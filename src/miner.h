@@ -37,7 +37,7 @@ struct CBlockTemplate
 // Container for tracking updates to ancestor feerate as we include (parent)
 // transactions in a block
 struct CTxMemPoolModifiedEntry {
-    CTxMemPoolModifiedEntry(CTxMemPool::txiter entry)
+    explicit CTxMemPoolModifiedEntry(CTxMemPool::txiter entry)
     {
         iter = entry;
         nSizeWithAncestors = entry->GetSizeWithAncestors();
@@ -120,7 +120,7 @@ typedef indexed_modified_transaction_set::index<ancestor_score>::type::iterator 
 
 struct update_for_parent_inclusion
 {
-    update_for_parent_inclusion(CTxMemPool::txiter it) : iter(it) {}
+    explicit update_for_parent_inclusion(CTxMemPool::txiter it) : iter(it) {}
 
     void operator() (CTxMemPoolModifiedEntry &e)
     {
@@ -165,7 +165,7 @@ public:
         CFeeRate blockMinFeeRate;
     };
 
-    BlockAssembler(const CChainParams& params);
+    explicit BlockAssembler(const CChainParams& params);
     BlockAssembler(const CChainParams& params, const Options& options);
 
     /** Construct a new block template with coinbase to scriptPubKeyIn */
