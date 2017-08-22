@@ -511,7 +511,7 @@ UniValue protx_register(const JSONRPCRequest& request)
     }
 
     CBitcoinAddress fundAddress = payoutAddress;
-    if (request.params.size() > paramIdx + 6) {
+    if (!request.params[paramIdx + 6].isNull()) {
         fundAddress = CBitcoinAddress(request.params[paramIdx + 6].get_str());
         if (!fundAddress.IsValid())
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Raptoreum address: ") + request.params[paramIdx + 6].get_str());
@@ -659,7 +659,7 @@ UniValue protx_update_service(const JSONRPCRequest& request)
     tx.nType = TRANSACTION_PROVIDER_UPDATE_SERVICE;
 
     // param operatorPayoutAddress
-    if (request.params.size() >= 5) {
+    if (!request.params[4].isNull()) {
         if (request.params[4].get_str().empty()) {
             ptx.scriptOperatorPayout = dmn->pdmnState->scriptOperatorPayout;
         } else {
@@ -676,7 +676,7 @@ UniValue protx_update_service(const JSONRPCRequest& request)
     CTxDestination feeSource;
 
     // param feeSourceAddress
-    if (request.params.size() >= 6) {
+    if (!request.params[5].isNull()) {
         CBitcoinAddress feeSourceAddress = CBitcoinAddress(request.params[5].get_str());
         if (!feeSourceAddress.IsValid())
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Raptoreum address: ") + request.params[5].get_str());
@@ -775,7 +775,7 @@ UniValue protx_update_registrar(const JSONRPCRequest& request)
     ptx.vchSig.resize(65);
 
     CTxDestination feeSourceDest = payoutDest;
-    if (request.params.size() > 5) {
+    if (!request.params[5].isNull()) {
         CBitcoinAddress feeSourceAddress = CBitcoinAddress(request.params[5].get_str());
         if (!feeSourceAddress.IsValid())
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Raptoreum address: ") + request.params[5].get_str());
@@ -828,7 +828,7 @@ UniValue protx_revoke(const JSONRPCRequest& request)
 
     CBLSSecretKey keyOperator = ParseBLSSecretKey(request.params[2].get_str(), "operatorKey");
 
-    if (request.params.size() > 3) {
+    if (!request.params[3].isNull()) {
         int32_t nReason = ParseInt32V(request.params[3], "reason");
         if (nReason < 0 || nReason > CProUpRevTx::REASON_LAST) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("invalid reason %d, must be between 0 and %d", nReason, CProUpRevTx::REASON_LAST));
@@ -849,7 +849,7 @@ UniValue protx_revoke(const JSONRPCRequest& request)
     tx.nVersion = 3;
     tx.nType = TRANSACTION_PROVIDER_UPDATE_REVOKE;
 
-    if (request.params.size() > 4) {
+    if (!request.params[4].isNull()) {
         CBitcoinAddress feeSourceAddress = CBitcoinAddress(request.params[4].get_str());
         if (!feeSourceAddress.IsValid())
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Raptoreum address: ") + request.params[4].get_str());
@@ -1125,7 +1125,7 @@ UniValue protx_list(const JSONRPCRequest& request)
 #endif
 
     std::string type = "registered";
-    if (request.params.size() > 1) {
+    if (!request.params[1].isNull()) {
         type = request.params[1].get_str();
     }
 
@@ -1144,9 +1144,9 @@ UniValue protx_list(const JSONRPCRequest& request)
             protx_list_help();
         }
 
-        bool detailed = request.params.size() > 2 ? ParseBoolV(request.params[2], "detailed") : false;
+        bool detailed = !request.params[2].isNull() ? ParseBoolV(request.params[2], "detailed") : false;
 
-        int height = request.params.size() > 3 ? ParseInt32V(request.params[3], "height") : chainActive.Height();
+        int height = !request.params[3].isNull() ? ParseInt32V(request.params[3], "height") : chainActive.Height();
         if (height < 1 || height > chainActive.Height()) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid height specified");
         }
@@ -1176,9 +1176,9 @@ UniValue protx_list(const JSONRPCRequest& request)
 
         LOCK(cs_main);
 
-        bool detailed = request.params.size() > 2 ? ParseBoolV(request.params[2], "detailed") : false;
+        bool detailed = !request.params[2].isNull() ? ParseBoolV(request.params[2], "detailed") : false;
 
-        int height = request.params.size() > 3 ? ParseInt32V(request.params[3], "height") : chainActive.Height();
+        int height = !request.params[3].isNull() ? ParseInt32V(request.params[3], "height") : chainActive.Height();
         if (height < 1 || height > chainActive.Height()) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid height specified");
         }
@@ -1311,7 +1311,7 @@ UniValue protx(const JSONRPCRequest& request)
     }
 
     std::string command;
-    if (request.params.size() >= 1) {
+    if (!request.params[0].isNull()) {
         command = request.params[0].get_str();
     }
 
@@ -1338,6 +1338,104 @@ UniValue protx(const JSONRPCRequest& request)
         return protx_diff(request);
     } else {
         protx_help();
+    }
+}
+
+void bls_generate_help()
+{
+    throw std::runtime_error(
+            "bls generate\n"
+            "\nReturns a BLS secret/public key pair.\n"
+            "\nResult:\n"
+            "{\n"
+            "  \"secret\": \"xxxx\",        (string) BLS secret key\n"
+            "  \"public\": \"xxxx\",        (string) BLS public key\n"
+            "}\n"
+            "\nExamples:\n"
+            + HelpExampleCli("bls generate", "")
+    );
+}
+
+UniValue bls_generate(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() != 1) {
+        bls_generate_help();
+    }
+
+    CBLSSecretKey sk;
+    sk.MakeNewKey();
+
+    UniValue ret(UniValue::VOBJ);
+    ret.push_back(Pair("secret", sk.ToString()));
+    ret.push_back(Pair("public", sk.GetPublicKey().ToString()));
+    return ret;
+}
+
+void bls_fromsecret_help()
+{
+    throw std::runtime_error(
+            "bls fromsecret \"secret\"\n"
+            "\nParses a BLS secret key and returns the secret/public key pair.\n"
+            "\nArguments:\n"
+            "1. \"secret\"                (string, required) The BLS secret key\n"
+            "\nResult:\n"
+            "{\n"
+            "  \"secret\": \"xxxx\",        (string) BLS secret key\n"
+            "  \"public\": \"xxxx\",        (string) BLS public key\n"
+            "}\n"
+            "\nExamples:\n"
+            + HelpExampleCli("bls fromsecret", "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f")
+    );
+}
+
+UniValue bls_fromsecret(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() != 2) {
+        bls_fromsecret_help();
+    }
+
+    CBLSSecretKey sk;
+    if (!sk.SetHexStr(request.params[1].get_str())) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Secret key must be a valid hex string of length %d", sk.SerSize*2));
+    }
+
+    UniValue ret(UniValue::VOBJ);
+    ret.push_back(Pair("secret", sk.ToString()));
+    ret.push_back(Pair("public", sk.GetPublicKey().ToString()));
+    return ret;
+}
+
+[[ noreturn ]] void bls_help()
+{
+    throw std::runtime_error(
+            "bls \"command\" ...\n"
+            "Set of commands to execute BLS related actions.\n"
+            "To get help on individual commands, use \"help bls command\".\n"
+            "\nArguments:\n"
+            "1. \"command\"        (string, required) The command to execute\n"
+            "\nAvailable commands:\n"
+            "  generate          - Create a BLS secret/public key pair\n"
+            "  fromsecret        - Parse a BLS secret key and return the secret/public key pair\n"
+            );
+}
+
+UniValue _bls(const JSONRPCRequest& request)
+{
+    if (request.fHelp && request.params.empty()) {
+        bls_help();
+    }
+
+    std::string command;
+    if (!request.params[0].isNull()) {
+        command = request.params[0].get_str();
+    }
+
+    if (command == "generate") {
+        return bls_generate(request);
+    } else if (command == "fromsecret") {
+        return bls_fromsecret(request);
+    } else {
+        bls_help();
     }
 }
 

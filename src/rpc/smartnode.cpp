@@ -306,7 +306,7 @@ void smartnode_winners_help()
 
 UniValue smartnode_winners(const JSONRPCRequest& request)
 {
-    if (request.fHelp)
+    if (request.fHelp || request.params.size() > 3)
         smartnode_winners_help();
 
     int nHeight;
@@ -321,16 +321,13 @@ UniValue smartnode_winners(const JSONRPCRequest& request)
     int nLast = 10;
     std::string strFilter = "";
 
-    if (request.params.size() >= 2) {
+    if (!request.params[1].isNull()) {
         nLast = atoi(request.params[1].get_str());
     }
 
-    if (request.params.size() == 3) {
+    if (!request.params[2].isNull()) {
         strFilter = request.params[2].get_str();
     }
-
-    if (request.params.size() > 3)
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'smartnode winners ( \"count\" \"filter\" )'");
 
     UniValue obj(UniValue::VOBJ);
     auto mapPayments = GetRequiredPaymentsStrings(nHeight - nLast, nHeight + 20);
@@ -364,7 +361,7 @@ UniValue smartnode_winners(const JSONRPCRequest& request)
 UniValue smartnode(const JSONRPCRequest& request)
 {
     std::string strCommand;
-    if (request.params.size() >= 1) {
+    if (!request.params[0].isNull()) {
         strCommand = request.params[0].get_str();
     }
 
@@ -400,8 +397,8 @@ UniValue smartnodelist(const JSONRPCRequest& request)
     std::string strMode = "json";
     std::string strFilter = "";
 
-    if (request.params.size() >= 1) strMode = request.params[0].get_str();
-    if (request.params.size() == 2) strFilter = request.params[1].get_str();
+    if (!request.params[0].isNull()) strMode = request.params[0].get_str();
+    if (!request.params[1].isNull()) strFilter = request.params[1].get_str();
 
     std::transform(strMode.begin(), strMode.end(), strMode.begin(), ::tolower);
 

@@ -43,7 +43,7 @@ UniValue quorum_list(const JSONRPCRequest& request)
     LOCK(cs_main);
 
     int count = -1;
-    if (request.params.size() > 1) {
+    if (!request.params[1].isNull()) {
         count = ParseInt32V(request.params[1], "count");
         if (count < 0) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "count can't be negative");
@@ -131,7 +131,7 @@ UniValue quorum_info(const JSONRPCRequest& request)
 
     uint256 quorumHash = ParseHashV(request.params[2], "quorumHash");
     bool includeSkShare = false;
-    if (request.params.size() > 3) {
+    if (!request.params[3].isNull()) {
         includeSkShare = ParseBoolV(request.params[3], "includeSkShare");
     }
 
@@ -162,7 +162,7 @@ UniValue quorum_dkgstatus(const JSONRPCRequest& request)
     }
 
     int detailLevel = 0;
-    if (request.params.size() > 1) {
+    if (!request.params[1].isNull()) {
         detailLevel = ParseInt32V(request.params[1], "detail_level");
         if (detailLevel < 0 || detailLevel > 2) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid detail_level");
@@ -213,7 +213,7 @@ UniValue quorum_memberof(const JSONRPCRequest& request)
 
     uint256 protxHash = ParseHashV(request.params[1], "proTxHash");
     int scanQuorumsCount = -1;
-    if (request.params.size() >= 3) {
+    if (!request.params[2].isNull()) {
         scanQuorumsCount = ParseInt32V(request.params[2], "scanQuorumsCount");
         if (scanQuorumsCount <= 0) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid scanQuorumsCount parameter");
@@ -409,7 +409,7 @@ UniValue quorum(const JSONRPCRequest& request)
     }
 
     std::string command;
-    if (request.params.size() >= 1) {
+    if (!request.params[0].isNull()) {
         command = request.params[0].get_str();
     }
 
