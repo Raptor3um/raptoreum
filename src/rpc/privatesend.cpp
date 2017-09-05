@@ -9,6 +9,7 @@
 #endif // ENABLE_WALLET
 #include "privatesend/privatesend-server.h"
 #include "rpc/server.h"
+#include "rpc/safemode.h"
 
 #include <univalue.h>
 
@@ -29,6 +30,8 @@ UniValue privatesend(const JSONRPCRequest& request)
             "  stop        - Stop mixing\n"
             "  reset       - Reset mixing\n"
         );
+
+    ObserveSafeMode();
 
     if (fSmartnodeMode)
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Client-side mixing is not supported on smartnodes");
@@ -150,12 +153,12 @@ UniValue getprivatesendinfo(const JSONRPCRequest& request)
 }
 
 static const CRPCCommand commands[] =
-    { //  category              name                      actor (function)         okSafe argNames
-        //  --------------------- ------------------------  -----------------------  ------ ----------
-        { "raptoreum",               "getpoolinfo",            &getpoolinfo,            true,  {} },
-        { "raptoreum",               "getprivatesendinfo",     &getprivatesendinfo,     true,  {} },
+    { //  category              name                      actor (function)         argNames
+        //  --------------------- ------------------------  ---------------------------------
+        { "raptoreum",               "getpoolinfo",            &getpoolinfo,            {} },
+        { "raptoreum",               "getprivatesendinfo",     &getprivatesendinfo,     {} },
 #ifdef ENABLE_WALLET
-        { "raptoreum",               "privatesend",            &privatesend,            false, {} },
+        { "raptoreum",               "privatesend",            &privatesend,            {} },
 #endif // ENABLE_WALLET
 };
 

@@ -6,6 +6,7 @@
 
 #include "base58.h"
 #include "chain.h"
+#include "rpc/safemode.h"
 #include "rpc/server.h"
 #include "init.h"
 #include "validation.h"
@@ -176,6 +177,7 @@ UniValue abortrescan(const JSONRPCRequest& request)
             + HelpExampleRpc("abortrescan", "")
         );
 
+    ObserveSafeMode();
     if (!pwallet->IsScanning() || pwallet->IsAbortingRescan()) return false;
     pwallet->AbortRescan();
     return true;
