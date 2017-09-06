@@ -145,6 +145,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     LOCK2(cs_main, mempool.cs);
 
     CBlockIndex* pindexPrev = chainActive.Tip();
+    assert(pindexPrev != nullptr);
     nHeight = pindexPrev->nHeight + 1;
 
     bool fDIP0003Active_context = chainparams.GetConsensus().DIP0003Enabled;
