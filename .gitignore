@@ -142,4 +142,3 @@ depends/sdk-sources/
 dist/
 *.conf
 .settings/language.settings.xml
-
