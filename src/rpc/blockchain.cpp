@@ -89,6 +89,7 @@ double GetDifficulty(const CBlockIndex* blockindex)
 
 UniValue blockheaderToJSON(const CBlockIndex* blockindex)
 {
+    AssertLockHeld(cs_main);
     UniValue result(UniValue::VOBJ);
     result.push_back(Pair("hash", blockindex->GetBlockHash().GetHex()));
     int confirmations = -1;
@@ -120,6 +121,7 @@ UniValue blockheaderToJSON(const CBlockIndex* blockindex)
 
 UniValue blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool txDetails, bool powHash)
 {
+    AssertLockHeld(cs_main);
     UniValue result(UniValue::VOBJ);
     result.push_back(Pair("hash", blockindex->GetBlockHash().GetHex()));
     int confirmations = -1;
