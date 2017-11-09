@@ -5,7 +5,7 @@
 
 #include "evodb.h"
 
-CEvoDB* evoDb;
+std::unique_ptr<CEvoDB> evoDb;
 
 CEvoDBScopedCommitter::CEvoDBScopedCommitter(CEvoDB &_evoDB) :
     evoDB(_evoDB)

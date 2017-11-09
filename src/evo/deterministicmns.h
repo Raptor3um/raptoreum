@@ -662,6 +662,6 @@ private:
     void CleanupCache(int nHeight);
 };
 
-extern CDeterministicMNManager* deterministicMNManager;
+extern std::unique_ptr<CDeterministicMNManager> deterministicMNManager;
 
 #endif //RAPTOREUM_DETERMINISTICMNS_H
