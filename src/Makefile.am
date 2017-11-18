@@ -261,6 +261,7 @@ BITCOIN_CORE_H = \
   wallet/rpcwallet.h \
   wallet/wallet.h \
   wallet/walletdb.h \
+  wallet/walletutil.h \
   warnings.h \
   zmq/zmqabstractnotifier.h \
   zmq/zmqconfig.h\
@@ -388,6 +389,7 @@ libraptoreum_wallet_a_SOURCES = \
   wallet/rpcwallet.cpp \
   wallet/wallet.cpp \
   wallet/walletdb.cpp \
+  wallet/walletutil.cpp \
   $(BITCOIN_CORE_H)
 
 # crypto primitives library
