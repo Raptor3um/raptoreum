@@ -1253,11 +1253,6 @@ bool AppInitParameterInteraction()
         fPruneMode = true;
     }
 
-    RegisterAllCoreRPCCommands(tableRPC);
-#ifdef ENABLE_WALLET
-    RegisterWalletRPC(tableRPC);
-#endif
-
     nConnectTimeout = gArgs.GetArg("-timeout", DEFAULT_CONNECT_TIMEOUT);
     if (nConnectTimeout <= 0)
         nConnectTimeout = DEFAULT_CONNECT_TIMEOUT;
@@ -1576,6 +1571,14 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     threadGroup.create_thread(boost::bind(&TraceThread<CScheduler::Function>, "scheduler", serviceLoop));
 
     GetMainSignals().RegisterBackgroundSignalScheduler(scheduler);
+
+    /* Register RPC commands regardless of -server setting so they will be
+     * available in the GUI RPC console even if external calls are disabled.
+     */
+    RegisterAllCoreRPCCommands(tableRPC);
+#ifdef ENABLE_WALLET
+    RegisterWalletRPC(tableRPC);
+#endif
 
     /* Start the RPC server already.  It will be started in "warmup" mode
      * and not really process calls already (but it will signify connections
