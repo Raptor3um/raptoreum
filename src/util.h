@@ -32,6 +32,7 @@
 #include <vector>
 
 #include <boost/signals2/signal.hpp>
+#include <boost/thread/condition_variable.hpp> // for boost::thread_interrupted
 
 // Debugging macros
 
