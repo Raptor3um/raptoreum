@@ -3667,8 +3667,8 @@ void PruneOneBlockFile(const int fileNumber)
 {
     LOCK(cs_LastBlockFile);
 
-    for (BlockMap::iterator it = mapBlockIndex.begin(); it != mapBlockIndex.end(); ++it) {
-        CBlockIndex* pindex = it->second;
+    for (const auto& entry : mapBlockIndex) {
+        CBlockIndex* pindex = entry.second;
         if (pindex->nFile == fileNumber) {
             pindex->nStatus &= ~BLOCK_HAVE_DATA;
             pindex->nStatus &= ~BLOCK_HAVE_UNDO;
@@ -4462,8 +4462,8 @@ void static CheckBlockIndex(const Consensus::Params& consensusParams)
 
     // Build forward-pointing map of the entire block tree.
     std::multimap<CBlockIndex*,CBlockIndex*> forward;
-    for (BlockMap::iterator it = mapBlockIndex.begin(); it != mapBlockIndex.end(); it++) {
-        forward.insert(std::make_pair(it->second->pprev, it->second));
+    for (auto& entry : mapBlockIndex) {
+        forward.insert(std::make_pair(entry.second->pprev, entry.second));
     }
 
     assert(forward.size() == mapBlockIndex.size());
