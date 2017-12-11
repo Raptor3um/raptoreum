@@ -1173,7 +1173,7 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
 
     if (IsBanned(addr) && !whitelisted)
     {
-        LogPrintf("%s (banned)\n", strDropped);
+        LogPrint(BCLog::NET, "%s (banned)\n", strDropped);
         CloseSocket(hSocket);
         return;
     }
