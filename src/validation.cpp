@@ -18,7 +18,6 @@
 #include <consensus/tx_verify.h>
 #include <consensus/validation.h>
 #include <cuckoocache.h>
-#include <fs.h>
 #include <hash.h>
 #include <init.h>
 #include <policy/fees.h>
@@ -41,7 +40,6 @@
 #include <utilmoneystr.h>
 #include <utilstrencodings.h>
 #include <validationinterface.h>
-#include <versionbits.h>
 #include <warnings.h>
 
 #include <smartnode/smartnode-payments.h>
@@ -54,7 +52,6 @@
 #include <llmq/quorums_instantsend.h>
 #include <llmq/quorums_chainlocks.h>
 
-#include <atomic>
 #include <future>
 #include <sstream>
 

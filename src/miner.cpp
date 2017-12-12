@@ -24,7 +24,6 @@
 #include <primitives/transaction.h>
 #include <script/standard.h>
 #include <timedata.h>
-#include <txmempool.h>
 #include <util.h>
 #include <utilmoneystr.h>
 #include <smartnode/smartnode-payments.h>
