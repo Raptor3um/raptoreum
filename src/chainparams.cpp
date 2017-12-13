@@ -583,7 +583,7 @@ public:
         nMinSporkKeys = 1;
         fBIP9CheckSmartnodesUpgraded = true;
 
-        checkpointData = (CCheckpointData) {
+        checkpointData = {
             {
                 {5145, uint256S("0x64c9cc82f05f4326e49fd4b21a48494b02b12a707de67a47c7e8e1102b0f1d9b")},
                 {35000, uint256S("0xb4fb191f3ef4141557aef8aafa700d312e5499cbde4a3079faa78cf58c0c414f")},
@@ -724,7 +724,7 @@ public:
         nMinSporkKeys = 1;
         fBIP9CheckSmartnodesUpgraded = true;
 
-        checkpointData = (CCheckpointData) {
+        checkpointData = {
             {
 
             }
@@ -950,7 +950,7 @@ public:
                                                         										   };
 		consensus.nFounderPayment = FounderPayment(rewardStructures, 200);
 
-        checkpointData = (CCheckpointData) {
+        checkpointData = {
             {
                 {0, uint256S("0x000008ca1832a4baf228eb1553c03d3a2c8e02399550dd6ea8d65cec3ef23d2e")},
             }
