@@ -1802,8 +1802,7 @@ void CConnman::ProcessOneShot()
     CAddress addr;
     CSemaphoreGrant grant(*semOutbound, true);
     if (grant) {
-        if (!OpenNetworkConnection(addr, false, &grant, strDest.c_str(), true))
-            AddOneShot(strDest);
+        OpenNetworkConnection(addr, false, &grant, strDest.c_str(), true);
     }
 }
 
@@ -2177,30 +2176,30 @@ bool CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
     // Initiate outbound network connection
     //
     if (interruptNet) {
-        return false;
+        return;
     }
     if (!fNetworkActive) {
-        return false;
+        return;
     }
     if (!pszDest) {
         // banned or exact match?
         if (IsBanned(addrConnect) || FindNode(addrConnect.ToStringIPPort()))
-            return false;
+            return;
         // local and not a connection to itself?
         bool fAllowLocal = Params().AllowMultiplePorts() && addrConnect.GetPort() != GetListenPort();
         if (!fAllowLocal && IsLocal(addrConnect))
-            return false;
+            return;
         // if multiple ports for same IP are allowed, search for IP:PORT match, otherwise search for IP-only match
         if ((!Params().AllowMultiplePorts() && FindNode((CNetAddr)addrConnect)) ||
             (Params().AllowMultiplePorts() && FindNode((CService)addrConnect)))
-            return false;
+            return;
     } else if (FindNode(std::string(pszDest)))
-        return false;
+        return;
 
     CNode* pnode = ConnectNode(addrConnect, pszDest, fCountFailure);
 
     if (!pnode)
-        return false;
+        return;
     if (grantOutbound)
         grantOutbound->MoveTo(pnode->grantOutbound);
     if (fOneShot)
@@ -2217,12 +2216,10 @@ bool CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
         LOCK(cs_vNodes);
         vNodes.push_back(pnode);
     }
-
-    return true;
 }
 
-bool CConnman::OpenSmartnodeConnection(const CAddress &addrConnect) {
-    return OpenNetworkConnection(addrConnect, false, nullptr, nullptr, false, false, false, true);
+void CConnman::OpenMasternodeConnection(const CAddress &addrConnect) {
+    OpenNetworkConnection(addrConnect, false, nullptr, nullptr, false, false, false, true);
 }
 
 void CConnman::ThreadMessageHandler()
