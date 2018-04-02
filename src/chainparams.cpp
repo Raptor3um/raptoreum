@@ -15,6 +15,7 @@
 #include <arith_uint256.h>
 
 #include <assert.h>
+#include <memory>
 
 #include <chainparamsseeds.h>
 
