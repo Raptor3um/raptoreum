@@ -2416,6 +2416,7 @@ UniValue scantxoutset(const JSONRPCRequest& request)
             "    \"txid\" : \"transactionid\",     (string) The transaction id\n"
             "    \"vout\": n,                    (numeric) the vout value\n"
             "    \"scriptPubKey\" : \"script\",    (string) the script key\n"
+            "    \"desc\" : \"descriptor\",        (string) A specialized descriptor for the matched scriptPubKey\n"
             "    \"amount\" : x.xxx,             (numeric) The total amount in " + CURRENCY_UNIT + " of the unspent output\n"
             "    \"height\" : n,                 (numeric) Height of the unspent transaction output\n"
             "   }\n"
@@ -2450,6 +2451,7 @@ UniValue scantxoutset(const JSONRPCRequest& request)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Scan already in progress, use action \"abort\" or \"status\"");
         }
         std::set<CScript> needles;
+        std::map<CScript, std::string> descriptors;
         CAmount total_in = 0;
 
         // loop through the scan objects
@@ -2485,7 +2487,11 @@ UniValue scantxoutset(const JSONRPCRequest& request)
                 if (!desc->Expand(i, provider, scripts, provider)) {
                     throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Cannot derive script without private keys: '%s'", desc_str));
                 }
-                needles.insert(scripts.begin(), scripts.end());
+                for (const auto& script : scripts) {
+                    std::string inferred = InferDescriptor(script, provider)->ToString();
+                    needles.emplace(script);
+                    descriptors.emplace(std::move(script), std::move(inferred));
+                }
             }
         }
 
@@ -2518,6 +2524,7 @@ UniValue scantxoutset(const JSONRPCRequest& request)
             unspent.pushKV("txid", outpoint.hash.GetHex());
             unspent.pushKV("vout", (int32_t)outpoint.n);
             unspent.pushKV("scriptPubKey", HexStr(txo.scriptPubKey));
+            unspent.pushKV("desc", descriptors[txo.scriptPubKey]);
             unspent.pushKV("amount", ValueFromAmount(txo.nValue));
             unspent.pushKV("height", (int32_t)coin.nHeight);
 
