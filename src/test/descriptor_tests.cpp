@@ -113,6 +113,7 @@ void Check(const std::string& prv, const std::string& pub, int flags, const std:
                 BOOST_CHECK_EQUAL(IsSolvable(provider_inferred, spks_inferred[0]), !(flags & UNSOLVABLE));
                 BOOST_CHECK(provider_inferred.origins == script_provider.origins);
             }
+
             // Test whether the observed key path is present in the 'paths' variable (which contains expected, unobserved paths),
             // and then remove it from that set.
             for (const auto& origin : script_provider.origins) {
