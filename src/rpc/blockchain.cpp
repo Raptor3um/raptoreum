@@ -14,21 +14,20 @@
 #include <coins.h>
 #include <node/coinstats.h>
 #include <core_io.h>
+#include <hash.h>
 #include <consensus/validation.h>
-#include <validation.h>
-#include <core_io.h>
-// #include <rpc/index/txindex.h>
 #include <policy/feerate.h>
 #include <policy/policy.h>
 #include <primitives/transaction.h>
 #include <rpc/server.h>
+#include <rpc/util.h>
 #include <streams.h>
 #include <sync.h>
 #include <txdb.h>
 #include <txmempool.h>
 #include <util.h>
 #include <utilstrencodings.h>
-#include <hash.h>
+#include <validation.h>
 #include <validationinterface.h>
 #include <versionbitsinfo.h>
 #include <warnings.h>

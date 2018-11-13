@@ -9,6 +9,7 @@
 
 #include <chainparams.h>
 #include <random.h>
+#include <rpc/util.h>
 #include <shutdown.h>
 #include <sync.h>
 #include <ui_interface.h>

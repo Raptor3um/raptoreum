@@ -9,7 +9,6 @@
 #include <chainparams.h>
 #include <clientversion.h>
 #include <core_io.h>
-#include <validation.h>
 #include <net.h>
 #include <net_processing.h>
 #include <netbase.h>
@@ -21,6 +20,7 @@
 #include <ui_interface.h>
 #include <util.h>
 #include <utilstrencodings.h>
+#include <validation.h>
 #include <version.h>
 #include <warnings.h>
 

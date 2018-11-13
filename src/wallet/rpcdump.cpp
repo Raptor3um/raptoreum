@@ -6,10 +6,9 @@
 
 #include <chain.h>
 #include <core_io.h>
-#include <interfaces/chain.h>
-#include <key_io.h>
 #include <merkleblock.h>
 #include <rpc/server.h>
+#include <rpc/util.h>
 #include <script/script.h>
 #include <script/standard.h>
 #include <sync.h>
@@ -989,7 +988,7 @@ UniValue dumpwallet(const JSONRPCRequest& request)
     file << "\n";
 
     UniValue obj(UniValue::VOBJ);
-    obj.pushKV("dashcoreversion", CLIENT_BUILD);
+    obj.pushKV("raptoreumcoreversion", CLIENT_BUILD);
     obj.pushKV("lastblockheight", tip_height.value_or(-1));
     obj.pushKV("lastblockhash", tip_height ? locked_chain->getBlockHash(*tip_height).ToString() : NullUniValue);
     obj.pushKV("lastblocktime", tip_height ? FormatISO8601DateTime(locked_chain->getBlockTime(*tip_height)) : NullUniValue);
