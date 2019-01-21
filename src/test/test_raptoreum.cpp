@@ -4,6 +4,7 @@
 
 #include <test/test_raptoreum.h>
 
+#include <banman.h>
 #include <chainparams.h>
 #include <consensus/consensus.h>
 #include <consensus/params.h>
@@ -36,26 +37,8 @@ std::ostream& operator<<(std::ostream& os, const uint256& num)
   return os;
 }
 
-void CConnmanTest::AddNode(CNode& node)
-{
-    LOCK(g_connman->cs_vNodes);
-    g_connman->vNodes.push_back(&node);
-    g_connman->mapSocketToNode.emplace(node.hSocket, &node);
-}
-
-void CConnmanTest::ClearNodes()
-{
-    LOCK(g_connman->cs_vNodes);
-    g_connman->vNodes.clear();
-    g_connman->mapSocketToNode.clear();
-
-    g_connman->mapReceivableNodes.clear();
-    g_connman->mapSendableNodes.clear();
-    LOCK(g_connman->cs_mapNodesWithDataToSend);
-    g_connman->mapNodesWithDataToSend.clear();
-}
-
-FastRandomContext insecure_rand_ctx;
+uint256 insecure_rand_seed = GetRandHash();
+FastRandomContext insecure_rand_ctx(insecure_rand_seed);
 
 extern bool fPrintToConsole;
 extern void noui_connect();
@@ -110,6 +93,7 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
     threadGroup.create_thread(std::bind(&CScheduler::serviceQueue, &scheduler));
     GetMainSignals().RegisterBackgroundSignalScheduler(scheduler);
     mempool.setSanityCheck(1.0);
+    g_banman = MakeUnique<BanMan>(GetDataDir() / "banlist.dat", nullptr, DEFAULT_MISBEHAVING_BANTIME);
     g_connman = MakeUnique<CConnman>(0x1337, 0x1337); // Deterministic randomness for tests.
     pblocktree.reset(new CBlockTreeDB(1 << 20, true));
     g_chainstate = MakeUnique<CChainState>();
@@ -133,7 +117,6 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
     int script_threads = 3;
     for (int i=0; i < script_threads-1; i++)
         StartScriptCheckWorkerThreads(script_threads);
-    peerLogic.reset(new PeerLogicValidation(connman, scheduler, true));
 }
 
 TestingSetup::~TestingSetup()
@@ -150,6 +133,7 @@ TestingSetup::~TestingSetup()
     GetMainSignals().FlushBackgroundCallbacks();
     GetMainSignals().UnregisterBackgroundSignalScheduler();
     g_connman.reset();
+    g_banman.reset();
     UnloadBlockIndex();
     g_chainstate.reset();
     llmq::DestroyLLMQSystem();
