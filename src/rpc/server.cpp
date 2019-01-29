@@ -131,12 +131,14 @@ UniValue help(const JSONRPCRequest& jsonRequest)
             RPCHelpMan{"help",
                 "\nList all commands, or get help for a specified command.\n",
                 {
-                    {"command", RPCArg::Type::STR, /* opt */ true, /* default_val */ "", "The command to get help on"},
+                    {"command", RPCArg::Type::STR, /* opt */ true, /* default_val */ "all commands", "The command to get help on"},
                     {"subcommand", RPCArg::Type::STR, /* opt */ true, /* default_val */ "", "The subcommand to get help on. Please note that not all subcommands support this at the moment"},
-                }}
-                .ToString() +
-            "\nResult:\n"
+                },
+                RPCResult{
             "\"text\"     (string) The help text\n"
+                },
+                RPCExamples{""},
+            }.ToString()
         );
 
     std::string strCommand, strSubCommand;
@@ -158,8 +160,11 @@ UniValue stop(const JSONRPCRequest& jsonRequest)
     if (jsonRequest.fHelp || jsonRequest.params.size() > 1)
         throw std::runtime_error(
             RPCHelpMan{"stop",
-                "\nStop Raptoreum Core server.", {}}
-                .ToString());
+                "\nStop Raptoreum Core server.",
+                {},
+                RPCResults{},
+                RPCExamples{""},
+            }.ToString());
     // Event loop will exit after current HTTP requests have been handled, so
     // this reply will get back to the client.
     StartShutdown();
@@ -174,14 +179,16 @@ UniValue uptime(const JSONRPCRequest& jsonRequest)
     if (jsonRequest.fHelp || jsonRequest.params.size() > 1)
         throw std::runtime_error(
             RPCHelpMan{"uptime",
-                "\nReturns the total uptime of the server.\n", {}}
-                .ToString() +
-                        "\nResult:\n"
+                "\nReturns the total uptime of the server.\n",
+                            {},
+                            RPCResult{
                         "ttt        (numeric) The number of seconds that the server has been running\n"
-                        "\nExamples:\n"
-                + HelpExampleCli("uptime", "")
+                            },
+                RPCExamples{
+                    HelpExampleCli("uptime", "")
                 + HelpExampleRpc("uptime", "")
-        );
+                },
+            }.ToString());
 
     return GetTime() - GetStartupTime();
 }

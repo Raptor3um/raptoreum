@@ -1735,9 +1735,9 @@ QString formatServicesStr(quint64 mask)
         return QObject::tr("None");
 }
 
-QString formatPingTime(double dPingTime)
+QString formatPingTime(int64_t ping_usec)
 {
-    return (dPingTime == std::numeric_limits<int64_t>::max()/1e6 || dPingTime == 0) ? QObject::tr("N/A") : QString(QObject::tr("%1 ms")).arg(QString::number((int)(dPingTime * 1000), 10));
+    return (ping_usec == std::numeric_limits<int64_t>::max() || ping_usec == 0) ? QObject::tr("N/A") : QString(QObject::tr("%1 ms")).arg(QString::number((int)(ping_usec / 1000), 10));
 }
 
 QString formatTimeOffset(int64_t nTimeOffset)
@@ -1749,10 +1749,10 @@ QString formatNiceTimeOffset(qint64 secs)
 {
     // Represent time from last generated block in human readable text
     QString timeBehindText;
-    const int HOUR_IN_SECONDS = 60*60;
-    const int DAY_IN_SECONDS = 24*60*60;
-    const int WEEK_IN_SECONDS = 7*24*60*60;
-    const int YEAR_IN_SECONDS = 31556952; // Average length of year in Gregorian calendar
+    const int HOUR_IN_SECONDS = 3600;
+    const int DAY_IN_SECONDS = 86400;
+    const int WEEK_IN_SECONDS = 604800;
+    const int YEAR_IN_SECONDS = 31536000; // seconds at common year
     if(secs < 60)
     {
         timeBehindText = QObject::tr("%n second(s)","",secs);
