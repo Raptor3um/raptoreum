@@ -223,6 +223,7 @@ BITCOIN_CORE_H = \
   netmessagemaker.h \
   node/coinstats.h \
   noui.h \
+  optional.h \
   policy/feerate.h \
   policy/fees.h \
   policy/policy.h \
