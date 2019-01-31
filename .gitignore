@@ -10,6 +10,9 @@ src/raptoreum
 src/raptoreumd
 src/raptoreum-cli
 src/raptoreum-tx
+src/raptoreum-wallet
+src/test/fuzz
+!src/test/fuzz/*.*
 src/test/test_raptoreum
 src/test/test_raptoreum_fuzzy
 src/qt/test/test_raptoreum-qt

@@ -239,7 +239,7 @@ bool CCryptoKeyStore::Lock(bool fAllowMixing)
     return true;
 }
 
-bool CCryptoKeyStore::Unlock(const CKeyingMaterial& vMasterKeyIn, bool fForMixingOnly)
+bool CCryptoKeyStore::Unlock(const CKeyingMaterial& vMasterKeyIn, bool fForMixingOnly, bool accept_no_keys)
 {
     {
         LOCK(cs_KeyStore);
@@ -268,7 +268,7 @@ bool CCryptoKeyStore::Unlock(const CKeyingMaterial& vMasterKeyIn, bool fForMixin
             LogPrintf("The wallet is probably corrupted: Some keys decrypt but not all.\n");
             assert(false);
         }
-        if (keyFail || (!keyPass && cryptedHDChain.IsNull()))
+        if (keyFail || (!keyPass && cryptedHDChain.IsNull() && !accept_no_keys))
             return false;
 
         vMasterKey = vMasterKeyIn;
