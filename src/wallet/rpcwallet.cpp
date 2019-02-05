@@ -3445,8 +3445,8 @@ UniValue rescanblockchain(const JSONRPCRequest& request)
             "2. \"stop_height\"     (numeric, optional) the last block height that should be scanned\n"
             "\nResult:\n"
             "{\n"
-            "  \"start_height\"     (numeric) The block height where the rescan has started. If omitted, rescan started from the genesis block.\n"
-            "  \"stop_height\"      (numeric) The height of the last rescanned block. If omitted, rescan stopped at the chain tip.\n"
+            "  \"start_height\"     (numeric) The block height where the rescan started (the requested height or 0)\n"
+            "  \"stop_height\"      (numeric) The height of the last rescanned block. May be null in rare cases if there was a reorg and the call didn't scan any blocks because they were already scanned in the background.\n"
             "}\n"
             "\nExamples:\n"
             + HelpExampleCli("rescanblockchain", "100000 120000")
@@ -3490,6 +3490,11 @@ UniValue rescanblockchain(const JSONRPCRequest& request)
 
         if (tip_height) {
             start_block = locked_chain->getBlockHash(start_height);
+            // If called with a stop_height, set the stop_height here to
+            // trigger a rescan to that height.
+            // If called without a stop height, leave stop_height as null here
+            // so rescan continues to the tip (even if the tip advances during
+            // rescan).
             if (stop_height) {
                 stop_block = locked_chain->getBlockHash(*stop_height);
             }
@@ -3509,7 +3514,7 @@ UniValue rescanblockchain(const JSONRPCRequest& request)
     }
     UniValue response(UniValue::VOBJ);
     response.pushKV("start_height", start_height);
-    response.pushKV("stop_height", result.stop_height ? *result.stop_height : UniValue());
+    response.pushKV("stop_height", result.last_scanned_height ? *result.last_scanned_height : UniValue());
     return response;
 }
 
