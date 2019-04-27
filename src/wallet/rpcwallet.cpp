@@ -3505,8 +3505,17 @@ UniValue signrawtransactionwithwallet(const JSONRPCRequest& request)
 
     // Sign the transaction
     auto locked_chain = pwallet->chain().lock();
-    LOCK2(mempool.cs, pwallet->cs_wallet);
-    return SignTransaction(pwallet->chain(), mtx, request.params[1], pwallet, false, request.params[2]);
+    LOCK(pwallet->cs_wallet);
+    EnsureWalletIsUnlocked(pwallet);
+
+    // Fetch previous transactions (inputs):
+    std::map<COutPoint, Coin> coins;
+    for (const CTxIn& txin : mtx.vin) {
+        coins[txin.prevout]; // Create empty map entry keyed by prevout.
+    }
+    pwallet->chain().findCoins(coins);
+
+    return SignTransaction(mtx, request.params[1], pwallet, coins, false, request.params[2]);
 }
 
 #if ENABLE_MINER

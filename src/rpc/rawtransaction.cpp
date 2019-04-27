@@ -17,6 +17,7 @@
 #include <keystore.h>
 #include <merkleblock.h>
 #include <net.h>
+#include <node/coin.h>
 #include <node/transaction.h>
 #include <policy/policy.h>
 #include <policy/settings.h>
@@ -106,7 +107,7 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry)
     entry.pushKV("chainlock", chainLock);
 }
 
-UniValue getrawtransaction(const JSONRPCRequest& request)
+static UniValue getrawtransaction(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 3)
         throw std::runtime_error(
@@ -247,7 +248,7 @@ UniValue getrawtransaction(const JSONRPCRequest& request)
     return result;
 }
 
-UniValue gettxoutproof(const JSONRPCRequest& request)
+static UniValue gettxoutproof(const JSONRPCRequest& request)
 {
     if (request.fHelp || (request.params.size() != 1 && request.params.size() != 2))
         throw std::runtime_error(
@@ -349,7 +350,7 @@ UniValue gettxoutproof(const JSONRPCRequest& request)
     return strHex;
 }
 
-UniValue verifytxoutproof(const JSONRPCRequest& request)
+static UniValue verifytxoutproof(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
@@ -465,7 +466,7 @@ static UniValue createrawtransaction(const JSONRPCRequest& request)
     return EncodeHexTx(CTransaction(rawTx));
 }
 
-UniValue decoderawtransaction(const JSONRPCRequest& request)
+static UniValue decoderawtransaction(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
@@ -533,7 +534,7 @@ UniValue decoderawtransaction(const JSONRPCRequest& request)
     return result;
 }
 
-UniValue decodescript(const JSONRPCRequest& request)
+static UniValue decodescript(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
@@ -749,10 +750,17 @@ static UniValue signrawtransactionwithkey(const JSONRPCRequest& request)
         keystore.AddKey(key);
     }
 
-    return SignTransaction(*g_rpc_interfaces->chain, mtx, request.params[2], &keystore, true, request.params[3]);
+    // Fetch previous transactions (inputs):
+    std::map<COutPoint, Coin> coins;
+    for (const CTxIn& txin : mtx.vin) {
+        coins[txin.prevout]; // Create empty map entry keyed by prevout.
+    }
+    FindCoins(coins);
+
+    return SignTransaction(mtx, request.params[2], &keystore, coins, true, request.params[3]);
 }
 
-UniValue sendrawtransaction(const JSONRPCRequest& request)
+static UniValue sendrawtransaction(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 4)
         throw std::runtime_error(
