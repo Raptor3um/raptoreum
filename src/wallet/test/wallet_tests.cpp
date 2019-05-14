@@ -14,6 +14,7 @@
 #include <consensus/validation.h>
 #include <interfaces/chain.h>
 #include <key_io.h>
+#include <policy/policy.h>
 #include <rpc/server.h>
 #include <test/test_raptoreum.h>
 #include <validation.h>
@@ -38,15 +39,15 @@ static void AddKey(CWallet& wallet, const CKey& key)
 
 BOOST_FIXTURE_TEST_CASE(rescan, TestChain100Setup)
 {
-    auto chain = interfaces::MakeChain();
-
     // Cap last block file size, and mine new block in a new block file.
     CBlockIndex* oldTip = ::ChainActive().Tip();
     GetBlockFileInfo(oldTip->GetBlockPos().nFile)->nSize = MAX_BLOCKFILE_SIZE;
     CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
     CBlockIndex* newTip = ::ChainActive().Tip();
 
-    LockAnnotation lock(::cs_main); // for PruneOneBlockFile
+    auto chain = interfaces::MakeChain();
+    auto locked_chain = chain->lock();
+    LockAnnotation lock(::cs_main);
 
     // Verify ScanForWalletTransactions accommodates a null start block.
     {
@@ -117,14 +118,13 @@ BOOST_FIXTURE_TEST_CASE(rescan, TestChain100Setup)
 
 BOOST_FIXTURE_TEST_CASE(importmulti_rescan, TestChain100Setup)
 {
-    auto chain = interfaces::MakeChain();
-
     // Cap last block file size, and mine new block in a new block file.
     CBlockIndex* oldTip = ::ChainActive().Tip();
     GetBlockFileInfo(oldTip->GetBlockPos().nFile)->nSize = MAX_BLOCKFILE_SIZE;
     CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
     CBlockIndex* newTip = ::ChainActive().Tip();
 
+    auto chain = interfaces::MakeChain();
     auto locked_chain = chain->lock();
     LockAnnotation lock(::cs_main);
 
