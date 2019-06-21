@@ -714,6 +714,12 @@ static void NotifyWatchonlyChanged(WalletModel *walletmodel, bool fHaveWatchonly
     assert(invoked);
 }
 
+static void NotifyCanGetAddressesChanged(WalletModel* walletmodel)
+{
+    bool invoked = QMetaObject::invokeMethod(walletmodel, "canGetAddressesChanged");
+    assert(invoked);
+}
+
 void WalletModel::subscribeToCoreSignals()
 {
     // Connect signals to wallet
@@ -725,6 +731,7 @@ void WalletModel::subscribeToCoreSignals()
     m_handler_chainlock_received = m_wallet->handleChainLockReceived(std::bind(NotifyChainLockReceived, this, pl::_1));
     m_handler_show_progress = m_wallet->handleShowProgress(std::bind(ShowProgress, this, pl::_1, pl::_2));
     m_handler_watch_only_changed = m_wallet->handleWatchOnlyChanged(std::bind(NotifyWatchonlyChanged, this, pl::_1));
+    m_handler_can_get_addrs_changed = m_wallet->handleCanGetAddressesChanged(std::bind(NotifyCanGetAddressesChanged, this));
 }
 
 void WalletModel::unsubscribeFromCoreSignals()
@@ -738,6 +745,7 @@ void WalletModel::unsubscribeFromCoreSignals()
     m_handler_chainlock_received->disconnect();
     m_handler_show_progress->disconnect();
     m_handler_watch_only_changed->disconnect();
+    m_handler_can_get_addrs_changed->disconnect();
 }
 
 // WalletModel::UnlockContext implementation
@@ -822,6 +830,11 @@ bool WalletModel::isWalletEnabled()
 bool WalletModel::privateKeysDisabled() const
 {
   return m_wallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS);
+}
+
+bool WalletModel::canGetAddresses() const
+{
+    return m_wallet->canGetAddresses();
 }
 
 QString WalletModel::getWalletName() const

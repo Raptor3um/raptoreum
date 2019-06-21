@@ -157,24 +157,100 @@ void UnloadWallet(std::shared_ptr<CWallet>&& wallet)
 
 std::shared_ptr<CWallet> LoadWallet(interfaces::Chain& chain, const WalletLocation& location, std::string& error, std::string& warning)
 {
-    if (!CWallet::Verify(chain, location, false, error, warning)) {
-        error = "Wallet file verification failed: " + error;
-        return nullptr;
-    }
+    try {
+        if (!CWallet::Verify(chain, location, false, error, warning)) {
+            error = "Wallet file verification failed: " + error;
+            return nullptr;
+        }
 
-    std::shared_ptr<CWallet> wallet = CWallet::CreateWalletFromFile(chain, location);
-    if (!wallet) {
-        error = "Wallet loading failed.";
+        std::shared_ptr<CWallet> wallet = CWallet::CreateWalletFromFile(chain, location);
+        if (!wallet) {
+            error = "Wallet loading failed.";
+            return nullptr;
+        }
+        AddWallet(wallet);
+        wallet->postInitProcess();
+        return wallet;
+    } catch (const std::runtime_error& e) {
+        error = e.what();
         return nullptr;
     }
-    AddWallet(wallet);
-    wallet->postInitProcess();
-    return wallet;
 }
 
 std::shared_ptr<CWallet> LoadWallet(interfaces::Chain& chain, const std::string& name, std::string& error, std::string& warning)
 {
     return LoadWallet(chain, WalletLocation(name), error, warning);
+}
+
+WalletCreationStatus CreateWallet(interfaces::Chain& chain, const SecureString& passphrase, uint64_t wallet_creation_flags, const std::string& name, std::string& error, std::string& warning, std::shared_ptr<CWallet>& result)
+{
+    // Indicate that the wallet is actually supposed to be blank and not just blank to make it encrypted
+    bool create_blank = (wallet_creation_flags & WALLET_FLAG_BLANK_WALLET);
+
+    // Born encrypted wallets need to be created blank first.
+    if (!passphrase.empty()) {
+        wallet_creation_flags |= WALLET_FLAG_BLANK_WALLET;
+    }
+
+    // Check the wallet file location
+    WalletLocation location(name);
+    if (location.Exists()) {
+        error = "Wallet " + location.GetName() + " already exists.";
+        return WalletCreationStatus::CREATION_FAILED;
+    }
+
+    // Wallet::Verify will check if we're trying to create a wallet with a duplicate name.
+    std::string wallet_error;
+    if (!CWallet::Verify(chain, location, false, wallet_error, warning)) {
+        error = "Wallet file verification failed: " + wallet_error;
+        return WalletCreationStatus::CREATION_FAILED;
+    }
+
+    // Do not allow a passphrase when private keys are disabled
+    if (!passphrase.empty() && (wallet_creation_flags & WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
+        error = "Passphrase provided but private keys are disabled. A passphrase is only used to encrypt private keys, so cannot be used for wallets with private keys disabled.";
+        return WalletCreationStatus::CREATION_FAILED;
+    }
+
+    // Make the wallet
+    std::shared_ptr<CWallet> wallet = CWallet::CreateWalletFromFile(chain, location, wallet_creation_flags);
+    if (!wallet) {
+        error = "Wallet creation failed";
+        return WalletCreationStatus::CREATION_FAILED;
+    }
+
+    // Encrypt the wallet
+    if (!passphrase.empty() && !(wallet_creation_flags & WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
+        if (!wallet->EncryptWallet(passphrase)) {
+            error = "Error: Wallet created but failed to encrypt.";
+            return WalletCreationStatus::ENCRYPTION_FAILED;
+        }
+        if (!create_blank) {
+            // Unlock the wallet
+            if (!wallet->Unlock(passphrase)) {
+                error = "Error: Wallet was encrypted but could not be unlocked";
+                return WalletCreationStatus::ENCRYPTION_FAILED;
+            }
+
+            // Set a HD chain for the wallet
+            // TODO: re-enable this and `keypoolsize_hd_internal` check in `wallet_createwallet.py`
+            // when HD is the default mode (make sure this actually works!)...
+            // if (!wallet->GenerateNewHDChainEncrypted("", "", passphrase)) {
+            //     throw JSONRPCError(RPC_WALLET_ERROR, "Failed to generate encrypted HD wallet");
+            // }
+            // ... and drop this
+            wallet->UnsetWalletFlag(WALLET_FLAG_BLANK_WALLET);
+            wallet->NewKeyPool();
+            // end TODO
+
+            // Relock the wallet
+            wallet->Lock();
+        }
+    }
+    AddWallet(wallet);
+    wallet->postInitProcess();
+    result = wallet;
+    return WalletCreationStatus::SUCCESS;
 }
 
 const uint256 CMerkleTx::ABANDON_HASH(uint256S("0000000000000000000000000000000000000000000000000000000000000001"));
@@ -233,6 +309,7 @@ const CWalletTx* CWallet::GetWalletTx(const uint256& hash) const
 CPubKey CWallet::GenerateNewKey(WalletBatch &batch, uint32_t nAccountIndex, bool fInternal)
 {
     assert(!IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS));
+    assert(!IsWalletFlagSet(WALLET_FLAG_BLANK_WALLET));
     AssertLockHeld(cs_wallet); // mapKeyMetadata
     bool fCompressed = CanSupportFeature(FEATURE_COMPRPUBKEY); // default to compressed public keys if we want 0.6.0 wallets
 
@@ -410,7 +487,11 @@ bool CWallet::AddHDPubKey(WalletBatch &batch, const CExtPubKey &extPubKey, bool 
     if (HaveWatchOnly(script))
         RemoveWatchOnly(script);
 
-    return batch.WriteHDPubKey(hdPubKey, mapKeyMetadata[extPubKey.pubkey.GetID()]);
+    if (!batch.WriteHDPubKey(hdPubKey, mapKeyMetadata[extPubKey.pubkey.GetID()])) {
+        return false;
+    }
+    UnsetWalletFlag(batch, WALLET_FLAG_BLANK_WALLET);
+    return true;
 }
 
 bool CWallet::AddKeyPubKeyWithDB(WalletBatch &batch, const CKey& secret, const CPubKey &pubkey)
@@ -446,6 +527,7 @@ bool CWallet::AddKeyPubKeyWithDB(WalletBatch &batch, const CKey& secret, const C
     if (!IsCrypted()) {
         return batch.WriteKey(pubkey, secret.GetPrivKey(), mapKeyMetadata[pubkey.GetID()]);
     }
+    UnsetWalletFlag(batch, WALLET_FLAG_BLANK_WALLET);
     return true;
 }
 
@@ -520,7 +602,12 @@ bool CWallet::AddCScript(const CScript& redeemScript)
 {
     if (!CCryptoKeyStore::AddCScript(redeemScript))
         return false;
-    return WalletBatch(*database).WriteCScript(Hash160(redeemScript), redeemScript);
+    WalletBatch batch(*database);
+    if (batch.WriteCScript(Hash160(redeemScript), redeemScript)) {
+        UnsetWalletFlag(batch, WALLET_FLAG_BLANK_WALLET);
+        return true;
+    }
+    return false;
 }
 
 bool CWallet::LoadCScript(const CScript& redeemScript)
@@ -545,7 +632,12 @@ bool CWallet::AddWatchOnly(const CScript& dest)
     const CKeyMetadata& meta = m_script_metadata[CScriptID(dest)];
     UpdateTimeFirstKey(meta.nCreateTime);
     NotifyWatchonlyChanged(true);
-    return WalletBatch(*database).WriteWatchOnly(dest, meta);
+    WalletBatch batch(*database);
+    if (batch.WriteWatchOnly(dest, meta)) {
+        UnsetWalletFlag(batch, WALLET_FLAG_BLANK_WALLET);
+        return true;
+    }
+    return false;
 }
 
 bool CWallet::AddWatchOnly(const CScript& dest, int64_t nCreateTime)
@@ -1774,8 +1866,13 @@ bool CWallet::SetHDChain(WalletBatch &batch, const CHDChain& chain, bool memonly
     if (!CCryptoKeyStore::SetHDChain(chain))
         return false;
 
-    if (!memonly && !batch.WriteHDChain(chain))
-        throw std::runtime_error(std::string(__func__) + ": WriteHDChain failed");
+    if (!memonly) {
+        if (!batch.WriteHDChain(chain)) {
+            throw std::runtime_error(std::string(__func__) + ": WriteHDChain failed");
+        }
+
+        UnsetWalletFlag(batch, WALLET_FLAG_BLANK_WALLET);
+    }
 
     return true;
 }
@@ -1795,6 +1892,7 @@ bool CWallet::SetCryptedHDChain(WalletBatch &batch, const CHDChain& chain, bool 
             if (!batch.WriteCryptedHDChain(chain))
                 throw std::runtime_error(std::string(__func__) + ": WriteCryptedHDChain failed");
         }
+        UnsetWalletFlag(batch, WALLET_FLAG_BLANK_WALLET);
     }
 
     return true;
@@ -1909,12 +2007,54 @@ CAmount CWallet::GetChange(const CTransaction& tx) const
     return nChange;
 }
 
+bool CWallet::CanGenerateKeys()
+{
+    LOCK(cs_wallet);
+    if (IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) || IsWalletFlagSet(WALLET_FLAG_BLANK_WALLET)) {
+        return false;
+    }
+    // A wallet can generate keys if it has a non-null HD chain (IsHDEnabled) or it is a non-HD wallet (pre FEATURE_HD)
+    return IsHDEnabled() || nWalletVersion < FEATURE_HD;
+}
+
+bool CWallet::CanGetAddresses(bool internal)
+{
+    LOCK(cs_wallet);
+    // Check if the keypool has keys
+    bool keypool_has_keys;
+    if (internal && CanSupportFeature(FEATURE_HD)) {
+        keypool_has_keys = setInternalKeyPool.size() > 0;
+    } else {
+        keypool_has_keys = KeypoolCountExternalKeys() > 0;
+    }
+    // If the keypool doesn't have keys, check if we can generate them
+    if (!keypool_has_keys) {
+        return CanGenerateKeys();
+    }
+    return keypool_has_keys;
+}
+
 void CWallet::SetWalletFlag(uint64_t flags)
 {
   LOCK(cs_wallet);
   m_wallet_flags |= flags;
   if (!WalletBatch(*database).WriteWalletFlags(m_wallet_flags))
     throw std::runtime_error(std::string(__func__) + ": writing wallet flags failed");
+}
+
+void CWallet::UnsetWalletFlag(uint64_t flag)
+{
+    LOCK(cs_wallet);
+    WalletBatch batch(*database);
+    UnsetWalletFlag(batch, flag);
+}
+
+void CWallet::UnsetWalletFlag(WalletBatch& batch, uint64_t flag)
+{
+    LOCK(cs_wallet);
+    m_wallet_flags &= ~flag;
+    if (!batch.WriteWalletFlags(m_wallet_flags))
+        throw std::runtime_error(std::string(__func__) + ": writing wallet flags failed");
 }
 
 bool CWallet::IsWalletFlagSet(uint64_t flag)
@@ -4015,7 +4155,7 @@ DBErrors CWallet::LoadWallet(bool& fFirstRunRet)
     {
         LOCK(cs_KeyStore);
         // This wallet is in its first run if all of these are empty
-        fFirstRunRet = mapKeys.empty() && mapHdPubKeys.empty() && mapCryptedKeys.empty() && mapWatchKeys.empty() && setWatchOnly.empty() && mapScripts.empty() && !IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS);
+        fFirstRunRet = mapKeys.empty() && mapHdPubKeys.empty() && mapCryptedKeys.empty() && mapWatchKeys.empty() && setWatchOnly.empty() && mapScripts.empty() && !IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) && !IsWalletFlagSet(WALLET_FLAG_BLANK_WALLET);
     }
 
     {
@@ -4232,7 +4372,7 @@ size_t CWallet::KeypoolCountInternalKeys()
 
 bool CWallet::TopUpKeyPool(unsigned int kpSize)
 {
-    if (IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
+      if (!CanGenerateKeys()) {
       return false;
     }
     {
@@ -4297,6 +4437,7 @@ bool CWallet::TopUpKeyPool(unsigned int kpSize)
             uiInterface.InitMessage(strMsg);
         }
     }
+    NotifyCanGetAddressesChanged();
     return true;
 }
 
@@ -4335,6 +4476,7 @@ void CWallet::ReserveKeyFromKeyPool(int64_t& nIndex, CKeyPool& keypool, bool fIn
         m_pool_key_to_index.erase(keypool.vchPubKey.GetID());
         WalletLogPrintf("keypool reserve %d\n", nIndex);
     }
+    NotifyCanGetAddressesChanged();
 }
 
 void CWallet::KeepKey(int64_t nIndex)
@@ -4359,13 +4501,14 @@ void CWallet::ReturnKey(int64_t nIndex, bool fInternal, const CPubKey& pubkey)
             setExternalKeyPool.insert(nIndex);
         }
         m_pool_key_to_index[pubkey.GetID()] = nIndex;
+        NotifyCanGetAddressesChanged();
     }
     WalletLogPrintf("keypool return %d\n", nIndex);
 }
 
 bool CWallet::GetKeyFromPool(CPubKey& result, bool internal)
 {
-    if (IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
+    if (!CanGetAddresses(internal)) {
       return false;
     }
 
@@ -4569,6 +4712,10 @@ std::set<CTxDestination> CWallet::GetLabelAddresses(const std::string& label) co
 
 bool CReserveKey::GetReservedKey(CPubKey& pubkey, bool fInternalIn)
 {
+    if (!pwallet->CanGetAddresses(fInternalIn)) {
+        return false;
+    }
+
     if (nIndex == -1)
     {
         CKeyPool keypool;
@@ -4991,11 +5138,12 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
     if (gArgs.GetBoolArg("-upgradewallet", fFirstRun))
     {
         int nMaxVersion = gArgs.GetArg("-upgradewallet", 0);
+        auto nMinVersion = DEFAULT_USE_HD_WALLET ? FEATURE_LATEST : FEATURE_COMPRPUBKEY;
         if (nMaxVersion == 0) // the -upgradewallet without argument case
         {
-            walletInstance->WalletLogPrintf("Performing wallet upgrade to %i\n", FEATURE_LATEST);
+            walletInstance->WalletLogPrintf("Performing wallet upgrade to %i\n", nMinVersion);
             nMaxVersion = FEATURE_LATEST;
-            walletInstance->SetMinVersion(FEATURE_LATEST); // permanently upgrade the wallet immediately
+            walletInstance->SetMinVersion(nMinVersion); // permanently upgrade the wallet immediately
         }
         else
             walletInstance->WalletLogPrintf("Allowing wallet upgrade up to %i\n", nMaxVersion);
@@ -5008,46 +5156,50 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
 
     if (fFirstRun)
     {
-        // Create new keyUser and set as default key
-        if (gArgs.GetBoolArg("-usehd", DEFAULT_USE_HD_WALLET) && !walletInstance->IsHDEnabled()) {
-            std::string strSeed = gArgs.GetArg("-hdseed", "not hex");
-
-            if (gArgs.IsArgSet("-hdseed") && IsHex(strSeed)) {
-                CHDChain newHdChain;
-                std::vector<unsigned char> vchSeed = ParseHex(strSeed);
-                if (!newHdChain.SetSeed(SecureVector(vchSeed.begin(), vchSeed.end()), true)) {
-                    return error(strprintf(_("%s failed"), "SetSeed"));
-                }
-                if (!walletInstance->SetHDChainSingle(newHdChain, false)) {
-                    return error(strprintf(_("%s failed"), "SetHDChainSingle"));
-                }
-                newHdChain.Debug(__func__);
-            } else {
-                if (gArgs.IsArgSet("-hdseed") && !IsHex(strSeed)) {
-                    walletInstance->WalletLogPrintf("%s -- Incorrect seed, generating a random mnemonic instead\n", __func__);
-                }
-                SecureString secureMnemonic = gArgs.GetArg("-mnemonic", "").c_str();
-                SecureString secureMnemonicPassphrase = gArgs.GetArg("-mnemonicpassphrase", "").c_str();
-                walletInstance->GenerateNewHDChain(secureMnemonic, secureMnemonicPassphrase);
-            }
-
-            // ensure this wallet.dat can only be opened by clients supporting HD
-            walletInstance->WalletLogPrintf("Upgrading wallet to HD\n");
-            walletInstance->SetMinVersion(FEATURE_HD);
-
-            // clean up
-            gArgs.ForceRemoveArg("-hdseed");
-            gArgs.ForceRemoveArg("-mnemonic");
-            gArgs.ForceRemoveArg("-mnemonicpassphrase");
-        }
-
         if ((wallet_creation_flags & WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
-          // selective allow to set flags
-          walletInstance->SetWalletFlag(WALLET_FLAG_DISABLE_PRIVATE_KEYS);
-        }
+            // selective allow to set flags
+            walletInstance->SetWalletFlag(WALLET_FLAG_DISABLE_PRIVATE_KEYS);
+        } else if (wallet_creation_flags & WALLET_FLAG_BLANK_WALLET) {
+            walletInstance->SetWalletFlag(WALLET_FLAG_BLANK_WALLET);
+        } else {
+            // Create new HD chain
+            if (gArgs.GetBoolArg("-usehd", DEFAULT_USE_HD_WALLET) && !walletInstance->IsHDEnabled()) {
+                std::string strSeed = gArgs.GetArg("-hdseed", "not hex");
+
+                if (gArgs.IsArgSet("-hdseed") && IsHex(strSeed)) {
+                    CHDChain newHdChain;
+                    std::vector<unsigned char> vchSeed = ParseHex(strSeed);
+                    if (!newHdChain.SetSeed(SecureVector(vchSeed.begin(), vchSeed.end()), true)) {
+                        return error(strprintf(_("%s failed"), "SetSeed"));
+                    }
+                    if (!walletInstance->SetHDChainSingle(newHdChain, false)) {
+                        return error(strprintf(_("%s failed"), "SetHDChainSingle"));
+                    }
+                    // add default account
+                    newHdChain.AddAccount();
+                    newHdChain.Debug(__func__);
+                } else {
+                    if (gArgs.IsArgSet("-hdseed") && !IsHex(strSeed)) {
+                        walletInstance->WalletLogPrintf("%s -- Incorrect seed, generating a random mnemonic instead\n", __func__);
+                    }
+                    SecureString secureMnemonic = gArgs.GetArg("-mnemonic", "").c_str();
+                    SecureString secureMnemonicPassphrase = gArgs.GetArg("-mnemonicpassphrase", "").c_str();
+                    walletInstance->GenerateNewHDChain(secureMnemonic, secureMnemonicPassphrase);
+                }
+
+                // ensure this wallet.dat can only be opened by clients supporting HD
+                walletInstance->WalletLogPrintf("Upgrading wallet to HD\n");
+                walletInstance->SetMinVersion(FEATURE_HD);
+
+                // clean up
+                gArgs.ForceRemoveArg("-hdseed");
+                gArgs.ForceRemoveArg("-mnemonic");
+                gArgs.ForceRemoveArg("-mnemonicpassphrase");
+            }
+        } // Otherwise, do not create a new HD chain
 
         // Top up the keypool
-        if (!walletInstance->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) && !walletInstance->TopUpKeyPool()) {
+        if (walletInstance->CanGenerateKeys() && !walletInstance->TopUpKeyPool()) {
             return error(_("Unable to generate initial keys"));
         }
 

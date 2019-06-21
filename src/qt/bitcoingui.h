@@ -10,6 +10,8 @@
 #include <config/raptoreum-config.h>
 #endif
 
+#include <qt/optionsdialog.h>
+
 #include <amount.h>
 
 #include <QLabel>
@@ -164,6 +166,7 @@ private:
     QAction* showBackupsAction = nullptr;
     QAction* openAction = nullptr;
     QAction* showHelpMessageAction = nullptr;
+    QAction* m_create_wallet_action{nullptr};
     QAction* m_open_wallet_action{nullptr};
     QMenu* m_open_wallet_menu{nullptr};
     QAction* m_close_wallet_action{nullptr};
@@ -238,6 +241,8 @@ private:
     void updateHeadersSyncProgressLabel();
 
     void updateProgressBarVisibility();
+
+    void openOptionsDialogWithTab(OptionsDialog::Tab tab);
 
 Q_SIGNALS:
     /** Signal raised when a URI was entered or dragged to the GUI */
@@ -371,9 +376,6 @@ public Q_SLOTS:
 
     /** When hideTrayIcon setting is changed in OptionsModel hide or show the icon accordingly. */
     void setTrayIconVisible(bool);
-
-    /** Toggle networking */
-    void toggleNetworkActive();
 
     void showModalOverlay();
 

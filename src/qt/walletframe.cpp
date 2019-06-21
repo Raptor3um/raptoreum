@@ -44,14 +44,14 @@ void WalletFrame::setClientModel(ClientModel *_clientModel)
     smartnodeListPage->setClientModel(_clientModel);
 }
 
-void WalletFrame::addWallet(WalletModel *walletModel)
+bool WalletFrame::addWallet(WalletModel *walletModel)
 {
     if (!gui || !clientModel || !walletModel) {
-        return;
+        return false;
     }
 
     if (mapWalletViews.count(walletModel) > 0) {
-        return;
+        return false;
     }
 
     WalletView* walletView = new WalletView(this);
@@ -71,9 +71,11 @@ void WalletFrame::addWallet(WalletModel *walletModel)
     mapWalletViews[walletModel] = walletView;
 
     // Ensure a walletView is able to show the main window
-    connect(walletView, &WalletView::showNormalIfMinimized, [this] { gui->showNormalIfMinimized(); });
+    //connect(walletView, &WalletView::showNormalIfMinimized, [this] { gui->showNormalIfMinimized(); });
 
     connect(walletView, &WalletView::outOfSyncWarningClicked, this, &WalletFrame::outOfSyncWarningClicked);
+
+    return true;
 }
 
 void WalletFrame::setCurrentWallet(WalletModel* wallet_model)

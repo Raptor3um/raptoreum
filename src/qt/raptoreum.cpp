@@ -27,6 +27,7 @@
 #ifdef ENABLE_WALLET
 #include <qt/paymentserver.h>
 #include <qt/walletcontroller.h>
+#include <qt/walletmodel.h>
 #endif
 
 #include <interfaces/handler.h>
@@ -221,10 +222,6 @@ BitcoinApplication::~BitcoinApplication()
 
     delete window;
     window = nullptr;
-#ifdef ENABLE_WALLET
-    delete paymentServer;
-    paymentServer = nullptr;
-#endif
     // Delete Qt-settings if user clicked on "Reset Options"
     QSettings settings;
     if(optionsModel && optionsModel->resetSettingsOnShutdown){
@@ -328,10 +325,6 @@ void BitcoinApplication::requestShutdown()
     window->setClientModel(nullptr);
     pollShutdownTimer->stop();
 
-#ifdef ENABLE_WALLET
-    delete m_wallet_controller;
-    m_wallet_controller = nullptr;
-#endif
     delete clientModel;
     clientModel = nullptr;
 
@@ -347,25 +340,23 @@ void BitcoinApplication::initializeResult(bool success)
     if(success)
     {
         // Log this only after AppInitMain finishes, as then logging setup is guaranteed complete
-        qWarning() << "Platform customization:" << gArgs.GetArg("-uiplatform", BitcoinGUI::DEFAULT_UIPLATFORM).c_str();
-#ifdef ENABLE_WALLET
-        m_wallet_controller = new WalletController(m_node, optionsModel, this);
-#ifdef ENABLE_BIP70
-        PaymentServer::LoadRootCAs();
-#endif
-        if (paymentServer) {
-            paymentServer->setOptionsModel(optionsModel);
-#ifdef ENABLE_BIP70
-            connect(m_wallet_controller, &WalletController::coinsSent, paymentServer, &PaymentServer::fetchPaymentACK);
-#endif
-        }
-#endif
+        qInfo() << "Platform customization:" << gArgs.GetArg("-uiplatform", BitcoinGUI::DEFAULT_UIPLATFORM).c_str();
 
         clientModel = new ClientModel(m_node, optionsModel);
         window->setClientModel(clientModel);
 #ifdef ENABLE_WALLET
-        window->setWalletController(m_wallet_controller);
+        if (WalletModel::isWalletEnabled()) {
+            m_wallet_controller = new WalletController(m_node, optionsModel, this);
+            window->setWalletController(m_wallet_controller);
+            if (paymentServer) {
+                paymentServer->setOptionsModel(optionsModel);
+#ifdef ENABLE_BIP70
+                PaymentServer::LoadRootCAs();
+                connect(m_wallet_controller, &WalletController::coinsSent, paymentServer, &PaymentServer::fetchPaymentACK);
 #endif
+            }
+        }
+#endif // ENABLE_WALLET
 
         // If -min option passed, start window minimized (iconified) or minimized to tray.
         if (!gArgs.GetBoolArg("-min", false)) {
@@ -590,8 +581,10 @@ int GuiMain(int argc, char* argv[])
 
     // Start up the payment server early, too, so impatient users that click on
     // raptoreum: links repeatedly have their payment requests routed to this process:
-    app.createPaymentServer();
-#endif
+    if (WalletModel::isWalletEnabled()) {
+        app.createPaymentServer();
+    }
+#endif // ENABLE_WALLET
 
     /// 9. Main GUI initialization
     // Install global event filter that makes sure that out-of-focus labels do not contain text cursor.

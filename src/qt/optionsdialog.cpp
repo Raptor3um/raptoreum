@@ -267,6 +267,11 @@ void OptionsDialog::setModel(OptionsModel *_model)
 #endif
 }
 
+void OptionsDialog::setCurrentTab(OptionsDialog::Tab tab)
+{
+    showPage(int(tab));
+}
+
 void OptionsDialog::setMapper()
 {
     /* Main */

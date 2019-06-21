@@ -20,7 +20,8 @@ FORMS += \
     ../src/qt/forms/sendfuturesdialog.ui \
     ../src/qt/forms/sendfuturesentry.ui \
     ../src/qt/forms/signverifymessagedialog.ui \
-    ../src/qt/forms/transactiondescdialog.ui
+    ../src/qt/forms/transactiondescdialog.ui \
+    ../src/qt/forms/createwalletdialog.ui
 
 RESOURCES += \
     ../src/qt/raptoreum.qrc

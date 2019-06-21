@@ -526,6 +526,7 @@ public:
     }
     unsigned int getConfirmTarget() override { return m_wallet->m_confirm_target; }
     bool hdEnabled() override { return m_wallet->IsHDEnabled(); }
+    bool canGetAddresses() override { return m_wallet->CanGetAddresses(); }
     bool IsWalletFlagSet(uint64_t flag) override { return m_wallet->IsWalletFlagSet(flag); }
     CoinJoin::Client& coinJoin() override { return m_coinjoin; }
     void remove() override { RemoveWallet(m_wallet); }
@@ -565,6 +566,10 @@ public:
     std::unique_ptr<Handler> handleWatchOnlyChanged(WatchOnlyChangedFn fn) override
     {
         return MakeHandler(m_wallet->NotifyWatchonlyChanged.connect(fn));
+    }
+    std::unique_ptr<Handler> handleCanGetAddressesChanged(CanGetAddressesChangedFn fn) override
+    {
+        return MakeHandler(m_wallet->NotifyCanGetAddressesChanged.connect(fn));
     }
 
     std::shared_ptr<CWallet> m_wallet;

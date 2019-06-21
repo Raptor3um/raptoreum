@@ -26,6 +26,7 @@
 #include <httprpc.h>
 #include <interfaces/chain.h>
 #include <index/txindex.h>
+#include <interfaces/node.h>
 #include <key.h>
 #include <mapport.h>
 #include <validation.h>

@@ -245,14 +245,19 @@ void WalletInit::Construct(InitInterfaces& interfaces) const
 
 bool LoadWallets(interfaces::Chain& chain, const std::vector<std::string>& wallet_files)
 {
-    for (const std::string& walletFile : wallet_files) {
-        std::shared_ptr<CWallet> pwallet = CWallet::CreateWalletFromFile(chain, WalletLocation(walletFile));
-        if (!pwallet) {
-            return false;
+    try {
+        for (const std::string& walletFile : wallet_files) {
+            std::shared_ptr<CWallet> pwallet = CWallet::CreateWalletFromFile(chain, WalletLocation(walletFile));
+            if (!pwallet) {
+                return false;
+            }
+            AddWallet(pwallet);
         }
+        return true;
+    } catch (const std::runtime_error& e) {
+        LogPrintf("%s\n", e.what());
+        return false;
     }
-
-    return true;
 }
 
 void StartWallets(CScheduler& scheduler)
