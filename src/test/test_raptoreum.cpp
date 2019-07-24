@@ -100,55 +100,60 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
 {
     SetDataDir("tempdir");
     const CChainParams& chainparams = Params();
-        // Ideally we'd move all the RPC tests to the functional testing framework
-        // instead of unit tests, but for now we need these here.
-        RegisterAllCoreRPCCommands(tableRPC);
-        ClearDatadirCache();
+    // Ideally we'd move all the RPC tests to the functional testing framework
+    // instead of unit tests, but for now we need these here.
+    RegisterAllCoreRPCCommands(tableRPC);
+    ClearDatadirCache();
 
-        // We have to run a scheduler thread to prevent ActivateBestChain
-        // from blocking due to queue overrun.
-        threadGroup.create_thread(std::bind(&CScheduler::serviceQueue, &scheduler));
-        GetMainSignals().RegisterBackgroundSignalScheduler(scheduler);
-        mempool.setSanityCheck(1.0);
-        g_connman = MakeUnique<CConnman>(0x1337, 0x1337); // Deterministic randomness for tests.
-        connman = g_connman.get();
-        pblocktree.reset(new CBlockTreeDB(1 << 20, true));
-        pcoinsdbview.reset(new CCoinsViewDB(1 << 23, true));
-        g_txindex = MakeUnique<TxIndex>(1 << 20, true);
-        g_txindex->Start();
-        llmq::InitLLMQSystem(*evoDb, true);
-        pcoinsTip.reset(new CCoinsViewCache(pcoinsdbview.get()));
-        if (!LoadGenesisBlock(chainparams)) {
-            throw std::runtime_error("LoadGenesisBlock failed.");
+    // We have to run a scheduler thread to prevent ActivateBestChain
+    // from blocking due to queue overrun.
+    threadGroup.create_thread(std::bind(&CScheduler::serviceQueue, &scheduler));
+    GetMainSignals().RegisterBackgroundSignalScheduler(scheduler);
+    mempool.setSanityCheck(1.0);
+    g_connman = MakeUnique<CConnman>(0x1337, 0x1337); // Deterministic randomness for tests.
+    pblocktree.reset(new CBlockTreeDB(1 << 20, true));
+    g_chainstate = MakeUnique<CChainState>();
+    ::ChainstateActive().InitCoinsDB(
+        /* cache_size_bytes */ 1 << 23, /* in_memory */ true, /* should_wipe */ false);
+    assert(!::ChainstateActive().CanFlushToDisk());
+    g_txindex = MakeUnique<TxIndex>(1 << 20, true);
+    g_txindex->Start();
+    llmq::InitLLMQSystem(*evoDb, true);
+    ::ChainstateActive().InitCoinsCache();
+    assert(::ChainstateActive().CanFlushToDisk());
+    if (!LoadGenesisBlock(chainparams)) {
+        throw std::runtime_error("LoadGenesisBlock failed.");
+    }
+    {
+        CValidationState state;
+        if (!ActivateBestChain(state, chainparams)) {
+            throw std::runtime_error(strprintf("ActivateBestChain failed. (%s)", FormatStateMessage(state)));
         }
-        {
-            CValidationState state;
-            if (!ActivateBestChain(state, chainparams)) {
-                throw std::runtime_error("ActivateBestChain failed.");
-            }
-        }
-        int script_threads = 3;
-        for (int i=0; i < script_threads-1; i++)
-            StartScriptCheckWorkerThreads(script_threads);
-        peerLogic.reset(new PeerLogicValidation(connman, scheduler, true));
+    }
+    int script_threads = 3;
+    for (int i=0; i < script_threads-1; i++)
+        StartScriptCheckWorkerThreads(script_threads);
+    peerLogic.reset(new PeerLogicValidation(connman, scheduler, true));
 }
 
 TestingSetup::~TestingSetup()
 {
-        llmq::InterruptLLMQSystem();
-        llmq::StopLLMQSystem();
-        g_txindex.reset();
-        threadGroup.interrupt_all();
-        threadGroup.join_all();
-        GetMainSignals().FlushBackgroundCallbacks();
-        GetMainSignals().UnregisterBackgroundSignalScheduler();
-        g_connman.reset();
-        peerLogic.reset();
-        UnloadBlockIndex();
-        pcoinsTip.reset();
-        llmq::DestroyLLMQSystem();
-        pcoinsdbview.reset();
-        pblocktree.reset();
+    scheduler.stop();
+    llmq::InterruptLLMQSystem();
+    llmq::StopLLMQSystem();
+    g_txindex->Interrupt();
+    g_txindex->Stop();
+    g_txindex.reset();
+    threadGroup.interrupt_all();
+    threadGroup.join_all();
+    StopScriptCheckWorkerThreads();
+    GetMainSignals().FlushBackgroundCallbacks();
+    GetMainSignals().UnregisterBackgroundSignalScheduler();
+    g_connman.reset();
+    UnloadBlockIndex();
+    g_chainstate.reset();
+    llmq::DestroyLLMQSystem();
+    pblocktree.reset();
 }
 
 TestChainSetup::TestChainSetup(int blockCount) : TestingSetup(CBaseChainParams::REGTEST)
@@ -222,7 +227,7 @@ CBlock TestChainSetup::CreateBlock(const std::vector<CMutableTransaction>& txns,
             BOOST_ASSERT(false);
         }
         CValidationState state;
-        if (!CalcCbTxMerkleRootMNList(block, ::ChainActive().Tip(), cbTx.merkleRootMNList, state, *pcoinsTip.get())) {
+        if (!CalcCbTxMerkleRootMNList(block, ::ChainActive().Tip(), cbTx.merkleRootMNList, state, ::ChainstateActive().CoinsTip())) {
             BOOST_ASSERT(false);
         }
         if (!CalcCbTxMerkleRootQuorums(block, ::ChainActive().Tip(), cbTx.merkleRootQuorums, state)) {

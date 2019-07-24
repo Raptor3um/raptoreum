@@ -52,10 +52,10 @@ class ChainstateWriteCrashTest(BitcoinTestFramework):
         self.base_args = ["-limitdescendantsize=0", "-maxmempool=0", "-rpcservertimeout=900"]
 
         # Set different crash ratios and cache sizes.  Note that not all of
-        # -dbcache goes to pcoinsTip.
-        self.node0_args = ["-dbcrashratio=8", "-dbcache=4", "-dbbatchsize=200000"] + self.base_args
-        self.node1_args = ["-dbcrashratio=16", "-dbcache=8", "-dbbatchsize=200000"] + self.base_args
-        self.node2_args = ["-dbcrashratio=24", "-dbcache=16", "-dbbatchsize=200000"] + self.base_args
+        # -dbcache goes to the in-memory coins cache.
+        self.node0_args = ["-dbcrashratio=8", "-dbcache=4"] + self.base_args
+        self.node1_args = ["-dbcrashratio=16", "-dbcache=8"] + self.base_args
+        self.node2_args = ["-dbcrashratio=24", "-dbcache=16"] + self.base_args
 
         # Node3 is a normal node with default args, will mine full blocks
         self.node3_args = []
