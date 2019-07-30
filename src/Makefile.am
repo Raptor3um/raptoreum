@@ -286,10 +286,14 @@ BITCOIN_CORE_H = \
   ui_interface.h \
   undo.h \
   unordered_lru_cache.h \
-  util/macro.h \
-  util/moneystr.h \
+  util/bytevectorhash.h \
+  util/error.h \
+  util/fees.h \
+  util/spanparsing.h \
   util/system.h \
   util/asmap.h \
+  util/macros.h \
+  util/moneystr.h \
   util/time.h \
   util/string.h \
   util/threadnames.h \
@@ -708,6 +712,7 @@ libraptoreum_util_a_SOURCES = \
   util/system.cpp \
   util/asmap.cpp \
   util/moneystr.cpp \
+  util/spanparsing.cpp \
   util/strencodings.cpp \
   util/string.cpp \
   util/time.cpp \

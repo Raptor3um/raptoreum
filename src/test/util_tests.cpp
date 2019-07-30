@@ -10,6 +10,8 @@
 #include <util/strencodings.h>
 #include <util/moneystr.h>
 #include <test/test_raptoreum.h>
+#include <util/vector.h>
+#include <util/spanparsing.h>
 
 #include <stdint.h>
 #include <utility>
@@ -1202,6 +1204,273 @@ BOOST_AUTO_TEST_CASE(test_DirIsWritable)
     // Should be able to write to it now.
     BOOST_CHECK_EQUAL(DirIsWritable(tmpdirname), true);
     fs::remove(tmpdirname);
+}
+
+namespace {
+
+struct Tracker
+{
+    //! Points to the original object (possibly itself) we moved/copied from
+    const Tracker* origin;
+    //! How many copies where involved between the original object and this one (moves are not counted)
+    int copies;
+
+    Tracker() noexcept : origin(this), copies(0) {}
+    Tracker(const Tracker& t) noexcept : origin(t.origin), copies(t.copies + 1) {}
+    Tracker(Tracker&& t) noexcept : origin(t.origin), copies(t.copies) {}
+    Tracker& operator=(const Tracker& t) noexcept
+    {
+        origin = t.origin;
+        copies = t.copies + 1;
+        return *this;
+    }
+    Tracker& operator=(Tracker&& t) noexcept
+    {
+        origin = t.origin;
+        copies = t.copies;
+        return *this;
+    }
+};
+
+}
+
+BOOST_AUTO_TEST_CASE(test_tracked_vector)
+{
+    Tracker t1;
+    Tracker t2;
+    Tracker t3;
+
+    BOOST_CHECK(t1.origin == &t1);
+    BOOST_CHECK(t2.origin == &t2);
+    BOOST_CHECK(t3.origin == &t3);
+
+    auto v1 = Vector(t1);
+    BOOST_CHECK_EQUAL(v1.size(), 1);
+    BOOST_CHECK(v1[0].origin == &t1);
+    BOOST_CHECK_EQUAL(v1[0].copies, 1);
+
+    auto v2 = Vector(std::move(t2));
+    BOOST_CHECK_EQUAL(v2.size(), 1);
+    BOOST_CHECK(v2[0].origin == &t2);
+    BOOST_CHECK_EQUAL(v2[0].copies, 0);
+
+    auto v3 = Vector(t1, std::move(t2));
+    BOOST_CHECK_EQUAL(v3.size(), 2);
+    BOOST_CHECK(v3[0].origin == &t1);
+    BOOST_CHECK(v3[1].origin == &t2);
+    BOOST_CHECK_EQUAL(v3[0].copies, 1);
+    BOOST_CHECK_EQUAL(v3[1].copies, 0);
+
+    auto v4 = Vector(std::move(v3[0]), v3[1], std::move(t3));
+    BOOST_CHECK_EQUAL(v4.size(), 3);
+    BOOST_CHECK(v4[0].origin == &t1);
+    BOOST_CHECK(v4[1].origin == &t2);
+    BOOST_CHECK(v4[2].origin == &t3);
+    BOOST_CHECK_EQUAL(v4[0].copies, 1);
+    BOOST_CHECK_EQUAL(v4[1].copies, 1);
+    BOOST_CHECK_EQUAL(v4[2].copies, 0);
+
+    auto v5 = Cat(v1, v4);
+    BOOST_CHECK_EQUAL(v5.size(), 4);
+    BOOST_CHECK(v5[0].origin == &t1);
+    BOOST_CHECK(v5[1].origin == &t1);
+    BOOST_CHECK(v5[2].origin == &t2);
+    BOOST_CHECK(v5[3].origin == &t3);
+    BOOST_CHECK_EQUAL(v5[0].copies, 2);
+    BOOST_CHECK_EQUAL(v5[1].copies, 2);
+    BOOST_CHECK_EQUAL(v5[2].copies, 2);
+    BOOST_CHECK_EQUAL(v5[3].copies, 1);
+
+    auto v6 = Cat(std::move(v1), v3);
+    BOOST_CHECK_EQUAL(v6.size(), 3);
+    BOOST_CHECK(v6[0].origin == &t1);
+    BOOST_CHECK(v6[1].origin == &t1);
+    BOOST_CHECK(v6[2].origin == &t2);
+    BOOST_CHECK_EQUAL(v6[0].copies, 1);
+    BOOST_CHECK_EQUAL(v6[1].copies, 2);
+    BOOST_CHECK_EQUAL(v6[2].copies, 1);
+
+    auto v7 = Cat(v2, std::move(v4));
+    BOOST_CHECK_EQUAL(v7.size(), 4);
+    BOOST_CHECK(v7[0].origin == &t2);
+    BOOST_CHECK(v7[1].origin == &t1);
+    BOOST_CHECK(v7[2].origin == &t2);
+    BOOST_CHECK(v7[3].origin == &t3);
+    BOOST_CHECK_EQUAL(v7[0].copies, 1);
+    BOOST_CHECK_EQUAL(v7[1].copies, 1);
+    BOOST_CHECK_EQUAL(v7[2].copies, 1);
+    BOOST_CHECK_EQUAL(v7[3].copies, 0);
+
+    auto v8 = Cat(std::move(v2), std::move(v3));
+    BOOST_CHECK_EQUAL(v8.size(), 3);
+    BOOST_CHECK(v8[0].origin == &t2);
+    BOOST_CHECK(v8[1].origin == &t1);
+    BOOST_CHECK(v8[2].origin == &t2);
+    BOOST_CHECK_EQUAL(v8[0].copies, 0);
+    BOOST_CHECK_EQUAL(v8[1].copies, 1);
+    BOOST_CHECK_EQUAL(v8[2].copies, 0);
+}
+
+BOOST_AUTO_TEST_CASE(test_ToLower)
+{
+    BOOST_CHECK_EQUAL(ToLower('@'), '@');
+    BOOST_CHECK_EQUAL(ToLower('A'), 'a');
+    BOOST_CHECK_EQUAL(ToLower('Z'), 'z');
+    BOOST_CHECK_EQUAL(ToLower('['), '[');
+    BOOST_CHECK_EQUAL(ToLower(0), 0);
+    BOOST_CHECK_EQUAL(ToLower('\xff'), '\xff');
+
+    std::string testVector;
+    Downcase(testVector);
+    BOOST_CHECK_EQUAL(testVector, "");
+
+    testVector = "#HODL";
+    Downcase(testVector);
+    BOOST_CHECK_EQUAL(testVector, "#hodl");
+
+    testVector = "\x00\xfe\xff";
+    Downcase(testVector);
+    BOOST_CHECK_EQUAL(testVector, "\x00\xfe\xff");
+}
+
+BOOST_AUTO_TEST_CASE(test_ToUpper)
+{
+    BOOST_CHECK_EQUAL(ToUpper('`'), '`');
+    BOOST_CHECK_EQUAL(ToUpper('a'), 'A');
+    BOOST_CHECK_EQUAL(ToUpper('z'), 'Z');
+    BOOST_CHECK_EQUAL(ToUpper('{'), '{');
+    BOOST_CHECK_EQUAL(ToUpper(0), 0);
+    BOOST_CHECK_EQUAL(ToUpper('\xff'), '\xff');
+}
+
+BOOST_AUTO_TEST_CASE(test_Capitalize)
+{
+    BOOST_CHECK_EQUAL(Capitalize(""), "");
+    BOOST_CHECK_EQUAL(Capitalize("bitcoin"), "Bitcoin");
+    BOOST_CHECK_EQUAL(Capitalize("\x00\xfe\xff"), "\x00\xfe\xff");
+}
+
+static std::string SpanToStr(Span<const char>& span)
+{
+    return std::string(span.begin(), span.end());
+}
+
+BOOST_AUTO_TEST_CASE(test_spanparsing)
+{
+    using namespace spanparsing;
+    std::string input;
+    Span<const char> sp;
+    bool success;
+
+    // Const(...): parse a constant, update span to skip it if successful
+    input = "MilkToastHoney";
+    sp = MakeSpan(input);
+    success = Const("", sp); // empty
+    BOOST_CHECK(success);
+    BOOST_CHECK_EQUAL(SpanToStr(sp), "MilkToastHoney");
+
+    success = Const("Milk", sp);
+    BOOST_CHECK(success);
+    BOOST_CHECK_EQUAL(SpanToStr(sp), "ToastHoney");
+
+    success = Const("Bread", sp);
+    BOOST_CHECK(!success);
+
+    success = Const("Toast", sp);
+    BOOST_CHECK(success);
+    BOOST_CHECK_EQUAL(SpanToStr(sp), "Honey");
+
+    success = Const("Honeybadger", sp);
+    BOOST_CHECK(!success);
+
+    success = Const("Honey", sp);
+    BOOST_CHECK(success);
+    BOOST_CHECK_EQUAL(SpanToStr(sp), "");
+
+    // Func(...): parse a function call, update span to argument if successful
+    input = "Foo(Bar(xy,z()))";
+    sp = MakeSpan(input);
+
+    success = Func("FooBar", sp);
+    BOOST_CHECK(!success);
+
+    success = Func("Foo(", sp);
+    BOOST_CHECK(!success);
+
+    success = Func("Foo", sp);
+    BOOST_CHECK(success);
+    BOOST_CHECK_EQUAL(SpanToStr(sp), "Bar(xy,z())");
+
+    success = Func("Bar", sp);
+    BOOST_CHECK(success);
+    BOOST_CHECK_EQUAL(SpanToStr(sp), "xy,z()");
+
+    success = Func("xy", sp);
+    BOOST_CHECK(!success);
+
+    // Expr(...): return expression that span begins with, update span to skip it
+    Span<const char> result;
+
+    input = "(n*(n-1))/2";
+    sp = MakeSpan(input);
+    result = Expr(sp);
+    BOOST_CHECK_EQUAL(SpanToStr(result), "(n*(n-1))/2");
+    BOOST_CHECK_EQUAL(SpanToStr(sp), "");
+
+    input = "foo,bar";
+    sp = MakeSpan(input);
+    result = Expr(sp);
+    BOOST_CHECK_EQUAL(SpanToStr(result), "foo");
+    BOOST_CHECK_EQUAL(SpanToStr(sp), ",bar");
+
+    input = "(aaaaa,bbbbb()),c";
+    sp = MakeSpan(input);
+    result = Expr(sp);
+    BOOST_CHECK_EQUAL(SpanToStr(result), "(aaaaa,bbbbb())");
+    BOOST_CHECK_EQUAL(SpanToStr(sp), ",c");
+
+    input = "xyz)foo";
+    sp = MakeSpan(input);
+    result = Expr(sp);
+    BOOST_CHECK_EQUAL(SpanToStr(result), "xyz");
+    BOOST_CHECK_EQUAL(SpanToStr(sp), ")foo");
+
+    input = "((a),(b),(c)),xxx";
+    sp = MakeSpan(input);
+    result = Expr(sp);
+    BOOST_CHECK_EQUAL(SpanToStr(result), "((a),(b),(c))");
+    BOOST_CHECK_EQUAL(SpanToStr(sp), ",xxx");
+
+    // Split(...): split a string on every instance of sep, return vector
+    std::vector<Span<const char>> results;
+
+    input = "xxx";
+    results = Split(MakeSpan(input), 'x');
+    BOOST_CHECK_EQUAL(results.size(), 4);
+    BOOST_CHECK_EQUAL(SpanToStr(results[0]), "");
+    BOOST_CHECK_EQUAL(SpanToStr(results[1]), "");
+    BOOST_CHECK_EQUAL(SpanToStr(results[2]), "");
+    BOOST_CHECK_EQUAL(SpanToStr(results[3]), "");
+
+    input = "one#two#three";
+    results = Split(MakeSpan(input), '-');
+    BOOST_CHECK_EQUAL(results.size(), 1);
+    BOOST_CHECK_EQUAL(SpanToStr(results[0]), "one#two#three");
+
+    input = "one#two#three";
+    results = Split(MakeSpan(input), '#');
+    BOOST_CHECK_EQUAL(results.size(), 3);
+    BOOST_CHECK_EQUAL(SpanToStr(results[0]), "one");
+    BOOST_CHECK_EQUAL(SpanToStr(results[1]), "two");
+    BOOST_CHECK_EQUAL(SpanToStr(results[2]), "three");
+
+    input = "*foo*bar*";
+    results = Split(MakeSpan(input), '*');
+    BOOST_CHECK_EQUAL(results.size(), 4);
+    BOOST_CHECK_EQUAL(SpanToStr(results[0]), "");
+    BOOST_CHECK_EQUAL(SpanToStr(results[1]), "foo");
+    BOOST_CHECK_EQUAL(SpanToStr(results[2]), "bar");
+    BOOST_CHECK_EQUAL(SpanToStr(results[3]), "");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
