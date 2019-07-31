@@ -282,7 +282,7 @@ WalletCreationStatus CreateWallet(interfaces::Chain& chain, const SecureString& 
     return WalletCreationStatus::SUCCESS;
 }
 
-const uint256 CMerkleTx::ABANDON_HASH(uint256S("0000000000000000000000000000000000000000000000000000000000000001"));
+const uint256 CWalletTx::ABANDON_HASH(uint256S("0000000000000000000000000000000000000000000000000000000000000001"));
 
 /** @defgroup mapWallet
  *
@@ -5760,7 +5760,7 @@ CWalletKey::CWalletKey(int64_t nExpires)
     nTimeExpires = nExpires;
 }
 
-void CMerkleTx::SetMerkleBranch(const uint256& block_hash, int posInBlock)
+void CWalletTx::SetMerkleBranch(const uint256& block_hash, int posInBlock)
 {
     // Update the tx's hashBlock
     hashBlock = block_hash;
@@ -5785,7 +5785,7 @@ int64_t CMerkleTx::GetConfirmationTime() const {
     return pindex->GetBlockTime();
 }
 
-int CMerkleTx::GetDepthInMainChain(interfaces::Chain::Lock& locked_chain) const
+int CWalletTx::GetDepthInMainChain(interfaces::Chain::Lock& locked_chain) const
 {
     int nResult;
 
@@ -5795,7 +5795,7 @@ int CMerkleTx::GetDepthInMainChain(interfaces::Chain::Lock& locked_chain) const
     return locked_chain.getBlockDepth(hashBlock) * (nIndex == -1 ? -1 : 1);
 }
 
-bool CMerkleTx::IsLockedByInstantSend() const
+bool CWalletTx::IsLockedByInstantSend() const
 {
     if (fIsChainlocked) {
         fIsInstantSendLocked = false;
@@ -5805,7 +5805,7 @@ bool CMerkleTx::IsLockedByInstantSend() const
     return fIsInstantSendLocked;
 }
 
-bool CMerkleTx::IsChainLocked() const
+bool CWalletTx::IsChainLocked() const
 {
     if (!fIsChainlocked) {
         AssertLockHeld(cs_main);
@@ -5817,7 +5817,7 @@ bool CMerkleTx::IsChainLocked() const
     return fIsChainlocked;
 }
 
-int CMerkleTx::GetBlocksToMaturity(interfaces::Chain::Lock& locked_chain) const
+int CWalletTx::GetBlocksToMaturity(interfaces::Chain::Lock& locked_chain) const
 {
     if (!IsCoinBase())
         return 0;
@@ -5826,7 +5826,7 @@ int CMerkleTx::GetBlocksToMaturity(interfaces::Chain::Lock& locked_chain) const
     return std::max(0, (COINBASE_MATURITY+1) - chain_depth);
 }
 
-bool CMerkleTx::IsImmatureCoinBase(interfaces::Chain::Lock& locked_chain) const
+bool CWalletTx::IsImmatureCoinBase(interfaces::Chain::Lock& locked_chain) const
 {
   return GetBlocksToMaturity(locked_chain) > 0;
 }
