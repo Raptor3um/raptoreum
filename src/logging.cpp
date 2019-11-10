@@ -82,10 +82,17 @@ void BCLog::Logger::EnableCategory(BCLog::LogFlags flag)
 
 bool BCLog::Logger::EnableCategory(const std::string& str)
 {
-	BCLog::LogFlags flag;
-	if (!GetLogCategory(flag, str)) return false;
-	EnableCategory(flag);
-	return true;
+  BCLog::LogFlags flag;
+  if (!GetLogCategory(flag, str)) {
+    if (str == "db") {
+      LogPrintf("Warning: logging category 'db' is deprecated, use 'walletdb' instead\n");
+      EnableCategory(BCLog::WALLETDB);
+      return true;
+    }
+    return false;
+  }
+  EnableCategory(flag);
+  return true;
 }
 
 void BCLog::Logger::DisableCategory(BCLog::LogFlags flag)
@@ -126,7 +133,7 @@ const CLogCategoryDesc LogCategories[] =
 	{BCLog::HTTP, "http"},
 	{BCLog::BENCHMARK, "bench"},
 	{BCLog::ZMQ, "zmq"},
-	{BCLog::DB, "db"},
+	{BCLog::WALLETDB, "walletdb"},
 	{BCLog::RPC, "rpc"},
 	{BCLog::ESTIMATEFEE, "estimatefee"},
 	{BCLog::ADDRMAN, "addrman"},
