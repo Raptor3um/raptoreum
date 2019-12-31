@@ -139,6 +139,7 @@ BASE_SCRIPTS= [
     'minchainwork.py',
     'p2p-acceptblock.py', # NOTE: needs raptoreum_hash to pass
     'feature_shutdown.py',
+    'privatesend.py',
 ]
 
 EXTENDED_SCRIPTS = [
