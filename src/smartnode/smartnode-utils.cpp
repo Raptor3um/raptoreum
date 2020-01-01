@@ -74,4 +74,3 @@ void CSmartnodeUtils::DoMaintenance(CConnman& connman)
         ProcessSmartnodeConnections(connman);
     }
 }
-
