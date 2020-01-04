@@ -2016,9 +2016,9 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     // ********************************************************* Step 10a: Prepare Smartnode related stuff
     fSmartnodeMode = false;
-    std::string strMasterNodeBLSPrivKey = gArgs.GetArg("-smartnodeblsprivkey", "");
-    if (!strMasterNodeBLSPrivKey.empty()) {
-        auto binKey = ParseHex(strMasterNodeBLSPrivKey);
+    std::string strSmartNodeBLSPrivKey = gArgs.GetArg("-smartnodeblsprivkey", "");
+    if (!strSmartNodeBLSPrivKey.empty()) {
+        auto binKey = ParseHex(strSmartNodeBLSPrivKey);
         CBLSSecretKey keyOperator;
         keyOperator.SetBuf(binKey);
         if (!keyOperator.IsValid()) {
