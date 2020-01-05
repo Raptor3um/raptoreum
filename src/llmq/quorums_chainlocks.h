@@ -79,7 +79,7 @@ private:
     int64_t lastCleanupTime{0};
 
 public:
-    CChainLocksHandler(CScheduler* _scheduler);
+    explicit CChainLocksHandler(CScheduler* _scheduler);
     ~CChainLocksHandler();
 
     void Start();

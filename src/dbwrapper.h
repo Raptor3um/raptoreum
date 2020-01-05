@@ -415,7 +415,7 @@ private:
     bool curIsParent{false};
 
 public:
-    CDBTransactionIterator(CDBTransaction& _transaction) :
+    explicit CDBTransactionIterator(CDBTransaction& _transaction) :
             transaction(_transaction),
             parentKey(SER_DISK, CLIENT_VERSION)
     {
@@ -721,6 +721,51 @@ public:
     }
     std::unique_ptr<CDBTransactionIterator<CDBTransaction>> NewIteratorUniquePtr() {
         return std::make_unique<CDBTransactionIterator<CDBTransaction>>(*this);
+    }
+};
+
+template<typename Parent, typename CommitTarget>
+class CScopedDBTransaction {
+public:
+    typedef CDBTransaction<Parent, CommitTarget> Transaction;
+
+private:
+    Transaction &dbTransaction;
+    std::function<void ()> commitHandler;
+    std::function<void ()> rollbackHandler;
+    bool didCommitOrRollback{};
+
+public:
+    explicit CScopedDBTransaction(Transaction &dbTx) : dbTransaction(dbTx) {}
+    ~CScopedDBTransaction() {
+        if (!didCommitOrRollback)
+            Rollback();
+    }
+    void Commit() {
+        assert(!didCommitOrRollback);
+        didCommitOrRollback = true;
+        dbTransaction.Commit();
+        if (commitHandler)
+            commitHandler();
+    }
+    void Rollback() {
+        assert(!didCommitOrRollback);
+        didCommitOrRollback = true;
+        dbTransaction.Clear();
+        if (rollbackHandler)
+            rollbackHandler();
+    }
+
+    static std::unique_ptr<CScopedDBTransaction<Parent, CommitTarget>> Begin(Transaction &dbTx) {
+        assert(dbTx.IsClean());
+        return std::make_unique<CScopedDBTransaction<Parent, CommitTarget>>(dbTx);
+    }
+
+    void SetCommitHandler(const std::function<void ()> &h) {
+        commitHandler = h;
+    }
+    void SetRollbackHandler(const std::function<void ()> &h) {
+        rollbackHandler = h;
     }
 };
 
