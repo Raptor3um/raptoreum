@@ -1828,7 +1828,7 @@ UniValue getchaintxstats(const JSONRPCRequest& request)
             pindex = chainActive.Tip();
         }
     }
-    
+
     assert(pindex != nullptr);
 
     if (blockcount < 1 || blockcount >= pindex->nHeight) {
