@@ -98,7 +98,7 @@ private:
 
         // read data and checksum from file
         try {
-            filein.read((char *)&vchData[0], dataSize);
+            filein.read((char *)vchData.data(), dataSize);
             filein >> hashIn;
         }
         catch (std::exception &e) {
