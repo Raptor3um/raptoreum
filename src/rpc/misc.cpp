@@ -1308,7 +1308,7 @@ static const CRPCCommand commands[] =
 
     /* Raptoreum features */
     { "raptoreum",               "mnsync",                 &mnsync,            {} },
-    { "raptoreum",               "spork",                  &spork,             {"value"} },
+    { "raptoreum",               "spork",                  &spork,             {"arg0","value"} },
 
     /* Not shown in help */
     { "hidden",             "setmocktime",            &setmocktime,            {"timestamp"}},

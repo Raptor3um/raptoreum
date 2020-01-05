@@ -1099,7 +1099,7 @@ static const CRPCCommand commands[] =
     { "raptoreum",               "getgovernanceinfo",      &getgovernanceinfo,      {} },
     { "raptoreum",               "getsuperblockbudget",    &getsuperblockbudget,    {"index"} },
     { "raptoreum",               "gobject",                &gobject,                {} },
-    { "raptoreum",               "voteraw",                &voteraw,                {} },
+    { "raptoreum",               "voteraw",                &voteraw,                {"tx_hash","tx_index","gov_hash","signal","outcome","time","sig"} },
 
 };
 
