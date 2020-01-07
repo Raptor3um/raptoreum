@@ -437,7 +437,7 @@ public:
     CMainParams() {
         strNetworkID = "main";
         consensus.nSubsidyHalvingInterval = 210240; // Note: actual number of blocks per calendar year with DGW v3 is ~200700 (for example 449750 - 249050)
-        consensus.nSmartnodePaymentsStartBlock = 5761; // 
+        consensus.nSmartnodePaymentsStartBlock = 5761; //
         consensus.nSmartnodePaymentsIncreaseBlock = 158000; // actual historical value
         consensus.nSmartnodePaymentsIncreasePeriod = 576*30; // 17280 - actual historical value
         consensus.nInstantSendConfirmationsRequired = 6;
@@ -952,8 +952,8 @@ public:
         // long living quorum params
         consensus.llmqs[Consensus::LLMQ_5_60] = llmq3_60;
         consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
-        consensus.llmqTypeChainLocks = Consensus::LLMQ_5_60;
-        consensus.llmqTypeInstantSend = Consensus::LLMQ_5_60;
+        consensus.llmqTypeChainLocks = Consensus::LLMQ_TEST;
+        consensus.llmqTypeInstantSend = Consensus::LLMQ_TEST;
     }
 };
 

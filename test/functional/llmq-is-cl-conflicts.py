@@ -172,7 +172,7 @@ class LLMQ_IS_CL_Conflicts(RaptoreumTestFramework):
         islock = self.create_islock(rawtx2)
 
         # Stop enough MNs so that ChainLocks don't work anymore
-        for i in range(3):
+        for i in range(2):
             self.stop_node(len(self.nodes) - 1)
             self.nodes.pop(len(self.nodes) - 1)
             self.mninfo.pop(len(self.mninfo) - 1)
