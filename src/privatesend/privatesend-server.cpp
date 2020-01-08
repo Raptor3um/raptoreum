@@ -450,7 +450,7 @@ void CPrivateSendServer::CheckTimeout(CConnman& connman)
     // Too early to do anything
     if (!fTimeout) return;
 
-    // See if we have at least min number of participants, if so - we can still do smth
+    // See if we have at least min number of participants, if so - we can still do something
     if (nState == POOL_STATE_QUEUE && vecSessionCollaterals.size() >= CPrivateSend::GetMinPoolParticipants()) {
         LogPrint(BCLog::PRIVATESEND, "CPrivateSendServer::CheckTimeout -- Queue for %d participants timed out (%ds) -- falling back to %d participants\n",
             nSessionMaxParticipants, nTimeout, vecSessionCollaterals.size());
@@ -653,7 +653,7 @@ bool CPrivateSendServer::IsAcceptableDSA(const CPrivateSendAccept& dsa, PoolMess
 {
     if (!fSmartnodeMode) return false;
 
-    // is denom even smth legit?
+    // is denom even something legit?
     std::vector<int> vecBits;
     if (!CPrivateSend::GetDenominationsBits(dsa.nDenom, vecBits)) {
         LogPrint(BCLog::PRIVATESEND, "CPrivateSendServer::%s -- denom not valid!\n", __func__);
@@ -804,7 +804,7 @@ void CPrivateSendServer::RelayStatus(PoolStatusUpdate nStatusUpdate, CConnman& c
     }
     if (nDisconnected == 0) return; // all is clear
 
-    // smth went wrong
+    // something went wrong
     LogPrint(BCLog::PRIVATESEND, "CPrivateSendServer::%s -- can't continue, %llu client(s) disconnected, nSessionID: %d  nSessionDenom: %d (%s)\n",
         __func__, nDisconnected, nSessionID, nSessionDenom, CPrivateSend::GetDenominationsToString(nSessionDenom));
 
