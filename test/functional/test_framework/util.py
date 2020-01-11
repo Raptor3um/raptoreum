@@ -10,6 +10,7 @@ from base64 import b64encode
 from binascii import hexlify, unhexlify
 from decimal import Decimal, ROUND_DOWN
 import hashlib
+import inspect
 import json
 import logging
 import os
@@ -207,9 +208,9 @@ def wait_until(predicate, *, attempts=float('inf'), timeout=float('inf'), sleep=
     if attempts == float('inf') and timeout == float('inf'):
         timeout = 60
     attempt = 0
-    timeout += time.time()
+    time_end = time.time() + timeout
 
-    while attempt < attempts and time.time() < timeout:
+    while attempt < attempts and time.time() < time_end:
         try:
             if lock:
                 with lock:
@@ -226,8 +227,12 @@ def wait_until(predicate, *, attempts=float('inf'), timeout=float('inf'), sleep=
 
     if do_assert:
         # Print the cause of the timeout
-        assert_greater_than(attempts, attempt)
-        assert_greater_than(timeout, time.time())
+        predicate_source = inspect.getsourcelines(predicate)
+        logger.error("wait_until() failed. Predicate: {}".format(predicate_source))
+        if attempt >= attempts:
+            raise AssertionError("Predicate {} not true after {} attempts".format(predicate_source, attempts))
+        elif time.time() >= time_end:
+            raise AssertionError("Predicate {} not true after {} seconds".format(predicate_source, timeout))
         raise RuntimeError('Unreachable')
     else:
         return False
