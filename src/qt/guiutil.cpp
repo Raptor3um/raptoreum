@@ -953,8 +953,9 @@ QString loadStyleSheet()
 
     QDir themes(":themes");
     // Make sure settings are pointing to an existent theme
+    // Set "Light" theme by default if settings are missing or incorrect
     if (theme.isEmpty() || !themes.exists(theme)) {
-        theme = defaultTheme;
+        theme = "Light";
         settings.setValue("theme", theme);
     }
 
