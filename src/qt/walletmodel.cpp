@@ -6,7 +6,7 @@
 
 #include "walletmodel.h"
 
-#include "addresstablemodel.h" 
+#include "addresstablemodel.h"
 #include "consensus/validation.h"
 #include "guiconstants.h"
 #include "guiutil.h"

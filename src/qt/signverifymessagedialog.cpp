@@ -52,7 +52,7 @@ SignVerifyMessageDialog::SignVerifyMessageDialog(const PlatformStyle *_platformS
     ui->copySignatureButton_SM->setIcon(QIcon(":/icons/editcopy"));
     ui->addressBookButton_VM->setIcon(QIcon(":/icons/address-book"));
 
-      
+
     GUIUtil::setupAddressWidget(ui->addressIn_SM, this);
     GUIUtil::setupAddressWidget(ui->addressIn_VM, this);
 
