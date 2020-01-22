@@ -249,7 +249,7 @@ std::string GetRequiredPaymentsString(int nBlockHeight, const CDeterministicMNCP
         CTxDestination dest;
         if (!ExtractDestination(payee->pdmnState->scriptPayout, dest))
             assert(false);
-        strPayee = CBitcoinAddress(dest).ToString();
+        strPayee = EncodeDestination(dest);
     }
     if (CSuperblockManager::IsSuperblockTriggered(nBlockHeight)) {
         strPayee += ", " + CSuperblockManager::GetRequiredPaymentsString(nBlockHeight);
@@ -306,12 +306,11 @@ bool CSmartnodePayments::GetSmartnodeTxOuts(int nBlockHeight, CAmount blockRewar
         return false;
     }
 
-    for (const auto& txout : voutSmartnodePaymentsRet) {
-        CTxDestination address1;
-        ExtractDestination(txout.scriptPubKey, address1);
-        CBitcoinAddress address2(address1);
+    for (const auto& txout : voutMasternodePaymentsRet) {
+        CTxDestination dest;
+        ExtractDestination(txout.scriptPubKey, dest);
 
-        LogPrintf("CSmartnodePayments::%s -- Smartnode payment %lld to %s\n", __func__, txout.nValue, address2.ToString());
+        LogPrintf("CSmartnodePayments::%s -- Smartnode payment %lld to %s\n", __func__, txout.nValue, EncodeDestination(dest));
     }
 
     return true;
@@ -393,7 +392,7 @@ bool CSmartnodePayments::IsTransactionValid(const CTransaction& txNew, int nBloc
             CTxDestination dest;
             if (!ExtractDestination(txout.scriptPubKey, dest))
                 assert(false);
-            LogPrintf("CSmartnodePayments::%s -- ERROR failed to find expected payee %s in block at height %s\n", __func__, CBitcoinAddress(dest).ToString(), nBlockHeight);
+            LogPrintf("CSmartnodePayments::%s -- ERROR failed to find expected payee %s in block at height %s\n", __func__, EncodeDestination(dest), nBlockHeight);
             return false;
         }
     }

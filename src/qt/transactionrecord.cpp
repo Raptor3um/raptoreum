@@ -60,7 +60,7 @@ int TransactionRecord::getFutureTxMaturityTime(const CWalletTx &wtx, CFutureTx &
  */
 bool TransactionRecord::isFutureTxMatured(const CWalletTx &wtx, CFutureTx &ftx)
 {
-    if (chainActive.Height() >= getFutureTxMaturityBlock(wtx, ftx) || GetAdjustedTime() >= getFutureTxMaturityTime(wtx, ftx)) 
+    if (chainActive.Height() >= getFutureTxMaturityBlock(wtx, ftx) || GetAdjustedTime() >= getFutureTxMaturityTime(wtx, ftx))
     {
         return true;
     }
@@ -88,7 +88,7 @@ void TransactionRecord::getFutureTxStatus(const CWalletTx &wtx, CFutureTx &ftx)
             if(maturityBlock >= chainActive.Height())
             {
                 status.status = TransactionStatus::OpenUntilBlock;
-                status.open_for = maturityBlock; 
+                status.open_for = maturityBlock;
             }
             if(maturityTime >= GetAdjustedTime())
             {
@@ -104,7 +104,7 @@ void TransactionRecord::getFutureTxStatus(const CWalletTx &wtx, CFutureTx &ftx)
         //not in main chain - new transaction
         status.status = TransactionStatus::NotAccepted;
     }
-    
+
 }
 
 /*
@@ -140,13 +140,15 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                 {
                     // Received by Raptoreum Address
                     sub.type = TransactionRecord::RecvWithAddress;
-                    sub.strAddress = CBitcoinAddress(address).ToString();
+                    sub.strAddress = EncodeDestination(address);
+                    sub.txDest = address;
                 }
                 else
                 {
                     // Received by IP connection (deprecated features), or a multisignature or other non-simple transaction
                     sub.type = TransactionRecord::RecvFromOther;
                     sub.strAddress = mapValue["from"];
+                    sub.txDest = DecodeDestination(sub.strAddress);
                 }
                 if (wtx.IsCoinBase())
                 {
@@ -157,14 +159,14 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                 if(wtx.tx->nType == TRANSACTION_FUTURE)
                 {
                     // Future TX Received
-                    
+
                     if (ExtractDestination(wtx.tx->vout[1].scriptPubKey, address))
                     {
                         // Received by Raptoreum Address
                         sub.type = TransactionRecord::FutureReceive;
                         sub.strAddress = CBitcoinAddress(address).ToString();
                     }
-                } 
+                }
 
                 sub.address.SetString(sub.strAddress);
                 sub.txDest = sub.address.Get();
@@ -222,18 +224,20 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
             if(mapValue["DS"] == "1")
             {
                 sub.type = TransactionRecord::PrivateSend;
-                
+
                 if (ExtractDestination(wtx.tx->vout[0].scriptPubKey, address))
                 {
-                    // Sent to Raptoreum Address
-                    sub.strAddress = CBitcoinAddress(address).ToString();
+                    // Sent to Dash Address
+                    sub.strAddress = EncodeDestination(address);
+                    sub.txDest = address;
                 }
                 else
                 {
                     // Sent to IP, or other non-address transaction like OP_EVAL
                     sub.strAddress = mapValue["to"];
+                    sub.txDest = DecodeDestination(sub.strAddress);
                 }
-            } 
+            }
             else
             {
                 sub.idx = parts.size();
@@ -243,8 +247,8 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                     && CPrivateSend::IsCollateralAmount(-nNet))
                 {
                     sub.type = TransactionRecord::PrivateSendCollateralPayment;
-                } 
-                else 
+                }
+                else
                 {
                     for (const auto& txout : wtx.tx->vout) {
                         if (txout.nValue == CPrivateSend::GetMaxCollateralAmount()) {
@@ -272,8 +276,6 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
 
             sub.debit = -(nDebit - nChange);
             sub.credit = nCredit - nChange;
-            sub.address.SetString(sub.strAddress);
-            sub.txDest = sub.address.Get();
             parts.append(sub);
             parts.last().involvesWatchAddress = involvesWatchAddress;   // maybe pass to TransactionRecord as constructor argument
         }
@@ -317,13 +319,15 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                 {
                     // Sent to Raptoreum Address
                     sub.type = TransactionRecord::SendToAddress;
-                    sub.strAddress = CBitcoinAddress(address).ToString();
+                    sub.strAddress = EncodeDestination(address);
+                    sub.txDest = address;
                 }
                 else
                 {
                     // Sent to IP, or other non-address transaction like OP_EVAL
                     sub.type = TransactionRecord::SendToOther;
                     sub.strAddress = mapValue["to"];
+                    sub.txDest = DecodeDestination(sub.strAddress);
                 }
 
                 if(mapValue["DS"] == "1")
@@ -344,9 +348,6 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                     nTxFee = 0;
                 }
                 sub.debit = -nValue;
-
-                sub.address.SetString(sub.strAddress);
-                sub.txDest = sub.address.Get();
 
                 parts.append(sub);
             }
@@ -442,7 +443,7 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx, int chainLockHeight)
     {
         CFutureTx ftx;
         getFutureTxStatus(wtx, ftx);
-        
+
     }
     else
     {

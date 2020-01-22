@@ -426,60 +426,34 @@ UniValue createrawtransaction(const JSONRPCRequest& request)
         rawTx.vin.push_back(in);
     }
 
-    std::set<CBitcoinAddress> setAddress;
+    std::set<CTxDestination> destinations;
     std::vector<std::string> addrList = sendTo.getKeys();
-    UniValue redeemScripts(UniValue::VOBJ);
-	for (const std::string& name_ : addrList) {
+    for (const std::string& name_ : addrList) {
 
-		if (name_ == "data") {
-			std::vector<unsigned char> data = ParseHexV(sendTo[name_].getValStr(),"Data");
+        if (name_ == "data") {
+            std::vector<unsigned char> data = ParseHexV(sendTo[name_].getValStr(),"Data");
 
-			CTxOut out(0, CScript() << OP_RETURN << data);
-			rawTx.vout.push_back(out);
-		} else {
-			CBitcoinAddress address(name_);
-			if (!address.IsValid())
-				throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Raptoreum address: ")+name_);
+            CTxOut out(0, CScript() << OP_RETURN << data);
+            rawTx.vout.push_back(out);
+        } else {
+            CTxDestination destination = DecodeDestination(name_);
+            if (!IsValidDestination(destination)) {
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Raptoreum address: ") + name_);
+            }
 
-			if (setAddress.count(address))
-				throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("Invalid parameter, duplicated address: ")+name_);
-			setAddress.insert(address);
-			UniValue sendToValue = sendTo[name_];
-			CScript scriptPubKey;
-			CScript redeemScript;
+            if (!destinations.insert(destination).second) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("Invalid parameter, duplicated address: ") + name_);
+            }
 
-			CAmount nAmount;
-			if(sendToValue.isObject()) {
-				scriptPubKey.clear();
-				if(sendToValue["future_block"].isNull()) {
-					throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("no future_block is specified "));
-				}
-				if(sendToValue["amount"].isNull()) {
-					throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("no amount is specified "));
-				}
-				uint32_t sequence = sendToValue["future_block"].get_int();
-				redeemScript = GetFutureScriptForDestination(address.Get(), sequence);
-				scriptPubKey = GetScriptForDestination(CScriptID(redeemScript));
-				//cout << sendToValue["amount"].get_str() << "\n";
-//				scriptPubKey = GetFutureScriptForDestination(address.Get(), sequence);
-				nAmount = AmountFromValue(sendToValue["amount"]);
-				//redeemScripts.push_back(Pair(name_, EncodeHexScript(redeemScript)));
-			} else {
-				scriptPubKey = GetScriptForDestination(address.Get());
-				nAmount = AmountFromValue(sendTo[name_]);
-			}
-			CTxOut out(nAmount, scriptPubKey);
-			rawTx.vout.push_back(out);
-		}
-	}
-	std::string rawHexTx = EncodeHexTx(rawTx);
-	if(redeemScripts.size() > 0) {
-		UniValue rawTxObj(UniValue::VOBJ);
-		rawTxObj.push_back(Pair("rawTx", rawHexTx));
-		rawTxObj.push_back(Pair("redeemScripts", redeemScripts));
-		return rawTxObj;
-	}
-	return rawHexTx;
+            CScript scriptPubKey = GetScriptForDestination(destination);
+            CAmount nAmount = AmountFromValue(sendTo[name_]);
+
+            CTxOut out(nAmount, scriptPubKey);
+            rawTx.vout.push_back(out);
+        }
+    }
+
+    return EncodeHexTx(rawTx);
 }
 
 UniValue decoderawtransaction(const JSONRPCRequest& request)
@@ -595,7 +569,7 @@ UniValue decodescript(const JSONRPCRequest& request)
     if (type.isStr() && type.get_str() != "scripthash") {
         // P2SH cannot be wrapped in a P2SH. If this script is already a P2SH,
         // don't return the address for a P2SH of the P2SH.
-        r.push_back(Pair("p2sh", CBitcoinAddress(CScriptID(script)).ToString()));
+        r.push_back(Pair("p2sh", EncodeDestination(CScriptID(script))));
     }
 
     return r;
