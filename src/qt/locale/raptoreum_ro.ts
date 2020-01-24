@@ -4675,6 +4675,14 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Trebuie să reconstruiești baza de date utilizând -reindex pentru a schimba -spentindex</translation>
     </message>
     <message>
+        <source>You need to rebuild the database using -reindex to change -addressindex</source>
+        <translation>Trebuie să reconstruiești baza de date utilizând -reindex pentru a schimba -addressindex</translation>
+    </message>
+    <message>
+        <source>You need to rebuild the database using -reindex to change -spentindex</source>
+        <translation>Trebuie să reconstruiești baza de date utilizând -reindex pentru a schimba -spentindex</translation>
+    </message>
+    <message>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
         <translation>Trebuie să reconstruiești baza de date utilizând -reindex pentru a schimba -txindex</translation>
     </message>
