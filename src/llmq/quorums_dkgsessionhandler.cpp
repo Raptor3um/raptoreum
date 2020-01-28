@@ -33,7 +33,7 @@ void CDKGPendingMessages::PushPendingMessage(NodeId from, CDataStream& vRecv)
 
         if (messagesPerNode[from] >= maxMessagesPerNode) {
             // TODO ban?
-            LogPrintf("CDKGPendingMessages::%s -- too many messages, peer=%d\n", __func__, from);
+            LogPrint(BCLog::LLMQ_DKG, "CDKGPendingMessages::%s -- too many messages, peer=%d\n", __func__, from);
             return;
         }
         messagesPerNode[from]++;
@@ -404,7 +404,7 @@ bool ProcessPendingMessageBatch(CDKGSession& session, CDKGPendingMessages& pendi
 
     for (const auto& p : msgs) {
         if (!p.second) {
-            LogPrintf("%s -- failed to deserialize message, peer=%d\n", __func__, p.first);
+            LogPrint(BCLog::LLMQ_DKG, "%s -- failed to deserialize message, peer=%d\n", __func__, p.first);
             {
                 LOCK(cs_main);
                 Misbehaving(p.first, 100);
@@ -422,13 +422,13 @@ bool ProcessPendingMessageBatch(CDKGSession& session, CDKGPendingMessages& pendi
         bool ban = false;
         if (!session.PreVerifyMessage(hash, msg, ban)) {
             if (ban) {
-                LogPrintf("%s -- banning node due to failed preverification, peer=%d\n", __func__, p.first);
+                LogPrint(BCLog::LLMQ_DKG, "%s -- banning node due to failed preverification, peer=%d\n", __func__, p.first);
                 {
                     LOCK(cs_main);
                     Misbehaving(p.first, 100);
                 }
             }
-            LogPrintf("%s -- skipping message due to failed preverification, peer=%d\n", __func__, p.first);
+            LogPrint(BCLog::LLMQ_DKG, "%s -- skipping message due to failed preverification, peer=%d\n", __func__, p.first);
             continue;
         }
         hashes.emplace_back(hash);
@@ -442,7 +442,7 @@ bool ProcessPendingMessageBatch(CDKGSession& session, CDKGPendingMessages& pendi
     if (!badNodes.empty()) {
         LOCK(cs_main);
         for (auto nodeId : badNodes) {
-            LogPrintf("%s -- failed to verify signature, peer=%d\n", __func__, nodeId);
+            LogPrint(BCLog::LLMQ_DKG, "%s -- failed to verify signature, peer=%d\n", __func__, nodeId);
             Misbehaving(nodeId, 100);
         }
     }
@@ -456,7 +456,7 @@ bool ProcessPendingMessageBatch(CDKGSession& session, CDKGPendingMessages& pendi
         bool ban = false;
         session.ReceiveMessage(hashes[i], msg, ban);
         if (ban) {
-            LogPrintf("%s -- banning node after ReceiveMessage failed, peer=%d\n", __func__, nodeId);
+            LogPrint(BCLog::LLMQ_DKG, "%s -- banning node after ReceiveMessage failed, peer=%d\n", __func__, nodeId);
             LOCK(cs_main);
             Misbehaving(nodeId, 100);
             badNodes.emplace(nodeId);

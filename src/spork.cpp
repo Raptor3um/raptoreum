@@ -140,7 +140,7 @@ void CSporkManager::ProcessSpork(CNode* pfrom, const std::string& strCommand, CD
 
         if (spork.nTimeSigned > GetAdjustedTime() + MAX_FUTURE_BLOCK_TIME) {
             LOCK(cs_main);
-            LogPrintf("CSporkManager::ProcessSpork -- ERROR: too far into the future\n");
+            LogPrint(BCLog::SPORK, "CSporkManager::ProcessSpork -- ERROR: too far into the future\n");
             Misbehaving(pfrom->GetId(), 100);
             return;
         }
@@ -153,7 +153,7 @@ void CSporkManager::ProcessSpork(CNode* pfrom, const std::string& strCommand, CD
             // (and even if it would, spork order can't be guaranteed anyway).
             if (!spork.GetSignerKeyID(keyIDSigner, !fSpork6IsActive) || !setSporkPubKeyIDs.count(keyIDSigner)) {
                 LOCK(cs_main);
-                LogPrintf("CSporkManager::ProcessSpork -- ERROR: invalid signature\n");
+                LogPrint(BCLog::SPORK, "CSporkManager::ProcessSpork -- ERROR: invalid signature\n");
                 Misbehaving(pfrom->GetId(), 100);
                 return;
             }
@@ -400,7 +400,7 @@ bool CSporkMessage::CheckSignature(const CKeyID& pubKeyId, bool fSporkSixActive)
         if (!CHashSigner::VerifyHash(hash, pubKeyId, vchSig, strError)) {
             // Note: unlike for many other messages when SPORK_6_NEW_SIGS is ON sporks with sigs in old format
             // and newer timestamps should not be accepted, so if we failed here - that's it
-            LogPrintf("CSporkMessage::CheckSignature -- VerifyHash() failed, error: %s\n", strError);
+            LogPrint(BCLog::SPORK, "CSporkMessage::CheckSignature -- VerifyHash() failed, error: %s\n", strError);
             return false;
         }
     } else {
@@ -412,7 +412,7 @@ bool CSporkMessage::CheckSignature(const CKeyID& pubKeyId, bool fSporkSixActive)
             // (and even if it would, spork order can't be guaranteed anyway).
             uint256 hash = GetSignatureHash();
             if (!CHashSigner::VerifyHash(hash, pubKeyId, vchSig, strError)) {
-                LogPrintf("CSporkMessage::CheckSignature -- VerifyHash() failed, error: %s\n", strError);
+                LogPrint(BCLog::SPORK, "CSporkMessage::CheckSignature -- VerifyHash() failed, error: %s\n", strError);
                 return false;
             }
         }
