@@ -70,10 +70,10 @@ void CActiveSmartnodeManager::Init()
 
     // Check that our local network configuration is correct
     if (!fListen) {
-        // listen option is probably overwritten by smth else, no good
+        // listen option is probably overwritten by something else, no good
         state = SMARTNODE_ERROR;
         strError = "Smartnode must accept connections from outside. Make sure listen configuration option is not overwritten by some another parameter.";
-        LogPrintf("CActiveDeterministicSmartnodeManager::Init -- ERROR: %s\n", strError);
+        LogPrintf("CActiveSmartnodeManager::Init -- ERROR: %s\n", strError);
         return;
     }
 
@@ -107,19 +107,23 @@ void CActiveSmartnodeManager::Init()
         return;
     }
 
-    if (Params().NetworkIDString() != CBaseChainParams::REGTEST) {
-        // Check socket connectivity
-        LogPrintf("CActiveDeterministicSmartnodeManager::Init -- Checking inbound connection to '%s'\n", activeSmartnodeInfo.service.ToString());
-        SOCKET hSocket;
-        bool fConnected = ConnectSocket(activeSmartnodeInfo.service, hSocket, nConnectTimeout) && IsSelectableSocket(hSocket);
-        CloseSocket(hSocket);
+    // Check socket connectivity
+    LogPrintf("CActiveSmartnodeManager::Init -- Checking inbound connection to '%s'\n", activeSmartnodeInfo.service.ToString());
+    SOCKET hSocket = CreateSocket(activeSmartnodeInfo.service);
+    if (hSocket == INVALID_SOCKET) {
+        state = SMARTNODE_ERROR;
+        strError = "Could not create socket to connect to " + activeSmartnodeInfo.service.ToString();
+        LogPrintf("CActiveSmartnodeManager::Init -- ERROR: %s\n", strError);
+        return;
+    }
+    bool fConnected = ConnectSocketDirectly(activeSmartnodeInfo.service, hSocket, nConnectTimeout) && IsSelectableSocket(hSocket);
+    CloseSocket(hSocket);
 
-        if (!fConnected) {
-            state = SMARTNODE_ERROR;
-            strError = "Could not connect to " + activeSmartnodeInfo.service.ToString();
-            LogPrintf("CActiveDeterministicSmartnodeManager::Init -- ERROR: %s\n", strError);
-            return;
-        }
+    if (!fConnected) {
+        state = SMARTNODE_ERROR;
+        strError = "Could not connect to " + activeSmartnodeInfo.service.ToString();
+        LogPrintf("CActiveSmartnodeManager::Init -- ERROR: %s\n", strError);
+        return;
     }
 
     activeSmartnodeInfo.proTxHash = dmn->proTxHash;
