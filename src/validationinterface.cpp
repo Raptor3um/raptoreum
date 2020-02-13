@@ -163,7 +163,7 @@ void CMainSignals::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockInd
 }
 
 void CMainSignals::TransactionAddedToMempool(const CTransactionRef &ptx, int64_t nAcceptTime) {
-    m_internals->m_schedulerClient.AddToProcessQueue([ptx, this] {
+    m_internals->m_schedulerClient.AddToProcessQueue([ptx, nAcceptTime, this] {
         m_internals->TransactionAddedToMempool(ptx, nAcceptTime);
     });
 }
@@ -175,7 +175,7 @@ void CMainSignals::BlockConnected(const std::shared_ptr<const CBlock> &pblock, c
 }
 
 void CMainSignals::BlockDisconnected(const std::shared_ptr<const CBlock> &pblock, const CBlockIndex* pindexDisconnected) {
-    m_internals->m_schedulerClient.AddToProcessQueue([pblock, this] {
+    m_internals->m_schedulerClient.AddToProcessQueue([pblock, pindexDisconnected, this] {
         m_internals->BlockDisconnected(pblock, pindexDisconnected);
     });
 }
