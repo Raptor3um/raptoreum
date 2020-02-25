@@ -52,6 +52,7 @@ enum LLMQType : uint8_t
 
     // for testing only
     LLMQ_5_60 = 100, // 5 members, 3 (60%) threshold, one per hour
+    LLMQ_TEST = LLMQ_5_60;
 
     LLMQ_DEVNET = 101,
 };

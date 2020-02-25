@@ -129,6 +129,14 @@ void CChainParams::UpdateLLMQDevnetParams(int size, int threshold)
   params.threshold = threshold;
 }
 
+void CChainParams::UpdateLLMQDevnetParams(int size, int threshold)
+{
+    auto& params = consensus.llmqs.at(Consensus::LLMQ_DEVNET);
+    params.size = size;
+    params.minSize = threshold;
+    params.threshold = threshold;
+}
+
 static CBlock FindDevNetGenesisBlock(const Consensus::Params& params, const CBlock &prevBlock, const CAmount& reward)
 {
     std::string devNetName = GetDevNetName();
@@ -363,6 +371,25 @@ static Consensus::LLMQParams llmq40_85 = {
         .signingActiveQuorumCount = 4, // four days worth of LLMQs
 
         .keepOldConnections = 5,
+};
+
+// this one is for devnets only
+static Consensus::LLMQParams llmq_devnet = {
+        .type = Consensus::LLMQ_DEVNET,
+        .name = "llmq_devnet",
+        .size = 10,
+        .minSize = 7,
+        .threshold = 6,
+
+        .dkgInterval = 24, // one DKG per hour
+        .dkgPhaseBlocks = 2,
+        .dkgMiningWindowStart = 10, // dkgPhaseBlocks * 5 = after finalization
+        .dkgMiningWindowEnd = 18,
+        .dkgBadVotesThreshold = 7,
+
+        .signingActiveQuorumCount = 3, // just a few ones to allow easier testing
+
+        .keepOldConnections = 4,
 };
 
 static Consensus::LLMQParams llmq50_60 = {
@@ -1070,4 +1097,9 @@ void CChainParams::UpdateLLMQParams(size_t totalMnCount, int height, bool lowLLM
 		}
 	}
 
+}
+
+void UpdateLLMQDevnetParams(int size, int threshold)
+{
+    globalChainParams->UpdateLLMQDevnetParams(size, threshold);
 }

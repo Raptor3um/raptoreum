@@ -171,6 +171,11 @@ void UpdateDevnetLLMQChainLocks(Consensus::LLMQType llmqType);
 
 void UpdateLLMQParams(size_t totalMnCount, int height, bool lowLLMQParams = false);
 
+void UpdateLLMQTestParams(int size, int threshold);
+
+/**
+ * Allows modifying parameters of the devnet LLMQ
+ */
 void UpdateLLMQDevnetParams(int size, int threshold);
 
 #endif // BITCOIN_CHAINPARAMS_H
