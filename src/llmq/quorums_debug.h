@@ -10,6 +10,7 @@
 #include <sync.h>
 #include <univalue.h>
 
+#include <functional>
 #include <set>
 
 class CDataStream;
