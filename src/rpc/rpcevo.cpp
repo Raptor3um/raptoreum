@@ -226,18 +226,61 @@ static CBLSSecretKey ParseBLSSecretKey(const std::string& hexKey, const std::str
 
 void bls_generate_help()
 {
-    throw std::runtime_error(
-            "bls generate\n"
-            "\nReturns a BLS secret/public key pair.\n"
-            "\nResult:\n"
-            "{\n"
-            "  \"secret\": \"xxxx\",        (string) BLS secret key\n"
-            "  \"public\": \"xxxx\",        (string) BLS public key\n"
-            "}\n"
-            "\nExamples:\n"
-            + HelpExampleCli("bls generate", "")
-    );
-}
+    assert(pwallet != nullptr);
+
+    // Make sure the results are valid at least up to the most recent block
+    // the user could have gotten from another RPC command prior to now
+    pwallet->BlockUntilSyncedToCurrentChain();
+
+    LOCK2(cs_main, pwallet->cs_wallet);
+
+    CTxDestination nodest = CNoDestination();
+    if (fundDest == nodest) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "No source of funds specified");
+    }
+
+    CDataStream ds(SER_NETWORK, PROTOCOL_VERSION);
+    ds << payload;
+    tx.vExtraPayload.assign(ds.begin(), ds.end());
+
+    static CTxOut dummyTxOut(0, CScript() << OP_RETURN);
+    std::vector<CRecipient> vecSend;
+    bool dummyTxOutAdded = false;
+
+    if (tx.vout.empty()) {
+        // add dummy txout as CreateTransaction requires at least one recipient
+        tx.vout.emplace_back(dummyTxOut);
+        dummyTxOutAdded = true;
+    }
+
+    for (const auto& txOut : tx.vout) {
+        CRecipient recipient = {txOut.scriptPubKey, txOut.nValue, false};
+        vecSend.push_back(recipient);
+    }
+
+    CCoinControl coinControl;
+    coinControl.destChange = fundDest;
+    coinControl.fRequireAllInputs = false;
+
+    std::vector<COutput> vecOutputs;
+    pwallet->AvailableCoins(vecOutputs);
+
+    for (const auto& out : vecOutputs) {
+        CTxDestination txDest;
+        if (ExtractDestination(out.tx->tx->vout[out.i].scriptPubKey, txDest) && txDest == fundDest) {
+            coinControl.Select(COutPoint(out.tx->tx->GetHash(), out.i));
+        }
+    }
+
+    if (!coinControl.HasSelected()) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "No funds at specified address");
+    }
+
+    CWalletTx wtx;
+    CReserveKey reservekey(pwallet);
+    CAmount nFee;
+    int nChangePos = -1;
+    std::string strFailReason;
 
 UniValue bls_generate(const JSONRPCRequest& request)
 {
@@ -304,9 +347,14 @@ UniValue bls_fromsecret(const JSONRPCRequest& request)
 
 UniValue _bls(const JSONRPCRequest& request)
 {
-    if (request.fHelp && request.params.empty()) {
-        bls_help();
+    {
+    LOCK(cs_main);
+
+    CValidationState state;
+    if (!CheckSpecialTx(tx, chainActive.Tip(), state)) {
+        throw std::runtime_error(FormatStateMessage(state));
     }
+    } // cs_main
 
     std::string command;
     if (request.params.size() >= 1) {
