@@ -465,12 +465,6 @@ See detailed [set of changes](https://github.com/raptoreum/raptoreum/compare/v0.
 - [`32aa229c7`](https://github.com/raptoreum/raptoreum/commit/32aa229c7) Reorganize Raptoreum Specific code into folders (#2753)
 - [`acbf0a221`](https://github.com/raptoreum/raptoreum/commit/acbf0a221) Bump version to 0.14.1 (#2928)
 
-Renamed script for creating JSON-RPC credentials
------------------------------
-The `share/rpcuser/rpcuser.py` script was renamed to `share/rpcauth/rpcauth.py`. This script can be
-used to create `rpcauth` credentials for a JSON-RPC user.
-
-
 Credits
 =======
 
