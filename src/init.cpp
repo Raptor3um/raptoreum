@@ -904,23 +904,6 @@ void InitParameterInteraction()
             LogPrintf("%s: parameter interaction: -whitebind set -> setting -listen=1\n", __func__);
     }
 
-    if (gArgs.IsArgSet("-smartnodeblsprivkey")) {
-        // smartnodes MUST accept connections from outside
-        gArgs.ForceSetArg("-listen", "1");
-        LogPrintf("%s: parameter interaction: -smartnodeblsprivkey=... -> setting -listen=1\n", __func__);
-#ifdef ENABLE_WALLET
-        // smartnode should not have wallet enabled
-        gArgs.ForceSetArg("-disablewallet", "1");
-        LogPrintf("%s: parameter interaction: -smartnodeblsprivkey=... -> setting -disablewallet=1\n", __func__);
-#endif // ENABLE_WALLET
-        if (gArgs.GetArg("-maxconnections", DEFAULT_MAX_PEER_CONNECTIONS) < DEFAULT_MAX_PEER_CONNECTIONS) {
-            // smartnodes MUST be able to handle at least DEFAULT_MAX_PEER_CONNECTIONS connections
-            gArgs.ForceSetArg("-maxconnections", itostr(DEFAULT_MAX_PEER_CONNECTIONS));
-            LogPrintf("%s: parameter interaction: -smartnodeblsprivkey=... -> setting -maxconnections=%d instead of specified -maxconnections=%d\n",
-                    __func__, DEFAULT_MAX_PEER_CONNECTIONS, gArgs.GetArg("-maxconnections", DEFAULT_MAX_PEER_CONNECTIONS));
-        }
-    }
-
     if (gArgs.IsArgSet("-connect")) {
         // when only connecting to trusted nodes, do not seed via DNS, or listen by default
         if (gArgs.SoftSetBoolArg("-dnsseed", false))
@@ -1461,6 +1444,27 @@ bool AppInitParameterInteraction()
 
     if (gArgs.IsArgSet("-smartnode")) {
         InitWarning(_("-smartnode option is deprecated and ignored, specifying -smartnodeblsprivkey is enough to start this node as a smartnode."));
+    }
+
+    if (gArgs.IsArgSet("-masternodeblsprivkey")) {
+        if (!gArgs.GetBoolArg("-listen", DEFAULT_LISTEN)) {
+            return InitError("Masternode must accept connections from outside, set -listen=1");
+        }
+        if (!gArgs.GetBoolArg("-txindex", DEFAULT_TXINDEX)) {
+            return InitError("Masternode must have transaction index enabled, set -txindex=1");
+        }
+        if (!gArgs.GetBoolArg("-peerbloomfilters", DEFAULT_PEERBLOOMFILTERS)) {
+            return InitError("Masternode must have bloom filters enabled, set -peerbloomfilters=1");
+        }
+        if (gArgs.GetArg("-prune", 0) > 0) {
+            return InitError("Masternode must have no pruning enabled, set -prune=0");
+        }
+        if (gArgs.GetArg("-maxconnections", DEFAULT_MAX_PEER_CONNECTIONS) < DEFAULT_MAX_PEER_CONNECTIONS) {
+            return InitError(strprintf("Masternode must be able to handle at least %d connections, set -maxconnections=%d", DEFAULT_MAX_PEER_CONNECTIONS, DEFAULT_MAX_PEER_CONNECTIONS));
+        }
+        if (gArgs.GetBoolArg("-litemode", false)) {
+            return InitError(_("You can not start a masternode in lite mode."));
+        }
     }
 
     return true;
@@ -2049,16 +2053,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         LogPrintf("  blsPubKeyOperator: %s\n", keyOperator.GetPublicKey().ToString());
     }
 
-    if(fLiteMode && fSmartnodeMode) {
-        return InitError(_("You can not start a smartnode in lite mode."));
-    }
-
     if(fSmartnodeMode) {
-#ifdef ENABLE_WALLET
-        if (!vpwallets.empty()) {
-            return InitError(_("You can not start a smartnode with wallet enabled."));
-        }
-#endif //ENABLE_WALLET
         // Create and register activeSmartnodeManager, will init later in ThreadImport
         activeSmartnodeManager = new CActiveSmartnodeManager();
         RegisterValidationInterface(activeSmartnodeManager);
