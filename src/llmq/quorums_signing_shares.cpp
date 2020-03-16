@@ -984,7 +984,7 @@ void CSigSharesManager::CollectSigSharesToAnnounce(std::unordered_map<NodeId, st
 bool CSigSharesManager::SendMessages()
 {
     std::unordered_map<NodeId, std::unordered_map<uint256, CSigSharesInv, StaticSaltedHasher>> sigSharesToRequest;
-    std::unordered_map<NodeId, std::unordered_map<uint256, CBatchedSigShares, StaticSaltedHasher>> sigSharesToSend;
+    std::unordered_map<NodeId, std::unordered_map<uint256, CBatchedSigShares, StaticSaltedHasher>> sigShareBatchesToSend;
     std::unordered_map<NodeId, std::unordered_map<uint256, CSigSharesInv, StaticSaltedHasher>> sigSharesToAnnounce;
     std::unordered_map<NodeId, std::vector<CSigSesAnn>> sigSessionAnnouncements;
 
@@ -1010,7 +1010,7 @@ bool CSigSharesManager::SendMessages()
     {
         LOCK(cs);
         CollectSigSharesToRequest(sigSharesToRequest);
-        CollectSigSharesToSend(sigSharesToSend);
+        CollectSigSharesToSend(sigShareBatchesToSend);
         CollectSigSharesToAnnounce(sigSharesToAnnounce);
 
         for (auto& p : sigSharesToRequest) {
@@ -1018,7 +1018,7 @@ bool CSigSharesManager::SendMessages()
                 p2.second.sessionId = addSigSesAnnIfNeeded(p.first, p2.first);
             }
         }
-        for (auto& p : sigSharesToSend) {
+        for (auto& p : sigShareBatchesToSend) {
             for (auto& p2 : p.second) {
                 p2.second.sessionId = addSigSesAnnIfNeeded(p.first, p2.first);
             }
@@ -1077,8 +1077,8 @@ bool CSigSharesManager::SendMessages()
             }
         }
 
-        auto jt = sigSharesToSend.find(pnode->GetId());
-        if (jt != sigSharesToSend.end()) {
+        auto jt = sigShareBatchesToSend.find(pnode->GetId());
+        if (jt != sigShareBatchesToSend.end()) {
             size_t totalSigsCount = 0;
             std::vector<CBatchedSigShares> msgs;
             for (auto& p : jt->second) {
