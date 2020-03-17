@@ -204,8 +204,8 @@ public:
     void Interrupt();
     bool GetNetworkActive() const { return fNetworkActive; };
     void SetNetworkActive(bool active);
-    void OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound = nullptr, const char *strDest = nullptr, bool fOneShot = false, bool fFeeler = false, bool manual_connection = false, bool fConnectToSmartnode = false);
-    void OpenSmartnodeConnection(const CAddress& addrConnect);
+    void OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound = nullptr, const char *strDest = nullptr, bool fOneShot = false, bool fFeeler = false, bool manual_connection = false, bool fConnectToSmartnode = false, bool fSmartnodeProbe = false);
+    void OpenSmartnodeConnection(const CAddress& addrConnect, bool probe = false);
     bool CheckIncomingNonce(uint64_t nonce);
 
     struct CFullyConnectedOnly {
@@ -415,6 +415,7 @@ public:
     std::set<NodeId> GetSmartnodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash) const;
     void RemoveSmartnodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash);
     bool IsSmartnodeQuorumNode(const CNode* pnode);
+    void AddPendingProbeConnections(const std::set<uint256>& proTxHashes);
 
     size_t GetNodeCount(NumConnections num);
     size_t GetMaxOutboundNodeCount();
@@ -544,7 +545,8 @@ private:
     std::vector<std::string> vAddedNodes GUARDED_BY(cs_vAddedNodes);
     CCriticalSection cs_vAddedNodes;
     std::vector<uint256> vPendingSmartnodes;
-    std::map<std::pair<Consensus::LLMQType, uint256>, std::set<uint256>> smartnodeQuorumNodes; // protected by cs_vPendingMasternodes
+    std::map<std::pair<Consensus::LLMQType, uint256>, std::set<uint256>> smartnodeQuorumNodes; // protected by cs_vPendingSmartnodes
+    std::set<uint256> smartnodePendingProbes;
     mutable CCriticalSection cs_vPendingSmartnodes;
     std::vector<CNode*> vNodes;
     std::list<CNode*> vNodesDisconnected;
@@ -816,8 +818,10 @@ public:
     //    unless it loads a bloom filter.
     bool fRelayTxes; //protected by cs_filter
     bool fSentAddr;
-    // If 'true' this node will be disconnected on CSmartnodeMan::ProcessSmartnodeConnections()
+    // If 'true' this node will be disconnected on CMasternodeMan::ProcessMasternodeConnections()
     bool fSmartnode;
+    // If 'true' this node will be disconnected after MNAUTH
+    bool fSmartnodeProbe;
     CSemaphoreGrant grantOutbound;
     CSemaphoreGrant grantSmartnodeOutbound;
     CCriticalSection cs_filter;

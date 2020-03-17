@@ -31,7 +31,7 @@ void CSmartnodeUtils::ProcessSmartnodeConnections(CConnman& connman)
     // Don't disconnect smartnode connections when we have less then the desired amount of outbound nodes
     int nonSmartnodeCount = 0;
     connman.ForEachNode(CConnman::AllNodes, [&](CNode* pnode) {
-        if (!pnode->fInbound && !pnode->fFeeler && !pnode->m_manual_connection && !pnode->fSmartnode) {
+        if (!pnode->fInbound && !pnode->fFeeler && !pnode->m_manual_connection && !pnode->fSmartnode && !pnode->fSmartnodeProbe) {
             nonSmartnodeCount++;
         }
     });
