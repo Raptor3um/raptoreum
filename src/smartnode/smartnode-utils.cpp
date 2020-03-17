@@ -40,7 +40,7 @@ void CSmartnodeUtils::ProcessSmartnodeConnections(CConnman& connman)
     }
 
     connman.ForEachNode(CConnman::AllNodes, [&](CNode* pnode) {
-        if (pnode->fSmartnode && !connman.IsSmartnodeQuorumNode(pnode)) {
+        if (!pnode->fInbound && pnode->fSmartnode && !connman.IsSmartnodeQuorumNode(pnode)) {
 #ifdef ENABLE_WALLET
             bool fFound = false;
             for (const auto& dmn : vecDmns) {
