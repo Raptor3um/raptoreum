@@ -5,9 +5,27 @@
 
 #include <smartnode/smartnode-meta.h>
 
+#include "timedata.h"
+
 CSmartnodeMetaMan mmetaman;
 
 const std::string CSmartnodeMetaMan::SERIALIZATION_VERSION_STRING = "CSmartnodeMetaMan-Version-2";
+
+UniValue CSmartnodeMetaInfo::ToJson() const
+{
+    UniValue ret(UniValue::VOBJ);
+
+    auto now = GetAdjustedTime();
+
+    ret.push_back(Pair("lastDSQ", nLastDsq));
+    ret.push_back(Pair("mixingTxCount", nMixingTxCount));
+    ret.push_back(Pair("lastOutboundAttempt", lastOutboundAttempt));
+    ret.push_back(Pair("lastOutboundAttemptElapsed", now - lastOutboundAttempt));
+    ret.push_back(Pair("lastOutboundSuccess", lastOutboundSuccess));
+    ret.push_back(Pair("lastOutboundSuccessElapsed", now - lastOutboundSuccess));
+
+    return ret;
+}
 
 void CSmartnodeMetaInfo::AddGovernanceVote(const uint256& nGovernanceObjectHash)
 {

@@ -28,43 +28,12 @@
 
 #include <bls/bls.h>
 
-static const std::string LOWER_CASE = "abcdefghijklmnopqrstuvwxyz";
-static const std::string SPECIAL = "~!@#$%^&*+<>[];:,.?|";
-static const std::string NUMBER = "0123456789";
+#include "smartnode/smartnode-meta.h"
 
-static std::string generateRandomString(int length, bool specialChar) {
-	std::time_t now = std::time(0);
-    boost::random::mt19937 gen{static_cast<std::uint32_t>(now)};
-    int charOptions = specialChar ? 4 : 3;
-    int specialLength = SPECIAL.length()-1;
-    boost::random::uniform_int_distribution<> randomOption{1, charOptions};
-    boost::random::uniform_int_distribution<> randomChar{0,25};
-    boost::random::uniform_int_distribution<> randomNum{0,9};
-    boost::random::uniform_int_distribution<> randomSpecial{0,specialLength};
-    string str;
-    str.reserve(length);
-    for(int i = 0; i < length; i++) {
-    	int option = randomOption(gen);
-    	char ch;
-    	switch(option) {
-    	case 1:
-    		str.push_back(LOWER_CASE[randomChar(gen)]);
-    		break;
-    	case 2:
-    		str.push_back(LOWER_CASE[randomChar(gen)] - 32);
-    		break;
-    	case 3:
-    		str.push_back(NUMBER[randomNum(gen)]);
-    		break;
-    	case 4:
-    		str.push_back(SPECIAL[randomSpecial(gen)]);
-    		break;
-    	default:
-    		continue;
-    	}
-	}
-    return str;
-}
+#ifdef ENABLE_WALLET
+extern UniValue signrawtransaction(const JSONRPCRequest& request);
+extern UniValue sendrawtransaction(const JSONRPCRequest& request);
+#endif//ENABLE_WALLET
 
 std::string GetHelpString(int nParamNum, std::string strParamName)
 {
@@ -1168,6 +1137,9 @@ UniValue BuildDMNListEntry(CWallet* pwallet, const CDeterministicMNCPtr& dmn, bo
     walletObj.push_back(Pair("ownsPayeeScript", CheckWalletOwnsScript(pwallet, dmn->pdmnState->scriptPayout)));
     walletObj.push_back(Pair("ownsOperatorRewardScript", CheckWalletOwnsScript(pwallet, dmn->pdmnState->scriptOperatorPayout)));
     o.push_back(Pair("wallet", walletObj));
+
+    auto metaInfo = mmetaman.GetMetaInfo(dmn->proTxHash);
+    o.push_back(Pair("metaInfo", metaInfo->ToJson()));
 
     return o;
 }
