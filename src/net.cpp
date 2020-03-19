@@ -2131,6 +2131,7 @@ void CConnman::ThreadOpenSmartnodeConnections()
                 vPendingSmartnodes.erase(vPendingSmartnodes.begin());
                 if (dmn && !connectedNodes.count(dmn->pdmnState->addr) && !IsSmartnodeOrDisconnectRequested(dmn->pdmnState->addr)) {
                     connectToDmn = dmn;
+                    LogPrint(BCLog::NET, "CConnman::%s -- opening pending masternode connection to %s, service=%s\n", __func__, dmn->proTxHash.ToString(), dmn->pdmnState->addr.ToString(false));
                 }
             }
 
@@ -2156,6 +2157,7 @@ void CConnman::ThreadOpenSmartnodeConnections()
 
                 if (!pending.empty()) {
                     connectToDmn = pending[GetRandInt(pending.size())];
+                    LogPrint(BCLog::NET, "CConnman::%s -- opening quorum connection to %s, service=%s\n", __func__, connectToDmn->proTxHash.ToString(), connectToDmn->pdmnState->addr.ToString(false));
                 }
             }
         }
