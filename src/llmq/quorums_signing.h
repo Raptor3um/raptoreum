@@ -6,13 +6,13 @@
 #ifndef RAPTOREUM_QUORUMS_SIGNING_H
 #define RAPTOREUM_QUORUMS_SIGNING_H
 
-#include "llmq/quorums.h"
+#include <llmq/quorums.h>
 
-#include "net.h"
-#include "chainparams.h"
-#include "saltedhasher.h"
-#include "univalue.h"
-#include "unordered_lru_cache.h"
+#include <net.h>
+#include <chainparams.h>
+#include <saltedhasher.h>
+#include <univalue.h>
+#include <unordered_lru_cache.h>
 
 #include <unordered_map>
 

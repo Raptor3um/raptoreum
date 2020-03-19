@@ -6,7 +6,7 @@
 #ifndef PRIVATESENDUTIL_H
 #define PRIVATESENDUTIL_H
 
-#include "wallet/wallet.h"
+#include <wallet/wallet.h>
 
 class CKeyHolder
 {

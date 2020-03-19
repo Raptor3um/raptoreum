@@ -6,16 +6,16 @@
 #ifndef RAPTOREUM_DETERMINISTICMNS_H
 #define RAPTOREUM_DETERMINISTICMNS_H
 
-#include "arith_uint256.h"
-#include "bls/bls.h"
-#include "dbwrapper.h"
-#include "evodb.h"
-#include "providertx.h"
-#include "simplifiedmns.h"
-#include "sync.h"
+#include <arith_uint256.h>
+#include <bls/bls.h>
+#include <dbwrapper.h>
+#include <evo/evodb.h>
+#include <evo/providertx.h>
+#include <evo/simplifiedmns.h>
+#include <sync.h>
 
-#include "immer/map.hpp"
-#include "immer/map_transient.hpp"
+#include <immer/map.hpp>
+#include <immer/map_transient.hpp>
 
 #include <map>
 

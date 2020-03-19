@@ -6,7 +6,7 @@
 #ifndef RAPTOREUM_BATCHEDLOGGER_H
 #define RAPTOREUM_BATCHEDLOGGER_H
 
-#include "tinyformat.h"
+#include <tinyformat.h>
 
 class CBatchedLogger
 {

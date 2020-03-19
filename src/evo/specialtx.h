@@ -6,9 +6,9 @@
 #ifndef RAPTOREUM_SPECIALTX_H
 #define RAPTOREUM_SPECIALTX_H
 
-#include "primitives/transaction.h"
-#include "streams.h"
-#include "version.h"
+#include <primitives/transaction.h>
+#include <streams.h>
+#include <version.h>
 
 class CBlock;
 class CBlockIndex;

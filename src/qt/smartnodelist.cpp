@@ -1,18 +1,18 @@
-#include "smartnodelist.h"
-#include "ui_smartnodelist.h"
+#include <qt/smartnodelist.h>
+#include <qt/forms/ui_smartnodelist.h>
 
-#include "smartnode/activesmartnode.h"
-#include "clientmodel.h"
-#include "clientversion.h"
-#include "coins.h"
-#include "guiutil.h"
-#include "init.h"
-#include "smartnode/smartnode-sync.h"
-#include "netbase.h"
-#include "sync.h"
-#include "validation.h"
-#include "wallet/wallet.h"
-#include "walletmodel.h"
+#include <smartnode/activesmartnode.h>
+#include <qt/clientmodel.h>
+#include <clientversion.h>
+#include <coins.h>
+#include <qt/guiutil.h>
+#include <init.h>
+#include <smartnode/smartnode-sync.h>
+#include <netbase.h>
+#include <sync.h>
+#include <validation.h>
+#include <wallet/wallet.h>
+#include <qt/walletmodel.h>
 
 #include <univalue.h>
 

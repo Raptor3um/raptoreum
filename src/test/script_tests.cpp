@@ -2,20 +2,20 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "data/script_tests.json.h"
+#include <test/data/script_tests.json.h>
 
-#include "core_io.h"
-#include "key.h"
-#include "keystore.h"
-#include "script/script.h"
-#include "script/script_error.h"
-#include "script/sign.h"
-#include "util.h"
-#include "utilstrencodings.h"
-#include "test/test_raptoreum.h"
+#include <core_io.h>
+#include <key.h>
+#include <keystore.h>
+#include <script/script.h>
+#include <script/script_error.h>
+#include <script/sign.h>
+#include <util.h>
+#include <utilstrencodings.h>
+#include <test/test_raptoreum.h>
 
 #if defined(HAVE_CONSENSUS_LIB)
-#include "script/raptoreumconsensus.h"
+#include <script/raptoreumconsensus.h>
 #endif
 
 #include <fstream>
@@ -429,7 +429,7 @@ BOOST_AUTO_TEST_CASE(script_build)
     tests.push_back(TestBuilder(CScript() << ToByteVector(keys.pubkey0C) << OP_CHECKSIG,
                                 "P2SH(P2PK), bad redeemscript", SCRIPT_VERIFY_P2SH, true
                                ).PushSig(keys.key0).PushRedeem().DamagePush(10).ScriptError(SCRIPT_ERR_EVAL_FALSE));
-    
+
     tests.push_back(TestBuilder(CScript() << OP_DUP << OP_HASH160 << ToByteVector(keys.pubkey0.GetID()) << OP_EQUALVERIFY << OP_CHECKSIG,
                                 "P2SH(P2PKH)", SCRIPT_VERIFY_P2SH, true
                                ).PushSig(keys.key0).Push(keys.pubkey0).PushRedeem());

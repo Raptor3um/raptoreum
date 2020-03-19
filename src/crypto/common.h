@@ -6,13 +6,13 @@
 #define BITCOIN_CRYPTO_COMMON_H
 
 #if defined(HAVE_CONFIG_H)
-#include "config/raptoreum-config.h"
+#include <config/raptoreum-config.h>
 #endif
 
 #include <stdint.h>
 #include <string.h>
 
-#include "compat/endian.h"
+#include <compat/endian.h>
 
 uint16_t static inline ReadLE16(const unsigned char* ptr)
 {

@@ -2,13 +2,13 @@
 // Copyright (c) 2020 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 
-#include "base58.h"
-#include "bip39.h"
-#include "chainparams.h"
-#include "hdchain.h"
-#include "tinyformat.h"
-#include "util.h"
-#include "utilstrencodings.h"
+#include <base58.h>
+#include <bip39.h>
+#include <chainparams.h>
+#include <hdchain.h>
+#include <tinyformat.h>
+#include <util.h>
+#include <utilstrencodings.h>
 
 bool CHDChain::SetNull()
 {

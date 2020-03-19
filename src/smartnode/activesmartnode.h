@@ -6,14 +6,14 @@
 #ifndef ACTIVESMARTNODE_H
 #define ACTIVESMARTNODE_H
 
-#include "chainparams.h"
-#include "key.h"
-#include "net.h"
-#include "primitives/transaction.h"
-#include "validationinterface.h"
+#include <chainparams.h>
+#include <key.h>
+#include <net.h>
+#include <primitives/transaction.h>
+#include <validationinterface.h>
 
-#include "evo/deterministicmns.h"
-#include "evo/providertx.h"
+#include <evo/deterministicmns.h>
+#include <evo/providertx.h>
 
 struct CActiveSmartnodeInfo;
 class CActiveSmartnodeManager;

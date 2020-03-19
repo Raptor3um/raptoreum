@@ -4,11 +4,11 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include "config/raptoreum-config.h"
+#include <config/raptoreum-config.h>
 #endif
 
-#include "tinyformat.h"
-#include "utiltime.h"
+#include <tinyformat.h>
+#include <utiltime.h>
 
 #include <atomic>
 

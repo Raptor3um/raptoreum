@@ -3,22 +3,22 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "privatesend.h"
+#include <privatesend/privatesend.h>
 
-#include "smartnode/activesmartnode.h"
-#include "consensus/validation.h"
-#include "smartnode/smartnode-payments.h"
-#include "smartnode/smartnode-sync.h"
-#include "messagesigner.h"
-#include "netmessagemaker.h"
-#include "script/sign.h"
-#include "txmempool.h"
-#include "util.h"
-#include "utilmoneystr.h"
-#include "validation.h"
+#include <smartnode/activesmartnode.h>
+#include <consensus/validation.h>
+#include <smartnode/smartnode-payments.h>
+#include <smartnode/smartnode-sync.h>
+#include <messagesigner.h>
+#include <netmessagemaker.h>
+#include <script/sign.h>
+#include <txmempool.h>
+#include <util.h>
+#include <utilmoneystr.h>
+#include <validation.h>
 
-#include "llmq/quorums_instantsend.h"
-#include "llmq/quorums_chainlocks.h"
+#include <llmq/quorums_instantsend.h>
+#include <llmq/quorums_chainlocks.h>
 
 #include <string>
 

@@ -5,21 +5,21 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include "config/raptoreum-config.h"
+#include <config/raptoreum-config.h>
 #endif
 
-#include "rpcconsole.h"
-#include "ui_debugwindow.h"
+#include <qt/rpcconsole.h>
+#include <qt/forms/ui_debugwindow.h>
 
-#include "bantablemodel.h"
-#include "clientmodel.h"
-#include "guiutil.h"
-#include "platformstyle.h"
-#include "chainparams.h"
-#include "netbase.h"
-#include "rpc/server.h"
-#include "rpc/client.h"
-#include "util.h"
+#include <qt/bantablemodel.h>
+#include <qt/clientmodel.h>
+#include <qt/guiutil.h>
+#include <qt/platformstyle.h>
+#include <chainparams.h>
+#include <netbase.h>
+#include <rpc/server.h>
+#include <rpc/client.h>
+#include <util.h>
 
 #include <openssl/crypto.h>
 
@@ -137,7 +137,7 @@ public:
 };
 
 
-#include "rpcconsole.moc"
+#include <qt/rpcconsole.moc>
 
 /**
  * Split shell command line into a list of arguments and optionally execute the command(s).
@@ -660,7 +660,7 @@ void RPCConsole::setClientModel(ClientModel *model)
         connect(model->getPeerTableModel(), SIGNAL(layoutChanged()), this, SLOT(peerLayoutChanged()));
         // peer table signal handling - cache selected node ids
         connect(model->getPeerTableModel(), SIGNAL(layoutAboutToBeChanged()), this, SLOT(peerLayoutAboutToChange()));
-        
+
         // set up ban table
         ui->banlistWidget->setModel(model->getBanTableModel());
         ui->banlistWidget->verticalHeader()->hide();
@@ -868,7 +868,7 @@ void RPCConsole::clear(bool clearHistory)
 #else
     QString clsKey = "Ctrl-L";
 #endif
-	 
+
     message(CMD_REPLY, (tr("Welcome to the %1 RPC console.").arg(tr(PACKAGE_NAME)) + "<br>" +
                         tr("Use up and down arrows to navigate history, and %1 to clear screen.").arg("<b>"+clsKey+"</b>") + "<br>" +
                         tr("Type %1 for an overview of available commands.").arg("<b>help</b>") + "<br>" +
@@ -1255,7 +1255,7 @@ void RPCConsole::disconnectSelectedNode()
 {
     if(!g_connman)
         return;
-    
+
     // Get selected peer addresses
     QList<QModelIndex> nodes = GUIUtil::getEntryData(ui->peerWidget, PeerTableModel::NetNodeId);
     for(int i = 0; i < nodes.count(); i++)
@@ -1272,7 +1272,7 @@ void RPCConsole::banSelectedNode(int bantime)
 {
     if (!clientModel || !g_connman)
         return;
-    
+
     // Get selected peer addresses
     QList<QModelIndex> nodes = GUIUtil::getEntryData(ui->peerWidget, PeerTableModel::NetNodeId);
     for(int i = 0; i < nodes.count(); i++)

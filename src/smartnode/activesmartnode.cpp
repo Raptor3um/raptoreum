@@ -3,14 +3,14 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "activesmartnode.h"
-#include "evo/deterministicmns.h"
-#include "init.h"
-#include "smartnode/smartnode-sync.h"
-#include "netbase.h"
-#include "protocol.h"
-#include "validation.h"
-#include "warnings.h"
+#include <smartnode/activesmartnode.h>
+#include <evo/deterministicmns.h>
+#include <init.h>
+#include <smartnode/smartnode-sync.h>
+#include <netbase.h>
+#include <protocol.h>
+#include <validation.h>
+#include <warnings.h>
 
 // Keep track of the active Smartnode
 CActiveSmartnodeInfo activeSmartnodeInfo;

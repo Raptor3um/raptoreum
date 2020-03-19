@@ -6,9 +6,9 @@
 #ifndef RAPTOREUM_CRYPTO_BLS_WORKER_H
 #define RAPTOREUM_CRYPTO_BLS_WORKER_H
 
-#include "bls.h"
+#include <bls/bls.h>
 
-#include "ctpl.h"
+#include <ctpl.h>
 
 #include <future>
 #include <mutex>

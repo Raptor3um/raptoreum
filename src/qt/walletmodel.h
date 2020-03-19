@@ -5,14 +5,14 @@
 #ifndef BITCOIN_QT_WALLETMODEL_H
 #define BITCOIN_QT_WALLETMODEL_H
 
-#include "paymentrequestplus.h"
-#include "walletmodeltransaction.h"
-#include "walletmodelfuturestransaction.h"
+#include <paymentrequestplus.h>
+#include <walletmodeltransaction.h>
+#include <walletmodelfuturestransaction.h>
 
 #ifdef ENABLE_WALLET
-#include "wallet/wallet.h"
+#include <wallet/wallet.h>
 #endif // ENABLE_WALLET
-#include "support/allocators/secure.h"
+#include <support/allocators/secure.h>
 
 #include <map>
 #include <vector>

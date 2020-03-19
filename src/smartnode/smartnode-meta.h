@@ -6,9 +6,9 @@
 #ifndef SMARTNODE_META_H
 #define SMARTNODE_META_H
 
-#include "serialize.h"
+#include <serialize.h>
 
-#include "evo/deterministicmns.h"
+#include <evo/deterministicmns.h>
 
 #include <memory>
 

@@ -3,16 +3,16 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "smartnode/activesmartnode.h"
-#include "governance/governance.h"
-#include "init.h"
-#include "validation.h"
-#include "smartnode/smartnode-payments.h"
-#include "smartnode/smartnode-sync.h"
-#include "netfulfilledman.h"
-#include "netmessagemaker.h"
-#include "ui_interface.h"
-#include "evo/deterministicmns.h"
+#include <smartnode/activesmartnode.h>
+#include <governance/governance.h>
+#include <init.h>
+#include <validation.h>
+#include <smartnode/smartnode-payments.h>
+#include <smartnode/smartnode-sync.h>
+#include <netfulfilledman.h>
+#include <netmessagemaker.h>
+#include <ui_interface.h>
+#include <evo/deterministicmns.h>
 
 class CSmartnodeSync;
 CSmartnodeSync smartnodeSync;

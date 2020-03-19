@@ -2,21 +2,17 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "tx_verify.h"
+#include <consensus/tx_verify.h>
 
-#include "consensus.h"
-#include "chainparams.h"
-#include "primitives/transaction.h"
-#include "script/interpreter.h"
-#include "validation.h"
-#include "future/fee.h"
-#include "evo/specialtx.h"
-#include "evo/providertx.h"
+#include <consensus/consensus.h>
+#include <primitives/transaction.h>
+#include <script/interpreter.h>
+#include <consensus/validation.h>
 
 // TODO remove the following dependencies
-#include "chain.h"
-#include "coins.h"
-#include "utilmoneystr.h"
+#include <chain.h>
+#include <coins.h>
+#include <utilmoneystr.h>
 
 
 static void checkSpecialTxFee(const CTransaction &tx, CAmount& nFeeTotal, CAmount& specialTxFee) {

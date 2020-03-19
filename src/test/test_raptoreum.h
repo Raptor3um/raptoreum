@@ -7,14 +7,14 @@
 #ifndef BITCOIN_TEST_TEST_RAPTOREUM_H
 #define BITCOIN_TEST_TEST_RAPTOREUM_H
 
-#include "chainparamsbase.h"
-#include "fs.h"
-#include "key.h"
-#include "pubkey.h"
-#include "random.h"
-#include "scheduler.h"
-#include "txdb.h"
-#include "txmempool.h"
+#include <chainparamsbase.h>
+#include <fs.h>
+#include <key.h>
+#include <pubkey.h>
+#include <random.h>
+#include <scheduler.h>
+#include <txdb.h>
+#include <txmempool.h>
 
 #include <boost/thread.hpp>
 

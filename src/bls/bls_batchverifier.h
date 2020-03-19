@@ -6,7 +6,7 @@
 #ifndef RAPTOREUM_CRYPTO_BLS_BATCHVERIFIER_H
 #define RAPTOREUM_CRYPTO_BLS_BATCHVERIFIER_H
 
-#include "bls.h"
+#include <bls/bls.h>
 
 #include <map>
 #include <vector>

@@ -3,18 +3,18 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "quorums_signing.h"
-#include "quorums_signing_shares.h"
-#include "quorums_utils.h"
+#include <llmq/quorums_signing.h>
+#include <llmq/quorums_signing_shares.h>
+#include <llmq/quorums_utils.h>
 
-#include "smartnode/activesmartnode.h"
-#include "bls/bls_batchverifier.h"
-#include "init.h"
-#include "net_processing.h"
-#include "netmessagemaker.h"
-#include "validation.h"
+#include <smartnode/activesmartnode.h>
+#include <bls/bls_batchverifier.h>
+#include <init.h>
+#include <net_processing.h>
+#include <netmessagemaker.h>
+#include <validation.h>
 
-#include "cxxtimer.hpp"
+#include <cxxtimer.hpp>
 
 namespace llmq
 {

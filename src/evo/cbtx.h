@@ -6,9 +6,9 @@
 #ifndef RAPTOREUM_CBTX_H
 #define RAPTOREUM_CBTX_H
 
-#include "consensus/validation.h"
-#include "primitives/transaction.h"
-#include "univalue.h"
+#include <consensus/validation.h>
+#include <primitives/transaction.h>
+#include <univalue.h>
 
 class CBlock;
 class CBlockIndex;

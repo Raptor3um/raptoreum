@@ -3,14 +3,14 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "smartnode/smartnode-utils.h"
+#include <smartnode/smartnode-utils.h>
 
-#include "init.h"
-#include "smartnode/smartnode-sync.h"
+#include <init.h>
+#include <smartnode/smartnode-sync.h>
 #ifdef ENABLE_WALLET
-#include "privatesend/privatesend-client.h"
+#include <privatesend/privatesend-client.h>
 #endif
-#include "validation.h"
+#include <validation.h>
 
 struct CompareScoreMN
 {

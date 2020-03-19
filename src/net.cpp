@@ -6,29 +6,29 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include "config/raptoreum-config.h"
+#include <config/raptoreum-config.h>
 #endif
 
-#include "net.h"
-#include "netmessagemaker.h"
+#include <net.h>
+#include <netmessagemaker.h>
 
-#include "addrman.h"
-#include "chainparams.h"
-#include "clientversion.h"
-#include "consensus/consensus.h"
-#include "crypto/common.h"
-#include "crypto/sha256.h"
-#include "hash.h"
-#include "primitives/transaction.h"
-#include "netbase.h"
-#include "scheduler.h"
-#include "ui_interface.h"
-#include "utilstrencodings.h"
-#include "validation.h"
+#include <addrman.h>
+#include <chainparams.h>
+#include <clientversion.h>
+#include <consensus/consensus.h>
+#include <crypto/common.h>
+#include <crypto/sha256.h>
+#include <hash.h>
+#include <primitives/transaction.h>
+#include <netbase.h>
+#include <scheduler.h>
+#include <ui_interface.h>
+#include <utilstrencodings.h>
+#include <validation.h>
 
-#include "smartnode/smartnode-sync.h"
-#include "privatesend/privatesend.h"
-#include "evo/deterministicmns.h"
+#include <smartnode/smartnode-sync.h>
+#include <privatesend/privatesend.h>
+#include <evo/deterministicmns.h>
 
 #ifdef WIN32
 #include <string.h>

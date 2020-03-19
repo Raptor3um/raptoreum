@@ -5,8 +5,8 @@
 #ifndef SMARTNODE_SYNC_H
 #define SMARTNODE_SYNC_H
 
-#include "chain.h"
-#include "net.h"
+#include <chain.h>
+#include <net.h>
 
 class CSmartnodeSync;
 

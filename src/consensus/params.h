@@ -6,9 +6,9 @@
 #ifndef BITCOIN_CONSENSUS_PARAMS_H
 #define BITCOIN_CONSENSUS_PARAMS_H
 
-#include "uint256.h"
-#include "founder_payment.h"
-#include "smartnode/smartnode-collaterals.h"
+#include <uint256.h>
+#include <founder_payment.h>
+#include <smartnode/smartnode-collaterals.h>
 #include <map>
 #include <string>
 

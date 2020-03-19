@@ -6,9 +6,9 @@
 #ifndef RAPTOREUM_EVODB_H
 #define RAPTOREUM_EVODB_H
 
-#include "dbwrapper.h"
-#include "sync.h"
-#include "uint256.h"
+#include <dbwrapper.h>
+#include <sync.h>
+#include <uint256.h>
 
 // "b_b" was used in the initial version of deterministic MN storage
 // "b_b2" was used after compact diffs were introduced

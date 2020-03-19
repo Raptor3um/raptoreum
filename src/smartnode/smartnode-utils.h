@@ -6,7 +6,7 @@
 #ifndef SMARTNODE_UTILS_H
 #define SMARTNODE_UTILS_H
 
-#include "evo/deterministicmns.h"
+#include <evo/deterministicmns.h>
 
 class CConnman;
 
