@@ -762,6 +762,7 @@ void CNode::copyStats(CNodeStats &stats)
         LOCK(cs_mnauth);
         X(verifiedProRegTxHash);
     }
+    X(fMasternode);
 }
 #undef X
 
