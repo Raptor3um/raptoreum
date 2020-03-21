@@ -59,6 +59,9 @@ class LLMQ_IS_RetroactiveSigning(RaptoreumTestFramework):
         self.wait_for_tx(txid, self.nodes[1])
         self.wait_for_tx(txid, self.nodes[2])
         reconnect_isolated_node(self.nodes[3], 0)
+        # Make sure nodes actually try re-connecting quorum connections
+        self.bump_mocktime(30)
+        set_node_times(self.nodes, self.mocktime)
         self.wait_for_mnauth(self.nodes[3], 2)
         # node 3 fully reconnected but the TX wasn't relayed to it, so there should be no IS lock
         self.wait_for_instantlock(txid, self.nodes[0], False, 5)
@@ -90,6 +93,9 @@ class LLMQ_IS_RetroactiveSigning(RaptoreumTestFramework):
         self.wait_for_tx(txid, self.nodes[1])
         self.wait_for_tx(txid, self.nodes[2])
         reconnect_isolated_node(self.nodes[3], 0)
+        # Make sure nodes actually try re-connecting quorum connections
+        self.bump_mocktime(30)
+        set_node_times(self.nodes, self.mocktime)
         self.wait_for_mnauth(self.nodes[3], 2)
         # node 3 fully reconnected but the TX wasn't relayed to it, so there should be no IS lock
         self.wait_for_instantlock(txid, self.nodes[0], False, 5)
@@ -132,6 +138,9 @@ class LLMQ_IS_RetroactiveSigning(RaptoreumTestFramework):
         set_node_times(self.nodes, self.mocktime)
         time.sleep(2) # make sure Cleanup() is called
         reconnect_isolated_node(self.nodes[3], 0)
+        # Make sure nodes actually try re-connecting quorum connections
+        self.bump_mocktime(30)
+        set_node_times(self.nodes, self.mocktime)
         self.wait_for_mnauth(self.nodes[3], 2)
         # node 3 fully reconnected but the signing session is already timed out on all nodes, so no IS lock
         self.wait_for_instantlock(txid, self.nodes[0], False, 5)
@@ -157,6 +166,9 @@ class LLMQ_IS_RetroactiveSigning(RaptoreumTestFramework):
         set_node_times(self.nodes, self.mocktime)
         time.sleep(2) # make sure Cleanup() is called
         reconnect_isolated_node(self.nodes[3], 0)
+        # Make sure nodes actually try re-connecting quorum connections
+        self.bump_mocktime(30)
+        set_node_times(self.nodes, self.mocktime)
         self.wait_for_mnauth(self.nodes[3], 2)
         self.nodes[0].sendrawtransaction(rawtx)
         # Make sure nodes 1 and 2 received the TX
