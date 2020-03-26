@@ -255,6 +255,10 @@ void PrepareShutdown()
     threadGroup.interrupt_all();
     threadGroup.join_all();
 
+    // After there are no more peers/RPC left to give us new data which may generate
+    // CValidationInterface callbacks, flush them...
+    GetMainSignals().FlushBackgroundCallbacks();
+
     if (!fLiteMode && !fRPCInWarmup) {
         // STORE DATA CACHES INTO SERIALIZED DAT FILES
         CFlatDB<CSmartnodeMetaMan> flatdb1("mncache.dat", "magicSmartnodeCache");
@@ -293,10 +297,6 @@ void PrepareShutdown()
     if (pcoinsTip != nullptr) {
         FlushStateToDisk();
     }
-
-    // After there are no more peers/RPC left to give us new data which may generate
-    // CValidationInterface callbacks, flush them...
-    GetMainSignals().FlushBackgroundCallbacks();
 
     // Any future callbacks will be dropped. This should absolutely be safe - if
     // missing a callback results in an unrecoverable situation, unclean shutdown
