@@ -5,7 +5,7 @@
 
 #include <smartnode/smartnode-meta.h>
 
-#include "timedata.h"
+#include <timedata.h>
 
 CSmartnodeMetaMan mmetaman;
 
