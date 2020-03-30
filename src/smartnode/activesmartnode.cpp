@@ -69,7 +69,7 @@ void CActiveMasternodeManager::Init(const CBlockIndex* pindex)
     if (!deterministicMNManager->IsDIP3Enforced(pindex->nHeight)) return;
 
     // Check that our local network configuration is correct
-    if (!fListen) {
+    if (!fListen && Params().NetworkIDString() != CBaseChainParams::REGTEST) {
         // listen option is probably overwritten by something else, no good
         state = SMARTNODE_ERROR;
         strError = "Smartnode must accept connections from outside. Make sure listen configuration option is not overwritten by some another parameter.";
@@ -120,7 +120,7 @@ void CActiveMasternodeManager::Init(const CBlockIndex* pindex)
     bool fConnected = ConnectSocketDirectly(activeSmartnodeInfo.service, hSocket, nConnectTimeout) && IsSelectableSocket(hSocket);
     CloseSocket(hSocket);
 
-    if (!fConnected) {
+    if (!fConnected && Params().NetworkIDString() != CBaseChainParams::REGTEST) {
         state = SMARTNODE_ERROR;
         strError = "Could not connect to " + activeSmartnodeInfo.service.ToString();
         LogPrintf("CActiveSmartnodeManager::Init -- ERROR: %s\n", strError);
