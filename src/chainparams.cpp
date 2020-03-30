@@ -118,12 +118,12 @@ void CChainParams::UpdateLLMQChainLocks(Consensus::LLMQType llmqType) {
     consensus.llmqTypeChainLocks = llmqType;
 }
 
-void CChainParams::UpdateLLMQDevnetParams(int size, int threshold)
-{
-  auto& params = consensus.llmqs.at(Consensus::LLMQ_DEVNET);
-  params.size = size;
-  params.minSize = threshold;
-  params.threshold = threshold;
+void CChainParams::UpdateLLMQTestParams(int size, int threshold) {
+    auto& params = consensus.llmqs.at(Consensus::LLMQ_TEST);
+    params.size = size;
+    params.minSize = threshold;
+    params.threshold = threshold;
+    params.dkgBadVotesThreshold = threshold;
 }
 
 void CChainParams::UpdateLLMQDevnetParams(int size, int threshold)
@@ -132,6 +132,7 @@ void CChainParams::UpdateLLMQDevnetParams(int size, int threshold)
     params.size = size;
     params.minSize = threshold;
     params.threshold = threshold;
+    params.dkgBadVotesThreshold = threshold;
 }
 
 static CBlock FindDevNetGenesisBlock(const Consensus::Params& params, const CBlock &prevBlock, const CAmount& reward)
@@ -237,7 +238,7 @@ static Consensus::LLMQParams llmq3_60 = {
         .dkgPhaseBlocks = 2,
         .dkgMiningWindowStart = 10, // dkgPhaseBlocks * 5 = after finalization
         .dkgMiningWindowEnd = 18,
-        .dkgBadVotesThreshold = 8,
+        .dkgBadVotesThreshold = 2,
 
         .signingActiveQuorumCount = 2, // just a few ones to allow easier testing
 
