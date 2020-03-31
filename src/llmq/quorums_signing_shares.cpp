@@ -1020,7 +1020,7 @@ void CSigSharesManager::CollectSigSharesToSend(std::unordered_map<NodeId, std::v
     AssertLockHeld(cs);
 
     std::unordered_map<uint256, CNode*> proTxToNode;
-    for (CNode* pnode : vNodes) {
+    for (const auto& pnode : vNodes) {
         if (pnode->verifiedProRegTxHash.IsNull()) {
             continue;
         }
