@@ -69,7 +69,7 @@ void CActiveMasternodeManager::Init(const CBlockIndex* pindex)
     if (!deterministicMNManager->IsDIP3Enforced(pindex->nHeight)) return;
 
     // Check that our local network configuration is correct
-    if (!fListen && Params().NetworkIDString() != CBaseChainParams::REGTEST) {
+    if (!fListen && Params().RequireRoutableExternalIP()) {
         // listen option is probably overwritten by something else, no good
         state = SMARTNODE_ERROR;
         strError = "Smartnode must accept connections from outside. Make sure listen configuration option is not overwritten by some another parameter.";
@@ -120,7 +120,7 @@ void CActiveMasternodeManager::Init(const CBlockIndex* pindex)
     bool fConnected = ConnectSocketDirectly(activeSmartnodeInfo.service, hSocket, nConnectTimeout) && IsSelectableSocket(hSocket);
     CloseSocket(hSocket);
 
-    if (!fConnected && Params().NetworkIDString() != CBaseChainParams::REGTEST) {
+    if (!fConnected && Params().RequireRoutableExternalIP()) {
         state = SMARTNODE_ERROR;
         strError = "Could not connect to " + activeSmartnodeInfo.service.ToString();
         LogPrintf("CActiveSmartnodeManager::Init -- ERROR: %s\n", strError);
@@ -191,7 +191,7 @@ bool CActiveSmartnodeManager::GetLocalAddress(CService& addrRet)
     if (LookupHost("8.8.8.8", addrDummyPeer, false)) {
         fFoundLocal = GetLocal(addrRet, &addrDummyPeer) && IsValidNetAddr(addrRet);
     }
-    if (!fFoundLocal && Params().NetworkIDString() == CBaseChainParams::REGTEST) {
+    if (!fFoundLocal && !Params().RequireRoutableExternalIP()) {
         if (Lookup("127.0.0.1", addrRet, GetListenPort(), false)) {
             fFoundLocal = true;
         }
@@ -219,6 +219,6 @@ bool CActiveSmartnodeManager::IsValidNetAddr(CService addrIn)
 {
     // TODO: regtest is fine with any addresses for now,
     // should probably be a bit smarter if one day we start to implement tests for this
-    return Params().NetworkIDString() == CBaseChainParams::REGTEST ||
+    return !Params().RequireRoutableExternalIP() ||
            (addrIn.IsIPv4() && IsReachable(addrIn) && addrIn.IsRoutable());
 }
