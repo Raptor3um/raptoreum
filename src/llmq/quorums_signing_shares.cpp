@@ -1027,7 +1027,7 @@ void CSigSharesManager::CollectSigSharesToSend(std::unordered_map<NodeId, std::v
         proTxToNode.emplace(pnode->verifiedProRegTxHash, pnode);
     }
 
-    auto curTime = GetAdjustedTime();
+    auto curTime = GetTime();
 
     for (auto& p : signedSessions) {
         if (p.second.attempt > p.second.quorum->params.recoveryMembers) {
