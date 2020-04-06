@@ -351,7 +351,6 @@ public:
     void RelayInvFiltered(CInv &inv, const CTransaction &relatedTx, const int minProtoVersion = MIN_PEER_PROTO_VERSION, bool fAllowMasternodeConnections = false);
     // This overload will not update node filters,  so use it only for the cases when other messages will update related transaction data in filters
     void RelayInvFiltered(CInv &inv, const uint256 &relatedTxHash, const int minProtoVersion = MIN_PEER_PROTO_VERSION, bool fAllowMasternodeConnections = false);
-    void RemoveAskFor(const uint256& hash);
 
     // Addrman functions
     size_t GetAddressCount() const;
@@ -1031,8 +1030,6 @@ public:
         LOCK(cs_inventory);
         vBlockHashesToAnnounce.push_back(hash);
     }
-
-    void RemoveAskFor(const uint256& hash);
 
     void CloseSocketDisconnect();
 

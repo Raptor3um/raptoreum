@@ -903,7 +903,7 @@ void CInstantSendManager::ProcessInstantSendLock(NodeId from, const uint256& has
 {
     {
         LOCK(cs_main);
-        g_connman->RemoveAskFor(hash);
+        EraseObjectRequest(hash);
     }
 
     CTransactionRef tx;
