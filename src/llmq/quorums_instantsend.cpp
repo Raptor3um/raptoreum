@@ -20,6 +20,8 @@
 #include <wallet/wallet.h>
 #endif
 
+#include <cxxtimer.hpp>
+
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/thread.hpp>
 
@@ -788,6 +790,8 @@ std::unordered_set<uint256> CInstantSendManager::ProcessPendingInstantSendLocks(
     CBLSBatchVerifier<NodeId, uint256> batchVerifier(false, true, 8);
     std::unordered_map<uint256, std::pair<CQuorumCPtr, CRecoveredSig>> recSigs;
 
+    size_t verifyCount = 0;
+    size_t alreadyVerified = 0;
     for (const auto& p : pend) {
         auto& hash = p.first;
         auto nodeId = p.second.first;
@@ -806,6 +810,7 @@ std::unordered_set<uint256> CInstantSendManager::ProcessPendingInstantSendLocks(
 
         // no need to verify an ISLOCK if we already have verified the recovered sig that belongs to it
         if (quorumSigningManager->HasRecoveredSig(llmqType, id, islock.txid)) {
+            alreadyVerified++;
             continue;
         }
 
@@ -816,6 +821,7 @@ std::unordered_set<uint256> CInstantSendManager::ProcessPendingInstantSendLocks(
         }
         uint256 signHash = CLLMQUtils::BuildSignHash(llmqType, quorum->qc.quorumHash, id, islock.txid);
         batchVerifier.PushMessage(nodeId, hash, signHash, islock.sig.Get(), quorum->qc.quorumPublicKey);
+        verifyCount++;
 
         // We can reconstruct the CRecoveredSig objects from the islock and pass it to the signing manager, which
         // avoids unnecessary double-verification of the signature. We however only do this when verification here
@@ -833,7 +839,12 @@ std::unordered_set<uint256> CInstantSendManager::ProcessPendingInstantSendLocks(
         }
     }
 
+    cxxtimer::Timer verifyTimer(true);
     batchVerifier.Verify();
+    verifyTimer.stop();
+
+    LogPrint(BCLog::INSTANTSEND, "CInstantSendManager::%s -- verified locks. count=%d, alreadyVerified=%d, vt=%d, nodes=%d\n", __func__,
+            verifyCount, alreadyVerified, verifyTimer.count(), batchVerifier.GetUniqueSourceCount());
 
     std::unordered_set<uint256> badISLocks;
 
