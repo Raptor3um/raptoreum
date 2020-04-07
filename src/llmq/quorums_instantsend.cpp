@@ -903,7 +903,7 @@ void CInstantSendManager::ProcessInstantSendLock(NodeId from, const uint256& has
 {
     {
         LOCK(cs_main);
-        EraseObjectRequest(hash);
+        EraseObjectRequest(from, CInv(MSG_ISLOCK, hash));
     }
 
     CTransactionRef tx;
