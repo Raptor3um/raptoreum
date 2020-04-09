@@ -4079,8 +4079,8 @@ bool PeerLogicValidation::SendMessages(CNode* pto, std::atomic<bool>& interruptM
             if (pto->nNextInvSend < nNow) {
                 fSendTrickle = true;
                 // Use half the delay for regular outbound peers, as there is less privacy concern for them,
-                // and quarter the delay for Smartnode outbound peers, as there is even less privacy concern in this case.
-                pto->nNextInvSend = PoissonNextSend(nNow, INVENTORY_BROADCAST_INTERVAL >> !pto->fInbound >> pto->fSmartnode);
+                // and quarter the delay for Masternode outbound peers, as there is even less privacy concern in this case.
+                pto->nNextInvSend = PoissonNextSend(nNow, INVENTORY_BROADCAST_INTERVAL >> !pto->fInbound >> !pto->verifiedProRegTxHash.IsNull());
             }
 
             // Time to send but the peer has requested we not relay transactions.
