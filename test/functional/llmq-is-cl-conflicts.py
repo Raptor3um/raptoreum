@@ -10,7 +10,7 @@ from test_framework import mininode
 from test_framework.blocktools import get_smartnode_payment, create_coinbase, create_block
 from test_framework.mininode import *
 from test_framework.test_framework import RaptoreumTestFramework
-from test_framework.util import sync_blocks, sync_mempools, p2p_port, assert_raises_rpc_error, set_node_times
+from test_framework.util import sync_blocks, sync_mempools, p2p_port, assert_raises_rpc_error
 
 '''
 llmq-is-cl-conflicts.py
@@ -181,7 +181,6 @@ class LLMQ_IS_CL_Conflicts(RaptoreumTestFramework):
 
         # fast forward 11 minutes, so that the TX is considered safe and included in the next block
         self.bump_mocktime(int(60 * 11))
-        set_node_times(self.nodes, self.mocktime)
 
         # Mine the conflicting TX into a block
         good_tip = self.nodes[0].getbestblockhash()

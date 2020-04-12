@@ -6,7 +6,7 @@
 
 from test_framework.mininode import *
 from test_framework.test_framework import RaptoreumTestFramework
-from test_framework.util import isolate_node, sync_mempools, set_node_times, reconnect_isolated_node, assert_equal, \
+from test_framework.util import isolate_node, sync_mempools, reconnect_isolated_node, assert_equal, \
     assert_raises_rpc_error
 
 '''
@@ -44,7 +44,6 @@ class InstantSendTest(RaptoreumTestFramework):
         sender_addr = sender.getnewaddress()
         self.nodes[0].sendtoaddress(sender_addr, 1)
         self.bump_mocktime(1)
-        set_node_times(self.nodes, self.mocktime)
         self.nodes[0].generate(2)
         self.sync_all()
 
@@ -65,7 +64,6 @@ class InstantSendTest(RaptoreumTestFramework):
         isolated.sendrawtransaction(dblspnd_tx['hex'])
         # generate block on isolated node with doublespend transaction
         self.bump_mocktime(1)
-        set_node_times(self.nodes, self.mocktime)
         isolated.generate(1)
         wrong_block = isolated.getbestblockhash()
         # connect isolated block to network
@@ -85,7 +83,6 @@ class InstantSendTest(RaptoreumTestFramework):
         # mine more blocks
         # TODO: mine these blocks on an isolated node
         self.bump_mocktime(1)
-        set_node_times(self.nodes, self.mocktime)
         # make sure the above TX is on node0
         self.sync_mempools([n for n in self.nodes if n is not isolated])
         self.nodes[0].generate(2)
@@ -100,7 +97,6 @@ class InstantSendTest(RaptoreumTestFramework):
         sender_addr = sender.getnewaddress()
         self.nodes[0].sendtoaddress(sender_addr, 1)
         self.bump_mocktime(1)
-        set_node_times(self.nodes, self.mocktime)
         self.nodes[0].generate(2)
         self.sync_all()
 
@@ -131,7 +127,6 @@ class InstantSendTest(RaptoreumTestFramework):
         assert_equal(receiver.getwalletinfo()["balance"], 0)
         # mine more blocks
         self.bump_mocktime(1)
-        set_node_times(self.nodes, self.mocktime)
         self.nodes[0].generate(2)
         self.sync_all()
 
