@@ -5,8 +5,9 @@
 
 #include <evo/mnauth.h>
 
-#include <smartnode/activesmartnode.h>
 #include <evo/deterministicmns.h>
+#include <llmq/quorums_utils.h>
+#include <smartnode/activesmartnode.h>
 #include <smartnode/smartnode-meta.h>
 #include <smartnode/smartnode-sync.h>
 #include <net.h>
@@ -125,10 +126,38 @@ void CMNAuth::ProcessMessage(CNode* pnode, const std::string& strCommand, CDataS
         }
 
         connman.ForEachNode([&](CNode* pnode2) {
+            if (pnode->fDisconnect) {
+                // we've already disconnected the new peer
+                return;
+            }
+
             if (pnode2->verifiedProRegTxHash == mnauth.proRegTxHash) {
-                LogPrint(BCLog::NET, "CMNAuth::ProcessMessage -- Smartnode %s has already verified as peer %d, dropping new connection. peer=%d\n",
-                        mnauth.proRegTxHash.ToString(), pnode2->GetId(), pnode->GetId());
-                pnode->fDisconnect = true;
+                if (fSmartnodeMode) {
+                    auto deterministicOutbound = llmq::CLLMQUtils::DeterministicOutboundConnection(activeSmartnodeInfo.proTxHash, mnauth.proRegTxHash);
+                    LogPrint(BCLog::NET, "CMNAuth::ProcessMessage -- Smartnode %s has already verified as peer %d, deterministicOutbound=%s. peer=%d\n",
+                             mnauth.proRegTxHash.ToString(), pnode2->GetId(), deterministicOutbound.ToString(), pnode->GetId());
+                    if (deterministicOutbound == activeSmartnodeInfo.proTxHash) {
+                        if (pnode2->fInbound) {
+                            LogPrint(BCLog::NET, "CMNAuth::ProcessMessage -- dropping old inbound, peer=%d\n", pnode2->GetId());
+                            pnode2->fDisconnect = true;
+                        } else if (pnode->fInbound) {
+                            LogPrint(BCLog::NET, "CMNAuth::ProcessMessage -- dropping new inbound, peer=%d\n", pnode->GetId());
+                            pnode->fDisconnect = true;
+                        }
+                    } else {
+                        if (!pnode2->fInbound) {
+                            LogPrint(BCLog::NET, "CMNAuth::ProcessMessage -- dropping old outbound, peer=%d\n", pnode2->GetId());
+                            pnode2->fDisconnect = true;
+                        } else if (!pnode->fInbound) {
+                            LogPrint(BCLog::NET, "CMNAuth::ProcessMessage -- dropping new outbound, peer=%d\n", pnode->GetId());
+                            pnode->fDisconnect = true;
+                        }
+                    }
+                } else {
+                    LogPrint(BCLog::NET, "CMNAuth::ProcessMessage -- Masternode %s has already verified as peer %d, dropping new connection. peer=%d\n",
+                            mnauth.proRegTxHash.ToString(), pnode2->GetId(), pnode->GetId());
+                    pnode->fDisconnect = true;
+                }
             }
         });
 
