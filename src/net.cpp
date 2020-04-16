@@ -1226,9 +1226,9 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
     m_msgproc->InitializeNode(pnode);
 
     if (fLogIPs) {
-        LogPrint(BCLog::NET, "connection from %s accepted, peer=%d\n", addr.ToString(), pnode->GetId());
+        LogPrint(BCLog::NET_NETCONN, "connection from %s accepted, sock=%d, peer=%d\n", addr.ToString(), pnode->hSocket, pnode->GetId());
     } else {
-        LogPrint(BCLog::NET, "connection accepted, peer=%d\n", pnode->GetId());
+        LogPrint(BCLog::NET_NETCONN, "connection accepted, sock=%d, peer=%d\n", pnode->hSocket, pnode->GetId());
     }
 
     {
@@ -2297,7 +2297,7 @@ void CConnman::ThreadOpenSmartnodeConnections()
                 vPendingSmartnodes.erase(vPendingSmartnodes.begin());
                 if (dmn && !connectedNodes.count(dmn->pdmnState->addr) && !IsSmartnodeOrDisconnectRequested(dmn->pdmnState->addr)) {
                     connectToDmn = dmn;
-                    LogPrint(BCLog::NET, "CConnman::%s -- opening pending masternode connection to %s, service=%s\n", __func__, dmn->proTxHash.ToString(), dmn->pdmnState->addr.ToString(false));
+                    LogPrint(BCLog::NET_NETCONN, "CConnman::%s -- opening pending masternode connection to %s, service=%s\n", __func__, dmn->proTxHash.ToString(), dmn->pdmnState->addr.ToString(false));
                 }
             }
 
@@ -2323,7 +2323,7 @@ void CConnman::ThreadOpenSmartnodeConnections()
 
                 if (!pending.empty()) {
                     connectToDmn = pending[GetRandInt(pending.size())];
-                    LogPrint(BCLog::NET, "CConnman::%s -- opening quorum connection to %s, service=%s\n", __func__, connectToDmn->proTxHash.ToString(), connectToDmn->pdmnState->addr.ToString(false));
+                    LogPrint(BCLog::NET_NETCONN, "CConnman::%s -- opening quorum connection to %s, service=%s\n", __func__, connectToDmn->proTxHash.ToString(), connectToDmn->pdmnState->addr.ToString(false));
                 }
             }
 
@@ -2358,7 +2358,7 @@ void CConnman::ThreadOpenSmartnodeConnections()
                     masternodePendingProbes.erase(connectToDmn->proTxHash);
                     isProbe = true;
 
-                    LogPrint(BCLog::NET, "CConnman::%s -- probing masternode %s, service=%s\n", __func__, connectToDmn->proTxHash.ToString(), connectToDmn->pdmnState->addr.ToString(false));
+                    LogPrint(BCLog::NET_NETCONN, "CConnman::%s -- probing masternode %s, service=%s\n", __func__, connectToDmn->proTxHash.ToString(), connectToDmn->pdmnState->addr.ToString(false));
                 }
             }
         }
@@ -2380,7 +2380,7 @@ void CConnman::ThreadOpenSmartnodeConnections()
             return true;
         });
         if (!connected) {
-            LogPrint(BCLog::NET, "CConnman::%s -- connection failed for masternode  %s, service=%s\n", __func__, connectToDmn->proTxHash.ToString(), connectToDmn->pdmnState->addr.ToString(false));
+            LogPrint(BCLog::NET_NETCONN, "CConnman::%s -- connection failed for masternode  %s, service=%s\n", __func__, connectToDmn->proTxHash.ToString(), connectToDmn->pdmnState->addr.ToString(false));
             // reset last outbound success
             mmetaman.GetMetaInfo(connectToDmn->proTxHash)->SetLastOutboundSuccess(0);
         }
@@ -2417,14 +2417,14 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
     } else if (FindNode(std::string(pszDest)))
         return;
 
-    LogPrint(BCLog::NET, "CConnman::%s -- connecting to %s\n", __func__, addrConnect.ToString(false));
+    LogPrint(BCLog::NET_NETCONN, "CConnman::%s -- connecting to %s\n", __func__, addrConnect.ToString(false));
     CNode* pnode = ConnectNode(addrConnect, pszDest, fCountFailure);
 
     if (!pnode) {
-        LogPrint(BCLog::NET, "CConnman::%s -- ConnectNode failed for %s\n", __func__, addrConnect.ToString(false));
+        LogPrint(BCLog::NET_NETCONN, "CConnman::%s -- ConnectNode failed for %s\n", __func__, addrConnect.ToString(false));
         return;
     }
-    LogPrint(BCLog::NET, "CConnman::%s -- succesfully connected to %s, peer=%d\n", __func__, addrConnect.ToString(false), pnode->GetId());
+    LogPrint(BCLog::NET_NETCONN, "CConnman::%s -- succesfully connected to %s, sock=%d, peer=%d\n", __func__, addrConnect.ToString(false), pnode->hSocket, pnode->GetId());
     if (grantOutbound)
         grantOutbound->MoveTo(pnode->grantOutbound);
     if (fOneShot)
