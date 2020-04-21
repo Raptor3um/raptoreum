@@ -1276,7 +1276,7 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
 void CConnman::DisconnectNodes()
 {
     {
-        LOCK2(cs_vNodes, cs_vNodesDisconnected);
+        LOCK(cs_vNodes);
 
         if (!fNetworkActive) {
             // Disconnect any connected nodes
@@ -1335,10 +1335,7 @@ void CConnman::DisconnectNodes()
             }
         }
     }
-    std::vector<CNode*> vNodesToDelete;
     {
-        LOCK(cs_vNodesDisconnected);
-
         // Delete disconnected nodes
         std::list<CNode*> vNodesDisconnectedCopy = vNodesDisconnected;
         for (auto it = vNodesDisconnected.begin(); it != vNodesDisconnected.end(); )
@@ -1358,17 +1355,13 @@ void CConnman::DisconnectNodes()
                 }
                 if (fDelete) {
                     it = vNodesDisconnected.erase(it);
-                    vNodesToDelete.emplace_back(pnode);
+                    DeleteNode(pnode);
                 }
             }
             if (!fDelete) {
                 ++it;
             }
         }
-    }
-    // Call DeleteNode without any locks held
-    for (auto pnode : vNodesToDelete) {
-        DeleteNode(pnode);
     }
 }
 
@@ -2580,9 +2573,6 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
     if (!fNetworkActive) {
         return;
     }
-    // Ensure nodes with fDisconnect==true are actually disconnected and evicted, otherwise we might end up finding that
-    // node here when we're re-connecting, which would cause OpenNetworkConnection to bail out
-    DisconnectNodes();
     if (!pszDest) {
         // banned or exact match?
         if (IsBanned(addrConnect) || FindNode(addrConnect.ToStringIPPort()))
