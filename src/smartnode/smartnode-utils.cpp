@@ -40,24 +40,31 @@ void CSmartnodeUtils::ProcessSmartnodeConnections(CConnman& connman)
     }
 
     connman.ForEachNode(CConnman::AllNodes, [&](CNode* pnode) {
-        if (!pnode->fInbound && pnode->fSmartnode && !connman.IsSmartnodeQuorumNode(pnode)) {
+        // we're only disconnecting fSmartnode connections
+        if (!pnode->fSmartnode) return;
+        // we're only disconnecting outbound connections
+        if (pnode->fInbound) return;
+        // we're not disconnecting LLMQ connections
+        if (connman.IsSmartnodeQuorumNode(pnode)) return;
+        // we're not disconnecting smartnode probes for at least a few seconds
+        if (pnode->fSmartnodeProbe && GetSystemTimeInSeconds() - pnode->nTimeConnected < 5) return;
+
 #ifdef ENABLE_WALLET
-            bool fFound = false;
-            for (const auto& dmn : vecDmns) {
-                if (pnode->addr == dmn->pdmnState->addr) {
-                    fFound = true;
-                    break;
-                }
+        bool fFound = false;
+        for (const auto& dmn : vecDmns) {
+            if (pnode->addr == dmn->pdmnState->addr) {
+                fFound = true;
+                break;
             }
-            if (fFound) return; // do NOT disconnect mixing smartnodes
-#endif // ENABLE_WALLET
-            if (fLogIPs) {
-                LogPrintf("Closing Smartnode connection: peer=%d, addr=%s\n", pnode->GetId(), pnode->addr.ToString());
-            } else {
-                LogPrintf("Closing Smartnode connection: peer=%d\n", pnode->GetId());
-            }
-            pnode->fDisconnect = true;
         }
+        if (fFound) return; // do NOT disconnect mixing smartnodes
+#endif // ENABLE_WALLET
+        if (fLogIPs) {
+            LogPrintf("Closing Smartnode connection: peer=%d, addr=%s\n", pnode->GetId(), pnode->addr.ToString());
+        } else {
+            LogPrintf("Closing Smartnode connection: peer=%d\n", pnode->GetId());
+        }
+        pnode->fDisconnect = true;
     });
 }
 
