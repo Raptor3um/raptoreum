@@ -41,7 +41,6 @@ UniValue getconnectioncount(const JSONRPCRequest& request)
     if(!g_connman)
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
 
-    g_connman->DisconnectNodes();
     return (int)g_connman->GetNodeCount(CConnman::CONNECTIONS_ALL);
 }
 
@@ -127,8 +126,6 @@ UniValue getpeerinfo(const JSONRPCRequest& request)
 
     if(!g_connman)
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
-
-    g_connman->DisconnectNodes();
 
     std::vector<CNodeStats> vstats;
     g_connman->GetNodeStats(vstats);
@@ -470,10 +467,6 @@ UniValue getnetworkinfo(const JSONRPCRequest& request)
             + HelpExampleCli("getnetworkinfo", "")
             + HelpExampleRpc("getnetworkinfo", "")
         );
-
-    if (g_connman) {
-        g_connman->DisconnectNodes();
-    }
 
     LOCK(cs_main);
     UniValue obj(UniValue::VOBJ);
