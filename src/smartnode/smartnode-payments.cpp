@@ -354,20 +354,7 @@ bool CSmartnodePayments::GetBlockTxOuts(int nBlockHeight, CAmount blockReward, s
     return true;
 }
 
-// Is this smartnode scheduled to get paid soon?
-// -- Only look ahead up to 8 blocks to allow for propagation of the latest 2 blocks of votes
-bool CSmartnodePayments::IsScheduled(const CDeterministicMNCPtr& dmnIn, int nNotBlockHeight) const
-{
-    auto projectedPayees = deterministicMNManager->GetListAtChainTip().GetProjectedMNPayees(8);
-    for (const auto &dmn : projectedPayees) {
-        if (dmn->proTxHash == dmnIn->proTxHash) {
-            return true;
-        }
-    }
-    return false;
-}
-
-bool CSmartnodePayments::IsTransactionValid(const CTransaction& txNew, int nBlockHeight, CAmount blockReward, CAmount specialTxFee) const
+bool CSmartnodePayments::IsTransactionValid(const CTransaction& txNew, int nBlockHeight, CAmount blockReward) const
 {
     if (!deterministicMNManager->IsDIP3Enforced(nBlockHeight)) {
         // can't verify historical blocks here

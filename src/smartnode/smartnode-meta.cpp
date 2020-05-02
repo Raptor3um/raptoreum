@@ -57,6 +57,21 @@ CSmartnodeMetaInfoPtr CSmartnodeMetaMan::GetMetaInfo(const uint256& proTxHash, b
     return it->second;
 }
 
+// We keep track of dsq (mixing queues) count to avoid using same smartnodes for mixing too often.
+// This threshold is calculated as the last dsq count this specific smartnode was used in a mixing
+// session plus a margin of 20% of smartnode count. In other words we expect at least 20% of unique
+// smartnodes before we ever see a smartnode that we know already mixed someone's funds ealier.
+int64_t CSmartnodeMetaMan::GetDsqThreshold(const uint256& proTxHash, int nMnCount)
+{
+    LOCK(cs);
+    auto metaInfo = GetMetaInfo(proTxHash);
+    if (metaInfo == nullptr) {
+        // return a threshold which is slightly above nDsqCount i.e. a no-go
+        return nDsqCount + 1;
+    }
+    return metaInfo->GetLastDsq() + nMnCount / 5;
+}
+
 void CSmartnodeMetaMan::AllowMixing(const uint256& proTxHash)
 {
     LOCK(cs);

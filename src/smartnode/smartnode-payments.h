@@ -32,9 +32,8 @@ extern CSmartnodePayments mnpayments;
 class CSmartnodePayments
 {
 public:
-    bool GetBlockTxOuts(int nBlockHeight, CAmount blockReward, std::vector<CTxOut>& voutSmartnodePaymentsRet, CAmount specialTxFee) const;
-    bool IsTransactionValid(const CTransaction& txNew, int nBlockHeight, CAmount blockReward, CAmount specialTxFee) const;
-    bool IsScheduled(const CDeterministicMNCPtr& dmn, int nNotBlockHeight) const;
+    bool GetBlockTxOuts(int nBlockHeight, CAmount blockReward, std::vector<CTxOut>& voutSmartnodePaymentsRet) const;
+    bool IsTransactionValid(const CTransaction& txNew, int nBlockHeight, CAmount blockReward) const;
 
     bool GetSmartnodeTxOuts(int nBlockHeight, CAmount blockReward, std::vector<CTxOut>& voutSmartnodePaymentsRet, CAmount specialTxFee) const;
 };
