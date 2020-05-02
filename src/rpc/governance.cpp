@@ -11,6 +11,7 @@
 #include <governance/governance-classes.h>
 #include <governance/governance-validators.h>
 #include <init.h>
+#include <txmempool.h>
 #include <validation.h>
 #include <smartnode/smartnode-sync.h>
 #include <messagesigner.h>
@@ -187,7 +188,8 @@ UniValue gobject_prepare(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Trigger objects need not be prepared (however only smartnodes can create them)");
     }
 
-    LOCK2(cs_main, pwallet->cs_wallet);
+    LOCK2(cs_main, mempool.cs);
+    LOCK(pwallet->cs_wallet);
 
     std::string strError = "";
     if (!govobj.IsValidLocally(strError, false))

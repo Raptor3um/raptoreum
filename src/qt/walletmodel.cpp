@@ -20,6 +20,7 @@
 #include <validation.h>
 #include <net.h> // for g_connman
 #include <sync.h>
+#include <txmempool.h>
 #include <ui_interface.h>
 #include <util.h> // for GetBoolArg
 #include <wallet/coincontrol.h>
@@ -342,7 +343,8 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
     bool fCreated;
     std::string strFailReason;
     {
-        LOCK2(cs_main, wallet->cs_wallet);
+        LOCK2(cs_main, mempool.cs);
+        LOCK(wallet->cs_wallet);
 
         transaction.newPossibleKeyChange(wallet);
 
@@ -385,7 +387,9 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &tran
     QByteArray transaction_array; /* store serialized transaction */
 
     {
-        LOCK2(cs_main, wallet->cs_wallet);
+        LOCK2(cs_main, mempool.cs);
+        LOCK(wallet->cs_wallet);
+
         CWalletTx *newTx = transaction.getTransaction();
         QList<SendCoinsRecipient> recipients = transaction.getRecipients();
 
