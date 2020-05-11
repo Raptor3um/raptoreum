@@ -859,8 +859,8 @@ void CPrivateSendServer::SetState(PoolState nStateNew)
 {
     if (!fSmartnodeMode) return;
 
-    if (nStateNew == POOL_STATE_ERROR || nStateNew == POOL_STATE_SUCCESS) {
-        LogPrint(BCLog::PRIVATESEND, "CPrivateSendServer::SetState -- Can't set state to ERROR or SUCCESS as a Smartnode. \n");
+    if (nStateNew == POOL_STATE_ERROR) {
+        LogPrint(BCLog::PRIVATESEND, "CPrivateSendServer::SetState -- Can't set state to ERROR as a Smartnode. \n");
         return;
     }
 
