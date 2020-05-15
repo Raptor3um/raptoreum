@@ -103,6 +103,8 @@ private:
     QAction *sendCoinsAction;
     QAction *sendCoinsMenuAction;
     QAction *sendFuturesAction;
+    QAction *privateSendCoinsAction;
+    QAction *privateSendCoinsMenuAction;
     QAction *usedSendingAddressesAction;
     QAction *usedReceivingAddressesAction;
     QAction *signMessageAction;
@@ -243,6 +245,9 @@ private Q_SLOTS:
     void gotoSendCoinsPage(QString addr = "");
     /** Switch to send futures page */
     void gotoSendFuturesPage(QString addr = "");
+    /** Switch to PrivateSend coins page */
+    void gotoPrivateSendCoinsPage(QString addr = "");
+
     /** Show Sign/Verify Message dialog and switch to sign message tab */
     void gotoSignMessageTab(QString addr = "");
     /** Show Sign/Verify Message dialog and switch to verify message tab */

@@ -60,7 +60,8 @@ SendCoinsDialog::SendCoinsDialog(const PlatformStyle *_platformStyle, QWidget *p
     model(0),
     fNewRecipientAllowed(true),
     fFeeMinimized(true),
-    platformStyle(_platformStyle)
+    platformStyle(_platformStyle),
+    fPrivateSend(false)
 {
     ui->setupUi(this);
 
@@ -102,17 +103,6 @@ SendCoinsDialog::SendCoinsDialog(const PlatformStyle *_platformStyle, QWidget *p
     }
     if (settings.contains("bUseInstantSend")) {
         settings.remove("bUseInstantSend");
-    }
-
-    if (!privateSendClient.fEnablePrivateSend) {
-        ui->checkUsePrivateSend->setChecked(false);
-        ui->checkUsePrivateSend->setVisible(false);
-        CoinControlDialog::coinControl()->UsePrivateSend(false);
-    } else {
-        bool fUsePrivateSend = settings.value("bUsePrivateSend").toBool();
-        ui->checkUsePrivateSend->setChecked(fUsePrivateSend);
-        CoinControlDialog::coinControl()->UsePrivateSend(fUsePrivateSend);
-        connect(ui->checkUsePrivateSend, SIGNAL(stateChanged ( int )), this, SLOT(updateDisplayUnit()));
     }
 
     // Coin Control: clipboard actions
@@ -305,7 +295,7 @@ void SendCoinsDialog::send(QList<SendCoinsRecipient> recipients)
 
     updateCoinControlState(ctrl);
 
-    ctrl.UsePrivateSend(ui->checkUsePrivateSend->isChecked());
+    ctrl.UsePrivateSend(fPrivateSend);
 
     prepareStatus = model->prepareTransaction(currentTransaction, ctrl);
 
@@ -617,14 +607,12 @@ void SendCoinsDialog::setBalance(const CAmount& balance, const CAmount& unconfir
 
     if(model && model->getOptionsModel())
     {
-	    uint64_t bal = 0;
-        QSettings settings;
-        settings.setValue("bUsePrivateSend", ui->checkUsePrivateSend->isChecked());
-	    if(ui->checkUsePrivateSend->isChecked()) {
-		    bal = anonymizedBalance;
-	    } else {
-		    bal = balance;
-	    }
+        uint64_t bal = 0;
+        if (fPrivateSend) {
+            bal = anonymizedBalance;
+        } else {
+            bal = balance;
+        }
 
         ui->labelBalance->setText(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), bal));
     }
@@ -634,7 +622,7 @@ void SendCoinsDialog::updateDisplayUnit()
 {
     setBalance(model->getBalance(), model->getUnconfirmedBalance(), model->getImmatureBalance(), model->getAnonymizedBalance(),
                    model->getWatchBalance(), model->getWatchUnconfirmedBalance(), model->getWatchImmatureBalance());
-    CoinControlDialog::coinControl()->UsePrivateSend(ui->checkUsePrivateSend->isChecked());
+    CoinControlDialog::coinControl()->UsePrivateSend(fPrivateSend);
     coinControlUpdateLabels();
     ui->customFee->setDisplayUnit(model->getOptionsModel()->getDisplayUnit());
     updateMinFeeLabel();
@@ -721,7 +709,13 @@ void SendCoinsDialog::useAvailableBalance(SendCoinsEntry* entry)
     }
 
     // Calculate available amount to send.
-    CAmount amount = model->getBalance(&coin_control);
+    CAmount amount;
+    if (fPrivateSend) {
+        amount = model->getAnonymizedBalance();
+    } else {
+        amount = model->getBalance(&coin_control);
+    }
+
     for (int i = 0; i < ui->entries->count(); ++i) {
         SendCoinsEntry* e = qobject_cast<SendCoinsEntry*>(ui->entries->itemAt(i)->widget());
         if (e && !e->isHidden() && e != entry) {
@@ -785,6 +779,22 @@ void SendCoinsDialog::updateCoinControlState(CCoinControl& ctrl)
     // Avoid using global defaults when sending money from the GUI
     // Either custom fee will be used or if not selected, the confirmation target from dropdown box
     ctrl.m_confirm_target = getConfTargetForIndex(ui->confTargetSelector->currentIndex());
+}
+
+void SendCoinsDialog::setPrivateSend(bool privateSend)
+{
+    if (fPrivateSend != privateSend) {
+        fPrivateSend = privateSend;
+        coinControlUpdateLabels();
+        updateDisplayUnit();
+        if (privateSend) {
+            ui->sendButton->setText("PrivateS&end");
+            ui->sendButton->setToolTip("Confirm the PrivateSend action");
+        } else {
+            ui->sendButton->setText("S&end");
+            ui->sendButton->setToolTip("Confirm the send action");
+        }
+    }
 }
 
 void SendCoinsDialog::updateSmartFeeLabel()
@@ -968,8 +978,6 @@ void SendCoinsDialog::coinControlUpdateLabels()
                 CoinControlDialog::fSubtractFeeFromAmount = true;
         }
     }
-
-    ui->checkUsePrivateSend->setChecked(CoinControlDialog::coinControl()->IsUsingPrivateSend());
 
     if (CoinControlDialog::coinControl()->HasSelected())
     {
