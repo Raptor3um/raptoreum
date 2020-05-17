@@ -787,8 +787,13 @@ void BitcoinGUI::setWalletActionsEnabled(bool enabled)
     sendCoinsAction->setEnabled(enabled);
     sendFuturesAction->setEnabled(enabled);
     sendCoinsMenuAction->setEnabled(enabled);
+#ifdef ENABLE_WALLET
     privateSendCoinsAction->setEnabled(enabled && privateSendClient.fEnablePrivateSend);
     privateSendCoinsMenuAction->setEnabled(enabled && privateSendClient.fEnablePrivateSend);
+#else
+    privateSendCoinsAction->setEnabled(enabled);
+    privateSendCoinsMenuAction->setEnabled(enabled);
+#endif // ENABLE_WALLET
     receiveCoinsAction->setEnabled(enabled);
     receiveCoinsMenuAction->setEnabled(enabled);
     historyAction->setEnabled(enabled);
