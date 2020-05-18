@@ -2829,7 +2829,7 @@ void CWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const
                 } else if(nCoinType == CoinType::ONLY_NONDENOMINATED) {
                     if (CPrivateSend::IsCollateralAmount(pcoin->tx->vout[i].nValue)) continue; // do not use collateral amounts
                     found = !CPrivateSend::IsDenominatedAmount(pcoin->tx->vout[i].nValue);
-                } else if(nCoinType == CoinType::SMARTNODE_COLLATERAL) {
+                } else if(nCoinType == CoinType::ONLY_SMARTNODE_COLLATERAL) {
                     found = collaterals.isValidCollateral(pcoin->tx->vout[i].nValue);
                 } else if(nCoinType == CoinType::ONLY_PRIVATESEND_COLLATERAL) {
                     found = CPrivateSend::IsCollateralAmount(pcoin->tx->vout[i].nValue);
@@ -2844,7 +2844,7 @@ void CWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const
                 if (coinControl && coinControl->HasSelected() && !coinControl->fAllowOtherInputs && !coinControl->IsSelected(COutPoint(wtxid, i)))
                     continue;
 
-                if (IsLockedCoin(wtxid, i) && nCoinType != CoinType::SMARTNODE_COLLATERAL)
+                if (IsLockedCoin(wtxid, i) && nCoinType != CoinType::ONLY_SMARTNODE_COLLATERAL)
                     continue;
 
                 if (IsSpent(wtxid, i))
@@ -3503,7 +3503,7 @@ bool CWallet::GetSmartnodeOutpointAndKeys(COutPoint& outpointRet, CPubKey& pubKe
     // Find possible candidates
     std::vector<COutput> vPossibleCoins;
     CCoinControl coin_control;
-    coin_control.nCoinType = CoinType::SMARTNODE_COLLATERAL;
+    coin_control.nCoinType = CoinType::ONLY_SMARTNODE_COLLATERAL;
     AvailableCoins(vPossibleCoins, true, &coin_control);
     if(vPossibleCoins.empty()) {
         LogPrintf("CWallet::GetSmartnodeOutpointAndKeys -- Could not locate any valid smartnode vin\n");

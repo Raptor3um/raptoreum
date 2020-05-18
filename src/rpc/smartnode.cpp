@@ -229,7 +229,7 @@ UniValue smartnode_outputs(const JSONRPCRequest& request)
     // Find possible candidates
     std::vector<COutput> vPossibleCoins;
     CCoinControl coin_control;
-    coin_control.nCoinType = CoinType::SMARTNODE_COLLATERAL;
+    coin_control.nCoinType = CoinType::ONLY_SMARTNODE_COLLATERAL;
     pwallet->AvailableCoins(vPossibleCoins, true, &coin_control);
 
     UniValue obj(UniValue::VOBJ);

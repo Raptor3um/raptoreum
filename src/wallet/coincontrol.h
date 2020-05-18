@@ -17,8 +17,11 @@ enum class CoinType
     ONLY_FULLY_MIXED,
     ONLY_READY_TO_MIX,
     ONLY_NONDENOMINATED,
-    SMARTNODE_COLLATERAL, // find smartnode outputs including locked ones (use with caution)
+    ONLY_SMARTNODE_COLLATERAL, // find smartnode outputs including locked ones (use with caution)
     ONLY_PRIVATESEND_COLLATERAL,
+    // Attributes
+    MIN_COIN_TYPE = ALL_COINS,
+    MAX_COIN_TYPE = ONLY_PRIVATESEND_COLLATERAL,
 };
 
 /** Coin Control Features. */
