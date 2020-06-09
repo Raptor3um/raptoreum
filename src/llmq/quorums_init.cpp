@@ -16,7 +16,6 @@
 #include <llmq/quorums_signing_shares.h>
 
 #include <dbwrapper.h>
-#include <scheduler.h>
 
 namespace llmq
 {
@@ -25,7 +24,7 @@ CBLSWorker* blsWorker;
 
 CDBWrapper* llmqDb;
 
-void InitLLMQSystem(CEvoDB& evoDb, CScheduler* scheduler, bool unitTests, bool fWipe)
+void InitLLMQSystem(CEvoDB& evoDb, bool unitTests, bool fWipe)
 {
     llmqDb = new CDBWrapper(unitTests ? "" : (GetDataDir() / "llmq"), 1 << 20, unitTests, fWipe);
     blsWorker = new CBLSWorker();
@@ -36,7 +35,7 @@ void InitLLMQSystem(CEvoDB& evoDb, CScheduler* scheduler, bool unitTests, bool f
     quorumManager = new CQuorumManager(evoDb, *blsWorker, *quorumDKGSessionManager);
     quorumSigSharesManager = new CSigSharesManager();
     quorumSigningManager = new CSigningManager(*llmqDb, unitTests);
-    chainLocksHandler = new CChainLocksHandler(scheduler);
+    chainLocksHandler = new CChainLocksHandler();
     quorumInstantSendManager = new CInstantSendManager(*llmqDb);
 }
 

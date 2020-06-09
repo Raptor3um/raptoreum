@@ -1835,7 +1835,7 @@ bool AppInitMain()
                 deterministicMNManager.reset();
                 deterministicMNManager.reset(new CDeterministicMNManager(*evoDb));
 
-                llmq::InitLLMQSystem(*evoDb, &scheduler, false, fReset || fReindexChainState);
+                llmq::InitLLMQSystem(*evoDb, false, fReset || fReindexChainState);
 
                 if (fReset) {
                     pblocktree->WriteReindexing(true);
