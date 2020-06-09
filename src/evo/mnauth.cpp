@@ -192,10 +192,10 @@ void CMNAuth::NotifySmartnodeListChanged(bool undo, const CDeterministicMNList& 
             return;
         }
         bool doRemove = false;
-        if (diff.removedMns.count(verifiedDmn->internalId)) {
+        if (diff.removedMns.count(verifiedDmn->GetInternalId())) {
             doRemove = true;
         } else {
-            auto it = diff.updatedMNs.find(verifiedDmn->internalId);
+            auto it = diff.updatedMNs.find(verifiedDmn->GetInternalId());
             if (it != diff.updatedMNs.end()) {
                 if ((it->second.fields & CDeterministicMNStateDiff::Field_pubKeyOperator) && it->second.state.pubKeyOperator.GetHash() != pnode->verifiedPubKeyHash) {
                     doRemove = true;
