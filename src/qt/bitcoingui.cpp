@@ -35,7 +35,7 @@
 #include <ui_interface.h>
 #include <util.h>
 #include <smartnode/smartnode-sync.h>
-#include <qt/masternodelist.h>
+#include <qt/smartnodelist.h>
 
 #include <iostream>
 
@@ -379,7 +379,7 @@ void BitcoinGUI::createActions()
 
 #ifdef ENABLE_WALLET
     QSettings settings;
-    if (!fLiteMode && settings.value("fShowSmartnodesTab").toBool()) {
+    if (settings.value("fShowSmartnodesTab").toBool()) {
         smartnodeAction = new QAction(tr("&Smartnodes"), this);
         smartnodeAction->setStatusTip(tr("Browse smartnodes"));
         smartnodeAction->setToolTip(smartnodeAction->statusTip());
@@ -610,8 +610,7 @@ void BitcoinGUI::createToolBars()
         toolbar->addAction(historyAction);
         toolbar->addAction(sendFuturesAction);
         QSettings settings;
-        if (!fLiteMode && settings.value("fShowSmartnodesTab").toBool() && smartnodeAction)
-        {
+        if (settings.value("fShowSmartnodesTab").toBool() && smartnodeAction) {
             toolbar->addAction(smartnodeAction);
         }
         toolbar->setMovable(false); // remove unused icon in upper left corner
@@ -784,7 +783,7 @@ void BitcoinGUI::setWalletActionsEnabled(bool enabled)
     receiveCoinsMenuAction->setEnabled(enabled);
     historyAction->setEnabled(enabled);
     QSettings settings;
-    if (!fLiteMode && settings.value("fShowSmartnodesTab").toBool() && smartnodeAction) {
+    if (settings.value("fShowSmartnodesTab").toBool() && smartnodeAction) {
         smartnodeAction->setEnabled(enabled);
     }
     encryptWalletAction->setEnabled(enabled);
@@ -954,7 +953,7 @@ void BitcoinGUI::gotoHistoryPage()
 void BitcoinGUI::gotoSmartnodePage()
 {
     QSettings settings;
-    if (!fLiteMode && settings.value("fShowSmartnodesTab").toBool() && smartnodeAction) {
+    if (settings.value("fShowSmartnodesTab").toBool() && smartnodeAction) {
         smartnodeAction->setChecked(true);
         if (walletFrame) walletFrame->gotoSmartnodePage();
     }

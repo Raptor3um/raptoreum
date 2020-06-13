@@ -28,7 +28,6 @@ CPrivateSendServer privateSendServer;
 void CPrivateSendServer::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman)
 {
     if (!fSmartnodeMode) return;
-    if (fLiteMode) return; // ignore all Raptoreum related functionality
     if (!smartnodeSync.IsBlockchainSynced()) return;
 
     if (strCommand == NetMsgType::DSACCEPT) {
@@ -871,8 +870,7 @@ void CPrivateSendServer::SetState(PoolState nStateNew)
 
 void CPrivateSendServer::DoMaintenance(CConnman& connman)
 {
-    if (fLiteMode) return;        // disable all Raptoreum specific functionality
-    if (!fSmartnodeMode) return; // only run on smartnodes
+    if (!fSmartnodeMode) return; // only run on masternodes
 
     if (!smartnodeSync.IsBlockchainSynced() || ShutdownRequested()) return;
 
