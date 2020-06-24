@@ -752,7 +752,7 @@ public:
 class CDevNetParams : public CChainParams {
 public:
     CDevNetParams() {
-        strNetworkID = "dev";
+        strNetworkID = "devnet";
         consensus.nSubsidyHalvingInterval = 210240;
         consensus.nSmartnodePaymentsStartBlock = 4010; // not true, but it's ok as long as it's less then nSmartnodePaymentsIncreaseBlock
         consensus.nSmartnodePaymentsIncreaseBlock = 4030;
