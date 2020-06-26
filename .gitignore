@@ -13,6 +13,7 @@ src/raptoreum-tx
 src/test/test_raptoreum
 src/test/test_raptoreum_fuzzy
 src/qt/test/test_raptoreum-qt
+src/qt/res/css/colors/*
 src/bench/bench_raptoreum
 
 # autoreconf
