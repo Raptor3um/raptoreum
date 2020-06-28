@@ -90,9 +90,9 @@
 // Application startup time (used for uptime calculation)
 const int64_t nStartupTime = GetTime();
 
-//Raptoreum only features
+//Dash only features
 bool fSmartnodeMode = false;
-bool fLiteMode = false;
+bool fDisableGovernance = false;
 /**
     nWalletBackups:
         1..10   - number of automatic backups to keep

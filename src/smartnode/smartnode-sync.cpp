@@ -231,7 +231,7 @@ void CSmartnodeSync::ProcessTick(CConnman& connman)
             // GOVOBJ : SYNC GOVERNANCE ITEMS FROM OUR PEERS
 
             if(nCurrentAsset == SMARTNODE_SYNC_GOVERNANCE) {
-                if (fLiteMode) {
+                if (fDisableGovernance) {
                     SwitchToNextAsset(connman);
                     connman.ReleaseNodeVector(vNodesCopy);
                     return;

@@ -51,7 +51,7 @@
 //Raptoreum only features
 
 extern bool fSmartnodeMode;
-extern bool fLiteMode;
+extern bool fDisableGovernance;
 extern int nWalletBackups;
 
 // Application startup time (used for uptime calculation)
