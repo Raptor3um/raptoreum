@@ -12,6 +12,7 @@
 #include <qt/forms/ui_askpassphrasedialog.h>
 
 #include <qt/guiconstants.h>
+#include <qt/guiutil.h>
 #include <qt/walletmodel.h>
 
 #include <support/allocators/secure.h>
@@ -28,6 +29,10 @@ AskPassphraseDialog::AskPassphraseDialog(Mode _mode, QWidget *parent) :
     fCapsLock(false)
 {
     ui->setupUi(this);
+
+    GUIUtil::setFont({ui->capsLabel}, GUIUtil::FontWeight::Bold);
+
+    GUIUtil::updateFonts();
 
     ui->passEdit1->setMinimumSize(ui->passEdit1->sizeHint());
     ui->passEdit2->setMinimumSize(ui->passEdit2->sizeHint());

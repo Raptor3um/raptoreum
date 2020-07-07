@@ -469,6 +469,15 @@ RPCConsole::RPCConsole(const PlatformStyle *_platformStyle, QWidget *parent) :
     /* Open CSS when configured */
     this->setStyleSheet(GUIUtil::loadStyleSheet());
 
+    GUIUtil::setFont({ui->label_9,
+                      ui->labelNetwork,
+                      ui->label_10,
+                      ui->labelMempoolTitle,
+                      ui->peerHeading,
+                      ui->label_repair_header,
+                      ui->banHeading
+                     }, GUIUtil::FontWeight::Bold, 16);
+
     QSettings settings;
     if (!restoreGeometry(settings.value("RPCConsoleWindowGeometry").toByteArray())) {
         // Restore failed (perhaps missing setting), center the window
@@ -524,7 +533,7 @@ RPCConsole::RPCConsole(const PlatformStyle *_platformStyle, QWidget *parent) :
 
     ui->peerHeading->setText(tr("Select a peer to view detailed information."));
 
-    consoleFontSize = settings.value(fontSizeSettingsKey, QFontInfo(QFont()).pointSize()).toInt();
+    consoleFontSize = settings.value(fontSizeSettingsKey, QFontInfo(GUIUtil::getFontNormal()).pointSize()).toInt();
     clear();
 }
 
