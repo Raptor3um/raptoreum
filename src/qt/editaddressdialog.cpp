@@ -22,6 +22,8 @@ EditAddressDialog::EditAddressDialog(Mode _mode, QWidget *parent) :
 {
     ui->setupUi(this);
 
+    GUIUtil::disableMacFocusRect(this);
+
     GUIUtil::setupAddressWidget(ui->addressEdit, this);
 
     switch(mode)
