@@ -25,7 +25,7 @@ BanMan::BanMan(fs::path ban_file, CClientUIInterface* client_interface, int64_t 
         SweepBanned();            // sweep out unused entries
 
         LogPrint(BCLog::NET, "Loaded %d banned node ips/subnets from banlist.dat  %dms\n",
-            banmap.size(), GetTimeMillis() - n_start);
+            m_banned.size(), GetTimeMillis() - n_start);
     } else {
         LogPrintf("Recreating banlist.dat\n");
         SetBannedSetDirty(true); // force write
