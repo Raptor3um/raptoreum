@@ -581,7 +581,9 @@ public:
         nLLMQConnectionRetryTimeout = 60;
 
         nPoolMinParticipants = 3;
-        nPoolMaxParticipants = 5; // TODO: bump on next HF / mandatory upgrade
+        nPoolNewMinParticipants = 3;
+        nPoolMaxParticipants = 5;
+        nPoolNewMaxParticipants = 20;
         nFulfilledRequestExpireTime = 60*60; // fulfilled requests expire in 1 hour
 
         vSporkAddresses = {"RWGvGpd3yJdnfh9ziyHNDEoHMJBvnZ23zK"};
@@ -722,8 +724,10 @@ public:
         miningRequiresPeers = false;
         nLLMQConnectionRetryTimeout = 60;
 
-        nPoolMinParticipants = 3; // TODO drop to 2 with next mandatory upgrade
+        nPoolMinParticipants = 3;
+        nPoolNewMinParticipants = 2;
         nPoolMaxParticipants = 5;
+        nPoolNewMaxParticipants = 20;
         nFulfilledRequestExpireTime = 5*60; // fulfilled requests expire in 5 minutes
 
         vSporkAddresses = {"rsqc2caFRG6myRdzKipP4PpVW9LnFaG7CH"};
@@ -849,8 +853,10 @@ public:
         fAllowMultiplePorts = true;
         nLLMQConnectionRetryTimeout = 60;
 
-        nPoolMinParticipants = 3; // same, drop to 2 w/ breaking change
+        nPoolMinParticipants = 3;
+        nPoolNewMinParticipants = 2;
         nPoolMaxParticipants = 5;
+        nPoolNewMaxParticipants = 20;
         nFulfilledRequestExpireTime = 5*60; // fulfilled requests expire in 5 minutes
 
         vSporkAddresses = {"yjPtiKh2uwk3bDutTEA2q9mCtXyiZRWn55"};
@@ -948,7 +954,9 @@ public:
 
         nFulfilledRequestExpireTime = 5*60; // fulfilled requests expire in 5 minutes
         nPoolMinParticipants = 2;
+        nPoolNewMinParticipants = 2;
         nPoolMaxParticipants = 5;
+        nPoolNewMaxParticipants = 20;
 
         // privKey: cP4EKFyJsHT39LDqgdcB43Y3YXjNyjb5Fuas1GQSeAtjnZWmZEQK
         vSporkAddresses = {"yj949n1UH6fDhw6HtVE5VMj2iSTaSWBMcW"};

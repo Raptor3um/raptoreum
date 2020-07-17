@@ -31,6 +31,7 @@ enum SporkId : int32_t {
 	  SPORK_21_LOW_LLMQ_PARAMS                        	     = 10020,
 	  SPORK_22_SPEICAL_TX_FEE                                = 10021,
     SPORK_21_QUORUM_ALL_CONNECTED                          = 10022,
+    SPORK_22_PS_MORE_PARTICIPANTS                          = 10023,
     SPORK_INVALID                                          = -1,
 };
 template<> struct is_serializable_enum<SporkId> : std::true_type {};

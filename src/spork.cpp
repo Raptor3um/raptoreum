@@ -27,6 +27,7 @@ std::vector<CSporkDef> sporkDefs = {
     MAKE_SPORK_DEF(SPORK_21_LOW_LLMQ_PARAMS,               4070908800ULL), // OFF
     MAKE_SPORK_DEF(SPORK_22_SPEICAL_TX_FEE,                100ULL), // default values for special tx fee
     MAKE_SPORK_DEF(SPORK_21_QUORUM_ALL_CONNECTED,          4070908800ULL), // OFF
+    MAKE_SPORK_DEF(SPORK_22_PS_MORE_PARTICIPANTS,          4070908800ULL), // OFF
 };
 
 CSporkManager sporkManager;
