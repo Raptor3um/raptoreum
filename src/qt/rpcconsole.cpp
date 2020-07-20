@@ -40,6 +40,7 @@
 #include <QTime>
 #include <QTimer>
 #include <QStringList>
+#include <QStyledItemDelegate>
 
 #if QT_VERSION < 0x050000
 #include <QUrl>
@@ -722,6 +723,9 @@ void RPCConsole::setClientModel(ClientModel *model)
         wordList << "help-console";
         wordList.sort();
         autoCompleter = new QCompleter(wordList, this);
+        autoCompleter->popup()->setItemDelegate(new QStyledItemDelegate(this));
+        autoCompleter->popup()->setObjectName("rpcAutoCompleter");
+        GUIUtil::loadStyleSheet(autoCompleter->popup());
         autoCompleter->setModelSorting(QCompleter::CaseSensitivelySortedModel);
         ui->lineEdit->setCompleter(autoCompleter);
         autoCompleter->popup()->installEventFilter(this);
