@@ -13,7 +13,6 @@
 
 #include <qt/bantablemodel.h>
 #include <qt/clientmodel.h>
-#include <qt/platformstyle.h>
 #include <chainparams.h>
 #include <netbase.h>
 #include <rpc/server.h>
@@ -455,12 +454,11 @@ void RPCExecutor::request(const QString &command)
     }
 }
 
-RPCConsole::RPCConsole(const PlatformStyle *_platformStyle, QWidget *parent) :
+RPCConsole::RPCConsole(QWidget* parent) :
     QWidget(parent, Qt::Window),
     ui(new Ui::RPCConsole),
     clientModel(0),
     historyPtr(0),
-    platformStyle(_platformStyle),
     peersTableContextMenu(0),
     banTableContextMenu(0),
     consoleFontSize(0)
@@ -486,9 +484,6 @@ RPCConsole::RPCConsole(const PlatformStyle *_platformStyle, QWidget *parent) :
 
     ui->openDebugLogfileButton->setToolTip(ui->openDebugLogfileButton->toolTip().arg(tr(PACKAGE_NAME)));
 
-    if (platformStyle->getImagesOnButtons()) {
-        ui->openDebugLogfileButton->setIcon(QIcon(":/icons/export"));
-    }
     // Needed on Mac also
     ui->clearButton->setIcon(QIcon(":/icons/console_remove"));
     ui->fontBiggerButton->setIcon(QIcon(":/icons/fontbigger"));

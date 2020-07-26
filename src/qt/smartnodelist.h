@@ -1,7 +1,6 @@
 #ifndef SMARTNODELIST_H
 #define SMARTNODELIST_H
 
-#include <qt/platformstyle.h>
 #include <primitives/transaction.h>
 #include <sync.h>
 #include <util.h>
@@ -33,7 +32,7 @@ class SmartnodeList : public QWidget
     Q_OBJECT
 
 public:
-    explicit SmartnodeList(const PlatformStyle* platformStyle, QWidget* parent = 0);
+    explicit SmartnodeList(QWidget* parent = 0);
     ~SmartnodeList();
 
     void setClientModel(ClientModel* clientModel);

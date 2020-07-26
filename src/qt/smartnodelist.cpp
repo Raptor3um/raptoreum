@@ -31,7 +31,7 @@ int GetOffsetFromUtc()
 #endif
 }
 
-SmartnodeList::SmartnodeList(const PlatformStyle* platformStyle, QWidget* parent) :
+MasternodeList::SmartnodeList(QWidget* parent) :
     QWidget(parent),
     ui(new Ui::SmartnodeList),
     clientModel(0),

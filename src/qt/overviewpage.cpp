@@ -12,7 +12,6 @@
 #include <qt/guiutil.h>
 #include <init.h>
 #include <qt/optionsmodel.h>
-#include <qt/platformstyle.h>
 #include <qt/transactionfilterproxy.h>
 #include <qt/transactiontablemodel.h>
 #include <qt/utilitydialog.h>
@@ -35,9 +34,8 @@ class TxViewDelegate : public QAbstractItemDelegate
 {
     Q_OBJECT
 public:
-    explicit TxViewDelegate(const PlatformStyle *_platformStyle, QObject *parent=nullptr):
-        QAbstractItemDelegate(), unit(BitcoinUnits::DASH),
-        platformStyle(_platformStyle)
+    explicit TxViewDelegate(QObject* parent = nullptr) :
+        QAbstractItemDelegate(), unit(BitcoinUnits::DASH)
     {
 
     }
@@ -56,7 +54,7 @@ public:
         int halfheight = (mainRect.height() - 2*ypad)/2;
         QRect amountRect(mainRect.left() + xspace, mainRect.top()+ypad, mainRect.width() - xspace - ICON_OFFSET, halfheight);
         QRect addressRect(mainRect.left() + xspace, mainRect.top()+ypad+halfheight, mainRect.width() - xspace, halfheight);
-        icon = platformStyle->SingleColorIcon(icon);
+        icon = QIcon(icon);
         icon.paint(painter, decorationRect);
 
         QDateTime date = index.data(TransactionTableModel::DateRole).toDateTime();
@@ -114,12 +112,11 @@ public:
     }
 
     int unit;
-    const PlatformStyle *platformStyle;
 
 };
 #include <qt/overviewpage.moc>
 
-OverviewPage::OverviewPage(const PlatformStyle *platformStyle, QWidget *parent) :
+OverviewPage::OverviewPage(QWidget* parent) :
     QWidget(parent),
     timer(nullptr),
     ui(new Ui::OverviewPage),
@@ -132,7 +129,7 @@ OverviewPage::OverviewPage(const PlatformStyle *platformStyle, QWidget *parent) 
     currentWatchUnconfBalance(-1),
     currentWatchImmatureBalance(-1),
     cachedNumISLocks(-1),
-    txdelegate(new TxViewDelegate(platformStyle, this))
+    txdelegate(new TxViewDelegate(this))
 {
     ui->setupUi(this);
 
