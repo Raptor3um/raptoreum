@@ -353,7 +353,7 @@ UniValue signmessagewithprivkey(const JSONRPCRequest& request)
     if (!key.SignCompact(ss.GetHash(), vchSig))
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Sign failed");
 
-    return EncodeBase64(vchSig.data(), vchSig.size());
+    return EncodeBase64(vchSig);
 }
 
 UniValue setmocktime(const JSONRPCRequest& request)

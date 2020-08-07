@@ -126,20 +126,20 @@ void SplitHostPort(std::string in, int &portOut, std::string &hostOut) {
         hostOut = in;
 }
 
-std::string EncodeBase64(const unsigned char* pch, size_t len)
+std::string EncodeBase64(Span<const unsigned char> input)
 {
     static const char *pbase64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
     std::string str;
-    str.reserve(((len + 2) / 3) * 4);
-    ConvertBits<8, 6, true>([&](int v) { str += pbase64[v]; }, pch, pch + len);
+    str.reserve(((input.size() + 2) / 3) * 4);
+    ConvertBits<8, 6, true>([&](int v) { str += pbase64[v]; }, input.begin(), input.end());
     while (str.size() % 4) str += '=';
     return str;
 }
 
 std::string EncodeBase64(const std::string& str)
 {
-    return EncodeBase64((const unsigned char*)str.c_str(), str.size());
+    return EncodeBase64(MakeUCharSpan(str));
 }
 
 std::vector<unsigned char> DecodeBase64(const char* p, bool* pfInvalid)
@@ -195,20 +195,20 @@ std::string DecodeBase64(const std::string& str)
     return std::string((const char*)vchRet.data(), vchRet.size());
 }
 
-std::string EncodeBase32(const unsigned char* pch, size_t len)
+std::string EncodeBase32(Span<const unsigned char> input)
 {
     static const char *pbase32 = "abcdefghijklmnopqrstuvwxyz234567";
 
     std::string str;
-    str.reserve(((len + 4) / 5) * 8);
-    ConvertBits<8, 5, true>([&](int v) { str += pbase32[v]; }, pch, pch + len);
+    str.reserve(((input.size() + 4) / 5) * 8);
+    ConvertBits<8, 5, true>([&](int v) { str += pbase32[v]; }, input.begin(), input.end());
     while (str.size() % 8) str += '=';
     return str;
 }
 
 std::string EncodeBase32(const std::string& str)
 {
-    return EncodeBase32((const unsigned char*)str.c_str(), str.size());
+    return EncodeBase32(MakeUCharSpan(str));
 }
 
 std::vector<unsigned char> DecodeBase32(const char* p, bool* pfInvalid)
