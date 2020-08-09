@@ -31,7 +31,7 @@ int GetOffsetFromUtc()
 #endif
 }
 
-MasternodeList::SmartnodeList(QWidget* parent) :
+SmartnodeList::SmartnodeList(QWidget* parent) :
     QWidget(parent),
     ui(new Ui::SmartnodeList),
     clientModel(0),
@@ -144,7 +144,7 @@ void SmartnodeList::updateDIP3ListScheduled()
     // after filter was last changed unless we want to force the update.
     if (fFilterUpdatedDIP3) {
         int64_t nSecondsToWait = nTimeFilterUpdatedDIP3 - GetTime() + SMARTNODELIST_FILTER_COOLDOWN_SECONDS;
-        ui->countLabelDIP3->setText(QString::fromStdString(strprintf("Please wait... %d", nSecondsToWait)));
+        ui->countLabelDIP3->setText(tr("Please wait... %1").arg(nSecondsToWait));
 
         if (nSecondsToWait <= 0) {
             updateDIP3List();
@@ -186,7 +186,7 @@ void SmartnodeList::updateDIP3List()
     LOCK(cs_dip3list);
 
     QString strToFilter;
-    ui->countLabelDIP3->setText("Updating...");
+    ui->countLabelDIP3->setText(tr("Updating..."));
     ui->tableWidgetSmartnodesDIP3->setSortingEnabled(false);
     ui->tableWidgetSmartnodesDIP3->clearContents();
     ui->tableWidgetSmartnodesDIP3->setRowCount(0);
@@ -316,7 +316,7 @@ void SmartnodeList::on_filterLineEditDIP3_textChanged(const QString& strFilterIn
     strCurrentFilterDIP3 = strFilterIn;
     nTimeFilterUpdatedDIP3 = GetTime();
     fFilterUpdatedDIP3 = true;
-    ui->countLabelDIP3->setText(QString::fromStdString(strprintf("Please wait... %d", SMARTNODELIST_FILTER_COOLDOWN_SECONDS)));
+    ui->countLabelDIP3->setText(tr("Please wait... %1").arg(SMARTNODELIST_FILTER_COOLDOWN_SECONDS));
 }
 
 void SmartnodeList::on_checkBoxMySmartnodesOnly_stateChanged(int state)
