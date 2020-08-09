@@ -228,7 +228,7 @@ void bls_generate_help()
     }
 
     if (!coinControl.HasSelected()) {
-        throw JSONRPCError(RPC_INTERNAL_ERROR, "No funds at specified address");
+        throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("No funds at specified address %s", EncodeDestination(fundDest)));
     }
 
     CWalletTx wtx;
