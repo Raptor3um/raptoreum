@@ -149,16 +149,16 @@ HelpMessageDialog::HelpMessageDialog(QWidget *parent, HelpMode helpMode) :
 <h3>PrivateSend Basics</h3> \
 PrivateSend gives you true financial privacy by obscuring the origins of your funds. \
 All the Raptoreum in your wallet is comprised of different \"inputs\" which you can think of as separate, discrete coins.<br> \
-PrivateSend uses an innovative process to mix your inputs with the inputs of two other people, without having your coins ever leave your wallet. \
+PrivateSend uses an innovative process to mix your inputs with the inputs of two or more other people, without having your coins ever leave your wallet. \
 You retain control of your money at all times.<hr> \
 <b>The PrivateSend process works like this:</b>\
 <ol type=\"1\"> \
 <li>PrivateSend begins by breaking your transaction inputs down into standard denominations. \
-These denominations are 0.1 RTM, 1 RTM, 10 RTM, 100 RTM and 1000 RTM -- sort of like the paper money you use every day.</li> \
+These denominations are 0.001 RTM, 0.01 RTM, 0.1 RTM, 1 RTM and 10 RTM -- sort of like the paper money you use every day.</li> \
 <li>Your wallet then sends requests to specially configured software nodes on the network, called \"smartnodes.\" \
 These smartnodes are informed then that you are interested in mixing a certain denomination. \
 No identifiable information is sent to the smartnodes, so they never know \"who\" you are.</li> \
-<li>When two other people send similar messages, indicating that they wish to mix the same denomination, a mixing session begins. \
+<li>When two or more other people send similar messages, indicating that they wish to mix the same denomination, a mixing session begins. \
 The smartnode mixes up the inputs and instructs all three users' wallets to pay the now-transformed input back to themselves. \
 Your wallet pays that denomination directly to itself, but in a different address (called a change address).</li> \
 <li>In order to fully obscure your funds, your wallet must repeat this process a number of times with each denomination. \
