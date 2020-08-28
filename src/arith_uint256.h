@@ -1,11 +1,12 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2009-2016 The Bitcoin Core developers
+// Copyright (c) 2017 The Dash Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_ARITH_UINT256_H
-#define BITCOIN_ARITH_UINT256_H
-
+#ifndef RAPTOREUM_ARITH_UINT256_H
+#define RAPTOREUM_ARITH_UINT256_H
+#include "crypto/common.h"
 #include <assert.h>
 #include <cstring>
 #include <stdexcept>
@@ -14,6 +15,7 @@
 #include <vector>
 
 class uint256;
+class uint512;
 
 class uint_error : public std::runtime_error {
 public:
@@ -210,6 +212,14 @@ public:
         return ret;
     }
 
+    void SetHex(const char* psz) {
+    	base_uint<BITS> b;
+		for(int x=0; x<b.WIDTH; ++x) {
+			memcpy((char*)&b.pn[x], psz + x*4, 4);
+		}
+		*this = b;
+    }
+
     int CompareTo(const base_uint& b) const;
     bool EqualTo(uint64_t b) const;
 
@@ -232,8 +242,9 @@ public:
     friend inline bool operator==(const base_uint& a, uint64_t b) { return a.EqualTo(b); }
     friend inline bool operator!=(const base_uint& a, uint64_t b) { return !a.EqualTo(b); }
 
+    int GET_WIDTH() const;
+    uint32_t GET_PN(int index) const;
     std::string GetHex() const;
-    void SetHex(const char* psz);
     void SetHex(const std::string& str);
     std::string ToString() const;
 
@@ -250,7 +261,7 @@ public:
 
     uint64_t GetLow64() const
     {
-        assert(WIDTH >= 2);
+        static_assert(WIDTH >= 2, "Assertion WIDTH >= 2 failed (WIDTH = BITS / 32). BITS is a template parameter.");
         return pn[0] | (uint64_t)pn[1] << 32;
     }
 };
@@ -278,7 +289,7 @@ public:
      * Thus 0x1234560000 is compact (0x05123456)
      * and  0xc0de000000 is compact (0x0600c0de)
      *
-     * Bitcoin only uses this "compact" format for encoding difficulty
+     * Raptoreum only uses this "compact" format for encoding difficulty
      * targets, which are unsigned 256bit quantities.  Thus, all the
      * complexities of the sign bit and using base 256 are probably an
      * implementation accident.
@@ -288,9 +299,35 @@ public:
 
     friend uint256 ArithToUint256(const arith_uint256 &);
     friend arith_uint256 UintToArith256(const uint256 &);
+    //std::string GetHex() const;
 };
 
 uint256 ArithToUint256(const arith_uint256 &);
 arith_uint256 UintToArith256(const uint256 &);
 
-#endif // BITCOIN_ARITH_UINT256_H
+class arith_uint512 : public base_uint<512> {
+public:
+	arith_uint512() {}
+	arith_uint512(const base_uint<512>& b) : base_uint<512>(b) {}
+	arith_uint512(const arith_uint256& b) {
+		 for (int i = 0; i < b.GET_WIDTH(); i++)
+			pn[i] = b.GET_PN(i);
+	}
+	arith_uint512(uint64_t b) : base_uint<512>(b) {}
+	explicit arith_uint512(const std::string& str) : base_uint<512>(str) {}
+
+	arith_uint256 trim256() const {
+		arith_uint256 result;
+		memcpy((void*)&result, (void*)pn, 32);
+		return result;
+	}
+	friend uint512 ArithToUint512(const arith_uint512 &);
+	friend arith_uint512 UintToArith512(const uint512 &);
+	//std::string GetHex() const;
+
+};
+
+uint512 ArithToUint512(const arith_uint512 &);
+arith_uint512 UintToArith512(const uint512 &);
+
+#endif // RAPTOREUM_ARITH_UINT256_H

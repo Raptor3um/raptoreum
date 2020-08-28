@@ -1,10 +1,11 @@
 // Copyright (c) 2011-2015 The Bitcoin Core developers
 // Copyright (c) 2014-2019 The Dash Core developers
+// Copyright (c) 2020 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include "config/dash-config.h"
+#include "config/raptoreum-config.h"
 #endif
 
 #include "rpcconsole.h"
@@ -572,7 +573,7 @@ void RPCConsole::setClientModel(ClientModel *model)
         updateNetworkState();
         connect(model, SIGNAL(networkActiveChanged(bool)), this, SLOT(setNetworkActive(bool)));
 
-        connect(model, SIGNAL(masternodeListChanged()), this, SLOT(updateMasternodeCount()));
+        connect(model, SIGNAL(smartnodeListChanged()), this, SLOT(updateMasternodeCount()));
         clientModel->refreshMasternodeList();
 
         updateTrafficStats(model->getTotalBytesRecv(), model->getTotalBytesSent());
@@ -917,7 +918,7 @@ void RPCConsole::updateMasternodeCount()
     QString strMasternodeCount = tr("Total: %1 (Enabled: %2)")
         .arg(QString::number(mnList.GetAllMNsCount()))
         .arg(QString::number(mnList.GetValidMNsCount()));
-    ui->masternodeCount->setText(strMasternodeCount);
+    ui->smartnodeCount->setText(strMasternodeCount);
 }
 
 void RPCConsole::setMempoolSize(long numberOfTxs, size_t dynUsage)

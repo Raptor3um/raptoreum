@@ -5,6 +5,7 @@
 #include "tx_verify.h"
 
 #include "consensus.h"
+#include "chainparams.h"
 #include "primitives/transaction.h"
 #include "script/interpreter.h"
 #include "validation.h"
@@ -149,7 +150,7 @@ unsigned int GetTransactionSigOpCount(const CTransaction& tx, const CCoinsViewCa
     return nSigOps;
 }
 
-bool CheckTransaction(const CTransaction& tx, CValidationState &state)
+bool CheckTransaction(const CTransaction& tx, CValidationState &state, int nHeight, CAmount blockReward)
 {
     bool allowEmptyTxInOut = false;
     if (tx.nType == TRANSACTION_QUORUM_COMMITMENT) {
@@ -197,6 +198,12 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
         }
         if (tx.vin[0].scriptSig.size() < minCbSize || tx.vin[0].scriptSig.size() > 100)
             return state.DoS(100, false, REJECT_INVALID, "bad-cb-length");
+		FounderPayment founderPayment = Params().GetConsensus().nFounderPayment;
+		CAmount founderReward = founderPayment.getFounderPaymentAmount(nHeight, blockReward);
+		int founderStartHeight = founderPayment.getStartBlock();
+		if(nHeight > founderStartHeight && founderReward && !founderPayment.IsBlockPayeeValid(tx,nHeight,blockReward)) {
+			return state.DoS(100, false, REJECT_INVALID, "bad-cb-founder-payment-not-found");
+		}
     }
     else
     {

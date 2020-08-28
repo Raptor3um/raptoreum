@@ -1,15 +1,16 @@
 // Copyright (c) 2014-2020 The Dash Core developers
+// Copyright (c) 2020 The Raptoreum developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "privatesend-server.h"
 
-#include "masternode/activemasternode.h"
+#include "smartnode/activesmartnode.h"
 #include "consensus/validation.h"
 #include "core_io.h"
 #include "init.h"
-#include "masternode/masternode-meta.h"
-#include "masternode/masternode-sync.h"
+#include "smartnode/smartnode-meta.h"
+#include "smartnode/smartnode-sync.h"
 #include "net_processing.h"
 #include "netmessagemaker.h"
 #include "script/interpreter.h"
@@ -27,8 +28,8 @@ CPrivateSendServer privateSendServer;
 void CPrivateSendServer::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman)
 {
     if (!fMasternodeMode) return;
-    if (fLiteMode) return; // ignore all Dash related functionality
-    if (!masternodeSync.IsBlockchainSynced()) return;
+    if (fLiteMode) return; // ignore all Raptoreum related functionality
+    if (!smartnodeSync.IsBlockchainSynced()) return;
 
     if (strCommand == NetMsgType::DSACCEPT) {
         if (pfrom->nVersion < MIN_PRIVATESEND_PEER_PROTO_VERSION) {
@@ -63,7 +64,7 @@ void CPrivateSendServer::ProcessMessage(CNode* pfrom, const std::string& strComm
                 if (!lockRecv) return;
 
                 for (const auto& q : vecPrivateSendQueue) {
-                    if (q.masternodeOutpoint == activeMasternodeInfo.outpoint) {
+                    if (q.smartnodeOutpoint == activeMasternodeInfo.outpoint) {
                         // refuse to create another queue this often
                         LogPrint(BCLog::PRIVATESEND, "DSACCEPT -- last dsq is still in queue, refuse to mix\n");
                         PushStatus(pfrom, STATUS_REJECTED, ERR_RECENT, connman);
@@ -117,9 +118,9 @@ void CPrivateSendServer::ProcessMessage(CNode* pfrom, const std::string& strComm
                 if (q == dsq) {
                     return;
                 }
-                if (q.fReady == dsq.fReady && q.masternodeOutpoint == dsq.masternodeOutpoint) {
+                if (q.fReady == dsq.fReady && q.smartnodeOutpoint == dsq.smartnodeOutpoint) {
                     // no way the same mn can send another dsq with the same readiness this soon
-                    LogPrint(BCLog::PRIVATESEND, "DSQUEUE -- Peer %s is sending WAY too many dsq messages for a masternode with collateral %s\n", pfrom->GetLogString(), dsq.masternodeOutpoint.ToStringShort());
+                    LogPrint(BCLog::PRIVATESEND, "DSQUEUE -- Peer %s is sending WAY too many dsq messages for a smartnode with collateral %s\n", pfrom->GetLogString(), dsq.smartnodeOutpoint.ToStringShort());
                     return;
                 }
             }
@@ -130,7 +131,7 @@ void CPrivateSendServer::ProcessMessage(CNode* pfrom, const std::string& strComm
         if (dsq.IsTimeOutOfBounds()) return;
 
         auto mnList = deterministicMNManager->GetListAtChainTip();
-        auto dmn = mnList.GetValidMNByCollateral(dsq.masternodeOutpoint);
+        auto dmn = mnList.GetValidMNByCollateral(dsq.smartnodeOutpoint);
         if (!dmn) return;
 
         if (!dsq.CheckSignature(dmn->pdmnState->pubKeyOperator.Get())) {
@@ -150,7 +151,7 @@ void CPrivateSendServer::ProcessMessage(CNode* pfrom, const std::string& strComm
             }
             mmetaman.AllowMixing(dmn->proTxHash);
 
-            LogPrint(BCLog::PRIVATESEND, "DSQUEUE -- new PrivateSend queue (%s) from masternode %s\n", dsq.ToString(), dmn->pdmnState->addr.ToString());
+            LogPrint(BCLog::PRIVATESEND, "DSQUEUE -- new PrivateSend queue (%s) from smartnode %s\n", dsq.ToString(), dmn->pdmnState->addr.ToString());
 
             TRY_LOCK(cs_vecqueue, lockRecv);
             if (!lockRecv) return;
@@ -281,7 +282,7 @@ void CPrivateSendServer::CreateFinalTransaction(CConnman& connman)
 
 void CPrivateSendServer::CommitFinalTransaction(CConnman& connman)
 {
-    if (!fMasternodeMode) return; // check and relay final tx only on masternode
+    if (!fMasternodeMode) return; // check and relay final tx only on smartnode
 
     CTransactionRef finalTransaction = MakeTransactionRef(finalMutableTransaction);
     uint256 hashTx = finalTransaction->GetHash();
@@ -304,7 +305,7 @@ void CPrivateSendServer::CommitFinalTransaction(CConnman& connman)
 
     LogPrint(BCLog::PRIVATESEND, "CPrivateSendServer::CommitFinalTransaction -- CREATING DSTX\n");
 
-    // create and sign masternode dstx transaction
+    // create and sign smartnode dstx transaction
     if (!CPrivateSend::GetDSTX(hashTx)) {
         CPrivateSendBroadcastTx dstxNew(finalTransaction, activeMasternodeInfo.outpoint, GetAdjustedTime());
         dstxNew.Sign();
@@ -405,7 +406,7 @@ void CPrivateSendServer::ChargeFees(CConnman& connman)
 
     Being that mixing has "no fees" we need to have some kind of cost associated
     with using it to stop abuse. Otherwise it could serve as an attack vector and
-    allow endless transaction that would bloat Dash and make it unusable. To
+    allow endless transaction that would bloat Raptoreum and make it unusable. To
     stop these kinds of attacks 1 in 10 successful transactions are charged. This
     adds up to a cost of 0.001DRK per transaction on average.
 */
@@ -523,7 +524,7 @@ bool CPrivateSendServer::IsInputScriptSigValid(const CTxIn& txin)
     if (nTxInIndex >= 0) { //might have to do this one input at a time?
         txNew.vin[nTxInIndex].scriptSig = txin.scriptSig;
         LogPrint(BCLog::PRIVATESEND, "CPrivateSendServer::IsInputScriptSigValid -- verifying scriptSig %s\n", ScriptToAsmStr(txin.scriptSig).substr(0, 24));
-        // TODO we're using amount=0 here but we should use the correct amount. This works because Dash ignores the amount while signing/verifying (only used in Bitcoin/Segwit)
+        // TODO we're using amount=0 here but we should use the correct amount. This works because Raptoreum ignores the amount while signing/verifying (only used in Bitcoin/Segwit)
         if (!VerifyScript(txNew.vin[nTxInIndex].scriptSig, sigPubKey, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC, MutableTransactionSignatureChecker(&txNew, nTxInIndex, 0))) {
             LogPrint(BCLog::PRIVATESEND, "CPrivateSendServer::IsInputScriptSigValid -- VerifyScript() failed on input %d\n", nTxInIndex);
             return false;
@@ -846,10 +847,10 @@ void CPrivateSendServer::SetState(PoolState nStateNew)
 
 void CPrivateSendServer::DoMaintenance(CConnman& connman)
 {
-    if (fLiteMode) return;        // disable all Dash specific functionality
-    if (!fMasternodeMode) return; // only run on masternodes
+    if (fLiteMode) return;        // disable all Raptoreum specific functionality
+    if (!fMasternodeMode) return; // only run on smartnodes
 
-    if (!masternodeSync.IsBlockchainSynced() || ShutdownRequested()) return;
+    if (!smartnodeSync.IsBlockchainSynced() || ShutdownRequested()) return;
 
     privateSendServer.CheckTimeout(connman);
     privateSendServer.CheckForCompleteQueue(connman);

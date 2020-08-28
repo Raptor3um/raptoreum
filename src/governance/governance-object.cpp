@@ -1,4 +1,5 @@
 // Copyright (c) 2014-2020 The Dash Core developers
+// Copyright (c) 2020 The Raptoreum developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,8 +9,8 @@
 #include "governance-validators.h"
 #include "governance-vote.h"
 #include "governance.h"
-#include "masternode/masternode-meta.h"
-#include "masternode/masternode-sync.h"
+#include "smartnode/smartnode-meta.h"
+#include "smartnode/smartnode-sync.h"
 #include "messagesigner.h"
 #include "spork.h"
 #include "util.h"
@@ -27,7 +28,7 @@ CGovernanceObject::CGovernanceObject() :
     nDeletionTime(0),
     nCollateralHash(),
     vchData(),
-    masternodeOutpoint(),
+    smartnodeOutpoint(),
     vchSig(),
     fCachedLocalValidity(false),
     strLocalValidityError(),
@@ -54,7 +55,7 @@ CGovernanceObject::CGovernanceObject(const uint256& nHashParentIn, int nRevision
     nDeletionTime(0),
     nCollateralHash(nCollateralHashIn),
     vchData(ParseHex(strDataHexIn)),
-    masternodeOutpoint(),
+    smartnodeOutpoint(),
     vchSig(),
     fCachedLocalValidity(false),
     strLocalValidityError(),
@@ -81,7 +82,7 @@ CGovernanceObject::CGovernanceObject(const CGovernanceObject& other) :
     nDeletionTime(other.nDeletionTime),
     nCollateralHash(other.nCollateralHash),
     vchData(other.vchData),
-    masternodeOutpoint(other.masternodeOutpoint),
+    smartnodeOutpoint(other.smartnodeOutpoint),
     vchSig(other.vchSig),
     fCachedLocalValidity(other.fCachedLocalValidity),
     strLocalValidityError(other.strLocalValidityError),
@@ -152,7 +153,7 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
         exception = CGovernanceException(ostr.str(), GOVERNANCE_EXCEPTION_NONE);
         return false;
     } else if (vote.GetTimestamp() == voteInstanceRef.nCreationTime) {
-        // Someone is doing smth fishy, there can be no two votes from the same masternode
+        // Someone is doing smth fishy, there can be no two votes from the same smartnode
         // with the same timestamp for the same object and signal and yet different hash/outcome.
         std::ostringstream ostr;
         ostr << "CGovernanceObject::ProcessVote -- Invalid vote, same timestamp for the different outcome";
@@ -286,7 +287,7 @@ uint256 CGovernanceObject::GetHash() const
     ss << nRevision;
     ss << nTime;
     ss << GetDataAsHexString();
-    ss << masternodeOutpoint << uint8_t{} << 0xffffffff; // adding dummy values here to match old hashing
+    ss << smartnodeOutpoint << uint8_t{} << 0xffffffff; // adding dummy values here to match old hashing
     ss << vchSig;
     // fee_tx is left out on purpose
 
@@ -300,7 +301,7 @@ uint256 CGovernanceObject::GetSignatureHash() const
 
 void CGovernanceObject::SetMasternodeOutpoint(const COutPoint& outpoint)
 {
-    masternodeOutpoint = outpoint;
+    smartnodeOutpoint = outpoint;
 }
 
 bool CGovernanceObject::Sign(const CBLSSecretKey& key)
@@ -467,16 +468,16 @@ bool CGovernanceObject::IsValidLocally(std::string& strError, bool& fMissingConf
 
         auto mnList = deterministicMNManager->GetListAtChainTip();
 
-        std::string strOutpoint = masternodeOutpoint.ToStringShort();
-        auto dmn = mnList.GetMNByCollateral(masternodeOutpoint);
+        std::string strOutpoint = smartnodeOutpoint.ToStringShort();
+        auto dmn = mnList.GetMNByCollateral(smartnodeOutpoint);
         if (!dmn) {
-            strError = "Failed to find Masternode by UTXO, missing masternode=" + strOutpoint;
+            strError = "Failed to find Masternode by UTXO, missing smartnode=" + strOutpoint;
             return false;
         }
 
         // Check that we have a valid MN signature
         if (!CheckSignature(dmn->pdmnState->pubKeyOperator.Get())) {
-            strError = "Invalid masternode signature for: " + strOutpoint + ", pubkey = " + dmn->pdmnState->pubKeyOperator.Get().ToString();
+            strError = "Invalid smartnode signature for: " + strOutpoint + ", pubkey = " + dmn->pdmnState->pubKeyOperator.Get().ToString();
             return false;
         }
 
@@ -650,7 +651,7 @@ bool CGovernanceObject::GetCurrentMNVotes(const COutPoint& mnCollateralOutpoint,
 void CGovernanceObject::Relay(CConnman& connman)
 {
     // Do not relay until fully synced
-    if (!masternodeSync.IsSynced()) {
+    if (!smartnodeSync.IsSynced()) {
         LogPrint(BCLog::GOBJECT, "CGovernanceObject::Relay -- won't relay until fully synced\n");
         return;
     }

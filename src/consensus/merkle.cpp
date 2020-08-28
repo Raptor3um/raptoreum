@@ -69,6 +69,7 @@ uint256 BlockMerkleRoot(const CBlock& block, bool* mutated)
     leaves.resize(block.vtx.size());
     for (size_t s = 0; s < block.vtx.size(); s++) {
         leaves[s] = block.vtx[s]->GetHash();
+
     }
     return ComputeMerkleRoot(std::move(leaves), mutated);
 }

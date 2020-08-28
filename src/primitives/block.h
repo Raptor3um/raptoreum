@@ -61,6 +61,7 @@ public:
     }
 
     uint256 GetHash() const;
+    uint256 GetPOWHash() const;
 
     int64_t GetBlockTime() const
     {
@@ -75,6 +76,7 @@ public:
     // network and disk
     std::vector<CTransactionRef> vtx;
 
+    mutable CTxOut txoutFounder; // founder payment
     // memory only
     mutable bool fChecked;
 
@@ -102,6 +104,7 @@ public:
         CBlockHeader::SetNull();
         vtx.clear();
         fChecked = false;
+        txoutFounder = CTxOut();
     }
 
     CBlockHeader GetBlockHeader() const

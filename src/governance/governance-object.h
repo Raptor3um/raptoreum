@@ -1,4 +1,5 @@
 // Copyright (c) 2014-2019 The Dash Core developers
+// Copyright (c) 2020 The Raptoreum developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -141,7 +142,7 @@ private:
     std::vector<unsigned char> vchData;
 
     /// Masternode info for signed objects
-    COutPoint masternodeOutpoint;
+    COutPoint smartnodeOutpoint;
     std::vector<unsigned char> vchSig;
 
     /// is valid by blockchain
@@ -208,7 +209,7 @@ public:
 
     const COutPoint& GetMasternodeOutpoint() const
     {
-        return masternodeOutpoint;
+        return smartnodeOutpoint;
     }
 
     bool IsSetCachedFunding() const
@@ -319,7 +320,7 @@ public:
         READWRITE(nCollateralHash);
         READWRITE(vchData);
         READWRITE(nObjectType);
-        READWRITE(masternodeOutpoint);
+        READWRITE(smartnodeOutpoint);
         if (!(s.GetType() & SER_GETHASH)) {
             READWRITE(vchSig);
         }

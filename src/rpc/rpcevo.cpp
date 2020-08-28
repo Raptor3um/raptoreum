@@ -1,4 +1,5 @@
 // Copyright (c) 2018-2020 The Dash Core developers
+// Copyright (c) 2020 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -35,7 +36,7 @@ std::string GetHelpString(int nParamNum, std::string strParamName)
 {
     static const std::map<std::string, std::string> mapParamHelp = {
         {"collateralAddress",
-            "%d. \"collateralAddress\"        (string, required) The dash address to send the collateral to.\n"
+            "%d. \"collateralAddress\"        (string, required) The raptoreum address to send the collateral to.\n"
         },
         {"collateralHash",
             "%d. \"collateralHash\"           (string, required) The collateral transaction hash.\n"
@@ -68,11 +69,11 @@ std::string GetHelpString(int nParamNum, std::string strParamName)
         },
         {"operatorPubKey_register",
             "%d. \"operatorPubKey\"           (string, required) The operator BLS public key. The private key does not have to be known.\n"
-            "                              It has to match the private key which is later used when operating the masternode.\n"
+            "                              It has to match the private key which is later used when operating the smartnode.\n"
         },
         {"operatorPubKey_update",
             "%d. \"operatorPubKey\"           (string, required) The operator BLS public key. The private key does not have to be known.\n"
-            "                              It has to match the private key which is later used when operating the masternode.\n"
+            "                              It has to match the private key which is later used when operating the smartnode.\n"
             "                              If set to an empty string, the currently active operator BLS public key is reused.\n"
         },
         {"operatorReward",
@@ -80,22 +81,22 @@ std::string GetHelpString(int nParamNum, std::string strParamName)
             "                              between 0.00 and 100.00.\n"
         },
         {"ownerAddress",
-            "%d. \"ownerAddress\"             (string, required) The dash address to use for payee updates and proposal voting.\n"
+            "%d. \"ownerAddress\"             (string, required) The raptoreum address to use for payee updates and proposal voting.\n"
             "                              The private key belonging to this address must be known in your wallet. The address must\n"
             "                              be unused and must differ from the collateralAddress\n"
         },
         {"payoutAddress_register",
-            "%d. \"payoutAddress\"            (string, required) The dash address to use for masternode reward payments.\n"
+            "%d. \"payoutAddress\"            (string, required) The raptoreum address to use for smartnode reward payments.\n"
         },
         {"payoutAddress_update",
-            "%d. \"payoutAddress\"            (string, required) The dash address to use for masternode reward payments.\n"
+            "%d. \"payoutAddress\"            (string, required) The raptoreum address to use for smartnode reward payments.\n"
             "                              If set to an empty string, the currently active payout address is reused.\n"
         },
         {"proTxHash",
             "%d. \"proTxHash\"                (string, required) The hash of the initial ProRegTx.\n"
         },
         {"reason",
-            "%d. reason                     (numeric, optional) The reason for masternode service revocation.\n"
+            "%d. reason                     (numeric, optional) The reason for smartnode service revocation.\n"
         },
         {"votingAddress_register",
             "%d. \"votingAddress\"            (string, required) The voting key address. The private key does not have to be known by your wallet.\n"
@@ -116,7 +117,7 @@ std::string GetHelpString(int nParamNum, std::string strParamName)
     return strprintf(it->second, nParamNum);
 }
 
-// Allows to specify Dash address or priv key. In case of Dash address, the priv key is taken from the wallet
+// Allows to specify Raptoreum address or priv key. In case of Raptoreum address, the priv key is taken from the wallet
 static CKey ParsePrivKey(CWallet* pwallet, const std::string &strKeyOrAddress, bool allowAddresses = true) {
     CBitcoinAddress address;
     if (allowAddresses && address.SetString(strKeyOrAddress) && address.IsValid()) {
@@ -308,9 +309,9 @@ void protx_register_fund_help(CWallet* const pwallet)
 {
     throw std::runtime_error(
             "protx register_fund \"collateralAddress\" \"ipAndPort\" \"ownerAddress\" \"operatorPubKey\" \"votingAddress\" operatorReward \"payoutAddress\" ( \"fundAddress\" )\n"
-            "\nCreates, funds and sends a ProTx to the network. The resulting transaction will move 1000 Dash\n"
+            "\nCreates, funds and sends a ProTx to the network. The resulting transaction will move 1000 Raptoreum\n"
             "to the address specified by collateralAddress and will then function as the collateral of your\n"
-            "masternode.\n"
+            "smartnode.\n"
             "A few of the limitations you see in the arguments are temporary and might be lifted after DIP3\n"
             "is fully deployed.\n"
             + HelpRequiringPassphrase(pwallet) + "\n"
@@ -336,7 +337,7 @@ void protx_register_help(CWallet* const pwallet)
             "protx register \"collateralHash\" collateralIndex \"ipAndPort\" \"ownerAddress\" \"operatorPubKey\" \"votingAddress\" operatorReward \"payoutAddress\" ( \"feeSourceAddress\" )\n"
             "\nSame as \"protx register_fund\", but with an externally referenced collateral.\n"
             "The collateral is specified through \"collateralHash\" and \"collateralIndex\" and must be an unspent\n"
-            "transaction output spendable by this wallet. It must also not be used by any other masternode.\n"
+            "transaction output spendable by this wallet. It must also not be used by any other smartnode.\n"
             + HelpRequiringPassphrase(pwallet) + "\n"
             "\nArguments:\n"
             + GetHelpString(1, "collateralHash")
@@ -426,7 +427,7 @@ UniValue protx_register(const JSONRPCRequest& request)
 
     size_t paramIdx = 1;
 
-    CAmount collateralAmount = 1000 * COIN;
+    CAmount collateralAmount = Params().GetConsensus().nCollaterals.getCollateral(chainActive.Height());
 
     CMutableTransaction tx;
     tx.nVersion = 3;
@@ -502,7 +503,7 @@ UniValue protx_register(const JSONRPCRequest& request)
     if (request.params.size() > paramIdx + 6) {
         fundAddress = CBitcoinAddress(request.params[paramIdx + 6].get_str());
         if (!fundAddress.IsValid())
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Dash address: ") + request.params[paramIdx + 6].get_str());
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Raptoreum address: ") + request.params[paramIdx + 6].get_str());
     }
 
     FundSpecialTx(pwallet, tx, ptx, fundAddress.Get());
@@ -595,8 +596,8 @@ void protx_update_service_help(CWallet* const pwallet)
     throw std::runtime_error(
             "protx update_service \"proTxHash\" \"ipAndPort\" \"operatorKey\" (\"operatorPayoutAddress\" \"feeSourceAddress\" )\n"
             "\nCreates and sends a ProUpServTx to the network. This will update the IP address\n"
-            "of a masternode.\n"
-            "If this is done for a masternode that got PoSe-banned, the ProUpServTx will also revive this masternode.\n"
+            "of a smartnode.\n"
+            "If this is done for a smartnode that got PoSe-banned, the ProUpServTx will also revive this smartnode.\n"
             + HelpRequiringPassphrase(pwallet) + "\n"
             "\nArguments:\n"
             + GetHelpString(1, "proTxHash")
@@ -634,7 +635,7 @@ UniValue protx_update_service(const JSONRPCRequest& request)
 
     auto dmn = deterministicMNManager->GetListAtChainTip().GetMN(ptx.proTxHash);
     if (!dmn) {
-        throw std::runtime_error(strprintf("masternode with proTxHash %s not found", ptx.proTxHash.ToString()));
+        throw std::runtime_error(strprintf("smartnode with proTxHash %s not found", ptx.proTxHash.ToString()));
     }
 
     if (keyOperator.GetPublicKey() != dmn->pdmnState->pubKeyOperator.Get()) {
@@ -666,7 +667,7 @@ UniValue protx_update_service(const JSONRPCRequest& request)
     if (request.params.size() >= 6) {
         CBitcoinAddress feeSourceAddress = CBitcoinAddress(request.params[5].get_str());
         if (!feeSourceAddress.IsValid())
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Dash address: ") + request.params[5].get_str());
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Raptoreum address: ") + request.params[5].get_str());
         feeSource = feeSourceAddress.Get();
     } else {
         if (ptx.scriptOperatorPayout != CScript()) {
@@ -691,8 +692,8 @@ void protx_update_registrar_help(CWallet* const pwallet)
     throw std::runtime_error(
             "protx update_registrar \"proTxHash\" \"operatorPubKey\" \"votingAddress\" \"payoutAddress\" ( \"feeSourceAddress\" )\n"
             "\nCreates and sends a ProUpRegTx to the network. This will update the operator key, voting key and payout\n"
-            "address of the masternode specified by \"proTxHash\".\n"
-            "The owner key of the masternode must be known to your wallet.\n"
+            "address of the smartnode specified by \"proTxHash\".\n"
+            "The owner key of the smartnode must be known to your wallet.\n"
             + HelpRequiringPassphrase(pwallet) + "\n"
             "\nArguments:\n"
             + GetHelpString(1, "proTxHash")
@@ -725,7 +726,7 @@ UniValue protx_update_registrar(const JSONRPCRequest& request)
 
     auto dmn = deterministicMNManager->GetListAtChainTip().GetMN(ptx.proTxHash);
     if (!dmn) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("masternode %s not found", ptx.proTxHash.ToString()));
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("smartnode %s not found", ptx.proTxHash.ToString()));
     }
     ptx.pubKeyOperator = dmn->pdmnState->pubKeyOperator.Get();
     ptx.keyIDVoting = dmn->pdmnState->keyIDVoting;
@@ -765,7 +766,7 @@ UniValue protx_update_registrar(const JSONRPCRequest& request)
     if (request.params.size() > 5) {
         CBitcoinAddress feeSourceAddress = CBitcoinAddress(request.params[5].get_str());
         if (!feeSourceAddress.IsValid())
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Dash address: ") + request.params[5].get_str());
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Raptoreum address: ") + request.params[5].get_str());
         feeSourceDest = feeSourceAddress.Get();
     }
 
@@ -780,10 +781,10 @@ void protx_revoke_help(CWallet* const pwallet)
 {
     throw std::runtime_error(
             "protx revoke \"proTxHash\" \"operatorKey\" ( reason \"feeSourceAddress\")\n"
-            "\nCreates and sends a ProUpRevTx to the network. This will revoke the operator key of the masternode and\n"
-            "put it into the PoSe-banned state. It will also set the service field of the masternode\n"
+            "\nCreates and sends a ProUpRevTx to the network. This will revoke the operator key of the smartnode and\n"
+            "put it into the PoSe-banned state. It will also set the service field of the smartnode\n"
             "to zero. Use this in case your operator key got compromised or you want to stop providing your service\n"
-            "to the masternode owner.\n"
+            "to the smartnode owner.\n"
             + HelpRequiringPassphrase(pwallet) + "\n"
             "\nArguments:\n"
             + GetHelpString(1, "proTxHash")
@@ -825,7 +826,7 @@ UniValue protx_revoke(const JSONRPCRequest& request)
 
     auto dmn = deterministicMNManager->GetListAtChainTip().GetMN(ptx.proTxHash);
     if (!dmn) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("masternode %s not found", ptx.proTxHash.ToString()));
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("smartnode %s not found", ptx.proTxHash.ToString()));
     }
 
     if (keyOperator.GetPublicKey() != dmn->pdmnState->pubKeyOperator.Get()) {
@@ -839,7 +840,7 @@ UniValue protx_revoke(const JSONRPCRequest& request)
     if (request.params.size() > 4) {
         CBitcoinAddress feeSourceAddress = CBitcoinAddress(request.params[4].get_str());
         if (!feeSourceAddress.IsValid())
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Dash address: ") + request.params[4].get_str());
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Raptoreum address: ") + request.params[4].get_str());
         FundSpecialTx(pwallet, tx, ptx, feeSourceAddress.Get());
     } else if (dmn->pdmnState->scriptOperatorPayout != CScript()) {
         // Using funds from previousely specified operator payout address
@@ -847,7 +848,7 @@ UniValue protx_revoke(const JSONRPCRequest& request)
         ExtractDestination(dmn->pdmnState->scriptOperatorPayout, txDest);
         FundSpecialTx(pwallet, tx, ptx, txDest);
     } else if (dmn->pdmnState->scriptPayout != CScript()) {
-        // Using funds from previousely specified masternode payout address
+        // Using funds from previousely specified smartnode payout address
         CTxDestination txDest;
         ExtractDestination(dmn->pdmnState->scriptPayout, txDest);
         FundSpecialTx(pwallet, tx, ptx, txDest);
@@ -1033,11 +1034,11 @@ void protx_info_help()
 {
     throw std::runtime_error(
             "protx info \"proTxHash\"\n"
-            "\nReturns detailed information about a deterministic masternode.\n"
+            "\nReturns detailed information about a deterministic smartnode.\n"
             "\nArguments:\n"
             + GetHelpString(1, "proTxHash") +
             "\nResult:\n"
-            "{                             (json object) Details about a specific deterministic masternode\n"
+            "{                             (json object) Details about a specific deterministic smartnode\n"
             "}\n"
             "\nExamples:\n"
             + HelpExampleCli("protx", "info \"0123456701234567012345670123456701234567012345670123456701234567\"")
@@ -1069,7 +1070,7 @@ void protx_diff_help()
 {
     throw std::runtime_error(
             "protx diff \"baseBlock\" \"block\"\n"
-            "\nCalculates a diff between two deterministic masternode lists. The result also contains proof data.\n"
+            "\nCalculates a diff between two deterministic smartnode lists. The result also contains proof data.\n"
             "\nArguments:\n"
             "1. \"baseBlock\"           (numeric, required) The starting block height.\n"
             "2. \"block\"               (numeric, required) The ending block height.\n"
@@ -1133,7 +1134,7 @@ UniValue protx_diff(const JSONRPCRequest& request)
             "  update_registrar  - Create and send ProUpRegTx to network\n"
             "  revoke            - Create and send ProUpRevTx to network\n"
 #endif
-            "  diff              - Calculate a diff and a proof between two masternode lists\n"
+            "  diff              - Calculate a diff and a proof between two smartnode lists\n"
     );
 }
 

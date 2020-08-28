@@ -1,13 +1,14 @@
 // Copyright (c) 2014-2020 The Dash Core developers
+// Copyright (c) 2020 The Raptoreum developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "privatesend.h"
 
-#include "masternode/activemasternode.h"
+#include "smartnode/activesmartnode.h"
 #include "consensus/validation.h"
-#include "masternode/masternode-payments.h"
-#include "masternode/masternode-sync.h"
+#include "smartnode/smartnode-payments.h"
+#include "smartnode/smartnode-sync.h"
 #include "messagesigner.h"
 #include "netmessagemaker.h"
 #include "script/sign.h"
@@ -325,17 +326,17 @@ void CPrivateSend::InitStandardDenominations()
         is convertible to another.
 
         For example:
-        1DRK+1000 == (.1DRK+100)*10
-        10DRK+10000 == (1DRK+1000)*10
+        100RTM+1000 == (10RTM+100)*10
+        10RM+10000 == (1RTM+1000)*10
     */
     /* Disabled
     vecStandardDenominations.push_back( (100      * COIN)+100000 );
     */
-    vecStandardDenominations.push_back((10 * COIN) + 10000);
-    vecStandardDenominations.push_back((1 * COIN) + 1000);
-    vecStandardDenominations.push_back((.1 * COIN) + 100);
-    vecStandardDenominations.push_back((.01 * COIN) + 10);
-    vecStandardDenominations.push_back((.001 * COIN) + 1);
+    vecStandardDenominations.push_back((10000 * COIN) + 10000);
+    vecStandardDenominations.push_back((1000 * COIN) + 1000);
+    vecStandardDenominations.push_back((100 * COIN) + 100);
+    vecStandardDenominations.push_back((10 * COIN) + 10);
+    vecStandardDenominations.push_back((1 * COIN) + 1);
 }
 
 // check to make sure the collateral provided by the client is valid
@@ -476,10 +477,10 @@ int CPrivateSend::GetDenominations(const std::vector<CTxOut>& vecTxOut, bool fSi
 bool CPrivateSend::GetDenominationsBits(int nDenom, std::vector<int>& vecBitsRet)
 {
     // ( bit on if present, 4 denominations example )
-    // bit 0 - 100DASH+1
-    // bit 1 - 10DASH+1
-    // bit 2 - 1DASH+1
-    // bit 3 - .1DASH+1
+    // bit 0 - 100RAPTOREUM+1
+    // bit 1 - 10RAPTOREUM+1
+    // bit 2 - 1RAPTOREUM+1
+    // bit 3 - .1RAPTOREUM+1
 
     int nMaxDenoms = vecStandardDenominations.size();
 
@@ -598,14 +599,14 @@ void CPrivateSend::CheckDSTXes(const CBlockIndex* pindex)
 
 void CPrivateSend::UpdatedBlockTip(const CBlockIndex* pindex)
 {
-    if (pindex && masternodeSync.IsBlockchainSynced()) {
+    if (pindex && smartnodeSync.IsBlockchainSynced()) {
         CheckDSTXes(pindex);
     }
 }
 
 void CPrivateSend::NotifyChainLock(const CBlockIndex* pindex)
 {
-    if (pindex && masternodeSync.IsBlockchainSynced()) {
+    if (pindex && smartnodeSync.IsBlockchainSynced()) {
         CheckDSTXes(pindex);
     }
 }

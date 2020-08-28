@@ -6,7 +6,7 @@
 #define BITCOIN_QT_BITCOINGUI_H
 
 #if defined(HAVE_CONFIG_H)
-#include "config/dash-config.h"
+#include "config/raptoreum-config.h"
 #endif
 
 #include "amount.h"
@@ -97,7 +97,7 @@ private:
     QMenuBar *appMenuBar;
     QAction *overviewAction;
     QAction *historyAction;
-    QAction *masternodeAction;
+    QAction *smartnodeAction;
     QAction *quitAction;
     QAction *sendCoinsAction;
     QAction *sendCoinsMenuAction;
@@ -233,7 +233,7 @@ private Q_SLOTS:
     void gotoOverviewPage();
     /** Switch to history (transactions) page */
     void gotoHistoryPage();
-    /** Switch to masternode page */
+    /** Switch to smartnode page */
     void gotoMasternodePage();
     /** Switch to receive coins page */
     void gotoReceiveCoinsPage();
@@ -262,7 +262,7 @@ private Q_SLOTS:
     void showPeers();
     void showRepair();
 
-    /** Open external (default) editor with dash.conf */
+    /** Open external (default) editor with raptoreum.conf */
     void showConfEditor();
     /** Show folder with wallet backups in default file browser */
     void showBackups();

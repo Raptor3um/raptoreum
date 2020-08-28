@@ -156,7 +156,7 @@
           <item>
            <widget class="QCheckBox" name="showMasternodesTab">
             <property name="toolTip">
-             <string>Show additional tab listing all your masternodes in first sub-tab&lt;br/&gt;and all masternodes on the network in second sub-tab.</string>
+             <string>Show additional tab listing all your smartnodes in first sub-tab&lt;br/&gt;and all smartnodes on the network in second sub-tab.</string>
             </property>
             <property name="text">
              <string>Show Masternodes Tab</string>
@@ -221,7 +221,7 @@
          <item>
           <widget class="QLabel" name="label">
            <property name="toolTip">
-            <string>This setting determines the amount of individual masternodes that an input will be mixed through.&lt;br/&gt;More rounds of mixing gives a higher degree of privacy, but also costs more in fees.</string>
+            <string>This setting determines the amount of individual smartnodes that an input will be mixed through.&lt;br/&gt;More rounds of mixing gives a higher degree of privacy, but also costs more in fees.</string>
            </property>
            <property name="text">
             <string>PrivateSend rounds to use</string>
@@ -308,7 +308,7 @@
        <item>
         <widget class="QCheckBox" name="mapPortUpnp">
          <property name="toolTip">
-          <string>Automatically open the Dash Core client port on the router. This only works when your router supports UPnP and it is enabled.</string>
+          <string>Automatically open the Raptoreum Core client port on the router. This only works when your router supports UPnP and it is enabled.</string>
          </property>
          <property name="text">
           <string>Map port using &amp;UPnP</string>
@@ -328,7 +328,7 @@
        <item>
         <widget class="QCheckBox" name="connectSocks">
          <property name="toolTip">
-          <string>Connect to the Dash network through a SOCKS5 proxy.</string>
+          <string>Connect to the Raptoreum network through a SOCKS5 proxy.</string>
          </property>
          <property name="text">
           <string>&amp;Connect through SOCKS5 proxy (default proxy):</string>
@@ -515,7 +515,7 @@
        <item>
         <widget class="QCheckBox" name="connectSocksTor">
          <property name="toolTip">
-          <string>Connect to the Dash network through a separate SOCKS5 proxy for Tor hidden services.</string>
+          <string>Connect to the Raptoreum network through a separate SOCKS5 proxy for Tor hidden services.</string>
          </property>
          <property name="text">
           <string>Use separate SOCKS5 proxy to reach peers via Tor hidden services:</string>
@@ -713,7 +713,7 @@
          </property>
          <property name="text">
           <string>Language missing or translation incomplete? Help contributing translations here:
-https://www.transifex.com/projects/p/dash/</string>
+https://www.transifex.com/projects/p/raptoreum/</string>
          </property>
          <property name="wordWrap">
           <bool>true</bool>

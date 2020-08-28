@@ -6,14 +6,14 @@ reset-files.bash
 *.tar.gz
 
 *.exe
-src/dash
-src/dashd
-src/dash-cli
-src/dash-tx
-src/test/test_dash
-src/test/test_dash_fuzzy
-src/qt/test/test_dash-qt
-src/bench/bench_dash
+src/raptoreum
+src/raptoreumd
+src/raptoreum-cli
+src/raptoreum-tx
+src/test/test_raptoreum
+src/test/test_raptoreum_fuzzy
+src/qt/test/test_raptoreum-qt
+src/bench/bench_raptoreum
 
 # autoreconf
 Makefile.in
@@ -36,8 +36,8 @@ config.log
 config.status
 configure
 libtool
-src/config/dash-config.h
-src/config/dash-config.h.in
+src/config/raptoreum-config.h
+src/config/raptoreum-config.h.in
 src/config/stamp-h1
 share/setup.nsi
 share/qt/Info.plist
@@ -82,13 +82,13 @@ libconftest.dylib*
 # Compilation and Qt preprocessor part
 *.qm
 Makefile
-dash-qt
-Dash-Qt.app
+raptoreum-qt
+Raptoreum-Qt.app
 !/depends/Makefile
 
 # Unit-tests
 Makefile.test
-dash-qt_test
+raptoreum-qt_test
 
 # Resources cpp
 qrc_*.cpp
@@ -101,7 +101,7 @@ build
 *.gcno
 *.gcda
 /*.info
-test_dash.coverage/
+test_raptoreum.coverage/
 total.coverage/
 coverage_percent.txt
 
@@ -119,15 +119,15 @@ test/cache/*
 .autotools
 /doc/doxygen/
 
-libdashconsensus.pc
+libraptoreumconsensus.pc
 contrib/devtools/split-debug.sh
-src/qt/dash-qt.bash
+src/qt/raptoreum-qt.bash
 qa/pull-tester/tests-config.sh
 
 #development symlinks
-dash-cli
-dashd
-dash-qt
+raptoreum-cli
+raptoreumd
+raptoreum-qt
 make
 
 /docker/bin
@@ -135,3 +135,6 @@ make
 # CLion
 .idea
 cmake-build-debug
+
+depends/built
+depends/x86_64-pc-linux-gnu

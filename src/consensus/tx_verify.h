@@ -18,7 +18,7 @@ class CValidationState;
 /** Transaction validation functions */
 
 /** Context-independent validity checks */
-bool CheckTransaction(const CTransaction& tx, CValidationState& state);
+bool CheckTransaction(const CTransaction& tx, CValidationState& state, int nHeight, CAmount blockReward);
 
 namespace Consensus {
 /**

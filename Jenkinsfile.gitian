@@ -11,7 +11,7 @@ def OSX_SDK='10.11'
 def proc = 4
 def mem = 2000
 
-def repositoryUrl = "https://github.com/dashpay/dash.git"
+def repositoryUrl = "https://github.com/raptoreum/raptoreum.git"
 
 def tasks = [:]
 for(int i = 0; i < targets.size(); i++) {
@@ -30,14 +30,14 @@ for(int i = 0; i < targets.size(); i++) {
       def gitianDescriptor
 
       stage("${target}/prepare") {
-        dir('dash') {
+        dir('raptoreum') {
           checkout scm
           gitianDescriptor = readYaml file: "contrib/gitian-descriptors/gitian-${target}.yml"
         }
         dir('gitian-builder') {
-          git url: 'https://github.com/dashpay/gitian-builder.git'
+          git url: 'https://github.com/raptoreum/gitian-builder.git'
         }
-        sh "mkdir -p dashcore-binaries"
+        sh "mkdir -p raptoreumcore-binaries"
         if (target == "osx") {
           dir('gitian-builder') {
             sh 'mkdir -p inputs'
@@ -47,28 +47,28 @@ for(int i = 0; i < targets.size(); i++) {
 
         // restore cache
         try {
-          copyArtifacts(projectName: "dashpay-dash-gitian-nightly/${BRANCH_NAME}", optional: true, selector: lastSuccessful(), filter: "cache-${gitianDescriptor.name}.tar.gz")
+          copyArtifacts(projectName: "raptoreum-raptoreum-gitian-nightly/${BRANCH_NAME}", optional: true, selector: lastSuccessful(), filter: "cache-${gitianDescriptor.name}.tar.gz")
         } catch (Exception e) {
         }
         if (fileExists("cache-${gitianDescriptor.name}.tar.gz")) {
           hasCache = true
-          echo "Using cache from dashpay-dash-gitian-nightly/${BRANCH_NAME}"
+          echo "Using cache from raptoreum-raptoreum-gitian-nightly/${BRANCH_NAME}"
         } else {
           try {
-            copyArtifacts(projectName: 'dashpay-dash-gitian-nightly/develop', optional: true, selector: lastSuccessful(), filter: "cache-${gitianDescriptor.name}.tar.gz");
+            copyArtifacts(projectName: 'raptoreum-raptoreum-gitian-nightly/develop', optional: true, selector: lastSuccessful(), filter: "cache-${gitianDescriptor.name}.tar.gz");
           } catch (Exception e) {
           }
           if (fileExists("cache-${gitianDescriptor.name}.tar.gz")) {
             hasCache = true
-            echo "Using cache from dashpay-dash-gitian-nightly/develop"
+            echo "Using cache from raptoreum-raptoreum-gitian-nightly/develop"
           }
         }
       }
 
       def gitianImage
       stage("${target}/builder-image") {
-        dir('dash') {
-          gitianImage = docker.build("dash-gitian:${env.BUILD_ID}", 'ci -f ci/Dockerfile.gitian-builder')
+        dir('raptoreum') {
+          gitianImage = docker.build("raptoreum-gitian:${env.BUILD_ID}", 'ci -f ci/Dockerfile.gitian-builder')
         }
       }
 
@@ -83,7 +83,7 @@ for(int i = 0; i < targets.size(); i++) {
             sh "mkdir -p inputs"
             sh "cd inputs && curl -R -O ${osslPatchUrl}"
             sh "cd inputs && curl -R -O ${osslTarUrl}"
-            sh "make -C ../dash/depends download SOURCES_PATH=`pwd`/cache/common"
+            sh "make -C ../raptoreum/depends download SOURCES_PATH=`pwd`/cache/common"
           }
         }
         stage("${target}/base-vm") {
@@ -101,7 +101,7 @@ for(int i = 0; i < targets.size(); i++) {
               sh """
                 tail -F var/install.log &
                 tail -F var/build.log &
-                USE_DOCKER=1 ./bin/gbuild -j ${proc} -m ${mem} --commit dash=${commit} --url dash=${repositoryUrl} ../dash/contrib/gitian-descriptors/gitian-${target}.yml
+                USE_DOCKER=1 ./bin/gbuild -j ${proc} -m ${mem} --commit raptoreum=${commit} --url raptoreum=${repositoryUrl} ../raptoreum/contrib/gitian-descriptors/gitian-${target}.yml
                 RET=\$?
                 # give the above tail calls enough time to print everything on failure
                 sleep 2s
@@ -111,10 +111,10 @@ for(int i = 0; i < targets.size(); i++) {
               // make sure it doesn't run forever
               sh "docker rm -fv gitian-target || true"
             }
-            sh "mv build/out/dashcore-* ../dashcore-binaries/"
-            sh "mv build/out/src/dashcore-* ../dashcore-binaries/"
+            sh "mv build/out/raptoreumcore-* ../raptoreumcore-binaries/"
+            sh "mv build/out/src/raptoreumcore-* ../raptoreumcore-binaries/"
           }
-          archiveArtifacts artifacts: 'dashcore-binaries/*', fingerprint: true
+          archiveArtifacts artifacts: 'raptoreumcore-binaries/*', fingerprint: true
         }
 
         // TODO remove this in a few days (only needed to prune the old compressed file from Jenkins caches)

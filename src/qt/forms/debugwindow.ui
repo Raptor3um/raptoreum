@@ -224,14 +224,14 @@
         </widget>
        </item>
        <item row="9" column="0">
-        <widget class="QLabel" name="masternodeCountLabel">
+        <widget class="QLabel" name="smartnodeCountLabel">
          <property name="text">
           <string>Number of Masternodes</string>
          </property>
         </widget>
        </item>
        <item row="9" column="1">
-        <widget class="QLabel" name="masternodeCount">
+        <widget class="QLabel" name="smartnodeCount">
          <property name="cursor">
           <cursorShape>IBeamCursor</cursorShape>
          </property>
@@ -608,7 +608,7 @@
             <string/>
            </property>
            <property name="icon">
-            <iconset resource="../dash.qrc">
+            <iconset resource="../raptoreum.qrc">
              <normaloff>:/icons/prompticon</normaloff>
              <disabledoff>:/icons/prompticon</disabledoff>:/icons/prompticon</iconset>
            </property>
@@ -1747,7 +1747,7 @@
   </customwidget>
  </customwidgets>
  <resources>
-  <include location="../dash.qrc"/>
+  <include location="../raptoreum.qrc"/>
  </resources>
  <connections/>
 </ui>

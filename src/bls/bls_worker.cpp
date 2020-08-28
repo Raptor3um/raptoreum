@@ -1,4 +1,5 @@
 // Copyright (c) 2018-2019 The Dash Core developers
+// Copyright (c) 2020 The Raptoreum developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -63,7 +64,7 @@ void CBLSWorker::Start()
     int workerCount = std::thread::hardware_concurrency() / 2;
     workerCount = std::max(std::min(1, workerCount), 4);
     workerPool.resize(workerCount);
-    RenameThreadPool(workerPool, "dash-bls-worker");
+    RenameThreadPool(workerPool, "raptoreum-bls-worker");
 }
 
 void CBLSWorker::Stop()

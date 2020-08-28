@@ -1,6 +1,7 @@
 // Copyright (c) 2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
 // Copyright (c) 2014-2020 The Dash Core developers
+// Copyright (c) 2020 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -35,6 +36,8 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "generate", 1, "maxtries" },
     { "generatetoaddress", 0, "nblocks" },
     { "generatetoaddress", 2, "maxtries" },
+    { "setgenerate", 0, "generate" },
+    { "setgenerate", 1, "genproclimit" },
 #endif // ENABLE_MINER
     { "getnetworkhashps", 0, "nblocks" },
     { "getnetworkhashps", 1, "height" },

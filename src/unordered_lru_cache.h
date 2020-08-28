@@ -1,9 +1,10 @@
 // Copyright (c) 2019-2020 The Dash Core developers
+// Copyright (c) 2020 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef DASH_UNORDERED_LRU_CACHE_H
-#define DASH_UNORDERED_LRU_CACHE_H
+#ifndef RAPTOREUM_UNORDERED_LRU_CACHE_H
+#define RAPTOREUM_UNORDERED_LRU_CACHE_H
 
 #include <unordered_map>
 
@@ -107,4 +108,4 @@ private:
     }
 };
 
-#endif // DASH_UNORDERED_LRU_CACHE_H
+#endif // RAPTOREUM_UNORDERED_LRU_CACHE_H

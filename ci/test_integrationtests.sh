@@ -15,7 +15,7 @@ fi
 
 export LD_LIBRARY_PATH=$BUILD_DIR/depends/$HOST/lib
 
-cd build-ci/dashcore-$BUILD_TARGET
+cd build-ci/raptoreumcore-$BUILD_TARGET
 
 set +e
 ./test/functional/test_runner.py --coverage --quiet --nocleanup --tmpdir=$(pwd)/testdatadirs $PASS_ARGS

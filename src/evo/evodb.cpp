@@ -1,4 +1,5 @@
 // Copyright (c) 2018-2019 The Dash Core developers
+// Copyright (c) 2020 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -69,7 +70,7 @@ bool CEvoDB::VerifyBestBlock(const uint256& hash)
     uint256 hashBlockIndex = fHasBestBlock ? hash : uint256();
     assert(hashBestBlock == hashBlockIndex);
 
-    return fHasBestBlock;
+    return fHasBestBlock || hashBestBlock == uint256();
 }
 
 void CEvoDB::WriteBestBlock(const uint256& hash)

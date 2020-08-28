@@ -19,7 +19,7 @@ void RegisterMiscRPCCommands(CRPCTable &tableRPC);
 void RegisterMiningRPCCommands(CRPCTable &tableRPC);
 /** Register raw transaction RPC commands */
 void RegisterRawTransactionRPCCommands(CRPCTable &tableRPC);
-/** Register masternode RPC commands */
+/** Register smartnode RPC commands */
 void RegisterMasternodeRPCCommands(CRPCTable &tableRPC);
 /** Register PrivateSend RPC commands */
 void RegisterPrivateSendRPCCommands(CRPCTable &tableRPC);

@@ -1,9 +1,10 @@
 // Copyright (c) 2019-2020 The Dash Core developers
+// Copyright (c) 2020 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef DASH_QUORUMS_INSTANTSEND_H
-#define DASH_QUORUMS_INSTANTSEND_H
+#ifndef RAPTOREUM_QUORUMS_INSTANTSEND_H
+#define RAPTOREUM_QUORUMS_INSTANTSEND_H
 
 #include "quorums_signing.h"
 
@@ -177,4 +178,4 @@ bool IsInstantSendEnabled();
 
 } // namespace llmq
 
-#endif//DASH_QUORUMS_INSTANTSEND_H
+#endif//RAPTOREUM_QUORUMS_INSTANTSEND_H

@@ -1,12 +1,13 @@
 // Copyright (c) 2014-2019 The Dash Core developers
+// Copyright (c) 2020 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "chainparams.h"
 #include "dsnotificationinterface.h"
 #include "governance/governance.h"
-#include "masternode/masternode-payments.h"
-#include "masternode/masternode-sync.h"
+#include "smartnode/smartnode-payments.h"
+#include "smartnode/smartnode-sync.h"
 #include "privatesend/privatesend.h"
 #ifdef ENABLE_WALLET
 #include "privatesend/privatesend-client.h"
@@ -30,12 +31,12 @@ void CDSNotificationInterface::InitializeCurrentBlockTip()
 void CDSNotificationInterface::AcceptedBlockHeader(const CBlockIndex *pindexNew)
 {
     llmq::chainLocksHandler->AcceptedBlockHeader(pindexNew);
-    masternodeSync.AcceptedBlockHeader(pindexNew);
+    smartnodeSync.AcceptedBlockHeader(pindexNew);
 }
 
 void CDSNotificationInterface::NotifyHeaderTip(const CBlockIndex *pindexNew, bool fInitialDownload)
 {
-    masternodeSync.NotifyHeaderTip(pindexNew, fInitialDownload, connman);
+    smartnodeSync.NotifyHeaderTip(pindexNew, fInitialDownload, connman);
 }
 
 void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload)
@@ -45,10 +46,10 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
 
     deterministicMNManager->UpdatedBlockTip(pindexNew);
 
-    masternodeSync.UpdatedBlockTip(pindexNew, fInitialDownload, connman);
+    smartnodeSync.UpdatedBlockTip(pindexNew, fInitialDownload, connman);
 
     // Update global DIP0001 activation status
-    fDIP0001ActiveAtTip = pindexNew->nHeight >= Params().GetConsensus().DIP0001Height;
+    fDIP0001ActiveAtTip = Params().GetConsensus().DIP0001Enabled;
 
     if (fInitialDownload)
         return;

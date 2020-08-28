@@ -60,8 +60,8 @@ from test_framework.blocktools import create_block, create_coinbase, create_tran
 class AcceptBlockTest(BitcoinTestFramework):
     def add_options(self, parser):
         parser.add_option("--testbinary", dest="testbinary",
-                          default=os.getenv("BITCOIND", "dashd"),
-                          help="dashd binary to test")
+                          default=os.getenv("BITCOIND", "raptoreumd"),
+                          help="raptoreumd binary to test")
 
     def set_test_params(self):
         self.setup_clean_chain = True

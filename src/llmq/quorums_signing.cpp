@@ -1,4 +1,5 @@
 // Copyright (c) 2018-2019 The Dash Core developers
+// Copyright (c) 2020 The Raptoreum developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,7 +7,7 @@
 #include "quorums_utils.h"
 #include "quorums_signing_shares.h"
 
-#include "masternode/activemasternode.h"
+#include "smartnode/activesmartnode.h"
 #include "bls/bls_batchverifier.h"
 #include "cxxtimer.hpp"
 #include "init.h"
@@ -691,7 +692,7 @@ void CSigningManager::ProcessRecoveredSig(NodeId nodeId, const CRecoveredSig& re
             if (db.GetRecoveredSigById(llmqType, recoveredSig.id, otherRecoveredSig)) {
                 auto otherSignHash = CLLMQUtils::BuildSignHash(recoveredSig);
                 if (signHash != otherSignHash) {
-                    // this should really not happen, as each masternode is participating in only one vote,
+                    // this should really not happen, as each smartnode is participating in only one vote,
                     // even if it's a member of multiple quorums. so a majority is only possible on one quorum and one msgHash per id
                     LogPrintf("CSigningManager::%s -- conflicting recoveredSig for signHash=%s, id=%s, msgHash=%s, otherSignHash=%s\n", __func__,
                               signHash.ToString(), recoveredSig.id.ToString(), recoveredSig.msgHash.ToString(), otherSignHash.ToString());

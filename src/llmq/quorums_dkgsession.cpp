@@ -1,4 +1,5 @@
 // Copyright (c) 2018-2019 The Dash Core developers
+// Copyright (c) 2020 The Raptoreum developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,7 +12,7 @@
 
 #include "evo/specialtx.h"
 
-#include "masternode/activemasternode.h"
+#include "smartnode/activesmartnode.h"
 #include "chainparams.h"
 #include "init.h"
 #include "net.h"

@@ -1,4 +1,5 @@
 // Copyright (c) 2014-2019 The Dash Core developers
+// Copyright (c) 2020 The Raptoreum developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,8 +10,8 @@
 #include "governance-validators.h"
 #include "governance-vote.h"
 #include "init.h"
-#include "masternode/masternode-meta.h"
-#include "masternode/masternode-sync.h"
+#include "smartnode/smartnode-meta.h"
+#include "smartnode/smartnode-sync.h"
 #include "messagesigner.h"
 #include "net_processing.h"
 #include "netfulfilledman.h"
@@ -89,7 +90,7 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strComm
 {
     // lite mode is not supported
     if (fLiteMode) return;
-    if (!masternodeSync.IsBlockchainSynced()) return;
+    if (!smartnodeSync.IsBlockchainSynced()) return;
 
     // ANOTHER USER IS ASKING US TO HELP THEM SYNC GOVERNANCE OBJECT DATA
     if (strCommand == NetMsgType::MNGOVERNANCESYNC) {
@@ -100,9 +101,9 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strComm
         }
 
         // Ignore such requests until we are fully synced.
-        // We could start processing this after masternode list is synced
+        // We could start processing this after smartnode list is synced
         // but this is a heavy one so it's better to finish sync first.
-        if (!masternodeSync.IsSynced()) return;
+        if (!smartnodeSync.IsSynced()) return;
 
         uint256 nProp;
         CBloomFilter filter;
@@ -144,8 +145,8 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strComm
             return;
         }
 
-        if (!masternodeSync.IsBlockchainSynced()) {
-            LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECT -- masternode list not synced\n");
+        if (!smartnodeSync.IsBlockchainSynced()) {
+            LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECT -- smartnode list not synced\n");
             return;
         }
 
@@ -168,7 +169,7 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strComm
 
         bool fRateCheckBypassed = false;
         if (!MasternodeRateCheck(govobj, true, false, fRateCheckBypassed)) {
-            LogPrintf("MNGOVERNANCEOBJECT -- masternode rate check failed - %s - (current block height %d) \n", strHash, nCachedBlockHeight);
+            LogPrintf("MNGOVERNANCEOBJECT -- smartnode rate check failed - %s - (current block height %d) \n", strHash, nCachedBlockHeight);
             return;
         }
 
@@ -180,7 +181,7 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strComm
 
         if (fRateCheckBypassed && fIsValid) {
             if (!MasternodeRateCheck(govobj, true)) {
-                LogPrintf("MNGOVERNANCEOBJECT -- masternode rate check failed (after signature verification) - %s - (current block height %d)\n", strHash, nCachedBlockHeight);
+                LogPrintf("MNGOVERNANCEOBJECT -- smartnode rate check failed (after signature verification) - %s - (current block height %d)\n", strHash, nCachedBlockHeight);
                 return;
             }
         }
@@ -218,9 +219,9 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strComm
             connman.PushMessage(pfrom, CNetMsgMaker(pfrom->GetSendVersion()).Make(NetMsgType::REJECT, strCommand, REJECT_OBSOLETE, strprintf("Version must be %d or greater", MIN_GOVERNANCE_PEER_PROTO_VERSION)));
         }
 
-        // Ignore such messages until masternode list is synced
-        if (!masternodeSync.IsBlockchainSynced()) {
-            LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECTVOTE -- masternode list not synced\n");
+        // Ignore such messages until smartnode list is synced
+        if (!smartnodeSync.IsBlockchainSynced()) {
+            LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECTVOTE -- smartnode list not synced\n");
             return;
         }
 
@@ -237,11 +238,11 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strComm
         CGovernanceException exception;
         if (ProcessVote(pfrom, vote, exception, connman)) {
             LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECTVOTE -- %s new\n", strHash);
-            masternodeSync.BumpAssetLastTime("MNGOVERNANCEOBJECTVOTE");
+            smartnodeSync.BumpAssetLastTime("MNGOVERNANCEOBJECTVOTE");
             vote.Relay(connman);
         } else {
             LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECTVOTE -- Rejected vote, error = %s\n", exception.what());
-            if ((exception.GetNodePenalty() != 0) && masternodeSync.IsSynced()) {
+            if ((exception.GetNodePenalty() != 0) && smartnodeSync.IsSynced()) {
                 LOCK(cs_main);
                 Misbehaving(pfrom->GetId(), exception.GetNodePenalty());
             }
@@ -326,7 +327,7 @@ void CGovernanceManager::AddGovernanceObject(CGovernanceObject& govobj, CConnman
     // Update the rate buffer
     MasternodeRateUpdate(govobj);
 
-    masternodeSync.BumpAssetLastTime("CGovernanceManager::AddGovernanceObject");
+    smartnodeSync.BumpAssetLastTime("CGovernanceManager::AddGovernanceObject");
 
     // WE MIGHT HAVE PENDING/ORPHAN VOTES FOR THIS OBJECT
 
@@ -340,7 +341,7 @@ void CGovernanceManager::AddGovernanceObject(CGovernanceObject& govobj, CConnman
 void CGovernanceManager::UpdateCachesAndClean()
 {
     // Return on initial sync, spammed the debug.log and provided no use
-    if (!masternodeSync.IsBlockchainSynced()) {
+    if (!smartnodeSync.IsBlockchainSynced()) {
         return;
     }
 
@@ -535,7 +536,7 @@ struct sortProposalsByVotes {
 
 void CGovernanceManager::DoMaintenance(CConnman& connman)
 {
-    if (fLiteMode || !masternodeSync.IsSynced() || ShutdownRequested()) return;
+    if (fLiteMode || !smartnodeSync.IsSynced() || ShutdownRequested()) return;
 
     // CHECK OBJECTS WE'VE ASKED FOR, REMOVE OLD ENTRIES
 
@@ -551,7 +552,7 @@ void CGovernanceManager::DoMaintenance(CConnman& connman)
 bool CGovernanceManager::ConfirmInventoryRequest(const CInv& inv)
 {
     // do not request objects until it's time to sync
-    if (!masternodeSync.IsBlockchainSynced()) return false;
+    if (!smartnodeSync.IsBlockchainSynced()) return false;
 
     LOCK(cs);
 
@@ -604,7 +605,7 @@ bool CGovernanceManager::ConfirmInventoryRequest(const CInv& inv)
 void CGovernanceManager::SyncSingleObjVotes(CNode* pnode, const uint256& nProp, const CBloomFilter& filter, CConnman& connman)
 {
     // do not provide any data until our node is synced
-    if (!masternodeSync.IsSynced()) return;
+    if (!smartnodeSync.IsSynced()) return;
 
     int nVoteCount = 0;
 
@@ -653,7 +654,7 @@ void CGovernanceManager::SyncSingleObjVotes(CNode* pnode, const uint256& nProp, 
 void CGovernanceManager::SyncObjects(CNode* pnode, CConnman& connman) const
 {
     // do not provide any data until our node is synced
-    if (!masternodeSync.IsSynced()) return;
+    if (!smartnodeSync.IsSynced()) return;
 
     if (netfulfilledman.HasFulfilledRequest(pnode->addr, NetMsgType::MNGOVERNANCESYNC)) {
         LOCK(cs_main);
@@ -701,11 +702,11 @@ void CGovernanceManager::MasternodeRateUpdate(const CGovernanceObject& govobj)
 {
     if (govobj.GetObjectType() != GOVERNANCE_OBJECT_TRIGGER) return;
 
-    const COutPoint& masternodeOutpoint = govobj.GetMasternodeOutpoint();
-    txout_m_it it = mapLastMasternodeObject.find(masternodeOutpoint);
+    const COutPoint& smartnodeOutpoint = govobj.GetMasternodeOutpoint();
+    txout_m_it it = mapLastMasternodeObject.find(smartnodeOutpoint);
 
     if (it == mapLastMasternodeObject.end()) {
-        it = mapLastMasternodeObject.insert(txout_m_t::value_type(masternodeOutpoint, last_object_rec(true))).first;
+        it = mapLastMasternodeObject.insert(txout_m_t::value_type(smartnodeOutpoint, last_object_rec(true))).first;
     }
 
     int64_t nTimestamp = govobj.GetCreationTime();
@@ -731,7 +732,7 @@ bool CGovernanceManager::MasternodeRateCheck(const CGovernanceObject& govobj, bo
 
     fRateCheckBypassed = false;
 
-    if (!masternodeSync.IsSynced() || !fRateChecksEnabled) {
+    if (!smartnodeSync.IsSynced() || !fRateChecksEnabled) {
         return true;
     }
 
@@ -739,7 +740,7 @@ bool CGovernanceManager::MasternodeRateCheck(const CGovernanceObject& govobj, bo
         return true;
     }
 
-    const COutPoint& masternodeOutpoint = govobj.GetMasternodeOutpoint();
+    const COutPoint& smartnodeOutpoint = govobj.GetMasternodeOutpoint();
     int64_t nTimestamp = govobj.GetCreationTime();
     int64_t nNow = GetAdjustedTime();
     int64_t nSuperblockCycleSeconds = Params().GetConsensus().nSuperblockCycle * Params().GetConsensus().nPowTargetSpacing;
@@ -747,18 +748,18 @@ bool CGovernanceManager::MasternodeRateCheck(const CGovernanceObject& govobj, bo
     std::string strHash = govobj.GetHash().ToString();
 
     if (nTimestamp < nNow - 2 * nSuperblockCycleSeconds) {
-        LogPrintf("CGovernanceManager::MasternodeRateCheck -- object %s rejected due to too old timestamp, masternode = %s, timestamp = %d, current time = %d\n",
-            strHash, masternodeOutpoint.ToStringShort(), nTimestamp, nNow);
+        LogPrintf("CGovernanceManager::MasternodeRateCheck -- object %s rejected due to too old timestamp, smartnode = %s, timestamp = %d, current time = %d\n",
+            strHash, smartnodeOutpoint.ToStringShort(), nTimestamp, nNow);
         return false;
     }
 
     if (nTimestamp > nNow + MAX_TIME_FUTURE_DEVIATION) {
-        LogPrintf("CGovernanceManager::MasternodeRateCheck -- object %s rejected due to too new (future) timestamp, masternode = %s, timestamp = %d, current time = %d\n",
-            strHash, masternodeOutpoint.ToStringShort(), nTimestamp, nNow);
+        LogPrintf("CGovernanceManager::MasternodeRateCheck -- object %s rejected due to too new (future) timestamp, smartnode = %s, timestamp = %d, current time = %d\n",
+            strHash, smartnodeOutpoint.ToStringShort(), nTimestamp, nNow);
         return false;
     }
 
-    txout_m_it it = mapLastMasternodeObject.find(masternodeOutpoint);
+    txout_m_it it = mapLastMasternodeObject.find(smartnodeOutpoint);
     if (it == mapLastMasternodeObject.end()) return true;
 
     if (it->second.fStatusOK && !fForce) {
@@ -779,8 +780,8 @@ bool CGovernanceManager::MasternodeRateCheck(const CGovernanceObject& govobj, bo
         return true;
     }
 
-    LogPrintf("CGovernanceManager::MasternodeRateCheck -- Rate too high: object hash = %s, masternode = %s, object timestamp = %d, rate = %f, max rate = %f\n",
-        strHash, masternodeOutpoint.ToStringShort(), nTimestamp, dRate, dMaxRate);
+    LogPrintf("CGovernanceManager::MasternodeRateCheck -- Rate too high: object hash = %s, smartnode = %s, object timestamp = %d, rate = %f, max rate = %f\n",
+        strHash, smartnodeOutpoint.ToStringShort(), nTimestamp, dRate, dMaxRate);
 
     if (fUpdateFailStatus) {
         it->second.fStatusOK = false;
@@ -845,7 +846,7 @@ bool CGovernanceManager::ProcessVote(CNode* pfrom, const CGovernanceVote& vote, 
 
 void CGovernanceManager::CheckPostponedObjects(CConnman& connman)
 {
-    if (!masternodeSync.IsSynced()) return;
+    if (!smartnodeSync.IsSynced()) return;
 
     LOCK2(cs_main, cs);
 
@@ -967,9 +968,9 @@ int CGovernanceManager::RequestGovernanceObjectVotes(const std::vector<CNode*>& 
     std::vector<uint256> vOtherObjHashes;
 
     // This should help us to get some idea about an impact this can bring once deployed on mainnet.
-    // Testnet is ~40 times smaller in masternode count, but only ~1000 masternodes usually vote,
+    // Testnet is ~40 times smaller in smartnode count, but only ~1000 smartnodes usually vote,
     // so 1 obj on mainnet == ~10 objs or ~1000 votes on testnet. However we want to test a higher
-    // number of votes to make sure it's robust enough, so aim at 2000 votes per masternode per request.
+    // number of votes to make sure it's robust enough, so aim at 2000 votes per smartnode per request.
     // On mainnet nMaxObjRequestsPerNode is always set to 1.
     int nMaxObjRequestsPerNode = 1;
     size_t nProjectedVotes = 2000;
@@ -1023,9 +1024,9 @@ int CGovernanceManager::RequestGovernanceObjectVotes(const std::vector<CNode*>& 
         }
         bool fAsked = false;
         for (const auto& pnode : vNodesCopy) {
-            // Only use regular peers, don't try to ask from outbound "masternode" connections -
+            // Only use regular peers, don't try to ask from outbound "smartnode" connections -
             // they stay connected for a short period of time and it's possible that we won't get everything we should.
-            // Only use outbound connections - inbound connection could be a "masternode" connection
+            // Only use outbound connections - inbound connection could be a "smartnode" connection
             // initiated from another node, so skip it too.
             if (pnode->fMasternode || (fMasternodeMode && pnode->fInbound)) continue;
             // only use up to date peers
@@ -1118,7 +1119,7 @@ void CGovernanceManager::InitOnLoad()
 {
     LOCK(cs);
     int64_t nStart = GetTimeMillis();
-    LogPrintf("Preparing masternode indexes and governance triggers...\n");
+    LogPrintf("Preparing smartnode indexes and governance triggers...\n");
     RebuildIndexes();
     AddCachedTriggers();
     LogPrintf("Masternode indexes and governance triggers prepared  %dms\n", GetTimeMillis() - nStart);
@@ -1257,7 +1258,7 @@ void CGovernanceManager::CleanOrphanObjects()
 
 void CGovernanceManager::RemoveInvalidVotes()
 {
-    if (!masternodeSync.IsSynced()) {
+    if (!smartnodeSync.IsSynced()) {
         return;
     }
 

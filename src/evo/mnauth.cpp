@@ -1,12 +1,13 @@
 // Copyright (c) 2019-2020 The Dash Core developers
+// Copyright (c) 2020 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "mnauth.h"
 
-#include "masternode/activemasternode.h"
+#include "smartnode/activesmartnode.h"
 #include "evo/deterministicmns.h"
-#include "masternode/masternode-sync.h"
+#include "smartnode/smartnode-sync.h"
 #include "net.h"
 #include "net_processing.h"
 #include "netmessagemaker.h"
@@ -46,7 +47,7 @@ void CMNAuth::PushMNAUTH(CNode* pnode, CConnman& connman)
 
 void CMNAuth::ProcessMessage(CNode* pnode, const std::string& strCommand, CDataStream& vRecv, CConnman& connman)
 {
-    if (!masternodeSync.IsBlockchainSynced()) {
+    if (!smartnodeSync.IsBlockchainSynced()) {
         // we can't really verify MNAUTH messages when we don't have the latest MN list
         return;
     }

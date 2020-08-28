@@ -4,7 +4,7 @@
 
 #include "chain.h"
 #include "versionbits.h"
-#include "test/test_dash.h"
+#include "test/test_raptoreum.h"
 #include "chainparams.h"
 #include "validation.h"
 #include "consensus/params.h"

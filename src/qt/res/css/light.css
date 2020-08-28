@@ -684,16 +684,16 @@ QDialog#HelpMessageDialog QScrollArea * {
 background-color:#ffffff;
 }
 
-/* About Dash Dialog */
+/* About Raptoreum Dialog */
 QDialog#AboutDialog {
 background-color:#F8F6F6;
 }
 
-QDialog#AboutDialog QLabel#label, QDialog#AboutDialog QLabel#copyrightLabel, QDialog#AboutDialog QLabel#label_2 { /* About Dash Contents */
+QDialog#AboutDialog QLabel#label, QDialog#AboutDialog QLabel#copyrightLabel, QDialog#AboutDialog QLabel#label_2 { /* About Raptoreum Contents */
 margin-left:10px;
 }
 
-QDialog#AboutDialog QLabel#label_2 { /* Margin for About Dash text */
+QDialog#AboutDialog QLabel#label_2 { /* Margin for About Raptoreum text */
 margin-right:10px;
 }
 

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Copyright (c) 2018-2020 The Dash Core developers
+# Copyright (c) 2020 The Raptoreum developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -53,7 +54,7 @@ class SporkTest(BitcoinTestFramework):
         assert(self.get_test_spork_state(self.nodes[0]))
         assert(self.get_test_spork_state(self.nodes[1]))
 
-        # Generate one block to kick off masternode sync, which also starts sporks syncing for node2
+        # Generate one block to kick off smartnode sync, which also starts sporks syncing for node2
         self.nodes[1].generate(1)
 
         # connect new node and check spork propagation after restoring from cache

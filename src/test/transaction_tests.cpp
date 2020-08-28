@@ -4,7 +4,7 @@
 
 #include "data/tx_invalid.json.h"
 #include "data/tx_valid.json.h"
-#include "test/test_dash.h"
+#include "test/test_raptoreum.h"
 
 #include "clientversion.h"
 #include "checkqueue.h"
@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_CASE(tx_valid)
             CTransaction tx(deserialize, stream);
 
             CValidationState state;
-            BOOST_CHECK_MESSAGE(CheckTransaction(tx, state), strTest);
+            BOOST_CHECK_MESSAGE(CheckTransaction(tx, state, 0, 0), strTest);
             BOOST_CHECK(state.IsValid());
 
             PrecomputedTransactionData txdata(tx);
@@ -215,7 +215,7 @@ BOOST_AUTO_TEST_CASE(tx_invalid)
             CTransaction tx(deserialize, stream);
 
             CValidationState state;
-            fValid = CheckTransaction(tx, state) && state.IsValid();
+            fValid = CheckTransaction(tx, state, 0, 0) && state.IsValid();
 
             PrecomputedTransactionData txdata(tx);
             for (unsigned int i = 0; i < tx.vin.size() && fValid; i++)
@@ -246,11 +246,11 @@ BOOST_AUTO_TEST_CASE(basic_transaction_tests)
     CMutableTransaction tx;
     stream >> tx;
     CValidationState state;
-    BOOST_CHECK_MESSAGE(CheckTransaction(tx, state) && state.IsValid(), "Simple deserialized transaction should be valid.");
+    BOOST_CHECK_MESSAGE(CheckTransaction(tx, state, 0, 0) && state.IsValid(), "Simple deserialized transaction should be valid.");
 
     // Check that duplicate txins fail
     tx.vin.push_back(tx.vin[0]);
-    BOOST_CHECK_MESSAGE(!CheckTransaction(tx, state) || !state.IsValid(), "Transaction with duplicate txins should be invalid.");
+    BOOST_CHECK_MESSAGE(!CheckTransaction(tx, state, 0 ,0) || !state.IsValid(), "Transaction with duplicate txins should be invalid.");
 }
 
 //

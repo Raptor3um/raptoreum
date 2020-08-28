@@ -1,4 +1,5 @@
 // Copyright (c) 2018-2019 The Dash Core developers
+// Copyright (c) 2020 The Raptoreum developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -120,7 +121,7 @@ bool CQuorumBlockProcessor::ProcessBlock(const CBlock& block, const CBlockIndex*
 {
     AssertLockHeld(cs_main);
 
-    bool fDIP0003Active = pindex->nHeight >= Params().GetConsensus().DIP0003Height;
+    bool fDIP0003Active = Params().GetConsensus().DIP0003Enabled;
     if (!fDIP0003Active) {
         evoDb.Write(DB_BEST_BLOCK_UPGRADE, block.GetHash());
         return true;
@@ -269,8 +270,10 @@ void CQuorumBlockProcessor::UpgradeDB()
 
     LogPrintf("CQuorumBlockProcessor::%s -- Upgrading DB...\n", __func__);
 
-    if (chainActive.Height() >= Params().GetConsensus().DIP0003EnforcementHeight) {
-        auto pindex = chainActive[Params().GetConsensus().DIP0003EnforcementHeight];
+    //if (chainActive.Height() >= Params().GetConsensus().DIP0003EnforcementHeight) {
+    //    auto pindex = chainActive[Params().GetConsensus().DIP0003EnforcementHeight];
+    if (chainActive.Height() >= 1) {
+           auto pindex = chainActive[1];
         while (pindex) {
             if (fPruneMode && !(pindex->nStatus & BLOCK_HAVE_DATA)) {
                 // Too late, we already pruned blocks we needed to reprocess commitments
@@ -308,7 +311,7 @@ bool CQuorumBlockProcessor::GetCommitmentsFromBlock(const CBlock& block, const C
     AssertLockHeld(cs_main);
 
     auto& consensus = Params().GetConsensus();
-    bool fDIP0003Active = pindex->nHeight >= consensus.DIP0003Height;
+    bool fDIP0003Active = consensus.DIP0003Enabled;
 
     ret.clear();
 

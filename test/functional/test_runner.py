@@ -54,11 +54,11 @@ TEST_EXIT_SKIPPED = 77
 BASE_SCRIPTS= [
     # Scripts that are run by the travis build process.
     # Longest test should go first, to favor running tests in parallel
-    'dip3-deterministicmns.py', # NOTE: needs dash_hash to pass
+    'dip3-deterministicmns.py', # NOTE: needs raptoreum_hash to pass
     'wallet-hd.py',
     'walletbackup.py',
     # vv Tests less than 5m vv
-    'p2p-fullblocktest.py', # NOTE: needs dash_hash to pass
+    'p2p-fullblocktest.py', # NOTE: needs raptoreum_hash to pass
     'fundrawtransaction.py',
     'fundrawtransaction-hd.py',
     # vv Tests less than 2m vv
@@ -68,15 +68,15 @@ BASE_SCRIPTS= [
     'wallet-dump.py',
     'listtransactions.py',
     'multikeysporks.py',
-    'llmq-signing.py', # NOTE: needs dash_hash to pass
-    'llmq-chainlocks.py', # NOTE: needs dash_hash to pass
-    'llmq-simplepose.py', # NOTE: needs dash_hash to pass
-    'llmq-is-cl-conflicts.py', # NOTE: needs dash_hash to pass
-    'llmq-is-retroactive.py', # NOTE: needs dash_hash to pass
-    'llmq-dkgerrors.py', # NOTE: needs dash_hash to pass
-    'dip4-coinbasemerkleroots.py', # NOTE: needs dash_hash to pass
+    'llmq-signing.py', # NOTE: needs raptoreum_hash to pass
+    'llmq-chainlocks.py', # NOTE: needs raptoreum_hash to pass
+    'llmq-simplepose.py', # NOTE: needs raptoreum_hash to pass
+    'llmq-is-cl-conflicts.py', # NOTE: needs raptoreum_hash to pass
+    'llmq-is-retroactive.py', # NOTE: needs raptoreum_hash to pass
+    'llmq-dkgerrors.py', # NOTE: needs raptoreum_hash to pass
+    'dip4-coinbasemerkleroots.py', # NOTE: needs raptoreum_hash to pass
     # vv Tests less than 60s vv
-    'sendheaders.py', # NOTE: needs dash_hash to pass
+    'sendheaders.py', # NOTE: needs raptoreum_hash to pass
     'zapwallettxes.py',
     'importmulti.py',
     'mempool_limit.py',
@@ -115,8 +115,8 @@ BASE_SCRIPTS= [
     'keypool-hd.py',
     'p2p-mempool.py',
     'prioritise_transaction.py',
-    'invalidblockrequest.py', # NOTE: needs dash_hash to pass
-    'invalidtxrequest.py', # NOTE: needs dash_hash to pass
+    'invalidblockrequest.py', # NOTE: needs raptoreum_hash to pass
+    'invalidtxrequest.py', # NOTE: needs raptoreum_hash to pass
     'p2p-versionbits-warning.py',
     'preciousblock.py',
     'importprunedfunds.py',
@@ -137,7 +137,7 @@ BASE_SCRIPTS= [
     'uptime.py',
     'resendwallettransactions.py',
     'minchainwork.py',
-    'p2p-acceptblock.py', # NOTE: needs dash_hash to pass
+    'p2p-acceptblock.py', # NOTE: needs raptoreum_hash to pass
     'feature_shutdown.py',
 ]
 
@@ -197,7 +197,7 @@ def main():
     parser.add_argument('--tmpdirprefix', '-t', default=tempfile.gettempdir(), help="Root directory for datadirs")
     args, unknown_args = parser.parse_known_args()
 
-    # args to be passed on always start with two dashes; tests are the remaining unknown args
+    # args to be passed on always start with two raptoreumes; tests are the remaining unknown args
     tests = [arg for arg in unknown_args if arg[:2] != "--"]
     passon_args = [arg for arg in unknown_args if arg[:2] == "--"]
 
@@ -213,7 +213,7 @@ def main():
     logging.basicConfig(format='%(message)s', level=logging_level)
 
     # Create base test directory
-    tmpdir = "%s/dash_test_runner_%s" % (args.tmpdirprefix, datetime.datetime.now().strftime("%Y%m%d_%H%M%S"))
+    tmpdir = "%s/raptoreum_test_runner_%s" % (args.tmpdirprefix, datetime.datetime.now().strftime("%Y%m%d_%H%M%S"))
     os.makedirs(tmpdir)
 
     logging.debug("Temporary test directory at %s" % tmpdir)
@@ -281,11 +281,11 @@ def main():
     run_tests(test_list, config["environment"]["SRCDIR"], config["environment"]["BUILDDIR"], config["environment"]["EXEEXT"], tmpdir, args.jobs, args.coverage, passon_args)
 
 def run_tests(test_list, src_dir, build_dir, exeext, tmpdir, jobs=1, enable_coverage=False, args=[]):
-    # Warn if dashd is already running (unix only)
+    # Warn if raptoreumd is already running (unix only)
     try:
-        pidof_output = subprocess.check_output(["pidof", "dashd"])
+        pidof_output = subprocess.check_output(["pidof", "raptoreumd"])
         if not (pidof_output is None or pidof_output == b''):
-            print("%sWARNING!%s There is already a dashd process running on this system. Tests may fail unexpectedly due to resource contention!" % (BOLD[1], BOLD[0]))
+            print("%sWARNING!%s There is already a raptoreumd process running on this system. Tests may fail unexpectedly due to resource contention!" % (BOLD[1], BOLD[0]))
     except (OSError, subprocess.SubprocessError):
         pass
 
@@ -297,8 +297,8 @@ def run_tests(test_list, src_dir, build_dir, exeext, tmpdir, jobs=1, enable_cove
 
     #Set env vars
     if "BITCOIND" not in os.environ:
-        os.environ["BITCOIND"] = build_dir + '/src/dashd' + exeext
-        os.environ["BITCOINCLI"] = build_dir + '/src/dash-cli' + exeext
+        os.environ["BITCOIND"] = build_dir + '/src/raptoreumd' + exeext
+        os.environ["BITCOINCLI"] = build_dir + '/src/raptoreum-cli' + exeext
 
     tests_dir = src_dir + '/test/functional/'
 

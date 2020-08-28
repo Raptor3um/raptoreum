@@ -155,7 +155,7 @@ class AssumeValidTest(BitcoinTestFramework):
         self.block_time += 1
         height += 1
 
-        # Bury the assumed valid block 8400 deep (Dash needs 4x as much blocks to allow -assumevalid to work)
+        # Bury the assumed valid block 8400 deep (Raptoreum needs 4x as much blocks to allow -assumevalid to work)
         for i in range(8400):
             block = create_block(self.tip, create_coinbase(height), self.block_time)
             block.nVersion = 4

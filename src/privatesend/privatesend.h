@@ -1,4 +1,5 @@
 // Copyright (c) 2014-2020 The Dash Core developers
+// Copyright (c) 2020 The Raptoreum developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -216,7 +217,7 @@ class CPrivateSendQueue
 {
 public:
     int nDenom;
-    COutPoint masternodeOutpoint;
+    COutPoint smartnodeOutpoint;
     int64_t nTime;
     bool fReady; //ready for submit
     std::vector<unsigned char> vchSig;
@@ -225,7 +226,7 @@ public:
 
     CPrivateSendQueue() :
         nDenom(0),
-        masternodeOutpoint(COutPoint()),
+        smartnodeOutpoint(COutPoint()),
         nTime(0),
         fReady(false),
         vchSig(std::vector<unsigned char>()),
@@ -235,7 +236,7 @@ public:
 
     CPrivateSendQueue(int nDenom, COutPoint outpoint, int64_t nTime, bool fReady) :
         nDenom(nDenom),
-        masternodeOutpoint(outpoint),
+        smartnodeOutpoint(outpoint),
         nTime(nTime),
         fReady(fReady),
         vchSig(std::vector<unsigned char>()),
@@ -249,7 +250,7 @@ public:
     inline void SerializationOp(Stream& s, Operation ser_action)
     {
         READWRITE(nDenom);
-        READWRITE(masternodeOutpoint);
+        READWRITE(smartnodeOutpoint);
         READWRITE(nTime);
         READWRITE(fReady);
         if (!(s.GetType() & SER_GETHASH)) {
@@ -276,13 +277,13 @@ public:
 
     std::string ToString() const
     {
-        return strprintf("nDenom=%d, nTime=%lld, fReady=%s, fTried=%s, masternode=%s",
-            nDenom, nTime, fReady ? "true" : "false", fTried ? "true" : "false", masternodeOutpoint.ToStringShort());
+        return strprintf("nDenom=%d, nTime=%lld, fReady=%s, fTried=%s, smartnode=%s",
+            nDenom, nTime, fReady ? "true" : "false", fTried ? "true" : "false", smartnodeOutpoint.ToStringShort());
     }
 
     friend bool operator==(const CPrivateSendQueue& a, const CPrivateSendQueue& b)
     {
-        return a.nDenom == b.nDenom && a.masternodeOutpoint == b.masternodeOutpoint && a.nTime == b.nTime && a.fReady == b.fReady;
+        return a.nDenom == b.nDenom && a.smartnodeOutpoint == b.smartnodeOutpoint && a.nTime == b.nTime && a.fReady == b.fReady;
     }
 };
 
@@ -297,14 +298,14 @@ private:
 
 public:
     CTransactionRef tx;
-    COutPoint masternodeOutpoint;
+    COutPoint smartnodeOutpoint;
     std::vector<unsigned char> vchSig;
     int64_t sigTime;
 
     CPrivateSendBroadcastTx() :
         nConfirmedHeight(-1),
         tx(MakeTransactionRef()),
-        masternodeOutpoint(),
+        smartnodeOutpoint(),
         vchSig(),
         sigTime(0)
     {
@@ -313,7 +314,7 @@ public:
     CPrivateSendBroadcastTx(const CTransactionRef& _tx, COutPoint _outpoint, int64_t _sigTime) :
         nConfirmedHeight(-1),
         tx(_tx),
-        masternodeOutpoint(_outpoint),
+        smartnodeOutpoint(_outpoint),
         vchSig(),
         sigTime(_sigTime)
     {
@@ -325,7 +326,7 @@ public:
     inline void SerializationOp(Stream& s, Operation ser_action)
     {
         READWRITE(tx);
-        READWRITE(masternodeOutpoint);
+        READWRITE(smartnodeOutpoint);
         if (!(s.GetType() & SER_GETHASH)) {
             READWRITE(vchSig);
         }
@@ -436,7 +437,7 @@ public:
     static std::vector<CAmount> GetStandardDenominations() { return vecStandardDenominations; }
     static CAmount GetSmallestDenomination() { return vecStandardDenominations.back(); }
 
-    /// Get the denominations for a specific amount of dash.
+    /// Get the denominations for a specific amount of raptoreum.
     static int GetDenominationsByAmounts(const std::vector<CAmount>& vecAmount);
 
     static bool IsDenominatedAmount(CAmount nInputAmount);

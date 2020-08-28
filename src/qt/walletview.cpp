@@ -82,8 +82,8 @@ WalletView::WalletView(const PlatformStyle *_platformStyle, QWidget *parent):
 
     QSettings settings;
     if (!fLiteMode && settings.value("fShowMasternodesTab").toBool()) {
-        masternodeListPage = new MasternodeList(platformStyle);
-        addWidget(masternodeListPage);
+        smartnodeListPage = new MasternodeList(platformStyle);
+        addWidget(smartnodeListPage);
     }
 
     // Clicking on a transaction on the overview pre-selects the transaction on the transaction history page
@@ -139,7 +139,7 @@ void WalletView::setClientModel(ClientModel *_clientModel)
     sendCoinsPage->setClientModel(_clientModel);
     QSettings settings;
     if (!fLiteMode && settings.value("fShowMasternodesTab").toBool()) {
-        masternodeListPage->setClientModel(_clientModel);
+        smartnodeListPage->setClientModel(_clientModel);
     }
 }
 
@@ -152,7 +152,7 @@ void WalletView::setWalletModel(WalletModel *_walletModel)
     overviewPage->setWalletModel(_walletModel);
     QSettings settings;
     if (!fLiteMode && settings.value("fShowMasternodesTab").toBool()) {
-        masternodeListPage->setWalletModel(_walletModel);
+        smartnodeListPage->setWalletModel(_walletModel);
     }
     receiveCoinsPage->setModel(_walletModel);
     sendCoinsPage->setModel(_walletModel);
@@ -226,7 +226,7 @@ void WalletView::gotoMasternodePage()
 {
     QSettings settings;
     if (!fLiteMode && settings.value("fShowMasternodesTab").toBool()) {
-        setCurrentWidget(masternodeListPage);
+        setCurrentWidget(smartnodeListPage);
     }
 }
 

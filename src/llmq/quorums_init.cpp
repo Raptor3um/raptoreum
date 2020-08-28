@@ -1,4 +1,5 @@
 // Copyright (c) 2018-2019 The Dash Core developers
+// Copyright (c) 2020 The Raptoreum developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -65,7 +66,7 @@ void DestroyLLMQSystem()
 
 void StartLLMQSystem()
 {
-    quorumBlockProcessor->UpgradeDB();
+    //quorumBlockProcessor->UpgradeDB();
 
     if (blsWorker) {
         blsWorker->Start();

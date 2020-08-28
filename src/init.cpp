@@ -1,11 +1,12 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
 // Copyright (c) 2014-2020 The Dash Core developers
+// Copyright (c) 2020 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include "config/dash-config.h"
+#include "config/raptoreum-config.h"
 #endif
 
 #include "init.h"
@@ -24,6 +25,7 @@
 #include "key.h"
 #include "validation.h"
 #include "miner.h"
+#include "rpc/mining.h"
 #include "netbase.h"
 #include "net.h"
 #include "net_processing.h"
@@ -48,17 +50,17 @@
 #include "wallet/wallet.h"
 #endif
 
-#include "masternode/activemasternode.h"
+#include "smartnode/activesmartnode.h"
 #include "dsnotificationinterface.h"
 #include "flat-database.h"
 #include "governance/governance.h"
 #ifdef ENABLE_WALLET
 #include "keepass.h"
 #endif
-#include "masternode/masternode-meta.h"
-#include "masternode/masternode-payments.h"
-#include "masternode/masternode-sync.h"
-#include "masternode/masternode-utils.h"
+#include "smartnode/smartnode-meta.h"
+#include "smartnode/smartnode-payments.h"
+#include "smartnode/smartnode-sync.h"
+#include "smartnode/smartnode-utils.h"
 #include "messagesigner.h"
 #include "netfulfilledman.h"
 #ifdef ENABLE_WALLET
@@ -219,7 +221,7 @@ void PrepareShutdown()
     /// for example if the data directory was found to be locked.
     /// Be sure that anything that writes files or flushes caches only does this if the respective
     /// module was initialized.
-    RenameThread("dash-shutoff");
+    RenameThread("raptoreum-shutoff");
     mempool.AddTransactionsUpdated(1);
     StopHTTPRPC();
     StopREST();
@@ -596,20 +598,20 @@ std::string HelpMessage(HelpMessageMode mode)
     }
     strUsage += HelpMessageOpt("-shrinkdebugfile", _("Shrink debug.log file on client startup (default: 1 when no -debug)"));
     AppendParamsHelpMessages(strUsage, showDebug);
-    strUsage += HelpMessageOpt("-litemode", strprintf(_("Disable all Dash specific functionality (Masternodes, PrivateSend, InstantSend, Governance) (0-1, default: %u)"), 0));
-    strUsage += HelpMessageOpt("-sporkaddr=<dashaddress>", strprintf(_("Override spork address. Only useful for regtest and devnet. Using this on mainnet or testnet will ban you.")));
+    strUsage += HelpMessageOpt("-litemode", strprintf(_("Disable all Raptoreum specific functionality (Masternodes, PrivateSend, InstantSend, Governance) (0-1, default: %u)"), 0));
+    strUsage += HelpMessageOpt("-sporkaddr=<raptoreumaddress>", strprintf(_("Override spork address. Only useful for regtest and devnet. Using this on mainnet or testnet will ban you.")));
     strUsage += HelpMessageOpt("-minsporkkeys=<n>", strprintf(_("Overrides minimum spork signers to change spork value. Only useful for regtest and devnet. Using this on mainnet or testnet will ban you.")));
 
     strUsage += HelpMessageGroup(_("Masternode options:"));
-    strUsage += HelpMessageOpt("-masternodeblsprivkey=<hex>", _("Set the masternode BLS private key and enable the client to act as a masternode"));
+    strUsage += HelpMessageOpt("-smartnodeblsprivkey=<hex>", _("Set the smartnode BLS private key and enable the client to act as a smartnode"));
 
 #ifdef ENABLE_WALLET
     strUsage += HelpMessageGroup(_("PrivateSend options:"));
     strUsage += HelpMessageOpt("-enableprivatesend", strprintf(_("Enable use of PrivateSend for funds stored in this wallet (0-1, default: %u)"), 0));
     strUsage += HelpMessageOpt("-privatesendautostart", strprintf(_("Start PrivateSend automatically (0-1, default: %u)"), DEFAULT_PRIVATESEND_AUTOSTART));
     strUsage += HelpMessageOpt("-privatesendmultisession", strprintf(_("Enable multiple PrivateSend mixing sessions per block, experimental (0-1, default: %u)"), DEFAULT_PRIVATESEND_MULTISESSION));
-    strUsage += HelpMessageOpt("-privatesendsessions=<n>", strprintf(_("Use N separate masternodes in parallel to mix funds (%u-%u, default: %u)"), MIN_PRIVATESEND_SESSIONS, MAX_PRIVATESEND_SESSIONS, DEFAULT_PRIVATESEND_SESSIONS));
-    strUsage += HelpMessageOpt("-privatesendrounds=<n>", strprintf(_("Use N separate masternodes for each denominated input to mix funds (%u-%u, default: %u)"), MIN_PRIVATESEND_ROUNDS, MAX_PRIVATESEND_ROUNDS, DEFAULT_PRIVATESEND_ROUNDS));
+    strUsage += HelpMessageOpt("-privatesendsessions=<n>", strprintf(_("Use N separate smartnodes in parallel to mix funds (%u-%u, default: %u)"), MIN_PRIVATESEND_SESSIONS, MAX_PRIVATESEND_SESSIONS, DEFAULT_PRIVATESEND_SESSIONS));
+    strUsage += HelpMessageOpt("-privatesendrounds=<n>", strprintf(_("Use N separate smartnodes for each denominated input to mix funds (%u-%u, default: %u)"), MIN_PRIVATESEND_ROUNDS, MAX_PRIVATESEND_ROUNDS, DEFAULT_PRIVATESEND_ROUNDS));
     strUsage += HelpMessageOpt("-privatesendamount=<n>", strprintf(_("Target PrivateSend balance (%u-%u, default: %u)"), MIN_PRIVATESEND_AMOUNT, MAX_PRIVATESEND_AMOUNT, DEFAULT_PRIVATESEND_AMOUNT));
     strUsage += HelpMessageOpt("-privatesenddenoms=<n>", strprintf(_("Create up to N inputs of each denominated amount (%u-%u, default: %u)"), MIN_PRIVATESEND_DENOMS, MAX_PRIVATESEND_DENOMS, DEFAULT_PRIVATESEND_DENOMS));
 #endif // ENABLE_WALLET
@@ -659,8 +661,8 @@ std::string HelpMessage(HelpMessageMode mode)
 
 std::string LicenseInfo()
 {
-    const std::string URL_SOURCE_CODE = "<https://github.com/dashpay/dash>";
-    const std::string URL_WEBSITE = "<https://dash.org>";
+    const std::string URL_SOURCE_CODE = "<https://github.com/raptoreum/raptoreum>";
+    const std::string URL_WEBSITE = "<https://raptoreum.org>";
 
     return CopyrightHolders(_("Copyright (C)"), 2014, COPYRIGHT_YEAR) + "\n" +
            "\n" +
@@ -763,7 +765,7 @@ void CleanupBlockRevFiles()
 void ThreadImport(std::vector<fs::path> vImportFiles)
 {
     const CChainParams& chainparams = Params();
-    RenameThread("dash-loadblk");
+    RenameThread("raptoreum-loadblk");
 
     {
     CImportingNow imp;
@@ -835,7 +837,7 @@ void ThreadImport(std::vector<fs::path> vImportFiles)
     {
         // Get all UTXOs for each MN collateral in one go so that we can fill coin cache early
         // and reduce further locking overhead for cs_main in other parts of code inclluding GUI
-        LogPrintf("Filling coin cache with masternode UTXOs...\n");
+        LogPrintf("Filling coin cache with smartnode UTXOs...\n");
         LOCK(cs_main);
         int64_t nStart = GetTimeMillis();
         auto mnList = deterministicMNManager->GetListAtChainTip();
@@ -843,7 +845,7 @@ void ThreadImport(std::vector<fs::path> vImportFiles)
             Coin coin;
             GetUTXOCoin(dmn->collateralOutpoint, coin);
         });
-        LogPrintf("Filling coin cache with masternode UTXOs: done in %dms\n", GetTimeMillis() - nStart);
+        LogPrintf("Filling coin cache with smartnode UTXOs: done in %dms\n", GetTimeMillis() - nStart);
     }
 
     if (fMasternodeMode) {
@@ -865,7 +867,7 @@ void ThreadImport(std::vector<fs::path> vImportFiles)
 }
 
 /** Sanity checks
- *  Ensure that Dash Core is running in a usable environment with all
+ *  Ensure that Raptoreum Core is running in a usable environment with all
  *  necessary library support.
  */
 bool InitSanityCheck(void)
@@ -922,19 +924,19 @@ void InitParameterInteraction()
             LogPrintf("%s: parameter interaction: -whitebind set -> setting -listen=1\n", __func__);
     }
 
-    if (gArgs.IsArgSet("-masternodeblsprivkey")) {
-        // masternodes MUST accept connections from outside
+    if (gArgs.IsArgSet("-smartnodeblsprivkey")) {
+        // smartnodes MUST accept connections from outside
         gArgs.ForceSetArg("-listen", "1");
-        LogPrintf("%s: parameter interaction: -masternodeblsprivkey=... -> setting -listen=1\n", __func__);
+        LogPrintf("%s: parameter interaction: -smartnodeblsprivkey=... -> setting -listen=1\n", __func__);
 #ifdef ENABLE_WALLET
-        // masternode should not have wallet enabled
+        // smartnode should not have wallet enabled
         gArgs.ForceSetArg("-disablewallet", "1");
-        LogPrintf("%s: parameter interaction: -masternodeblsprivkey=... -> setting -disablewallet=1\n", __func__);
+        LogPrintf("%s: parameter interaction: -smartnodeblsprivkey=... -> setting -disablewallet=1\n", __func__);
 #endif // ENABLE_WALLET
         if (gArgs.GetArg("-maxconnections", DEFAULT_MAX_PEER_CONNECTIONS) < DEFAULT_MAX_PEER_CONNECTIONS) {
-            // masternodes MUST be able to handle at least DEFAULT_MAX_PEER_CONNECTIONS connections
+            // smartnodes MUST be able to handle at least DEFAULT_MAX_PEER_CONNECTIONS connections
             gArgs.ForceSetArg("-maxconnections", itostr(DEFAULT_MAX_PEER_CONNECTIONS));
-            LogPrintf("%s: parameter interaction: -masternodeblsprivkey=... -> setting -maxconnections=%d instead of specified -maxconnections=%d\n",
+            LogPrintf("%s: parameter interaction: -smartnodeblsprivkey=... -> setting -maxconnections=%d instead of specified -maxconnections=%d\n",
                     __func__, DEFAULT_MAX_PEER_CONNECTIONS, gArgs.GetArg("-maxconnections", DEFAULT_MAX_PEER_CONNECTIONS));
         }
     }
@@ -1024,7 +1026,7 @@ void InitLogging()
     fLogIPs = gArgs.GetBoolArg("-logips", DEFAULT_LOGIPS);
 
     LogPrintf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
-    LogPrintf("Dash Core version %s\n", FormatFullVersion());
+    LogPrintf("Raptoreum Core version %s\n", FormatFullVersion());
 }
 
 namespace { // Variables internal to initialization process only
@@ -1373,7 +1375,7 @@ bool AppInitParameterInteraction()
         }
     }
 
-    if (gArgs.IsArgSet("-dip3params")) {
+    /*if (gArgs.IsArgSet("-dip3params")) {
         // Allow overriding budget parameters for testing
         if (!chainparams.MineBlocksOnDemand()) {
             return InitError("DIP3 parameters may only be overridden on regtest.");
@@ -1392,7 +1394,7 @@ bool AppInitParameterInteraction()
             return InitError(strprintf("Invalid nDIP3EnforcementHeight (%s)", vDIP3Params[1]));
         }
         UpdateDIP3Parameters(nDIP3ActivationHeight, nDIP3EnforcementHeight);
-    }
+    }*/
 
     if (gArgs.IsArgSet("-budgetparams")) {
         // Allow overriding budget parameters for testing
@@ -1404,7 +1406,7 @@ bool AppInitParameterInteraction()
         std::vector<std::string> vBudgetParams;
         boost::split(vBudgetParams, strBudgetParams, boost::is_any_of(":"));
         if (vBudgetParams.size() != 3) {
-            return InitError("Budget parameters malformed, expecting masternodePaymentsStartBlock:budgetPaymentsStartBlock:superblockStartBlock");
+            return InitError("Budget parameters malformed, expecting smartnodePaymentsStartBlock:budgetPaymentsStartBlock:superblockStartBlock");
         }
         int nMasternodePaymentsStartBlock, nBudgetPaymentsStartBlock, nSuperblockStartBlock;
         if (!ParseInt32(vBudgetParams[0], &nMasternodePaymentsStartBlock)) {
@@ -1449,8 +1451,8 @@ bool AppInitParameterInteraction()
         InitWarning("-maxorphantx is not supported anymore. Use -maxorphantxsize instead.");
     }
 
-    if (gArgs.IsArgSet("-masternode")) {
-        InitWarning(_("-masternode option is deprecated and ignored, specifying -masternodeblsprivkey is enough to start this node as a masternode."));
+    if (gArgs.IsArgSet("-smartnode")) {
+        InitWarning(_("-smartnode option is deprecated and ignored, specifying -smartnodeblsprivkey is enough to start this node as a smartnode."));
     }
 
     return true;
@@ -1460,7 +1462,7 @@ static bool LockDataDirectory(bool probeOnly)
 {
     std::string strDataDir = GetDataDir().string();
 
-    // Make sure only a single Dash Core process is using the data directory.
+    // Make sure only a single Raptoreum Core process is using the data directory.
     fs::path pathLockFile = GetDataDir() / ".lock";
     FILE* file = fsbridge::fopen(pathLockFile, "a"); // empty lock file; created if it doesn't exist.
     if (file) fclose(file);
@@ -1597,12 +1599,13 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     // Initialize KeePass Integration
     keePassInt.init();
 #endif // ENABLE_WALLET
+    bool fGenerate = gArgs.GetBoolArg("-regtest", false) ? false : DEFAULT_GENERATE;
+	GenerateRaptoreums(fGenerate, gArgs.GetArg("-genproclimit", DEFAULT_GENERATE_THREADS), chainparams);
     // ********************************************************* Step 6: network initialization
     // Note that we absolutely cannot open any actual connections
     // until the very end ("start node") as the UTXO/block state
     // is not yet setup and may end up being set up twice if we
     // need to reindex later.
-
     assert(!g_connman);
     g_connman = std::unique_ptr<CConnman>(new CConnman(GetRand(std::numeric_limits<uint64_t>::max()), GetRand(std::numeric_limits<uint64_t>::max())));
     CConnman& connman = *g_connman;
@@ -1722,16 +1725,16 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     // ********************************************************* Step 7a: check lite mode and load sporks
 
-    // lite mode disables all Dash-specific functionality
+    // lite mode disables all Raptoreum-specific functionality
     fLiteMode = gArgs.GetBoolArg("-litemode", false);
     LogPrintf("fLiteMode %d\n", fLiteMode);
 
     if(fLiteMode) {
-        InitWarning(_("You are starting in lite mode, most Dash-specific functionality is disabled."));
+        InitWarning(_("You are starting in lite mode, most Raptoreum-specific functionality is disabled."));
     }
 
     if((!fLiteMode && fTxIndex == false)
-       && chainparams.NetworkIDString() != CBaseChainParams::REGTEST) { // TODO remove this when pruning is fixed. See https://github.com/dashpay/dash/pull/1817 and https://github.com/dashpay/dash/pull/1743
+       && chainparams.NetworkIDString() != CBaseChainParams::REGTEST) { // TODO remove this when pruning is fixed. See https://github.com/raptoreum/raptoreum/pull/1817 and https://github.com/raptoreum/raptoreum/pull/1743
         return InitError(_("Transaction index can't be disabled in full mode. Either start with -litemode command line switch or enable transaction index."));
     }
 
@@ -1891,7 +1894,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                     assert(chainActive.Tip() != NULL);
                 }
 
-                deterministicMNManager->UpgradeDBIfNeeded();
+                //deterministicMNManager->UpgradeDBIfNeeded();
 
                 if (!is_coinsview_empty) {
                     uiInterface.InitMessage(_("Verifying blocks..."));
@@ -2005,13 +2008,13 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     // ********************************************************* Step 10a: Prepare Masternode related stuff
     fMasternodeMode = false;
-    std::string strMasterNodeBLSPrivKey = gArgs.GetArg("-masternodeblsprivkey", "");
+    std::string strMasterNodeBLSPrivKey = gArgs.GetArg("-smartnodeblsprivkey", "");
     if (!strMasterNodeBLSPrivKey.empty()) {
         auto binKey = ParseHex(strMasterNodeBLSPrivKey);
         CBLSSecretKey keyOperator;
         keyOperator.SetBuf(binKey);
         if (!keyOperator.IsValid()) {
-            return InitError(_("Invalid masternodeblsprivkey. Please see documentation."));
+            return InitError(_("Invalid smartnodeblsprivkey. Please see documentation."));
         }
         fMasternodeMode = true;
         activeMasternodeInfo.blsKeyOperator = std::make_unique<CBLSSecretKey>(keyOperator);
@@ -2021,13 +2024,13 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     }
 
     if(fLiteMode && fMasternodeMode) {
-        return InitError(_("You can not start a masternode in lite mode."));
+        return InitError(_("You can not start a smartnode in lite mode."));
     }
 
     if(fMasternodeMode) {
 #ifdef ENABLE_WALLET
         if (!vpwallets.empty()) {
-            return InitError(_("You can not start a masternode with wallet enabled."));
+            return InitError(_("You can not start a smartnode with wallet enabled."));
         }
 #endif //ENABLE_WALLET
         // Create and register activeMasternodeManager, will init later in ThreadImport
@@ -2086,16 +2089,16 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     std::string strDBName;
 
     strDBName = "mncache.dat";
-    uiInterface.InitMessage(_("Loading masternode cache..."));
+    uiInterface.InitMessage(_("Loading smartnode cache..."));
     CFlatDB<CMasternodeMetaMan> flatdb1(strDBName, "magicMasternodeCache");
     if (fLoadCacheFiles) {
         if(!flatdb1.Load(mmetaman)) {
-            return InitError(_("Failed to load masternode cache from") + "\n" + (pathDB / strDBName).string());
+            return InitError(_("Failed to load smartnode cache from") + "\n" + (pathDB / strDBName).string());
         }
     } else {
         CMasternodeMetaMan mmetamanTmp;
         if(!flatdb1.Dump(mmetamanTmp)) {
-            return InitError(_("Failed to clear masternode cache at") + "\n" + (pathDB / strDBName).string());
+            return InitError(_("Failed to clear smartnode cache at") + "\n" + (pathDB / strDBName).string());
         }
     }
 
@@ -2128,11 +2131,11 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         }
     }
 
-    // ********************************************************* Step 10c: schedule Dash-specific tasks
+    // ********************************************************* Step 10c: schedule Raptoreum-specific tasks
 
     if (!fLiteMode) {
         scheduler.scheduleEvery(boost::bind(&CNetFulfilledRequestManager::DoMaintenance, boost::ref(netfulfilledman)), 60 * 1000);
-        scheduler.scheduleEvery(boost::bind(&CMasternodeSync::DoMaintenance, boost::ref(masternodeSync), boost::ref(*g_connman)), 1 * 1000);
+        scheduler.scheduleEvery(boost::bind(&CMasternodeSync::DoMaintenance, boost::ref(smartnodeSync), boost::ref(*g_connman)), 1 * 1000);
 
         scheduler.scheduleEvery(boost::bind(&CGovernanceManager::DoMaintenance, boost::ref(governance), boost::ref(*g_connman)), 60 * 5 * 1000);
     }

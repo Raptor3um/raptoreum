@@ -1,10 +1,11 @@
 // Copyright (c) 2011-2015 The Bitcoin Core developers
 // Copyright (c) 2014-2019 The Dash Core developers
+// Copyright (c) 2020 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include "config/dash-config.h"
+#include "config/raptoreum-config.h"
 #endif
 
 #include "bitcoingui.h"
@@ -37,8 +38,8 @@
 #include "init.h"
 #include "ui_interface.h"
 #include "util.h"
-#include "masternode/masternode-sync.h"
-#include "masternodelist.h"
+#include "smartnode/smartnode-sync.h"
+#include "smartnodelist.h"
 
 #include <iostream>
 
@@ -98,7 +99,7 @@ BitcoinGUI::BitcoinGUI(const PlatformStyle *_platformStyle, const NetworkStyle *
     appMenuBar(0),
     overviewAction(0),
     historyAction(0),
-    masternodeAction(0),
+    smartnodeAction(0),
     quitAction(0),
     sendCoinsAction(0),
     sendCoinsMenuAction(0),
@@ -328,7 +329,7 @@ void BitcoinGUI::createActions()
     tabGroup->addAction(overviewAction);
 
     sendCoinsAction = new QAction(tr("&Send"), this);
-    sendCoinsAction->setStatusTip(tr("Send coins to a Dash address"));
+    sendCoinsAction->setStatusTip(tr("Send coins to a Raptoreum address"));
     sendCoinsAction->setToolTip(sendCoinsAction->statusTip());
     sendCoinsAction->setCheckable(true);
 #ifdef Q_OS_MAC
@@ -343,7 +344,7 @@ void BitcoinGUI::createActions()
     sendCoinsMenuAction->setToolTip(sendCoinsMenuAction->statusTip());
 
     receiveCoinsAction = new QAction(tr("&Receive"), this);
-    receiveCoinsAction->setStatusTip(tr("Request payments (generates QR codes and dash: URIs)"));
+    receiveCoinsAction->setStatusTip(tr("Request payments (generates QR codes and raptoreum: URIs)"));
     receiveCoinsAction->setToolTip(receiveCoinsAction->statusTip());
     receiveCoinsAction->setCheckable(true);
 #ifdef Q_OS_MAC
@@ -371,18 +372,18 @@ void BitcoinGUI::createActions()
 #ifdef ENABLE_WALLET
     QSettings settings;
     if (!fLiteMode && settings.value("fShowMasternodesTab").toBool()) {
-        masternodeAction = new QAction(tr("&Masternodes"), this);
-        masternodeAction->setStatusTip(tr("Browse masternodes"));
-        masternodeAction->setToolTip(masternodeAction->statusTip());
-        masternodeAction->setCheckable(true);
+        smartnodeAction = new QAction(tr("&Masternodes"), this);
+        smartnodeAction->setStatusTip(tr("Browse smartnodes"));
+        smartnodeAction->setToolTip(smartnodeAction->statusTip());
+        smartnodeAction->setCheckable(true);
 #ifdef Q_OS_MAC
-        masternodeAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_5));
+        smartnodeAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_5));
 #else
-        masternodeAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_5));
+        smartnodeAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_5));
 #endif
-        tabGroup->addAction(masternodeAction);
-        connect(masternodeAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
-        connect(masternodeAction, SIGNAL(triggered()), this, SLOT(gotoMasternodePage()));
+        tabGroup->addAction(smartnodeAction);
+        connect(smartnodeAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
+        connect(smartnodeAction, SIGNAL(triggered()), this, SLOT(gotoMasternodePage()));
     }
 
     // These showNormalIfMinimized are needed because Send Coins and Receive Coins
@@ -406,7 +407,7 @@ void BitcoinGUI::createActions()
     quitAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Q));
     quitAction->setMenuRole(QAction::QuitRole);
     aboutAction = new QAction(QIcon(":/icons/about"), tr("&About %1").arg(tr(PACKAGE_NAME)), this);
-    aboutAction->setStatusTip(tr("Show information about Dash Core"));
+    aboutAction->setStatusTip(tr("Show information about Raptoreum Core"));
     aboutAction->setMenuRole(QAction::AboutRole);
     aboutAction->setEnabled(false);
     aboutQtAction = new QAction(QIcon(":/icons/about_qt"), tr("About &Qt"), this);
@@ -430,9 +431,9 @@ void BitcoinGUI::createActions()
     unlockWalletAction->setToolTip(tr("Unlock wallet"));
     lockWalletAction = new QAction(tr("&Lock Wallet"), this);
     signMessageAction = new QAction(QIcon(":/icons/edit"), tr("Sign &message..."), this);
-    signMessageAction->setStatusTip(tr("Sign messages with your Dash addresses to prove you own them"));
+    signMessageAction->setStatusTip(tr("Sign messages with your Raptoreum addresses to prove you own them"));
     verifyMessageAction = new QAction(QIcon(":/icons/transaction_0"), tr("&Verify message..."), this);
-    verifyMessageAction->setStatusTip(tr("Verify messages to ensure they were signed with specified Dash addresses"));
+    verifyMessageAction->setStatusTip(tr("Verify messages to ensure they were signed with specified Raptoreum addresses"));
 
     openInfoAction = new QAction(QApplication::style()->standardIcon(QStyle::SP_MessageBoxInformation), tr("&Information"), this);
     openInfoAction->setStatusTip(tr("Show diagnostic information"));
@@ -461,11 +462,11 @@ void BitcoinGUI::createActions()
     usedReceivingAddressesAction->setStatusTip(tr("Show the list of used receiving addresses and labels"));
 
     openAction = new QAction(QApplication::style()->standardIcon(QStyle::SP_DirOpenIcon), tr("Open &URI..."), this);
-    openAction->setStatusTip(tr("Open a dash: URI or payment request"));
+    openAction->setStatusTip(tr("Open a raptoreum: URI or payment request"));
 
     showHelpMessageAction = new QAction(QApplication::style()->standardIcon(QStyle::SP_MessageBoxInformation), tr("&Command-line options"), this);
     showHelpMessageAction->setMenuRole(QAction::NoRole);
-    showHelpMessageAction->setStatusTip(tr("Show the %1 help message to get a list with possible Dash command-line options").arg(tr(PACKAGE_NAME)));
+    showHelpMessageAction->setStatusTip(tr("Show the %1 help message to get a list with possible Raptoreum command-line options").arg(tr(PACKAGE_NAME)));
 
     showPrivateSendHelpAction = new QAction(QApplication::style()->standardIcon(QStyle::SP_MessageBoxInformation), tr("&PrivateSend information"), this);
     showPrivateSendHelpAction->setMenuRole(QAction::NoRole);
@@ -588,20 +589,20 @@ void BitcoinGUI::createToolBars()
         toolbar->addAction(receiveCoinsAction);
         toolbar->addAction(historyAction);
         QSettings settings;
-        if (!fLiteMode && settings.value("fShowMasternodesTab").toBool() && masternodeAction)
+        if (!fLiteMode && settings.value("fShowMasternodesTab").toBool() && smartnodeAction)
         {
-            toolbar->addAction(masternodeAction);
+            toolbar->addAction(smartnodeAction);
         }
         toolbar->setMovable(false); // remove unused icon in upper left corner
         overviewAction->setChecked(true);
 
-        // Add Dash logo on the right side
+        // Add Raptoreum logo on the right side
         QWidget* spacer = new QWidget();
         spacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
         toolbar->addWidget(spacer);
 
         QLabel *logoLabel = new QLabel();
-        QPixmap logoPixmap(":/images/dash_logo_toolbar");
+        QPixmap logoPixmap(":/images/raptoreum_logo_toolbar");
         logoLabel->setPixmap(logoPixmap);
         toolbar->addWidget(logoLabel);
 
@@ -747,8 +748,8 @@ void BitcoinGUI::setWalletActionsEnabled(bool enabled)
     receiveCoinsMenuAction->setEnabled(enabled);
     historyAction->setEnabled(enabled);
     QSettings settings;
-    if (!fLiteMode && settings.value("fShowMasternodesTab").toBool() && masternodeAction) {
-        masternodeAction->setEnabled(enabled);
+    if (!fLiteMode && settings.value("fShowMasternodesTab").toBool() && smartnodeAction) {
+        smartnodeAction->setEnabled(enabled);
     }
     encryptWalletAction->setEnabled(enabled);
     backupWalletAction->setEnabled(enabled);
@@ -913,8 +914,8 @@ void BitcoinGUI::gotoHistoryPage()
 void BitcoinGUI::gotoMasternodePage()
 {
     QSettings settings;
-    if (!fLiteMode && settings.value("fShowMasternodesTab").toBool() && masternodeAction) {
-        masternodeAction->setChecked(true);
+    if (!fLiteMode && settings.value("fShowMasternodesTab").toBool() && smartnodeAction) {
+        smartnodeAction->setChecked(true);
         if (walletFrame) walletFrame->gotoMasternodePage();
     }
 }
@@ -956,7 +957,7 @@ void BitcoinGUI::updateNetworkState()
     }
 
     if (clientModel->getNetworkActive()) {
-        labelConnectionsIcon->setToolTip(tr("%n active connection(s) to Dash network", "", count));
+        labelConnectionsIcon->setToolTip(tr("%n active connection(s) to Raptoreum network", "", count));
     } else {
         labelConnectionsIcon->setToolTip(tr("Network activity disabled"));
         icon = ":/icons/network_disabled";
@@ -988,7 +989,7 @@ void BitcoinGUI::setNumBlocks(int count, const QDateTime& blockDate, double nVer
 {
 #ifdef Q_OS_MAC
     // Disabling macOS App Nap on initial sync, disk, reindex operations and mixing.
-    bool disableAppNap = !masternodeSync.IsSynced();
+    bool disableAppNap = !smartnodeSync.IsSynced();
 #ifdef ENABLE_WALLET
     disableAppNap |= privateSendClient.fPrivateSendRunning;
 #endif // ENABLE_WALLET
@@ -1065,7 +1066,7 @@ void BitcoinGUI::setNumBlocks(int count, const QDateTime& blockDate, double nVer
     }
 #endif // ENABLE_WALLET
 
-    if(!masternodeSync.IsBlockchainSynced())
+    if(!smartnodeSync.IsBlockchainSynced())
     {
         QString timeBehindText = GUIUtil::formatNiceTimeOffset(secs);
 
@@ -1114,7 +1115,7 @@ void BitcoinGUI::setAdditionalDataSyncProgress(double nSyncProgress)
         return;
 
     // No additional data sync should be happening while blockchain is not synced, nothing to update
-    if(!masternodeSync.IsBlockchainSynced())
+    if(!smartnodeSync.IsBlockchainSynced())
         return;
 
     // Prevent orphan statusbar messages (e.g. hover Quit in main menu, wait until chain-sync starts -> garbelled text)
@@ -1131,7 +1132,7 @@ void BitcoinGUI::setAdditionalDataSyncProgress(double nSyncProgress)
         walletFrame->showOutOfSyncWarning(false);
 #endif // ENABLE_WALLET
 
-    if(masternodeSync.IsSynced()) {
+    if(smartnodeSync.IsSynced()) {
         progressBarLabel->setVisible(false);
         progressBar->setVisible(false);
         labelBlocksIcon->setPixmap(QIcon(":/icons/synced").pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));
@@ -1147,7 +1148,7 @@ void BitcoinGUI::setAdditionalDataSyncProgress(double nSyncProgress)
         progressBar->setValue(nSyncProgress * 1000000000.0 + 0.5);
     }
 
-    strSyncStatus = QString(masternodeSync.GetSyncStatus().c_str());
+    strSyncStatus = QString(smartnodeSync.GetSyncStatus().c_str());
     progressBarLabel->setText(strSyncStatus);
     tooltip = strSyncStatus + QString("<br>") + tooltip;
 
@@ -1161,7 +1162,7 @@ void BitcoinGUI::setAdditionalDataSyncProgress(double nSyncProgress)
 
 void BitcoinGUI::message(const QString &title, const QString &message, unsigned int style, bool *ret)
 {
-    QString strTitle = tr("Dash Core"); // default title
+    QString strTitle = tr("Raptoreum Core"); // default title
     // Default to information icon
     int nMBoxIcon = QMessageBox::Information;
     int nNotifyIcon = Notificator::Information;
@@ -1187,7 +1188,7 @@ void BitcoinGUI::message(const QString &title, const QString &message, unsigned 
             break;
         }
     }
-    // Append title to "Dash Core - "
+    // Append title to "Raptoreum Core - "
     if (!msgType.isEmpty())
         strTitle += " - " + msgType;
 

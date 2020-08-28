@@ -1,9 +1,10 @@
 // Copyright (c) 2018 The Dash Core developers
+// Copyright (c) 2020 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef DASH_CRYPTO_BLS_IES_H
-#define DASH_CRYPTO_BLS_IES_H
+#ifndef RAPTOREUM_CRYPTO_BLS_IES_H
+#define RAPTOREUM_CRYPTO_BLS_IES_H
 
 #include "bls.h"
 #include "streams.h"
@@ -161,4 +162,4 @@ public:
     }
 };
 
-#endif // DASH_CRYPTO_BLS_IES_H
+#endif // RAPTOREUM_CRYPTO_BLS_IES_H

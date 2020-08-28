@@ -7,6 +7,8 @@
 #define BITCOIN_CONSENSUS_PARAMS_H
 
 #include "uint256.h"
+#include "founder_payment.h"
+#include "smartnode/smartnode-collaterals.h"
 #include <map>
 #include <string>
 
@@ -15,11 +17,7 @@ namespace Consensus {
 enum DeploymentPos
 {
     DEPLOYMENT_TESTDUMMY,
-    DEPLOYMENT_CSV, // Deployment of BIP68, BIP112, and BIP113.
-    DEPLOYMENT_DIP0001, // Deployment of DIP0001 and lower transaction fees.
-    DEPLOYMENT_BIP147, // Deployment of BIP147 (NULLDUMMY)
-    DEPLOYMENT_DIP0003, // Deployment of DIP0002 and DIP0003 (txv3 and deterministic MN lists)
-    DEPLOYMENT_DIP0008, // Deployment of ChainLock enforcement
+
     // NOTE: Also add new deployments to VersionBitsDeploymentInfo in versionbits.cpp
     MAX_VERSION_BITS_DEPLOYMENTS
 };
@@ -53,7 +51,7 @@ enum LLMQType : uint8_t
 };
 
 // Configures a LLMQ and its DKG
-// See https://github.com/dashpay/dips/blob/master/dip-0006.md for more details
+// See https://github.com/raptoreum/dips/blob/master/dip-0006.md for more details
 struct LLMQParams {
     LLMQType type;
 
@@ -71,7 +69,7 @@ struct LLMQParams {
     // The threshold required to recover a final signature. Should be at least 50%+1 of the quorum size. This value
     // also controls the size of the public key verification vector and has a large influence on the performance of
     // recovery. It also influences the amount of minimum messages that need to be exchanged for a single signing session.
-    // This value has the most influence on the security of the quorum. The number of total malicious masternodes
+    // This value has the most influence on the security of the quorum. The number of total malicious smartnodes
     // required to negatively influence signing sessions highly correlates to the threshold percentage.
     int threshold;
 
@@ -134,20 +132,21 @@ struct Params {
     int nGovernanceMinQuorum; // Min absolute vote count to trigger an action
     int nGovernanceFilterElements;
     int nMasternodeMinimumConfirmations;
+    bool BIPCSVEnabled;
+    bool BIP147Enabled;
     /** Block height and hash at which BIP34 becomes active */
-    int BIP34Height;
-    uint256 BIP34Hash;
+    bool BIP34Enabled;
     /** Block height at which BIP65 becomes active */
-    int BIP65Height;
+    bool BIP65Enabled;
     /** Block height at which BIP66 becomes active */
-    int BIP66Height;
+    bool BIP66Enabled;
     /** Block height at which DIP0001 becomes active */
-    int DIP0001Height;
+    bool DIP0001Enabled;
     /** Block height at which DIP0003 becomes active */
-    int DIP0003Height;
+    bool DIP0003Enabled;
+    bool DIP0008Enabled;
     /** Block height at which DIP0003 becomes enforced */
-    int DIP0003EnforcementHeight;
-    uint256 DIP0003EnforcementHash;
+    //int DIP0003EnforcementHeight;
     /**
      * Minimum blocks including miner confirmation of the total of nMinerConfirmationWindow blocks in a retargeting period,
      * (nPowTargetTimespan / nPowTargetSpacing) which is also used for BIP9 deployments.
@@ -164,8 +163,8 @@ struct Params {
     bool fPowNoRetargeting;
     int64_t nPowTargetSpacing;
     int64_t nPowTargetTimespan;
-    int nPowKGWHeight;
     int nPowDGWHeight;
+    int DGWBlocksAvg;
     int64_t DifficultyAdjustmentInterval() const { return nPowTargetTimespan / nPowTargetSpacing; }
     uint256 nMinimumChainWork;
     uint256 defaultAssumeValid;
@@ -178,6 +177,10 @@ struct Params {
     std::map<LLMQType, LLMQParams> llmqs;
     LLMQType llmqTypeChainLocks;
     LLMQType llmqTypeInstantSend{LLMQ_NONE};
+
+    FounderPayment nFounderPayment;
+    SmartnodeCollaterals nCollaterals;
+
 };
 } // namespace Consensus
 

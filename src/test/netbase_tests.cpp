@@ -1,10 +1,11 @@
 // Copyright (c) 2012-2015 The Bitcoin Core developers
 // Copyright (c) 2014-2017 The Dash Core developers
+// Copyright (c) 2020 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "netbase.h"
-#include "test/test_dash.h"
+#include "test/test_raptoreum.h"
 #include "utilstrencodings.h"
 
 #include <string>

@@ -1,11 +1,11 @@
 Sample configuration files for:
 ```
-SystemD: dashd.service
-Upstart: dashd.conf
-OpenRC:  dashd.openrc
-         dashd.openrcconf
-CentOS:  dashd.init
-OS X:    org.dash.dashd.plist
+SystemD: raptoreumd.service
+Upstart: raptoreumd.conf
+OpenRC:  raptoreumd.openrc
+         raptoreumd.openrcconf
+CentOS:  raptoreumd.init
+OS X:    org.raptoreum.raptoreumd.plist
 ```
 have been made available to assist packagers in creating node packages here.
 

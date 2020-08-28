@@ -1,6 +1,7 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
 // Copyright (c) 2014-2019 The Dash Core developers
+// Copyright (c) 2020 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -126,6 +127,14 @@ public:
     uint256() {}
     uint256(const base_blob<256>& b) : base_blob<256>(b) {}
     explicit uint256(const std::vector<unsigned char>& vch) : base_blob<256>(vch) {}
+
+    int GetNibble(int index) const
+	{
+		index = 63 - index;
+		if (index % 2 == 1)
+			return(data[index / 2] >> 4);
+		return(data[index / 2] & 0x0F);
+	}
 
     /** A cheap hash function that just returns 64 bits from the result, it can be
      * used when the contents are considered uniformly random. It is not appropriate

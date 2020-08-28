@@ -137,7 +137,7 @@ public:
 };
 
 /**
- * Dash RPC command dispatcher.
+ * Raptoreum RPC command dispatcher.
  */
 class CRPCTable
 {

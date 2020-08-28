@@ -9,7 +9,7 @@
 #include "qt/sendcoinsentry.h"
 #include "qt/transactiontablemodel.h"
 #include "qt/walletmodel.h"
-#include "test/test_dash.h"
+#include "test/test_raptoreum.h"
 #include "validation.h"
 #include "wallet/wallet.h"
 

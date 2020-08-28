@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # Copyright (c) 2014-2016 The Bitcoin Core developers
 # Copyright (c) 2014-2020 The Dash Core developers
+# Copyright (c) 2020 The Raptoreum developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Helpful routines for regression testing."""
@@ -30,10 +31,10 @@ def assert_fee_amount(fee, tx_size, fee_per_kB):
     """Assert the fee was in range"""
     target_fee = tx_size * fee_per_kB / 1000
     if fee < target_fee:
-        raise AssertionError("Fee of %s DASH too low! (Should be %s DASH)" % (str(fee), str(target_fee)))
+        raise AssertionError("Fee of %s RAPTOREUM too low! (Should be %s RAPTOREUM)" % (str(fee), str(target_fee)))
     # allow the wallet's estimation to be at most 2 bytes off
     if fee > (tx_size + 2) * fee_per_kB / 1000:
-        raise AssertionError("Fee of %s DASH too high! (Should be %s DASH)" % (str(fee), str(target_fee)))
+        raise AssertionError("Fee of %s RAPTOREUM too high! (Should be %s RAPTOREUM)" % (str(fee), str(target_fee)))
 
 def assert_equal(thing1, thing2, *args):
     if thing1 != thing2 or any(thing1 != arg for arg in args):
@@ -296,7 +297,7 @@ def initialize_datadir(dirname, n):
     datadir = os.path.join(dirname, "node" + str(n))
     if not os.path.isdir(datadir):
         os.makedirs(datadir)
-    with open(os.path.join(datadir, "dash.conf"), 'w', encoding='utf8') as f:
+    with open(os.path.join(datadir, "raptoreum.conf"), 'w', encoding='utf8') as f:
         f.write("regtest=1\n")
         f.write("port=" + str(p2p_port(n)) + "\n")
         f.write("rpcport=" + str(rpc_port(n)) + "\n")
@@ -309,8 +310,8 @@ def get_datadir_path(dirname, n):
 def get_auth_cookie(datadir):
     user = None
     password = None
-    if os.path.isfile(os.path.join(datadir, "dash.conf")):
-        with open(os.path.join(datadir, "dash.conf"), 'r', encoding='utf8') as f:
+    if os.path.isfile(os.path.join(datadir, "raptoreum.conf")):
+        with open(os.path.join(datadir, "raptoreum.conf"), 'r', encoding='utf8') as f:
             for line in f:
                 if line.startswith("rpcuser="):
                     assert user is None  # Ensure that there is only one rpcuser line

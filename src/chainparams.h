@@ -39,7 +39,7 @@ struct ChainTxData {
 
 /**
  * CChainParams defines various tweakable parameters of a given instance of the
- * Dash system. There are three: the main network on which people trade goods
+ * Raptoreum system. There are three: the main network on which people trade goods
  * and services, the public test network which gets reset from time to time and
  * a regression test mode which is intended for private networks only. It has
  * minimal difficulty to ensure that blocks can be found instantly.
@@ -76,6 +76,7 @@ public:
     bool AllowMultipleAddressesFromGroup() const { return fAllowMultipleAddressesFromGroup; }
     /** Allow nodes with the same address and multiple ports */
     bool AllowMultiplePorts() const { return fAllowMultiplePorts; }
+    bool MiningRequiresPeers() const { return miningRequiresPeers; }
     /** Return the BIP70 network string (main, test or regtest) */
     std::string NetworkIDString() const { return strNetworkID; }
     const std::vector<CDNSSeedData>& DNSSeeds() const { return vSeeds; }
@@ -115,6 +116,7 @@ protected:
     bool fMineBlocksOnDemand;
     bool fAllowMultipleAddressesFromGroup;
     bool fAllowMultiplePorts;
+    bool miningRequiresPeers;
     CCheckpointData checkpointData;
     ChainTxData chainTxData;
     int nPoolMinParticipants;
@@ -123,6 +125,7 @@ protected:
     std::vector<std::string> vSporkAddresses;
     int nMinSporkKeys;
     bool fBIP9CheckMasternodesUpgraded;
+
 };
 
 /**

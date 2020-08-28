@@ -1,9 +1,10 @@
 // Copyright (c) 2018-2019 The Dash Core developers
+// Copyright (c) 2020 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef DASH_SPECIALTX_H
-#define DASH_SPECIALTX_H
+#ifndef RAPTOREUM_SPECIALTX_H
+#define RAPTOREUM_SPECIALTX_H
 
 #include "primitives/transaction.h"
 #include "streams.h"
@@ -49,4 +50,4 @@ void SetTxPayload(CMutableTransaction& tx, const T& payload)
 
 uint256 CalcTxInputsHash(const CTransaction& tx);
 
-#endif //DASH_SPECIALTX_H
+#endif //RAPTOREUM_SPECIALTX_H

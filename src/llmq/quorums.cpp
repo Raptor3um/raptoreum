@@ -1,4 +1,5 @@
 // Copyright (c) 2018-2019 The Dash Core developers
+// Copyright (c) 2020 The Raptoreum developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -12,10 +13,10 @@
 
 #include "evo/specialtx.h"
 
-#include "masternode/activemasternode.h"
+#include "smartnode/activesmartnode.h"
 #include "chainparams.h"
 #include "init.h"
-#include "masternode/masternode-sync.h"
+#include "smartnode/smartnode-sync.h"
 #include "univalue.h"
 #include "validation.h"
 
@@ -145,7 +146,7 @@ void CQuorum::StartCachePopulatorThread(std::shared_ptr<CQuorum> _this)
     // this thread will exit after some time
     // when then later some other thread tries to get keys, it will be much faster
     _this->cachePopulatorThread = std::thread([_this, t]() {
-        RenameThread("dash-q-cachepop");
+        RenameThread("raptoreum-q-cachepop");
         for (size_t i = 0; i < _this->members.size() && !_this->stopCachePopulatorThread && !ShutdownRequested(); i++) {
             if (_this->qc.validMembers[i]) {
                 _this->GetPubKeyShare(i);
@@ -164,7 +165,7 @@ CQuorumManager::CQuorumManager(CEvoDB& _evoDb, CBLSWorker& _blsWorker, CDKGSessi
 
 void CQuorumManager::UpdatedBlockTip(const CBlockIndex* pindexNew, bool fInitialDownload)
 {
-    if (!masternodeSync.IsBlockchainSynced()) {
+    if (!smartnodeSync.IsBlockchainSynced()) {
         return;
     }
 
@@ -205,7 +206,7 @@ void CQuorumManager::EnsureQuorumConnections(Consensus::LLMQType llmqType, const
             if (!connections.empty()) {
                 if (LogAcceptCategory(BCLog::LLMQ)) {
                     auto mnList = deterministicMNManager->GetListAtChainTip();
-                    std::string debugMsg = strprintf("CQuorumManager::%s -- adding masternodes quorum connections for quorum %s:\n", __func__, quorum->qc.quorumHash.ToString());
+                    std::string debugMsg = strprintf("CQuorumManager::%s -- adding smartnodes quorum connections for quorum %s:\n", __func__, quorum->qc.quorumHash.ToString());
                     for (auto& c : connections) {
                         auto dmn = mnList.GetValidMN(c);
                         if (!dmn) {
@@ -223,7 +224,7 @@ void CQuorumManager::EnsureQuorumConnections(Consensus::LLMQType llmqType, const
     }
 
     for (auto& qh : connmanQuorumsToDelete) {
-        LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- removing masternodes quorum connections for quorum %s:\n", __func__, qh.ToString());
+        LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- removing smartnodes quorum connections for quorum %s:\n", __func__, qh.ToString());
         g_connman->RemoveMasternodeQuorumNodes(llmqType, qh);
     }
 }

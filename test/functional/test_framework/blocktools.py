@@ -87,7 +87,7 @@ def get_legacy_sigopcount_tx(tx, fAccurate=True):
     return count
 
 # Identical to GetMasternodePayment in C++ code
-def get_masternode_payment(nHeight, blockValue):
+def get_smartnode_payment(nHeight, blockValue):
     ret = int(blockValue / 5)
 
     nMNPIBlock = 350

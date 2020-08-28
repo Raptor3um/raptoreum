@@ -1,4 +1,5 @@
 // Copyright (c) 2018-2019 The Dash Core developers
+// Copyright (c) 2020 The Raptoreum developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,7 +9,7 @@
 #include "quorums_init.h"
 #include "quorums_utils.h"
 
-#include "masternode/activemasternode.h"
+#include "smartnode/activesmartnode.h"
 #include "chainparams.h"
 #include "init.h"
 #include "net_processing.h"
@@ -95,7 +96,7 @@ CDKGSessionHandler::CDKGSessionHandler(const Consensus::LLMQParams& _params, ctp
     pendingPrematureCommitments((size_t)_params.size * 2)
 {
     phaseHandlerThread = std::thread([this] {
-        RenameThread(strprintf("dash-q-phase-%d", (uint8_t)params.type).c_str());
+        RenameThread(strprintf("raptoreum-q-phase-%d", (uint8_t)params.type).c_str());
         PhaseHandlerThread();
     });
 }
@@ -512,7 +513,7 @@ void CDKGSessionHandler::HandleDKGRound()
         }
         if (!connections.empty()) {
             if (LogAcceptCategory(BCLog::LLMQ_DKG)) {
-                std::string debugMsg = strprintf("CDKGSessionManager::%s -- adding masternodes quorum connections for quorum %s:\n", __func__, curSession->pindexQuorum->GetBlockHash().ToString());
+                std::string debugMsg = strprintf("CDKGSessionManager::%s -- adding smartnodes quorum connections for quorum %s:\n", __func__, curSession->pindexQuorum->GetBlockHash().ToString());
                 auto mnList = deterministicMNManager->GetListAtChainTip();
                 for (const auto& c : connections) {
                     auto dmn = mnList.GetValidMN(c);

@@ -1,5 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2009-2016 The Bitcoin Core developers
+// Copyright (c) 2017 The Dash Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -14,7 +15,7 @@ template <unsigned int BITS>
 base_blob<BITS>::base_blob(const std::vector<unsigned char>& vch)
 {
     assert(vch.size() == sizeof(data));
-    memcpy(data, &vch[0], sizeof(data));
+    memcpy(data, vch.data(), sizeof(data));
 }
 
 template <unsigned int BITS>
@@ -77,3 +78,4 @@ template std::string base_blob<256>::GetHex() const;
 template std::string base_blob<256>::ToString() const;
 template void base_blob<256>::SetHex(const char*);
 template void base_blob<256>::SetHex(const std::string&);
+template std::string base_blob<512>::GetHex() const;

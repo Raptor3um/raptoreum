@@ -154,7 +154,7 @@ class FrameworkInfo(object):
 class ApplicationBundleInfo(object):
     def __init__(self, path):
         self.path = path
-        appName = "Dash-Qt"
+        appName = "Raptoreum-Qt"
         self.binaryPath = os.path.join(path, "Contents", "MacOS", appName)
         if not os.path.exists(self.binaryPath):
             raise RuntimeError("Could not find bundle binary for " + path)
@@ -602,7 +602,7 @@ else:
 
 # ------------------------------------------------
 
-target = os.path.join("dist", "Dash-Qt.app")
+target = os.path.join("dist", "Raptoreum-Qt.app")
 
 if verbose >= 2:
     print("+ Copying source bundle +")
@@ -848,7 +848,7 @@ if config.dmg is not None:
             print("Running AppleScript:")
             print(s)
 
-        time.sleep(2) # fixes '112:116: execution error: Finder got an error: Can’t get disk "Dash-Core". (-1728)'
+        time.sleep(2) # fixes '112:116: execution error: Finder got an error: Can’t get disk "Raptoreum-Core". (-1728)'
         p = subprocess.Popen(['osascript', '-'], stdin=subprocess.PIPE)
         p.communicate(input=s.encode('utf-8'))
         if p.returncode:

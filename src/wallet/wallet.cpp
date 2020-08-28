@@ -1,6 +1,7 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
 // Copyright (c) 2014-2020 The Dash Core developers
+// Copyright (c) 2020 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -2705,7 +2706,7 @@ void CWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const
 {
     vCoins.clear();
     CoinType nCoinType = coinControl ? coinControl->nCoinType : CoinType::ALL_COINS;
-
+    CAmount collateralAmount = Params().GetConsensus().nCollaterals.getCollateral(chainActive.Height());
     {
         LOCK2(cs_main, cs_wallet);
 
@@ -2735,7 +2736,6 @@ void CWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const
 
             if (nDepth < nMinDepth || nDepth > nMaxDepth)
                 continue;
-
             for (unsigned int i = 0; i < pcoin->tx->vout.size(); i++) {
                 bool found = false;
                 if(nCoinType == CoinType::ONLY_DENOMINATED) {
@@ -2743,8 +2743,8 @@ void CWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const
                 } else if(nCoinType == CoinType::ONLY_NONDENOMINATED) {
                     if (CPrivateSend::IsCollateralAmount(pcoin->tx->vout[i].nValue)) continue; // do not use collateral amounts
                     found = !CPrivateSend::IsDenominatedAmount(pcoin->tx->vout[i].nValue);
-                } else if(nCoinType == CoinType::ONLY_1000) {
-                    found = pcoin->tx->vout[i].nValue == 1000*COIN;
+                } else if(nCoinType == CoinType::SMARTNODE_COLLATERAL) {
+                    found = pcoin->tx->vout[i].nValue == collateralAmount;
                 } else if(nCoinType == CoinType::ONLY_PRIVATESEND_COLLATERAL) {
                     found = CPrivateSend::IsCollateralAmount(pcoin->tx->vout[i].nValue);
                 } else {
@@ -2758,7 +2758,7 @@ void CWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const
                 if (coinControl && coinControl->HasSelected() && !coinControl->fAllowOtherInputs && !coinControl->IsSelected(COutPoint(wtxid, i)))
                     continue;
 
-                if (IsLockedCoin(wtxid, i) && nCoinType != CoinType::ONLY_1000)
+                if (IsLockedCoin(wtxid, i) && nCoinType != CoinType::SMARTNODE_COLLATERAL)
                     continue;
 
                 if (IsSpent(wtxid, i))
@@ -3302,7 +3302,7 @@ bool CWallet::SelectCoinsGroupedByAddresses(std::vector<CompactTallyItem>& vecTa
     }
 
     CAmount nSmallestDenom = CPrivateSend::GetSmallestDenomination();
-
+    CAmount collateralAmount = Params().GetConsensus().nCollaterals.getCollateral(chainActive.Height());
     // Tally
     std::map<CTxDestination, CompactTallyItem> mapTally;
     std::set<uint256> setWalletTxesCounted;
@@ -3335,7 +3335,7 @@ bool CWallet::SelectCoinsGroupedByAddresses(std::vector<CompactTallyItem>& vecTa
             if(fAnonymizable) {
                 // ignore collaterals
                 if(CPrivateSend::IsCollateralAmount(wtx.tx->vout[i].nValue)) continue;
-                if(fMasternodeMode && wtx.tx->vout[i].nValue == 1000*COIN) continue;
+                if(fMasternodeMode && wtx.tx->vout[i].nValue == collateralAmount) continue;
                 // ignore outputs that are 10 times smaller then the smallest denomination
                 // otherwise they will just lead to higher fee / lower priority
                 if(wtx.tx->vout[i].nValue <= nSmallestDenom/10) continue;
@@ -3395,14 +3395,14 @@ bool CWallet::SelectPrivateCoins(CAmount nValueMin, CAmount nValueMax, std::vect
 
     //order the array so largest nondenom are first, then denominations, then very small inputs.
     std::sort(vCoins.rbegin(), vCoins.rend(), CompareByPriority());
-
+    CAmount collateralAmount = Params().GetConsensus().nCollaterals.getCollateral(chainActive.Height());
     for (const auto& out : vCoins)
     {
         //do not allow inputs less than 1/10th of minimum value
         if(out.tx->tx->vout[out.i].nValue < nValueMin/10) continue;
         //do not allow collaterals to be selected
         if(CPrivateSend::IsCollateralAmount(out.tx->tx->vout[out.i].nValue)) continue;
-        if(fMasternodeMode && out.tx->tx->vout[out.i].nValue == 1000*COIN) continue; //masternode input
+        if(fMasternodeMode && out.tx->tx->vout[out.i].nValue == collateralAmount) continue; //smartnode input
 
         if(nValueRet + out.tx->tx->vout[out.i].nValue <= nValueMax){
             CTxIn txin = CTxIn(out.tx->GetHash(),out.i);
@@ -3447,10 +3447,10 @@ bool CWallet::GetMasternodeOutpointAndKeys(COutPoint& outpointRet, CPubKey& pubK
     // Find possible candidates
     std::vector<COutput> vPossibleCoins;
     CCoinControl coin_control;
-    coin_control.nCoinType = CoinType::ONLY_1000;
+    coin_control.nCoinType = CoinType::SMARTNODE_COLLATERAL;
     AvailableCoins(vPossibleCoins, true, &coin_control);
     if(vPossibleCoins.empty()) {
-        LogPrintf("CWallet::GetMasternodeOutpointAndKeys -- Could not locate any valid masternode vin\n");
+        LogPrintf("CWallet::GetMasternodeOutpointAndKeys -- Could not locate any valid smartnode vin\n");
         return false;
     }
 
@@ -3465,7 +3465,7 @@ bool CWallet::GetMasternodeOutpointAndKeys(COutPoint& outpointRet, CPubKey& pubK
         if(out.tx->GetHash() == txHash && out.i == nOutputIndex) // found it!
             return GetOutpointAndKeysFromOutput(out, outpointRet, pubKeyRet, keyRet);
 
-    LogPrintf("CWallet::GetMasternodeOutpointAndKeys -- Could not locate specified masternode vin\n");
+    LogPrintf("CWallet::GetMasternodeOutpointAndKeys -- Could not locate specified smartnode vin\n");
     return false;
 }
 
@@ -4210,7 +4210,7 @@ DBErrors CWallet::LoadWallet(bool& fFirstRunRet)
     return DB_LOAD_OK;
 }
 
-// Goes through all wallet transactions and checks if they are masternode collaterals, in which case these are locked
+// Goes through all wallet transactions and checks if they are smartnode collaterals, in which case these are locked
 // This avoids accidential spending of collaterals. They can still be unlocked manually if a spend is really intended.
 void CWallet::AutoLockMasternodeCollaterals()
 {

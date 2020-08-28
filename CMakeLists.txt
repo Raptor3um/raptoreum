@@ -6,7 +6,7 @@
 # You'll also have to manually change the executable in the configuration to the correct path of the already built executable
 
 cmake_minimum_required(VERSION 3.7)
-project(dash)
+project(raptoreum)
 
 set(CMAKE_CXX_STANDARD 14)
 
@@ -58,8 +58,8 @@ file(GLOB SOURCE_FILES
         src/leveldb/include/*.h
         src/llmq/*.cpp
         src/llmq/*.h
-        src/masternode/*.cpp
-        src/masternode/*.h
+        src/smartnode/*.cpp
+        src/smartnode/*.h
         src/policy/*.cpp
         src/policy/*.h
         src/primitives/*.cpp
@@ -87,4 +87,4 @@ file(GLOB SOURCE_FILES
         src/zmq/*.h
         )
 
-add_executable(dash ${SOURCE_FILES})
+add_executable(raptoreum ${SOURCE_FILES})

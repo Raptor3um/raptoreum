@@ -1,5 +1,6 @@
 // Copyright (c) 2011-2015 The Bitcoin Core developers
 // Copyright (c) 2014-2020 The Dash Core developers
+// Copyright (c) 2020 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -17,7 +18,7 @@
 #include "utilitydialog.h"
 #include "walletmodel.h"
 
-#include "masternode/masternode-sync.h"
+#include "smartnode/smartnode-sync.h"
 #include "privatesend/privatesend-client.h"
 
 #include <QAbstractItemDelegate>
@@ -35,7 +36,7 @@ class TxViewDelegate : public QAbstractItemDelegate
     Q_OBJECT
 public:
     TxViewDelegate(const PlatformStyle *_platformStyle, QObject *parent=nullptr):
-        QAbstractItemDelegate(), unit(BitcoinUnits::DASH),
+        QAbstractItemDelegate(), unit(BitcoinUnits::RAPTOREUM),
         platformStyle(_platformStyle)
     {
 
@@ -157,7 +158,7 @@ OverviewPage::OverviewPage(const PlatformStyle *platformStyle, QWidget *parent) 
 
     if(!privateSendClient.fEnablePrivateSend) return;
 
-    // Disable any PS UI for masternode or when autobackup is disabled or failed for whatever reason
+    // Disable any PS UI for smartnode or when autobackup is disabled or failed for whatever reason
     if(fMasternodeMode || nWalletBackups <= 0){
         DisablePrivateSendCompletely();
         if (nWalletBackups <= 0) {
@@ -273,7 +274,7 @@ void OverviewPage::setWalletModel(WalletModel *model)
     this->walletModel = model;
     if(model && model->getOptionsModel())
     {
-        // update the display unit, to not use the default ("DASH")
+        // update the display unit, to not use the default ("RTM")
         updateDisplayUnit();
         // Keep up to date with wallet
         setBalance(model->getBalance(), model->getUnconfirmedBalance(), model->getImmatureBalance(), model->getAnonymizedBalance(),
@@ -331,7 +332,7 @@ void OverviewPage::showOutOfSyncWarning(bool fShow)
 
 void OverviewPage::updatePrivateSendProgress()
 {
-    if(!masternodeSync.IsBlockchainSynced() || ShutdownRequested()) return;
+    if(!smartnodeSync.IsBlockchainSynced() || ShutdownRequested()) return;
 
     if(vpwallets.empty()) return;
 
@@ -453,7 +454,7 @@ void OverviewPage::updateAdvancedPSUI(bool fShowAdvancedPSUI) {
 
 void OverviewPage::privateSendStatus()
 {
-    if(!masternodeSync.IsBlockchainSynced() || ShutdownRequested()) return;
+    if(!smartnodeSync.IsBlockchainSynced() || ShutdownRequested()) return;
 
     static int64_t nLastDSProgressBlockTime = 0;
     int nBestHeight = clientModel->getNumBlocks();

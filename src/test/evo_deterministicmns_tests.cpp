@@ -1,8 +1,9 @@
 // Copyright (c) 2018-2019 The Dash Core developers
+// Copyright (c) 2020 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "test/test_dash.h"
+#include "test/test_raptoreum.h"
 
 #include "script/interpreter.h"
 #include "script/standard.h"
@@ -96,7 +97,8 @@ static CMutableTransaction CreateProRegTx(SimpleUTXOMap& utxos, int port, const 
     operatorKeyRet.MakeNewKey();
 
     CAmount change;
-    auto inputs = SelectUTXOs(utxos, 1000 * COIN, change);
+    CAmount collateralAmount = Params().GetConsensus().nCollaterals.getCollateral(chainActive.Height() < 0 ? 1 : chainActive.Height());
+    auto inputs = SelectUTXOs(utxos, collateralAmount, change);
 
     CProRegTx proTx;
     proTx.collateralOutpoint.n = 0;
@@ -109,7 +111,7 @@ static CMutableTransaction CreateProRegTx(SimpleUTXOMap& utxos, int port, const 
     CMutableTransaction tx;
     tx.nVersion = 3;
     tx.nType = TRANSACTION_PROVIDER_REGISTER;
-    FundTransaction(tx, utxos, scriptPayout, 1000 * COIN, coinbaseKey);
+    FundTransaction(tx, utxos, scriptPayout, collateralAmount, coinbaseKey);
     proTx.inputsHash = CalcTxInputsHash(tx);
     SetTxPayload(tx, proTx);
     SignTransaction(tx, coinbaseKey);
@@ -322,8 +324,9 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
         nHeight++;
     }
 
-    int DIP0003EnforcementHeightBackup = Params().GetConsensus().DIP0003EnforcementHeight;
-    const_cast<Consensus::Params&>(Params().GetConsensus()).DIP0003EnforcementHeight = chainActive.Height() + 1;
+    //int DIP0003EnforcementHeightBackup = Params().GetConsensus().DIP0003EnforcementHeight;
+    int DIP0003EnforcementHeightBackup = 1;
+    //const_cast<Consensus::Params&>(Params().GetConsensus()).DIP0003EnforcementHeight = chainActive.Height() + 1;
     CreateAndProcessBlock({}, coinbaseKey);
     deterministicMNManager->UpdatedBlockTip(chainActive.Tip());
     nHeight++;
@@ -450,6 +453,6 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
     }
     BOOST_ASSERT(foundRevived);
 
-    const_cast<Consensus::Params&>(Params().GetConsensus()).DIP0003EnforcementHeight = DIP0003EnforcementHeightBackup;
+    //const_cast<Consensus::Params&>(Params().GetConsensus()).DIP0003EnforcementHeight = DIP0003EnforcementHeightBackup;
 }
 BOOST_AUTO_TEST_SUITE_END()

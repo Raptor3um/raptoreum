@@ -1,8 +1,9 @@
 // Copyright (c) 2014-2020 The Dash Core developers
+// Copyright (c) 2020 The Raptoreum developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "masternode/activemasternode.h"
+#include "smartnode/activesmartnode.h"
 #include "consensus/validation.h"
 #include "core_io.h"
 #include "governance/governance.h"
@@ -11,7 +12,7 @@
 #include "governance/governance-validators.h"
 #include "init.h"
 #include "validation.h"
-#include "masternode/masternode-sync.h"
+#include "smartnode/smartnode-sync.h"
 #include "messagesigner.h"
 #include "rpc/server.h"
 #include "util.h"
@@ -166,9 +167,9 @@ UniValue gobject_prepare(const JSONRPCRequest& request)
 
     CGovernanceObject govobj(hashParent, nRevision, nTime, uint256(), strDataHex);
 
-    // This command is dangerous because it consumes 5 DASH irreversibly.
+    // This command is dangerous because it consumes 5 RAPTOREUM irreversibly.
     // If params are lost, it's very hard to bruteforce them and yet
-    // users ignore all instructions on dashcentral etc. and do not save them...
+    // users ignore all instructions on raptoreumcentral etc. and do not save them...
     // Let's log them here and hope users do not mess with debug.log
     LogPrintf("gobject_prepare -- params: %s %s %s %s, data: %s, hash: %s\n",
                 request.params[1].get_str(), request.params[2].get_str(),
@@ -183,7 +184,7 @@ UniValue gobject_prepare(const JSONRPCRequest& request)
     }
 
     if (govobj.GetObjectType() == GOVERNANCE_OBJECT_TRIGGER) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Trigger objects need not be prepared (however only masternodes can create them)");
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Trigger objects need not be prepared (however only smartnodes can create them)");
     }
 
     LOCK2(cs_main, pwallet->cs_wallet);
@@ -245,8 +246,8 @@ UniValue gobject_submit(const JSONRPCRequest& request)
     if (request.fHelp || ((request.params.size() < 5) || (request.params.size() > 6)))
         gobject_submit_help();
 
-    if(!masternodeSync.IsBlockchainSynced()) {
-        throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Must wait for client to sync with masternode network. Try again in a minute or so.");
+    if(!smartnodeSync.IsBlockchainSynced()) {
+        throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Must wait for client to sync with smartnode network. Try again in a minute or so.");
     }
 
     auto mnList = deterministicMNManager->GetListAtChainTip();
@@ -296,8 +297,8 @@ UniValue gobject_submit(const JSONRPCRequest& request)
             govobj.SetMasternodeOutpoint(activeMasternodeInfo.outpoint);
             govobj.Sign(*activeMasternodeInfo.blsKeyOperator);
         } else {
-            LogPrintf("gobject(submit) -- Object submission rejected because node is not a masternode\n");
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Only valid masternodes can submit this type of object");
+            LogPrintf("gobject(submit) -- Object submission rejected because node is not a smartnode\n");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Only valid smartnodes can submit this type of object");
         }
     } else if (request.params.size() != 6) {
         LogPrintf("gobject(submit) -- Object submission rejected because fee tx not provided\n");
@@ -339,7 +340,7 @@ void gobject_vote_conf_help()
 {
     throw std::runtime_error(
                 "gobject vote-conf <governance-hash> <vote> <vote-outcome>\n"
-                "Vote on a governance object by masternode configured in dash.conf\n"
+                "Vote on a governance object by smartnode configured in raptoreum.conf\n"
                 "\nArguments:\n"
                 "1. governance-hash   (string, required) hash of the governance object\n"
                 "2. vote              (string, required) vote, possible values: [funding|valid|delete|endorsed]\n"
@@ -393,8 +394,8 @@ UniValue gobject_vote_conf(const JSONRPCRequest& request)
     if (!dmn) {
         nFailed++;
         statusObj.push_back(Pair("result", "failed"));
-        statusObj.push_back(Pair("errorMessage", "Can't find masternode by collateral output"));
-        resultsObj.push_back(Pair("dash.conf", statusObj));
+        statusObj.push_back(Pair("errorMessage", "Can't find smartnode by collateral output"));
+        resultsObj.push_back(Pair("raptoreum.conf", statusObj));
         returnObj.push_back(Pair("overall", strprintf("Voted successfully %d time(s) and failed %d time(s).", nSuccessful, nFailed)));
         returnObj.push_back(Pair("detail", resultsObj));
         return returnObj;
@@ -414,7 +415,7 @@ UniValue gobject_vote_conf(const JSONRPCRequest& request)
         nFailed++;
         statusObj.push_back(Pair("result", "failed"));
         statusObj.push_back(Pair("errorMessage", "Failure to sign."));
-        resultsObj.push_back(Pair("dash.conf", statusObj));
+        resultsObj.push_back(Pair("raptoreum.conf", statusObj));
         returnObj.push_back(Pair("overall", strprintf("Voted successfully %d time(s) and failed %d time(s).", nSuccessful, nFailed)));
         returnObj.push_back(Pair("detail", resultsObj));
         return returnObj;
@@ -430,7 +431,7 @@ UniValue gobject_vote_conf(const JSONRPCRequest& request)
         statusObj.push_back(Pair("errorMessage", exception.GetMessage()));
     }
 
-    resultsObj.push_back(Pair("dash.conf", statusObj));
+    resultsObj.push_back(Pair("raptoreum.conf", statusObj));
 
     returnObj.push_back(Pair("overall", strprintf("Voted successfully %d time(s) and failed %d time(s).", nSuccessful, nFailed)));
     returnObj.push_back(Pair("detail", resultsObj));
@@ -469,7 +470,7 @@ UniValue VoteWithMasternodes(const std::map<uint256, CKey>& keys,
         if (!dmn) {
             nFailed++;
             statusObj.push_back(Pair("result", "failed"));
-            statusObj.push_back(Pair("errorMessage", "Can't find masternode by proTxHash"));
+            statusObj.push_back(Pair("errorMessage", "Can't find smartnode by proTxHash"));
             resultsObj.push_back(Pair(proTxHash.ToString(), statusObj));
             continue;
         }
@@ -508,7 +509,7 @@ void gobject_vote_many_help(CWallet* const pwallet)
 {
     throw std::runtime_error(
                 "gobject vote-many <governance-hash> <vote> <vote-outcome>\n"
-                "Vote on a governance object by all masternodes for which the voting key is present in the local wallet\n"
+                "Vote on a governance object by all smartnodes for which the voting key is present in the local wallet\n"
                 + HelpRequiringPassphrase(pwallet) + "\n"
                 "\nArguments:\n"
                 "1. governance-hash   (string, required) hash of the governance object\n"
@@ -561,13 +562,13 @@ void gobject_vote_alias_help(CWallet* const pwallet)
 {
     throw std::runtime_error(
                 "gobject vote-alias <governance-hash> <vote> <vote-outcome> <protx-hash>\n"
-                "Vote on a governance object by masternode's voting key (if present in local wallet)\n"
+                "Vote on a governance object by smartnode's voting key (if present in local wallet)\n"
                 + HelpRequiringPassphrase(pwallet) + "\n"
                 "\nArguments:\n"
                 "1. governance-hash   (string, required) hash of the governance object\n"
                 "2. vote              (string, required) vote, possible values: [funding|valid|delete|endorsed]\n"
                 "3. vote-outcome      (string, required) vote outcome, possible values: [yes|no|abstain]\n"
-                "4. protx-hash        (string, required) masternode's proTxHash"
+                "4. protx-hash        (string, required) smartnode's proTxHash"
                 );
 }
 
@@ -645,9 +646,9 @@ UniValue ListObjects(const std::string& strCachedSignal, const std::string& strT
         bObj.push_back(Pair("CollateralHash",  pGovObj->GetCollateralHash().ToString()));
         bObj.push_back(Pair("ObjectType", pGovObj->GetObjectType()));
         bObj.push_back(Pair("CreationTime", pGovObj->GetCreationTime()));
-        const COutPoint& masternodeOutpoint = pGovObj->GetMasternodeOutpoint();
-        if (masternodeOutpoint != COutPoint()) {
-            bObj.push_back(Pair("SigningMasternode", masternodeOutpoint.ToStringShort()));
+        const COutPoint& smartnodeOutpoint = pGovObj->GetMasternodeOutpoint();
+        if (smartnodeOutpoint != COutPoint()) {
+            bObj.push_back(Pair("SigningMasternode", smartnodeOutpoint.ToStringShort()));
         }
 
         // REPORT STATUS FOR FUNDING VOTES SPECIFICALLY
@@ -765,9 +766,9 @@ UniValue gobject_get(const JSONRPCRequest& request)
     objResult.push_back(Pair("CollateralHash",  pGovObj->GetCollateralHash().ToString()));
     objResult.push_back(Pair("ObjectType", pGovObj->GetObjectType()));
     objResult.push_back(Pair("CreationTime", pGovObj->GetCreationTime()));
-    const COutPoint& masternodeOutpoint = pGovObj->GetMasternodeOutpoint();
-    if (masternodeOutpoint != COutPoint()) {
-        objResult.push_back(Pair("SigningMasternode", masternodeOutpoint.ToStringShort()));
+    const COutPoint& smartnodeOutpoint = pGovObj->GetMasternodeOutpoint();
+    if (smartnodeOutpoint != COutPoint()) {
+        objResult.push_back(Pair("SigningMasternode", smartnodeOutpoint.ToStringShort()));
     }
 
     // SHOW (MUCH MORE) INFORMATION ABOUT VOTES FOR GOVERNANCE OBJECT (THAN LIST/DIFF ABOVE)
@@ -822,8 +823,8 @@ void gobject_getcurrentvotes_help()
                 "Get only current (tallying) votes for a governance object hash (does not include old votes)\n"
                 "\nArguments:\n"
                 "1. governance-hash   (string, required) object id\n"
-                "2. txid              (string, optional) masternode collateral txid\n"
-                "3. vout              (string, optional) masternode collateral output index, required if <txid> presents\n"
+                "2. txid              (string, optional) smartnode collateral txid\n"
+                "3. vout              (string, optional) smartnode collateral output index, required if <txid> presents\n"
                 );
 }
 
@@ -885,11 +886,11 @@ UniValue gobject_getcurrentvotes(const JSONRPCRequest& request)
             "  list               - List governance objects (can be filtered by signal and/or object type)\n"
             "  diff               - List differences since last diff\n"
 #ifdef ENABLE_WALLET
-            "  vote-alias         - Vote on a governance object by masternode proTxHash\n"
+            "  vote-alias         - Vote on a governance object by smartnode proTxHash\n"
 #endif // ENABLE_WALLET
-            "  vote-conf          - Vote on a governance object by masternode configured in dash.conf\n"
+            "  vote-conf          - Vote on a governance object by smartnode configured in raptoreum.conf\n"
 #ifdef ENABLE_WALLET
-            "  vote-many          - Vote on a governance object by all masternodes for which the voting key is in the wallet\n"
+            "  vote-many          - Vote on a governance object by all smartnodes for which the voting key is in the wallet\n"
 #endif // ENABLE_WALLET
             );
 }
@@ -999,7 +1000,7 @@ UniValue voteraw(const JSONRPCRequest& request)
     auto dmn = deterministicMNManager->GetListAtChainTip().GetValidMNByCollateral(outpoint);
 
     if (!dmn) {
-        throw JSONRPCError(RPC_INTERNAL_ERROR, "Failure to find masternode in list : " + outpoint.ToStringShort());
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "Failure to find smartnode in list : " + outpoint.ToStringShort());
     }
 
     CGovernanceVote vote(outpoint, hashGovObj, eVoteSignal, eVoteOutcome);
@@ -1084,11 +1085,11 @@ UniValue getsuperblockbudget(const JSONRPCRequest& request)
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         okSafe argNames
   //  --------------------- ------------------------  -----------------------  ------ ----------
-    /* Dash features */
-    { "dash",               "getgovernanceinfo",      &getgovernanceinfo,      true,  {} },
-    { "dash",               "getsuperblockbudget",    &getsuperblockbudget,    true,  {"index"} },
-    { "dash",               "gobject",                &gobject,                true,  {} },
-    { "dash",               "voteraw",                &voteraw,                true,  {} },
+    /* Raptoreum features */
+    { "raptoreum",               "getgovernanceinfo",      &getgovernanceinfo,      true,  {} },
+    { "raptoreum",               "getsuperblockbudget",    &getsuperblockbudget,    true,  {"index"} },
+    { "raptoreum",               "gobject",                &gobject,                true,  {} },
+    { "raptoreum",               "voteraw",                &voteraw,                true,  {} },
 
 };
 

@@ -1,4 +1,5 @@
 // Copyright (c) 2014-2020 The Dash Core developers
+// Copyright (c) 2020 The Raptoreum developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,9 +8,9 @@
 #include "consensus/validation.h"
 #include "core_io.h"
 #include "init.h"
-#include "masternode/masternode-payments.h"
-#include "masternode/masternode-sync.h"
-#include "masternode/masternode-meta.h"
+#include "smartnode/smartnode-payments.h"
+#include "smartnode/smartnode-sync.h"
+#include "smartnode/smartnode-meta.h"
 #include "netmessagemaker.h"
 #include "script/sign.h"
 #include "txmempool.h"
@@ -27,7 +28,7 @@ void CPrivateSendClientManager::ProcessMessage(CNode* pfrom, const std::string& 
 {
     if (fMasternodeMode) return;
     if (!fEnablePrivateSend) return;
-    if (!masternodeSync.IsBlockchainSynced()) return;
+    if (!smartnodeSync.IsBlockchainSynced()) return;
 
     if (!CheckDiskSpace()) {
         ResetPool();
@@ -55,9 +56,9 @@ void CPrivateSendClientManager::ProcessMessage(CNode* pfrom, const std::string& 
                 if (q == dsq) {
                     return;
                 }
-                if (q.fReady == dsq.fReady && q.masternodeOutpoint == dsq.masternodeOutpoint) {
+                if (q.fReady == dsq.fReady && q.smartnodeOutpoint == dsq.smartnodeOutpoint) {
                     // no way the same mn can send another dsq with the same readiness this soon
-                    LogPrint(BCLog::PRIVATESEND, "DSQUEUE -- Peer %s is sending WAY too many dsq messages for a masternode with collateral %s\n", pfrom->GetLogString(), dsq.masternodeOutpoint.ToStringShort());
+                    LogPrint(BCLog::PRIVATESEND, "DSQUEUE -- Peer %s is sending WAY too many dsq messages for a smartnode with collateral %s\n", pfrom->GetLogString(), dsq.smartnodeOutpoint.ToStringShort());
                     return;
                 }
             }
@@ -68,7 +69,7 @@ void CPrivateSendClientManager::ProcessMessage(CNode* pfrom, const std::string& 
         if (dsq.IsTimeOutOfBounds()) return;
 
         auto mnList = deterministicMNManager->GetListAtChainTip();
-        auto dmn = mnList.GetValidMNByCollateral(dsq.masternodeOutpoint);
+        auto dmn = mnList.GetValidMNByCollateral(dsq.smartnodeOutpoint);
         if (!dmn) return;
 
         if (!dsq.CheckSignature(dmn->pdmnState->pubKeyOperator.Get())) {
@@ -83,7 +84,7 @@ void CPrivateSendClientManager::ProcessMessage(CNode* pfrom, const std::string& 
             for (auto& session : deqSessions) {
                 CDeterministicMNCPtr mnMixing;
                 if (session.GetMixingMasternodeInfo(mnMixing) && mnMixing->pdmnState->addr == dmn->pdmnState->addr && session.GetState() == POOL_STATE_QUEUE) {
-                    LogPrint(BCLog::PRIVATESEND, "DSQUEUE -- PrivateSend queue (%s) is ready on masternode %s\n", dsq.ToString(), dmn->pdmnState->addr.ToString());
+                    LogPrint(BCLog::PRIVATESEND, "DSQUEUE -- PrivateSend queue (%s) is ready on smartnode %s\n", dsq.ToString(), dmn->pdmnState->addr.ToString());
                     session.SubmitDenominate(connman);
                     return;
                 }
@@ -100,12 +101,12 @@ void CPrivateSendClientManager::ProcessMessage(CNode* pfrom, const std::string& 
 
             mmetaman.AllowMixing(dmn->proTxHash);
 
-            LogPrint(BCLog::PRIVATESEND, "DSQUEUE -- new PrivateSend queue (%s) from masternode %s\n", dsq.ToString(), dmn->pdmnState->addr.ToString());
+            LogPrint(BCLog::PRIVATESEND, "DSQUEUE -- new PrivateSend queue (%s) from smartnode %s\n", dsq.ToString(), dmn->pdmnState->addr.ToString());
 
             LOCK(cs_deqsessions);
             for (auto& session : deqSessions) {
                 CDeterministicMNCPtr mnMixing;
-                if (session.GetMixingMasternodeInfo(mnMixing) && mnMixing->collateralOutpoint == dsq.masternodeOutpoint) {
+                if (session.GetMixingMasternodeInfo(mnMixing) && mnMixing->collateralOutpoint == dsq.smartnodeOutpoint) {
                     dsq.fTried = true;
                 }
             }
@@ -130,7 +131,7 @@ void CPrivateSendClientSession::ProcessMessage(CNode* pfrom, const std::string& 
 {
     if (fMasternodeMode) return;
     if (!privateSendClient.fEnablePrivateSend) return;
-    if (!masternodeSync.IsBlockchainSynced()) return;
+    if (!smartnodeSync.IsBlockchainSynced()) return;
 
     if (strCommand == NetMsgType::DSSTATUSUPDATE) {
         if (pfrom->nVersion < MIN_PRIVATESEND_PEER_PROTO_VERSION) {
@@ -283,7 +284,7 @@ std::string CPrivateSendClientSession::GetStatus(bool fWaitForBlock)
     nStatusMessageProgress += 10;
     std::string strSuffix = "";
 
-    if (fWaitForBlock || !masternodeSync.IsBlockchainSynced()) {
+    if (fWaitForBlock || !smartnodeSync.IsBlockchainSynced()) {
         return strAutoDenomResult;
     }
 
@@ -297,7 +298,7 @@ std::string CPrivateSendClientSession::GetStatus(bool fWaitForBlock)
             strSuffix = "..";
         else if (nStatusMessageProgress % 70 <= 70)
             strSuffix = "...";
-        return strprintf(_("Submitted to masternode, waiting in queue %s"), strSuffix);
+        return strprintf(_("Submitted to smartnode, waiting in queue %s"), strSuffix);
     case POOL_STATE_ACCEPTING_ENTRIES:
         return strAutoDenomResult;
     case POOL_STATE_SIGNING:
@@ -618,7 +619,7 @@ bool CPrivateSendClientSession::SignFinalTransaction(const CTransaction& finalTr
             const CKeyStore& keystore = *vpwallets[0];
 
             LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientSession::%s -- Signing my input %i\n", __func__, nMyInputIndex);
-            // TODO we're using amount=0 here but we should use the correct amount. This works because Dash ignores the amount while signing/verifying (only used in Bitcoin/Segwit)
+            // TODO we're using amount=0 here but we should use the correct amount. This works because Raptoreum ignores the amount while signing/verifying (only used in Bitcoin/Segwit)
             if (!SignSignature(keystore, prevPubKey, finalMutableTransaction, nMyInputIndex, 0, int(SIGHASH_ALL | SIGHASH_ANYONECANPAY))) { // changes scriptSig
                 LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientSession::%s -- Unable to sign my own transaction!\n", __func__);
                 // not sure what to do here, it will timeout...?
@@ -640,7 +641,7 @@ bool CPrivateSendClientSession::SignFinalTransaction(const CTransaction& finalTr
     }
 
     // push all of our signatures to the Masternode
-    LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientSession::%s -- pushing sigs to the masternode, finalMutableTransaction=%s", __func__, finalMutableTransaction.ToString());
+    LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientSession::%s -- pushing sigs to the smartnode, finalMutableTransaction=%s", __func__, finalMutableTransaction.ToString());
     CNetMsgMaker msgMaker(pnode->GetSendVersion());
     connman.PushMessage(pnode, msgMaker.Make(NetMsgType::DSSIGNFINALTX, sigs));
     SetState(POOL_STATE_SIGNING);
@@ -690,7 +691,7 @@ void CPrivateSendClientManager::RemoveSkippedDenom(const CAmount& nDenomValue)
 
 bool CPrivateSendClientManager::WaitForAnotherBlock()
 {
-    if (!masternodeSync.IsBlockchainSynced()) return true;
+    if (!smartnodeSync.IsBlockchainSynced()) return true;
 
     if (fPrivateSendMultiSession) return false;
 
@@ -769,10 +770,10 @@ bool CPrivateSendClientManager::CheckAutomaticBackup()
 //
 bool CPrivateSendClientSession::DoAutomaticDenominating(CConnman& connman, bool fDryRun)
 {
-    if (fMasternodeMode) return false; // no client-side mixing on masternodes
+    if (fMasternodeMode) return false; // no client-side mixing on smartnodes
     if (nState != POOL_STATE_IDLE) return false;
 
-    if (!masternodeSync.IsBlockchainSynced()) {
+    if (!smartnodeSync.IsBlockchainSynced()) {
         strAutoDenomResult = _("Can't mix while sync in progress.");
         return false;
     }
@@ -946,10 +947,10 @@ bool CPrivateSendClientSession::DoAutomaticDenominating(CConnman& connman, bool 
 
 bool CPrivateSendClientManager::DoAutomaticDenominating(CConnman& connman, bool fDryRun)
 {
-    if (fMasternodeMode) return false; // no client-side mixing on masternodes
+    if (fMasternodeMode) return false; // no client-side mixing on smartnodes
     if (!fEnablePrivateSend || !fPrivateSendRunning) return false;
 
-    if (!masternodeSync.IsBlockchainSynced()) {
+    if (!smartnodeSync.IsBlockchainSynced()) {
         strAutoDenomResult = _("Can't mix while sync in progress.");
         return false;
     }
@@ -1003,7 +1004,7 @@ CDeterministicMNCPtr CPrivateSendClientManager::GetRandomNotUsedMasternode()
     int nCountEnabled = mnList.GetValidMNsCount();
     int nCountNotExcluded = nCountEnabled - vecMasternodesUsed.size();
 
-    LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientManager::%s -- %d enabled masternodes, %d masternodes to choose from\n", __func__, nCountEnabled, nCountNotExcluded);
+    LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientManager::%s -- %d enabled smartnodes, %d smartnodes to choose from\n", __func__, nCountEnabled, nCountNotExcluded);
     if(nCountNotExcluded < 1) {
         return nullptr;
     }
@@ -1027,7 +1028,7 @@ CDeterministicMNCPtr CPrivateSendClientManager::GetRandomNotUsedMasternode()
             continue;
         }
 
-        LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientManager::%s -- found, masternode=%s\n", __func__, dmn->collateralOutpoint.ToStringShort());
+        LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientManager::%s -- found, smartnode=%s\n", __func__, dmn->collateralOutpoint.ToStringShort());
         return dmn;
     }
 
@@ -1045,16 +1046,16 @@ bool CPrivateSendClientSession::JoinExistingQueue(CAmount nBalanceNeedsAnonymize
     // Look through the queues and see if anything matches
     CPrivateSendQueue dsq;
     while (privateSendClient.GetQueueItemAndTry(dsq)) {
-        auto dmn = mnList.GetValidMNByCollateral(dsq.masternodeOutpoint);
+        auto dmn = mnList.GetValidMNByCollateral(dsq.smartnodeOutpoint);
 
         if (!dmn) {
-            LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientSession::JoinExistingQueue -- dsq masternode is not in masternode list, masternode=%s\n", dsq.masternodeOutpoint.ToStringShort());
+            LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientSession::JoinExistingQueue -- dsq smartnode is not in smartnode list, smartnode=%s\n", dsq.smartnodeOutpoint.ToStringShort());
             continue;
         }
 
         // skip next mn payments winners
         if (mnpayments.IsScheduled(dmn, 0)) {
-            LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientSession::JoinExistingQueue -- skipping winner, masternode=%s\n", dmn->proTxHash.ToString());
+            LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientSession::JoinExistingQueue -- skipping winner, smartnode=%s\n", dmn->proTxHash.ToString());
             continue;
         }
 
@@ -1080,10 +1081,10 @@ bool CPrivateSendClientSession::JoinExistingQueue(CAmount nBalanceNeedsAnonymize
             continue;
         }
 
-        privateSendClient.AddUsedMasternode(dsq.masternodeOutpoint);
+        privateSendClient.AddUsedMasternode(dsq.smartnodeOutpoint);
 
         if (connman.IsMasternodeOrDisconnectRequested(dmn->pdmnState->addr)) {
-            LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientSession::JoinExistingQueue -- skipping masternode connection, addr=%s\n", dmn->pdmnState->addr.ToString());
+            LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientSession::JoinExistingQueue -- skipping smartnode connection, addr=%s\n", dmn->pdmnState->addr.ToString());
             continue;
         }
 
@@ -1126,7 +1127,7 @@ bool CPrivateSendClientSession::StartNewQueue(CAmount nBalanceNeedsAnonymized, C
         auto dmn = privateSendClient.GetRandomNotUsedMasternode();
 
         if (!dmn) {
-            LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientSession::StartNewQueue -- Can't find random masternode!\n");
+            LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientSession::StartNewQueue -- Can't find random smartnode!\n");
             strAutoDenomResult = _("Can't find random Masternode.");
             return false;
         }
@@ -1135,15 +1136,15 @@ bool CPrivateSendClientSession::StartNewQueue(CAmount nBalanceNeedsAnonymized, C
 
         // skip next mn payments winners
         if (mnpayments.IsScheduled(dmn, 0)) {
-            LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientSession::StartNewQueue -- skipping winner, masternode=%s\n", dmn->proTxHash.ToString());
+            LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientSession::StartNewQueue -- skipping winner, smartnode=%s\n", dmn->proTxHash.ToString());
             nTries++;
             continue;
         }
 
         int64_t nLastDsq = mmetaman.GetMetaInfo(dmn->proTxHash)->GetLastDsq();
         if (nLastDsq != 0 && nLastDsq + nMnCount / 5 > mmetaman.GetDsqCount()) {
-            LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientSession::StartNewQueue -- Too early to mix on this masternode!"
-                      " masternode=%s  addr=%s  nLastDsq=%d  CountEnabled/5=%d  nDsqCount=%d\n",
+            LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientSession::StartNewQueue -- Too early to mix on this smartnode!"
+                      " smartnode=%s  addr=%s  nLastDsq=%d  CountEnabled/5=%d  nDsqCount=%d\n",
                 dmn->proTxHash.ToString(), dmn->pdmnState->addr.ToString(), nLastDsq,
                 nMnCount / 5, mmetaman.GetDsqCount());
             nTries++;
@@ -1151,7 +1152,7 @@ bool CPrivateSendClientSession::StartNewQueue(CAmount nBalanceNeedsAnonymized, C
         }
 
         if (connman.IsMasternodeOrDisconnectRequested(dmn->pdmnState->addr)) {
-            LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientSession::StartNewQueue -- skipping masternode connection, addr=%s\n", dmn->pdmnState->addr.ToString());
+            LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientSession::StartNewQueue -- skipping smartnode connection, addr=%s\n", dmn->pdmnState->addr.ToString());
             nTries++;
             continue;
         }
@@ -1669,9 +1670,9 @@ void CPrivateSendClientManager::UpdatedBlockTip(const CBlockIndex* pindex)
 void CPrivateSendClientManager::DoMaintenance(CConnman& connman)
 {
     if (!fEnablePrivateSend) return;
-    if (fMasternodeMode) return; // no client-side mixing on masternodes
+    if (fMasternodeMode) return; // no client-side mixing on smartnodes
 
-    if (!masternodeSync.IsBlockchainSynced() || ShutdownRequested()) return;
+    if (!smartnodeSync.IsBlockchainSynced() || ShutdownRequested()) return;
 
     static unsigned int nTick = 0;
     static unsigned int nDoAutoNextRun = nTick + PRIVATESEND_AUTO_TIMEOUT_MIN;

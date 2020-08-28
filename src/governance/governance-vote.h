@@ -1,4 +1,5 @@
 // Copyright (c) 2014-2019 The Dash Core developers
+// Copyright (c) 2020 The Raptoreum developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -48,7 +49,7 @@ public:
 };
 
 //
-// CGovernanceVote - Allow a masternode to vote and broadcast throughout the network
+// CGovernanceVote - Allow a smartnode to vote and broadcast throughout the network
 //
 
 class CGovernanceVote
@@ -61,7 +62,7 @@ private:
     bool fValid;     //if the vote is currently valid / counted
     bool fSynced;    //if we've sent this to our peers
     int nVoteSignal; // see VOTE_ACTIONS above
-    COutPoint masternodeOutpoint;
+    COutPoint smartnodeOutpoint;
     uint256 nParentHash;
     int nVoteOutcome; // see VOTE_OUTCOMES above
     int64_t nTime;
@@ -102,7 +103,7 @@ public:
     bool IsValid(bool useVotingKey) const;
     void Relay(CConnman& connman) const;
 
-    const COutPoint& GetMasternodeOutpoint() const { return masternodeOutpoint; }
+    const COutPoint& GetMasternodeOutpoint() const { return smartnodeOutpoint; }
 
     /**
     *   GetHash()
@@ -120,7 +121,7 @@ public:
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action)
     {
-        READWRITE(masternodeOutpoint);
+        READWRITE(smartnodeOutpoint);
         READWRITE(nParentHash);
         READWRITE(nVoteOutcome);
         READWRITE(nVoteSignal);

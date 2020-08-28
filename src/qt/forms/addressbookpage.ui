@@ -150,7 +150,7 @@
   </layout>
  </widget>
  <resources>
-  <include location="../dash.qrc"/>
+  <include location="../raptoreum.qrc"/>
  </resources>
  <connections/>
 </ui>

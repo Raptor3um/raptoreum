@@ -10,7 +10,7 @@
 #include "script/script.h"
 #include "serialize.h"
 #include "streams.h"
-#include "test/test_dash.h"
+#include "test/test_raptoreum.h"
 #include "util.h"
 #include "utilstrencodings.h"
 #include "version.h"
@@ -196,7 +196,7 @@ BOOST_AUTO_TEST_CASE(sighash_from_data)
           stream >> tx;
 
           CValidationState state;
-          BOOST_CHECK_MESSAGE(CheckTransaction(*tx, state), strTest);
+          BOOST_CHECK_MESSAGE(CheckTransaction(*tx, state, 0, 0), strTest);
           BOOST_CHECK(state.IsValid());
 
           std::vector<unsigned char> raw = ParseHex(raw_script);

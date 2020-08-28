@@ -1,11 +1,12 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
 // Copyright (c) 2014-2020 The Dash Core developers
+// Copyright (c) 2020 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include "config/dash-config.h"
+#include "config/raptoreum-config.h"
 #endif
 
 #include "net.h"
@@ -25,7 +26,7 @@
 #include "utilstrencodings.h"
 #include "validation.h"
 
-#include "masternode/masternode-sync.h"
+#include "smartnode/smartnode-sync.h"
 #include "privatesend/privatesend.h"
 #include "evo/deterministicmns.h"
 
@@ -708,7 +709,7 @@ void CNode::copyStats(CNodeStats &stats)
         nPingUsecWait = GetTimeMicros() - nPingUsecStart;
     }
 
-    // Raw ping time is in microseconds, but show it to user as whole seconds (Dash users should be well used to small numbers with many decimal places by now :)
+    // Raw ping time is in microseconds, but show it to user as whole seconds (Raptoreum users should be well used to small numbers with many decimal places by now :)
     stats.dPingTime = (((double)nPingUsecTime) / 1e6);
     stats.dMinPing  = (((double)nMinPingUsecTime) / 1e6);
     stats.dPingWait = (((double)nPingUsecWait) / 1e6);
@@ -990,7 +991,7 @@ bool CConnman::AttemptToEvictConnection()
             if (fMasternodeMode) {
                 // This handles eviction protected nodes. Nodes are always protected for a short time after the connection
                 // was accepted. This short time is meant for the VERSION/VERACK exchange and the possible MNAUTH that might
-                // follow when the incoming connection is from another masternode. When a message other than MNAUTH
+                // follow when the incoming connection is from another smartnode. When a message other than MNAUTH
                 // is received after VERSION/VERACK, the protection is lifted immediately.
                 bool isProtected = GetSystemTimeInSeconds() - node->nTimeConnected < INBOUND_EVICTION_PROTECTION_TIME;
                 if (node->nTimeFirstMessageReceived != 0 && !node->fFirstMessageIsMNAUTH) {
@@ -1171,8 +1172,8 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
     }
 
     // don't accept incoming connections until fully synced
-    if(fMasternodeMode && !masternodeSync.IsSynced()) {
-        LogPrint(BCLog::NET, "AcceptConnection -- masternode is not synced yet, skipping inbound connection attempt\n");
+    if(fMasternodeMode && !smartnodeSync.IsSynced()) {
+        LogPrint(BCLog::NET, "AcceptConnection -- smartnode is not synced yet, skipping inbound connection attempt\n");
         CloseSocket(hSocket);
         return;
     }
@@ -1601,7 +1602,7 @@ void ThreadMapPort()
             }
         }
 
-        std::string strDesc = "Dash Core " + FormatFullVersion();
+        std::string strDesc = "Raptoreum Core " + FormatFullVersion();
 
         try {
             while (true) {
@@ -1814,7 +1815,7 @@ int CConnman::GetExtraOutboundCount()
     {
         LOCK(cs_vNodes);
         for (CNode* pnode : vNodes) {
-            // don't count outbound masternodes
+            // don't count outbound smartnodes
             if (pnode->fMasternode) {
                 continue;
             }
@@ -2084,7 +2085,7 @@ void CConnman::ThreadOpenAddedConnections()
 
 void CConnman::ThreadOpenMasternodeConnections()
 {
-    // Connecting to specific addresses, no masternode connections available
+    // Connecting to specific addresses, no smartnode connections available
     if (gArgs.IsArgSet("-connect") && gArgs.GetArgs("-connect").size() > 0)
         return;
 
@@ -2110,14 +2111,14 @@ void CConnman::ThreadOpenMasternodeConnections()
 
         int64_t nANow = GetAdjustedTime();
 
-        // NOTE: Process only one pending masternode at a time
+        // NOTE: Process only one pending smartnode at a time
 
         CService addr;
         { // don't hold lock while calling OpenMasternodeConnection as cs_main is locked deep inside
             LOCK2(cs_vNodes, cs_vPendingMasternodes);
 
             std::vector<CService> pending;
-            for (const auto& group : masternodeQuorumNodes) {
+            for (const auto& group : smartnodeQuorumNodes) {
                 for (const auto& proRegTxHash : group.second) {
                     auto dmn = mnList.GetMN(proRegTxHash);
                     if (!dmn) {
@@ -2607,7 +2608,7 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
     if (!gArgs.IsArgSet("-connect") || gArgs.GetArgs("-connect").size() != 1 || gArgs.GetArgs("-connect")[0] != "0")
         threadOpenConnections = std::thread(&TraceThread<std::function<void()> >, "opencon", std::function<void()>(std::bind(&CConnman::ThreadOpenConnections, this)));
 
-    // Initiate masternode connections
+    // Initiate smartnode connections
     threadOpenMasternodeConnections = std::thread(&TraceThread<std::function<void()> >, "mncon", std::function<void()>(std::bind(&CConnman::ThreadOpenMasternodeConnections, this)));
 
     // Process messages
@@ -2807,25 +2808,25 @@ bool CConnman::AddPendingMasternode(const CService& service)
 bool CConnman::AddMasternodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash, const std::set<uint256>& proTxHashes)
 {
     LOCK(cs_vPendingMasternodes);
-    auto it = masternodeQuorumNodes.find(std::make_pair(llmqType, quorumHash));
-    if (it != masternodeQuorumNodes.end()) {
+    auto it = smartnodeQuorumNodes.find(std::make_pair(llmqType, quorumHash));
+    if (it != smartnodeQuorumNodes.end()) {
         return false;
     }
-    masternodeQuorumNodes.emplace(std::make_pair(llmqType, quorumHash), proTxHashes);
+    smartnodeQuorumNodes.emplace(std::make_pair(llmqType, quorumHash), proTxHashes);
     return true;
 }
 
 bool CConnman::HasMasternodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash)
 {
     LOCK(cs_vPendingMasternodes);
-    return masternodeQuorumNodes.count(std::make_pair(llmqType, quorumHash));
+    return smartnodeQuorumNodes.count(std::make_pair(llmqType, quorumHash));
 }
 
 std::set<uint256> CConnman::GetMasternodeQuorums(Consensus::LLMQType llmqType)
 {
     LOCK(cs_vPendingMasternodes);
     std::set<uint256> result;
-    for (const auto& p : masternodeQuorumNodes) {
+    for (const auto& p : smartnodeQuorumNodes) {
         if (p.first.first != llmqType) {
             continue;
         }
@@ -2837,8 +2838,8 @@ std::set<uint256> CConnman::GetMasternodeQuorums(Consensus::LLMQType llmqType)
 std::set<NodeId> CConnman::GetMasternodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash) const
 {
     LOCK2(cs_vNodes, cs_vPendingMasternodes);
-    auto it = masternodeQuorumNodes.find(std::make_pair(llmqType, quorumHash));
-    if (it == masternodeQuorumNodes.end()) {
+    auto it = smartnodeQuorumNodes.find(std::make_pair(llmqType, quorumHash));
+    if (it == smartnodeQuorumNodes.end()) {
         return {};
     }
     const auto& proRegTxHashes = it->second;
@@ -2859,26 +2860,26 @@ std::set<NodeId> CConnman::GetMasternodeQuorumNodes(Consensus::LLMQType llmqType
 void CConnman::RemoveMasternodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash)
 {
     LOCK(cs_vPendingMasternodes);
-    masternodeQuorumNodes.erase(std::make_pair(llmqType, quorumHash));
+    smartnodeQuorumNodes.erase(std::make_pair(llmqType, quorumHash));
 }
 
 bool CConnman::IsMasternodeQuorumNode(const CNode* pnode)
 {
-    // Let's see if this is an outgoing connection to an address that is known to be a masternode
+    // Let's see if this is an outgoing connection to an address that is known to be a smartnode
     // We however only need to know this if the node did not authenticate itself as a MN yet
     uint256 assumedProTxHash;
     if (pnode->verifiedProRegTxHash.IsNull() && !pnode->fInbound) {
         auto mnList = deterministicMNManager->GetListAtChainTip();
         auto dmn = mnList.GetMNByService(pnode->addr);
         if (dmn == nullptr) {
-            // This is definitely not a masternode
+            // This is definitely not a smartnode
             return false;
         }
         assumedProTxHash = dmn->proTxHash;
     }
 
     LOCK(cs_vPendingMasternodes);
-    for (const auto& p : masternodeQuorumNodes) {
+    for (const auto& p : smartnodeQuorumNodes) {
         if (!pnode->verifiedProRegTxHash.IsNull()) {
             if (p.second.count(pnode->verifiedProRegTxHash)) {
                 return true;

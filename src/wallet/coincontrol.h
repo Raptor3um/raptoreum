@@ -16,7 +16,7 @@ enum class CoinType
     ALL_COINS,
     ONLY_DENOMINATED,
     ONLY_NONDENOMINATED,
-    ONLY_1000, // find masternode outputs including locked ones (use with caution)
+    SMARTNODE_COLLATERAL, // find smartnode outputs including locked ones (use with caution)
     ONLY_PRIVATESEND_COLLATERAL,
 };
 
@@ -91,7 +91,7 @@ public:
         vOutpoints.assign(setSelected.begin(), setSelected.end());
     }
 
-    // Dash-specific helpers
+    // Raptoreum-specific helpers
 
     void UsePrivateSend(bool fUsePrivateSend)
     {

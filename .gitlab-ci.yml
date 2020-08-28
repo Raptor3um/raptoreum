@@ -87,9 +87,9 @@ stages:
     - echo PULL_REQUEST=$PULL_REQUEST COMMIT_RANGE=$COMMIT_RANGE HOST_SRC_DIR=$HOST_SRC_DIR CACHE_DIR=$CACHE_DIR
     - echo "Commit log:" && git log --format=fuller -1
 
-    # Build dash_hash
-    - git clone https://github.com/dashpay/dash_hash
-    - cd dash_hash && python3 setup.py install
+    # Build raptoreum_hash
+    - git clone https://github.com/raptoreum/raptoreum_hash
+    - cd raptoreum_hash && python3 setup.py install
 
     # Install build target specific packages
     - echo PACKAGES=$PACKAGES

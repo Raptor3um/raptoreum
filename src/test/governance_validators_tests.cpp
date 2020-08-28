@@ -1,4 +1,5 @@
 // Copyright (c) 2014-2019 The Dash Core developers
+// Copyright (c) 2020 The Raptoreum developers
 
 #include "governance/governance-validators.h"
 #include "utilstrencodings.h"
@@ -6,7 +7,7 @@
 #include "data/proposals_valid.json.h"
 #include "data/proposals_invalid.json.h"
 
-#include "test/test_dash.h"
+#include "test/test_raptoreum.h"
 
 #include <iostream>
 #include <fstream>

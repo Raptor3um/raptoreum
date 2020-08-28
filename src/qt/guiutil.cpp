@@ -1,5 +1,6 @@
 // Copyright (c) 2011-2015 The Bitcoin Core developers
 // Copyright (c) 2014-2020 The Dash Core developers
+// Copyright (c) 2020 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -185,7 +186,7 @@ void setupAddressWidget(QValidatedLineEdit *widget, QWidget *parent)
 #if QT_VERSION >= 0x040700
     // We don't want translators to use own addresses in translations
     // and this is the only place, where this address is supplied.
-    widget->setPlaceholderText(QObject::tr("Enter a Dash address (e.g. %1)").arg(
+    widget->setPlaceholderText(QObject::tr("Enter a Raptoreum address (e.g. %1)").arg(
         QString::fromStdString(DummyAddress(Params()))));
 #endif
     widget->setValidator(new BitcoinAddressEntryValidator(parent));
@@ -203,8 +204,8 @@ void setupAmountWidget(QLineEdit *widget, QWidget *parent)
 
 bool parseBitcoinURI(const QUrl &uri, SendCoinsRecipient *out)
 {
-    // return if URI is not valid or is no dash: URI
-    if(!uri.isValid() || uri.scheme() != QString("dash"))
+    // return if URI is not valid or is no raptoreum: URI
+    if(!uri.isValid() || uri.scheme() != QString("raptoreum"))
         return false;
 
     SendCoinsRecipient rv;
@@ -250,7 +251,7 @@ bool parseBitcoinURI(const QUrl &uri, SendCoinsRecipient *out)
         {
             if(!i->second.isEmpty())
             {
-                if(!BitcoinUnits::parse(BitcoinUnits::DASH, i->second, &rv.amount))
+                if(!BitcoinUnits::parse(BitcoinUnits::RAPTOREUM, i->second, &rv.amount))
                 {
                     return false;
                 }
@@ -270,13 +271,13 @@ bool parseBitcoinURI(const QUrl &uri, SendCoinsRecipient *out)
 
 bool parseBitcoinURI(QString uri, SendCoinsRecipient *out)
 {
-    // Convert dash:// to dash:
+    // Convert raptoreum:// to raptoreum:
     //
-    //    Cannot handle this later, because dash:// will cause Qt to see the part after // as host,
+    //    Cannot handle this later, because raptoreum:// will cause Qt to see the part after // as host,
     //    which will lower-case it (and thus invalidate the address).
-    if(uri.startsWith("dash://", Qt::CaseInsensitive))
+    if(uri.startsWith("raptoreum://", Qt::CaseInsensitive))
     {
-        uri.replace(0, 7, "dash:");
+        uri.replace(0, 7, "raptoreum:");
     }
     QUrl uriInstance(uri);
     return parseBitcoinURI(uriInstance, out);
@@ -284,12 +285,12 @@ bool parseBitcoinURI(QString uri, SendCoinsRecipient *out)
 
 QString formatBitcoinURI(const SendCoinsRecipient &info)
 {
-    QString ret = QString("dash:%1").arg(info.address);
+    QString ret = QString("raptoreum:%1").arg(info.address);
     int paramCount = 0;
 
     if (info.amount)
     {
-        ret += QString("?amount=%1").arg(BitcoinUnits::format(BitcoinUnits::DASH, info.amount, false, BitcoinUnits::separatorNever));
+        ret += QString("?amount=%1").arg(BitcoinUnits::format(BitcoinUnits::RAPTOREUM, info.amount, false, BitcoinUnits::separatorNever));
         paramCount++;
     }
 
@@ -484,7 +485,7 @@ void openConfigfile()
 {
     fs::path pathConfig = GetConfigFile(gArgs.GetArg("-conf", BITCOIN_CONF_FILENAME));
 
-    /* Open dash.conf with the associated application */
+    /* Open raptoreum.conf with the associated application */
     if (fs::exists(pathConfig))
         QDesktopServices::openUrl(QUrl::fromLocalFile(boostPathToQString(pathConfig)));
 }
@@ -685,15 +686,15 @@ fs::path static StartupShortcutPath()
 {
     std::string chain = ChainNameFromCommandLine();
     if (chain == CBaseChainParams::MAIN)
-        return GetSpecialFolderPath(CSIDL_STARTUP) / "Dash Core.lnk";
+        return GetSpecialFolderPath(CSIDL_STARTUP) / "Raptoreum Core.lnk";
     if (chain == CBaseChainParams::TESTNET) // Remove this special case when CBaseChainParams::TESTNET = "testnet4"
-        return GetSpecialFolderPath(CSIDL_STARTUP) / "Dash Core (testnet).lnk";
-    return GetSpecialFolderPath(CSIDL_STARTUP) / strprintf("Dash Core (%s).lnk", chain);
+        return GetSpecialFolderPath(CSIDL_STARTUP) / "Raptoreum Core (testnet).lnk";
+    return GetSpecialFolderPath(CSIDL_STARTUP) / strprintf("Raptoreum Core (%s).lnk", chain);
 }
 
 bool GetStartOnSystemStartup()
 {
-    // check for "Dash Core*.lnk"
+    // check for "Raptoreum Core*.lnk"
     return fs::exists(StartupShortcutPath());
 }
 
@@ -783,8 +784,8 @@ fs::path static GetAutostartFilePath()
 {
     std::string chain = ChainNameFromCommandLine();
     if (chain == CBaseChainParams::MAIN)
-        return GetAutostartDir() / "dashcore.desktop";
-    return GetAutostartDir() / strprintf("dashcore-%s.lnk", chain);
+        return GetAutostartDir() / "raptoreumcore.desktop";
+    return GetAutostartDir() / strprintf("raptoreumcore-%s.lnk", chain);
 }
 
 bool GetStartOnSystemStartup()
@@ -823,13 +824,13 @@ bool SetStartOnSystemStartup(bool fAutoStart)
         if (!optionFile.good())
             return false;
         std::string chain = ChainNameFromCommandLine();
-        // Write a dashcore.desktop file to the autostart directory:
+        // Write a raptoreumcore.desktop file to the autostart directory:
         optionFile << "[Desktop Entry]\n";
         optionFile << "Type=Application\n";
         if (chain == CBaseChainParams::MAIN)
-            optionFile << "Name=Dash Core\n";
+            optionFile << "Name=Raptoreum Core\n";
         else
-            optionFile << strprintf("Name=Dash Core (%s)\n", chain);
+            optionFile << strprintf("Name=Raptoreum Core (%s)\n", chain);
         optionFile << "Exec=" << pszExePath << strprintf(" -min -testnet=%d -regtest=%d\n", gArgs.GetBoolArg("-testnet", false), gArgs.GetBoolArg("-regtest", false));
         optionFile << "Terminal=false\n";
         optionFile << "Hidden=false\n";
@@ -850,7 +851,7 @@ bool SetStartOnSystemStartup(bool fAutoStart)
 LSSharedFileListItemRef findStartupItemInList(LSSharedFileListRef list, CFURLRef findUrl);
 LSSharedFileListItemRef findStartupItemInList(LSSharedFileListRef list, CFURLRef findUrl)
 {
-    // loop through the list of startup items and try to find the Dash Core app
+    // loop through the list of startup items and try to find the Raptoreum Core app
     CFArrayRef listSnapshot = LSSharedFileListCopySnapshot(list, nullptr);
     for(int i = 0; i < CFArrayGetCount(listSnapshot); i++) {
         LSSharedFileListItemRef item = (LSSharedFileListItemRef)CFArrayGetValueAtIndex(listSnapshot, i);
@@ -895,7 +896,7 @@ bool SetStartOnSystemStartup(bool fAutoStart)
     LSSharedFileListItemRef foundItem = findStartupItemInList(loginItems, bitcoinAppUrl);
 
     if(fAutoStart && !foundItem) {
-        // add Dash Core app to startup item list
+        // add Raptoreum Core app to startup item list
         LSSharedFileListInsertItemURL(loginItems, kLSSharedFileListItemBeforeFirst, nullptr, nullptr, bitcoinAppUrl, nullptr, nullptr);
     }
     else if(!fAutoStart && foundItem) {

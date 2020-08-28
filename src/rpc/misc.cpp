@@ -1,6 +1,7 @@
 // Copyright (c) 2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
 // Copyright (c) 2014-2020 The Dash Core developers
+// Copyright (c) 2020 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -26,7 +27,7 @@
 #endif
 #include "warnings.h"
 
-#include "masternode/masternode-sync.h"
+#include "smartnode/smartnode-sync.h"
 #include "spork.h"
 
 #include <stdint.h>
@@ -63,7 +64,7 @@ UniValue getinfo(const JSONRPCRequest& request)
             "  \"version\": xxxxx,           (numeric) the server version\n"
             "  \"protocolversion\": xxxxx,   (numeric) the protocol version\n"
             "  \"walletversion\": xxxxx,     (numeric) the wallet version\n"
-            "  \"balance\": xxxxxxx,         (numeric) the total dash balance of the wallet\n"
+            "  \"balance\": xxxxxxx,         (numeric) the total raptoreum balance of the wallet\n"
             "  \"privatesend_balance\": xxxxxx, (numeric) the PrivateSend balance in " + CURRENCY_UNIT + "\n"
             "  \"blocks\": xxxxxx,           (numeric) the current number of blocks processed in the server\n"
             "  \"timeoffset\": xxxxx,        (numeric) the time offset\n"
@@ -138,7 +139,7 @@ UniValue debug(const JSONRPCRequest& request)
             "libevent logging is configured on startup and cannot be modified by this RPC during runtime.\n"
             "There are also a few meta-categories:\n"
             " - \"all\", \"1\" and \"\" activate all categories at once;\n"
-            " - \"dash\" activates all Dash-specific categories at once;\n"
+            " - \"raptoreum\" activates all Raptoreum-specific categories at once;\n"
             " - \"none\" (or \"0\") deactivates all categories at once.\n"
             "Note: If specified category doesn't match any of the above, no error is thrown.\n"
             "\nArguments:\n"
@@ -146,8 +147,8 @@ UniValue debug(const JSONRPCRequest& request)
             "\nResult:\n"
             "  result               (string) \"Debug mode: \" followed by the specified category.\n"
             "\nExamples:\n"
-            + HelpExampleCli("debug", "dash")
-            + HelpExampleRpc("debug", "dash+net")
+            + HelpExampleCli("debug", "raptoreum")
+            + HelpExampleRpc("debug", "raptoreum+net")
         );
 
     std::string strMode = request.params[0].get_str();
@@ -180,26 +181,26 @@ UniValue mnsync(const JSONRPCRequest& request)
 
     if(strMode == "status") {
         UniValue objStatus(UniValue::VOBJ);
-        objStatus.push_back(Pair("AssetID", masternodeSync.GetAssetID()));
-        objStatus.push_back(Pair("AssetName", masternodeSync.GetAssetName()));
-        objStatus.push_back(Pair("AssetStartTime", masternodeSync.GetAssetStartTime()));
-        objStatus.push_back(Pair("Attempt", masternodeSync.GetAttempt()));
-        objStatus.push_back(Pair("IsBlockchainSynced", masternodeSync.IsBlockchainSynced()));
-        objStatus.push_back(Pair("IsSynced", masternodeSync.IsSynced()));
-        objStatus.push_back(Pair("IsFailed", masternodeSync.IsFailed()));
+        objStatus.push_back(Pair("AssetID", smartnodeSync.GetAssetID()));
+        objStatus.push_back(Pair("AssetName", smartnodeSync.GetAssetName()));
+        objStatus.push_back(Pair("AssetStartTime", smartnodeSync.GetAssetStartTime()));
+        objStatus.push_back(Pair("Attempt", smartnodeSync.GetAttempt()));
+        objStatus.push_back(Pair("IsBlockchainSynced", smartnodeSync.IsBlockchainSynced()));
+        objStatus.push_back(Pair("IsSynced", smartnodeSync.IsSynced()));
+        objStatus.push_back(Pair("IsFailed", smartnodeSync.IsFailed()));
         return objStatus;
     }
 
     if(strMode == "next")
     {
-        masternodeSync.SwitchToNextAsset(*g_connman);
-        return "sync updated to " + masternodeSync.GetAssetName();
+        smartnodeSync.SwitchToNextAsset(*g_connman);
+        return "sync updated to " + smartnodeSync.GetAssetName();
     }
 
     if(strMode == "reset")
     {
-        masternodeSync.Reset();
-        masternodeSync.SwitchToNextAsset(*g_connman);
+        smartnodeSync.Reset();
+        smartnodeSync.SwitchToNextAsset(*g_connman);
         return "success";
     }
     return "failure";
@@ -330,13 +331,13 @@ UniValue validateaddress(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
             "validateaddress \"address\"\n"
-            "\nReturn information about the given dash address.\n"
+            "\nReturn information about the given raptoreum address.\n"
             "\nArguments:\n"
-            "1. \"address\"     (string, required) The dash address to validate\n"
+            "1. \"address\"     (string, required) The raptoreum address to validate\n"
             "\nResult:\n"
             "{\n"
             "  \"isvalid\" : true|false,       (boolean) If the address is valid or not. If not, this is the only property returned.\n"
-            "  \"address\" : \"address\", (string) The dash address validated\n"
+            "  \"address\" : \"address\", (string) The raptoreum address validated\n"
             "  \"scriptPubKey\" : \"hex\",       (string) The hex encoded scriptPubKey generated by the address\n"
             "  \"ismine\" : true|false,        (boolean) If the address is yours or not\n"
             "  \"iswatchonly\" : true|false,   (boolean) If the address is watchonly\n"
@@ -440,7 +441,7 @@ CScript _createmultisig_redeemScript(CWallet * const pwallet, const UniValue& pa
     {
         const std::string& ks = keys[i].get_str();
 #ifdef ENABLE_WALLET
-        // Case 1: Dash address and we have full public key:
+        // Case 1: Raptoreum address and we have full public key:
         CBitcoinAddress address(ks);
         if (pwallet && address.IsValid()) {
             CKeyID keyID;
@@ -497,9 +498,9 @@ UniValue createmultisig(const JSONRPCRequest& request)
 
             "\nArguments:\n"
             "1. nrequired      (numeric, required) The number of required signatures out of the n keys or addresses.\n"
-            "2. \"keys\"       (string, required) A json array of keys which are dash addresses or hex-encoded public keys\n"
+            "2. \"keys\"       (string, required) A json array of keys which are raptoreum addresses or hex-encoded public keys\n"
             "     [\n"
-            "       \"key\"    (string) dash address or hex-encoded public key\n"
+            "       \"key\"    (string) raptoreum address or hex-encoded public key\n"
             "       ,...\n"
             "     ]\n"
 
@@ -537,7 +538,7 @@ UniValue verifymessage(const JSONRPCRequest& request)
             "verifymessage \"address\" \"signature\" \"message\"\n"
             "\nVerify a signed message\n"
             "\nArguments:\n"
-            "1. \"address\"         (string, required) The dash address to use for the signature.\n"
+            "1. \"address\"         (string, required) The raptoreum address to use for the signature.\n"
             "2. \"signature\"       (string, required) The signature provided by the signer in base 64 encoding (see signmessage).\n"
             "3. \"message\"         (string, required) The message that was signed.\n"
             "\nResult:\n"
@@ -1228,7 +1229,7 @@ UniValue logging(const JSONRPCRequest& request)
             "libevent logging is configured on startup and cannot be modified by this RPC during runtime.\n"
             "There are also a few meta-categories:\n"
             " - \"all\", \"1\" and \"\" activate all categories at once;\n"
-            " - \"dash\" activates all Dash-specific categories at once.\n"
+            " - \"raptoreum\" activates all Raptoreum-specific categories at once.\n"
             "To deactivate all categories at once you can specify \"all\" in <exclude>.\n"
             "\nArguments:\n"
             "1. \"include\" (array of strings) add debug logging for these categories.\n"
@@ -1305,9 +1306,9 @@ static const CRPCCommand commands[] =
     { "addressindex",       "getaddresstxids",        &getaddresstxids,        false, {"addresses"} },
     { "addressindex",       "getaddressbalance",      &getaddressbalance,      false, {"addresses"} },
 
-    /* Dash features */
-    { "dash",               "mnsync",                 &mnsync,                 true,  {} },
-    { "dash",               "spork",                  &spork,                  true,  {"value"} },
+    /* Raptoreum features */
+    { "raptoreum",               "mnsync",                 &mnsync,                 true,  {} },
+    { "raptoreum",               "spork",                  &spork,                  true,  {"value"} },
 
     /* Not shown in help */
     { "hidden",             "setmocktime",            &setmocktime,            true,  {"timestamp"}},

@@ -6,7 +6,7 @@
 #define BITCOIN_QT_WALLETVIEW_H
 
 #include "amount.h"
-#include "masternodelist.h"
+#include "smartnodelist.h"
 
 #include <QStackedWidget>
 
@@ -66,7 +66,7 @@ private:
     SendCoinsDialog *sendCoinsPage;
     AddressBookPage *usedSendingAddressesPage;
     AddressBookPage *usedReceivingAddressesPage;
-    MasternodeList *masternodeListPage;
+    MasternodeList *smartnodeListPage;
 
     TransactionView *transactionView;
 
@@ -79,7 +79,7 @@ public Q_SLOTS:
     void gotoOverviewPage();
     /** Switch to history (transactions) page */
     void gotoHistoryPage();
-    /** Switch to masternode page */
+    /** Switch to smartnode page */
     void gotoMasternodePage();
     /** Switch to receive coins page */
     void gotoReceiveCoinsPage();
@@ -122,7 +122,7 @@ public Q_SLOTS:
     void requestedSyncWarningInfo();
 
 
-    /** Update selected DASH amount from transactionview */
+    /** Update selected RAPTOREUM amount from transactionview */
     void trxAmount(QString amount);
 Q_SIGNALS:
     /** Signal that we want to show the main window */

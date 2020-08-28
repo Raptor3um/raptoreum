@@ -79,7 +79,7 @@ static const unsigned int MAX_SUBVERSION_LENGTH = 256;
 static const int MAX_OUTBOUND_CONNECTIONS = 8;
 /** Maximum number of addnode outgoing nodes */
 static const int MAX_ADDNODE_CONNECTIONS = 8;
-/** Maximum number if outgoing masternodes */
+/** Maximum number if outgoing smartnodes */
 static const int MAX_OUTBOUND_MASTERNODE_CONNECTIONS = 30;
 static const int MAX_OUTBOUND_MASTERNODE_CONNECTIONS_ON_MN = 250;
 /** Eviction protection time for incoming connections  */
@@ -534,7 +534,7 @@ private:
     std::vector<std::string> vAddedNodes;
     CCriticalSection cs_vAddedNodes;
     std::vector<CService> vPendingMasternodes;
-    std::map<std::pair<Consensus::LLMQType, uint256>, std::set<uint256>> masternodeQuorumNodes; // protected by cs_vPendingMasternodes
+    std::map<std::pair<Consensus::LLMQType, uint256>, std::set<uint256>> smartnodeQuorumNodes; // protected by cs_vPendingMasternodes
     mutable CCriticalSection cs_vPendingMasternodes;
     std::vector<CNode*> vNodes;
     std::list<CNode*> vNodesDisconnected;

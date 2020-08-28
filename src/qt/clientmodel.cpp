@@ -1,5 +1,6 @@
 // Copyright (c) 2011-2015 The Bitcoin Core developers
 // Copyright (c) 2014-2019 The Dash Core developers
+// Copyright (c) 2020 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -21,7 +22,7 @@
 #include "util.h"
 #include "warnings.h"
 
-#include "masternode/masternode-sync.h"
+#include "smartnode/smartnode-sync.h"
 #include "privatesend/privatesend.h"
 
 #include "llmq/quorums_instantsend.h"
@@ -82,7 +83,7 @@ void ClientModel::setMasternodeList(const CDeterministicMNList& mnList)
         return;
     }
     mnListCached = mnList;
-    Q_EMIT masternodeListChanged();
+    Q_EMIT smartnodeListChanged();
 }
 
 CDeterministicMNList ClientModel::getMasternodeList() const

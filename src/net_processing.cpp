@@ -35,9 +35,9 @@
 
 #include "spork.h"
 #include "governance/governance.h"
-#include "masternode/masternode-payments.h"
-#include "masternode/masternode-sync.h"
-#include "masternode/masternode-meta.h"
+#include "smartnode/smartnode-payments.h"
+#include "smartnode/smartnode-sync.h"
+#include "smartnode/smartnode-meta.h"
 #ifdef ENABLE_WALLET
 #include "privatesend/privatesend-client.h"
 #endif // ENABLE_WALLET
@@ -56,7 +56,7 @@
 #include "llmq/quorums_signing_shares.h"
 
 #if defined(NDEBUG)
-# error "Dash Core cannot be compiled without assertions."
+# error "Raptoreum Core cannot be compiled without assertions."
 #endif
 
 std::atomic<int64_t> nTimeBestReceived(0); // Used only to inform the wallet of when we last received a block
@@ -1039,7 +1039,7 @@ bool static AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
             // relay a valid DSTX as a regular TX first which would skip all the specific checks
             // but would cause such tx to be rejected by ATMP due to 0 fee. Ignoring it here
             // should let DSTX to be propagated by honest peer later. Note, that a malicious
-            // masternode would not be able to exploit this to spam the network with specially
+            // smartnode would not be able to exploit this to spam the network with specially
             // crafted invalid DSTX-es and potentially cause high load cheaply, because
             // corresponding checks in ProcessMessage won't let it to send DSTX-es too often.
             bool fIgnoreRecentRejects = llmq::quorumInstantSendManager->IsLocked(inv.hash) || inv.type == MSG_DSTX;
@@ -1056,7 +1056,7 @@ bool static AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
         return mapBlockIndex.count(inv.hash);
 
     /*
-        Dash Related Inventory Messages
+        Raptoreum Related Inventory Messages
 
         --
 
@@ -2471,17 +2471,17 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             // It could be that a MN is no longer in the list but its DSTX is not yet mined.
             // Try to find a MN up to 24 blocks deep to make sure such dstx-es are relayed and processed correctly.
             for (int i = 0; i < 24 && pindex; ++i) {
-                dmn = deterministicMNManager->GetListForBlock(pindex).GetMNByCollateral(dstx.masternodeOutpoint);
+                dmn = deterministicMNManager->GetListForBlock(pindex).GetMNByCollateral(dstx.smartnodeOutpoint);
                 if (dmn) break;
                 pindex = pindex->pprev;
             }
             if(!dmn) {
-                LogPrint(BCLog::PRIVATESEND, "DSTX -- Can't find masternode %s to verify %s\n", dstx.masternodeOutpoint.ToStringShort(), hashTx.ToString());
+                LogPrint(BCLog::PRIVATESEND, "DSTX -- Can't find smartnode %s to verify %s\n", dstx.smartnodeOutpoint.ToStringShort(), hashTx.ToString());
                 return false;
             }
 
             if (!mmetaman.GetMetaInfo(dmn->proTxHash)->IsValidForMixingTxes()) {
-                LogPrint(BCLog::PRIVATESEND, "DSTX -- Masternode %s is sending too many transactions %s\n", dstx.masternodeOutpoint.ToStringShort(), hashTx.ToString());
+                LogPrint(BCLog::PRIVATESEND, "DSTX -- Masternode %s is sending too many transactions %s\n", dstx.smartnodeOutpoint.ToStringShort(), hashTx.ToString());
                 return true;
                 // TODO: Not an error? Could it be that someone is relaying old DSTXes
                 // we have no idea about (e.g we were offline)? How to handle them?
@@ -3183,7 +3183,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
 #endif // ENABLE_WALLET
         privateSendServer.ProcessMessage(pfrom, strCommand, vRecv, *connman);
         sporkManager.ProcessSpork(pfrom, strCommand, vRecv, *connman);
-        masternodeSync.ProcessMessage(pfrom, strCommand, vRecv);
+        smartnodeSync.ProcessMessage(pfrom, strCommand, vRecv);
         governance.ProcessMessage(pfrom, strCommand, vRecv, *connman);
         CMNAuth::ProcessMessage(pfrom, strCommand, vRecv, *connman);
         llmq::quorumBlockProcessor->ProcessMessage(pfrom, strCommand, vRecv, *connman);
@@ -3421,7 +3421,7 @@ void PeerLogicValidation::EvictExtraOutboundPeers(int64_t time_in_seconds)
         LOCK(cs_main);
 
         connman->ForEachNode([&](CNode* pnode) {
-            // Don't disconnect masternodes just because they were slow in block announcement
+            // Don't disconnect smartnodes just because they were slow in block announcement
             if (pnode->fMasternode) return;
             // Ignore non-outbound peers, or nodes marked for disconnect already
             if (!IsOutboundDisconnectionCandidate(pnode) || pnode->fDisconnect) return;

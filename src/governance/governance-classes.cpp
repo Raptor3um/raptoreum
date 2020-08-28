@@ -1,4 +1,5 @@
 // Copyright (c) 2014-2019 The Dash Core developers
+// Copyright (c) 2020 The Raptoreum developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -349,7 +350,7 @@ bool CSuperblockManager::GetSuperblockPayments(int nBlockHeight, std::vector<CTx
             ExtractDestination(payment.script, address1);
             CBitcoinAddress address2(address1);
 
-            // TODO: PRINT NICE N.N DASH OUTPUT
+            // TODO: PRINT NICE N.N RAPTOREUM OUTPUT
 
             LogPrint(BCLog::GOBJECT, "CSuperblockManager::GetSuperblockPayments -- NEW Superblock: output %d (addr %s, amount %lld)\n",
                         i, address2.ToString(), payment.nAmount);
@@ -514,7 +515,7 @@ void CSuperblock::ParsePaymentSchedule(const std::string& strPaymentAddresses, c
         CBitcoinAddress address(vecParsed1[i]);
         if (!address.IsValid()) {
             std::ostringstream ostr;
-            ostr << "CSuperblock::ParsePaymentSchedule -- Invalid Dash Address : " << vecParsed1[i];
+            ostr << "CSuperblock::ParsePaymentSchedule -- Invalid Raptoreum Address : " << vecParsed1[i];
             LogPrintf("%s\n", ostr.str());
             throw std::runtime_error(ostr.str());
         }
@@ -619,7 +620,7 @@ bool CSuperblock::IsValid(const CTransaction& txNew, int nBlockHeight, CAmount b
         return false;
     }
 
-    // miner and masternodes should not get more than they would usually get
+    // miner and smartnodes should not get more than they would usually get
     CAmount nBlockValue = txNew.GetValueOut();
     if (nBlockValue > blockReward + nPaymentsTotalAmount) {
         LogPrintf("CSuperblock::IsValid -- ERROR: Block invalid, block value limit exceeded: block %lld, limit %lld\n", nBlockValue, blockReward + nPaymentsTotalAmount);

@@ -123,7 +123,7 @@ class ImportRescanTest(BitcoinTestFramework):
         extra_args = [[] for _ in range(self.num_nodes)]
         for i, import_node in enumerate(IMPORT_NODES, 2):
             if import_node.prune:
-                # txindex is enabled by default in Dash and needs to be disabled for import-rescan.py
+                # txindex is enabled by default in Raptoreum and needs to be disabled for import-rescan.py
                 extra_args[i] += ["-prune=1", "-txindex=0", "-reindex"]
 
         self.add_nodes(self.num_nodes, extra_args)

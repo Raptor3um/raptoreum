@@ -1,5 +1,6 @@
 # Copyright (c) 2013-2016 The Bitcoin Core developers
 # Copyright (c) 2014-2018 The Dash Core developers
+# Copyright (c) 2020 The Raptoreum developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -15,7 +16,7 @@ export PYTHONPATH
 
 if BUILD_BITCOIN_LIBS
 pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = libdashconsensus.pc
+pkgconfig_DATA = libraptoreumconsensus.pc
 endif
 
 BITCOIND_BIN=$(top_builddir)/src/$(BITCOIN_DAEMON_NAME)$(EXEEXT)
@@ -26,7 +27,7 @@ BITCOIN_WIN_INSTALLER=$(PACKAGE)-$(PACKAGE_VERSION)-win$(WINDOWS_BITS)-setup$(EX
 empty :=
 space := $(empty) $(empty)
 
-OSX_APP=Dash-Qt.app
+OSX_APP=Raptoreum-Qt.app
 OSX_VOLNAME = $(subst $(space),-,$(PACKAGE_NAME))
 OSX_DMG = $(OSX_VOLNAME).dmg
 OSX_BACKGROUND_SVG=background.svg
@@ -40,9 +41,9 @@ OSX_PLIST=$(top_builddir)/share/qt/Info.plist #not installed
 OSX_QT_TRANSLATIONS = da,de,es,hu,ru,uk,zh_CN,zh_TW
 
 DIST_DOCS = $(wildcard doc/*.md) $(wildcard doc/release-notes/*.md)
-DIST_CONTRIB = $(top_srcdir)/contrib/dash-cli.bash-completion \
-	       $(top_srcdir)/contrib/dash-tx.bash-completion \
-	       $(top_srcdir)/contrib/dashd.bash-completion \
+DIST_CONTRIB = $(top_srcdir)/contrib/raptoreum-cli.bash-completion \
+	       $(top_srcdir)/contrib/raptoreum-tx.bash-completion \
+	       $(top_srcdir)/contrib/raptoreumd.bash-completion \
 	       $(top_srcdir)/contrib/init
 DIST_SHARE = \
   $(top_srcdir)/share/genbuild.sh \
@@ -63,9 +64,9 @@ OSX_PACKAGING = $(OSX_DEPLOY_SCRIPT) $(OSX_FANCY_PLIST) $(OSX_INSTALLER_ICONS) \
   $(top_srcdir)/contrib/macdeploy/detached-sig-create.sh
 
 COVERAGE_INFO = baseline.info \
-  test_dash_filtered.info total_coverage.info \
+  test_raptoreum_filtered.info total_coverage.info \
   baseline_filtered.info functional_test.info functional_test_filtered.info \
-  test_dash_coverage.info test_dash.info
+  test_raptoreum_coverage.info test_raptoreum.info
 
 dist-hook:
 	-$(GIT) archive --format=tar HEAD -- src/clientversion.cpp | $(AMTAR) -C $(top_distdir) -xf -
@@ -95,7 +96,7 @@ $(OSX_APP)/Contents/Resources/bitcoin.icns: $(OSX_INSTALLER_ICONS)
 	$(MKDIR_P) $(@D)
 	$(INSTALL_DATA) $< $@
 
-$(OSX_APP)/Contents/MacOS/Dash-Qt: $(BITCOIN_QT_BIN)
+$(OSX_APP)/Contents/MacOS/Raptoreum-Qt: $(BITCOIN_QT_BIN)
 	$(MKDIR_P) $(@D)
 	STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM)  $< $@
 
@@ -105,7 +106,7 @@ $(OSX_APP)/Contents/Resources/Base.lproj/InfoPlist.strings:
 
 OSX_APP_BUILT=$(OSX_APP)/Contents/PkgInfo $(OSX_APP)/Contents/Resources/empty.lproj \
   $(OSX_APP)/Contents/Resources/bitcoin.icns $(OSX_APP)/Contents/Info.plist \
-  $(OSX_APP)/Contents/MacOS/Dash-Qt $(OSX_APP)/Contents/Resources/Base.lproj/InfoPlist.strings
+  $(OSX_APP)/Contents/MacOS/Raptoreum-Qt $(OSX_APP)/Contents/Resources/Base.lproj/InfoPlist.strings
 
 osx_volname:
 	echo $(OSX_VOLNAME) >$@
@@ -130,7 +131,7 @@ $(APP_DIST_DIR)/Applications:
 	@rm -f $@
 	@cd $(@D); $(LN_S) /Applications $(@F)
 
-$(APP_DIST_EXTRAS): $(APP_DIST_DIR)/$(OSX_APP)/Contents/MacOS/Dash-Qt
+$(APP_DIST_EXTRAS): $(APP_DIST_DIR)/$(OSX_APP)/Contents/MacOS/Raptoreum-Qt
 
 $(OSX_DMG): $(APP_DIST_EXTRAS)
 	$(GENISOIMAGE) -no-cache-inodes -D -l -probe -V "$(OSX_VOLNAME)" -no-pad -r -dir-mode 0755 -apple -o $@ dist
@@ -145,7 +146,7 @@ $(APP_DIST_DIR)/.background/$(OSX_BACKGROUND_IMAGE): $(OSX_BACKGROUND_IMAGE_DPIF
 $(APP_DIST_DIR)/.DS_Store: $(OSX_DSSTORE_GEN)
 	$(PYTHON) $< "$@" "$(OSX_VOLNAME)"
 
-$(APP_DIST_DIR)/$(OSX_APP)/Contents/MacOS/Dash-Qt: $(OSX_APP_BUILT) $(OSX_PACKAGING)
+$(APP_DIST_DIR)/$(OSX_APP)/Contents/MacOS/Raptoreum-Qt: $(OSX_APP_BUILT) $(OSX_PACKAGING)
 	INSTALLNAMETOOL=$(INSTALLNAMETOOL)  OTOOL=$(OTOOL) STRIP=$(STRIP) $(PYTHON) $(OSX_DEPLOY_SCRIPT) $(OSX_APP) -translations-dir=$(QT_TRANSLATION_DIR) -add-qt-tr $(OSX_QT_TRANSLATIONS) -verbose 2
 
 deploydir: $(APP_DIST_EXTRAS)
@@ -178,16 +179,16 @@ baseline_filtered.info: baseline.info
 	$(abs_builddir)/contrib/filter-lcov.py $(LCOV_FILTER_PATTERN) $< $@
 	$(LCOV) -a $@ $(LCOV_OPTS) -o $@
 
-test_dash.info: baseline_filtered.info
+test_raptoreum.info: baseline_filtered.info
 	$(MAKE) -C src/ check
-	$(LCOV) -c $(LCOV_OPTS) -d $(abs_builddir)/src -t test_dash -o $@
+	$(LCOV) -c $(LCOV_OPTS) -d $(abs_builddir)/src -t test_raptoreum -o $@
 	$(LCOV) -z $(LCOV_OPTS) -d $(abs_builddir)/src
 
-test_dash_filtered.info: test_dash.info
+test_raptoreum_filtered.info: test_raptoreum.info
 	$(abs_builddir)/contrib/filter-lcov.py $(LCOV_FILTER_PATTERN) $< $@
 	$(LCOV) -a $@ $(LCOV_OPTS) -o $@
 
-functional_test.info: test_dash_filtered.info
+functional_test.info: test_raptoreum_filtered.info
 	-@TIMEOUT=15 test/functional/test_runner.py $(EXTENDED_FUNCTIONAL_TESTS)
 	$(LCOV) -c $(LCOV_OPTS) -d $(abs_builddir)/src --t functional-tests -o $@
 	$(LCOV) -z $(LCOV_OPTS) -d $(abs_builddir)/src
@@ -196,13 +197,13 @@ functional_test_filtered.info: functional_test.info
 	$(abs_builddir)/contrib/filter-lcov.py $(LCOV_FILTER_PATTERN) $< $@
 	$(LCOV) -a $@ $(LCOV_OPTS) -o $@
 
-test_dash_coverage.info: baseline_filtered.info test_dash_filtered.info
-	$(LCOV) -a $(LCOV_OPTS) baseline_filtered.info -a test_dash_filtered.info -o $@
+test_raptoreum_coverage.info: baseline_filtered.info test_raptoreum_filtered.info
+	$(LCOV) -a $(LCOV_OPTS) baseline_filtered.info -a test_raptoreum_filtered.info -o $@
 
-total_coverage.info: test_dash_filtered.info functional_test_filtered.info
-	$(LCOV) -a $(LCOV_OPTS) baseline_filtered.info -a test_dash_filtered.info -a functional_test_filtered.info -o $@ | $(GREP) "\%" | $(AWK) '{ print substr($$3,2,50) "/" $$5 }' > coverage_percent.txt
+total_coverage.info: test_raptoreum_filtered.info functional_test_filtered.info
+	$(LCOV) -a $(LCOV_OPTS) baseline_filtered.info -a test_raptoreum_filtered.info -a functional_test_filtered.info -o $@ | $(GREP) "\%" | $(AWK) '{ print substr($$3,2,50) "/" $$5 }' > coverage_percent.txt
 
-test_dash.coverage/.dirstamp:  test_dash_coverage.info
+test_raptoreum.coverage/.dirstamp:  test_raptoreum_coverage.info
 	$(GENHTML) -s $(LCOV_OPTS) $< -o $(@D)
 	@touch $@
 
@@ -210,7 +211,7 @@ total.coverage/.dirstamp: total_coverage.info
 	$(GENHTML) -s $(LCOV_OPTS) $< -o $(@D)
 	@touch $@
 
-cov: test_dash.coverage/.dirstamp total.coverage/.dirstamp
+cov: test_raptoreum.coverage/.dirstamp total.coverage/.dirstamp
 
 endif
 
@@ -265,5 +266,5 @@ CLEANFILES = $(OSX_DMG) $(BITCOIN_WIN_INSTALLER)
 DISTCHECK_CONFIGURE_FLAGS = --enable-man
 
 clean-local:
-	rm -rf coverage_percent.txt test_dash.coverage/ total.coverage/ test/tmp/ cache/ $(OSX_APP)
+	rm -rf coverage_percent.txt test_raptoreum.coverage/ total.coverage/ test/tmp/ cache/ $(OSX_APP)
 	rm -rf test/functional/__pycache__

@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 # Copyright (c) 2018-2020 The Dash Core developers
+# Copyright (c) 2020 The Raptoreum developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 from test_framework.mininode import *
-from test_framework.test_framework import DashTestFramework
+from test_framework.test_framework import RaptoreumTestFramework
 from test_framework.util import isolate_node, sync_mempools, set_node_times, reconnect_isolated_node, assert_equal, \
     assert_raises_rpc_error
 
@@ -14,9 +15,9 @@ p2p-instantsend.py
 Tests InstantSend functionality (prevent doublespend for unconfirmed transactions)
 '''
 
-class InstantSendTest(DashTestFramework):
+class InstantSendTest(RaptoreumTestFramework):
     def set_test_params(self):
-        self.set_dash_test_params(9, 5, fast_dip3_enforcement=True)
+        self.set_raptoreum_test_params(9, 5, fast_dip3_enforcement=True)
         # set sender,  receiver,  isolated nodes
         self.isolated_idx = 1
         self.receiver_idx = 2

@@ -44,8 +44,8 @@ alias = Alias.from_bytes(icvp['backgroundImageAlias'])
 alias.volume.name = package_name_ns
 alias.volume.posix_path = '/Volumes/' + package_name_ns
 alias.volume.disk_image_alias.target.filename = package_name_ns + '.temp.dmg'
-alias.volume.disk_image_alias.target.carbon_path = 'Macintosh HD:Users:\x00dashcoreuser:\x00Documents:\x00dashcore:\x00dashcore:\x00' + package_name_ns + '.temp.dmg'
-alias.volume.disk_image_alias.target.posix_path = 'Users/dashcoreuser/Documents/dashcore/dashcore/' + package_name_ns + '.temp.dmg'
+alias.volume.disk_image_alias.target.carbon_path = 'Macintosh HD:Users:\x00raptoreumcoreuser:\x00Documents:\x00raptoreumcore:\x00raptoreumcore:\x00' + package_name_ns + '.temp.dmg'
+alias.volume.disk_image_alias.target.posix_path = 'Users/raptoreumcoreuser/Documents/raptoreumcore/raptoreumcore/' + package_name_ns + '.temp.dmg'
 alias.target.carbon_path = package_name_ns + ':.background:\x00background.tiff'
 icvp['backgroundImageAlias'] = biplist.Data(alias.to_bytes())
 ds['.']['icvp'] = icvp
@@ -53,7 +53,7 @@ ds['.']['icvp'] = icvp
 ds['.']['vSrn'] = ('long', 1)
 
 ds['Applications']['Iloc'] = (370, 156)
-ds['Dash-Qt.app']['Iloc'] = (128, 156)
+ds['Raptoreum-Qt.app']['Iloc'] = (128, 156)
 
 ds.flush()
 ds.close()

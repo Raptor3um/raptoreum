@@ -1,5 +1,6 @@
 // Copyright (c) 2012-2014 The Bitcoin Core developers
 // Copyright (c) 2014-2020 The Dash Core developers
+// Copyright (c) 2020 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -41,7 +42,7 @@ static const int DIP0001_PROTOCOL_VERSION = 70208;
 //! short-id-based block download starts with this version
 static const int SHORT_IDS_BLOCKS_VERSION = 70209;
 
-//! introduction of DIP3/deterministic masternodes
+//! introduction of DIP3/deterministic smartnodes
 static const int DMN_PROTO_VERSION = 70213;
 
 //! introduction of LLMQs
