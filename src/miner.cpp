@@ -206,13 +206,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
         coinbaseTx.nType = TRANSACTION_COINBASE;
 
         CCbTx cbTx;
-
-        if (fDIP0008Active_context) {
-            cbTx.nVersion = 2;
-        } else {
-            cbTx.nVersion = 1;
-        }
-
+        cbTx.nVersion = 2;
         cbTx.nHeight = nHeight;
 
         CValidationState state;

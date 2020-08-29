@@ -32,6 +32,7 @@ bool CheckCbTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidatio
     }
 
     if (cbTx.nVersion == 0 || cbTx.nVersion > CCbTx::CURRENT_VERSION) {
+        LogPrintf("CheckCbTx: cbTx.nVersion=%d\n", cbTx.nVersion);
         return state.DoS(100, false, REJECT_INVALID, "bad-cbtx-version");
     }
 
@@ -41,6 +42,7 @@ bool CheckCbTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidatio
 
     if (pindexPrev) {
         if (Params().GetConsensus().DIP0008Enabled && cbTx.nVersion < 2) {
+        	LogPrintf("CheckCbTx DIP0008Enabled: cbTx.nVersion=%d\n", cbTx.nVersion);
             return state.DoS(100, false, REJECT_INVALID, "bad-cbtx-version");
         }
     }

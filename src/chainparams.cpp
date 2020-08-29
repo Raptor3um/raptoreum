@@ -327,6 +327,7 @@ public:
 
         //vSeeds.emplace_back("dnsseed.raptoreum.org", true);
         //vSeeds.emplace_back("dnsseed.raptoreumdot.io", true);
+        vSeeds.emplace_back("34.72.8.88", true);
 
         // Raptoreum addresses start with 'X'
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,60);
@@ -384,7 +385,7 @@ public:
         nPoolMaxParticipants = 5;
         nFulfilledRequestExpireTime = 60*60; // fulfilled requests expire in 1 hour
 
-        vSporkAddresses = {"RNdoKbfB2Xu5pEQA2EpzrD465qk73xVN7o"};
+        vSporkAddresses = {"RWGvGpd3yJdnfh9ziyHNDEoHMJBvnZ23zK"};
         nMinSporkKeys = 1;
         fBIP9CheckMasternodesUpgraded = true;
 
