@@ -51,6 +51,8 @@ static const int PRIVATESEND_DENOM_OUTPUTS_THRESHOLD = 500;
 static const int PRIVATESEND_KEYS_THRESHOLD_WARNING = 100;
 // Stop mixing completely, it's too dangerous to continue when we have only this many keys left
 static const int PRIVATESEND_KEYS_THRESHOLD_STOP = 50;
+// Pseudorandomly mix up to this many times in addition to base round count
+static const int PRIVATESEND_RANDOM_ROUNDS = 3;
 
 // The main object for accessing mixing
 extern CPrivateSendClientManager privateSendClient;
@@ -205,6 +207,7 @@ private:
 public:
     int nPrivateSendSessions;
     int nPrivateSendRounds;
+    int nPrivateSendRandomRounds;
     int nPrivateSendAmount;
     int nPrivateSendDenomsGoal;
     int nPrivateSendDenomsHardCap;
@@ -212,8 +215,8 @@ public:
     bool fPrivateSendRunning;
     bool fPrivateSendMultiSession;
 
-    int nCachedNumBlocks;    //used for the overview screen
-    bool fCreateAutoBackups; //builtin support for automatic backups
+    int nCachedNumBlocks;    // used for the overview screen
+    bool fCreateAutoBackups; // builtin support for automatic backups
 
     CPrivateSendClientManager() :
         vecSmartnodesUsed(),
@@ -223,6 +226,7 @@ public:
         strAutoDenomResult(),
         nCachedBlockHeight(0),
         nPrivateSendRounds(DEFAULT_PRIVATESEND_ROUNDS),
+        nPrivateSendRandomRounds(PRIVATESEND_RANDOM_ROUNDS),
         nPrivateSendAmount(DEFAULT_PRIVATESEND_AMOUNT),
         nPrivateSendDenomsGoal(DEFAULT_PRIVATESEND_DENOMS_GOAL),
         nPrivateSendDenomsHardCap(DEFAULT_PRIVATESEND_DENOMS_HARDCAP),
