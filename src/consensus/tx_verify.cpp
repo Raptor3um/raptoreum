@@ -201,6 +201,7 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, int nHeig
 		FounderPayment founderPayment = Params().GetConsensus().nFounderPayment;
 		CAmount founderReward = founderPayment.getFounderPaymentAmount(nHeight, blockReward);
 		int founderStartHeight = founderPayment.getStartBlock();
+		//std::cout << "height=" << nHeight << ", reward=" << founderReward << endl;
 		if(nHeight > founderStartHeight && founderReward && !founderPayment.IsBlockPayeeValid(tx,nHeight,blockReward)) {
 			return state.DoS(100, false, REJECT_INVALID, "bad-cb-founder-payment-not-found");
 		}

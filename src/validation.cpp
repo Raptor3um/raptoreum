@@ -3195,10 +3195,10 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
     for (unsigned int i = 1; i < block.vtx.size(); i++)
         if (block.vtx[i]->IsCoinBase())
             return state.DoS(100, false, REJECT_INVALID, "bad-cb-multiple", false, "more than one coinbase");
-    CAmount blockReward = GetBlockSubsidy(1, nHeight, Params().GetConsensus(), false);
+    CAmount blockReward = GetBlockSubsidy(1, nHeight - 1, Params().GetConsensus(), false);
     // Check transactions
     for (const auto& tx : block.vtx)
-        if (!CheckTransaction(*tx, state, nHeight, blockReward))
+        if (!CheckTransaction(*tx, state, nHeight - 1, blockReward))
             return state.Invalid(false, state.GetRejectCode(), state.GetRejectReason(),
                                  strprintf("Transaction check failed (tx hash %s) %s", tx->GetHash().ToString(), state.GetDebugMessage()));
 

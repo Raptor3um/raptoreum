@@ -119,6 +119,13 @@ static CMutableTransaction CreateProRegTx(SimpleUTXOMap& utxos, int port, const 
     return tx;
 }
 
+static CMutableTransaction CreateFutureTransaction(SimpleUTXOMap& utxos, const CScript& scriptPayout) {
+	CMutableTransaction tx;
+	tx.nVersion = 4;
+	tx.nType = TRANSACTION_FUTURE;
+	return tx;
+}
+
 static CMutableTransaction CreateProUpServTx(SimpleUTXOMap& utxos, const uint256& proTxHash, const CBLSSecretKey& operatorKey, int port, const CScript& scriptOperatorPayout, const CKey& coinbaseKey)
 {
     CAmount change;

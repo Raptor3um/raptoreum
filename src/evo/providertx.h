@@ -238,6 +238,27 @@ public:
     }
 };
 
+class CFutureTx {
+	static const uint16_t CURRENT_VERSION = 1;
+public:
+	uint16_t nVersion{CURRENT_VERSION};// message version
+	uint32_t maturity;
+	uint16_t lockOutputIndex;
+
+public:
+	ADD_SERIALIZE_METHODS;
+
+	template <typename Stream, typename Operation>
+	inline void SerializationOp(Stream& s, Operation ser_action)
+	{
+		READWRITE(nVersion);
+		READWRITE(maturity);
+		READWRITE(lockOutputIndex);
+
+	}
+
+};
+
 
 bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state);
 bool CheckProUpServTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state);
