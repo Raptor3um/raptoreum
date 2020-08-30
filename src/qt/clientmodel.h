@@ -73,6 +73,7 @@ public:
 
     double getVerificationProgress(const CBlockIndex *tip) const;
     QDateTime getLastBlockDate() const;
+    QString getLastBlockHash() const;
 
     //! Return true if core is doing initial block download
     bool inInitialBlockDownload() const;
@@ -114,7 +115,7 @@ private:
 Q_SIGNALS:
     void numConnectionsChanged(int count);
     void smartnodeListChanged() const;
-    void numBlocksChanged(int count, const QDateTime& blockDate, double nVerificationProgress, bool header);
+    void numBlocksChanged(int count, const QDateTime& blockDate, const QString& blockHash, double nVerificationProgress, bool header);
     void additionalDataSyncProgressChanged(double nSyncProgress);
     void mempoolSizeChanged(long count, size_t mempoolSizeInBytes);
     void islockCountChanged(size_t count);

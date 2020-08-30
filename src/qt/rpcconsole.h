@@ -93,7 +93,7 @@ public Q_SLOTS:
     void fontBigger();
     void fontSmaller();
     void setFontSize(int newSize);
-    
+
     /** Wallet repair options */
     void walletSalvage();
     void walletRescan();
@@ -101,7 +101,7 @@ public Q_SLOTS:
     void walletZaptxes2();
     void walletUpgrade();
     void walletReindex();
-    
+
     /** Append the message to the message widget */
     void message(int category, const QString &message, bool html = false);
     /** Set number of connections shown in the UI */
@@ -110,8 +110,8 @@ public Q_SLOTS:
     void setNetworkActive(bool networkActive);
     /** Update number of smartnodes shown in the UI */
     void updateSmartnodeCount();
-    /** Set number of blocks and last block date shown in the UI */
-    void setNumBlocks(int count, const QDateTime& blockDate, double nVerificationProgress, bool headers);
+    /** Set number of blocks, last block date and last block hash shown in the UI */
+    void setNumBlocks(int count, const QDateTime& blockDate, const QString& blockHash, double nVerificationProgress, bool headers);
     /** Set size (number of transactions and memory usage) of the mempool in the UI */
     void setMempoolSize(long numberOfTxs, size_t dynUsage);
     /** Set number of InstantSend locks */
