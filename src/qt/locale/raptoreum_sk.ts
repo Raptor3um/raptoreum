@@ -306,7 +306,7 @@
         <translation>Prechádzať históriu transakcií</translation>
     </message>
     <message>
-        <source>&amp;Masternodes</source>
+        <source>&amp;Smartnodes</source>
         <translation>&amp;Masternódy</translation>
     </message>
     <message>
@@ -1064,7 +1064,7 @@
     </message>
 </context>
 <context>
-    <name>MasternodeList</name>
+    <name>SmartnodeList</name>
     <message>
         <source>Form</source>
         <translation>Od</translation>
@@ -1174,8 +1174,8 @@
         <translation>ŽIADNE</translation>
     </message>
     <message>
-        <source>Additional information for DIP3 Masternode %1</source>
-        <translation>Ďalšie informácie pre DIP3 Masternode %1</translation>
+        <source>Additional information for DIP3 Smartnode %1</source>
+        <translation>Ďalšie informácie pre DIP3 Smartnode %1</translation>
     </message>
 </context>
 <context>
@@ -1287,7 +1287,7 @@
         <translation>Zobraziť dodatočnú záložku, ktorá vypíše všetky vaše masternódy v prvej pod-zložke&lt;br/&gt;- a všetky masternódy v druhej pod-zložke. </translation>
     </message>
     <message>
-        <source>Show Masternodes Tab</source>
+        <source>Show Smartnodes Tab</source>
         <translation>Ukázať záložku masternódov</translation>
     </message>
     <message>
@@ -1672,8 +1672,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Zostatok PrivateSend:</translation>
     </message>
     <message>
-        <source>The denominations you submitted to the Masternode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
-        <translation>Denominácie ktoré ste odoslali na Masternode. &lt;br&gt;Pre miešanie, ostatný používatelia musia odoslať rovnakú sumu denominácií.</translation>
+        <source>The denominations you submitted to the Smartnode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
+        <translation>Denominácie ktoré ste odoslali na Smartnode. &lt;br&gt;Pre miešanie, ostatný používatelia musia odoslať rovnakú sumu denominácií.</translation>
     </message>
     <message>
         <source>(Last Message)</source>
@@ -2115,7 +2115,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Reťazec blokov</translation>
     </message>
     <message>
-        <source>Number of Masternodes</source>
+        <source>Number of Smartnodes</source>
         <translation>Počet masternódov</translation>
     </message>
     <message>
@@ -4152,20 +4152,20 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Je potrebné zadať port s -whitebind: '%s'</translation>
     </message>
     <message>
-        <source>No Masternodes detected.</source>
-        <translation>Nezistený žiadny Masternode.</translation>
+        <source>No Smartnodes detected.</source>
+        <translation>Nezistený žiadny Smartnode.</translation>
     </message>
     <message>
-        <source>No compatible Masternode found.</source>
-        <translation>Nekompatibilný Masternode zdroj.</translation>
+        <source>No compatible Smartnode found.</source>
+        <translation>Nekompatibilný Smartnode zdroj.</translation>
     </message>
     <message>
         <source>Not enough funds to mix.</source>
         <translation>Nedostatok zdrojov pre miešanie.</translation>
     </message>
     <message>
-        <source>Not in the Masternode list.</source>
-        <translation>Nie je v zozname Masternode.</translation>
+        <source>Not in the Smartnode list.</source>
+        <translation>Nie je v zozname Smartnode.</translation>
     </message>
     <message>
         <source>Only connect to nodes in network &lt;net&gt; (ipv4, ipv6 or onion)</source>
@@ -4292,8 +4292,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Skúsime znovu...</translation>
     </message>
     <message>
-        <source>Can't find random Masternode.</source>
-        <translation>Nedá sa nájsť náhodný Masternode.</translation>
+        <source>Can't find random Smartnode.</source>
+        <translation>Nedá sa nájsť náhodný Smartnode.</translation>
     </message>
     <message>
         <source>Can't mix while sync in progress.</source>
@@ -4316,7 +4316,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Kľúč KeePassHttp pre šifrovanú AES komunikáciu s KeePass</translation>
     </message>
     <message>
-        <source>Disable all Raptoreum specific functionality (Masternodes, PrivateSend, InstantSend, Governance) (0-1, default: %u)</source>
+        <source>Disable all Raptoreum specific functionality (Smartnodes, PrivateSend, InstantSend, Governance) (0-1, default: %u)</source>
         <translation>Vypnúť všetky funkcie špecifické pre Raptoreum (Masternódy, PrivateSend, InstantSend, Správu) (0-1, predvolené: %u)</translation>
     </message>
     <message>
@@ -4628,16 +4628,16 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Vysielať transakcie z peňaženky</translation>
     </message>
     <message>
-        <source>Masternode options:</source>
-        <translation>Možnosti Masternode:</translation>
+        <source>Smartnode options:</source>
+        <translation>Možnosti Smartnode:</translation>
     </message>
     <message>
-        <source>Masternode queue is full.</source>
-        <translation>Fronta Masternode je plná</translation>
+        <source>Smartnode queue is full.</source>
+        <translation>Fronta Smartnode je plná</translation>
     </message>
     <message>
-        <source>Masternode:</source>
-        <translation>Masternode:</translation>
+        <source>Smartnode:</source>
+        <translation>Smartnode:</translation>
     </message>
     <message>
         <source>Minimum bytes per sigop in transactions we relay and mine (default: %u)</source>

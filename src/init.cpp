@@ -255,7 +255,7 @@ void PrepareShutdown()
 
     if (!fLiteMode && !fRPCInWarmup) {
         // STORE DATA CACHES INTO SERIALIZED DAT FILES
-        CFlatDB<CMasternodeMetaMan> flatdb1("mncache.dat", "magicMasternodeCache");
+        CFlatDB<CSmartnodeMetaMan> flatdb1("mncache.dat", "magicSmartnodeCache");
         flatdb1.Dump(mmetaman);
         CFlatDB<CGovernanceManager> flatdb3("governance.dat", "magicGovernanceCache");
         flatdb3.Dump(governance);
@@ -334,13 +334,13 @@ void PrepareShutdown()
         delete pdsNotificationInterface;
         pdsNotificationInterface = nullptr;
     }
-    if (fMasternodeMode) {
-        UnregisterValidationInterface(activeMasternodeManager);
+    if (fSmartnodeMode) {
+        UnregisterValidationInterface(activeSmartnodeManager);
     }
 
     // make sure to clean up BLS keys before global destructors are called (they have allocated from the secure memory pool)
-    activeMasternodeInfo.blsKeyOperator.reset();
-    activeMasternodeInfo.blsPubKeyOperator.reset();
+    activeSmartnodeInfo.blsKeyOperator.reset();
+    activeSmartnodeInfo.blsPubKeyOperator.reset();
 
 #ifndef WIN32
     try {
@@ -598,11 +598,11 @@ std::string HelpMessage(HelpMessageMode mode)
     }
     strUsage += HelpMessageOpt("-shrinkdebugfile", _("Shrink debug.log file on client startup (default: 1 when no -debug)"));
     AppendParamsHelpMessages(strUsage, showDebug);
-    strUsage += HelpMessageOpt("-litemode", strprintf(_("Disable all Raptoreum specific functionality (Masternodes, PrivateSend, InstantSend, Governance) (0-1, default: %u)"), 0));
+    strUsage += HelpMessageOpt("-litemode", strprintf(_("Disable all Raptoreum specific functionality (Smartnodes, PrivateSend, InstantSend, Governance) (0-1, default: %u)"), 0));
     strUsage += HelpMessageOpt("-sporkaddr=<raptoreumaddress>", strprintf(_("Override spork address. Only useful for regtest and devnet. Using this on mainnet or testnet will ban you.")));
     strUsage += HelpMessageOpt("-minsporkkeys=<n>", strprintf(_("Overrides minimum spork signers to change spork value. Only useful for regtest and devnet. Using this on mainnet or testnet will ban you.")));
 
-    strUsage += HelpMessageGroup(_("Masternode options:"));
+    strUsage += HelpMessageGroup(_("Smartnode options:"));
     strUsage += HelpMessageOpt("-smartnodeblsprivkey=<hex>", _("Set the smartnode BLS private key and enable the client to act as a smartnode"));
 
 #ifdef ENABLE_WALLET
@@ -848,15 +848,15 @@ void ThreadImport(std::vector<fs::path> vImportFiles)
         LogPrintf("Filling coin cache with smartnode UTXOs: done in %dms\n", GetTimeMillis() - nStart);
     }
 
-    if (fMasternodeMode) {
-        assert(activeMasternodeManager);
-        activeMasternodeManager->Init();
+    if (fSmartnodeMode) {
+        assert(activeSmartnodeManager);
+        activeSmartnodeManager->Init();
     }
 
 #ifdef ENABLE_WALLET
     // we can't do this before DIP3 is fully initialized
     for (CWalletRef pwallet : vpwallets) {
-        pwallet->AutoLockMasternodeCollaterals();
+        pwallet->AutoLockSmartnodeCollaterals();
     }
 #endif
 
@@ -1408,9 +1408,9 @@ bool AppInitParameterInteraction()
         if (vBudgetParams.size() != 3) {
             return InitError("Budget parameters malformed, expecting smartnodePaymentsStartBlock:budgetPaymentsStartBlock:superblockStartBlock");
         }
-        int nMasternodePaymentsStartBlock, nBudgetPaymentsStartBlock, nSuperblockStartBlock;
-        if (!ParseInt32(vBudgetParams[0], &nMasternodePaymentsStartBlock)) {
-            return InitError(strprintf("Invalid nMasternodePaymentsStartBlock (%s)", vBudgetParams[0]));
+        int nSmartnodePaymentsStartBlock, nBudgetPaymentsStartBlock, nSuperblockStartBlock;
+        if (!ParseInt32(vBudgetParams[0], &nSmartnodePaymentsStartBlock)) {
+            return InitError(strprintf("Invalid nSmartnodePaymentsStartBlock (%s)", vBudgetParams[0]));
         }
         if (!ParseInt32(vBudgetParams[1], &nBudgetPaymentsStartBlock)) {
             return InitError(strprintf("Invalid nBudgetPaymentsStartBlock (%s)", vBudgetParams[1]));
@@ -1418,7 +1418,7 @@ bool AppInitParameterInteraction()
         if (!ParseInt32(vBudgetParams[2], &nSuperblockStartBlock)) {
             return InitError(strprintf("Invalid nSuperblockStartBlock (%s)", vBudgetParams[2]));
         }
-        UpdateBudgetParameters(nMasternodePaymentsStartBlock, nBudgetPaymentsStartBlock, nSuperblockStartBlock);
+        UpdateBudgetParameters(nSmartnodePaymentsStartBlock, nBudgetPaymentsStartBlock, nSuperblockStartBlock);
     }
 
     if (chainparams.NetworkIDString() == CBaseChainParams::DEVNET) {
@@ -2006,8 +2006,8 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         return false;
     }
 
-    // ********************************************************* Step 10a: Prepare Masternode related stuff
-    fMasternodeMode = false;
+    // ********************************************************* Step 10a: Prepare Smartnode related stuff
+    fSmartnodeMode = false;
     std::string strMasterNodeBLSPrivKey = gArgs.GetArg("-smartnodeblsprivkey", "");
     if (!strMasterNodeBLSPrivKey.empty()) {
         auto binKey = ParseHex(strMasterNodeBLSPrivKey);
@@ -2016,33 +2016,33 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         if (!keyOperator.IsValid()) {
             return InitError(_("Invalid smartnodeblsprivkey. Please see documentation."));
         }
-        fMasternodeMode = true;
-        activeMasternodeInfo.blsKeyOperator = std::make_unique<CBLSSecretKey>(keyOperator);
-        activeMasternodeInfo.blsPubKeyOperator = std::make_unique<CBLSPublicKey>(activeMasternodeInfo.blsKeyOperator->GetPublicKey());
-        LogPrintf("MASTERNODE:\n");
+        fSmartnodeMode = true;
+        activeSmartnodeInfo.blsKeyOperator = std::make_unique<CBLSSecretKey>(keyOperator);
+        activeSmartnodeInfo.blsPubKeyOperator = std::make_unique<CBLSPublicKey>(activeSmartnodeInfo.blsKeyOperator->GetPublicKey());
+        LogPrintf("SMARTNODE:\n");
         LogPrintf("  blsPubKeyOperator: %s\n", keyOperator.GetPublicKey().ToString());
     }
 
-    if(fLiteMode && fMasternodeMode) {
+    if(fLiteMode && fSmartnodeMode) {
         return InitError(_("You can not start a smartnode in lite mode."));
     }
 
-    if(fMasternodeMode) {
+    if(fSmartnodeMode) {
 #ifdef ENABLE_WALLET
         if (!vpwallets.empty()) {
             return InitError(_("You can not start a smartnode with wallet enabled."));
         }
 #endif //ENABLE_WALLET
-        // Create and register activeMasternodeManager, will init later in ThreadImport
-        activeMasternodeManager = new CActiveMasternodeManager();
-        RegisterValidationInterface(activeMasternodeManager);
+        // Create and register activeSmartnodeManager, will init later in ThreadImport
+        activeSmartnodeManager = new CActiveSmartnodeManager();
+        RegisterValidationInterface(activeSmartnodeManager);
     }
 
-    if (activeMasternodeInfo.blsKeyOperator == nullptr) {
-        activeMasternodeInfo.blsKeyOperator = std::make_unique<CBLSSecretKey>();
+    if (activeSmartnodeInfo.blsKeyOperator == nullptr) {
+        activeSmartnodeInfo.blsKeyOperator = std::make_unique<CBLSSecretKey>();
     }
-    if (activeMasternodeInfo.blsPubKeyOperator == nullptr) {
-        activeMasternodeInfo.blsPubKeyOperator = std::make_unique<CBLSPublicKey>();
+    if (activeSmartnodeInfo.blsPubKeyOperator == nullptr) {
+        activeSmartnodeInfo.blsPubKeyOperator = std::make_unique<CBLSPublicKey>();
     }
 
     // ********************************************************* Step 10b: setup PrivateSend
@@ -2090,13 +2090,13 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     strDBName = "mncache.dat";
     uiInterface.InitMessage(_("Loading smartnode cache..."));
-    CFlatDB<CMasternodeMetaMan> flatdb1(strDBName, "magicMasternodeCache");
+    CFlatDB<CSmartnodeMetaMan> flatdb1(strDBName, "magicSmartnodeCache");
     if (fLoadCacheFiles) {
         if(!flatdb1.Load(mmetaman)) {
             return InitError(_("Failed to load smartnode cache from") + "\n" + (pathDB / strDBName).string());
         }
     } else {
-        CMasternodeMetaMan mmetamanTmp;
+        CSmartnodeMetaMan mmetamanTmp;
         if(!flatdb1.Dump(mmetamanTmp)) {
             return InitError(_("Failed to clear smartnode cache at") + "\n" + (pathDB / strDBName).string());
         }
@@ -2135,14 +2135,14 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     if (!fLiteMode) {
         scheduler.scheduleEvery(boost::bind(&CNetFulfilledRequestManager::DoMaintenance, boost::ref(netfulfilledman)), 60 * 1000);
-        scheduler.scheduleEvery(boost::bind(&CMasternodeSync::DoMaintenance, boost::ref(smartnodeSync), boost::ref(*g_connman)), 1 * 1000);
+        scheduler.scheduleEvery(boost::bind(&CSmartnodeSync::DoMaintenance, boost::ref(smartnodeSync), boost::ref(*g_connman)), 1 * 1000);
 
         scheduler.scheduleEvery(boost::bind(&CGovernanceManager::DoMaintenance, boost::ref(governance), boost::ref(*g_connman)), 60 * 5 * 1000);
     }
 
-    scheduler.scheduleEvery(boost::bind(&CMasternodeUtils::DoMaintenance, boost::ref(*g_connman)), 1 * 1000);
+    scheduler.scheduleEvery(boost::bind(&CSmartnodeUtils::DoMaintenance, boost::ref(*g_connman)), 1 * 1000);
 
-    if (fMasternodeMode) {
+    if (fSmartnodeMode) {
         scheduler.scheduleEvery(boost::bind(&CPrivateSendServer::DoMaintenance, boost::ref(privateSendServer), boost::ref(*g_connman)), 1 * 1000);
 #ifdef ENABLE_WALLET
     } else if (privateSendClient.fEnablePrivateSend) {

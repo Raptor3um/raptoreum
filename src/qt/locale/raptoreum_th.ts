@@ -306,8 +306,8 @@
         <translation>เรียกดูประวัติการทำธุรกรรม</translation>
     </message>
     <message>
-        <source>&amp;Masternodes</source>
-        <translation>Masternodes</translation>
+        <source>&amp;Smartnodes</source>
+        <translation>Smartnodes</translation>
     </message>
     <message>
         <source>Browse smartnodes</source>
@@ -1032,7 +1032,7 @@
     </message>
 </context>
 <context>
-    <name>MasternodeList</name>
+    <name>SmartnodeList</name>
     <message>
         <source>Form</source>
         <translation>รูป</translation>
@@ -1063,7 +1063,7 @@
     </message>
     <message>
         <source>My smartnodes only</source>
-        <translation>Masternodes ของฉันเท่านั้น</translation>
+        <translation>Smartnodes ของฉันเท่านั้น</translation>
     </message>
     <message>
         <source>PoSe Score</source>
@@ -1122,8 +1122,8 @@
         <translation>ไม่มี</translation>
     </message>
     <message>
-        <source>Additional information for DIP3 Masternode %1</source>
-        <translation>ข้อมูลเพิ่มเติมสำหรับ DIP3 Masternode %1</translation>
+        <source>Additional information for DIP3 Smartnode %1</source>
+        <translation>ข้อมูลเพิ่มเติมสำหรับ DIP3 Smartnode %1</translation>
     </message>
 </context>
 <context>
@@ -1235,8 +1235,8 @@
         <translation>แสดงแท็บเพิ่มเติมแสดง smartnodes ทั้งหมดของคุณในแท็บย่อยแรก &lt;br/&gt;และ smartnodes ทั้งหมดบนเครือข่ายในแท็บย่อยที่สอง</translation>
     </message>
     <message>
-        <source>Show Masternodes Tab</source>
-        <translation>แสดงแถบ Masternodes</translation>
+        <source>Show Smartnodes Tab</source>
+        <translation>แสดงแถบ Smartnodes</translation>
     </message>
     <message>
         <source>Show additional information and buttons for PrivateSend on overview screen.</source>
@@ -1612,8 +1612,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>PrivateSend ยอดคงเหลือ : </translation>
     </message>
     <message>
-        <source>The denominations you submitted to the Masternode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
-        <translation> หน่วยเงินที่คุณส่งไปยัง Masternode. &lt;br&gt; ในการผสมนั้นผู้ใช้อื่นจะต้องส่งหน่วยเงินที่เหมือนกัน</translation>
+        <source>The denominations you submitted to the Smartnode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
+        <translation> หน่วยเงินที่คุณส่งไปยัง Smartnode. &lt;br&gt; ในการผสมนั้นผู้ใช้อื่นจะต้องส่งหน่วยเงินที่เหมือนกัน</translation>
     </message>
     <message>
         <source>(Last Message)</source>
@@ -2050,8 +2050,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Block chain</translation>
     </message>
     <message>
-        <source>Number of Masternodes</source>
-        <translation>จำนวน Masternodes</translation>
+        <source>Number of Smartnodes</source>
+        <translation>จำนวน Smartnodes</translation>
     </message>
     <message>
         <source>Memory Pool</source>
@@ -4051,16 +4051,16 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>จำเป็นต้องระบุพอร์ตด้วย  -whitebind: '%s'  </translation>
     </message>
     <message>
-        <source>No Masternodes detected.</source>
-        <translation>ไม่พบ Masternodes</translation>
+        <source>No Smartnodes detected.</source>
+        <translation>ไม่พบ Smartnodes</translation>
     </message>
     <message>
-        <source>No compatible Masternode found.</source>
-        <translation>ไม่พบ Masternode ที่เข้ากันได้</translation>
+        <source>No compatible Smartnode found.</source>
+        <translation>ไม่พบ Smartnode ที่เข้ากันได้</translation>
     </message>
     <message>
-        <source>Not in the Masternode list.</source>
-        <translation>ไม่อยู่ในรายการ Masternode</translation>
+        <source>Not in the Smartnode list.</source>
+        <translation>ไม่อยู่ในรายการ Smartnode</translation>
     </message>
     <message>
         <source>Only connect to nodes in network &lt;net&gt; (ipv4, ipv6 or onion)</source>
@@ -4187,8 +4187,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>จะลองใหม่ ...</translation>
     </message>
     <message>
-        <source>Can't find random Masternode.</source>
-        <translation>ไม่พบ Masternode </translation>
+        <source>Can't find random Smartnode.</source>
+        <translation>ไม่พบ Smartnode </translation>
     </message>
     <message>
         <source>Can't mix while sync in progress.</source>
@@ -4211,8 +4211,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>คีย์ KeePassHttp สำหรับการสื่อสารที่เข้ารหัสด้วย AES กับ KeePass</translation>
     </message>
     <message>
-        <source>Disable all Raptoreum specific functionality (Masternodes, PrivateSend, InstantSend, Governance) (0-1, default: %u)</source>
-        <translation>ปิดใช้ฟังก์ชันการทำงานเฉพาะ Raptoreum ทั้งหมด  (Masternodes, PrivateSend, InstantSend, Governance) (0-1, ค่าดีฟอลต์: %u)</translation>
+        <source>Disable all Raptoreum specific functionality (Smartnodes, PrivateSend, InstantSend, Governance) (0-1, default: %u)</source>
+        <translation>ปิดใช้ฟังก์ชันการทำงานเฉพาะ Raptoreum ทั้งหมด  (Smartnodes, PrivateSend, InstantSend, Governance) (0-1, ค่าดีฟอลต์: %u)</translation>
     </message>
     <message>
         <source>%s file contains all private keys from this wallet. Do not share it with anyone!</source>
@@ -4495,16 +4495,16 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>ดำเนินการในการเผยแพร่ธุรกรรม wallet</translation>
     </message>
     <message>
-        <source>Masternode options:</source>
-        <translation>ตัวเลือก Masternode: </translation>
+        <source>Smartnode options:</source>
+        <translation>ตัวเลือก Smartnode: </translation>
     </message>
     <message>
-        <source>Masternode queue is full.</source>
-        <translation>คิว Masternode เต็ม</translation>
+        <source>Smartnode queue is full.</source>
+        <translation>คิว Smartnode เต็ม</translation>
     </message>
     <message>
-        <source>Masternode:</source>
-        <translation>Masternode:</translation>
+        <source>Smartnode:</source>
+        <translation>Smartnode:</translation>
     </message>
     <message>
         <source>Minimum bytes per sigop in transactions we relay and mine (default: %u)</source>

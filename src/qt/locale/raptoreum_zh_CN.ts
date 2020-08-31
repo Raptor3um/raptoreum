@@ -306,7 +306,7 @@
         <translation>查看交易历史</translation>
     </message>
     <message>
-        <source>&amp;Masternodes</source>
+        <source>&amp;Smartnodes</source>
         <translation>主节点(&amp;M)</translation>
     </message>
     <message>
@@ -1064,7 +1064,7 @@
     </message>
 </context>
 <context>
-    <name>MasternodeList</name>
+    <name>SmartnodeList</name>
     <message>
         <source>Form</source>
         <translation>表单</translation>
@@ -1174,7 +1174,7 @@
         <translation>NONE</translation>
     </message>
     <message>
-        <source>Additional information for DIP3 Masternode %1</source>
+        <source>Additional information for DIP3 Smartnode %1</source>
         <translation>DIP3 主节点 %1 的额外信息</translation>
     </message>
 </context>
@@ -1287,7 +1287,7 @@
         <translation>显示其他标签，在第一个子标签列出所有您的主节点&lt;br/&gt;在第二个子标签列出所有网络上的主节点。</translation>
     </message>
     <message>
-        <source>Show Masternodes Tab</source>
+        <source>Show Smartnodes Tab</source>
         <translation>显示主节点标签页</translation>
     </message>
     <message>
@@ -1672,7 +1672,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>匿名发送余额：</translation>
     </message>
     <message>
-        <source>The denominations you submitted to the Masternode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
+        <source>The denominations you submitted to the Smartnode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
         <translation>您向主节点所提交的用以面额化混合的达世币。&lt;br&gt;为了混合，其他用户必须提交完全一样的面额。</translation>
     </message>
     <message>
@@ -2114,7 +2114,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>区块链</translation>
     </message>
     <message>
-        <source>Number of Masternodes</source>
+        <source>Number of Smartnodes</source>
         <translation>主节点数量</translation>
     </message>
     <message>
@@ -4151,11 +4151,11 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>指定-whitebind时必须包含通信端口： '%s'</translation>
     </message>
     <message>
-        <source>No Masternodes detected.</source>
+        <source>No Smartnodes detected.</source>
         <translation>没有检测到任何主节点。</translation>
     </message>
     <message>
-        <source>No compatible Masternode found.</source>
+        <source>No compatible Smartnode found.</source>
         <translation>没有找到任何兼容的主节点。</translation>
     </message>
     <message>
@@ -4163,7 +4163,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>没有足够的资金进行混币。</translation>
     </message>
     <message>
-        <source>Not in the Masternode list.</source>
+        <source>Not in the Smartnode list.</source>
         <translation>在主节点列表中不存在。</translation>
     </message>
     <message>
@@ -4291,7 +4291,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>即将重试...</translation>
     </message>
     <message>
-        <source>Can't find random Masternode.</source>
+        <source>Can't find random Smartnode.</source>
         <translation>无法找到随机主节点。</translation>
     </message>
     <message>
@@ -4315,7 +4315,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>KeePassHttp的密钥，用作与KeePass的AES加密通信</translation>
     </message>
     <message>
-        <source>Disable all Raptoreum specific functionality (Masternodes, PrivateSend, InstantSend, Governance) (0-1, default: %u)</source>
+        <source>Disable all Raptoreum specific functionality (Smartnodes, PrivateSend, InstantSend, Governance) (0-1, default: %u)</source>
         <translation>禁止所有达世币的附加功能（主节点，匿名发送，即时发送，预算案）（0-1，默认：%u）</translation>
     </message>
     <message>
@@ -4627,15 +4627,15 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>使钱包广播交易</translation>
     </message>
     <message>
-        <source>Masternode options:</source>
+        <source>Smartnode options:</source>
         <translation>主节点选项：</translation>
     </message>
     <message>
-        <source>Masternode queue is full.</source>
+        <source>Smartnode queue is full.</source>
         <translation>主节点列队已满。</translation>
     </message>
     <message>
-        <source>Masternode:</source>
+        <source>Smartnode:</source>
         <translation>主节点：</translation>
     </message>
     <message>

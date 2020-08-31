@@ -12,79 +12,79 @@
 #include "validation.h"
 #include "warnings.h"
 
-// Keep track of the active Masternode
-CActiveMasternodeInfo activeMasternodeInfo;
-CActiveMasternodeManager* activeMasternodeManager;
+// Keep track of the active Smartnode
+CActiveSmartnodeInfo activeSmartnodeInfo;
+CActiveSmartnodeManager* activeSmartnodeManager;
 
-std::string CActiveMasternodeManager::GetStateString() const
+std::string CActiveSmartnodeManager::GetStateString() const
 {
     switch (state) {
-    case MASTERNODE_WAITING_FOR_PROTX:
+    case SMARTNODE_WAITING_FOR_PROTX:
         return "WAITING_FOR_PROTX";
-    case MASTERNODE_POSE_BANNED:
+    case SMARTNODE_POSE_BANNED:
         return "POSE_BANNED";
-    case MASTERNODE_REMOVED:
+    case SMARTNODE_REMOVED:
         return "REMOVED";
-    case MASTERNODE_OPERATOR_KEY_CHANGED:
+    case SMARTNODE_OPERATOR_KEY_CHANGED:
         return "OPERATOR_KEY_CHANGED";
-    case MASTERNODE_PROTX_IP_CHANGED:
+    case SMARTNODE_PROTX_IP_CHANGED:
         return "PROTX_IP_CHANGED";
-    case MASTERNODE_READY:
+    case SMARTNODE_READY:
         return "READY";
-    case MASTERNODE_ERROR:
+    case SMARTNODE_ERROR:
         return "ERROR";
     default:
         return "UNKNOWN";
     }
 }
 
-std::string CActiveMasternodeManager::GetStatus() const
+std::string CActiveSmartnodeManager::GetStatus() const
 {
     switch (state) {
-    case MASTERNODE_WAITING_FOR_PROTX:
+    case SMARTNODE_WAITING_FOR_PROTX:
         return "Waiting for ProTx to appear on-chain";
-    case MASTERNODE_POSE_BANNED:
-        return "Masternode was PoSe banned";
-    case MASTERNODE_REMOVED:
-        return "Masternode removed from list";
-    case MASTERNODE_OPERATOR_KEY_CHANGED:
+    case SMARTNODE_POSE_BANNED:
+        return "Smartnode was PoSe banned";
+    case SMARTNODE_REMOVED:
+        return "Smartnode removed from list";
+    case SMARTNODE_OPERATOR_KEY_CHANGED:
         return "Operator key changed or revoked";
-    case MASTERNODE_PROTX_IP_CHANGED:
+    case SMARTNODE_PROTX_IP_CHANGED:
         return "IP address specified in ProTx changed";
-    case MASTERNODE_READY:
+    case SMARTNODE_READY:
         return "Ready";
-    case MASTERNODE_ERROR:
+    case SMARTNODE_ERROR:
         return "Error. " + strError;
     default:
         return "Unknown";
     }
 }
 
-void CActiveMasternodeManager::Init()
+void CActiveSmartnodeManager::Init()
 {
     LOCK(cs_main);
 
-    if (!fMasternodeMode) return;
+    if (!fSmartnodeMode) return;
 
     if (!deterministicMNManager->IsDIP3Enforced()) return;
 
     // Check that our local network configuration is correct
     if (!fListen) {
         // listen option is probably overwritten by smth else, no good
-        state = MASTERNODE_ERROR;
-        strError = "Masternode must accept connections from outside. Make sure listen configuration option is not overwritten by some another parameter.";
-        LogPrintf("CActiveDeterministicMasternodeManager::Init -- ERROR: %s\n", strError);
+        state = SMARTNODE_ERROR;
+        strError = "Smartnode must accept connections from outside. Make sure listen configuration option is not overwritten by some another parameter.";
+        LogPrintf("CActiveDeterministicSmartnodeManager::Init -- ERROR: %s\n", strError);
         return;
     }
 
-    if (!GetLocalAddress(activeMasternodeInfo.service)) {
-        state = MASTERNODE_ERROR;
+    if (!GetLocalAddress(activeSmartnodeInfo.service)) {
+        state = SMARTNODE_ERROR;
         return;
     }
 
     CDeterministicMNList mnList = deterministicMNManager->GetListAtChainTip();
 
-    CDeterministicMNCPtr dmn = mnList.GetMNByOperatorKey(*activeMasternodeInfo.blsPubKeyOperator);
+    CDeterministicMNCPtr dmn = mnList.GetMNByOperatorKey(*activeSmartnodeInfo.blsPubKeyOperator);
     if (!dmn) {
         // MN not appeared on the chain yet
         return;
@@ -92,70 +92,70 @@ void CActiveMasternodeManager::Init()
 
     if (!mnList.IsMNValid(dmn->proTxHash)) {
         if (mnList.IsMNPoSeBanned(dmn->proTxHash)) {
-            state = MASTERNODE_POSE_BANNED;
+            state = SMARTNODE_POSE_BANNED;
         } else {
-            state = MASTERNODE_REMOVED;
+            state = SMARTNODE_REMOVED;
         }
         return;
     }
 
-    LogPrintf("CActiveMasternodeManager::Init -- proTxHash=%s, proTx=%s\n", dmn->proTxHash.ToString(), dmn->ToString());
+    LogPrintf("CActiveSmartnodeManager::Init -- proTxHash=%s, proTx=%s\n", dmn->proTxHash.ToString(), dmn->ToString());
 
-    if (activeMasternodeInfo.service != dmn->pdmnState->addr) {
-        state = MASTERNODE_ERROR;
+    if (activeSmartnodeInfo.service != dmn->pdmnState->addr) {
+        state = SMARTNODE_ERROR;
         strError = "Local address does not match the address from ProTx";
-        LogPrintf("CActiveMasternodeManager::Init -- ERROR: %s\n", strError);
+        LogPrintf("CActiveSmartnodeManager::Init -- ERROR: %s\n", strError);
         return;
     }
 
     if (Params().NetworkIDString() != CBaseChainParams::REGTEST) {
         // Check socket connectivity
-        LogPrintf("CActiveDeterministicMasternodeManager::Init -- Checking inbound connection to '%s'\n", activeMasternodeInfo.service.ToString());
+        LogPrintf("CActiveDeterministicSmartnodeManager::Init -- Checking inbound connection to '%s'\n", activeSmartnodeInfo.service.ToString());
         SOCKET hSocket;
-        bool fConnected = ConnectSocket(activeMasternodeInfo.service, hSocket, nConnectTimeout) && IsSelectableSocket(hSocket);
+        bool fConnected = ConnectSocket(activeSmartnodeInfo.service, hSocket, nConnectTimeout) && IsSelectableSocket(hSocket);
         CloseSocket(hSocket);
 
         if (!fConnected) {
-            state = MASTERNODE_ERROR;
-            strError = "Could not connect to " + activeMasternodeInfo.service.ToString();
-            LogPrintf("CActiveDeterministicMasternodeManager::Init -- ERROR: %s\n", strError);
+            state = SMARTNODE_ERROR;
+            strError = "Could not connect to " + activeSmartnodeInfo.service.ToString();
+            LogPrintf("CActiveDeterministicSmartnodeManager::Init -- ERROR: %s\n", strError);
             return;
         }
     }
 
-    activeMasternodeInfo.proTxHash = dmn->proTxHash;
-    activeMasternodeInfo.outpoint = dmn->collateralOutpoint;
-    state = MASTERNODE_READY;
+    activeSmartnodeInfo.proTxHash = dmn->proTxHash;
+    activeSmartnodeInfo.outpoint = dmn->collateralOutpoint;
+    state = SMARTNODE_READY;
 }
 
-void CActiveMasternodeManager::UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlockIndex* pindexFork, bool fInitialDownload)
+void CActiveSmartnodeManager::UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlockIndex* pindexFork, bool fInitialDownload)
 {
     LOCK(cs_main);
 
-    if (!fMasternodeMode) return;
+    if (!fSmartnodeMode) return;
 
     if (!deterministicMNManager->IsDIP3Enforced(pindexNew->nHeight)) return;
 
-    if (state == MASTERNODE_READY) {
+    if (state == SMARTNODE_READY) {
         auto oldMNList = deterministicMNManager->GetListForBlock(pindexNew->pprev);
         auto newMNList = deterministicMNManager->GetListForBlock(pindexNew);
-        if (!newMNList.IsMNValid(activeMasternodeInfo.proTxHash)) {
+        if (!newMNList.IsMNValid(activeSmartnodeInfo.proTxHash)) {
             // MN disappeared from MN list
-            state = MASTERNODE_REMOVED;
-            activeMasternodeInfo.proTxHash = uint256();
-            activeMasternodeInfo.outpoint.SetNull();
+            state = SMARTNODE_REMOVED;
+            activeSmartnodeInfo.proTxHash = uint256();
+            activeSmartnodeInfo.outpoint.SetNull();
             // MN might have reappeared in same block with a new ProTx
             Init();
             return;
         }
 
-        auto oldDmn = oldMNList.GetMN(activeMasternodeInfo.proTxHash);
-        auto newDmn = newMNList.GetMN(activeMasternodeInfo.proTxHash);
+        auto oldDmn = oldMNList.GetMN(activeSmartnodeInfo.proTxHash);
+        auto newDmn = newMNList.GetMN(activeSmartnodeInfo.proTxHash);
         if (newDmn->pdmnState->pubKeyOperator != oldDmn->pdmnState->pubKeyOperator) {
             // MN operator key changed or revoked
-            state = MASTERNODE_OPERATOR_KEY_CHANGED;
-            activeMasternodeInfo.proTxHash = uint256();
-            activeMasternodeInfo.outpoint.SetNull();
+            state = SMARTNODE_OPERATOR_KEY_CHANGED;
+            activeSmartnodeInfo.proTxHash = uint256();
+            activeSmartnodeInfo.outpoint.SetNull();
             // MN might have reappeared in same block with a new ProTx
             Init();
             return;
@@ -163,9 +163,9 @@ void CActiveMasternodeManager::UpdatedBlockTip(const CBlockIndex* pindexNew, con
 
         if (newDmn->pdmnState->addr != oldDmn->pdmnState->addr) {
             // MN IP changed
-            state = MASTERNODE_PROTX_IP_CHANGED;
-            activeMasternodeInfo.proTxHash = uint256();
-            activeMasternodeInfo.outpoint.SetNull();
+            state = SMARTNODE_PROTX_IP_CHANGED;
+            activeSmartnodeInfo.proTxHash = uint256();
+            activeSmartnodeInfo.outpoint.SetNull();
             Init();
             return;
         }
@@ -176,7 +176,7 @@ void CActiveMasternodeManager::UpdatedBlockTip(const CBlockIndex* pindexNew, con
     }
 }
 
-bool CActiveMasternodeManager::GetLocalAddress(CService& addrRet)
+bool CActiveSmartnodeManager::GetLocalAddress(CService& addrRet)
 {
     // First try to find whatever our own local address is known internally.
     // Addresses could be specified via externalip or bind option, discovered via UPnP
@@ -198,20 +198,20 @@ bool CActiveMasternodeManager::GetLocalAddress(CService& addrRet)
         g_connman->ForEachNodeContinueIf(CConnman::AllNodes, [&fFoundLocal, &empty](CNode* pnode) {
             empty = false;
             if (pnode->addr.IsIPv4())
-                fFoundLocal = GetLocal(activeMasternodeInfo.service, &pnode->addr) && IsValidNetAddr(activeMasternodeInfo.service);
+                fFoundLocal = GetLocal(activeSmartnodeInfo.service, &pnode->addr) && IsValidNetAddr(activeSmartnodeInfo.service);
             return !fFoundLocal;
         });
         // nothing and no live connections, can't do anything for now
         if (empty) {
             strError = "Can't detect valid external address. Please consider using the externalip configuration option if problem persists. Make sure to use IPv4 address only.";
-            LogPrintf("CActiveMasternodeManager::GetLocalAddress -- ERROR: %s\n", strError);
+            LogPrintf("CActiveSmartnodeManager::GetLocalAddress -- ERROR: %s\n", strError);
             return false;
         }
     }
     return true;
 }
 
-bool CActiveMasternodeManager::IsValidNetAddr(CService addrIn)
+bool CActiveSmartnodeManager::IsValidNetAddr(CService addrIn)
 {
     // TODO: regtest is fine with any addresses for now,
     // should probably be a bit smarter if one day we start to implement tests for this

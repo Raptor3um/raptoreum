@@ -56,11 +56,11 @@ std::vector<CGovernanceVote> CGovernanceObjectVoteFile::GetVotes() const
     return vecResult;
 }
 
-void CGovernanceObjectVoteFile::RemoveVotesFromMasternode(const COutPoint& outpointMasternode)
+void CGovernanceObjectVoteFile::RemoveVotesFromSmartnode(const COutPoint& outpointSmartnode)
 {
     vote_l_it it = listVotes.begin();
     while (it != listVotes.end()) {
-        if (it->GetMasternodeOutpoint() == outpointMasternode) {
+        if (it->GetSmartnodeOutpoint() == outpointSmartnode) {
             --nMemoryVotes;
             mapVoteIndex.erase(it->GetHash());
             listVotes.erase(it++);
@@ -70,13 +70,13 @@ void CGovernanceObjectVoteFile::RemoveVotesFromMasternode(const COutPoint& outpo
     }
 }
 
-std::set<uint256> CGovernanceObjectVoteFile::RemoveInvalidVotes(const COutPoint& outpointMasternode, bool fProposal)
+std::set<uint256> CGovernanceObjectVoteFile::RemoveInvalidVotes(const COutPoint& outpointSmartnode, bool fProposal)
 {
     std::set<uint256> removedVotes;
 
     vote_l_it it = listVotes.begin();
     while (it != listVotes.end()) {
-        if (it->GetMasternodeOutpoint() == outpointMasternode) {
+        if (it->GetSmartnodeOutpoint() == outpointSmartnode) {
             bool useVotingKey = fProposal && (it->GetSignal() == VOTE_SIGNAL_FUNDING);
             if (!it->IsValid(useVotingKey)) {
                 removedVotes.emplace(it->GetHash());
@@ -96,7 +96,7 @@ void CGovernanceObjectVoteFile::RemoveOldVotes(const CGovernanceVote& vote)
 {
     vote_l_it it = listVotes.begin();
     while (it != listVotes.end()) {
-        if (it->GetMasternodeOutpoint() == vote.GetMasternodeOutpoint() // same smartnode
+        if (it->GetSmartnodeOutpoint() == vote.GetSmartnodeOutpoint() // same smartnode
             && it->GetParentHash() == vote.GetParentHash() // same governance object (e.g. same proposal)
             && it->GetSignal() == vote.GetSignal() // same signal (e.g. "funding", "delete", etc.)
             && it->GetTimestamp() < vote.GetTimestamp()) // older than new vote

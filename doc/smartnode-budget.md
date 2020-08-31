@@ -1,7 +1,7 @@
 NOTE : 12.1 -- REWRITE
 
 
-Masternode Budget API
+Smartnode Budget API
 =======================
 
 Raptoreum now supports full decentralized budgets that are paid directly from the blockchain via superblocks once per month.

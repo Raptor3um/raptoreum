@@ -185,7 +185,7 @@
 - [`11e41b90c`](https://github.com/raptoreum/raptoreum/commit/11e41b90c) internal -> fInternal
 - [`b8c1d66fb`](https://github.com/raptoreum/raptoreum/commit/b8c1d66fb) Merge #10795: No longer ever reuse keypool indexes
 - [`d04633d28`](https://github.com/raptoreum/raptoreum/commit/d04633d28) Merge #10707: Better API for estimatesmartfee RPC
-- [`65cd33479`](https://github.com/raptoreum/raptoreum/commit/65cd33479) Tools window: Information - make "InstantSend locks" and "Number of Masternodes" fields copyable
+- [`65cd33479`](https://github.com/raptoreum/raptoreum/commit/65cd33479) Tools window: Information - make "InstantSend locks" and "Number of Smartnodes" fields copyable
 - [`ddef2025b`](https://github.com/raptoreum/raptoreum/commit/ddef2025b) sat -> duff
 - [`a7e20cd4c`](https://github.com/raptoreum/raptoreum/commit/a7e20cd4c) Use chainparams passed into ATMPW
 - [`e6df5690a`](https://github.com/raptoreum/raptoreum/commit/e6df5690a) Drop segwit related parts and fix cs_main issues

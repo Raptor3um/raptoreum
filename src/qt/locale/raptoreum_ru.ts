@@ -306,7 +306,7 @@
         <translation>Показать историю транзакций</translation>
     </message>
     <message>
-        <source>&amp;Masternodes</source>
+        <source>&amp;Smartnodes</source>
         <translation>&amp;Мастерноды</translation>
     </message>
     <message>
@@ -1064,7 +1064,7 @@
     </message>
 </context>
 <context>
-    <name>MasternodeList</name>
+    <name>SmartnodeList</name>
     <message>
         <source>Form</source>
         <translation>Форма</translation>
@@ -1174,7 +1174,7 @@
         <translation>NONE</translation>
     </message>
     <message>
-        <source>Additional information for DIP3 Masternode %1</source>
+        <source>Additional information for DIP3 Smartnode %1</source>
         <translation>Дополнительная информация для DIP3 мастерноды %1</translation>
     </message>
 </context>
@@ -1287,7 +1287,7 @@
         <translation>Показывать дополнительную вкладку со списком своих мастернод&lt;br/&gt;в одной таблице и списком всех мастернод в другой.</translation>
     </message>
     <message>
-        <source>Show Masternodes Tab</source>
+        <source>Show Smartnodes Tab</source>
         <translation>Показывать вкладку с мастернодами</translation>
     </message>
     <message>
@@ -1672,7 +1672,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Баланс PrivateSend:</translation>
     </message>
     <message>
-        <source>The denominations you submitted to the Masternode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
+        <source>The denominations you submitted to the Smartnode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
         <translation>Номиналы, предоставленные Вами мастерноде.&lt;br&gt;Для перемешивания другие пользователи должны предоставить точно такой же набор номиналов.</translation>
     </message>
     <message>
@@ -2114,7 +2114,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Цепочка блоков</translation>
     </message>
     <message>
-        <source>Number of Masternodes</source>
+        <source>Number of Smartnodes</source>
         <translation>Количество Мастернод</translation>
     </message>
     <message>
@@ -4151,11 +4151,11 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Для параметра -whitebind нужно указать порт: '%s'</translation>
     </message>
     <message>
-        <source>No Masternodes detected.</source>
+        <source>No Smartnodes detected.</source>
         <translation>Мастерноды не найдены.</translation>
     </message>
     <message>
-        <source>No compatible Masternode found.</source>
+        <source>No compatible Smartnode found.</source>
         <translation>Отсутствуют совместимые мастерноды.</translation>
     </message>
     <message>
@@ -4163,7 +4163,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Недостаточно средств, подходящих для перемешивания.</translation>
     </message>
     <message>
-        <source>Not in the Masternode list.</source>
+        <source>Not in the Smartnode list.</source>
         <translation>Отсутствует в списке мастернод.</translation>
     </message>
     <message>
@@ -4291,7 +4291,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Попробуем еще раз...</translation>
     </message>
     <message>
-        <source>Can't find random Masternode.</source>
+        <source>Can't find random Smartnode.</source>
         <translation>Не получилось выбрать случайную Мастерноду.</translation>
     </message>
     <message>
@@ -4315,7 +4315,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Ключ KeePassHttp для зашифрованной коммуникации с KeePass</translation>
     </message>
     <message>
-        <source>Disable all Raptoreum specific functionality (Masternodes, PrivateSend, InstantSend, Governance) (0-1, default: %u)</source>
+        <source>Disable all Raptoreum specific functionality (Smartnodes, PrivateSend, InstantSend, Governance) (0-1, default: %u)</source>
         <translation>Отключить всю функциональность, относящуюся к Raptoreum (Мастерноды, PrivateSend, InstantSend, Governance) (0-1, по умолчанию: %u)</translation>
     </message>
     <message>
@@ -4627,15 +4627,15 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Рассылать транзакции из бумажника</translation>
     </message>
     <message>
-        <source>Masternode options:</source>
+        <source>Smartnode options:</source>
         <translation>Параметры мастерноды:</translation>
     </message>
     <message>
-        <source>Masternode queue is full.</source>
+        <source>Smartnode queue is full.</source>
         <translation>Очередь на мастерноде переполнена.</translation>
     </message>
     <message>
-        <source>Masternode:</source>
+        <source>Smartnode:</source>
         <translation>Мастернода:</translation>
     </message>
     <message>

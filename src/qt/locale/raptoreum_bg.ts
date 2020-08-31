@@ -306,8 +306,8 @@
         <translation>История на транзакциите</translation>
     </message>
     <message>
-        <source>&amp;Masternodes</source>
-        <translation>&amp;Masternodes</translation>
+        <source>&amp;Smartnodes</source>
+        <translation>&amp;Smartnodes</translation>
     </message>
     <message>
         <source>Browse smartnodes</source>
@@ -993,7 +993,7 @@
     </message>
     <message>
         <source>&lt;h3&gt;PrivateSend Basics&lt;/h3&gt; PrivateSend gives you true financial privacy by obscuring the origins of your funds. All the Raptoreum in your wallet is comprised of different "inputs" which you can think of as separate, discrete coins.&lt;br&gt; PrivateSend uses an innovative process to mix your inputs with the inputs of two other people, without having your coins ever leave your wallet. You retain control of your money at all times.&lt;hr&gt; &lt;b&gt;The PrivateSend process works like this:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;PrivateSend begins by breaking your transaction inputs down into standard denominations. These denominations are 0.001 RAPTOREUM, 0.01 RAPTOREUM, 0.1 RAPTOREUM, 1 RAPTOREUM and 10 RAPTOREUM -- sort of like the paper money you use every day.&lt;/li&gt; &lt;li&gt;Your wallet then sends requests to specially configured software nodes on the network, called "smartnodes." These smartnodes are informed then that you are interested in mixing a certain denomination. No identifiable information is sent to the smartnodes, so they never know "who" you are.&lt;/li&gt; &lt;li&gt;When two other people send similar messages, indicating that they wish to mix the same denomination, a mixing session begins. The smartnode mixes up the inputs and instructs all three users' wallets to pay the now-transformed input back to themselves. Your wallet pays that denomination directly to itself, but in a different address (called a change address).&lt;/li&gt; &lt;li&gt;In order to fully obscure your funds, your wallet must repeat this process a number of times with each denomination. Each time the process is completed, it's called a "round." Each round of PrivateSend makes it exponentially more difficult to determine where your funds originated.&lt;/li&gt; &lt;li&gt;This mixing process happens in the background without any intervention on your part. When you wish to make a transaction, your funds will already be mixed. No additional waiting is required.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;IMPORTANT:&lt;/b&gt; Your wallet only contains 1000 of these "change addresses." Every time a mixing event happens, up to 9 of your addresses are used up. This means those 1000 addresses last for about 100 mixing events. When 900 of them are used, your wallet must create more addresses. It can only do this, however, if you have automatic backups enabled.&lt;br&gt; Consequently, users who have backups disabled will also have PrivateSend disabled. &lt;hr&gt;For more information, see the &lt;a href="https://docs.raptoreum.org/en/stable/wallets/raptoreumcore/privatesend-instantsend.html"&gt;PrivateSend documentation&lt;/a&gt;.</source>
-        <translation>&lt;h3&gt;PrivateSend основни понятия&lt;/h3&gt; PrivateSend ви дава истинска финансова независимост чрез скриване произхода на средствата ви. Всички Raptoreum монети в портфейла ви са съставени от различни "входове" които можете да приемете като отделни дискретни монети&lt;br&gt; PrivateSend използва иновативен процес като смесва вашите входове с входовете на други двама души без монетите да напускат изобщо портфейла ви. Имате пълен контрол върху парите си през цялото време. &lt;hr&gt; &lt;b&gt; PrivateSend процесът работи по следния начин:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;PrivateSend започва чрез разделяне на транзакцията ви до стандартни деноминации. Тези деноминации са 0.001 RAPTOREUM, 0.01 RAPTOREUM, 0.1 RAPTOREUM, 1 RAPTOREUM и 10 RAPTOREUM --подобно на стандартните пари, които ползваме ежедневно.&lt;/li&gt; &lt;li&gt;Вашия портфейл изпраща запитване към специално конфигурираните софтуерни възли в мрежата, наречени "smartnodes." Тези smartnodes са информирани, че се интересувате от смесване на определена деноминация. Никаква идентификационна информация не се изпраща към   smartnodes, така, че те никога не знаят "кой" сте.&lt;/li&gt; &lt;li&gt;Когато други двама души изпратят подобни съобщения, обозначаващи, че искат да смесят същата деноминация, смесващата сесия започва. Masternode смесват входовете и инструктират портфейлите на тримата потребители да платят ново трансформираните входове обратно към притежателите им. Вашият портфейл плаща деноминацията директно на себе си, но с различен адрес (наричан сменен адрес).  &lt;/li&gt; &lt;li&gt;С цел напълно скриване на доходите ви, вашият портфейл трябва да повтори този процес няколко пъти във всяка деноминация.  Всеки път завършеният процес се нарича "цикъл." Всеки цикъл на PrivateSend прави откриването на първоначалния източник на вашите средства напълно непроследим.&lt;/li&gt; &lt;li&gt;Този смесващ процес се случва като процес на заден фон без никаква намеса от ваша страна. Когато искате да направите транзакция, вашите средства са винаги анонимни. Не е необходимо допълнително изчакване. &lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;ВАЖНО:&lt;/b&gt; Вашият портфейл съдържа само 1000 от тези "сменяеми адреси". Всеки път когато се случва смесването до 9 от вашите адреси се ползват.  Това означава, че тези 1000 адреси се миксират в около 100 смесващи събития. Когато 900 се използват, вашия портфейл трябва да създаде повече адреси. Това може да стане само ако имате автоматично архивиране.&lt;br&gt; Следователно, потребителите, на които е изключено автоматичното архивиране, нямат и  PrivateSend включено. &lt;hr&gt;За повече информация вижте &lt;a href="https://docs.raptoreum.org/en/stable/wallets/raptoreumcore/privatesend-instantsend.html"&gt;документацията за PrivateSend&lt;/a&gt;.</translation>
+        <translation>&lt;h3&gt;PrivateSend основни понятия&lt;/h3&gt; PrivateSend ви дава истинска финансова независимост чрез скриване произхода на средствата ви. Всички Raptoreum монети в портфейла ви са съставени от различни "входове" които можете да приемете като отделни дискретни монети&lt;br&gt; PrivateSend използва иновативен процес като смесва вашите входове с входовете на други двама души без монетите да напускат изобщо портфейла ви. Имате пълен контрол върху парите си през цялото време. &lt;hr&gt; &lt;b&gt; PrivateSend процесът работи по следния начин:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;PrivateSend започва чрез разделяне на транзакцията ви до стандартни деноминации. Тези деноминации са 0.001 RAPTOREUM, 0.01 RAPTOREUM, 0.1 RAPTOREUM, 1 RAPTOREUM и 10 RAPTOREUM --подобно на стандартните пари, които ползваме ежедневно.&lt;/li&gt; &lt;li&gt;Вашия портфейл изпраща запитване към специално конфигурираните софтуерни възли в мрежата, наречени "smartnodes." Тези smartnodes са информирани, че се интересувате от смесване на определена деноминация. Никаква идентификационна информация не се изпраща към   smartnodes, така, че те никога не знаят "кой" сте.&lt;/li&gt; &lt;li&gt;Когато други двама души изпратят подобни съобщения, обозначаващи, че искат да смесят същата деноминация, смесващата сесия започва. Smartnode смесват входовете и инструктират портфейлите на тримата потребители да платят ново трансформираните входове обратно към притежателите им. Вашият портфейл плаща деноминацията директно на себе си, но с различен адрес (наричан сменен адрес).  &lt;/li&gt; &lt;li&gt;С цел напълно скриване на доходите ви, вашият портфейл трябва да повтори този процес няколко пъти във всяка деноминация.  Всеки път завършеният процес се нарича "цикъл." Всеки цикъл на PrivateSend прави откриването на първоначалния източник на вашите средства напълно непроследим.&lt;/li&gt; &lt;li&gt;Този смесващ процес се случва като процес на заден фон без никаква намеса от ваша страна. Когато искате да направите транзакция, вашите средства са винаги анонимни. Не е необходимо допълнително изчакване. &lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;ВАЖНО:&lt;/b&gt; Вашият портфейл съдържа само 1000 от тези "сменяеми адреси". Всеки път когато се случва смесването до 9 от вашите адреси се ползват.  Това означава, че тези 1000 адреси се миксират в около 100 смесващи събития. Когато 900 се използват, вашия портфейл трябва да създаде повече адреси. Това може да стане само ако имате автоматично архивиране.&lt;br&gt; Следователно, потребителите, на които е изключено автоматичното архивиране, нямат и  PrivateSend включено. &lt;hr&gt;За повече информация вижте &lt;a href="https://docs.raptoreum.org/en/stable/wallets/raptoreumcore/privatesend-instantsend.html"&gt;документацията за PrivateSend&lt;/a&gt;.</translation>
     </message>
 </context>
 <context>
@@ -1064,7 +1064,7 @@
     </message>
 </context>
 <context>
-    <name>MasternodeList</name>
+    <name>SmartnodeList</name>
     <message>
         <source>Form</source>
         <translation>От</translation>
@@ -1174,8 +1174,8 @@
         <translation>НИЩО</translation>
     </message>
     <message>
-        <source>Additional information for DIP3 Masternode %1</source>
-        <translation>Допълнителна информация за DIP3 Masternode %1</translation>
+        <source>Additional information for DIP3 Smartnode %1</source>
+        <translation>Допълнителна информация за DIP3 Smartnode %1</translation>
     </message>
 </context>
 <context>
@@ -1287,8 +1287,8 @@
         <translation>Показване на допълнителен раздел показваш всичките Ви smartnodes  в първият подраздел&lt;br/&gt;и всички smartnodes в мрежата във вторият подраздел.</translation>
     </message>
     <message>
-        <source>Show Masternodes Tab</source>
-        <translation>Показване на раздел Masternodes </translation>
+        <source>Show Smartnodes Tab</source>
+        <translation>Показване на раздел Smartnodes </translation>
     </message>
     <message>
         <source>Show additional information and buttons for PrivateSend on overview screen.</source>
@@ -1672,8 +1672,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>PrivateSend баланс:</translation>
     </message>
     <message>
-        <source>The denominations you submitted to the Masternode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
-        <translation>Деноминираните суми, които сте изпратили към Masternode. За смесване, другите потребители трябва да изпратят абсолютно същите деноминирани суми.</translation>
+        <source>The denominations you submitted to the Smartnode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
+        <translation>Деноминираните суми, които сте изпратили към Smartnode. За смесване, другите потребители трябва да изпратят абсолютно същите деноминирани суми.</translation>
     </message>
     <message>
         <source>(Last Message)</source>
@@ -2114,8 +2114,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Регистър на блокове</translation>
     </message>
     <message>
-        <source>Number of Masternodes</source>
-        <translation>Брой на Masternodes</translation>
+        <source>Number of Smartnodes</source>
+        <translation>Брой на Smartnodes</translation>
     </message>
     <message>
         <source>Memory Pool</source>
@@ -4151,19 +4151,19 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Нужно е определяне на порта с -whitebind: '%s'</translation>
     </message>
     <message>
-        <source>No Masternodes detected.</source>
-        <translation>Не са открити Masternodes.</translation>
+        <source>No Smartnodes detected.</source>
+        <translation>Не са открити Smartnodes.</translation>
     </message>
     <message>
-        <source>No compatible Masternode found.</source>
-        <translation>Не e намерен съвместим Masternode.</translation>
+        <source>No compatible Smartnode found.</source>
+        <translation>Не e намерен съвместим Smartnode.</translation>
     </message>
     <message>
         <source>Not enough funds to mix.</source>
         <translation>Недостатъчно средства за миксиране.</translation>
     </message>
     <message>
-        <source>Not in the Masternode list.</source>
+        <source>Not in the Smartnode list.</source>
         <translation>Не е в Мasternode списъка.</translation>
     </message>
     <message>
@@ -4291,8 +4291,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Ще опита отново...</translation>
     </message>
     <message>
-        <source>Can't find random Masternode.</source>
-        <translation>Не можете да намери случаен Masternode.</translation>
+        <source>Can't find random Smartnode.</source>
+        <translation>Не можете да намери случаен Smartnode.</translation>
     </message>
     <message>
         <source>Can't mix while sync in progress.</source>
@@ -4315,7 +4315,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>KeePassHttp ключ за  AES криптирана връзка с KeePass</translation>
     </message>
     <message>
-        <source>Disable all Raptoreum specific functionality (Masternodes, PrivateSend, InstantSend, Governance) (0-1, default: %u)</source>
+        <source>Disable all Raptoreum specific functionality (Smartnodes, PrivateSend, InstantSend, Governance) (0-1, default: %u)</source>
         <translation>Изключване на всички специфични Raptoreum функции (PrivateSend, InstantSend, Governance) (0-1, по подразбиране: %u)</translation>
     </message>
     <message>
@@ -4627,16 +4627,16 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Прави излъчващи транзакции от портфейла</translation>
     </message>
     <message>
-        <source>Masternode options:</source>
-        <translation>Masternode опции:</translation>
+        <source>Smartnode options:</source>
+        <translation>Smartnode опции:</translation>
     </message>
     <message>
-        <source>Masternode queue is full.</source>
-        <translation>Опашката с задачи на Masternode е пълна.</translation>
+        <source>Smartnode queue is full.</source>
+        <translation>Опашката с задачи на Smartnode е пълна.</translation>
     </message>
     <message>
-        <source>Masternode:</source>
-        <translation>Masternode:</translation>
+        <source>Smartnode:</source>
+        <translation>Smartnode:</translation>
     </message>
     <message>
         <source>Minimum bytes per sigop in transactions we relay and mine (default: %u)</source>
@@ -4920,7 +4920,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <source>Use N separate smartnodes for each denominated input to mix funds (%u-%u, default: %u)</source>
-        <translation>Използвайте N отделни Masternode за всеки деноминиран вход за миксиране на средства (%u-%u, по подразбиране: %u)</translation>
+        <translation>Използвайте N отделни Smartnode за всеки деноминиран вход за миксиране на средства (%u-%u, по подразбиране: %u)</translation>
     </message>
     <message>
         <source>Use hierarchical deterministic key generation (HD) after BIP39/BIP44. Only has effect during wallet creation/first start</source>

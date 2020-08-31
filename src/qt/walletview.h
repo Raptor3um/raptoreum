@@ -66,7 +66,7 @@ private:
     SendCoinsDialog *sendCoinsPage;
     AddressBookPage *usedSendingAddressesPage;
     AddressBookPage *usedReceivingAddressesPage;
-    MasternodeList *smartnodeListPage;
+    SmartnodeList *smartnodeListPage;
 
     TransactionView *transactionView;
 
@@ -80,7 +80,7 @@ public Q_SLOTS:
     /** Switch to history (transactions) page */
     void gotoHistoryPage();
     /** Switch to smartnode page */
-    void gotoMasternodePage();
+    void gotoSmartnodePage();
     /** Switch to receive coins page */
     void gotoReceiveCoinsPage();
     /** Switch to send coins page */

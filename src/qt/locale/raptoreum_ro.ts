@@ -306,8 +306,8 @@
         <translation>Răsfoiește istoricul tranzacțiilor</translation>
     </message>
     <message>
-        <source>&amp;Masternodes</source>
-        <translation>&amp;Masternode-uri</translation>
+        <source>&amp;Smartnodes</source>
+        <translation>&amp;Smartnode-uri</translation>
     </message>
     <message>
         <source>Browse smartnodes</source>
@@ -1032,7 +1032,7 @@
     </message>
 </context>
 <context>
-    <name>MasternodeList</name>
+    <name>SmartnodeList</name>
     <message>
         <source>Form</source>
         <translation>Form</translation>
@@ -1122,8 +1122,8 @@
         <translation>Niciuna</translation>
     </message>
     <message>
-        <source>Additional information for DIP3 Masternode %1</source>
-        <translation>Informații suplimentare pentru Masternode DIP3 %1</translation>
+        <source>Additional information for DIP3 Smartnode %1</source>
+        <translation>Informații suplimentare pentru Smartnode DIP3 %1</translation>
     </message>
 </context>
 <context>
@@ -1235,8 +1235,8 @@
         <translation>Afișează o pagină suplimentară care conține lista tuturor smartnode-urilor în prima sub-pagină&lt;br/&gt;și toate smartnode-urile din rețea în a sub-pagină.</translation>
     </message>
     <message>
-        <source>Show Masternodes Tab</source>
-        <translation>Arată Pagina Masternode-urilor</translation>
+        <source>Show Smartnodes Tab</source>
+        <translation>Arată Pagina Smartnode-urilor</translation>
     </message>
     <message>
         <source>Show additional information and buttons for PrivateSend on overview screen.</source>
@@ -1612,8 +1612,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Sold TrimitePrivat:</translation>
     </message>
     <message>
-        <source>The denominations you submitted to the Masternode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
-        <translation>Denominațiile pe care le-ai trimis la Masternode.&lt;br&gt;Pentru a amesteca, ceilalți utilizatori trebuie să trimită exact aceleași denominații.</translation>
+        <source>The denominations you submitted to the Smartnode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
+        <translation>Denominațiile pe care le-ai trimis la Smartnode.&lt;br&gt;Pentru a amesteca, ceilalți utilizatori trebuie să trimită exact aceleași denominații.</translation>
     </message>
     <message>
         <source>(Last Message)</source>
@@ -2050,8 +2050,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Lanţ de blocuri</translation>
     </message>
     <message>
-        <source>Number of Masternodes</source>
-        <translation>Număr de Masternode-uri</translation>
+        <source>Number of Smartnodes</source>
+        <translation>Număr de Smartnode-uri</translation>
     </message>
     <message>
         <source>Memory Pool</source>
@@ -4051,16 +4051,16 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Trebuie să specificaţi un port cu -whitebind: '%s'</translation>
     </message>
     <message>
-        <source>No Masternodes detected.</source>
-        <translation>Nici un Masternode detectat.</translation>
+        <source>No Smartnodes detected.</source>
+        <translation>Nici un Smartnode detectat.</translation>
     </message>
     <message>
-        <source>No compatible Masternode found.</source>
-        <translation>Nici un Masternode compatibil nu a fost găsit.</translation>
+        <source>No compatible Smartnode found.</source>
+        <translation>Nici un Smartnode compatibil nu a fost găsit.</translation>
     </message>
     <message>
-        <source>Not in the Masternode list.</source>
-        <translation>Nu este în lista Masternode</translation>
+        <source>Not in the Smartnode list.</source>
+        <translation>Nu este în lista Smartnode</translation>
     </message>
     <message>
         <source>Only connect to nodes in network &lt;net&gt; (ipv4, ipv6 or onion)</source>
@@ -4187,8 +4187,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Se va reîncerca...</translation>
     </message>
     <message>
-        <source>Can't find random Masternode.</source>
-        <translation>Nu se găseşte un Masternode aleatoariu.</translation>
+        <source>Can't find random Smartnode.</source>
+        <translation>Nu se găseşte un Smartnode aleatoariu.</translation>
     </message>
     <message>
         <source>Can't mix while sync in progress.</source>
@@ -4211,8 +4211,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Cheie KeePassHttp pentru comunicarea criptată AES cu KeePass</translation>
     </message>
     <message>
-        <source>Disable all Raptoreum specific functionality (Masternodes, PrivateSend, InstantSend, Governance) (0-1, default: %u)</source>
-        <translation>Dezactivează toate funcționalitățile specifice Raptoreum (Masternode-uri, TrimitePrivat, TrimiteInstant, Guvernanță) (0-1, implicit: %u)</translation>
+        <source>Disable all Raptoreum specific functionality (Smartnodes, PrivateSend, InstantSend, Governance) (0-1, default: %u)</source>
+        <translation>Dezactivează toate funcționalitățile specifice Raptoreum (Smartnode-uri, TrimitePrivat, TrimiteInstant, Guvernanță) (0-1, implicit: %u)</translation>
     </message>
     <message>
         <source>%s file contains all private keys from this wallet. Do not share it with anyone!</source>
@@ -4499,16 +4499,16 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Fă ca portofelul sa trimită tranzacții</translation>
     </message>
     <message>
-        <source>Masternode options:</source>
-        <translation>Opțiuni Masternode:</translation>
+        <source>Smartnode options:</source>
+        <translation>Opțiuni Smartnode:</translation>
     </message>
     <message>
-        <source>Masternode queue is full.</source>
-        <translation>Queue-ul Masternode este plin.</translation>
+        <source>Smartnode queue is full.</source>
+        <translation>Queue-ul Smartnode este plin.</translation>
     </message>
     <message>
-        <source>Masternode:</source>
-        <translation>Masternode:</translation>
+        <source>Smartnode:</source>
+        <translation>Smartnode:</translation>
     </message>
     <message>
         <source>Minimum bytes per sigop in transactions we relay and mine (default: %u)</source>

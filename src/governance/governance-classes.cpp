@@ -596,7 +596,7 @@ bool CSuperblock::IsValid(const CTransaction& txNew, int nBlockHeight, CAmount b
 
     int nOutputs = txNew.vout.size();
     int nPayments = CountPayments();
-    int nMinerAndMasternodePayments = nOutputs - nPayments;
+    int nMinerAndSmartnodePayments = nOutputs - nPayments;
 
     LogPrint(BCLog::GOBJECT, "CSuperblock::IsValid -- nOutputs = %d, nPayments = %d, GetDataAsHexString = %s\n",
         nOutputs, nPayments, GetGovernanceObject()->GetDataAsHexString());
@@ -604,7 +604,7 @@ bool CSuperblock::IsValid(const CTransaction& txNew, int nBlockHeight, CAmount b
     // We require an exact match (including order) between the expected
     // superblock payments and the payments actually in the block.
 
-    if (nMinerAndMasternodePayments < 0) {
+    if (nMinerAndSmartnodePayments < 0) {
         // This means the block cannot have all the superblock payments
         // so it is not valid.
         // TODO: could that be that we just hit coinbase size limit?

@@ -21,26 +21,26 @@ struct CompareScoreMN
     }
 };
 
-void CMasternodeUtils::ProcessMasternodeConnections(CConnman& connman)
+void CSmartnodeUtils::ProcessSmartnodeConnections(CConnman& connman)
 {
     std::vector<CDeterministicMNCPtr> vecDmns; // will be empty when no wallet
 #ifdef ENABLE_WALLET
-    privateSendClient.GetMixingMasternodesInfo(vecDmns);
+    privateSendClient.GetMixingSmartnodesInfo(vecDmns);
 #endif // ENABLE_WALLET
 
     // Don't disconnect smartnode connections when we have less then the desired amount of outbound nodes
-    int nonMasternodeCount = 0;
+    int nonSmartnodeCount = 0;
     connman.ForEachNode(CConnman::AllNodes, [&](CNode* pnode) {
-        if (!pnode->fInbound && !pnode->fFeeler && !pnode->m_manual_connection && !pnode->fMasternode) {
-            nonMasternodeCount++;
+        if (!pnode->fInbound && !pnode->fFeeler && !pnode->m_manual_connection && !pnode->fSmartnode) {
+            nonSmartnodeCount++;
         }
     });
-    if (nonMasternodeCount < connman.GetMaxOutboundNodeCount()) {
+    if (nonSmartnodeCount < connman.GetMaxOutboundNodeCount()) {
         return;
     }
 
     connman.ForEachNode(CConnman::AllNodes, [&](CNode* pnode) {
-        if (pnode->fMasternode && !connman.IsMasternodeQuorumNode(pnode)) {
+        if (pnode->fSmartnode && !connman.IsSmartnodeQuorumNode(pnode)) {
 #ifdef ENABLE_WALLET
             bool fFound = false;
             for (const auto& dmn : vecDmns) {
@@ -52,16 +52,16 @@ void CMasternodeUtils::ProcessMasternodeConnections(CConnman& connman)
             if (fFound) return; // do NOT disconnect mixing smartnodes
 #endif // ENABLE_WALLET
             if (fLogIPs) {
-                LogPrintf("Closing Masternode connection: peer=%d, addr=%s\n", pnode->GetId(), pnode->addr.ToString());
+                LogPrintf("Closing Smartnode connection: peer=%d, addr=%s\n", pnode->GetId(), pnode->addr.ToString());
             } else {
-                LogPrintf("Closing Masternode connection: peer=%d\n", pnode->GetId());
+                LogPrintf("Closing Smartnode connection: peer=%d\n", pnode->GetId());
             }
             pnode->fDisconnect = true;
         }
     });
 }
 
-void CMasternodeUtils::DoMaintenance(CConnman& connman)
+void CSmartnodeUtils::DoMaintenance(CConnman& connman)
 {
     if(!smartnodeSync.IsBlockchainSynced() || ShutdownRequested())
         return;
@@ -71,7 +71,7 @@ void CMasternodeUtils::DoMaintenance(CConnman& connman)
     nTick++;
 
     if(nTick % 60 == 0) {
-        ProcessMasternodeConnections(connman);
+        ProcessSmartnodeConnections(connman);
     }
 }
 

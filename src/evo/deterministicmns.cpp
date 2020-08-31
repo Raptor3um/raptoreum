@@ -540,8 +540,8 @@ bool CDeterministicMNManager::ProcessBlock(const CBlock& block, const CBlockInde
 
     // Don't hold cs while calling signals
     if (diff.HasChanges()) {
-        GetMainSignals().NotifyMasternodeListChanged(false, oldList, diff);
-        uiInterface.NotifyMasternodeListChanged(newList);
+        GetMainSignals().NotifySmartnodeListChanged(false, oldList, diff);
+        uiInterface.NotifySmartnodeListChanged(newList);
     }
 
 //    if (nHeight == consensusParams.DIP0003EnforcementHeight) {
@@ -585,8 +585,8 @@ bool CDeterministicMNManager::UndoBlock(const CBlock& block, const CBlockIndex* 
 
     if (diff.HasChanges()) {
         auto inversedDiff = curList.BuildDiff(prevList);
-        GetMainSignals().NotifyMasternodeListChanged(true, curList, inversedDiff);
-        uiInterface.NotifyMasternodeListChanged(prevList);
+        GetMainSignals().NotifySmartnodeListChanged(true, curList, inversedDiff);
+        uiInterface.NotifySmartnodeListChanged(prevList);
     }
 
     const auto& consensusParams = Params().GetConsensus();
@@ -625,10 +625,10 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
             // already confirmed
             return;
         }
-        // this works on the previous block, so confirmation will happen one block after nMasternodeMinimumConfirmations
-        // has been reached, but the block hash will then point to the block at nMasternodeMinimumConfirmations
+        // this works on the previous block, so confirmation will happen one block after nSmartnodeMinimumConfirmations
+        // has been reached, but the block hash will then point to the block at nSmartnodeMinimumConfirmations
         int nConfirmations = pindexPrev->nHeight - dmn->pdmnState->nRegisteredHeight;
-        if (nConfirmations >= Params().GetConsensus().nMasternodeMinimumConfirmations) {
+        if (nConfirmations >= Params().GetConsensus().nSmartnodeMinimumConfirmations) {
             CDeterministicMNState newState = *dmn->pdmnState;
             newState.UpdateConfirmedHash(dmn->proTxHash, pindexPrev->GetBlockHash());
             newList.UpdateMN(dmn->proTxHash, std::make_shared<CDeterministicMNState>(newState));

@@ -97,7 +97,7 @@
 const int64_t nStartupTime = GetTime();
 
 //Raptoreum only features
-bool fMasternodeMode = false;
+bool fSmartnodeMode = false;
 bool fLiteMode = false;
 /**
     nWalletBackups:

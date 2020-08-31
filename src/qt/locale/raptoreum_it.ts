@@ -306,8 +306,8 @@
         <translation>Mostra la cronologia delle transazioni</translation>
     </message>
     <message>
-        <source>&amp;Masternodes</source>
-        <translation>&amp;Masternode</translation>
+        <source>&amp;Smartnodes</source>
+        <translation>&amp;Smartnode</translation>
     </message>
     <message>
         <source>Browse smartnodes</source>
@@ -1064,7 +1064,7 @@
     </message>
 </context>
 <context>
-    <name>MasternodeList</name>
+    <name>SmartnodeList</name>
     <message>
         <source>Form</source>
         <translation>Modulo</translation>
@@ -1083,7 +1083,7 @@
     </message>
     <message>
         <source>Filter smartnode list</source>
-        <translation>Filtra la lista dei Masternode</translation>
+        <translation>Filtra la lista dei Smartnode</translation>
     </message>
     <message>
         <source>Node Count:</source>
@@ -1174,8 +1174,8 @@
         <translation>nessuna</translation>
     </message>
     <message>
-        <source>Additional information for DIP3 Masternode %1</source>
-        <translation>Ulteriori informazioni per DIP3 Masternode %1</translation>
+        <source>Additional information for DIP3 Smartnode %1</source>
+        <translation>Ulteriori informazioni per DIP3 Smartnode %1</translation>
     </message>
 </context>
 <context>
@@ -1284,11 +1284,11 @@
     </message>
     <message>
         <source>Show additional tab listing all your smartnodes in first sub-tab&lt;br/&gt;and all smartnodes on the network in second sub-tab.</source>
-        <translation>Mostra la tabella aggiuntiva che elenca tutti i Masternode nella prima sotto-tabella &lt;br/&gt;e tutti i Masternode sulla rete nella seconda sotto-tabella.</translation>
+        <translation>Mostra la tabella aggiuntiva che elenca tutti i Smartnode nella prima sotto-tabella &lt;br/&gt;e tutti i Smartnode sulla rete nella seconda sotto-tabella.</translation>
     </message>
     <message>
-        <source>Show Masternodes Tab</source>
-        <translation>Mostra la Tabella dei Masternode</translation>
+        <source>Show Smartnodes Tab</source>
+        <translation>Mostra la Tabella dei Smartnode</translation>
     </message>
     <message>
         <source>Show additional information and buttons for PrivateSend on overview screen.</source>
@@ -1672,7 +1672,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Saldo di PrivateSend:</translation>
     </message>
     <message>
-        <source>The denominations you submitted to the Masternode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
+        <source>The denominations you submitted to the Smartnode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
         <translation>Le denominazioni che hai richiesto al Mastermode. &lt;br&gt; Per mixare, gli altri utenti devono richiedere esattamente le stesse denominazioni.</translation>
     </message>
     <message>
@@ -2114,8 +2114,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Block chain</translation>
     </message>
     <message>
-        <source>Number of Masternodes</source>
-        <translation>Numero di Masternode</translation>
+        <source>Number of Smartnodes</source>
+        <translation>Numero di Smartnode</translation>
     </message>
     <message>
         <source>Memory Pool</source>
@@ -4151,20 +4151,20 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>È necessario specificare una porta con -whitebind: '%s'</translation>
     </message>
     <message>
-        <source>No Masternodes detected.</source>
-        <translation>Nessun Masternode trovato.</translation>
+        <source>No Smartnodes detected.</source>
+        <translation>Nessun Smartnode trovato.</translation>
     </message>
     <message>
-        <source>No compatible Masternode found.</source>
-        <translation>Nessun Masternode compatibile trovato.</translation>
+        <source>No compatible Smartnode found.</source>
+        <translation>Nessun Smartnode compatibile trovato.</translation>
     </message>
     <message>
         <source>Not enough funds to mix.</source>
         <translation>Non ci sono abbastanza fondi per effettuare il mixaggio.</translation>
     </message>
     <message>
-        <source>Not in the Masternode list.</source>
-        <translation>Non si trova nella  lista dei Masternode.</translation>
+        <source>Not in the Smartnode list.</source>
+        <translation>Non si trova nella  lista dei Smartnode.</translation>
     </message>
     <message>
         <source>Only connect to nodes in network &lt;net&gt; (ipv4, ipv6 or onion)</source>
@@ -4291,8 +4291,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Ritenterà ...</translation>
     </message>
     <message>
-        <source>Can't find random Masternode.</source>
-        <translation>Impossibile trovare un Masternode casuale.</translation>
+        <source>Can't find random Smartnode.</source>
+        <translation>Impossibile trovare un Smartnode casuale.</translation>
     </message>
     <message>
         <source>Can't mix while sync in progress.</source>
@@ -4315,8 +4315,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Chiave KeePassHttp per AES, comunicazione criptata con KeePass</translation>
     </message>
     <message>
-        <source>Disable all Raptoreum specific functionality (Masternodes, PrivateSend, InstantSend, Governance) (0-1, default: %u)</source>
-        <translation>Disabilitare tutte le funzionalità specifiche di Raptoreum (Masternodes, PrivateSend, InstantSend, Governance) (0-1, default: %u)</translation>
+        <source>Disable all Raptoreum specific functionality (Smartnodes, PrivateSend, InstantSend, Governance) (0-1, default: %u)</source>
+        <translation>Disabilitare tutte le funzionalità specifiche di Raptoreum (Smartnodes, PrivateSend, InstantSend, Governance) (0-1, default: %u)</translation>
     </message>
     <message>
         <source>%s file contains all private keys from this wallet. Do not share it with anyone!</source>
@@ -4627,16 +4627,16 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Configura il portafolgio per la trasmissione di transazioni</translation>
     </message>
     <message>
-        <source>Masternode options:</source>
+        <source>Smartnode options:</source>
         <translation>Opzioni smartnode:</translation>
     </message>
     <message>
-        <source>Masternode queue is full.</source>
+        <source>Smartnode queue is full.</source>
         <translation>La lista dei smartnode e' piena.</translation>
     </message>
     <message>
-        <source>Masternode:</source>
-        <translation>Masternode: </translation>
+        <source>Smartnode:</source>
+        <translation>Smartnode: </translation>
     </message>
     <message>
         <source>Minimum bytes per sigop in transactions we relay and mine (default: %u)</source>

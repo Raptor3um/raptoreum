@@ -30,6 +30,8 @@ protected:
 public:
 	SmartnodeCollaterals(vector<Collateral> collaterals = {}, vector<RewardPercentage> rewardPercentages = {});
 	CAmount getCollateral(int height) const;
+	bool isValidCollateral(int height) const;
+	bool isPayableCollateral(int height) const;
 	float getRewardPercentage(int height) const;
 	virtual ~SmartnodeCollaterals();
 };

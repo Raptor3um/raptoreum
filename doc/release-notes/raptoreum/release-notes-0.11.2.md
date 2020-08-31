@@ -10,7 +10,7 @@ Please report bugs using the issue tracker at github:
   https://github.com/darkcoin/darkcoin/issues
 
 
-Masternode enhancements
+Smartnode enhancements
 -----------------------
 
 When restarting the client the smartnodes will be stored in the datadir in
@@ -73,8 +73,8 @@ raptoreumd/raptoreum-qt (on Linux).
 - BIP 66 integration
 - Strict DER signatures
 - Bump block header version to 3 (see notes above)
-- Masternode caching
-- Masternode payment scheduler
+- Smartnode caching
+- Smartnode payment scheduler
 - Better protection from cheating smartnodes
 - Extended functionality for `smartnode list` RPC command
 - Live Darksend and InstantX fee calculations in CoinControl

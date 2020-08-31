@@ -767,7 +767,7 @@ bool CSigningManager::AsyncSignIfMember(Consensus::LLMQType llmqType, const uint
 {
     auto& params = Params().GetConsensus().llmqs.at(llmqType);
 
-    if (!fMasternodeMode || activeMasternodeInfo.proTxHash.IsNull()) {
+    if (!fSmartnodeMode || activeSmartnodeInfo.proTxHash.IsNull()) {
         return false;
     }
 
@@ -818,7 +818,7 @@ bool CSigningManager::AsyncSignIfMember(Consensus::LLMQType llmqType, const uint
         return false;
     }
 
-    if (!quorum->IsValidMember(activeMasternodeInfo.proTxHash)) {
+    if (!quorum->IsValidMember(activeSmartnodeInfo.proTxHash)) {
         return false;
     }
 

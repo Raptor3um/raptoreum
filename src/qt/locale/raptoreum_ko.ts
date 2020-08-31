@@ -306,7 +306,7 @@
         <translation>거래내역을 검색합니다.</translation>
     </message>
     <message>
-        <source>&amp;Masternodes</source>
+        <source>&amp;Smartnodes</source>
         <translation>마스터노드(&amp;M)</translation>
     </message>
     <message>
@@ -1064,7 +1064,7 @@
     </message>
 </context>
 <context>
-    <name>MasternodeList</name>
+    <name>SmartnodeList</name>
     <message>
         <source>Form</source>
         <translation>유형</translation>
@@ -1174,7 +1174,7 @@
         <translation>없음</translation>
     </message>
     <message>
-        <source>Additional information for DIP3 Masternode %1</source>
+        <source>Additional information for DIP3 Smartnode %1</source>
         <translation>DIP3 마스터노드 %1에 대한 추가 정보</translation>
     </message>
 </context>
@@ -1287,7 +1287,7 @@
         <translation>추가적인 탭 목록을 보여줍니다. 당신의 모든 마스터노드는 첫 번째 서브 탭에 표시되고,&lt;br/&gt; 네트워크상의 전체 마스터노드는 두 번째 서브 탭에 표시됩니다.</translation>
     </message>
     <message>
-        <source>Show Masternodes Tab</source>
+        <source>Show Smartnodes Tab</source>
         <translation>마스터노드 탭을 보여줍니다.</translation>
     </message>
     <message>
@@ -1672,7 +1672,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>프라이빗샌드 잔고</translation>
     </message>
     <message>
-        <source>The denominations you submitted to the Masternode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
+        <source>The denominations you submitted to the Smartnode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
         <translation>당신이 마스터노드에 제출한 분할 단위.&lt;br&gt;믹싱을 위해서는 다른 사용자들이 같은 단위를 제출하여야만 합니다.</translation>
     </message>
     <message>
@@ -2114,7 +2114,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>블록 체인</translation>
     </message>
     <message>
-        <source>Number of Masternodes</source>
+        <source>Number of Smartnodes</source>
         <translation>마스터노드 수</translation>
     </message>
     <message>
@@ -4151,11 +4151,11 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>-whitebind를 통해 포트를 지정해야 합니다: '%s'</translation>
     </message>
     <message>
-        <source>No Masternodes detected.</source>
+        <source>No Smartnodes detected.</source>
         <translation>마스터노드가 탐지되지 않습니다.</translation>
     </message>
     <message>
-        <source>No compatible Masternode found.</source>
+        <source>No compatible Smartnode found.</source>
         <translation>호환되는 마스터노드를 찾을 수 없습니다.</translation>
     </message>
     <message>
@@ -4163,7 +4163,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>믹싱을 진행하기에 잔고가 충분하지 않습니다.</translation>
     </message>
     <message>
-        <source>Not in the Masternode list.</source>
+        <source>Not in the Smartnode list.</source>
         <translation>마스터노드 리스트에 없습니다.</translation>
     </message>
     <message>
@@ -4291,7 +4291,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>다시 시도할 예정입니다...</translation>
     </message>
     <message>
-        <source>Can't find random Masternode.</source>
+        <source>Can't find random Smartnode.</source>
         <translation>임의의 마스터노드를 찾을 수 없습니다.</translation>
     </message>
     <message>
@@ -4315,7 +4315,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>KeePass를 통해 AES 암호화된 의사 소통을 위한 KeePassHttp 키</translation>
     </message>
     <message>
-        <source>Disable all Raptoreum specific functionality (Masternodes, PrivateSend, InstantSend, Governance) (0-1, default: %u)</source>
+        <source>Disable all Raptoreum specific functionality (Smartnodes, PrivateSend, InstantSend, Governance) (0-1, default: %u)</source>
         <translation>모든 대시만의 기능(마스터노드, 프라이빗샌드, 인스턴트샌드, 거버넌스)을 비활성화 (0-1, 디폴트: %u)</translation>
     </message>
     <message>
@@ -4627,15 +4627,15 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>지갑 브로드캐스트 거래 생성</translation>
     </message>
     <message>
-        <source>Masternode options:</source>
+        <source>Smartnode options:</source>
         <translation>마스터노드 옵션:</translation>
     </message>
     <message>
-        <source>Masternode queue is full.</source>
+        <source>Smartnode queue is full.</source>
         <translation>마스터노드 대기열이 가득 찼습니다.</translation>
     </message>
     <message>
-        <source>Masternode:</source>
+        <source>Smartnode:</source>
         <translation>마스터노드:</translation>
     </message>
     <message>

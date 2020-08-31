@@ -92,7 +92,7 @@ private:
     std::string strLastMessage;
     std::string strAutoDenomResult;
 
-    CDeterministicMNCPtr mixingMasternode;
+    CDeterministicMNCPtr mixingSmartnode;
     CMutableTransaction txMyCollateral; // client side collateral
     CPendingDsaRequest pendingDsaRequest;
 
@@ -116,7 +116,7 @@ private:
     /// step 2: send denominated inputs and outputs prepared in step 1
     bool SendDenominate(const std::vector<std::pair<CTxDSIn, CTxOut> >& vecPSInOutPairsIn, CConnman& connman);
 
-    /// Get Masternode updates about the progress of mixing
+    /// Get Smartnode updates about the progress of mixing
     bool CheckPoolStateUpdate(CPrivateSendStatusUpdate psssup);
     // Set the 'state' value, with some logging and capturing when the state changed
     void SetState(PoolState nStateNew);
@@ -137,7 +137,7 @@ public:
         vecOutPointLocked(),
         strLastMessage(),
         strAutoDenomResult(),
-        mixingMasternode(),
+        mixingSmartnode(),
         txMyCollateral(),
         pendingDsaRequest(),
         keyHolderStorage()
@@ -152,12 +152,12 @@ public:
 
     std::string GetStatus(bool fWaitForBlock);
 
-    bool GetMixingMasternodeInfo(CDeterministicMNCPtr& ret) const;
+    bool GetMixingSmartnodeInfo(CDeterministicMNCPtr& ret) const;
 
     /// Passively run mixing in the background according to the configuration in settings
     bool DoAutomaticDenominating(CConnman& connman, bool fDryRun = false);
 
-    /// As a client, submit part of a future mixing transaction to a Masternode to start the process
+    /// As a client, submit part of a future mixing transaction to a Smartnode to start the process
     bool SubmitDenominate(CConnman& connman);
 
     bool ProcessPendingDsaRequest(CConnman& connman);
@@ -172,8 +172,8 @@ public:
 class CPrivateSendClientManager : public CPrivateSendBaseManager
 {
 private:
-    // Keep track of the used Masternodes
-    std::vector<COutPoint> vecMasternodesUsed;
+    // Keep track of the used Smartnodes
+    std::vector<COutPoint> vecSmartnodesUsed;
 
     std::vector<CAmount> vecDenominationsSkipped;
 
@@ -206,7 +206,7 @@ public:
     bool fCreateAutoBackups; //builtin support for automatic backups
 
     CPrivateSendClientManager() :
-        vecMasternodesUsed(),
+        vecSmartnodesUsed(),
         vecDenominationsSkipped(),
         deqSessions(),
         nCachedLastSuccessBlock(0),
@@ -235,7 +235,7 @@ public:
     std::string GetStatuses();
     std::string GetSessionDenoms();
 
-    bool GetMixingMasternodesInfo(std::vector<CDeterministicMNCPtr>& vecDmnsRet) const;
+    bool GetMixingSmartnodesInfo(std::vector<CDeterministicMNCPtr>& vecDmnsRet) const;
 
     /// Passively run mixing in the background according to the configuration in settings
     bool DoAutomaticDenominating(CConnman& connman, bool fDryRun = false);
@@ -244,8 +244,8 @@ public:
 
     void ProcessPendingDsaRequest(CConnman& connman);
 
-    void AddUsedMasternode(const COutPoint& outpointMn);
-    CDeterministicMNCPtr GetRandomNotUsedMasternode();
+    void AddUsedSmartnode(const COutPoint& outpointMn);
+    CDeterministicMNCPtr GetRandomNotUsedSmartnode();
 
     void UpdatedSuccessBlock();
 

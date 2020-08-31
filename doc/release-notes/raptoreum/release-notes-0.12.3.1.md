@@ -154,11 +154,11 @@ New cmd-line options:
 
 See `Help -> Command-line options` in Qt wallet or `raptoreumd --help` for more info.
 
-New Masternode Information Dialog
+New Smartnode Information Dialog
 ---------------------------------
 
-You can now double-click on your smartnode in `My Masternodes` list on `Masternodes` tab to reveal the new
-Masternode Information dialog. It will show you some basic information as well as software versions reported by the
+You can now double-click on your smartnode in `My Smartnodes` list on `Smartnodes` tab to reveal the new
+Smartnode Information dialog. It will show you some basic information as well as software versions reported by the
 smartnode. There is also a QR code now which encodes corresponding smartnode private key (the one you set with
 mnprivkey during MN setup and NOT the one that controls the 1000 RAPTOREUM collateral) which should make the process of pairing with
 mobile software allowing you to vote with your smartnode a bit easier (this software is still in development).
@@ -264,7 +264,7 @@ See detailed [change log](https://github.com/raptoreum/raptoreum/compare/v0.12.2
 ### Network:
 - [`fda74b4a8`](https://github.com/raptoreum/raptoreum/commit/fda74b4a8) Use correct protocol when serializing messages in reply to `getdata` (#2157)
 - [`6bf389afb`](https://github.com/raptoreum/raptoreum/commit/6bf389afb) Don't drop mnb-s for outdated MNs (#2131)
-- [`c60079b59`](https://github.com/raptoreum/raptoreum/commit/c60079b59) ThreadOpenMasternodeConnections should process only one mn at a time (#2080)
+- [`c60079b59`](https://github.com/raptoreum/raptoreum/commit/c60079b59) ThreadOpenSmartnodeConnections should process only one mn at a time (#2080)
 - [`a648d6eff`](https://github.com/raptoreum/raptoreum/commit/a648d6eff) Drop delayed headers logic and fix duplicate initial headers sync by handling block inv correctly (#2032)
 - [`99085c5b6`](https://github.com/raptoreum/raptoreum/commit/99085c5b6) swap devnet magic bytes around (#2028)
 - [`a37dbd6d2`](https://github.com/raptoreum/raptoreum/commit/a37dbd6d2) Fix netfulfilledman usage (#2033)
@@ -276,7 +276,7 @@ See detailed [change log](https://github.com/raptoreum/raptoreum/compare/v0.12.2
 - [`ed712eb81`](https://github.com/raptoreum/raptoreum/commit/ed712eb81) Fix nDelayGetHeadersTime (int64_t max == never delay) (#1916)
 - [`f35b5979a`](https://github.com/raptoreum/raptoreum/commit/f35b5979a) Refactor CGovernanceManager::Sync (split in two) (#1930)
 - [`b5046d59c`](https://github.com/raptoreum/raptoreum/commit/b5046d59c) Dseg fixes (#1929)
-- [`312088b56`](https://github.com/raptoreum/raptoreum/commit/312088b56) Fix connectivity check in CActiveMasternode::ManageStateInitial (#1918)
+- [`312088b56`](https://github.com/raptoreum/raptoreum/commit/312088b56) Fix connectivity check in CActiveSmartnode::ManageStateInitial (#1918)
 - [`8f2c1998d`](https://github.com/raptoreum/raptoreum/commit/8f2c1998d) Rename vBlockHashesFromINV to vDelayedGetHeaders (#1909)
 - [`4719ec477`](https://github.com/raptoreum/raptoreum/commit/4719ec477) Remove some locking in net.h/net.cpp (#1905)
 - [`a6ba82ac9`](https://github.com/raptoreum/raptoreum/commit/a6ba82ac9) Use smartnode list to generate hardcoded seeds (#1892)
@@ -295,7 +295,7 @@ See detailed [change log](https://github.com/raptoreum/raptoreum/compare/v0.12.2
 - [`79183f630`](https://github.com/raptoreum/raptoreum/commit/79183f630) Add tests for GetBlockSubsidy algorithm (#2022)
 
 ### Wallet:
-- [`0a71c693e`](https://github.com/raptoreum/raptoreum/commit/0a71c693e) Remove explicit wallet lock in MasternodeList::StartAll() (#2106)
+- [`0a71c693e`](https://github.com/raptoreum/raptoreum/commit/0a71c693e) Remove explicit wallet lock in SmartnodeList::StartAll() (#2106)
 - [`0de79d70b`](https://github.com/raptoreum/raptoreum/commit/0de79d70b) Do not create oversized transactions (bad-txns-oversize) (#2103)
 - [`0260821f8`](https://github.com/raptoreum/raptoreum/commit/0260821f8) fix SelectCoinsByDenominations (#2074)
 - [`b7bd96e2b`](https://github.com/raptoreum/raptoreum/commit/b7bd96e2b) Clarify the warning displayed when encrypting HD wallet (#2002)
@@ -334,7 +334,7 @@ See detailed [change log](https://github.com/raptoreum/raptoreum/compare/v0.12.2
 - [`82805a6c6`](https://github.com/raptoreum/raptoreum/commit/82805a6c6) swap out old logo for T&C logo in Qt GUI (#2081)
 - [`e9f63073d`](https://github.com/raptoreum/raptoreum/commit/e9f63073d) Warn when more than 50% of smartnodes are using newer version (#1963)
 - [`653600352`](https://github.com/raptoreum/raptoreum/commit/653600352) Draw text on top of everything else in TrafficGraphWidget (#1944)
-- [`118eeded6`](https://github.com/raptoreum/raptoreum/commit/118eeded6) [GUI] Create QR-code for Masternode private key (#1970)
+- [`118eeded6`](https://github.com/raptoreum/raptoreum/commit/118eeded6) [GUI] Create QR-code for Smartnode private key (#1970)
 - [`9f2467af8`](https://github.com/raptoreum/raptoreum/commit/9f2467af8) Hide autocompleter on Enter/Return key (#1898)
 - [`e30009c31`](https://github.com/raptoreum/raptoreum/commit/e30009c31) Fix qt and fontconfig depends #1884
 
@@ -362,7 +362,7 @@ See detailed [change log](https://github.com/raptoreum/raptoreum/compare/v0.12.2
 - [`97b9b4fed`](https://github.com/raptoreum/raptoreum/commit/97b9b4fed) Bump nMinimumChainWork, defaultAssumeValid and checkpoints (#2130)
 - [`1c9917e22`](https://github.com/raptoreum/raptoreum/commit/1c9917e22) Fix CVE-2018-12356 by hardening the regex (#2126)
 - [`b7c326115`](https://github.com/raptoreum/raptoreum/commit/b7c326115) Do not create mnb until sync is finished (#2122)
-- [`b98643c27`](https://github.com/raptoreum/raptoreum/commit/b98643c27) Split sentinel expiration in CMasternode::Check() in two parts (timeout and version) (#2121)
+- [`b98643c27`](https://github.com/raptoreum/raptoreum/commit/b98643c27) Split sentinel expiration in CSmartnode::Check() in two parts (timeout and version) (#2121)
 - [`836e10471`](https://github.com/raptoreum/raptoreum/commit/836e10471) Bump proto to 70210 (#2109)
 - [`23ba94b37`](https://github.com/raptoreum/raptoreum/commit/23ba94b37) Bump remaining min protocols (#2097)
 - [`9299a84b1`](https://github.com/raptoreum/raptoreum/commit/9299a84b1) Bump few consts (#2096)
@@ -388,26 +388,26 @@ See detailed [change log](https://github.com/raptoreum/raptoreum/compare/v0.12.2
 - [`8b09e779b`](https://github.com/raptoreum/raptoreum/commit/8b09e779b) Bump testnet checkpoint and nMinimumChainWork/defaultAssumeValid params (#2026)
 - [`eecc69223`](https://github.com/raptoreum/raptoreum/commit/eecc69223) Fix a very ancient bug from mid 2015 (#2021)
 - [`72a225b9b`](https://github.com/raptoreum/raptoreum/commit/72a225b9b) Few fixes for lite mode (#2014)
-- [`c7e9ea9fb`](https://github.com/raptoreum/raptoreum/commit/c7e9ea9fb) Avoid repeating the full scan in CMasternodeMan::UpdateLastPaid() on non-MNs (#1985)
+- [`c7e9ea9fb`](https://github.com/raptoreum/raptoreum/commit/c7e9ea9fb) Avoid repeating the full scan in CSmartnodeMan::UpdateLastPaid() on non-MNs (#1985)
 - [`f28a58e0a`](https://github.com/raptoreum/raptoreum/commit/f28a58e0a) Refactor and fix restart (#1999)
 - [`7248700b3`](https://github.com/raptoreum/raptoreum/commit/7248700b3) Add missing cs_main locks (#1998)
 - [`9e98c856f`](https://github.com/raptoreum/raptoreum/commit/9e98c856f) A pack of small fixes (#1992)
-- [`19ea1a791`](https://github.com/raptoreum/raptoreum/commit/19ea1a791) Use operator[] instead of emplace in CMasternodePayments::AddPaymentVote (#1980)
+- [`19ea1a791`](https://github.com/raptoreum/raptoreum/commit/19ea1a791) Use operator[] instead of emplace in CSmartnodePayments::AddPaymentVote (#1980)
 - [`ca3655f49`](https://github.com/raptoreum/raptoreum/commit/ca3655f49) Fix some (potential dead)locks (#1977)
 - [`2a7e6861d`](https://github.com/raptoreum/raptoreum/commit/2a7e6861d) Include "clientversion.h" in rpc/smartnode.cpp (#1979)
 - [`ef1a86c3e`](https://github.com/raptoreum/raptoreum/commit/ef1a86c3e) Add dummy CMakeLists.txt file to make development with CLion easier (#1978)
 - [`a9d8e2c5d`](https://github.com/raptoreum/raptoreum/commit/a9d8e2c5d) [Init] Avoid segfault when called with -enableinstantsend=0 (#1976)
 - [`3200eae9b`](https://github.com/raptoreum/raptoreum/commit/3200eae9b) Don't use short version of 'tinyformat/fmt' namespace in util.h (#1975)
-- [`97a07cbc4`](https://github.com/raptoreum/raptoreum/commit/97a07cbc4) Refactor `CMasternodePayment*` (#1974)
+- [`97a07cbc4`](https://github.com/raptoreum/raptoreum/commit/97a07cbc4) Refactor `CSmartnodePayment*` (#1974)
 - [`4ffa7bac0`](https://github.com/raptoreum/raptoreum/commit/4ffa7bac0) Introduce DIP0001Height (#1973)
 - [`611879aa6`](https://github.com/raptoreum/raptoreum/commit/611879aa6) Use spork addresses instead of raw keys and allow changing them on startup (#1969)
-- [`9ef38c6d7`](https://github.com/raptoreum/raptoreum/commit/9ef38c6d7) Switch CNetFulfilledRequestManager and CMasternodeMan maps/funcs to CService (#1967)
+- [`9ef38c6d7`](https://github.com/raptoreum/raptoreum/commit/9ef38c6d7) Switch CNetFulfilledRequestManager and CSmartnodeMan maps/funcs to CService (#1967)
 - [`929c1584a`](https://github.com/raptoreum/raptoreum/commit/929c1584a) Rename CheckPreviousBlockVotes to CheckBlockVotes and adjust its log output a bit (#1965)
 - [`bf0854e58`](https://github.com/raptoreum/raptoreum/commit/bf0854e58) Swap `expired` and `sentinel_expired` states in order (#1961)
 - [`9876207ce`](https://github.com/raptoreum/raptoreum/commit/9876207ce) Multiple devnet fixes (#1960)
 - [`e37b6c7da`](https://github.com/raptoreum/raptoreum/commit/e37b6c7da) Fix BIP147 deployment threshold parameter (#1955)
 - [`106276a3e`](https://github.com/raptoreum/raptoreum/commit/106276a3e) Adjust/fix log output (#1954)
-- [`0abd1894e`](https://github.com/raptoreum/raptoreum/commit/0abd1894e) Call CheckMnbAndUpdateMasternodeList when starting MN (#1945)
+- [`0abd1894e`](https://github.com/raptoreum/raptoreum/commit/0abd1894e) Call CheckMnbAndUpdateSmartnodeList when starting MN (#1945)
 - [`e23f61822`](https://github.com/raptoreum/raptoreum/commit/e23f61822) Make TrafficGraphDataTests more general (#1943)
 - [`5b1c4d8a1`](https://github.com/raptoreum/raptoreum/commit/5b1c4d8a1) Few (mostly trivial) cleanups and fixes (#1940)
 - [`99273f63a`](https://github.com/raptoreum/raptoreum/commit/99273f63a) Use SPORK_6_NEW_SIGS to switch from signing string messages to hashes (#1937)
@@ -422,7 +422,7 @@ See detailed [change log](https://github.com/raptoreum/raptoreum/compare/v0.12.2
 - [`a7fa07a30`](https://github.com/raptoreum/raptoreum/commit/a7fa07a30) Drop BOOST_FOREACH and use references in loops (const ref where applicable, Raptoreum code only) (#1899)
 - [`e0b6988a4`](https://github.com/raptoreum/raptoreum/commit/e0b6988a4) Various fixes and refactoring for Cache*Map classes (#1896)
 - [`99b2789a7`](https://github.com/raptoreum/raptoreum/commit/99b2789a7) Fix DeserializeAndCheckBlockTest benchmark and store hashDevnetGenesisBlock in `consensus` (#1888)
-- [`88646bd0d`](https://github.com/raptoreum/raptoreum/commit/88646bd0d) Rename `fMasterNode` to `fMasternodeMode` to clarify its meaning and to avoid confusion with `CNode::fMasternode` (#1874)
+- [`88646bd0d`](https://github.com/raptoreum/raptoreum/commit/88646bd0d) Rename `fMasterNode` to `fSmartnodeMode` to clarify its meaning and to avoid confusion with `CNode::fSmartnode` (#1874)
 - [`f6d98422c`](https://github.com/raptoreum/raptoreum/commit/f6d98422c) Silence ratecheck_test (#1873)
 - [`9cee4193b`](https://github.com/raptoreum/raptoreum/commit/9cee4193b) Separate .h generation from .json/.raw for different modules (#1870)
 - [`83957f2d3`](https://github.com/raptoreum/raptoreum/commit/83957f2d3) Fix alertTests.raw.h (again) (#1869)

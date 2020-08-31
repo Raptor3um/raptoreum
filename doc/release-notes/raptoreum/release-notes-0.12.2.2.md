@@ -155,7 +155,7 @@ See detailed [change log](https://github.com/raptoreum/raptoreum/compare/v0.12.2
 - [`cdb2b1944`](https://github.com/raptoreum/raptoreum/commit/cdb2b1944) build: quiet annoying warnings without adding new ones
 - [`fee05dab9`](https://github.com/raptoreum/raptoreum/commit/fee05dab9) build: silence gcc7's implicit fallthrough warning
 
-### Masternodes:
+### Smartnodes:
 - [`312663b4b`](https://github.com/raptoreum/raptoreum/commit/312663b4b) Remove support for local smartnodes (#1706)
 
 ### PrivateSend:
@@ -204,7 +204,7 @@ See detailed [change log](https://github.com/raptoreum/raptoreum/compare/v0.12.2
 - [`c5ec2f82a`](https://github.com/raptoreum/raptoreum/commit/c5ec2f82a) Drop `IsNormalPaymentScript`, use `IsPayToPublicKeyHash` (#1761)
 - [`f9f28e7c7`](https://github.com/raptoreum/raptoreum/commit/f9f28e7c7) De-bump to 0.12.2.2 (#1768)
 - [`54186a159`](https://github.com/raptoreum/raptoreum/commit/54186a159) Make sure additional indexes are recalculated correctly in VerifyDB (#1773)
-- [`86e6f0dd2`](https://github.com/raptoreum/raptoreum/commit/86e6f0dd2) Fix CMasternodeMan::ProcessVerify* logs (#1782)
+- [`86e6f0dd2`](https://github.com/raptoreum/raptoreum/commit/86e6f0dd2) Fix CSmartnodeMan::ProcessVerify* logs (#1782)
 
 
 Credits

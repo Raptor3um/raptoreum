@@ -478,8 +478,8 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
 
     // Get expected MN/superblock payees. The call to GetBlockTxOuts might fail on regtest/devnet or when
     // testnet is reset. This is fine and we ignore failure (blocks will be accepted)
-    std::vector<CTxOut> voutMasternodePayments;
-    mnpayments.GetBlockTxOuts(chainActive.Height() + 1, 0, voutMasternodePayments);
+    std::vector<CTxOut> voutSmartnodePayments;
+    mnpayments.GetBlockTxOuts(chainActive.Height() + 1, 0, voutSmartnodePayments);
 
     // next bock is a superblock and we need governance info to correctly construct it
     if (sporkManager.IsSporkActive(SPORK_9_SUPERBLOCKS_ENABLED)
@@ -685,7 +685,7 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
     result.push_back(Pair("height", (int64_t)(pindexPrev->nHeight+1)));
 
     UniValue smartnodeObj(UniValue::VARR);
-    for (const auto& txout : pblocktemplate->voutMasternodePayments) {
+    for (const auto& txout : pblocktemplate->voutSmartnodePayments) {
         CTxDestination address1;
         ExtractDestination(txout.scriptPubKey, address1);
         CBitcoinAddress address2(address1);
@@ -698,7 +698,7 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
     }
 
     result.push_back(Pair("smartnode", smartnodeObj));
-    result.push_back(Pair("smartnode_payments_started", pindexPrev->nHeight + 1 > consensusParams.nMasternodePaymentsStartBlock));
+    result.push_back(Pair("smartnode_payments_started", pindexPrev->nHeight + 1 > consensusParams.nSmartnodePaymentsStartBlock));
     result.push_back(Pair("smartnode_payments_enforced", true));
 
     UniValue superblockObjArray(UniValue::VARR);

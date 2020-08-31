@@ -76,7 +76,7 @@ int ClientModel::getNumConnections(unsigned int flags) const
     return 0;
 }
 
-void ClientModel::setMasternodeList(const CDeterministicMNList& mnList)
+void ClientModel::setSmartnodeList(const CDeterministicMNList& mnList)
 {
     LOCK(cs_mnlinst);
     if (mnListCached.GetBlockHash() == mnList.GetBlockHash()) {
@@ -86,16 +86,16 @@ void ClientModel::setMasternodeList(const CDeterministicMNList& mnList)
     Q_EMIT smartnodeListChanged();
 }
 
-CDeterministicMNList ClientModel::getMasternodeList() const
+CDeterministicMNList ClientModel::getSmartnodeList() const
 {
     LOCK(cs_mnlinst);
     return mnListCached;
 }
 
-void ClientModel::refreshMasternodeList()
+void ClientModel::refreshSmartnodeList()
 {
     LOCK(cs_mnlinst);
-    setMasternodeList(deterministicMNManager->GetListAtChainTip());
+    setSmartnodeList(deterministicMNManager->GetListAtChainTip());
 }
 
 int ClientModel::getNumBlocks() const
@@ -351,9 +351,9 @@ static void BlockTipChanged(ClientModel *clientmodel, bool initialSync, const CB
     }
 }
 
-static void NotifyMasternodeListChanged(ClientModel *clientmodel, const CDeterministicMNList& newList)
+static void NotifySmartnodeListChanged(ClientModel *clientmodel, const CDeterministicMNList& newList)
 {
-    clientmodel->setMasternodeList(newList);
+    clientmodel->setSmartnodeList(newList);
 }
 
 static void NotifyAdditionalDataSyncProgressChanged(ClientModel *clientmodel, double nSyncProgress)
@@ -372,7 +372,7 @@ void ClientModel::subscribeToCoreSignals()
     uiInterface.BannedListChanged.connect(boost::bind(BannedListChanged, this));
     uiInterface.NotifyBlockTip.connect(boost::bind(BlockTipChanged, this, _1, _2, false));
     uiInterface.NotifyHeaderTip.connect(boost::bind(BlockTipChanged, this, _1, _2, true));
-    uiInterface.NotifyMasternodeListChanged.connect(boost::bind(NotifyMasternodeListChanged, this, _1));
+    uiInterface.NotifySmartnodeListChanged.connect(boost::bind(NotifySmartnodeListChanged, this, _1));
     uiInterface.NotifyAdditionalDataSyncProgressChanged.connect(boost::bind(NotifyAdditionalDataSyncProgressChanged, this, _1));
 }
 
@@ -386,6 +386,6 @@ void ClientModel::unsubscribeFromCoreSignals()
     uiInterface.BannedListChanged.disconnect(boost::bind(BannedListChanged, this));
     uiInterface.NotifyBlockTip.disconnect(boost::bind(BlockTipChanged, this, _1, _2, false));
     uiInterface.NotifyHeaderTip.disconnect(boost::bind(BlockTipChanged, this, _1, _2, true));
-    uiInterface.NotifyMasternodeListChanged.disconnect(boost::bind(NotifyMasternodeListChanged, this, _1));
+    uiInterface.NotifySmartnodeListChanged.disconnect(boost::bind(NotifySmartnodeListChanged, this, _1));
     uiInterface.NotifyAdditionalDataSyncProgressChanged.disconnect(boost::bind(NotifyAdditionalDataSyncProgressChanged, this, _1));
 }

@@ -3335,7 +3335,7 @@ bool CWallet::SelectCoinsGroupedByAddresses(std::vector<CompactTallyItem>& vecTa
             if(fAnonymizable) {
                 // ignore collaterals
                 if(CPrivateSend::IsCollateralAmount(wtx.tx->vout[i].nValue)) continue;
-                if(fMasternodeMode && wtx.tx->vout[i].nValue == collateralAmount) continue;
+                if(fSmartnodeMode && wtx.tx->vout[i].nValue == collateralAmount) continue;
                 // ignore outputs that are 10 times smaller then the smallest denomination
                 // otherwise they will just lead to higher fee / lower priority
                 if(wtx.tx->vout[i].nValue <= nSmallestDenom/10) continue;
@@ -3402,7 +3402,7 @@ bool CWallet::SelectPrivateCoins(CAmount nValueMin, CAmount nValueMax, std::vect
         if(out.tx->tx->vout[out.i].nValue < nValueMin/10) continue;
         //do not allow collaterals to be selected
         if(CPrivateSend::IsCollateralAmount(out.tx->tx->vout[out.i].nValue)) continue;
-        if(fMasternodeMode && out.tx->tx->vout[out.i].nValue == collateralAmount) continue; //smartnode input
+        if(fSmartnodeMode && out.tx->tx->vout[out.i].nValue == collateralAmount) continue; //smartnode input
 
         if(nValueRet + out.tx->tx->vout[out.i].nValue <= nValueMax){
             CTxIn txin = CTxIn(out.tx->GetHash(),out.i);
@@ -3439,7 +3439,7 @@ bool CWallet::GetCollateralTxDSIn(CTxDSIn& txdsinRet, CAmount& nValueRet) const
     return true;
 }
 
-bool CWallet::GetMasternodeOutpointAndKeys(COutPoint& outpointRet, CPubKey& pubKeyRet, CKey& keyRet, const std::string& strTxHash, const std::string& strOutputIndex)
+bool CWallet::GetSmartnodeOutpointAndKeys(COutPoint& outpointRet, CPubKey& pubKeyRet, CKey& keyRet, const std::string& strTxHash, const std::string& strOutputIndex)
 {
     // wait for reindex and/or import to finish
     if (fImporting || fReindex) return false;
@@ -3450,7 +3450,7 @@ bool CWallet::GetMasternodeOutpointAndKeys(COutPoint& outpointRet, CPubKey& pubK
     coin_control.nCoinType = CoinType::SMARTNODE_COLLATERAL;
     AvailableCoins(vPossibleCoins, true, &coin_control);
     if(vPossibleCoins.empty()) {
-        LogPrintf("CWallet::GetMasternodeOutpointAndKeys -- Could not locate any valid smartnode vin\n");
+        LogPrintf("CWallet::GetSmartnodeOutpointAndKeys -- Could not locate any valid smartnode vin\n");
         return false;
     }
 
@@ -3465,7 +3465,7 @@ bool CWallet::GetMasternodeOutpointAndKeys(COutPoint& outpointRet, CPubKey& pubK
         if(out.tx->GetHash() == txHash && out.i == nOutputIndex) // found it!
             return GetOutpointAndKeysFromOutput(out, outpointRet, pubKeyRet, keyRet);
 
-    LogPrintf("CWallet::GetMasternodeOutpointAndKeys -- Could not locate specified smartnode vin\n");
+    LogPrintf("CWallet::GetSmartnodeOutpointAndKeys -- Could not locate specified smartnode vin\n");
     return false;
 }
 
@@ -4212,7 +4212,7 @@ DBErrors CWallet::LoadWallet(bool& fFirstRunRet)
 
 // Goes through all wallet transactions and checks if they are smartnode collaterals, in which case these are locked
 // This avoids accidential spending of collaterals. They can still be unlocked manually if a spend is really intended.
-void CWallet::AutoLockMasternodeCollaterals()
+void CWallet::AutoLockSmartnodeCollaterals()
 {
     auto mnList = deterministicMNManager->GetListAtChainTip();
 

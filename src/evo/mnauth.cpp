@@ -17,7 +17,7 @@
 
 void CMNAuth::PushMNAUTH(CNode* pnode, CConnman& connman)
 {
-    if (!fMasternodeMode || activeMasternodeInfo.proTxHash.IsNull()) {
+    if (!fSmartnodeMode || activeSmartnodeInfo.proTxHash.IsNull()) {
         return;
     }
 
@@ -33,12 +33,12 @@ void CMNAuth::PushMNAUTH(CNode* pnode, CConnman& connman)
         // It does not protect against:
         //   node1 -> Eve -> node2
         // This is ok as we only use MNAUTH as a DoS protection and not for sensitive stuff
-        signHash = ::SerializeHash(std::make_tuple(*activeMasternodeInfo.blsPubKeyOperator, pnode->receivedMNAuthChallenge, pnode->fInbound));
+        signHash = ::SerializeHash(std::make_tuple(*activeSmartnodeInfo.blsPubKeyOperator, pnode->receivedMNAuthChallenge, pnode->fInbound));
     }
 
     CMNAuth mnauth;
-    mnauth.proRegTxHash = activeMasternodeInfo.proTxHash;
-    mnauth.sig = activeMasternodeInfo.blsKeyOperator->Sign(signHash);
+    mnauth.proRegTxHash = activeSmartnodeInfo.proTxHash;
+    mnauth.sig = activeSmartnodeInfo.blsKeyOperator->Sign(signHash);
 
     LogPrint(BCLog::NET, "CMNAuth::%s -- Sending MNAUTH, peer=%d\n", __func__, pnode->GetId());
 
@@ -102,7 +102,7 @@ void CMNAuth::ProcessMessage(CNode* pnode, const std::string& strCommand, CDataS
 
         connman.ForEachNode([&](CNode* pnode2) {
             if (pnode2->verifiedProRegTxHash == mnauth.proRegTxHash) {
-                LogPrint(BCLog::NET, "CMNAuth::ProcessMessage -- Masternode %s has already verified as peer %d, dropping new connection. peer=%d\n",
+                LogPrint(BCLog::NET, "CMNAuth::ProcessMessage -- Smartnode %s has already verified as peer %d, dropping new connection. peer=%d\n",
                         mnauth.proRegTxHash.ToString(), pnode2->GetId(), pnode->GetId());
                 pnode->fDisconnect = true;
             }
@@ -122,7 +122,7 @@ void CMNAuth::ProcessMessage(CNode* pnode, const std::string& strCommand, CDataS
     }
 }
 
-void CMNAuth::NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff)
+void CMNAuth::NotifySmartnodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff)
 {
     // we're only interested in updated/removed MNs. Added MNs are of no interest for us
     if (diff.updatedMNs.empty() && diff.removedMns.empty()) {
@@ -151,7 +151,7 @@ void CMNAuth::NotifyMasternodeListChanged(bool undo, const CDeterministicMNList&
         }
 
         if (doRemove) {
-            LogPrint(BCLog::NET, "CMNAuth::NotifyMasternodeListChanged -- Disconnecting MN %s due to key changed/removed, peer=%d\n",
+            LogPrint(BCLog::NET, "CMNAuth::NotifySmartnodeListChanged -- Disconnecting MN %s due to key changed/removed, peer=%d\n",
                      pnode->verifiedProRegTxHash.ToString(), pnode->GetId());
             pnode->fDisconnect = true;
         }

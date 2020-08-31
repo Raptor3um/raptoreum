@@ -96,7 +96,7 @@ UniValue smartnode_connect(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Incorrect smartnode address %s", strAddress));
 
     // TODO: Pass CConnman instance somehow and don't use global variable.
-    g_connman->OpenMasternodeConnection(CAddress(addr, NODE_NETWORK));
+    g_connman->OpenSmartnodeConnection(CAddress(addr, NODE_NETWORK));
     if (!g_connman->IsConnected(CAddress(addr, NODE_NETWORK), CConnman::AllNodes))
         throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Couldn't connect to smartnode %s", strAddress));
 
@@ -154,7 +154,7 @@ UniValue smartnode_count(const JSONRPCRequest& request)
     throw JSONRPCError(RPC_INVALID_PARAMETER, "Unknown mode value");
 }
 
-UniValue GetNextMasternodeForPayment(int heightShift)
+UniValue GetNextSmartnodeForPayment(int heightShift)
 {
     auto mnList = deterministicMNManager->GetListAtChainTip();
     auto payees = mnList.GetProjectedMNPayees(heightShift);
@@ -192,7 +192,7 @@ UniValue smartnode_winner(const JSONRPCRequest& request)
     if (request.fHelp)
         smartnode_winner_help();
 
-    return GetNextMasternodeForPayment(10);
+    return GetNextSmartnodeForPayment(10);
 }
 
 void smartnode_current_help()
@@ -208,7 +208,7 @@ UniValue smartnode_current(const JSONRPCRequest& request)
     if (request.fHelp)
         smartnode_current_help();
 
-    return GetNextMasternodeForPayment(1);
+    return GetNextSmartnodeForPayment(1);
 }
 
 #ifdef ENABLE_WALLET
@@ -258,16 +258,16 @@ UniValue smartnode_status(const JSONRPCRequest& request)
     if (request.fHelp)
         smartnode_status_help();
 
-    if (!fMasternodeMode)
+    if (!fSmartnodeMode)
         throw JSONRPCError(RPC_INTERNAL_ERROR, "This is not a smartnode");
 
     UniValue mnObj(UniValue::VOBJ);
 
     // keep compatibility with legacy status for now (might get deprecated/removed later)
-    mnObj.push_back(Pair("outpoint", activeMasternodeInfo.outpoint.ToStringShort()));
-    mnObj.push_back(Pair("service", activeMasternodeInfo.service.ToString()));
+    mnObj.push_back(Pair("outpoint", activeSmartnodeInfo.outpoint.ToStringShort()));
+    mnObj.push_back(Pair("service", activeSmartnodeInfo.service.ToString()));
 
-    auto dmn = deterministicMNManager->GetListAtChainTip().GetMN(activeMasternodeInfo.proTxHash);
+    auto dmn = deterministicMNManager->GetListAtChainTip().GetMN(activeSmartnodeInfo.proTxHash);
     if (dmn) {
         mnObj.push_back(Pair("proTxHash", dmn->proTxHash.ToString()));
         mnObj.push_back(Pair("collateralHash", dmn->collateralOutpoint.hash.ToString()));
@@ -276,8 +276,8 @@ UniValue smartnode_status(const JSONRPCRequest& request)
         dmn->pdmnState->ToJson(stateObj);
         mnObj.push_back(Pair("dmnState", stateObj));
     }
-    mnObj.push_back(Pair("state", activeMasternodeManager->GetStateString()));
-    mnObj.push_back(Pair("status", activeMasternodeManager->GetStatus()));
+    mnObj.push_back(Pair("state", activeSmartnodeManager->GetStateString()));
+    mnObj.push_back(Pair("status", activeSmartnodeManager->GetStatus()));
 
     return mnObj;
 }
@@ -535,7 +535,7 @@ static const CRPCCommand commands[] =
     { "raptoreum",               "smartnodelist",         &smartnodelist,         true,  {} },
 };
 
-void RegisterMasternodeRPCCommands(CRPCTable &t)
+void RegisterSmartnodeRPCCommands(CRPCTable &t)
 {
     for (unsigned int vcidx = 0; vcidx < ARRAYLEN(commands); vcidx++)
         t.appendCommand(commands[vcidx].name, &commands[vcidx]);

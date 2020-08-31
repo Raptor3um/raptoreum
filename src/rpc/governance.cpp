@@ -251,11 +251,11 @@ UniValue gobject_submit(const JSONRPCRequest& request)
     }
 
     auto mnList = deterministicMNManager->GetListAtChainTip();
-    bool fMnFound = mnList.HasValidMNByCollateral(activeMasternodeInfo.outpoint);
+    bool fMnFound = mnList.HasValidMNByCollateral(activeSmartnodeInfo.outpoint);
 
     LogPrint(BCLog::GOBJECT, "gobject_submit -- pubKeyOperator = %s, outpoint = %s, params.size() = %lld, fMnFound = %d\n",
-            (activeMasternodeInfo.blsPubKeyOperator ? activeMasternodeInfo.blsPubKeyOperator->ToString() : "N/A"),
-            activeMasternodeInfo.outpoint.ToStringShort(), request.params.size(), fMnFound);
+            (activeSmartnodeInfo.blsPubKeyOperator ? activeSmartnodeInfo.blsPubKeyOperator->ToString() : "N/A"),
+            activeSmartnodeInfo.outpoint.ToStringShort(), request.params.size(), fMnFound);
 
     // ASSEMBLE NEW GOVERNANCE OBJECT FROM USER PARAMETERS
 
@@ -294,8 +294,8 @@ UniValue gobject_submit(const JSONRPCRequest& request)
     // Attempt to sign triggers if we are a MN
     if (govobj.GetObjectType() == GOVERNANCE_OBJECT_TRIGGER) {
         if (fMnFound) {
-            govobj.SetMasternodeOutpoint(activeMasternodeInfo.outpoint);
-            govobj.Sign(*activeMasternodeInfo.blsKeyOperator);
+            govobj.SetSmartnodeOutpoint(activeSmartnodeInfo.outpoint);
+            govobj.Sign(*activeSmartnodeInfo.blsKeyOperator);
         } else {
             LogPrintf("gobject(submit) -- Object submission rejected because node is not a smartnode\n");
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Only valid smartnodes can submit this type of object");
@@ -319,7 +319,7 @@ UniValue gobject_submit(const JSONRPCRequest& request)
 
     // RELAY THIS OBJECT
     // Reject if rate check fails but don't update buffer
-    if (!governance.MasternodeRateCheck(govobj)) {
+    if (!governance.SmartnodeRateCheck(govobj)) {
         LogPrintf("gobject(submit) -- Object submission rejected because of rate check failure - hash = %s\n", strHash);
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Object creation rate limit exceeded");
     }
@@ -389,7 +389,7 @@ UniValue gobject_vote_conf(const JSONRPCRequest& request)
     UniValue statusObj(UniValue::VOBJ);
     UniValue returnObj(UniValue::VOBJ);
 
-    auto dmn = deterministicMNManager->GetListAtChainTip().GetValidMNByCollateral(activeMasternodeInfo.outpoint);
+    auto dmn = deterministicMNManager->GetListAtChainTip().GetValidMNByCollateral(activeSmartnodeInfo.outpoint);
 
     if (!dmn) {
         nFailed++;
@@ -407,8 +407,8 @@ UniValue gobject_vote_conf(const JSONRPCRequest& request)
     if (govObjType == GOVERNANCE_OBJECT_PROPOSAL && eVoteSignal == VOTE_SIGNAL_FUNDING) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Can't use vote-conf for proposals");
     }
-    if (activeMasternodeInfo.blsKeyOperator) {
-        signSuccess = vote.Sign(*activeMasternodeInfo.blsKeyOperator);
+    if (activeSmartnodeInfo.blsKeyOperator) {
+        signSuccess = vote.Sign(*activeSmartnodeInfo.blsKeyOperator);
     }
 
     if (!signSuccess) {
@@ -439,7 +439,7 @@ UniValue gobject_vote_conf(const JSONRPCRequest& request)
     return returnObj;
 }
 
-UniValue VoteWithMasternodes(const std::map<uint256, CKey>& keys,
+UniValue VoteWithSmartnodes(const std::map<uint256, CKey>& keys,
                              const uint256& hash, vote_signal_enum_t eVoteSignal,
                              vote_outcome_enum_t eVoteOutcome)
 {
@@ -555,7 +555,7 @@ UniValue gobject_vote_many(const JSONRPCRequest& request)
         }
     });
 
-    return VoteWithMasternodes(votingKeys, hash, eVoteSignal, eVoteOutcome);
+    return VoteWithSmartnodes(votingKeys, hash, eVoteSignal, eVoteOutcome);
 }
 
 void gobject_vote_alias_help(CWallet* const pwallet)
@@ -613,7 +613,7 @@ UniValue gobject_vote_alias(const JSONRPCRequest& request)
     std::map<uint256, CKey> votingKeys;
     votingKeys.emplace(proTxHash, votingKey);
 
-    return VoteWithMasternodes(votingKeys, hash, eVoteSignal, eVoteOutcome);
+    return VoteWithSmartnodes(votingKeys, hash, eVoteSignal, eVoteOutcome);
 }
 #endif
 
@@ -646,9 +646,9 @@ UniValue ListObjects(const std::string& strCachedSignal, const std::string& strT
         bObj.push_back(Pair("CollateralHash",  pGovObj->GetCollateralHash().ToString()));
         bObj.push_back(Pair("ObjectType", pGovObj->GetObjectType()));
         bObj.push_back(Pair("CreationTime", pGovObj->GetCreationTime()));
-        const COutPoint& smartnodeOutpoint = pGovObj->GetMasternodeOutpoint();
+        const COutPoint& smartnodeOutpoint = pGovObj->GetSmartnodeOutpoint();
         if (smartnodeOutpoint != COutPoint()) {
-            bObj.push_back(Pair("SigningMasternode", smartnodeOutpoint.ToStringShort()));
+            bObj.push_back(Pair("SigningSmartnode", smartnodeOutpoint.ToStringShort()));
         }
 
         // REPORT STATUS FOR FUNDING VOTES SPECIFICALLY
@@ -766,9 +766,9 @@ UniValue gobject_get(const JSONRPCRequest& request)
     objResult.push_back(Pair("CollateralHash",  pGovObj->GetCollateralHash().ToString()));
     objResult.push_back(Pair("ObjectType", pGovObj->GetObjectType()));
     objResult.push_back(Pair("CreationTime", pGovObj->GetCreationTime()));
-    const COutPoint& smartnodeOutpoint = pGovObj->GetMasternodeOutpoint();
+    const COutPoint& smartnodeOutpoint = pGovObj->GetSmartnodeOutpoint();
     if (smartnodeOutpoint != COutPoint()) {
-        objResult.push_back(Pair("SigningMasternode", smartnodeOutpoint.ToStringShort()));
+        objResult.push_back(Pair("SigningSmartnode", smartnodeOutpoint.ToStringShort()));
     }
 
     // SHOW (MUCH MORE) INFORMATION ABOUT VOTES FOR GOVERNANCE OBJECT (THAN LIST/DIFF ABOVE)
@@ -797,7 +797,7 @@ UniValue gobject_get(const JSONRPCRequest& request)
     objDelete.push_back(Pair("AbstainCount",  pGovObj->GetAbstainCount(VOTE_SIGNAL_DELETE)));
     objResult.push_back(Pair("DeleteResult", objDelete));
 
-    // -- ENDORSED VIA MASTERNODE-ELECTED BOARD
+    // -- ENDORSED VIA SMARTNODE-ELECTED BOARD
     UniValue objEndorsed(UniValue::VOBJ);
     objEndorsed.push_back(Pair("AbsoluteYesCount",  pGovObj->GetAbsoluteYesCount(VOTE_SIGNAL_ENDORSED)));
     objEndorsed.push_back(Pair("YesCount",  pGovObj->GetYesCount(VOTE_SIGNAL_ENDORSED)));
@@ -839,7 +839,7 @@ UniValue gobject_getcurrentvotes(const JSONRPCRequest& request)
 
     COutPoint mnCollateralOutpoint;
     if (request.params.size() == 4) {
-        uint256 txid = ParseHashV(request.params[2], "Masternode Collateral hash");
+        uint256 txid = ParseHashV(request.params[2], "Smartnode Collateral hash");
         std::string strVout = request.params[3].get_str();
         mnCollateralOutpoint = COutPoint(txid, (uint32_t)atoi(strVout));
     }

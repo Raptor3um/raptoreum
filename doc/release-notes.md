@@ -106,8 +106,8 @@ Wallet changes
 Wallet internals were optimized to significantly improve performance which should be especially notable for huge
 wallets with tens of thousands of transactions or more. The GUI for such wallets should be much more responsive too now.
 
-Running Masternodes from local wallets was deprecated a long time ago and starting from this version we disable
-wallet functionality on Masternodes completely.
+Running Smartnodes from local wallets was deprecated a long time ago and starting from this version we disable
+wallet functionality on Smartnodes completely.
 
 GUI changes
 -----------
@@ -251,7 +251,7 @@ See detailed [set of changes](https://github.com/raptoreum/raptoreum/compare/v0.
 - [`dbbc51121`](https://github.com/raptoreum/raptoreum/commit/dbbc51121) Add `automake` package to raptoreum-win-signer's packages list (#3307)
 - [`fd0f24335`](https://github.com/raptoreum/raptoreum/commit/fd0f24335) [Trivial] Release note update (#3308)
 - [`058872d4f`](https://github.com/raptoreum/raptoreum/commit/058872d4f) Update release-notes.md
-- [`546e69f1a`](https://github.com/raptoreum/raptoreum/commit/546e69f1a) Fix CActiveMasternodeManager::GetLocalAddress to prefer IPv4 if multiple local addresses are known (#3304)
+- [`546e69f1a`](https://github.com/raptoreum/raptoreum/commit/546e69f1a) Fix CActiveSmartnodeManager::GetLocalAddress to prefer IPv4 if multiple local addresses are known (#3304)
 - [`e4ef7e8d0`](https://github.com/raptoreum/raptoreum/commit/e4ef7e8d0) Drop unused `invSet` in `CDKGSession` (#3303)
 - [`da7686c93`](https://github.com/raptoreum/raptoreum/commit/da7686c93) Update translations 2020-01-23 (#3302)
 - [`6b5d3edae`](https://github.com/raptoreum/raptoreum/commit/6b5d3edae) Fix dip4-coinbasemerkleroots.py race condition (#3297)
@@ -381,7 +381,7 @@ See detailed [set of changes](https://github.com/raptoreum/raptoreum/compare/v0.
 - [`1acde17e8`](https://github.com/raptoreum/raptoreum/commit/1acde17e8) Don't care about governance cache while the blockchain isn't synced yet (#3089)
 - [`0d126c2ae`](https://github.com/raptoreum/raptoreum/commit/0d126c2ae) Use chainparams factory for devnet (#3087)
 - [`ac90abe89`](https://github.com/raptoreum/raptoreum/commit/ac90abe89) When mixing, always try to join an exsisting queue, only fall back to starting a new queue (#3085)
-- [`68d575dc0`](https://github.com/raptoreum/raptoreum/commit/68d575dc0) Masternodes should have no wallet enabled (#3084)
+- [`68d575dc0`](https://github.com/raptoreum/raptoreum/commit/68d575dc0) Smartnodes should have no wallet enabled (#3084)
 - [`6b5b70fab`](https://github.com/raptoreum/raptoreum/commit/6b5b70fab) Remove liquidity provider privatesend (#3082)
 - [`0b2221ed6`](https://github.com/raptoreum/raptoreum/commit/0b2221ed6) Clarify default max peer connections (#3081)
 - [`c22169d57`](https://github.com/raptoreum/raptoreum/commit/c22169d57) Reduce non-debug PS log output (#3076)

@@ -45,11 +45,11 @@ uint256 CPrivateSendQueue::GetSignatureHash() const
 
 bool CPrivateSendQueue::Sign()
 {
-    if (!fMasternodeMode) return false;
+    if (!fSmartnodeMode) return false;
 
 
     uint256 hash = GetSignatureHash();
-    CBLSSignature sig = activeMasternodeInfo.blsKeyOperator->Sign(hash);
+    CBLSSignature sig = activeSmartnodeInfo.blsKeyOperator->Sign(hash);
     if (!sig.IsValid()) {
         return false;
     }
@@ -95,11 +95,11 @@ uint256 CPrivateSendBroadcastTx::GetSignatureHash() const
 
 bool CPrivateSendBroadcastTx::Sign()
 {
-    if (!fMasternodeMode) return false;
+    if (!fSmartnodeMode) return false;
 
     uint256 hash = GetSignatureHash();
 
-    CBLSSignature sig = activeMasternodeInfo.blsKeyOperator->Sign(hash);
+    CBLSSignature sig = activeSmartnodeInfo.blsKeyOperator->Sign(hash);
     if (!sig.IsValid()) {
         return false;
     }
@@ -542,11 +542,11 @@ std::string CPrivateSend::GetMessageByID(PoolMessage nMessageID)
     case ERR_MAXIMUM:
         return _("Entry exceeds maximum size.");
     case ERR_MN_LIST:
-        return _("Not in the Masternode list.");
+        return _("Not in the Smartnode list.");
     case ERR_MODE:
         return _("Incompatible mode.");
     case ERR_QUEUE_FULL:
-        return _("Masternode queue is full.");
+        return _("Smartnode queue is full.");
     case ERR_RECENT:
         return _("Last PrivateSend was too recent.");
     case ERR_SESSION:

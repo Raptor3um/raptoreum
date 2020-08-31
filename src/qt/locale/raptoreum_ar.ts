@@ -290,7 +290,7 @@
         <translation>تصفح سجل المعاملات</translation>
     </message>
     <message>
-        <source>&amp;Masternodes</source>
+        <source>&amp;Smartnodes</source>
         <translation>العقد الرئيسية</translation>
     </message>
     <message>
@@ -1016,7 +1016,7 @@
     </message>
 </context>
 <context>
-    <name>MasternodeList</name>
+    <name>SmartnodeList</name>
     <message>
         <source>Form</source>
         <translation>نمودج</translation>
@@ -1098,7 +1098,7 @@
         <translation>لا شيء</translation>
     </message>
     <message>
-        <source>Additional information for DIP3 Masternode %1</source>
+        <source>Additional information for DIP3 Smartnode %1</source>
         <translation>معلومات إضافية عن DIP3 ماسترنود %1</translation>
     </message>
 </context>
@@ -1211,7 +1211,7 @@
         <translation>عرض علامة تبويب إضافية تسرد جميع رموزك في أول علامة تبويب فرعية &lt;br/&gt;وجميع ماسترنود على الشبكة في علامة التبويب الفرعية الثانية.</translation>
     </message>
     <message>
-        <source>Show Masternodes Tab</source>
+        <source>Show Smartnodes Tab</source>
         <translation>إضهار شريط ماسترنود</translation>
     </message>
     <message>
@@ -1584,7 +1584,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>رصيد الإرسال المخفي</translation>
     </message>
     <message>
-        <source>The denominations you submitted to the Masternode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
+        <source>The denominations you submitted to the Smartnode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
         <translation>الفئات التي قدمتها إلى ماسترنود &lt;br&gt; لدمج ، يجب على المستخدمين الآخرين تقديم نفس الفئات نفسها.</translation>
     </message>
     <message>
@@ -2022,7 +2022,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>سلسلة الكتل</translation>
     </message>
     <message>
-        <source>Number of Masternodes</source>
+        <source>Number of Smartnodes</source>
         <translation>ارقام ماسترنود</translation>
     </message>
     <message>
@@ -3963,15 +3963,15 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>تحتاج إلى تحديد منفذ مع -whitebind: '%s'</translation>
     </message>
     <message>
-        <source>No Masternodes detected.</source>
+        <source>No Smartnodes detected.</source>
         <translation>لم يتم اكتشاف ماسترنود.</translation>
     </message>
     <message>
-        <source>No compatible Masternode found.</source>
+        <source>No compatible Smartnode found.</source>
         <translation>لم يتم العثور على متسترنود متوافق.</translation>
     </message>
     <message>
-        <source>Not in the Masternode list.</source>
+        <source>Not in the Smartnode list.</source>
         <translation>ليس في قائمة ماسترنود.</translation>
     </message>
     <message>
@@ -4095,7 +4095,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>سيعيد المحاولة ...</translation>
     </message>
     <message>
-        <source>Can't find random Masternode.</source>
+        <source>Can't find random Smartnode.</source>
         <translation>لا يمكن العثور على ماسترنود عشوائي.</translation>
     </message>
     <message>
@@ -4119,7 +4119,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>مفتاح KeePassHttp للتواصل المشفر مع AES KeePass</translation>
     </message>
     <message>
-        <source>Disable all Raptoreum specific functionality (Masternodes, PrivateSend, InstantSend, Governance) (0-1, default: %u)</source>
+        <source>Disable all Raptoreum specific functionality (Smartnodes, PrivateSend, InstantSend, Governance) (0-1, default: %u)</source>
         <translation>تعطيل جميع وظائف داش المحددة (ماسترنود ، الإرسال المخفي  ، الإرسال الفوري ، الحوكمة) (0-1 ، القيمة الافتراضية: %u)</translation>
     </message>
     <message>
@@ -4391,15 +4391,15 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>إنتاج معاملات بث المحفظة</translation>
     </message>
     <message>
-        <source>Masternode options:</source>
+        <source>Smartnode options:</source>
         <translation>خيارات ماسترنود</translation>
     </message>
     <message>
-        <source>Masternode queue is full.</source>
+        <source>Smartnode queue is full.</source>
         <translation>طابور ماسترنود ممتلئ.</translation>
     </message>
     <message>
-        <source>Masternode:</source>
+        <source>Smartnode:</source>
         <translation>ماسترنود</translation>
     </message>
     <message>

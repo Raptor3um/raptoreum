@@ -226,7 +226,7 @@
 - [`b3ee3fc35`](https://github.com/raptoreum/raptoreum/commit/b3ee3fc35) Raptoreumify example config and help strings
 - [`6ab9e6b90`](https://github.com/raptoreum/raptoreum/commit/6ab9e6b90) Add missing colons to Result/Example help strings
 - [`5371ff4ef`](https://github.com/raptoreum/raptoreum/commit/5371ff4ef) Disable contrib/rpm dist
-- [`df3159986`](https://github.com/raptoreum/raptoreum/commit/df3159986) Use OpenMasternodeConnection in ThreadMnbRequestConnections
+- [`df3159986`](https://github.com/raptoreum/raptoreum/commit/df3159986) Use OpenSmartnodeConnection in ThreadMnbRequestConnections
 - [`29d5bdb55`](https://github.com/raptoreum/raptoreum/commit/29d5bdb55) Fix import-rescan.py test
 - [`4f39a090b`](https://github.com/raptoreum/raptoreum/commit/4f39a090b) Fix remaining direct uses of mapArgs
 - [`8763d30d5`](https://github.com/raptoreum/raptoreum/commit/8763d30d5) Merge #9506: RFC: Improve style for if indentation

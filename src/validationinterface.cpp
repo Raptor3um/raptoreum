@@ -34,7 +34,7 @@ struct MainSignalsInstance {
     boost::signals2::signal<void (const CGovernanceVote &vote)>NotifyGovernanceVote;
     boost::signals2::signal<void (const CGovernanceObject &object)>NotifyGovernanceObject;
     boost::signals2::signal<void (const CTransaction &currentTx, const CTransaction &previousTx)>NotifyInstantSendDoubleSpendAttempt;
-    boost::signals2::signal<void (bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff)>NotifyMasternodeListChanged;
+    boost::signals2::signal<void (bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff)>NotifySmartnodeListChanged;
     // We are not allowed to assume the scheduler only runs in one thread,
     // but must ensure all callbacks happen in-order, so we end up creating
     // our own queue here :(
@@ -81,7 +81,7 @@ void RegisterValidationInterface(CValidationInterface* pwalletIn) {
     g_signals.m_internals->NotifyGovernanceObject.connect(boost::bind(&CValidationInterface::NotifyGovernanceObject, pwalletIn, _1));
     g_signals.m_internals->NotifyGovernanceVote.connect(boost::bind(&CValidationInterface::NotifyGovernanceVote, pwalletIn, _1));
     g_signals.m_internals->NotifyInstantSendDoubleSpendAttempt.connect(boost::bind(&CValidationInterface::NotifyInstantSendDoubleSpendAttempt, pwalletIn, _1, _2));
-    g_signals.m_internals->NotifyMasternodeListChanged.connect(boost::bind(&CValidationInterface::NotifyMasternodeListChanged, pwalletIn, _1, _2, _3));
+    g_signals.m_internals->NotifySmartnodeListChanged.connect(boost::bind(&CValidationInterface::NotifySmartnodeListChanged, pwalletIn, _1, _2, _3));
 }
 
 void UnregisterValidationInterface(CValidationInterface* pwalletIn) {
@@ -102,7 +102,7 @@ void UnregisterValidationInterface(CValidationInterface* pwalletIn) {
     g_signals.m_internals->NotifyGovernanceObject.disconnect(boost::bind(&CValidationInterface::NotifyGovernanceObject, pwalletIn, _1));
     g_signals.m_internals->NotifyGovernanceVote.disconnect(boost::bind(&CValidationInterface::NotifyGovernanceVote, pwalletIn, _1));
     g_signals.m_internals->NotifyInstantSendDoubleSpendAttempt.disconnect(boost::bind(&CValidationInterface::NotifyInstantSendDoubleSpendAttempt, pwalletIn, _1, _2));
-    g_signals.m_internals->NotifyMasternodeListChanged.disconnect(boost::bind(&CValidationInterface::NotifyMasternodeListChanged, pwalletIn, _1, _2, _3));
+    g_signals.m_internals->NotifySmartnodeListChanged.disconnect(boost::bind(&CValidationInterface::NotifySmartnodeListChanged, pwalletIn, _1, _2, _3));
 }
 
 void UnregisterAllValidationInterfaces() {
@@ -123,7 +123,7 @@ void UnregisterAllValidationInterfaces() {
     g_signals.m_internals->NotifyGovernanceObject.disconnect_all_slots();
     g_signals.m_internals->NotifyGovernanceVote.disconnect_all_slots();
     g_signals.m_internals->NotifyInstantSendDoubleSpendAttempt.disconnect_all_slots();
-    g_signals.m_internals->NotifyMasternodeListChanged.disconnect_all_slots();
+    g_signals.m_internals->NotifySmartnodeListChanged.disconnect_all_slots();
 }
 
 void CMainSignals::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) {
@@ -194,6 +194,6 @@ void CMainSignals::NotifyInstantSendDoubleSpendAttempt(const CTransaction &curre
         m_internals->NotifyInstantSendDoubleSpendAttempt(currentTx, previousTx);
 }
 
-void CMainSignals::NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff) {
-        m_internals->NotifyMasternodeListChanged(undo, oldMNList, diff);
+void CMainSignals::NotifySmartnodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff) {
+        m_internals->NotifySmartnodeListChanged(undo, oldMNList, diff);
 }

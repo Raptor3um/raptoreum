@@ -371,8 +371,8 @@ void BitcoinGUI::createActions()
 
 #ifdef ENABLE_WALLET
     QSettings settings;
-    if (!fLiteMode && settings.value("fShowMasternodesTab").toBool()) {
-        smartnodeAction = new QAction(tr("&Masternodes"), this);
+    if (!fLiteMode && settings.value("fShowSmartnodesTab").toBool()) {
+        smartnodeAction = new QAction(tr("&Smartnodes"), this);
         smartnodeAction->setStatusTip(tr("Browse smartnodes"));
         smartnodeAction->setToolTip(smartnodeAction->statusTip());
         smartnodeAction->setCheckable(true);
@@ -383,7 +383,7 @@ void BitcoinGUI::createActions()
 #endif
         tabGroup->addAction(smartnodeAction);
         connect(smartnodeAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
-        connect(smartnodeAction, SIGNAL(triggered()), this, SLOT(gotoMasternodePage()));
+        connect(smartnodeAction, SIGNAL(triggered()), this, SLOT(gotoSmartnodePage()));
     }
 
     // These showNormalIfMinimized are needed because Send Coins and Receive Coins
@@ -589,7 +589,7 @@ void BitcoinGUI::createToolBars()
         toolbar->addAction(receiveCoinsAction);
         toolbar->addAction(historyAction);
         QSettings settings;
-        if (!fLiteMode && settings.value("fShowMasternodesTab").toBool() && smartnodeAction)
+        if (!fLiteMode && settings.value("fShowSmartnodesTab").toBool() && smartnodeAction)
         {
             toolbar->addAction(smartnodeAction);
         }
@@ -748,7 +748,7 @@ void BitcoinGUI::setWalletActionsEnabled(bool enabled)
     receiveCoinsMenuAction->setEnabled(enabled);
     historyAction->setEnabled(enabled);
     QSettings settings;
-    if (!fLiteMode && settings.value("fShowMasternodesTab").toBool() && smartnodeAction) {
+    if (!fLiteMode && settings.value("fShowSmartnodesTab").toBool() && smartnodeAction) {
         smartnodeAction->setEnabled(enabled);
     }
     encryptWalletAction->setEnabled(enabled);
@@ -911,12 +911,12 @@ void BitcoinGUI::gotoHistoryPage()
     if (walletFrame) walletFrame->gotoHistoryPage();
 }
 
-void BitcoinGUI::gotoMasternodePage()
+void BitcoinGUI::gotoSmartnodePage()
 {
     QSettings settings;
-    if (!fLiteMode && settings.value("fShowMasternodesTab").toBool() && smartnodeAction) {
+    if (!fLiteMode && settings.value("fShowSmartnodesTab").toBool() && smartnodeAction) {
         smartnodeAction->setChecked(true);
-        if (walletFrame) walletFrame->gotoMasternodePage();
+        if (walletFrame) walletFrame->gotoSmartnodePage();
     }
 }
 

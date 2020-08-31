@@ -306,12 +306,12 @@
         <translation>Transaktionsverlauf durchsehen</translation>
     </message>
     <message>
-        <source>&amp;Masternodes</source>
-        <translation>&amp;Masternodes</translation>
+        <source>&amp;Smartnodes</source>
+        <translation>&amp;Smartnodes</translation>
     </message>
     <message>
         <source>Browse smartnodes</source>
-        <translation>Browse Masternodes</translation>
+        <translation>Browse Smartnodes</translation>
     </message>
     <message>
         <source>E&amp;xit</source>
@@ -993,7 +993,7 @@
     </message>
     <message>
         <source>&lt;h3&gt;PrivateSend Basics&lt;/h3&gt; PrivateSend gives you true financial privacy by obscuring the origins of your funds. All the Raptoreum in your wallet is comprised of different "inputs" which you can think of as separate, discrete coins.&lt;br&gt; PrivateSend uses an innovative process to mix your inputs with the inputs of two other people, without having your coins ever leave your wallet. You retain control of your money at all times.&lt;hr&gt; &lt;b&gt;The PrivateSend process works like this:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;PrivateSend begins by breaking your transaction inputs down into standard denominations. These denominations are 0.001 RAPTOREUM, 0.01 RAPTOREUM, 0.1 RAPTOREUM, 1 RAPTOREUM and 10 RAPTOREUM -- sort of like the paper money you use every day.&lt;/li&gt; &lt;li&gt;Your wallet then sends requests to specially configured software nodes on the network, called "smartnodes." These smartnodes are informed then that you are interested in mixing a certain denomination. No identifiable information is sent to the smartnodes, so they never know "who" you are.&lt;/li&gt; &lt;li&gt;When two other people send similar messages, indicating that they wish to mix the same denomination, a mixing session begins. The smartnode mixes up the inputs and instructs all three users' wallets to pay the now-transformed input back to themselves. Your wallet pays that denomination directly to itself, but in a different address (called a change address).&lt;/li&gt; &lt;li&gt;In order to fully obscure your funds, your wallet must repeat this process a number of times with each denomination. Each time the process is completed, it's called a "round." Each round of PrivateSend makes it exponentially more difficult to determine where your funds originated.&lt;/li&gt; &lt;li&gt;This mixing process happens in the background without any intervention on your part. When you wish to make a transaction, your funds will already be mixed. No additional waiting is required.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;IMPORTANT:&lt;/b&gt; Your wallet only contains 1000 of these "change addresses." Every time a mixing event happens, up to 9 of your addresses are used up. This means those 1000 addresses last for about 100 mixing events. When 900 of them are used, your wallet must create more addresses. It can only do this, however, if you have automatic backups enabled.&lt;br&gt; Consequently, users who have backups disabled will also have PrivateSend disabled. &lt;hr&gt;For more information, see the &lt;a href="https://docs.raptoreum.org/en/stable/wallets/raptoreumcore/privatesend-instantsend.html"&gt;PrivateSend documentation&lt;/a&gt;.</source>
-        <translation>&lt;h3&gt;Basisinformation zu PrivateSend&lt;/h3&gt; PrivateSend bietet finanziellen Datenschutz durch geschickte Verschleierung der Herkunft Ihres Geldes. Die Raptoreum in Ihrer Geldbörse setzen sich aus völlig unterschiedlichen eigenständigen "Inputs" zusammen.&lt;br&gt; PrivateSend benutzt einen innovativen Prozeß, um Ihre "Inputs" mit denen von 2 anderen Personen zu mischen, ohne das Ihr Geld jemals Ihre Geldbörse verlassen muß, d.h. Sie haben während dieses Prozesses immer die Kontrolle über Ihr Geld.&lt;hr&gt;&lt;b&gt;Der PrivateSend-Prozess funktioniert folgendermaßen:&lt;/b&gt;&lt;ol type="1"&gt;&lt;li&gt;PrivateSend stückelt Ihre "Inputs" in kleinere Teile. Diese sind 0,001 RAPTOREUM, 0,01 RAPTOREUM, 0,1 RAPTOREUM, 1 RAPTOREUM und 10 RAPTOREUM -- im Prinzip wie Münzen oder Scheine, wie wir sie jeden Tag benutzen.&lt;/li&gt; &lt;li&gt;Ihre Geldbörse sendet dann eine entsprechende Mixing Anforderungen an spezielle Raptoreum-Server im Internet, die sogenannten "Masternodes". Damit werden diese Masternodes darüber informiert, daß Sie Ihre gestückelten RAPTOREUM gerne mixen würden. Dabei wird keinerlei Information über Sie versendet, d.h. die Masternodes wissen nie, wer genau mixen möchte.&lt;/li&gt; &lt;li&gt; Sobald zwei andere Personen eine gleiche Mixing-Anforderung mit der gleichen Stückelung senden beginnt der Mixing-Prozeß. Der Masternode vermischt (daher das Wort "Mixing") die gestückelten Inputs und weist das Ergebnis wieder den Geldbörsen zu, allerdings mit neuen Empfängeradressen (die natürlich zu Ihrer Wallet gehören), so daß man sie nicht mehr den ursprünglichen Adressen zuordnen kann. Man kann sich das so vorstellen wie wenn 3 Personen jeweils 100 Euro in der gleichen Anzahl von 10 Euro Scheinen, 5 Euro Scheinen, 2- und 1-Euro Münzen auf einen Tisch legen, alles einmal gut durchmischen, und sich anschießend ohne hinzusehen wieder 100 Euro vom Tischen nehmen. Jeder hat genau so viele Euro wie vorher, aber keiner weiß, wessen Scheine oder Münzen er letztendlich in seiner Geldbörse hat, oder wo sie herkommen. Und das Gute dabei ist, im Raptoreum Mixing Prozeß verlassen die Scheine oder Münzen niemals die Geldbörse ihres Besitzers, daher kann kein Betrug stattfinden.&lt;/li&gt; &lt;li&gt;Um die Herkunft Ihres Guthabens vollständig zu verschleiern muß dieser Prozeß mehrmals wiederholt werden, d.h. es gibt mehrere "Runden" des Mixing-Prozesses. Die Anzahl der Runden ist einstellbar, je mehr, desto besser ist die Herkunft Ihres Guthabens verschleiert, aber um so länger dauert der Prozeß.&lt;/li&gt; &lt;li&gt;
+        <translation>&lt;h3&gt;Basisinformation zu PrivateSend&lt;/h3&gt; PrivateSend bietet finanziellen Datenschutz durch geschickte Verschleierung der Herkunft Ihres Geldes. Die Raptoreum in Ihrer Geldbörse setzen sich aus völlig unterschiedlichen eigenständigen "Inputs" zusammen.&lt;br&gt; PrivateSend benutzt einen innovativen Prozeß, um Ihre "Inputs" mit denen von 2 anderen Personen zu mischen, ohne das Ihr Geld jemals Ihre Geldbörse verlassen muß, d.h. Sie haben während dieses Prozesses immer die Kontrolle über Ihr Geld.&lt;hr&gt;&lt;b&gt;Der PrivateSend-Prozess funktioniert folgendermaßen:&lt;/b&gt;&lt;ol type="1"&gt;&lt;li&gt;PrivateSend stückelt Ihre "Inputs" in kleinere Teile. Diese sind 0,001 RAPTOREUM, 0,01 RAPTOREUM, 0,1 RAPTOREUM, 1 RAPTOREUM und 10 RAPTOREUM -- im Prinzip wie Münzen oder Scheine, wie wir sie jeden Tag benutzen.&lt;/li&gt; &lt;li&gt;Ihre Geldbörse sendet dann eine entsprechende Mixing Anforderungen an spezielle Raptoreum-Server im Internet, die sogenannten "Smartnodes". Damit werden diese Smartnodes darüber informiert, daß Sie Ihre gestückelten RAPTOREUM gerne mixen würden. Dabei wird keinerlei Information über Sie versendet, d.h. die Smartnodes wissen nie, wer genau mixen möchte.&lt;/li&gt; &lt;li&gt; Sobald zwei andere Personen eine gleiche Mixing-Anforderung mit der gleichen Stückelung senden beginnt der Mixing-Prozeß. Der Smartnode vermischt (daher das Wort "Mixing") die gestückelten Inputs und weist das Ergebnis wieder den Geldbörsen zu, allerdings mit neuen Empfängeradressen (die natürlich zu Ihrer Wallet gehören), so daß man sie nicht mehr den ursprünglichen Adressen zuordnen kann. Man kann sich das so vorstellen wie wenn 3 Personen jeweils 100 Euro in der gleichen Anzahl von 10 Euro Scheinen, 5 Euro Scheinen, 2- und 1-Euro Münzen auf einen Tisch legen, alles einmal gut durchmischen, und sich anschießend ohne hinzusehen wieder 100 Euro vom Tischen nehmen. Jeder hat genau so viele Euro wie vorher, aber keiner weiß, wessen Scheine oder Münzen er letztendlich in seiner Geldbörse hat, oder wo sie herkommen. Und das Gute dabei ist, im Raptoreum Mixing Prozeß verlassen die Scheine oder Münzen niemals die Geldbörse ihres Besitzers, daher kann kein Betrug stattfinden.&lt;/li&gt; &lt;li&gt;Um die Herkunft Ihres Guthabens vollständig zu verschleiern muß dieser Prozeß mehrmals wiederholt werden, d.h. es gibt mehrere "Runden" des Mixing-Prozesses. Die Anzahl der Runden ist einstellbar, je mehr, desto besser ist die Herkunft Ihres Guthabens verschleiert, aber um so länger dauert der Prozeß.&lt;/li&gt; &lt;li&gt;
 Der Mixing-Prozeß läuft nach dem Start vollständig im Hintergrund, d.h. es ist keine Benutzerinteraktion mehr erforderlich. Das Wallet informiert Sie über den Fortschrittsbalken über den aktuellen Status des Prozesses.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;WICHTIG:&lt;/b&gt; beim Mischen der Inputs werden die einzelnen Stückelungen einer NEUEN Empfängeradresse zugeordnet (siehe Oben). Ihre Geldbörse hat bereits beim ersten Start 1000 dieser "Wechseladressen" auf Vorrat erzeugt. Bei jedem Mischen werden 9 dieser Wechseladressen verbraucht, d.h. nach ungefähr 100 Mischvorgänge sind diese 1000 Wechseladressen aufgebraucht. Die Geldbörse ist so eingestellt, daß sie bei Erreichen von 900 benutzen Wechseladressen wieder genug neue Wechseladressen erzeugt, damit man auch in der Zukunft wieder mischen kann. Die neuen Wechseladressen werden aber nur dann erzeugt, wenn man in den Einstellungen "Automatische Datensicherungen" aktiviert hat.&lt;br&gt; Daher ist bei Benutzern, die "Automatische Datensicherungen" deaktiviert haben, automatisch auch PrivateSend dekativiert.&lt;hr&gt; Weitere Information hierzu finden Sie in der &lt;a href="https://docs.raptoreum.org/en/stable/wallets/raptoreumcore/privatesend-instantsend.html"&gt;PrivateSend-Dokumentation&lt;/a&gt;.</translation>
     </message>
 </context>
@@ -1065,7 +1065,7 @@ Der Mixing-Prozeß läuft nach dem Start vollständig im Hintergrund, d.h. es is
     </message>
 </context>
 <context>
-    <name>MasternodeList</name>
+    <name>SmartnodeList</name>
     <message>
         <source>Form</source>
         <translation>Formular</translation>
@@ -1084,7 +1084,7 @@ Der Mixing-Prozeß läuft nach dem Start vollständig im Hintergrund, d.h. es is
     </message>
     <message>
         <source>Filter smartnode list</source>
-        <translation>Filter Masternode-Liste</translation>
+        <translation>Filter Smartnode-Liste</translation>
     </message>
     <message>
         <source>Node Count:</source>
@@ -1092,11 +1092,11 @@ Der Mixing-Prozeß läuft nach dem Start vollständig im Hintergrund, d.h. es is
     </message>
     <message>
         <source>Show only smartnodes this wallet has keys for.</source>
-        <translation>Nur Masternodes anzeigen für welche diese Wallet die Schlüssel hat.</translation>
+        <translation>Nur Smartnodes anzeigen für welche diese Wallet die Schlüssel hat.</translation>
     </message>
     <message>
         <source>My smartnodes only</source>
-        <translation>Nur meine Masternodes</translation>
+        <translation>Nur meine Smartnodes</translation>
     </message>
     <message>
         <source>Service</source>
@@ -1175,8 +1175,8 @@ Der Mixing-Prozeß läuft nach dem Start vollständig im Hintergrund, d.h. es is
         <translation>KEINE</translation>
     </message>
     <message>
-        <source>Additional information for DIP3 Masternode %1</source>
-        <translation>Zusätzliche Informationen für DIP3 Masternode %1</translation>
+        <source>Additional information for DIP3 Smartnode %1</source>
+        <translation>Zusätzliche Informationen für DIP3 Smartnode %1</translation>
     </message>
 </context>
 <context>
@@ -1285,11 +1285,11 @@ Der Mixing-Prozeß läuft nach dem Start vollständig im Hintergrund, d.h. es is
     </message>
     <message>
         <source>Show additional tab listing all your smartnodes in first sub-tab&lt;br/&gt;and all smartnodes on the network in second sub-tab.</source>
-        <translation>Tabulator mit der Lister aller/Ihrer Masternodes anzeigen.</translation>
+        <translation>Tabulator mit der Lister aller/Ihrer Smartnodes anzeigen.</translation>
     </message>
     <message>
-        <source>Show Masternodes Tab</source>
-        <translation>Masternode Tabulator anzeigen</translation>
+        <source>Show Smartnodes Tab</source>
+        <translation>Smartnode Tabulator anzeigen</translation>
     </message>
     <message>
         <source>Show additional information and buttons for PrivateSend on overview screen.</source>
@@ -1389,7 +1389,7 @@ Der Mixing-Prozeß läuft nach dem Start vollständig im Hintergrund, d.h. es is
     </message>
     <message>
         <source>This setting determines the amount of individual smartnodes that an input will be mixed through.&lt;br/&gt;More rounds of mixing gives a higher degree of privacy, but also costs more in fees.</source>
-        <translation>Diese Einstellung legt fest, durch wie viele Masternodes ein Input gemischt wird. &lt;br/&gt; Eine höhere Anzahl an Mischrunden bewirkt einen besseren Schutz der Privatsphäre, verursacht allerdings auch höhere Gebühren.</translation>
+        <translation>Diese Einstellung legt fest, durch wie viele Smartnodes ein Input gemischt wird. &lt;br/&gt; Eine höhere Anzahl an Mischrunden bewirkt einen besseren Schutz der Privatsphäre, verursacht allerdings auch höhere Gebühren.</translation>
     </message>
     <message>
         <source>&amp;Network</source>
@@ -1673,8 +1673,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>PrivateSend Kontostand:</translation>
     </message>
     <message>
-        <source>The denominations you submitted to the Masternode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
-        <translation>Die gestückelten Beträge, die Sie zu dem Masternode gesendet haben.&lt;br&gt; Zum Erfolgreichen Mixen müssen andere Benutzer exakt gleich gestückelte Beträge senden.</translation>
+        <source>The denominations you submitted to the Smartnode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
+        <translation>Die gestückelten Beträge, die Sie zu dem Smartnode gesendet haben.&lt;br&gt; Zum Erfolgreichen Mixen müssen andere Benutzer exakt gleich gestückelte Beträge senden.</translation>
     </message>
     <message>
         <source>(Last Message)</source>
@@ -2116,8 +2116,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Blockkette</translation>
     </message>
     <message>
-        <source>Number of Masternodes</source>
-        <translation>Anzahl Masternodes</translation>
+        <source>Number of Smartnodes</source>
+        <translation>Anzahl Smartnodes</translation>
     </message>
     <message>
         <source>Memory Pool</source>
@@ -3978,7 +3978,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <source>Use N separate smartnodes in parallel to mix funds (%u-%u, default: %u)</source>
-        <translation>N verschiedene Masternodes verwenden, um Guthaben parallel zu mischen (%u-%u, Standard: %u)</translation>
+        <translation>N verschiedene Smartnodes verwenden, um Guthaben parallel zu mischen (%u-%u, Standard: %u)</translation>
     </message>
     <message>
         <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)</source>
@@ -4038,7 +4038,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <source>Failed to load smartnode cache from</source>
-        <translation>Cache für Masternodes konnte nicht geladen werden aus</translation>
+        <translation>Cache für Smartnodes konnte nicht geladen werden aus</translation>
     </message>
     <message>
         <source>Found enough users, signing ( waiting %s )</source>
@@ -4126,7 +4126,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <source>Loading smartnode cache...</source>
-        <translation>Lade Masternode-Cache...</translation>
+        <translation>Lade Smartnode-Cache...</translation>
     </message>
     <message>
         <source>Lock is already in place.</source>
@@ -4153,20 +4153,20 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Für -whitebind muss eine Portnummer angegeben werden: '%s'</translation>
     </message>
     <message>
-        <source>No Masternodes detected.</source>
-        <translation>Keine Masternodes gefunden.</translation>
+        <source>No Smartnodes detected.</source>
+        <translation>Keine Smartnodes gefunden.</translation>
     </message>
     <message>
-        <source>No compatible Masternode found.</source>
-        <translation>Kein kompatibler Masternode gefunden.</translation>
+        <source>No compatible Smartnode found.</source>
+        <translation>Kein kompatibler Smartnode gefunden.</translation>
     </message>
     <message>
         <source>Not enough funds to mix.</source>
         <translation>Nicht genug Guthaben zum Mischen vorhanden.</translation>
     </message>
     <message>
-        <source>Not in the Masternode list.</source>
-        <translation>Nicht in der Masternode-Liste.</translation>
+        <source>Not in the Smartnode list.</source>
+        <translation>Nicht in der Smartnode-Liste.</translation>
     </message>
     <message>
         <source>Only connect to nodes in network &lt;net&gt; (ipv4, ipv6 or onion)</source>
@@ -4214,7 +4214,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <source>Submitted to smartnode, waiting in queue %s</source>
-        <translation>An Masternode übermittelt, wartet in Warteschlange %s</translation>
+        <translation>An Smartnode übermittelt, wartet in Warteschlange %s</translation>
     </message>
     <message>
         <source>Synchronization failed</source>
@@ -4293,8 +4293,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Versuche erneut...</translation>
     </message>
     <message>
-        <source>Can't find random Masternode.</source>
-        <translation>Kann keinen zufällig ausgewählten Masternode finden</translation>
+        <source>Can't find random Smartnode.</source>
+        <translation>Kann keinen zufällig ausgewählten Smartnode finden</translation>
     </message>
     <message>
         <source>Can't mix while sync in progress.</source>
@@ -4317,8 +4317,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>"KeePassHttp key" für die  AES-verschlüsselte Kommunikation mit "KeePass"</translation>
     </message>
     <message>
-        <source>Disable all Raptoreum specific functionality (Masternodes, PrivateSend, InstantSend, Governance) (0-1, default: %u)</source>
-        <translation>Deaktiviere all Raptoreum-spezifischen Funktionen (Masternodes, PrivateSend, InstantSend, Governance) (0-1, Standard: %u)</translation>
+        <source>Disable all Raptoreum specific functionality (Smartnodes, PrivateSend, InstantSend, Governance) (0-1, default: %u)</source>
+        <translation>Deaktiviere all Raptoreum-spezifischen Funktionen (Smartnodes, PrivateSend, InstantSend, Governance) (0-1, Standard: %u)</translation>
     </message>
     <message>
         <source>%s file contains all private keys from this wallet. Do not share it with anyone!</source>
@@ -4326,7 +4326,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <source>-smartnode option is deprecated and ignored, specifying -smartnodeblsprivkey is enough to start this node as a smartnode.</source>
-        <translation>Die -smartnode Option wird nicht mehr unterstützt und daher ignoriert -smartnodeblsprivkey reicht aus, um diese Node als Masternode zu starten.</translation>
+        <translation>Die -smartnode Option wird nicht mehr unterstützt und daher ignoriert -smartnodeblsprivkey reicht aus, um diese Node als Smartnode zu starten.</translation>
     </message>
     <message>
         <source>Add a node to connect to and attempt to keep the connection open (see the `addnode` RPC command help for more info)</source>
@@ -4422,7 +4422,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <source>Set the smartnode BLS private key and enable the client to act as a smartnode</source>
-        <translation>Masternode BLS PrivateKey setzen und den Client dazu verwenden, eine Masternode zu starten</translation>
+        <translation>Smartnode BLS PrivateKey setzen und den Client dazu verwenden, eine Smartnode zu starten</translation>
     </message>
     <message>
         <source>Specify full path to directory for automatic wallet backups (must exist)</source>
@@ -4629,16 +4629,16 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Aktiviere die Übertragung von Transaktionen</translation>
     </message>
     <message>
-        <source>Masternode options:</source>
-        <translation>Masternode Optionen:</translation>
+        <source>Smartnode options:</source>
+        <translation>Smartnode Optionen:</translation>
     </message>
     <message>
-        <source>Masternode queue is full.</source>
-        <translation>Warteschlange der Masternode ist voll.</translation>
+        <source>Smartnode queue is full.</source>
+        <translation>Warteschlange der Smartnode ist voll.</translation>
     </message>
     <message>
-        <source>Masternode:</source>
-        <translation>Masternode:</translation>
+        <source>Smartnode:</source>
+        <translation>Smartnode:</translation>
     </message>
     <message>
         <source>Minimum bytes per sigop in transactions we relay and mine (default: %u)</source>
@@ -4790,11 +4790,11 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <source>You can not start a smartnode in lite mode.</source>
-        <translation>Eine Masternode kann nicht im Lite-Modus gestartet werden,</translation>
+        <translation>Eine Smartnode kann nicht im Lite-Modus gestartet werden,</translation>
     </message>
     <message>
         <source>You can not start a smartnode with wallet enabled.</source>
-        <translation>Eine Masternode kann nicht mit aktivierter Wallet gestartet werden.</translation>
+        <translation>Eine Smartnode kann nicht mit aktivierter Wallet gestartet werden.</translation>
     </message>
     <message>
         <source>You need to rebuild the database using -reindex to change -addressindex</source>
@@ -4922,7 +4922,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <source>Use N separate smartnodes for each denominated input to mix funds (%u-%u, default: %u)</source>
-        <translation>N unterschiedliche Masternodes benutzen, um Raptoreum zu anonymisieren (%u-%u, Standard: %u) </translation>
+        <translation>N unterschiedliche Smartnodes benutzen, um Raptoreum zu anonymisieren (%u-%u, Standard: %u) </translation>
     </message>
     <message>
         <source>Use hierarchical deterministic key generation (HD) after BIP39/BIP44. Only has effect during wallet creation/first start</source>

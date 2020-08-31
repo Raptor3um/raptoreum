@@ -79,7 +79,7 @@ See detailed [change log](https://github.com/raptoreum/raptoreum/compare/v0.12.3
 - [`050cabdf5`](https://github.com/raptoreum/raptoreum/commit/050cabdf5) Adjust diff for slow testnet/devnet blocks a bit smoother (#2161)
 
 ### GUI:
-- [`7b9919d18`](https://github.com/raptoreum/raptoreum/commit/7b9919d18) Fix issues with selections on Masternode tab (#2170)
+- [`7b9919d18`](https://github.com/raptoreum/raptoreum/commit/7b9919d18) Fix issues with selections on Smartnode tab (#2170)
 - [`c4698d5f3`](https://github.com/raptoreum/raptoreum/commit/c4698d5f3) Make PS Buttons not react to spacebar (#2154)
 
 ### Other:

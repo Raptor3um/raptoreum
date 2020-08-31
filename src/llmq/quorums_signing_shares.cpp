@@ -233,7 +233,7 @@ void CSigSharesManager::InterruptWorkerThread()
 void CSigSharesManager::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman)
 {
     // non-smartnodes are not interested in sigshares
-    if (!fMasternodeMode || activeMasternodeInfo.proTxHash.IsNull()) {
+    if (!fSmartnodeMode || activeSmartnodeInfo.proTxHash.IsNull()) {
         return;
     }
 
@@ -474,7 +474,7 @@ bool CSigSharesManager::PreVerifyBatchedSigShares(NodeId nodeId, const CSigShare
         // quorum is too old
         return false;
     }
-    if (!session.quorum->IsMember(activeMasternodeInfo.proTxHash)) {
+    if (!session.quorum->IsMember(activeSmartnodeInfo.proTxHash)) {
         // we're not a member so we can't verify it (we actually shouldn't have received it)
         return false;
     }
@@ -669,8 +669,8 @@ void CSigSharesManager::ProcessSigShare(NodeId nodeId, const CSigShare& sigShare
 
     // prepare node set for direct-push in case this is our sig share
     std::set<NodeId> quorumNodes;
-    if (sigShare.quorumMember == quorum->GetMemberIndex(activeMasternodeInfo.proTxHash)) {
-        quorumNodes = connman.GetMasternodeQuorumNodes((Consensus::LLMQType) sigShare.llmqType, sigShare.quorumHash);
+    if (sigShare.quorumMember == quorum->GetMemberIndex(activeSmartnodeInfo.proTxHash)) {
+        quorumNodes = connman.GetSmartnodeQuorumNodes((Consensus::LLMQType) sigShare.llmqType, sigShare.quorumHash);
     }
 
     if (quorumSigningManager->HasRecoveredSigForId(llmqType, sigShare.id)) {
@@ -947,7 +947,7 @@ void CSigSharesManager::CollectSigSharesToAnnounce(std::unordered_map<NodeId, st
         auto quorumKey = std::make_pair((Consensus::LLMQType)sigShare->llmqType, sigShare->quorumHash);
         auto it = quorumNodesMap.find(quorumKey);
         if (it == quorumNodesMap.end()) {
-            auto nodeIds = g_connman->GetMasternodeQuorumNodes(quorumKey.first, quorumKey.second);
+            auto nodeIds = g_connman->GetSmartnodeQuorumNodes(quorumKey.first, quorumKey.second);
             it = quorumNodesMap.emplace(std::piecewise_construct, std::forward_as_tuple(quorumKey), std::forward_as_tuple(nodeIds.begin(), nodeIds.end())).first;
         }
 
@@ -1396,7 +1396,7 @@ void CSigSharesManager::Sign(const CQuorumCPtr& quorum, const uint256& id, const
 {
     cxxtimer::Timer t(true);
 
-    if (!quorum->IsValidMember(activeMasternodeInfo.proTxHash)) {
+    if (!quorum->IsValidMember(activeSmartnodeInfo.proTxHash)) {
         return;
     }
 
@@ -1406,7 +1406,7 @@ void CSigSharesManager::Sign(const CQuorumCPtr& quorum, const uint256& id, const
         return;
     }
 
-    int memberIdx = quorum->GetMemberIndex(activeMasternodeInfo.proTxHash);
+    int memberIdx = quorum->GetMemberIndex(activeSmartnodeInfo.proTxHash);
     if (memberIdx == -1) {
         // this should really not happen (IsValidMember gave true)
         return;

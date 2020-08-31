@@ -195,7 +195,7 @@ void CDKGSession::SendContributions(CDKGPendingMessages& pendingMessages)
 
     logger.Batch("encrypted contributions. time=%d", t1.count());
 
-    qc.sig = activeMasternodeInfo.blsKeyOperator->Sign(qc.GetSignHash());
+    qc.sig = activeSmartnodeInfo.blsKeyOperator->Sign(qc.GetSignHash());
 
     logger.Flush();
 
@@ -319,7 +319,7 @@ void CDKGSession::ReceiveMessage(const uint256& hash, const CDKGContribution& qc
 
     bool complain = false;
     CBLSSecretKey skContribution;
-    if (!qc.contributions->Decrypt(myIdx, *activeMasternodeInfo.blsKeyOperator, skContribution, PROTOCOL_VERSION)) {
+    if (!qc.contributions->Decrypt(myIdx, *activeSmartnodeInfo.blsKeyOperator, skContribution, PROTOCOL_VERSION)) {
         logger.Batch("contribution from %s could not be decrypted", member->dmn->proTxHash.ToString());
         complain = true;
     } else if (member->idx != myIdx && ShouldSimulateError("complain-lie")) {
@@ -470,7 +470,7 @@ void CDKGSession::SendComplaint(CDKGPendingMessages& pendingMessages)
 
     logger.Batch("sending complaint. badCount=%d, complaintCount=%d", badCount, complaintCount);
 
-    qc.sig = activeMasternodeInfo.blsKeyOperator->Sign(qc.GetSignHash());
+    qc.sig = activeSmartnodeInfo.blsKeyOperator->Sign(qc.GetSignHash());
 
     logger.Flush();
 
@@ -667,7 +667,7 @@ void CDKGSession::SendJustification(CDKGPendingMessages& pendingMessages, const 
         return;
     }
 
-    qj.sig = activeMasternodeInfo.blsKeyOperator->Sign(qj.GetSignHash());
+    qj.sig = activeSmartnodeInfo.blsKeyOperator->Sign(qj.GetSignHash());
 
     logger.Flush();
 
@@ -968,7 +968,7 @@ void CDKGSession::SendCommitment(CDKGPendingMessages& pendingMessages)
         (*commitmentHash.begin())++;
     }
 
-    qc.sig = activeMasternodeInfo.blsKeyOperator->Sign(commitmentHash);
+    qc.sig = activeSmartnodeInfo.blsKeyOperator->Sign(commitmentHash);
     qc.quorumSig = skShare.Sign(commitmentHash);
 
     if (lieType == 3) {

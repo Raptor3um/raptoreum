@@ -64,9 +64,9 @@ public:
     //! Return number of ISLOCKs
     size_t getInstantSentLockCount() const;
 
-    void setMasternodeList(const CDeterministicMNList& mnList);
-    CDeterministicMNList getMasternodeList() const;
-    void refreshMasternodeList();
+    void setSmartnodeList(const CDeterministicMNList& mnList);
+    CDeterministicMNList getSmartnodeList() const;
+    void refreshSmartnodeList();
 
     quint64 getTotalBytesRecv() const;
     quint64 getTotalBytesSent() const;

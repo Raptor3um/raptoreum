@@ -116,16 +116,16 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
     }
 
     auto mnList = deterministicMNManager->GetListAtChainTip();
-    auto dmn = mnList.GetMNByCollateral(vote.GetMasternodeOutpoint());
+    auto dmn = mnList.GetMNByCollateral(vote.GetSmartnodeOutpoint());
 
     if (!dmn) {
         std::ostringstream ostr;
-        ostr << "CGovernanceObject::ProcessVote -- Masternode " << vote.GetMasternodeOutpoint().ToStringShort() << " not found";
+        ostr << "CGovernanceObject::ProcessVote -- Smartnode " << vote.GetSmartnodeOutpoint().ToStringShort() << " not found";
         exception = CGovernanceException(ostr.str(), GOVERNANCE_EXCEPTION_PERMANENT_ERROR, 20);
         return false;
     }
 
-    vote_m_it it = mapCurrentMNVotes.emplace(vote_m_t::value_type(vote.GetMasternodeOutpoint(), vote_rec_t())).first;
+    vote_m_it it = mapCurrentMNVotes.emplace(vote_m_t::value_type(vote.GetSmartnodeOutpoint(), vote_rec_t())).first;
     vote_rec_t& voteRecordRef = it->second;
     vote_signal_enum_t eSignal = vote.GetSignal();
     if (eSignal == VOTE_SIGNAL_NONE) {
@@ -175,8 +175,8 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
         int64_t nTimeDelta = nNow - voteInstanceRef.nTime;
         if (nTimeDelta < GOVERNANCE_UPDATE_MIN) {
             std::ostringstream ostr;
-            ostr << "CGovernanceObject::ProcessVote -- Masternode voting too often"
-                 << ", MN outpoint = " << vote.GetMasternodeOutpoint().ToStringShort()
+            ostr << "CGovernanceObject::ProcessVote -- Smartnode voting too often"
+                 << ", MN outpoint = " << vote.GetSmartnodeOutpoint().ToStringShort()
                  << ", governance object hash = " << GetHash().ToString()
                  << ", time delta = " << nTimeDelta;
             LogPrint(BCLog::GOBJECT, "%s\n", ostr.str());
@@ -192,7 +192,7 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
     if (!vote.IsValid(onlyVotingKeyAllowed)) {
         std::ostringstream ostr;
         ostr << "CGovernanceObject::ProcessVote -- Invalid vote"
-             << ", MN outpoint = " << vote.GetMasternodeOutpoint().ToStringShort()
+             << ", MN outpoint = " << vote.GetSmartnodeOutpoint().ToStringShort()
              << ", governance object hash = " << GetHash().ToString()
              << ", vote hash = " << vote.GetHash().ToString();
         LogPrintf("%s\n", ostr.str());
@@ -204,7 +204,7 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
     if (!mmetaman.AddGovernanceVote(dmn->proTxHash, vote.GetParentHash())) {
         std::ostringstream ostr;
         ostr << "CGovernanceObject::ProcessVote -- Unable to add governance vote"
-             << ", MN outpoint = " << vote.GetMasternodeOutpoint().ToStringShort()
+             << ", MN outpoint = " << vote.GetSmartnodeOutpoint().ToStringShort()
              << ", governance object hash = " << GetHash().ToString();
         LogPrint(BCLog::GOBJECT, "%s\n", ostr.str());
         exception = CGovernanceException(ostr.str(), GOVERNANCE_EXCEPTION_PERMANENT_ERROR);
@@ -217,7 +217,7 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
     return true;
 }
 
-void CGovernanceObject::ClearMasternodeVotes()
+void CGovernanceObject::ClearSmartnodeVotes()
 {
     LOCK(cs);
 
@@ -226,7 +226,7 @@ void CGovernanceObject::ClearMasternodeVotes()
     vote_m_it it = mapCurrentMNVotes.begin();
     while (it != mapCurrentMNVotes.end()) {
         if (!mnList.HasMNByCollateral(it->first)) {
-            fileVotes.RemoveVotesFromMasternode(it->first);
+            fileVotes.RemoveVotesFromSmartnode(it->first);
             mapCurrentMNVotes.erase(it++);
             fDirtyCache = true;
         } else {
@@ -299,7 +299,7 @@ uint256 CGovernanceObject::GetSignatureHash() const
     return SerializeHash(*this);
 }
 
-void CGovernanceObject::SetMasternodeOutpoint(const COutPoint& outpoint)
+void CGovernanceObject::SetSmartnodeOutpoint(const COutPoint& outpoint)
 {
     smartnodeOutpoint = outpoint;
 }
@@ -471,7 +471,7 @@ bool CGovernanceObject::IsValidLocally(std::string& strError, bool& fMissingConf
         std::string strOutpoint = smartnodeOutpoint.ToStringShort();
         auto dmn = mnList.GetMNByCollateral(smartnodeOutpoint);
         if (!dmn) {
-            strError = "Failed to find Masternode by UTXO, missing smartnode=" + strOutpoint;
+            strError = "Failed to find Smartnode by UTXO, missing smartnode=" + strOutpoint;
             return false;
         }
 

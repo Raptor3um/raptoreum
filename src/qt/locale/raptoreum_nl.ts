@@ -306,8 +306,8 @@
         <translation>Blader door transactiegeschiedenis</translation>
     </message>
     <message>
-        <source>&amp;Masternodes</source>
-        <translation>&amp;Masternodes</translation>
+        <source>&amp;Smartnodes</source>
+        <translation>&amp;Smartnodes</translation>
     </message>
     <message>
         <source>Browse smartnodes</source>
@@ -1064,7 +1064,7 @@
     </message>
 </context>
 <context>
-    <name>MasternodeList</name>
+    <name>SmartnodeList</name>
     <message>
         <source>Form</source>
         <translation>Formulier</translation>
@@ -1174,8 +1174,8 @@
         <translation>GEEN</translation>
     </message>
     <message>
-        <source>Additional information for DIP3 Masternode %1</source>
-        <translation>Extra informatie voor DIP3 Masternode %1</translation>
+        <source>Additional information for DIP3 Smartnode %1</source>
+        <translation>Extra informatie voor DIP3 Smartnode %1</translation>
     </message>
 </context>
 <context>
@@ -1287,8 +1287,8 @@
         <translation>Toon extra tabblad waarin je al jouw smartnodes toont in de eerste sub-tab&lt;br/&gt; en alle smartnodes op het netwerk in het tweede sub-tabblad.</translation>
     </message>
     <message>
-        <source>Show Masternodes Tab</source>
-        <translation>Toon Masternodes tab</translation>
+        <source>Show Smartnodes Tab</source>
+        <translation>Toon Smartnodes tab</translation>
     </message>
     <message>
         <source>Show additional information and buttons for PrivateSend on overview screen.</source>
@@ -1673,8 +1673,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>PrivateSend-balans:</translation>
     </message>
     <message>
-        <source>The denominations you submitted to the Masternode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
-        <translation>De denominaties zijn bij de Masternode ingebracht. 
+        <source>The denominations you submitted to the Smartnode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
+        <translation>De denominaties zijn bij de Smartnode ingebracht. 
 Om te mixen moeten andere gebruikers exact dezelfde denominaties inbrengen.</translation>
     </message>
     <message>
@@ -2116,8 +2116,8 @@ Om te mixen moeten andere gebruikers exact dezelfde denominaties inbrengen.</tra
         <translation>Blokketen</translation>
     </message>
     <message>
-        <source>Number of Masternodes</source>
-        <translation>Aantal Masternodes</translation>
+        <source>Number of Smartnodes</source>
+        <translation>Aantal Smartnodes</translation>
     </message>
     <message>
         <source>Memory Pool</source>
@@ -4156,20 +4156,20 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Raptoreum n
         <translation>Verplicht een poort met -whitebind op te geven: '%s'</translation>
     </message>
     <message>
-        <source>No Masternodes detected.</source>
-        <translation>Geen Masternodes gedetecteerd.</translation>
+        <source>No Smartnodes detected.</source>
+        <translation>Geen Smartnodes gedetecteerd.</translation>
     </message>
     <message>
-        <source>No compatible Masternode found.</source>
-        <translation>Geen compatibele Masternode gevonden.</translation>
+        <source>No compatible Smartnode found.</source>
+        <translation>Geen compatibele Smartnode gevonden.</translation>
     </message>
     <message>
         <source>Not enough funds to mix.</source>
         <translation>Onvoldoende fondsen om te mixen.</translation>
     </message>
     <message>
-        <source>Not in the Masternode list.</source>
-        <translation>Niet in de Masternode lijst.</translation>
+        <source>Not in the Smartnode list.</source>
+        <translation>Niet in de Smartnode lijst.</translation>
     </message>
     <message>
         <source>Only connect to nodes in network &lt;net&gt; (ipv4, ipv6 or onion)</source>
@@ -4296,8 +4296,8 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Raptoreum n
         <translation>Opnieuw aan het proberen...</translation>
     </message>
     <message>
-        <source>Can't find random Masternode.</source>
-        <translation>Kan Masternode niet vinden.</translation>
+        <source>Can't find random Smartnode.</source>
+        <translation>Kan Smartnode niet vinden.</translation>
     </message>
     <message>
         <source>Can't mix while sync in progress.</source>
@@ -4320,8 +4320,8 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Raptoreum n
         <translation>KeePassHttp sleutel voor AES versleutelde communicatie met KeePass</translation>
     </message>
     <message>
-        <source>Disable all Raptoreum specific functionality (Masternodes, PrivateSend, InstantSend, Governance) (0-1, default: %u)</source>
-        <translation>Uitschakelen van alle Raptoreum specifieke functies (Masternodes, PrivateSend, InstantSend, Governance) (0-1, standaard: %u)</translation>
+        <source>Disable all Raptoreum specific functionality (Smartnodes, PrivateSend, InstantSend, Governance) (0-1, default: %u)</source>
+        <translation>Uitschakelen van alle Raptoreum specifieke functies (Smartnodes, PrivateSend, InstantSend, Governance) (0-1, standaard: %u)</translation>
     </message>
     <message>
         <source>%s file contains all private keys from this wallet. Do not share it with anyone!</source>
@@ -4632,16 +4632,16 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Raptoreum n
         <translation>Laat de portemonnee transacties uitsturen</translation>
     </message>
     <message>
-        <source>Masternode options:</source>
-        <translation>Masternode-opties:</translation>
+        <source>Smartnode options:</source>
+        <translation>Smartnode-opties:</translation>
     </message>
     <message>
-        <source>Masternode queue is full.</source>
-        <translation>Masternode wachtrij is vol.</translation>
+        <source>Smartnode queue is full.</source>
+        <translation>Smartnode wachtrij is vol.</translation>
     </message>
     <message>
-        <source>Masternode:</source>
-        <translation>Masternode:</translation>
+        <source>Smartnode:</source>
+        <translation>Smartnode:</translation>
     </message>
     <message>
         <source>Minimum bytes per sigop in transactions we relay and mine (default: %u)</source>

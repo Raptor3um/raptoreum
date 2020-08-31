@@ -306,7 +306,7 @@
         <translation>トランザクション履歴を閲覧</translation>
     </message>
     <message>
-        <source>&amp;Masternodes</source>
+        <source>&amp;Smartnodes</source>
         <translation>マスターノード(&amp;M)</translation>
     </message>
     <message>
@@ -1033,7 +1033,7 @@
     </message>
 </context>
 <context>
-    <name>MasternodeList</name>
+    <name>SmartnodeList</name>
     <message>
         <source>Form</source>
         <translation>フォーム</translation>
@@ -1123,8 +1123,8 @@
         <translation>無し</translation>
     </message>
     <message>
-        <source>Additional information for DIP3 Masternode %1</source>
-        <translation>DIP3 Masternode %1の追加情報</translation>
+        <source>Additional information for DIP3 Smartnode %1</source>
+        <translation>DIP3 Smartnode %1の追加情報</translation>
     </message>
 </context>
 <context>
@@ -1236,7 +1236,7 @@
         <translation>あなたのすべてのマスターノードをリストしている追加のタブを最初のサブタブに表示し&lt;br/&gt;すべてのマスターノードを次のサブタブに表示</translation>
     </message>
     <message>
-        <source>Show Masternodes Tab</source>
+        <source>Show Smartnodes Tab</source>
         <translation>マスターノードタブを表示する</translation>
     </message>
     <message>
@@ -1613,7 +1613,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>プライベートセンド残高:</translation>
     </message>
     <message>
-        <source>The denominations you submitted to the Masternode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
+        <source>The denominations you submitted to the Smartnode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
         <translation>マスターノードに送った通貨単位&lt;br&gt;ミキシングをするには他のユーザーが正確に同じ通貨単位を送る必要があります。</translation>
     </message>
     <message>
@@ -2051,7 +2051,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>ブロックチェーン</translation>
     </message>
     <message>
-        <source>Number of Masternodes</source>
+        <source>Number of Smartnodes</source>
         <translation>マスターノードの数</translation>
     </message>
     <message>
@@ -4052,15 +4052,15 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>-whitebind を用いてポートを指定する必要があります： '%s'</translation>
     </message>
     <message>
-        <source>No Masternodes detected.</source>
+        <source>No Smartnodes detected.</source>
         <translation>マスターノードが検出されません</translation>
     </message>
     <message>
-        <source>No compatible Masternode found.</source>
+        <source>No compatible Smartnode found.</source>
         <translation>互換性のあるマスターノードが検出されません</translation>
     </message>
     <message>
-        <source>Not in the Masternode list.</source>
+        <source>Not in the Smartnode list.</source>
         <translation>マスターノードリストにありません</translation>
     </message>
     <message>
@@ -4188,7 +4188,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>再試行...</translation>
     </message>
     <message>
-        <source>Can't find random Masternode.</source>
+        <source>Can't find random Smartnode.</source>
         <translation>ランダムなマスターノードを発見できません</translation>
     </message>
     <message>
@@ -4212,7 +4212,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>KeePassとの AES 暗号化接続用のKeePassHttp キー </translation>
     </message>
     <message>
-        <source>Disable all Raptoreum specific functionality (Masternodes, PrivateSend, InstantSend, Governance) (0-1, default: %u)</source>
+        <source>Disable all Raptoreum specific functionality (Smartnodes, PrivateSend, InstantSend, Governance) (0-1, default: %u)</source>
         <translation>Raptoreumに固有の機能(マスターノード, プライベートセンド, インスタントセンド, ガバナンス) を無効化(0-1, 初期設定: %u)</translation>
     </message>
     <message>
@@ -4496,15 +4496,15 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>ウォレットにトランザクションをブロードキャストさせる</translation>
     </message>
     <message>
-        <source>Masternode options:</source>
+        <source>Smartnode options:</source>
         <translation>マスターノードオプション:</translation>
     </message>
     <message>
-        <source>Masternode queue is full.</source>
+        <source>Smartnode queue is full.</source>
         <translation>マスターノードキューがいっぱいです</translation>
     </message>
     <message>
-        <source>Masternode:</source>
+        <source>Smartnode:</source>
         <translation>マスターノード:</translation>
     </message>
     <message>

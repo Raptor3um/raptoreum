@@ -47,7 +47,7 @@ public:
         ThreadsScriptVerif,     // int
         DatabaseCache,          // int
         SpendZeroConfChange,    // bool
-        ShowMasternodesTab,     // bool
+        ShowSmartnodesTab,     // bool
         ShowAdvancedPSUI,       // bool
         ShowPrivateSendPopups,  // bool
         LowKeysWarning,         // bool

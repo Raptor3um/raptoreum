@@ -14,7 +14,7 @@ from test_framework.mininode import CTransaction, ToHex, FromHex, CTxOut, COIN, 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 
-class Masternode(object):
+class Smartnode(object):
     pass
 
 class DIP3Test(BitcoinTestFramework):
@@ -205,7 +205,7 @@ class DIP3Test(BitcoinTestFramework):
         assert(old_dmnState["payoutAddress"] == new_dmnState["payoutAddress"])
 
     def prepare_mn(self, node, idx, alias):
-        mn = Masternode()
+        mn = Smartnode()
         mn.idx = idx
         mn.alias = alias
         mn.is_protx = True

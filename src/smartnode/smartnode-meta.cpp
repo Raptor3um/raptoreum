@@ -5,11 +5,11 @@
 
 #include "smartnode-meta.h"
 
-CMasternodeMetaMan mmetaman;
+CSmartnodeMetaMan mmetaman;
 
-const std::string CMasternodeMetaMan::SERIALIZATION_VERSION_STRING = "CMasternodeMetaMan-Version-1";
+const std::string CSmartnodeMetaMan::SERIALIZATION_VERSION_STRING = "CSmartnodeMetaMan-Version-1";
 
-void CMasternodeMetaInfo::AddGovernanceVote(const uint256& nGovernanceObjectHash)
+void CSmartnodeMetaInfo::AddGovernanceVote(const uint256& nGovernanceObjectHash)
 {
     LOCK(cs);
     // Insert a zero value, or not. Then increment the value regardless. This
@@ -18,14 +18,14 @@ void CMasternodeMetaInfo::AddGovernanceVote(const uint256& nGovernanceObjectHash
     pair.first->second++;
 }
 
-void CMasternodeMetaInfo::RemoveGovernanceObject(const uint256& nGovernanceObjectHash)
+void CSmartnodeMetaInfo::RemoveGovernanceObject(const uint256& nGovernanceObjectHash)
 {
     LOCK(cs);
     // Whether or not the govobj hash exists in the map first is irrelevant.
     mapGovernanceObjectsVotedOn.erase(nGovernanceObjectHash);
 }
 
-CMasternodeMetaInfoPtr CMasternodeMetaMan::GetMetaInfo(const uint256& proTxHash, bool fCreate)
+CSmartnodeMetaInfoPtr CSmartnodeMetaMan::GetMetaInfo(const uint256& proTxHash, bool fCreate)
 {
     LOCK(cs);
     auto it = metaInfos.find(proTxHash);
@@ -35,11 +35,11 @@ CMasternodeMetaInfoPtr CMasternodeMetaMan::GetMetaInfo(const uint256& proTxHash,
     if (!fCreate) {
         return nullptr;
     }
-    it = metaInfos.emplace(proTxHash, std::make_shared<CMasternodeMetaInfo>(proTxHash)).first;
+    it = metaInfos.emplace(proTxHash, std::make_shared<CSmartnodeMetaInfo>(proTxHash)).first;
     return it->second;
 }
 
-void CMasternodeMetaMan::AllowMixing(const uint256& proTxHash)
+void CSmartnodeMetaMan::AllowMixing(const uint256& proTxHash)
 {
     LOCK(cs);
     auto mm = GetMetaInfo(proTxHash);
@@ -49,7 +49,7 @@ void CMasternodeMetaMan::AllowMixing(const uint256& proTxHash)
     mm->nMixingTxCount = 0;
 }
 
-void CMasternodeMetaMan::DisallowMixing(const uint256& proTxHash)
+void CSmartnodeMetaMan::DisallowMixing(const uint256& proTxHash)
 {
     LOCK(cs);
     auto mm = GetMetaInfo(proTxHash);
@@ -58,7 +58,7 @@ void CMasternodeMetaMan::DisallowMixing(const uint256& proTxHash)
     mm->nMixingTxCount++;
 }
 
-bool CMasternodeMetaMan::AddGovernanceVote(const uint256& proTxHash, const uint256& nGovernanceObjectHash)
+bool CSmartnodeMetaMan::AddGovernanceVote(const uint256& proTxHash, const uint256& nGovernanceObjectHash)
 {
     LOCK(cs);
     auto mm = GetMetaInfo(proTxHash);
@@ -66,7 +66,7 @@ bool CMasternodeMetaMan::AddGovernanceVote(const uint256& proTxHash, const uint2
     return true;
 }
 
-void CMasternodeMetaMan::RemoveGovernanceObject(const uint256& nGovernanceObjectHash)
+void CSmartnodeMetaMan::RemoveGovernanceObject(const uint256& nGovernanceObjectHash)
 {
     LOCK(cs);
     for(auto& p : metaInfos) {
@@ -74,7 +74,7 @@ void CMasternodeMetaMan::RemoveGovernanceObject(const uint256& nGovernanceObject
     }
 }
 
-std::vector<uint256> CMasternodeMetaMan::GetAndClearDirtyGovernanceObjectHashes()
+std::vector<uint256> CSmartnodeMetaMan::GetAndClearDirtyGovernanceObjectHashes()
 {
     LOCK(cs);
     std::vector<uint256> vecTmp = std::move(vecDirtyGovernanceObjectHashes);
@@ -82,23 +82,23 @@ std::vector<uint256> CMasternodeMetaMan::GetAndClearDirtyGovernanceObjectHashes(
     return vecTmp;
 }
 
-void CMasternodeMetaMan::Clear()
+void CSmartnodeMetaMan::Clear()
 {
     LOCK(cs);
     metaInfos.clear();
     vecDirtyGovernanceObjectHashes.clear();
 }
 
-void CMasternodeMetaMan::CheckAndRemove()
+void CSmartnodeMetaMan::CheckAndRemove()
 {
 
 }
 
-std::string CMasternodeMetaMan::ToString() const
+std::string CSmartnodeMetaMan::ToString() const
 {
     std::ostringstream info;
 
-    info << "Masternodes: meta infos object count: " << (int)metaInfos.size() <<
+    info << "Smartnodes: meta infos object count: " << (int)metaInfos.size() <<
          ", nDsqCount: " << (int)nDsqCount;
     return info.str();
 }

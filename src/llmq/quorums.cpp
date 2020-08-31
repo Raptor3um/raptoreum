@@ -178,10 +178,10 @@ void CQuorumManager::EnsureQuorumConnections(Consensus::LLMQType llmqType, const
 {
     const auto& params = Params().GetConsensus().llmqs.at(llmqType);
 
-    auto myProTxHash = activeMasternodeInfo.proTxHash;
+    auto myProTxHash = activeSmartnodeInfo.proTxHash;
     auto lastQuorums = ScanQuorums(llmqType, pindexNew, (size_t)params.keepOldConnections);
 
-    auto connmanQuorumsToDelete = g_connman->GetMasternodeQuorums(llmqType);
+    auto connmanQuorumsToDelete = g_connman->GetSmartnodeQuorums(llmqType);
 
     // don't remove connections for the currently in-progress DKG round
     int curDkgHeight = pindexNew->nHeight - (pindexNew->nHeight % params.dkgInterval);
@@ -193,7 +193,7 @@ void CQuorumManager::EnsureQuorumConnections(Consensus::LLMQType llmqType, const
             continue;
         }
 
-        if (!g_connman->HasMasternodeQuorumNodes(llmqType, quorum->qc.quorumHash)) {
+        if (!g_connman->HasSmartnodeQuorumNodes(llmqType, quorum->qc.quorumHash)) {
             std::set<uint256> connections;
             if (quorum->IsMember(myProTxHash)) {
                 connections = CLLMQUtils::GetQuorumConnections(llmqType, quorum->pindexQuorum, myProTxHash);
@@ -217,7 +217,7 @@ void CQuorumManager::EnsureQuorumConnections(Consensus::LLMQType llmqType, const
                     }
                     LogPrint(BCLog::LLMQ, debugMsg.c_str());
                 }
-                g_connman->AddMasternodeQuorumNodes(llmqType, quorum->qc.quorumHash, connections);
+                g_connman->AddSmartnodeQuorumNodes(llmqType, quorum->qc.quorumHash, connections);
             }
         }
         connmanQuorumsToDelete.erase(quorum->qc.quorumHash);
@@ -225,7 +225,7 @@ void CQuorumManager::EnsureQuorumConnections(Consensus::LLMQType llmqType, const
 
     for (auto& qh : connmanQuorumsToDelete) {
         LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- removing smartnodes quorum connections for quorum %s:\n", __func__, qh.ToString());
-        g_connman->RemoveMasternodeQuorumNodes(llmqType, qh);
+        g_connman->RemoveSmartnodeQuorumNodes(llmqType, qh);
     }
 }
 

@@ -573,8 +573,8 @@ void RPCConsole::setClientModel(ClientModel *model)
         updateNetworkState();
         connect(model, SIGNAL(networkActiveChanged(bool)), this, SLOT(setNetworkActive(bool)));
 
-        connect(model, SIGNAL(smartnodeListChanged()), this, SLOT(updateMasternodeCount()));
-        clientModel->refreshMasternodeList();
+        connect(model, SIGNAL(smartnodeListChanged()), this, SLOT(updateSmartnodeCount()));
+        clientModel->refreshSmartnodeList();
 
         updateTrafficStats(model->getTotalBytesRecv(), model->getTotalBytesSent());
         connect(model, SIGNAL(bytesChanged(quint64,quint64)), this, SLOT(updateTrafficStats(quint64, quint64)));
@@ -909,16 +909,16 @@ void RPCConsole::setNumBlocks(int count, const QDateTime& blockDate, double nVer
     }
 }
 
-void RPCConsole::updateMasternodeCount()
+void RPCConsole::updateSmartnodeCount()
 {
     if (!clientModel) {
         return;
     }
-    auto mnList = clientModel->getMasternodeList();
-    QString strMasternodeCount = tr("Total: %1 (Enabled: %2)")
+    auto mnList = clientModel->getSmartnodeList();
+    QString strSmartnodeCount = tr("Total: %1 (Enabled: %2)")
         .arg(QString::number(mnList.GetAllMNsCount()))
         .arg(QString::number(mnList.GetValidMNsCount()));
-    ui->smartnodeCount->setText(strMasternodeCount);
+    ui->smartnodeCount->setText(strSmartnodeCount);
 }
 
 void RPCConsole::setMempoolSize(long numberOfTxs, size_t dynUsage)

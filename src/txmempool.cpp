@@ -1284,7 +1284,7 @@ bool CTxMemPool::existsProviderTxConflict(const CTransaction &tx) const {
         // this method should only be called with validated ProTxs
         auto dmn = deterministicMNManager->GetListAtChainTip().GetMN(proTx.proTxHash);
         if (!dmn) {
-            LogPrintf("%s: ERROR: Masternode is not in the list, proTxHash: %s", __func__, proTx.proTxHash.ToString());
+            LogPrintf("%s: ERROR: Smartnode is not in the list, proTxHash: %s", __func__, proTx.proTxHash.ToString());
             return true; // i.e. failed to find validated ProTx == conflict
         }
         // only allow one operator key change in the mempool
@@ -1306,7 +1306,7 @@ bool CTxMemPool::existsProviderTxConflict(const CTransaction &tx) const {
         // this method should only be called with validated ProTxs
         auto dmn = deterministicMNManager->GetListAtChainTip().GetMN(proTx.proTxHash);
         if (!dmn) {
-            LogPrintf("%s: ERROR: Masternode is not in the list, proTxHash: %s", __func__, proTx.proTxHash.ToString());
+            LogPrintf("%s: ERROR: Smartnode is not in the list, proTxHash: %s", __func__, proTx.proTxHash.ToString());
             return true; // i.e. failed to find validated ProTx == conflict
         }
         // only allow one operator key change in the mempool

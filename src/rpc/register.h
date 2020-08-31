@@ -20,7 +20,7 @@ void RegisterMiningRPCCommands(CRPCTable &tableRPC);
 /** Register raw transaction RPC commands */
 void RegisterRawTransactionRPCCommands(CRPCTable &tableRPC);
 /** Register smartnode RPC commands */
-void RegisterMasternodeRPCCommands(CRPCTable &tableRPC);
+void RegisterSmartnodeRPCCommands(CRPCTable &tableRPC);
 /** Register PrivateSend RPC commands */
 void RegisterPrivateSendRPCCommands(CRPCTable &tableRPC);
 /** Register governance RPC commands */
@@ -37,7 +37,7 @@ static inline void RegisterAllCoreRPCCommands(CRPCTable &t)
     RegisterMiscRPCCommands(t);
     RegisterMiningRPCCommands(t);
     RegisterRawTransactionRPCCommands(t);
-    RegisterMasternodeRPCCommands(t);
+    RegisterSmartnodeRPCCommands(t);
     RegisterPrivateSendRPCCommands(t);
     RegisterGovernanceRPCCommands(t);
     RegisterEvoRPCCommands(t);

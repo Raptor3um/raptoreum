@@ -80,7 +80,7 @@ Network
 Legacy messages `mnw`, `mnwb`, `mnget`, `mnb`, `mnp`, `dseg`, `mnv`, `qdcommit` and their corresponding
 inventory types (7, 10, 14, 15, 19, 22) are no longer suported.
 
-Message `version` is extended with a 256 bit field - a challenge sent to a smartnode. Masternode which
+Message `version` is extended with a 256 bit field - a challenge sent to a smartnode. Smartnode which
 received such a challenge must reply with new p2p message `mnauth` directly after `verack`. This `mnauth`
 message must include a signed challenge that was previously sent via `version`.
 
@@ -127,7 +127,7 @@ and `sentinel` modes, new mode - `pubkeyoperator`
 - `smartnode winner` and `smartnode current` no longer have `protocol`, `lastseen` and `activeseconds`
 fields, new field - `proTxHash`
 - `debug` supports new categories: `chainlocks`, `llmq`, `llmq-dkg`, `llmq-sigs`
-- `mnsync` no longer has `IsMasternodeListSynced` and `IsWinnersListSynced` fields
+- `mnsync` no longer has `IsSmartnodeListSynced` and `IsWinnersListSynced` fields
 - various RPCs that had `instantlock` field have `chainlock` (excluding mempool RPCs) and
 `instantlock_internal` fields now
 
@@ -207,7 +207,7 @@ See detailed [set of changes](https://github.com/raptoreum/raptoreum/compare/v0.
 - [`7f419ae7f`](https://github.com/raptoreum/raptoreum/commit/7f419ae7f) Accept non-spent LLMQ IS locked outpoints from mempool in PS mixing (#2878)
 - [`2652030a2`](https://github.com/raptoreum/raptoreum/commit/2652030a2) Use larger nPruneAfterSizeIn parameter for mapAlreadyAskedFor (#2882)
 - [`03021fa53`](https://github.com/raptoreum/raptoreum/commit/03021fa53) Harden DIP3 activation (#2881)
-- [`dcdb9dba1`](https://github.com/raptoreum/raptoreum/commit/dcdb9dba1) Add NotifyMasternodeListChanged signal to CClientUIInterface (#2880)
+- [`dcdb9dba1`](https://github.com/raptoreum/raptoreum/commit/dcdb9dba1) Add NotifySmartnodeListChanged signal to CClientUIInterface (#2880)
 - [`19a9e2f4c`](https://github.com/raptoreum/raptoreum/commit/19a9e2f4c) Report `instantlock: true` for transactions locked via ChainLocks (#2877)
 - [`5cfceab86`](https://github.com/raptoreum/raptoreum/commit/5cfceab86) Refactor IS-lock GUI notification and implement a similar one for ChainLocks (#2875)
 - [`ed30db713`](https://github.com/raptoreum/raptoreum/commit/ed30db713) Ensure wallet is available and unlocked for some `governance` and `evo` RPCs (#2874)
@@ -233,11 +233,11 @@ See detailed [set of changes](https://github.com/raptoreum/raptoreum/compare/v0.
 - [`e67618ac5`](https://github.com/raptoreum/raptoreum/commit/e67618ac5) Clean up a few GUI related items (#2846)
 - [`225c3898d`](https://github.com/raptoreum/raptoreum/commit/225c3898d) Don't skip "safe TX" check when ChainLocks are not enforced yet (#2851)
 - [`27b2cd2cc`](https://github.com/raptoreum/raptoreum/commit/27b2cd2cc) Skip required services and port checks when outgoing connections is a MN (#2847)
-- [`aeb4c60c8`](https://github.com/raptoreum/raptoreum/commit/aeb4c60c8) Reimplement CMNAuth::NotifyMasternodeListChanged to work with new interface
-- [`fa90c0204`](https://github.com/raptoreum/raptoreum/commit/fa90c0204) Also call NotifyMasternodeListChanged when MNs have been updated
-- [`db781b32d`](https://github.com/raptoreum/raptoreum/commit/db781b32d) Pass oldList and diff instead of newList into NotifyMasternodeListChanged
+- [`aeb4c60c8`](https://github.com/raptoreum/raptoreum/commit/aeb4c60c8) Reimplement CMNAuth::NotifySmartnodeListChanged to work with new interface
+- [`fa90c0204`](https://github.com/raptoreum/raptoreum/commit/fa90c0204) Also call NotifySmartnodeListChanged when MNs have been updated
+- [`db781b32d`](https://github.com/raptoreum/raptoreum/commit/db781b32d) Pass oldList and diff instead of newList into NotifySmartnodeListChanged
 - [`b0260e970`](https://github.com/raptoreum/raptoreum/commit/b0260e970) Do not maintain CService in smartnodeQuorumNodes
-- [`60788ce32`](https://github.com/raptoreum/raptoreum/commit/60788ce32) Connect to most recently updated address in ThreadOpenMasternodeConnections
+- [`60788ce32`](https://github.com/raptoreum/raptoreum/commit/60788ce32) Connect to most recently updated address in ThreadOpenSmartnodeConnections
 - [`93b1b3d73`](https://github.com/raptoreum/raptoreum/commit/93b1b3d73) Fix shadowing of "addr"
 - [`5bebdda71`](https://github.com/raptoreum/raptoreum/commit/5bebdda71) Add GetValidMNByService to CDeterministicMNList
 - [`5d94d6bdf`](https://github.com/raptoreum/raptoreum/commit/5d94d6bdf) Remove unused CConnman::ForEachQuorumMember
@@ -319,8 +319,8 @@ See detailed [set of changes](https://github.com/raptoreum/raptoreum/compare/v0.
 - [`7b76e7abb`](https://github.com/raptoreum/raptoreum/commit/7b76e7abb) Implement BIP9 style deployment for DIP8/ChainLocks and fix a bug with late headers (#2793)
 - [`3ead8cd85`](https://github.com/raptoreum/raptoreum/commit/3ead8cd85) Fix potential travis failures due to network failures (#2795)
 - [`02db06658`](https://github.com/raptoreum/raptoreum/commit/02db06658) Fix loop in CLLMQUtils::GetQuorumConnections to add at least 2 connections (#2796)
-- [`071b60ded`](https://github.com/raptoreum/raptoreum/commit/071b60ded) Bump MAX_OUTBOUND_MASTERNODE_CONNECTIONS to 250 on smartnodes (#2791)
-- [`0ed5ae05a`](https://github.com/raptoreum/raptoreum/commit/0ed5ae05a) Fix bug in GetNextMasternodeForPayment (#2789)
+- [`071b60ded`](https://github.com/raptoreum/raptoreum/commit/071b60ded) Bump MAX_OUTBOUND_SMARTNODE_CONNECTIONS to 250 on smartnodes (#2791)
+- [`0ed5ae05a`](https://github.com/raptoreum/raptoreum/commit/0ed5ae05a) Fix bug in GetNextSmartnodeForPayment (#2789)
 - [`7135f01a1`](https://github.com/raptoreum/raptoreum/commit/7135f01a1) Fix revoke reason check for ProUpRevTx (#2787)
 - [`658ce9eff`](https://github.com/raptoreum/raptoreum/commit/658ce9eff) Apply Bloom filters to DIP2 transactions extra payload (#2786)
 - [`a1e4ac21f`](https://github.com/raptoreum/raptoreum/commit/a1e4ac21f) Disable logging of libevent debug messages (#2794)
@@ -625,7 +625,7 @@ See detailed [set of changes](https://github.com/raptoreum/raptoreum/compare/v0.
 - [`c948c0ff3`](https://github.com/raptoreum/raptoreum/commit/c948c0ff3) Fix help for optional parameters in "quorum dkgstatus"
 - [`957652bf3`](https://github.com/raptoreum/raptoreum/commit/957652bf3) Fix help for "quorum dkgstatus" and remove support for "0" proTxHash
 - [`b7b436b7d`](https://github.com/raptoreum/raptoreum/commit/b7b436b7d) Apply review suggestions to rpcquorums.cpp
-- [`3fe991063`](https://github.com/raptoreum/raptoreum/commit/3fe991063) Drop unused overload of GetMasternodeQuorums
+- [`3fe991063`](https://github.com/raptoreum/raptoreum/commit/3fe991063) Drop unused overload of GetSmartnodeQuorums
 - [`5daeedabf`](https://github.com/raptoreum/raptoreum/commit/5daeedabf) Batched logger should not break log parsing
 - [`2aed51c55`](https://github.com/raptoreum/raptoreum/commit/2aed51c55) Give nodes more time per phase when doing PoSe tests
 - [`5958f8b81`](https://github.com/raptoreum/raptoreum/commit/5958f8b81) Remove dkgRndSleepTime from consensus params and make sleeping it non-random
@@ -649,7 +649,7 @@ See detailed [set of changes](https://github.com/raptoreum/raptoreum/compare/v0.
 - [`07dcddb4c`](https://github.com/raptoreum/raptoreum/commit/07dcddb4c) Backports 0.15 pr2 (#2597)
 - [`04d1671b9`](https://github.com/raptoreum/raptoreum/commit/04d1671b9) armv7l build support (#2601)
 - [`7d58d87f4`](https://github.com/raptoreum/raptoreum/commit/7d58d87f4) Remove a few sporks which are not used anymore (#2607)
-- [`d1910eaff`](https://github.com/raptoreum/raptoreum/commit/d1910eaff) Refactor remains of CMasternode/-Man into CMasternodeMeta/-Man (#2606)
+- [`d1910eaff`](https://github.com/raptoreum/raptoreum/commit/d1910eaff) Refactor remains of CSmartnode/-Man into CSmartnodeMeta/-Man (#2606)
 - [`cdc8ae943`](https://github.com/raptoreum/raptoreum/commit/cdc8ae943) Don't hold CDeterministicMNManager::cs while calling signals (#2608)
 - [`968eb3fc5`](https://github.com/raptoreum/raptoreum/commit/968eb3fc5) Add real timestamp to log output when mock time is enabled (#2604)
 - [`0648496e2`](https://github.com/raptoreum/raptoreum/commit/0648496e2) Fix flaky p2p-fullblocktest (#2605)
@@ -663,23 +663,23 @@ See detailed [set of changes](https://github.com/raptoreum/raptoreum/compare/v0.
 - [`e54f6b274`](https://github.com/raptoreum/raptoreum/commit/e54f6b274) Use ban score of 10 for invalid DSQ sigs
 - [`536229d17`](https://github.com/raptoreum/raptoreum/commit/536229d17) Apply suggestions from code review
 - [`75024e117`](https://github.com/raptoreum/raptoreum/commit/75024e117) Merge #10365: [tests] increase timeouts in sendheaders test
-- [`1efd77358`](https://github.com/raptoreum/raptoreum/commit/1efd77358) Remove non-DIP3 code path in CMasternodePayments::IsScheduled
+- [`1efd77358`](https://github.com/raptoreum/raptoreum/commit/1efd77358) Remove non-DIP3 code path in CSmartnodePayments::IsScheduled
 - [`4c749b7e9`](https://github.com/raptoreum/raptoreum/commit/4c749b7e9) Directly use deterministicMNManager in "smartnode list"
 - [`0fe97a045`](https://github.com/raptoreum/raptoreum/commit/0fe97a045) Remove support for "smartnode list rank"
 - [`adc2ec225`](https://github.com/raptoreum/raptoreum/commit/adc2ec225) Remove unsupported types/fields from "smartnode list"
 - [`4b150e72f`](https://github.com/raptoreum/raptoreum/commit/4b150e72f) Directly use deterministicMNManager instead of mnodeman.CountXXX
 - [`4c3bb7304`](https://github.com/raptoreum/raptoreum/commit/4c3bb7304) Remove call to mnodeman.PoSeBan
-- [`0594cd719`](https://github.com/raptoreum/raptoreum/commit/0594cd719) Remove code that is incompatible now due to GetMasternodeRanks returning DMNs now
-- [`37541ee00`](https://github.com/raptoreum/raptoreum/commit/37541ee00) Change GetMasternodeScores and GetMasternodeRank/s to use CDeterministicMNCPtr
+- [`0594cd719`](https://github.com/raptoreum/raptoreum/commit/0594cd719) Remove code that is incompatible now due to GetSmartnodeRanks returning DMNs now
+- [`37541ee00`](https://github.com/raptoreum/raptoreum/commit/37541ee00) Change GetSmartnodeScores and GetSmartnodeRank/s to use CDeterministicMNCPtr
 - [`17c792cd3`](https://github.com/raptoreum/raptoreum/commit/17c792cd3) Remove MN upgrade check in ComputeBlockVersion
-- [`71a695100`](https://github.com/raptoreum/raptoreum/commit/71a695100) Move logic from FindRandomNotInVec into GetRandomNotUsedMasternode
+- [`71a695100`](https://github.com/raptoreum/raptoreum/commit/71a695100) Move logic from FindRandomNotInVec into GetRandomNotUsedSmartnode
 - [`2f66d6ada`](https://github.com/raptoreum/raptoreum/commit/2f66d6ada) Replace uses of mnodeman in PS code when deterministicMNManager can be used directly
-- [`eedb15845`](https://github.com/raptoreum/raptoreum/commit/eedb15845) Remove use of mnodeman.GetMasternodeInfo from IX code
+- [`eedb15845`](https://github.com/raptoreum/raptoreum/commit/eedb15845) Remove use of mnodeman.GetSmartnodeInfo from IX code
 - [`fb13b000b`](https://github.com/raptoreum/raptoreum/commit/fb13b000b) Remove support for legacy operator keys in CPrivateSendBroadcastTx
 - [`5f5fcc49c`](https://github.com/raptoreum/raptoreum/commit/5f5fcc49c) Remove legacy signatures support in CPrivateSendQueue
 - [`da924519a`](https://github.com/raptoreum/raptoreum/commit/da924519a) Remove support for legacy signatures in CTxLockVote
 - [`2b2e4f45d`](https://github.com/raptoreum/raptoreum/commit/2b2e4f45d) Remove a few uses of mnodeman from governance code
-- [`14d8ce03c`](https://github.com/raptoreum/raptoreum/commit/14d8ce03c) Don't use GetMasternodeInfo in CTxLockVote::IsValid
+- [`14d8ce03c`](https://github.com/raptoreum/raptoreum/commit/14d8ce03c) Don't use GetSmartnodeInfo in CTxLockVote::IsValid
 - [`1ff241881`](https://github.com/raptoreum/raptoreum/commit/1ff241881) Directly use deterministicMNManager in some places
 - [`45f34e130`](https://github.com/raptoreum/raptoreum/commit/45f34e130) Implement HasValidMN, HasValidMNByCollateral and GetValidMNByCollateral
 - [`bc29fe160`](https://github.com/raptoreum/raptoreum/commit/bc29fe160) Remove compatibility code from governance RPCs and directly use deterministicMNManager

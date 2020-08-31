@@ -393,8 +393,8 @@
     </message>
     <message>
         <location line="+13"/>
-        <source>&amp;Masternodes</source>
-        <translation>&amp;Masternodes</translation>
+        <source>&amp;Smartnodes</source>
+        <translation>&amp;Smartnodes</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1341,7 +1341,7 @@
     </message>
 </context>
 <context>
-    <name>MasternodeList</name>
+    <name>SmartnodeList</name>
     <message>
         <location filename="../forms/smartnodelist.ui" line="+14"/>
         <source>Form</source>
@@ -1482,8 +1482,8 @@
     </message>
     <message>
         <location line="+120"/>
-        <source>Additional information for DIP3 Masternode %1</source>
-        <translation>Additional information for DIP3 Masternode %1</translation>
+        <source>Additional information for DIP3 Smartnode %1</source>
+        <translation>Additional information for DIP3 Smartnode %1</translation>
     </message>
 </context>
 <context>
@@ -1624,8 +1624,8 @@
     </message>
     <message>
         <location line="+3"/>
-        <source>Show Masternodes Tab</source>
-        <translation>Show Masternodes Tab</translation>
+        <source>Show Smartnodes Tab</source>
+        <translation>Show Smartnodes Tab</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -2120,8 +2120,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <location line="+41"/>
-        <source>The denominations you submitted to the Masternode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
-        <translation>The denominations you submitted to the Masternode.&lt;br&gt;To mix, other users must submit the exact same denominations.</translation>
+        <source>The denominations you submitted to the Smartnode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
+        <translation>The denominations you submitted to the Smartnode.&lt;br&gt;To mix, other users must submit the exact same denominations.</translation>
     </message>
     <message>
         <location line="+14"/>
@@ -2748,8 +2748,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <location line="-29"/>
-        <source>Number of Masternodes</source>
-        <translation>Number of Masternodes</translation>
+        <source>Number of Smartnodes</source>
+        <translation>Number of Smartnodes</translation>
     </message>
     <message>
         <location line="+88"/>
@@ -5348,13 +5348,13 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>No Masternodes detected.</source>
-        <translation>No Masternodes detected.</translation>
+        <source>No Smartnodes detected.</source>
+        <translation>No Smartnodes detected.</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>No compatible Masternode found.</source>
-        <translation>No compatible Masternode found.</translation>
+        <source>No compatible Smartnode found.</source>
+        <translation>No compatible Smartnode found.</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -5363,8 +5363,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>Not in the Masternode list.</source>
-        <translation>Not in the Masternode list.</translation>
+        <source>Not in the Smartnode list.</source>
+        <translation>Not in the Smartnode list.</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -5523,8 +5523,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <location line="-230"/>
-        <source>Can&apos;t find random Masternode.</source>
-        <translation>Can&apos;t find random Masternode.</translation>
+        <source>Can&apos;t find random Smartnode.</source>
+        <translation>Can&apos;t find random Smartnode.</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -5553,8 +5553,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <location line="-392"/>
-        <source>Disable all Raptoreum specific functionality (Masternodes, PrivateSend, InstantSend, Governance) (0-1, default: %u)</source>
-        <translation>Disable all Raptoreum specific functionality (Masternodes, PrivateSend, InstantSend, Governance) (0-1, default: %u)</translation>
+        <source>Disable all Raptoreum specific functionality (Smartnodes, PrivateSend, InstantSend, Governance) (0-1, default: %u)</source>
+        <translation>Disable all Raptoreum specific functionality (Smartnodes, PrivateSend, InstantSend, Governance) (0-1, default: %u)</translation>
     </message>
     <message>
         <location line="-48"/>
@@ -5943,18 +5943,18 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>Masternode options:</source>
-        <translation>Masternode options:</translation>
+        <source>Smartnode options:</source>
+        <translation>Smartnode options:</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>Masternode queue is full.</source>
-        <translation>Masternode queue is full.</translation>
+        <source>Smartnode queue is full.</source>
+        <translation>Smartnode queue is full.</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>Masternode:</source>
-        <translation>Masternode:</translation>
+        <source>Smartnode:</source>
+        <translation>Smartnode:</translation>
     </message>
     <message>
         <location line="+3"/>

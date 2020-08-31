@@ -90,11 +90,11 @@ CGovernanceVote::CGovernanceVote() :
 {
 }
 
-CGovernanceVote::CGovernanceVote(const COutPoint& outpointMasternodeIn, const uint256& nParentHashIn, vote_signal_enum_t eVoteSignalIn, vote_outcome_enum_t eVoteOutcomeIn) :
+CGovernanceVote::CGovernanceVote(const COutPoint& outpointSmartnodeIn, const uint256& nParentHashIn, vote_signal_enum_t eVoteSignalIn, vote_outcome_enum_t eVoteOutcomeIn) :
     fValid(true),
     fSynced(false),
     nVoteSignal(eVoteSignalIn),
-    smartnodeOutpoint(outpointMasternodeIn),
+    smartnodeOutpoint(outpointSmartnodeIn),
     nParentHash(nParentHashIn),
     nVoteOutcome(eVoteOutcomeIn),
     nTime(GetAdjustedTime()),
@@ -274,7 +274,7 @@ bool CGovernanceVote::IsValid(bool useVotingKey) const
 
     auto dmn = deterministicMNManager->GetListAtChainTip().GetMNByCollateral(smartnodeOutpoint);
     if (!dmn) {
-        LogPrint(BCLog::GOBJECT, "CGovernanceVote::IsValid -- Unknown Masternode - %s\n", smartnodeOutpoint.ToStringShort());
+        LogPrint(BCLog::GOBJECT, "CGovernanceVote::IsValid -- Unknown Smartnode - %s\n", smartnodeOutpoint.ToStringShort());
         return false;
     }
 

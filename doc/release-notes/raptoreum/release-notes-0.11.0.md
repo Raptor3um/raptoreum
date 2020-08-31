@@ -32,7 +32,7 @@ Darkcoin Core:
   `keepass`, `keepassport`, `keepasskey`, `keepassid`, `keepassname`
 
 
-Masternodes:
+Smartnodes:
 
 - Improve support for start-many with multi smartnode config
 - New smartnode rpc commands: stop-many, start-alias, stop-alias, list-conf

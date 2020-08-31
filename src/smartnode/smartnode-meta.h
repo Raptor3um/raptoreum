@@ -3,8 +3,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef MASTERNODE_META_H
-#define MASTERNODE_META_H
+#ifndef SMARTNODE_META_H
+#define SMARTNODE_META_H
 
 #include "serialize.h"
 
@@ -14,13 +14,13 @@
 
 class CConnman;
 
-static const int MASTERNODE_MAX_MIXING_TXES             = 5;
+static const int SMARTNODE_MAX_MIXING_TXES             = 5;
 
 // Holds extra (non-deterministic) information about smartnodes
 // This is mostly local information, e.g. about mixing and governance
-class CMasternodeMetaInfo
+class CSmartnodeMetaInfo
 {
-    friend class CMasternodeMetaMan;
+    friend class CSmartnodeMetaMan;
 
 private:
     mutable CCriticalSection cs;
@@ -31,13 +31,13 @@ private:
     int64_t nLastDsq = 0;
     int nMixingTxCount = 0;
 
-    // KEEP TRACK OF GOVERNANCE ITEMS EACH MASTERNODE HAS VOTE UPON FOR RECALCULATION
+    // KEEP TRACK OF GOVERNANCE ITEMS EACH SMARTNODE HAS VOTE UPON FOR RECALCULATION
     std::map<uint256, int> mapGovernanceObjectsVotedOn;
 
 public:
-    CMasternodeMetaInfo() {}
-    CMasternodeMetaInfo(const uint256& _proTxHash) : proTxHash(_proTxHash) {}
-    CMasternodeMetaInfo(const CMasternodeMetaInfo& ref) :
+    CSmartnodeMetaInfo() {}
+    CSmartnodeMetaInfo(const uint256& _proTxHash) : proTxHash(_proTxHash) {}
+    CSmartnodeMetaInfo(const CSmartnodeMetaInfo& ref) :
         proTxHash(ref.proTxHash),
         nLastDsq(ref.nLastDsq),
         nMixingTxCount(ref.nMixingTxCount),
@@ -61,23 +61,23 @@ public:
     int64_t GetLastDsq() const { LOCK(cs); return nLastDsq; }
     int GetMixingTxCount() const { LOCK(cs); return nMixingTxCount; }
 
-    bool IsValidForMixingTxes() const { return GetMixingTxCount() <= MASTERNODE_MAX_MIXING_TXES; }
+    bool IsValidForMixingTxes() const { return GetMixingTxCount() <= SMARTNODE_MAX_MIXING_TXES; }
 
     // KEEP TRACK OF EACH GOVERNANCE ITEM INCASE THIS NODE GOES OFFLINE, SO WE CAN RECALC THEIR STATUS
     void AddGovernanceVote(const uint256& nGovernanceObjectHash);
 
     void RemoveGovernanceObject(const uint256& nGovernanceObjectHash);
 };
-typedef std::shared_ptr<CMasternodeMetaInfo> CMasternodeMetaInfoPtr;
+typedef std::shared_ptr<CSmartnodeMetaInfo> CSmartnodeMetaInfoPtr;
 
-class CMasternodeMetaMan
+class CSmartnodeMetaMan
 {
 private:
     static const std::string SERIALIZATION_VERSION_STRING;
 
     CCriticalSection cs;
 
-    std::map<uint256, CMasternodeMetaInfoPtr> metaInfos;
+    std::map<uint256, CSmartnodeMetaInfoPtr> metaInfos;
     std::vector<uint256> vecDirtyGovernanceObjectHashes;
 
     // keep track of dsq count to prevent smartnodes from gaming privatesend queue
@@ -104,12 +104,12 @@ public:
             READWRITE(strVersion);
         }
 
-        std::vector<CMasternodeMetaInfo> tmpMetaInfo;
+        std::vector<CSmartnodeMetaInfo> tmpMetaInfo;
         if (ser_action.ForRead()) {
             READWRITE(tmpMetaInfo);
             metaInfos.clear();
             for (auto& mm : tmpMetaInfo) {
-                metaInfos.emplace(mm.GetProTxHash(), std::make_shared<CMasternodeMetaInfo>(std::move(mm)));
+                metaInfos.emplace(mm.GetProTxHash(), std::make_shared<CSmartnodeMetaInfo>(std::move(mm)));
             }
         } else {
             for (auto& p : metaInfos) {
@@ -122,7 +122,7 @@ public:
     }
 
 public:
-    CMasternodeMetaInfoPtr GetMetaInfo(const uint256& proTxHash, bool fCreate = true);
+    CSmartnodeMetaInfoPtr GetMetaInfo(const uint256& proTxHash, bool fCreate = true);
 
     int64_t GetDsqCount() { LOCK(cs); return nDsqCount; }
 
@@ -140,6 +140,6 @@ public:
     std::string ToString() const;
 };
 
-extern CMasternodeMetaMan mmetaman;
+extern CSmartnodeMetaMan mmetaman;
 
-#endif//MASTERNODE_META_H
+#endif//SMARTNODE_META_H

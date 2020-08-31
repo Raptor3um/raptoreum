@@ -27,7 +27,7 @@ CPrivateSendServer privateSendServer;
 
 void CPrivateSendServer::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman)
 {
-    if (!fMasternodeMode) return;
+    if (!fSmartnodeMode) return;
     if (fLiteMode) return; // ignore all Raptoreum related functionality
     if (!smartnodeSync.IsBlockchainSynced()) return;
 
@@ -52,7 +52,7 @@ void CPrivateSendServer::ProcessMessage(CNode* pfrom, const std::string& strComm
         LogPrint(BCLog::PRIVATESEND, "DSACCEPT -- nDenom %d (%s)  txCollateral %s", dsa.nDenom, CPrivateSend::GetDenominationsToString(dsa.nDenom), dsa.txCollateral.ToString());
 
         auto mnList = deterministicMNManager->GetListAtChainTip();
-        auto dmn = mnList.GetValidMNByCollateral(activeMasternodeInfo.outpoint);
+        auto dmn = mnList.GetValidMNByCollateral(activeSmartnodeInfo.outpoint);
         if (!dmn) {
             PushStatus(pfrom, STATUS_REJECTED, ERR_MN_LIST, connman);
             return;
@@ -64,7 +64,7 @@ void CPrivateSendServer::ProcessMessage(CNode* pfrom, const std::string& strComm
                 if (!lockRecv) return;
 
                 for (const auto& q : vecPrivateSendQueue) {
-                    if (q.smartnodeOutpoint == activeMasternodeInfo.outpoint) {
+                    if (q.smartnodeOutpoint == activeSmartnodeInfo.outpoint) {
                         // refuse to create another queue this often
                         LogPrint(BCLog::PRIVATESEND, "DSACCEPT -- last dsq is still in queue, refuse to mix\n");
                         PushStatus(pfrom, STATUS_REJECTED, ERR_RECENT, connman);
@@ -146,7 +146,7 @@ void CPrivateSendServer::ProcessMessage(CNode* pfrom, const std::string& strComm
             LogPrint(BCLog::PRIVATESEND, "DSQUEUE -- nLastDsq: %d  threshold: %d  nDsqCount: %d\n", nLastDsq, nThreshold, mmetaman.GetDsqCount());
             //don't allow a few nodes to dominate the queuing process
             if (nLastDsq != 0 && nThreshold > mmetaman.GetDsqCount()) {
-                LogPrint(BCLog::PRIVATESEND, "DSQUEUE -- Masternode %s is sending too many dsq messages\n", dmn->pdmnState->addr.ToString());
+                LogPrint(BCLog::PRIVATESEND, "DSQUEUE -- Smartnode %s is sending too many dsq messages\n", dmn->pdmnState->addr.ToString());
                 return;
             }
             mmetaman.AllowMixing(dmn->proTxHash);
@@ -230,11 +230,11 @@ void CPrivateSendServer::SetNull()
 }
 
 //
-// Check the mixing progress and send client updates if a Masternode
+// Check the mixing progress and send client updates if a Smartnode
 //
 void CPrivateSendServer::CheckPool(CConnman& connman)
 {
-    if (!fMasternodeMode) return;
+    if (!fSmartnodeMode) return;
 
     LogPrint(BCLog::PRIVATESEND, "CPrivateSendServer::CheckPool -- entries count %lu\n", GetEntriesCount());
 
@@ -282,7 +282,7 @@ void CPrivateSendServer::CreateFinalTransaction(CConnman& connman)
 
 void CPrivateSendServer::CommitFinalTransaction(CConnman& connman)
 {
-    if (!fMasternodeMode) return; // check and relay final tx only on smartnode
+    if (!fSmartnodeMode) return; // check and relay final tx only on smartnode
 
     CTransactionRef finalTransaction = MakeTransactionRef(finalMutableTransaction);
     uint256 hashTx = finalTransaction->GetHash();
@@ -307,7 +307,7 @@ void CPrivateSendServer::CommitFinalTransaction(CConnman& connman)
 
     // create and sign smartnode dstx transaction
     if (!CPrivateSend::GetDSTX(hashTx)) {
-        CPrivateSendBroadcastTx dstxNew(finalTransaction, activeMasternodeInfo.outpoint, GetAdjustedTime());
+        CPrivateSendBroadcastTx dstxNew(finalTransaction, activeSmartnodeInfo.outpoint, GetAdjustedTime());
         dstxNew.Sign();
         CPrivateSend::AddDSTX(dstxNew);
     }
@@ -336,13 +336,13 @@ void CPrivateSendServer::CommitFinalTransaction(CConnman& connman)
 // a client submits a transaction then refused to sign, there must be a cost. Otherwise they
 // would be able to do this over and over again and bring the mixing to a halt.
 //
-// How does this work? Messages to Masternodes come in via NetMsgType::DSVIN, these require a valid collateral
-// transaction for the client to be able to enter the pool. This transaction is kept by the Masternode
+// How does this work? Messages to Smartnodes come in via NetMsgType::DSVIN, these require a valid collateral
+// transaction for the client to be able to enter the pool. This transaction is kept by the Smartnode
 // until the transaction is either complete or fails.
 //
 void CPrivateSendServer::ChargeFees(CConnman& connman)
 {
-    if (!fMasternodeMode) return;
+    if (!fSmartnodeMode) return;
 
     //we don't need to charge collateral for every offence.
     if (GetRandInt(100) > 33) return;
@@ -412,7 +412,7 @@ void CPrivateSendServer::ChargeFees(CConnman& connman)
 */
 void CPrivateSendServer::ChargeRandomFees(CConnman& connman)
 {
-    if (!fMasternodeMode) return;
+    if (!fSmartnodeMode) return;
 
     for (const auto& txCollateral : vecSessionCollaterals) {
         if (GetRandInt(100) > 10) return;
@@ -438,7 +438,7 @@ void CPrivateSendServer::ConsumeCollateral(CConnman& connman, const CTransaction
 //
 void CPrivateSendServer::CheckTimeout(CConnman& connman)
 {
-    if (!fMasternodeMode) return;
+    if (!fSmartnodeMode) return;
 
     CheckQueue();
 
@@ -483,12 +483,12 @@ void CPrivateSendServer::CheckTimeout(CConnman& connman)
 */
 void CPrivateSendServer::CheckForCompleteQueue(CConnman& connman)
 {
-    if (!fMasternodeMode) return;
+    if (!fSmartnodeMode) return;
 
     if (nState == POOL_STATE_QUEUE && IsSessionReady()) {
         SetState(POOL_STATE_ACCEPTING_ENTRIES);
 
-        CPrivateSendQueue dsq(nSessionDenom, activeMasternodeInfo.outpoint, GetAdjustedTime(), true);
+        CPrivateSendQueue dsq(nSessionDenom, activeSmartnodeInfo.outpoint, GetAdjustedTime(), true);
         LogPrint(BCLog::PRIVATESEND, "CPrivateSendServer::CheckForCompleteQueue -- queue is ready, signing and relaying (%s)\n", dsq.ToString());
         dsq.Sign();
         dsq.Relay(connman);
@@ -543,7 +543,7 @@ bool CPrivateSendServer::IsInputScriptSigValid(const CTxIn& txin)
 //
 bool CPrivateSendServer::AddEntry(CConnman& connman, const CPrivateSendEntry& entry, PoolMessage& nMessageIDRet)
 {
-    if (!fMasternodeMode) return false;
+    if (!fSmartnodeMode) return false;
 
     if (GetEntriesCount() >= nSessionMaxParticipants) {
         LogPrint(BCLog::PRIVATESEND, "CPrivateSendServer::%s -- ERROR: entries is full!\n", __func__);
@@ -651,7 +651,7 @@ bool CPrivateSendServer::IsSignaturesComplete()
 
 bool CPrivateSendServer::IsAcceptableDSA(const CPrivateSendAccept& dsa, PoolMessage& nMessageIDRet)
 {
-    if (!fMasternodeMode) return false;
+    if (!fSmartnodeMode) return false;
 
     // is denom even smth legit?
     std::vector<int> vecBits;
@@ -673,7 +673,7 @@ bool CPrivateSendServer::IsAcceptableDSA(const CPrivateSendAccept& dsa, PoolMess
 
 bool CPrivateSendServer::CreateNewSession(const CPrivateSendAccept& dsa, PoolMessage& nMessageIDRet, CConnman& connman)
 {
-    if (!fMasternodeMode || nSessionID != 0) return false;
+    if (!fSmartnodeMode || nSessionID != 0) return false;
 
     // new session can only be started in idle mode
     if (nState != POOL_STATE_IDLE) {
@@ -696,7 +696,7 @@ bool CPrivateSendServer::CreateNewSession(const CPrivateSendAccept& dsa, PoolMes
 
     if (!fUnitTest) {
         //broadcast that I'm accepting entries, only if it's the first entry through
-        CPrivateSendQueue dsq(nSessionDenom, activeMasternodeInfo.outpoint, GetAdjustedTime(), false);
+        CPrivateSendQueue dsq(nSessionDenom, activeSmartnodeInfo.outpoint, GetAdjustedTime(), false);
         LogPrint(BCLog::PRIVATESEND, "CPrivateSendServer::CreateNewSession -- signing and relaying new queue: %s\n", dsq.ToString());
         dsq.Sign();
         dsq.Relay(connman);
@@ -712,7 +712,7 @@ bool CPrivateSendServer::CreateNewSession(const CPrivateSendAccept& dsa, PoolMes
 
 bool CPrivateSendServer::AddUserToExistingSession(const CPrivateSendAccept& dsa, PoolMessage& nMessageIDRet)
 {
-    if (!fMasternodeMode || nSessionID == 0 || IsSessionReady()) return false;
+    if (!fSmartnodeMode || nSessionID == 0 || IsSessionReady()) return false;
 
     if (!IsAcceptableDSA(dsa, nMessageIDRet)) {
         return false;
@@ -833,10 +833,10 @@ void CPrivateSendServer::RelayCompletedTransaction(PoolMessage nMessageID, CConn
 
 void CPrivateSendServer::SetState(PoolState nStateNew)
 {
-    if (!fMasternodeMode) return;
+    if (!fSmartnodeMode) return;
 
     if (nStateNew == POOL_STATE_ERROR || nStateNew == POOL_STATE_SUCCESS) {
-        LogPrint(BCLog::PRIVATESEND, "CPrivateSendServer::SetState -- Can't set state to ERROR or SUCCESS as a Masternode. \n");
+        LogPrint(BCLog::PRIVATESEND, "CPrivateSendServer::SetState -- Can't set state to ERROR or SUCCESS as a Smartnode. \n");
         return;
     }
 
@@ -848,7 +848,7 @@ void CPrivateSendServer::SetState(PoolState nStateNew)
 void CPrivateSendServer::DoMaintenance(CConnman& connman)
 {
     if (fLiteMode) return;        // disable all Raptoreum specific functionality
-    if (!fMasternodeMode) return; // only run on smartnodes
+    if (!fSmartnodeMode) return; // only run on smartnodes
 
     if (!smartnodeSync.IsBlockchainSynced() || ShutdownRequested()) return;
 

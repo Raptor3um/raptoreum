@@ -2481,7 +2481,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             }
 
             if (!mmetaman.GetMetaInfo(dmn->proTxHash)->IsValidForMixingTxes()) {
-                LogPrint(BCLog::PRIVATESEND, "DSTX -- Masternode %s is sending too many transactions %s\n", dstx.smartnodeOutpoint.ToStringShort(), hashTx.ToString());
+                LogPrint(BCLog::PRIVATESEND, "DSTX -- Smartnode %s is sending too many transactions %s\n", dstx.smartnodeOutpoint.ToStringShort(), hashTx.ToString());
                 return true;
                 // TODO: Not an error? Could it be that someone is relaying old DSTXes
                 // we have no idea about (e.g we were offline)? How to handle them?
@@ -2492,7 +2492,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                 return false;
             }
 
-            LogPrint(BCLog::PRIVATESEND, "DSTX -- Got Masternode transaction %s\n", hashTx.ToString());
+            LogPrint(BCLog::PRIVATESEND, "DSTX -- Got Smartnode transaction %s\n", hashTx.ToString());
             mempool.PrioritiseTransaction(hashTx, 0.1*COIN);
             mmetaman.DisallowMixing(dmn->proTxHash);
         }
@@ -2505,7 +2505,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         if (!AlreadyHave(inv) && AcceptToMemoryPool(mempool, state, ptx, true, &fMissingInputs)) {
             // Process custom txes, this changes AlreadyHave to "true"
             if (nInvType == MSG_DSTX) {
-                LogPrint(BCLog::PRIVATESEND, "DSTX -- Masternode transaction accepted, txid=%s, peer=%d\n",
+                LogPrint(BCLog::PRIVATESEND, "DSTX -- Smartnode transaction accepted, txid=%s, peer=%d\n",
                         tx.GetHash().ToString(), pfrom->GetId());
                 CPrivateSend::AddDSTX(dstx);
             }
@@ -3422,7 +3422,7 @@ void PeerLogicValidation::EvictExtraOutboundPeers(int64_t time_in_seconds)
 
         connman->ForEachNode([&](CNode* pnode) {
             // Don't disconnect smartnodes just because they were slow in block announcement
-            if (pnode->fMasternode) return;
+            if (pnode->fSmartnode) return;
             // Ignore non-outbound peers, or nodes marked for disconnect already
             if (!IsOutboundDisconnectionCandidate(pnode) || pnode->fDisconnect) return;
             CNodeState *state = State(pnode->GetId());
@@ -3781,14 +3781,14 @@ bool PeerLogicValidation::SendMessages(CNode* pto, std::atomic<bool>& interruptM
             pto->vInventoryBlockToSend.clear();
 
             // Check whether periodic sends should happen
-            // Note: If this node is running in a Masternode mode, it makes no sense to delay outgoing txes
+            // Note: If this node is running in a Smartnode mode, it makes no sense to delay outgoing txes
             // because we never produce any txes ourselves i.e. no privacy is lost in this case.
-            bool fSendTrickle = pto->fWhitelisted || fMasternodeMode;
+            bool fSendTrickle = pto->fWhitelisted || fSmartnodeMode;
             if (pto->nNextInvSend < nNow) {
                 fSendTrickle = true;
                 // Use half the delay for regular outbound peers, as there is less privacy concern for them,
-                // and quarter the delay for Masternode outbound peers, as there is even less privacy concern in this case.
-                pto->nNextInvSend = PoissonNextSend(nNow, INVENTORY_BROADCAST_INTERVAL >> !pto->fInbound >> pto->fMasternode);
+                // and quarter the delay for Smartnode outbound peers, as there is even less privacy concern in this case.
+                pto->nNextInvSend = PoissonNextSend(nNow, INVENTORY_BROADCAST_INTERVAL >> !pto->fInbound >> pto->fSmartnode);
             }
 
             // Time to send but the peer has requested we not relay transactions.

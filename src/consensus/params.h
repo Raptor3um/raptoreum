@@ -118,9 +118,9 @@ struct Params {
     uint256 hashGenesisBlock;
     uint256 hashDevnetGenesisBlock;
     int nSubsidyHalvingInterval;
-    int nMasternodePaymentsStartBlock;
-    int nMasternodePaymentsIncreaseBlock;
-    int nMasternodePaymentsIncreasePeriod; // in blocks
+    int nSmartnodePaymentsStartBlock;
+    int nSmartnodePaymentsIncreaseBlock;
+    int nSmartnodePaymentsIncreasePeriod; // in blocks
     int nInstantSendConfirmationsRequired; // in blocks
     int nInstantSendKeepLock; // in blocks
     int nBudgetPaymentsStartBlock;
@@ -131,7 +131,7 @@ struct Params {
     int nSuperblockCycle; // in blocks
     int nGovernanceMinQuorum; // Min absolute vote count to trigger an action
     int nGovernanceFilterElements;
-    int nMasternodeMinimumConfirmations;
+    int nSmartnodeMinimumConfirmations;
     bool BIPCSVEnabled;
     bool BIP147Enabled;
     /** Block height and hash at which BIP34 becomes active */

@@ -71,8 +71,8 @@ public:
 
     std::vector<CGovernanceVote> GetVotes() const;
 
-    void RemoveVotesFromMasternode(const COutPoint& outpointMasternode);
-    std::set<uint256> RemoveInvalidVotes(const COutPoint& outpointMasternode, bool fProposal);
+    void RemoveVotesFromSmartnode(const COutPoint& outpointSmartnode);
+    std::set<uint256> RemoveInvalidVotes(const COutPoint& outpointSmartnode, bool fProposal);
 
     ADD_SERIALIZE_METHODS;
 

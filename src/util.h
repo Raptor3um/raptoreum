@@ -46,7 +46,7 @@
 
 //Raptoreum only features
 
-extern bool fMasternodeMode;
+extern bool fSmartnodeMode;
 extern bool fLiteMode;
 extern int nWalletBackups;
 

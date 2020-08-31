@@ -20,7 +20,7 @@
 
 #include <string>
 
-CMasternodePayments mnpayments;
+CSmartnodePayments mnpayments;
 
 bool IsOldBudgetBlockValueValid(const CBlock& block, int nBlockHeight, CAmount blockReward, std::string& strErrorRet) {
     const Consensus::Params& consensusParams = Params().GetConsensus();
@@ -212,7 +212,7 @@ bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight, CAmount bloc
     return false;
 }
 
-void FillBlockPayments(CMutableTransaction& txNew, int nBlockHeight, CAmount blockReward, std::vector<CTxOut>& voutMasternodePaymentsRet, std::vector<CTxOut>& voutSuperblockPaymentsRet)
+void FillBlockPayments(CMutableTransaction& txNew, int nBlockHeight, CAmount blockReward, std::vector<CTxOut>& voutSmartnodePaymentsRet, std::vector<CTxOut>& voutSuperblockPaymentsRet)
 {
     // only create superblocks if spork is enabled AND if superblock is actually triggered
     // (height should be validated inside)
@@ -222,24 +222,24 @@ void FillBlockPayments(CMutableTransaction& txNew, int nBlockHeight, CAmount blo
             CSuperblockManager::GetSuperblockPayments(nBlockHeight, voutSuperblockPaymentsRet);
     }
 
-    if (!mnpayments.GetMasternodeTxOuts(nBlockHeight, blockReward, voutMasternodePaymentsRet)) {
+    if (!mnpayments.GetSmartnodeTxOuts(nBlockHeight, blockReward, voutSmartnodePaymentsRet)) {
         LogPrint(BCLog::MNPAYMENTS, "%s -- no smartnode to pay (MN list probably empty)\n", __func__);
     }
 
-    txNew.vout.insert(txNew.vout.end(), voutMasternodePaymentsRet.begin(), voutMasternodePaymentsRet.end());
+    txNew.vout.insert(txNew.vout.end(), voutSmartnodePaymentsRet.begin(), voutSmartnodePaymentsRet.end());
     txNew.vout.insert(txNew.vout.end(), voutSuperblockPaymentsRet.begin(), voutSuperblockPaymentsRet.end());
 
-    std::string voutMasternodeStr;
-    for (const auto& txout : voutMasternodePaymentsRet) {
+    std::string voutSmartnodeStr;
+    for (const auto& txout : voutSmartnodePaymentsRet) {
         // subtract MN payment from miner reward
         txNew.vout[0].nValue -= txout.nValue;
-        if (!voutMasternodeStr.empty())
-            voutMasternodeStr += ",";
-        voutMasternodeStr += txout.ToString();
+        if (!voutSmartnodeStr.empty())
+            voutSmartnodeStr += ",";
+        voutSmartnodeStr += txout.ToString();
     }
 
-    LogPrint(BCLog::MNPAYMENTS, "%s -- nBlockHeight %d blockReward %lld voutMasternodePaymentsRet \"%s\" txNew %s", __func__,
-                            nBlockHeight, blockReward, voutMasternodeStr, txNew.ToString());
+    LogPrint(BCLog::MNPAYMENTS, "%s -- nBlockHeight %d blockReward %lld voutSmartnodePaymentsRet \"%s\" txNew %s", __func__,
+                            nBlockHeight, blockReward, voutSmartnodeStr, txNew.ToString());
 }
 
 std::string GetRequiredPaymentsString(int nBlockHeight, const CDeterministicMNCPtr &payee)
@@ -291,37 +291,37 @@ std::map<int, std::string> GetRequiredPaymentsStrings(int nStartHeight, int nEnd
 }
 
 /**
-*   GetMasternodeTxOuts
+*   GetSmartnodeTxOuts
 *
 *   Get smartnode payment tx outputs
 */
 
-bool CMasternodePayments::GetMasternodeTxOuts(int nBlockHeight, CAmount blockReward, std::vector<CTxOut>& voutMasternodePaymentsRet) const
+bool CSmartnodePayments::GetSmartnodeTxOuts(int nBlockHeight, CAmount blockReward, std::vector<CTxOut>& voutSmartnodePaymentsRet) const
 {
     // make sure it's not filled yet
-    voutMasternodePaymentsRet.clear();
+    voutSmartnodePaymentsRet.clear();
 
-    if(!GetBlockTxOuts(nBlockHeight, blockReward, voutMasternodePaymentsRet)) {
-        LogPrintf("CMasternodePayments::%s -- no payee (deterministic smartnode list empty)\n", __func__);
+    if(!GetBlockTxOuts(nBlockHeight, blockReward, voutSmartnodePaymentsRet)) {
+        LogPrintf("CSmartnodePayments::%s -- no payee (deterministic smartnode list empty)\n", __func__);
         return false;
     }
 
-    for (const auto& txout : voutMasternodePaymentsRet) {
+    for (const auto& txout : voutSmartnodePaymentsRet) {
         CTxDestination address1;
         ExtractDestination(txout.scriptPubKey, address1);
         CBitcoinAddress address2(address1);
 
-        LogPrintf("CMasternodePayments::%s -- Masternode payment %lld to %s\n", __func__, txout.nValue, address2.ToString());
+        LogPrintf("CSmartnodePayments::%s -- Smartnode payment %lld to %s\n", __func__, txout.nValue, address2.ToString());
     }
 
     return true;
 }
 
-bool CMasternodePayments::GetBlockTxOuts(int nBlockHeight, CAmount blockReward, std::vector<CTxOut>& voutMasternodePaymentsRet) const
+bool CSmartnodePayments::GetBlockTxOuts(int nBlockHeight, CAmount blockReward, std::vector<CTxOut>& voutSmartnodePaymentsRet) const
 {
-    voutMasternodePaymentsRet.clear();
+    voutSmartnodePaymentsRet.clear();
 
-    CAmount smartnodeReward = GetMasternodePayment(nBlockHeight, blockReward);
+    CAmount smartnodeReward = GetSmartnodePayment(nBlockHeight, blockReward);
 
     const CBlockIndex* pindex;
     {
@@ -343,10 +343,10 @@ bool CMasternodePayments::GetBlockTxOuts(int nBlockHeight, CAmount blockReward, 
     }
 
     if (smartnodeReward > 0) {
-        voutMasternodePaymentsRet.emplace_back(smartnodeReward, dmnPayee->pdmnState->scriptPayout);
+        voutSmartnodePaymentsRet.emplace_back(smartnodeReward, dmnPayee->pdmnState->scriptPayout);
     }
     if (operatorReward > 0) {
-        voutMasternodePaymentsRet.emplace_back(operatorReward, dmnPayee->pdmnState->scriptOperatorPayout);
+        voutSmartnodePaymentsRet.emplace_back(operatorReward, dmnPayee->pdmnState->scriptOperatorPayout);
     }
 
     return true;
@@ -354,7 +354,7 @@ bool CMasternodePayments::GetBlockTxOuts(int nBlockHeight, CAmount blockReward, 
 
 // Is this smartnode scheduled to get paid soon?
 // -- Only look ahead up to 8 blocks to allow for propagation of the latest 2 blocks of votes
-bool CMasternodePayments::IsScheduled(const CDeterministicMNCPtr& dmnIn, int nNotBlockHeight) const
+bool CSmartnodePayments::IsScheduled(const CDeterministicMNCPtr& dmnIn, int nNotBlockHeight) const
 {
     auto projectedPayees = deterministicMNManager->GetListAtChainTip().GetProjectedMNPayees(8);
     for (const auto &dmn : projectedPayees) {
@@ -365,20 +365,20 @@ bool CMasternodePayments::IsScheduled(const CDeterministicMNCPtr& dmnIn, int nNo
     return false;
 }
 
-bool CMasternodePayments::IsTransactionValid(const CTransaction& txNew, int nBlockHeight, CAmount blockReward) const
+bool CSmartnodePayments::IsTransactionValid(const CTransaction& txNew, int nBlockHeight, CAmount blockReward) const
 {
     if (!deterministicMNManager->IsDIP3Enforced(nBlockHeight)) {
         // can't verify historical blocks here
         return true;
     }
 
-    std::vector<CTxOut> voutMasternodePayments;
-    if (!GetBlockTxOuts(nBlockHeight, blockReward, voutMasternodePayments)) {
-        LogPrintf("CMasternodePayments::%s -- ERROR failed to get payees for block at height %s\n", __func__, nBlockHeight);
+    std::vector<CTxOut> voutSmartnodePayments;
+    if (!GetBlockTxOuts(nBlockHeight, blockReward, voutSmartnodePayments)) {
+        LogPrintf("CSmartnodePayments::%s -- ERROR failed to get payees for block at height %s\n", __func__, nBlockHeight);
         return true;
     }
 
-    for (const auto& txout : voutMasternodePayments) {
+    for (const auto& txout : voutSmartnodePayments) {
         bool found = false;
         for (const auto& txout2 : txNew.vout) {
             if (txout == txout2) {
@@ -390,7 +390,7 @@ bool CMasternodePayments::IsTransactionValid(const CTransaction& txNew, int nBlo
             CTxDestination dest;
             if (!ExtractDestination(txout.scriptPubKey, dest))
                 assert(false);
-            LogPrintf("CMasternodePayments::%s -- ERROR failed to find expected payee %s in block at height %s\n", __func__, CBitcoinAddress(dest).ToString(), nBlockHeight);
+            LogPrintf("CSmartnodePayments::%s -- ERROR failed to find expected payee %s in block at height %s\n", __func__, CBitcoinAddress(dest).ToString(), nBlockHeight);
             return false;
         }
     }

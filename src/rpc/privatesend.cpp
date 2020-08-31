@@ -30,7 +30,7 @@ UniValue privatesend(const JSONRPCRequest& request)
             "  reset       - Reset mixing\n"
         );
 
-    if (fMasternodeMode)
+    if (fSmartnodeMode)
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Client-side mixing is not supported on smartnodes");
 
     if (!privateSendClient.fEnablePrivateSend) {
@@ -127,7 +127,7 @@ UniValue getprivatesendinfo(const JSONRPCRequest& request)
 
     UniValue obj(UniValue::VOBJ);
 
-    if (fMasternodeMode) {
+    if (fSmartnodeMode) {
         privateSendServer.GetJsonInfo(obj);
         return obj;
     }

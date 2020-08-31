@@ -13,7 +13,7 @@
 class CGovernanceVote;
 class CConnman;
 
-// INTENTION OF MASTERNODES REGARDING ITEM
+// INTENTION OF SMARTNODES REGARDING ITEM
 enum vote_outcome_enum_t {
     VOTE_OUTCOME_NONE      = 0,
     VOTE_OUTCOME_YES       = 1,
@@ -74,7 +74,7 @@ private:
 
 public:
     CGovernanceVote();
-    CGovernanceVote(const COutPoint& outpointMasternodeIn, const uint256& nParentHashIn, vote_signal_enum_t eVoteSignalIn, vote_outcome_enum_t eVoteOutcomeIn);
+    CGovernanceVote(const COutPoint& outpointSmartnodeIn, const uint256& nParentHashIn, vote_signal_enum_t eVoteSignalIn, vote_outcome_enum_t eVoteOutcomeIn);
 
     bool IsValid() const { return fValid; }
 
@@ -103,7 +103,7 @@ public:
     bool IsValid(bool useVotingKey) const;
     void Relay(CConnman& connman) const;
 
-    const COutPoint& GetMasternodeOutpoint() const { return smartnodeOutpoint; }
+    const COutPoint& GetSmartnodeOutpoint() const { return smartnodeOutpoint; }
 
     /**
     *   GetHash()

@@ -154,12 +154,12 @@
            </widget>
           </item>
           <item>
-           <widget class="QCheckBox" name="showMasternodesTab">
+           <widget class="QCheckBox" name="showSmartnodesTab">
             <property name="toolTip">
              <string>Show additional tab listing all your smartnodes in first sub-tab&lt;br/&gt;and all smartnodes on the network in second sub-tab.</string>
             </property>
             <property name="text">
-             <string>Show Masternodes Tab</string>
+             <string>Show Smartnodes Tab</string>
             </property>
            </widget>
           </item>

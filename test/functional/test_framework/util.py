@@ -445,7 +445,7 @@ def sync_mempools(rpc_connections, *, wait=1, timeout=60):
 
 def force_finish_mnsync(node):
     """
-    Masternodes won't accept incoming connections while IsSynced is false.
+    Smartnodes won't accept incoming connections while IsSynced is false.
     Force them to switch to this state to speed things up.
     """
     while True:

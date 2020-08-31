@@ -261,13 +261,13 @@ public:
     uint256 GetSignatureHash() const;
     /** Sign this mixing transaction
      *  \return true if all conditions are met:
-     *     1) we have an active Masternode,
-     *     2) we have a valid Masternode private key,
+     *     1) we have an active Smartnode,
+     *     2) we have a valid Smartnode private key,
      *     3) we signed the message successfully, and
      *     4) we verified the message successfully
      */
     bool Sign();
-    /// Check if we have a valid Masternode address
+    /// Check if we have a valid Smartnode address
     bool CheckSignature(const CBLSPublicKey& blsPubKey) const;
 
     bool Relay(CConnman& connman);
@@ -362,7 +362,7 @@ class CPrivateSendBaseSession
 protected:
     mutable CCriticalSection cs_privatesend;
 
-    std::vector<CPrivateSendEntry> vecEntries; // Masternode/clients entries
+    std::vector<CPrivateSendEntry> vecEntries; // Smartnode/clients entries
 
     PoolState nState;                // should be one of the POOL_STATE_XXX values
     int64_t nTimeLastSuccessfulStep; // the time when last successful mixing step was performed

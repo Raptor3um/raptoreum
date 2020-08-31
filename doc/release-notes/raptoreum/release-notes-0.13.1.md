@@ -53,7 +53,7 @@ this way. This is fully backwards compatible and no update is required for (non-
 
 GUI changes
 -----------
-Masternodes tab has a new checkbox that should filter smartnode list by using keys stored in the wallet.
+Smartnodes tab has a new checkbox that should filter smartnode list by using keys stored in the wallet.
 This should make it much easier for smartnode owners to find their smartnodes in the list.
 
 RPC changes

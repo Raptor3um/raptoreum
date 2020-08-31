@@ -61,15 +61,15 @@ classical transactions.
 
 Read more: https://github.com/raptoreum/dips/blob/master/dip-0002.md
 
-DIP0003 - Deterministic Masternode Lists
+DIP0003 - Deterministic Smartnode Lists
 ----------------------------------------
 This DIP provides on-chain consensus for smartnode lists that in turn allow for deterministic quorum
 derivation and service scoring of smartnode rewards.
 
-In the previous system, each node maintained its own individual smartnode list. Masternodes gained
+In the previous system, each node maintained its own individual smartnode list. Smartnodes gained
 entry to that smartnode list after the owner created a 1000 Raptoreum UTXO and the smartnode broadcast
 a "smartnode broadcast/announcement" P2P message. This in turn set the smartnode to a PRE_ENABLED
-state in the list maintained by each node. Masternodes then regularly broadcasted ping messages to
+state in the list maintained by each node. Smartnodes then regularly broadcasted ping messages to
 keep the smartnode in ENABLED state.
 
 The previous system was maintained with consensus mechanisms that predated Satoshi Nakamoto’s solution
@@ -97,7 +97,7 @@ The new system is going to be activated via combination of a BIP9-like deploymen
 Read more: https://github.com/raptoreum/dips/blob/master/dip-0003.md
 Upgrade instructions: https://docs.raptoreum.org/DIP3-smartnode-upgrade
 
-DIP0004 - Simplified Verification of Deterministic Masternode Lists
+DIP0004 - Simplified Verification of Deterministic Smartnode Lists
 -------------------------------------------------------------------
 A verifiable and correct smartnode list is foundational to many Raptoreum features, including verification
 of an InstantSend transaction, mixing in PrivateSend and many features of Evolution. The deterministic
@@ -163,7 +163,7 @@ blockchain confirmations only and a separate indicator to show if transaction wa
 or not. For GUI it's color highlight and a new column, for RPC commands - `instantlock` field and `addlocked`
 param.
 
-One of the issues with InstantSend adoption by SPV wallets (besides lack of Deterministic Masternode List)
+One of the issues with InstantSend adoption by SPV wallets (besides lack of Deterministic Smartnode List)
 was inability to filter all InstantSend messages the same way transactions are filtered. This should be
 fixed now and SPV wallets should only get lock votes for transactions they are interested in.
 
@@ -185,9 +185,9 @@ Spork data is stored in a new cache file (`sporks.dat`) now.
 
 Governance
 ----------
-Introduction of Deterministic Masternodes requires replacing of the old smartnode private key which was used
+Introduction of Deterministic Smartnodes requires replacing of the old smartnode private key which was used
 both for operating a MN and for voting on proposals with a set of separate keys, preferably fresh new ones.
-This means that votes casted for proposals by Masternode Owners via the old system will no longer be valid
+This means that votes casted for proposals by Smartnode Owners via the old system will no longer be valid
 after DIP0003 activation and must be re-casted using the new voting key.
 
 Also, you can now get notifications about governance objects or votes via new ZMQ notifications:
@@ -196,7 +196,7 @@ Also, you can now get notifications about governance objects or votes via new ZM
 
 GUI changes
 -----------
-Masternodes tab has a new section dedicated to DIP0003 registered smartnodes now. After DIP0003 activation
+Smartnodes tab has a new section dedicated to DIP0003 registered smartnodes now. After DIP0003 activation
 this will be the only section shown here, the two old sections for non-deterministic smartnodes will no
 longer be available.
 
@@ -269,7 +269,7 @@ See detailed [set of changes](https://github.com/raptoreum/raptoreum/compare/v0.
 
 ### Network
 - [`03a6865d9`](https://github.com/raptoreum/raptoreum/commit/03a6865d9) Enforce correct port on mainnet for DIP3 MNs (#2576)
-- [`3f26ed78c`](https://github.com/raptoreum/raptoreum/commit/3f26ed78c) Backport network checks missing in CActiveDeterministicMasternodeManager::Init() (#2572)
+- [`3f26ed78c`](https://github.com/raptoreum/raptoreum/commit/3f26ed78c) Backport network checks missing in CActiveDeterministicSmartnodeManager::Init() (#2572)
 - [`7c7500864`](https://github.com/raptoreum/raptoreum/commit/7c7500864) Also stop asking other peers for a TX when ProcessTxLockRequest fails (#2529)
 - [`19a6f718d`](https://github.com/raptoreum/raptoreum/commit/19a6f718d) Don't respond with getdata for legacy inv types when spork15 is active (#2528)
 - [`22dcec71a`](https://github.com/raptoreum/raptoreum/commit/22dcec71a) Punish nodes which keep requesting and then rejecting blocks (#2518)
@@ -278,7 +278,7 @@ See detailed [set of changes](https://github.com/raptoreum/raptoreum/compare/v0.
 - [`c6cf4d9a4`](https://github.com/raptoreum/raptoreum/commit/c6cf4d9a4) Relay txes through MN network faster than through regular nodes (#2397)
 - [`e66c4e184`](https://github.com/raptoreum/raptoreum/commit/e66c4e184) Don't revert to INV based block announcements when the previous block is the devnet genesis block (#2388)
 - [`b5142ee2c`](https://github.com/raptoreum/raptoreum/commit/b5142ee2c) Implement RemoveAskFor to indicate that we're not interested in an item anymore (#2384)
-- [`53e12b7b4`](https://github.com/raptoreum/raptoreum/commit/53e12b7b4) Don't bail out from ProcessMasternodeConnections in regtest (#2368)
+- [`53e12b7b4`](https://github.com/raptoreum/raptoreum/commit/53e12b7b4) Don't bail out from ProcessSmartnodeConnections in regtest (#2368)
 - [`31759a44d`](https://github.com/raptoreum/raptoreum/commit/31759a44d) Fix tx inv throughput (#2300)
 - [`9d90b4fa4`](https://github.com/raptoreum/raptoreum/commit/9d90b4fa4) Honor filterInventoryKnown for non-tx/non-block items (#2292)
 - [`6764dafec`](https://github.com/raptoreum/raptoreum/commit/6764dafec) Skip initial smartnode list sync if spork 15 is active
@@ -353,7 +353,7 @@ See detailed [set of changes](https://github.com/raptoreum/raptoreum/compare/v0.
 - [`4cd969e3d`](https://github.com/raptoreum/raptoreum/commit/4cd969e3d) Add `previousbits` field to `getblocktemplate` output (#2201)
 - [`ac30196bc`](https://github.com/raptoreum/raptoreum/commit/ac30196bc) Show some info about the wallet dumped via dumpwallet (#2191)
 
-### LLMQ and Deterministic Masternodes
+### LLMQ and Deterministic Smartnodes
 - [`a3b01dfbe`](https://github.com/raptoreum/raptoreum/commit/a3b01dfbe) Gracefully shutdown on evodb inconsistency instead of crashing (#2611) (#2620)
 - [`3861c6a82`](https://github.com/raptoreum/raptoreum/commit/3861c6a82) Add BIP9 deployment for DIP3 on mainnet (#2585)
 - [`587911b36`](https://github.com/raptoreum/raptoreum/commit/587911b36) Fix IsBlockPayeeValid (#2577)
@@ -384,7 +384,7 @@ See detailed [set of changes](https://github.com/raptoreum/raptoreum/compare/v0.
 - [`6edad3745`](https://github.com/raptoreum/raptoreum/commit/6edad3745) Use ForEachMN and GetMN in BuildDiff instead of directly accessing mnMap
 - [`83aac461b`](https://github.com/raptoreum/raptoreum/commit/83aac461b) Allow P2SH/multisig addresses for operator rewards
 - [`f5864254c`](https://github.com/raptoreum/raptoreum/commit/f5864254c) Do not use keyIDCollateralAddress anymore when spork15 is active
-- [`5ccf556f3`](https://github.com/raptoreum/raptoreum/commit/5ccf556f3) GetMasternodeInfo with payee argument should do nothing when DIP3 is active
+- [`5ccf556f3`](https://github.com/raptoreum/raptoreum/commit/5ccf556f3) GetSmartnodeInfo with payee argument should do nothing when DIP3 is active
 - [`927e8bd79`](https://github.com/raptoreum/raptoreum/commit/927e8bd79) Also forbid reusing collateral key for owner/voting keys
 - [`826e7d063`](https://github.com/raptoreum/raptoreum/commit/826e7d063) Move internal collateral check to the else branch of the external collateral check
 - [`dc404e755`](https://github.com/raptoreum/raptoreum/commit/dc404e755) Allow P2SH for payout scripts
@@ -408,20 +408,20 @@ See detailed [set of changes](https://github.com/raptoreum/raptoreum/compare/v0.
 - [`c9d274518`](https://github.com/raptoreum/raptoreum/commit/c9d274518) Use BLS keys for the DIP3 operator key (#2352)
 - [`eaef90202`](https://github.com/raptoreum/raptoreum/commit/eaef90202) Don't use boost range adaptors in CDeterministicMNList (#2327)
 - [`6adc236d0`](https://github.com/raptoreum/raptoreum/commit/6adc236d0) Only use dataDir in CEvoDB when not in-memory (#2291)
-- [`8a878bfcf`](https://github.com/raptoreum/raptoreum/commit/8a878bfcf) Call InitializeCurrentBlockTip and activeMasternodeManager->Init after importing has finished (#2286)
+- [`8a878bfcf`](https://github.com/raptoreum/raptoreum/commit/8a878bfcf) Call InitializeCurrentBlockTip and activeSmartnodeManager->Init after importing has finished (#2286)
 - [`6b3d65028`](https://github.com/raptoreum/raptoreum/commit/6b3d65028) After DIP3 activation, allow voting with voting keys stored in your wallet (#2281)
 - [`d8247dfff`](https://github.com/raptoreum/raptoreum/commit/d8247dfff) Use refactored payment logic when spork15 is active
 - [`60002b7dd`](https://github.com/raptoreum/raptoreum/commit/60002b7dd) Payout and enforce operator reward payments
-- [`2c481f0f8`](https://github.com/raptoreum/raptoreum/commit/2c481f0f8) Implement deterministic version of CMasternodePayments::IsScheduled
-- [`19fbf8ab7`](https://github.com/raptoreum/raptoreum/commit/19fbf8ab7) Move cs_main lock from CMasternode::UpdateLastPaid to CMasternodeMan
+- [`2c481f0f8`](https://github.com/raptoreum/raptoreum/commit/2c481f0f8) Implement deterministic version of CSmartnodePayments::IsScheduled
+- [`19fbf8ab7`](https://github.com/raptoreum/raptoreum/commit/19fbf8ab7) Move cs_main lock from CSmartnode::UpdateLastPaid to CSmartnodeMan
 - [`dc7292afa`](https://github.com/raptoreum/raptoreum/commit/dc7292afa) Implement new MN payments logic and add compatibility code
-- [`d4530eb7d`](https://github.com/raptoreum/raptoreum/commit/d4530eb7d) Put all smartnodes in MASTERNODE_ENABLED state when spork15 is active
+- [`d4530eb7d`](https://github.com/raptoreum/raptoreum/commit/d4530eb7d) Put all smartnodes in SMARTNODE_ENABLED state when spork15 is active
 - [`31b4f8354`](https://github.com/raptoreum/raptoreum/commit/31b4f8354) Forbid starting of legacy smartnodes with non matching ProTx collateral values
-- [`5050a9205`](https://github.com/raptoreum/raptoreum/commit/5050a9205) Add compatibility code for FindRandomNotInVec and GetMasternodeScores
+- [`5050a9205`](https://github.com/raptoreum/raptoreum/commit/5050a9205) Add compatibility code for FindRandomNotInVec and GetSmartnodeScores
 - [`cc73422f8`](https://github.com/raptoreum/raptoreum/commit/cc73422f8) Add methods to add/remove (non-)deterministic MNs
-- [`7d14566bc`](https://github.com/raptoreum/raptoreum/commit/7d14566bc) Add compatibility code to CMasternodeMan so that old code is still compatible
+- [`7d14566bc`](https://github.com/raptoreum/raptoreum/commit/7d14566bc) Add compatibility code to CSmartnodeMan so that old code is still compatible
 - [`27e8b48a6`](https://github.com/raptoreum/raptoreum/commit/27e8b48a6) Stop executing legacy MN list code when spork 15 is activated
-- [`d90b13996`](https://github.com/raptoreum/raptoreum/commit/d90b13996) Implement CActiveDeterministicMasternodeManager
+- [`d90b13996`](https://github.com/raptoreum/raptoreum/commit/d90b13996) Implement CActiveDeterministicSmartnodeManager
 - [`a5e65aa37`](https://github.com/raptoreum/raptoreum/commit/a5e65aa37) Erase mnListCache entry on UndoBlock (#2254)
 - [`88e7888de`](https://github.com/raptoreum/raptoreum/commit/88e7888de) Try using cache in GetListForBlock before reading from disk (#2253)
 - [`9653af2f3`](https://github.com/raptoreum/raptoreum/commit/9653af2f3) Classes, validation and update logic for CProUpRevTX
@@ -430,7 +430,7 @@ See detailed [set of changes](https://github.com/raptoreum/raptoreum/compare/v0.
 - [`923fd6739`](https://github.com/raptoreum/raptoreum/commit/923fd6739) Implement CProUpServTx logic in CDeterministicMNManager
 - [`6ec0d7aea`](https://github.com/raptoreum/raptoreum/commit/6ec0d7aea) Classes and basic validation of ProUpServTx
 - [`255403e92`](https://github.com/raptoreum/raptoreum/commit/255403e92) Include proTx data in json formatted transactions
-- [`25545fc1e`](https://github.com/raptoreum/raptoreum/commit/25545fc1e) Split keyIDMasternode into keyIDOwner/keyIDOperator/keyIDVoting (#2248)
+- [`25545fc1e`](https://github.com/raptoreum/raptoreum/commit/25545fc1e) Split keyIDSmartnode into keyIDOwner/keyIDOperator/keyIDVoting (#2248)
 - [`2c172873a`](https://github.com/raptoreum/raptoreum/commit/2c172873a) Don't allow non-ProTx smartnode collaterals after DIP3 activation
 - [`9e8a86714`](https://github.com/raptoreum/raptoreum/commit/9e8a86714) Implementation of deterministic MNs list
 - [`76fd30894`](https://github.com/raptoreum/raptoreum/commit/76fd30894) Automatically lock ProTx collaterals when TX is added/loaded to wallet
@@ -448,11 +448,11 @@ See detailed [set of changes](https://github.com/raptoreum/raptoreum/compare/v0.
 - [`a3c4ee3fd`](https://github.com/raptoreum/raptoreum/commit/a3c4ee3fd) DIP2 changes to CTransaction and CMutableTransaction
 - [`d20100ecd`](https://github.com/raptoreum/raptoreum/commit/d20100ecd) DIP0003 deployment
 - [`4d3518fe0`](https://github.com/raptoreum/raptoreum/commit/4d3518fe0) Refactor MN payee logic in preparation for DIP3 (#2215)
-- [`d946f21bd`](https://github.com/raptoreum/raptoreum/commit/d946f21bd) Masternode related refactorings in preparation of DIP3 (#2212)
+- [`d946f21bd`](https://github.com/raptoreum/raptoreum/commit/d946f21bd) Smartnode related refactorings in preparation of DIP3 (#2212)
 
 ### PrivateSend
-- [`07309f0ec`](https://github.com/raptoreum/raptoreum/commit/07309f0ec) Allow up to MASTERNODE_MAX_MIXING_TXES (5) DSTXes per MN in a row (#2552)
-- [`ed53fce47`](https://github.com/raptoreum/raptoreum/commit/ed53fce47) Revert "Apply similar logic to vecMasternodesUsed" (#2503)
+- [`07309f0ec`](https://github.com/raptoreum/raptoreum/commit/07309f0ec) Allow up to SMARTNODE_MAX_MIXING_TXES (5) DSTXes per MN in a row (#2552)
+- [`ed53fce47`](https://github.com/raptoreum/raptoreum/commit/ed53fce47) Revert "Apply similar logic to vecSmartnodesUsed" (#2503)
 - [`69bffed72`](https://github.com/raptoreum/raptoreum/commit/69bffed72) Do not sort resulting vector in SelectCoinsGroupedByAddresses (#2493)
 - [`bb11f1a63`](https://github.com/raptoreum/raptoreum/commit/bb11f1a63) Fix recent changes in DSA conditions (#2494)
 - [`6480ad1d5`](https://github.com/raptoreum/raptoreum/commit/6480ad1d5) Should check dsq queue regardless of the mixing state (#2491)
@@ -523,7 +523,7 @@ See detailed [set of changes](https://github.com/raptoreum/raptoreum/compare/v0.
 - [`3e97b0cbd`](https://github.com/raptoreum/raptoreum/commit/3e97b0cbd) Make sure that we can get inputType and fUseInstantSend regardless of the way recipients are sorted (#2550)
 - [`1a7c29b97`](https://github.com/raptoreum/raptoreum/commit/1a7c29b97) Revert "Sort recipients in SendCoins dialog via BIP69 rule (#2546)" (#2549)
 - [`ca0aec2a3`](https://github.com/raptoreum/raptoreum/commit/ca0aec2a3) Match recipients with txouts by scriptPubKey in reassignAmounts() (#2548)
-- [`09730e1c5`](https://github.com/raptoreum/raptoreum/commit/09730e1c5) Bail out from update methods in MasternodeList when shutdown is requested (#2551)
+- [`09730e1c5`](https://github.com/raptoreum/raptoreum/commit/09730e1c5) Bail out from update methods in SmartnodeList when shutdown is requested (#2551)
 - [`18cd5965c`](https://github.com/raptoreum/raptoreum/commit/18cd5965c) Sort recipients in SendCoins dialog via BIP69 rule (#2546)
 - [`9100c69eb`](https://github.com/raptoreum/raptoreum/commit/9100c69eb) Allow filtering by proTxHash on DIP3 MN tab (#2532)
 - [`216119921`](https://github.com/raptoreum/raptoreum/commit/216119921) Fix wrong total MN count in UI and "smartnode count" RPC (#2527)
@@ -615,7 +615,7 @@ See detailed [set of changes](https://github.com/raptoreum/raptoreum/compare/v0.
 - [`89f744d06`](https://github.com/raptoreum/raptoreum/commit/89f744d06) pack of small cleanup fixes / optimizations (#2334)
 - [`9603c5290`](https://github.com/raptoreum/raptoreum/commit/9603c5290) Trivial: Codestyle fixes in InstantSend code (#2332)
 - [`90ad75911`](https://github.com/raptoreum/raptoreum/commit/90ad75911) Fix auto-IS and tests (#2331)
-- [`b3fc236af`](https://github.com/raptoreum/raptoreum/commit/b3fc236af) Fix mnodeman.cs vs cs_vPendingMasternodes vs cs_main deadlock (#2200)
+- [`b3fc236af`](https://github.com/raptoreum/raptoreum/commit/b3fc236af) Fix mnodeman.cs vs cs_vPendingSmartnodes vs cs_main deadlock (#2200)
 - [`80fd096b0`](https://github.com/raptoreum/raptoreum/commit/80fd096b0) Add ECDSA benchmarks
 - [`78675d9bb`](https://github.com/raptoreum/raptoreum/commit/78675d9bb) Add BLS and DKG benchmarks
 - [`3ee27c168`](https://github.com/raptoreum/raptoreum/commit/3ee27c168) Add highly parallelized worker/helper for BLS/DKG calculations
@@ -653,7 +653,7 @@ See detailed [set of changes](https://github.com/raptoreum/raptoreum/compare/v0.
 - [`e002c50b0`](https://github.com/raptoreum/raptoreum/commit/e002c50b0) Add "immer" functional/immutable containers library (#2244)
 - [`799e3c312`](https://github.com/raptoreum/raptoreum/commit/799e3c312) Perform Jenkins builds in /raptoreum-src all the time to fix caching issues (#2242)
 - [`b6896387a`](https://github.com/raptoreum/raptoreum/commit/b6896387a) Move DIP1 transaction size checks out of ContextualCheckBlock and use ContextualCheckTransaction instead (#2238)
-- [`e415fd049`](https://github.com/raptoreum/raptoreum/commit/e415fd049) Revert CMasternodePayments::IsTransactionValid to the logic before the recent refactorings (#2237)
+- [`e415fd049`](https://github.com/raptoreum/raptoreum/commit/e415fd049) Revert CSmartnodePayments::IsTransactionValid to the logic before the recent refactorings (#2237)
 - [`8da88ecf6`](https://github.com/raptoreum/raptoreum/commit/8da88ecf6) Don't crash when formatting in logging throws exceptions (#2231)
 - [`2e06f8133`](https://github.com/raptoreum/raptoreum/commit/2e06f8133) fix missed format parameter (#2229)
 - [`3d654b981`](https://github.com/raptoreum/raptoreum/commit/3d654b981) Build bionic base image in Jenkinsfile.gitian & update docs (#2226)
@@ -666,7 +666,7 @@ See detailed [set of changes](https://github.com/raptoreum/raptoreum/compare/v0.
 - [`589a77013`](https://github.com/raptoreum/raptoreum/commit/589a77013) Correction to release date for 0.12.0 (#2205)
 - [`96435288f`](https://github.com/raptoreum/raptoreum/commit/96435288f) Move block template specific stuff from CBlock to CBlockTemplate (#2195)
 - [`3d002c946`](https://github.com/raptoreum/raptoreum/commit/3d002c946) Fix active smartnode task schedule (#2193)
-- [`65b904526`](https://github.com/raptoreum/raptoreum/commit/65b904526) Add helpers GetSentinelString() and GetDaemonString() to CMasternodePing (#2192)
+- [`65b904526`](https://github.com/raptoreum/raptoreum/commit/65b904526) Add helpers GetSentinelString() and GetDaemonString() to CSmartnodePing (#2192)
 - [`eb202e812`](https://github.com/raptoreum/raptoreum/commit/eb202e812) Use ccache in gitian builds (#2185)
 - [`b47617325`](https://github.com/raptoreum/raptoreum/commit/b47617325) Install python3 in gitian builds (#2182)
 - [`7a85e24c3`](https://github.com/raptoreum/raptoreum/commit/7a85e24c3) Remove deprecated gitian-rpi2.yml descriptor (#2183)
@@ -674,7 +674,7 @@ See detailed [set of changes](https://github.com/raptoreum/raptoreum/compare/v0.
 - [`dac090964`](https://github.com/raptoreum/raptoreum/commit/dac090964) remove raptoreum.io dns seed entry (#2181)
 - [`753c2436b`](https://github.com/raptoreum/raptoreum/commit/753c2436b) Fix MissingPropertyException on Jenkins when no cache was found (#2180)
 - [`f3e380659`](https://github.com/raptoreum/raptoreum/commit/f3e380659) Move to in-docker CI builds and add Jenkins support (#2178)
-- [`23dde9f12`](https://github.com/raptoreum/raptoreum/commit/23dde9f12) Remove a few annoying debug prints from CMasternodeMan (#2179)
+- [`23dde9f12`](https://github.com/raptoreum/raptoreum/commit/23dde9f12) Remove a few annoying debug prints from CSmartnodeMan (#2179)
 - [`5036d7dfc`](https://github.com/raptoreum/raptoreum/commit/5036d7dfc) depends: Update Qt download url (#2177)
 - [`e23339d6f`](https://github.com/raptoreum/raptoreum/commit/e23339d6f) use nullptr in Raptoreum-specific code (#2166)
 - [`42c193df0`](https://github.com/raptoreum/raptoreum/commit/42c193df0) replace map count/insert w/emplace in instantx.cpp (#2165)

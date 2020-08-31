@@ -155,7 +155,7 @@ bool CDKGSessionHandler::InitNewQuorum(const CBlockIndex* pindexQuorum)
 
     auto mns = CLLMQUtils::GetAllQuorumMembers(params.type, pindexQuorum);
 
-    if (!curSession->Init(pindexQuorum, mns, activeMasternodeInfo.proTxHash)) {
+    if (!curSession->Init(pindexQuorum, mns, activeSmartnodeInfo.proTxHash)) {
         LogPrintf("CDKGSessionManager::%s -- quorum initialiation failed\n", __func__);
         return false;
     }
@@ -525,7 +525,7 @@ void CDKGSessionHandler::HandleDKGRound()
                 }
                 LogPrint(BCLog::LLMQ_DKG, debugMsg.c_str());
             }
-            g_connman->AddMasternodeQuorumNodes(params.type, curQuorumHash, connections);
+            g_connman->AddSmartnodeQuorumNodes(params.type, curQuorumHash, connections);
         }
     }
 

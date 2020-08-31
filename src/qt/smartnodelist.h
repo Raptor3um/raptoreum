@@ -1,5 +1,5 @@
-#ifndef MASTERNODELIST_H
-#define MASTERNODELIST_H
+#ifndef SMARTNODELIST_H
+#define SMARTNODELIST_H
 
 #include "platformstyle.h"
 #include "primitives/transaction.h"
@@ -12,12 +12,12 @@
 #include <QTimer>
 #include <QWidget>
 
-#define MASTERNODELIST_UPDATE_SECONDS 3
-#define MASTERNODELIST_FILTER_COOLDOWN_SECONDS 3
+#define SMARTNODELIST_UPDATE_SECONDS 3
+#define SMARTNODELIST_FILTER_COOLDOWN_SECONDS 3
 
 namespace Ui
 {
-class MasternodeList;
+class SmartnodeList;
 }
 
 class ClientModel;
@@ -27,14 +27,14 @@ QT_BEGIN_NAMESPACE
 class QModelIndex;
 QT_END_NAMESPACE
 
-/** Masternode Manager page widget */
-class MasternodeList : public QWidget
+/** Smartnode Manager page widget */
+class SmartnodeList : public QWidget
 {
     Q_OBJECT
 
 public:
-    explicit MasternodeList(const PlatformStyle* platformStyle, QWidget* parent = 0);
-    ~MasternodeList();
+    explicit SmartnodeList(const PlatformStyle* platformStyle, QWidget* parent = 0);
+    ~SmartnodeList();
 
     void setClientModel(ClientModel* clientModel);
     void setWalletModel(WalletModel* walletModel);
@@ -46,11 +46,11 @@ private:
     bool fFilterUpdatedDIP3;
 
     QTimer* timer;
-    Ui::MasternodeList* ui;
+    Ui::SmartnodeList* ui;
     ClientModel* clientModel;
     WalletModel* walletModel;
 
-    // Protects tableWidgetMasternodesDIP3
+    // Protects tableWidgetSmartnodesDIP3
     CCriticalSection cs_dip3list;
 
     QString strCurrentFilterDIP3;
@@ -67,13 +67,13 @@ Q_SIGNALS:
 private Q_SLOTS:
     void showContextMenuDIP3(const QPoint&);
     void on_filterLineEditDIP3_textChanged(const QString& strFilterIn);
-    void on_checkBoxMyMasternodesOnly_stateChanged(int state);
+    void on_checkBoxMySmartnodesOnly_stateChanged(int state);
 
     void extraInfoDIP3_clicked();
     void copyProTxHash_clicked();
     void copyCollateralOutpoint_clicked();
 
-    void handleMasternodeListChanged();
+    void handleSmartnodeListChanged();
     void updateDIP3ListScheduled();
 };
-#endif // MASTERNODELIST_H
+#endif // SMARTNODELIST_H

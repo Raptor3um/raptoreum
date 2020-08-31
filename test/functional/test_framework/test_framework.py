@@ -467,10 +467,10 @@ class BitcoinTestFramework(object):
         for i in range(self.num_nodes):
             initialize_datadir(self.options.tmpdir, i)
 
-MASTERNODE_COLLATERAL = 1000
+SMARTNODE_COLLATERAL = 1000
 
 
-class MasternodeInfo:
+class SmartnodeInfo:
     def __init__(self, proTxHash, ownerAddr, votingAddr, pubKeyOperator, keyOperator, collateral_address, collateral_txid, collateral_vout):
         self.proTxHash = proTxHash
         self.ownerAddr = ownerAddr
@@ -515,13 +515,13 @@ class RaptoreumTestFramework(BitcoinTestFramework):
     def prepare_smartnode(self, idx):
         bls = self.nodes[0].bls('generate')
         address = self.nodes[0].getnewaddress()
-        txid = self.nodes[0].sendtoaddress(address, MASTERNODE_COLLATERAL)
+        txid = self.nodes[0].sendtoaddress(address, SMARTNODE_COLLATERAL)
 
         txraw = self.nodes[0].getrawtransaction(txid, True)
         collateral_vout = 0
         for vout_idx in range(0, len(txraw["vout"])):
             vout = txraw["vout"][vout_idx]
-            if vout["value"] == MASTERNODE_COLLATERAL:
+            if vout["value"] == SMARTNODE_COLLATERAL:
                 collateral_vout = vout_idx
         self.nodes[0].lockunspent(False, [{'txid': txid, 'vout': collateral_vout}])
 
@@ -541,7 +541,7 @@ class RaptoreumTestFramework(BitcoinTestFramework):
             proTxHash = self.nodes[0].protx('register', txid, collateral_vout, '127.0.0.1:%d' % port, ownerAddr, bls['public'], votingAddr, 0, rewardsAddr, address)
         self.nodes[0].generate(1)
 
-        self.mninfo.append(MasternodeInfo(proTxHash, ownerAddr, votingAddr, bls['public'], bls['secret'], address, txid, collateral_vout))
+        self.mninfo.append(SmartnodeInfo(proTxHash, ownerAddr, votingAddr, bls['public'], bls['secret'], address, txid, collateral_vout))
         self.sync_all()
 
         self.log.info("Prepared smartnode %d: collateral_txid=%s, collateral_vout=%d, protxHash=%s" % (idx, txid, collateral_vout, proTxHash))
@@ -613,7 +613,7 @@ class RaptoreumTestFramework(BitcoinTestFramework):
         self.log.info("Creating and starting controller node")
         self.add_nodes(1, extra_args=[self.extra_args[0]])
         self.start_node(0)
-        required_balance = MASTERNODE_COLLATERAL * self.mn_count + 1
+        required_balance = SMARTNODE_COLLATERAL * self.mn_count + 1
         self.log.info("Generating %d coins" % required_balance)
         while self.nodes[0].getbalance() < required_balance:
             self.bump_mocktime(1)

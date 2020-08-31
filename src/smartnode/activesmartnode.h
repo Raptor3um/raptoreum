@@ -3,8 +3,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef ACTIVEMASTERNODE_H
-#define ACTIVEMASTERNODE_H
+#ifndef ACTIVESMARTNODE_H
+#define ACTIVESMARTNODE_H
 
 #include "chainparams.h"
 #include "key.h"
@@ -15,39 +15,39 @@
 #include "evo/deterministicmns.h"
 #include "evo/providertx.h"
 
-struct CActiveMasternodeInfo;
-class CActiveMasternodeManager;
+struct CActiveSmartnodeInfo;
+class CActiveSmartnodeManager;
 
-extern CActiveMasternodeInfo activeMasternodeInfo;
-extern CActiveMasternodeManager* activeMasternodeManager;
+extern CActiveSmartnodeInfo activeSmartnodeInfo;
+extern CActiveSmartnodeManager* activeSmartnodeManager;
 
-struct CActiveMasternodeInfo {
-    // Keys for the active Masternode
+struct CActiveSmartnodeInfo {
+    // Keys for the active Smartnode
     std::unique_ptr<CBLSPublicKey> blsPubKeyOperator;
     std::unique_ptr<CBLSSecretKey> blsKeyOperator;
 
-    // Initialized while registering Masternode
+    // Initialized while registering Smartnode
     uint256 proTxHash;
     COutPoint outpoint;
     CService service;
 };
 
 
-class CActiveMasternodeManager : public CValidationInterface
+class CActiveSmartnodeManager : public CValidationInterface
 {
 public:
     enum smartnode_state_t {
-        MASTERNODE_WAITING_FOR_PROTX,
-        MASTERNODE_POSE_BANNED,
-        MASTERNODE_REMOVED,
-        MASTERNODE_OPERATOR_KEY_CHANGED,
-        MASTERNODE_PROTX_IP_CHANGED,
-        MASTERNODE_READY,
-        MASTERNODE_ERROR,
+        SMARTNODE_WAITING_FOR_PROTX,
+        SMARTNODE_POSE_BANNED,
+        SMARTNODE_REMOVED,
+        SMARTNODE_OPERATOR_KEY_CHANGED,
+        SMARTNODE_PROTX_IP_CHANGED,
+        SMARTNODE_READY,
+        SMARTNODE_ERROR,
     };
 
 private:
-    smartnode_state_t state{MASTERNODE_WAITING_FOR_PROTX};
+    smartnode_state_t state{SMARTNODE_WAITING_FOR_PROTX};
     std::string strError;
 
 public:

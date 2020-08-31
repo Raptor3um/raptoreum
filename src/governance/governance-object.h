@@ -141,7 +141,7 @@ private:
     /// Data field - can be used for anything
     std::vector<unsigned char> vchData;
 
-    /// Masternode info for signed objects
+    /// Smartnode info for signed objects
     COutPoint smartnodeOutpoint;
     std::vector<unsigned char> vchSig;
 
@@ -149,7 +149,7 @@ private:
     bool fCachedLocalValidity;
     std::string strLocalValidityError;
 
-    // VARIOUS FLAGS FOR OBJECT / SET VIA MASTERNODE VOTING
+    // VARIOUS FLAGS FOR OBJECT / SET VIA SMARTNODE VOTING
 
     /// true == minimum network support has been reached for this object to be funded (doesn't mean it will for sure though)
     bool fCachedFunding;
@@ -207,7 +207,7 @@ public:
         return nCollateralHash;
     }
 
-    const COutPoint& GetMasternodeOutpoint() const
+    const COutPoint& GetSmartnodeOutpoint() const
     {
         return smartnodeOutpoint;
     }
@@ -254,7 +254,7 @@ public:
 
     // Signature related functions
 
-    void SetMasternodeOutpoint(const COutPoint& outpoint);
+    void SetSmartnodeOutpoint(const COutPoint& outpoint);
     bool Sign(const CBLSSecretKey& key);
     bool CheckSignature(const CBLSPublicKey& pubKey) const;
 
@@ -347,7 +347,7 @@ public:
         CConnman& connman);
 
     /// Called when MN's which have voted on this object have been removed
-    void ClearMasternodeVotes();
+    void ClearSmartnodeVotes();
 
     // Revalidate all votes from this MN and delete them if validation fails.
     // This is the case for DIP3 MNs that changed voting or operator keys and

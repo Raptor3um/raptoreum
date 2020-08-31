@@ -179,7 +179,7 @@ Threads
 
 - ThreadOpenConnections : Initiates new connections to peers.
 
-- ThreadOpenMasternodeConnections : Opens network connections to smartnodes.
+- ThreadOpenSmartnodeConnections : Opens network connections to smartnodes.
 
 - ThreadMessageHandler : Higher-level message handling (sending and receiving).
 

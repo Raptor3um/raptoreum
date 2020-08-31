@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>MasternodeList</class>
- <widget class="QWidget" name="MasternodeList">
+ <class>SmartnodeList</class>
+ <widget class="QWidget" name="SmartnodeList">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -66,7 +66,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QCheckBox" name="checkBoxMyMasternodesOnly">
+          <widget class="QCheckBox" name="checkBoxMySmartnodesOnly">
            <property name="toolTip">
             <string>Show only smartnodes this wallet has keys for.</string>
            </property>
@@ -105,7 +105,7 @@
         </layout>
        </item>
        <item row="1" column="0">
-        <widget class="QTableWidget" name="tableWidgetMasternodesDIP3">
+        <widget class="QTableWidget" name="tableWidgetSmartnodesDIP3">
          <property name="editTriggers">
           <set>QAbstractItemView::NoEditTriggers</set>
          </property>

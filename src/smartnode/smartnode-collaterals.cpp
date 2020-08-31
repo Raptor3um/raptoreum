@@ -36,3 +36,10 @@ SmartnodeCollaterals::~SmartnodeCollaterals() {
 	this->collaterals.clear();
 }
 
+bool SmartnodeCollaterals::isValidCollateral(int height) const {
+	return true;
+}
+
+bool SmartnodeCollaterals::isPayableCollateral(int height) const {
+	return true;
+}

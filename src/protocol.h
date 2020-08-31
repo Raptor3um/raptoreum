@@ -398,7 +398,7 @@ enum GetDataMsg {
     MSG_DSTX = 16,
     MSG_GOVERNANCE_OBJECT = 17,
     MSG_GOVERNANCE_OBJECT_VOTE = 18,
-    /* 19 was used for MSG_MASTERNODE_VERIFY and is not supported anymore */
+    /* 19 was used for MSG_SMARTNODE_VERIFY and is not supported anymore */
     // Nodes may always request a MSG_CMPCT_BLOCK in a getdata, however,
     // MSG_CMPCT_BLOCK should not appear in any invs except as a part of getdata.
     MSG_CMPCT_BLOCK = 20, //!< Defined in BIP152
