@@ -328,6 +328,7 @@ public:
         //vSeeds.emplace_back("dnsseed.raptoreum.org", true);
         //vSeeds.emplace_back("dnsseed.raptoreumdot.io", true);
         vSeeds.emplace_back("34.72.8.88", true);
+        vSeeds.emplace_back("64.227.61.186", true);
 
         // Raptoreum addresses start with 'X'
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,60);
@@ -379,7 +380,7 @@ public:
         fMineBlocksOnDemand = false;
         fAllowMultipleAddressesFromGroup = false;
         fAllowMultiplePorts = false;
-        miningRequiresPeers = false;
+        miningRequiresPeers = true;
 
         nPoolMinParticipants = 3;
         nPoolMaxParticipants = 5;
