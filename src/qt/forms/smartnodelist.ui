@@ -171,6 +171,11 @@
          </column>
          <column>
           <property name="text">
+           <string>Collateral Amount</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
            <string>Owner Address</string>
           </property>
          </column>

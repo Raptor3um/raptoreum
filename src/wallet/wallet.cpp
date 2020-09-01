@@ -2706,7 +2706,7 @@ void CWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const
 {
     vCoins.clear();
     CoinType nCoinType = coinControl ? coinControl->nCoinType : CoinType::ALL_COINS;
-    CAmount collateralAmount = Params().GetConsensus().nCollaterals.getCollateral(chainActive.Height());
+    SmartnodeCollaterals collaterals = Params().GetConsensus().nCollaterals;
     {
         LOCK2(cs_main, cs_wallet);
 
@@ -2744,7 +2744,7 @@ void CWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const
                     if (CPrivateSend::IsCollateralAmount(pcoin->tx->vout[i].nValue)) continue; // do not use collateral amounts
                     found = !CPrivateSend::IsDenominatedAmount(pcoin->tx->vout[i].nValue);
                 } else if(nCoinType == CoinType::SMARTNODE_COLLATERAL) {
-                    found = pcoin->tx->vout[i].nValue == collateralAmount;
+                    found = collaterals.isValidCollateral(pcoin->tx->vout[i].nValue);
                 } else if(nCoinType == CoinType::ONLY_PRIVATESEND_COLLATERAL) {
                     found = CPrivateSend::IsCollateralAmount(pcoin->tx->vout[i].nValue);
                 } else {
@@ -3302,7 +3302,7 @@ bool CWallet::SelectCoinsGroupedByAddresses(std::vector<CompactTallyItem>& vecTa
     }
 
     CAmount nSmallestDenom = CPrivateSend::GetSmallestDenomination();
-    CAmount collateralAmount = Params().GetConsensus().nCollaterals.getCollateral(chainActive.Height());
+    SmartnodeCollaterals collaterals = Params().GetConsensus().nCollaterals;
     // Tally
     std::map<CTxDestination, CompactTallyItem> mapTally;
     std::set<uint256> setWalletTxesCounted;
@@ -3335,7 +3335,7 @@ bool CWallet::SelectCoinsGroupedByAddresses(std::vector<CompactTallyItem>& vecTa
             if(fAnonymizable) {
                 // ignore collaterals
                 if(CPrivateSend::IsCollateralAmount(wtx.tx->vout[i].nValue)) continue;
-                if(fSmartnodeMode && wtx.tx->vout[i].nValue == collateralAmount) continue;
+                if(fSmartnodeMode && collaterals.isValidCollateral(wtx.tx->vout[i].nValue)) continue;
                 // ignore outputs that are 10 times smaller then the smallest denomination
                 // otherwise they will just lead to higher fee / lower priority
                 if(wtx.tx->vout[i].nValue <= nSmallestDenom/10) continue;
@@ -3395,14 +3395,14 @@ bool CWallet::SelectPrivateCoins(CAmount nValueMin, CAmount nValueMax, std::vect
 
     //order the array so largest nondenom are first, then denominations, then very small inputs.
     std::sort(vCoins.rbegin(), vCoins.rend(), CompareByPriority());
-    CAmount collateralAmount = Params().GetConsensus().nCollaterals.getCollateral(chainActive.Height());
+    SmartnodeCollaterals collaterals = Params().GetConsensus().nCollaterals;
     for (const auto& out : vCoins)
     {
         //do not allow inputs less than 1/10th of minimum value
         if(out.tx->tx->vout[out.i].nValue < nValueMin/10) continue;
         //do not allow collaterals to be selected
         if(CPrivateSend::IsCollateralAmount(out.tx->tx->vout[out.i].nValue)) continue;
-        if(fSmartnodeMode && out.tx->tx->vout[out.i].nValue == collateralAmount) continue; //smartnode input
+        if(fSmartnodeMode && collaterals.isValidCollateral(out.tx->tx->vout[out.i].nValue)) continue; //smartnode input
 
         if(nValueRet + out.tx->tx->vout[out.i].nValue <= nValueMax){
             CTxIn txin = CTxIn(out.tx->GetHash(),out.i);

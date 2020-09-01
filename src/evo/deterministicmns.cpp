@@ -117,7 +117,13 @@ bool CDeterministicMNList::IsMNPoSeBanned(const uint256& proTxHash) const
 
 bool CDeterministicMNList::IsMNValid(const CDeterministicMNCPtr& dmn) const
 {
-    return !IsMNPoSeBanned(dmn);
+	uint256 mnHash = dmn.get()->collateralOutpoint.hash;
+	Coin coin;
+	//should this be call directly or use pcoinsTip->GetCoin(outpoint, coin) without locking cs_main
+	bool isValidUtxo = GetUTXOCoin(dmn->collateralOutpoint, coin);
+	SmartnodeCollaterals collaterals = Params().GetConsensus().nCollaterals;
+	int nHeight = chainActive.Tip() == nullptr ? 0 : chainActive.Tip()->nHeight;
+    return !IsMNPoSeBanned(dmn) && (isValidUtxo && collaterals.isPayableCollateral(nHeight, coin.out.nValue));
 }
 
 bool CDeterministicMNList::IsMNPoSeBanned(const CDeterministicMNCPtr& dmn) const
@@ -665,8 +671,8 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
             }
 
             Coin coin;
-            CAmount collateralAmount = Params().GetConsensus().nCollaterals.getCollateral(nHeight);
-            if (!proTx.collateralOutpoint.hash.IsNull() && (!GetUTXOCoin(dmn->collateralOutpoint, coin) || coin.out.nValue != collateralAmount)) {
+            SmartnodeCollaterals collaterals = Params().GetConsensus().nCollaterals;
+            if (!proTx.collateralOutpoint.hash.IsNull() && (!GetUTXOCoin(dmn->collateralOutpoint, coin) || !collaterals.isValidCollateral(coin.out.nValue))) {
                 // should actually never get to this point as CheckProRegTx should have handled this case.
                 // We do this additional check nevertheless to be 100% sure
                 return _state.DoS(100, false, REJECT_INVALID, "bad-protx-collateral");
@@ -953,10 +959,9 @@ bool CDeterministicMNManager::IsProTxWithCollateral(const CTransactionRef& tx, u
     if (proTx.collateralOutpoint.n >= tx->vout.size() || proTx.collateralOutpoint.n != n) {
         return false;
     }
-    int nHeight = chainActive.Tip() == nullptr ? 0 : chainActive.Tip()->nHeight;
-    CAmount collateralAmount = Params().GetConsensus().nCollaterals.getCollateral(nHeight);
+    SmartnodeCollaterals collaterals = Params().GetConsensus().nCollaterals;
 
-    if (tx->vout[n].nValue != collateralAmount) {
+    if (!collaterals.isValidCollateral(tx->vout[n].nValue)) {
         return false;
     }
     return true;

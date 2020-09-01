@@ -52,6 +52,7 @@ SmartnodeList::SmartnodeList(const PlatformStyle* platformStyle, QWidget* parent
     int columnPayeeWidth = 130;
     int columnOperatorRewardWidth = 130;
     int columnCollateralWidth = 130;
+    int columnCollateralAmountWidth = 130;
     int columnOwnerWidth = 130;
     int columnVotingWidth = 130;
 
@@ -64,13 +65,14 @@ SmartnodeList::SmartnodeList(const PlatformStyle* platformStyle, QWidget* parent
     ui->tableWidgetSmartnodesDIP3->setColumnWidth(6, columnPayeeWidth);
     ui->tableWidgetSmartnodesDIP3->setColumnWidth(7, columnOperatorRewardWidth);
     ui->tableWidgetSmartnodesDIP3->setColumnWidth(8, columnCollateralWidth);
-    ui->tableWidgetSmartnodesDIP3->setColumnWidth(9, columnOwnerWidth);
-    ui->tableWidgetSmartnodesDIP3->setColumnWidth(10, columnVotingWidth);
+    ui->tableWidgetSmartnodesDIP3->setColumnWidth(9, columnCollateralAmountWidth);
+    ui->tableWidgetSmartnodesDIP3->setColumnWidth(10, columnOwnerWidth);
+    ui->tableWidgetSmartnodesDIP3->setColumnWidth(11, columnVotingWidth);
 
     // dummy column for proTxHash
     // TODO use a proper table model for the MN list
-    ui->tableWidgetSmartnodesDIP3->insertColumn(11);
-    ui->tableWidgetSmartnodesDIP3->setColumnHidden(11, true);
+    ui->tableWidgetSmartnodesDIP3->insertColumn(12);
+    ui->tableWidgetSmartnodesDIP3->setColumnHidden(12, true);
 
     ui->tableWidgetSmartnodesDIP3->setContextMenuPolicy(Qt::CustomContextMenu);
 
@@ -222,6 +224,10 @@ void SmartnodeList::updateDIP3List()
             payeeStr = QString::fromStdString(CBitcoinAddress(payeeDest).ToString());
         }
         QTableWidgetItem* payeeItem = new QTableWidgetItem(payeeStr);
+        Coin coin;
+		//should this be call directly or use pcoinsTip->GetCoin(outpoint, coin) without locking cs_main
+		bool isValidUtxo = GetUTXOCoin(dmn->collateralOutpoint, coin);
+        QTableWidgetItem* collateralAmountItem = new QTableWidgetItem(!isValidUtxo ? tr("Invalid") : QString::number(coin.out.nValue / COIN));
 
         QString operatorRewardStr = tr("NONE");
         if (dmn->nOperatorReward) {
@@ -281,9 +287,10 @@ void SmartnodeList::updateDIP3List()
         ui->tableWidgetSmartnodesDIP3->setItem(0, 6, payeeItem);
         ui->tableWidgetSmartnodesDIP3->setItem(0, 7, operatorRewardItem);
         ui->tableWidgetSmartnodesDIP3->setItem(0, 8, collateralItem);
-        ui->tableWidgetSmartnodesDIP3->setItem(0, 9, ownerItem);
-        ui->tableWidgetSmartnodesDIP3->setItem(0, 10, votingItem);
-        ui->tableWidgetSmartnodesDIP3->setItem(0, 11, proTxHashItem);
+        ui->tableWidgetSmartnodesDIP3->setItem(0, 9, collateralAmountItem);
+        ui->tableWidgetSmartnodesDIP3->setItem(0, 10, ownerItem);
+        ui->tableWidgetSmartnodesDIP3->setItem(0, 11, votingItem);
+        ui->tableWidgetSmartnodesDIP3->setItem(0, 12, proTxHashItem);
     });
 
     ui->countLabelDIP3->setText(QString::number(ui->tableWidgetSmartnodesDIP3->rowCount()));

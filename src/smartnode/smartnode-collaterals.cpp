@@ -11,6 +11,9 @@
 SmartnodeCollaterals::SmartnodeCollaterals(vector<Collateral> collaterals, vector<RewardPercentage> rewardPercentages) {
 	this->collaterals = collaterals;
 	this->rewardPercentages = rewardPercentages;
+	for (auto& it : this->collaterals) {
+		collateralsHeightMap.insert(make_pair(it.amount, it.height));
+	}
 
 }
 
@@ -36,10 +39,15 @@ SmartnodeCollaterals::~SmartnodeCollaterals() {
 	this->collaterals.clear();
 }
 
-bool SmartnodeCollaterals::isValidCollateral(int height) const {
-	return true;
+bool SmartnodeCollaterals::isValidCollateral(CAmount collateralAnount) const {
+	auto it = collateralsHeightMap.find(collateralAnount);
+	return it != collateralsHeightMap.end();
 }
 
-bool SmartnodeCollaterals::isPayableCollateral(int height) const {
-	return true;
+bool SmartnodeCollaterals::isPayableCollateral(int height, CAmount collateralAnount) const {
+	if(!this->isValidCollateral(collateralAnount)) {
+		return false;
+	}
+	int collateralEndHeight = this->collateralsHeightMap.at(collateralAnount);
+	return collateralEndHeight == INT_MAX || height <= collateralEndHeight;
 }

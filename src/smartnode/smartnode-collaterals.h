@@ -8,6 +8,7 @@
 
 #include "amount.h"
 #include <vector>
+#include <unordered_map>
 using namespace std;
 
 #ifndef SRC_SMARTNODE_SMARTNODE_COLLATERALS_H_
@@ -27,11 +28,13 @@ class SmartnodeCollaterals {
 protected:
 	vector<Collateral> collaterals;
 	vector<RewardPercentage> rewardPercentages;
+	unordered_map<CAmount, int> collateralsHeightMap;
+
 public:
 	SmartnodeCollaterals(vector<Collateral> collaterals = {}, vector<RewardPercentage> rewardPercentages = {});
 	CAmount getCollateral(int height) const;
-	bool isValidCollateral(int height) const;
-	bool isPayableCollateral(int height) const;
+	bool isValidCollateral(CAmount collateralAmount) const;
+	bool isPayableCollateral(int height,CAmount collateralAnount) const;
 	float getRewardPercentage(int height) const;
 	virtual ~SmartnodeCollaterals();
 };

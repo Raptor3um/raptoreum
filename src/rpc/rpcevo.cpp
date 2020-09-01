@@ -427,8 +427,21 @@ UniValue protx_register(const JSONRPCRequest& request)
 
     size_t paramIdx = 1;
 
-    CAmount collateralAmount = Params().GetConsensus().nCollaterals.getCollateral(chainActive.Height());
-
+    SmartnodeCollaterals collaterals = Params().GetConsensus().nCollaterals;
+    uint256 collateralHash = ParseHashV(request.params[paramIdx], "collateralHash");
+	int32_t collateralIndex = ParseInt32V(request.params[paramIdx + 1], "collateralIndex");
+	if (collateralHash.IsNull() || collateralIndex < 0) {
+		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("invalid hash or index: %s-%d", collateralHash.ToString(), collateralIndex));
+	}
+    const auto &p = pwallet->mapWallet[collateralHash];
+    CAmount collateralAmount = p.tx->vout[collateralIndex].nValue;
+    if (!collaterals.isValidCollateral(collateralAmount)) {
+		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("invalid collateral amount: hash=%s-%d\namount=%d", collateralHash.ToString(), collateralIndex, collateralAmount/COIN));
+	}
+    int nHeight = chainActive.Height();
+    if(!collaterals.isPayableCollateral(nHeight, collateralAmount)) {
+		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("collateral amount is not a payable amount: hash=%s-%d\namount=%d", collateralHash.ToString(), collateralIndex, collateralAmount/COIN));
+    }
     CMutableTransaction tx;
     tx.nVersion = 3;
     tx.nType = TRANSACTION_PROVIDER_REGISTER;
@@ -448,12 +461,6 @@ UniValue protx_register(const JSONRPCRequest& request)
 
         paramIdx++;
     } else {
-        uint256 collateralHash = ParseHashV(request.params[paramIdx], "collateralHash");
-        int32_t collateralIndex = ParseInt32V(request.params[paramIdx + 1], "collateralIndex");
-        if (collateralHash.IsNull() || collateralIndex < 0) {
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("invalid hash or index: %s-%d", collateralHash.ToString(), collateralIndex));
-        }
-
         ptx.collateralOutpoint = COutPoint(collateralHash, (uint32_t)collateralIndex);
         paramIdx += 2;
 

@@ -136,10 +136,10 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
     CKeyID keyForPayloadSig;
     COutPoint collateralOutpoint;
     Coin coin;
-	CAmount collateralAmount = Params().GetConsensus().nCollaterals.getCollateral(pindexPrev->nHeight);
+	SmartnodeCollaterals collaterals = Params().GetConsensus().nCollaterals;
     if (!ptx.collateralOutpoint.hash.IsNull()) {
 
-        if (!GetUTXOCoin(ptx.collateralOutpoint, coin) || coin.out.nValue != collateralAmount) {
+        if (!GetUTXOCoin(ptx.collateralOutpoint, coin) || !collaterals.isValidCollateral(coin.out.nValue)) {
             return state.DoS(10, false, REJECT_INVALID, "bad-protx-collateral");
         }
 
@@ -158,7 +158,7 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
         if (ptx.collateralOutpoint.n >= tx.vout.size()) {
             return state.DoS(10, false, REJECT_INVALID, "bad-protx-collateral-index");
         }
-        if (tx.vout[ptx.collateralOutpoint.n].nValue != collateralAmount) {
+        if (!collaterals.isValidCollateral(tx.vout[ptx.collateralOutpoint.n].nValue)) {
             return state.DoS(10, false, REJECT_INVALID, "bad-protx-collateral");
         }
 
