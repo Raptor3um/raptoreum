@@ -188,7 +188,7 @@
         <translation>ウォレットの暗号化を確認</translation>
     </message>
     <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR RAPTOREUM&lt;/b&gt;!</source>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR RTM&lt;/b&gt;!</source>
         <translation>警告: ウォレットを暗号化しパスフレーズを紛失した場合、あなたは &lt;b&gt;すべてのRaptoreum&lt;/b&gt;を失います!</translation>
     </message>
     <message>
@@ -1589,8 +1589,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>金額とラウンド</translation>
     </message>
     <message>
-        <source>0 RAPTOREUM / 0 Rounds</source>
-        <translation>0 RAPTOREUM / 0 ラウンド</translation>
+        <source>0 RTM / 0 Rounds</source>
+        <translation>0 RTM / 0 ラウンド</translation>
     </message>
     <message>
         <source>Submitted Denom:</source>

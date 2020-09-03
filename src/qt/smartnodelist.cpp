@@ -211,8 +211,16 @@ void SmartnodeList::updateDIP3List()
         }
         // populate list
         // Address, Protocol, Status, Active Seconds, Last Seen, Pub Key
+        Coin coin;
+		//should this be call directly or use pcoinsTip->GetCoin(outpoint, coin) without locking cs_main
+		bool isValidUtxo = GetUTXOCoin(dmn->collateralOutpoint, coin);
+		SmartnodeCollaterals collaterals = Params().GetConsensus().nCollaterals;
+		int nHeight = chainActive.Tip() == nullptr ? 0 : chainActive.Tip()->nHeight;
+	    QTableWidgetItem* collateralAmountItem = new QTableWidgetItem(!isValidUtxo ? tr("Invalid") : QString::number(coin.out.nValue / COIN));
         QTableWidgetItem* addressItem = new QTableWidgetItem(QString::fromStdString(dmn->pdmnState->addr.ToString()));
-        QTableWidgetItem* statusItem = new QTableWidgetItem(mnList.IsMNValid(dmn) ? tr("ENABLED") : (mnList.IsMNPoSeBanned(dmn) ? tr("POSE_BANNED") : tr("UNKNOWN")));
+        QTableWidgetItem* statusItem = new QTableWidgetItem(mnList.IsMNValid(dmn) ? tr("ENABLED") :
+        		(mnList.IsMNPoSeBanned(dmn) ? tr("POSE_BANNED") :
+        				!collaterals.isPayableCollateral(nHeight, coin.out.nValue) ? tr("C_UPGRADE") : tr("UNKNOWN")));
         QTableWidgetItem* PoSeScoreItem = new QTableWidgetItem(QString::number(dmn->pdmnState->nPoSePenalty));
         QTableWidgetItem* registeredItem = new QTableWidgetItem(QString::number(dmn->pdmnState->nRegisteredHeight));
         QTableWidgetItem* lastPaidItem = new QTableWidgetItem(QString::number(dmn->pdmnState->nLastPaidHeight));
@@ -224,10 +232,6 @@ void SmartnodeList::updateDIP3List()
             payeeStr = QString::fromStdString(CBitcoinAddress(payeeDest).ToString());
         }
         QTableWidgetItem* payeeItem = new QTableWidgetItem(payeeStr);
-        Coin coin;
-		//should this be call directly or use pcoinsTip->GetCoin(outpoint, coin) without locking cs_main
-		bool isValidUtxo = GetUTXOCoin(dmn->collateralOutpoint, coin);
-        QTableWidgetItem* collateralAmountItem = new QTableWidgetItem(!isValidUtxo ? tr("Invalid") : QString::number(coin.out.nValue / COIN));
 
         QString operatorRewardStr = tr("NONE");
         if (dmn->nOperatorReward) {
@@ -271,6 +275,7 @@ void SmartnodeList::updateDIP3List()
                           payeeItem->text() + " " +
                           operatorRewardItem->text() + " " +
                           collateralItem->text() + " " +
+						  collateralAmountItem->text() + " " +
                           ownerItem->text() + " " +
                           votingItem->text() + " " +
                           proTxHashItem->text();
@@ -324,12 +329,11 @@ CDeterministicMNCPtr SmartnodeList::GetSelectedDIP3MN()
 
         QItemSelectionModel* selectionModel = ui->tableWidgetSmartnodesDIP3->selectionModel();
         QModelIndexList selected = selectionModel->selectedRows();
-
         if (selected.count() == 0) return nullptr;
 
         QModelIndex index = selected.at(0);
         int nSelectedRow = index.row();
-        strProTxHash = ui->tableWidgetSmartnodesDIP3->item(nSelectedRow, 11)->text().toStdString();
+        strProTxHash = ui->tableWidgetSmartnodesDIP3->item(nSelectedRow, 12)->text().toStdString();
     }
 
     uint256 proTxHash;
@@ -342,17 +346,15 @@ CDeterministicMNCPtr SmartnodeList::GetSelectedDIP3MN()
 void SmartnodeList::extraInfoDIP3_clicked()
 {
     auto dmn = GetSelectedDIP3MN();
+
     if (!dmn) {
         return;
     }
-
     UniValue json(UniValue::VOBJ);
     dmn->ToJson(json);
-
     // Title of popup window
     QString strWindowtitle = tr("Additional information for DIP3 Smartnode %1").arg(QString::fromStdString(dmn->proTxHash.ToString()));
     QString strText = QString::fromStdString(json.write(2));
-
     QMessageBox::information(this, strWindowtitle, strText);
 }
 

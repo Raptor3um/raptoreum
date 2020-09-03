@@ -58,10 +58,10 @@ public:
      */
     enum Unit
     {
-        RAPTOREUM,
-        mRAPTOREUM,
-        uRAPTOREUM,
-        duffs
+        RTM,
+        mRTM,
+        uRTM,
+        ruffs
     };
 
     enum SeparatorStyle

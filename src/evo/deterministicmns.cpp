@@ -84,12 +84,15 @@ void CDeterministicMN::ToJson(UniValue& obj) const
     obj.push_back(Pair("proTxHash", proTxHash.ToString()));
     obj.push_back(Pair("collateralHash", collateralOutpoint.hash.ToString()));
     obj.push_back(Pair("collateralIndex", (int)collateralOutpoint.n));
-
     Coin coin;
     if (GetUTXOCoin(collateralOutpoint, coin)) {
         CTxDestination dest;
         if (ExtractDestination(coin.out.scriptPubKey, dest)) {
+    		SmartnodeCollaterals collaterals = Params().GetConsensus().nCollaterals;
+    		int nHeight = chainActive.Tip() == nullptr ? 0 : chainActive.Tip()->nHeight;
             obj.push_back(Pair("collateralAddress", CBitcoinAddress(dest).ToString()));
+            obj.push_back(Pair("collateralAmount", coin.out.nValue / COIN));
+            obj.push_back(Pair("needToUpgrade", !collaterals.isPayableCollateral(nHeight, coin.out.nValue)));
         }
     }
 

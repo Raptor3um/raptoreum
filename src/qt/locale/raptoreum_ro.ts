@@ -188,8 +188,8 @@
         <translation>Confirmaţi criptarea portofelului</translation>
     </message>
     <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR RAPTOREUM&lt;/b&gt;!</source>
-        <translation>Avertisment: dacă criptezi portofelul și pierzi fraza de acces, vei &lt;b&gt;PIERDE TOATE MONEDELE TALE RAPTOREUM&lt;/b&gt;!</translation>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR RTM&lt;/b&gt;!</source>
+        <translation>Avertisment: dacă criptezi portofelul și pierzi fraza de acces, vei &lt;b&gt;PIERDE TOATE MONEDELE TALE RTM&lt;/b&gt;!</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
@@ -1588,8 +1588,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Suma și Runde:</translation>
     </message>
     <message>
-        <source>0 RAPTOREUM / 0 Rounds</source>
-        <translation>0 RAPTOREUM / 0 Runde</translation>
+        <source>0 RTM / 0 Rounds</source>
+        <translation>0 RTM / 0 Runde</translation>
     </message>
     <message>
         <source>Submitted Denom:</source>
