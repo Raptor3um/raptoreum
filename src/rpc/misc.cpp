@@ -98,7 +98,6 @@ UniValue mnsync(const JSONRPCRequest& request)
         objStatus.push_back(Pair("Attempt", smartnodeSync.GetAttempt()));
         objStatus.push_back(Pair("IsBlockchainSynced", smartnodeSync.IsBlockchainSynced()));
         objStatus.push_back(Pair("IsSynced", smartnodeSync.IsSynced()));
-        objStatus.push_back(Pair("IsFailed", smartnodeSync.IsFailed()));
         return objStatus;
     }
 

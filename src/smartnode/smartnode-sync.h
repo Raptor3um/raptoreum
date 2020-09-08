@@ -10,7 +10,6 @@
 
 class CSmartnodeSync;
 
-static const int SMARTNODE_SYNC_FAILED          = -1;
 static const int SMARTNODE_SYNC_INITIAL         = 0; // sync just started, was reset recently or still in IDB
 static const int SMARTNODE_SYNC_WAITING         = 1; // waiting after initial to see if we can get more headers/blocks
 static const int SMARTNODE_SYNC_GOVERNANCE      = 4;
@@ -39,8 +38,6 @@ private:
     int64_t nTimeAssetSyncStarted;
     // ... last bumped
     int64_t nTimeLastBumped;
-    // ... or failed
-    int64_t nTimeLastFailure;
 
 public:
     CSmartnodeSync() { Reset(); }
@@ -48,7 +45,6 @@ public:
 
     void SendGovernanceSyncRequest(CNode* pnode, CConnman& connman);
 
-    bool IsFailed() { return nCurrentAsset == SMARTNODE_SYNC_FAILED; }
     bool IsBlockchainSynced() { return nCurrentAsset > SMARTNODE_SYNC_WAITING; }
     bool IsSynced() { return nCurrentAsset == SMARTNODE_SYNC_FINISHED; }
 
