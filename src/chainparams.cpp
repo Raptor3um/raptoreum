@@ -994,8 +994,7 @@ public:
         nExtCoinType = 1;
 
         // long living quorum params
-        consensus.llmqs[Consensus::LLMQ_5_60] = llmq3_60;
-        consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
+        consensus.llmqs[Consensus::LLMQ_TEST] = llmq_test;
         consensus.llmqTypeChainLocks = Consensus::LLMQ_TEST;
         consensus.llmqTypeInstantSend = Consensus::LLMQ_TEST;
     }
