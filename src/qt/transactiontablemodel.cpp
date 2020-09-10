@@ -436,19 +436,18 @@ QVariant TransactionTableModel::txAddressDecoration(const TransactionRecord *wtx
     switch(wtx->type)
     {
     case TransactionRecord::Generated:
-        return QIcon(":/icons/tx_mined");
+        return GUIUtil::getIcon("tx_mined");
     case TransactionRecord::RecvWithPrivateSend:
     case TransactionRecord::RecvWithAddress:
     case TransactionRecord::RecvFromOther:
-    case TransactionRecord::FutureReceive:
-        return QIcon(":/icons/tx_input");
+        return GUIUtil::getIcon("tx_input");
     case TransactionRecord::PrivateSend:
     case TransactionRecord::SendToAddress:
     case TransactionRecord::SendToOther:
     case TransactionRecord::FutureSend:
-        return QIcon(":/icons/tx_output");
+        return GUIUtil::getIcon("tx_output");
     default:
-        return QIcon(":/icons/tx_inout");
+        return GUIUtil::getIcon("tx_inout");
     }
 }
 
@@ -463,7 +462,7 @@ QString TransactionTableModel::formatTxToAddress(const TransactionRecord *wtx, b
     switch(wtx->type)
     {
     case TransactionRecord::RecvFromOther:
-    
+
         return QString::fromStdString(wtx->strAddress) + watchAddress;
     case TransactionRecord::RecvWithAddress:
     case TransactionRecord::RecvWithPrivateSend:
@@ -533,30 +532,30 @@ QVariant TransactionTableModel::txStatusDecoration(const TransactionRecord *wtx)
     case TransactionStatus::Offline:
         return GUIUtil::getThemedQColor(GUIUtil::ThemedColor::TX_STATUS_OFFLINE);
     case TransactionStatus::Unconfirmed:
-        return QIcon(":/icons/transaction_0");
+        return GUIUtil::getIcon("transaction_0");
     case TransactionStatus::Abandoned:
-        return QIcon(":/icons/transaction_abandoned");
+        return GUIUtil::getIcon("transaction_abandoned");
     case TransactionStatus::Confirming:
         switch(wtx->status.depth)
         {
-        case 1: return QIcon(":/icons/transaction_1");
-        case 2: return QIcon(":/icons/transaction_2");
-        case 3: return QIcon(":/icons/transaction_3");
-        case 4: return QIcon(":/icons/transaction_4");
-        default: return QIcon(":/icons/transaction_5");
+        case 1: return GUIUtil::getIcon("transaction_1");
+        case 2: return GUIUtil::getIcon("transaction_2");
+        case 3: return GUIUtil::getIcon("transaction_3");
+        case 4: return GUIUtil::getIcon("transaction_4");
+        default: return GUIUtil::getIcon("transaction_5");
         };
     case TransactionStatus::Confirmed:
-        return QIcon(":/icons/transaction_confirmed");
+        return GUIUtil::getIcon("transaction_confirmed");
     case TransactionStatus::Conflicted:
-        return QIcon(":/icons/transaction_conflicted");
+        return GUIUtil::getIcon("transaction_conflicted");
     case TransactionStatus::Immature: {
         int total = wtx->status.depth + wtx->status.matures_in;
         int part = (wtx->status.depth * 5 / total) + 1;
-        return QIcon(QString(":/icons/transaction_%1").arg(part));
+        return GUIUtil::getIcon(QString("transaction_%1").arg(part));
         }
     case TransactionStatus::MaturesWarning:
     case TransactionStatus::NotAccepted:
-        return QIcon(":/icons/transaction_0");
+        return GUIUtil::getIcon("transaction_0");
     default:
         return GUIUtil::getThemedQColor(GUIUtil::ThemedColor::DEFAULT);
     }
@@ -565,7 +564,7 @@ QVariant TransactionTableModel::txStatusDecoration(const TransactionRecord *wtx)
 QVariant TransactionTableModel::txWatchonlyDecoration(const TransactionRecord *wtx) const
 {
     if (wtx->involvesWatchAddress)
-        return QIcon(":/icons/eye");
+        return GUIUtil::getIcon("eye");
     else
         return QVariant();
 }
@@ -573,7 +572,7 @@ QVariant TransactionTableModel::txWatchonlyDecoration(const TransactionRecord *w
 QVariant TransactionTableModel::txInstantSendDecoration(const TransactionRecord *wtx) const
 {
     if (wtx->status.lockedByInstantSend) {
-            return QIcon(":/icons/verify");
+            return GUIUtil::getIcon("verify");
     }
     return QVariant();
 }
@@ -582,7 +581,7 @@ QString TransactionTableModel::formatTooltip(const TransactionRecord *rec) const
 {
     QString tooltip = formatTxStatus(rec) + QString("\n") + formatTxType(rec);
     if(rec->type==TransactionRecord::RecvFromOther || rec->type==TransactionRecord::SendToOther ||
-       rec->type==TransactionRecord::SendToAddress || rec->type==TransactionRecord::RecvWithAddress || 
+       rec->type==TransactionRecord::SendToAddress || rec->type==TransactionRecord::RecvWithAddress ||
        rec->type==TransactionRecord::FutureSend || rec->type==TransactionRecord::FutureReceive)
     {
         tooltip += QString(" ") + formatTxToAddress(rec, true);
