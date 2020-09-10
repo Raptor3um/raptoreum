@@ -1017,7 +1017,7 @@ CAmount GetBlockSubsidy(int nPrevBits, int nPrevHeight, const Consensus::Params&
 	const short owlings = 21262; // amount of blocks between 2 owlings
 	int multiplier; // integer number of owlings
 	int tempHeight; // number of blocks since last anchor
-	if (nPrevHeight < 719) {
+	if (nPrevHeight < 119) {
 		nSubsidy = 4;
 	} else if ( (nPrevHeight > 553531) && (nPrevHeight < 2105657) ){
 		tempHeight = nPrevHeight - 553532;
@@ -1052,8 +1052,8 @@ CAmount GetBlockSubsidy(int nPrevBits, int nPrevHeight, const Consensus::Params&
 
 CAmount GetSmartnodePayment(int nHeight, CAmount blockValue)
 {
-    float percentage = Params().GetConsensus().nCollaterals.getRewardPercentage(nHeight);
-    return blockValue * percentage;
+    int percentage = Params().GetConsensus().nCollaterals.getRewardPercentage(nHeight);
+    return blockValue * percentage / 100;
 }
 
 bool IsInitialBlockDownload()
@@ -1792,6 +1792,7 @@ static int64_t nTimeTotal = 0;
 static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pindex,
                   CCoinsViewCache& view, const CChainParams& chainparams, bool fJustCheck = false)
 {
+	std::cout << "ConnectBlock\n";
     AssertLockHeld(cs_main);
     assert(pindex);
     // pindex->phashBlock can be null if called by CreateNewBlock/TestBlockValidity
@@ -4026,6 +4027,9 @@ bool CVerifyDB::VerifyDB(const CChainParams& chainparams, CCoinsView *coinsview,
                 nGoodTransactions += block.vtx.size();
             }
         }
+
+        CDeterministicMNList mnList = deterministicMNManager->GetListForBlock(pindex);
+        UpdateLLMQParams(mnList.GetAllMNsCount(), pindex->nHeight);
         if (ShutdownRequested())
             return true;
     }

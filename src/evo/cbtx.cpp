@@ -19,15 +19,18 @@
 bool CheckCbTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state)
 {
     if (tx.nType != TRANSACTION_COINBASE) {
+    	std::cout << "fail to check TRANSACTION_COINBASE\n";
         return state.DoS(100, false, REJECT_INVALID, "bad-cbtx-type");
     }
 
     if (!tx.IsCoinBase()) {
+    	std::cout << "fail to check IsCoinBase\n";
         return state.DoS(100, false, REJECT_INVALID, "bad-cbtx-invalid");
     }
 
     CCbTx cbTx;
     if (!GetTxPayload(tx, cbTx)) {
+    	std::cout << "fail to check GetTxPayload " << tx.ToString() << endl;
         return state.DoS(100, false, REJECT_INVALID, "bad-cbtx-payload");
     }
 
@@ -37,6 +40,7 @@ bool CheckCbTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidatio
     }
 
     if (pindexPrev && pindexPrev->nHeight + 1 != cbTx.nHeight) {
+    	std::cout << "fail to check nHeight\n";
         return state.DoS(100, false, REJECT_INVALID, "bad-cbtx-height");
     }
 

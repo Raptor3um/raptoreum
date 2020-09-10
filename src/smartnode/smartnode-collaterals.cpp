@@ -26,7 +26,7 @@ CAmount SmartnodeCollaterals::getCollateral(int height) const {
 	return 0;
 }
 
-float SmartnodeCollaterals::getRewardPercentage(int height) const {
+int SmartnodeCollaterals::getRewardPercentage(int height) const {
 	for (auto& it : this->rewardPercentages) {
 		if(it.height == INT_MAX || height <= it.height) {
 			return it.percentage;

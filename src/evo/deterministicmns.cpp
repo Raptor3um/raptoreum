@@ -236,8 +236,11 @@ CDeterministicMNCPtr CDeterministicMNList::GetMNPayee() const
 
 std::vector<CDeterministicMNCPtr> CDeterministicMNList::GetProjectedMNPayees(int nCount) const
 {
-    if (nCount > GetValidMNsCount()) {
-        nCount = GetValidMNsCount();
+	int validMnCount =  GetValidMNsCount();
+	if(validMnCount < 10) {
+		nCount = 0;
+	} else if (nCount > validMnCount) {
+        nCount = validMnCount;
     }
 
     std::vector<CDeterministicMNCPtr> result;
@@ -616,7 +619,7 @@ void CDeterministicMNManager::UpdatedBlockTip(const CBlockIndex* pindex)
 bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const CBlockIndex* pindexPrev, CValidationState& _state, CDeterministicMNList& mnListRet, bool debugLogs)
 {
     AssertLockHeld(cs);
-
+    std::cout << "BuildNewListFromBlock called\n";
     int nHeight = pindexPrev->nHeight + 1;
 
     CDeterministicMNList oldList = GetListForBlock(pindexPrev);
@@ -644,7 +647,9 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
         }
     });
 
-    DecreasePoSePenalties(newList);
+    if(nHeight % 2 == 0) {
+    	DecreasePoSePenalties(newList);
+    }
 
     // we skip the coinbase
     for (int i = 1; i < (int)block.vtx.size(); i++) {
@@ -849,7 +854,7 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
     }
 
     mnListRet = std::move(newList);
-
+    UpdateLLMQParams(mnListRet.GetAllMNsCount(), nHeight);
     return true;
 }
 

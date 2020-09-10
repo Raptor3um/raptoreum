@@ -21,7 +21,7 @@ struct Collateral {
 
 struct RewardPercentage {
 	int height;
-	float percentage;
+	int percentage;
 };
 
 class SmartnodeCollaterals {
@@ -35,7 +35,7 @@ public:
 	CAmount getCollateral(int height) const;
 	bool isValidCollateral(CAmount collateralAmount) const;
 	bool isPayableCollateral(int height,CAmount collateralAnount) const;
-	float getRewardPercentage(int height) const;
+	int getRewardPercentage(int height) const;
 	virtual ~SmartnodeCollaterals();
 };
 

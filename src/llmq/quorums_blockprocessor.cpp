@@ -325,6 +325,7 @@ bool CQuorumBlockProcessor::GetCommitmentsFromBlock(const CBlock& block, const C
 
             // only allow one commitment per type and per block
             if (ret.count((Consensus::LLMQType)qc.commitment.llmqType)) {
+            	std::cout << "ret.count failed \n";
                 return state.DoS(100, false, REJECT_INVALID, "bad-qc-dup");
             }
 

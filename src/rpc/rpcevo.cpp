@@ -434,6 +434,9 @@ UniValue protx_register(const JSONRPCRequest& request)
 		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("invalid hash or index: %s-%d", collateralHash.ToString(), collateralIndex));
 	}
     const auto &p = pwallet->mapWallet[collateralHash];
+    if(p.tx == nullptr) {
+		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Invalid collateral, you do not own the collateral address : hash=%s-%d\n", collateralHash.ToString(), collateralIndex));
+	}
     CAmount collateralAmount = p.tx->vout[collateralIndex].nValue;
     if (!collaterals.isValidCollateral(collateralAmount)) {
 		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("invalid collateral amount: hash=%s-%d\namount=%d", collateralHash.ToString(), collateralIndex, collateralAmount/COIN));

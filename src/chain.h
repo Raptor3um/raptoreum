@@ -291,7 +291,7 @@ public:
 
     uint256 GetBlockHash() const
     {
-        return *phashBlock;
+        return phashBlock == nullptr ? uint256() : *phashBlock;
     }
 
     int64_t GetBlockTime() const

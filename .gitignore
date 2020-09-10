@@ -138,3 +138,5 @@ cmake-build-debug
 
 depends/built
 depends/x86_64-pc-linux-gnu
+depends/sdk-sources/
+dist/

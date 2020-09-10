@@ -90,6 +90,7 @@ public:
     void UpdateBudgetParameters(int nSmartnodePaymentsStartBlock, int nBudgetPaymentsStartBlock, int nSuperblockStartBlock);
     void UpdateSubsidyAndDiffParams(int nMinimumDifficultyBlocks, int nHighSubsidyBlocks, int nHighSubsidyFactor);
     void UpdateLLMQChainLocks(Consensus::LLMQType llmqType);
+    void UpdateLLMQParams(size_t totalMnCount, int height);
     int PoolMinParticipants() const { return nPoolMinParticipants; }
     int PoolMaxParticipants() const { return nPoolMaxParticipants; }
     int FulfilledRequestExpireTime() const { return nFulfilledRequestExpireTime; }
@@ -171,5 +172,7 @@ void UpdateDevnetSubsidyAndDiffParams(int nMinimumDifficultyBlocks, int nHighSub
  * Allows modifying the LLMQ type for ChainLocks.
  */
 void UpdateDevnetLLMQChainLocks(Consensus::LLMQType llmqType);
+
+void UpdateLLMQParams(size_t totalMnCount, int height);
 
 #endif // BITCOIN_CHAINPARAMS_H
