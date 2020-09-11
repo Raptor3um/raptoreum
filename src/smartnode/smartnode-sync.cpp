@@ -17,12 +17,20 @@
 class CSmartnodeSync;
 CSmartnodeSync smartnodeSync;
 
-void CSmartnodeSync::Reset()
+void CSmartnodeSync::Reset(bool fForce, bool fNotifyReset)
 {
-    nCurrentAsset = SMARTNODE_SYNC_INITIAL;
-    nTriedPeerCount = 0;
-    nTimeAssetSyncStarted = GetTime();
-    nTimeLastBumped = GetTime();
+    // Avoid resetting the sync process if we just "recently" received a new block
+    if (fForce || (GetTime() - nTimeLastUpdateBlockTip > SMARTNODE_SYNC_RESET_SECONDS)) {
+        nCurrentAsset = SMARTNODE_SYNC_BLOCKCHAIN;
+        nTriedPeerCount = 0;
+        nTimeAssetSyncStarted = GetTime();
+        nTimeLastBumped = GetTime();
+        nTimeLastUpdateBlockTip = 0;
+        fReachedBestHeader = false;
+        if (fNotifyReset) {
+            uiInterface.NotifyAdditionalDataSyncProgressChanged(-1);
+        }
+    }
 }
 
 void CSmartnodeSync::BumpAssetLastTime(const std::string& strFuncName)
@@ -36,8 +44,7 @@ std::string CSmartnodeSync::GetAssetName()
 {
     switch(nCurrentAsset)
     {
-        case(SMARTNODE_SYNC_INITIAL):      return "SMARTNODE_SYNC_INITIAL";
-        case(SMARTNODE_SYNC_WAITING):      return "SMARTNODE_SYNC_WAITING";
+        case(SMARTNODE_SYNC_BLOCKCHAIN):   return "SMARTNODE_SYNC_BLOCKCHAIN";
         case(SMARTNODE_SYNC_GOVERNANCE):   return "SMARTNODE_SYNC_GOVERNANCE";
         case SMARTNODE_SYNC_FINISHED:      return "SMARTNODE_SYNC_FINISHED";
         default:                            return "UNKNOWN";
@@ -48,11 +55,7 @@ void CSmartnodeSync::SwitchToNextAsset(CConnman& connman)
 {
     switch(nCurrentAsset)
     {
-        case(SMARTNODE_SYNC_INITIAL):
-            nCurrentAsset = SMARTNODE_SYNC_WAITING;
-            LogPrintf("CSmartnodeSync::SwitchToNextAsset -- Starting %s\n", GetAssetName());
-            break;
-        case(SMARTNODE_SYNC_WAITING):
+        case(SMARTNODE_SYNC_BLOCKCHAIN):
             LogPrintf("CSmartnodeSync::SwitchToNextAsset -- Completed %s in %llds\n", GetAssetName(), GetTime() - nTimeAssetSyncStarted);
             nCurrentAsset = SMARTNODE_SYNC_GOVERNANCE;
             LogPrintf("CSmartnodeSync::SwitchToNextAsset -- Starting %s\n", GetAssetName());
@@ -77,8 +80,7 @@ void CSmartnodeSync::SwitchToNextAsset(CConnman& connman)
 std::string CSmartnodeSync::GetSyncStatus()
 {
     switch (smartnodeSync.nCurrentAsset) {
-        case SMARTNODE_SYNC_INITIAL:       return _("Synchronizing blockchain...");
-        case SMARTNODE_SYNC_WAITING:       return _("Synchronization pending...");
+        case SMARTNODE_SYNC_BLOCKCHAIN:    return _("Synchronizing blockchain...");
         case SMARTNODE_SYNC_GOVERNANCE:    return _("Synchronizing governance objects...");
         case SMARTNODE_SYNC_FINISHED:      return _("Synchronization finished");
         default:                            return "";
@@ -112,8 +114,7 @@ void CSmartnodeSync::ProcessTick(CConnman& connman)
     static int64_t nTimeLastProcess = GetTime();
     if(GetTime() - nTimeLastProcess > 60*60 && !fSmartnodeMode) {
         LogPrintf("CSmartnodeSync::ProcessTick -- WARNING: no actions for too long, restarting sync...\n");
-        Reset();
-        SwitchToNextAsset(connman);
+        Reset(true);
         nTimeLastProcess = GetTime();
         return;
     }
@@ -153,7 +154,7 @@ void CSmartnodeSync::ProcessTick(CConnman& connman)
         // QUICK MODE (REGTEST ONLY!)
         if(Params().NetworkIDString() == CBaseChainParams::REGTEST)
         {
-            if (nCurrentAsset == SMARTNODE_SYNC_WAITING) {
+            if (nCurrentAsset == SMARTNODE_SYNC_BLOCKCHAIN) {
                 connman.PushMessage(pnode, msgMaker.Make(NetMsgType::GETSPORKS)); //get current network sporks
                 SwitchToNextAsset(connman);
             } else if (nCurrentAsset == SMARTNODE_SYNC_GOVERNANCE) {
@@ -190,25 +191,26 @@ void CSmartnodeSync::ProcessTick(CConnman& connman)
                 LogPrintf("CSmartnodeSync::ProcessTick -- nTick %d nCurrentAsset %d -- requesting sporks from peer=%d\n", nTick, nCurrentAsset, pnode->GetId());
             }
 
-            // INITIAL TIMEOUT
-
-            if(nCurrentAsset == SMARTNODE_SYNC_WAITING) {
+            if (nCurrentAsset == SMARTNODE_SYNC_BLOCKCHAIN) {
                 if(pnode->nVersion >= 70216 && !pnode->fInbound && gArgs.GetBoolArg("-syncmempool", DEFAULT_SYNC_MEMPOOL) && !netfulfilledman.HasFulfilledRequest(pnode->addr, "mempool-sync")) {
                     netfulfilledman.AddFulfilledRequest(pnode->addr, "mempool-sync");
                     connman.PushMessage(pnode, msgMaker.Make(NetMsgType::MEMPOOL));
                     LogPrintf("CSmartnodeSync::ProcessTick -- nTick %d nCurrentAsset %d -- syncing mempool from peer=%d\n", nTick, nCurrentAsset, pnode->GetId());
                 }
 
-                if(GetTime() - nTimeLastBumped > SMARTNODE_SYNC_TIMEOUT_SECONDS) {
+                int64_t nTimeSyncTimeout = vNodesCopy.size() > 3 ? SMARTNODE_SYNC_TICK_SECONDS : SMARTNODE_SYNC_TIMEOUT_SECONDS;
+                if (fReachedBestHeader && (GetTime() - nTimeLastBumped > nTimeSyncTimeout)) {
                     // At this point we know that:
                     // a) there are peers (because we are looping on at least one of them);
-                    // b) we waited for at least SMARTNODE_SYNC_TIMEOUT_SECONDS since we reached
-                    //    the headers tip the last time (i.e. since we switched from
-                    //     SMARTNODE_SYNC_INITIAL to SMARTNODE_SYNC_WAITING and bumped time);
+                    // b) we waited for at least SMARTNODE_SYNC_TICK_SECONDS/SMARTNODE_SYNC_TIMEOUT_SECONDS
+                    //    (depending on the number of connected peers) since we reached the headers tip the last
+                    //    time (i.e. since fReachedBestHeader has been set to true);
                     // c) there were no blocks (UpdatedBlockTip, NotifyHeaderTip) or headers (AcceptedBlockHeader)
-                    //    for at least SMARTNODE_SYNC_TIMEOUT_SECONDS.
+                    //    for at least SMARTNODE_SYNC_TICK_SECONDS/SMARTNODE_SYNC_TIMEOUT_SECONDS (depending on
+                    //    the number of connected peers).
                     // We must be at the tip already, let's move to the next asset.
                     SwitchToNextAsset(connman);
+                    uiInterface.NotifyAdditionalDataSyncProgressChanged(nSyncProgress);
                 }
             }
 
@@ -325,6 +327,8 @@ void CSmartnodeSync::UpdatedBlockTip(const CBlockIndex *pindexNew, bool fInitial
 {
     LogPrint(BCLog::MNSYNC, "CSmartnodeSync::UpdatedBlockTip -- pindexNew->nHeight: %d fInitialDownload=%d\n", pindexNew->nHeight, fInitialDownload);
 
+    nTimeLastUpdateBlockTip = GetAdjustedTime();
+
     if (IsSynced() || !pindexBestHeader)
         return;
 
@@ -336,7 +340,7 @@ void CSmartnodeSync::UpdatedBlockTip(const CBlockIndex *pindexNew, bool fInitial
     if (fInitialDownload) {
         // switched too early
         if (IsBlockchainSynced()) {
-            Reset();
+            Reset(true);
         }
 
         // no need to check any further while still in IBD mode
@@ -344,28 +348,19 @@ void CSmartnodeSync::UpdatedBlockTip(const CBlockIndex *pindexNew, bool fInitial
     }
 
     // Note: since we sync headers first, it should be ok to use this
-    static bool fReachedBestHeader = false;
     bool fReachedBestHeaderNew = pindexNew->GetBlockHash() == pindexBestHeader->GetBlockHash();
 
     if (fReachedBestHeader && !fReachedBestHeaderNew) {
         // Switching from true to false means that we previousely stuck syncing headers for some reason,
         // probably initial timeout was not enough,
         // because there is no way we can update tip not having best header
-        Reset();
-        fReachedBestHeader = false;
-        return;
+        Reset(true);
     }
 
     fReachedBestHeader = fReachedBestHeaderNew;
 
     LogPrint(BCLog::MNSYNC, "CSmartnodeSync::UpdatedBlockTip -- pindexNew->nHeight: %d pindexBestHeader->nHeight: %d fInitialDownload=%d fReachedBestHeader=%d\n",
                 pindexNew->nHeight, pindexBestHeader->nHeight, fInitialDownload, fReachedBestHeader);
-
-    if (!IsBlockchainSynced() && fReachedBestHeader) {
-        // Reached best header while being in initial mode.
-        // We must be at the tip already, let's move to the next asset.
-        SwitchToNextAsset(connman);
-    }
 }
 
 void CSmartnodeSync::DoMaintenance(CConnman &connman)
