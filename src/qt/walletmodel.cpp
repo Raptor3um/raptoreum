@@ -90,9 +90,9 @@ CAmount WalletModel::getAnonymizableBalance(bool fSkipDenominated, bool fSkipUnc
     return wallet->GetAnonymizableBalance(fSkipDenominated, fSkipUnconfirmed);
 }
 
-CAmount WalletModel::getAnonymizedBalance() const
+CAmount WalletModel::getAnonymizedBalance(const CCoinControl* coinControl) const
 {
-    return wallet->GetAnonymizedBalance();
+    return wallet->GetAnonymizedBalance(coinControl);
 }
 
 CAmount WalletModel::getDenominatedBalance(bool unconfirmed) const
