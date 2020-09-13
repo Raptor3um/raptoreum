@@ -78,9 +78,11 @@ bool CheckCbTxMerkleRoots(const CBlock& block, const CBlockIndex* pindex, CValid
     if (pindex) {
         uint256 calculatedMerkleRoot;
         if (!CalcCbTxMerkleRootMNList(block, pindex->pprev, calculatedMerkleRoot, state)) {
+        	std::cout << "CalcCbTxMerkleRootMNList false\n";
             return state.DoS(100, false, REJECT_INVALID, "bad-cbtx-mnmerkleroot");
         }
         if (calculatedMerkleRoot != cbTx.merkleRootMNList) {
+        	std::cout << "calculatedMerkleRoot !=  cbTx.merkleRootMNList " << calculatedMerkleRoot.GetHex() << "!=" <<  cbTx.merkleRootMNList.GetHex() << endl;
             return state.DoS(100, false, REJECT_INVALID, "bad-cbtx-mnmerkleroot");
         }
 
@@ -116,7 +118,7 @@ bool CalcCbTxMerkleRootMNList(const CBlock& block, const CBlockIndex* pindexPrev
 
     CDeterministicMNList tmpMNList;
     if (!deterministicMNManager->BuildNewListFromBlock(block, pindexPrev, state, tmpMNList, false)) {
-        return false;
+    	return false;
     }
 
     int64_t nTime2 = GetTimeMicros(); nTimeDMN += nTime2 - nTime1;

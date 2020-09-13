@@ -322,6 +322,9 @@ bool CSmartnodePayments::GetBlockTxOuts(int nBlockHeight, CAmount blockReward, s
     voutSmartnodePaymentsRet.clear();
 
     CAmount smartnodeReward = GetSmartnodePayment(nBlockHeight, blockReward);
+    if(smartnodeReward == 0) {
+    	return false;
+    }
 
     const CBlockIndex* pindex;
     {

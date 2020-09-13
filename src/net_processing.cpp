@@ -2471,6 +2471,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             // It could be that a MN is no longer in the list but its DSTX is not yet mined.
             // Try to find a MN up to 24 blocks deep to make sure such dstx-es are relayed and processed correctly.
             for (int i = 0; i < 24 && pindex; ++i) {
+
                 dmn = deterministicMNManager->GetListForBlock(pindex).GetMNByCollateral(dstx.smartnodeOutpoint);
                 if (dmn) break;
                 pindex = pindex->pprev;

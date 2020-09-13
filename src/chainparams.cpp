@@ -17,6 +17,9 @@
 #include <assert.h>
 
 #include "chainparamsseeds.h"
+static size_t lastCheckMnCount = 0;
+static int lastCheckHeight= 0;
+static int isPrintedHeight = 0;
 
 static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesisOutputScript, uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
 {
@@ -416,8 +419,10 @@ public:
 
         //vSeeds.emplace_back("dnsseed.raptoreum.org", true);
         //vSeeds.emplace_back("dnsseed.raptoreumdot.io", true);
-        vSeeds.emplace_back("34.72.8.88", true);
+        //vSeeds.emplace_back("34.72.8.88", true);
         vSeeds.emplace_back("64.227.61.186", true);
+        vSeeds.emplace_back("121.121.19.249", true);
+
 
         // Raptoreum addresses start with 'X'
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,60);
@@ -469,7 +474,7 @@ public:
         fMineBlocksOnDemand = false;
         fAllowMultipleAddressesFromGroup = false;
         fAllowMultiplePorts = false;
-        miningRequiresPeers = false;
+        miningRequiresPeers = true;
 
         nPoolMinParticipants = 3;
         nPoolMaxParticipants = 5;
@@ -935,7 +940,15 @@ bool IsLLMQsMiningPhase(int nHeight) {
 }
 
 void CChainParams::UpdateLLMQParams(size_t totalMnCount, int height) {
-	if(!IsLLMQsMiningPhase(height)) {
+	bool isNotLLMQsMiningPhase;
+//	if(isPrintedHeight != height) {
+//		isPrintedHeight = height;
+//		LogPrintf("UpdateLLMQParams %d-%d-%ld-%ld-%d\n", lastCheckHeight, height, lastCheckMnCount, totalMnCount, !IsLLMQsMiningPhase(height));
+//	}
+    if(lastCheckHeight < height && lastCheckMnCount != totalMnCount && (isNotLLMQsMiningPhase = !IsLLMQsMiningPhase(height))) {
+	    LogPrintf("---UpdateLLMQParams %d-%d-%ld-%ld-%d\n", lastCheckHeight, height, lastCheckMnCount, totalMnCount, isNotLLMQsMiningPhase);
+		lastCheckMnCount = totalMnCount;
+		lastCheckHeight = height;
 		if(totalMnCount < llmq5_60.size) {
 			consensus.llmqs[Consensus::LLMQ_50_60] = llmq5_60;
 			consensus.llmqs[Consensus::LLMQ_400_60] = llmq20_60;
@@ -963,4 +976,5 @@ void CChainParams::UpdateLLMQParams(size_t totalMnCount, int height) {
 //			consensus.llmqs[Consensus::LLMQ_400_85] = llmq400_85;
 //		}
 	}
+
 }

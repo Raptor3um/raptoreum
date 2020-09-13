@@ -220,9 +220,13 @@ static bool CompareByLastPaid(const CDeterministicMNCPtr& _a, const CDeterminist
 
 CDeterministicMNCPtr CDeterministicMNList::GetMNPayee() const
 {
-    if (mnMap.size() == 0) {
-        return nullptr;
-    }
+//	int nHeight = chainActive.Tip() == nullptr ? 0 : chainActive.Tip()->nHeight;
+//    if ((nHeight < 900 &&  mnMap.size() == 0)||(nHeight >= 900 && mnMap.size() <= 10)) {
+//        return nullptr;
+//    }
+	if(mnMap.size() <= 10) {
+		return nullptr;
+	}
 
     CDeterministicMNCPtr best;
     ForEachMN(true, [&](const CDeterministicMNCPtr& dmn) {
@@ -242,6 +246,9 @@ std::vector<CDeterministicMNCPtr> CDeterministicMNList::GetProjectedMNPayees(int
 	} else if (nCount > validMnCount) {
         nCount = validMnCount;
     }
+//	if (nCount > validMnCount) {
+//		nCount = validMnCount;
+//	}
 
     std::vector<CDeterministicMNCPtr> result;
     result.reserve(nCount);
@@ -524,11 +531,9 @@ bool CDeterministicMNManager::ProcessBlock(const CBlock& block, const CBlockInde
 
     {
         LOCK(cs);
-
         if (!BuildNewListFromBlock(block, pindex->pprev, _state, newList, true)) {
             return false;
         }
-
         if (fJustCheck) {
             return true;
         }
@@ -538,7 +543,6 @@ bool CDeterministicMNManager::ProcessBlock(const CBlock& block, const CBlockInde
         }
 
         newList.SetBlockHash(block.GetHash());
-
         oldList = GetListForBlock(pindex->pprev);
         diff = oldList.BuildDiff(newList);
 
@@ -619,16 +623,13 @@ void CDeterministicMNManager::UpdatedBlockTip(const CBlockIndex* pindex)
 bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const CBlockIndex* pindexPrev, CValidationState& _state, CDeterministicMNList& mnListRet, bool debugLogs)
 {
     AssertLockHeld(cs);
-    std::cout << "BuildNewListFromBlock called\n";
     int nHeight = pindexPrev->nHeight + 1;
-
     CDeterministicMNList oldList = GetListForBlock(pindexPrev);
     CDeterministicMNList newList = oldList;
     newList.SetBlockHash(uint256()); // we can't know the final block hash, so better not return a (invalid) block hash
     newList.SetHeight(nHeight);
 
     auto payee = oldList.GetMNPayee();
-
     // we iterate the oldList here and update the newList
     // this is only valid as long these have not diverged at this point, which is the case as long as we don't add
     // code above this loop that modifies newList
@@ -659,7 +660,6 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
             // only interested in special TXs
             continue;
         }
-
         if (tx.nType == TRANSACTION_PROVIDER_REGISTER) {
             CProRegTx proTx;
             if (!GetTxPayload(tx, proTx)) {
@@ -938,7 +938,7 @@ CDeterministicMNList CDeterministicMNManager::GetListForBlock(const CBlockIndex*
 
         mnListsCache.emplace(diffIndex->GetBlockHash(), snapshot);
     }
-
+    UpdateLLMQParams(snapshot.GetAllMNsCount(), snapshot.GetHeight());
     return snapshot;
 }
 

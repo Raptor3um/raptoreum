@@ -1052,8 +1052,13 @@ CAmount GetBlockSubsidy(int nPrevBits, int nPrevHeight, const Consensus::Params&
 
 CAmount GetSmartnodePayment(int nHeight, CAmount blockValue)
 {
-    int percentage = Params().GetConsensus().nCollaterals.getRewardPercentage(nHeight);
-    return blockValue * percentage / 100;
+	size_t mnCount = chainActive.Tip() == nullptr ? 0 : deterministicMNManager->GetListForBlock(chainActive.Tip()).GetAllMNsCount();
+	if(mnCount >= 10) {
+		int percentage = Params().GetConsensus().nCollaterals.getRewardPercentage(nHeight);
+		return blockValue * percentage / 100;
+	} else {
+		return 0;
+	}
 }
 
 bool IsInitialBlockDownload()
@@ -1792,7 +1797,6 @@ static int64_t nTimeTotal = 0;
 static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pindex,
                   CCoinsViewCache& view, const CChainParams& chainparams, bool fJustCheck = false)
 {
-	std::cout << "ConnectBlock\n";
     AssertLockHeld(cs_main);
     assert(pindex);
     // pindex->phashBlock can be null if called by CreateNewBlock/TestBlockValidity
@@ -2108,7 +2112,6 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
 
     int64_t nTime5_4 = GetTimeMicros(); nTimePayeeValid += nTime5_4 - nTime5_3;
     LogPrint(BCLog::BENCHMARK, "      - IsBlockPayeeValid: %.2fms [%.2fs]\n", 0.001 * (nTime5_4 - nTime5_3), nTimePayeeValid * 0.000001);
-
     if (!ProcessSpecialTxsInBlock(block, pindex, state, fJustCheck, fScriptChecks)) {
         return error("ConnectBlock(RAPTOREUM): ProcessSpecialTxsInBlock for block %s failed with %s",
                      pindex->GetBlockHash().ToString(), FormatStateMessage(state));
@@ -2852,7 +2855,6 @@ bool PreciousBlock(CValidationState& state, const CChainParams& params, CBlockIn
             PruneBlockIndexCandidates();
         }
     }
-
     return ActivateBestChain(state, params);
 }
 
@@ -4028,8 +4030,9 @@ bool CVerifyDB::VerifyDB(const CChainParams& chainparams, CCoinsView *coinsview,
             }
         }
 
-        CDeterministicMNList mnList = deterministicMNManager->GetListForBlock(pindex);
-        UpdateLLMQParams(mnList.GetAllMNsCount(), pindex->nHeight);
+//        CDeterministicMNList mnList = deterministicMNManager->GetListForBlock(pindex);
+//        std::cout << "UpdateLLMQParams at height " << pindex->nHeight << " listSize "<< mnList.GetAllMNsCount() << endl;
+//        UpdateLLMQParams(mnList.GetAllMNsCount(), pindex->nHeight);
         if (ShutdownRequested())
             return true;
     }
