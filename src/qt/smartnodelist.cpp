@@ -144,7 +144,7 @@ void SmartnodeList::updateDIP3ListScheduled()
     // after filter was last changed unless we want to force the update.
     if (fFilterUpdatedDIP3) {
         int64_t nSecondsToWait = nTimeFilterUpdatedDIP3 - GetTime() + SMARTNODELIST_FILTER_COOLDOWN_SECONDS;
-        ui->countLabelDIP3->setText(tr("Please wait... %1").arg(nSecondsToWait));
+        ui->countLabelDIP3->setText(tr("Please wait...") + " " + QString::number(nSecondsToWait));
 
         if (nSecondsToWait <= 0) {
             updateDIP3List();
@@ -316,7 +316,7 @@ void SmartnodeList::on_filterLineEditDIP3_textChanged(const QString& strFilterIn
     strCurrentFilterDIP3 = strFilterIn;
     nTimeFilterUpdatedDIP3 = GetTime();
     fFilterUpdatedDIP3 = true;
-    ui->countLabelDIP3->setText(tr("Please wait... %1").arg(SMARTNODELIST_FILTER_COOLDOWN_SECONDS));
+    ui->countLabelDIP3->setText(tr("Please wait...") + " " + QString::number(SMARTNODELIST_FILTER_COOLDOWN_SECONDS));
 }
 
 void SmartnodeList::on_checkBoxMySmartnodesOnly_stateChanged(int state)
