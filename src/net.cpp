@@ -1926,7 +1926,6 @@ void CConnman::ThreadOpenConnections()
                 continue;
             }
         }
-
         auto mnList = deterministicMNManager->GetListAtChainTip();
 
         int64_t nANow = GetAdjustedTime();
@@ -2102,7 +2101,6 @@ void CConnman::ThreadOpenSmartnodeConnections()
                 connectedProRegTxHashes.emplace(pnode->verifiedProRegTxHash);
             }
         });
-
         auto mnList = deterministicMNManager->GetListAtChainTip();
 
         CSemaphoreGrant grant(*semSmartnodeOutbound);

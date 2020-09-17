@@ -269,9 +269,20 @@ UniValue smartnode_status(const JSONRPCRequest& request)
 
     auto dmn = deterministicMNManager->GetListAtChainTip().GetMN(activeSmartnodeInfo.proTxHash);
     if (dmn) {
-        mnObj.push_back(Pair("proTxHash", dmn->proTxHash.ToString()));
-        mnObj.push_back(Pair("collateralHash", dmn->collateralOutpoint.hash.ToString()));
-        mnObj.push_back(Pair("collateralIndex", (int)dmn->collateralOutpoint.n));
+    	Coin coin;
+		mnObj.push_back(Pair("proTxHash", dmn->proTxHash.ToString()));
+		mnObj.push_back(Pair("collateralHash", dmn->collateralOutpoint.hash.ToString()));
+		mnObj.push_back(Pair("collateralIndex", (int)dmn->collateralOutpoint.n));
+    	if(GetUTXOCoin(dmn->collateralOutpoint, coin)) {
+    		CTxDestination dest;
+			if (ExtractDestination(coin.out.scriptPubKey, dest)) {
+	    		int nHeight = chainActive.Tip() == nullptr ? 0 : chainActive.Tip()->nHeight;
+				SmartnodeCollaterals collaterals = Params().GetConsensus().nCollaterals;
+				mnObj.push_back(Pair("collateralAddress", CBitcoinAddress(dest).ToString()));
+				mnObj.push_back(Pair("collateralAmount", coin.out.nValue / COIN));
+				mnObj.push_back(Pair("needToUpgrade", !collaterals.isPayableCollateral(nHeight, coin.out.nValue)));
+			}
+    	}
         UniValue stateObj;
         dmn->pdmnState->ToJson(stateObj);
         mnObj.push_back(Pair("dmnState", stateObj));

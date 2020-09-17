@@ -422,6 +422,7 @@ public:
         //vSeeds.emplace_back("34.72.8.88", true);
         vSeeds.emplace_back("64.227.61.186", true);
         vSeeds.emplace_back("121.121.19.249", true);
+        vSeeds.emplace_back("ger1.raptoreum.com", true);
 
 
         // Raptoreum addresses start with 'X'

@@ -81,7 +81,6 @@ void CActiveSmartnodeManager::Init()
         state = SMARTNODE_ERROR;
         return;
     }
-
     CDeterministicMNList mnList = deterministicMNManager->GetListAtChainTip();
 
     CDeterministicMNCPtr dmn = mnList.GetMNByOperatorKey(*activeSmartnodeInfo.blsPubKeyOperator);

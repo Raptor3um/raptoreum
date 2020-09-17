@@ -673,7 +673,6 @@ UniValue protx_register(const JSONRPCRequest& request)
             UniValue ret(UniValue::VOBJ);
             ret.push_back(Pair("tx", EncodeHexTx(tx)));
             ret.push_back(Pair("collateralAddress", CBitcoinAddress(txDest).ToString()));
-            printf("collateralAmount %ld\n", collateralAmount / COIN);
             ret.push_back(Pair("collateralAmount", collateralAmount / COIN));
             ret.push_back(Pair("signMessage", ptx.MakeSignString()));
             return ret;
@@ -1010,12 +1009,16 @@ void protx_quick_setup_help(CWallet* const pwallet)
 			+ GetHelpString(3, "ipAndPort")
 			+ GetHelpString(4, "feeSourceAddress")
 			+ "\nResult:\n{\n"
-            "  \"txid:\"                  (string) The transaction id for submitted protx register_submit.\n"
-			"  \"ownerAddress:\"          (string) The generated owner address.\n"
-			"  \"votingAddress:\"         (string) The generated voting address.\n"
-			"  \"operationPubkey:\"       (string) The public key from bls generate.\n"
-			"  \"operationSecret:\"       (string) The secret key from bls generate.\n"
-			"  \"raptoreum.conf:\"        (string) The content of raptoreum.conf to be used in vps node.\n"
+            "  \"txid\":                  (string) The transaction id for submitted protx register_submit.\n"
+            "  \"tx\":                    (string) The raw transaction hex of this protx without signiature.\n"
+			"  \"ownerAddress\":          (string) The generated owner address.\n"
+			"  \"votingAddress\":         (string) The generated voting address.\n"
+			"  \"payoutAddress\":         (string) The generated payout address.\n"
+			"  \"collateralAddress\":     (string) The collateral address for this collateralHash.\n"
+			"  \"collateralAmount\":      (numberic) The collateral Amount was used for this protx.\n"
+			"  \"operationPubkey\":       (string) The public key from bls generate.\n"
+			"  \"operationSecret\":       (string) The secret key from bls generate.\n"
+			"  \"raptoreum.conf\" :       (string) The content of raptoreum.conf to be used in vps node.\n"
             "}\n"
 			"\nExamples:\n"
             + HelpExampleCli("protx", "quick_setup \"collateralHash\" \"collateralIndex\" \"ipAndPort\" \"feeSourceAddress\"")
@@ -1073,7 +1076,7 @@ UniValue createConfigFile(string blsPrivateKey, string ip, string address) {
 	configFile << "server=1\n";
 	configFile << "daemon=1\n";
 	configFile << "listen=1\n";
-	configFile << "masternodeblsprivkey=" << blsPrivateKey << endl;
+	configFile << "smartnodeblsprivkey=" << blsPrivateKey << endl;
 	configFile << "externalip=" << ip << endl;
 	configFile.flush();
 	configFile.close();
