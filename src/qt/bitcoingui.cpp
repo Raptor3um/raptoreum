@@ -391,11 +391,6 @@ void BitcoinGUI::createActions()
     overviewAction->setStatusTip(tr("Show general overview of wallet"));
     overviewAction->setToolTip(overviewAction->statusTip());
     overviewAction->setCheckable(true);
-#ifdef Q_OS_MAC
-    overviewAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_1));
-#else
-    overviewAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_1));
-#endif
     tabGroup->addButton(overviewAction);
 
     sendCoinsAction = new QToolButton(this);
@@ -403,11 +398,6 @@ void BitcoinGUI::createActions()
     sendCoinsAction->setStatusTip(tr("Send coins to a Raptoreum address"));
     sendCoinsAction->setToolTip(sendCoinsAction->statusTip());
     sendCoinsAction->setCheckable(true);
-#ifdef Q_OS_MAC
-    sendCoinsAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_2));
-#else
-    sendCoinsAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_2));
-#endif
     tabGroup->addButton(sendCoinsAction);
 
     sendCoinsMenuAction = new QAction(sendCoinsAction->text(), this);
@@ -419,11 +409,6 @@ void BitcoinGUI::createActions()
     privateSendCoinsAction->setStatusTip(tr("PrivateSend coins to a Dash address"));
     privateSendCoinsAction->setToolTip(privateSendCoinsAction->statusTip());
     privateSendCoinsAction->setCheckable(true);
-#ifdef Q_OS_MAC
-    privateSendCoinsAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_3));
-#else
-    privateSendCoinsAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_3));
-#endif
     tabGroup->addButton(privateSendCoinsAction);
 
     privateSendCoinsMenuAction = new QAction(privateSendCoinsAction->text(), this);
@@ -435,11 +420,6 @@ void BitcoinGUI::createActions()
     receiveCoinsAction->setStatusTip(tr("Request payments (generates QR codes and raptoreum: URIs)"));
     receiveCoinsAction->setToolTip(receiveCoinsAction->statusTip());
     receiveCoinsAction->setCheckable(true);
-#ifdef Q_OS_MAC
-    receiveCoinsAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_4));
-#else
-    receiveCoinsAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_4));
-#endif
     tabGroup->addButton(receiveCoinsAction);
 
     receiveCoinsMenuAction = new QAction(receiveCoinsAction->text(), this);
@@ -451,11 +431,6 @@ void BitcoinGUI::createActions()
     historyAction->setStatusTip(tr("Browse transaction history"));
     historyAction->setToolTip(historyAction->statusTip());
     historyAction->setCheckable(true);
-#ifdef Q_OS_MAC
-    historyAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_5));
-#else
-    historyAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_5));
-#endif
     tabGroup->addButton(historyAction);
 
     sendFuturesAction = new QAction(tr("&Futures"), this);
@@ -477,11 +452,6 @@ void BitcoinGUI::createActions()
         smartnodeAction->setStatusTip(tr("Browse smartnodes"));
         smartnodeAction->setToolTip(smartnodeAction->statusTip());
         smartnodeAction->setCheckable(true);
-#ifdef Q_OS_MAC
-        smartnodeAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_6));
-#else
-        smartnodeAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_6));
-#endif
         tabGroup->addButton(smartnodeAction);
         connect(smartnodeAction, SIGNAL(clicked()), this, SLOT(showNormalIfMinimized()));
         connect(smartnodeAction, SIGNAL(clicked()), this, SLOT(gotoSmartnodePage()));
@@ -838,6 +808,8 @@ void BitcoinGUI::setClientModel(ClientModel *_clientModel)
         }
 #endif
     }
+
+    updatePrivateSendVisibility();
 }
 
 #ifdef ENABLE_WALLET
@@ -957,6 +929,8 @@ void BitcoinGUI::optionsClicked()
     OptionsDialog dlg(this, enableWallet);
     dlg.setModel(clientModel->getOptionsModel());
     dlg.exec();
+
+    updatePrivateSendVisibility();
 }
 
 void BitcoinGUI::aboutClicked()
@@ -1192,6 +1166,38 @@ void BitcoinGUI::updateProgressBarVisibility()
     bool fShowProgressBar = clientModel->getNetworkActive() && !smartnodeSync.IsSynced() && clientModel->getNumConnections() > 0;
     progressBarLabel->setVisible(fShowProgressBarLabel);
     progressBar->setVisible(fShowProgressBar);
+}
+
+void BitcoinGUI::updatePrivateSendVisibility()
+{
+#ifdef ENABLE_WALLET
+    bool fEnabled = CPrivateSendClientOptions::IsEnabled();
+#else
+    bool fEnabled = false;
+#endif
+    // PrivateSend button is the third QToolButton, show/hide the underlying QAction
+    // Hiding the QToolButton itself doesn't work.
+    appToolBar->actions()[2]->setVisible(fEnabled);
+    privateSendCoinsMenuAction->setVisible(fEnabled);
+    showPrivateSendHelpAction->setVisible(fEnabled);
+    updateToolBarShortcuts();
+}
+
+void BitcoinGUI::updateToolBarShortcuts()
+{
+#ifdef Q_OS_MAC
+    auto modifier = Qt::CTRL;
+#else
+    auto modifier = Qt::ALT;
+#endif
+    int nKey = 0;
+    for (int i = 0; i < tabGroup->buttons().size(); ++i) {
+        if (appToolBar->actions()[i]->isVisible()) {
+            tabGroup->buttons()[i]->setShortcut(QKeySequence(modifier + Qt::Key_1 + nKey++));
+        } else {
+            tabGroup->buttons()[i]->setShortcut(QKeySequence());
+        }
+    }
 }
 
 void BitcoinGUI::setNumBlocks(int count, const QDateTime& blockDate, const QString& blockHash, double nVerificationProgress, bool header)
