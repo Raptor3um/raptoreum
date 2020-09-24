@@ -98,6 +98,8 @@ SmartnodeList::SmartnodeList(QWidget* parent) :
     timer = new QTimer(this);
     connect(timer, SIGNAL(timeout()), this, SLOT(updateDIP3ListScheduled()));
     timer->start(1000);
+
+    GUIUtil::updateFonts();
 }
 
 SmartnodeList::~SmartnodeList()
