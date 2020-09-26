@@ -717,8 +717,21 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
     result.push_back(Pair("superblock", superblockObjArray));
     result.push_back(Pair("superblocks_started", pindexPrev->nHeight + 1 > consensusParams.nSuperblockStartBlock));
     result.push_back(Pair("superblocks_enabled", sporkManager.IsSporkActive(SPORK_9_SUPERBLOCKS_ENABLED)));
+    UniValue founderObj(UniValue::VOBJ);
+	FounderPayment founderPayment = Params().GetConsensus().nFounderPayment;
+	if(pblock->txoutFounder!= CTxOut()) {
+		CTxDestination address;
+		ExtractDestination(pblock->txoutFounder.scriptPubKey, address);
+		CBitcoinAddress address2(address);
+		founderObj.push_back(Pair("payee", address2.ToString().c_str()));
+		founderObj.push_back(Pair("script", HexStr(pblock->txoutFounder.scriptPubKey.begin(), pblock->txoutFounder.scriptPubKey.end())));
+		founderObj.push_back(Pair("amount", pblock->txoutFounder.nValue));
+	}
+	result.push_back(Pair("founder", founderObj));
+	result.push_back(Pair("founder_payments_started", pindexPrev->nHeight + 1 > founderPayment.getStartBlock()));
 
     result.push_back(Pair("coinbase_payload", HexStr(pblock->vtx[0]->vExtraPayload)));
+
 
     return result;
 }
