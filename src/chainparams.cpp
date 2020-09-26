@@ -379,7 +379,7 @@ public:
         consensus.BIP66Enabled = true; // 00000000000b1fa2dfa312863570e13fae9ca7b5566cb27e55422620b469aefa
         consensus.DIP0001Enabled = true;
         consensus.DIP0003Enabled = true;
-        consensus.DIP0003Enabled = true;
+        consensus.DIP0008Enabled = true;
        // consensus.DIP0003EnforcementHeight = 1047200;
         consensus.powLimit = uint256S("00ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 20
         consensus.nPowTargetTimespan = 24 * 60 * 60; // Raptoreum: 1 day
