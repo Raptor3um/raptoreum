@@ -70,11 +70,11 @@
         <translation>받기 주소</translation>
     </message>
     <message>
-        <source>These are your Raptoreum addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <source>These are your Dash addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation>송금을 위한 대시 주소입니다. 코인을 보내기 전에 항상 금액과 받는 주소를 확인하세요.</translation>
     </message>
     <message>
-        <source>These are your Raptoreum addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
+        <source>These are your Dash addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
         <translation>대시를 송금 받기 위한 주소입니다. 매 거래시 새로운 주소를 사용할 것을 권장합니다.</translation>
     </message>
     <message>
@@ -130,6 +130,45 @@
     </message>
 </context>
 <context>
+    <name>AppearanceWidget</name>
+    <message>
+        <source>Lighter</source>
+        <translation>밝게</translation>
+    </message>
+    <message>
+        <source>Bolder</source>
+        <translation>굵게</translation>
+    </message>
+    <message>
+        <source>Font Weight Normal:</source>
+        <translation>글꼴 두께 일반:</translation>
+    </message>
+    <message>
+        <source>Smaller</source>
+        <translation>작게</translation>
+    </message>
+    <message>
+        <source>Bigger</source>
+        <translation>크게</translation>
+    </message>
+    <message>
+        <source>Font Scale:</source>
+        <translation>글꼴 크기:</translation>
+    </message>
+    <message>
+        <source>Font Family:</source>
+        <translation>글꼴 집합:</translation>
+    </message>
+    <message>
+        <source>Theme:</source>
+        <translation>테마:</translation>
+    </message>
+    <message>
+        <source>Font Weight Bold:</source>
+        <translation>글꼴 두께 굵게:</translation>
+    </message>
+</context>
+<context>
     <name>AskPassphraseDialog</name>
     <message>
         <source>Passphrase Dialog</source>
@@ -146,6 +185,10 @@
     <message>
         <source>Repeat new passphrase</source>
         <translation>새로운 암호문 확인</translation>
+    </message>
+    <message>
+        <source>Show password</source>
+        <translation>비밀번호 보이기</translation>
     </message>
     <message>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
@@ -188,7 +231,7 @@
         <translation>지갑 암호화 승인</translation>
     </message>
     <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR RTM&lt;/b&gt;!</source>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR DASH&lt;/b&gt;!</source>
         <translation>경고: 지갑을 암호화하고 암호문을 잃어버리는 경우 당신은 &lt;b&gt;모든 대시를 잃게 됩니다&lt;/b&gt;!</translation>
     </message>
     <message>
@@ -256,13 +299,20 @@
     </message>
 </context>
 <context>
+    <name>BitcoinAmountField</name>
+    <message>
+        <source>Amount in %1</source>
+        <translation>%1로 표시한 금액</translation>
+    </message>
+</context>
+<context>
     <name>BitcoinGUI</name>
     <message>
-        <source>A fatal error occurred. Raptoreum Core can no longer continue safely and will quit.</source>
+        <source>A fatal error occurred. Dash Core can no longer continue safely and will quit.</source>
         <translation>치명적인 오류가 발생하였습니다. 더 이상 대시 코어가 안전하지 않을 가능성이 있으며 대시 코어는 곧 종료될 예정입니다.</translation>
     </message>
     <message>
-        <source>Raptoreum Core</source>
+        <source>Dash Core</source>
         <translation>대시 코어</translation>
     </message>
     <message>
@@ -286,7 +336,7 @@
         <translation>보내기(&amp;S)</translation>
     </message>
     <message>
-        <source>Send coins to a Raptoreum address</source>
+        <source>Send coins to a Dash address</source>
         <translation>대시 주소로 코인 전송</translation>
     </message>
     <message>
@@ -294,7 +344,7 @@
         <translation>받기(&amp;R)</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and raptoreum: URIs)</source>
+        <source>Request payments (generates QR codes and dash: URIs)</source>
         <translation>지불 요청하기 (QR코드와 대시 URI가 생성됩니다.)</translation>
     </message>
     <message>
@@ -306,11 +356,11 @@
         <translation>거래내역을 검색합니다.</translation>
     </message>
     <message>
-        <source>&amp;Smartnodes</source>
+        <source>&amp;Masternodes</source>
         <translation>마스터노드(&amp;M)</translation>
     </message>
     <message>
-        <source>Browse smartnodes</source>
+        <source>Browse masternodes</source>
         <translation>마스터노드 보기</translation>
     </message>
     <message>
@@ -322,7 +372,7 @@
         <translation>어플리케이션 종료</translation>
     </message>
     <message>
-        <source>Show information about Raptoreum Core</source>
+        <source>Show information about Dash Core</source>
         <translation>대시 코어에 관한 정보를 표시합니다.</translation>
     </message>
     <message>
@@ -340,6 +390,10 @@
     <message>
         <source>&amp;About %1</source>
         <translation>%1 정보(&amp;A)</translation>
+    </message>
+    <message>
+        <source>PrivateSend coins to a Dash address</source>
+        <translation>프라이빗샌드 코인을 대시 주소로</translation>
     </message>
     <message>
         <source>Modify configuration options for %1</source>
@@ -394,7 +448,7 @@
         <translation>메시지 서명...(&amp;M)</translation>
     </message>
     <message>
-        <source>Sign messages with your Raptoreum addresses to prove you own them</source>
+        <source>Sign messages with your Dash addresses to prove you own them</source>
         <translation>본인의 대시 주소임을 증명하기 위하여 메시지에 서명합니다.</translation>
     </message>
     <message>
@@ -402,7 +456,7 @@
         <translation>메시지 검증...(&amp;V)</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified Raptoreum addresses</source>
+        <source>Verify messages to ensure they were signed with specified Dash addresses</source>
         <translation>특정 대시 주소에 서명된 것인지 확인하기 위하여 메시지를 검증합니다.</translation>
     </message>
     <message>
@@ -482,20 +536,24 @@
         <translation>URI 열기(&amp;U)...</translation>
     </message>
     <message>
-        <source>Open a raptoreum: URI or payment request</source>
-        <translation>Raptoreum: URI 또는 지불 요청을 엽니다.</translation>
+        <source>Open a dash: URI or payment request</source>
+        <translation>Dash: URI 또는 지불 요청을 엽니다.</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
         <translation>명령줄 옵션(&amp;C)</translation>
     </message>
     <message>
-        <source>Show the %1 help message to get a list with possible Raptoreum command-line options</source>
+        <source>Show the %1 help message to get a list with possible Dash command-line options</source>
         <translation>사용 가능한 대시 명령줄 옵션 목록을 가져오기 위해 %1 도움말 메시지를 표시합니다.</translation>
     </message>
     <message>
         <source>%1 client</source>
         <translation>%1 클라이언트</translation>
+    </message>
+    <message>
+        <source>Wallet is &lt;b&gt;unencrypted&lt;/b&gt;</source>
+        <translation>지갑이 &lt;b&gt;복호화&lt;/b&gt; 되었습니다</translation>
     </message>
     <message>
         <source>&amp;PrivateSend information</source>
@@ -526,7 +584,7 @@
         <translation>도구 모음 탭</translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to Raptoreum network</source>
+        <source>%n active connection(s) to Dash network</source>
         <translation><numerusform>대시 네트워크의 활성 연결 수는 %n 입니다.</numerusform></translation>
     </message>
     <message>
@@ -664,10 +722,6 @@
         <translation>HD 키 생성이 &lt;b&gt;활성화되었습니다&lt;/b&gt;</translation>
     </message>
     <message>
-        <source>HD key generation is &lt;b&gt;disabled&lt;/b&gt;</source>
-        <translation>HD 키 생성이 &lt;b&gt;비활성화되었습니다&lt;/b&gt;</translation>
-    </message>
-    <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
         <translation>지갑이 &lt;b&gt;암호화&lt;/b&gt;되어 있으며, 현재 &lt;b&gt;잠금 해제&lt;/b&gt; 상태입니다.</translation>
     </message>
@@ -747,10 +801,6 @@
         <translation>함께 수신된 주소</translation>
     </message>
     <message>
-        <source>PS Rounds</source>
-        <translation>PS 라운드</translation>
-    </message>
-    <message>
         <source>Date</source>
         <translation>날짜</translation>
     </message>
@@ -815,10 +865,6 @@
         <translation>이 기능을 사용하기 위해서는 '리스트 모드'를 켜주세요.</translation>
     </message>
     <message>
-        <source>Non-mixed input selected. &lt;b&gt;PrivateSend will be disabled.&lt;/b&gt;&lt;br&gt;&lt;br&gt;If you still want to use PrivateSend, please deselect all non-mixed inputs first and then check the PrivateSend checkbox again.</source>
-        <translation>믹싱되지 않은 입력이 선택되었습니다. &lt;b&gt;프라이빗샌드 기능이 비활성화됩니다. &lt;/b&gt;&lt;br&gt;&lt;br&gt;계속해서 프라이빗샌드 기능을 사용하고자 하시는 경우 믹싱되지 않은 모든 입력 선택을 취소하시고 프라이빗샌드 체크 박스를 다시 선택해주세요. </translation>
-    </message>
-    <message>
         <source>(%1 locked)</source>
         <translation>(%1 잠금)</translation>
     </message>
@@ -837,6 +883,14 @@
     <message>
         <source>Can vary +/- %1 duff(s) per input.</source>
         <translation>입력당 +/- %1 더프가 달라질 수 있습니다.</translation>
+    </message>
+    <message>
+        <source>Some coins were unselected because they were spent.</source>
+        <translation>일부 코인은 이미 사용되어 선택되지 않았습니다.</translation>
+    </message>
+    <message>
+        <source>Some coins were unselected because they do not have enough mixing rounds.</source>
+        <translation>일부 코인은 믹싱 라운드가 충분하지 않아 선택되지 않았습니다.</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -878,10 +932,6 @@
         <translation>이 주소 목록에 입력된 주소와 연결된 주소. 이 경우 보내기 주소만 변경이 가능합니다.</translation>
     </message>
     <message>
-        <source>New receiving address</source>
-        <translation>새로운 받기 주소</translation>
-    </message>
-    <message>
         <source>New sending address</source>
         <translation>새로운 보내기 주소</translation>
     </message>
@@ -894,7 +944,7 @@
         <translation>보내기 주소 편집</translation>
     </message>
     <message>
-        <source>The entered address "%1" is not a valid Raptoreum address.</source>
+        <source>The entered address "%1" is not a valid Dash address.</source>
         <translation>입력한 주소 "%1" 는 올바른 대시 주소가 아닙니다.</translation>
     </message>
     <message>
@@ -968,6 +1018,22 @@
         <translation>실행시 데이터 디렉토리 선택하기 (기본값: %u)</translation>
     </message>
     <message>
+        <source>Set the font family. Possible values: %1. (default: %2)</source>
+        <translation>글꼴 집합을 지정하세요. 가능한 값: %1. (디폴트: %2)</translation>
+    </message>
+    <message>
+        <source>Set a scale factor which gets applied to the base font size. Possible range %1 (smallest fonts) to %2 (largest fonts). (default: %3)</source>
+        <translation>기본 글꼴 크기에 적용되는 글꼴 크기를 지정하세요. 가능한 범위 %1 (가장 작은 글꼴) 에서 %2 (가장 큰 글꼴). (디폴트: %3)</translation>
+    </message>
+    <message>
+        <source>Set the font weight for bold texts. Possible range %1 to %2 (default: %3)</source>
+        <translation>두꺼운 텍스트를 위한 글꼴 두께를 지정하세요. 가능한 범위 %1 에서 %2 (디폴트: %3)</translation>
+    </message>
+    <message>
+        <source>Set the font weight for normal texts. Possible range %1 to %2 (default: %3)</source>
+        <translation>일반 텍스트를 위한 글꼴 두께를 지정하세요. 가능한 범위 %1에서 %2 (디폴트: %3)</translation>
+    </message>
+    <message>
         <source>Set language, for example "de_DE" (default: system locale)</source>
         <translation>언어를 설정하십시오. 예: "kr_KR" (기본값: 시스템 로케일)</translation>
     </message>
@@ -992,8 +1058,8 @@
         <translation>프라이빗샌드 정보</translation>
     </message>
     <message>
-        <source>&lt;h3&gt;PrivateSend Basics&lt;/h3&gt; PrivateSend gives you true financial privacy by obscuring the origins of your funds. All the Raptoreum in your wallet is comprised of different "inputs" which you can think of as separate, discrete coins.&lt;br&gt; PrivateSend uses an innovative process to mix your inputs with the inputs of two other people, without having your coins ever leave your wallet. You retain control of your money at all times.&lt;hr&gt; &lt;b&gt;The PrivateSend process works like this:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;PrivateSend begins by breaking your transaction inputs down into standard denominations. These denominations are 0.001 RTM, 0.01 RTM, 0.1 RTM, 1 RTM and 10 RTM -- sort of like the paper money you use every day.&lt;/li&gt; &lt;li&gt;Your wallet then sends requests to specially configured software nodes on the network, called "smartnodes." These smartnodes are informed then that you are interested in mixing a certain denomination. No identifiable information is sent to the smartnodes, so they never know "who" you are.&lt;/li&gt; &lt;li&gt;When two other people send similar messages, indicating that they wish to mix the same denomination, a mixing session begins. The smartnode mixes up the inputs and instructs all three users' wallets to pay the now-transformed input back to themselves. Your wallet pays that denomination directly to itself, but in a different address (called a change address).&lt;/li&gt; &lt;li&gt;In order to fully obscure your funds, your wallet must repeat this process a number of times with each denomination. Each time the process is completed, it's called a "round." Each round of PrivateSend makes it exponentially more difficult to determine where your funds originated.&lt;/li&gt; &lt;li&gt;This mixing process happens in the background without any intervention on your part. When you wish to make a transaction, your funds will already be mixed. No additional waiting is required.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;IMPORTANT:&lt;/b&gt; Your wallet only contains 1000 of these "change addresses." Every time a mixing event happens, up to 9 of your addresses are used up. This means those 1000 addresses last for about 100 mixing events. When 900 of them are used, your wallet must create more addresses. It can only do this, however, if you have automatic backups enabled.&lt;br&gt; Consequently, users who have backups disabled will also have PrivateSend disabled. &lt;hr&gt;For more information, see the &lt;a href="https://docs.raptoreum.org/en/stable/wallets/raptoreumcore/privatesend-instantsend.html"&gt;PrivateSend documentation&lt;/a&gt;.</source>
-        <translation>&lt;h3&gt;프라이빗샌드에 관한 기본 정보&lt;/h3&gt; 프라이빗 샌드는 당신의 자금 출처를 가려 진정한 재정적 프라이버시를 보장합니다. 당신의 지갑에 보관된 모든 대시는 각기 다른 ‘입력값’으로 구성되어 있습니다. 쉽게 생각하면 별도의 분리된 동전으로 구성되어 있다고 볼 수 있습니다.&lt;br&gt; 프라이빗샌드는 당신의 코인이 지갑을 떠나지 않고도 그 입력값을 다른 두 사람의 입력값과 섞는 혁신적인 방식을 사용합니다. 이로써 당신의 자금은 언제나 당신의 통제 하에 있습니다.&lt;hr&gt;&lt;b&gt; 프라이빗샌드는 다음과 같은 방식으로 작동합니다.&lt;/b&gt;&lt;ol type="1"&gt;&lt;li&gt; 프라이빗샌드는 당신의 거래 입력값을 표준 단위로 쪼개는 것으로 시작합니다. 이렇게 분할하는 단위는 0.001대시, 0.01대시, 0.1대시, 1대시 혹은 10대시 입니다 - 귀하가 일상적으로 사용하는 지폐와 비슷하다고 생각하셔도 좋습니다. &lt;/li&gt;&lt;li&gt;이후 당신의 지갑은 ‘마스터노드’라고 불리는 네트워크의 특수 구성 소프트웨어 노드에 요청을 전송합니다. 이로써 이들 마스터노드는 당신이 특정 금액을 믹싱하고자 한다는 정보를 수신합니다. 마스터노드에는 당신의 개인 정보를 식별할 수 있는 어떤 내용도 전송되지 않습니다. 즉 당신이 ‘누구’인지 알 수 있는 방법은 없습니다.&lt;/li&gt;&lt;li&gt; 두 명의 다른 사람이 비슷한 메시지를 보내어 그들 역시 같은 단위의 금액을 믹싱하고 싶다는 정보를 표시하면 믹싱 세션이 시작됩니다. 마스터노드는 이들 입력값을 믹싱하여 세 사용자의 지갑에 변환된 입력을 지불하도록 지시합니다. 당신의 지갑은 해당 입력값을 지불하지만, 지불되는 주소는 '변경 주소'라고 불리는 다른 주소로 보내집니다.&lt;/li&gt;&lt;li&gt; 당신의 자금을 완전히 가리기 위해서, 당신의 지갑은 이 과정을 각 대시 분할 단위만큼 여러번 반복합니다. 이러한 반복을 ‘라운드’라고 부릅니다. 프라이빗샌드의 각 라운드가 진행됨에 따라 당신이 송금하고자 하는 자금의 출처는 기하급수적으로 높은 수준으로 가려집니다.&lt;/li&gt;&lt;li&gt; 이 믹싱 과정은 당신이 개입할 필요 없이 백그라운드에서 진행됩니다. 당신이 거래를 원하시는 경우, 당신의 자금은 이미 믹싱을 진행하는 중입니다. 추가적으로 대기할 필요 역시 없습니다. &lt;/li&gt;&lt;/ol&gt;&lt;hr&gt;&lt;b&gt;중요:&lt;/b&gt; 당신의 지갑은 1,000개의 ‘변경 주소’만을 가지고 있습니다. 믹싱을 실행할 때마다 최대 9개의 주소가 사용됩니다. 이는 곧 이들 1000개의 주소가 약 100개의 믹싱 작업을 위해 사용될 수 있다는 것을 의미합니다. 전체 1,000개의 주소 중 900개가 사용된 경우 당신의 지갑은 더 많은 주소를 만들어야 합니다. 그러나 이 작업은 당신이 자동 백업을 설정한 경우에만 수행됩니다. &lt;br&gt;따라서 백업이 비활성화된 사용자는 프라이빗샌드 역시 비활성화 됩니다. &lt;hr&gt;더 많은 정보를 위해서는 다음을 참조하세요 &lt;a href="https://docs.raptoreum.org/en/stable/wallets/raptoreumcore/privatesend-instantsend.html"&gt;프라이빗샌드 설명서&lt;/a&gt;. </translation>
+        <source>&lt;h3&gt;PrivateSend Basics&lt;/h3&gt; PrivateSend gives you true financial privacy by obscuring the origins of your funds. All the Dash in your wallet is comprised of different "inputs" which you can think of as separate, discrete coins.&lt;br&gt; PrivateSend uses an innovative process to mix your inputs with the inputs of two or more other people, without having your coins ever leave your wallet. You retain control of your money at all times.&lt;hr&gt; &lt;b&gt;The PrivateSend process works like this:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;PrivateSend begins by breaking your transaction inputs down into standard denominations. These denominations are 0.001 DASH, 0.01 DASH, 0.1 DASH, 1 DASH and 10 DASH -- sort of like the paper money you use every day.&lt;/li&gt; &lt;li&gt;Your wallet then sends requests to specially configured software nodes on the network, called "masternodes." These masternodes are informed then that you are interested in mixing a certain denomination. No identifiable information is sent to the masternodes, so they never know "who" you are.&lt;/li&gt; &lt;li&gt;When two or more other people send similar messages, indicating that they wish to mix the same denomination, a mixing session begins. The masternode mixes up the inputs and instructs all three users' wallets to pay the now-transformed input back to themselves. Your wallet pays that denomination directly to itself, but in a different address (called a change address).&lt;/li&gt; &lt;li&gt;In order to fully obscure your funds, your wallet must repeat this process a number of times with each denomination. Each time the process is completed, it's called a "round." Each round of PrivateSend makes it exponentially more difficult to determine where your funds originated.&lt;/li&gt; &lt;li&gt;This mixing process happens in the background without any intervention on your part. When you wish to make a transaction, your funds will already be mixed. No additional waiting is required.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;IMPORTANT:&lt;/b&gt; Your wallet only contains 1000 of these "change addresses." Every time a mixing event happens, up to 9 of your addresses are used up. This means those 1000 addresses last for about 100 mixing events. When 900 of them are used, your wallet must create more addresses. It can only do this, however, if you have automatic backups enabled.&lt;br&gt; Consequently, users who have backups disabled will also have PrivateSend disabled. &lt;hr&gt;For more information, see the &lt;a style="%1" href="https://docs.dash.org/en/stable/wallets/dashcore/privatesend-instantsend.html"&gt;PrivateSend documentation&lt;/a&gt;.</source>
+        <translation>&lt;h3&gt;프라이빗샌드에 관한 기본 정보&lt;/h3&gt; 프라이빗 샌드는 당신의 자금 출처를 가려 진정한 재정적 프라이버시를 보장합니다. 당신의 지갑에 보관된 모든 대시는 각기 다른 ‘입력값’으로 구성되어 있습니다. 쉽게 생각하면 별도의 분리된 동전으로 구성되어 있다고 볼 수 있습니다.&lt;br&gt; 프라이빗샌드는 당신의 코인이 지갑을 떠나지 않고도 그 입력값을 다른 두 사람의 입력값과 섞는 혁신적인 방식을 사용합니다. 이로써 당신의 자금은 언제나 당신의 통제 하에 있습니다.&lt;hr&gt;&lt;b&gt; 프라이빗샌드는 다음과 같은 방식으로 작동합니다.&lt;/b&gt;&lt;ol type="1"&gt;&lt;li&gt; 프라이빗샌드는 당신의 거래 입력값을 표준 단위로 쪼개는 것으로 시작합니다. 이렇게 분할하는 단위는 0.001대시, 0.01대시, 0.1대시, 1대시 혹은 10대시 입니다 - 귀하가 일상적으로 사용하는 지폐와 비슷하다고 생각하셔도 좋습니다. &lt;/li&gt;&lt;li&gt;이후 당신의 지갑은 ‘마스터노드’라고 불리는 네트워크의 특수 구성 소프트웨어 노드에 요청을 전송합니다. 이로써 이들 마스터노드는 당신이 특정 금액을 믹싱하고자 한다는 정보를 수신합니다. 마스터노드에는 당신의 개인 정보를 식별할 수 있는 어떤 내용도 전송되지 않습니다. 즉 당신이 ‘누구’인지 알 수 있는 방법은 없습니다.&lt;/li&gt;&lt;li&gt; 두 명의 다른 사람이 비슷한 메시지를 보내어 그들 역시 같은 단위의 금액을 믹싱하고 싶다는 정보를 표시하면 믹싱 세션이 시작됩니다. 마스터노드는 이들 입력값을 믹싱하여 세 사용자의 지갑에 변환된 입력을 지불하도록 지시합니다. 당신의 지갑은 해당 입력값을 지불하지만, 지불되는 주소는 '변경 주소'라고 불리는 다른 주소로 보내집니다.&lt;/li&gt;&lt;li&gt; 당신의 자금을 완전히 가리기 위해서, 당신의 지갑은 이 과정을 각 대시 분할 단위만큼 여러번 반복합니다. 이러한 반복을 ‘라운드’라고 부릅니다. 프라이빗샌드의 각 라운드가 진행됨에 따라 당신이 송금하고자 하는 자금의 출처는 기하급수적으로 높은 수준으로 가려집니다.&lt;/li&gt;&lt;li&gt; 이 믹싱 과정은 당신이 개입할 필요 없이 백그라운드에서 진행됩니다. 당신이 거래를 원하시는 경우, 당신의 자금은 이미 믹싱을 진행하는 중입니다. 추가적으로 대기할 필요 역시 없습니다. &lt;/li&gt;&lt;/ol&gt;&lt;hr&gt;&lt;b&gt;중요:&lt;/b&gt; 당신의 지갑은 1,000개의 ‘변경 주소’만을 가지고 있습니다. 믹싱을 실행할 때마다 최대 9개의 주소가 사용됩니다. 이는 곧 이들 1000개의 주소가 약 100개의 믹싱 작업을 위해 사용될 수 있다는 것을 의미합니다. 전체 1,000개의 주소 중 900개가 사용된 경우 당신의 지갑은 더 많은 주소를 만들어야 합니다. 그러나 이 작업은 당신이 자동 백업을 설정한 경우에만 수행됩니다. &lt;br&gt;따라서 백업이 비활성화된 사용자는 프라이빗샌드 역시 비활성화 됩니다. &lt;hr&gt;더 많은 정보를 위해서는 다음을 참조하세요 &lt;a style="%1" href="https://docs.dash.org/en/stable/wallets/dashcore/privatesend-instantsend.html"&gt;프라이빗샌드 설명서&lt;/a&gt;. </translation>
     </message>
 </context>
 <context>
@@ -1039,7 +1105,7 @@
         <translation>약 %1 GB의 데이터가 이 디렉토리에 저장됩니다.</translation>
     </message>
     <message>
-        <source>%1 will download and store a copy of the Raptoreum block chain.</source>
+        <source>%1 will download and store a copy of the Dash block chain.</source>
         <translation>%1은 비트코인 블록체인의 사본을 다운로드하여 저장합니다.</translation>
     </message>
     <message>
@@ -1064,7 +1130,7 @@
     </message>
 </context>
 <context>
-    <name>SmartnodeList</name>
+    <name>MasternodeList</name>
     <message>
         <source>Form</source>
         <translation>유형</translation>
@@ -1082,7 +1148,7 @@
         <translation>필터 목록:</translation>
     </message>
     <message>
-        <source>Filter smartnode list</source>
+        <source>Filter masternode list</source>
         <translation>마스터노드 목록 필터</translation>
     </message>
     <message>
@@ -1090,11 +1156,11 @@
         <translation>노드 개수:</translation>
     </message>
     <message>
-        <source>Show only smartnodes this wallet has keys for.</source>
+        <source>Show only masternodes this wallet has keys for.</source>
         <translation>이 지갑이 키를 가지고 있는 마스터노드만 보이기</translation>
     </message>
     <message>
-        <source>My smartnodes only</source>
+        <source>My masternodes only</source>
         <translation>나의 마스터노드만</translation>
     </message>
     <message>
@@ -1146,6 +1212,10 @@
         <translation>콜래트럴 아웃포인트 복사</translation>
     </message>
     <message>
+        <source>Updating...</source>
+        <translation>업데이트 중...</translation>
+    </message>
+    <message>
         <source>ENABLED</source>
         <translation>활성화됨</translation>
     </message>
@@ -1174,7 +1244,15 @@
         <translation>없음</translation>
     </message>
     <message>
-        <source>Additional information for DIP3 Smartnode %1</source>
+        <source>Filter by any property (e.g. address or protx hash)</source>
+        <translation>모든 속성으로 검색하기 (예: 주소 혹은 protx 해시)</translation>
+    </message>
+    <message>
+        <source>Please wait...</source>
+        <translation>기다려주십시오...</translation>
+    </message>
+    <message>
+        <source>Additional information for DIP3 Masternode %1</source>
         <translation>DIP3 마스터노드 %1에 대한 추가 정보</translation>
     </message>
 </context>
@@ -1185,11 +1263,11 @@
         <translation>유형</translation>
     </message>
     <message>
-        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the Raptoreum network, as detailed below.</source>
+        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the Dash network, as detailed below.</source>
         <translation>최근 거래는 아직 표시되지 않을 수 있으며, 따라서 당신 지갑의 잔고 역시 실제와 다를 수 있습니다. 이는 당신의 지갑이 대시 네트워크와 동기화를 마치는대로 아래의 세부 내용과 같이 정확히 표시될 예정입니다.</translation>
     </message>
     <message>
-        <source>Attempting to spend Raptoreum that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
+        <source>Attempting to spend Dash that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
         <translation>'아직 표시 되지 않은 거래'의 영향을 받는 대시를 사용하시려는 경우, 네트워크에 의해 승인되지 않습니다.</translation>
     </message>
     <message>
@@ -1283,11 +1361,15 @@
         <translation>지갑(&amp;a)</translation>
     </message>
     <message>
-        <source>Show additional tab listing all your smartnodes in first sub-tab&lt;br/&gt;and all smartnodes on the network in second sub-tab.</source>
+        <source>&amp;Appearance</source>
+        <translation>외관(&amp;A)</translation>
+    </message>
+    <message>
+        <source>Show additional tab listing all your masternodes in first sub-tab&lt;br/&gt;and all masternodes on the network in second sub-tab.</source>
         <translation>추가적인 탭 목록을 보여줍니다. 당신의 모든 마스터노드는 첫 번째 서브 탭에 표시되고,&lt;br/&gt; 네트워크상의 전체 마스터노드는 두 번째 서브 탭에 표시됩니다.</translation>
     </message>
     <message>
-        <source>Show Smartnodes Tab</source>
+        <source>Show Masternodes Tab</source>
         <translation>마스터노드 탭을 보여줍니다.</translation>
     </message>
     <message>
@@ -1331,11 +1413,19 @@
         <translation>타깃 프라이빗샌드 잔고</translation>
     </message>
     <message>
-        <source>Automatically open the Raptoreum Core client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <source>Automatically open the Dash Core client port on the router. This only works when your router supports UPnP and it is enabled.</source>
         <translation>라우터에서 대시 코어 클라이언트를 자동으로 엽니다. 이 기능은 당신의 라우터가 UPnP를 지원하고 해당 기능이 작동하는 경우에만 가능합니다.</translation>
     </message>
     <message>
-        <source>Connect to the Raptoreum network through a SOCKS5 proxy.</source>
+        <source>Accept connections from outside.</source>
+        <translation>외부로부터의 연결을 허용합니다.</translation>
+    </message>
+    <message>
+        <source>Allow incomin&amp;g connections</source>
+        <translation>수신 연결 허용</translation>
+    </message>
+    <message>
+        <source>Connect to the Dash network through a SOCKS5 proxy.</source>
         <translation>SOCKS5 프록시를 통해 대시 네트워크 연결</translation>
     </message>
     <message>
@@ -1347,6 +1437,18 @@
         <translation>선택된 기본 SOCKS5 프록시가 이 네트워크 유형을 통해 피어에 연결하는 경우에 보여주기</translation>
     </message>
     <message>
+        <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor hidden services:</source>
+        <translation>Tor 숨김 서비스로 피어에 접속하기 위해 별도의 SOCKS&amp;5 프록시 사용:</translation>
+    </message>
+    <message>
+        <source>Hide the icon from the system tray.</source>
+        <translation>시스템 트레이에서 아이콘을 숨깁니다.</translation>
+    </message>
+    <message>
+        <source>&amp;Hide tray icon</source>
+        <translation>트레이 아이콘 숨김(&amp;H)</translation>
+    </message>
+    <message>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
         <translation>창이 닫히는 경우 종료하지 않고 축소합니다. 이 옵션을 활성화하면 메뉴에서 종료를 선택하는 경우에만 어플리케이션이 종료됩니다.</translation>
     </message>
@@ -1355,8 +1457,8 @@
         <translation>거래 탭에 강조 표시된 메뉴 항목으로 나타나는 제3자 URL(예: 블록 탐색기). &lt;br/&gt;해당 URL의 %s 는 거래 해시에 의해 대체됩니다. 다중 URL은 수직 바 | 에 의해 분리됩니다.</translation>
     </message>
     <message>
-        <source>Expert</source>
-        <translation>전문가</translation>
+        <source>&amp;Third party transaction URLs</source>
+        <translation>제3자 거래 URL(&amp;T)</translation>
     </message>
     <message>
         <source>Whether to show coin control features or not.</source>
@@ -1387,7 +1489,7 @@
         <translation>검증되지 않은 잔돈 쓰기 (&amp;S)</translation>
     </message>
     <message>
-        <source>This setting determines the amount of individual smartnodes that an input will be mixed through.&lt;br/&gt;More rounds of mixing gives a higher degree of privacy, but also costs more in fees.</source>
+        <source>This setting determines the amount of individual masternodes that an input will be mixed through.&lt;br/&gt;More rounds of mixing gives a higher degree of privacy, but also costs more in fees.</source>
         <translation>이 설정은 얼마나 많은 개별 마스터노드를 거쳐 믹싱을 진행할 지를 결정합니다.&lt;br/&gt;믹싱을 위해 보다 많은 라운드를 거치는 것은 향상된 개인 정보 보호 수준을 제공하지만 더 많은 수수료가 발생합니다.</translation>
     </message>
     <message>
@@ -1397,14 +1499,6 @@
     <message>
         <source>Map port using &amp;UPnP</source>
         <translation>UPnP를 사용하는 맵 포트(&amp;U)</translation>
-    </message>
-    <message>
-        <source>Accept connections from outside</source>
-        <translation>외부로부터의 연결 허용</translation>
-    </message>
-    <message>
-        <source>Allow incoming connections</source>
-        <translation>수신 연결 허용</translation>
     </message>
     <message>
         <source>Proxy &amp;IP:</source>
@@ -1439,24 +1533,8 @@
         <translation>Tor</translation>
     </message>
     <message>
-        <source>Connect to the Raptoreum network through a separate SOCKS5 proxy for Tor hidden services.</source>
+        <source>Connect to the Dash network through a separate SOCKS5 proxy for Tor hidden services.</source>
         <translation>Tor 숨김 서비스를 위한 별도의 SOCKS5 프록시를 사용하여 대시 네트워크에 연결</translation>
-    </message>
-    <message>
-        <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services:</source>
-        <translation>Tor 숨김 서비스로 피어에 접속하기 위해 별도의 SOCKS5 프록시 사용</translation>
-    </message>
-    <message>
-        <source>&amp;Window</source>
-        <translation>창(&amp;W)</translation>
-    </message>
-    <message>
-        <source>&amp;Hide the icon from the system tray.</source>
-        <translation>시스템 트레이에서 아이콘 숨기기(&amp;H)</translation>
-    </message>
-    <message>
-        <source>Hide tray icon</source>
-        <translation>트레이 아이콘을 숨깁니다.</translation>
     </message>
     <message>
         <source>Show only a tray icon after minimizing the window.</source>
@@ -1484,13 +1562,9 @@
     </message>
     <message>
         <source>Language missing or translation incomplete? Help contributing translations here:
-https://www.transifex.com/projects/p/raptoreum/</source>
+https://www.transifex.com/projects/p/dash/</source>
         <translation>지정하려는 언어가 목록에 없거나 번역이 완성되지 않았다면? 다음의 주소에서 번역을 도와주세요:
-https://www.transifex.com/projects/p/raptoreum/</translation>
-    </message>
-    <message>
-        <source>User Interface Theme:</source>
-        <translation>사용자 인터페이스 테마:</translation>
+https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <source>&amp;Unit to show amounts in:</source>
@@ -1503,10 +1577,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Decimal digits</source>
         <translation>십진수</translation>
-    </message>
-    <message>
-        <source>Third party transaction URLs</source>
-        <translation>제3자 거래 URL</translation>
     </message>
     <message>
         <source>Active command-line options that override above options:</source>
@@ -1531,10 +1601,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>default</source>
         <translation>기본값</translation>
-    </message>
-    <message>
-        <source>none</source>
-        <translation>없음</translation>
     </message>
     <message>
         <source>Confirm options reset</source>
@@ -1564,7 +1630,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>유형</translation>
     </message>
     <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Raptoreum network after a connection is established, but this process has not completed yet.</source>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Dash network after a connection is established, but this process has not completed yet.</source>
         <translation>표시된 정보가 오래된 것으로 보입니다. 당신의 지갑은 대시 네트워크에 연결되는 대로 동기화 될 예정입니다. 이 과정은 아직 종료되지 않았습니다.</translation>
     </message>
     <message>
@@ -1648,7 +1714,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>금액과 라운드:</translation>
     </message>
     <message>
-        <source>0 RTM / 0 Rounds</source>
+        <source>0 DASH / 0 Rounds</source>
         <translation>0 대시 / 0 라운드</translation>
     </message>
     <message>
@@ -1672,12 +1738,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>프라이빗샌드 잔고</translation>
     </message>
     <message>
-        <source>The denominations you submitted to the Smartnode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
+        <source>The denominations you submitted to the Masternode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
         <translation>당신이 마스터노드에 제출한 분할 단위.&lt;br&gt;믹싱을 위해서는 다른 사용자들이 같은 단위를 제출하여야만 합니다.</translation>
-    </message>
-    <message>
-        <source>(Last Message)</source>
-        <translation>(지난 메시지)</translation>
     </message>
     <message>
         <source>out of sync</source>
@@ -1704,12 +1766,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation><numerusform>&amp;n 라운드</numerusform></translation>
     </message>
     <message>
-        <source>Found enough compatible inputs to anonymize %1</source>
-        <translation>%1 을/를 익명으로 처리하기 위해 충분한 호환 가능 입력을 찾았습니다.</translation>
+        <source>Found enough compatible inputs to mix %1</source>
+        <translation>%1 믹싱에 사용되는 호환 가능한 입력값을 찾았습니다</translation>
     </message>
     <message>
-        <source>Not enough compatible inputs to anonymize &lt;span style='color:red;'&gt;%1&lt;/span&gt;,&lt;br&gt;will anonymize &lt;span style='color:red;'&gt;%2&lt;/span&gt; instead</source>
-        <translation>&lt;span style='color:red;'&gt;%1&lt;/span&gt;을/를 익명으로 처리하기 위한 호환 가능 입력이 충분하지 않아, 이를 대신 하여 &lt;span style='color:red;'&gt;%2&lt;/span&gt;을/를 &lt;br&gt;익명화 할 예정입니다.</translation>
+        <source>Not enough compatible inputs to mix &lt;span style='%1'&gt;%2&lt;/span&gt;,&lt;br&gt;will mix &lt;span style='%1'&gt;%3&lt;/span&gt; instead</source>
+        <translation>&lt;span style='%1'&gt;%2&lt;/span&gt; 믹싱에 쓰이는 호환 가능한 입력값이 충분하지 않아, &lt;br&gt;이를 대신하여 &lt;span style='%1'&gt;%3&lt;/span&gt;을 믹싱할 예정입니다</translation>
     </message>
     <message>
         <source>Overall progress</source>
@@ -1744,8 +1806,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>지난 자동 백업 이후 매우 적은 수의 키가 남아 있습니다!</translation>
     </message>
     <message>
-        <source>We are about to create a new automatic backup for you, however &lt;span style='color:red;'&gt; you should always make sure you have backups saved in some safe place&lt;/span&gt;!</source>
-        <translation>당신을 위한 새로운 자동 백업을 생성하고자 합니다. 그러나 &lt;span style='color:red;'&gt;언제나 안전한 장소에 백업 파일을 저장해두어야 한다는 점을 명심하세요&lt;/span&gt;!</translation>
+        <source>We are about to create a new automatic backup for you, however &lt;span style='%1'&gt; you should always make sure you have backups saved in some safe place&lt;/span&gt;!</source>
+        <translation>당신을 위한 새로운 자동 백업을 생성하고자 합니다. 그러나 &lt;span style='%1'&gt;언제나 안전한 장소에 백업 파일을 저장해두어야 한다는 점을 명심하세요&lt;/span&gt;!</translation>
     </message>
     <message>
         <source>Note: You can turn this message off in options.</source>
@@ -1776,12 +1838,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>경고! 키풀 보충에 실패하였습니다. 키풀 보충을 위해서는 지갑을 잠금 해제 하세요.</translation>
     </message>
     <message>
-        <source>Last PrivateSend message:
-</source>
-        <translation>지난 프라이빗샌드 메시지:
-</translation>
-    </message>
-    <message>
         <source>If you don't want to see internal PrivateSend fees/transactions select "Most Common" as Type on the "Transactions" tab.</source>
         <translation>프라이빗샌드 수수료/거래의 내부 사항을 보고 싶지 않으면 '거래' 탭에서 유형을 클릭하고  '자주 사용된 항목'을 선택하세요.</translation>
     </message>
@@ -1801,7 +1857,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>지불 요청 오류</translation>
     </message>
     <message>
-        <source>Cannot start raptoreum: click-to-pay handler</source>
+        <source>Cannot start dash: click-to-pay handler</source>
         <translation>대시를 시작할 수 없습니다: 원클릭 지불 핸들러</translation>
     </message>
     <message>
@@ -1817,7 +1873,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>유효하지 않은 지불 주소 %1</translation>
     </message>
     <message>
-        <source>URI cannot be parsed! This can be caused by an invalid Raptoreum address or malformed URI parameters.</source>
+        <source>URI cannot be parsed! This can be caused by an invalid Dash address or malformed URI parameters.</source>
         <translation>URI를 분석할 수 없습니다! 대시 주소가 유효하지 않거나 URI 파라미터 구성에 오류가 존재할 수 있습니다.</translation>
     </message>
     <message>
@@ -1903,6 +1959,14 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <source>Ping</source>
         <translation>Ping</translation>
     </message>
+    <message>
+        <source>Sent</source>
+        <translation>보냄</translation>
+    </message>
+    <message>
+        <source>Received</source>
+        <translation>받음</translation>
+    </message>
 </context>
 <context>
     <name>QObject</name>
@@ -1915,8 +1979,16 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>거래액</translation>
     </message>
     <message>
-        <source>Enter a Raptoreum address (e.g. %1)</source>
+        <source>Enter a Dash address (e.g. %1)</source>
         <translation>대시 주소 입력 (예: %1)</translation>
+    </message>
+    <message>
+        <source>Appearance Setup</source>
+        <translation>외관 설정</translation>
+    </message>
+    <message>
+        <source>This can also be adjusted later in the "Appearance" tab of the preferences.</source>
+        <translation>이는 이후 "외관" 탭에서 선호에 따라 다시 조정할 수 있습니다.</translation>
     </message>
     <message>
         <source>%1 d</source>
@@ -1975,6 +2047,22 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>%1 및 %2</translation>
     </message>
     <message>
+        <source>%1 B</source>
+        <translation>%1 B</translation>
+    </message>
+    <message>
+        <source>%1 KB</source>
+        <translation>%1 KB</translation>
+    </message>
+    <message>
+        <source>%1 MB</source>
+        <translation>%1 MB</translation>
+    </message>
+    <message>
+        <source>%1 GB</source>
+        <translation>%1 GB</translation>
+    </message>
+    <message>
         <source>unknown</source>
         <translation>알 수 없음</translation>
     </message>
@@ -1992,6 +2080,34 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Error: %1</source>
         <translation>에러: %1</translation>
+    </message>
+    <message>
+        <source>Error: Failed to load application fonts.</source>
+        <translation>오류: 어플리케이션 글꼴을 불러오는 데 실패하였습니다.</translation>
+    </message>
+    <message>
+        <source>Error: Specified font-family invalid. Valid values: %1.</source>
+        <translation>오류: 지정된 글꼴 집합이 유효하지 않습니다. 유효한 값: %1</translation>
+    </message>
+    <message>
+        <source>Error: Specified font-weight-normal invalid. Valid range %1 to %2.</source>
+        <translation>오류: 지정된 글꼴-두께-일반이 유효하지 않습니다. 유효 범위는 %1에서 %2 사이입니다.</translation>
+    </message>
+    <message>
+        <source>Error: Specified font-weight-bold invalid. Valid range %1 to %2.</source>
+        <translation>오류: 지정된 글꼴-두께-굵게가 유효하지 않습니다. 유효 범위는 %1에서 %2 사이입니다.</translation>
+    </message>
+    <message>
+        <source>Error: Specified font-scale invalid. Valid range %1 to %2.</source>
+        <translation>오류: 지정된 글꼴 크기가 유효하지 않습니다. 유효 범위는 %1에서 %2 사이입니다.</translation>
+    </message>
+    <message>
+        <source>Error: Invalid -custom-css-dir path.</source>
+        <translation>오류: 유효하지 않은 -custom-css-dir 경로입니다.</translation>
+    </message>
+    <message>
+        <source>Error: %1 CSS file(s) missing in -custom-css-dir path.</source>
+        <translation>오류: %1 CSS 파일이 -custom-css-dir 경로에서 누락되었습니다.</translation>
     </message>
 </context>
 <context>
@@ -2114,7 +2230,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>블록 체인</translation>
     </message>
     <message>
-        <source>Number of Smartnodes</source>
+        <source>Number of Masternodes</source>
         <translation>마스터노드 수</translation>
     </message>
     <message>
@@ -2140,10 +2256,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>&amp;Network Traffic</source>
         <translation>네트워크 트래픽(&amp;N)</translation>
-    </message>
-    <message>
-        <source>Totals</source>
-        <translation>총액</translation>
     </message>
     <message>
         <source>Received</source>
@@ -2202,6 +2314,10 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>데이터 폴더</translation>
     </message>
     <message>
+        <source>Last block hash</source>
+        <translation>최종 블록 해시</translation>
+    </message>
+    <message>
         <source>Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.</source>
         <translation>현재 데이터 디렉토리에서 %1 디버그 로그 파일을 엽니다. 용량이 큰 로그 파일들은 여는 데 수 초가 걸릴 수 있습니다.</translation>
     </message>
@@ -2211,11 +2327,11 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <source>Decrease font size</source>
-        <translation>글자 크기 축소</translation>
+        <translation>글꼴 크기 축소</translation>
     </message>
     <message>
         <source>Increase font size</source>
-        <translation>글자 크기 확대</translation>
+        <translation>글꼴 크기 확대</translation>
     </message>
     <message>
         <source>&amp;Reset</source>
@@ -2354,12 +2470,16 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>%1 RPC 콘솔에 오신걸 환영합니다</translation>
     </message>
     <message>
-        <source>Type &lt;b&gt;help&lt;/b&gt; for an overview of available commands.</source>
-        <translation>사용 가능한 명령을 둘러보려면 &lt;b&gt;help&lt;/b&gt;를 입력하십시오.</translation>
-    </message>
-    <message>
         <source>Use up and down arrows to navigate history, and %1 to clear screen.</source>
         <translation>기록을 찾아보려면 위 아래 화살표 키를, 화면을 지우려면 %1 키를 사용하십시오.</translation>
+    </message>
+    <message>
+        <source>Type %1 for an overview of available commands.</source>
+        <translation>사용 가능한 명령을 둘러보시려면 %1을 입력하십시오.</translation>
+    </message>
+    <message>
+        <source>For more information on using this console type %1.</source>
+        <translation>이 콘솔을 사용하기 위한 더 많은 정보를 둘러보시려면 %1을 입력하십시오.</translation>
     </message>
     <message>
         <source>WARNING: Scammers have been active, telling users to type commands here, stealing their wallet contents. Do not use this console without fully understanding the ramifications of a command.</source>
@@ -2380,22 +2500,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Total: %1 (Enabled: %2)</source>
         <translation>전체: %1 (가능: %2)</translation>
-    </message>
-    <message>
-        <source>%1 B</source>
-        <translation>%1 B</translation>
-    </message>
-    <message>
-        <source>%1 KB</source>
-        <translation>%1 KB</translation>
-    </message>
-    <message>
-        <source>%1 MB</source>
-        <translation>%1 MB</translation>
-    </message>
-    <message>
-        <source>%1 GB</source>
-        <translation>%1 GB</translation>
     </message>
     <message>
         <source>(node id: %1)</source>
@@ -2433,15 +2537,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
-        <source>Reuse one of the previously used receiving addresses.&lt;br&gt;Reusing addresses has security and privacy issues.&lt;br&gt;Do not use this unless re-generating a payment request made before.</source>
-        <translation>이전에 사용한 적 있는 받기 주소를 다시 사용합니다. &lt;br&gt;주소를 다시 사용하는 것은 보안 및 프라이버시 문제에 연결됩니다. &lt;br&gt;이전에 이루어진 지불 요청을 다시 생성하는 것이 아니면 해당 주소를 사용하지 마십시오.</translation>
-    </message>
-    <message>
-        <source>R&amp;euse an existing receiving address (not recommended)</source>
-        <translation>이미 존재하는 받기 주소를 다시 사용하기(권장하지 않음) (&amp;R)</translation>
-    </message>
-    <message>
-        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Raptoreum network.</source>
+        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Dash network.</source>
         <translation>지불 요청에 메시지를 첨부할 지 선택할 수 있습니다. 해당 메세지는 지불 요청이 열릴 때 표시될 것 입니다. 메모: 이 메시지는 대시 네트워크로 전송되지 않습니다.</translation>
     </message>
     <message>
@@ -2453,7 +2549,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>새로운 받기 주소와 결합하는 임의의 라벨</translation>
     </message>
     <message>
-        <source>An optional message to attach to the payment request, which will be displayed when the request is opened.&lt;br&gt;Note: The message will not be sent with the payment over the Raptoreum network.</source>
+        <source>An optional message to attach to the payment request, which will be displayed when the request is opened.&lt;br&gt;Note: The message will not be sent with the payment over the Dash network.</source>
         <translation>지불 요청에 메시지를 첨부할 지 선택할 수 있습니다. 해당 메세지는 지불 요청이 열릴 때 표시될 것 입니다. 메모: 이 메시지는 대시 네트워크로 전송되지 않습니다.</translation>
     </message>
     <message>
@@ -2503,6 +2599,14 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Remove</source>
         <translation>삭제</translation>
+    </message>
+    <message>
+        <source>Enter a label to associate with the new receiving address</source>
+        <translation>새로운 받기 주소와 연결된 라벨을 입력하세요</translation>
+    </message>
+    <message>
+        <source>Enter a message to attach to the payment request</source>
+        <translation>지불 요청에 첨부되는 메시지를 입력하세요</translation>
     </message>
     <message>
         <source>Copy URI</source>
@@ -2682,15 +2786,11 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>승인 시간 목표:</translation>
     </message>
     <message>
-        <source>PrivateSend</source>
-        <translation>프라이빗샌드</translation>
-    </message>
-    <message>
         <source>If the custom fee is set to 1000 duffs and the transaction is only 250 bytes, then "per kilobyte" only pays 250 duffs in fee,&lt;br /&gt;while "at least" pays 1000 duffs. For transactions bigger than a kilobyte both pay by kilobyte.</source>
         <translation>만일 사용자 지정 수수료가 1000 더프로 설정되어 있으나 거래는 250바이트에 불과한 경우, 'KB 당'은 오직 250 더프를 수수료로 지불하는 한편 &lt;br /&gt;'최소'는 1000더프를 지불합니다. 1 KB보다 큰 거래를 진행하는 경우 두 옵션 모두 KB 당으로 지불합니다.</translation>
     </message>
     <message>
-        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks.&lt;br /&gt;But be aware that this can end up in a never confirming transaction once there is more demand for raptoreum transactions than the network can process.</source>
+        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks.&lt;br /&gt;But be aware that this can end up in a never confirming transaction once there is more demand for dash transactions than the network can process.</source>
         <translation>최소한의 수수료만 지불하기는 블록체인 내의 공간보다 적은 거래가 진행 중인 경우에만 제대로 작동합니다.&lt;br /&gt;이 옵션을 선택하면 대시 네트워크가 처리할 수 있는 것 보다 많은 거래가 진행되는 경우 거래 확인이 이루어지지 않을 수도 있다는 점을 주의하세요.</translation>
     </message>
     <message>
@@ -2810,6 +2910,10 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>&lt;b&gt;(%2 중 %1 입력값 표시됨)&lt;/b&gt;</translation>
     </message>
     <message>
+        <source>Confirm the PrivateSend action</source>
+        <translation>프라이빗샌드 액션 확인</translation>
+    </message>
+    <message>
         <source>PrivateSend funds only</source>
         <translation>프라이빗샌드 자금만</translation>
     </message>
@@ -2886,7 +2990,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation><numerusform>%n 블록 내 거래 확인을 시작하기 위해 추정 완료</numerusform></translation>
     </message>
     <message>
-        <source>Warning: Invalid Raptoreum address</source>
+        <source>Warning: Invalid Dash address</source>
         <translation>경고: 잘못된 대시 주소입니다</translation>
     </message>
     <message>
@@ -2917,7 +3021,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>송금할 대상(&amp;T):</translation>
     </message>
     <message>
-        <source>The Raptoreum address to send the payment to</source>
+        <source>The Dash address to send the payment to</source>
         <translation>이 대시 주소로 송금합니다.</translation>
     </message>
     <message>
@@ -2953,7 +3057,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>금액:(&amp;m)</translation>
     </message>
     <message>
-        <source>The fee will be deducted from the amount being sent. The recipient will receive a lower amount of Raptoreum than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
+        <source>The fee will be deducted from the amount being sent. The recipient will receive a lower amount of Dash than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
         <translation>수수료는 보내는 금액에서 차감됩니다. 수령인은 당신이 수량란에 입력한 것 보다 적은 금액을 받게 됩니다. 만일 다중의 수령인이 선택되었다면 수수료는 수령인간에 동일하게 분할됩니다.</translation>
     </message>
     <message>
@@ -2961,11 +3065,15 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>송금액에서 수수료 차감(&amp;u)</translation>
     </message>
     <message>
+        <source>Use available balance</source>
+        <translation>사용할 수 있는 잔고 사용</translation>
+    </message>
+    <message>
         <source>Message:</source>
         <translation>메시지:</translation>
     </message>
     <message>
-        <source>A message that was attached to the raptoreum: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Raptoreum network.</source>
+        <source>A message that was attached to the dash: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Dash network.</source>
         <translation>대시: URI에 첨부된 메시지는 거래와 함께 참고용으로 저장됩니다. 주의: 이 메시지는 대시 네트워크로 전송되지 않습니다.</translation>
     </message>
     <message>
@@ -3018,11 +3126,11 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>메시지 서명(&amp;S)</translation>
     </message>
     <message>
-        <source>You can sign messages/agreements with your addresses to prove you can receive Raptoreum sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
+        <source>You can sign messages/agreements with your addresses to prove you can receive Dash sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
         <translation>당신의 주소로 대시를 받을 수 있다는 점을 증명하기 위하여 메시지/계약서에 서명할 수 있습니다. 내용이 분명하지 않거나 무작위인 경우 서명하지 않도록 주의하세요. 피싱 공격이 당신의 서명을 얻기 위해 유도하는 것일 수 있습니다. 오직 완전한 세부 내용을 갖추고 당신이 동의하는 내용에만 서명하세요.</translation>
     </message>
     <message>
-        <source>The Raptoreum address to sign the message with</source>
+        <source>The Dash address to sign the message with</source>
         <translation>메시지에 서명하기 위한 대시 주소</translation>
     </message>
     <message>
@@ -3054,7 +3162,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>현재 서명을 시스템 클립보드에 복사</translation>
     </message>
     <message>
-        <source>Sign the message to prove you own this Raptoreum address</source>
+        <source>Sign the message to prove you own this Dash address</source>
         <translation>이 대시 주소가 당신의 소유임을 증명하기 위해 메시지에 서명하세요.</translation>
     </message>
     <message>
@@ -3078,11 +3186,11 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>메시지를 검증하기 위하여 아래에 수신인의 주소, 메시지(띄어쓰기, 들여쓰기, 행 나눔 등을 정확히 입력하기 위해 복사하여 입력) 및 서명을 입력하세요. 중간자 공격에 의한 피해를 피하기 위해 서명된 메시지 자체에 필요한 것 보다 많은 정보를 읽어 들이지 않도록 주의하세요. 이 기능은 서명 당사자가 해당 주소로 수신하였다는 점을 증명할 뿐이며, 거래의 발송 정보를 담지 않습니다.</translation>
     </message>
     <message>
-        <source>The Raptoreum address the message was signed with</source>
+        <source>The Dash address the message was signed with</source>
         <translation>메시지에 서명된 대시 주소</translation>
     </message>
     <message>
-        <source>Verify the message to ensure it was signed with the specified Raptoreum address</source>
+        <source>Verify the message to ensure it was signed with the specified Dash address</source>
         <translation>특정 대시 주소에 서명된 것인지 확인하기 위하여 메시지를 검증합니다.</translation>
     </message>
     <message>
@@ -3094,8 +3202,20 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>모든 검증 메시지 필드 재설정</translation>
     </message>
     <message>
+        <source>Enter a message to be signed</source>
+        <translation>서명할 메시지를 입력하세요</translation>
+    </message>
+    <message>
         <source>Click "Sign Message" to generate signature</source>
         <translation>서명을 생성하려면 "메시지 서명"을 클릭하세요.</translation>
+    </message>
+    <message>
+        <source>Enter a message to be verified</source>
+        <translation>검증할 메시지를 입력하세요</translation>
+    </message>
+    <message>
+        <source>Enter a signature for the message to be verified</source>
+        <translation>검증될 메시지를 위한 서명을 입력하세요</translation>
     </message>
     <message>
         <source>The entered address is invalid.</source>
@@ -3152,10 +3272,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <source>[testnet]</source>
         <translation>[테스트넷]</translation>
     </message>
-    <message>
-        <source>Version %1</source>
-        <translation>버전 %1</translation>
-    </message>
 </context>
 <context>
     <name>TrafficGraphWidget</name>
@@ -3163,7 +3279,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <source>KB/s</source>
         <translation>KB/s</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>TransactionDesc</name>
     <message numerus="yes">
@@ -3177,10 +3293,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>conflicted</source>
         <translation>충돌</translation>
-    </message>
-    <message>
-        <source>%1/offline</source>
-        <translation>%1/오프라인</translation>
     </message>
     <message>
         <source>0/unconfirmed, %1</source>
@@ -3207,24 +3319,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>%1 확인</translation>
     </message>
     <message>
-        <source>locked via LLMQ based ChainLocks</source>
-        <translation>LLMQ 기반 체인락스로 잠김</translation>
-    </message>
-    <message>
-        <source>verified via LLMQ based InstantSend</source>
-        <translation>LLMQ 기반 인스턴트샌드로 검증됨</translation>
-    </message>
-    <message>
         <source>Status</source>
         <translation>상태</translation>
-    </message>
-    <message>
-        <source>, has not been successfully broadcast yet</source>
-        <translation>. 아직 성공적으로 통보되지 않았습니다.</translation>
-    </message>
-    <message numerus="yes">
-        <source>, broadcast through %n node(s)</source>
-        <translation><numerusform>,%n 노드에 통보하였습니다.</numerusform></translation>
     </message>
     <message>
         <source>Date</source>
@@ -3381,10 +3477,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>%1 까지 열림</translation>
     </message>
     <message>
-        <source>Offline</source>
-        <translation>오프라인</translation>
-    </message>
-    <message>
         <source>Unconfirmed</source>
         <translation>미확인</translation>
     </message>
@@ -3407,10 +3499,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Immature (%1 confirmations, will be available after %2)</source>
         <translation>이용 불가능한 상태 (%1 승인, %2 후에 사용 가능합니다)</translation>
-    </message>
-    <message>
-        <source>This block was not received by any other nodes and will probably not be accepted!</source>
-        <translation>이 블록은 다른 노드로부터 전달받지 않은 것으로, 받아들여지지 않을 것입니다!</translation>
     </message>
     <message>
         <source>Generated but not accepted</source>
@@ -3457,10 +3545,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>프라이빗샌드 분할 단위 생성</translation>
     </message>
     <message>
-        <source>PrivateSend</source>
-        <translation>프라이빗샌드</translation>
-    </message>
-    <message>
         <source>watch-only</source>
         <translation>조회 전용</translation>
     </message>
@@ -3489,10 +3573,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>이 거래에 조회 전용 주소가 포함 되는지의 여부</translation>
     </message>
     <message>
-        <source>Whether or not this transaction was locked by InstantSend.</source>
-        <translation>이 거래가 인스턴트샌드를 통해 잠겼는 지의 여부</translation>
-    </message>
-    <message>
         <source>User-defined intent/purpose of the transaction.</source>
         <translation>거래의 의도/목적에 대한 사용자 정의</translation>
     </message>
@@ -3506,14 +3586,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>All</source>
         <translation>전체</translation>
-    </message>
-    <message>
-        <source>Locked by InstantSend</source>
-        <translation>인스턴트샌드로 잠김</translation>
-    </message>
-    <message>
-        <source>Not locked by InstantSend</source>
-        <translation>인스턴트샌드로 잠기지 않음</translation>
     </message>
     <message>
         <source>Today</source>
@@ -3552,10 +3624,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>보낸 주소</translation>
     </message>
     <message>
-        <source>PrivateSend</source>
-        <translation>프라이빗샌드</translation>
-    </message>
-    <message>
         <source>PrivateSend Make Collateral Inputs</source>
         <translation>프라이빗샌드 콜래트럴 입력값 생성</translation>
     </message>
@@ -3584,8 +3652,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>기타</translation>
     </message>
     <message>
-        <source>Enter address or label to search</source>
-        <translation>검색을 위해 주소 또는 라벨을 입력하세요.</translation>
+        <source>Enter address, transaction id, or label to search</source>
+        <translation>검색을 위해 주소, 거래 id 또는 라벨을 입력하세요.</translation>
     </message>
     <message>
         <source>Min amount</source>
@@ -3757,7 +3825,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
 </context>
 <context>
-    <name>raptoreum-core</name>
+    <name>dash-core</name>
     <message>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
         <translation>선택한 주소에 바인드하고 언제나 수신합니다. IPv6인 경우 [host]:port 명령어 표기법을 사용합니다.</translation>
@@ -3819,16 +3887,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>지갑을 다운그레이드 할 수 없습니다.</translation>
     </message>
     <message>
-        <source>Cannot write default address</source>
-        <translation>기본 주소에 기록할 수 없습니다.</translation>
-    </message>
-    <message>
         <source>Collateral not valid.</source>
         <translation>유효하지 않은 콜래트럴입니다.</translation>
-    </message>
-    <message>
-        <source>Connect to a node to retrieve peer addresses, and disconnect</source>
-        <translation>피어 주소를 검색하기 위해 노드에 연결하고 검색이 끝나면 연결을 해제합니다.</translation>
     </message>
     <message>
         <source>Connection options:</source>
@@ -3907,12 +3967,32 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>거래를 중계하지 않은 상태라도 화이트리스트에 포함된 피어에서 수신된 거래 중계를 받습니다. (디폴트:%d)</translation>
     </message>
     <message>
+        <source>Add a node to connect to and attempt to keep the connection open (see the `addnode` RPC command help for more info). This option can be specified multiple times to add multiple nodes.</source>
+        <translation>연결할 노드를 추가하고 이 연결을 유지합니다 (더 많은 정보를 확인하시려면 `addnode` RPC 코맨드를 확인하세요). 이 옵션은 다중의 노드를 추가하기 위해 여러 번 지정할 수 있습니다.</translation>
+    </message>
+    <message>
         <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
         <translation>특정 소스에서의 JSON-RPC 연결을 허용합니다. 이 설정은 다음에 유효합니다. &lt;ip&gt; 하나의 IP주소 (예 1.2.3.4), 네트워크/넷마스크 (예 1.2.3.4/255.255.255.0) 혹은 네트워크/CIDR (예 1.2.3.4/24). 이 옵션은 복수로 설정 할 수 있습니다.</translation>
     </message>
     <message>
         <source>Bind to given address and whitelist peers connecting to it. Use [host]:port notation for IPv6</source>
         <translation>선택한 주소와 이에 연결된 화이트리스트 피어를 바인드 합니다. IPv6인 경우 [host]:port 명령어 표기법을 사용합니다.</translation>
+    </message>
+    <message>
+        <source>Bind to given address to listen for JSON-RPC connections. Do not expose the RPC server to untrusted networks such as the public internet! This option is ignored unless -rpcallowip is also passed. Port is optional and overrides -rpcport. Use [host]:port notation for IPv6. This option can be specified multiple times (default: 127.0.0.1 and ::1 i.e., localhost, or if -rpcallowip has been specified, 0.0.0.0 and :: i.e., all addresses)</source>
+        <translation>JSON-RPC 연결을 수신하기 위해 선택한 주소를 바인드합니다. 공공 인터넷과 같은 신뢰할 수 없는 네트워크에 RPC 서버를 노출하지 마세요! 이 옵션은 -rpcallowip 역시 패스한 경우가 아니라면 무시하셔도 좋습니다. 포트는 선택 사항이며 -rpcport를 덮어씁니다. IPv6인 경우 [host]:port 명령어 표기법을 사용합니다. 이 옵션은 여러 번 지정할 수 있습니다 (디폴트: 127.0.0.1 및 ::1 즉 localhost, 혹은 -rpcallowip가 선택된 경우 0.0.0.0 및 :: 즉 모든 주소)</translation>
+    </message>
+    <message>
+        <source>Cannot provide specific connections and have addrman find outgoing connections at the same.</source>
+        <translation>특정 연결을 제공하면서 addrman이 외부로 향하는 연결을 찾도록 동시에 설정할 수 없습니다.</translation>
+    </message>
+    <message>
+        <source>Connect only to the specified node; -connect=0 disables automatic connections (the rules for this peer are the same as for -addnode). This option can be specified multiple times to connect to multiple nodes.</source>
+        <translation>지정된 노드에만 연결합니다; -connect=0을 이용하면 자동 연결이 해제됩니다 (이 피어를 위한 규칙은 -addnode를 위한 규칙과 같습니다). 이 옵션은 다중의 노드와 연결하기 위해 여러 번 지정할 수 있습니다.</translation>
+    </message>
+    <message>
+        <source>Connect to a node to retrieve peer addresses, and disconnect. This option can be specified multiple times to connect to multiple nodes.</source>
+        <translation>피어 주소를 검색하기 위해 노드에 연결한 후 해제합니다. 이 옵션은 다중의 노드와 연결하기 위해 여러 번 지정할 수 있습니다.</translation>
     </message>
     <message>
         <source>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</source>
@@ -3947,12 +4027,24 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>이 블록이 체인에 있으면 해당 블록과 그 조상이 유효하며, 스크립트 확인을 건너 뛸 수 있습니다. (0은 모두 확인, 기본값: %s, 테스트넷: %s)</translation>
     </message>
     <message>
+        <source>Invalid -socketevents ('%s') specified. Only these modes are supported: %s</source>
+        <translation>유효하지 않은 -socketevent ('%s')가 지정되었습니다. 이들 모드만이 지원됩니다: %s </translation>
+    </message>
+    <message>
         <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)</source>
         <translation>다음을 위한 금액이 유효하지 않습니다 -maxtxfee=&lt;amount&gt;: '%s' (거래가 막히는 상황을 방지하게 위해 적어도 %s 의 최소 중계 수수료를 지정해야 합니다)</translation>
     </message>
     <message>
+        <source>Location of the auth cookie. Relative paths will be prefixed by a net-specific datadir location. (default: data dir)</source>
+        <translation>승인된 쿠키의 위치. 네트워크-특정 datadir 위치로 상대 경로가 프리픽스 됩니다. (디폴트: data dir)</translation>
+    </message>
+    <message>
         <source>Maintain a full transaction index, used by the getrawtransaction rpc call (default: %u)</source>
         <translation>getrawtransaction를 RPC CALL를 통해 완전한 거래 인덱스 유지 (기본값: %u)</translation>
+    </message>
+    <message>
+        <source>Make outgoing connections only through network &lt;net&gt; (ipv4, ipv6 or onion). Incoming connections are not affected by this option. This option can be specified multiple times to allow multiple networks.</source>
+        <translation>네트워크를 통해서만 나가는 연결이 이루어집니다 &lt;net&gt; (ipv4, ipv6 혹은 어니언). 들어오는 연결은 이 옵션으로 인한 영향을 받지 않습니다. 이 옵션은 다중 네트워크를 허용하기 위해 여러 번 지정할 수 있습니다.</translation>
     </message>
     <message>
         <source>Maximum size of data in data carrier transactions we relay and mine (default: %u)</source>
@@ -3975,7 +4067,39 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>프라이빗샌드는 송금을 위하여 정확한 분할 단위 금액을 사용합니다. 단순히 더 많은 코인을 믹싱함으로써 문제를 해결할 수 있을 지도 모릅니다.</translation>
     </message>
     <message>
-        <source>Use N separate smartnodes in parallel to mix funds (%u-%u, default: %u)</source>
+        <source>Reduce storage requirements by enabling pruning (deleting) of old blocks. This allows the pruneblockchain RPC to be called to delete specific blocks, and enables automatic pruning of old blocks if a target size in MiB is provided. This mode is incompatible with -txindex, -rescan and -disablegovernance=false. Warning: Reverting this setting requires re-downloading the entire blockchain. (default: 0 = disable pruning blocks, 1 = allow manual pruning via RPC, &gt;=%u = automatically prune block files to stay under the specified target size in MiB)</source>
+        <translation>오래된 블록을 정리(삭제) 함으로써 스토리지 용량 요구 사항을 줄입니다. 이로써 pruneblockchain RPC를 호출하여 특정 블록을 삭제하고, MiB로 목표 사이즈를 설정하는 경우 오래된 블록을 자동으로 정리합니다. 이 모드는 -txindex, -rescan 와 -disablegovernance=false 과 호환되지 않습니다. 경고: 이 설정을 되돌리기 위해서는 전체 블록체인을 다시 다운로드 해야 합니다. (디폴트: 0 = 블록 정리 기능 해제, 1 = RPC를 통한 수동 블록 정리 허용,  &gt;=%u = 자동으로 블록 파일을 정리하여 MiB로 지정된 목표 사이즈로 유지)</translation>
+    </message>
+    <message>
+        <source>Send trace/debug info to console (default: 1 when no -daemon. To disable logging to file, set debuglogfile=0)</source>
+        <translation>콘솔에 추적/디버그 정보를 보냅니다 (디폴트: -daemon 이 아닌 경우 1. 파일 로깅을 해제하려면 debuglogfile=0 설정)</translation>
+    </message>
+    <message>
+        <source>Specify configuration file. Relative paths will be prefixed by datadir location. (default: %s)</source>
+        <translation>설정 파일 지정. datadir 위치로 상대 경로가 프리픽스됩니다. (디폴트: %s)</translation>
+    </message>
+    <message>
+        <source>Specify directory to hold wallets (default: &lt;datadir&gt;/wallets if it exists, otherwise &lt;datadir&gt;)</source>
+        <translation>지급을 보유하기 위한 경로를 지정합니다 (디폴트: 존재하는 경우 &lt;datadir&gt;/지갑, 이외 &lt;datadir&gt;)</translation>
+    </message>
+    <message>
+        <source>Specify location of debug log file. Relative paths will be prefixed by a net-specific datadir location. (0 to disable; default: %s)</source>
+        <translation>디버그 로그 파일의 위치를 지정합니다. 네트워크-특정 datadir 위치로 상대 경로가 프리픽스됩니다. (해제하려면 0; 디폴트: %s)</translation>
+    </message>
+    <message>
+        <source>Specify pid file. Relative paths will be prefixed by a net-specific datadir location. (default: %s)</source>
+        <translation>pid 파일을 지정합니다. 네트워크-특정 datadir 위치로 상대 경로가 프리픽스됩니다. (디폴트: %s)</translation>
+    </message>
+    <message>
+        <source>Specify wallet database path. Can be specified multiple times to load multiple wallets. Path is interpreted relative to &lt;walletdir&gt; if it is not absolute, and will be created if it does not exist (as a directory containing a wallet.dat file and log files). For backwards compatibility this will also accept names of existing data files in &lt;walletdir&gt;.)</source>
+        <translation>지갑 데이터베이스 경로를 지정하세요. 여러 개의 지갑을 로딩하기 위해 여러 번 지정할 수 있습니다. 경로가 완전하지 않은 경우 &lt;walletdir&gt; 상대적으로 해석되며, 존재하지 않는 경우 새로 생성됩니다 (wallet.dat 파일 및 로그 파일을 지닌 디렉토리 형식). 이전 버전과의 호환성과 관련하여, 이는 &lt;walletdir&gt;에 있는 기존 데이터 파일의 이름 역시 수용하게 됩니다.)</translation>
+    </message>
+    <message>
+        <source>Transaction index can't be disabled with governance validation enabled. Either start with -disablegovernance command line switch or enable transaction index.</source>
+        <translation>거버넌스 유효성 검사가 활성화된 경우 거래 색인을 비활성화할 수 없습니다. -disablegovernance 명령어 스위치로 시작하거나 거래 인덱스를 활성화하여 시작하세요.</translation>
+    </message>
+    <message>
+        <source>Use N separate masternodes in parallel to mix funds (%u-%u, default: %u)</source>
         <translation>병렬 관계에 있는 N개의 마스터노드를 사용하여 금액을 믹스합니다. (%u-%u, 디폴트: %u)</translation>
     </message>
     <message>
@@ -3993,10 +4117,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Whitelisted peers cannot be DoS banned and their transactions are always relayed, even if they are already in the mempool, useful e.g. for a gateway</source>
         <translation>화이트리스트에 포함된 피어는 이미 멤풀에 포함되어 있다고 하더라도 DoS 추방이 되지 않으며, 이들의 거래는 항상 중계됩니다. 이는 예컨대 게이트웨이에서 유용합니다.</translation>
-    </message>
-    <message>
-        <source>(default: %s)</source>
-        <translation>(디폴트: %s)</translation>
     </message>
     <message>
         <source>Accept public REST requests (default: %u)</source>
@@ -4035,7 +4155,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>다음으로부터 거버넌스 캐시를 불러오는 데 실패하였습니다.</translation>
     </message>
     <message>
-        <source>Failed to load smartnode cache from</source>
+        <source>Failed to load masternode cache from</source>
         <translation>다음으로부터 마스터노드 캐시를 불러오는 데 실패하였습니다.</translation>
     </message>
     <message>
@@ -4095,14 +4215,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>-minsporkkeys로 지정된 스포크 서명자의 최소 숫자가 유효하지 않습니다.</translation>
     </message>
     <message>
-        <source>Keep N RTM mixed (%u-%u, default: %u)</source>
-        <translation>N 대시를 믹싱한 상태로 유지합니다(%u-%u, 디폴트: %u).</translation>
-    </message>
-    <message>
-        <source>Keep at most &lt;n&gt; unconnectable transactions in memory (default: %u)</source>
-        <translation>최대 &lt;n&gt;개의 연결할 수 없는 거래를 메모리에 저장 (기본값: %u)</translation>
-    </message>
-    <message>
         <source>Keypool ran out, please call keypoolrefill first</source>
         <translation>Keypool을 모두 사용하였습니다. 우선 keypoolrefill을 호출하십시오.</translation>
     </message>
@@ -4123,7 +4235,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>수행된 요청 캐시를 불러오는 중...</translation>
     </message>
     <message>
-        <source>Loading smartnode cache...</source>
+        <source>Loading masternode cache...</source>
         <translation>마스터노드 캐시를 불러오는 중...</translation>
     </message>
     <message>
@@ -4151,11 +4263,11 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>-whitebind를 통해 포트를 지정해야 합니다: '%s'</translation>
     </message>
     <message>
-        <source>No Smartnodes detected.</source>
+        <source>No Masternodes detected.</source>
         <translation>마스터노드가 탐지되지 않습니다.</translation>
     </message>
     <message>
-        <source>No compatible Smartnode found.</source>
+        <source>No compatible Masternode found.</source>
         <translation>호환되는 마스터노드를 찾을 수 없습니다.</translation>
     </message>
     <message>
@@ -4163,12 +4275,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>믹싱을 진행하기에 잔고가 충분하지 않습니다.</translation>
     </message>
     <message>
-        <source>Not in the Smartnode list.</source>
+        <source>Not in the Masternode list.</source>
         <translation>마스터노드 리스트에 없습니다.</translation>
-    </message>
-    <message>
-        <source>Only connect to nodes in network &lt;net&gt; (ipv4, ipv6 or onion)</source>
-        <translation>오직 네트워크에서만 노드에 접속합니다. &lt;net&gt;(ipv4, ipv6 혹은 onion)</translation>
     </message>
     <message>
         <source>Prepend debug output with timestamp (default: %u)</source>
@@ -4195,28 +4303,16 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>RPC 호출 서비스를 위한 스레드의 개수 설정 (기본값: %d)</translation>
     </message>
     <message>
-        <source>Specify configuration file (default: %s)</source>
-        <translation>설정 파일을 지정합니다. (기본값: %s)</translation>
-    </message>
-    <message>
         <source>Specify connection timeout in milliseconds (minimum: 1, default: %d)</source>
         <translation>밀리세컨드 단위로 연결 제한 시간을 설정합니다. (최소값: 1, 기본값: %d)</translation>
-    </message>
-    <message>
-        <source>Specify pid file (default: %s)</source>
-        <translation>pid 파일을 지정합니다. (기본값: %s)</translation>
     </message>
     <message>
         <source>Spend unconfirmed change when sending transactions (default: %u)</source>
         <translation>거래를 보낼 때 검증되지 않은 잔돈 쓰기 (기본값: %u)</translation>
     </message>
     <message>
-        <source>Submitted to smartnode, waiting in queue %s</source>
+        <source>Submitted to masternode, waiting in queue %s</source>
         <translation>마스터노드에 제출, 대기열에서 기다리는 중 %s</translation>
-    </message>
-    <message>
-        <source>Synchronization failed</source>
-        <translation>동기화에 실패하였습니다.</translation>
     </message>
     <message>
         <source>Synchronization finished</source>
@@ -4225,14 +4321,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Threshold for disconnecting misbehaving peers (default: %u)</source>
         <translation>비정상적인 피어의 연결을 차단시키기 위한 임계값 (기본값: %u)</translation>
-    </message>
-    <message>
-        <source>Too many %f denominations, removing.</source>
-        <translation>%f 분할 단위가 너무 많습니다. 삭제합니다.</translation>
-    </message>
-    <message>
-        <source>Too many %f denominations, skipping.</source>
-        <translation>%f 분할 단위가 너무 많습니다. 건너뜁니다.</translation>
     </message>
     <message>
         <source>Tor control port password (default: empty)</source>
@@ -4291,7 +4379,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>다시 시도할 예정입니다...</translation>
     </message>
     <message>
-        <source>Can't find random Smartnode.</source>
+        <source>Can't find random Masternode.</source>
         <translation>임의의 마스터노드를 찾을 수 없습니다.</translation>
     </message>
     <message>
@@ -4315,28 +4403,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>KeePass를 통해 AES 암호화된 의사 소통을 위한 KeePassHttp 키</translation>
     </message>
     <message>
-        <source>Disable all Raptoreum specific functionality (Smartnodes, PrivateSend, InstantSend, Governance) (0-1, default: %u)</source>
-        <translation>모든 대시만의 기능(마스터노드, 프라이빗샌드, 인스턴트샌드, 거버넌스)을 비활성화 (0-1, 디폴트: %u)</translation>
-    </message>
-    <message>
         <source>%s file contains all private keys from this wallet. Do not share it with anyone!</source>
         <translation>%s 파일에는이 지갑의 모든 프라이빗키가 들어 있습니다. 절대 공유하지 마십시오!</translation>
     </message>
     <message>
-        <source>-smartnode option is deprecated and ignored, specifying -smartnodeblsprivkey is enough to start this node as a smartnode.</source>
-        <translation>-smartnode 옵션은 중요도가 하락하여 무시되고 -smartnodeblsprivkey는 마스터노드로서 이 노드를 시작하기에 충분합니다.</translation>
-    </message>
-    <message>
-        <source>Add a node to connect to and attempt to keep the connection open (see the `addnode` RPC command help for more info)</source>
-        <translation>연결할 노드를 추가하고 이 연결을 유지합니다 (더 많은 정보를 확인하시려면 'addnode` RPC 코맨드를 확인하세요).</translation>
-    </message>
-    <message>
-        <source>Bind to given address to listen for JSON-RPC connections. This option is ignored unless -rpcallowip is also passed. Port is optional and overrides -rpcport. Use [host]:port notation for IPv6. This option can be specified multiple times (default: 127.0.0.1 and ::1 i.e., localhost, or if -rpcallowip has been specified, 0.0.0.0 and :: i.e., all addresses)</source>
-        <translation>JSON-RPC 연결을 수신하기 위해 선택한 주소를 바인드 합니다. -rpcallowip 역시 패스한 경우 외에는 이 옵션은 무시하셔도 좋습니다. 포트는 선택 사항이며 -rpcport를 덮어씁니다. IPv6인 경우 [host]:port 명령어 표기법을 사용합니다. 이 옵션은 복수로 설정할 수 있습니다 (디폴트: 127.0.0.1 및 ::1 즉 localhost, 혹은 -rpcallowip가 선택된 경우 0.0.0.0 및 :: 즉 모든 주소) </translation>
-    </message>
-    <message>
-        <source>Connect only to the specified node(s); -connect=0 disables automatic connections (the rules for this peer are the same as for -addnode)</source>
-        <translation>지정된 노드(들)에만 연결합니다; -connecdt=0을 이용하면 자동 연결이 해제됩니다 (이 피어를 위한 규칙은 -addnode를 위한 규칙과 같습니다)</translation>
+        <source>-masternode option is deprecated and ignored, specifying -masternodeblsprivkey is enough to start this node as a masternode.</source>
+        <translation>-masternode 옵션은 중요도가 하락하여 무시되고 -masternodeblsprivkey는 마스터노드로서 이 노드를 시작하기에 충분합니다.</translation>
     </message>
     <message>
         <source>Discover own IP addresses (default: 1 when listening and no -externalip or -proxy)</source>
@@ -4419,7 +4491,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>블록 축소 모드에서는 재검색이 불가능 합니다. -reindex 명령을 사용해서 모든 블록체인을 다시 다운로드 해야 합니다.</translation>
     </message>
     <message>
-        <source>Set the smartnode BLS private key and enable the client to act as a smartnode</source>
+        <source>Set the masternode BLS private key and enable the client to act as a masternode</source>
         <translation>마스터노드로서 작동하기 위해 마스터노드 BLS 개인 키를 설정하고 클라이언트를 활성화합니다</translation>
     </message>
     <message>
@@ -4443,12 +4515,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>네트워크 버전의 총 문자 길이(%i)가 최대 길이(%i)를 초과합니다. UA코멘트의 갯수나 길이를 줄이십시오.</translation>
     </message>
     <message>
-        <source>Transaction index can't be disabled in full mode. Either start with -litemode command line switch or enable transaction index.</source>
-        <translation>전체 모드에서는 트랜잭션 색인을 비활성화 할 수 없습니다. -litemode 명령 행 스위치로 시작하거나 트랜잭션 색인을 사용 가능하게 하십시오.</translation>
-    </message>
-    <message>
         <source>Tries to keep outbound traffic under the given target (in MiB per 24h), 0 = no limit (default: %d)</source>
         <translation>아웃바운드 트래픽을 설정된 목표치 이하로 유지하기 (24시간당 MiB기준), 0 = 무제한 (기본값: %d)</translation>
+    </message>
+    <message>
+        <source>Try to create at least N inputs of each denominated amount (%u-%u, default: %u)</source>
+        <translation>각 분할 단위 금액에 최소 N개 입력값을 생성하세요 (%u-%u, 디폴트: %u)</translation>
     </message>
     <message>
         <source>Unable to locate enough PrivateSend denominated funds for this transaction.</source>
@@ -4465,6 +4537,10 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Use UPnP to map the listening port (default: 1 when listening and no -proxy)</source>
         <translation>수신 포트를 맵핑하기 위해 UPnP 사용 (기본값: 수신하는 경우 및 -proxy가 없는 경우 1)</translation>
+    </message>
+    <message>
+        <source>Username and hashed password for JSON-RPC connections. The field &lt;userpw&gt; comes in the format: &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;. A canonical python script is included in share/rpcauth. The client then connects normally using the rpcuser=&lt;USERNAME&gt;/rpcpassword=&lt;PASSWORD&gt; pair of arguments. This option can be specified multiple times</source>
+        <translation>클라이언트JSON-RPC 연결에 필요한 사용자 이름과 해시화된 암호문.  해당 필드는 &lt;userpw&gt; 다음과 같은 필드로 구성되어 있습니다: &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;. share/rpcauth에는 표준 파이톤 스크립트가 포함됩니다. 이후 클라이언트는 rpcuser=&lt;USERNAME&gt;/ rpcpassword=&lt;PASSWORD&gt; 쌍의 매개 변수를 이용하여 정상적으로 연결합니다. 이 옵션은 복수로 지정할 수 있습니다.</translation>
     </message>
     <message>
         <source>WARNING! Failed to replenish keypool, please unlock your wallet to do so.</source>
@@ -4491,6 +4567,10 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>(기본값: %u)</translation>
     </message>
     <message>
+        <source>-litemode is deprecated.</source>
+        <translation>-litemode는 앞으로 사라지게 됩니다.</translation>
+    </message>
+    <message>
         <source>-maxmempool must be at least %d MB</source>
         <translation>-maxmempool은 최소한 %d MB가 필요합니다</translation>
     </message>
@@ -4509,6 +4589,10 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Automatically create Tor hidden service (default: %d)</source>
         <translation>Tor 숨김 서비스를 자동적으로 생성 (기본값: %d)</translation>
+    </message>
+    <message>
+        <source>Disable governance validation (0-1, default: %u)</source>
+        <translation>거버넌스 유효성 검사를 해제합니다 (0-1, 디폴트: %u)</translation>
     </message>
     <message>
         <source>ERROR! Failed to create automatic backup</source>
@@ -4547,8 +4631,36 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>&lt;address&gt;에 대한 원시 거래 공개 활성화</translation>
     </message>
     <message>
+        <source>Error upgrading evo database</source>
+        <translation>에볼루션 데이터베이스 업그레이드 중 오류가 발생했습니다</translation>
+    </message>
+    <message>
         <source>Error: A fatal internal error occurred, see debug.log for details</source>
         <translation>에러: 치명적인 내부 오류가 발생했습니다, 자세한 내용은 debug.log 를 확인해주세요.</translation>
+    </message>
+    <message>
+        <source>Error: failed to add socket to epollfd (epoll_ctl returned error %s)</source>
+        <translation>오류: epollfd에 소켓을 추가하는 데 실패하였습니다 (epoll_ctl 반환 오류 %s)</translation>
+    </message>
+    <message>
+        <source>Exceeded max tries.</source>
+        <translation>최대 시도 횟수를 초과하였습니다.</translation>
+    </message>
+    <message>
+        <source>Failed to clear fulfilled requests cache at</source>
+        <translation>다음의 수행된 요청 캐시를 비우는 데 실패하였습니다</translation>
+    </message>
+    <message>
+        <source>Failed to clear governance cache at</source>
+        <translation>다음의 거버넌스 캐시를 비우는 데 실패하였습니다</translation>
+    </message>
+    <message>
+        <source>Failed to clear masternode cache at</source>
+        <translation>다음의 마스터노드 캐시를 비우는 데 실패하였습니다</translation>
+    </message>
+    <message>
+        <source>Failed to commit EvoDB</source>
+        <translation>EvoDB를 수행하는 데 실패하였습니다</translation>
     </message>
     <message>
         <source>Failed to create backup %s!</source>
@@ -4567,6 +4679,10 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>스포크 캐시 로딩 실패</translation>
     </message>
     <message>
+        <source>Failed to rescan the wallet during initialization</source>
+        <translation>초기치 설정 중 지갑을 재 스캔하는 데 실패하였습니다</translation>
+    </message>
+    <message>
         <source>Fee (in %s/kB) to add to transactions you send (default: %s)</source>
         <translation>송금 시 추가되는 수수료 (%s/kB) (기본값: %s)</translation>
     </message>
@@ -4583,8 +4699,16 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>유효하지 않은 금액 -fallbackfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
-        <source>Invalid smartnodeblsprivkey. Please see documentation.</source>
-        <translation>유효하지 않은 smartnodeblsprivkey 입니다. 문서를 확인하세요.</translation>
+        <source>Invalid masternodeblsprivkey. Please see documentation.</source>
+        <translation>유효하지 않은 masternodeblsprivkey 입니다. 문서를 확인하세요.</translation>
+    </message>
+    <message>
+        <source>It has been replaced by -disablegovernance.</source>
+        <translation>-disablegovernance가 대체하였습니다.</translation>
+    </message>
+    <message>
+        <source>Its replacement -disablegovernance has been forced instead.</source>
+        <translation>대체한 -disablegovernance가 대신 강제되었습니다.</translation>
     </message>
     <message>
         <source>Keep the transaction memory pool below &lt;n&gt; megabytes (default: %u)</source>
@@ -4619,23 +4743,19 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>지갑을 불러오는 중...</translation>
     </message>
     <message>
-        <source>Location of the auth cookie (default: data dir)</source>
-        <translation>인증 쿠키의 위치 (기본값: data dir)</translation>
-    </message>
-    <message>
         <source>Make the wallet broadcast transactions</source>
         <translation>지갑 브로드캐스트 거래 생성</translation>
     </message>
     <message>
-        <source>Smartnode options:</source>
+        <source>Masternode options:</source>
         <translation>마스터노드 옵션:</translation>
     </message>
     <message>
-        <source>Smartnode queue is full.</source>
+        <source>Masternode queue is full.</source>
         <translation>마스터노드 대기열이 가득 찼습니다.</translation>
     </message>
     <message>
-        <source>Smartnode:</source>
+        <source>Masternode:</source>
         <translation>마스터노드:</translation>
     </message>
     <message>
@@ -4657,10 +4777,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Node relay options:</source>
         <translation>노드 중계 옵션:</translation>
-    </message>
-    <message>
-        <source>Non-standard public key detected.</source>
-        <translation>규격 외의 공개 키가 감지되었습니다.</translation>
     </message>
     <message>
         <source>Not compatible with existing transactions.</source>
@@ -4695,16 +4811,16 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>프라이빗샌드 옵션:</translation>
     </message>
     <message>
-        <source>PrivateSend request complete:</source>
-        <translation>프라이빗샌드 요청이 완료되었습니다: </translation>
-    </message>
-    <message>
         <source>PrivateSend request incomplete:</source>
         <translation>프라이빗샌드 요청이 완료되지 않았습니다:</translation>
     </message>
     <message>
         <source>Prune cannot be configured with a negative value.</source>
         <translation>블록 축소는 음수로 설정할 수 없습니다.</translation>
+    </message>
+    <message>
+        <source>Prune mode is incompatible with -disablegovernance=false.</source>
+        <translation>블록 축소 모드는 -disablegovernance=false와 호환되지 않습니다.</translation>
     </message>
     <message>
         <source>Prune mode is incompatible with -txindex.</source>
@@ -4719,12 +4835,44 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>시작할 때 블록체인에서 누락된 지갑 거래를 다시 검색합니다. </translation>
     </message>
     <message>
+        <source>Send reject messages per BIP61 (default: %u)</source>
+        <translation>BIP61 마다 거부 메시지를 전송합니다 (디폴트: %u)</translation>
+    </message>
+    <message>
+        <source>Socket events mode, which must be one of: %s (default: %s)</source>
+        <translation>소켓 이벤트 모드는 다음 중 하나여야 합니다: %s (디폴트: %s)</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" does not exist</source>
+        <translation>지정된 -walletdir "%s" 은/는 존재하지 않습니다</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" is a relative path</source>
+        <translation>지정된 -walletdir "%s" 은/는 상대 경로입니다.</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" is not a directory</source>
+        <translation>지정된 -walletdir "%s" 은/는 디렉토리가 아닙니다.</translation>
+    </message>
+    <message>
+        <source>Sync mempool from other nodes on start (default: %u)</source>
+        <translation>실행시 다른 노드로부터 멤풀 동기화하기 (디폴트: %u)</translation>
+    </message>
+    <message>
         <source>Synchronizing blockchain...</source>
         <translation>블록체인 동기화 중...</translation>
     </message>
     <message>
+        <source>Target PrivateSend balance (%u-%u, default: %u)</source>
+        <translation>프라이빗샌드 잔고 타깃 (%u-%u, 디폴트: %u)</translation>
+    </message>
+    <message>
         <source>The wallet will avoid paying less than the minimum relay fee.</source>
         <translation>이 지갑은 최소 중계 수수료보다 적은 수수료를 지불하지 않을 것입니다.</translation>
+    </message>
+    <message>
+        <source>This is expected because you are running a pruned node.</source>
+        <translation>이는 현재의 블록 축소 모드로 인한 것입니다.</translation>
     </message>
     <message>
         <source>This is the minimum transaction fee you pay on every transaction.</source>
@@ -4759,12 +4907,20 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>이 컴퓨터의 %s에 바인딩 할 수 없습니다. %s이 이미 실행 중인 것으로 보입니다.</translation>
     </message>
     <message>
+        <source>Unable to generate initial keys</source>
+        <translation>초기 키를 생성할 수 없습니다.</translation>
+    </message>
+    <message>
         <source>Upgrading UTXO database</source>
         <translation>UTXO 데이터베이스 업그레이드</translation>
     </message>
     <message>
         <source>Use devnet chain with provided name</source>
         <translation>제공된 이름으로 개발 네트워크 체인을 사용</translation>
+    </message>
+    <message>
+        <source>Wallet %s resides outside wallet directory %s</source>
+        <translation>지갑 %s 이 지갑 디렉토리 %s 외부에 위치합니다.</translation>
     </message>
     <message>
         <source>Wallet debugging/testing options:</source>
@@ -4787,11 +4943,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>블록 전용 모드로 동작할 지 여부를 결정합니다. (기본값: %u)</translation>
     </message>
     <message>
-        <source>You can not start a smartnode in lite mode.</source>
-        <translation>라이트 모드에서는 마스터 노드를 시작할 수 없습니다.</translation>
-    </message>
-    <message>
-        <source>You can not start a smartnode with wallet enabled.</source>
+        <source>You can not start a masternode with wallet enabled.</source>
         <translation>지갑이 활성화된 상태에서는 마스터노드를 실행할 수 없습니다.</translation>
     </message>
     <message>
@@ -4823,7 +4975,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>RPC 서버 설정</translation>
     </message>
     <message>
-        <source>Raptoreum Core</source>
+        <source>Dash Core</source>
         <translation>대시 코어</translation>
     </message>
     <message>
@@ -4845,10 +4997,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Error loading %s: You can't enable HD on an already existing non-HD wallet</source>
         <translation>%s 로딩 에러: HD 지갑이 아닌 경우 HD를 활성화 할 수 없습니다.</translation>
-    </message>
-    <message>
-        <source>Error loading wallet %s. -wallet parameter must only specify a filename (not a path).</source>
-        <translation>지갑 %s 로딩 중 에러. -wallet 파라미터는 (경로가 아닌) 파일 이름만을 선택해야 합니다.</translation>
     </message>
     <message>
         <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
@@ -4887,10 +5035,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>%s이/가 유용하다고 생각한다면 프로젝트에 공헌해주세요. 이 소프트웨어에 대한 보다 자세한 정보는 %s를 방문해주십시오.</translation>
     </message>
     <message>
-        <source>Reduce storage requirements by enabling pruning (deleting) of old blocks. This allows the pruneblockchain RPC to be called to delete specific blocks, and enables automatic pruning of old blocks if a target size in MiB is provided. This mode is incompatible with -txindex and -rescan. Warning: Reverting this setting requires re-downloading the entire blockchain. (default: 0 = disable pruning blocks, 1 = allow manual pruning via RPC, &gt;%u = automatically prune block files to stay under the specified target size in MiB)</source>
-        <translation>오래된 블록을 정리(삭제) 함으로써 스토리지 용량 요구 사항을 줄입니다. 이로써 pruneblockchain RPC를 호출하여 특정 블록을 삭제하고, MiB로 목표 사이즈를 설정하는 경우 오래된 블록을 자동으로 정리합니다. 이 모드는 -txindex와 -rescan과 호환되지 않습니다. 경고: 이 설정을 되돌리기 위해서는 전체 블록체인을 다시 다운로드 해야 합니다. (디폴트: 0 = 블록 정리 기능 해제, 1 = RPC를 통한 수동 블록 정리 허용, &gt;%u = 자동으로 블록 파일을 정리하여 MiB로 지정된 목표 사이즈로 유지)</translation>
-    </message>
-    <message>
         <source>Set lowest fee rate (in %s/kB) for transactions to be included in block creation. (default: %s)</source>
         <translation>블록 생성에 포함되기 위한 거래의 최저 수수료 비율(%s/kB)을 설정하십시오. (기본값: %s)</translation>
     </message>
@@ -4919,7 +5063,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>블록을 재실행 할 수 없습니다. -reindex-chainstate를 이용해 데이터베이스를 재구성해야 합니다.</translation>
     </message>
     <message>
-        <source>Use N separate smartnodes for each denominated input to mix funds (%u-%u, default: %u)</source>
+        <source>Use N separate masternodes for each denominated input to mix funds (%u-%u, default: %u)</source>
         <translation>N개의 마스터노드를 사용하여 분할한 각 입력값을 섞습니다. (%u-%u, 디폴트: %u)</translation>
     </message>
     <message>
@@ -4929,10 +5073,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>User defined mnemonic passphrase for HD wallet (BIP39). Only has effect during wallet creation/first start (default: empty string)</source>
         <translation>HD 지갑을 위해 사용자가 지정한 연상 기호 암호문(BIP39)은 지갑 생성/첫 시작에만 효력이 있습니다. (디폴트: 빈 문자열)</translation>
-    </message>
-    <message>
-        <source>Username and hashed password for JSON-RPC connections. The field &lt;userpw&gt; comes in the format: &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;. A canonical python script is included in share/rpcuser. The client then connects normally using the rpcuser=&lt;USERNAME&gt;/rpcpassword=&lt;PASSWORD&gt; pair of arguments. This option can be specified multiple times</source>
-        <translation>클라이언트JSON-RPC 연결에 필요한 사용자 이름과 해시화된 암호문.  해당 필드는 &lt;userpw&gt; 다음과 같은 필드로 구성되어 있습니다: &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;. share/rpcuser에는 표준 파이톤 스크립트가 포함됩니다. 이후 클라이언트는 rpcuser=&lt;USERNAME&gt;/ rpcpassword=&lt;PASSWORD&gt; 쌍의 매개 변수를 이용하여 정상적으로 연결합니다. 이 옵션은 복수로 지정할 수 있습니다.</translation>
     </message>
     <message>
         <source>Wallet will not create transactions that violate mempool chain limits (default: %u)</source>
@@ -4951,10 +5091,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>지정된 IP주소 (예 1.2.3.4) 혹은 CIDR로 작성된 네트워크 (예 1.2.3.0/24)로 화이트리스트 피어에 접속합니다. 이는 복수로 지정 할 수 있습니다.</translation>
     </message>
     <message>
-        <source>You are starting in lite mode, most Raptoreum-specific functionality is disabled.</source>
-        <translation>라이트 모드로 시작하면 대부분의 대시 고유 기능은 비활성화 됩니다.</translation>
-    </message>
-    <message>
         <source>%d of last 100 blocks have unexpected version</source>
         <translation>지난 100 블록 중 %d가 예상치 못한 버전을 지니고 있습니다</translation>
     </message>
@@ -4969,10 +5105,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>%s is set very high!</source>
         <translation>%s가 매우 높게 설정되었습니다!</translation>
-    </message>
-    <message>
-        <source>(press q to shutdown and continue later)</source>
-        <translation>(q를 눌러 종료하고 나중에 계속하기)</translation>
     </message>
     <message>
         <source>-devnet can only be specified once</source>
@@ -5031,16 +5163,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>%s 로딩 에러: 이미 존재하는 HD 지갑에서 HD를 비활성화 할 수 없습니다.</translation>
     </message>
     <message>
-        <source>Error loading wallet %s. -wallet filename must be a regular file.</source>
-        <translation>지갑 %s 로딩 중 에러. -wallet 파일명은 일반 파일이어야 합니다</translation>
-    </message>
-    <message>
         <source>Error loading wallet %s. Duplicate -wallet filename specified.</source>
         <translation>지갑 %s 로딩 중 에러. 설정된 -wallet 파일명을 복사하세요</translation>
-    </message>
-    <message>
-        <source>Error loading wallet %s. Invalid characters in -wallet filename.</source>
-        <translation>지갑 %s 로딩 중 에러. -wallet 파일명에 유효하지 않은 문자입니다</translation>
     </message>
     <message>
         <source>Error upgrading chainstate database</source>
@@ -5111,10 +5235,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>데몬으로 백그라운드에서 실행하고 명령을 허용</translation>
     </message>
     <message>
-        <source>Send trace/debug info to console instead of debug.log file</source>
-        <translation>추적/디버그 정보를 degug.log 파일 대신 콘솔로 보내기</translation>
-    </message>
-    <message>
         <source>Session not complete!</source>
         <translation>세션이 완료되지 않았습니다!</translation>
     </message>
@@ -5147,10 +5267,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>데이터 디렉토리를 지정하십시오.</translation>
     </message>
     <message>
-        <source>Specify wallet file (within data directory)</source>
-        <translation>(데이터 디렉토리 내의) 지갑 파일을 지정하십시오.</translation>
-    </message>
-    <message>
         <source>Specify your own public address</source>
         <translation>공개 주소를 지정하십시오.</translation>
     </message>
@@ -5161,10 +5277,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Starting network threads...</source>
         <translation>네트워크 스레드 시작중...</translation>
-    </message>
-    <message>
-        <source>Synchronization pending...</source>
-        <translation>처리 중인 데이터 동기화중...</translation>
     </message>
     <message>
         <source>Synchronizing governance objects...</source>
@@ -5189,10 +5301,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Transaction created successfully.</source>
         <translation>거래가 성공적으로 생성되었습니다.</translation>
-    </message>
-    <message>
-        <source>Transaction fee and change calculation failed</source>
-        <translation>거래 수수료와 계산 변경에 실패하였습니다</translation>
     </message>
     <message>
         <source>Transaction fees are too high.</source>
@@ -5239,10 +5347,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>매우 적은 숫자의 키가 남았습니다: %d</translation>
     </message>
     <message>
-        <source>Wallet %s resides outside data directory %s</source>
-        <translation>지갑 %s 이 데이터 디렉토리 외부에 위치합니다 %s.</translation>
-    </message>
-    <message>
         <source>Wallet is locked.</source>
         <translation>지갑이 잠금 상태입니다.</translation>
     </message>
@@ -5251,12 +5355,16 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>지갑 옵션:</translation>
     </message>
     <message>
-        <source>Wallet window title</source>
-        <translation>지갑 창 제목</translation>
-    </message>
-    <message>
         <source>Warning</source>
         <translation>경고</translation>
+    </message>
+    <message>
+        <source>You are starting with governance validation disabled.</source>
+        <translation>거버넌스 유효성 검사를 해제한 상태로 시작합니다.</translation>
+    </message>
+    <message>
+        <source>You can not disable governance validation on a masternode.</source>
+        <translation>마스터노드에서 거버넌스 유효성 검사를 해제할 수 없습니다.</translation>
     </message>
     <message>
         <source>Your entries added successfully.</source>

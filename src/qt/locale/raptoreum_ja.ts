@@ -70,12 +70,12 @@
         <translation>受取アドレス</translation>
     </message>
     <message>
-        <source>These are your Raptoreum addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>これらは送金するためのあなたの Raptoreum アドレスです。送金する前に常に金額と受取アドレスを確認してください。</translation>
+        <source>These are your Dash addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation>これらは送金するためのあなたの Dash アドレスです。送金する前に常に金額と受取アドレスを確認してください。</translation>
     </message>
     <message>
-        <source>These are your Raptoreum addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>これらは送金を受取用のあなたのRaptoreumアドレスです。トランザクションごとに新しい受け取り用アドレスの作成を推奨します。</translation>
+        <source>These are your Dash addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
+        <translation>これらは送金を受取用のあなたのDashアドレスです。トランザクションごとに新しい受け取り用アドレスの作成を推奨します。</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -129,6 +129,9 @@
         <translation>（ラベル無し）</translation>
     </message>
 </context>
+<context>
+    <name>AppearanceWidget</name>
+    </context>
 <context>
     <name>AskPassphraseDialog</name>
     <message>
@@ -188,8 +191,8 @@
         <translation>ウォレットの暗号化を確認</translation>
     </message>
     <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR RTM&lt;/b&gt;!</source>
-        <translation>警告: ウォレットを暗号化しパスフレーズを紛失した場合、あなたは &lt;b&gt;すべてのRaptoreum&lt;/b&gt;を失います!</translation>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR DASH&lt;/b&gt;!</source>
+        <translation>警告: ウォレットを暗号化しパスフレーズを紛失した場合、あなたは &lt;b&gt;すべてのDash&lt;/b&gt;を失います!</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
@@ -256,14 +259,17 @@
     </message>
 </context>
 <context>
+    <name>BitcoinAmountField</name>
+    </context>
+<context>
     <name>BitcoinGUI</name>
     <message>
-        <source>A fatal error occurred. Raptoreum Core can no longer continue safely and will quit.</source>
-        <translation>重大なエラーが発生しました。 Raptoreum Coreは安全に続行できなくなり終了します。</translation>
+        <source>A fatal error occurred. Dash Core can no longer continue safely and will quit.</source>
+        <translation>重大なエラーが発生しました。 Dash Coreは安全に続行できなくなり終了します。</translation>
     </message>
     <message>
-        <source>Raptoreum Core</source>
-        <translation>Raptoreum Core</translation>
+        <source>Dash Core</source>
+        <translation>Dash Core</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -286,16 +292,16 @@
         <translation>送金 (&amp;S)</translation>
     </message>
     <message>
-        <source>Send coins to a Raptoreum address</source>
-        <translation>Raptoreum アドレスに送金</translation>
+        <source>Send coins to a Dash address</source>
+        <translation>Dash アドレスに送金</translation>
     </message>
     <message>
         <source>&amp;Receive</source>
         <translation>受取 (&amp;R)</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and raptoreum: URIs)</source>
-        <translation>送金を要求 (QRコードとraptoreum:URIを生成)</translation>
+        <source>Request payments (generates QR codes and dash: URIs)</source>
+        <translation>送金を要求 (QRコードとdash:URIを生成)</translation>
     </message>
     <message>
         <source>&amp;Transactions</source>
@@ -306,11 +312,11 @@
         <translation>トランザクション履歴を閲覧</translation>
     </message>
     <message>
-        <source>&amp;Smartnodes</source>
+        <source>&amp;Masternodes</source>
         <translation>マスターノード(&amp;M)</translation>
     </message>
     <message>
-        <source>Browse smartnodes</source>
+        <source>Browse masternodes</source>
         <translation>マスターノードを閲覧</translation>
     </message>
     <message>
@@ -322,8 +328,8 @@
         <translation>アプリケーションを終了</translation>
     </message>
     <message>
-        <source>Show information about Raptoreum Core</source>
-        <translation>Raptoreum Coreについての情報を表示</translation>
+        <source>Show information about Dash Core</source>
+        <translation>Dash Coreについての情報を表示</translation>
     </message>
     <message>
         <source>About &amp;Qt</source>
@@ -394,16 +400,16 @@
         <translation>メッセージの署名… (&amp;M)</translation>
     </message>
     <message>
-        <source>Sign messages with your Raptoreum addresses to prove you own them</source>
-        <translation>あなたがRaptoreum アドレスを所有していることを証明するために、あなたのRaptoreumアドレスでメッセージに署名してください。</translation>
+        <source>Sign messages with your Dash addresses to prove you own them</source>
+        <translation>あなたがDash アドレスを所有していることを証明するために、あなたのDashアドレスでメッセージに署名してください。</translation>
     </message>
     <message>
         <source>&amp;Verify message...</source>
         <translation>メッセージの検証… (&amp;V)</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified Raptoreum addresses</source>
-        <translation>指定されたRaptoreumアドレスで署名されたことを確認するためにメッセージを検証してください。</translation>
+        <source>Verify messages to ensure they were signed with specified Dash addresses</source>
+        <translation>指定されたDashアドレスで署名されたことを確認するためにメッセージを検証してください。</translation>
     </message>
     <message>
         <source>&amp;Information</source>
@@ -482,16 +488,16 @@
         <translation>URIを開く… (&amp;U)</translation>
     </message>
     <message>
-        <source>Open a raptoreum: URI or payment request</source>
-        <translation>raptoreum: URIまたは送金リクエストを開く</translation>
+        <source>Open a dash: URI or payment request</source>
+        <translation>dash: URIまたは送金リクエストを開く</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
         <translation>コマンドラインオプション (&amp;C)</translation>
     </message>
     <message>
-        <source>Show the %1 help message to get a list with possible Raptoreum command-line options</source>
-        <translation>有効なRaptoreumのコマンドラインオプションのリストを見るために %1 のヘルプメッセージを表示</translation>
+        <source>Show the %1 help message to get a list with possible Dash command-line options</source>
+        <translation>有効なDashのコマンドラインオプションのリストを見るために %1 のヘルプメッセージを表示</translation>
     </message>
     <message>
         <source>%1 client</source>
@@ -526,7 +532,7 @@
         <translation>タブツールバー</translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to Raptoreum network</source>
+        <source>%n active connection(s) to Dash network</source>
         <translation><numerusform>%n アクティブコネクション</numerusform></translation>
     </message>
     <message>
@@ -640,10 +646,6 @@
         <translation>HDウォレット鍵生成は&lt;b&gt;有効&lt;/b&gt;です。</translation>
     </message>
     <message>
-        <source>HD key generation is &lt;b&gt;disabled&lt;/b&gt;</source>
-        <translation>HDウォレット鍵生成は&lt;b&gt;無効&lt;/b&gt;です。</translation>
-    </message>
-    <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
         <translation>ウォレットは &lt;b&gt;暗号化&lt;/b&gt;され、現在&lt;b&gt;アンロック&lt;/b&gt;されています。</translation>
     </message>
@@ -721,10 +723,6 @@
     <message>
         <source>Received with address</source>
         <translation>アドレスに対する入金一覧</translation>
-    </message>
-    <message>
-        <source>PS Rounds</source>
-        <translation>PSラウンド</translation>
     </message>
     <message>
         <source>Date</source>
@@ -850,10 +848,6 @@
         <translation>このアドレスに関連しているアドレス。これは送金アドレス用にのみ変更できます。</translation>
     </message>
     <message>
-        <source>New receiving address</source>
-        <translation>新しい入金アドレス</translation>
-    </message>
-    <message>
         <source>New sending address</source>
         <translation>新しい送金アドレス</translation>
     </message>
@@ -866,8 +860,8 @@
         <translation>送金アドレスを編集</translation>
     </message>
     <message>
-        <source>The entered address "%1" is not a valid Raptoreum address.</source>
-        <translation>入力されたアドレス "%1" は有効なRaptoreumアドレスではありません。</translation>
+        <source>The entered address "%1" is not a valid Dash address.</source>
+        <translation>入力されたアドレス "%1" は有効なDashアドレスではありません。</translation>
     </message>
     <message>
         <source>The entered address "%1" is already in the address book.</source>
@@ -1008,8 +1002,8 @@
         <translation>おおむね%1GBのデータがこのディレクトリに保存されます。</translation>
     </message>
     <message>
-        <source>%1 will download and store a copy of the Raptoreum block chain.</source>
-        <translation>%1はRaptoreumのブロックチェーンの複製をダウンロードし保存します。</translation>
+        <source>%1 will download and store a copy of the Dash block chain.</source>
+        <translation>%1はDashのブロックチェーンの複製をダウンロードし保存します。</translation>
     </message>
     <message>
         <source>The wallet will also be stored in this directory.</source>
@@ -1033,7 +1027,7 @@
     </message>
 </context>
 <context>
-    <name>SmartnodeList</name>
+    <name>MasternodeList</name>
     <message>
         <source>Form</source>
         <translation>フォーム</translation>
@@ -1051,7 +1045,7 @@
         <translation>フィルターリスト:</translation>
     </message>
     <message>
-        <source>Filter smartnode list</source>
+        <source>Filter masternode list</source>
         <translation>マスターノードのリストをフィルター</translation>
     </message>
     <message>
@@ -1059,11 +1053,11 @@
         <translation>ノード数:</translation>
     </message>
     <message>
-        <source>Show only smartnodes this wallet has keys for.</source>
+        <source>Show only masternodes this wallet has keys for.</source>
         <translation>このウォレットがキーを持つマスターノードのみを表示</translation>
     </message>
     <message>
-        <source>My smartnodes only</source>
+        <source>My masternodes only</source>
         <translation>自分のマスターノードのみ</translation>
     </message>
     <message>
@@ -1123,8 +1117,8 @@
         <translation>無し</translation>
     </message>
     <message>
-        <source>Additional information for DIP3 Smartnode %1</source>
-        <translation>DIP3 Smartnode %1の追加情報</translation>
+        <source>Additional information for DIP3 Masternode %1</source>
+        <translation>DIP3 Masternode %1の追加情報</translation>
     </message>
 </context>
 <context>
@@ -1134,12 +1128,12 @@
         <translation>フォーム</translation>
     </message>
     <message>
-        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the Raptoreum network, as detailed below.</source>
-        <translation>確認できない最新のトランザクションがあるかもしれません。これによりウォレットの残高は不正確なものである可能性があります。この情報はウォレットが一度Raptoreumのネットワークへの同期が完了すると正確なものとなります。詳細は下記を参照してください。</translation>
+        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the Dash network, as detailed below.</source>
+        <translation>確認できない最新のトランザクションがあるかもしれません。これによりウォレットの残高は不正確なものである可能性があります。この情報はウォレットが一度Dashのネットワークへの同期が完了すると正確なものとなります。詳細は下記を参照してください。</translation>
     </message>
     <message>
-        <source>Attempting to spend Raptoreum that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
-        <translation>表示されてないトランザクションに影響を受けたRaptoreumを使用しようとするとネットワークに承認されません。</translation>
+        <source>Attempting to spend Dash that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
+        <translation>表示されてないトランザクションに影響を受けたDashを使用しようとするとネットワークに承認されません。</translation>
     </message>
     <message>
         <source>Number of blocks left</source>
@@ -1232,11 +1226,11 @@
         <translation>ウォレット (&amp;A)</translation>
     </message>
     <message>
-        <source>Show additional tab listing all your smartnodes in first sub-tab&lt;br/&gt;and all smartnodes on the network in second sub-tab.</source>
+        <source>Show additional tab listing all your masternodes in first sub-tab&lt;br/&gt;and all masternodes on the network in second sub-tab.</source>
         <translation>あなたのすべてのマスターノードをリストしている追加のタブを最初のサブタブに表示し&lt;br/&gt;すべてのマスターノードを次のサブタブに表示</translation>
     </message>
     <message>
-        <source>Show Smartnodes Tab</source>
+        <source>Show Masternodes Tab</source>
         <translation>マスターノードタブを表示する</translation>
     </message>
     <message>
@@ -1276,12 +1270,12 @@
         <translation>この設定は閾値として機能し、この量に達するとプライベートセンドが無効になります。</translation>
     </message>
     <message>
-        <source>Automatically open the Raptoreum Core client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>自動的にルーターのRaptoreum Core クライアントポートを開放します。これはルーターがUPnP機能をサポートしておりUPnP機能が有効な場合にのみ機能します。</translation>
+        <source>Automatically open the Dash Core client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <translation>自動的にルーターのDash Core クライアントポートを開放します。これはルーターがUPnP機能をサポートしておりUPnP機能が有効な場合にのみ機能します。</translation>
     </message>
     <message>
-        <source>Connect to the Raptoreum network through a SOCKS5 proxy.</source>
-        <translation>SOCKS5プロキシ経由でRaptoreumネットワークに接続</translation>
+        <source>Connect to the Dash network through a SOCKS5 proxy.</source>
+        <translation>SOCKS5プロキシ経由でDashネットワークに接続</translation>
     </message>
     <message>
         <source>&amp;Connect through SOCKS5 proxy (default proxy):</source>
@@ -1298,10 +1292,6 @@
     <message>
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items.&lt;br/&gt;%s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
         <translation>メニューアイテムとしてトランザクションタブに表示されるサードパーティのURL (例 ブロックエクスプローラー) :&lt;br/&gt;%s はトランザクションハッシュに置き換えられます。複数のURLは"|"によって区切られます。</translation>
-    </message>
-    <message>
-        <source>Expert</source>
-        <translation>エキスパート</translation>
     </message>
     <message>
         <source>Whether to show coin control features or not.</source>
@@ -1340,14 +1330,6 @@
         <translation>UPnPを使ってポートを割り当て (&amp;U)</translation>
     </message>
     <message>
-        <source>Accept connections from outside</source>
-        <translation>外部からの接続を許可</translation>
-    </message>
-    <message>
-        <source>Allow incoming connections</source>
-        <translation>受信中の接続を許可</translation>
-    </message>
-    <message>
         <source>Proxy &amp;IP:</source>
         <translation>プロキシの IP：(&amp;I) </translation>
     </message>
@@ -1380,24 +1362,8 @@
         <translation>Tor</translation>
     </message>
     <message>
-        <source>Connect to the Raptoreum network through a separate SOCKS5 proxy for Tor hidden services.</source>
-        <translation>Tor秘匿サービスを利用するため独立なSOCKS5プロキシ経由でRaptoreumネットワークに接続</translation>
-    </message>
-    <message>
-        <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services:</source>
-        <translation>独立なSOCKS5プロキシを使用してTor秘匿サービス経由でピアに到達</translation>
-    </message>
-    <message>
-        <source>&amp;Window</source>
-        <translation>ウインドウ (&amp;W)</translation>
-    </message>
-    <message>
-        <source>&amp;Hide the icon from the system tray.</source>
-        <translation>システムトレイからアイコンを非表示(&amp;W)</translation>
-    </message>
-    <message>
-        <source>Hide tray icon</source>
-        <translation>トレイアイコンを非表示</translation>
+        <source>Connect to the Dash network through a separate SOCKS5 proxy for Tor hidden services.</source>
+        <translation>Tor秘匿サービスを利用するため独立なSOCKS5プロキシ経由でDashネットワークに接続</translation>
     </message>
     <message>
         <source>Show only a tray icon after minimizing the window.</source>
@@ -1425,13 +1391,9 @@
     </message>
     <message>
         <source>Language missing or translation incomplete? Help contributing translations here:
-https://www.transifex.com/projects/p/raptoreum/</source>
+https://www.transifex.com/projects/p/dash/</source>
         <translation>希望の言語がない場合または翻訳に問題がある場合はこちらで翻訳にご協力ください。:
-https://www.transifex.com/projects/p/raptoreum/</translation>
-    </message>
-    <message>
-        <source>User Interface Theme:</source>
-        <translation>ユーザーインターフェイスのテーマ:</translation>
+https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <source>&amp;Unit to show amounts in:</source>
@@ -1444,10 +1406,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Decimal digits</source>
         <translation>10進数</translation>
-    </message>
-    <message>
-        <source>Third party transaction URLs</source>
-        <translation>サードパーティのトランザクションURL</translation>
     </message>
     <message>
         <source>Active command-line options that override above options:</source>
@@ -1472,10 +1430,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>default</source>
         <translation>デフォルト設定</translation>
-    </message>
-    <message>
-        <source>none</source>
-        <translation>なし</translation>
     </message>
     <message>
         <source>Confirm options reset</source>
@@ -1505,8 +1459,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>フォーム</translation>
     </message>
     <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Raptoreum network after a connection is established, but this process has not completed yet.</source>
-        <translation>表示された情報は古いかもしれません。接続が確立されればあなたのウォレットは Raptoreumネットワークと自動的に同期しますが、このプロセスはまだ完了していません。</translation>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Dash network after a connection is established, but this process has not completed yet.</source>
+        <translation>表示された情報は古いかもしれません。接続が確立されればあなたのウォレットは Dashネットワークと自動的に同期しますが、このプロセスはまだ完了していません。</translation>
     </message>
     <message>
         <source>Available:</source>
@@ -1589,8 +1543,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>金額とラウンド</translation>
     </message>
     <message>
-        <source>0 RTM / 0 Rounds</source>
-        <translation>0 RTM / 0 ラウンド</translation>
+        <source>0 DASH / 0 Rounds</source>
+        <translation>0 DASH / 0 ラウンド</translation>
     </message>
     <message>
         <source>Submitted Denom:</source>
@@ -1613,12 +1567,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>プライベートセンド残高:</translation>
     </message>
     <message>
-        <source>The denominations you submitted to the Smartnode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
+        <source>The denominations you submitted to the Masternode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
         <translation>マスターノードに送った通貨単位&lt;br&gt;ミキシングをするには他のユーザーが正確に同じ通貨単位を送る必要があります。</translation>
-    </message>
-    <message>
-        <source>(Last Message)</source>
-        <translation>(最新メッセージ)</translation>
     </message>
     <message>
         <source>out of sync</source>
@@ -1643,14 +1593,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message numerus="yes">
         <source>%n Rounds</source>
         <translation><numerusform>%n ラウンド</numerusform></translation>
-    </message>
-    <message>
-        <source>Found enough compatible inputs to anonymize %1</source>
-        <translation> %1 を匿名化するのに十分なインプットを検知しました。</translation>
-    </message>
-    <message>
-        <source>Not enough compatible inputs to anonymize &lt;span style='color:red;'&gt;%1&lt;/span&gt;,&lt;br&gt;will anonymize &lt;span style='color:red;'&gt;%2&lt;/span&gt; instead</source>
-        <translation> &lt;span style='color:red;'&gt;%1&lt;/span&gt;を匿名化するのに十分なインプットがありません、&lt;br&gt; &lt;span style='color:red;'&gt;%2&lt;/span&gt; を代わりに匿名化します。</translation>
     </message>
     <message>
         <source>Overall progress</source>
@@ -1681,10 +1623,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>前回の自動バックアップから残されたキーの数がほとんどありません！</translation>
     </message>
     <message>
-        <source>We are about to create a new automatic backup for you, however &lt;span style='color:red;'&gt; you should always make sure you have backups saved in some safe place&lt;/span&gt;!</source>
-        <translation>新しい自動バックアップを作成しますが、 &lt;span style='color:red;'&gt; 常にバックアップを安全な場所に作成してください&lt;/span&gt;!</translation>
-    </message>
-    <message>
         <source>Note: You can turn this message off in options.</source>
         <translation>注記: このメッセージはオプションで非表示にできます。</translation>
     </message>
@@ -1713,12 +1651,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>警告! キープールの補充に失敗しました。ウォレットをアンロックしてキープールを補充してください</translation>
     </message>
     <message>
-        <source>Last PrivateSend message:
-</source>
-        <translation>最後のプライベートセンドのメッセージ:
-</translation>
-    </message>
-    <message>
         <source>If you don't want to see internal PrivateSend fees/transactions select "Most Common" as Type on the "Transactions" tab.</source>
         <translation>プライベートセンドのトランザクションや手数料を非表示にしたい場合はトランザクションタブ上で”通常”をタイプとして選択してください。</translation>
     </message>
@@ -1738,8 +1670,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>支払いリクエストのエラー</translation>
     </message>
     <message>
-        <source>Cannot start raptoreum: click-to-pay handler</source>
-        <translation>Raptoreum を起動できません: click-to-pay ハンドラー</translation>
+        <source>Cannot start dash: click-to-pay handler</source>
+        <translation>Dash を起動できません: click-to-pay ハンドラー</translation>
     </message>
     <message>
         <source>URI handling</source>
@@ -1754,8 +1686,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>支払いのアドレス　%1　は無効です</translation>
     </message>
     <message>
-        <source>URI cannot be parsed! This can be caused by an invalid Raptoreum address or malformed URI parameters.</source>
-        <translation>URI を解析できません! これは無効な Raptoreum アドレスあるいは不正な形式の URI パラメーターによって引き起こされた可能性があります。</translation>
+        <source>URI cannot be parsed! This can be caused by an invalid Dash address or malformed URI parameters.</source>
+        <translation>URI を解析できません! これは無効な Dash アドレスあるいは不正な形式の URI パラメーターによって引き起こされた可能性があります。</translation>
     </message>
     <message>
         <source>Payment request file handling</source>
@@ -1840,7 +1772,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <source>Ping</source>
         <translation>Ping</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>QObject</name>
     <message>
@@ -1852,8 +1784,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>総額</translation>
     </message>
     <message>
-        <source>Enter a Raptoreum address (e.g. %1)</source>
-        <translation>Raptoreumアドレスを入力してください (例 %1)</translation>
+        <source>Enter a Dash address (e.g. %1)</source>
+        <translation>Dashアドレスを入力してください (例 %1)</translation>
     </message>
     <message>
         <source>%1 d</source>
@@ -1930,7 +1862,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <source>Error: %1</source>
         <translation>エラー: %1</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>QRDialog</name>
     <message>
@@ -2051,7 +1983,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>ブロックチェーン</translation>
     </message>
     <message>
-        <source>Number of Smartnodes</source>
+        <source>Number of Masternodes</source>
         <translation>マスターノードの数</translation>
     </message>
     <message>
@@ -2077,10 +2009,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>&amp;Network Traffic</source>
         <translation>ネットワークトラフィック (&amp;N)</translation>
-    </message>
-    <message>
-        <source>Totals</source>
-        <translation>合計</translation>
     </message>
     <message>
         <source>Received</source>
@@ -2291,10 +2219,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>%1 RPCコンソールへようこそ。</translation>
     </message>
     <message>
-        <source>Type &lt;b&gt;help&lt;/b&gt; for an overview of available commands.</source>
-        <translation>使用可能なコマンドを見るには &lt;b&gt;help&lt;/b&gt; と入力してください</translation>
-    </message>
-    <message>
         <source>Use up and down arrows to navigate history, and %1 to clear screen.</source>
         <translation>上下の矢印を使用して履歴をナビゲートし、 %1 を使用して画面をクリアします。</translation>
     </message>
@@ -2317,22 +2241,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Total: %1 (Enabled: %2)</source>
         <translation>合計: %1 (有効: %2)</translation>
-    </message>
-    <message>
-        <source>%1 B</source>
-        <translation>%1 B</translation>
-    </message>
-    <message>
-        <source>%1 KB</source>
-        <translation>%1 KB</translation>
-    </message>
-    <message>
-        <source>%1 MB</source>
-        <translation>%1 MB</translation>
-    </message>
-    <message>
-        <source>%1 GB</source>
-        <translation>%1 GB</translation>
     </message>
     <message>
         <source>(node id: %1)</source>
@@ -2370,16 +2278,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
-        <source>Reuse one of the previously used receiving addresses.&lt;br&gt;Reusing addresses has security and privacy issues.&lt;br&gt;Do not use this unless re-generating a payment request made before.</source>
-        <translation>過去に使用した受け取り用アドレスを再使用します。&lt;br&gt;アドレスの再使用はセキュリティーとプライバシー保護に問題があります。&lt;br&gt;過去の支払いリクエストの再生成をしない限りこれを使用しないでください。</translation>
-    </message>
-    <message>
-        <source>R&amp;euse an existing receiving address (not recommended)</source>
-        <translation>既存の受け取り用アドレスを再使用する (非推奨) (&amp;E)</translation>
-    </message>
-    <message>
-        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Raptoreum network.</source>
-        <translation>支払いリクエストが開始された時に表示される、支払いリクエストに添付される任意のメッセージです。注意：このメッセージはRaptoreumネットワークを通じて支払いと共に送信されるわけではありません。</translation>
+        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Dash network.</source>
+        <translation>支払いリクエストが開始された時に表示される、支払いリクエストに添付される任意のメッセージです。注意：このメッセージはDashネットワークを通じて支払いと共に送信されるわけではありません。</translation>
     </message>
     <message>
         <source>&amp;Message:</source>
@@ -2390,8 +2290,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>新しい受け取り用アドレスに紐づく任意のラベル。</translation>
     </message>
     <message>
-        <source>An optional message to attach to the payment request, which will be displayed when the request is opened.&lt;br&gt;Note: The message will not be sent with the payment over the Raptoreum network.</source>
-        <translation>支払いリクエストが開始された時に表示される、支払いリクエストに添付される任意のメッセージです。注意：このメッセージはRaptoreumネットワークを通じて支払いと共に送信されるわけではありません。</translation>
+        <source>An optional message to attach to the payment request, which will be displayed when the request is opened.&lt;br&gt;Note: The message will not be sent with the payment over the Dash network.</source>
+        <translation>支払いリクエストが開始された時に表示される、支払いリクエストに添付される任意のメッセージです。注意：このメッセージはDashネットワークを通じて支払いと共に送信されるわけではありません。</translation>
     </message>
     <message>
         <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
@@ -2619,16 +2519,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>検証時間ターゲット:</translation>
     </message>
     <message>
-        <source>PrivateSend</source>
-        <translation>プライベートセンド</translation>
-    </message>
-    <message>
         <source>If the custom fee is set to 1000 duffs and the transaction is only 250 bytes, then "per kilobyte" only pays 250 duffs in fee,&lt;br /&gt;while "at least" pays 1000 duffs. For transactions bigger than a kilobyte both pay by kilobyte.</source>
         <translation>カスタマイズされた手数料が1000duffsに設定され、トランザクションが250 bytesしかなかった場合、キロバイトあたりでは250 duffsしか手数料を支払いませんが&lt;br /&gt;最低でも1000 duffs支払います。1キロバイト以上のトランザクションに対しては、1キロバイトあたり1000duffs支払います。</translation>
     </message>
     <message>
-        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks.&lt;br /&gt;But be aware that this can end up in a never confirming transaction once there is more demand for raptoreum transactions than the network can process.</source>
-        <translation>最低限の手数料しか支払わなくても、トランザクション量以上のスペースが対象ブロックにあれば問題ありません。&lt;br /&gt;しかし、ネットワークが処理できる以上のRaptoreumのトランザクション需要があれば、処理されないトランザクションになり得ることに注意してください。</translation>
+        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks.&lt;br /&gt;But be aware that this can end up in a never confirming transaction once there is more demand for dash transactions than the network can process.</source>
+        <translation>最低限の手数料しか支払わなくても、トランザクション量以上のスペースが対象ブロックにあれば問題ありません。&lt;br /&gt;しかし、ネットワークが処理できる以上のDashのトランザクション需要があれば、処理されないトランザクションになり得ることに注意してください。</translation>
     </message>
     <message>
         <source>per kilobyte</source>
@@ -2799,8 +2695,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation><numerusform>%n ブロック以内に検証が開始されると予想されます</numerusform></translation>
     </message>
     <message>
-        <source>Warning: Invalid Raptoreum address</source>
-        <translation>警告：Raptoreumアドレスが無効です</translation>
+        <source>Warning: Invalid Dash address</source>
+        <translation>警告：Dashアドレスが無効です</translation>
     </message>
     <message>
         <source>Warning: Unknown change address</source>
@@ -2830,8 +2726,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>送り先: (&amp;T)</translation>
     </message>
     <message>
-        <source>The Raptoreum address to send the payment to</source>
-        <translation>送金先Raptoreumアドレス</translation>
+        <source>The Dash address to send the payment to</source>
+        <translation>送金先Dashアドレス</translation>
     </message>
     <message>
         <source>Choose previously used address</source>
@@ -2866,8 +2762,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>金額： (&amp;M)</translation>
     </message>
     <message>
-        <source>The fee will be deducted from the amount being sent. The recipient will receive a lower amount of Raptoreum than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
-        <translation>手数料は総額から差し引かれます。受取人は入力した金額より少ないRaptoreumを受け取ります。複数の受取人を選択した場合、手数料は等しく分割されます。</translation>
+        <source>The fee will be deducted from the amount being sent. The recipient will receive a lower amount of Dash than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
+        <translation>手数料は総額から差し引かれます。受取人は入力した金額より少ないDashを受け取ります。複数の受取人を選択した場合、手数料は等しく分割されます。</translation>
     </message>
     <message>
         <source>S&amp;ubtract fee from amount</source>
@@ -2878,8 +2774,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>メッセージ：</translation>
     </message>
     <message>
-        <source>A message that was attached to the raptoreum: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Raptoreum network.</source>
-        <translation>Raptoreum: URIに添付されていたメッセージです。これは参照用としてトランザクションとともに保存されます。注意：このメッセージはRaptoreumネットワークを経由して送信されるわけではありません。</translation>
+        <source>A message that was attached to the dash: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Dash network.</source>
+        <translation>Dash: URIに添付されていたメッセージです。これは参照用としてトランザクションとともに保存されます。注意：このメッセージはDashネットワークを経由して送信されるわけではありません。</translation>
     </message>
     <message>
         <source>This is an unauthenticated payment request.</source>
@@ -2931,12 +2827,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>メッセージの署名 (&amp;S)</translation>
     </message>
     <message>
-        <source>You can sign messages/agreements with your addresses to prove you can receive Raptoreum sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
-        <translation>あなたのアドレスを使用してあなたがRaptoreumを受け取ることができるようにメッセージやアグリーメントに署名できます。充分に詳細が判明していてあなたが確認しているものだけに署名してください。フィッシングによってあなたの署名を読み取られないように注意してください。</translation>
+        <source>You can sign messages/agreements with your addresses to prove you can receive Dash sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
+        <translation>あなたのアドレスを使用してあなたがDashを受け取ることができるようにメッセージやアグリーメントに署名できます。充分に詳細が判明していてあなたが確認しているものだけに署名してください。フィッシングによってあなたの署名を読み取られないように注意してください。</translation>
     </message>
     <message>
-        <source>The Raptoreum address to sign the message with</source>
-        <translation>メッセージを署名する際に使用するRaptoreumアドレス</translation>
+        <source>The Dash address to sign the message with</source>
+        <translation>メッセージを署名する際に使用するDashアドレス</translation>
     </message>
     <message>
         <source>Choose previously used address</source>
@@ -2967,8 +2863,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>現在の署名をシステムのクリップボードにコピー</translation>
     </message>
     <message>
-        <source>Sign the message to prove you own this Raptoreum address</source>
-        <translation>この Raptoreum アドレスを所有していることを証明するためにメッセージに署名</translation>
+        <source>Sign the message to prove you own this Dash address</source>
+        <translation>この Dash アドレスを所有していることを証明するためにメッセージに署名</translation>
     </message>
     <message>
         <source>Sign &amp;Message</source>
@@ -2991,12 +2887,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>受取人のアドレスとメッセージ（改行やスペース、タブなども完全に一致するよう注意してください）および署名を以下に入力し、メッセージを検証してください。中間者攻撃により騙されるのを防ぐため、署名対象のメッセージに書かれていること以上の意味を署名から読み取ろうとしないよう注意してください。これは署名作成者がこのアドレスで受け取ることを証明するだけであり、トランザクションの送信者を証明するものではないことに注意してください！</translation>
     </message>
     <message>
-        <source>The Raptoreum address the message was signed with</source>
-        <translation>メッセージの署名に使用されたRaptoreumアドレス</translation>
+        <source>The Dash address the message was signed with</source>
+        <translation>メッセージの署名に使用されたDashアドレス</translation>
     </message>
     <message>
-        <source>Verify the message to ensure it was signed with the specified Raptoreum address</source>
-        <translation>指定されたRaptoreumアドレスで署名されたことを確認するためメッセージを検証</translation>
+        <source>Verify the message to ensure it was signed with the specified Dash address</source>
+        <translation>指定されたDashアドレスで署名されたことを確認するためメッセージを検証</translation>
     </message>
     <message>
         <source>Verify &amp;Message</source>
@@ -3065,10 +2961,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <source>[testnet]</source>
         <translation>[testnet]</translation>
     </message>
-    <message>
-        <source>Version %1</source>
-        <translation>バージョン %1</translation>
-    </message>
 </context>
 <context>
     <name>TrafficGraphWidget</name>
@@ -3076,7 +2968,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <source>KB/s</source>
         <translation>KB/s</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>TransactionDesc</name>
     <message numerus="yes">
@@ -3090,10 +2982,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>conflicted</source>
         <translation>コンフリクト発生</translation>
-    </message>
-    <message>
-        <source>%1/offline</source>
-        <translation>%1/オフライン</translation>
     </message>
     <message>
         <source>0/unconfirmed, %1</source>
@@ -3120,24 +3008,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>%1 確認</translation>
     </message>
     <message>
-        <source>locked via LLMQ based ChainLocks</source>
-        <translation>LLMQベースのChainLocksによりロック済み</translation>
-    </message>
-    <message>
-        <source>verified via LLMQ based InstantSend</source>
-        <translation>LLMQベースのインスタントセンドにより検証済み</translation>
-    </message>
-    <message>
         <source>Status</source>
         <translation>ステータス</translation>
-    </message>
-    <message>
-        <source>, has not been successfully broadcast yet</source>
-        <translation>ブロードキャストがまだ成功していません</translation>
-    </message>
-    <message numerus="yes">
-        <source>, broadcast through %n node(s)</source>
-        <translation><numerusform>%n ノードにブロードキャスト</numerusform></translation>
     </message>
     <message>
         <source>Date</source>
@@ -3294,10 +3166,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation> %1 までオープン</translation>
     </message>
     <message>
-        <source>Offline</source>
-        <translation>オフライン</translation>
-    </message>
-    <message>
         <source>Unconfirmed</source>
         <translation>未検証</translation>
     </message>
@@ -3320,10 +3188,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Immature (%1 confirmations, will be available after %2)</source>
         <translation>マチュアでない状態（%1検証。%2検証完了後に使用可能となります）</translation>
-    </message>
-    <message>
-        <source>This block was not received by any other nodes and will probably not be accepted!</source>
-        <translation>このブロックは他のどのノードにも受け取られてないで、今後も受け取られないでしょう！</translation>
     </message>
     <message>
         <source>Generated but not accepted</source>
@@ -3370,10 +3234,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>プライベートセンド：デノミネーション生成</translation>
     </message>
     <message>
-        <source>PrivateSend</source>
-        <translation>プライベートセンド</translation>
-    </message>
-    <message>
         <source>watch-only</source>
         <translation>ウォッチオンリー</translation>
     </message>
@@ -3402,10 +3262,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>ウォッチオンリーのアドレスがこのトランザクションに含まれているかどうか</translation>
     </message>
     <message>
-        <source>Whether or not this transaction was locked by InstantSend.</source>
-        <translation>このトランザクションがインスタントセンドによってロックされていたかどうか。</translation>
-    </message>
-    <message>
         <source>User-defined intent/purpose of the transaction.</source>
         <translation>ユーザー定義のトランザクションの意図／目的</translation>
     </message>
@@ -3419,14 +3275,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>All</source>
         <translation>すべて</translation>
-    </message>
-    <message>
-        <source>Locked by InstantSend</source>
-        <translation>即時送金［インスタントセンド］によってロックされています</translation>
-    </message>
-    <message>
-        <source>Not locked by InstantSend</source>
-        <translation>即時送金［インスタントセンド］によってロックされていません</translation>
     </message>
     <message>
         <source>Today</source>
@@ -3465,10 +3313,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>送金先</translation>
     </message>
     <message>
-        <source>PrivateSend</source>
-        <translation>プライベートセンド</translation>
-    </message>
-    <message>
         <source>PrivateSend Make Collateral Inputs</source>
         <translation>プライベートセンド：コラテラル入力</translation>
     </message>
@@ -3495,10 +3339,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Other</source>
         <translation>その他</translation>
-    </message>
-    <message>
-        <source>Enter address or label to search</source>
-        <translation>検索するアドレスまたはラベルを入力</translation>
     </message>
     <message>
         <source>Min amount</source>
@@ -3670,7 +3510,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
 </context>
 <context>
-    <name>raptoreum-core</name>
+    <name>dash-core</name>
     <message>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
         <translation>指定のアドレスへバインドし、その上で常にリッスンします。IPv6 は [host]:port 番号と表記します</translation>
@@ -3732,16 +3572,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>ウォレットのダウングレードはできません</translation>
     </message>
     <message>
-        <source>Cannot write default address</source>
-        <translation>初期値のアドレスを書き込むことができません</translation>
-    </message>
-    <message>
         <source>Collateral not valid.</source>
         <translation>コラテラルが無効です</translation>
-    </message>
-    <message>
-        <source>Connect to a node to retrieve peer addresses, and disconnect</source>
-        <translation>ピアアドレスを取得するためにノードに接続し、そして切断します</translation>
     </message>
     <message>
         <source>Connection options:</source>
@@ -3884,7 +3716,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>スポーク値を変更するために最小のスポーク署名者を無視します。 regtestとdevnetでのみ使用可能です。これをmainnetやtestnetで使うとあなたは追放されます。</translation>
     </message>
     <message>
-        <source>Use N separate smartnodes in parallel to mix funds (%u-%u, default: %u)</source>
+        <source>Use N separate masternodes in parallel to mix funds (%u-%u, default: %u)</source>
         <translation>資金を混合するためにN個の別々のマスターノードを並行して使用する (%u-%u, default: %u)</translation>
     </message>
     <message>
@@ -3902,10 +3734,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Whitelisted peers cannot be DoS banned and their transactions are always relayed, even if they are already in the mempool, useful e.g. for a gateway</source>
         <translation>ホワイトリストのピアはDoSによるアクセス禁止処理が無効化され、トランザクションは例えmempool内に既に存在していたとしても常にリレーされます。これは例えばゲートウェイに対して有用です</translation>
-    </message>
-    <message>
-        <source>(default: %s)</source>
-        <translation>(初期設定： %s)</translation>
     </message>
     <message>
         <source>Accept public REST requests (default: %u)</source>
@@ -3944,7 +3772,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>ガバナンスキャッシュの読み込み失敗：</translation>
     </message>
     <message>
-        <source>Failed to load smartnode cache from</source>
+        <source>Failed to load masternode cache from</source>
         <translation>マスターノードキャッシュの読み込み失敗：</translation>
     </message>
     <message>
@@ -4024,7 +3852,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>承認されたリクエストキャッシュを読み込んでいます...</translation>
     </message>
     <message>
-        <source>Loading smartnode cache...</source>
+        <source>Loading masternode cache...</source>
         <translation>マスターノードキャッシュを読み込んでいます...</translation>
     </message>
     <message>
@@ -4052,20 +3880,16 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>-whitebind を用いてポートを指定する必要があります： '%s'</translation>
     </message>
     <message>
-        <source>No Smartnodes detected.</source>
+        <source>No Masternodes detected.</source>
         <translation>マスターノードが検出されません</translation>
     </message>
     <message>
-        <source>No compatible Smartnode found.</source>
+        <source>No compatible Masternode found.</source>
         <translation>互換性のあるマスターノードが検出されません</translation>
     </message>
     <message>
-        <source>Not in the Smartnode list.</source>
+        <source>Not in the Masternode list.</source>
         <translation>マスターノードリストにありません</translation>
-    </message>
-    <message>
-        <source>Only connect to nodes in network &lt;net&gt; (ipv4, ipv6 or onion)</source>
-        <translation>&lt;net&gt; (ipv4, ipv6 または onion) ネットワーク内のノードだけに接続する</translation>
     </message>
     <message>
         <source>Prepend debug output with timestamp (default: %u)</source>
@@ -4092,28 +3916,16 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>RPC 呼び出しのスレッド数を設定 (初期設定： %d)</translation>
     </message>
     <message>
-        <source>Specify configuration file (default: %s)</source>
-        <translation>設定ファイルの指定 (初期設定： %s)</translation>
-    </message>
-    <message>
         <source>Specify connection timeout in milliseconds (minimum: 1, default: %d)</source>
         <translation>接続のタイムアウトをミリ秒単位で指定 (最小値： 1, 初期設定：: %d)</translation>
-    </message>
-    <message>
-        <source>Specify pid file (default: %s)</source>
-        <translation>pid ファイルの指定 (初期設定： %s)</translation>
     </message>
     <message>
         <source>Spend unconfirmed change when sending transactions (default: %u)</source>
         <translation>トランザクション送信時に未検証のチェンジを使用する (初期設定： %u)</translation>
     </message>
     <message>
-        <source>Submitted to smartnode, waiting in queue %s</source>
+        <source>Submitted to masternode, waiting in queue %s</source>
         <translation>マスターノードにサブミット、待機中 %s</translation>
-    </message>
-    <message>
-        <source>Synchronization failed</source>
-        <translation>同期失敗</translation>
     </message>
     <message>
         <source>Synchronization finished</source>
@@ -4122,14 +3934,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Threshold for disconnecting misbehaving peers (default: %u)</source>
         <translation>不正なピアを切断するためのしきい値 (初期設定： %u)</translation>
-    </message>
-    <message>
-        <source>Too many %f denominations, removing.</source>
-        <translation>異常に多くの %f デノミネーション、削除中</translation>
-    </message>
-    <message>
-        <source>Too many %f denominations, skipping.</source>
-        <translation>%f 分割単位が多すぎるため、スキップします。</translation>
     </message>
     <message>
         <source>Tor control port password (default: empty)</source>
@@ -4188,7 +3992,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>再試行...</translation>
     </message>
     <message>
-        <source>Can't find random Smartnode.</source>
+        <source>Can't find random Masternode.</source>
         <translation>ランダムなマスターノードを発見できません</translation>
     </message>
     <message>
@@ -4212,16 +4016,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>KeePassとの AES 暗号化接続用のKeePassHttp キー </translation>
     </message>
     <message>
-        <source>Disable all Raptoreum specific functionality (Smartnodes, PrivateSend, InstantSend, Governance) (0-1, default: %u)</source>
-        <translation>Raptoreumに固有の機能(マスターノード, プライベートセンド, インスタントセンド, ガバナンス) を無効化(0-1, 初期設定: %u)</translation>
-    </message>
-    <message>
         <source>%s file contains all private keys from this wallet. Do not share it with anyone!</source>
         <translation>%s ファイルはこのウォレットのプライベートキーをすべて保有しています。誰ともシェアしないでください。</translation>
-    </message>
-    <message>
-        <source>Bind to given address to listen for JSON-RPC connections. This option is ignored unless -rpcallowip is also passed. Port is optional and overrides -rpcport. Use [host]:port notation for IPv6. This option can be specified multiple times (default: 127.0.0.1 and ::1 i.e., localhost, or if -rpcallowip has been specified, 0.0.0.0 and :: i.e., all addresses)</source>
-        <translation>指定されたアドレスに対してJSON-RPC接続をリッスンするようバインドします。-rpcallowipもパスされない限り、このオプションは無視されます。ポートはオプションであり、-rpcportをオーバーライドします。IPv6には[host]：port表記を使用します。このオプションは複数回指定できます（デフォルト：127.0.0.1および:: 1すなわちlocalhost、または-rpcallowipが指定されている場合、0.0.0.0および::すなわちすべてのアドレス）</translation>
     </message>
     <message>
         <source>Discover own IP addresses (default: 1 when listening and no -externalip or -proxy)</source>
@@ -4314,10 +4110,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
         <translation>ネットワークバージョン文字 (%i) の長さが最大の長さ (%i) を超えています。UAコメントの数や長さを削減してください。</translation>
-    </message>
-    <message>
-        <source>Transaction index can't be disabled in full mode. Either start with -litemode command line switch or enable transaction index.</source>
-        <translation>トランザクションインデックスはフルモードでは無効化できません。  -litemodeコマンドラインスイッチでスタートするかトランザクションインデックスを有効にしてください。</translation>
     </message>
     <message>
         <source>Tries to keep outbound traffic under the given target (in MiB per 24h), 0 = no limit (default: %d)</source>
@@ -4452,7 +4244,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>無効な額 -fallbackfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
-        <source>Invalid smartnodeblsprivkey. Please see documentation.</source>
+        <source>Invalid masternodeblsprivkey. Please see documentation.</source>
         <translation>マスターノードBLS秘密鍵が無効です。ドキュメントをお読み下さい。</translation>
     </message>
     <message>
@@ -4488,23 +4280,19 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>ウォレットを読み込んでいます…</translation>
     </message>
     <message>
-        <source>Location of the auth cookie (default: data dir)</source>
-        <translation>認証クッキーの場所 (初期設定: データディレクトリ)</translation>
-    </message>
-    <message>
         <source>Make the wallet broadcast transactions</source>
         <translation>ウォレットにトランザクションをブロードキャストさせる</translation>
     </message>
     <message>
-        <source>Smartnode options:</source>
+        <source>Masternode options:</source>
         <translation>マスターノードオプション:</translation>
     </message>
     <message>
-        <source>Smartnode queue is full.</source>
+        <source>Masternode queue is full.</source>
         <translation>マスターノードキューがいっぱいです</translation>
     </message>
     <message>
-        <source>Smartnode:</source>
+        <source>Masternode:</source>
         <translation>マスターノード:</translation>
     </message>
     <message>
@@ -4526,10 +4314,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Node relay options:</source>
         <translation>ノード中継オプション：</translation>
-    </message>
-    <message>
-        <source>Non-standard public key detected.</source>
-        <translation>スタンダードでないパブリックキーが検出されました</translation>
     </message>
     <message>
         <source>Not compatible with existing transactions.</source>
@@ -4562,10 +4346,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>PrivateSend options:</source>
         <translation>プライベートセンドオプション:</translation>
-    </message>
-    <message>
-        <source>PrivateSend request complete:</source>
-        <translation>プライベートセンドリクエスト完了:</translation>
     </message>
     <message>
         <source>PrivateSend request incomplete:</source>
@@ -4656,11 +4436,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>ブロック限定モードにおいて動作を行うかどうか (初期値: %u)</translation>
     </message>
     <message>
-        <source>You can not start a smartnode in lite mode.</source>
-        <translation>ライトモードではマスターノードをスタートできません。</translation>
-    </message>
-    <message>
-        <source>You can not start a smartnode with wallet enabled.</source>
+        <source>You can not start a masternode with wallet enabled.</source>
         <translation>ウォレットを有効にした状態でマスターノードを起動することはできません。</translation>
     </message>
     <message>
@@ -4684,8 +4460,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>RPCサーバのオプション：</translation>
     </message>
     <message>
-        <source>Raptoreum Core</source>
-        <translation>Raptoreumコア</translation>
+        <source>Dash Core</source>
+        <translation>Dashコア</translation>
     </message>
     <message>
         <source>The %s developers</source>
@@ -4706,10 +4482,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Error loading %s: You can't enable HD on an already existing non-HD wallet</source>
         <translation>%s読み込みエラー: 既存の非HDウォレット上でHDを有効化できません</translation>
-    </message>
-    <message>
-        <source>Error loading wallet %s. -wallet parameter must only specify a filename (not a path).</source>
-        <translation>ウォレットの読み込みエラー %s。-wallet parameterはファイル名（pathではない）のみを使用する必要があります。</translation>
     </message>
     <message>
         <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
@@ -4748,10 +4520,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>%s が有用だと感じられた方はぜひプロジェクトへの貢献をお願いします。ソフトウェアのより詳細な情報については %s をご覧ください。</translation>
     </message>
     <message>
-        <source>Reduce storage requirements by enabling pruning (deleting) of old blocks. This allows the pruneblockchain RPC to be called to delete specific blocks, and enables automatic pruning of old blocks if a target size in MiB is provided. This mode is incompatible with -txindex and -rescan. Warning: Reverting this setting requires re-downloading the entire blockchain. (default: 0 = disable pruning blocks, 1 = allow manual pruning via RPC, &gt;%u = automatically prune block files to stay under the specified target size in MiB)</source>
-        <translation>古いブロックの剪定 (削除) を有効にすることでストレージの必要量を削減します。これにより pruneblockchain RPC を呼び出すことで指定されたブロックを削除することができます。またターゲットサイズが MiB 単位で指定された場合には古いブロックの自動剪定が有効となります。このモードは -txindex および -rescan オプションと互換性がありません。警告: この設定を再有効化するにはすべてのブロックチェーンの再ダウンロードが必要となります。(初期設定: 0 = ブロックの剪定を無効化する, 1 = RPC 経由での手動剪定を許可する, &gt;%u = MiB 単位で指定されたターゲットサイズを常に下回るようにブロックファイルを自動的に剪定する)</translation>
-    </message>
-    <message>
         <source>Set lowest fee rate (in %s/kB) for transactions to be included in block creation. (default: %s)</source>
         <translation>ブロック生成時に取り込まれるトランザクションの最低手数料率 (%s/kB 単位)。(初期設定: %s)</translation>
     </message>
@@ -4780,7 +4548,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>ブロックを再生できません。 -reindex-chainstateを使用してデータベースを再構築する必要があります。</translation>
     </message>
     <message>
-        <source>Use N separate smartnodes for each denominated input to mix funds (%u-%u, default: %u)</source>
+        <source>Use N separate masternodes for each denominated input to mix funds (%u-%u, default: %u)</source>
         <translation>それぞれの分割されたインプットに対してN 個の別々のマスターノードを使用してファンドをミキシングします。(%u-%u, 初期設定: %u)</translation>
     </message>
     <message>
@@ -4790,10 +4558,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>User defined mnemonic passphrase for HD wallet (BIP39). Only has effect during wallet creation/first start (default: empty string)</source>
         <translation>ユーザー定義ニーモニックパスフレーズをHDウォレットに使用します (BIP39)。ウォレット作成時にのみ有効です。(初期設定: 空文字)</translation>
-    </message>
-    <message>
-        <source>Username and hashed password for JSON-RPC connections. The field &lt;userpw&gt; comes in the format: &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;. A canonical python script is included in share/rpcuser. The client then connects normally using the rpcuser=&lt;USERNAME&gt;/rpcpassword=&lt;PASSWORD&gt; pair of arguments. This option can be specified multiple times</source>
-        <translation>JSON-RPC 接続時のユーザ名とハッシュ化されたパスワード。&lt;userpw&gt; フィールドのフォーマットは &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;。標準的な Python スクリプトが share/rpcuser 内に含まれています。クライアントは通常の場合には rpcuser=&lt;USERNAME&gt;/rpcpassword=&lt;PASSWORD&gt; を利用して接続を行います。このオプションは複数回指定できます。</translation>
     </message>
     <message>
         <source>Wallet will not create transactions that violate mempool chain limits (default: %u)</source>
@@ -4812,10 +4576,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>ホワイトリストとして登録するピア、接続元の IP アドレス (例: 1.2.3.4) または CIDR 表現のネットワーク (例: 1.2.3.0/24)。複数回指定することも可能。</translation>
     </message>
     <message>
-        <source>You are starting in lite mode, most Raptoreum-specific functionality is disabled.</source>
-        <translation>ライトモードで起動すると、ほとんどのRaptoreum特有の機能が無効になります。</translation>
-    </message>
-    <message>
         <source>%d of last 100 blocks have unexpected version</source>
         <translation>最新の100ブロックの %d で予期しないバージョンがあります。</translation>
     </message>
@@ -4830,10 +4590,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>%s is set very high!</source>
         <translation>%s の設定値は高すぎます！</translation>
-    </message>
-    <message>
-        <source>(press q to shutdown and continue later)</source>
-        <translation>( qを押してシャットダウンし、あとで再開してください)</translation>
     </message>
     <message>
         <source>-devnet can only be specified once</source>
@@ -4892,16 +4648,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>読み込みエラー %s: 既存のHDウォレット上のHDを無効化できません</translation>
     </message>
     <message>
-        <source>Error loading wallet %s. -wallet filename must be a regular file.</source>
-        <translation>ウォレットの読み込みエラー %s. -wallet ファイル名は通常のファイルでなければなりません。</translation>
-    </message>
-    <message>
         <source>Error loading wallet %s. Duplicate -wallet filename specified.</source>
         <translation>ウォレットの読み込みエラー %s。重複する -walletファイル名が指定されました。</translation>
-    </message>
-    <message>
-        <source>Error loading wallet %s. Invalid characters in -wallet filename.</source>
-        <translation>ウォレットの読み込みエラー %s。ウォレットファイルの名前に無効な文字があります。</translation>
     </message>
     <message>
         <source>Error upgrading chainstate database</source>
@@ -4972,10 +4720,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>デーモンとしてバックグランドで実行しコマンドを許可</translation>
     </message>
     <message>
-        <source>Send trace/debug info to console instead of debug.log file</source>
-        <translation>トレース/デバッグ情報を debug.log ファイルの代わりにコンソールへ送る</translation>
-    </message>
-    <message>
         <source>Session not complete!</source>
         <translation>セッション未完了！</translation>
     </message>
@@ -5008,10 +4752,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>データ ディレクトリの指定</translation>
     </message>
     <message>
-        <source>Specify wallet file (within data directory)</source>
-        <translation>ウォレットのファイルを指定　(データディレクトリの中で)</translation>
-    </message>
-    <message>
         <source>Specify your own public address</source>
         <translation>あなた自身のパブリックなアドレスを指定</translation>
     </message>
@@ -5022,10 +4762,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Starting network threads...</source>
         <translation>ネットワークのスレッドを起動しています...</translation>
-    </message>
-    <message>
-        <source>Synchronization pending...</source>
-        <translation>同期保留中...</translation>
     </message>
     <message>
         <source>Synchronizing governance objects...</source>
@@ -5050,10 +4786,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Transaction created successfully.</source>
         <translation>トランザクション作成に成功</translation>
-    </message>
-    <message>
-        <source>Transaction fee and change calculation failed</source>
-        <translation>送金手数料とおつりの計算に失敗しました</translation>
     </message>
     <message>
         <source>Transaction fees are too high.</source>
@@ -5100,20 +4832,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>非常に少ない数のキー: %d</translation>
     </message>
     <message>
-        <source>Wallet %s resides outside data directory %s</source>
-        <translation>ウォレット %s はデータディレクトリ%sの外にあります。</translation>
-    </message>
-    <message>
         <source>Wallet is locked.</source>
         <translation>ウォレットはロックされています。</translation>
     </message>
     <message>
         <source>Wallet options:</source>
         <translation>ウォレットオプション：</translation>
-    </message>
-    <message>
-        <source>Wallet window title</source>
-        <translation>ウォレットウィンドウタイトル</translation>
     </message>
     <message>
         <source>Warning</source>

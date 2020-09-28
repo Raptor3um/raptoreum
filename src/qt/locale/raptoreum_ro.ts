@@ -70,12 +70,12 @@
         <translation>Adresa de primire</translation>
     </message>
     <message>
-        <source>These are your Raptoreum addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Acestea sunt adresele tale Raptoreum pentru efectuarea platilor. Intotdeauna verifica atent suma de plata si adresa beneficiarului inainte de a trimite monede.</translation>
+        <source>These are your Dash addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation>Acestea sunt adresele tale Dash pentru efectuarea platilor. Intotdeauna verifica atent suma de plata si adresa beneficiarului inainte de a trimite monede.</translation>
     </message>
     <message>
-        <source>These are your Raptoreum addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Acestea sunt adresele tale Raptoreum pentru receptionarea platilor. Este recomandat sa folosesti mereu o adresa noua pentru primirea platilor.</translation>
+        <source>These are your Dash addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
+        <translation>Acestea sunt adresele tale Dash pentru receptionarea platilor. Este recomandat sa folosesti mereu o adresa noua pentru primirea platilor.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -129,6 +129,9 @@
         <translation>(fără etichetă)</translation>
     </message>
 </context>
+<context>
+    <name>AppearanceWidget</name>
+    </context>
 <context>
     <name>AskPassphraseDialog</name>
     <message>
@@ -188,8 +191,8 @@
         <translation>Confirmaţi criptarea portofelului</translation>
     </message>
     <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR RTM&lt;/b&gt;!</source>
-        <translation>Avertisment: dacă criptezi portofelul și pierzi fraza de acces, vei &lt;b&gt;PIERDE TOATE MONEDELE TALE RTM&lt;/b&gt;!</translation>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR DASH&lt;/b&gt;!</source>
+        <translation>Avertisment: dacă criptezi portofelul și pierzi fraza de acces, vei &lt;b&gt;PIERDE TOATE MONEDELE TALE DASH&lt;/b&gt;!</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
@@ -256,14 +259,17 @@
     </message>
 </context>
 <context>
+    <name>BitcoinAmountField</name>
+    </context>
+<context>
     <name>BitcoinGUI</name>
     <message>
-        <source>A fatal error occurred. Raptoreum Core can no longer continue safely and will quit.</source>
-        <translation>A apărut o eroare fatală. Raptoreum Core nu mai poate continua în siguranță și se va opri.</translation>
+        <source>A fatal error occurred. Dash Core can no longer continue safely and will quit.</source>
+        <translation>A apărut o eroare fatală. Dash Core nu mai poate continua în siguranță și se va opri.</translation>
     </message>
     <message>
-        <source>Raptoreum Core</source>
-        <translation>Raptoreum Core</translation>
+        <source>Dash Core</source>
+        <translation>Dash Core</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -286,16 +292,16 @@
         <translation>Trimite</translation>
     </message>
     <message>
-        <source>Send coins to a Raptoreum address</source>
-        <translation>Trimite monede către o adresă Raptoreum</translation>
+        <source>Send coins to a Dash address</source>
+        <translation>Trimite monede către o adresă Dash</translation>
     </message>
     <message>
         <source>&amp;Receive</source>
         <translation>P&amp;rimeşte</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and raptoreum: URIs)</source>
-        <translation>Cereţi plăţi (generează coduri QR şi Raptoreum-uri: URls)</translation>
+        <source>Request payments (generates QR codes and dash: URIs)</source>
+        <translation>Cereţi plăţi (generează coduri QR şi Dash-uri: URls)</translation>
     </message>
     <message>
         <source>&amp;Transactions</source>
@@ -306,12 +312,12 @@
         <translation>Răsfoiește istoricul tranzacțiilor</translation>
     </message>
     <message>
-        <source>&amp;Smartnodes</source>
-        <translation>&amp;Smartnode-uri</translation>
+        <source>&amp;Masternodes</source>
+        <translation>&amp;Masternode-uri</translation>
     </message>
     <message>
-        <source>Browse smartnodes</source>
-        <translation>Caută smartnode-uri</translation>
+        <source>Browse masternodes</source>
+        <translation>Caută masternode-uri</translation>
     </message>
     <message>
         <source>E&amp;xit</source>
@@ -322,8 +328,8 @@
         <translation>Închide aplicaţia</translation>
     </message>
     <message>
-        <source>Show information about Raptoreum Core</source>
-        <translation>Arată informații despre Raptoreum Core</translation>
+        <source>Show information about Dash Core</source>
+        <translation>Arată informații despre Dash Core</translation>
     </message>
     <message>
         <source>About &amp;Qt</source>
@@ -394,16 +400,16 @@
         <translation>Semnează &amp;mesaj...</translation>
     </message>
     <message>
-        <source>Sign messages with your Raptoreum addresses to prove you own them</source>
-        <translation>Semnaţi mesaje cu adresa dvs. Raptoreum pentru a dovedi că vă aparţin</translation>
+        <source>Sign messages with your Dash addresses to prove you own them</source>
+        <translation>Semnaţi mesaje cu adresa dvs. Dash pentru a dovedi că vă aparţin</translation>
     </message>
     <message>
         <source>&amp;Verify message...</source>
         <translation>&amp;Verifică mesaj...</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified Raptoreum addresses</source>
-        <translation>Verificaţi mesaje pentru a vă asigura că au fost semnate cu adresa Raptoreum specificată</translation>
+        <source>Verify messages to ensure they were signed with specified Dash addresses</source>
+        <translation>Verificaţi mesaje pentru a vă asigura că au fost semnate cu adresa Dash specificată</translation>
     </message>
     <message>
         <source>&amp;Information</source>
@@ -482,16 +488,16 @@
         <translation>Deschide &amp;URI...</translation>
     </message>
     <message>
-        <source>Open a raptoreum: URI or payment request</source>
-        <translation>Deschidere Raptoreum: o adresa URI sau o cerere de plată</translation>
+        <source>Open a dash: URI or payment request</source>
+        <translation>Deschidere Dash: o adresa URI sau o cerere de plată</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
         <translation>Opţiuni linie de &amp;comandă</translation>
     </message>
     <message>
-        <source>Show the %1 help message to get a list with possible Raptoreum command-line options</source>
-        <translation>Arată mesajul de ajutor %1 pentru a obţine o listă cu opţiunile posibile de linii de comandă Raptoreum</translation>
+        <source>Show the %1 help message to get a list with possible Dash command-line options</source>
+        <translation>Arată mesajul de ajutor %1 pentru a obţine o listă cu opţiunile posibile de linii de comandă Dash</translation>
     </message>
     <message>
         <source>%1 client</source>
@@ -526,8 +532,8 @@
         <translation>Bara de file</translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to Raptoreum network</source>
-        <translation><numerusform>%n conexiune activă la rețeaua Raptoreum</numerusform><numerusform>%n conexiuni active la rețeaua Raptoreum</numerusform><numerusform>%n conexiuni active la rețeaua Raptoreum </numerusform></translation>
+        <source>%n active connection(s) to Dash network</source>
+        <translation><numerusform>%n conexiune activă la rețeaua Dash</numerusform><numerusform>%n conexiuni active la rețeaua Dash</numerusform><numerusform>%n conexiuni active la rețeaua Dash </numerusform></translation>
     </message>
     <message>
         <source>Network activity disabled</source>
@@ -598,6 +604,30 @@
         <translation>Informaţie</translation>
     </message>
     <message>
+        <source>Received and sent multiple transactions</source>
+        <translation>Tranzactii multiple primite si trimise</translation>
+    </message>
+    <message>
+        <source>Sent multiple transactions</source>
+        <translation>Tranzactii multiple trimise</translation>
+    </message>
+    <message>
+        <source>Received multiple transactions</source>
+        <translation>Tranzactii multiple primite</translation>
+    </message>
+    <message>
+        <source>Sent Amount: %1
+</source>
+        <translation>Suma trimisa: %1
+</translation>
+    </message>
+    <message>
+        <source>Received Amount: %1
+</source>
+        <translation>Suma primita: %1
+</translation>
+    </message>
+    <message>
         <source>Date: %1
 </source>
         <translation>Data: %1
@@ -638,10 +668,6 @@
     <message>
         <source>HD key generation is &lt;b&gt;enabled&lt;/b&gt;</source>
         <translation>Generarea de chei HD este &lt;b&gt;activata&lt;/b&gt;</translation>
-    </message>
-    <message>
-        <source>HD key generation is &lt;b&gt;disabled&lt;/b&gt;</source>
-        <translation>Generarea de chei HD este &lt;b&gt;dezactivata&lt;/b&gt;</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
@@ -721,10 +747,6 @@
     <message>
         <source>Received with address</source>
         <translation>Primite cu adresa</translation>
-    </message>
-    <message>
-        <source>PS Rounds</source>
-        <translation>Runde PS</translation>
     </message>
     <message>
         <source>Date</source>
@@ -850,10 +872,6 @@
         <translation>Adresa asociată cu această adresă din listă. Aceasta poate fi modificată doar pentru adresele de trimitere.</translation>
     </message>
     <message>
-        <source>New receiving address</source>
-        <translation>Noua adresă de primire</translation>
-    </message>
-    <message>
         <source>New sending address</source>
         <translation>Noua adresă de trimitere</translation>
     </message>
@@ -866,8 +884,8 @@
         <translation>Editează adresa de trimitere</translation>
     </message>
     <message>
-        <source>The entered address "%1" is not a valid Raptoreum address.</source>
-        <translation>Adresa introdusă "%1" nu este o adresă Raptoreum validă</translation>
+        <source>The entered address "%1" is not a valid Dash address.</source>
+        <translation>Adresa introdusă "%1" nu este o adresă Dash validă</translation>
     </message>
     <message>
         <source>The entered address "%1" is already in the address book.</source>
@@ -963,7 +981,11 @@
         <source>PrivateSend information</source>
         <translation>Informație TrimitePrivat</translation>
     </message>
-    </context>
+    <message>
+        <source>&lt;h3&gt;PrivateSend Basics&lt;/h3&gt; PrivateSend gives you true financial privacy by obscuring the origins of your funds. All the Dash in your wallet is comprised of different "inputs" which you can think of as separate, discrete coins.&lt;br&gt; PrivateSend uses an innovative process to mix your inputs with the inputs of two or more other people, without having your coins ever leave your wallet. You retain control of your money at all times.&lt;hr&gt; &lt;b&gt;The PrivateSend process works like this:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;PrivateSend begins by breaking your transaction inputs down into standard denominations. These denominations are 0.001 DASH, 0.01 DASH, 0.1 DASH, 1 DASH and 10 DASH -- sort of like the paper money you use every day.&lt;/li&gt; &lt;li&gt;Your wallet then sends requests to specially configured software nodes on the network, called "masternodes." These masternodes are informed then that you are interested in mixing a certain denomination. No identifiable information is sent to the masternodes, so they never know "who" you are.&lt;/li&gt; &lt;li&gt;When two or more other people send similar messages, indicating that they wish to mix the same denomination, a mixing session begins. The masternode mixes up the inputs and instructs all three users' wallets to pay the now-transformed input back to themselves. Your wallet pays that denomination directly to itself, but in a different address (called a change address).&lt;/li&gt; &lt;li&gt;In order to fully obscure your funds, your wallet must repeat this process a number of times with each denomination. Each time the process is completed, it's called a "round." Each round of PrivateSend makes it exponentially more difficult to determine where your funds originated.&lt;/li&gt; &lt;li&gt;This mixing process happens in the background without any intervention on your part. When you wish to make a transaction, your funds will already be mixed. No additional waiting is required.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;IMPORTANT:&lt;/b&gt; Your wallet only contains 1000 of these "change addresses." Every time a mixing event happens, up to 9 of your addresses are used up. This means those 1000 addresses last for about 100 mixing events. When 900 of them are used, your wallet must create more addresses. It can only do this, however, if you have automatic backups enabled.&lt;br&gt; Consequently, users who have backups disabled will also have PrivateSend disabled. &lt;hr&gt;For more information, see the &lt;a style="%1" href="https://docs.dash.org/en/stable/wallets/dashcore/privatesend-instantsend.html"&gt;PrivateSend documentation&lt;/a&gt;.</source>
+        <translation>&lt;h3&gt;Informații de bază TrimitePrivat&lt;/h3&gt;TrimitePrivat oferă o intimitate financiară adevărată, ascunzând originea fondurilor. Toate monedele Dash din portofel sunt alcătuite din diferite "intrări" pe care le poți considera drept monede separate, discrete. &lt;br&gt; TrimitePrivat folosește un proces inovator pentru a amesteca intrările tale cu input-urile altor două persoane, fără ca monedele tale să părăsească vreodată portofelul tău. Menții controlul asupra banilor în orice moment.&lt;hr&gt; &lt;b&gt;Procesul TrimitePrivat funcționează astfel:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;TrimitePrivat începe prin ruperea intrărilor de tranzacții în denumiri standard. Aceste denumiri sunt 0.001 DASH, 0.01 DASH, 0.1 DASH, 1 DASH și 10 DASH - ceva asemănător cu banii de hârtie pe care îi folosim zilnic.&lt;/li&gt; &lt;li&gt;Portofelul tău trimite apoi cereri către nodurile software configurate special pe rețea, numite "masternodes". Aceste masternodes sunt informate atunci că eștii interesat să amesteci o anumită denominație. Nu sunt trimise nici un fel de informații identificabile la masternodes, astfel încât să nu știe niciodată "cine" ești.&lt;/li&gt; &lt;li&gt;Atunci când alte două persoane trimit mesaje similare, indicând faptul că doresc să amestece aceeași denominație, începe o sesiune de amestecare. Masternodul amestecă intrările și instruiește portofelele celor trei utilizatori să plătească intrarea transformată acum înapoi la ei înșiși. Portofelul tău plătește această denominație direct la sine, dar într-o altă adresă (numită o adresă de schimbare).&lt;/li&gt; &lt;li&gt;Pentru a închide complet fondurile tale, portofelul tău trebuie să repete acest proces de mai multe ori cu fiecare denominație. De fiecare dată când procesul este finalizat, se numește o "rundă". Fiecare rundă de TrimitePrivat o face exponențial mai dificil de determinat de unde au provenit fondurile.&lt;/li&gt; &lt;li&gt;Acest proces de amestecare se întâmplă în fundal, fără intervenție din partea ta când dorești să efectuezi o tranzacție, fondurile tale vor fi deja anonime. Nu este necesară o așteptare suplimentară.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;IMPORTANT:&lt;/b&gt;Portofelul tău conține numai 1000 dintre aceste "adrese de schimbare". De fiecare dată când se întâmplă un eveniment de amestecare, până la 9 dintre adresele tale sunt epuizate. Aceasta înseamnă că cele 1000 de adrese durează aproximativ 100 de evenimente de amestecare. Atunci când sunt utilizate 900 dintre ele, portofelul tău trebuie să creeze mai multe adrese. Cu toate acestea, poți face acest lucru numai dacă ai activări de rezervă automate. &lt;br&gt;În consecință, utilizatorii care au backup-urile dezactivate vor avea și TrimitePrivat dezactivat . &lt;hr&gt;Pentru mai multe informații, consultă &lt;a style="%1" href="https://docs.dash.org/en/stable/wallets/dashcore/privatesend-instantsend.html"&gt;documentația PrivateSend&lt;/a&gt;.</translation>
+    </message>
+</context>
 <context>
     <name>Intro</name>
     <message>
@@ -1007,8 +1029,8 @@
         <translation>Aproximativ %1 GB de date vor fi stocate in acest director.</translation>
     </message>
     <message>
-        <source>%1 will download and store a copy of the Raptoreum block chain.</source>
-        <translation>%1 va descarca si stoca o copie a blockchainului Raptoreum</translation>
+        <source>%1 will download and store a copy of the Dash block chain.</source>
+        <translation>%1 va descarca si stoca o copie a blockchainului Dash</translation>
     </message>
     <message>
         <source>The wallet will also be stored in this directory.</source>
@@ -1032,7 +1054,7 @@
     </message>
 </context>
 <context>
-    <name>SmartnodeList</name>
+    <name>MasternodeList</name>
     <message>
         <source>Form</source>
         <translation>Form</translation>
@@ -1050,20 +1072,24 @@
         <translation>Filtrează Lista</translation>
     </message>
     <message>
-        <source>Filter smartnode list</source>
-        <translation>Filtrează lista smartnode</translation>
+        <source>Filter masternode list</source>
+        <translation>Filtrează lista masternode</translation>
     </message>
     <message>
         <source>Node Count:</source>
         <translation>Numărul de Noduri:</translation>
     </message>
     <message>
-        <source>Show only smartnodes this wallet has keys for.</source>
-        <translation>Afișează doar smartnode-urile pentru care acest portofel are chei.</translation>
+        <source>Show only masternodes this wallet has keys for.</source>
+        <translation>Afișează doar masternode-urile pentru care acest portofel are chei.</translation>
     </message>
     <message>
-        <source>My smartnodes only</source>
-        <translation>Doar smartnode-urile mele</translation>
+        <source>My masternodes only</source>
+        <translation>Doar masternode-urile mele</translation>
+    </message>
+    <message>
+        <source>Service</source>
+        <translation>Serviciu</translation>
     </message>
     <message>
         <source>PoSe Score</source>
@@ -1082,8 +1108,24 @@
         <translation>Următoarea Plată</translation>
     </message>
     <message>
+        <source>Payout Address</source>
+        <translation>Adresa de plata</translation>
+    </message>
+    <message>
         <source>Operator Reward</source>
         <translation>Recompensă Operator</translation>
+    </message>
+    <message>
+        <source>Collateral Address</source>
+        <translation>Adresa colaterala</translation>
+    </message>
+    <message>
+        <source>Owner Address</source>
+        <translation>Adresa Proprietarului</translation>
+    </message>
+    <message>
+        <source>Voting Address</source>
+        <translation>Adresa de vot</translation>
     </message>
     <message>
         <source>Copy ProTx Hash</source>
@@ -1122,8 +1164,8 @@
         <translation>Niciuna</translation>
     </message>
     <message>
-        <source>Additional information for DIP3 Smartnode %1</source>
-        <translation>Informații suplimentare pentru Smartnode DIP3 %1</translation>
+        <source>Additional information for DIP3 Masternode %1</source>
+        <translation>Informații suplimentare pentru Masternode DIP3 %1</translation>
     </message>
 </context>
 <context>
@@ -1133,12 +1175,12 @@
         <translation>Form</translation>
     </message>
     <message>
-        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the Raptoreum network, as detailed below.</source>
-        <translation>Tranzactiile recente pot sa nu fie inca vizibile, de aceea balanta portofelului poate fi incorecta. Aceasta informatie va fi corecta de indata ce portofelul va fi complet sincronizat cu reteaua Raptoreum, asa cum este detaliat mai jos.</translation>
+        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the Dash network, as detailed below.</source>
+        <translation>Tranzactiile recente pot sa nu fie inca vizibile, de aceea balanta portofelului poate fi incorecta. Aceasta informatie va fi corecta de indata ce portofelul va fi complet sincronizat cu reteaua Dash, asa cum este detaliat mai jos.</translation>
     </message>
     <message>
-        <source>Attempting to spend Raptoreum that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
-        <translation>Încercarea de a cheltui monede Raptoreum care sunt afectate de tranzacțiile care nu au fost încă afișate nu va fi acceptată de rețea.</translation>
+        <source>Attempting to spend Dash that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
+        <translation>Încercarea de a cheltui monede Dash care sunt afectate de tranzacțiile care nu au fost încă afișate nu va fi acceptată de rețea.</translation>
     </message>
     <message>
         <source>Number of blocks left</source>
@@ -1231,12 +1273,12 @@
         <translation>Portofel</translation>
     </message>
     <message>
-        <source>Show additional tab listing all your smartnodes in first sub-tab&lt;br/&gt;and all smartnodes on the network in second sub-tab.</source>
-        <translation>Afișează o pagină suplimentară care conține lista tuturor smartnode-urilor în prima sub-pagină&lt;br/&gt;și toate smartnode-urile din rețea în a sub-pagină.</translation>
+        <source>Show additional tab listing all your masternodes in first sub-tab&lt;br/&gt;and all masternodes on the network in second sub-tab.</source>
+        <translation>Afișează o pagină suplimentară care conține lista tuturor masternode-urilor în prima sub-pagină&lt;br/&gt;și toate masternode-urile din rețea în a sub-pagină.</translation>
     </message>
     <message>
-        <source>Show Smartnodes Tab</source>
-        <translation>Arată Pagina Smartnode-urilor</translation>
+        <source>Show Masternodes Tab</source>
+        <translation>Arată Pagina Masternode-urilor</translation>
     </message>
     <message>
         <source>Show additional information and buttons for PrivateSend on overview screen.</source>
@@ -1275,12 +1317,16 @@
         <translation>Această sumă acționează ca un prag pentru a dezactiva TrimitePrivat după ce a fost atins.</translation>
     </message>
     <message>
-        <source>Automatically open the Raptoreum Core client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Deschide automat portul client Raptoreum Core de pe router. Asta funcționează numai atunci când routerul dvs. acceptă UPnP și este activat.</translation>
+        <source>Target PrivateSend balance</source>
+        <translation>Obiectiv Sold TrimitePrivat:</translation>
     </message>
     <message>
-        <source>Connect to the Raptoreum network through a SOCKS5 proxy.</source>
-        <translation>Conectare la reţeaua Raptoreum printr-un proxy SOCKS.</translation>
+        <source>Automatically open the Dash Core client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <translation>Deschide automat portul client Dash Core de pe router. Asta funcționează numai atunci când routerul dvs. acceptă UPnP și este activat.</translation>
+    </message>
+    <message>
+        <source>Connect to the Dash network through a SOCKS5 proxy.</source>
+        <translation>Conectare la reţeaua Dash printr-un proxy SOCKS.</translation>
     </message>
     <message>
         <source>&amp;Connect through SOCKS5 proxy (default proxy):</source>
@@ -1297,10 +1343,6 @@
     <message>
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items.&lt;br/&gt;%s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
         <translation>Adresele URL ale unor terțe părți (de exemplu, un explorator block) care apar în tab-ul de tranzacții ca elemente de meniu contextual.&lt;br/&gt;%s în URL este înlocuit de hash-ul tranzacției. Adresele URL multiple sunt separate prin bara verticală |.</translation>
-    </message>
-    <message>
-        <source>Expert</source>
-        <translation>Expert</translation>
     </message>
     <message>
         <source>Whether to show coin control features or not.</source>
@@ -1331,20 +1373,16 @@
         <translation>Cheltuire rest neconfirmat</translation>
     </message>
     <message>
+        <source>This setting determines the amount of individual masternodes that an input will be mixed through.&lt;br/&gt;More rounds of mixing gives a higher degree of privacy, but also costs more in fees.</source>
+        <translation>Această setare determină cantitatea de masternode-uri individuale prin care o intrare va fi amestecată.&lt;br/&gt;Mai multe runde de amestecare oferă un grad mai mare de confidențialitate, dar costă mai mult în taxe.</translation>
+    </message>
+    <message>
         <source>&amp;Network</source>
         <translation>&amp;Retea</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
         <translation>Mapare port folosind &amp;UPnP</translation>
-    </message>
-    <message>
-        <source>Accept connections from outside</source>
-        <translation>Acceptă conexiuni din exterior</translation>
-    </message>
-    <message>
-        <source>Allow incoming connections</source>
-        <translation>Acceptă conexiuni în curs de sosire</translation>
     </message>
     <message>
         <source>Proxy &amp;IP:</source>
@@ -1379,24 +1417,8 @@
         <translation>Tor</translation>
     </message>
     <message>
-        <source>Connect to the Raptoreum network through a separate SOCKS5 proxy for Tor hidden services.</source>
-        <translation>Conectare la reteaua Raptoreum printr-un proxy SOCKS5 separat pentru serviciile TOR ascunse.</translation>
-    </message>
-    <message>
-        <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services:</source>
-        <translation>Utilizează un proxy separat SOCKS5 pentru a ajunge la peers prin intermediul serviciilor ascunse Tor:</translation>
-    </message>
-    <message>
-        <source>&amp;Window</source>
-        <translation>&amp;Fereastra</translation>
-    </message>
-    <message>
-        <source>&amp;Hide the icon from the system tray.</source>
-        <translation>&amp;Ascunde pictrograma din zona de notificare.</translation>
-    </message>
-    <message>
-        <source>Hide tray icon</source>
-        <translation>Ascunde pictrograma de notificare</translation>
+        <source>Connect to the Dash network through a separate SOCKS5 proxy for Tor hidden services.</source>
+        <translation>Conectare la reteaua Dash printr-un proxy SOCKS5 separat pentru serviciile TOR ascunse.</translation>
     </message>
     <message>
         <source>Show only a tray icon after minimizing the window.</source>
@@ -1424,13 +1446,9 @@
     </message>
     <message>
         <source>Language missing or translation incomplete? Help contributing translations here:
-https://www.transifex.com/projects/p/raptoreum/</source>
+https://www.transifex.com/projects/p/dash/</source>
         <translation>Limba lipsă sau traducerea incompletă? Ajută contribuind traduceri aici:
-https://www.transifex.com/projects/p/raptoreum/</translation>
-    </message>
-    <message>
-        <source>User Interface Theme:</source>
-        <translation>Tematica Interfaței Utilizatorului:</translation>
+https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <source>&amp;Unit to show amounts in:</source>
@@ -1443,10 +1461,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Decimal digits</source>
         <translation>Zecimale</translation>
-    </message>
-    <message>
-        <source>Third party transaction URLs</source>
-        <translation>Adrese URL de tranzacție terță parte</translation>
     </message>
     <message>
         <source>Active command-line options that override above options:</source>
@@ -1471,10 +1485,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>default</source>
         <translation>Initial</translation>
-    </message>
-    <message>
-        <source>none</source>
-        <translation>Niciuna</translation>
     </message>
     <message>
         <source>Confirm options reset</source>
@@ -1504,8 +1514,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Form</translation>
     </message>
     <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Raptoreum network after a connection is established, but this process has not completed yet.</source>
-        <translation>Informatia afisata poate fi depasita.  Portofel se sincronizează automat cu rețeaua Raptoreum după ce se stabilește o conexiune, dar acest proces nu s-a finalizat încă.</translation>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Dash network after a connection is established, but this process has not completed yet.</source>
+        <translation>Informatia afisata poate fi depasita.  Portofel se sincronizează automat cu rețeaua Dash după ce se stabilește o conexiune, dar acest proces nu s-a finalizat încă.</translation>
     </message>
     <message>
         <source>Available:</source>
@@ -1588,8 +1598,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Suma și Runde:</translation>
     </message>
     <message>
-        <source>0 RTM / 0 Rounds</source>
-        <translation>0 RTM / 0 Runde</translation>
+        <source>0 DASH / 0 Rounds</source>
+        <translation>0 DASH / 0 Runde</translation>
     </message>
     <message>
         <source>Submitted Denom:</source>
@@ -1612,12 +1622,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Sold TrimitePrivat:</translation>
     </message>
     <message>
-        <source>The denominations you submitted to the Smartnode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
-        <translation>Denominațiile pe care le-ai trimis la Smartnode.&lt;br&gt;Pentru a amesteca, ceilalți utilizatori trebuie să trimită exact aceleași denominații.</translation>
-    </message>
-    <message>
-        <source>(Last Message)</source>
-        <translation>(Ultimul Mesaj)</translation>
+        <source>The denominations you submitted to the Masternode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
+        <translation>Denominațiile pe care le-ai trimis la Masternode.&lt;br&gt;Pentru a amesteca, ceilalți utilizatori trebuie să trimită exact aceleași denominații.</translation>
     </message>
     <message>
         <source>out of sync</source>
@@ -1644,20 +1650,16 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation><numerusform>%n Rundă</numerusform><numerusform>%n Runde</numerusform><numerusform>%n Runde</numerusform></translation>
     </message>
     <message>
-        <source>Found enough compatible inputs to anonymize %1</source>
-        <translation>S-au găsit suficiente intrări compatibile pentru anonimizare %1</translation>
-    </message>
-    <message>
-        <source>Not enough compatible inputs to anonymize &lt;span style='color:red;'&gt;%1&lt;/span&gt;,&lt;br&gt;will anonymize &lt;span style='color:red;'&gt;%2&lt;/span&gt; instead</source>
-        <translation>Nu există suficiente intrări compatibile pentru anonimizare&lt;span style='color:red;'&gt;%1&lt;/span&gt;,&lt;br&gt;va anonimiza&lt;span style='color:red;'&gt;%2&lt;/span&gt;în schimb </translation>
-    </message>
-    <message>
         <source>Overall progress</source>
         <translation>Progres general</translation>
     </message>
     <message>
         <source>Denominated</source>
         <translation>Denominat</translation>
+    </message>
+    <message>
+        <source>Partially mixed</source>
+        <translation>Partial amestecate</translation>
     </message>
     <message>
         <source>Mixed</source>
@@ -1680,8 +1682,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Număr foarte mic de chei rămase de la ultimul backup automat!</translation>
     </message>
     <message>
-        <source>We are about to create a new automatic backup for you, however &lt;span style='color:red;'&gt; you should always make sure you have backups saved in some safe place&lt;/span&gt;!</source>
-        <translation>Suntem pe cale să creăm un nou backup automat pentru tine, dar &lt;span style='color:red;'&gt;va trebui să te asiguri întotdeauna că ai backup-urile salvate într-un loc sigur &lt;/span&gt;!</translation>
+        <source>We are about to create a new automatic backup for you, however &lt;span style='%1'&gt; you should always make sure you have backups saved in some safe place&lt;/span&gt;!</source>
+        <translation>Suntem pe cale să creăm un nou backup automat pentru tine, dar &lt;span style='%1'&gt;va trebui să te asiguri întotdeauna că ai backup-urile salvate într-un loc sigur &lt;/span&gt;!</translation>
     </message>
     <message>
         <source>Note: You can turn this message off in options.</source>
@@ -1712,12 +1714,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>AVERTIZARE! Nu s-a reușit reîncărcarea keypool-ului, te rog deblochează portofelul pentru a face acest lucru.</translation>
     </message>
     <message>
-        <source>Last PrivateSend message:
-</source>
-        <translation>Ultimul mesaj TrimitePrivat:
-</translation>
-    </message>
-    <message>
         <source>If you don't want to see internal PrivateSend fees/transactions select "Most Common" as Type on the "Transactions" tab.</source>
         <translation>Dacă nu vrei să vezi taxele / tranzacțiile interne TrimitePrivat, selectează "Cele mai frecvente" ca Tip în pagina "Tranzacții".</translation>
     </message>
@@ -1737,8 +1733,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Eroare la cererea de plată</translation>
     </message>
     <message>
-        <source>Cannot start raptoreum: click-to-pay handler</source>
-        <translation>Raptoreum nu poate porni: click-to-pay handler</translation>
+        <source>Cannot start dash: click-to-pay handler</source>
+        <translation>Dash nu poate porni: click-to-pay handler</translation>
     </message>
     <message>
         <source>URI handling</source>
@@ -1753,8 +1749,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Adresă pentru plată invalidă %1</translation>
     </message>
     <message>
-        <source>URI cannot be parsed! This can be caused by an invalid Raptoreum address or malformed URI parameters.</source>
-        <translation>URI nu poate fi analizat! Acest lucru poate fi cauzat de o adresă Raptoreum invalidă sau parametri URI deformaţi.</translation>
+        <source>URI cannot be parsed! This can be caused by an invalid Dash address or malformed URI parameters.</source>
+        <translation>URI nu poate fi analizat! Acest lucru poate fi cauzat de o adresă Dash invalidă sau parametri URI deformaţi.</translation>
     </message>
     <message>
         <source>Payment request file handling</source>
@@ -1839,7 +1835,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <source>Ping</source>
         <translation>Ping</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>QObject</name>
     <message>
@@ -1851,8 +1847,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Cantitate</translation>
     </message>
     <message>
-        <source>Enter a Raptoreum address (e.g. %1)</source>
-        <translation>Introduceţi o adresă Raptoreum (de exemplu %1)</translation>
+        <source>Enter a Dash address (e.g. %1)</source>
+        <translation>Introduceţi o adresă Dash (de exemplu %1)</translation>
     </message>
     <message>
         <source>%1 d</source>
@@ -1929,7 +1925,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <source>Error: %1</source>
         <translation>Eroare: %1</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>QRDialog</name>
     <message>
@@ -2050,8 +2046,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Lanţ de blocuri</translation>
     </message>
     <message>
-        <source>Number of Smartnodes</source>
-        <translation>Număr de Smartnode-uri</translation>
+        <source>Number of Masternodes</source>
+        <translation>Număr de Masternode-uri</translation>
     </message>
     <message>
         <source>Memory Pool</source>
@@ -2076,10 +2072,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>&amp;Network Traffic</source>
         <translation>Trafic reţea</translation>
-    </message>
-    <message>
-        <source>Totals</source>
-        <translation>Totaluri</translation>
     </message>
     <message>
         <source>Received</source>
@@ -2290,10 +2282,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Bun venit la consola %1 RPC.</translation>
     </message>
     <message>
-        <source>Type &lt;b&gt;help&lt;/b&gt; for an overview of available commands.</source>
-        <translation>Scrie &lt;b&gt;help&lt;/b&gt; pentru a vedea comenzile disponibile</translation>
-    </message>
-    <message>
         <source>Use up and down arrows to navigate history, and %1 to clear screen.</source>
         <translation>Foloseste sagetile sus si jos pentru a naviga in istoric si %1 pentru a curata.</translation>
     </message>
@@ -2316,22 +2304,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Total: %1 (Enabled: %2)</source>
         <translation>Total: %1 (Activat: %2)</translation>
-    </message>
-    <message>
-        <source>%1 B</source>
-        <translation>%1 B</translation>
-    </message>
-    <message>
-        <source>%1 KB</source>
-        <translation>%1 KB</translation>
-    </message>
-    <message>
-        <source>%1 MB</source>
-        <translation>%1 MB</translation>
-    </message>
-    <message>
-        <source>%1 GB</source>
-        <translation>%1 GB</translation>
     </message>
     <message>
         <source>(node id: %1)</source>
@@ -2369,16 +2341,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
-        <source>Reuse one of the previously used receiving addresses.&lt;br&gt;Reusing addresses has security and privacy issues.&lt;br&gt;Do not use this unless re-generating a payment request made before.</source>
-        <translation>Reutilizează una dintre adresele primite anterior.&lt;br&gt;Reutilizarea adreselor creează probleme de securitate și confidențialitate.&lt;br&gt;Nu utiliza decât dacă re-generezi o cerere de plată făcută înainte.</translation>
-    </message>
-    <message>
-        <source>R&amp;euse an existing receiving address (not recommended)</source>
-        <translation>R&amp;eutilizează o adresă de primire existentă (nerecomandat)</translation>
-    </message>
-    <message>
-        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Raptoreum network.</source>
-        <translation>Un mesaj opţional de ataşat la cererea de plată, care va fi afişat cînd cererea este deschisă. Notă: Acest mesaj nu va fi trimis cu plata către reţeaua Raptoreum.</translation>
+        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Dash network.</source>
+        <translation>Un mesaj opţional de ataşat la cererea de plată, care va fi afişat cînd cererea este deschisă. Notă: Acest mesaj nu va fi trimis cu plata către reţeaua Dash.</translation>
     </message>
     <message>
         <source>&amp;Message:</source>
@@ -2389,8 +2353,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>O etichetă opţională de asociat cu adresa de primire.</translation>
     </message>
     <message>
-        <source>An optional message to attach to the payment request, which will be displayed when the request is opened.&lt;br&gt;Note: The message will not be sent with the payment over the Raptoreum network.</source>
-        <translation>Un mesaj opțional pentru a atașa solicitării de plată, care va fi afișat la deschiderea cererii.&lt;br&gt;Notă: mesajul nu va fi trimis cu plata prin rețeaua Raptoreum.</translation>
+        <source>An optional message to attach to the payment request, which will be displayed when the request is opened.&lt;br&gt;Note: The message will not be sent with the payment over the Dash network.</source>
+        <translation>Un mesaj opțional pentru a atașa solicitării de plată, care va fi afișat la deschiderea cererii.&lt;br&gt;Notă: mesajul nu va fi trimis cu plata prin rețeaua Dash.</translation>
     </message>
     <message>
         <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
@@ -2618,16 +2582,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Timp confirmare tinta:</translation>
     </message>
     <message>
-        <source>PrivateSend</source>
-        <translation>TrimitePrivat</translation>
-    </message>
-    <message>
         <source>If the custom fee is set to 1000 duffs and the transaction is only 250 bytes, then "per kilobyte" only pays 250 duffs in fee,&lt;br /&gt;while "at least" pays 1000 duffs. For transactions bigger than a kilobyte both pay by kilobyte.</source>
         <translation>Dacă taxa vamală este stabilită la 1000 de duffi și tranzacția are doar 250 de octeți, atunci "per kilobyte" plătește doar 250 de duffi în taxă,&lt;br /&gt;în timp ce "cel puțin" plătește 1000 de duffi. Pentru tranzacțiile mai mari decât un kilobyte, ambele plătesc cu kilobyte.</translation>
     </message>
     <message>
-        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks.&lt;br /&gt;But be aware that this can end up in a never confirming transaction once there is more demand for raptoreum transactions than the network can process.</source>
-        <translation>Plata numai a taxei minime este ok, atâta timp cât există un volum mai mic de tranzacții decât spațiul din block-uri.&lt;br /&gt;Dar trebuie să știi că acest lucru se poate încheia într-o tranzacție care nu se confirmă odată ce există mai multă cerere pentru tranzacții raptoreum decât poate procesa rețeaua.</translation>
+        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks.&lt;br /&gt;But be aware that this can end up in a never confirming transaction once there is more demand for dash transactions than the network can process.</source>
+        <translation>Plata numai a taxei minime este ok, atâta timp cât există un volum mai mic de tranzacții decât spațiul din block-uri.&lt;br /&gt;Dar trebuie să știi că acest lucru se poate încheia într-o tranzacție care nu se confirmă odată ce există mai multă cerere pentru tranzacții dash decât poate procesa rețeaua.</translation>
     </message>
     <message>
         <source>per kilobyte</source>
@@ -2746,8 +2706,32 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>&lt;b&gt;(%1 of %2 înregistrările afișate)&lt;/b&gt;</translation>
     </message>
     <message>
+        <source>PrivateSend funds only</source>
+        <translation>Fonduri TrimitePrivat doar</translation>
+    </message>
+    <message>
         <source>any available funds</source>
         <translation>orice fonduri disponibile</translation>
+    </message>
+    <message>
+        <source>(PrivateSend transactions have higher fees usually due to no change output being allowed)</source>
+        <translation>(Tranzactiile TrimitePrivat au taxe mai mari de obicei din cauza ca iesirile cu rest nu sunt permise)</translation>
+    </message>
+    <message>
+        <source>Transaction size: %1</source>
+        <translation>Marimea tranzactiei: %1</translation>
+    </message>
+    <message>
+        <source>Fee rate: %1</source>
+        <translation>Rata taxei: %1</translation>
+    </message>
+    <message numerus="yes">
+        <source>This transaction will consume %n input(s)</source>
+        <translation><numerusform>Aceasta tranzactie va consuma %n din intrari</numerusform><numerusform>Aceasta tranzactie va consuma %n din intrari</numerusform><numerusform>Aceasta tranzactie va consuma %n din intrari</numerusform></translation>
+    </message>
+    <message>
+        <source>Warning: Using PrivateSend with %1 or more inputs can harm your privacy and is not recommended</source>
+        <translation>Avertisment: Folosirea TrimitePrivat cu %1 sau mai multe intrari poate provoca daune confidentialitatii tale si nu este recomandata</translation>
     </message>
     <message>
         <source>Confirm send coins</source>
@@ -2798,8 +2782,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation><numerusform>Înceaperea confirmării estimată într-un %n block.</numerusform><numerusform>Înceaperea confirmării estimată în %n block-uri.</numerusform><numerusform>Înceaperea confirmării estimată în %n block-uri.</numerusform></translation>
     </message>
     <message>
-        <source>Warning: Invalid Raptoreum address</source>
-        <translation>Atenţie: Adresa Raptoreum nevalidă!</translation>
+        <source>Warning: Invalid Dash address</source>
+        <translation>Atenţie: Adresa Dash nevalidă!</translation>
     </message>
     <message>
         <source>Warning: Unknown change address</source>
@@ -2829,8 +2813,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Plăteşte că&amp;tre:</translation>
     </message>
     <message>
-        <source>The Raptoreum address to send the payment to</source>
-        <translation>Adresa Raptoreum către care se face plata</translation>
+        <source>The Dash address to send the payment to</source>
+        <translation>Adresa Dash către care se face plata</translation>
     </message>
     <message>
         <source>Choose previously used address</source>
@@ -2865,8 +2849,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Su&amp;mă:</translation>
     </message>
     <message>
-        <source>The fee will be deducted from the amount being sent. The recipient will receive a lower amount of Raptoreum than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
-        <translation>Taxa va fi dedusă din suma trimisă. Destinatarul va primi o sumă mai mică de Raptoreum decât introduci în câmpul pentru suma. Dacă sunt selectați mai mulți destinatari, taxa este împărțită în mod egal.</translation>
+        <source>The fee will be deducted from the amount being sent. The recipient will receive a lower amount of Dash than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
+        <translation>Taxa va fi dedusă din suma trimisă. Destinatarul va primi o sumă mai mică de Dash decât introduci în câmpul pentru suma. Dacă sunt selectați mai mulți destinatari, taxa este împărțită în mod egal.</translation>
     </message>
     <message>
         <source>S&amp;ubtract fee from amount</source>
@@ -2877,8 +2861,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Mesaj:</translation>
     </message>
     <message>
-        <source>A message that was attached to the raptoreum: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Raptoreum network.</source>
-        <translation>un mesaj a fost ataşat la Raptoreum: URI care va fi stocat cu tranzacţia pentru referinţa dvs. Notă: Acest mesaj nu va fi trimis către reţeaua Raptoreum.</translation>
+        <source>A message that was attached to the dash: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Dash network.</source>
+        <translation>un mesaj a fost ataşat la Dash: URI care va fi stocat cu tranzacţia pentru referinţa dvs. Notă: Acest mesaj nu va fi trimis către reţeaua Dash.</translation>
     </message>
     <message>
         <source>This is an unauthenticated payment request.</source>
@@ -2930,11 +2914,11 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>&amp;Semnează mesaj</translation>
     </message>
     <message>
-        <source>You can sign messages/agreements with your addresses to prove you can receive Raptoreum sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
-        <translation>Poți semna mesaje / acorduri cu adreseletale pentru a dovedi că poți primi Raptoreum trimis la ele. Ai grijă să nu semnezi nimic vag sau întâmplător, deoarece atacurile de tip phishing pot încerca să te păcălească să le dai identitatea ta. Semnează declarații complet-detaliate cu care ești de acord.</translation>
+        <source>You can sign messages/agreements with your addresses to prove you can receive Dash sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
+        <translation>Poți semna mesaje / acorduri cu adreseletale pentru a dovedi că poți primi Dash trimis la ele. Ai grijă să nu semnezi nimic vag sau întâmplător, deoarece atacurile de tip phishing pot încerca să te păcălească să le dai identitatea ta. Semnează declarații complet-detaliate cu care ești de acord.</translation>
     </message>
     <message>
-        <source>The Raptoreum address to sign the message with</source>
+        <source>The Dash address to sign the message with</source>
         <translation>Adresa cu care semnaţi mesajul</translation>
     </message>
     <message>
@@ -2966,8 +2950,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Copiaza semnatura curenta in clipboard-ul sistemului</translation>
     </message>
     <message>
-        <source>Sign the message to prove you own this Raptoreum address</source>
-        <translation>Semnează mesajul pentru a dovedi ca deţineţi acestă adresă Raptoreum</translation>
+        <source>Sign the message to prove you own this Dash address</source>
+        <translation>Semnează mesajul pentru a dovedi ca deţineţi acestă adresă Dash</translation>
     </message>
     <message>
         <source>Sign &amp;Message</source>
@@ -2990,12 +2974,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Introduceţi adresa de semnatură, mesajul (asiguraţi-vă că aţi copiat spaţiile, taburile etc. exact) şi semnatura dedesubt pentru a verifica mesajul. Aveţi grijă să nu citiţi mai mult în semnatură decît mesajul în sine, pentru a evita să fiţi păcăliţi de un atac de tip man-in-the-middle. De notat ca aceasta dovedeste doar ca semnatarul primeste odata cu adresa, nu dovedesta insa trimiterea vreunei tranzactii.</translation>
     </message>
     <message>
-        <source>The Raptoreum address the message was signed with</source>
-        <translation>Introduceţi o adresă Raptoreum</translation>
+        <source>The Dash address the message was signed with</source>
+        <translation>Introduceţi o adresă Dash</translation>
     </message>
     <message>
-        <source>Verify the message to ensure it was signed with the specified Raptoreum address</source>
-        <translation>Verificaţi mesajul pentru a vă asigura că a fost semnat cu adresa Raptoreum specificată</translation>
+        <source>Verify the message to ensure it was signed with the specified Dash address</source>
+        <translation>Verificaţi mesajul pentru a vă asigura că a fost semnat cu adresa Dash specificată</translation>
     </message>
     <message>
         <source>Verify &amp;Message</source>
@@ -3064,10 +3048,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <source>[testnet]</source>
         <translation>[testnet]</translation>
     </message>
-    <message>
-        <source>Version %1</source>
-        <translation>Versiunea %1</translation>
-    </message>
 </context>
 <context>
     <name>TrafficGraphWidget</name>
@@ -3075,7 +3055,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <source>KB/s</source>
         <translation>KB/s</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>TransactionDesc</name>
     <message numerus="yes">
@@ -3089,10 +3069,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>conflicted</source>
         <translation>conflictual</translation>
-    </message>
-    <message>
-        <source>%1/offline</source>
-        <translation>%1/deconectat</translation>
     </message>
     <message>
         <source>0/unconfirmed, %1</source>
@@ -3119,24 +3095,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>%1 confirmări</translation>
     </message>
     <message>
-        <source>locked via LLMQ based ChainLocks</source>
-        <translation>blocat cu ChainLocks bazat pe LLMQ</translation>
-    </message>
-    <message>
-        <source>verified via LLMQ based InstantSend</source>
-        <translation>verificat cu TrimiteInstant bazat pe LLMQ</translation>
-    </message>
-    <message>
         <source>Status</source>
         <translation>Stare</translation>
-    </message>
-    <message>
-        <source>, has not been successfully broadcast yet</source>
-        <translation>, nu s-a propagat încă</translation>
-    </message>
-    <message numerus="yes">
-        <source>, broadcast through %n node(s)</source>
-        <translation><numerusform>, difuzat prin %n nod</numerusform><numerusform>, difuzat prin %n node-uri</numerusform><numerusform>, difuzat prin %n node-uri</numerusform></translation>
     </message>
     <message>
         <source>Date</source>
@@ -3293,10 +3253,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Deschis până la %1</translation>
     </message>
     <message>
-        <source>Offline</source>
-        <translation>Deconectat</translation>
-    </message>
-    <message>
         <source>Unconfirmed</source>
         <translation>Neconfirmat</translation>
     </message>
@@ -3319,10 +3275,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Immature (%1 confirmations, will be available after %2)</source>
         <translation>Imatur (%1 confirmari, va fi disponibil după %2)</translation>
-    </message>
-    <message>
-        <source>This block was not received by any other nodes and will probably not be accepted!</source>
-        <translation>Acest bloc nu a fost recepționat de niciun alt nod și probabil nu va fi acceptat!</translation>
     </message>
     <message>
         <source>Generated but not accepted</source>
@@ -3369,10 +3321,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>TrimitePrivat Creează Denumiri</translation>
     </message>
     <message>
-        <source>PrivateSend</source>
-        <translation>TrimitePrivat</translation>
-    </message>
-    <message>
         <source>watch-only</source>
         <translation>doar-supraveghere</translation>
     </message>
@@ -3401,10 +3349,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Indiferent dacă sau nu o adresa doar-suăpraveghere este implicată în această tranzacţie.</translation>
     </message>
     <message>
-        <source>Whether or not this transaction was locked by InstantSend.</source>
-        <translation>Dacă această tranzacție a fost sau nu blocată de TrimiteInstant.</translation>
-    </message>
-    <message>
         <source>User-defined intent/purpose of the transaction.</source>
         <translation>Intentie/scop al tranzactie definit de user.</translation>
     </message>
@@ -3418,14 +3362,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>All</source>
         <translation>Toate</translation>
-    </message>
-    <message>
-        <source>Locked by InstantSend</source>
-        <translation>Blocat de TrimiteInstant</translation>
-    </message>
-    <message>
-        <source>Not locked by InstantSend</source>
-        <translation>Ne-blocat de TrimiteInstant</translation>
     </message>
     <message>
         <source>Today</source>
@@ -3464,10 +3400,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Trimis către</translation>
     </message>
     <message>
-        <source>PrivateSend</source>
-        <translation>TrimitePrivat</translation>
-    </message>
-    <message>
         <source>PrivateSend Make Collateral Inputs</source>
         <translation>TrimitePrivat Realizează Intrări Colaterale </translation>
     </message>
@@ -3494,10 +3426,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Other</source>
         <translation>Altele</translation>
-    </message>
-    <message>
-        <source>Enter address or label to search</source>
-        <translation>Introdu adresa sau eticheta pentru căutare</translation>
     </message>
     <message>
         <source>Min amount</source>
@@ -3669,7 +3597,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
 </context>
 <context>
-    <name>raptoreum-core</name>
+    <name>dash-core</name>
     <message>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
         <translation>Leagă-te de adresa dată și ascultă întotdeauna. Utilizează [host]: Notation port pentru IPv6</translation>
@@ -3731,16 +3659,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Nu se poate retrograda portofelul</translation>
     </message>
     <message>
-        <source>Cannot write default address</source>
-        <translation>Nu se poate scrie adresa implicită</translation>
-    </message>
-    <message>
         <source>Collateral not valid.</source>
         <translation>Colateralul nu este valabil.</translation>
-    </message>
-    <message>
-        <source>Connect to a node to retrieve peer addresses, and disconnect</source>
-        <translation>Conectează-te la nod pentru a obține adresele partenerilor, și apoi deconectează-te</translation>
     </message>
     <message>
         <source>Connection options:</source>
@@ -3883,8 +3803,16 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Depășește minimumul semnătorilor spork pentru a schimba valoarea spork. Doar util pentru regtest și devnet. Folosirea acestui lucru pe mainnet sau testnet te va bloca.</translation>
     </message>
     <message>
-        <source>Use N separate smartnodes in parallel to mix funds (%u-%u, default: %u)</source>
-        <translation>Foloseștee N smartnode-uri separate în paralel pentru mixarea fondurilor (%u-%u, implicit: %u)</translation>
+        <source>PrivateSend uses exact denominated amounts to send funds, you might simply need to mix some more coins.</source>
+        <translation>TrimitePrivat foloseste sume denominate exacte pentru a trimite fonduri, s-ar putea sa ai nevoie pur si simplu sa amesteci niste monede in plus.</translation>
+    </message>
+    <message>
+        <source>Reduce storage requirements by enabling pruning (deleting) of old blocks. This allows the pruneblockchain RPC to be called to delete specific blocks, and enables automatic pruning of old blocks if a target size in MiB is provided. This mode is incompatible with -txindex, -rescan and -disablegovernance=false. Warning: Reverting this setting requires re-downloading the entire blockchain. (default: 0 = disable pruning blocks, 1 = allow manual pruning via RPC, &gt;=%u = automatically prune block files to stay under the specified target size in MiB)</source>
+        <translation>Redu cerințele de stocare activând tăierea (ștergerea) block-urilor vechi. Asta va permite apelarea la pruneblockchain RPC pentru a șterge block-uri specifice, și permite tăierea automată a block-urilor vechi dacă este furnizată o dimensiune țintă în MiB. Acest mod este incompatibil cu -txindex, -rescan și -disablegovernance=false. Avertisment: Inversarea acestei setări necesită re-descărcarea întregului blockchain. (implicit: 0 = dezactivați tăierea block-urilor, 1 = permiteți tăierea manuală prin RPC, &gt;=%u = taie automat fișierele block pentru a rămâne sub dimensiunea de țintă specificată în MiB)</translation>
+    </message>
+    <message>
+        <source>Use N separate masternodes in parallel to mix funds (%u-%u, default: %u)</source>
+        <translation>Foloseștee N masternode-uri separate în paralel pentru mixarea fondurilor (%u-%u, implicit: %u)</translation>
     </message>
     <message>
         <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)</source>
@@ -3901,10 +3829,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Whitelisted peers cannot be DoS banned and their transactions are always relayed, even if they are already in the mempool, useful e.g. for a gateway</source>
         <translation>Whitelisted peers nu pot fi interziși și tranzacțiile lor sunt întotdeauna transmise, chiar dacă acestea sunt deja în mempool, de ex. pentru un gateway</translation>
-    </message>
-    <message>
-        <source>(default: %s)</source>
-        <translation>(implicit: %s)</translation>
     </message>
     <message>
         <source>Accept public REST requests (default: %u)</source>
@@ -3943,8 +3867,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Nu a reușit să se încarce cache-ul guvernării de la</translation>
     </message>
     <message>
-        <source>Failed to load smartnode cache from</source>
-        <translation>Nu a reușit să se încarce cache-ul smartnode-urilor de la</translation>
+        <source>Failed to load masternode cache from</source>
+        <translation>Nu a reușit să se încarce cache-ul masternode-urilor de la</translation>
     </message>
     <message>
         <source>Found enough users, signing ( waiting %s )</source>
@@ -4023,8 +3947,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Încărcarea cache-ului de cereri îndeplinite ...</translation>
     </message>
     <message>
-        <source>Loading smartnode cache...</source>
-        <translation>Încărcarea cache-ului smartnode-ului</translation>
+        <source>Loading masternode cache...</source>
+        <translation>Încărcarea cache-ului masternode-ului</translation>
     </message>
     <message>
         <source>Lock is already in place.</source>
@@ -4051,20 +3975,20 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Trebuie să specificaţi un port cu -whitebind: '%s'</translation>
     </message>
     <message>
-        <source>No Smartnodes detected.</source>
-        <translation>Nici un Smartnode detectat.</translation>
+        <source>No Masternodes detected.</source>
+        <translation>Nici un Masternode detectat.</translation>
     </message>
     <message>
-        <source>No compatible Smartnode found.</source>
-        <translation>Nici un Smartnode compatibil nu a fost găsit.</translation>
+        <source>No compatible Masternode found.</source>
+        <translation>Nici un Masternode compatibil nu a fost găsit.</translation>
     </message>
     <message>
-        <source>Not in the Smartnode list.</source>
-        <translation>Nu este în lista Smartnode</translation>
+        <source>Not enough funds to mix.</source>
+        <translation>Nu sunt suficiente fonduri pentru amestecare.</translation>
     </message>
     <message>
-        <source>Only connect to nodes in network &lt;net&gt; (ipv4, ipv6 or onion)</source>
-        <translation>Conectează-te numai la nodurile din rețea &lt;net&gt; (ipv4, ipv6 sau onion)</translation>
+        <source>Not in the Masternode list.</source>
+        <translation>Nu este în lista Masternode</translation>
     </message>
     <message>
         <source>Prepend debug output with timestamp (default: %u)</source>
@@ -4091,28 +4015,16 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Setează numărul de fire pentru a activa apelurile RPC (implicit: %d)</translation>
     </message>
     <message>
-        <source>Specify configuration file (default: %s)</source>
-        <translation>Specifică fișierul de configurare (implicit: %s)</translation>
-    </message>
-    <message>
         <source>Specify connection timeout in milliseconds (minimum: 1, default: %d)</source>
         <translation>Specifică timpul de conectare în milisecunde (minimum: 1, implicit: %d)</translation>
-    </message>
-    <message>
-        <source>Specify pid file (default: %s)</source>
-        <translation>Specifică fișierul pid (implicit: %s)</translation>
     </message>
     <message>
         <source>Spend unconfirmed change when sending transactions (default: %u)</source>
         <translation>Cheltuie restul neconfirmat la trimiterea tranzacțiilor (implicit: %u)</translation>
     </message>
     <message>
-        <source>Submitted to smartnode, waiting in queue %s</source>
-        <translation>Trimis la smartnode, așteaptă la coadă %s</translation>
-    </message>
-    <message>
-        <source>Synchronization failed</source>
-        <translation>Sincronizarea a eșuat</translation>
+        <source>Submitted to masternode, waiting in queue %s</source>
+        <translation>Trimis la masternode, așteaptă la coadă %s</translation>
     </message>
     <message>
         <source>Synchronization finished</source>
@@ -4121,14 +4033,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Threshold for disconnecting misbehaving peers (default: %u)</source>
         <translation> Prag pentru deconectarea acelor peers care au o conduita nepotrivită (implicit: %u)</translation>
-    </message>
-    <message>
-        <source>Too many %f denominations, removing.</source>
-        <translation>Prea multe %f denumiri, se elimină.</translation>
-    </message>
-    <message>
-        <source>Too many %f denominations, skipping.</source>
-        <translation>Prea multe %f denumiri, se sare.</translation>
     </message>
     <message>
         <source>Tor control port password (default: empty)</source>
@@ -4187,8 +4091,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Se va reîncerca...</translation>
     </message>
     <message>
-        <source>Can't find random Smartnode.</source>
-        <translation>Nu se găseşte un Smartnode aleatoariu.</translation>
+        <source>Can't find random Masternode.</source>
+        <translation>Nu se găseşte un Masternode aleatoariu.</translation>
     </message>
     <message>
         <source>Can't mix while sync in progress.</source>
@@ -4211,16 +4115,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Cheie KeePassHttp pentru comunicarea criptată AES cu KeePass</translation>
     </message>
     <message>
-        <source>Disable all Raptoreum specific functionality (Smartnodes, PrivateSend, InstantSend, Governance) (0-1, default: %u)</source>
-        <translation>Dezactivează toate funcționalitățile specifice Raptoreum (Smartnode-uri, TrimitePrivat, TrimiteInstant, Guvernanță) (0-1, implicit: %u)</translation>
-    </message>
-    <message>
         <source>%s file contains all private keys from this wallet. Do not share it with anyone!</source>
         <translation>%s fișierul conține toate cheile private din acest portofel. Nu le împărtăși nimănui!</translation>
     </message>
     <message>
-        <source>Bind to given address to listen for JSON-RPC connections. This option is ignored unless -rpcallowip is also passed. Port is optional and overrides -rpcport. Use [host]:port notation for IPv6. This option can be specified multiple times (default: 127.0.0.1 and ::1 i.e., localhost, or if -rpcallowip has been specified, 0.0.0.0 and :: i.e., all addresses)</source>
-        <translation>Leagă-te la adresa dată pentru a asculta conexiunile JSON-RPC. Această opțiune este ignorată doar dacă -rpcallowip este de asemenea trecut. Portul este opțional și suprascrie -rpcport. Utilizează [host]: port de notare pentru IPv6. Această opțiune poate fi specificată de mai multe ori (implicit: 127.0.0.1 și ::1 i.e., localhost, sau dacă -rpcallowip a fost specificat, 0.0.0.0 și :: ex., toate adresele)</translation>
+        <source>-masternode option is deprecated and ignored, specifying -masternodeblsprivkey is enough to start this node as a masternode.</source>
+        <translation>- optiunea masternode este dezaprobata si ignorata - specificarea masternodeblsprivkey-ului este suficienta pentru a porni acest nod ca si un masternode.</translation>
     </message>
     <message>
         <source>Discover own IP addresses (default: 1 when listening and no -externalip or -proxy)</source>
@@ -4275,6 +4175,14 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Menține cel mult &lt;n&gt;conexiuni cu peers (excluderea conexiunilor temporare) (implicit : %u)</translation>
     </message>
     <message>
+        <source>Make sure to encrypt your wallet and delete all non-encrypted backups after you have verified that the wallet works!</source>
+        <translation>Fii sigur sa criptezi portofelul tau si sa stergi toate backup-urile non-criptate dupa ce ai verificat ca portofelul functioneaza!</translation>
+    </message>
+    <message>
+        <source>Maximum total size of all orphan transactions in megabytes (default: %u)</source>
+        <translation>Marimea totala maxima a tuturor tranzactiilor orfane in megabytes (implicit: %u)</translation>
+    </message>
+    <message>
         <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
         <translation>Reductia e configurata sub minimul de %d MiB. Rugam folositi un numar mai mare.</translation>
     </message>
@@ -4293,6 +4201,10 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</source>
         <translation>Rescanarile nu sunt posibile in modul redus. Va trebui sa folositi -reindex, ceea ce va descarca din nou intregul blockchain.</translation>
+    </message>
+    <message>
+        <source>Set the masternode BLS private key and enable the client to act as a masternode</source>
+        <translation>Seteza cheia BLS privata a masternodului si permite clientului sa se comporte ca un masternode</translation>
     </message>
     <message>
         <source>Specify full path to directory for automatic wallet backups (must exist)</source>
@@ -4315,10 +4227,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Lungimea totala a sirului versiunii retelei (%i) depaseste lungimea maxima (%i). Reduceti numarul sa dimensiunea uacomments. </translation>
     </message>
     <message>
-        <source>Transaction index can't be disabled in full mode. Either start with -litemode command line switch or enable transaction index.</source>
-        <translation>Indexul tranzacției nu poate fi dezactivat în full mode. Ori porneşti cu comutatorul de linie de comandă -litemode sau activezi indexul tranzacțiilor.</translation>
-    </message>
-    <message>
         <source>Tries to keep outbound traffic under the given target (in MiB per 24h), 0 = no limit (default: %d)</source>
         <translation>Încearcă să păstrezi traficul de ieșire sub ținta dată (în MiB per 24h), 0 = fără limită (implicit: %d)</translation>
     </message>
@@ -4337,6 +4245,10 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Use UPnP to map the listening port (default: 1 when listening and no -proxy)</source>
         <translation>Utilizează UPnP pentru a mapa portul de ascultare (implicit: 1 când asculți și nu -proxy)</translation>
+    </message>
+    <message>
+        <source>Username and hashed password for JSON-RPC connections. The field &lt;userpw&gt; comes in the format: &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;. A canonical python script is included in share/rpcauth. The client then connects normally using the rpcuser=&lt;USERNAME&gt;/rpcpassword=&lt;PASSWORD&gt; pair of arguments. This option can be specified multiple times</source>
+        <translation>Numele de utilizator și parola de salvare pentru conexiunile JSON-RPC. Câmpul &lt;userpw&gt; vine în formatul: &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;. Un script phyton canonic este inclus în share/rpcauth. Apoi, clientul se conectează în mod normal folosind rpcuser=&lt;USERNAME&gt;/rpcpassword=&lt;PASSWORD&gt;pereche de argumente. Această opțiune poate fi specificată de mai multe ori </translation>
     </message>
     <message>
         <source>WARNING! Failed to replenish keypool, please unlock your wallet to do so.</source>
@@ -4455,8 +4367,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Suma nevalidă pentru -fallbackfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
-        <source>Invalid smartnodeblsprivkey. Please see documentation.</source>
-        <translation>smartnodeblsprivkey nu este valabil. Consultă documentația.</translation>
+        <source>Invalid masternodeblsprivkey. Please see documentation.</source>
+        <translation>masternodeblsprivkey nu este valabil. Consultă documentația.</translation>
     </message>
     <message>
         <source>Keep the transaction memory pool below &lt;n&gt; megabytes (default: %u)</source>
@@ -4491,24 +4403,20 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Încarc portofel...</translation>
     </message>
     <message>
-        <source>Location of the auth cookie (default: data dir)</source>
-        <translation>Locația cookie-ului de autentificare (implicit: dir de date)</translation>
-    </message>
-    <message>
         <source>Make the wallet broadcast transactions</source>
         <translation>Fă ca portofelul sa trimită tranzacții</translation>
     </message>
     <message>
-        <source>Smartnode options:</source>
-        <translation>Opțiuni Smartnode:</translation>
+        <source>Masternode options:</source>
+        <translation>Opțiuni Masternode:</translation>
     </message>
     <message>
-        <source>Smartnode queue is full.</source>
-        <translation>Queue-ul Smartnode este plin.</translation>
+        <source>Masternode queue is full.</source>
+        <translation>Queue-ul Masternode este plin.</translation>
     </message>
     <message>
-        <source>Smartnode:</source>
-        <translation>Smartnode:</translation>
+        <source>Masternode:</source>
+        <translation>Masternode:</translation>
     </message>
     <message>
         <source>Minimum bytes per sigop in transactions we relay and mine (default: %u)</source>
@@ -4529,10 +4437,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Node relay options:</source>
         <translation>Opțiuni pentru node relay:</translation>
-    </message>
-    <message>
-        <source>Non-standard public key detected.</source>
-        <translation>Cheie publică non-standard detectată.</translation>
     </message>
     <message>
         <source>Not compatible with existing transactions.</source>
@@ -4565,10 +4469,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>PrivateSend options:</source>
         <translation>opțiuni TrimitePrivat:</translation>
-    </message>
-    <message>
-        <source>PrivateSend request complete:</source>
-        <translation>solicitare TrimitePrivat completă:</translation>
     </message>
     <message>
         <source>PrivateSend request incomplete:</source>
@@ -4659,20 +4559,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Dacă funcționează doar într-un mod blocks only (implicit: %u)</translation>
     </message>
     <message>
-        <source>You can not start a smartnode in lite mode.</source>
-        <translation>Nu poți porni un smartnode în modul lite.</translation>
-    </message>
-    <message>
-        <source>You can not start a smartnode with wallet enabled.</source>
-        <translation>Nu poți porni un smartnode cu portofelul activat.</translation>
-    </message>
-    <message>
-        <source>You need to rebuild the database using -reindex to change -addressindex</source>
-        <translation>Trebuie să reconstruiești baza de date utilizând -reindex pentru a schimba -addressindex</translation>
-    </message>
-    <message>
-        <source>You need to rebuild the database using -reindex to change -spentindex</source>
-        <translation>Trebuie să reconstruiești baza de date utilizând -reindex pentru a schimba -spentindex</translation>
+        <source>You can not start a masternode with wallet enabled.</source>
+        <translation>Nu poți porni un masternode cu portofelul activat.</translation>
     </message>
     <message>
         <source>You need to rebuild the database using -reindex to change -addressindex</source>
@@ -4703,8 +4591,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Opțiuni server RPC:</translation>
     </message>
     <message>
-        <source>Raptoreum Core</source>
-        <translation>Raptoreum Core</translation>
+        <source>Dash Core</source>
+        <translation>Dash Core</translation>
     </message>
     <message>
         <source>The %s developers</source>
@@ -4725,10 +4613,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Error loading %s: You can't enable HD on an already existing non-HD wallet</source>
         <translation>Eroare la încărcare %s: Nu poți activa HD pe un portofel non-HD deja existent</translation>
-    </message>
-    <message>
-        <source>Error loading wallet %s. -wallet parameter must only specify a filename (not a path).</source>
-        <translation>Eroare la încărcarea portofelului %s. -wallet parametrul trebuie să specifice doar un nume de fișier (nu o cale).</translation>
     </message>
     <message>
         <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
@@ -4767,10 +4651,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Va rugam sa contribuiti daca apreciati ca %s va este util. Vizitati %s pentru mai multe informatii despre software.</translation>
     </message>
     <message>
-        <source>Reduce storage requirements by enabling pruning (deleting) of old blocks. This allows the pruneblockchain RPC to be called to delete specific blocks, and enables automatic pruning of old blocks if a target size in MiB is provided. This mode is incompatible with -txindex and -rescan. Warning: Reverting this setting requires re-downloading the entire blockchain. (default: 0 = disable pruning blocks, 1 = allow manual pruning via RPC, &gt;%u = automatically prune block files to stay under the specified target size in MiB)</source>
-        <translation>Redu cerințele de stocare activând tăierea (ștergerea) block-urilor vechi. Asta va permite apelarea la pruneblockchain RPC pentru a șterge block-uri specifice, și permite tăierea automată a block-urilor vechi dacă este furnizată o dimensiune țintă în MiB. Acest mod este incompatibil cu -txindex și -rescan. Avertisment: Inversarea acestei setări necesită re-descărcarea întregului blockchain. (implicit: 0 = dezactivați tăierea block-urilor, 1 = permiteți tăierea manuală prin RPC, &gt;%u = taie automat fișierele block pentru a rămâne sub dimensiunea de țintă specificată în MiB)</translation>
-    </message>
-    <message>
         <source>Set lowest fee rate (in %s/kB) for transactions to be included in block creation. (default: %s)</source>
         <translation>Setează cea mai mică rată de taxă (în %s/kB) pentru tranzacțiile care vor fi incluse în crearea block-urilor. (implicit: %s)</translation>
     </message>
@@ -4799,8 +4679,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Imposibil de redat block-urile. Va trebui să reconstruiți baza de date folosind -reindex-chainstate.</translation>
     </message>
     <message>
-        <source>Use N separate smartnodes for each denominated input to mix funds (%u-%u, default: %u)</source>
-        <translation> Utilizați smartnode-uri N separate pentru fiecare intrare nominală pentru a amesteca fonduri (%u-%u, implicit: %u)</translation>
+        <source>Use N separate masternodes for each denominated input to mix funds (%u-%u, default: %u)</source>
+        <translation> Utilizați masternode-uri N separate pentru fiecare intrare nominală pentru a amesteca fonduri (%u-%u, implicit: %u)</translation>
     </message>
     <message>
         <source>Use hierarchical deterministic key generation (HD) after BIP39/BIP44. Only has effect during wallet creation/first start</source>
@@ -4809,10 +4689,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>User defined mnemonic passphrase for HD wallet (BIP39). Only has effect during wallet creation/first start (default: empty string)</source>
         <translation>Fraza de acces mnemonică definită de utilizator pentru portofelul HD (BIP39). Are efect numai în timpul creării portofelului/primula pornire (implicit: empty string)</translation>
-    </message>
-    <message>
-        <source>Username and hashed password for JSON-RPC connections. The field &lt;userpw&gt; comes in the format: &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;. A canonical python script is included in share/rpcuser. The client then connects normally using the rpcuser=&lt;USERNAME&gt;/rpcpassword=&lt;PASSWORD&gt; pair of arguments. This option can be specified multiple times</source>
-        <translation>Numele de utilizator și parola de salvare pentru conexiunile JSON-RPC. Câmpul &lt;userpw&gt; vine în  formatul: &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;. Un script phyton canonic este inclus în share/rpcuser. Apoi, clientul se conectează în mod normal folosind rpcuser=&lt;USERNAME&gt;/rpcpassword=&lt;PASSWORD&gt;pereche de argumente. Această opțiune poate fi specificată de mai multe ori </translation>
     </message>
     <message>
         <source>Wallet will not create transactions that violate mempool chain limits (default: %u)</source>
@@ -4831,10 +4707,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Whitelist peers care se conectează de la adresa IP dată (ex. 1.2.3.4) sau rețeaua notată CIDR (ex. 1.2.3.0/24). Poate fi specificat de mai multe ori.</translation>
     </message>
     <message>
-        <source>You are starting in lite mode, most Raptoreum-specific functionality is disabled.</source>
-        <translation>Începeți în modul lite, cele mai multe funcționalități specifice Raptoreum sunt dezactivate.</translation>
-    </message>
-    <message>
         <source>%d of last 100 blocks have unexpected version</source>
         <translation>%d din ultimele 100 de blocuri au versiune neașteptată</translation>
     </message>
@@ -4849,10 +4721,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>%s is set very high!</source>
         <translation>%s este setata foarte sus!</translation>
-    </message>
-    <message>
-        <source>(press q to shutdown and continue later)</source>
-        <translation>(apasă q pentru a opri și continuă mai târziu)</translation>
     </message>
     <message>
         <source>-devnet can only be specified once</source>
@@ -4911,16 +4779,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Eroare la încărcare %s: Nu poți dezactiva HD pe un portofel HD deja existent</translation>
     </message>
     <message>
-        <source>Error loading wallet %s. -wallet filename must be a regular file.</source>
-        <translation>Eroare la încărcarea portofelului %s. Numele fișierului -wallet trebuie să fie un fișier obișnuit.</translation>
-    </message>
-    <message>
         <source>Error loading wallet %s. Duplicate -wallet filename specified.</source>
         <translation>Eroare la încărcarea portofelului %s. Numele de fișier duplicat -walet specificat.</translation>
-    </message>
-    <message>
-        <source>Error loading wallet %s. Invalid characters in -wallet filename.</source>
-        <translation>Eroare la încărcarea portofelului %s. Caractere invalide în numele de fişier -wallet.</translation>
     </message>
     <message>
         <source>Error upgrading chainstate database</source>
@@ -4991,10 +4851,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Rulează în fundal ca un demon și acceptă comenzi</translation>
     </message>
     <message>
-        <source>Send trace/debug info to console instead of debug.log file</source>
-        <translation>Trimite informațiile trace/debug la consolă în locul fișierului debug.log</translation>
-    </message>
-    <message>
         <source>Session not complete!</source>
         <translation>Sesiunea nu este completă!</translation>
     </message>
@@ -5027,10 +4883,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Specifică dosarul de date</translation>
     </message>
     <message>
-        <source>Specify wallet file (within data directory)</source>
-        <translation>Specifică fișierul wallet (în dosarul de date)</translation>
-    </message>
-    <message>
         <source>Specify your own public address</source>
         <translation>Specifică adresa ta publică</translation>
     </message>
@@ -5041,10 +4893,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Starting network threads...</source>
         <translation>Se pornesc threadurile retelei...</translation>
-    </message>
-    <message>
-        <source>Synchronization pending...</source>
-        <translation>Sincronizare în desfășurare...</translation>
     </message>
     <message>
         <source>Synchronizing governance objects...</source>
@@ -5069,10 +4917,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Transaction created successfully.</source>
         <translation>Tranzacția a fost creată cu succes.</translation>
-    </message>
-    <message>
-        <source>Transaction fee and change calculation failed</source>
-        <translation>Taxa de tranzacție și calculul modificărilor au eșuat</translation>
     </message>
     <message>
         <source>Transaction fees are too high.</source>
@@ -5119,20 +4963,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Un număr foarte scăzut de chei rămase: %d</translation>
     </message>
     <message>
-        <source>Wallet %s resides outside data directory %s</source>
-        <translation>Protofelul %s se află în afara directorului de date %s</translation>
-    </message>
-    <message>
         <source>Wallet is locked.</source>
         <translation>Portofel blocat.</translation>
     </message>
     <message>
         <source>Wallet options:</source>
         <translation>Opțiuni pentru portofel:</translation>
-    </message>
-    <message>
-        <source>Wallet window title</source>
-        <translation>Titlu fereastră portofel</translation>
     </message>
     <message>
         <source>Warning</source>
