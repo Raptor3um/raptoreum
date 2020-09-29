@@ -1298,6 +1298,7 @@ QString fontFamilyToString(FontFamily family)
 void setFontFamily(FontFamily family)
 {
     fontFamily = family;
+    setApplicationFont();
     updateFonts();
 }
 
