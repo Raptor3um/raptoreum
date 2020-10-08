@@ -33,6 +33,9 @@
 //#define GetCurrentDir _getcwd
 //#else
 #include <unistd.h>
+#include <boost/random.hpp>
+#include <ctime>
+
 #define GetCurrentDir getcwd
 //#endif
 using namespace std;
@@ -47,6 +50,44 @@ static std::string get_current_dir() {
    GetCurrentDir( buff, FILENAME_MAX );
    string current_working_dir(buff);
    return current_working_dir;
+}
+
+static const std::string LOWER_CASE = "abcdefghijklmnopqrstuvwxyz";
+static const std::string SPECIAL = "~!@#$%^&*+<>[];:,.?|";
+static const std::string NUMBER = "0123456789";
+
+static std::string generateRandomString(int length, bool specialChar) {
+	std::time_t now = std::time(0);
+    boost::random::mt19937 gen{static_cast<std::uint32_t>(now)};
+    int charOptions = specialChar ? 4 : 3;
+    int specialLength = SPECIAL.length()-1;
+    boost::random::uniform_int_distribution<> randomOption{1, charOptions};
+    boost::random::uniform_int_distribution<> randomChar{0,25};
+    boost::random::uniform_int_distribution<> randomNum{0,9};
+    boost::random::uniform_int_distribution<> randomSpecial{0,specialLength};
+    string str;
+    str.reserve(length);
+    for(int i = 0; i < length; i++) {
+    	int option = randomOption(gen);
+    	char ch;
+    	switch(option) {
+    	case 1:
+    		str.push_back(LOWER_CASE[randomChar(gen)]);
+    		break;
+    	case 2:
+    		str.push_back(LOWER_CASE[randomChar(gen)] - 32);
+    		break;
+    	case 3:
+    		str.push_back(NUMBER[randomNum(gen)]);
+    		break;
+    	case 4:
+    		str.push_back(SPECIAL[randomSpecial(gen)]);
+    		break;
+    	default:
+    		continue;
+    	}
+	}
+    return str;
 }
 
 std::string GetHelpString(int nParamNum, std::string strParamName)
@@ -1069,8 +1110,10 @@ UniValue createConfigFile(string blsPrivateKey, string ip, string address) {
 
 	string fileName = get_current_dir() + "/" + address + "_raptoreum.conf";
 	ofstream configFile(fileName);
-	configFile << "rpcuser=youruser\n";
-	configFile << "rpcpassword=yourpassword\n";
+	string username = generateRandomString(10, false);
+	string password = generateRandomString(20, true);
+	configFile << "rpcuser=" << username << endl;
+	configFile << "rpcpassword=" << password << endl;
 	configFile << "rpcport=8484\n";
 	configFile << "rpcallowip=127.0.0.1\n";
 	configFile << "server=1\n";
@@ -1088,7 +1131,6 @@ UniValue protx_quick_setup(const JSONRPCRequest& request) {
 	if (request.fHelp || request.params.size() != 5) {
 		protx_quick_setup_help(pwallet);
 	}
-
 	if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
 		return NullUniValue;
 //register_fund "collateralAddress" "ipAndPort" "ownerAddress" "operatorPubKey" "votingAddress" operatorReward "payoutAddress" ( "fundAddress" )

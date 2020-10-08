@@ -468,6 +468,7 @@ public:
         consensus.llmqs[Consensus::LLMQ_400_85] = llmq20_85;
         consensus.llmqTypeChainLocks = Consensus::LLMQ_400_60;
         consensus.llmqTypeInstantSend = Consensus::LLMQ_50_60;
+        consensus.quorumSizeForkHeight = 19590;
 
         fDefaultConsistencyChecks = false;
         fRequireStandard = true;
@@ -950,18 +951,33 @@ void CChainParams::UpdateLLMQParams(size_t totalMnCount, int height) {
 	    LogPrintf("---UpdateLLMQParams %d-%d-%ld-%ld-%d\n", lastCheckHeight, height, lastCheckMnCount, totalMnCount, isNotLLMQsMiningPhase);
 		lastCheckMnCount = totalMnCount;
 		lastCheckHeight = height;
-		if(totalMnCount < llmq5_60.size) {
+		if(totalMnCount < 5) {
 			consensus.llmqs[Consensus::LLMQ_50_60] = llmq5_60;
 			consensus.llmqs[Consensus::LLMQ_400_60] = llmq20_60;
 			consensus.llmqs[Consensus::LLMQ_400_85] = llmq20_85;
-		} else if(totalMnCount < llmq400_60.size) {
+		} else if(height < consensus.quorumSizeForkHeight) {
+			if(totalMnCount < 400) {
+				consensus.llmqs[Consensus::LLMQ_50_60] = llmq10_60;
+				consensus.llmqs[Consensus::LLMQ_400_60] = llmq20_60;
+				consensus.llmqs[Consensus::LLMQ_400_85] = llmq20_85;
+			} else {
+				consensus.llmqs[Consensus::LLMQ_50_60] = llmq10_60;
+				consensus.llmqs[Consensus::LLMQ_400_60] = llmq40_60;
+				consensus.llmqs[Consensus::LLMQ_400_85] = llmq40_85;
+			}
+		}
+		else if(totalMnCount < 60) {
 			consensus.llmqs[Consensus::LLMQ_50_60] = llmq10_60;
 			consensus.llmqs[Consensus::LLMQ_400_60] = llmq20_60;
 			consensus.llmqs[Consensus::LLMQ_400_85] = llmq20_85;
-		} else {
-			consensus.llmqs[Consensus::LLMQ_50_60] = llmq10_60;
+		}  else if(totalMnCount < 440) {
+			consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
 			consensus.llmqs[Consensus::LLMQ_400_60] = llmq40_60;
 			consensus.llmqs[Consensus::LLMQ_400_85] = llmq40_85;
+		} else {
+			consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
+			consensus.llmqs[Consensus::LLMQ_400_60] = llmq400_60;
+			consensus.llmqs[Consensus::LLMQ_400_85] = llmq400_85;
 		}
 //		if(totalMnCount < llmq50_60.size) {
 //			consensus.llmqs[Consensus::LLMQ_50_60] = llmq10_60;

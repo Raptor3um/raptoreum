@@ -27,7 +27,7 @@ color: #ccc;
 
 QMenuBar::item:selected {
 background-color: #333;
-color: #1c75bc; /* aka Strong Blue */
+color: #b7410e; 
 }
 
 QMenu {
@@ -40,18 +40,18 @@ color: #ccc;
 
 QMenu::item:selected {
 background-color: #666;
-color: #ddd;
+color: #b7410e;
 }
 
 QToolBar {
-background-color: #1c75bc;
+background-color: #b7410e;
 border: 0;
 padding:0;
 margin:0;
 }
 
 QToolBar > QToolButton {
-background-color: #1c75bc;
+background-color: #b7410e;
 border: 0;
 font-size: 14px;
 min-width: 70px;
@@ -93,7 +93,7 @@ background-color:transparent;
 }
 
 .QValidatedLineEdit, .QLineEdit { /* Text Entry Fields */
-border: 1px solid #1c75bc;
+border: 1px solid #b7410e;
 font-size:11px;
 min-height:31px;
 outline:0;
@@ -127,7 +127,7 @@ selection-background-color: #999;
 /*******************************************************/
 
 QPushButton { /* Global Button Style */
-background-color: #1c75bc;
+background-color: #b7410e;
 border: 0;
 border-radius:8px;
 color:#ffffff;
@@ -141,7 +141,7 @@ padding-bottom:5px;
 }
 
 QPushButton:hover {
-background-color: #005c96; /* aka Dark Blue */
+background-color: #b7410e; /* aka Dark Blue */
 }
 
 QPushButton:focus {
@@ -306,7 +306,7 @@ background-color:transparent;
 
 QHeaderView::section { /* Table Header Sections */
 qproperty-alignment:center;
-background-color: #1c75bc;
+background-color: #b7410e;
 color: #ccc;
 min-height:25px;
 font-weight:bold;
@@ -467,7 +467,7 @@ padding-right:10px;
 }
 
 QDialog#SignVerifyMessageDialog QPlainTextEdit { /* Message Signing Text */
-border: 1px solid #1c75bc;
+border: 1px solid #b7410e;
 background-color: #444;
 color: #ccc;
 }
@@ -773,7 +773,7 @@ min-height:30px;
 
 QWidget .QFrame#frame .QLabel#label_5 { /* Wallet Label */
 min-width:180px;
-color:#008de4;
+color:#b7410e;
 margin-top:0;
 margin-right:5px;
 padding-right:5px;
@@ -906,7 +906,7 @@ min-width: 421px;
 QWidget .QFrame#framePrivateSend .QLabel#labelPrivateSendHeader { /* PrivateSend Header */
 qproperty-alignment: 'AlignVCenter | AlignLeft';
 min-width:180px;
-color:#008de4;
+color:#b7410e;
 margin-top:0;
 margin-right:5px;
 padding-right:5px;
@@ -963,7 +963,7 @@ color: #aaa;
 }
 
 QWidget .QFrame#framePrivateSend #privateSendFormLayoutWidget .QProgressBar#privateSendProgress::chunk {
-background-color: #008de4;
+background-color: #b7410e;
 width:1px;
 }
 
@@ -1052,7 +1052,7 @@ margin-top:0;
 
 QWidget .QFrame#frame_2 .QLabel#label_4 { /* Recent Transactions Label */
 min-width:180px;
-color: #008de4;
+color: #b7410e;
 margin-left:67px;
 margin-top:0;
 margin-right:5px;
