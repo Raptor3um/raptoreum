@@ -161,7 +161,7 @@ BitcoinGUI::BitcoinGUI(const NetworkStyle *networkStyle, QWidget *parent) :
     setUnifiedTitleAndToolBarOnMac(true);
 #endif
 
-    rpcConsole = new RPCConsole(this);
+    rpcConsole = new RPCConsole(this, enableWallet ? Qt::Window : Qt::Widget);
     helpMessageDialog = new HelpMessageDialog(this, HelpMessageDialog::cmdline);
 #ifdef ENABLE_WALLET
     if(enableWallet)
@@ -456,6 +456,7 @@ void BitcoinGUI::createActions()
         connect(smartnodeAction, SIGNAL(clicked()), this, SLOT(showNormalIfMinimized()));
         connect(smartnodeAction, SIGNAL(clicked()), this, SLOT(gotoSmartnodePage()));
     }
+#endif // ENABLE_WALLET
 
     // These showNormalIfMinimized are needed because Send Coins and Receive Coins
     // can be triggered from the tray menu, and need to show the GUI to be useful.
@@ -480,12 +481,15 @@ void BitcoinGUI::createActions()
 
     for (auto button : tabGroup->buttons()) {
         GUIUtil::setFont({button}, GUIUtil::FontWeight::Normal, 16);
+        if (walletFrame == nullptr) {
+            // hide buttons when there is no wallet
+            button->setVisible(false);
+        }
     }
     GUIUtil::updateFonts();
 
     // Give the selected tab button a bolder font.
     connect(tabGroup, SIGNAL(buttonToggled(QAbstractButton *, bool)), this, SLOT(highlightTabButton(QAbstractButton *, bool)));
-#endif // ENABLE_WALLET
 
     quitAction = new QAction(tr("E&xit"), this);
     quitAction->setStatusTip(tr("Quit application"));
@@ -1185,7 +1189,9 @@ void BitcoinGUI::updatePrivateSendVisibility()
 #endif
     // PrivateSend button is the third QToolButton, show/hide the underlying QAction
     // Hiding the QToolButton itself doesn't work.
-    qobject_cast<QToolBar*>(centralWidget()->layout()->itemAt(0)->widget())->actions()[2]->setVisible(fEnabled);
+    if (centralWidget()->layout()->itemAt(0)->widget() != nullptr) {
+        qobject_cast<QToolBar*>(centralWidget()->layout()->itemAt(0)->widget())->actions()[2]->setVisible(fEnabled);
+    }
     privateSendCoinsMenuAction->setVisible(fEnabled);
     showPrivateSendHelpAction->setVisible(fEnabled);
     updateToolBarShortcuts();
@@ -1194,6 +1200,9 @@ void BitcoinGUI::updatePrivateSendVisibility()
 
 void BitcoinGUI::updateWidth()
 {
+    if (walletFrame == nullptr) {
+        return;
+    }
     int nWidthWidestButton{0};
     int nButtonsVisible{0};
     for (QAbstractButton* button : tabGroup->buttons()) {
@@ -1213,6 +1222,9 @@ void BitcoinGUI::updateWidth()
 
 void BitcoinGUI::updateToolBarShortcuts()
 {
+    if (walletFrame == nullptr) {
+        return;
+    }
 #ifdef Q_OS_MAC
     auto modifier = Qt::CTRL;
 #else
