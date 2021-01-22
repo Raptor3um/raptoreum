@@ -13,7 +13,7 @@
 #include "ui_interface.h"
 #include "validation.h"
 #include "validationinterface.h"
-
+#include "spork.h"
 #include "llmq/quorums_commitment.h"
 #include "llmq/quorums_utils.h"
 
@@ -647,8 +647,8 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
             newList.UpdateMN(dmn->proTxHash, std::make_shared<CDeterministicMNState>(newState));
         }
     });
-
-    if(nHeight % 2 == 0) {
+    bool isDecrease = sporkManager.IsSporkActive(SPORK_21_LOW_LLMQ_PARAMS) ? nHeight % 30 == 0 : nHeight % 2 == 0;
+    if(isDecrease) {
     	DecreasePoSePenalties(newList);
     }
 
@@ -854,7 +854,7 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
     }
 
     mnListRet = std::move(newList);
-    UpdateLLMQParams(mnListRet.GetAllMNsCount(), nHeight);
+    UpdateLLMQParams(mnListRet.GetAllMNsCount(), nHeight, sporkManager.IsSporkActive(SPORK_21_LOW_LLMQ_PARAMS));
     return true;
 }
 
@@ -938,7 +938,7 @@ CDeterministicMNList CDeterministicMNManager::GetListForBlock(const CBlockIndex*
 
         mnListsCache.emplace(diffIndex->GetBlockHash(), snapshot);
     }
-    UpdateLLMQParams(snapshot.GetAllMNsCount(), snapshot.GetHeight());
+    UpdateLLMQParams(snapshot.GetAllMNsCount(), snapshot.GetHeight(), sporkManager.IsSporkActive(SPORK_21_LOW_LLMQ_PARAMS));
     return snapshot;
 }
 

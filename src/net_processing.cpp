@@ -1830,8 +1830,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             pfrom->fDisconnect = true;
             return false;
         }
-        int nHeight = chainActive.Tip() == nullptr ? 0 : chainActive.Tip()->nHeight;
-        int minVersion = nHeight < Params().GetConsensus().quorumSizeForkHeight ? MIN_PEER_PROTO_VERSION : NEW_MIN_PEER_PROTO_VERSION;
+        int minVersion = MIN_PEER_PROTO_VERSION;
         if (nVersion < minVersion)
         {
             // disconnect from peers older than this proto version

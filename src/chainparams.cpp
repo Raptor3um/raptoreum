@@ -178,12 +178,12 @@ static void FindMainNetGenesisBlock(uint32_t nTime, uint32_t nBits, const char* 
 }
 
 // this one is for testing only
-static Consensus::LLMQParams llmq5_60 = {
+static Consensus::LLMQParams llmq3_60 = {
         .type = Consensus::LLMQ_50_60,
-        .name = "llmq_5_60",
-        .size = 5,
-        .minSize = 3,
-        .threshold = 3,
+        .name = "llmq_3_60",
+        .size = 3,
+        .minSize = 2,
+        .threshold = 2,
 
         .dkgInterval = 30, // one DKG per hour
         .dkgPhaseBlocks = 2,
@@ -405,21 +405,22 @@ public:
          * The characters are rarely used upper ASCII, not valid as UTF-8, and produce
          * a large 32-bit integer with any alignment.
          */
-        pchMessageStart[0] = 0xcf;
-        pchMessageStart[1] = 0xcc;
-        pchMessageStart[2] = 0xcb;
-        pchMessageStart[3] = 0xcd;
-        nDefaultPort = 19989;
+        pchMessageStart[0] = 0xaf;
+        pchMessageStart[1] = 0xac;
+        pchMessageStart[2] = 0xab;
+        pchMessageStart[3] = 0xad;
+        nDefaultPort = 19979;
         nPruneAfterHeight = 100000;
-        //FindMainNetGenesisBlock(1599634970, 0x20001fff, "main");
-        genesis = CreateGenesisBlock(1599634970, 7043, 0x20001fff, 4, 5000 * COIN);
+        //FindMainNetGenesisBlock(1611298545, 0x20001fff, "main");
+        genesis = CreateGenesisBlock(1611298545, 201, 0x20001fff, 4, 5000 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x4978d31cde3a1931af273b4a5f0499b4629d52fd1f50d4288720e50d91ba9658"));
+        assert(consensus.hashGenesisBlock == uint256S("0x495d5223943038bb4d398773f9fb417375206b015b1a822a614407543724cc71"));
         assert(genesis.hashMerkleRoot == uint256S("0x87a48bc22468acdd72ee540aab7c086a5bbcddc12b51c6ac925717a74c269453"));
 
         //vSeeds.emplace_back("dnsseed.raptoreum.org", true);
         //vSeeds.emplace_back("dnsseed.raptoreumdot.io", true);
         //vSeeds.emplace_back("34.72.8.88", true);
+        vSeeds.emplace_back("47.151.11.28", true);
         vSeeds.emplace_back("64.227.61.186", true);
         vSeeds.emplace_back("121.121.19.249", true);
         vSeeds.emplace_back("ger1.raptoreum.com", true);
@@ -463,12 +464,11 @@ public:
         //vFixedSeeds = std::vector<SeedSpec6>(pnSeed6_main, pnSeed6_main + ARRAYLEN(pnSeed6_main));
         vFixedSeeds = std::vector<SeedSpec6>();
         // long living quorum params
-        consensus.llmqs[Consensus::LLMQ_50_60] = llmq5_60;
+        consensus.llmqs[Consensus::LLMQ_50_60] = llmq3_60;
         consensus.llmqs[Consensus::LLMQ_400_60] = llmq20_60;
         consensus.llmqs[Consensus::LLMQ_400_85] = llmq20_85;
         consensus.llmqTypeChainLocks = Consensus::LLMQ_400_60;
         consensus.llmqTypeInstantSend = Consensus::LLMQ_50_60;
-        consensus.quorumSizeForkHeight = 19590;
 
         fDefaultConsistencyChecks = false;
         fRequireStandard = true;
@@ -493,7 +493,7 @@ public:
         };
 
         chainTxData = ChainTxData{
-        	1598339138, // * UNIX timestamp of last known number of transactions (Block 1173619)
+        	1611298545, // * UNIX timestamp of last known number of transactions (Block 1173619)
             0,   // * total number of transactions between genesis and that timestamp
                         //   (the tx=... number in the SetBestChain debug.log lines)
             0.2         // * estimated number of transactions per second after that timestamp
@@ -862,7 +862,7 @@ public:
         nExtCoinType = 1;
 
         // long living quorum params
-        consensus.llmqs[Consensus::LLMQ_5_60] = llmq5_60;
+        consensus.llmqs[Consensus::LLMQ_5_60] = llmq3_60;
         consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
         consensus.llmqTypeChainLocks = Consensus::LLMQ_5_60;
         consensus.llmqTypeInstantSend = Consensus::LLMQ_5_60;
@@ -920,8 +920,8 @@ void UpdateDevnetLLMQChainLocks(Consensus::LLMQType llmqType)
     globalChainParams->UpdateLLMQChainLocks(llmqType);
 }
 
-void UpdateLLMQParams(size_t totalMnCount, int height) {
-	globalChainParams->UpdateLLMQParams(totalMnCount, height);
+void UpdateLLMQParams(size_t totalMnCount, int height, bool lowLLMQParams) {
+	globalChainParams->UpdateLLMQParams(totalMnCount, height, lowLLMQParams);
 }
 bool IsMiningPhase(Consensus::LLMQParams params, int nHeight)
 {
@@ -941,7 +941,7 @@ bool IsLLMQsMiningPhase(int nHeight) {
 	return false;
 }
 
-void CChainParams::UpdateLLMQParams(size_t totalMnCount, int height) {
+void CChainParams::UpdateLLMQParams(size_t totalMnCount, int height, bool lowLLMQParams) {
 	bool isNotLLMQsMiningPhase;
 //	if(isPrintedHeight != height) {
 //		isPrintedHeight = height;
@@ -951,26 +951,15 @@ void CChainParams::UpdateLLMQParams(size_t totalMnCount, int height) {
 	    LogPrintf("---UpdateLLMQParams %d-%d-%ld-%ld-%d\n", lastCheckHeight, height, lastCheckMnCount, totalMnCount, isNotLLMQsMiningPhase);
 		lastCheckMnCount = totalMnCount;
 		lastCheckHeight = height;
-		if(totalMnCount < 5) {
-			consensus.llmqs[Consensus::LLMQ_50_60] = llmq5_60;
+		if(totalMnCount < 5 || lowLLMQParams) {
+			consensus.llmqs[Consensus::LLMQ_50_60] = llmq3_60;
 			consensus.llmqs[Consensus::LLMQ_400_60] = llmq20_60;
 			consensus.llmqs[Consensus::LLMQ_400_85] = llmq20_85;
-		} else if(height < consensus.quorumSizeForkHeight) {
-			if(totalMnCount < 400) {
-				consensus.llmqs[Consensus::LLMQ_50_60] = llmq10_60;
-				consensus.llmqs[Consensus::LLMQ_400_60] = llmq20_60;
-				consensus.llmqs[Consensus::LLMQ_400_85] = llmq20_85;
-			} else {
-				consensus.llmqs[Consensus::LLMQ_50_60] = llmq10_60;
-				consensus.llmqs[Consensus::LLMQ_400_60] = llmq40_60;
-				consensus.llmqs[Consensus::LLMQ_400_85] = llmq40_85;
-			}
-		}
-		else if(totalMnCount < 60) {
+		} else if(totalMnCount < 100) {
 			consensus.llmqs[Consensus::LLMQ_50_60] = llmq10_60;
 			consensus.llmqs[Consensus::LLMQ_400_60] = llmq20_60;
 			consensus.llmqs[Consensus::LLMQ_400_85] = llmq20_85;
-		}  else if(totalMnCount < 440) {
+		}  else if(totalMnCount < 600) {
 			consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
 			consensus.llmqs[Consensus::LLMQ_400_60] = llmq40_60;
 			consensus.llmqs[Consensus::LLMQ_400_85] = llmq40_85;
@@ -979,19 +968,6 @@ void CChainParams::UpdateLLMQParams(size_t totalMnCount, int height) {
 			consensus.llmqs[Consensus::LLMQ_400_60] = llmq400_60;
 			consensus.llmqs[Consensus::LLMQ_400_85] = llmq400_85;
 		}
-//		if(totalMnCount < llmq50_60.size) {
-//			consensus.llmqs[Consensus::LLMQ_50_60] = llmq10_60;
-//			consensus.llmqs[Consensus::LLMQ_400_60] = llmq40_60;
-//			consensus.llmqs[Consensus::LLMQ_400_85] = llmq40_85;
-//		} else if(totalMnCount < llmq400_60.size) {
-//			consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
-//			consensus.llmqs[Consensus::LLMQ_400_60] = llmq40_60;
-//			consensus.llmqs[Consensus::LLMQ_400_85] = llmq40_85;
-//		} else {
-//			consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
-//			consensus.llmqs[Consensus::LLMQ_400_60] = llmq400_60;
-//			consensus.llmqs[Consensus::LLMQ_400_85] = llmq400_85;
-//		}
 	}
 
 }

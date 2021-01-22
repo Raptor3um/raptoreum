@@ -90,7 +90,7 @@ public:
     void UpdateBudgetParameters(int nSmartnodePaymentsStartBlock, int nBudgetPaymentsStartBlock, int nSuperblockStartBlock);
     void UpdateSubsidyAndDiffParams(int nMinimumDifficultyBlocks, int nHighSubsidyBlocks, int nHighSubsidyFactor);
     void UpdateLLMQChainLocks(Consensus::LLMQType llmqType);
-    void UpdateLLMQParams(size_t totalMnCount, int height);
+    void UpdateLLMQParams(size_t totalMnCount, int height, bool lowLLMQParams = false);
     int PoolMinParticipants() const { return nPoolMinParticipants; }
     int PoolMaxParticipants() const { return nPoolMaxParticipants; }
     int FulfilledRequestExpireTime() const { return nFulfilledRequestExpireTime; }
@@ -173,6 +173,6 @@ void UpdateDevnetSubsidyAndDiffParams(int nMinimumDifficultyBlocks, int nHighSub
  */
 void UpdateDevnetLLMQChainLocks(Consensus::LLMQType llmqType);
 
-void UpdateLLMQParams(size_t totalMnCount, int height);
+void UpdateLLMQParams(size_t totalMnCount, int height, bool lowLLMQParams = false);
 
 #endif // BITCOIN_CHAINPARAMS_H

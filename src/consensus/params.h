@@ -184,7 +184,6 @@ struct Params {
 
     FounderPayment nFounderPayment;
     SmartnodeCollaterals nCollaterals;
-    int quorumSizeForkHeight;
 
 };
 } // namespace Consensus

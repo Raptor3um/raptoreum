@@ -256,6 +256,38 @@ public:
 };
 } // namespace
 
+namespace
+{
+class CScriptFutureVisitor : public boost::static_visitor<bool>
+{
+private:
+    CScript *script;
+    int height;
+public:
+    CScriptFutureVisitor(CScript *scriptin, int nHeight) { script = scriptin;  height = nHeight;}
+
+    bool operator()(const CNoDestination &dest) const {
+        script->clear();
+        return false;
+    }
+
+    bool operator()(const CKeyID &keyID) const {
+        script->clear();
+        *script << height << OP_CHECKSEQUENCEVERIFY << OP_DROP << ToByteVector(keyID) << OP_CHECKSIG;
+        return true;
+    }
+
+};
+} // namespace
+
+CScript GetFutureScriptForDestination(const CTxDestination& dest, int height)
+{
+    CScript script;
+
+    boost::apply_visitor(CScriptFutureVisitor(&script, height), dest);
+    return script;
+}
+
 CScript GetScriptForDestination(const CTxDestination& dest)
 {
     CScript script;
