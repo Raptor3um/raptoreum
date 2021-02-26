@@ -1,22 +1,22 @@
-Raptoreum Core staging tree 0.15
-===========================
-
-`master:` [![Build Status](https://travis-ci.org/raptoreum/raptoreum.svg?branch=master)](https://travis-ci.org/raptoreum/raptoreum) `develop:` [![Build Status](https://travis-ci.org/raptoreum/raptoreum.svg?branch=develop)](https://travis-ci.org/raptoreum/raptoreum/branches)
-
-https://www.raptoreum.org
-
 
 What is Raptoreum?
 -------------
 
-Raptoreum is an experimental digital currency that enables instant, private
-payments to anyone, anywhere in the world. Raptoreum uses peer-to-peer technology
-to operate with no central authority: managing transactions and issuing money
-are carried out collectively by the network. Raptoreum Core is the name of the open
-source software which enables the use of this currency.
+The name Raptoreum is derived from the Victoria term for a bird of prey and ium/eum place for a pertaining to in this case birds of prey. The name comes from the team’s extensive experience in the security field with top level skills covering all aspects of it. This is a unique strength in the crypto community and will leverage well into a successful project.
 
-For more information, as well as an immediately useable, binary version of
-the Raptoreum Core software, see https://www.raptoreum.org/get-raptoreum/.
+Introduction
+Raptoreum began as the fairly simple idea, introducing smart contracts which would allow on chain, trustless transfers (goodbye centralized marketplaces) on the Ravencoin codebase, however with the automation of assets and RTM (Raptoreum). 
+The project has quickly evolved, adding innovative features that not only further expand the asset layer, but also introduce features that could help other Blockchain projects. Ravencoin unfortunately suffered several serious breaches of its asset layer so that code base has been abandoned by us. We are currently working with and building on Dash code expending its capabilities significantly.
+
+Raptoreum is now a code fork of Dash and inherits current and optionally future features such as chain locks, oracles etc. We are further expanding capabilities by adding the following features:
+A)	The deployment of a unique asset layer.
+B)	The option to lock X amount of coins or assets into a special transaction. Coins are unlocked at a block number of choice or timestamp.
+C)	Trustless on chain transfers of assets and native coins VIA Smart Contracts.
+D)	Integrating, developing and deploying a VM protocol that would allow for smart contracts in 4 major programming languages as opposed to the situation with Ethereum being limited to solidity.
+
+These additional features open up the power and ease of use of Raptoreum’s features to a greater variety of industries under the Distributed Application umbrella. DAPP's are a critical part of driving widespread adoption as recently seen with DEFI and Raptoreum hopes to help provide further alternatives and possibilities for DAPP developers particularly in the field of opening up new programming languages for DAPP and contract development.
+
+It is one of our goals to not only innovate ideas for Raptoreum but to contribute back to the general crypto community with open-source features that anybody can use to help their Blockchain projects succeed.
 
 
 License
@@ -28,7 +28,7 @@ information or see https://opensource.org/licenses/MIT.
 Development Process
 -------------------
 
-The `master` branch is meant to be stable. Development is normally done in separate branches.
+The `master` branch is meant to be stable. Development is done in separate branches.
 [Tags](https://github.com/raptoreum/raptoreum/tags) are created to indicate new official,
 stable release versions of Raptoreum Core.
 
@@ -66,12 +66,10 @@ Translations
 ------------
 
 Changes to translations as well as new translations can be submitted to
-[Raptoreum Core's Transifex page](https://www.transifex.com/projects/p/raptoreum/).
+[Raptoreum's Transifex page](https://www.transifex.com/projects/p/raptoreum/).
 
 Translations are periodically pulled from Transifex and merged into the git repository. See the
 [translation process](doc/translation_process.md) for details on how this works.
 
 **Important**: We do not accept translation changes as GitHub pull requests because the next
 pull from Transifex would automatically overwrite them again.
-
-Translators should also follow the [forum](https://www.raptoreum.org/forum/topic/raptoreum-worldwide-collaboration.88/).
