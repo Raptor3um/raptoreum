@@ -239,7 +239,7 @@ UniValue getmininginfo(const JSONRPCRequest& request)
     obj.push_back(Pair("hashespersec",     (double)nHashesPerSec));
 	obj.push_back(Pair("algos", (std::string)alsoHashString));
 	obj.push_back(Pair("pooledtx",         (uint64_t)mempool.size()));
-	obj.push_back(Pair("chain",            "test"/*Params().NetworkIDString()*/));
+	obj.push_back(Pair("chain",            Params().NetworkIDString()));
 
     return obj;
 }
