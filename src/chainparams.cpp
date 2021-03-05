@@ -433,10 +433,10 @@ public:
         consensus.hashGenesisBlock = genesis.GetHash();
         assert(consensus.hashGenesisBlock == uint256S("0xb79e5df07278b9567ada8fc655ffbfa9d3f586dc38da3dd93053686f41caeea0"));
         assert(genesis.hashMerkleRoot == uint256S("0x87a48bc22468acdd72ee540aab7c086a5bbcddc12b51c6ac925717a74c269453"));
-
+        //98.38.235.195
         vSeeds.emplace_back("47.151.7.226", true);
-        vSeeds.emplace_back("94.237.94.13", true);
-        vSeeds.emplace_back("209.151.154.214", true);
+        vSeeds.emplace_back("62.171.153.224", true);
+        vSeeds.emplace_back("98.38.235.195", true);
         vSeeds.emplace_back("ger1.raptoreum.com", true);
         vSeeds.emplace_back("ny1.raptoreum.com", true);
 
@@ -494,15 +494,15 @@ public:
 
         checkpointData = (CCheckpointData) {
             {
-
+                {5145, uint256S("0x64c9cc82f05f4326e49fd4b21a48494b02b12a707de67a47c7e8e1102b0f1d9b")}
             }
         };
 
         chainTxData = ChainTxData{
-        	1614369600, // * UNIX timestamp of last known number of transactions (Block 0)
-            0,   // * total number of transactions between genesis and that timestamp
+        	1614964862, // * UNIX timestamp of last known number of transactions (Block 0)
+			11169,   // * total number of transactions between genesis and that timestamp
                         //   (the tx=... number in the SetBestChain debug.log lines)
-            0.2         // * estimated number of transactions per second after that timestamp
+            0.1         // * estimated number of transactions per second after that timestamp
         };
     }
 };
