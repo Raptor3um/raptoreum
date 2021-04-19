@@ -611,7 +611,11 @@ public:
 
         vSeeds.clear();
         // nodes with support for servicebits filtering should be at the top
-        //vSeeds.emplace_back("testnet-seed.raptoreumdot.io", true);
+        vSeeds.emplace_back("47.151.7.226", true);
+        vSeeds.emplace_back("62.171.153.224", true);
+        vSeeds.emplace_back("98.38.235.195", true);
+        vSeeds.emplace_back("ger1.raptoreum.com", true);
+        vSeeds.emplace_back("ny1.raptoreum.com", true);
 
         // Testnet Raptoreum addresses start with 'r'
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,123);
@@ -645,7 +649,7 @@ public:
 
         vector<FounderRewardStructure> rewardStructures = {  {INT_MAX, 5}// 5% founder/dev fee forever
                                                 										   };
-		consensus.nFounderPayment = FounderPayment(rewardStructures, 200);
+		consensus.nFounderPayment = FounderPayment(rewardStructures, 200, "reWytCJZGmetgAeahMULhexHJVpx7QbebS");
 
         fDefaultConsistencyChecks = false;
         fRequireStandard = false;
