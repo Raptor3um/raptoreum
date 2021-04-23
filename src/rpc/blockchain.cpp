@@ -117,7 +117,7 @@ UniValue blockheaderToJSON(const CBlockIndex* blockindex)
     return result;
 }
 
-UniValue blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool txDetails)
+UniValue blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool txDetails, bool powHash)
 {
     UniValue result(UniValue::VOBJ);
     result.push_back(Pair("hash", blockindex->GetBlockHash().GetHex()));
@@ -168,7 +168,9 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool tx
     CBlockIndex *pnext = chainActive.Next(blockindex);
     if (pnext)
         result.push_back(Pair("nextblockhash", pnext->GetBlockHash().GetHex()));
-
+    if(powHash) {
+    	result.push_back(Pair("powhash", block.GetPOWHash().GetHex()));
+    }
     result.push_back(Pair("chainlock", chainLock));
 
     return result;
@@ -963,7 +965,7 @@ UniValue getmerkleblocks(const JSONRPCRequest& request)
 
 UniValue getblock(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 3)
         throw std::runtime_error(
             "getblock \"blockhash\" ( verbosity ) \n"
             "\nIf verbosity is 0, returns a string that is serialized, hex-encoded data for block 'hash'.\n"
@@ -1001,6 +1003,7 @@ UniValue getblock(const JSONRPCRequest& request)
             "  \"chainwork\" : \"xxxx\",  (string) Expected number of hashes required to produce the chain up to this block (in hex)\n"
             "  \"previousblockhash\" : \"hash\",  (string) The hash of the previous block\n"
             "  \"nextblockhash\" : \"hash\"       (string) The hash of the next block\n"
+            "  \"powhash\" : \"hash\"       (string) The pow hash of the this block\n"
             "}\n"
             "\nResult (for verbosity = 2):\n"
             "{\n"
@@ -1027,6 +1030,14 @@ UniValue getblock(const JSONRPCRequest& request)
         else
             verbosity = request.params[1].get_bool() ? 1 : 0;
     }
+    bool powHash = false;
+    if (!request.params[2].isNull()) {
+		if(request.params[2].isNum()) {
+			powHash = request.params[2].get_int() != 0;
+		} else {
+			powHash = request.params[2].get_bool();
+		}
+	}
 
     if (mapBlockIndex.count(hash) == 0)
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
@@ -1042,7 +1053,7 @@ UniValue getblock(const JSONRPCRequest& request)
         return strHex;
     }
 
-    return blockToJSON(block, pblockindex, verbosity >= 2);
+    return blockToJSON(block, pblockindex, verbosity >= 2, powHash);
 }
 
 struct CCoinsStats
@@ -2196,7 +2207,7 @@ static const CRPCCommand commands[] =
     { "blockchain",         "getbestblockhash",       &getbestblockhash,       true,  {} },
     { "blockchain",         "getbestchainlock",       &getbestchainlock,       true,  {} },
     { "blockchain",         "getblockcount",          &getblockcount,          true,  {} },
-    { "blockchain",         "getblock",               &getblock,               true,  {"blockhash","verbosity|verbose"} },
+    { "blockchain",         "getblock",               &getblock,               true,  {"blockhash","verbosity|verbose", "powhash"} },
     { "blockchain",         "getblockhashes",         &getblockhashes,         true,  {"high","low"} },
     { "blockchain",         "getblockhash",           &getblockhash,           true,  {"height"} },
     { "blockchain",         "getblockheader",         &getblockheader,         true,  {"blockhash","verbose"} },

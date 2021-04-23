@@ -214,7 +214,8 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params&
     arith_uint256 bnTarget;
 
     bnTarget.SetCompact(nBits, &fNegative, &fOverflow);
-
+    printf("\n fucking bnTarget = %s\n", bnTarget.GetHex().c_str());
+    printf("\n fucking hash = %s\n", UintToArith256(hash).GetHex().c_str());
     // Check range
     if (fNegative || bnTarget == 0 || fOverflow || bnTarget > UintToArith256(params.powLimit))
         return false;

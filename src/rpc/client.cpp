@@ -108,6 +108,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "listunspent", 4, "query_options" },
     { "getblock", 1, "verbosity" },
     { "getblock", 1, "verbose" },
+    { "getblock", 2, "powhash" },
     { "getblockheader", 1, "verbose" },
     { "getblockheaders", 1, "count" },
     { "getblockheaders", 2, "verbose" },
