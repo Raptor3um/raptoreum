@@ -20,6 +20,10 @@
 #include <malloc.h>
 #endif
 
+#if defined(__APPLE__)
+#include <unistd.h>
+#endif
+
 // Standard Crypto Definitions
 #define AES_BLOCK_SIZE         16
 #define AES_KEY_SIZE           32
@@ -196,11 +200,15 @@ void cryptonight_soft_shell_hash(const char* input, char* output, uint32_t len, 
     uint8_t c[AES_BLOCK_SIZE];
     uint8_t aes_key[AES_KEY_SIZE];
     oaes_ctx* aes_ctx;
-    
+
 #if defined(_MSC_VER)
     uint8_t *long_state = (uint8_t *)_malloca(scratchpad);
 #else
-    uint8_t *long_state = (uint8_t *)malloc(scratchpad);
+    #if defined(__APPLE__)
+        uint8_t *long_state = (uint8_t *)calloc(scratchpad, sizeof(uint8_t));
+    #else
+        uint8_t *long_state = (uint8_t *)malloc(scratchpad);
+    #endif
 #endif
 
     size_t CN_INIT = (scratchpad / INIT_SIZE_BYTE);
@@ -289,6 +297,7 @@ void cryptonight_soft_shell_hash(const char* input, char* output, uint32_t len, 
     /*memcpy(hash, &state, 32);*/
     extra_hashes[state.hs.b[0] & 3](&state, 200, output);
     oaes_free((OAES_CTX **) &aes_ctx);
+    free(long_state);
 }
 
 void cryptonight_soft_shell_fast_hash(const char* input, char* output, uint32_t len) {

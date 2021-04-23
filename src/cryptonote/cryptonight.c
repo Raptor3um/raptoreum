@@ -20,6 +20,10 @@
 #include <malloc.h>
 #endif
 
+#if defined(__APPLE__)
+#include <unistd.h>
+#endif
+
 #define MEMORY          2097152 /* 2 MiB 2^21 */
 #define ITER            1048576 /* 2^20 */
 #define ITER_DIV        524288 /* 2^19 */
@@ -207,7 +211,11 @@ void cryptonight_hash(const char* input, char* output, uint32_t len, int variant
 #if defined(_MSC_VER)
     struct cryptonight_ctx *ctx = _malloca(sizeof(struct cryptonight_ctx));
 #else
-    struct cryptonight_ctx *ctx = alloca(sizeof(struct cryptonight_ctx));
+    #if defined(__APPLE__)
+        struct cryptonight_ctx *ctx = calloc(sizeof(struct cryptonight_ctx), sizeof(uint32_t));
+    #else
+        struct cryptonight_ctx *ctx = alloca(sizeof(struct cryptonight_ctx));
+    #endif
 #endif
     hash_process(&ctx->state.hs, (const uint8_t*) input, len);
     memcpy(ctx->text, ctx->state.init, INIT_SIZE_BYTE);
@@ -291,6 +299,7 @@ void cryptonight_hash(const char* input, char* output, uint32_t len, int variant
     /*memcpy(hash, &state, 32);*/
     extra_hashes[ctx->state.hs.b[0] & 3](&ctx->state, 200, output);
     oaes_free((OAES_CTX **) &ctx->aes_ctx);
+    free(ctx);
 }
 
 void cryptonight_fast_hash(const char* input, char* output, uint32_t len) {
