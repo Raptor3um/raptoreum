@@ -1,10 +1,10 @@
 dnl require autoconf 2.60 (AS_ECHO/AS_ECHO_N)
 AC_PREREQ([2.60])
 define(_CLIENT_VERSION_MAJOR, 1)
-define(_CLIENT_VERSION_MINOR, 3)
+define(_CLIENT_VERSION_MINOR, 2)
 define(_CLIENT_VERSION_REVISION, 15)
-define(_CLIENT_VERSION_BUILD, 99)
-define(_CLIENT_VERSION_IS_RELEASE, false)
+define(_CLIENT_VERSION_BUILD, 2)
+define(_CLIENT_VERSION_IS_RELEASE, true)
 define(_COPYRIGHT_YEAR, 2020)
 define(_COPYRIGHT_HOLDERS,[The %s developers])
 define(_COPYRIGHT_HOLDERS_SUBSTITUTION,[[Raptoreum Core]])
@@ -267,7 +267,7 @@ fi
 
 AM_CONDITIONAL([ENABLE_CRASH_HOOKS], [test x$enable_crashhooks = xyes])
 if test "x$enable_crashhooks" = xyes; then
-    AC_DEFINE(ENABLE_CRASH_HOOKS, 1, [Define this symbol if crash hooks should be enabled])
+    AC_DEFINE(ENABLE_CRASH_HOOKS, 0, [Define this symbol if crash hooks should be enabled])
 fi
 AX_CHECK_LINK_FLAG([-Wl,-wrap=__cxa_allocate_exception], [LINK_WRAP_SUPPORTED=yes],,,)
 AM_CONDITIONAL([CRASH_HOOKS_WRAPPED_CXX_ABI],[test x$LINK_WRAP_SUPPORTED = xyes])
@@ -537,7 +537,7 @@ case $host in
      fi
 
      AX_CHECK_LINK_FLAG([[-Wl,-headerpad_max_install_names]], [LDFLAGS="$LDFLAGS -Wl,-headerpad_max_install_names"])
-     CPPFLAGS="$CPPFLAGS -DMAC_OSX"
+     CPPFLAGS="$CPPFLAGS -DMAC_OSX -DOBJC_OLD_DISPATCH_PROTOTYPES=1"
      OBJCXXFLAGS="$CXXFLAGS"
      ;;
    *linux*)
