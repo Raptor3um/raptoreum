@@ -214,7 +214,7 @@ void cryptonight_hash(const char* input, char* output, uint32_t len, int variant
     #if defined(__APPLE__)
         struct cryptonight_ctx *ctx = calloc(sizeof(struct cryptonight_ctx), sizeof(uint32_t));
     #else
-        struct cryptonight_ctx *ctx = alloca(sizeof(struct cryptonight_ctx));
+        struct cryptonight_ctx *ctx = malloc(sizeof(struct cryptonight_ctx));
     #endif
 #endif
     hash_process(&ctx->state.hs, (const uint8_t*) input, len);

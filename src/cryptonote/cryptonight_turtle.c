@@ -214,7 +214,7 @@ void cryptonightturtle_hash(const char* input, char* output, uint32_t len, int v
     #if defined(__APPLE__)
         struct cryptonightturtle_ctx *ctx = calloc(sizeof(struct cryptonightturtle_ctx), sizeof(uint32_t));
     #else
-        struct cryptonightturtle_ctx *ctx = alloca(sizeof(struct cryptonightturtle_ctx));
+        struct cryptonightturtle_ctx *ctx = malloc(sizeof(struct cryptonightturtle_ctx));
     #endif
 #endif
     hash_process(&ctx->state.hs, (const uint8_t*) input, len);
