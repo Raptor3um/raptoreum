@@ -448,10 +448,10 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 1230767999; // December 31, 2008
 
         // The best chain should have at least this much work.
-        consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000000000000000067ee70f7af0"); // 0
+        consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000000000000000d69a4fc6f3e"); // 0
 
         // By default assume that the signatures in ancestors of this block are valid.
-        consensus.defaultAssumeValid = uint256S("0xb4fb191f3ef4141557aef8aafa700d312e5499cbde4a3079faa78cf58c0c414f"); // 0
+        consensus.defaultAssumeValid = uint256S("0xc146fc6244fe4d71559f4fef16a386f1fceda6e5efa3da3ca1ebe9806cc8f25c"); // 0
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.
@@ -487,9 +487,8 @@ public:
         base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x88, 0xB2, 0x1E};
         // Raptoreum BIP32 prvkeys start with 'xprv' (Bitcoin defaults)
         base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x88, 0xAD, 0xE4};
-
         // Raptoreum BIP44 coin type is '5'
-        nExtCoinType = 200;
+        nExtCoinType = gArgs.GetArg("-extcoinindex", 10226);
         vector<FounderRewardStructure> rewardStructures = {  {INT_MAX, 5}// 5% founder/dev fee forever
                                         										   };
         consensus.nFounderPayment = FounderPayment(rewardStructures, 250);
@@ -531,13 +530,14 @@ public:
         checkpointData = (CCheckpointData) {
             {
                 {5145, uint256S("0x64c9cc82f05f4326e49fd4b21a48494b02b12a707de67a47c7e8e1102b0f1d9b")},
-                {35000, uint256S("0xb4fb191f3ef4141557aef8aafa700d312e5499cbde4a3079faa78cf58c0c414f")}
-            }
+                {35000, uint256S("0xb4fb191f3ef4141557aef8aafa700d312e5499cbde4a3079faa78cf58c0c414f")},
+                {61900, uint256S("0xc146fc6244fe4d71559f4fef16a386f1fceda6e5efa3da3ca1ebe9806cc8f25c")}
+           }
         };
 
         chainTxData = ChainTxData{
-        	1618621650, // * UNIX timestamp of last known number of transactions (Block 0)
-			99590,   // * total number of transactions between genesis and that timestamp
+        	1621916553, // * UNIX timestamp of last known number of transactions (Block 0)
+			170026,   // * total number of transactions between genesis and that timestamp
                         //   (the tx=... number in the SetBestChain debug.log lines)
             0.1         // * estimated number of transactions per second after that timestamp
         };
