@@ -288,7 +288,11 @@ void BCLog::Logger::ShrinkDebugFile()
 	if (file && log_size > 11 * (RECENT_DEBUG_HISTORY_SIZE / 10)) {
 		// Restart the file with some of the end
 		std::vector<char> vch(RECENT_DEBUG_HISTORY_SIZE, 0);
-		fseek(file, -((long)vch.size()), SEEK_END);
+		if (fseek(file, -((long)vch.size()), SEEK_END)) {
+		  LogPrintf("Failed to shring debug log file: fseek(...) failed\n");
+		  fclose(file);
+		  return;
+		}
 		int nBytes = fread(vch.data(), 1, vch.size(), file);
 		fclose(file);
 

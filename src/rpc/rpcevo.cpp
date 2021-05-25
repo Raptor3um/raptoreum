@@ -6,6 +6,7 @@
 #include <base58.h>
 #include <consensus/validation.h>
 #include <core_io.h>
+#include <index/txindex.h>
 #include <messagesigner.h>
 #include <rpc/util.h>
 #include <rpc/server.h>
@@ -1368,6 +1369,10 @@ UniValue protx_list(const JSONRPCRequest& request)
 
     UniValue ret(UniValue::VARR);
 
+    if (g_txindex) {
+        g_txindex->BlockUntilSyncedToCurrentChain();
+    }
+
     LOCK(cs_main);
 
     if (type == "wallet") {
@@ -1468,6 +1473,10 @@ UniValue protx_info(const JSONRPCRequest& request)
 #else
     CWallet* const pwallet = nullptr;
 #endif
+
+    if (g_txindex) {
+        g_txindex->BlockUntilSyncedToCurrentChain();
+    }
 
     uint256 proTxHash = ParseHashV(request.params[1], "proTxHash");
     auto mnList = deterministicMNManager->GetListAtChainTip();

@@ -9,6 +9,7 @@
 #include <consensus/params.h>
 #include <consensus/validation.h>
 #include <crypto/sha256.h>
+#include <index/txindex.h>
 #include <miner.h>
 #include <net_processing.h>
 #include <pow.h>
@@ -113,6 +114,8 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
         connman = g_connman.get();
         pblocktree.reset(new CBlockTreeDB(1 << 20, true));
         pcoinsdbview.reset(new CCoinsViewDB(1 << 23, true));
+        g_txindex = MakeUnique<TxIndex>(MakeUnique<TxIndexDB>(1 << 20, true));
+        g_txindex->Start();
         llmq::InitLLMQSystem(*evoDb, true);
         pcoinsTip.reset(new CCoinsViewCache(pcoinsdbview.get()));
         if (!LoadGenesisBlock(chainparams)) {
@@ -134,6 +137,7 @@ TestingSetup::~TestingSetup()
 {
         llmq::InterruptLLMQSystem();
         llmq::StopLLMQSystem();
+        g_txindex.reset();
         threadGroup.interrupt_all();
         threadGroup.join_all();
         GetMainSignals().FlushBackgroundCallbacks();
@@ -157,6 +161,13 @@ TestChainSetup::TestChainSetup(int blockCount) : TestingSetup(CBaseChainParams::
         std::vector<CMutableTransaction> noTxns;
         CBlock b = CreateAndProcessBlock(noTxns, scriptPubKey);
         m_coinbase_txns.push_back(b.vtx[0]);
+    }
+    // Allow tx index to catch up with the block index.
+    constexpr int64_t timeout_ms = 10 * 1000;
+    int64_t time_start = GetTimeMillis();
+    while (!g_txindex->BlockUntilSyncedToCurrentChain()) {
+        assert(time_start + timeout_ms > GetTimeMillis());
+        MilliSleep(100);
     }
 }
 

@@ -11,7 +11,7 @@ export LC_ALL=C
 EXPECTED_CIRCULAR_DEPENDENCIES=(
     "chainparamsbase -> util -> chainparamsbase"
     "checkpoints -> validation -> checkpoints"
-    # "index/txindex -> validation -> index/txindex"
+    "index/txindex -> validation -> index/txindex"
     "policy/fees -> txmempool -> policy/fees"
     "policy/policy -> validation -> policy/policy"
     "qt/addresstablemodel -> qt/walletmodel -> qt/addresstablemodel"
@@ -104,6 +104,10 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
 
     "llmq/quorums -> llmq/quorums_dkgsessionmgr -> llmq/quorums_dkgsessionhandler -> llmq/quorums"
     "evo/deterministicmns -> evo/simplifiedmns -> llmq/quorums_blockprocessor -> net -> evo/deterministicmns"
+    "index/txindex -> init -> index/txindex"
+    "index/txindex -> init -> llmq/quorums_init -> llmq/quorums_instantsend -> index/txindex"
+    "index/txindex -> init -> net_processing -> index/txindex"
+    "index/txindex -> init -> rpc/blockchain -> index/txindex"
 )
 
 EXIT_CODE=0

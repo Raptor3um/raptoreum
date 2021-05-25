@@ -178,6 +178,7 @@ BITCOIN_CORE_H = \
   httpserver.h \
   indices/spent_index.h \
   indices/future_index.h \
+  index/txindex.h \
   indirectmap.h \
   init.h \
   interfaces/chain.h \
@@ -337,8 +338,8 @@ libraptoreum_server_a_SOURCES = \
   interfaces/chain.cpp \
   interfaces/handler.cpp \
   interfaces/node.cpp \
+  index/txindex.cpp \
   init.cpp \
-  interfaces/node.cpp \
   mapport.cpp \
   governance/governance.cpp \
   governance/governance-classes.cpp \

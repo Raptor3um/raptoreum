@@ -170,7 +170,6 @@ extern std::atomic<int> atomicHeaderHeight;
  * False indicates all script checking is done on the main threadMessageHandler thread.
  */
 extern bool g_parallel_script_checks;
-extern bool fTxIndex;
 extern bool fAddressIndex;
 extern bool fTimestampIndex;
 extern bool fFutureIndex;

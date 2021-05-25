@@ -25,6 +25,7 @@
 #include <httpserver.h>
 #include <httprpc.h>
 #include <interfaces/chain.h>
+#include <index/txindex.h>
 #include <key.h>
 #include <mapport.h>
 #include <validation.h>
@@ -217,6 +218,8 @@ void Interrupt()
     InterruptMapPort();
     if (g_connman) {
         g_connman->Interrupt();
+    if (g_txindex) {
+        g_txindex->Interrupt();
     }
 }
 
@@ -254,7 +257,7 @@ void PrepareShutdown(InitInterfaces& interfaces)
     // using the other before destroying them.
     if (peerLogic) UnregisterValidationInterface(peerLogic.get());
     if (g_connman) g_connman->Stop();
-    // if (g_txindex) g_txindex->Stop(); //TODO watch out when backporting bitcoin#13033 (don't accidently put the reset here, as we've already backported bitcoin#13894)
+    if (g_txindex) g_txindex->Stop();
 
     StopTorControl();
 
@@ -289,7 +292,7 @@ void PrepareShutdown(InitInterfaces& interfaces)
     // destruct and reset all to nullptr.
     peerLogic.reset();
     g_connman.reset();
-    //g_txindex.reset(); //TODO watch out when backporting bitcoin#13033 (re-enable this, was backported via bitcoin#13894)
+    g_txindex.reset();
 
     if (g_is_mempool_loaded && gArgs.GetArg("-persistmempool", DEFAULT_PERSIST_MEMPOOL)) {
         DumpMempool();
@@ -1820,9 +1823,10 @@ bool AppInitMain(InitInterfaces& interfaces)
     int64_t nTotalCache = (gArgs.GetArg("-dbcache", nDefaultDbCache) << 20);
     nTotalCache = std::max(nTotalCache, nMinDbCache << 20); // total cache cannot be less than nMinDbCache
     nTotalCache = std::min(nTotalCache, nMaxDbCache << 20); // total cache cannot be greater than nMaxDbcache
-    int64_t nBlockTreeDBCache = nTotalCache / 8;
-    nBlockTreeDBCache = std::min(nBlockTreeDBCache, (gArgs.GetBoolArg("-txindex", DEFAULT_TXINDEX) ? nMaxBlockDBAndTxIndexCache : nMaxBlockDBCache) << 20);
+    int64_t nBlockTreeDBCache = std::min(nTotalCache / 8, nMaxBlockDBCache << 20);
     nTotalCache -= nBlockTreeDBCache;
+    int64_t nTxIndexCache = std::min(nTotalCache / 8, gArgs.GetBoolArg("-txindex", DEFAULT_TXINDEX) ? nMaxTxIndexCache << 20 : 0);
+    nTotalCache -= nTxIndexCache;
     int64_t nCoinDBCache = std::min(nTotalCache / 2, (nTotalCache / 4) + (1 << 23)); // use 25%-50% of the remainder for disk cache
     nCoinDBCache = std::min(nCoinDBCache, nMaxCoinsDBCache << 20); // cap total coins db cache
     nTotalCache -= nCoinDBCache;
@@ -1831,6 +1835,9 @@ bool AppInitMain(InitInterfaces& interfaces)
     int64_t nEvoDbCache = 1024 * 1024 * 16; // TODO
     LogPrintf("Cache configuration:\n");
     LogPrintf("* Using %.1fMiB for block index database\n", nBlockTreeDBCache * (1.0 / 1024 / 1024));
+    if (gArgs.GetBoolArg("-txindex", DEFAULT_TXINDEX)) {
+        LogPrintf("* Using %.1fMiB for transaction index database\n", nTxIndexCache * (1.0 / 1024 / 1024));
+    }
     LogPrintf("* Using %.1fMiB for chain state database\n", nCoinDBCache * (1.0 / 1024 / 1024));
     LogPrintf("* Using %.1fMiB for in-memory UTXO set (plus up to %.1fMiB of unused mempool space)\n", nCoinCacheUsage * (1.0 / 1024 / 1024), nMempoolSizeMax * (1.0 / 1024 / 1024));
 
@@ -1874,9 +1881,8 @@ bool AppInitMain(InitInterfaces& interfaces)
 
                 if (ShutdownRequested()) break;
 
-                // LoadBlockIndex will load fTxIndex from the db, or set it if
-                // we're reindexing. It will also load fHavePruned if we've
-                // ever removed a block file from disk.
+                // LoadBlockIndex will load fHavePruned if we've ever removed a
+                // block file from disk.
                 // Note that it also sets fReindex based on the disk flag!
                 // From here on out fReindex and fReset mean something different!
                 if (!LoadBlockIndex(chainparams)) {
@@ -1884,7 +1890,7 @@ bool AppInitMain(InitInterfaces& interfaces)
                     break;
                 }
 
-                if (!fDisableGovernance && !fTxIndex
+                if (!fDisableGovernance && !gArgs.GetBoolArg("-txindex", DEFAULT_TXINDEX)
                    && chainparams.NetworkIDString() != CBaseChainParams::REGTEST) { // TODO remove this when pruning is fixed. See https://github.com/dashpay/dash/pull/1817 and https://github.com/dashpay/dash/pull/1743
                     return InitError(_("Transaction index can't be disabled with governance validation enabled. Either start with -disablegovernance command line switch or enable transaction index."));
                 }
@@ -1897,12 +1903,6 @@ bool AppInitMain(InitInterfaces& interfaces)
 
                 if (!chainparams.GetConsensus().hashDevnetGenesisBlock.IsNull() && !mapBlockIndex.empty() && mapBlockIndex.count(chainparams.GetConsensus().hashDevnetGenesisBlock) == 0)
                     return InitError(_("Incorrect or no devnet genesis block found. Wrong datadir for devnet specified?"));
-
-                // Check for changed -txindex state
-                if (fTxIndex != gArgs.GetBoolArg("-txindex", DEFAULT_TXINDEX)) {
-                    strLoadError = _("You need to rebuild the database using -reindex to change -txindex");
-                    break;
-                }
 
                 // Check for changed -addressindex state
                 if (fAddressIndex != gArgs.GetBoolArg("-addressindex", DEFAULT_ADDRESSINDEX)) {
@@ -2076,12 +2076,22 @@ bool AppInitMain(InitInterfaces& interfaces)
         }
     }
 
-    // ********************************************************* Step 8b: load wallet
+    // ********************************************************* Step 8b: start indexers
+    if (gArgs.GetBoolArg("-txindex", DEFAULT_TXINDEX)) {
+        auto txindex_db = MakeUnique<TxIndexDB>(nTxIndexCache, false, fReindex);
+        g_txindex = MakeUnique<TxIndex>(std::move(txindex_db));
+        g_txindex->Start();
+    }
+
+    // ********************************************************* Step 8c: load wallet
     for (const auto& client : interfaces.chain_clients) {
       if (!client->load()) {
         return false;
       }
     }
+
+    // ********************************************************* Step 9: load wallet
+    if (!g_wallet_init_interface.Open()) return false;
 
     // As InitLoadWallet can take several minutes, it's possible the user
     // requested to kill the GUI during the last operation. If so, exit.
@@ -2089,8 +2099,8 @@ bool AppInitMain(InitInterfaces& interfaces)
         LogPrintf("Shutdown requested. Exiting.\n");
         return false;
     }
+    // ********************************************************* Step 10: data directory maintenance
 
-    // ********************************************************* Step 9: data directory maintenance
 
     // if pruning, unset the service bit and perform the initial blockstore prune
     // after any wallet rescanning has taken place.

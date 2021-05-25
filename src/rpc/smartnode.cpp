@@ -7,6 +7,7 @@
 #include <base58.h>
 #include <clientversion.h>
 #include <init.h>
+#include <index/txindex.h>
 #include <netbase.h>
 #include <rpc/util.h>
 #include <rpc/server.h>
@@ -401,6 +402,10 @@ UniValue smartnode_payments(const JSONRPCRequest& request)
     }
 
     CBlockIndex* pindex{nullptr};
+
+    if (g_txindex) {
+        g_txindex->BlockUntilSyncedToCurrentChain();
+    }
 
     if (request.params[1].isNull()) {
         LOCK(cs_main);
