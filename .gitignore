@@ -141,4 +141,5 @@ depends/x86_64-pc-linux-gnu
 depends/sdk-sources/
 dist/
 *.conf
+.settings/language.settings.xml
 
