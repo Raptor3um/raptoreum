@@ -237,13 +237,26 @@ public:
         obj.push_back(Pair("inputsHash", inputsHash.ToString()));
     }
 };
-
+/**
+ * Future transaction is a transaction locks by maturity (number of block confirmation) or
+ * by lockTime (number of second from its first confirm time) whichever come later.
+ * if maturity is negative, this transaction lock by lockTime.
+ * If lockTime is negative, this transaction lock by maturity.
+ * If both are negative, this transaction is locked till external condition is met
+ *
+ */
 class CFutureTx {
 	static const uint16_t CURRENT_VERSION = 1;
 public:
 	uint16_t nVersion{CURRENT_VERSION};// message version
-	uint32_t maturity;
-	uint16_t lockOutputIndex;
+	int32_t maturity; // number of confirmations to be matured and spendable.
+	int32_t lockTime; // number of seconds for this transaction to be spendable
+	uint16_t lockOutputIndex; // vout index that is locked in this transaction
+	bool updatableByDestination = false; // true to allow some information of this transaction to be change by lockOutput address
+	CScript externalPayoutScript;
+    uint256 externalTxid;
+	uint256 inputsHash; // replay protection
+	std::vector<unsigned char> vchSig;
 
 public:
 	ADD_SERIALIZE_METHODS;
@@ -253,8 +266,33 @@ public:
 	{
 		READWRITE(nVersion);
 		READWRITE(maturity);
+		READWRITE(lockTime);
 		READWRITE(lockOutputIndex);
+		READWRITE(updatableByDestination);
+		READWRITE(externalPayoutScript);
+		READWRITE(externalTxid);
+		READWRITE(inputsHash);
+		READWRITE(vchSig);
 
+	}
+	 std::string ToString() const;
+
+	void ToJson(UniValue& obj) const
+	{
+		obj.clear();
+		obj.setObject();
+		obj.push_back(Pair("version", nVersion));
+		obj.push_back(Pair("maturity", maturity));
+		obj.push_back(Pair("lockTime",(int)lockTime));
+		obj.push_back(Pair("lockOutputIndex", (int)lockOutputIndex));
+		obj.push_back(Pair("updatableByDestination", updatableByDestination));
+		CTxDestination dest;
+		if (ExtractDestination(externalPayoutScript, dest)) {
+			CBitcoinAddress bitcoinAddress(dest);
+			obj.push_back(Pair("externalPayoutAddress", bitcoinAddress.ToString()));
+		}
+		obj.push_back(Pair("externalTxid", externalTxid.ToString()));
+		obj.push_back(Pair("inputsHash", inputsHash.ToString()));
 	}
 
 };
