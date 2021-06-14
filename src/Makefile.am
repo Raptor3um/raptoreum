@@ -342,6 +342,7 @@ libraptoreum_server_a_SOURCES = \
   rpc/rpcquorums.cpp \
   rpc/server.cpp \
   rpc/privatesend.cpp \
+  rpc/rpcfuture.cpp \
   script/sigcache.cpp \
   script/ismine.cpp \
   spork.cpp \
