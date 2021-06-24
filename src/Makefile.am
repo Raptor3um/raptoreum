@@ -163,6 +163,7 @@ BITCOIN_CORE_H = \
   governance/governance-validators.h \
   governance/governance-vote.h \
   governance/governance-votedb.h \
+  future/fee.h \
   flat-database.h \
   hdchain.h \
   fs.h \
@@ -219,6 +220,7 @@ BITCOIN_CORE_H = \
   rpc/protocol.h \
   rpc/server.h \
   rpc/register.h \
+  rpc/specialtx_utilities.h \
   saltedhasher.h \
   scheduler.h \
   script/sigcache.h \
@@ -300,6 +302,7 @@ libraptoreum_server_a_SOURCES = \
   governance/governance-validators.cpp \
   governance/governance-vote.cpp \
   governance/governance-votedb.cpp \
+  future/fee.cpp \
   llmq/quorums.cpp \
   llmq/quorums_blockprocessor.cpp \
   llmq/quorums_commitment.cpp \

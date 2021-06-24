@@ -84,6 +84,27 @@ static bool CheckInputsHash(const CTransaction& tx, const ProTx& proTx, CValidat
     return true;
 }
 
+bool CheckFutureTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state)
+{
+    if (tx.nType != TRANSACTION_FUTURE) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-future-type");
+    }
+
+    CFutureTx ftx;
+    if (!GetTxPayload(tx, ftx)) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-future-payload");
+    }
+
+    if (ftx.nVersion == 0 || ftx.nVersion > CFutureTx::CURRENT_VERSION) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-future-version");
+    }
+    if (!CheckInputsHash(tx, ftx, state)) {
+        return false;
+    }
+
+    return true;
+}
+
 bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state)
 {
     if (tx.nType != TRANSACTION_PROVIDER_REGISTER) {

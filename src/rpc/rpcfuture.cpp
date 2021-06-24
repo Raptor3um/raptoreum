@@ -2,42 +2,70 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "base58.h"
-#include "consensus/validation.h"
-#include "core_io.h"
-#include "init.h"
-#include "messagesigner.h"
-#include "rpc/server.h"
-#include "utilmoneystr.h"
-#include "validation.h"
-
-#ifdef ENABLE_WALLET
-#include "wallet/coincontrol.h"
-#include "wallet/wallet.h"
-#include "wallet/rpcwallet.h"
-#endif//ENABLE_WALLET
-
-#include "netbase.h"
-#include "evo/specialtx.h"
-#include "evo/providertx.h"
-
-#include <iostream>
-#include <unistd.h>
-
-using namespace std;
+#include "rpc/specialtx_utilities.h"
+#include "future/fee.h"
 
 #ifdef ENABLE_WALLET
 extern UniValue signrawtransaction(const JSONRPCRequest& request);
 extern UniValue sendrawtransaction(const JSONRPCRequest& request);
 #endif//ENABLE_WALLET
 
-#ifdef ENABLE_WALLET
-UniValue futuretx_send(const JSONRPCRequest& request) {
-	throw std::runtime_error(
-				"not yet implemented"
-				);
+
+[[ noreturn ]] void futuretx_send_help()
+{
+    throw std::runtime_error(
+            "futuretx send amount fromAddress toAddress maturity lockTime ...\n"
+            "Sending amount RTM fromAddress to toAddress and locked it with maturity or lockTime. \n"
+    		"if maturity is negative, this transaction lock by lockTime."
+    		"If lockTime is negative, this transaction lock by maturity."
+    		"If both are negative, this transaction is locked till external condition is met."
+    		"Otherwise it is unlock and spendable either maturity or lockTime whichever come later.\n"
+            "\nArguments:\n"
+            "1. \"amount\"        (Number, required) Amount of RTM to be sent\n"
+            "2. \"fromAddress\"   (String, required) source address where unspent is from. it need to have enough for amount + mining fee. \n"
+            "3. \"toAddress\"     (String, required) destination address\n"
+            "4. \"maturity\"      (Number, required) Amount of confirmations need for this transaction to be spendable.\n"
+            "5. \"lockTime\"      (Number, required) Numbner of seconds from first confirms for this transaction to be spendable.\n"
+
+    );
 }
-#endif
+//#ifdef ENABLE_WALLET
+UniValue futuretx_send(const JSONRPCRequest& request) {
+	if(request.params.size() < 6) {
+		futuretx_send_help();
+	}
+	CWallet* const pwallet = GetWalletForJSONRPCRequest(request);
+	CAmount amount = AmountFromValue(request.params[1]);
+    CBitcoinAddress fromAddress(request.params[2].get_str());
+    CBitcoinAddress toAddress(request.params[3].get_str());
+    int32_t maturity = ParseInt32V(request.params[4], "maturity");
+    int32_t lockTime = ParseInt32V(request.params[5], "lockTime");
+    CScript toAddressScript = GetScriptForDestination(toAddress.Get());
+    CTxOut toTxOut(amount, toAddressScript);
+
+	CMutableTransaction tx;
+	tx.nVersion = 3;
+	tx.nType = TRANSACTION_FUTURE;
+    tx.vout.emplace_back(toTxOut);
+
+    CFutureTx ftx;
+	ftx.nVersion = CFutureTx::CURRENT_VERSION;
+	ftx.lockTime = lockTime;
+	ftx.maturity = maturity;
+	ftx.lockOutputIndex = 0;
+	ftx.updatableByDestination = false;
+
+	CAmount futureFee = getFutureFees();
+    FundSpecialTx(pwallet, tx, ftx, fromAddress.Get(), futureFee);
+    UpdateSpecialTxInputsHash(tx, ftx);
+    SetTxPayload(tx, ftx);
+    UniValue result(UniValue::VOBJ);
+	TxToUniv(CTransaction(std::move(tx)), uint256(), result);
+	return result;
+//	return SignAndSendSpecialTx(tx);
+;
+}
+//#endif
 
 UniValue futuretx_info(const JSONRPCRequest& request) {
 	throw std::runtime_error(

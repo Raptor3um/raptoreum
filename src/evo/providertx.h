@@ -246,8 +246,9 @@ public:
  *
  */
 class CFutureTx {
-	static const uint16_t CURRENT_VERSION = 1;
 public:
+	static const uint16_t CURRENT_VERSION = 1;
+
 	uint16_t nVersion{CURRENT_VERSION};// message version
 	int32_t maturity; // number of confirmations to be matured and spendable.
 	int32_t lockTime; // number of seconds for this transaction to be spendable
@@ -255,8 +256,8 @@ public:
 	bool updatableByDestination = false; // true to allow some information of this transaction to be change by lockOutput address
 	CScript externalPayoutScript;
     uint256 externalTxid;
+    uint16_t externalConfirmations = 0;
 	uint256 inputsHash; // replay protection
-	std::vector<unsigned char> vchSig;
 
 public:
 	ADD_SERIALIZE_METHODS;
@@ -271,9 +272,8 @@ public:
 		READWRITE(updatableByDestination);
 		READWRITE(externalPayoutScript);
 		READWRITE(externalTxid);
+		READWRITE(externalConfirmations);
 		READWRITE(inputsHash);
-		READWRITE(vchSig);
-
 	}
 	 std::string ToString() const;
 
@@ -290,14 +290,16 @@ public:
 		if (ExtractDestination(externalPayoutScript, dest)) {
 			CBitcoinAddress bitcoinAddress(dest);
 			obj.push_back(Pair("externalPayoutAddress", bitcoinAddress.ToString()));
+		} else {
+			obj.push_back(Pair("externalPayoutAddress", "N/A"));
 		}
 		obj.push_back(Pair("externalTxid", externalTxid.ToString()));
+		obj.push_back(Pair("externalConfirmations", (int)externalConfirmations));
 		obj.push_back(Pair("inputsHash", inputsHash.ToString()));
 	}
-
 };
 
-
+bool CheckFutureTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state);
 bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state);
 bool CheckProUpServTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state);
 bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state);

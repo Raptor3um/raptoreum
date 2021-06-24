@@ -3627,7 +3627,7 @@ static CFeeRate GetDiscardRate(const CBlockPolicyEstimator& estimator)
 }
 
 bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet,
-                                int& nChangePosInOut, std::string& strFailReason, const CCoinControl& coin_control, bool sign, int nExtraPayloadSize)
+                                int& nChangePosInOut, std::string& strFailReason, const CCoinControl& coin_control, bool sign, int nExtraPayloadSize, CAmount specialFees)
 {
     CAmount nValue = 0;
     int nChangePosRequest = nChangePosInOut;
@@ -3763,7 +3763,6 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                             txout.nValue -= nFeeRet % nSubtractFeeFromAmount;
                         }
                     }
-
                     if (IsDust(txout, ::dustRelayFee))
                     {
                         if (recipient.fSubtractFeeFromAmount && nFeeRet > 0)
@@ -3781,6 +3780,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                 }
 
                 // Choose coins to use
+                nValueToSelect += specialFees;
                 if (pick_new_inputs) {
                     nValueIn = 0;
                     setCoins.clear();
@@ -3799,6 +3799,11 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                 }
 
                 const CAmount nChange = nValueIn - nValueToSelect;
+//                if(specialFees && nChange < specialFees) {
+//                    strFailReason = _("Unable to to pay for special tx fee + miner fee ");
+//                    return false;
+//                }
+//                cout << "specialFees " << specialFees << ", nChange = " << nChange << endl;
                 CTxOut newTxOut;
 
                 if (nChange > 0)
