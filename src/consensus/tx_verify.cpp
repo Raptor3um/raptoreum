@@ -9,11 +9,29 @@
 #include "primitives/transaction.h"
 #include "script/interpreter.h"
 #include "validation.h"
+#include "future/fee.h"
+#include "evo/specialtx.h"
+#include "evo/providertx.h"
 
 // TODO remove the following dependencies
 #include "chain.h"
 #include "coins.h"
 #include "utilmoneystr.h"
+
+
+static void checkSpecialTxFee(const CTransaction &tx, CAmount& nFeeTotal, CAmount& specialTxFee) {
+	if(tx.nVersion >= 3) {
+		switch(tx.nType){
+		case TRANSACTION_FUTURE:
+			CFutureTx ftx;
+			if(GetTxPayload(tx.vExtraPayload, ftx)) {
+				specialTxFee = getFutureFees();
+				nFeeTotal -= specialTxFee;
+			}
+			break;
+		}
+	}
+}
 
 bool IsFinalTx(const CTransaction &tx, int nBlockHeight, int64_t nBlockTime)
 {
@@ -216,7 +234,7 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, int nHeig
     return true;
 }
 
-bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight, CAmount& txfee)
+bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight, CAmount& txfee, CAmount& specialTxFee)
 {
     // are the actual inputs available?
     if (!inputs.HaveInputs(tx)) {
@@ -255,7 +273,11 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
     if (!MoneyRange(txfee_aux)) {
         return state.DoS(100, false, REJECT_INVALID, "bad-txns-fee-outofrange");
     }
-
     txfee = txfee_aux;
+	checkSpecialTxFee(tx, txfee, specialTxFee);
+	if(txfee <= 0) {
+		return state.DoS(100, false, REJECT_INVALID, "bad-txns-fee-too-low", false,
+		            strprintf("fee (%s), special tx fee (%s)", FormatMoney(txfee), FormatMoney(specialTxFee)));
+	}
     return true;
 }

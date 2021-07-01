@@ -15,17 +15,26 @@ extern UniValue sendrawtransaction(const JSONRPCRequest& request);
 {
     throw std::runtime_error(
             "futuretx send amount fromAddress toAddress maturity lockTime ...\n"
-            "Sending amount RTM fromAddress to toAddress and locked it with maturity or lockTime. \n"
+            "Sending amount RTM fromAddress to toAddress and locked it with maturity or lockTime variable transaction fees. \n"
     		"if maturity is negative, this transaction lock by lockTime."
     		"If lockTime is negative, this transaction lock by maturity."
     		"If both are negative, this transaction is locked till external condition is met."
     		"Otherwise it is unlock and spendable either maturity or lockTime whichever come later.\n"
             "\nArguments:\n"
             "1. \"amount\"        (Number, required) Amount of RTM to be sent\n"
-            "2. \"fromAddress\"   (String, required) source address where unspent is from. it need to have enough for amount + mining fee. \n"
+            "2. \"fromAddress\"   (String, required) source address where unspent is from. it need to have enough for amount + future feee + mining fee. \n"
             "3. \"toAddress\"     (String, required) destination address\n"
             "4. \"maturity\"      (Number, required) Amount of confirmations need for this transaction to be spendable.\n"
             "5. \"lockTime\"      (Number, required) Numbner of seconds from first confirms for this transaction to be spendable.\n"
+
+    );
+}
+
+[[ noreturn ]] void futuretx_fee_help()
+{
+    throw std::runtime_error(
+            "futuretx fee ...\n"
+            "Get current future transaction fee amount \n"
 
     );
 }
@@ -59,13 +68,20 @@ UniValue futuretx_send(const JSONRPCRequest& request) {
     FundSpecialTx(pwallet, tx, ftx, fromAddress.Get(), futureFee);
     UpdateSpecialTxInputsHash(tx, ftx);
     SetTxPayload(tx, ftx);
-    UniValue result(UniValue::VOBJ);
-	TxToUniv(CTransaction(std::move(tx)), uint256(), result);
-	return result;
-//	return SignAndSendSpecialTx(tx);
+   // UniValue result(UniValue::VOBJ);
+//	TxToUniv(CTransaction(std::move(tx)), uint256(), result);
+//	return result;
+	return SignAndSendSpecialTx(tx);
 ;
 }
 //#endif
+
+UniValue futuretx_fee(const JSONRPCRequest& request) {
+	if(request.params.size() > 1) {
+		futuretx_fee_help();
+	}
+	return getFutureFees() / COIN;
+}
 
 UniValue futuretx_info(const JSONRPCRequest& request) {
 	throw std::runtime_error(
@@ -86,6 +102,7 @@ UniValue futuretx_info(const JSONRPCRequest& request) {
             "  send              - Create and send FutureTx to network\n"
 #endif
             "  info              - Return information about a FutureTx\n"
+    		"  fee               - Return current fee amount for Future transaction\n"
     );
 }
 
@@ -108,6 +125,8 @@ UniValue futuretx(const JSONRPCRequest& request)
 #endif
     if (command == "info") {
         return futuretx_info(request);
+    } else if (command == "fee") {
+        return futuretx_fee(request);
     }  else {
     	futuretx_help();
     }
