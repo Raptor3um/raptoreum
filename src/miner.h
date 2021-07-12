@@ -27,6 +27,7 @@ struct CBlockTemplate
 {
     CBlock block;
     std::vector<CAmount> vTxFees;
+    std::vector<CAmount> vSpecialTxFees;
     std::vector<int64_t> vTxSigOps;
     uint32_t nPrevBits; // nBits of previous block (for subsidy calculation)
     std::vector<CTxOut> voutSmartnodePayments; // smartnode payment
@@ -149,6 +150,7 @@ private:
     uint64_t nBlockTx;
     unsigned int nBlockSigOps;
     CAmount nFees;
+    CAmount nSpecialTxFees;
     CTxMemPool::setEntries inBlock;
 
     // Chain context for the block

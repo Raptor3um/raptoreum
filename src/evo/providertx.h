@@ -254,6 +254,7 @@ public:
 	int32_t lockTime; // number of seconds for this transaction to be spendable
 	uint16_t lockOutputIndex; // vout index that is locked in this transaction
 	bool updatableByDestination = false; // true to allow some information of this transaction to be change by lockOutput address
+	uint16_t exChainType = 0; // external chain type. each 15 bit unsign number will be map to a external chain. i.e 0 for btc
 	CScript externalPayoutScript;
     uint256 externalTxid;
     uint16_t externalConfirmations = 0;
@@ -270,6 +271,7 @@ public:
 		READWRITE(lockTime);
 		READWRITE(lockOutputIndex);
 		READWRITE(updatableByDestination);
+		READWRITE(exChainType);
 		READWRITE(externalPayoutScript);
 		READWRITE(externalTxid);
 		READWRITE(externalConfirmations);
@@ -286,6 +288,7 @@ public:
 		obj.push_back(Pair("lockTime",(int)lockTime));
 		obj.push_back(Pair("lockOutputIndex", (int)lockOutputIndex));
 		obj.push_back(Pair("updatableByDestination", updatableByDestination));
+		obj.push_back(Pair("exChainType", exChainType));
 		CTxDestination dest;
 		if (ExtractDestination(externalPayoutScript, dest)) {
 			CBitcoinAddress bitcoinAddress(dest);

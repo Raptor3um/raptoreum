@@ -10,5 +10,4 @@
 
 CAmount getFutureFees();
 
-
 #endif //RAPTOREUM_FEE_H
