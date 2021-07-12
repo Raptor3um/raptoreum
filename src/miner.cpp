@@ -121,6 +121,7 @@ void BlockAssembler::resetBlock()
     // These counters do not include coinbase tx
     nBlockTx = 0;
     nFees = 0;
+    nSpecialTxFees = 0;
 }
 
 std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn)
@@ -182,7 +183,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
 
     nLastBlockTx = nBlockTx;
     nLastBlockSize = nBlockSize;
-    LogPrintf("CreateNewBlock(): total size %u txs: %u fees: %ld sigops %d\n", nBlockSize, nBlockTx, nFees, nBlockSigOps);
+    LogPrintf("CreateNewBlock(): total size %u txs: %u fees: %ld specialTxFee: %ld sigops %d\n", nBlockSize, nBlockTx, nFees, nSpecialTxFees, nBlockSigOps);
 
     // Create coinbase transaction.
     CMutableTransaction coinbaseTx;
@@ -192,7 +193,8 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     coinbaseTx.vout[0].scriptPubKey = scriptPubKeyIn;
 
     // NOTE: unlike in bitcoin, we need to pass PREVIOUS block height here
-    CAmount blockReward = nFees + GetBlockSubsidy(pindexPrev->nBits, pindexPrev->nHeight, Params().GetConsensus());
+    CAmount mintReward = GetBlockSubsidy(pindexPrev->nBits, pindexPrev->nHeight, Params().GetConsensus());
+    CAmount blockReward = nFees + nSpecialTxFees + mintReward;
 
     // Compute regular coinbase transaction.
     coinbaseTx.vout[0].nValue = blockReward;
@@ -224,11 +226,13 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
 
     // Update coinbase transaction with additional info about smartnode and governance payments,
     // get some info back to pass to getblocktemplate
-    FillBlockPayments(coinbaseTx, nHeight, blockReward, pblocktemplate->voutSmartnodePayments, pblocktemplate->voutSuperblockPayments);
+    FillBlockPayments(coinbaseTx, nHeight, mintReward, pblocktemplate->voutSmartnodePayments, pblocktemplate->voutSuperblockPayments, nFees, nSpecialTxFees);
     FounderPayment founderPayment = chainparams.GetConsensus().nFounderPayment;
-	founderPayment.FillFounderPayment(coinbaseTx, nHeight, blockReward, pblock->txoutFounder);
+	founderPayment.FillFounderPayment(coinbaseTx, nHeight, mintReward, pblock->txoutFounder);
     pblock->vtx[0] = MakeTransactionRef(std::move(coinbaseTx));
     pblocktemplate->vTxFees[0] = -nFees;
+    pblocktemplate->vSpecialTxFees[0] = -nSpecialTxFees;
+
 
     // Fill in header
     pblock->hashPrevBlock  = pindexPrev->GetBlockHash();
@@ -290,11 +294,13 @@ void BlockAssembler::AddToBlock(CTxMemPool::txiter iter)
 {
     pblock->vtx.emplace_back(iter->GetSharedTx());
     pblocktemplate->vTxFees.push_back(iter->GetFee());
+    pblocktemplate->vSpecialTxFees.push_back(iter->GetSpecialTxFee());
     pblocktemplate->vTxSigOps.push_back(iter->GetSigOpCount());
     nBlockSize += iter->GetTxSize();
     ++nBlockTx;
     nBlockSigOps += iter->GetSigOpCount();
     nFees += iter->GetFee();
+    nSpecialTxFees += iter->GetSpecialTxFee();
     inBlock.insert(iter);
 
     bool fPrintPriority = gArgs.GetBoolArg("-printpriority", DEFAULT_PRINTPRIORITY);
