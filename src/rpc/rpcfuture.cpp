@@ -68,10 +68,10 @@ UniValue futuretx_send(const JSONRPCRequest& request) {
     FundSpecialTx(pwallet, tx, ftx, fromAddress.Get(), futureFee);
     UpdateSpecialTxInputsHash(tx, ftx);
     SetTxPayload(tx, ftx);
-    UniValue result(UniValue::VOBJ);
-	TxToUniv(CTransaction(std::move(tx)), uint256(), result);
-	return result;
-	//return SignAndSendSpecialTx(tx);
+    //UniValue result(UniValue::VOBJ);
+	//TxToUniv(CTransaction(std::move(tx)), uint256(), result);
+	//return result;
+	return SignAndSendSpecialTx(tx);
 ;
 }
 //#endif
