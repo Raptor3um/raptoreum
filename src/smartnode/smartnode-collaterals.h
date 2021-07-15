@@ -36,6 +36,7 @@ public:
 	bool isValidCollateral(CAmount collateralAmount) const;
 	bool isPayableCollateral(int height,CAmount collateralAnount) const;
 	int getRewardPercentage(int height) const;
+	void printCollateral() const;
 	virtual ~SmartnodeCollaterals();
 };
 

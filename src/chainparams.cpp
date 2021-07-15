@@ -614,10 +614,10 @@ public:
         vSeeds.clear();
         // nodes with support for servicebits filtering should be at the top
         vSeeds.emplace_back("47.151.7.226", true);
-        vSeeds.emplace_back("62.171.153.224", true);
-        vSeeds.emplace_back("98.38.235.195", true);
-        vSeeds.emplace_back("ger1.raptoreum.com", true);
-        vSeeds.emplace_back("ny1.raptoreum.com", true);
+        //vSeeds.emplace_back("62.171.153.224", true);
+        //vSeeds.emplace_back("98.38.235.195", true);
+        //vSeeds.emplace_back("ger1.raptoreum.com", true);
+        //vSeeds.emplace_back("ny1.raptoreum.com", true);
 
         // Testnet Raptoreum addresses start with 'r'
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,123);
@@ -660,7 +660,7 @@ public:
         fMineBlocksOnDemand = false;
         fAllowMultipleAddressesFromGroup = false;
         fAllowMultiplePorts = true;
-        miningRequiresPeers = true;
+        miningRequiresPeers = false;
 
         nPoolMinParticipants = 3;
         nPoolMaxParticipants = 5;

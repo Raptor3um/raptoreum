@@ -7,6 +7,7 @@
 
 #include "smartnode-collaterals.h"
 #include <limits.h>
+#include <iostream>
 
 SmartnodeCollaterals::SmartnodeCollaterals(vector<Collateral> collaterals, vector<RewardPercentage> rewardPercentages) {
 	this->collaterals = collaterals;
@@ -40,6 +41,7 @@ SmartnodeCollaterals::~SmartnodeCollaterals() {
 }
 
 bool SmartnodeCollaterals::isValidCollateral(CAmount collateralAnount) const {
+	std::cout << "isValidCollateral " << collateralAnount << endl;
 	auto it = collateralsHeightMap.find(collateralAnount);
 	return it != collateralsHeightMap.end();
 }
@@ -50,4 +52,13 @@ bool SmartnodeCollaterals::isPayableCollateral(int height, CAmount collateralAno
 	}
 	int collateralEndHeight = this->collateralsHeightMap.at(collateralAnount);
 	return collateralEndHeight == INT_MAX || height <= collateralEndHeight;
+}
+
+void SmartnodeCollaterals::printCollateral() const {
+	{
+	    for (auto const &pair: collateralsHeightMap) {
+	        std::cout << "{" << pair.first << ": " << pair.second << "}\n";
+	    }
+
+	}
 }
