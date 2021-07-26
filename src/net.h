@@ -898,11 +898,11 @@ public:
     bool fRelayTxes; //protected by cs_filter
     bool fSentAddr;
     // If 'true' this node will be disconnected on CSmartnodeMan::ProcessSmartnodeConnections()
-    bool m_smartnode_connection;
+    std::atomic<bool> m_smartnode_connection;
     // If 'true' this node will be disconnected after MNAUTH
-    bool m_smartnode_probe_connection;
+    std::atomic<bool> m_smartnode_probe_connection;
     // If 'true', we identified it as an intra-quorum relay connection
-    bool m_smartnode_iqr_connection{false};
+    std::atomic<bool> m_smartnode_iqr_connection{false};
     CSemaphoreGrant grantOutbound;
     CCriticalSection cs_filter;
     std::unique_ptr<CBloomFilter> pfilter PT_GUARDED_BY(cs_filter){nullptr};
@@ -973,13 +973,6 @@ public:
     // If true, we will send him CoinJoin queue messages
     std::atomic<bool> fSendDSQueue{false};
 
-    // Challenge sent in VERSION to be answered with MNAUTH (only happens between MNs)
-    mutable CCriticalSection cs_mnauth;
-    uint256 sentMNAuthChallenge;
-    uint256 receivedMNAuthChallenge;
-    uint256 verifiedProRegTxHash;
-    uint256 verifiedPubKeyHash;
-
     // If true, we will announce/send him plain recovered sigs (usually true for full nodes)
     std::atomic<bool> fSendRecSigs{false};
     // If true, we will send him all quorum related messages, even if he is not a member of our quorums
@@ -1007,6 +1000,14 @@ private:
     // Our address, as reported by the peer
     CService addrLocal GUARDED_BY(cs_addrLocal);
     mutable CCriticalSection cs_addrLocal;
+
+    // Challenge sent in VERSION to be answered with MNAUTH (only happens between MNs)
+    mutable CCriticalSection cs_mnauth;
+    uint256 sentMNAuthChallenge GUARDED_BY(cs_mnauth);
+    uint256 receivedMNAuthChallenge GUARDED_BY(cs_mnauth);
+    uint256 verifiedProRegTxHash GUARDED_BY(cs_mnauth);
+    uint256 verifiedPubKeyHash GUARDED_BY(cs_mnauth);
+
 public:
 
     NodeId GetId() const {
@@ -1135,6 +1136,46 @@ public:
     std::string GetLogString() const;
 
     bool CanRelay() const { return !m_smartnode_connection || m_smartnode_iqr_connection; }
+
+    uint256 GetSentMNAuthChallenge() const {
+        LOCK(cs_mnauth);
+        return sentMNAuthChallenge;
+    }
+
+    uint256 GetReceivedMNAuthChallenge() const {
+        LOCK(cs_mnauth);
+        return receivedMNAuthChallenge;
+    }
+
+    uint256 GetVerifiedProRegTxHash() const {
+        LOCK(cs_mnauth);
+        return verifiedProRegTxHash;
+    }
+
+    uint256 GetVerifiedPubKeyHash() const {
+        LOCK(cs_mnauth);
+        return verifiedPubKeyHash;
+    }
+
+    void SetSentMNAuthChallenge(const uint256& newSentMNAuthChallenge) {
+        LOCK(cs_mnauth);
+        sentMNAuthChallenge = newSentMNAuthChallenge;
+    }
+
+    void SetReceivedMNAuthChallenge(const uint256& newReceivedMNAuthChallenge) {
+        LOCK(cs_mnauth);
+        receivedMNAuthChallenge = newReceivedMNAuthChallenge;
+    }
+
+    void SetVerifiedProRegTxHash(const uint256& newVerifiedProRegTxHash) {
+        LOCK(cs_mnauth);
+        verifiedProRegTxHash = newVerifiedProRegTxHash;
+    }
+
+    void SetVerifiedPubKeyHash(const uint256& newVerifiedPubKeyHash) {
+        LOCK(cs_mnauth);
+        verifiedPubKeyHash = newVerifiedPubKeyHash;
+    }
 };
 
 class CExplicitNetCleanup

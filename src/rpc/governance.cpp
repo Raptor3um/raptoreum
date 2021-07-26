@@ -306,11 +306,11 @@ UniValue gobject_submit(const JSONRPCRequest& request)
     }
 
     auto mnList = deterministicMNManager->GetListAtChainTip();
-    bool fMnFound = mnList.HasValidMNByCollateral(activeSmartnodeInfo.outpoint);
+    bool fMnFound = WITH_LOCK(activeSmartnodeInfoCs, return mnList.HasValidMNByCollateral(activeSmartnodeInfo.outpoint));
 
     LogPrint(BCLog::GOBJECT, "gobject_submit -- pubKeyOperator = %s, outpoint = %s, params.size() = %lld, fMnFound = %d\n",
-            (activeSmartnodeInfo.blsPubKeyOperator ? activeSmartnodeInfo.blsPubKeyOperator->ToString() : "N/A"),
-            activeSmartnodeInfo.outpoint.ToStringShort(), request.params.size(), fMnFound);
+            (WITH_LOCK(activeSmartnodeInfoCs, return activeSmartnodeInfo.blsPubKeyOperator ? activeSmartnodeInfo.blsPubKeyOperator->ToString() : "N/A")),
+            WITH_LOCK(activeSmartnodeInfoCs, return activeSmartnodeInfo.outpoint.ToStringShort()), request.params.size(), fMnFound);
 
     // ASSEMBLE NEW GOVERNANCE OBJECT FROM USER PARAMETERS
 
@@ -347,6 +347,9 @@ UniValue gobject_submit(const JSONRPCRequest& request)
     // Attempt to sign triggers if we are a MN
     if (govobj.GetObjectType() == GOVERNANCE_OBJECT_TRIGGER) {
         if (fMnFound) {
+            // govobj.SetSmartnodeOutpoint(activeSmartnodeInfo.outpoint);
+            // govobj.Sign(*activeSmartnodeInfo.blsKeyOperator);
+            LOCK(activeSmartnodeInfoCs);
             govobj.SetSmartnodeOutpoint(activeSmartnodeInfo.outpoint);
             govobj.Sign(*activeSmartnodeInfo.blsKeyOperator);
         } else {
@@ -442,7 +445,7 @@ UniValue gobject_vote_conf(const JSONRPCRequest& request)
     UniValue statusObj(UniValue::VOBJ);
     UniValue returnObj(UniValue::VOBJ);
 
-    auto dmn = deterministicMNManager->GetListAtChainTip().GetValidMNByCollateral(activeSmartnodeInfo.outpoint);
+    auto dmn = WITH_LOCK(activeSmartnodeInfoCs, return deterministicMNManager->GetListAtChainTip().GetValidMNByCollateral(activeSmartnodeInfo.outpoint));
 
     if (!dmn) {
         nFailed++;
@@ -460,8 +463,11 @@ UniValue gobject_vote_conf(const JSONRPCRequest& request)
     if (govObjType == GOVERNANCE_OBJECT_PROPOSAL && eVoteSignal == VOTE_SIGNAL_FUNDING) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Can't use vote-conf for proposals");
     }
-    if (activeSmartnodeInfo.blsKeyOperator) {
-        signSuccess = vote.Sign(*activeSmartnodeInfo.blsKeyOperator);
+    {
+        LOCK(activeSmartnodeInfoCs);
+        if (activeSmartnodeInfo.blsKeyOperator) {
+            signSuccess = vote.Sign(*activeSmartnodeInfo.blsKeyOperator);
+        }
     }
 
     if (!signSuccess) {

@@ -12,7 +12,8 @@
 #include <warnings.h>
 
 // Keep track of the active Smartnode
-CActiveSmartnodeInfo activeSmartnodeInfo;
+CCriticalSection activeSmartnodeInfoCs;
+CActiveSmartnodeInfo activeSmartnodeInfo GUARDED_BY(activeSmartnodeInfoCs);
 CActiveSmartnodeManager* activeSmartnodeManager;
 
 std::string CActiveSmartnodeManager::GetStateString() const
@@ -61,7 +62,7 @@ std::string CActiveSmartnodeManager::GetStatus() const
 
 void CActiveSmartnodeManager::Init(const CBlockIndex* pindex)
 {
-    LOCK(cs_main);
+    LOCK2(cs_main, activeSmartnodeInfoCs);
 
     if (!fSmartnodeMode) return;
 
@@ -133,7 +134,7 @@ void CActiveSmartnodeManager::Init(const CBlockIndex* pindex)
 
 void CActiveSmartnodeManager::UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlockIndex* pindexFork, bool fInitialDownload)
 {
-    LOCK(cs_main);
+    LOCK2(cs_main, activeSmartnodeInfoCs);
 
     if (!fSmartnodeMode) return;
 
@@ -198,10 +199,11 @@ bool CActiveSmartnodeManager::GetLocalAddress(CService& addrRet)
     if (!fFoundLocal) {
         bool empty = true;
         // If we have some peers, let's try to find our local address from one of them
-        g_connman->ForEachNodeContinueIf(CConnman::AllNodes, [&fFoundLocal, &empty](CNode* pnode) {
+        auto service = WITH_LOCK(activeSmartnodeInfoCs, return activeSmartnodeInfo.service);
+        g_connman->ForEachNodeContinueIf(CConnman::AllNodes, [&](CNode* pnode) {
             empty = false;
             if (pnode->addr.IsIPv4())
-                fFoundLocal = GetLocal(activeSmartnodeInfo.service, &pnode->addr) && IsValidNetAddr(activeSmartnodeInfo.service);
+                fFoundLocal = GetLocal(service, &pnode->addr) && IsValidNetAddr(service);
             return !fFoundLocal;
         });
         // nothing and no live connections, can't do anything for now

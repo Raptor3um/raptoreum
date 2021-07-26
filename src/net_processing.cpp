@@ -431,10 +431,7 @@ void PushNodeVersion(CNode *pnode, CConnman* connman, int64_t nTime)
 
     uint256 mnauthChallenge;
     GetRandBytes(mnauthChallenge.begin(), mnauthChallenge.size());
-    {
-        LOCK(pnode->cs_mnauth);
-        pnode->sentMNAuthChallenge = mnauthChallenge;
-    }
+    pnode->SetSentMNAuthChallenge(mnauthChallenge);
 
     int nProtocolVersion = PROTOCOL_VERSION;
     if (params.NetworkIDString() != CBaseChainParams::MAIN && gArgs.IsArgSet("-pushversion")) {
@@ -442,7 +439,7 @@ void PushNodeVersion(CNode *pnode, CConnman* connman, int64_t nTime)
     }
 
     connman->PushMessage(pnode, CNetMsgMaker(INIT_PROTO_VERSION).Make(NetMsgType::VERSION, nProtocolVersion, (uint64_t)nLocalNodeServices, nTime, addrYou, addrMe,
-            nonce, strSubVersion, nNodeStartingHeight, ::fRelayTxes, mnauthChallenge, pnode->m_smartnode_connection));
+            nonce, strSubVersion, nNodeStartingHeight, ::fRelayTxes, mnauthChallenge, pnode->m_smartnode_connection.load()));
 
     if (fLogIPs) {
         LogPrint(BCLog::NET, "send version message: version %d, blocks=%d, us=%s, them=%s, peer=%d\n", nProtocolVersion, nNodeStartingHeight, addrMe.ToString(), addrYou.ToString(), nodeid);
@@ -2201,8 +2198,9 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         if (!vRecv.empty())
             vRecv >> fRelay;
         if (!vRecv.empty()) {
-            LOCK(pfrom->cs_mnauth);
-            vRecv >> pfrom->receivedMNAuthChallenge;
+            uint256 receivedMNAuthChallenge;
+            vRecv >> receivedMNAuthChallenge;
+            pfrom->SetReceivedMNAuthChallenge(receivedMNAuthChallenge);
         }
         if (!vRecv.empty()) {
             bool fOtherSmartnode = false;
@@ -4203,8 +4201,8 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                     pto->nNextInvSend = std::chrono::microseconds{connman->PoissonNextSendInbound(current_time.count(), INVENTORY_BROADCAST_INTERVAL)};
                 } else {
                     // Use half the delay for regular outbound peers, as there is less privacy concern for them.
-                    // and quarter the delay for Smartnode outbound peers, as there is even less privacy concern in this case.
-                    pto->nNextInvSend = PoissonNextSend(current_time, std::chrono::seconds{INVENTORY_BROADCAST_INTERVAL >> 1 >> !pto->verifiedProRegTxHash.IsNull()});
+                    // and quarter the delay for Masternode outbound peers, as there is even less privacy concern in this case.
+                    pto->nNextInvSend = PoissonNextSend(current_time, std::chrono::seconds{INVENTORY_BROADCAST_INTERVAL >> 1 >> !pto->GetVerifiedProRegTxHash().IsNull()});
                 }
             }
 
