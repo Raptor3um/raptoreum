@@ -259,6 +259,7 @@ BITCOIN_CORE_H = \
   rpc/specialtx_utilities.h \
   saltedhasher.h \
   scheduler.h \
+  script/descriptor.h \
   script/ismine.h \
   script/sigcache.h \
   script/sign.h \
@@ -669,6 +670,7 @@ libraptoreum_common_a_SOURCES = \
   rpc/util.cpp \
   saltedhasher.cpp \
   scheduler.cpp \
+  script/descriptor.cpp \
   script/ismine.cpp \
   script/sign.cpp \
   script/standard.cpp \
