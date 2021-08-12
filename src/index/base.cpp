@@ -4,7 +4,7 @@
 
 #include <chainparams.h>
 #include <index/base.h>
-#include <init.h>
+#include <shutdown.h>
 #include <tinyformat.h>
 #include <ui_interface.h>
 #include <validation.h>
@@ -62,9 +62,9 @@ bool BaseIndex::Init()
     if (locator.IsNull()) {
         m_best_block_index = nullptr;
     } else {
-        m_best_block_index = FindForkInGlobalIndex(chainActive, locator);
+        m_best_block_index = FindForkInGlobalIndex(::ChainActive(), locator);
     }
-    m_synced = m_best_block_index.load() == chainActive.Tip();
+    m_synced = m_best_block_index.load() == ::ChainActive().Tip();
     return true;
 }
 
@@ -73,15 +73,15 @@ static const CBlockIndex* NextSyncBlock(const CBlockIndex* pindex_prev)
     AssertLockHeld(cs_main);
 
     if (!pindex_prev) {
-        return chainActive.Genesis();
+        return ::ChainActive().Genesis();
     }
 
-    const CBlockIndex* pindex = chainActive.Next(pindex_prev);
+    const CBlockIndex* pindex = ::ChainActive().Next(pindex_prev);
     if (pindex) {
         return pindex;
     }
 
-    return chainActive.Next(chainActive.FindFork(pindex_prev));
+    return ::ChainActive().Next(::ChainActive().FindFork(pindex_prev));
 }
 
 void BaseIndex::ThreadSync()
@@ -146,7 +146,7 @@ void BaseIndex::ThreadSync()
 bool BaseIndex::WriteBestBlock(const CBlockIndex* block_index)
 {
     LOCK(cs_main);
-    if (!GetDB().WriteBestBlock(chainActive.GetLocator(block_index))) {
+    if (!GetDB().WriteBestBlock(::ChainActive().GetLocator(block_index))) {
         return error("%s: Failed to write locator to disk", __func__);
     }
     return true;
@@ -238,9 +238,9 @@ bool BaseIndex::BlockUntilSyncedToCurrentChain()
 
     {
         // Skip the queue-draining stuff if we know we're caught up with
-        // chainActive.Tip().
+        // ::ChainActive().Tip().
         LOCK(cs_main);
-        const CBlockIndex* chain_tip = chainActive.Tip();
+        const CBlockIndex* chain_tip = ::ChainActive().Tip();
         const CBlockIndex* best_block_index = m_best_block_index.load();
         if (best_block_index->GetAncestor(chain_tip->nHeight) == chain_tip) {
             return true;

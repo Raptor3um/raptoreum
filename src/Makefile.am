@@ -173,12 +173,14 @@ BITCOIN_CORE_H = \
   future/utils.h \
   flat-database.h \
   hdchain.h \
+  flatfile.h \
   fs.h \
   httprpc.h \
   httpserver.h \
   indices/spent_index.h \
   indices/future_index.h \
   index/base.h \
+  index/disktxpos.h \
   index/txindex.h \
   indirectmap.h \
   init.h \
@@ -334,6 +336,7 @@ libraptoreum_server_a_SOURCES = \
   evo/providertx.cpp \
   evo/simplifiedmns.cpp \
   evo/specialtx.cpp \
+  flatfile.cpp \
   httprpc.cpp \
   httpserver.cpp \
   interfaces/chain.cpp \

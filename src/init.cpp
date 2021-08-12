@@ -216,11 +216,8 @@ void Interrupt()
     InterruptTorControl();
     llmq::InterruptLLMQSystem();
     InterruptMapPort();
-    if (g_connman) {
-        g_connman->Interrupt();
-    if (g_txindex) {
-        g_txindex->Interrupt();
-    }
+    if (g_connman) g_connman->Interrupt();
+    if (g_txindex) g_txindex->Interrupt();
 }
 
 /** Preparing steps before shutting down or restarting the wallet */
@@ -827,8 +824,8 @@ static void ThreadImport(std::vector<fs::path> vImportFiles)
     if (fReindex) {
         int nFile = 0;
         while (true) {
-            CDiskBlockPos pos(nFile, 0);
-            if (!fs::exists(GetBlockPosFilename(pos, "blk")))
+            FlatFilePos pos(nFile, 0);
+            if (!fs::exists(GetBlockPosFilename(pos)))
                 break; // No block files left to reindex
             FILE *file = OpenBlockFile(pos, true);
             if (!file)
@@ -2082,15 +2079,12 @@ bool AppInitMain(InitInterfaces& interfaces)
         g_txindex->Start();
     }
 
-    // ********************************************************* Step 8c: load wallet
+    // ********************************************************* Step 9: load wallet
     for (const auto& client : interfaces.chain_clients) {
       if (!client->load()) {
         return false;
       }
     }
-
-    // ********************************************************* Step 9: load wallet
-    if (!g_wallet_init_interface.Open()) return false;
 
     // As InitLoadWallet can take several minutes, it's possible the user
     // requested to kill the GUI during the last operation. If so, exit.
@@ -2237,11 +2231,11 @@ bool AppInitMain(InitInterfaces& interfaces)
 
     // ********************************************************* Step 11: import blocks
 
-    if (!CheckDiskSpace(/* additional_bytes */0, /* blocks_dir */ false)) {
+    if (!CheckDiskSpace(GetDataDir())) {
         InitError(strprintf(_("Error: Disk space is low for %s"), GetDataDir()));
         return false;
     }
-    if (!CheckDiskSpace(/* additional_bytes */ 0, /* blocks_dir */ true)) {
+    if (!CheckDiskSpace(GetBlocksDir())) {
         InitError(strprintf(_("Error: Disk space is low for %s"), GetBlocksDir()));
         return false;
     }

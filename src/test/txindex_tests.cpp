@@ -5,7 +5,7 @@
 #include <chainparams.h>
 #include <index/txindex.h>
 #include <script/standard.h>
-#include <test/test_dash.h>
+#include <test/test_raptoreum.h>
 #include <util.h>
 #include <utiltime.h>
 #include <validation.h>
@@ -36,7 +36,7 @@ BOOST_FIXTURE_TEST_CASE(txindex_initial_sync, TestChain100Setup)
     int64_t time_start = GetTimeMillis();
     while (!txindex.BlockUntilSyncedToCurrentChain()) {
         BOOST_REQUIRE(time_start + timeout_ms > GetTimeMillis());
-        MilliSleep(100);
+        UninterruptibleSleep(std::chrono::milliseconds{100});
     }
 
     // Check that txindex excludes genesis block transactions.
