@@ -96,7 +96,9 @@ public:
         PrivateSendCollateralPayment,
         PrivateSendMakeCollaterals,
         PrivateSendCreateDenominations,
-        PrivateSend
+        PrivateSend,
+        FutureSend,
+        FutureReceive
     };
 
     /** Number of confirmation recommended for accepting a transaction */
