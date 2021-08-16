@@ -72,6 +72,10 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                     // Generated
                     sub.type = TransactionRecord::Generated;
                 }
+                if (wtx.tx->nType == TRANSACTION_FUTURE)
+                {
+                    sub.type = TransactionRecord::FutureReceive;
+                }
 
                 sub.address.SetString(sub.strAddress);
                 sub.txDest = sub.address.Get();
@@ -124,6 +128,11 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
             sub.type = TransactionRecord::SendToSelf;
             sub.strAddress = "";
 
+            if (wtx.tx->nType == TRANSACTION_FUTURE)
+            {
+                sub.type = TransactionRecord::FutureSend;
+            }
+
             if(mapValue["DS"] == "1")
             {
                 sub.type = TransactionRecord::PrivateSend;
@@ -138,7 +147,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                     // Sent to IP, or other non-address transaction like OP_EVAL
                     sub.strAddress = mapValue["to"];
                 }
-            }
+            } 
             else
             {
                 sub.idx = parts.size();
@@ -222,6 +231,11 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                 if(mapValue["DS"] == "1")
                 {
                     sub.type = TransactionRecord::PrivateSend;
+                }
+
+                if (wtx.tx->nType == TRANSACTION_FUTURE)
+                {
+                    sub.type = TransactionRecord::FutureSend;
                 }
 
                 CAmount nValue = txout.nValue;
@@ -324,6 +338,11 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx, int chainLockHeight)
         {
             status.status = TransactionStatus::Confirmed;
         }
+    }
+    else if(type == TransactionRecord::FutureReceive)
+    {
+        //more math to come...
+        status.status = TransactionStatus::Immature;
     }
     else
     {
