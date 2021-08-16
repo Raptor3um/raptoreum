@@ -94,7 +94,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
         const CTxOut& txout2 = wtx.tx->vout[1];
         isminetype mine = wallet->IsMine(txout1);
         isminetype mineToo = wallet->IsMine(txout2);
-        bool involvesWatchAddress = false;
+
 
         TransactionRecord sub(hash, nTime);
         CTxDestination address;
@@ -104,7 +104,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
         {
             sub.idx = 0; // vout index
             sub.credit = txout1.nValue;
-            sub.involvesWatchAddress = mine;
+
             if (ExtractDestination(txout1.scriptPubKey, address) && IsMine(*wallet, address))
             {
                 // Received by Raptoreum Address
@@ -119,11 +119,10 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                 sub.strAddress = mapValue["from"];
             }
 
-            if(mine & ISMINE_WATCH_ONLY) involvesWatchAddress = true;
             sub.address.SetString(sub.strAddress);
             sub.txDest = sub.address.Get();
             parts.append(sub);
-            parts.last().involvesWatchAddress = involvesWatchAddress;   // maybe pass to TransactionRecord as constructor argument
+
         }
 
         //FutureTX vout[1], TO ADDRESS
@@ -134,7 +133,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
             sub.debit = -(nDebit - nChange);
             sub.credit = nCredit - nChange;
 
-            sub.involvesWatchAddress = mineToo;
+
             if (ExtractDestination(txout2.scriptPubKey, address) && IsMine(*wallet, address))
             {
                 // Received by Raptoreum Address
@@ -147,11 +146,11 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                 sub.type = TransactionRecord::FutureSend;
                 sub.strAddress = mapValue["from"];
             }
-            if(mine & ISMINE_WATCH_ONLY) involvesWatchAddress = true;
+
             sub.address.SetString(sub.strAddress);
             sub.txDest = sub.address.Get();
             parts.append(sub);
-            parts.last().involvesWatchAddress = involvesWatchAddress;   // maybe pass to TransactionRecord as constructor argument
+
         }
     }
     else
