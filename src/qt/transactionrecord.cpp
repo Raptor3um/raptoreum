@@ -73,6 +73,12 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                     sub.type = TransactionRecord::Generated;
                 }
 
+                if(wtx.tx->nType == TRANSACTION_FUTURE)
+                {
+                    // Future TX Received
+                    sub.type = TransactionRecord::FutureReceive;
+                } 
+
                 sub.address.SetString(sub.strAddress);
                 sub.txDest = sub.address.Get();
                 parts.append(sub);
