@@ -72,15 +72,76 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                     // Generated
                     sub.type = TransactionRecord::Generated;
                 }
-                if (wtx.tx->nType == TRANSACTION_FUTURE)
-                {
-                    sub.type = TransactionRecord::FutureReceive;
-                }
 
                 sub.address.SetString(sub.strAddress);
                 sub.txDest = sub.address.Get();
                 parts.append(sub);
             }
+        }
+    }
+    else if(wtx.tx->nType == TRANSACTION_FUTURE)
+    {
+
+        const CTxOut& txout1 = wtx.tx->vout[0];
+        const CTxOut& txout2 = wtx.tx->vout[1];
+        isminetype mine = wallet->IsMine(txout1);
+        isminetype mineToo = wallet->IsMine(txout2);
+        bool involvesWatchAddress = false;
+
+        TransactionRecord sub(hash, nTime);
+        CTxDestination address;
+
+        if(mine)
+        {
+            sub.idx = 0; // vout index
+            sub.credit = txout1.nValue;
+            sub.involvesWatchAddress = mine;
+            if (ExtractDestination(txout1.scriptPubKey, address) && IsMine(*wallet, address))
+            {
+                // Received by Raptoreum Address
+                sub.type = TransactionRecord::FutureReceive;
+                sub.strAddress = CBitcoinAddress(address).ToString();
+                
+            }
+            else
+            {
+                // Received by IP connection (deprecated features), or a multisignature or other non-simple transaction
+                sub.type = TransactionRecord::FutureReceive;
+                sub.strAddress = mapValue["from"];
+            }
+
+            if(mine & ISMINE_WATCH_ONLY) involvesWatchAddress = true;
+            sub.address.SetString(sub.strAddress);
+            sub.txDest = sub.address.Get();
+            parts.append(sub);
+            parts.last().involvesWatchAddress = involvesWatchAddress;   // maybe pass to TransactionRecord as constructor argument
+        }
+
+        if(mineToo)
+        {
+            CAmount nChange = wtx.GetChange();
+            sub.idx = 1; // vout index
+            sub.debit = -(nDebit - nChange);
+            sub.credit = nCredit - nChange;
+
+            sub.involvesWatchAddress = mineToo;
+            if (ExtractDestination(txout2.scriptPubKey, address) && IsMine(*wallet, address))
+            {
+                // Received by Raptoreum Address
+                sub.type = TransactionRecord::FutureSend;
+                sub.strAddress = CBitcoinAddress(address).ToString();
+            }
+            else
+            {
+                // Received by IP connection (deprecated features), or a multisignature or other non-simple transaction
+                sub.type = TransactionRecord::FutureSend;
+                sub.strAddress = mapValue["from"];
+            }
+            if(mine & ISMINE_WATCH_ONLY) involvesWatchAddress = true;
+            sub.address.SetString(sub.strAddress);
+            sub.txDest = sub.address.Get();
+            parts.append(sub);
+            parts.last().involvesWatchAddress = involvesWatchAddress;   // maybe pass to TransactionRecord as constructor argument
         }
     }
     else
@@ -128,11 +189,6 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
             sub.type = TransactionRecord::SendToSelf;
             sub.strAddress = "";
 
-            if (wtx.tx->nType == TRANSACTION_FUTURE)
-            {
-                sub.type = TransactionRecord::FutureSend;
-            }
-
             if(mapValue["DS"] == "1")
             {
                 sub.type = TransactionRecord::PrivateSend;
@@ -157,7 +213,9 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                     && CPrivateSend::IsCollateralAmount(-nNet))
                 {
                     sub.type = TransactionRecord::PrivateSendCollateralPayment;
-                } else {
+                } 
+                else 
+                {
                     for (const auto& txout : wtx.tx->vout) {
                         if (txout.nValue == CPrivateSend::GetMaxCollateralAmount()) {
                             sub.type = TransactionRecord::PrivateSendMakeCollaterals;
@@ -231,11 +289,6 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                 if(mapValue["DS"] == "1")
                 {
                     sub.type = TransactionRecord::PrivateSend;
-                }
-
-                if (wtx.tx->nType == TRANSACTION_FUTURE)
-                {
-                    sub.type = TransactionRecord::FutureSend;
                 }
 
                 CAmount nValue = txout.nValue;
