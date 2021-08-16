@@ -13,6 +13,8 @@
 #include "wallet/wallet.h"
 
 #include "privatesend/privatesend.h"
+#include "evo/providertx.h"
+#include "evo/specialtx.h"
 
 #include <stdint.h>
 
@@ -87,7 +89,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
     }
     else if(wtx.tx->nType == TRANSACTION_FUTURE)
     {
-
+        //FUTURE TX
         const CTxOut& txout1 = wtx.tx->vout[0];
         const CTxOut& txout2 = wtx.tx->vout[1];
         isminetype mine = wallet->IsMine(txout1);
@@ -97,6 +99,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
         TransactionRecord sub(hash, nTime);
         CTxDestination address;
 
+        //FutureTX vout[0], FROM ADDRESS
         if(mine)
         {
             sub.idx = 0; // vout index
@@ -123,6 +126,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
             parts.last().involvesWatchAddress = involvesWatchAddress;   // maybe pass to TransactionRecord as constructor argument
         }
 
+        //FutureTX vout[1], TO ADDRESS
         if(mineToo)
         {
             CAmount nChange = wtx.GetChange();
@@ -400,8 +404,25 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx, int chainLockHeight)
     }
     else if(type == TransactionRecord::FutureReceive)
     {
-        //more math to come...
-        status.status = TransactionStatus::Immature;
+        if (wtx.GetBlocksToMaturity() > 0)
+        {
+            status.status = TransactionStatus::Immature;
+
+            if (wtx.IsInMainChain())
+            {
+                status.matures_in = wtx.GetBlocksToMaturity();
+
+                //put some futuretx logic here...     
+            }
+            else
+            {
+                status.status = TransactionStatus::NotAccepted;
+            }
+        }
+        else
+        {
+            status.status = TransactionStatus::Confirmed;
+        }
     }
     else
     {
