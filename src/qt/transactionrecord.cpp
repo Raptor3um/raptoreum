@@ -87,73 +87,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
             }
         }
     }
-    else if(wtx.tx->nType == TRANSACTION_FUTURE)
-    {
-        //FUTURE TX
-        const CTxOut& txout1 = wtx.tx->vout[0];
-        const CTxOut& txout2 = wtx.tx->vout[1];
-        isminetype mine = wallet->IsMine(txout1);
-        isminetype mineToo = wallet->IsMine(txout2);
-        bool involvesWatchAddress = false;
 
-        TransactionRecord sub(hash, nTime);
-        CTxDestination address;
-
-        //FutureTX vout[0], FROM ADDRESS
-        if(mine)
-        {
-            sub.idx = 0; // vout index
-            sub.credit = txout1.nValue;
-            sub.involvesWatchAddress = mine;
-            if (ExtractDestination(txout1.scriptPubKey, address) && IsMine(*wallet, address))
-            {
-                // Received by Raptoreum Address
-                sub.type = TransactionRecord::FutureReceive;
-                sub.strAddress = CBitcoinAddress(address).ToString();
-                
-            }
-            else
-            {
-                // Received by IP connection (deprecated features), or a multisignature or other non-simple transaction
-                sub.type = TransactionRecord::FutureReceive;
-                sub.strAddress = mapValue["from"];
-            }
-
-            if(mine & ISMINE_WATCH_ONLY) involvesWatchAddress = true;
-            sub.address.SetString(sub.strAddress);
-            sub.txDest = sub.address.Get();
-            parts.append(sub);
-            parts.last().involvesWatchAddress = involvesWatchAddress;   // maybe pass to TransactionRecord as constructor argument
-        }
-
-        //FutureTX vout[1], TO ADDRESS
-        if(mineToo)
-        {
-            CAmount nChange = wtx.GetChange();
-            sub.idx = 1; // vout index
-            sub.debit = -(nDebit - nChange);
-            sub.credit = nCredit - nChange;
-
-            sub.involvesWatchAddress = mineToo;
-            if (ExtractDestination(txout2.scriptPubKey, address) && IsMine(*wallet, address))
-            {
-                // Received by Raptoreum Address
-                sub.type = TransactionRecord::FutureSend;
-                sub.strAddress = CBitcoinAddress(address).ToString();
-            }
-            else
-            {
-                // Received by IP connection (deprecated features), or a multisignature or other non-simple transaction
-                sub.type = TransactionRecord::FutureSend;
-                sub.strAddress = mapValue["to"];
-            }
-            if(mine & ISMINE_WATCH_ONLY) involvesWatchAddress = true;
-            sub.address.SetString(sub.strAddress);
-            sub.txDest = sub.address.Get();
-            parts.append(sub);
-            parts.last().involvesWatchAddress = involvesWatchAddress;   // maybe pass to TransactionRecord as constructor argument
-        }
-    }
     else
     {
         bool fAllFromMeDenom = true;
@@ -238,6 +172,11 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                 }
             }
 
+            if(wtx.tx->nType == TRANSACTION_FUTURE)
+            {
+                sub.type = TransactionRecord::FutureSend;
+            }
+
             CAmount nChange = wtx.GetChange();
 
             sub.debit = -(nDebit - nChange);
@@ -299,6 +238,11 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                 if(mapValue["DS"] == "1")
                 {
                     sub.type = TransactionRecord::PrivateSend;
+                }
+
+                if(wtx.tx->nType == TRANSACTION_FUTURE)
+                {
+                    sub.type = TransactionRecord::FutureSend;
                 }
 
                 CAmount nValue = txout.nValue;
