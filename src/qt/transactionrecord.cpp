@@ -79,6 +79,12 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                 {
                     // Future TX Received
                     sub.type = TransactionRecord::FutureReceive;
+                    if (ExtractDestination(wtx.tx->vout[1].scriptPubKey, address))
+                    {
+                        // Received by Raptoreum Address
+                        
+                        sub.strAddress = CBitcoinAddress(address).ToString();
+                    }
                 } 
 
                 sub.address.SetString(sub.strAddress);
@@ -132,11 +138,12 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
             // Payment to self by default
             sub.type = TransactionRecord::SendToSelf;
             sub.strAddress = "";
+            CTxDestination address;
 
             if(mapValue["DS"] == "1")
             {
                 sub.type = TransactionRecord::PrivateSend;
-                CTxDestination address;
+                
                 if (ExtractDestination(wtx.tx->vout[0].scriptPubKey, address))
                 {
                     // Sent to Raptoreum Address
@@ -175,6 +182,11 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
             if(wtx.tx->nType == TRANSACTION_FUTURE)
             {
                 sub.type = TransactionRecord::FutureSend;
+                if (ExtractDestination(wtx.tx->vout[1].scriptPubKey, address))
+                {
+                    // Sent to Raptoreum Address
+                    sub.strAddress = CBitcoinAddress(address).ToString();
+                }
             }
 
             CAmount nChange = wtx.GetChange();
@@ -346,6 +358,7 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx, int chainLockHeight)
             status.status = TransactionStatus::Confirmed;
         }
     }
+    //For Future transactions, determine spendable
     else if(type == TransactionRecord::FutureReceive)
     {
         if (wtx.GetBlocksToMaturity() > 0)
