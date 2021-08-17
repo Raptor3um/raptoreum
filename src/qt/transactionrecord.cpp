@@ -182,7 +182,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
             if(wtx.tx->nType == TRANSACTION_FUTURE)
             {
                 sub.type = TransactionRecord::FutureSend;
-                if (ExtractDestination(wtx.tx->vout[1].scriptPubKey, address))
+                if (ExtractDestination(wtx.tx->vout[0].scriptPubKey, address))
                 {
                     // Sent to Raptoreum Address
                     sub.strAddress = CBitcoinAddress(address).ToString();
