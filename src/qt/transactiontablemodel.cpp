@@ -465,13 +465,13 @@ QString TransactionTableModel::formatTxToAddress(const TransactionRecord *wtx, b
     switch(wtx->type)
     {
     case TransactionRecord::RecvFromOther:
+    case TransactionRecord::FutureReceive:
         return QString::fromStdString(wtx->strAddress) + watchAddress;
     case TransactionRecord::RecvWithAddress:
     case TransactionRecord::RecvWithPrivateSend:
     case TransactionRecord::SendToAddress:
     case TransactionRecord::Generated:
     case TransactionRecord::PrivateSend:
-    case TransactionRecord::FutureReceive:
         return formatAddressLabel(wtx->strAddress, wtx->status.label, tooltip) + watchAddress;
     case TransactionRecord::SendToOther:
     case TransactionRecord::FutureSend:
