@@ -101,6 +101,8 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
                                         TransactionFilterProxy::TYPE(TransactionRecord::RecvFromOther));
     typeWidget->addItem(tr("Sent to"), TransactionFilterProxy::TYPE(TransactionRecord::SendToAddress) |
                                   TransactionFilterProxy::TYPE(TransactionRecord::SendToOther));
+    typeWidget->addItem(tr("Future"), TransactionFilterProxy::TYPE(TransactionRecord::FutureSend) |
+                                    TransactionFilterProxy::TYPE(TransactionRecord::FutureReceive));
     typeWidget->addItem(tr("Future Send"), TransactionFilterProxy::TYPE(TransactionRecord::FutureSend));
     typeWidget->addItem(tr("Future Received"), TransactionFilterProxy::TYPE(TransactionRecord::FutureReceive));
     typeWidget->addItem(tr("PrivateSend"), TransactionFilterProxy::TYPE(TransactionRecord::PrivateSend));
