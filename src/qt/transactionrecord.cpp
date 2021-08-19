@@ -78,11 +78,11 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                 if(wtx.tx->nType == TRANSACTION_FUTURE)
                 {
                     // Future TX Received
-                    sub.type = TransactionRecord::FutureReceive;
-                    if (ExtractDestination(wtx.tx->vout[1].scriptPubKey, address))
+                    
+                    if (ExtractDestination(wtx.tx->vout[1].scriptPubKey, address) && IsMine(*wallet, address))
                     {
                         // Received by Raptoreum Address
-                        
+                        sub.type = TransactionRecord::FutureReceive;
                         sub.strAddress = CBitcoinAddress(address).ToString();
                     }
                 } 
