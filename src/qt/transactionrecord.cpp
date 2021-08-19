@@ -367,32 +367,41 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx, int chainLockHeight)
         if (wtx.IsInMainChain() && GetTxPayload(wtx.tx->vExtraPayload, ftx))
         {
             //what to do first... 
-            int maturityBlock = (pindex->nHeight + ftx.maturity); //tx block height + maturity
-            int64_t maturityTime = (wtx.GetTxTime() + ftx.lockTime); //tx time + locked seconds
-
+           // int maturityBlock = (pindex->nHeight + ftx.maturity); //tx block height + maturity
+            
             if((ftx.maturity * 2 * 60) > ftx.lockTime)
             {
-                if(maturityBlock > status.cur_num_blocks)
+                if(ftx.maturity > status.depth)
                 {
-                    status.countsForBalance = false;
+                    //status.matures_in = (ftx.maturity - status.depth);
                     status.status = TransactionStatus::OpenUntilBlock;
-                    status.open_for = (maturityBlock - status.cur_num_blocks);
+                    status.open_for = (ftx.maturity - status.depth);
+                    status.countsForBalance = false;
+                    status.lockedByChainLocks = true;
                 }
                 else
                 {
+                    status.lockedByChainLocks = false;
                     status.status = TransactionStatus::Confirmed;
                 }
             }
             else
             {
-                if(GetAdjustedTime() < maturityTime)
+
+                int64_t maturityTime = (wtx.GetTxTime() + ftx.lockTime); //tx time + locked seconds
+
+                if(maturityTime > GetAdjustedTime())
                 {
-                    status.countsForBalance = false;
+                    //int maturityBlockFromTime = round(ftx.lockTime / (2 * 60));
+                    //status.matures_in = maturityBlockFromTime;  
                     status.status = TransactionStatus::OpenUntilDate;
-                    status.open_for = maturityTime;                        
+                    status.open_for = maturityTime;
+                    status.countsForBalance = false;
+                    status.lockedByChainLocks = true;   
                 }
                 else
                 {
+                    status.lockedByChainLocks = false;
                     status.status = TransactionStatus::Confirmed;
                 }
             }
