@@ -366,10 +366,12 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx, int chainLockHeight)
 
         if (wtx.IsInMainChain() && GetTxPayload(wtx.tx->vExtraPayload, ftx))
         {
+            //what to do first... 
+            int maturityBlock = (pindex->nHeight + ftx.maturity); //tx block height + maturity
+            int64_t maturityTime = (wtx.GetTxTime() + ftx.lockTime); //tx time + locked seconds
 
-            if(ftx.maturity > 0)
+            if((ftx.maturity * 2 * 60) > ftx.lockTime)
             {
-                int maturityBlock = (pindex->nHeight + ftx.maturity); //tx block height + maturity
                 if(maturityBlock > status.cur_num_blocks)
                 {
                     status.countsForBalance = false;
@@ -381,9 +383,8 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx, int chainLockHeight)
                     status.status = TransactionStatus::Confirmed;
                 }
             }
-            else if(ftx.lockTime > 0)
+            else
             {
-                int64_t maturityTime = (wtx.GetTxTime() + ftx.lockTime); //tx time + locked seconds
                 if(GetAdjustedTime() < maturityTime)
                 {
                     status.countsForBalance = false;
@@ -395,11 +396,7 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx, int chainLockHeight)
                     status.status = TransactionStatus::Confirmed;
                 }
             }
-            else
-            {
-                //should have had something to calculate, guess not... Regular TX then. 
-                status.status = TransactionStatus::Confirmed;
-            }
+
         }
         else
         {
