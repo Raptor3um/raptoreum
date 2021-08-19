@@ -109,15 +109,16 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
                 pindex = (*mi).second;
 
             CAmount ftxValue = wtx.tx->vout[0].nValue;
+            int txBlock = pindex ? pindex->nHeight : std::numeric_limits<int>::max();
             int currentHeight = chainActive.Height();
-            int maturityBlock = (pindex->nHeight + ftx.maturity);
-            int64_t maturityTime = (wtx.GetTxTime() + ftx.lockTime);
-
+            
             strHTML += "<hr><b>Future Transaction:</b><br><br>";
             strHTML += "<b>Future Amount:</b> " + BitcoinUnits::formatHtmlWithUnit(unit, ftxValue) + "<br>";
 
-            if(ftx.maturity > 0)
+            if((ftx.maturity * 2 * 60) > ftx.lockTime)
             {
+                int maturityBlock = (txBlock + ftx.maturity);
+
                 strHTML += "<b>Maturity Block:</b> " + QString::number(maturityBlock);
                 if(currentHeight < maturityBlock)
                 {
@@ -129,14 +130,15 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
                     int remainingBlocks = (currentHeight - maturityBlock);
                     strHTML += " (<em>" + QString::number(remainingBlocks) + " Blocks ago</em>)<br>";
                 }            
-            }
-
-            if(ftx.lockTime > 0)
-            {
-                strHTML += "<b>Locked For:</b><em> " + QString::number(ftx.lockTime) + " seconds</em><br>";
-                strHTML += "<b>Maturity Time:</b> " + GUIUtil::dateTimeStr(maturityTime) + "<br>";
-            }
             
+            }
+            else
+            {
+                int64_t maturityTime = (wtx.GetTxTime() + ftx.lockTime);
+                strHTML += "<b>Maturity Time:</b> " + GUIUtil::dateTimeStr(maturityTime) + "<br>";
+                strHTML += "<b>Locked Time:</b><em> " + QString::number(ftx.lockTime) + " seconds</em><br>";
+                
+            }
             
             strHTML += "<b>Locked Output Index:</b> " + QString::number(ftx.lockOutputIndex) + "<br>";
             strHTML += "<hr><br>";
