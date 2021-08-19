@@ -358,28 +358,54 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx, int chainLockHeight)
             status.status = TransactionStatus::Confirmed;
         }
     }
-    //For Future transactions, determine spendable
+    //For Future transactions, determine maturity
     else if(type == TransactionRecord::FutureReceive)
     {
-        if (wtx.GetBlocksToMaturity() > 0)
+
+        CFutureTx ftx;
+
+        if (wtx.IsInMainChain() && GetTxPayload(wtx.tx->vExtraPayload, ftx))
         {
-            status.status = TransactionStatus::Immature;
 
-            if (wtx.IsInMainChain())
+            if(ftx.maturity > 0)
             {
-                status.matures_in = wtx.GetBlocksToMaturity();
-
-                //put some futuretx logic here...     
+                int maturityBlock = (pindex->nHeight + ftx.maturity); //tx block height + maturity
+                if(maturityBlock > status.cur_num_blocks)
+                {
+                    status.countsForBalance = false;
+                    status.status = TransactionStatus::OpenUntilBlock;
+                    status.open_for = (maturityBlock - status.cur_num_blocks);
+                }
+                else
+                {
+                    status.status = TransactionStatus::Confirmed;
+                }
+            }
+            else if(ftx.lockTime > 0)
+            {
+                int64_t maturityTime = (wtx.GetTxTime() + ftx.lockTime); //tx time + locked seconds
+                if(GetAdjustedTime() < maturityTime)
+                {
+                    status.countsForBalance = false;
+                    status.status = TransactionStatus::OpenUntilDate;
+                    status.open_for = maturityTime;                        
+                }
+                else
+                {
+                    status.status = TransactionStatus::Confirmed;
+                }
             }
             else
             {
-                status.status = TransactionStatus::NotAccepted;
+                //should have had something to calculate, guess not... Regular TX then. 
+                status.status = TransactionStatus::Confirmed;
             }
         }
         else
         {
-            status.status = TransactionStatus::Confirmed;
+            status.status = TransactionStatus::NotAccepted;
         }
+        
     }
     else
     {
