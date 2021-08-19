@@ -661,8 +661,8 @@ std::string HelpMessage(HelpMessageMode mode)
 
 std::string LicenseInfo()
 {
-    const std::string URL_SOURCE_CODE = "<https://github.com/raptoreum/raptoreum>";
-    const std::string URL_WEBSITE = "<https://raptoreum.org>";
+    const std::string URL_SOURCE_CODE = "<https://github.com/Raptor3um/raptoreum>";
+    const std::string URL_WEBSITE = "<https://raptoreum.com>";
 
     return CopyrightHolders(_("Copyright (C)"), 2014, COPYRIGHT_YEAR) + "\n" +
            "\n" +
