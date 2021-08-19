@@ -15,17 +15,17 @@ extern UniValue sendrawtransaction(const JSONRPCRequest& request);
 {
     throw std::runtime_error(
             "futuretx send amount fromAddress toAddress maturity lockTime ...\n"
-            "Sending amount RTM fromAddress to toAddress and locked it with maturity or lockTime variable transaction fees. \n"
-    		"if maturity is negative, this transaction lock by lockTime."
-    		"If lockTime is negative, this transaction lock by maturity."
-    		"If both are negative, this transaction is locked till external condition is met."
-    		"Otherwise it is unlock and spendable either maturity or lockTime whichever come later.\n"
+            "Send amount of RTM fromAddress to toAddress and locked by maturity or lockTime. Transaction fees are variable. \n"
+    		"If maturity is negative, this transaction is locked by lockTime."
+    		"If lockTime is negative, this transaction is locked by maturity."
+    		"If both are negative, this transaction is locked until an external condition is met."
+    		"Otherwise, it is unlocked and spendable by either maturity or lockTime whichever comes later.\n"
             "\nArguments:\n"
             "1. \"amount\"        (Number, required) Amount of RTM to be sent\n"
-            "2. \"fromAddress\"   (String, required) source address where unspent is from. it need to have enough for amount + future feee + mining fee. \n"
-            "3. \"toAddress\"     (String, required) destination address\n"
-            "4. \"maturity\"      (Number, required) Amount of confirmations need for this transaction to be spendable.\n"
-            "5. \"lockTime\"      (Number, required) Numbner of seconds from first confirms for this transaction to be spendable.\n"
+            "2. \"fromAddress\"   (String, required) Source address where unspent is from. It needs to have enough for amount + future fee + mining fee. \n"
+            "3. \"toAddress\"     (String, required) Destination address\n"
+            "4. \"maturity\"      (Number, required) Amount of confirmations needed for this transaction to be spendable.\n"
+            "5. \"lockTime\"      (Number, required) Number of seconds from first confirmations for this transaction to be spendable.\n"
 
     );
 }
