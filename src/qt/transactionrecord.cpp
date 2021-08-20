@@ -377,11 +377,9 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx, int chainLockHeight)
                     status.status = TransactionStatus::OpenUntilBlock;
                     status.open_for = (ftx.maturity - status.depth);
                     status.countsForBalance = false;
-                    status.lockedByChainLocks = true;
                 }
                 else
                 {
-                    status.lockedByChainLocks = false;
                     status.status = TransactionStatus::Confirmed;
                 }
             }
@@ -397,11 +395,9 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx, int chainLockHeight)
                     status.status = TransactionStatus::OpenUntilDate;
                     status.open_for = maturityTime;
                     status.countsForBalance = false;
-                    status.lockedByChainLocks = true;   
                 }
                 else
                 {
-                    status.lockedByChainLocks = false;
                     status.status = TransactionStatus::Confirmed;
                 }
             }
