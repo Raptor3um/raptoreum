@@ -79,7 +79,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                 {
                     // Future TX Received
                     
-                    if (ExtractDestination(wtx.tx->vout[1].scriptPubKey, address) && IsMine(*wallet, address))
+                    if (ExtractDestination(wtx.tx->vout[1].scriptPubKey, address))
                     {
                         // Received by Raptoreum Address
                         sub.type = TransactionRecord::FutureReceive;
