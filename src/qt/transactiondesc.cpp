@@ -99,6 +99,8 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
 
     if (wtx.tx->nType == TRANSACTION_FUTURE)
     {
+        strHTML += "<hr><b>Future Transaction:</b><br><br>";
+
         CFutureTx ftx;
         if (GetTxPayload(wtx.tx->vExtraPayload, ftx)) {
 
@@ -111,16 +113,16 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
             CAmount ftxValue = wtx.tx->vout[0].nValue;
             int txBlock = pindex ? pindex->nHeight : std::numeric_limits<int>::max();
             int currentHeight = chainActive.Height();
+
+            int maturityBlock = (txBlock + ftx.maturity);
+            int64_t maturityTime = (nTime + ftx.lockTime);
+
             
-            strHTML += "<hr><b>Future Transaction:</b><br><br>";
             strHTML += "<b>Future Amount:</b> " + BitcoinUnits::formatHtmlWithUnit(unit, ftxValue) + "<br>";
-
-            if((ftx.maturity * 2 * 60) > ftx.lockTime)
+            if(wtx.IsInMainChain())
             {
-                int maturityBlock = (txBlock + ftx.maturity);
-
                 strHTML += "<b>Maturity Block:</b> " + QString::number(maturityBlock);
-                if(currentHeight < maturityBlock)
+                if(maturityBlock >= currentHeight)
                 {
                     int remainingBlocks = (maturityBlock - currentHeight);
                      strHTML += " (<em>" + QString::number(remainingBlocks) + " Blocks left</em>)<br>";
@@ -129,20 +131,20 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
                 {
                     int remainingBlocks = (currentHeight - maturityBlock);
                     strHTML += " (<em>" + QString::number(remainingBlocks) + " Blocks ago</em>)<br>";
-                }            
-            
+                }                 
             }
-            else
-            {
-                int64_t maturityTime = (wtx.GetTxTime() + ftx.lockTime);
-                strHTML += "<b>Maturity Time:</b> " + GUIUtil::dateTimeStr(maturityTime) + "<br>";
-                strHTML += "<b>Locked Time:</b><em> " + QString::number(ftx.lockTime) + " seconds</em><br>";
-                
-            }
-            
+
+            strHTML += "<b>Maturity Time:</b> " + GUIUtil::dateTimeStr(maturityTime) + "<br>";
+            strHTML += "<b>Locked Time:</b><em> " + QString::number(ftx.lockTime) + " seconds</em><br>";
             strHTML += "<b>Locked Output Index:</b> " + QString::number(ftx.lockOutputIndex) + "<br>";
-            strHTML += "<hr><br>";
+            
         }
+        else
+        {
+            strHTML += "<em>Waiting for sync...</em><br>";
+        }
+
+        strHTML += "<hr><br>";
     }
 
     //
