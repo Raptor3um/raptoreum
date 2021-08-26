@@ -181,7 +181,7 @@ public:
     int getFutureTxMaturityTime(const CWalletTx &wtx, CFutureTx &ftx);
 
     /** Return whether Future TX has matured */
-    bool futureTxHasMatured(const CWalletTx &wtx, CFutureTx &ftx);
+    bool isFutureTxMatured(const CWalletTx &wtx, CFutureTx &ftx);
 
     /** Return the Future TX Status based on maturity */
     void getFutureTxStatus(const CWalletTx &wtx, CFutureTx &ftx);
