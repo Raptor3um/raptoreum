@@ -1,6 +1,6 @@
 // Copyright (c) 2011-2015 The Bitcoin Core developers
 // Copyright (c) 2014-2019 The Dash Core developers
-// Copyright (c) 2020 The Raptoreum developers
+// Copyright (c) 2020-2021 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -26,6 +26,85 @@ bool TransactionRecord::showTransaction(const CWalletTx &wtx)
     // There are currently no cases where we hide transactions, but
     // we may want to use this in the future for things like RBF.
     return true;
+}
+
+/* Return block height for transaction */
+int TransactionRecord::getTransactionBlockHeight(const CWalletTx &wtx)
+{
+    // Find the block the tx is in
+    CBlockIndex* pindex = nullptr;
+    BlockMap::iterator mi = mapBlockIndex.find(wtx.hashBlock);
+    if (mi != mapBlockIndex.end())
+        pindex = (*mi).second;
+
+    int txBlock = pindex ? pindex->nHeight : std::numeric_limits<int>::max();
+
+    return txBlock;
+}
+
+/* Return Maturity Block of Future TX */
+int TransactionRecord::getFutureTxMaturityBlock(const CWalletTx &wtx, CFutureTx &ftx)
+{
+    int maturityBlock = (getTransactionBlockHeight(wtx) + ftx.maturity); //tx block height + maturity
+    return maturityBlock;
+}
+
+/* Return Maturity Time of Future TX */
+int TransactionRecord::getFutureTxMaturityTime(const CWalletTx &wtx, CFutureTx &ftx)
+{
+    int64_t maturityTime = (wtx.nTimeReceived + ftx.lockTime); //tx time + locked seconds
+    return maturityTime;
+}
+
+/* Return positive answer if future transaction has matured.
+ */
+bool TransactionRecord::futureTxHasMatured(const CWalletTx &wtx, CFutureTx &ftx)
+{
+    if (chainActive.Height() >= getFutureTxMaturityBlock(wtx, ftx) || GetAdjustedTime() >= getFutureTxMaturityTime(wtx, ftx)) 
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+void TransactionRecord::getFutureTxStatus(const CWalletTx &wtx, CFutureTx &ftx)
+{
+
+    if (wtx.IsInMainChain() && GetTxPayload(wtx.tx->vExtraPayload, ftx))
+    {
+
+        int maturityBlock = getFutureTxMaturityBlock(wtx, ftx);
+        int64_t maturityTime = getFutureTxMaturityTime(wtx, ftx);
+
+        //transaction depth in chain against maturity OR relative seconds of transaction against lockTime
+        if (futureTxHasMatured(wtx, ftx)) {
+            status.status = TransactionStatus::Confirmed;
+        } else {
+            status.countsForBalance = false;
+           //display transaction is mature in x blocks or transaction is mature in days hh:mm:ss
+            if(maturityBlock >= chainActive.Height())
+            {
+                status.status = TransactionStatus::OpenUntilBlock;
+                status.open_for = maturityBlock; 
+            }
+            if(maturityTime >= GetAdjustedTime())
+            {
+                status.status = TransactionStatus::OpenUntilDate;
+                status.open_for = maturityTime;
+            }
+
+        }
+
+    }
+    else
+    {
+        //not in main chain - new transaction
+        status.status = TransactionStatus::NotAccepted;
+    }
+    
 }
 
 /*
@@ -291,15 +370,9 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx, int chainLockHeight)
     AssertLockHeld(wtx.GetWallet()->cs_wallet);
     // Determine transaction status
 
-    // Find the block the tx is in
-    CBlockIndex* pindex = nullptr;
-    BlockMap::iterator mi = mapBlockIndex.find(wtx.hashBlock);
-    if (mi != mapBlockIndex.end())
-        pindex = (*mi).second;
-
     // Sort order, unrecorded transactions sort to the top
     status.sortKey = strprintf("%010d-%01d-%010u-%03d",
-        (pindex ? pindex->nHeight : std::numeric_limits<int>::max()),
+        getTransactionBlockHeight(wtx),
         (wtx.IsCoinBase() ? 1 : 0),
         wtx.nTimeReceived,
         idx);
@@ -361,40 +434,8 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx, int chainLockHeight)
     //For Future transactions, determine maturity
     else if(type == TransactionRecord::FutureReceive)
     {
-
         CFutureTx ftx;
-
-        if (wtx.IsInMainChain() && GetTxPayload(wtx.tx->vExtraPayload, ftx))
-        {
-            int txBlock = pindex ? pindex->nHeight : std::numeric_limits<int>::max();
-            int maturityBlock = (txBlock + ftx.maturity); //tx block height + maturity
-            int64_t maturityTime = (wtx.nTimeReceived + ftx.lockTime); //tx time + locked seconds
-
-            //transaction depth in chain against maturity OR relative seconds of transaction against lockTime
-            if (status.cur_num_blocks >= maturityBlock || GetAdjustedTime() >= maturityTime) {
-                status.status = TransactionStatus::Confirmed;
-            } else {
-                status.countsForBalance = false;
-               //display transaction is mature in x blocks or transaction is mature in days hh:mm:ss
-                if(maturityBlock >= status.cur_num_blocks)
-                {
-                    status.status = TransactionStatus::OpenUntilBlock;
-                    status.open_for = maturityBlock; 
-                }
-                if(maturityTime >= GetAdjustedTime())
-                {
-                    status.status = TransactionStatus::OpenUntilDate;
-                    status.open_for = maturityTime;
-                }
-
-            }
-
-        }
-        else
-        {
-            //not in main chain - new transaction
-            status.status = TransactionStatus::NotAccepted;
-        }
+        getFutureTxStatus(wtx, ftx);
         
     }
     else
