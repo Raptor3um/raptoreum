@@ -14,6 +14,7 @@
 
 class CWallet;
 class CWalletTx;
+class CFutureTx;
 
 /** UI model for transaction status. The transaction status is the part of a transaction that will change over time.
  */
@@ -169,6 +170,23 @@ public:
     /** Return whether a status update is needed.
      */
     bool statusUpdateNeeded(int chainLockHeight);
+
+    /** Return the block height of this transaction */
+    int getTransactionBlockHeight(const CWalletTx &wtx);
+
+    /** Return the Future TX Maturity block height */
+    int getFutureTxMaturityBlock(const CWalletTx &wtx, CFutureTx &ftx);
+
+    /** Return the Future TX Maturity time */
+    int getFutureTxMaturityTime(const CWalletTx &wtx, CFutureTx &ftx);
+
+    /** Return whether Future TX has matured */
+    bool futureTxHasMatured(const CWalletTx &wtx, CFutureTx &ftx);
+
+    /** Return the Future TX Status based on maturity */
+    void getFutureTxStatus(const CWalletTx &wtx, CFutureTx &ftx);
+
+
 };
 
 #endif // BITCOIN_QT_TRANSACTIONRECORD_H
