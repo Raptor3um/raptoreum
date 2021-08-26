@@ -58,7 +58,7 @@ int TransactionRecord::getFutureTxMaturityTime(const CWalletTx &wtx, CFutureTx &
 
 /* Return positive answer if future transaction has matured.
  */
-bool TransactionRecord::futureTxHasMatured(const CWalletTx &wtx, CFutureTx &ftx)
+bool TransactionRecord::isFutureTxMatured(const CWalletTx &wtx, CFutureTx &ftx)
 {
     if (chainActive.Height() >= getFutureTxMaturityBlock(wtx, ftx) || GetAdjustedTime() >= getFutureTxMaturityTime(wtx, ftx)) 
     {
@@ -80,7 +80,7 @@ void TransactionRecord::getFutureTxStatus(const CWalletTx &wtx, CFutureTx &ftx)
         int64_t maturityTime = getFutureTxMaturityTime(wtx, ftx);
 
         //transaction depth in chain against maturity OR relative seconds of transaction against lockTime
-        if (futureTxHasMatured(wtx, ftx)) {
+        if (isFutureTxMatured(wtx, ftx)) {
             status.status = TransactionStatus::Confirmed;
         } else {
             status.countsForBalance = false;
