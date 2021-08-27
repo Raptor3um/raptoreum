@@ -19,7 +19,7 @@ extern UniValue sendrawtransaction(const JSONRPCRequest& request);
     		"If maturity is negative, this transaction is locked by lockTime."
     		"If lockTime is negative, this transaction is locked by maturity."
     		"If both are negative, this transaction is locked until an external condition is met."
-    		"Otherwise, it is unlocked and spendable by either maturity or lockTime whichever comes later.\n"
+    		"Otherwise, it is unlocked and spendable by either maturity or lockTime whichever comes first.\n"
             "\nArguments:\n"
             "1. \"amount\"        (Number, required) Amount of RTM to be sent\n"
             "2. \"fromAddress\"   (String, required) Source address where unspent is from. It needs to have enough for amount + future fee + mining fee. \n"
