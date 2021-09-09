@@ -41,7 +41,6 @@ SmartnodeCollaterals::~SmartnodeCollaterals() {
 }
 
 bool SmartnodeCollaterals::isValidCollateral(CAmount collateralAnount) const {
-	std::cout << "isValidCollateral " << collateralAnount << endl;
 	auto it = collateralsHeightMap.find(collateralAnount);
 	return it != collateralsHeightMap.end();
 }
