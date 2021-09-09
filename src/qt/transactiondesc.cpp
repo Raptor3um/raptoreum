@@ -1,6 +1,6 @@
 // Copyright (c) 2011-2015 The Bitcoin Core developers
 // Copyright (c) 2014-2019 The Dash Core developers
-// Copyright (c) 2020 The Raptoreum developers
+// Copyright (c) 2020-2021 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -19,6 +19,9 @@
 #include "util.h"
 #include "wallet/db.h"
 #include "wallet/wallet.h"
+
+#include "evo/providertx.h"
+#include "evo/specialtx.h"
 
 #include <stdint.h>
 #include <string>
@@ -64,6 +67,64 @@ QString TransactionDesc::FormatTxStatus(const CWalletTx& wtx)
     }
 }
 
+QString TransactionDesc::FutureTxDescToHTML(const CWalletTx& wtx, CFutureTx& ftx, int unit)
+{
+    //
+    // Future Transaction HTML Description
+    //
+
+    QString strHTML;
+
+    strHTML += "<hr><b>Future Transaction:</b><br><br>";
+
+    if (GetTxPayload(wtx.tx->vExtraPayload, ftx)) {
+
+        // Find the block the tx is in
+        CBlockIndex* pindex = nullptr;
+        BlockMap::iterator mi = mapBlockIndex.find(wtx.hashBlock);
+        if (mi != mapBlockIndex.end())
+            pindex = (*mi).second;
+
+        CAmount ftxValue = wtx.tx->vout[0].nValue;
+        int txBlock = pindex ? pindex->nHeight : std::numeric_limits<int>::max();
+        int currentHeight = chainActive.Height();
+        int64_t nTime = wtx.GetTxTime();
+        int maturityBlock = (txBlock + ftx.maturity);
+        int64_t maturityTime = (nTime + ftx.lockTime);
+
+        
+        strHTML += "<b>Future Amount:</b> " + BitcoinUnits::formatHtmlWithUnit(unit, ftxValue) + "<br>";
+        if(wtx.IsInMainChain())
+        {
+            strHTML += tr("<b>Maturity Block:</b> %1").arg(maturityBlock);
+            if(maturityBlock >= currentHeight)
+            {
+                int remainingBlocks = (maturityBlock - currentHeight);
+                 strHTML += tr(" (<em>%1 Blocks left</em>)<br>").arg(remainingBlocks);
+            }
+            else
+            {
+                int remainingBlocks = (currentHeight - maturityBlock);
+                strHTML += tr(" (<em>%1 Blocks ago</em>)<br>").arg(remainingBlocks);
+            }                 
+        }
+
+        strHTML += "<b>Maturity Time:</b> " + GUIUtil::dateTimeStr(maturityTime) + "<br>";
+        strHTML += tr("<b>Locked Time:</b><em> %1 seconds</em><br>").arg(ftx.lockTime);
+        strHTML += tr("<b>Locked Output Index:</b> %1<br>").arg(ftx.lockOutputIndex);
+        
+    }
+    else
+    {
+        strHTML += "<em>Waiting for sync...</em><br>";
+    }
+
+    strHTML += "<hr><br>";
+    
+
+    return strHTML;
+}
+
 QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionRecord *rec, int unit)
 {
     QString strHTML;
@@ -90,6 +151,14 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
 
     strHTML += "<b>" + tr("Date") + ":</b> " + (nTime ? GUIUtil::dateTimeStr(nTime) : "") + "<br>";
 
+    //
+    // Future Transaction
+    //
+    if (wtx.tx->nType == TRANSACTION_FUTURE)
+    {
+        CFutureTx ftx;
+        strHTML += FutureTxDescToHTML(wtx, ftx, unit);
+    }
     //
     // From
     //
@@ -286,6 +355,8 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
         quint32 numBlocksToMaturity = COINBASE_MATURITY +  1;
         strHTML += "<br>" + tr("Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to \"not accepted\" and it won't be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.").arg(QString::number(numBlocksToMaturity)) + "<br>";
     }
+
+
 
     //
     // Debug view

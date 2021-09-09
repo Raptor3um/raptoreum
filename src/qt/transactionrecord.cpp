@@ -1,6 +1,6 @@
 // Copyright (c) 2011-2015 The Bitcoin Core developers
 // Copyright (c) 2014-2019 The Dash Core developers
-// Copyright (c) 2020 The Raptoreum developers
+// Copyright (c) 2020-2021 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,6 +13,8 @@
 #include "wallet/wallet.h"
 
 #include "privatesend/privatesend.h"
+#include "evo/providertx.h"
+#include "evo/specialtx.h"
 
 #include <stdint.h>
 
@@ -24,6 +26,85 @@ bool TransactionRecord::showTransaction(const CWalletTx &wtx)
     // There are currently no cases where we hide transactions, but
     // we may want to use this in the future for things like RBF.
     return true;
+}
+
+/* Return block height for transaction */
+int TransactionRecord::getTransactionBlockHeight(const CWalletTx &wtx)
+{
+    // Find the block the tx is in
+    CBlockIndex* pindex = nullptr;
+    BlockMap::iterator mi = mapBlockIndex.find(wtx.hashBlock);
+    if (mi != mapBlockIndex.end())
+        pindex = (*mi).second;
+
+    int txBlock = pindex ? pindex->nHeight : chainActive.Height();
+
+    return txBlock;
+}
+
+/* Return Maturity Block of Future TX */
+int TransactionRecord::getFutureTxMaturityBlock(const CWalletTx &wtx, CFutureTx &ftx)
+{
+    int maturityBlock = (getTransactionBlockHeight(wtx) + ftx.maturity); //tx block height + maturity
+    return maturityBlock;
+}
+
+/* Return Maturity Time of Future TX */
+int TransactionRecord::getFutureTxMaturityTime(const CWalletTx &wtx, CFutureTx &ftx)
+{
+    int64_t maturityTime = (wtx.nTimeReceived + ftx.lockTime); //tx time + locked seconds
+    return maturityTime;
+}
+
+/* Return positive answer if future transaction has matured.
+ */
+bool TransactionRecord::isFutureTxMatured(const CWalletTx &wtx, CFutureTx &ftx)
+{
+    if (chainActive.Height() >= getFutureTxMaturityBlock(wtx, ftx) || GetAdjustedTime() >= getFutureTxMaturityTime(wtx, ftx)) 
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+void TransactionRecord::getFutureTxStatus(const CWalletTx &wtx, CFutureTx &ftx)
+{
+
+    if (wtx.IsInMainChain() && GetTxPayload(wtx.tx->vExtraPayload, ftx))
+    {
+
+        int maturityBlock = getFutureTxMaturityBlock(wtx, ftx);
+        int64_t maturityTime = getFutureTxMaturityTime(wtx, ftx);
+
+        //transaction depth in chain against maturity OR relative seconds of transaction against lockTime
+        if (isFutureTxMatured(wtx, ftx)) {
+            status.status = TransactionStatus::Confirmed;
+        } else {
+            status.countsForBalance = false;
+           //display transaction is mature in x blocks or transaction is mature in days hh:mm:ss
+            if(maturityBlock >= chainActive.Height())
+            {
+                status.status = TransactionStatus::OpenUntilBlock;
+                status.open_for = maturityBlock; 
+            }
+            if(maturityTime >= GetAdjustedTime())
+            {
+                status.status = TransactionStatus::OpenUntilDate;
+                status.open_for = maturityTime;
+            }
+
+        }
+
+    }
+    else
+    {
+        //not in main chain - new transaction
+        status.status = TransactionStatus::NotAccepted;
+    }
+    
 }
 
 /*
@@ -73,12 +154,25 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                     sub.type = TransactionRecord::Generated;
                 }
 
+                if(wtx.tx->nType == TRANSACTION_FUTURE)
+                {
+                    // Future TX Received
+                    
+                    if (ExtractDestination(wtx.tx->vout[1].scriptPubKey, address))
+                    {
+                        // Received by Raptoreum Address
+                        sub.type = TransactionRecord::FutureReceive;
+                        sub.strAddress = CBitcoinAddress(address).ToString();
+                    }
+                } 
+
                 sub.address.SetString(sub.strAddress);
                 sub.txDest = sub.address.Get();
                 parts.append(sub);
             }
         }
     }
+
     else
     {
         bool fAllFromMeDenom = true;
@@ -123,11 +217,12 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
             // Payment to self by default
             sub.type = TransactionRecord::SendToSelf;
             sub.strAddress = "";
+            CTxDestination address;
 
             if(mapValue["DS"] == "1")
             {
                 sub.type = TransactionRecord::PrivateSend;
-                CTxDestination address;
+                
                 if (ExtractDestination(wtx.tx->vout[0].scriptPubKey, address))
                 {
                     // Sent to Raptoreum Address
@@ -138,7 +233,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                     // Sent to IP, or other non-address transaction like OP_EVAL
                     sub.strAddress = mapValue["to"];
                 }
-            }
+            } 
             else
             {
                 sub.idx = parts.size();
@@ -148,7 +243,9 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                     && CPrivateSend::IsCollateralAmount(-nNet))
                 {
                     sub.type = TransactionRecord::PrivateSendCollateralPayment;
-                } else {
+                } 
+                else 
+                {
                     for (const auto& txout : wtx.tx->vout) {
                         if (txout.nValue == CPrivateSend::GetMaxCollateralAmount()) {
                             sub.type = TransactionRecord::PrivateSendMakeCollaterals;
@@ -158,6 +255,16 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                             break; // Done, it's definitely a tx creating mixing denoms, no need to look any further
                         }
                     }
+                }
+            }
+
+            if(wtx.tx->nType == TRANSACTION_FUTURE)
+            {
+                sub.type = TransactionRecord::FutureSend;
+                if (ExtractDestination(wtx.tx->vout[0].scriptPubKey, address))
+                {
+                    // Sent to Raptoreum Address
+                    sub.strAddress = CBitcoinAddress(address).ToString();
                 }
             }
 
@@ -222,6 +329,11 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                 if(mapValue["DS"] == "1")
                 {
                     sub.type = TransactionRecord::PrivateSend;
+                }
+
+                if(wtx.tx->nType == TRANSACTION_FUTURE)
+                {
+                    sub.type = TransactionRecord::FutureSend;
                 }
 
                 CAmount nValue = txout.nValue;
@@ -324,6 +436,13 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx, int chainLockHeight)
         {
             status.status = TransactionStatus::Confirmed;
         }
+    }
+    //For Future transactions, determine maturity
+    else if(type == TransactionRecord::FutureReceive)
+    {
+        CFutureTx ftx;
+        getFutureTxStatus(wtx, ftx);
+        
     }
     else
     {
