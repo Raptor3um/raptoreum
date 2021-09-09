@@ -3295,7 +3295,7 @@ static bool ContextualCheckBlock(const CBlock& block, CValidationState& state, c
         nLockTimeFlags |= LOCKTIME_MEDIAN_TIME_PAST;
     }
 
-    int64_t nLockTimeCutoff = (nLockTimeFlags & LOCKTIME_MEDIAN_TIME_PAST)
+    int64_t nLockTimeCutoff = (nLockTimeFlags & LOCKTIME_MEDIAN_TIME_PAST) && pindexPrev != nullptr
                               ? pindexPrev->GetMedianTimePast()
                               : block.GetBlockTime();
 
@@ -3337,7 +3337,8 @@ static bool ContextualCheckBlock(const CBlock& block, CValidationState& state, c
     }
 
     if (fDIP0003Active_context) {
-        if (block.vtx[0]->nType != TRANSACTION_COINBASE) {
+        if (nHeight != 0 && block.vtx[0]->nType != TRANSACTION_COINBASE) {
+            LogPrintf("invalid block at height %d: %s\n", nHeight, block.ToString());
             return state.DoS(100, false, REJECT_INVALID, "bad-cb-type", false, "coinbase is not a CbTx");
         }
     }
