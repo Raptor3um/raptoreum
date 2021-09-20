@@ -119,6 +119,11 @@ CAmount WalletModel::getWatchImmatureBalance() const
     return wallet->GetImmatureWatchOnlyBalance();
 }
 
+std::map<CTxDestination, CAmount> WalletModel::getAddressBalances() const
+{
+    return wallet->GetAddressBalances();
+}
+
 void WalletModel::updateStatus()
 {
     EncryptionStatus newEncryptionStatus = getEncryptionStatus();
