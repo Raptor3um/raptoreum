@@ -1,6 +1,6 @@
 // Copyright (c) 2011-2015 The Bitcoin Core developers
 // Copyright (c) 2014-2019 The Dash Core developers
-// Copyright (c) 2020 The Raptoreum developers
+// Copyright (c) 2020-2021 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -103,6 +103,7 @@ BitcoinGUI::BitcoinGUI(const PlatformStyle *_platformStyle, const NetworkStyle *
     quitAction(0),
     sendCoinsAction(0),
     sendCoinsMenuAction(0),
+    sendFuturesAction(0),
     usedSendingAddressesAction(0),
     usedReceivingAddressesAction(0),
     signMessageAction(0),
@@ -369,6 +370,17 @@ void BitcoinGUI::createActions()
 #endif
     tabGroup->addAction(historyAction);
 
+    sendFuturesAction = new QAction(tr("&Futures"), this);
+    sendFuturesAction->setStatusTip(tr("Send future coins to a Raptoreum address"));
+    sendFuturesAction->setToolTip(sendFuturesAction->statusTip());
+    sendFuturesAction->setCheckable(true);
+#ifdef Q_OS_MAC
+    sendFuturesAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_5));
+#else
+    sendFuturesAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_5));
+#endif
+    tabGroup->addAction(sendFuturesAction);
+
 #ifdef ENABLE_WALLET
     QSettings settings;
     if (!fLiteMode && settings.value("fShowSmartnodesTab").toBool()) {
@@ -377,9 +389,9 @@ void BitcoinGUI::createActions()
         smartnodeAction->setToolTip(smartnodeAction->statusTip());
         smartnodeAction->setCheckable(true);
 #ifdef Q_OS_MAC
-        smartnodeAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_5));
+        smartnodeAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_6));
 #else
-        smartnodeAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_5));
+        smartnodeAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_6));
 #endif
         tabGroup->addAction(smartnodeAction);
         connect(smartnodeAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
@@ -400,6 +412,8 @@ void BitcoinGUI::createActions()
     connect(receiveCoinsMenuAction, SIGNAL(triggered()), this, SLOT(gotoReceiveCoinsPage()));
     connect(historyAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
     connect(historyAction, SIGNAL(triggered()), this, SLOT(gotoHistoryPage()));
+    connect(sendFuturesAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
+    connect(sendFuturesAction, SIGNAL(triggered()), this, SLOT(gotoSendFuturesPage()));
 #endif // ENABLE_WALLET
 
     quitAction = new QAction(QIcon(":/icons/quit"), tr("E&xit"), this);
@@ -588,6 +602,7 @@ void BitcoinGUI::createToolBars()
         toolbar->addAction(sendCoinsAction);
         toolbar->addAction(receiveCoinsAction);
         toolbar->addAction(historyAction);
+        toolbar->addAction(sendFuturesAction);
         QSettings settings;
         if (!fLiteMode && settings.value("fShowSmartnodesTab").toBool() && smartnodeAction)
         {
@@ -747,6 +762,7 @@ void BitcoinGUI::setWalletActionsEnabled(bool enabled)
     receiveCoinsAction->setEnabled(enabled);
     receiveCoinsMenuAction->setEnabled(enabled);
     historyAction->setEnabled(enabled);
+    sendFuturesAction->setEnabled(enabled);
     QSettings settings;
     if (!fLiteMode && settings.value("fShowSmartnodesTab").toBool() && smartnodeAction) {
         smartnodeAction->setEnabled(enabled);
@@ -930,6 +946,12 @@ void BitcoinGUI::gotoSendCoinsPage(QString addr)
 {
     sendCoinsAction->setChecked(true);
     if (walletFrame) walletFrame->gotoSendCoinsPage(addr);
+}
+
+void BitcoinGUI::gotoSendFuturesPage(QString addr)
+{
+    sendFuturesAction->setChecked(true);
+    if (walletFrame) walletFrame->gotoSendFuturesPage(addr);
 }
 
 void BitcoinGUI::gotoSignMessageTab(QString addr)
