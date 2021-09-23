@@ -114,11 +114,8 @@ void SendFuturesEntry::setModel(WalletModel *_model)
 
     if (_model && _model->getOptionsModel()) {
         connect(_model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
-        
+        connect(_model, SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)), this, SLOT(balanceChange(CAmount)));
         setupPayFrom(0);
-        //connect(ui->payFrom, SIGNAL(currentTextChanged(const QString &)), this, SLOT(updatePayFromBalanceLabel()));
-        //connect(ui->payAmount, SIGNAL(valueChanged()), this, SLOT(setupPayFrom(ui->payFrom->currentIndex())));
-
     }
 
     clear();
@@ -341,7 +338,7 @@ void SendFuturesEntry::setupPayFrom(int selected)
     //Build table for dropdown
     QStandardItemModel *itemModel = new QStandardItemModel( this );
     QStringList horzHeaders;
-    horzHeaders << "Address" << BitcoinUnits::getAmountColumnTitle(model->getOptionsModel()->getDisplayUnit());
+    horzHeaders << "Address" << "Label" << BitcoinUnits::getAmountColumnTitle(model->getOptionsModel()->getDisplayUnit());
 
     QList<QStandardItem *> placeholder;
     placeholder.append(new QStandardItem( "Select a Raptoreum address" ) );
@@ -350,8 +347,15 @@ void SendFuturesEntry::setupPayFrom(int selected)
     for (auto& balance : balances) {
         if (balance.second >= nMinAmount) {
             QList<QStandardItem *> items;
+            QString associatedLabel = model->getAddressTableModel()->labelForAddress(balance.first);
+
+            QStandardItem *balanceAmount = new QStandardItem();
+            balanceAmount->setData(quint64(balance.second));
+            balanceAmount->setText(BitcoinUnits::format(model->getOptionsModel()->getDisplayUnit(), balance.second, false, BitcoinUnits::separatorAlways));
+
             items.append(new QStandardItem( GUIUtil::HtmlEscape(CBitcoinAddress(balance.first).ToString()) ) );
-            items.append(new QStandardItem( BitcoinUnits::format(model->getOptionsModel()->getDisplayUnit(), balance.second, false, BitcoinUnits::separatorAlways) ) );
+            items.append(new QStandardItem( associatedLabel ));
+            items.append(balanceAmount);
             itemModel->appendRow(items);
         }
     }
@@ -362,6 +366,7 @@ void SendFuturesEntry::setupPayFrom(int selected)
     tableView->setObjectName("payFromTable");
     tableView->setModel( itemModel );
     tableView->resizeColumnsToContents();
+    tableView->setColumnWidth(1,160);
     tableView->horizontalHeader()->setStretchLastSection(true);
     tableView->horizontalHeader()->setSortIndicator(-1, Qt::AscendingOrder);
     tableView->setSortingEnabled(true);
@@ -375,6 +380,11 @@ void SendFuturesEntry::setupPayFrom(int selected)
     ui->payFrom->setView( tableView );
 
     ui->payFrom->setCurrentIndex(selected);
+}
+
+void SendFuturesEntry::balanceChange(const CAmount& balance)
+{
+    setupPayFrom(0);
 }
 
 /*void SendFuturesEntry::updatePayFromBalanceLabel()
