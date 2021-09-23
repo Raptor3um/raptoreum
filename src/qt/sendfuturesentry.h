@@ -64,7 +64,7 @@ private Q_SLOTS:
     void on_pasteButton_clicked();
     void updateDisplayUnit();
     void getLockTime(const QDateTime & dateTime);
-    //void updatePayFromBalanceLabel();
+    void balanceChange(const CAmount& balance);
 
 private:
     SendCoinsRecipient recipient;
