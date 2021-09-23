@@ -442,47 +442,7 @@ crypto_libraptoreum_crypto_base_a_SOURCES = \
   crypto/sph_sha2.h \
   crypto/sph_types.h \
   crypto/sha512.cpp \
-  crypto/sha512.h \
-  cryptonote/crypto/aesb.c \
-  cryptonote/crypto/c_blake256.c \
-  cryptonote/crypto/c_groestl.c \
-  cryptonote/crypto/c_jh.c \
-  cryptonote/crypto/c_keccak.c \
-  cryptonote/crypto/c_skein.c \
-  cryptonote/crypto/hash.c \
-  cryptonote/crypto/oaes_lib.c \
-  cryptonote/crypto/wild_keccak.cpp \
-  cryptonote/crypto/c_blake256.h \
-  cryptonote/crypto/c_groestl.h \
-  cryptonote/crypto/c_jh.h \
-  cryptonote/crypto/c_keccak.h \
-  cryptonote/crypto/crypto.h \
-  cryptonote/crypto/c_skein.h \
-  cryptonote/crypto/groestl_tables.h \
-  cryptonote/crypto/hash.h \
-  cryptonote/crypto/hash-ops.h \
-  cryptonote/crypto/int-util.h \
-  cryptonote/crypto/oaes_config.h \
-  cryptonote/crypto/oaes_lib.h \
-  cryptonote/crypto/skein_port.h \
-  cryptonote/crypto/variant2_int_sqrt.h \
-  cryptonote/crypto/wild_keccak.h \
-  cryptonote/cryptonight.c \
-  cryptonote/cryptonight_dark.c \
-  cryptonote/cryptonight_dark_lite.c \
-  cryptonote/cryptonight_fast.c \
-  cryptonote/cryptonight_lite.c \
-  cryptonote/cryptonight_soft_shell.c \
-  cryptonote/cryptonight_turtle.c \
-  cryptonote/cryptonight_turtle_lite.c \
-  cryptonote/cryptonight_dark.h  \
-  cryptonote/cryptonight_dark_lite.h \
-  cryptonote/cryptonight_fast.h \
-  cryptonote/cryptonight.h \
-  cryptonote/cryptonight_lite.h \
-  cryptonote/cryptonight_soft_shell.h \
-  cryptonote/cryptonight_turtle.h \
-  cryptonote/cryptonight_turtle_lite.h
+  crypto/sha512.h
 
 if USE_ASM
 crypto_libraptoreum_crypto_base_a_SOURCES += crypto/sha256_sse4.cpp
@@ -505,6 +465,34 @@ crypto_libraptoreum_crypto_shani_a_CPPFLAGS = $(AM_CPPFLAGS)
 crypto_libraptoreum_crypto_shani_a_CXXFLAGS += $(SHANI_CXXFLAGS)
 crypto_libraptoreum_crypto_shani_a_CPPFLAGS += -DENABLE_SHANI
 crypto_libraptoreum_crypto_shani_a_SOURCES = crypto/sha256_shani.cpp
+
+crypto_libraptoreum_crypto_base_a_SOURCES += \
+  cryptonote/aesb.c \
+  cryptonote/c_blake256.c \
+  cryptonote/c_groestl.c \
+  cryptonote/c_jh.c \
+  cryptonote/c_keccak.c \
+  cryptonote/c_skein.c \
+  cryptonote/slow-hash.c \
+  cryptonote/hash-ops.c \
+  cryptonote/oaes_lib.c \
+  cryptonote/wild_keccak.cpp \
+  cryptonote/c_blake256.h \
+  cryptonote/c_groestl.h \
+  cryptonote/c_jh.h \
+  cryptonote/c_keccak.h \
+  cryptonote/crypto.h \
+  cryptonote/c_skein.h \
+  cryptonote/groestl_tables.h \
+  cryptonote/slow-hash.h \
+  cryptonote/int-util.h \
+  cryptonote/oaes_config.h \
+  cryptonote/hash-ops.h \
+  cryptonote/oaes_lib.h \
+  cryptonote/skein_port.h \
+  cryptonote/variant2_int_sqrt.h \
+  cryptonote/wild_keccak.h \
+  cryptonote/warnings.h
 
 # consensus: shared between all executables that validate any consensus rules.
 libraptoreum_consensus_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)

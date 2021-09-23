@@ -13,7 +13,8 @@
    Last Modified: January 16, 2011
 */
 #pragma once
-#include "hash.h"
+
+#include "slow-hash.h"
 
 typedef enum {SUCCESS = 0, FAIL = 1, BAD_HASHLEN = 2} HashReturn;
 

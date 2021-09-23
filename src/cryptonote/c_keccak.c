@@ -2,7 +2,7 @@
 // 19-Nov-11  Markku-Juhani O. Saarinen <mjos@iki.fi>
 // A baseline Keccak (3rd round) implementation.
 
-#include "hash-ops.h"
+#include "slow-hash.h"
 #include "c_keccak.h"
 
 const uint64_t keccakf_rndc[24] = 

@@ -1,4 +1,6 @@
-#pragma once
+#ifndef __hash_h
+#define __hash_h
+
 /*
 #include "crypto_uint8.h"
 #include "crypto_uint32.h"
@@ -10,7 +12,7 @@ typedef crypto_uint32 uint32_t;
 typedef crypto_uint64 uint64_t;
 */
 #include <stdint.h>
-#include "hash.h"
+#include "slow-hash.h"
 
 /* some sizes (number of bytes) */
 #define ROWS 8
@@ -54,3 +56,5 @@ int crypto_hash(unsigned char *out,
 		const unsigned char *in,
 		unsigned long long len);
 */
+
+#endif

@@ -8,9 +8,8 @@
 #include <mutex>
 #include <vector>
 
-#include "common/pod-class.h"
 #include "generic-ops.h"
-#include "hash.h"
+#include "slow-hash.h"
 
 namespace crypto {
 

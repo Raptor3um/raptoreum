@@ -7,14 +7,7 @@
  */
 
 #include "hash_selection.h"
-#include "cryptonote/cryptonight_dark.h"
-#include "cryptonote/cryptonight_dark_lite.h"
-#include "cryptonote/cryptonight_fast.h"
-#include "cryptonote/cryptonight.h"
-#include "cryptonote/cryptonight_lite.h"
-#include "cryptonote/cryptonight_soft_shell.h"
-#include "cryptonote/cryptonight_turtle.h"
-#include "cryptonote/cryptonight_turtle_lite.h"
+#include "cryptonote/slow-hash.h"
 
 std::vector<std::vector<int>> GR_GROUP = {
 		{0,1,2,3,4},
@@ -200,26 +193,26 @@ void coreHash(const void *toHash, uint512* hash, int lenToHash, int hashSelectio
 	}
 }
 
-void cnHash(uint512* toHash, uint512* hash, int lenToHash, int hashSelection){
+void cnHash(uint512* toHash, uint512* hash, int lenToHash, int hashSelection) {
 	switch(hashSelection)
 	{
 	 case 0:
-		cryptonightdark_hash(reinterpret_cast<const char*>(toHash), reinterpret_cast<char*>(hash), lenToHash, 1);
-		break;
+		crypto::cryptonight_dark_hash(reinterpret_cast<const char*>(toHash), reinterpret_cast<char*>(hash), lenToHash, 1);
+  	break;
 	 case 1:
-		cryptonightdarklite_hash(reinterpret_cast<const char*>(toHash), reinterpret_cast<char*>(hash), lenToHash, 1);
+		crypto::cryptonight_darklite_hash(reinterpret_cast<const char*>(toHash), reinterpret_cast<char*>(hash), lenToHash, 1);
 		break;
 	 case 2:
-		cryptonightfast_hash(reinterpret_cast<const char*>(toHash), reinterpret_cast<char*>(hash), lenToHash, 1);
+		crypto::cryptonight_cnfast_hash(reinterpret_cast<const char*>(toHash), reinterpret_cast<char*>(hash), lenToHash, 1);
 		break;
 	 case 3:
-		cryptonightlite_hash(reinterpret_cast<const char*>(toHash), reinterpret_cast<char*>(hash), lenToHash, 1);
+	  crypto::cryptonight_cnlite_hash(reinterpret_cast<const char*>(toHash), reinterpret_cast<char*>(hash), lenToHash, 1);
 		break;
 	 case 4:
-		cryptonightturtle_hash(reinterpret_cast<const char*>(toHash), reinterpret_cast<char*>(hash), lenToHash, 1);
+		crypto::cryptonight_turtle_hash(reinterpret_cast<const char*>(toHash), reinterpret_cast<char*>(hash), lenToHash, 1);
 		break;
 	 case 5:
-		cryptonightturtlelite_hash(reinterpret_cast<const char*>(toHash), reinterpret_cast<char*>(hash), lenToHash, 1);
+		crypto::cryptonight_turtlelite_hash(reinterpret_cast<const char*>(toHash), reinterpret_cast<char*>(hash), lenToHash, 1);
 		break;
 	}
 }
