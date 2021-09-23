@@ -895,7 +895,9 @@ void SendFuturesDialog::coinControlClipboardChange()
 // Coin Control: settings menu - coin control enabled/disabled by user
 void SendFuturesDialog::coinControlFeatureChanged(bool checked)
 {
-    ui->frameCoinControl->setVisible(checked);
+    //hide for futures until ready for implementation
+    //ui->frameCoinControl->setVisible(checked);
+    ui->frameCoinControl->setVisible(false);
 
     if (!checked && model) // coin control features disabled
         CoinControlDialog::coinControl->SetNull();
