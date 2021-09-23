@@ -10,7 +10,7 @@
 
 #include <stdint.h>
 #include <string.h>
-#include "hash.h"
+#include "slow-hash.h"
 
 #ifndef KECCAK_ROUNDS
 #define KECCAK_ROUNDS 24
