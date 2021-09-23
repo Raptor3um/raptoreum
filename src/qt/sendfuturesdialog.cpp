@@ -545,7 +545,7 @@ SendFuturesEntry *SendFuturesDialog::addEntry()
     SendFuturesEntry *entry = new SendFuturesEntry(platformStyle, this);
     entry->setModel(model);
     ui->entries->addWidget(entry);
-    connect(entry, SIGNAL(removeEntry(SendCoinsEntry*)), this, SLOT(removeEntry(SendCoinsEntry*)));
+    connect(entry, SIGNAL(removeEntry(SendFuturesEntry*)), this, SLOT(removeEntry(SendFuturesEntry*)));
     connect(entry, SIGNAL(payAmountChanged()), this, SLOT(coinControlUpdateLabels()));
 
     connect(entry, SIGNAL(payFromChanged(const QString &)), this, SLOT(payFromUpdateLabels()));
@@ -992,7 +992,7 @@ void SendFuturesDialog::coinControlUpdateLabels()
 
     updateCoinControlState(*CoinControlDialog::coinControl);
 
-    payFromUpdateLabels();
+    //payFromUpdateLabels();
 
     // set pay amounts
     CoinControlDialog::payAmounts.clear();
