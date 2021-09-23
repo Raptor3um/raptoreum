@@ -335,6 +335,12 @@ void SendFuturesEntry::setupPayFrom(int selected)
 
     std::map<CTxDestination, CAmount> balances = model->getAddressBalances();
 
+    if(balances.empty())
+    {
+        ui->payFrom->setDisabled(true);
+        return;
+    }
+
     //Build table for dropdown
     QStandardItemModel *itemModel = new QStandardItemModel( this );
     QStringList horzHeaders;
