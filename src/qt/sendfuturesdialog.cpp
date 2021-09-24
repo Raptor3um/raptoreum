@@ -992,7 +992,7 @@ void SendFuturesDialog::coinControlUpdateLabels()
 
     updateCoinControlState(*CoinControlDialog::coinControl);
 
-    //payFromUpdateLabels();
+    payFromUpdateLabels();
 
     // set pay amounts
     CoinControlDialog::payAmounts.clear();
