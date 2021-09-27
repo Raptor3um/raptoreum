@@ -19,9 +19,12 @@
 
 #include <QApplication>
 #include <QClipboard>
+#include <QDateTime>
 #include <QDebug>
 #include <QComboBox>
 #include <QStandardItemModel>
+#include <QStandardItem>
+#include <QTableView>
 
 SendFuturesEntry::SendFuturesEntry(const PlatformStyle *_platformStyle, QWidget *parent) :
     QStackedWidget(parent),
@@ -392,30 +395,3 @@ void SendFuturesEntry::balanceChange(const CAmount& balance)
 {
     setupPayFrom(0);
 }
-
-/*void SendFuturesEntry::updatePayFromBalanceLabel()
-{
-    if (!model || !model->getOptionsModel())
-        return;
-    
-    std::map<CTxDestination, CAmount> balances = model->getAddressBalances();
-    CAmount addressBalance = 0;
-    CAmount futureFee = getFutureFees();
-    CAmount sendAmount = ui->payAmount->value();
-
-    //find balance for matched address in payfrom field
-    for (auto& balance : balances) {
-        //std::cout << CBitcoinAddress(balance.first).ToString() << ": " << ui->payFrom->currentText().toStdString() << endl;
-        if (CBitcoinAddress(balance.first).ToString() == ui->payFrom->currentText().toStdString()) {
-            addressBalance += balance.second;
-        }
-    }
-
-    ui->ftxPayFromBalance->setText(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), addressBalance));
-
-    if(addressBalance > sendAmount + futureFee) {
-        ui->ftxPayFromBalance->setStyleSheet(GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_PRIMARY));
-    } else {
-        ui->ftxPayFromBalance->setStyleSheet(GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_ERROR));
-    }
-}*/
