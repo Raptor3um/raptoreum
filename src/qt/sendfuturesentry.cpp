@@ -1,6 +1,6 @@
 // Copyright (c) 2011-2015 The Bitcoin Core developers
 // Copyright (c) 2014-2019 The Dash Core developers
-// Copyright (c) 2020-2021 The Raptoreum developers 
+// Copyright (c) 2020-2021 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -15,16 +15,11 @@
 #include "platformstyle.h"
 #include "walletmodel.h"
 
-#include "future/fee.h"
+#include "future/fee.h" // future fee
 
 #include <QApplication>
 #include <QClipboard>
-#include <QDateTime>
-#include <QDebug>
-#include <QComboBox>
 #include <QStandardItemModel>
-#include <QStandardItem>
-#include <QTableView>
 
 SendFuturesEntry::SendFuturesEntry(const PlatformStyle *_platformStyle, QWidget *parent) :
     QStackedWidget(parent),
@@ -33,19 +28,6 @@ SendFuturesEntry::SendFuturesEntry(const PlatformStyle *_platformStyle, QWidget 
     platformStyle(_platformStyle)
 {
     ui->setupUi(this);
-
-    //Setup maturity locktime datetime field
-    ui->ftxLockTime->setDateTime( QDateTime::currentDateTime() );
-    ui->ftxLockTime->setMinimumDate( QDate::currentDate() );
-
-    // This field holds the maturity locktime, programatically controlled, no need to show to user
-    ui->ftxLockTimeField->hide();
-
-    //hide unused UI elements for futures
-    ui->deleteButton->hide();
-    ui->deleteButton_is->hide();
-    ui->deleteButton_s->hide();
-    ui->checkboxSubtractFeeFromAmount->hide();
 
     setCurrentWidget(ui->SendFutures);
 
@@ -68,18 +50,28 @@ SendFuturesEntry::SendFuturesEntry(const PlatformStyle *_platformStyle, QWidget 
     ui->payTo_is->setFont(GUIUtil::fixedPitchFont());
     ui->payFrom->setFont(GUIUtil::fixedPitchFont());
 
+    //hide unused UI elements for futures
+    ui->deleteButton->hide();
+    ui->deleteButton_is->hide();
+    ui->deleteButton_s->hide();
+    ui->checkboxSubtractFeeFromAmount->hide();
+
+    //FTX Specific form fields
+    //Setup maturity locktime datetime field
+    ui->ftxLockTime->setDateTime( QDateTime::currentDateTime() );
+    ui->ftxLockTime->setMinimumDate( QDate::currentDate() );
+
     // Connect signals
     connect(ui->payAmount, SIGNAL(valueChanged()), this, SIGNAL(payAmountChanged()));
-    connect(ui->checkboxSubtractFeeFromAmount, SIGNAL(toggled(bool)), this, SIGNAL(subtractFeeFromAmountChanged()));
-    connect(ui->deleteButton, SIGNAL(clicked()), this, SLOT(deleteClicked()));
-    connect(ui->deleteButton_is, SIGNAL(clicked()), this, SLOT(deleteClicked()));
-    connect(ui->deleteButton_s, SIGNAL(clicked()), this, SLOT(deleteClicked()));
+    //connect(ui->checkboxSubtractFeeFromAmount, SIGNAL(toggled(bool)), this, SIGNAL(subtractFeeFromAmountChanged()));
+    //connect(ui->deleteButton, SIGNAL(clicked()), this, SLOT(deleteClicked()));
+    //connect(ui->deleteButton_is, SIGNAL(clicked()), this, SLOT(deleteClicked()));
+    //connect(ui->deleteButton_s, SIGNAL(clicked()), this, SLOT(deleteClicked()));
+
     //Connect signals for future tx pay from field
     connect(ui->payFrom, SIGNAL(currentTextChanged(const QString &)), this, SIGNAL(payFromChanged(const QString &)));
-
-    //Connect signals for new maturity fields
-    connect (ui->ftxLockTime, SIGNAL (dateTimeChanged (QDateTime)), this , SLOT (getLockTime (QDateTime)));
-
+    //Connect signals for FTX maturity fields
+    connect (ui->ftxLockTime, SIGNAL (dateTimeChanged (QDateTime)), this, SIGNAL (updateLockTimeField (QDateTime)));
 }
 
 SendFuturesEntry::~SendFuturesEntry()
@@ -115,18 +107,18 @@ void SendFuturesEntry::setModel(WalletModel *_model)
 {
     this->model = _model;
 
-    if (_model && _model->getOptionsModel()) {
+    if (_model && _model->getOptionsModel())
+    {
         connect(_model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
         connect(_model, SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)), this, SLOT(balanceChange(CAmount)));
-        setupPayFrom(0);
+        setupPayFrom();
     }
-
     clear();
 }
 
 void SendFuturesEntry::clear()
 {
-    // clear UI elements for future payment
+    // clear UI elements for normal payment
     ui->payTo->clear();
     ui->addAsLabel->clear();
     ui->payAmount->clear();
@@ -134,6 +126,7 @@ void SendFuturesEntry::clear()
     ui->messageTextLabel->clear();
     ui->messageTextLabel->hide();
     ui->messageLabel->hide();
+    // clear and reset FTX UI elements
     ui->ftxMaturity->setValue(-1);
     ui->ftxLockTime->setDateTime( QDateTime::currentDateTime() );
     // clear UI elements for unauthenticated payment request
@@ -156,7 +149,6 @@ void SendFuturesEntry::deleteClicked()
 
 bool SendFuturesEntry::validate()
 {
-
     if (!model)
         return false;
 
@@ -199,21 +191,23 @@ bool SendFuturesEntry::validate()
     return retval;
 }
 
-SendCoinsRecipient SendFuturesEntry::getValue()
+SendFuturesRecipient SendFuturesEntry::getValue()
 {
     // Payment request
     if (recipient.paymentRequest.IsInitialized())
         return recipient;
 
-    // Future payment
-    recipient.payFrom = ui->payFrom->currentText();
+    // Normal payment
     recipient.address = ui->payTo->text();
     recipient.label = ui->addAsLabel->text();
     recipient.amount = ui->payAmount->value();
-    recipient.maturity = ui->ftxMaturity->value();
-    recipient.locktime = ui->ftxLockTimeField->text().toInt();
     recipient.message = ui->messageTextLabel->text();
     recipient.fSubtractFeeFromAmount = (ui->checkboxSubtractFeeFromAmount->checkState() == Qt::Checked);
+
+    //Future TX
+    recipient.payFrom = ui->payFrom->currentText();
+    recipient.maturity = ui->ftxMaturity->value();
+    recipient.locktime = ui->ftxLockTimeField->text().toInt();    
 
     return recipient;
 }
@@ -226,11 +220,13 @@ QWidget *SendFuturesEntry::setupTabChain(QWidget *prev)
     QWidget::setTabOrder(w, ui->checkboxSubtractFeeFromAmount);
     QWidget::setTabOrder(ui->checkboxSubtractFeeFromAmount, ui->addressBookButton);
     QWidget::setTabOrder(ui->addressBookButton, ui->pasteButton);
-    QWidget::setTabOrder(ui->pasteButton, ui->deleteButton);
-    return ui->deleteButton;
+    // Disable delete button for future tx
+    //QWidget::setTabOrder(ui->pasteButton, ui->deleteButton);
+    //return ui->deleteButton;
+    return ui->pasteButton;
 }
 
-void SendFuturesEntry::setValue(const SendCoinsRecipient &value)
+void SendFuturesEntry::setValue(const SendFuturesRecipient &value)
 {
     recipient = value;
 
@@ -313,8 +309,8 @@ bool SendFuturesEntry::updateLabel(const QString &address)
     return false;
 }
 
-//Calculate Future tx locktime
-void SendFuturesEntry::getLockTime(const QDateTime & dateTime)
+//Calculate Future tx locktime from QDateTime field
+void SendFuturesEntry::updateLockTimeField(const QDateTime & dateTime)
 {
     QDateTime currentDateTime = QDateTime::currentDateTime();
     //Calculate seconds from now to the chosen datetime value
@@ -323,12 +319,10 @@ void SendFuturesEntry::getLockTime(const QDateTime & dateTime)
     
     //set the seconds in this field for handling
     ui->ftxLockTimeField->setText(int_string);
-
-    //QTextStream(stdout) << futureTime << endl;
 }
 
 //Future coin control: update combobox
-void SendFuturesEntry::setupPayFrom(int selected)
+void SendFuturesEntry::setupPayFrom()
 {
     if (!model || !model->getOptionsModel())
         return;
@@ -382,16 +376,22 @@ void SendFuturesEntry::setupPayFrom(int selected)
     tableView->setFont(GUIUtil::fixedPitchFont());
     tableView->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
-    tableView->setAutoScroll(false);
+    tableView->setAutoScroll(true);
     tableView->hideRow(0);
     
     ui->payFrom->setModel( itemModel );
     ui->payFrom->setView( tableView );
 
-    ui->payFrom->setCurrentIndex(selected);
+}
+
+void SendFuturesEntry::selectedChange(int selected)
+{
+    int selectedIndex = ui->payFrom->currentIndex() > 0 ? ui->payFrom->currentIndex() : 0;
+    ui->payFrom->setCurrentIndex(selectedIndex);
 }
 
 void SendFuturesEntry::balanceChange(const CAmount& balance)
 {
-    setupPayFrom(0);
+    int selected = ui->payFrom->currentIndex() > 0 ? ui->payFrom->currentIndex() : 0;
+    selectedChange(selected);
 }
