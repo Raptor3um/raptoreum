@@ -64,6 +64,7 @@ private Q_SLOTS:
     void on_pasteButton_clicked();
     void updateDisplayUnit();
     void balanceChange(const CAmount& balance);
+    void updateLockTimeField(const QDateTime &dateTime);
 
 private:
     SendFuturesRecipient recipient;
@@ -72,7 +73,7 @@ private:
     const PlatformStyle *platformStyle;
 
     bool updateLabel(const QString &address);
-    void updateLockTimeField(const QDateTime &dateTime);
+    
     void setupPayFrom();
     void selectedChange(int selected);
 };
