@@ -19,7 +19,10 @@
 
 #include <QApplication>
 #include <QClipboard>
+#include <QComboBox>
+#include <QDateTime>
 #include <QStandardItemModel>
+#include <QTableView>
 
 SendFuturesEntry::SendFuturesEntry(const PlatformStyle *_platformStyle, QWidget *parent) :
     QStackedWidget(parent),
@@ -71,7 +74,7 @@ SendFuturesEntry::SendFuturesEntry(const PlatformStyle *_platformStyle, QWidget 
     //Connect signals for future tx pay from field
     connect(ui->payFrom, SIGNAL(currentTextChanged(const QString &)), this, SIGNAL(payFromChanged(const QString &)));
     //Connect signals for FTX maturity fields
-    connect (ui->ftxLockTime, SIGNAL (dateTimeChanged (QDateTime)), this, SIGNAL (updateLockTimeField (QDateTime)));
+    connect (ui->ftxLockTime, SIGNAL (dateTimeChanged (QDateTime)), this, SLOT (updateLockTimeField (QDateTime)));
 }
 
 SendFuturesEntry::~SendFuturesEntry()
@@ -197,6 +200,8 @@ SendFuturesRecipient SendFuturesEntry::getValue()
     if (recipient.paymentRequest.IsInitialized())
         return recipient;
 
+
+
     // Normal payment
     recipient.address = ui->payTo->text();
     recipient.label = ui->addAsLabel->text();
@@ -207,7 +212,7 @@ SendFuturesRecipient SendFuturesEntry::getValue()
     //Future TX
     recipient.payFrom = ui->payFrom->currentText();
     recipient.maturity = ui->ftxMaturity->value();
-    recipient.locktime = ui->ftxLockTimeField->text().toInt();    
+    recipient.locktime = ui->ftxLockTimeField->text().toInt();  
 
     return recipient;
 }
