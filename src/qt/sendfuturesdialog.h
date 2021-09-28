@@ -1,5 +1,5 @@
 // Copyright (c) 2011-2015 The Bitcoin Core developers
-// Copyright (c) 2020-2021 The Raptoreum developers 
+// Copyright (c) 2020-2021 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,12 +13,12 @@
 #include <QString>
 #include <QTimer>
 
-static const int MAX_FUTURE_POPUP_ENTRIES = 10;
+static const int MAX_FUTURES_POPUP_ENTRIES = 10;
 
 class ClientModel;
 class PlatformStyle;
 class SendFuturesEntry;
-class SendCoinsRecipient;
+class SendFuturesRecipient;
 
 namespace Ui {
     class SendFuturesDialog;
@@ -45,8 +45,8 @@ public:
     QWidget *setupTabChain(QWidget *prev);
 
     void setAddress(const QString &address);
-    void pasteEntry(const SendCoinsRecipient &rv);
-    bool handlePaymentRequest(const SendCoinsRecipient &recipient);
+    void pasteEntry(const SendFuturesRecipient &rv);
+    bool handlePaymentRequest(const SendFuturesRecipient &recipient);
 
 public Q_SLOTS:
     void clear();
@@ -62,14 +62,14 @@ private:
     ClientModel *clientModel;
     WalletModel *model;
     bool fNewRecipientAllowed;
-    void send(QList<SendCoinsRecipient> recipients);
+    void send(QList<SendFuturesRecipient> recipients);
     bool fFeeMinimized;
     const PlatformStyle *platformStyle;
 
-    // Process WalletModel::SendCoinsReturn and generate a pair consisting
+    // Process WalletModel::SendFuturesReturn and generate a pair consisting
     // of a message and message flags for use in Q_EMIT message().
     // Additional parameter msgArg can be used via .arg(msgArg).
-    void processSendCoinsReturn(const WalletModel::SendCoinsReturn &sendCoinsReturn, const QString &msgArg = QString());
+    void processSendFuturesReturn(const WalletModel::SendFuturesReturn &sendFuturesReturn, const QString &msgArg = QString());
     void minimizeFeeSection(bool fMinimize);
     void updateFeeMinimizedLabel();
     // Update the passed in CCoinControl with state from the GUI
@@ -98,12 +98,14 @@ private Q_SLOTS:
     void updateMinFeeLabel();
     void updateSmartFeeLabel();
     void updateFtxFeeLabel();
-    void payFromUpdateLabels();
+    void updateFTXpayFromLabels();
 
 Q_SIGNALS:
     // Fired when a message should be reported to the user
     void message(const QString &title, const QString &message, unsigned int style);
 };
+
+
 
 class FutureConfirmationDialog : public QMessageBox
 {
@@ -123,4 +125,4 @@ private:
     int secDelay;
 };
 
-#endif // BITCOIN_QT_SENDCOINSDIALOG_H
+#endif // BITCOIN_QT_SENDFUTURESDIALOG_H
