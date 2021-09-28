@@ -289,7 +289,7 @@ void SendFuturesEntry::updateDisplayUnit()
         ui->payAmount_is->setDisplayUnit(model->getOptionsModel()->getDisplayUnit());
         ui->payAmount_s->setDisplayUnit(model->getOptionsModel()->getDisplayUnit());
 
-        setupPayFrom(ui->payFrom->currentIndex());
+        setupPayFrom();
     }
 }
 
