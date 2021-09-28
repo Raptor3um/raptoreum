@@ -1,6 +1,6 @@
 // Copyright (c) 2011-2015 The Bitcoin Core developers
 // Copyright (c) 2014-2019 The Dash Core developers
-// Copyright (c) 2020-2021 The Raptoreum developers
+// Copyright (c) 2020 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -371,7 +371,7 @@ void BitcoinGUI::createActions()
     tabGroup->addAction(historyAction);
 
     sendFuturesAction = new QAction(tr("&Futures"), this);
-    sendFuturesAction->setStatusTip(tr("Send future coins to a Raptoreum address"));
+    sendFuturesAction->setStatusTip(tr("Send futures to a Raptoreum address"));
     sendFuturesAction->setToolTip(sendFuturesAction->statusTip());
     sendFuturesAction->setCheckable(true);
 #ifdef Q_OS_MAC
@@ -406,14 +406,14 @@ void BitcoinGUI::createActions()
     connect(sendCoinsAction, SIGNAL(triggered()), this, SLOT(gotoSendCoinsPage()));
     connect(sendCoinsMenuAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
     connect(sendCoinsMenuAction, SIGNAL(triggered()), this, SLOT(gotoSendCoinsPage()));
+    connect(sendFuturesAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
+    connect(sendFuturesAction, SIGNAL(triggered()), this, SLOT(gotoSendFuturesPage()));
     connect(receiveCoinsAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
     connect(receiveCoinsAction, SIGNAL(triggered()), this, SLOT(gotoReceiveCoinsPage()));
     connect(receiveCoinsMenuAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
     connect(receiveCoinsMenuAction, SIGNAL(triggered()), this, SLOT(gotoReceiveCoinsPage()));
     connect(historyAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
     connect(historyAction, SIGNAL(triggered()), this, SLOT(gotoHistoryPage()));
-    connect(sendFuturesAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
-    connect(sendFuturesAction, SIGNAL(triggered()), this, SLOT(gotoSendFuturesPage()));
 #endif // ENABLE_WALLET
 
     quitAction = new QAction(QIcon(":/icons/quit"), tr("E&xit"), this);
@@ -758,11 +758,11 @@ void BitcoinGUI::setWalletActionsEnabled(bool enabled)
 {
     overviewAction->setEnabled(enabled);
     sendCoinsAction->setEnabled(enabled);
+    sendFuturesAction->setEnabled(enabled);
     sendCoinsMenuAction->setEnabled(enabled);
     receiveCoinsAction->setEnabled(enabled);
     receiveCoinsMenuAction->setEnabled(enabled);
     historyAction->setEnabled(enabled);
-    sendFuturesAction->setEnabled(enabled);
     QSettings settings;
     if (!fLiteMode && settings.value("fShowSmartnodesTab").toBool() && smartnodeAction) {
         smartnodeAction->setEnabled(enabled);
