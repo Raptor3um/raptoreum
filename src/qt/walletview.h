@@ -1,5 +1,4 @@
 // Copyright (c) 2011-2015 The Bitcoin Core developers
-// Copyright (c) 2020-2021 The Raptoreum Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -17,8 +16,8 @@ class OverviewPage;
 class PlatformStyle;
 class ReceiveCoinsDialog;
 class SendCoinsDialog;
-class SendCoinsRecipient;
 class SendFuturesDialog;
+class SendCoinsRecipient;
 class TransactionView;
 class WalletModel;
 class AddressBookPage;
@@ -66,10 +65,11 @@ private:
     QWidget *transactionsPage;
     ReceiveCoinsDialog *receiveCoinsPage;
     SendCoinsDialog *sendCoinsPage;
+    SendFuturesDialog *sendFuturesPage;
     AddressBookPage *usedSendingAddressesPage;
     AddressBookPage *usedReceivingAddressesPage;
     SmartnodeList *smartnodeListPage;
-    SendFuturesDialog *sendFuturesPage;
+
     TransactionView *transactionView;
 
     QProgressDialog *progressDialog;
