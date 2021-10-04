@@ -1,5 +1,5 @@
 // Copyright (c) 2011-2015 The Bitcoin Core developers
-// Copyright (c) 2020-2021 The Raptoreum developers 
+// Copyright (c) 2020-2021 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -32,13 +32,12 @@ public:
 
     void setModel(WalletModel *model);
     bool validate();
-
-    SendCoinsRecipient getValue();
+    SendFuturesRecipient getValue();
 
     /** Return whether the entry is still empty and unedited */
     bool isClear();
 
-    void setValue(const SendCoinsRecipient &value);
+    void setValue(const SendFuturesRecipient &value);
     void setAddress(const QString &address);
 
     /** Set up the tab chain manually, as Qt messes up the tab chain by default in some cases
@@ -54,8 +53,9 @@ public Q_SLOTS:
 Q_SIGNALS:
     void removeEntry(SendFuturesEntry *entry);
     void payAmountChanged();
-    void payFromChanged(const QString &address);
     void subtractFeeFromAmountChanged();
+
+    void payFromChanged(const QString &address);
 
 private Q_SLOTS:
     void deleteClicked();
@@ -63,18 +63,19 @@ private Q_SLOTS:
     void on_addressBookButton_clicked();
     void on_pasteButton_clicked();
     void updateDisplayUnit();
-    void getLockTime(const QDateTime & dateTime);
-    //void updatePayFromBalanceLabel();
+    void balanceChange(const CAmount& balance);
+    void updateLockTimeField(const QDateTime &dateTime);
 
 private:
-    SendCoinsRecipient recipient;
+    SendFuturesRecipient recipient;
     Ui::SendFuturesEntry *ui;
     WalletModel *model;
     const PlatformStyle *platformStyle;
 
     bool updateLabel(const QString &address);
-    void setupPayFrom(int selected);
-
+    
+    void setupPayFrom();
+    void selectedChange(int selected);
 };
 
 #endif // BITCOIN_QT_SENDFUTURESENTRY_H

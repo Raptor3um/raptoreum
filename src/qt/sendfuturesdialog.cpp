@@ -1,6 +1,6 @@
 // Copyright (c) 2011-2015 The Bitcoin Core developers
 // Copyright (c) 2014-2020 The Dash Core developers
-// Copyright (c) 2020-2021 The Raptoreum developers 
+// Copyright (c) 2020-2021 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -23,9 +23,8 @@
 #include "ui_interface.h"
 #include "txmempool.h"
 #include "policy/fees.h"
+#include "future/fee.h" // future fee
 #include "wallet/wallet.h"
-
-#include "future/fee.h"
 
 #include "privatesend/privatesend.h"
 #include "privatesend/privatesend-client.h"
@@ -37,9 +36,10 @@
 #include <QTextDocument>
 #include <QTimer>
 
-#define SEND_CONFIRM_DELAY   3
+#define FUTURES_CONFIRM_DELAY   3
 
 static const std::array<int, 9> confTargets = { {2, 4, 6, 12, 24, 48, 144, 504, 1008} };
+
 int getFTXConfTargetForIndex(int index) {
     if (index+1 > static_cast<int>(confTargets.size())) {
         return confTargets.back();
@@ -49,6 +49,7 @@ int getFTXConfTargetForIndex(int index) {
     }
     return confTargets[index];
 }
+
 int getFTXIndexForConfTarget(int target) {
     for (unsigned int i = 0; i < confTargets.size(); i++) {
         if (confTargets[i] >= target) {
@@ -69,6 +70,20 @@ SendFuturesDialog::SendFuturesDialog(const PlatformStyle *_platformStyle, QWidge
 {
     ui->setupUi(this);
 
+    if (!_platformStyle->getImagesOnButtons()) {
+        //ui->addButton->setIcon(QIcon());
+        ui->clearButton->setIcon(QIcon());
+        ui->sendButton->setIcon(QIcon());
+    } else {
+        //ui->addButton->setIcon(QIcon(":/icons/add"));
+        ui->clearButton->setIcon(QIcon(":/icons/remove"));
+        ui->sendButton->setIcon(QIcon(":/icons/send"));
+    }
+
+    GUIUtil::setupAddressWidget(ui->lineEditCoinControlChange, this);
+
+    addEntry();
+
     /**
      * 
      * Hide unused UI elements for Future TX - functionality will remain intact for repurposing
@@ -82,26 +97,13 @@ SendFuturesDialog::SendFuturesDialog(const PlatformStyle *_platformStyle, QWidge
     ui->buttonChooseFee->hide();
     ui->fallbackFeeWarningLabel->hide();
 
-    if (!_platformStyle->getImagesOnButtons()) {
-        ui->addButton->setIcon(QIcon());
-        ui->clearButton->setIcon(QIcon());
-        ui->sendButton->setIcon(QIcon());
-    } else {
-        ui->addButton->setIcon(QIcon(":/icons/add"));
-        ui->clearButton->setIcon(QIcon(":/icons/remove"));
-        ui->sendButton->setIcon(QIcon(":/icons/send"));
-    }
-
-    GUIUtil::setupAddressWidget(ui->lineEditCoinControlChange, this);
-
-    addEntry();
-    connect(ui->addButton, SIGNAL(clicked()), this, SLOT(addEntry()));
+    //connect(ui->addButton, SIGNAL(clicked()), this, SLOT(addEntry()));
     connect(ui->clearButton, SIGNAL(clicked()), this, SLOT(clear()));
 
     // Coin Control
-    connect(ui->pushButtonCoinControl, SIGNAL(clicked()), this, SLOT(coinControlButtonClicked()));
-    connect(ui->checkBoxCoinControlChange, SIGNAL(stateChanged(int)), this, SLOT(coinControlChangeChecked(int)));
-    connect(ui->lineEditCoinControlChange, SIGNAL(textEdited(const QString &)), this, SLOT(coinControlChangeEdited(const QString &)));
+//    connect(ui->pushButtonCoinControl, SIGNAL(clicked()), this, SLOT(coinControlButtonClicked()));
+//    connect(ui->checkBoxCoinControlChange, SIGNAL(stateChanged(int)), this, SLOT(coinControlChangeChecked(int)));
+//    connect(ui->lineEditCoinControlChange, SIGNAL(textEdited(const QString &)), this, SLOT(coinControlChangeEdited(const QString &)));
 
     // Raptoreum specific
     QSettings settings;
@@ -133,7 +135,7 @@ SendFuturesDialog::SendFuturesDialog(const PlatformStyle *_platformStyle, QWidge
     }
 
     // Coin Control: clipboard actions
-    QAction *clipboardQuantityAction = new QAction(tr("Copy quantity"), this);
+/*    QAction *clipboardQuantityAction = new QAction(tr("Copy quantity"), this);
     QAction *clipboardAmountAction = new QAction(tr("Copy amount"), this);
     QAction *clipboardFeeAction = new QAction(tr("Copy fee"), this);
     QAction *clipboardAfterFeeAction = new QAction(tr("Copy after fee"), this);
@@ -154,7 +156,7 @@ SendFuturesDialog::SendFuturesDialog(const PlatformStyle *_platformStyle, QWidge
     ui->labelCoinControlBytes->addAction(clipboardBytesAction);
     ui->labelCoinControlLowOutput->addAction(clipboardLowOutputAction);
     ui->labelCoinControlChange->addAction(clipboardChangeAction);
-
+*/
     // init transaction fee section
     if (!settings.contains("fFeeSectionMinimized"))
         settings.setValue("fFeeSectionMinimized", true);
@@ -175,7 +177,6 @@ SendFuturesDialog::SendFuturesDialog(const PlatformStyle *_platformStyle, QWidge
     ui->customFee->setValue(settings.value("nTransactionFee").toLongLong());
     ui->checkBoxMinimumFee->setChecked(settings.value("fPayOnlyMinFee").toBool());
     minimizeFeeSection(settings.value("fFeeSectionMinimized").toBool());
-
 }
 
 void SendFuturesDialog::setClientModel(ClientModel *_clientModel)
@@ -211,11 +212,9 @@ void SendFuturesDialog::setModel(WalletModel *_model)
         // Coin Control
         connect(_model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(coinControlUpdateLabels()));
         connect(_model->getOptionsModel(), SIGNAL(coinControlFeaturesChanged(bool)), this, SLOT(coinControlFeatureChanged(bool)));
-
         /**************  DISABLE FOR FUTURES UNTIL READY FOR USE *****************/
         //ui->frameCoinControl->setVisible(_model->getOptionsModel()->getCoinControlFeatures());
         ui->frameCoinControl->setVisible(false);
-
         coinControlUpdateLabels();
 
         // fee section
@@ -270,7 +269,7 @@ void SendFuturesDialog::on_sendButton_clicked()
     if(!model || !model->getOptionsModel())
         return;
 
-    QList<SendCoinsRecipient> recipients;
+    QList<SendFuturesRecipient> recipients;
     bool valid = true;
 
     for(int i = 0; i < ui->entries->count(); ++i)
@@ -316,11 +315,11 @@ void SendFuturesDialog::on_sendButton_clicked()
     send(recipients);
 }
 
-void SendFuturesDialog::send(QList<SendCoinsRecipient> recipients)
+void SendFuturesDialog::send(QList<SendFuturesRecipient> recipients)
 {
     // prepare transaction for getting txFee earlier
-    WalletModelTransaction currentTransaction(recipients);
-    WalletModel::SendCoinsReturn prepareStatus;
+    WalletModelFuturesTransaction currentTransaction(recipients);
+    WalletModel::SendFuturesReturn prepareStatus;
 
     // Always use a CCoinControl instance, use the CoinControlDialog instance if CoinControl has been enabled
     CCoinControl ctrl;
@@ -331,10 +330,10 @@ void SendFuturesDialog::send(QList<SendCoinsRecipient> recipients)
 
     ctrl.UsePrivateSend(ui->checkUsePrivateSend->isChecked());
 
-    prepareStatus = model->prepareTransaction(currentTransaction, ctrl);
+    prepareStatus = model->prepareFuturesTransaction(currentTransaction, ctrl);
 
     // process prepareStatus and on error generate message shown to user
-    processSendCoinsReturn(prepareStatus,
+    processSendFuturesReturn(prepareStatus,
         BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), currentTransaction.getTransactionFee()));
 
     if(prepareStatus.status != WalletModel::OK) {
@@ -344,7 +343,7 @@ void SendFuturesDialog::send(QList<SendCoinsRecipient> recipients)
 
     // Format confirmation message
     QStringList formatted;
-    for (const SendCoinsRecipient &rcp : currentTransaction.getRecipients())
+    for (const SendFuturesRecipient &rcp : currentTransaction.getRecipients())
     {
         // generate bold amount string
         QString amount = "<b>" + BitcoinUnits::formatHtmlWithUnit(model->getOptionsModel()->getDisplayUnit(), rcp.amount);
@@ -384,7 +383,7 @@ void SendFuturesDialog::send(QList<SendCoinsRecipient> recipients)
     int messageEntries = formatted.size();
     int displayedEntries = 0;
     for(int i = 0; i < formatted.size(); i++){
-        if(i >= MAX_FUTURE_POPUP_ENTRIES){
+        if(i >= MAX_FUTURES_POPUP_ENTRIES){
             formatted.removeLast();
             i--;
         }
@@ -402,6 +401,7 @@ void SendFuturesDialog::send(QList<SendCoinsRecipient> recipients)
     if(ctrl.IsUsingPrivateSend()) {
         questionString.append(tr("using") + " <b>" + tr("PrivateSend funds only") + "</b>");
     } else {
+        //questionString.append(tr("using") + " <b>any available funds</b>");
         questionString.append(tr("using") + " <b>" + GUIUtil::HtmlEscape(recipients[0].payFrom) + "</b>");
     }
 
@@ -433,6 +433,7 @@ void SendFuturesDialog::send(QList<SendCoinsRecipient> recipients)
 
     questionString.append("<hr />");
     questionString.append("<span style='" + GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_ERROR) + "'><b>Future Maturity:</b></span><br />");
+    
     if(recipients[0].maturity > 0) {
         questionString.append(tr("Confirmations: <b>%1</b><br />").arg(recipients[0].maturity));
     }
@@ -452,6 +453,7 @@ void SendFuturesDialog::send(QList<SendCoinsRecipient> recipients)
     } else if(recipients[0].maturity <= 0 && recipients[0].locktime <= 0){
         questionString.append("<span style='" + GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_ERROR) + "'><b>No maturity is set. Transaction will mature as normal.</b></span>");
     }
+    
     
     // Show some additioinal information
     questionString.append("<hr />");
@@ -493,7 +495,7 @@ void SendFuturesDialog::send(QList<SendCoinsRecipient> recipients)
 
     // Display message box
     FutureConfirmationDialog confirmationDialog(tr("Confirm send coins"),
-        questionString, SEND_CONFIRM_DELAY, this);
+        questionString, FUTURES_CONFIRM_DELAY, this);
     confirmationDialog.exec();
     QMessageBox::StandardButton retval = (QMessageBox::StandardButton)confirmationDialog.result();
 
@@ -504,9 +506,9 @@ void SendFuturesDialog::send(QList<SendCoinsRecipient> recipients)
     }
 
     // now send the prepared transaction
-    WalletModel::SendCoinsReturn sendStatus = model->sendCoins(currentTransaction);
+    WalletModel::SendFuturesReturn sendStatus = model->sendFutures(currentTransaction);
     // process sendStatus and on error generate message shown to user
-    processSendCoinsReturn(sendStatus);
+    processSendFuturesReturn(sendStatus);
 
     if (sendStatus.status == WalletModel::OK)
     {
@@ -527,7 +529,6 @@ void SendFuturesDialog::clear()
     addEntry();
 
     updateTabsAndLabels();
-    updateDisplayUnit();
 }
 
 void SendFuturesDialog::reject()
@@ -545,12 +546,11 @@ SendFuturesEntry *SendFuturesDialog::addEntry()
     SendFuturesEntry *entry = new SendFuturesEntry(platformStyle, this);
     entry->setModel(model);
     ui->entries->addWidget(entry);
-    connect(entry, SIGNAL(removeEntry(SendCoinsEntry*)), this, SLOT(removeEntry(SendCoinsEntry*)));
+    //connect(entry, SIGNAL(removeEntry(SendFuturesEntry*)), this, SLOT(removeEntry(SendFuturesEntry*)));
     connect(entry, SIGNAL(payAmountChanged()), this, SLOT(coinControlUpdateLabels()));
+    //connect(entry, SIGNAL(subtractFeeFromAmountChanged()), this, SLOT(coinControlUpdateLabels()));
 
-    connect(entry, SIGNAL(payFromChanged(const QString &)), this, SLOT(payFromUpdateLabels()));
-
-    connect(entry, SIGNAL(subtractFeeFromAmountChanged()), this, SLOT(coinControlUpdateLabels()));
+    connect(entry, SIGNAL(payFromChanged(const QString &)), this, SLOT(updateFTXpayFromLabels()));
 
     // Focus the field, so that entry can start immediately
     entry->clear();
@@ -596,8 +596,10 @@ QWidget *SendFuturesDialog::setupTabChain(QWidget *prev)
     }
     QWidget::setTabOrder(prev, ui->sendButton);
     QWidget::setTabOrder(ui->sendButton, ui->clearButton);
-    QWidget::setTabOrder(ui->clearButton, ui->addButton);
-    return ui->addButton;
+    //QWidget::setTabOrder(ui->clearButton, ui->addButton);
+    //Add button hidden for Futures
+    //return ui->addButton;
+    return ui->clearButton;
 }
 
 void SendFuturesDialog::setAddress(const QString &address)
@@ -620,7 +622,7 @@ void SendFuturesDialog::setAddress(const QString &address)
     entry->setAddress(address);
 }
 
-void SendFuturesDialog::pasteEntry(const SendCoinsRecipient &rv)
+void SendFuturesDialog::pasteEntry(const SendFuturesRecipient &rv)
 {
     if(!fNewRecipientAllowed)
         return;
@@ -644,7 +646,7 @@ void SendFuturesDialog::pasteEntry(const SendCoinsRecipient &rv)
     updateTabsAndLabels();
 }
 
-bool SendFuturesDialog::handlePaymentRequest(const SendCoinsRecipient &rv)
+bool SendFuturesDialog::handlePaymentRequest(const SendFuturesRecipient &rv)
 {
     // Just paste the entry, all pre-checks
     // are done in paymentserver.cpp.
@@ -674,7 +676,7 @@ void SendFuturesDialog::setBalance(const CAmount& balance, const CAmount& unconf
 	    }
 
         //ui->labelBalance->setText(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), bal));
-        ui->labelBalance->setText(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), 0));
+        updateFTXpayFromLabels();
     }
 }
 
@@ -687,20 +689,21 @@ void SendFuturesDialog::updateDisplayUnit()
     ui->customFee->setDisplayUnit(model->getOptionsModel()->getDisplayUnit());
     updateMinFeeLabel();
     updateSmartFeeLabel();
+    //FTX specific labels
     updateFtxFeeLabel();
-    payFromUpdateLabels();
+    updateFTXpayFromLabels();
 }
 
-void SendFuturesDialog::processSendCoinsReturn(const WalletModel::SendCoinsReturn &sendCoinsReturn, const QString &msgArg)
+void SendFuturesDialog::processSendFuturesReturn(const WalletModel::SendFuturesReturn &sendFuturesReturn, const QString &msgArg)
 {
     QPair<QString, CClientUIInterface::MessageBoxFlags> msgParams;
     // Default to a warning message, override if error message is needed
     msgParams.second = CClientUIInterface::MSG_WARNING;
 
-    // This comment is specific to SendCoinsDialog usage of WalletModel::SendCoinsReturn.
-    // WalletModel::TransactionCommitFailed is used only in WalletModel::sendCoins()
+    // This comment is specific to SendFuturesDialog usage of WalletModel::SendFuturesReturn.
+    // WalletModel::TransactionCommitFailed is used only in WalletModel::sendFutures()
     // all others are used only in WalletModel::prepareTransaction()
-    switch(sendCoinsReturn.status)
+    switch(sendFuturesReturn.status)
     {
     case WalletModel::InvalidAddress:
         msgParams.first = tr("The recipient address is not valid. Please recheck.");
@@ -722,7 +725,7 @@ void SendFuturesDialog::processSendCoinsReturn(const WalletModel::SendCoinsRetur
         msgParams.second = CClientUIInterface::MSG_ERROR;
         break;
     case WalletModel::TransactionCommitFailed:
-        msgParams.first = tr("The transaction was rejected with the following reason: %1").arg(sendCoinsReturn.reasonCommitFailed);
+        msgParams.first = tr("The transaction was rejected with the following reason: %1").arg(sendFuturesReturn.reasonCommitFailed);
         msgParams.second = CClientUIInterface::MSG_ERROR;
         break;
     case WalletModel::AbsurdFee:
@@ -738,7 +741,7 @@ void SendFuturesDialog::processSendCoinsReturn(const WalletModel::SendCoinsRetur
         return;
     }
 
-    Q_EMIT message(tr("Send Coins"), msgParams.first, msgParams.second);
+    Q_EMIT message(tr("Send Futures"), msgParams.first, msgParams.second);
 }
 
 void SendFuturesDialog::minimizeFeeSection(bool fMinimize)
@@ -766,6 +769,12 @@ void SendFuturesDialog::on_buttonMinimizeFee_clicked()
 void SendFuturesDialog::setMinimumFee()
 {
     ui->customFee->setValue(CWallet::GetRequiredFee(1000));
+}
+
+void SendFuturesDialog::updateFtxFeeLabel()
+{
+    CAmount futureFee = getFutureFees();
+    ui->ftxFee->setText(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), futureFee));
 }
 
 void SendFuturesDialog::updateFeeSectionControls()
@@ -801,13 +810,6 @@ void SendFuturesDialog::updateMinFeeLabel()
         );
 }
 
-void SendFuturesDialog::updateFtxFeeLabel()
-{
-    CAmount futureFee = getFutureFees();
-    if (model && model->getOptionsModel())
-        ui->ftxFee->setText(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), futureFee));
-}
-
 void SendFuturesDialog::updateCoinControlState(CCoinControl& ctrl)
 {
     if (ui->radioCustomFee->isChecked()) {
@@ -824,7 +826,6 @@ void SendFuturesDialog::updateSmartFeeLabel()
 {
     if(!model || !model->getOptionsModel())
         return;
-    
     CCoinControl coin_control;
     updateCoinControlState(coin_control);
     coin_control.m_feerate.reset(); // Explicitly use only fee estimation rate for smart fee labels
@@ -832,13 +833,11 @@ void SendFuturesDialog::updateSmartFeeLabel()
     CFeeRate feeRate = CFeeRate(CWallet::GetMinimumFee(1000, coin_control, ::mempool, ::feeEstimator, &feeCalc));
 
     ui->labelSmartFee->setText(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), feeRate.GetFeePerK()) + "/kB");
-   // ui->labelSmartFee->setText(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), futureFee));
 
     if (feeCalc.reason == FeeReason::FALLBACK) {
         ui->labelSmartFee2->show(); // (Smart fee not initialized yet. This usually takes a few blocks...)
         ui->labelFeeEstimation->setText("");
-        //hidden for future tx -> see above line 83
-        //ui->fallbackFeeWarningLabel->setVisible(true);
+        ui->fallbackFeeWarningLabel->setVisible(true);
     }
     else
     {
@@ -895,9 +894,12 @@ void SendFuturesDialog::coinControlClipboardChange()
 // Coin Control: settings menu - coin control enabled/disabled by user
 void SendFuturesDialog::coinControlFeatureChanged(bool checked)
 {
-    ui->frameCoinControl->setVisible(checked);
-
-    if (!checked && model) // coin control features disabled
+    //hide for futures until ready for implementation
+    //ui->frameCoinControl->setVisible(checked);
+    ui->frameCoinControl->setVisible(false);
+    
+    //Disable check on control dialog for Future TX
+    //if (!checked && model) // coin control features disabled
         CoinControlDialog::coinControl->SetNull();
 
     coinControlUpdateLabels();
@@ -990,7 +992,8 @@ void SendFuturesDialog::coinControlUpdateLabels()
 
     updateCoinControlState(*CoinControlDialog::coinControl);
 
-    payFromUpdateLabels();
+    //Update FTX specific labels
+    updateFTXpayFromLabels();
 
     // set pay amounts
     CoinControlDialog::payAmounts.clear();
@@ -1001,7 +1004,7 @@ void SendFuturesDialog::coinControlUpdateLabels()
         SendFuturesEntry *entry = qobject_cast<SendFuturesEntry*>(ui->entries->itemAt(i)->widget());
         if(entry && !entry->isHidden())
         {
-            SendCoinsRecipient rcp = entry->getValue();
+            SendFuturesRecipient rcp = entry->getValue();
             CoinControlDialog::payAmounts.append(rcp.amount);
             if (rcp.fSubtractFeeFromAmount)
                 CoinControlDialog::fSubtractFeeFromAmount = true;
@@ -1029,7 +1032,7 @@ void SendFuturesDialog::coinControlUpdateLabels()
 }
 
 //Future pay from: update labels
-void SendFuturesDialog::payFromUpdateLabels()
+void SendFuturesDialog::updateFTXpayFromLabels()
 {
     if (!model || !model->getOptionsModel())
         return;
@@ -1046,7 +1049,7 @@ void SendFuturesDialog::payFromUpdateLabels()
         SendFuturesEntry *entry = qobject_cast<SendFuturesEntry*>(ui->entries->itemAt(i)->widget());
         if(entry && !entry->isHidden())
         {
-            SendCoinsRecipient rcp = entry->getValue();
+            SendFuturesRecipient rcp = entry->getValue();
             sendAmount += rcp.amount;
             //find balance for matched address in payfrom field
             for (auto& balance : balances) {
@@ -1069,7 +1072,7 @@ void SendFuturesDialog::payFromUpdateLabels()
     } else {
         ui->labelBalance->setStyleSheet(GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_ERROR));
     }
-    
+
 }
 
 FutureConfirmationDialog::FutureConfirmationDialog(const QString &title, const QString &text, int _secDelay,

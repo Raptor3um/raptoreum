@@ -802,7 +802,7 @@
                <string>Using the fallbackfee can result in sending a transaction that will take several hours or days (or never) to confirm. Consider choosing your fee manually or wait until you have validated the complete chain.</string>
               </property>
               <property name="text">
-               <string>Note: Not enough data for fee estimation, using the fallback fee instead.</string>
+               <string>Note: Not enough data for fee rate estimation, using the fallback fee rate instead.</string>
               </property>
               <property name="wordWrap">
                <bool>false</bool>
