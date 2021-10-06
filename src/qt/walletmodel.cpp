@@ -1,12 +1,12 @@
 // Copyright (c) 2011-2015 The Bitcoin Core developers
 // Copyright (c) 2014-2020 The Dash Core developers
-// Copyright (c) 2020 The Raptoreum developers
+// Copyright (c) 2020-2021 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "walletmodel.h"
 
-#include "addresstablemodel.h"
+#include "addresstablemodel.h" 
 #include "consensus/validation.h"
 #include "guiconstants.h"
 #include "guiutil.h"
@@ -228,6 +228,11 @@ bool WalletModel::validateAddress(const QString &address)
     return addressParsed.IsValid();
 }
 
+std::map<CTxDestination, CAmount> WalletModel::getAddressBalances() const
+{
+    return wallet->GetAddressBalances();
+}
+
 WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransaction &transaction, const CCoinControl& coinControl)
 {
     CAmount total = 0;
@@ -422,6 +427,202 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &tran
     checkBalanceChanged(); // update balance immediately, otherwise there could be a short noticeable delay until pollBalanceChanged hits
 
     return SendCoinsReturn(OK);
+}
+
+WalletModel::SendFuturesReturn WalletModel::prepareFuturesTransaction(WalletModelFuturesTransaction &transaction, const CCoinControl& coinControl)
+{
+    CAmount total = 0;
+    bool fSubtractFeeFromAmount = false;
+    QList<SendFuturesRecipient> recipients = transaction.getRecipients();
+    std::vector<CRecipient> vecSend;
+
+    if(recipients.empty())
+    {
+        return OK;
+    }
+
+    // This should never really happen, yet another safety check, just in case.
+    if(wallet->IsLocked()) {
+        return TransactionCreationFailed;
+    }
+
+    QSet<QString> setAddress; // Used to detect duplicates
+    int nAddresses = 0;
+
+    // Pre-check input data for validity
+    for (const SendFuturesRecipient &rcp : recipients)
+    {
+        if (rcp.fSubtractFeeFromAmount)
+            fSubtractFeeFromAmount = true;
+
+        if (rcp.paymentRequest.IsInitialized())
+        {   // PaymentRequest...
+            CAmount subtotal = 0;
+            const payments::PaymentDetails& details = rcp.paymentRequest.getDetails();
+            for (int i = 0; i < details.outputs_size(); i++)
+            {
+                const payments::Output& out = details.outputs(i);
+                if (out.amount() <= 0) continue;
+                subtotal += out.amount();
+                const unsigned char* scriptStr = (const unsigned char*)out.script().data();
+                CScript scriptPubKey(scriptStr, scriptStr+out.script().size());
+                CAmount nAmount = out.amount();
+                CRecipient recipient = {scriptPubKey, nAmount, rcp.fSubtractFeeFromAmount};
+                vecSend.push_back(recipient);
+            }
+            if (subtotal <= 0)
+            {
+                return InvalidAmount;
+            }
+            total += subtotal;
+        }
+        else
+        {   // User-entered raptoreum address / amount:
+            if(!validateAddress(rcp.address))
+            {
+                return InvalidAddress;
+            }
+            if(rcp.amount <= 0)
+            {
+                return InvalidAmount;
+            }
+            setAddress.insert(rcp.address);
+            ++nAddresses;
+
+            CScript scriptPubKey = GetScriptForDestination(CBitcoinAddress(rcp.address.toStdString()).Get());
+            CRecipient recipient = {scriptPubKey, rcp.amount, rcp.fSubtractFeeFromAmount};
+            vecSend.push_back(recipient);
+
+            total += rcp.amount;
+        }
+    }
+    if(setAddress.size() != nAddresses)
+    {
+        return DuplicateAddress;
+    }
+
+    CAmount nBalance = getBalance(&coinControl);
+
+    if(total > nBalance)
+    {
+        return AmountExceedsBalance;
+    }
+
+    CAmount nFeeRequired = 0;
+    CAmount nValueOut = 0;
+    size_t nVinSize = 0;
+    bool fCreated;
+    std::string strFailReason;
+    {
+        LOCK2(cs_main, wallet->cs_wallet);
+
+        transaction.newPossibleKeyChange(wallet);
+
+        int nChangePosRet = -1;
+
+        CWalletTx* newTx = transaction.getTransaction();
+        CReserveKey *keyChange = transaction.getPossibleKeyChange();
+
+        fCreated = wallet->CreateTransaction(vecSend, *newTx, *keyChange, nFeeRequired, nChangePosRet, strFailReason, coinControl);
+        transaction.setTransactionFee(nFeeRequired);
+        if (fSubtractFeeFromAmount && fCreated)
+            transaction.reassignAmounts();
+
+        nValueOut = newTx->tx->GetValueOut();
+        nVinSize = newTx->tx->vin.size();
+    }
+
+    if(!fCreated)
+    {
+        if(!fSubtractFeeFromAmount && (total + nFeeRequired) > nBalance)
+        {
+            return SendFuturesReturn(AmountWithFeeExceedsBalance);
+        }
+        Q_EMIT message(tr("Send Futures"), QString::fromStdString(strFailReason),
+                     CClientUIInterface::MSG_ERROR);
+        return TransactionCreationFailed;
+    }
+
+    // reject absurdly high fee. (This can never happen because the
+    // wallet caps the fee at maxTxFee. This merely serves as a
+    // belt-and-suspenders check)
+    if (nFeeRequired > maxTxFee)
+        return AbsurdFee;
+
+    return SendFuturesReturn(OK);
+}
+
+WalletModel::SendFuturesReturn WalletModel::sendFutures(WalletModelFuturesTransaction &transaction)
+{
+    QByteArray transaction_array; /* store serialized transaction */
+
+    {
+        LOCK2(cs_main, wallet->cs_wallet);
+        CWalletTx *newTx = transaction.getTransaction();
+        QList<SendFuturesRecipient> recipients = transaction.getRecipients();
+
+        for (const SendFuturesRecipient &rcp : recipients)
+        {
+            if (rcp.paymentRequest.IsInitialized())
+            {
+                // Make sure any payment requests involved are still valid.
+                if (PaymentServer::verifyExpired(rcp.paymentRequest.getDetails())) {
+                    return PaymentRequestExpired;
+                }
+
+                // Store PaymentRequests in wtx.vOrderForm in wallet.
+                std::string key("PaymentRequest");
+                std::string value;
+                rcp.paymentRequest.SerializeToString(&value);
+                newTx->vOrderForm.push_back(make_pair(key, value));
+            }
+            else if (!rcp.message.isEmpty()) // Message from normal raptoreum:URI (raptoreum:XyZ...?message=example)
+            {
+                newTx->vOrderForm.push_back(make_pair("Message", rcp.message.toStdString()));
+            }
+        }
+
+        CReserveKey *keyChange = transaction.getPossibleKeyChange();
+        CValidationState state;
+        if(!wallet->CommitTransaction(*newTx, *keyChange, g_connman.get(), state))
+            return SendFuturesReturn(TransactionCommitFailed, QString::fromStdString(state.GetRejectReason()));
+
+        CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
+        ssTx << *newTx->tx;
+        transaction_array.append(&(ssTx[0]), ssTx.size());
+    }
+
+    // Add addresses / update labels that we've sent to the address book,
+    // and emit coinsSent signal for each recipient
+    for (const SendFuturesRecipient &rcp : transaction.getRecipients())
+    {
+        // Don't touch the address book when we have a payment request
+        if (!rcp.paymentRequest.IsInitialized())
+        {
+            std::string strAddress = rcp.address.toStdString();
+            CTxDestination dest = CBitcoinAddress(strAddress).Get();
+            std::string strLabel = rcp.label.toStdString();
+            {
+                LOCK(wallet->cs_wallet);
+
+                std::map<CTxDestination, CAddressBookData>::iterator mi = wallet->mapAddressBook.find(dest);
+
+                // Check if we have a new address or an updated label
+                if (mi == wallet->mapAddressBook.end())
+                {
+                    wallet->SetAddressBook(dest, strLabel, "send");
+                }
+                else if (mi->second.name != strLabel)
+                {
+                    wallet->SetAddressBook(dest, strLabel, ""); // "" means don't change purpose
+                }
+            }
+        }
+        Q_EMIT futuresSent(wallet, rcp, transaction_array);
+    }
+    checkBalanceChanged(); // update balance immediately, otherwise there could be a short noticeable delay until pollBalanceChanged hits
+
+    return SendFuturesReturn(OK);
 }
 
 OptionsModel *WalletModel::getOptionsModel()

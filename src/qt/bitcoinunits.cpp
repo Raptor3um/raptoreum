@@ -1,6 +1,6 @@
 // Copyright (c) 2011-2015 The Bitcoin Core developers
 // Copyright (c) 2014-2019 The Dash Core developers
-// Copyright (c) 2020 The Raptoreum developers
+// Copyright (c) 2020-2021 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -61,7 +61,7 @@ QString BitcoinUnits::name(int unit)
             case RTM: return QString("tRTM");
             case mRTM: return QString("mtRTM");
             case uRTM: return QString::fromUtf8("μtRTM");
-            case ruffs: return QString("tduffs");
+            case ruffs: return QString("truffs");
             default: return QString("???");
         }
     }
