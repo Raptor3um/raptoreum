@@ -49,6 +49,8 @@ QT_FORMS_UI = \
   qt/forms/debugwindow.ui \
   qt/forms/sendcoinsdialog.ui \
   qt/forms/sendcoinsentry.ui \
+  qt/forms/sendfuturesdialog.ui \
+  qt/forms/sendfuturesentry.ui \
   qt/forms/signverifymessagedialog.ui \
   qt/forms/transactiondescdialog.ui
 
@@ -89,6 +91,8 @@ QT_MOC_CPP = \
   qt/moc_rpcconsole.cpp \
   qt/moc_sendcoinsdialog.cpp \
   qt/moc_sendcoinsentry.cpp \
+  qt/moc_sendfuturesdialog.cpp \
+  qt/moc_sendfuturesentry.cpp \
   qt/moc_signverifymessagedialog.cpp \
   qt/moc_splashscreen.cpp \
   qt/moc_trafficgraphwidget.cpp \
@@ -166,6 +170,8 @@ BITCOIN_QT_H = \
   qt/rpcconsole.h \
   qt/sendcoinsdialog.h \
   qt/sendcoinsentry.h \
+  qt/sendfuturesdialog.h \
+  qt/sendfuturesentry.h \
   qt/signverifymessagedialog.h \
   qt/splashscreen.h \
   qt/trafficgraphdata.h \
@@ -180,6 +186,7 @@ BITCOIN_QT_H = \
   qt/walletframe.h \
   qt/walletmodel.h \
   qt/walletmodeltransaction.h \
+  qt/walletmodelfuturestransaction.h \
   qt/walletview.h \
   qt/winshutdownmonitor.h
 
@@ -283,6 +290,8 @@ BITCOIN_QT_WALLET_CPP = \
   qt/recentrequeststablemodel.cpp \
   qt/sendcoinsdialog.cpp \
   qt/sendcoinsentry.cpp \
+  qt/sendfuturesdialog.cpp \
+  qt/sendfuturesentry.cpp \
   qt/signverifymessagedialog.cpp \
   qt/transactiondesc.cpp \
   qt/transactiondescdialog.cpp \
@@ -293,6 +302,7 @@ BITCOIN_QT_WALLET_CPP = \
   qt/walletframe.cpp \
   qt/walletmodel.cpp \
   qt/walletmodeltransaction.cpp \
+  qt/walletmodelfuturestransaction.cpp \
   qt/walletview.cpp
 
 BITCOIN_QT_CPP = $(BITCOIN_QT_BASE_CPP)
