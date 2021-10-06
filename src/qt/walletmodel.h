@@ -7,6 +7,7 @@
 
 #include "paymentrequestplus.h"
 #include "walletmodeltransaction.h"
+#include "walletmodelfuturestransaction.h"
 
 #ifdef ENABLE_WALLET
 #include "wallet/wallet.h"
@@ -24,6 +25,7 @@ class PlatformStyle;
 class RecentRequestsTableModel;
 class TransactionTableModel;
 class WalletModelTransaction;
+class WalletModelFuturesTransaction;
 
 class CCoinControl;
 class CKeyID;
@@ -97,6 +99,78 @@ public:
     }
 };
 
+class SendFuturesRecipient
+{
+public:
+    explicit SendFuturesRecipient() : amount(0), fSubtractFeeFromAmount(false), nVersion(SendFuturesRecipient::CURRENT_VERSION) { }
+    explicit SendFuturesRecipient(const QString &payFrom, const QString &addr, const QString &_label, const CAmount& _amount, const QString &_message, const int &_maturity, const int64_t &_locktime):
+        address(addr), label(_label), amount(_amount), message(_message), maturity(_maturity), locktime(_locktime), fSubtractFeeFromAmount(false), nVersion(SendCoinsRecipient::CURRENT_VERSION) {}
+
+    // If from an unauthenticated payment request, this is used for storing
+    // the addresses, e.g. address-A<br />address-B<br />address-C.
+    // Info: As we don't need to process addresses in here when using
+    // payment requests, we can abuse it for displaying an address list.
+    // Todo: This is a hack, should be replaced with a cleaner solution!
+    QString address;
+    QString label;
+    CAmount amount;
+    // If from a payment request, this is used for storing the memo
+    QString message;
+
+    //Futures strings
+    QString payFrom;
+
+    //Future TX maturity fields
+    int maturity;
+    int64_t locktime;
+
+    // If from a payment request, paymentRequest.IsInitialized() will be true
+    PaymentRequestPlus paymentRequest;
+    // Empty if no authentication or invalid signature/cert/etc.
+    QString authenticatedMerchant;
+
+    bool fSubtractFeeFromAmount; // memory only
+
+    static const int CURRENT_VERSION = 1;
+    int nVersion;
+
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action) {
+        std::string sPayFrom = payFrom.toStdString();
+        std::string sAddress = address.toStdString();
+        std::string sLabel = label.toStdString();
+        std::string sMessage = message.toStdString();
+        std::string sPaymentRequest;
+        if (!ser_action.ForRead() && paymentRequest.IsInitialized())
+            paymentRequest.SerializeToString(&sPaymentRequest);
+        std::string sAuthenticatedMerchant = authenticatedMerchant.toStdString();
+
+        READWRITE(this->nVersion);
+        READWRITE(sPayFrom);
+        READWRITE(sAddress);
+        READWRITE(sLabel);
+        READWRITE(amount);
+        READWRITE(sMessage);
+        READWRITE(maturity);
+        READWRITE(locktime);
+        READWRITE(sPaymentRequest);
+        READWRITE(sAuthenticatedMerchant);
+
+        if (ser_action.ForRead())
+        {
+            payFrom = QString::fromStdString(sPayFrom);
+            address = QString::fromStdString(sAddress);
+            label = QString::fromStdString(sLabel);
+            message = QString::fromStdString(sMessage);
+            if (!sPaymentRequest.empty())
+                paymentRequest.parse(QByteArray::fromRawData(sPaymentRequest.data(), sPaymentRequest.size()));
+            authenticatedMerchant = QString::fromStdString(sAuthenticatedMerchant);
+        }
+    }
+};
+
 /** Interface to Bitcoin wallet from Qt view code. */
 class WalletModel : public QObject
 {
@@ -133,6 +207,8 @@ public:
     TransactionTableModel *getTransactionTableModel();
     RecentRequestsTableModel *getRecentRequestsTableModel();
 
+    std::map<CTxDestination, CAmount> getAddressBalances() const;
+
     CAmount getBalance(const CCoinControl *coinControl = nullptr) const;
     CAmount getUnconfirmedBalance() const;
     CAmount getImmatureBalance() const;
@@ -163,6 +239,24 @@ public:
 
     // Send coins to a list of recipients
     SendCoinsReturn sendCoins(WalletModelTransaction &transaction);
+
+    // Return status record for SendFutures, contains error id + information
+    struct SendFuturesReturn
+    {
+        SendFuturesReturn(StatusCode _status = OK, QString _reasonCommitFailed = "")
+            : status(_status),
+              reasonCommitFailed(_reasonCommitFailed)
+        {
+        }
+        StatusCode status;
+        QString reasonCommitFailed;
+    };
+
+    // prepare futures transaction for getting txfee before sending coins
+    SendFuturesReturn prepareFuturesTransaction(WalletModelFuturesTransaction &transaction, const CCoinControl& coinControl);
+
+    // Send futures to a list of recipients
+    SendFuturesReturn sendFutures(WalletModelFuturesTransaction &transaction);
 
     // Wallet encryption
     bool setWalletEncrypted(bool encrypted, const SecureString &passphrase);
@@ -274,6 +368,9 @@ Q_SIGNALS:
 
     // Coins sent: from wallet, to recipient, in (serialized) transaction:
     void coinsSent(CWallet* wallet, SendCoinsRecipient recipient, QByteArray transaction);
+
+    //Futures sent: from wallet, to recipient, in (serialized) transaction:
+    void futuresSent(CWallet* wallet, SendFuturesRecipient recipient, QByteArray transaction);
 
     // Show progress dialog e.g. for rescan
     void showProgress(const QString &title, int nProgress);

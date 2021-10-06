@@ -16,6 +16,7 @@ class OverviewPage;
 class PlatformStyle;
 class ReceiveCoinsDialog;
 class SendCoinsDialog;
+class SendFuturesDialog;
 class SendCoinsRecipient;
 class TransactionView;
 class WalletModel;
@@ -64,6 +65,7 @@ private:
     QWidget *transactionsPage;
     ReceiveCoinsDialog *receiveCoinsPage;
     SendCoinsDialog *sendCoinsPage;
+    SendFuturesDialog *sendFuturesPage;
     AddressBookPage *usedSendingAddressesPage;
     AddressBookPage *usedReceivingAddressesPage;
     SmartnodeList *smartnodeListPage;
@@ -85,7 +87,8 @@ public Q_SLOTS:
     void gotoReceiveCoinsPage();
     /** Switch to send coins page */
     void gotoSendCoinsPage(QString addr = "");
-
+    /** Switch to send futures page */
+    void gotoSendFuturesPage(QString addr = "");
     /** Show Sign/Verify Message dialog and switch to sign message tab */
     void gotoSignMessageTab(QString addr = "");
     /** Show Sign/Verify Message dialog and switch to verify message tab */
