@@ -121,6 +121,14 @@ void CChainParams::UpdateLLMQChainLocks(Consensus::LLMQType llmqType) {
     consensus.llmqTypeChainLocks = llmqType;
 }
 
+void CChainParams::UpdateLLMQDevnetParams(int size, int threshold)
+{
+  auto& params = consensus.llmqs.at(Consensus::LLMQ_DEVNET);
+  params.size = size;
+  params.minSize = threshold;
+  params.threshold = threshold;
+}
+
 static CBlock FindDevNetGenesisBlock(const Consensus::Params& params, const CBlock &prevBlock, const CAmount& reward)
 {
     std::string devNetName = GetDevNetName();
@@ -144,6 +152,25 @@ static CBlock FindDevNetGenesisBlock(const Consensus::Params& params, const CBlo
     error("FindDevNetGenesisBlock: could not find devnet genesis block for %s", devNetName);
     assert(false);
 }
+
+// this one is for DEVNETS only
+static Consensus::LLMQParams llmq_devnet = {
+  .type = Consensus::LLMQ_DEVNET,
+  .name = "llmq_devnet",
+  .size = 10,
+  .minSize = 7,
+  .threshold = 6,
+
+  .dkgInterval = 24,
+  .dkgPhaseBlocks = 2,
+  .dkgMiningWindowStart = 10,
+  .dkgMiningWindowEnd = 18,
+  .dkgBadVotesThreshold = 7,
+
+  .signingActiveQuorumConunt = 3,
+
+  .keepOldConnections = 4,
+};
 
 static void FindMainNetGenesisBlock(uint32_t nTime, uint32_t nBits, const char* network)
 {
@@ -722,7 +749,7 @@ public:
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = false;
         consensus.nPowDGWHeight = 60;
-		consensus.DGWBlocksAvg = 60;
+        consensus.DGWBlocksAvg = 60;
         consensus.nRuleChangeActivationThreshold = 1512; // 75% for testchains
         consensus.nMinerConfirmationWindow = 2016; // nPowTargetTimespan / nPowTargetSpacing
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
@@ -751,9 +778,9 @@ public:
         consensus.hashDevnetGenesisBlock = devnetGenesis.GetHash();
         consensus.nFutureRewardShare = Consensus::FutureRewardShare(0.8,0.2,0.0);
 
-        vector<FounderRewardStructure> rewardStructures = {  {INT_MAX, 5}// 5% founder/dev fee forever
-                                                                										   };
-		consensus.nFounderPayment = FounderPayment(rewardStructures, 200);
+        vector<FounderRewardStructure> rewardStructures = {  {INT_MAX, 5} };// 5% founder/dev fee forever
+
+        consensus.nFounderPayment = FounderPayment(rewardStructures, 200);
 
         vFixedSeeds.clear();
         vSeeds.clear();
@@ -774,6 +801,7 @@ public:
         nExtCoinType = 1;
 
         // long living quorum params
+        consensus.llmqs[Consensus::LLMQ_DEVNET] = llmq_devnet;
         consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
         consensus.llmqs[Consensus::LLMQ_400_60] = llmq400_60;
         consensus.llmqs[Consensus::LLMQ_400_85] = llmq400_85;
@@ -978,6 +1006,11 @@ void UpdateDevnetSubsidyAndDiffParams(int nMinimumDifficultyBlocks, int nHighSub
 void UpdateDevnetLLMQChainLocks(Consensus::LLMQType llmqType)
 {
     globalChainParams->UpdateLLMQChainLocks(llmqType);
+}
+
+void UpdateLLMQDevnetParams(int size, int threshold)
+{
+  globalChainParams->UpdateLLMQDevnetParams(size, threshold);
 }
 
 void UpdateLLMQParams(size_t totalMnCount, int height, bool lowLLMQParams) {
