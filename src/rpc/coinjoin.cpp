@@ -11,7 +11,8 @@
 #endif // ENABLE_WALLET
 #include <coinjoin/coinjoin-server.h>
 #include <rpc/server.h>
-#include <version.h>
+#include <rpc/util.h>
+#include <utilstrencodings.h>
 
 #include <univalue.h>
 
@@ -25,7 +26,12 @@ UniValue coinjoin(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
-            "coinjoin \"command\"\n"
+            RPCHelpMan{"coinjoin",
+                "",
+                {
+                    {"command", RPCArg::Type::STR, false},
+                }}
+                .ToString() +
             "\nArguments:\n"
             "1. \"command\"        (string or set of strings, required) The command to execute\n"
             "\nAvailable commands:\n"
@@ -82,8 +88,10 @@ UniValue coinjoin(const JSONRPCRequest& request)
 UniValue getpoolinfo(const JSONRPCRequest& request)
 {
     throw std::runtime_error(
-            "getpoolinfo\n"
-            "DEPRECATED. Please use getcoinjoininfo instead.\n"
+            RPCHelpMan{"getpoolinfo",
+                "DEPRECATED. Please use getcoinjoininfo instead.\n",
+            {}}
+            .ToString()
     );
 }
 
@@ -91,44 +99,46 @@ UniValue getcoinjoininfo(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 0) {
         throw std::runtime_error(
-                "getcoinjoininfo\n"
-                "Returns an object containing an information about CoinJoin settings and state.\n"
-                "\nResult (for regular nodes):\n"
-                "{\n"
-                "  \"enabled\": true|false,             (bool) Whether mixing functionality is enabled\n"
-                "  \"multisession\": true|false,        (bool) Whether CoinJoin Multisession option is enabled\n"
-                "  \"max_sessions\": xxx,               (numeric) How many parallel mixing sessions can there be at once\n"
-                "  \"max_rounds\": xxx,                 (numeric) How many rounds to mix\n"
-                "  \"max_amount\": xxx,                 (numeric) Target CoinJoin balance in " + CURRENCY_UNIT + "\n"
-                "  \"denoms_goal\": xxx,                (numeric) How many inputs of each denominated amount to target\n"
-                "  \"denoms_hardcap\": xxx,             (numeric) Maximum limit of how many inputs of each denominated amount to create\n"
-                "  \"queue_size\": xxx,                 (numeric) How many queues there are currently on the network\n"
-                "  \"running\": true|false,             (bool) Whether mixing is currently running\n"
-                "  \"sessions\":                        (array of json objects)\n"
-                "    [\n"
-                "      {\n"
-                "      \"protxhash\": \"...\",            (string) The ProTxHash of the smartnode\n"
-                "      \"outpoint\": \"txid-index\",      (string) The outpoint of the smartnode\n"
-                "      \"service\": \"host:port\",        (string) The IP address and port of the smartnode\n"
-                "      \"denomination\": xxx,           (numeric) The denomination of the mixing session in " + CURRENCY_UNIT + "\n"
-                "      \"state\": \"...\",                (string) Current state of the mixing session\n"
-                "      \"entries_count\": xxx,          (numeric) The number of entries in the mixing session\n"
-                "      }\n"
-                "      ,...\n"
-                "    ],\n"
-                "  \"keys_left\": xxx,                  (numeric) How many new keys are left since last automatic backup\n"
-                "  \"warnings\": \"...\"                  (string) Warnings if any\n"
-                "}\n"
-                "\nResult (for smartnodes):\n"
-                "{\n"
-                "  \"queue_size\": xxx,                 (numeric) How many queues there are currently on the network\n"
-                "  \"denomination\": xxx,               (numeric) The denomination of the mixing session in " + CURRENCY_UNIT + "\n"
-                "  \"state\": \"...\",                    (string) Current state of the mixing session\n"
-                "  \"entries_count\": xxx,              (numeric) The number of entries in the mixing session\n"
-                "}\n"
-                "\nExamples:\n"
-                + HelpExampleCli("getcoinjoininfo", "")
-                + HelpExampleRpc("getcoinjoininfo", "")
+            RPCHelpMan{"getcoinjoininfo",
+                "Returns an object containing an information about CoinJoin settings and state.\n",
+                {}}
+                .ToString() +
+            "\nResult (for regular nodes):\n"
+            "{\n"
+            "  \"enabled\": true|false,             (bool) Whether mixing functionality is enabled\n"
+            "  \"multisession\": true|false,        (bool) Whether CoinJoin Multisession option is enabled\n"
+            "  \"max_sessions\": xxx,               (numeric) How many parallel mixing sessions can there be at once\n"
+            "  \"max_rounds\": xxx,                 (numeric) How many rounds to mix\n"
+            "  \"max_amount\": xxx,                 (numeric) Target CoinJoin balance in " + CURRENCY_UNIT + "\n"
+            "  \"denoms_goal\": xxx,                (numeric) How many inputs of each denominated amount to target\n"
+            "  \"denoms_hardcap\": xxx,             (numeric) Maximum limit of how many inputs of each denominated amount to create\n"
+            "  \"queue_size\": xxx,                 (numeric) How many queues there are currently on the network\n"
+            "  \"running\": true|false,             (bool) Whether mixing is currently running\n"
+            "  \"sessions\":                        (array of json objects)\n"
+            "    [\n"
+            "      {\n"
+            "      \"protxhash\": \"...\",            (string) The ProTxHash of the smartnode\n"
+            "      \"outpoint\": \"txid-index\",      (string) The outpoint of the smartnode\n"
+            "      \"service\": \"host:port\",        (string) The IP address and port of the smartnode\n"
+            "      \"denomination\": xxx,           (numeric) The denomination of the mixing session in " + CURRENCY_UNIT + "\n"
+            "      \"state\": \"...\",                (string) Current state of the mixing session\n"
+            "      \"entries_count\": xxx,          (numeric) The number of entries in the mixing session\n"
+            "      }\n"
+            "      ,...\n"
+            "    ],\n"
+            "  \"keys_left\": xxx,                  (numeric) How many new keys are left since last automatic backup\n"
+            "  \"warnings\": \"...\"                  (string) Warnings if any\n"
+            "}\n"
+            "\nResult (for smartnodes):\n"
+            "{\n"
+            "  \"queue_size\": xxx,                 (numeric) How many queues there are currently on the network\n"
+            "  \"denomination\": xxx,               (numeric) The denomination of the mixing session in " + CURRENCY_UNIT + "\n"
+            "  \"state\": \"...\",                    (string) Current state of the mixing session\n"
+            "  \"entries_count\": xxx,              (numeric) The number of entries in the mixing session\n"
+            "}\n"
+            "\nExamples:\n"
+            + HelpExampleCli("getcoinjoininfo", "")
+            + HelpExampleRpc("getcoinjoininfo", "")
         );
     }
 

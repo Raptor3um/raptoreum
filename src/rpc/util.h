@@ -5,11 +5,13 @@
 #ifndef BITCOIN_RPC_UTIL_H
 #define BITCOIN_RPC_UTIL_H
 
+#include <node/transaction.h>
 #include <pubkey.h>
 #include <protocol.h>
 #include <script/standard.h>
 #include <univalue.h>
 #include <utilstrencodings.h>
+#include <rpc/protocol.h>
 
 #include <string>
 #include <vector>
@@ -26,6 +28,9 @@ CPubKey AddrToPubKey(CKeyStore* const keystore, const std::string& addr_in);
 CScript CreateMultisigRedeemscript(const int required, const std::vector<CPubKey>& pubkeys);
 
 UniValue DescribeAddress(const CTxDestination& dest);
+
+RPCErrorCode RPCErrorFromTransactionError(TransactionError terr);
+UniValue JSONRPCTransactionError(TransactionError terr, const std::string& err_string = "");
 
 /** Returns given services flags a list of humanly readable (known) network services */
 UniValue GetServicesNames(ServiceFlags services);
@@ -45,15 +50,16 @@ struct RPCArg {
     const Type m_type;
     const std::vector<RPCArg> m_inner; //!< Only used for arrays or dicts
     const bool m_optional;
+    const std::string m_oneline_description; //!< Should be empty unless it is supposed to override the auto-generated summary line
 
-    RPCArg(const std::string& name, const Type& type, const bool optional)
-        : m_name{name}, m_type{type}, m_optional{optional}
+    RPCArg(const std::string& name, const Type& type, const bool optional, const std::string& oneline_description = "")
+        : m_name{name}, m_type{type}, m_optional{optional}, m_oneline_description{oneline_description}
     {
         assert(type != Type::ARR && type != Type::OBJ);
     }
 
-    RPCArg(const std::string& name, const Type& type, const std::vector<RPCArg>& inner, const bool optional)
-        : m_name{name}, m_type{type}, m_inner{inner}, m_optional{optional}
+    RPCArg(const std::string& name, const Type& type, const std::vector<RPCArg>& inner, const bool optional, const std::string& oneline_description = "")
+        : m_name{name}, m_type{type}, m_inner{inner}, m_optional{optional}, m_oneline_description{oneline_description}
     {
         assert(type == Type::ARR || type == Type::OBJ);
     }
@@ -67,8 +73,8 @@ private:
 class RPCHelpMan
 {
 public:
-    RPCHelpMan(const std::string& name, const std::vector<RPCArg>& args)
-        : m_name{name}, m_args{args}
+    RPCHelpMan(const std::string& name, const std::string& description, const std::vector<RPCArg>& args)
+        : m_name{name}, m_description{description}, m_args{args}
     {
     }
 
@@ -76,6 +82,7 @@ public:
 
 private:
     const std::string m_name;
+    const std::string m_description;
     const std::vector<RPCArg> m_args;
 };
 

@@ -222,6 +222,7 @@ BITCOIN_CORE_H = \
   netfulfilledman.h \
   netmessagemaker.h \
   node/coinstats.h \
+  node/transaction.h \
   noui.h \
   optional.h \
   policy/feerate.h \
@@ -371,6 +372,7 @@ libraptoreum_server_a_SOURCES = \
   netfulfilledman.cpp \
   net_processing.cpp \
   node/coinstats.cpp \
+  node/transaction.cpp \
   ui_interface.cpp \
   noui.cpp \
   policy/fees.cpp \

@@ -95,6 +95,30 @@ UniValue DescribeAddress(const CTxDestination& dest)
     return boost::apply_visitor(DescribeAddressVisitor(), dest);
 }
 
+RPCErrorCode RPCErrorFromTransactionError(TransactionError terr)
+{
+    switch (terr) {
+        case TransactionError::MEMPOOL_REJECTED:
+            return RPC_TRANSACTION_REJECTED;
+        case TransactionError::ALREADY_IN_CHAIN:
+            return RPC_TRANSACTION_ALREADY_IN_CHAIN;
+        case TransactionError::P2P_DISABLED:
+            return RPC_CLIENT_P2P_DISABLED;
+        case TransactionError::SIGHASH_MISMATCH:
+            return RPC_DESERIALIZATION_ERROR;
+        default: break;
+    }
+    return RPC_TRANSACTION_ERROR;
+}
+
+UniValue JSONRPCTransactionError(TransactionError terr, const std::string& err_string)
+{
+    if (err_string.length() > 0) {
+        return JSONRPCError(RPCErrorFromTransactionError(terr), err_string);
+    } else {
+        return JSONRPCError(RPCErrorFromTransactionError(terr), TransactionErrorString(terr));
+    }
+}
 
 std::string RPCHelpMan::ToString() const
 {
@@ -116,6 +140,8 @@ std::string RPCHelpMan::ToString() const
     }
     if (is_optional) ret += " )";
     ret += "\n";
+
+    ret += m_description;
 
     return ret;
 }
@@ -152,6 +178,8 @@ std::string RPCArg::ToStringObj() const
 
 std::string RPCArg::ToString() const
 {
+    if (!m_oneline_description.empty()) return m_oneline_description;
+
     switch (m_type) {
     case Type::STR_HEX:
     case Type::STR: {

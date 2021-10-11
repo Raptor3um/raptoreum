@@ -288,7 +288,7 @@ void StartScriptCheckWorkerThreads(int threads_num);
 /** Stop all of the script checking worker threads. */
 void StopScriptCheckWorkerThreads();
 /** Retrieve a transaction (from memory pool, or from disk, if possible) */
-bool GetTransaction(const uint256& hash, CTransactionRef& tx, const Consensus::Params& params, uint256& hashBlock, bool fAllowSlow = false, CBlockIndex* blockIndex = nullptr);
+bool GetTransaction(const uint256& hash, CTransactionRef& tx, const Consensus::Params& params, uint256& hashBlock, const CBlockIndex* const blockIndex = nullptr);
 /**
  * Find the best known block, and make it the tip of the block chain
  *

@@ -8,6 +8,8 @@
 #include <clientversion.h>
 #include <init.h>
 #include <netbase.h>
+#include <rpc/util.h>
+#include <rpc/server.h>
 #include <validation.h>
 #include <util.h>
 #include <utilmoneystr.h>
@@ -38,8 +40,13 @@ UniValue smartnodelist(const JSONRPCRequest& request);
 void smartnode_list_help()
 {
     throw std::runtime_error(
-            "smartnodelist ( \"mode\" \"filter\" )\n"
-            "Get a list of smartnodes in different modes. This call is identical to 'smartnode list' call.\n"
+            RPCHelpMan{"smartnodelist",
+                "Get a list of smartnodes in different modes. This call is identical to 'smartnode list' call.\n",
+                {
+                    {"mode", RPCArg::Type::STR, true},
+                    {"filter", RPCArg::Type::STR, true},
+                }}
+                .ToString() +
             "\nArguments:\n"
             "1. \"mode\"      (string, optional/required to use filter, defaults = json) The mode to run list in\n"
             "2. \"filter\"    (string, optional) Filter results. Partial match by outpoint by default in all modes,\n"
@@ -79,11 +86,14 @@ UniValue smartnode_list(const JSONRPCRequest& request)
 void smartnode_connect_help()
 {
     throw std::runtime_error(
-            "smartnode connect \"address\"\n"
-            "Connect to given smartnode\n"
-            "\nArguments:\n"
-            "1. \"address\"      (string, required) The address of the smartnode to connect\n"
-        );
+        RPCHelpMan{"smartnode connect",
+            "Connect to given smartnode\n",
+            {
+                {"address", RPCArg::Type::STR, false},
+            }}
+            .ToString() +
+        "\nArguments:\n"
+        "1. \"address\"      (string, required) The address of the smartnode to connect\n");
 }
 
 UniValue smartnode_connect(const JSONRPCRequest& request)
@@ -108,9 +118,9 @@ UniValue smartnode_connect(const JSONRPCRequest& request)
 void smartnode_count_help()
 {
     throw std::runtime_error(
-            "smartnode count\n"
-            "Get information about number of smartnodes.\n"
-        );
+        RPCHelpMan{"smartnode count",
+            "Get information about number of smartnodes.\n",
+        {}}.ToString());
 }
 
 UniValue smartnode_count(const JSONRPCRequest& request)
@@ -157,9 +167,9 @@ void smartnode_winner_help()
     }
 
     throw std::runtime_error(
-            "smartnode winner\n"
-            "Print info on next smartnode winner to vote for\n"
-        );
+        RPCHelpMan{"smartnode winner",
+            "Print info on next smartnode winner to vote for\n",
+        {}}.ToString());
 }
 
 UniValue smartnode_winner(const JSONRPCRequest& request)
@@ -177,9 +187,9 @@ void smartnode_current_help()
     }
 
     throw std::runtime_error(
-            "smartnode current\n"
-            "Print info on current smartnode winner to be paid the next block (calculated locally)\n"
-        );
+        RPCHelpMan{"smartnode current",
+            "Print info on current smartnode winner to be paid the next block (calculated locally)\n",
+            {}}.ToString());
 }
 
 UniValue smartnode_current(const JSONRPCRequest& request)
@@ -194,9 +204,9 @@ UniValue smartnode_current(const JSONRPCRequest& request)
 void smartnode_outputs_help()
 {
     throw std::runtime_error(
-            "smartnode outputs\n"
-            "Print smartnode compatible outputs\n"
-        );
+        RPCHelpMan{"smartnode outputs",
+            "Print smartnode compatible outputs\n",
+            {}}.ToString());
 }
 
 UniValue smartnode_outputs(const JSONRPCRequest& request)
@@ -231,9 +241,9 @@ UniValue smartnode_outputs(const JSONRPCRequest& request)
 void smartnode_status_help()
 {
     throw std::runtime_error(
-            "smartnode status\n"
-            "Print smartnode status information\n"
-        );
+        RPCHelpMan{"smartnode status",
+            "Print smartnode status information\n",
+            {}}.ToString());
 }
 
 UniValue smartnode_status(const JSONRPCRequest& request)
@@ -304,12 +314,15 @@ std::string GetRequiredPaymentsString(int nBlockHeight, const CDeterministicMNCP
 void smartnode_winners_help()
 {
     throw std::runtime_error(
-            "smartnode winners ( count \"filter\" )\n"
-            "Print list of smartnode winners\n"
-            "\nArguments:\n"
-            "1. count        (numeric, optional) number of last winners to return\n"
-            "2. filter       (string, optional) filter for returned winners\n"
-        );
+        RPCHelpMan{"smartnode winners",
+            "Print list of smartnode winners\n",
+            {
+                {"count", RPCArg::Type::NUM, true},
+                {"filter", RPCArg::Type::STR, true},
+            }}.ToString() +
+        "\nArguments:\n"
+        "1. count        (numeric, optional) number of last winners to return\n"
+        "2. filter       (string, optional) filter for returned winners\n");
 }
 
 UniValue smartnode_winners(const JSONRPCRequest& request)
@@ -360,35 +373,39 @@ UniValue smartnode_winners(const JSONRPCRequest& request)
 void smartnode_payments_help()
 {
     throw std::runtime_error(
-            "smartnode payments ( \"blockhash\" count )\n"
-            "\nReturns an array of deterministic smartnodes and their payments for the specified block\n"
-            "\nArguments:\n"
-            "1. \"blockhash\"                       (string, optional, default=tip) The hash of the starting block\n"
-            "2. count                             (numeric, optional, default=1) The number of blocks to return.\n"
-            "                                     Will return <count> previous blocks if <count> is negative.\n"
-            "                                     Both 1 and -1 correspond to the chain tip.\n"
-            "\nResult:\n"
-            "  [                                  (array) Blocks\n"
-            "    {\n"
-            "       \"height\" : n,                 (numeric) The height of the block\n"
-            "       \"blockhash\" : \"hash\",         (string) The hash of the block\n"
-            "       \"amount\": n                   (numeric) Amount received in this block by all smartnodes\n"
-            "       \"smartnodes\": [              (array) Smartnodes that received payments in this block\n"
-            "          {\n"
-            "             \"proTxHash\": \"xxxx\",    (string) The hash of the corresponding ProRegTx\n"
-            "             \"amount\": n             (numeric) Amount received by this smartnode\n"
-            "             \"payees\": [             (array) Payees who received a share of this payment\n"
-            "                {\n"
-            "                  \"address\" : \"xxx\", (string) Payee address\n"
-            "                  \"script\" : \"xxx\",  (string) Payee scriptPubKey\n"
-            "                  \"amount\": n        (numeric) Amount received by this payee\n"
-            "                },...\n"
-            "             ]\n"
-            "          },...\n"
-            "       ]\n"
-            "    },...\n"
-            "  ]\n"
-        );
+        RPCHelpMan{"smartnode payments",
+            "\nReturns an array of deterministic smartnodes and their payments for the specified block\n",
+            {
+                {"blockhash", RPCArg::Type::STR, true},
+                {"count", RPCArg::Type::NUM, true},
+            }}
+            .ToString() +
+        "\nArguments:\n"
+        "1. \"blockhash\"                       (string, optional, default=tip) The hash of the starting block\n"
+        "2. count                             (numeric, optional, default=1) The number of blocks to return.\n"
+        "                                     Will return <count> previous blocks if <count> is negative.\n"
+        "                                     Both 1 and -1 correspond to the chain tip.\n"
+        "\nResult:\n"
+        "  [                                  (array) Blocks\n"
+        "    {\n"
+        "       \"height\" : n,                 (numeric) The height of the block\n"
+        "       \"blockhash\" : \"hash\",         (string) The hash of the block\n"
+        "       \"amount\": n                   (numeric) Amount received in this block by all smartnodes\n"
+        "       \"smartnodes\": [              (array) smartnodes that received payments in this block\n"
+        "          {\n"
+        "             \"proTxHash\": \"xxxx\",    (string) The hash of the corresponding ProRegTx\n"
+        "             \"amount\": n             (numeric) Amount received by this smartnode\n"
+        "             \"payees\": [             (array) Payees who received a share of this payment\n"
+        "                {\n"
+        "                  \"address\" : \"xxx\", (string) Payee address\n"
+        "                  \"script\" : \"xxx\",  (string) Payee scriptPubKey\n"
+        "                  \"amount\": n        (numeric) Amount received by this payee\n"
+        "                },...\n"
+        "             ]\n"
+        "          },...\n"
+        "       ]\n"
+        "    },...\n"
+        "  ]\n");
 }
 
 UniValue smartnode_payments(const JSONRPCRequest& request)
@@ -501,8 +518,10 @@ UniValue smartnode_payments(const JSONRPCRequest& request)
 [[ noreturn ]] void smartnode_help()
 {
     throw std::runtime_error(
-        "smartnode \"command\" ...\n"
-        "Set of commands to execute smartnode related actions\n"
+        RPCHelpMan{"smartnode",
+            "Set of commands to execute smartnode related actions\n",
+            {}}
+            .ToString() +
         "\nArguments:\n"
         "1. \"command\"        (string or set of strings, required) The command to execute\n"
         "\nAvailable commands:\n"

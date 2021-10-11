@@ -22,11 +22,6 @@
 #include <util.h>
 #include <utilstrencodings.h>
 #include <validation.h>
-#ifdef ENABLE_WALLET
-#include <wallet/rpcwallet.h>
-#include <wallet/wallet.h>
-#include <wallet/walletdb.h>
-#endif
 #include <warnings.h>
 
 #include <smartnode/smartnode-sync.h>
@@ -41,12 +36,18 @@
 
 #include <univalue.h>
 
-UniValue mnsync(const JSONRPCRequest& request)
+static UniValue mnsync(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
-            "mnsync [status|next|reset]\n"
-            "Returns the sync status, updates to the next step or resets it entirely.\n"
+            RPCHelpMan{"mnsync",
+                "Returns the sync status, updates to the next step or resets it entirely.\n",
+                {
+                    {"mode", RPCArg::Type::STR, false},
+                }}
+                .ToString() +
+            "\nArguments:\n"
+            "1. mode     (string, required) [status|next|reset]\n"
         );
 
     std::string strMode = request.params[0].get_str();
@@ -102,8 +103,12 @@ UniValue spork(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() != 2) {
         // default help, for basic mode
         throw std::runtime_error(
-            "spork \"command\"\n"
-            "\nShows information about current state of sporks\n"
+            RPCHelpMan{"spork",
+                "\nShows information about current state of sporks\n",
+                {
+                    {"command", RPCArg::Type::STR, false},
+                }}
+                .ToString() +
             "\nArguments:\n"
             "1. \"command\"                     (string, required) 'show' to show all current spork values, 'active' to show which sporks are active\n"
             "\nResult:\n"
@@ -137,8 +142,13 @@ UniValue spork(const JSONRPCRequest& request)
             return "success";
         } else {
             throw std::runtime_error(
-                "spork \"name\" value\n"
-                "\nUpdate the value of the specific spork. Requires \"-sporkkey\" to be set to sign the message.\n"
+                RPCHelpMan{"spork",
+                    "\nUpdate the value of the specific spork. Requires \"-sporkkey\" to be set to sign the message.\n",
+                    {
+                        {"name", RPCArg::Type::STR, false},
+                        {"value", RPCArg::Type::NUM, false},
+                    }}
+                    .ToString() +
                 "\nArguments:\n"
                 "1. \"name\"              (string, required) The name of the spork to update\n"
                 "2. value               (number, required) The new desired value of the spork\n"
@@ -156,12 +166,12 @@ UniValue validateaddress(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
-            "validateaddress \"address\"\n"
-            "\nReturn information about the given raptoreum address.\n"
-            "DEPRECATION WARNING: Parts of this command have been deprecated and moved to getaddressinfo. Clients must\n"
-            "transition to using getaddressinfo to access this information before upgrading to v0.18. The following deprecated\n"
-            "fields have moved to getaddressinfo and will only be shown here with -deprecatedrpc=validateaddress: ismine, iswatchonly,\n"
-            "script, hex, pubkeys, sigsrequired, pubkey, addresses, embedded, iscompressed, account, timestamp, hdkeypath.\n"
+            RPCHelpMan{"validateaddress",
+                "\nReturn information about the given raptoreum address.\n",
+                {
+                    {"address", RPCArg::Type::STR, false},
+                }}
+                .ToString() +
             "\nArguments:\n"
             "1. \"address\"                    (string, required) The raptoreum address to validate\n"
             "\nResult:\n"
@@ -183,36 +193,35 @@ UniValue validateaddress(const JSONRPCRequest& request)
     ret.pushKV("isvalid", isValid);
     if (isValid)
     {
+        std::string currentAddress = EncodeDestination(dest);
+        ret.pushKV("address", currentAddress);
 
-#ifdef ENABLE_WALLET
-        if (HasWallets() && IsDeprecatedRPCEnabled("validateaddress")) {
-            ret.pushKVs(getaddressinfo(request));
-        }
-#endif
-        if (ret["address"].isNull()) {
-            std::string currentAddress = EncodeDestination(dest);
-            ret.pushKV("address", currentAddress);
+        CScript scriptPubKey = GetScriptForDestination(dest);
+        ret.pushKV("scriptPubKey", HexStr(scriptPubKey));;
 
-            CScript scriptPubKey = GetScriptForDestination(dest);
-            ret.pushKV("scriptPubKey", HexStr(scriptPubKey));;
-
-            UniValue detail = DescribeAddress(dest);
-            ret.pushKVs(detail);
-        }
+        UniValue detail = DescribeAddress(dest);
+        ret.pushKVs(detail);
     }
     return ret;
 }
-
-// Needed even with !ENABLE_WALLET, to pass (ignored) pointers around
-class CWallet;
 
 UniValue createmultisig(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 2 || request.params.size() > 2)
     {
-        std::string msg = "createmultisig nrequired [\"key\",...]\n"
-            "\nCreates a multi-signature address with n signature of m keys required.\n"
-            "It returns a json object with the address and redeemScript.\n"
+        std::string msg =
+            RPCHelpMan{"createmultisig",
+                "\nCreates a multi-signature address with n signature of m keys required.\n"
+                "It returns a json object with the address and redeemScript.\n",
+                {
+                    {"nrequired", RPCArg::Type::NUM, false},
+                    {"keys", RPCArg::Type::ARR,
+                        {
+                            {"key", RPCArg::Type::STR_HEX, true},
+                        },
+                    false},
+                }}
+                .ToString() +
             "\nArguments:\n"
             "1. nrequired                    (numeric, required) The number of required signatures out of the n keys.\n"
             "2. \"keys\"                       (string, required) A json array of hex-encoded public keys\n"
@@ -245,8 +254,7 @@ UniValue createmultisig(const JSONRPCRequest& request)
         if (IsHex(keys[i].get_str()) && (keys[i].get_str().length() == 66 || keys[i].get_str().length() == 130)) {
             pubkeys.push_back(HexToPubKey(keys[i].get_str()));
         } else {
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Invalid public key: %s\nNote that from v0.16, createmultisig no longer accepts addresses."
-            " Users must use addmultisigaddress to create multisig addresses with addresses known to the wallet.", keys[i].get_str()));
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Invalid public key: %s\n.", keys[i].get_str()));
         }
     }
 
@@ -265,8 +273,14 @@ UniValue verifymessage(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 3)
         throw std::runtime_error(
-            "verifymessage \"address\" \"signature\" \"message\"\n"
-            "\nVerify a signed message\n"
+            RPCHelpMan{"verifymessage",
+                "\nVerify a signed message\n",
+                {
+                    {"address", RPCArg::Type::STR, false},
+                    {"signature", RPCArg::Type::STR, false},
+                    {"message", RPCArg::Type::STR, false},
+                }}
+                .ToString() +
             "\nArguments:\n"
             "1. \"address\"         (string, required) The raptoreum address to use for the signature.\n"
             "2. \"signature\"       (string, required) The signature provided by the signer in base 64 encoding (see signmessage).\n"
@@ -321,8 +335,13 @@ UniValue signmessagewithprivkey(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 2)
         throw std::runtime_error(
-            "signmessagewithprivkey \"privkey\" \"message\"\n"
-            "\nSign a message with the private key of an address\n"
+            RPCHelpMan{"signmessagewithprivkey",
+                "\nSign a message with the private key of an address\n",
+                {
+                    {"privkey", RPCArg::Type::STR, false},
+                    {"message", RPCArg::Type::STR, false},
+                }}
+                .ToString() +
             "\nArguments:\n"
             "1. \"privkey\"         (string, required) The private key to sign the message with.\n"
             "2. \"message\"         (string, required) The message to create a signature of.\n"
@@ -360,8 +379,12 @@ UniValue setmocktime(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
-            "setmocktime timestamp\n"
-            "\nSet the local time to given timestamp (-regtest only)\n"
+            RPCHelpMan{"setmocktime",
+                "\nSet the local time to given timestamp (-regtest only)\n",
+                {
+                    {"timestamp", RPCArg::Type::NUM, false},
+                }}
+                .ToString() +
             "\nArguments:\n"
             "1. timestamp  (integer, required) Unix seconds-since-epoch timestamp\n"
             "   Pass 0 to go back to using the system time."
@@ -387,8 +410,14 @@ UniValue mnauth(const JSONRPCRequest& request)
 {
     if (request.fHelp || (request.params.size() != 3))
         throw std::runtime_error(
-            "mnauth nodeId \"proTxHash\" \"publicKey\"\n"
-            "\nOverride MNAUTH processing results for the specified node with a user provided data (-regtest only).\n"
+            RPCHelpMan{"mnauth",
+                "\nOverride MNAUTH processing results for the specified node with a user provided data (-regtest only).\n",
+                {
+                    {"nodeId", RPCArg::Type::NUM, false},
+                    {"proTxHash", RPCArg::Type::STR, false},
+                    {"publicKey", RPCArg::Type::STR, false},
+                }}
+                .ToString() +
             "\nArguments:\n"
             "1. nodeId          (integer, required) Internal peer id of the node the mock data gets added to.\n"
             "2. \"proTxHash\"     (string, required) The authenticated proTxHash as hex string.\n"
@@ -493,8 +522,15 @@ UniValue getaddressmempool(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
-            "getaddressmempool\n"
-            "\nReturns all mempool deltas for an address (requires addressindex to be enabled).\n"
+            RPCHelpMan{"getaddressmempool",
+                "\nReturns all mempool deltas for an address (requires addressindex to be enabled).\n",
+                {
+                    {"addresses", RPCArg::Type::ARR,
+                        {
+                            {"address", RPCArg::Type::STR, true},
+                        },
+                    true},
+                }}.ToString() +
             "\nArguments:\n"
             "{\n"
             "  \"addresses\"\n"
@@ -564,8 +600,15 @@ UniValue getaddressutxos(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
-            "getaddressutxos\n"
-            "\nReturns all unspent outputs for an address (requires addressindex to be enabled).\n"
+            RPCHelpMan{"getaddressutxos",
+                "\nReturns all unspent outputs for an address (requires addressindex to be enabled).\n",
+                {
+                    {"addresses", RPCArg::Type::ARR,
+                        {
+                            {"address", RPCArg::Type::STR, true},
+                        },
+                    true},
+                }}.ToString() +
             "\nArguments:\n"
             "{\n"
             "  \"addresses\"\n"
@@ -631,8 +674,15 @@ UniValue getaddressdeltas(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1 || !request.params[0].isObject())
         throw std::runtime_error(
-            "getaddressdeltas\n"
-            "\nReturns all changes for an address (requires addressindex to be enabled).\n"
+            RPCHelpMan{"getaddressdeltas",
+                "\nReturns all changes for an address (requires addressindex to be enabled).\n",
+                {
+                    {"addresses", RPCArg::Type::ARR,
+                        {
+                            {"address", RPCArg::Type::STR, true},
+                        },
+                    true},
+                }}.ToString() +
             "\nArguments:\n"
             "{\n"
             "  \"addresses\"\n"
@@ -719,8 +769,15 @@ UniValue getaddressbalance(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
-            "getaddressbalance\n"
-            "\nReturns the balance for an address(es) (requires addressindex to be enabled).\n"
+            RPCHelpMan{"getaddressbalance",
+                "\nReturns the balance for an address(es) (requires addressindex to be enabled).\n",
+                {
+                    {"addresses", RPCArg::Type::ARR,
+                        {
+                            {"address", RPCArg::Type::STR, true},
+                        },
+                    true},
+                }}.ToString() +
             "\nArguments:\n"
             "{\n"
             "  \"addresses\"\n"
@@ -792,8 +849,15 @@ UniValue getaddresstxids(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
-            "getaddresstxids\n"
-            "\nReturns the txids for an address(es) (requires addressindex to be enabled).\n"
+            RPCHelpMan{"getaddresstxids",
+                "\nReturns the txids for an address(es) (requires addressindex to be enabled).\n",
+                {
+                    {"addresses", RPCArg::Type::ARR,
+                        {
+                            {"address", RPCArg::Type::STR, true},
+                        },
+                    true},
+                }}.ToString() +
             "\nArguments:\n"
             "{\n"
             "  \"addresses\"\n"
@@ -875,8 +939,16 @@ UniValue getspentinfo(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1 || !request.params[0].isObject())
         throw std::runtime_error(
-            "getspentinfo\n"
-            "\nReturns the txid and index where an output is spent.\n"
+            RPCHelpMan{"getspentinfo",
+                "\nReturns the txid and index where an output is spent.\n",
+                {
+                    {"request", RPCArg::Type::OBJ,
+                        {
+                            {"txid", RPCArg::Type::STR, true},
+                            {"index", RPCArg::Type::NUM, true},
+                        },
+                    true},
+                }}.ToString() +
             "\nArguments:\n"
             "{\n"
             "  \"txid\" (string) The hex string of the txid\n"
@@ -957,8 +1029,12 @@ UniValue getmemoryinfo(const JSONRPCRequest& request)
      */
     if (request.fHelp || request.params.size() > 1)
         throw std::runtime_error(
-            "getmemoryinfo (\"mode\")\n"
-            "Returns an object containing information about memory usage.\n"
+            RPCHelpMan{"getmemoryinfo",
+                "Returns an object containing information about memory usage.\n",
+                {
+                    {"mode", RPCArg::Type::STR, true},
+                }}
+                .ToString() +
             "\nArguments:\n"
             "1. \"mode\"     (string, optional, default: \"stats\") Determines what kind of information is returned.\n"
             "  - \"stats\" returns general statistics about memory usage in the daemon.\n"
@@ -1019,7 +1095,7 @@ UniValue logging(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() > 2) {
         throw std::runtime_error(
-            "logging ( <include> <exclude> )\n"
+            RPCHelpMan{"logging",
             "Gets and sets the logging configuration.\n"
             "When called without an argument, returns the list of categories with status that are currently being debug logged or not.\n"
             "When called with arguments, adds or removes categories from debug logging and return the lists above.\n"
@@ -1031,6 +1107,12 @@ UniValue logging(const JSONRPCRequest& request)
             "  - \"raptoreum\" activates all Raptoreum-specific categories at once.\n"
             "To deactivate all categories at once you can specify \"all\" in <exclude>.\n"
             "  - \"none\", \"0\" : even if other logging categories are specified, ignore all of them.\n"
+            ,
+                {
+                    {"include", RPCArg::Type::STR, true},
+                    {"exclude", RPCArg::Type::STR, true},
+                }}
+                .ToString() +
             "\nArguments:\n"
             "1. \"include\"        (array of strings, optional) A json array of categories to add debug logging\n"
             "     [\n"
@@ -1090,11 +1172,13 @@ UniValue echo(const JSONRPCRequest& request)
 {
     if (request.fHelp)
         throw std::runtime_error(
-            "echo|echojson \"message\" ...\n"
-            "\nSimply echo back the input arguments. This command is for testing.\n"
-            "\nThe difference between echo and echojson is that echojson has argument conversion enabled in the client-side table in"
-            "raptoreum-cli and the GUI. There is no server-side difference."
-        );
+            RPCHelpMan{"echo|echojson ...",
+                "\nSimply echo back the input arguments. This command is for testing.\n"
+                "\nThe difference between echo and echojson is that echojson has argument conversion enabled in the client-side table in "
+                "raptoreum-cli and the GUI. There is no server-side difference.",
+                {}}
+                .ToString() +
+            "");
 
     return request.params;
 }
@@ -1104,7 +1188,7 @@ static const CRPCCommand commands[] =
   //  --------------------- ------------------------  -----------------------  ----------
     { "control",            "getmemoryinfo",          &getmemoryinfo,          {"mode"} },
     { "control",            "logging",                &logging,                {"include", "exclude"}},
-    { "util",               "validateaddress",        &validateaddress,        {"address"} }, /* uses wallet if enabled */
+    { "util",               "validateaddress",        &validateaddress,        {"address"} },
     { "util",               "createmultisig",         &createmultisig,         {"nrequired","keys"} },
     { "util",               "verifymessage",          &verifymessage,          {"address","signature","message"} },
     { "util",               "signmessagewithprivkey", &signmessagewithprivkey, {"privkey","message"} },
