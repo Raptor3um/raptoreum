@@ -9,29 +9,17 @@
 #include <stdint.h>
 #include <string.h>
 
-/*
- * Create GNU compatible endian macros. We use the values for __LITTLE_ENDIAN
- * and __BIG_ENDIAN based on endian.h.
- */
-#ifdef __sun
-#include <sys/byteorder.h>
-#define LITTLE_ENDIAN   1234
-#define BIG_ENDIAN      4321
-#ifdef _LITTLE_ENDIAN
-#define BYTE_ORDER      LITTLE_ENDIAN
-#else
-#define BYTE_ORDER      BIG_ENDIAN
-#endif /* _LITTLE_ENDIAN */
-#endif /* __sun */
+#ifndef _MSC_VER
+#include <sys/param.h>
+#endif
+
+#if defined(__sun) && defined(__SVR4)
+#include <endian.h>
+#endif
 
 #if defined(_MSC_VER)
 #include <stdlib.h>
 
-//instead of #include <sys/param.h>
-// assume little-endian on Windows
-#define LITTLE_ENDIAN   1234
-#define BIG_ENDIAN      4321
-#define BYTE_ORDER      LITTLE_ENDIAN
 
 static inline uint32_t rol32(uint32_t x, int r) {
   static_assert(sizeof(uint32_t) == sizeof(unsigned int), "this code assumes 32-bit integers");
@@ -43,7 +31,6 @@ static inline uint64_t rol64(uint64_t x, int r) {
 }
 
 #else
-#include <sys/param.h>
 
 static inline uint32_t rol32(uint32_t x, int r) {
   return (x << (r & 31)) | (x >> (-r & 31));
@@ -110,6 +97,36 @@ static inline uint32_t div128_32(uint64_t dividend_hi, uint64_t dividend_lo, uin
   *quotient_lo  = div_with_reminder(dividend_dwords[1], divisor, &remainder) << 32;
   *quotient_lo |= div_with_reminder(dividend_dwords[0], divisor, &remainder);
 
+  return remainder;
+}
+
+static inline bool shl128(uint64_t* hi, uint64_t* lo)
+{
+  bool carry = ((*hi) >> 63);
+  *hi <<= 1;
+  *hi += ((*lo) >> 63);
+  *lo <<= 1;
+  return carry;
+}
+
+// Long division with 2^64 base
+static inline uint64_t div128_64(uint64_t dividend_hi, uint64_t dividend_lo, uint64_t divisor, uint64_t* quotient_hi, uint64_t* quotient_lo)
+{
+  uint64_t remainder = 0;
+  for(size_t i = 0; i < 128; i++)
+  {
+    bool carry = remainder >> 63;
+    remainder <<= 1;
+    if(shl128(&dividend_hi, &dividend_lo))
+      remainder |= 1;
+    if(carry || remainder >= divisor)
+    {
+      remainder -= divisor;
+      dividend_lo |= 1;
+    }
+  }
+  *quotient_hi = dividend_hi;
+  *quotient_lo = dividend_lo;
   return remainder;
 }
 
@@ -183,12 +200,14 @@ static inline void memcpy_swap64(void *dst, const void *src, size_t n) {
   }
 }
 
-#if !defined(BYTE_ORDER) || !defined(LITTLE_ENDIAN) || !defined(BIG_ENDIAN)
-#if __STDC_VERSION__ - 0 >= 201112L
-static_assert(false, "BYTE_ORDER is undefined. Perhaps, GNU extensions are not enabled");
-#else
-#error "BYTE_ORDER is undefined. Perhaps, GNU extensions are not enabled"
+#ifdef _MSC_VER
+# define LITTLE_ENDIAN 1234
+# define BIG_ENDIAN    4321
+# define BYTE_ORDER    LITTLE_ENDIAN
 #endif
+
+#if !defined(BYTE_ORDER) || !defined(LITTLE_ENDIAN) || !defined(BIG_ENDIAN)
+static_assert(false, "BYTE_ORDER is undefined. Perhaps, GNU extensions are not enabled");
 #endif
 
 #if BYTE_ORDER == LITTLE_ENDIAN

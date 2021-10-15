@@ -28,7 +28,7 @@
 **
 ***************************************************************************/
 #include "skein_port.h"                      /* get platform-specific definitions */
-#include "hash.h"
+#include "slow-hash.h"
 
 typedef enum
 {
