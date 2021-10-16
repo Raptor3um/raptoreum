@@ -112,9 +112,9 @@ static WalletTxStatus MakeWalletTxStatus(interfaces::Chain::Lock& locked_chain, 
     LockAnnotation lock(::cs_main);
 
     WalletTxStatus result;
-    auto mi = ::mapBlockIndex.find(wtx.hashBlock);
-    CBlockIndex* block = mi != ::mapBlockIndex.end() ? mi->second : nullptr;
-    result.block_height = (block ? block->nHeight : std::numeric_limits<int>::max()),
+    auto mi = ::BlockIndex().find(wtx.hashBlock);
+    CBlockIndex* block = mi != ::BlockIndex().end() ? mi->second : nullptr;
+    result.block_height = (block ? block->nHeight : std::numeric_limits<int>::max());
     result.blocks_to_maturity = wtx.GetBlocksToMaturity(locked_chain);
     result.depth_in_main_chain = wtx.GetDepthInMainChain(locked_chain);
     result.time_received = wtx.nTimeReceived;
