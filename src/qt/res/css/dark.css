@@ -352,7 +352,7 @@ color: #aaa;
 }
 
 /* Do NOT apply any styles to QScrollBar here,
-    * it's OS dependent and should be handled via platform specific code.
+* it's OS dependent and should be handled via platform specific code.
 */
 
 /*******************************************************/
@@ -1578,7 +1578,7 @@ QLabel#transactionSumLabel { /* Example of setObjectName for widgets without nam
 color: #ccc;
 font-weight:bold;
 }
-    
+
 QLabel#transactionSum { /* Example of setObjectName for widgets without name */
 color: #ccc;
 }
