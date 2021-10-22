@@ -454,6 +454,10 @@ public:
         return vChain.size() > 0 ? vChain[vChain.size() - 1] : nullptr;
     }
 
+    CBlockIndex *atHeight(int nHeight) const {
+    	return nHeight >= vChain.size() ? nullptr : vChain[nHeight];
+    }
+
     /** Returns the index entry at a particular height in this chain, or nullptr if no such height exists. */
     CBlockIndex *operator[](int nHeight) const {
         if (nHeight < 0 || nHeight >= (int)vChain.size())
