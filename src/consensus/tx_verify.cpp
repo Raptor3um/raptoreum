@@ -36,20 +36,31 @@ static void checkSpecialTxFee(const CTransaction &tx, CAmount& nFeeTotal, CAmoun
 	}
 }
 
-static bool validateFutureCoin(const Coin& coin, int nSpendHeight, uint32_t confirmedTime, int64_t adjustCurrentTime) {
+static const char *validateFutureCoin(const Coin& coin, int nSpendHeight) {
 	if(coin.nType == TRANSACTION_FUTURE) {
-		CFutureTx futureTx;
-		//std::cout << "futuretx checking" << endl;
-		if(GetTxPayload(coin.vExtraPayload, futureTx)) {
-			//std::cout << "futuretx extract" << endl;
-			bool isBlockMature = futureTx.maturity > 0 && nSpendHeight - coin.nHeight >= futureTx.maturity;
-			bool isTimeMature = futureTx.lockTime > 0 && adjustCurrentTime - confirmedTime  >= futureTx.lockTime;
-			//std::cout << "isBlockMature " << isBlockMature << " isTimeMature " << isTimeMature << endl;
-			return isBlockMature || isTimeMature;
+		CBlockIndex* confirmedBlockIndex = chainActive[coin.nHeight];
+		if(confirmedBlockIndex) {
+			int64_t adjustCurrentTime = GetAdjustedTime();
+			uint32_t confirmedTime = confirmedBlockIndex->nTime;
+			CFutureTx futureTx;
+			//std::cout << "futuretx checking" << endl;
+			if(GetTxPayload(coin.vExtraPayload, futureTx)) {
+				//std::cout << "futuretx extract" << endl;
+				bool isBlockMature = futureTx.maturity > 0 && nSpendHeight - coin.nHeight >= futureTx.maturity;
+				bool isTimeMature = futureTx.lockTime > 0 && adjustCurrentTime - confirmedTime  >= futureTx.lockTime;
+				//std::cout << "isBlockMature " << isBlockMature << " isTimeMature " << isTimeMature << endl;
+				bool canSpend = isBlockMature || isTimeMature;
+				if(!canSpend) {
+					return "bad-txns-premature-spend-of-future";
+				}
+				return nullptr;
+			}
+			return "bad-txns-unable-to-parse-future";
 		}
-		return false;
+		// should not get here
+		return "bad-txns-unable-to-block-index-for-future";
 	}
-	return true;
+	return nullptr;
 }
 
 
@@ -280,11 +291,9 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputvalues-outofrange");
         }
 
-        CBlockIndex* confirmedBlockIndex = chainActive.atHeight(coin.nHeight);
-        int64_t adjustCurrentTime = GetAdjustedTime();
-        uint32_t confirmedTime = confirmedBlockIndex->nTime;
-		if(!validateFutureCoin(coin, nSpendHeight, confirmedTime, adjustCurrentTime)) {
-            return state.DoS(100, false, REJECT_INVALID, "bad-txns-premature-spend-of-future");
+        const char* futureValidationError = validateFutureCoin(coin, nSpendHeight);
+		if(futureValidationError) {
+			return state.DoS(100, false, REJECT_INVALID, futureValidationError);
 
 		}
     }
