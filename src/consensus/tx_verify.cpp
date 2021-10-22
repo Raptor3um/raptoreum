@@ -280,7 +280,7 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputvalues-outofrange");
         }
 
-        CBlockIndex* confirmedBlockIndex = chainActive[coin.nHeight];
+        CBlockIndex* confirmedBlockIndex = chainActive.atHeight(coin.nHeight);
         int64_t adjustCurrentTime = GetAdjustedTime();
         uint32_t confirmedTime = confirmedBlockIndex->nTime;
 		if(!validateFutureCoin(coin, nSpendHeight, confirmedTime, adjustCurrentTime)) {
