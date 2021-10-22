@@ -7,6 +7,7 @@
 #include "consensus/consensus.h"
 #include "memusage.h"
 #include "random.h"
+#include "future/utils.h"
 
 #include <assert.h>
 
@@ -94,7 +95,10 @@ void AddCoins(CCoinsViewCache& cache, const CTransaction &tx, int nHeight, bool 
         bool overwrite = check ? cache.HaveCoin(COutPoint(txid, i)) : fCoinbase;
         // Always set the possible_overwrite flag to AddCoin for coinbase txn, in order to correctly
         // deal with the pre-BIP30 occurrences of duplicate coinbase transactions.
-        cache.AddCoin(COutPoint(txid, i), Coin(tx.vout[i], nHeight, fCoinbase), overwrite);
+        Coin coin = Coin(tx.vout[i], nHeight, fCoinbase, 0, std::vector<uint8_t>());
+        COutPoint outpoint = COutPoint(txid, i);
+        maybeSetPayload(coin, outpoint, tx.nType, tx.vExtraPayload);
+        cache.AddCoin(outpoint, Coin(tx.vout[i], nHeight, fCoinbase, coin.nType, coin.vExtraPayload), overwrite);
     }
 }
 
