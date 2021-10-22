@@ -20,6 +20,7 @@
 #include "utiltime.h"
 #include "hash.h"
 
+#include "future/utils.h"
 #include "evo/specialtx.h"
 #include "evo/providertx.h"
 
@@ -1383,7 +1384,8 @@ bool CCoinsViewMemPool::GetCoin(const COutPoint &outpoint, Coin &coin) const {
     CTransactionRef ptx = mempool.get(outpoint.hash);
     if (ptx) {
         if (outpoint.n < ptx->vout.size()) {
-            coin = Coin(ptx->vout[outpoint.n], MEMPOOL_HEIGHT, false);
+            coin = Coin(ptx->vout[outpoint.n], MEMPOOL_HEIGHT, false, 0, std::vector<uint8_t>());
+            maybeSetPayload(coin, outpoint, ptx.get()->nType, ptx.get()->vExtraPayload);
             return true;
         } else {
             return false;
