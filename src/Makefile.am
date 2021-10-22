@@ -164,6 +164,7 @@ BITCOIN_CORE_H = \
   governance/governance-vote.h \
   governance/governance-votedb.h \
   future/fee.h \
+  future/utils.h \
   flat-database.h \
   hdchain.h \
   fs.h \
@@ -548,6 +549,7 @@ libraptoreum_common_a_SOURCES = \
   bip39.cpp \
   chainparams.cpp \
   smartnode/smartnode-collaterals.cpp \
+  future/utils.cpp \
   coins.cpp \
   compressor.cpp \
   core_read.cpp \

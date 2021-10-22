@@ -10,6 +10,8 @@
 #include "script/script.h"
 #include "serialize.h"
 #include "uint256.h"
+//#include "consensus/tx_verify.h"
+
 
 /** Transaction types */
 enum {
