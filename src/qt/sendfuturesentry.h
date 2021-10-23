@@ -53,9 +53,8 @@ public Q_SLOTS:
 Q_SIGNALS:
     void removeEntry(SendFuturesEntry *entry);
     void payAmountChanged();
-    void subtractFeeFromAmountChanged();
-
     void payFromChanged(const QString &address);
+    void subtractFeeFromAmountChanged();
 
 private Q_SLOTS:
     void deleteClicked();
@@ -63,8 +62,8 @@ private Q_SLOTS:
     void on_addressBookButton_clicked();
     void on_pasteButton_clicked();
     void updateDisplayUnit();
-    void balanceChange(const CAmount& balance);
     void updateLockTimeField(const QDateTime &dateTime);
+    void setupPayFrom();
 
 private:
     SendFuturesRecipient recipient;
@@ -74,8 +73,6 @@ private:
 
     bool updateLabel(const QString &address);
     
-    void setupPayFrom();
-    void selectedChange(int selected);
 };
 
 #endif // BITCOIN_QT_SENDFUTURESENTRY_H
