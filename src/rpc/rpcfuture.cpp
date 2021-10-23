@@ -66,6 +66,14 @@ UniValue futuretx_send(const JSONRPCRequest& request) {
 
 	CAmount futureFee = getFutureFees();
     FundSpecialTx(pwallet, tx, ftx, fromAddress.Get(), futureFee);
+    //double check to be sure lockOutputIndex is to update to new index if it change because of FundSpecialTx
+    for (const auto& txOut : tx.vout) {
+		if(txOut.scriptPubKey == toAddressScript) {
+			break;
+		}
+		ftx.lockOutputIndex++;
+	}
+
     UpdateSpecialTxInputsHash(tx, ftx);
     SetTxPayload(tx, ftx);
     //UniValue result(UniValue::VOBJ);
