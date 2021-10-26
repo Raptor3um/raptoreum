@@ -133,37 +133,6 @@ int COutput::Priority() const
     return -(tx->tx->vout[i].nValue/COIN);
 }
 
-
-bool COutput::isFutureTransaction() const{
-	return tx->tx->nType == TRANSACTION_FUTURE;
-}
-
-bool COutput::isFutureSpendable() const {
-	if(this->isFutureSpendable()) {
-//		const CBlockIndex *confirmedBlockIndex;
-//		int maturity = tx->GetDepthInMainChain(confirmedBlockIndex);
-//		if(confirmedBlockIndex) {
-//			int64_t adjustCurrentTime = GetAdjustedTime();
-//			uint32_t confirmedTime = confirmedBlockIndex->nTime;
-//			CFutureTx futureTx;
-//			//std::cout << "futuretx checking" << endl;
-//			if(GetTxPayload(tx->tx->vExtraPayload, futureTx)) {
-//				if(futureTx.lockOutputIndex == i) {
-//				//std::cout << "futuretx extract" << endl;
-//					bool isBlockMature = futureTx.maturity > 0 && maturity >= futureTx.maturity;
-//					bool isTimeMature = futureTx.lockTime > 0 && adjustCurrentTime - confirmedTime  >= futureTx.lockTime;
-//					//std::cout << "isBlockMature " << isBlockMature << " isTimeMature " << isTimeMature << endl;
-//					return isBlockMature || isTimeMature;
-//				}
-//				return true;
-//			}
-//			return false;
-//		}
-//		return false;
-	}
-	return true;
-}
-
 const CWalletTx* CWallet::GetWalletTx(const uint256& hash) const
 {
     LOCK(cs_wallet);
@@ -2490,47 +2459,6 @@ void CWallet::ResendWalletTransactions(int64_t nBestBlockTime, CConnman* connman
     if (!relayed.empty())
         LogPrintf("%s: rebroadcast %u unconfirmed transactions\n", __func__, relayed.size());
 }
-
-void CWallet::addSpenableTx(const COutPoint &outpoint,
-		const CWalletTx *walletTx,
-		std::unordered_set<const CWalletTx*, WalletTxHasher> &ret) const {
-	if (walletTx->tx->nType == TRANSACTION_FUTURE) {
-		const CBlockIndex *confirmedBlockIndex;
-		int maturity = walletTx->GetDepthInMainChain(confirmedBlockIndex);
-		if (confirmedBlockIndex) {
-			int64_t adjustCurrentTime = GetAdjustedTime();
-			uint32_t confirmedTime = confirmedBlockIndex->nTime;
-			CFutureTx futureTx;
-			//std::cout << "futuretx checking" << endl;
-			if (GetTxPayload(walletTx->tx->vExtraPayload, futureTx)) {
-				if (futureTx.lockOutputIndex == outpoint.n) {
-					std::cout << "--------------------------------------------\n" << endl;
-					std::cout << "futureTx.lockOutputIndex " << futureTx.lockOutputIndex << "outpoint.n " << outpoint.n << endl;
-					std::cout << "outpoint.hash " << outpoint.hash.GetHex() << endl;
-					//std::cout << "futuretx extract" << endl;
-					bool isBlockMature = futureTx.maturity > 0
-							&& maturity >= futureTx.maturity;
-					bool isTimeMature = futureTx.lockTime > 0
-							&& adjustCurrentTime - confirmedTime
-									>= futureTx.lockTime;
-					std::cout << "maturity " << maturity << " futureTx.maturity " << futureTx.maturity << endl;
-					std::cout << "adjustCurrentTime - confirmedTime " << (adjustCurrentTime - confirmedTime) << " futureTx.lockTime " << futureTx.lockTime << endl;
-					std::cout << "isBlockMature " << isBlockMature << " isTimeMature " << isTimeMature << endl;
-					if (isBlockMature || isTimeMature) {
-						ret.emplace(walletTx);
-					}
-				} else {
-					ret.emplace(walletTx);
-				}
-			}
-		}
-	} else {
-		ret.emplace(walletTx);
-	}
-//	ret.emplace(walletTx);
-
-}
-
 /** @} */ // end of mapWallet
 
 
@@ -2551,9 +2479,7 @@ std::unordered_set<const CWalletTx*, WalletTxHasher> CWallet::GetSpendableTXs() 
         const auto& outpoint = *it;
         const auto jt = mapWallet.find(outpoint.hash);
         if (jt != mapWallet.end()) {
-        	const CWalletTx *walletTx = &jt->second;
-			//addSpenableTx(outpoint, walletTx, ret);
-			ret.emplace(walletTx);
+			ret.emplace(&jt->second);
         }
 
         // setWalletUTXO is sorted by COutPoint, which means that all UTXOs for the same TX are neighbors
@@ -2792,7 +2718,7 @@ CAmount CWallet::GetAvailableBalance(const CCoinControl* coinControl) const
     std::vector<COutput> vCoins;
     AvailableCoins(vCoins, true, coinControl);
     for (const COutput& out : vCoins) {
-        if (out.fSpendable) {
+        if (out.fSpendable && out.isFutureSpendable) {
             balance += out.tx->tx->vout[out.i].nValue;
         }
     }
@@ -2871,9 +2797,8 @@ void CWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const
                 bool fSpendableIn = ((mine & ISMINE_SPENDABLE) != ISMINE_NO) || (coinControl && coinControl->fAllowWatchOnly && (mine & ISMINE_WATCH_SOLVABLE) != ISMINE_NO);
                 bool fSolvableIn = (mine & (ISMINE_SPENDABLE | ISMINE_WATCH_SOLVABLE)) != ISMINE_NO;
 				bool isCoinSpenable = pcoin->isFutureSpendable(i);
-                if(isCoinSpenable) {
-                	vCoins.push_back(COutput(pcoin, i, nDepth, fSpendableIn, fSolvableIn, safeTx));
-                }
+                vCoins.push_back(COutput(pcoin, i, nDepth, fSpendableIn, fSolvableIn, safeTx, pcoin->tx->nType == TRANSACTION_FUTURE, isCoinSpenable));
+
                 // Checks the sum amount of all UTXO's.
                 if (nMinimumSumAmount != MAX_MONEY) {
                     nTotal += pcoin->tx->vout[i].nValue;
@@ -2929,7 +2854,8 @@ std::map<CTxDestination, std::vector<COutput>> CWallet::ListCoins() const
                 CTxDestination address;
                 if (ExtractDestination(FindNonChangeParentOutput(*it->second.tx, output.n).scriptPubKey, address)) {
                     result[address].emplace_back(
-                        &it->second, output.n, depth, true /* spendable */, true /* solvable */, false /* safe */);
+                        &it->second, output.n, depth, true /* spendable */, true /* solvable */, false /* safe */,
+						it->second.tx->nType == TRANSACTION_FUTURE, it->second.isFutureSpendable(output.n));
                 }
             }
         }
@@ -3193,7 +3119,7 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
     {
         for (const COutput& out : vCoins)
         {
-            if(!out.fSpendable)
+            if(!out.fSpendable || (out.isFuture && !out.isFutureSpendable))
                 continue;
 
             if(nCoinType == CoinType::ONLY_DENOMINATED) {
@@ -3887,7 +3813,6 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                     //std::cout << recipient.scriptPubKey << " == " << fpp->futureRecScript << "\n";
                     if(fpp && recipient.scriptPubKey == fpp->futureRecScript) {
                     	ftx.lockOutputIndex = txNew.vout.size();
-						std::cout << "found future rec script index " << ftx.lockOutputIndex << endl;
 					    CDataStream ds(SER_NETWORK, PROTOCOL_VERSION);
 					    ds << ftx;
 					    txNew.vExtraPayload.assign(ds.begin(), ds.end());
@@ -4106,8 +4031,15 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
 
         if (nChangePosInOut == -1) reservekey.ReturnKey(); // Return any reserved key if we don't have change
         if(fpp) {
+        	ftx.lockOutputIndex = 0;
+        	// this loop needed because vout may be in a different order then recipient list
+        	for (const auto& txOut : txNew.vout) {
+				if(txOut.scriptPubKey == fpp->futureRecScript) {
+					break;
+				}
+				ftx.lockOutputIndex++;
+			}
         	UpdateSpecialTxInputsHash(txNew, ftx);
-			std::cout << "UpdateSpecialTxInputsHash index " << ftx.lockOutputIndex << endl;
         	SetTxPayload(txNew, ftx);
         }
         if (sign)
