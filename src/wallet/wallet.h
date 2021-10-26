@@ -583,17 +583,23 @@ public:
      */
     bool fSafe;
 
-    COutput(const CWalletTx *txIn, int iIn, int nDepthIn, bool fSpendableIn, bool fSolvableIn, bool fSafeIn)
+    bool isFuture;
+    bool isFutureSpendable;
+
+    COutput(const CWalletTx *txIn, int iIn, int nDepthIn, bool fSpendableIn, bool fSolvableIn, bool fSafeIn, bool future = false, bool futureSpendable = true)
     {
-        tx = txIn; i = iIn; nDepth = nDepthIn; fSpendable = fSpendableIn; fSolvable = fSolvableIn; fSafe = fSafeIn;
+        tx = txIn;
+        i = iIn;
+        nDepth = nDepthIn;
+        fSpendable = fSpendableIn;
+        fSolvable = fSolvableIn;
+        fSafe = fSafeIn;
+        isFuture = future;
+        isFutureSpendable = futureSpendable;
     }
 
     //Used with Darksend. Will return largest nondenom, then denominations, then very small inputs
     int Priority() const;
-
-    bool isFutureTransaction() const;
-
-    bool isFutureSpendable() const;
 
     std::string ToString() const;
 };
@@ -796,8 +802,6 @@ private:
 
     // A helper function which loops through wallet UTXOs
     std::unordered_set<const CWalletTx*, WalletTxHasher> GetSpendableTXs() const;
-	void addSpenableTx(const COutPoint &outpoint, const CWalletTx *walletTx,
-			std::unordered_set<const CWalletTx*, WalletTxHasher> &ret) const;
 
 public:
     /*
