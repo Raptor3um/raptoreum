@@ -2879,6 +2879,8 @@ UniValue listunspent(const JSONRPCRequest& request)
         entry.push_back(Pair("confirmations", out.nDepth));
         entry.push_back(Pair("spendable", out.fSpendable));
         entry.push_back(Pair("solvable", out.fSolvable));
+        entry.push_back(Pair("future", out.isFuture));
+        entry.push_back(Pair("futureSpendable", out.isFutureSpendable));
         entry.push_back(Pair("safe", out.fSafe));
         entry.push_back(Pair("ps_rounds", pwallet->GetCappedOutpointPrivateSendRounds(COutPoint(out.tx->GetHash(), out.i))));
         results.push_back(entry);

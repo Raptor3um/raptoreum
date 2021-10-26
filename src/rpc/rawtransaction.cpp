@@ -33,6 +33,7 @@
 #include "evo/specialtx.h"
 #include "evo/providertx.h"
 #include "evo/cbtx.h"
+#include "rpc/specialtx_utilities.h"
 
 #include "llmq/quorums_chainlocks.h"
 #include "llmq/quorums_commitment.h"
@@ -428,11 +429,11 @@ UniValue createrawtransaction(const JSONRPCRequest& request)
     std::set<CBitcoinAddress> setAddress;
     std::vector<std::string> addrList = sendTo.getKeys();
     UniValue redeemScripts(UniValue::VOBJ);
+    bool hasFuture = false;
+	CFutureTx ftx;
 	for (const std::string& name_ : addrList) {
-
 		if (name_ == "data") {
 			std::vector<unsigned char> data = ParseHexV(sendTo[name_].getValStr(),"Data");
-
 			CTxOut out(0, CScript() << OP_RETURN << data);
 			rawTx.vout.push_back(out);
 		} else {
@@ -444,32 +445,41 @@ UniValue createrawtransaction(const JSONRPCRequest& request)
 				throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("Invalid parameter, duplicated address: ")+name_);
 			setAddress.insert(address);
 			UniValue sendToValue = sendTo[name_];
-			CScript scriptPubKey;
-			CScript redeemScript;
+			CScript scriptPubKey = GetScriptForDestination(address.Get());
 
 			CAmount nAmount;
 			if(sendToValue.isObject()) {
-				scriptPubKey.clear();
-				if(sendToValue["future_block"].isNull()) {
-					throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("no future_block is specified "));
+				if(hasFuture) {
+					throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("can only send future to one address"));
 				}
-				if(sendToValue["amount"].isNull()) {
-					throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("no amount is specified "));
+				if(sendToValue["future_maturity"].isNull()) {
+					throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("no future_maturity is specified "));
 				}
-				uint32_t sequence = sendToValue["future_block"].get_int();
-				redeemScript = GetFutureScriptForDestination(address.Get(), sequence);
-				scriptPubKey = GetScriptForDestination(CScriptID(redeemScript));
-				//cout << sendToValue["amount"].get_str() << "\n";
-//				scriptPubKey = GetFutureScriptForDestination(address.Get(), sequence);
-				nAmount = AmountFromValue(sendToValue["amount"]);
-				//redeemScripts.push_back(Pair(name_, EncodeHexScript(redeemScript)));
+				if(sendToValue["future_locktime"].isNull()) {
+					throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("no future_locktime is specified "));
+				}
+				if(sendToValue["future_amount"].isNull()) {
+					throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("no future_amount is specified "));
+				}
+				hasFuture = true;
+				nAmount = AmountFromValue(sendToValue["future_amount"]);
+				ftx.lockOutputIndex = rawTx.vout.size();
+				ftx.nVersion = CFutureTx::CURRENT_VERSION;
+				ftx.maturity = sendToValue["future_maturity"].get_int();
+				ftx.lockTime = sendToValue["future_locktime"].get_int();
+				ftx.updatableByDestination = false;
+				rawTx.nType = TRANSACTION_FUTURE;
+				rawTx.nVersion = 3;
 			} else {
-				scriptPubKey = GetScriptForDestination(address.Get());
 				nAmount = AmountFromValue(sendTo[name_]);
 			}
 			CTxOut out(nAmount, scriptPubKey);
 			rawTx.vout.push_back(out);
 		}
+	}
+	if(hasFuture) {
+	    UpdateSpecialTxInputsHash(rawTx, ftx);
+	    SetTxPayload(rawTx, ftx);
 	}
 	std::string rawHexTx = EncodeHexTx(rawTx);
 	if(redeemScripts.size() > 0) {

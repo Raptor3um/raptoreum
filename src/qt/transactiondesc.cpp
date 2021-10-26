@@ -96,20 +96,24 @@ QString TransactionDesc::FutureTxDescToHTML(const CWalletTx& wtx, CFutureTx& ftx
         strHTML += "<b>Future Amount:</b> " + BitcoinUnits::formatHtmlWithUnit(unit, ftxValue) + "<br>";
         if(wtx.IsInMainChain())
         {
-            strHTML += tr("<b>Maturity Block:</b> %1").arg(maturityBlock);
-            if(maturityBlock >= currentHeight)
-            {
-                int remainingBlocks = (maturityBlock - currentHeight);
-                 strHTML += tr(" (<em>%1 Blocks left</em>)<br>").arg(remainingBlocks);
-            }
-            else
-            {
-                int remainingBlocks = (currentHeight - maturityBlock);
-                strHTML += tr(" (<em>%1 Blocks ago</em>)<br>").arg(remainingBlocks);
-            }                 
+        	if(ftx.maturity >= 0) {
+				strHTML += tr("<b>Maturity Block:</b> %1").arg(maturityBlock);
+				if(maturityBlock >= currentHeight)
+				{
+					int remainingBlocks = (maturityBlock - currentHeight);
+					 strHTML += tr(" (<em>%1 Blocks left</em>)<br>").arg(remainingBlocks);
+				}
+				else
+				{
+					int remainingBlocks = (currentHeight - maturityBlock);
+					strHTML += tr(" (<em>%1 Blocks ago</em>)<br>").arg(remainingBlocks);
+				}
+        	} else {
+        		strHTML += tr("<b>Maturity Block:</b> Never");
+        	}
         }
 
-        strHTML += "<b>Maturity Time:</b> " + GUIUtil::dateTimeStr(maturityTime) + "<br>";
+        strHTML += "<b>Maturity Time:</b> " + (ftx.lockTime >=0 ? GUIUtil::dateTimeStr(maturityTime) : "Never") + "<br>";
         strHTML += tr("<b>Locked Time:</b><em> %1 seconds</em><br>").arg(ftx.lockTime);
         strHTML += tr("<b>Locked Output Index:</b> %1<br>").arg(ftx.lockOutputIndex);
         
