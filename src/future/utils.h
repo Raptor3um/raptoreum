@@ -5,11 +5,14 @@
 #ifndef RAPTOREUM_FUTILS_H
 #define RAPTOREUM_FUTILS_H
 
+//#include <vector>
+//#include <stdint.h>
 //#include "coins.h"
 class Coin;
 class COutPoint;
+class CBlockIndex;
 
 void maybeSetPayload(Coin& coin, const COutPoint& outpoint, const int16_t& nType, const std::vector<uint8_t>& vExtraPayload);
-//bool checkFutureCoin(const Coin& coin, int nSpendHeight, uint32_t confirmedTime, int64_t adjustCurrentTime);
+//const char *validateFutureCoin(const std::vector<uint8_t>& payload, int maturity, uint32_t confirmedTime);
 
 #endif //RAPTOREUM_FUTILS_H

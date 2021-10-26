@@ -837,14 +837,19 @@ UniValue getaddressutxos(const JSONRPCRequest& request)
         if (!getAddressFromIndex(it->first.type, it->first.hashBytes, address)) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Unknown address type");
         }
-
-        output.push_back(Pair("address", address));
-        output.push_back(Pair("txid", it->first.txhash.GetHex()));
-        output.push_back(Pair("outputIndex", (int)it->first.index));
-        output.push_back(Pair("script", HexStr(it->second.script.begin(), it->second.script.end())));
-        output.push_back(Pair("satoshis", it->second.satoshis));
-        output.push_back(Pair("height", it->second.blockHeight));
-        result.push_back(output);
+        int currentHeight = chainActive.Height();
+        int64_t currentTime = GetAdjustedTime();
+        if(currentHeight >= it->second.fSpendableHeight || currentTime >= it->second.fSpendableTime) {
+			output.push_back(Pair("address", address));
+			output.push_back(Pair("txid", it->first.txhash.GetHex()));
+			output.push_back(Pair("outputIndex", (int)it->first.index));
+			output.push_back(Pair("script", HexStr(it->second.script.begin(), it->second.script.end())));
+			output.push_back(Pair("satoshis", it->second.satoshis));
+			output.push_back(Pair("height", it->second.blockHeight));
+			output.push_back(Pair("spendableHeight", it->second.fSpendableHeight));
+			output.push_back(Pair("spendableTime", it->second.fSpendableTime));
+			result.push_back(output);
+        }
     }
 
     return result;

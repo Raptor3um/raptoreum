@@ -448,10 +448,11 @@ WalletModel::SendFuturesReturn WalletModel::prepareFuturesTransaction(WalletMode
 
     QSet<QString> setAddress; // Used to detect duplicates
     int nAddresses = 0;
-
+	FuturePartialPayload fpp;
     // Pre-check input data for validity
     for (const SendFuturesRecipient &rcp : recipients)
     {
+
         if (rcp.fSubtractFeeFromAmount)
             fSubtractFeeFromAmount = true;
 
@@ -488,9 +489,11 @@ WalletModel::SendFuturesReturn WalletModel::prepareFuturesTransaction(WalletMode
             }
             setAddress.insert(rcp.address);
             ++nAddresses;
-
-            CScript scriptPubKey = GetScriptForDestination(CBitcoinAddress(rcp.address.toStdString()).Get());
-            CRecipient recipient = {scriptPubKey, rcp.amount, rcp.fSubtractFeeFromAmount};
+            std::cout << "rec address " << rcp.address.toStdString() << endl;
+            fpp.futureRecScript = GetScriptForDestination(CBitcoinAddress(rcp.address.toStdString()).Get());
+            fpp.maturity = rcp.maturity;
+            fpp.locktime = rcp.locktime; //- GetAdjustedTime();
+            CRecipient recipient = {fpp.futureRecScript, rcp.amount, rcp.fSubtractFeeFromAmount};
             vecSend.push_back(recipient);
 
             total += rcp.amount;
@@ -521,13 +524,17 @@ WalletModel::SendFuturesReturn WalletModel::prepareFuturesTransaction(WalletMode
         int nChangePosRet = -1;
 
         CWalletTx* newTx = transaction.getTransaction();
+        //CTransactionRef txRef = newTx->tx;
+        //txRef->nType = TRANSACTION_FUTURE;
+        //txRef->nVersion = 3;
         CReserveKey *keyChange = transaction.getPossibleKeyChange();
+    	CAmount futureFee = getFutureFees();
+        fCreated = wallet->CreateTransaction(vecSend, *newTx, *keyChange, nFeeRequired, nChangePosRet, strFailReason, coinControl, true, 0, futureFee, &fpp);
 
-        fCreated = wallet->CreateTransaction(vecSend, *newTx, *keyChange, nFeeRequired, nChangePosRet, strFailReason, coinControl);
         transaction.setTransactionFee(nFeeRequired);
         if (fSubtractFeeFromAmount && fCreated)
             transaction.reassignAmounts();
-
+        //transaction.assignFuturePayload();
         nValueOut = newTx->tx->GetValueOut();
         nVinSize = newTx->tx->vin.size();
     }

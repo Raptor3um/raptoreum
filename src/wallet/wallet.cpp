@@ -37,10 +37,9 @@
 #include "privatesend/privatesend-client.h"
 #include "spork.h"
 
-#include "evo/providertx.h"
-
 #include "llmq/quorums_instantsend.h"
 #include "llmq/quorums_chainlocks.h"
+#include "rpc/specialtx_utilities.h"
 
 #include <assert.h>
 
@@ -132,6 +131,37 @@ int COutput::Priority() const
 
     //nondenom return largest first
     return -(tx->tx->vout[i].nValue/COIN);
+}
+
+
+bool COutput::isFutureTransaction() const{
+	return tx->tx->nType == TRANSACTION_FUTURE;
+}
+
+bool COutput::isFutureSpendable() const {
+	if(this->isFutureSpendable()) {
+//		const CBlockIndex *confirmedBlockIndex;
+//		int maturity = tx->GetDepthInMainChain(confirmedBlockIndex);
+//		if(confirmedBlockIndex) {
+//			int64_t adjustCurrentTime = GetAdjustedTime();
+//			uint32_t confirmedTime = confirmedBlockIndex->nTime;
+//			CFutureTx futureTx;
+//			//std::cout << "futuretx checking" << endl;
+//			if(GetTxPayload(tx->tx->vExtraPayload, futureTx)) {
+//				if(futureTx.lockOutputIndex == i) {
+//				//std::cout << "futuretx extract" << endl;
+//					bool isBlockMature = futureTx.maturity > 0 && maturity >= futureTx.maturity;
+//					bool isTimeMature = futureTx.lockTime > 0 && adjustCurrentTime - confirmedTime  >= futureTx.lockTime;
+//					//std::cout << "isBlockMature " << isBlockMature << " isTimeMature " << isTimeMature << endl;
+//					return isBlockMature || isTimeMature;
+//				}
+//				return true;
+//			}
+//			return false;
+//		}
+//		return false;
+	}
+	return true;
 }
 
 const CWalletTx* CWallet::GetWalletTx(const uint256& hash) const
@@ -1860,6 +1890,31 @@ int64_t CWalletTx::GetTxTime() const
     return n ? n : nTimeReceived;
 }
 
+bool CWalletTx::isFutureSpendable(unsigned int outputIndex) const {
+	bool isCoinSpenable;
+	if (tx->nType == TRANSACTION_FUTURE) {
+		int maturity = GetDepthInMainChain();
+		int64_t adjustCurrentTime = GetAdjustedTime();
+		uint32_t confirmedTime = GetTxTime();
+		CFutureTx futureTx;
+		if (GetTxPayload(tx->vExtraPayload, futureTx)) {
+			if (futureTx.lockOutputIndex == outputIndex) {
+				bool isBlockMature = futureTx.maturity > 0 && maturity >= futureTx.maturity;
+				bool isTimeMature = futureTx.lockTime > 0 && adjustCurrentTime - confirmedTime >= futureTx.lockTime;
+				isCoinSpenable = isBlockMature || isTimeMature;
+			} else {
+				isCoinSpenable = true;
+			}
+		} else {
+			isCoinSpenable = false;
+		}
+
+	} else {
+		isCoinSpenable = true;
+	}
+	return isCoinSpenable;
+}
+
 int CWalletTx::GetRequestCount() const
 {
     // Returns -1 if it wasn't being tracked
@@ -2436,6 +2491,46 @@ void CWallet::ResendWalletTransactions(int64_t nBestBlockTime, CConnman* connman
         LogPrintf("%s: rebroadcast %u unconfirmed transactions\n", __func__, relayed.size());
 }
 
+void CWallet::addSpenableTx(const COutPoint &outpoint,
+		const CWalletTx *walletTx,
+		std::unordered_set<const CWalletTx*, WalletTxHasher> &ret) const {
+	if (walletTx->tx->nType == TRANSACTION_FUTURE) {
+		const CBlockIndex *confirmedBlockIndex;
+		int maturity = walletTx->GetDepthInMainChain(confirmedBlockIndex);
+		if (confirmedBlockIndex) {
+			int64_t adjustCurrentTime = GetAdjustedTime();
+			uint32_t confirmedTime = confirmedBlockIndex->nTime;
+			CFutureTx futureTx;
+			//std::cout << "futuretx checking" << endl;
+			if (GetTxPayload(walletTx->tx->vExtraPayload, futureTx)) {
+				if (futureTx.lockOutputIndex == outpoint.n) {
+					std::cout << "--------------------------------------------\n" << endl;
+					std::cout << "futureTx.lockOutputIndex " << futureTx.lockOutputIndex << "outpoint.n " << outpoint.n << endl;
+					std::cout << "outpoint.hash " << outpoint.hash.GetHex() << endl;
+					//std::cout << "futuretx extract" << endl;
+					bool isBlockMature = futureTx.maturity > 0
+							&& maturity >= futureTx.maturity;
+					bool isTimeMature = futureTx.lockTime > 0
+							&& adjustCurrentTime - confirmedTime
+									>= futureTx.lockTime;
+					std::cout << "maturity " << maturity << " futureTx.maturity " << futureTx.maturity << endl;
+					std::cout << "adjustCurrentTime - confirmedTime " << (adjustCurrentTime - confirmedTime) << " futureTx.lockTime " << futureTx.lockTime << endl;
+					std::cout << "isBlockMature " << isBlockMature << " isTimeMature " << isTimeMature << endl;
+					if (isBlockMature || isTimeMature) {
+						ret.emplace(walletTx);
+					}
+				} else {
+					ret.emplace(walletTx);
+				}
+			}
+		}
+	} else {
+		ret.emplace(walletTx);
+	}
+//	ret.emplace(walletTx);
+
+}
+
 /** @} */ // end of mapWallet
 
 
@@ -2456,7 +2551,9 @@ std::unordered_set<const CWalletTx*, WalletTxHasher> CWallet::GetSpendableTXs() 
         const auto& outpoint = *it;
         const auto jt = mapWallet.find(outpoint.hash);
         if (jt != mapWallet.end()) {
-            ret.emplace(&jt->second);
+        	const CWalletTx *walletTx = &jt->second;
+			//addSpenableTx(outpoint, walletTx, ret);
+			ret.emplace(walletTx);
         }
 
         // setWalletUTXO is sorted by COutPoint, which means that all UTXOs for the same TX are neighbors
@@ -2736,8 +2833,9 @@ void CWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const
 
             if (nDepth < nMinDepth || nDepth > nMaxDepth)
                 continue;
-            for (unsigned int i = 0; i < pcoin->tx->vout.size(); i++) {
+			for (unsigned int i = 0; i < pcoin->tx->vout.size(); i++) {
                 bool found = false;
+                //std::cout << "vout size " << pcoin->tx->vout.size() << endl;
                 if(nCoinType == CoinType::ONLY_DENOMINATED) {
                     found = CPrivateSend::IsDenominatedAmount(pcoin->tx->vout[i].nValue);
                 } else if(nCoinType == CoinType::ONLY_NONDENOMINATED) {
@@ -2772,9 +2870,10 @@ void CWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const
 
                 bool fSpendableIn = ((mine & ISMINE_SPENDABLE) != ISMINE_NO) || (coinControl && coinControl->fAllowWatchOnly && (mine & ISMINE_WATCH_SOLVABLE) != ISMINE_NO);
                 bool fSolvableIn = (mine & (ISMINE_SPENDABLE | ISMINE_WATCH_SOLVABLE)) != ISMINE_NO;
-
-                vCoins.push_back(COutput(pcoin, i, nDepth, fSpendableIn, fSolvableIn, safeTx));
-
+				bool isCoinSpenable = pcoin->isFutureSpendable(i);
+                if(isCoinSpenable) {
+                	vCoins.push_back(COutput(pcoin, i, nDepth, fSpendableIn, fSolvableIn, safeTx));
+                }
                 // Checks the sum amount of all UTXO's.
                 if (nMinimumSumAmount != MAX_MONEY) {
                     nTotal += pcoin->tx->vout[i].nValue;
@@ -3627,7 +3726,7 @@ static CFeeRate GetDiscardRate(const CBlockPolicyEstimator& estimator)
 }
 
 bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet,
-                                int& nChangePosInOut, std::string& strFailReason, const CCoinControl& coin_control, bool sign, int nExtraPayloadSize, CAmount specialFees)
+                                int& nChangePosInOut, std::string& strFailReason, const CCoinControl& coin_control, bool sign, int nExtraPayloadSize, CAmount specialFees, FuturePartialPayload* fpp )
 {
     CAmount nValue = 0;
     int nChangePosRequest = nChangePosInOut;
@@ -3657,7 +3756,16 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
     }
 
     CMutableTransaction txNew;
-
+    CFutureTx ftx;
+    if(fpp) {
+    	txNew.nVersion = 3;
+    	txNew.nType = TRANSACTION_FUTURE;
+		ftx.nVersion = CFutureTx::CURRENT_VERSION;
+		ftx.lockTime = fpp->locktime;
+		ftx.maturity = fpp->maturity;
+		ftx.lockOutputIndex = 0;
+		ftx.updatableByDestination = false;
+    }
     // Discourage fee sniping.
     //
     // For a large miner the value of the transactions in the best block and
@@ -3776,6 +3884,15 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                             strFailReason = _("Transaction amount too small");
                         return false;
                     }
+                    //std::cout << recipient.scriptPubKey << " == " << fpp->futureRecScript << "\n";
+                    if(fpp && recipient.scriptPubKey == fpp->futureRecScript) {
+                    	ftx.lockOutputIndex = txNew.vout.size();
+						std::cout << "found future rec script index " << ftx.lockOutputIndex << endl;
+					    CDataStream ds(SER_NETWORK, PROTOCOL_VERSION);
+					    ds << ftx;
+					    txNew.vExtraPayload.assign(ds.begin(), ds.end());
+					    nExtraPayloadSize = txNew.vExtraPayload.size();
+					}
                     txNew.vout.push_back(txout);
                 }
 
@@ -3988,7 +4105,11 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
         }
 
         if (nChangePosInOut == -1) reservekey.ReturnKey(); // Return any reserved key if we don't have change
-
+        if(fpp) {
+        	UpdateSpecialTxInputsHash(txNew, ftx);
+			std::cout << "UpdateSpecialTxInputsHash index " << ftx.lockOutputIndex << endl;
+        	SetTxPayload(txNew, ftx);
+        }
         if (sign)
         {
             CTransaction txNewConst(txNew);

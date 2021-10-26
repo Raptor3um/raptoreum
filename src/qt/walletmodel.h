@@ -13,6 +13,7 @@
 #include "wallet/wallet.h"
 #endif // ENABLE_WALLET
 #include "support/allocators/secure.h"
+#include "future/fee.h" // future fee
 
 #include <map>
 #include <vector>
