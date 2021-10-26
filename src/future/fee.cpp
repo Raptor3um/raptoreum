@@ -13,12 +13,12 @@ CAmount getFutureFees() {
 	return futureTxFee * COIN;
 }
 
-void maybeSetPayload(Coin& coin, const COutPoint& outpoint, const int16_t& nType, const std::vector<uint8_t>& vExtraPayload) {
-	if(nType == TRANSACTION_FUTURE) {
-		CFutureTx futureTx;
-		if(GetTxPayload(vExtraPayload, futureTx) && outpoint.n == futureTx.lockOutputIndex) {
-			coin.nType = nType;
-			coin.vExtraPayload = vExtraPayload;
-		}
-	}
-}
+//void maybeSetPayload(Coin& coin, const COutPoint& outpoint, const int16_t& nType, const std::vector<uint8_t>& vExtraPayload) {
+//	if(nType == TRANSACTION_FUTURE) {
+//		CFutureTx futureTx;
+//		if(GetTxPayload(vExtraPayload, futureTx) && outpoint.n == futureTx.lockOutputIndex) {
+//			coin.nType = nType;
+//			coin.vExtraPayload = vExtraPayload;
+//		}
+//	}
+//}

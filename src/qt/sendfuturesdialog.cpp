@@ -23,7 +23,6 @@
 #include "ui_interface.h"
 #include "txmempool.h"
 #include "policy/fees.h"
-#include "future/fee.h" // future fee
 #include "wallet/wallet.h"
 
 #include "privatesend/privatesend.h"
