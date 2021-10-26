@@ -39,6 +39,8 @@ public:
 
     void reassignAmounts(); // needed for the subtract-fee-from-amount feature
 
+    void assignFuturePayload();
+
 private:
     QList<SendFuturesRecipient> recipients;
     //CFutureTx *walletTransaction;
