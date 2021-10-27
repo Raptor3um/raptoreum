@@ -26,6 +26,7 @@ static const char DB_ADDRESSINDEX = 'a';
 static const char DB_ADDRESSUNSPENTINDEX = 'u';
 static const char DB_TIMESTAMPINDEX = 's';
 static const char DB_SPENTINDEX = 'p';
+static const char DB_FUTUREINDEX = 'n';
 static const char DB_BLOCK_INDEX = 'b';
 
 static const char DB_BEST_BLOCK = 'B';
@@ -266,6 +267,22 @@ bool CBlockTreeDB::UpdateSpentIndex(const std::vector<std::pair<CSpentIndexKey, 
             batch.Erase(std::make_pair(DB_SPENTINDEX, it->first));
         } else {
             batch.Write(std::make_pair(DB_SPENTINDEX, it->first), it->second);
+        }
+    }
+    return WriteBatch(batch);
+}
+
+bool CBlockTreeDB::ReadFutureIndex(CFutureIndexKey &key, CFutureIndexValue &value) {
+    return Read(std::make_pair(DB_FUTUREINDEX, key), value);
+}
+
+bool CBlockTreeDB::UpdateFutureIndex(const std::vector<std::pair<CFutureIndexKey, CFutureIndexValue> >&vect) {
+    CDBBatch batch(*this);
+    for (std::vector<std::pair<CFutureIndexKey,CFutureIndexValue> >::const_iterator it=vect.begin(); it!=vect.end(); it++) {
+        if (it->second.IsNull()) {
+            batch.Erase(std::make_pair(DB_FUTUREINDEX, it->first));
+        } else {
+            batch.Write(std::make_pair(DB_FUTUREINDEX, it->first), it->second);
         }
     }
     return WriteBatch(batch);

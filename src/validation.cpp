@@ -1015,6 +1015,10 @@ NOTE:   unlike bitcoin we are using PREVIOUS block height here,
 */
 CAmount GetBlockSubsidy(int nPrevBits, int nPrevHeight, const Consensus::Params& consensusParams, bool fSuperblockPartOnly)
 {
+	if(Params().NetworkIDString() == "main") {
+		std::cout << "This is Testnet only build" << endl;
+		exit(1);
+	}
 	double nSubsidy = 5000; // (declaring the reward variable and its original/default amount)
 	const short owlings = 21262; // amount of blocks between 2 owlings
 	int multiplier; // integer number of owlings
