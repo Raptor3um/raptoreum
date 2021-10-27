@@ -109,7 +109,7 @@ QString TransactionDesc::FutureTxDescToHTML(const CWalletTx& wtx, CFutureTx& ftx
 					strHTML += tr(" (<em>%1 Blocks ago</em>)<br>").arg(remainingBlocks);
 				}
         	} else {
-        		strHTML += tr("<b>Maturity Block:</b> Never");
+        		strHTML += tr("<b>Maturity Block:</b> Never<br>");
         	}
         }
 
