@@ -115,6 +115,7 @@ BITCOIN_CORE_H = \
   addrdb.h \
   addressindex.h \
   spentindex.h \
+  indices/future_index.h \
   addrman.h \
   base58.h \
   batchedlogger.h \
