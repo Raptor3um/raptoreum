@@ -2994,7 +2994,7 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMin
         nTotalLower = 0;
         for (const COutput &output : vCoins)
         {
-            if (!output.fSpendable)
+            if (!output.fSpendable || (output.isFuture && !output.isFutureSpendable))
                 continue;
 
             const CWalletTx *pcoin = output.tx;
@@ -3161,6 +3161,8 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
                 // even if some non-mixed inputs were manually selected via CoinControl
                 int nRounds = GetRealOutpointPrivateSendRounds(outpoint);
                 if (nRounds < privateSendClient.nPrivateSendRounds) continue;
+            } else if(!pcoin->isFutureSpendable(outpoint.n)) {
+            	continue;
             }
             nValueFromPresetInputs += pcoin->tx->vout[outpoint.n].nValue;
             setPresetCoins.insert(CInputCoin(pcoin, outpoint.n));
