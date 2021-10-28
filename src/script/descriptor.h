@@ -107,8 +107,23 @@ struct Descriptor {
     virtual bool ExpandFromCache(int pos, const std::vector<unsigned char>& cache, std::vector<CScript>& output_scripts, FlatSigningProvider& out) const = 0;
 };
 
-/** Parse a descriptor string. Included private keys are put in out. Returns nullptr if parsing fails. */
-std::unique_ptr<Descriptor> Parse(const std::string& descriptor, FlatSigningProvider& out);
+/** Parse a descriptor string. Included private keys are put in out.
+ *
+ * If the descriptor has a checksum, it must be valid. If require_checksum
+ * is set, the checksum is mandatory - otherwise it is optional.
+ *
+ * If a parse error occurs, or the checksum is missing/invalid, or anything
+ * else is wrong, nullptr is returned.
+ */
+std::unique_ptr<Descriptor> Parse(const std::string& descriptor, FlatSigningProvider& out, bool require_checksum = false);
+
+/** Get the checksum for a descriptor.
+ *
+ * If it already has one, and it is correct, return the checksum in the input.
+ * If it already has one that is wrong, return "".
+ * If it does not already have one, return the checksum that would need to be added.
+ */
+std::string GetDescriptorChecksum(const std::string& descriptor);
 
 /** Find a descriptor for the specified script, using information from provider where possible.
  *

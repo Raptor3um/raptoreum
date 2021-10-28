@@ -79,7 +79,7 @@ static UniValue mnsync(const JSONRPCRequest& request)
 /*
     Used for updating/reading spork settings on the network
 */
-UniValue spork(const JSONRPCRequest& request)
+static UniValue spork(const JSONRPCRequest& request)
 {
     if (request.params.size() == 1) {
         // basic mode, show info
@@ -156,7 +156,7 @@ UniValue spork(const JSONRPCRequest& request)
 
 }
 
-UniValue validateaddress(const JSONRPCRequest& request)
+static UniValue validateaddress(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
@@ -198,7 +198,7 @@ UniValue validateaddress(const JSONRPCRequest& request)
     return ret;
 }
 
-UniValue createmultisig(const JSONRPCRequest& request)
+static UniValue createmultisig(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 2 || request.params.size() > 2)
     {
@@ -253,7 +253,47 @@ UniValue createmultisig(const JSONRPCRequest& request)
     return result;
 }
 
-UniValue deriveaddresses(const JSONRPCRequest& request)
+static UniValue getdescriptorinfo(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() != 1) {
+        throw std::runtime_error(
+            RPCHelpMan{"getdescriptorinfo",
+            {"\nAnalyses a descriptor.\n"},
+            {
+                {"descriptor", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "The descriptor"},
+            }}.ToString() +
+            "\nResult:\n"
+            "{\n"
+            "  \"descriptor\" : \"desc\",       (string)  The descriptor in canonical form, without private keys\n"
+            "  \"checksum\" : \"chksum\",       (string)  checksum for the input descriptor\n"
+            "  \"isrange\" : true|false,        (boolean) Whether the descriptor is ranged\n"
+            "  \"issolvable\" : true|false,     (boolean) Whether the descriptor is solvable\n"
+            "  \"hasprivatekeys\" : true|false, (boolean) Whether the input descriptor contained at least one private key\n"
+            "}\n"
+            "\nExamples:\n"
+            "\nAnalyse a descriptor\n"
+            + HelpExampleCli("getdescriptorinfo", "\"pkh([d34db33f/84h/0h/0h]0279be667ef9dcbbac55a06295Ce870b07029Bfcdb2dce28d959f2815b16f81798)\"")
+        );
+    }
+
+    RPCTypeCheck(request.params, {UniValue::VSTR});
+
+    FlatSigningProvider provider;
+    auto desc = Parse(request.params[0].get_str(), provider);
+    if (!desc) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Invalid descriptor"));
+    }
+
+    UniValue result(UniValue::VOBJ);
+    result.pushKV("descriptor", desc->ToString());
+    result.pushKV("checksum", GetDescriptorChecksum(request.params[0].get_str()));
+    result.pushKV("isrange", desc->IsRange());
+    result.pushKV("issolvable", desc->IsSolvable());
+    result.pushKV("hasprivatekeys", provider.keys.size() > 0);
+    return result;
+}
+
+static UniValue deriveaddresses(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.empty() || request.params.size() > 3) {
         throw std::runtime_error(
@@ -278,7 +318,7 @@ UniValue deriveaddresses(const JSONRPCRequest& request)
             "     ]\n"
             "\nExamples:\n"
             "\nFirst three receive addresses\n"
-            + HelpExampleCli("deriveaddresses", "\"pkh([d34db33f/84h/0h/0h]xpub6DJ2dNUysrn5Vt36jH2KLBT2i1auw1tTSSomg8PhqNiUtx8QX2SvC9nrHu81fT41fvDUnhMjEzQgXnQjKEu3oaqMSzhSrHMxyyoEAmUHQbY/0/*)\" 0 2")
+            + HelpExampleCli("deriveaddresses", "\"pkh([d34db33f/84h/0h/0h]xpub6DJ2dNUysrn5Vt36jH2KLBT2i1auw1tTSSomg8PhqNiUtx8QX2SvC9nrHu81fT41fvDUnhMjEzQgXnQjKEu3oaqMSzhSrHMxyyoEAmUHQbY/0/*)#trd0mf0l\" 0 2")
         );
     }
 
@@ -303,7 +343,7 @@ UniValue deriveaddresses(const JSONRPCRequest& request)
     }
 
     FlatSigningProvider provider;
-    auto desc = Parse(desc_str, provider);
+    auto desc = Parse(desc_str, provider, /* require_checksum = */ true);
     if (!desc) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Invalid descriptor"));
     }
@@ -1205,6 +1245,7 @@ static const CRPCCommand commands[] =
     { "util",               "validateaddress",        &validateaddress,        {"address"} },
     { "util",               "createmultisig",         &createmultisig,         {"nrequired","keys"} },
     { "util",               "deriveaddresses",        &deriveaddresses,        {"descriptor", "begin", "end"} },
+    { "util",               "getdescriptorinfo",      &getdescriptorinfo,      {"descriptor"} },
     { "util",               "verifymessage",          &verifymessage,          {"address","signature","message"} },
     { "util",               "signmessagewithprivkey", &signmessagewithprivkey, {"privkey","message"} },
     { "blockchain",         "getspentinfo",           &getspentinfo,           {"json"} },
