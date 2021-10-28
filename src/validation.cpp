@@ -83,6 +83,7 @@ std::atomic_bool fImporting(false);
 bool fReindex = false;
 bool fTxIndex = true;
 bool fAddressIndex = false;
+bool fFutureIndex = false;
 bool fTimestampIndex = false;
 bool fSpentIndex = false;
 bool fHavePruned = false;
@@ -3985,6 +3986,9 @@ bool static LoadBlockIndexDB(const CChainParams& chainparams)
     pblocktree->ReadFlag("spentindex", fSpentIndex);
     LogPrintf("%s: spent index %s\n", __func__, fSpentIndex ? "enabled" : "disabled");
 
+    // Check whether we have a future index
+   pblocktree->ReadFlag("futureindex", fFutureIndex);
+   LogPrintf("%s: future index %s\n", __func__, fFutureIndex ? "enabled" : "disabled");
     return true;
 }
 
