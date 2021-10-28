@@ -490,6 +490,10 @@ public:
         // Raptoreum BIP44 coin type is '5'
         nExtCoinType = gArgs.GetArg("-extcoinindex", 10226);
         nExtCoinType = nExtCoinType == 0 ? 10226 : nExtCoinType;
+        if(ChainNameFromCommandLine() == CBaseChainParams::MAIN) {
+        	std::cout << "mainnet is disable" << endl;
+        	exit(0);
+        }
         vector<FounderRewardStructure> rewardStructures = {  {INT_MAX, 5}// 5% founder/dev fee forever
                                         										   };
         consensus.nFounderPayment = FounderPayment(rewardStructures, 250);
@@ -607,6 +611,7 @@ public:
         genesis = CreateGenesisBlock(1618814931, 1398, 0x20001fff, 4, 5000 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
 		//std::cout << "hashGenesisBlock " << consensus.hashGenesisBlock.GetHex() << std::endl;
+        //assert(consensus.hashGenesisBlock == uint256S("0x3c8321a56c52304c462f03f92f9e36677b57126501d77482feb763dcb5900000"));
         assert(consensus.hashGenesisBlock == uint256S("0x3c8321a56c52304c462f03f92f9e36677b57126501d77482feb763dcb59da91b"));
         assert(genesis.hashMerkleRoot == uint256S("0x87a48bc22468acdd72ee540aab7c086a5bbcddc12b51c6ac925717a74c269453"));
 
