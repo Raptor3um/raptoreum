@@ -1,5 +1,5 @@
 // Copyright (c) 2017-2019 The Dash Core developers
-// Copyright (c) 2020 The Raptoreum developers
+// Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -165,6 +165,7 @@ bool CalcCbTxMerkleRootQuorums(const CBlock& block, const CBlockIndex* pindexPre
 
     // The returned quorums are in reversed order, so the most recent one is at index 0
     auto quorums = llmq::quorumBlockProcessor->GetMinedAndActiveCommitmentsUntilBlock(pindexPrev);
+
     std::map<Consensus::LLMQType, std::vector<uint256>> qcHashes;
     size_t hashCount = 0;
 
