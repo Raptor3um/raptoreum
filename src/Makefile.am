@@ -1,6 +1,6 @@
 # Copyright (c) 2013-2016 The Bitcoin Core developers
 # Copyright (c) 2014-2018 The Dash Core developers
-# Copyright (c) 2020 The Raptoreum developers
+# Copyright (c) 2020-2022 The Raptoreum developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -114,6 +114,7 @@ BITCOIN_CORE_H = \
   addrdb.h \
   addressindex.h \
   spentindex.h \
+  indices/future_index.h \
   addrman.h \
   base58.h \
   batchedlogger.h \
@@ -163,6 +164,7 @@ BITCOIN_CORE_H = \
   governance/governance-vote.h \
   governance/governance-votedb.h \
   future/fee.h \
+  future/utils.h \
   flat-database.h \
   hdchain.h \
   fs.h \
@@ -555,6 +557,7 @@ libraptoreum_common_a_SOURCES = \
   bip39.cpp \
   chainparams.cpp \
   smartnode/smartnode-collaterals.cpp \
+  future/utils.cpp \
   coins.cpp \
   compressor.cpp \
   core_read.cpp \

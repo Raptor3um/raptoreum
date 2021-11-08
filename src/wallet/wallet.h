@@ -1,7 +1,7 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
 // Copyright (c) 2014-2019 The Dash Core developers
-// Copyright (c) 2020 The Raptoreum developers
+// Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -24,8 +24,8 @@
 #include <wallet/crypter.h>
 #include <wallet/walletdb.h>
 #include <wallet/rpcwallet.h>
-
 #include <privatesend/privatesend.h>
+#include "evo/providertx.h"
 
 #include <algorithm>
 #include <atomic>
@@ -116,6 +116,12 @@ struct CompactTallyItem
     }
 };
 
+struct FuturePartialPayload
+{
+	CScript futureRecScript;
+	int32_t maturity;
+	int32_t locktime;
+};
 /** A key pool entry */
 class CKeyPool
 {
@@ -490,6 +496,7 @@ public:
 
     CAmount GetAnonymizedCredit(const CCoinControl* coinControl = nullptr) const;
     CAmount GetDenominatedCredit(bool unconfirmed, bool fUseCache=true) const;
+	bool isFutureSpendable(unsigned int outputIndex) const;
 
     void GetAmounts(std::list<COutputEntry>& listReceived,
                     std::list<COutputEntry>& listSent, CAmount& nFee, std::string& strSentAccount, const isminefilter& filter) const;
@@ -584,9 +591,19 @@ public:
      */
     bool fSafe;
 
-    COutput(const CWalletTx *txIn, int iIn, int nDepthIn, bool fSpendableIn, bool fSolvableIn, bool fSafeIn)
+    bool isFuture;
+    bool isFutureSpendable;
+
+    COutput(const CWalletTx *txIn, int iIn, int nDepthIn, bool fSpendableIn, bool fSolvableIn, bool fSafeIn, bool future = false, bool futureSpendable = true)
     {
-        tx = txIn; i = iIn; nDepth = nDepthIn; fSpendable = fSpendableIn; fSolvable = fSolvableIn; fSafe = fSafeIn;
+        tx = txIn;
+        i = iIn;
+        nDepth = nDepthIn;
+        fSpendable = fSpendableIn;
+        fSolvable = fSolvableIn;
+        fSafe = fSafeIn;
+        isFuture = future;
+        isFutureSpendable = futureSpendable;
     }
 
     //Used with Darksend. Will return largest nondenom, then denominations, then very small inputs
@@ -1098,7 +1115,7 @@ public:
      * @note passing nChangePosInOut as -1 will result in setting a random position
      */
     bool CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, int& nChangePosInOut,
-                           std::string& strFailReason, const CCoinControl& coin_control, bool sign = true, int nExtraPayloadSize = 0, CAmount specialFees = 0);
+                           std::string& strFailReason, const CCoinControl& coin_control, bool sign = true, int nExtraPayloadSize = 0, CAmount specialFees = 0, FuturePartialPayload* fpp = nullptr);
     bool CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey, CConnman* connman, CValidationState& state);
 
     bool CreateCollateralTransaction(CMutableTransaction& txCollateral, std::string& strReason);

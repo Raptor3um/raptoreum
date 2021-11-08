@@ -19,11 +19,12 @@
 #include <utilmoneystr.h>
 #include <utiltime.h>
 #include <hash.h>
-
 #include <evo/specialtx.h>
 #include <evo/providertx.h>
-
 #include <llmq/quorums_instantsend.h>
+
+#include "future/utils.h"
+
 
 CTxMemPoolEntry::CTxMemPoolEntry(const CTransactionRef& _tx, const CAmount& _nFee, const CAmount& _specialTxFee,
                                  int64_t _nTime, unsigned int _entryHeight,
@@ -1378,7 +1379,8 @@ bool CCoinsViewMemPool::GetCoin(const COutPoint &outpoint, Coin &coin) const {
     CTransactionRef ptx = mempool.get(outpoint.hash);
     if (ptx) {
         if (outpoint.n < ptx->vout.size()) {
-            coin = Coin(ptx->vout[outpoint.n], MEMPOOL_HEIGHT, false);
+            coin = Coin(ptx->vout[outpoint.n], MEMPOOL_HEIGHT, false, 0, std::vector<uint8_t>());
+            maybeSetPayload(coin, outpoint, ptx.get()->nType, ptx.get()->vExtraPayload);
             return true;
         } else {
             return false;

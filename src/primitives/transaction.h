@@ -6,6 +6,7 @@
 #ifndef BITCOIN_PRIMITIVES_TRANSACTION_H
 #define BITCOIN_PRIMITIVES_TRANSACTION_H
 
+
 #include <amount.h>
 #include <script/script.h>
 #include <serialize.h>
@@ -229,6 +230,7 @@ private:
 public:
     /** Construct a CTransaction that qualifies as IsNull() */
     CTransaction();
+    CTransaction(int16_t version, int16_t type);
 
     /** Convert a CMutableTransaction into a CTransaction. */
     CTransaction(const CMutableTransaction &tx);

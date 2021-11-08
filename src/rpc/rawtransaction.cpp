@@ -1,7 +1,7 @@
 // Copyright (c) 2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
 // Copyright (c) 2014-2019 The Dash Core developers
-// Copyright (c) 2020 The Raptoreum developers
+// Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -35,6 +35,7 @@
 #include <evo/specialtx.h>
 #include <evo/providertx.h>
 #include <evo/cbtx.h>
+#include "rpc/specialtx_utilities.h"
 
 #include <llmq/quorums_chainlocks.h>
 #include <llmq/quorums_commitment.h>
@@ -452,32 +453,67 @@ UniValue createrawtransaction(const JSONRPCRequest& request)
 
     std::set<CTxDestination> destinations;
     std::vector<std::string> addrList = sendTo.getKeys();
-    for (const std::string& name_ : addrList) {
+    UniValue redeemScripts(UniValue::VOBJ);
+    bool hasFuture = false;
+	CFutureTx ftx;
+	for (const std::string& name_ : addrList) {
+		if (name_ == "data") {
+			std::vector<unsigned char> data = ParseHexV(sendTo[name_].getValStr(),"Data");
+			CTxOut out(0, CScript() << OP_RETURN << data);
+			rawTx.vout.push_back(out);
+		} else {
+			CBitcoinAddress address(name_);
+			if (!address.IsValid())
+				throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Raptoreum address: ")+name_);
 
-        if (name_ == "data") {
-            std::vector<unsigned char> data = ParseHexV(sendTo[name_].getValStr(),"Data");
+			if (setAddress.count(address))
+				throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("Invalid parameter, duplicated address: ")+name_);
+			setAddress.insert(address);
+			UniValue sendToValue = sendTo[name_];
+			CScript scriptPubKey = GetScriptForDestination(address.Get());
 
-            CTxOut out(0, CScript() << OP_RETURN << data);
-            rawTx.vout.push_back(out);
-        } else {
-            CTxDestination destination = DecodeDestination(name_);
-            if (!IsValidDestination(destination)) {
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Raptoreum address: ") + name_);
-            }
-
-            if (!destinations.insert(destination).second) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("Invalid parameter, duplicated address: ") + name_);
-            }
-
-            CScript scriptPubKey = GetScriptForDestination(destination);
-            CAmount nAmount = AmountFromValue(sendTo[name_]);
-
-            CTxOut out(nAmount, scriptPubKey);
-            rawTx.vout.push_back(out);
-        }
-    }
-
-    return EncodeHexTx(rawTx);
+			CAmount nAmount;
+			if(sendToValue.isObject()) {
+				if(hasFuture) {
+					throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("can only send future to one address"));
+				}
+				if(sendToValue["future_maturity"].isNull()) {
+					throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("no future_maturity is specified "));
+				}
+				if(sendToValue["future_locktime"].isNull()) {
+					throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("no future_locktime is specified "));
+				}
+				if(sendToValue["future_amount"].isNull()) {
+					throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("no future_amount is specified "));
+				}
+				hasFuture = true;
+				nAmount = AmountFromValue(sendToValue["future_amount"]);
+				ftx.lockOutputIndex = rawTx.vout.size();
+				ftx.nVersion = CFutureTx::CURRENT_VERSION;
+				ftx.maturity = sendToValue["future_maturity"].get_int();
+				ftx.lockTime = sendToValue["future_locktime"].get_int();
+				ftx.updatableByDestination = false;
+				rawTx.nType = TRANSACTION_FUTURE;
+				rawTx.nVersion = 3;
+			} else {
+				nAmount = AmountFromValue(sendTo[name_]);
+			}
+			CTxOut out(nAmount, scriptPubKey);
+			rawTx.vout.push_back(out);
+		}
+	}
+	if(hasFuture) {
+	    UpdateSpecialTxInputsHash(rawTx, ftx);
+	    SetTxPayload(rawTx, ftx);
+	}
+	std::string rawHexTx = EncodeHexTx(rawTx);
+	if(redeemScripts.size() > 0) {
+		UniValue rawTxObj(UniValue::VOBJ);
+		rawTxObj.push_back(Pair("rawTx", rawHexTx));
+		rawTxObj.push_back(Pair("redeemScripts", redeemScripts));
+		return rawTxObj;
+	}
+	return rawHexTx;
 }
 
 UniValue decoderawtransaction(const JSONRPCRequest& request)

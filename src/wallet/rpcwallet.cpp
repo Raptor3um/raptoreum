@@ -1,7 +1,7 @@
 // Copyright (c) 2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
 // Copyright (c) 2014-2020 The Dash Core developers
-// Copyright (c) 2020 The Raptoreum developers
+// Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -3201,6 +3201,8 @@ UniValue listunspent(const JSONRPCRequest& request)
         entry.push_back(Pair("confirmations", out.nDepth));
         entry.push_back(Pair("spendable", out.fSpendable));
         entry.push_back(Pair("solvable", out.fSolvable));
+        entry.push_back(Pair("future", out.isFuture));
+        entry.push_back(Pair("futureSpendable", out.isFutureSpendable));
         entry.push_back(Pair("safe", out.fSafe));
         entry.push_back(Pair("ps_rounds", pwallet->GetRealOutpointPrivateSendRounds(COutPoint(out.tx->GetHash(), out.i))));
         results.push_back(entry);

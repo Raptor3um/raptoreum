@@ -1,5 +1,5 @@
 // Copyright (c) 2018-2019 The Dash Core developers
-// Copyright (c) 2020 The Raptoreum developers
+// Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -24,7 +24,6 @@ bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVali
         return true;
 
     if (!Params().GetConsensus().DIP0003Enabled) {
-    	std::cout << "fail to check DIP0003Enabled\n";
         return state.DoS(10, false, REJECT_INVALID, "bad-tx-type");
     }
 
@@ -92,6 +91,8 @@ bool UndoSpecialTx(const CTransaction& tx, const CBlockIndex* pindex)
         return true; // nothing to do
     case TRANSACTION_QUORUM_COMMITMENT:
         return true; // handled per block
+    case TRANSACTION_FUTURE:
+    	return true;
     }
     return false;
 }
@@ -128,7 +129,7 @@ bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, CV
 
         int64_t nTime3 = GetTimeMicros(); nTimeQuorum += nTime3 - nTime2;
         LogPrint(BCLog::BENCHMARK, "        - quorumBlockProcessor: %.2fms [%.2fs]\n", 0.001 * (nTime3 - nTime2), nTimeQuorum * 0.000001);
-
+      
         if (!deterministicMNManager->ProcessBlock(block, pindex, state, fJustCheck)) {
             // pass the state returned by the function above
             return false;

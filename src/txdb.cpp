@@ -26,6 +26,7 @@ static const char DB_ADDRESSINDEX = 'a';
 static const char DB_ADDRESSUNSPENTINDEX = 'u';
 static const char DB_TIMESTAMPINDEX = 's';
 static const char DB_SPENTINDEX = 'p';
+static const char DB_FUTUREINDEX = 'n';
 static const char DB_BLOCK_INDEX = 'b';
 
 static const char DB_BEST_BLOCK = 'B';
@@ -284,6 +285,22 @@ bool CBlockTreeDB::UpdateSpentIndex(const std::vector<std::pair<CSpentIndexKey, 
             batch.Erase(std::make_pair(DB_SPENTINDEX, it->first));
         } else {
             batch.Write(std::make_pair(DB_SPENTINDEX, it->first), it->second);
+        }
+    }
+    return WriteBatch(batch);
+}
+
+bool CBlockTreeDB::ReadFutureIndex(CFutureIndexKey &key, CFutureIndexValue &value) {
+    return Read(std::make_pair(DB_FUTUREINDEX, key), value);
+}
+
+bool CBlockTreeDB::UpdateFutureIndex(const std::vector<std::pair<CFutureIndexKey, CFutureIndexValue> >&vect) {
+    CDBBatch batch(*this);
+    for (std::vector<std::pair<CFutureIndexKey,CFutureIndexValue> >::const_iterator it=vect.begin(); it!=vect.end(); it++) {
+        if (it->second.IsNull()) {
+            batch.Erase(std::make_pair(DB_FUTUREINDEX, it->first));
+        } else {
+            batch.Write(std::make_pair(DB_FUTUREINDEX, it->first), it->second);
         }
     }
     return WriteBatch(batch);
@@ -554,7 +571,7 @@ bool CCoinsViewDB::Upgrade() {
             COutPoint outpoint(key.second, 0);
             for (size_t i = 0; i < old_coins.vout.size(); ++i) {
                 if (!old_coins.vout[i].IsNull() && !old_coins.vout[i].scriptPubKey.IsUnspendable()) {
-                    Coin newcoin(std::move(old_coins.vout[i]), old_coins.nHeight, old_coins.fCoinBase);
+                    Coin newcoin(std::move(old_coins.vout[i]), old_coins.nHeight, old_coins.fCoinBase, 0, std::vector<uint8_t>());
                     outpoint.n = i;
                     CoinEntry entry(&outpoint);
                     batch.Write(entry, newcoin);

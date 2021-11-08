@@ -58,10 +58,11 @@ SendFuturesEntry::SendFuturesEntry(const PlatformStyle *_platformStyle, QWidget 
     ui->deleteButton_is->hide();
     ui->deleteButton_s->hide();
     ui->checkboxSubtractFeeFromAmount->hide();
-
+    QDateTime defaultDate = QDateTime::currentDateTime();
+    defaultDate = defaultDate.addDays(1);
     //FTX Specific form fields
     //Setup maturity locktime datetime field
-    ui->ftxLockTime->setDateTime( QDateTime::currentDateTime() );
+    ui->ftxLockTime->setDateTime( defaultDate );
     ui->ftxLockTime->setMinimumDate( QDate::currentDate() );
 
     // Connect signals
@@ -113,8 +114,7 @@ void SendFuturesEntry::setModel(WalletModel *_model)
     if (_model && _model->getOptionsModel())
     {
         connect(_model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
-        connect(_model, SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)), this, SLOT(balanceChange(CAmount)));
-        setupPayFrom();
+        connect(_model, SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)), this, SLOT(setupPayFrom()));
     }
     clear();
 }
@@ -130,8 +130,12 @@ void SendFuturesEntry::clear()
     ui->messageTextLabel->hide();
     ui->messageLabel->hide();
     // clear and reset FTX UI elements
-    ui->ftxMaturity->setValue(-1);
-    ui->ftxLockTime->setDateTime( QDateTime::currentDateTime() );
+    ui->ftxMaturity->setValue(100);
+    QDateTime defaultDate = QDateTime::currentDateTime();
+	defaultDate = defaultDate.addDays(1);
+	//FTX Specific form fields
+	//Setup maturity locktime datetime field
+	ui->ftxLockTime->setDateTime( defaultDate );
     // clear UI elements for unauthenticated payment request
     ui->payTo_is->clear();
     ui->memoTextLabel_is->clear();
@@ -199,8 +203,6 @@ SendFuturesRecipient SendFuturesEntry::getValue()
     // Payment request
     if (recipient.paymentRequest.IsInitialized())
         return recipient;
-
-
 
     // Normal payment
     recipient.address = ui->payTo->text();
@@ -293,7 +295,6 @@ void SendFuturesEntry::updateDisplayUnit()
         ui->payAmount->setDisplayUnit(model->getOptionsModel()->getDisplayUnit());
         ui->payAmount_is->setDisplayUnit(model->getOptionsModel()->getDisplayUnit());
         ui->payAmount_s->setDisplayUnit(model->getOptionsModel()->getDisplayUnit());
-
         setupPayFrom();
     }
 }
@@ -343,6 +344,8 @@ void SendFuturesEntry::setupPayFrom()
         return;
     }
 
+    int selected = ui->payFrom->currentIndex() > 0 ? ui->payFrom->currentIndex() : 0;
+
     //Build table for dropdown
     QStandardItemModel *itemModel = new QStandardItemModel( this );
     QStringList horzHeaders;
@@ -352,23 +355,33 @@ void SendFuturesEntry::setupPayFrom()
     placeholder.append(new QStandardItem( "Select a Raptoreum address" ) );
     itemModel->appendRow(placeholder);
 
+    #define SORT_ROLE Qt::UserRole + 1
+
     for (auto& balance : balances) {
         if (balance.second >= nMinAmount) {
             QList<QStandardItem *> items;
-            QString associatedLabel = model->getAddressTableModel()->labelForAddress(balance.first);
+
+            QStandardItem *walletAddress = new QStandardItem();
+            walletAddress->setText(GUIUtil::HtmlEscape(CBitcoinAddress(balance.first).ToString()));
+            walletAddress->setData(GUIUtil::HtmlEscape(CBitcoinAddress(balance.first).ToString()), SORT_ROLE);
+
+            QStandardItem *walletAddressLabel = new QStandardItem();
+            walletAddressLabel->setText(model->getAddressTableModel()->labelForAddress(balance.first));
+            walletAddressLabel->setData(model->getAddressTableModel()->labelForAddress(balance.first), SORT_ROLE);
 
             QStandardItem *balanceAmount = new QStandardItem();
-            balanceAmount->setData(quint64(balance.second));
             balanceAmount->setText(BitcoinUnits::format(model->getOptionsModel()->getDisplayUnit(), balance.second, false, BitcoinUnits::separatorAlways));
+            balanceAmount->setData(qlonglong(balance.second), SORT_ROLE);
 
-            items.append(new QStandardItem( GUIUtil::HtmlEscape(CBitcoinAddress(balance.first).ToString()) ) );
-            items.append(new QStandardItem( associatedLabel ));
+            items.append(walletAddress);
+            items.append(walletAddressLabel);
             items.append(balanceAmount);
             itemModel->appendRow(items);
         }
     }
 
     itemModel->setHorizontalHeaderLabels( horzHeaders );
+    itemModel->setSortRole(SORT_ROLE);
     //Table settings
     QTableView* tableView = new QTableView( this );
     tableView->setObjectName("payFromTable");
@@ -380,23 +393,14 @@ void SendFuturesEntry::setupPayFrom()
     tableView->setSortingEnabled(true);
     tableView->setFont(GUIUtil::fixedPitchFont());
     tableView->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+    tableView->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
     tableView->setAutoScroll(true);
     tableView->hideRow(0);
-    
+
     ui->payFrom->setModel( itemModel );
     ui->payFrom->setView( tableView );
 
-}
+    ui->payFrom->setCurrentIndex(selected);
 
-void SendFuturesEntry::selectedChange(int selected)
-{
-    int selectedIndex = ui->payFrom->currentIndex() > 0 ? ui->payFrom->currentIndex() : 0;
-    ui->payFrom->setCurrentIndex(selectedIndex);
-}
-
-void SendFuturesEntry::balanceChange(const CAmount& balance)
-{
-    int selected = ui->payFrom->currentIndex() > 0 ? ui->payFrom->currentIndex() : 0;
-    selectedChange(selected);
 }
