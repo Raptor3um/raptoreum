@@ -58,10 +58,11 @@ SendFuturesEntry::SendFuturesEntry(const PlatformStyle *_platformStyle, QWidget 
     ui->deleteButton_is->hide();
     ui->deleteButton_s->hide();
     ui->checkboxSubtractFeeFromAmount->hide();
-
+    QDateTime defaultDate = QDateTime::currentDateTime();
+    defaultDate = defaultDate.addDays(1);
     //FTX Specific form fields
     //Setup maturity locktime datetime field
-    ui->ftxLockTime->setDateTime( QDateTime::currentDateTime() );
+    ui->ftxLockTime->setDateTime( defaultDate );
     ui->ftxLockTime->setMinimumDate( QDate::currentDate() );
 
     // Connect signals
@@ -129,8 +130,12 @@ void SendFuturesEntry::clear()
     ui->messageTextLabel->hide();
     ui->messageLabel->hide();
     // clear and reset FTX UI elements
-    ui->ftxMaturity->setValue(-1);
-    ui->ftxLockTime->setDateTime( QDateTime::currentDateTime() );
+    ui->ftxMaturity->setValue(100);
+    QDateTime defaultDate = QDateTime::currentDateTime();
+	defaultDate = defaultDate.addDays(1);
+	//FTX Specific form fields
+	//Setup maturity locktime datetime field
+	ui->ftxLockTime->setDateTime( defaultDate );
     // clear UI elements for unauthenticated payment request
     ui->payTo_is->clear();
     ui->memoTextLabel_is->clear();

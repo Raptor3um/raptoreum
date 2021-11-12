@@ -10,6 +10,8 @@
 #include "script/script.h"
 #include "serialize.h"
 #include "uint256.h"
+//#include "consensus/tx_verify.h"
+
 
 /** Transaction types */
 enum {
@@ -229,6 +231,7 @@ private:
 public:
     /** Construct a CTransaction that qualifies as IsNull() */
     CTransaction();
+    CTransaction(int16_t version, int16_t type);
 
     /** Convert a CMutableTransaction into a CTransaction. */
     CTransaction(const CMutableTransaction &tx);

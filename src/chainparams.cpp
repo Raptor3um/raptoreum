@@ -1,7 +1,7 @@
 // Copyright (c) 2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin Core developers
 // Copyright (c) 2014-2020 The Dash Core developers
-// Copyright (c) 2020 The Raptoreum developers
+// Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -489,6 +489,11 @@ public:
         base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x88, 0xAD, 0xE4};
         // Raptoreum BIP44 coin type is '5'
         nExtCoinType = gArgs.GetArg("-extcoinindex", 10226);
+        nExtCoinType = nExtCoinType == 0 ? 10226 : nExtCoinType;
+        if(ChainNameFromCommandLine() == CBaseChainParams::MAIN) {
+        	std::cout << "mainnet is disable" << endl;
+        	exit(0);
+        }
         vector<FounderRewardStructure> rewardStructures = {  {INT_MAX, 5}// 5% founder/dev fee forever
                                         										   };
         consensus.nFounderPayment = FounderPayment(rewardStructures, 250);
@@ -575,6 +580,7 @@ public:
         consensus.DIP0003Enabled = true;
         consensus.BIPCSVEnabled = true;
         consensus.BIP147Enabled = true;
+        consensus.DIP0008Enabled = true;
      //   consensus.DIP0003EnforcementHeight = 7300;
         consensus.powLimit = uint256S("00ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 20
         consensus.nPowTargetTimespan = 24 * 60 * 60; // Raptoreum: 1 day
@@ -605,6 +611,8 @@ public:
         //FindMainNetGenesisBlock(1618814931,  0x20001fff, "test");
         genesis = CreateGenesisBlock(1618814931, 1398, 0x20001fff, 4, 5000 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
+		//std::cout << "hashGenesisBlock " << consensus.hashGenesisBlock.GetHex() << std::endl;
+        //assert(consensus.hashGenesisBlock == uint256S("0x3c8321a56c52304c462f03f92f9e36677b57126501d77482feb763dcb5900000"));
         assert(consensus.hashGenesisBlock == uint256S("0x3c8321a56c52304c462f03f92f9e36677b57126501d77482feb763dcb59da91b"));
         assert(genesis.hashMerkleRoot == uint256S("0x87a48bc22468acdd72ee540aab7c086a5bbcddc12b51c6ac925717a74c269453"));
 
@@ -631,7 +639,8 @@ public:
         base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x35, 0x83, 0x94};
 
         // Testnet Raptoreum BIP44 coin type is '1' (All coin's testnet default)
-        nExtCoinType = 10227;
+        nExtCoinType = gArgs.GetArg("-extcoinindex", 10227);
+        nExtCoinType = nExtCoinType == 0 ? 10227 : nExtCoinType;
 
         // long living quorum params
         consensus.llmqs[Consensus::LLMQ_50_60] = llmq3_60;
@@ -660,7 +669,7 @@ public:
         fMineBlocksOnDemand = false;
         fAllowMultipleAddressesFromGroup = false;
         fAllowMultiplePorts = true;
-        miningRequiresPeers = false;
+        miningRequiresPeers = true;
 
         nPoolMinParticipants = 3;
         nPoolMaxParticipants = 5;
@@ -715,6 +724,7 @@ public:
         consensus.BIP66Enabled = true; // BIP66 activated immediately on devnet
         consensus.DIP0001Enabled = true; // DIP0001 activated immediately on devnet
         consensus.DIP0003Enabled = true; // DIP0003 activated immediately on devnet
+        consensus.DIP0008Enabled = true;// DIP0008 activated immediately on devnet
        // consensus.DIP0003EnforcementHeight = 2; // DIP0003 activated immediately on devnet
         consensus.powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 1
         consensus.nPowTargetTimespan = 24 * 60 * 60; // Raptoreum: 1 day

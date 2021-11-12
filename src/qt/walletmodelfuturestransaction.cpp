@@ -3,6 +3,8 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "walletmodelfuturestransaction.h"
+#include "rpc/specialtx_utilities.h"
+#include "timedata.h"
 
 #include "wallet/wallet.h"
 
@@ -47,9 +49,35 @@ void WalletModelFuturesTransaction::setTransactionFee(const CAmount& newFee)
     fee = newFee;
 }
 
+void WalletModelFuturesTransaction::assignFuturePayload() {
+	for (QList<SendFuturesRecipient>::iterator it = recipients.begin(); it != recipients.end(); ++it)
+	{
+		SendFuturesRecipient& rcp = (*it);
+		// normal recipient (no payment request)
+		if (!rcp.paymentRequest.IsInitialized())
+		{
+			CFutureTx ftx;
+			ftx.nVersion = CFutureTx::CURRENT_VERSION;
+			ftx.lockOutputIndex = 0;
+			ftx.updatableByDestination = false;
+			for (const auto& txout : walletTransaction->tx->vout) {
+				CScript scriptPubKey = GetScriptForDestination(CBitcoinAddress(rcp.address.toStdString()).Get());
+				if (txout.scriptPubKey == scriptPubKey) {
+					rcp.amount = txout.nValue;
+					ftx.lockTime = rcp.locktime - GetAdjustedTime();
+					ftx.maturity = rcp.maturity;
+					break;
+				}
+				ftx.lockOutputIndex++;
+			}
+		}
+	}
+}
+
 void WalletModelFuturesTransaction::reassignAmounts()
 {
     // For each recipient look for a matching CTxOut in walletTransaction and reassign amounts
+
     for (QList<SendFuturesRecipient>::iterator it = recipients.begin(); it != recipients.end(); ++it)
     {
         SendFuturesRecipient& rcp = (*it);
@@ -75,6 +103,7 @@ void WalletModelFuturesTransaction::reassignAmounts()
         }
         else // normal recipient (no payment request)
         {
+            CFutureTx ftx;
             for (const auto& txout : walletTransaction->tx->vout) {
                 CScript scriptPubKey = GetScriptForDestination(CBitcoinAddress(rcp.address.toStdString()).Get());
                 if (txout.scriptPubKey == scriptPubKey) {
