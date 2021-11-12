@@ -12,7 +12,7 @@ RAW_BENCH_FILES = \
   bench/data/block813851.raw
 GENERATED_BENCH_FILES = $(RAW_BENCH_FILES:.raw=.raw.h)
 
-bench_bench_dash_SOURCES = \
+bench_bench_raptoreum_SOURCES = \
   $(RAW_BENCH_FILES) \
   bench/bench_raptoreum.cpp \
   bench/bench.cpp \

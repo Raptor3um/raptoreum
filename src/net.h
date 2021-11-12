@@ -355,10 +355,10 @@ public:
     void ReleaseNodeVector(const std::vector<CNode*>& vecNodes);
 
     void RelayTransaction(const CTransaction& tx);
-    void RelayInv(CInv &inv, const int minProtoVersion = MIN_PEER_PROTO_VERSION, bool fAllowMasternodeConnections = false);
-    void RelayInvFiltered(CInv &inv, const CTransaction &relatedTx, const int minProtoVersion = MIN_PEER_PROTO_VERSION, bool fAllowMasternodeConnections = false);
+    void RelayInv(CInv &inv, const int minProtoVersion = MIN_PEER_PROTO_VERSION, bool fAllowSmartnodeConnections = false);
+    void RelayInvFiltered(CInv &inv, const CTransaction &relatedTx, const int minProtoVersion = MIN_PEER_PROTO_VERSION, bool fAllowSmartnodeConnections = false);
     // This overload will not update node filters,  so use it only for the cases when other messages will update related transaction data in filters
-    void RelayInvFiltered(CInv &inv, const uint256 &relatedTxHash, const int minProtoVersion = MIN_PEER_PROTO_VERSION, bool fAllowMasternodeConnections = false);
+    void RelayInvFiltered(CInv &inv, const uint256 &relatedTxHash, const int minProtoVersion = MIN_PEER_PROTO_VERSION, bool fAllowSmartnodeConnections = false);
 
     // Addrman functions
     size_t GetAddressCount() const;
@@ -411,7 +411,7 @@ public:
     bool AddPendingSmartnode(const uint256& proTxHash);
     void SetSmartnodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash, const std::set<uint256>& proTxHashes);
     bool HasSmartnodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash);
-    std::set<uint256> GetMasternodeQuorums(Consensus::LLMQType llmqType);
+    std::set<uint256> GetSmartnodeQuorums(Consensus::LLMQType llmqType);
     // also returns QWATCH nodes
     std::set<NodeId> GetSmartnodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash) const;
     void RemoveSmartnodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash);
@@ -746,7 +746,7 @@ public:
     CAddress addrBind;
     // In case this is a verified MN, this value is the proTx of the MN
     uint256 verifiedProRegTxHash;
-    bool fMasternode;
+    bool fSmartnode;
 };
 
 
@@ -860,7 +860,7 @@ public:
     //    unless it loads a bloom filter.
     bool fRelayTxes; //protected by cs_filter
     bool fSentAddr;
-    // If 'true' this node will be disconnected on CMasternodeMan::ProcessMasternodeConnections()
+    // If 'true' this node will be disconnected on CSmartnodeMan::ProcessSmartnodeConnections()
     bool fSmartnode;
     // If 'true' this node will be disconnected after MNAUTH
     bool fSmartnodeProbe;

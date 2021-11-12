@@ -264,7 +264,7 @@ public:
 	inline void SerializationOp(Stream& s, Operation ser_action)
 	{
 		READWRITE(nVersion);
-		READWRITE(maturity);
+    READWRITE(maturity);
 		READWRITE(lockTime);
 		READWRITE(lockOutputIndex);
 		READWRITE(updatableByDestination);
@@ -288,8 +288,7 @@ public:
 		obj.push_back(Pair("exChainType", exChainType));
 		CTxDestination dest;
 		if (ExtractDestination(externalPayoutScript, dest)) {
-			CBitcoinAddress bitcoinAddress(dest);
-			obj.push_back(Pair("externalPayoutAddress", bitcoinAddress.ToString()));
+		  obj.push_back(Pair("votingAddress", EncodeDestination(dest)));
 		} else {
 			obj.push_back(Pair("externalPayoutAddress", "N/A"));
 		}

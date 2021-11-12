@@ -814,7 +814,7 @@ void CNode::copyStats(CNodeStats &stats)
         LOCK(cs_mnauth);
         X(verifiedProRegTxHash);
     }
-    X(fMasternode);
+    X(fSmartnode);
 }
 #undef X
 
@@ -1397,7 +1397,7 @@ void CConnman::NotifyNumConnectionsChanged()
     // If we had zero connections before and new connections now or if we just dropped
     // to zero connections reset the sync process if its outdated.
     if ((vNodesSize > 0 && nPrevNodeCount == 0) || (vNodesSize == 0 && nPrevNodeCount > 0)) {
-        masternodeSync.Reset();
+        smartnodeSync.Reset();
     }
 
     if(vNodesSize != nPrevNodeCount) {
@@ -2088,7 +2088,7 @@ void CConnman::ThreadDNSAddressSeed()
         LOCK(cs_vNodes);
         int nRelevant = 0;
         for (auto pnode : vNodes) {
-            nRelevant += pnode->fSuccessfullyConnected && !pnode->fFeeler && !pnode->fOneShot && !pnode->m_manual_connection && !pnode->fInbound && !pnode->fMasternodeProbe;
+            nRelevant += pnode->fSuccessfullyConnected && !pnode->fFeeler && !pnode->fOneShot && !pnode->m_manual_connection && !pnode->fInbound && !pnode->fSmartnodeProbe;
         }
         if (nRelevant >= 2) {
             LogPrintf("P2P peers available. Skipped DNS seeding.\n");
@@ -2211,7 +2211,7 @@ int CConnman::GetExtraOutboundCount()
             if (pnode->fSmartnode) {
                 continue;
             }
-            if (!pnode->fInbound && !pnode->m_manual_connection && !pnode->fFeeler && !pnode->fDisconnect && !pnode->fOneShot && pnode->fSuccessfullyConnected && !pnode->fMasternodeProbe) {
+            if (!pnode->fInbound && !pnode->m_manual_connection && !pnode->fFeeler && !pnode->fDisconnect && !pnode->fOneShot && pnode->fSuccessfullyConnected && !pnode->fSmartnodeProbe) {
                 ++nOutbound;
             }
         }
@@ -2295,12 +2295,12 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
             }
         }
 
-        std::set<uint256> setConnectedMasternodes;
+        std::set<uint256> setConnectedSmartnodes;
         {
             LOCK(cs_vNodes);
             for (CNode* pnode : vNodes) {
                 if (!pnode->verifiedProRegTxHash.IsNull()) {
-                    setConnectedMasternodes.emplace(pnode->verifiedProRegTxHash);
+                    setConnectedSmartnodes.emplace(pnode->verifiedProRegTxHash);
                 }
             }
         }
@@ -2343,8 +2343,8 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
             if (!addr.IsValid() || setConnected.count(addr.GetGroup()))
                 break;
 
-            // don't try to connect to masternodes that we already have a connection to (most likely inbound)
-            if (isMasternode && setConnectedMasternodes.count(dmn->proTxHash))
+            // don't try to connect to smartnodes that we already have a connection to (most likely inbound)
+            if (isSmartnode && setConnectedSmartnodes.count(dmn->proTxHash))
                 break;
 
             // if we selected a local address, restart (local addresses are allowed in regtest and devnet)
@@ -2503,7 +2503,7 @@ void CConnman::ThreadOpenSmartnodeConnections()
 
         didConnect = false;
 
-        if (!fNetworkActive || !masternodeSync.IsBlockchainSynced())
+        if (!fNetworkActive || !smartnodeSync.IsBlockchainSynced())
             continue;
 
         std::set<CService> connectedNodes;
@@ -2525,28 +2525,28 @@ void CConnman::ThreadOpenSmartnodeConnections()
 
         CDeterministicMNCPtr connectToDmn;
         bool isProbe = false;
-        { // don't hold lock while calling OpenMasternodeConnection as cs_main is locked deep inside
-            LOCK2(cs_vNodes, cs_vPendingMasternodes);
+        { // don't hold lock while calling OpenSmartnodeConnection as cs_main is locked deep inside
+            LOCK2(cs_vNodes, cs_vPendingSmartnodes);
 
             if (!vPendingSmartnodes.empty()) {
                 auto dmn = mnList.GetValidMN(vPendingSmartnodes.front());
                 vPendingSmartnodes.erase(vPendingSmartnodes.begin());
                 if (dmn && !connectedNodes.count(dmn->pdmnState->addr) && !IsSmartnodeOrDisconnectRequested(dmn->pdmnState->addr)) {
                     connectToDmn = dmn;
-                    LogPrint(BCLog::NET_NETCONN, "CConnman::%s -- opening pending masternode connection to %s, service=%s\n", __func__, dmn->proTxHash.ToString(), dmn->pdmnState->addr.ToString(false));
+                    LogPrint(BCLog::NET_NETCONN, "CConnman::%s -- opening pending smartnode connection to %s, service=%s\n", __func__, dmn->proTxHash.ToString(), dmn->pdmnState->addr.ToString(false));
                 }
             }
 
             if (!connectToDmn) {
                 std::vector<CDeterministicMNCPtr> pending;
-                for (const auto& group : masternodeQuorumNodes) {
+                for (const auto& group : smartnodeQuorumNodes) {
                     for (const auto& proRegTxHash : group.second) {
                         auto dmn = mnList.GetMN(proRegTxHash);
                         if (!dmn) {
                             continue;
                         }
                         const auto& addr2 = dmn->pdmnState->addr;
-                        if (!connectedNodes.count(addr2) && !IsMasternodeOrDisconnectRequested(addr2) && !connectedProRegTxHashes.count(proRegTxHash)) {
+                        if (!connectedNodes.count(addr2) && !IsSmartnodeOrDisconnectRequested(addr2) && !connectedProRegTxHashes.count(proRegTxHash)) {
                             int64_t lastAttempt = mmetaman.GetMetaInfo(dmn->proTxHash)->GetLastOutboundAttempt();
                             // back off trying connecting to an address if we already tried recently
                             if (nANow - lastAttempt < chainParams.LLMQConnectionRetryTimeout()) {
@@ -2565,17 +2565,17 @@ void CConnman::ThreadOpenSmartnodeConnections()
 
             if (!connectToDmn) {
                 std::vector<CDeterministicMNCPtr> pending;
-                for (auto it = masternodePendingProbes.begin(); it != masternodePendingProbes.end(); ) {
+                for (auto it = smartnodePendingProbes.begin(); it != smartnodePendingProbes.end(); ) {
                     auto dmn = mnList.GetMN(*it);
                     if (!dmn) {
-                        it = masternodePendingProbes.erase(it);
+                        it = smartnodePendingProbes.erase(it);
                         continue;
                     }
                     bool connectedAndOutbound = connectedProRegTxHashes.count(dmn->proTxHash) && !connectedProRegTxHashes[dmn->proTxHash];
                     if (connectedAndOutbound) {
                         // we already have an outbound connection to this MN so there is no theed to probe it again
                         mmetaman.GetMetaInfo(dmn->proTxHash)->SetLastOutboundSuccess(nANow);
-                        it = masternodePendingProbes.erase(it);
+                        it = smartnodePendingProbes.erase(it);
                         continue;
                     }
 
@@ -2591,10 +2591,10 @@ void CConnman::ThreadOpenSmartnodeConnections()
 
                 if (!pending.empty()) {
                     connectToDmn = pending[GetRandInt(pending.size())];
-                    masternodePendingProbes.erase(connectToDmn->proTxHash);
+                    smartnodePendingProbes.erase(connectToDmn->proTxHash);
                     isProbe = true;
 
-                    LogPrint(BCLog::NET_NETCONN, "CConnman::%s -- probing masternode %s, service=%s\n", __func__, connectToDmn->proTxHash.ToString(), connectToDmn->pdmnState->addr.ToString(false));
+                    LogPrint(BCLog::NET_NETCONN, "CConnman::%s -- probing smartnode %s, service=%s\n", __func__, connectToDmn->proTxHash.ToString(), connectToDmn->pdmnState->addr.ToString(false));
                 }
             }
         }
@@ -2616,7 +2616,7 @@ void CConnman::ThreadOpenSmartnodeConnections()
             return true;
         });
         if (!connected) {
-            LogPrint(BCLog::NET_NETCONN, "CConnman::%s -- connection failed for masternode  %s, service=%s\n", __func__, connectToDmn->proTxHash.ToString(), connectToDmn->pdmnState->addr.ToString(false));
+            LogPrint(BCLog::NET_NETCONN, "CConnman::%s -- connection failed for smartnode  %s, service=%s\n", __func__, connectToDmn->proTxHash.ToString(), connectToDmn->pdmnState->addr.ToString(false));
             // reset last outbound success
             mmetaman.GetMetaInfo(connectToDmn->proTxHash)->SetLastOutboundSuccess(0);
         }
@@ -2699,7 +2699,7 @@ void CConnman::OpenSmartnodeConnection(const CAddress &addrConnect, bool probe) 
 
 void CConnman::ThreadMessageHandler()
 {
-    int64_t nLastSendMessagesTimeMasternodes = 0;
+    int64_t nLastSendMessagesTimeSmartnodes = 0;
 
     while (!flagInterruptMsgProc)
     {
@@ -2707,10 +2707,10 @@ void CConnman::ThreadMessageHandler()
 
         bool fMoreWork = false;
 
-        bool fSkipSendMessagesForMasternodes = true;
-        if (GetTimeMillis() - nLastSendMessagesTimeMasternodes >= 100) {
-            fSkipSendMessagesForMasternodes = false;
-            nLastSendMessagesTimeMasternodes = GetTimeMillis();
+        bool fSkipSendMessagesForSmartnodes = true;
+        if (GetTimeMillis() - nLastSendMessagesTimeSmartnodes >= 100) {
+            fSkipSendMessagesForSmartnodes = false;
+            nLastSendMessagesTimeSmartnodes = GetTimeMillis();
         }
 
         for (CNode* pnode : vNodesCopy)
@@ -2724,7 +2724,7 @@ void CConnman::ThreadMessageHandler()
             if (flagInterruptMsgProc)
                 return;
             // Send messages
-            if (!fSkipSendMessagesForMasternodes || !pnode->fMasternode) {
+            if (!fSkipSendMessagesForSmartnodes || !pnode->fSmartnode) {
                 LOCK(pnode->cs_sendProcessing);
                 m_msgproc->SendMessages(pnode, flagInterruptMsgProc);
             }
@@ -2894,7 +2894,7 @@ void CConnman::SetNetworkActive(bool active)
 
     // Always call the Reset() if the network gets enabled/disabled to make sure the sync process
     // gets a reset if its outdated..
-    masternodeSync.Reset();
+    smartnodeSync.Reset();
 
     uiInterface.NotifyNetworkActiveChanged(fNetworkActive);
 }
@@ -3400,8 +3400,8 @@ bool CConnman::IsSmartnodeQuorumNode(const CNode* pnode)
 
 void CConnman::AddPendingProbeConnections(const std::set<uint256> &proTxHashes)
 {
-    LOCK(cs_vPendingMasternodes);
-    masternodePendingProbes.insert(proTxHashes.begin(), proTxHashes.end());
+    LOCK(cs_vPendingSmartnodes);
+    smartnodePendingProbes.insert(proTxHashes.begin(), proTxHashes.end());
 }
 
 size_t CConnman::GetNodeCount(NumConnections flags)
@@ -3472,26 +3472,26 @@ void CConnman::RelayTransaction(const CTransaction& tx)
     LOCK(cs_vNodes);
     for (CNode* pnode : vNodes)
     {
-        if (pnode->fMasternode)
+        if (pnode->fSmartnode)
             continue;
         pnode->PushInventory(inv);
     }
 }
 
-void CConnman::RelayInv(CInv &inv, const int minProtoVersion, bool fAllowMasternodeConnections) {
+void CConnman::RelayInv(CInv &inv, const int minProtoVersion, bool fAllowSmartnodeConnections) {
     LOCK(cs_vNodes);
     for (const auto& pnode : vNodes) {
-        if (pnode->nVersion < minProtoVersion || (pnode->fMasternode && !fAllowMasternodeConnections))
+        if (pnode->nVersion < minProtoVersion || (pnode->fSmartnode && !fAllowSmartnodeConnections))
             continue;
         pnode->PushInventory(inv);
     }
 }
 
-void CConnman::RelayInvFiltered(CInv &inv, const CTransaction& relatedTx, const int minProtoVersion, bool fAllowMasternodeConnections)
+void CConnman::RelayInvFiltered(CInv &inv, const CTransaction& relatedTx, const int minProtoVersion, bool fAllowSmartnodeConnections)
 {
     LOCK(cs_vNodes);
     for (const auto& pnode : vNodes) {
-        if (pnode->nVersion < minProtoVersion || (pnode->fMasternode && !fAllowMasternodeConnections))
+        if (pnode->nVersion < minProtoVersion || (pnode->fSmartnode && !fAllowSmartnodeConnections))
             continue;
         {
             LOCK(pnode->cs_filter);
@@ -3502,11 +3502,11 @@ void CConnman::RelayInvFiltered(CInv &inv, const CTransaction& relatedTx, const 
     }
 }
 
-void CConnman::RelayInvFiltered(CInv &inv, const uint256& relatedTxHash, const int minProtoVersion, bool fAllowMasternodeConnections)
+void CConnman::RelayInvFiltered(CInv &inv, const uint256& relatedTxHash, const int minProtoVersion, bool fAllowSmartnodeConnections)
 {
     LOCK(cs_vNodes);
     for (const auto& pnode : vNodes) {
-        if (pnode->nVersion < minProtoVersion || (pnode->fMasternode && !fAllowMasternodeConnections))
+        if (pnode->nVersion < minProtoVersion || (pnode->fSmartnode && !fAllowSmartnodeConnections))
             continue;
         {
             LOCK(pnode->cs_filter);

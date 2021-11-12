@@ -40,9 +40,9 @@ void CMNAuth::PushMNAUTH(CNode* pnode, CConnman& connman)
             nOurNodeVersion = gArgs.GetArg("-pushversion", PROTOCOL_VERSION);
         }
         if (pnode->nVersion < MNAUTH_NODE_VER_VERSION || nOurNodeVersion < MNAUTH_NODE_VER_VERSION) {
-            signHash = ::SerializeHash(std::make_tuple(*activeMasternodeInfo.blsPubKeyOperator, pnode->receivedMNAuthChallenge, pnode->fInbound));
+            signHash = ::SerializeHash(std::make_tuple(*activeSmartnodeInfo.blsPubKeyOperator, pnode->receivedMNAuthChallenge, pnode->fInbound));
         } else {
-            signHash = ::SerializeHash(std::make_tuple(*activeMasternodeInfo.blsPubKeyOperator, pnode->receivedMNAuthChallenge, pnode->fInbound, nOurNodeVersion));
+            signHash = ::SerializeHash(std::make_tuple(*activeSmartnodeInfo.blsPubKeyOperator, pnode->receivedMNAuthChallenge, pnode->fInbound, nOurNodeVersion));
         }
     }
 
@@ -104,7 +104,7 @@ void CMNAuth::ProcessMessage(CNode* pnode, const std::string& strCommand, CDataS
             // in case node was unlucky and not up to date, just let it be connected as a regular node, which gives it
             // a chance to get up-to-date and thus realize that it's not a MN anymore. We still give it a
             // low DoS score.
-            Misbehaving(pnode->GetId(), 10, "missing mnauth masternode");
+            Misbehaving(pnode->GetId(), 10, "missing mnauth smartnode");
             return;
         }
 
@@ -134,8 +134,8 @@ void CMNAuth::ProcessMessage(CNode* pnode, const std::string& strCommand, CDataS
 
         if (!pnode->fInbound) {
             mmetaman.GetMetaInfo(mnauth.proRegTxHash)->SetLastOutboundSuccess(GetAdjustedTime());
-            if (pnode->fMasternodeProbe) {
-                LogPrint(BCLog::NET_NETCONN, "CMNAuth::ProcessMessage -- Masternode probe successful for %s, disconnecting. peer=%d\n",
+            if (pnode->fSmartnodeProbe) {
+                LogPrint(BCLog::NET_NETCONN, "CMNAuth::ProcessMessage -- Smartnode probe successful for %s, disconnecting. peer=%d\n",
                          mnauth.proRegTxHash.ToString(), pnode->GetId());
                 pnode->fDisconnect = true;
                 return;
@@ -171,7 +171,7 @@ void CMNAuth::ProcessMessage(CNode* pnode, const std::string& strCommand, CDataS
                         }
                     }
                 } else {
-                    LogPrint(BCLog::NET_NETCONN, "CMNAuth::ProcessMessage -- Masternode %s has already verified as peer %d, dropping new connection. peer=%d\n",
+                    LogPrint(BCLog::NET_NETCONN, "CMNAuth::ProcessMessage -- Smartnode %s has already verified as peer %d, dropping new connection. peer=%d\n",
                             mnauth.proRegTxHash.ToString(), pnode2->GetId(), pnode->GetId());
                     pnode->fDisconnect = true;
                 }

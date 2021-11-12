@@ -112,8 +112,8 @@ public:
     void Stop() override {}
     void Close() override {}
 
-    // Dash Specific WalletInitInterface InitPrivateSendSettings
-    void AutoLockMasternodeCollaterals() override {}
+    // Raptoreum Specific WalletInitInterface InitPrivateSendSettings
+    void AutoLockSmartnodeCollaterals() override {}
     void InitPrivateSendSettings() override {}
     void InitKeePass() override {}
     bool InitAutoBackup() override {return true;}
@@ -1508,24 +1508,24 @@ bool AppInitParameterInteraction()
         InitWarning(_("-smartnode option is deprecated and ignored, specifying -smartnodeblsprivkey is enough to start this node as a smartnode."));
     }
 
-    if (gArgs.IsArgSet("-masternodeblsprivkey")) {
+    if (gArgs.IsArgSet("-smartnodeblsprivkey")) {
         if (!gArgs.GetBoolArg("-listen", DEFAULT_LISTEN) && Params().RequireRoutableExternalIP()) {
-            return InitError("Masternode must accept connections from outside, set -listen=1");
+            return InitError("Smartnode must accept connections from outside, set -listen=1");
         }
         if (!gArgs.GetBoolArg("-txindex", DEFAULT_TXINDEX)) {
-            return InitError("Masternode must have transaction index enabled, set -txindex=1");
+            return InitError("Smartnode must have transaction index enabled, set -txindex=1");
         }
         if (!gArgs.GetBoolArg("-peerbloomfilters", DEFAULT_PEERBLOOMFILTERS)) {
-            return InitError("Masternode must have bloom filters enabled, set -peerbloomfilters=1");
+            return InitError("Smartnode must have bloom filters enabled, set -peerbloomfilters=1");
         }
         if (gArgs.GetArg("-prune", 0) > 0) {
-            return InitError("Masternode must have no pruning enabled, set -prune=0");
+            return InitError("Smartnode must have no pruning enabled, set -prune=0");
         }
         if (gArgs.GetArg("-maxconnections", DEFAULT_MAX_PEER_CONNECTIONS) < DEFAULT_MAX_PEER_CONNECTIONS) {
-            return InitError(strprintf("Masternode must be able to handle at least %d connections, set -maxconnections=%d", DEFAULT_MAX_PEER_CONNECTIONS, DEFAULT_MAX_PEER_CONNECTIONS));
+            return InitError(strprintf("Smartnode must be able to handle at least %d connections, set -maxconnections=%d", DEFAULT_MAX_PEER_CONNECTIONS, DEFAULT_MAX_PEER_CONNECTIONS));
         }
         if (gArgs.GetBoolArg("-disablegovernance", false)) {
-            return InitError(_("You can not disable governance validation on a masternode."));
+            return InitError(_("You can not disable governance validation on a smartnode."));
         }
     }
 

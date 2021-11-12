@@ -11,7 +11,7 @@
 #include <spork.h>
 #include <validation.h>
 
-#include <masternode/masternode-meta.h>
+#include <smartnode/smartnode-meta.h>
 
 namespace llmq
 {
@@ -188,9 +188,9 @@ void CLLMQUtils::EnsureQuorumConnections(Consensus::LLMQType llmqType, const CBl
         }
     }
     if (!connections.empty()) {
-        if (!g_connman->HasMasternodeQuorumNodes(llmqType, pindexQuorum->GetBlockHash()) && LogAcceptCategory(BCLog::LLMQ)) {
+        if (!g_connman->HasSmartnodeQuorumNodes(llmqType, pindexQuorum->GetBlockHash()) && LogAcceptCategory(BCLog::LLMQ)) {
             auto mnList = deterministicMNManager->GetListAtChainTip();
-            std::string debugMsg = strprintf("CLLMQUtils::%s -- adding masternodes quorum connections for quorum %s:\n", __func__, pindexQuorum->GetBlockHash().ToString());
+            std::string debugMsg = strprintf("CLLMQUtils::%s -- adding smartnodes quorum connections for quorum %s:\n", __func__, pindexQuorum->GetBlockHash().ToString());
             for (auto& c : connections) {
                 auto dmn = mnList.GetValidMN(c);
                 if (!dmn) {
@@ -201,7 +201,7 @@ void CLLMQUtils::EnsureQuorumConnections(Consensus::LLMQType llmqType, const CBl
             }
             LogPrint(BCLog::NET_NETCONN, debugMsg.c_str());
         }
-        g_connman->SetMasternodeQuorumNodes(llmqType, pindexQuorum->GetBlockHash(), connections);
+        g_connman->SetSmartnodeQuorumNodes(llmqType, pindexQuorum->GetBlockHash(), connections);
     }
 }
 
@@ -226,7 +226,7 @@ void CLLMQUtils::AddQuorumProbeConnections(Consensus::LLMQType llmqType, const C
     if (!probeConnections.empty()) {
         if (LogAcceptCategory(BCLog::LLMQ)) {
             auto mnList = deterministicMNManager->GetListAtChainTip();
-            std::string debugMsg = strprintf("CLLMQUtils::%s -- adding masternodes probes for quorum %s:\n", __func__, pindexQuorum->GetBlockHash().ToString());
+            std::string debugMsg = strprintf("CLLMQUtils::%s -- adding smartnodes probes for quorum %s:\n", __func__, pindexQuorum->GetBlockHash().ToString());
             for (auto& c : probeConnections) {
                 auto dmn = mnList.GetValidMN(c);
                 if (!dmn) {

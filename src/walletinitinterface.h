@@ -32,7 +32,7 @@ public:
     virtual void Close() = 0;
 
     // Dash Specific WalletInitInterface
-    virtual void AutoLockMasternodeCollaterals() = 0;
+    virtual void AutoLockSmartnodeCollaterals() = 0;
     virtual void InitPrivateSendSettings() = 0;
     virtual void InitKeePass() = 0;
     virtual bool InitAutoBackup() = 0;

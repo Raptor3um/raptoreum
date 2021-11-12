@@ -120,7 +120,7 @@ static constexpr unsigned int AVG_LOCAL_ADDRESS_BROADCAST_INTERVAL = 24 * 60 * 6
 static const unsigned int AVG_ADDRESS_BROADCAST_INTERVAL = 30;
 /** Average delay between trickled inventory transmissions in seconds.
  *  Blocks and whitelisted receivers bypass this, regular outbound peers get half this delay,
- *  Masternode outbound peers get quarter this delay. */
+ *  Smartnode outbound peers get quarter this delay. */
 static const unsigned int INVENTORY_BROADCAST_INTERVAL = 5;
 /** Maximum number of inventory items to send per transmission.
  *  Limits the impact of low-fee transaction floods.
@@ -426,7 +426,7 @@ void PushNodeVersion(CNode *pnode, CConnman* connman, int64_t nTime)
     }
 
     connman->PushMessage(pnode, CNetMsgMaker(INIT_PROTO_VERSION).Make(NetMsgType::VERSION, nProtocolVersion, (uint64_t)nLocalNodeServices, nTime, addrYou, addrMe,
-            nonce, strSubVersion, nNodeStartingHeight, ::fRelayTxes, mnauthChallenge, pnode->fMasternode));
+            nonce, strSubVersion, nNodeStartingHeight, ::fRelayTxes, mnauthChallenge, pnode->fSmartnode));
 
     if (fLogIPs) {
         LogPrint(BCLog::NET, "send version message: version %d, blocks=%d, us=%s, them=%s, peer=%d\n", nProtocolVersion, nNodeStartingHeight, addrMe.ToString(), addrYou.ToString(), nodeid);
@@ -761,7 +761,7 @@ std::chrono::microseconds CalculateObjectGetDataTime(const CInv& inv, std::chron
     }
 
     // We delay processing announcements from inbound peers
-    if (inv.type == MSG_TX && !fMasternodeMode && use_inbound_delay) process_time += INBOUND_PEER_TX_DELAY;
+    if (inv.type == MSG_TX && !fSmartnodeMode && use_inbound_delay) process_time += INBOUND_PEER_TX_DELAY;
 
     return process_time;
 }
@@ -1201,7 +1201,7 @@ void PeerLogicValidation::UpdatedBlockTip(const CBlockIndex *pindexNew, const CB
         }
         // Relay inventory, but don't relay old inventory during initial block download.
         connman->ForEachNode([nNewHeight, &vHashes](CNode* pnode) {
-            if (pnode->fMasternode) return;
+            if (pnode->fSmartnode) return;
             if (nNewHeight > (pnode->nStartingHeight != -1 ? pnode->nStartingHeight - 2000 : 0)) {
                 for (const uint256& hash : reverse_iterate(vHashes)) {
                     pnode->PushBlockHash(hash);
@@ -2130,14 +2130,14 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             vRecv >> pfrom->receivedMNAuthChallenge;
         }
         if (!vRecv.empty()) {
-            bool fOtherMasternode = false;
-            vRecv >> fOtherMasternode;
+            bool fOtherSmartnode = false;
+            vRecv >> fOtherSmartnode;
             if (pfrom->fInbound) {
-                pfrom->fMasternode = fOtherMasternode;
-                if (fOtherMasternode) {
-                    LogPrint(BCLog::NET_NETCONN, "peer=%d is an inbound masternode connection, not relaying anything to it\n", pfrom->GetId());
-                    if (!fMasternodeMode) {
-                        LogPrint(BCLog::NET_NETCONN, "but we're not a masternode, disconnecting\n");
+                pfrom->fSmartnode = fOtherSmartnode;
+                if (fOtherSmartnode) {
+                    LogPrint(BCLog::NET_NETCONN, "peer=%d is an inbound smartnode connection, not relaying anything to it\n", pfrom->GetId());
+                    if (!fSmartnodeMode) {
+                        LogPrint(BCLog::NET_NETCONN, "but we're not a smartnode, disconnecting\n");
                         pfrom->fDisconnect = true;
                         return true;
                     }
@@ -2277,7 +2277,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                       (fLogIPs ? strprintf(", peeraddr=%s", pfrom->addr.ToString()) : ""));
         }
 
-        if (pfrom->nVersion >= LLMQS_PROTO_VERSION && !pfrom->fMasternodeProbe) {
+        if (pfrom->nVersion >= LLMQS_PROTO_VERSION && !pfrom->fSmartnodeProbe) {
             CMNAuth::PushMNAUTH(pfrom, *connman);
         }
 
@@ -2289,7 +2289,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::SENDHEADERS));
         }
 
-        if (pfrom->nVersion >= SHORT_IDS_BLOCKS_VERSION && !pfrom->fMasternode) {
+        if (pfrom->nVersion >= SHORT_IDS_BLOCKS_VERSION && !pfrom->fSmartnode) {
             // Tell our peer we are willing to provide version-1 cmpctblocks
             // However, we do not request new block announcements using
             // cmpctblock messages.
@@ -2309,7 +2309,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             pfrom->fSendDSQueue = true;
         }
 
-        if (pfrom->nVersion >= LLMQS_PROTO_VERSION && !pfrom->fMasternode) {
+        if (pfrom->nVersion >= LLMQS_PROTO_VERSION && !pfrom->fSmartnode) {
             // Tell our peer that we're interested in plain LLMQ recovered signatures.
             // Otherwise the peer would only announce/send messages resulting from QRECSIG,
             // e.g. InstantSend locks or ChainLocks. SPV nodes should not send this message
@@ -2317,7 +2317,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::QSENDRECSIGS, true));
         }
 
-        if (gArgs.GetBoolArg("-watchquorums", llmq::DEFAULT_WATCH_QUORUMS) && !pfrom->fMasternode) {
+        if (gArgs.GetBoolArg("-watchquorums", llmq::DEFAULT_WATCH_QUORUMS) && !pfrom->fSmartnode) {
             connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::QWATCH));
         }
 
@@ -2338,8 +2338,8 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         pfrom->fFirstMessageIsMNAUTH = strCommand == NetMsgType::MNAUTH;
         // Note: do not break the flow here
 
-        if (pfrom->fMasternodeProbe && !pfrom->fFirstMessageIsMNAUTH) {
-            LogPrint(BCLog::NET, "connection is a masternode probe but first received message is not MNAUTH, peer=%d\n", pfrom->GetId());
+        if (pfrom->fSmartnodeProbe && !pfrom->fFirstMessageIsMNAUTH) {
+            LogPrint(BCLog::NET, "connection is a smartnode probe but first received message is not MNAUTH, peer=%d\n", pfrom->GetId());
             pfrom->fDisconnect = true;
             return false;
         }
@@ -2581,7 +2581,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                 LogPrint(BCLog::NET, " getblocks stopping, pruned or too old block at %d %s\n", pindex->nHeight, pindex->GetBlockHash().ToString());
                 break;
             }
-            if (!pfrom->fMasternode) {
+            if (!pfrom->fSmartnode) {
                 pfrom->PushInventory(CInv(MSG_BLOCK, pindex->GetBlockHash()));
             }
             if (--nLimit <= 0)
@@ -3908,7 +3908,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto, std::atomic<bool>& interruptM
         if (pindexBestHeader == nullptr)
             pindexBestHeader = chainActive.Tip();
         bool fFetch = state.fPreferredDownload || (nPreferredDownload == 0 && !pto->fClient && !pto->fOneShot); // Download if this is a nice peer, or we have no nice peers and this one might do.
-        if (!state.fSyncStarted && !pto->fClient && !fImporting && !fReindex && !pto->fMasternode) {
+        if (!state.fSyncStarted && !pto->fClient && !fImporting && !fReindex && !pto->fSmartnode) {
             // Only actively request headers from a single peer, unless we're close to end of initial download.
             if ((nSyncStarted == 0 && fFetch) || pindexBestHeader->GetBlockTime() > GetAdjustedTime() - nMaxTipAge) {
                 state.fSyncStarted = true;
@@ -3947,7 +3947,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto, std::atomic<bool>& interruptM
         //
         // Try sending block announcements via headers
         //
-        if (!pto->fMasternode) {
+        if (!pto->fSmartnode) {
             // If we have less than MAX_BLOCKS_TO_ANNOUNCE in our
             // list of block hashes we're relaying, and our peer wants
             // headers announcements, then find the first header
@@ -4119,7 +4119,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto, std::atomic<bool>& interruptM
                     pto->nNextInvSend = std::chrono::microseconds{connman->PoissonNextSendInbound(current_time.count(), INVENTORY_BROADCAST_INTERVAL)};
                 } else {
                     // Use half the delay for regular outbound peers, as there is less privacy concern for them.
-                    // and quarter the delay for Masternode outbound peers, as there is even less privacy concern in this case.
+                    // and quarter the delay for Smartnode outbound peers, as there is even less privacy concern in this case.
                     pto->nNextInvSend = PoissonNextSend(current_time, std::chrono::seconds{INVENTORY_BROADCAST_INTERVAL >> 1 >> !pto->verifiedProRegTxHash.IsNull()});
                 }
             }
@@ -4321,7 +4321,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto, std::atomic<bool>& interruptM
         // Message: getdata (blocks)
         //
         std::vector<CInv> vGetData;
-        if (!pto->fClient && !pto->fMasternode && ((fFetch && !pto->m_limited_node) || !IsInitialBlockDownload()) && state.nBlocksInFlight < MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
+        if (!pto->fClient && !pto->fSmartnode && ((fFetch && !pto->m_limited_node) || !IsInitialBlockDownload()) && state.nBlocksInFlight < MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
             std::vector<const CBlockIndex*> vToDownload;
             NodeId staller = -1;
             FindNextBlocksToDownload(pto->GetId(), MAX_BLOCKS_IN_TRANSIT_PER_PEER - state.nBlocksInFlight, vToDownload, staller, consensusParams);

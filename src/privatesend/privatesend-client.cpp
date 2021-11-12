@@ -470,7 +470,7 @@ bool CPrivateSendClientSession::SendDenominate(const std::vector<std::pair<CTxDS
     return true;
 }
 
-// Process incoming messages from Masternode updating the progress of mixing
+// Process incoming messages from Smartnode updating the progress of mixing
 void CPrivateSendClientSession::ProcessPoolStateUpdate(CPrivateSendStatusUpdate psssup)
 {
     if (fSmartnodeMode) return;
@@ -489,11 +489,11 @@ void CPrivateSendClientSession::ProcessPoolStateUpdate(CPrivateSendStatusUpdate 
     }
 
     std::string strMessageTmp = CPrivateSend::GetMessageByID(psssup.nMessageID);
-    strAutoDenomResult = _("Masternode:") + " " + strMessageTmp;
+    strAutoDenomResult = _("Smartnode:") + " " + strMessageTmp;
 
     switch (psssup.nStatusUpdate) {
         case STATUS_REJECTED: {
-            LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientSession::%s -- rejected by Masternode: %s\n", __func__, strMessageTmp);
+            LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientSession::%s -- rejected by Smartnode: %s\n", __func__, strMessageTmp);
             SetState(POOL_STATE_ERROR);
             UnlockCoins();
             keyHolderStorage.ReturnAll();
@@ -508,7 +508,7 @@ void CPrivateSendClientSession::ProcessPoolStateUpdate(CPrivateSendStatusUpdate 
                 nTimeLastSuccessfulStep = GetTime();
                 strMessageTmp += strprintf(" Set nSessionID to %d.", nSessionID);
             }
-            LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientSession::%s -- accepted by Masternode: %s\n", __func__, strMessageTmp);
+            LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientSession::%s -- accepted by Smartnode: %s\n", __func__, strMessageTmp);
             break;
         }
         default: {
@@ -779,7 +779,7 @@ bool CPrivateSendClientSession::DoAutomaticDenominating(CConnman& connman, bool 
         if (deterministicMNManager->GetListAtChainTip().GetValidMNsCount() == 0 &&
             Params().NetworkIDString() != CBaseChainParams::REGTEST) {
             LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientSession::DoAutomaticDenominating -- No Smartnodes detected\n");
-            strAutoDenomResult = _("No Masternodes detected.");
+            strAutoDenomResult = _("No Smartnodes detected.");
             return false;
         }
 
@@ -1136,7 +1136,7 @@ bool CPrivateSendClientSession::StartNewQueue(CAmount nBalanceNeedsAnonymized, C
             }
         }
 
-        mixingMasternode = dmn;
+        mixingSmartnode = dmn;
         connman.AddPendingSmartnode(dmn->proTxHash);
         pendingDsaRequest = CPendingDsaRequest(dmn->pdmnState->addr, CPrivateSendAccept(nSessionDenom, txMyCollateral));
         // TODO: add new state POOL_STATE_CONNECTING and bump MIN_PRIVATESEND_PEER_PROTO_VERSION

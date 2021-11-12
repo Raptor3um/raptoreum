@@ -9,6 +9,7 @@
 #include <primitives/transaction.h>
 #include <script/interpreter.h>
 #include <consensus/validation.h>
+
 #include "chainparams.h"
 #include "future/fee.h"
 //#include "future/utils.h"

@@ -494,7 +494,7 @@ void CSigSharesManager::ProcessMessageSigShare(NodeId fromId, const CSigShare& s
         // quorum is too old
         return;
     }
-    if (!quorum->IsMember(activeMasternodeInfo.proTxHash)) {
+    if (!quorum->IsMember(activeSmartnodeInfo.proTxHash)) {
         // we're not a member so we can't verify it (we actually shouldn't have received it)
         return;
     }

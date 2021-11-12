@@ -60,7 +60,7 @@ std::string CActiveSmartnodeManager::GetStatus() const
     }
 }
 
-void CActiveMasternodeManager::Init(const CBlockIndex* pindex)
+void CActiveSmartnodeManager::Init(const CBlockIndex* pindex)
 {
     LOCK(cs_main);
 

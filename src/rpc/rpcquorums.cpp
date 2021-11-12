@@ -7,7 +7,7 @@
 #include <rpc/server.h>
 #include <validation.h>
 
-#include <masternode/activemasternode.h>
+#include <smartnode/activesmartnode.h>
 
 #include <llmq/quorums.h>
 #include <llmq/quorums_blockprocessor.h>
@@ -185,10 +185,10 @@ UniValue quorum_dkgstatus(const JSONRPCRequest& request)
     for (const auto& p : Params().GetConsensus().llmqs) {
         auto& params = p.second;
 
-        if (fMasternodeMode) {
+        if (fSmartnodeMode) {
             const CBlockIndex* pindexQuorum = chainActive[tipHeight - (tipHeight % params.dkgInterval)];
-            auto allConnections = llmq::CLLMQUtils::GetQuorumConnections(params.type, pindexQuorum, activeMasternodeInfo.proTxHash, false);
-            auto outboundConnections = llmq::CLLMQUtils::GetQuorumConnections(params.type, pindexQuorum, activeMasternodeInfo.proTxHash, true);
+            auto allConnections = llmq::CLLMQUtils::GetQuorumConnections(params.type, pindexQuorum, activeSmartnodeInfo.proTxHash, false);
+            auto outboundConnections = llmq::CLLMQUtils::GetQuorumConnections(params.type, pindexQuorum, activeSmartnodeInfo.proTxHash, true);
             std::map<uint256, CAddress> foundConnections;
             g_connman->ForEachNode([&](const CNode* pnode) {
                 if (!pnode->verifiedProRegTxHash.IsNull() && allConnections.count(pnode->verifiedProRegTxHash)) {

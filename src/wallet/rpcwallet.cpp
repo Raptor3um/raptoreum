@@ -3044,7 +3044,7 @@ UniValue listunspent(const JSONRPCRequest& request)
             "      \"minimumSumAmount\" (numeric or string, default=unlimited) Minimum sum value of all UTXOs in " + CURRENCY_UNIT + "\n"
             "      \"coinType\"         (numeric, default=0) Filter coinTypes as follows:\n"
             "                         0=ALL_COINS, 1=ONLY_FULLY_MIXED, 2=ONLY_READY_TO_MIX, 3=ONLY_NONDENOMINATED,\n"
-            "                         4=ONLY_MASTERNODE_COLLATERAL, 5=ONLY_PRIVATESEND_COLLATERAL\n"
+            "                         4=ONLY_SMARTNODE_COLLATERAL, 5=ONLY_PRIVATESEND_COLLATERAL\n"
             "    }\n"
             "\nResult\n"
             "[                   (array of json object)\n"

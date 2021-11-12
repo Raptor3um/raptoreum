@@ -52,7 +52,7 @@ public:
     void Close() override;
 
     // Dash Specific Wallet Init
-    void AutoLockMasternodeCollaterals() override;
+    void AutoLockSmartnodeCollaterals() override;
     void InitPrivateSendSettings() override;
     void InitKeePass() override;
     bool InitAutoBackup() override;
@@ -102,8 +102,8 @@ std::string WalletInit::GetHelpString(bool showDebug)
     strUsage += HelpMessageOpt("-enableprivatesend", strprintf(_("Enable use of PrivateSend for funds stored in this wallet (0-1, default: %u)"), 0));
     strUsage += HelpMessageOpt("-privatesendautostart", strprintf(_("Start PrivateSend automatically (0-1, default: %u)"), DEFAULT_PRIVATESEND_AUTOSTART));
     strUsage += HelpMessageOpt("-privatesendmultisession", strprintf(_("Enable multiple PrivateSend mixing sessions per block, experimental (0-1, default: %u)"), DEFAULT_PRIVATESEND_MULTISESSION));
-    strUsage += HelpMessageOpt("-privatesendsessions=<n>", strprintf(_("Use N separate masternodes in parallel to mix funds (%u-%u, default: %u)"), MIN_PRIVATESEND_SESSIONS, MAX_PRIVATESEND_SESSIONS, DEFAULT_PRIVATESEND_SESSIONS));
-    strUsage += HelpMessageOpt("-privatesendrounds=<n>", strprintf(_("Use N separate masternodes for each denominated input to mix funds (%u-%u, default: %u)"), MIN_PRIVATESEND_ROUNDS, MAX_PRIVATESEND_ROUNDS, DEFAULT_PRIVATESEND_ROUNDS));
+    strUsage += HelpMessageOpt("-privatesendsessions=<n>", strprintf(_("Use N separate smartnodes in parallel to mix funds (%u-%u, default: %u)"), MIN_PRIVATESEND_SESSIONS, MAX_PRIVATESEND_SESSIONS, DEFAULT_PRIVATESEND_SESSIONS));
+    strUsage += HelpMessageOpt("-privatesendrounds=<n>", strprintf(_("Use N separate smartnodes for each denominated input to mix funds (%u-%u, default: %u)"), MIN_PRIVATESEND_ROUNDS, MAX_PRIVATESEND_ROUNDS, DEFAULT_PRIVATESEND_ROUNDS));
     strUsage += HelpMessageOpt("-privatesendamount=<n>", strprintf(_("Target PrivateSend balance (%u-%u, default: %u)"), MIN_PRIVATESEND_AMOUNT, MAX_PRIVATESEND_AMOUNT, DEFAULT_PRIVATESEND_AMOUNT));
     strUsage += HelpMessageOpt("-privatesenddenomsgoal=<n>", strprintf(_("Try to create at least N inputs of each denominated amount (%u-%u, default: %u)"), MIN_PRIVATESEND_DENOMS_GOAL, MAX_PRIVATESEND_DENOMS_GOAL, DEFAULT_PRIVATESEND_DENOMS_GOAL));
     strUsage += HelpMessageOpt("-privatesenddenomshardcap=<n>", strprintf(_("Create up to N inputs of each denominated amount (%u-%u, default: %u)"), MIN_PRIVATESEND_DENOMS_HARDCAP, MAX_PRIVATESEND_DENOMS_HARDCAP, DEFAULT_PRIVATESEND_DENOMS_HARDCAP));
@@ -123,8 +123,8 @@ std::string WalletInit::GetHelpString(bool showDebug)
 
 bool WalletInit::ParameterInteraction()
 {
-    if (gArgs.IsArgSet("-masternodeblsprivkey") && gArgs.SoftSetBoolArg("-disablewallet", true)) {
-        LogPrintf("%s: parameter interaction: -masternodeblsprivkey set -> setting -disablewallet=1\n", __func__);
+    if (gArgs.IsArgSet("-smartnodeblsprivkey") && gArgs.SoftSetBoolArg("-disablewallet", true)) {
+        LogPrintf("%s: parameter interaction: -smartnodeblsprivkey set -> setting -disablewallet=1\n", __func__);
     }
 
     if (gArgs.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET)) {
@@ -133,8 +133,8 @@ bool WalletInit::ParameterInteraction()
         }
 
         return true;
-    } else if (gArgs.IsArgSet("-masternodeblsprivkey")) {
-        return InitError(_("You can not start a masternode with wallet enabled."));
+    } else if (gArgs.IsArgSet("-smartnodeblsprivkey")) {
+        return InitError(_("You can not start a smartnode with wallet enabled."));
     }
 
     gArgs.SoftSetArg("-wallet", "");
@@ -364,7 +364,7 @@ void WalletInit::Start(CScheduler& scheduler)
     // Run a thread to flush wallet periodically
     scheduler.scheduleEvery(MaybeCompactWalletDB, 500);
 
-    if (!fMasternodeMode && privateSendClient.fEnablePrivateSend) {
+    if (!fSmartnodeMode && privateSendClient.fEnablePrivateSend) {
         scheduler.scheduleEvery(std::bind(&CPrivateSendClientManager::DoMaintenance, std::ref(privateSendClient),
                                             std::ref(*g_connman)), 1 * 1000);
     }
@@ -397,11 +397,11 @@ void WalletInit::Close()
     }
 }
 
-void WalletInit::AutoLockMasternodeCollaterals()
+void WalletInit::AutoLockSmartnodeCollaterals()
 {
     // we can't do this before DIP3 is fully initialized
     for (CWallet* pwallet : GetWallets()) {
-        pwallet->AutoLockMasternodeCollaterals();
+        pwallet->AutoLockSmartnodeCollaterals();
     }
 }
 
