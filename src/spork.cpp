@@ -11,6 +11,10 @@
 #include <messagesigner.h>
 #include <net_processing.h>
 #include <netmessagemaker.h>
+#include <primitives/block.h>
+#include <protocol.h>
+#include <script/standard.h>
+#include <timedata.h>
 
 #include <string>
 

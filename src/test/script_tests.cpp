@@ -13,6 +13,7 @@
 #include <util.h>
 #include <utilstrencodings.h>
 #include <test/test_raptoreum.h>
+#include <rpc/util.h>
 
 #if defined(HAVE_CONSENSUS_LIB)
 #include <script/raptoreumconsensus.h>

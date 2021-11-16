@@ -443,6 +443,8 @@ fi
 dnl Do not allow extended (non-ASCII) symbols in identifiers. This is easier for code review.
 AX_CHECK_COMPILE_FLAG([-fno-extended-identifiers], [CORE_CXXFLAGS="$CORE_CXXFLAGS -fno-extended-identifiers"], [], [$CXXFLAG_WERROR])
 
+enable_arm_crc=no
+enable_arm_shani=no
 enable_sse42=no
 enable_sse41=no
 enable_avx2=no
@@ -612,7 +614,7 @@ AC_ARG_ENABLE([util-tx],
 
 AC_ARG_ENABLE([util-wallet],
   [AS_HELP_STRING([--enable-util-wallet],
-  [build dash-wallet])],
+  [build raptoreum-wallet])],
   [build_bitcoin_wallet=$enableval],
   [build_bitcoin_wallet=$build_bitcoin_utils])
 
@@ -1499,8 +1501,8 @@ AC_MSG_CHECKING([whether to build raptoreum-tx])
 AM_CONDITIONAL([BUILD_BITCOIN_TX], [test $build_bitcoin_tx = "yes"])
 AC_MSG_RESULT([$build_bitcoin_tx])
 
-AC_MSG_CHECKING([whether to build dash-wallet])
-AM_CONDITIONAL([BUILD_BITCOIN_WALLET], [test x$build_bitcoin_wallet = xyes])
+AC_MSG_CHECKING([whether to build raptoreum-wallet])
+AM_CONDITIONAL([BUILD_BITCOIN_WALLET], [test $build_bitcoin_wallet = "yes"])
 AC_MSG_RESULT($build_bitcoin_wallet)
 
 AC_MSG_CHECKING([whether to build libraries])

@@ -156,6 +156,7 @@ BITCOIN_CORE_H = \
   compat/sanity.h \
   compressor.h \
   consensus/consensus.h \
+  consensus/tx_check.h \
   consensus/tx_verify.h \
   core_io.h \
   core_memusage.h \
@@ -241,6 +242,7 @@ BITCOIN_CORE_H = \
   policy/feerate.h \
   policy/fees.h \
   policy/policy.h \
+  policy/settings.h \
   pow.h \
   protocol.h \
   random.h \
@@ -251,7 +253,7 @@ BITCOIN_CORE_H = \
   rpc/mining.h \
   rpc/protocol.h \
   rpc/server.h \
-  rpc/rawtransaction.h \
+  rpc/rawtransaction_util.h \
   rpc/register.h \
   rpc/util.h \
   rpc/specialtx_utilities.h \
@@ -291,6 +293,8 @@ BITCOIN_CORE_H = \
   utilstring.h \
   utilthreadnames.h \
   utilmemory.h \
+  utilerror.h \
+  utilfees.h \
   validation.h \
   validationinterface.h \
   versionbits.h \
@@ -300,6 +304,7 @@ BITCOIN_CORE_H = \
   wallet/crypter.h \
   wallet/db.h \
   wallet/fees.h \
+  wallet/load.h \
   wallet/rpcwallet.h \
   wallet/wallet.h \
   wallet/walletdb.h \
@@ -321,6 +326,9 @@ obj/build.h: FORCE
 libraptoreum_util_a-clientversion.$(OBJEXT): obj/build.h
 
 # server: shared between raptoreumd and raptoreum-qt
+# Contains code accessing mempool and chain state that is meant to be separated
+# from wallet and GUI code (see node/README.md). Shared code should go in
+# libraptoreum_common or libraptoreum_util libraries instead.
 libraptoreum_server_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(MINIUPNPC_CPPFLAGS) $(NATPMP_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
 libraptoreum_server_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libraptoreum_server_a_SOURCES = \
@@ -328,8 +336,6 @@ libraptoreum_server_a_SOURCES = \
   addrman.cpp \
   banman.cpp \
   batchedlogger.cpp \
-  blockencodings.cpp \
-  bloom.cpp \
   blockencodings.cpp \
   blockfilter.cpp \
   chain.cpp \
@@ -351,7 +357,6 @@ libraptoreum_server_a_SOURCES = \
   httprpc.cpp \
   httpserver.cpp \
   interfaces/chain.cpp \
-  interfaces/handler.cpp \
   interfaces/node.cpp \
   index/base.cpp \
   index/txindex.cpp \
@@ -382,7 +387,6 @@ libraptoreum_server_a_SOURCES = \
   smartnode/smartnode-payments.cpp \
   smartnode/smartnode-sync.cpp \
   smartnode/smartnode-utils.cpp \
-  merkleblock.cpp \
   messagesigner.cpp \
   miner.cpp \
   net.cpp \
@@ -395,6 +399,7 @@ libraptoreum_server_a_SOURCES = \
   noui.cpp \
   policy/fees.cpp \
   policy/policy.cpp \
+  policy/settings.cpp \
   pow.cpp \
   rest.cpp \
   rpc/blockchain.cpp \
@@ -453,7 +458,7 @@ libraptoreum_wallet_a_SOURCES = \
   wallet/crypter.cpp \
   wallet/db.cpp \
   wallet/fees.cpp \
-  wallet/init.cpp \
+  wallet/load.cpp \
   wallet/rpcdump.cpp \
   wallet/rpcwallet.cpp \
   wallet/wallet.cpp \
@@ -604,6 +609,7 @@ libraptoreum_consensus_a_SOURCES = \
   consensus/merkle.cpp \
   consensus/merkle.h \
   consensus/params.h \
+  consensus/tx_check.cpp \
   consensus/validation.h \
   prevector.h \
   primitives/block.cpp \
@@ -639,6 +645,7 @@ libraptoreum_common_a_SOURCES = \
   bech32.cpp \
   founder_payment.cpp \
   bip39.cpp \
+  bloom.cpp \
   chainparams.cpp \
   smartnode/smartnode-collaterals.cpp \
   future/utils.cpp \
@@ -650,10 +657,13 @@ libraptoreum_common_a_SOURCES = \
   key.cpp \
   key_io.cpp \
   keystore.cpp \
+  merkleblock.cpp \
   netaddress.cpp \
   netbase.cpp \
   policy/feerate.cpp \
+  policy/policy.cpp \
   protocol.cpp \
+  rpc/rawtransaction_util.cpp \
   rpc/util.cpp \
   saltedhasher.cpp \
   scheduler.cpp \
@@ -682,6 +692,7 @@ libraptoreum_util_a_SOURCES = \
   compat/glibc_sanity.cpp \
   compat/glibcxx_sanity.cpp \
   fs.cpp \
+  interfaces/handler.cpp \
   logging.cpp \
   random.cpp \
   randomenv.cpp \
@@ -697,6 +708,8 @@ libraptoreum_util_a_SOURCES = \
   utilstring.cpp \
   utiltime.cpp \
   utilthreadnames.cpp \
+  utilerror.cpp \
+  utilfees.cpp \
   $(BITCOIN_CORE_H)
 
 # cli: shared between raptoreumd and raptoreum-qt

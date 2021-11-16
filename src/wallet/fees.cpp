@@ -6,6 +6,7 @@
 #include <wallet/fees.h>
 
 #include <policy/policy.h>
+#include <policy/settings.h>
 #include <util.h>
 #include <validation.h>
 #include <wallet/coincontrol.h>

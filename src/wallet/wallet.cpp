@@ -21,6 +21,7 @@
 #include <net.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
+#include <policy/settings.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <script/script.h>
@@ -28,7 +29,9 @@
 #include <shutdown.h>
 #include <timedata.h>
 #include <txmempool.h>
+#include <utilfees.h>
 #include <utilmoneystr.h>
+#include <utilerror.h>
 #include <validation.h>
 #include <wallet/coincontrol.h>
 #include <wallet/coinselection.h>

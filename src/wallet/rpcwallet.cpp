@@ -16,12 +16,13 @@
 #include <policy/feerate.h>
 #include <policy/fees.h>
 #include <rpc/mining.h>
-#include <rpc/rawtransaction.h>
+#include <rpc/rawtransaction_util.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
 #include <timedata.h>
 #include <txmempool.h>
 #include <util.h>
+#include <utilfees.h>
 #include <utilmoneystr.h>
 #include <validation.h>
 #include <wallet/coincontrol.h>

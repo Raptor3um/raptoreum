@@ -25,6 +25,7 @@
 #include <shutdown.h>
 #include <txmempool.h>
 #include <util.h>
+#include <utilfees.h>
 #include <utilstrencodings.h>
 #include <validationinterface.h>
 #include <versionbitsinfo.h>

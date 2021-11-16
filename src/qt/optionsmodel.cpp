@@ -15,15 +15,17 @@
 #include <qt/guiutil.h>
 
 #include <interfaces/node.h>
-#include <validation.h> // for DEFAULT_SCRIPTCHECK_THREADS
+#include <mapport.h>
 #include <net.h>
 #include <netbase.h>
 #include <txdb.h> // for -dbcache defaults
+#include <validation.h> // for DEFAULT_SCRIPTCHECK_THREADS
 
 #ifdef ENABLE_WALLET
 #include <coinjoin/coinjoin-client-options.h>
 #endif
 
+#include <QDebug>
 #include <QNetworkProxy>
 #include <QSettings>
 #include <QStringList>

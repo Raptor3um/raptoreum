@@ -5,7 +5,7 @@
 
 #include <key_io.h>
 #include <hash.h>
-#include <validation.h> // For strMessageMagic
+#include <validation.h>
 #include <messagesigner.h>
 #include <tinyformat.h>
 #include <utilstrencodings.h>
