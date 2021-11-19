@@ -57,6 +57,8 @@ static const bool DEFAULT_LOGTIMEMICROS  = false;
 static const bool DEFAULT_LOGIPS         = false;
 static const bool DEFAULT_LOGTIMESTAMPS  = true;
 static const bool DEFAULT_LOGTHREADNAMES = false;
+static const int  DEFAULT_POW_CACHE_SIZE = 150000;
+
 
 /** Signals for translation. */
 class CTranslationInterface

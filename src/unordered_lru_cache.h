@@ -42,6 +42,16 @@ public:
         }
     }
 
+    void setMaxSize(size_t _maxSize, size_t _truncateThreshold = TruncateThreshold) {
+    	maxSize = _maxSize;
+    	truncateThreshold = _truncateThreshold == 0 ? _maxSize * 2 : _truncateThreshold;
+        assert(_maxSize != 0);
+    }
+
+    size_t getMaxSize() const {
+    	return maxSize;
+    }
+
     void emplace(const Key& key, Value&& v)
     {
         _emplace(key, v);
@@ -81,6 +91,10 @@ public:
     void clear()
     {
         cacheMap.clear();
+    }
+
+    int size() const {
+    	return cacheMap.size();
     }
 
 private:

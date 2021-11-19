@@ -933,9 +933,9 @@ void InitParameterInteraction()
         gArgs.ForceSetArg("-disablewallet", "1");
         LogPrintf("%s: parameter interaction: -smartnodeblsprivkey=... -> setting -disablewallet=1\n", __func__);
 #endif // ENABLE_WALLET
-        if (gArgs.GetArg("-maxconnections", DEFAULT_MAX_PEER_CONNECTIONS) < DEFAULT_MAX_PEER_CONNECTIONS) {
+        if (gArgs.GetArg("-maxconnections", DEFAULT_MAX_PEER_CONNECTIONS) < DEFAULT_SN_MAX_PEER_CONNECTIONS) {
             // smartnodes MUST be able to handle at least DEFAULT_MAX_PEER_CONNECTIONS connections
-            gArgs.ForceSetArg("-maxconnections", itostr(DEFAULT_MAX_PEER_CONNECTIONS));
+            gArgs.ForceSetArg("-maxconnections", itostr(DEFAULT_SN_MAX_PEER_CONNECTIONS));
             LogPrintf("%s: parameter interaction: -smartnodeblsprivkey=... -> setting -maxconnections=%d instead of specified -maxconnections=%d\n",
                     __func__, DEFAULT_MAX_PEER_CONNECTIONS, gArgs.GetArg("-maxconnections", DEFAULT_MAX_PEER_CONNECTIONS));
         }
