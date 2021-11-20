@@ -34,7 +34,7 @@ public:
 	SmartnodeCollaterals(vector<Collateral> collaterals = {}, vector<RewardPercentage> rewardPercentages = {});
 	CAmount getCollateral(int height) const;
 	bool isValidCollateral(CAmount collateralAmount) const;
-	bool isPayableCollateral(int height,CAmount collateralAnount) const;
+	bool isPayableCollateral(int height,CAmount collateralAmount) const;
 	int getRewardPercentage(int height) const;
 	void printCollateral() const;
 	virtual ~SmartnodeCollaterals();
