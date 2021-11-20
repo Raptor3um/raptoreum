@@ -108,6 +108,21 @@ Optionally, it is possible to specify the following parameters:
 3. subtractfeefromamount (boolean): "true" to subtract the fees from the specified amount. By default this is set to "false".
 
 
+### Address management
+#### Generating a new address
+In order to receive RTM, you should have an address.
+
+To create a new address:
+```bash
+./raptoreum-cli getnewaddress
+```
+
+#### Listing balances by address
+You can list you balance by address using:
+```bash
+./raptoreum-cli listaddressbalances
+```
+
 ### List received RTM by address
 To list the amount of RTM received by address:
 ```bash
