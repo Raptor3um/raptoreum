@@ -11,18 +11,19 @@
 #include "utilstrencodings.h"
 #include "crypto/common.h"
 #include "unordered_lru_cache.h"
-#include "util.h"
 
-unordered_lru_cache<uint256, uint256, std::hash<uint256>, 1> powHashCache;
-
-void initializePowCacheIfNeeded() {
-	if(powHashCache.getMaxSize() == 1) {
-		int powCacheSize = gArgs.GetArg("-powhashcache", DEFAULT_POW_CACHE_SIZE);
-		powCacheSize = powCacheSize == 0 ? DEFAULT_POW_CACHE_SIZE : powCacheSize;
-		powHashCache.setMaxSize(powCacheSize);
-
-	}
-}
+//commented out for now as window build error here
+//#include "util.h"
+//unordered_lru_cache<uint256, uint256, std::hash<uint256>, 1> powHashCache;
+//void initializePowCacheIfNeeded() {
+//	if(powHashCache.getMaxSize() == 1) {
+//		int powCacheSize = gArgs.GetArg("-powhashcache", DEFAULT_POW_CACHE_SIZE);
+//		powCacheSize = powCacheSize == 0 ? DEFAULT_POW_CACHE_SIZE : powCacheSize;
+//		powHashCache.setMaxSize(powCacheSize);
+//
+//	}
+//}
+unordered_lru_cache<uint256, uint256, std::hash<uint256>, 200000> powHashCache;
 
 uint256 CBlockHeader::GetHash() const
 {
@@ -31,7 +32,8 @@ uint256 CBlockHeader::GetHash() const
 
 uint256 CBlockHeader::GetPOWHash() const
 {
-	initializePowCacheIfNeeded();
+
+//	initializePowCacheIfNeeded();
 	uint256 headerHash = GetHash();
 	uint256 powHash;
 	if(powHashCache.get(headerHash, powHash)) {
