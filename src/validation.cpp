@@ -353,6 +353,40 @@ bool CheckSequenceLocks(const CTransaction &tx, int flags, LockPoints* lp, bool 
     return EvaluateSequenceLocks(index, lockPair);
 }
 
+bool GetUTXOCoin(const COutPoint& outpoint, Coin& coin, int height)
+{
+    LOCK(cs_main);
+    bool gotCoin = pcoinsTip->GetCoin(outpoint, coin);
+
+    if (height != chainActive.Tip()->nHeight) {
+        CSpentIndexKey key(outpoint.hash, outpoint.n);
+        CSpentIndexValue value;
+
+        if (GetSpentIndex(key, value)) {
+            if (value.blockHeight <= height) {
+                // Not Valid, already spent at this height
+                return false;
+            }
+        }
+        else
+        {
+            // Not spent, it was valid at this height
+        }
+    }
+    else
+    {
+        if (!gotCoin) {
+            // Coin not found at tip
+            return false;
+        }
+        if (coin.IsSpent()) {
+            // Coin was spent
+            return false;
+        }
+    }
+    return true;
+}
+
 bool GetUTXOCoin(const COutPoint& outpoint, Coin& coin)
 {
     LOCK(cs_main);
