@@ -939,6 +939,7 @@ public:
     void UnlockCoin(const COutPoint& output);
     void UnlockAllCoins();
     void ListLockedCoins(std::vector<COutPoint>& vOutpts) const;
+    void GetProTxCoins(const CDeterministicMNList& mnList, std::vector<COutPoint>& vOutpts);
     void ListProTxCoins(int height, std::vector<COutPoint>& vOutpts);
     void ListProTxCoins(std::vector<COutPoint>& vOutpts);
 

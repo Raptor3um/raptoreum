@@ -128,7 +128,8 @@ bool CDeterministicMNList::IsMNValid(const CDeterministicMNCPtr& dmn, int height
 
     int64_t amount = coin.out.nValue;
 
-    if (height != chainActive.Tip()->nHeight) {
+    int tipHeight = chainActive.Tip() == nullptr ? 0 : chainActive.Tip()->nHeight;
+    if (height != tipHeight) {
         int outputIndex = dmn.get()->collateralOutpoint.n;
         CSpentIndexKey key(mnHash, outputIndex);
         CSpentIndexValue value;
