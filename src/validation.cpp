@@ -363,16 +363,11 @@ bool GetUTXOCoin(const COutPoint& outpoint, Coin& coin, int height)
         CSpentIndexKey key(outpoint.hash, outpoint.n);
         CSpentIndexValue value;
 
-        if (GetSpentIndex(key, value)) {
-            if (value.blockHeight <= height) {
-                // Not Valid, already spent at this height
-                return false;
-            }
+        if (GetSpentIndex(key, value) && value.blockHeight <= height) {
+            // Not Valid, already spent at this height
+            return false;
         }
-        else
-        {
-            // Not spent, it was valid at this height
-        }
+        // Not spent, it was valid at this height
     }
     else
     {
