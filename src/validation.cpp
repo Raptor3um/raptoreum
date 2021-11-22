@@ -359,7 +359,8 @@ bool GetUTXOCoin(const COutPoint& outpoint, Coin& coin, int height)
     LOCK(cs_main);
     bool gotCoin = pcoinsTip->GetCoin(outpoint, coin);
 
-    if (height != chainActive.Tip()->nHeight) {
+    int tipHeight = chainActive.Tip() == nullptr ? 0 : chainActive.Tip()->nHeight;
+    if (height != tipHeight) {
         CSpentIndexKey key(outpoint.hash, outpoint.n);
         CSpentIndexValue value;
 
