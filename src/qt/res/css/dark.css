@@ -348,6 +348,7 @@ color: #ccc;
 .QTableWidget {
 border: 0px solid #444;
 background-color: #333;
+color: #aaa;
 }
 
 /* Do NOT apply any styles to QScrollBar here,
