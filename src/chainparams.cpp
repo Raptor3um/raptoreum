@@ -470,10 +470,13 @@ public:
         assert(consensus.hashGenesisBlock == uint256S("0xb79e5df07278b9567ada8fc655ffbfa9d3f586dc38da3dd93053686f41caeea0"));
         assert(genesis.hashMerkleRoot == uint256S("0x87a48bc22468acdd72ee540aab7c086a5bbcddc12b51c6ac925717a74c269453"));
 
-        vSeeds.emplace_back("47.151.7.226", true);
-        vSeeds.emplace_back("62.171.153.224", true);
-        vSeeds.emplace_back("94.237.79.27", true);
-        vSeeds.emplace_back("209.151.150.72", true);
+        vSeeds.emplace_back("seed00.raptoreum.com", true);
+        vSeeds.emplace_back("seed01.raptoreum.com", true);
+        vSeeds.emplace_back("seed02.raptoreum.com", true);
+        vSeeds.emplace_back("seed03.raptoreum.com", true);
+        vSeeds.emplace_back("seed04.raptoreum.com", true);
+        vSeeds.emplace_back("seed05.raptoreum.com", true);
+        vSeeds.emplace_back("seed06.raptoreum.com", true);
         vSeeds.emplace_back("ger1.raptoreum.com", true);
         vSeeds.emplace_back("ny1.raptoreum.com", true);
 
