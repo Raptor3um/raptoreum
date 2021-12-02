@@ -12,7 +12,7 @@ class Coin;
 class COutPoint;
 class CBlockIndex;
 
-void maybeSetPayload(Coin& coin, const COutPoint& outpoint, const int16_t& nType, const std::vector<uint8_t>& vExtraPayload);
+void maybeSetPayload(Coin& coin, const COutPoint& outputIndex, const int16_t& nType, const std::vector<uint8_t>& vExtraPayload);
 //const char *validateFutureCoin(const std::vector<uint8_t>& payload, int maturity, uint32_t confirmedTime);
 
 #endif //RAPTOREUM_FUTILS_H

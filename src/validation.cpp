@@ -397,12 +397,12 @@ bool ContextualCheckTransaction(const CTransaction& tx, CValidationState &state,
                 tx.nType != TRANSACTION_COINBASE &&
                 tx.nType != TRANSACTION_QUORUM_COMMITMENT &&
 				tx.nType != TRANSACTION_FUTURE) {
-                return state.DoS(100, false, REJECT_INVALID, "bad-txns-type");
+                return state.DoS(100, false, REJECT_INVALID, "bad-txns-type-"+tx.nType);
             }
             if (tx.IsCoinBase() && tx.nType != TRANSACTION_COINBASE)
                 return state.DoS(100, false, REJECT_INVALID, "bad-txns-cb-type");
         } else if (tx.nType != TRANSACTION_NORMAL) {
-            return state.DoS(100, false, REJECT_INVALID, "bad-txns-type");
+            return state.DoS(100, false, REJECT_INVALID, tx.nVersion + "-bad-txns-type-"+tx.nType);
         }
     }
 

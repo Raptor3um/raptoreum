@@ -1283,16 +1283,32 @@ UniValue gettxout(const JSONRPCRequest& request)
     BlockMap::iterator it = mapBlockIndex.find(pcoinsTip->GetBestBlock());
     CBlockIndex *pindex = it->second;
     ret.push_back(Pair("bestblock", pindex->GetBlockHash().GetHex()));
-    if (coin.nHeight == MEMPOOL_HEIGHT) {
-        ret.push_back(Pair("confirmations", 0));
-    } else {
-        ret.push_back(Pair("confirmations", (int64_t)(pindex->nHeight - coin.nHeight + 1)));
+    int64_t confirmations = 0;
+    if (coin.nHeight != MEMPOOL_HEIGHT) {
+    	confirmations = (int64_t) ((pindex->nHeight - coin.nHeight + 1));
     }
+	ret.push_back(Pair("confirmations", confirmations));
     ret.push_back(Pair("value", ValueFromAmount(coin.out.nValue)));
     UniValue o(UniValue::VOBJ);
     ScriptPubKeyToUniv(coin.out.scriptPubKey, o, true);
     ret.push_back(Pair("scriptPubKey", o));
     ret.push_back(Pair("coinbase", (bool)coin.fCoinBase));
+    if(coin.nType == TRANSACTION_FUTURE) {
+    	CFutureTx futureTx;
+		//std::cout << "futuretx checking" << endl;
+		if(GetTxPayload(coin.vExtraPayload, futureTx)) {
+			if (futureTx.lockOutputIndex == n) {
+				CBlockIndex* confirmedBlockIndex = chainActive[coin.nHeight];
+				int64_t adjustCurrentTime = GetAdjustedTime();
+				bool isBlockMature = futureTx.maturity > 0 && confirmations >= futureTx.maturity;
+				bool isTimeMature = futureTx.lockTime > 0 && adjustCurrentTime - confirmedBlockIndex->nTime >= futureTx.lockTime;
+				bool isCoinSpenable = isBlockMature || isTimeMature;
+			    ret.push_back(Pair("ftxSpendable", isCoinSpenable));
+			    ret.push_back(Pair("ftxMaturity", futureTx.maturity));
+			    ret.push_back(Pair("ftxLocktime", futureTx.lockTime));
+			}
+		}
+    }
 
     return ret;
 }

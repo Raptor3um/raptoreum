@@ -38,7 +38,8 @@ public:
     //! at which height this containing transaction was included in the active block chain
     uint32_t nHeight : 31;
 
-    int16_t nType;
+    // At this fault this is a normal transaction which is nType = 0
+    int16_t nType = 0;
 
     std::vector<uint8_t> vExtraPayload;
 
