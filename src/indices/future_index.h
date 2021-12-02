@@ -5,10 +5,10 @@
 #ifndef BITCOIN_FUTUREINDEX_H
 #define BITCOIN_FUTUREINDEX_H
 
-#include "uint256.h"
-#include "amount.h"
-#include "script/script.h"
-#include "serialize.h"
+#include <uint256.h>
+#include <amount.h>
+#include <script/script.h>
+#include <serialize.h>
 
 struct IndexKey {
 	uint256 txid;

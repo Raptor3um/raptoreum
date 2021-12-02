@@ -6,11 +6,16 @@
 
 #include <qt/transactionrecord.h>
 
+#include <evo/deterministicmns.h>
+#include <evo/providertx.h>
+#include <evo/specialtx.h>
+
 #include <base58.h>
 #include <consensus/consensus.h>
 #include <validation.h>
 #include <timedata.h>
 #include <wallet/wallet.h>
+#include <key_io.h>
 
 #include <privatesend/privatesend.h>
 
@@ -162,12 +167,11 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                     {
                         // Received by Raptoreum Address
                         sub.type = TransactionRecord::FutureReceive;
-                        sub.strAddress = CBitcoinAddress(address).ToString();
+                        sub.strAddress = EncodeDestination(address);
+                        sub.txDest = address;
                     }
                 }
 
-                sub.address.SetString(sub.strAddress);
-                sub.txDest = sub.address.Get();
                 parts.append(sub);
             }
         }
@@ -278,7 +282,8 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                 if (ExtractDestination(wtx.tx->vout[0].scriptPubKey, address))
                 {
                     // Sent to Raptoreum Address
-                    sub.strAddress = CBitcoinAddress(address).ToString();
+                    sub.strAddress = EncodeDestination(address);
+                    sub.txDest = address;
                 }
             }
 

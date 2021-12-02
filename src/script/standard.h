@@ -10,8 +10,7 @@
 #include <uint256.h>
 
 #include <boost/variant.hpp>
-
-#include <stdint.h>
+#include <string>
 
 static const bool DEFAULT_ACCEPT_DATACARRIER = true;
 
@@ -77,7 +76,7 @@ public:
  *  * CScriptID: TX_SCRIPTHASH destination
  *  A CTxDestination is the internal data type encoded in a bitcoin address
  */
-typedef boost::variant<CNoDestination, CKeyID, CScriptID> CTxDestination;
+typedef boost::variant<CNoDestination, CKeyID, CScriptID>CTxDestination;
 
 /** Check whether a CTxDestination is a CNoDestination. */
 bool IsValidDestination(const CTxDestination& dest);
@@ -92,11 +91,10 @@ const char* GetTxnOutputType(txnouttype t);
  * script hash, for P2PKH it will contain the key hash, etc.
  *
  * @param[in]   scriptPubKey   Script to parse
- * @param[out]  typeRet        The script type
  * @param[out]  vSolutionsRet  Vector of parsed pubkeys and hashes
- * @return                     True if script matches standard template
+ * @return                     The script type. TX_NONSTANDARD represents a failed solve.
  */
-bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<std::vector<unsigned char> >& vSolutionsRet);
+txnouttype Solver(const CScript& scriptPubKey, std::vector<std::vector<unsigned char>>& vSolutionsRet);
 
 /**
  * Parse a standard scriptPubKey for the destination address. Assigns result to
@@ -115,7 +113,6 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
  */
 bool ExtractDestinations(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<CTxDestination>& addressRet, int& nRequiredRet);
 
-CScript GetFutureScriptForDestination(const CTxDestination& dest, int height);
 CScript GetScriptForDestination(const CTxDestination& dest);
 
 /** Generate a P2PK script for the given pubkey. */

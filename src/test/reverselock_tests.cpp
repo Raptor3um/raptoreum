@@ -3,9 +3,9 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <reverselock.h>
-#include <test/test_dash.h>
+#include <test/test_raptoreum.h>
 
-#include <boost/test/unit_raptoreum.hpp>
+#include <boost/test/unit_test.hpp>
 
 BOOST_FIXTURE_TEST_SUITE(reverselock_tests, BasicTestingSetup)
 

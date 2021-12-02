@@ -5,7 +5,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <base58.h>
 #include <amount.h>
 #include <chain.h>
 #include <chainparams.h>
@@ -15,6 +14,7 @@
 #include <core_io.h>
 #include <init.h>
 #include <validation.h>
+#include <key_io.h>
 #include <miner.h>
 #include <net.h>
 #include <policy/fees.h>
@@ -692,7 +692,7 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
 
     UniValue smartnodeObj(UniValue::VARR);
     for (const auto& txout : pblocktemplate->voutSmartnodePayments) {
-        CTxDestination address1;
+        CTxDestination dest;
         ExtractDestination(txout.scriptPubKey, dest);
 
         UniValue obj(UniValue::VOBJ);
@@ -721,18 +721,18 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
     result.push_back(Pair("superblock", superblockObjArray));
     result.push_back(Pair("superblocks_started", pindexPrev->nHeight + 1 > consensusParams.nSuperblockStartBlock));
     result.push_back(Pair("superblocks_enabled", sporkManager.IsSporkActive(SPORK_9_SUPERBLOCKS_ENABLED)));
+
     UniValue founderObj(UniValue::VOBJ);
-	FounderPayment founderPayment = Params().GetConsensus().nFounderPayment;
-	if(pblock->txoutFounder!= CTxOut()) {
-		CTxDestination address;
-		ExtractDestination(pblock->txoutFounder.scriptPubKey, address);
-		CBitcoinAddress address2(address);
-		founderObj.push_back(Pair("payee", address2.ToString().c_str()));
-		founderObj.push_back(Pair("script", HexStr(pblock->txoutFounder.scriptPubKey.begin(), pblock->txoutFounder.scriptPubKey.end())));
-		founderObj.push_back(Pair("amount", pblock->txoutFounder.nValue));
-	}
-	result.push_back(Pair("founder", founderObj));
-	result.push_back(Pair("founder_payments_started", pindexPrev->nHeight + 1 > founderPayment.getStartBlock()));
+    FounderPayment founderPayment = Params().GetConsensus().nFounderPayment;
+    if(pblock->txoutFounder != CTxOut()) {
+      CTxDestination founder_addr;
+      ExtractDestination(pblock->txoutFounder.scriptPubKey, founder_addr);
+      founderObj.push_back(Pair("payee", EncodeDestination(founder_addr).c_str()));
+      founderObj.push_back(Pair("script", HexStr(pblock->txoutFounder.scriptPubKey)));
+      founderObj.push_back(Pair("amount", pblock->txoutFounder.nValue));
+    }
+    result.push_back(Pair("founder", founderObj));
+    result.push_back(Pair("founder_payments_started", pindexPrev->nHeight + 1 > founderPayment.getStartBlock()));
 
     result.push_back(Pair("coinbase_payload", HexStr(pblock->vtx[0]->vExtraPayload)));
 

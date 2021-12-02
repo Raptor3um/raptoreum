@@ -12,6 +12,7 @@
 #include <vector>
 
 #include <consensus/validation.h>
+#include <key_io.h>
 #include <rpc/server.h>
 #include <test/test_raptoreum.h>
 #include <validation.h>

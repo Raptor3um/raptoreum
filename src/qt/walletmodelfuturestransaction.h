@@ -5,7 +5,9 @@
 #ifndef BITCOIN_QT_WALLETMODELFUTURESTRANSACTION_H
 #define BITCOIN_QT_WALLETMODELFUTURESTRANSACTION_H
 
-#include "walletmodel.h"
+#include <qt/walletmodel.h>
+
+#include <memory>
 
 #include <QObject>
 
@@ -23,16 +25,16 @@ public:
     explicit WalletModelFuturesTransaction(const QList<SendFuturesRecipient> &recipients);
     ~WalletModelFuturesTransaction();
 
-    QList<SendFuturesRecipient> getRecipients();
+    QList<SendFuturesRecipient> getRecipients() const;
 
     //CFutureTx *getTransaction();
-    CWalletTx *getTransaction();
-    unsigned int getTransactionSize();
+    CWalletTx *getTransaction() const;
+    unsigned int getTransactionSize() const;
 
     void setTransactionFee(const CAmount& newFee);
-    CAmount getTransactionFee();
+    CAmount getTransactionFee() const;
 
-    CAmount getTotalTransactionAmount();
+    CAmount getTotalTransactionAmount() const;
 
     void newPossibleKeyChange(CWallet *wallet);
     CReserveKey *getPossibleKeyChange();
@@ -45,7 +47,7 @@ private:
     QList<SendFuturesRecipient> recipients;
     //CFutureTx *walletTransaction;
     CWalletTx *walletTransaction;
-    CReserveKey *keyChange;
+    std::unique_ptr<CReserveKey> keyChange;
     CAmount fee;
 };
 

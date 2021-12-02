@@ -173,6 +173,7 @@ BITCOIN_CORE_H = \
   indirectmap.h \
   init.h \
   key.h \
+  key_io.h \
   keepass.h \
   keystore.h \
   dbwrapper.h \
@@ -250,6 +251,7 @@ BITCOIN_CORE_H = \
   undo.h \
   unordered_lru_cache.h \
   util.h \
+  utilmemory.h \
   utilmoneystr.h \
   utiltime.h \
   validation.h \
@@ -436,7 +438,6 @@ crypto_libraptoreum_crypto_base_a_SOURCES = \
   crypto/sha1.h \
   crypto/sha256.cpp \
   crypto/sha256.h \
-  crypto/sha512.h \
   crypto/sph_blake.h \
   crypto/sph_bmw.h \
   crypto/sph_cubehash.h \
@@ -455,31 +456,6 @@ crypto_libraptoreum_crypto_base_a_SOURCES = \
   crypto/sph_sha2.h \
   crypto/sph_types.h \
   crypto/sha512.cpp \
-  crypto/sha512.h
-
-if USE_ASM
-crypto_libraptoreum_crypto_base_a_SOURCES += crypto/sha256_sse4.cpp
-endif
-
-crypto_libraptoreum_crypto_sse41_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-crypto_libraptoreum_crypto_sse41_a_CPPFLAGS = $(AM_CPPFLAGS)
-crypto_libraptoreum_crypto_sse41_a_CXXFLAGS += $(SSE41_CXXFLAGS)
-crypto_libraptoreum_crypto_sse41_a_CPPFLAGS += -DENABLE_SSE41
-crypto_libraptoreum_crypto_sse41_a_SOURCES = crypto/sha256_sse41.cpp
-
-crypto_libraptoreum_crypto_avx2_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-crypto_libraptoreum_crypto_avx2_a_CPPFLAGS = $(AM_CPPFLAGS)
-crypto_libraptoreum_crypto_avx2_a_CXXFLAGS += $(AVX2_CXXFLAGS)
-crypto_libraptoreum_crypto_avx2_a_CPPFLAGS += -DENABLE_AVX2
-crypto_libraptoreum_crypto_avx2_a_SOURCES = crypto/sha256_avx2.cpp
-
-crypto_libraptoreum_crypto_shani_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-crypto_libraptoreum_crypto_shani_a_CPPFLAGS = $(AM_CPPFLAGS)
-crypto_libraptoreum_crypto_shani_a_CXXFLAGS += $(SHANI_CXXFLAGS)
-crypto_libraptoreum_crypto_shani_a_CPPFLAGS += -DENABLE_SHANI
-crypto_libraptoreum_crypto_shani_a_SOURCES = crypto/sha256_shani.cpp
-
-crypto_libraptoreum_crypto_base_a_SOURCES += \
   cryptonote/aesb.c \
   cryptonote/c_blake256.c \
   cryptonote/c_groestl.c \
@@ -505,7 +481,30 @@ crypto_libraptoreum_crypto_base_a_SOURCES += \
   cryptonote/skein_port.h \
   cryptonote/variant2_int_sqrt.h \
   cryptonote/wild_keccak.h \
-  cryptonote/warnings.h
+  cryptonote/warnings.h \
+  crypto/sha512.h
+
+if USE_ASM
+crypto_libraptoreum_crypto_base_a_SOURCES += crypto/sha256_sse4.cpp
+endif
+
+crypto_libraptoreum_crypto_sse41_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+crypto_libraptoreum_crypto_sse41_a_CPPFLAGS = $(AM_CPPFLAGS)
+crypto_libraptoreum_crypto_sse41_a_CXXFLAGS += $(SSE41_CXXFLAGS)
+crypto_libraptoreum_crypto_sse41_a_CPPFLAGS += -DENABLE_SSE41
+crypto_libraptoreum_crypto_sse41_a_SOURCES = crypto/sha256_sse41.cpp
+
+crypto_libraptoreum_crypto_avx2_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+crypto_libraptoreum_crypto_avx2_a_CPPFLAGS = $(AM_CPPFLAGS)
+crypto_libraptoreum_crypto_avx2_a_CXXFLAGS += $(AVX2_CXXFLAGS)
+crypto_libraptoreum_crypto_avx2_a_CPPFLAGS += -DENABLE_AVX2
+crypto_libraptoreum_crypto_avx2_a_SOURCES = crypto/sha256_avx2.cpp
+
+crypto_libraptoreum_crypto_shani_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+crypto_libraptoreum_crypto_shani_a_CPPFLAGS = $(AM_CPPFLAGS)
+crypto_libraptoreum_crypto_shani_a_CXXFLAGS += $(SHANI_CXXFLAGS)
+crypto_libraptoreum_crypto_shani_a_CPPFLAGS += -DENABLE_SHANI
+crypto_libraptoreum_crypto_shani_a_SOURCES = crypto/sha256_shani.cpp
 
 # consensus: shared between all executables that validate any consensus rules.
 libraptoreum_consensus_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
@@ -564,6 +563,7 @@ libraptoreum_common_a_SOURCES = \
   core_write.cpp \
   hdchain.cpp \
   key.cpp \
+  key_io.cpp \
   keystore.cpp \
   netaddress.cpp \
   netbase.cpp \

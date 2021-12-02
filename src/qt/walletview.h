@@ -66,7 +66,7 @@ private:
     ReceiveCoinsDialog *receiveCoinsPage;
     SendCoinsDialog *sendCoinsPage;
     SendFuturesDialog *sendFuturesPage;
-    SendCoinsDialog *privateSendCoinsPage;
+    SendCoinsDialog* privateSendCoinsPage;
     AddressBookPage *usedSendingAddressesPage;
     AddressBookPage *usedReceivingAddressesPage;
     SmartnodeList *smartnodeListPage;

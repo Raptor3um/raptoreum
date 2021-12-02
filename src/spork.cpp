@@ -5,8 +5,8 @@
 
 #include <spork.h>
 
-#include <base58.h>
 #include <chainparams.h>
+#include <key_io.h>
 #include <validation.h>
 #include <messagesigner.h>
 #include <net_processing.h>
@@ -20,13 +20,14 @@ const std::string CSporkManager::SERIALIZATION_VERSION_STRING = "CSporkManager-V
 std::vector<CSporkDef> sporkDefs = {
     MAKE_SPORK_DEF(SPORK_2_INSTANTSEND_ENABLED,            4070908800ULL), // OFF
     MAKE_SPORK_DEF(SPORK_3_INSTANTSEND_BLOCK_FILTERING,    4070908800ULL), // OFF
+    MAKE_SPORK_DEF(SPORK_6_NEW_SIGS,                       4070908800ULL),
     MAKE_SPORK_DEF(SPORK_9_SUPERBLOCKS_ENABLED,            4070908800ULL), // OFF
     MAKE_SPORK_DEF(SPORK_17_QUORUM_DKG_ENABLED,            4070908800ULL), // OFF
     MAKE_SPORK_DEF(SPORK_19_CHAINLOCKS_ENABLED,            4070908800ULL), // OFF
     MAKE_SPORK_DEF(SPORK_21_LOW_LLMQ_PARAMS,               4070908800ULL), // OFF
     MAKE_SPORK_DEF(SPORK_22_SPEICAL_TX_FEE,                100ULL), // default values for special tx fee
-    MAKE_SPORK_DEF(SPORK_21_QUORUM_ALL_CONNECTED,          4070908800ULL), // OFF
-    MAKE_SPORK_DEF(SPORK_22_PS_MORE_PARTICIPANTS,          4070908800ULL), // OFF
+    MAKE_SPORK_DEF(SPORK_23_QUORUM_ALL_CONNECTED,          4070908800ULL), // OFF
+    MAKE_SPORK_DEF(SPORK_24_PS_MORE_PARTICIPANTS,          4070908800ULL), // OFF
 };
 
 CSporkManager sporkManager;
@@ -83,10 +84,12 @@ void CSporkManager::CheckAndRemove()
                 mapSporksByHash.erase(itSignerPair->second.GetHash());
                 continue;
             }
-            if (!itSignerPair->second.CheckSignature(itSignerPair->first)) {
-                mapSporksByHash.erase(itSignerPair->second.GetHash());
-                itActive->second.erase(itSignerPair++);
-                continue;
+            if (!itSignerPair->second.CheckSignature(itSignerPair->first, false)) {
+                if(!itSignerPair->second.CheckSignature(itSignerPair->first, true)) {
+                    mapSporksByHash.erase(itSignerPair->second.GetHash());
+                    itActive->second.erase(itSignerPair++);
+                    continue;
+                }
             }
             ++itSignerPair;
         }
@@ -101,7 +104,8 @@ void CSporkManager::CheckAndRemove()
     while (itByHash != mapSporksByHash.end()) {
         bool found = false;
         for (const auto& signer: setSporkPubKeyIDs) {
-            if (itByHash->second.CheckSignature(signer)) {
+            if (itByHash->second.CheckSignature(signer, false) ||
+                itByHash->second.CheckSignature(signer, true)) {
                 found = true;
                 break;
             }
@@ -140,12 +144,14 @@ void CSporkManager::ProcessSpork(CNode* pfrom, const std::string& strCommand, CD
         }
 
         CKeyID keyIDSigner;
-
-        if (!spork.GetSignerKeyID(keyIDSigner) || !setSporkPubKeyIDs.count(keyIDSigner)) {
-            LOCK(cs_main);
-            LogPrint(BCLog::SPORK, "CSporkManager::ProcessSpork -- ERROR: invalid signature\n");
-            Misbehaving(pfrom->GetId(), 100);
-            return;
+        bool fSpork6IsActive = IsSporkActive(SPORK_6_NEW_SIGS);
+        if (!spork.GetSignerKeyID(keyIDSigner, fSpork6IsActive) || !setSporkPubKeyIDs.count(keyIDSigner)) {
+            if(!spork.GetSignerKeyID(keyIDSigner, !fSpork6IsActive) || !setSporkPubKeyIDs.count(keyIDSigner)) {
+                LOCK(cs_main);
+                LogPrint(BCLog::SPORK, "CSporkManager::ProcessSpork -- ERROR: invalid signature\n");
+                Misbehaving(pfrom->GetId(), 100);
+                return;
+            }
         }
 
         {
@@ -191,13 +197,14 @@ bool CSporkManager::UpdateSpork(SporkId nSporkID, int64_t nValue, CConnman& conn
 
     LOCK(cs);
 
-    if (!spork.Sign(sporkPrivKey)) {
+    bool fSpork6IsActive = IsSporkActive(SPORK_6_NEW_SIGS);
+    if (!spork.Sign(sporkPrivKey, fSpork6IsActive)) {
         LogPrintf("CSporkManager::%s -- ERROR: signing failed for spork %d\n", __func__, nSporkID);
         return false;
     }
 
     CKeyID keyIDSigner;
-    if (!spork.GetSignerKeyID(keyIDSigner) || !setSporkPubKeyIDs.count(keyIDSigner)) {
+    if (!spork.GetSignerKeyID(keyIDSigner, fSpork6IsActive) || !setSporkPubKeyIDs.count(keyIDSigner)) {
         LogPrintf("CSporkManager::UpdateSpork: failed to find keyid for private key\n");
         return false;
     }
@@ -307,7 +314,7 @@ bool CSporkManager::SetPrivKey(const std::string& strPrivKey)
     }
 
     CSporkMessage spork;
-    if (!spork.Sign(key)) {
+    if (!spork.Sign(key, IsSporkActive(SPORK_6_NEW_SIGS))) {
         LogPrintf("CSporkManager::SetPrivKey -- Test signing failed\n");
         return false;
     }
@@ -339,7 +346,7 @@ uint256 CSporkMessage::GetSignatureHash() const
     return s.GetHash();
 }
 
-bool CSporkMessage::Sign(const CKey& key)
+bool CSporkMessage::Sign(const CKey& key, bool fSporkSixActive)
 {
     if (!key.IsValid()) {
         LogPrintf("CSporkMessage::Sign -- signing key is not valid\n");
@@ -349,8 +356,7 @@ bool CSporkMessage::Sign(const CKey& key)
     CKeyID pubKeyId = key.GetPubKey().GetID();
     std::string strError = "";
 
-    // Harden Spork6 so that it is active on testnet and no other networks
-    if (Params().NetworkIDString() == CBaseChainParams::TESTNET) {
+    if(fSporkSixActive) {
         uint256 hash = GetSignatureHash();
 
         if(!CHashSigner::SignHash(hash, key, vchSig)) {
@@ -379,12 +385,11 @@ bool CSporkMessage::Sign(const CKey& key)
     return true;
 }
 
-bool CSporkMessage::CheckSignature(const CKeyID& pubKeyId) const
+bool CSporkMessage::CheckSignature(const CKeyID& pubKeyId, bool fSporkSixActive) const
 {
     std::string strError = "";
 
-    // Harden Spork6 so that it is active on testnet and no other networks
-    if (Params().NetworkIDString() == CBaseChainParams::TESTNET) {
+    if(fSporkSixActive) {
         uint256 hash = GetSignatureHash();
 
         if (!CHashSigner::VerifyHash(hash, pubKeyId, vchSig, strError)) {
@@ -395,19 +400,21 @@ bool CSporkMessage::CheckSignature(const CKeyID& pubKeyId) const
         std::string strMessage = std::to_string(nSporkID) + std::to_string(nValue) + std::to_string(nTimeSigned);
 
         if (!CMessageSigner::VerifyMessage(pubKeyId, vchSig, strMessage, strError)){
-            LogPrint(BCLog::SPORK, "CSporkMessage::CheckSignature -- VerifyMessage() failed, error: %s\n", strError);
-            return false;
+            uint256 hash = GetSignatureHash();
+            if(!CHashSigner::VerifyHash(hash, pubKeyId, vchSig, strError)) {
+                LogPrint(BCLog::SPORK, "CSporkMessage::CheckSignature -- VerifyMessage() failed, error: %s\n", strError);
+                return false;
+            }
         }
     }
 
     return true;
 }
 
-bool CSporkMessage::GetSignerKeyID(CKeyID &retKeyidSporkSigner)
+bool CSporkMessage::GetSignerKeyID(CKeyID &retKeyidSporkSigner, bool fSporkSixActive)
 {
     CPubKey pubkeyFromSig;
-    // Harden Spork6 so that it is active on testnet and no other networks
-    if (Params().NetworkIDString() == CBaseChainParams::TESTNET) {
+    if(fSporkSixActive) {
         if (!pubkeyFromSig.RecoverCompact(GetSignatureHash(), vchSig)) {
             return false;
         }

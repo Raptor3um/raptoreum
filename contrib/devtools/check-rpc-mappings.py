@@ -14,7 +14,7 @@ SOURCES = [
     "src/rpc/server.cpp",
     "src/rpc/blockchain.cpp",
     "src/rpc/governance.cpp",
-    "src/rpc/masternode.cpp",
+    "src/rpc/smartnode.cpp",
     "src/rpc/mining.cpp",
     "src/rpc/misc.cpp",
     "src/rpc/net.cpp",

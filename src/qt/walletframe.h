@@ -14,6 +14,7 @@ class ClientModel;
 class SendCoinsRecipient;
 class WalletModel;
 class WalletView;
+class SendFuturesRecipient;
 
 QT_BEGIN_NAMESPACE
 class QStackedWidget;
@@ -42,6 +43,8 @@ public:
     void removeAllWallets();
 
     bool handlePaymentRequest(const SendCoinsRecipient& recipient);
+
+    bool handlePaymentRequest(const SendFuturesRecipient& recipient);
 
     void showOutOfSyncWarning(bool fShow);
 

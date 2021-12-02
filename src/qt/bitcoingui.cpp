@@ -406,7 +406,7 @@ void BitcoinGUI::createActions()
 
     privateSendCoinsAction = new QToolButton(this);
     privateSendCoinsAction->setText("&PrivateSend");
-    privateSendCoinsAction->setStatusTip(tr("PrivateSend coins to a Dash address"));
+    privateSendCoinsAction->setStatusTip(tr("PrivateSend coins to a Raptoreum address"));
     privateSendCoinsAction->setToolTip(privateSendCoinsAction->statusTip());
     privateSendCoinsAction->setCheckable(true);
     tabGroup->addButton(privateSendCoinsAction);
@@ -433,7 +433,8 @@ void BitcoinGUI::createActions()
     historyAction->setCheckable(true);
     tabGroup->addButton(historyAction);
 
-    sendFuturesAction = new QAction(tr("&Futures"), this);
+    sendFuturesAction = new QToolButton(this);
+    sendFuturesAction->setText(tr("&Futures"));
     sendFuturesAction->setStatusTip(tr("Send futures to a Raptoreum address"));
     sendFuturesAction->setToolTip(sendFuturesAction->statusTip());
     sendFuturesAction->setCheckable(true);
@@ -442,7 +443,7 @@ void BitcoinGUI::createActions()
 #else
     sendFuturesAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_5));
 #endif
-    tabGroup->addAction(sendFuturesAction);
+    tabGroup->addButton(sendFuturesAction);
 
 #ifdef ENABLE_WALLET
     QSettings settings;
@@ -519,7 +520,7 @@ void BitcoinGUI::createActions()
     unlockWalletAction->setToolTip(tr("Unlock wallet"));
     lockWalletAction = new QAction(tr("&Lock Wallet"), this);
     signMessageAction = new QAction(tr("Sign &message..."), this);
-    signMessageAction->setStatusTip(tr("Sign messages with your Dash addresses to prove you own them"));
+    signMessageAction->setStatusTip(tr("Sign messages with your Raptoreum addresses to prove you own them"));
     verifyMessageAction = new QAction(tr("&Verify message..."), this);
     verifyMessageAction->setStatusTip(tr("Verify messages to ensure they were signed with specified Raptoreum addresses"));
 
@@ -1129,7 +1130,7 @@ void BitcoinGUI::updateNetworkState()
     fNetworkActivePrev = fNetworkActive;
 
     if (fNetworkActive) {
-        labelConnectionsIcon->setToolTip(tr("%n active connection(s) to Dash network", "", count));
+        labelConnectionsIcon->setToolTip(tr("%n active connection(s) to Raptoreum network", "", count));
     } else {
         labelConnectionsIcon->setToolTip(tr("Network activity disabled"));
         icon = "connect_4";
@@ -1216,7 +1217,7 @@ void BitcoinGUI::updateWidth()
         ++nButtonsVisible;
     }
     // Add 30 per button as padding and use minimum 980 which is the minimum required to show all tab's contents
-    // Use nButtonsVisible + 1 <- for the dash logo
+    // Use nButtonsVisible + 1 <- for the Raptoreum logo
     int nWidth = std::max<int>(980, (nWidthWidestButton + 30) * (nButtonsVisible + 1));
     setMinimumWidth(nWidth);
     resize(nWidth, height());

@@ -510,8 +510,7 @@ void BitcoinApplication::initializeResult(bool success)
             window->addWallet(BitcoinGUI::DEFAULT_WALLET, walletModel);
             window->setCurrentWallet(BitcoinGUI::DEFAULT_WALLET);
 
-            connect(walletModel, SIGNAL(coinsSent(CWallet*,SendCoinsRecipient,QByteArray)),
-                             paymentServer, SLOT(fetchPaymentACK(CWallet*,const SendCoinsRecipient&,QByteArray)));
+            connect(walletModel, SIGNAL(coinsSent(CWallet*,SendCoinsRecipient,QByteArray)), paymentServer, SLOT(fetchPaymentACK(CWallet*,const SendCoinsRecipient&,QByteArray)));
         }
 #endif
 
@@ -532,12 +531,9 @@ void BitcoinApplication::initializeResult(bool success)
 #ifdef ENABLE_WALLET
         // Now that initialization/startup is done, process any command-line
         // raptoreum: URIs or payment requests:
-        connect(paymentServer, SIGNAL(receivedPaymentRequest(SendCoinsRecipient)),
-                         window, SLOT(handlePaymentRequest(SendCoinsRecipient)));
-        connect(window, SIGNAL(receivedURI(QString)),
-                         paymentServer, SLOT(handleURIOrFile(QString)));
-        connect(paymentServer, SIGNAL(message(QString,QString,unsigned int)),
-                         window, SLOT(message(QString,QString,unsigned int)));
+        connect(paymentServer, SIGNAL(receivedPaymentRequest(SendCoinsRecipient)), window, SLOT(handlePaymentRequest(SendCoinsRecipient)));
+        connect(window, SIGNAL(receivedURI(QString)), paymentServer, SLOT(handleURIOrFile(QString)));
+        connect(paymentServer, SIGNAL(message(QString,QString,unsigned int)), window, SLOT(message(QString,QString,unsigned int)));
         QTimer::singleShot(100, paymentServer, SLOT(uiReady()));
 #endif
         pollShutdownTimer->start(200);
@@ -649,15 +645,13 @@ int main(int argc, char *argv[])
     /// - Do not call GetDataDir(true) before this step finishes
     if (!fs::is_directory(GetDataDir(false)))
     {
-        QMessageBox::critical(0, QObject::tr(PACKAGE_NAME),
-                              QObject::tr("Error: Specified data directory \"%1\" does not exist.").arg(QString::fromStdString(gArgs.GetArg("-datadir", ""))));
+        QMessageBox::critical(0, QObject::tr(PACKAGE_NAME), QObject::tr("Error: Specified data directory \"%1\" does not exist.").arg(QString::fromStdString(gArgs.GetArg("-datadir", ""))));
         return EXIT_FAILURE;
     }
     try {
         gArgs.ReadConfigFile(gArgs.GetArg("-conf", BITCOIN_CONF_FILENAME));
     } catch (const std::exception& e) {
-        QMessageBox::critical(0, QObject::tr(PACKAGE_NAME),
-                              QObject::tr("Error: Cannot parse configuration file: %1. Only use key=value syntax.").arg(e.what()));
+        QMessageBox::critical(0, QObject::tr(PACKAGE_NAME), QObject::tr("Error: Cannot parse configuration file: %1. Only use key=value syntax.").arg(e.what()));
         return EXIT_FAILURE;
     }
 
@@ -721,8 +715,7 @@ int main(int argc, char *argv[])
     app.createOptionsModel(gArgs.GetBoolArg("-resetguisettings", false));
     // Load custom application fonts and setup font management
     if (!GUIUtil::loadFonts()) {
-        QMessageBox::critical(0, QObject::tr(PACKAGE_NAME),
-                              QObject::tr("Error: Failed to load application fonts."));
+        QMessageBox::critical(0, QObject::tr(PACKAGE_NAME), QObject::tr("Error: Failed to load application fonts."));
         return EXIT_FAILURE;
     }
     // Validate/set font family
@@ -732,8 +725,7 @@ int main(int argc, char *argv[])
         try {
             family = GUIUtil::fontFamilyFromString(strFamily);
         } catch (const std::exception& e) {
-            QMessageBox::critical(0, QObject::tr(PACKAGE_NAME),
-                                  QObject::tr("Error: Specified font-family invalid. Valid values: %1.").arg("SystemDefault, Montserrat"));
+            QMessageBox::critical(0, QObject::tr(PACKAGE_NAME), QObject::tr("Error: Specified font-family invalid. Valid values: %1.").arg("SystemDefault, Montserrat"));
             return EXIT_FAILURE;
         }
         GUIUtil::setFontFamily(family);
@@ -742,8 +734,7 @@ int main(int argc, char *argv[])
     if (gArgs.IsArgSet("-font-weight-normal")) {
         QFont::Weight weight;
         if (!GUIUtil::weightFromArg(gArgs.GetArg("-font-weight-normal", GUIUtil::weightToArg(GUIUtil::getFontWeightNormal())), weight)) {
-            QMessageBox::critical(0, QObject::tr(PACKAGE_NAME),
-                                  QObject::tr("Error: Specified font-weight-normal invalid. Valid range %1 to %2.").arg(0).arg(8));
+            QMessageBox::critical(0, QObject::tr(PACKAGE_NAME), QObject::tr("Error: Specified font-weight-normal invalid. Valid range %1 to %2.").arg(0).arg(8));
             return EXIT_FAILURE;
         }
         GUIUtil::setFontWeightNormal(weight);
@@ -752,8 +743,7 @@ int main(int argc, char *argv[])
     if (gArgs.IsArgSet("-font-weight-bold")) {
         QFont::Weight weight;
         if (!GUIUtil::weightFromArg(gArgs.GetArg("-font-weight-bold", GUIUtil::weightToArg(GUIUtil::getFontWeightBold())), weight)) {
-            QMessageBox::critical(0, QObject::tr(PACKAGE_NAME),
-                                  QObject::tr("Error: Specified font-weight-bold invalid. Valid range %1 to %2.").arg(0).arg(8));
+            QMessageBox::critical(0, QObject::tr(PACKAGE_NAME), QObject::tr("Error: Specified font-weight-bold invalid. Valid range %1 to %2.").arg(0).arg(8));
             return EXIT_FAILURE;
         }
         GUIUtil::setFontWeightBold(weight);
@@ -763,8 +753,7 @@ int main(int argc, char *argv[])
         const int nScaleMin = -100, nScaleMax = 100;
         int nScale = gArgs.GetArg("-font-scale", GUIUtil::getFontScale());
         if (nScale < nScaleMin || nScale > nScaleMax) {
-            QMessageBox::critical(0, QObject::tr(PACKAGE_NAME),
-                                  QObject::tr("Error: Specified font-scale invalid. Valid range %1 to %2.").arg(nScaleMin).arg(nScaleMax));
+            QMessageBox::critical(0, QObject::tr(PACKAGE_NAME), QObject::tr("Error: Specified font-scale invalid. Valid range %1 to %2.").arg(nScaleMin).arg(nScaleMax));
             return EXIT_FAILURE;
         }
         GUIUtil::setFontScale(nScale);
@@ -777,8 +766,7 @@ int main(int argc, char *argv[])
         QString strFile;
 
         if (!fs::is_directory(customDir)) {
-            QMessageBox::critical(0, QObject::tr(PACKAGE_NAME),
-                                  QObject::tr("Error: Invalid -custom-css-dir path.") + "\n\n" + strCustomDir);
+            QMessageBox::critical(0, QObject::tr(PACKAGE_NAME), QObject::tr("Error: Invalid -custom-css-dir path.") + "\n\n" + strCustomDir);
             return EXIT_FAILURE;
         }
 
@@ -797,8 +785,7 @@ int main(int argc, char *argv[])
             for (const auto& strMissingFile : vecRequiredFiles) {
                 strMissingFiles += strMissingFile + "\n";
             }
-            QMessageBox::critical(0, QObject::tr(PACKAGE_NAME),
-                                  QObject::tr("Error: %1 CSS file(s) missing in -custom-css-dir path.").arg(vecRequiredFiles.size()) + "\n\n" + strMissingFiles);
+            QMessageBox::critical(0, QObject::tr(PACKAGE_NAME), QObject::tr("Error: %1 CSS file(s) missing in -custom-css-dir path.").arg(vecRequiredFiles.size()) + "\n\n" + strMissingFiles);
             return EXIT_FAILURE;
         }
 

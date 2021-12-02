@@ -35,7 +35,7 @@ class TxViewDelegate : public QAbstractItemDelegate
     Q_OBJECT
 public:
     explicit TxViewDelegate(QObject* parent = nullptr) :
-        QAbstractItemDelegate(), unit(BitcoinUnits::DASH)
+        QAbstractItemDelegate(), unit(BitcoinUnits::RTM)
     {
 
     }
@@ -443,8 +443,8 @@ void OverviewPage::privateSendStatus(bool fForce)
 
     if(!walletModel) return;
 
-    // Disable any PS UI for masternode or when autobackup is disabled or failed for whatever reason
-    if (fMasternodeMode || nWalletBackups <= 0) {
+    // Disable any PS UI for smartnode or when autobackup is disabled or failed for whatever reason
+    if (fSmartnodeMode || nWalletBackups <= 0) {
         DisablePrivateSendCompletely();
         if (nWalletBackups <= 0) {
             ui->labelPrivateSendEnabled->setToolTip(tr("Automatic backups are disabled, no mixing available!"));

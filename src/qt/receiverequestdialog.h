@@ -55,6 +55,7 @@ public:
 
     void setModel(OptionsModel *model);
     void setInfo(const SendCoinsRecipient &info);
+    void set_Info(const SendFuturesRecipient &_info);
 
 private Q_SLOTS:
     void on_btnCopyURI_clicked();
@@ -66,6 +67,7 @@ private:
     Ui::ReceiveRequestDialog *ui;
     OptionsModel *model;
     SendCoinsRecipient info;
+    SendFuturesRecipient _info;
 };
 
 #endif // BITCOIN_QT_RECEIVEREQUESTDIALOG_H

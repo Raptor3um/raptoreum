@@ -9,7 +9,6 @@
 #define BITCOIN_WALLET_WALLET_H
 
 #include <amount.h>
-#include <base58.h>
 #include <policy/feerate.h>
 #include <saltedhasher.h>
 #include <streams.h>
@@ -25,7 +24,7 @@
 #include <wallet/walletdb.h>
 #include <wallet/rpcwallet.h>
 #include <privatesend/privatesend.h>
-#include "evo/providertx.h"
+#include <evo/providertx.h>
 
 #include <algorithm>
 #include <atomic>
@@ -83,6 +82,7 @@ static const bool DEFAULT_USE_HD_WALLET = false;
 
 class CBlockIndex;
 class CCoinControl;
+class CKey;
 class COutput;
 class CReserveKey;
 class CScript;
@@ -496,7 +496,7 @@ public:
 
     CAmount GetAnonymizedCredit(const CCoinControl* coinControl = nullptr) const;
     CAmount GetDenominatedCredit(bool unconfirmed, bool fUseCache=true) const;
-	bool isFutureSpendable(unsigned int outputIndex) const;
+    bool isFutureSpendable(unsigned int outputIndex) const;
 
     void GetAmounts(std::list<COutputEntry>& listReceived,
                     std::list<COutputEntry>& listSent, CAmount& nFee, std::string& strSentAccount, const isminefilter& filter) const;

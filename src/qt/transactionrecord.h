@@ -7,7 +7,7 @@
 
 #include <amount.h>
 #include <uint256.h>
-#include <base58.h>
+#include <key_io.h>
 
 #include <QList>
 #include <QString>
@@ -163,7 +163,7 @@ public:
 
     /** Return whether a status update is needed.
      */
-    bool statusUpdateNeeded(int chainLockHeight);
+    bool statusUpdateNeeded(int chainLockHeight) const;
 
     /** Return the block height of this transaction */
     int getTransactionBlockHeight(const CWalletTx &wtx);

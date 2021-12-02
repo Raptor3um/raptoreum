@@ -11,8 +11,8 @@
 #include <qt/guiutil.h>
 #include <qt/walletmodel.h>
 
-#include <base58.h>
 #include <init.h>
+#include <key_io.h>
 #include <validation.h> // For strMessageMagic
 #include <wallet/wallet.h>
 
@@ -148,7 +148,7 @@ void SignVerifyMessageDialog::on_signMessageButton_SM_clicked()
         ui->statusLabel_SM->setText(tr("The entered address is invalid.") + QString(" ") + tr("Please check the address and try again."));
         return;
     }
-    const CKeyID* keyID = boost::get<CKeyID>(&destination);
+    const CKeyID *keyID = boost::get<CKeyID>(&destination);
     if (!keyID) {
         ui->addressIn_SM->setValid(false);
         ui->statusLabel_SM->setStyleSheet(GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_ERROR));

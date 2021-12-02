@@ -21,6 +21,7 @@
 class QValidatedLineEdit;
 class OptionsModel;
 class SendCoinsRecipient;
+class SendFuturesRecipient;
 
 QT_BEGIN_NAMESPACE
 class QAbstractButton;
@@ -113,6 +114,11 @@ namespace GUIUtil
     bool parseBitcoinURI(QString uri, SendCoinsRecipient *out);
     bool validateBitcoinURI(const QString& uri);
     QString formatBitcoinURI(const SendCoinsRecipient &info);
+
+    // Futures
+    bool parseBitcoinURI(const QUrl &uri, SendFuturesRecipient *out);
+    bool parseBitcoinURI(QString uri, SendFuturesRecipient *out);
+    QString formatBitcoinURI(const SendFuturesRecipient &info);
 
     // Returns true if given address+amount meets "dust" definition
     bool isDust(const QString& address, const CAmount& amount);
@@ -320,7 +326,7 @@ namespace GUIUtil
     /** get font size with GUIUtil::fontScale applied */
     double getScaledFontSize(int nSize);
 
-    /** Load dash specific appliciation fonts */
+    /** Load raptoreum specific appliciation fonts */
     bool loadFonts();
 
     /** Set an application wide default font, depends on the selected theme */
@@ -356,8 +362,8 @@ namespace GUIUtil
     /** Return the name of the currently active theme.*/
     QString getActiveTheme();
 
-    /** Check if a dash specific theme is activated (light/dark).*/
-    bool dashThemeActive();
+    /** Check if a raptoreum specific theme is activated (light/dark).*/
+    bool raptoreumThemeActive();
 
     /** Load the theme and update all UI elements according to the appearance settings. */
     void loadTheme(QWidget* widget = nullptr, bool fForce = false);

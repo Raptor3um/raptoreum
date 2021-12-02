@@ -15,6 +15,7 @@
 
 static const int MAX_SEND_POPUP_ENTRIES = 10;
 
+class CCoinControl;
 class ClientModel;
 class SendCoinsEntry;
 class SendCoinsRecipient;
@@ -60,6 +61,7 @@ private:
     Ui::SendCoinsDialog *ui;
     ClientModel *clientModel;
     WalletModel *model;
+    std::unique_ptr<CCoinControl> m_coin_control;
     bool fNewRecipientAllowed;
     void send(QList<SendCoinsRecipient> recipients);
     bool fFeeMinimized;

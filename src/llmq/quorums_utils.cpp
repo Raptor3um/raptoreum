@@ -47,11 +47,11 @@ uint256 CLLMQUtils::BuildSignHash(Consensus::LLMQType llmqType, const uint256& q
 
 bool CLLMQUtils::IsAllMembersConnectedEnabled(Consensus::LLMQType llmqType)
 {
-    auto spork21 = sporkManager.GetSporkValue(SPORK_21_QUORUM_ALL_CONNECTED);
-    if (spork21 == 0) {
+    auto spork23 = sporkManager.GetSporkValue(SPORK_23_QUORUM_ALL_CONNECTED);
+    if (spork23 == 0) {
         return true;
     }
-    if (spork21 == 1 && llmqType != Consensus::LLMQ_400_60 && llmqType != Consensus::LLMQ_400_85) {
+    if (spork23 == 1 && llmqType != Consensus::LLMQ_400_60 && llmqType != Consensus::LLMQ_400_85) {
         return true;
     }
     return false;

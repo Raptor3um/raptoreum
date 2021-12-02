@@ -10,7 +10,7 @@
 
 #include <stdint.h>
 #include <string.h>
-#include "slow-hash.h"
+#include <cryptonote/slow-hash.h>
 
 #ifndef KECCAK_ROUNDS
 #define KECCAK_ROUNDS 24

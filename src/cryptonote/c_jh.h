@@ -14,7 +14,7 @@
 */
 #pragma once
 
-#include "slow-hash.h"
+#include <cryptonote/slow-hash.h>
 
 typedef enum {SUCCESS = 0, FAIL = 1, BAD_HASHLEN = 2} HashReturn;
 

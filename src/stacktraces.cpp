@@ -11,7 +11,7 @@
 #include <util.h>
 #include <utilstrencodings.h>
 
-#include <dash-config.h>
+#include <raptoreum-config.h>
 
 #include <mutex>
 #include <map>

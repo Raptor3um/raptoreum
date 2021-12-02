@@ -92,7 +92,7 @@ def filtermultipayoutaddress(mns):
     return [mn for mn in mns if len(hist[mn['state']['payoutAddress']]) == 1]
 
 def resolveasn(resolver, ip):
-    asn = int([x.to_text() for x in resolver.query('.'.join(reversed(ip.split('.'))) + '.origin.asn.cymru.com', 'TXT').response.answer][0].split('\"')[1].split(' ')[0])
+    asn = int([x.to_text() for x in resolver.resolve('.'.join(reversed(ip.split('.'))) + '.origin.asn.cymru.com', 'TXT').response.answer][0].split('\"')[1].split(' ')[0])
     return asn
 
 # Based on Greg Maxwell's seed_filter.py
@@ -107,7 +107,7 @@ def filterbyasn(ips, max_per_asn, max_total):
     pool = multiprocessing.Pool(processes=16)
 
     # OpenDNS servers
-    my_resolver.nameservers = ['208.67.222.222', '208.67.220.220']
+    my_resolver.nameservers = ['1.1.1.1', '8.8.8.8']
 
     # Resolve ASNs in parallel
     asns = [pool.apply_async(resolveasn, args=(my_resolver, ip['ip'])) for ip in ips_ipv4]

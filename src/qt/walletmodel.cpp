@@ -14,13 +14,13 @@
 #include <qt/recentrequeststablemodel.h>
 #include <qt/transactiontablemodel.h>
 
-#include <base58.h>
 #include <chain.h>
 #include <keystore.h>
 #include <validation.h>
 #include <net.h> // for g_connman
 #include <sync.h>
 #include <txmempool.h>
+#include <key_io.h>
 #include <ui_interface.h>
 #include <util.h> // for GetBoolArg
 #include <wallet/coincontrol.h>
@@ -266,7 +266,7 @@ std::map<CTxDestination, CAmount> WalletModel::getAddressBalances() const
 WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransaction &transaction, const CCoinControl& coinControl)
 {
     CAmount total = 0;
-    bool fSubtractFeeFromAmount = false;
+     bool fSubtractFeeFromAmount = false;
     QList<SendCoinsRecipient> recipients = transaction.getRecipients();
     std::vector<CRecipient> vecSend;
 
@@ -481,14 +481,11 @@ WalletModel::SendFuturesReturn WalletModel::prepareFuturesTransaction(WalletMode
 
     QSet<QString> setAddress; // Used to detect duplicates
     int nAddresses = 0;
-	FuturePartialPayload fpp;
+    FuturePartialPayload fpp;
+
     // Pre-check input data for validity
     for (const SendFuturesRecipient &rcp : recipients)
     {
-
-        if (rcp.fSubtractFeeFromAmount)
-            fSubtractFeeFromAmount = true;
-
         if (rcp.paymentRequest.IsInitialized())
         {   // PaymentRequest...
             CAmount subtotal = 0;
@@ -501,7 +498,7 @@ WalletModel::SendFuturesReturn WalletModel::prepareFuturesTransaction(WalletMode
                 const unsigned char* scriptStr = (const unsigned char*)out.script().data();
                 CScript scriptPubKey(scriptStr, scriptStr+out.script().size());
                 CAmount nAmount = out.amount();
-                CRecipient recipient = {scriptPubKey, nAmount, rcp.fSubtractFeeFromAmount};
+                CRecipient recipient = {scriptPubKey, nAmount};
                 vecSend.push_back(recipient);
             }
             if (subtotal <= 0)
@@ -522,11 +519,11 @@ WalletModel::SendFuturesReturn WalletModel::prepareFuturesTransaction(WalletMode
             }
             setAddress.insert(rcp.address);
             ++nAddresses;
-            std::cout << "rec address " << rcp.address.toStdString() << endl;
-            fpp.futureRecScript = GetScriptForDestination(CBitcoinAddress(rcp.address.toStdString()).Get());
+
+            CScript scriptPubKey = GetScriptForDestination(DecodeDestination(rcp.address.toStdString()));
             fpp.maturity = rcp.maturity;
             fpp.locktime = rcp.locktime; //- GetAdjustedTime();
-            CRecipient recipient = {fpp.futureRecScript, rcp.amount, rcp.fSubtractFeeFromAmount};
+            CRecipient recipient = {scriptPubKey, rcp.amount};
             vecSend.push_back(recipient);
 
             total += rcp.amount;
@@ -550,7 +547,8 @@ WalletModel::SendFuturesReturn WalletModel::prepareFuturesTransaction(WalletMode
     bool fCreated;
     std::string strFailReason;
     {
-        LOCK2(cs_main, wallet->cs_wallet);
+        LOCK2(cs_main, mempool.cs);
+        LOCK(wallet->cs_wallet);
 
         transaction.newPossibleKeyChange(wallet);
 
@@ -561,11 +559,11 @@ WalletModel::SendFuturesReturn WalletModel::prepareFuturesTransaction(WalletMode
         //txRef->nType = TRANSACTION_FUTURE;
         //txRef->nVersion = 3;
         CReserveKey *keyChange = transaction.getPossibleKeyChange();
-    	CAmount futureFee = getFutureFees();
+        CAmount futureFee = getFutureFees();
         fCreated = wallet->CreateTransaction(vecSend, *newTx, *keyChange, nFeeRequired, nChangePosRet, strFailReason, coinControl, true, 0, futureFee, &fpp);
 
         transaction.setTransactionFee(nFeeRequired);
-        if (fSubtractFeeFromAmount && fCreated)
+        if(fCreated)
             transaction.reassignAmounts();
         //transaction.assignFuturePayload();
         nValueOut = newTx->tx->GetValueOut();
@@ -574,7 +572,7 @@ WalletModel::SendFuturesReturn WalletModel::prepareFuturesTransaction(WalletMode
 
     if(!fCreated)
     {
-        if(!fSubtractFeeFromAmount && (total + nFeeRequired) > nBalance)
+        if((total + nFeeRequired) > nBalance)
         {
             return SendFuturesReturn(AmountWithFeeExceedsBalance);
         }
@@ -597,7 +595,9 @@ WalletModel::SendFuturesReturn WalletModel::sendFutures(WalletModelFuturesTransa
     QByteArray transaction_array; /* store serialized transaction */
 
     {
-        LOCK2(cs_main, wallet->cs_wallet);
+        LOCK2(cs_main, mempool.cs);
+        LOCK(wallet->cs_wallet);
+
         CWalletTx *newTx = transaction.getTransaction();
         QList<SendFuturesRecipient> recipients = transaction.getRecipients();
 
@@ -629,7 +629,7 @@ WalletModel::SendFuturesReturn WalletModel::sendFutures(WalletModelFuturesTransa
 
         CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
         ssTx << *newTx->tx;
-        transaction_array.append(&(ssTx[0]), ssTx.size());
+        transaction_array.append(ssTx.data(), ssTx.size());
     }
 
     // Add addresses / update labels that we've sent to the address book,
@@ -640,7 +640,7 @@ WalletModel::SendFuturesReturn WalletModel::sendFutures(WalletModelFuturesTransa
         if (!rcp.paymentRequest.IsInitialized())
         {
             std::string strAddress = rcp.address.toStdString();
-            CTxDestination dest = CBitcoinAddress(strAddress).Get();
+            CTxDestination dest = DecodeDestination(strAddress);
             std::string strLabel = rcp.label.toStdString();
             {
                 LOCK(wallet->cs_wallet);

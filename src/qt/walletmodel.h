@@ -5,16 +5,21 @@
 #ifndef BITCOIN_QT_WALLETMODEL_H
 #define BITCOIN_QT_WALLETMODEL_H
 
-#include <paymentrequestplus.h>
-#include <walletmodeltransaction.h>
-#include <walletmodelfuturestransaction.h>
+#include <amount.h>
+#include <key.h>
+#include <serialize.h>
+#include <script/standard.h>
+
+#include <qt/paymentrequestplus.h>
+#include <qt/walletmodeltransaction.h>
+#include <qt/walletmodelfuturestransaction.h>
 
 #ifdef ENABLE_WALLET
 #include <wallet/wallet.h>
 #endif // ENABLE_WALLET
 
 #include <support/allocators/secure.h>
-#include "future/fee.h" // future fee
+#include <future/fee.h> // future fee
 
 
 #include <map>
@@ -104,9 +109,9 @@ public:
 class SendFuturesRecipient
 {
 public:
-    explicit SendFuturesRecipient() : amount(0), fSubtractFeeFromAmount(false), nVersion(SendFuturesRecipient::CURRENT_VERSION) { }
+    explicit SendFuturesRecipient() : amount(0), nVersion(SendFuturesRecipient::CURRENT_VERSION) { }
     explicit SendFuturesRecipient(const QString &payFrom, const QString &addr, const QString &_label, const CAmount& _amount, const QString &_message, const int &_maturity, const int64_t &_locktime):
-        address(addr), label(_label), amount(_amount), message(_message), maturity(_maturity), locktime(_locktime), fSubtractFeeFromAmount(false), nVersion(SendCoinsRecipient::CURRENT_VERSION) {}
+        address(addr), label(_label), amount(_amount), message(_message), maturity(_maturity), locktime(_locktime), nVersion(SendCoinsRecipient::CURRENT_VERSION) {}
 
     // If from an unauthenticated payment request, this is used for storing
     // the addresses, e.g. address-A<br />address-B<br />address-C.
@@ -130,8 +135,6 @@ public:
     PaymentRequestPlus paymentRequest;
     // Empty if no authentication or invalid signature/cert/etc.
     QString authenticatedMerchant;
-
-    bool fSubtractFeeFromAmount; // memory only
 
     static const int CURRENT_VERSION = 1;
     int nVersion;

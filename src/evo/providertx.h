@@ -12,6 +12,7 @@
 
 #include <base58.h>
 #include <netaddress.h>
+#include <key_io.h>
 #include <pubkey.h>
 #include <univalue.h>
 
@@ -253,8 +254,8 @@ public:
 	bool updatableByDestination = false; // true to allow some information of this transaction to be change by lockOutput address
 	uint16_t exChainType = 0; // external chain type. each 15 bit unsign number will be map to a external chain. i.e 0 for btc
 	CScript externalPayoutScript;
-    uint256 externalTxid;
-    uint16_t externalConfirmations = 0;
+  uint256 externalTxid;
+  uint16_t externalConfirmations = 0;
 	uint256 inputsHash; // replay protection
 
 public:
@@ -274,7 +275,7 @@ public:
 		READWRITE(externalConfirmations);
 		READWRITE(inputsHash);
 	}
-	 std::string ToString() const;
+  std::string ToString() const;
 
 	void ToJson(UniValue& obj) const
 	{

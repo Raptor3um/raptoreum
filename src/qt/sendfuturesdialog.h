@@ -6,17 +6,18 @@
 #ifndef BITCOIN_QT_SENDFUTURESDIALOG_H
 #define BITCOIN_QT_SENDFUTURESDIALOG_H
 
-#include "walletmodel.h"
+#include <qt/walletmodel.h>
 
 #include <QDialog>
 #include <QMessageBox>
+#include <QShowEvent>
 #include <QString>
 #include <QTimer>
 
 static const int MAX_FUTURES_POPUP_ENTRIES = 10;
 
+class CCoinControl;
 class ClientModel;
-class PlatformStyle;
 class SendFuturesEntry;
 class SendFuturesRecipient;
 
@@ -34,7 +35,7 @@ class SendFuturesDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit SendFuturesDialog(const PlatformStyle *platformStyle, QWidget *parent = 0);
+    explicit SendFuturesDialog(QWidget* parent = 0);
     ~SendFuturesDialog();
 
     void setClientModel(ClientModel *clientModel);
@@ -61,10 +62,10 @@ private:
     Ui::SendFuturesDialog *ui;
     ClientModel *clientModel;
     WalletModel *model;
+    std::unique_ptr<CCoinControl> m_coin_control;
     bool fNewRecipientAllowed;
     void send(QList<SendFuturesRecipient> recipients);
     bool fFeeMinimized;
-    const PlatformStyle *platformStyle;
 
     // Process WalletModel::SendFuturesReturn and generate a pair consisting
     // of a message and message flags for use in Q_EMIT message().
@@ -74,6 +75,8 @@ private:
     void updateFeeMinimizedLabel();
     // Update the passed in CCoinControl with state from the GUI
     void updateCoinControlState(CCoinControl& ctrl);
+
+    void showEvent(QShowEvent* event);
 
 private Q_SLOTS:
     void on_sendButton_clicked();

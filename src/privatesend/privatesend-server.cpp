@@ -461,7 +461,7 @@ void CPrivateSendServer::ConsumeCollateral(CConnman& connman, const CTransaction
 
 bool CPrivateSendServer::HasTimedOut()
 {
-    if (!fMasternodeMode) return false;
+    if (!fSmartnodeMode) return false;
 
     if (nState == POOL_STATE_IDLE) return false;
 
@@ -870,7 +870,7 @@ void CPrivateSendServer::SetState(PoolState nStateNew)
 
 void CPrivateSendServer::DoMaintenance(CConnman& connman)
 {
-    if (!fSmartnodeMode) return; // only run on masternodes
+    if (!fSmartnodeMode) return; // only run on smartnodes
 
     if (!smartnodeSync.IsBlockchainSynced() || ShutdownRequested()) return;
 

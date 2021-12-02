@@ -12,9 +12,9 @@
 #ifndef SRC_FOUNDER_PAYMENT_H_
 #define SRC_FOUNDER_PAYMENT_H_
 #include <string>
-#include "amount.h"
-#include "primitives/transaction.h"
-#include "script/standard.h"
+#include <amount.h>
+#include <primitives/transaction.h>
+#include <script/standard.h>
 #include <limits.h>
 using namespace std;
 

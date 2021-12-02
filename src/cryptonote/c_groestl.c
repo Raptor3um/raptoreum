@@ -8,8 +8,8 @@
  *
  */
 
-#include "c_groestl.h"
-#include "groestl_tables.h"
+#include <cryptonote/c_groestl.h>
+#include <cryptonote/groestl_tables.h>
 
 #define P_TYPE 0
 #define Q_TYPE 1

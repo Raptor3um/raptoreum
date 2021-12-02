@@ -88,7 +88,6 @@ public:
     void UpdateSubsidyAndDiffParams(int nMinimumDifficultyBlocks, int nHighSubsidyBlocks, int nHighSubsidyFactor);
     void UpdateLLMQChainLocks(Consensus::LLMQType llmqType);
     void UpdateLLMQParams(size_t totalMnCount, int height, bool lowLLMQParams = false);
-    void UpdateLLMQDevnetParams(int size, int threshold);
     int PoolMinParticipants() const { return nPoolMinParticipants; }
     int PoolNewMinParticipants() const { return nPoolNewMinParticipants; }
     int PoolMaxParticipants() const { return nPoolMaxParticipants; }
@@ -177,12 +176,5 @@ void UpdateDevnetSubsidyAndDiffParams(int nMinimumDifficultyBlocks, int nHighSub
 void UpdateDevnetLLMQChainLocks(Consensus::LLMQType llmqType);
 
 void UpdateLLMQParams(size_t totalMnCount, int height, bool lowLLMQParams = false);
-
-void UpdateLLMQTestParams(int size, int threshold);
-
-/**
- * Allows modifying parameters of the devnet LLMQ
- */
-void UpdateLLMQDevnetParams(int size, int threshold);
 
 #endif // BITCOIN_CHAINPARAMS_H

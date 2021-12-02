@@ -395,7 +395,7 @@
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <location filename="../dash.cpp" line="+556"/>
+        <location filename="../raptoreum.cpp" line="+556"/>
         <source>A fatal error occurred. Dash Core can no longer continue safely and will quit.</source>
         <translation>A fatal error occurred. Dash Core can no longer continue safely and will quit.</translation>
     </message>
@@ -1456,7 +1456,7 @@
 <context>
     <name>MasternodeList</name>
     <message>
-        <location filename="../forms/masternodelist.ui" line="+14"/>
+        <location filename="../forms/smartnodelist.ui" line="+14"/>
         <source>Form</source>
         <translation>Form</translation>
     </message>
@@ -1546,7 +1546,7 @@
         <translation>Voting Address</translation>
     </message>
     <message>
-        <location filename="../masternodelist.cpp" line="+86"/>
+        <location filename="../smartnodelist.cpp" line="+86"/>
         <source>Copy ProTx Hash</source>
         <translation>Copy ProTx Hash</translation>
     </message>
@@ -2548,7 +2548,7 @@ https://www.transifex.com/projects/p/dash/</translation>
 <context>
     <name>QObject</name>
     <message>
-        <location filename="../dash.cpp" line="+272"/>
+        <location filename="../raptoreum.cpp" line="+272"/>
         <source>%1 didn&apos;t yet exit safely...</source>
         <translation>%1 didn&apos;t yet exit safely...</translation>
     </message>
@@ -2696,7 +2696,7 @@ https://www.transifex.com/projects/p/dash/</translation>
 <context>
     <name>QObject::QObject</name>
     <message>
-        <location filename="../dash.cpp" line="-176"/>
+        <location filename="../raptoreum.cpp" line="-176"/>
         <source>Error: Specified data directory &quot;%1&quot; does not exist.</source>
         <translation>Error: Specified data directory &quot;%1&quot; does not exist.</translation>
     </message>
@@ -5005,7 +5005,7 @@ https://www.transifex.com/projects/p/dash/</translation>
 <context>
     <name>dash-core</name>
     <message>
-        <location filename="../dashstrings.cpp" line="+40"/>
+        <location filename="../raptoreumstrings.cpp" line="+40"/>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
         <translation>Bind to given address and always listen on it. Use [host]:port notation for IPv6</translation>
     </message>

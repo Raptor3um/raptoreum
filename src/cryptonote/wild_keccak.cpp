@@ -8,7 +8,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 
-#include "wild_keccak.h"
+#include <cryptonote/wild_keccak.h>
 namespace crypto
 {
 

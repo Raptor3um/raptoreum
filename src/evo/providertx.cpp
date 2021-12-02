@@ -7,7 +7,7 @@
 #include <evo/providertx.h>
 #include <evo/specialtx.h>
 
-#include <base58.h>
+#include <key_io.h>
 #include <chainparams.h>
 #include <clientversion.h>
 #include <core_io.h>

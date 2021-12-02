@@ -14,7 +14,10 @@
 #include <qt/qvalidatedlineedit.h>
 #include <qt/walletmodel.h>
 
+#include <base58.h>
+#include <chainparams.h>
 #include <primitives/transaction.h>
+#include <key_io.h>
 #include <init.h>
 #include <policy/policy.h>
 #include <protocol.h>
@@ -1245,7 +1248,7 @@ void loadStyleSheet(QWidget* widget, bool fForceUpdate)
 
         std::vector<QString> vecFiles;
         // If light/dark theme is used load general styles first
-        if (dashThemeActive()) {
+        if (raptoreumThemeActive()) {
             vecFiles.push_back(pathToFile("general"));
         }
         vecFiles.push_back(pathToFile(getActiveTheme()));
@@ -1779,7 +1782,7 @@ QString getActiveTheme()
     return settings.value("theme", defaultTheme).toString();
 }
 
-bool dashThemeActive()
+bool raptoreumThemeActive()
 {
     QSettings settings;
     QString theme = settings.value("theme", "").toString();
@@ -1798,7 +1801,7 @@ void disableMacFocusRect(const QWidget* w)
 #ifdef Q_OS_MAC
     for (const auto& c : w->findChildren<QWidget*>()) {
         if (c->testAttribute(Qt::WA_MacShowFocusRect)) {
-            c->setAttribute(Qt::WA_MacShowFocusRect, !dashThemeActive());
+            c->setAttribute(Qt::WA_MacShowFocusRect, !raptoreumThemeActive());
             setRectsDisabled.emplace(c);
         }
     }
@@ -1812,7 +1815,7 @@ void updateMacFocusRects()
     auto it = setRectsDisabled.begin();
     while (it != setRectsDisabled.end()) {
         if (allWidgets.contains(*it)) {
-            (*it)->setAttribute(Qt::WA_MacShowFocusRect, !dashThemeActive());
+            (*it)->setAttribute(Qt::WA_MacShowFocusRect, !raptoreumThemeActive());
             ++it;
         } else {
             it = setRectsDisabled.erase(it);
@@ -1971,6 +1974,118 @@ void ClickableLabel::mouseReleaseEvent(QMouseEvent *event)
 void ClickableProgressBar::mouseReleaseEvent(QMouseEvent *event)
 {
     Q_EMIT clicked(event->pos());
+}
+
+// Futures
+
+bool parseBitcoinURI(const QUrl &uri, SendFuturesRecipient *out)
+{
+  // return if URI is not valid or is no dash: URI
+  if(!uri.isValid() || uri.scheme() != QString("raptoreum"))
+    return false;
+
+  SendFuturesRecipient rv;
+  rv.address = uri.path();
+  // Trim any following forward slash which may have been added by the OS
+  if(rv.address.endsWith("/"))
+  {
+    rv.address.truncate(rv.address.length() - 1);
+  }
+  rv.amount = 0;
+
+#if QT_VERSION < 0x050000
+  QList<QPair<QString, QString> > items = uri.queryItems();
+#else
+  QUrlQuery uriQuery(uri);
+  QList<QPair<QString, QString> > items = uriQuery.queryItems();
+#endif
+
+  for (QList<QPair<QString, QString> >::iterator i = items.begin(); i != items.end(); i++)
+  {
+    bool fShouldReturnFalse = false;
+    if(i->first.startsWith("req-"))
+    {
+      i->first.remove(0, 4);
+      fShouldReturnFalse = true;
+    }
+
+    if(i->first == "label")
+    {
+      rv.label = i->second;
+      fShouldReturnFalse = false;
+    }
+    if(i->first == "IS")
+    {
+      // we simply ignore IS
+      fShouldReturnFalse = false;
+    }
+    if(i->first == "message")
+    {
+      rv.message = i->second;
+      fShouldReturnFalse = false;
+    }
+    else if(i->first == "amount")
+    {
+      if(!i->second.isEmpty())
+      {
+        if(!BitcoinUnits::parse(BitcoinUnits::RTM, i->second, &rv.amount))
+        {
+          return false;
+        }
+      }
+      fShouldReturnFalse = false;
+    }
+
+    if (fShouldReturnFalse)
+      return false;
+  }
+  if(out)
+  {
+    *out = rv;
+  }
+  return true;
+}
+
+bool parseBitcoinURI(QString uri, SendFuturesRecipient *out)
+{
+  // Convert raptoreum:// to raptoreum:
+  //
+  //    Cannot handle this later, because raptoreum:// will cause Qt to see the part after // as host,
+  //    which will lower-case it (and thus invalidate the address).
+  if(uri.startsWith("raptoreum://", Qt::CaseInsensitive))
+  {
+    uri.replace(0, 7, "raptoreum:");
+  }
+  QUrl uriInstance(uri);
+  return parseBitcoinURI(uriInstance, out);
+}
+
+QString formatBitcoinURI(const SendFuturesRecipient &info)
+{
+  QString ret = QString("raptoreum:%1").arg(info.address);
+  int paramCount = 0;
+
+  if(info.amount)
+  {
+    ret += QString("?amount=%1").arg(BitcoinUnits::format(BitcoinUnits::RTM, info.amount, false, BitcoinUnits::separatorNever));
+    paramCount++;
+  }
+
+  if(!info.label.isEmpty())
+  {
+    QString lbl(QUrl::toPercentEncoding(info.label));
+    ret += QString("%1label=%2").arg(paramCount == 0 ? "?" : "&").arg(lbl);
+    paramCount++;
+  }
+
+  if(!info.message.isEmpty())
+  {
+    QString msg(QUrl::toPercentEncoding(info.message));
+    ret += QString("%1message=%2").arg(paramCount == 0 ? "?" : "&").arg(msg);
+    paramCount++;
+  }
+
+  return ret;
 }
 
 } // namespace GUIUtil

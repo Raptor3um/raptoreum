@@ -238,7 +238,7 @@ void CSigSharesManager::ProcessMessage(CNode* pfrom, const std::string& strComma
         return;
     }
 
-    if (sporkManager.IsSporkActive(SPORK_21_QUORUM_ALL_CONNECTED)) {
+    if (sporkManager.IsSporkActive(SPORK_23_QUORUM_ALL_CONNECTED)) {
         if (strCommand == NetMsgType::QSIGSHARE) {
             std::vector<CSigShare> sigShares;
             vRecv >> sigShares;

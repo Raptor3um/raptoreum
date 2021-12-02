@@ -24,11 +24,13 @@
 #include <primitives/transaction.h>
 #include <script/standard.h>
 #include <timedata.h>
+#include <txmempool.h>
 #include <util.h>
 #include <utilmoneystr.h>
 #include <smartnode/smartnode-payments.h>
 #include <smartnode/smartnode-sync.h>
 #include <validationinterface.h>
+#include <wallet/wallet.h>
 
 #include <evo/specialtx.h>
 #include <evo/cbtx.h>
@@ -228,10 +230,10 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
 
     // Update coinbase transaction with additional info about smartnode and governance payments,
     // get some info back to pass to getblocktemplate
-    FillBlockPayments(coinbaseTx, nHeight, mintReward, pblocktemplate->voutSmartnodePayments, pblocktemplate->voutSuperblockPayments, nFees, nSpecialTxFees);
+    FillBlockPayments(coinbaseTx, nHeight, blockReward, pblocktemplate->voutSmartnodePayments, pblocktemplate->voutSuperblockPayments, nFees, nSpecialTxFees);
     FounderPayment founderPayment = chainparams.GetConsensus().nFounderPayment;
-	founderPayment.FillFounderPayment(coinbaseTx, nHeight, mintReward, pblock->txoutFounder);
-    pblock->vtx[0] = MakeTransactionRef(std::move(coinbaseTx));
+    founderPayment.FillFounderPayment(coinbaseTx, nHeight, blockReward, pblock->txoutFounder);
+ 	  pblock->vtx[0] = MakeTransactionRef(std::move(coinbaseTx));
     pblocktemplate->vTxFees[0] = -nFees;
     pblocktemplate->vSpecialTxFees[0] = -nSpecialTxFees;
 
@@ -531,15 +533,6 @@ static bool ProcessBlockFound(const CBlock* pblock, const CChainParams& chainpar
 }
 
 CWallet *GetFirstWallet() {
-#ifdef ENABLE_WALLET
-    while(vpwallets.size() == 0){
-        MilliSleep(100);
-
-    }
-    if (vpwallets.size() == 0)
-        return(NULL);
-    return(vpwallets[0]);
-#endif
     return(NULL);
 }
 
