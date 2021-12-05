@@ -16,6 +16,8 @@
 #include "evo/providertx.h"
 #include "evo/specialtx.h"
 
+#include "utilmoneystr.h"
+
 #include <stdint.h>
 
 
@@ -113,71 +115,63 @@ void TransactionRecord::getFutureTxStatus(const CWalletTx &wtx, CFutureTx &ftx)
 QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *wallet, const CWalletTx &wtx)
 {
     QList<TransactionRecord> parts;
+    isminefilter creditMineTypes = 0;
+    isminefilter debitMineTypes = 0;
+
     int64_t nTime = wtx.GetTxTime();
-    CAmount nCredit = wtx.GetCredit(ISMINE_ALL);
-    CAmount nDebit = wtx.GetDebit(ISMINE_ALL);
+    CAmount nCredit = wtx.GetCredit(ISMINE_ALL, &creditMineTypes);
+    CAmount nDebit = wtx.GetDebit(ISMINE_ALL, &debitMineTypes);
     CAmount nNet = nCredit - nDebit;
+    CAmount nTxFee = nDebit - wtx.tx->GetValueOut();
     uint256 hash = wtx.GetHash();
+    bool isFuture = wtx.tx->nType == TRANSACTION_FUTURE;
+
     std::map<std::string, std::string> mapValue = wtx.mapValue;
 
-    if (nNet > 0 || wtx.IsCoinBase())
+    // Combinations of transactions:
+    // NB: This treats all watched addresses like a single, other wallet
+
+    // A/B: Generated:
+    // A: coinbase -> self    Generated
+    // B: coinbase -> watched Generated (watched)
+
+    // C/D: SendToSelf, PrivateSend*
+    // C: self    -> self     Send to self
+    // D: watched -> watched  Send to self (watched)
+
+    // E/F: SendToAddress, SendToOther, watched: ReceiveWithAddress, RecvFromOther + FutureSend, FutureReceive
+    // These create one or two records (one normal, possibly one watched):
+    // E: self     -> other   Send from wallet to external
+    // F: self     -> watched Send from wallet to watched external (and watched receive)
+
+    // G/H: SendToAddress, SendToOther, watched: ReceiveWithAddress, RecvFromOther + FutureSend, FutureReceive
+    // These create one or two records (one normal, possibly one watched):
+    // G: other    -> self    Send from watched to wallet no change
+    // H: watched  -> self    Send from watched to wallet with change
+
+    // LogPrintf("TransactionRecord::%s TxId: %s debitMineTypes: %02X, creditMineTypes: %02X, debit: %s, credit: %s, ValueOut: %s, TxFee: %s, nType: %d\n",
+    //         __func__, hash.ToString(), debitMineTypes, creditMineTypes, FormatMoney(nDebit), FormatMoney(nCredit), FormatMoney(wtx.tx->GetValueOut()), FormatMoney(nTxFee), wtx.tx->nType);
+
+    for (unsigned int vOutIdx = 0; vOutIdx < wtx.tx->vout.size(); ++vOutIdx)
     {
-        //
-        // Credit
-        //
-        for(unsigned int i = 0; i < wtx.tx->vout.size(); i++)
-        {
-            const CTxOut& txout = wtx.tx->vout[i];
-            isminetype mine = wallet->IsMine(txout);
-            if(mine)
-            {
-                TransactionRecord sub(hash, nTime);
-                CTxDestination address;
-                sub.idx = i; // vout index
-                sub.credit = txout.nValue;
-                sub.involvesWatchAddress = mine & ISMINE_WATCH_ONLY;
-                if (ExtractDestination(txout.scriptPubKey, address) && IsMine(*wallet, address))
-                {
-                    // Received by Raptoreum Address
-                    sub.type = TransactionRecord::RecvWithAddress;
-                    sub.strAddress = CBitcoinAddress(address).ToString();
-                }
-                else
-                {
-                    // Received by IP connection (deprecated features), or a multisignature or other non-simple transaction
-                    sub.type = TransactionRecord::RecvFromOther;
-                    sub.strAddress = mapValue["from"];
-                }
-                if (wtx.IsCoinBase())
-                {
-                    // Generated
-                    sub.type = TransactionRecord::Generated;
-                }
+        const CTxOut& txout = wtx.tx->vout[vOutIdx];
 
-                if(wtx.tx->nType == TRANSACTION_FUTURE)
-                {
-                    // Future TX Received
-                    
-                    if (ExtractDestination(wtx.tx->vout[1].scriptPubKey, address))
-                    {
-                        // Received by Raptoreum Address
-                        sub.type = TransactionRecord::FutureReceive;
-                        sub.strAddress = CBitcoinAddress(address).ToString();
-                    }
-                } 
+        isminetype mine = wallet->IsMine(txout);
 
-                sub.address.SetString(sub.strAddress);
-                sub.txDest = sub.address.Get();
-                parts.append(sub);
-            }
-        }
-    }
+        TransactionRecord sub(hash, nTime);
+        CTxDestination address;
+        bool validDestination = ExtractDestination(txout.scriptPubKey, address);
+        sub.idx = vOutIdx;
+        sub.credit = txout.nValue;
+        sub.strAddress = validDestination ? CBitcoinAddress(address).ToString() : mapValue["from"];
+        sub.address.SetString(sub.strAddress);
+        sub.txDest = sub.address.Get();
 
-    else
-    {
+        // Check if all inputs are from wallet and if output are to wallet
         bool fAllFromMeDenom = true;
         int nFromMe = 0;
-        bool involvesWatchAddress = false;
+        bool inputInvolvesWatchAddress = false;
+        bool outputInvolvesWatchAddress = false;
         isminetype fAllFromMe = ISMINE_SPENDABLE;
         for (const CTxIn& txin : wtx.tx->vin)
         {
@@ -186,7 +180,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                 nFromMe++;
             }
             isminetype mine = wallet->IsMine(txin);
-            if(mine & ISMINE_WATCH_ONLY) involvesWatchAddress = true;
+            if(mine & ISMINE_WATCH_ONLY) inputInvolvesWatchAddress = true;
             if(fAllFromMe > mine) fAllFromMe = mine;
         }
 
@@ -199,168 +193,133 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                 nToMe++;
             }
             isminetype mine = wallet->IsMine(txout);
-            if(mine & ISMINE_WATCH_ONLY) involvesWatchAddress = true;
+            if(mine & ISMINE_WATCH_ONLY) outputInvolvesWatchAddress = true;
             if(fAllToMe > mine) fAllToMe = mine;
         }
 
-        if(fAllFromMeDenom && fAllToMeDenom && nFromMe * nToMe) {
-            parts.append(TransactionRecord(hash, nTime, TransactionRecord::PrivateSendDenominate, "", -nDebit, nCredit));
-            parts.last().involvesWatchAddress = false;   // maybe pass to TransactionRecord as constructor argument
-        }
-        else if (fAllFromMe && fAllToMe)
+        // LogPrintf("TransactionRecord::%s TxId: %s, vOutIdx: %d, CoinBase: %d, AllFromMe: %d, AllToMe: %d, inputWatch: %d, outputWatch: %d\n",
+        //         __func__, hash.ToString(), vOutIdx, wtx.IsCoinBase(), fAllFromMe, fAllToMe, inputInvolvesWatchAddress, outputInvolvesWatchAddress);
+
+        // A/B Generated:
+        // A: coinbase -> self    Generated
+        // B: coinbase -> watched Generated (watched)
+        if (wtx.IsCoinBase() && mine)
         {
-            // Payment to self
-            // TODO: this section still not accurate but covers most cases,
-            // might need some additional work however
+            sub.type = TransactionRecord::Generated;
+            sub.involvesWatchAddress = creditMineTypes & ISMINE_WATCH_ONLY;
+            parts.append(sub);
+            continue;
+        }
 
-            TransactionRecord sub(hash, nTime);
-            // Payment to self by default
-            sub.type = TransactionRecord::SendToSelf;
-            sub.strAddress = "";
-            CTxDestination address;
+        // C/D: SendToSelf, PrivateSend*
+        // C: self    -> self     Send to self
+        // D: watched -> watched  Send to self (watched)
+        if (fAllFromMe && fAllToMe && (debitMineTypes == creditMineTypes))
+        {
+            CAmount nChange = wtx.GetChange();
+            sub.debit = -(nDebit - nChange);
+            sub.credit = nCredit - nChange;
+            sub.involvesWatchAddress = inputInvolvesWatchAddress;
 
-            if(mapValue["DS"] == "1")
+            if (fAllFromMeDenom && fAllToMeDenom && nFromMe * nToMe)
+            {
+                sub.type = TransactionRecord::PrivateSendDenominate;
+                sub.debit = -nDebit;
+                sub.credit = nCredit;
+                parts.append(sub);
+                break; // Only report first of the batch
+            }
+
+            if (mapValue["DS"] == "1")
             {
                 sub.type = TransactionRecord::PrivateSend;
-                
-                if (ExtractDestination(wtx.tx->vout[0].scriptPubKey, address))
-                {
-                    // Sent to Raptoreum Address
-                    sub.strAddress = CBitcoinAddress(address).ToString();
-                }
-                else
-                {
-                    // Sent to IP, or other non-address transaction like OP_EVAL
-                    sub.strAddress = mapValue["to"];
-                }
+                CAmount nChange = wtx.GetChange();
+                parts.append(sub);
+                break; // Only report first of the batch
             } 
-            else
+
+
+            sub.type = TransactionRecord::SendToSelf;
+
+            sub.idx = parts.size();
+            if (wtx.tx->vin.size() == 1 && wtx.tx->vout.size() == 1
+                && CPrivateSend::IsCollateralAmount(nDebit)
+                && CPrivateSend::IsCollateralAmount(nCredit)
+                && CPrivateSend::IsCollateralAmount(-nNet))
             {
-                sub.idx = parts.size();
-                if(wtx.tx->vin.size() == 1 && wtx.tx->vout.size() == 1
-                    && CPrivateSend::IsCollateralAmount(nDebit)
-                    && CPrivateSend::IsCollateralAmount(nCredit)
-                    && CPrivateSend::IsCollateralAmount(-nNet))
-                {
-                    sub.type = TransactionRecord::PrivateSendCollateralPayment;
-                } 
-                else 
-                {
-                    for (const auto& txout : wtx.tx->vout) {
-                        if (txout.nValue == CPrivateSend::GetMaxCollateralAmount()) {
-                            sub.type = TransactionRecord::PrivateSendMakeCollaterals;
-                            continue; // Keep looking, could be a part of PrivateSendCreateDenominations
-                        } else if (CPrivateSend::IsDenominatedAmount(txout.nValue)) {
-                            sub.type = TransactionRecord::PrivateSendCreateDenominations;
-                            break; // Done, it's definitely a tx creating mixing denoms, no need to look any further
-                        }
+                sub.type = TransactionRecord::PrivateSendCollateralPayment;
+            } 
+            else 
+            {
+                for (const auto& txout : wtx.tx->vout) {
+                    if (txout.nValue == CPrivateSend::GetMaxCollateralAmount()) {
+                        sub.type = TransactionRecord::PrivateSendMakeCollaterals;
+                        continue; // Keep looking, could be a part of PrivateSendCreateDenominations
+                    } else if (CPrivateSend::IsDenominatedAmount(txout.nValue)) {
+                        sub.type = TransactionRecord::PrivateSendCreateDenominations;
+                        break; // Done, it's definitely a tx creating mixing denoms, no need to look any further
                     }
                 }
             }
-
-            if(wtx.tx->nType == TRANSACTION_FUTURE)
-            {
-                sub.type = TransactionRecord::FutureSend;
-                if (ExtractDestination(wtx.tx->vout[0].scriptPubKey, address))
-                {
-                    // Sent to Raptoreum Address
-                    sub.strAddress = CBitcoinAddress(address).ToString();
-                }
-            }
-
-            CAmount nChange = wtx.GetChange();
-
-            sub.debit = -(nDebit - nChange);
-            sub.credit = nCredit - nChange;
-            sub.address.SetString(sub.strAddress);
-            sub.txDest = sub.address.Get();
             parts.append(sub);
-            parts.last().involvesWatchAddress = involvesWatchAddress;   // maybe pass to TransactionRecord as constructor argument
+            break; // Only report vout[0], consider the other outputs change
         }
-        else if (fAllFromMe)
+
+        // E/F: SendToAddress, SendToOther, watched: ReceiveWithAddress, RecvFromOther + FutureSend, FutureReceive
+        // These create one or two records (one normal, possibly one watched):
+        // E: self     -> other   Send from wallet to external
+        // F: self     -> watched Send from wallet to watched external (and watched receive)
+        if (debitMineTypes & ISMINE_SPENDABLE && !(mine & ISMINE_SPENDABLE))
         {
-            //
-            // Debit
-            //
-            CAmount nTxFee = nDebit - wtx.tx->GetValueOut();
+            // Generate one or two records - sent from wallet, received by watched:
+            sub.type = isFuture ? TransactionRecord::FutureSend : (validDestination ? TransactionRecord::SendToAddress : TransactionRecord::SendToOther);
 
-            bool fDone = false;
-            if(wtx.tx->vin.size() == 1 && wtx.tx->vout.size() == 1
-                && CPrivateSend::IsCollateralAmount(nDebit)
-                && nCredit == 0 // OP_RETURN
-                && CPrivateSend::IsCollateralAmount(-nNet))
+            // Sent from wallet:
+            sub.debit = -(txout.nValue + nTxFee);
+            nTxFee = 0; // Add fee to first output
+            sub.credit = 0;
+            parts.append(sub);
+
+            // If received by Watch, add a receive transaction on the watched side:
+            if (mine & ISMINE_WATCH_ONLY)
             {
-                TransactionRecord sub(hash, nTime);
-                sub.idx = 0;
-                sub.type = TransactionRecord::PrivateSendCollateralPayment;
-                sub.debit = -nDebit;
-                parts.append(sub);
-                fDone = true;
-            }
-
-            for (unsigned int nOut = 0; nOut < wtx.tx->vout.size() && !fDone; nOut++)
-            {
-                const CTxOut& txout = wtx.tx->vout[nOut];
-                TransactionRecord sub(hash, nTime);
-                sub.idx = nOut;
-                sub.involvesWatchAddress = involvesWatchAddress;
-
-                if(wallet->IsMine(txout))
-                {
-                    // Ignore parts sent to self, as this is usually the change
-                    // from a transaction sent back to our own address.
-                    continue;
-                }
-
-                CTxDestination address;
-                if (ExtractDestination(txout.scriptPubKey, address))
-                {
-                    // Sent to Raptoreum Address
-                    sub.type = TransactionRecord::SendToAddress;
-                    sub.strAddress = CBitcoinAddress(address).ToString();
-                }
-                else
-                {
-                    // Sent to IP, or other non-address transaction like OP_EVAL
-                    sub.type = TransactionRecord::SendToOther;
-                    sub.strAddress = mapValue["to"];
-                }
-
-                if(mapValue["DS"] == "1")
-                {
-                    sub.type = TransactionRecord::PrivateSend;
-                }
-
-                if(wtx.tx->nType == TRANSACTION_FUTURE)
-                {
-                    sub.type = TransactionRecord::FutureSend;
-                }
-
-                CAmount nValue = txout.nValue;
-                /* Add fee to first output */
-                if (nTxFee > 0)
-                {
-                    nValue += nTxFee;
-                    nTxFee = 0;
-                }
-                sub.debit = -nValue;
-
-                sub.address.SetString(sub.strAddress);
-                sub.txDest = sub.address.Get();
-
+                sub.involvesWatchAddress = true;
+                sub.type = isFuture ? TransactionRecord::FutureReceive : (validDestination ? TransactionRecord::RecvWithAddress : TransactionRecord::RecvFromOther);
+                sub.debit = 0;
+                sub.credit = txout.nValue;
                 parts.append(sub);
             }
+            continue;
         }
-        else
+
+        // G/H: SendToAddress, SendToOther, watched: ReceiveWithAddress, RecvFromOther + FutureSend, FutureReceive
+        // These create one or two records (one normal, possibly one watched):
+        // G: other    -> self    Send from watched to wallet no change
+        // H: watched  -> self    Send from watched to wallet with change
+        if (!(debitMineTypes & ISMINE_SPENDABLE) && mine & ISMINE_SPENDABLE)
         {
-            //
-            // Mixed debit transaction, can't break down payees
-            //
-            parts.append(TransactionRecord(hash, nTime, TransactionRecord::Other, "", nNet, 0));
-            parts.last().involvesWatchAddress = involvesWatchAddress;
+            // Generate one or two records - receive with wallet, sent by watched:
+            sub.involvesWatchAddress = false;
+            sub.type = isFuture ? TransactionRecord::FutureReceive : (validDestination ? TransactionRecord::RecvWithAddress : TransactionRecord::RecvFromOther);
+
+            // Received with wallet:
+            sub.credit = txout.nValue;
+            parts.append(sub);
+
+            // If sent by Watch, add a sent transaction on the watched side:
+            if (debitMineTypes & ISMINE_WATCH_ONLY)
+            {
+                sub.involvesWatchAddress = true;
+                sub.type = isFuture ? TransactionRecord::FutureSend : (validDestination ? TransactionRecord::SendToAddress : TransactionRecord::SendToOther);
+                sub.debit = -(txout.nValue + nTxFee);
+                nTxFee = 0; // Add fee to first output
+                sub.credit = 0;
+                parts.append(sub);
+            }
+            continue;
         }
+        LogPrintf("TransactionRecord::%s TxId: %s, vOutIdx: %d, Unhandled\n", __func__, hash.ToString(), vOutIdx);
     }
-
     return parts;
 }
 
