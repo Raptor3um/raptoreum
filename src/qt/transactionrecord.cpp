@@ -275,6 +275,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
             sub.type = isFuture ? TransactionRecord::FutureSend : (validDestination ? TransactionRecord::SendToAddress : TransactionRecord::SendToOther);
 
             // Sent from wallet:
+            sub.involvesWatchAddress = false;
             sub.debit = -(txout.nValue + nTxFee);
             nTxFee = 0; // Add fee to first output
             sub.credit = 0;
