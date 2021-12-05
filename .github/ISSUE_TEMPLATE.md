@@ -2,9 +2,9 @@
 
 This issue tracker is only for technical issues related to Raptoreum Core.
 
-General Raptoreum questions and/or support requests and are best directed to the [Raptoreum Reddit](https://www.reddit.com/r/raptoreum/).
+General Raptoreum questions and/or support requests and are best directed to the [Raptoreum Discord](https://discord.com/invite/2T8xG7e).
 
-To report critical security issues, email infosec@raptoreum.org and/or see the RAPTOREUM bug bounty program on [Bugcrowd](https://bugcrowd.com/raptoreumdigitalcash) instead of creating Github issues.
+To report critical security issues, DM the Core or Developer Teams instead of creating Github issues.
 
 ### Describe the issue
 
