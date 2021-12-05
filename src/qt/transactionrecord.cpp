@@ -319,7 +319,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
             }
             continue;
         }
-        LogPrintf("TransactionRecord::%s TxId: %s, vOutIdx: %d, Unhandled\n", __func__, hash.ToString(), vOutIdx);
+        //LogPrintf("TransactionRecord::%s TxId: %s, vOutIdx: %d, Unhandled\n", __func__, hash.ToString(), vOutIdx);
     }
     return parts;
 }
