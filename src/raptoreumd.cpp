@@ -90,7 +90,6 @@ static bool AppInit(int argc, char* argv[])
     try
     {
         if (!CheckDataDirOption()) {
-        {
             return InitError(strprintf("Error: Specified data directory \"%s\" does not exist.\n", gArgs.GetArg("-datadir", "")));
         }
 

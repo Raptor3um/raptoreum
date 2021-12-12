@@ -23,23 +23,22 @@
 namespace pl = std::placeholders;
 
 struct ValidationInterfaceConnections {
-    boost::signals2::scoped_connection BlockChecked;
-    boost::signals2::scoped_connection Broadcast;
-    boost::signals2::scoped_connection ChainStateFlushed;
-    boost::signals2::scoped_connection NotifyTransactionLock;
-    boost::signals2::scoped_connection NotifyChainLock;
+    boost::signals2::scoped_connection UpdatedBlockTip;
+    boost::signals2::scoped_connection SynchronousUpdatedBlockTip;
     boost::signals2::scoped_connection TransactionAddedToMempool;
     boost::signals2::scoped_connection BlockConnected;
     boost::signals2::scoped_connection BlockDisconnected;
     boost::signals2::scoped_connection TransactionRemovedFromMempool;
-    boost::signals2::scoped_connection UpdatedBlockTip;
-    boost::signals2::scoped_connection SynchronousUpdatedBlockTip;
+    boost::signals2::scoped_connection ChainStateFlushed;
+    boost::signals2::scoped_connection BlockChecked;
     boost::signals2::scoped_connection NewPoWValidBlock;
     boost::signals2::scoped_connection BlockFound;
-    boost::signals2::scoped_connection NotifyHeaderTip;
     boost::signals2::scoped_connection AcceptedBlockHeader;
-    boost::signals2::scoped_connection NotifyGovernanceObject;
+    boost::signals2::scoped_connection NotifyHeaderTip;
+    boost::signals2::scoped_connection NotifyTransactionLock;
+    boost::signals2::scoped_connection NotifyChainLock;
     boost::signals2::scoped_connection NotifyGovernanceVote;
+    boost::signals2::scoped_connection NotifyGovernanceObject;
     boost::signals2::scoped_connection NotifyInstantSendDoubleSpendAttempt;
     boost::signals2::scoped_connection NotifySmartnodeListChanged;
     boost::signals2::scoped_connection NotifyRecoveredSig;
@@ -53,7 +52,6 @@ struct MainSignalsInstance {
     boost::signals2::signal<void (const std::shared_ptr<const CBlock> &, const CBlockIndex* pindexDisconnected)> BlockDisconnected;
     boost::signals2::signal<void (const CTransactionRef &, MemPoolRemovalReason)> TransactionRemovedFromMempool;
     boost::signals2::signal<void (const CBlockLocator &)> ChainStateFlushed;
-    boost::signals2::signal<void (int64_t nBestBlockTime, CConnman* connman)> Broadcast;
     boost::signals2::signal<void (const CBlock&, const CValidationState&)> BlockChecked;
     boost::signals2::signal<void (const CBlockIndex *, const std::shared_ptr<const CBlock>&)> NewPoWValidBlock;
     boost::signals2::signal<void (const uint256 &)> BlockFound;
@@ -130,7 +128,6 @@ void RegisterSharedValidationInterface(std::shared_ptr<CValidationInterface> pwa
     conns.NotifyTransactionLock = g_signals.m_internals->NotifyTransactionLock.connect(std::bind(&CValidationInterface::NotifyTransactionLock, pwalletIn, pl::_1, pl::_2));
     conns.NotifyChainLock = g_signals.m_internals->NotifyChainLock.connect(std::bind(&CValidationInterface::NotifyChainLock, pwalletIn, pl::_1, pl::_2));
     conns.TransactionRemovedFromMempool = g_signals.m_internals->TransactionRemovedFromMempool.connect(std::bind(&CValidationInterface::TransactionRemovedFromMempool, pwalletIn, pl::_1, pl::_2));
-    conns.Broadcast = g_signals.m_internals->Broadcast.connect(std::bind(&CValidationInterface::ResendWalletTransactions, pwalletIn, pl::_1, pl::_2));
     conns.BlockChecked = g_signals.m_internals->BlockChecked.connect(std::bind(&CValidationInterface::BlockChecked, pwalletIn, pl::_1, pl::_2));
     conns.NewPoWValidBlock = g_signals.m_internals->NewPoWValidBlock.connect(std::bind(&CValidationInterface::NewPoWValidBlock, pwalletIn, pl::_1, pl::_2));
     conns.NotifyGovernanceObject = g_signals.m_internals->NotifyGovernanceObject.connect(std::bind(&CValidationInterface::NotifyGovernanceObject, pwalletIn, pl::_1));
@@ -219,10 +216,6 @@ void CMainSignals::ChainStateFlushed(const CBlockLocator &locator) {
     m_internals->m_schedulerClient.AddToProcessQueue([locator, this] {
         m_internals->ChainStateFlushed(locator);
     });
-}
-
-void CMainSignals::Broadcast(int64_t nBestBlockTime, CConnman* connman) {
-    m_internals->Broadcast(nBestBlockTime, connman);
 }
 
 void CMainSignals::BlockChecked(const CBlock& block, const CValidationState& state) {

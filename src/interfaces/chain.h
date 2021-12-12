@@ -130,11 +130,6 @@ public:
         //! information is desired).
         virtual Optional<int> findFork(const uint256& hash, Optional<int>* height) = 0;
 
-        //! Return true if block hash points to the current chain tip, or to a
-        //! possible descendant of the current chain tip that isn't currently
-        //! connected.
-        virtual bool isPotentialTip(const uint256& hash) = 0;
-
         //! Get locator for the current chain tip.
         virtual CBlockLocator getTipLocator() = 0;
 
@@ -154,11 +149,6 @@ public:
     //! Return Lock interface. Chain is locked when this is called, and
     //! unlocked when the returned interface is freed.
     virtual std::unique_ptr<Lock> lock(bool try_lock = false) = 0;
-
-    //! Return Lock interface assuming chain is already locked. This
-    //! method is temporary and is only used in a few places to avoid changing
-    //! behavior while code is transitioned to use the Chain::Lock interface.
-    virtual std::unique_ptr<Lock> assumeLocked() = 0;
 
     //! Return whether node has the block and optionally return block metadata
     //! or contents.
@@ -222,6 +212,9 @@ public:
     //! Check if p2p enabled.
     virtual bool p2pEnabled() = 0;
 
+    //! Check if the node is ready to broadcast transactions.
+    virtual bool isReadyToBroadcast() = 0;
+
     //! Check if in IBD.
     virtual bool isInitialBlockDownload() = 0;
 
@@ -252,8 +245,8 @@ public:
         virtual void TransactionRemovedFromMempool(const CTransactionRef& ptx, MemPoolRemovalReason reason) {}
         virtual void BlockConnected(const CBlock& block, const std::vector<CTransactionRef>& tx_conflicted) {}
         virtual void BlockDisconnected(const CBlock& block) {}
+        virtual void UpdatedBlockTip() {}
         virtual void ChainStateFlushed(const CBlockLocator& locator) {}
-        virtual void ResendWalletTransactions(Lock& locked_chain, int64_t best_block_time) {}
         virtual void NotifyChainLock(const CBlockIndex* pindexChainLock, const std::shared_ptr<const llmq::CChainLockSig>& clsig) {}
         virtual void NotifyTransactionLock(const CTransactionRef &tx, const std::shared_ptr<const llmq::CInstantSendLock>& islock) {}
     };
@@ -261,8 +254,10 @@ public:
     //! Register handler for notifications.
     virtual std::unique_ptr<Handler> handleNotifications(std::shared_ptr<Notifications> notifications) = 0;
 
-    //! Wait for pending notifications to be handled.
-    virtual void waitForNotifications() = 0;
+    //! Wait for pending notifications to be processed unless block hash points to the current
+    //! chain tip or to a possible descendant of the current chain tip that isn't currently
+    //! connected.
+    virtual void waitForNotificationsIfNewBlocksConnected(const uint256& old_tip) = 0;
 
     //! Register handler for RPC. Command is not copied, so reference
     //! needs to remain valid until Handler is disconnected.

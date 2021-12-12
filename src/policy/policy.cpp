@@ -151,7 +151,7 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
 
         std::vector<std::vector<unsigned char> > vSolutions;
         txnouttype whichType = Solver(prev.scriptPubKey, vSolutions);
-        if (whichType == TXX_NONSTANDARD) {
+        if (whichType == TX_NONSTANDARD) {
             return false;
         } else if(whichType == TX_SCRIPTHASH) {
             std::vector<std::vector<unsigned char> > stack;

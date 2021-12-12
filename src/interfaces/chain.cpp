@@ -38,7 +38,7 @@
 namespace interfaces {
 namespace {
 
-class LockImpl : public Chain::Lock
+class LockImpl : public Chain::Lock, public UniqueLock<RecursiveMutex>
 {
     Optional<int> getHeight() override
     {
@@ -146,13 +146,6 @@ class LockImpl : public Chain::Lock
         }
         return nullopt;
     }
-    bool isPotentialTip(const uint256& hash) override
-    {
-        LockAnnotation lock(::cs_main);
-        if (::ChainActive().Tip()->GetBlockHash() == hash) return true;
-        CBlockIndex* block = LookupBlockIndex(hash);
-        return block && block->GetAncestor(::ChainActive().Height()) == ::ChainActive().Tip();
-    }
     CBlockLocator getTipLocator() override
     {
         LockAnnotation lock(::cs_main);
@@ -177,10 +170,7 @@ class LockImpl : public Chain::Lock
         return AcceptToMemoryPool(::mempool, state, tx, nullptr /* missing inputs */,
             false /* bypass limits */, absurd_fee);
     }
-};
 
-class LockingStateImpl : public LockImpl, public UniqueLock<RecursiveMutex>
-{
     using UniqueLock::UniqueLock;
 };
 
@@ -207,16 +197,18 @@ public:
     {
         m_notifications->BlockDisconnected(*block);
     }
-    void ChainStateFlushed(const CBlockLocator& locator) override { m_notifications->ChainStateFlushed(locator); }
-    void ResendWalletTransactions(int64_t best_block_time, CConnman*) override
+    void UpdatedBlockTip(const CBlockIndex* index, const CBlockIndex* fork_index, bool is_ibd) override
     {
-        // `cs_main` is always held when this method is called, so it is safe to
-        // call `assumeLocked`. This is awkward, and the `assumeLocked` method
-        // should be able to be removed entirely if `ResendWalletTransactions`
-        // is replaced by a wallet timer as suggested in
-        // https://github.com/bitcoin/bitcoin/issues/15619
-        auto locked_chain = m_chain.assumeLocked();
-        m_notifications->ResendWalletTransactions(*locked_chain, best_block_time);
+        m_notifications->UpdatedBlockTip();
+    }
+    void ChainStateFlushed(const CBlockLocator& locator) override { m_notifications->ChainStateFlushed(locator); }
+    void NotifyChainLock(const CBlockIndex* pindexChainLock, const std::shared_ptr<const llmq::CChainLockSig>& clsig) override
+    {
+        m_notifications->NotifyChainLock(pindexChainLock, clsig);
+    }
+    void NotifyTransactionLock(const CTransactionRef &tx, const std::shared_ptr<const llmq::CInstantSendLock>& islock) override
+    {
+        m_notifications->NotifyTransactionLock(tx, islock);
     }
     std::shared_ptr<Chain::Notifications> m_notifications;
 };
@@ -238,7 +230,7 @@ public:
         }
     }
     std::shared_ptr<NotificationsProxy> m_proxy;
-}
+};
 
 class RpcHandlerImpl : public Handler
 {
@@ -284,13 +276,12 @@ class ChainImpl : public Chain
 public:
     std::unique_ptr<Chain::Lock> lock(bool try_lock) override
     {
-        auto result = MakeUnique<LockingStateImpl>(::cs_main, "cs_main", __FILE__, __LINE__, try_lock);
+        auto result = MakeUnique<LockImpl>(::cs_main, "cs_main", __FILE__, __LINE__, try_lock);
         if (try_lock && result && !*result) return {};
         // std::move necessary on some compilers due to conversion from
-        // LockingStateImpl to Lock pointer
+        // LockImpl to Lock pointer
         return std::move(result);
     }
-    std::unique_ptr<Chain::Lock> assumeLocked() override { return MakeUnique<LockImpl>(); }
     bool findBlock(const uint256& hash, CBlock* block, int64_t* time, int64_t* time_max) override
     {
         CBlockIndex* index;
@@ -365,6 +356,7 @@ public:
     CAmount maxTxFee() override { return ::maxTxFee; }
     bool getPruneMode() override { return ::fPruneMode; }
     bool p2pEnabled() override { return g_connman != nullptr; }
+    bool isReadyToBroadcast() override { return !::fImporting && !::fReindex && !::ChainstateActive().IsInitialBlockDownload(); }
     bool isInitialBlockDownload() override { return ::ChainstateActive().IsInitialBlockDownload(); }
     bool shutdownRequested() override { return ShutdownRequested(); }
     int64_t getAdjustedTime() override { return GetAdjustedTime(); }
@@ -379,7 +371,16 @@ public:
     {
         return MakeUnique<NotificationsHandlerImpl>(std::move(notifications));
     }
-    void waitForNotifications() override { SyncWithValidationInterfaceQueue(); }
+    void waitForNotificationsIfNewBlocksConnected(const uint256& old_tip) override
+    {
+        if (!old_tip.IsNull()) {
+            LOCK(::cs_main);
+            if (old_tip == ::ChainActive().Tip()->GetBlockHash()) return;
+            CBlockIndex* block = LookupBlockIndex(old_tip);
+            if (block && block->GetAncestor(::ChainActive().Height()) == ::ChainActive().Tip()) return;
+        }
+        SyncWithValidationInterfaceQueue();
+    }
     std::unique_ptr<Handler> handleRpc(const CRPCCommand& command) override
     {
         return MakeUnique<RpcHandlerImpl>(command);
