@@ -5748,12 +5748,6 @@ CKeyPool::CKeyPool(const CPubKey& vchPubKeyIn, bool fInternalIn)
     fInternal = fInternalIn;
 }
 
-CWalletKey::CWalletKey(int64_t nExpires)
-{
-    nTimeCreated = (nExpires ? GetTime() : 0);
-    nTimeExpires = nExpires;
-}
-
 int64_t CWalletTx::GetConfirmationTime() const
 {
     int nResult;
