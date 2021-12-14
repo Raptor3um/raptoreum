@@ -13,6 +13,10 @@
 class WalletModel;
 class PlatformStyle;
 
+QT_BEGIN_NAMESPACE
+class QTimer;
+QT_END_NAMESPACE
+
 namespace Ui {
     class SendFuturesEntry;
 }
@@ -63,12 +67,14 @@ private Q_SLOTS:
     void on_pasteButton_clicked();
     void updateDisplayUnit();
     void updateLockTimeField(const QDateTime &dateTime);
+    void updateFutureDateTime();
     void setupPayFrom();
 
 private:
     SendFuturesRecipient recipient;
     Ui::SendFuturesEntry *ui;
     WalletModel *model;
+    QTimer *timer;
     const PlatformStyle *platformStyle;
 
     bool updateLabel(const QString &address);
