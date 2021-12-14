@@ -23,6 +23,7 @@
 #include <QDateTime>
 #include <QStandardItemModel>
 #include <QTableView>
+#include <QTimer>
 
 SendFuturesEntry::SendFuturesEntry(const PlatformStyle *_platformStyle, QWidget *parent) :
     QStackedWidget(parent),
@@ -76,6 +77,11 @@ SendFuturesEntry::SendFuturesEntry(const PlatformStyle *_platformStyle, QWidget 
     connect(ui->payFrom, SIGNAL(currentTextChanged(const QString &)), this, SIGNAL(payFromChanged(const QString &)));
     //Connect signals for FTX maturity fields
     connect (ui->ftxLockTime, SIGNAL (dateTimeChanged (QDateTime)), this, SLOT (updateLockTimeField (QDateTime)));
+
+    //Set a timer and keep future from and datetime fields updated.
+    timer = new QTimer(this);
+    connect(timer, SIGNAL(timeout()), this, SLOT(updateFutureDateTime()));
+    timer->start(1000);
 }
 
 SendFuturesEntry::~SendFuturesEntry()
@@ -325,6 +331,21 @@ void SendFuturesEntry::updateLockTimeField(const QDateTime & dateTime)
     
     //set the seconds in this field for handling
     ui->ftxLockTimeField->setText(int_string);
+}
+
+//Update Future tx maturity time form field as signaled by timer, until the user changes the date.
+void SendFuturesEntry::updateFutureDateTime()
+{
+    QDateTime defaultDate = QDateTime::currentDateTime();
+    defaultDate = defaultDate.addDays(1);
+    int setTime = ui->ftxLockTimeField->text().toInt();
+    float setTimeEst = setTime*0.01;
+
+    if(ceil(setTimeEst)*100 == 86400) {
+        ui->ftxLockTime->setDateTime( defaultDate );
+    }
+
+    return;
 }
 
 //Future coin control: update combobox
