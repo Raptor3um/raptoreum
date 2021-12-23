@@ -1,0 +1,38 @@
+## Docker Compose file Raptoreum container
+version: '3.7'
+
+services:
+   rtm-mainnet-node:
+      container_name: rtm-mainnet-node
+      image: rtm-mainnet:${MAINNET_VER}
+      build:
+         context: .
+         dockerfile: mainnet.dockerfile
+         args:
+            VER: ${MAINNET_VER}
+      command: /app/entrypoint.sh raptoreumd
+      environment:
+         # Enable the following line to remove existing chain data and re-bootstrap:
+         #reset_chain: 1
+
+         # Enable the following line to delete any existing bootstrap.zip file (to force a fresh download):
+         #reset_bootstrap: 1
+
+         config_template_file: /app/mainnet-raptoreum.conf
+
+         bootstrap_url: https://github.com/Raptor3um/raptoreum/releases/download/${MAINNET_VER}/bootstrap.zip
+
+         # If you have already downloaded the bootstrap file, it will be available here for quick reload:
+         bootstrap_file: /app/.raptoreumcore/bootstrap.zip
+
+         # TOR Configuration:
+#        TOR_CONTROL_HOST:
+#        TOR_PROXY_PORT:
+#        TOR_CONTROL_PORT:
+#        TOR_IP:
+
+      volumes:
+      - rtm-mainnet-data:/app/.raptoreumcore
+
+volumes:
+   rtm-mainnet-data:
