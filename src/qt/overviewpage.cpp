@@ -1,5 +1,6 @@
 // Copyright (c) 2011-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2021 The Dash Core developers
+// Copyright (c) 2014-2020 The Dash Core developers
+// Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -34,7 +35,7 @@ class TxViewDelegate : public QAbstractItemDelegate
     Q_OBJECT
 public:
     explicit TxViewDelegate(QObject* parent = nullptr) :
-        QAbstractItemDelegate(), unit(BitcoinUnits::DASH)
+        QAbstractItemDelegate(), unit(BitcoinUnits::RTM)
     {
 
     }
@@ -196,7 +197,7 @@ void OverviewPage::setBalance(const interfaces::WalletBalances& balances)
     ui->labelWatchImmature->setText(BitcoinUnits::floorHtmlWithUnit(unit, balances.immature_watch_only_balance, false, BitcoinUnits::separatorAlways));
     ui->labelWatchTotal->setText(BitcoinUnits::floorHtmlWithUnit(unit, balances.watch_only_balance + balances.unconfirmed_watch_only_balance + balances.immature_watch_only_balance, false, BitcoinUnits::separatorAlways));
 
-    // only show immature (newly mined) balance if it's non-zero, so as not to complicate things
+    // only show immature (newly mined) balance if it's non-zero or in UI debug mode, so as not to complicate things
     // for the non-mining users
     bool fDebugUI = gArgs.GetBoolArg("-debug-ui", false);
     bool showImmature = fDebugUI || balances.immature_balance != 0;
@@ -255,7 +256,7 @@ void OverviewPage::setWalletModel(WalletModel *model)
     this->walletModel = model;
     if(model && model->getOptionsModel())
     {
-        // update the display unit, to not use the default ("DASH")
+        // update the display unit, to not use the default ("RTM")
         updateDisplayUnit();
         // Keep up to date with wallet
         interfaces::Wallet& wallet = model->wallet();
@@ -319,7 +320,7 @@ void OverviewPage::showOutOfSyncWarning(bool fShow)
 
 void OverviewPage::updateCoinJoinProgress()
 {
-    if (!walletModel || !clientModel || clientModel->node().shutdownRequested() || !clientModel->masternodeSync().isBlockchainSynced()) return;
+    if (!walletModel || !clientModel || clientModel->node().shutdownRequested() || !clientModel->smartnodeSync().isBlockchainSynced()) return;
 
     QString strAmountAndRounds;
     QString strCoinJoinAmount = BitcoinUnits::formatHtmlWithUnit(nDisplayUnit, clientModel->coinJoinOptions().getAmount() * COIN, false, BitcoinUnits::separatorAlways);
@@ -435,10 +436,10 @@ void OverviewPage::coinJoinStatus(bool fForce)
 {
     if (!walletModel || !clientModel) return;
 
-    if (!fForce && (clientModel->node().shutdownRequested() || !clientModel->masternodeSync().isBlockchainSynced())) return;
+    if (!fForce && (clientModel->node().shutdownRequested() || !clientModel->smartnodeSync().isBlockchainSynced())) return;
 
     // Disable any PS UI for masternode or when autobackup is disabled or failed for whatever reason
-    if (fMasternodeMode || nWalletBackups <= 0) {
+    if (fSmartnodeMode || nWalletBackups <= 0) {
         DisableCoinJoinCompletely();
         if (nWalletBackups <= 0) {
             ui->labelCoinJoinEnabled->setToolTip(tr("Automatic backups are disabled, no mixing available!"));

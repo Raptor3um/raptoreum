@@ -28,7 +28,7 @@ namespace RPCServer
 /** Wrapper for UniValue::VType, which includes typeAny:
  * Used to denote don't care type. */
 struct UniValueType {
-    UniValueType(UniValue::VType _type) : typeAny(false), type(_type) {}
+    explicit UniValueType(UniValue::VType _type) : typeAny(false), type(_type) {}
     UniValueType() : typeAny(true) {}
     bool typeAny;
     UniValue::VType type;
@@ -136,7 +136,7 @@ public:
 };
 
 /**
- * Dash RPC command dispatcher.
+ * Raptoreum RPC command dispatcher.
  */
 class CRPCTable
 {

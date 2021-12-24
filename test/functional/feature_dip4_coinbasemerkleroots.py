@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2021 The Dash Core developers
+# Copyright (c) 2015-2020 The Dash Core developers
+# Copyright (c) 2020-2022 The Raptoreum developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 from test_framework.mininode import *
@@ -34,9 +35,9 @@ class TestP2PConn(P2PInterface):
         return self.last_mnlistdiff
 
 
-class LLMQCoinbaseCommitmentsTest(DashTestFramework):
+class LLMQCoinbaseCommitmentsTest(RaptoreumTestFramework):
     def set_test_params(self):
-        self.set_dash_test_params(4, 3, fast_dip3_enforcement=True)
+        self.set_raptoreum_test_params(4, 3, fast_dip3_enforcement=True)
 
     def run_test(self):
         self.test_node = self.nodes[0].add_p2p_connection(TestP2PConn())
@@ -52,9 +53,9 @@ class LLMQCoinbaseCommitmentsTest(DashTestFramework):
         mnList = self.test_getmnlistdiff(null_hash, self.nodes[0].getbestblockhash(), {}, [], expectedUpdated)
         expectedUpdated2 = expectedUpdated + []
 
-        # Register one more MN, but don't start it (that would fail as DashTestFramework doesn't support this atm)
+        # Register one more MN, but don't start it (that would fail as RaptoreumTestFramework doesn't support this atm)
         baseBlockHash = self.nodes[0].getbestblockhash()
-        self.prepare_masternode(self.mn_count)
+        self.prepare_smartnode(self.mn_count)
         new_mn = self.mninfo[self.mn_count]
 
         # Now test if that MN appears in a diff when the base block is the one just before MN registration
@@ -251,7 +252,13 @@ class LLMQCoinbaseCommitmentsTest(DashTestFramework):
         cbtx = self.nodes[0].getblock(self.nodes[0].getbestblockhash(), 2)["tx"][0]
         assert(cbtx["cbTx"]["version"] == 1)
 
-        self.activate_dip8(slow_mode)
+        assert(self.nodes[0].getblockchaininfo()["bip9_softforks"]["dip0008"]["status"] != "active")
+
+        while self.nodes[0].getblockchaininfo()["bip9_softforks"]["dip0008"]["status"] != "active":
+            self.nodes[0].generate(4)
+            self.sync_all()
+        self.nodes[0].generate(1)
+        self.sync_blocks()
 
         # Assert that merkleRootQuorums is present and 0 (we have no quorums yet)
         cbtx = self.nodes[0].getblock(self.nodes[0].getbestblockhash(), 2)["tx"][0]

@@ -56,7 +56,7 @@ don't have test cases for.
 - Set the `self.setup_clean_chain` variable in `set_test_params()` to control whether
   or not to use the cached data directories. The cached data directories
   contain a 200-block pre-mined blockchain and wallets for four nodes. Each node
-  has 25 mature blocks (25x500=12500 DASH) in its wallet.
+  has 25 mature blocks (25x500=12500 RAPTOREUM) in its wallet.
 - When calling RPCs with lots of arguments, consider using named keyword
   arguments instead of positional arguments to make the intent of the call
   clear to readers.
@@ -77,7 +77,7 @@ over the network (`CBlock`, `CTransaction`, etc, along with the network-level
 wrappers for them, `msg_block`, `msg_tx`, etc).
 
 - P2P tests have two threads. One thread handles all network communication
-with the dashd(s) being tested (using python's asyncore package); the other
+with the raptoreumd(s) being tested (using python's asyncore package); the other
 implements the test logic.
 
 - `P2PConnection` is the class used to connect to a dashd.  `P2PInterface`

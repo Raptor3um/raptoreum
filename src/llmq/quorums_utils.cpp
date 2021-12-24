@@ -1,4 +1,5 @@
 // Copyright (c) 2018-2021 The Dash Core developers
+// Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -10,7 +11,7 @@
 #include <spork.h>
 #include <validation.h>
 
-#include <masternode/masternode-meta.h>
+#include <smartnode/smartnode-meta.h>
 
 namespace llmq
 {
@@ -220,9 +221,9 @@ bool CLLMQUtils::EnsureQuorumConnections(Consensus::LLMQType llmqType, const CBl
         relayMembers = connections;
     }
     if (!connections.empty()) {
-        if (!g_connman->HasMasternodeQuorumNodes(llmqType, pindexQuorum->GetBlockHash()) && LogAcceptCategory(BCLog::LLMQ)) {
+        if (!g_connman->HasSmartnodeQuorumNodes(llmqType, pindexQuorum->GetBlockHash()) && LogAcceptCategory(BCLog::LLMQ)) {
             auto mnList = deterministicMNManager->GetListAtChainTip();
-            std::string debugMsg = strprintf("CLLMQUtils::%s -- adding masternodes quorum connections for quorum %s:\n", __func__, pindexQuorum->GetBlockHash().ToString());
+            std::string debugMsg = strprintf("CLLMQUtils::%s -- adding smartnodes quorum connections for quorum %s:\n", __func__, pindexQuorum->GetBlockHash().ToString());
             for (auto& c : connections) {
                 auto dmn = mnList.GetValidMN(c);
                 if (!dmn) {
@@ -233,10 +234,10 @@ bool CLLMQUtils::EnsureQuorumConnections(Consensus::LLMQType llmqType, const CBl
             }
             LogPrint(BCLog::NET_NETCONN, debugMsg.c_str()); /* Continued */
         }
-        g_connman->SetMasternodeQuorumNodes(llmqType, pindexQuorum->GetBlockHash(), connections);
+        g_connman->SetSmartnodeQuorumNodes(llmqType, pindexQuorum->GetBlockHash(), connections);
     }
     if (!relayMembers.empty()) {
-        g_connman->SetMasternodeQuorumRelayMembers(llmqType, pindexQuorum->GetBlockHash(), relayMembers);
+        g_connman->SetSmartnodeQuorumRelayMembers(llmqType, pindexQuorum->GetBlockHash(), relayMembers);
     }
     return true;
 }
@@ -266,7 +267,7 @@ void CLLMQUtils::AddQuorumProbeConnections(Consensus::LLMQType llmqType, const C
     if (!probeConnections.empty()) {
         if (LogAcceptCategory(BCLog::LLMQ)) {
             auto mnList = deterministicMNManager->GetListAtChainTip();
-            std::string debugMsg = strprintf("CLLMQUtils::%s -- adding masternodes probes for quorum %s:\n", __func__, pindexQuorum->GetBlockHash().ToString());
+            std::string debugMsg = strprintf("CLLMQUtils::%s -- adding smartnodes probes for quorum %s:\n", __func__, pindexQuorum->GetBlockHash().ToString());
             for (auto& c : probeConnections) {
                 auto dmn = mnList.GetValidMN(c);
                 if (!dmn) {
@@ -316,8 +317,8 @@ bool CLLMQUtils::IsQuorumTypeEnabled(Consensus::LLMQType llmqType, const CBlockI
                 return false;
             }
             break;
-        case Consensus::LLMQ_TEST:
-        case Consensus::LLMQ_DEVNET:
+        case Consensus::LLMQ_50_60:
+        case Consensus::LLMQ_50_60:
             break;
         default:
             throw std::runtime_error(strprintf("%s: Unknown LLMQ type %d", __func__, llmqType));

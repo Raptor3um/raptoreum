@@ -1,4 +1,5 @@
-// Copyright (c) 2018-2021 The Dash Core developers
+// Copyright (c) 2018-2019 The Dash Core developers
+// Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -10,9 +11,9 @@
 
 #include <evo/specialtx.h>
 
-#include <masternode/activemasternode.h>
+#include <smartnode/activesmartnode.h>
 #include <chainparams.h>
-#include <masternode/masternode-sync.h>
+#include <smartnode/smartnode-sync.h>
 #include <net.h>
 #include <net_processing.h>
 #include <netmessagemaker.h>
@@ -236,7 +237,7 @@ void CQuorumManager::TriggerQuorumDataRecoveryThreads(const CBlockIndex* pIndex)
 
 void CQuorumManager::UpdatedBlockTip(const CBlockIndex* pindexNew, bool fInitialDownload) const
 {
-    if (!masternodeSync.IsBlockchainSynced()) {
+    if (!smartnodeSync.IsBlockchainSynced()) {
         return;
     }
 
@@ -264,23 +265,24 @@ void CQuorumManager::EnsureQuorumConnections(Consensus::LLMQType llmqType, const
 {
     const auto& params = Params().GetConsensus().llmqs.at(llmqType);
 
-    auto myProTxHash = activeMasternodeInfo.proTxHash;
+    auto myProTxHash = activeSmartnodeInfo.proTxHash;
     auto lastQuorums = ScanQuorums(llmqType, pindexNew, (size_t)params.keepOldConnections);
 
-    auto connmanQuorumsToDelete = g_connman->GetMasternodeQuorums(llmqType);
+    auto connmanQuorumsToDelete = g_connman->GetSmartnodeQuorums(llmqType);
 
     // don't remove connections for the currently in-progress DKG round
     int curDkgHeight = pindexNew->nHeight - (pindexNew->nHeight % params.dkgInterval);
     auto curDkgBlock = pindexNew->GetAncestor(curDkgHeight)->GetBlockHash();
     connmanQuorumsToDelete.erase(curDkgBlock);
 
+    bool allowWatch = gArgs.GetBoolArg("-watchquorums", DEFAULT_WATCH_QUORUMS);
     for (auto& quorum : lastQuorums) {
         if (CLLMQUtils::EnsureQuorumConnections(llmqType, quorum->pindexQuorum, myProTxHash)) {
             continue;
         }
         if (connmanQuorumsToDelete.count(quorum->qc.quorumHash) > 0) {
-            LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- removing masternodes quorum connections for quorum %s:\n", __func__, quorum->qc.quorumHash.ToString());
-            g_connman->RemoveMasternodeQuorumNodes(llmqType, quorum->qc.quorumHash);
+            LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- removing smartnodes quorum connections for quorum %s:\n", __func__, quorum->qc.quorumHash.ToString());
+            g_connman->RemoveSmartnodeQuorumNodes(llmqType, quorum->qc.quorumHash);
         }
     }
 }

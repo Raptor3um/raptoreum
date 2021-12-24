@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 # Copyright (c) 2015-2020 The Dash Core developers
+# Copyright (c) 2020-2022 The Raptoreum developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #
-# Test deterministic masternodes
+# Test deterministic smartnodes
 #
 from test_framework.blocktools import create_block, create_coinbase, get_masternode_payment
 from test_framework.messages import uint256_to_string
@@ -12,7 +13,7 @@ from test_framework.mininode import CTransaction, ToHex, FromHex, COIN, CCbTx
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 
-class Masternode(object):
+class Smartnode(object):
     pass
 
 class DIP3Test(BitcoinTestFramework):
@@ -158,8 +159,8 @@ class DIP3Test(BitcoinTestFramework):
         found_multisig_payee = False
         for i in range(len(mns)):
             bt = self.nodes[0].getblocktemplate()
-            expected_payee = bt['masternode'][0]['payee']
-            expected_amount = bt['masternode'][0]['amount']
+            expected_payee = bt['smartnode'][0]['payee']
+            expected_amount = bt['smartnode'][0]['amount']
             self.nodes[0].generate(1)
             self.sync_all()
             if expected_payee == multisig:
@@ -191,11 +192,11 @@ class DIP3Test(BitcoinTestFramework):
             self.start_mn(new_mn)
             self.sync_all()
 
-        self.log.info("testing masternode status updates")
-        # change voting address and see if changes are reflected in `masternode status` rpc output
+        self.log.info("testing smartnode status updates")
+        # change voting address and see if changes are reflected in `smartnode status` rpc output
         mn = mns[0]
         node = self.nodes[0]
-        old_dmnState = mn.node.masternode("status")["dmnState"]
+        old_dmnState = mn.node.smartnode("status")["dmnState"]
         old_voting_address = old_dmnState["votingAddress"]
         new_voting_address = node.getnewaddress()
         assert(old_voting_address != new_voting_address)
@@ -204,14 +205,14 @@ class DIP3Test(BitcoinTestFramework):
         node.protx('update_registrar', mn.protx_hash, "", new_voting_address, "")
         node.generate(1)
         self.sync_all()
-        new_dmnState = mn.node.masternode("status")["dmnState"]
+        new_dmnState = mn.node.smartnode("status")["dmnState"]
         new_voting_address_from_rpc = new_dmnState["votingAddress"]
         assert(new_voting_address_from_rpc == new_voting_address)
         # make sure payoutAddress is the same as before
         assert(old_dmnState["payoutAddress"] == new_dmnState["payoutAddress"])
 
     def prepare_mn(self, node, idx, alias):
-        mn = Masternode()
+        mn = Smartnode()
         mn.idx = idx
         mn.alias = alias
         mn.is_protx = True
@@ -267,7 +268,7 @@ class DIP3Test(BitcoinTestFramework):
     def start_mn(self, mn):
         while len(self.nodes) <= mn.idx:
             self.add_nodes(1)
-        extra_args = ['-masternodeblsprivkey=%s' % mn.blsMnkey]
+        extra_args = ['-smartnodeblsprivkey=%s' % mn.blsMnkey]
         self.start_node(mn.idx, extra_args = self.extra_args + extra_args)
         force_finish_mnsync(self.nodes[mn.idx])
         mn.node = self.nodes[mn.idx]
@@ -292,7 +293,7 @@ class DIP3Test(BitcoinTestFramework):
         self.sync_all()
         for node in self.nodes:
             protx_info = node.protx('info', mn.protx_hash)
-            mn_list = node.masternode('list')
+            mn_list = node.smartnode('list')
             assert_equal(protx_info['state']['service'], '127.0.0.2:%d' % mn.p2p_port)
             assert_equal(mn_list['%s-%d' % (mn.collateral_txid, mn.collateral_vout)]['address'], '127.0.0.2:%d' % mn.p2p_port)
 
@@ -309,12 +310,12 @@ class DIP3Test(BitcoinTestFramework):
             expected = []
             for mn in mns:
                 expected.append('%s-%d' % (mn.collateral_txid, mn.collateral_vout))
-            self.log.error('mnlist: ' + str(node.masternode('list', 'status')))
+            self.log.error('mnlist: ' + str(node.smartnode('list', 'status')))
             self.log.error('expected: ' + str(expected))
             raise AssertionError("mnlists does not match provided mns")
 
     def compare_mnlist(self, node, mns):
-        mnlist = node.masternode('list', 'status')
+        mnlist = node.smartnode('list', 'status')
         for mn in mns:
             s = '%s-%d' % (mn.collateral_txid, mn.collateral_vout)
             in_list = s in mnlist
@@ -363,11 +364,11 @@ class DIP3Test(BitcoinTestFramework):
         if miner_address is None:
             miner_address = self.nodes[0].getnewaddress()
         if mn_payee is None:
-            if isinstance(bt['masternode'], list):
-                mn_payee = bt['masternode'][0]['payee']
+            if isinstance(bt['smartnode'], list):
+                mn_payee = bt['smartnode'][0]['payee']
             else:
-                mn_payee = bt['masternode']['payee']
-        # we can't take the masternode payee amount from the template here as we might have additional fees in vtx
+                mn_payee = bt['smartnode']['payee']
+        # we can't take the smartnode payee amount from the template here as we might have additional fees in vtx
 
         # calculate fees that the block template included (we'll have to remove it from the coinbase as we won't
         # include the template's transactions
@@ -405,7 +406,7 @@ class DIP3Test(BitcoinTestFramework):
         coinbase = FromHex(CTransaction(), node.createrawtransaction([], outputs))
         coinbase.vin = create_coinbase(height).vin
 
-        # We can't really use this one as it would result in invalid merkle roots for masternode lists
+        # We can't really use this one as it would result in invalid merkle roots for smartnode lists
         if len(bt['coinbase_payload']) != 0:
             cbtx = FromHex(CCbTx(version=1), bt['coinbase_payload'])
             if use_mnmerkleroot_from_tip:

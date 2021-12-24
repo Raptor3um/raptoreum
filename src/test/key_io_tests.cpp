@@ -9,7 +9,7 @@
 #include <key_io.h>
 #include <script/script.h>
 #include <utilstrencodings.h>
-#include <test/test_dash.h>
+#include <test/test_raptoreum.h>
 
 #include <boost/test/unit_test.hpp>
 

@@ -1,5 +1,6 @@
 // Copyright (c) 2011-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2021 The Dash Core developers
+// Copyright (c) 2014-2019 The Dash Core developers
+// Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -40,7 +41,7 @@ enum NumConnections {
     CONNECTIONS_ALL  = (CONNECTIONS_IN | CONNECTIONS_OUT),
 };
 
-/** Model for Dash network client. */
+/** Model for Raptoreum network client. */
 class ClientModel : public QObject
 {
     Q_OBJECT
@@ -63,9 +64,9 @@ public:
     int getHeaderTipHeight() const;
     int64_t getHeaderTipTime() const;
 
-    void setMasternodeList(const CDeterministicMNList& mnList);
-    CDeterministicMNList getMasternodeList() const;
-    void refreshMasternodeList();
+    void setSmartnodeList(const CDeterministicMNList& mnList);
+    CDeterministicMNList getSmartnodeList() const;
+    void refreshSmartnodeList();
 
     //! Returns enum BlockSource of the current importing/syncing state
     enum BlockSource getBlockSource() const;
@@ -91,7 +92,7 @@ private:
     std::unique_ptr<interfaces::Handler> m_handler_banned_list_changed;
     std::unique_ptr<interfaces::Handler> m_handler_notify_block_tip;
     std::unique_ptr<interfaces::Handler> m_handler_notify_header_tip;
-    std::unique_ptr<interfaces::Handler> m_handler_notify_masternodelist_changed;
+    std::unique_ptr<interfaces::Handler> m_handler_notify_smartnodelist_changed;
     std::unique_ptr<interfaces::Handler> m_handler_notify_additional_data_sync_progess_changed;
     OptionsModel *optionsModel;
     PeerTableModel *peerTableModel;
@@ -110,7 +111,7 @@ private:
 
 Q_SIGNALS:
     void numConnectionsChanged(int count);
-    void masternodeListChanged() const;
+    void smartnodeListChanged() const;
     void numBlocksChanged(int count, const QDateTime& blockDate, const QString& blockHash, double nVerificationProgress, bool header);
     void additionalDataSyncProgressChanged(double nSyncProgress);
     void mempoolSizeChanged(long count, size_t mempoolSizeInBytes);

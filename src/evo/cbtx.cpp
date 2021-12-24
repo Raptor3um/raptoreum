@@ -1,4 +1,5 @@
-// Copyright (c) 2017-2021 The Dash Core developers
+// Copyright (c) 2017-2019 The Dash Core developers
+// Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -16,29 +17,34 @@
 bool CheckCbTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state)
 {
     if (tx.nType != TRANSACTION_COINBASE) {
+    	std::cout << "fail to check TRANSACTION_COINBASE\n";
         return state.DoS(100, false, REJECT_INVALID, "bad-cbtx-type");
     }
 
     if (!tx.IsCoinBase()) {
+    	std::cout << "fail to check IsCoinBase\n";
         return state.DoS(100, false, REJECT_INVALID, "bad-cbtx-invalid");
     }
 
     CCbTx cbTx;
     if (!GetTxPayload(tx, cbTx)) {
+    	std::cout << "fail to check GetTxPayload " << tx.ToString() << endl;
         return state.DoS(100, false, REJECT_INVALID, "bad-cbtx-payload");
     }
 
     if (cbTx.nVersion == 0 || cbTx.nVersion > CCbTx::CURRENT_VERSION) {
+        LogPrintf("CheckCbTx: cbTx.nVersion=%d\n", cbTx.nVersion);
         return state.DoS(100, false, REJECT_INVALID, "bad-cbtx-version");
     }
 
     if (pindexPrev && pindexPrev->nHeight + 1 != cbTx.nHeight) {
+    	std::cout << "fail to check nHeight\n";
         return state.DoS(100, false, REJECT_INVALID, "bad-cbtx-height");
     }
 
     if (pindexPrev) {
-        bool fDIP0008Active = pindexPrev->nHeight >= Params().GetConsensus().DIP0008Height;
-        if (fDIP0008Active && cbTx.nVersion < 2) {
+        if (Params().GetConsensus().DIP0008Enabled && cbTx.nVersion < 2) {
+        	LogPrintf("CheckCbTx DIP0008Enabled: cbTx.nVersion=%d\n", cbTx.nVersion);
             return state.DoS(100, false, REJECT_INVALID, "bad-cbtx-version");
         }
     }
@@ -74,6 +80,7 @@ bool CheckCbTxMerkleRoots(const CBlock& block, const CBlockIndex* pindex, CValid
             return false;
         }
         if (calculatedMerkleRoot != cbTx.merkleRootMNList) {
+        	std::cout << "calculatedMerkleRoot !=  cbTx.merkleRootMNList " << calculatedMerkleRoot.GetHex() << "!=" <<  cbTx.merkleRootMNList.GetHex() << endl;
             return state.DoS(100, false, REJECT_INVALID, "bad-cbtx-mnmerkleroot");
         }
 
@@ -170,6 +177,7 @@ bool CalcCbTxMerkleRootQuorums(const CBlock& block, const CBlockIndex* pindexPre
 
     // The returned quorums are in reversed order, so the most recent one is at index 0
     auto quorums = llmq::quorumBlockProcessor->GetMinedAndActiveCommitmentsUntilBlock(pindexPrev);
+
     std::map<Consensus::LLMQType, std::vector<uint256>> qcHashes;
     size_t hashCount = 0;
 

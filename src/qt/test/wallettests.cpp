@@ -13,7 +13,7 @@
 #include <qt/transactionview.h>
 #include <qt/walletmodel.h>
 #include <key_io.h>
-#include <test/test_dash.h>
+#include <test/test_raptoreum.h>
 #include <validation.h>
 #include <wallet/wallet.h>
 #include <qt/overviewpage.h>
@@ -108,9 +108,9 @@ QModelIndex FindTx(const QAbstractItemModel& model, const uint256& txid)
 //
 // This also requires overriding the default minimal Qt platform:
 //
-//     src/qt/test/test_dash-qt -platform xcb      # Linux
-//     src/qt/test/test_dash-qt -platform windows  # Windows
-//     src/qt/test/test_dash-qt -platform cocoa    # macOS
+//     src/qt/test/test_raptoreum-qt -platform xcb      # Linux
+//     src/qt/test/test_raptoreum-qt -platform windows  # Windows
+//     src/qt/test/test_raptoreum-qt -platform cocoa    # macOS
 void TestGUI()
 {
     // Set up wallet and chain with 105 blocks (5 mature blocks for spending).

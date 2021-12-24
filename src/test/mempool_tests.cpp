@@ -5,7 +5,7 @@
 #include <txmempool.h>
 #include <util.h>
 
-#include <test/test_dash.h>
+#include <test/test_raptoreum.h>
 
 #include <boost/test/unit_test.hpp>
 #include <list>
@@ -166,6 +166,7 @@ BOOST_AUTO_TEST_CASE(MempoolIndexingTest)
     sortedOrder[2] = tx1.GetHash().ToString(); // 10000
     sortedOrder[3] = tx4.GetHash().ToString(); // 15000
     sortedOrder[4] = tx2.GetHash().ToString(); // 20000
+    LOCK(pool.cs);
     CheckSort<descendant_score>(pool, sortedOrder);
 
     /* low fee but with high fee child */
@@ -348,6 +349,7 @@ BOOST_AUTO_TEST_CASE(MempoolAncestorIndexingTest)
     }
     sortedOrder[4] = tx3.GetHash().ToString(); // 0
 
+    LOCK(pool.cs);
     CheckSort<ancestor_score>(pool, sortedOrder);
 
     /* low fee parent with high fee child */

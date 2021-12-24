@@ -1,0 +1,6 @@
+usr/local/bin/raptoreum-qt usr/bin
+share/pixmaps/raptoreum32.xpm usr/share/pixmaps
+share/pixmaps/raptoreum16.xpm usr/share/pixmaps
+share/pixmaps/raptoreum128.png usr/share/pixmaps
+debian/raptoreum-qt.desktop usr/share/applications
+debian/raptoreum-qt.protocol usr/share/kde4/services/

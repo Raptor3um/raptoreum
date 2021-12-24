@@ -1,10 +1,11 @@
 // Copyright (c) 2011-2015 The Bitcoin Core developers
 // Copyright (c) 2014-2021 The Dash Core developers
+// Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include <config/dash-config.h>
+#include <config/raptoreum-config.h>
 #endif
 
 #include <qt/rpcconsole.h>
@@ -615,8 +616,8 @@ void RPCConsole::setClientModel(ClientModel *model)
         updateNetworkState();
         connect(model, SIGNAL(networkActiveChanged(bool)), this, SLOT(setNetworkActive(bool)));
 
-        connect(model, SIGNAL(masternodeListChanged()), this, SLOT(updateMasternodeCount()));
-        clientModel->refreshMasternodeList();
+        connect(model, SIGNAL(smartnodeListChanged()), this, SLOT(updateMasternodeCount()));
+        clientModel->refreshSmartnodeList();
 
         connect(model, SIGNAL(mempoolSizeChanged(long,size_t)), this, SLOT(setMempoolSize(long,size_t)));
         connect(model, SIGNAL(islockCountChanged(size_t)), this, SLOT(setInstantSendLockCount(size_t)));
@@ -971,16 +972,16 @@ void RPCConsole::setNumBlocks(int count, const QDateTime& blockDate, const QStri
     }
 }
 
-void RPCConsole::updateMasternodeCount()
+void RPCConsole::updateSmartnodeCount()
 {
     if (!clientModel) {
         return;
     }
-    auto mnList = clientModel->getMasternodeList();
-    QString strMasternodeCount = tr("Total: %1 (Enabled: %2)")
+    auto mnList = clientModel->getSmartnodeList();
+    QString strSmartnodeCount = tr("Total: %1 (Enabled: %2)")
         .arg(QString::number(mnList.GetAllMNsCount()))
         .arg(QString::number(mnList.GetValidMNsCount()));
-    ui->masternodeCount->setText(strMasternodeCount);
+    ui->smartnodeCount->setText(strSmartnodeCount);
 }
 
 void RPCConsole::setMempoolSize(long numberOfTxs, size_t dynUsage)

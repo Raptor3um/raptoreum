@@ -53,7 +53,7 @@ public:
     void Close() const override;
 
     // Dash Specific Wallet Init
-    void AutoLockMasternodeCollaterals() const override;
+    void AutoLockSmartnodeCollaterals() const override;
     void InitCoinJoinSettings() const override;
     void InitKeePass() const override;
     bool InitAutoBackup() const override;
@@ -125,8 +125,8 @@ bool WalletInit::ParameterInteraction() const
         }
 
         return true;
-    } else if (gArgs.IsArgSet("-masternodeblsprivkey")) {
-        return InitError(_("You can not start a masternode with wallet enabled."));
+    } else if (gArgs.IsArgSet("-smartnodeblsprivkey")) {
+        return InitError(_("You can not start a smartnode with wallet enabled."));
     }
 
     gArgs.SoftSetArg("-wallet", "");
@@ -450,11 +450,11 @@ void WalletInit::Close() const
     }
 }
 
-void WalletInit::AutoLockMasternodeCollaterals() const
+void WalletInit::AutoLockSmartnodeCollaterals() const
 {
     // we can't do this before DIP3 is fully initialized
     for (const auto pwallet : GetWallets()) {
-        pwallet->AutoLockMasternodeCollaterals();
+        pwallet->AutoLockSmartnodeCollaterals();
     }
 }
 

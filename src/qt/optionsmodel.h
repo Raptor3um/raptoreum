@@ -58,7 +58,7 @@ public:
         ThreadsScriptVerif,     // int
         DatabaseCache,          // int
         SpendZeroConfChange,    // bool
-        ShowMasternodesTab,     // bool
+        ShowSmartnodesTab,     // bool
         CoinJoinEnabled,     // bool
         ShowAdvancedCJUI,       // bool
         ShowCoinJoinPopups,  // bool

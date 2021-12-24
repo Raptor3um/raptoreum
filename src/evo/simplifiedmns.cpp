@@ -1,4 +1,5 @@
 // Copyright (c) 2017-2021 The Dash Core developers
+// Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -210,7 +211,6 @@ bool BuildSimplifiedMNListDiff(const uint256& baseBlockHash, const uint256& bloc
     }
 
     LOCK(deterministicMNManager->cs);
-
     auto baseDmnList = deterministicMNManager->GetListForBlock(baseBlockIndex);
     auto dmnList = deterministicMNManager->GetListForBlock(blockIndex);
     mnListDiffRet = baseDmnList.BuildSimplifiedDiff(dmnList);

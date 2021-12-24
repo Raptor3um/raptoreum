@@ -1,6 +1,7 @@
 // Copyright (c) 2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2021 The Dash Core developers
+// Copyright (c) 2014-2020 The Dash Core developers
+// Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -118,7 +119,7 @@ UniValue blockheaderToJSON(const CBlockIndex* blockindex)
     return result;
 }
 
-UniValue blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool txDetails)
+UniValue blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool txDetails, bool powHash)
 {
     AssertLockHeld(cs_main);
     UniValue result(UniValue::VOBJ);
@@ -171,6 +172,8 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool tx
     CBlockIndex *pnext = chainActive.Next(blockindex);
     if (pnext)
         result.pushKV("nextblockhash", pnext->GetBlockHash().GetHex());
+    if(powHash)
+        result.pushKV("powhash", block.GetPOWHash().GetHex());
 
     result.pushKV("chainlock", chainLock);
 
@@ -216,7 +219,7 @@ UniValue getbestchainlock(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() != 0)
         throw std::runtime_error(
             "getbestchainlock\n"
-            "\nReturns information about the best chainlock. Throws an error if there is no known chainlock yet."
+            "\nReturns the block hash of the best chainlock. Throws an error if there is no known chainlock yet. "
             "\nResult:\n"
             "{\n"
             "  \"blockhash\" : \"hash\",      (string) The block hash hex encoded\n"
@@ -1011,7 +1014,7 @@ UniValue getmerkleblocks(const JSONRPCRequest& request)
 
 UniValue getblock(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 3)
         throw std::runtime_error(
             "getblock \"blockhash\" ( verbosity ) \n"
             "\nIf verbosity is 0, returns a string that is serialized, hex-encoded data for block 'hash'.\n"
@@ -1038,7 +1041,7 @@ UniValue getblock(const JSONRPCRequest& request)
             "  \"cbTx\" : {             (json object) The coinbase special transaction \n"
             "     \"version\"           (numeric) The coinbase special transaction version\n"
             "     \"height\"            (numeric) The block height\n"
-            "     \"merkleRootMNList\" : \"xxxx\", (string) The merkle root of the masternode list\n"
+            "     \"merkleRootMNList\" : \"xxxx\", (string) The merkle root of the smartnode list\n"
             "     \"merkleRootQuorums\" : \"xxxx\", (string) The merkle root of the quorum list\n"
             "  },\n"
             "  \"time\" : ttt,          (numeric) The block time in seconds since epoch (Jan 1 1970 GMT)\n"
@@ -1050,6 +1053,7 @@ UniValue getblock(const JSONRPCRequest& request)
             "  \"nTx\" : n,             (numeric) The number of transactions in the block.\n"
             "  \"previousblockhash\" : \"hash\",  (string) The hash of the previous block\n"
             "  \"nextblockhash\" : \"hash\"       (string) The hash of the next block\n"
+            "  \"powhash\" : \"hash\"       (string) The pow hash of the this block\n"
             "}\n"
             "\nResult (for verbosity = 2):\n"
             "{\n"
@@ -1076,6 +1080,14 @@ UniValue getblock(const JSONRPCRequest& request)
         else
             verbosity = request.params[1].get_bool() ? 1 : 0;
     }
+    bool powHash = false;
+    if (!request.params[2].isNull()) {
+		if(request.params[2].isNum()) {
+			powHash = request.params[2].get_int() != 0;
+		} else {
+			powHash = request.params[2].get_bool();
+		}
+	}
 
     const CBlockIndex* pblockindex = LookupBlockIndex(hash);
     if (!pblockindex) {
@@ -1092,7 +1104,7 @@ UniValue getblock(const JSONRPCRequest& request)
         return strHex;
     }
 
-    return blockToJSON(block, pblockindex, verbosity >= 2);
+    return blockToJSON(block, pblockindex, verbosity >= 2, powHash);
 }
 
 UniValue pruneblockchain(const JSONRPCRequest& request)
@@ -1207,8 +1219,8 @@ UniValue gettxout(const JSONRPCRequest& request)
             "     \"hex\" : \"hex\",        (string) \n"
             "     \"reqSigs\" : n,          (numeric) Number of required signatures\n"
             "     \"type\" : \"pubkeyhash\", (string) The type, eg pubkeyhash\n"
-            "     \"addresses\" : [          (array of string) array of dash addresses\n"
-            "        \"address\"     (string) dash address\n"
+            "     \"addresses\" : [          (array of string) array of raptoreum addresses\n"
+            "        \"address\"     (string) raptoreum address\n"
             "        ,...\n"
             "     ]\n"
             "  },\n"
@@ -1301,13 +1313,13 @@ static UniValue SoftForkMajorityDesc(int version, CBlockIndex* pindex, const Con
     switch(version)
     {
         case 2:
-            activated = pindex->nHeight >= consensusParams.BIP34Height;
+            activated = consensusParams.BIP34Enabled;
             break;
         case 3:
-            activated = pindex->nHeight >= consensusParams.BIP66Height;
+            activated = consensusParams.BIP66Enabled;
             break;
         case 4:
-            activated = pindex->nHeight >= consensusParams.BIP65Height;
+            activated = consensusParams.BIP65Enabled;
             break;
     }
     rv.pushKV("status", activated);
@@ -1457,12 +1469,12 @@ UniValue getblockchaininfo(const JSONRPCRequest& request)
     UniValue softforks(UniValue::VARR);
     UniValue bip9_softforks(UniValue::VOBJ);
     // sorted by activation block
-    softforks.push_back(SoftForkDesc("bip34", 2, tip, consensusParams));
-    softforks.push_back(SoftForkDesc("bip66", 3, tip, consensusParams));
-    softforks.push_back(SoftForkDesc("bip65", 4, tip, consensusParams));
-    for (int pos = Consensus::DEPLOYMENT_CSV; pos != Consensus::MAX_VERSION_BITS_DEPLOYMENTS; ++pos) {
-        BIP9SoftForkDescPushBack(bip9_softforks, consensusParams, static_cast<Consensus::DeploymentPos>(pos));
-    }
+    // softforks.push_back(SoftForkDesc("bip34", 2, tip, consensusParams));
+    // softforks.push_back(SoftForkDesc("bip66", 3, tip, consensusParams));
+    // softforks.push_back(SoftForkDesc("bip65", 4, tip, consensusParams));
+    // for (int pos = Consensus::DEPLOYMENT_CSV; pos != Consensus::MAX_VERSION_BITS_DEPLOYMENTS; ++pos) {
+    //     BIP9SoftForkDescPushBack(bip9_softforks, consensusParams, static_cast<Consensus::DeploymentPos>(pos));
+    // }
     obj.pushKV("softforks",             softforks);
     obj.pushKV("bip9_softforks", bip9_softforks);
 

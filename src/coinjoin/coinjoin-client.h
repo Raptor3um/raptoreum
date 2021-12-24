@@ -1,4 +1,5 @@
-// Copyright (c) 2014-2021 The Dash Core developers
+// Copyright (c) 2014-2019 The Dash Core developers
+// Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -74,7 +75,7 @@ private:
     std::string strLastMessage;
     std::string strAutoDenomResult;
 
-    CDeterministicMNCPtr mixingMasternode;
+    CDeterministicMNCPtr mixingSmartnode;
     CMutableTransaction txMyCollateral; // client side collateral
     CPendingDsaRequest pendingDsaRequest;
 
@@ -121,7 +122,7 @@ public:
         vecOutPointLocked(),
         strLastMessage(),
         strAutoDenomResult(),
-        mixingMasternode(),
+        mixingSmartnode(),
         txMyCollateral(),
         pendingDsaRequest(),
         keyHolderStorage(),
@@ -137,12 +138,12 @@ public:
 
     std::string GetStatus(bool fWaitForBlock);
 
-    bool GetMixingMasternodeInfo(CDeterministicMNCPtr& ret) const;
+    bool GetMixingSmartnodeInfo(CDeterministicMNCPtr& ret) const;
 
     /// Passively run mixing in the background according to the configuration in settings
     bool DoAutomaticDenominating(CConnman& connman, bool fDryRun = false);
 
-    /// As a client, submit part of a future mixing transaction to a Masternode to start the process
+    /// As a client, submit part of a future mixing transaction to a Smartnode to start the process
     bool SubmitDenominate(CConnman& connman);
 
     bool ProcessPendingDsaRequest(CConnman& connman);
@@ -221,7 +222,7 @@ public:
     std::string GetStatuses();
     std::string GetSessionDenoms();
 
-    bool GetMixingMasternodesInfo(std::vector<CDeterministicMNCPtr>& vecDmnsRet) const;
+    bool GetMixingSmartnodesInfo(std::vector<CDeterministicMNCPtr>& vecDmnsRet) const;
 
     /// Passively run mixing in the background according to the configuration in settings
     bool DoAutomaticDenominating(CConnman& connman, bool fDryRun = false);
@@ -233,8 +234,8 @@ public:
 
     void ProcessPendingDsaRequest(CConnman& connman);
 
-    void AddUsedMasternode(const COutPoint& outpointMn);
-    CDeterministicMNCPtr GetRandomNotUsedMasternode();
+    void AddUsedSmartnode(const COutPoint& outpointMn);
+    CDeterministicMNCPtr GetRandomNotUsedSmartnode();
 
     void UpdatedSuccessBlock();
 

@@ -1,4 +1,5 @@
 // Copyright (c) 2011-2015 The Bitcoin Core developers
+// Copyright (c) 2020-2021 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,7 +7,7 @@
 #define BITCOIN_QT_BITCOINGUI_H
 
 #if defined(HAVE_CONFIG_H)
-#include <config/dash-config.h>
+#include <config/raptoreum-config.h>
 #endif
 
 #include <amount.h>
@@ -112,7 +113,7 @@ private:
     QToolButton *coinJoinCoinsButton;
     QToolButton *receiveCoinsButton;
     QToolButton *historyButton;
-    QToolButton *masternodeButton;
+    QToolButton *smartnodeButton;
     QAction* appToolBarLogoAction;
     QAction *quitAction;
     QAction *sendCoinsMenuAction;
@@ -274,8 +275,8 @@ private Q_SLOTS:
     void gotoOverviewPage();
     /** Switch to history (transactions) page */
     void gotoHistoryPage();
-    /** Switch to masternode page */
-    void gotoMasternodePage();
+    /** Switch to smartnode page */
+    void gotoSmartnodePage();
     /** Switch to receive coins page */
     void gotoReceiveCoinsPage();
     /** Switch to send coins page */
@@ -308,7 +309,7 @@ private Q_SLOTS:
     void showPeers();
     void showRepair();
 
-    /** Open external (default) editor with dash.conf */
+    /** Open external (default) editor with raptoreum.conf */
     void showConfEditor();
     /** Show folder with wallet backups in default file browser */
     void showBackups();

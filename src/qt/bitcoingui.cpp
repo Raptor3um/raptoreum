@@ -1,5 +1,6 @@
 // Copyright (c) 2011-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2021 The Dash Core developers
+// Copyright (c) 2014-2019 The Dash Core developers
+// Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -34,7 +35,7 @@
 #include <interfaces/node.h>
 #include <ui_interface.h>
 #include <util.h>
-#include <qt/masternodelist.h>
+#include <qt/smartnodelist.h>
 
 #include <iostream>
 
@@ -90,7 +91,7 @@ BitcoinGUI::BitcoinGUI(interfaces::Node& node, const NetworkStyle* networkStyle,
     appToolBarLogoAction(0),
     overviewButton(0),
     historyButton(0),
-    masternodeButton(0),
+    smartnodeButton(0),
     quitAction(0),
     sendCoinsButton(0),
     coinJoinCoinsButton(0),
@@ -1039,12 +1040,12 @@ void BitcoinGUI::gotoHistoryPage()
     if (walletFrame) walletFrame->gotoHistoryPage();
 }
 
-void BitcoinGUI::gotoMasternodePage()
+void BitcoinGUI::gotoSmartnodePage()
 {
     QSettings settings;
-    if (settings.value("fShowMasternodesTab").toBool() && masternodeButton) {
-        masternodeButton->setChecked(true);
-        if (walletFrame) walletFrame->gotoMasternodePage();
+    if (settings.value("fShowSmartnodesTab").toBool() && smartnodeButton) {
+        smartnodeButton->setChecked(true);
+        if (walletFrame) walletFrame->gotoSmartnodePage();
     }
 }
 
@@ -1106,9 +1107,9 @@ void BitcoinGUI::updateNetworkState()
 
     if (fNetworkBecameActive) {
         // If the sync process still signals synced after five seconds represent it in the UI.
-        if (m_node.masternodeSync().isSynced()) {
+        if (m_node.smartnodeSync().isSynced()) {
             QTimer::singleShot(5000, this, [&]() {
-                if (clientModel->getNumConnections() > 0 && m_node.masternodeSync().isSynced()) {
+                if (clientModel->getNumConnections() > 0 && m_node.smartnodeSync().isSynced()) {
                     setAdditionalDataSyncProgress(1);
                 }
             });
@@ -1226,7 +1227,7 @@ void BitcoinGUI::setNumBlocks(int count, const QDateTime& blockDate, const QStri
 {
 #ifdef Q_OS_MAC
     // Disabling macOS App Nap on initial sync, disk, reindex operations and mixing.
-    bool disableAppNap = !m_node.masternodeSync().isSynced();
+    bool disableAppNap = !m_node.smartnodeSync().isSynced();
 #ifdef ENABLE_WALLET
     for (const auto& wallet : m_node.getWallets()) {
         disableAppNap |= wallet->coinJoin().isMixing();
@@ -1307,7 +1308,7 @@ void BitcoinGUI::setNumBlocks(int count, const QDateTime& blockDate, const QStri
     }
 #endif // ENABLE_WALLET
 
-    if(!m_node.masternodeSync().isBlockchainSynced())
+    if(!m_node.smartnodeSync().isBlockchainSynced())
     {
         QString timeBehindText = GUIUtil::formatNiceTimeOffset(secs);
 
@@ -1356,7 +1357,7 @@ void BitcoinGUI::setAdditionalDataSyncProgress(double nSyncProgress)
     }
 
     // No additional data sync should be happening while blockchain is not synced, nothing to update
-    if(!m_node.masternodeSync().isBlockchainSynced())
+    if(!m_node.smartnodeSync().isBlockchainSynced())
         return;
 
     // Prevent orphan statusbar messages (e.g. hover Quit in main menu, wait until chain-sync starts -> garbelled text)
@@ -1375,7 +1376,7 @@ void BitcoinGUI::setAdditionalDataSyncProgress(double nSyncProgress)
 
     updateProgressBarVisibility();
 
-    if(m_node.masternodeSync().isSynced()) {
+    if(m_node.smartnodeSync().isSynced()) {
         stopSpinner();
         labelBlocksIcon->setPixmap(GUIUtil::getIcon("synced", GUIUtil::ThemedColor::GREEN).pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));
     } else {
@@ -1384,7 +1385,7 @@ void BitcoinGUI::setAdditionalDataSyncProgress(double nSyncProgress)
         progressBar->setValue(nSyncProgress * 1000000000.0 + 0.5);
     }
 
-    strSyncStatus = QString(m_node.masternodeSync().getSyncStatus().c_str());
+    strSyncStatus = QString(m_node.smartnodeSync().getSyncStatus().c_str());
     progressBarLabel->setText(strSyncStatus);
     tooltip = strSyncStatus + QString("<br>") + tooltip;
 
@@ -1398,7 +1399,7 @@ void BitcoinGUI::setAdditionalDataSyncProgress(double nSyncProgress)
 
 void BitcoinGUI::message(const QString &title, const QString &message, unsigned int style, bool *ret)
 {
-    QString strTitle = tr("Dash Core"); // default title
+    QString strTitle = tr("Raptoreum Core"); // default title
     // Default to information icon
     int nMBoxIcon = QMessageBox::Information;
     int nNotifyIcon = Notificator::Information;
@@ -1424,7 +1425,7 @@ void BitcoinGUI::message(const QString &title, const QString &message, unsigned 
             break;
         }
     }
-    // Append title to "Dash Core - "
+    // Append title to "Raptoreum Core - "
     if (!msgType.isEmpty())
         strTitle += " - " + msgType;
 
@@ -1483,7 +1484,7 @@ void BitcoinGUI::changeEvent(QEvent *e)
 #ifdef ENABLE_WALLET
         updateWalletStatus();
 #endif
-        if (m_node.masternodeSync().isSynced()) {
+        if (m_node.smartnodeSync().isSynced()) {
             labelBlocksIcon->setPixmap(GUIUtil::getIcon("synced", GUIUtil::ThemedColor::GREEN).pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));
         }
     }

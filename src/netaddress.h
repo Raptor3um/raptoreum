@@ -6,7 +6,7 @@
 #define BITCOIN_NETADDRESS_H
 
 #if defined(HAVE_CONFIG_H)
-#include <config/dash-config.h>
+#include <config/raptoreum-config.h>
 #endif
 
 #include <compat.h>
@@ -71,6 +71,7 @@ class CNetAddr
         explicit CNetAddr(const struct in_addr& ipv4Addr);
         void SetIP(const CNetAddr& ip);
 
+    private:
         /**
          * Set from a legacy IPv6 address.
          * Legacy IPv6 address may be a normal IPv6 address, or another address

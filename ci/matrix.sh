@@ -9,7 +9,7 @@ export BUILD_TARGET=${BUILD_TARGET:-linux64}
 export PULL_REQUEST=${PULL_REQUEST:-false}
 export JOB_NUMBER=${JOB_NUMBER:-1}
 
-export BUILDER_IMAGE_NAME="dash-builder-$BUILD_TARGET-$JOB_NUMBER"
+export BUILDER_IMAGE_NAME="raptoreum-builder-$BUILD_TARGET-$JOB_NUMBER"
 
 export HOST_SRC_DIR=${HOST_SRC_DIR:-$(pwd)}
 export HOST_CACHE_DIR=${HOST_CACHE_DIR:-$(pwd)/ci-cache-$BUILD_TARGET}
@@ -55,7 +55,7 @@ elif [ "$BUILD_TARGET" = "win64" ]; then
 elif [ "$BUILD_TARGET" = "linux32" ]; then
   export HOST=i686-pc-linux-gnu
   export BITCOIN_CONFIG="--enable-zmq --enable-glibc-back-compat --enable-reduce-exports --enable-crash-hooks LDFLAGS=-static-libstdc++"
-  export USE_SHELL="/bin/dash"
+  export USE_SHELL="/bin/raptoreum"
   export PYZMQ=true
   export RUN_UNITTESTS=true
   export RUN_INTEGRATIONTESTS=true
@@ -63,7 +63,7 @@ elif [ "$BUILD_TARGET" = "linux64" ]; then
   export HOST=x86_64-unknown-linux-gnu
   export DEP_OPTS="NO_UPNP=1 DEBUG=1"
   export BITCOIN_CONFIG="--enable-zmq --enable-glibc-back-compat --enable-reduce-exports --enable-crash-hooks"
-  export CPPFLAGS="-DDEBUG_LOCKORDER -DENABLE_DASH_DEBUG -DARENA_DEBUG"
+  export CPPFLAGS="-DDEBUG_LOCKORDER -DENABLE_RAPTOREUM_DEBUG"
   export PYZMQ=true
   export RUN_UNITTESTS=true
   export RUN_INTEGRATIONTESTS=true

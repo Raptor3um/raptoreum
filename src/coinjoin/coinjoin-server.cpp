@@ -1,15 +1,16 @@
-// Copyright (c) 2014-2021 The Dash Core developers
+// Copyright (c) 2014-2020 The Dash Core developers
+// Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <coinjoin/coinjoin-server.h>
+#include <privatesend/privatesend-server.h>
 
-#include <masternode/activemasternode.h>
+#include <smartnode/activesmartnode.h>
 #include <consensus/validation.h>
 #include <core_io.h>
 #include <init.h>
-#include <masternode/masternode-meta.h>
-#include <masternode/masternode-sync.h>
+#include <smartnode/smartnode-meta.h>
+#include <smartnode/smartnode-sync.h>
 #include <net_processing.h>
 #include <netmessagemaker.h>
 #include <script/interpreter.h>
@@ -27,8 +28,8 @@ CCoinJoinServer coinJoinServer;
 
 void CCoinJoinServer::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman, bool enable_bip61)
 {
-    if (!fMasternodeMode) return;
-    if (!masternodeSync.IsBlockchainSynced()) return;
+    if (!fSmartnodeMode) return;
+    if (!shmartnodeSync.IsBlockchainSynced()) return;
 
     if (strCommand == NetMsgType::DSACCEPT) {
         if (pfrom->nVersion < MIN_COINJOIN_PEER_PROTO_VERSION) {
@@ -55,7 +56,7 @@ void CCoinJoinServer::ProcessMessage(CNode* pfrom, const std::string& strCommand
         LogPrint(BCLog::COINJOIN, "DSACCEPT -- nDenom %d (%s)  txCollateral %s", dsa.nDenom, CCoinJoin::DenominationToString(dsa.nDenom), dsa.txCollateral.ToString()); /* Continued */
 
         auto mnList = deterministicMNManager->GetListAtChainTip();
-        auto dmn = mnList.GetValidMNByCollateral(activeMasternodeInfo.outpoint);
+        auto dmn = mnList.GetValidMNByCollateral(activeSmartnodeInfo.outpoint);
         if (!dmn) {
             PushStatus(pfrom, STATUS_REJECTED, ERR_MN_LIST, connman);
             return;
@@ -67,7 +68,7 @@ void CCoinJoinServer::ProcessMessage(CNode* pfrom, const std::string& strCommand
                 if (!lockRecv) return;
 
                 for (const auto& q : vecCoinJoinQueue) {
-                    if (q.masternodeOutpoint == activeMasternodeInfo.outpoint) {
+                    if (q.smartnodeOutpoint == activeSmartnodeInfo.outpoint) {
                         // refuse to create another queue this often
                         LogPrint(BCLog::COINJOIN, "DSACCEPT -- last dsq is still in queue, refuse to mix\n");
                         PushStatus(pfrom, STATUS_REJECTED, ERR_RECENT, connman);
@@ -126,7 +127,7 @@ void CCoinJoinServer::ProcessMessage(CNode* pfrom, const std::string& strCommand
                 if (q == dsq) {
                     return;
                 }
-                if (q.fReady == dsq.fReady && q.masternodeOutpoint == dsq.masternodeOutpoint) {
+                if (q.fReady == dsq.fReady && q.smartnodeOutpoint == dsq.smartnodeOutpoint) {
                     // no way the same mn can send another dsq with the same readiness this soon
                     LogPrint(BCLog::COINJOIN, "DSQUEUE -- Peer %s is sending WAY too many dsq messages for a masternode with collateral %s\n", pfrom->GetLogString(), dsq.masternodeOutpoint.ToStringShort());
                     return;
@@ -139,7 +140,7 @@ void CCoinJoinServer::ProcessMessage(CNode* pfrom, const std::string& strCommand
         if (dsq.IsTimeOutOfBounds()) return;
 
         auto mnList = deterministicMNManager->GetListAtChainTip();
-        auto dmn = mnList.GetValidMNByCollateral(dsq.masternodeOutpoint);
+        auto dmn = mnList.GetValidMNByCollateral(dsq.smartnodeOutpoint);
         if (!dmn) return;
 
         if (!dsq.CheckSignature(dmn->pdmnState->pubKeyOperator.Get())) {
@@ -245,11 +246,11 @@ void CCoinJoinServer::SetNull()
 }
 
 //
-// Check the mixing progress and send client updates if a Masternode
+// Check the mixing progress and send client updates if a Smartnode
 //
 void CCoinJoinServer::CheckPool(CConnman& connman)
 {
-    if (!fMasternodeMode) return;
+    if (!fSmartnodeMode) return;
 
     LogPrint(BCLog::COINJOIN, "CCoinJoinServer::CheckPool -- entries count %lu\n", GetEntriesCount());
 
@@ -308,7 +309,7 @@ void CCoinJoinServer::CreateFinalTransaction(CConnman& connman)
 
 void CCoinJoinServer::CommitFinalTransaction(CConnman& connman)
 {
-    if (!fMasternodeMode) return; // check and relay final tx only on masternode
+    if (!fSmartnodeMode) return; // check and relay final tx only on smartnode
 
     CTransactionRef finalTransaction = MakeTransactionRef(finalMutableTransaction);
     uint256 hashTx = finalTransaction->GetHash();
@@ -333,7 +334,7 @@ void CCoinJoinServer::CommitFinalTransaction(CConnman& connman)
 
     // create and sign masternode dstx transaction
     if (!CCoinJoin::GetDSTX(hashTx)) {
-        CCoinJoinBroadcastTx dstxNew(finalTransaction, activeMasternodeInfo.outpoint, GetAdjustedTime());
+        CCoinJoinBroadcastTx dstxNew(finalTransaction, activeSmartnodeInfo.outpoint, GetAdjustedTime());
         dstxNew.Sign();
         CCoinJoin::AddDSTX(dstxNew);
     }
@@ -362,13 +363,13 @@ void CCoinJoinServer::CommitFinalTransaction(CConnman& connman)
 // a client submits a transaction then refused to sign, there must be a cost. Otherwise they
 // would be able to do this over and over again and bring the mixing to a halt.
 //
-// How does this work? Messages to Masternodes come in via NetMsgType::DSVIN, these require a valid collateral
-// transaction for the client to be able to enter the pool. This transaction is kept by the Masternode
+// How does this work? Messages to Smartnodes come in via NetMsgType::DSVIN, these require a valid collateral
+// transaction for the client to be able to enter the pool. This transaction is kept by the Smartnode
 // until the transaction is either complete or fails.
 //
 void CCoinJoinServer::ChargeFees(CConnman& connman)
 {
-    if (!fMasternodeMode) return;
+    if (!fSmartnodeMode) return;
 
     //we don't need to charge collateral for every offence.
     if (GetRandInt(100) > 33) return;
@@ -432,13 +433,13 @@ void CCoinJoinServer::ChargeFees(CConnman& connman)
 
     Being that mixing has "no fees" we need to have some kind of cost associated
     with using it to stop abuse. Otherwise it could serve as an attack vector and
-    allow endless transaction that would bloat Dash and make it unusable. To
+    allow endless transaction that would bloat Raptoreum and make it unusable. To
     stop these kinds of attacks 1 in 10 successful transactions are charged. This
     adds up to a cost of 0.001DRK per transaction on average.
 */
 void CCoinJoinServer::ChargeRandomFees(CConnman& connman)
 {
-    if (!fMasternodeMode) return;
+    if (!fSmartnodeMode) return;
 
     for (const auto& txCollateral : vecSessionCollaterals) {
         if (GetRandInt(100) > 10) return;
@@ -461,7 +462,7 @@ void CCoinJoinServer::ConsumeCollateral(CConnman& connman, const CTransactionRef
 
 bool CCoinJoinServer::HasTimedOut()
 {
-    if (!fMasternodeMode) return false;
+    if (!fSmartnodeMode) return false;
 
     if (nState == POOL_STATE_IDLE) return false;
 
@@ -475,7 +476,7 @@ bool CCoinJoinServer::HasTimedOut()
 //
 void CCoinJoinServer::CheckTimeout(CConnman& connman)
 {
-    if (!fMasternodeMode) return;
+    if (!fSmartnodeMode) return;
 
     CheckQueue();
 
@@ -495,12 +496,12 @@ void CCoinJoinServer::CheckTimeout(CConnman& connman)
 */
 void CCoinJoinServer::CheckForCompleteQueue(CConnman& connman)
 {
-    if (!fMasternodeMode) return;
+    if (!fSmartnodeMode) return;
 
     if (nState == POOL_STATE_QUEUE && IsSessionReady()) {
         SetState(POOL_STATE_ACCEPTING_ENTRIES);
 
-        CCoinJoinQueue dsq(nSessionDenom, activeMasternodeInfo.outpoint, GetAdjustedTime(), true);
+        CCoinJoinQueue dsq(nSessionDenom, activeSmartnodeInfo.outpoint, GetAdjustedTime(), true);
         LogPrint(BCLog::COINJOIN, "CCoinJoinServer::CheckForCompleteQueue -- queue is ready, signing and relaying (%s) " /* Continued */
                                      "with %d participants\n", dsq.ToString(), vecSessionCollaterals.size());
         dsq.Sign();
@@ -537,7 +538,7 @@ bool CCoinJoinServer::IsInputScriptSigValid(const CTxIn& txin)
     if (nTxInIndex >= 0) { //might have to do this one input at a time?
         txNew.vin[nTxInIndex].scriptSig = txin.scriptSig;
         LogPrint(BCLog::COINJOIN, "CCoinJoinServer::IsInputScriptSigValid -- verifying scriptSig %s\n", ScriptToAsmStr(txin.scriptSig).substr(0, 24));
-        // TODO we're using amount=0 here but we should use the correct amount. This works because Dash ignores the amount while signing/verifying (only used in Bitcoin/Segwit)
+        // TODO we're using amount=0 here but we should use the correct amount. This works because Raptoreum ignores the amount while signing/verifying (only used in Bitcoin/Segwit)
         if (!VerifyScript(txNew.vin[nTxInIndex].scriptSig, sigPubKey, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC, MutableTransactionSignatureChecker(&txNew, nTxInIndex, 0))) {
             LogPrint(BCLog::COINJOIN, "CCoinJoinServer::IsInputScriptSigValid -- VerifyScript() failed on input %d\n", nTxInIndex);
             return false;
@@ -556,7 +557,7 @@ bool CCoinJoinServer::IsInputScriptSigValid(const CTxIn& txin)
 //
 bool CCoinJoinServer::AddEntry(CConnman& connman, const CCoinJoinEntry& entry, PoolMessage& nMessageIDRet)
 {
-    if (!fMasternodeMode) return false;
+    if (!fSmartnodeMode) return false;
 
     if (GetEntriesCount() >= vecSessionCollaterals.size()) {
         LogPrint(BCLog::COINJOIN, "CCoinJoinServer::%s -- ERROR: entries is full!\n", __func__);
@@ -664,7 +665,7 @@ bool CCoinJoinServer::IsSignaturesComplete()
 
 bool CCoinJoinServer::IsAcceptableDSA(const CCoinJoinAccept& dsa, PoolMessage& nMessageIDRet)
 {
-    if (!fMasternodeMode) return false;
+    if (!fSmartnodeMode) return false;
 
     // is denom even something legit?
     if (!CCoinJoin::IsValidDenomination(dsa.nDenom)) {
@@ -685,7 +686,7 @@ bool CCoinJoinServer::IsAcceptableDSA(const CCoinJoinAccept& dsa, PoolMessage& n
 
 bool CCoinJoinServer::CreateNewSession(const CCoinJoinAccept& dsa, PoolMessage& nMessageIDRet, CConnman& connman)
 {
-    if (!fMasternodeMode || nSessionID != 0) return false;
+    if (!fSmartnodeMode || nSessionID != 0) return false;
 
     // new session can only be started in idle mode
     if (nState != POOL_STATE_IDLE) {
@@ -723,7 +724,7 @@ bool CCoinJoinServer::CreateNewSession(const CCoinJoinAccept& dsa, PoolMessage& 
 
 bool CCoinJoinServer::AddUserToExistingSession(const CCoinJoinAccept& dsa, PoolMessage& nMessageIDRet)
 {
-    if (!fMasternodeMode || nSessionID == 0 || IsSessionReady()) return false;
+    if (!fSmartnodeMode || nSessionID == 0 || IsSessionReady()) return false;
 
     if (!IsAcceptableDSA(dsa, nMessageIDRet)) {
         return false;
@@ -856,10 +857,10 @@ void CCoinJoinServer::RelayCompletedTransaction(PoolMessage nMessageID, CConnman
 
 void CCoinJoinServer::SetState(PoolState nStateNew)
 {
-    if (!fMasternodeMode) return;
+    if (!fSmartnodeMode) return;
 
     if (nStateNew == POOL_STATE_ERROR) {
-        LogPrint(BCLog::COINJOIN, "CCoinJoinServer::SetState -- Can't set state to ERROR as a Masternode. \n");
+        LogPrint(BCLog::COINJOIN, "CCoinJoinServer::SetState -- Can't set state to ERROR as a Smartnode. \n");
         return;
     }
 
@@ -870,9 +871,9 @@ void CCoinJoinServer::SetState(PoolState nStateNew)
 
 void CCoinJoinServer::DoMaintenance(CConnman& connman)
 {
-    if (!fMasternodeMode) return; // only run on masternodes
+    if (!fSmartnodeMode) return; // only run on masternodes
 
-    if (!masternodeSync.IsBlockchainSynced() || ShutdownRequested()) return;
+    if (!smartnodeSync.IsBlockchainSynced() || ShutdownRequested()) return;
 
     coinJoinServer.CheckForCompleteQueue(connman);
     coinJoinServer.CheckPool(connman);

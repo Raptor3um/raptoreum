@@ -1,5 +1,6 @@
 # Copyright (c) 2013-2016 The Bitcoin Core developers
 # Copyright (c) 2014-2018 The Dash Core developers
+# Copyright (c) 2020-2022 The Raptoreum developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -47,36 +48,36 @@ BITCOIN_INCLUDES += $(UNIVALUE_CFLAGS)
 
 BLS_LIBS=-lbls-dash -lgmp
 
-LIBBITCOIN_SERVER=libdash_server.a
-LIBBITCOIN_COMMON=libdash_common.a
-LIBBITCOIN_CONSENSUS=libdash_consensus.a
-LIBBITCOIN_CLI=libdash_cli.a
-LIBBITCOIN_UTIL=libdash_util.a
-LIBBITCOIN_CRYPTO_BASE=crypto/libdash_crypto_base.a
-LIBBITCOINQT=qt/libdashqt.a
+LIBBITCOIN_SERVER=libraptoreum_server.a
+LIBBITCOIN_COMMON=libraptoreum_common.a
+LIBBITCOIN_CONSENSUS=libraptoreum_consensus.a
+LIBBITCOIN_CLI=libraptoreum_cli.a
+LIBBITCOIN_UTIL=libraptoreum_util.a
+LIBBITCOIN_CRYPTO_BASE=crypto/libraptoreum_crypto_base.a
+LIBBITCOINQT=qt/libraptoreumqt.a
 LIBSECP256K1=secp256k1/libsecp256k1.la
 
 if ENABLE_ZMQ
-LIBBITCOIN_ZMQ=libdash_zmq.a
+LIBBITCOIN_ZMQ=libraptoreum_zmq.a
 endif
 if BUILD_BITCOIN_LIBS
-LIBBITCOINCONSENSUS=libdashconsensus.la
+LIBBITCOINCONSENSUS=libraptoreumconsensus.la
 endif
 if ENABLE_WALLET
-LIBBITCOIN_WALLET=libdash_wallet.a
+LIBBITCOIN_WALLET=libraptoreum_wallet.a
 endif
 
 LIBBITCOIN_CRYPTO= $(LIBBITCOIN_CRYPTO_BASE)
 if ENABLE_SSE41
-LIBBITCOIN_CRYPTO_SSE41 = crypto/libdash_crypto_sse41.a
+LIBBITCOIN_CRYPTO_SSE41 = crypto/libraptoreum_crypto_sse41.a
 LIBBITCOIN_CRYPTO += $(LIBBITCOIN_CRYPTO_SSE41)
 endif
 if ENABLE_AVX2
-LIBBITCOIN_CRYPTO_AVX2 = crypto/libdash_crypto_avx2.a
+LIBBITCOIN_CRYPTO_AVX2 = crypto/libraptoreum_crypto_avx2.a
 LIBBITCOIN_CRYPTO += $(LIBBITCOIN_CRYPTO_AVX2)
 endif
 if ENABLE_SHANI
-LIBBITCOIN_CRYPTO_SHANI = crypto/libdash_crypto_shani.a
+LIBBITCOIN_CRYPTO_SHANI = crypto/libraptoreum_crypto_shani.a
 LIBBITCOIN_CRYPTO += $(LIBBITCOIN_CRYPTO_SHANI)
 endif
 
@@ -103,19 +104,20 @@ TESTS =
 BENCHMARKS =
 
 if BUILD_BITCOIND
-  bin_PROGRAMS += dashd
+  bin_PROGRAMS += raptoreumd
 endif
 
 if BUILD_BITCOIN_UTILS
-  bin_PROGRAMS += dash-cli dash-tx
+  bin_PROGRAMS += raptoreum-cli raptoreum-tx
 endif
 
 .PHONY: FORCE check-symbols check-security
-# dash core #
+# raptoreum core #
 BITCOIN_CORE_H = \
   addrdb.h \
   addressindex.h \
   spentindex.h \
+  indices/future_index.h \
   addrman.h \
   attributes.h \
   base58.h \
@@ -168,6 +170,8 @@ BITCOIN_CORE_H = \
   governance/governance-validators.h \
   governance/governance-vote.h \
   governance/governance-votedb.h \
+  future/fee.h \
+  future/utils.h \
   flat-database.h \
   hdchain.h \
   fs.h \
@@ -197,12 +201,13 @@ BITCOIN_CORE_H = \
   llmq/quorums_signing.h \
   llmq/quorums_signing_shares.h \
   llmq/quorums_utils.h \
-  logging.h \
-  masternode/activemasternode.h \
-  masternode/masternode-meta.h \
-  masternode/masternode-payments.h \
-  masternode/masternode-sync.h \
-  masternode/masternode-utils.h \
+  loggibng.h \
+  smartnode/activesmartnode.h \
+  smartnode/smartnode-meta.h \
+  smartnode/smartnode-payments.h \
+  smartnode/smartnode-sync.h \
+  smartnode/smartnode-utils.h \
+  smartnode/smartnode-collaterals.h \
   memusage.h \
   merkleblock.h \
   messagesigner.h \
@@ -287,12 +292,12 @@ obj/build.h: FORCE
 	@$(MKDIR_P) $(builddir)/obj
 	@$(top_srcdir)/share/genbuild.sh "$(abs_top_builddir)/src/obj/build.h" \
 	  "$(abs_top_srcdir)"
-libdash_util_a-clientversion.$(OBJEXT): obj/build.h
+libraptoreum_util_a-clientversion.$(OBJEXT): obj/build.h
 
-# server: shared between dashd and dash-qt
-libdash_server_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(MINIUPNPC_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
-libdash_server_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-libdash_server_a_SOURCES = \
+# server: shared between raptoreumd and raptoreum-qt
+libraptoreum_server_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(MINIUPNPC_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
+libraptoreum_server_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libraptoreum_server_a_SOURCES = \
   addrdb.cpp \
   addrman.cpp \
   batchedlogger.cpp \
@@ -322,6 +327,7 @@ libdash_server_a_SOURCES = \
   governance/governance-validators.cpp \
   governance/governance-vote.cpp \
   governance/governance-votedb.cpp \
+  future/fee.cpp \
   llmq/quorums.cpp \
   llmq/quorums_blockprocessor.cpp \
   llmq/quorums_commitment.cpp \
@@ -335,11 +341,11 @@ libdash_server_a_SOURCES = \
   llmq/quorums_signing.cpp \
   llmq/quorums_signing_shares.cpp \
   llmq/quorums_utils.cpp \
-  masternode/activemasternode.cpp \
-  masternode/masternode-meta.cpp \
-  masternode/masternode-payments.cpp \
-  masternode/masternode-sync.cpp \
-  masternode/masternode-utils.cpp \
+  smartnode/activesmartnode.cpp \
+  smartnode/smartnode-meta.cpp \
+  smartnode/smartnode-payments.cpp \
+  smartnode/smartnode-sync.cpp \
+  smartnode/smartnode-utils.cpp \
   merkleblock.cpp \
   messagesigner.cpp \
   miner.cpp \
@@ -353,7 +359,7 @@ libdash_server_a_SOURCES = \
   pow.cpp \
   rest.cpp \
   rpc/blockchain.cpp \
-  rpc/masternode.cpp \
+  rpc/smartnode.cpp \
   rpc/governance.cpp \
   rpc/mining.cpp \
   rpc/misc.cpp \
@@ -378,9 +384,9 @@ libdash_server_a_SOURCES = \
   $(BITCOIN_CORE_H)
 
 if ENABLE_ZMQ
-libdash_zmq_a_CPPFLAGS = $(BITCOIN_INCLUDES) $(ZMQ_CFLAGS)
-libdash_zmq_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-libdash_zmq_a_SOURCES = \
+libraptoreum_zmq_a_CPPFLAGS = $(BITCOIN_INCLUDES) $(ZMQ_CFLAGS)
+libraptoreum_zmq_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libraptoreum_zmq_a_SOURCES = \
   zmq/zmqabstractnotifier.cpp \
   zmq/zmqnotificationinterface.cpp \
   zmq/zmqpublishnotifier.cpp \
@@ -388,11 +394,11 @@ libdash_zmq_a_SOURCES = \
 endif
 
 
-# wallet: shared between dashd and dash-qt, but only linked
+# wallet: shared between raptoreumd and raptoreum-qt, but only linked
 # when wallet enabled
-libdash_wallet_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
-libdash_wallet_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-libdash_wallet_a_SOURCES = \
+libraptoreum_wallet_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+libraptoreum_wallet_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libraptoreum_wallet_a_SOURCES = \
   coinjoin/coinjoin-client.cpp \
   coinjoin/coinjoin-client-options.cpp \
   coinjoin/coinjoin-util.cpp \
@@ -411,9 +417,9 @@ libdash_wallet_a_SOURCES = \
   $(BITCOIN_CORE_H)
 
 # crypto primitives library
-crypto_libdash_crypto_base_a_CPPFLAGS = $(AM_CPPFLAGS) $(PIC_FLAGS)
-crypto_libdash_crypto_base_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS) $(PIC_FLAGS)
-crypto_libdash_crypto_base_a_SOURCES = \
+crypto_libraptoreum_crypto_base_a_CPPFLAGS = $(AM_CPPFLAGS) $(PIC_FLAGS)
+crypto_libraptoreum_crypto_base_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS) $(PIC_FLAGS)
+crypto_libraptoreum_crypto_base_a_SOURCES = \
   crypto/aes.cpp \
   crypto/aes.h \
   crypto/chacha_poly_aead.h \
@@ -429,32 +435,6 @@ crypto_libdash_crypto_base_a_SOURCES = \
   crypto/poly1305.cpp \
   crypto/ripemd160.cpp \
   crypto/aes_helper.c \
-  crypto/ripemd160.h \
-  crypto/sha1.cpp \
-  crypto/sha1.h \
-  crypto/sha256.cpp \
-  crypto/sha256.h \
-  crypto/sha512.cpp \
-  crypto/sha512.h
-
-if USE_ASM
-crypto_libdash_crypto_base_a_SOURCES += crypto/sha256_sse4.cpp
-endif
-
-crypto_libdash_crypto_sse41_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-crypto_libdash_crypto_sse41_a_CPPFLAGS = $(AM_CPPFLAGS)
-crypto_libdash_crypto_sse41_a_CXXFLAGS += $(SSE41_CXXFLAGS)
-crypto_libdash_crypto_sse41_a_CPPFLAGS += -DENABLE_SSE41
-crypto_libdash_crypto_sse41_a_SOURCES = crypto/sha256_sse41.cpp
-
-crypto_libdash_crypto_avx2_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-crypto_libdash_crypto_avx2_a_CPPFLAGS = $(AM_CPPFLAGS)
-crypto_libdash_crypto_avx2_a_CXXFLAGS += $(AVX2_CXXFLAGS)
-crypto_libdash_crypto_avx2_a_CPPFLAGS += -DENABLE_AVX2
-crypto_libdash_crypto_avx2_a_SOURCES = crypto/sha256_avx2.cpp
-
-# x11
-crypto_libdash_crypto_base_a_SOURCES += \
   crypto/blake.c \
   crypto/bmw.c \
   crypto/cubehash.c \
@@ -466,6 +446,18 @@ crypto_libdash_crypto_base_a_SOURCES += \
   crypto/shavite.c \
   crypto/simd.c \
   crypto/skein.c \
+  crypto/sph_hamsi.c \
+  crypto/sph_hamsi_helper.c \
+  crypto/sph_fugue.c \
+  crypto/sph_shabal.c \
+  crypto/sph_whirlpool.c \
+  crypto/sph_sha2.c \
+  crypto/sph_sha512.c \
+  crypto/ripemd160.h \
+  crypto/sha1.cpp \
+  crypto/sha1.h \
+  crypto/sha256.cpp \
+  crypto/sha256.h \
   crypto/sph_blake.h \
   crypto/sph_bmw.h \
   crypto/sph_cubehash.h \
@@ -477,19 +469,69 @@ crypto_libdash_crypto_base_a_SOURCES += \
   crypto/sph_shavite.h \
   crypto/sph_simd.h \
   crypto/sph_skein.h \
-  crypto/sph_types.h
+  crypto/sph_hamsi.h \
+  crypto/sph_fugue.h \
+  crypto/sph_shabal.h \
+  crypto/sph_whirlpool.h \
+  crypto/sph_sha2.h \
+  crypto/sph_types.h \
+  crypto/sha512.cpp \
+  cryptonote/aesb.c \
+  cryptonote/c_blake256.c \
+  cryptonote/c_groestl.c \
+  cryptonote/c_jh.c \
+  cryptonote/c_keccak.c \
+  cryptonote/c_skein.c \
+  cryptonote/slow-hash.c \
+  cryptonote/hash-ops.c \
+  cryptonote/oaes_lib.c \
+  cryptonote/wild_keccak.cpp \
+  cryptonote/c_blake256.h \
+  cryptonote/c_groestl.h \
+  cryptonote/c_jh.h \
+  cryptonote/c_keccak.h \
+  cryptonote/crypto.h \
+  cryptonote/c_skein.h \
+  cryptonote/groestl_tables.h \
+  cryptonote/slow-hash.h \
+  cryptonote/int-util.h \
+  cryptonote/oaes_config.h \
+  cryptonote/hash-ops.h \
+  cryptonote/oaes_lib.h \
+  cryptonote/skein_port.h \
+  cryptonote/variant2_int_sqrt.h \
+  cryptonote/wild_keccak.h \
+  cryptonote/warnings.h \
+  crypto/sha512.h
 
-crypto_libdash_crypto_shani_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-crypto_libdash_crypto_shani_a_CPPFLAGS = $(AM_CPPFLAGS)
-crypto_libdash_crypto_shani_a_CXXFLAGS += $(SHANI_CXXFLAGS)
-crypto_libdash_crypto_shani_a_CPPFLAGS += -DENABLE_SHANI
-crypto_libdash_crypto_shani_a_SOURCES = crypto/sha256_shani.cpp
+if USE_ASM
+crypto_libraptoreum_crypto_base_a_SOURCES += crypto/sha256_sse4.cpp
+endif
+
+crypto_libraptoreum_crypto_sse41_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+crypto_libraptoreum_crypto_sse41_a_CPPFLAGS = $(AM_CPPFLAGS)
+crypto_libraptoreum_crypto_sse41_a_CXXFLAGS += $(SSE41_CXXFLAGS)
+crypto_libraptoreum_crypto_sse41_a_CPPFLAGS += -DENABLE_SSE41
+crypto_libraptoreum_crypto_sse41_a_SOURCES = crypto/sha256_sse41.cpp
+
+crypto_libraptoreum_crypto_avx2_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+crypto_libraptoreum_crypto_avx2_a_CPPFLAGS = $(AM_CPPFLAGS)
+crypto_libraptoreum_crypto_avx2_a_CXXFLAGS += $(AVX2_CXXFLAGS)
+crypto_libraptoreum_crypto_avx2_a_CPPFLAGS += -DENABLE_AVX2
+crypto_libraptoreum_crypto_avx2_a_SOURCES = crypto/sha256_avx2.cpp
+
+crypto_libraptoreum_crypto_shani_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+crypto_libraptoreum_crypto_shani_a_CPPFLAGS = $(AM_CPPFLAGS)
+crypto_libraptoreum_crypto_shani_a_CXXFLAGS += $(SHANI_CXXFLAGS)
+crypto_libraptoreum_crypto_shani_a_CPPFLAGS += -DENABLE_SHANI
+crypto_libraptoreum_crypto_shani_a_SOURCES = crypto/sha256_shani.cpp
 
 # consensus: shared between all executables that validate any consensus rules.
-libdash_consensus_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
-libdash_consensus_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-libdash_consensus_a_SOURCES = \
+libraptoreum_consensus_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+libraptoreum_consensus_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libraptoreum_consensus_a_SOURCES = \
   amount.h \
+  founder_payment.h \
   arith_uint256.cpp \
   arith_uint256.h \
   bls/bls.cpp \
@@ -498,6 +540,8 @@ libdash_consensus_a_SOURCES = \
   consensus/merkle.h \
   consensus/params.h \
   consensus/validation.h \
+  hash_selection.h \
+  hash_selection.cpp \
   hash.cpp \
   hash.h \
   prevector.h \
@@ -507,7 +551,7 @@ libdash_consensus_a_SOURCES = \
   primitives/transaction.h \
   pubkey.cpp \
   pubkey.h \
-  script/dashconsensus.cpp \
+  script/raptoreumconsensus.cpp \
   script/interpreter.cpp \
   script/interpreter.h \
   script/script.cpp \
@@ -524,14 +568,17 @@ libdash_consensus_a_SOURCES = \
   utilstrencodings.h \
   version.h
 
-# common: shared between dashd, and dash-qt and non-server tools
-libdash_common_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
-libdash_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-libdash_common_a_SOURCES = \
+# common: shared between raptoreumd, and raptoreum-qt and non-server tools
+libraptoreum_common_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+libraptoreum_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libraptoreum_common_a_SOURCES = \
   base58.cpp \
   bech32.cpp \
+  founder_payment.cpp \
   bip39.cpp \
   chainparams.cpp \
+  smartnode/smartnode-collaterals.cpp \
+  future/utils.cpp \
   coins.cpp \
   compressor.cpp \
   core_read.cpp \
@@ -546,7 +593,6 @@ libdash_common_a_SOURCES = \
   protocol.cpp \
   saltedhasher.cpp \
   scheduler.cpp \
-  script/ismine.cpp \
   script/sign.cpp \
   script/standard.cpp \
   warnings.cpp \
@@ -555,9 +601,9 @@ libdash_common_a_SOURCES = \
 # util: shared between all executables.
 # This library *must* be included to make sure that the glibc
 # backward-compatibility objects and their sanity checks are linked.
-libdash_util_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
-libdash_util_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-libdash_util_a_SOURCES = \
+libraptoreum_util_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+libraptoreum_util_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libraptoreum_util_a_SOURCES = \
   bls/bls_batchverifier.h \
   bls/bls_ies.cpp \
   bls/bls_ies.h \
@@ -586,31 +632,31 @@ libdash_util_a_SOURCES = \
   $(BITCOIN_CORE_H)
 
 if GLIBC_BACK_COMPAT
-libdash_util_a_SOURCES += compat/glibc_compat.cpp
+libraptoreum_util_a_SOURCES += compat/glibc_compat.cpp
 AM_LDFLAGS += -Wl,--wrap=log2f -Wl,--wrap=__divmoddi4
 endif
 
-# cli: shared between dash-cli and dash-qt
-libdash_cli_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
-libdash_cli_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-libdash_cli_a_SOURCES = \
+# cli: shared between raptoreum-cli and raptoreum-qt
+libraptoreum_cli_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+libraptoreum_cli_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libraptoreum_cli_a_SOURCES = \
   rpc/client.cpp \
   $(BITCOIN_CORE_H)
 
-nodist_libdash_util_a_SOURCES = $(srcdir)/obj/build.h
+nodist_libraptoreum_util_a_SOURCES = $(srcdir)/obj/build.h
 #
 
-# dashd binary #
-dashd_SOURCES = dashd.cpp
-dashd_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
-dashd_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-dashd_LDFLAGS = $(LDFLAGS_WRAP_EXCEPTIONS) $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+# raptoreumd binary #
+raptoreumd_SOURCES = raptoreumd.cpp
+raptoreumd_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+raptoreumd_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+raptoreumd_LDFLAGS = $(LDFLAGS_WRAP_EXCEPTIONS) $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 if TARGET_WINDOWS
-dashd_SOURCES += dashd-res.rc
+raptoreumd_SOURCES += raptoreumd-res.rc
 endif
 
-dashd_LDADD = \
+raptoreumd_LDADD = \
   $(LIBBITCOIN_SERVER) \
   $(LIBBITCOIN_WALLET) \
   $(LIBBITCOIN_COMMON) \
@@ -624,37 +670,37 @@ dashd_LDADD = \
   $(LIBMEMENV) \
   $(LIBSECP256K1)
 
-dashd_LDADD += $(BACKTRACE_LIB) $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(BLS_LIBS)
+raptoreumd_LDADD += $(BACKTRACE_LIB) $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(BLS_LIBS)
 
-# dash-cli binary #
-dash_cli_SOURCES = dash-cli.cpp
-dash_cli_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(EVENT_CFLAGS)
-dash_cli_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-dash_cli_LDFLAGS = $(LDFLAGS_WRAP_EXCEPTIONS) $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+# raptoreum-cli binary #
+raptoreum_cli_SOURCES = raptoreum-cli.cpp
+raptoreum_cli_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(EVENT_CFLAGS)
+raptoreum_cli_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+raptoreum_cli_LDFLAGS = $(LDFLAGS_WRAP_EXCEPTIONS) $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 if TARGET_WINDOWS
-dash_cli_SOURCES += dash-cli-res.rc
+raptoreum_cli_SOURCES += raptoreum-cli-res.rc
 endif
 
-dash_cli_LDADD = \
+raptoreum_cli_LDADD = \
   $(LIBBITCOIN_CLI) \
   $(LIBUNIVALUE) \
   $(LIBBITCOIN_UTIL) \
   $(LIBBITCOIN_CRYPTO)
-dash_cli_LDADD += $(BACKTRACE_LIB) $(BOOST_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS) $(BLS_LIBS)
+raptoreum_cli_LDADD += $(BACKTRACE_LIB) $(BOOST_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS) $(BLS_LIBS)
 #
 
-# dash-tx binary #
-dash_tx_SOURCES = dash-tx.cpp
-dash_tx_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
-dash_tx_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-dash_tx_LDFLAGS = $(LDFLAGS_WRAP_EXCEPTIONS) $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+# raptoreum-tx binary #
+raptoreum_tx_SOURCES = raptoreum-tx.cpp
+raptoreum_tx_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+raptoreum_tx_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+raptoreum_tx_LDFLAGS = $(LDFLAGS_WRAP_EXCEPTIONS) $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 if TARGET_WINDOWS
-dash_tx_SOURCES += dash-tx-res.rc
+raptoreum_tx_SOURCES += raptoreum-tx-res.rc
 endif
 
-dash_tx_LDADD = \
+raptoreum_tx_LDADD = \
   $(LIBUNIVALUE) \
   $(LIBBITCOIN_COMMON) \
   $(LIBBITCOIN_UTIL) \
@@ -662,22 +708,22 @@ dash_tx_LDADD = \
   $(LIBBITCOIN_CRYPTO) \
   $(LIBSECP256K1)
 
-dash_tx_LDADD += $(BACKTRACE_LIB) $(BOOST_LIBS) $(CRYPTO_LIBS) $(BLS_LIBS)
+raptoreum_tx_LDADD += $(BACKTRACE_LIB) $(BOOST_LIBS) $(CRYPTO_LIBS) $(BLS_LIBS)
 #
 
-# dashconsensus library #
+# raptoreumconsensus library #
 if BUILD_BITCOIN_LIBS
-include_HEADERS = script/dashconsensus.h
-libdashconsensus_la_SOURCES = support/cleanse.cpp $(crypto_libdash_crypto_base_a_SOURCES) $(libdash_consensus_a_SOURCES)
+include_HEADERS = script/raptoreumconsensus.h
+libraptoreumconsensus_la_SOURCES = support/cleanse.cpp $(crypto_libraptoreum_crypto_base_a_SOURCES) $(libraptoreum_consensus_a_SOURCES)
 
 if GLIBC_BACK_COMPAT
-  libdashconsensus_la_SOURCES += compat/glibc_compat.cpp
+  libraptoreumconsensus_la_SOURCES += compat/glibc_compat.cpp
 endif
 
-libdashconsensus_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS)
-libdashconsensus_la_LIBADD = $(LIBSECP256K1) $(BLS_LIBS)
-libdashconsensus_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include -DBUILD_BITCOIN_INTERNAL
-libdashconsensus_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libraptoreumconsensus_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS)
+libraptoreumconsensus_la_LIBADD = $(LIBSECP256K1) $(BLS_LIBS)
+libraptoreumconsensus_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include -DBUILD_BITCOIN_INTERNAL
+libraptoreumconsensus_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 
 endif
 #
@@ -710,12 +756,12 @@ EXTRA_DIST = $(CTAES_DIST)
 EXTRA_DIST += $(IMMER_DIST)
 
 
-config/dash-config.h: config/stamp-h1
+config/raptoreum-config.h: config/stamp-h1
 	@$(MAKE) -C $(top_builddir) $(subdir)/$(@)
-config/stamp-h1: $(top_srcdir)/$(subdir)/config/dash-config.h.in $(top_builddir)/config.status
+config/stamp-h1: $(top_srcdir)/$(subdir)/config/raptoreum-config.h.in $(top_builddir)/config.status
 	$(AM_V_at)$(MAKE) -C $(top_builddir) $(subdir)/$(@)
-$(top_srcdir)/$(subdir)/config/dash-config.h.in:  $(am__configure_deps)
-	$(AM_V_at)$(MAKE) -C $(top_srcdir) $(subdir)/config/dash-config.h.in
+$(top_srcdir)/$(subdir)/config/raptoreum-config.h.in:  $(am__configure_deps)
+	$(AM_V_at)$(MAKE) -C $(top_srcdir) $(subdir)/config/raptoreum-config.h.in
 
 
 clean-local:

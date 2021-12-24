@@ -1,0 +1,13 @@
+[Desktop Entry]
+Encoding=UTF-8
+Name=Raptoreum Core
+Comment=Raptoreum P2P Cryptocurrency
+Comment[de]=Verbinde mit dem Raptoreum peer-to-peer Netzwerk
+Comment[fr]=Raptoreum, monnaie virtuelle cryptographique pair à pair
+Comment[tr]=Raptoreum, eşten eşe kriptografik sanal para birimi
+Exec=raptoreum-qt %u
+Terminal=false
+Type=Application
+Icon=raptoreum128
+MimeType=x-scheme-handler/raptoreum;
+Categories=Office;Finance;

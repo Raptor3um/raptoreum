@@ -7,16 +7,16 @@ import common_helpers
 sys.path.append(os.getcwd())
 
 
-simple_types = ["CMasternode", "CMasternodeVerification",
-                "CMasternodeBroadcast", "CMasternodePing",
-                "CMasternodeMan", "CDarksendQueue", "CDarkSendEntry",
+simple_types = ["CSmartnode", "CSmartnodeVerification",
+                "CSmartnodeBroadcast", "CSmartnodePing",
+                "CSmartnodeMan", "CDarksendQueue", "CDarkSendEntry",
                 "CTransaction", "CMutableTransaction", "CCoinJoinBaseSession",
                 "CCoinJoinBaseManager", "CCoinJoinClientSession",
-                "CCoinJoinClientManager", "CCoinJoinServer", "CMasternodePayments",
-                "CMasternodePaymentVote", "CMasternodeBlockPayees",
-                "CMasternodePayee", "CInstantSend", "CTxLockRequest",
+                "CCoinJoinClientManager", "CCoinJoinServer", "CSmartnodePayments",
+                "CSmartnodePaymentVote", "CSmartnodeBlockPayees",
+                "CSmartnodePayee", "CInstantSend", "CTxLockRequest",
                 "CTxLockVote", "CTxLockCandidate", "COutPoint",
-                "COutPointLock", "CSporkManager", "CMasternodeSync",
+                "COutPointLock", "CSporkManager", "CSmartnodeSync",
                 "CGovernanceManager", "CRateCheckBuffer", "CGovernanceObject",
                 "CGovernanceVote", "CGovernanceObjectVoteFile"]
 

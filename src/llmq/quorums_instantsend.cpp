@@ -1,4 +1,5 @@
 // Copyright (c) 2019-2021 The Dash Core developers
+// Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,7 +10,7 @@
 #include <bls/bls_batchverifier.h>
 #include <chainparams.h>
 #include <txmempool.h>
-#include <masternode/masternode-sync.h>
+#include <smartnode/smartnode-sync.h>
 #include <net_processing.h>
 #include <spork.h>
 #include <validation.h>
@@ -448,7 +449,7 @@ void CInstantSendManager::InterruptWorkerThread()
 
 void CInstantSendManager::ProcessTx(const CTransaction& tx, bool fRetroactive, const Consensus::Params& params)
 {
-    if (!fMasternodeMode || !IsInstantSendEnabled() || !masternodeSync.IsBlockchainSynced()) {
+    if (!fSmartnodeMode || !IsInstantSendEnabled() || !smartnodeSync.IsBlockchainSynced()) {
         return;
     }
 
@@ -587,7 +588,7 @@ bool CInstantSendManager::CheckCanLock(const COutPoint& outpoint, bool printDebu
 
     CTransactionRef tx;
     uint256 hashBlock;
-    // this relies on enabled txindex and won't work if we ever try to remove the requirement for txindex for masternodes
+    // this relies on enabled txindex and won't work if we ever try to remove the requirement for txindex for smartnodes
     if (!GetTransaction(outpoint.hash, tx, params, hashBlock, false)) {
         if (printDebug) {
             LogPrint(BCLog::INSTANTSEND, "CInstantSendManager::%s -- txid=%s: failed to find parent TX %s\n", __func__,
@@ -1221,7 +1222,7 @@ void CInstantSendManager::UpdatedBlockTip(const CBlockIndex* pindexNew)
         }
     }
 
-    bool fDIP0008Active = pindexNew->pprev && pindexNew->pprev->nHeight >= Params().GetConsensus().DIP0008Height;
+    bool fDIP0008Active = Params().GetConsensus().DIP0008Enabled;
 
     if (AreChainLocksEnabled() && fDIP0008Active) {
         // Nothing to do here. We should keep all islocks and let chainlocks handle them.
@@ -1356,7 +1357,7 @@ void CInstantSendManager::ResolveBlockConflicts(const uint256& islockHash, const
 
     // If a conflict was mined into a ChainLocked block, then we have no other choice and must prune the ISLOCK and all
     // chained ISLOCKs that build on top of this one. The probability of this is practically zero and can only happen
-    // when large parts of the masternode network are controlled by an attacker. In this case we must still find consensus
+    // when large parts of the smartnode network are controlled by an attacker. In this case we must still find consensus
     // and its better to sacrifice individual ISLOCKs then to sacrifice whole ChainLocks.
     if (hasChainLockedConflict) {
         LogPrintf("CInstantSendManager::%s -- txid=%s, islock=%s: at least one conflicted TX already got a ChainLock\n", __func__,

@@ -1,4 +1,5 @@
 // Copyright (c) 2018-2021 The Dash Core developers
+// Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -27,18 +28,75 @@
 
 #include <bls/bls.h>
 
-#include <masternode/masternode-meta.h>
+#include <smartnode/smartnode-meta.h>
 
 #ifdef ENABLE_WALLET
 extern UniValue signrawtransaction(const JSONRPCRequest& request);
 extern UniValue sendrawtransaction(const JSONRPCRequest& request);
 #endif//ENABLE_WALLET
 
+std::string get_current_dir()
+{
+  char buff[FILENAME_MAX];
+  char* r = getcwd(buff, FILENAME_MAX);
+  (void*)r;
+  std::string current_dir(buff);
+//  current_dir += '/';
+#ifdef WIN32
+	std::replace(current_dir.begin(), current_dir.end(), '\\', '/');
+#endif
+	return current_dir;
+}
+
+static const std::string LOWER_CASE = "abcdefghijklmnopqrstuvwxyz";
+static const std::string SPECIAL = "~!@#$%^&*+<>[];:,.?|";
+static const std::string NUMBER = "0123456789";
+
+static std::string generateRandomString(int length, bool specialChar)
+{
+  std::time_t now = std::time(0);
+  boost::random::mt19937 gen{static_cast<std::uint32_t>(now)};
+  int charOptions = specialChar ? 4 : 3;
+  int specialLength = SPECIAL.length()-1;
+  boost::random::uniform_int_distribution<> randomOption{1, charOptions};
+  boost::random::uniform_int_distribution<> randomChar{0,25};
+  boost::random::uniform_int_distribution<> randomNum{0,9};
+  boost::random::uniform_int_distribution<> randomSpecial{0,specialLength};
+  std::string str;
+  str.reserve(length);
+  for(int i = 0; i < length; i++)
+  {
+    int option = randomOption(gen);
+    char ch;
+    switch(option)
+    {
+      case 1:
+        str.push_back(LOWER_CASE[randomChar(gen)]);
+    		break;
+    	case 2:
+    		str.push_back(LOWER_CASE[randomChar(gen)] - 32);
+    		break;
+    	case 3:
+    		str.push_back(NUMBER[randomNum(gen)]);
+    		break;
+    	case 4:
+    		str.push_back(SPECIAL[randomSpecial(gen)]);
+    		break;
+    	default:
+    		continue;
+    }
+  }
+  return str;
+}
+
 std::string GetHelpString(int nParamNum, std::string strParamName)
 {
     static const std::map<std::string, std::string> mapParamHelp = {
         {"collateralAddress",
-            "%d. \"collateralAddress\"        (string, required) The dash address to send the collateral to.\n"
+            "%d. \"collateralAddress\"        (string, required) The raptoreum address to send the collateral to.\n"
+        },
+        {"collateralAmount",
+            "%d. \"collateralAmount\"        (numeric, required) The collateral amount to be sent to collateral address.\n"
         },
         {"collateralHash",
             "%d. \"collateralHash\"           (string, required) The collateral transaction hash.\n"
@@ -88,17 +146,17 @@ std::string GetHelpString(int nParamNum, std::string strParamName)
             "                              The address must be unused and must differ from the collateralAddress.\n"
         },
         {"payoutAddress_register",
-            "%d. \"payoutAddress\"            (string, required) The dash address to use for masternode reward payments.\n"
+            "%d. \"payoutAddress\"            (string, required) The raptoreum address to use for smartnode reward payments.\n"
         },
         {"payoutAddress_update",
-            "%d. \"payoutAddress\"            (string, required) The dash address to use for masternode reward payments.\n"
+            "%d. \"payoutAddress\"            (string, required) The raptoreum address to use for smartnode reward payments.\n"
             "                              If set to an empty string, the currently active payout address is reused.\n"
         },
         {"proTxHash",
             "%d. \"proTxHash\"                (string, required) The hash of the initial ProRegTx.\n"
         },
         {"reason",
-            "%d. reason                     (numeric, optional) The reason for masternode service revocation.\n"
+            "%d. reason                     (numeric, optional) The reason for smartnode service revocation.\n"
         },
         {"submit",
             "%d. submit                     (bool, optional, default=true) If true, the resulting transaction is sent to the network.\n"
@@ -148,6 +206,104 @@ static CBLSSecretKey ParseBLSSecretKey(const std::string& hexKey, const std::str
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("%s must be a valid BLS secret key", paramName));
     }
     return secKey;
+}
+
+void bls_generate_help()
+{
+    throw std::runtime_error(
+            "bls generate\n"
+            "\nReturns a BLS secret/public key pair.\n"
+            "\nResult:\n"
+            "{\n"
+            "  \"secret\": \"xxxx\",        (string) BLS secret key\n"
+            "  \"public\": \"xxxx\",        (string) BLS public key\n"
+            "}\n"
+            "\nExamples:\n"
+            + HelpExampleCli("bls generate", "")
+    );
+}
+
+UniValue bls_generate(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() != 1) {
+        bls_generate_help();
+    }
+
+    CBLSSecretKey sk;
+    sk.MakeNewKey();
+
+    UniValue ret(UniValue::VOBJ);
+    ret.push_back(Pair("secret", sk.ToString()));
+    ret.push_back(Pair("public", sk.GetPublicKey().ToString()));
+    return ret;
+}
+
+void bls_fromsecret_help()
+{
+    throw std::runtime_error(
+            "bls fromsecret \"secret\"\n"
+            "\nParses a BLS secret key and returns the secret/public key pair.\n"
+            "\nArguments:\n"
+            "1. \"secret\"                (string, required) The BLS secret key\n"
+            "\nResult:\n"
+            "{\n"
+            "  \"secret\": \"xxxx\",        (string) BLS secret key\n"
+            "  \"public\": \"xxxx\",        (string) BLS public key\n"
+            "}\n"
+            "\nExamples:\n"
+            + HelpExampleCli("bls fromsecret", "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f")
+    );
+}
+
+UniValue bls_fromsecret(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() != 2) {
+        bls_fromsecret_help();
+    }
+
+    CBLSSecretKey sk;
+    if (!sk.SetHexStr(request.params[1].get_str())) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Secret key must be a valid hex string of length %d", sk.SerSize*2));
+    }
+
+    UniValue ret(UniValue::VOBJ);
+    ret.push_back(Pair("secret", sk.ToString()));
+    ret.push_back(Pair("public", sk.GetPublicKey().ToString()));
+    return ret;
+}
+
+[[ noreturn ]] void bls_help()
+{
+    throw std::runtime_error(
+            "bls \"command\" ...\n"
+            "Set of commands to execute BLS related actions.\n"
+            "To get help on individual commands, use \"help bls command\".\n"
+            "\nArguments:\n"
+            "1. \"command\"        (string, required) The command to execute\n"
+            "\nAvailable commands:\n"
+            "  generate          - Create a BLS secret/public key pair\n"
+            "  fromsecret        - Parse a BLS secret key and return the secret/public key pair\n"
+            );
+}
+
+UniValue _bls(const JSONRPCRequest& request)
+{
+    if (request.fHelp && request.params.empty()) {
+        bls_help();
+    }
+
+    std::string command;
+    if (!request.params[0].isNull()) {
+        command = request.params[0].get_str();
+    }
+
+    if (command == "generate") {
+        return bls_generate(request);
+    } else if (command == "fromsecret") {
+        return bls_fromsecret(request);
+    } else {
+        bls_help();
+    }
 }
 
 #ifdef ENABLE_WALLET
@@ -231,40 +387,42 @@ static void FundSpecialTx(CWallet* pwallet, CMutableTransaction& tx, const Speci
 template<typename SpecialTxPayload>
 static void UpdateSpecialTxInputsHash(const CMutableTransaction& tx, SpecialTxPayload& payload)
 {
-    payload.inputsHash = CalcTxInputsHash(tx);
+  payload.inputsHash = CalcTxInputsHash(tx);
 }
 
 template<typename SpecialTxPayload>
 static void SignSpecialTxPayloadByHash(const CMutableTransaction& tx, SpecialTxPayload& payload, const CKey& key)
 {
-    UpdateSpecialTxInputsHash(tx, payload);
-    payload.vchSig.clear();
+  UpdateSpecialTxInputsHash(tx, payload);
+  payload.vchSig.clear();
 
-    uint256 hash = ::SerializeHash(payload);
-    if (!CHashSigner::SignHash(hash, key, payload.vchSig)) {
-        throw JSONRPCError(RPC_INTERNAL_ERROR, "failed to sign special tx");
-    }
+  uint256 hash = ::SerializeHash(payload);
+  if(!CHashSigner::SignHash(hash, key, payload.vchSig))
+  {
+    throw JSONRPCError(RPC_INTERNAL_ERROR, "Failed to sign special tx");
+  }
 }
 
 template<typename SpecialTxPayload>
 static void SignSpecialTxPayloadByString(const CMutableTransaction& tx, SpecialTxPayload& payload, const CKey& key)
 {
-    UpdateSpecialTxInputsHash(tx, payload);
-    payload.vchSig.clear();
+  UpdateSpecialTxInputsHash(tx, payload);
+  payload.vchSig.clear();
 
-    std::string m = payload.MakeSignString();
-    if (!CMessageSigner::SignMessage(m, payload.vchSig, key)) {
-        throw JSONRPCError(RPC_INTERNAL_ERROR, "failed to sign special tx");
-    }
+  std::string m = payload.MakeSignString();
+  if(!CMessageSigner::SignMessage(m, payload.vchSig, key))
+  {
+    throw JSONRPCError(RPC_INTERNAL_ERROR, "Failed to sign special tx");
+  }
 }
 
 template<typename SpecialTxPayload>
 static void SignSpecialTxPayloadByHash(const CMutableTransaction& tx, SpecialTxPayload& payload, const CBLSSecretKey& key)
 {
-    UpdateSpecialTxInputsHash(tx, payload);
+  UpdateSpecialTxInputsHash(tx, payload);
 
-    uint256 hash = ::SerializeHash(payload);
-    payload.sig = key.Sign(hash);
+  uint256 hash = ::SerializeHash(payload);
+  payload.sig = key.Sign(hash);
 }
 
 static std::string SignAndSendSpecialTx(const CMutableTransaction& tx, bool fSubmit = true)
@@ -302,7 +460,7 @@ void protx_register_fund_help(CWallet* const pwallet)
             "protx register_fund \"collateralAddress\" \"ipAndPort\" \"ownerAddress\" \"operatorPubKey\" \"votingAddress\" operatorReward \"payoutAddress\" ( \"fundAddress\" submit )\n"
             "\nCreates, funds and sends a ProTx to the network. The resulting transaction will move 1000 Dash\n"
             "to the address specified by collateralAddress and will then function as the collateral of your\n"
-            "masternode.\n"
+            "smartnode.\n"
             "A few of the limitations you see in the arguments are temporary and might be lifted after DIP3\n"
             "is fully deployed.\n"
             + HelpRequiringPassphrase(pwallet) + "\n"
@@ -331,7 +489,7 @@ void protx_register_help(CWallet* const pwallet)
             "protx register \"collateralHash\" collateralIndex \"ipAndPort\" \"ownerAddress\" \"operatorPubKey\" \"votingAddress\" operatorReward \"payoutAddress\" ( \"feeSourceAddress\" submit )\n"
             "\nSame as \"protx register_fund\", but with an externally referenced collateral.\n"
             "The collateral is specified through \"collateralHash\" and \"collateralIndex\" and must be an unspent\n"
-            "transaction output spendable by this wallet. It must also not be used by any other masternode.\n"
+            "transaction output spendable by this wallet. It must also not be used by any other smartnode.\n"
             + HelpRequiringPassphrase(pwallet) + "\n"
             "\nArguments:\n"
             + GetHelpString(1, "collateralHash")
@@ -400,7 +558,19 @@ void protx_register_submit_help(CWallet* const pwallet)
     );
 }
 
-// handles register, register_prepare and register_fund in one method
+bool isValidCollateral(CAmount collateralAmount) {
+	SmartnodeCollaterals collaterals = Params().GetConsensus().nCollaterals;
+	if (!collaterals.isValidCollateral(collateralAmount)) {
+		throw JSONRPCError(RPC_INVALID_COLLATERAL_AMOUNT, strprintf("invalid collateral amount: amount=%d\n", collateralAmount/COIN));
+	}
+	int nHeight = chainActive.Height();
+	if(!collaterals.isPayableCollateral(nHeight, collateralAmount)) {
+		throw JSONRPCError(RPC_INVALID_COLLATERAL_AMOUNT, strprintf("collateral amount is not a payable amount: amount=%d", collateralAmount/COIN));
+	}
+	return true;
+}
+
+// handles register, register_prepare and register_fund in one method.
 UniValue protx_register(const JSONRPCRequest& request)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
@@ -426,7 +596,7 @@ UniValue protx_register(const JSONRPCRequest& request)
 
     size_t paramIdx = 1;
 
-    CAmount collateralAmount = 1000 * COIN;
+    CAmount collateralAmount;
 
     CMutableTransaction tx;
     tx.nVersion = 3;
@@ -445,14 +615,19 @@ UniValue protx_register(const JSONRPCRequest& request)
         CTxOut collateralTxOut(collateralAmount, collateralScript);
         tx.vout.emplace_back(collateralTxOut);
 
-        paramIdx++;
+        paramIdx += 2;
     } else {
         uint256 collateralHash = ParseHashV(request.params[paramIdx], "collateralHash");
         int32_t collateralIndex = ParseInt32V(request.params[paramIdx + 1], "collateralIndex");
-        if (collateralHash.IsNull() || collateralIndex < 0) {
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("invalid hash or index: %s-%d", collateralHash.ToString(), collateralIndex));
+        if(collateralHash.IsNull() || collateralIndex < 0) {
+          throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("invalid hash or index: %s-%d", collateralHash.ToString(), collateralIndex));
         }
-
+        const auto &p = pwallet->mapWallet[collateralHash];
+        if(p.tx == nullptr || p.tx->vout.size() <= collateralIndex) {
+          throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Invalid collateral, you do not own the collateral address : hash=%s-%d\n", collateralHash.ToString(), collateralIndex));
+        }
+        collateralAmount = p.tx->vout[collateralIndex].nValue;
+        isValidCollateral(collateralAmount);
         ptx.collateralOutpoint = COutPoint(collateralHash, (uint32_t)collateralIndex);
         paramIdx += 2;
 
@@ -460,7 +635,6 @@ UniValue protx_register(const JSONRPCRequest& request)
         LOCK(pwallet->cs_wallet);
         pwallet->LockCoin(ptx.collateralOutpoint);
     }
-
     if (request.params[paramIdx].get_str() != "") {
         if (!Lookup(request.params[paramIdx].get_str().c_str(), ptx.addr, Params().GetDefaultPort(), false)) {
             throw std::runtime_error(strprintf("invalid network address %s", request.params[paramIdx].get_str()));
@@ -602,8 +776,8 @@ void protx_update_service_help(CWallet* const pwallet)
     throw std::runtime_error(
             "protx update_service \"proTxHash\" \"ipAndPort\" \"operatorKey\" (\"operatorPayoutAddress\" \"feeSourceAddress\" )\n"
             "\nCreates and sends a ProUpServTx to the network. This will update the IP address\n"
-            "of a masternode.\n"
-            "If this is done for a masternode that got PoSe-banned, the ProUpServTx will also revive this masternode.\n"
+            "of a smartnode.\n"
+            "If this is done for a smartnode that got PoSe-banned, the ProUpServTx will also revive this smartnode.\n"
             + HelpRequiringPassphrase(pwallet) + "\n"
             "\nArguments:\n"
             + GetHelpString(1, "proTxHash")
@@ -642,7 +816,7 @@ UniValue protx_update_service(const JSONRPCRequest& request)
 
     auto dmn = deterministicMNManager->GetListAtChainTip().GetMN(ptx.proTxHash);
     if (!dmn) {
-        throw std::runtime_error(strprintf("masternode with proTxHash %s not found", ptx.proTxHash.ToString()));
+        throw std::runtime_error(strprintf("smartnode with proTxHash %s not found", ptx.proTxHash.ToString()));
     }
 
     if (keyOperator.GetPublicKey() != dmn->pdmnState->pubKeyOperator.Get()) {
@@ -698,8 +872,8 @@ void protx_update_registrar_help(CWallet* const pwallet)
     throw std::runtime_error(
             "protx update_registrar \"proTxHash\" \"operatorPubKey\" \"votingAddress\" \"payoutAddress\" ( \"feeSourceAddress\" )\n"
             "\nCreates and sends a ProUpRegTx to the network. This will update the operator key, voting key and payout\n"
-            "address of the masternode specified by \"proTxHash\".\n"
-            "The owner key of the masternode must be known to your wallet.\n"
+            "address of the smartnode specified by \"proTxHash\".\n"
+            "The owner key of the smartnode must be known to your wallet.\n"
             + HelpRequiringPassphrase(pwallet) + "\n"
             "\nArguments:\n"
             + GetHelpString(1, "proTxHash")
@@ -733,7 +907,7 @@ UniValue protx_update_registrar(const JSONRPCRequest& request)
 
     auto dmn = deterministicMNManager->GetListAtChainTip().GetMN(ptx.proTxHash);
     if (!dmn) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("masternode %s not found", ptx.proTxHash.ToString()));
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("smartnode %s not found", ptx.proTxHash.ToString()));
     }
     ptx.pubKeyOperator = dmn->pdmnState->pubKeyOperator.Get();
     ptx.keyIDVoting = dmn->pdmnState->keyIDVoting;
@@ -786,10 +960,10 @@ void protx_revoke_help(CWallet* const pwallet)
 {
     throw std::runtime_error(
             "protx revoke \"proTxHash\" \"operatorKey\" ( reason \"feeSourceAddress\")\n"
-            "\nCreates and sends a ProUpRevTx to the network. This will revoke the operator key of the masternode and\n"
-            "put it into the PoSe-banned state. It will also set the service field of the masternode\n"
+            "\nCreates and sends a ProUpRevTx to the network. This will revoke the operator key of the smartnode and\n"
+            "put it into the PoSe-banned state. It will also set the service field of the smartnode\n"
             "to zero. Use this in case your operator key got compromised or you want to stop providing your service\n"
-            "to the masternode owner.\n"
+            "to the smartnode owner.\n"
             + HelpRequiringPassphrase(pwallet) + "\n"
             "\nArguments:\n"
             + GetHelpString(1, "proTxHash")
@@ -832,7 +1006,7 @@ UniValue protx_revoke(const JSONRPCRequest& request)
 
     auto dmn = deterministicMNManager->GetListAtChainTip().GetMN(ptx.proTxHash);
     if (!dmn) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("masternode %s not found", ptx.proTxHash.ToString()));
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("smartnode %s not found", ptx.proTxHash.ToString()));
     }
 
     if (keyOperator.GetPublicKey() != dmn->pdmnState->pubKeyOperator.Get()) {
@@ -854,7 +1028,7 @@ UniValue protx_revoke(const JSONRPCRequest& request)
         ExtractDestination(dmn->pdmnState->scriptOperatorPayout, txDest);
         FundSpecialTx(pwallet, tx, ptx, txDest);
     } else if (dmn->pdmnState->scriptPayout != CScript()) {
-        // Using funds from previousely specified masternode payout address
+        // Using funds from previousely specified smartnode payout address
         CTxDestination txDest;
         ExtractDestination(dmn->pdmnState->scriptPayout, txDest);
         FundSpecialTx(pwallet, tx, ptx, txDest);
@@ -867,11 +1041,168 @@ UniValue protx_revoke(const JSONRPCRequest& request)
 
     return SignAndSendSpecialTx(tx);
 }
+
+void protx_quick_setup_help(CWallet* const pwallet)
+{
+    throw std::runtime_error(
+      "protx quick_setup \"collateralHash\" \"collateralIndex\" \"ipAndPort\" \"feeSourceAddress\"\n"
+      "\nRegister protx transaction from collateral inputs. This command will generate voting address,\n"
+      "owner address, operation pubkey with 0 operation reward and use them for register_prepare.\n"
+      "bls generate also call to generate public and secret for operator. it then use register_prepare output\n"
+      "to sign collateral message. Finnally it send protx transaction with protx register_submit"
+      "feeAddress is added to \"protx register_prepare\" to cover transaction fees\n"
+      + HelpRequiringPassphrase(pwallet) + "\n"
+      "\nArguments:\n"
+			+ GetHelpString(1, "collateralHash")
+			+ GetHelpString(2, "collateralIndex")
+			+ GetHelpString(3, "ipAndPort")
+			+ GetHelpString(4, "feeSourceAddress")
+			+ "\nResult:\n{\n"
+      "  \"txid\":                  (string) The transaction id for submitted protx register_submit.\n"
+      "  \"tx\":                    (string) The raw transaction hex of this protx without signiature.\n"
+			"  \"ownerAddress\":          (string) The generated owner address.\n"
+			"  \"votingAddress\":         (string) The generated voting address.\n"
+			"  \"payoutAddress\":         (string) The generated payout address.\n"
+			"  \"collateralAddress\":     (string) The collateral address for this collateralHash.\n"
+			"  \"collateralAmount\":      (numeric) The collateral Amount was used for this protx.\n"
+			"  \"operationPubkey\":       (string) The public key from bls generate.\n"
+			"  \"operationSecret\":       (string) The secret key from bls generate.\n"
+			"  \"raptoreum.conf\" :       (string) The content of raptoreum.conf to be used in vps node.\n"
+      "}\n"
+			"\nExamples:\n"
+      + HelpExampleCli("protx", "quick_setup \"collateralHash\" \"collateralIndex\" \"ipAndPort\" \"feeSourceAddress\"")
+    );
+}
+
+UniValue generateNewAddress(CWallet * const pwallet) {
+	if (!pwallet->IsLocked(true)) {
+		pwallet->TopUpKeyPool();
+	}
+
+	// Generate a new key that is added to wallet
+	CPubKey newKey;
+	if (!pwallet->GetKeyFromPool(newKey, false)) {
+		throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
+	}
+	CKeyID keyID = newKey.GetID();
+
+	pwallet->SetAddressBook(keyID, "", "receive");
+
+	return EncodeDestination(keyID);
+}
+
+UniValue signMessage(CWallet * const pwallet, std::string strAddress, std::string strMessage) {
+  EnsureWalletIsUnlocked(pwallet);
+
+	CTxDestination addr = DecodeDestination(strAddress);
+	if(!IsValidDestination(addr))
+		throw JSONRPCError(RPC_TYPE_ERROR, "Invalid address");
+
+	const CKeyID *keyID = boost::get<CKeyID>(&addr);
+	if(!keyID)
+		throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to key");
+
+	CKey key;
+	if (!pwallet->GetKey(*keyID, key))
+		throw JSONRPCError(RPC_WALLET_ERROR, "Private key not available");
+
+	CHashWriter ss(SER_GETHASH, 0);
+	ss << strMessageMagic;
+	ss << strMessage;
+
+	std::vector<unsigned char> vchSig;
+	if (!key.SignCompact(ss.GetHash(), vchSig))
+		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Sign failed");
+
+	return EncodeBase64(&vchSig[0], vchSig.size());
+}
+
+UniValue createConfigFile(string blsPrivateKey, string ip, string address) {
+
+	string fileName = get_current_dir() + "/" + address + "_raptoreum.conf";
+	ofstream configFile(fileName);
+	string username = generateRandomString(10, false);
+	string password = generateRandomString(20, true);
+	configFile << "rpcuser=" << username << endl;
+	configFile << "rpcpassword=" << password << endl;
+	configFile << "rpcport=8484\n";
+	configFile << "rpcallowip=127.0.0.1\n";
+	configFile << "server=1\n";
+	configFile << "daemon=1\n";
+	configFile << "listen=1\n";
+	configFile << "smartnodeblsprivkey=" << blsPrivateKey << endl;
+	configFile << "externalip=" << ip << endl;
+	configFile.flush();
+	configFile.close();
+	return fileName;
+}
+
+UniValue protx_quick_setup(const JSONRPCRequest& request) {
+	CWallet* const pwallet = GetWalletForJSONRPCRequest(request);
+	if (request.fHelp || request.params.size() != 5) {
+		protx_quick_setup_help(pwallet);
+	}
+
+  ObserveSafeMode();
+
+	if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
+		return NullUniValue;
+//register_fund "collateralAddress" "ipAndPort" "ownerAddress" "operatorPubKey" "votingAddress" operatorReward "payoutAddress" ( "fundAddress" )
+//register_prepare "collateralHash" collateralIndex "ipAndPort" "ownerAddress" "operatorPubKey" "votingAddress" operatorReward "payoutAddress" ( "feeSourceAddress" )
+	//bls_generate
+	EnsureWalletIsUnlocked(pwallet);
+	JSONRPCRequest blsRequest;
+	blsRequest.params = UniValue(UniValue::VARR);
+	blsRequest.params.push_back(UniValue(UniValue::VSTR, "generate"));
+	UniValue ownerAddress = generateNewAddress(pwallet);
+	UniValue votingAddress = generateNewAddress(pwallet);
+	UniValue payoutAddress = generateNewAddress(pwallet);
+	UniValue blsKeys = bls_generate(blsRequest);
+	JSONRPCRequest prepareRequest;
+	prepareRequest.params = UniValue(UniValue::VARR);
+	prepareRequest.params.push_back("register_prepare");
+	prepareRequest.params.push_back(UniValue(UniValue::VSTR,request.params[1].get_str()));
+	prepareRequest.params.push_back(UniValue(UniValue::VSTR,request.params[2].get_str()));
+	prepareRequest.params.push_back(UniValue(UniValue::VSTR,request.params[3].get_str()));
+	prepareRequest.params.push_back(UniValue(UniValue::VSTR,ownerAddress.get_str()));
+	prepareRequest.params.push_back(UniValue(UniValue::VSTR,blsKeys["public"].get_str()));
+	prepareRequest.params.push_back(UniValue(UniValue::VSTR,votingAddress.get_str()));
+	prepareRequest.params.push_back(UniValue(UniValue::VSTR, "0"));
+	prepareRequest.params.push_back(UniValue(UniValue::VSTR,payoutAddress.get_str()));
+	prepareRequest.params.push_back(UniValue(UniValue::VSTR,request.params[4].get_str()));
+	prepareRequest.URI = request.URI;
+	UniValue prepareResult = protx_register(prepareRequest);
+	UniValue msg = signMessage(pwallet, prepareResult["collateralAddress"].get_str(), prepareResult["signMessage"].get_str());
+	JSONRPCRequest submitRequest;
+	submitRequest.params = UniValue(UniValue::VARR);
+	submitRequest.params.push_back("register_submit");
+	submitRequest.params.push_back(prepareResult["tx"]);
+	submitRequest.params.push_back(msg);
+	UniValue txid = protx_register_submit(submitRequest);
+	UniValue result = UniValue(UniValue::VOBJ);
+	//signedMessage
+	result.push_back(Pair("txid", txid.get_str()));
+	result.push_back(Pair("tx", prepareResult["tx"].get_str()));
+	result.push_back(Pair("ownerAddress", ownerAddress.get_str()));
+	result.push_back(Pair("votingAddress", votingAddress.get_str()));
+	result.push_back(Pair("payoutAddress", payoutAddress.get_str()));
+	result.push_back(Pair("collateralAddress", prepareResult["collateralAddress"].get_str()));
+	result.push_back(Pair("collateralAmount", prepareResult["collateralAmount"].get_int()));
+	result.push_back(Pair("signedMessage", msg.get_str()));
+	result.push_back(Pair("operatorPublic", blsKeys["public"].get_str()));
+	result.push_back(Pair("operatorSecret", blsKeys["secret"].get_str()));
+	UniValue config = createConfigFile( blsKeys["secret"].get_str(),request.params[3].get_str(),  prepareResult["collateralAddress"].get_str());
+	result.push_back(Pair("raptoreum.conf",config.get_str()));
+
+	return result;
+}
+
 #endif//ENABLE_WALLET
+
 
 void protx_list_help()
 {
-    throw std::runtime_error(
+  throw std::runtime_error(
             "protx list (\"type\" \"detailed\" \"height\")\n"
             "\nLists all ProTxs in your wallet or on-chain, depending on the given type.\n"
             "If \"type\" is not specified, it defaults to \"registered\".\n"
@@ -885,7 +1216,7 @@ void protx_list_help()
             "  wallet       - List only ProTx which are found in your wallet at the given chain height.\n"
             "                 This will also include ProTx which failed PoSe verfication.\n"
 #endif
-    );
+  );
 }
 
 static bool CheckWalletOwnsKey(CWallet* pwallet, const CKeyID& keyID) {
@@ -1048,11 +1379,11 @@ void protx_info_help()
 {
     throw std::runtime_error(
             "protx info \"proTxHash\"\n"
-            "\nReturns detailed information about a deterministic masternode.\n"
+            "\nReturns detailed information about a deterministic smartnode.\n"
             "\nArguments:\n"
             + GetHelpString(1, "proTxHash") +
             "\nResult:\n"
-            "{                             (json object) Details about a specific deterministic masternode\n"
+            "{                             (json object) Details about a specific deterministic smartnode\n"
             "}\n"
             "\nExamples:\n"
             + HelpExampleCli("protx", "info \"0123456701234567012345670123456701234567012345670123456701234567\"")
@@ -1085,7 +1416,7 @@ void protx_diff_help()
 {
     throw std::runtime_error(
             "protx diff \"baseBlock\" \"block\"\n"
-            "\nCalculates a diff between two deterministic masternode lists. The result also contains proof data.\n"
+            "\nCalculates a diff between two deterministic smartnode lists. The result also contains proof data.\n"
             "\nArguments:\n"
             "1. \"baseBlock\"           (numeric, required) The starting block height.\n"
             "2. \"block\"               (numeric, required) The ending block height.\n"
@@ -1141,6 +1472,7 @@ UniValue protx_diff(const JSONRPCRequest& request)
             "  register_fund     - Fund, create and send ProTx to network\n"
             "  register_prepare  - Create an unsigned ProTx\n"
             "  register_submit   - Sign and submit a ProTx\n"
+            "  quick_setup       - register_prepare, signmessage and register_submit in one command\n"
 #endif
             "  list              - List ProTxs\n"
             "  info              - Return information about a ProTx\n"
@@ -1149,7 +1481,7 @@ UniValue protx_diff(const JSONRPCRequest& request)
             "  update_registrar  - Create and send ProUpRegTx to network\n"
             "  revoke            - Create and send ProUpRevTx to network\n"
 #endif
-            "  diff              - Calculate a diff and a proof between two masternode lists\n"
+            "  diff              - Calculate a diff and a proof between two smartnode lists\n"
     );
 }
 
@@ -1175,9 +1507,11 @@ UniValue protx(const JSONRPCRequest& request)
         return protx_update_registrar(request);
     } else if (command == "revoke") {
         return protx_revoke(request);
-    } else
+    } else if(command == "quick_setup") {
+    	return protx_quick_setup(request);
+    }
 #endif
-    if (command == "list") {
+    else if (command == "list") {
         return protx_list(request);
     } else if (command == "info") {
         return protx_info(request);

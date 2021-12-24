@@ -234,7 +234,7 @@ extern const char *GETBLOCKTXN;
  */
 extern const char *BLOCKTXN;
 
-// Dash message types
+// Raptoreum message types
 // NOTE: do NOT declare non-implmented here, we don't want them to be exposed to the outside
 // TODO: add description
 extern const char *LEGACYTXLOCKREQUEST; // only present for backwards compatibility
@@ -283,14 +283,14 @@ enum ServiceFlags : uint64_t {
     // Nothing
     NODE_NONE = 0,
     // NODE_NETWORK means that the node is capable of serving the complete block chain. It is currently
-    // set by all Dash Core non pruned nodes, and is unset by SPV clients or other light clients.
+    // set by all Raptoreum Core non pruned nodes, and is unset by SPV clients or other light clients.
     NODE_NETWORK = (1 << 0),
     // NODE_GETUTXO means the node is capable of responding to the getutxo protocol request.
-    // Dash Core does not support this but a patch set called Bitcoin XT does.
+    // Raptoreum Core does not support this but a patch set called Bitcoin XT does.
     // See BIP 64 for details on how this is implemented.
     NODE_GETUTXO = (1 << 1),
     // NODE_BLOOM means the node is capable and willing to handle bloom-filtered connections.
-    // Dash Core nodes used to support this by default, without advertising this bit,
+    // Raptoreum Core nodes used to support this by default, without advertising this bit,
     // but no longer do as of protocol version 70201 (= NO_BLOOM_VERSION)
     NODE_BLOOM = (1 << 2),
     // NODE_XTHIN means the node supports Xtreme Thinblocks
@@ -327,7 +327,7 @@ enum ServiceFlags : uint64_t {
  * Thus, generally, avoid calling with peerServices == NODE_NONE, unless
  * state-specific flags must absolutely be avoided. When called with
  * peerServices == NODE_NONE, the returned desirable service flags are
- * guaranteed to not change dependent on state - ie they are suitable for
+ * guaranteed to not change dependant on state - ie they are suitable for
  * use when describing peers which we know to be desirable, but for which
  * we do not have a confirmed set of service flags.
  *
@@ -402,16 +402,16 @@ enum GetDataMsg {
     MSG_BLOCK = 2,
     // The following can only occur in getdata. Invs always use TX or BLOCK.
     MSG_FILTERED_BLOCK = 3,  //!< Defined in BIP37
-    // Dash message types
+    // Raptoreum message types
     // NOTE: declare non-implmented here, we must keep this enum consistent and backwards compatible
     MSG_LEGACY_TXLOCK_REQUEST = 4,
     /* MSG_TXLOCK_VOTE = 5, Legacy InstantSend and not used anymore  */
     MSG_SPORK = 6,
-    /* 7 - 15 were used in old Dash versions and were mainly budget and MN broadcast/ping related*/
+    /* 7 - 15 were used in old Raptoreum versions and were mainly budget and MN broadcast/ping related*/
     MSG_DSTX = 16,
     MSG_GOVERNANCE_OBJECT = 17,
     MSG_GOVERNANCE_OBJECT_VOTE = 18,
-    /* 19 was used for MSG_MASTERNODE_VERIFY and is not supported anymore */
+    /* 19 was used for MSG_SMARTNODE_VERIFY and is not supported anymore */
     // Nodes may always request a MSG_CMPCT_BLOCK in a getdata, however,
     // MSG_CMPCT_BLOCK should not appear in any invs except as a part of getdata.
     MSG_CMPCT_BLOCK = 20, //!< Defined in BIP152

@@ -1,0 +1,25 @@
+<!DOCTYPE RCC><RCC version="1.0">
+    <qresource prefix="/translations">
+        <file alias="ar">locale/raptoreum_ar.qm</file>
+        <file alias="bg">locale/raptoreum_bg.qm</file>
+        <file alias="de">locale/raptoreum_de.qm</file>
+        <file alias="en">locale/raptoreum_en.qm</file>
+        <file alias="es">locale/raptoreum_es.qm</file>
+        <file alias="fi">locale/raptoreum_fi.qm</file>
+        <file alias="fr">locale/raptoreum_fr.qm</file>
+        <file alias="it">locale/raptoreum_it.qm</file>
+        <file alias="ja">locale/raptoreum_ja.qm</file>
+        <file alias="ko">locale/raptoreum_ko.qm</file>
+        <file alias="nl">locale/raptoreum_nl.qm</file>
+        <file alias="pl">locale/raptoreum_pl.qm</file>
+        <file alias="pt">locale/raptoreum_pt.qm</file>
+        <file alias="ro">locale/raptoreum_ro.qm</file>
+        <file alias="ru">locale/raptoreum_ru.qm</file>
+        <file alias="sk">locale/raptoreum_sk.qm</file>
+        <file alias="th">locale/raptoreum_th.qm</file>
+        <file alias="tr">locale/raptoreum_tr.qm</file>
+        <file alias="vi">locale/raptoreum_vi.qm</file>
+        <file alias="zh_CN">locale/raptoreum_zh_CN.qm</file>
+        <file alias="zh_TW">locale/raptoreum_zh_TW.qm</file>
+    </qresource>
+</RCC>

@@ -1,4 +1,5 @@
 // Copyright (c) 2018-2021 The Dash Core developers
+// Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,7 +7,7 @@
 #include <llmq/quorums_signing_shares.h>
 #include <llmq/quorums_utils.h>
 
-#include <masternode/activemasternode.h>
+#include <smartnode/activesmartnode.h>
 #include <bls/bls_batchverifier.h>
 #include <init.h>
 #include <net_processing.h>
@@ -230,12 +231,12 @@ void CSigSharesManager::InterruptWorkerThread()
 
 void CSigSharesManager::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv)
 {
-    // non-masternodes are not interested in sigshares
-    if (!fMasternodeMode || activeMasternodeInfo.proTxHash.IsNull()) {
+    // non-smartnodes are not interested in sigshares
+    if (!fSmartnodeMode || activeSmartnodeInfo.proTxHash.IsNull()) {
         return;
     }
 
-    if (sporkManager.IsSporkActive(SPORK_21_QUORUM_ALL_CONNECTED)) {
+    if (sporkManager.IsSporkActive(SPORK_23_QUORUM_ALL_CONNECTED)) {
         if (strCommand == NetMsgType::QSIGSHARE) {
             std::vector<CSigShare> sigShares;
             vRecv >> sigShares;
@@ -489,7 +490,7 @@ void CSigSharesManager::ProcessMessageSigShare(NodeId fromId, const CSigShare& s
         // quorum is too old
         return;
     }
-    if (!quorum->IsMember(activeMasternodeInfo.proTxHash)) {
+    if (!quorum->IsMember(activeSmartnodeInfo.proTxHash)) {
         // we're not a member so we can't verify it (we actually shouldn't have received it)
         return;
     }
@@ -538,7 +539,7 @@ bool CSigSharesManager::PreVerifyBatchedSigShares(const CSigSharesNodeState::Ses
         // quorum is too old
         return false;
     }
-    if (!session.quorum->IsMember(activeMasternodeInfo.proTxHash)) {
+    if (!session.quorum->IsMember(activeSmartnodeInfo.proTxHash)) {
         // we're not a member so we can't verify it (we actually shouldn't have received it)
         return false;
     }
@@ -862,6 +863,21 @@ CDeterministicMNCPtr CSigSharesManager::SelectMemberForRecovery(const CQuorumCPt
     return v[attempt].second;
 }
 
+CDeterministicMNCPtr CSigSharesManager::SelectMemberForRecovery(const CQuorumCPtr& quorum, const uint256 &id, int attempt)
+{
+    assert(attempt < quorum->members.size());
+
+    std::vector<std::pair<uint256, CDeterministicMNCPtr>> v;
+    v.reserve(quorum->members.size());
+    for (const auto& dmn : quorum->members) {
+        auto h = ::SerializeHash(std::make_pair(dmn->proTxHash, id));
+        v.emplace_back(h, dmn);
+    }
+    std::sort(v.begin(), v.end());
+
+    return v[attempt].second;
+}
+
 void CSigSharesManager::CollectSigSharesToRequest(std::unordered_map<NodeId, std::unordered_map<uint256, CSigSharesInv, StaticSaltedHasher>>& sigSharesToRequest)
 {
     AssertLockHeld(cs);
@@ -1080,7 +1096,7 @@ void CSigSharesManager::CollectSigSharesToAnnounce(std::unordered_map<NodeId, st
         auto quorumKey = std::make_pair((Consensus::LLMQType)sigShare->llmqType, sigShare->quorumHash);
         auto it = quorumNodesMap.find(quorumKey);
         if (it == quorumNodesMap.end()) {
-            auto nodeIds = g_connman->GetMasternodeQuorumNodes(quorumKey.first, quorumKey.second);
+            auto nodeIds = g_connman->GetSmartnodeQuorumNodes(quorumKey.first, quorumKey.second);
             it = quorumNodesMap.emplace(std::piecewise_construct, std::forward_as_tuple(quorumKey), std::forward_as_tuple(nodeIds.begin(), nodeIds.end())).first;
         }
 
@@ -1571,7 +1587,7 @@ CSigShare CSigSharesManager::CreateSigShare(const CQuorumCPtr& quorum, const uin
 {
     cxxtimer::Timer t(true);
 
-    if (!quorum->IsValidMember(activeMasternodeInfo.proTxHash)) {
+    if (!quorum->IsValidMember(activeSmartnodeInfo.proTxHash)) {
         return {};
     }
 
@@ -1581,7 +1597,7 @@ CSigShare CSigSharesManager::CreateSigShare(const CQuorumCPtr& quorum, const uin
         return {};
     }
 
-    int memberIdx = quorum->GetMemberIndex(activeMasternodeInfo.proTxHash);
+    int memberIdx = quorum->GetMemberIndex(activeSmartnodeInfo.proTxHash);
     if (memberIdx == -1) {
         // this should really not happen (IsValidMember gave true)
         return {};

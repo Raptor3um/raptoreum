@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # Copyright (c) 2014-2016 The Bitcoin Core developers
 # Copyright (c) 2014-2021 The Dash Core developers
+# Copyright (c) 2020-2022 The Raptoreum developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Base class for RPC testing."""
@@ -97,7 +98,7 @@ class BitcoinTestFramework():
 
         parser = optparse.OptionParser(usage="%prog [options]")
         parser.add_option("--nocleanup", dest="nocleanup", default=False, action="store_true",
-                          help="Leave dashds and test.* datadir on exit or error")
+                          help="Leave raptoreumds and test.* datadir on exit or error")
         parser.add_option("--noshutdown", dest="noshutdown", default=False, action="store_true",
                           help="Don't stop dashds after the test execution")
         parser.add_option("--srcdir", dest="srcdir", default=os.path.abspath(os.path.dirname(os.path.realpath(__file__)) + "/../../../src"),
@@ -195,7 +196,7 @@ class BitcoinTestFramework():
         else:
             for node in self.nodes:
                 node.cleanup_on_exit = False
-            self.log.info("Note: dashds were not stopped and may still be running")
+            self.log.info("Note: raptoreumds were not stopped and may still be running")
 
         if not self.options.nocleanup and not self.options.noshutdown and success != TestStatus.FAILED:
             self.log.info("Cleaning up {} on exit".format(self.options.tmpdir))
@@ -284,7 +285,7 @@ class BitcoinTestFramework():
             self.nodes.append(TestNode(old_num_nodes + i, get_datadir_path(self.options.tmpdir, old_num_nodes + i), self.extra_args_from_options, chain=self.chain, rpchost=rpchost, timewait=timewait, bitcoind=binary[i], bitcoin_cli=self.options.bitcoincli, stderr=stderr, mocktime=self.mocktime, coverage_dir=self.options.coveragedir, extra_conf=extra_confs[i], extra_args=extra_args[i], use_cli=self.options.usecli))
 
     def start_node(self, i, *args, **kwargs):
-        """Start a dashd"""
+        """Start a raptoreumd"""
 
         node = self.nodes[i]
 
@@ -295,7 +296,7 @@ class BitcoinTestFramework():
             coverage.write_all_rpc_commands(self.options.coveragedir, node.rpc)
 
     def start_nodes(self, extra_args=None, stderr=None, *args, **kwargs):
-        """Start multiple dashds"""
+        """Start multiple raptoreumds"""
 
         if extra_args is None:
             extra_args = [None] * self.num_nodes
@@ -315,12 +316,12 @@ class BitcoinTestFramework():
                 coverage.write_all_rpc_commands(self.options.coveragedir, node.rpc)
 
     def stop_node(self, i, wait=0):
-        """Stop a dashd test node"""
+        """Stop a raptoreumd test node"""
         self.nodes[i].stop_node(wait=wait)
         self.nodes[i].wait_until_stopped()
 
     def stop_nodes(self, wait=0):
-        """Stop multiple dashd test nodes"""
+        """Stop multiple raptoreumd test nodes"""
         for node in self.nodes:
             # Issue RPC to stop nodes
             node.stop_node(wait=wait)
@@ -443,7 +444,7 @@ class BitcoinTestFramework():
                 if os.path.isdir(get_datadir_path(self.options.cachedir, i)):
                     shutil.rmtree(get_datadir_path(self.options.cachedir, i))
 
-            # Create cache directories, run dashds:
+            # Create cache directories, run raptoreumds:
             self.set_genesis_mocktime()
             for i in range(MAX_NODES):
                 datadir = initialize_datadir(self.options.cachedir, i, self.chain)
@@ -505,10 +506,10 @@ class BitcoinTestFramework():
         for i in range(self.num_nodes):
             initialize_datadir(self.options.tmpdir, i, self.chain)
 
-MASTERNODE_COLLATERAL = 1000
+SMARTNODE_COLLATERAL = 1000
 
 
-class MasternodeInfo:
+class SmartnodeInfo:
     def __init__(self, proTxHash, ownerAddr, votingAddr, pubKeyOperator, keyOperator, collateral_address, collateral_txid, collateral_vout):
         self.proTxHash = proTxHash
         self.ownerAddr = ownerAddr
@@ -520,8 +521,8 @@ class MasternodeInfo:
         self.collateral_vout = collateral_vout
 
 
-class DashTestFramework(BitcoinTestFramework):
-    def set_dash_test_params(self, num_nodes, masterodes_count, extra_args=None, fast_dip3_enforcement=False):
+class RaptoreumTestFramework(BitcoinTestFramework):
+    def set_raptoreum_test_params(self, num_nodes, masterodes_count, extra_args=None, fast_dip3_enforcement=False):
         self.mn_count = masterodes_count
         self.num_nodes = num_nodes
         self.mninfo = []
@@ -537,9 +538,6 @@ class DashTestFramework(BitcoinTestFramework):
         if fast_dip3_enforcement:
             for i in range(0, num_nodes):
                 self.extra_args[i].append("-dip3params=30:50")
-
-        # make sure to activate dip8 after prepare_masternodes has finished its job already
-        self.set_dash_dip8_activation(200)
 
         # LLMQ default test params (no need to pass -llmqtestparams)
         self.llmq_size = 3
@@ -579,21 +577,21 @@ class DashTestFramework(BitcoinTestFramework):
         for i in range(0, idx):
             connect_nodes(self.nodes[i], idx)
 
-    def prepare_masternodes(self):
-        self.log.info("Preparing %d masternodes" % self.mn_count)
+    def prepare_smartnodes(self):
+        self.log.info("Preparing %d smartnodes" % self.mn_count)
         for idx in range(0, self.mn_count):
-            self.prepare_masternode(idx)
+            self.prepare_smartnode(idx)
 
-    def prepare_masternode(self, idx):
+    def prepare_smartnode(self, idx):
         bls = self.nodes[0].bls('generate')
         address = self.nodes[0].getnewaddress()
-        txid = self.nodes[0].sendtoaddress(address, MASTERNODE_COLLATERAL)
+        txid = self.nodes[0].sendtoaddress(address, SMARTNODE_COLLATERAL)
 
         txraw = self.nodes[0].getrawtransaction(txid, True)
         collateral_vout = 0
         for vout_idx in range(0, len(txraw["vout"])):
             vout = txraw["vout"][vout_idx]
-            if vout["value"] == MASTERNODE_COLLATERAL:
+            if vout["value"] == SMARTNODE_COLLATERAL:
                 collateral_vout = vout_idx
         self.nodes[0].lockunspent(False, [{'txid': txid, 'vout': collateral_vout}])
 
@@ -631,7 +629,7 @@ class DashTestFramework(BitcoinTestFramework):
         self.mninfo.append(MasternodeInfo(proTxHash, ownerAddr, votingAddr, bls['public'], bls['secret'], address, txid, collateral_vout))
         self.sync_all()
 
-        self.log.info("Prepared masternode %d: collateral_txid=%s, collateral_vout=%d, protxHash=%s" % (idx, txid, collateral_vout, proTxHash))
+        self.log.info("Prepared smartnode %d: collateral_txid=%s, collateral_vout=%d, protxHash=%s" % (idx, txid, collateral_vout, proTxHash))
 
     def remove_masternode(self, idx):
         mn = self.mninfo[idx]
@@ -642,7 +640,7 @@ class DashTestFramework(BitcoinTestFramework):
         self.sync_all()
         self.mninfo.remove(mn)
 
-        self.log.info("Removed masternode %d", idx)
+        self.log.info("Removed smartnode %d", idx)
 
     def prepare_datadirs(self):
         # stop faucet node so that we can copy the datadir
@@ -656,8 +654,8 @@ class DashTestFramework(BitcoinTestFramework):
         self.start_node(0)
         force_finish_mnsync(self.nodes[0])
 
-    def start_masternodes(self):
-        self.log.info("Starting %d masternodes", self.mn_count)
+    def start_smartnodes(self):
+        self.log.info("Starting %d smartnodes", self.mn_count)
 
         start_idx = len(self.nodes)
 
@@ -665,7 +663,7 @@ class DashTestFramework(BitcoinTestFramework):
         executor = ThreadPoolExecutor(max_workers=20)
 
         def do_connect(idx):
-            # Connect to the control node only, masternodes should take care of intra-quorum connections themselves
+            # Connect to the control node only, smartnodes should take care of intra-quorum connections themselves
             connect_nodes(self.mninfo[idx].node, 0)
 
         jobs = []
@@ -692,7 +690,7 @@ class DashTestFramework(BitcoinTestFramework):
         executor.shutdown()
 
     def start_masternode(self, mninfo, extra_args=None):
-        args = ['-masternodeblsprivkey=%s' % mninfo.keyOperator] + self.extra_args[mninfo.nodeIdx]
+        args = ['-smartnodeblsprivkey=%s' % mninfo.keyOperator] + self.extra_args[mninfo.nodeIdx]
         if extra_args is not None:
             args += extra_args
         self.start_node(mninfo.nodeIdx, extra_args=args)
@@ -703,7 +701,7 @@ class DashTestFramework(BitcoinTestFramework):
         self.log.info("Creating and starting controller node")
         self.add_nodes(1, extra_args=[self.extra_args[0]])
         self.start_node(0)
-        required_balance = MASTERNODE_COLLATERAL * self.mn_count + 1
+        required_balance = SMARTNODE_COLLATERAL * self.mn_count + 1
         self.log.info("Generating %d coins" % required_balance)
         while self.nodes[0].getbalance() < required_balance:
             self.bump_mocktime(1)
@@ -719,12 +717,12 @@ class DashTestFramework(BitcoinTestFramework):
                 self.nodes[0].generate(10)
         self.sync_all()
 
-        # create masternodes
-        self.prepare_masternodes()
+        # create smartnodes
+        self.prepare_smartnodes()
         self.prepare_datadirs()
-        self.start_masternodes()
+        self.start_smartnodes()
 
-        # non-masternodes where disconnected from the control node during prepare_datadirs,
+        # non-smartnodes where disconnected from the control node during prepare_datadirs,
         # let's reconnect them back to make sure they receive updates
         for i in range(0, num_simple_nodes):
             connect_nodes(self.nodes[i+1], 0)
@@ -740,7 +738,7 @@ class DashTestFramework(BitcoinTestFramework):
         self.wait_for_sporks_same()
         self.bump_mocktime(1)
 
-        mn_info = self.nodes[0].masternodelist("status")
+        mn_info = self.nodes[0].smartnodelist("status")
         assert (len(mn_info) == self.mn_count)
         for status in mn_info.values():
             assert (status == 'ENABLED')
@@ -975,11 +973,11 @@ class DashTestFramework(BitcoinTestFramework):
         wait_until(wait_func, timeout=timeout, sleep=sleep)
 
     def mine_quorum(self, expected_connections=None, expected_members=None, expected_contributions=None, expected_complaints=0, expected_justifications=0, expected_commitments=None, mninfos_online=None, mninfos_valid=None):
-        spork21_active = self.nodes[0].spork('show')['SPORK_21_QUORUM_ALL_CONNECTED'] <= 1
-        spork23_active = self.nodes[0].spork('show')['SPORK_23_QUORUM_POSE'] <= 1
+        spork23_active = self.nodes[0].spork('show')['SPORK_23_QUORUM_ALL_CONNECTED'] <= 1
+        spork25_active = self.nodes[0].spork('show')['SPORK_25_QUORUM_POSE'] <= 1
 
         if expected_connections is None:
-            expected_connections = (self.llmq_size - 1) if spork21_active else 2
+            expected_connections = (self.llmq_size - 1) if spork23_active else 2
         if expected_members is None:
             expected_members = self.llmq_size
         if expected_contributions is None:
@@ -1009,8 +1007,8 @@ class DashTestFramework(BitcoinTestFramework):
         self.log.info("Waiting for phase 1 (init)")
         self.wait_for_quorum_phase(q, 1, expected_members, None, 0, mninfos_online)
         self.wait_for_quorum_connections(expected_connections, nodes, wait_proc=lambda: self.bump_mocktime(1, nodes=nodes))
-        if spork23_active:
-            self.wait_for_masternode_probes(mninfos_valid, wait_proc=lambda: self.bump_mocktime(1, nodes=nodes))
+        if spork25_active:
+            self.wait_for_smartnode_probes(mninfos_valid, wait_proc=lambda: self.bump_mocktime(1, nodes=nodes))
         self.bump_mocktime(1, nodes=nodes)
         self.nodes[0].generate(2)
         sync_blocks(nodes)
@@ -1079,7 +1077,7 @@ class DashTestFramework(BitcoinTestFramework):
                 time.sleep(0.1)
         assert False
 
-    def get_quorum_masternodes(self, q):
+    def get_quorum_smartnodes(self, q):
         qi = self.nodes[0].quorum('info', 100, q)
         result = []
         for m in qi['members']:

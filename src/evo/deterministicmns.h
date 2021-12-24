@@ -1,9 +1,10 @@
-// Copyright (c) 2018-2021 The Dash Core developers
+// Copyright (c) 2018-2020 The Dash Core developers
+// Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_EVO_DETERMINISTICMNS_H
-#define BITCOIN_EVO_DETERMINISTICMNS_H
+#ifndef RAPTOREUM_DETERMINISTICMNS_H
+#define RAPTOREUM_DETERMINISTICMNS_H
 
 #include <arith_uint256.h>
 #include <bls/bls.h>
@@ -711,4 +712,4 @@ private:
 
 extern std::unique_ptr<CDeterministicMNManager> deterministicMNManager;
 
-#endif // BITCOIN_EVO_DETERMINISTICMNS_H
+#endif //RAPTOREUM_DETERMINISTICMNS_H

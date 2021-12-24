@@ -6,8 +6,8 @@
 """
     ZMQ example using python3's asyncio
 
-    Dash should be started with the command line arguments:
-        dashd -testnet -daemon \
+    Raptoreum should be started with the command line arguments:
+        raptoreumd -testnet -daemon \
                 -zmqpubrawtx=tcp://127.0.0.1:28332 \
                 -zmqpubrawblock=tcp://127.0.0.1:28332 \
                 -zmqpubhashtx=tcp://127.0.0.1:28332 \

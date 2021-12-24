@@ -1,6 +1,7 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
 // Copyright (c) 2014-2021 The Dash Core developers
+// Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -88,7 +89,7 @@
 const int64_t nStartupTime = GetTime();
 
 //Dash only features
-bool fMasternodeMode = false;
+bool fSmartnodeMode = false;
 bool fDisableGovernance = false;
 /**
     nWalletBackups:
@@ -99,8 +100,8 @@ bool fDisableGovernance = false;
 */
 int nWalletBackups = 10;
 
-const char * const BITCOIN_CONF_FILENAME = "dash.conf";
-const char * const BITCOIN_PID_FILENAME = "dashd.pid";
+const char * const BITCOIN_CONF_FILENAME = "raptoreum.conf";
+const char * const BITCOIN_PID_FILENAME = "raptoreumd.pid";
 
 ArgsManager gArgs;
 
@@ -424,6 +425,7 @@ void ArgsManager::WarnForSectionOnlyArgs()
     }
 }
 
+>>>>>>> v0.16.x
 void ArgsManager::SelectConfigNetwork(const std::string& network)
 {
     m_network = network;
@@ -574,7 +576,7 @@ std::string ArgsManager::GetHelpMessage()
                 usage += HelpMessageGroup("Connection options:");
             else if (last_cat == OptionsCategory::INDEXING)
                 usage += HelpMessageGroup("Indexing options:");
-            else if (last_cat == OptionsCategory::MASTERNODE)
+            else if (last_cat == OptionsCategory::SMARTNODE)
                 usage += HelpMessageGroup("Masternode options:");
             else if (last_cat == OptionsCategory::STATSD)
                 usage += HelpMessageGroup("Statsd options:");
@@ -662,13 +664,13 @@ void PrintExceptionContinue(const std::exception_ptr pex, const char* pszExcepti
 
 fs::path GetDefaultDataDir()
 {
-    // Windows < Vista: C:\Documents and Settings\Username\Application Data\DashCore
-    // Windows >= Vista: C:\Users\Username\AppData\Roaming\DashCore
-    // Mac: ~/Library/Application Support/DashCore
-    // Unix: ~/.dashcore
+    // Windows < Vista: C:\Documents and Settings\Username\Application Data\RaptoreumCore
+    // Windows >= Vista: C:\Users\Username\AppData\Roaming\RaptoreumCore
+    // Mac: ~/Library/Application Support/RaptoreumCore
+    // Unix: ~/.raptoreumcore
 #ifdef WIN32
     // Windows
-    return GetSpecialFolderPath(CSIDL_APPDATA) / "DashCore";
+    return GetSpecialFolderPath(CSIDL_APPDATA) / "RaptoreumCore";
 #else
     fs::path pathRet;
     char* pszHome = getenv("HOME");
@@ -678,10 +680,10 @@ fs::path GetDefaultDataDir()
         pathRet = fs::path(pszHome);
 #ifdef MAC_OSX
     // Mac
-    return pathRet / "Library/Application Support/DashCore";
+    return pathRet / "Library/Application Support/RaptoreumCore";
 #else
     // Unix
-    return pathRet / ".dashcore";
+    return pathRet / ".raptoreumcore";
 #endif
 #endif
 }
@@ -1145,7 +1147,7 @@ int GetNumCores()
 
 std::string CopyrightHolders(const std::string& strPrefix, unsigned int nStartYear, unsigned int nEndYear)
 {
-    std::string strCopyrightHolders = strPrefix + strprintf(" %u-%u ", nStartYear, nEndYear) + strprintf(_(COPYRIGHT_HOLDERS), _(COPYRIGHT_HOLDERS_SUBSTITUTION));
+    std::string strCopyrightHolders = strPrefix + strprintf(" %u ", nEndYear) + strprintf(_(COPYRIGHT_HOLDERS), _(COPYRIGHT_HOLDERS_SUBSTITUTION));
 
     // Check for untranslated substitution to make sure Dash Core copyright is not removed by accident
     if (strprintf(COPYRIGHT_HOLDERS, COPYRIGHT_HOLDERS_SUBSTITUTION).find("Dash Core") == std::string::npos) {
@@ -1153,6 +1155,7 @@ std::string CopyrightHolders(const std::string& strPrefix, unsigned int nStartYe
     }
     // Check for untranslated substitution to make sure Bitcoin Core copyright is not removed by accident
     if (strprintf(COPYRIGHT_HOLDERS, COPYRIGHT_HOLDERS_SUBSTITUTION).find("Bitcoin Core") == std::string::npos) {
+    	strCopyrightHolders += "\n" + strPrefix + strprintf(" %u-%u ", 2014, nEndYear) + "The Dash Core developers";
         strCopyrightHolders += "\n" + strPrefix + strprintf(" %u-%u ", 2009, nEndYear) + "The Bitcoin Core developers";
     }
     return strCopyrightHolders;

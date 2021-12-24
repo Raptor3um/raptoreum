@@ -83,6 +83,10 @@ TransactionView::TransactionView(QWidget* parent) :
                                         TransactionFilterProxy::TYPE(TransactionRecord::RecvFromOther));
     typeWidget->addItem(tr("Sent to"), TransactionFilterProxy::TYPE(TransactionRecord::SendToAddress) |
                                   TransactionFilterProxy::TYPE(TransactionRecord::SendToOther));
+    typeWidget->addItem(tr("Future"), TransactionFilterProxy::TYPE(TransactionRecord::FutureSend) |
+                                    TransactionFilterProxy::TYPE(TransactionRecord::FutureReceive));
+    typeWidget->addItem(tr("Future Send"), TransactionFilterProxy::TYPE(TransactionRecord::FutureSend));
+    typeWidget->addItem(tr("Future Received"), TransactionFilterProxy::TYPE(TransactionRecord::FutureReceive));
     typeWidget->addItem(tr("%1 Send").arg("CoinJoin"), TransactionFilterProxy::TYPE(TransactionRecord::CoinJoinSend));
     typeWidget->addItem(tr("%1 Make Collateral Inputs").arg("CoinJoin"), TransactionFilterProxy::TYPE(TransactionRecord::CoinJoinMakeCollaterals));
     typeWidget->addItem(tr("%1 Create Denominations").arg("CoinJoin"), TransactionFilterProxy::TYPE(TransactionRecord::CoinJoinCreateDenominations));
@@ -195,6 +199,8 @@ TransactionView::TransactionView(QWidget* parent) :
     connect(editLabelAction, SIGNAL(triggered()), this, SLOT(editLabel()));
     connect(showDetailsAction, SIGNAL(triggered()), this, SLOT(showDetails()));
     connect(showAddressQRCodeAction, SIGNAL(triggered()), this, SLOT(showAddressQRCode()));
+
+    updatePrivateSendVisibility();
 }
 
 void TransactionView::setModel(WalletModel *_model)
@@ -542,7 +548,7 @@ void TransactionView::showAddressQRCode()
     QRDialog* dialog = new QRDialog(this);
 
     dialog->setAttribute(Qt::WA_DeleteOnClose);
-    dialog->setInfo(tr("QR code"), "dash:"+strAddress, "", strAddress);
+    dialog->setInfo(tr("QR code"), "raptoreum:"+strAddress, "", strAddress);
     dialog->show();
 }
 

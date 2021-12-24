@@ -114,8 +114,8 @@ public Q_SLOTS:
     void setNumConnections(int count);
     /** Set network state shown in the UI */
     void setNetworkActive(bool networkActive);
-    /** Update number of masternodes shown in the UI */
-    void updateMasternodeCount();
+    /** Update number of smartnodes shown in the UI */
+    void updateSmartnodeCount();
     /** Set number of blocks, last block date and last block hash shown in the UI */
     void setNumBlocks(int count, const QDateTime& blockDate, const QString& blockHash, double nVerificationProgress, bool headers);
     /** Set size (number of transactions and memory usage) of the mempool in the UI */

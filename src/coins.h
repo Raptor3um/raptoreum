@@ -38,14 +38,25 @@ public:
     //! at which height this containing transaction was included in the active block chain
     uint32_t nHeight : 31;
 
+    int16_t nType;
+
+    std::vector<uint8_t> vExtraPayload;
+
     //! construct a Coin from a CTxOut and height/coinbase information.
-    Coin(CTxOut&& outIn, int nHeightIn, bool fCoinBaseIn) : out(std::move(outIn)), fCoinBase(fCoinBaseIn), nHeight(nHeightIn) {}
-    Coin(const CTxOut& outIn, int nHeightIn, bool fCoinBaseIn) : out(outIn), fCoinBase(fCoinBaseIn),nHeight(nHeightIn) {}
+//    Coin(CTxOut&& outIn, int nHeightIn, bool fCoinBaseIn, std::vector<uint8_t> && vExtraPayloadIn) : out(std::move(outIn)), fCoinBase(fCoinBaseIn), nHeight(nHeightIn),vExtraPayload(std::move(vExtraPayloadIn)) {}
+//    Coin(const CTxOut& outIn, int nHeightIn, bool fCoinBaseIn, const std::vector<uint8_t> & vExtraPayloadIn) : out(outIn), fCoinBase(fCoinBaseIn),nHeight(nHeightIn), vExtraPayload(vExtraPayloadIn) {}
+    Coin(CTxOut&& outIn, int nHeightIn, bool fCoinBaseIn, int16_t type, std::vector<uint8_t> extraPayload) :
+    	out(std::move(outIn)), fCoinBase(fCoinBaseIn), nHeight(nHeightIn), nType(type), vExtraPayload(extraPayload){}
+	Coin(const CTxOut& outIn, int nHeightIn, bool fCoinBaseIn, int16_t type, std::vector<uint8_t> extraPayload) :
+		out(outIn), fCoinBase(fCoinBaseIn),nHeight(nHeightIn), nType(type), vExtraPayload(extraPayload) {}
 
     void Clear() {
         out.SetNull();
         fCoinBase = false;
         nHeight = 0;
+        nType = 0;
+        vExtraPayload.clear();
+        vExtraPayload.resize(0);
     }
 
     //! empty constructor
@@ -61,6 +72,8 @@ public:
         uint32_t code = nHeight * 2 + fCoinBase;
         ::Serialize(s, VARINT(code));
         ::Serialize(s, CTxOutCompressor(REF(out)));
+        ::Serialize(s, VARINT(nType));
+        ::Serialize(s, vExtraPayload);
     }
 
     template<typename Stream>
@@ -70,6 +83,8 @@ public:
         nHeight = code >> 1;
         fCoinBase = code & 1;
         ::Unserialize(s, CTxOutCompressor(out));
+        ::Unserialize(s, VARINT(nType));
+        ::Unserialize(s, vExtraPayload);
     }
 
     bool IsSpent() const {
@@ -280,8 +295,8 @@ public:
     //! Calculate the size of the cache (in bytes)
     size_t DynamicMemoryUsage() const;
 
-    /**
-     * Amount of dash coming in to a transaction
+    /** 
+     * Amount of raptoreum coming in to a transaction
      * Note that lightweight clients may not know anything besides the hash of previous transactions,
      * so may not be able to calculate this.
      *

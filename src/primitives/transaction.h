@@ -20,6 +20,7 @@ enum {
     TRANSACTION_PROVIDER_UPDATE_REVOKE = 4,
     TRANSACTION_COINBASE = 5,
     TRANSACTION_QUORUM_COMMITMENT = 6,
+	TRANSACTION_FUTURE = 7
 };
 
 /** An outpoint - a combination of a transaction hash and an index n into its vout */
@@ -225,6 +226,7 @@ private:
 public:
     /** Construct a CTransaction that qualifies as IsNull() */
     CTransaction();
+    CTransaction(int16_t version, int16_t type);
 
     /** Convert a CMutableTransaction into a CTransaction. */
     CTransaction(const CMutableTransaction &tx);

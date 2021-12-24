@@ -46,6 +46,10 @@
 class CScheduler;
 class CNode;
 
+namespace boost {
+    class thread_group;
+} // namespace boost
+
 /** Time between pings automatically sent out for latency probing and keepalive (in seconds). */
 static const int PING_INTERVAL = 2 * 60;
 /** Time after which to disconnect, after waiting for a ping response (or inactivity). */
@@ -79,7 +83,7 @@ static const bool DEFAULT_UPNP = USE_UPNP;
 static const bool DEFAULT_UPNP = false;
 #endif
 /** The maximum number of peer connections to maintain.
- *  Masternodes are forced to accept at least this many connections
+ *  Smartnodes are forced to accept at least this many connections
  */
 static const unsigned int DEFAULT_MAX_PEER_CONNECTIONS = 125;
 /** The default for -maxuploadtarget. 0 = Unlimited */
@@ -213,8 +217,8 @@ public:
     bool GetUseAddrmanOutgoing() const { return m_use_addrman_outgoing; };
     void SetNetworkActive(bool active);
     SocketEventsMode GetSocketEventsMode() const { return socketEventsMode; }
-    void OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound = nullptr, const char *strDest = nullptr, bool fOneShot = false, bool fFeeler = false, bool manual_connection = false, bool masternode_connection = false, bool masternode_probe_connection = false);
-    void OpenMasternodeConnection(const CAddress& addrConnect, bool probe = false);
+    void OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound = nullptr, const char *strDest = nullptr, bool fOneShot = false, bool fFeeler = false, bool manual_connection = false, bool smartnode_connection = false, bool smartnode_probe_connection = false);
+    void OpenSmartnodeConnection(const CAddress& addrConnect, bool probe = false);
     bool CheckIncomingNonce(uint64_t nonce);
 
     struct CFullyConnectedOnly {
@@ -253,7 +257,7 @@ public:
         });
     }
 
-    bool IsMasternodeOrDisconnectRequested(const CService& addr);
+    bool IsSmartnodeOrDisconnectRequested(const CService& addr);
 
     void PushMessage(CNode* pnode, CSerializedNetMsg&& msg);
 
@@ -415,16 +419,16 @@ public:
     bool RemoveAddedNode(const std::string& node);
     std::vector<AddedNodeInfo> GetAddedNodeInfo();
 
-    bool AddPendingMasternode(const uint256& proTxHash);
-    void SetMasternodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash, const std::set<uint256>& proTxHashes);
-    void SetMasternodeQuorumRelayMembers(Consensus::LLMQType llmqType, const uint256& quorumHash, const std::set<uint256>& proTxHashes);
-    bool HasMasternodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash);
-    std::set<uint256> GetMasternodeQuorums(Consensus::LLMQType llmqType);
+    bool AddPendingSmartnode(const uint256& proTxHash);
+    void SetSmartnodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash, const std::set<uint256>& proTxHashes);
+    void SetSmartnodeQuorumRelayMembers(Consensus::LLMQType llmqType, const uint256& quorumHash, const std::set<uint256>& proTxHashes);
+    bool HasSmartnodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash);
+    std::set<uint256> GetSmartnodeQuorums(Consensus::LLMQType llmqType);
     // also returns QWATCH nodes
-    std::set<NodeId> GetMasternodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash) const;
-    void RemoveMasternodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash);
-    bool IsMasternodeQuorumNode(const CNode* pnode);
-    bool IsMasternodeQuorumRelayMember(const uint256& protxHash);
+    std::set<NodeId> GetSmartnodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash) const;
+    void RemoveSmartnodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash);
+    bool IsSmartnodeQuorumNode(const CNode* pnode);
+    bool IsSmartnodeQuorumRelayMember(const uint256& protxHash);
     void AddPendingProbeConnections(const std::set<uint256>& proTxHashes);
 
     size_t GetNodeCount(NumConnections num);
@@ -512,7 +516,7 @@ private:
     void SocketHandler();
     void ThreadSocketHandler();
     void ThreadDNSAddressSeed();
-    void ThreadOpenMasternodeConnections();
+    void ThreadOpenSmartnodeConnections();
 
     uint64_t CalculateKeyedNetGroup(const CAddress& ad) const;
 
@@ -584,11 +588,11 @@ private:
     CCriticalSection cs_vOneShots;
     std::vector<std::string> vAddedNodes GUARDED_BY(cs_vAddedNodes);
     CCriticalSection cs_vAddedNodes;
-    std::vector<uint256> vPendingMasternodes;
-    std::map<std::pair<Consensus::LLMQType, uint256>, std::set<uint256>> masternodeQuorumNodes; // protected by cs_vPendingMasternodes
-    std::map<std::pair<Consensus::LLMQType, uint256>, std::set<uint256>> masternodeQuorumRelayMembers; // protected by cs_vPendingMasternodes
-    std::set<uint256> masternodePendingProbes;
-    mutable CCriticalSection cs_vPendingMasternodes;
+    std::vector<uint256> vPendingSmartnodes;
+    std::map<std::pair<Consensus::LLMQType, uint256>, std::set<uint256>> smartnodeQuorumNodes; // protected by cs_vPendingMasternodes
+    std::map<std::pair<Consensus::LLMQType, uint256>, std::set<uint256>> smartnodeQuorumRelayMembers; // protected by cs_vPendingMasternodes
+    std::set<uint256> smartnodePendingProbes;
+    mutable CCriticalSection cs_vPendingSmartnodes;
     std::vector<CNode*> vNodes;
     std::list<CNode*> vNodesDisconnected;
     std::unordered_map<SOCKET, CNode*> mapSocketToNode;
@@ -647,7 +651,7 @@ private:
     std::thread threadSocketHandler;
     std::thread threadOpenAddedConnections;
     std::thread threadOpenConnections;
-    std::thread threadOpenMasternodeConnections;
+    std::thread threadOpenSmartnodeConnections;
     std::thread threadMessageHandler;
 
     /** flag for deciding to connect to an extra outbound peer,
@@ -778,7 +782,7 @@ public:
     uint256 verifiedProRegTxHash;
     // In case this is a verified MN, this value is the hashed operator pubkey of the MN
     uint256 verifiedPubKeyHash;
-    bool m_masternode_connection;
+    bool m_smartnode_connection;
 };
 
 
@@ -893,11 +897,11 @@ public:
     bool fRelayTxes; //protected by cs_filter
     bool fSentAddr;
     // If 'true' this node will be disconnected on CMasternodeMan::ProcessMasternodeConnections()
-    bool m_masternode_connection;
+    bool m_smartnode_connection;
     // If 'true' this node will be disconnected after MNAUTH
-    bool m_masternode_probe_connection;
+    bool m_smartnode_probe_connection;
     // If 'true', we identified it as an intra-quorum relay connection
-    bool m_masternode_iqr_connection{false};
+    bool m_smartnode_iqr_connection{false};
     CSemaphoreGrant grantOutbound;
     CCriticalSection cs_filter;
     std::unique_ptr<CBloomFilter> pfilter PT_GUARDED_BY(cs_filter){nullptr};

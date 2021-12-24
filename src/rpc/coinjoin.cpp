@@ -1,4 +1,5 @@
-// Copyright (c) 2019-2021 The Dash Core developers
+// Copyright (c) 2019-2020 The Dash Core developers
+// Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -33,8 +34,8 @@ UniValue coinjoin(const JSONRPCRequest& request)
             "  reset       - Reset mixing\n"
         );
 
-    if (fMasternodeMode)
-        throw JSONRPCError(RPC_INTERNAL_ERROR, "Client-side mixing is not supported on masternodes");
+    if (fSmartnodeMode)
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "Client-side mixing is not supported on smartnodes");
 
     if (!CCoinJoinClientOptions::IsEnabled()) {
         if (!gArgs.GetBoolArg("-enablecoinjoin", true)) {
@@ -106,9 +107,9 @@ UniValue getcoinjoininfo(const JSONRPCRequest& request)
                 "  \"sessions\":                        (array of json objects)\n"
                 "    [\n"
                 "      {\n"
-                "      \"protxhash\": \"...\",            (string) The ProTxHash of the masternode\n"
-                "      \"outpoint\": \"txid-index\",      (string) The outpoint of the masternode\n"
-                "      \"service\": \"host:port\",        (string) The IP address and port of the masternode\n"
+                "      \"protxhash\": \"...\",            (string) The ProTxHash of the smartnode\n"
+                "      \"outpoint\": \"txid-index\",      (string) The outpoint of the smartnode\n"
+                "      \"service\": \"host:port\",        (string) The IP address and port of the smartnode\n"
                 "      \"denomination\": xxx,           (numeric) The denomination of the mixing session in " + CURRENCY_UNIT + "\n"
                 "      \"state\": \"...\",                (string) Current state of the mixing session\n"
                 "      \"entries_count\": xxx,          (numeric) The number of entries in the mixing session\n"
@@ -118,7 +119,7 @@ UniValue getcoinjoininfo(const JSONRPCRequest& request)
                 "  \"keys_left\": xxx,                  (numeric) How many new keys are left since last automatic backup\n"
                 "  \"warnings\": \"...\"                  (string) Warnings if any\n"
                 "}\n"
-                "\nResult (for masternodes):\n"
+                "\nResult (for smartnodes):\n"
                 "{\n"
                 "  \"queue_size\": xxx,                 (numeric) How many queues there are currently on the network\n"
                 "  \"denomination\": xxx,               (numeric) The denomination of the mixing session in " + CURRENCY_UNIT + "\n"
@@ -133,7 +134,7 @@ UniValue getcoinjoininfo(const JSONRPCRequest& request)
 
     UniValue obj(UniValue::VOBJ);
 
-    if (fMasternodeMode) {
+    if (fSmartnodeMode) {
         coinJoinServer.GetJsonInfo(obj);
         return obj;
     }
@@ -164,10 +165,10 @@ UniValue getcoinjoininfo(const JSONRPCRequest& request)
 static const CRPCCommand commands[] =
     { //  category              name                      actor (function)         argNames
         //  --------------------- ------------------------  ---------------------------------
-        { "dash",               "getpoolinfo",            &getpoolinfo,            {} },
-        { "dash",               "getcoinjoininfo",        &getcoinjoininfo,        {} },
+        { "raptoreum",               "getpoolinfo",            &getpoolinfo,            {} },
+        { "raptoreum",               "getcoinjoininfo",        &getcoinjoininfo,        {} },
 #ifdef ENABLE_WALLET
-        { "dash",               "coinjoin",               &coinjoin,               {} },
+        { "raptoreum",               "coinjoin",               &coinjoin,               {} },
 #endif // ENABLE_WALLET
 };
 

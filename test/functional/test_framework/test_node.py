@@ -2,7 +2,7 @@
 # Copyright (c) 2017 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-"""Class for dashd node under test"""
+"""Class for raptoreumd node under test"""
 
 import contextlib
 import decimal
@@ -40,7 +40,7 @@ class FailedToStartError(Exception):
 
 
 class TestNode():
-    """A class for representing a dashd node under test.
+    """A class for representing a raptoreumd node under test.
 
     This class contains:
 
@@ -134,10 +134,10 @@ class TestNode():
         delete_cookie_file(self.datadir, self.chain)
         self.process = subprocess.Popen(all_args, stderr=stderr, *args, **kwargs)
         self.running = True
-        self.log.debug("dashd started, waiting for RPC to come up")
+        self.log.debug("raptoreumd started, waiting for RPC to come up")
 
     def wait_for_rpc_connection(self):
-        """Sets up an RPC connection to the dashd process. Returns False if unable to connect."""
+        """Sets up an RPC connection to the raptoreumd process. Returns False if unable to connect."""
         # Poll at a rate of four times per second
         poll_per_s = 4
         for _ in range(poll_per_s * self.rpc_timeout):
@@ -160,7 +160,7 @@ class TestNode():
                 # -342 Service unavailable, RPC server started but is shutting down due to error
                 if e.error['code'] != -28 and e.error['code'] != -342:
                     raise  # unknown JSON RPC exception
-            except ValueError as e:  # cookie file not found and no rpcuser or rpcassword. dashd still starting
+            except ValueError as e:  # cookie file not found and no rpcuser or rpcassword. raptoreumd still starting
                 if "No RPC credentials" not in str(e):
                     raise
             time.sleep(1.0 / poll_per_s)

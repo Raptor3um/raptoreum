@@ -1,9 +1,10 @@
 // Copyright (c) 2018-2020 The Dash Core developers
+// Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_EVO_EVODB_H
-#define BITCOIN_EVO_EVODB_H
+#ifndef RAPTOREUM_EVODB_H
+#define RAPTOREUM_EVODB_H
 
 #include <dbwrapper.h>
 #include <sync.h>
@@ -112,4 +113,4 @@ private:
 
 extern std::unique_ptr<CEvoDB> evoDb;
 
-#endif // BITCOIN_EVO_EVODB_H
+#endif //RAPTOREUM_EVODB_H

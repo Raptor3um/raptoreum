@@ -18,7 +18,7 @@
 #include <QPixmap>
 
 #if defined(HAVE_CONFIG_H)
-#include <config/dash-config.h> /* for USE_QRCODE */
+#include <config/raptoreum-config.h> /* for USE_QRCODE */
 #endif
 
 #ifdef USE_QRCODE
@@ -122,6 +122,12 @@ void ReceiveRequestDialog::setInfo(const SendCoinsRecipient &_info)
 {
     this->info = _info;
     update();
+}
+
+void ReceiveRequestDialog::set_info(const SendFuturesRecipient &__info)
+{
+  this->info = __info;
+  update();
 }
 
 void ReceiveRequestDialog::update()

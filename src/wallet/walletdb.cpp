@@ -1,6 +1,7 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
 // Copyright (c) 2014-2021 The Dash Core developers
+// Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -66,7 +67,8 @@ bool WalletBatch::WriteKeyMeta(const CPubKey& vchPubKey, const CKeyMetadata& key
 
 bool WalletBatch::WriteKey(const CPubKey& vchPubKey, const CPrivKey& vchPrivKey, const CKeyMetadata& keyMeta)
 {
-    if (!WriteIC(std::make_pair(std::string("keymeta"), vchPubKey), keyMeta, false)) {
+    if (!WriteIC(std::make_pair(std::string("keymeta"), vchPubKey), keyMeta, false))
+    {
         return false;
     }
 
@@ -81,13 +83,14 @@ bool WalletBatch::WriteKey(const CPubKey& vchPubKey, const CPrivKey& vchPrivKey,
 
 bool WalletBatch::WriteCryptedKey(const CPubKey& vchPubKey,
                                 const std::vector<unsigned char>& vchCryptedSecret,
-                                const CKeyMetadata &keyMeta)
 {
-    if (!WriteIC(std::make_pair(std::string("keymeta"), vchPubKey), keyMeta)) {
+    if (!WriteIC(std::make_pair(std::string("keymeta"), vchPubKey), keyMeta))
+    {
         return false;
     }
 
-    if (!WriteIC(std::make_pair(std::string("ckey"), vchPubKey), vchCryptedSecret, false)) {
+    if (!WriteIC(std::make_pair(std::string("ckey"), vchPubKey), vchCryptedSecret, false))
+    {
         return false;
     }
     EraseIC(std::make_pair(std::string("key"), vchPubKey));
@@ -107,7 +110,8 @@ bool WalletBatch::WriteCScript(const uint160& hash, const CScript& redeemScript)
 
 bool WalletBatch::WriteWatchOnly(const CScript &dest, const CKeyMetadata& keyMeta)
 {
-    if (!WriteIC(std::make_pair(std::string("watchmeta"), dest), keyMeta)) {
+    if (!WriteIC(std::make_pair(std::string("watchmeta"), dest), keyMeta))
+    {
         return false;
     }
     return WriteIC(std::make_pair(std::string("watchs"), dest), '1');
@@ -115,7 +119,8 @@ bool WalletBatch::WriteWatchOnly(const CScript &dest, const CKeyMetadata& keyMet
 
 bool WalletBatch::EraseWatchOnly(const CScript &dest)
 {
-    if (!EraseIC(std::make_pair(std::string("watchmeta"), dest))) {
+    if (!EraseIC(std::make_pair(std::string("watchmeta"), dest)))
+    {
         return false;
     }
     return EraseIC(std::make_pair(std::string("watchs"), dest));
@@ -310,8 +315,7 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
                     char fTmp;
                     char fUnused;
                     ssValue >> fTmp >> fUnused >> wtx.strFromAccount;
-                    strErr = strprintf("LoadWallet() upgrading tx ver=%d %d '%s' %s",
-                                       wtx.fTimeReceivedIsTxTime, fTmp, wtx.strFromAccount, hash.ToString());
+                    strErr = strprintf("LoadWallet() upgrading tx ver=%d %d '%s' %s", wtx.fTimeReceivedIsTxTime, fTmp, wtx.strFromAccount, hash.ToString());
                     wtx.fTimeReceivedIsTxTime = fTmp;
                 }
                 else
@@ -333,7 +337,8 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             ssKey >> strAccount;
             uint64_t nNumber;
             ssKey >> nNumber;
-            if (nNumber > pwallet->nAccountingEntryNumber) {
+            if (nNumber > pwallet->nAccountingEntryNumber)
+            {
                 pwallet->nAccountingEntryNumber = nNumber;
             }
 

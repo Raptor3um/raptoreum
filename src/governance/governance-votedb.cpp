@@ -1,4 +1,5 @@
-// Copyright (c) 2014-2021 The Dash Core developers
+// Copyright (c) 2014-2019 The Dash Core developers
+// Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -55,11 +56,11 @@ std::vector<CGovernanceVote> CGovernanceObjectVoteFile::GetVotes() const
     return vecResult;
 }
 
-void CGovernanceObjectVoteFile::RemoveVotesFromMasternode(const COutPoint& outpointMasternode)
+void CGovernanceObjectVoteFile::RemoveVotesFromSmartnode(const COutPoint& outpointSmartnode)
 {
     auto it = listVotes.begin();
     while (it != listVotes.end()) {
-        if (it->GetMasternodeOutpoint() == outpointMasternode) {
+        if (it->GetSmartnodeOutpoint() == outpointSmartnode) {
             --nMemoryVotes;
             mapVoteIndex.erase(it->GetHash());
             listVotes.erase(it++);
@@ -69,13 +70,13 @@ void CGovernanceObjectVoteFile::RemoveVotesFromMasternode(const COutPoint& outpo
     }
 }
 
-std::set<uint256> CGovernanceObjectVoteFile::RemoveInvalidVotes(const COutPoint& outpointMasternode, bool fProposal)
+std::set<uint256> CGovernanceObjectVoteFile::RemoveInvalidVotes(const COutPoint& outpointSmartnode, bool fProposal)
 {
     std::set<uint256> removedVotes;
 
     auto it = listVotes.begin();
     while (it != listVotes.end()) {
-        if (it->GetMasternodeOutpoint() == outpointMasternode) {
+        if (it->GetSmartnodeOutpoint() == outpointSmartnode) {
             bool useVotingKey = fProposal && (it->GetSignal() == VOTE_SIGNAL_FUNDING);
             if (!it->IsValid(useVotingKey)) {
                 removedVotes.emplace(it->GetHash());
@@ -95,7 +96,7 @@ void CGovernanceObjectVoteFile::RemoveOldVotes(const CGovernanceVote& vote)
 {
     auto it = listVotes.begin();
     while (it != listVotes.end()) {
-        if (it->GetMasternodeOutpoint() == vote.GetMasternodeOutpoint() // same masternode
+        if (it->GetSmartnodeOutpoint() == vote.GetSmartnodeOutpoint() // same smartnode
             && it->GetParentHash() == vote.GetParentHash() // same governance object (e.g. same proposal)
             && it->GetSignal() == vote.GetSignal() // same signal (e.g. "funding", "delete", etc.)
             && it->GetTimestamp() < vote.GetTimestamp()) // older than new vote

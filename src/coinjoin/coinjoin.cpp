@@ -1,4 +1,5 @@
 // Copyright (c) 2014-2021 The Dash Core developers
+// Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -14,8 +15,8 @@
 #include <utilmoneystr.h>
 #include <validation.h>
 
-#include <masternode/activemasternode.h>
-#include <masternode/masternode-sync.h>
+#include <smartnode/activesmartnode.h>
+#include <smartnode/smartnode-sync.h>
 
 #include <llmq/quorums_instantsend.h>
 #include <llmq/quorums_chainlocks.h>
@@ -45,11 +46,11 @@ uint256 CCoinJoinQueue::GetSignatureHash() const
 
 bool CCoinJoinQueue::Sign()
 {
-    if (!fMasternodeMode) return false;
+    if (!fSmartnodeMode) return false;
 
 
     uint256 hash = GetSignatureHash();
-    CBLSSignature sig = activeMasternodeInfo.blsKeyOperator->Sign(hash);
+    CBLSSignature sig = activeSmartnodeInfo.blsKeyOperator->Sign(hash);
     if (!sig.IsValid()) {
         return false;
     }
@@ -91,11 +92,11 @@ uint256 CCoinJoinBroadcastTx::GetSignatureHash() const
 
 bool CCoinJoinBroadcastTx::Sign()
 {
-    if (!fMasternodeMode) return false;
+    if (!fSmartnodeMode) return false;
 
     uint256 hash = GetSignatureHash();
 
-    CBLSSignature sig = activeMasternodeInfo.blsKeyOperator->Sign(hash);
+    CBLSSignature sig = activeSmartnodeInfo.blsKeyOperator->Sign(hash);
     if (!sig.IsValid()) {
         return false;
     }
@@ -315,17 +316,17 @@ void CCoinJoin::InitStandardDenominations()
         is convertible to another.
 
         For example:
-        1DRK+1000 == (.1DRK+100)*10
-        10DRK+10000 == (1DRK+1000)*10
+        100RTM+1000 == (10RTM+100)*10
+        10RM+10000 == (1RTM+1000)*10
     */
     /* Disabled
     vecStandardDenominations.push_back( (100      * COIN)+100000 );
     */
-    vecStandardDenominations.push_back((10 * COIN) + 10000);
-    vecStandardDenominations.push_back((1 * COIN) + 1000);
-    vecStandardDenominations.push_back((.1 * COIN) + 100);
-    vecStandardDenominations.push_back((.01 * COIN) + 10);
-    vecStandardDenominations.push_back((.001 * COIN) + 1);
+    vecStandardDenominations.push_back((10000 * COIN) + 10000);
+    vecStandardDenominations.push_back((1000 * COIN) + 1000);
+    vecStandardDenominations.push_back((100 * COIN) + 100);
+    vecStandardDenominations.push_back((10 * COIN) + 10);
+    vecStandardDenominations.push_back((1 * COIN) + 1);
 }
 
 // check to make sure the collateral provided by the client is valid
@@ -493,11 +494,11 @@ std::string CCoinJoin::GetMessageByID(PoolMessage nMessageID)
     case ERR_MAXIMUM:
         return _("Entry exceeds maximum size.");
     case ERR_MN_LIST:
-        return _("Not in the Masternode list.");
+        return _("Not in the Smartnode list.");
     case ERR_MODE:
         return _("Incompatible mode.");
     case ERR_QUEUE_FULL:
-        return _("Masternode queue is full.");
+        return _("Smartnode queue is full.");
     case ERR_RECENT:
         return _("Last queue was created too recently.");
     case ERR_SESSION:
@@ -550,14 +551,14 @@ void CCoinJoin::CheckDSTXes(const CBlockIndex* pindex)
 
 void CCoinJoin::UpdatedBlockTip(const CBlockIndex* pindex)
 {
-    if (pindex && masternodeSync.IsBlockchainSynced()) {
+    if (pindex && smartnodeSync.IsBlockchainSynced()) {
         CheckDSTXes(pindex);
     }
 }
 
 void CCoinJoin::NotifyChainLock(const CBlockIndex* pindex)
 {
-    if (pindex && masternodeSync.IsBlockchainSynced()) {
+    if (pindex && smartnodeSync.IsBlockchainSynced()) {
         CheckDSTXes(pindex);
     }
 }

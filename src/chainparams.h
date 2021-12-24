@@ -39,7 +39,7 @@ struct ChainTxData {
 
 /**
  * CChainParams defines various tweakable parameters of a given instance of the
- * Dash system. There are three: the main network on which people trade goods
+ * Raptoreum system. There are three: the main network on which people trade goods
  * and services, the public test network which gets reset from time to time and
  * a regression test mode which is intended for private networks only. It has
  * minimal difficulty to ensure that blocks can be found instantly.
@@ -76,6 +76,7 @@ public:
     bool AllowMultipleAddressesFromGroup() const { return fAllowMultipleAddressesFromGroup; }
     /** Allow nodes with the same address and multiple ports */
     bool AllowMultiplePorts() const { return fAllowMultiplePorts; }
+    bool MiningRequiresPeers() const { return miningRequiresPeers; }
     /** How long to wait until we allow retrying of a LLMQ connection  */
     int LLMQConnectionRetryTimeout() const { return nLLMQConnectionRetryTimeout; }
     /** Return the BIP70 network string (main, test or regtest) */
@@ -89,19 +90,18 @@ public:
     const ChainTxData& TxData() const { return chainTxData; }
     void UpdateVersionBitsParameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout, int64_t nWindowSize, int64_t nThresholdStart, int64_t nThresholdMin, int64_t nFalloffCoeff);
     void UpdateDIP3Parameters(int nActivationHeight, int nEnforcementHeight);
-    void UpdateDIP8Parameters(int nActivationHeight);
-    void UpdateBudgetParameters(int nMasternodePaymentsStartBlock, int nBudgetPaymentsStartBlock, int nSuperblockStartBlock);
+    void UpdateBudgetParameters(int nSmartnodePaymentsStartBlock, int nBudgetPaymentsStartBlock, int nSuperblockStartBlock);
     void UpdateSubsidyAndDiffParams(int nMinimumDifficultyBlocks, int nHighSubsidyBlocks, int nHighSubsidyFactor);
     void UpdateLLMQChainLocks(Consensus::LLMQType llmqType);
-    void UpdateLLMQInstantSend(Consensus::LLMQType llmqType);
-    void UpdateLLMQTestParams(int size, int threshold);
-    void UpdateLLMQDevnetParams(int size, int threshold);
+    void UpdateLLMQParams(size_t totalMnCount, int height, bool lowLLMQParams = false);
     int PoolMinParticipants() const { return nPoolMinParticipants; }
+    int PoolNewMinParticipants() const { return nPoolNewMinParticipants; }
     int PoolMaxParticipants() const { return nPoolMaxParticipants; }
+    int PoolNewMaxParticipants() const { return nPoolNewMaxParticipants; }
     int FulfilledRequestExpireTime() const { return nFulfilledRequestExpireTime; }
     const std::vector<std::string>& SporkAddresses() const { return vSporkAddresses; }
     int MinSporkKeys() const { return nMinSporkKeys; }
-    bool BIP9CheckMasternodesUpgraded() const { return fBIP9CheckMasternodesUpgraded; }
+    bool BIP9CheckSmartnodesUpgraded() const { return fBIP9CheckSmartnodesUpgraded; }
 protected:
     CChainParams() {}
 
@@ -122,15 +122,19 @@ protected:
     bool fMineBlocksOnDemand;
     bool fAllowMultipleAddressesFromGroup;
     bool fAllowMultiplePorts;
+    bool miningRequiresPeers;
     int nLLMQConnectionRetryTimeout;
     CCheckpointData checkpointData;
     ChainTxData chainTxData;
     int nPoolMinParticipants;
+    int nPoolNewMinParticipants;
     int nPoolMaxParticipants;
+    int nPoolNewMaxParticipants;
     int nFulfilledRequestExpireTime;
     std::vector<std::string> vSporkAddresses;
     int nMinSporkKeys;
-    bool fBIP9CheckMasternodesUpgraded;
+    bool fBIP9CheckSmartnodesUpgraded;
+
 };
 
 /**
@@ -138,7 +142,7 @@ protected:
  * @returns a CChainParams* of the chosen chain.
  * @throws a std::runtime_error if the chain is not supported.
  */
-std::unique_ptr<CChainParams> CreateChainParams(const std::string& chain, bool fHelpOnly = false);
+std::unique_ptr<CChainParams> CreateChainParams(const std::string& chain);
 
 /**
  * Return the currently selected parameters. This won't change after app
@@ -163,14 +167,9 @@ void UpdateVersionBitsParameters(Consensus::DeploymentPos d, int64_t nStartTime,
 void UpdateDIP3Parameters(int nActivationHeight, int nEnforcementHeight);
 
 /**
- * Allows modifying the DIP8 activation height
- */
-void UpdateDIP8Parameters(int nActivationHeight);
-
-/**
  * Allows modifying the budget regtest parameters.
  */
-void UpdateBudgetParameters(int nMasternodePaymentsStartBlock, int nBudgetPaymentsStartBlock, int nSuperblockStartBlock);
+void UpdateBudgetParameters(int nSmartnodePaymentsStartBlock, int nBudgetPaymentsStartBlock, int nSuperblockStartBlock);
 
 /**
  * Allows modifying the subsidy and difficulty devnet parameters.
@@ -182,19 +181,6 @@ void UpdateDevnetSubsidyAndDiffParams(int nMinimumDifficultyBlocks, int nHighSub
  */
 void UpdateDevnetLLMQChainLocks(Consensus::LLMQType llmqType);
 
-/**
- * Allows modifying the LLMQ type for InstantSend.
- */
-void UpdateDevnetLLMQInstantSend(Consensus::LLMQType llmqType);
-
-/**
- * Allows modifying parameters of the test LLMQ
- */
-void UpdateLLMQTestParams(int size, int threshold);
-
-/**
- * Allows modifying parameters of the devnet LLMQ
- */
-void UpdateLLMQDevnetParams(int size, int threshold);
+void UpdateLLMQParams(size_t totalMnCount, int height, bool lowLLMQParams = false);
 
 #endif // BITCOIN_CHAINPARAMS_H

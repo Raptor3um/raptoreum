@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2021 The Dash Core developers
+# Copyright (c) 2015-2020 The Dash Core developers
+# Copyright (c) 2020-2022 The Raptoreum developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 import time
@@ -45,15 +46,18 @@ class TestP2PConn(P2PInterface):
                 self.send_message(self.islocks[inv.hash])
 
 
-class LLMQ_IS_CL_Conflicts(DashTestFramework):
+class LLMQ_IS_CL_Conflicts(RaptoreumTestFramework):
     def set_test_params(self):
-        self.set_dash_test_params(4, 3, fast_dip3_enforcement=True)
+        self.set_raptoreum_test_params(6, 5, fast_dip3_enforcement=True)
         #disable_mocktime()
 
     def run_test(self):
-        self.activate_dip8()
 
-        self.test_node = self.nodes[0].add_p2p_connection(TestP2PConn())
+        while self.nodes[0].getblockchaininfo()["bip9_softforks"]["dip0008"]["status"] != "active":
+            self.nodes[0].generate(10)
+        self.sync_blocks(self.nodes, timeout=60*5)
+
+        self.test_node = self.nodes[0].add_p2p_connection(TestNode())
         network_thread_start()
         self.nodes[0].p2p.wait_for_verack()
 
@@ -200,8 +204,11 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
         # Create an ISLOCK but don't broadcast it yet
         islock = self.create_islock(rawtx2)
 
-        # Disable ChainLocks to avoid accidential locking
-        self.nodes[0].spork("SPORK_19_CHAINLOCKS_ENABLED", 4070908800)
+        # Stop enough MNs so that ChainLocks don't work anymore
+        for i in range(2):
+            self.stop_node(len(self.nodes) - 1)
+            self.nodes.pop(len(self.nodes) - 1)
+            self.mninfo.pop(len(self.mninfo) - 1)
 
         # Send tx1, which will later conflict with the ISLOCK
         self.nodes[0].sendrawtransaction(rawtx1)
@@ -259,7 +266,7 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
 
         coinbasevalue = bt['coinbasevalue']
         miner_address = node.getnewaddress()
-        mn_payee = bt['masternode'][0]['payee']
+        mn_payee = bt['smartnode'][0]['payee']
 
         # calculate fees that the block template included (we'll have to remove it from the coinbase as we won't
         # include the template's transactions
@@ -282,11 +289,7 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
         coinbasevalue -= bt_fees
         coinbasevalue += new_fees
 
-        realloc_info = get_bip9_status(self.nodes[0], 'realloc')
-        realloc_height = 99999999
-        if realloc_info['status'] == 'active':
-            realloc_height = realloc_info['since']
-        mn_amount = get_masternode_payment(height, coinbasevalue, realloc_height)
+        mn_amount = get_smartnode_payment(height, coinbasevalue)
         miner_amount = coinbasevalue - mn_amount
 
         outputs = {miner_address: str(Decimal(miner_amount) / COIN)}
@@ -296,7 +299,7 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
         coinbase = FromHex(CTransaction(), node.createrawtransaction([], outputs))
         coinbase.vin = create_coinbase(height).vin
 
-        # We can't really use this one as it would result in invalid merkle roots for masternode lists
+        # We can't really use this one as it would result in invalid merkle roots for smartnode lists
         if len(bt['coinbase_payload']) != 0:
             cbtx = FromHex(CCbTx(version=1), bt['coinbase_payload'])
             coinbase.nVersion = 3

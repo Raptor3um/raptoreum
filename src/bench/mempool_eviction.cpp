@@ -9,7 +9,7 @@
 #include <list>
 #include <vector>
 
-static void AddTx(const CTransaction& tx, const CAmount& nFee, CTxMemPool& pool) EXCLUSIVE_LOCKS_REQUIRED(pool.cs)
+static void AddTx(const CTransaction& tx, const CAmount& nFee, const CAmount& specialTxFee, CTxMemPool& pool) EXCLUSIVE_LOCKS_REQUIRED(pool.cs)
 {
     int64_t nTime = 0;
     unsigned int nHeight = 1;
@@ -17,7 +17,7 @@ static void AddTx(const CTransaction& tx, const CAmount& nFee, CTxMemPool& pool)
     unsigned int sigOpCost = 4;
     LockPoints lp;
     pool.addUnchecked(tx.GetHash(), CTxMemPoolEntry(
-                                        MakeTransactionRef(tx), nFee, nTime, nHeight,
+                                        MakeTransactionRef(tx), nFee, specialTxFee, nTime, nHeight,
                                         spendsCoinbase, sigOpCost, lp));
 }
 
@@ -100,13 +100,13 @@ static void MempoolEviction(benchmark::State& state)
     LOCK(pool.cs);
 
     while (state.KeepRunning()) {
-        AddTx(tx1, 10000LL, pool);
-        AddTx(tx2, 5000LL, pool);
-        AddTx(tx3, 20000LL, pool);
-        AddTx(tx4, 7000LL, pool);
-        AddTx(tx5, 1000LL, pool);
-        AddTx(tx6, 1100LL, pool);
-        AddTx(tx7, 9000LL, pool);
+        AddTx(tx1, 10000LL, 0LL,pool);
+        AddTx(tx2, 5000LL, 0LL, pool);
+        AddTx(tx3, 20000LL, 0LL, pool);
+        AddTx(tx4, 7000LL, 0LL, pool);
+        AddTx(tx5, 1000LL, 0LL, pool);
+        AddTx(tx6, 1100LL, 0LL, pool);
+        AddTx(tx7, 9000LL, 0LL, pool);
         pool.TrimToSize(pool.DynamicMemoryUsage() * 3 / 4);
         pool.TrimToSize(::GetSerializeSize(tx1, SER_NETWORK, PROTOCOL_VERSION));
     }

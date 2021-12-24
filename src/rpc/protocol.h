@@ -28,7 +28,7 @@ enum HTTPStatusCode
     HTTP_SERVICE_UNAVAILABLE   = 503,
 };
 
-//! Dash Core RPC error codes
+//! Raptoreum Core RPC error codes
 enum RPCErrorCode
 {
     //! Standard JSON-RPC 2.0 errors
@@ -48,6 +48,7 @@ enum RPCErrorCode
     RPC_MISC_ERROR                  = -1,  //!< std::exception thrown in command handling
     RPC_TYPE_ERROR                  = -3,  //!< Unexpected type was passed as parameter
     RPC_INVALID_ADDRESS_OR_KEY      = -5,  //!< Invalid address or key
+	RPC_INVALID_COLLATERAL_AMOUNT   = -50,  //!< Invalid collateral amount
     RPC_OUT_OF_MEMORY               = -7,  //!< Ran out of memory during operation
     RPC_INVALID_PARAMETER           = -8,  //!< Invalid, missing or duplicate parameter
     RPC_DATABASE_ERROR              = -20, //!< Database error
@@ -65,7 +66,7 @@ enum RPCErrorCode
     RPC_TRANSACTION_ALREADY_IN_CHAIN= RPC_VERIFY_ALREADY_IN_CHAIN,
 
     //! P2P client errors
-    RPC_CLIENT_NOT_CONNECTED        = -9,  //!< Dash is not connected
+    RPC_CLIENT_NOT_CONNECTED        = -9,  //!< Raptoreum is not connected
     RPC_CLIENT_IN_INITIAL_DOWNLOAD  = -10, //!< Still downloading initial blocks
     RPC_CLIENT_NODE_ALREADY_ADDED   = -23, //!< Node is already added
     RPC_CLIENT_NODE_NOT_ADDED       = -24, //!< Node has not been added before

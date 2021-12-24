@@ -1,5 +1,6 @@
 // Copyright (c) 2011-2015 The Bitcoin Core developers
 // Copyright (c) 2014-2021 The Dash Core developers
+// Copyright (c) 2020-2021 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -21,6 +22,85 @@ bool TransactionRecord::showTransaction()
     // There are currently no cases where we hide transactions, but
     // we may want to use this in the future for things like RBF.
     return true;
+}
+
+/* Return block height for transaction */
+int TransactionRecord::getTransactionBlockHeight(const CWalletTx &wtx)
+{
+    // Find the block the tx is in
+    CBlockIndex* pindex = nullptr;
+    BlockMap::iterator mi = mapBlockIndex.find(wtx.hashBlock);
+    if (mi != mapBlockIndex.end())
+        pindex = (*mi).second;
+
+    int txBlock = pindex ? pindex->nHeight : chainActive.Height();
+
+    return txBlock;
+}
+
+/* Return Maturity Block of Future TX */
+int TransactionRecord::getFutureTxMaturityBlock(const CWalletTx &wtx, CFutureTx &ftx)
+{
+    int maturityBlock = (getTransactionBlockHeight(wtx) + ftx.maturity); //tx block height + maturity
+    return maturityBlock;
+}
+
+/* Return Maturity Time of Future TX */
+int TransactionRecord::getFutureTxMaturityTime(const CWalletTx &wtx, CFutureTx &ftx)
+{
+    int64_t maturityTime = (wtx.nTimeReceived + ftx.lockTime); //tx time + locked seconds
+    return maturityTime;
+}
+
+/* Return positive answer if future transaction has matured.
+ */
+bool TransactionRecord::isFutureTxMatured(const CWalletTx &wtx, CFutureTx &ftx)
+{
+    if (chainActive.Height() >= getFutureTxMaturityBlock(wtx, ftx) || GetAdjustedTime() >= getFutureTxMaturityTime(wtx, ftx))
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+void TransactionRecord::getFutureTxStatus(const CWalletTx &wtx, CFutureTx &ftx)
+{
+
+    if (wtx.IsInMainChain() && GetTxPayload(wtx.tx->vExtraPayload, ftx))
+    {
+
+        int maturityBlock = getFutureTxMaturityBlock(wtx, ftx);
+        int64_t maturityTime = getFutureTxMaturityTime(wtx, ftx);
+
+        //transaction depth in chain against maturity OR relative seconds of transaction against lockTime
+        if (isFutureTxMatured(wtx, ftx)) {
+            status.status = TransactionStatus::Confirmed;
+        } else {
+            status.countsForBalance = false;
+           //display transaction is mature in x blocks or transaction is mature in days hh:mm:ss
+            if(maturityBlock >= chainActive.Height())
+            {
+                status.status = TransactionStatus::OpenUntilBlock;
+                status.open_for = maturityBlock;
+            }
+            if(maturityTime >= GetAdjustedTime())
+            {
+                status.status = TransactionStatus::OpenUntilDate;
+                status.open_for = maturityTime;
+            }
+
+        }
+
+    }
+    else
+    {
+        //not in main chain - new transaction
+        status.status = TransactionStatus::NotAccepted;
+    }
+
 }
 
 /*
@@ -55,7 +135,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(interfaces::Wal
                 sub.involvesWatchAddress = mine & ISMINE_WATCH_ONLY;
                 if (wtx.txout_address_is_mine[i])
                 {
-                    // Received by Dash Address
+                    // Received by Raptoreum Address
                     sub.type = TransactionRecord::RecvWithAddress;
                     sub.strAddress = EncodeDestination(wtx.txout_address[i]);
                     sub.txDest = wtx.txout_address[i];
@@ -74,6 +154,19 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(interfaces::Wal
                     sub.type = TransactionRecord::Generated;
                 }
 
+                if(wtx.tx->nType == TRANSACTION_FUTURE)
+                {
+                    // Future TX Received
+
+                    if (ExtractDestination(wtx.tx->vout[1].scriptPubKey, address))
+                    {
+                        // Received by Raptoreum Address
+                        sub.type = TransactionRecord::FutureReceive;
+                        sub.strAddress = EncodeDestination(address);
+                        sub.txDest = address;
+                    }
+                }
+                
                 parts.append(sub);
             }
         }
@@ -165,6 +258,18 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(interfaces::Wal
             }
 
             CAmount nChange = wtx.change;
+            if(wtx.tx->nType == TRANSACTION_FUTURE)
+            {
+                sub.type = TransactionRecord::FutureSend;
+                if (ExtractDestination(wtx.tx->vout[0].scriptPubKey, address))
+                {
+                    // Sent to Raptoreum Address
+                    sub.strAddress = EncodeDestination(address);
+                    sub.txDest = address;
+                }
+            }
+
+            CAmount nChange = wtx.GetChange();
 
             sub.debit = -(nDebit - nChange);
             sub.credit = nCredit - nChange;
@@ -208,7 +313,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(interfaces::Wal
 
                 if (!boost::get<CNoDestination>(&wtx.txout_address[nOut]))
                 {
-                    // Sent to Dash Address
+                    // Sent to Raptoreum Address
                     sub.type = TransactionRecord::SendToAddress;
                     sub.strAddress = EncodeDestination(wtx.txout_address[nOut]);
                     sub.txDest = wtx.txout_address[nOut];
@@ -225,6 +330,11 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(interfaces::Wal
                 if(mapValue["DS"] == "1")
                 {
                     sub.type = TransactionRecord::CoinJoinSend;
+                }
+
+                if(wtx.tx->nType == TRANSACTION_FUTURE)
+                {
+                    sub.type = TransactionRecord::FutureSend;
                 }
 
                 CAmount nValue = txout.nValue;
@@ -302,6 +412,13 @@ void TransactionRecord::updateStatus(const interfaces::WalletTxStatus& wtx, int 
         {
             status.status = TransactionStatus::Confirmed;
         }
+    }
+    //For Future transactions, determine maturity
+    else if(type == TransactionRecord::FutureReceive)
+    {
+        CFutureTx ftx;
+        getFutureTxStatus(wtx, ftx);
+
     }
     else
     {

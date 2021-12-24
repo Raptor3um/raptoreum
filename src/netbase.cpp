@@ -628,7 +628,6 @@ bool ConnectThroughProxy(const proxyType &proxy, const std::string& strDest, int
     }
     return true;
 }
-
 bool LookupSubNet(const char* pszName, CSubNet& ret)
 {
     std::string strSubnet(pszName);

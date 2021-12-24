@@ -1,7 +1,7 @@
 WINDOWS BUILD NOTES
 ====================
 
-Below are some notes on how to build Dash Core for Windows.
+Below are some notes on how to build Raptoreum Core for Windows.
 
 The options known to work for building Dash Core on Windows are:
 
@@ -59,9 +59,9 @@ Installation
 After building using the Windows subsystem it can be useful to copy the compiled
 executables to a directory on the Windows drive in the same directory structure
 as they appear in the release `.zip` archive. This can be done in the following
-way. This will install to `c:\workspace\dash`, for example:
+way. This will install to `c:\workspace\raptoreum`, for example:
 
-    make install DESTDIR=/mnt/c/workspace/dash
+    make install DESTDIR=/mnt/c/workspace/raptoreum
 
 You can also create an installer using:
 

@@ -1,4 +1,5 @@
 // Copyright (c) 2011-2014 The Bitcoin Core developers
+// Copyright (c) 2020-2021 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -15,6 +16,7 @@ class Node;
 class Wallet;
 struct WalletTx;
 struct WalletTxStatus;
+struct FutureTx;
 }
 
 /** Provide a human-readable extended HTML description of a transaction.
@@ -30,6 +32,8 @@ private:
     TransactionDesc() {}
 
     static QString FormatTxStatus(const interfaces::WalletTx& wtx, const interfaces::WalletTxStatus& status, bool inMempool, int numBlocks, int64_t adjustedTime);
+    static QString FutureTxDescToHTML(const interface::WalletTx& wtx, const interface::FutureTx& ftx, int unit);
+
 };
 
 #endif // BITCOIN_QT_TRANSACTIONDESC_H

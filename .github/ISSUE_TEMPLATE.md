@@ -1,10 +1,10 @@
 <!--- Remove sections that do not apply -->
 
-This issue tracker is only for technical issues related to Dash Core.
+This issue tracker is only for technical issues related to Raptoreum Core.
 
-General Dash questions and/or support requests and are best directed to the [Dashpay Reddit](https://www.reddit.com/r/dashpay/).
+General Raptoreum questions and/or support requests and are best directed to the [Raptoreum Reddit](https://www.reddit.com/r/raptoreum/).
 
-To report critical security issues, email infosec@dash.org and/or see the DASH bug bounty program on [Bugcrowd](https://bugcrowd.com/dashdigitalcash) instead of creating Github issues.
+To report critical security issues, email infosec@raptoreum.org and/or see the RAPTOREUM bug bounty program on [Bugcrowd](https://bugcrowd.com/raptoreumdigitalcash) instead of creating Github issues.
 
 ### Describe the issue
 
@@ -23,7 +23,7 @@ Tell us what happens instead
 ### Screenshots.
 If the issue is related to the GUI, screenshots can be added to this issue via drag & drop.
 
-### What version of Dash Core are you using?
+### What version of Raptoreum Core are you using?
 List the version number/commit ID, and if it is an official binary, self compiled or a distribution package such as PPA.
 
 ### Machine specs:

@@ -1,4 +1,5 @@
 // Copyright (c) 2011-2015 The Bitcoin Core developers
+// Copyright (c) 2020-2021 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,6 +14,7 @@ class ClientModel;
 class SendCoinsRecipient;
 class WalletModel;
 class WalletView;
+class SendFuturesRecipient;
 
 QT_BEGIN_NAMESPACE
 class QStackedWidget;
@@ -42,6 +44,8 @@ public:
 
     bool handlePaymentRequest(const SendCoinsRecipient& recipient);
 
+    bool handlePaymentRequest(const SendFuturesRecipient& recipient);
+
     void showOutOfSyncWarning(bool fShow);
 
 Q_SIGNALS:
@@ -64,12 +68,14 @@ public Q_SLOTS:
     void gotoOverviewPage();
     /** Switch to history (transactions) page */
     void gotoHistoryPage();
-    /** Switch to masternode page */
-    void gotoMasternodePage();
+    /** Switch to smartnode page */
+    void gotoSmartnodePage();
     /** Switch to receive coins page */
     void gotoReceiveCoinsPage();
     /** Switch to send coins page */
     void gotoSendCoinsPage(QString addr = "");
+    /** Switch to send futures page */
+    void gotoSendFuturesPage(QString addr = "");
     /** Switch to CoinJoin coins page */
     void gotoCoinJoinCoinsPage(QString addr = "");
 

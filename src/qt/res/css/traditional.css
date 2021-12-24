@@ -37,7 +37,7 @@ QToolBar / QToolButton
 
 QToolBar QLabel#lblToolbarLogo {
     padding: 12px;
-    image: url(':/images/dash_logo_toolbar_blue');
+    image: url(':/images/raptoreum_logo_toolbar_blue');
     height: 2.5em;
 }
 

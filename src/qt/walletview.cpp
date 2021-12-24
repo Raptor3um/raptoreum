@@ -73,6 +73,7 @@ WalletView::WalletView(QWidget* parent) :
 
     receiveCoinsPage = new ReceiveCoinsDialog();
     sendCoinsPage = new SendCoinsDialog();
+    sendFuturesPage = new SendFuturesDialog();
     coinJoinCoinsPage = new SendCoinsDialog(true);
 
     usedSendingAddressesPage = new AddressBookPage(AddressBookPage::ForEditing, AddressBookPage::SendingTab, this);
@@ -82,12 +83,13 @@ WalletView::WalletView(QWidget* parent) :
     addWidget(transactionsPage);
     addWidget(receiveCoinsPage);
     addWidget(sendCoinsPage);
+    addWidget(sendFuturesPage);
     addWidget(coinJoinCoinsPage);
 
     QSettings settings;
-    if (settings.value("fShowMasternodesTab").toBool()) {
-        masternodeListPage = new MasternodeList();
-        addWidget(masternodeListPage);
+    if (settings.value("fShowSmartnodesTab").toBool()) {
+        smartnodeListPage = new SmartnodeList();
+        addWidget(smartnodeListPage);
     }
 
     // Clicking on a transaction on the overview pre-selects the transaction on the transaction history page
@@ -110,6 +112,9 @@ WalletView::WalletView(QWidget* parent) :
     // Pass through messages from SendCoinsDialog
     connect(sendCoinsPage, SIGNAL(message(QString,QString,unsigned int)), this, SIGNAL(message(QString,QString,unsigned int)));
     connect(coinJoinCoinsPage, SIGNAL(message(QString, QString, unsigned int)), this, SIGNAL(message(QString, QString, unsigned int)));
+
+    // Pass through messages from sendFuturesPage
+    connect(sendFuturesPage, SIGNAL(message(QString,QString,unsigned int)), this, SIGNAL(message(QString,QString,unsigned int)));
 
     // Pass through messages from transactionView
     connect(transactionView, SIGNAL(message(QString,QString,unsigned int)), this, SIGNAL(message(QString,QString,unsigned int)));
@@ -154,8 +159,8 @@ void WalletView::setClientModel(ClientModel *_clientModel)
     sendCoinsPage->setClientModel(_clientModel);
     coinJoinCoinsPage->setClientModel(_clientModel);
     QSettings settings;
-    if (settings.value("fShowMasternodesTab").toBool()) {
-        masternodeListPage->setClientModel(_clientModel);
+    if (settings.value("fShowSmartnodesTab").toBool()) {
+        smartnodeListPage->setClientModel(_clientModel);
     }
 }
 
@@ -167,11 +172,12 @@ void WalletView::setWalletModel(WalletModel *_walletModel)
     transactionView->setModel(_walletModel);
     overviewPage->setWalletModel(_walletModel);
     QSettings settings;
-    if (settings.value("fShowMasternodesTab").toBool()) {
-        masternodeListPage->setWalletModel(_walletModel);
+    if (settings.value("fShowSmartnodesTab").toBool()) {
+        smartnodeListPage->setWalletModel(_walletModel);
     }
     receiveCoinsPage->setModel(_walletModel);
     sendCoinsPage->setModel(_walletModel);
+    sendFuturesPage->setModel(_walletModel);
     coinJoinCoinsPage->setModel(_walletModel);
     usedReceivingAddressesPage->setModel(_walletModel ? _walletModel->getAddressTableModel() : nullptr);
     usedSendingAddressesPage->setModel(_walletModel ? _walletModel->getAddressTableModel() : nullptr);
@@ -239,11 +245,11 @@ void WalletView::gotoHistoryPage()
     setCurrentWidget(transactionsPage);
 }
 
-void WalletView::gotoMasternodePage()
+void WalletView::gotoSmartnodePage()
 {
     QSettings settings;
-    if (settings.value("fShowMasternodesTab").toBool()) {
-        setCurrentWidget(masternodeListPage);
+    if (settings.value("fShowSmartnodesTab").toBool()) {
+        setCurrentWidget(smartnodeListPage);
     }
 }
 
@@ -267,6 +273,14 @@ void WalletView::gotoCoinJoinCoinsPage(QString addr)
 
     if (!addr.isEmpty())
         coinJoinCoinsPage->setAddress(addr);
+}
+
+void WalletView::gotoSendFuturesPage(QString addr)
+{
+    setCurrentWidget(sendFuturesPage);
+
+    if (!addr.isEmpty())
+        sendFuturesPage->setAddress(addr);
 }
 
 void WalletView::gotoSignMessageTab(QString addr)

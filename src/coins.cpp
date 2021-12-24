@@ -6,6 +6,7 @@
 
 #include <consensus/consensus.h>
 #include <random.h>
+#include <future/future.h>
 
 bool CCoinsView::GetCoin(const COutPoint &outpoint, Coin &coin) const { return false; }
 uint256 CCoinsView::GetBestBlock() const { return uint256(); }
@@ -91,7 +92,10 @@ void AddCoins(CCoinsViewCache& cache, const CTransaction &tx, int nHeight, bool 
         bool overwrite = check ? cache.HaveCoin(COutPoint(txid, i)) : fCoinbase;
         // Always set the possible_overwrite flag to AddCoin for coinbase txn, in order to correctly
         // deal with the pre-BIP30 occurrences of duplicate coinbase transactions.
-        cache.AddCoin(COutPoint(txid, i), Coin(tx.vout[i], nHeight, fCoinbase), overwrite);
+        Coin coin = Coin(tx.vout[i], nHeight, fCoinbase, 0, std::vector<uint8_t>());
+        COutPoint outpoint = COutPoint(txid, i);
+        maybeSetPayload(coin, outpoint, tx.nType, tx.vExtraPayload);
+        cache.AddCoin(outpoint, Coin(tx.vout[i], nHeight, fCoinbase, coin.nType, coin.vExtraPayload), overwrite);
     }
 }
 

@@ -19,7 +19,7 @@ enum class CoinType
     ONLY_FULLY_MIXED,
     ONLY_READY_TO_MIX,
     ONLY_NONDENOMINATED,
-    ONLY_MASTERNODE_COLLATERAL, // find masternode outputs including locked ones (use with caution)
+    ONLY_SMARTNODE_COLLATERAL, // find smartnode outputs including locked ones (use with caution)
     ONLY_COINJOIN_COLLATERAL,
     // Attributes
     MIN_COIN_TYPE = ALL_COINS,
@@ -102,7 +102,7 @@ public:
         vOutpoints.assign(setSelected.begin(), setSelected.end());
     }
 
-    // Dash-specific helpers
+    // Raptoreum-specific helpers
 
     void UseCoinJoin(bool fUseCoinJoin)
     {

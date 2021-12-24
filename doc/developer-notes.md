@@ -276,36 +276,36 @@ Some examples:
 ./configure --with-sanitizers=thread
 ```
 
-If you are compiling with GCC you will typically need to install corresponding
-"san" libraries to actually compile with these flags, e.g. libasan for the
-address sanitizer, libtsan for the thread sanitizer, and libubsan for the
-undefined sanitizer. If you are missing required libraries, the configure script
-will fail with a linker error when testing the sanitizer flags.
+**Valgrind suppressions file**
 
-The test suite should pass cleanly with the `thread` and `undefined` sanitizers,
-but there are a number of known problems when using the `address` sanitizer. The
-address sanitizer is known to fail in
-[sha256_sse4::Transform](/src/crypto/sha256_sse4.cpp) which makes it unusable
-unless you also use `--disable-asm` when running configure. We would like to fix
-sanitizer issues, so please send pull requests if you can fix any errors found
-by the address sanitizer (or any other sanitizer).
+Valgrind is a programming tool for memory debugging, memory leak detection, and
+profiling. The repo contains a Valgrind suppressions file
+([`valgrind.supp`](https://github.com/dashpay/dash/blob/master/contrib/valgrind.supp))
+which includes known Valgrind warnings in our dependencies that cannot be fixed
+in-tree. Example use:
 
-Not all sanitizer options can be enabled at the same time, e.g. trying to build
-with `--with-sanitizers=address,thread` will fail in the configure script as
-these sanitizers are mutually incompatible. Refer to your compiler manual to
-learn more about these options and which sanitizers are supported by your
-compiler.
+```shell
+$ valgrind --suppressions=contrib/valgrind.supp src/test/test_dash
+$ valgrind --suppressions=contrib/valgrind.supp --leak-check=full \
+      --show-leak-kinds=all src/test/test_dash --log_level=test_suite
+$ valgrind -v --leak-check=full src/dashd -printtoconsole
+```
 
-Additional resources:
+**compiling for test coverage**
 
- * [AddressSanitizer](https://clang.llvm.org/docs/AddressSanitizer.html)
- * [LeakSanitizer](https://clang.llvm.org/docs/LeakSanitizer.html)
- * [MemorySanitizer](https://clang.llvm.org/docs/MemorySanitizer.html)
- * [ThreadSanitizer](https://clang.llvm.org/docs/ThreadSanitizer.html)
- * [UndefinedBehaviorSanitizer](https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html)
- * [GCC Instrumentation Options](https://gcc.gnu.org/onlinedocs/gcc/Instrumentation-Options.html)
- * [Google Sanitizers Wiki](https://github.com/google/sanitizers/wiki)
- * [Issue #12691: Enable -fsanitize flags in Travis](https://github.com/bitcoin/bitcoin/issues/12691)
+LCOV can be used to generate a test coverage report based upon `make check`
+execution. LCOV must be installed on your system (e.g. the `lcov` package
+on Debian/Ubuntu).
+
+To enable LCOV report generation during test runs:
+
+```shell
+./configure --enable-lcov
+make
+make cov
+
+# A coverage report will now be accessible at `./test_dash.coverage/index.html`.
+```
 
 Locking/mutex usage notes
 -------------------------
@@ -343,7 +343,7 @@ Threads
 
 - ThreadOpenConnections : Initiates new connections to peers.
 
-- ThreadOpenMasternodeConnections : Opens network connections to masternodes.
+- ThreadOpenSmartnodeConnections : Opens network connections to smartnodes.
 
 - ThreadMessageHandler : Higher-level message handling (sending and receiving).
 
@@ -370,7 +370,7 @@ Ignoring IDE/editor files
 In closed-source environments in which everyone uses the same IDE it is common
 to add temporary files it produces to the project-wide `.gitignore` file.
 
-However, in open source software such as Dash Core, where everyone uses
+However, in open source software such as Raptoreum Core, where everyone uses
 their own editors/IDE/tools, it is less common. Only you know what files your
 editor produces and this may change from version to version. The canonical way
 to do this is thus to create your local gitignore. Add this to `~/.gitconfig`:
@@ -400,9 +400,9 @@ Development guidelines
 ============================
 
 A few non-style-related recommendations for developers, as well as points to
-pay attention to for reviewers of Dash Core code.
+pay attention to for reviewers of Raptoreum Core code.
 
-General Dash Core
+General Raptoreum Core
 ----------------------
 
 - New features should be exposed on RPC first, then can be made available in the GUI
@@ -496,6 +496,12 @@ class A
     arise when single-argument constructors are used as implicit conversion
     functions.
 
+- By default, declare single-argument constructors `explicit`.
+
+  - *Rationale*: This is a precaution to avoid unintended conversions that might
+    arise when single-argument constructors are used as implicit conversion
+    functions.
+
 - Use explicitly signed or unsigned `char`s, or even better `uint8_t` and
   `int8_t`. Do not use bare `char` unless it is to pass to a third-party API.
   This type can be signed or unsigned depending on the architecture, which can
@@ -562,7 +568,7 @@ Strings and formatting
 
 - For `strprintf`, `LogPrint`, `LogPrintf` formatting characters don't need size specifiers
 
-  - *Rationale*: Dash Core uses tinyformat, which is type safe. Leave them out to avoid confusion
+  - *Rationale*: Raptoreum Core uses tinyformat, which is type safe. Leave them out to avoid confusion
 
 Variable names
 --------------
@@ -708,7 +714,7 @@ directly upstream without being PRed directly against the project.  They will be
 subtree merge.
 
 Others are external projects without a tight relationship with our project.  Changes to these should also
-be sent upstream but bugfixes may also be prudent to PR against Dash Core so that they can be integrated
+be sent upstream but bugfixes may also be prudent to PR against Raptoreum Core so that they can be integrated
 quickly.  Cosmetic changes should be purely taken upstream.
 
 There is a tool in `test/lint/git-subtree-check.sh` to check a subtree directory for consistency with

@@ -1,4 +1,5 @@
 // Copyright (c) 2014-2021 The Dash Core developers
+// Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -26,9 +27,10 @@ enum SporkId : int32_t {
     SPORK_9_SUPERBLOCKS_ENABLED                            = 10008,
     SPORK_17_QUORUM_DKG_ENABLED                            = 10016,
     SPORK_19_CHAINLOCKS_ENABLED                            = 10018,
-    SPORK_21_QUORUM_ALL_CONNECTED                          = 10020,
-    SPORK_23_QUORUM_POSE                                   = 10022,
-
+	SPORK_21_LOW_LLMQ_PARAMS                        	     = 10020,
+	SPORK_22_SPEICAL_TX_FEE                                = 10022,
+    SPORK_23_QUORUM_ALL_CONNECTED                          = 10023,
+    SPORK_24_PS_MORE_PARTICIPANTS                          = 10024,
     SPORK_INVALID                                          = -1,
 };
 template<> struct is_serializable_enum<SporkId> : std::true_type {};

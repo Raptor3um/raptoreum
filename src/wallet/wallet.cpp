@@ -1,6 +1,7 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
 // Copyright (c) 2014-2021 The Dash Core developers
+// Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -1741,6 +1742,29 @@ bool CWallet::IsFullyMixed(const COutPoint& outpoint) const
     return true;
 }
 
+bool CWallet::IsFullyMixed(const COutPoint& outpoint) const
+{
+    int nRounds = GetRealOutpointPrivateSendRounds(outpoint);
+    // Mix again if we don't have N rounds yet
+    if (nRounds < privateSendClient.nPrivateSendRounds) return false;
+
+    // Try to mix a "random" number of rounds more than minimum.
+    // If we have already mixed N + MaxOffset rounds, don't mix again.
+    // Otherwise, we should mix again 50% of the time, this results in an exponential decay
+    // N rounds 50% N+1 25% N+2 12.5%... until we reach N + GetRandomRounds() rounds where we stop.
+    if (nRounds < privateSendClient.nPrivateSendRounds + privateSendClient.nPrivateSendRandomRounds) {
+        CDataStream ss(SER_GETHASH, PROTOCOL_VERSION);
+        ss << outpoint << nPrivateSendSalt;
+        uint256 nHash;
+        CSHA256().Write((const unsigned char*)ss.data(), ss.size()).Finalize(nHash.begin());
+        if (nHash.GetCheapHash() % 2 == 0) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 isminetype CWallet::IsMine(const CTxOut& txout) const
 {
     return ::IsMine(*this, txout.scriptPubKey);
@@ -2659,7 +2683,6 @@ void CWallet::ResendWalletTransactions(int64_t nBestBlockTime, CConnman* connman
     if (!relayed.empty())
         LogPrintf("%s: rebroadcast %u unconfirmed transactions\n", __func__, relayed.size());
 }
-
 /** @} */ // end of mapWallet
 
 
@@ -2680,7 +2703,7 @@ std::unordered_set<const CWalletTx*, WalletTxHasher> CWallet::GetSpendableTXs() 
         const auto& outpoint = *it;
         const auto jt = mapWallet.find(outpoint.hash);
         if (jt != mapWallet.end()) {
-            ret.emplace(&jt->second);
+			ret.emplace(&jt->second);
         }
 
         // setWalletUTXO is sorted by COutPoint, which means that all UTXOs for the same TX are neighbors
@@ -2906,7 +2929,7 @@ CAmount CWallet::GetAvailableBalance(const CCoinControl* coinControl) const
     std::vector<COutput> vCoins;
     AvailableCoins(vCoins, true, coinControl);
     for (const COutput& out : vCoins) {
-        if (out.fSpendable) {
+        if (out.fSpendable && out.isFutureSpendable) {
             balance += out.tx->tx->vout[out.i].nValue;
         }
     }
@@ -3045,7 +3068,8 @@ std::map<CTxDestination, std::vector<COutput>> CWallet::ListCoins() const
                 CTxDestination address;
                 if (ExtractDestination(FindNonChangeParentOutput(*it->second.tx, output.n).scriptPubKey, address)) {
                     result[address].emplace_back(
-                        &it->second, output.n, depth, true /* spendable */, true /* solvable */, false /* safe */);
+                        &it->second, output.n, depth, true /* spendable */, true /* solvable */, false /* safe */,
+						it->second.tx->nType == TRANSACTION_FUTURE, it->second.isFutureSpendable(output.n));
                 }
             }
         }
@@ -3183,7 +3207,7 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
 
         for (const COutput& out : vCoins)
         {
-            if(!out.fSpendable)
+            if(!out.fSpendable || (out.isFuture && !out.isFutureSpendable))
                 continue;
 
             nValueRet += out.tx->tx->vout[out.i].nValue;
@@ -3220,6 +3244,9 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
                 // Make sure to include mixed preset inputs only,
                 // even if some non-mixed inputs were manually selected via CoinControl
                 if (!IsFullyMixed(outpoint)) continue;
+              
+            } else if(!pcoin->isFutureSpendable(outpoint.n)) {
+            	continue;
             }
             // Just to calculate the marginal byte size
             nValueFromPresetInputs += pcoin->tx->vout[outpoint.n].nValue;
@@ -3420,7 +3447,7 @@ bool CWallet::SelectCoinsGroupedByAddresses(std::vector<CompactTallyItem>& vecTa
             if(fAnonymizable) {
                 // ignore collaterals
                 if(CCoinJoin::IsCollateralAmount(wtx.tx->vout[i].nValue)) continue;
-                if(fMasternodeMode && wtx.tx->vout[i].nValue == 1000*COIN) continue;
+                if(fSmartnodeMode && collaterals.isValidCollateral(wtx.tx->vout[i].nValue)) continue;
                 // ignore outputs that are 10 times smaller then the smallest denomination
                 // otherwise they will just lead to higher fee / lower priority
                 if(wtx.tx->vout[i].nValue <= nSmallestDenom/10) continue;
@@ -3575,7 +3602,16 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
     }
 
     CMutableTransaction txNew;
-
+    CFutureTx ftx;
+    if(fpp) {
+    	txNew.nVersion = 3;
+    	txNew.nType = TRANSACTION_FUTURE;
+		ftx.nVersion = CFutureTx::CURRENT_VERSION;
+		ftx.lockTime = fpp->locktime;
+		ftx.maturity = fpp->maturity;
+		ftx.lockOutputIndex = 0;
+		ftx.updatableByDestination = false;
+    }
     // Discourage fee sniping.
     //
     // For a large miner the value of the transactions in the best block and
@@ -3621,6 +3657,12 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
             AvailableCoins(vAvailableCoins, true, &coin_control);
             CoinSelectionParams coin_selection_params; // Parameters for coin selection, init with dummy
             coin_selection_params.use_bnb = false; // never use BnB
+
+            for (auto out : vAvailableCoins) {
+                if (out.fSpendable) {
+                    nAmountAvailable += out.tx->tx->vout[out.i].nValue;
+                }
+            }
 
             for (auto out : vAvailableCoins) {
                 if (out.fSpendable) {
@@ -3691,7 +3733,6 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
                             txout.nValue -= nFeeRet % nSubtractFeeFromAmount;
                         }
                     }
-
                     if (IsDust(txout, ::dustRelayFee))
                     {
                         if (recipient.fSubtractFeeFromAmount && nFeeRet > 0)
@@ -3720,6 +3761,89 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
                             strFailReason = _("Unable to locate enough mixed funds for this transaction.");
                             strFailReason += " " + strprintf(_("%s uses exact denominated amounts to send funds, you might simply need to mix some more coins."), "CoinJoin");
                         } else if (nValueIn < nValueToSelect) {
+                            strFailReason = _("Insufficient funds.");
+                        }
+                        return false;
+                    }
+                    vecCoins.assign(setCoinsTmp.begin(), setCoinsTmp.end());
+                }
+
+                // Fill vin
+                //
+                // Note how the sequence number is set to max()-1 so that the
+                // nLockTime set above actually works.
+                txNew.vin.clear();
+                for (const auto& coin : vecCoins) {
+                    txNew.vin.emplace_back(coin.outpoint, CScript(), CTxIn::SEQUENCE_FINAL - 1);
+                }
+
+                auto calculateFee = [&](CAmount& nFee) -> bool {
+                    // Fill in dummy signatures for fee calculation.
+                    int nIn = 0;
+                    for (const auto& coin : vecCoins) {
+                        const CScript& scriptPubKey = coin.txout.scriptPubKey;
+                        SignatureData sigdata;
+                        if (!ProduceSignature(DummySignatureCreator(this), scriptPubKey, sigdata)) {
+                            strFailReason = _("Signing transaction failed");
+                            return false;
+                        } else {
+                            UpdateTransaction(txNew, nIn, sigdata);
+                        }
+
+                        nIn++;
+                    }
+
+                    nBytes = ::GetSerializeSize(txNew, SER_NETWORK, PROTOCOL_VERSION);
+
+                    if (nExtraPayloadSize != 0) {
+                        // account for extra payload in fee calculation
+                        nBytes += GetSizeOfCompactSize(nExtraPayloadSize) + nExtraPayloadSize;
+                    }
+
+                    if (nBytes > MAX_STANDARD_TX_SIZE) {
+                        // Do not create oversized transactions (bad-txns-oversize).
+                        strFailReason = _("Transaction too large");
+                        return false;
+                    }
+
+                    // Remove scriptSigs to eliminate the fee calculation dummy signatures
+                    for (auto& txin : txNew.vin) {
+                        txin.scriptSig = CScript();
+                    }
+
+                    nFee = GetMinimumFee(nBytes, coin_control, ::mempool, ::feeEstimator, &feeCalc);
+
+                    // If we made it here and we aren't even able to meet the relay fee on the next pass, give up
+                    // because we must be at the maximum allowed fee.
+                    if (nFee < ::minRelayTxFee.GetFee(nBytes)) {
+                        strFailReason = _("Transaction too large for fee policy");
+                        return false;
+                    }
+
+                    //std::cout << recipient.scriptPubKey << " == " << fpp->futureRecScript << "\n";
+                    if(fpp && recipient.scriptPubKey == fpp->futureRecScript) {
+                    	ftx.lockOutputIndex = txNew.vout.size();
+					    CDataStream ds(SER_NETWORK, PROTOCOL_VERSION);
+					    ds << ftx;
+					    txNew.vExtraPayload.assign(ds.begin(), ds.end());
+					    nExtraPayloadSize = txNew.vExtraPayload.size();
+					}
+                    txNew.vout.push_back(txout);
+                }
+
+                // Choose coins to use
+                nValueToSelect += specialFees;
+                if (pick_new_inputs) {
+                    nValueIn = 0;
+                    std::set<CInputCoin> setCoinsTmp;
+                    if (!SelectCoins(vAvailableCoins, nValueToSelect, setCoinsTmp, nValueIn, &coin_control)) {
+                        if (coin_control.nCoinType == CoinType::ONLY_NONDENOMINATED) {
+                            strFailReason = _("Unable to locate enough PrivateSend non-denominated funds for this transaction.");
+                        } else if (coin_control.nCoinType == CoinType::ONLY_FULLY_MIXED) {
+                            strFailReason = _("Unable to locate enough PrivateSend denominated funds for this transaction.");
+                            strFailReason += " " + _("PrivateSend uses exact denominated amounts to send funds, you might simply need to mix some more coins.");
+                        } else if (nValueIn < nValueToSelect) {
+                        	//std::string errMsg = "Insufficient funds." + nValueIn + "-" + nValueToSelect;
                             strFailReason = _("Insufficient funds.");
                         }
                         return false;
@@ -3921,7 +4045,18 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
         assert(nChangePosInOut != std::numeric_limits<int>::max());
 
         if (nChangePosInOut == -1) reservekey.ReturnKey(); // Return any reserved key if we don't have change
-
+        if(fpp) {
+        	ftx.lockOutputIndex = 0;
+        	// this loop needed because vout may be in a different order then recipient list
+        	for (const auto& txOut : txNew.vout) {
+				if(txOut.scriptPubKey == fpp->futureRecScript) {
+					break;
+				}
+				ftx.lockOutputIndex++;
+			}
+        	UpdateSpecialTxInputsHash(txNew, ftx);
+        	SetTxPayload(txNew, ftx);
+        }
         if (sign)
         {
             CTransaction txNewConst(txNew);
@@ -3950,7 +4085,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
     if (gArgs.GetBoolArg("-walletrejectlongchains", DEFAULT_WALLET_REJECT_LONG_CHAINS)) {
         // Lastly, ensure this tx will pass the mempool's chain limits
         LockPoints lp;
-        CTxMemPoolEntry entry(tx, 0, 0, 0, false, 0, lp);
+        CTxMemPoolEntry entry(wtxNew.tx, 0, 0, 0, 0, false, 0, lp);
         CTxMemPool::setEntries setAncestors;
         size_t nLimitAncestors = gArgs.GetArg("-limitancestorcount", DEFAULT_ANCESTOR_LIMIT);
         size_t nLimitAncestorSize = gArgs.GetArg("-limitancestorsize", DEFAULT_ANCESTOR_SIZE_LIMIT)*1000;
@@ -4102,9 +4237,9 @@ DBErrors CWallet::LoadWallet(bool& fFirstRunRet)
     return DBErrors::LOAD_OK;
 }
 
-// Goes through all wallet transactions and checks if they are masternode collaterals, in which case these are locked
+// Goes through all wallet transactions and checks if they are smartnode collaterals, in which case these are locked
 // This avoids accidential spending of collaterals. They can still be unlocked manually if a spend is really intended.
-void CWallet::AutoLockMasternodeCollaterals()
+void CWallet::AutoLockSmartnodeCollaterals()
 {
     auto mnList = deterministicMNManager->GetListAtChainTip();
 

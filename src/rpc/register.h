@@ -19,8 +19,8 @@ void RegisterMiscRPCCommands(CRPCTable &tableRPC);
 void RegisterMiningRPCCommands(CRPCTable &tableRPC);
 /** Register raw transaction RPC commands */
 void RegisterRawTransactionRPCCommands(CRPCTable &tableRPC);
-/** Register masternode RPC commands */
-void RegisterMasternodeRPCCommands(CRPCTable &tableRPC);
+/** Register smartnode RPC commands */
+void RegisterSmartnodeRPCCommands(CRPCTable &tableRPC);
 /** Register CoinJoin RPC commands */
 void RegisterCoinJoinRPCCommands(CRPCTable &tableRPC);
 /** Register governance RPC commands */
@@ -29,6 +29,8 @@ void RegisterGovernanceRPCCommands(CRPCTable &tableRPC);
 void RegisterEvoRPCCommands(CRPCTable &tableRPC);
 /** Register Quorums RPC commands */
 void RegisterQuorumsRPCCommands(CRPCTable &tableRPC);
+/** Register Evo RPC commands */
+void RegisterFutureRPCCommands(CRPCTable &tableRPC);
 
 static inline void RegisterAllCoreRPCCommands(CRPCTable &t)
 {
@@ -37,11 +39,12 @@ static inline void RegisterAllCoreRPCCommands(CRPCTable &t)
     RegisterMiscRPCCommands(t);
     RegisterMiningRPCCommands(t);
     RegisterRawTransactionRPCCommands(t);
-    RegisterMasternodeRPCCommands(t);
+    RegisterSmartnodeRPCCommands(t);
     RegisterCoinJoinRPCCommands(t);
     RegisterGovernanceRPCCommands(t);
     RegisterEvoRPCCommands(t);
     RegisterQuorumsRPCCommands(t);
+    RegisterFutureRPCCommands(t);
 }
 
 #endif // BITCOIN_RPC_REGISTER_H

@@ -1,8 +1,8 @@
-Cross-compiliation of Dash Core
+Cross-compiliation of Raptoreum Core
 ===============================
 
-Dash Core can be cross-compiled on Linux to all other supported host systems. This is done by changing
-the `HOST` parameter when building the dependencies and then specifying another `--prefix` directory when building Dash.
+Raptoreum Core can be cross-compiled on Linux to all other supported host systems. This is done by changing
+the `HOST` parameter when building the dependencies and then specifying another `--prefix` directory when building Raptoreum.
 
 The following instructions are only tested on Debian Stretch and Ubuntu Bionic.
 
@@ -29,7 +29,7 @@ When building the dependencies, as described in [build-generic](build-generic.md
 $ make HOST=x86_64-apple-darwin14 -j4
 ```
 
-When building Dash Core, use
+When building Raptoreum Core, use
 
 ```bash
 $ ./configure --prefix=`pwd`/depends/x86_64-apple-darwin14
@@ -45,7 +45,7 @@ First, install the general dependencies:
 
     sudo apt update
     sudo apt upgrade
-    sudo apt install build-essential libtool autotools-dev automake pkg-config bsdmainutils curl git python3
+    sudo apt install build-essential libtool autotools-dev automake pkg-config bsdmainutils curl git python3 cmake
 
 A host toolchain (`build-essential`) is necessary because some dependency
 packages need to build host utilities that are used in the build process.
@@ -105,7 +105,7 @@ When building the dependencies, as described in [build-generic](build-generic.md
 $ make HOST=arm-linux-gnueabihf -j4
 ```
 
-When building Dash Core, use
+When building Raptoreum Core, use
 
 ```bash
 $ ./configure --prefix=`pwd`/depends/arm-linux-gnueabihf

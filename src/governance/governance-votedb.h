@@ -1,4 +1,5 @@
-// Copyright (c) 2014-2021 The Dash Core developers
+// Copyright (c) 2014-2019 The Dash Core developers
+// Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -62,8 +63,8 @@ public:
 
     std::vector<CGovernanceVote> GetVotes() const;
 
-    void RemoveVotesFromMasternode(const COutPoint& outpointMasternode);
-    std::set<uint256> RemoveInvalidVotes(const COutPoint& outpointMasternode, bool fProposal);
+    void RemoveVotesFromSmartnode(const COutPoint& outpointSmartnode);
+    std::set<uint256> RemoveInvalidVotes(const COutPoint& outpointSmartnode, bool fProposal);
 
     ADD_SERIALIZE_METHODS;
 
@@ -78,7 +79,7 @@ public:
     }
 
 private:
-    // Drop older votes for the same gobject from the same masternode
+    // Drop older votes for the same gobject from the same smartnode
     void RemoveOldVotes(const CGovernanceVote& vote);
 
     void RebuildIndex();

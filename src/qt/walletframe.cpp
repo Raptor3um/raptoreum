@@ -116,6 +116,15 @@ bool WalletFrame::handlePaymentRequest(const SendCoinsRecipient &recipient)
     return walletView->handlePaymentRequest(recipient);
 }
 
+bool WalletFrame::handlePaymentRequest(const SendFuturesRecipient &recipient)
+{
+  WalletView *walletView = currentWalletView();
+  if(!walletView)
+    return false;
+
+  return walletView->handlePaymentRequest(recipient);
+}
+
 void WalletFrame::showOutOfSyncWarning(bool fShow)
 {
     bOutOfSync = fShow;
@@ -138,11 +147,11 @@ void WalletFrame::gotoHistoryPage()
         i.value()->gotoHistoryPage();
 }
 
-void WalletFrame::gotoMasternodePage()
+void WalletFrame::gotoSmartnodePage()
 {
     QMap<QString, WalletView*>::const_iterator i;
     for (i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i)
-        i.value()->gotoMasternodePage();
+        i.value()->gotoSmartnodePage();
 }
 
 void WalletFrame::gotoReceiveCoinsPage()

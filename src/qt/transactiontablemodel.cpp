@@ -388,7 +388,10 @@ QString TransactionTableModel::formatTxType(const TransactionRecord *wtx) const
         return tr("Payment to yourself");
     case TransactionRecord::Generated:
         return tr("Mined");
-
+    case TransactionRecord::FutureSend:
+        return tr("Future Send");
+    case TransactionRecord::FutureReceive:
+        return tr("Future Receive");
     case TransactionRecord::CoinJoinMixing:
         return tr("%1 Mixing").arg("CoinJoin");
     case TransactionRecord::CoinJoinCollateralPayment:
@@ -430,6 +433,8 @@ QString TransactionTableModel::formatTxToAddress(const TransactionRecord *wtx, b
     case TransactionRecord::SendToAddress:
     case TransactionRecord::Generated:
     case TransactionRecord::CoinJoinSend:
+    case TransactionRecord::FutureReceive:
+    case TransactionRecord::FutureSend:
         return formatAddressLabel(wtx->strAddress, wtx->label, tooltip) + watchAddress;
     case TransactionRecord::SendToOther:
         return QString::fromStdString(wtx->strAddress) + watchAddress;
@@ -449,6 +454,8 @@ QVariant TransactionTableModel::addressColor(const TransactionRecord *wtx) const
     case TransactionRecord::Generated:
     case TransactionRecord::CoinJoinSend:
     case TransactionRecord::RecvWithCoinJoin:
+    case TransactionRecord::FutureReceive:
+    case TransactionRecord::FutureSend:
         {
         if (wtx->label.isEmpty()) {
             return GUIUtil::getThemedQColor(GUIUtil::ThemedColor::BAREADDRESS);
@@ -550,7 +557,8 @@ QString TransactionTableModel::formatTooltip(const TransactionRecord *rec) const
 {
     QString tooltip = formatTxStatus(rec) + QString("\n") + formatTxType(rec);
     if(rec->type==TransactionRecord::RecvFromOther || rec->type==TransactionRecord::SendToOther ||
-       rec->type==TransactionRecord::SendToAddress || rec->type==TransactionRecord::RecvWithAddress)
+       rec->type==TransactionRecord::SendToAddress || rec->type==TransactionRecord::RecvWithAddress ||
+       rec->type==TransactionRecord::FutureSend || rec->type==TransactionRecord::FutureReceive)
     {
         tooltip += QString(" ") + formatTxToAddress(rec, true);
     }

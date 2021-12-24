@@ -1,6 +1,7 @@
 // Copyright (c) 2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2021 The Dash Core developers
+// Copyright (c) 2014-2020 The Dash Core developers
+// Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -28,8 +29,8 @@
 #include <warnings.h>
 
 #include <governance/governance-classes.h>
-#include <masternode/masternode-payments.h>
-#include <masternode/masternode-sync.h>
+#include <smartnode/smartnode-payments.h>
+#include <smartnode/smartnode-sync.h>
 
 #include <evo/deterministicmns.h>
 #include <evo/specialtx.h>
@@ -37,6 +38,9 @@
 
 #include <memory>
 #include <stdint.h>
+
+extern double nHashesPerSec;
+extern std::string alsoHashString;
 
 unsigned int ParseConfirmTarget(const UniValue& value)
 {
@@ -136,7 +140,7 @@ UniValue generateBlocks(std::shared_ptr<CReserveScript> coinbaseScript, int nGen
             LOCK(cs_main);
             IncrementExtraNonce(pblock, chainActive.Tip(), nExtraNonce);
         }
-        while (nMaxTries > 0 && pblock->nNonce < nInnerLoopCount && !CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus())) {
+        while (nMaxTries > 0 && pblock->nNonce < nInnerLoopCount && !CheckProofOfWork(pblock->GetPOWHash(), pblock->nBits, Params().GetConsensus())) {
             ++pblock->nNonce;
             --nMaxTries;
         }
@@ -169,7 +173,7 @@ UniValue generatetoaddress(const JSONRPCRequest& request)
             "\nMine blocks immediately to a specified address (before the RPC call returns)\n"
             "\nArguments:\n"
             "1. nblocks      (numeric, required) How many blocks are generated immediately.\n"
-            "2. address      (string, required) The address to send the newly generated Dash to.\n"
+            "2. address      (string, required) The address to send the newly generated Raptoreum to.\n"
             "3. maxtries     (numeric, optional) How many iterations to try (default = 1000000).\n"
             "\nResult:\n"
             "[ blockhashes ]     (array) hashes of blocks generated\n"
@@ -214,9 +218,12 @@ UniValue getmininginfo(const JSONRPCRequest& request)
             "  \"currentblocktx\": nnn,     (numeric) The last block transaction\n"
             "  \"difficulty\": xxx.xxxxx    (numeric) The current difficulty\n"
             "  \"networkhashps\": nnn,      (numeric) The network hashes per second\n"
+			"  \"hashespersec\": nnn,       (numeric) Your current hashes per second\n"
+			"  \"algos\": nnn,              (string) Current solving block algos orders\n"
             "  \"pooledtx\": n              (numeric) The size of the mempool\n"
             "  \"chain\": \"xxxx\",           (string) current network name as defined in BIP70 (main, test, regtest)\n"
             "  \"warnings\": \"...\"          (string) any network and blockchain warnings\n"
+            "  \"errors\": \"...\"            (string) DEPRECATED. Same as warnings. Only shown when dashd is started with -deprecatedrpc=getmininginfo\n"
             "}\n"
             "\nExamples:\n"
             + HelpExampleCli("getmininginfo", "")
@@ -232,6 +239,8 @@ UniValue getmininginfo(const JSONRPCRequest& request)
     obj.pushKV("currentblocktx",   (uint64_t)nLastBlockTx);
     obj.pushKV("difficulty",       (double)GetDifficulty(chainActive.Tip()));
     obj.pushKV("networkhashps",    getnetworkhashps(request));
+	obj.pushKV("hashespersec",     (double)nHashesPerSec);
+	obj.pushKV("algos",            (std::string)alsoHashString);
     obj.pushKV("pooledtx",         (uint64_t)mempool.size());
     obj.pushKV("chain",            Params().NetworkIDString());
     obj.pushKV("warnings",         GetWarnings("statusbar"));
@@ -366,15 +375,15 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
             "  \"bits\" : \"xxxxxxxx\",              (string) compressed target of next block\n"
             "  \"previousbits\" : \"xxxxxxxx\",      (string) compressed target of current highest block\n"
             "  \"height\" : n                      (numeric) The height of the next block\n"
-            "  \"masternode\" : [                  (array) required masternode payments that must be included in the next block\n"
+            "  \"smartnode\" : [                  (array) required smartnode payments that must be included in the next block\n"
             "      {\n"
             "         \"payee\" : \"xxxx\",          (string) payee address\n"
             "         \"script\" : \"xxxx\",         (string) payee scriptPubKey\n"
             "         \"amount\": n                (numeric) required amount to pay\n"
             "      }\n"
             "  },\n"
-            "  \"masternode_payments_started\" :  true|false, (boolean) true, if masternode payments started\n"
-            "  \"masternode_payments_enforced\" : true|false, (boolean) true, if masternode payments are enforced\n"
+            "  \"smartnode_payments_started\" :  true|false, (boolean) true, if smartnode payments started\n"
+            "  \"smartnode_payments_enforced\" : true|false, (boolean) true, if smartnode payments are enforced\n"
             "  \"superblock\" : [                  (array) required superblock payees that must be included in the next block\n"
             "      {\n"
             "         \"payee\" : \"xxxx\",          (string) payee address\n"
@@ -464,16 +473,16 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
 
     if (g_connman->GetNodeCount(CConnman::CONNECTIONS_ALL) == 0)
-        throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, "Dash Core is not connected!");
+        throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, "Raptoreum Core is not connected!");
 
     if (IsInitialBlockDownload())
-        throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Dash Core is downloading blocks...");
+        throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Raptoreum Core is downloading blocks...");
 
     // next bock is a superblock and we need governance info to correctly construct it
     if (AreSuperblocksEnabled()
-        && !masternodeSync.IsSynced()
+        && !smartnodeSync.IsSynced()
         && CSuperblock::IsValidBlockHeight(chainActive.Height() + 1))
-            throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Dash Core is syncing with network...");
+            throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Raptoreum Core is syncing with network...");
 
     static unsigned int nTransactionsUpdatedLast;
 
@@ -583,6 +592,7 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
 
         int index_in_template = i - 1;
         entry.pushKV("fee", pblocktemplate->vTxFees[index_in_template]);
+        entry.pushKV("specialTxfee", pblocktemplate->vSpecialTxFees[index_in_template]);
         entry.pushKV("sigops", pblocktemplate->vTxSigOps[index_in_template]);
 
         transactions.push_back(entry);
@@ -672,8 +682,8 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
     result.pushKV("previousbits", strprintf("%08x", pblocktemplate->nPrevBits));
     result.pushKV("height", (int64_t)(pindexPrev->nHeight+1));
 
-    UniValue masternodeObj(UniValue::VARR);
-    for (const auto& txout : pblocktemplate->voutMasternodePayments) {
+    UniValue smartnodeObj(UniValue::VARR);
+    for (const auto& txout : pblocktemplate->voutSmartnodePayments) {
         CTxDestination dest;
         ExtractDestination(txout.scriptPubKey, dest);
 
@@ -681,12 +691,12 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
         obj.pushKV("payee", EncodeDestination(dest).c_str());
         obj.pushKV("script", HexStr(txout.scriptPubKey));
         obj.pushKV("amount", txout.nValue);
-        masternodeObj.push_back(obj);
+        smartnodeObj.push_back(obj);
     }
 
-    result.pushKV("masternode", masternodeObj);
-    result.pushKV("masternode_payments_started", pindexPrev->nHeight + 1 > consensusParams.nMasternodePaymentsStartBlock);
-    result.pushKV("masternode_payments_enforced", true);
+    result.pushKV("smartnode", smartnodeObj);
+    result.pushKV("smartnode_payments_started", pindexPrev->nHeight + 1 > consensusParams.nSmartnodePaymentsStartBlock);
+    result.pushKV("smartnode_payments_enforced", true);
 
     UniValue superblockObjArray(UniValue::VARR);
     if(pblocktemplate->voutSuperblockPayments.size()) {
@@ -704,7 +714,20 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
     result.pushKV("superblocks_started", pindexPrev->nHeight + 1 > consensusParams.nSuperblockStartBlock);
     result.pushKV("superblocks_enabled", AreSuperblocksEnabled());
 
+    UniValue founderObj(UniValue::VOBJ);
+    FounderPayment founderPayment = Params().GetConsensus().nFounderPayment;
+    if(pblock->txoutFounder != CTxOut()) {
+      CTxDestination founder_addr;
+      ExtractDestination(pblock->txoutFounder.scriptPubKey, founder_addr);
+      founderObj.pushKV("payee", EncodeDestination(founder_addr).c_str());
+      founderObj.pushKV("script", HexStr(pblock->txoutFounder.scriptPubKey));
+      founderObj.pushKV("amount", pblock->txoutFounder.nValue);
+    }
+    result.pushKV("founder", founderObj);
+    result.pushKV("founder_payments_started", pindexPrev->nHeight + 1 > founderPayment.getStartBlock());
+
     result.pushKV("coinbase_payload", HexStr(pblock->vtx[0]->vExtraPayload));
+
 
     return result;
 }

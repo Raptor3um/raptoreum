@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Copyright (c) 2015-2020 The Dash Core developers
+# Copyright (c) 2020-2022 The Raptoreum developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -12,12 +13,15 @@ Simulate and check DKG errors
 
 '''
 
-class LLMQDKGErrors(DashTestFramework):
+class LLMQDKGErrors(RaptoreumTestFramework):
     def set_test_params(self):
-        self.set_dash_test_params(4, 3, [["-whitelist=127.0.0.1"]] * 4, fast_dip3_enforcement=True)
+        self.set_raptoreum_test_params(6, 5, [["-whitelist=127.0.0.1"]] * 6, fast_dip3_enforcement=True)
 
     def run_test(self):
-        self.activate_dip8()
+
+        while self.nodes[0].getblockchaininfo()["bip9_softforks"]["dip0008"]["status"] != "active":
+            self.nodes[0].generate(10)
+        self.sync_blocks(self.nodes, timeout=60*5)
 
         self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
         self.wait_for_sporks_same()
@@ -42,8 +46,8 @@ class LLMQDKGErrors(DashTestFramework):
         qh = self.mine_quorum(expected_contributions=3, expected_complaints=2)
         self.assert_member_valid(qh, self.mninfo[0].proTxHash, False)
 
-        self.log.info("Heal some damage (don't get PoSe banned)")
-        self.heal_masternodes(33)
+        # Heal some damage (don't get PoSe banned)
+        self.heal_smartnodes(33)
 
         self.log.info("Lets lie in the contribution and then also lie in the justification")
         self.mninfo[0].node.quorum('dkgsimerror', 'justify-omit', '0')
@@ -81,7 +85,7 @@ class LLMQDKGErrors(DashTestFramework):
             else:
                 assert(m['valid'])
 
-    def heal_masternodes(self, blockCount):
+    def heal_smartnodes(self, blockCount):
         # We're not testing PoSe here, so lets heal the MNs :)
         self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 4070908800)
         self.wait_for_sporks_same()

@@ -6,7 +6,7 @@
 #include <utiltime.h>
 #include <validation.h>
 
-#include <test/test_dash.h>
+#include <test/test_raptoreum.h>
 #include <checkqueue.h>
 #include <boost/test/unit_test.hpp>
 #include <boost/thread.hpp>
@@ -442,4 +442,3 @@ BOOST_AUTO_TEST_CASE(test_CheckQueueControl_Locks)
     }
 }
 BOOST_AUTO_TEST_SUITE_END()
-

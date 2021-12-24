@@ -1,10 +1,11 @@
 // Copyright (c) 2011-2015 The Bitcoin Core developers
 // Copyright (c) 2014-2021 The Dash Core developers
+// Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include <config/dash-config.h>
+#include <config/raptoreum-config.h>
 #endif
 
 #include <qt/utilitydialog.h>
@@ -75,7 +76,7 @@ HelpMessageDialog::HelpMessageDialog(interfaces::Node& node, QWidget *parent, He
     } else if (helpMode == cmdline) {
         setWindowTitle(tr("Command-line options"));
         QString header = "Usage:\n"
-            "  dash-qt [command-line options]                     \n";
+            "  raptoreum-qt [command-line options]                     \n";
         QTextCursor cursor(ui->helpMessage->document());
         cursor.insertText(version);
         cursor.insertBlock();
@@ -127,18 +128,18 @@ HelpMessageDialog::HelpMessageDialog(interfaces::Node& node, QWidget *parent, He
         ui->aboutMessage->setText(tr("\
 <h3>%1 Basics</h3> \
 %1 gives you true financial privacy by obscuring the origins of your funds. \
-All the Dash in your wallet is comprised of different \"inputs\" which you can think of as separate, discrete coins.<br> \
+All the Raptoreum in your wallet is comprised of different \"inputs\" which you can think of as separate, discrete coins.<br> \
 %1 uses an innovative process to mix your inputs with the inputs of two or more other people, without having your coins ever leave your wallet. \
 You retain control of your money at all times.<hr> \
 <b>The %1 process works like this:</b>\
 <ol type=\"1\"> \
 <li>%1 begins by breaking your transaction inputs down into standard denominations. \
-These denominations are 0.001 DASH, 0.01 DASH, 0.1 DASH, 1 DASH and 10 DASH -- sort of like the paper money you use every day.</li> \
-<li>Your wallet then sends requests to specially configured software nodes on the network, called \"masternodes.\" \
-These masternodes are informed then that you are interested in mixing a certain denomination. \
-No identifiable information is sent to the masternodes, so they never know \"who\" you are.</li> \
+These denominations are 0.001 RTM, 0.01 RTM, 0.1 RTM, 1 RTM and 10 RTM -- sort of like the paper money you use every day.</li> \
+<li>Your wallet then sends requests to specially configured software nodes on the network, called \"smartnodes.\" \
+These smartnodes are informed then that you are interested in mixing a certain denomination. \
+No identifiable information is sent to the smartnodes, so they never know \"who\" you are.</li> \
 <li>When two or more other people send similar messages, indicating that they wish to mix the same denomination, a mixing session begins. \
-The masternode mixes up the inputs and instructs all three users' wallets to pay the now-transformed input back to themselves. \
+The smartnode mixes up the inputs and instructs all three users' wallets to pay the now-transformed input back to themselves. \
 Your wallet pays that denomination directly to itself, but in a different address (called a change address).</li> \
 <li>In order to fully obscure your funds, your wallet must repeat this process a number of times with each denomination. \
 Each time the process is completed, it's called a \"round.\" Each round of %1 makes it exponentially more difficult to determine where your funds originated.</li> \

@@ -1,11 +1,12 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2021 The Dash Core developers
+// Copyright (c) 2014-2020 The Dash Core developers
+// Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include <config/dash-config.h>
+#include <config/raptoreum-config.h>
 #endif
 
 #include <init.h>
@@ -46,15 +47,15 @@
 #include <utilmoneystr.h>
 #include <validationinterface.h>
 
-#include <masternode/activemasternode.h>
+#include <smartnode/activesmartnode.h>
 #include <coinjoin/coinjoin-server.h>
 #include <dsnotificationinterface.h>
 #include <flat-database.h>
 #include <governance/governance.h>
-#include <masternode/masternode-meta.h>
-#include <masternode/masternode-payments.h>
-#include <masternode/masternode-sync.h>
-#include <masternode/masternode-utils.h>
+#include <smartnode/smartnode-meta.h>
+#include <smartnode/smartnode-payments.h>
+#include <smartnode/smartnode-sync.h>
+#include <smartnode/smartnode-utils.h>
 #include <messagesigner.h>
 #include <netfulfilledman.h>
 #include <spork.h>
@@ -114,8 +115,8 @@ public:
     void Stop() const override {}
     void Close() const override {}
 
-    // Dash Specific WalletInitInterface InitCoinJoinSettings
-    void AutoLockMasternodeCollaterals() const override {}
+    // Raptoreum Specific WalletInitInterface InitCoinJoinSettings
+    void AutoLockSmartnodeCollaterals() const override {}
     void InitCoinJoinSettings() const override {}
     void InitKeePass() const override {}
     bool InitAutoBackup() const override {return true;}
@@ -235,7 +236,7 @@ void PrepareShutdown()
     /// for example if the data directory was found to be locked.
     /// Be sure that anything that writes files or flushes caches only does this if the respective
     /// module was initialized.
-    RenameThread("dash-shutoff");
+    RenameThread("raptoreum-shutoff");
     mempool.AddTransactionsUpdated(1);
     StopHTTPRPC();
     StopREST();
@@ -270,7 +271,7 @@ void PrepareShutdown()
 
     if (!fRPCInWarmup) {
         // STORE DATA CACHES INTO SERIALIZED DAT FILES
-        CFlatDB<CMasternodeMetaMan> flatdb1("mncache.dat", "magicMasternodeCache");
+        CFlatDB<CSmartnodeMetaMan> flatdb1("mncache.dat", "magicSmartnodeCache");
         flatdb1.Dump(mmetaman);
         CFlatDB<CNetFulfilledRequestManager> flatdb4("netfulfilled.dat", "magicFulfilledCache");
         flatdb4.Dump(netfulfilledman);
@@ -309,10 +310,6 @@ void PrepareShutdown()
         FlushStateToDisk();
     }
 
-    // After there are no more peers/RPC left to give us new data which may generate
-    // CValidationInterface callbacks, flush them...
-    GetMainSignals().FlushBackgroundCallbacks();
-
     // Any future callbacks will be dropped. This should absolutely be safe - if
     // missing a callback results in an unrecoverable situation, unclean shutdown
     // would too. The only reason to do the above flushes is to let the wallet catch
@@ -347,13 +344,13 @@ void PrepareShutdown()
         delete pdsNotificationInterface;
         pdsNotificationInterface = nullptr;
     }
-    if (fMasternodeMode) {
-        UnregisterValidationInterface(activeMasternodeManager);
+    if (fSmartnodeMode) {
+        UnregisterValidationInterface(activeSmartnodeManager);
     }
 
     // make sure to clean up BLS keys before global destructors are called (they have allocated from the secure memory pool)
-    activeMasternodeInfo.blsKeyOperator.reset();
-    activeMasternodeInfo.blsPubKeyOperator.reset();
+    activeSmartnodeInfo.blsKeyOperator.reset();
+    activeSmartnodeInfo.blsPubKeyOperator.reset();
 
 #ifndef WIN32
     try {
@@ -458,14 +455,8 @@ void SetupServerArgs()
     const auto testnetBaseParams = CreateBaseChainParams(CBaseChainParams::TESTNET);
     const auto defaultChainParams = CreateChainParams(CBaseChainParams::MAIN);
     const auto testnetChainParams = CreateChainParams(CBaseChainParams::TESTNET);
+    const bool showDebug = gArgs.GetBoolArg("-help-debug", false);
 
-    Consensus::Params devnetConsensus = CreateChainParams(CBaseChainParams::DEVNET, true)->GetConsensus();
-    Consensus::LLMQParams devnetLLMQ = devnetConsensus.llmqs.at(Consensus::LLMQ_DEVNET);
-
-    const auto regtestLLMQ = CreateChainParams(CBaseChainParams::REGTEST)->GetConsensus().llmqs.at(Consensus::LLMQ_TEST);
-
-
-    // Set all of the args and their help
     // When adding new options to the categories, please keep and ensure alphabetical ordering.
     gArgs.AddArg("-?", "Print this help message and exit", false, OptionsCategory::OPTIONS);
     gArgs.AddArg("-alertnotify=<cmd>", "Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)", false, OptionsCategory::OPTIONS);
@@ -592,9 +583,7 @@ void SetupServerArgs()
     gArgs.AddArg("-highsubsidyblocks=<n>", strprintf("The number of blocks with a higher than normal subsidy to mine at the start of a devnet (default: %u)", devnetConsensus.nHighSubsidyBlocks), false, OptionsCategory::DEBUG_TEST);
     gArgs.AddArg("-highsubsidyfactor=<n>", strprintf("The factor to multiply the normal block subsidy by while in the highsubsidyblocks window of a devnet (default: %u)", devnetConsensus.nHighSubsidyFactor), false, OptionsCategory::DEBUG_TEST);
     gArgs.AddArg("-llmqchainlocks=<quorum name>", strprintf("Override the default LLMQ type used for ChainLocks on a devnet. Allows using ChainLocks with smaller LLMQs. (default: %s)", devnetConsensus.llmqs.at(devnetConsensus.llmqTypeChainLocks).name), false, OptionsCategory::DEBUG_TEST);
-    gArgs.AddArg("-llmqdevnetparams=<size:threshold>", strprintf("Override the default LLMQ size for the LLMQ_DEVNET quorum (default: %u:%u)", devnetLLMQ.size, devnetLLMQ.threshold), false, OptionsCategory::DEBUG_TEST);
     gArgs.AddArg("-llmqinstantsend=<quorum name>", strprintf("Override the default LLMQ type used for InstantSend on a devnet. Allows using InstantSend with smaller LLMQs. (default: %s)", devnetConsensus.llmqs.at(devnetConsensus.llmqTypeInstantSend).name), false, OptionsCategory::DEBUG_TEST);
-    gArgs.AddArg("-llmqtestparams=<size:threshold>", strprintf("Override the default LLMQ size for the LLMQ_TEST quorum (default: %u:%u)", regtestLLMQ.size, regtestLLMQ.threshold), false, OptionsCategory::DEBUG_TEST);
     gArgs.AddArg("-logips", strprintf("Include IP addresses in debug output (default: %u)", DEFAULT_LOGIPS), false, OptionsCategory::DEBUG_TEST);
     gArgs.AddArg("-logthreadnames", strprintf("Add thread names to debug messages (default: %u)", DEFAULT_LOGTHREADNAMES), true, OptionsCategory::DEBUG_TEST);
     gArgs.AddArg("-logtimemicros", strprintf("Add microsecond precision to debug timestamps (default: %u)", DEFAULT_LOGTIMEMICROS), true, OptionsCategory::DEBUG_TEST);
@@ -616,10 +605,10 @@ void SetupServerArgs()
 
     SetupChainParamsBaseOptions();
 
-    gArgs.AddArg("-llmq-data-recovery=<n>", strprintf("Enable automated quorum data recovery (default: %u)", llmq::DEFAULT_ENABLE_QUORUM_DATA_RECOVERY), false, OptionsCategory::MASTERNODE);
-    gArgs.AddArg("-llmq-qvvec-sync=<quorum_name>:<mode>", strprintf("Defines from which LLMQ type the masternode should sync quorum verification vectors. Can be used multiple times with different LLMQ types. <mode>: %d (sync always from all quorums of the type defined by <quorum_name>), %d (sync from all quorums of the type defined by <quorum_name> if a member of any of the quorums)", (int32_t)llmq::QvvecSyncMode::Always, (int32_t)llmq::QvvecSyncMode::OnlyIfTypeMember), false, OptionsCategory::MASTERNODE);
-    gArgs.AddArg("-masternodeblsprivkey=<hex>", "Set the masternode BLS private key and enable the client to act as a masternode", false, OptionsCategory::MASTERNODE);
-    gArgs.AddArg("-platform-user=<user>", "Set the username for the \"platform user\", a restricted user intended to be used by Dash Platform, to the specified username.", false, OptionsCategory::MASTERNODE);
+    gArgs.AddArg("-llmq-data-recovery=<n>", strprintf("Enable automated quorum data recovery (default: %u)", llmq::DEFAULT_ENABLE_QUORUM_DATA_RECOVERY), false, OptionsCategory::SMARTNODE);
+    gArgs.AddArg("-llmq-qvvec-sync=<quorum_name>:<mode>", strprintf("Defines from which LLMQ type the smartnode should sync quorum verification vectors. Can be used multiple times with different LLMQ types. <mode>: %d (sync always from all quorums of the type defined by <quorum_name>), %d (sync from all quorums of the type defined by <quorum_name> if a member of any of the quorums)", (int32_t)llmq::QvvecSyncMode::Always, (int32_t)llmq::QvvecSyncMode::OnlyIfTypeMember), false, OptionsCategory::SMARTNODE);
+    gArgs.AddArg("-smartnodeblsprivkey=<hex>", "Set the smartnode BLS private key and enable the client to act as a smartnode", false, OptionsCategory::SMARTNODE);
+    gArgs.AddArg("-platform-user=<user>", "Set the username for the \"platform user\", a restricted user intended to be used by Dash Platform, to the specified username.", false, OptionsCategory::SMARTNODE);
 
     gArgs.AddArg("-acceptnonstdtxn", strprintf("Relay and mine \"non-standard\" transactions (%sdefault: %u)", "testnet/regtest only; ", !testnetChainParams->RequireStandard()), true, OptionsCategory::NODE_RELAY);
     gArgs.AddArg("-dustrelayfee=<amt>", strprintf("Fee rate (in %s/kB) used to defined dust, the value of an output such that it will cost more than its value in fees at this fee rate to spend it. (default: %s)", CURRENCY_UNIT, FormatMoney(DUST_RELAY_TX_FEE)), true, OptionsCategory::NODE_RELAY);
@@ -659,8 +648,8 @@ void SetupServerArgs()
 
 std::string LicenseInfo()
 {
-    const std::string URL_SOURCE_CODE = "<https://github.com/dashpay/dash>";
-    const std::string URL_WEBSITE = "<https://dash.org>";
+    const std::string URL_SOURCE_CODE = "<https://github.com/Raptor3um/raptoreum>";
+    const std::string URL_WEBSITE = "<https://raptoreum.com>";
 
     return CopyrightHolders(_("Copyright (C)"), 2014, COPYRIGHT_YEAR) + "\n" +
            "\n" +
@@ -765,7 +754,7 @@ void CleanupBlockRevFiles()
 void ThreadImport(std::vector<fs::path> vImportFiles)
 {
     const CChainParams& chainparams = Params();
-    RenameThread("dash-loadblk");
+    RenameThread("raptoreum-loadblk");
     ScheduleBatchPriority();
 
     {
@@ -840,7 +829,7 @@ void ThreadImport(std::vector<fs::path> vImportFiles)
     {
         // Get all UTXOs for each MN collateral in one go so that we can fill coin cache early
         // and reduce further locking overhead for cs_main in other parts of code including GUI
-        LogPrintf("Filling coin cache with masternode UTXOs...\n");
+        LogPrintf("Filling coin cache with smartnode UTXOs...\n");
         LOCK(cs_main);
         int64_t nStart = GetTimeMillis();
         auto mnList = deterministicMNManager->GetListAtChainTip();
@@ -848,20 +837,20 @@ void ThreadImport(std::vector<fs::path> vImportFiles)
             Coin coin;
             GetUTXOCoin(dmn->collateralOutpoint, coin);
         });
-        LogPrintf("Filling coin cache with masternode UTXOs: done in %dms\n", GetTimeMillis() - nStart);
+        LogPrintf("Filling coin cache with smartnode UTXOs: done in %dms\n", GetTimeMillis() - nStart);
     }
 
-    if (fMasternodeMode) {
-        assert(activeMasternodeManager);
+    if (fSmartnodeMode) {
+        assert(activeSmartnodeManager);
         const CBlockIndex* pindexTip;
         {
             LOCK(cs_main);
             pindexTip = chainActive.Tip();
         }
-        activeMasternodeManager->Init(pindexTip);
+        activeSmartnodeManager->Init(pindexTip);
     }
 
-    g_wallet_init_interface.AutoLockMasternodeCollaterals();
+    g_wallet_init_interface->AutoLockSmartnodeCollaterals();
 
     if (gArgs.GetArg("-persistmempool", DEFAULT_PERSIST_MEMPOOL)) {
         LoadMempool();
@@ -922,7 +911,7 @@ void PeriodicStats()
 }
 
 /** Sanity checks
- *  Ensure that Dash Core is running in a usable environment with all
+ *  Ensure that Raptoreum Core is running in a usable environment with all
  *  necessary library support.
  */
 bool InitSanityCheck(void)
@@ -1055,8 +1044,8 @@ void InitParameterInteraction()
         LogPrintf("%s: parameter interaction: additional indexes -> setting -checklevel=4\n", __func__);
     }
 
-    if (gArgs.IsArgSet("-masternodeblsprivkey") && gArgs.SoftSetBoolArg("-disablewallet", true)) {
-        LogPrintf("%s: parameter interaction: -masternodeblsprivkey set -> setting -disablewallet=1\n", __func__);
+    if (gArgs.IsArgSet("-smartnodeblsprivkey") && gArgs.SoftSetBoolArg("-disablewallet", true)) {
+        LogPrintf("%s: parameter interaction: -smartnodeblsprivkey set -> setting -disablewallet=1\n", __func__);
     }
 
     // Warn if network-specific options (-addnode, -connect, etc) are
@@ -1458,8 +1447,8 @@ bool AppInitParameterInteraction()
         }
     }
 
-    if (gArgs.IsArgSet("-dip3params")) {
-        // Allow overriding dip3 parameters for testing
+    /*if (gArgs.IsArgSet("-dip3params")) {
+        // Allow overriding budget parameters for testing
         if (!chainparams.MineBlocksOnDemand()) {
             return InitError("DIP3 parameters may only be overridden on regtest.");
         }
@@ -1477,15 +1466,7 @@ bool AppInitParameterInteraction()
             return InitError(strprintf("Invalid nDIP3EnforcementHeight (%s)", vDIP3Params[1]));
         }
         UpdateDIP3Parameters(nDIP3ActivationHeight, nDIP3EnforcementHeight);
-    }
-
-    if (gArgs.IsArgSet("-dip8params")) {
-        // Allow overriding dip8 activation height for testing
-        if (!chainparams.MineBlocksOnDemand()) {
-            return InitError("DIP8 activation height may only be overridden on regtest.");
-        }
-        UpdateDIP8Parameters(gArgs.GetArg("-dip8params", Params().GetConsensus().DIP0008Height));
-    }
+    }*/
 
     if (gArgs.IsArgSet("-budgetparams")) {
         // Allow overriding budget parameters for testing
@@ -1497,11 +1478,11 @@ bool AppInitParameterInteraction()
         std::vector<std::string> vBudgetParams;
         boost::split(vBudgetParams, strBudgetParams, boost::is_any_of(":"));
         if (vBudgetParams.size() != 3) {
-            return InitError("Budget parameters malformed, expecting masternodePaymentsStartBlock:budgetPaymentsStartBlock:superblockStartBlock");
+            return InitError("Budget parameters malformed, expecting smartnodePaymentsStartBlock:budgetPaymentsStartBlock:superblockStartBlock");
         }
-        int nMasternodePaymentsStartBlock, nBudgetPaymentsStartBlock, nSuperblockStartBlock;
-        if (!ParseInt32(vBudgetParams[0], &nMasternodePaymentsStartBlock)) {
-            return InitError(strprintf("Invalid nMasternodePaymentsStartBlock (%s)", vBudgetParams[0]));
+        int nSmartnodePaymentsStartBlock, nBudgetPaymentsStartBlock, nSuperblockStartBlock;
+        if (!ParseInt32(vBudgetParams[0], &nSmartnodePaymentsStartBlock)) {
+            return InitError(strprintf("Invalid nSmartnodePaymentsStartBlock (%s)", vBudgetParams[0]));
         }
         if (!ParseInt32(vBudgetParams[1], &nBudgetPaymentsStartBlock)) {
             return InitError(strprintf("Invalid nBudgetPaymentsStartBlock (%s)", vBudgetParams[1]));
@@ -1509,7 +1490,7 @@ bool AppInitParameterInteraction()
         if (!ParseInt32(vBudgetParams[2], &nSuperblockStartBlock)) {
             return InitError(strprintf("Invalid nSuperblockStartBlock (%s)", vBudgetParams[2]));
         }
-        UpdateBudgetParameters(nMasternodePaymentsStartBlock, nBudgetPaymentsStartBlock, nSuperblockStartBlock);
+        UpdateBudgetParameters(nSmartnodePaymentsStartBlock, nBudgetPaymentsStartBlock, nSuperblockStartBlock);
     }
 
     if (chainparams.NetworkIDString() == CBaseChainParams::DEVNET) {
@@ -1544,76 +1525,34 @@ bool AppInitParameterInteraction()
         UpdateDevnetLLMQInstantSend(llmqTypeInstantSend);
     } else if (gArgs.IsArgSet("-llmqchainlocks")) {
         return InitError("LLMQ type for ChainLocks can only be overridden on devnet.");
-    } else if (gArgs.IsArgSet("-llmqinstantsend")) {
-        return InitError("LLMQ type for InstantSend can only be overridden on devnet.");
-    }
-
-    if (chainparams.NetworkIDString() == CBaseChainParams::DEVNET) {
-        if (gArgs.IsArgSet("-llmqdevnetparams")) {
-            std::string s = gArgs.GetArg("-llmqdevnetparams", "");
-            std::vector<std::string> v;
-            boost::split(v, s, boost::is_any_of(":"));
-            int size, threshold;
-            if (v.size() != 2 || !ParseInt32(v[0], &size) || !ParseInt32(v[1], &threshold)) {
-                return InitError("Invalid -llmqdevnetparams specified");
-            }
-            UpdateLLMQDevnetParams(size, threshold);
-        }
-    } else if (gArgs.IsArgSet("-llmqdevnetparams")) {
-        return InitError("LLMQ devnet params can only be overridden on devnet.");
-    }
-
-    if (chainparams.NetworkIDString() == CBaseChainParams::REGTEST) {
-        if (gArgs.IsArgSet("-llmqtestparams")) {
-            std::string s = gArgs.GetArg("-llmqtestparams", "");
-            std::vector<std::string> v;
-            boost::split(v, s, boost::is_any_of(":"));
-            int size, threshold;
-            if (v.size() != 2 || !ParseInt32(v[0], &size) || !ParseInt32(v[1], &threshold)) {
-                return InitError("Invalid -llmqtestparams specified");
-            }
-            UpdateLLMQTestParams(size, threshold);
-        }
-    } else if (gArgs.IsArgSet("-llmqtestparams")) {
-        return InitError("LLMQ test params can only be overridden on regtest.");
-    }
-
-    try {
-        const bool fRecoveryEnabled{llmq::CLLMQUtils::QuorumDataRecoveryEnabled()};
-        const bool fQuorumVvecRequestsEnabled{llmq::CLLMQUtils::GetEnabledQuorumVvecSyncEntries().size() > 0};
-        if (!fRecoveryEnabled && fQuorumVvecRequestsEnabled) {
-            InitWarning("-llmq-qvvec-sync set but recovery is disabled due to -llmq-data-recovery=0");
-        }
-    } catch (const std::invalid_argument& e) {
-        return InitError(e.what());
     }
 
     if (gArgs.IsArgSet("-maxorphantx")) {
         InitWarning("-maxorphantx is not supported anymore. Use -maxorphantxsize instead.");
     }
 
-    if (gArgs.IsArgSet("-masternode")) {
-        InitWarning(_("-masternode option is deprecated and ignored, specifying -masternodeblsprivkey is enough to start this node as a masternode."));
+    if (gArgs.IsArgSet("-smartnode")) {
+        InitWarning(_("-smartnode option is deprecated and ignored, specifying -smartnodeblsprivkey is enough to start this node as a smartnode."));
     }
 
-    if (gArgs.IsArgSet("-masternodeblsprivkey")) {
+    if (gArgs.IsArgSet("-smartnodeblsprivkey")) {
         if (!gArgs.GetBoolArg("-listen", DEFAULT_LISTEN) && Params().RequireRoutableExternalIP()) {
-            return InitError("Masternode must accept connections from outside, set -listen=1");
+            return InitError("Smartnode must accept connections from outside, set -listen=1");
         }
         if (!gArgs.GetBoolArg("-txindex", DEFAULT_TXINDEX)) {
-            return InitError("Masternode must have transaction index enabled, set -txindex=1");
+            return InitError("Smartnode must have transaction index enabled, set -txindex=1");
         }
         if (!gArgs.GetBoolArg("-peerbloomfilters", DEFAULT_PEERBLOOMFILTERS)) {
-            return InitError("Masternode must have bloom filters enabled, set -peerbloomfilters=1");
+            return InitError("Smartnode must have bloom filters enabled, set -peerbloomfilters=1");
         }
         if (gArgs.GetArg("-prune", 0) > 0) {
-            return InitError("Masternode must have no pruning enabled, set -prune=0");
+            return InitError("Smartnode must have no pruning enabled, set -prune=0");
         }
         if (gArgs.GetArg("-maxconnections", DEFAULT_MAX_PEER_CONNECTIONS) < DEFAULT_MAX_PEER_CONNECTIONS) {
-            return InitError(strprintf("Masternode must be able to handle at least %d connections, set -maxconnections=%d", DEFAULT_MAX_PEER_CONNECTIONS, DEFAULT_MAX_PEER_CONNECTIONS));
+            return InitError(strprintf("Smartnode must be able to handle at least %d connections, set -maxconnections=%d", DEFAULT_MAX_PEER_CONNECTIONS, DEFAULT_MAX_PEER_CONNECTIONS));
         }
         if (gArgs.GetBoolArg("-disablegovernance", false)) {
-            return InitError(_("You can not disable governance validation on a masternode."));
+            return InitError(_("You can not disable governance validation on a smartnode."));
         }
     }
 
@@ -1788,7 +1727,6 @@ bool AppInitMain()
     // until the very end ("start node") as the UTXO/block state
     // is not yet setup and may end up being set up twice if we
     // need to reindex later.
-
     assert(!g_connman);
     g_connman = std::unique_ptr<CConnman>(new CConnman(GetRand(std::numeric_limits<uint64_t>::max()), GetRand(std::numeric_limits<uint64_t>::max())));
     CConnman& connman = *g_connman;
@@ -2193,32 +2131,32 @@ bool AppInitMain()
     }
 
     // ********************************************************* Step 10a: Prepare Masternode related stuff
-    fMasternodeMode = false;
-    std::string strMasterNodeBLSPrivKey = gArgs.GetArg("-masternodeblsprivkey", "");
-    if (!strMasterNodeBLSPrivKey.empty()) {
-        auto binKey = ParseHex(strMasterNodeBLSPrivKey);
+    fSmartnodeMode = false;
+    std::string strSmartNodeBLSPrivKey = gArgs.GetArg("-smartnodeblsprivkey", "");
+    if (!strSmartNodeBLSPrivKey.empty()) {
+        auto binKey = ParseHex(strSmartNodeBLSPrivKey);
         CBLSSecretKey keyOperator(binKey);
         if (!keyOperator.IsValid()) {
-            return InitError(_("Invalid masternodeblsprivkey. Please see documentation."));
+            return InitError(_("Invalid smartnodeblsprivkey. Please see documentation."));
         }
-        fMasternodeMode = true;
-        activeMasternodeInfo.blsKeyOperator = std::make_unique<CBLSSecretKey>(keyOperator);
-        activeMasternodeInfo.blsPubKeyOperator = std::make_unique<CBLSPublicKey>(activeMasternodeInfo.blsKeyOperator->GetPublicKey());
-        LogPrintf("MASTERNODE:\n");
+        fSmartnodeMode = true;
+        activeSmartnodeInfo.blsKeyOperator = std::make_unique<CBLSSecretKey>(keyOperator);
+        activeSmartnodeInfo.blsPubKeyOperator = std::make_unique<CBLSPublicKey>(activeSmartnodeInfo.blsKeyOperator->GetPublicKey());
+        LogPrintf("SMARTNODE:\n");
         LogPrintf("  blsPubKeyOperator: %s\n", keyOperator.GetPublicKey().ToString());
     }
 
-    if(fMasternodeMode) {
-        // Create and register activeMasternodeManager, will init later in ThreadImport
-        activeMasternodeManager = new CActiveMasternodeManager();
-        RegisterValidationInterface(activeMasternodeManager);
+    if(fSmartnodeMode) {
+        // Create and register activeSmartnodeManager, will init later in ThreadImport
+        activeSmartnodeManager = new CActiveSmartnodeManager();
+        RegisterValidationInterface(activeSmartnodeManager);
     }
 
-    if (activeMasternodeInfo.blsKeyOperator == nullptr) {
-        activeMasternodeInfo.blsKeyOperator = std::make_unique<CBLSSecretKey>();
+    if (activeSmartnodeInfo.blsKeyOperator == nullptr) {
+        activeSmartnodeInfo.blsKeyOperator = std::make_unique<CBLSSecretKey>();
     }
-    if (activeMasternodeInfo.blsPubKeyOperator == nullptr) {
-        activeMasternodeInfo.blsPubKeyOperator = std::make_unique<CBLSPublicKey>();
+    if (activeSmartnodeInfo.blsPubKeyOperator == nullptr) {
+        activeSmartnodeInfo.blsPubKeyOperator = std::make_unique<CBLSPublicKey>();
     }
 
     // ********************************************************* Step 10b: setup CoinJoin
@@ -2242,16 +2180,16 @@ bool AppInitMain()
     std::string strDBName;
 
     strDBName = "mncache.dat";
-    uiInterface.InitMessage(_("Loading masternode cache..."));
-    CFlatDB<CMasternodeMetaMan> flatdb1(strDBName, "magicMasternodeCache");
+    uiInterface.InitMessage(_("Loading smartnode cache..."));
+    CFlatDB<CSmartnodeMetaMan> flatdb1(strDBName, "magicSmartnodeCache");
     if (fLoadCacheFiles) {
         if(!flatdb1.Load(mmetaman)) {
-            return InitError(_("Failed to load masternode cache from") + "\n" + (pathDB / strDBName).string());
+            return InitError(_("Failed to load smartnode cache from") + "\n" + (pathDB / strDBName).string());
         }
     } else {
-        CMasternodeMetaMan mmetamanTmp;
+        CSmartnodeMetaMan mmetamanTmp;
         if(!flatdb1.Dump(mmetamanTmp)) {
-            return InitError(_("Failed to clear masternode cache at") + "\n" + (pathDB / strDBName).string());
+            return InitError(_("Failed to clear smartnode cache at") + "\n" + (pathDB / strDBName).string());
         }
     }
 
@@ -2284,11 +2222,11 @@ bool AppInitMain()
         }
     }
 
-    // ********************************************************* Step 10c: schedule Dash-specific tasks
+    // ********************************************************* Step 10c: schedule Raptoreum-specific tasks
 
     scheduler.scheduleEvery(std::bind(&CNetFulfilledRequestManager::DoMaintenance, std::ref(netfulfilledman)), 60 * 1000);
-    scheduler.scheduleEvery(std::bind(&CMasternodeSync::DoMaintenance, std::ref(masternodeSync), std::ref(*g_connman)), 1 * 1000);
-    scheduler.scheduleEvery(std::bind(&CMasternodeUtils::DoMaintenance, std::ref(*g_connman)), 1 * 1000);
+    scheduler.scheduleEvery(std::bind(&CSmartnodeSync::DoMaintenance, std::ref(smartnodeSync), std::ref(*g_connman)), 1 * 1000);
+    scheduler.scheduleEvery(std::bind(&CSmartnodeUtils::DoMaintenance, std::ref(*g_connman)), 1 * 1000);
 
     if (!fDisableGovernance) {
         scheduler.scheduleEvery(std::bind(&CGovernanceManager::DoMaintenance, std::ref(governance), std::ref(*g_connman)), 60 * 5 * 1000);

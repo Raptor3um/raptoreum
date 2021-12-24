@@ -22,6 +22,7 @@
 class QValidatedLineEdit;
 class OptionsModel;
 class SendCoinsRecipient;
+class SendFuturesRecipient;
 
 namespace interfaces
 {
@@ -39,7 +40,7 @@ class QUrl;
 class QWidget;
 QT_END_NAMESPACE
 
-/** Utility functions used by the Dash Qt UI.
+/** Utility functions used by the Raptoreum Qt UI.
  */
 namespace GUIUtil
 {
@@ -114,7 +115,7 @@ namespace GUIUtil
     // Setup appearance settings if not done yet
     void setupAppearance(QWidget* parent, OptionsModel* model);
 
-    // Parse "dash:" URI into recipient object, return true on successful parsing
+    // Parse "raptoreum:" URI into recipient object, return true on successful parsing
     bool parseBitcoinURI(const QUrl &uri, SendCoinsRecipient *out);
     bool parseBitcoinURI(QString uri, SendCoinsRecipient *out);
     bool validateBitcoinURI(const QString& uri);
@@ -187,7 +188,7 @@ namespace GUIUtil
     // Open debug.log
     void openDebugLogfile();
 
-    // Open dash.conf
+    // Open raptoreum.conf
     void openConfigfile();
 
     // Browse backup folder
@@ -363,8 +364,8 @@ namespace GUIUtil
     /** Return the name of the currently active theme.*/
     QString getActiveTheme();
 
-    /** Check if a dash specific theme is activated (light/dark).*/
-    bool dashThemeActive();
+    /** Check if a raptoreum specific theme is activated (light/dark).*/
+    bool raptoreumThemeActive();
 
     /** Load the theme and update all UI elements according to the appearance settings. */
     void loadTheme(bool fForce = false);

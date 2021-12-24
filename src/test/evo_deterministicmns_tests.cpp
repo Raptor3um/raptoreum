@@ -1,8 +1,9 @@
-// Copyright (c) 2018-2021 The Dash Core developers
+// Copyright (c) 2018-2019 The Dash Core developers
+// Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <test/test_dash.h>
+#include <test/test_raptoreum.h>
 
 #include <script/interpreter.h>
 #include <script/standard.h>
@@ -96,6 +97,8 @@ static CMutableTransaction CreateProRegTx(SimpleUTXOMap& utxos, int port, const 
     ownerKeyRet.MakeNewKey(true);
     operatorKeyRet.MakeNewKey();
 
+    CAmount collateralAmount = Params().GetConsensus().nCollaterals.getCollateral(chainActive.Height() < 0 ? 1 : chainActive.Height());
+    
     CProRegTx proTx;
     proTx.collateralOutpoint.n = 0;
     proTx.addr = LookupNumeric("1.1.1.1", port);
@@ -107,12 +110,19 @@ static CMutableTransaction CreateProRegTx(SimpleUTXOMap& utxos, int port, const 
     CMutableTransaction tx;
     tx.nVersion = 3;
     tx.nType = TRANSACTION_PROVIDER_REGISTER;
-    FundTransaction(tx, utxos, scriptPayout, 1000 * COIN, coinbaseKey);
+    FundTransaction(tx, utxos, scriptPayout, collateralAmount, coinbaseKey);
     proTx.inputsHash = CalcTxInputsHash(tx);
     SetTxPayload(tx, proTx);
     SignTransaction(tx, coinbaseKey);
 
     return tx;
+}
+
+static CMutableTransaction CreateFutureTransaction(SimpleUTXOMap& utxos, const CScript& scriptPayout) {
+	CMutableTransaction tx;
+	tx.nVersion = 4;
+	tx.nType = TRANSACTION_FUTURE;
+	return tx;
 }
 
 static CMutableTransaction CreateProUpServTx(SimpleUTXOMap& utxos, const uint256& proTxHash, const CBLSSecretKey& operatorKey, int port, const CScript& scriptOperatorPayout, const CKey& coinbaseKey)
@@ -308,8 +318,9 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
         nHeight++;
     }
 
-    int DIP0003EnforcementHeightBackup = Params().GetConsensus().DIP0003EnforcementHeight;
-    const_cast<Consensus::Params&>(Params().GetConsensus()).DIP0003EnforcementHeight = chainActive.Height() + 1;
+    //int DIP0003EnforcementHeightBackup = Params().GetConsensus().DIP0003EnforcementHeight;
+    int DIP0003EnforcementHeightBackup = 1;
+    //const_cast<Consensus::Params&>(Params().GetConsensus()).DIP0003EnforcementHeight = chainActive.Height() + 1;
     CreateAndProcessBlock({}, coinbaseKey);
     deterministicMNManager->UpdatedBlockTip(chainActive.Tip());
     nHeight++;
@@ -436,7 +447,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
     }
     BOOST_ASSERT(foundRevived);
 
-    const_cast<Consensus::Params&>(Params().GetConsensus()).DIP0003EnforcementHeight = DIP0003EnforcementHeightBackup;
+    //const_cast<Consensus::Params&>(Params().GetConsensus()).DIP0003EnforcementHeight = DIP0003EnforcementHeightBackup;
 }
 
 BOOST_FIXTURE_TEST_CASE(dip3_test_mempool_reorg, TestChainDIP3Setup)

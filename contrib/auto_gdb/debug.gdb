@@ -8,5 +8,5 @@ source test_used_size.gdb
 logsize mnpayments "memlog.txt"
 #logsize instantsend "memlog.txt"
 #logsize sporkManager "memlog.txt"
-#logsize masternodeSync "memlog.txt"
+#logsize smartnodeSync "memlog.txt"
 #logsize governance "memlog.txt"

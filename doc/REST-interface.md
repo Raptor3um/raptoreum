@@ -90,7 +90,7 @@ Only supports JSON as output format.
 * bytes : (numeric) size of the TX mempool in bytes
 * usage : (numeric) total TX mempool memory usage
 * maxmempool : (numeric) maximum memory usage for the mempool in bytes
-* mempoolminfee : (numeric) minimum feerate (DASH per KB) for tx to be accepted
+* mempoolminfee : (numeric) minimum feerate (RAPTOREUM per KB) for tx to be accepted
 
 `GET /rest/mempool/contents.json`
 
@@ -99,4 +99,4 @@ Only supports JSON as output format.
 
 Risks
 -------------
-Running a web browser on the same node with a REST enabled dashd can be a risk. Accessing prepared XSS websites could read out tx/block data of your node by placing links like `<script src="http://127.0.0.1:19998/rest/tx/1234567890.json">` which might break the nodes privacy.
+Running a web browser on the same node with a REST enabled raptoreumd can be a risk. Accessing prepared XSS websites could read out tx/block data of your node by placing links like `<script src="http://127.0.0.1:19998/rest/tx/1234567890.json">` which might break the nodes privacy.

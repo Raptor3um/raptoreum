@@ -1,4 +1,5 @@
 // Copyright (c) 2018-2021 The Dash Core developers
+// Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -234,8 +235,73 @@ public:
         obj.pushKV("inputsHash", inputsHash.ToString());
     }
 };
+/**
+ * Future transaction is a transaction locks by maturity (number of block confirmation) or
+ * by lockTime (number of second from its first confirm time) whichever come later.
+ * if maturity is negative, this transaction lock by lockTime.
+ * If lockTime is negative, this transaction lock by maturity.
+ * If both are negative, this transaction is locked till external condition is met
+ *
+ */
+class CFutureTx {
+public:
+	static const uint16_t CURRENT_VERSION = 1;
+
+	uint16_t nVersion{CURRENT_VERSION};// message version
+	int32_t maturity; // number of confirmations to be matured and spendable.
+	int32_t lockTime; // number of seconds for this transaction to be spendable
+	uint16_t lockOutputIndex; // vout index that is locked in this transaction
+	bool updatableByDestination = false; // true to allow some information of this transaction to be change by lockOutput address
+	uint16_t exChainType = 0; // external chain type. each 15 bit unsign number will be map to a external chain. i.e 0 for btc
+	CScript externalPayoutScript;
+  uint256 externalTxid;
+  uint16_t externalConfirmations = 0;
+	uint256 inputsHash; // replay protection
+
+public:
+	ADD_SERIALIZE_METHODS;
+
+	template <typename Stream, typename Operation>
+	inline void SerializationOp(Stream& s, Operation ser_action)
+	{
+		READWRITE(nVersion);
+    READWRITE(maturity);
+		READWRITE(lockTime);
+		READWRITE(lockOutputIndex);
+		READWRITE(updatableByDestination);
+		READWRITE(exChainType);
+		READWRITE(externalPayoutScript);
+		READWRITE(externalTxid);
+		READWRITE(externalConfirmations);
+		READWRITE(inputsHash);
+	}
+  std::string ToString() const;
+
+	void ToJson(UniValue& obj) const
+	{
+		obj.clear();
+		obj.setObject();
+		obj.pushKV("version", nVersion);
+		obj.pushKV("maturity", maturity);
+		obj.pushKV("lockTime",(int)lockTime);
+		obj.pushKV("lockOutputIndex", (int)lockOutputIndex);
+		obj.pushKV("updatableByDestination", updatableByDestination);
+		obj.pushKV("exChainType", exChainType);
+		CTxDestination dest;
+		if (ExtractDestination(externalPayoutScript, dest)) {
+		  obj.pushKV("votingAddress", EncodeDestination(dest));
+		} else {
+			obj.pushKV("externalPayoutAddress", "N/A");
+		}
+		obj.pushKV("externalTxid", externalTxid.ToString());
+		obj.pushKV("externalConfirmations", (int)externalConfirmations);
+		obj.pushKV("inputsHash", inputsHash.ToString());
+	}
+};
 
 
+
+bool CheckFutureTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state);
 bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, const CCoinsViewCache& view);
 bool CheckProUpServTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state);
 bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, const CCoinsViewCache& view);
