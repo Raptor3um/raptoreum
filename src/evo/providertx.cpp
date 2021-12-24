@@ -7,15 +7,12 @@
 #include <evo/providertx.h>
 #include <evo/specialtx.h>
 
-#include <key_io.h>
 #include <chainparams.h>
 #include <clientversion.h>
-#include <core_io.h>
+#include <coins.h>
 #include <hash.h>
 #include <messagesigner.h>
 #include <script/standard.h>
-#include <streams.h>
-#include <univalue.h>
 #include <validation.h>
 
 template <typename ProTx>
@@ -105,7 +102,7 @@ bool CheckFutureTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
     return true;
 }
 
-bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state)
+bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, const CCoinsViewCache& view)
 {
     if (tx.nType != TRANSACTION_PROVIDER_REGISTER) {
         return state.DoS(100, false, REJECT_INVALID, "bad-protx-type");
@@ -160,8 +157,7 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
     Coin coin;
 	SmartnodeCollaterals collaterals = Params().GetConsensus().nCollaterals;
     if (!ptx.collateralOutpoint.hash.IsNull()) {
-
-        if (!GetUTXOCoin(ptx.collateralOutpoint, coin) || !collaterals.isValidCollateral(coin.out.nValue)) {
+        if (!view.GetCoin(ptx.collateralOutpoint, coin) || coin.IsSpent() || !collaterals.isValidCollateral(coin.out.nValue)) {
             return state.DoS(10, false, REJECT_INVALID, "bad-protx-collateral");
         }
 
@@ -294,7 +290,7 @@ bool CheckProUpServTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVa
     return true;
 }
 
-bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state)
+bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, const CCoinsViewCache& view)
 {
     if (tx.nType != TRANSACTION_PROVIDER_UPDATE_REGISTRAR) {
         return state.DoS(100, false, REJECT_INVALID, "bad-protx-type");
@@ -338,7 +334,7 @@ bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVal
         }
 
         Coin coin;
-        if (!GetUTXOCoin(dmn->collateralOutpoint, coin)) {
+        if (!view.GetCoin(dmn->collateralOutpoint, coin) || coin.IsSpent()) {
             // this should never happen (there would be no dmn otherwise)
             return state.DoS(100, false, REJECT_INVALID, "bad-protx-collateral");
         }

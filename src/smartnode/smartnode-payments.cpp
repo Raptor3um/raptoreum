@@ -1,22 +1,15 @@
-// Copyright (c) 2014-2019 The Dash Core developers
+// Copyright (c) 2014-2021 The Dash Core developers
 // Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <smartnode/activesmartnode.h>
-#include <consensus/validation.h>
+#include <masternode/activemasternode.h>
 #include <governance/governance-classes.h>
-#include <init.h>
-#include <smartnode/smartnode-payments.h>
-#include <smartnode/smartnode-sync.h>
-#include <messagesigner.h>
+#include <masternode/masternode-payments.h>
+#include <masternode/masternode-sync.h>
 #include <netfulfilledman.h>
 #include <netmessagemaker.h>
-#include <spork.h>
-#include <util.h>
 #include <validation.h>
-
-#include <evo/deterministicmns.h>
 
 #include <string>
 
@@ -71,7 +64,7 @@ bool IsOldBudgetBlockValueValid(const CBlock& block, int nBlockHeight, CAmount b
 *
 *   Why is this needed?
 *   - In Raptoreum some blocks are superblocks, which output much higher amounts of coins
-*   - Otherblocks are 10% lower in outgoing value, so in total, no extra coins are created
+*   - Other blocks are 10% lower in outgoing value, so in total, no extra coins are created
 *   - When non-superblocks are detected, the normal schedule should be maintained
 */
 
@@ -126,7 +119,7 @@ bool IsBlockValueValid(const CBlock& block, int nBlockHeight, CAmount blockRewar
 
     // we are synced and possibly on a superblock now
 
-    if (!sporkManager.IsSporkActive(SPORK_9_SUPERBLOCKS_ENABLED)) {
+    if (!AreSuperblocksEnabled()) {
         // should NOT allow superblocks at all, when superblocks are disabled
         // revert to block reward limits in this case
         LogPrint(BCLog::GOBJECT, "%s -- Superblocks are disabled, no superblocks allowed\n", __func__);
@@ -184,10 +177,10 @@ bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight, CAmount bloc
     // superblocks started
     // SEE IF THIS IS A VALID SUPERBLOCK
 
-    if(sporkManager.IsSporkActive(SPORK_9_SUPERBLOCKS_ENABLED)) {
+    if(AreSuperblocksEnabled()) {
         if(CSuperblockManager::IsSuperblockTriggered(nBlockHeight)) {
             if(CSuperblockManager::IsValid(txNew, nBlockHeight, blockReward)) {
-                LogPrint(BCLog::GOBJECT, "%s -- Valid superblock at height %d: %s", __func__, nBlockHeight, txNew.ToString());
+                LogPrint(BCLog::GOBJECT, "%s -- Valid superblock at height %d: %s", __func__, nBlockHeight, txNew.ToString()); /* Continued */
                 // continue validation, should also pay MN
             } else {
                 LogPrintf("%s -- ERROR: Invalid superblock detected at height %d: %s", __func__, nBlockHeight, txNew.ToString()); /* Continued */
@@ -203,8 +196,8 @@ bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight, CAmount bloc
     }
 
     // Check for correct smartnode payment
-    if(mnpayments.IsTransactionValid(txNew, nBlockHeight, blockReward, specialTxFees)) {
-        LogPrint(BCLog::MNPAYMENTS, "%s -- Valid smartnode payment at height %d: %s", __func__, nBlockHeight, txNew.ToString());
+    if(CSmartnodePayments::IsTransactionValid(txNew, nBlockHeight, blockReward)) {
+        LogPrint(BCLog::MNPAYMENTS, "%s -- Valid smartnode payment at height %d: %s", __func__, nBlockHeight, txNew.ToString()); /* Continued */
         return true;
     }
 
@@ -216,13 +209,12 @@ void FillBlockPayments(CMutableTransaction& txNew, int nBlockHeight, CAmount min
 {
     // only create superblocks if spork is enabled AND if superblock is actually triggered
     // (height should be validated inside)
-    if(sporkManager.IsSporkActive(SPORK_9_SUPERBLOCKS_ENABLED) &&
-        CSuperblockManager::IsSuperblockTriggered(nBlockHeight)) {
-            LogPrint(BCLog::GOBJECT, "%s -- triggered superblock creation at height %d\n", __func__, nBlockHeight);
-            CSuperblockManager::GetSuperblockPayments(nBlockHeight, voutSuperblockPaymentsRet);
+    if(AreSuperblocksEnabled() && CSuperblockManager::IsSuperblockTriggered(nBlockHeight)) {
+        LogPrint(BCLog::GOBJECT, "%s -- triggered superblock creation at height %d\n", __func__, nBlockHeight);
+        CSuperblockManager::GetSuperblockPayments(nBlockHeight, voutSuperblockPaymentsRet);
     }
-    CAmount normalBlockReward = mintReward + nFees;
-    if (!mnpayments.GetSmartnodeTxOuts(nBlockHeight, normalBlockReward, voutSmartnodePaymentsRet, specialTxFees)) {
+
+    if (!CSmartnodePayments::GetSmartnodeTxOuts(nBlockHeight, blockReward, voutSmartnodePaymentsRet)) {
         LogPrint(BCLog::MNPAYMENTS, "%s -- no smartnode to pay (MN list probably empty)\n", __func__);
     }
 
@@ -238,56 +230,8 @@ void FillBlockPayments(CMutableTransaction& txNew, int nBlockHeight, CAmount min
         voutSmartnodeStr += txout.ToString();
     }
 
-    LogPrint(BCLog::MNPAYMENTS, "%s -- nBlockHeight %d normalBlockReward %lld specialTxFees %lld voutSmartnodePaymentsRet \"%s\" txNew %s", __func__,
-                            nBlockHeight, normalBlockReward, specialTxFees, voutSmartnodeStr, txNew.ToString());
-}
-
-std::string GetRequiredPaymentsString(int nBlockHeight, const CDeterministicMNCPtr &payee)
-{
-    std::string strPayee = "Unknown";
-    if (payee) {
-        CTxDestination dest;
-        if (!ExtractDestination(payee->pdmnState->scriptPayout, dest))
-            assert(false);
-        strPayee = EncodeDestination(dest);
-    }
-    if (CSuperblockManager::IsSuperblockTriggered(nBlockHeight)) {
-        strPayee += ", " + CSuperblockManager::GetRequiredPaymentsString(nBlockHeight);
-    }
-    return strPayee;
-}
-
-std::map<int, std::string> GetRequiredPaymentsStrings(int nStartHeight, int nEndHeight)
-{
-    std::map<int, std::string> mapPayments;
-
-    if (nStartHeight < 1) {
-        nStartHeight = 1;
-    }
-
-    LOCK(cs_main);
-    int nChainTipHeight = chainActive.Height();
-
-    bool doProjection = false;
-    for(int h = nStartHeight; h < nEndHeight; h++) {
-        if (h <= nChainTipHeight) {
-            auto payee = deterministicMNManager->GetListForBlock(chainActive[h - 1]).GetMNPayee();
-            mapPayments.emplace(h, GetRequiredPaymentsString(h, payee));
-        } else {
-            doProjection = true;
-            break;
-        }
-    }
-    if (doProjection) {
-        auto projection = deterministicMNManager->GetListAtChainTip().GetProjectedMNPayees(nEndHeight - nChainTipHeight);
-        for (size_t i = 0; i < projection.size(); i++) {
-            auto payee = projection[i];
-            int h = nChainTipHeight + 1 + i;
-            mapPayments.emplace(h, GetRequiredPaymentsString(h, payee));
-        }
-    }
-
-    return mapPayments;
+    LogPrint(BCLog::MNPAYMENTS, "%s -- nBlockHeight %d blockReward %lld voutMasternodePaymentsRet \"%s\" txNew %s", __func__, /* Continued */
+                            nBlockHeight, blockReward, voutMasternodeStr, txNew.ToString());
 }
 
 /**
@@ -296,7 +240,7 @@ std::map<int, std::string> GetRequiredPaymentsStrings(int nStartHeight, int nEnd
 *   Get smartnode payment tx outputs
 */
 
-bool CSmartnodePayments::GetSmartnodeTxOuts(int nBlockHeight, CAmount blockReward, std::vector<CTxOut>& voutSmartnodePaymentsRet, CAmount specialTxFee) const
+bool CSmartnodePayments::GetSmartnodeTxOuts(int nBlockHeight, CAmount blockReward, std::vector<CTxOut>& voutSmartnodePaymentsRet)
 {
     // make sure it's not filled yet
     voutSmartnodePaymentsRet.clear();
@@ -316,21 +260,24 @@ bool CSmartnodePayments::GetSmartnodeTxOuts(int nBlockHeight, CAmount blockRewar
     return true;
 }
 
-bool CSmartnodePayments::GetBlockTxOuts(int nBlockHeight, CAmount blockReward, std::vector<CTxOut>& voutSmartnodePaymentsRet, CAmount specialTxFee) const
+bool CSmartnodePayments::GetBlockTxOuts(int nBlockHeight, CAmount blockReward, std::vector<CTxOut>& voutSmartnodePaymentsRet)
 {
     voutSmartnodePaymentsRet.clear();
 
-    CAmount smartnodeReward = GetSmartnodePayment(nBlockHeight, blockReward, specialTxFee);
-    if(smartnodeReward == 0) {
-    	return false;
-    }
-
     const CBlockIndex* pindex;
+    int nReallocActivationHeight{std::numeric_limits<int>::max()};
+
     {
         LOCK(cs_main);
         pindex = chainActive[nBlockHeight - 1];
+
+        const Consensus::Params& consensusParams = Params().GetConsensus();
+        if (VersionBitsState(pindex, consensusParams, Consensus::DEPLOYMENT_REALLOC, versionbitscache) == ThresholdState::ACTIVE) {
+            nReallocActivationHeight = VersionBitsStateSinceHeight(pindex, consensusParams, Consensus::DEPLOYMENT_REALLOC, versionbitscache);
+        }
     }
-    uint256 proTxHash;
+
+    CAmount smartnodeReward = GetSmartnodePayment(nBlockHeight, blockReward, nReallocActivationHeight);
 
     auto dmnPayee = deterministicMNManager->GetListForBlock(pindex).GetMNPayee();
     if (!dmnPayee) {
@@ -355,7 +302,7 @@ bool CSmartnodePayments::GetBlockTxOuts(int nBlockHeight, CAmount blockReward, s
     return true;
 }
 
-bool CSmartnodePayments::IsTransactionValid(const CTransaction& txNew, int nBlockHeight, CAmount blockReward, CAmount specialTxFee) const
+bool CSmartnodePayments::IsTransactionValid(const CTransaction& txNew, int nBlockHeight, CAmount blockReward)
 {
     if (!deterministicMNManager->IsDIP3Enforced(nBlockHeight)) {
         // can't verify historical blocks here

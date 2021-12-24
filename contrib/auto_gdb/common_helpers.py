@@ -1,15 +1,11 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 #
 
-try:
-    import gdb
-except ImportError as e:
-    raise ImportError("This script must be run in GDB: ", str(e))
 import sys
 import os
-sys.path.append(os.getcwd())
 import stl_containers
 import simple_class_obj
+sys.path.append(os.getcwd())
 
 SIZE_OF_INT = 4
 SIZE_OF_BOOL = 1

@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <wallet/wallet.h>
+#include <validation.h> // for cs_main because of AddToWallet
 
 #include <wallet/test/wallet_test_fixture.h>
 
@@ -18,7 +19,7 @@ GetResults(CWallet& wallet, std::map<CAmount, CAccountingEntry>& results)
     std::list<CAccountingEntry> aes;
 
     results.clear();
-    BOOST_CHECK(wallet.ReorderTransactions() == DB_LOAD_OK);
+    BOOST_CHECK(wallet.ReorderTransactions() == DBErrors::LOAD_OK);
     wallet.ListAccountCreditDebit("", aes);
     for (CAccountingEntry& ae : aes)
     {
@@ -29,11 +30,11 @@ GetResults(CWallet& wallet, std::map<CAmount, CAccountingEntry>& results)
 BOOST_AUTO_TEST_CASE(acc_orderupgrade)
 {
     std::vector<CWalletTx*> vpwtx;
-    CWalletTx wtx;
+    CWalletTx wtx(nullptr /* pwallet */, MakeTransactionRef());
     CAccountingEntry ae;
     std::map<CAmount, CAccountingEntry> results;
 
-    LOCK(m_wallet.cs_wallet);
+    LOCK2(cs_main, m_wallet.cs_wallet);
 
     ae.strAccount = "";
     ae.nCreditDebit = 1;
@@ -44,7 +45,7 @@ BOOST_AUTO_TEST_CASE(acc_orderupgrade)
 
     wtx.mapValue["comment"] = "z";
     m_wallet.AddToWallet(wtx);
-    vpwtx.push_back(&m_wallet.mapWallet[wtx.GetHash()]);
+    vpwtx.push_back(&m_wallet.mapWallet.at(wtx.GetHash()));
     vpwtx[0]->nTimeReceived = (unsigned int)1333333335;
     vpwtx[0]->nOrderPos = -1;
 
@@ -82,21 +83,21 @@ BOOST_AUTO_TEST_CASE(acc_orderupgrade)
     wtx.mapValue["comment"] = "y";
     {
         CMutableTransaction tx(*wtx.tx);
-        --tx.nLockTime;  // Just to change the hash :)
+        ++tx.nLockTime;  // Just to change the hash :)
         wtx.SetTx(MakeTransactionRef(std::move(tx)));
     }
     m_wallet.AddToWallet(wtx);
-    vpwtx.push_back(&m_wallet.mapWallet[wtx.GetHash()]);
+    vpwtx.push_back(&m_wallet.mapWallet.at(wtx.GetHash()));
     vpwtx[1]->nTimeReceived = (unsigned int)1333333336;
 
     wtx.mapValue["comment"] = "x";
     {
         CMutableTransaction tx(*wtx.tx);
-        --tx.nLockTime;  // Just to change the hash :)
+        ++tx.nLockTime;  // Just to change the hash :)
         wtx.SetTx(MakeTransactionRef(std::move(tx)));
     }
     m_wallet.AddToWallet(wtx);
-    vpwtx.push_back(&m_wallet.mapWallet[wtx.GetHash()]);
+    vpwtx.push_back(&m_wallet.mapWallet.at(wtx.GetHash()));
     vpwtx[2]->nTimeReceived = (unsigned int)1333333329;
     vpwtx[2]->nOrderPos = -1;
 

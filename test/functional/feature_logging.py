@@ -15,11 +15,11 @@ class LoggingTest(BitcoinTestFramework):
 
     def run_test(self):
         # test default log file name
-        assert os.path.isfile(os.path.join(self.nodes[0].datadir, "regtest", "debug.log"))
+        assert os.path.isfile(os.path.join(self.nodes[0].datadir, self.chain, "debug.log"))
 
         # test alternative log file name in datadir
         self.restart_node(0, ["-debuglogfile=foo.log"])
-        assert os.path.isfile(os.path.join(self.nodes[0].datadir, "regtest", "foo.log"))
+        assert os.path.isfile(os.path.join(self.nodes[0].datadir, self.chain, "foo.log"))
 
         # test alternative log file name outside datadir
         tempname = os.path.join(self.options.tmpdir, "foo.log")
@@ -27,11 +27,11 @@ class LoggingTest(BitcoinTestFramework):
         assert os.path.isfile(tempname)
 
         # check that invalid log (relative) will cause error
-        invdir = os.path.join(self.nodes[0].datadir, "regtest", "foo")
+        invdir = os.path.join(self.nodes[0].datadir, self.chain, "foo")
         invalidname = os.path.join("foo", "foo.log")
         self.stop_node(0)
-        self.assert_start_raises_init_error(0, ["-debuglogfile=%s" % (invalidname)],
-                                                "Error: Could not open debug log file")
+        exp_stderr = "Error: Could not open debug log file \S+$"
+        self.nodes[0].assert_start_raises_init_error(["-debuglogfile=%s" % (invalidname)], exp_stderr)
         assert not os.path.isfile(os.path.join(invdir, "foo.log"))
 
         # check that invalid log (relative) works after path exists
@@ -44,8 +44,7 @@ class LoggingTest(BitcoinTestFramework):
         self.stop_node(0)
         invdir = os.path.join(self.options.tmpdir, "foo")
         invalidname = os.path.join(invdir, "foo.log")
-        self.assert_start_raises_init_error(0, ["-debuglogfile=%s" % invalidname],
-                                               "Error: Could not open debug log file")
+        self.nodes[0].assert_start_raises_init_error(["-debuglogfile=%s" % invalidname], exp_stderr)
         assert not os.path.isfile(os.path.join(invdir, "foo.log"))
 
         # check that invalid log (absolute) works after path exists

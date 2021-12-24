@@ -4,18 +4,17 @@
 
 #include <consensus/tx_verify.h>
 
-
 #include <consensus/consensus.h>
 #include <primitives/transaction.h>
 #include <script/interpreter.h>
 #include <consensus/validation.h>
 
-#include "chainparams.h"
-#include "future/fee.h"
-//#include "future/utils.h"
-#include "evo/specialtx.h"
-#include "evo/providertx.h"
-#include "timedata.h"
+#include <chainparams.h>
+#include <future/fee.h>
+//#include <future/utils.h>
+#include <evo/specialtx.h>
+#include <evo/providertx.h>
+#include <timedata.h>
 
 // TODO remove the following dependencies
 #include <chain.h>
@@ -64,7 +63,6 @@ static const char *validateFutureCoin(const Coin& coin, int nSpendHeight) {
 	}
 	return nullptr;
 }
-
 
 bool IsFinalTx(const CTransaction &tx, int nBlockHeight, int64_t nBlockTime)
 {

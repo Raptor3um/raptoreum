@@ -14,6 +14,7 @@
 
 #include <qt/guiutil.h>
 
+#include <interfaces/node.h>
 #include <util.h>
 
 #include <QFileDialog>
@@ -24,7 +25,7 @@
 
 static const uint64_t GB_BYTES = 1000000000LL;
 /* Minimum free space (in GB) needed for data directory */
-static const uint64_t BLOCK_CHAIN_SIZE = 1;
+static const uint64_t BLOCK_CHAIN_SIZE = 3;
 /* Minimum free space (in GB) needed for data directory when pruned; Does not include prune target */
 static const uint64_t CHAIN_STATE_SIZE = 1;
 /* Total required space (in GB) depending on user choice (prune, not prune) */
@@ -188,7 +189,7 @@ QString Intro::getDefaultDataDirectory()
     return GUIUtil::boostPathToQString(GetDefaultDataDir());
 }
 
-bool Intro::pickDataDirectory()
+bool Intro::pickDataDirectory(interfaces::Node& node)
 {
     QSettings settings;
     /* If data directory provided on command line, no need to look at settings
@@ -207,9 +208,9 @@ bool Intro::pickDataDirectory()
         /* Let the user choose one */
         Intro intro;
         GUIUtil::disableMacFocusRect(&intro);
-        GUIUtil::loadStyleSheet(&intro);
+        GUIUtil::loadStyleSheet(true);
         intro.setDataDirectory(dataDirDefaultCurrent);
-        intro.setWindowIcon(QIcon(":icons/bitcoin"));
+        intro.setWindowIcon(QIcon(":icons/dash"));
 
         while(true)
         {
@@ -239,8 +240,9 @@ bool Intro::pickDataDirectory()
      * override -datadir in the raptoreum.conf file in the default data directory
      * (to be consistent with raptoreumd behavior)
      */
-    if(dataDir != dataDirDefaultCurrent)
-        gArgs.SoftSetArg("-datadir", GUIUtil::qstringToBoostPath(dataDir).string()); // use OS locale for path setting
+    if(dataDir != dataDirDefaultCurrent) {
+        node.softSetArg("-datadir", GUIUtil::qstringToBoostPath(dataDir).string()); // use OS locale for path setting
+    }
     return true;
 }
 

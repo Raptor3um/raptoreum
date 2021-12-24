@@ -20,12 +20,29 @@ don't have test cases for.
 - Where possible, try to adhere to [PEP-8 guidelines](https://www.python.org/dev/peps/pep-0008/)
 - Use a python linter like flake8 before submitting PRs to catch common style
   nits (eg trailing whitespace, unused imports, etc)
+- See [the python lint script](/test/lint/lint-python.sh) that checks for violations that
+  could lead to bugs and issues in the test code.
 - Avoid wildcard imports where possible
 - Use a module-level docstring to describe what the test is testing, and how it
   is testing it.
 - When subclassing the BitcoinTestFramwork, place overrides for the
   `set_test_params()`, `add_options()` and `setup_xxxx()` methods at the top of
   the subclass, then locally-defined helper methods, then the `run_test()` method.
+- Use `'{}'.format(x)` for string formatting, not `'%s' % x`.
+
+#### Naming guidelines
+
+- Name the test `<area>_test.py`, where area can be one of the following:
+    - `feature` for tests for full features that aren't wallet/mining/mempool, eg `feature_rbf.py`
+    - `interface` for tests for other interfaces (REST, ZMQ, etc), eg `interface_rest.py`
+    - `mempool` for tests for mempool behaviour, eg `mempool_reorg.py`
+    - `mining` for tests for mining features, eg `mining_prioritisetransaction.py`
+    - `p2p` for tests that explicitly test the p2p interface, eg `p2p_disconnect_ban.py`
+    - `rpc` for tests for individual RPC methods or features, eg `rpc_listtransactions.py`
+    - `wallet` for tests for wallet features, eg `wallet_keypool.py`
+- use an underscore to separate words
+    - exception: for tests for specific RPCs or command line options which don't include underscores, name the test after the exact RPC or argument name, eg `rpc_decodescript.py`, not `rpc_decode_script.py`
+- Don't use the redundant word `test` in the name, eg `interface_zmq.py`, not `interface_zmq_test.py`
 
 #### General test-writing advice
 
@@ -63,7 +80,7 @@ wrappers for them, `msg_block`, `msg_tx`, etc).
 with the raptoreumd(s) being tested (using python's asyncore package); the other
 implements the test logic.
 
-- `P2PConnection` is the class used to connect to a raptoreumd.  `P2PInterface`
+- `P2PConnection` is the class used to connect to a dashd.  `P2PInterface`
 contains the higher level logic for processing P2P payloads and connecting to
 the Bitcoin Core node application logic. For custom behaviour, subclass the
 P2PInterface object and override the callback methods.
@@ -73,7 +90,7 @@ start the networking thread.  (Continue with the test logic in your existing
 thread.)
 
 - Can be used to write tests where specific P2P protocol behavior is tested.
-Examples tests are `p2p-accept-block.py`, `p2p-compactblocks.py`.
+Examples tests are `p2p_unrequested_blocks.py`, `p2p_compactblocks.py`.
 
 ### test-framework modules
 
@@ -87,7 +104,7 @@ Base class for functional tests.
 Generally useful functions.
 
 #### [test_framework/mininode.py](test_framework/mininode.py)
-Basic code to support P2P connectivity to a raptoreumd.
+Basic code to support P2P connectivity to a dashd.
 
 #### [test_framework/script.py](test_framework/script.py)
 Utilities for manipulating transaction scripts (originally from python-bitcoinlib)

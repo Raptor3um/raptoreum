@@ -10,7 +10,8 @@
 #include <uint256.h>
 
 #include <boost/variant.hpp>
-#include <string>
+
+#include <stdint.h>
 
 static const bool DEFAULT_ACCEPT_DATACARRIER = true;
 
@@ -91,10 +92,11 @@ const char* GetTxnOutputType(txnouttype t);
  * script hash, for P2PKH it will contain the key hash, etc.
  *
  * @param[in]   scriptPubKey   Script to parse
+ * @param[out]  typeRet        The script type
  * @param[out]  vSolutionsRet  Vector of parsed pubkeys and hashes
- * @return                     The script type. TX_NONSTANDARD represents a failed solve.
+ * @return                     True if script matches standard template
  */
-txnouttype Solver(const CScript& scriptPubKey, std::vector<std::vector<unsigned char>>& vSolutionsRet);
+bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<std::vector<unsigned char> >& vSolutionsRet);
 
 /**
  * Parse a standard scriptPubKey for the destination address. Assigns result to
@@ -113,6 +115,11 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
  */
 bool ExtractDestinations(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<CTxDestination>& addressRet, int& nRequiredRet);
 
+/**
+ * Generate a Bitcoin scriptPubKey for the given CTxDestination. Returns a P2PKH
+ * script for a CKeyID destination, a P2SH script for a CScriptID, and an empty
+ * script for CNoDestination.
+ */
 CScript GetScriptForDestination(const CTxDestination& dest);
 
 /** Generate a P2PK script for the given pubkey. */

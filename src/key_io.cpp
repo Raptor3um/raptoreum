@@ -6,6 +6,7 @@
 #include <key_io.h>
 
 #include <base58.h>
+#include <bech32.h>
 #include <script/script.h>
 #include <utilstrencodings.h>
 
@@ -16,7 +17,8 @@
 #include <string.h>
 #include <algorithm>
 
-namespace {
+namespace
+{
 class DestinationEncoder : public boost::static_visitor<std::string>
 {
 private:
@@ -79,7 +81,9 @@ CKey DecodeSecret(const std::string& str)
             key.Set(data.begin() + privkey_prefix.size(), data.begin() + privkey_prefix.size() + 32, compressed);
         }
     }
-    memory_cleanse(data.data(), data.size());
+    if (!data.empty()) {
+        memory_cleanse(data.data(), data.size());
+    }
     return key;
 }
 

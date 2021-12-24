@@ -2,6 +2,11 @@ image: "ubuntu:bionic"
 
 variables:
   DOCKER_DRIVER: overlay2
+  FAST_MODE: "false" # when "true", only run linter on arm and unit/functional tests on linux64, skip everything else
+
+workflow:
+  rules:
+    - when: always
 
 stages:
   - builder-image
@@ -37,7 +42,7 @@ builder-image:
   before_script:
     - echo HOST=$HOST
     - |
-      if [ "$HOST" = "x86_64-apple-darwin11" ]; then
+      if [ "$HOST" = "x86_64-apple-darwin14" ]; then
         echo "Downloading MacOS SDK"
         mkdir -p depends/SDKs
         mkdir -p depends/sdk-sources
@@ -112,8 +117,11 @@ builder-image:
 .test-template:
   stage: test
   extends: .base-template
+  variables:
+    INTEGRATION_TESTS_ARGS: "--extended --exclude feature_pruning,feature_dbcrash"
   script:
-    - ./ci/test_integrationtests.sh --extended --exclude pruning,dbcrash
+    - echo "INTEGRATION_TESTS_ARGS=${INTEGRATION_TESTS_ARGS}"
+    - ./ci/test_integrationtests.sh $INTEGRATION_TESTS_ARGS
   after_script:
     - mkdir -p $CI_PROJECT_DIR/testlogs
   artifacts:
@@ -123,6 +131,12 @@ builder-image:
       - $CI_PROJECT_DIR/testlogs
     expire_in: 3 days
 
+.skip-in-fast-mode-template:
+  rules:
+    - if: '$FAST_MODE == "true"'
+      when: never
+    - when: always
+
 ###
 
 arm-linux-gnueabihf:
@@ -131,24 +145,25 @@ arm-linux-gnueabihf:
     HOST: arm-linux-gnueabihf
 
 i686-w64-mingw32:
-  extends: .build-depends-template
+  extends:
+    - .build-depends-template
+    - .skip-in-fast-mode-template
   variables:
     HOST: i686-w64-mingw32
 
 x86_64-w64-mingw32:
-  extends: .build-depends-template
+  extends:
+    - .build-depends-template
+    - .skip-in-fast-mode-template
   variables:
     HOST: x86_64-w64-mingw32
 
 i686-pc-linux-gnu:
-  extends: .build-depends-template
+  extends:
+    - .build-depends-template
+    - .skip-in-fast-mode-template
   variables:
     HOST: i686-pc-linux-gnu
-
-x86_64-unknown-linux-gnu:
-  extends: .build-depends-template
-  variables:
-    HOST: x86_64-unknown-linux-gnu
 
 x86_64-unknown-linux-gnu-debug:
   extends: .build-depends-template
@@ -156,22 +171,28 @@ x86_64-unknown-linux-gnu-debug:
     HOST: x86_64-unknown-linux-gnu
     DEP_OPTS: "DEBUG=1"
 
-x86_64-unknown-linux-gnu-nowalet:
-  extends: .build-depends-template
+x86_64-unknown-linux-gnu-nowallet:
+  extends:
+    - .build-depends-template
+    - .skip-in-fast-mode-template
   variables:
     HOST: x86_64-unknown-linux-gnu
     DEP_OPTS: "NO_WALLET=1"
 
 x86_64-unknown-linux-gnu-release:
-  extends: .build-depends-template
+  extends:
+    - .build-depends-template
+    - .skip-in-fast-mode-template
   variables:
     HOST: x86_64-unknown-linux-gnu
     DEP_OPTS: "NO_UPNP=1"
 
-x86_64-apple-darwin11:
-  extends: .build-depends-template
+x86_64-apple-darwin14:
+  extends:
+    - .build-depends-template
+    - .skip-in-fast-mode-template
   variables:
-    HOST: x86_64-apple-darwin11
+    HOST: x86_64-apple-darwin14
 
 ###
 
@@ -183,21 +204,27 @@ arm-linux-build:
     BUILD_TARGET: arm-linux
 
 win32-build:
-  extends: .build-template
+  extends:
+    - .build-template
+    - .skip-in-fast-mode-template
   needs:
     - i686-w64-mingw32
   variables:
     BUILD_TARGET: win32
 
 win64-build:
-  extends: .build-template
+  extends:
+    - .build-template
+    - .skip-in-fast-mode-template
   needs:
     - x86_64-w64-mingw32
   variables:
     BUILD_TARGET: win64
 
 linux32-build:
-  extends: .build-template
+  extends:
+    - .build-template
+    - .skip-in-fast-mode-template
   needs:
     - i686-pc-linux-gnu
   variables:
@@ -211,30 +238,38 @@ linux64-build:
     BUILD_TARGET: linux64
 
 linux64_nowallet-build:
-  extends: .build-template
+  extends:
+    - .build-template
+    - .skip-in-fast-mode-template
   needs:
-    - x86_64-unknown-linux-gnu-nowalet
+    - x86_64-unknown-linux-gnu-nowallet
   variables:
     BUILD_TARGET: linux64_nowallet
 
 linux64_release-build:
-  extends: .build-template
+  extends:
+    - .build-template
+    - .skip-in-fast-mode-template
   needs:
     - x86_64-unknown-linux-gnu-release
   variables:
     BUILD_TARGET: linux64_release
 
 mac-build:
-  extends: .build-template
+  extends:
+    - .build-template
+    - .skip-in-fast-mode-template
   needs:
-    - x86_64-apple-darwin11
+    - x86_64-apple-darwin14
   variables:
     BUILD_TARGET: mac
 
 ###
 
 linux32-test:
-  extends: .test-template
+  extends:
+    - .test-template
+    - .skip-in-fast-mode-template
   needs:
     - linux32-build
   variables:

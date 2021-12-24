@@ -15,8 +15,6 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/thread.hpp>
 
-#include <chrono>
-
 static std::atomic<int64_t> nMockTime(0); //!< For unit testing
 
 int64_t GetTime()
@@ -99,4 +97,16 @@ std::string DateTimeStrFormat(const char* pszFormat, int64_t nTime)
     ss.imbue(loc);
     ss << boost::posix_time::from_time_t(nTime);
     return ss.str();
+}
+
+std::string FormatISO8601DateTime(int64_t nTime) {
+    return DateTimeStrFormat("%Y-%m-%dT%H:%M:%SZ", nTime);
+}
+
+std::string FormatISO8601Date(int64_t nTime) {
+    return DateTimeStrFormat("%Y-%m-%d", nTime);
+}
+
+std::string FormatISO8601Time(int64_t nTime) {
+    return DateTimeStrFormat("%H:%M:%SZ", nTime);
 }

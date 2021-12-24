@@ -7,7 +7,6 @@
 #include <governance/governance-object.h>
 #include <smartnode/smartnode-sync.h>
 #include <messagesigner.h>
-#include <spork.h>
 #include <util.h>
 
 #include <evo/deterministicmns.h>
@@ -165,7 +164,8 @@ bool CGovernanceVote::Sign(const CKey& key, const CKeyID& keyID)
 {
     std::string strError;
 
-    if(sporkManager.IsSporkActive(SPORK_6_NEW_SIGS)) {
+    // Harden Spork6 so that it is active on testnet and no other networks
+    if (Params().NetworkIDString() == CBaseChainParams::TESTNET) {
         uint256 hash = GetSignatureHash();
 
         if (!CHashSigner::SignHash(hash, key, vchSig)) {
@@ -199,19 +199,13 @@ bool CGovernanceVote::CheckSignature(const CKeyID& keyID) const
 {
     std::string strError;
 
-    if(sporkManager.IsSporkActive(SPORK_6_NEW_SIGS)) {
+    // Harden Spork6 so that it is active on testnet and no other networks
+    if (Params().NetworkIDString() == CBaseChainParams::TESTNET) {
         uint256 hash = GetSignatureHash();
 
         if (!CHashSigner::VerifyHash(hash, keyID, vchSig, strError)) {
-            std::string strMessage = smartnodeOutpoint.ToStringShort() + "|" + nParentHash.ToString() + "|" +
-                                     std::to_string(nVoteSignal) + "|" +
-                                     std::to_string(nVoteOutcome) + "|" +
-                                     std::to_string(nTime);
-
-            if(!CMessageSigner::VerifyMessage(keyID, vchSig, strMessage, strError)) {
-                LogPrint(BCLog::GOBJECT, "CGovernanceVote::IsValid -- VerifyMessage() failed, error: %s\n", strError);
-                return false;
-            }
+            LogPrint(BCLog::GOBJECT, "CGovernanceVote::IsValid -- VerifyHash() failed, error: %s\n", strError);
+            return false;
         }
     } else {
         std::string strMessage = smartnodeOutpoint.ToStringShort() + "|" + nParentHash.ToString() + "|" +
@@ -235,16 +229,13 @@ bool CGovernanceVote::Sign(const CBLSSecretKey& key)
     if (!sig.IsValid()) {
         return false;
     }
-    sig.GetBuf(vchSig);
+    vchSig = sig.ToByteVector();
     return true;
 }
 
 bool CGovernanceVote::CheckSignature(const CBLSPublicKey& pubKey) const
 {
-    uint256 hash = GetSignatureHash();
-    CBLSSignature sig;
-    sig.SetBuf(vchSig);
-    if (!sig.VerifyInsecure(pubKey, hash)) {
+    if (!CBLSSignature(vchSig).VerifyInsecure(pubKey, GetSignatureHash())) {
         LogPrintf("CGovernanceVote::CheckSignature -- VerifyInsecure() failed\n");
         return false;
     }
@@ -305,19 +296,19 @@ bool operator<(const CGovernanceVote& vote1, const CGovernanceVote& vote2)
     if (!fResult) {
         return false;
     }
-    fResult = fResult && (vote1.nParentHash == vote2.nParentHash);
+    fResult = (vote1.nParentHash == vote2.nParentHash);
 
     fResult = fResult && (vote1.nVoteOutcome < vote2.nVoteOutcome);
     if (!fResult) {
         return false;
     }
-    fResult = fResult && (vote1.nVoteOutcome == vote2.nVoteOutcome);
+    fResult = (vote1.nVoteOutcome == vote2.nVoteOutcome);
 
     fResult = fResult && (vote1.nVoteSignal == vote2.nVoteSignal);
     if (!fResult) {
         return false;
     }
-    fResult = fResult && (vote1.nVoteSignal == vote2.nVoteSignal);
+    fResult = (vote1.nVoteSignal == vote2.nVoteSignal);
 
     fResult = fResult && (vote1.nTime < vote2.nTime);
 

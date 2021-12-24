@@ -138,12 +138,12 @@ void AskPassphraseDialog::accept()
             {
                 if(model->setWalletEncrypted(true, newpass1))
                 {
-                    if (model->hdEnabled()) {
+                    if (model->wallet().hdEnabled()) {
                         QMessageBox::warning(this, tr("Wallet encrypted"),
                                          "<qt>" +
-                                         tr("%1 will close now to finish the encryption process. "
+                                         tr("Your wallet is now encrypted. "
                                          "Remember that encrypting your wallet cannot fully protect "
-                                         "your funds from being stolen by malware infecting your computer.").arg(tr(PACKAGE_NAME)) +
+                                         "your funds from being stolen by malware infecting your computer.") +
                                          "<br><br><b>" +
                                          tr("IMPORTANT: Any previous backups you have made of your wallet file "
                                          "should be replaced with the newly generated, encrypted wallet file. "
@@ -153,9 +153,9 @@ void AskPassphraseDialog::accept()
                     } else {
                         QMessageBox::warning(this, tr("Wallet encrypted"),
                                          "<qt>" +
-                                         tr("%1 will close now to finish the encryption process. "
+                                         tr("Your wallet is now encrypted. "
                                          "Remember that encrypting your wallet cannot fully protect "
-                                         "your funds from being stolen by malware infecting your computer.").arg(tr(PACKAGE_NAME)) +
+                                         "your funds from being stolen by malware infecting your computer.") +
                                          "<br><br><b>" +
                                          tr("IMPORTANT: Any previous backups you have made of your wallet file "
                                          "should be replaced with the newly generated, encrypted wallet file. "
@@ -163,7 +163,6 @@ void AskPassphraseDialog::accept()
                                          "will become useless as soon as you start using the new, encrypted wallet.") +
                                          "</b></qt>");
                     }
-                    QApplication::quit();
                 }
                 else
                 {

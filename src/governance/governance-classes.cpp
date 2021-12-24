@@ -138,7 +138,7 @@ void CGovernanceTriggerManager::CleanAndRemove()
     // Remove triggers that are invalid or expired
     LogPrint(BCLog::GOBJECT, "CGovernanceTriggerManager::CleanAndRemove -- mapTrigger.size() = %d\n", mapTrigger.size());
 
-    trigger_m_it it = mapTrigger.begin();
+    auto it = mapTrigger.begin();
     while (it != mapTrigger.end()) {
         bool remove = false;
         CGovernanceObject* pObj = nullptr;
@@ -417,6 +417,10 @@ CSuperblock::
 
     UniValue obj = pGovObj->GetJSONObject();
 
+    if (obj["type"].get_int() != GOVERNANCE_OBJECT_TRIGGER) {
+        throw std::runtime_error("CSuperblock: invalid data type");
+    }
+
     // FIRST WE GET THE START HEIGHT, THE BLOCK HEIGHT AT WHICH THE PAYMENT SHALL OCCUR
     nBlockHeight = obj["event_block_height"].get_int();
 
@@ -665,7 +669,7 @@ bool CSuperblock::IsValid(const CTransaction& txNew, int nBlockHeight, CAmount b
 
 bool CSuperblock::IsExpired() const
 {
-    int nExpirationBlocks{0};
+    int nExpirationBlocks;
     // Executed triggers are kept for another superblock cycle (approximately 1 month),
     // other valid triggers are kept for ~1 day only, everything else is pruned after ~1h.
     switch (nStatus) {
@@ -690,46 +694,4 @@ bool CSuperblock::IsExpired() const
     }
 
     return false;
-}
-
-/**
-*   Get Required Payment String
-*
-*   - Get a string representing the payments required for a given superblock
-*/
-
-std::string CSuperblockManager::GetRequiredPaymentsString(int nBlockHeight)
-{
-    LOCK(governance.cs);
-    std::string ret = "Unknown";
-
-    // GET BEST SUPERBLOCK
-
-    CSuperblock_sptr pSuperblock;
-    if (!GetBestSuperblock(pSuperblock, nBlockHeight)) {
-        LogPrint(BCLog::GOBJECT, "CSuperblockManager::GetRequiredPaymentsString -- Can't find superblock for height %d\n", nBlockHeight);
-        return "error";
-    }
-
-    // LOOP THROUGH SUPERBLOCK PAYMENTS, CONFIGURE OUTPUT STRING
-
-    for (int i = 0; i < pSuperblock->CountPayments(); i++) {
-        CGovernancePayment payment;
-        if (pSuperblock->GetPayment(i, payment)) {
-            // PRINT NICE LOG OUTPUT FOR SUPERBLOCK PAYMENT
-
-            CTxDestination dest;
-            ExtractDestination(payment.script, dest);
-
-            // RETURN NICE OUTPUT FOR CONSOLE
-
-            if (ret != "Unknown") {
-                ret += ", " + EncodeDestination(dest);
-            } else {
-                ret = EncodeDestination(dest);
-            }
-        }
-    }
-
-    return ret;
 }

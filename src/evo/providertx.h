@@ -1,22 +1,22 @@
-// Copyright (c) 2018-2020 The Dash Core developers
+// Copyright (c) 2018-2021 The Dash Core developers
 // Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef RAPTOREUM_PROVIDERTX_H
-#define RAPTOREUM_PROVIDERTX_H
+#ifndef BITCOIN_EVO_PROVIDERTX_H
+#define BITCOIN_EVO_PROVIDERTX_H
 
 #include <bls/bls.h>
 #include <consensus/validation.h>
 #include <primitives/transaction.h>
 
-#include <base58.h>
-#include <netaddress.h>
 #include <key_io.h>
+#include <netaddress.h>
 #include <pubkey.h>
 #include <univalue.h>
 
 class CBlockIndex;
+class CCoinsViewCache;
 
 class CProRegTx
 {
@@ -69,21 +69,21 @@ public:
     {
         obj.clear();
         obj.setObject();
-        obj.push_back(Pair("version", nVersion));
-        obj.push_back(Pair("collateralHash", collateralOutpoint.hash.ToString()));
-        obj.push_back(Pair("collateralIndex", (int)collateralOutpoint.n));
-        obj.push_back(Pair("service", addr.ToString(false)));
-        obj.push_back(Pair("ownerAddress", EncodeDestination(keyIDOwner)));
-        obj.push_back(Pair("votingAddress", EncodeDestination(keyIDVoting)));
+        obj.pushKV("version", nVersion);
+        obj.pushKV("collateralHash", collateralOutpoint.hash.ToString());
+        obj.pushKV("collateralIndex", (int)collateralOutpoint.n);
+        obj.pushKV("service", addr.ToString(false));
+        obj.pushKV("ownerAddress", EncodeDestination(keyIDOwner));
+        obj.pushKV("votingAddress", EncodeDestination(keyIDVoting));
 
         CTxDestination dest;
         if (ExtractDestination(scriptPayout, dest)) {
-            obj.push_back(Pair("payoutAddress", EncodeDestination(dest)));
+            obj.pushKV("payoutAddress", EncodeDestination(dest));
         }
-        obj.push_back(Pair("pubKeyOperator", pubKeyOperator.ToString()));
-        obj.push_back(Pair("operatorReward", (double)nOperatorReward / 100));
+        obj.pushKV("pubKeyOperator", pubKeyOperator.ToString());
+        obj.pushKV("operatorReward", (double)nOperatorReward / 100);
 
-        obj.push_back(Pair("inputsHash", inputsHash.ToString()));
+        obj.pushKV("inputsHash", inputsHash.ToString());
     }
 };
 
@@ -123,14 +123,14 @@ public:
     {
         obj.clear();
         obj.setObject();
-        obj.push_back(Pair("version", nVersion));
-        obj.push_back(Pair("proTxHash", proTxHash.ToString()));
-        obj.push_back(Pair("service", addr.ToString(false)));
+        obj.pushKV("version", nVersion);
+        obj.pushKV("proTxHash", proTxHash.ToString());
+        obj.pushKV("service", addr.ToString(false));
         CTxDestination dest;
         if (ExtractDestination(scriptOperatorPayout, dest)) {
-            obj.push_back(Pair("operatorPayoutAddress", EncodeDestination(dest)));
+            obj.pushKV("operatorPayoutAddress", EncodeDestination(dest));
         }
-        obj.push_back(Pair("inputsHash", inputsHash.ToString()));
+        obj.pushKV("inputsHash", inputsHash.ToString());
     }
 };
 
@@ -174,15 +174,15 @@ public:
     {
         obj.clear();
         obj.setObject();
-        obj.push_back(Pair("version", nVersion));
-        obj.push_back(Pair("proTxHash", proTxHash.ToString()));
-        obj.push_back(Pair("votingAddress", EncodeDestination(keyIDVoting)));
+        obj.pushKV("version", nVersion);
+        obj.pushKV("proTxHash", proTxHash.ToString());
+        obj.pushKV("votingAddress", EncodeDestination(keyIDVoting));
         CTxDestination dest;
         if (ExtractDestination(scriptPayout, dest)) {
-            obj.push_back(Pair("payoutAddress", EncodeDestination(dest)));
+            obj.pushKV("payoutAddress", EncodeDestination(dest));
         }
-        obj.push_back(Pair("pubKeyOperator", pubKeyOperator.ToString()));
-        obj.push_back(Pair("inputsHash", inputsHash.ToString()));
+        obj.pushKV("pubKeyOperator", pubKeyOperator.ToString());
+        obj.pushKV("inputsHash", inputsHash.ToString());
     }
 };
 
@@ -229,10 +229,10 @@ public:
     {
         obj.clear();
         obj.setObject();
-        obj.push_back(Pair("version", nVersion));
-        obj.push_back(Pair("proTxHash", proTxHash.ToString()));
-        obj.push_back(Pair("reason", (int)nReason));
-        obj.push_back(Pair("inputsHash", inputsHash.ToString()));
+        obj.pushKV("version", nVersion);
+        obj.pushKV("proTxHash", proTxHash.ToString());
+        obj.pushKV("reason", (int)nReason);
+        obj.pushKV("inputsHash", inputsHash.ToString());
     }
 };
 /**
@@ -281,28 +281,30 @@ public:
 	{
 		obj.clear();
 		obj.setObject();
-		obj.push_back(Pair("version", nVersion));
-		obj.push_back(Pair("maturity", maturity));
-		obj.push_back(Pair("lockTime",(int)lockTime));
-		obj.push_back(Pair("lockOutputIndex", (int)lockOutputIndex));
-		obj.push_back(Pair("updatableByDestination", updatableByDestination));
-		obj.push_back(Pair("exChainType", exChainType));
+		obj.pushKV("version", nVersion);
+		obj.pushKV("maturity", maturity);
+		obj.pushKV("lockTime",(int)lockTime);
+		obj.pushKV("lockOutputIndex", (int)lockOutputIndex);
+		obj.pushKV("updatableByDestination", updatableByDestination);
+		obj.pushKV("exChainType", exChainType);
 		CTxDestination dest;
 		if (ExtractDestination(externalPayoutScript, dest)) {
-		  obj.push_back(Pair("votingAddress", EncodeDestination(dest)));
+		  obj.pushKV("votingAddress", EncodeDestination(dest));
 		} else {
-			obj.push_back(Pair("externalPayoutAddress", "N/A"));
+			obj.pushKV("externalPayoutAddress", "N/A");
 		}
-		obj.push_back(Pair("externalTxid", externalTxid.ToString()));
-		obj.push_back(Pair("externalConfirmations", (int)externalConfirmations));
-		obj.push_back(Pair("inputsHash", inputsHash.ToString()));
+		obj.pushKV("externalTxid", externalTxid.ToString());
+		obj.pushKV("externalConfirmations", (int)externalConfirmations);
+		obj.pushKV("inputsHash", inputsHash.ToString());
 	}
 };
 
+
+
 bool CheckFutureTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state);
-bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state);
+bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, const CCoinsViewCache& view);
 bool CheckProUpServTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state);
-bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state);
+bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, const CCoinsViewCache& view);
 bool CheckProUpRevTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state);
 
-#endif //RAPTOREUM_PROVIDERTX_H
+#endif // BITCOIN_EVO_PROVIDERTX_H

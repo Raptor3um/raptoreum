@@ -1,10 +1,10 @@
-// Copyright (c) 2018-2019 The Dash Core developers
+// Copyright (c) 2018-2020 The Dash Core developers
 // Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef RAPTOREUM_BATCHEDLOGGER_H
-#define RAPTOREUM_BATCHEDLOGGER_H
+#ifndef BITCOIN_BATCHEDLOGGER_H
+#define BITCOIN_BATCHEDLOGGER_H
 
 #include <tinyformat.h>
 
@@ -30,4 +30,4 @@ public:
     void Flush();
 };
 
-#endif//RAPTOREUM_BATCHEDLOGGER_H
+#endif//BITCOIN_BATCHEDLOGGER_H

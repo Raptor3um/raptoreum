@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2019 The Dash Core developers
+// Copyright (c) 2018-2021 The Dash Core developers
 // Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -14,6 +14,7 @@
 #include <llmq/quorums_instantsend.h>
 #include <llmq/quorums_signing.h>
 #include <llmq/quorums_signing_shares.h>
+#include <llmq/quorums_utils.h>
 
 #include <dbwrapper.h>
 
@@ -26,7 +27,7 @@ CDBWrapper* llmqDb;
 
 void InitLLMQSystem(CEvoDB& evoDb, bool unitTests, bool fWipe)
 {
-    llmqDb = new CDBWrapper(unitTests ? "" : (GetDataDir() / "llmq"), 1 << 20, unitTests, fWipe);
+    llmqDb = new CDBWrapper(unitTests ? "" : (GetDataDir() / "llmq"), 8 << 20, unitTests, fWipe);
     blsWorker = new CBLSWorker();
 
     quorumDKGDebugManager = new CDKGDebugManager();
@@ -61,17 +62,20 @@ void DestroyLLMQSystem()
     blsWorker = nullptr;
     delete llmqDb;
     llmqDb = nullptr;
+    LOCK(cs_llmq_vbc);
+    llmq_versionbitscache.Clear();
 }
 
 void StartLLMQSystem()
 {
-    //quorumBlockProcessor->UpgradeDB();
-
     if (blsWorker) {
         blsWorker->Start();
     }
     if (quorumDKGSessionManager) {
         quorumDKGSessionManager->StartThreads();
+    }
+    if (quorumManager) {
+        quorumManager->Start();
     }
     if (quorumSigSharesManager) {
         quorumSigSharesManager->RegisterAsRecoveredSigsListener();
@@ -96,6 +100,9 @@ void StopLLMQSystem()
     if (quorumSigSharesManager) {
         quorumSigSharesManager->StopWorkerThread();
         quorumSigSharesManager->UnregisterAsRecoveredSigsListener();
+    }
+    if (quorumManager) {
+        quorumManager->Stop();
     }
     if (quorumDKGSessionManager) {
         quorumDKGSessionManager->StopThreads();

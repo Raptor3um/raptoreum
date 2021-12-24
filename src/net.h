@@ -60,6 +60,8 @@ static const int WARNING_INTERVAL = 10 * 60;
 static const int FEELER_INTERVAL = 120;
 /** The maximum number of entries in an 'inv' protocol message */
 static const unsigned int MAX_INV_SZ = 50000;
+/** The maximum number of entries in a locator */
+static const unsigned int MAX_LOCATOR_SZ = 101;
 /** The maximum number of new addresses to accumulate before announcing. */
 static const unsigned int MAX_ADDR_TO_SEND = 1000;
 /** Maximum length of incoming protocol messages (no message over 3 MiB is currently acceptable). */
@@ -90,6 +92,8 @@ static const uint64_t DEFAULT_MAX_UPLOAD_TARGET = 0;
 static const uint64_t MAX_UPLOAD_TIMEFRAME = 60 * 60 * 24;
 /** Default for blocks only*/
 static const bool DEFAULT_BLOCKSONLY = false;
+/** -peertimeout default */
+static const int64_t DEFAULT_PEER_CONNECT_TIMEOUT = 60;
 
 static const bool DEFAULT_FORCEDNSSEED = false;
 static const size_t DEFAULT_MAXRECEIVEBUFFER = 5 * 1000;
@@ -98,7 +102,9 @@ static const size_t DEFAULT_MAXSENDBUFFER    = 1 * 1000;
 // NOTE: When adjusting this, update rpcnet:setban's help ("24h")
 static const unsigned int DEFAULT_MISBEHAVING_BANTIME = 60 * 60 * 24;  // Default 24-hour ban
 
-#if defined USE_EPOLL
+#if defined USE_KQUEUE
+#define DEFAULT_SOCKETEVENTS "kqueue"
+#elif defined USE_EPOLL
 #define DEFAULT_SOCKETEVENTS "epoll"
 #elif defined USE_POLL
 #define DEFAULT_SOCKETEVENTS "poll"
@@ -149,6 +155,7 @@ public:
         SOCKETEVENTS_SELECT = 0,
         SOCKETEVENTS_POLL = 1,
         SOCKETEVENTS_EPOLL = 2,
+        SOCKETEVENTS_KQUEUE = 3,
     };
 
     struct Options
@@ -165,6 +172,7 @@ public:
         unsigned int nReceiveFloodSize = 0;
         uint64_t nMaxOutboundTimeframe = 0;
         uint64_t nMaxOutboundLimit = 0;
+        int64_t m_peer_connect_timeout = DEFAULT_PEER_CONNECT_TIMEOUT;
         std::vector<std::string> vSeedNodes;
         std::vector<CSubNet> vWhitelistedRange;
         std::vector<CService> vBinds, vWhiteBinds;
@@ -178,6 +186,7 @@ public:
         nLocalServices = connOptions.nLocalServices;
         nMaxConnections = connOptions.nMaxConnections;
         nMaxOutbound = std::min(connOptions.nMaxOutbound, connOptions.nMaxConnections);
+        m_use_addrman_outgoing = connOptions.m_use_addrman_outgoing;
         nMaxAddnode = connOptions.nMaxAddnode;
         nMaxFeeler = connOptions.nMaxFeeler;
         nBestHeight = connOptions.nBestHeight;
@@ -185,6 +194,7 @@ public:
         m_msgproc = connOptions.m_msgproc;
         nSendBufferMaxSize = connOptions.nSendBufferMaxSize;
         nReceiveFloodSize = connOptions.nReceiveFloodSize;
+        m_peer_connect_timeout = connOptions.m_peer_connect_timeout;
         {
             LOCK(cs_totalBytesSent);
             nMaxOutboundTimeframe = connOptions.nMaxOutboundTimeframe;
@@ -204,9 +214,10 @@ public:
     void Stop();
     void Interrupt();
     bool GetNetworkActive() const { return fNetworkActive; };
+    bool GetUseAddrmanOutgoing() const { return m_use_addrman_outgoing; };
     void SetNetworkActive(bool active);
     SocketEventsMode GetSocketEventsMode() const { return socketEventsMode; }
-    void OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound = nullptr, const char *strDest = nullptr, bool fOneShot = false, bool fFeeler = false, bool manual_connection = false, bool fConnectToSmartnode = false, bool fSmartnodeProbe = false);
+    void OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound = nullptr, const char *strDest = nullptr, bool fOneShot = false, bool fFeeler = false, bool manual_connection = false, bool smartnode_connection = false, bool smartnode_probe_connection = false);
     void OpenSmartnodeConnection(const CAddress& addrConnect, bool probe = false);
     bool CheckIncomingNonce(uint64_t nonce);
 
@@ -355,10 +366,10 @@ public:
     void ReleaseNodeVector(const std::vector<CNode*>& vecNodes);
 
     void RelayTransaction(const CTransaction& tx);
-    void RelayInv(CInv &inv, const int minProtoVersion = MIN_PEER_PROTO_VERSION, bool fAllowSmartnodeConnections = false);
-    void RelayInvFiltered(CInv &inv, const CTransaction &relatedTx, const int minProtoVersion = MIN_PEER_PROTO_VERSION, bool fAllowSmartnodeConnections = false);
+    void RelayInv(CInv &inv, const int minProtoVersion = MIN_PEER_PROTO_VERSION);
+    void RelayInvFiltered(CInv &inv, const CTransaction &relatedTx, const int minProtoVersion = MIN_PEER_PROTO_VERSION);
     // This overload will not update node filters,  so use it only for the cases when other messages will update related transaction data in filters
-    void RelayInvFiltered(CInv &inv, const uint256 &relatedTxHash, const int minProtoVersion = MIN_PEER_PROTO_VERSION, bool fAllowSmartnodeConnections = false);
+    void RelayInvFiltered(CInv &inv, const uint256 &relatedTxHash, const int minProtoVersion = MIN_PEER_PROTO_VERSION);
 
     // Addrman functions
     size_t GetAddressCount() const;
@@ -410,12 +421,14 @@ public:
 
     bool AddPendingSmartnode(const uint256& proTxHash);
     void SetSmartnodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash, const std::set<uint256>& proTxHashes);
+    void SetSmartnodeQuorumRelayMembers(Consensus::LLMQType llmqType, const uint256& quorumHash, const std::set<uint256>& proTxHashes);
     bool HasSmartnodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash);
     std::set<uint256> GetSmartnodeQuorums(Consensus::LLMQType llmqType);
     // also returns QWATCH nodes
     std::set<NodeId> GetSmartnodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash) const;
     void RemoveSmartnodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash);
     bool IsSmartnodeQuorumNode(const CNode* pnode);
+    bool IsSmartnodeQuorumRelayMember(const uint256& protxHash);
     void AddPendingProbeConnections(const std::set<uint256>& proTxHashes);
 
     size_t GetNodeCount(NumConnections num);
@@ -486,8 +499,12 @@ private:
     void AcceptConnection(const ListenSocket& hListenSocket);
     void DisconnectNodes();
     void NotifyNumConnectionsChanged();
+    void CalculateNumConnectionsChangedStats();
     void InactivityCheck(CNode *pnode);
     bool GenerateSelectSet(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_set, std::set<SOCKET> &error_set);
+#ifdef USE_KQUEUE
+    void SocketEventsKqueue(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_set, std::set<SOCKET> &error_set, bool fOnlyPoll);
+#endif
 #ifdef USE_EPOLL
     void SocketEventsEpoll(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_set, std::set<SOCKET> &error_set, bool fOnlyPoll);
 #endif
@@ -509,7 +526,7 @@ private:
     CNode* FindNode(const CService& addr, bool fExcludeDisconnecting = true);
 
     bool AttemptToEvictConnection();
-    CNode* ConnectNode(CAddress addrConnect, const char *pszDest = nullptr, bool fCountFailure = false);
+    CNode* ConnectNode(CAddress addrConnect, const char *pszDest = nullptr, bool fCountFailure = false, bool manual_connection = false);
     bool IsWhitelistedRange(const CNetAddr &addr);
 
     void DeleteNode(CNode* pnode);
@@ -550,6 +567,9 @@ private:
     uint64_t nMaxOutboundLimit GUARDED_BY(cs_totalBytesSent);
     uint64_t nMaxOutboundTimeframe GUARDED_BY(cs_totalBytesSent);
 
+    // P2P timeout in seconds
+    int64_t m_peer_connect_timeout;
+
     // Whitelisted ranges. Any node connecting from these is automatically
     // whitelisted (as well as those connecting to whitelisted binds).
     std::vector<CSubNet> vWhitelistedRange;
@@ -569,7 +589,8 @@ private:
     std::vector<std::string> vAddedNodes GUARDED_BY(cs_vAddedNodes);
     CCriticalSection cs_vAddedNodes;
     std::vector<uint256> vPendingSmartnodes;
-    std::map<std::pair<Consensus::LLMQType, uint256>, std::set<uint256>> smartnodeQuorumNodes; // protected by cs_vPendingSmartnodes
+    std::map<std::pair<Consensus::LLMQType, uint256>, std::set<uint256>> smartnodeQuorumNodes; // protected by cs_vPendingMasternodes
+    std::map<std::pair<Consensus::LLMQType, uint256>, std::set<uint256>> smartnodeQuorumRelayMembers; // protected by cs_vPendingMasternodes
     std::set<uint256> smartnodePendingProbes;
     mutable CCriticalSection cs_vPendingSmartnodes;
     std::vector<CNode*> vNodes;
@@ -588,6 +609,7 @@ private:
     int nMaxOutbound;
     int nMaxAddnode;
     int nMaxFeeler;
+    bool m_use_addrman_outgoing;
     std::atomic<int> nBestHeight;
     CClientUIInterface* clientInterface;
     NetEventsInterface* m_msgproc;
@@ -611,6 +633,9 @@ private:
     std::atomic<bool> wakeupSelectNeeded{false};
 
     SocketEventsMode socketEventsMode;
+#ifdef USE_KQUEUE
+    int kqueuefd{-1};
+#endif
 #ifdef USE_EPOLL
     int epollfd{-1};
 #endif
@@ -634,13 +659,15 @@ private:
      *  This takes the place of a feeler connection */
     std::atomic_bool m_try_another_outbound_peer;
 
-    std::atomic<int64_t> m_next_send_inv_to_incoming;
+    std::atomic<int64_t> m_next_send_inv_to_incoming{0};
 
     friend struct CConnmanTest;
 };
 extern std::unique_ptr<CConnman> g_connman;
-void Discover(boost::thread_group& threadGroup);
-void MapPort(bool fUseUPnP);
+void Discover();
+void StartMapPort();
+void InterruptMapPort();
+void StopMapPort();
 unsigned short GetListenPort();
 bool BindListenPort(const CService &bindAddr, std::string& strError, bool fWhitelisted = false);
 
@@ -666,9 +693,16 @@ class NetEventsInterface
 {
 public:
     virtual bool ProcessMessages(CNode* pnode, std::atomic<bool>& interrupt) = 0;
-    virtual bool SendMessages(CNode* pnode, std::atomic<bool>& interrupt) = 0;
+    virtual bool SendMessages(CNode* pnode) = 0;
     virtual void InitializeNode(CNode* pnode) = 0;
     virtual void FinalizeNode(NodeId id, bool& update_connection_time) = 0;
+
+protected:
+    /**
+     * Protected destructor so that instances can only be deleted by derived classes.
+     * If that restriction is no longer desired, this should be made public and virtual.
+     */
+    ~NetEventsInterface() = default;
 };
 
 enum
@@ -746,7 +780,9 @@ public:
     CAddress addrBind;
     // In case this is a verified MN, this value is the proTx of the MN
     uint256 verifiedProRegTxHash;
-    bool fSmartnode;
+    // In case this is a verified MN, this value is the hashed operator pubkey of the MN
+    uint256 verifiedPubKeyHash;
+    bool m_smartnode_connection;
 };
 
 
@@ -860,13 +896,15 @@ public:
     //    unless it loads a bloom filter.
     bool fRelayTxes; //protected by cs_filter
     bool fSentAddr;
-    // If 'true' this node will be disconnected on CSmartnodeMan::ProcessSmartnodeConnections()
-    bool fSmartnode;
+    // If 'true' this node will be disconnected on CMasternodeMan::ProcessMasternodeConnections()
+    bool m_smartnode_connection;
     // If 'true' this node will be disconnected after MNAUTH
-    bool fSmartnodeProbe;
+    bool m_smartnode_probe_connection;
+    // If 'true', we identified it as an intra-quorum relay connection
+    bool m_smartnode_iqr_connection{false};
     CSemaphoreGrant grantOutbound;
     CCriticalSection cs_filter;
-    std::unique_ptr<CBloomFilter> pfilter PT_GUARDED_BY(cs_filter);
+    std::unique_ptr<CBloomFilter> pfilter PT_GUARDED_BY(cs_filter){nullptr};
     std::atomic<int> nRefCount;
 
     const uint64_t nKeyedNetGroup;
@@ -931,7 +969,7 @@ public:
     // Whether a ping is requested.
     std::atomic<bool> fPingQueued;
 
-    // If true, we will send him PrivateSend queue messages
+    // If true, we will send him CoinJoin queue messages
     std::atomic<bool> fSendDSQueue{false};
 
     // Challenge sent in VERSION to be answered with MNAUTH (only happens between MNs)
@@ -1094,6 +1132,8 @@ public:
     void MaybeSetAddrName(const std::string& addrNameIn);
 
     std::string GetLogString() const;
+
+    bool CanRelay() const { return !m_masternode_connection || m_masternode_iqr_connection; }
 };
 
 class CExplicitNetCleanup

@@ -1,5 +1,5 @@
 ---
-name: "raptoreum-win-0.15"
+name: "raptoreum-win-0.17"
 enable_cache: true
 suites:
 - "bionic"
@@ -13,7 +13,6 @@ packages:
 - "autoconf"
 - "libtool"
 - "automake"
-- "cmake"
 - "faketime"
 - "bsdmainutils"
 - "mingw-w64"
@@ -39,6 +38,7 @@ script: |
   HOST_CXXFLAGS="-O2 -g"
 
   export QT_RCC_TEST=1
+  export QT_RCC_SOURCE_DATE_OVERRIDE=1
   export GZIP="-9n"
   export TAR_OPTIONS="--mtime="$REFERENCE_DATE\\\ $REFERENCE_TIME""
   export TZ="UTC"
@@ -72,7 +72,7 @@ script: |
 
   function create_global_faketime_wrappers {
   for prog in ${FAKETIME_PROGS}; do
-    echo '#!/bin/bash' > ${WRAP_DIR}/${prog}
+    echo '#!/usr/bin/env bash' > ${WRAP_DIR}/${prog}
     echo "# GCCVERSION=${GCCVERSION}" >> ${WRAP_DIR}/${prog}
     echo "REAL=\`which -a ${prog} | grep -v ${WRAP_DIR}/${prog} | head -1\`" >> ${WRAP_DIR}/${prog}
     echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> ${WRAP_DIR}/${prog}
@@ -86,7 +86,7 @@ script: |
   function create_per-host_faketime_wrappers {
   for i in $HOSTS; do
     for prog in ${FAKETIME_HOST_PROGS}; do
-        echo '#!/bin/bash' > ${WRAP_DIR}/${i}-${prog}
+        echo '#!/usr/bin/env bash' > ${WRAP_DIR}/${i}-${prog}
         echo "# GCCVERSION=${GCCVERSION}" >> ${WRAP_DIR}/${i}-${prog}
         echo "REAL=\`which -a ${i}-${prog} | grep -v ${WRAP_DIR}/${i}-${prog} | head -1\`" >> ${WRAP_DIR}/${i}-${prog}
         echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> ${WRAP_DIR}/${i}-${prog}
@@ -104,7 +104,7 @@ script: |
   for i in $HOSTS; do
     mkdir -p ${WRAP_DIR}/${i}
     for prog in collect2; do
-        echo '#!/bin/bash' > ${WRAP_DIR}/${i}/${prog}
+        echo '#!/usr/bin/env bash' > ${WRAP_DIR}/${i}/${prog}
         echo "# GCCVERSION=${GCCVERSION}" >> ${WRAP_DIR}/${i}/${prog}
         REAL=$(${i}-gcc -print-prog-name=${prog})
         echo "export MALLOC_PERTURB_=255" >> ${WRAP_DIR}/${i}/${prog}
@@ -113,7 +113,7 @@ script: |
         touch -d "${REFERENCE_DATETIME}" ${WRAP_DIR}/${i}/${prog}
     done
     for prog in gcc g++; do
-        echo '#!/bin/bash' > ${WRAP_DIR}/${i}-${prog}
+        echo '#!/usr/bin/env bash' > ${WRAP_DIR}/${i}-${prog}
         echo "# GCCVERSION=${GCCVERSION}" >> ${WRAP_DIR}/${i}-${prog}
         echo "REAL=\`which -a ${i}-${prog}-posix | grep -v ${WRAP_DIR}/${i}-${prog} | head -1\`" >> ${WRAP_DIR}/${i}-${prog}
         echo '# Add the gcc version to the wrapper so that ccache takes this into account (we use CCACHE_COMPILERCHECK=content)' >> ${WRAP_DIR}/${i}-${prog}

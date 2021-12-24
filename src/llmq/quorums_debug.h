@@ -1,10 +1,10 @@
-// Copyright (c) 2018-2019 The Dash Core developers
+// Copyright (c) 2018-2020 The Dash Core developers
 // Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef RAPTOREUM_QUORUMS_DEBUG_H
-#define RAPTOREUM_QUORUMS_DEBUG_H
+#ifndef BITCOIN_LLMQ_QUORUMS_DEBUG_H
+#define BITCOIN_LLMQ_QUORUMS_DEBUG_H
 
 #include <consensus/params.h>
 #include <sync.h>
@@ -109,4 +109,4 @@ extern CDKGDebugManager* quorumDKGDebugManager;
 
 } // namespace llmq
 
-#endif //RAPTOREUM_QUORUMS_DEBUG_H
+#endif // BITCOIN_LLMQ_QUORUMS_DEBUG_H

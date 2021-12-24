@@ -7,10 +7,6 @@
 
 #include <util.h>
 
-bool CKeyStore::AddKey(const CKey &key) {
-    return AddKeyPubKey(key, key.GetPubKey());
-}
-
 bool CBasicKeyStore::GetPubKey(const CKeyID &address, CPubKey &vchPubKeyOut) const
 {
     CKey key;
@@ -149,6 +145,7 @@ bool CBasicKeyStore::HaveWatchOnly() const
 
 bool CBasicKeyStore::GetHDChain(CHDChain& hdChainRet) const
 {
+    LOCK(cs_KeyStore);
     hdChainRet = hdChain;
     return !hdChain.IsNull();
 }

@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <qt/walletframe.h>
+#include <qt/walletmodel.h>
 
 #include <qt/bitcoingui.h>
 #include <qt/walletview.h>
@@ -38,10 +39,16 @@ void WalletFrame::setClientModel(ClientModel *_clientModel)
     this->clientModel = _clientModel;
 }
 
-bool WalletFrame::addWallet(const QString& name, WalletModel *walletModel)
+bool WalletFrame::addWallet(WalletModel *walletModel)
 {
-    if (!gui || !clientModel || !walletModel || mapWalletViews.count(name) > 0)
+    if (!gui || !clientModel || !walletModel) {
         return false;
+    }
+
+    const QString name = walletModel->getWalletName();
+    if (mapWalletViews.count(name) > 0) {
+        return false;
+    }
 
     WalletView* walletView = new WalletView(this);
     walletView->setBitcoinGUI(gui);
@@ -49,8 +56,13 @@ bool WalletFrame::addWallet(const QString& name, WalletModel *walletModel)
     walletView->setWalletModel(walletModel);
     walletView->showOutOfSyncWarning(bOutOfSync);
 
-     /* TODO we should goto the currently selected page once dynamically adding wallets is supported */
-    walletView->gotoOverviewPage();
+    WalletView* current_wallet_view = currentWalletView();
+    if (current_wallet_view) {
+        walletView->setCurrentIndex(current_wallet_view->currentIndex());
+    } else {
+        walletView->gotoOverviewPage();
+    }
+
     walletStack->addWidget(walletView);
     mapWalletViews[name] = walletView;
 
@@ -81,14 +93,17 @@ bool WalletFrame::removeWallet(const QString &name)
 
     WalletView *walletView = mapWalletViews.take(name);
     walletStack->removeWidget(walletView);
+    delete walletView;
     return true;
 }
 
 void WalletFrame::removeAllWallets()
 {
     QMap<QString, WalletView*>::const_iterator i;
-    for (i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i)
+    for (i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i) {
         walletStack->removeWidget(i.value());
+        delete i.value();
+    }
     mapWalletViews.clear();
 }
 
@@ -153,18 +168,11 @@ void WalletFrame::gotoSendCoinsPage(QString addr)
         i.value()->gotoSendCoinsPage(addr);
 }
 
-void WalletFrame::gotoSendFuturesPage(QString addr)
-{
-  QMap<QString, WalletView*>::const_iterator i;
-  for(i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i)
-    i.value()->gotoSendFuturesPage(addr);
-}
-
-void WalletFrame::gotoPrivateSendCoinsPage(QString addr)
+void WalletFrame::gotoCoinJoinCoinsPage(QString addr)
 {
     QMap<QString, WalletView*>::const_iterator i;
     for (auto i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i) {
-        i.value()->gotoPrivateSendCoinsPage(addr);
+        i.value()->gotoCoinJoinCoinsPage(addr);
     }
 }
 

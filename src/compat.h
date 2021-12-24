@@ -93,22 +93,6 @@ typedef int32_t ssize_t;
 #endif
 #endif
 
-#ifndef PRIO_MAX
-#define PRIO_MAX 20
-#endif
-#ifndef THREAD_PRIORITY_LOWEST
-#define THREAD_PRIORITY_LOWEST          PRIO_MAX
-#endif
-#ifndef THREAD_PRIORITY_BELOW_NORMAL
-#define THREAD_PRIORITY_BELOW_NORMAL    2
-#endif
-#ifndef THREAD_PRIORITY_NORMAL
-#define THREAD_PRIORITY_NORMAL          0
-#endif
-#ifndef THREAD_PRIORITY_ABOVE_NORMAL
-#define THREAD_PRIORITY_ABOVE_NORMAL    (-2)
-#endif
-
 #if HAVE_DECL_STRNLEN == 0
 size_t strnlen( const char *start, size_t max_len);
 #endif // HAVE_DECL_STRNLEN
@@ -122,12 +106,16 @@ typedef char* sockopt_arg_type;
 // Note these both should work with the current usage of poll, but best to be safe
 // WIN32 poll is broken https://daniel.haxx.se/blog/2012/10/10/wsapoll-is-broken/
 // __APPLE__ poll is broke https://github.com/bitcoin/bitcoin/pull/14336#issuecomment-437384408
-#if defined(__linux__)
+#if defined(__linux__) || defined(__FreeBSD__)
 #define USE_POLL
 #endif
 
 #if defined(__linux__)
 #define USE_EPOLL
+#endif
+
+#if defined(__FreeBSD__) || defined(__APPLE__)
+#define USE_KQUEUE
 #endif
 
 bool static inline IsSelectableSocket(const SOCKET& s) {

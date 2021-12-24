@@ -1,10 +1,10 @@
-// Copyright (c) 2017-2020 The Dash Core developers
+// Copyright (c) 2017-2021 The Dash Core developers
 // Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef RAPTOREUM_SIMPLIFIEDMNS_H
-#define RAPTOREUM_SIMPLIFIEDMNS_H
+#ifndef BITCOIN_EVO_SIMPLIFIEDMNS_H
+#define BITCOIN_EVO_SIMPLIFIEDMNS_H
 
 #include <bls/bls.h>
 #include <merkleblock.h>
@@ -33,7 +33,7 @@ public:
     bool isValid;
 
 public:
-    CSimplifiedMNListEntry() {}
+    CSimplifiedMNListEntry() = default;
     explicit CSimplifiedMNListEntry(const CDeterministicMN& dmn);
 
     bool operator==(const CSimplifiedMNListEntry& rhs) const
@@ -78,7 +78,7 @@ public:
     std::vector<std::unique_ptr<CSimplifiedMNListEntry>> mnList;
 
 public:
-    CSimplifiedMNList() {}
+    CSimplifiedMNList() = default;
     explicit CSimplifiedMNList(const std::vector<CSimplifiedMNListEntry>& smlEntries);
     explicit CSimplifiedMNList(const CDeterministicMNList& dmnList);
 
@@ -148,4 +148,4 @@ public:
 
 bool BuildSimplifiedMNListDiff(const uint256& baseBlockHash, const uint256& blockHash, CSimplifiedMNListDiff& mnListDiffRet, std::string& errorRet);
 
-#endif //RAPTOREUM_SIMPLIFIEDMNS_H
+#endif // BITCOIN_EVO_SIMPLIFIEDMNS_H

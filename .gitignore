@@ -63,8 +63,6 @@ libconftest.dylib*
 *.pyc
 *.o
 *.o-*
-*.patch
-!depends/patches/*/*.patch
 *.a
 *.pb.cc
 *.pb.h
@@ -76,6 +74,10 @@ libconftest.dylib*
 *.json.h
 *.raw.h
 
+# Only ignore unexpected patches
+*.patch
+!depends/patches/**/*.patch
+
 #libtool object files
 *.lo
 *.la
@@ -85,6 +87,7 @@ libconftest.dylib*
 Makefile
 raptoreum-qt
 Raptoreum-Qt.app
+background.tiff*
 !/depends/Makefile
 
 # Unit-tests
@@ -97,6 +100,7 @@ qrc_*.cpp
 # Mac specific
 .DS_Store
 build
+*.dSYM
 
 #lcov
 *.gcno
@@ -136,10 +140,3 @@ make
 # CLion
 .idea
 cmake-build-debug
-
-depends/built
-depends/x86_64-pc-linux-gnu
-depends/sdk-sources/
-dist/
-*.conf
-.settings/language.settings.xml

@@ -1,13 +1,11 @@
-// Copyright (c) 2014-2020 The Dash Core developers
+// Copyright (c) 2014-2021 The Dash Core developers
 // Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <smartnode/activesmartnode.h>
 #include <governance/governance.h>
 #include <init.h>
 #include <validation.h>
-#include <smartnode/smartnode-payments.h>
 #include <smartnode/smartnode-sync.h>
 #include <netfulfilledman.h>
 #include <netmessagemaker.h>
@@ -40,7 +38,7 @@ void CSmartnodeSync::BumpAssetLastTime(const std::string& strFuncName)
     LogPrint(BCLog::MNSYNC, "CSmartnodeSync::BumpAssetLastTime -- %s\n", strFuncName);
 }
 
-std::string CSmartnodeSync::GetAssetName()
+std::string CSmartnodeSync::GetAssetName() const
 {
     switch(nCurrentAsset)
     {
@@ -77,9 +75,9 @@ void CSmartnodeSync::SwitchToNextAsset(CConnman& connman)
     BumpAssetLastTime("CSmartnodeSync::SwitchToNextAsset");
 }
 
-std::string CSmartnodeSync::GetSyncStatus()
+std::string CSmartnodeSync::GetSyncStatus() const
 {
-    switch (smartnodeSync.nCurrentAsset) {
+    switch (nCurrentAsset) {
         case SMARTNODE_SYNC_BLOCKCHAIN:    return _("Synchronizing blockchain...");
         case SMARTNODE_SYNC_GOVERNANCE:    return _("Synchronizing governance objects...");
         case SMARTNODE_SYNC_FINISHED:      return _("Synchronization finished");
@@ -87,7 +85,7 @@ std::string CSmartnodeSync::GetSyncStatus()
     }
 }
 
-void CSmartnodeSync::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv)
+void CSmartnodeSync::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv) const
 {
     if (strCommand == NetMsgType::SYNCSTATUSCOUNT) { //Sync status count
 
@@ -145,11 +143,10 @@ void CSmartnodeSync::ProcessTick(CConnman& connman)
     {
         CNetMsgMaker msgMaker(pnode->GetSendVersion());
 
-        // Don't try to sync any data from outbound "smartnode" connections -
-        // they are temporary and should be considered unreliable for a sync process.
+        // Don't try to sync any data from outbound non-relay "smartnode" connections.
         // Inbound connection this early is most likely a "smartnode" connection
         // initiated from another node, so skip it too.
-        if(pnode->fSmartnode || (fSmartnodeMode && pnode->fInbound)) continue;
+        if (!pnode->CanRelay() || (fSmartnodeMode && pnode->fInbound)) continue;
 
         // QUICK MODE (REGTEST ONLY!)
         if(Params().NetworkIDString() == CBaseChainParams::REGTEST)
@@ -196,11 +193,11 @@ void CSmartnodeSync::ProcessTick(CConnman& connman)
                 if (fReachedBestHeader && (GetTime() - nTimeLastBumped > nTimeSyncTimeout)) {
                     // At this point we know that:
                     // a) there are peers (because we are looping on at least one of them);
-                    // b) we waited for at least SMARTNODE_SYNC_TICK_SECONDS/SMARTNODE_SYNC_TIMEOUT_SECONDS
+                    // b) we waited for at least MASTERNODE_SYNC_TICK_SECONDS/MASTERNODE_SYNC_TIMEOUT_SECONDS
                     //    (depending on the number of connected peers) since we reached the headers tip the last
                     //    time (i.e. since fReachedBestHeader has been set to true);
                     // c) there were no blocks (UpdatedBlockTip, NotifyHeaderTip) or headers (AcceptedBlockHeader)
-                    //    for at least SMARTNODE_SYNC_TICK_SECONDS/SMARTNODE_SYNC_TIMEOUT_SECONDS (depending on
+                    //    for at least MASTERNODE_SYNC_TICK_SECONDS/MASTERNODE_SYNC_TIMEOUT_SECONDS (depending on
                     //    the number of connected peers).
                     // We must be at the tip already, let's move to the next asset.
                     SwitchToNextAsset(connman);
@@ -259,9 +256,9 @@ void CSmartnodeSync::ProcessTick(CConnman& connman)
                         if(GetTime() - nTimeNoObjectsLeft > SMARTNODE_SYNC_TIMEOUT_SECONDS &&
                             governance.GetVoteCount() - nLastVotes < std::max(int(0.0001 * nLastVotes), SMARTNODE_SYNC_TICK_SECONDS)
                         ) {
-                            // We already asked for all objects, waited for SMARTNODE_SYNC_TIMEOUT_SECONDS
-                            // after that and less then 0.01% or SMARTNODE_SYNC_TICK_SECONDS
-                            // (i.e. 1 per second) votes were recieved during the last tick.
+                            // We already asked for all objects, waited for MASTERNODE_SYNC_TIMEOUT_SECONDS
+                            // after that and less then 0.01% or MASTERNODE_SYNC_TICK_SECONDS
+                            // (i.e. 1 per second) votes were received during the last tick.
                             // We can be pretty sure that we are done syncing.
                             LogPrintf("CSmartnodeSync::ProcessTick -- nTick %d nCurrentAsset %d -- asked for all objects, nothing to do\n", nTick, nCurrentAsset);
                             // reset nTimeNoObjectsLeft to be able to use the same condition on resync
@@ -295,15 +292,10 @@ void CSmartnodeSync::SendGovernanceSyncRequest(CNode* pnode, CConnman& connman)
 {
     CNetMsgMaker msgMaker(pnode->GetSendVersion());
 
-    if(pnode->nVersion >= GOVERNANCE_FILTER_PROTO_VERSION) {
-        CBloomFilter filter;
-        filter.clear();
+    CBloomFilter filter;
+    filter.clear();
 
-        connman.PushMessage(pnode, msgMaker.Make(NetMsgType::MNGOVERNANCESYNC, uint256(), filter));
-    }
-    else {
-        connman.PushMessage(pnode, msgMaker.Make(NetMsgType::MNGOVERNANCESYNC, uint256()));
-    }
+    connman.PushMessage(pnode, msgMaker.Make(NetMsgType::MNGOVERNANCESYNC, uint256(), filter));
 }
 
 void CSmartnodeSync::AcceptedBlockHeader(const CBlockIndex *pindexNew)
@@ -357,7 +349,7 @@ void CSmartnodeSync::UpdatedBlockTip(const CBlockIndex *pindexNew, bool fInitial
     bool fReachedBestHeaderNew = pindexNew->GetBlockHash() == pindexBestHeader->GetBlockHash();
 
     if (fReachedBestHeader && !fReachedBestHeaderNew) {
-        // Switching from true to false means that we previousely stuck syncing headers for some reason,
+        // Switching from true to false means that we previously stuck syncing headers for some reason,
         // probably initial timeout was not enough,
         // because there is no way we can update tip not having best header
         Reset(true);

@@ -12,9 +12,13 @@
 #include <QList>
 #include <QString>
 
-class CWallet;
-class CWalletTx;
-class CFutureTx;
+namespace interfaces {
+class Node;
+class Wallet;
+struct WalletTx;
+struct WalletTxStatus;
+struct FutureTx;
+}
 
 /** UI model for transaction status. The transaction status is the part of a transaction that will change over time.
  */
@@ -49,8 +53,6 @@ public:
     bool lockedByChainLocks;
     /// Sorting key based on status
     std::string sortKey;
-    /// Label
-    QString label;
 
     /** @name Generated (mined) transactions
        @{*/
@@ -90,12 +92,12 @@ public:
         RecvWithAddress,
         RecvFromOther,
         SendToSelf,
-        RecvWithPrivateSend,
-        PrivateSendDenominate,
-        PrivateSendCollateralPayment,
-        PrivateSendMakeCollaterals,
-        PrivateSendCreateDenominations,
-        PrivateSend,
+        RecvWithCoinJoin,
+        CoinJoinMixing,
+        CoinJoinCollateralPayment,
+        CoinJoinMakeCollaterals,
+        CoinJoinCreateDenominations,
+        CoinJoinSend,
         FutureSend,
         FutureReceive
     };
@@ -127,8 +129,8 @@ public:
 
     /** Decompose CWallet transaction to model transaction records.
      */
-    static bool showTransaction(const CWalletTx &wtx);
-    static QList<TransactionRecord> decomposeTransaction(const CWallet *wallet, const CWalletTx &wtx);
+    static bool showTransaction();
+    static QList<TransactionRecord> decomposeTransaction(interfaces::Wallet& wallet, const interfaces::WalletTx& wtx);
 
     /** @name Immutable transaction attributes
       @{*/
@@ -151,19 +153,26 @@ public:
     /** Whether the transaction was sent/received with a watch-only address */
     bool involvesWatchAddress;
 
+    /// Label
+    QString label;
+
     /** Return the unique identifier for this transaction (part) */
-    QString getTxID() const;
+    QString getTxHash() const;
 
     /** Return the output index of the subtransaction  */
     int getOutputIndex() const;
 
     /** Update status from core wallet tx.
      */
-    void updateStatus(const CWalletTx &wtx, int chainLockHeight);
+    void updateStatus(const interfaces::WalletTxStatus& wtx, int numBlocks, int64_t adjustedTime, int chainLockHeight);
 
     /** Return whether a status update is needed.
      */
-    bool statusUpdateNeeded(int chainLockHeight) const;
+    bool statusUpdateNeeded(int numBlocks, int chainLockHeight) const;
+
+    /** Update label from address book.
+     */
+    void updateLabel(interfaces::Wallet& wallet);
 
     /** Return the block height of this transaction */
     int getTransactionBlockHeight(const CWalletTx &wtx);
@@ -179,7 +188,6 @@ public:
 
     /** Return the Future TX Status based on maturity */
     void getFutureTxStatus(const CWalletTx &wtx, CFutureTx &ftx);
-
 
 };
 

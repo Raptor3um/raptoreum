@@ -34,7 +34,7 @@ class SendCoinsDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit SendCoinsDialog(bool fPrivateSend = false, QWidget* parent = 0);
+    explicit SendCoinsDialog(bool fCoinJoin = false, QWidget* parent = 0);
     ~SendCoinsDialog();
 
     void setClientModel(ClientModel *clientModel);
@@ -54,8 +54,10 @@ public Q_SLOTS:
     void accept();
     SendCoinsEntry *addEntry();
     void updateTabsAndLabels();
-    void setBalance(const CAmount& balance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance, const CAmount& anonymizedBalance,
-                    const CAmount& watchOnlyBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance);
+    void setBalance(const interfaces::WalletBalances& balances);
+
+Q_SIGNALS:
+    void coinsSent(const uint256& txid);
 
 private:
     Ui::SendCoinsDialog *ui;
@@ -65,7 +67,6 @@ private:
     bool fNewRecipientAllowed;
     void send(QList<SendCoinsRecipient> recipients);
     bool fFeeMinimized;
-    bool fPrivateSend;
 
     // Process WalletModel::SendCoinsReturn and generate a pair consisting
     // of a message and message flags for use in Q_EMIT message().
@@ -75,8 +76,6 @@ private:
     void updateFeeMinimizedLabel();
     // Update the passed in CCoinControl with state from the GUI
     void updateCoinControlState(CCoinControl& ctrl);
-
-    void showEvent(QShowEvent* event);
 
 private Q_SLOTS:
     void on_sendButton_clicked();

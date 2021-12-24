@@ -13,31 +13,35 @@
 
 #include <init.h>
 #include <key_io.h>
+#include <utilstrencodings.h>
 #include <validation.h> // For strMessageMagic
-#include <wallet/wallet.h>
 
 #include <string>
 #include <vector>
 
+#include <QButtonGroup>
 #include <QClipboard>
 
 SignVerifyMessageDialog::SignVerifyMessageDialog(QWidget* parent) :
     QDialog(parent),
     ui(new Ui::SignVerifyMessageDialog),
-    model(0)
+    model(0),
+    pageButtons(0)
 {
     ui->setupUi(this);
-    pageButtons.addButton(ui->btnSignMessage, pageButtons.buttons().size());
-    pageButtons.addButton(ui->btnVerifyMessage, pageButtons.buttons().size());
-    connect(&pageButtons, SIGNAL(buttonClicked(int)), this, SLOT(showPage(int)));
-#if QT_VERSION >= 0x040700
+
+    pageButtons = new QButtonGroup(this);
+    pageButtons->addButton(ui->btnSignMessage, pageButtons->buttons().size());
+    pageButtons->addButton(ui->btnVerifyMessage, pageButtons->buttons().size());
+    connect(pageButtons, SIGNAL(buttonClicked(int)), this, SLOT(showPage(int)));
+
     ui->messageIn_SM->setPlaceholderText(tr("Enter a message to be signed"));
     ui->signatureOut_SM->setPlaceholderText(tr("Click \"Sign Message\" to generate signature"));
 
     ui->messageIn_VM->setPlaceholderText(tr("Enter a message to be verified"));
     ui->signatureIn_VM->setPlaceholderText(tr("Enter a signature for the message to be verified"));
-#endif
 
+    // These icons are needed on Mac also
     GUIUtil::setIcon(ui->addressBookButton_SM, "address-book");
     GUIUtil::setIcon(ui->pasteButton_SM, "editpaste");
     GUIUtil::setIcon(ui->copySignatureButton_SM, "editcopy");
@@ -64,6 +68,7 @@ SignVerifyMessageDialog::SignVerifyMessageDialog(QWidget* parent) :
 
 SignVerifyMessageDialog::~SignVerifyMessageDialog()
 {
+    delete pageButtons;
     delete ui;
 }
 
@@ -101,8 +106,8 @@ void SignVerifyMessageDialog::showTab_VM(bool fShow)
 void SignVerifyMessageDialog::showPage(int index)
 {
     std::vector<QWidget*> vecNormal;
-    QAbstractButton* btnActive = pageButtons.button(index);
-    for (QAbstractButton* button : pageButtons.buttons()) {
+    QAbstractButton* btnActive = pageButtons->button(index);
+    for (QAbstractButton* button : pageButtons->buttons()) {
         if (button != btnActive) {
             vecNormal.push_back(button);
         }
@@ -148,7 +153,7 @@ void SignVerifyMessageDialog::on_signMessageButton_SM_clicked()
         ui->statusLabel_SM->setText(tr("The entered address is invalid.") + QString(" ") + tr("Please check the address and try again."));
         return;
     }
-    const CKeyID *keyID = boost::get<CKeyID>(&destination);
+    const CKeyID* keyID = boost::get<CKeyID>(&destination);
     if (!keyID) {
         ui->addressIn_SM->setValid(false);
         ui->statusLabel_SM->setStyleSheet(GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_ERROR));
@@ -165,7 +170,7 @@ void SignVerifyMessageDialog::on_signMessageButton_SM_clicked()
     }
 
     CKey key;
-    if (!model->getPrivKey(*keyID, key))
+    if (!model->wallet().getPrivKey(*keyID, key))
     {
         ui->statusLabel_SM->setStyleSheet(GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_ERROR));
         ui->statusLabel_SM->setText(tr("Private key for the entered address is not available."));
@@ -297,4 +302,12 @@ bool SignVerifyMessageDialog::eventFilter(QObject *object, QEvent *event)
         }
     }
     return QDialog::eventFilter(object, event);
+}
+
+void SignVerifyMessageDialog::showEvent(QShowEvent* event)
+{
+    if (!event->spontaneous()) {
+        GUIUtil::updateButtonGroupShortcuts(pageButtons);
+    }
+    QDialog::showEvent(event);
 }

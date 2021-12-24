@@ -4,7 +4,7 @@
 # Copyright (c) 2010-2017 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-"""Bitcoin test framework primitive and message strcutures
+"""Bitcoin test framework primitive and message structures
 CBlock, CTransaction, CBlockHeader, CTxIn, CTxOut, etc....:
     data structures that should map to corresponding structures in
     bitcoin/primitives
@@ -22,14 +22,13 @@ import struct
 import time
 
 from test_framework.siphash import siphash256
-from test_framework.util import hex_str_to_bytes, bytes_to_hex_str, wait_until
+from test_framework.util import hex_str_to_bytes, bytes_to_hex_str
 
 import dash_hash
 
 MIN_VERSION_SUPPORTED = 60001
-MY_VERSION = 70214  # MIN_PEER_PROTO_VERSION
-MY_SUBVERSION = b"/python-mininode-tester:0.0.3/"
-MY_SUBVERSION_DEVNET = b"/python-mininode-tester:0.0.3,devnet=devnet-%s/"
+MY_VERSION = 70219  # LLMQ_DATA_MESSAGES_VERSION
+MY_SUBVERSION = b"/python-mininode-tester:0.0.3%s/"
 MY_RELAY = 1 # from version 70001 onwards, fRelay should be appended to version messages (BIP37)
 
 MAX_INV_SZ = 50000
@@ -104,6 +103,10 @@ def uint256_from_str(s):
     for i in range(8):
         r += t[i] << (i * 32)
     return r
+
+
+def uint256_to_string(uint256):
+    return '%064x' % uint256
 
 
 def uint256_from_compact(c):
@@ -297,7 +300,7 @@ class CBlockLocator():
 
 
 class COutPoint():
-    def __init__(self, hash=0, n=0):
+    def __init__(self, hash=0, n=0xFFFFFFFF):
         self.hash = hash
         self.n = n
 
@@ -734,6 +737,7 @@ class CPartialMerkleTree():
         self.nTransactions = 0
         self.vBits = []
         self.vHash = []
+        self.fBad = False
 
     def deserialize(self, f):
         self.nTransactions = struct.unpack("<I", f.read(4))[0]
@@ -875,6 +879,164 @@ class CFinalCommitment:
         return r
 
 
+class CGovernanceObject:
+    def __init__(self):
+        self.nHashParent = 0
+        self.nRevision = 0
+        self.nTime = 0
+        self.nCollateralHash = 0
+        self.vchData = []
+        self.nObjectType = 0
+        self.masternodeOutpoint = COutPoint()
+        self.vchSig = []
+
+    def deserialize(self, f):
+        self.nHashParent = deser_uint256(f)
+        self.nRevision = struct.unpack("<i", f.read(4))[0]
+        self.nTime = struct.unpack("<q", f.read(8))[0]
+        self.nCollateralHash = deser_uint256(f)
+        size = deser_compact_size(f)
+        if size > 0:
+            self.vchData = f.read(size)
+        self.nObjectType = struct.unpack("<i", f.read(4))[0]
+        self.masternodeOutpoint.deserialize(f)
+        size = deser_compact_size(f)
+        if size > 0:
+            self.vchSig = f.read(size)
+
+    def serialize(self):
+        r = b""
+        r += ser_uint256(self.nParentHash)
+        r += struct.pack("<i", self.nRevision)
+        r += struct.pack("<q", self.nTime)
+        r += deser_uint256(self.nCollateralHash)
+        r += deser_compact_size(len(self.vchData))
+        r += self.vchData
+        r += struct.pack("<i", self.nObjectType)
+        r += self.masternodeOutpoint.serialize()
+        r += deser_compact_size(len(self.vchSig))
+        r += self.vchSig
+        return r
+
+
+class CGovernanceVote:
+    def __init__(self):
+        self.masternodeOutpoint = COutPoint()
+        self.nParentHash = 0
+        self.nVoteOutcome = 0
+        self.nVoteSignal = 0
+        self.nTime = 0
+        self.vchSig = []
+
+    def deserialize(self, f):
+        self.masternodeOutpoint.deserialize(f)
+        self.nParentHash = deser_uint256(f)
+        self.nVoteOutcome = struct.unpack("<i", f.read(4))[0]
+        self.nVoteSignal = struct.unpack("<i", f.read(4))[0]
+        self.nTime = struct.unpack("<q", f.read(8))[0]
+        size = deser_compact_size(f)
+        if size > 0:
+            self.vchSig = f.read(size)
+
+    def serialize(self):
+        r = b""
+        r += self.masternodeOutpoint.serialize()
+        r += ser_uint256(self.nParentHash)
+        r += struct.pack("<i", self.nVoteOutcome)
+        r += struct.pack("<i", self.nVoteSignal)
+        r += struct.pack("<q", self.nTime)
+        r += ser_compact_size(len(self.vchSig))
+        r += self.vchSig
+        return r
+
+
+class CRecoveredSig:
+    def __init__(self):
+        self.llmqType = 0
+        self.quorumHash = 0
+        self.id = 0
+        self.msgHash = 0
+        self.sig = b'\\x0' * 96
+
+    def deserialize(self, f):
+        self.llmqType = struct.unpack("<B", f.read(1))[0]
+        self.quorumHash = deser_uint256(f)
+        self.id = deser_uint256(f)
+        self.msgHash = deser_uint256(f)
+        self.sig = f.read(96)
+
+    def serialize(self):
+        r = b""
+        r += struct.pack("<B", self.llmqType)
+        r += ser_uint256(self.quorumHash)
+        r += ser_uint256(self.id)
+        r += ser_uint256(self.msgHash)
+        r += self.sig
+        return r
+
+
+class CSigShare:
+    def __init__(self):
+        self.llmqType = 0
+        self.quorumHash = 0
+        self.quorumMember = 0
+        self.id = 0
+        self.msgHash = 0
+        self.sigShare = b'\\x0' * 96
+
+    def deserialize(self, f):
+        self.llmqType = struct.unpack("<B", f.read(1))[0]
+        self.quorumHash = deser_uint256(f)
+        self.quorumMember = struct.unpack("<H", f.read(2))[0]
+        self.id = deser_uint256(f)
+        self.msgHash = deser_uint256(f)
+        self.sigShare = f.read(96)
+
+    def serialize(self):
+        r = b""
+        r += struct.pack("<B", self.llmqType)
+        r += ser_uint256(self.quorumHash)
+        r += struct.pack("<H", self.quorumMember)
+        r += ser_uint256(self.id)
+        r += ser_uint256(self.msgHash)
+        r += self.sigShare
+        return r
+
+
+class CBLSPublicKey:
+    def __init__(self):
+        self.data = b'\\x0' * 48
+
+    def deserialize(self, f):
+        self.data = f.read(48)
+
+    def serialize(self):
+        r = b""
+        r += self.data
+        return r
+
+
+class CBLSIESEncryptedSecretKey:
+    def __init__(self):
+        self.ephemeral_pubKey = b'\\x0' * 48
+        self.iv = b'\\x0' * 32
+        self.data = b'\\x0' * 32
+
+    def deserialize(self, f):
+        self.ephemeral_pubKey = f.read(48)
+        self.iv = f.read(32)
+        data_size = deser_compact_size(f)
+        self.data = f.read(data_size)
+
+    def serialize(self):
+        r = b""
+        r += self.ephemeral_pubKey
+        r += self.iv
+        r += ser_compact_size(len(self.data))
+        r += self.data
+        return r
+
+
 # Objects that correspond to messages on the wire
 class msg_version():
     command = b"version"
@@ -886,34 +1048,23 @@ class msg_version():
         self.addrTo = CAddress()
         self.addrFrom = CAddress()
         self.nNonce = random.getrandbits(64)
-        self.strSubVer = MY_SUBVERSION
+        self.strSubVer = MY_SUBVERSION % b""
         self.nStartingHeight = -1
         self.nRelay = MY_RELAY
 
     def deserialize(self, f):
         self.nVersion = struct.unpack("<i", f.read(4))[0]
-        if self.nVersion == 10300:
-            self.nVersion = 300
         self.nServices = struct.unpack("<Q", f.read(8))[0]
         self.nTime = struct.unpack("<q", f.read(8))[0]
         self.addrTo = CAddress()
         self.addrTo.deserialize(f, False)
 
-        if self.nVersion >= 106:
-            self.addrFrom = CAddress()
-            self.addrFrom.deserialize(f, False)
-            self.nNonce = struct.unpack("<Q", f.read(8))[0]
-            self.strSubVer = deser_string(f)
-        else:
-            self.addrFrom = None
-            self.nNonce = None
-            self.strSubVer = None
-            self.nStartingHeight = None
+        self.addrFrom = CAddress()
+        self.addrFrom.deserialize(f, False)
+        self.nNonce = struct.unpack("<Q", f.read(8))[0]
+        self.strSubVer = deser_string(f)
 
-        if self.nVersion >= 209:
-            self.nStartingHeight = struct.unpack("<i", f.read(4))[0]
-        else:
-            self.nStartingHeight = None
+        self.nStartingHeight = struct.unpack("<i", f.read(4))[0]
 
         if self.nVersion >= 70001:
             # Relay field is optional for version 70001 onwards
@@ -1428,3 +1579,111 @@ class msg_islock():
 
     def __repr__(self):
         return "msg_islock(inputs=%s, txid=%064x)" % (repr(self.inputs), self.txid)
+
+
+class msg_qsigshare():
+    command = b"qsigshare"
+
+    def __init__(self, sig_shares=[]):
+        self.sig_shares = sig_shares
+
+    def deserialize(self, f):
+        self.sig_shares = deser_vector(f, CSigShare)
+
+    def serialize(self):
+        r = b""
+        r += ser_vector(self.sig_shares)
+        return r
+
+    def __repr__(self):
+        return "msg_qsigshare(sigShares=%d)" % (len(self.sig_shares))
+
+
+class msg_qwatch():
+    command = b"qwatch"
+
+    def __init__(self):
+        pass
+
+    def deserialize(self, f):
+        pass
+
+    def serialize(self):
+        return b""
+
+    def __repr__(self):
+        return "msg_qwatch()"
+
+
+class msg_qgetdata():
+    command = b"qgetdata"
+
+    def __init__(self, quorum_hash=0, quorum_type=-1, data_mask=0, protx_hash=0):
+        self.quorum_hash = quorum_hash
+        self.quorum_type = quorum_type
+        self.data_mask = data_mask
+        self.protx_hash = protx_hash
+
+    def deserialize(self, f):
+        self.quorum_type = struct.unpack("<B", f.read(1))[0]
+        self.quorum_hash = deser_uint256(f)
+        self.data_mask = struct.unpack("<H", f.read(2))[0]
+        self.protx_hash = deser_uint256(f)
+
+    def serialize(self):
+        r = b""
+        r += struct.pack("<B", self.quorum_type)
+        r += ser_uint256(self.quorum_hash)
+        r += struct.pack("<H", self.data_mask)
+        r += ser_uint256(self.protx_hash)
+        return r
+
+    def __repr__(self):
+        return "msg_qgetdata(quorum_hash=%064x, quorum_type=%d, data_mask=%d, protx_hash=%064x)" % (
+                                                                                self.quorum_hash,
+                                                                                self.quorum_type,
+                                                                                self.data_mask,
+                                                                                self.protx_hash)
+
+
+class msg_qdata():
+    command = b"qdata"
+
+    def __init__(self):
+        self.quorum_type = 0
+        self.quorum_hash = 0
+        self.data_mask = 0
+        self.protx_hash = 0
+        self.error = 0
+        self.quorum_vvec = list()
+        self.enc_contributions = list()
+
+    def deserialize(self, f):
+        self.quorum_type = struct.unpack("<B", f.read(1))[0]
+        self.quorum_hash = deser_uint256(f)
+        self.data_mask = struct.unpack("<H", f.read(2))[0]
+        self.protx_hash = deser_uint256(f)
+        self.error = struct.unpack("<B", f.read(1))[0]
+        if self.error == 0:
+            if self.data_mask & 0x01:
+                self.quorum_vvec = deser_vector(f, CBLSPublicKey)
+            if self.data_mask & 0x02:
+                self.enc_contributions = deser_vector(f, CBLSIESEncryptedSecretKey)
+
+    def serialize(self):
+        r = b""
+        r += struct.pack("<B", self.quorum_type)
+        r += ser_uint256(self.quorum_hash)
+        r += struct.pack("<H", self.data_mask)
+        r += ser_uint256(self.protx_hash)
+        r += struct.pack("<B", self.error)
+        if self.error == 0:
+            if self.data_mask & 0x01:
+                r += ser_vector(self.quorum_vvec)
+            if self.data_mask & 0x02:
+                r += ser_vector(self.enc_contributions)
+        return r
+
+    def __repr__(self):
+        return "msg_qdata(error=%d, quorum_vvec=%d, enc_contributions=%d)" % (self.error, len(self.quorum_vvec),
+                                                                                          len(self.enc_contributions))

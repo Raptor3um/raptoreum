@@ -7,6 +7,8 @@
 
 #include <qt/guiutil.h>
 
+#include <uint256.h>
+
 #include <QWidget>
 #include <QKeyEvent>
 
@@ -100,7 +102,7 @@ private Q_SLOTS:
     void copyTxPlainText();
     void openThirdPartyTxUrl(QString url);
     void updateWatchOnlyColumn(bool fHaveWatchOnly);
-    void updatePrivateSendVisibility();
+    void updateCoinJoinVisibility();
     void abandonTx();
 
 Q_SIGNALS:
@@ -120,6 +122,7 @@ public Q_SLOTS:
     void changedSearch();
     void exportClicked();
     void focusTransaction(const QModelIndex&);
+    void focusTransaction(const uint256& txid);
     void computeSum();
 };
 

@@ -33,10 +33,8 @@ ReceiveCoinsDialog::ReceiveCoinsDialog(QWidget* parent) :
                       ui->label_3}, GUIUtil::FontWeight::Normal, 15);
     GUIUtil::updateFonts();
 
-#if QT_VERSION >= 0x040700
     ui->reqLabel->setPlaceholderText(tr("Enter a label to associate with the new receiving address"));
     ui->reqMessage->setPlaceholderText(tr("Enter a message to attach to the payment request"));
-#endif
 
     // context menu actions
     QAction *copyURIAction = new QAction(tr("Copy URI"), this);
@@ -135,7 +133,7 @@ void ReceiveCoinsDialog::on_receiveButton_clicked()
         ui->reqAmount->value(), ui->reqMessage->text());
     ReceiveRequestDialog *dialog = new ReceiveRequestDialog(this);
     dialog->setAttribute(Qt::WA_DeleteOnClose);
-    dialog->setModel(model->getOptionsModel());
+    dialog->setModel(model);
     dialog->setInfo(info);
     dialog->show();
     clear();
@@ -148,7 +146,7 @@ void ReceiveCoinsDialog::on_recentRequestsView_doubleClicked(const QModelIndex &
 {
     const RecentRequestsTableModel *submodel = model->getRecentRequestsTableModel();
     ReceiveRequestDialog *dialog = new ReceiveRequestDialog(this);
-    dialog->setModel(model->getOptionsModel());
+    dialog->setModel(model);
     dialog->setInfo(submodel->entry(index.row()).recipient);
     dialog->setAttribute(Qt::WA_DeleteOnClose);
     dialog->show();

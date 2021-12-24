@@ -29,12 +29,12 @@ ThresholdState AbstractThresholdConditionChecker::GetStateFor(const CBlockIndex*
     while (cache.count(pindexPrev) == 0) {
         if (pindexPrev == nullptr) {
             // The genesis block is by definition defined.
-            cache[pindexPrev] = THRESHOLD_DEFINED;
+            cache[pindexPrev] = ThresholdState::DEFINED;
             break;
         }
         if (pindexPrev->GetMedianTimePast() < nTimeStart) {
             // Optimization: don't recompute down further, as we know every earlier block will be before the start time
-            cache[pindexPrev] = THRESHOLD_DEFINED;
+            cache[pindexPrev] = ThresholdState::DEFINED;
             break;
         }
         vToCompute.push_back(pindexPrev);
@@ -47,7 +47,7 @@ ThresholdState AbstractThresholdConditionChecker::GetStateFor(const CBlockIndex*
 
     int nStartHeight{std::numeric_limits<int>::max()};
     for (const auto& pair : cache) {
-        if (pair.second == THRESHOLD_STARTED && nStartHeight > pair.first->nHeight + 1) {
+        if (pair.second == ThresholdState::STARTED && nStartHeight > pair.first->nHeight + 1) {
             nStartHeight = pair.first->nHeight + 1;
         }
     }
@@ -59,18 +59,18 @@ ThresholdState AbstractThresholdConditionChecker::GetStateFor(const CBlockIndex*
         vToCompute.pop_back();
 
         switch (state) {
-            case THRESHOLD_DEFINED: {
+            case ThresholdState::DEFINED: {
                 if (pindexPrev->GetMedianTimePast() >= nTimeTimeout) {
-                    stateNext = THRESHOLD_FAILED;
+                    stateNext = ThresholdState::FAILED;
                 } else if (pindexPrev->GetMedianTimePast() >= nTimeStart) {
-                    stateNext = THRESHOLD_STARTED;
+                    stateNext = ThresholdState::STARTED;
                     nStartHeight = pindexPrev->nHeight + 1;
                 }
                 break;
             }
-            case THRESHOLD_STARTED: {
+            case ThresholdState::STARTED: {
                 if (pindexPrev->GetMedianTimePast() >= nTimeTimeout) {
-                    stateNext = THRESHOLD_FAILED;
+                    stateNext = ThresholdState::FAILED;
                     break;
                 }
                 // We need to count
@@ -85,17 +85,17 @@ ThresholdState AbstractThresholdConditionChecker::GetStateFor(const CBlockIndex*
                 assert(nStartHeight > 0 && nStartHeight < std::numeric_limits<int>::max());
                 int nAttempt = (pindexCount->nHeight + 1 - nStartHeight) / nPeriod;
                 if (count >= Threshold(params, nAttempt)) {
-                    stateNext = THRESHOLD_LOCKED_IN;
+                    stateNext = ThresholdState::LOCKED_IN;
                 }
                 break;
             }
-            case THRESHOLD_LOCKED_IN: {
+            case ThresholdState::LOCKED_IN: {
                 // Always progresses into ACTIVE.
-                stateNext = THRESHOLD_ACTIVE;
+                stateNext = ThresholdState::ACTIVE;
                 break;
             }
-            case THRESHOLD_FAILED:
-            case THRESHOLD_ACTIVE: {
+            case ThresholdState::FAILED:
+            case ThresholdState::ACTIVE: {
                 // Nothing happens, these are terminal states.
                 break;
             }
@@ -124,7 +124,7 @@ BIP9Stats AbstractThresholdConditionChecker::GetStateStatisticsFor(const CBlockI
     // Re-calculate current threshold
     int nAttempt{0};
     const ThresholdState state = GetStateFor(pindexEndOfPrevPeriod, params, cache);
-    if (state == THRESHOLD_STARTED) {
+    if (state == ThresholdState::STARTED) {
         int nStartHeight = GetStateSinceHeightFor(pindexEndOfPrevPeriod, params, cache);
         nAttempt = (pindexEndOfPrevPeriod->nHeight + 1 - nStartHeight)/stats.period;
     }
@@ -150,7 +150,7 @@ int AbstractThresholdConditionChecker::GetStateSinceHeightFor(const CBlockIndex*
     const ThresholdState initialState = GetStateFor(pindexPrev, params, cache);
 
     // BIP 9 about state DEFINED: "The genesis block is by definition in this state for each deployment."
-    if (initialState == THRESHOLD_DEFINED) {
+    if (initialState == ThresholdState::DEFINED) {
         return 0;
     }
 

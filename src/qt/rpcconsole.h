@@ -11,19 +11,24 @@
 
 #include <net.h>
 
-#include <QButtonGroup>
 #include <QWidget>
 #include <QCompleter>
 #include <QThread>
 
 class ClientModel;
 class RPCTimerInterface;
+class WalletModel;
+
+namespace interfaces {
+    class Node;
+}
 
 namespace Ui {
     class RPCConsole;
 }
 
 QT_BEGIN_NAMESPACE
+class QButtonGroup;
 class QMenu;
 class QItemSelection;
 QT_END_NAMESPACE
@@ -34,15 +39,17 @@ class RPCConsole: public QWidget
     Q_OBJECT
 
 public:
-    explicit RPCConsole(QWidget* parent, Qt::WindowFlags flags);
+    explicit RPCConsole(interfaces::Node& node, QWidget* parent, Qt::WindowFlags flags);
     ~RPCConsole();
 
-    static bool RPCParseCommandLine(std::string &strResult, const std::string &strCommand, bool fExecute, std::string * const pstrFilteredOut = nullptr);
-    static bool RPCExecuteCommandLine(std::string &strResult, const std::string &strCommand, std::string * const pstrFilteredOut = nullptr) {
-        return RPCParseCommandLine(strResult, strCommand, true, pstrFilteredOut);
+    static bool RPCParseCommandLine(interfaces::Node* node, std::string &strResult, const std::string &strCommand, bool fExecute, std::string * const pstrFilteredOut = nullptr, const std::string *walletID = nullptr);
+    static bool RPCExecuteCommandLine(interfaces::Node& node, std::string &strResult, const std::string &strCommand, std::string * const pstrFilteredOut = nullptr, const std::string *walletID = nullptr) {
+        return RPCParseCommandLine(&node, strResult, strCommand, true, pstrFilteredOut, walletID);
     }
 
     void setClientModel(ClientModel *model);
+    void addWallet(WalletModel * const walletModel);
+    void removeWallet(WalletModel* const walletModel);
 
     enum MessageClass {
         MC_ERROR,
@@ -94,7 +101,8 @@ public Q_SLOTS:
 
     /** Wallet repair options */
     void walletSalvage();
-    void walletRescan();
+    void walletRescan1();
+    void walletRescan2();
     void walletZaptxes1();
     void walletZaptxes2();
     void walletUpgrade();
@@ -136,7 +144,7 @@ public Q_SLOTS:
 Q_SIGNALS:
     // For RPC command executor
     void stopExecutor();
-    void cmdRequest(const QString &command);
+    void cmdRequest(const QString &command, const QString &walletID);
     /** Get restart command-line parameters and handle restart */
     void handleRestart(QStringList args);
 
@@ -149,6 +157,8 @@ private:
     void updateNodeDetail(const CNodeCombinedStats *stats);
     /** Set required icons for buttons inside the dialog */
     void setButtonIcons();
+    /** Reload some themes related widgets */
+    void reloadThemedWidgets();
 
     enum ColumnWidths
     {
@@ -160,8 +170,9 @@ private:
 
     };
 
+    interfaces::Node& m_node;
     Ui::RPCConsole *ui;
-    QButtonGroup pageButtons;
+    QButtonGroup* pageButtons;
     ClientModel *clientModel;
     QStringList history;
     int historyPtr;
@@ -173,6 +184,7 @@ private:
     int consoleFontSize;
     QCompleter *autoCompleter;
     QThread thread;
+    QString m_last_wallet_id;
 
     /** Update UI with latest network info from model. */
     void updateNetworkState();

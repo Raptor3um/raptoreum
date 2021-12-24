@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef WALLETINITINTERFACE_H
-#define WALLETINITINTERFACE_H
+#ifndef BITCOIN_WALLETINITINTERFACE_H
+#define BITCOIN_WALLETINITINTERFACE_H
 
 #include <string>
 
@@ -13,31 +13,31 @@ class CRPCTable;
 class WalletInitInterface {
 public:
     /** Get wallet help string */
-    virtual std::string GetHelpString(bool showDebug) = 0;
+    virtual void AddWalletOptions() const = 0;
     /** Check wallet parameter interaction */
-    virtual bool ParameterInteraction() = 0;
+    virtual bool ParameterInteraction() const = 0;
     /** Register wallet RPC*/
-    virtual void RegisterRPC(CRPCTable &) = 0;
+    virtual void RegisterRPC(CRPCTable &) const = 0;
     /** Verify wallets */
-    virtual bool Verify() = 0;
+    virtual bool Verify() const = 0;
     /** Open wallets*/
-    virtual bool Open() = 0;
+    virtual bool Open() const = 0;
     /** Start wallets*/
-    virtual void Start(CScheduler& scheduler) = 0;
+    virtual void Start(CScheduler& scheduler) const = 0;
     /** Flush Wallets*/
-    virtual void Flush() = 0;
+    virtual void Flush() const = 0;
     /** Stop Wallets*/
-    virtual void Stop() = 0;
+    virtual void Stop() const = 0;
     /** Close wallets */
-    virtual void Close() = 0;
+    virtual void Close() const = 0;
 
     // Dash Specific WalletInitInterface
-    virtual void AutoLockSmartnodeCollaterals() = 0;
-    virtual void InitPrivateSendSettings() = 0;
-    virtual void InitKeePass() = 0;
-    virtual bool InitAutoBackup() = 0;
+    virtual void AutoLockMasternodeCollaterals() const = 0;
+    virtual void InitCoinJoinSettings() const = 0;
+    virtual void InitKeePass() const = 0;
+    virtual bool InitAutoBackup() const = 0;
 
     virtual ~WalletInitInterface() {}
 };
 
-#endif // WALLETINITINTERFACE_H
+#endif // BITCOIN_WALLETINITINTERFACE_H

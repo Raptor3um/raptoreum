@@ -34,6 +34,7 @@ static const bool DEFAULT_FLUSHWALLET = true;
 class CAccount;
 class CAccountingEntry;
 struct CBlockLocator;
+class CGovernanceObject;
 class CKeyPool;
 class CMasterKey;
 class CScript;
@@ -46,14 +47,14 @@ class uint256;
 using WalletDatabase = BerkeleyDatabase;
 
 /** Error statuses for the wallet database */
-enum DBErrors
+enum class DBErrors
 {
-    DB_LOAD_OK,
-    DB_CORRUPT,
-    DB_NONCRITICAL_ERROR,
-    DB_TOO_NEW,
-    DB_LOAD_FAIL,
-    DB_NEED_REWRITE
+    LOAD_OK,
+    CORRUPT,
+    NONCRITICAL_ERROR,
+    TOO_NEW,
+    LOAD_FAIL,
+    NEED_REWRITE
 };
 
 class CKeyMetadata
@@ -134,6 +135,8 @@ public:
     bool WriteTx(const CWalletTx& wtx);
     bool EraseTx(uint256 hash);
 
+    bool WriteKeyMeta(const CPubKey& vchPubKey, const CKeyMetadata &keyMeta);
+
     bool WriteKey(const CPubKey& vchPubKey, const CPrivKey& vchPrivKey, const CKeyMetadata &keyMeta);
     bool WriteCryptedKey(const CPubKey& vchPubKey, const std::vector<unsigned char>& vchCryptedSecret, const CKeyMetadata &keyMeta);
     bool WriteMasterKey(unsigned int nID, const CMasterKey& kMasterKey);
@@ -159,6 +162,13 @@ public:
     bool WriteAccountingEntry(const uint64_t nAccEntryNum, const CAccountingEntry& acentry);
     bool ReadAccount(const std::string& strAccount, CAccount& account);
     bool WriteAccount(const std::string& strAccount, const CAccount& account);
+    bool EraseAccount(const std::string& strAccount);
+
+    bool ReadCoinJoinSalt(uint256& salt, bool fLegacy = false);
+    bool WriteCoinJoinSalt(const uint256& salt);
+
+    /** Write a CGovernanceObject to the database */
+    bool WriteGovernanceObject(const CGovernanceObject& obj);
 
     bool ReadPrivateSendSalt(uint256& salt);
     bool WritePrivateSendSalt(const uint256& salt);

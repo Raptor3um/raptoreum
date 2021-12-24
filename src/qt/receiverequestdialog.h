@@ -12,8 +12,6 @@
 #include <QLabel>
 #include <QPainter>
 
-class OptionsModel;
-
 namespace Ui {
     class ReceiveRequestDialog;
 }
@@ -53,7 +51,7 @@ public:
     explicit ReceiveRequestDialog(QWidget *parent = 0);
     ~ReceiveRequestDialog();
 
-    void setModel(OptionsModel *model);
+    void setModel(WalletModel *model);
     void setInfo(const SendCoinsRecipient &info);
     void set_Info(const SendFuturesRecipient &_info);
 
@@ -65,7 +63,7 @@ private Q_SLOTS:
 
 private:
     Ui::ReceiveRequestDialog *ui;
-    OptionsModel *model;
+    WalletModel *model;
     SendCoinsRecipient info;
     SendFuturesRecipient _info;
 };

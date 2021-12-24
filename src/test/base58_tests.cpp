@@ -2,16 +2,16 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-
 #include <test/data/base58_encode_decode.json.h>
 
 #include <base58.h>
 #include <test/test_raptoreum.h>
 #include <utilstrencodings.h>
 
+#include <univalue.h>
+
 #include <boost/test/unit_test.hpp>
 
-#include <univalue.h>
 
 extern UniValue read_json(const std::string& jsondata);
 
@@ -66,48 +66,5 @@ BOOST_AUTO_TEST_CASE(base58_DecodeBase58)
     BOOST_CHECK_EQUAL_COLLECTIONS(result.begin(), result.end(), expected.begin(), expected.end());
 }
 
-// Visitor to check address type
-class TestAddrTypeVisitor : public boost::static_visitor<bool>
-{
-private:
-    std::string exp_addrType;
-public:
-    explicit TestAddrTypeVisitor(const std::string &_exp_addrType) : exp_addrType(_exp_addrType) { }
-    bool operator()(const CKeyID &id) const
-    {
-        return (exp_addrType == "pubkey");
-    }
-    bool operator()(const CScriptID &id) const
-    {
-        return (exp_addrType == "script");
-    }
-    bool operator()(const CNoDestination &no) const
-    {
-        return (exp_addrType == "none");
-    }
-};
-
-// Visitor to check address payload
-class TestPayloadVisitor : public boost::static_visitor<bool>
-{
-private:
-    std::vector<unsigned char> exp_payload;
-public:
-    explicit TestPayloadVisitor(std::vector<unsigned char> &_exp_payload) : exp_payload(_exp_payload) { }
-    bool operator()(const CKeyID &id) const
-    {
-        uint160 exp_key(exp_payload);
-        return exp_key == id;
-    }
-    bool operator()(const CScriptID &id) const
-    {
-        uint160 exp_key(exp_payload);
-        return exp_key == id;
-    }
-    bool operator()(const CNoDestination &no) const
-    {
-        return exp_payload.size() == 0;
-    }
-};
-
 BOOST_AUTO_TEST_SUITE_END()
+

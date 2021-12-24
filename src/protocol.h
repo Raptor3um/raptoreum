@@ -48,10 +48,10 @@ public:
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action)
     {
-        READWRITE(FLATDATA(pchMessageStart));
-        READWRITE(FLATDATA(pchCommand));
+        READWRITE(pchMessageStart);
+        READWRITE(pchCommand);
         READWRITE(nMessageSize);
-        READWRITE(FLATDATA(pchChecksum));
+        READWRITE(pchChecksum);
     }
 
     char pchMessageStart[MESSAGE_START_SIZE];
@@ -268,6 +268,8 @@ extern const char *QGETSIGSHARES;
 extern const char *QBSIGSHARES;
 extern const char *QSIGREC;
 extern const char *QSIGSHARE;
+extern const char* QGETDATA;
+extern const char* QDATA;
 extern const char *CLSIG;
 extern const char *ISLOCK;
 extern const char *MNAUTH;
@@ -378,8 +380,8 @@ public:
             READWRITE(nTime);
         uint64_t nServicesInt = nServices;
         READWRITE(nServicesInt);
-        nServices = (ServiceFlags)nServicesInt;
-        READWRITE(*(CService*)this);
+        nServices = static_cast<ServiceFlags>(nServicesInt);
+        READWRITEAS(CService, *this);
     }
 
     // TODO: make private (improves encapsulation)

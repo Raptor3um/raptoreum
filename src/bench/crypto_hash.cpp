@@ -91,10 +91,9 @@ static void HASH_SHA512(benchmark::State& state)
 static void HASH_SipHash_0032b(benchmark::State& state)
 {
     uint256 x;
+    uint64_t k1 = 0;
     while (state.KeepRunning()) {
-        for (int i = 0; i < 1000000; i++) {
-            *((uint64_t*)x.begin()) = SipHashUint256(0, i, x);
-        }
+        *((uint64_t*)x.begin()) = SipHashUint256(0, ++k1, x);
     }
 }
 
@@ -103,9 +102,7 @@ static void FastRandom_32bit(benchmark::State& state)
     FastRandomContext rng(true);
     uint32_t x = 0;
     while (state.KeepRunning()) {
-        for (int i = 0; i < 1000000; i++) {
-            x += rng.rand32();
-        }
+        x += rng.rand32();
     }
 }
 
@@ -114,9 +111,7 @@ static void FastRandom_1bit(benchmark::State& state)
     FastRandomContext rng(true);
     uint32_t x = 0;
     while (state.KeepRunning()) {
-        for (int i = 0; i < 1000000; i++) {
-            x += rng.randbool();
-        }
+        x += rng.randbool();
     }
 }
 

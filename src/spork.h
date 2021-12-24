@@ -1,10 +1,10 @@
-// Copyright (c) 2014-2019 The Dash Core developers
+// Copyright (c) 2014-2021 The Dash Core developers
 // Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef SPORK_H
-#define SPORK_H
+#ifndef BITCOIN_SPORK_H
+#define BITCOIN_SPORK_H
 
 #include <hash.h>
 #include <net.h>
@@ -24,12 +24,11 @@ class CSporkManager;
 enum SporkId : int32_t {
     SPORK_2_INSTANTSEND_ENABLED                            = 10001,
     SPORK_3_INSTANTSEND_BLOCK_FILTERING                    = 10002,
-    SPORK_6_NEW_SIGS                                       = 10005,
     SPORK_9_SUPERBLOCKS_ENABLED                            = 10008,
     SPORK_17_QUORUM_DKG_ENABLED                            = 10016,
     SPORK_19_CHAINLOCKS_ENABLED                            = 10018,
-	  SPORK_21_LOW_LLMQ_PARAMS                        	     = 10020,
-	  SPORK_22_SPEICAL_TX_FEE                                = 10022,
+	SPORK_21_LOW_LLMQ_PARAMS                        	     = 10020,
+	SPORK_22_SPEICAL_TX_FEE                                = 10022,
     SPORK_23_QUORUM_ALL_CONNECTED                          = 10023,
     SPORK_24_PS_MORE_PARTICIPANTS                          = 10024,
     SPORK_INVALID                                          = -1,
@@ -123,13 +122,13 @@ public:
     /**
      * Sign will sign the spork message with the given key.
      */
-    bool Sign(const CKey& key, bool fSporkSixActive);
+    bool Sign(const CKey& key);
 
     /**
      * CheckSignature will ensure the spork signature matches the provided public
      * key hash.
      */
-    bool CheckSignature(const CKeyID& pubKeyId, bool fSporkSixActive) const;
+    bool CheckSignature(const CKeyID& pubKeyId) const;
 
     /**
      * GetSignerKeyID is used to recover the spork address of the key used to
@@ -138,12 +137,12 @@ public:
      * This method was introduced along with the multi-signer sporks feature,
      * in order to identify which spork key signed this message.
      */
-    bool GetSignerKeyID(CKeyID& retKeyidSporkSigner, bool fSporkSixActive);
+    bool GetSignerKeyID(CKeyID& retKeyidSporkSigner) const;
 
     /**
      * Relay is used to send this spork message to other peers.
      */
-    void Relay(CConnman& connman);
+    void Relay(CConnman& connman) const;
 };
 
 /**
@@ -158,6 +157,9 @@ private:
 
     std::unordered_map<SporkId, CSporkDef*> sporkDefsById;
     std::unordered_map<std::string, CSporkDef*> sporkDefsByName;
+
+    mutable std::unordered_map<SporkId, bool> mapSporksCachedActive;
+    mutable std::unordered_map<SporkId, int64_t> mapSporksCachedValues;
 
     mutable CCriticalSection cs;
     std::unordered_map<uint256, CSporkMessage> mapSporksByHash;
@@ -193,7 +195,8 @@ public:
         }
         // we don't serialize pubkey ids because pubkeys should be
         // hardcoded or be setted with cmdline or options, should
-        // not reuse pubkeys from previous raptoreumd run
+        // not reuse pubkeys from previous dashd run
+        LOCK(cs);
         READWRITE(mapSporksByHash);
         READWRITE(mapSporksActive);
         // we don't serialize private key to prevent its leakage
@@ -241,23 +244,23 @@ public:
      * instead, and therefore this method doesn't make sense and should not be
      * used.
      */
-    bool IsSporkActive(SporkId nSporkID);
+    bool IsSporkActive(SporkId nSporkID) const;
 
     /**
      * GetSporkValue returns the spork value given a Spork ID. If no active spork
      * message has yet been received by the node, it returns the default value.
      */
-    int64_t GetSporkValue(SporkId nSporkID);
+    int64_t GetSporkValue(SporkId nSporkID) const;
 
     /**
      * GetSporkIDByName returns the internal Spork ID given the spork name.
      */
-    SporkId GetSporkIDByName(const std::string& strName);
+    SporkId GetSporkIDByName(const std::string& strName) const;
 
     /**
      * GetSporkNameByID returns the spork name as a string, given a Spork ID.
      */
-    std::string GetSporkNameByID(SporkId nSporkID);
+    std::string GetSporkNameByID(SporkId nSporkID) const;
 
     /**
      * GetSporkByHash returns a spork message given a hash of the spork message.
@@ -267,7 +270,7 @@ public:
      * hash-based index of sporks for this reason, and this function is the access
      * point into that index.
      */
-    bool GetSporkByHash(const uint256& hash, CSporkMessage &sporkRet);
+    bool GetSporkByHash(const uint256& hash, CSporkMessage &sporkRet) const;
 
     /**
      * SetSporkAddress is used to set a public key ID which will be used to
@@ -302,4 +305,4 @@ public:
     std::string ToString() const;
 };
 
-#endif
+#endif // BITCOIN_SPORK_H

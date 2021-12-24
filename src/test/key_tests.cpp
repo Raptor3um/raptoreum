@@ -32,7 +32,7 @@ BOOST_FIXTURE_TEST_SUITE(key_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(key_test1)
 {
-    CKey key1 = DecodeSecret(strSecret1);
+    CKey key1  = DecodeSecret(strSecret1);
     BOOST_CHECK(key1.IsValid() && !key1.IsCompressed());
     CKey key2  = DecodeSecret(strSecret2);
     BOOST_CHECK(key2.IsValid() && !key2.IsCompressed());
@@ -42,6 +42,7 @@ BOOST_AUTO_TEST_CASE(key_test1)
     BOOST_CHECK(key2C.IsValid() && key2C.IsCompressed());
     CKey bad_key = DecodeSecret(strAddressBad);
     BOOST_CHECK(!bad_key.IsValid());
+
     CPubKey pubkey1  = key1. GetPubKey();
     CPubKey pubkey2  = key2. GetPubKey();
     CPubKey pubkey1C = key1C.GetPubKey();
