@@ -522,6 +522,9 @@ bool CWallet::RemoveWatchOnly(const CScript &dest)
     if (!WalletBatch(*database).EraseWatchOnly(dest))
         return false;
 
+    // Full refresh of UI because many transactions may have been deleted:
+    NotifyTransactionChanged(this, uint256(), CT_UPDATED);
+
     return true;
 }
 
