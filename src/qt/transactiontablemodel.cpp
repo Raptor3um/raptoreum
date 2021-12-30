@@ -92,6 +92,14 @@ public:
     {
         qDebug() << "TransactionTablePriv::updateWallet: " + QString::fromStdString(hash.ToString()) + " " + QString::number(status);
 
+        if (hash == uint256() && status == CT_UPDATED)
+        {
+            parent->beginResetModel();
+            refreshWallet();
+            parent->endResetModel();
+            return;
+        }
+
         // Find bounds of this transaction in model
         QList<TransactionRecord>::iterator lower = qLowerBound(
             cachedWallet.begin(), cachedWallet.end(), hash, TxLessThan());
@@ -778,9 +786,7 @@ static std::vector< TransactionNotification > vQueueNotifications;
 
 static void NotifyTransactionChanged(TransactionTableModel *ttm, const uint256 &hash, ChangeType status)
 {
-    // Find transaction in wallet
-    // Determine whether to show transaction or not (determine this here so that no relocking is needed in GUI thread)
-    bool showTransaction = TransactionRecord::showTransaction();
+    bool showTransaction = true;
 
     TransactionNotification notification(hash, status, showTransaction);
 
