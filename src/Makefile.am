@@ -370,7 +370,9 @@ libraptoreum_server_a_SOURCES = \
   rpc/server.cpp \
   rpc/coinjoin.cpp \
   rpc/util.cpp \
+  rpc/rpcfuture.cpp \
   script/sigcache.cpp \
+  script/ismine.cpp \
   spork.cpp \
   statsd_client.cpp \
   timedata.cpp \

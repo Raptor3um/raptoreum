@@ -568,7 +568,7 @@ UniValue CRPCTable::execute(const JSONRPCRequest &request) const
         throw JSONRPCError(RPC_METHOD_NOT_FOUND, "Method not found");
 
     // Before executing the RPC Command, filter commands from platform rpc user
-    if (fMasternodeMode && request.authUser == gArgs.GetArg("-platform-user", defaultPlatformUser)) {
+    if (fSmartnodeMode && request.authUser == gArgs.GetArg("-platform-user", defaultPlatformUser)) {
 
         auto it = mapPlatformRestrictions.equal_range(request.strMethod);
 

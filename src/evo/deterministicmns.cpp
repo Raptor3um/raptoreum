@@ -334,7 +334,7 @@ void CDeterministicMNList::PoSePunish(const uint256& proTxHash, int penalty, boo
 
     auto dmn = GetMN(proTxHash);
     if (!dmn) {
-        throw(std::runtime_error(strprintf("%s: Can't find a masternode with proTxHash=%s", __func__, proTxHash.ToString())));
+        throw(std::runtime_error(strprintf("%s: Can't find a smartnode with proTxHash=%s", __func__, proTxHash.ToString())));
     }
 
     int maxPenalty = CalcMaxPoSePenalty();
@@ -362,7 +362,7 @@ void CDeterministicMNList::PoSeDecrease(const uint256& proTxHash)
 {
     auto dmn = GetMN(proTxHash);
     if (!dmn) {
-        throw(std::runtime_error(strprintf("%s: Can't find a masternode with proTxHash=%s", __func__, proTxHash.ToString())));
+        throw(std::runtime_error(strprintf("%s: Can't find a smartnode with proTxHash=%s", __func__, proTxHash.ToString())));
     }
     assert(dmn->pdmnState->nPoSePenalty > 0 && !dmn->pdmnState->IsBanned());
 
@@ -439,7 +439,7 @@ CDeterministicMNList CDeterministicMNList::ApplyDiff(const CBlockIndex* pindex, 
     for (const auto& id : diff.removedMns) {
         auto dmn = result.GetMNByInternalId(id);
         if (!dmn) {
-            throw(std::runtime_error(strprintf("%s: can't find a removed masternode, id=%d", __func__, id)));
+            throw(std::runtime_error(strprintf("%s: can't find a removed smartnode, id=%d", __func__, id)));
         }
         result.RemoveMN(dmn->proTxHash);
     }
@@ -459,10 +459,10 @@ void CDeterministicMNList::AddMN(const CDeterministicMNCPtr& dmn, bool fBumpTota
     assert(dmn != nullptr);
 
     if (mnMap.find(dmn->proTxHash)) {
-        throw(std::runtime_error(strprintf("%s: Can't add a masternode with a duplicate proTxHash=%s", __func__, dmn->proTxHash.ToString())));
+        throw(std::runtime_error(strprintf("%s: Can't add a smartnode with a duplicate proTxHash=%s", __func__, dmn->proTxHash.ToString())));
     }
     if (mnInternalIdMap.find(dmn->GetInternalId())) {
-        throw(std::runtime_error(strprintf("%s: Can't add a masternode with a duplicate internalId=%d", __func__, dmn->GetInternalId())));
+        throw(std::runtime_error(strprintf("%s: Can't add a smartnode with a duplicate internalId=%d", __func__, dmn->GetInternalId())));
     }
 
     // All mnUniquePropertyMap's updates must be atomic.
@@ -471,22 +471,22 @@ void CDeterministicMNList::AddMN(const CDeterministicMNCPtr& dmn, bool fBumpTota
 
     if (!AddUniqueProperty(dmn, dmn->collateralOutpoint)) {
         mnUniquePropertyMap = mnUniquePropertyMapSaved;
-        throw(std::runtime_error(strprintf("%s: Can't add a masternode %s with a duplicate collateralOutpoint=%s", __func__,
+        throw(std::runtime_error(strprintf("%s: Can't add a smartnode %s with a duplicate collateralOutpoint=%s", __func__,
                 dmn->proTxHash.ToString(), dmn->collateralOutpoint.ToStringShort())));
     }
     if (dmn->pdmnState->addr != CService() && !AddUniqueProperty(dmn, dmn->pdmnState->addr)) {
         mnUniquePropertyMap = mnUniquePropertyMapSaved;
-        throw(std::runtime_error(strprintf("%s: Can't add a masternode %s with a duplicate address=%s", __func__,
+        throw(std::runtime_error(strprintf("%s: Can't add a smartnode %s with a duplicate address=%s", __func__,
                 dmn->proTxHash.ToString(), dmn->pdmnState->addr.ToStringIPPort(false))));
     }
     if (!AddUniqueProperty(dmn, dmn->pdmnState->keyIDOwner)) {
         mnUniquePropertyMap = mnUniquePropertyMapSaved;
-        throw(std::runtime_error(strprintf("%s: Can't add a masternode %s with a duplicate keyIDOwner=%s", __func__,
+        throw(std::runtime_error(strprintf("%s: Can't add a smartnode %s with a duplicate keyIDOwner=%s", __func__,
                 dmn->proTxHash.ToString(), EncodeDestination(dmn->pdmnState->keyIDOwner))));
     }
     if (dmn->pdmnState->pubKeyOperator.Get().IsValid() && !AddUniqueProperty(dmn, dmn->pdmnState->pubKeyOperator)) {
         mnUniquePropertyMap = mnUniquePropertyMapSaved;
-        throw(std::runtime_error(strprintf("%s: Can't add a masternode %s with a duplicate pubKeyOperator=%s", __func__,
+        throw(std::runtime_error(strprintf("%s: Can't add a smartnode %s with a duplicate pubKeyOperator=%s", __func__,
                 dmn->proTxHash.ToString(), dmn->pdmnState->pubKeyOperator.Get().ToString())));
     }
 
@@ -512,17 +512,17 @@ void CDeterministicMNList::UpdateMN(const CDeterministicMNCPtr& oldDmn, const CD
 
     if (!UpdateUniqueProperty(dmn, oldState->addr, pdmnState->addr)) {
         mnUniquePropertyMap = mnUniquePropertyMapSaved;
-        throw(std::runtime_error(strprintf("%s: Can't update a masternode %s with a duplicate address=%s", __func__,
+        throw(std::runtime_error(strprintf("%s: Can't update a smartnode %s with a duplicate address=%s", __func__,
                 oldDmn->proTxHash.ToString(), pdmnState->addr.ToStringIPPort(false))));
     }
     if (!UpdateUniqueProperty(dmn, oldState->keyIDOwner, pdmnState->keyIDOwner)) {
         mnUniquePropertyMap = mnUniquePropertyMapSaved;
-        throw(std::runtime_error(strprintf("%s: Can't update a masternode %s with a duplicate keyIDOwner=%s", __func__,
+        throw(std::runtime_error(strprintf("%s: Can't update a smartnode %s with a duplicate keyIDOwner=%s", __func__,
                 oldDmn->proTxHash.ToString(), EncodeDestination(pdmnState->keyIDOwner))));
     }
     if (!UpdateUniqueProperty(dmn, oldState->pubKeyOperator, pdmnState->pubKeyOperator)) {
         mnUniquePropertyMap = mnUniquePropertyMapSaved;
-        throw(std::runtime_error(strprintf("%s: Can't update a masternode %s with a duplicate pubKeyOperator=%s", __func__,
+        throw(std::runtime_error(strprintf("%s: Can't update a smartnode %s with a duplicate pubKeyOperator=%s", __func__,
                 oldDmn->proTxHash.ToString(), pdmnState->pubKeyOperator.Get().ToString())));
     }
 
@@ -533,7 +533,7 @@ void CDeterministicMNList::UpdateMN(const uint256& proTxHash, const CDeterminist
 {
     auto oldDmn = mnMap.find(proTxHash);
     if (!oldDmn) {
-        throw(std::runtime_error(strprintf("%s: Can't find a masternode with proTxHash=%s", __func__, proTxHash.ToString())));
+        throw(std::runtime_error(strprintf("%s: Can't find a smartnode with proTxHash=%s", __func__, proTxHash.ToString())));
     }
     UpdateMN(*oldDmn, pdmnState);
 }
@@ -551,7 +551,7 @@ void CDeterministicMNList::RemoveMN(const uint256& proTxHash)
 {
     auto dmn = GetMN(proTxHash);
     if (!dmn) {
-        throw(std::runtime_error(strprintf("%s: Can't find a masternode with proTxHash=%s", __func__, proTxHash.ToString())));
+        throw(std::runtime_error(strprintf("%s: Can't find a smartnode with proTxHash=%s", __func__, proTxHash.ToString())));
     }
 
     // All mnUniquePropertyMap's updates must be atomic.
@@ -560,22 +560,22 @@ void CDeterministicMNList::RemoveMN(const uint256& proTxHash)
 
     if (!DeleteUniqueProperty(dmn, dmn->collateralOutpoint)) {
         mnUniquePropertyMap = mnUniquePropertyMapSaved;
-        throw(std::runtime_error(strprintf("%s: Can't delete a masternode %s with a collateralOutpoint=%s", __func__,
+        throw(std::runtime_error(strprintf("%s: Can't delete a smartnode %s with a collateralOutpoint=%s", __func__,
                 proTxHash.ToString(), dmn->collateralOutpoint.ToStringShort())));
     }
     if (dmn->pdmnState->addr != CService() && !DeleteUniqueProperty(dmn, dmn->pdmnState->addr)) {
         mnUniquePropertyMap = mnUniquePropertyMapSaved;
-        throw(std::runtime_error(strprintf("%s: Can't delete a masternode %s with a address=%s", __func__,
+        throw(std::runtime_error(strprintf("%s: Can't delete a smartnode %s with a address=%s", __func__,
                 proTxHash.ToString(), dmn->pdmnState->addr.ToStringIPPort(false))));
     }
     if (!DeleteUniqueProperty(dmn, dmn->pdmnState->keyIDOwner)) {
         mnUniquePropertyMap = mnUniquePropertyMapSaved;
-        throw(std::runtime_error(strprintf("%s: Can't delete a masternode %s with a keyIDOwner=%s", __func__,
+        throw(std::runtime_error(strprintf("%s: Can't delete a smartnode %s with a keyIDOwner=%s", __func__,
                 proTxHash.ToString(), EncodeDestination(dmn->pdmnState->keyIDOwner))));
     }
     if (dmn->pdmnState->pubKeyOperator.Get().IsValid() && !DeleteUniqueProperty(dmn, dmn->pdmnState->pubKeyOperator)) {
         mnUniquePropertyMap = mnUniquePropertyMapSaved;
-        throw(std::runtime_error(strprintf("%s: Can't delete a masternode %s with a pubKeyOperator=%s", __func__,
+        throw(std::runtime_error(strprintf("%s: Can't delete a smartnode %s with a pubKeyOperator=%s", __func__,
                 proTxHash.ToString(), dmn->pdmnState->pubKeyOperator.Get().ToString())));
     }
 

@@ -17,6 +17,7 @@ namespace Consensus {
 enum DeploymentPos
 {
     DEPLOYMENT_TESTDUMMY,
+    DEPLOYMENT_V17, // Hard Fork v17
 
     // NOTE: Also add new deployments to VersionBitsDeploymentInfo in versionbits.cpp
     MAX_VERSION_BITS_DEPLOYMENTS
@@ -49,6 +50,7 @@ enum LLMQType : uint8_t
     LLMQ_50_60 = 1, // 50 members, 30 (60%) threshold, one per hour
     LLMQ_400_60 = 2, // 400 members, 240 (60%) threshold, one every 12 hours
     LLMQ_400_85 = 3, // 400 members, 340 (85%) threshold, one every 24 hours
+    LLMQ_100_67 = 4, // 100 members, 67 (67%) threshold, one per hour
 	// these are LLMQ set when network still young
 //	LLMQ_10_60 = 4, // 10 members, 6 (60%) threshold, one per hour
 //	LLMQ_40_60 = 5, // 40 members, 24 (60%) threshold, one every 12 hours
@@ -56,6 +58,7 @@ enum LLMQType : uint8_t
 
     // for testing only
     LLMQ_5_60 = 100, // 5 members, 3 (60%) threshold, one per hour. Params might be different when use -llmqtestparams
+    LLMQ_TEST_V17 = 101, // 3 members, 2 (66%) threshold, one per hour
 };
 
 // Configures a LLMQ and its DKG
@@ -199,6 +202,7 @@ struct Params {
     std::map<LLMQType, LLMQParams> llmqs;
     LLMQType llmqTypeChainLocks;
     LLMQType llmqTypeInstantSend{LLMQ_NONE};
+    LLMQType llmqTypePlatform{LLMQ_NONE};
 
     FounderPayment nFounderPayment;
     FutureRewardShare nFutureRewardShare;

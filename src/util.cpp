@@ -6,6 +6,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <util.h>
+#include <fs.h>
 
 #include <support/allocators/secure.h>
 #include <chainparamsbase.h>
@@ -76,6 +77,9 @@
 #include <malloc.h>
 #endif
 
+#include <boost/algorithm/string/join.hpp>
+#include <boost/algorithm/string/split.hpp>
+#include <boost/algorithm/string/classification.hpp>
 #include <boost/interprocess/sync/file_lock.hpp>
 #include <boost/program_options/detail/config_file.hpp>
 #include <boost/program_options/parsers.hpp>
@@ -83,7 +87,6 @@
 #include <openssl/crypto.h>
 #include <openssl/rand.h>
 #include <openssl/conf.h>
-#include <thread>
 
 // Application startup time (used for uptime calculation)
 const int64_t nStartupTime = GetTime();
@@ -425,7 +428,6 @@ void ArgsManager::WarnForSectionOnlyArgs()
     }
 }
 
->>>>>>> v0.16.x
 void ArgsManager::SelectConfigNetwork(const std::string& network)
 {
     m_network = network;
@@ -1165,6 +1167,19 @@ std::string CopyrightHolders(const std::string& strPrefix, unsigned int nStartYe
 int64_t GetStartupTime()
 {
     return nStartupTime;
+}
+
+void SetThreadPriority(int nPriority)
+{
+#ifdef WIN32
+    SetThreadPriority(GetCurrentThread(), nPriority);
+#else
+#ifdef PRIO_THREAD
+    setpriority(PRIO_THREAD, 0, nPriority);
+#else
+    setpriority(PRIO_PROCESS, 0, nPriority);
+#endif
+#endif
 }
 
 fs::path AbsPathForConfigVal(const fs::path& path, bool net_specific)

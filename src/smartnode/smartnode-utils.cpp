@@ -5,11 +5,11 @@
 
 #include <smartnode/smartnode-utils.h>
 
+#ifdef ENABLE_WALLET
+#include <coinjoin/coinjoin-client.h>
+#endif
 #include <init.h>
 #include <smartnode/smartnode-sync.h>
-#ifdef ENABLE_WALLET
-#include <privatesend/privatesend-client.h>
-#endif
 #include <validation.h>
 
 struct CompareScoreMN
@@ -25,13 +25,15 @@ void CSmartnodeUtils::ProcessSmartnodeConnections(CConnman& connman)
 {
     std::vector<CDeterministicMNCPtr> vecDmns; // will be empty when no wallet
 #ifdef ENABLE_WALLET
-    privateSendClient.GetMixingSmartnodesInfo(vecDmns);
+    for(const auto& pair : coinJoinClientManagers) {
+        pair.second->GetMixingSmartnodesInfo(vecDmns);
+    }
 #endif // ENABLE_WALLET
 
     // Don't disconnect smartnode connections when we have less then the desired amount of outbound nodes
     int nonSmartnodeCount = 0;
     connman.ForEachNode(CConnman::AllNodes, [&](CNode* pnode) {
-        if (!pnode->fInbound && !pnode->fFeeler && !pnode->m_manual_connection && !pnode->fSmartnode && !pnode->fSmartnodeProbe) {
+        if (!pnode->fInbound && !pnode->fFeeler && !pnode->m_manual_connection && !pnode->m_smartnode_connection && !pnode->m_smartnode_probe_connection) {
             nonSmartnodeCount++;
         }
     });
@@ -40,14 +42,14 @@ void CSmartnodeUtils::ProcessSmartnodeConnections(CConnman& connman)
     }
 
     connman.ForEachNode(CConnman::AllNodes, [&](CNode* pnode) {
-        // we're only disconnecting fSmartnode connections
-        if (!pnode->fSmartnode) return;
+        // we're only disconnecting m_smartnode_connection connections
+        if (!pnode->m_smartnode_connection) return;
         // we're only disconnecting outbound connections
         if (pnode->fInbound) return;
         // we're not disconnecting LLMQ connections
         if (connman.IsSmartnodeQuorumNode(pnode)) return;
         // we're not disconnecting smartnode probes for at least a few seconds
-        if (pnode->fSmartnodeProbe && GetSystemTimeInSeconds() - pnode->nTimeConnected < 5) return;
+        if (pnode->m_smartnode_probe_connection && GetSystemTimeInSeconds() - pnode->nTimeConnected < 5) return;
 
 #ifdef ENABLE_WALLET
         bool fFound = false;

@@ -3,8 +3,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_MASTERNODE_MASTERNODE_META_H
-#define BITCOIN_MASTERNODE_MASTERNODE_META_H
+#ifndef BITCOIN_SMARTNODE_MASTERNODE_META_H
+#define BITCOIN_SMARTNODE_MASTERNODE_META_H
 
 #include <serialize.h>
 
@@ -159,4 +159,4 @@ public:
 
 extern CSmartnodeMetaMan mmetaman;
 
-#endif // BITCOIN_MASTERNODE_MASTERNODE_META_H
+#endif // BITCOIN_SMARTNODE_MASTERNODE_META_H

@@ -1,5 +1,5 @@
-#ifndef BITCOIN_QT_MASTERNODELIST_H
-#define BITCOIN_QT_MASTERNODELIST_H
+#ifndef BITCOIN_QT_SMARTNODELIST_H
+#define BITCOIN_QT_SMARTNODELIST_H
 
 #include <primitives/transaction.h>
 #include <sync.h>
@@ -90,4 +90,4 @@ private Q_SLOTS:
     void handleSmartnodeListChanged();
     void updateDIP3ListScheduled();
 };
-#endif // BITCOIN_QT_MASTERNODELIST_H
+#endif // BITCOIN_QT_SMARTNODELIST_H

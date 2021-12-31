@@ -13,7 +13,7 @@
 #include <interfaces/handler.h>
 #include <interfaces/wallet.h>
 #include <llmq/quorums_instantsend.h>
-#include <masternode/masternode-sync.h>
+#include <smartnode/smartnode-sync.h>
 #include <net.h>
 #include <net_processing.h>
 #include <netaddress.h>
@@ -32,7 +32,7 @@
 #include <warnings.h>
 
 #if defined(HAVE_CONFIG_H)
-#include <config/dash-config.h>
+#include <config/raptoreum-config.h>
 #endif
 #ifdef ENABLE_WALLET
 #include <coinjoin/coinjoin-client-options.h>
@@ -71,20 +71,20 @@ public:
     }
 };
 
-class MasternodeSyncImpl : public Masternode::Sync
+class SmartnodeSyncImpl : public Smartnode::Sync
 {
 public:
     bool isSynced()
     {
-        return masternodeSync.IsSynced();
+        return smartnodeSync.IsSynced();
     }
     bool isBlockchainSynced()
     {
-        return masternodeSync.IsBlockchainSynced();
+        return smartnodeSync.IsBlockchainSynced();
     }
     std::string getSyncStatus()
     {
-        return masternodeSync.GetSyncStatus();
+        return smartnodeSync.GetSyncStatus();
     }
 };
 
@@ -155,7 +155,7 @@ class NodeImpl : public Node
 {
     EVOImpl m_evo;
     LLMQImpl m_llmq;
-    MasternodeSyncImpl m_masternodeSync;
+    SmartnodeSyncImpl m_smartnodeSync;
 #ifdef ENABLE_WALLET
     CoinJoinOptionsImpl m_coinjoin;
 #endif
@@ -366,7 +366,7 @@ class NodeImpl : public Node
     }
     EVO& evo() override { return m_evo; }
     LLMQ& llmq() override { return m_llmq; }
-    Masternode::Sync& masternodeSync() override { return m_masternodeSync; }
+    Smartnode::Sync& smartnodeSync() override { return m_smartnodeSync; }
 #ifdef ENABLE_WALLET
     CoinJoin::Options& coinJoinOptions() override { return m_coinjoin; }
 #endif
@@ -423,10 +423,10 @@ class NodeImpl : public Node
                     GuessVerificationProgress(Params().TxData(), block));
             }));
     }
-    std::unique_ptr<Handler> handleNotifyMasternodeListChanged(NotifyMasternodeListChangedFn fn) override
+    std::unique_ptr<Handler> handleNotifySmartnodeListChanged(NotifySmartnodeListChangedFn fn) override
     {
         return MakeHandler(
-            ::uiInterface.NotifyMasternodeListChanged.connect([fn](const CDeterministicMNList& newList) {
+            ::uiInterface.NotifySmartnodeListChanged.connect([fn](const CDeterministicMNList& newList) {
                 fn(newList);
             }));
     }

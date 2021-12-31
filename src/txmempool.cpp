@@ -24,14 +24,11 @@
 
 #include <llmq/quorums_instantsend.h>
 
-#include "future/utils.h"
+#include <future/utils.h>
 
 
-CTxMemPoolEntry::CTxMemPoolEntry(const CTransactionRef& _tx, const CAmount& _nFee, const CAmount& _specialTxFee,
-                                 int64_t _nTime, unsigned int _entryHeight,
-                                 bool _spendsCoinbase, unsigned int _sigOps, LockPoints lp):
-    tx(_tx), nFee(_nFee), specialTxFee(_specialTxFee) ,nTime(_nTime), entryHeight(_entryHeight),
-    spendsCoinbase(_spendsCoinbase), sigOpCount(_sigOps), lockPoints(lp)
+CTxMemPoolEntry::CTxMemPoolEntry(const CTransactionRef& _tx, const CAmount& _nFee, const CAmount& _specialTxFee, int64_t _nTime, unsigned int _entryHeight, bool _spendsCoinbase, unsigned int _sigOps, LockPoints lp) :
+    tx(_tx), nFee(_nFee), specialTxFee(_specialTxFee) ,nTime(_nTime), entryHeight(_entryHeight), spendsCoinbase(_spendsCoinbase), sigOpCount(_sigOps), lockPoints(lp)
 {
     nTxSize = ::GetSerializeSize(*_tx, SER_NETWORK, PROTOCOL_VERSION);
     nUsageSize = RecursiveDynamicUsage(tx);

@@ -21,12 +21,12 @@ VersionBitsCache llmq_versionbitscache;
 
 std::vector<CDeterministicMNCPtr> CLLMQUtils::GetAllQuorumMembers(Consensus::LLMQType llmqType, const CBlockIndex* pindexQuorum)
 {
+    if(!IsQuorumTypeEnabled(llmqType, pindexQuorum->pprev)) {
+        return {};
+    }
     static CCriticalSection cs_members;
     static std::map<Consensus::LLMQType, unordered_lru_cache<uint256, std::vector<CDeterministicMNCPtr>, StaticSaltedHasher>> mapQuorumMembers;
 
-    if (!IsQuorumTypeEnabled(llmqType, pindexQuorum->pprev)) {
-        return {};
-    }
     std::vector<CDeterministicMNCPtr> quorumMembers;
     {
         LOCK(cs_members);
@@ -81,12 +81,12 @@ static bool EvalSpork(Consensus::LLMQType llmqType, int64_t spork_value)
 
 bool CLLMQUtils::IsAllMembersConnectedEnabled(Consensus::LLMQType llmqType)
 {
-    return EvalSpork(llmqType, sporkManager.GetSporkValue(SPORK_21_QUORUM_ALL_CONNECTED));
+    return EvalSpork(llmqType, sporkManager.GetSporkValue(SPORK_23_QUORUM_ALL_CONNECTED));
 }
 
 bool CLLMQUtils::IsQuorumPoseEnabled(Consensus::LLMQType llmqType)
 {
-    return EvalSpork(llmqType, sporkManager.GetSporkValue(SPORK_23_QUORUM_POSE));
+    return EvalSpork(llmqType, sporkManager.GetSporkValue(SPORK_25_QUORUM_POSE));
 }
 
 uint256 CLLMQUtils::DeterministicOutboundConnection(const uint256& proTxHash1, const uint256& proTxHash2)
@@ -300,12 +300,10 @@ bool CLLMQUtils::IsQuorumActive(Consensus::LLMQType llmqType, const uint256& quo
 
 bool CLLMQUtils::IsQuorumTypeEnabled(Consensus::LLMQType llmqType, const CBlockIndex* pindex)
 {
-    LOCK(cs_llmq_vbc);
-
     const Consensus::Params& consensusParams = Params().GetConsensus();
-    bool f_dip0020_Active = VersionBitsState(pindex, consensusParams, Consensus::DEPLOYMENT_DIP0020, llmq_versionbitscache) == ThresholdState::ACTIVE;
+    bool f_v17_Active = VersionBitsState(pindex, consensusParams, Consensus::DEPLOYMENT_V17, versionbitscache) == ThresholdState::ACTIVE;
 
-    switch (llmqType)
+    switch(llmqType)
     {
         case Consensus::LLMQ_50_60:
         case Consensus::LLMQ_400_60:
@@ -313,15 +311,12 @@ bool CLLMQUtils::IsQuorumTypeEnabled(Consensus::LLMQType llmqType, const CBlockI
             break;
         case Consensus::LLMQ_100_67:
         case Consensus::LLMQ_TEST_V17:
-            if (!f_dip0020_Active) {
+            if(!f_v17_Active) {
                 return false;
             }
             break;
-        case Consensus::LLMQ_50_60:
-        case Consensus::LLMQ_50_60:
-            break;
         default:
-            throw std::runtime_error(strprintf("%s: Unknown LLMQ type %d", __func__, llmqType));
+            throw std::runtime_error(strprintf("%s: Unknown LLMQ Type %d", __func__, llmqType));
     }
 
     return true;
@@ -330,12 +325,17 @@ bool CLLMQUtils::IsQuorumTypeEnabled(Consensus::LLMQType llmqType, const CBlockI
 std::vector<Consensus::LLMQType> CLLMQUtils::GetEnabledQuorumTypes(const CBlockIndex* pindex)
 {
     std::vector<Consensus::LLMQType> ret;
-    for (const auto& p : Params().GetConsensus().llmqs) {
-        if (IsQuorumTypeEnabled(p.first, pindex)) {
+    for(const auto& p : Params().GetConsensus().llmqs) {
+        if(IsQuorumTypeEnabled(p.first, pindex)) {
             ret.push_back(p.first);
         }
     }
     return ret;
+}
+
+const Consensus::LLMQParams& GetLLMQParams(Consensus::LLMQType llmqType)
+{
+    return Params().GetConsensus().llmqs.at(llmqType);
 }
 
 bool CLLMQUtils::QuorumDataRecoveryEnabled()
@@ -396,11 +396,6 @@ std::map<Consensus::LLMQType, QvvecSyncMode> CLLMQUtils::GetEnabledQuorumVvecSyn
         mapQuorumVvecSyncEntries.emplace(llmqType, mode);
     }
     return mapQuorumVvecSyncEntries;
-}
-
-const Consensus::LLMQParams& GetLLMQParams(Consensus::LLMQType llmqType)
-{
-    return Params().GetConsensus().llmqs.at(llmqType);
 }
 
 } // namespace llmq

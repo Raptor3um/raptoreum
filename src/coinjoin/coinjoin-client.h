@@ -173,7 +173,7 @@ private:
     CCoinJoinClientManager& operator=(CCoinJoinClientManager const&) = delete;
 
     // Keep track of the used Masternodes
-    std::vector<COutPoint> vecMasternodesUsed;
+    std::vector<COutPoint> vecSmartnodesUsed;
 
     // TODO: or map<denom, CCoinJoinClientSession> ??
     std::deque<CCoinJoinClientSession> deqSessions;
@@ -200,7 +200,7 @@ public:
     bool fCreateAutoBackups; // builtin support for automatic backups
 
     CCoinJoinClientManager(CWallet& wallet) :
-        vecMasternodesUsed(),
+        vecSmartnodesUsed(),
         deqSessions(),
         nCachedLastSuccessBlock(0),
         nMinBlocksToWait(1),

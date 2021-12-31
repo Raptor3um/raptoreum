@@ -146,7 +146,7 @@ enum class OptionsCategory
     OPTIONS,
     CONNECTION,
     INDEXING,
-    MASTERNODE,
+    SMARTNODE,
     STATSD,
     WALLET,
     WALLET_FEE,
@@ -364,5 +364,7 @@ std::string CopyrightHolders(const std::string& strPrefix, unsigned int nStartYe
  * sched_setchedule().
  */
 int ScheduleBatchPriority(void);
+
+void SetThreadPriority(int nPriority);
 
 #endif // BITCOIN_UTIL_H

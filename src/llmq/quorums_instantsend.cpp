@@ -1039,7 +1039,7 @@ void CInstantSendManager::ProcessInstantSendLock(NodeId from, const uint256& has
 
 void CInstantSendManager::TransactionAddedToMempool(const CTransactionRef& tx)
 {
-    if (!IsInstantSendEnabled() || !masternodeSync.IsBlockchainSynced() || tx->vin.empty()) {
+    if (!IsInstantSendEnabled() || !smartnodeSync.IsBlockchainSynced() || tx->vin.empty()) {
         return;
     }
 
@@ -1097,7 +1097,7 @@ void CInstantSendManager::BlockConnected(const std::shared_ptr<const CBlock>& pb
         }
     }
 
-    if (masternodeSync.IsBlockchainSynced()) {
+    if (smartnodeSync.IsBlockchainSynced()) {
         for (const auto& tx : pblock->vtx) {
             if (tx->IsCoinBase() || tx->vin.empty()) {
                 // coinbase and TXs with no inputs can't be locked
@@ -1216,7 +1216,7 @@ void CInstantSendManager::UpdatedBlockTip(const CBlockIndex* pindexNew)
 {
     if (!fUpgradedDB) {
         LOCK(cs_main);
-        if (VersionBitsState(pindexNew, Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0020, versionbitscache) == ThresholdState::ACTIVE) {
+        if (VersionBitsState(pindexNew, Params().GetConsensus(), Consensus::DEPLOYMENT_V17, versionbitscache) == ThresholdState::ACTIVE) {
             db.Upgrade();
             fUpgradedDB = true;
         }

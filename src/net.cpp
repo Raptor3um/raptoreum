@@ -3619,8 +3619,8 @@ bool CConnman::IsSmartnodeQuorumRelayMember(const uint256& protxHash)
 
 void CConnman::AddPendingProbeConnections(const std::set<uint256> &proTxHashes)
 {
-    LOCK(cs_vPendingMasternodes);
-    masternodePendingProbes.insert(proTxHashes.begin(), proTxHashes.end());
+    LOCK(cs_vPendingSmartnodes);
+    smartnodePendingProbes.insert(proTxHashes.begin(), proTxHashes.end());
 }
 
 size_t CConnman::GetNodeCount(NumConnections flags)

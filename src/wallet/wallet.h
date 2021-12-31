@@ -23,6 +23,8 @@
 #include <wallet/coinselection.h>
 #include <wallet/walletdb.h>
 #include <wallet/walletutil.h>
+#include <wallet/rpcwallet.h>
+
 
 #include <coinjoin/coinjoin.h>
 #include <governance/governance-object.h>
@@ -538,16 +540,6 @@ struct CompareInputCoinBIP69
     }
 };
 
-struct CompareInputCoinBIP69
-{
-    inline bool operator()(const CInputCoin& a, const CInputCoin& b) const
-    {
-        // Note: CInputCoin-s are essentially inputs, their txouts are used for informational purposes only
-        // that's why we use CompareInputBIP69 to sort them in a BIP69 compliant way.
-        return CompareInputBIP69()(CTxIn(a.outpoint), CTxIn(b.outpoint));
-    }
-};
-
 class COutput
 {
 public:
@@ -848,29 +840,6 @@ private:
      */
     void InitCoinJoinSalt();
 
-    /**
-     * The following is used to keep track of how far behind the wallet is
-     * from the chain sync, and to allow clients to block on us being caught up.
-     *
-     * Note that this is *not* how far we've processed, we may need some rescan
-     * to have seen all transactions in the chain, but is only used to track
-     * live BlockConnected callbacks.
-     *
-     * Protected by cs_main (see BlockUntilSyncedToCurrentChain)
-     */
-    const CBlockIndex* m_last_block_processed;
-
-    /** Pulled from wallet DB ("ps_salt") and used when mixing a random number of rounds.
-     *  This salt is needed to prevent an attacker from learning how many extra times
-     *  the input was mixed based only on information in the blockchain.
-     */
-    uint256 nPrivateSendSalt;
-
-    /**
-     * Fetches PrivateSend salt from database or generates and saves a new one if no salt was found in the db
-     */
-    void InitPrivateSendSalt();
-
 public:
     /*
      * Main wallet lock.
@@ -1118,9 +1087,8 @@ public:
      * selected by SelectCoins(); Also create the change output, when needed
      * @note passing nChangePosInOut as -1 will result in setting a random position
      */
-    bool CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, int& nChangePosInOut,
-                           std::string& strFailReason, const CCoinControl& coin_control, bool sign = true, int nExtraPayloadSize = 0, CAmount specialFees = 0, FuturePartialPayload* fpp = nullptr);
-    bool CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey, CConnman* connman, CValidationState& state);
+    bool CreateTransaction(const std::vector<CRecipient>& vecSend, CTransactionRef& tx, CReserveKey& reservekey, CAmount& nFeeRet, int& nChangePosInOut, std::string& strFailReason, const CCoinControl& coin_control, bool sign = true, int nExtraPayloadSize = 0, CAmount specialFees = 0, FuturePartialPayload* fpp = nullptr);
+    bool CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::vector<std::pair<std::string, std::string>> orderForm, std::string fromAccount, CReserveKey& reservekey, CConnman* connman, CValidationState& state);
 
     bool CreateCollateralTransaction(CMutableTransaction& txCollateral, std::string& strReason);
 

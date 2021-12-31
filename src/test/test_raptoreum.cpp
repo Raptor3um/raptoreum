@@ -17,11 +17,11 @@
 #include <rpc/register.h>
 #include <script/sigcache.h>
 
+#include <coinjoin/coinjoin.h>
 #include <evo/specialtx.h>
 #include <evo/deterministicmns.h>
 #include <evo/cbtx.h>
 #include <llmq/quorums_init.h>
-#include <privatesend/privatesend.h>
 
 #include <memory>
 

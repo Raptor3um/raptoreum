@@ -151,13 +151,16 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<std::v
     }
 
     vSolutionsRet.clear();
-    return TX_NONSTANDARD;
+    typeRet = TX_NONSTANDARD;
+    return false;
 }
 
 bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
 {
     std::vector<valtype> vSolutions;
-    txnouttype whichType = Solver(scriptPubKey, vSolutions);
+    txnouttype whichType;
+    if(!Solver(scriptPubKey, whichType, vSolutions))
+        return false;
 
     if (whichType == TX_PUBKEY)
     {
@@ -185,13 +188,11 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
 bool ExtractDestinations(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<CTxDestination>& addressRet, int& nRequiredRet)
 {
     addressRet.clear();
+    typeRet = TX_NONSTANDARD;
     std::vector<valtype> vSolutions;
-    typeRet = Solver(scriptPubKey, vSolutions);
-    if(typeRet == TX_NONSTANDARD)
-    {
+    if(!Solver(scriptPubKey, typeRet, vSolutions))
         return false;
-    }
-    else if (typeRet == TX_NULL_DATA)
+    if(typeRet == TX_NULL_DATA)
     {
         // This is data, not addresses
         return false;

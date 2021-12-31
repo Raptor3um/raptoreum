@@ -6,8 +6,8 @@
  *      Author: tri
  */
 
-#include "hash_selection.h"
-#include "cryptonote/slow-hash.h"
+#include <hash_selection.h>
+#include <cryptonote/slow-hash.h>
 
 std::vector<std::vector<int>> GR_GROUP = {
 		{0,1,2,3,4},

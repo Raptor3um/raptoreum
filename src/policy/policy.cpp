@@ -40,13 +40,10 @@ bool IsDust(const CTxOut& txout, const CFeeRate& dustRelayFeeIn)
 bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType)
 {
     std::vector<std::vector<unsigned char> > vSolutions;
-    whichType = Solver(scriptPubKey, vSolutions);
+    if(!Solver(scriptPubKey, whichType, vSolutions))
+        return false;
 
-    if(whichType == TX_NONSTANDARD)
-    {
-      return false;
-    }
-    else if(whichType == TX_MULTISIG)
+    if(whichType == TX_MULTISIG)
     {
         unsigned char m = vSolutions.front()[0];
         unsigned char n = vSolutions.back()[0];
@@ -56,11 +53,9 @@ bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType)
         if (m < 1 || m > n)
             return false;
     } else if (whichType == TX_NULL_DATA && (!fAcceptDatacarrier || scriptPubKey.size() > nMaxDatacarrierBytes))
-    {
         return false;
-    }
 
-    return true;
+    return whichType != TX_NONSTANDARD;
 }
 
 bool IsStandardTx(const CTransaction& tx, std::string& reason)
@@ -153,12 +148,12 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
         const CTxOut& prev = mapInputs.AccessCoin(tx.vin[i].prevout).out;
 
         std::vector<std::vector<unsigned char> > vSolutions;
-        txnouttype whichType = Solver(prev.scriptPubKey, vSolutions);
-        if(whichType == TX_NONSTANDARD)
-        {
+        txnouttype whichType;
+        const CScript& prevScript = prev.scriptPubKey;
+        if(!Solver(prevScript, whichType, vSolutions))
             return false;
-        }
-        else if (whichType == TX_SCRIPTHASH)
+
+        if(whichType == TX_SCRIPTHASH)
         {
             std::vector<std::vector<unsigned char> > stack;
             // convert the scriptSig into a stack, so we can inspect the redeemScript

@@ -11,27 +11,27 @@
 #ifndef RAPTOREUM_SELECTION_H_
 #define RAPTOREUM_SELECTION_H_
 
-#include "uint256.h"
+#include <uint256.h>
 #include <string>
 #include <vector>
 
-#include "crypto/sph_blake.h"
-#include "crypto/sph_bmw.h"
-#include "crypto/sph_groestl.h"
-#include "crypto/sph_jh.h"
-#include "crypto/sph_keccak.h"
-#include "crypto/sph_skein.h"
-#include "crypto/sph_luffa.h"
-#include "crypto/sph_cubehash.h"
-#include "crypto/sph_shavite.h"
-#include "crypto/sph_simd.h"
-#include "crypto/sph_echo.h"
-#include "crypto/sph_hamsi.h"
-#include "crypto/sph_fugue.h"
-#include "crypto/sph_shabal.h"
-#include "crypto/sph_whirlpool.h"
+#include <crypto/sph_blake.h>
+#include <crypto/sph_bmw.h>
+#include <crypto/sph_groestl.h>
+#include <crypto/sph_jh.h>
+#include <crypto/sph_keccak.h>
+#include <crypto/sph_skein.h>
+#include <crypto/sph_luffa.h>
+#include <crypto/sph_cubehash.h>
+#include <crypto/sph_shavite.h>
+#include <crypto/sph_simd.h>
+#include <crypto/sph_echo.h>
+#include <crypto/sph_hamsi.h>
+#include <crypto/sph_fugue.h>
+#include <crypto/sph_shabal.h>
+#include <crypto/sph_whirlpool.h>
 extern "C" {
-#include "crypto/sph_sha2.h"
+#include <crypto/sph_sha2.h>
 }
 
 extern std::vector<std::vector<int>> GR_GROUP;

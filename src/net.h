@@ -589,8 +589,8 @@ private:
     std::vector<std::string> vAddedNodes GUARDED_BY(cs_vAddedNodes);
     CCriticalSection cs_vAddedNodes;
     std::vector<uint256> vPendingSmartnodes;
-    std::map<std::pair<Consensus::LLMQType, uint256>, std::set<uint256>> smartnodeQuorumNodes; // protected by cs_vPendingMasternodes
-    std::map<std::pair<Consensus::LLMQType, uint256>, std::set<uint256>> smartnodeQuorumRelayMembers; // protected by cs_vPendingMasternodes
+    std::map<std::pair<Consensus::LLMQType, uint256>, std::set<uint256>> smartnodeQuorumNodes; // protected by cs_vPendingSmartnodes
+    std::map<std::pair<Consensus::LLMQType, uint256>, std::set<uint256>> smartnodeQuorumRelayMembers; // protected by cs_vPendingSmartnodes
     std::set<uint256> smartnodePendingProbes;
     mutable CCriticalSection cs_vPendingSmartnodes;
     std::vector<CNode*> vNodes;
@@ -896,7 +896,7 @@ public:
     //    unless it loads a bloom filter.
     bool fRelayTxes; //protected by cs_filter
     bool fSentAddr;
-    // If 'true' this node will be disconnected on CMasternodeMan::ProcessMasternodeConnections()
+    // If 'true' this node will be disconnected on CSmartnodeMan::ProcessSmartnodeConnections()
     bool m_smartnode_connection;
     // If 'true' this node will be disconnected after MNAUTH
     bool m_smartnode_probe_connection;
@@ -1133,7 +1133,7 @@ public:
 
     std::string GetLogString() const;
 
-    bool CanRelay() const { return !m_masternode_connection || m_masternode_iqr_connection; }
+    bool CanRelay() const { return !m_smartnode_connection || m_smartnode_iqr_connection; }
 };
 
 class CExplicitNetCleanup

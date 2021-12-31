@@ -32,7 +32,7 @@ public:
     virtual void Close() const = 0;
 
     // Dash Specific WalletInitInterface
-    virtual void AutoLockMasternodeCollaterals() const = 0;
+    virtual void AutoLockSmartnodeCollaterals() const = 0;
     virtual void InitCoinJoinSettings() const = 0;
     virtual void InitKeePass() const = 0;
     virtual bool InitAutoBackup() const = 0;

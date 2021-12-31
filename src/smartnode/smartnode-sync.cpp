@@ -45,7 +45,7 @@ std::string CSmartnodeSync::GetAssetName() const
         case(SMARTNODE_SYNC_BLOCKCHAIN):   return "SMARTNODE_SYNC_BLOCKCHAIN";
         case(SMARTNODE_SYNC_GOVERNANCE):   return "SMARTNODE_SYNC_GOVERNANCE";
         case SMARTNODE_SYNC_FINISHED:      return "SMARTNODE_SYNC_FINISHED";
-        default:                            return "UNKNOWN";
+        default:                           return "UNKNOWN";
     }
 }
 
@@ -81,7 +81,7 @@ std::string CSmartnodeSync::GetSyncStatus() const
         case SMARTNODE_SYNC_BLOCKCHAIN:    return _("Synchronizing blockchain...");
         case SMARTNODE_SYNC_GOVERNANCE:    return _("Synchronizing governance objects...");
         case SMARTNODE_SYNC_FINISHED:      return _("Synchronization finished");
-        default:                            return "";
+        default:                           return "";
     }
 }
 
@@ -193,11 +193,11 @@ void CSmartnodeSync::ProcessTick(CConnman& connman)
                 if (fReachedBestHeader && (GetTime() - nTimeLastBumped > nTimeSyncTimeout)) {
                     // At this point we know that:
                     // a) there are peers (because we are looping on at least one of them);
-                    // b) we waited for at least MASTERNODE_SYNC_TICK_SECONDS/MASTERNODE_SYNC_TIMEOUT_SECONDS
+                    // b) we waited for at least SMARTNODE_SYNC_TICK_SECONDS/SMARTNODE_SYNC_TIMEOUT_SECONDS
                     //    (depending on the number of connected peers) since we reached the headers tip the last
                     //    time (i.e. since fReachedBestHeader has been set to true);
                     // c) there were no blocks (UpdatedBlockTip, NotifyHeaderTip) or headers (AcceptedBlockHeader)
-                    //    for at least MASTERNODE_SYNC_TICK_SECONDS/MASTERNODE_SYNC_TIMEOUT_SECONDS (depending on
+                    //    for at least SMARTNODE_SYNC_TICK_SECONDS/SMARTNODE_SYNC_TIMEOUT_SECONDS (depending on
                     //    the number of connected peers).
                     // We must be at the tip already, let's move to the next asset.
                     SwitchToNextAsset(connman);

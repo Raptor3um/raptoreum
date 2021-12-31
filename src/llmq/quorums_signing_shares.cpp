@@ -735,8 +735,8 @@ void CSigSharesManager::ProcessSigShare(const CSigShare& sigShare, CConnman& con
     // prepare node set for direct-push in case this is our sig share
     std::set<NodeId> quorumNodes;
     if (!CLLMQUtils::IsAllMembersConnectedEnabled(llmqType)) {
-        if (sigShare.quorumMember == quorum->GetMemberIndex(activeMasternodeInfo.proTxHash)) {
-            quorumNodes = connman.GetMasternodeQuorumNodes((Consensus::LLMQType) sigShare.llmqType, sigShare.quorumHash);
+        if (sigShare.quorumMember == quorum->GetMemberIndex(activeSmartnodeInfo.proTxHash)) {
+            quorumNodes = connman.GetSmartnodeQuorumNodes((Consensus::LLMQType) sigShare.llmqType, sigShare.quorumHash);
         }
     }
 
@@ -846,21 +846,6 @@ void CSigSharesManager::TryRecoverSig(const CQuorumCPtr& quorum, const uint256& 
     }
 
     quorumSigningManager->ProcessRecoveredSig(rs);
-}
-
-CDeterministicMNCPtr CSigSharesManager::SelectMemberForRecovery(const CQuorumCPtr& quorum, const uint256 &id, int attempt)
-{
-    assert(attempt < quorum->members.size());
-
-    std::vector<std::pair<uint256, CDeterministicMNCPtr>> v;
-    v.reserve(quorum->members.size());
-    for (const auto& dmn : quorum->members) {
-        auto h = ::SerializeHash(std::make_pair(dmn->proTxHash, id));
-        v.emplace_back(h, dmn);
-    }
-    std::sort(v.begin(), v.end());
-
-    return v[attempt].second;
 }
 
 CDeterministicMNCPtr CSigSharesManager::SelectMemberForRecovery(const CQuorumCPtr& quorum, const uint256 &id, int attempt)

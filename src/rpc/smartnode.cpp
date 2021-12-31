@@ -3,7 +3,7 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <masternode/activemasternode.h>
+#include <smartnode/activesmartnode.h>
 #include <base58.h>
 #include <clientversion.h>
 #include <init.h>
@@ -109,7 +109,7 @@ void smartnode_count_help()
 {
     throw std::runtime_error(
             "smartnode count\n"
-            "Get information about number of masternodes.\n"
+            "Get information about number of smartnodes.\n"
         );
 }
 
@@ -152,8 +152,8 @@ UniValue GetNextSmartnodeForPayment(int heightShift)
 
 void smartnode_winner_help()
 {
-    if (!IsDeprecatedRPCEnabled("masternode_winner")) {
-        throw std::runtime_error("DEPRECATED: set -deprecatedrpc=masternode_winner to enable it");
+    if (!IsDeprecatedRPCEnabled("smartnode_winner")) {
+        throw std::runtime_error("DEPRECATED: set -deprecatedrpc=smartnode_winner to enable it");
     }
 
     throw std::runtime_error(
@@ -164,7 +164,7 @@ void smartnode_winner_help()
 
 UniValue smartnode_winner(const JSONRPCRequest& request)
 {
-    if (request.fHelp || !IsDeprecatedRPCEnabled("masternode_winner"))
+    if (request.fHelp || !IsDeprecatedRPCEnabled("smartnode_winner"))
         smartnode_winner_help();
 
     return GetNextSmartnodeForPayment(10);
@@ -172,8 +172,8 @@ UniValue smartnode_winner(const JSONRPCRequest& request)
 
 void smartnode_current_help()
 {
-    if (!IsDeprecatedRPCEnabled("masternode_current")) {
-        throw std::runtime_error("DEPRECATED: set -deprecatedrpc=masternode_current to enable it");
+    if (!IsDeprecatedRPCEnabled("smartnode_current")) {
+        throw std::runtime_error("DEPRECATED: set -deprecatedrpc=smartnode_current to enable it");
     }
 
     throw std::runtime_error(
@@ -184,7 +184,7 @@ void smartnode_current_help()
 
 UniValue smartnode_current(const JSONRPCRequest& request)
 {
-    if (request.fHelp || !IsDeprecatedRPCEnabled("masternode_current"))
+    if (request.fHelp || !IsDeprecatedRPCEnabled("smartnode_current"))
         smartnode_current_help();
 
     return GetNextSmartnodeForPayment(1);
@@ -214,7 +214,7 @@ UniValue smartnode_outputs(const JSONRPCRequest& request)
     // Find possible candidates
     std::vector<COutput> vPossibleCoins;
     CCoinControl coin_control;
-    coin_control.nCoinType = CoinType::ONLY_MASTERNODE_COLLATERAL;
+    coin_control.nCoinType = CoinType::ONLY_SMARTNODE_COLLATERAL;
     pwallet->AvailableCoins(vPossibleCoins, true, &coin_control);
 
     UniValue obj(UniValue::VOBJ);
@@ -246,8 +246,8 @@ UniValue smartnode_status(const JSONRPCRequest& request)
     UniValue mnObj(UniValue::VOBJ);
 
     // keep compatibility with legacy status for now (might get deprecated/removed later)
-    mnObj.pushKV("outpoint", activeMasternodeInfo.outpoint.ToStringShort());
-    mnObj.pushKV("service", activeMasternodeInfo.service.ToString());
+    mnObj.pushKV("outpoint", activeSmartnodeInfo.outpoint.ToStringShort());
+    mnObj.pushKV("service", activeSmartnodeInfo.service.ToString());
 
     auto dmn = deterministicMNManager->GetListAtChainTip().GetMN(activeSmartnodeInfo.proTxHash);
     if (dmn) {
@@ -258,8 +258,8 @@ UniValue smartnode_status(const JSONRPCRequest& request)
         dmn->pdmnState->ToJson(stateObj);
         mnObj.pushKV("dmnState", stateObj);
     }
-    mnObj.pushKV("state", activeMasternodeManager->GetStateString());
-    mnObj.pushKV("status", activeMasternodeManager->GetStatus());
+    mnObj.pushKV("state", activeSmartnodeManager->GetStateString());
+    mnObj.pushKV("status", activeSmartnodeManager->GetStatus());
 
     return mnObj;
 }
@@ -300,7 +300,7 @@ std::string GetRequiredPaymentsString(int nBlockHeight, const CDeterministicMNCP
     return strPayments;
 }
 
-void masternode_winners_help()
+void smartnode_winners_help()
 {
     throw std::runtime_error(
             "smartnode winners ( count \"filter\" )\n"
@@ -356,11 +356,11 @@ UniValue smartnode_winners(const JSONRPCRequest& request)
 
     return obj;
 }
-void masternode_payments_help()
+void smartnode_payments_help()
 {
     throw std::runtime_error(
-            "masternode payments ( \"blockhash\" count )\n"
-            "\nReturns an array of deterministic masternodes and their payments for the specified block\n"
+            "smartnode payments ( \"blockhash\" count )\n"
+            "\nReturns an array of deterministic smartnodes and their payments for the specified block\n"
             "\nArguments:\n"
             "1. \"blockhash\"                       (string, optional, default=tip) The hash of the starting block\n"
             "2. count                             (numeric, optional, default=1) The number of blocks to return.\n"
@@ -371,11 +371,11 @@ void masternode_payments_help()
             "    {\n"
             "       \"height\" : n,                 (numeric) The height of the block\n"
             "       \"blockhash\" : \"hash\",         (string) The hash of the block\n"
-            "       \"amount\": n                   (numeric) Amount received in this block by all masternodes\n"
-            "       \"masternodes\": [              (array) Masternodes that received payments in this block\n"
+            "       \"amount\": n                   (numeric) Amount received in this block by all smartnodes\n"
+            "       \"smartnodes\": [              (array) Smartnodes that received payments in this block\n"
             "          {\n"
             "             \"proTxHash\": \"xxxx\",    (string) The hash of the corresponding ProRegTx\n"
-            "             \"amount\": n             (numeric) Amount received by this masternode\n"
+            "             \"amount\": n             (numeric) Amount received by this smartnode\n"
             "             \"payees\": [             (array) Payees who received a share of this payment\n"
             "                {\n"
             "                  \"address\" : \"xxx\", (string) Payee address\n"
@@ -390,10 +390,10 @@ void masternode_payments_help()
         );
 }
 
-UniValue masternode_payments(const JSONRPCRequest& request)
+UniValue smartnode_payments(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() > 3) {
-        masternode_payments_help();
+        smartnode_payments_help();
     }
 
     CBlockIndex* pindex{nullptr};
@@ -439,41 +439,42 @@ UniValue masternode_payments(const JSONRPCRequest& request)
             nBlockFees += nValueIn - tx->GetValueOut();
         }
 
-        std::vector<CTxOut> voutMasternodePayments, voutDummy;
+        std::vector<CTxOut> voutSmartnodePayments, voutDummy;
         CMutableTransaction dummyTx;
+        CAmount nFees, specialTxFees;
         CAmount blockReward = nBlockFees + GetBlockSubsidy(pindex->pprev->nBits, pindex->pprev->nHeight, Params().GetConsensus());
-        FillBlockPayments(dummyTx, pindex->nHeight, blockReward, voutMasternodePayments, voutDummy);
+        FillBlockPayments(dummyTx, pindex->nHeight, blockReward, voutSmartnodePayments, voutDummy, nFees, specialTxFees);
 
         UniValue blockObj(UniValue::VOBJ);
         CAmount payedPerBlock{0};
 
-        UniValue masternodeArr(UniValue::VARR);
+        UniValue smartnodeArr(UniValue::VARR);
         UniValue protxObj(UniValue::VOBJ);
         UniValue payeesArr(UniValue::VARR);
-        CAmount payedPerMasternode{0};
+        CAmount payedPerSmartnode{0};
 
-        for (const auto& txout : voutMasternodePayments) {
+        for (const auto& txout : voutSmartnodePayments) {
             UniValue obj(UniValue::VOBJ);
             CTxDestination dest;
             ExtractDestination(txout.scriptPubKey, dest);
             obj.pushKV("address", EncodeDestination(dest));
             obj.pushKV("script", HexStr(txout.scriptPubKey));
             obj.pushKV("amount", txout.nValue);
-            payedPerMasternode += txout.nValue;
+            payedPerSmartnode += txout.nValue;
             payeesArr.push_back(obj);
         }
 
         const auto dmnPayee = deterministicMNManager->GetListForBlock(pindex).GetMNPayee();
         protxObj.pushKV("proTxHash", dmnPayee == nullptr ? "" : dmnPayee->proTxHash.ToString());
-        protxObj.pushKV("amount", payedPerMasternode);
+        protxObj.pushKV("amount", payedPerSmartnode);
         protxObj.pushKV("payees", payeesArr);
-        payedPerBlock += payedPerMasternode;
-        masternodeArr.push_back(protxObj);
+        payedPerBlock += payedPerSmartnode;
+        smartnodeArr.push_back(protxObj);
 
         blockObj.pushKV("height", pindex->nHeight);
         blockObj.pushKV("blockhash", pindex->GetBlockHash().ToString());
         blockObj.pushKV("amount", payedPerBlock);
-        blockObj.pushKV("masternodes", masternodeArr);
+        blockObj.pushKV("smartnodes", smartnodeArr);
         vecPayments.push_back(blockObj);
 
         if (nCount > 0) {

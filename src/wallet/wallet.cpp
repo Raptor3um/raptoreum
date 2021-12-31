@@ -39,11 +39,13 @@
 
 #include <llmq/quorums_instantsend.h>
 #include <llmq/quorums_chainlocks.h>
+#include <rpc/specialtx_utilities.h>
 
 #include <assert.h>
 #include <future>
 
 #include <boost/algorithm/string/replace.hpp>
+#include <boost/thread.hpp>
 
 static CCriticalSection cs_wallets;
 static std::vector<std::shared_ptr<CWallet>> vpwallets GUARDED_BY(cs_wallets);
@@ -1742,29 +1744,6 @@ bool CWallet::IsFullyMixed(const COutPoint& outpoint) const
     return true;
 }
 
-bool CWallet::IsFullyMixed(const COutPoint& outpoint) const
-{
-    int nRounds = GetRealOutpointPrivateSendRounds(outpoint);
-    // Mix again if we don't have N rounds yet
-    if (nRounds < privateSendClient.nPrivateSendRounds) return false;
-
-    // Try to mix a "random" number of rounds more than minimum.
-    // If we have already mixed N + MaxOffset rounds, don't mix again.
-    // Otherwise, we should mix again 50% of the time, this results in an exponential decay
-    // N rounds 50% N+1 25% N+2 12.5%... until we reach N + GetRandomRounds() rounds where we stop.
-    if (nRounds < privateSendClient.nPrivateSendRounds + privateSendClient.nPrivateSendRandomRounds) {
-        CDataStream ss(SER_GETHASH, PROTOCOL_VERSION);
-        ss << outpoint << nPrivateSendSalt;
-        uint256 nHash;
-        CSHA256().Write((const unsigned char*)ss.data(), ss.size()).Finalize(nHash.begin());
-        if (nHash.GetCheapHash() % 2 == 0) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
 isminetype CWallet::IsMine(const CTxOut& txout) const
 {
     return ::IsMine(*this, txout.scriptPubKey);
@@ -2943,6 +2922,7 @@ void CWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const
 
     vCoins.clear();
     CoinType nCoinType = coinControl ? coinControl->nCoinType : CoinType::ALL_COINS;
+    SmartnodeCollaterals collaterals = Params().GetConsensus().nCollaterals;
 
     CAmount nTotal = 0;
 
@@ -2982,8 +2962,8 @@ void CWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const
             } else if(nCoinType == CoinType::ONLY_NONDENOMINATED) {
                 if (CCoinJoin::IsCollateralAmount(pcoin->tx->vout[i].nValue)) continue; // do not use collateral amounts
                 found = !CCoinJoin::IsDenominatedAmount(pcoin->tx->vout[i].nValue);
-            } else if(nCoinType == CoinType::ONLY_MASTERNODE_COLLATERAL) {
-                found = pcoin->tx->vout[i].nValue == 1000*COIN;
+            } else if(nCoinType == CoinType::ONLY_SMARTNODE_COLLATERAL) {
+                found = collaterals.isValidCollateral(pcoin->tx->vout[i].nValue);
             } else if(nCoinType == CoinType::ONLY_COINJOIN_COLLATERAL) {
                 found = CCoinJoin::IsCollateralAmount(pcoin->tx->vout[i].nValue);
             } else {
@@ -2997,7 +2977,7 @@ void CWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const
             if (coinControl && coinControl->HasSelected() && !coinControl->fAllowOtherInputs && !coinControl->IsSelected(COutPoint(wtxid, i)))
                 continue;
 
-            if (IsLockedCoin(wtxid, i) && nCoinType != CoinType::ONLY_MASTERNODE_COLLATERAL)
+            if (IsLockedCoin(wtxid, i) && nCoinType != CoinType::ONLY_SMARTNODE_COLLATERAL)
                 continue;
 
             if (IsSpent(wtxid, i))
@@ -3244,7 +3224,6 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
                 // Make sure to include mixed preset inputs only,
                 // even if some non-mixed inputs were manually selected via CoinControl
                 if (!IsFullyMixed(outpoint)) continue;
-              
             } else if(!pcoin->isFutureSpendable(outpoint.n)) {
             	continue;
             }
@@ -3413,6 +3392,7 @@ bool CWallet::SelectCoinsGroupedByAddresses(std::vector<CompactTallyItem>& vecTa
     }
 
     CAmount nSmallestDenom = CCoinJoin::GetSmallestDenomination();
+    SmartnodeCollaterals collaterals = Params().GetConsensus().nCollaterals;
 
     // Tally
     std::map<CTxDestination, CompactTallyItem> mapTally;
@@ -3577,8 +3557,7 @@ bool CWallet::GetBudgetSystemCollateralTX(CTransactionRef& tx, uint256 hash, CAm
     return true;
 }
 
-bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransactionRef& tx, CReserveKey& reservekey, CAmount& nFeeRet,
-                                int& nChangePosInOut, std::string& strFailReason, const CCoinControl& coin_control, bool sign, int nExtraPayloadSize)
+bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransactionRef& tx, CReserveKey& reservekey, CAmount& nFeeRet, int& nChangePosInOut, std::string& strFailReason, const CCoinControl& coin_control, bool sign, int nExtraPayloadSize, CAmount specialFees, FuturePartialPayload* fpp)
 {
     CAmount nValue = 0;
     int nChangePosRequest = nChangePosInOut;
@@ -3604,13 +3583,13 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
     CMutableTransaction txNew;
     CFutureTx ftx;
     if(fpp) {
-    	txNew.nVersion = 3;
-    	txNew.nType = TRANSACTION_FUTURE;
-		ftx.nVersion = CFutureTx::CURRENT_VERSION;
-		ftx.lockTime = fpp->locktime;
-		ftx.maturity = fpp->maturity;
-		ftx.lockOutputIndex = 0;
-		ftx.updatableByDestination = false;
+      txNew.nVersion = 3;
+      txNew.nType = TRANSACTION_FUTURE;
+      ftx.nVersion = CFutureTx::CURRENT_VERSION;
+      ftx.lockTime = fpp->locktime;
+      ftx.maturity = fpp->maturity;
+      ftx.lockOutputIndex = 0;
+      ftx.updatableByDestination = false;
     }
     // Discourage fee sniping.
     //
@@ -3746,11 +3725,21 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
                             strFailReason = _("Transaction amount too small");
                         return false;
                     }
+                    //std::cout << recipient.scriptPubKey << " == " << fpp->futureRecScript << "\n";
+                    if(fpp && recipient.scriptPubKey == fpp->futureRecScript)
+                    {
+                      ftx.lockOutputIndex = txNew.vout.size();
+                      CDataStream ds(SER_NETWORK, PROTOCOL_VERSION);
+                      ds << ftx;
+                      txNew.vExtraPayload.assign(ds.begin(), ds.end());
+                      nExtraPayloadSize = txNew.vExtraPayload.size();
+                    }
                     txNew.vout.push_back(txout);
                 }
 
                 // Choose coins to use
                 bool bnb_used;
+                nValueToSelect += specialFees;
                 if (pick_new_inputs) {
                     nValueIn = 0;
                     std::set<CInputCoin> setCoinsTmp;
@@ -3761,89 +3750,6 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
                             strFailReason = _("Unable to locate enough mixed funds for this transaction.");
                             strFailReason += " " + strprintf(_("%s uses exact denominated amounts to send funds, you might simply need to mix some more coins."), "CoinJoin");
                         } else if (nValueIn < nValueToSelect) {
-                            strFailReason = _("Insufficient funds.");
-                        }
-                        return false;
-                    }
-                    vecCoins.assign(setCoinsTmp.begin(), setCoinsTmp.end());
-                }
-
-                // Fill vin
-                //
-                // Note how the sequence number is set to max()-1 so that the
-                // nLockTime set above actually works.
-                txNew.vin.clear();
-                for (const auto& coin : vecCoins) {
-                    txNew.vin.emplace_back(coin.outpoint, CScript(), CTxIn::SEQUENCE_FINAL - 1);
-                }
-
-                auto calculateFee = [&](CAmount& nFee) -> bool {
-                    // Fill in dummy signatures for fee calculation.
-                    int nIn = 0;
-                    for (const auto& coin : vecCoins) {
-                        const CScript& scriptPubKey = coin.txout.scriptPubKey;
-                        SignatureData sigdata;
-                        if (!ProduceSignature(DummySignatureCreator(this), scriptPubKey, sigdata)) {
-                            strFailReason = _("Signing transaction failed");
-                            return false;
-                        } else {
-                            UpdateTransaction(txNew, nIn, sigdata);
-                        }
-
-                        nIn++;
-                    }
-
-                    nBytes = ::GetSerializeSize(txNew, SER_NETWORK, PROTOCOL_VERSION);
-
-                    if (nExtraPayloadSize != 0) {
-                        // account for extra payload in fee calculation
-                        nBytes += GetSizeOfCompactSize(nExtraPayloadSize) + nExtraPayloadSize;
-                    }
-
-                    if (nBytes > MAX_STANDARD_TX_SIZE) {
-                        // Do not create oversized transactions (bad-txns-oversize).
-                        strFailReason = _("Transaction too large");
-                        return false;
-                    }
-
-                    // Remove scriptSigs to eliminate the fee calculation dummy signatures
-                    for (auto& txin : txNew.vin) {
-                        txin.scriptSig = CScript();
-                    }
-
-                    nFee = GetMinimumFee(nBytes, coin_control, ::mempool, ::feeEstimator, &feeCalc);
-
-                    // If we made it here and we aren't even able to meet the relay fee on the next pass, give up
-                    // because we must be at the maximum allowed fee.
-                    if (nFee < ::minRelayTxFee.GetFee(nBytes)) {
-                        strFailReason = _("Transaction too large for fee policy");
-                        return false;
-                    }
-
-                    //std::cout << recipient.scriptPubKey << " == " << fpp->futureRecScript << "\n";
-                    if(fpp && recipient.scriptPubKey == fpp->futureRecScript) {
-                    	ftx.lockOutputIndex = txNew.vout.size();
-					    CDataStream ds(SER_NETWORK, PROTOCOL_VERSION);
-					    ds << ftx;
-					    txNew.vExtraPayload.assign(ds.begin(), ds.end());
-					    nExtraPayloadSize = txNew.vExtraPayload.size();
-					}
-                    txNew.vout.push_back(txout);
-                }
-
-                // Choose coins to use
-                nValueToSelect += specialFees;
-                if (pick_new_inputs) {
-                    nValueIn = 0;
-                    std::set<CInputCoin> setCoinsTmp;
-                    if (!SelectCoins(vAvailableCoins, nValueToSelect, setCoinsTmp, nValueIn, &coin_control)) {
-                        if (coin_control.nCoinType == CoinType::ONLY_NONDENOMINATED) {
-                            strFailReason = _("Unable to locate enough PrivateSend non-denominated funds for this transaction.");
-                        } else if (coin_control.nCoinType == CoinType::ONLY_FULLY_MIXED) {
-                            strFailReason = _("Unable to locate enough PrivateSend denominated funds for this transaction.");
-                            strFailReason += " " + _("PrivateSend uses exact denominated amounts to send funds, you might simply need to mix some more coins.");
-                        } else if (nValueIn < nValueToSelect) {
-                        	//std::string errMsg = "Insufficient funds." + nValueIn + "-" + nValueToSelect;
                             strFailReason = _("Insufficient funds.");
                         }
                         return false;
@@ -4046,17 +3952,17 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
 
         if (nChangePosInOut == -1) reservekey.ReturnKey(); // Return any reserved key if we don't have change
         if(fpp) {
-        	ftx.lockOutputIndex = 0;
-        	// this loop needed because vout may be in a different order then recipient list
-        	for (const auto& txOut : txNew.vout) {
-				if(txOut.scriptPubKey == fpp->futureRecScript) {
-					break;
-				}
-				ftx.lockOutputIndex++;
-			}
-        	UpdateSpecialTxInputsHash(txNew, ftx);
-        	SetTxPayload(txNew, ftx);
+        	  ftx.lockOutputIndex = 0;
+        	  // this loop needed because vout may be in a different order then recipient list
+        	  for (const auto& txOut : txNew.vout) {
+				        if(txOut.scriptPubKey == fpp->futureRecScript)
+					          break;
+					      ftx.lockOutputIndex++;
+					  }
+        	  UpdateSpecialTxInputsHash(txNew, ftx);
+        	  SetTxPayload(txNew, ftx);
         }
+
         if (sign)
         {
             CTransaction txNewConst(txNew);
@@ -4085,7 +3991,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
     if (gArgs.GetBoolArg("-walletrejectlongchains", DEFAULT_WALLET_REJECT_LONG_CHAINS)) {
         // Lastly, ensure this tx will pass the mempool's chain limits
         LockPoints lp;
-        CTxMemPoolEntry entry(wtxNew.tx, 0, 0, 0, 0, false, 0, lp);
+        CTxMemPoolEntry entry(tx, 0, 0, 0, 0, false, 0, lp);
         CTxMemPool::setEntries setAncestors;
         size_t nLimitAncestors = gArgs.GetArg("-limitancestorcount", DEFAULT_ANCESTOR_LIMIT);
         size_t nLimitAncestorSize = gArgs.GetArg("-limitancestorsize", DEFAULT_ANCESTOR_SIZE_LIMIT)*1000;
@@ -4126,7 +4032,7 @@ bool CWallet::CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::ve
         wtxNew.fTimeReceivedIsTxTime = true;
         wtxNew.fFromMe = true;
 
-        LogPrintf("CommitTransaction:\n%s", wtxNew.tx->ToString()); /* Continued */
+        LogPrintf("CommitTransaction:\n%s\n", wtxNew.tx->ToString());
         {
             // Take key pair from key pool so it won't be used again
             reservekey.KeepKey();

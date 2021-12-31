@@ -51,7 +51,7 @@ public:
 };
 
 //! Interface for the src/masternode part of a dash node (dashd process).
-namespace Masternode
+namespace Smartnode
 {
 class Sync
 {
@@ -255,7 +255,7 @@ public:
     virtual LLMQ& llmq() = 0;
 
     //! Return interface for accessing masternode related handler.
-    virtual Masternode::Sync& masternodeSync() = 0;
+    virtual Smartnode::Sync& smartnodeSync() = 0;
 
     //! Return interface for accessing masternode related handler.
 #ifdef ENABLE_WALLET
@@ -313,9 +313,9 @@ public:
     virtual std::unique_ptr<Handler> handleNotifyHeaderTip(NotifyHeaderTipFn fn) = 0;
 
     //! Register handler for masternode list update messages.
-    using NotifyMasternodeListChangedFn =
+    using NotifySmartnodeListChangedFn =
         std::function<void(const CDeterministicMNList& newList)>;
-    virtual std::unique_ptr<Handler> handleNotifyMasternodeListChanged(NotifyMasternodeListChangedFn fn) = 0;
+    virtual std::unique_ptr<Handler> handleNotifySmartnodeListChanged(NotifySmartnodeListChangedFn fn) = 0;
 
     //! Register handler for additional data sync progress update messages.
     using NotifyAdditionalDataSyncProgressChangedFn =

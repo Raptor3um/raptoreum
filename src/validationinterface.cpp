@@ -43,7 +43,7 @@ struct MainSignalsInstance {
     boost::signals2::signal<void (const std::shared_ptr<const CGovernanceVote>& vote)>NotifyGovernanceVote;
     boost::signals2::signal<void (const std::shared_ptr<const CGovernanceObject>& object)>NotifyGovernanceObject;
     boost::signals2::signal<void (const CTransactionRef& currentTx, const CTransactionRef& previousTx)>NotifyInstantSendDoubleSpendAttempt;
-    boost::signals2::signal<void (bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff)>NotifyMasternodeListChanged;
+    boost::signals2::signal<void (bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff)>NotifySmartnodeListChanged;
     boost::signals2::signal<void (const std::shared_ptr<const llmq::CRecoveredSig>& sig)>NotifyRecoveredSig;
     // We are not allowed to assume the scheduler only runs in one thread,
     // but must ensure all callbacks happen in-order, so we end up creating
@@ -108,7 +108,7 @@ void RegisterValidationInterface(CValidationInterface* pwalletIn) {
     g_signals.m_internals->NotifyGovernanceVote.connect(boost::bind(&CValidationInterface::NotifyGovernanceVote, pwalletIn, _1));
     g_signals.m_internals->NotifyInstantSendDoubleSpendAttempt.connect(boost::bind(&CValidationInterface::NotifyInstantSendDoubleSpendAttempt, pwalletIn, _1, _2));
     g_signals.m_internals->NotifyRecoveredSig.connect(boost::bind(&CValidationInterface::NotifyRecoveredSig, pwalletIn, _1));
-    g_signals.m_internals->NotifyMasternodeListChanged.connect(boost::bind(&CValidationInterface::NotifyMasternodeListChanged, pwalletIn, _1, _2, _3));
+    g_signals.m_internals->NotifySmartnodeListChanged.connect(boost::bind(&CValidationInterface::NotifySmartnodeListChanged, pwalletIn, _1, _2, _3));
 }
 
 void UnregisterValidationInterface(CValidationInterface* pwalletIn) {
@@ -232,6 +232,10 @@ void CMainSignals::NewPoWValidBlock(const CBlockIndex *pindex, const std::shared
     m_internals->NewPoWValidBlock(pindex, block);
 }
 
+void CMainSignals::BlockFound(const uint256 &hash) {
+    m_internals->BlockFound(hash);
+}
+
 void CMainSignals::AcceptedBlockHeader(const CBlockIndex *pindexNew) {
     m_internals->AcceptedBlockHeader(pindexNew);
 }
@@ -276,5 +280,6 @@ void CMainSignals::NotifyRecoveredSig(const std::shared_ptr<const llmq::CRecover
     });
 }
 
-void CMainSignals::NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff) {
-    m_internals->NotifyMasternodeListChanged(undo, oldMNList, diff);
+void CMainSignals::NotifySmartnodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff) {
+    m_internals->NotifySmartnodeListChanged(undo, oldMNList, diff);
+}

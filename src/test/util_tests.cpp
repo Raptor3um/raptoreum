@@ -1086,43 +1086,6 @@ BOOST_AUTO_TEST_CASE(test_ParseFixedPoint)
     BOOST_CHECK(!ParseFixedPoint("1.", 8, &amount));
 }
 
-static void TestOtherThread(fs::path dirname, std::string lockname, bool *result)
-{
-    *result = LockDirectory(dirname, lockname);
-}
-
-#ifndef WIN32 // Cannot do this test on WIN32 due to lack of fork()
-static constexpr char LockCommand = 'L';
-static constexpr char UnlockCommand = 'U';
-static constexpr char ExitCommand = 'X';
-
-static void TestOtherProcess(fs::path dirname, std::string lockname, int fd)
-{
-    char ch;
-    while (true) {
-        int rv = read(fd, &ch, 1); // Wait for command
-        assert(rv == 1);
-        switch(ch) {
-        case LockCommand:
-            ch = LockDirectory(dirname, lockname);
-            rv = write(fd, &ch, 1);
-            assert(rv == 1);
-            break;
-        case UnlockCommand:
-            ReleaseDirectoryLocks();
-            ch = true; // Always succeeds
-            rv = write(fd, &ch, 1);
-            break;
-        case ExitCommand:
-            close(fd);
-            exit(0);
-        default:
-            assert(0);
-        }
-    }
-}
-#endif
-
 BOOST_AUTO_TEST_CASE(test_LockDirectory)
 {
     fs::path dirname = SetDataDir("test_LockDirectory") / fs::unique_path();

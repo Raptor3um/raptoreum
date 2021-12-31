@@ -14,8 +14,6 @@
 #include <evo/specialtx.h>
 #include <evo/providertx.h>
 
-#include <rpc/safemode.h>
-
 #ifdef ENABLE_WALLET
 extern UniValue signrawtransaction(const JSONRPCRequest& request);
 extern UniValue sendrawtransaction(const JSONRPCRequest& request);
@@ -72,11 +70,10 @@ std::string GetFtxHelp(int nFtxParamNum, std::string strFtxParamName)
 #ifdef ENABLE_WALLET
 UniValue futuretx_send(const JSONRPCRequest& request)
 {
-  CWallet* const pwallet = GetWalletForJSONRPCRequest(request);
+  std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+  CWallet* const pwallet = wallet.get();
 	if(request.fHelp || request.params.size() != 6)
 	  futuretx_send_help(pwallet);
-
-	ObserveSafeMode();
 
 	if(!EnsureWalletIsAvailable(pwallet, request.fHelp))
 	  return NullUniValue;

@@ -71,7 +71,6 @@ class CNetAddr
         explicit CNetAddr(const struct in_addr& ipv4Addr);
         void SetIP(const CNetAddr& ip);
 
-    private:
         /**
          * Set from a legacy IPv6 address.
          * Legacy IPv6 address may be a normal IPv6 address, or another address

@@ -27,6 +27,18 @@
 #include <evo/simplifiedmns.h>
 
 #include <bls/bls.h>
+#include <limits.h>
+#include <iostream>
+#include <fstream>
+#include <boost/random.hpp>
+#include <ctime>
+#include <stdio.h>
+#ifdef WIN32
+#include <direct.h>
+#define getcwd _getcwd
+#else
+#include <unistd.h>
+#endif
 
 #include <smartnode/smartnode-meta.h>
 
@@ -129,11 +141,11 @@ std::string GetHelpString(int nParamNum, std::string strParamName)
         },
         {"operatorPubKey_register",
             "%d. \"operatorPubKey\"           (string, required) The operator BLS public key. The BLS private key does not have to be known.\n"
-            "                              It has to match the BLS private key which is later used when operating the masternode.\n"
+            "                              It has to match the BLS private key which is later used when operating the smartnode.\n"
         },
         {"operatorPubKey_update",
             "%d. \"operatorPubKey\"           (string, required) The operator BLS public key. The BLS private key does not have to be known.\n"
-            "                              It has to match the BLS private key which is later used when operating the masternode.\n"
+            "                              It has to match the BLS private key which is later used when operating the smartnode.\n"
             "                              If set to an empty string, the currently active operator BLS public key is reused.\n"
         },
         {"operatorReward",
@@ -210,100 +222,100 @@ static CBLSSecretKey ParseBLSSecretKey(const std::string& hexKey, const std::str
 
 void bls_generate_help()
 {
-    throw std::runtime_error(
-            "bls generate\n"
-            "\nReturns a BLS secret/public key pair.\n"
-            "\nResult:\n"
-            "{\n"
-            "  \"secret\": \"xxxx\",        (string) BLS secret key\n"
-            "  \"public\": \"xxxx\",        (string) BLS public key\n"
-            "}\n"
-            "\nExamples:\n"
-            + HelpExampleCli("bls generate", "")
-    );
+  throw std::runtime_error(
+    "bls generate\n"
+    "\nReturns a BLS secret/public key pair.\n"
+    "\nResult:\n"
+    "{\n"
+    "   \"secret\": \"xxxx\", (string) BLS secret key\n"
+    "   \"public\": \"xxxx\", (string) BLS public key\n"
+    "}\n"
+    "\nExamples:\n"
+    + HelpExampleCli("bls generate", "")
+  );
 }
 
 UniValue bls_generate(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() != 1) {
-        bls_generate_help();
-    }
+  if (request.fHelp || request.params.size() != 1) {
+    bls_generate_help();
+  }
 
-    CBLSSecretKey sk;
-    sk.MakeNewKey();
+  CBLSSecretKey sk;
+  sk.MakeNewKey();
 
-    UniValue ret(UniValue::VOBJ);
-    ret.push_back(Pair("secret", sk.ToString()));
-    ret.push_back(Pair("public", sk.GetPublicKey().ToString()));
-    return ret;
+  UniValue ret(UniValue::VOBJ);
+  ret.pushKV("secret", sk.ToString());
+  ret.pushKV("public", sk.GetPublicKey().ToString());
+  return ret;
 }
 
 void bls_fromsecret_help()
 {
-    throw std::runtime_error(
-            "bls fromsecret \"secret\"\n"
-            "\nParses a BLS secret key and returns the secret/public key pair.\n"
-            "\nArguments:\n"
-            "1. \"secret\"                (string, required) The BLS secret key\n"
-            "\nResult:\n"
-            "{\n"
-            "  \"secret\": \"xxxx\",        (string) BLS secret key\n"
-            "  \"public\": \"xxxx\",        (string) BLS public key\n"
-            "}\n"
-            "\nExamples:\n"
-            + HelpExampleCli("bls fromsecret", "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f")
-    );
+  throw std::runtime_error(
+    "bls fromsecret \"secret\"\n"
+    "\nParses a BLS secret key and returns the secret/public key pair.\n"
+    "\nArguments:\n"
+    "1. \"secret\"                (string, required) The BLS secret key\n"
+    "\nResult:\n"
+    "{\n"
+    "  \"secret\": \"xxxx\",        (string) BLS secret key\n"
+    "  \"public\": \"xxxx\",        (string) BLS public key\n"
+    "}\n"
+    "\nExamples:\n"
+    + HelpExampleCli("bls fromsecret", "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f")
+  );
 }
 
 UniValue bls_fromsecret(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() != 2) {
-        bls_fromsecret_help();
-    }
+  if(request.fHelp || request.params.size() != 2) {
+    bls_fromsecret_help();
+  }
 
-    CBLSSecretKey sk;
-    if (!sk.SetHexStr(request.params[1].get_str())) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Secret key must be a valid hex string of length %d", sk.SerSize*2));
-    }
+  CBLSSecretKey sk;
+  if(!sk.SetHexStr(request.params[1].get_str())) {
+    throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Secret key must be a valid hex string of length %d", sk.SerSize*2));
+  }
 
-    UniValue ret(UniValue::VOBJ);
-    ret.push_back(Pair("secret", sk.ToString()));
-    ret.push_back(Pair("public", sk.GetPublicKey().ToString()));
-    return ret;
+  UniValue ret(UniValue::VOBJ);
+  ret.pushKV("secret", sk.ToString());
+  ret.pushKV("public", sk.GetPublicKey().ToString());
+  return ret;
 }
 
 [[ noreturn ]] void bls_help()
 {
-    throw std::runtime_error(
-            "bls \"command\" ...\n"
-            "Set of commands to execute BLS related actions.\n"
-            "To get help on individual commands, use \"help bls command\".\n"
-            "\nArguments:\n"
-            "1. \"command\"        (string, required) The command to execute\n"
-            "\nAvailable commands:\n"
-            "  generate          - Create a BLS secret/public key pair\n"
-            "  fromsecret        - Parse a BLS secret key and return the secret/public key pair\n"
-            );
+     throw std::runtime_error(
+       "bls \"command\" ...\n"
+       "Set of commands to execute BLS related actions.\n"
+       "To get help on individual commands, use \"help bls command\".\n"
+       "\nArguments:\n"
+       "1. \"command\"        (string, required) The command to execute\n"
+       "\nAvailable commands:\n"
+       "  generate          - Create a BLS secret/public key pair\n"
+       "  fromsecret        - Parse a BLS secret key and return the secret/public key pair\n"
+     );
 }
 
 UniValue _bls(const JSONRPCRequest& request)
 {
-    if (request.fHelp && request.params.empty()) {
-        bls_help();
-    }
+  if (request.fHelp && request.params.empty()) {
+    bls_help();
+  }
 
-    std::string command;
-    if (!request.params[0].isNull()) {
-        command = request.params[0].get_str();
-    }
+  std::string command;
+  if (!request.params[0].isNull()) {
+    command = request.params[0].get_str();
+  }
 
-    if (command == "generate") {
-        return bls_generate(request);
-    } else if (command == "fromsecret") {
-        return bls_fromsecret(request);
-    } else {
-        bls_help();
-    }
+  if (command == "generate") {
+    return bls_generate(request);
+  } else if (command == "fromsecret") {
+    return bls_fromsecret(request);
+  } else {
+    bls_help();
+  }
 }
 
 #ifdef ENABLE_WALLET
@@ -622,7 +634,7 @@ UniValue protx_register(const JSONRPCRequest& request)
         if(collateralHash.IsNull() || collateralIndex < 0) {
           throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("invalid hash or index: %s-%d", collateralHash.ToString(), collateralIndex));
         }
-        const auto &p = pwallet->mapWallet[collateralHash];
+        const auto &p = pwallet->mapWallet.at(collateralHash);
         if(p.tx == nullptr || p.tx->vout.size() <= collateralIndex) {
           throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Invalid collateral, you do not own the collateral address : hash=%s-%d\n", collateralHash.ToString(), collateralIndex));
         }
@@ -1138,12 +1150,11 @@ UniValue createConfigFile(string blsPrivateKey, string ip, string address) {
 }
 
 UniValue protx_quick_setup(const JSONRPCRequest& request) {
-	CWallet* const pwallet = GetWalletForJSONRPCRequest(request);
+  std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+	CWallet* const pwallet = wallet.get();
 	if (request.fHelp || request.params.size() != 5) {
 		protx_quick_setup_help(pwallet);
 	}
-
-  ObserveSafeMode();
 
 	if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
 		return NullUniValue;
@@ -1181,18 +1192,18 @@ UniValue protx_quick_setup(const JSONRPCRequest& request) {
 	UniValue txid = protx_register_submit(submitRequest);
 	UniValue result = UniValue(UniValue::VOBJ);
 	//signedMessage
-	result.push_back(Pair("txid", txid.get_str()));
-	result.push_back(Pair("tx", prepareResult["tx"].get_str()));
-	result.push_back(Pair("ownerAddress", ownerAddress.get_str()));
-	result.push_back(Pair("votingAddress", votingAddress.get_str()));
-	result.push_back(Pair("payoutAddress", payoutAddress.get_str()));
-	result.push_back(Pair("collateralAddress", prepareResult["collateralAddress"].get_str()));
-	result.push_back(Pair("collateralAmount", prepareResult["collateralAmount"].get_int()));
-	result.push_back(Pair("signedMessage", msg.get_str()));
-	result.push_back(Pair("operatorPublic", blsKeys["public"].get_str()));
-	result.push_back(Pair("operatorSecret", blsKeys["secret"].get_str()));
+	result.pushKV("txid", txid.get_str());
+	result.pushKV("tx", prepareResult["tx"].get_str());
+	result.pushKV("ownerAddress", ownerAddress.get_str());
+	result.pushKV("votingAddress", votingAddress.get_str());
+	result.pushKV("payoutAddress", payoutAddress.get_str());
+	result.pushKV("collateralAddress", prepareResult["collateralAddress"].get_str());
+	result.pushKV("collateralAmount", prepareResult["collateralAmount"].get_int());
+	result.pushKV("signedMessage", msg.get_str());
+	result.pushKV("operatorPublic", blsKeys["public"].get_str());
+	result.pushKV("operatorSecret", blsKeys["secret"].get_str());
 	UniValue config = createConfigFile( blsKeys["secret"].get_str(),request.params[3].get_str(),  prepareResult["collateralAddress"].get_str());
-	result.push_back(Pair("raptoreum.conf",config.get_str()));
+	result.pushKV("raptoreum.conf",config.get_str());
 
 	return result;
 }
@@ -1519,104 +1530,6 @@ UniValue protx(const JSONRPCRequest& request)
         return protx_diff(request);
     } else {
         protx_help();
-    }
-}
-
-void bls_generate_help()
-{
-    throw std::runtime_error(
-            "bls generate\n"
-            "\nReturns a BLS secret/public key pair.\n"
-            "\nResult:\n"
-            "{\n"
-            "  \"secret\": \"xxxx\",        (string) BLS secret key\n"
-            "  \"public\": \"xxxx\",        (string) BLS public key\n"
-            "}\n"
-            "\nExamples:\n"
-            + HelpExampleCli("bls generate", "")
-    );
-}
-
-UniValue bls_generate(const JSONRPCRequest& request)
-{
-    if (request.fHelp || request.params.size() != 1) {
-        bls_generate_help();
-    }
-
-    CBLSSecretKey sk;
-    sk.MakeNewKey();
-
-    UniValue ret(UniValue::VOBJ);
-    ret.pushKV("secret", sk.ToString());
-    ret.pushKV("public", sk.GetPublicKey().ToString());
-    return ret;
-}
-
-void bls_fromsecret_help()
-{
-    throw std::runtime_error(
-            "bls fromsecret \"secret\"\n"
-            "\nParses a BLS secret key and returns the secret/public key pair.\n"
-            "\nArguments:\n"
-            "1. \"secret\"                (string, required) The BLS secret key\n"
-            "\nResult:\n"
-            "{\n"
-            "  \"secret\": \"xxxx\",        (string) BLS secret key\n"
-            "  \"public\": \"xxxx\",        (string) BLS public key\n"
-            "}\n"
-            "\nExamples:\n"
-            + HelpExampleCli("bls fromsecret", "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f")
-    );
-}
-
-UniValue bls_fromsecret(const JSONRPCRequest& request)
-{
-    if (request.fHelp || request.params.size() != 2) {
-        bls_fromsecret_help();
-    }
-
-    CBLSSecretKey sk;
-    if (!sk.SetHexStr(request.params[1].get_str())) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Secret key must be a valid hex string of length %d", sk.SerSize*2));
-    }
-
-    UniValue ret(UniValue::VOBJ);
-    ret.pushKV("secret", sk.ToString());
-    ret.pushKV("public", sk.GetPublicKey().ToString());
-    return ret;
-}
-
-[[ noreturn ]] void bls_help()
-{
-    throw std::runtime_error(
-            "bls \"command\" ...\n"
-            "Set of commands to execute BLS related actions.\n"
-            "To get help on individual commands, use \"help bls command\".\n"
-            "\nArguments:\n"
-            "1. \"command\"        (string, required) The command to execute\n"
-            "\nAvailable commands:\n"
-            "  generate          - Create a BLS secret/public key pair\n"
-            "  fromsecret        - Parse a BLS secret key and return the secret/public key pair\n"
-            );
-}
-
-UniValue _bls(const JSONRPCRequest& request)
-{
-    if (request.fHelp && request.params.empty()) {
-        bls_help();
-    }
-
-    std::string command;
-    if (!request.params[0].isNull()) {
-        command = request.params[0].get_str();
-    }
-
-    if (command == "generate") {
-        return bls_generate(request);
-    } else if (command == "fromsecret") {
-        return bls_fromsecret(request);
-    } else {
-        bls_help();
     }
 }
 

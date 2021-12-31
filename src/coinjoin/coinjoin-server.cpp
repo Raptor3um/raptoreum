@@ -3,7 +3,7 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <privatesend/privatesend-server.h>
+#include <coinjoin/coinjoin-server.h>
 
 #include <smartnode/activesmartnode.h>
 #include <consensus/validation.h>
@@ -29,7 +29,7 @@ CCoinJoinServer coinJoinServer;
 void CCoinJoinServer::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman, bool enable_bip61)
 {
     if (!fSmartnodeMode) return;
-    if (!shmartnodeSync.IsBlockchainSynced()) return;
+    if (!smartnodeSync.IsBlockchainSynced()) return;
 
     if (strCommand == NetMsgType::DSACCEPT) {
         if (pfrom->nVersion < MIN_COINJOIN_PEER_PROTO_VERSION) {
@@ -129,7 +129,7 @@ void CCoinJoinServer::ProcessMessage(CNode* pfrom, const std::string& strCommand
                 }
                 if (q.fReady == dsq.fReady && q.smartnodeOutpoint == dsq.smartnodeOutpoint) {
                     // no way the same mn can send another dsq with the same readiness this soon
-                    LogPrint(BCLog::COINJOIN, "DSQUEUE -- Peer %s is sending WAY too many dsq messages for a masternode with collateral %s\n", pfrom->GetLogString(), dsq.masternodeOutpoint.ToStringShort());
+                    LogPrint(BCLog::COINJOIN, "DSQUEUE -- Peer %s is sending WAY too many dsq messages for a smartnode with collateral %s\n", pfrom->GetLogString(), dsq.smartnodeOutpoint.ToStringShort());
                     return;
                 }
             }
@@ -155,12 +155,12 @@ void CCoinJoinServer::ProcessMessage(CNode* pfrom, const std::string& strCommand
             LogPrint(BCLog::COINJOIN, "DSQUEUE -- nLastDsq: %d  nDsqThreshold: %d  nDsqCount: %d\n", nLastDsq, nDsqThreshold, mmetaman.GetDsqCount());
             //don't allow a few nodes to dominate the queuing process
             if (nLastDsq != 0 && nDsqThreshold > mmetaman.GetDsqCount()) {
-                LogPrint(BCLog::COINJOIN, "DSQUEUE -- Masternode %s is sending too many dsq messages\n", dmn->pdmnState->addr.ToString());
+                LogPrint(BCLog::COINJOIN, "DSQUEUE -- Smartnode %s is sending too many dsq messages\n", dmn->pdmnState->addr.ToString());
                 return;
             }
             mmetaman.AllowMixing(dmn->proTxHash);
 
-            LogPrint(BCLog::COINJOIN, "DSQUEUE -- new CoinJoin queue (%s) from masternode %s\n", dsq.ToString(), dmn->pdmnState->addr.ToString());
+            LogPrint(BCLog::COINJOIN, "DSQUEUE -- new CoinJoin queue (%s) from smartnode %s\n", dsq.ToString(), dmn->pdmnState->addr.ToString());
 
             TRY_LOCK(cs_vecqueue, lockRecv);
             if (!lockRecv) return;
@@ -332,7 +332,7 @@ void CCoinJoinServer::CommitFinalTransaction(CConnman& connman)
 
     LogPrint(BCLog::COINJOIN, "CCoinJoinServer::CommitFinalTransaction -- CREATING DSTX\n");
 
-    // create and sign masternode dstx transaction
+    // create and sign smartnode dstx transaction
     if (!CCoinJoin::GetDSTX(hashTx)) {
         CCoinJoinBroadcastTx dstxNew(finalTransaction, activeSmartnodeInfo.outpoint, GetAdjustedTime());
         dstxNew.Sign();
@@ -708,7 +708,7 @@ bool CCoinJoinServer::CreateNewSession(const CCoinJoinAccept& dsa, PoolMessage& 
 
     if (!fUnitTest) {
         //broadcast that I'm accepting entries, only if it's the first entry through
-        CCoinJoinQueue dsq(nSessionDenom, activeMasternodeInfo.outpoint, GetAdjustedTime(), false);
+        CCoinJoinQueue dsq(nSessionDenom, activeSmartnodeInfo.outpoint, GetAdjustedTime(), false);
         LogPrint(BCLog::COINJOIN, "CCoinJoinServer::CreateNewSession -- signing and relaying new queue: %s\n", dsq.ToString());
         dsq.Sign();
         dsq.Relay(connman);
@@ -871,7 +871,7 @@ void CCoinJoinServer::SetState(PoolState nStateNew)
 
 void CCoinJoinServer::DoMaintenance(CConnman& connman)
 {
-    if (!fSmartnodeMode) return; // only run on masternodes
+    if (!fSmartnodeMode) return; // only run on smartnodes
 
     if (!smartnodeSync.IsBlockchainSynced() || ShutdownRequested()) return;
 

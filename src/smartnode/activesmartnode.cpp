@@ -5,7 +5,6 @@
 
 #include <smartnode/activesmartnode.h>
 #include <evo/deterministicmns.h>
-#include <init.h>
 #include <smartnode/smartnode-sync.h>
 #include <netbase.h>
 #include <protocol.h>
@@ -117,7 +116,7 @@ void CActiveSmartnodeManager::Init(const CBlockIndex* pindex)
         LogPrintf("CActiveSmartnodeManager::Init -- ERROR: %s\n", strError);
         return;
     }
-    bool fConnected = ConnectSocketDirectly(activeSmartnodeInfo.service, hSocket, nConnectTimeout) && IsSelectableSocket(hSocket);
+    bool fConnected = ConnectSocketDirectly(activeSmartnodeInfo.service, hSocket, nConnectTimeout, true) && IsSelectableSocket(hSocket);
     CloseSocket(hSocket);
 
     if (!fConnected && Params().RequireRoutableExternalIP()) {

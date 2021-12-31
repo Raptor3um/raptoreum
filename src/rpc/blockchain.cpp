@@ -8,6 +8,7 @@
 #include <rpc/blockchain.h>
 
 #include <amount.h>
+#include <chain.h>
 #include <chainparams.h>
 #include <checkpoints.h>
 #include <coins.h>
@@ -15,6 +16,7 @@
 #include <core_io.h>
 #include <consensus/validation.h>
 #include <validation.h>
+#include <core_io.h>
 // #include <rpc/index/txindex.h>
 #include <policy/feerate.h>
 #include <policy/policy.h>

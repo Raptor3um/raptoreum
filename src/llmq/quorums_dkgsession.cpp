@@ -54,7 +54,7 @@ static double GetSimulatedErrorRate(const std::string& type)
 
 bool CDKGSession::ShouldSimulateError(const std::string& type)
 {
-    if (params.type != Consensus::LLMQType::LLMQ_TEST) {
+    if (params.type != Consensus::LLMQType::LLMQ_5_60) {
         return false;
     }
     double rate = GetSimulatedErrorRate(type);
