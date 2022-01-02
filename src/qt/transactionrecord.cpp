@@ -197,8 +197,8 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
             if(fAllToMe > mine) fAllToMe = mine;
         }
 
-        // LogPrintf("TransactionRecord::%s TxId: %s, vOutIdx: %d, CoinBase: %d, AllFromMe: %d, AllToMe: %d, inputWatch: %d, outputWatch: %d\n",
-        //         __func__, hash.ToString(), vOutIdx, wtx.IsCoinBase(), fAllFromMe, fAllToMe, inputInvolvesWatchAddress, outputInvolvesWatchAddress);
+        // LogPrintf("TransactionRecord::%s TxId: %s, vOutIdx: %d, CoinBase: %d, AllFromMe: %d, AllToMe: %d, inputWatch: %d, outputWatch: %d, mine: %d\n",
+        //         __func__, hash.ToString(), vOutIdx, wtx.IsCoinBase(), fAllFromMe, fAllToMe, inputInvolvesWatchAddress, outputInvolvesWatchAddress, mine);
 
         // A/B Generated:
         // A: coinbase -> self    Generated
@@ -206,7 +206,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
         if (wtx.IsCoinBase() && mine)
         {
             sub.type = TransactionRecord::Generated;
-            sub.involvesWatchAddress = creditMineTypes & ISMINE_WATCH_ONLY;
+            sub.involvesWatchAddress = mine & ISMINE_WATCH_ONLY;
             parts.append(sub);
             continue;
         }
