@@ -210,7 +210,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(interfaces::Wal
         if (wtx.is_coinbase && mine)
         {
             sub.type = TransactionRecord::Generated;
-            sub.involvesWatchAddress = creditMineTypes & ISMINE_WATCH_ONLY;
+            sub.involvesWatchAddress = mine & ISMINE_WATCH_ONLY;
             parts.append(sub);
             continue;
         }
