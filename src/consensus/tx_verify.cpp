@@ -64,6 +64,50 @@ static const char *validateFutureCoin(const Coin& coin, int nSpendHeight) {
 	return nullptr;
 }
 
+extern CChain chainActive;
+
+static void checkSpecialTxFee(const CTransaction &tx, CAmount& nFeeTotal, CAmount& specialTxFee) {
+	if(tx.nVersion >= 3) {
+		switch(tx.nType){
+		case TRANSACTION_FUTURE:
+			CFutureTx ftx;
+			if(GetTxPayload(tx.vExtraPayload, ftx)) {
+				specialTxFee = getFutureFees();
+				nFeeTotal -= specialTxFee;
+			}
+			break;
+		}
+	}
+}
+
+static const char *validateFutureCoin(const Coin& coin, int nSpendHeight) {
+	if(coin.nType == TRANSACTION_FUTURE) {
+		CBlockIndex* confirmedBlockIndex = chainActive[coin.nHeight];
+		if(confirmedBlockIndex) {
+			int64_t adjustCurrentTime = GetAdjustedTime();
+			uint32_t confirmedTime = confirmedBlockIndex->nTime;
+			CFutureTx futureTx;
+			//std::cout << "futuretx checking" << endl;
+			if(GetTxPayload(coin.vExtraPayload, futureTx)) {
+				//std::cout << "futuretx extract" << endl;
+				bool isBlockMature = futureTx.maturity > 0 && nSpendHeight - coin.nHeight >= futureTx.maturity;
+				bool isTimeMature = futureTx.lockTime > 0 && adjustCurrentTime - confirmedTime  >= futureTx.lockTime;
+				//std::cout << "isBlockMature " << isBlockMature << " isTimeMature " << isTimeMature << endl;
+				bool canSpend = isBlockMature || isTimeMature;
+				if(!canSpend) {
+					return "bad-txns-premature-spend-of-future";
+				}
+				return nullptr;
+			}
+			return "bad-txns-unable-to-parse-future";
+		}
+		// should not get here
+		return "bad-txns-unable-to-block-index-for-future";
+	}
+	return nullptr;
+}
+
+
 bool IsFinalTx(const CTransaction &tx, int nBlockHeight, int64_t nBlockTime)
 {
     if (tx.nLockTime == 0)

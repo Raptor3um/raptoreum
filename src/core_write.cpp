@@ -287,6 +287,13 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
         	ctx.ToJson(obj);
 			entry.pushKV("futureTx", obj);
         }
+    } else if(tx.nType == TRANSACTION_FUTURE) {
+    	CFutureTx ctx;
+        if (GetTxPayload(tx, ctx)) {
+        	UniValue obj;
+        	ctx.ToJson(obj);
+			entry.push_back(Pair("futureTx", obj));
+        }
     }
 
     if (!hashBlock.IsNull())

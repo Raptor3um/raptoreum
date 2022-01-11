@@ -137,6 +137,17 @@ struct FutureRewardShare {
 };
 
 /**
+ * future fee share for smartnode, miner and dev
+ */
+struct FutureRewardShare {
+	float smartnode;
+	float miner;
+	float founder;
+	FutureRewardShare() : smartnode(0), miner(0), founder(0) {}
+	FutureRewardShare(float _smartnode, float _miner, float _founder) : smartnode(_smartnode), miner(_miner), founder(_founder) {}
+};
+
+/**
  * Parameters that influence chain consensus.
  */
 struct Params {

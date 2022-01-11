@@ -19,6 +19,9 @@
 #include <timedata.h>
 #include <util.h>
 
+#include "evo/providertx.h"
+#include "evo/specialtx.h"
+
 #include <stdint.h>
 #include <string>
 

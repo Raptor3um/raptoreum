@@ -325,6 +325,7 @@ static bool AcceptToMemoryPoolWithTime(const CChainParams& chainparams, CTxMemPo
                                        bool* pfMissingInputs, int64_t nAcceptTime, bool bypass_limits,
                                        const CAmount nAbsurdFee, bool fDryRun = false);
 
+bool GetUTXOCoin(const COutPoint& outpoint, Coin& coin, int height);
 bool GetUTXOCoin(const COutPoint& outpoint, Coin& coin);
 int GetUTXOHeight(const COutPoint& outpoint);
 int GetUTXOConfirmations(const COutPoint& outpoint);

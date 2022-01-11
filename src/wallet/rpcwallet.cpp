@@ -3676,6 +3676,8 @@ UniValue listunspent(const JSONRPCRequest& request)
         entry.pushKV("confirmations", out.nDepth);
         entry.pushKV("spendable", out.fSpendable);
         entry.pushKV("solvable", out.fSolvable);
+        entry.pushKV("future", out.isFuture);
+        entry.pushKV("futureSpendable", out.isFutureSpendable);
         entry.pushKV("safe", out.fSafe);
         entry.pushKV("coinjoin_rounds", pwallet->GetRealOutpointCoinJoinRounds(COutPoint(out.tx->GetHash(), out.i)));
         results.push_back(entry);

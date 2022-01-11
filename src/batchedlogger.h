@@ -3,10 +3,10 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_BATCHEDLOGGER_H
-#define BITCOIN_BATCHEDLOGGER_H
+#ifndef RAPTOREUM_BATCHEDLOGGER_H
+#define RAPTOREUM_BATCHEDLOGGER_H
 
-#include <tinyformat.h>
+#include "tinyformat.h"
 
 class CBatchedLogger
 {
@@ -30,4 +30,4 @@ public:
     void Flush();
 };
 
-#endif//BITCOIN_BATCHEDLOGGER_H
+#endif//RAPTOREUM_BATCHEDLOGGER_H

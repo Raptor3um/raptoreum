@@ -319,46 +319,39 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(interfaces::Wal
                     sub.txDest = wtx.txout_address[nOut];
                     sub.updateLabel(wallet);
                 }
-                else
-                {
-                    // Sent to IP, or other non-address transaction like OP_EVAL
-                    sub.type = TransactionRecord::SendToOther;
-                    sub.strAddress = mapValue["to"];
-                    sub.txDest = DecodeDestination(sub.strAddress);
-                }
-
-                if(mapValue["DS"] == "1")
-                {
-                    sub.type = TransactionRecord::CoinJoinSend;
-                }
-
-                if(wtx.tx->nType == TRANSACTION_FUTURE)
-                {
-                    sub.type = TransactionRecord::FutureSend;
-                }
-
-                CAmount nValue = txout.nValue;
-                /* Add fee to first output */
-                if (nTxFee > 0)
-                {
-                    nValue += nTxFee;
-                    nTxFee = 0;
-                }
-                sub.debit = -nValue;
-
                 parts.append(sub);
             }
+            continue;
         }
-        else
-        {
-            //
-            // Mixed debit transaction, can't break down payees
-            //
-            parts.append(TransactionRecord(hash, nTime, TransactionRecord::Other, "", nNet, 0));
-            parts.last().involvesWatchAddress = involvesWatchAddress;
-        }
-    }
 
+        // G/H: SendToAddress, SendToOther, watched: ReceiveWithAddress, RecvFromOther + FutureSend, FutureReceive
+        // These create one or two records (one normal, possibly one watched):
+        // G: other    -> self    Send from watched to wallet no change
+        // H: watched  -> self    Send from watched to wallet with change
+        if (!(debitMineTypes & ISMINE_SPENDABLE) && mine & ISMINE_SPENDABLE)
+        {
+            // Generate one or two records - receive with wallet, sent by watched:
+            sub.involvesWatchAddress = false;
+            sub.type = isFuture ? TransactionRecord::FutureReceive : (validDestination ? TransactionRecord::RecvWithAddress : TransactionRecord::RecvFromOther);
+
+            // Received with wallet:
+            sub.credit = txout.nValue;
+            parts.append(sub);
+
+            // If sent by Watch, add a sent transaction on the watched side:
+            if (debitMineTypes & ISMINE_WATCH_ONLY)
+            {
+                sub.involvesWatchAddress = true;
+                sub.type = isFuture ? TransactionRecord::FutureSend : (validDestination ? TransactionRecord::SendToAddress : TransactionRecord::SendToOther);
+                sub.debit = -(txout.nValue + nTxFee);
+                nTxFee = 0; // Add fee to first output
+                sub.credit = 0;
+                parts.append(sub);
+            }
+            continue;
+        }
+        //LogPrintf("TransactionRecord::%s TxId: %s, vOutIdx: %d, Unhandled\n", __func__, hash.ToString(), vOutIdx);
+    }
     return parts;
 }
 

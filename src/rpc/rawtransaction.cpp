@@ -35,6 +35,7 @@
 #include <evo/providertx.h>
 #include <evo/cbtx.h>
 #include <rpc/specialtx_utilities.h>
+#include <future/utils.h>
 
 #include <llmq/quorums_chainlocks.h>
 #include <llmq/quorums_commitment.h>
@@ -797,6 +798,7 @@ UniValue SignTransaction(CMutableTransaction& mtx, const UniValue& prevTxsUnival
                     newcoin.out.nValue = AmountFromValue(find_value(prevOut, "amount"));
                 }
                 newcoin.nHeight = 1;
+                maybeSetPayload(newcoin, out, mtx.nType, mtx.vExtraPayload);
                 view.AddCoin(out, std::move(newcoin), true);
             }
 

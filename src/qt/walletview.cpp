@@ -116,6 +116,9 @@ WalletView::WalletView(QWidget* parent) :
     // Pass through messages from sendFuturesPage
     connect(sendFuturesPage, SIGNAL(message(QString,QString,unsigned int)), this, SIGNAL(message(QString,QString,unsigned int)));
 
+    // Pass through messages from sendFuturesPage
+    connect(sendFuturesPage, SIGNAL(message(QString,QString,unsigned int)), this, SIGNAL(message(QString,QString,unsigned int)));
+
     // Pass through messages from transactionView
     connect(transactionView, SIGNAL(message(QString,QString,unsigned int)), this, SIGNAL(message(QString,QString,unsigned int)));
 
@@ -273,6 +276,14 @@ void WalletView::gotoCoinJoinCoinsPage(QString addr)
 
     if (!addr.isEmpty())
         coinJoinCoinsPage->setAddress(addr);
+}
+
+void WalletView::gotoSendFuturesPage(QString addr)
+{
+    setCurrentWidget(sendFuturesPage);
+
+    if (!addr.isEmpty())
+        sendFuturesPage->setAddress(addr);
 }
 
 void WalletView::gotoSendFuturesPage(QString addr)

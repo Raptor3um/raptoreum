@@ -1077,6 +1077,9 @@ void SendFuturesDialog::updateFTXpayFromLabels()
         }
     }
     //update balance label with selected
+=======
+    //update balance label with selected 
+>>>>>>> develop
     ui->labelBalance->setText(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), addressBalance));
     //enable send button when amounts look good
     if(addressBalance > sendAmount + futureFee && sendAmount > 0) {

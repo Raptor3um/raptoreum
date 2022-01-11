@@ -40,16 +40,16 @@ SmartnodeCollaterals::~SmartnodeCollaterals() {
 	this->collaterals.clear();
 }
 
-bool SmartnodeCollaterals::isValidCollateral(CAmount collateralAnount) const {
-	auto it = collateralsHeightMap.find(collateralAnount);
+bool SmartnodeCollaterals::isValidCollateral(CAmount collateralAmount) const {
+	auto it = collateralsHeightMap.find(collateralAmount);
 	return it != collateralsHeightMap.end();
 }
 
-bool SmartnodeCollaterals::isPayableCollateral(int height, CAmount collateralAnount) const {
-	if(!this->isValidCollateral(collateralAnount)) {
+bool SmartnodeCollaterals::isPayableCollateral(int height, CAmount collateralAmount) const {
+	if(!this->isValidCollateral(collateralAmount)) {
 		return false;
 	}
-	int collateralEndHeight = this->collateralsHeightMap.at(collateralAnount);
+	int collateralEndHeight = this->collateralsHeightMap.at(collateralAmount);
 	return collateralEndHeight == INT_MAX || height <= collateralEndHeight;
 }
 

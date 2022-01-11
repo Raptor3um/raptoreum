@@ -1600,7 +1600,7 @@ isminetype CWallet::IsMine(const CTxIn &txin) const
 
 // Note that this function doesn't distinguish between a 0-valued input,
 // and a not-"is mine" (according to the filter) input.
-CAmount CWallet::GetDebit(const CTxIn &txin, const isminefilter& filter) const
+CAmount CWallet::GetDebit(const CTxIn &txin, const isminefilter& filter, isminefilter* mineTypes) const
 {
     {
         LOCK(cs_wallet);
@@ -1608,9 +1608,13 @@ CAmount CWallet::GetDebit(const CTxIn &txin, const isminefilter& filter) const
         if (mi != mapWallet.end())
         {
             const CWalletTx& prev = (*mi).second;
-            if (txin.prevout.n < prev.tx->vout.size())
-                if (IsMine(prev.tx->vout[txin.prevout.n]) & filter)
+            if (txin.prevout.n < prev.tx->vout.size()) {
+                isminefilter txMineTypes = IsMine(prev.tx->vout[txin.prevout.n]);
+                if (txMineTypes & filter) {
+                    if (mineTypes) *mineTypes |= txMineTypes;
                     return prev.tx->vout[txin.prevout.n].nValue;
+                }
+            }
         }
     }
     return 0;
@@ -1749,11 +1753,17 @@ isminetype CWallet::IsMine(const CTxOut& txout) const
     return ::IsMine(*this, txout.scriptPubKey);
 }
 
-CAmount CWallet::GetCredit(const CTxOut& txout, const isminefilter& filter) const
+CAmount CWallet::GetCredit(const CTxOut& txout, const isminefilter& filter, isminefilter* mineTypes) const
 {
     if (!MoneyRange(txout.nValue))
         throw std::runtime_error(std::string(__func__) + ": value out of range");
-    return ((IsMine(txout) & filter) ? txout.nValue : 0);
+    isminefilter txMineTypes = IsMine(txout);
+    if (txMineTypes & filter)
+    {
+        if (mineTypes) *mineTypes |= txMineTypes;
+        return txout.nValue;
+    }
+    return 0;
 }
 
 bool CWallet::IsChange(const CTxOut& txout) const
@@ -1955,12 +1965,12 @@ bool CWallet::IsFromMe(const CTransaction& tx) const
     return (GetDebit(tx, ISMINE_ALL) > 0);
 }
 
-CAmount CWallet::GetDebit(const CTransaction& tx, const isminefilter& filter) const
+CAmount CWallet::GetDebit(const CTransaction& tx, const isminefilter& filter, isminefilter* mineTypes) const
 {
     CAmount nDebit = 0;
     for (const CTxIn& txin : tx.vin)
     {
-        nDebit += GetDebit(txin, filter);
+        nDebit += GetDebit(txin, filter, mineTypes);
         if (!MoneyRange(nDebit))
             throw std::runtime_error(std::string(__func__) + ": value out of range");
     }
@@ -1988,12 +1998,12 @@ bool CWallet::IsAllFromMe(const CTransaction& tx, const isminefilter& filter) co
     return true;
 }
 
-CAmount CWallet::GetCredit(const CTransaction& tx, const isminefilter& filter) const
+CAmount CWallet::GetCredit(const CTransaction& tx, const isminefilter& filter, isminefilter* mineTypes) const
 {
     CAmount nCredit = 0;
     for (const CTxOut& txout : tx.vout)
     {
-        nCredit += GetCredit(txout, filter);
+        nCredit += GetCredit(txout, filter, mineTypes);
         if (!MoneyRange(nCredit))
             throw std::runtime_error(std::string(__func__) + ": value out of range");
     }
@@ -2337,7 +2347,7 @@ std::set<uint256> CWalletTx::GetConflicts() const
     return result;
 }
 
-CAmount CWalletTx::GetDebit(const isminefilter& filter) const
+CAmount CWalletTx::GetDebit(const isminefilter& filter, isminefilter* mineTypes) const
 {
     if (tx->vin.empty())
         return 0;
@@ -2346,7 +2356,10 @@ CAmount CWalletTx::GetDebit(const isminefilter& filter) const
     if(filter & ISMINE_SPENDABLE)
     {
         if (fDebitCached)
+        {
             debit += nDebitCached;
+            if (mineTypes && nDebitCached > 0.0) *mineTypes |= ISMINE_SPENDABLE;
+        }
         else
         {
             nDebitCached = pwallet->GetDebit(*tx, ISMINE_SPENDABLE);
@@ -2357,7 +2370,10 @@ CAmount CWalletTx::GetDebit(const isminefilter& filter) const
     if(filter & ISMINE_WATCH_ONLY)
     {
         if(fWatchDebitCached)
+        {
             debit += nWatchDebitCached;
+            if (mineTypes && nWatchDebitCached > 0.0) *mineTypes |= ISMINE_WATCH_ONLY;
+        }
         else
         {
             nWatchDebitCached = pwallet->GetDebit(*tx, ISMINE_WATCH_ONLY);
@@ -2368,7 +2384,7 @@ CAmount CWalletTx::GetDebit(const isminefilter& filter) const
     return debit;
 }
 
-CAmount CWalletTx::GetCredit(const isminefilter& filter) const
+CAmount CWalletTx::GetCredit(const isminefilter& filter, isminefilter* mineTypes) const
 {
     // Must wait until coinbase is safely deep enough in the chain before valuing it
     if (IsCoinBase() && GetBlocksToMaturity() > 0)
@@ -2379,7 +2395,10 @@ CAmount CWalletTx::GetCredit(const isminefilter& filter) const
     {
         // GetBalance can assume transactions in mapWallet won't change
         if (fCreditCached)
+        {
             credit += nCreditCached;
+            if (mineTypes && nCreditCached > 0.0) *mineTypes |= ISMINE_SPENDABLE;
+        }
         else
         {
             nCreditCached = pwallet->GetCredit(*tx, ISMINE_SPENDABLE);
@@ -2390,7 +2409,10 @@ CAmount CWalletTx::GetCredit(const isminefilter& filter) const
     if (filter & ISMINE_WATCH_ONLY)
     {
         if (fWatchCreditCached)
+        {
             credit += nWatchCreditCached;
+            if (mineTypes && nWatchCreditCached > 0.0) *mineTypes |= ISMINE_WATCH_ONLY;
+        }
         else
         {
             nWatchCreditCached = pwallet->GetCredit(*tx, ISMINE_WATCH_ONLY);
@@ -4788,7 +4810,7 @@ void CWallet::ListLockedCoins(std::vector<COutPoint>& vOutpts) const
 void CWallet::ListProTxCoins(std::vector<COutPoint>& vOutpts) const
 {
     auto mnList = deterministicMNManager->GetListAtChainTip();
-
+{
     AssertLockHeld(cs_wallet);
     for (const auto &o : setWalletUTXO) {
         auto it = mapWallet.find(o.hash);
@@ -4799,6 +4821,16 @@ void CWallet::ListProTxCoins(std::vector<COutPoint>& vOutpts) const
             }
         }
     }
+}
+
+void CWallet::ListProTxCoins(int height, std::vector<COutPoint>& vOutpts)
+{
+    GetProTxCoins(deterministicMNManager->GetListForBlock(chainActive[height]), vOutpts);
+}
+
+void CWallet::ListProTxCoins(std::vector<COutPoint>& vOutpts)
+{
+    GetProTxCoins(deterministicMNManager->GetListAtChainTip(), vOutpts);
 }
 
 /** @} */ // end of Actions

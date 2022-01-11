@@ -20,6 +20,7 @@
 #include <util.h>
 #include <utilmoneystr.h>
 #include <utilstrencodings.h>
+#include <future/utils.h>
 
 #include <memory>
 #include <stdio.h>
@@ -564,6 +565,7 @@ static void MutateTxSign(CMutableTransaction& tx, const std::string& flagStr)
                     newcoin.out.nValue = AmountFromValue(prevOut["amount"]);
                 }
                 newcoin.nHeight = 1;
+                maybeSetPayload(newcoin, out, tx.nType, tx.vExtraPayload);
                 view.AddCoin(out, std::move(newcoin), true);
             }
 

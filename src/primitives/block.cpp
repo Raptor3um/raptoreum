@@ -18,7 +18,17 @@ uint256 CBlockHeader::GetHash() const
 
 uint256 CBlockHeader::GetPOWHash() const
 {
-	return HashGR(BEGIN(nVersion), END(nNonce), hashPrevBlock);
+
+//	initializePowCacheIfNeeded();
+	uint256 headerHash = GetHash();
+	uint256 powHash;
+	if(powHashCache.get(headerHash, powHash)) {
+		//do nothing
+	} else {
+		powHash = HashGR(BEGIN(nVersion), END(nNonce), hashPrevBlock);
+		powHashCache.insert(headerHash, powHash);
+	}
+	return powHash;
 }
 
 

@@ -519,10 +519,10 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_V17].nFalloffCoeff = 5; // this corresponds to 10 periods
 
         // The best chain should have at least this much work.
-        consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000000000000000d69a4fc6f3e"); // 0
+        consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000000000000000c2a6d13d4138"); // 0
 
         // By default assume that the signatures in ancestors of this block are valid.
-        consensus.defaultAssumeValid = uint256S("0xc146fc6244fe4d71559f4fef16a386f1fceda6e5efa3da3ca1ebe9806cc8f25c"); // 0
+        consensus.defaultAssumeValid = uint256S("0x40e5b20023ae263fa2e62d8c6c7111aab7d2743851045a226525c6e32492c227"); // 0
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.
@@ -540,10 +540,14 @@ public:
         consensus.hashGenesisBlock = genesis.GetHash();
         assert(consensus.hashGenesisBlock == uint256S("0xb79e5df07278b9567ada8fc655ffbfa9d3f586dc38da3dd93053686f41caeea0"));
         assert(genesis.hashMerkleRoot == uint256S("0x87a48bc22468acdd72ee540aab7c086a5bbcddc12b51c6ac925717a74c269453"));
-        //98.38.235.195
-        vSeeds.emplace_back("47.151.7.226", true);
-        vSeeds.emplace_back("62.171.153.224", true);
-        vSeeds.emplace_back("98.38.235.195", true);
+
+        vSeeds.emplace_back("seed00.raptoreum.com", true);
+        vSeeds.emplace_back("seed01.raptoreum.com", true);
+        vSeeds.emplace_back("seed02.raptoreum.com", true);
+        vSeeds.emplace_back("seed03.raptoreum.com", true);
+        vSeeds.emplace_back("seed04.raptoreum.com", true);
+        vSeeds.emplace_back("seed05.raptoreum.com", true);
+        vSeeds.emplace_back("seed06.raptoreum.com", true);
         vSeeds.emplace_back("ger1.raptoreum.com", true);
         vSeeds.emplace_back("ny1.raptoreum.com", true);
 
@@ -704,10 +708,10 @@ public:
         vSeeds.clear();
         // nodes with support for servicebits filtering should be at the top
         vSeeds.emplace_back("47.151.7.226", true);
-        vSeeds.emplace_back("62.171.153.224", true);
-        vSeeds.emplace_back("98.38.235.195", true);
-        vSeeds.emplace_back("ger1.raptoreum.com", true);
-        vSeeds.emplace_back("ny1.raptoreum.com", true);
+        //vSeeds.emplace_back("62.171.153.224", true);
+        //vSeeds.emplace_back("98.38.235.195", true);
+        //vSeeds.emplace_back("ger1.raptoreum.com", true);
+        //vSeeds.emplace_back("ny1.raptoreum.com", true);
 
         // Testnet Raptoreum addresses start with 'r'
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,123);
