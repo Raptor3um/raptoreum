@@ -2,6 +2,10 @@
 <context>
     <name>AddressBookPage</name>
     <message>
+        <source>Enter address or label to search</source>
+        <translation>ป้อนที่อยู่หรือชื่อที่จะค้นหา</translation>
+    </message>
+    <message>
         <source>Right-click to edit address or label</source>
         <translation>คลิกขวาเพื่อแก้ไขที่อยู่ หรือป้ายชื่อ</translation>
     </message>
@@ -51,11 +55,11 @@
     </message>
     <message>
         <source>Choose the address to send coins to</source>
-        <translation>เลือกที่อยู่เพื่อส่งเหรียญไปไว้</translation>
+        <translation>เลือกที่อยู่เพื่อส่งเหรียญ</translation>
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
-        <translation>เลือกที่อยู่เพื่อส่งเหรียญไปไว้</translation>
+        <translation>เลือกที่อยู่เพื่อรับเหรียญ</translation>
     </message>
     <message>
         <source>C&amp;hoose</source>
@@ -70,24 +74,24 @@
         <translation>ที่อยู่ผู้รับ</translation>
     </message>
     <message>
-        <source>These are your Raptoreum addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>นี่คือที่อยู่ Raptoreum ของคุณสำหรับการส่งการชำระเงิน โปรดตรวจสอบจำนวนเงินและที่อยู่ผู้รับก่อนที่จะส่งเหรียญ</translation>
+        <source>These are your Dash addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation>นี่คือที่อยู่ Dash ของคุณสำหรับการส่งการชำระเงิน โปรดตรวจสอบจำนวนเงินและที่อยู่ผู้รับก่อนที่จะส่งเหรียญ</translation>
     </message>
     <message>
-        <source>These are your Raptoreum addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>นี่เป็นที่อยู่ Raptoreum ของคุณสำหรับการรับการชำระเงิน แนะนำให้ใช้ที่อยู่รับใหม่สำหรับแต่ละธุรกรรม</translation>
+        <source>These are your Dash addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
+        <translation>นี่เป็นที่อยู่ Dash ของคุณสำหรับการรับการชำระเงิน แนะนำให้ใช้ที่อยู่รับใหม่สำหรับแต่ละธุรกรรม</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
-        <translation>คัดลอกที่อยู่</translation>
+        <translation>&amp;คัดลอกที่อยู่</translation>
     </message>
     <message>
         <source>Copy &amp;Label</source>
-        <translation>คัดลอกป้ายชื่อ</translation>
+        <translation>คัดลอก&amp;ป้ายชื่อ</translation>
     </message>
     <message>
         <source>&amp;Edit</source>
-        <translation>แก้ไข</translation>
+        <translation>&amp;แก้ไข</translation>
     </message>
     <message>
         <source>&amp;Show address QR code</source>
@@ -103,7 +107,7 @@
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>
-        <translation>Comma separated file (*.csv)</translation>
+        <translation>รูปแบบการเก็บข้อมูลตัวเลข และตัวอักษร (*.csv)</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
@@ -130,6 +134,45 @@
     </message>
 </context>
 <context>
+    <name>AppearanceWidget</name>
+    <message>
+        <source>Lighter</source>
+        <translation>เบาลง</translation>
+    </message>
+    <message>
+        <source>Bolder</source>
+        <translation>โดดเด่นยิ่งขึ้น</translation>
+    </message>
+    <message>
+        <source>Font Weight Normal:</source>
+        <translation>ค่าอักษรปกติ:</translation>
+    </message>
+    <message>
+        <source>Smaller</source>
+        <translation>เล็กลง</translation>
+    </message>
+    <message>
+        <source>Bigger</source>
+        <translation>ใหญ่ขึ้น</translation>
+    </message>
+    <message>
+        <source>Font Scale:</source>
+        <translation>ค่าตัวอักษร:</translation>
+    </message>
+    <message>
+        <source>Font Family:</source>
+        <translation>รูปแบบตัวอักษร:</translation>
+    </message>
+    <message>
+        <source>Theme:</source>
+        <translation>ธีม</translation>
+    </message>
+    <message>
+        <source>Font Weight Bold:</source>
+        <translation>ค่าอักษรตัวหนา:</translation>
+    </message>
+</context>
+<context>
     <name>AskPassphraseDialog</name>
     <message>
         <source>Passphrase Dialog</source>
@@ -141,15 +184,19 @@
     </message>
     <message>
         <source>New passphrase</source>
-        <translation>รหัสผา่นใหม่</translation>
+        <translation>รหัสผ่านใหม่</translation>
     </message>
     <message>
         <source>Repeat new passphrase</source>
         <translation>กรุณากรอกรหัสผ่านใหม่อีกครั้งหนึ่ง</translation>
     </message>
     <message>
+        <source>Show password</source>
+        <translation>แสดงรหัสผ่าน</translation>
+    </message>
+    <message>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>ใส่วลีรหัสผ่านใหม่ลงใน Wallet &lt;br/&gt; โปรดใช้วลีรหัสผ่านที่มี&lt;b&gt;อักขระสุ่ม 10 ตัวขึ้นไป&lt;/b&gt;, หรือ&lt;b&gt;มากกว่าหรือมากกว่า 8 คำ&lt;/b&gt;</translation>
+        <translation>ใส่วลีรหัสผ่านใหม่ลงในกระเป๋าสตางค์ &lt;br/&gt; โปรดใช้วลีรหัสผ่านที่มี&lt;b&gt;อักขระสุ่ม 10 ตัวขึ้นไป&lt;/b&gt;, หรือ&lt;b&gt;มากกว่าหรือมากกว่า 8 คำ&lt;/b&gt;</translation>
     </message>
     <message>
         <source>Encrypt wallet</source>
@@ -157,23 +204,23 @@
     </message>
     <message>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation>การดำเนินการนี้ต้องการรหัสวลีของคุณเพื่อปลดล็อค Wallet ของคุณ</translation>
+        <translation>การดำเนินการนี้ต้องการรหัสวลีของคุณเพื่อปลดล็อคกระเป๋าสตางค์ของคุณ</translation>
     </message>
     <message>
         <source>Unlock wallet for mixing only</source>
-        <translation>ปลดล็อค Wallet สำหรับการผสมเท่านั้น</translation>
+        <translation>ปลดล็อคกระเป๋าสตางค์สำหรับการผสมเท่านั้น</translation>
     </message>
     <message>
         <source>Unlock wallet</source>
-        <translation>ปลดล็อค Wallet</translation>
+        <translation>ปลดล็อคกระเป๋าสตางค์</translation>
     </message>
     <message>
         <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
-        <translation>การดำเนินการนี้ต้องการรหัสวลีของคุณเพื่อถอดรหัส wallet </translation>
+        <translation>การดำเนินการนี้ต้องการรหัสวลีของคุณเพื่อถอดรหัสกระเป๋าสตางค์</translation>
     </message>
     <message>
         <source>Decrypt wallet</source>
-        <translation>ถอดรหัส Wallet</translation>
+        <translation>ถอดรหัสกระเป๋าสตางค์</translation>
     </message>
     <message>
         <source>Change passphrase</source>
@@ -181,35 +228,31 @@
     </message>
     <message>
         <source>Enter the old passphrase and new passphrase to the wallet.</source>
-        <translation>ใส่รหัสผ่านเก่าและรหัสวลีใหม่ไปยัง wallet </translation>
+        <translation>ใส่รหัสผ่านเก่าและรหัสวลีใหม่ไปยังกระเป๋าสตางค์</translation>
     </message>
     <message>
         <source>Confirm wallet encryption</source>
         <translation>ยืนยันการเข้ารหัสกระเป๋าสตางค์</translation>
     </message>
     <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR RTM&lt;/b&gt;!</source>
-        <translation>คำเตือน : ถ้าคุณเข้ารหัส Wallet ของคุณแล้วทำรหัสวลีหาย คุณจะ&lt;b&gt;สูญเสีย Raptoreum ของคุณทั้งหมด&lt;/b&gt;!</translation>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR DASH&lt;/b&gt;!</source>
+        <translation>คำเตือน : ถ้าคุณเข้ารหัสกระเป๋าสตางค์ของคุณแล้วทำรหัสวลีหาย คุณจะ&lt;b&gt;สูญเสีย Dash ของคุณทั้งหมด&lt;/b&gt;!</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
-        <translation>คุณแน่ใจหรือไม่ว่าต้องการเข้ารหัสข้อมูล Wallet ของคุณ?</translation>
+        <translation>คุณแน่ใจหรือไม่ว่าต้องการเข้ารหัสข้อมูลกระเป๋าสตางค์ของคุณ?</translation>
     </message>
     <message>
         <source>Wallet encrypted</source>
-        <translation>Wallet ถูกเข้ารหัสเรียบร้อยแล้ว</translation>
-    </message>
-    <message>
-        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your funds from being stolen by malware infecting your computer.</source>
-        <translation>%1 จะปิดตอนนี้เพื่อสิ้นสุดขั้นตอนการเข้ารหัส โปรดทราบว่าการเข้ารหัสข้อมูล Wallet ของคุณไม่สามารถป้องกันเงินจากการถูกโจรกรรมจากคอมพิวเตอร์ของคุณได้อย่างเต็มที่</translation>
+        <translation>กระเป๋าสตางค์ถูกเข้ารหัสเรียบร้อยแล้ว</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. Previous backups of the unencrypted wallet file contain the same HD seed and still have full access to all your funds just like the new, encrypted wallet.</source>
-        <translation>ข้อมูลสำคัญ: การสำรองข้อมูลใดๆที่คุณได้สำรองจากไฟล์ Wallet จะถูกแทนที่ด้วยไฟล์ Wallet ที่เข้ารหัสที่สร้างใหม่ การสำรองข้อมูลก่อนหน้าของไฟล์ Wallet ที่ไม่ได้เข้ารหัสมี HD Seed เดียวกันและยังคงสามารถเข้าถึงกองทุนของคุณได้อย่างเต็มที่เช่นเดียวกับ Wallet ใหม่ที่มีการเข้ารหัส</translation>
+        <translation>ข้อมูลสำคัญ: การสำรองข้อมูลใดๆก่อนหน้านี้ในไฟล์กระเป๋าสตางค์ควรจะถูกแทนที่โดยใช้ไฟล์กระเป๋าสตางค์ที่เข้ารหัสลับใหม่ที่สร้างขึ้น การสำรองข้อมูลก่อนหน้าของไฟล์กระเป๋าสตางค์ที่ไม่ได้เข้ารหัสด้วย HD Seed เดียวกันจะยังคงสามารถเข้าถึงกองทุนของคุณได้อย่างเต็มที่เช่นเดียวกับกระเป๋าสตางค์ใหม่ที่มีการเข้ารหัสลับใหม่</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation>ข้อมูลสำคัญ: การสำรองข้อมูลก่อนหน้าใด ๆ ที่คุณทำจากกระเป๋าสตางค์ของคุณควรถูกแทนที่โดยใช้ไฟล์กระเป๋าสตางค์ที่เข้ารหัสลับใหม่ที่สร้างขึ้น เพื่อความปลอดภัยการสำรองข้อมูลก่อนหน้าของไฟล์ Wallet ที่ไม่ได้เข้ารหัสจะใช้งานไม่ได้เมื่อคุณเริ่มใช้ Wallet ที่เข้ารหัสใหม่</translation>
+        <translation>ข้อมูลสำคัญ: การสำรองข้อมูลใดๆก่อนหน้านี้ในไฟล์กระเป๋าสตางค์ควรจะถูกแทนที่โดยใช้ไฟล์กระเป๋าสตางค์ที่เข้ารหัสลับใหม่ที่สร้างขึ้น  เพื่อความปลอดภัยการสำรองข้อมูลก่อนหน้านี้ในกระเป๋าสตางค์จะใช้งานไม่ได้เมื่อทันทีเมื่อคุณเริ่มใช้กระเป๋าสตางค์ที่เข้ารหัสลับใหม่</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
@@ -217,7 +260,7 @@
     </message>
     <message>
         <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
-        <translation>การเข้ารหัส Wallet ล้มเหลวเนื่องจากข้อผิดพลาดภายใน Wallet ของคุณไม่ได้รับการเข้ารหัส</translation>
+        <translation>การเข้ารหัสกระเป๋าสตางค์ล้มเหลวเนื่องจากข้อผิดพลาดภายใน กระเป็าสตางค์ของคุณไม่ได้รับการเข้ารหัส</translation>
     </message>
     <message>
         <source>The supplied passphrases do not match.</source>
@@ -225,23 +268,23 @@
     </message>
     <message>
         <source>Wallet unlock failed</source>
-        <translation>ปลดล็อค Wallet ล้มเหลว</translation>
+        <translation>ปลดล็อคกระเป๋าสตางค์ล้มเหลว</translation>
     </message>
     <message>
         <source>The passphrase entered for the wallet decryption was incorrect.</source>
-        <translation>รหัสผ่านวลีสำหรับเข้าถึง Wallet ไม่ถูกต้อง </translation>
+        <translation>รหัสผ่านของวลีสำหรับการเข้าถึงกระเป๋าสตางค์ไม่ถูกต้อง </translation>
     </message>
     <message>
         <source>Wallet decryption failed</source>
-        <translation>การเข้าถึง Wallet ล้มเหลว</translation>
+        <translation>การเข้าถึงกระเป๋าสตางค์ล้มเหลว</translation>
     </message>
     <message>
         <source>Wallet passphrase was successfully changed.</source>
-        <translation>เปลี่ยนรหัสผ่านวลีเรียบร้อยแล้ว</translation>
+        <translation>เปลี่ยนวลีรหัสผ่านเรียบร้อยแล้ว</translation>
     </message>
     <message>
         <source>Warning: The Caps Lock key is on!</source>
-        <translation>คำเตือน: ปุ่ม Caps Lock เปิดอยู่</translation>
+        <translation>คำเตือน: ปุ่มแป้นตรึงตัวอักษรใหญ่เปิดอยู่</translation>
     </message>
 </context>
 <context>
@@ -256,22 +299,29 @@
     </message>
 </context>
 <context>
+    <name>BitcoinAmountField</name>
+    <message>
+        <source>Amount in %1</source>
+        <translation>จำนวนเงินใน %1</translation>
+    </message>
+</context>
+<context>
     <name>BitcoinGUI</name>
     <message>
-        <source>A fatal error occurred. Raptoreum Core can no longer continue safely and will quit.</source>
-        <translation>เกิดข้อผิดพลาดร้ายแรงขึ้น Raptoreum Core ไม่สามารถดำเนินการต่อได้อย่างปลอดภัยและจะออกจากระบบ</translation>
+        <source>A fatal error occurred. Dash Core can no longer continue safely and will quit.</source>
+        <translation>เกิดข้อผิดพลาดร้ายแรงขึ้น Dash Core ไม่สามารถดำเนินการต่อได้อย่างปลอดภัยและจะออกจากระบบ</translation>
     </message>
     <message>
-        <source>Raptoreum Core</source>
-        <translation>Raptoreum Core</translation>
+        <source>Dash Core</source>
+        <translation>Dash Core</translation>
     </message>
     <message>
         <source>Wallet</source>
-        <translation>Wallet </translation>
+        <translation>กระเป๋าสตางค์</translation>
     </message>
     <message>
         <source>Node</source>
-        <translation>Node/โหนด</translation>
+        <translation>ปุ่ม</translation>
     </message>
     <message>
         <source>&amp;Overview</source>
@@ -279,39 +329,39 @@
     </message>
     <message>
         <source>Show general overview of wallet</source>
-        <translation>แสดงภาพรวมทั่วไปของกระเป๋าเงิน</translation>
+        <translation>แสดงภาพรวมทั่วไปของกระเป๋าสตางค์</translation>
     </message>
     <message>
         <source>&amp;Send</source>
         <translation>&amp;ส่ง</translation>
     </message>
     <message>
-        <source>Send coins to a Raptoreum address</source>
-        <translation>ส่ง เหรียญ ไปยัง ที่อยู่ Raptoreum</translation>
+        <source>Send coins to a Dash address</source>
+        <translation>ส่งเหรียญไปยังที่อยู่ของ Dash</translation>
     </message>
     <message>
         <source>&amp;Receive</source>
         <translation>&amp;รับ</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and raptoreum: URIs)</source>
-        <translation>เรียกเก็บ การชำระเงิน (สร้าง QR codes และ Raptoreum: URIs)</translation>
+        <source>Request payments (generates QR codes and dash: URIs)</source>
+        <translation>เรียกเก็บการชำระเงิน (สร้างคิว อาร์ โค้ด QR codes และแหล่งที่มาของ Dash: URIs)</translation>
     </message>
     <message>
         <source>&amp;Transactions</source>
-        <translation>การทำธุรกรรม</translation>
+        <translation>&amp;การทำธุรกรรม</translation>
     </message>
     <message>
         <source>Browse transaction history</source>
         <translation>เรียกดูประวัติการทำธุรกรรม</translation>
     </message>
     <message>
-        <source>&amp;Smartnodes</source>
-        <translation>Smartnodes</translation>
+        <source>&amp;Masternodes</source>
+        <translation>&amp;Masternodes</translation>
     </message>
     <message>
-        <source>Browse smartnodes</source>
-        <translation>Browse smartnodes</translation>
+        <source>Browse masternodes</source>
+        <translation>เรียกดูบัญชี masternodes</translation>
     </message>
     <message>
         <source>E&amp;xit</source>
@@ -322,8 +372,8 @@
         <translation>ออกจากโปรแกรม</translation>
     </message>
     <message>
-        <source>Show information about Raptoreum Core</source>
-        <translation>แสดงข้อมูลเกี่ยวกับ Raptoreum Core</translation>
+        <source>Show information about Dash Core</source>
+        <translation>แสดงข้อมูลเกี่ยวกับ Dash Core</translation>
     </message>
     <message>
         <source>About &amp;Qt</source>
@@ -342,6 +392,10 @@
         <translation>&amp;เกี่ยวกับ %1</translation>
     </message>
     <message>
+        <source>Send %1 funds to a Dash address</source>
+        <translation>ส่งเงิน %1 ไปยังที่อยู่ Dash</translation>
+    </message>
+    <message>
         <source>Modify configuration options for %1</source>
         <translation>ปรับปรุง ข้อมูลการตั้งค่าตัวเลือก สำหรับ %1</translation>
     </message>
@@ -355,67 +409,67 @@
     </message>
     <message>
         <source>&amp;Encrypt Wallet...</source>
-        <translation>เข้ารหัส  Wallet </translation>
+        <translation>&amp;เข้ารหัสกระเป๋าสตางค์</translation>
     </message>
     <message>
         <source>Encrypt the private keys that belong to your wallet</source>
-        <translation>เข้ารหัส private keys สำหรับ Wallet ของท่าน</translation>
+        <translation>เข้ารหัส private keys สำหรับกระเป๋าสตางค์ของท่าน</translation>
     </message>
     <message>
         <source>&amp;Backup Wallet...</source>
-        <translation>&amp;สำรอง Wallet ...</translation>
+        <translation>&amp;สำรองกระเป๋าสตางค์...</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
-        <translation>สำรอง กระเป๋าเงินไปยัง ที่เก็บอื่น</translation>
+        <translation>สำรองกระเป๋าเงินไปยังที่เก็บอื่น</translation>
     </message>
     <message>
         <source>&amp;Change Passphrase...</source>
-        <translation>&amp;เปลี่ยนรหัสผ่าน...</translation>
+        <translation>&amp;เปลี่ยนวลีรหัสผ่าน...</translation>
     </message>
     <message>
         <source>Change the passphrase used for wallet encryption</source>
-        <translation>เปลี่ยนรหัสผ่านที่ใช้สำหรับการเข้ารหัสกระเป๋าเงิน</translation>
+        <translation>เปลี่ยนรหัสผ่านที่ใช้สำหรับการเข้าถึงรหัสลับของกระเป๋าสตางค์</translation>
     </message>
     <message>
         <source>&amp;Unlock Wallet...</source>
-        <translation>ปลดล็อค Wallet</translation>
+        <translation>&amp;ปลดล็อคกระเป๋าสตางค์</translation>
     </message>
     <message>
         <source>Unlock wallet</source>
-        <translation>ปลดล็อค Wallet </translation>
+        <translation>ปลดล็อคกระเป๋าสตางค์</translation>
     </message>
     <message>
         <source>&amp;Lock Wallet</source>
-        <translation>ล็อค Wallet</translation>
+        <translation>ล็อคกระเป๋าสตางค์</translation>
     </message>
     <message>
         <source>Sign &amp;message...</source>
-        <translation>เซ็นต์ชื่อด้วย &amp;ข้อความ...</translation>
+        <translation>การลงนาม &amp;ข้อความ...</translation>
     </message>
     <message>
-        <source>Sign messages with your Raptoreum addresses to prove you own them</source>
-        <translation>เซ็นชื่อด้วยข้อความ ที่เก็บ Raptoreum เพื่อแสดงว่าท่านเป็นเจ้าของ Raptoreum นี้จริง</translation>
+        <source>Sign messages with your Dash addresses to prove you own them</source>
+        <translation>ลงชื่อด้วยที่อยู่ Dash ของคุณเพื่อแสดงว่าคุณคือเจ้าของบัญชีนี้จริง</translation>
     </message>
     <message>
         <source>&amp;Verify message...</source>
         <translation>&amp;ยืนยันข้อความ...</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified Raptoreum addresses</source>
-        <translation>ตรวจสอบ ข้อความ เพื่อให้แน่ใจว่า การเซ็นต์ชื่อ ด้วยที่เก็บ Raptoreum แล้ว</translation>
+        <source>Verify messages to ensure they were signed with specified Dash addresses</source>
+        <translation>ตรวจสอบข้อความเพื่อให้แน่ใจว่าถูกเซ็นกำกำกับไว้ด้วยที่อยู่ของ Dash โดยเฉพาะ</translation>
     </message>
     <message>
         <source>&amp;Information</source>
-        <translation>ข้อมูล</translation>
+        <translation>&amp;ข้อมูล</translation>
     </message>
     <message>
         <source>Show diagnostic information</source>
-        <translation>แสดงข้อมูลการวินิจฉัย</translation>
+        <translation>แสดงข้อมูลการวิเคราะห์</translation>
     </message>
     <message>
         <source>&amp;Debug console</source>
-        <translation>คอนโซลการแก้ไขจุดบกพร่อง</translation>
+        <translation>&amp;การแก้ไขจุดบกพร่อง</translation>
     </message>
     <message>
         <source>Open debugging console</source>
@@ -423,7 +477,7 @@
     </message>
     <message>
         <source>&amp;Network Monitor</source>
-        <translation>ตัวตรวจสอบเครือข่าย</translation>
+        <translation>&amp;ตรวจสอบเครือข่าย</translation>
     </message>
     <message>
         <source>Show network monitor</source>
@@ -431,7 +485,7 @@
     </message>
     <message>
         <source>&amp;Peers list</source>
-        <translation>รายชื่อ Peers</translation>
+        <translation>&amp;รายชื่อ Peers</translation>
     </message>
     <message>
         <source>Show peers info</source>
@@ -439,15 +493,15 @@
     </message>
     <message>
         <source>Wallet &amp;Repair</source>
-        <translation>ซ่อมแซม Wallet</translation>
+        <translation>กระเป๋าสตางค์ &amp;การซ่อมแซม</translation>
     </message>
     <message>
         <source>Show wallet repair options</source>
-        <translation>แสดงตัวเลือกการซ่อมแซม Wallet </translation>
+        <translation>แสดงตัวเลือกการซ่อมแซมกระเป๋าสตางค์</translation>
     </message>
     <message>
         <source>Open Wallet &amp;Configuration File</source>
-        <translation>เปิดไฟล์การกำหนดค่า Wallet </translation>
+        <translation>เปิดกระเป๋าสตางค์  &amp;การกำหนดค่าไฟล์</translation>
     </message>
     <message>
         <source>Open configuration file</source>
@@ -455,15 +509,15 @@
     </message>
     <message>
         <source>Show Automatic &amp;Backups</source>
-        <translation>แสดงการสำรองข้อมูลอัตโนมัติ</translation>
+        <translation>แสดงอัตโนมัติ &amp;การสำรองข้อมูล</translation>
     </message>
     <message>
         <source>Show automatically created wallet backups</source>
-        <translation>แสดงการสำรองข้อมูล Wallet ที่สร้างขึ้นโดยอัตโนมัติ</translation>
+        <translation>แสดงการสำรองข้อมูลกระเป๋าสตางค์ที่สร้างขึ้นโดยอัตโนมัติ</translation>
     </message>
     <message>
         <source>&amp;Sending addresses...</source>
-        <translation>&amp;ที่เก็บเงิน ที่จะส่ง bitcoin</translation>
+        <translation>&amp;กำลังส่งข้อมูลที่อยู่...</translation>
     </message>
     <message>
         <source>Show the list of used sending addresses and labels</source>
@@ -471,7 +525,7 @@
     </message>
     <message>
         <source>&amp;Receiving addresses...</source>
-        <translation>ที่อยู่ผู้รับ</translation>
+        <translation>&amp;ที่อยู่ผู้รับ</translation>
     </message>
     <message>
         <source>Show the list of used receiving addresses and labels</source>
@@ -479,55 +533,65 @@
     </message>
     <message>
         <source>Open &amp;URI...</source>
-        <translation>เปิด URI</translation>
+        <translation>เปิด &amp;URI...</translation>
     </message>
     <message>
-        <source>Open a raptoreum: URI or payment request</source>
-        <translation>เปิด Raptoreum: URI หรือคำขอการชำระเงิน</translation>
+        <source>Open a dash: URI or payment request</source>
+        <translation>เปิด Dash: URI หรือคำขอการชำระเงิน</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
-        <translation>ตัวเลือก Command-line</translation>
+        <translation>&amp;ตัวเลือก Command-line</translation>
     </message>
     <message>
-        <source>Show the %1 help message to get a list with possible Raptoreum command-line options</source>
-        <translation>แสดง %1 ข้อความช่วยเหลือ เพื่อแสดงรายการ ตัวเลือกที่เป็นไปได้สำหรับ Raptoreum command-line</translation>
+        <source>Show the %1 help message to get a list with possible Dash command-line options</source>
+        <translation>แสดง %1 ข้อความช่วยเหลือ เพื่อแสดงรายการ ตัวเลือกที่เป็นไปได้สำหรับ Dash command-line</translation>
     </message>
     <message>
         <source>%1 client</source>
         <translation>%1 ไคลเอนต์</translation>
     </message>
     <message>
-        <source>&amp;PrivateSend information</source>
-        <translation>ข้อมูล PrivateSend</translation>
+        <source>Wallet: %1
+</source>
+        <translation>กระเป๋าสตางค์: %1
+</translation>
     </message>
     <message>
-        <source>Show the PrivateSend basic information</source>
-        <translation>แสดงข้อมูลพื้นฐานของ PrivateSend</translation>
+        <source>Wallet is &lt;b&gt;unencrypted&lt;/b&gt;</source>
+        <translation>กระเป๋าสตางค์ &lt;b&gt;ไม่ได้ถูกเข้ารหัส&lt;/b&gt;</translation>
     </message>
     <message>
         <source>&amp;File</source>
-        <translation>ไฟล์</translation>
+        <translation>&amp;ไฟล์</translation>
+    </message>
+    <message>
+        <source>%1 &amp;information</source>
+        <translation>%1 &amp;ข้อมูล</translation>
+    </message>
+    <message>
+        <source>Show the %1 basic information</source>
+        <translation>แสดงข้อมูลพื้นฐานของ %1</translation>
     </message>
     <message>
         <source>&amp;Settings</source>
-        <translation>การตั้งค่า</translation>
+        <translation>&amp;การตั้งค่า</translation>
     </message>
     <message>
         <source>&amp;Tools</source>
-        <translation>เครื่องมือ</translation>
+        <translation>&amp;เครื่องมือ</translation>
     </message>
     <message>
         <source>&amp;Help</source>
-        <translation>ช่วยเหลือ</translation>
+        <translation>&amp;ช่วยเหลือ</translation>
     </message>
     <message>
         <source>Tabs toolbar</source>
         <translation>แถบเครื่องมือ</translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to Raptoreum network</source>
-        <translation><numerusform>%n เชื่อมต่อใช้งานกับเครือข่าย Raptoreum</numerusform></translation>
+        <source>%n active connection(s) to Dash network</source>
+        <translation><numerusform>%n เชื่อมต่อใช้งานกับเครือข่าย Dash</numerusform></translation>
     </message>
     <message>
         <source>Network activity disabled</source>
@@ -598,6 +662,30 @@
         <translation>ข้อมูล</translation>
     </message>
     <message>
+        <source>Received and sent multiple transactions</source>
+        <translation>การรับและส่งแบบหลากหลายธุรกรรม</translation>
+    </message>
+    <message>
+        <source>Sent multiple transactions</source>
+        <translation>ส่งแบบหลากหลายธุรกรรม</translation>
+    </message>
+    <message>
+        <source>Received multiple transactions</source>
+        <translation>รับแบบหลากหลายธุรกรรม</translation>
+    </message>
+    <message>
+        <source>Sent Amount: %1
+</source>
+        <translation>ส่งเป็นจำนวน %1
+</translation>
+    </message>
+    <message>
+        <source>Received Amount: %1
+</source>
+        <translation>รับเป็นจำนวน %1
+</translation>
+    </message>
+    <message>
         <source>Date: %1
 </source>
         <translation>วันที่: %1
@@ -640,16 +728,12 @@
         <translation>&lt;b&gt;เปิดใช้งาน&lt;/b&gt;การสร้างคีย์ HD แล้ว</translation>
     </message>
     <message>
-        <source>HD key generation is &lt;b&gt;disabled&lt;/b&gt;</source>
-        <translation>การสร้างคีย์ HD ถูก&lt;b&gt;ปิดใช้งาน&lt;/b&gt;</translation>
-    </message>
-    <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
         <translation>ระเป๋าเงินถูก &lt;b&gt;เข้ารหัส&lt;/b&gt; และในขณะนี้ &lt;b&gt;ปลดล็อคแล้ว&lt;/b&gt;</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt; for mixing only</source>
-        <translation>Wallet &lt;b&gt;เข้ารหัสแล้ว&lt;/b&gt;และขณะนี้&lt;b&gt;ปลดล็อก&lt;/b&gt;สำหรับการผสมเท่านั้น</translation>
+        <translation>กระเป๋าสตางค์ &lt;b&gt;เข้ารหัสแล้ว&lt;/b&gt;และขณะนี้&lt;b&gt;ปลดล็อก&lt;/b&gt;สำหรับการผสมเท่านั้น</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
@@ -723,8 +807,8 @@
         <translation>รับโดยที่เก็บ</translation>
     </message>
     <message>
-        <source>PS Rounds</source>
-        <translation>PS รอบ</translation>
+        <source>Mixing Rounds</source>
+        <translation>รอบผสม</translation>
     </message>
     <message>
         <source>Date</source>
@@ -776,7 +860,7 @@
     </message>
     <message>
         <source>Copy bytes</source>
-        <translation>คัดลอกไบต์</translation>
+        <translation>คัดลอกหน่วยของข้อมูลคอมพิวเตอร์</translation>
     </message>
     <message>
         <source>Copy dust</source>
@@ -788,7 +872,7 @@
     </message>
     <message>
         <source>Please switch to "List mode" to use this function.</source>
-        <translation>โปรดเปลี่ยนเป็น List mode เพื่อใช้ฟังก์ชั่นนี้</translation>
+        <translation>กรุณาเปลี่ยนเป็น "List mode" เพื่อใช้ฟังก์ชั่นนี้</translation>
     </message>
     <message>
         <source>(%1 locked)</source>
@@ -809,6 +893,30 @@
     <message>
         <source>Can vary +/- %1 duff(s) per input.</source>
         <translation>สามารถเปลี่ยนแปลงได้ + / - %1 duff (s) ต่อรายการ</translation>
+    </message>
+    <message>
+        <source>Some coins were unselected because they were spent.</source>
+        <translation>บางเหรียญถูกยกเลิกการเลือกเพราะถูกใช้ไปแล้ว</translation>
+    </message>
+    <message>
+        <source>Some coins were unselected because they do not have enough mixing rounds.</source>
+        <translation>บางเหรียญถูกยกเลิกการเลือกเพราะมีจำนวนไม่พอให้ผสม</translation>
+    </message>
+    <message>
+        <source>Show all coins</source>
+        <translation>แสดงเหรียญทั้งหมด</translation>
+    </message>
+    <message>
+        <source>Hide %1 coins</source>
+        <translation>ซ่อน %1 เหรียญ</translation>
+    </message>
+    <message>
+        <source>Show all %1 coins</source>
+        <translation>แสดงเหรียญ %1 ทั้งหมด</translation>
+    </message>
+    <message>
+        <source>Show spendable coins only</source>
+        <translation>แสดงเหรียญที่ใช้จ่ายได้เท่านั้น</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -843,15 +951,11 @@
     </message>
     <message>
         <source>&amp;Address</source>
-        <translation>&amp;ที่เก็บ</translation>
+        <translation>&amp;ที่อยู่</translation>
     </message>
     <message>
         <source>The address associated with this address list entry. This can only be modified for sending addresses.</source>
         <translation>ที่เก็บที่เกี่ยวข้องกับ ที่เก็บที่แสดงรายการนี้ การปรับปรุงนี้ทำได้สำหรับ ที่เก็บเงินที่จะใช่ส่งเงิน เท่านั้น</translation>
-    </message>
-    <message>
-        <source>New receiving address</source>
-        <translation>ที่อยู่ผู้รับใหม่</translation>
     </message>
     <message>
         <source>New sending address</source>
@@ -866,8 +970,8 @@
         <translation>แก้ไขที่อยู่ผู้ส่ง</translation>
     </message>
     <message>
-        <source>The entered address "%1" is not a valid Raptoreum address.</source>
-        <translation>ที่อยู่ที่ป้อน "%1" ไม่ใช่ที่อยู่ Raptoreum ที่ถูกต้อง</translation>
+        <source>The entered address "%1" is not a valid Dash address.</source>
+        <translation>ที่อยู่ที่ป้อน "%1" ไม่ใช่ที่อยู่ Dash ที่ถูกต้อง</translation>
     </message>
     <message>
         <source>The entered address "%1" is already in the address book.</source>
@@ -875,7 +979,7 @@
     </message>
     <message>
         <source>Could not unlock wallet.</source>
-        <translation>ไม่สามารถปลดล็อค Wallet  ได้</translation>
+        <translation>ไม่สามารถปลดล็อคกระเป๋าสตางค์ได้</translation>
     </message>
     <message>
         <source>New key generation failed.</source>
@@ -924,46 +1028,14 @@
         <translation>ตัวเลือก Command-line</translation>
     </message>
     <message>
-        <source>Usage:</source>
-        <translation>วิธีใช้งาน:</translation>
+        <source>%1 information</source>
+        <translation>%1 ข้อมูล</translation>
     </message>
     <message>
-        <source>command-line options</source>
-        <translation>ตัวเลือก Command-line</translation>
+        <source>&lt;h3&gt;%1 Basics&lt;/h3&gt; %1 gives you true financial privacy by obscuring the origins of your funds. All the Dash in your wallet is comprised of different "inputs" which you can think of as separate, discrete coins.&lt;br&gt; %1 uses an innovative process to mix your inputs with the inputs of two or more other people, without having your coins ever leave your wallet. You retain control of your money at all times.&lt;hr&gt; &lt;b&gt;The %1 process works like this:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;%1 begins by breaking your transaction inputs down into standard denominations. These denominations are 0.001 DASH, 0.01 DASH, 0.1 DASH, 1 DASH and 10 DASH -- sort of like the paper money you use every day.&lt;/li&gt; &lt;li&gt;Your wallet then sends requests to specially configured software nodes on the network, called "masternodes." These masternodes are informed then that you are interested in mixing a certain denomination. No identifiable information is sent to the masternodes, so they never know "who" you are.&lt;/li&gt; &lt;li&gt;When two or more other people send similar messages, indicating that they wish to mix the same denomination, a mixing session begins. The masternode mixes up the inputs and instructs all three users' wallets to pay the now-transformed input back to themselves. Your wallet pays that denomination directly to itself, but in a different address (called a change address).&lt;/li&gt; &lt;li&gt;In order to fully obscure your funds, your wallet must repeat this process a number of times with each denomination. Each time the process is completed, it's called a "round." Each round of %1 makes it exponentially more difficult to determine where your funds originated.&lt;/li&gt; &lt;li&gt;This mixing process happens in the background without any intervention on your part. When you wish to make a transaction, your funds will already be mixed. No additional waiting is required.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;IMPORTANT:&lt;/b&gt; Your wallet only contains 1000 of these "change addresses." Every time a mixing event happens, up to 9 of your addresses are used up. This means those 1000 addresses last for about 100 mixing events. When 900 of them are used, your wallet must create more addresses. It can only do this, however, if you have automatic backups enabled.&lt;br&gt; Consequently, users who have backups disabled will also have %1 disabled. &lt;hr&gt;For more information, see the &lt;a style="%2" href="%3"&gt;%1 documentation&lt;/a&gt;.</source>
+        <translation>&lt;h3&gt;ข้อมูลเบื้องต้นเกี่ยวกับ %1&lt;/h3&gt;%1ให้ความเป็นส่วนตัวทางการเงินที่แท้จริงโดยการปิดบังต้นกำเนิดของเงินทุนของคุณ Dash ทั้งหมดในกระเป๋าเงินของคุณประกอบด้วย &amp;quot;อินพุต&amp;quot; ที่แตกต่างกันซึ่งคุณสามารถแยกเหรียญออกจากกัน ได้&lt;br&gt;%1 ใช้กระบวนการที่เป็นนวัตกรรมในการผสมผสานอินพุตของคุณกับอินพุตของคนอื่น ๆ สองคน โดยไม่ต้องเก็บเหรียญไว้ในกระเป๋าอิเลกทรอนิกส์ของคุณ และคุณสามารถควบคุมเงินของคุณได้ตลอดเวลา&lt;hr&gt; &lt;b&gt;กระบวนการของ %1 จะทำงานดังต่อไปนี้: &lt;/b&gt;&lt;ol type="1"&gt;&lt;li&gt;%1 จะเริ่มต้นด้วยการทำธุรกรรมของคุณให้เป็นหน่วยเงินตรามาตรฐาน หน่วยเงินตราเหล่านี้คือ 0.001 DASH 0.01 DASH 0.1 DASH 1 DASH และ 10 DASH – ดั่งเช่นเงินสดที่คุณใช้ในทุก ๆ วัน &lt;/li&gt;&lt;li&gt; กระเป๋าเงินอิเลกทรอนิกส์ของคุณจะส่งคำขอไปยังซอฟต์แวร์ที่กำหนดค่าพิเศษในเครือข่ายที่เรียกว่า "masternodes" masternodes เหล่านี้จะได้รับแจ้งว่าคุณมีความสนใจในผสมเงินตราบางอย่าง แตจะไม่มีการส่งข้อมูลที่ระบุตัวตนไปยัง masternodes ดังนั้นพวกเขาจึงไม่เคยรู้ว่า "คุณ" คือใคร &lt;/li&gt;&lt;li&gt;  เมื่อมีคนอื่นสองคนส่งข้อความที่คล้ายกัน ซึ่งบ่งชี้ว่าพวกเขาต้องการผสมหน่วยเงินตราเดียวกัน กระบวนการผสมก็จะเริ่มต้นขึ้น masternode จะรวมอินพุตและสั่งให้กระเป๋าเงินอิเลกทรอนิกส์ของผู้ใช้ทั้งสามคนจ่ายอินพุตที่แปลงตอนนี้กลับคืนสู่ตัวเอง กระเป๋าเงินของคุณจ่ายเงินให้กับตัวเองโดยตรง แต่ในที่อยู่บัญชี (Address) อื่น เรียกว่า “change address” &lt;/li&gt;&lt;li&gt; เพื่อที่จะบดบังเงินทุนของคุณอย่างเต็มที่ กระเป๋าเงินของคุณจะต้องทำซ้ำขั้นตอนนี้หลายครั้งในแต่ละสกุลเงิน ทุกครั้งที่กระบวนการเสร็จสิ้นจะเรียกว่า "รอบ" สำหรับ %1 จะทำงานดังต่อไปนี้: แต่ละรอบทำให้ยากต่อการระบุว่าเงินของคุณมาจากแหล่งใด &lt;/li&gt;&lt;li&gt; กระบวนการผสมนี้เกิดขึ้นในกระบวนการหลังบ้าน โดยไม่มีการแทรกแซงในส่วนของคุณ เมื่อคุณต้องการทำธุรกรรม เงินของคุณจะถูกผสมกันแล้ว ไม่จำเป็นต้องรออีก&lt;/li&gt;&lt;/ol&gt;&lt;hr&gt;&lt;b&gt; ข้อสำคัญ: &lt;/b&gt;กระเป๋าเงินของคุณมี "change address" เพียง 1000 รายการเท่านั้น ทุกครั้งที่มีกระบวนการผสมเงินตราเกินขึ้น change address ของคุณจะถูกใช้ไปสูงสุด 9 รายการ ซึ่งหมายความว่า 1000 ที่อยู่เหล่านั้นมีอายุการใช้งานประมาณ 100 ครั้ง เมื่อใช้ 900 รายการกระเป๋าเงินของคุณจะต้องสร้างที่อยู่เพิ่มเติม อย่างไรก็ตาม กระบวนการนี้สามารถทำได้ก็ต่อเมื่อคุณเปิดใช้งานการสำรองข้อมูลอัตโนมัติ &lt;br&gt;ดังนั้นผู้ใช้ที่ปิดใช้งานการสำรองข้อมูลระบบ %1 ก็จะถูกปิดใช้งานด้วย&lt;hr&gt;สำหรับข้อมูลเพิ่มเติมโปรดดูที่ &lt;a style="%2" href="%3"&gt;เอกสารอ้างอิงของ %1&lt;/a&gt;</translation>
     </message>
-    <message>
-        <source>UI Options:</source>
-        <translation>ตัวเลือก UI:</translation>
-    </message>
-    <message>
-        <source>Choose data directory on startup (default: %u)</source>
-        <translation>เลือกไดเร็กทอรี่ข้อมูลตั้งแต่เริ่มต้นสตาร์ทอัพ (ค่าเริ่มต้น: %u)</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>ตั้งค่าภาษา ยกตัวอย่าง "de_DE" (ค่าเริ่มต้น: ภาษาท้องถิ่นของระบบ)</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>เริ่มต้นมินิไมซ์</translation>
-    </message>
-    <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>ตั้งค่า SSL root certificates สำหรับเรียกการชำระเงิน (ค่าเริ่มต้น: -system-)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: %u)</source>
-        <translation>แสดง splash screen ตอนเริ่มต้น (ค่าเริ่มต้น: %u)</translation>
-    </message>
-    <message>
-        <source>Reset all settings changed in the GUI</source>
-        <translation>รีเซตการเปลี่ยนการตั้งค่าทั้งหมดใน GUI</translation>
-    </message>
-    <message>
-        <source>PrivateSend information</source>
-        <translation>ข้อมูล PrivateSend</translation>
-    </message>
-    </context>
+</context>
 <context>
     <name>Intro</name>
     <message>
@@ -1007,12 +1079,12 @@
         <translation>ประมาณ %1 GB ของข้อมูลจะถูกเก็บอยู่ในแฟ้มเอกสารนี้</translation>
     </message>
     <message>
-        <source>%1 will download and store a copy of the Raptoreum block chain.</source>
-        <translation>%1 จะกดาวน์โหลดและเก็บสำเนาของ Raptoreum block chain</translation>
+        <source>%1 will download and store a copy of the Dash block chain.</source>
+        <translation>%1 จะกดาวน์โหลดและเก็บสำเนาของ Dash block chain</translation>
     </message>
     <message>
         <source>The wallet will also be stored in this directory.</source>
-        <translation>Wallet จะถูกเก็บในแฟ้มข้อมูลนี้เช่นกัน</translation>
+        <translation>กรเป๋าสตางค์จะถูกเก็บในแฟ้มข้อมูลนี้เช่นกัน</translation>
     </message>
     <message>
         <source>Error: Specified data directory "%1" cannot be created.</source>
@@ -1032,7 +1104,7 @@
     </message>
 </context>
 <context>
-    <name>SmartnodeList</name>
+    <name>MasternodeList</name>
     <message>
         <source>Form</source>
         <translation>รูป</translation>
@@ -1043,27 +1115,31 @@
     </message>
     <message>
         <source>0</source>
-        <translation>0</translation>
+        <translation>ศูนย์</translation>
     </message>
     <message>
         <source>Filter List:</source>
-        <translation>Filter List:</translation>
+        <translation>ตัวกรองบัญชีรายชื่อ</translation>
     </message>
     <message>
-        <source>Filter smartnode list</source>
-        <translation>Filter smartnode list</translation>
+        <source>Filter masternode list</source>
+        <translation>ตัวกรองบัญชีรายชื่อ masternode</translation>
     </message>
     <message>
         <source>Node Count:</source>
         <translation>จำนวนโหนด:</translation>
     </message>
     <message>
-        <source>Show only smartnodes this wallet has keys for.</source>
-        <translation>แสดงเพียงแค่ smartnodes ที่ wallet นี้มีจำนวนคีย์</translation>
+        <source>Show only masternodes this wallet has keys for.</source>
+        <translation>แสดงเพียงแค่ masternodes ที่กระเป๋าสตางค์นี้มีจำนวนคีย์</translation>
     </message>
     <message>
-        <source>My smartnodes only</source>
-        <translation>Smartnodes ของฉันเท่านั้น</translation>
+        <source>My masternodes only</source>
+        <translation>บัญชี Masternodes ของฉันเท่านั้น</translation>
+    </message>
+    <message>
+        <source>Service</source>
+        <translation>การให้บริการ</translation>
     </message>
     <message>
         <source>PoSe Score</source>
@@ -1082,8 +1158,24 @@
         <translation>การชำระครั้งถัดไป</translation>
     </message>
     <message>
+        <source>Payout Address</source>
+        <translation>ที่อยู่การจ่ายเงิน</translation>
+    </message>
+    <message>
         <source>Operator Reward</source>
         <translation>รางวัลผู้ดำเนินการ</translation>
+    </message>
+    <message>
+        <source>Collateral Address</source>
+        <translation>ที่อยู่หลักประกัน</translation>
+    </message>
+    <message>
+        <source>Owner Address</source>
+        <translation>ที่อยู่เจ้าของบัญชี</translation>
+    </message>
+    <message>
+        <source>Voting Address</source>
+        <translation>ที่อยู่การลงคะแนนเสียง</translation>
     </message>
     <message>
         <source>Copy ProTx Hash</source>
@@ -1092,6 +1184,10 @@
     <message>
         <source>Copy Collateral Outpoint</source>
         <translation>Copy Collateral Outpoint</translation>
+    </message>
+    <message>
+        <source>Updating...</source>
+        <translation>กำลังอัพเดต...</translation>
     </message>
     <message>
         <source>ENABLED</source>
@@ -1122,8 +1218,16 @@
         <translation>ไม่มี</translation>
     </message>
     <message>
-        <source>Additional information for DIP3 Smartnode %1</source>
-        <translation>ข้อมูลเพิ่มเติมสำหรับ DIP3 Smartnode %1</translation>
+        <source>Filter by any property (e.g. address or protx hash)</source>
+        <translation>กรองตามทรัพย์สินต่าง ๆ  (เช่นที่อยู่หรือ protx hash)</translation>
+    </message>
+    <message>
+        <source>Please wait...</source>
+        <translation>กรุณารอสักครู่...</translation>
+    </message>
+    <message>
+        <source>Additional information for DIP3 Masternode %1</source>
+        <translation>ข้อมูลเพิ่มเติมสำหรับ DIP3 Masternode %1</translation>
     </message>
 </context>
 <context>
@@ -1133,12 +1237,12 @@
         <translation>รูป</translation>
     </message>
     <message>
-        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the Raptoreum network, as detailed below.</source>
-        <translation>การทำธุรกรรมล่าสุดอาจยังไม่สามารถเห็นได้และทำให้ยอดคงเหลือของ wallet ของคุณไม่ถูกต้อง ข้อมูลนี้จะถูกต้องก่อนที่ Wallet ของคุณจะเสร็จสิ้นการซิงค์กับเครือข่าย Raptoreum ตามรายละเอียดด้านล่างนี้</translation>
+        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the Dash network, as detailed below.</source>
+        <translation>การทำธุรกรรมล่าสุดอาจยังไม่สามารถเห็นได้และทำให้ยอดคงเหลือของกระเป๋าสตางค์ของคุณไม่ถูกต้อง ข้อมูลนี้จะถูกต้องก่อนที่กระเป๋าสตางค์ของคุณจะเสร็จสิ้นการซิงค์กับเครือข่าย Dash ตามรายละเอียดด้านล่างนี้</translation>
     </message>
     <message>
-        <source>Attempting to spend Raptoreum that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
-        <translation>เครือข่ายจะไม่ยอมรับความพยายามที่จะใช้ Raptoreum ที่ได้รับผลกระทบจากการทำธุรกรรมที่ยังไม่ได้แสดงผล</translation>
+        <source>Attempting to spend Dash that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
+        <translation>เครือข่ายจะไม่ยอมรับความพยายามที่จะใช้ Dash ที่ได้รับผลกระทบจากการทำธุรกรรมที่ยังไม่ได้แสดงผล</translation>
     </message>
     <message>
         <source>Number of blocks left</source>
@@ -1212,7 +1316,7 @@
     </message>
     <message>
         <source>Size of &amp;database cache</source>
-        <translation>ขนาดของ &amp;database cache</translation>
+        <translation>ขนาดของ &amp;ฐานข้อมูล cache</translation>
     </message>
     <message>
         <source>MB</source>
@@ -1220,7 +1324,7 @@
     </message>
     <message>
         <source>Number of script &amp;verification threads</source>
-        <translation>จำนวนของสคริปท์ &amp;verification threads</translation>
+        <translation>จำนวนของสคริปท์ &amp;หัวข้อการตรวจสอบ</translation>
     </message>
     <message>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
@@ -1228,59 +1332,87 @@
     </message>
     <message>
         <source>W&amp;allet</source>
-        <translation>Wallet</translation>
+        <translation>W&amp;allet</translation>
     </message>
     <message>
-        <source>Show additional tab listing all your smartnodes in first sub-tab&lt;br/&gt;and all smartnodes on the network in second sub-tab.</source>
-        <translation>แสดงแท็บเพิ่มเติมแสดง smartnodes ทั้งหมดของคุณในแท็บย่อยแรก &lt;br/&gt;และ smartnodes ทั้งหมดบนเครือข่ายในแท็บย่อยที่สอง</translation>
+        <source>&amp;Appearance</source>
+        <translation>&amp;ลักษณะ</translation>
     </message>
     <message>
-        <source>Show Smartnodes Tab</source>
-        <translation>แสดงแถบ Smartnodes</translation>
+        <source>Show additional tab listing all your masternodes in first sub-tab&lt;br/&gt;and all masternodes on the network in second sub-tab.</source>
+        <translation>แสดงแท็บเพิ่มเติมแสดง masternodes ทั้งหมดของคุณในแท็บย่อยแรก &lt;br/&gt;และ masternodes ทั้งหมดบนเครือข่ายในแท็บย่อยที่สอง</translation>
     </message>
     <message>
-        <source>Show additional information and buttons for PrivateSend on overview screen.</source>
-        <translation>แสดงข้อมูลเพิ่มเติมและปุ่มสำหรับ PrivateSend บนหน้าจอ</translation>
-    </message>
-    <message>
-        <source>Enable advanced PrivateSend interface</source>
-        <translation>เปิดใช้งานอินเทอร์เฟซขั้นสูงของ PrivateSend</translation>
-    </message>
-    <message>
-        <source>Show warning dialog when PrivateSend detects that wallet has very low number of keys left.</source>
-        <translation>แสดงข้อความแจ้งเตือนเมื่อ PrivateSend ตรวจพบว่า Wallet มีจำนวนคีย์ที่เหลืออยู่ต่ำมาก</translation>
-    </message>
-    <message>
-        <source>Warn if PrivateSend is running out of keys</source>
-        <translation>แจ้งเตือนหากคีย์ PrivateSend กำลังจะหมด</translation>
-    </message>
-    <message>
-        <source>Whether to use experimental PrivateSend mode with multiple mixing sessions per block.&lt;br/&gt;Note: You must use this feature carefully.&lt;br/&gt;Make sure you always have recent wallet (auto)backup in a safe place!</source>
-        <translation>ไม่ว่าจะใช้โหมด PrivateSend แบบทดลองกับการผสมหลายเซสชันต่อบล็อกหรือไม่&lt;br/&gt;หมายเหตุ: คุณต้องใช้คุณลักษณะนี้อย่างระมัดระวัง&lt;br/&gt;ตรวจสอบให้แน่ใจว่าคุณได้สำรองข้อมูล wallet (อัตโนมัติ) ไว้ในที่ปลอดภัยทุกครั้ง!</translation>
-    </message>
-    <message>
-        <source>Enable PrivateSend &amp;multi-session</source>
-        <translation>เปิดใช้งาน PrivateSend และหลายเซสชัน</translation>
+        <source>Show Masternodes Tab</source>
+        <translation>แสดงแถบ Masternodes</translation>
     </message>
     <message>
         <source>If you disable the spending of unconfirmed change, the change from a transaction&lt;br/&gt;cannot be used until that transaction has at least one confirmation.&lt;br/&gt;This also affects how your balance is computed.</source>
         <translation>ถ้าหากคุณปิดการใช้จ่ายในการเปลี่ยนแปลงที่ไม่ได้รับการยืนยัน การเปลี่ยนแปลงจากธุรกรรม&lt;br/&gt;จะไม่สามารถใช้ได้จนกว่ารายการดังกล่าวจะมีการยืนยันอย่างน้อยหนึ่งรายการ&lt;br/&gt;นอกจากนี้ยังมีผลต่อการคำนวณยอดคงเหลือของคุณอีกด้วย</translation>
     </message>
     <message>
-        <source>PrivateSend rounds to use</source>
-        <translation>จำนวนรอบ PrivateSend ที่ใช้</translation>
+        <source>Show mixing interface on Overview screen and reveal an additional screen which allows to spend fully mixed coins only.&lt;br/&gt;A new tab with more settings will also appear in this dialog, please make sure to check them before mixing your coins.</source>
+        <translation>แสดงอินเทอร์เฟซการผสมบนหน้าจอภาพรวมและเปิดเผยหน้าจอเพิ่มเติมซึ่งช่วยให้สามารถใช้เหรียญที่ผสมกันอย่างสมบูรณ์&lt;br/&gt;แท็บใหม่ที่มีการตั้งค่าเพิ่มเติมจะปรากฏในกล่องโต้ตอบนี้โปรดตรวจสอบให้แน่ใจว่าได้ตรวจสอบพวกเขาก่อนที่จะผสมเหรียญ</translation>
     </message>
     <message>
-        <source>This amount acts as a threshold to turn off PrivateSend once it's reached.</source>
-        <translation>จำนวนนี้ทำหน้าที่เป็นเกณฑ์เพื่อปิดการใช้งาน PrivateSend เมื่อถึงขีดจำกัดแล้ว</translation>
+        <source>Show additional information and buttons on overview screen.</source>
+        <translation>แสดงข้อมูลเพิ่มเติมและปุ่มสบนหน้าจอ</translation>
     </message>
     <message>
-        <source>Automatically open the Raptoreum Core client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>เปิดพอร์ต Raptoreum Core client บนเราเตอร์โดยอัตโนมัติ การทำงานนี้ใช้ได้เฉพาะเมื่อเราเตอร์ของคุณรองรับ UPnP และเปิดใช้งานแล้ว</translation>
+        <source>Enable advanced interface</source>
+        <translation>เปิดใช้งานอินเทอร์เฟซขั้นสูงข</translation>
     </message>
     <message>
-        <source>Connect to the Raptoreum network through a SOCKS5 proxy.</source>
-        <translation>เชื่อมต่อกับเครือข่าย Raptoreum ผ่านพร็อกซี่แบบ SOCKS5</translation>
+        <source>Show system popups for mixing transactions&lt;br/&gt;just like for all other transaction types.</source>
+        <translation>แสดงระบบป๊อปอัพสำหรับทำธุรกรรมผสม&lt;br/&gt;เช่นเดียวกับทำธุรกรรมแบบประเภทอื่นๆ</translation>
+    </message>
+    <message>
+        <source>Show popups for mixing transactions</source>
+        <translation>แสดงป๊อปอัพสำหรับการทำธุรกรรมการผสม</translation>
+    </message>
+    <message>
+        <source>Show warning dialog when the wallet has very low number of keys left.</source>
+        <translation>แสดงข้อความคำเตือนเมื่อกระเป๋าสตางค์มีปุ่มเหลือน้อยมาก</translation>
+    </message>
+    <message>
+        <source>Warn if the wallet is running out of keys</source>
+        <translation>แจ้งเตือนหากคีย์กำลังจะหมด</translation>
+    </message>
+    <message>
+        <source>Whether to use experimental mode with multiple mixing sessions per block.&lt;br/&gt;Note: You must use this feature carefully.&lt;br/&gt;Make sure you always have recent wallet (auto)backup in a safe place!</source>
+        <translation>ไม่ว่าจะใช้โหมดแบบทดลองกับการผสมหลายเซสชันต่อบล็อกหรือไม่&lt;br/&gt;หมายเหตุ: คุณต้องใช้คุณลักษณะนี้อย่างระมัดระวัง&lt;br/&gt;ตรวจสอบให้แน่ใจว่าคุณได้สำรองข้อมูล wallet (อัตโนมัติ) ไว้ในที่ปลอดภัยทุกครั้ง!</translation>
+    </message>
+    <message>
+        <source>Enable &amp;multi-session</source>
+        <translation>เปิดใช้งาน &amp;multi-session</translation>
+    </message>
+    <message>
+        <source>Mixing rounds</source>
+        <translation>รอบผสม</translation>
+    </message>
+    <message>
+        <source>This amount acts as a threshold to turn off mixing once it's reached.</source>
+        <translation>จำนวนนี้ทำหน้าที่เป็นเกณฑ์เพื่อปิดการผสมเมื่อถึง</translation>
+    </message>
+    <message>
+        <source>Target balance</source>
+        <translation>ยอดเงินคงเหลือที่กำหนดไว้ในการทำธุรกรรมแบบ</translation>
+    </message>
+    <message>
+        <source>Automatically open the Dash Core client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <translation>เปิด port ลูกค้าของ Dash Core บนเราเตอร์โดยอัตโนมัติ การทำงานนี้ใช้ได้เฉพาะเมื่อเราเตอร์ของคุณรองรับ UPnP และเปิดใช้งานแล้ว</translation>
+    </message>
+    <message>
+        <source>Accept connections from outside.</source>
+        <translation>ยอมรับการเชื่อมต่อจากภายนอก</translation>
+    </message>
+    <message>
+        <source>Allow incomin&amp;g connections</source>
+        <translation>อนุญาติการเชื่อมต่อ</translation>
+    </message>
+    <message>
+        <source>Connect to the Dash network through a SOCKS5 proxy.</source>
+        <translation>เชื่อมต่อกับเครือข่าย Dash ผ่านพร็อกซี่แบบ SOCKS5</translation>
     </message>
     <message>
         <source>&amp;Connect through SOCKS5 proxy (default proxy):</source>
@@ -1291,6 +1423,18 @@
         <translation>แสดง หากพร็อกซี SOCKS5 เป็นค่าเริ่มต้นที่ใช้เพื่อเข้าถึง Peers ผ่านเครือข่ายประเภทนี้</translation>
     </message>
     <message>
+        <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor hidden services:</source>
+        <translation>ใช้พร็อกซี SOCKS&amp;5 แยกเพื่อเข้าถึงเพื่อนร่วมทางผ่านบริการที่ซ่อนไว้ของ Tor:</translation>
+    </message>
+    <message>
+        <source>Hide the icon from the system tray.</source>
+        <translation>ซ่อนไอคอนจาก System tray</translation>
+    </message>
+    <message>
+        <source>&amp;Hide tray icon</source>
+        <translation>&amp;ซ่อนไอคอน tray </translation>
+    </message>
+    <message>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
         <translation>มินิไมซ์แอพ แทนการออกจากแอพพลิเคชั่น เมื่อวินโดว์ได้รับการปิด เมื่อเลือกตัวเลือกนี้ แอพพลิเคชั่น จะถูกปิด ก็ต่อเมื่อ มีการเลือกเมนู Exit/ออกจากระบบ เท่านั้น</translation>
     </message>
@@ -1299,8 +1443,8 @@
         <translation>URL ของบุคคลที่สาม (เช่น explorer บล็อก) ที่ปรากฏในแท็บธุรกรรมเป็นรายการในเมนู&lt;br/&gt; %s ใน URL ถูกแทนที่ด้วย hash การทำธุรกรรม หลาย URL ถูกแยกด้วยแถบแนวตั้ง </translation>
     </message>
     <message>
-        <source>Expert</source>
-        <translation>ผู้เชี่ยวชาญ</translation>
+        <source>&amp;Third party transaction URLs</source>
+        <translation>&amp;URL ธุรกรรมของบุคคลที่สาม</translation>
     </message>
     <message>
         <source>Whether to show coin control features or not.</source>
@@ -1316,19 +1460,15 @@
     </message>
     <message>
         <source>Enable coin &amp;control features</source>
-        <translation>เปิดใช้ coin &amp; รูปแบบการควบคุม</translation>
-    </message>
-    <message>
-        <source>Show system popups for PrivateSend mixing transactions&lt;br/&gt;just like for all other transaction types.</source>
-        <translation>แสดงระบบป๊อปอัพสำหรับทำธุรกรรมผสม PrivateSend &lt;br/&gt; เช่นเดียวกับทำธุรกรรมแบบประเภทอื่นๆ</translation>
-    </message>
-    <message>
-        <source>Show popups for PrivateSend transactions</source>
-        <translation>แสดงป๊อปอัปสำหรับธุรกรรม PrivateSend</translation>
+        <translation>เปิดใช้เหรียญ &amp;รูปแบบการควบคุม</translation>
     </message>
     <message>
         <source>&amp;Spend unconfirmed change</source>
         <translation>&amp;ใช้เงินทอนที่ยังไม่ยืนยัน</translation>
+    </message>
+    <message>
+        <source>This setting determines the amount of individual masternodes that an input will be mixed through.&lt;br/&gt;More rounds of mixing gives a higher degree of privacy, but also costs more in fees.</source>
+        <translation>การกำหนดค่านี้จะกำหนดจำนวนของ masternodes แต่ละตัวซึ่งจะถูกป้อนเข้าไปรวมกันทั้งหมด &lt;br/&gt;การรวมทั้งหมดเข้าด้วยกันนี้ทำให้มีระดับความเป็นส่วนตัวสูงขึ้น แต่ยังมีค่าใช้จ่ายเพิ่มขึ้นด้วย</translation>
     </message>
     <message>
         <source>&amp;Network</source>
@@ -1336,19 +1476,11 @@
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
-        <translation>จองพอร์ต โดยใช้ &amp;UPnP</translation>
-    </message>
-    <message>
-        <source>Accept connections from outside</source>
-        <translation>ยอมรับการเชื่อมต่อจากภายนอก</translation>
-    </message>
-    <message>
-        <source>Allow incoming connections</source>
-        <translation>อนุญาตการเชื่อมต่อขาเข้า</translation>
+        <translation>แผนที่ port โดยใช้ &amp;UPnP</translation>
     </message>
     <message>
         <source>Proxy &amp;IP:</source>
-        <translation>พร็อกซี่ &amp;IP:</translation>
+        <translation>Proxy &amp;IP:</translation>
     </message>
     <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
@@ -1356,11 +1488,11 @@
     </message>
     <message>
         <source>&amp;Port:</source>
-        <translation>&amp;พอร์ต</translation>
+        <translation>&amp;Port:</translation>
     </message>
     <message>
         <source>Port of the proxy (e.g. 9050)</source>
-        <translation>พอร์ตของพร็อกซี่ (ตัวอย่าง 9050)</translation>
+        <translation>Port ของพร็อกซี่ (ตัวอย่าง 9050)</translation>
     </message>
     <message>
         <source>Used for reaching peers via:</source>
@@ -1379,24 +1511,8 @@
         <translation>Tor</translation>
     </message>
     <message>
-        <source>Connect to the Raptoreum network through a separate SOCKS5 proxy for Tor hidden services.</source>
-        <translation>เชื่อมต่อกับ เครือข่าย Raptoreum ผ่านทาง พร้อกซี่ SOCKS5 แยกต่างหาก สำหรับ Tor เซอร์วิส</translation>
-    </message>
-    <message>
-        <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services:</source>
-        <translation>ใช้พร็อกซี SOCKS5 แยกเพื่อเข้าถึงเพื่อนร่วมทางผ่านบริการที่ซ่อนไว้ของ Tor:</translation>
-    </message>
-    <message>
-        <source>&amp;Window</source>
-        <translation>&amp;วันโดว์</translation>
-    </message>
-    <message>
-        <source>&amp;Hide the icon from the system tray.</source>
-        <translation>ซ่อนไอคอนจาก  System tray</translation>
-    </message>
-    <message>
-        <source>Hide tray icon</source>
-        <translation>ซ่อนไอคอน tray </translation>
+        <source>Connect to the Dash network through a separate SOCKS5 proxy for Tor hidden services.</source>
+        <translation>เชื่อมต่อกับ เครือข่าย Dash ผ่านทาง พร้อกซี่ SOCKS5 แยกต่างหาก สำหรับ Tor เซอร์วิส</translation>
     </message>
     <message>
         <source>Show only a tray icon after minimizing the window.</source>
@@ -1404,7 +1520,7 @@
     </message>
     <message>
         <source>&amp;Minimize to the tray instead of the taskbar</source>
-        <translation>ลดขนาด Tray ลงไปยังแถบ taskbar</translation>
+        <translation>&amp;ลดขนาด Tray ลงไปยังแถบ taskbar</translation>
     </message>
     <message>
         <source>M&amp;inimize on close</source>
@@ -1412,11 +1528,11 @@
     </message>
     <message>
         <source>&amp;Display</source>
-        <translation>แสดง</translation>
+        <translation>&amp;แสดง</translation>
     </message>
     <message>
         <source>User Interface &amp;language:</source>
-        <translation>User Interface language</translation>
+        <translation>หน้าจอผู้ใช้ &amp;ภาษา:</translation>
     </message>
     <message>
         <source>The user interface language can be set here. This setting will take effect after restarting %1.</source>
@@ -1424,17 +1540,13 @@
     </message>
     <message>
         <source>Language missing or translation incomplete? Help contributing translations here:
-https://www.transifex.com/projects/p/raptoreum/</source>
+https://www.transifex.com/projects/p/dash/</source>
         <translation>ภาษาขาดหายไปหรือการแปลไม่สมบูรณ์ใช่หรือไม่?  สามารถช่วยแปลเพิ่มเติมได้ที่นี่:   
-https://www.transifex.com/projects/p/raptoreum/</translation>
-    </message>
-    <message>
-        <source>User Interface Theme:</source>
-        <translation>User Interface Theme: </translation>
+https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <source>&amp;Unit to show amounts in:</source>
-        <translation>หน่วยที่จะแสดงจำนวนเงิน:</translation>
+        <translation>&amp;หน่วยที่จะแสดงจำนวนเงินใน:</translation>
     </message>
     <message>
         <source>Choose the default subdivision unit to show in the interface and when sending coins.</source>
@@ -1443,10 +1555,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Decimal digits</source>
         <translation>ตัวเลขทศนิยม</translation>
-    </message>
-    <message>
-        <source>Third party transaction URLs</source>
-        <translation>URL ธุรกรรมของบุคคลที่สาม</translation>
     </message>
     <message>
         <source>Active command-line options that override above options:</source>
@@ -1458,23 +1566,23 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <source>&amp;Reset Options</source>
-        <translation>&amp;รีเซต ออพชั่น</translation>
+        <translation>&amp;ตัวเลือกการตั้งค่าใหม่</translation>
     </message>
     <message>
         <source>&amp;OK</source>
-        <translation>โอเค</translation>
+        <translation>&amp;ตกลง</translation>
     </message>
     <message>
         <source>&amp;Cancel</source>
-        <translation>ยกเลิก</translation>
+        <translation>&amp;ยกเลิก</translation>
+    </message>
+    <message>
+        <source>Enable %1 features</source>
+        <translation>เปิดใช้เหรียญ %1 &amp;รูปแบบการควบคุม</translation>
     </message>
     <message>
         <source>default</source>
         <translation>ค่าเริ่มต้น</translation>
-    </message>
-    <message>
-        <source>none</source>
-        <translation>ไม่มี</translation>
     </message>
     <message>
         <source>Confirm options reset</source>
@@ -1504,8 +1612,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>รูป</translation>
     </message>
     <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Raptoreum network after a connection is established, but this process has not completed yet.</source>
-        <translation>ข้อมูลที่แสดงอาจล้าสมัย  Wallet ของคุณจะทำข้อมูลให้ตรงกับเครือข่าย Raptoreum โดยอัตโนมัติหลังจากที่มีการเชื่อมต่อแล้ว แต่กระบวนการนี้ยังไม่เสร็จสมบูรณ์</translation>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Dash network after a connection is established, but this process has not completed yet.</source>
+        <translation>ข้อมูลที่แสดงอาจล้าสมัย กระเป๋าสตางค์ของคุณจะทำข้อมูลให้ตรงกับเครือข่าย Dash โดยอัตโนมัติหลังจากที่มีการเชื่อมต่อแล้ว แต่กระบวนการนี้ยังไม่เสร็จสมบูรณ์</translation>
     </message>
     <message>
         <source>Available:</source>
@@ -1568,10 +1676,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>ที่สามารถใช้ได้: </translation>
     </message>
     <message>
-        <source>PrivateSend</source>
-        <translation>PrivateSend</translation>
-    </message>
-    <message>
         <source>Status:</source>
         <translation>สถานะ :</translation>
     </message>
@@ -1588,8 +1692,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>จำนวนและรอบ:</translation>
     </message>
     <message>
-        <source>0 RTM / 0 Rounds</source>
-        <translation>0 RTM / 0 รอบ</translation>
+        <source>0 DASH / 0 Rounds</source>
+        <translation>0 DASH / 0 รอบ</translation>
     </message>
     <message>
         <source>Submitted Denom:</source>
@@ -1597,7 +1701,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <source>n/a</source>
-        <translation>n / a</translation>
+        <translation>ไม่ปรากฏ</translation>
     </message>
     <message>
         <source>Recent transactions</source>
@@ -1608,16 +1712,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>เริ่ม / หยุดการผสม</translation>
     </message>
     <message>
-        <source>PrivateSend Balance:</source>
-        <translation>PrivateSend ยอดคงเหลือ : </translation>
-    </message>
-    <message>
-        <source>The denominations you submitted to the Smartnode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
-        <translation> หน่วยเงินที่คุณส่งไปยัง Smartnode. &lt;br&gt; ในการผสมนั้นผู้ใช้อื่นจะต้องส่งหน่วยเงินที่เหมือนกัน</translation>
-    </message>
-    <message>
-        <source>(Last Message)</source>
-        <translation>(ข้อความล่าสุด)</translation>
+        <source>The denominations you submitted to the Masternode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
+        <translation> หน่วยเงินที่คุณส่งไปยัง Masternode &lt;br&gt; ในการผสมนั้นผู้ใช้อื่นจะต้องส่งหน่วยเงินที่เหมือนกัน</translation>
     </message>
     <message>
         <source>out of sync</source>
@@ -1628,28 +1724,24 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>การสำรองข้อมูลอัตโนมัติถูกปิดใช้งานโดยไม่มีการผสม!</translation>
     </message>
     <message>
-        <source>Start Mixing</source>
-        <translation>เริ่มต้นการผสม</translation>
-    </message>
-    <message>
-        <source>Stop Mixing</source>
-        <translation>หยุดการผสม</translation>
-    </message>
-    <message>
         <source>No inputs detected</source>
         <translation>ไม่พบข้อมูล</translation>
+    </message>
+    <message>
+        <source>%1 Balance</source>
+        <translation>%1 ยอดคงเหลือ</translation>
     </message>
     <message numerus="yes">
         <source>%n Rounds</source>
         <translation><numerusform>%n รอบ</numerusform></translation>
     </message>
     <message>
-        <source>Found enough compatible inputs to anonymize %1</source>
-        <translation>พบข้อมูลที่เข้ากันได้มากพอที่จะไม่ระบุชื่อ %1</translation>
+        <source>Found enough compatible inputs to mix %1</source>
+        <translation>พบปัจจัยที่เข้ากันได้มากพอที่จะผสม %1</translation>
     </message>
     <message>
-        <source>Not enough compatible inputs to anonymize &lt;span style='color:red;'&gt;%1&lt;/span&gt;,&lt;br&gt;will anonymize &lt;span style='color:red;'&gt;%2&lt;/span&gt; instead</source>
-        <translation>ข้อมูลไม่เพียงพอที่จะไม่ระบุชื่อ &lt;span style='color:red;'&gt;%1&lt;/span&gt; &lt;br&gt;จะไม่ระบุชื่อ&lt;span style='color:red;'&gt;%2&lt;/span&gt; แทน</translation>
+        <source>Not enough compatible inputs to mix &lt;span style='%1'&gt;%2&lt;/span&gt;,&lt;br&gt;will mix &lt;span style='%1'&gt;%3&lt;/span&gt; instead</source>
+        <translation>ปัจจัยที่เข้ากันได้ไม่มากพอที่จะนำมาผสม &lt;span style='%1'&gt;%2&lt;/span&gt;,&lt;br&gt;จะผสม &lt;span style='%1'&gt;%3&lt;/span&gt; แทน</translation>
     </message>
     <message>
         <source>Overall progress</source>
@@ -1658,6 +1750,10 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Denominated</source>
         <translation>สกุลเงิน</translation>
+    </message>
+    <message>
+        <source>Partially mixed</source>
+        <translation>การประสมสัญลักษณ์ที่มีลักษณะหลายอย่างรวมกัน</translation>
     </message>
     <message>
         <source>Mixed</source>
@@ -1672,6 +1768,26 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>คีย์เหลืออยู่: %1</translation>
     </message>
     <message>
+        <source>Start %1</source>
+        <translation>เริ่มต้น %1</translation>
+    </message>
+    <message>
+        <source>If you don't want to see internal %1 fees/transactions select "Most Common" as Type on the "Transactions" tab.</source>
+        <translation>หากคุณไม่ต้องการเห็นค่าธรรมเนียม %1 / ธุรกรรม  ให้เลือก "Most Common" เป็นประเภท "Transactions"</translation>
+    </message>
+    <message>
+        <source>%1 requires at least %2 to use.</source>
+        <translation>%1 ต้องการอย่างน้อย %2 เพื่อใช้งาน</translation>
+    </message>
+    <message>
+        <source>Wallet is locked and user declined to unlock. Disabling %1.</source>
+        <translation>กระเป๋าสตางค์ถูกล็อกและผู้ใช้ปฏิเสธที่จะปลดล็อก กำลังปิดใช้งาน %1</translation>
+    </message>
+    <message>
+        <source>Stop %1</source>
+        <translation>หยุด %1</translation>
+    </message>
+    <message>
         <source>Disabled</source>
         <translation>ปิดการใช้งาน</translation>
     </message>
@@ -1680,8 +1796,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>จำนวนคีย์ที่เหลือต่ำมากตั้งแต่การสำรองข้อมูลอัตโนมัติครั้งล่าสุด!</translation>
     </message>
     <message>
-        <source>We are about to create a new automatic backup for you, however &lt;span style='color:red;'&gt; you should always make sure you have backups saved in some safe place&lt;/span&gt;!</source>
-        <translation>เรากำลังจะสร้างการสำรองข้อมูลอัตโนมัติใหม่ให้กับคุณ แต่อย่างไรก็ตาม&lt;span style='color:red;'&gt;คุณควรตรวจสอบให้แน่ใจเสมอว่าคุณได้สำรองข้อมูลไว้ในที่ปลอดภัยแล้ว&lt;/span&gt;!</translation>
+        <source>We are about to create a new automatic backup for you, however &lt;span style='%1'&gt; you should always make sure you have backups saved in some safe place&lt;/span&gt;!</source>
+        <translation>เรากำลังจะสร้างการสำรองข้อมูลอัตโนมัติใหม่ให้กับคุณ แต่อย่างไรก็ตาม&lt;span style='%1'&gt;คุณควรตรวจสอบให้แน่ใจเสมอว่าคุณได้สำรองข้อมูลไว้ในที่ปลอดภัยแล้ว&lt;/span&gt;!</translation>
     </message>
     <message>
         <source>Note: You can turn this message off in options.</source>
@@ -1697,7 +1813,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <source>Mixing is disabled, please close your wallet and fix the issue!</source>
-        <translation>ปิดใช้งานการผสม โปรดปิด Wallet ของคุณและแก้ไขปัญหา!</translation>
+        <translation>ปิดใช้งานการผสม โปรดปิดกระเป๋าสตางค์ของคุณและแก้ไขปัญหา!</translation>
     </message>
     <message>
         <source>Enabled</source>
@@ -1709,25 +1825,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <source>WARNING! Failed to replenish keypool, please unlock your wallet to do so.</source>
-        <translation>คำเตือน! ไม่สามารถเติม keypool ได้ โปรดปลดล็อก Wallet ของคุณ</translation>
-    </message>
-    <message>
-        <source>Last PrivateSend message:
-</source>
-        <translation>ข้อความ PrivateSend ล่าสุด:
-</translation>
-    </message>
-    <message>
-        <source>If you don't want to see internal PrivateSend fees/transactions select "Most Common" as Type on the "Transactions" tab.</source>
-        <translation>หากคุณไม่ต้องการเห็นค่าธรรมเนียม PrivateSend / ธุรกรรม  ให้เลือก "Most Common" เป็นประเภท "Transactions"</translation>
-    </message>
-    <message>
-        <source>PrivateSend requires at least %1 to use.</source>
-        <translation>PrivateSend ต้องการอย่างน้อย %1 เพื่อใช้งาน</translation>
-    </message>
-    <message>
-        <source>Wallet is locked and user declined to unlock. Disabling PrivateSend.</source>
-        <translation>Wallet ถูกล็อกและผู้ใช้ปฏิเสธที่จะปลดล็อก กำลังปิดใช้งาน PrivateSend</translation>
+        <translation>คำเตือน! ไม่สามารถเติม keypool ได้ โปรดปลดล็อกกระเป๋าสตางค์ของคุณ</translation>
     </message>
 </context>
 <context>
@@ -1737,12 +1835,16 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>คำขอการชำระเงินผิดพลาด</translation>
     </message>
     <message>
-        <source>Cannot start raptoreum: click-to-pay handler</source>
-        <translation>ไม่สามารถเริ่มต้น Raptoreum: คลิกเพื่อจ่ายเงิน</translation>
+        <source>Cannot start dash: click-to-pay handler</source>
+        <translation>ไม่สามารถเริ่มต้น Dash: คลิกเพื่อจ่ายเงิน</translation>
     </message>
     <message>
         <source>URI handling</source>
         <translation>การจัดการ URI</translation>
+    </message>
+    <message>
+        <source>'dash://' is not a valid URI. Use 'dash:' instead.</source>
+        <translation>'dash://' ไม่ใช่ URI ที่ถูกต้องใช้ 'dash:' แทน</translation>
     </message>
     <message>
         <source>Payment request fetch URL is invalid: %1</source>
@@ -1753,8 +1855,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>ที่อยู่การชำระเงินไม่ถูกต้อง %1</translation>
     </message>
     <message>
-        <source>URI cannot be parsed! This can be caused by an invalid Raptoreum address or malformed URI parameters.</source>
-        <translation>ไม่สามารถประมวลผล URI ได้สำเร็จ ! ซึ่งอาจเกิดจากที่อยู่ Raptoreum ไม่ถูกต้องหรือพารามิเตอร์ URI ที่มีรูปแบบไม่ถูกต้อง</translation>
+        <source>URI cannot be parsed! This can be caused by an invalid Dash address or malformed URI parameters.</source>
+        <translation>ไม่สามารถประมวลผล URI ได้สำเร็จ ! ซึ่งอาจเกิดจากที่อยู่ Dash ไม่ถูกต้องหรือพารามิเตอร์ URI ที่มีรูปแบบไม่ถูกต้อง</translation>
     </message>
     <message>
         <source>Payment request file handling</source>
@@ -1839,9 +1941,57 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <source>Ping</source>
         <translation>Ping</translation>
     </message>
+    <message>
+        <source>Sent</source>
+        <translation>ส่ง</translation>
+    </message>
+    <message>
+        <source>Received</source>
+        <translation>ได้รับ</translation>
+    </message>
 </context>
 <context>
     <name>QObject</name>
+    <message>
+        <source>Choose data directory on startup (default: %u)</source>
+        <translation>เลือกไดเร็กทอรี่ข้อมูลตั้งแต่เริ่มต้นสตาร์ทอัพ (ค่าเริ่มต้น: %u)</translation>
+    </message>
+    <message>
+        <source>Set the font family. Possible values: %1. (default: %2)</source>
+        <translation>ตั้งค่าแบบอักษร ค่าที่เป็นไปได้: %1. (ค่าเริ่มต้น: %2)</translation>
+    </message>
+    <message>
+        <source>Set a scale factor which gets applied to the base font size. Possible range %1 (smallest fonts) to %2 (largest fonts). (default: %3)</source>
+        <translation>ตั้งค่าระดับที่ได้รับเพื่อนำไปใช้กับขนาดตัวอักษรฐาน ระดับเป็นไปได้ %1 (แบบอักษรที่มีขนาดเล็กที่สุด) ถึง %2 (แบบอักษรที่ใหญ่ที่สุด). (ค่าเริ่มต้น: %3)</translation>
+    </message>
+    <message>
+        <source>Set the font weight for bold texts. Possible range %1 to %2 (default: %3)</source>
+        <translation>ตั้งค่าของตัวอักษรสำหรับข้อความที่เป็นตัวหนา ช่วงที่เป็นไปได้ %1 ถึง %2 (เริ่มต้น: %3)</translation>
+    </message>
+    <message>
+        <source>Set the font weight for normal texts. Possible range %1 to %2 (default: %3)</source>
+        <translation>ตั้งค่าของตัวอักษรสำหรับข้อความปกติ ช่วงที่เป็นไปได้ %1 ถึง %2 (เริ่มต้น: %3)</translation>
+    </message>
+    <message>
+        <source>Set language, for example "de_DE" (default: system locale)</source>
+        <translation>ตั้งค่าภาษา ยกตัวอย่าง "de_DE" (ค่าเริ่มต้น: ภาษาท้องถิ่นของระบบ)</translation>
+    </message>
+    <message>
+        <source>Start minimized</source>
+        <translation>เริ่มต้นมินิไมซ์</translation>
+    </message>
+    <message>
+        <source>Reset all settings changed in the GUI</source>
+        <translation>รีเซตการเปลี่ยนการตั้งค่าทั้งหมดใน GUI</translation>
+    </message>
+    <message>
+        <source>Set SSL root certificates for payment request (default: -system-)</source>
+        <translation>ตั้งค่า SSL root certificates สำหรับเรียกการชำระเงิน (ค่าเริ่มต้น: -system-)</translation>
+    </message>
+    <message>
+        <source>Show splash screen on startup (default: %u)</source>
+        <translation>แสดง splash screen ตอนเริ่มต้น (ค่าเริ่มต้น: %u)</translation>
+    </message>
     <message>
         <source>%1 didn't yet exit safely...</source>
         <translation>%1 ยังไม่สามารถออกจากระบบได้อย่างปลอดภัย ...</translation>
@@ -1851,8 +2001,20 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>จำนวน</translation>
     </message>
     <message>
-        <source>Enter a Raptoreum address (e.g. %1)</source>
-        <translation>ป้อนที่อยู่ Raptoreum (เช่น %1)</translation>
+        <source>Enter a Dash address (e.g. %1)</source>
+        <translation>ป้อนที่อยู่ Dash (เช่น %1)</translation>
+    </message>
+    <message>
+        <source>Appearance Setup</source>
+        <translation>การติดตั้งลักษณะ</translation>
+    </message>
+    <message>
+        <source>Please choose your preferred settings for the appearance of %1</source>
+        <translation>กรุณาเลือกการตั้งค่าที่คุณต้องการสำหรับลักษณะของ %1</translation>
+    </message>
+    <message>
+        <source>This can also be adjusted later in the "Appearance" tab of the preferences.</source>
+        <translation>นอกจากนี้ยังสามารถปรับเปลี่ยนได้ภายหลังในแท็บ "ลักษณะ" ของการตั้งค่า</translation>
     </message>
     <message>
         <source>%1 d</source>
@@ -1911,6 +2073,22 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>%1 และ %2</translation>
     </message>
     <message>
+        <source>%1 B</source>
+        <translation>%1 B</translation>
+    </message>
+    <message>
+        <source>%1 KB</source>
+        <translation>%1 KB</translation>
+    </message>
+    <message>
+        <source>%1 MB</source>
+        <translation>%1 MB</translation>
+    </message>
+    <message>
+        <source>%1 GB</source>
+        <translation>%1 GB</translation>
+    </message>
+    <message>
         <source>unknown</source>
         <translation>ไม่ทราบ</translation>
     </message>
@@ -1929,6 +2107,34 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <source>Error: %1</source>
         <translation>ข้อผิดพลาด: %1</translation>
     </message>
+    <message>
+        <source>Error: Failed to load application fonts.</source>
+        <translation>ข้อผิดพลาด: ไม่สามารถโหลดแอพพลิเคชั่นแบบอักษร</translation>
+    </message>
+    <message>
+        <source>Error: Specified font-family invalid. Valid values: %1.</source>
+        <translation>ข้อผิดพลาด: ระบุรูปแบบตัวอักษรไม่ถูกต้อง ค่าที่ถูกต้อง: %1</translation>
+    </message>
+    <message>
+        <source>Error: Specified font-weight-normal invalid. Valid range %1 to %2.</source>
+        <translation>ข้อผิดพลาด: ระบุค่าตัวอักษรปกติไม่ถูกต้อง ช่วงที่ถูกต้อง %1 ถึง %2</translation>
+    </message>
+    <message>
+        <source>Error: Specified font-weight-bold invalid. Valid range %1 to %2.</source>
+        <translation>ข้อผิดพลาด: ระบุค่าตัวอักษรที่เป็นตัวหนาไม่ถูกต้อง ช่วงที่ถูกต้อง %1 ถึง %2 </translation>
+    </message>
+    <message>
+        <source>Error: Specified font-scale invalid. Valid range %1 to %2.</source>
+        <translation>ข้อผิดพลาด: ระบุแบบอักษรขนาดตัวอักษรไม่ถูกต้อง ช่วงที่ถูกต้อง %1 ถึง %2</translation>
+    </message>
+    <message>
+        <source>Error: Invalid -custom-css-dir path.</source>
+        <translation>ข้อผิดพลาด: Invalid -custom-css-dir path</translation>
+    </message>
+    <message>
+        <source>Error: %1 CSS file(s) missing in -custom-css-dir path.</source>
+        <translation>ข้อผิดพลาด: %1 CSS file(s) missing in -custom-css-dir path</translation>
+    </message>
 </context>
 <context>
     <name>QRDialog</name>
@@ -1942,7 +2148,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <source>&amp;Save Image...</source>
-        <translation>บันทึกรูปภาพ</translation>
+        <translation>&amp;บันทึกรูปภาพ...</translation>
     </message>
     <message>
         <source>Error creating QR Code.</source>
@@ -1953,11 +2159,11 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <name>QRGeneralImageWidget</name>
     <message>
         <source>&amp;Save Image...</source>
-        <translation>บันทึกรูปภาพ</translation>
+        <translation>&amp;บันทึกรูปภาพ...</translation>
     </message>
     <message>
         <source>&amp;Copy Image</source>
-        <translation>คัดลอกรูปภาพ</translation>
+        <translation>&amp;คัดลอกรูปภาพ</translation>
     </message>
     <message>
         <source>Save QR Code</source>
@@ -1972,11 +2178,11 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <name>QRImageWidget</name>
     <message>
         <source>&amp;Save Image...</source>
-        <translation>บันทึกรูปภาพ</translation>
+        <translation>&amp;บันทึกรูปภาพ...</translation>
     </message>
     <message>
         <source>&amp;Copy Image</source>
-        <translation>คัดลอกรูปภาพ</translation>
+        <translation>&amp;คัดลอกรูปภาพ</translation>
     </message>
     <message>
         <source>Save QR Code</source>
@@ -1995,7 +2201,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <source>&amp;Information</source>
-        <translation>ข้อมูล</translation>
+        <translation>&amp;ข้อมูล</translation>
     </message>
     <message>
         <source>General</source>
@@ -2015,7 +2221,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <source>&amp;Open</source>
-        <translation>เปิด</translation>
+        <translation>&amp;เปิด</translation>
     </message>
     <message>
         <source>Startup time</source>
@@ -2050,8 +2256,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Block chain</translation>
     </message>
     <message>
-        <source>Number of Smartnodes</source>
-        <translation>จำนวน Smartnodes</translation>
+        <source>Number of Masternodes</source>
+        <translation>จำนวน Masternodes</translation>
     </message>
     <message>
         <source>Memory Pool</source>
@@ -2067,7 +2273,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <source>&amp;Console</source>
-        <translation>คอนโซล</translation>
+        <translation>&amp;ส่วนเฝ้าคุม</translation>
     </message>
     <message>
         <source>Clear console</source>
@@ -2075,11 +2281,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <source>&amp;Network Traffic</source>
-        <translation>&amp;Network Traffic</translation>
-    </message>
-    <message>
-        <source>Totals</source>
-        <translation>ทั้งหมด</translation>
+        <translation>&amp;การรับส่งข้อมูลเครือข่าย</translation>
     </message>
     <message>
         <source>Received</source>
@@ -2091,7 +2293,11 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <source>&amp;Peers</source>
-        <translation>Peers</translation>
+        <translation>&amp;เพียร์</translation>
+    </message>
+    <message>
+        <source>Wallet:</source>
+        <translation>กระเป๋าสตางค์: </translation>
     </message>
     <message>
         <source>Banned peers</source>
@@ -2126,8 +2332,24 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>บล็อคที่ซิงโครไนซ์</translation>
     </message>
     <message>
+        <source>Rescan blockchain files 1</source>
+        <translation>สแกน blockchain ไฟล์ 1</translation>
+    </message>
+    <message>
+        <source>Rescan blockchain files 2</source>
+        <translation>สแกน blockchain ไฟล์ 2</translation>
+    </message>
+    <message>
+        <source>-rescan=1: Rescan the block chain for missing wallet transactions starting from wallet creation time.</source>
+        <translation>-rescan=1: สแกนโซ่บล็อกอีกครั้งสำหรับการทำธุรกรรมกระเป๋าสตางค์ที่ขาดหายไปเริ่มต้นจากการสร้างกระเป๋าสตางค์</translation>
+    </message>
+    <message>
+        <source>-rescan=2: Rescan the block chain for missing wallet transactions starting from genesis block.</source>
+        <translation>-rescan=2: สแกนโซ่บล็อกอีกครั้งสำหรับการทำธุรกรรมกระเป๋าสตางค์ที่ขาดหายไปจากการสร้าง genesis block</translation>
+    </message>
+    <message>
         <source>Wallet Path</source>
-        <translation>เส้นทาง wallet</translation>
+        <translation>เส้นทางกระเป๋าสตางค์</translation>
     </message>
     <message>
         <source>User Agent</source>
@@ -2138,12 +2360,20 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Datadir</translation>
     </message>
     <message>
+        <source>Last block hash</source>
+        <translation>hash บล็อกล่าสุด</translation>
+    </message>
+    <message>
         <source>Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.</source>
-        <translation>เปิดแฟ้มบันทึกข้อผิดพลาด %1 จากไดเร็กทอรีข้อมูลปัจจุบัน อาจใช้เวลาสักครู่สำหรับไฟล์บันทึกขนาดใหญ่</translation>
+        <translation>เปิดแฟ้มบันทึกข้อผิดพลาด %1 จากไดเร็กทอรี่ข้อมูลปัจจุบัน อาจใช้เวลาสักครู่สำหรับไฟล์บันทึกขนาดใหญ่</translation>
     </message>
     <message>
         <source>InstantSend locks</source>
         <translation>InstantSend ล็อค</translation>
+    </message>
+    <message>
+        <source>(none)</source>
+        <translation>(ไม่มี)</translation>
     </message>
     <message>
         <source>Decrease font size</source>
@@ -2155,7 +2385,15 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <source>&amp;Reset</source>
-        <translation>&amp;รีเซต </translation>
+        <translation>&amp;ตั้งค่าใหม่</translation>
+    </message>
+    <message>
+        <source>Node Type</source>
+        <translation>ประเภทโหนด</translation>
+    </message>
+    <message>
+        <source>PoSe Score</source>
+        <translation>คะแนน PoSe</translation>
     </message>
     <message>
         <source>Services</source>
@@ -2199,15 +2437,11 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <source>&amp;Wallet Repair</source>
-        <translation>ซ่อม Wallet</translation>
+        <translation>&amp;ซ่อมกระเป๋าสตางค์</translation>
     </message>
     <message>
         <source>Salvage wallet</source>
-        <translation>กู้คืน Wallet</translation>
-    </message>
-    <message>
-        <source>Rescan blockchain files</source>
-        <translation>สแกน blockchain ไฟล์ใหม่</translation>
+        <translation>กู้คืนกระเป๋าสตางค์</translation>
     </message>
     <message>
         <source>Recover transactions 1</source>
@@ -2219,19 +2453,15 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <source>Upgrade wallet format</source>
-        <translation>อัพเกรดรูปแบบ wallet</translation>
+        <translation>อัพเกรดรูปแบบกระเป๋าสตางค์</translation>
     </message>
     <message>
         <source>The buttons below will restart the wallet with command-line options to repair the wallet, fix issues with corrupt blockhain files or missing/obsolete transactions.</source>
-        <translation>ปุ่มด้านล่างจะเริ่มต้น wallet ด้วยตัวเลือก command-line เพื่อซ่อมแซม wallet และแก้ไขปัญหาเกี่ยวกับไฟล์ blockhain ที่เสียหายหรือการทำธุรกรรมที่ขาดหายไป / ล้าสมัย</translation>
+        <translation>ปุ่มด้านล่างจะเริ่มต้นกระเป๋าสตางค์ด้วยตัวเลือก command-line เพื่อซ่อมแซมกระเป๋าสตางค์และแก้ไขปัญหาเกี่ยวกับไฟล์ blockhain ที่เสียหายหรือการทำธุรกรรมที่ขาดหายไป/ล้าสมัย</translation>
     </message>
     <message>
         <source>-salvagewallet: Attempt to recover private keys from a corrupt wallet.dat.</source>
         <translation>-salvagewallet: พยายามกู้คืนคีย์ส่วนตัวของ wallet.dat ที่เสียหาย</translation>
-    </message>
-    <message>
-        <source>-rescan: Rescan the block chain for missing wallet transactions.</source>
-        <translation>-rescan: สแกน blockchain ใหม่ สำหรับธุรกรรม wallet ที่ขาดหายไป</translation>
     </message>
     <message>
         <source>-zapwallettxes=1: Recover transactions from blockchain (keep meta-data, e.g. account owner).</source>
@@ -2243,11 +2473,11 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <source>-upgradewallet: Upgrade wallet to latest format on startup. (Note: this is NOT an update of the wallet itself!)</source>
-        <translation>-upgradewallet: อัปเดต wallet เป็นรูปแบบสุดท้ายเมื่อเริ่มต้น (หมายเหตุ: นี่ไม่ใช่การปรับปรุงตัว wallet เอง!)</translation>
+        <translation>-upgradewallet: อัปเดตกระเป๋าสตางค์เป็นรูปแบบสุดท้ายเมื่อเริ่มต้น (หมายเหตุ: นี่ไม่ใช่การปรับปรุงตัวกระเป๋าสตางค์เอง!)</translation>
     </message>
     <message>
         <source>Wallet repair options.</source>
-        <translation>ตัวเลือกการซ่อมแซม Wallet</translation>
+        <translation>ตัวเลือกการซ่อมแซมกระเป๋าสตางค์</translation>
     </message>
     <message>
         <source>Rebuild index</source>
@@ -2259,7 +2489,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <source>&amp;Disconnect</source>
-        <translation>ยกเลิกการเชื่อมต่อ</translation>
+        <translation>&amp;ยกเลิกการเชื่อมต่อ</translation>
     </message>
     <message>
         <source>Ban for</source>
@@ -2267,11 +2497,11 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <source>1 &amp;hour</source>
-        <translation>1 &amp; ชั่วโมง</translation>
+        <translation>1 &amp;ชั่วโมง</translation>
     </message>
     <message>
         <source>1 &amp;day</source>
-        <translation>1 &amp; วัน</translation>
+        <translation>1 &amp;วัน</translation>
     </message>
     <message>
         <source>1 &amp;week</source>
@@ -2279,7 +2509,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <source>1 &amp;year</source>
-        <translation>1 &amp; ปี</translation>
+        <translation>1 &amp;ปี</translation>
     </message>
     <message>
         <source>&amp;Unban</source>
@@ -2290,12 +2520,16 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>ยินดีต้อนรับสู่คอนโซล %1 RPC</translation>
     </message>
     <message>
-        <source>Type &lt;b&gt;help&lt;/b&gt; for an overview of available commands.</source>
-        <translation>พิมพ์ &lt;b&gt;help&lt;/b&gt;สำหรับภาพรวมของคำสั่งที่พร้อมใช้งาน </translation>
-    </message>
-    <message>
         <source>Use up and down arrows to navigate history, and %1 to clear screen.</source>
         <translation>ใช้ลูกศรขึ้นและลงเพื่อเลื่อนดูประวัติ และ %1 เพื่อเคลียร์หน้าจอ</translation>
+    </message>
+    <message>
+        <source>Type %1 for an overview of available commands.</source>
+        <translation>พิมพ์ %1 สำหรับภาพรวมของคำสั่งที่ใช้ได้</translation>
+    </message>
+    <message>
+        <source>For more information on using this console type %1.</source>
+        <translation>สำหรับข้อมูลเพิ่มเติมเกี่ยวกับการใช้คอนโซลประเภทนี้พิมพ์ %1</translation>
     </message>
     <message>
         <source>WARNING: Scammers have been active, telling users to type commands here, stealing their wallet contents. Do not use this console without fully understanding the ramifications of a command.</source>
@@ -2318,20 +2552,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>ทั้งหมด: %1 (เปิดใช้งาน: %2)</translation>
     </message>
     <message>
-        <source>%1 B</source>
-        <translation>%1 B</translation>
+        <source>Executing command without any wallet</source>
+        <translation>ปฎิบัติการคำสั่งโดยไม่ต้องใช้กระเป๋าสตางค์ใด ๆ</translation>
     </message>
     <message>
-        <source>%1 KB</source>
-        <translation>%1 KB</translation>
-    </message>
-    <message>
-        <source>%1 MB</source>
-        <translation>%1 MB</translation>
-    </message>
-    <message>
-        <source>%1 GB</source>
-        <translation>%1 GB</translation>
+        <source>Executing command using "%1" wallet</source>
+        <translation>ปฎิบัติการคำสั่งโดยใช้ "%1" กระเป๋าสตางค์</translation>
     </message>
     <message>
         <source>(node id: %1)</source>
@@ -2362,6 +2588,18 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>ไม่</translation>
     </message>
     <message>
+        <source>Regular</source>
+        <translation>ปกติ</translation>
+    </message>
+    <message>
+        <source>Masternode</source>
+        <translation>Masternode</translation>
+    </message>
+    <message>
+        <source>Verified Masternode</source>
+        <translation>Masternode ที่ตรวจสอบแล้ว</translation>
+    </message>
+    <message>
         <source>Unknown</source>
         <translation>ไม่ทราบ</translation>
     </message>
@@ -2369,28 +2607,20 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
-        <source>Reuse one of the previously used receiving addresses.&lt;br&gt;Reusing addresses has security and privacy issues.&lt;br&gt;Do not use this unless re-generating a payment request made before.</source>
-        <translation>ใช้ที่อยู่ที่ได้รับก่อนหน้านี้อีกครั้งนึง&lt;br&gt; การใช้ที่อยู่ซ้ำมีปัญหาด้านความปลอดภัยและความเป็นส่วนตัว&lt;br&gt;อย่าใช้ข้อมูลนี้เว้นแต่สร้างคำขอชำระเงินที่ทำขึ้นมาใหม่มาก่อน</translation>
-    </message>
-    <message>
-        <source>R&amp;euse an existing receiving address (not recommended)</source>
-        <translation>ใช้ที่อยู่รับที่มีอยู่ (ไม่แนะนำ)</translation>
-    </message>
-    <message>
-        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Raptoreum network.</source>
-        <translation>ข้อความเสริมที่จะแนบไปกับคำขอการชำระเงินซึ่งจะแสดงขึ้นเมื่อมีการเปิดคำขอ หมายเหตุ: ข้อความจะไม่ถูกส่งพร้อมกับการชำระเงินผ่านเครือข่าย Raptoreum</translation>
+        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Dash network.</source>
+        <translation>ข้อความเสริมที่จะแนบไปกับคำขอการชำระเงินซึ่งจะแสดงขึ้นเมื่อมีการเปิดคำขอ หมายเหตุ: ข้อความจะไม่ถูกส่งพร้อมกับการชำระเงินผ่านเครือข่าย Dash</translation>
     </message>
     <message>
         <source>&amp;Message:</source>
-        <translation>ข้อความ:</translation>
+        <translation>&amp;ข้อความ:</translation>
     </message>
     <message>
         <source>An optional label to associate with the new receiving address.</source>
         <translation>ป้ายกำกับเพิ่มเติมสำหรับเชื่อมโยงกับที่อยู่รับใหม่</translation>
     </message>
     <message>
-        <source>An optional message to attach to the payment request, which will be displayed when the request is opened.&lt;br&gt;Note: The message will not be sent with the payment over the Raptoreum network.</source>
-        <translation>ข้อความเสริมที่จะแนบไปกับคำขอการชำระเงินซึ่งจะแสดงขึ้นเมื่อมีการเปิดคำขอ&lt;br&gt; หมายเหตุ: ข้อความจะไม่ถูกส่งพร้อมกับการชำระเงินผ่านเครือข่าย Raptoreum</translation>
+        <source>An optional message to attach to the payment request, which will be displayed when the request is opened.&lt;br&gt;Note: The message will not be sent with the payment over the Dash network.</source>
+        <translation>ข้อความเสริมที่จะแนบไปกับคำขอการชำระเงินซึ่งจะแสดงขึ้นเมื่อมีการเปิดคำขอ&lt;br&gt; หมายเหตุ: ข้อความจะไม่ถูกส่งพร้อมกับการชำระเงินผ่านเครือข่าย Dash</translation>
     </message>
     <message>
         <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
@@ -2406,11 +2636,11 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <source>&amp;Amount:</source>
-        <translation>จำนวน:</translation>
+        <translation>&amp;จำนวน:</translation>
     </message>
     <message>
         <source>&amp;Request payment</source>
-        <translation>ขอชำระเงิน</translation>
+        <translation>&amp;การขอชำระเงิน</translation>
     </message>
     <message>
         <source>Clear all fields of the form.</source>
@@ -2441,6 +2671,14 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>ลบออก</translation>
     </message>
     <message>
+        <source>Enter a label to associate with the new receiving address</source>
+        <translation>ใส่ป้ายกำกับเพื่อเชื่อมโยงกับที่อยู่ใหม่ที่ได้รับ</translation>
+    </message>
+    <message>
+        <source>Enter a message to attach to the payment request</source>
+        <translation>ป้อนข้อความที่จะแนบไปร้องขอการชำระเงิน</translation>
+    </message>
+    <message>
         <source>Copy URI</source>
         <translation>คัดลอก URI</translation>
     </message>
@@ -2465,15 +2703,15 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <source>Copy &amp;URI</source>
-        <translation>คัดลอก URI</translation>
+        <translation>คัดลอก &amp;URI</translation>
     </message>
     <message>
         <source>Copy &amp;Address</source>
-        <translation>คัดลอกที่อยู่</translation>
+        <translation>คัดลอก &amp;ที่อยู่</translation>
     </message>
     <message>
         <source>&amp;Save Image...</source>
-        <translation>บันทึกรูปภาพ</translation>
+        <translation>&amp;บันทึกรูปภาพ...</translation>
     </message>
     <message>
         <source>Request payment to %1</source>
@@ -2502,6 +2740,10 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Message</source>
         <translation>ข้อความ</translation>
+    </message>
+    <message>
+        <source>Wallet</source>
+        <translation>กระเป๋าสตางค์</translation>
     </message>
     <message>
         <source>Resulting URI too long, try to reduce the text for label / message.</source>
@@ -2618,16 +2860,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>การยืนยันเวลาเป้าหมาย</translation>
     </message>
     <message>
-        <source>PrivateSend</source>
-        <translation>PrivateSend</translation>
-    </message>
-    <message>
         <source>If the custom fee is set to 1000 duffs and the transaction is only 250 bytes, then "per kilobyte" only pays 250 duffs in fee,&lt;br /&gt;while "at least" pays 1000 duffs. For transactions bigger than a kilobyte both pay by kilobyte.</source>
         <translation>หากค่าธรรมเนียมที่กำหนดเองถูกตั้งค่าเป็น 1000 duffs และการทำธุรกรรมนี้มีเพียง 250 ไบต์   ซึ่ง "ต่อกิโลไบต์" จะจ่ายเพียง 250 duffs ในขณะที่ "อย่างน้อย" จ่าย 1000 duffs สำหรับธุรกรรมที่มีขนาดใหญ่กว่ากิโลไบต์จะต้องจ่ายเป็นกิโลไบต์</translation>
     </message>
     <message>
-        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks.&lt;br /&gt;But be aware that this can end up in a never confirming transaction once there is more demand for raptoreum transactions than the network can process.</source>
-        <translation>การจ่ายเงินเพียงค่าขั้นต่ำก็ทำได้ดีตราบเท่าที่ปริมาณธุรกรรมมีน้อยกว่าพื้นที่ในบล็อก&lt;br /&gt; แต่โปรดทราบว่าการจ่ายนี้จะสิ้นสุดลงในธุรกรรมที่ไม่เคยมีการยืนยัน ความต้องการใช้การทำธุรกรรมแบบ Raptoreum มีมากกว่าที่เครือข่ายสามารถดำเนินการได้</translation>
+        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks.&lt;br /&gt;But be aware that this can end up in a never confirming transaction once there is more demand for dash transactions than the network can process.</source>
+        <translation>การจ่ายเงินเพียงค่าขั้นต่ำก็ทำได้ดีตราบเท่าที่ปริมาณธุรกรรมมีน้อยกว่าพื้นที่ในบล็อก&lt;br /&gt; แต่โปรดทราบว่าการจ่ายนี้จะสิ้นสุดลงในธุรกรรมที่ไม่เคยมีการยืนยัน ความต้องการใช้การทำธุรกรรมแบบ Dash มีมากกว่าที่เครือข่ายสามารถดำเนินการได้</translation>
     </message>
     <message>
         <source>per kilobyte</source>
@@ -2667,7 +2905,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <source>S&amp;end</source>
-        <translation>ส่ง</translation>
+        <translation>&amp;ส่ง</translation>
     </message>
     <message>
         <source>Clear all fields of the form.</source>
@@ -2675,7 +2913,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <source>Clear &amp;All</source>
-        <translation>ล้างทั้งหมด</translation>
+        <translation>ลบ &amp;ทั้งหมด</translation>
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
@@ -2683,7 +2921,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <source>Add &amp;Recipient</source>
-        <translation>เพิ่มผู้รับ</translation>
+        <translation>เพิ่ม &amp;ผู้รับ</translation>
     </message>
     <message>
         <source>Balance:</source>
@@ -2722,6 +2960,10 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>%1 (%2 blocks)</translation>
     </message>
     <message>
+        <source>from wallet %1</source>
+        <translation>จากกระเป๋าสตางค์ %1</translation>
+    </message>
+    <message>
         <source>using</source>
         <translation>การใช้</translation>
     </message>
@@ -2746,8 +2988,40 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>&lt;b&gt;(%1 of %2 รายการที่แสดง)&lt;/b&gt;</translation>
     </message>
     <message>
+        <source>S&amp;end mixed funds</source>
+        <translation>S&amp;end เงินทุนที่ได้รับการผสม</translation>
+    </message>
+    <message>
+        <source>Confirm the %1 send action</source>
+        <translation>ยืนยัน %1 การส่ง </translation>
+    </message>
+    <message>
+        <source>%1 funds only</source>
+        <translation>ทำธุรกรรมแบบ %1 เฉพาะในกองทุนเท่านั้น</translation>
+    </message>
+    <message>
         <source>any available funds</source>
         <translation>เงินทุนที่มีอยู่</translation>
+    </message>
+    <message>
+        <source>(%1 transactions have higher fees usually due to no change output being allowed)</source>
+        <translation>(การทำธุรกรรมแบบปกปิดข้อมูล %1 มีค่าธรรมเนียมสูงขึ้นเนื่องมาจากไม่มีการให้ผลลัพธ์ที่เปลี่ยนแปลง)</translation>
+    </message>
+    <message>
+        <source>Transaction size: %1</source>
+        <translation>ขนาดของการทำธุกรรม: %1</translation>
+    </message>
+    <message>
+        <source>Fee rate: %1</source>
+        <translation>ค่าธรรมเนียม: %1</translation>
+    </message>
+    <message numerus="yes">
+        <source>This transaction will consume %n input(s)</source>
+        <translation><numerusform>ธุรกรรมนี้จะถูกป้อนเข้าไป %n</numerusform></translation>
+    </message>
+    <message>
+        <source>Warning: Using %1 with %2 or more inputs can harm your privacy and is not recommended</source>
+        <translation>คำเตือน: การใช้ธุรกรรมแบบบปกปิดข้อมูล %1 ด้วยการนำเข้าข้อมูล %2 หรือมากกว่า สามารถสร้างความเสียหายต่อความเป็นส่วนตัวของคุณได้ ไม่แนะนำ</translation>
     </message>
     <message>
         <source>Confirm send coins</source>
@@ -2798,8 +3072,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation><numerusform>คาดว่าจะเริ่มการยืนยันภายใน %n บล็อค</numerusform></translation>
     </message>
     <message>
-        <source>Warning: Invalid Raptoreum address</source>
-        <translation>คำเตือน: ที่อยู่ Raptoreum ไม่ถูกต้อง</translation>
+        <source>Warning: Invalid Dash address</source>
+        <translation>คำเตือน: ที่อยู่ Dash ไม่ถูกต้อง</translation>
     </message>
     <message>
         <source>Warning: Unknown change address</source>
@@ -2811,7 +3085,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <source>The address you selected for change is not part of this wallet. Any or all funds in your wallet may be sent to this address. Are you sure?</source>
-        <translation>ที่อยู่ที่คุณเลือกสำหรับการเปลี่ยนแปลงไม่ใช่ส่วนหนึ่งของ wallet  เงินบางส่วนหรือทั้งหมดใน wallet ของคุณอาจจะถูกส่งไปยังที่อยู่นี้  คุณแน่ใจหรือไม่?</translation>
+        <translation>ที่อยู่ที่คุณเลือกสำหรับการเปลี่ยนแปลงไม่ใช่ส่วนหนึ่งของกระเป๋าสตางค์นี้ เงินบางส่วนหรือทั้งหมดในกระเป๋าสตางค์ของคุณอาจจะถูกส่งไปยังที่อยู่นี้  คุณแน่ใจหรือไม่?</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -2826,11 +3100,11 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <source>Pay &amp;To:</source>
-        <translation>จ่ายไปยัง:</translation>
+        <translation>จ่าย &amp;ไปยัง:</translation>
     </message>
     <message>
-        <source>The Raptoreum address to send the payment to</source>
-        <translation>ที่อยู่ Raptoreum เพื่อส่งการชำระเงินไปที่</translation>
+        <source>The Dash address to send the payment to</source>
+        <translation>ที่อยู่ Dash เพื่อส่งการชำระเงินไปที่</translation>
     </message>
     <message>
         <source>Choose previously used address</source>
@@ -2865,20 +3139,24 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>จำนวน:</translation>
     </message>
     <message>
-        <source>The fee will be deducted from the amount being sent. The recipient will receive a lower amount of Raptoreum than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
-        <translation>ค่าธรรมเนียมจะถูกหักออกจากจำนวนเงินที่ส่ง ผู้รับจะได้รับ Raptoreum น้อยกว่าที่คุณป้อนในฟิลด์ หากมีการเลือกผู้รับหลายรายค่าธรรมเนียมจะแบ่งเท่า ๆ กัน</translation>
+        <source>The fee will be deducted from the amount being sent. The recipient will receive a lower amount of Dash than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
+        <translation>ค่าธรรมเนียมจะถูกหักออกจากจำนวนเงินที่ส่ง ผู้รับจะได้รับ Dash น้อยกว่าที่คุณป้อนในฟิลด์ หากมีการเลือกผู้รับหลายรายค่าธรรมเนียมจะแบ่งเท่า ๆ กัน</translation>
     </message>
     <message>
         <source>S&amp;ubtract fee from amount</source>
         <translation>หักค่าบริการจากจำนวนเงิน</translation>
     </message>
     <message>
+        <source>Use available balance</source>
+        <translation>ใช้ยอดเงินคงเหลือ</translation>
+    </message>
+    <message>
         <source>Message:</source>
         <translation>ข้อความ: </translation>
     </message>
     <message>
-        <source>A message that was attached to the raptoreum: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Raptoreum network.</source>
-        <translation>ข้อความที่แนบมาไปยัง Raptoreum: URI ซึ่งจะถูกเก็บไว้กับธุรกรรมเพื่อเป็นข้อมูลอ้างอิงของคุณ  หมายเหตุ: ข้อความนี้จะถูกส่งไปยังเครือข่าย Raptoreum </translation>
+        <source>A message that was attached to the dash: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Dash network.</source>
+        <translation>ข้อความที่แนบมาไปยัง Dash: URI ซึ่งจะถูกเก็บไว้กับธุรกรรมเพื่อเป็นข้อมูลอ้างอิงของคุณ  หมายเหตุ: ข้อความนี้จะถูกส่งไปยังเครือข่าย Dash </translation>
     </message>
     <message>
         <source>This is an unauthenticated payment request.</source>
@@ -2927,15 +3205,15 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <source>&amp;Sign Message</source>
-        <translation>ลงนามข้อความ</translation>
+        <translation>&amp;ลงนามข้อความ</translation>
     </message>
     <message>
-        <source>You can sign messages/agreements with your addresses to prove you can receive Raptoreum sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
-        <translation>คุณสามารถลงนามในข้อความ / ข้อตกลงกับที่อยู่ของคุณเพื่อพิสูจน์ว่าคุณสามารถรับ Raptoreum ส่งถึงพวกเขาได้  ระวังอย่าเซ็นชื่ออะไรที่กำกวม เนื่องจากการโจมตีแบบฟิชชิ่งอาจพยายามหลอกล่อให้คุณเซ็นชื่อตัวคุณเอง เพียงลงนามในคำชี้แจงอย่างละเอียดที่คุณเห็นด้วยเท่านั้น</translation>
+        <source>You can sign messages/agreements with your addresses to prove you can receive Dash sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
+        <translation>คุณสามารถลงนามในข้อความ / ข้อตกลงกับที่อยู่ของคุณเพื่อพิสูจน์ว่าคุณสามารถรับ Dash ส่งถึงพวกเขาได้  ระวังอย่าเซ็นชื่ออะไรที่กำกวม เนื่องจากการโจมตีแบบฟิชชิ่งอาจพยายามหลอกล่อให้คุณเซ็นชื่อตัวคุณเอง เพียงลงนามในคำชี้แจงอย่างละเอียดที่คุณเห็นด้วยเท่านั้น</translation>
     </message>
     <message>
-        <source>The Raptoreum address to sign the message with</source>
-        <translation>ที่อยู่ Raptoreum เพื่อเซ็นชื่อ</translation>
+        <source>The Dash address to sign the message with</source>
+        <translation>ที่อยู่ Dash เพื่อเซ็นชื่อ</translation>
     </message>
     <message>
         <source>Choose previously used address</source>
@@ -2966,12 +3244,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>คัดลอกลายเซ็นปัจจุบันไปยังคลิปบอร์ดของระบบ</translation>
     </message>
     <message>
-        <source>Sign the message to prove you own this Raptoreum address</source>
-        <translation>ลงนามข้อความเพื่อพิสูจน์ว่าคุณเป็นเจ้าของที่อยู่ Raptoreum นี้</translation>
+        <source>Sign the message to prove you own this Dash address</source>
+        <translation>ลงนามข้อความเพื่อพิสูจน์ว่าคุณเป็นเจ้าของที่อยู่ Dash นี้</translation>
     </message>
     <message>
         <source>Sign &amp;Message</source>
-        <translation>ลงนามข้อความ</translation>
+        <translation>ลงนาม &amp;ข้อความ</translation>
     </message>
     <message>
         <source>Reset all sign message fields</source>
@@ -2979,35 +3257,47 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <source>Clear &amp;All</source>
-        <translation>ลบทั้งหมด</translation>
+        <translation>ลบ &amp;ทั้งหมด</translation>
     </message>
     <message>
         <source>&amp;Verify Message</source>
-        <translation>ยืนยันข้อความ</translation>
+        <translation>&amp;ยืนยันข้อความ</translation>
     </message>
     <message>
         <source>Enter the receiver's address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack. Note that this only proves the signing party receives with the address, it cannot prove sendership of any transaction!</source>
         <translation>ป้อนที่อยู่ของผู้รับข้อความ (ตรวจสอบให้แน่ใจว่าคุณได้คัดลอกเว้นวรรค ช่องว่าง ย่อหน้า ฯลฯ ) และลายเซ็นด้านล่างเพื่อยืนยันข้อความ โปรดระวังอย่าใช้ข้อมูลมากกว่าข้อความที่เซ็นชื่อไว้เพื่อหลีกเลี่ยงการฉ้อโกงโดยอาศัยการโจมตีแบบ man-in-the-middle โปรดทราบว่าสิ่งนี้พิสูจน์ให้เห็นว่าบุคคลที่ลงนามได้รับพร้อมกับที่อยู่แล้วไม่สามารถพิสูจน์ว่ามีผู้ส่งรายการใด ๆ !</translation>
     </message>
     <message>
-        <source>The Raptoreum address the message was signed with</source>
-        <translation>ข้อความที่อยู่ Raptoreum ถูกเซ็นชื่อด้วย</translation>
+        <source>The Dash address the message was signed with</source>
+        <translation>ข้อความที่อยู่ Dash ถูกเซ็นชื่อด้วย</translation>
     </message>
     <message>
-        <source>Verify the message to ensure it was signed with the specified Raptoreum address</source>
-        <translation>ยืนยันข้อความเพื่อให้แน่ใจว่าข้อความถูกเซ็นชื่อด้วยที่อยู่ Raptoreum ที่ระบุ</translation>
+        <source>Verify the message to ensure it was signed with the specified Dash address</source>
+        <translation>ยืนยันข้อความเพื่อให้แน่ใจว่าข้อความถูกเซ็นชื่อด้วยที่อยู่ Dash ที่ระบุ</translation>
     </message>
     <message>
         <source>Verify &amp;Message</source>
-        <translation>ยืนยันข้อความ</translation>
+        <translation>ยืนยัน &amp;ข้อความ</translation>
     </message>
     <message>
         <source>Reset all verify message fields</source>
         <translation>รีเซ็ตข้อความยืนยันทั้งหมด</translation>
     </message>
     <message>
+        <source>Enter a message to be signed</source>
+        <translation>ป้อนข้อความที่จะลงนาม</translation>
+    </message>
+    <message>
         <source>Click "Sign Message" to generate signature</source>
         <translation>คลิก "ลงนามข้อความ" เพื่อสร้างลายเซ็น</translation>
+    </message>
+    <message>
+        <source>Enter a message to be verified</source>
+        <translation>ป้อนข้อความได้รับการยืนยัน</translation>
+    </message>
+    <message>
+        <source>Enter a signature for the message to be verified</source>
+        <translation>ใส่ลายเซ็นให้กับข้อความที่จะได้รับการตรวจสอบแล้ว</translation>
     </message>
     <message>
         <source>The entered address is invalid.</source>
@@ -3023,7 +3313,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <source>Wallet unlock was cancelled.</source>
-        <translation>ยกเลิกการปลดล็อก Wallet แล้ว</translation>
+        <translation>ยกเลิกการปลดล็อกกระเป๋าสตางค์แล้ว</translation>
     </message>
     <message>
         <source>Private key for the entered address is not available.</source>
@@ -3064,16 +3354,24 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <source>[testnet]</source>
         <translation>[testnet]</translation>
     </message>
-    <message>
-        <source>Version %1</source>
-        <translation>เวอร์ชั่น %1</translation>
-    </message>
 </context>
 <context>
     <name>TrafficGraphWidget</name>
     <message>
         <source>KB/s</source>
         <translation>KB/s</translation>
+    </message>
+    <message>
+        <source>Total</source>
+        <translation>ยอดรวม: </translation>
+    </message>
+    <message>
+        <source>Received</source>
+        <translation>ได้รับ</translation>
+    </message>
+    <message>
+        <source>Sent</source>
+        <translation>ส่ง</translation>
     </message>
 </context>
 <context>
@@ -3089,10 +3387,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>conflicted</source>
         <translation>ขัดแย้ง</translation>
-    </message>
-    <message>
-        <source>%1/offline</source>
-        <translation>%1 / ออฟไลน์</translation>
     </message>
     <message>
         <source>0/unconfirmed, %1</source>
@@ -3119,24 +3413,16 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>%1 ยืนยัน</translation>
     </message>
     <message>
-        <source>locked via LLMQ based ChainLocks</source>
-        <translation>ล็อกผ่าน LLMQ ซึ่งมาจาก ChainLocks</translation>
+        <source>locked via ChainLocks</source>
+        <translation>ล็อกผ่าน Chainlocks</translation>
     </message>
     <message>
-        <source>verified via LLMQ based InstantSend</source>
-        <translation>ยืนยันผ่าน LLMQ ซึ่งมาจาก InstantSend</translation>
+        <source>verified via InstantSend</source>
+        <translation>ยืนยันผ่าน InstantSend</translation>
     </message>
     <message>
         <source>Status</source>
         <translation>สถานะ</translation>
-    </message>
-    <message>
-        <source>, has not been successfully broadcast yet</source>
-        <translation>ยังถ่ายทอดไม่สำเร็จ</translation>
-    </message>
-    <message numerus="yes">
-        <source>, broadcast through %n node(s)</source>
-        <translation><numerusform>, ถ่ายทอดผ่าน %n โหนด</numerusform></translation>
     </message>
     <message>
         <source>Date</source>
@@ -3293,10 +3579,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>เปิดจนถึง %1</translation>
     </message>
     <message>
-        <source>Offline</source>
-        <translation>ออฟไลน์</translation>
-    </message>
-    <message>
         <source>Unconfirmed</source>
         <translation>ไม่มีการยืนยัน</translation>
     </message>
@@ -3321,12 +3603,16 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>ยังไม่สมบูรณ์ (การยืนยัน %1 จะพร้อมใช้งานหลังจาก %2)</translation>
     </message>
     <message>
-        <source>This block was not received by any other nodes and will probably not be accepted!</source>
-        <translation>บล็อกนี้ไม่ได้รับโดยโหนดอื่น ๆ และอาจจะไม่ได้รับการยอมรับ!</translation>
-    </message>
-    <message>
         <source>Generated but not accepted</source>
         <translation>สร้างแล้ว แต่ไม่ยอมรับ</translation>
+    </message>
+    <message>
+        <source>verified via InstantSend</source>
+        <translation>ยืนยันผ่าน InstantSend</translation>
+    </message>
+    <message>
+        <source>locked via ChainLocks</source>
+        <translation>ล็อกผ่าน Chainlocks</translation>
     </message>
     <message>
         <source>Received with</source>
@@ -3337,8 +3623,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>ได้รับจาก</translation>
     </message>
     <message>
-        <source>Received via PrivateSend</source>
-        <translation>ได้รับผ่าน PrivateSend</translation>
+        <source>Received via %1</source>
+        <translation>ได้รับผ่าน %1</translation>
     </message>
     <message>
         <source>Sent to</source>
@@ -3353,24 +3639,24 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Mined</translation>
     </message>
     <message>
-        <source>PrivateSend Denominate</source>
-        <translation>PrivateSend Denominate</translation>
+        <source>%1 Mixing</source>
+        <translation>%1 ผสม</translation>
     </message>
     <message>
-        <source>PrivateSend Collateral Payment</source>
-        <translation>หลักประกันการชำระเงิน PrivateSend </translation>
+        <source>%1 Collateral Payment</source>
+        <translation>หลักประกันการชำระเงิน %1</translation>
     </message>
     <message>
-        <source>PrivateSend Make Collateral Inputs</source>
-        <translation>PrivateSend สร้างการป้อนข้อมูลหลักประกัน</translation>
+        <source>%1 Make Collateral Inputs</source>
+        <translation>%1 สร้างการป้อนข้อมูลหลักประกัน</translation>
     </message>
     <message>
-        <source>PrivateSend Create Denominations</source>
-        <translation>PrivateSend สร้างหน่วยเงิน</translation>
+        <source>%1 Create Denominations</source>
+        <translation>%1 สร้างหน่วยเงิน</translation>
     </message>
     <message>
-        <source>PrivateSend</source>
-        <translation>PrivateSend</translation>
+        <source>%1 Send</source>
+        <translation>%1 ส่ง</translation>
     </message>
     <message>
         <source>watch-only</source>
@@ -3401,10 +3687,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>ไม่ว่าจะเป็นที่อยู่สำหรับดูอย่างเดียวหรือไม่ก็ตามก็เกี่ยวข้องกับธุรกรรมนี้</translation>
     </message>
     <message>
-        <source>Whether or not this transaction was locked by InstantSend.</source>
-        <translation>ไม่ว่าธุรกรรมนี้จะถูกล็อคโดย InstantSend หรือไม่</translation>
-    </message>
-    <message>
         <source>User-defined intent/purpose of the transaction.</source>
         <translation>เจตนา / วัตถุประสงค์ที่กำหนดโดยผู้ใช้ของธุรกรรม</translation>
     </message>
@@ -3418,14 +3700,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>All</source>
         <translation>ทั้งหมด</translation>
-    </message>
-    <message>
-        <source>Locked by InstantSend</source>
-        <translation>ล็อคโดย InstantSend</translation>
-    </message>
-    <message>
-        <source>Not locked by InstantSend</source>
-        <translation>ไม่ได้ถูกล็อคโดย InstantSend</translation>
     </message>
     <message>
         <source>Today</source>
@@ -3464,24 +3738,24 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>ส่งถึง</translation>
     </message>
     <message>
-        <source>PrivateSend</source>
-        <translation>PrivateSend</translation>
+        <source>%1 Send</source>
+        <translation>%1 ส่ง</translation>
     </message>
     <message>
-        <source>PrivateSend Make Collateral Inputs</source>
-        <translation>PrivateSend สร้างการป้อนข้อมูลหลักประกัน</translation>
+        <source>%1 Make Collateral Inputs</source>
+        <translation>%1 สร้างการป้อนข้อมูลหลักประกัน</translation>
     </message>
     <message>
-        <source>PrivateSend Create Denominations</source>
-        <translation>PrivateSend สร้างหน่วยเงิน</translation>
+        <source>%1 Create Denominations</source>
+        <translation>%1 สร้างหน่วยเงิน</translation>
     </message>
     <message>
-        <source>PrivateSend Denominate</source>
-        <translation>PrivateSend Denominate</translation>
+        <source>%1 Mixing</source>
+        <translation>%1 ผสม</translation>
     </message>
     <message>
-        <source>PrivateSend Collateral Payment</source>
-        <translation>PrivateSend หลักประกันการชำระเงิน</translation>
+        <source>%1 Collateral Payment</source>
+        <translation>หลักประกันการชำระเงิน %1</translation>
     </message>
     <message>
         <source>To yourself</source>
@@ -3496,8 +3770,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>อื่นๆ</translation>
     </message>
     <message>
-        <source>Enter address or label to search</source>
-        <translation>ป้อนที่อยู่หรือป้ายชื่อที่ต้องการค้นหา</translation>
+        <source>Enter address, transaction id, or label to search</source>
+        <translation>ป้อนที่อยู่, รหัสธุรกรรม, หรือฉลากที่จะค้นหา</translation>
     </message>
     <message>
         <source>Min amount</source>
@@ -3619,7 +3893,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <name>WalletFrame</name>
     <message>
         <source>No wallet has been loaded.</source>
-        <translation>ไม่ได้มีการโหลด wallet </translation>
+        <translation>ไม่มีการโหลดกระเป๋าสตางค์</translation>
     </message>
 </context>
 <context>
@@ -3645,7 +3919,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <source>Backup Wallet</source>
-        <translation>สำรอง Wallet </translation>
+        <translation>สำรองกระเป๋าสตางค์</translation>
     </message>
     <message>
         <source>Wallet Data (*.dat)</source>
@@ -3657,7 +3931,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <source>There was an error trying to save the wallet data to %1.</source>
-        <translation>เกิดข้อผิดพลาดขณะพยายามบันทึกข้อมูล wallet ไปที่ %1</translation>
+        <translation>เกิดข้อผิดพลาดขณะพยายามบันทึกข้อมูลกระเป๋าสตางค์ไปที่ %1</translation>
     </message>
     <message>
         <source>Backup Successful</source>
@@ -3665,38 +3939,18 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <source>The wallet data was successfully saved to %1.</source>
-        <translation>บันทึกข้อมูล wallet สำเร็จแล้วที่ %1</translation>
+        <translation>บันทึกข้อมูลกระเป๋าสตางค์สำเร็จแล้วที่ %1</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>ยกเลิก</translation>
     </message>
 </context>
 <context>
-    <name>raptoreum-core</name>
-    <message>
-        <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
-        <translation>เชื่อมโยงไปยังที่อยู่ที่กำหนดและฟังเสมอ โปรดใช้รูปแบบ  [host]:port สำหรับ IPv6</translation>
-    </message>
+    <name>dash-core</name>
     <message>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
         <translation>ข้อผิดพลาด: ฟังการเชื่อมต่อขาเข้าล้มเหลว (ฟังข้อผิดพลาด %s)</translation>
-    </message>
-    <message>
-        <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
-        <translation>ดำเนินการคำสั่งเมื่อได้รับการแจ้งเตือนที่เกี่ยวข้องหรือเราเห็น fork ที่ยาวมาก (%s ในคำสั่งจะถูกแทนที่ด้วยข้อความ)</translation>
-    </message>
-    <message>
-        <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
-        <translation>ดำเนินการคำสั่งเมื่อมีการเปลี่ยนแปลงธุรกรรม wallet  (%s ใน cmd จะถูกแทนที่ด้วย TxID)</translation>
-    </message>
-    <message>
-        <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
-        <translation>ดำเนินการคำสั่งเมื่อมีการเปลี่ยนแปลงที่ดีที่สุดของบล็อก (%s ใน cmd ถูกแทนที่ด้วย block hash)</translation>
-    </message>
-    <message>
-        <source>Name to construct url for KeePass entry that stores the wallet passphrase</source>
-        <translation>ตั้งชื่อเพื่อสร้าง URL สำหรับเข้า KeePass ที่จัดเก็บวลีรหัสผ่าน wallet</translation>
-    </message>
-    <message>
-        <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
-        <translation>กำหนดจำนวนของเธรดสคริปต์การตรวจสอบ (%u ถึง %d, 0 = อัตโนมัติ, &lt;0 = ปล่อยให้คอร์อิสระ , ค่าเริ่มต้น: %d)</translation>
     </message>
     <message>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
@@ -3711,52 +3965,20 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>คำเตือน: เราไม่ปรากฎกับ peer ของเรา! คุณอาจต้องอัพเกรดหรือโหนดอื่น ๆ อาจต้องอัพเกรด</translation>
     </message>
     <message>
-        <source>Accept command line and JSON-RPC commands</source>
-        <translation>ยอมรับ command line และคำสั่ง JSON-RPC</translation>
-    </message>
-    <message>
-        <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
-        <translation>อนุญาต DNS ค้นหาสำหรับ -addnode, -seednode และ -connect</translation>
-    </message>
-    <message>
         <source>Already have that input.</source>
         <translation>มีข้อมูลดังกล่าวแล้ว</translation>
     </message>
     <message>
-        <source>Block creation options:</source>
-        <translation>ตัวเลือกการสร้างบล็อก:</translation>
-    </message>
-    <message>
         <source>Cannot downgrade wallet</source>
-        <translation>ไม่สามารถลดระดับ wallet ได้</translation>
-    </message>
-    <message>
-        <source>Cannot write default address</source>
-        <translation>ไม่สามารถเขียนที่อยู่เริ่มต้นได้</translation>
+        <translation>ไม่สามารถลดระดับกระเป๋าสตางค์ได้</translation>
     </message>
     <message>
         <source>Collateral not valid.</source>
         <translation>หลักประกันไม่ถูกต้อง</translation>
     </message>
     <message>
-        <source>Connect to a node to retrieve peer addresses, and disconnect</source>
-        <translation>เชื่อมต่อกับโหนดเพื่อดึงข้อมูลที่อยู่ของ peer และยกเลิกการเชื่อมต่อ</translation>
-    </message>
-    <message>
-        <source>Connection options:</source>
-        <translation>ตัวเลือกการเชื่อมต่อ: </translation>
-    </message>
-    <message>
         <source>Corrupted block database detected</source>
         <translation>ตรวจพบฐานข้อมูลบล็อกที่เสียหาย</translation>
-    </message>
-    <message>
-        <source>Debugging/Testing options:</source>
-        <translation>การแก้จุดบกพร่อง / ตัวเลือกการทดสอบ:</translation>
-    </message>
-    <message>
-        <source>Do not load the wallet and disable wallet RPC calls</source>
-        <translation>ห้ามโหลด wallet และปิดการใช้งาน wallet RPC</translation>
     </message>
     <message>
         <source>Do you want to rebuild the block database now?</source>
@@ -3776,7 +3998,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <source>Error initializing wallet database environment %s!</source>
-        <translation>เริ่มต้นข้อผิดพลาดด้านสภาพแวดล้อมของฐานข้อมูล Wallet %s!</translation>
+        <translation>เริ่มต้นข้อผิดพลาดด้านสภาพแวดล้อมของฐานข้อมูลกระเป๋าสตางค์ %s!</translation>
     </message>
     <message>
         <source>Error loading block database</source>
@@ -3800,135 +4022,35 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
-        <translation>เกิดข้อผิดพลาดในการฟังพอร์ตใด ๆ ใช้ -listen = 0 ถ้าต้องการ</translation>
-    </message>
-    <message>
-        <source>(1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)</source>
-        <translation>(1 = เก็บ tx meta data เช่น ชื่อเจ้าของบัญชีและข้อมูลการชำระเงิน,  2 = ทิ้ง tx meta data)</translation>
+        <translation>เกิดข้อผิดพลาดในการฟัง port ใด ๆ ใช้ -listen = 0 ถ้าต้องการ</translation>
     </message>
     <message>
         <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
         <translation>-maxtxfee ตั้งค่าไว้สูงมาก! ค่าธรรมเนียมที่มีขนาดใหญ่นี้สามารถจ่ายได้เมื่อทำธุรกรรมครั้งเดียว</translation>
     </message>
     <message>
-        <source>A fee rate (in %s/kB) that will be used when fee estimation has insufficient data (default: %s)</source>
-        <translation>อัตราค่าธรรมเนียม (%s / kB) ที่จะใช้เมื่อการประมาณค่าใช้จ่ายมีข้อมูลไม่เพียงพอ (ค่าเริ่มต้น: %s)</translation>
-    </message>
-    <message>
-        <source>Accept relayed transactions received from whitelisted peers even when not relaying transactions (default: %d)</source>
-        <translation>ยอมรับการถ่ายทอดธุรกรรมที่ได้รับจาก whitelisted peers แม้ว่าจะไม่ได้ทำธุรกรรมแบบเดิมก็ตาม (ค่าเริ่มต้น: %d)</translation>
-    </message>
-    <message>
-        <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
-        <translation>อนุญาตให้ JSON-RPC เชื่อมต่อจากแหล่งที่ระบุ สามารถใช้ได้สำหรับ &lt;ip&gt; คือ IP เดียว (เช่น 1.2.3.4)  network / netmask (เช่น 1.2.3.4/255.255.255.0) หรือ network / CIDR (เช่น 1.2.3.4/24) สามารถระบุตัวเลือกนี้ได้หลายครั้ง</translation>
-    </message>
-    <message>
-        <source>Bind to given address and whitelist peers connecting to it. Use [host]:port notation for IPv6</source>
-        <translation>เชื่อมโยงไปยังที่อยู่ที่กำหนดและ whitelist peers ที่เชื่อมต่ออยู่  ใช้ [โฮสต์]: สัญลักษณ์พอร์ตสำหรับ IPv6</translation>
-    </message>
-    <message>
-        <source>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</source>
-        <translation>สร้างไฟล์ใหม่ด้วยระบบสิทธิ์ดีฟอลต์แทนที่จะเป็น umask 077 (มีผลกับการทำงานของกระเป๋าสตางค์เท่านั้น)</translation>
-    </message>
-    <message>
-        <source>Delete all wallet transactions and only recover those parts of the blockchain through -rescan on startup</source>
-        <translation>ลบการทำธุรกรรมทั้งหมดของ wallet และกู้เฉพาะส่วนของ blockchain ผ่านการสแกนใหม่เมื่อเริ่มต้น</translation>
-    </message>
-    <message>
-        <source>Enable publish raw transactions of attempted InstantSend double spend in &lt;address&gt;</source>
-        <translation>เปิดใช้งาน raw transactions ของ InstantSend พยายามที่จะใช้จ่ายสองเท่าใน &lt;address&gt;</translation>
-    </message>
-    <message>
-        <source>Enable publish transaction hashes of attempted InstantSend double spend in &lt;address&gt;</source>
-        <translation>เปิดใช้งาน transaction hashes ของ InstantSend พยายามที่จะใช้จ่ายสองเท่าใน&lt;address&gt;</translation>
+        <source>Cannot provide specific connections and have addrman find outgoing connections at the same.</source>
+        <translation>ไม่สามารถให้การเชื่อมต่อที่เฉพาะเจาะจงและมี addrman พบการเชื่อมต่อขาออกในเวลาเดียวกัน</translation>
     </message>
     <message>
         <source>Found unconfirmed denominated outputs, will wait till they confirm to continue.</source>
         <translation>พบเอาท์พุตที่เป็นสกุลเงินที่ไม่ได้รับการยืนยัน จะรอจนกว่าพวกเขาจะยืนยันเพื่อดำเนินการต่อ</translation>
     </message>
     <message>
-        <source>How thorough the block verification of -checkblocks is (0-4, default: %u)</source>
-        <translation>การตรวจสอบบล็อกอย่างละเอียดด้วย -checkblocks (0-4 ค่าดีฟอลต์: %u)</translation>
-    </message>
-    <message>
-        <source>If paytxfee is not set, include enough fee so transactions begin confirmation on average within n blocks (default: %u)</source>
-        <translation>หากไม่ได้ตั้งค่า paytxfee ให้รวมค่าคอมมิชชั่นสำหรับการทำธุรกรรมเพื่อเริ่มต้นการยืนยันโดยเฉลี่ยในบล็อก n (ค่าเริ่มต้น: %u)</translation>
-    </message>
-    <message>
-        <source>If this block is in the chain assume that it and its ancestors are valid and potentially skip their script verification (0 to verify all, default: %s, testnet: %s)</source>
-        <translation>ถ้าบล็อกนี้อยู่ในสายโซ่ สมมติว่าสายโซ่และรุ่นก่อนนี้ถูกต้องและเป็นไปได้ที่จะข้ามการตรวจสอบความถูกต้องของสคริปต์ (0 เพื่อยืนยันทุกอย่าง, เริ่มต้น: %s, testnet: %s)</translation>
+        <source>Invalid -socketevents ('%s') specified. Only these modes are supported: %s</source>
+        <translation>-socketevents ไม่ถูกต้อง ('%s') ที่ระบุไว้ เฉพาะโหมดเหล่านี้ได้รับการสนับสนุน: %s</translation>
     </message>
     <message>
         <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)</source>
         <translation>จำนวนเงินไม่ถูกต้องสำหรับ -maxtxfee = &lt;amount&gt;'%s' (ต้องมีอย่างน้อยค่าธรรมเนียงการส่งของ %s เพื่อป้องกันธุรกรรมที่ติดค้าง)</translation>
     </message>
     <message>
-        <source>Maintain a full transaction index, used by the getrawtransaction rpc call (default: %u)</source>
-        <translation>รักษาดัชนีการทำรายการทั้งหมดโดยใช้การเรียก gettransaction rpc (ค่าเริ่มต้น: %u)</translation>
-    </message>
-    <message>
-        <source>Maximum size of data in data carrier transactions we relay and mine (default: %u)</source>
-        <translation>ขนาดสูงสุดของข้อมูลในการทำธุรกรรมผู้ให้บริการข้อมูลที่เราโอนและขุด (ค่าเริ่มต้น: %u)</translation>
-    </message>
-    <message>
-        <source>Number of seconds to keep misbehaving peers from reconnecting (default: %u)</source>
-        <translation>จำนวนวินาทีที่  peer ทำงานไม่ถูกต้องจากการเชื่อมต่อใหม่ (ค่าเริ่มต้น: %u)</translation>
-    </message>
-    <message>
-        <source>Output debugging information (default: %u, supplying &lt;category&gt; is optional)</source>
-        <translation>ข้อมูลการแก้ไขจุดบกพร่องของ Output (ค่าดีฟอลต์: %u &lt;category&gt; เป็นตัวเลือกเพิ่มเติม)</translation>
-    </message>
-    <message>
-        <source>Overrides minimum spork signers to change spork value. Only useful for regtest and devnet. Using this on mainnet or testnet will ban you.</source>
-        <translation>ยกเลิกจำนวนขั้นต่ำ spork signers เพื่อเปลี่ยนจำนวน  มีประโยชน์สำหรับ regtest และ devnet เท่านั้น หากใช้สิ่งนี้บน mainnet หรือ testnet  คุณจะถูกแบน</translation>
-    </message>
-    <message>
-        <source>Use N separate smartnodes in parallel to mix funds (%u-%u, default: %u)</source>
-        <translation>ใช้ N smartnode ในการผสมเงินทุน (%u-%u, ค่าเริ่มต้น: %u)</translation>
-    </message>
-    <message>
-        <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)</source>
-        <translation>ใช้พร็อกซี SOCKS5 แยกเพื่อเข้าถึงเพื่อนร่วมทางผ่านบริการที่ซ่อนไว้ของ Tor (ค่าดีฟอลต์: %s)</translation>
-    </message>
-    <message>
-        <source>User defined mnemonic for HD wallet (bip39). Only has effect during wallet creation/first start (default: randomly generated)</source>
-        <translation>ผู้ใช้กำหนดเทคนิคช่วยจำสำหรับ wallet HD (bip39) จะมีผลเฉพาะระหว่างการสร้าง wallet / การเริ่มครั้งแรก (ค่าเริ่มต้น: สร้างแบบสุ่ม)</translation>
-    </message>
-    <message>
-        <source>User defined seed for HD wallet (should be in hex). Only has effect during wallet creation/first start (default: randomly generated)</source>
-        <translation>ผู้ใช้กำหนด seed สำหรับ wallet  HD (ควรเป็นเลขฐายสิบหก) มีผลเฉพาะระหว่างการสร้างกระเป๋าสตางค์ / การเริ่มครั้งแรก (ค่าเริ่มต้น: สร้างแบบสุ่ม)</translation>
-    </message>
-    <message>
-        <source>Whitelisted peers cannot be DoS banned and their transactions are always relayed, even if they are already in the mempool, useful e.g. for a gateway</source>
-        <translation>Whitelisted peers ไม่สามารถถูกห้ามโดย DoS และการทำธุรกรรมของพวกเขาจะถูกส่งถึงแม้ว่าจะมีอยู่ในกลุ่ม mempool แล้วก็ตามเช่น สำหรับเกตเวย์</translation>
-    </message>
-    <message>
-        <source>(default: %s)</source>
-        <translation>(ค่าดีฟอลต์: %s)</translation>
-    </message>
-    <message>
-        <source>Accept public REST requests (default: %u)</source>
-        <translation>ยอมรับคำขอ REST สาธารณะ (ค่าเริ่มต้น: %u)</translation>
-    </message>
-    <message>
-        <source>Always query for peer addresses via DNS lookup (default: %u)</source>
-        <translation>ค้นหา peer address ผ่านการค้นหา DNS เสมอ (ค่าดีฟอลต์: %u)</translation>
+        <source>Transaction index can't be disabled with governance validation enabled. Either start with -disablegovernance command line switch or enable transaction index.</source>
+        <translation>ดัชนีการทำธุรกรรมไม่สามารถปิดการใช้งานกับการตรวจสอบการกำกับดูแลการเปิดใช้งาน ทั้งสองเริ่มต้นด้วย -disablegovernance command line switch หรือเปิดใช้งานดัชนีการทำธุรกรรม</translation>
     </message>
     <message>
         <source>Can't mix: no compatible inputs found!</source>
         <translation>ไม่สามารถผสมได้: ไม่พบอินพุตที่เข้ากันได้!</translation>
-    </message>
-    <message>
-        <source>Chain selection options:</source>
-        <translation>ตัวเลือกการเลือก Chain:</translation>
-    </message>
-    <message>
-        <source>Connect through SOCKS5 proxy</source>
-        <translation>เชื่อมต่อผ่าน SOCKS5 proxy</translation>
-    </message>
-    <message>
-        <source>Connect to KeePassHttp on port &lt;port&gt; (default: %u)</source>
-        <translation>เชื่อมต่อกับ KeePassHttp บนพอร์ต  &lt;port&gt; (ค่าเริ่มต้น: %u)</translation>
     </message>
     <message>
         <source>Entry exceeds maximum size.</source>
@@ -3943,8 +4065,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>ไม่สามารถโหลดแคชกำกับดูแลจาก</translation>
     </message>
     <message>
-        <source>Failed to load smartnode cache from</source>
-        <translation>ไม่สามารถโหลดแคช smartnode ได้</translation>
+        <source>Failed to load masternode cache from</source>
+        <translation>ไม่สามารถโหลดแคช masternode ได้</translation>
     </message>
     <message>
         <source>Found enough users, signing ( waiting %s )</source>
@@ -3955,16 +4077,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>พบผู้ใช้เพียงพอ, กำลังลงนาม...</translation>
     </message>
     <message>
-        <source>How many blocks to check at startup (default: %u, 0 = all)</source>
-        <translation>จำนวนบล็อกที่ถูกตรวจสอบเมื่อเริ่มต้น (ค่าเริ่มต้น: %u, 0 = ทั้งหมด)</translation>
-    </message>
-    <message>
         <source>Importing...</source>
         <translation>กำลังนำเข้า...</translation>
-    </message>
-    <message>
-        <source>Include IP addresses in debug output (default: %u)</source>
-        <translation>รวมทั้งที่อยู่ IP ในผลลัพธ์การแก้ปัญหา (ค่าดีฟอลต์: %u)</translation>
     </message>
     <message>
         <source>Incompatible mode.</source>
@@ -4007,14 +4121,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Keypool หมดแล้ว โปรดเติม Keypool ก่อน</translation>
     </message>
     <message>
-        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: %u or testnet: %u)</source>
-        <translation>ฟังเพื่อการเชื่อมต่อ JSON-RPC  &lt;port&gt; (ค่าเริ่มต้น: %u หรือ testnet: %u)</translation>
-    </message>
-    <message>
-        <source>Listen for connections on &lt;port&gt; (default: %u or testnet: %u)</source>
-        <translation>ฟังเพื่อการเชื่อมต่อ &lt;port&gt; (ค่าเริ่มต้น: %u หรือ testnet: %u)</translation>
-    </message>
-    <message>
         <source>Loading banlist...</source>
         <translation>กำลังโหลดรายการต้องห้าม</translation>
     </message>
@@ -4023,120 +4129,44 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>กำลังโหลดแคชของคำขอ...</translation>
     </message>
     <message>
-        <source>Loading smartnode cache...</source>
-        <translation>กำลังโหลดแคช smartnode ...</translation>
+        <source>Loading masternode cache...</source>
+        <translation>กำลังโหลดแคช masternode ...</translation>
     </message>
     <message>
         <source>Lock is already in place.</source>
         <translation>ล็อกอยู่ในตำแหน่งแล้ว</translation>
     </message>
     <message>
-        <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: %u)</source>
-        <translation>สูงสุดต่อการเชื่อมต่อได้รับบัฟเฟอร์   &lt;n&gt; * 1000 ไบต์  (ค่าเริ่มต้น: %u)</translation>
-    </message>
-    <message>
-        <source>Maximum per-connection send buffer, &lt;n&gt;*1000 bytes (default: %u)</source>
-        <translation>สูงสุดบัฟเฟอร์ต่อการส่งต่อ &lt;n&gt; * 1000 ไบต์ (ค่าดีฟอลต์: %u)</translation>
-    </message>
-    <message>
         <source>Mixing in progress...</source>
         <translation>อยู่ระหว่างการผสม...</translation>
-    </message>
-    <message>
-        <source>Mnemonic passphrase is too long, must be at most 256 characters</source>
-        <translation>รหัสผ่านของ Mnemonic ยาวเกินไป จะต้องมีไม่เกิน 256 ตัว</translation>
     </message>
     <message>
         <source>Need to specify a port with -whitebind: '%s'</source>
         <translation>จำเป็นต้องระบุพอร์ตด้วย  -whitebind: '%s'  </translation>
     </message>
     <message>
-        <source>No Smartnodes detected.</source>
-        <translation>ไม่พบ Smartnodes</translation>
+        <source>No Masternodes detected.</source>
+        <translation>ไม่พบ Masternodes</translation>
     </message>
     <message>
-        <source>No compatible Smartnode found.</source>
-        <translation>ไม่พบ Smartnode ที่เข้ากันได้</translation>
+        <source>No compatible Masternode found.</source>
+        <translation>ไม่พบ Masternode ที่เข้ากันได้</translation>
     </message>
     <message>
-        <source>Not in the Smartnode list.</source>
-        <translation>ไม่อยู่ในรายการ Smartnode</translation>
+        <source>Not enough funds to mix.</source>
+        <translation>เงินไม่เพียงพอที่จะผสม</translation>
     </message>
     <message>
-        <source>Only connect to nodes in network &lt;net&gt; (ipv4, ipv6 or onion)</source>
-        <translation>เชื่อมต่อกับโหนดในเครือข่ายเท่านั้น &lt;net&gt; (ipv4, ipv6 หรือ onion)</translation>
+        <source>Not in the Masternode list.</source>
+        <translation>ไม่อยู่ในรายการ Masternode</translation>
     </message>
     <message>
-        <source>Prepend debug output with timestamp (default: %u)</source>
-        <translation>แสดงผลลัพธ์ดีบักด้วย timestamp (ค่าดีฟอลต์: %u) </translation>
-    </message>
-    <message>
-        <source>Rebuild chain state and block index from the blk*.dat files on disk</source>
-        <translation>สร้างสถานะ chain และ block index จากไฟล์ blk * .dat บนดิสก์</translation>
-    </message>
-    <message>
-        <source>Rebuild chain state from the currently indexed blocks</source>
-        <translation>สร้างสถานะ chain จากบล็อกที่จัดทำดัชนีไว้ในขณะนี้</translation>
-    </message>
-    <message>
-        <source>Send trace/debug info to debug.log file (default: %u)</source>
-        <translation>ส่งข้อมูล trace / debug ไปยังไฟล์ debug.log (ค่าดีฟอลต์: %u)</translation>
-    </message>
-    <message>
-        <source>Set key pool size to &lt;n&gt; (default: %u)</source>
-        <translation>ตั้งค่าขนาด key pool เป็น &lt;n&gt; (ค่าเริ่มต้น: %u)</translation>
-    </message>
-    <message>
-        <source>Set the number of threads to service RPC calls (default: %d)</source>
-        <translation>กำหนดจำนวน threads เพื่อให้บริการการโทร RPC (ค่าเริ่มต้น: %d)</translation>
-    </message>
-    <message>
-        <source>Specify configuration file (default: %s)</source>
-        <translation>ระบุไฟล์การกำหนดค่า (ค่าดีฟอลต์: %s)</translation>
-    </message>
-    <message>
-        <source>Specify connection timeout in milliseconds (minimum: 1, default: %d)</source>
-        <translation>ระบุระยะหมดเวลาการเชื่อมต่อเป็นมิลลิวินาที (ต่ำสุด: 1 ค่าเริ่มต้น: %d)</translation>
-    </message>
-    <message>
-        <source>Specify pid file (default: %s)</source>
-        <translation>ระบุไฟล์ pid (ค่าดีฟอลต์: %s)</translation>
-    </message>
-    <message>
-        <source>Spend unconfirmed change when sending transactions (default: %u)</source>
-        <translation>ใช้การเปลี่ยนแปลงยกเลิกการยืนยันเมื่อกำลังส่งธุรกรรม (ค่าเริ่มต้น: %u)</translation>
-    </message>
-    <message>
-        <source>Submitted to smartnode, waiting in queue %s</source>
-        <translation>ส่งไปยัง smartnode กำลังรอคิว %s</translation>
-    </message>
-    <message>
-        <source>Synchronization failed</source>
-        <translation>การซิงโครไนซ์ล้มเหลว</translation>
+        <source>Submitted to masternode, waiting in queue %s</source>
+        <translation>ส่งไปยัง masternode กำลังรอคิว %s</translation>
     </message>
     <message>
         <source>Synchronization finished</source>
         <translation>การซิงโครไนซ์สิ้นเสร็จ</translation>
-    </message>
-    <message>
-        <source>Threshold for disconnecting misbehaving peers (default: %u)</source>
-        <translation>เกณฑ์สำหรับการยกเลิกการเชื่อมต่อ peer ที่ทำงานผิดปกติ (ค่าเริ่มต้น: %u)</translation>
-    </message>
-    <message>
-        <source>Too many %f denominations, removing.</source>
-        <translation>จำนวนเงิน %f มากเกินไป, กำลังลบออก</translation>
-    </message>
-    <message>
-        <source>Too many %f denominations, skipping.</source>
-        <translation>จำนวน %f มากเกินไป , ข้าม</translation>
-    </message>
-    <message>
-        <source>Tor control port password (default: empty)</source>
-        <translation>รหัสผ่านพอร์ตควบคุม Tor (ค่าเริ่มต้น: ว่าง)</translation>
-    </message>
-    <message>
-        <source>Tor control port to use if onion listening enabled (default: %s)</source>
-        <translation>เปิดพอร์ตควบคุม Tor เมื่อฟังการเชื่อมต่อ onion (ค่าดีฟอลต์: %s)</translation>
     </message>
     <message>
         <source>Unable to start HTTP server. See debug log for details.</source>
@@ -4159,22 +4189,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>อาร์กิวเมนต์ที่ไม่ได้รับการสนับสนุน พบ -tor  , ใช้ -onion.</translation>
     </message>
     <message>
-        <source>Upgrade wallet to latest format on startup</source>
-        <translation>อัปเดต wallet เป็นรูปแบบล่าสุดเมื่อเริ่มต้น</translation>
-    </message>
-    <message>
-        <source>Use KeePass 2 integration using KeePassHttp plugin (default: %u)</source>
-        <translation>ใช้การรวม KeePass 2 โดยใช้ปลั๊กอิน KeePassHttp (ค่าเริ่มต้น: %u)</translation>
-    </message>
-    <message>
-        <source>Use UPnP to map the listening port (default: %u)</source>
-        <translation>ใช้ UPnP เพื่อวางแผนพอร์ตการฟัง (ค่าเริ่มต้น: %u)</translation>
-    </message>
-    <message>
-        <source>Use the test chain</source>
-        <translation>ใช้สายโซ่ทดสอบ</translation>
-    </message>
-    <message>
         <source>User Agent comment (%s) contains unsafe characters.</source>
         <translation>ตัวแทนผู้ใช้แสดงความคิดเห็น (%s) มีอักขระที่ไม่ปลอดภัย</translation>
     </message>
@@ -4187,8 +4201,20 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>จะลองใหม่ ...</translation>
     </message>
     <message>
-        <source>Can't find random Smartnode.</source>
-        <translation>ไม่พบ Smartnode </translation>
+        <source>Can't find random Masternode.</source>
+        <translation>ไม่พบ Masternode </translation>
+    </message>
+    <message>
+        <source>%s can't be lower than %s</source>
+        <translation>%s ไม่ต่ำกว่า %s</translation>
+    </message>
+    <message>
+        <source>%s is idle.</source>
+        <translation>%s ไม่ได้ใช้งาน</translation>
+    </message>
+    <message>
+        <source>%s request incomplete: %s</source>
+        <translation>คำขอ %s ไม่สมบูรณ์: %s</translation>
     </message>
     <message>
         <source>Can't mix while sync in progress.</source>
@@ -4203,76 +4229,20 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>ตรวจพบสคริปต์ที่ไม่ถูกต้อง</translation>
     </message>
     <message>
-        <source>KeePassHttp id for the established association</source>
-        <translation>รหัส KeePassHttp สำหรับสมาคมที่จัดตั้งขึ้น</translation>
-    </message>
-    <message>
-        <source>KeePassHttp key for AES encrypted communication with KeePass</source>
-        <translation>คีย์ KeePassHttp สำหรับการสื่อสารที่เข้ารหัสด้วย AES กับ KeePass</translation>
-    </message>
-    <message>
-        <source>Disable all Raptoreum specific functionality (Smartnodes, PrivateSend, InstantSend, Governance) (0-1, default: %u)</source>
-        <translation>ปิดใช้ฟังก์ชันการทำงานเฉพาะ Raptoreum ทั้งหมด  (Smartnodes, PrivateSend, InstantSend, Governance) (0-1, ค่าดีฟอลต์: %u)</translation>
-    </message>
-    <message>
         <source>%s file contains all private keys from this wallet. Do not share it with anyone!</source>
-        <translation>ไฟล์ %s มี private keys ทั้งหมดจาก wallet นี้  ห้ามเผยแพร่กับคนอื่น</translation>
+        <translation>ไฟล์ %s มี private keys ทั้งหมดจากกระเป๋าสตางค์นี้  ห้ามเผยแพร่กับคนอื่น</translation>
     </message>
     <message>
-        <source>Bind to given address to listen for JSON-RPC connections. This option is ignored unless -rpcallowip is also passed. Port is optional and overrides -rpcport. Use [host]:port notation for IPv6. This option can be specified multiple times (default: 127.0.0.1 and ::1 i.e., localhost, or if -rpcallowip has been specified, 0.0.0.0 and :: i.e., all addresses)</source>
-        <translation>เชื่อมโยงไปยังที่อยู่ที่กำหนดเพื่อรับฟังการเชื่อมต่อ JSON-RPC ตัวเลือกนี้ถูกเพิกเฉยนอกจาก -rpcallowip ได้รับการอนุญาติ พอร์ตเป็นเพียงทางเลือกและมาแทนที่ -rpcport ใช้ [host]:port พอร์ตสำหรับ IPv6 ตัวเลือกนี้สามารถระบุได้หลายครั้ง (ค่าดีฟอลต์: 127.0.0.1 และ ::1 i.e., localhost, หรือถ้า -rpcallowip ได้ถูกกำหนด, 0.0.0.0 และ ::ยกตัวอย่าง, ที่อยู่ทั้งหมด)</translation>
-    </message>
-    <message>
-        <source>Discover own IP addresses (default: 1 when listening and no -externalip or -proxy)</source>
-        <translation>ค้นพบที่อยู่ IP ของตัวเอง (ค่าเริ่มต้น: 1 เมื่อฟังและไม่มี -externalip หรือ -proxy)</translation>
-    </message>
-    <message>
-        <source>Do not keep transactions in the mempool longer than &lt;n&gt; hours (default: %u)</source>
-        <translation>อย่าเก็บธุรกรรมไว้ใน mempool นานกว่า &lt;n&gt; ชั่วโมง (ค่าเริ่มต้น: %u)</translation>
-    </message>
-    <message>
-        <source>Enable multiple PrivateSend mixing sessions per block, experimental (0-1, default: %u)</source>
-        <translation>เปิดใช้งานเซสชันการผสม PrivateSend ต่อบล็อค (0-1 ค่าดีฟอลต์: %u)</translation>
-    </message>
-    <message>
-        <source>Execute command when a wallet InstantSend transaction is successfully locked (%s in cmd is replaced by TxID)</source>
-        <translation>ดำเนินการคำสั่งเมื่อทำธุรกรรมแบบ InstantSend  ล็อคเรียบร้อยแล้ว (%s ใน cmd จะถูกแทนที่ด้วย TxID)</translation>
-    </message>
-    <message>
-        <source>Extra transactions to keep in memory for compact block reconstructions (default: %u)</source>
-        <translation>การทำธุรกรรมพิเศษเพื่อเก็บไว้ในหน่วยความจำสำหรับการสร้างบล็อคใหม่ทำที่มีขนาดกะทัดรัด (ค่าดีฟอลต์: %u)</translation>
+        <source>-masternode option is deprecated and ignored, specifying -masternodeblsprivkey is enough to start this node as a masternode.</source>
+        <translation>masternode ที่ถูกคัดค้านและเพิกเฉย การระบุเจาะจงอย่างละเอียดของ masternodeblsprivkey เพียงพอที่จะเริ่มให้โหนดนี้เป็น masternode</translation>
     </message>
     <message>
         <source>Failed to create backup, file already exists! This could happen if you restarted wallet in less than 60 seconds. You can continue if you are ok with this.</source>
-        <translation>ไม่สามารถสร้างไฟล์สำรองข้อมูลได้แล้ว! กรณีนี้อาจเกิดขึ้นหากคุณรีสตาร์ท wallet ภายในเวลาไม่ถึง 60 วินาที คุณสามารถดำเนินการต่อได้หากคุณต้องการ</translation>
+        <translation>ไม่สามารถสร้างไฟล์สำรองข้อมูลได้แล้ว! กรณีนี้อาจเกิดขึ้นหากคุณรีสตาร์ทกระเป๋าสตางค์ภายในเวลาไม่ถึง 60 วินาที คุณสามารถดำเนินการต่อได้หากคุณต้องการ</translation>
     </message>
     <message>
-        <source>Fees (in %s/kB) smaller than this are considered zero fee for relaying, mining and transaction creation (default: %s)</source>
-        <translation>ค่าธรรมเนียม (ใน %s / kB) เล็กกว่านี้ถือว่าเป็นศูนย์สำหรับการโอนย้าย การขุดและการทำธุรกรรม (ค่าดีฟอลต์: %s)</translation>
-    </message>
-    <message>
-        <source>Fees (in %s/kB) smaller than this are considered zero fee for transaction creation (default: %s)</source>
-        <translation>ค่าธรรมเนียม (ใน %s / kB) เล็กกว่านี้ถือว่าเป็นศูนย์สำหรับการทำธุรกรรม (ค่าดีฟอลต์: %s)</translation>
-    </message>
-    <message>
-        <source>If &lt;category&gt; is not supplied or if &lt;category&gt; = 1, output all debugging information.</source>
-        <translation>ถ้าไม่มี &lt;category&gt;หรือถ้า &lt;category&gt;= 1  , ผลลัพธ์ก็จะเกิดจากข้อมูลการดีบักทั้งหมด</translation>
-    </message>
-    <message>
-        <source>Maintain a full address index, used to query for the balance, txids and unspent outputs for addresses (default: %u)</source>
-        <translation>รักษาดัชนีที่อยู่แบบเต็มใช้ในการค้นหายอดคงเหลือ, txids และผลลัพธ์ที่ไม่ได้ระบุสำหรับที่อยู่ (ค่าดีฟอลต์: %u)</translation>
-    </message>
-    <message>
-        <source>Maintain a full spent index, used to query the spending txid and input index for an outpoint (default: %u)</source>
-        <translation>รักษาดัชนีที่ใช้เต็มรูปแบบ  ใช้เพื่อสอบถามค่าใช้จ่าย txid และดัชนีการป้อนข้อมูลสำหรับ outpoint (ค่าเริ่มต้น: %u)</translation>
-    </message>
-    <message>
-        <source>Maintain a timestamp index for block hashes, used to query blocks hashes by a range of timestamps (default: %u)</source>
-        <translation>รักษาดัชนี timestamps สำหรับแฮชบล็อค  ใช้ในการค้นหาแฮชบล็อคโดยใช้ช่วงของ timestamps (default: %u)</translation>
-    </message>
-    <message>
-        <source>Maintain at most &lt;n&gt; connections to peers (temporary service connections excluded) (default: %u)</source>
-        <translation>รักษาบริการเชื่อมต่อแบบ peer อย่างน้อย &lt;n&gt;  (ไม่รวมบริการเชื่อมต่อชั่วคราว) (ค่าเริ่มต้น: %u)</translation>
+        <source>Make sure to encrypt your wallet and delete all non-encrypted backups after you have verified that the wallet works!</source>
+        <translation>ตรวจสอบให้แน่ใจว่าได้เข้ารหัสกระเป๋าสตางค์ของคุณและลบสำเนาสำรองที่ไม่ได้เข้ารหัสทั้งหมดหลังจากยืนยันว่า wallet ของคุณทำงานได้!  </translation>
     </message>
     <message>
         <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
@@ -4280,27 +4250,11 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <source>Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)</source>
-        <translation>การซิงโครไนซ์ wallet ครั้งล่าสุดเหนือกว่าข้อมูล pruned คุณต้อง -reindex (ดาวน์โหลด blockchain ทั้งหมดอีกครั้งในกรณีของ pruned โหนด)</translation>
-    </message>
-    <message>
-        <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect used)</source>
-        <translation>ข้อสงสัยสำหรับที่อยู่ของ peer ค้นหาได้ทาง DNS หากมีที่อยู่ต่ำ (ค่าเริ่มต้น: 1 เว้นแต่ -connect ถูกใช้)</translation>
-    </message>
-    <message>
-        <source>Randomize credentials for every proxy connection. This enables Tor stream isolation (default: %u)</source>
-        <translation>สุ่มข้อมูลตัวอย่างรับรองสำหรับการเชื่อมต่อพร็อกซีทุกครั้ง ซึ่งจะช่วยให้การแยก Tor สตรีม (ค่าเริ่มต้น: %u)</translation>
+        <translation>การซิงโครไนซ์กระเป๋าสตางค์ครั้งล่าสุดเหนือกว่าข้อมูล pruned คุณต้อง -reindex (ดาวน์โหลด blockchain ทั้งหมดอีกครั้งในกรณีของ pruned โหนด)</translation>
     </message>
     <message>
         <source>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</source>
         <translation>Rescans ไม่สามารถทำได้ในโหมด pruned คุณจะต้องใช้ -reindex ซึ่งจะดาวน์โหลด blockchain ทั้งหมดอีกครั้ง</translation>
-    </message>
-    <message>
-        <source>Specify full path to directory for automatic wallet backups (must exist)</source>
-        <translation>ระบุแพทเต็มรูปแบบไปยังไดเรกทอรีสำหรับการสำรองข้อมูล wallet อัตโนมัติ (ต้องมีอยู่)</translation>
-    </message>
-    <message>
-        <source>Support filtering of blocks and transaction with bloom filters (default: %u)</source>
-        <translation>สนับสนุนการกรองบล็อคและการทำธุรกรรมด้วยตัวกรองของบลูม หรือ  bloom filters  (ค่าดีฟอลต์: %u)</translation>
     </message>
     <message>
         <source>The block database contains a block which appears to be from the future. This may be due to your computer's date and time being set incorrectly. Only rebuild the block database if you are sure that your computer's date and time are correct</source>
@@ -4315,18 +4269,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>ความยาวทั้งหมดของสตริงเวอร์ชันเครือข่าย (%i) เกินความยาวสูงสุด (%i)  ลดจำนวนหรือขนาดของ uacomments</translation>
     </message>
     <message>
-        <source>Transaction index can't be disabled in full mode. Either start with -litemode command line switch or enable transaction index.</source>
-        <translation>ไม่สามารถปิดใช้ดัชนีรายการในโหมดเต็มได้ นอกจากจะเริ่มต้นด้วยสวิตช์คำสั่ง - litemode หรือเปิดใช้งานรายการดัชนี</translation>
-    </message>
-    <message>
-        <source>Tries to keep outbound traffic under the given target (in MiB per 24h), 0 = no limit (default: %d)</source>
-        <translation>พยายามให้การรับส่งข้อมูลขาออกตามเป้าหมายที่กำหนด (ใน MiB ต่อ 24 ชั่วโมง), 0 = ไม่มีขีด จำกัด (ค่าเริ่มต้น: %d)</translation>
-    </message>
-    <message>
-        <source>Unable to locate enough PrivateSend denominated funds for this transaction.</source>
-        <translation>ไม่สามารถหาเงินได้เพียงพอสำหรับ PrivateSend สำหรับธุรกรรมนี้</translation>
-    </message>
-    <message>
         <source>Unsupported argument -socks found. Setting SOCKS version isn't possible anymore, only SOCKS5 proxies are supported.</source>
         <translation>พบอาร์กิวเมนต์ที่ไม่สนับสนุน -socks  การตั้งค่าเวอร์ชัน BB ไม่สามารถทำได้อีกต่อไป สนับสนุนพร็อกซี SOCKS5 เท่านั้น</translation>
     </message>
@@ -4335,88 +4277,72 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>เพิกเฉยอาร์กิวเมนต์ที่ไม่สนับสนุน - whitelistalwaysrelay   ใช้ -whitelistrelay และ/หรือ -whitelistforcerelay.</translation>
     </message>
     <message>
-        <source>Use UPnP to map the listening port (default: 1 when listening and no -proxy)</source>
-        <translation>ใช้ UPnP เพื่อวางแผนพอร์ตการฟัง (ค่าเริ่มต้น: 1 เมื่อกำลังฟังและไม่มี -proxy)</translation>
-    </message>
-    <message>
         <source>WARNING! Failed to replenish keypool, please unlock your wallet to do so.</source>
-        <translation>คำเตือน! ไม่สามารถเติม keypool ได้  โปรดปลดล็อก wallet ของคุณเพื่อทำเช่นนั้น</translation>
+        <translation>คำเตือน! ไม่สามารถเติม keypool ได้  โปรดปลดล็อกกระเป๋าสตางค์ของคุณเพื่อทำเช่นนั้น</translation>
     </message>
     <message>
         <source>Wallet is locked, can't replenish keypool! Automatic backups and mixing are disabled, please unlock your wallet to replenish keypool.</source>
-        <translation>Wallet ถูกล็อคไม่สามารถเติม keypool! ปิดใช้งานการสำรองข้อมูลและการผสมข้อมูลอัตโนมัติ โปรดปลดล็อกเพื่อใส่พวง keypool</translation>
+        <translation>กระเป๋าสตางค์ถูกล็อคไม่สามารถเติม keypool! ปิดใช้งานการสำรองข้อมูลและการผสมข้อมูลอัตโนมัติ โปรดปลดล็อกเพื่อใส่พวง keypool</translation>
     </message>
     <message>
         <source>Warning: Unknown block versions being mined! It's possible unknown rules are in effect</source>
         <translation>คำเตือน: ไม่สามารถหาเงิน PrivateSend ที่ระบุได้เพียงพอสำหรับธุรกรรมนี้</translation>
     </message>
     <message>
+        <source>You need to rebuild the database using -reindex to change -timestampindex</source>
+        <translation>คุณจำเป็นต้องสร้างฐานข้อมูลโดยใช้ -reindex เพื่อเปลี่ยน -timestampindex</translation>
+    </message>
+    <message>
         <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
         <translation>คุณจำเป็นต้องสร้างฐานข้อมูลโดยใช้ -reindex ที่จะกลับไปที่โหมด unpruned  และนี่จะดาวน์โหลด blockchain  ที่เหลือใหม่ทั้งหมด</translation>
     </message>
     <message>
-        <source>(default: %u)</source>
-        <translation>(ค่าเริ่มต้น: %u)</translation>
+        <source>-litemode is deprecated.</source>
+        <translation>-litemode ถูกคัดค้าน</translation>
     </message>
     <message>
         <source>-maxmempool must be at least %d MB</source>
         <translation>-maxmempool ต้องมีอย่างน้อย %d MB</translation>
     </message>
     <message>
-        <source>&lt;category&gt; can be:</source>
-        <translation>&lt;category&gt;เป็นไปได้: </translation>
-    </message>
-    <message>
-        <source>Append comment to the user agent string</source>
-        <translation>เพิ่มความคิดเห็นไปยังสตริงตัวแทนผู้ใช้</translation>
-    </message>
-    <message>
         <source>Automatic backups disabled</source>
         <translation>ปิดการสำรองข้อมูลอัตโนมัติแล้ว</translation>
-    </message>
-    <message>
-        <source>Automatically create Tor hidden service (default: %d)</source>
-        <translation>สร้างบริการ Tor ที่ซ่อนไว้โดยอัตโนมัติ (ค่าเริ่มต้น: %d)</translation>
     </message>
     <message>
         <source>ERROR! Failed to create automatic backup</source>
         <translation>ข้อผิดพลาด! ไม่สามารถสร้างการสำรองข้อมูลอัตโนมัติ</translation>
     </message>
     <message>
-        <source>Enable publish hash block in &lt;address&gt;</source>
-        <translation>เปิดใช้งานบล็อคแฮชใน &lt;address&gt;</translation>
-    </message>
-    <message>
-        <source>Enable publish hash of governance objects (like proposals) in &lt;address&gt;</source>
-        <translation>เปิดใช้งานแฮชการเผยแพร่เนื้อหาการกำกับดูแล (เช่น ข้อเสนอ) ใน &lt;address&gt;</translation>
-    </message>
-    <message>
-        <source>Enable publish hash of governance votes in &lt;address&gt;</source>
-        <translation>เปิดใช้งานแฮชการโหวตเกี่ยวกับการกำกับดูแลใน &lt;address&gt;</translation>
-    </message>
-    <message>
-        <source>Enable publish hash transaction (locked via InstantSend) in &lt;address&gt;</source>
-        <translation>เปิดใช้งานการทำธุรกรรมแฮช (ล็อกผ่าน InstantSend) ใน&lt;address&gt;</translation>
-    </message>
-    <message>
-        <source>Enable publish hash transaction in &lt;address&gt;</source>
-        <translation>เปิดใช้งานการธุรกรรมแฮชใน&lt;address&gt;</translation>
-    </message>
-    <message>
-        <source>Enable publish raw block in &lt;address&gt;</source>
-        <translation>เปิดใช้งานบล็อกแบบดิบใน&lt;address&gt;</translation>
-    </message>
-    <message>
-        <source>Enable publish raw transaction (locked via InstantSend) in &lt;address&gt;</source>
-        <translation>เปิดใช้งานการทำธุรกรรมดิบ (ล็อกผ่าน InstantSend) ใน&lt;address&gt;</translation>
-    </message>
-    <message>
-        <source>Enable publish raw transaction in &lt;address&gt;</source>
-        <translation>เปิดใช้งานการทำธุรกรรมดิบใหม่ใน &lt;address&gt;</translation>
+        <source>Error upgrading evo database</source>
+        <translation>ฐานข้อมูลข้อผิดพลาดในการอัพเกรด evo</translation>
     </message>
     <message>
         <source>Error: A fatal internal error occurred, see debug.log for details</source>
         <translation>ข้อผิดพลาด: มีข้อผิดพลาดร้ายแรงภายในเกิดขึ้น โปรดดูที่ debug.log เพื่อดูรายละเอียด</translation>
+    </message>
+    <message>
+        <source>Error: failed to add socket to epollfd (epoll_ctl returned error %s)</source>
+        <translation>ข้อผิดพลาด: ล้มเหลวในการเพิ่ม socket to epollfd (epoll_ctl returned error %s) </translation>
+    </message>
+    <message>
+        <source>Exceeded max tries.</source>
+        <translation>เกินความพยายามสูงสุด</translation>
+    </message>
+    <message>
+        <source>Failed to clear fulfilled requests cache at</source>
+        <translation>ล้มเหลวในการเคลียคำร้อง cache ที่</translation>
+    </message>
+    <message>
+        <source>Failed to clear governance cache at</source>
+        <translation>ล้มเหลวในการเคลียการกำกับดูแล cache ที่</translation>
+    </message>
+    <message>
+        <source>Failed to clear masternode cache at</source>
+        <translation>ล้มเหลวในการเคลียร์ masternode cache ที่</translation>
+    </message>
+    <message>
+        <source>Failed to commit EvoDB</source>
+        <translation>ล้มเหลวในการกระทำ EvoDB</translation>
     </message>
     <message>
         <source>Failed to create backup %s!</source>
@@ -4435,36 +4361,24 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>โหลดแคช sporks ล้มเหลว</translation>
     </message>
     <message>
-        <source>Fee (in %s/kB) to add to transactions you send (default: %s)</source>
-        <translation>ค่าธรรมเนียม (ใน %s / kB) เพื่อเพิ่มธุรกรรมที่คุณส่ง (ค่าเริ่มต้น: %s)</translation>
-    </message>
-    <message>
-        <source>Imports blocks from external blk000??.dat file on startup</source>
-        <translation>นำเข้าบล็อคจากภายนอก blk000 ??.dat ไฟล์เมื่อเริ่มต้น</translation>
-    </message>
-    <message>
-        <source>InstantSend options:</source>
-        <translation>ตัวเลือก InstantSend : </translation>
+        <source>Failed to rescan the wallet during initialization</source>
+        <translation>ล้มเหลวในการสแกนกระเป๋าสตางค์ในช่วงเริ่มต้น</translation>
     </message>
     <message>
         <source>Invalid amount for -fallbackfee=&lt;amount&gt;: '%s'</source>
         <translation>จำนวนเงินที่ไม่ถูกต้องสำหรับ -fallbackfee = 1: '%s'</translation>
     </message>
     <message>
-        <source>Invalid smartnodeblsprivkey. Please see documentation.</source>
-        <translation>smartnodeprivkey ไม่ถูกต้อง โปรดดูเอกสารประกอบ</translation>
+        <source>Invalid masternodeblsprivkey. Please see documentation.</source>
+        <translation>masternodeprivkey ไม่ถูกต้อง โปรดดูเอกสารประกอบ</translation>
     </message>
     <message>
-        <source>Keep the transaction memory pool below &lt;n&gt; megabytes (default: %u)</source>
-        <translation>เก็บหน่วยความจำธุรกรรมไว้ต่ำกว่า 1 เมกะไบต์ (ค่าเริ่มต้น: %u)</translation>
+        <source>It has been replaced by -disablegovernance.</source>
+        <translation>มันได้ถูกแทนที่ด้วย -disablegovernance</translation>
     </message>
     <message>
-        <source>Last PrivateSend was too recent.</source>
-        <translation>PrivateSend ล่าสุดเป็นข้อมูลล่าสุด</translation>
-    </message>
-    <message>
-        <source>Last successful PrivateSend action was too recent.</source>
-        <translation>การกระทำ PrivateSend ที่ประสบความสำเร็จล่าสุดเป็นข้อมูลล่าสุด</translation>
+        <source>Its replacement -disablegovernance has been forced instead.</source>
+        <translation>-disablegovernance ได้รับการบังคับทดแทน</translation>
     </message>
     <message>
         <source>Loading block index...</source>
@@ -4487,28 +4401,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>กำลังโหลด Wallet ...</translation>
     </message>
     <message>
-        <source>Location of the auth cookie (default: data dir)</source>
-        <translation>ตำแหน่งของคุกกี้ที่ได้รับรองความถูกต้อง (ค่าดีฟอลต์: data dir)</translation>
+        <source>Masternode queue is full.</source>
+        <translation>คิว Masternode เต็ม</translation>
     </message>
     <message>
-        <source>Make the wallet broadcast transactions</source>
-        <translation>ดำเนินการในการเผยแพร่ธุรกรรม wallet</translation>
-    </message>
-    <message>
-        <source>Smartnode options:</source>
-        <translation>ตัวเลือก Smartnode: </translation>
-    </message>
-    <message>
-        <source>Smartnode queue is full.</source>
-        <translation>คิว Smartnode เต็ม</translation>
-    </message>
-    <message>
-        <source>Smartnode:</source>
-        <translation>Smartnode:</translation>
-    </message>
-    <message>
-        <source>Minimum bytes per sigop in transactions we relay and mine (default: %u)</source>
-        <translation>ไบต์ขั้นต่ำต่อ sigop ในธุรกรรมที่เราส่งต่อและขุด  (ค่าเริ่มต้น: %u)</translation>
+        <source>Masternode:</source>
+        <translation>Masternode:</translation>
     </message>
     <message>
         <source>Missing input transaction information.</source>
@@ -4523,14 +4421,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>ไม่พบสกุลเงินที่เหมาะสมสำหรับการผสม</translation>
     </message>
     <message>
-        <source>Node relay options:</source>
-        <translation>ตัวเลือกการถ่ายทอดโหนด:</translation>
-    </message>
-    <message>
-        <source>Non-standard public key detected.</source>
-        <translation>ตรวจพบคีย์สาธารณะที่ไม่เป็นไปตามมาตรฐาน</translation>
-    </message>
-    <message>
         <source>Not compatible with existing transactions.</source>
         <translation>ไม่สามารถใช้งานร่วมกับธุรกรรมที่มีอยู่ได้</translation>
     </message>
@@ -4539,40 +4429,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>มีคำอธิบายไฟล์เพียงพอ</translation>
     </message>
     <message>
-        <source>Number of automatic wallet backups (default: %u)</source>
-        <translation>จำนวนการสำรองข้อมูล Wallet อัตโนมัติ (ค่าเริ่มต้น: %u)</translation>
-    </message>
-    <message>
-        <source>Options:</source>
-        <translation>ตัวเลือก:</translation>
-    </message>
-    <message>
-        <source>Password for JSON-RPC connections</source>
-        <translation>รหัสผ่านสำหรับการเชื่อมต่อ JSON-RPC</translation>
-    </message>
-    <message>
-        <source>Print version and exit</source>
-        <translation>พิมพ์เวอร์ชันแล้วออกโปรแกรม</translation>
-    </message>
-    <message>
-        <source>PrivateSend is idle.</source>
-        <translation>PrivateSend ไม่ได้ใช้งาน</translation>
-    </message>
-    <message>
-        <source>PrivateSend options:</source>
-        <translation>ตัวเลือก PrivateSend:</translation>
-    </message>
-    <message>
-        <source>PrivateSend request complete:</source>
-        <translation>คำขอ PrivateSend สมบูรณ์:</translation>
-    </message>
-    <message>
-        <source>PrivateSend request incomplete:</source>
-        <translation>คำขอ PrivateSend ไม่สมบูรณ์:</translation>
-    </message>
-    <message>
         <source>Prune cannot be configured with a negative value.</source>
         <translation>Prune  ไม่สามารถกำหนดค่าได้ด้วยค่าลบ </translation>
+    </message>
+    <message>
+        <source>Prune mode is incompatible with -disablegovernance=false.</source>
+        <translation>Prune โหมด ไม่เข้ากันกับ -disablegovernance=ผิดพลาด</translation>
     </message>
     <message>
         <source>Prune mode is incompatible with -txindex.</source>
@@ -4583,8 +4445,16 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>กำลังตัด blockstore ...</translation>
     </message>
     <message>
-        <source>Rescan the block chain for missing wallet transactions on startup</source>
-        <translation>สแกน Block chain ใหม่สำหรับธุรกรรม Wallet ที่หายไปเมื่อเริ่มต้น</translation>
+        <source>Specified -walletdir "%s" does not exist</source>
+        <translation>-walletdir "%s" ที่ระบุไม่มีอยู่</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" is a relative path</source>
+        <translation>-walletdir "%s" ที่ระบุมีความสัมพันธ์กัน</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" is not a directory</source>
+        <translation>-walletdir "%s" ที่ระบุไม่ใช่ไดเรกทอรี่</translation>
     </message>
     <message>
         <source>Synchronizing blockchain...</source>
@@ -4592,7 +4462,11 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <source>The wallet will avoid paying less than the minimum relay fee.</source>
-        <translation>Wallet จะหลีกเลี่ยงการจ่ายเงินน้อยกว่าค่าโอนขั้นต่ำ</translation>
+        <translation>กระเป๋าสตางค์นี้จะหลีกเลี่ยงการจ่ายเงินน้อยกว่าค่าโอนขั้นต่ำ</translation>
+    </message>
+    <message>
+        <source>This is expected because you are running a pruned node.</source>
+        <translation>สิ่งนี้คาดว่าเพราะคุณกำลังดำเนินงาน pruned โหนด </translation>
     </message>
     <message>
         <source>This is the minimum transaction fee you pay on every transaction.</source>
@@ -4627,20 +4501,20 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>ไม่สามารถผูกกับ %s คอมพิวเตอร์เครื่องนี้ได้  %s อาจกำลังทำงานอยู่แล้ว</translation>
     </message>
     <message>
+        <source>Unable to generate initial keys</source>
+        <translation>ไม่สามารถสร้างคีย์เริ่มต้น</translation>
+    </message>
+    <message>
         <source>Upgrading UTXO database</source>
         <translation>การอัพเกรดฐานข้อมูล UTXO</translation>
     </message>
     <message>
-        <source>Use devnet chain with provided name</source>
-        <translation>ใช้ devnet chain พร้อมชื่อที่ระบุ</translation>
-    </message>
-    <message>
-        <source>Wallet debugging/testing options:</source>
-        <translation>การแก้จุดบกพร่อง / ตัวเลือกการทดสอบ Wallet:</translation>
+        <source>Wallet %s resides outside wallet directory %s</source>
+        <translation>กระเป๋าสตางค์ %s มีอยู่ด้านนอกไดเรกทอรี่ของกระเป๋าสตางค์ %s</translation>
     </message>
     <message>
         <source>Wallet needed to be rewritten: restart %s to complete</source>
-        <translation>Wallet ต้องการพิมพ์ใหม่: รีสตาร์ท %s ให้เสร็จสมบูรณ์</translation>
+        <translation>กระเป๋าสตางค์ต้องการพิมพ์ใหม่: รีสตาร์ท %s ให้เสร็จสมบูรณ์</translation>
     </message>
     <message>
         <source>Warning: unknown new rules activated (versionbit %i)</source>
@@ -4648,27 +4522,23 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <source>Wasn't able to create wallet backup folder %s!</source>
-        <translation>ไม่สามารถสร้างโฟลเดอร์สำรอง Wallet ได้ %s!</translation>
+        <translation>ไม่สามารถสร้างโฟลเดอร์สำรองกระเป๋าสตางค์ได้ %s!</translation>
     </message>
     <message>
-        <source>Whether to operate in a blocks only mode (default: %u)</source>
-        <translation>ใช้งานในโหมดบล็อกเฉพาะ (ค่าเริ่มต้น: %u)</translation>
+        <source>You can not start a masternode with wallet enabled.</source>
+        <translation>คุณไม่สามารถเริ่มต้น masternode กับกระเป๋าสตางค์เปิดการใช้งาน</translation>
     </message>
     <message>
-        <source>You can not start a smartnode in lite mode.</source>
-        <translation>คุณไม่สามารถเริ่มต้น smartnode ใน Lite mode</translation>
+        <source>You need to rebuild the database using -reindex to change -addressindex</source>
+        <translation>คุณจำเป็นต้องสร้างฐานข้อมูลโดยใช้ -reindex เพื่อเปลี่ยน -addressindex</translation>
     </message>
     <message>
-        <source>You can not start a smartnode with wallet enabled.</source>
-        <translation>คุณไม่สามารถเริ่มต้น smartnode กับ wallet เปิดการใช้งาน</translation>
+        <source>You need to rebuild the database using -reindex to change -spentindex</source>
+        <translation>คุณจำเป็นต้องสร้างฐานข้อมูลโดยใช้ -reindex เพื่อเปลี่ยน -spentindex</translation>
     </message>
     <message>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
         <translation>คุณจำเป็นต้องสร้างฐานข้อมูลโดยใช้ -reindex-chainstate เพื่อเปลี่ยน -txindex</translation>
-    </message>
-    <message>
-        <source>ZeroMQ notification options:</source>
-        <translation>ตัวเลือกการแจ้งเตือน ZeroMQ:</translation>
     </message>
     <message>
         <source>no mixing available.</source>
@@ -4679,64 +4549,36 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>ดูรายละเอียดได้ใน debug.log</translation>
     </message>
     <message>
-        <source>RPC server options:</source>
-        <translation>ตัวเลือกเซิร์ฟเวอร์ RPC:</translation>
-    </message>
-    <message>
-        <source>Raptoreum Core</source>
-        <translation>Raptoreum Core</translation>
+        <source>Dash Core</source>
+        <translation>Dash Core</translation>
     </message>
     <message>
         <source>The %s developers</source>
         <translation>%s นักพัฒนา</translation>
     </message>
     <message>
+        <source>%s uses exact denominated amounts to send funds, you might simply need to mix some more coins.</source>
+        <translation>การทำธุรกรรมแบบปกปิดข้อมูล %s ใช้จำนวนเงินตามสกุลเงินที่แน่นอน คุณอาจเพียงต้องผสมเหรียญเพิ่มเติม</translation>
+    </message>
+    <message>
         <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
-        <translation>ไม่สามารถรับการล็อกไดเรกทอรีข้อมูล %s ได้ %s มันอาจทำงานอยู่แล้ว</translation>
+        <translation>ไม่สามารถรับการล็อกไดเรกทอรี่ข้อมูล %s ได้ %s ซึ่งมันอาจทำงานอยู่แล้ว</translation>
     </message>
     <message>
         <source>Distributed under the MIT software license, see the accompanying file %s or %s</source>
         <translation>เผยแพร่ภายใต้ใบอนุญาตซอฟต์แวร์ MIT โปรดดูที่ไฟล์ที่แนบมา %s หรือ %s</translation>
     </message>
     <message>
-        <source>Enable use of PrivateSend for funds stored in this wallet (0-1, default: %u)</source>
-        <translation>เปิดใช้งาน PrivateSend สำหรับเก็บเงินไว้ใน wallet นี้ (0-1 ค่าเริ่มต้น: %u)</translation>
-    </message>
-    <message>
         <source>Error loading %s: You can't enable HD on an already existing non-HD wallet</source>
-        <translation>เกิดข้อผิดพลาดในการโหลด %s: คุณไม่สามารถเปิดใช้งาน HD บน wallet ที่ไม่ใช่ของ HD ที่มีอยู่แล้ว</translation>
-    </message>
-    <message>
-        <source>Error loading wallet %s. -wallet parameter must only specify a filename (not a path).</source>
-        <translation>เกิดข้อผิดพลาดในการโหลด wallet %s. -wallet พารามิเตอร์ต้องกำหนดชื่อไฟล์เท่านั้น (ไม่ใช่ path)</translation>
+        <translation>เกิดข้อผิดพลาดในการโหลด %s: คุณไม่สามารถเปิดใช้งาน HD บนกระเป๋าสตางค์ที่ไม่ใช่ของ HD ที่มีอยู่แล้ว</translation>
     </message>
     <message>
         <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
         <translation>เกิดข้อผิดพลาดในการอ่าน %s! คีย์ทั้งหมดอ่านได้อย่างถูกต้อง แต่ข้อมูลธุรกรรมหรือรายการสมุดที่อยู่อาจหายไปหรือไม่ถูกต้อง</translation>
     </message>
     <message>
-        <source>Exclude debugging information for a category. Can be used in conjunction with -debug=1 to output debug logs for all categories except one or more specified categories.</source>
-        <translation>ไม่รวมข้อมูลการแก้ไขจุดบกพร่อง สามารถถูกใช้ในคำเชื่อมกับ -debug=1 ไปยัง output บันทึกดีบักสำหรับทุกประเภทนอกจากประเภทที่กำหนด</translation>
-    </message>
-    <message>
-        <source>Force relay of transactions from whitelisted peers even if they violate local relay policy (default: %d)</source>
-        <translation>บังคับให้การถ่ายทอดของธุรกรรมจาก whitelisted peers แม้ว่าจะละเมิดนโยบายการถ่ายทอดข้อมูลท้องถิ่น (ค่าเริ่มต้น: %d)</translation>
-    </message>
-    <message>
         <source>Incorrect or no devnet genesis block found. Wrong datadir for devnet specified?</source>
         <translation>ไม่พบหรือไม่พบแหล่งกำเนิด devnet genesis  ระบุข้อมูลที่ผิดสำหรับ devnet  หรือไม่ ?</translation>
-    </message>
-    <message>
-        <source>Maximum allowed median peer time offset adjustment. Local perspective of time may be influenced by peers forward or backward by this amount. (default: %u seconds)</source>
-        <translation>การปรับชดเชยชดเชยเวลาของค่ามัธยฐานได้สูงสุด มุมมองท้องถิ่นของเวลาอาจได้รับอิทธิพลจาก Peer ข้างหน้าหรือข้างหลังด้วยจำนวนนี้ (ค่าเริ่มต้น: %u วินาที)</translation>
-    </message>
-    <message>
-        <source>Maximum total fees (in %s) to use in a single wallet transaction or raw transaction; setting this too low may abort large transactions (default: %s)</source>
-        <translation>ค่าธรรมเนียมรวมสูงสุด (เป็น %s) ที่จะใช้ในธุรกรรม Wallet เดียวหรือธุรกรรมแบบดั้งเดิม การตั้งค่านี้ต่ำเกินไปอาจยกเลิกธุรกรรมที่มีขนาดใหญ่ (ค่าเริ่มต้น: %s)</translation>
-    </message>
-    <message>
-        <source>Override spork address. Only useful for regtest and devnet. Using this on mainnet or testnet will ban you.</source>
-        <translation>ยกเลิกที่อยู่ spork เป็นประโยชน์สำหรับ regtest และ devnet การใช้สิ่งนี้ใน mainnet หรือ testnet จะห้ามคุณไม่ให้ใช้</translation>
     </message>
     <message>
         <source>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</source>
@@ -4745,18 +4587,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Please contribute if you find %s useful. Visit %s for further information about the software.</source>
         <translation>โปรดให้การสนับสนุนหากคุณพบ %s ที่เป็นประโยชน์ ไปที่ %s เพื่อดูข้อมูลเพิ่มเติมเกี่ยวกับซอฟต์แวร์</translation>
-    </message>
-    <message>
-        <source>Reduce storage requirements by enabling pruning (deleting) of old blocks. This allows the pruneblockchain RPC to be called to delete specific blocks, and enables automatic pruning of old blocks if a target size in MiB is provided. This mode is incompatible with -txindex and -rescan. Warning: Reverting this setting requires re-downloading the entire blockchain. (default: 0 = disable pruning blocks, 1 = allow manual pruning via RPC, &gt;%u = automatically prune block files to stay under the specified target size in MiB)</source>
-        <translation>ลดข้อกำหนดในการจัดเก็บโดยการตัดแต่ง (การลบ) บล็อกเก่า  ซึ่งจะช่วยให้สามารถเรียกใช้ RPM pruneblockchain เพื่อลบบล็อคที่ต้องการและช่วยให้การตัดบล็อกเก่าโดยอัตโนมัติหากมีการกำหนดขนาดเป้าหมายไว้ใน MiB โหมดนี้ไม่สามารถใช้ได้กับ -txtindex และ -rescan                                                    คำเตือน: การคืนค่าการตั้งค่านี้จะต้องดาวน์โหลดใหม่ทั้งหมด blockchain  (ค่าเริ่มต้น: 0 = ปิดใช้งานการตัดบล็อค, 1 = อนุญาตการตัดด้วยตนเองผ่านทาง RPC, &gt;%u = อัตโนมัติตัดไฟล์บล็อคเพื่อให้อยู่ภายใต้ขนาดเป้าหมายที่ระบุใน MiB)</translation>
-    </message>
-    <message>
-        <source>Set lowest fee rate (in %s/kB) for transactions to be included in block creation. (default: %s)</source>
-        <translation>กำหนดอัตราค่าธรรมเนียมต่ำสุด (%s / kB) สำหรับธุรกรรมที่ถูกรวมในการสร้างบล็อค (ค่าดีฟอลต์: %s)</translation>
-    </message>
-    <message>
-        <source>The fee rate (in %s/kB) that indicates your tolerance for discarding change by adding it to the fee (default: %s). Note: An output is discarded if it is dust at this rate, but we will always discard up to the dust relay fee and a discard fee above that is limited by the fee estimate for the longest target</source>
-        <translation>อัตราค่าธรรมเนียม (%s / kB) ที่บ่งบอกการยอมรับความคิดเห็นของคุณสำหรับละทิ้งการเปลี่ยนแปลงโดยเพิ่มไปยังค่าธรรมเนียม (default: %s). หมายเหตุ: Output จะถูกละทิ้งหาก dust ในอัตรานี้ เราจะละทิ้งถึงค่าธรรมเนียมโอน dust และการละทิ้งค่าธรรมเนียมที่สูงกว่าจะถูกจำกัดโดยค่าธรรมเนียมที่ประมาณสำหรับเป้าหมายที่ยาวที่สุด</translation>
     </message>
     <message>
         <source>This is the transaction fee you may discard if change is smaller than dust at this level</source>
@@ -4771,48 +4601,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>ผลิตภัณฑ์นี้รวมถึงซอฟต์แวร์ที่พัฒนาโดย OpenSSL Project เพื่อใช้ใน OpenSSL Toolkit %s และซอฟต์แวร์เข้ารหัสที่เขียนขึ้นโดย Eric Young และซอฟต์แวร์ UPnP ที่เขียนโดย Thomas Bernard</translation>
     </message>
     <message>
-        <source>Unable to locate enough PrivateSend non-denominated funds for this transaction.</source>
-        <translation>ไม่สามารถหาเงินทุนที่ไม่ใช่สกุลเงินที่ระบุ PrivateSend ได้มากพอสำหรับธุรกรรมนี้</translation>
-    </message>
-    <message>
         <source>Unable to replay blocks. You will need to rebuild the database using -reindex-chainstate.</source>
         <translation>ไม่สามารถ replay blocks คุณจะต้องสร้างฐานข้อมูลโดยใช้ -reindex-chainstate</translation>
     </message>
     <message>
-        <source>Use N separate smartnodes for each denominated input to mix funds (%u-%u, default: %u)</source>
-        <translation>ใช้ N smartnodes แยกต่างหากสำหรับแต่ละสกุลเงินที่ป้อนเพื่อผสมเงิน (%u-%u, ค่าเริ่มต้น: %u)</translation>
-    </message>
-    <message>
-        <source>Use hierarchical deterministic key generation (HD) after BIP39/BIP44. Only has effect during wallet creation/first start</source>
-        <translation>ใช้คีย์ที่กำหนดตามลำดับชั้น (HD) หลังจาก BIP39 / BIP44  มีผลเฉพาะระหว่างการสร้าง / การเริ่มต้น wallet ครั้งแรก เท่านั้น</translation>
-    </message>
-    <message>
-        <source>User defined mnemonic passphrase for HD wallet (BIP39). Only has effect during wallet creation/first start (default: empty string)</source>
-        <translation>ผู้ใช้กำหนดรหัสผ่านสำหรับการจดจำรหัสผ่านสำหรับ HD Wallet  (BIP39) มีผลเฉพาะระหว่างการสร้าง Wallet / การเริ่มครั้งแรก (ค่าเริ่มต้น: ว่างเปล่า)</translation>
-    </message>
-    <message>
-        <source>Username and hashed password for JSON-RPC connections. The field &lt;userpw&gt; comes in the format: &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;. A canonical python script is included in share/rpcuser. The client then connects normally using the rpcuser=&lt;USERNAME&gt;/rpcpassword=&lt;PASSWORD&gt; pair of arguments. This option can be specified multiple times</source>
-        <translation>ชื่อผู้ใช้และ hashed password สำหรับการเชื่อมต่อ JSON-RPC   ฟิลด์&lt;userpw&gt;มาในรูปแบบ:&lt;USERNAME&gt;: &lt;SALT&gt;$&lt;HASH&gt; สคริปต์จะรวมอยู่ใน share / rpcuser ลูกค้าเชื่อมต่อโดยปกติโดยใช้ rpcuser = &lt;USERNAME&gt; / rpcpassword = &lt;PASSWORD&gt; คู่อาร์กิวเมนต์ สามารถระบุตัวเลือกนี้ได้หลายครั้ง</translation>
-    </message>
-    <message>
-        <source>Wallet will not create transactions that violate mempool chain limits (default: %u)</source>
-        <translation>Wallet จะไม่สร้างธุรกรรมที่ละเมิดข้อจำกัดของ Mempool chain (ค่าเริ่มต้น: %u)</translation>
-    </message>
-    <message>
         <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
-        <translation>คำเตือน: ไฟล์ Wallet เสียหาย, ข้อมูลได้ถูกกู้! %s จากเดิมถูกบันทึกเป็น %s ใน %s; หากยอดคงเหลือหรือธุรกรรมของคุณไม่ถูกต้องคุณควรเรียกคืนจากสำเนาสำรอง</translation>
-    </message>
-    <message>
-        <source>Whether to save the mempool on shutdown and load on restart (default: %u)</source>
-        <translation>ไม่ว่าจะเซฟ mempool ในเลาปิดเครื่องและโหลดตอนรีสตาร์ท (ค่าเริ่มต้น: %u)</translation>
-    </message>
-    <message>
-        <source>Whitelist peers connecting from the given IP address (e.g. 1.2.3.4) or CIDR notated network (e.g. 1.2.3.0/24). Can be specified multiple times.</source>
-        <translation>Whitelist peers กำลังเชื่อมต่อจากที่อยู่ IP ที่ระบุ (เช่น 1.2.3.4) หรือเครือข่ายที่ได้รับการจดบันทึก CIDR (เช่น 1.2.3.0/24) สามารถระบุได้หลายครั้ง</translation>
-    </message>
-    <message>
-        <source>You are starting in lite mode, most Raptoreum-specific functionality is disabled.</source>
-        <translation>คุณกำลังเริ่มต้นใน Lite Mode ฟังก์ชันการทำงานเฉพาะ Raptoreum ส่วนใหญ่จะถูกปิดใช้งาน</translation>
+        <translation>คำเตือน: ไฟล์กระเป๋าสตางค์เสียหาย, ข้อมูลได้ถูกกู้! %s จากเดิมถูกบันทึกเป็น %s ใน %s; หากยอดคงเหลือหรือธุรกรรมของคุณไม่ถูกต้องคุณควรเรียกคืนจากสำเนาสำรอง</translation>
     </message>
     <message>
         <source>%d of last 100 blocks have unexpected version</source>
@@ -4831,10 +4625,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>%s ถูกตั้งค่าไว้สูงมาก!</translation>
     </message>
     <message>
-        <source>(press q to shutdown and continue later)</source>
-        <translation>(กด q เพื่อปิดเครื่องและดำเนินการต่อในภายหลัง)</translation>
-    </message>
-    <message>
         <source>-devnet can only be specified once</source>
         <translation>--devnet สามารถระบุได้เพียงครั้งเดียวเท่านั้น</translation>
     </message>
@@ -4847,20 +4637,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>-rpcport ควรระบุเฉพาะเมื่อระบุ -devnet และ -server</translation>
     </message>
     <message>
-        <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
-        <translation>ยอมรับการเชื่อมต่อจากภายนอก (ค่าเริ่มต้น: 1 ถ้าไม่มี -proxy หรือ - เชื่อมต่อ)</translation>
-    </message>
-    <message>
-        <source>Allow RFC1918 addresses to be relayed and connected to (default: %u)</source>
-        <translation>อนุญาตให้ที่อยู่ RFC1918 ถูกส่งต่อและเชื่อมต่อกับ (ค่าเริ่มต้น: %u)</translation>
-    </message>
-    <message>
-        <source>Attempt to recover private keys from a corrupt wallet on startup</source>
-        <translation>พยายามกู้คืน Privatekeys จาก wallet  ที่เสียหายเมื่อเริ่มต้น</translation>
-    </message>
-    <message>
         <source>Cannot resolve -%s address: '%s'</source>
         <translation>ไม่สามารถแก้ไขได้ -%s ที่อยู่: '%s'</translation>
+    </message>
+    <message>
+        <source>Cannot write to data directory '%s'; check permissions.</source>
+        <translation>ไม่สามารถเขียนไปยังไดเรกทอรีข้อมูล '%s'; ตรวจสอบการอนุญาต</translation>
     </message>
     <message>
         <source>Change index out of range</source>
@@ -4871,40 +4653,32 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>ลิขสิทธิ์ (C)</translation>
     </message>
     <message>
-        <source>Create up to N inputs of each denominated amount (%u-%u, default: %u)</source>
-        <translation>สร้างได้ถึงจำนวน N inputs ของแต่ละจำนวน (%u-%u, ค่าดีฟอลต์: %u)</translation>
-    </message>
-    <message>
         <source>Error loading %s</source>
         <translation>เกิดข้อผิดพลาดในการโหลด %s</translation>
     </message>
     <message>
         <source>Error loading %s: Wallet corrupted</source>
-        <translation>เกิดข้อผิดพลาดในการโหลด %s: Wallet เสียหาย</translation>
+        <translation>เกิดข้อผิดพลาดในการโหลด %s: กระเป๋าสตางค์เสียหาย</translation>
     </message>
     <message>
         <source>Error loading %s: Wallet requires newer version of %s</source>
-        <translation>เกิดข้อผิดพลาดในการโหลด %s: Wallet ต้องใช้เวอร์ชันที่ใหม่กว่า %s</translation>
+        <translation>เกิดข้อผิดพลาดในการโหลด %s: กระเป๋าสตางค์ต้องใช้เวอร์ชั่นที่ใหม่กว่า %s</translation>
     </message>
     <message>
         <source>Error loading %s: You can't disable HD on an already existing HD wallet</source>
         <translation>เกิดข้อผิดพลาดในการโหลด %s: คุณไม่สามารถปิดการใช้งาน HD บน HD wallet ที่มีอยู่แล้ว</translation>
     </message>
     <message>
-        <source>Error loading wallet %s. -wallet filename must be a regular file.</source>
-        <translation>เกิดข้อผิดพลาดในการโหลด wallet %s. ชื่อไฟล์ -wallet จะต้องเป็นไฟล์ปกติ</translation>
-    </message>
-    <message>
         <source>Error loading wallet %s. Duplicate -wallet filename specified.</source>
         <translation>เกิดข้อผิดพลาดในการโหลด wallet %s. คัดลอกชื่อไฟล์ -wallet เฉพาะเจาะจง</translation>
     </message>
     <message>
-        <source>Error loading wallet %s. Invalid characters in -wallet filename.</source>
-        <translation>เกิดข้อผิดพลาดในการโหลด wallet %s. อักขระไม่ถูกต้องในชื่อไฟล์ -wallet</translation>
-    </message>
-    <message>
         <source>Error upgrading chainstate database</source>
         <translation>เกิดข้อผิดพลาดในการอัพเกรดฐานข้อมูล chainstate</translation>
+    </message>
+    <message>
+        <source>Error: failed to add socket to kqueuefd (kevent returned error %s)</source>
+        <translation>ข้อผิดพลาด: ล้มเหลวในการเพิ่ม socket to kqueuefd (kevent returned error %s) </translation>
     </message>
     <message>
         <source>Failed to find mixing queue to join</source>
@@ -4913,6 +4687,10 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Failed to start a new mixing queue</source>
         <translation>ไม่สามารถเริ่มคิวการผสมใหม่</translation>
+    </message>
+    <message>
+        <source>Incorrect -rescan mode, falling back to default value</source>
+        <translation>โหมด -rescan ไม่ถูกต้อง ถอยกลับไปในค่าเริ่มต้น</translation>
     </message>
     <message>
         <source>Initialization sanity check failed. %s is shutting down.</source>
@@ -4943,20 +4721,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>กำลังโหลดที่อยู่ P2P ...</translation>
     </message>
     <message>
-        <source>Print this help message and exit</source>
-        <translation>พิมพ์ข้อความช่วยเหลือนี้และออกจากโปรแกรม</translation>
-    </message>
-    <message>
         <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
         <translation>ลดการเชื่อมต่อสูงสุดจาก %d ถึง %d เนื่องจากข้อจำกัดของระบบ</translation>
-    </message>
-    <message>
-        <source>Relay and mine data carrier transactions (default: %u)</source>
-        <translation>ส่งผ่านและขุดธุรกรรมข้อมูลผู้ให้บริการ (ค่าเริ่มต้น: %u)</translation>
-    </message>
-    <message>
-        <source>Relay non-P2SH multisig (default: %u)</source>
-        <translation>ส่งผ่าน non-P2SH multisig (ค่าดีฟอลต์: %u)</translation>
     </message>
     <message>
         <source>Replaying blocks...</source>
@@ -4967,14 +4733,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>กำลังสแกนใหม่...</translation>
     </message>
     <message>
-        <source>Run in the background as a daemon and accept commands</source>
-        <translation>เรียกใช้ในพื้นหลังเป็น daemon และยอมรับคำสั่ง</translation>
-    </message>
-    <message>
-        <source>Send trace/debug info to console instead of debug.log file</source>
-        <translation>ส่งข้อมูล trace / debug ไปยัง console แทนไฟล์ debug.log</translation>
-    </message>
-    <message>
         <source>Session not complete!</source>
         <translation>เซสชันไม่สมบูรณ์!</translation>
     </message>
@@ -4983,48 +4741,24 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>เซสชันหมดอายุแล้ว</translation>
     </message>
     <message>
-        <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
-        <translation>ตั้งค่าขนาดฐานข้อมูลเป็นเมกะไบต์ (%d ถึง %d ค่าเริ่มต้น: %d)</translation>
-    </message>
-    <message>
-        <source>Set maximum block size in bytes (default: %d)</source>
-        <translation>กำหนดขนาดบล็อกสูงสุดเป็นไบต์ (ค่าดีฟอลต์: %d)</translation>
-    </message>
-    <message>
-        <source>Show all debugging options (usage: --help -help-debug)</source>
-        <translation>แสดงการแก้จุดบกพร่องทั้งหมด (การใช้งาน: --help - help-debug)</translation>
-    </message>
-    <message>
-        <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
-        <translation>ลดขนาดไฟล์ debug.log ในการเริ่มต้นของไคลเอ็นต์ (ค่าเริ่มต้น: 1 เมื่อไม่มี debug)</translation>
-    </message>
-    <message>
         <source>Signing transaction failed</source>
         <translation>ลงชื่อการทำธุรกรรมล้มเหลว</translation>
     </message>
     <message>
-        <source>Specify data directory</source>
-        <translation>ระบุไดเร็กทอรีข้อมูล</translation>
+        <source>Specified blocks directory "%s" does not exist.</source>
+        <translation>ไดเรกทอรีบล็อกที่ระบุ "%s" ไม่มีอยู่</translation>
     </message>
     <message>
-        <source>Specify wallet file (within data directory)</source>
-        <translation>ระบุไฟล์ wallet (ภายในไดเรกทอรีข้อมูล)</translation>
+        <source>Last queue was created too recently.</source>
+        <translation>คิวสุดท้ายถูกสร้างขึ้นเร็วเกินไป</translation>
     </message>
     <message>
-        <source>Specify your own public address</source>
-        <translation>กำหนดที่อยู่สาธารณะของคุณเอง</translation>
-    </message>
-    <message>
-        <source>Start PrivateSend automatically (0-1, default: %u)</source>
-        <translation>เริ่มต้น PrivateSend อัตโนมัติ (0-1, ค่าดีฟอลต์: %u)</translation>
+        <source>Last successful action was too recent.</source>
+        <translation>การกระทำที่ประสบความสำเร็จล่าสุดเป็นข้อมูลล่าสุด</translation>
     </message>
     <message>
         <source>Starting network threads...</source>
         <translation>เริ่มต้นเธรดเครือข่าย ..</translation>
-    </message>
-    <message>
-        <source>Synchronization pending...</source>
-        <translation>กำลังรอการซิงค์</translation>
     </message>
     <message>
         <source>Synchronizing governance objects...</source>
@@ -5051,10 +4785,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>ทำธุรกรรมสำเร็จแล้ว</translation>
     </message>
     <message>
-        <source>Transaction fee and change calculation failed</source>
-        <translation>ธุรกรรมค่าธรรมเนียมและการคำนวณล้มเหลว</translation>
-    </message>
-    <message>
         <source>Transaction fees are too high.</source>
         <translation>ค่าธรรมเนียมการทำธุรกรรมสูงเกินไป</translation>
     </message>
@@ -5069,6 +4799,14 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
         <translation>ไม่สามารถ bind กับ %s บนคอมพิวเตอร์เครื่องนี้ได้ (bind ผิดพลาด %s)</translation>
+    </message>
+    <message>
+        <source>Unable to locate enough mixed funds for this transaction.</source>
+        <translation>ไม่สามารถหาเงินทุนผสมที่เพียงพอสำหรับการทำธุรกรรมนี้</translation>
+    </message>
+    <message>
+        <source>Unable to locate enough non-denominated funds for this transaction.</source>
+        <translation>ไม่สามารถหาเงินทุนที่ไม่ใช่สกุลเงินที่ระบุได้มากพอสำหรับธุรกรรมนี้</translation>
     </message>
     <message>
         <source>Unable to sign spork message, wrong key?</source>
@@ -5087,10 +4825,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>การบันทึกประเภทที่ไม่ได้รับการสนับสนุน %s=%s</translation>
     </message>
     <message>
-        <source>Username for JSON-RPC connections</source>
-        <translation>ชื่อผู้ใช้สำหรับการเชื่อมต่อ JSON-RPC</translation>
-    </message>
-    <message>
         <source>Verifying blocks...</source>
         <translation>กำลังตรวจสอบบล็อค ...</translation>
     </message>
@@ -5099,24 +4833,32 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>จำนวนคีย์ที่เหลืออยู่ต่ำมาก: %d</translation>
     </message>
     <message>
-        <source>Wallet %s resides outside data directory %s</source>
-        <translation>Wallet %s อยู่นอกไดเรกทอรีข้อมูล %s</translation>
-    </message>
-    <message>
         <source>Wallet is locked.</source>
-        <translation>ล็อค Wallet </translation>
-    </message>
-    <message>
-        <source>Wallet options:</source>
-        <translation>ตัวเลือก Wallet :</translation>
-    </message>
-    <message>
-        <source>Wallet window title</source>
-        <translation>ชื่อหน้าต่าง Wallet </translation>
+        <translation>กระเป๋าสตางค์ถูกล็อค</translation>
     </message>
     <message>
         <source>Warning</source>
         <translation>คำเตือน</translation>
+    </message>
+    <message>
+        <source>Warning: %s is deprecated, please use %s instead</source>
+        <translation>คำเตือน: %s ถูกคัดค้านโปรดใช้ %s แทน</translation>
+    </message>
+    <message>
+        <source>Warning: can't use %s and %s together, will prefer %s</source>
+        <translation>คำเตือน: ไม่สามารถใช้ %s และ %s ด้วยกันได้ จะต้องการ %s</translation>
+    </message>
+    <message>
+        <source>Warning: incorrect parameter %s, path must exist! Using default path.</source>
+        <translation>คำเตือน: ปัจจัยที่กำหนดไม่ถูกต้อง %s, เส้นทางต้องมี! ใช้เส้นทางเริ่มต้น</translation>
+    </message>
+    <message>
+        <source>You are starting with governance validation disabled.</source>
+        <translation>คุณกำลังเริ่มตรวจสอบการกำกับดูแลปิดการใช้งาน</translation>
+    </message>
+    <message>
+        <source>You can not disable governance validation on a masternode.</source>
+        <translation>คุณไม่สามารถตรวจสอบการกำกับดูแลปิดการใช้งานบน masternode</translation>
     </message>
     <message>
         <source>Your entries added successfully.</source>
@@ -5124,7 +4866,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <source>Zapping all transactions from wallet...</source>
-        <translation>กำลังลบการทำธุรกรรมทั้งหมดจาก wallet...</translation>
+        <translation>กำลังลบการทำธุรกรรมทั้งหมดจากกระเป๋าสตางค์...</translation>
     </message>
 </context>
 </TS>

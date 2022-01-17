@@ -3,14 +3,14 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef CACHEMAP_H_
-#define CACHEMAP_H_
+#ifndef BITCOIN_CACHEMAP_H
+#define BITCOIN_CACHEMAP_H
 
 #include <map>
 #include <list>
 #include <cstddef>
 
-#include "serialize.h"
+#include <serialize.h>
 
 /**
  * Serializable structure for key/value items
@@ -71,7 +71,7 @@ private:
     map_t mapIndex;
 
 public:
-    CacheMap(size_type nMaxSizeIn = 0)
+    explicit CacheMap(size_type nMaxSizeIn = 0)
         : nMaxSize(nMaxSizeIn),
           listItems(),
           mapIndex()
@@ -187,4 +187,4 @@ private:
     }
 };
 
-#endif /* CACHEMAP_H_ */
+#endif // BITCOIN_CACHEMAP_H

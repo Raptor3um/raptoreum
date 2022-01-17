@@ -3,14 +3,16 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "protocol.h"
+#include <protocol.h>
 
-#include "util.h"
-#include "utilstrencodings.h"
+#include <util.h>
+#include <utilstrencodings.h>
 
 #ifndef WIN32
 # include <arpa/inet.h>
 #endif
+
+static std::atomic<bool> g_initial_block_download_completed(false);
 
 namespace NetMsgType {
 const char *VERSION="version";
@@ -69,6 +71,9 @@ const char *QSIGSHARESINV="qsigsinv";
 const char *QGETSIGSHARES="qgetsigs";
 const char *QBSIGSHARES="qbsigs";
 const char *QSIGREC="qsigrec";
+const char *QSIGSHARE="qsigshare";
+const char* QGETDATA = "qgetdata";
+const char* QDATA = "qdata";
 const char *CLSIG="clsig";
 const char *ISLOCK="islock";
 const char *MNAUTH="mnauth";
@@ -135,6 +140,9 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::QGETSIGSHARES,
     NetMsgType::QBSIGSHARES,
     NetMsgType::QSIGREC,
+    NetMsgType::QSIGSHARE,
+    NetMsgType::QGETDATA,
+    NetMsgType::QDATA,
     NetMsgType::CLSIG,
     NetMsgType::ISLOCK,
     NetMsgType::MNAUTH,
@@ -193,6 +201,17 @@ bool CMessageHeader::IsValid(const MessageStartChars& pchMessageStartIn) const
     return true;
 }
 
+
+ServiceFlags GetDesirableServiceFlags(ServiceFlags services) {
+    if ((services & NODE_NETWORK_LIMITED) && g_initial_block_download_completed) {
+        return ServiceFlags(NODE_NETWORK_LIMITED);
+    }
+    return ServiceFlags(NODE_NETWORK);
+}
+
+void SetServiceFlagsIBDCache(bool state) {
+    g_initial_block_download_completed = state;
+}
 
 
 CAddress::CAddress() : CService()

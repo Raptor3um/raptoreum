@@ -10,15 +10,15 @@
 #include <string.h>
 #include <stdio.h>
 #include <unistd.h>
-#include "slow-hash.h"
-#include "oaes_lib.h"
-#include "c_keccak.h"
-#include "c_groestl.h"
-#include "c_blake256.h"
-#include "c_jh.h"
-#include "c_skein.h"
-#include "int-util.h"
-#include "variant2_int_sqrt.h"
+#include <cryptonote/slow-hash.h>
+#include <cryptonote/oaes_lib.h>
+#include <cryptonote/c_keccak.h>
+#include <cryptonote/c_groestl.h>
+#include <cryptonote/c_blake256.h>
+#include <cryptonote/c_jh.h>
+#include <cryptonote/c_skein.h>
+#include <cryptonote/int-util.h>
+#include <cryptonote/variant2_int_sqrt.h>
 
 #if defined(_MSC_VER)
 #include <malloc.h>

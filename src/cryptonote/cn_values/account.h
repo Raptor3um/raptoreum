@@ -4,9 +4,8 @@
 
 #pragma once
 
-#include "cryptonote_core/cryptonote_basic.h"
-#include "crypto/crypto.h"
-#include "serialization/keyvalue_serialization.h"
+#include <cryptonote/cn_values/cryptonote_basic.h>
+#include <crypto/crypto.h>
 
 namespace cryptonote
 {

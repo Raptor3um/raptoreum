@@ -3,7 +3,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 '''
-A script to check that the (Linux) executables produced by gitian only contain
+A script to check that the (Linux) executables produced by Gitian only contain
 allowed gcc, glibc and libstdc++ version symbols.  This makes sure they are
 still compatible with the minimum supported Linux distribution versions.
 
@@ -52,7 +52,7 @@ READELF_CMD = os.getenv('READELF', '/usr/bin/readelf')
 CPPFILT_CMD = os.getenv('CPPFILT', '/usr/bin/c++filt')
 # Allowed NEEDED libraries
 ALLOWED_LIBRARIES = {
-# bitcoind and bitcoin-qt
+# dashd and dash-qt
 'libgcc_s.so.1', # GCC base support
 'libc.so.6', # C library
 'libpthread.so.0', # threading
@@ -61,9 +61,7 @@ ALLOWED_LIBRARIES = {
 'librt.so.1', # real-time (clock)
 'ld-linux-x86-64.so.2', # 64-bit dynamic linker
 'ld-linux.so.2', # 32-bit dynamic linker
-# bitcoin-qt only
-'libX11-xcb.so.1', # part of X11
-'libX11.so.6', # part of X11
+# dash-qt only
 'libxcb.so.1', # part of X11
 'libfontconfig.so.1', # font support
 'libfreetype.so.6', # font parsing
@@ -158,6 +156,6 @@ if __name__ == '__main__':
                 print('%s: NEEDED library %s is not allowed' % (filename, library_name))
                 retval = 1
 
-    exit(retval)
+    sys.exit(retval)
 
 

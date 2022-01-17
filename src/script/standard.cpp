@@ -3,12 +3,12 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "script/standard.h"
+#include <script/standard.h>
 
-#include "pubkey.h"
-#include "script/script.h"
-#include "util.h"
-#include "utilstrencodings.h"
+#include <pubkey.h>
+#include <script/script.h>
+#include <util.h>
+#include <utilstrencodings.h>
 
 
 typedef std::vector<unsigned char> valtype;
@@ -32,9 +32,6 @@ const char* GetTxnOutputType(txnouttype t)
     return nullptr;
 }
 
-/**
- * Return public keys or hashes from scriptPubKey, for 'standard' transaction types.
- */
 bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<std::vector<unsigned char> >& vSolutionsRet)
 {
     // Templates
@@ -75,7 +72,7 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<std::v
 
     // Scan templates
     const CScript& script1 = scriptPubKey;
-    for (const std::pair<txnouttype, CScript>& tplate : mTemplates)
+    for (const std::pair<const txnouttype, CScript>& tplate : mTemplates)
     {
         const CScript& script2 = tplate.second;
         vSolutionsRet.clear();
@@ -110,7 +107,7 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<std::v
             // Template matching opcodes:
             if (opcode2 == OP_PUBKEYS)
             {
-                while (vch1.size() >= 33 && vch1.size() <= 65)
+                while (CPubKey::ValidSize(vch1))
                 {
                     vSolutionsRet.push_back(vch1);
                     if (!script1.GetOp(pc1, opcode1, vch1))
@@ -124,7 +121,7 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<std::v
 
             if (opcode2 == OP_PUBKEY)
             {
-                if (vch1.size() < 33 || vch1.size() > 65)
+                if (!CPubKey::ValidSize(vch1))
                     break;
                 vSolutionsRet.push_back(vch1);
             }
@@ -162,7 +159,7 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
 {
     std::vector<valtype> vSolutions;
     txnouttype whichType;
-    if (!Solver(scriptPubKey, whichType, vSolutions))
+    if(!Solver(scriptPubKey, whichType, vSolutions))
         return false;
 
     if (whichType == TX_PUBKEY)
@@ -193,9 +190,10 @@ bool ExtractDestinations(const CScript& scriptPubKey, txnouttype& typeRet, std::
     addressRet.clear();
     typeRet = TX_NONSTANDARD;
     std::vector<valtype> vSolutions;
-    if (!Solver(scriptPubKey, typeRet, vSolutions))
+    if(!Solver(scriptPubKey, typeRet, vSolutions))
         return false;
-    if (typeRet == TX_NULL_DATA){
+    if(typeRet == TX_NULL_DATA)
+    {
         // This is data, not addresses
         return false;
     }
@@ -235,7 +233,7 @@ class CScriptVisitor : public boost::static_visitor<bool>
 private:
     CScript *script;
 public:
-    CScriptVisitor(CScript *scriptin) { script = scriptin; }
+    explicit CScriptVisitor(CScript *scriptin) { script = scriptin; }
 
     bool operator()(const CNoDestination &dest) const {
         script->clear();
@@ -255,38 +253,6 @@ public:
     }
 };
 } // namespace
-
-namespace
-{
-class CScriptFutureVisitor : public boost::static_visitor<bool>
-{
-private:
-    CScript *script;
-    int height;
-public:
-    CScriptFutureVisitor(CScript *scriptin, int nHeight) { script = scriptin;  height = nHeight;}
-
-    bool operator()(const CNoDestination &dest) const {
-        script->clear();
-        return false;
-    }
-
-    bool operator()(const CKeyID &keyID) const {
-        script->clear();
-        *script << height << OP_CHECKSEQUENCEVERIFY << OP_DROP << ToByteVector(keyID) << OP_CHECKSIG;
-        return true;
-    }
-
-};
-} // namespace
-
-CScript GetFutureScriptForDestination(const CTxDestination& dest, int height)
-{
-    CScript script;
-
-    boost::apply_visitor(CScriptFutureVisitor(&script, height), dest);
-    return script;
-}
 
 CScript GetScriptForDestination(const CTxDestination& dest)
 {
@@ -310,4 +276,9 @@ CScript GetScriptForMultisig(int nRequired, const std::vector<CPubKey>& keys)
         script << ToByteVector(key);
     script << CScript::EncodeOP_N(keys.size()) << OP_CHECKMULTISIG;
     return script;
+}
+
+
+bool IsValidDestination(const CTxDestination& dest) {
+    return dest.which() != 0;
 }

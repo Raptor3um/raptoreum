@@ -5,16 +5,20 @@
 #ifndef BITCOIN_QT_TRANSACTIONRECORD_H
 #define BITCOIN_QT_TRANSACTIONRECORD_H
 
-#include "amount.h"
-#include "uint256.h"
-#include "base58.h"
+#include <amount.h>
+#include <uint256.h>
+#include <key_io.h>
 
 #include <QList>
 #include <QString>
 
-class CWallet;
-class CWalletTx;
-class CFutureTx;
+namespace interfaces {
+class Node;
+class Wallet;
+struct WalletTx;
+struct WalletTxStatus;
+struct FutureTx;
+}
 
 /** UI model for transaction status. The transaction status is the part of a transaction that will change over time.
  */
@@ -23,7 +27,7 @@ class TransactionStatus
 public:
     TransactionStatus():
         countsForBalance(false), lockedByInstantSend(false), lockedByChainLocks(false), sortKey(""),
-        matures_in(0), status(Offline), depth(0), open_for(0), cur_num_blocks(-1),
+        matures_in(0), status(Unconfirmed), depth(0), open_for(0), cur_num_blocks(-1),
         cachedChainLockHeight(-1), needsUpdate(false)
     { }
 
@@ -32,14 +36,12 @@ public:
         /// Normal (sent/received) transactions
         OpenUntilDate,      /**< Transaction not yet final, waiting for date */
         OpenUntilBlock,     /**< Transaction not yet final, waiting for block */
-        Offline,            /**< Not sent to any other nodes **/
         Unconfirmed,        /**< Not yet mined into a block **/
         Confirming,         /**< Confirmed, but waiting for the recommended number of confirmations **/
         Conflicted,         /**< Conflicts with other transaction or mempool **/
         Abandoned,          /**< Abandoned from the wallet **/
         /// Generated (mined) transactions
         Immature,           /**< Mined but waiting for maturity */
-        MaturesWarning,     /**< Transaction will likely not mature because no nodes have confirmed */
         NotAccepted         /**< Mined but not accepted */
     };
 
@@ -51,8 +53,6 @@ public:
     bool lockedByChainLocks;
     /// Sorting key based on status
     std::string sortKey;
-    /// Label
-    QString label;
 
     /** @name Generated (mined) transactions
        @{*/
@@ -92,12 +92,12 @@ public:
         RecvWithAddress,
         RecvFromOther,
         SendToSelf,
-        RecvWithPrivateSend,
-        PrivateSendDenominate,
-        PrivateSendCollateralPayment,
-        PrivateSendMakeCollaterals,
-        PrivateSendCreateDenominations,
-        PrivateSend,
+        RecvWithCoinJoin,
+        CoinJoinMixing,
+        CoinJoinCollateralPayment,
+        CoinJoinMakeCollaterals,
+        CoinJoinCreateDenominations,
+        CoinJoinSend,
         FutureSend,
         FutureReceive
     };
@@ -108,16 +108,14 @@ public:
     TransactionRecord():
             hash(), time(0), type(Other), strAddress(""), debit(0), credit(0), idx(0)
     {
-        address = CBitcoinAddress(strAddress);
-        txDest = address.Get();
+        txDest = DecodeDestination(strAddress);
     }
 
     TransactionRecord(uint256 _hash, qint64 _time):
             hash(_hash), time(_time), type(Other), strAddress(""), debit(0),
             credit(0), idx(0)
     {
-        address = CBitcoinAddress(strAddress);
-        txDest = address.Get();
+        txDest = DecodeDestination(strAddress);
     }
 
     TransactionRecord(uint256 _hash, qint64 _time,
@@ -126,14 +124,13 @@ public:
             hash(_hash), time(_time), type(_type), strAddress(_strAddress), debit(_debit), credit(_credit),
             idx(0)
     {
-        address = CBitcoinAddress(strAddress);
-        txDest = address.Get();
+        txDest = DecodeDestination(strAddress);
     }
 
     /** Decompose CWallet transaction to model transaction records.
      */
-    static bool showTransaction(const CWalletTx &wtx);
-    static QList<TransactionRecord> decomposeTransaction(const CWallet *wallet, const CWalletTx &wtx);
+    static bool showTransaction();
+    static QList<TransactionRecord> decomposeTransaction(interfaces::Wallet& wallet, const interfaces::WalletTx& wtx);
 
     /** @name Immutable transaction attributes
       @{*/
@@ -141,7 +138,6 @@ public:
     qint64 time;
     Type type;
     std::string strAddress;
-    CBitcoinAddress address;
     CTxDestination txDest;
 
     CAmount debit;
@@ -157,19 +153,26 @@ public:
     /** Whether the transaction was sent/received with a watch-only address */
     bool involvesWatchAddress;
 
+    /// Label
+    QString label;
+
     /** Return the unique identifier for this transaction (part) */
-    QString getTxID() const;
+    QString getTxHash() const;
 
     /** Return the output index of the subtransaction  */
     int getOutputIndex() const;
 
     /** Update status from core wallet tx.
      */
-    void updateStatus(const CWalletTx &wtx, int chainLockHeight);
+    void updateStatus(const interfaces::WalletTxStatus& wtx, int numBlocks, int64_t adjustedTime, int chainLockHeight);
 
     /** Return whether a status update is needed.
      */
-    bool statusUpdateNeeded(int chainLockHeight);
+    bool statusUpdateNeeded(int numBlocks, int chainLockHeight) const;
+
+    /** Update label from address book.
+     */
+    void updateLabel(interfaces::Wallet& wallet);
 
     /** Return the block height of this transaction */
     int getTransactionBlockHeight(const CWalletTx &wtx);
@@ -185,7 +188,6 @@ public:
 
     /** Return the Future TX Status based on maturity */
     void getFutureTxStatus(const CWalletTx &wtx, CFutureTx &ftx);
-
 
 };
 

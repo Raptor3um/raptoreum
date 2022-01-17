@@ -14,7 +14,7 @@ import os
 REFERENCE_FILENAME = 'rpc_interface.txt'
 
 
-class AuthServiceProxyWrapper(object):
+class AuthServiceProxyWrapper():
     """
     An object that wraps AuthServiceProxy to record specific RPC calls.
 
@@ -76,7 +76,7 @@ def get_filename(dirname, n_node):
 
 def write_all_rpc_commands(dirname, node):
     """
-    Write out a list of all RPC functions available in `bitcoin-cli` for
+    Write out a list of all RPC functions available in `dash-cli` for
     coverage comparison. This will only happen once per coverage
     directory.
 

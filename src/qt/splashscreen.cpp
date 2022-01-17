@@ -1,34 +1,35 @@
 // Copyright (c) 2011-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2019 The Dash Core developers
+// Copyright (c) 2014-2020 The Dash Core developers
 // Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include "config/raptoreum-config.h"
+#include <config/raptoreum-config.h>
 #endif
 
-#include "splashscreen.h"
+#include <qt/splashscreen.h>
 
-#include "guiutil.h"
-#include "networkstyle.h"
+#include <qt/guiutil.h>
+#include <qt/networkstyle.h>
 
-#include "clientversion.h"
-#include "init.h"
-#include "util.h"
-#include "ui_interface.h"
-#include "version.h"
-#ifdef ENABLE_WALLET
-#include "wallet/wallet.h"
-#endif
+#include <chainparams.h>
+#include <clientversion.h>
+#include <init.h>
+#include <interfaces/handler.h>
+#include <interfaces/node.h>
+#include <interfaces/wallet.h>
+#include <util.h>
+#include <ui_interface.h>
+#include <version.h>
 
 #include <QApplication>
 #include <QCloseEvent>
 #include <QDesktopWidget>
 #include <QPainter>
 
-SplashScreen::SplashScreen(Qt::WindowFlags f, const NetworkStyle *networkStyle) :
-    QWidget(0, f), curAlignment(0)
+SplashScreen::SplashScreen(interfaces::Node& node, Qt::WindowFlags f, const NetworkStyle *networkStyle) :
+    QWidget(0, f), curAlignment(0), m_node(node)
 {
 
     // transparent background
@@ -38,67 +39,94 @@ SplashScreen::SplashScreen(Qt::WindowFlags f, const NetworkStyle *networkStyle) 
     // no window decorations
     setWindowFlags(Qt::FramelessWindowHint);
 
+    // Geometries of splashscreen
+    int width = 380;
+    int height = 460;
+    int logoWidth = 270;
+    int logoHeight = 270;
+
     // set reference point, paddings
-    int paddingLeft             = 14;
-    int paddingTop              = 470;
-    int titleVersionVSpace      = 17;
-    int titleCopyrightVSpace    = 22;
+    int paddingTop = 10;
+    int titleVersionVSpace = 25;
 
     float fontFactor            = 1.0;
+    float scale = qApp->devicePixelRatio();
 
     // define text to place
     QString titleText       = tr(PACKAGE_NAME);
-    QString versionText     = QString(tr("Version %1")).arg(QString::fromStdString(FormatFullVersion()));
-    QString copyrightText   = QString::fromUtf8(CopyrightHolders("\xc2\xA9", 2014, COPYRIGHT_YEAR).c_str());
+    QString versionText = QString::fromStdString(FormatFullVersion()).remove(0, 1);
     QString titleAddText    = networkStyle->getTitleAddText();
 
-    QString font = QApplication::font().toString();
+    QFont fontNormal = GUIUtil::getFontNormal();
+    QFont fontBold = GUIUtil::getFontBold();
 
-    // load the bitmap for writing some text over it
-    pixmap = networkStyle->getSplashImage();
+    QPixmap pixmapLogo = networkStyle->getSplashImage();
+    pixmapLogo.setDevicePixelRatio(scale);
+
+    // Adjust logo color based on the current theme
+    QImage imgLogo = pixmapLogo.toImage().convertToFormat(QImage::Format_ARGB32);
+    QColor logoColor = GUIUtil::getThemedQColor(GUIUtil::ThemedColor::BLUE);
+    for (int x = 0; x < imgLogo.width(); ++x) {
+        for (int y = 0; y < imgLogo.height(); ++y) {
+            const QRgb rgb = imgLogo.pixel(x, y);
+            imgLogo.setPixel(x, y, qRgba(logoColor.red(), logoColor.green(), logoColor.blue(), qAlpha(rgb)));
+        }
+    }
+    pixmapLogo.convertFromImage(imgLogo);
+
+    pixmap = QPixmap(width * scale, height * scale);
+    pixmap.setDevicePixelRatio(scale);
+    pixmap.fill(GUIUtil::getThemedQColor(GUIUtil::ThemedColor::BORDER_WIDGET));
 
     QPainter pixPaint(&pixmap);
-    pixPaint.setPen(QColor(255,255,255));
+
+    QRect rect = QRect(1, 1, width - 2, height - 2);
+    pixPaint.fillRect(rect, GUIUtil::getThemedQColor(GUIUtil::ThemedColor::BACKGROUND_WIDGET));
+
+    pixPaint.drawPixmap((width / 2) - (logoWidth / 2), (height / 2) - (logoHeight / 2) + 20, pixmapLogo.scaled(logoWidth * scale, logoHeight * scale, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    pixPaint.setPen(GUIUtil::getThemedQColor(GUIUtil::ThemedColor::DEFAULT));
 
     // check font size and drawing with
-    pixPaint.setFont(QFont(font, 28*fontFactor));
+    fontBold.setPointSize(50 * fontFactor);
+    pixPaint.setFont(fontBold);
     QFontMetrics fm = pixPaint.fontMetrics();
     int titleTextWidth = fm.width(titleText);
-    if (titleTextWidth > 160) {
+    if (titleTextWidth > width * 0.8) {
         fontFactor = 0.75;
     }
 
-    pixPaint.setFont(QFont(font, 28*fontFactor));
+    fontBold.setPointSize(50 * fontFactor);
+    pixPaint.setFont(fontBold);
     fm = pixPaint.fontMetrics();
     titleTextWidth  = fm.width(titleText);
-    pixPaint.drawText(paddingLeft,paddingTop,titleText);
+    int titleTextHeight = fm.height();
+    pixPaint.drawText((width / 2) - (titleTextWidth / 2), titleTextHeight + paddingTop, titleText);
 
-    pixPaint.setFont(QFont(font, 15*fontFactor));
-    pixPaint.drawText(paddingLeft,paddingTop+titleVersionVSpace,versionText);
-
-    // draw copyright stuff
-    {
-        pixPaint.setFont(QFont(font, 10*fontFactor));
-        const int x = paddingLeft;
-        const int y = paddingTop+titleCopyrightVSpace;
-        QRect copyrightRect(x, y, pixmap.width() - x, pixmap.height() - y);
-        pixPaint.drawText(copyrightRect, Qt::AlignLeft | Qt::AlignTop | Qt::TextWordWrap, copyrightText);
-    }
+    fontNormal.setPointSize(16 * fontFactor);
+    pixPaint.setFont(fontNormal);
+    fm = pixPaint.fontMetrics();
+    int versionTextWidth = fm.width(versionText);
+    pixPaint.drawText((width / 2) - (versionTextWidth / 2), titleTextHeight + paddingTop + titleVersionVSpace, versionText);
 
     // draw additional text if special network
     if(!titleAddText.isEmpty()) {
-        QFont boldFont = QFont(font, 10*fontFactor);
-        boldFont.setWeight(QFont::Bold);
-        pixPaint.setFont(boldFont);
+        fontBold.setPointSize(10 * fontFactor);
+        pixPaint.setFont(fontBold);
         fm = pixPaint.fontMetrics();
-        int titleAddTextWidth  = fm.width(titleAddText);
-        pixPaint.drawText(pixmap.width()-titleAddTextWidth-10,pixmap.height()-25,titleAddText);
+        int titleAddTextWidth = fm.width(titleAddText);
+        // Draw the badge backround with the network-specific color
+        QRect badgeRect = QRect(width - titleAddTextWidth - 20, 5, width, fm.height() + 10);
+        QColor badgeColor = networkStyle->getBadgeColor();
+        pixPaint.fillRect(badgeRect, badgeColor);
+        // Draw the text itself using white color, regardless of the current theme
+        pixPaint.setPen(QColor(255, 255, 255));
+        pixPaint.drawText(width - titleAddTextWidth - 10, paddingTop + 10, titleAddText);
     }
 
     pixPaint.end();
 
     // Resize window and move to center of desktop, disallow resizing
-    QRect r(QPoint(), pixmap.size());
+    QRect r(QPoint(), QSize(width, height));
     resize(r.size());
     setFixedSize(r.size());
     move(QApplication::desktop()->screenGeometry().center() - r.center());
@@ -115,8 +143,8 @@ SplashScreen::~SplashScreen()
 bool SplashScreen::eventFilter(QObject * obj, QEvent * ev) {
     if (ev->type() == QEvent::KeyPress) {
         QKeyEvent *keyEvent = static_cast<QKeyEvent *>(ev);
-        if(keyEvent->text()[0] == 'q' && breakAction != nullptr) {
-            breakAction();
+        if(keyEvent->text()[0] == 'q') {
+            m_node.startShutdown();
         }
     }
     return QObject::eventFilter(obj, ev);
@@ -139,56 +167,48 @@ static void InitMessage(SplashScreen *splash, const std::string &message)
     QMetaObject::invokeMethod(splash, "showMessage",
         Qt::QueuedConnection,
         Q_ARG(QString, QString::fromStdString(message)),
-        Q_ARG(int, Qt::AlignBottom|Qt::AlignHCenter),
-        Q_ARG(QColor, QColor(255,255,255)));
+        Q_ARG(int, Qt::AlignBottom | Qt::AlignHCenter),
+        Q_ARG(QColor, GUIUtil::getThemedQColor(GUIUtil::ThemedColor::DEFAULT)));
 }
 
-static void ShowProgress(SplashScreen *splash, const std::string &title, int nProgress)
+static void ShowProgress(SplashScreen *splash, const std::string &title, int nProgress, bool resume_possible)
 {
-    InitMessage(splash, title + strprintf("%d", nProgress) + "%");
+    InitMessage(splash, title + std::string("\n") +
+            (resume_possible ? _("(press q to shutdown and continue later)")
+                                : _("press q to shutdown")) +
+            strprintf("\n%d", nProgress) + "%");
 }
-
-void SplashScreen::setBreakAction(const std::function<void(void)> &action)
-{
-    breakAction = action;
-}
-
-static void SetProgressBreakAction(SplashScreen *splash, const std::function<void(void)> &action)
-{
-    QMetaObject::invokeMethod(splash, "setBreakAction",
-        Qt::QueuedConnection,
-        Q_ARG(std::function<void(void)>, action));
-}
-
 #ifdef ENABLE_WALLET
-void SplashScreen::ConnectWallet(CWallet* wallet)
+void SplashScreen::ConnectWallet(std::unique_ptr<interfaces::Wallet> wallet)
 {
-    wallet->ShowProgress.connect(boost::bind(ShowProgress, this, _1, _2));
-    connectedWallets.push_back(wallet);
+    m_connected_wallet_handlers.emplace_back(wallet->handleShowProgress(boost::bind(ShowProgress, this, _1, _2, false)));
+    m_connected_wallets.emplace_back(std::move(wallet));
 }
 #endif
 
 void SplashScreen::subscribeToCoreSignals()
 {
     // Connect signals to client
-    uiInterface.InitMessage.connect(boost::bind(InitMessage, this, _1));
-    uiInterface.ShowProgress.connect(boost::bind(ShowProgress, this, _1, _2));
-    uiInterface.SetProgressBreakAction.connect(boost::bind(SetProgressBreakAction, this, _1));
+    m_handler_init_message = m_node.handleInitMessage(boost::bind(InitMessage, this, _1));
+    m_handler_show_progress = m_node.handleShowProgress(boost::bind(ShowProgress, this, _1, _2, _3));
 #ifdef ENABLE_WALLET
-    uiInterface.LoadWallet.connect(boost::bind(&SplashScreen::ConnectWallet, this, _1));
+    m_handler_load_wallet = m_node.handleLoadWallet([this](std::unique_ptr<interfaces::Wallet> wallet) { ConnectWallet(std::move(wallet)); });
 #endif
 }
 
 void SplashScreen::unsubscribeFromCoreSignals()
 {
     // Disconnect signals from client
-    uiInterface.InitMessage.disconnect(boost::bind(InitMessage, this, _1));
-    uiInterface.ShowProgress.disconnect(boost::bind(ShowProgress, this, _1, _2));
+    m_handler_init_message->disconnect();
+    m_handler_show_progress->disconnect();
 #ifdef ENABLE_WALLET
-    for (CWallet* const & pwallet : connectedWallets) {
-        pwallet->ShowProgress.disconnect(boost::bind(ShowProgress, this, _1, _2));
+    m_handler_load_wallet->disconnect();
+#endif // ENABLE_WALLET
+    for (auto& handler : m_connected_wallet_handlers) {
+        handler->disconnect();
     }
-#endif
+    m_connected_wallet_handlers.clear();
+    m_connected_wallets.clear();
 }
 
 void SplashScreen::showMessage(const QString &message, int alignment, const QColor &color)
@@ -202,14 +222,17 @@ void SplashScreen::showMessage(const QString &message, int alignment, const QCol
 void SplashScreen::paintEvent(QPaintEvent *event)
 {
     QPainter painter(this);
+    QFont messageFont = GUIUtil::getFontNormal();
+    messageFont.setPointSize(14);
+    painter.setFont(messageFont);
     painter.drawPixmap(0, 0, pixmap);
-    QRect r = rect().adjusted(5, 5, -5, -5);
+    QRect r = rect().adjusted(5, 5, -5, -15);
     painter.setPen(curColor);
     painter.drawText(r, curAlignment, curMessage);
 }
 
 void SplashScreen::closeEvent(QCloseEvent *event)
 {
-    StartShutdown(); // allows an "emergency" shutdown during startup
+    m_node.startShutdown(); // allows an "emergency" shutdown during startup
     event->ignore();
 }

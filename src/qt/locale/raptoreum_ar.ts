@@ -2,6 +2,10 @@
 <context>
     <name>AddressBookPage</name>
     <message>
+        <source>Enter address or label to search</source>
+        <translation>أدخل العنوان أو التسمية للبحث</translation>
+    </message>
+    <message>
         <source>Right-click to edit address or label</source>
         <translation>انقر بالزر الايمن لتعديل العنوان</translation>
     </message>
@@ -20,6 +24,14 @@
     <message>
         <source>&amp;Copy</source>
         <translation>نسخ </translation>
+    </message>
+    <message>
+        <source>Show QR code for the currently selected address</source>
+        <translation>إظهار رمز الاستجابة السريعة للعنوان المحدد حاليًا</translation>
+    </message>
+    <message>
+        <source>&amp;Show QR code</source>
+        <translation>&amp; إظهار رمز الاستجابة السريعة</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
@@ -82,6 +94,14 @@
         <translation>تعديل </translation>
     </message>
     <message>
+        <source>&amp;Show address QR code</source>
+        <translation>&amp; إظهار رمز الاستجابة السريعة العنوان</translation>
+    </message>
+    <message>
+        <source>QR code</source>
+        <translation>رمز الاستجابة السريعة</translation>
+    </message>
+    <message>
         <source>Export Address List</source>
         <translation>تصدير قائمة العناوين</translation>
     </message>
@@ -114,6 +134,45 @@
     </message>
 </context>
 <context>
+    <name>AppearanceWidget</name>
+    <message>
+        <source>Lighter</source>
+        <translation>اخف</translation>
+    </message>
+    <message>
+        <source>Bolder</source>
+        <translation>أكثر جرأة</translation>
+    </message>
+    <message>
+        <source>Font Weight Normal:</source>
+        <translation>وزن الخط عادي:</translation>
+    </message>
+    <message>
+        <source>Smaller</source>
+        <translation>اصغر</translation>
+    </message>
+    <message>
+        <source>Bigger</source>
+        <translation>اكبر</translation>
+    </message>
+    <message>
+        <source>Font Scale:</source>
+        <translation>مقياس الخط:</translation>
+    </message>
+    <message>
+        <source>Font Family:</source>
+        <translation>عائلة الخط:</translation>
+    </message>
+    <message>
+        <source>Theme:</source>
+        <translation>موضوع:</translation>
+    </message>
+    <message>
+        <source>Font Weight Bold:</source>
+        <translation>وزن الخط غامق:</translation>
+    </message>
+</context>
+<context>
     <name>AskPassphraseDialog</name>
     <message>
         <source>Passphrase Dialog</source>
@@ -132,8 +191,12 @@
         <translation>اعد كتابة جملة السر الجديدة</translation>
     </message>
     <message>
+        <source>Show password</source>
+        <translation>عرض كلمة المرور</translation>
+    </message>
+    <message>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>أدخل عبارة مرور جديدة إلى المحفظة. الرجاء استخدام عبارة مرور تتكون من10 حروف عشوائية على الاقل, أو ثمانية كلمات على الاقل</translation>
+        <translation>أدخل عبارة مرور جديدة إلى المحفظة. &lt;br/&gt;الرجاء استخدام عبارة مرور تتكون من&lt;b&gt;10 حروف عشوائية&lt;/b&gt; على الاقل, أو&lt;b&gt; ثمانية كلمات على الاقل&lt;/b&gt;</translation>
     </message>
     <message>
         <source>Encrypt wallet</source>
@@ -182,10 +245,6 @@
     <message>
         <source>Wallet encrypted</source>
         <translation>محفظة مشفرة</translation>
-    </message>
-    <message>
-        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your funds from being stolen by malware infecting your computer.</source>
-        <translation>%1 سوف يغلق الآن لإنهاء عملية التشفير. تذكر أن تشفير محفظتك لا يمكنه حماية أموالك بالكامل من التعرض للسرقة بسبب البرامج الضارة التي تصيب جهاز الكمبيوتر الخاص بك.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. Previous backups of the unencrypted wallet file contain the same HD seed and still have full access to all your funds just like the new, encrypted wallet.</source>
@@ -237,6 +296,13 @@
     <message>
         <source>Banned Until</source>
         <translation>محظور حتى</translation>
+    </message>
+</context>
+<context>
+    <name>BitcoinAmountField</name>
+    <message>
+        <source>Amount in %1</source>
+        <translation>المبلغ في %1</translation>
     </message>
 </context>
 <context>
@@ -326,8 +392,12 @@
         <translation>حوالي %1</translation>
     </message>
     <message>
+        <source>PrivateSend coins to a Dash address</source>
+        <translation>أرسل العملات المعدنية إلى عنوان داش</translation>
+    </message>
+    <message>
         <source>Modify configuration options for %1</source>
-        <translation>تغيير خيارات الإعداد لأساس ل%1</translation>
+        <translation>تغيير خيارات الإعداد لأساس ل %1</translation>
     </message>
     <message>
         <source>&amp;Show / Hide</source>
@@ -482,16 +552,22 @@
         <translation>الزبون %1</translation>
     </message>
     <message>
-        <source>&amp;PrivateSend information</source>
-        <translation> المعلومات إرسال خاص </translation>
+        <source>Wallet: %1
+</source>
+        <translation>المحفظة:%1
+</translation>
     </message>
     <message>
-        <source>Show the PrivateSend basic information</source>
-        <translation>خاص إرسال المعلومات إظهار خاص إرسال المعلومات الأساسية</translation>
+        <source>Wallet is &lt;b&gt;unencrypted&lt;/b&gt;</source>
+        <translation>المحفظة &lt;b&gt; غير مشفرة&lt;/b&gt;</translation>
     </message>
     <message>
         <source>&amp;File</source>
         <translation>ملف</translation>
+    </message>
+    <message>
+        <source>%1 &amp;information</source>
+        <translation>%1 معلومات</translation>
     </message>
     <message>
         <source>&amp;Settings</source>
@@ -582,6 +658,30 @@
         <translation>معلومات</translation>
     </message>
     <message>
+        <source>Received and sent multiple transactions</source>
+        <translation>استلام وإرسال معاملات متعددة</translation>
+    </message>
+    <message>
+        <source>Sent multiple transactions</source>
+        <translation>أرسل معاملات متعددة</translation>
+    </message>
+    <message>
+        <source>Received multiple transactions</source>
+        <translation>استلم معاملات متعددة</translation>
+    </message>
+    <message>
+        <source>Sent Amount: %1
+</source>
+        <translation>المبلغ المرسل:%1
+</translation>
+    </message>
+    <message>
+        <source>Received Amount: %1
+</source>
+        <translation>المبلغ المتلقى:%1
+</translation>
+    </message>
+    <message>
         <source>Date: %1
 </source>
         <translation>التاريخ:%1
@@ -621,23 +721,19 @@
     </message>
     <message>
         <source>HD key generation is &lt;b&gt;enabled&lt;/b&gt;</source>
-        <translation>الجيل مفتاح هد هو 1 تمكين 1</translation>
-    </message>
-    <message>
-        <source>HD key generation is &lt;b&gt;disabled&lt;/b&gt;</source>
-        <translation>الجيل مفتاح هد هو 1 تعطيل 1</translation>
+        <translation>توليد مفتاح HD &lt;b&gt;متاح&lt;/b&gt; </translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
-        <translation>المحفظة هي 1 مشفرة 1 وحاليا 2 مقفلة 2</translation>
+        <translation>المحفظة هي &lt;b&gt; مشفرة &lt;/b&gt; وحاليا &lt;b&gt;مقفلة&lt;/b&gt;</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt; for mixing only</source>
-        <translation>المحفظة هو 1 مشفرة 1 وحاليا 2 مقفلة 2 للخلط فقط</translation>
+        <translation>المحفظة &lt;b&gt; مشفرة&lt;/b&gt; وحاليا &lt;b&gt;غير مقفلة&lt;/b&gt; للخلط فقط</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
-        <translation>المحفظة هي 1 مشفرة 1 وحاليا 2 مؤمن 2</translation>
+        <translation>المحفظة هي &lt;b&gt;مشفرة&lt;/b&gt; وحاليا &lt;b&gt;مؤمنة&lt;/b&gt;</translation>
     </message>
 </context>
 <context>
@@ -707,8 +803,8 @@
         <translation>تلقى مع عنوان</translation>
     </message>
     <message>
-        <source>PS Rounds</source>
-        <translation>بس جولة</translation>
+        <source>Mixing Rounds</source>
+        <translation>جولات الخلط</translation>
     </message>
     <message>
         <source>Date</source>
@@ -795,6 +891,22 @@
         <translation>يمكن أن تختلف +/-%1 داف (ق) لكل مدخلات.</translation>
     </message>
     <message>
+        <source>Some coins were unselected because they were spent.</source>
+        <translation>تم إلغاء تحديد بعض العملات المعدنية لأنها تم إنفاقها.</translation>
+    </message>
+    <message>
+        <source>Some coins were unselected because they do not have enough mixing rounds.</source>
+        <translation>لم يتم تحديد بعض العملات المعدنية لأنها لا تحتوي على دورات خلط كافية.</translation>
+    </message>
+    <message>
+        <source>Show all coins</source>
+        <translation>اظهار جميع العملات</translation>
+    </message>
+    <message>
+        <source>Show spendable coins only</source>
+        <translation>اظهار العملات التي يمكن صرفها فقط</translation>
+    </message>
+    <message>
         <source>(no label)</source>
         <translation>(بدون تسمية)</translation>
     </message>
@@ -832,10 +944,6 @@
     <message>
         <source>The address associated with this address list entry. This can only be modified for sending addresses.</source>
         <translation>العنوان المرتبط بقائمة العناوين المدخلة. و التي يمكن تعديلها فقط بواسطة ارسال العناوين</translation>
-    </message>
-    <message>
-        <source>New receiving address</source>
-        <translation>عنوان أستلام جديد</translation>
     </message>
     <message>
         <source>New sending address</source>
@@ -906,46 +1014,6 @@
     <message>
         <source>Command-line options</source>
         <translation>خيارات سطر الأوامر</translation>
-    </message>
-    <message>
-        <source>Usage:</source>
-        <translation>المستخدم</translation>
-    </message>
-    <message>
-        <source>command-line options</source>
-        <translation>خيارات سطر الأوامر</translation>
-    </message>
-    <message>
-        <source>UI Options:</source>
-        <translation>خيارات واجهة المستخدم</translation>
-    </message>
-    <message>
-        <source>Choose data directory on startup (default: %u)</source>
-        <translation>اختر دليل البيانات عند بدء التشغير (افتراضي: %u)</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>أضع لغة, على سبيل المثال " de_DE "  (افتراضي:- مكان النظام)</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>الدخول مصغر</translation>
-    </message>
-    <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>أضع شهادة بروتوكول الشبقة الأمنية لطلب المدفوع (افتراضي: -نظام-)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: %u)</source>
-        <translation>أظهر شاشة البداية عند بدء التشغيل (افتراضي: %u)</translation>
-    </message>
-    <message>
-        <source>Reset all settings changed in the GUI</source>
-        <translation>اعد تعديل جميع الإعدادات المتغيرة في GUI</translation>
-    </message>
-    <message>
-        <source>PrivateSend information</source>
-        <translation>معلومات الإرسال المخفي</translation>
     </message>
     </context>
 <context>
@@ -1042,6 +1110,18 @@
         <translation>عدد نود</translation>
     </message>
     <message>
+        <source>Show only masternodes this wallet has keys for.</source>
+        <translation>إظهار الرموز الرئيسية فقط تحتوي هذه المحفظة على مفاتيح.</translation>
+    </message>
+    <message>
+        <source>My masternodes only</source>
+        <translation>ماسترنوداتي فقط</translation>
+    </message>
+    <message>
+        <source>Service</source>
+        <translation>الخدمات</translation>
+    </message>
+    <message>
         <source>PoSe Score</source>
         <translation>نقاط PoSe</translation>
     </message>
@@ -1058,8 +1138,24 @@
         <translation>الدفع المقبل</translation>
     </message>
     <message>
+        <source>Payout Address</source>
+        <translation>عنوان الدفع</translation>
+    </message>
+    <message>
         <source>Operator Reward</source>
         <translation>مكافأة المشغل</translation>
+    </message>
+    <message>
+        <source>Collateral Address</source>
+        <translation>عنوان الضمان</translation>
+    </message>
+    <message>
+        <source>Owner Address</source>
+        <translation>عنوان المالك</translation>
+    </message>
+    <message>
+        <source>Voting Address</source>
+        <translation>عنوان التصويت</translation>
     </message>
     <message>
         <source>Copy ProTx Hash</source>
@@ -1068,6 +1164,10 @@
     <message>
         <source>Copy Collateral Outpoint</source>
         <translation>نسخ نقطة خارجية</translation>
+    </message>
+    <message>
+        <source>Updating...</source>
+        <translation>جارٍ التحديث ...</translation>
     </message>
     <message>
         <source>ENABLED</source>
@@ -1098,7 +1198,15 @@
         <translation>لا شيء</translation>
     </message>
     <message>
-        <source>Additional information for DIP3 Smartnode %1</source>
+        <source>Filter by any property (e.g. address or protx hash)</source>
+        <translation>تصفية حسب أي خاصية (مثل العنوان أو تجزئة البروتكس)</translation>
+    </message>
+    <message>
+        <source>Please wait...</source>
+        <translation>ارجوك انتظر...</translation>
+    </message>
+    <message>
+        <source>Additional information for DIP3 Masternode %1</source>
         <translation>معلومات إضافية عن DIP3 ماسترنود %1</translation>
     </message>
 </context>
@@ -1207,7 +1315,11 @@
         <translation>&amp;محفظة</translation>
     </message>
     <message>
-        <source>Show additional tab listing all your smartnodes in first sub-tab&lt;br/&gt;and all smartnodes on the network in second sub-tab.</source>
+        <source>&amp;Appearance</source>
+        <translation>&amp;مظهر خارجي</translation>
+    </message>
+    <message>
+        <source>Show additional tab listing all your masternodes in first sub-tab&lt;br/&gt;and all masternodes on the network in second sub-tab.</source>
         <translation>عرض علامة تبويب إضافية تسرد جميع رموزك في أول علامة تبويب فرعية &lt;br/&gt;وجميع ماسترنود على الشبكة في علامة التبويب الفرعية الثانية.</translation>
     </message>
     <message>
@@ -1215,52 +1327,96 @@
         <translation>إضهار شريط ماسترنود</translation>
     </message>
     <message>
-        <source>Show additional information and buttons for PrivateSend on overview screen.</source>
-        <translation>عرض معلومات إضافية وأزرار لشاشة الإرسال الخاص في نظرة عامة.</translation>
-    </message>
-    <message>
-        <source>Enable advanced PrivateSend interface</source>
-        <translation>تمكين واجهة الإرسال المخفي المتقدمة</translation>
-    </message>
-    <message>
-        <source>Show warning dialog when PrivateSend detects that wallet has very low number of keys left.</source>
-        <translation>إظهار مربع حوار التحذير عندما يكتشف الإرسال المخفي أن هناك عددًا منخفضًا جدًا من المفاتيح في المحفظة.</translation>
-    </message>
-    <message>
-        <source>Warn if PrivateSend is running out of keys</source>
-        <translation>تحذير إذا نفدت مفاتيح الإرسال المخفي</translation>
-    </message>
-    <message>
-        <source>Whether to use experimental PrivateSend mode with multiple mixing sessions per block.&lt;br/&gt;Note: You must use this feature carefully.&lt;br/&gt;Make sure you always have recent wallet (auto)backup in a safe place!</source>
-        <translation>لتحديد ما إذا كنت تريد استخدام وضع الإرسال المخفي التجريبي مع جلسات خلط متعددة لكل مقطع.&lt;br/&gt;ملاحظة: يجب عليك استخدام هذه الميزة بعناية. &lt;br/&gt;تأكد من أن لديك دائمًا احتياطي محفظة (تلقائي) حديث في مكان آمن!</translation>
-    </message>
-    <message>
-        <source>Enable PrivateSend &amp;multi-session</source>
-        <translation>تمكين الإرسال المخفي متعددة الجلسة</translation>
-    </message>
-    <message>
         <source>If you disable the spending of unconfirmed change, the change from a transaction&lt;br/&gt;cannot be used until that transaction has at least one confirmation.&lt;br/&gt;This also affects how your balance is computed.</source>
         <translation>إذا قمت بتعطيل الإنفاق من التغيير غير المؤكد ، فإن التغيير من معاملة&lt;br/&gt; لا يمكن استخدامه حتى يكون لهذه المعاملة تأكيد واحد على الأقل. &lt;br/&gt; يؤثر هذا أيضًا على كيفية حساب رصيدك.</translation>
     </message>
     <message>
-        <source>PrivateSend rounds to use</source>
-        <translation>الإرسال المخفي و جولات للاستخدام</translation>
+        <source>Show mixing interface on Overview screen and reveal an additional screen which allows to spend fully mixed coins only.&lt;br/&gt;A new tab with more settings will also appear in this dialog, please make sure to check them before mixing your coins.</source>
+        <translation>أظهر واجهة المزج على شاشة النظرة العامة واكشف عن شاشة إضافية تسمح بإنفاق عملات مختلطة بالكامل فقط. &lt;br/&gt; ستظهر أيضًا علامة تبويب جديدة بها المزيد من الإعدادات في مربع الحوار هذا ، يرجى التأكد من التحقق منها قبل خلط عملاتك المعدنية.</translation>
     </message>
     <message>
-        <source>This amount acts as a threshold to turn off PrivateSend once it's reached.</source>
-        <translation>يعمل هذا المقدار كعتبة لإيقاف تشغيل الإرسال المخفي بمجرد الوصول إليه.</translation>
+        <source>Show additional information and buttons on overview screen.</source>
+        <translation>إظهار معلومات وأزرار إضافية على شاشة النظرة العامة.</translation>
+    </message>
+    <message>
+        <source>Enable advanced interface</source>
+        <translation>تفعيل الواجهة المتقدمة</translation>
+    </message>
+    <message>
+        <source>Show system popups for mixing transactions&lt;br/&gt;just like for all other transaction types.</source>
+        <translation>عرض النوافذ المنبثقة للنظام لخلط المعاملات&lt;br/&gt; تمامًا مثل جميع أنواع المعاملات الأخرى.</translation>
+    </message>
+    <message>
+        <source>Show popups for mixing transactions</source>
+        <translation>عرض النوافذ المنبثقة لخلط المعاملات</translation>
+    </message>
+    <message>
+        <source>Show warning dialog when the wallet has very low number of keys left.</source>
+        <translation>إظهار مربع حوار التحذير عندما يكون هناك عدد قليل جدًا من المفاتيح المتبقية في المحفظة.</translation>
+    </message>
+    <message>
+        <source>Warn if the wallet is running out of keys</source>
+        <translation>تحذير إذا كانت المحفظة تنفد من المفاتيح</translation>
+    </message>
+    <message>
+        <source>Whether to use experimental mode with multiple mixing sessions per block.&lt;br/&gt;Note: You must use this feature carefully.&lt;br/&gt;Make sure you always have recent wallet (auto)backup in a safe place!</source>
+        <translation>لتحديد ما إذا كنت تريد استخدام وضع الإرسال التجريبي مع جلسات خلط متعددة لكل مقطع.&lt;br/&gt;ملاحظة: يجب عليك استخدام هذه الميزة بعناية. &lt;br/&gt;تأكد من أن لديك دائمًا احتياطي محفظة (تلقائي) حديث في مكان آمن!</translation>
+    </message>
+    <message>
+        <source>Enable &amp;multi-session</source>
+        <translation>تمكين الإرسال متعدد الجلسات</translation>
+    </message>
+    <message>
+        <source>Mixing rounds</source>
+        <translation>جولات الخلط</translation>
+    </message>
+    <message>
+        <source>This amount acts as a threshold to turn off mixing once it's reached.</source>
+        <translation>يعمل هذا المقدار كعتبة لإيقاف تشغيل الخلط بمجرد الوصول إليه.</translation>
+    </message>
+    <message>
+        <source>Target balance</source>
+        <translation>الهدف رصيد</translation>
+    </message>
+    <message>
+        <source>Target PrivateSend balance</source>
+        <translation>الهدف رصيد PrivateSend</translation>
     </message>
     <message>
         <source>Automatically open the Raptoreum Core client port on the router. This only works when your router supports UPnP and it is enabled.</source>
         <translation>فتح منفذ عميل داش كور تلقائيًا على جهاز التوجيه. هذا يعمل فقط عندما يدعم جهاز التوجيه الخاص بك UPnP وتمكينه.</translation>
     </message>
     <message>
-        <source>Connect to the Raptoreum network through a SOCKS5 proxy.</source>
+        <source>Accept connections from outside.</source>
+        <translation>اقبل الاتصالات من الخارج.</translation>
+    </message>
+    <message>
+        <source>Allow incomin&amp;g connections</source>
+        <translation>السماح بالاتصالات الواردة</translation>
+    </message>
+    <message>
+        <source>Connect to the Dash network through a SOCKS5 proxy.</source>
         <translation>الاتصال بشبكة داش من خلال وكيل SOCKS5.</translation>
     </message>
     <message>
         <source>&amp;Connect through SOCKS5 proxy (default proxy):</source>
         <translation>الاتصال من خلال وكيل SOCKS5 (الوكيل الافتراضي):</translation>
+    </message>
+    <message>
+        <source>Shows if the supplied default SOCKS5 proxy is used to reach peers via this network type.</source>
+        <translation>يظهر ما إذا كان وكيل SOCKS5 الافتراضي المقدم مستخدمًا للوصول إلى الأقران عبر هذا النوع من الشبكة.</translation>
+    </message>
+    <message>
+        <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor hidden services:</source>
+        <translation>استخدم بروكسي SOCKS5 منفصل للوصول إلى الأقران عبر خدمات Tor المخفية:</translation>
+    </message>
+    <message>
+        <source>Hide the icon from the system tray.</source>
+        <translation>إخفاء الرمز من علبة النظام.</translation>
+    </message>
+    <message>
+        <source>&amp;Hide tray icon</source>
+        <translation>رمز علبة اخفاء</translation>
     </message>
     <message>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
@@ -1271,8 +1427,8 @@
         <translation>عناوين التابعة لجهات خارجية (مثل مستكشف كتلة) التي تظهر في علامة شريط المعاملات كعناصر قائمة السياق &lt;br/&gt; يتم استبدال %s في عنوان بتجزئة المعاملة. عناوين متعددة مفصولة بشريط عمودي.</translation>
     </message>
     <message>
-        <source>Expert</source>
-        <translation>تصدير</translation>
+        <source>&amp;Third party transaction URLs</source>
+        <translation>&amp; عناوين URL لمعاملات الطرف الثالث</translation>
     </message>
     <message>
         <source>Whether to show coin control features or not.</source>
@@ -1291,16 +1447,12 @@
         <translation>تمكين ميزات التحكم في العملة</translation>
     </message>
     <message>
-        <source>Show system popups for PrivateSend mixing transactions&lt;br/&gt;just like for all other transaction types.</source>
-        <translation>إظهار النوافذ المنبثقة للنظام لـ الإرسال المخفي معاملات المزج &lt;br/&gt; تمامًا مثل جميع أنواع المعاملات الأخرى.</translation>
-    </message>
-    <message>
-        <source>Show popups for PrivateSend transactions</source>
-        <translation>إظهار النوافذ المنبثقة لمعاملات الإرسال المخفي</translation>
-    </message>
-    <message>
         <source>&amp;Spend unconfirmed change</source>
         <translation>اقضي على تغيير غير مؤكد</translation>
+    </message>
+    <message>
+        <source>This setting determines the amount of individual masternodes that an input will be mixed through.&lt;br/&gt;More rounds of mixing gives a higher degree of privacy, but also costs more in fees.</source>
+        <translation>يحدد هذا الإعداد مقدار ماسترنود الفردية التي سيتم خلط المدخلات من خلالها.&lt;br/&gt; توفر المزيد من جولات الاختلاط درجة أعلى من الخصوصية ، ولكنها أيضًا تكلف رسومًا أكبر.</translation>
     </message>
     <message>
         <source>&amp;Network</source>
@@ -1309,14 +1461,6 @@
     <message>
         <source>Map port using &amp;UPnP</source>
         <translation>ميناء الخريطة باستخدام UPnP</translation>
-    </message>
-    <message>
-        <source>Accept connections from outside</source>
-        <translation>اقبل الاتصالات من الخارج</translation>
-    </message>
-    <message>
-        <source>Allow incoming connections</source>
-        <translation>السماح بالاتصالات الواردة</translation>
     </message>
     <message>
         <source>Proxy &amp;IP:</source>
@@ -1355,22 +1499,6 @@
         <translation>اتصل بشبكة داش من خلال وكيل SOCKS5 منفصل لخدمات المخفية.</translation>
     </message>
     <message>
-        <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services:</source>
-        <translation>استخدم بروكسي SOCKS5 منفصل للوصول إلى الأقران عبر خدمات المخفية:</translation>
-    </message>
-    <message>
-        <source>&amp;Window</source>
-        <translation>نافذه</translation>
-    </message>
-    <message>
-        <source>&amp;Hide the icon from the system tray.</source>
-        <translation>إإخفاء الأيقونة من علبة النظام</translation>
-    </message>
-    <message>
-        <source>Hide tray icon</source>
-        <translation>إخفاء الأيقونة</translation>
-    </message>
-    <message>
         <source>Show only a tray icon after minimizing the window.</source>
         <translation>إظهار آيقونة الصينية فقط بعد تصغير النافذة.</translation>
     </message>
@@ -1392,17 +1520,13 @@
     </message>
     <message>
         <source>The user interface language can be set here. This setting will take effect after restarting %1.</source>
-        <translation>يمكن تعيين لغة واجهة للمستخدم هنا. سيتم تفعيل هذا الإعداد بعد إعادة تشغيل%1.</translation>
+        <translation>يمكن تعيين لغة واجهة للمستخدم هنا. سيتم تفعيل هذا الإعداد بعد إعادة تشغيل %1.</translation>
     </message>
     <message>
         <source>Language missing or translation incomplete? Help contributing translations here:
 https://www.transifex.com/projects/p/raptoreum/</source>
         <translation>لغة مفقودة أو ترجمة غير مكتملة؟ مساعدة في المساهمة بالترجمات هنا:
-https://www.transifex.com/projects/p/raptoreum/</translation>
-    </message>
-    <message>
-        <source>User Interface Theme:</source>
-        <translation>موضوع جهة التعامل للمستخدم:</translation>
+https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <source>&amp;Unit to show amounts in:</source>
@@ -1415,10 +1539,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Decimal digits</source>
         <translation>أرقام عشرية</translation>
-    </message>
-    <message>
-        <source>Third party transaction URLs</source>
-        <translation>عناوين لجهات خارجية</translation>
     </message>
     <message>
         <source>Active command-line options that override above options:</source>
@@ -1443,10 +1563,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>default</source>
         <translation>الافتراضي</translation>
-    </message>
-    <message>
-        <source>none</source>
-        <translation>لا شيء</translation>
     </message>
     <message>
         <source>Confirm options reset</source>
@@ -1540,10 +1656,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>قابل للصرف:</translation>
     </message>
     <message>
-        <source>PrivateSend</source>
-        <translation>الإرسال المخفي</translation>
-    </message>
-    <message>
         <source>Status:</source>
         <translation>الحالة:</translation>
     </message>
@@ -1580,16 +1692,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>بدأ/إنهاء/دمج</translation>
     </message>
     <message>
-        <source>PrivateSend Balance:</source>
-        <translation>رصيد الإرسال المخفي</translation>
-    </message>
-    <message>
-        <source>The denominations you submitted to the Smartnode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
+        <source>The denominations you submitted to the Masternode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
         <translation>الفئات التي قدمتها إلى ماسترنود &lt;br&gt; لدمج ، يجب على المستخدمين الآخرين تقديم نفس الفئات نفسها.</translation>
-    </message>
-    <message>
-        <source>(Last Message)</source>
-        <translation>( آخر رسالة )</translation>
     </message>
     <message>
         <source>out of sync</source>
@@ -1600,28 +1704,24 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>تم تعطيل النسخ الاحتياطية التلقائية ، ولا يوجد دمج متاح!</translation>
     </message>
     <message>
-        <source>Start Mixing</source>
-        <translation>بدأ دمج</translation>
-    </message>
-    <message>
-        <source>Stop Mixing</source>
-        <translation>إنهاء دمج</translation>
-    </message>
-    <message>
         <source>No inputs detected</source>
         <translation>لم يتم اكتشاف أي مدخلات</translation>
+    </message>
+    <message>
+        <source>%1 Balance</source>
+        <translation>%1 الرصيد</translation>
     </message>
     <message numerus="yes">
         <source>%n Rounds</source>
         <translation><numerusform>%n جولات</numerusform><numerusform>%n جولات</numerusform><numerusform>%n جولات</numerusform><numerusform>%n جولات</numerusform><numerusform>%n جولات</numerusform><numerusform>%n جولات</numerusform></translation>
     </message>
     <message>
-        <source>Found enough compatible inputs to anonymize %1</source>
-        <translation>تم العثور على مدخلات متوافقة كافية لإخفاء الهوية%1</translation>
+        <source>Found enough compatible inputs to mix %1</source>
+        <translation>تم العثور على مدخلات متوافقة كافية لمزج %1</translation>
     </message>
     <message>
-        <source>Not enough compatible inputs to anonymize &lt;span style='color:red;'&gt;%1&lt;/span&gt;,&lt;br&gt;will anonymize &lt;span style='color:red;'&gt;%2&lt;/span&gt; instead</source>
-        <translation>لا توجد مدخلات متوافقة كافية لإخفاء الهوية &lt;span style='color:red;'&gt; %1 &lt;/span&gt;. &lt;br&gt;سوف مجهول &lt;span style='color:red;'&gt;%2&lt;/span&gt; بدلا من </translation>
+        <source>Not enough compatible inputs to mix &lt;span style='%1'&gt;%2&lt;/span&gt;,&lt;br&gt;will mix &lt;span style='%1'&gt;%3&lt;/span&gt; instead</source>
+        <translation>لا توجد إدخالات متوافقة كافية لخلط&lt;span style='%1'&gt;%2&lt;/span&gt; ، &lt;br&gt;سيتم خلط&lt;span style='%1'&gt;%3&lt;/span&gt; بدلاً من ذلك</translation>
     </message>
     <message>
         <source>Overall progress</source>
@@ -1630,6 +1730,10 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Denominated</source>
         <translation>المقومة</translation>
+    </message>
+    <message>
+        <source>Partially mixed</source>
+        <translation>مختلطة جزئيا</translation>
     </message>
     <message>
         <source>Mixed</source>
@@ -1641,7 +1745,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <source>keys left: %1</source>
-        <translation>المفاتيح المتبقية:%1</translation>
+        <translation>المفاتيح المتبقية: %1</translation>
     </message>
     <message>
         <source>Disabled</source>
@@ -1652,8 +1756,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>عدد قليل جدا من مفاتيح اليسار منذ آخر النسخ الاحتياطي التلقائي!</translation>
     </message>
     <message>
-        <source>We are about to create a new automatic backup for you, however &lt;span style='color:red;'&gt; you should always make sure you have backups saved in some safe place&lt;/span&gt;!</source>
-        <translation>نحن على وشك إنشاء نسخة احتياطية تلقائية جديدة لك &lt;span style='color:red;'&gt;يجب عليك دائمًا التأكد من الاحتفاظ بنسخ احتياطية في مكان آمن &lt;/span&gt;!</translation>
+        <source>We are about to create a new automatic backup for you, however &lt;span style='%1'&gt; you should always make sure you have backups saved in some safe place&lt;/span&gt;!</source>
+        <translation>نحن على وشك إنشاء نسخة احتياطية تلقائية جديدة لك &lt;span style='%1'&gt;يجب عليك دائمًا التأكد من الاحتفاظ بنسخ احتياطية في مكان آمن &lt;/span&gt;!</translation>
     </message>
     <message>
         <source>Note: You can turn this message off in options.</source>
@@ -1683,24 +1787,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <source>WARNING! Failed to replenish keypool, please unlock your wallet to do so.</source>
         <translation>تحذير! تعذّر تجديد مفتاح ، يرجى إلغاء قفل محفظتك للقيام بذلك.</translation>
     </message>
-    <message>
-        <source>Last PrivateSend message:
-</source>
-        <translation>آخر رسالة ابإرسال المخفي
-</translation>
-    </message>
-    <message>
-        <source>If you don't want to see internal PrivateSend fees/transactions select "Most Common" as Type on the "Transactions" tab.</source>
-        <translation>إذا كنت لا ترغب في رؤية رسوم / معاملات الإرسال المخفي الداخلي حدد "الأكثر شيوعًا" كأنواع في علامة شريط "المعاملات".</translation>
-    </message>
-    <message>
-        <source>PrivateSend requires at least %1 to use.</source>
-        <translation>يتطلب الإرسال المخفي على الأقل%1 لاستخدامه.</translation>
-    </message>
-    <message>
-        <source>Wallet is locked and user declined to unlock. Disabling PrivateSend.</source>
-        <translation>تم قفل المحفظة ورفض المستخدم إلغاء القفل. تعطيل الإرسال المخفي</translation>
-    </message>
 </context>
 <context>
     <name>PaymentServer</name>
@@ -1717,8 +1803,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>التعامل مع العنوان</translation>
     </message>
     <message>
+        <source>'raptoreum://' is not a valid URI. Use 'raptoreum:' instead.</source>
+        <translation>'raptoreum: //' ليس URI صالحًا. استخدم "شرطة:" بدلاً من ذلك.</translation>
+    </message>
+    <message>
         <source>Payment request fetch URL is invalid: %1</source>
-        <translation>عنوان الخاص بجلب طلب الدفع غير صالح:%1</translation>
+        <translation>عنوان الخاص بجلب طلب الدفع غير صالح: %1</translation>
     </message>
     <message>
         <source>Invalid payment address %1</source>
@@ -1811,9 +1901,57 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <source>Ping</source>
         <translation>رنين</translation>
     </message>
+    <message>
+        <source>Sent</source>
+        <translation>أرسلت</translation>
+    </message>
+    <message>
+        <source>Received</source>
+        <translation>وصلت</translation>
+    </message>
 </context>
 <context>
     <name>QObject</name>
+    <message>
+        <source>Choose data directory on startup (default: %u)</source>
+        <translation>اختر دليل البيانات عند بدء التشغير (افتراضي: %u)</translation>
+    </message>
+    <message>
+        <source>Set the font family. Possible values: %1. (default: %2)</source>
+        <translation>عيّن عائلة الخط. القيم الممكنة:%1. (الافتراضي:%2)</translation>
+    </message>
+    <message>
+        <source>Set a scale factor which gets applied to the base font size. Possible range %1 (smallest fonts) to %2 (largest fonts). (default: %3)</source>
+        <translation>قم بتعيين عامل مقياس يتم تطبيقه على حجم الخط الأساسي. النطاق المحتمل %1 (أصغر الخطوط) إلى %2 (الخطوط الأكبر). (الافتراضي: %3)</translation>
+    </message>
+    <message>
+        <source>Set the font weight for bold texts. Possible range %1 to %2 (default: %3)</source>
+        <translation>اضبط وزن الخط للنصوص الغامقة. النطاق المحتمل %1 إلى %2 (الافتراضي: %3)</translation>
+    </message>
+    <message>
+        <source>Set the font weight for normal texts. Possible range %1 to %2 (default: %3)</source>
+        <translation>اضبط وزن الخط للنصوص العادية. النطاق المحتمل %1 إلى %2 (الافتراضي: %3)</translation>
+    </message>
+    <message>
+        <source>Set language, for example "de_DE" (default: system locale)</source>
+        <translation>أضع لغة, على سبيل المثال " ar_AR "  (افتراضي:- مكان النظام)</translation>
+    </message>
+    <message>
+        <source>Start minimized</source>
+        <translation>الدخول مصغر</translation>
+    </message>
+    <message>
+        <source>Reset all settings changed in the GUI</source>
+        <translation>اعد تعديل جميع الإعدادات المتغيرة في GUI</translation>
+    </message>
+    <message>
+        <source>Set SSL root certificates for payment request (default: -system-)</source>
+        <translation>أضع شهادة بروتوكول الشبقة الأمنية لطلب المدفوع (افتراضي: -نظام-)</translation>
+    </message>
+    <message>
+        <source>Show splash screen on startup (default: %u)</source>
+        <translation>أظهر شاشة البداية عند بدء التشغيل (افتراضي: %u)</translation>
+    </message>
     <message>
         <source>%1 didn't yet exit safely...</source>
         <translation>%1 لم يخرج بعد بأمان...</translation>
@@ -1824,7 +1962,15 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <source>Enter a Raptoreum address (e.g. %1)</source>
-        <translation>أدخل عنوان داش (على سبيل المثال%1)</translation>
+        <translation>أدخل عنوان داش (على سبيل المثال %1)</translation>
+    </message>
+    <message>
+        <source>Appearance Setup</source>
+        <translation>إعداد المظهر</translation>
+    </message>
+    <message>
+        <source>This can also be adjusted later in the "Appearance" tab of the preferences.</source>
+        <translation>يمكن أيضًا تعديل هذا لاحقًا في علامة التبويب "المظهر" في التفضيلات.</translation>
     </message>
     <message>
         <source>%1 d</source>
@@ -1883,6 +2029,22 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>%1 و %2</translation>
     </message>
     <message>
+        <source>%1 B</source>
+        <translation>%1 B</translation>
+    </message>
+    <message>
+        <source>%1 KB</source>
+        <translation>%1 KB</translation>
+    </message>
+    <message>
+        <source>%1 MB</source>
+        <translation>%1 MB</translation>
+    </message>
+    <message>
+        <source>%1 GB</source>
+        <translation>%1 GB</translation>
+    </message>
+    <message>
         <source>unknown</source>
         <translation>غير معروف</translation>
     </message>
@@ -1895,11 +2057,39 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <source>Error: Cannot parse configuration file: %1. Only use key=value syntax.</source>
-        <translation>خطأ: لا يمكن تحليل ملف التهيئة:%1. استخدم فقط بناء الجملة = القيمة الأساسية.</translation>
+        <translation>خطأ: لا يمكن تحليل ملف التهيئة: %1. استخدم فقط بناء الجملة = القيمة الأساسية.</translation>
     </message>
     <message>
         <source>Error: %1</source>
         <translation>خطأ: %1</translation>
+    </message>
+    <message>
+        <source>Error: Failed to load application fonts.</source>
+        <translation>خطأ: فشل تحميل خطوط التطبيق.</translation>
+    </message>
+    <message>
+        <source>Error: Specified font-family invalid. Valid values: %1.</source>
+        <translation>خطأ: مجموعة الخطوط المحددة غير صالحة. القيم الصالحة: %1.</translation>
+    </message>
+    <message>
+        <source>Error: Specified font-weight-normal invalid. Valid range %1 to %2.</source>
+        <translation>خطأ: خط الوزن العادي المحدد غير صالح. النطاق الصالح %1 إلى %2.</translation>
+    </message>
+    <message>
+        <source>Error: Specified font-weight-bold invalid. Valid range %1 to %2.</source>
+        <translation>خطأ: خط غامق محدد غير صالح. النطاق الصالح %1 إلى %2.</translation>
+    </message>
+    <message>
+        <source>Error: Specified font-scale invalid. Valid range %1 to %2.</source>
+        <translation>خطأ: مقياس الخط المحدد غير صالح. النطاق الصالح %1 إلى %2.</translation>
+    </message>
+    <message>
+        <source>Error: Invalid -custom-css-dir path.</source>
+        <translation>خطأ: مسار -custom-css-dir غير صالح.</translation>
+    </message>
+    <message>
+        <source>Error: %1 CSS file(s) missing in -custom-css-dir path.</source>
+        <translation>خطأ: يفتقد %1 ملف (ملفات) CSS في المسار -custom-css-dir.</translation>
     </message>
 </context>
 <context>
@@ -2050,10 +2240,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>&amp;حركة مرور الشبكة</translation>
     </message>
     <message>
-        <source>Totals</source>
-        <translation>المجموع</translation>
-    </message>
-    <message>
         <source>Received</source>
         <translation>إستقبل</translation>
     </message>
@@ -2064,6 +2250,10 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>&amp;Peers</source>
         <translation>&amp;اصدقاء</translation>
+    </message>
+    <message>
+        <source>Wallet:</source>
+        <translation>محفظة</translation>
     </message>
     <message>
         <source>Banned peers</source>
@@ -2098,6 +2288,22 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>كتل متزامنة</translation>
     </message>
     <message>
+        <source>Rescan blockchain files 1</source>
+        <translation>إعادة فحص ملفات بلوكشين1</translation>
+    </message>
+    <message>
+        <source>Rescan blockchain files 2</source>
+        <translation>إعادة فحص ملفات بلوكشين2</translation>
+    </message>
+    <message>
+        <source>-rescan=1: Rescan the block chain for missing wallet transactions starting from wallet creation time.</source>
+        <translation>-rescan = 1: إعادة فحص سلسلة الكتل بحثًا عن معاملات المحفظة المفقودة بدءًا من وقت إنشاء المحفظة.</translation>
+    </message>
+    <message>
+        <source>-rescan=2: Rescan the block chain for missing wallet transactions starting from genesis block.</source>
+        <translation>-rescan = 2: إعادة فحص سلسلة الكتل بحثًا عن معاملات المحفظة المفقودة بدءًا من كتلة التكوين.</translation>
+    </message>
+    <message>
         <source>Wallet Path</source>
         <translation>محفظة path</translation>
     </message>
@@ -2110,8 +2316,20 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>دليل البيانات</translation>
     </message>
     <message>
+        <source>Last block hash</source>
+        <translation>آخر تجزئة كتلة</translation>
+    </message>
+    <message>
         <source>Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.</source>
         <translation>افتح ملف سجل تصحيح %1 من دليل البيانات الحالي. قد يستغرق هذا بضع ثوانٍ لملفات السجل الكبيرة.</translation>
+    </message>
+    <message>
+        <source>InstantSend locks</source>
+        <translation>أقفال InstantSend</translation>
+    </message>
+    <message>
+        <source>(none)</source>
+        <translation>(لا شيء)</translation>
     </message>
     <message>
         <source>Decrease font size</source>
@@ -2120,6 +2338,18 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Increase font size</source>
         <translation>تكبير حجم الخط</translation>
+    </message>
+    <message>
+        <source>&amp;Reset</source>
+        <translation>&amp;إعادة تعيين</translation>
+    </message>
+    <message>
+        <source>Node Type</source>
+        <translation>نوع العقدة</translation>
+    </message>
+    <message>
+        <source>PoSe Score</source>
+        <translation>نقاط PoSe</translation>
     </message>
     <message>
         <source>Services</source>
@@ -2170,10 +2400,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>محفظة الإنقاذ</translation>
     </message>
     <message>
-        <source>Rescan blockchain files</source>
-        <translation>إعادة فحص ملفات بلوكشين</translation>
-    </message>
-    <message>
         <source>Recover transactions 1</source>
         <translation>استرداد المعاملات 1</translation>
     </message>
@@ -2192,10 +2418,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>-salvagewallet: Attempt to recover private keys from a corrupt wallet.dat.</source>
         <translation>محفظة النقود: محاولة استرداد المفاتيح الخاصة من wallet.dat فاسدة.</translation>
-    </message>
-    <message>
-        <source>-rescan: Rescan the block chain for missing wallet transactions.</source>
-        <translation>إعادة المسح: إعادة فحص سلسلة الكتل الخاصة بمعاملات المحفظة المفقودة.</translation>
     </message>
     <message>
         <source>-zapwallettxes=1: Recover transactions from blockchain (keep meta-data, e.g. account owner).</source>
@@ -2254,8 +2476,20 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>مرحبًا بك في وحدة التحكم %1 RPC.</translation>
     </message>
     <message>
-        <source>Type &lt;b&gt;help&lt;/b&gt; for an overview of available commands.</source>
-        <translation>نوع &lt;b&gt;مساعدة&lt;/b&gt;للحصول على نظرة عامة على الأوامر متاح.</translation>
+        <source>Use up and down arrows to navigate history, and %1 to clear screen.</source>
+        <translation>استخدم السهمين لأعلى ولأسفل للتنقل في المحفوظات ، و%1 لمسح الشاشة.</translation>
+    </message>
+    <message>
+        <source>Type %1 for an overview of available commands.</source>
+        <translation>اكتب %1 للحصول على نظرة عامة حول الأوامر المتوفرة.</translation>
+    </message>
+    <message>
+        <source>For more information on using this console type %1.</source>
+        <translation>لمزيد من المعلومات حول استخدام نوع وحدة التحكم هذه %1.</translation>
+    </message>
+    <message>
+        <source>WARNING: Scammers have been active, telling users to type commands here, stealing their wallet contents. Do not use this console without fully understanding the ramifications of a command.</source>
+        <translation>تحذير: كان المحتالون نشطين ، ويخبرون المستخدمين بكتابة الأوامر هنا ، وسرقة محتويات محفظتهم. لا تستخدم وحدة التحكم هذه دون فهم تداعيات الأمر بشكل كامل.</translation>
     </message>
     <message>
         <source>In:</source>
@@ -2270,20 +2504,16 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>تم إلغاء تفعيل الشبكه</translation>
     </message>
     <message>
-        <source>%1 B</source>
-        <translation>%1 بايت</translation>
+        <source>Total: %1 (Enabled: %2)</source>
+        <translation>الإجمالي: %1 (ممكّن: %2)</translation>
     </message>
     <message>
-        <source>%1 KB</source>
-        <translation>%1 كيلو بايت</translation>
+        <source>Executing command without any wallet</source>
+        <translation>تنفيذ الأمر بدون أي محفظة</translation>
     </message>
     <message>
-        <source>%1 MB</source>
-        <translation>%1 ميقا بايت</translation>
-    </message>
-    <message>
-        <source>%1 GB</source>
-        <translation>%1 قيقا بايت</translation>
+        <source>Executing command using "%1" wallet</source>
+        <translation>تنفيذ الأمر باستخدام المحفظة "%1"</translation>
     </message>
     <message>
         <source>(node id: %1)</source>
@@ -2314,6 +2544,18 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>لا</translation>
     </message>
     <message>
+        <source>Regular</source>
+        <translation>عادي</translation>
+    </message>
+    <message>
+        <source>Masternode</source>
+        <translation>ماسترنود</translation>
+    </message>
+    <message>
+        <source>Verified Masternode</source>
+        <translation>التحقق من Masternode</translation>
+    </message>
+    <message>
         <source>Unknown</source>
         <translation>غير معروف</translation>
     </message>
@@ -2321,15 +2563,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
-        <source>Reuse one of the previously used receiving addresses.&lt;br&gt;Reusing addresses has security and privacy issues.&lt;br&gt;Do not use this unless re-generating a payment request made before.</source>
-        <translation>إعادة استخدام أحد عناوين الاستلام المستخدمة مسبقًا.&lt;br&gt; إعادة استخدام العناوين لديها قضايا الأمن والخصوصية.&lt;br&gt; لا تستخدم هذا إلا إذا أعدت إنشاء طلب دفع مقدم من قبل.</translation>
-    </message>
-    <message>
-        <source>R&amp;euse an existing receiving address (not recommended)</source>
-        <translation>إعادة استخدام عنوان استلام موجود (غير مستحسن)</translation>
-    </message>
-    <message>
-        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Raptoreum network.</source>
+        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Dash network.</source>
         <translation>رسالة اختيارية لإرفاقها بطلب الدفع ، والتي سيتم عرضها عند فتح الطلب. ملاحظة: لن يتم إرسال الرسالة مع الدفع عبر شبكة داش.</translation>
     </message>
     <message>
@@ -2393,6 +2627,14 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>ازل</translation>
     </message>
     <message>
+        <source>Enter a label to associate with the new receiving address</source>
+        <translation>أدخل تصنيفًا لربطه بعنوان الاستلام الجديد</translation>
+    </message>
+    <message>
+        <source>Enter a message to attach to the payment request</source>
+        <translation>أدخل رسالة لإرفاقها بطلب الدفع</translation>
+    </message>
+    <message>
         <source>Copy URI</source>
         <translation>نسخ العنوان</translation>
     </message>
@@ -2454,6 +2696,10 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Message</source>
         <translation>رسالة </translation>
+    </message>
+    <message>
+        <source>Wallet</source>
+        <translation>محفظة</translation>
     </message>
     <message>
         <source>Resulting URI too long, try to reduce the text for label / message.</source>
@@ -2570,10 +2816,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>هدف وقت التأكيد:</translation>
     </message>
     <message>
-        <source>PrivateSend</source>
-        <translation>الإرسال المخفي</translation>
-    </message>
-    <message>
         <source>If the custom fee is set to 1000 duffs and the transaction is only 250 bytes, then "per kilobyte" only pays 250 duffs in fee,&lt;br /&gt;while "at least" pays 1000 duffs. For transactions bigger than a kilobyte both pay by kilobyte.</source>
         <translation>إذا تم تعيين الرسوم الجمركية على 1000 دافع وكانت المعاملة 250 بايتًا فقط ، فإن "كل كيلوبايت" يدفع 250 جنيهًا فقط رسومًا ،&lt;br /&gt; بينما "على الأقل" يدفع 1000 دفين. لمعاملات أكبر من كيلوبايت تدفع كل من كيلوبايت.</translation>
     </message>
@@ -2584,6 +2826,14 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>per kilobyte</source>
         <translation>لكل كيلوبايت</translation>
+    </message>
+    <message>
+        <source>Using the fallbackfee can result in sending a transaction that will take several hours or days (or never) to confirm. Consider choosing your fee manually or wait until you have validated the complete chain.</source>
+        <translation>قد يؤدي استخدام fallbackfee إلى إرسال معاملة تستغرق عدة ساعات أو أيام (أو أبداً) للتأكيد. فكر في اختيار الرسوم يدويًا أو انتظر حتى يتم التحقق من صحة السلسلة الكاملة.</translation>
+    </message>
+    <message>
+        <source>Note: Not enough data for fee estimation, using the fallback fee instead.</source>
+        <translation>ملاحظة: لا توجد بيانات كافية لتقدير الرسوم ، باستخدام الرسوم الاحتياطية بدلاً من ذلك.</translation>
     </message>
     <message>
         <source>Hide</source>
@@ -2662,6 +2912,14 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>نسخ التعديل</translation>
     </message>
     <message>
+        <source>%1 (%2 blocks)</source>
+        <translation>%1 (%2 كتل)</translation>
+    </message>
+    <message>
+        <source>from wallet %1</source>
+        <translation>من المحفظة %1</translation>
+    </message>
+    <message>
         <source>using</source>
         <translation>إستخدام</translation>
     </message>
@@ -2686,6 +2944,22 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>&lt;b&gt;( %1 على %2 المداخلات المعروضة)&lt;/b&gt;</translation>
     </message>
     <message>
+        <source>any available funds</source>
+        <translation>أي أموال متاحة</translation>
+    </message>
+    <message>
+        <source>Transaction size: %1</source>
+        <translation>حجم العملية: %1</translation>
+    </message>
+    <message>
+        <source>Fee rate: %1</source>
+        <translation>معدل الرسوم: %1</translation>
+    </message>
+    <message numerus="yes">
+        <source>This transaction will consume %n input(s)</source>
+        <translation><numerusform>ستستهلك هذه المعاملة إدخال٪ n</numerusform><numerusform>ستستهلك هذه المعاملة إدخال٪ n</numerusform><numerusform>ستستهلك هذه المعاملة إدخال٪ n</numerusform><numerusform>ستستهلك هذه المعاملة إدخال٪ n</numerusform><numerusform>ستستهلك هذه المعاملة إدخال٪ n</numerusform><numerusform>ستستهلك هذه المعاملة مدخلات %n</numerusform></translation>
+    </message>
+    <message>
         <source>Confirm send coins</source>
         <translation>تأكيد الإرسال Coins</translation>
     </message>
@@ -2700,10 +2974,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>The amount exceeds your balance.</source>
         <translation>القيمة تتجاوز رصيدك</translation>
-    </message>
-    <message>
-        <source>The total exceeds your balance when the %1 transaction fee is included.</source>
-        <translation>المجموع يتجاوز رصيدك عندما يتم اضافة %1 رسوم العملية</translation>
     </message>
     <message>
         <source>Duplicate address found: addresses should only be used once each.</source>
@@ -2807,6 +3077,10 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>S&amp;ubtract fee from amount</source>
         <translation>طرح الرسوم من المبلغ</translation>
+    </message>
+    <message>
+        <source>Use available balance</source>
+        <translation>استخدم الرصيد المتاح</translation>
     </message>
     <message>
         <source>Message:</source>
@@ -2942,8 +3216,20 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>إعادة تعيين جميع حقول التحقق من الرسالة</translation>
     </message>
     <message>
+        <source>Enter a message to be signed</source>
+        <translation>أدخل رسالة ليتم التوقيع عليها</translation>
+    </message>
+    <message>
         <source>Click "Sign Message" to generate signature</source>
         <translation>اضغط  "توقيع الرسالة" لتوليد التوقيع</translation>
+    </message>
+    <message>
+        <source>Enter a message to be verified</source>
+        <translation>أدخل رسالة ليتم التحقق منها</translation>
+    </message>
+    <message>
+        <source>Enter a signature for the message to be verified</source>
+        <translation>أدخل توقيعًا للرسالة ليتم التحقق منها</translation>
     </message>
     <message>
         <source>The entered address is invalid.</source>
@@ -3000,16 +3286,24 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <source>[testnet]</source>
         <translation>[testnet]</translation>
     </message>
-    <message>
-        <source>Version %1</source>
-        <translation>نسخة %1</translation>
-    </message>
 </context>
 <context>
     <name>TrafficGraphWidget</name>
     <message>
         <source>KB/s</source>
         <translation>كيلوبايت/ث</translation>
+    </message>
+    <message>
+        <source>Total</source>
+        <translation>المجموع</translation>
+    </message>
+    <message>
+        <source>Received</source>
+        <translation>إستقبل</translation>
+    </message>
+    <message>
+        <source>Sent</source>
+        <translation>أرسلت</translation>
     </message>
 </context>
 <context>
@@ -3025,10 +3319,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>conflicted</source>
         <translation>يتعارض</translation>
-    </message>
-    <message>
-        <source>%1/offline</source>
-        <translation>%1 غير متواجد</translation>
     </message>
     <message>
         <source>0/unconfirmed, %1</source>
@@ -3055,16 +3345,16 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>تأكيد %1</translation>
     </message>
     <message>
-        <source>Status</source>
-        <translation>الحالة.</translation>
+        <source>locked via ChainLocks</source>
+        <translation>مغلق عبر ChainLocks</translation>
     </message>
     <message>
-        <source>, has not been successfully broadcast yet</source>
-        <translation>,  لم يتم حتى الآن البث بنجاح</translation>
+        <source>verified via InstantSend</source>
+        <translation>محقق من فبل الإرسال الفوري</translation>
     </message>
-    <message numerus="yes">
-        <source>, broadcast through %n node(s)</source>
-        <translation><numerusform>البث من خلال عقد %n</numerusform><numerusform>البث من خلال عقد %n</numerusform><numerusform>البث من خلال عقد %n</numerusform><numerusform>البث من خلال عقد %n</numerusform><numerusform>البث من خلال عقد %n</numerusform><numerusform>البث من خلال عقد %n</numerusform></translation>
+    <message>
+        <source>Status</source>
+        <translation>الحالة.</translation>
     </message>
     <message>
         <source>Date</source>
@@ -3160,7 +3450,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to "not accepted" and it won't be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
-        <translation>يجب أن تنضج العملات المولدة%1 قبل أن يتم إنفاقها. عند إنشاء هذا الحظر ، تم بثه إلى الشبكة ليتم إضافته إلى سلسلة الحظر. إذا فشلت في الدخول إلى السلسلة ، ستتغير حالتها إلى "غير مقبولة" ولن تكون قابلة للانفاق. قد يحدث هذا أحيانًا إذا أدت عقدة أخرى إلى إنشاء كتلة في غضون ثوانٍ قليلة من حسابك.</translation>
+        <translation>يجب أن تنضج العملات المولدة %1 قبل أن يتم إنفاقها. عند إنشاء هذا الحظر ، تم بثه إلى الشبكة ليتم إضافته إلى سلسلة الحظر. إذا فشلت في الدخول إلى السلسلة ، ستتغير حالتها إلى "غير مقبولة" ولن تكون قابلة للانفاق. قد يحدث هذا أحيانًا إذا أدت عقدة أخرى إلى إنشاء كتلة في غضون ثوانٍ قليلة من حسابك.</translation>
     </message>
     <message>
         <source>Debug information</source>
@@ -3221,10 +3511,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>مفتوح حتى %1</translation>
     </message>
     <message>
-        <source>Offline</source>
-        <translation>غير متصل</translation>
-    </message>
-    <message>
         <source>Unconfirmed</source>
         <translation>غير مؤكد</translation>
     </message>
@@ -3238,7 +3524,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <source>Confirmed (%1 confirmations)</source>
-        <translation>تأكيد %1 الإرسال</translation>
+        <translation>مؤكد (%1 تأكيد)</translation>
     </message>
     <message>
         <source>Conflicted</source>
@@ -3249,12 +3535,16 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>غير متاح (تأكيدات %1 ، ستكون متوفرة بعد %2)</translation>
     </message>
     <message>
-        <source>This block was not received by any other nodes and will probably not be accepted!</source>
-        <translation>لم يتم تلقى هذه الكتلة (Block) من قبل أي العقد الأخرى وربما لن تكون مقبولة!</translation>
-    </message>
-    <message>
         <source>Generated but not accepted</source>
         <translation>ولدت ولكن لم تقبل</translation>
+    </message>
+    <message>
+        <source>verified via InstantSend</source>
+        <translation>محقق من فبل الإرسال الفوري</translation>
+    </message>
+    <message>
+        <source>locked via ChainLocks</source>
+        <translation>مغلق عبر ChainLocks</translation>
     </message>
     <message>
         <source>Received with</source>
@@ -3263,10 +3553,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Received from</source>
         <translation>استقبل من</translation>
-    </message>
-    <message>
-        <source>Received via PrivateSend</source>
-        <translation>تلقى عن طريق الإرسال المخفي</translation>
     </message>
     <message>
         <source>Sent to</source>
@@ -3279,26 +3565,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Mined</source>
         <translation>Mined</translation>
-    </message>
-    <message>
-        <source>PrivateSend Denominate</source>
-        <translation>الإرسال المخفي المقوم</translation>
-    </message>
-    <message>
-        <source>PrivateSend Collateral Payment</source>
-        <translation>الإرسال المخفي الدفع الجانبي</translation>
-    </message>
-    <message>
-        <source>PrivateSend Make Collateral Inputs</source>
-        <translation>الإرسال المخفي جعل مدخلات الجانبية</translation>
-    </message>
-    <message>
-        <source>PrivateSend Create Denominations</source>
-        <translation>الإرسال المخفي إنشاء الطوائف</translation>
-    </message>
-    <message>
-        <source>PrivateSend</source>
-        <translation>لإرسال المخفي</translation>
     </message>
     <message>
         <source>watch-only</source>
@@ -3329,10 +3595,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>ما إذا كان العنوان المشاهدة فقط متضمنًا في هذه المعاملة أم لا.</translation>
     </message>
     <message>
-        <source>Whether or not this transaction was locked by InstantSend.</source>
-        <translation>ما إذا كانت هذه المعاملة مقفلة بواسطة الإرسال الفوري أم لا.</translation>
-    </message>
-    <message>
         <source>User-defined intent/purpose of the transaction.</source>
         <translation>هدف / غرض محدد من قبل المستخدم للمعاملات.</translation>
     </message>
@@ -3346,14 +3608,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>All</source>
         <translation>الكل</translation>
-    </message>
-    <message>
-        <source>Locked by InstantSend</source>
-        <translation>مغلق من الإرسال الفوري</translation>
-    </message>
-    <message>
-        <source>Not locked by InstantSend</source>
-        <translation>غير مغلق من الإرسال الفوري</translation>
     </message>
     <message>
         <source>Today</source>
@@ -3392,26 +3646,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>أرسل إلى</translation>
     </message>
     <message>
-        <source>PrivateSend</source>
-        <translation>الإرسال المخفي</translation>
-    </message>
-    <message>
-        <source>PrivateSend Make Collateral Inputs</source>
-        <translation>الإرسال المخفي جعل مدخلات الجانبية</translation>
-    </message>
-    <message>
-        <source>PrivateSend Create Denominations</source>
-        <translation>الإرسال المخفي إنشاء الطوائف</translation>
-    </message>
-    <message>
-        <source>PrivateSend Denominate</source>
-        <translation>الإرسال المخفي المقوم</translation>
-    </message>
-    <message>
-        <source>PrivateSend Collateral Payment</source>
-        <translation>الإرسال المخفي الدفع الجانبي</translation>
-    </message>
-    <message>
         <source>To yourself</source>
         <translation>إليك</translation>
     </message>
@@ -3424,8 +3658,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>اخرى</translation>
     </message>
     <message>
-        <source>Enter address or label to search</source>
-        <translation>ادخل عنوان أووصف للبحث</translation>
+        <source>Enter address, transaction id, or label to search</source>
+        <translation>أدخل العنوان أو معرف المعاملة أو التسمية للبحث</translation>
     </message>
     <message>
         <source>Min amount</source>
@@ -3466,6 +3700,10 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Show transaction details</source>
         <translation>عرض تفاصيل المعاملة</translation>
+    </message>
+    <message>
+        <source>Show address QR code</source>
+        <translation>إظهار رمز الاستجابة السريعة العنوان</translation>
     </message>
     <message>
         <source>Export Transaction History</source>
@@ -3518,6 +3756,10 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>The transaction history was successfully saved to %1.</source>
         <translation>تم حفظ محفوظات المعاملة بنجاح إلى %1.</translation>
+    </message>
+    <message>
+        <source>QR code</source>
+        <translation>رمز الاستجابة السريعة</translation>
     </message>
     <message>
         <source>Range:</source>
@@ -3577,7 +3819,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <source>There was an error trying to save the wallet data to %1.</source>
-        <translation>حدث خطأ أثناء محاولة حفظ بيانات المحفظة إلى%1.</translation>
+        <translation>حدث خطأ أثناء محاولة حفظ بيانات المحفظة إلى %1.</translation>
     </message>
     <message>
         <source>Backup Successful</source>
@@ -3587,36 +3829,16 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <source>The wallet data was successfully saved to %1.</source>
         <translation>تم حفظ بيانات المحفظة بنجاح إلى %1.</translation>
     </message>
+    <message>
+        <source>Cancel</source>
+        <translation>الغاء</translation>
+    </message>
 </context>
 <context>
     <name>raptoreum-core</name>
     <message>
-        <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
-        <translation>ربط عنوان معين والاستماع دائما على ذلك. استخدم [host]: تدوين المنفذ لـ IPv6</translation>
-    </message>
-    <message>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
         <translation>خطأ: فشل الاستماع إلى الاتصالات الواردة (تم إرجاع الخطأ %s)</translation>
-    </message>
-    <message>
-        <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
-        <translation>تنفيذ الأمر عند تلقي تنبيه ذي صلة أو ظهور شوكة طويلة بالفعل (يتم استبدال %s في cmd بالرسالة)</translation>
-    </message>
-    <message>
-        <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
-        <translation>تنفيذ الأمر عند تغيير معاملة المحفظة (يتم استبدال %s في cmd بـ TxID)</translation>
-    </message>
-    <message>
-        <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
-        <translation>تنفيذ الأمر عند تغيير أفضل كتلة (يتم استبدال %s في cmd بتجزئة التجميع)</translation>
-    </message>
-    <message>
-        <source>Name to construct url for KeePass entry that stores the wallet passphrase</source>
-        <translation>اسم لإنشاء عنوان لإدخال KeePass الذي يخزن عبارة مرور المحفظة</translation>
-    </message>
-    <message>
-        <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
-        <translation>عدد مؤشرات التحقق من البرنامج النصي (%u إلى %d ، 0 = auto ، &lt;0 = ترك العديد من النوى خالية ، الافتراضي: %d)</translation>
     </message>
     <message>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
@@ -3631,52 +3853,20 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>تحذير: لا يبدو أننا نتفق تمامًا مع نظرائنا! قد تحتاج إلى الترقية ، أو قد تحتاج العقد الأخرى إلى الترقية.</translation>
     </message>
     <message>
-        <source>Accept command line and JSON-RPC commands</source>
-        <translation>قبول أوامر وحدة التحكم وأوامر JSON-RPC</translation>
-    </message>
-    <message>
-        <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
-        <translation>السماح بعمليات البحث عن DNS لـ -ddnode و -seednode و -connect</translation>
-    </message>
-    <message>
         <source>Already have that input.</source>
         <translation>بالفعل هذا الإدخال.</translation>
-    </message>
-    <message>
-        <source>Block creation options:</source>
-        <translation>خيارات صناعة الكتل</translation>
     </message>
     <message>
         <source>Cannot downgrade wallet</source>
         <translation>لا يمكن تخفيض قيمة المحفظة</translation>
     </message>
     <message>
-        <source>Cannot write default address</source>
-        <translation> لا يمكن كتابة العنوان الافتراضي</translation>
-    </message>
-    <message>
         <source>Collateral not valid.</source>
         <translation>ضمانات غير صالحة.</translation>
     </message>
     <message>
-        <source>Connect to a node to retrieve peer addresses, and disconnect</source>
-        <translation>الاتصال بعقدة لاسترداد عناوين النظير ، وقطع الاتصال</translation>
-    </message>
-    <message>
-        <source>Connection options:</source>
-        <translation>خيارات الاتصال:</translation>
-    </message>
-    <message>
         <source>Corrupted block database detected</source>
         <translation>تم الكشف عن قاعدة بيانات كتل تالفة</translation>
-    </message>
-    <message>
-        <source>Debugging/Testing options:</source>
-        <translation>خيارات التصحيح / الاختبار:</translation>
-    </message>
-    <message>
-        <source>Do not load the wallet and disable wallet RPC calls</source>
-        <translation>لا تقم بتحميل المحفظة وتعطيل استدعاءات RPC للمحفظة</translation>
     </message>
     <message>
         <source>Do you want to rebuild the block database now?</source>
@@ -3723,128 +3913,36 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>فشل في الاستماع على أي منفذ. استخدام الاستماع = 0 إذا كنت تريد هذا.</translation>
     </message>
     <message>
-        <source>(1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)</source>
-        <translation>(1 = الاحتفاظ ببيانات التعريف tx ، على سبيل المثال ، مالك الحساب ومعلومات طلب الدفع ، 2 = بيانات تعريف tx drop)</translation>
-    </message>
-    <message>
         <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
         <translation>يتم تعيين maxtxfee عالية جدا! يمكن دفع هذه الرسوم في معاملة واحدة.</translation>
     </message>
     <message>
-        <source>A fee rate (in %s/kB) that will be used when fee estimation has insufficient data (default: %s)</source>
-        <translation>سعر الرسوم (بالكيلو %s / kB) الذي سيتم استخدامه عندما يكون تقدير الرسوم غير كافٍ للبيانات (الافتراضي: %s)</translation>
-    </message>
-    <message>
-        <source>Accept relayed transactions received from whitelisted peers even when not relaying transactions (default: %d)</source>
-        <translation>قبول المعاملات المرحّلة التي تم استلامها من أقران القائمة البيضاء حتى عند عدم ترحيل المعاملات (القيمة الافتراضية: %d)</translation>
-    </message>
-    <message>
-        <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
-        <translation>السماح لاتصالات JSON-RPC من المصدر المحدد. صالحة ل&lt;ip&gt; عبارة عن عنوان IP فردي (على سبيل المثال ، 1.2.3.4) ، وشبكة / قناع شبكة (على سبيل المثال 1.2.3.4/255.255.255.0) أو شبكة / CIDR (على سبيل المثال 1.2.3.4/24). يمكن تحديد هذا الخيار عدة مرات</translation>
-    </message>
-    <message>
-        <source>Bind to given address and whitelist peers connecting to it. Use [host]:port notation for IPv6</source>
-        <translation>ربط العنوان المعطى وأقرانه في القائمة البيضاء بالاتصال به. استخدم [host]: تدوين المنفذ لـ IPv6</translation>
-    </message>
-    <message>
-        <source>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</source>
-        <translation>إنشاء ملفات جديدة بأذونات النظام الافتراضية ، بدلاً من umask 077 (فعال فقط مع وظيفة المحفظة المعطلة)</translation>
-    </message>
-    <message>
-        <source>Delete all wallet transactions and only recover those parts of the blockchain through -rescan on startup</source>
-        <translation>حذف جميع معاملات المحفظة واسترداد فقط تلك الأجزاء من سلسلة الكتل عبر -escan عند بدء التشغيل</translation>
-    </message>
-    <message>
-        <source>Enable publish raw transactions of attempted InstantSend double spend in &lt;address&gt;</source>
-        <translation>تمكين نشر المعاملات الأولية لمحاولات الإرسال الفوري للإنفاق الفوري في &lt;address&gt;</translation>
-    </message>
-    <message>
-        <source>Enable publish transaction hashes of attempted InstantSend double spend in &lt;address&gt;</source>
-        <translation>تمكين تجزئات عمليات النشر لمحاولة الإرسال الفوري ومضاعفة إنفاق فيها &lt;address&gt;</translation>
+        <source>Cannot provide specific connections and have addrman find outgoing connections at the same.</source>
+        <translation>لا يمكن توفير اتصالات محددة ولديك addrman يجد الاتصالات الصادرة في نفس الوقت.</translation>
     </message>
     <message>
         <source>Found unconfirmed denominated outputs, will wait till they confirm to continue.</source>
         <translation>العثور على نتائج مقومة غير مؤكدة ، سوف تنتظر حتى تؤكد استمرارها.</translation>
     </message>
     <message>
-        <source>How thorough the block verification of -checkblocks is (0-4, default: %u)</source>
-        <translation>مدى دقة التحقق من كتلة -checkblocks (0-4 ، الافتراضي: %u)</translation>
+        <source>Invalid -socketevents ('%s') specified. Only these modes are supported: %s</source>
+        <translation>تم تحديد أحداث مأخذ توصيل غير صالحة ('%s'). يتم دعم هذه الأوضاع فقط: %s</translation>
     </message>
     <message>
-        <source>If paytxfee is not set, include enough fee so transactions begin confirmation on average within n blocks (default: %u)</source>
-        <translation>إذا لم يتم تعيين paytxfee ، قم بتضمين رسوم كافية حتى تبدأ المعاملات في التأكيد في المتوسط داخل كتل n (الافتراضي: %u)</translation>
-    </message>
-    <message>
-        <source>If this block is in the chain assume that it and its ancestors are valid and potentially skip their script verification (0 to verify all, default: %s, testnet: %s)</source>
-        <translation>إذا كانت هذه المجموعة في السلسلة تفترض أنها وأصولها صالحة ، ومن المحتمل أن تتخطى التحقق من البرنامج النصي (0 للتحقق من الكل ، الافتراضي: %s ، testnet: %s)</translation>
+        <source>Invalid -socketevents ('%s') specified. Only these modes are supported: %s</source>
+        <translation>تم تحديد أحداث مأخذ توصيل غير صالحة ('%s'). يتم دعم هذه الأوضاع فقط: %s</translation>
     </message>
     <message>
         <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)</source>
         <translation>كمية غير صالحة لـ -maxtxfee = : '%s' &lt;amount&gt; (يجب أن تكون على الأقل رسوم minrelay %s لمنع المعاملات عالقة)</translation>
     </message>
     <message>
-        <source>Maintain a full transaction index, used by the getrawtransaction rpc call (default: %u)</source>
-        <translation>احتفظ بفهرس للمعاملات كامل ، يستخدم من قبل استدعاء getrawtransaction (الافتراضي: %u)</translation>
-    </message>
-    <message>
-        <source>Maximum size of data in data carrier transactions we relay and mine (default: %u)</source>
-        <translation>الحد الأقصى لحجم البيانات في معاملات شركات نقل البيانات التي نقوم بترحيلها وبياناتي (الافتراضي: %u)</translation>
-    </message>
-    <message>
-        <source>Number of seconds to keep misbehaving peers from reconnecting (default: %u)</source>
-        <translation>عدد الثواني للاحتفاظ بسوء تصرف الأقران من إعادة الاتصال (الإعداد الافتراضي: %u)</translation>
-    </message>
-    <message>
-        <source>Overrides minimum spork signers to change spork value. Only useful for regtest and devnet. Using this on mainnet or testnet will ban you.</source>
-        <translation>يلغي الحد الأدنى من مواقع السبات لتغيير قيمة السِلك. مفيدة فقط ل regtest و devnet. استخدام هذا على mainnet أو testnet سيحظر لك.</translation>
-    </message>
-    <message>
-        <source>Use N separate smartnodes in parallel to mix funds (%u-%u, default: %u)</source>
-        <translation>استخدم N ماسترنود منفصلة بالتوازي مع خلط الصناديق (%u-%u ، القيمة الافتراضية: %u)</translation>
-    </message>
-    <message>
-        <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)</source>
-        <translation>استخدام وكيل SOCKS5 منفصل للوصول إلى الأقران عبر خدمات تور المخفية (القيمة الافتراضية: %s)</translation>
-    </message>
-    <message>
-        <source>User defined mnemonic for HD wallet (bip39). Only has effect during wallet creation/first start (default: randomly generated)</source>
-        <translation>تعريف المستخدم ذاكري لمحرك HD (bip39). يكون تأثيره فقط أثناء إنشاء المحفظة / البدء الأول (افتراضي: يتم إنشاؤه عشوائيًا)</translation>
-    </message>
-    <message>
-        <source>User defined seed for HD wallet (should be in hex). Only has effect during wallet creation/first start (default: randomly generated)</source>
-        <translation>تعريف المستخدم البذور لمحفظ HD (يجب أن يكون في ست عشري). يكون تأثيره فقط أثناء إنشاء المحفظة / البدء الأول (افتراضي: يتم إنشاؤه عشوائيًا)</translation>
-    </message>
-    <message>
-        <source>Whitelisted peers cannot be DoS banned and their transactions are always relayed, even if they are already in the mempool, useful e.g. for a gateway</source>
-        <translation>لا يمكن حظر الزملاء في القائمة البيضاء في DoS ويتم ترحيل معاملاتهم دائمًا ، حتى إذا كانت موجودة بالفعل في mempool ، على سبيل المثال ، على سبيل المثال ، لبوابة</translation>
-    </message>
-    <message>
-        <source>(default: %s)</source>
-        <translation>(القيمة الافتراضية: %s)</translation>
-    </message>
-    <message>
-        <source>Accept public REST requests (default: %u)</source>
-        <translation>قبول طلبات REST العامة (القيمة الافتراضية: %u)</translation>
-    </message>
-    <message>
-        <source>Always query for peer addresses via DNS lookup (default: %u)</source>
-        <translation>استعلم دومًا عن عناوين النظير عبر البحث عن DNS (الافتراضي: %u)</translation>
+        <source>Transaction index can't be disabled with governance validation enabled. Either start with -disablegovernance command line switch or enable transaction index.</source>
+        <translation>لا يمكن تعطيل فهرس المعاملات مع تمكين التحقق من صحة الحوكمة. إما أن تبدأ بمفتاح سطر الأوامر -disablegovernance أو تمكين فهرس المعاملات.</translation>
     </message>
     <message>
         <source>Can't mix: no compatible inputs found!</source>
         <translation>لا يمكن الجمع: لم يتم العثور على مدخلات متوافقة!</translation>
-    </message>
-    <message>
-        <source>Chain selection options:</source>
-        <translation>خيارات اختيار السلسلة:</translation>
-    </message>
-    <message>
-        <source>Connect through SOCKS5 proxy</source>
-        <translation>الاتصال من خلال وكيل SOCKS5</translation>
-    </message>
-    <message>
-        <source>Connect to KeePassHttp on port &lt;port&gt; (default: %u)</source>
-        <translation>الاتصال KeePassHttp على المنفذ&lt;port&gt; ( الافتراضي: %u ) </translation>
     </message>
     <message>
         <source>Entry exceeds maximum size.</source>
@@ -3871,16 +3969,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>العثور على عدد كافٍ من المستخدمين ، والتوقيع ...</translation>
     </message>
     <message>
-        <source>How many blocks to check at startup (default: %u, 0 = all)</source>
-        <translation>كم عدد الكتل المطلوب فحصها عند بدء التشغيل (الافتراضي: %u، 0 =)</translation>
-    </message>
-    <message>
         <source>Importing...</source>
         <translation>استيراد...</translation>
-    </message>
-    <message>
-        <source>Include IP addresses in debug output (default: %u)</source>
-        <translation>تضمين عناوين IP في مخرجات التصحيح (القيمة الافتراضية: %u)</translation>
     </message>
     <message>
         <source>Incompatible mode.</source>
@@ -3907,6 +3997,10 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>رصيد غير كاف.</translation>
     </message>
     <message>
+        <source>Invalid amount for -discardfee=&lt;amount&gt;: '%s'</source>
+        <translation>مبلغ غير صالح لـ -discardfee =&lt;amount&gt;: '%s'</translation>
+    </message>
+    <message>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s' (must be at least %s)</source>
         <translation>مبلغ غير صالح لـ -paytxfee = : '%s' &lt;amount&gt; (يجب أن يكون على الأقل %s)</translation>
     </message>
@@ -3917,14 +4011,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Keypool ran out, please call keypoolrefill first</source>
         <translation>ركض خارج ، يرجى الاتصال الأولى</translation>
-    </message>
-    <message>
-        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: %u or testnet: %u)</source>
-        <translation>استمع لاتصالات JSON-RPC&lt;port&gt; (الإعداد الافتراضي: %u أو testnet: %u)</translation>
-    </message>
-    <message>
-        <source>Listen for connections on &lt;port&gt; (default: %u or testnet: %u)</source>
-        <translation>استمع لاتصالات&lt;port&gt;(الإعداد الافتراضي: %u أو testnet: %u)</translation>
     </message>
     <message>
         <source>Loading banlist...</source>
@@ -3943,20 +4029,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>قفل بالفعل في المكان.</translation>
     </message>
     <message>
-        <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: %u)</source>
-        <translation>الحد الأقصى لاستقبال كل مخزن مؤقت ، &lt;n&gt;* 1000 بايت (افتراضيًا: %u)</translation>
-    </message>
-    <message>
-        <source>Maximum per-connection send buffer, &lt;n&gt;*1000 bytes (default: %u)</source>
-        <translation>الحد الأقصى لكل اتصال الإرسال المؤقت ، &lt;n&gt;* 1000 بايت (افتراضيًا: %u)</translation>
-    </message>
-    <message>
         <source>Mixing in progress...</source>
         <translation>الدمج قيد التقدم ...</translation>
-    </message>
-    <message>
-        <source>Mnemonic passphrase is too long, must be at most 256 characters</source>
-        <translation>عبارة المرور الطويلة طويلة جدًا ويجب أن تكون 256 حرفًا على الأكثر</translation>
     </message>
     <message>
         <source>Need to specify a port with -whitebind: '%s'</source>
@@ -3971,84 +4045,20 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>لم يتم العثور على متسترنود متوافق.</translation>
     </message>
     <message>
-        <source>Not in the Smartnode list.</source>
+        <source>Not enough funds to mix.</source>
+        <translation>لا توجد أموال كافية للاختلاط.</translation>
+    </message>
+    <message>
+        <source>Not in the Masternode list.</source>
         <translation>ليس في قائمة ماسترنود.</translation>
-    </message>
-    <message>
-        <source>Only connect to nodes in network &lt;net&gt; (ipv4, ipv6 or onion)</source>
-        <translation>فقط الاتصال بالعقد في الشبكة &lt;net&gt;  (ipv4, ipv6 or onion)</translation>
-    </message>
-    <message>
-        <source>Prepend debug output with timestamp (default: %u)</source>
-        <translation>إعداد إخراج debug مع الطابع الزمني (الافتراضي: %u)</translation>
-    </message>
-    <message>
-        <source>Rebuild chain state and block index from the blk*.dat files on disk</source>
-        <translation>إعادة إنشاء حالة سلسلة وكتلة فهرس من ملفات blk * .dat على القرص</translation>
-    </message>
-    <message>
-        <source>Rebuild chain state from the currently indexed blocks</source>
-        <translation>إعادة بناء سلسلة السلسلة من الكتل المفهرسة حاليًا</translation>
-    </message>
-    <message>
-        <source>Send trace/debug info to debug.log file (default: %u)</source>
-        <translation>إرسال معلومات التتبع / التصحيح إلى ملف debug.log (الافتراضي: %u)</translation>
-    </message>
-    <message>
-        <source>Set key pool size to &lt;n&gt; (default: %u)</source>
-        <translation>تعيين حجم تجمع مفتاح &lt;n&gt; (افتراضي: %u)</translation>
-    </message>
-    <message>
-        <source>Set the number of threads to service RPC calls (default: %d)</source>
-        <translation>تعيين عدد مؤشرات الترابط لخدمة المكالمات RPC (الافتراضي: %d)</translation>
-    </message>
-    <message>
-        <source>Specify configuration file (default: %s)</source>
-        <translation>تحديد ملف التهيئة (افتراضي: %s)</translation>
-    </message>
-    <message>
-        <source>Specify connection timeout in milliseconds (minimum: 1, default: %d)</source>
-        <translation>تحديد مهلة الاتصال بالمللي ثانية (الحد الأدنى: 1 ، القيمة الافتراضية: %d)</translation>
-    </message>
-    <message>
-        <source>Specify pid file (default: %s)</source>
-        <translation>تحديد ملف pid (الافتراضي: %s)</translation>
-    </message>
-    <message>
-        <source>Spend unconfirmed change when sending transactions (default: %u)</source>
-        <translation>اقضي على تغيير غير مؤكد عند إرسال المعاملات (القيمة الافتراضية: %u)</translation>
     </message>
     <message>
         <source>Submitted to smartnode, waiting in queue %s</source>
         <translation>تم إرساله إلى ماسترنود ، في الانتظار في قائمة الانتظار %s</translation>
     </message>
     <message>
-        <source>Synchronization failed</source>
-        <translation>فشل التزامن</translation>
-    </message>
-    <message>
         <source>Synchronization finished</source>
         <translation>انتهى التزامن</translation>
-    </message>
-    <message>
-        <source>Threshold for disconnecting misbehaving peers (default: %u)</source>
-        <translation>الحد الأدنى لفصل أقران سوء السلوك (الافتراضي: %u)</translation>
-    </message>
-    <message>
-        <source>Too many %f denominations, removing.</source>
-        <translation>عدد كبير جدًا من %f فئة ، إزالة.</translation>
-    </message>
-    <message>
-        <source>Too many %f denominations, skipping.</source>
-        <translation>عدد أكبر من %f من الطوائف ، تخطي.</translation>
-    </message>
-    <message>
-        <source>Tor control port password (default: empty)</source>
-        <translation>كلمة مرور منفذ تحكم تور (القيمة الافتراضية: فارغة)</translation>
-    </message>
-    <message>
-        <source>Tor control port to use if onion listening enabled (default: %s)</source>
-        <translation>منفذ تحكم Tor لاستخدامه في حالة تفعيل الاستماع بالبصل (افتراضي: %s)</translation>
     </message>
     <message>
         <source>Unable to start HTTP server. See debug log for details.</source>
@@ -4071,24 +4081,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>تم العثور على وسيطة غير مدعومة -tor ، استخدم -onion.</translation>
     </message>
     <message>
-        <source>Upgrade wallet to latest format on startup</source>
-        <translation>ترقية المحفظة إلى التنسيق الأحدث عند بدء التشغيل</translation>
-    </message>
-    <message>
-        <source>Use KeePass 2 integration using KeePassHttp plugin (default: %u)</source>
-        <translation>استخدام تكامل KeePass 2 باستخدام المكون الإضافي KeePassHttp (الإعداد الافتراضي: %u)</translation>
-    </message>
-    <message>
-        <source>Use UPnP to map the listening port (default: %u)</source>
-        <translation>استخدام UPnP لتعيين منفذ الاستماع (الافتراضي: %u)</translation>
-    </message>
-    <message>
-        <source>Use the test chain</source>
-        <translation>إستخدم السلسلة التجريبية</translation>
-    </message>
-    <message>
         <source>User Agent comment (%s) contains unsafe characters.</source>
         <translation>يحتوي تعليق وكيل المستخدم (%s) على أحرف غير آمنة.</translation>
+    </message>
+    <message>
+        <source>Verifying wallet(s)...</source>
+        <translation>التحقق من المحفظة (المحافظ) ...</translation>
     </message>
     <message>
         <source>Will retry...</source>
@@ -4111,72 +4109,20 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>تم اكتشاف نص برمجي غير صالح.</translation>
     </message>
     <message>
-        <source>KeePassHttp id for the established association</source>
-        <translation>معرف KeePassHttp للرابطة المنشأة</translation>
-    </message>
-    <message>
-        <source>KeePassHttp key for AES encrypted communication with KeePass</source>
-        <translation>مفتاح KeePassHttp للتواصل المشفر مع AES KeePass</translation>
-    </message>
-    <message>
-        <source>Disable all Raptoreum specific functionality (Smartnodes, PrivateSend, InstantSend, Governance) (0-1, default: %u)</source>
-        <translation>تعطيل جميع وظائف داش المحددة (ماسترنود ، الإرسال المخفي  ، الإرسال الفوري ، الحوكمة) (0-1 ، القيمة الافتراضية: %u)</translation>
-    </message>
-    <message>
         <source>%s file contains all private keys from this wallet. Do not share it with anyone!</source>
         <translation>يحتوي ملف %s على جميع المفاتيح الخاصة من هذه المحفظة. لا تشاركه مع أي شخص!</translation>
     </message>
     <message>
-        <source>Discover own IP addresses (default: 1 when listening and no -externalip or -proxy)</source>
-        <translation>اكتشاف عناوين IP الخاصة (الافتراضي: 1 عند الاستماع وعدم وجود - أو "خضوع")</translation>
-    </message>
-    <message>
-        <source>Do not keep transactions in the mempool longer than &lt;n&gt; hours (default: %u)</source>
-        <translation>لا تحتفظ بالمعاملات في الذاكرة أكثر من &lt;n&gt; ساعات (الافتراضي: %u)</translation>
-    </message>
-    <message>
-        <source>Enable multiple PrivateSend mixing sessions per block, experimental (0-1, default: %u)</source>
-        <translation>تمكين جلسات دمج الإرسال المحمي متعددة لكل كتلة ، تجريبية (0-1 ، القيمة الافتراضية: %u)</translation>
-    </message>
-    <message>
-        <source>Execute command when a wallet InstantSend transaction is successfully locked (%s in cmd is replaced by TxID)</source>
-        <translation>تنفيذ الأمر عند قفل معاملة الإرسال الفوري في المحفظة بنجاح (يتم استبدال %s في cmd بـ TxID)</translation>
-    </message>
-    <message>
-        <source>Extra transactions to keep in memory for compact block reconstructions (default: %u)</source>
-        <translation>معاملات إضافية للاحتفاظ بالذاكرة لإعادة إنشاء الكتل المضغوطة (الافتراضي: %u)</translation>
+        <source>-masternode option is deprecated and ignored, specifying -masternodeblsprivkey is enough to start this node as a masternode.</source>
+        <translation>تم إهمال خيار -masternode وتجاهله ، مع تحديد -masternodeblsprivkey يكفي لبدء هذه العقدة كعقدة رئيسية.</translation>
     </message>
     <message>
         <source>Failed to create backup, file already exists! This could happen if you restarted wallet in less than 60 seconds. You can continue if you are ok with this.</source>
         <translation>فشل إنشاء نسخة احتياطية ، يوجد ملف بالفعل! قد يحدث هذا إذا أعدت تشغيل المحفظة في أقل من 60 ثانية. يمكنك الاستمرار إذا كنت على ما يرام مع هذا.</translation>
     </message>
     <message>
-        <source>Fees (in %s/kB) smaller than this are considered zero fee for relaying, mining and transaction creation (default: %s)</source>
-        <translation>الرسوم (بالكيلو %s / kB) الأصغر من ذلك تعتبر رسومًا صفرًا في حالة الترحيل والتعدين وإنشاء المعاملات (الافتراضي: %s)</translation>
-    </message>
-    <message>
-        <source>Fees (in %s/kB) smaller than this are considered zero fee for transaction creation (default: %s)</source>
-        <translation>الرسوم (بـ %s / kB) الأصغر من ذلك تعتبر رسومًا صفرًا لإنشاء المعاملات (الافتراضي: %s)</translation>
-    </message>
-    <message>
-        <source>If &lt;category&gt; is not supplied or if &lt;category&gt; = 1, output all debugging information.</source>
-        <translation>إذا &lt;category&gt; لا يتم توفير أو إذا &lt;category&gt; = 1 ، إخراج كافة معلومات التصحيح</translation>
-    </message>
-    <message>
-        <source>Maintain a full address index, used to query for the balance, txids and unspent outputs for addresses (default: %u)</source>
-        <translation>الاحتفاظ بفهرس كامل للعنوان ، يُستخدم للاستعلام عن الرصيد ، و txids والمخرجات غير المنفقة للعناوين (القيمة الافتراضية: %u)</translation>
-    </message>
-    <message>
-        <source>Maintain a full spent index, used to query the spending txid and input index for an outpoint (default: %u)</source>
-        <translation>الاحتفاظ بفهرس كامل مستنفد ، يُستخدم للاستعلام عن إنفاق txid ومُدخل فهرس نقطة خارجية (افتراضي: %u)</translation>
-    </message>
-    <message>
-        <source>Maintain a timestamp index for block hashes, used to query blocks hashes by a range of timestamps (default: %u)</source>
-        <translation>الحفاظ على فهرس الطابع الزمني لكتل التجزئات ، المستخدمة في الاستعلام عن تجزئة القطع بواسطة مجموعة من الطوابع الزمنية (الإعداد الافتراضي: %u)</translation>
-    </message>
-    <message>
-        <source>Maintain at most &lt;n&gt; connections to peers (temporary service connections excluded) (default: %u)</source>
-        <translation>الحفاظ على الأكثر  &lt;n&gt; اتصالات للأقران (باستثناء اتصالات الخدمة المؤقتة) (الافتراضي: %u)</translation>
+        <source>Make sure to encrypt your wallet and delete all non-encrypted backups after you have verified that the wallet works!</source>
+        <translation>تأكد من تشفير محفظتك وحذف جميع النسخ الاحتياطية غير المشفرة بعد التحقق من عمل المحفظة!</translation>
     </message>
     <message>
         <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
@@ -4187,20 +4133,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>تقليم: آخر تزامن المحفظة يتجاوز البيانات المحصورة. تحتاج إلى -reindex (قم بتنزيل بلوكشين بأكمله مرة أخرى في حالة عقدة مقشرة)</translation>
     </message>
     <message>
-        <source>Randomize credentials for every proxy connection. This enables Tor stream isolation (default: %u)</source>
-        <translation>عشوائية وثائق الاعتماد لكل اتصال عبر وكيل. يتيح ذلك عزل تيار تور (القيمة الافتراضية: %u)</translation>
-    </message>
-    <message>
         <source>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</source>
         <translation>إعادة المسح ليست ممكنة في وضع مجسم. سوف تحتاج إلى استخدام -reindex التي ستقوم بتنزيل بلوكشين كله مرة أخرى.</translation>
-    </message>
-    <message>
-        <source>Specify full path to directory for automatic wallet backups (must exist)</source>
-        <translation>تحديد المسار الكامل للدليل للنسخ الاحتياطية للمحفظة التلقائية (يجب أن تكون موجودة)</translation>
-    </message>
-    <message>
-        <source>Support filtering of blocks and transaction with bloom filters (default: %u)</source>
-        <translation>دعم تصفية الكتل والمعاملات مع مرشحات bloom (الافتراضي: %u)</translation>
     </message>
     <message>
         <source>The block database contains a block which appears to be from the future. This may be due to your computer's date and time being set incorrectly. Only rebuild the block database if you are sure that your computer's date and time are correct</source>
@@ -4215,28 +4149,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>المجموع طول سلسلة إصدار الشبكة (%i) يتجاوز الحد الأقصى للطول (%i). تقليل عدد أو حجم </translation>
     </message>
     <message>
-        <source>Transaction index can't be disabled in full mode. Either start with -litemode command line switch or enable transaction index.</source>
-        <translation>لا يمكن تعطيل فهرس المعاملات في الوضع الكامل. إما أن تبدأ مع مفتاح تبديل سطر الأوامر أو تمكين فهرس المعاملة.</translation>
-    </message>
-    <message>
-        <source>Tries to keep outbound traffic under the given target (in MiB per 24h), 0 = no limit (default: %d)</source>
-        <translation>يحاول الحفاظ على حركة المرور الصادرة تحت الهدف المحدد (في MiB لكل 24 ساعة) ، 0 = بلا حدود (الافتراضي: %d)</translation>
-    </message>
-    <message>
-        <source>Unable to locate enough PrivateSend denominated funds for this transaction.</source>
-        <translation>غير قادر على تحديد ما يكفي من الأموال المخصصة الإرسال المحمي لهذه الصفقة ..</translation>
-    </message>
-    <message>
         <source>Unsupported argument -socks found. Setting SOCKS version isn't possible anymore, only SOCKS5 proxies are supported.</source>
         <translation>تم العثور على وسيطة غير مدعومة. إعداد SOCKS غير ممكن بعد الآن ، يتم دعم بروكسيات SOCKS5 فقط.</translation>
     </message>
     <message>
         <source>Unsupported argument -whitelistalwaysrelay ignored, use -whitelistrelay and/or -whitelistforcerelay.</source>
         <translation>الوسيطة غير المدعومة -whitelistalwaysrelay تم تجاهلها واستخدامها - و / أو whitelistforcerelay و / أو -whitelistforcerelay.</translation>
-    </message>
-    <message>
-        <source>Use UPnP to map the listening port (default: 1 when listening and no -proxy)</source>
-        <translation>استخدام UPnP لتعيين منفذ الاستماع (الافتراضي: 1 عند الاستماع و no -proxy)</translation>
     </message>
     <message>
         <source>WARNING! Failed to replenish keypool, please unlock your wallet to do so.</source>
@@ -4251,72 +4169,60 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>تحذير: يتم نسخ إصدارات الحظر غير المعروفة! من المحتمل أن تكون قواعد غير معروفة سارية المفعول</translation>
     </message>
     <message>
+        <source>You need to rebuild the database using -reindex to change -timestampindex</source>
+        <translation>تحتاج إلى إعادة بناء قاعدة البيانات باستخدام -reindex لتغيير -timestampindex</translation>
+    </message>
+    <message>
         <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
         <translation>تحتاج إلى إعادة إنشاء قاعدة البيانات باستخدام -reindex للعودة إلى الوضعية الغير مجردة. هذا سوف يعيد تحميل سلسلة الكتل بأكملها</translation>
     </message>
     <message>
-        <source>(default: %u)</source>
-        <translation>(القيمة الافتراضية: %u)</translation>
+        <source>-litemode is deprecated.</source>
+        <translation>تم إهمال الوضع -litemode.</translation>
     </message>
     <message>
         <source>-maxmempool must be at least %d MB</source>
         <translation>يجب أن يكون maxmempool على الأقل %d ميغابايت</translation>
     </message>
     <message>
-        <source>&lt;category&gt; can be:</source>
-        <translation>&lt;category&gt; يمكن أن يكون</translation>
-    </message>
-    <message>
-        <source>Append comment to the user agent string</source>
-        <translation>إلحاق تعليق إلى سلسلة وكيل المستخدم</translation>
-    </message>
-    <message>
         <source>Automatic backups disabled</source>
         <translation>النسخ الاحتياطي التلقائي تعطيل</translation>
-    </message>
-    <message>
-        <source>Automatically create Tor hidden service (default: %d)</source>
-        <translation>إنشاء خدمة تور المخفية تلقائيًا (القيمة الافتراضية: %d)</translation>
     </message>
     <message>
         <source>ERROR! Failed to create automatic backup</source>
         <translation>خطأ! فشل إنشاء نسخة احتياطية تلقائية</translation>
     </message>
     <message>
-        <source>Enable publish hash block in &lt;address&gt;</source>
-        <translation>تمكين حظر التجزئة في &lt;address&gt;</translation>
-    </message>
-    <message>
-        <source>Enable publish hash of governance objects (like proposals) in &lt;address&gt;</source>
-        <translation>تمكين نشر التجزئة من كائنات الحوكمة (مثل المقترحات) في &lt;address&gt;</translation>
-    </message>
-    <message>
-        <source>Enable publish hash of governance votes in &lt;address&gt;</source>
-        <translation>تمكين نشر التجزئة من أصوات الحكم في &lt;address&gt;</translation>
-    </message>
-    <message>
-        <source>Enable publish hash transaction (locked via InstantSend) in &lt;address&gt;</source>
-        <translation>تمكين عملية التجزئة المنشورة (مؤمنة عبر الإرسال الفوري) في &lt;address&gt;</translation>
-    </message>
-    <message>
-        <source>Enable publish hash transaction in &lt;address&gt;</source>
-        <translation>تمكين معالجة التجزئة في &lt;address&gt;</translation>
-    </message>
-    <message>
-        <source>Enable publish raw block in &lt;address&gt;</source>
-        <translation>تمكين نشر كتلة الخام في &lt;address&gt;</translation>
-    </message>
-    <message>
-        <source>Enable publish raw transaction (locked via InstantSend) in &lt;address&gt;</source>
-        <translation>تمكين نشر المعاملة الأولية (مؤمّنة عبر InstantSend) في &lt;address&gt;</translation>
-    </message>
-    <message>
-        <source>Enable publish raw transaction in &lt;address&gt;</source>
-        <translation>تمكين نشر المعاملة الأولية في &lt;address&gt;</translation>
+        <source>Error upgrading evo database</source>
+        <translation>خطأ في ترقية قاعدة بيانات evo</translation>
     </message>
     <message>
         <source>Error: A fatal internal error occurred, see debug.log for details</source>
         <translation>خطأ: حدث خطأ داخلي فادح، راجع debug.log للحصول على التفاصيل</translation>
+    </message>
+    <message>
+        <source>Error: failed to add socket to epollfd (epoll_ctl returned error %s)</source>
+        <translation>خطأ: فشل في إضافة مأخذ التوصيل إلى epollfd (أرجع epoll_ctl الخطأ %s)</translation>
+    </message>
+    <message>
+        <source>Exceeded max tries.</source>
+        <translation>تم تجاوز الحد الأقصى من المحاولات.</translation>
+    </message>
+    <message>
+        <source>Failed to clear fulfilled requests cache at</source>
+        <translation>فشل مسح ذاكرة التخزين المؤقت للطلبات التي تم الوفاء بها في</translation>
+    </message>
+    <message>
+        <source>Failed to clear governance cache at</source>
+        <translation>فشل مسح ذاكرة التخزين المؤقت للحوكمة في</translation>
+    </message>
+    <message>
+        <source>Failed to clear masternode cache at</source>
+        <translation>فشل مسح ذاكرة التخزين المؤقت للرمز الرئيسي في</translation>
+    </message>
+    <message>
+        <source>Failed to commit EvoDB</source>
+        <translation>فشل الالتزام بـ EvoDB</translation>
     </message>
     <message>
         <source>Failed to create backup %s!</source>
@@ -4335,32 +4241,24 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>فشل تحميل ذاكرة التخزين المؤقت</translation>
     </message>
     <message>
-        <source>Fee (in %s/kB) to add to transactions you send (default: %s)</source>
-        <translation>الرسوم (في %s / kB) لإضافتها إلى المعاملات التي ترسلها (الافتراضي: %s)</translation>
-    </message>
-    <message>
-        <source>Imports blocks from external blk000??.dat file on startup</source>
-        <translation>استيراد كتل من ملف blk000??.dat الخارجي عند بدء التشغيل</translation>
-    </message>
-    <message>
-        <source>InstantSend options:</source>
-        <translation>خيارات الإرسال الفوري:</translation>
+        <source>Failed to rescan the wallet during initialization</source>
+        <translation>فشل في إعادة فحص المحفظة أثناء التهيئة</translation>
     </message>
     <message>
         <source>Invalid amount for -fallbackfee=&lt;amount&gt;: '%s'</source>
-        <translation>المبلغ غير صالح forfallbackfee = &lt;amount&gt; :'%s</translation>
+        <translation>المبلغ غير صالح fallbackfee = &lt;amount&gt; :'%s-</translation>
     </message>
     <message>
-        <source>Keep the transaction memory pool below &lt;n&gt; megabytes (default: %u)</source>
-        <translation>إبقاء تجمع ذاكرة المعاملة أدناه &lt;n&gt; ميغابايت (افتراضي: %u)</translation>
+        <source>Invalid masternodeblsprivkey. Please see documentation.</source>
+        <translation>masternodeblsprivkey غير صالح. يرجى الاطلاع على الوثائق.</translation>
     </message>
     <message>
-        <source>Last PrivateSend was too recent.</source>
-        <translation>اخر إرسال مخفي كان حديث للغاية</translation>
+        <source>It has been replaced by -disablegovernance.</source>
+        <translation>تم استبدالها بـ -disablegovernance.</translation>
     </message>
     <message>
-        <source>Last successful PrivateSend action was too recent.</source>
-        <translation>آخر إجراء الإرسال المخفي ناجح كان حديث للغاية.</translation>
+        <source>Its replacement -disablegovernance has been forced instead.</source>
+        <translation>وبدلاً من ذلك ، تم إجبار نظام الحكم البديل المعطل.</translation>
     </message>
     <message>
         <source>Loading block index...</source>
@@ -4383,28 +4281,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>تحميل المحفظه</translation>
     </message>
     <message>
-        <source>Location of the auth cookie (default: data dir)</source>
-        <translation>موقع ملف تعريف ارتباط المصادقة (القيمة الافتراضية: دليل البيانات)</translation>
-    </message>
-    <message>
-        <source>Make the wallet broadcast transactions</source>
-        <translation>إنتاج معاملات بث المحفظة</translation>
-    </message>
-    <message>
-        <source>Smartnode options:</source>
-        <translation>خيارات ماسترنود</translation>
-    </message>
-    <message>
-        <source>Smartnode queue is full.</source>
+        <source>Masternode queue is full.</source>
         <translation>طابور ماسترنود ممتلئ.</translation>
     </message>
     <message>
         <source>Smartnode:</source>
         <translation>ماسترنود</translation>
-    </message>
-    <message>
-        <source>Minimum bytes per sigop in transactions we relay and mine (default: %u)</source>
-        <translation>.الحد الأدنى من البايت لكل sigop في المعاملات التي نقوم بترحيلها وبياناتي (الافتراضي: %u)</translation>
     </message>
     <message>
         <source>Missing input transaction information.</source>
@@ -4419,14 +4301,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>لم يتم العثور على فئات مطابقة للاختلاط.</translation>
     </message>
     <message>
-        <source>Node relay options:</source>
-        <translation>خيارات ترحيل العقد:</translation>
-    </message>
-    <message>
-        <source>Non-standard public key detected.</source>
-        <translation>تم اكتشاف مفتاح عام غير قياسي.</translation>
-    </message>
-    <message>
         <source>Not compatible with existing transactions.</source>
         <translation>غير متوافق مع المعاملات الحالية.</translation>
     </message>
@@ -4435,40 +4309,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>لا تتوفر واصفات ملف متاح.</translation>
     </message>
     <message>
-        <source>Number of automatic wallet backups (default: %u)</source>
-        <translation>عدد النسخ الاحتياطية للمحفظة التلقائية (الافتراضي: %u)</translation>
-    </message>
-    <message>
-        <source>Options:</source>
-        <translation>خيارات: </translation>
-    </message>
-    <message>
-        <source>Password for JSON-RPC connections</source>
-        <translation>كلمة المرور لاتصالات JSON-RPC</translation>
-    </message>
-    <message>
-        <source>Print version and exit</source>
-        <translation>طباعة النسخة ومن ثم الخروج</translation>
-    </message>
-    <message>
-        <source>PrivateSend is idle.</source>
-        <translation>الإرسال المخفي غير نشط.</translation>
-    </message>
-    <message>
-        <source>PrivateSend options:</source>
-        <translation>خيارات الإرسال المخفي:</translation>
-    </message>
-    <message>
-        <source>PrivateSend request complete:</source>
-        <translation>اكتمل طلب الإرسال المخفي:</translation>
-    </message>
-    <message>
-        <source>PrivateSend request incomplete:</source>
-        <translation>طلب الإرسال المخفي غير مكتمل:</translation>
-    </message>
-    <message>
         <source>Prune cannot be configured with a negative value.</source>
         <translation>لا يمكن تهيئة التجريد بقيمة سالبة.</translation>
+    </message>
+    <message>
+        <source>Prune mode is incompatible with -disablegovernance=false.</source>
+        <translation>وضع التقليم غير متوافق مع -disablegovernance = false.</translation>
     </message>
     <message>
         <source>Prune mode is incompatible with -txindex.</source>
@@ -4479,12 +4325,36 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>تجريد مخزن الكتل...</translation>
     </message>
     <message>
-        <source>Rescan the block chain for missing wallet transactions on startup</source>
-        <translation>إعادة فحص سلسلة كتلة معاملات المحفظة المفقودة عند بدء التشغيل</translation>
+        <source>Specified -walletdir "%s" does not exist</source>
+        <translation>- المحفظة المحددة "%s" غير موجودة</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" is a relative path</source>
+        <translation>- المحفظة المحددة "%s" هي مسار نسبي</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" is not a directory</source>
+        <translation>-walletdir المحدد "%s" ليس دليلاً</translation>
+    </message>
+    <message>
+        <source>Sync mempool from other nodes on start (default: %u)</source>
+        <translation>مزامنة mempool من العقد الأخرى عند البدء (الافتراضي: %u)</translation>
+    </message>
+    <message>
+        <source>Synchronizing blockchain...</source>
+        <translation>مزامنة بلوكشين...</translation>
+    </message>
+    <message>
+        <source>Target PrivateSend balance (%u-%u, default: %u)</source>
+        <translation>رصيد PrivateSend المستهدف (%u-%u ، الافتراضي: %u)</translation>
     </message>
     <message>
         <source>The wallet will avoid paying less than the minimum relay fee.</source>
         <translation>سوف تتجنب المحفظة دفع أقل من الحد الأدنى لرسوم التتابع.</translation>
+    </message>
+    <message>
+        <source>This is expected because you are running a pruned node.</source>
+        <translation>هذا متوقع لأنك تقوم بتشغيل عقدة مشذبة.</translation>
     </message>
     <message>
         <source>This is the minimum transaction fee you pay on every transaction.</source>
@@ -4519,16 +4389,16 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>يتعذر الربط مع %s على هذا الكمبيوتر. من المحتمل أن %s قيد التشغيل بالفعل.</translation>
     </message>
     <message>
+        <source>Unable to generate initial keys</source>
+        <translation>تعذر إنشاء المفاتيح الأولية</translation>
+    </message>
+    <message>
         <source>Upgrading UTXO database</source>
         <translation>ترقية قاعدة بيانات UTXO</translation>
     </message>
     <message>
-        <source>Use devnet chain with provided name</source>
-        <translation>استخدم سلسلة devnet بالاسم المقدم</translation>
-    </message>
-    <message>
-        <source>Wallet debugging/testing options:</source>
-        <translation>خيارات تصحيح / اختبار المحفظة:</translation>
+        <source>Wallet %s resides outside wallet directory %s</source>
+        <translation>توجد المحفظة %s خارج دليل الحافظة %s</translation>
     </message>
     <message>
         <source>Wallet needed to be rewritten: restart %s to complete</source>
@@ -4543,16 +4413,20 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>لم يكن قادراً على إنشاء مجلد النسخ الاحتياطي المحفظة %s!</translation>
     </message>
     <message>
-        <source>Whether to operate in a blocks only mode (default: %u)</source>
-        <translation>ما إذا كان سيتم العمل في وضع الكتل فقط (الإعداد الافتراضي: %u)</translation>
+        <source>You can not start a masternode with wallet enabled.</source>
+        <translation>لا يمكنك بدء Masternode مع محفظة ممكنة.</translation>
     </message>
     <message>
-        <source>You can not start a smartnode in lite mode.</source>
-        <translation>لا يمكنك بدء تشغيل ماسترنود في الوضع البسيط.</translation>
+        <source>You need to rebuild the database using -reindex to change -addressindex</source>
+        <translation>تحتاج إلى إعادة بناء قاعدة البيانات باستخدام -reindex لتغيير -addressindex</translation>
     </message>
     <message>
-        <source>ZeroMQ notification options:</source>
-        <translation>خيارات إعلام ZeroMQ:</translation>
+        <source>You need to rebuild the database using -reindex to change -spentindex</source>
+        <translation>تحتاج إلى إعادة بناء قاعدة البيانات باستخدام -reindex لتغيير -spentindex</translation>
+    </message>
+    <message>
+        <source>You need to rebuild the database using -reindex to change -txindex</source>
+        <translation>تحتاج إلى إعادة بناء قاعدة البيانات باستخدام -reindex لتغيير -txindex</translation>
     </message>
     <message>
         <source>no mixing available.</source>
@@ -4563,11 +4437,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>انظر debug.log للحصول على التفاصيل.</translation>
     </message>
     <message>
-        <source>RPC server options:</source>
-        <translation>خيارات خادم RPC:</translation>
-    </message>
-    <message>
-        <source>Raptoreum Core</source>
+        <source>Dash Core</source>
         <translation>جوهر الداش</translation>
     </message>
     <message>
@@ -4583,28 +4453,16 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>موزعة تحت ترخيص برنامج MIT ، راجع ملف المرافق %s أو %s</translation>
     </message>
     <message>
+        <source>Error loading %s: You can't enable HD on an already existing non-HD wallet</source>
+        <translation>خطأ في تحميل %s: لا يمكنك تمكين HD في محفظة موجودة بالفعل بخلاف HD</translation>
+    </message>
+    <message>
         <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
         <translation>خطأ في قراءة %s! قراءة كافة المفاتيح بشكل صحيح ، ولكن قد تكون بيانات المعاملة أو إدخالات دفتر العناوين مفقودة أو غير صحيحة.</translation>
     </message>
     <message>
-        <source>Force relay of transactions from whitelisted peers even if they violate local relay policy (default: %d)</source>
-        <translation>فرض ترحيل المعاملات من أقران القائمة البيضاء حتى إذا كانت تنتهك سياسة الترحيل المحلي (افتراضي: %d)</translation>
-    </message>
-    <message>
         <source>Incorrect or no devnet genesis block found. Wrong datadir for devnet specified?</source>
         <translation>تم العثور على كتلة تكوين devnet غير صحيحة أو لا. datadir خاطئة ل devnet المحدد؟</translation>
-    </message>
-    <message>
-        <source>Maximum allowed median peer time offset adjustment. Local perspective of time may be influenced by peers forward or backward by this amount. (default: %u seconds)</source>
-        <translation>الحد الأقصى المسموح به من متوسط الوقت لتعديل الأقران. قد يتأثر المنظور المحلي للوقت بالأقران إلى الأمام أو إلى الخلف بهذا المقدار. (افتراضي: %u ثانية)</translation>
-    </message>
-    <message>
-        <source>Maximum total fees (in %s) to use in a single wallet transaction or raw transaction; setting this too low may abort large transactions (default: %s)</source>
-        <translation>المجموع الأقصى للرسوم (في %s) لاستخدامها في معاملة محفظة واحدة أو معاملة أولية ؛ قد يؤدي تعيين هذا منخفض جدًا إلى إحباط المعاملات الكبيرة (الإعداد الافتراضي: %s)</translation>
-    </message>
-    <message>
-        <source>Override spork address. Only useful for regtest and devnet. Using this on mainnet or testnet will ban you.</source>
-        <translation>تجاوز عنوان السكة. مفيدة فقط ل regtest و devnet. استخدام هذا على mainnet أو testnet سيحظر لك.</translation>
     </message>
     <message>
         <source>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</source>
@@ -4615,12 +4473,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>يرجى المساهمة إذا وجدت %s مفيداً. تفضل بزيارة %s لمزيد من المعلومات حول البرنامج.</translation>
     </message>
     <message>
-        <source>Reduce storage requirements by enabling pruning (deleting) of old blocks. This allows the pruneblockchain RPC to be called to delete specific blocks, and enables automatic pruning of old blocks if a target size in MiB is provided. This mode is incompatible with -txindex and -rescan. Warning: Reverting this setting requires re-downloading the entire blockchain. (default: 0 = disable pruning blocks, 1 = allow manual pruning via RPC, &gt;%u = automatically prune block files to stay under the specified target size in MiB)</source>
-        <translation>تقليل متطلبات التخزين عن طريق تمكين التقليم (حذف) الكتل القديمة. يسمح هذا باستدعاء RUN pruneblockchain لحذف كتل معينة ، وتمكين التقليم التلقائي للكتل القديمة إذا تم توفير حجم الهدف في MiB. هذا الوضع غير متوافق مع -txindex و -rescan. تحذير: يتطلب إعادة هذا الإعداد إعادة تنزيل blockchain بالكامل. (افتراضي: 0 = تعطيل كتل التشذيب ، 1 = السماح بالتقليم اليدوي عن طريق RPC ،&gt; %u = ملفات التجميع تلقائياً للتخفيض تحت حجم الهدف المحدد في MiB)</translation>
-    </message>
-    <message>
-        <source>Set lowest fee rate (in %s/kB) for transactions to be included in block creation. (default: %s)</source>
-        <translation>تعيين أدنى معدل رسوم (في %s / kB) للمعاملات ليتم تضمينها في إنشاء كتلة. (افتراضي: %s)</translation>
+        <source>This is the transaction fee you may discard if change is smaller than dust at this level</source>
+        <translation>هذه هي رسوم المعاملة التي يمكنك تجاهلها إذا كان التغيير أصغر من الغبار عند هذا المستوى</translation>
     </message>
     <message>
         <source>This is the transaction fee you may pay when fee estimates are not available.</source>
@@ -4631,36 +4485,16 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>يتضمن هذا المنتج برنامجًا تم تطويره بواسطة OpenSSL Project للاستخدام في OpenSSL Toolkit %s وبرنامج التشفير الذي كتبه Eric Young و UPnP الذي كتبه Thomas Bernard.</translation>
     </message>
     <message>
-        <source>Unable to locate enough PrivateSend non-denominated funds for this transaction.</source>
-        <translation>غير قادر على تحديد ما يكفي من الأموال المخصصة غير المقومة الإرسال المخفي لهذه الصفقة.</translation>
-    </message>
-    <message>
-        <source>Use N separate smartnodes for each denominated input to mix funds (%u-%u, default: %u)</source>
-        <translation>استخدم N ماسترنود منفصلة لكل إدخال مقنن لخلط الصناديق (%u-%u ، القيمة الافتراضية: %u)</translation>
-    </message>
-    <message>
-        <source>Use hierarchical deterministic key generation (HD) after BIP39/BIP44. Only has effect during wallet creation/first start</source>
-        <translation>استخدام جيل المفتاح الحتمي الهرمي (HD) بعد BIP39 / BIP44. يكون تأثيره فقط أثناء إنشاء المحفظة / البدء الأول</translation>
-    </message>
-    <message>
-        <source>User defined mnemonic passphrase for HD wallet (BIP39). Only has effect during wallet creation/first start (default: empty string)</source>
-        <translation>تعريف المستخدم عبارة مرور ذاكري لمحفظة HD (BIP39). يكون تأثيره فقط أثناء إنشاء المحفظة / البدء الأول (افتراضي: سلسلة فارغة)</translation>
-    </message>
-    <message>
-        <source>Username and hashed password for JSON-RPC connections. The field &lt;userpw&gt; comes in the format: &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;. A canonical python script is included in share/rpcuser. The client then connects normally using the rpcuser=&lt;USERNAME&gt;/rpcpassword=&lt;PASSWORD&gt; pair of arguments. This option can be specified multiple times</source>
-        <translation>اسم المستخدم وكلمة المرور المجزأة لاتصالات JSON-RPC. الميدان&lt;userpw&gt; يأتي في الشكل:&lt;USERNAME&gt; : &lt;SALT&gt; $&lt;HASH&gt; يتم تضمين النصي بيثون الكنسي في المشاركة / rpcuser. ثم يتصل العميل عادة باستخدام rpcuser = &lt;USERNAME&gt; /rpcpassword&lt;PASSWORD&gt;  زوج من الحجج. يمكن تحديد هذا الخيار عدة مرات</translation>
-    </message>
-    <message>
-        <source>Wallet will not create transactions that violate mempool chain limits (default: %u)</source>
-        <translation>لن تنشئ المحفظة المعاملات التي تنتهك حدود سلسلة mempool (القيمة الافتراضية: %u)</translation>
+        <source>Unable to replay blocks. You will need to rebuild the database using -reindex-chainstate.</source>
+        <translation>غير قادر على إعادة الكتل. ستحتاج إلى إعادة بناء قاعدة البيانات باستخدام -reindex-chainstate.</translation>
     </message>
     <message>
         <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
         <translation>تحذير: ملف المحفظة فاسد ، تم انقاذ البيانات! تم حفظ %s الأصلي ك %s في %s؛ إذا كان رصيدك أو كانت معاملاتك غير صحيحة، فيجب عليك الإستعادة من نسخة احتياطية.</translation>
     </message>
     <message>
-        <source>Whitelist peers connecting from the given IP address (e.g. 1.2.3.4) or CIDR notated network (e.g. 1.2.3.0/24). Can be specified multiple times.</source>
-        <translation>أقران القائمة البيضاء المتصلين من عنوان IP المحدد (مثل 1.2.3.4) أو شبكة CIDR Notated (على سبيل المثال 1.2.3.0/24). يمكن تحديده عدة مرات.</translation>
+        <source>%d of last 100 blocks have unexpected version</source>
+        <translation>%d من الـ 100 كتلة الأخيرة بها إصدار غير متوقع</translation>
     </message>
     <message>
         <source>%s corrupt, salvage failed</source>
@@ -4675,10 +4509,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>%s عالٍ جداً</translation>
     </message>
     <message>
-        <source>(press q to shutdown and continue later)</source>
-        <translation>(اضغط على q للإيقاف والاستمرار في وقت لاحق)</translation>
-    </message>
-    <message>
         <source>-devnet can only be specified once</source>
         <translation>لا يمكن تحديد -devnet إلا مرة واحدة</translation>
     </message>
@@ -4689,14 +4519,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>-rpcport must be specified when -devnet and -server are specified</source>
         <translation>يجب تحديد -ppcport عند تحديد -devnet و -server </translation>
-    </message>
-    <message>
-        <source>Allow RFC1918 addresses to be relayed and connected to (default: %u)</source>
-        <translation>السماح بعناوين RFC1918 والتواصل معها (الإعداد الافتراضي:%u)</translation>
-    </message>
-    <message>
-        <source>Attempt to recover private keys from a corrupt wallet on startup</source>
-        <translation>محاولة استرداد المفاتيح الخاصة من المحفظة في حالة تلفها عند بدء التشغيل</translation>
     </message>
     <message>
         <source>Cannot resolve -%s address: '%s'</source>
@@ -4720,7 +4542,15 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <source>Error loading %s: Wallet requires newer version of %s</source>
-        <translation>حدث خطأ أثناء تحميل%s: تتطلب المحفظة إصدارًا أحدث من%s</translation>
+        <translation>حدث خطأ أثناء تحميل %s: تتطلب المحفظة إصدارًا أحدث من %s</translation>
+    </message>
+    <message>
+        <source>Error loading %s: You can't disable HD on an already existing HD wallet</source>
+        <translation>حدث خطأ أثناء تحميل %s: لا يمكنك تعطيل HD في محفظة HD موجودة بالفعل</translation>
+    </message>
+    <message>
+        <source>Error loading wallet %s. Duplicate -wallet filename specified.</source>
+        <translation>خطأ في تحميل المحفظة %s. تم تحديد اسم ملف مكرر -wallet.</translation>
     </message>
     <message>
         <source>Error upgrading chainstate database</source>
@@ -4735,8 +4565,24 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>فشل في بدء صف مختلط جديد</translation>
     </message>
     <message>
+        <source>Incorrect -rescan mode, falling back to default value</source>
+        <translation>وضع المسح غير الصحيح ، والعودة إلى القيمة الافتراضية</translation>
+    </message>
+    <message>
         <source>Initialization sanity check failed. %s is shutting down.</source>
         <translation>فشل بالتحقق في اختبار التعقل. تم إيقاف %s.</translation>
+    </message>
+    <message>
+        <source>Inputs vs outputs size mismatch.</source>
+        <translation>عدم تطابق حجم المدخلات مقابل المخرجات.</translation>
+    </message>
+    <message>
+        <source>Invalid -onion address or hostname: '%s'</source>
+        <translation>عنوان أو اسم مضيف غير صالح: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid -proxy address or hostname: '%s'</source>
+        <translation>عنوان -proxy أو اسم مضيف غير صالح: '%s'</translation>
     </message>
     <message>
         <source>Invalid amount for -%s=&lt;amount&gt;: '%s'</source>
@@ -4751,32 +4597,16 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>تحميل عناوين P2P...</translation>
     </message>
     <message>
-        <source>Print this help message and exit</source>
-        <translation>اطبع رسالة مساعدة هذه واخرج منها</translation>
-    </message>
-    <message>
         <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
         <translation>تقليل -maxconnections من %d إلى %d ، بسبب قيود النظام.</translation>
     </message>
     <message>
-        <source>Relay and mine data carrier transactions (default: %u)</source>
-        <translation>معاملات ترحيل البيانات وبيانات الألغام (الافتراضي: %u)</translation>
-    </message>
-    <message>
-        <source>Relay non-P2SH multisig (default: %u)</source>
-        <translation>Relay non-P2SH multisig (default: %u)</translation>
+        <source>Replaying blocks...</source>
+        <translation>إعادة الكتل ...</translation>
     </message>
     <message>
         <source>Rescanning...</source>
         <translation>إعادة مسح</translation>
-    </message>
-    <message>
-        <source>Run in the background as a daemon and accept commands</source>
-        <translation>تشغيل في الخلفية بشكل مخفي لقبول الأوامر</translation>
-    </message>
-    <message>
-        <source>Send trace/debug info to console instead of debug.log file</source>
-        <translation>إرسال معلومات التتبع / التصحيح إلى وحدة التحكم بدلاً من ملف debug.log</translation>
     </message>
     <message>
         <source>Session not complete!</source>
@@ -4787,44 +4617,20 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>انتهت الجلسة.</translation>
     </message>
     <message>
-        <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
-        <translation>تعيين حجم ذاكرة التخزين المؤقت لقاعدة البيانات بالميغابايت (%d إلى %d ، القيمة الافتراضية: %d)</translation>
-    </message>
-    <message>
-        <source>Set maximum block size in bytes (default: %d)</source>
-        <translation>تعيين الحد الأقصى لحجم الفدرة بالبايت (الافتراضي: %d)</translation>
-    </message>
-    <message>
-        <source>Show all debugging options (usage: --help -help-debug)</source>
-        <translation>عرض جميع خيارات التصحيح (الاستخدام: - مساعدة - تصحيح الأخطاء - تصحيح الأخطاء)</translation>
-    </message>
-    <message>
-        <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
-        <translation>تقليص ملف debug.log على بدء تشغيل العميل (الافتراضي: 1 عند عدم - debug)</translation>
-    </message>
-    <message>
         <source>Signing transaction failed</source>
         <translation>فشل توقيع المعاملة</translation>
     </message>
     <message>
-        <source>Specify data directory</source>
-        <translation>حدد مجلد المعلومات</translation>
+        <source>Last queue was created too recently.</source>
+        <translation>تم إنشاء قائمة الانتظار الأخيرة مؤخرًا.</translation>
     </message>
     <message>
-        <source>Specify wallet file (within data directory)</source>
-        <translation>تحديد ملف المحفظة (داخل دليل البيانات)</translation>
-    </message>
-    <message>
-        <source>Specify your own public address</source>
-        <translation>حدد عنوانك العام هنا</translation>
+        <source>Last successful action was too recent.</source>
+        <translation>آخر إجراء ناجح كان حديثًا جدًا.</translation>
     </message>
     <message>
         <source>Starting network threads...</source>
         <translation>بدء مؤشرات شبكة الاتصال...</translation>
-    </message>
-    <message>
-        <source>Synchronization pending...</source>
-        <translation>التزامن في طور الإنجاز...</translation>
     </message>
     <message>
         <source>Synchronizing governance objects...</source>
@@ -4867,6 +4673,14 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>يتعذر الربط مع %s على هذا الكمبيوتر (الربط انتج خطأ %s)</translation>
     </message>
     <message>
+        <source>Unable to locate enough mixed funds for this transaction.</source>
+        <translation>تعذر تحديد موقع أموال مختلطة كافية لهذه المعاملة.</translation>
+    </message>
+    <message>
+        <source>Unable to locate enough non-denominated funds for this transaction.</source>
+        <translation>غير قادر على تحديد موقع أموال كافية غير مقومة لهذه المعاملة.</translation>
+    </message>
+    <message>
         <source>Unable to sign spork message, wrong key?</source>
         <translation>غير قادر على التوقيع على رسالة ورش ، مفتاح خاطئ؟</translation>
     </message>
@@ -4879,8 +4693,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>حالة غير معروفة: id = %u</translation>
     </message>
     <message>
-        <source>Username for JSON-RPC connections</source>
-        <translation>اسم المستخدم لاتصالات JSON-RPC</translation>
+        <source>Unsupported logging category %s=%s.</source>
+        <translation>فئة التسجيل غير المعتمدة%s=%s.</translation>
     </message>
     <message>
         <source>Verifying blocks...</source>
@@ -4891,24 +4705,20 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>عدد منخفض جدًا من المفاتيح المتبقية: %d</translation>
     </message>
     <message>
-        <source>Wallet %s resides outside data directory %s</source>
-        <translation>تتواجد المحفظة %s خارج دليل البيانات %s</translation>
-    </message>
-    <message>
         <source>Wallet is locked.</source>
         <translation>المحفظة مؤمنة.</translation>
     </message>
     <message>
-        <source>Wallet options:</source>
-        <translation>خيارات المحفظة :</translation>
-    </message>
-    <message>
-        <source>Wallet window title</source>
-        <translation>عنوان نافذة المحفظة</translation>
-    </message>
-    <message>
         <source>Warning</source>
         <translation>تحذير</translation>
+    </message>
+    <message>
+        <source>You are starting with governance validation disabled.</source>
+        <translation>أنت تبدأ مع تعطيل التحقق من صحة الحكم.</translation>
+    </message>
+    <message>
+        <source>You can not disable governance validation on a masternode.</source>
+        <translation>لا يمكنك تعطيل التحقق من الحوكمة على Masternode.</translation>
     </message>
     <message>
         <source>Your entries added successfully.</source>

@@ -45,7 +45,7 @@ operation.
 
 By default, the ZeroMQ feature is automatically compiled in if the
 necessary prerequisites are found.  To disable, use --disable-zmq
-during the *configure* step of building bitcoind:
+during the *configure* step of building dashd:
 
     $ ./configure --disable-zmq (other options)
 
@@ -63,6 +63,7 @@ Currently, the following notifications are supported:
     -zmqpubhashgovernancevote=address
     -zmqpubhashgovernanceobject=address
     -zmqpubhashinstantsenddoublespend=address
+    -zmqpubhashrecoveredsig=address
     -zmqpubrawblock=address
     -zmqpubrawchainlock=address
     -zmqpubrawchainlocksig=address
@@ -72,6 +73,7 @@ Currently, the following notifications are supported:
     -zmqpubrawgovernancevote=address
     -zmqpubrawgovernanceobject=address
     -zmqpubrawinstantsenddoublespend=address
+    -zmqpubrawrecoveredsig=address
 
 The socket type is PUB and the address must be a valid ZeroMQ socket
 address. The same address can be used in more than one notification.
@@ -84,7 +86,7 @@ For instance:
 Each PUB notification has a topic and body, where the header
 corresponds to the notification type. For instance, for the
 notification `-zmqpubhashtx` the topic is `hashtx` (no null
-terminator) and the body is the hexadecimal transaction hash (32
+terminator) and the body is the transaction hash (32
 bytes).
 
 These options can also be provided in raptoreum.conf.

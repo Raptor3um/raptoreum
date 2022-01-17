@@ -13,6 +13,7 @@ src/raptoreum-tx
 src/test/test_raptoreum
 src/test/test_raptoreum_fuzzy
 src/qt/test/test_raptoreum-qt
+src/qt/res/css/colors/*
 src/bench/bench_raptoreum
 
 # autoreconf
@@ -62,8 +63,6 @@ libconftest.dylib*
 *.pyc
 *.o
 *.o-*
-*.patch
-!depends/patches/*/*.patch
 *.a
 *.pb.cc
 *.pb.h
@@ -75,6 +74,10 @@ libconftest.dylib*
 *.json.h
 *.raw.h
 
+# Only ignore unexpected patches
+*.patch
+!depends/patches/**/*.patch
+
 #libtool object files
 *.lo
 *.la
@@ -84,6 +87,7 @@ libconftest.dylib*
 Makefile
 raptoreum-qt
 Raptoreum-Qt.app
+background.tiff*
 !/depends/Makefile
 
 # Unit-tests
@@ -96,6 +100,7 @@ qrc_*.cpp
 # Mac specific
 .DS_Store
 build
+*.dSYM
 
 #lcov
 *.gcno

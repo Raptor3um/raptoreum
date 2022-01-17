@@ -2,24 +2,24 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "base58.h"
-#include "consensus/validation.h"
-#include "core_io.h"
-#include "init.h"
-#include "messagesigner.h"
-#include "rpc/server.h"
-#include "utilmoneystr.h"
-#include "validation.h"
+#include <consensus/validation.h>
+#include <core_io.h>
+#include <init.h>
+#include <key_io.h>
+#include <messagesigner.h>
+#include <rpc/server.h>
+#include <utilmoneystr.h>
+#include <validation.h>
 
 #ifdef ENABLE_WALLET
-#include "wallet/coincontrol.h"
-#include "wallet/wallet.h"
-#include "wallet/rpcwallet.h"
+#include <wallet/coincontrol.h>
+#include <wallet/wallet.h>
+#include <wallet/rpcwallet.h>
 #endif//ENABLE_WALLET
 
-#include "netbase.h"
-#include "evo/specialtx.h"
-#include "evo/providertx.h"
+#include <netbase.h>
+#include <evo/specialtx.h>
+#include <evo/providertx.h>
 
 #include <iostream>
 #include <unistd.h>
@@ -78,7 +78,7 @@ static void FundSpecialTx(CWallet* pwallet, CMutableTransaction& tx, const Speci
         throw JSONRPCError(RPC_INTERNAL_ERROR, "No funds at specified address");
     }
 
-    CWalletTx wtx;
+    CTransactionRef wtx;
     CReserveKey reservekey(pwallet);
     CAmount nFee;
     int nChangePos = -1;
@@ -88,8 +88,8 @@ static void FundSpecialTx(CWallet* pwallet, CMutableTransaction& tx, const Speci
         throw JSONRPCError(RPC_INTERNAL_ERROR, strFailReason);
     }
 
-    tx.vin = wtx.tx->vin;
-    tx.vout = wtx.tx->vout;
+    tx.vin = wtx->vin;
+    tx.vout = wtx->vout;
 
     if (dummyTxOutAdded && tx.vout.size() > 1) {
         // CreateTransaction added a change output, so we don't need the dummy txout anymore.
@@ -144,7 +144,8 @@ static std::string SignAndSendSpecialTx(const CMutableTransaction& tx)
     LOCK(cs_main);
 
     CValidationState state;
-    if (!CheckSpecialTx(tx, chainActive.Tip(), state)) {
+//    CCoinsViewCache view;
+    if (!CheckSpecialTx(tx, chainActive.Tip(), state, *pcoinsTip.get())) {
         throw std::runtime_error(FormatStateMessage(state));
     }
 

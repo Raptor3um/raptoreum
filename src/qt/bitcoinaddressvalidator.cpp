@@ -4,9 +4,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "bitcoinaddressvalidator.h"
+#include <qt/bitcoinaddressvalidator.h>
+#include <qt/guiutil.h>
 
-#include "base58.h"
+#include <key_io.h>
 
 /* Base58 characters are:
      "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
@@ -17,8 +18,8 @@
   - All lower-case letters except for 'l'
 */
 
-BitcoinAddressEntryValidator::BitcoinAddressEntryValidator(QObject *parent) :
-    QValidator(parent)
+BitcoinAddressEntryValidator::BitcoinAddressEntryValidator(QObject *parent, bool fAllowURI) :
+    QValidator(parent), fAllowURI(fAllowURI)
 {
 }
 
@@ -29,6 +30,10 @@ QValidator::State BitcoinAddressEntryValidator::validate(QString &input, int &po
     // Empty address is "intermediate" input
     if (input.isEmpty())
         return QValidator::Intermediate;
+
+    if (fAllowURI && GUIUtil::validateBitcoinURI(input)) {
+        return QValidator::Acceptable;
+    }
 
     // Correction
     for (int idx = 0; idx < input.size();)
@@ -90,10 +95,10 @@ BitcoinAddressCheckValidator::BitcoinAddressCheckValidator(QObject *parent) :
 QValidator::State BitcoinAddressCheckValidator::validate(QString &input, int &pos) const
 {
     Q_UNUSED(pos);
-    // Validate the passed Raptoreum address
-    CBitcoinAddress addr(input.toStdString());
-    if (addr.IsValid())
+    // Validate the passed Dash address
+    if (IsValidDestinationString(input.toStdString())) {
         return QValidator::Acceptable;
+    }
 
     return QValidator::Invalid;
 }

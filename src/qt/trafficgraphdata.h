@@ -1,5 +1,5 @@
-#ifndef TRAFFICGRAPHDATA_H
-#define TRAFFICGRAPHDATA_H
+#ifndef BITCOIN_QT_TRAFFICGRAPHDATA_H
+#define BITCOIN_QT_TRAFFICGRAPHDATA_H
 
 #include <QHash>
 #include <QQueue>
@@ -61,6 +61,8 @@ public:
     SampleQueue getCurrentRangeQueueWithAverageBandwidth();
     void clear();
     void setLastBytes(quint64 nLastBytesIn, quint64 nLastBytesOut);
+    quint64 getLastBytesIn() { return nLastBytesIn; }
+    quint64 getLastBytesOut() { return nLastBytesOut; }
 
 private:
     static const int DesiredQueueSizes[];
@@ -88,4 +90,4 @@ private:
     TrafficGraphData& operator=(TrafficGraphData const&);
 };
 
-#endif // TRAFFICGRAPHDATA_H
+#endif // BITCOIN_QT_TRAFFICGRAPHDATA_H

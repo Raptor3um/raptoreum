@@ -2,23 +2,67 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "tx_verify.h"
+#include <consensus/tx_verify.h>
 
-#include "consensus.h"
-#include "chainparams.h"
-#include "primitives/transaction.h"
-#include "script/interpreter.h"
-#include "validation.h"
-#include "future/fee.h"
-//#include "future/utils.h"
-#include "evo/specialtx.h"
-#include "evo/providertx.h"
-#include "timedata.h"
+#include <consensus/consensus.h>
+#include <primitives/transaction.h>
+#include <script/interpreter.h>
+#include <consensus/validation.h>
+
+#include <chainparams.h>
+#include <future/fee.h>
+//#include <future/utils.h>
+#include <evo/specialtx.h>
+#include <evo/providertx.h>
+#include <timedata.h>
 
 // TODO remove the following dependencies
-#include "chain.h"
-#include "coins.h"
-#include "utilmoneystr.h"
+#include <chain.h>
+#include <coins.h>
+#include <utilmoneystr.h>
+
+extern CChain chainActive;
+
+static void checkSpecialTxFee(const CTransaction &tx, CAmount& nFeeTotal, CAmount& specialTxFee) {
+	if(tx.nVersion >= 3) {
+		switch(tx.nType){
+		case TRANSACTION_FUTURE:
+			CFutureTx ftx;
+			if(GetTxPayload(tx.vExtraPayload, ftx)) {
+				specialTxFee = getFutureFees();
+				nFeeTotal -= specialTxFee;
+			}
+			break;
+		}
+	}
+}
+
+static const char *validateFutureCoin(const Coin& coin, int nSpendHeight) {
+	if(coin.nType == TRANSACTION_FUTURE) {
+		CBlockIndex* confirmedBlockIndex = chainActive[coin.nHeight];
+		if(confirmedBlockIndex) {
+			int64_t adjustCurrentTime = GetAdjustedTime();
+			uint32_t confirmedTime = confirmedBlockIndex->nTime;
+			CFutureTx futureTx;
+			//std::cout << "futuretx checking" << endl;
+			if(GetTxPayload(coin.vExtraPayload, futureTx)) {
+				//std::cout << "futuretx extract" << endl;
+				bool isBlockMature = futureTx.maturity > 0 && nSpendHeight - coin.nHeight >= futureTx.maturity;
+				bool isTimeMature = futureTx.lockTime > 0 && adjustCurrentTime - confirmedTime  >= futureTx.lockTime;
+				//std::cout << "isBlockMature " << isBlockMature << " isTimeMature " << isTimeMature << endl;
+				bool canSpend = isBlockMature || isTimeMature;
+				if(!canSpend) {
+					return "bad-txns-premature-spend-of-future";
+				}
+				return nullptr;
+			}
+			return "bad-txns-unable-to-parse-future";
+		}
+		// should not get here
+		return "bad-txns-unable-to-block-index-for-future";
+	}
+	return nullptr;
+}
 
 extern CChain chainActive;
 

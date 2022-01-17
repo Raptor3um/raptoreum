@@ -35,15 +35,14 @@ static const char _NR[] = {
 
 #include <stddef.h>
 #include <time.h>
-#include <sys/timeb.h>
-#ifdef __APPLE__
-#include <malloc/malloc.h>
-#else
-#include <malloc.h>
-#endif
+#include <sys/time.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+
+#if !defined(__APPLE__)
+#include <malloc.h>
+#endif
 
 #ifdef WIN32
 #include <process.h>
@@ -52,11 +51,16 @@ static const char _NR[] = {
 #include <unistd.h>
 #endif
 
-#include "oaes_config.h"
-#include "oaes_lib.h"
+#ifdef _MSC_VER
+#define GETPID() _getpid()
+#else
+#define GETPID() getpid()
+#endif
+#include <cryptonote/oaes_config.h>
+#include <cryptonote/oaes_lib.h>
 
 #ifdef OAES_HAVE_ISAAC
-#include "rand.h"
+#include <rand.h>
 #endif // OAES_HAVE_ISAAC
 
 #define OAES_RKEY_LEN 4
@@ -466,41 +470,35 @@ OAES_RET oaes_sprintf(
 #ifdef OAES_HAVE_ISAAC
 static void oaes_get_seed( char buf[RANDSIZ + 1] )
 {
-	struct timeb timer;
-	struct tm *gmTimer;
-	char * _test = NULL;
+  struct timeval tv;
+  struct tm *gmTimer;
+  char * _test = NULL;
 
-	ftime (&timer);
-	gmTimer = gmtime( &timer.time );
-	_test = (char *) calloc( sizeof( char ), timer.millitm );
-	sprintf( buf, "%04d%02d%02d%02d%02d%02d%03d%p%d",
-		gmTimer->tm_year + 1900, gmTimer->tm_mon + 1, gmTimer->tm_mday,
-		gmTimer->tm_hour, gmTimer->tm_min, gmTimer->tm_sec, timer.millitm,
-		_test + timer.millitm, getpid() );
-
-	if( _test )
-		free( _test );
+  gettimeofday(&tv, NULL);
+  gmTimer = gmtime( &tv.tv_sec );
+  _test = (char *) calloc( sizeof( char ), tv.tv_usec/1000 );
+  sprintf( buf, "%04d%02d%02d%02d%02d%02d%03d%p%d", gmTimer->tm_year + 1900, gmTimer->tm_mon + 1, gmTimer->tm_mday, gmTimer->tm_hour, gmTimer->tm_min, gmTimer->tm_sec, tv.tv_usec/1000, _test + tv.tv_usec/1000, GETPID() );
+  if( _test )
+    free( _test );
 }
 #else
 static uint32_t oaes_get_seed(void)
 {
-	struct timeb timer;
-	struct tm *gmTimer;
-	char * _test = NULL;
-	uint32_t _ret = 0;
+  struct timeval tv;
+  struct tm *gmTimer;
+  char * _test = NULL;
+  uint32_t _ret = 0;
 
-	ftime (&timer);
-	gmTimer = gmtime( &timer.time );
-	_test = (char *) calloc( sizeof( char ), timer.millitm );
-	_ret = (uint32_t)(gmTimer->tm_year + 1900 + gmTimer->tm_mon + 1 + gmTimer->tm_mday +
-			gmTimer->tm_hour + gmTimer->tm_min + gmTimer->tm_sec + timer.millitm +
-			(uintptr_t) ( _test + timer.millitm ) + getpid());
+  gettimeofday(&tv, NULL);
+  gmTimer = gmtime( &tv.tv_sec );
+  _test = (char *) calloc( sizeof( char ), tv.tv_usec/1000 );
+  _ret = gmTimer->tm_year + 1900 + gmTimer->tm_mon + 1 + gmTimer->tm_mday + gmTimer->tm_hour + gmTimer->tm_min + gmTimer->tm_sec + tv.tv_usec/1000 + (uintptr_t)( _test + tv.tv_usec/1000 ) + GETPID();
+  if( _test )
+    free( _test );
 
-	if( _test )
-		free( _test );
-
-	return _ret;
+  return _ret;
 }
+
 #endif // OAES_HAVE_ISAAC
 
 static OAES_RET oaes_key_destroy( oaes_key ** key )

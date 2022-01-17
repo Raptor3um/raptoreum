@@ -5,8 +5,8 @@
 #ifndef RAPTOREUM_FEE_H
 #define RAPTOREUM_FEE_H
 
-#include "amount.h"
-#include "coins.h"
+#include <amount.h>
+#include <coins.h>
 
 CAmount getFutureFees();
 

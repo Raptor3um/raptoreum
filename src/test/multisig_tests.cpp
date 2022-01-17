@@ -2,16 +2,16 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "key.h"
-#include "keystore.h"
-#include "policy/policy.h"
-#include "script/script.h"
-#include "script/script_error.h"
-#include "script/interpreter.h"
-#include "script/sign.h"
-#include "script/ismine.h"
-#include "uint256.h"
-#include "test/test_raptoreum.h"
+#include <key.h>
+#include <keystore.h>
+#include <policy/policy.h>
+#include <script/script.h>
+#include <script/script_error.h>
+#include <script/interpreter.h>
+#include <script/sign.h>
+#include <script/ismine.h>
+#include <uint256.h>
+#include <test/test_raptoreum.h>
 
 
 #include <boost/test/unit_test.hpp>
@@ -21,7 +21,7 @@ BOOST_FIXTURE_TEST_SUITE(multisig_tests, BasicTestingSetup)
 CScript
 sign_multisig(CScript scriptPubKey, std::vector<CKey> keys, CTransaction transaction, int whichIn)
 {
-    uint256 hash = SignatureHash(scriptPubKey, transaction, whichIn, SIGHASH_ALL, 0, SIGVERSION_BASE);
+    uint256 hash = SignatureHash(scriptPubKey, transaction, whichIn, SIGHASH_ALL, 0, SigVersion::BASE);
 
     CScript result;
     result << OP_0; // CHECKMULTISIG bug workaround

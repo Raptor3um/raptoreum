@@ -6,13 +6,16 @@
 #ifndef BITCOIN_TXDB_H
 #define BITCOIN_TXDB_H
 
-#include "coins.h"
-#include "dbwrapper.h"
-#include "chain.h"
-#include "spentindex.h"
+#include <coins.h>
+#include <dbwrapper.h>
+#include <chain.h>
+#include <limitedmap.h>
+#include <spentindex.h>
+#include <sync.h>
 #include "indices/future_index.h"
 
 #include <map>
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
@@ -48,7 +51,7 @@ struct CDiskTxPos : public CDiskBlockPos
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action) {
-        READWRITE(*(CDiskBlockPos*)this);
+        READWRITEAS(CDiskBlockPos, *this);
         READWRITE(VARINT(nTxOffset));
     }
 
@@ -66,12 +69,12 @@ struct CDiskTxPos : public CDiskBlockPos
 };
 
 /** CCoinsView backed by the coin database (chainstate/) */
-class CCoinsViewDB : public CCoinsView
+class CCoinsViewDB final : public CCoinsView
 {
 protected:
     CDBWrapper db;
 public:
-    CCoinsViewDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
+    explicit CCoinsViewDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
 
 
     bool GetCoin(const COutPoint &outpoint, Coin &coin) const override;
@@ -111,20 +114,24 @@ private:
 /** Access to the block database (blocks/index/) */
 class CBlockTreeDB : public CDBWrapper
 {
-public:
-    CBlockTreeDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
 private:
-    CBlockTreeDB(const CBlockTreeDB&);
-    void operator=(const CBlockTreeDB&);
+    CCriticalSection cs;
+    unordered_limitedmap<uint256, bool> mapHasTxIndexCache;
+
 public:
+    explicit CBlockTreeDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
+
+    CBlockTreeDB(const CBlockTreeDB&) = delete;
+    CBlockTreeDB& operator=(const CBlockTreeDB&) = delete;
+
     bool WriteBatchSync(const std::vector<std::pair<int, const CBlockFileInfo*> >& fileInfo, int nLastFile, const std::vector<const CBlockIndex*>& blockinfo);
-    bool ReadBlockFileInfo(int nFile, CBlockFileInfo &fileinfo);
+    bool ReadBlockFileInfo(int nFile, CBlockFileInfo &info);
     bool ReadLastBlockFile(int &nFile);
-    bool WriteReindexing(bool fReindex);
-    bool ReadReindexing(bool &fReindex);
+    bool WriteReindexing(bool fReindexing);
+    bool ReadReindexing(bool &fReindexing);
     bool HasTxIndex(const uint256 &txid);
     bool ReadTxIndex(const uint256 &txid, CDiskTxPos &pos);
-    bool WriteTxIndex(const std::vector<std::pair<uint256, CDiskTxPos> > &list);
+    bool WriteTxIndex(const std::vector<std::pair<uint256, CDiskTxPos> > &vect);
     bool ReadSpentIndex(CSpentIndexKey &key, CSpentIndexValue &value);
     bool UpdateSpentIndex(const std::vector<std::pair<CSpentIndexKey, CSpentIndexValue> >&vect);
     bool ReadFutureIndex(CFutureIndexKey &key, CFutureIndexValue &value);

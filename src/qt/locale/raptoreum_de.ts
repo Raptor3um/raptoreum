@@ -2,6 +2,10 @@
 <context>
     <name>AddressBookPage</name>
     <message>
+        <source>Enter address or label to search</source>
+        <translation>Zu suchende Adresse oder Bezeichnung eingeben</translation>
+    </message>
+    <message>
         <source>Right-click to edit address or label</source>
         <translation>Rechts-Klick um Adresse oder Bezeichnung zu bearbeiten</translation>
     </message>
@@ -51,11 +55,11 @@
     </message>
     <message>
         <source>Choose the address to send coins to</source>
-        <translation>Wählen Sie die Adresse aus, an die Sie Raptoreum überweisen möchten</translation>
+        <translation>Wählen Sie die Adresse aus, an die Sie Dash überweisen möchten</translation>
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
-        <translation>Wählen Sie die Adresse aus, über die Sie Raptoreum empfangen wollen</translation>
+        <translation>Wählen Sie die Adresse aus, über die Sie Dash empfangen wollen</translation>
     </message>
     <message>
         <source>C&amp;hoose</source>
@@ -70,12 +74,12 @@
         <translation>Empfangsadressen</translation>
     </message>
     <message>
-        <source>These are your Raptoreum addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Dies sind ihre Raptoreum-Adressen zum Tätigen von Überweisungen. Bitte prüfen Sie den Betrag und die Empfangsadresse, bevor Sie Raptoreum überweisen.</translation>
+        <source>These are your Dash addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation>Dies sind ihre Dash-Adressen zum Tätigen von Überweisungen. Bitte prüfen Sie den Betrag und die Empfangsadresse, bevor Sie Dash überweisen.</translation>
     </message>
     <message>
-        <source>These are your Raptoreum addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Dies sind ihre Raptoreum-Adressen zum Empfangen von Zahlungen. Es wird empfohlen für jede Transaktion eine neue Empfangsadresse zu verwenden.</translation>
+        <source>These are your Dash addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
+        <translation>Dies sind ihre Dash-Adressen zum Empfangen von Zahlungen. Es wird empfohlen für jede Transaktion eine neue Empfangsadresse zu verwenden.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -130,6 +134,45 @@
     </message>
 </context>
 <context>
+    <name>AppearanceWidget</name>
+    <message>
+        <source>Lighter</source>
+        <translation>Schmaler</translation>
+    </message>
+    <message>
+        <source>Bolder</source>
+        <translation>Breiter</translation>
+    </message>
+    <message>
+        <source>Font Weight Normal:</source>
+        <translation>Schriftstärke Normal:</translation>
+    </message>
+    <message>
+        <source>Smaller</source>
+        <translation>Kleiner</translation>
+    </message>
+    <message>
+        <source>Bigger</source>
+        <translation>Größer</translation>
+    </message>
+    <message>
+        <source>Font Scale:</source>
+        <translation>Schriftgröße:</translation>
+    </message>
+    <message>
+        <source>Font Family:</source>
+        <translation>Schriftfamilie:</translation>
+    </message>
+    <message>
+        <source>Theme:</source>
+        <translation>Thema:</translation>
+    </message>
+    <message>
+        <source>Font Weight Bold:</source>
+        <translation>Schriftstärke Fett:</translation>
+    </message>
+</context>
+<context>
     <name>AskPassphraseDialog</name>
     <message>
         <source>Passphrase Dialog</source>
@@ -146,6 +189,10 @@
     <message>
         <source>Repeat new passphrase</source>
         <translation>Neue Passphrase wiederholen</translation>
+    </message>
+    <message>
+        <source>Show password</source>
+        <translation>Passwort anzeigen</translation>
     </message>
     <message>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
@@ -188,8 +235,8 @@
         <translation>Wallet-Verschlüsselung bestätigen</translation>
     </message>
     <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR RTM&lt;/b&gt;!</source>
-        <translation>Warnung: Wenn Sie ihre Wallet verschlüsseln und ihre Passphrase verlieren werden Sie &lt;b&gt;alle ihre Raptoreum verlieren&lt;/b&gt;!</translation>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR DASH&lt;/b&gt;!</source>
+        <translation>Warnung: Wenn Sie ihre Wallet verschlüsseln und ihre Passphrase verlieren werden Sie &lt;b&gt;alle ihre Dash verlieren&lt;/b&gt;!</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
@@ -198,10 +245,6 @@
     <message>
         <source>Wallet encrypted</source>
         <translation>Wallet verschlüsselt</translation>
-    </message>
-    <message>
-        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your funds from being stolen by malware infecting your computer.</source>
-        <translation>%1 wird jetzt beendet, um den Verschlüsselungsprozess abzuschließen. Bitte beachten Sie, dass die Wallet-Verschlüsselung nicht vollständig vor Diebstahl ihrer Raptoreum durch Schadsoftware schützt, die ihren Computer befällt. </translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. Previous backups of the unencrypted wallet file contain the same HD seed and still have full access to all your funds just like the new, encrypted wallet.</source>
@@ -256,14 +299,21 @@
     </message>
 </context>
 <context>
+    <name>BitcoinAmountField</name>
+    <message>
+        <source>Amount in %1</source>
+        <translation>Betrag in %1</translation>
+    </message>
+</context>
+<context>
     <name>BitcoinGUI</name>
     <message>
-        <source>A fatal error occurred. Raptoreum Core can no longer continue safely and will quit.</source>
-        <translation>Ein kritischer Fehler ist aufgetreten. Raptoreum Core kann nicht mehr ausgeführt werden und wird nun beendet.</translation>
+        <source>A fatal error occurred. Dash Core can no longer continue safely and will quit.</source>
+        <translation>Ein kritischer Fehler ist aufgetreten. Dash Core kann nicht mehr ausgeführt werden und wird nun beendet.</translation>
     </message>
     <message>
-        <source>Raptoreum Core</source>
-        <translation>Raptoreum Core</translation>
+        <source>Dash Core</source>
+        <translation>Dash Core</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -286,16 +336,16 @@
         <translation>&amp;Überweisen</translation>
     </message>
     <message>
-        <source>Send coins to a Raptoreum address</source>
-        <translation>Raptoreum an eine Raptoreum-Adresse überweisen</translation>
+        <source>Send coins to a Dash address</source>
+        <translation>Dash an eine Dash-Adresse überweisen</translation>
     </message>
     <message>
         <source>&amp;Receive</source>
         <translation>&amp;Empfangen</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and raptoreum: URIs)</source>
-        <translation>Zahlungen anfordern (erzeugt QR-Codes und "raptoreum:"-URIs)</translation>
+        <source>Request payments (generates QR codes and dash: URIs)</source>
+        <translation>Zahlungen anfordern (erzeugt QR-Codes und "dash:"-URIs)</translation>
     </message>
     <message>
         <source>&amp;Transactions</source>
@@ -306,12 +356,12 @@
         <translation>Transaktionsverlauf durchsehen</translation>
     </message>
     <message>
-        <source>&amp;Smartnodes</source>
-        <translation>&amp;Smartnodes</translation>
+        <source>&amp;Masternodes</source>
+        <translation>&amp;Masternodes</translation>
     </message>
     <message>
-        <source>Browse smartnodes</source>
-        <translation>Browse Smartnodes</translation>
+        <source>Browse masternodes</source>
+        <translation>Browse Masternodes</translation>
     </message>
     <message>
         <source>E&amp;xit</source>
@@ -322,8 +372,8 @@
         <translation>Anwendung beenden</translation>
     </message>
     <message>
-        <source>Show information about Raptoreum Core</source>
-        <translation>Informationen über Raptoreum Core anzeigen</translation>
+        <source>Show information about Dash Core</source>
+        <translation>Informationen über Dash Core anzeigen</translation>
     </message>
     <message>
         <source>About &amp;Qt</source>
@@ -340,6 +390,10 @@
     <message>
         <source>&amp;About %1</source>
         <translation>Über %1</translation>
+    </message>
+    <message>
+        <source>Send %1 funds to a Dash address</source>
+        <translation>Sende %1 Guthaben an eine Dash-Adresse</translation>
     </message>
     <message>
         <source>Modify configuration options for %1</source>
@@ -394,16 +448,16 @@
         <translation>Nachricht s&amp;ignieren...</translation>
     </message>
     <message>
-        <source>Sign messages with your Raptoreum addresses to prove you own them</source>
-        <translation>Nachrichten signieren, um den Besitz ihrer Raptoreum-Adressen zu beweisen</translation>
+        <source>Sign messages with your Dash addresses to prove you own them</source>
+        <translation>Nachrichten signieren, um den Besitz ihrer Dash-Adressen zu beweisen</translation>
     </message>
     <message>
         <source>&amp;Verify message...</source>
         <translation>Nachricht &amp;verifizieren...</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified Raptoreum addresses</source>
-        <translation>Nachrichten verifizieren, um sicherzustellen, dass diese mit den angegebenen Raptoreum-Adressen signiert wurden</translation>
+        <source>Verify messages to ensure they were signed with specified Dash addresses</source>
+        <translation>Nachrichten verifizieren, um sicherzustellen, dass diese mit den angegebenen Dash-Adressen signiert wurden</translation>
     </message>
     <message>
         <source>&amp;Information</source>
@@ -482,15 +536,15 @@
         <translation>&amp;URI öffnen...</translation>
     </message>
     <message>
-        <source>Open a raptoreum: URI or payment request</source>
-        <translation>Eine "raptoreum:"-URI oder Zahlungsanforderung öffnen</translation>
+        <source>Open a dash: URI or payment request</source>
+        <translation>Eine "dash:"-URI oder Zahlungsanforderung öffnen</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
         <translation>&amp;Kommandozeilenoptionen</translation>
     </message>
     <message>
-        <source>Show the %1 help message to get a list with possible Raptoreum command-line options</source>
+        <source>Show the %1 help message to get a list with possible Dash command-line options</source>
         <translation>Zeige den "%1"-Hilfetext, um eine Liste mit möglichen Kommandozeilenoptionen zu erhalten</translation>
     </message>
     <message>
@@ -498,16 +552,26 @@
         <translation>%1 Client</translation>
     </message>
     <message>
-        <source>&amp;PrivateSend information</source>
-        <translation>&amp;PrivateSend Informationen</translation>
+        <source>Wallet: %1
+</source>
+        <translation>Wallet: %1
+</translation>
     </message>
     <message>
-        <source>Show the PrivateSend basic information</source>
-        <translation>&amp;PrivateSend Basisinformationen</translation>
+        <source>Wallet is &lt;b&gt;unencrypted&lt;/b&gt;</source>
+        <translation>Wallet ist &lt;b&gt;unverschlüsselt&lt;/b&gt;</translation>
     </message>
     <message>
         <source>&amp;File</source>
         <translation>&amp;Datei</translation>
+    </message>
+    <message>
+        <source>%1 &amp;information</source>
+        <translation>%1 &amp;Information</translation>
+    </message>
+    <message>
+        <source>Show the %1 basic information</source>
+        <translation>Zeige die %1 Basis-Information</translation>
     </message>
     <message>
         <source>&amp;Settings</source>
@@ -526,8 +590,8 @@
         <translation>Registerkartenleiste</translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to Raptoreum network</source>
-        <translation><numerusform>%n aktive Verbindung zum Raptoreum-Netzwerk</numerusform><numerusform>%n aktive Verbindungen zum Raptoreum-Netzwerk</numerusform></translation>
+        <source>%n active connection(s) to Dash network</source>
+        <translation><numerusform>%n aktive Verbindung zum Dash-Netzwerk</numerusform><numerusform>%n aktive Verbindungen zum Dash-Netzwerk</numerusform></translation>
     </message>
     <message>
         <source>Network activity disabled</source>
@@ -664,10 +728,6 @@
         <translation>HD-Schlüssel Erzeugung ist &lt;b&gt;aktiviert&lt;/b&gt;</translation>
     </message>
     <message>
-        <source>HD key generation is &lt;b&gt;disabled&lt;/b&gt;</source>
-        <translation>HD-Schlüssel Erzeugung ist &lt;b&gt;inaktiv&lt;/b&gt;</translation>
-    </message>
-    <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
         <translation>Wallet ist &lt;b&gt;verschlüsselt&lt;/b&gt; und aktuell &lt;b&gt;entsperrt&lt;/b&gt;</translation>
     </message>
@@ -747,8 +807,8 @@
         <translation>Empfangen über Adresse</translation>
     </message>
     <message>
-        <source>PS Rounds</source>
-        <translation>PS Runden</translation>
+        <source>Mixing Rounds</source>
+        <translation>Mischrunden</translation>
     </message>
     <message>
         <source>Date</source>
@@ -815,10 +875,6 @@
         <translation>Wechseln Sie bitte zum "Listenmodus" um die Funktion zu benutzen.</translation>
     </message>
     <message>
-        <source>Non-mixed input selected. &lt;b&gt;PrivateSend will be disabled.&lt;/b&gt;&lt;br&gt;&lt;br&gt;If you still want to use PrivateSend, please deselect all non-mixed inputs first and then check the PrivateSend checkbox again.</source>
-        <translation>Ungemischter Input ausgewählt. &lt;b&gt;PrivateSend wird deaktiviert.&lt;/b&gt;&lt;br&gt;&lt;br&gt;Sollten Sie trotzdem PrivateSend verwenden wollen, müssen Sie zuerst die Markierung der ungemischten Inputs aufheben und das Feld "PrivateSend" erneut auswählen.</translation>
-    </message>
-    <message>
         <source>(%1 locked)</source>
         <translation>(%1 gesperrt)</translation>
     </message>
@@ -837,6 +893,30 @@
     <message>
         <source>Can vary +/- %1 duff(s) per input.</source>
         <translation>Kann um +/- %1 duff(s) pro Eingabe variieren.</translation>
+    </message>
+    <message>
+        <source>Some coins were unselected because they were spent.</source>
+        <translation>Einige Coins wurden aus der Auswahl entfernt, da sie bereits ausgegeben wurden.</translation>
+    </message>
+    <message>
+        <source>Some coins were unselected because they do not have enough mixing rounds.</source>
+        <translation>Einige Coins wurden aus der Auswahl entfernt, da sie nicht über genügend Mischrunden verfügen.</translation>
+    </message>
+    <message>
+        <source>Show all coins</source>
+        <translation>Alle Coins zeigen</translation>
+    </message>
+    <message>
+        <source>Hide %1 coins</source>
+        <translation>%1 Coins ausblenden</translation>
+    </message>
+    <message>
+        <source>Show all %1 coins</source>
+        <translation>Zeige alle %1 Coins</translation>
+    </message>
+    <message>
+        <source>Show spendable coins only</source>
+        <translation>Nur auszahlbare Coins anzeigen</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -878,10 +958,6 @@
         <translation>Adresse, die dem Adresslisteneintrag zugeordnet ist. Diese kann nur bei Zahlungsadressen verändert werden.</translation>
     </message>
     <message>
-        <source>New receiving address</source>
-        <translation>Neue Empfangsadresse</translation>
-    </message>
-    <message>
         <source>New sending address</source>
         <translation>Neue Zahlungsadresse</translation>
     </message>
@@ -894,8 +970,8 @@
         <translation>Zahlungsadresse bearbeiten</translation>
     </message>
     <message>
-        <source>The entered address "%1" is not a valid Raptoreum address.</source>
-        <translation>Die eingegebene Adresse "%1" ist keine gültige Raptoreum-Adresse.</translation>
+        <source>The entered address "%1" is not a valid Dash address.</source>
+        <translation>Die eingegebene Adresse "%1" ist keine gültige Dash-Adresse.</translation>
     </message>
     <message>
         <source>The entered address "%1" is already in the address book.</source>
@@ -952,49 +1028,12 @@
         <translation>Kommandozeilenoptionen</translation>
     </message>
     <message>
-        <source>Usage:</source>
-        <translation>Benutzung:</translation>
+        <source>%1 information</source>
+        <translation>%1 Information</translation>
     </message>
     <message>
-        <source>command-line options</source>
-        <translation>Kommandozeilenoptionen</translation>
-    </message>
-    <message>
-        <source>UI Options:</source>
-        <translation>UI-Optionen:</translation>
-    </message>
-    <message>
-        <source>Choose data directory on startup (default: %u)</source>
-        <translation>Datenverzeichnis beim Starten auswählen (Standard: %u)</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Sprache festlegen, z.B. "de_DE" (Standard: Systemstandard)</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Minimiert starten</translation>
-    </message>
-    <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>SSL-Wurzelzertifikate für Zahlungsanforderungen festlegen (Standard: Systemstandard)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: %u)</source>
-        <translation>Startbildschirm beim Starten anzeigen (Standard: %u)</translation>
-    </message>
-    <message>
-        <source>Reset all settings changed in the GUI</source>
-        <translation>Alle über die Benutzeroberfläche gemachten Einstellungen zurücksetzen</translation>
-    </message>
-    <message>
-        <source>PrivateSend information</source>
-        <translation>PrivateSend Informationen</translation>
-    </message>
-    <message>
-        <source>&lt;h3&gt;PrivateSend Basics&lt;/h3&gt; PrivateSend gives you true financial privacy by obscuring the origins of your funds. All the Raptoreum in your wallet is comprised of different "inputs" which you can think of as separate, discrete coins.&lt;br&gt; PrivateSend uses an innovative process to mix your inputs with the inputs of two other people, without having your coins ever leave your wallet. You retain control of your money at all times.&lt;hr&gt; &lt;b&gt;The PrivateSend process works like this:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;PrivateSend begins by breaking your transaction inputs down into standard denominations. These denominations are 0.001 RTM, 0.01 RTM, 0.1 RTM, 1 RTM and 10 RTM -- sort of like the paper money you use every day.&lt;/li&gt; &lt;li&gt;Your wallet then sends requests to specially configured software nodes on the network, called "smartnodes." These smartnodes are informed then that you are interested in mixing a certain denomination. No identifiable information is sent to the smartnodes, so they never know "who" you are.&lt;/li&gt; &lt;li&gt;When two other people send similar messages, indicating that they wish to mix the same denomination, a mixing session begins. The smartnode mixes up the inputs and instructs all three users' wallets to pay the now-transformed input back to themselves. Your wallet pays that denomination directly to itself, but in a different address (called a change address).&lt;/li&gt; &lt;li&gt;In order to fully obscure your funds, your wallet must repeat this process a number of times with each denomination. Each time the process is completed, it's called a "round." Each round of PrivateSend makes it exponentially more difficult to determine where your funds originated.&lt;/li&gt; &lt;li&gt;This mixing process happens in the background without any intervention on your part. When you wish to make a transaction, your funds will already be mixed. No additional waiting is required.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;IMPORTANT:&lt;/b&gt; Your wallet only contains 1000 of these "change addresses." Every time a mixing event happens, up to 9 of your addresses are used up. This means those 1000 addresses last for about 100 mixing events. When 900 of them are used, your wallet must create more addresses. It can only do this, however, if you have automatic backups enabled.&lt;br&gt; Consequently, users who have backups disabled will also have PrivateSend disabled. &lt;hr&gt;For more information, see the &lt;a href="https://docs.raptoreum.org/en/stable/wallets/raptoreumcore/privatesend-instantsend.html"&gt;PrivateSend documentation&lt;/a&gt;.</source>
-        <translation>&lt;h3&gt;Basisinformation zu PrivateSend&lt;/h3&gt; PrivateSend bietet finanziellen Datenschutz durch geschickte Verschleierung der Herkunft Ihres Geldes. Die Raptoreum in Ihrer Geldbörse setzen sich aus völlig unterschiedlichen eigenständigen "Inputs" zusammen.&lt;br&gt; PrivateSend benutzt einen innovativen Prozeß, um Ihre "Inputs" mit denen von 2 anderen Personen zu mischen, ohne das Ihr Geld jemals Ihre Geldbörse verlassen muß, d.h. Sie haben während dieses Prozesses immer die Kontrolle über Ihr Geld.&lt;hr&gt;&lt;b&gt;Der PrivateSend-Prozess funktioniert folgendermaßen:&lt;/b&gt;&lt;ol type="1"&gt;&lt;li&gt;PrivateSend stückelt Ihre "Inputs" in kleinere Teile. Diese sind 0,001 RTM, 0,01 RTM, 0,1 RTM, 1 RTM und 10 RTM -- im Prinzip wie Münzen oder Scheine, wie wir sie jeden Tag benutzen.&lt;/li&gt; &lt;li&gt;Ihre Geldbörse sendet dann eine entsprechende Mixing Anforderungen an spezielle Raptoreum-Server im Internet, die sogenannten "Smartnodes". Damit werden diese Smartnodes darüber informiert, daß Sie Ihre gestückelten RTM gerne mixen würden. Dabei wird keinerlei Information über Sie versendet, d.h. die Smartnodes wissen nie, wer genau mixen möchte.&lt;/li&gt; &lt;li&gt; Sobald zwei andere Personen eine gleiche Mixing-Anforderung mit der gleichen Stückelung senden beginnt der Mixing-Prozeß. Der Smartnode vermischt (daher das Wort "Mixing") die gestückelten Inputs und weist das Ergebnis wieder den Geldbörsen zu, allerdings mit neuen Empfängeradressen (die natürlich zu Ihrer Wallet gehören), so daß man sie nicht mehr den ursprünglichen Adressen zuordnen kann. Man kann sich das so vorstellen wie wenn 3 Personen jeweils 100 Euro in der gleichen Anzahl von 10 Euro Scheinen, 5 Euro Scheinen, 2- und 1-Euro Münzen auf einen Tisch legen, alles einmal gut durchmischen, und sich anschießend ohne hinzusehen wieder 100 Euro vom Tischen nehmen. Jeder hat genau so viele Euro wie vorher, aber keiner weiß, wessen Scheine oder Münzen er letztendlich in seiner Geldbörse hat, oder wo sie herkommen. Und das Gute dabei ist, im Raptoreum Mixing Prozeß verlassen die Scheine oder Münzen niemals die Geldbörse ihres Besitzers, daher kann kein Betrug stattfinden.&lt;/li&gt; &lt;li&gt;Um die Herkunft Ihres Guthabens vollständig zu verschleiern muß dieser Prozeß mehrmals wiederholt werden, d.h. es gibt mehrere "Runden" des Mixing-Prozesses. Die Anzahl der Runden ist einstellbar, je mehr, desto besser ist die Herkunft Ihres Guthabens verschleiert, aber um so länger dauert der Prozeß.&lt;/li&gt; &lt;li&gt;
-Der Mixing-Prozeß läuft nach dem Start vollständig im Hintergrund, d.h. es ist keine Benutzerinteraktion mehr erforderlich. Das Wallet informiert Sie über den Fortschrittsbalken über den aktuellen Status des Prozesses.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;WICHTIG:&lt;/b&gt; beim Mischen der Inputs werden die einzelnen Stückelungen einer NEUEN Empfängeradresse zugeordnet (siehe Oben). Ihre Geldbörse hat bereits beim ersten Start 1000 dieser "Wechseladressen" auf Vorrat erzeugt. Bei jedem Mischen werden 9 dieser Wechseladressen verbraucht, d.h. nach ungefähr 100 Mischvorgänge sind diese 1000 Wechseladressen aufgebraucht. Die Geldbörse ist so eingestellt, daß sie bei Erreichen von 900 benutzen Wechseladressen wieder genug neue Wechseladressen erzeugt, damit man auch in der Zukunft wieder mischen kann. Die neuen Wechseladressen werden aber nur dann erzeugt, wenn man in den Einstellungen "Automatische Datensicherungen" aktiviert hat.&lt;br&gt; Daher ist bei Benutzern, die "Automatische Datensicherungen" deaktiviert haben, automatisch auch PrivateSend dekativiert.&lt;hr&gt; Weitere Information hierzu finden Sie in der &lt;a href="https://docs.raptoreum.org/en/stable/wallets/raptoreumcore/privatesend-instantsend.html"&gt;PrivateSend-Dokumentation&lt;/a&gt;.</translation>
+        <source>&lt;h3&gt;%1 Basics&lt;/h3&gt; %1 gives you true financial privacy by obscuring the origins of your funds. All the Dash in your wallet is comprised of different "inputs" which you can think of as separate, discrete coins.&lt;br&gt; %1 uses an innovative process to mix your inputs with the inputs of two or more other people, without having your coins ever leave your wallet. You retain control of your money at all times.&lt;hr&gt; &lt;b&gt;The %1 process works like this:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;%1 begins by breaking your transaction inputs down into standard denominations. These denominations are 0.001 DASH, 0.01 DASH, 0.1 DASH, 1 DASH and 10 DASH -- sort of like the paper money you use every day.&lt;/li&gt; &lt;li&gt;Your wallet then sends requests to specially configured software nodes on the network, called "masternodes." These masternodes are informed then that you are interested in mixing a certain denomination. No identifiable information is sent to the masternodes, so they never know "who" you are.&lt;/li&gt; &lt;li&gt;When two or more other people send similar messages, indicating that they wish to mix the same denomination, a mixing session begins. The masternode mixes up the inputs and instructs all three users' wallets to pay the now-transformed input back to themselves. Your wallet pays that denomination directly to itself, but in a different address (called a change address).&lt;/li&gt; &lt;li&gt;In order to fully obscure your funds, your wallet must repeat this process a number of times with each denomination. Each time the process is completed, it's called a "round." Each round of %1 makes it exponentially more difficult to determine where your funds originated.&lt;/li&gt; &lt;li&gt;This mixing process happens in the background without any intervention on your part. When you wish to make a transaction, your funds will already be mixed. No additional waiting is required.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;IMPORTANT:&lt;/b&gt; Your wallet only contains 1000 of these "change addresses." Every time a mixing event happens, up to 9 of your addresses are used up. This means those 1000 addresses last for about 100 mixing events. When 900 of them are used, your wallet must create more addresses. It can only do this, however, if you have automatic backups enabled.&lt;br&gt; Consequently, users who have backups disabled will also have %1 disabled. &lt;hr&gt;For more information, see the &lt;a style="%2" href="%3"&gt;%1 documentation&lt;/a&gt;.</source>
+        <translation>&lt;h3&gt;Basisinformation zu %1&lt;/h3&gt; %1 bietet finanziellen Datenschutz durch geschickte Verschleierung der Herkunft Ihres Geldes. Die Dash in Ihrer Geldbörse setzen sich aus völlig unterschiedlichen eigenständigen "Inputs" zusammen.&lt;br&gt; %1 benutzt einen innovativen Prozeß, um Ihre "Inputs" mit denen von 2 anderen Personen zu mischen, ohne das Ihr Geld jemals Ihre Geldbörse verlassen muß, d.h. Sie haben während dieses Prozesses immer die Kontrolle über Ihr Geld.&lt;hr&gt;&lt;b&gt;Der %1-Prozess funktioniert folgendermaßen:&lt;/b&gt;&lt;ol type="1"&gt;&lt;li&gt;%1 stückelt Ihre "Inputs" in kleinere Teile. Diese sind 0,001 DASH, 0,01 DASH, 0,1 DASH, 1 DASH und 10 DASH -- im Prinzip wie Münzen oder Scheine, wie wir sie jeden Tag benutzen.&lt;/li&gt; &lt;li&gt;Ihre Geldbörse sendet dann eine entsprechende Mixing Anforderungen an spezielle Dash-Server im Internet, die sogenannten "Masternodes". Damit werden diese Masternodes darüber informiert, daß Sie Ihre gestückelten DASH gerne mixen würden. Dabei wird keinerlei Information über Sie versendet, d.h. die Masternodes wissen nie, wer genau mixen möchte.&lt;/li&gt; &lt;li&gt; Sobald zwei andere Personen eine gleiche Mixing-Anforderung mit der gleichen Stückelung senden beginnt der Mixing-Prozeß. Der Masternode vermischt (daher das Wort "Mixing") die gestückelten Inputs und weist das Ergebnis wieder den Geldbörsen zu, allerdings mit neuen Empfängeradressen (sog. Wechseladressen), so daß man sie nicht mehr den ursprünglichen Adressen zuordnen kann.&lt;/li&gt; &lt;li&gt;Um die Herkunft Ihres Guthabens vollständig zu verschleiern muß dieser Prozeß mehrmals wiederholt werden, d.h. es gibt mehrere "Runden" des Mixing-Prozesses. Die Anzahl der Runden ist einstellbar, je mehr, desto besser ist die Herkunft Ihres Guthabens verschleiert, aber um so länger dauert der Prozeß.&lt;/li&gt; &lt;li&gt;Der Mixing-Prozeß läuft nach dem Start vollständig im Hintergrund, d.h. es ist keine Benutzerinteraktion mehr erforderlich. Das Wallet informiert Sie über den Fortschrittsbalken über den aktuellen Status des Prozesses.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;WICHTIG:&lt;/b&gt; beim Mischen der Inputs werden die einzelnen Stückelungen einer NEUEN Empfängeradresse zugeordnet (siehe Oben). Ihre Geldbörse hat bereits beim ersten Start 1000 dieser "Wechseladressen" auf Vorrat erzeugt. Bei jedem Mischen werden 9 dieser Wechseladressen verbraucht, d.h. nach ungefähr 100 Mischvorgänge sind diese 1000 Wechseladressen aufgebraucht. Die Geldbörse ist so eingestellt, daß sie bei Erreichen von 900 benutzen Wechseladressen wieder genug neue Wechseladressen erzeugt. Die neuen Wechseladressen werden aber nur dann erzeugt, wenn man in den Einstellungen "Automatische Datensicherungen" aktiviert hat.&lt;br&gt; Daher ist bei Benutzern, die "Automatische Datensicherungen" deaktiviert haben, automatisch auch %1 dekativiert.&lt;hr&gt; Weitere Information hierzu finden Sie in der &lt;a style="%2" href="%3"&gt;%1-Dokumentation&lt;/a&gt;.</translation>
     </message>
 </context>
 <context>
@@ -1040,8 +1079,8 @@ Der Mixing-Prozeß läuft nach dem Start vollständig im Hintergrund, d.h. es is
         <translation>Etwa %1 GB Daten werden in diesem Verzeichnis gespeichert.</translation>
     </message>
     <message>
-        <source>%1 will download and store a copy of the Raptoreum block chain.</source>
-        <translation>%1 wird eine Kopie der Raptoreum Blockchain herunterladen und speichern.</translation>
+        <source>%1 will download and store a copy of the Dash block chain.</source>
+        <translation>%1 wird eine Kopie der Dash Blockchain herunterladen und speichern.</translation>
     </message>
     <message>
         <source>The wallet will also be stored in this directory.</source>
@@ -1065,7 +1104,7 @@ Der Mixing-Prozeß läuft nach dem Start vollständig im Hintergrund, d.h. es is
     </message>
 </context>
 <context>
-    <name>SmartnodeList</name>
+    <name>MasternodeList</name>
     <message>
         <source>Form</source>
         <translation>Formular</translation>
@@ -1083,20 +1122,20 @@ Der Mixing-Prozeß läuft nach dem Start vollständig im Hintergrund, d.h. es is
         <translation>Filterliste:</translation>
     </message>
     <message>
-        <source>Filter smartnode list</source>
-        <translation>Filter Smartnode-Liste</translation>
+        <source>Filter masternode list</source>
+        <translation>Filter Masternode-Liste</translation>
     </message>
     <message>
         <source>Node Count:</source>
         <translation>Anzahl Knoten</translation>
     </message>
     <message>
-        <source>Show only smartnodes this wallet has keys for.</source>
-        <translation>Nur Smartnodes anzeigen für welche diese Wallet die Schlüssel hat.</translation>
+        <source>Show only masternodes this wallet has keys for.</source>
+        <translation>Nur Masternodes anzeigen für welche diese Wallet die Schlüssel hat.</translation>
     </message>
     <message>
-        <source>My smartnodes only</source>
-        <translation>Nur meine Smartnodes</translation>
+        <source>My masternodes only</source>
+        <translation>Nur meine Masternodes</translation>
     </message>
     <message>
         <source>Service</source>
@@ -1147,6 +1186,10 @@ Der Mixing-Prozeß läuft nach dem Start vollständig im Hintergrund, d.h. es is
         <translation>Collateral Outpoint kopieren</translation>
     </message>
     <message>
+        <source>Updating...</source>
+        <translation>Aktualisiere...</translation>
+    </message>
+    <message>
         <source>ENABLED</source>
         <translation>AKTIVIERT</translation>
     </message>
@@ -1175,8 +1218,16 @@ Der Mixing-Prozeß läuft nach dem Start vollständig im Hintergrund, d.h. es is
         <translation>KEINE</translation>
     </message>
     <message>
-        <source>Additional information for DIP3 Smartnode %1</source>
-        <translation>Zusätzliche Informationen für DIP3 Smartnode %1</translation>
+        <source>Filter by any property (e.g. address or protx hash)</source>
+        <translation>Nach Eigenschaft filtern (z.B. Adresse oder Protx-Hash)</translation>
+    </message>
+    <message>
+        <source>Please wait...</source>
+        <translation>Bitte warten...</translation>
+    </message>
+    <message>
+        <source>Additional information for DIP3 Masternode %1</source>
+        <translation>Zusätzliche Informationen für DIP3 Masternode %1</translation>
     </message>
 </context>
 <context>
@@ -1186,12 +1237,12 @@ Der Mixing-Prozeß läuft nach dem Start vollständig im Hintergrund, d.h. es is
         <translation>Formular</translation>
     </message>
     <message>
-        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the Raptoreum network, as detailed below.</source>
-        <translation>Kontostand möglicherweise falsch, da die neuesten Transaktionen ggf. noch nicht sichtbar sind. Der Kontostand wird automatisch aktualisiert, sobald Ihre Wallet die Synchronisation mit dem Raptoreum Netzwerk abgeschlossen hat.</translation>
+        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the Dash network, as detailed below.</source>
+        <translation>Kontostand möglicherweise falsch, da die neuesten Transaktionen ggf. noch nicht sichtbar sind. Der Kontostand wird automatisch aktualisiert, sobald Ihre Wallet die Synchronisation mit dem Dash Netzwerk abgeschlossen hat.</translation>
     </message>
     <message>
-        <source>Attempting to spend Raptoreum that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
-        <translation>Der Versuch Raptoreum aus Transaktionen auszugeben, die noch nicht angezeigt werden, wird vom Netzwerk nicht akzeptiert.</translation>
+        <source>Attempting to spend Dash that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
+        <translation>Der Versuch Dash aus Transaktionen auszugeben, die noch nicht angezeigt werden, wird vom Netzwerk nicht akzeptiert.</translation>
     </message>
     <message>
         <source>Number of blocks left</source>
@@ -1284,60 +1335,84 @@ Der Mixing-Prozeß läuft nach dem Start vollständig im Hintergrund, d.h. es is
         <translation>W&amp;allet</translation>
     </message>
     <message>
-        <source>Show additional tab listing all your smartnodes in first sub-tab&lt;br/&gt;and all smartnodes on the network in second sub-tab.</source>
-        <translation>Tabulator mit der Lister aller/Ihrer Smartnodes anzeigen.</translation>
+        <source>&amp;Appearance</source>
+        <translation>&amp;Darstellung</translation>
     </message>
     <message>
-        <source>Show Smartnodes Tab</source>
-        <translation>Smartnode Tabulator anzeigen</translation>
+        <source>Show additional tab listing all your masternodes in first sub-tab&lt;br/&gt;and all masternodes on the network in second sub-tab.</source>
+        <translation>Tabulator mit der Lister aller/Ihrer Masternodes anzeigen.</translation>
     </message>
     <message>
-        <source>Show additional information and buttons for PrivateSend on overview screen.</source>
-        <translation>Auf der Übersichtsseite Zusatzinformationen und Buttons für PrivateSend anzeigen.</translation>
-    </message>
-    <message>
-        <source>Enable advanced PrivateSend interface</source>
-        <translation>Erweiterte PrivateSend Schnittstelle anzeigen</translation>
-    </message>
-    <message>
-        <source>Show warning dialog when PrivateSend detects that wallet has very low number of keys left.</source>
-        <translation>Warndialog anzeigen, wenn die Anzahl verbliebener Schlüssel sehr klein ist.</translation>
-    </message>
-    <message>
-        <source>Warn if PrivateSend is running out of keys</source>
-        <translation>Warnung anzeigen, wenn alle Schlüssel aufgebraucht sind</translation>
-    </message>
-    <message>
-        <source>Whether to use experimental PrivateSend mode with multiple mixing sessions per block.&lt;br/&gt;Note: You must use this feature carefully.&lt;br/&gt;Make sure you always have recent wallet (auto)backup in a safe place!</source>
-        <translation>Experimentell: benutze mehrere Mixing-Prozesse (Sessions) pro Block.&lt;br /&gt; Achtung: benutzen Sie diese Option mit großer Sorgfalt.&lt;br /&gt; Vergewissern Sie sich, daß Sie ein aktuelles Backup des Wallet an einem sicheren Ort haben!</translation>
-    </message>
-    <message>
-        <source>Enable PrivateSend &amp;multi-session</source>
-        <translation>PrivateSend &amp;multisession aktivieren</translation>
+        <source>Show Masternodes Tab</source>
+        <translation>Masternode Tabulator anzeigen</translation>
     </message>
     <message>
         <source>If you disable the spending of unconfirmed change, the change from a transaction&lt;br/&gt;cannot be used until that transaction has at least one confirmation.&lt;br/&gt;This also affects how your balance is computed.</source>
         <translation>Wenn Sie das Ausgeben von unbestätigtem Wechselgeld deaktivieren, kann das Wechselgeld einer &lt;br/&gt; Transaktion nicht verwendet werden, bis es mindestens eine Bestätigung erhalten hat.&lt;br/&gt;Dies wirkt sich auf die Berechnung des Kontostands aus.</translation>
     </message>
     <message>
-        <source>PrivateSend rounds to use</source>
-        <translation>PrivateSend Runden</translation>
+        <source>Show mixing interface on Overview screen and reveal an additional screen which allows to spend fully mixed coins only.&lt;br/&gt;A new tab with more settings will also appear in this dialog, please make sure to check them before mixing your coins.</source>
+        <translation>Zeige die Mischoberfläche in der Übersicht an und öffne einen zusätzlichen Reiter, der es erlaubt, nur vollständig gemischte Coins zu verwenden.&lt;br/&gt;In diesem Dialog erscheint auch ein neuer Reiter mit weiteren Einstellungen, bitte überprüfe diese vor dem Mischen deiner Coins.</translation>
     </message>
     <message>
-        <source>This amount acts as a threshold to turn off PrivateSend once it's reached.</source>
-        <translation>Beim Erreichen dieses Betrages wird PrivateSend ausgeschaltet.</translation>
+        <source>Show additional information and buttons on overview screen.</source>
+        <translation>Auf der Übersichtsseite Zusatzinformationen und Buttons anzeigen.</translation>
     </message>
     <message>
-        <source>Target PrivateSend balance</source>
-        <translation>PrivateSend-Guthaben auswählen</translation>
+        <source>Enable advanced interface</source>
+        <translation>Erweiterte Schnittstelle anzeigen</translation>
     </message>
     <message>
-        <source>Automatically open the Raptoreum Core client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Automatisch den Raptoreum Core Clientport auf dem Router öffnen. Dies funktioniert nur, wenn Ihr Router UPnP unterstützt und dies aktiviert ist.</translation>
+        <source>Show system popups for mixing transactions&lt;br/&gt;just like for all other transaction types.</source>
+        <translation>Systembenachrichtigungen für Mischtransaktionen&lt;br/&gt;genauso wie andere Transaktionen anzeigen.</translation>
     </message>
     <message>
-        <source>Connect to the Raptoreum network through a SOCKS5 proxy.</source>
-        <translation>Über einen SOCKS5-Proxy mit dem Raptoreum-Netzwerk verbinden.</translation>
+        <source>Show popups for mixing transactions</source>
+        <translation>Benachrichtigungen für Misch-Transaktionen anzeigen</translation>
+    </message>
+    <message>
+        <source>Show warning dialog when the wallet has very low number of keys left.</source>
+        <translation>Warndialog anzeigen, wenn die Anzahl verbliebener Schlüssel sehr niedrig ist.</translation>
+    </message>
+    <message>
+        <source>Warn if the wallet is running out of keys</source>
+        <translation>Warnung anzeigen, wenn die Schlüssel fast aufgebraucht sind</translation>
+    </message>
+    <message>
+        <source>Whether to use experimental mode with multiple mixing sessions per block.&lt;br/&gt;Note: You must use this feature carefully.&lt;br/&gt;Make sure you always have recent wallet (auto)backup in a safe place!</source>
+        <translation>Experimentell: benutze mehrere Misch-Prozesse (Sessions) pro Block.&lt;br/&gt;Achtung: benutze diese Option mit großer Sorgfalt.&lt;br/&gt;Vergewissere dich, dass du ein aktuelles Backup der Wallet an einem sicheren Ort hast!</translation>
+    </message>
+    <message>
+        <source>Enable &amp;multi-session</source>
+        <translation>&amp;Multisession aktivieren</translation>
+    </message>
+    <message>
+        <source>Mixing rounds</source>
+        <translation>Mischrunden</translation>
+    </message>
+    <message>
+        <source>This amount acts as a threshold to turn off mixing once it's reached.</source>
+        <translation>Beim Erreichen dieses Betrages wird das Mischen ausgeschaltet.</translation>
+    </message>
+    <message>
+        <source>Target balance</source>
+        <translation>Guthaben auswählen</translation>
+    </message>
+    <message>
+        <source>Automatically open the Dash Core client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <translation>Automatisch den Dash Core Clientport auf dem Router öffnen. Dies funktioniert nur, wenn Ihr Router UPnP unterstützt und dies aktiviert ist.</translation>
+    </message>
+    <message>
+        <source>Accept connections from outside.</source>
+        <translation>Eingehende Verbindungen annehmen.</translation>
+    </message>
+    <message>
+        <source>Allow incomin&amp;g connections</source>
+        <translation>Eingehend&amp;e Verbindungen erlauben</translation>
+    </message>
+    <message>
+        <source>Connect to the Dash network through a SOCKS5 proxy.</source>
+        <translation>Über einen SOCKS5-Proxy mit dem Dash-Netzwerk verbinden.</translation>
     </message>
     <message>
         <source>&amp;Connect through SOCKS5 proxy (default proxy):</source>
@@ -1348,6 +1423,18 @@ Der Mixing-Prozeß läuft nach dem Start vollständig im Hintergrund, d.h. es is
         <translation>Zeigt an, ob der mitgelieferte Standard SOCKS5 Proxy benutzt wird.</translation>
     </message>
     <message>
+        <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor hidden services:</source>
+        <translation>Separaten SOCKS&amp;5-Proxy verwenden, um Gegenstellen über versteckte Tor-Dienste zu erreichen:</translation>
+    </message>
+    <message>
+        <source>Hide the icon from the system tray.</source>
+        <translation>Verberge Symbol im Infobereich.</translation>
+    </message>
+    <message>
+        <source>&amp;Hide tray icon</source>
+        <translation>&amp;Infosymbol verbergen</translation>
+    </message>
+    <message>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
         <translation>Minimiert die Anwendung anstatt sie zu beenden wenn das Fenster geschlossen wird. Wenn dies aktiviert ist, müssen Sie das Programm über "Beenden" im Menü schließen.</translation>
     </message>
@@ -1356,8 +1443,8 @@ Der Mixing-Prozeß läuft nach dem Start vollständig im Hintergrund, d.h. es is
         <translation>Externe URLs (z.B. ein Block-Explorer), die im Kontextmenü des Transaktionsverlaufs eingefügt werden. In der URL wird %s durch den Transaktionshash ersetzt. Bei Angabe mehrerer URLs müssen diese durch "|" voneinander getrennt werden.</translation>
     </message>
     <message>
-        <source>Expert</source>
-        <translation>Erweiterte Wallet-Optionen</translation>
+        <source>&amp;Third party transaction URLs</source>
+        <translation>&amp;Externe Transaktions-URLs</translation>
     </message>
     <message>
         <source>Whether to show coin control features or not.</source>
@@ -1376,20 +1463,12 @@ Der Mixing-Prozeß läuft nach dem Start vollständig im Hintergrund, d.h. es is
         <translation>"&amp;Coin Control"-Funktionen aktivieren</translation>
     </message>
     <message>
-        <source>Show system popups for PrivateSend mixing transactions&lt;br/&gt;just like for all other transaction types.</source>
-        <translation>Systembenachrichtigungen für PrivateSend-Mischtransaktionen&lt;br/&gt;genauso wie andere Transaktionen anzeigen.</translation>
-    </message>
-    <message>
-        <source>Show popups for PrivateSend transactions</source>
-        <translation>Benachrichtigungen für PrivateSend-Transaktionen anzeigen</translation>
-    </message>
-    <message>
         <source>&amp;Spend unconfirmed change</source>
         <translation>&amp;Unbestätigtes Wechselgeld darf ausgegeben werden</translation>
     </message>
     <message>
-        <source>This setting determines the amount of individual smartnodes that an input will be mixed through.&lt;br/&gt;More rounds of mixing gives a higher degree of privacy, but also costs more in fees.</source>
-        <translation>Diese Einstellung legt fest, durch wie viele Smartnodes ein Input gemischt wird. &lt;br/&gt; Eine höhere Anzahl an Mischrunden bewirkt einen besseren Schutz der Privatsphäre, verursacht allerdings auch höhere Gebühren.</translation>
+        <source>This setting determines the amount of individual masternodes that an input will be mixed through.&lt;br/&gt;More rounds of mixing gives a higher degree of privacy, but also costs more in fees.</source>
+        <translation>Diese Einstellung legt fest, durch wie viele Masternodes ein Input gemischt wird. &lt;br/&gt; Eine höhere Anzahl an Mischrunden bewirkt einen besseren Schutz der Privatsphäre, verursacht allerdings auch höhere Gebühren.</translation>
     </message>
     <message>
         <source>&amp;Network</source>
@@ -1398,14 +1477,6 @@ Der Mixing-Prozeß läuft nach dem Start vollständig im Hintergrund, d.h. es is
     <message>
         <source>Map port using &amp;UPnP</source>
         <translation>Portweiterleitung via &amp;UPnP</translation>
-    </message>
-    <message>
-        <source>Accept connections from outside</source>
-        <translation>Eingehende Verbindungen annehmen</translation>
-    </message>
-    <message>
-        <source>Allow incoming connections</source>
-        <translation>Eingehende Verbindungen erlauben</translation>
     </message>
     <message>
         <source>Proxy &amp;IP:</source>
@@ -1440,24 +1511,8 @@ Der Mixing-Prozeß läuft nach dem Start vollständig im Hintergrund, d.h. es is
         <translation>Tor</translation>
     </message>
     <message>
-        <source>Connect to the Raptoreum network through a separate SOCKS5 proxy for Tor hidden services.</source>
-        <translation>Über einen separaten SOCKS5-Proxy für versteckte Tor Dienste mit dem Raptoreum-Netzwerk verbinden.</translation>
-    </message>
-    <message>
-        <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services:</source>
-        <translation>Separaten SOCKS5-Proxy verwenden, um Gegenstellen über versteckte Tor-Dienste zu erreichen:</translation>
-    </message>
-    <message>
-        <source>&amp;Window</source>
-        <translation>&amp;Programmfenster</translation>
-    </message>
-    <message>
-        <source>&amp;Hide the icon from the system tray.</source>
-        <translation>&amp;Verberge Symbol im Infobereich.</translation>
-    </message>
-    <message>
-        <source>Hide tray icon</source>
-        <translation>Infosymbol verbergen</translation>
+        <source>Connect to the Dash network through a separate SOCKS5 proxy for Tor hidden services.</source>
+        <translation>Über einen separaten SOCKS5-Proxy für versteckte Tor Dienste mit dem Dash-Netzwerk verbinden.</translation>
     </message>
     <message>
         <source>Show only a tray icon after minimizing the window.</source>
@@ -1485,13 +1540,9 @@ Der Mixing-Prozeß läuft nach dem Start vollständig im Hintergrund, d.h. es is
     </message>
     <message>
         <source>Language missing or translation incomplete? Help contributing translations here:
-https://www.transifex.com/projects/p/raptoreum/</source>
+https://www.transifex.com/projects/p/dash/</source>
         <translation>Fehlt eine Sprache oder ist unvollständig übersetzt? Hier können Sie helfen:
-https://www.transifex.com/projects/p/raptoreum/</translation>
-    </message>
-    <message>
-        <source>User Interface Theme:</source>
-        <translation>Design/Thema der Benutzeroberfläche:</translation>
+https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <source>&amp;Unit to show amounts in:</source>
@@ -1499,15 +1550,11 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <source>Choose the default subdivision unit to show in the interface and when sending coins.</source>
-        <translation>Wählen Sie die standardmäßige Untereinheit, die in der Benutzeroberfläche und beim Überweisen von Raptoreum angezeigt werden soll.</translation>
+        <translation>Wählen Sie die standardmäßige Untereinheit, die in der Benutzeroberfläche und beim Überweisen von Dash angezeigt werden soll.</translation>
     </message>
     <message>
         <source>Decimal digits</source>
         <translation>Dezimalziffern</translation>
-    </message>
-    <message>
-        <source>Third party transaction URLs</source>
-        <translation>Externe Transaktions-URLs</translation>
     </message>
     <message>
         <source>Active command-line options that override above options:</source>
@@ -1530,12 +1577,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>A&amp;bbrechen</translation>
     </message>
     <message>
-        <source>default</source>
-        <translation>Standard</translation>
+        <source>Enable %1 features</source>
+        <translation>%1-Funktionen aktivieren</translation>
     </message>
     <message>
-        <source>none</source>
-        <translation>keine</translation>
+        <source>default</source>
+        <translation>Standard</translation>
     </message>
     <message>
         <source>Confirm options reset</source>
@@ -1565,8 +1612,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Formular</translation>
     </message>
     <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Raptoreum network after a connection is established, but this process has not completed yet.</source>
-        <translation>Die angezeigten Informationen sind möglicherweise nicht mehr aktuell. Ihre Wallet wird automatisch synchronisiert, nachdem eine Verbindung zum Raptoreum-Netzwerk hergestellt wurde. Dieser Prozess ist jedoch derzeit noch nicht abgeschlossen.</translation>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Dash network after a connection is established, but this process has not completed yet.</source>
+        <translation>Die angezeigten Informationen sind möglicherweise nicht mehr aktuell. Ihre Wallet wird automatisch synchronisiert, nachdem eine Verbindung zum Dash-Netzwerk hergestellt wurde. Dieser Prozess ist jedoch derzeit noch nicht abgeschlossen.</translation>
     </message>
     <message>
         <source>Available:</source>
@@ -1629,10 +1676,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Verfügbar:</translation>
     </message>
     <message>
-        <source>PrivateSend</source>
-        <translation>PrivateSend</translation>
-    </message>
-    <message>
         <source>Status:</source>
         <translation>Status:</translation>
     </message>
@@ -1649,8 +1692,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Betrag und Runden:</translation>
     </message>
     <message>
-        <source>0 RTM / 0 Rounds</source>
-        <translation>0 RTM / 0 Runden</translation>
+        <source>0 DASH / 0 Rounds</source>
+        <translation>0 DASH / 0 Runden</translation>
     </message>
     <message>
         <source>Submitted Denom:</source>
@@ -1669,16 +1712,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Starte/Stoppe das Mixen</translation>
     </message>
     <message>
-        <source>PrivateSend Balance:</source>
-        <translation>PrivateSend Kontostand:</translation>
-    </message>
-    <message>
-        <source>The denominations you submitted to the Smartnode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
-        <translation>Die gestückelten Beträge, die Sie zu dem Smartnode gesendet haben.&lt;br&gt; Zum Erfolgreichen Mixen müssen andere Benutzer exakt gleich gestückelte Beträge senden.</translation>
-    </message>
-    <message>
-        <source>(Last Message)</source>
-        <translation>(Letzte Nachricht)</translation>
+        <source>The denominations you submitted to the Masternode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
+        <translation>Die gestückelten Beträge, die Sie zu dem Masternode gesendet haben.&lt;br&gt; Zum Erfolgreichen Mixen müssen andere Benutzer exakt gleich gestückelte Beträge senden.</translation>
     </message>
     <message>
         <source>out of sync</source>
@@ -1689,28 +1724,24 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Automatische Datensicherungen sind deaktiviert, mixen nicht möglich!</translation>
     </message>
     <message>
-        <source>Start Mixing</source>
-        <translation>Starte Mixen</translation>
-    </message>
-    <message>
-        <source>Stop Mixing</source>
-        <translation>Stoppe Mixen</translation>
-    </message>
-    <message>
         <source>No inputs detected</source>
         <translation>Keine Inputs gefunden</translation>
+    </message>
+    <message>
+        <source>%1 Balance</source>
+        <translation>%1 Kontostand</translation>
     </message>
     <message numerus="yes">
         <source>%n Rounds</source>
         <translation><numerusform>%n Runde</numerusform><numerusform>%n Runden</numerusform></translation>
     </message>
     <message>
-        <source>Found enough compatible inputs to anonymize %1</source>
-        <translation>Genug kompatible Inputs zum Anonymisieren von %1 gefunden</translation>
+        <source>Found enough compatible inputs to mix %1</source>
+        <translation>Genug kompatible Inputs zum Mischen von %1 gefunden</translation>
     </message>
     <message>
-        <source>Not enough compatible inputs to anonymize &lt;span style='color:red;'&gt;%1&lt;/span&gt;,&lt;br&gt;will anonymize &lt;span style='color:red;'&gt;%2&lt;/span&gt; instead</source>
-        <translation>Nicht genug kompatible Inputs zum Anonymisieren von &lt;span style='color:red;'&gt;%1&lt;/span&gt; gefunden,&lt;br/&gt;&lt;span style='color:red;'&gt;%2&lt;/span&gt; wird stattdessen anonymisiert</translation>
+        <source>Not enough compatible inputs to mix &lt;span style='%1'&gt;%2&lt;/span&gt;,&lt;br&gt;will mix &lt;span style='%1'&gt;%3&lt;/span&gt; instead</source>
+        <translation>Nicht genug kompatible Inputs zum Mischen von &lt;span style='%1'&gt;%2&lt;/span&gt; gefunden,&lt;br&gt;&lt;span style='%1'&gt;%3&lt;/span&gt; wird stattdessen gemischt</translation>
     </message>
     <message>
         <source>Overall progress</source>
@@ -1737,6 +1768,26 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Verfügbare Schlüssel: %1</translation>
     </message>
     <message>
+        <source>Start %1</source>
+        <translation>Starte %1</translation>
+    </message>
+    <message>
+        <source>If you don't want to see internal %1 fees/transactions select "Most Common" as Type on the "Transactions" tab.</source>
+        <translation>Wenn Sie keine internen %1-Gebühren oder -Transaktionen sehen wollen wählen Sie "Gängigste" als Typ auf der "Transaktionen" Karteikarte.</translation>
+    </message>
+    <message>
+        <source>%1 requires at least %2 to use.</source>
+        <translation>Zur Benutzung von %1 benötigt man mindestens %2</translation>
+    </message>
+    <message>
+        <source>Wallet is locked and user declined to unlock. Disabling %1.</source>
+        <translation>Das Wallet ist gesperrt und der Benutzer hat abgelehnt, es zu entsperren. %1 wird deaktiviert.</translation>
+    </message>
+    <message>
+        <source>Stop %1</source>
+        <translation>Stoppe %1</translation>
+    </message>
+    <message>
         <source>Disabled</source>
         <translation>Deaktiviert</translation>
     </message>
@@ -1745,8 +1796,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Seit der letzten Sicherung sind nur noch wenige Schlüssel verblieben!</translation>
     </message>
     <message>
-        <source>We are about to create a new automatic backup for you, however &lt;span style='color:red;'&gt; you should always make sure you have backups saved in some safe place&lt;/span&gt;!</source>
-        <translation>Datensicherungen werden automatisch gemacht, aber &lt;span style='color:red;'&gt; Sie sollten zusätzlich immer noch Datensicherungen an einem sicheren Ort haben&lt;/span&gt;!</translation>
+        <source>We are about to create a new automatic backup for you, however &lt;span style='%1'&gt; you should always make sure you have backups saved in some safe place&lt;/span&gt;!</source>
+        <translation>Datensicherungen werden automatisch gemacht, aber &lt;span style='%1'&gt; Sie sollten zusätzlich immer noch Datensicherungen an einem sicheren Ort haben&lt;/span&gt;!</translation>
     </message>
     <message>
         <source>Note: You can turn this message off in options.</source>
@@ -1776,25 +1827,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <source>WARNING! Failed to replenish keypool, please unlock your wallet to do so.</source>
         <translation>WARNUNG! Erzeugen neuer Schlüssel ist fehlgeschlagen, bitte entsperren Sie Ihre Wallet  um dies zu ermöglichen.</translation>
     </message>
-    <message>
-        <source>Last PrivateSend message:
-</source>
-        <translation>Letzter PrivateSend Status:
-
-</translation>
-    </message>
-    <message>
-        <source>If you don't want to see internal PrivateSend fees/transactions select "Most Common" as Type on the "Transactions" tab.</source>
-        <translation>Wenn Sie keine internen PrivateSend-Gebühren oder -Transaktionen sehen wollen wählen Sie "Gängigste" als Typ auf der "Transaktionen" Karteikarte.</translation>
-    </message>
-    <message>
-        <source>PrivateSend requires at least %1 to use.</source>
-        <translation>Zur Benutzung von PrivateSend benötigt man mindestens %1</translation>
-    </message>
-    <message>
-        <source>Wallet is locked and user declined to unlock. Disabling PrivateSend.</source>
-        <translation>Das Wallet ist gesperrt und der Benutzer hat abgelehnt, es zu entsperren. PrivateSend wird deaktiviert.</translation>
-    </message>
 </context>
 <context>
     <name>PaymentServer</name>
@@ -1803,12 +1835,16 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Fehlerhafte Zahlungsanforderung</translation>
     </message>
     <message>
-        <source>Cannot start raptoreum: click-to-pay handler</source>
-        <translation>Raptoreum kann nicht gestartet werden: click-to-pay handler</translation>
+        <source>Cannot start dash: click-to-pay handler</source>
+        <translation>Dash kann nicht gestartet werden: click-to-pay handler</translation>
     </message>
     <message>
         <source>URI handling</source>
         <translation>URI-Verarbeitung</translation>
+    </message>
+    <message>
+        <source>'dash://' is not a valid URI. Use 'dash:' instead.</source>
+        <translation>'dash://' ist keine gültige URI. Verwende 'dash:' stattdessen.</translation>
     </message>
     <message>
         <source>Payment request fetch URL is invalid: %1</source>
@@ -1819,8 +1855,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Ungültige Zahlungsadresse %1</translation>
     </message>
     <message>
-        <source>URI cannot be parsed! This can be caused by an invalid Raptoreum address or malformed URI parameters.</source>
-        <translation>URI konnte nicht erfolgreich verarbeitet werden. Höchstwahrscheinlich ist dies entweder keine gültige Raptoreum-Adresse oder die URI-Parameter sind falsch gesetzt. </translation>
+        <source>URI cannot be parsed! This can be caused by an invalid Dash address or malformed URI parameters.</source>
+        <translation>URI konnte nicht erfolgreich verarbeitet werden. Höchstwahrscheinlich ist dies entweder keine gültige Dash-Adresse oder die URI-Parameter sind falsch gesetzt. </translation>
     </message>
     <message>
         <source>Payment request file handling</source>
@@ -1905,9 +1941,57 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <source>Ping</source>
         <translation>Ping</translation>
     </message>
+    <message>
+        <source>Sent</source>
+        <translation>Gesendet</translation>
+    </message>
+    <message>
+        <source>Received</source>
+        <translation>Empfangen</translation>
+    </message>
 </context>
 <context>
     <name>QObject</name>
+    <message>
+        <source>Choose data directory on startup (default: %u)</source>
+        <translation>Datenverzeichnis beim Starten auswählen (Standard: %u)</translation>
+    </message>
+    <message>
+        <source>Set the font family. Possible values: %1. (default: %2)</source>
+        <translation>Schriftfamilie auswählen. Mögliche Werte: %1. (Standard: %2)</translation>
+    </message>
+    <message>
+        <source>Set a scale factor which gets applied to the base font size. Possible range %1 (smallest fonts) to %2 (largest fonts). (default: %3)</source>
+        <translation>Skalierungsfaktor setzen, der auf die Standardschriftgröße angewendet wird. Möglicher Bereich %1 (kleinste Schrift) bis %2 (größte Schrift). (Standard: %3)</translation>
+    </message>
+    <message>
+        <source>Set the font weight for bold texts. Possible range %1 to %2 (default: %3)</source>
+        <translation>Schriftstärke für fette Texte auswählen. Möglicher Bereich %1 bis %2 (Standard: %3)</translation>
+    </message>
+    <message>
+        <source>Set the font weight for normal texts. Possible range %1 to %2 (default: %3)</source>
+        <translation>Schriftstärke für normale Texte auswählen. Möglicher Bereich %1 bis %2 (Standard: %3)</translation>
+    </message>
+    <message>
+        <source>Set language, for example "de_DE" (default: system locale)</source>
+        <translation>Sprache festlegen, z.B. "de_DE" (Standard: Systemstandard)</translation>
+    </message>
+    <message>
+        <source>Start minimized</source>
+        <translation>Minimiert starten</translation>
+    </message>
+    <message>
+        <source>Reset all settings changed in the GUI</source>
+        <translation>Alle über die Benutzeroberfläche gemachten Einstellungen zurücksetzen</translation>
+    </message>
+    <message>
+        <source>Set SSL root certificates for payment request (default: -system-)</source>
+        <translation>SSL-Wurzelzertifikate für Zahlungsanforderungen festlegen (Standard: Systemstandard)</translation>
+    </message>
+    <message>
+        <source>Show splash screen on startup (default: %u)</source>
+        <translation>Startbildschirm beim Starten anzeigen (Standard: %u)</translation>
+    </message>
     <message>
         <source>%1 didn't yet exit safely...</source>
         <translation>%1 wurde noch nicht sicher beendet...</translation>
@@ -1917,8 +2001,20 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Betrag</translation>
     </message>
     <message>
-        <source>Enter a Raptoreum address (e.g. %1)</source>
-        <translation>Raptoreum-Adresse eingeben (z.B. %1)</translation>
+        <source>Enter a Dash address (e.g. %1)</source>
+        <translation>Dash-Adresse eingeben (z.B. %1)</translation>
+    </message>
+    <message>
+        <source>Appearance Setup</source>
+        <translation>Darstellungseinstellungen</translation>
+    </message>
+    <message>
+        <source>Please choose your preferred settings for the appearance of %1</source>
+        <translation>Bitte bevorzugte Einstellungen für die Darstellung von %1 auswählen</translation>
+    </message>
+    <message>
+        <source>This can also be adjusted later in the "Appearance" tab of the preferences.</source>
+        <translation>Dies kann später in der Registerkarte "Darstellung" unter Einstellungen angepasst werden.</translation>
     </message>
     <message>
         <source>%1 d</source>
@@ -1977,6 +2073,22 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>%1 und %2</translation>
     </message>
     <message>
+        <source>%1 B</source>
+        <translation>%1 B</translation>
+    </message>
+    <message>
+        <source>%1 KB</source>
+        <translation>%1 KB</translation>
+    </message>
+    <message>
+        <source>%1 MB</source>
+        <translation>%1 MB</translation>
+    </message>
+    <message>
+        <source>%1 GB</source>
+        <translation>%1 GB</translation>
+    </message>
+    <message>
         <source>unknown</source>
         <translation>unbekannt</translation>
     </message>
@@ -1994,6 +2106,34 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Error: %1</source>
         <translation>Fehler: %1</translation>
+    </message>
+    <message>
+        <source>Error: Failed to load application fonts.</source>
+        <translation>Fehler: Anwendungsschrift konnte nicht geladen werden</translation>
+    </message>
+    <message>
+        <source>Error: Specified font-family invalid. Valid values: %1.</source>
+        <translation>Fehler: Angegebene Schriftfamilie ungültig. Gültige Werte: %1.</translation>
+    </message>
+    <message>
+        <source>Error: Specified font-weight-normal invalid. Valid range %1 to %2.</source>
+        <translation>Fehler: Angegebene Schriftstärke Normal ungültig. Gültige Werte: %1 bis %2.</translation>
+    </message>
+    <message>
+        <source>Error: Specified font-weight-bold invalid. Valid range %1 to %2.</source>
+        <translation>Fehler: Angegebene Schriftstärke Fett ungültig. Gültige Werte: %1 bis %2.</translation>
+    </message>
+    <message>
+        <source>Error: Specified font-scale invalid. Valid range %1 to %2.</source>
+        <translation>Fehler: Angegebene Schriftgröße ungültig. Gültige Werte: %1 bis %2.</translation>
+    </message>
+    <message>
+        <source>Error: Invalid -custom-css-dir path.</source>
+        <translation>Fehler: Ungültiger -custom-css-dir Pfad.</translation>
+    </message>
+    <message>
+        <source>Error: %1 CSS file(s) missing in -custom-css-dir path.</source>
+        <translation>Fehler: %1 CSS Datei(en) fehlen im -custom-css-dir Pfad.</translation>
     </message>
 </context>
 <context>
@@ -2116,8 +2256,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Blockkette</translation>
     </message>
     <message>
-        <source>Number of Smartnodes</source>
-        <translation>Anzahl Smartnodes</translation>
+        <source>Number of Masternodes</source>
+        <translation>Anzahl Masternodes</translation>
     </message>
     <message>
         <source>Memory Pool</source>
@@ -2144,10 +2284,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>&amp;Netzwerkauslastung</translation>
     </message>
     <message>
-        <source>Totals</source>
-        <translation>Summen</translation>
-    </message>
-    <message>
         <source>Received</source>
         <translation>Empfangen</translation>
     </message>
@@ -2158,6 +2294,10 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>&amp;Peers</source>
         <translation>&amp;Gegenstellen</translation>
+    </message>
+    <message>
+        <source>Wallet:</source>
+        <translation>Wallet: </translation>
     </message>
     <message>
         <source>Banned peers</source>
@@ -2192,6 +2332,22 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Synchronisierte Blöcke</translation>
     </message>
     <message>
+        <source>Rescan blockchain files 1</source>
+        <translation>Dateien der Blockkette erneut durchsuchen 1</translation>
+    </message>
+    <message>
+        <source>Rescan blockchain files 2</source>
+        <translation>Dateien der Blockkette erneut durchsuchen 2</translation>
+    </message>
+    <message>
+        <source>-rescan=1: Rescan the block chain for missing wallet transactions starting from wallet creation time.</source>
+        <translation>-rescan=1: Blockchain erneut nach fehlenden Wallet-Transaktionen seit Erstellzeitpunkt der Wallet durchsuchen.</translation>
+    </message>
+    <message>
+        <source>-rescan=2: Rescan the block chain for missing wallet transactions starting from genesis block.</source>
+        <translation>-rescan=2: Blockchain erneut nach fehlenden Wallet-Transaktionen seit dem Genesis Block durchsuchen.</translation>
+    </message>
+    <message>
         <source>Wallet Path</source>
         <translation>Dateipfad des Wallet</translation>
     </message>
@@ -2204,12 +2360,20 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Datenverzeichnis</translation>
     </message>
     <message>
+        <source>Last block hash</source>
+        <translation>Letzter Blockhash</translation>
+    </message>
+    <message>
         <source>Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.</source>
         <translation>Öffnet die %1-Debugprotokolldatei aus dem aktuellen Datenverzeichnis. Dies kann bei großen Protokolldateien einige Sekunden dauern.</translation>
     </message>
     <message>
         <source>InstantSend locks</source>
         <translation>InstantSend Locks</translation>
+    </message>
+    <message>
+        <source>(none)</source>
+        <translation>(keine)</translation>
     </message>
     <message>
         <source>Decrease font size</source>
@@ -2222,6 +2386,14 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>&amp;Reset</source>
         <translation>&amp;Zurücksetzen</translation>
+    </message>
+    <message>
+        <source>Node Type</source>
+        <translation>Knoten-Typ</translation>
+    </message>
+    <message>
+        <source>PoSe Score</source>
+        <translation>PoSe Wertung</translation>
     </message>
     <message>
         <source>Services</source>
@@ -2272,10 +2444,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Wallet Datenwiederherstellungen</translation>
     </message>
     <message>
-        <source>Rescan blockchain files</source>
-        <translation>Dateien der Blockkette erneut durchsuchen</translation>
-    </message>
-    <message>
         <source>Recover transactions 1</source>
         <translation>Transaktion wiederherstellen 1</translation>
     </message>
@@ -2294,10 +2462,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>-salvagewallet: Attempt to recover private keys from a corrupt wallet.dat.</source>
         <translation>-salvagewallet: versucht private Schlüssel aus einer beschädigten wallet.dat wiederherzustellen</translation>
-    </message>
-    <message>
-        <source>-rescan: Rescan the block chain for missing wallet transactions.</source>
-        <translation>-rescan: Blockkette erneut nach fehlenden Wallet-Transaktionen durchsuchen</translation>
     </message>
     <message>
         <source>-zapwallettxes=1: Recover transactions from blockchain (keep meta-data, e.g. account owner).</source>
@@ -2356,12 +2520,16 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Willkommen in der %1 RPC Konsole.</translation>
     </message>
     <message>
-        <source>Type &lt;b&gt;help&lt;/b&gt; for an overview of available commands.</source>
-        <translation>Bitte &lt;b&gt;help&lt;/b&gt; eingeben, um eine Übersicht verfügbarer Befehle zu erhalten.</translation>
-    </message>
-    <message>
         <source>Use up and down arrows to navigate history, and %1 to clear screen.</source>
         <translation>Pfeiltaste hoch und runter, um den Verlauf durchzublättern und %1, um die Konsole zurückzusetzen.</translation>
+    </message>
+    <message>
+        <source>Type %1 for an overview of available commands.</source>
+        <translation>Bitte %1 eingeben, um eine Übersicht verfügbarer Befehle zu erhalten.</translation>
+    </message>
+    <message>
+        <source>For more information on using this console type %1.</source>
+        <translation>Für mehr Informationen zur Verwendung dieser Konsole, schreibe %1.</translation>
     </message>
     <message>
         <source>WARNING: Scammers have been active, telling users to type commands here, stealing their wallet contents. Do not use this console without fully understanding the ramifications of a command.</source>
@@ -2384,20 +2552,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Insgesamt: %1 (Aktiv: %2)</translation>
     </message>
     <message>
-        <source>%1 B</source>
-        <translation>%1 B</translation>
+        <source>Executing command without any wallet</source>
+        <translation>Befehl wird ohne eine Wallet ausgeführt</translation>
     </message>
     <message>
-        <source>%1 KB</source>
-        <translation>%1 KB</translation>
-    </message>
-    <message>
-        <source>%1 MB</source>
-        <translation>%1 MB</translation>
-    </message>
-    <message>
-        <source>%1 GB</source>
-        <translation>%1 GB</translation>
+        <source>Executing command using "%1" wallet</source>
+        <translation>Befehl wird für Wallet "%1" ausgeführt</translation>
     </message>
     <message>
         <source>(node id: %1)</source>
@@ -2428,6 +2588,18 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Nein</translation>
     </message>
     <message>
+        <source>Regular</source>
+        <translation>Standard</translation>
+    </message>
+    <message>
+        <source>Masternode</source>
+        <translation>Masternode</translation>
+    </message>
+    <message>
+        <source>Verified Masternode</source>
+        <translation>Verifizierte Masternode</translation>
+    </message>
+    <message>
         <source>Unknown</source>
         <translation>Unbekannt</translation>
     </message>
@@ -2435,16 +2607,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
-        <source>Reuse one of the previously used receiving addresses.&lt;br&gt;Reusing addresses has security and privacy issues.&lt;br&gt;Do not use this unless re-generating a payment request made before.</source>
-        <translation>Eine der bereits verwendeten Empfangsadressen wiederverwenden.&lt;br&gt; Addressen wiederzuverwenden birgt Sicherheits- und Datenschutzrisiken.&lt;br&gt; Außer zum Neuerstellen einer bereits erzeugten Zahlungsanforderung sollten Sie dies nicht nutzen.</translation>
-    </message>
-    <message>
-        <source>R&amp;euse an existing receiving address (not recommended)</source>
-        <translation>Vorhandene Empfangsadresse &amp;wiederverwenden (nicht empfohlen)</translation>
-    </message>
-    <message>
-        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Raptoreum network.</source>
-        <translation>Eine optionale Nachricht, die an die Zahlungsanforderung angehängt wird. Sie wird angezeigt, wenn die Anforderung geöffnet wird. Hinweis: Diese Nachricht wird nicht mit der Zahlung über das Raptoreum-Netzwerk gesendet.</translation>
+        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Dash network.</source>
+        <translation>Eine optionale Nachricht, die an die Zahlungsanforderung angehängt wird. Sie wird angezeigt, wenn die Anforderung geöffnet wird. Hinweis: Diese Nachricht wird nicht mit der Zahlung über das Dash-Netzwerk gesendet.</translation>
     </message>
     <message>
         <source>&amp;Message:</source>
@@ -2455,8 +2619,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Eine optionale Bezeichnung, die der neuen Empfangsadresse zugeordnet wird.</translation>
     </message>
     <message>
-        <source>An optional message to attach to the payment request, which will be displayed when the request is opened.&lt;br&gt;Note: The message will not be sent with the payment over the Raptoreum network.</source>
-        <translation>Eine optionale Nachricht, die an die Zahlungsanforderung angehängt wird. Sie wird angezeigt, wenn die Anforderung geöffnet wird.&lt;br&gt; Hinweis: Diese Nachricht wird nicht mit der Zahlung über das Raptoreum-Netzwerk gesendet.</translation>
+        <source>An optional message to attach to the payment request, which will be displayed when the request is opened.&lt;br&gt;Note: The message will not be sent with the payment over the Dash network.</source>
+        <translation>Eine optionale Nachricht, die an die Zahlungsanforderung angehängt wird. Sie wird angezeigt, wenn die Anforderung geöffnet wird.&lt;br&gt; Hinweis: Diese Nachricht wird nicht mit der Zahlung über das Dash-Netzwerk gesendet.</translation>
     </message>
     <message>
         <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
@@ -2505,6 +2669,14 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Remove</source>
         <translation>Entfernen</translation>
+    </message>
+    <message>
+        <source>Enter a label to associate with the new receiving address</source>
+        <translation>Eine Bezeichnung eingeben, die der neuen Empfangsadresse zugeordnet wird</translation>
+    </message>
+    <message>
+        <source>Enter a message to attach to the payment request</source>
+        <translation>Nachricht eingeben, die zur Zahlungsanforderung hinzugefügt wird</translation>
     </message>
     <message>
         <source>Copy URI</source>
@@ -2570,6 +2742,10 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Nachricht</translation>
     </message>
     <message>
+        <source>Wallet</source>
+        <translation>Wallet</translation>
+    </message>
+    <message>
         <source>Resulting URI too long, try to reduce the text for label / message.</source>
         <translation>Resultierende URI ist zu lang, bitte den Text für Bezeichnung/Nachricht kürzen.</translation>
     </message>
@@ -2613,7 +2789,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <name>SendCoinsDialog</name>
     <message>
         <source>Send Coins</source>
-        <translation>Raptoreum überweisen</translation>
+        <translation>Dash überweisen</translation>
     </message>
     <message>
         <source>Coin Control Features</source>
@@ -2684,15 +2860,11 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Bestätigungsziel:</translation>
     </message>
     <message>
-        <source>PrivateSend</source>
-        <translation>PrivateSend</translation>
-    </message>
-    <message>
         <source>If the custom fee is set to 1000 duffs and the transaction is only 250 bytes, then "per kilobyte" only pays 250 duffs in fee,&lt;br /&gt;while "at least" pays 1000 duffs. For transactions bigger than a kilobyte both pay by kilobyte.</source>
         <translation>Wenn die benutzerdefinierten Gebühren auf 1000 duffs gesetzt sind und eine Transaktion hat nur 250 Bytes, dann kostet "pro Kilobyte" nur 250 duffs Gebühren,&lt;br/&gt; während "mindestens" 1000 duffs kostet. Transaktionen größer als 1 Kilobyte werden immer pro Kilobyte bezahlt.</translation>
     </message>
     <message>
-        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks.&lt;br /&gt;But be aware that this can end up in a never confirming transaction once there is more demand for raptoreum transactions than the network can process.</source>
+        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks.&lt;br /&gt;But be aware that this can end up in a never confirming transaction once there is more demand for dash transactions than the network can process.</source>
         <translation>Nur die minimalen Gebühren zu zahlen ist völlig ausreichend so lange in einem neuen Block der Blockkette noch genug Platz für neue Transaktionen ist.&lt;br /&gt; Bitte beachten Sie dass wenn dies in der Zukunft nicht mehr der Fall sein sollte Ihre Transaktion eventuell niemals in einen neuen Block aufgenommen werden wird, also niemals bestätigt wird.</translation>
     </message>
     <message>
@@ -2788,6 +2960,10 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>%1 (%2 blocks)</translation>
     </message>
     <message>
+        <source>from wallet %1</source>
+        <translation>von Wallet %1</translation>
+    </message>
+    <message>
         <source>using</source>
         <translation>mittels</translation>
     </message>
@@ -2812,16 +2988,24 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>&lt;b&gt;(%1 von %2 Einträgen angezeigt)&lt;/b&gt;</translation>
     </message>
     <message>
-        <source>PrivateSend funds only</source>
-        <translation>Nur PrivateSend-Guthaben</translation>
+        <source>S&amp;end mixed funds</source>
+        <translation>S&amp;ende gemischtes Guthaben</translation>
+    </message>
+    <message>
+        <source>Confirm the %1 send action</source>
+        <translation>Überweisung %1 bestätigen</translation>
+    </message>
+    <message>
+        <source>%1 funds only</source>
+        <translation>Nur %1-Guthaben</translation>
     </message>
     <message>
         <source>any available funds</source>
         <translation>beliebiger verfügbarer Coins</translation>
     </message>
     <message>
-        <source>(PrivateSend transactions have higher fees usually due to no change output being allowed)</source>
-        <translation>(PrivateSend-Transaktionen fordern in der Regel eine höhere Gebühr, da kein Wechselgeld zulässig ist)</translation>
+        <source>(%1 transactions have higher fees usually due to no change output being allowed)</source>
+        <translation>(%1-Transaktionen fordern in der Regel eine höhere Gebühr, da kein Wechselgeld zulässig ist)</translation>
     </message>
     <message>
         <source>Transaction size: %1</source>
@@ -2836,8 +3020,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation><numerusform>Diese Transaktion wird %n Input verbrauchen</numerusform><numerusform>Diese Transaktion wird %n Inputs verbrauchen</numerusform></translation>
     </message>
     <message>
-        <source>Warning: Using PrivateSend with %1 or more inputs can harm your privacy and is not recommended</source>
-        <translation>Warnung: PrivateSend mit %1 oder mehr Inputs zu verwenden mindert die Privatsphäre und ist nicht empfohlen</translation>
+        <source>Warning: Using %1 with %2 or more inputs can harm your privacy and is not recommended</source>
+        <translation>Warnung: %1 mit %2 oder mehr Inputs zu verwenden mindert die Privatsphäre und ist nicht empfohlen</translation>
     </message>
     <message>
         <source>Confirm send coins</source>
@@ -2888,8 +3072,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation><numerusform>Geschätzter Beginn der Bestätigung in %n Block.</numerusform><numerusform>Geschätzter Beginn der Bestätigung in %n Blöcken.</numerusform></translation>
     </message>
     <message>
-        <source>Warning: Invalid Raptoreum address</source>
-        <translation>Warnung: ungültige Raptoreum-Adresse</translation>
+        <source>Warning: Invalid Dash address</source>
+        <translation>Warnung: ungültige Dash-Adresse</translation>
     </message>
     <message>
         <source>Warning: Unknown change address</source>
@@ -2919,8 +3103,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>E&amp;mpfänger:</translation>
     </message>
     <message>
-        <source>The Raptoreum address to send the payment to</source>
-        <translation>Raptoreum-Adresse, an die überwiesen werden soll</translation>
+        <source>The Dash address to send the payment to</source>
+        <translation>Dash-Adresse, an die überwiesen werden soll</translation>
     </message>
     <message>
         <source>Choose previously used address</source>
@@ -2955,7 +3139,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Betra&amp;g:</translation>
     </message>
     <message>
-        <source>The fee will be deducted from the amount being sent. The recipient will receive a lower amount of Raptoreum than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
+        <source>The fee will be deducted from the amount being sent. The recipient will receive a lower amount of Dash than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
         <translation>Die Gebühr wird von der versendeten  Summe abgezogen, daher wird der Empfänger einen  niedrigeren Betrag erhalten, als Sie im Feld "Betrag" angegeben haben. Bei mehreren Empfängern wird die Gebühre gleichmäßig auf alle Empfänger aufgeteilt.</translation>
     </message>
     <message>
@@ -2963,12 +3147,16 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Geb&amp;ühren vom Betrag abziehen</translation>
     </message>
     <message>
+        <source>Use available balance</source>
+        <translation>Verfügbares Guthaben verwenden</translation>
+    </message>
+    <message>
         <source>Message:</source>
         <translation>Nachricht:</translation>
     </message>
     <message>
-        <source>A message that was attached to the raptoreum: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Raptoreum network.</source>
-        <translation>Eine an die "raptoreum:"-URI angefügte Nachricht, die zusammen mit der Transaktion gespeichert wird. Hinweis: Diese Nachricht wird nicht über das Raptoreum-Netzwerk gesendet.</translation>
+        <source>A message that was attached to the dash: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Dash network.</source>
+        <translation>Eine an die "dash:"-URI angefügte Nachricht, die zusammen mit der Transaktion gespeichert wird. Hinweis: Diese Nachricht wird nicht über das Dash-Netzwerk gesendet.</translation>
     </message>
     <message>
         <source>This is an unauthenticated payment request.</source>
@@ -3020,12 +3208,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Nachricht &amp;signieren</translation>
     </message>
     <message>
-        <source>You can sign messages/agreements with your addresses to prove you can receive Raptoreum sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
+        <source>You can sign messages/agreements with your addresses to prove you can receive Dash sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
         <translation>Sie können Nachrichten mit ihren Adressen signieren, um den Besitz dieser Adressen zu beweisen. Bitte nutzen Sie diese Funktion mit Vorsicht und nehmen Sie sich vor Phishingangriffen in Acht. Signieren Sie nur Nachrichten, mit denen Sie vollständig einverstanden sind.</translation>
     </message>
     <message>
-        <source>The Raptoreum address to sign the message with</source>
-        <translation>Raptoreum-Adresse, mit der die Nachricht signiert werden soll</translation>
+        <source>The Dash address to sign the message with</source>
+        <translation>Dash-Adresse, mit der die Nachricht signiert werden soll</translation>
     </message>
     <message>
         <source>Choose previously used address</source>
@@ -3056,8 +3244,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Aktuelle Signatur in die Zwischenablage kopieren</translation>
     </message>
     <message>
-        <source>Sign the message to prove you own this Raptoreum address</source>
-        <translation>Die Nachricht signieren, um den Besitz dieser Raptoreum-Adresse zu belegen</translation>
+        <source>Sign the message to prove you own this Dash address</source>
+        <translation>Die Nachricht signieren, um den Besitz dieser Dash-Adresse zu belegen</translation>
     </message>
     <message>
         <source>Sign &amp;Message</source>
@@ -3080,12 +3268,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Geben Sie die signierende Adresse, Nachricht (achten Sie darauf Zeilenumbrüche, Leerzeichen, Tabulatoren usw. exakt zu kopieren) und Signatur unten ein, um die Nachricht zu verifizieren. Vorsicht, interpretieren Sie nicht mehr in die Signatur hinein, als in der signierten Nachricht selber enthalten ist, um nicht von einem Man-in-the-middle-Angriff hinters Licht geführt zu werden.</translation>
     </message>
     <message>
-        <source>The Raptoreum address the message was signed with</source>
-        <translation>Raptoreum-Adresse, mit der die Nachricht signiert worden ist</translation>
+        <source>The Dash address the message was signed with</source>
+        <translation>Dash-Adresse, mit der die Nachricht signiert worden ist</translation>
     </message>
     <message>
-        <source>Verify the message to ensure it was signed with the specified Raptoreum address</source>
-        <translation>Die Nachricht verifizieren, um sicherzustellen, dass diese mit der angegebenen Raptoreum-Adresse signiert wurde</translation>
+        <source>Verify the message to ensure it was signed with the specified Dash address</source>
+        <translation>Die Nachricht verifizieren, um sicherzustellen, dass diese mit der angegebenen Dash-Adresse signiert wurde</translation>
     </message>
     <message>
         <source>Verify &amp;Message</source>
@@ -3096,8 +3284,20 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Alle "Nachricht verifizieren"-Felder zurücksetzen</translation>
     </message>
     <message>
+        <source>Enter a message to be signed</source>
+        <translation>Zu signierende Nachricht eingeben</translation>
+    </message>
+    <message>
         <source>Click "Sign Message" to generate signature</source>
         <translation>Auf "Nachricht signieren" klicken, um die Signatur zu erzeugen</translation>
+    </message>
+    <message>
+        <source>Enter a message to be verified</source>
+        <translation>Zu bestätigende Nachricht eingeben</translation>
+    </message>
+    <message>
+        <source>Enter a signature for the message to be verified</source>
+        <translation>Signatur zur Bestätigung der Nachricht eingeben</translation>
     </message>
     <message>
         <source>The entered address is invalid.</source>
@@ -3154,16 +3354,24 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <source>[testnet]</source>
         <translation>[Testnetz]</translation>
     </message>
-    <message>
-        <source>Version %1</source>
-        <translation>Version %1</translation>
-    </message>
 </context>
 <context>
     <name>TrafficGraphWidget</name>
     <message>
         <source>KB/s</source>
         <translation>KB/s</translation>
+    </message>
+    <message>
+        <source>Total</source>
+        <translation>Gesamtbetrag</translation>
+    </message>
+    <message>
+        <source>Received</source>
+        <translation>Erhalten</translation>
+    </message>
+    <message>
+        <source>Sent</source>
+        <translation>Gesendet</translation>
     </message>
 </context>
 <context>
@@ -3179,10 +3387,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>conflicted</source>
         <translation>in Konflikt stehend</translation>
-    </message>
-    <message>
-        <source>%1/offline</source>
-        <translation>%1/offline</translation>
     </message>
     <message>
         <source>0/unconfirmed, %1</source>
@@ -3209,24 +3413,16 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>%1 Bestätigungen</translation>
     </message>
     <message>
-        <source>locked via LLMQ based ChainLocks</source>
-        <translation>durch LLMQ basierte ChainLocks bestätigt</translation>
+        <source>locked via ChainLocks</source>
+        <translation>Via ChainLocks gesperrt</translation>
     </message>
     <message>
-        <source>verified via LLMQ based InstantSend</source>
-        <translation>durch LLMQ basiertes InstantSend verifiziert</translation>
+        <source>verified via InstantSend</source>
+        <translation>Verifiziert via InstantSend</translation>
     </message>
     <message>
         <source>Status</source>
         <translation>Status</translation>
-    </message>
-    <message>
-        <source>, has not been successfully broadcast yet</source>
-        <translation>, wurde noch nicht erfolgreich übertragen</translation>
-    </message>
-    <message numerus="yes">
-        <source>, broadcast through %n node(s)</source>
-        <translation><numerusform>, über %n Knoten übertragen</numerusform><numerusform>, über %n Knoten übertragen</numerusform></translation>
     </message>
     <message>
         <source>Date</source>
@@ -3322,7 +3518,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to "not accepted" and it won't be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
-        <translation>Erzeugte Raptoreum müssen %1 Blöcke lang reifen, bevor sie ausgegeben werden können. Als Sie diesen Block erzeugten, wurde er an das Netzwerk übertragen, um ihn der Blockkette hinzuzufügen. Falls dies fehlschlägt wird der Status in "nicht angenommen" geändert und Sie werden keine Raptoreum gutgeschrieben bekommen. Das kann gelegentlich passieren, wenn ein anderer Knoten einen Block fast zeitgleich erzeugt.</translation>
+        <translation>Erzeugte Dash müssen %1 Blöcke lang reifen, bevor sie ausgegeben werden können. Als Sie diesen Block erzeugten, wurde er an das Netzwerk übertragen, um ihn der Blockkette hinzuzufügen. Falls dies fehlschlägt wird der Status in "nicht angenommen" geändert und Sie werden keine Dash gutgeschrieben bekommen. Das kann gelegentlich passieren, wenn ein anderer Knoten einen Block fast zeitgleich erzeugt.</translation>
     </message>
     <message>
         <source>Debug information</source>
@@ -3383,10 +3579,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Offen bis %1</translation>
     </message>
     <message>
-        <source>Offline</source>
-        <translation>Offline</translation>
-    </message>
-    <message>
         <source>Unconfirmed</source>
         <translation>Unbestätigt</translation>
     </message>
@@ -3411,12 +3603,16 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Unreif (%1 Bestätigungen, wird verfügbar sein nach %2)</translation>
     </message>
     <message>
-        <source>This block was not received by any other nodes and will probably not be accepted!</source>
-        <translation>Dieser Block wurde von keinem anderen Knoten empfangen und wird wahrscheinlich nicht angenommen werden!</translation>
-    </message>
-    <message>
         <source>Generated but not accepted</source>
         <translation>Erzeugt, jedoch nicht angenommen</translation>
+    </message>
+    <message>
+        <source>verified via InstantSend</source>
+        <translation>Verifiziert via InstantSend</translation>
+    </message>
+    <message>
+        <source>locked via ChainLocks</source>
+        <translation>Via ChainLocks gesperrt</translation>
     </message>
     <message>
         <source>Received with</source>
@@ -3427,8 +3623,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Empfangen von</translation>
     </message>
     <message>
-        <source>Received via PrivateSend</source>
-        <translation>über/durch PrivateSend empfangen</translation>
+        <source>Received via %1</source>
+        <translation>über/durch %1 empfangen</translation>
     </message>
     <message>
         <source>Sent to</source>
@@ -3443,24 +3639,24 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Erarbeitet</translation>
     </message>
     <message>
-        <source>PrivateSend Denominate</source>
-        <translation>PrivateSend Stückelung</translation>
+        <source>%1 Mixing</source>
+        <translation>%1 Mixen</translation>
     </message>
     <message>
-        <source>PrivateSend Collateral Payment</source>
-        <translation>PrivateSend Sicherheits-Zahlung</translation>
+        <source>%1 Collateral Payment</source>
+        <translation>%1 Sicherheits-Zahlung</translation>
     </message>
     <message>
-        <source>PrivateSend Make Collateral Inputs</source>
-        <translation>PrivateSend Sicherheits-Eingänge machen</translation>
+        <source>%1 Make Collateral Inputs</source>
+        <translation>%1 Sicherheits-Eingänge machen</translation>
     </message>
     <message>
-        <source>PrivateSend Create Denominations</source>
-        <translation>PrivateSend Stückelung erzeugen</translation>
+        <source>%1 Create Denominations</source>
+        <translation>%1 Stückelungs-Gebühr</translation>
     </message>
     <message>
-        <source>PrivateSend</source>
-        <translation>PrivateSend</translation>
+        <source>%1 Send</source>
+        <translation>%1 Überweisen</translation>
     </message>
     <message>
         <source>watch-only</source>
@@ -3491,10 +3687,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Zeigt ob eine beobachtete Adresse in dieser Transaktion beteiligt ist.</translation>
     </message>
     <message>
-        <source>Whether or not this transaction was locked by InstantSend.</source>
-        <translation>Ob diese Transaktion mit InstantSend gesichert wurde.</translation>
-    </message>
-    <message>
         <source>User-defined intent/purpose of the transaction.</source>
         <translation>Benutzerdefinierter Verwendungszweck der Transaktion</translation>
     </message>
@@ -3508,14 +3700,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>All</source>
         <translation>Alle</translation>
-    </message>
-    <message>
-        <source>Locked by InstantSend</source>
-        <translation>Mit InstantSend gesichert</translation>
-    </message>
-    <message>
-        <source>Not locked by InstantSend</source>
-        <translation>Nicht mit InstantSend gesichert</translation>
     </message>
     <message>
         <source>Today</source>
@@ -3554,24 +3738,24 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Überwiesen an</translation>
     </message>
     <message>
-        <source>PrivateSend</source>
-        <translation>PrivateSend</translation>
+        <source>%1 Send</source>
+        <translation>%1 Überweisen</translation>
     </message>
     <message>
-        <source>PrivateSend Make Collateral Inputs</source>
-        <translation>PrivateSend Sicherheits-Eingänge machen</translation>
+        <source>%1 Make Collateral Inputs</source>
+        <translation>%1 Sicherheits-Eingänge machen</translation>
     </message>
     <message>
-        <source>PrivateSend Create Denominations</source>
-        <translation>PrivateSend Stückelung erzeugen</translation>
+        <source>%1 Create Denominations</source>
+        <translation>%1 Stückelungs-Gebühr</translation>
     </message>
     <message>
-        <source>PrivateSend Denominate</source>
-        <translation>PrivateSend Stückelung</translation>
+        <source>%1 Mixing</source>
+        <translation>%1 Mixen</translation>
     </message>
     <message>
-        <source>PrivateSend Collateral Payment</source>
-        <translation>PrivateSend Sicherheits-Zahlung</translation>
+        <source>%1 Collateral Payment</source>
+        <translation>%1 Sicherheits-Zahlung</translation>
     </message>
     <message>
         <source>To yourself</source>
@@ -3586,8 +3770,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Andere</translation>
     </message>
     <message>
-        <source>Enter address or label to search</source>
-        <translation>Zu suchende Adresse oder Bezeichnung eingeben</translation>
+        <source>Enter address, transaction id, or label to search</source>
+        <translation>Adresse, Transaktions-ID oder Bezeichnung zur Suche eingeben</translation>
     </message>
     <message>
         <source>Min amount</source>
@@ -3716,7 +3900,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <name>WalletModel</name>
     <message>
         <source>Send Coins</source>
-        <translation>Raptoreum überweisen</translation>
+        <translation>Dash überweisen</translation>
     </message>
 </context>
 <context>
@@ -3757,36 +3941,16 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <source>The wallet data was successfully saved to %1.</source>
         <translation>Speichern der Wallet-Daten nach %1 war erfolgreich.</translation>
     </message>
+    <message>
+        <source>Cancel</source>
+        <translation>Abbrechen</translation>
+    </message>
 </context>
 <context>
-    <name>raptoreum-core</name>
-    <message>
-        <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
-        <translation>An die angegebene Adresse binden und immer abhören. Für IPv6 "[Host]:Port"-Schreibweise verwenden</translation>
-    </message>
+    <name>dash-core</name>
     <message>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
         <translation>Fehler: Abhören nach eingehenden Verbindungen fehlgeschlagen (Fehler %s)</translation>
-    </message>
-    <message>
-        <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
-        <translation>Befehl ausführen wenn ein relevanter Alarm empfangen wird oder wir einen wirklich langen Fork entdecken (%s im Befehl wird durch die Nachricht ersetzt)</translation>
-    </message>
-    <message>
-        <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
-        <translation>Befehl ausführen wenn sich eine Wallet-Transaktion verändert (%s im Befehl wird durch die TxID ersetzt)</translation>
-    </message>
-    <message>
-        <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
-        <translation>Befehl ausführen wenn der beste Block wechselt (%s im Befehl wird durch den Hash des Blocks ersetzt)</translation>
-    </message>
-    <message>
-        <source>Name to construct url for KeePass entry that stores the wallet passphrase</source>
-        <translation>Name, um eine URL für den KeyPass-Eintrag zu erzeugen, der die Wallet-Passphrase speichert.</translation>
-    </message>
-    <message>
-        <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
-        <translation>Maximale Anzahl an Skript-Verifizierungs-Threads festlegen (%u bis %d, 0 = automatisch, &lt;0 = so viele Kerne frei lassen, Standard: %d)</translation>
     </message>
     <message>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
@@ -3801,52 +3965,20 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Warnung: Wir scheinen nicht vollständig mit unseren Gegenstellen übereinzustimmen! Sie oder die anderen Knoten müssen unter Umständen ihre Client-Software aktualisieren.</translation>
     </message>
     <message>
-        <source>Accept command line and JSON-RPC commands</source>
-        <translation>Kommandozeilen- und JSON-RPC-Befehle annehmen</translation>
-    </message>
-    <message>
-        <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
-        <translation>Erlaube DNS-Abfragen für -addnode, -seednode und -connect</translation>
-    </message>
-    <message>
         <source>Already have that input.</source>
         <translation>Haben diesen Eintrag bereits.</translation>
-    </message>
-    <message>
-        <source>Block creation options:</source>
-        <translation>Blockerzeugungsoptionen:</translation>
     </message>
     <message>
         <source>Cannot downgrade wallet</source>
         <translation>Wallet kann nicht auf eine ältere Version herabgestuft werden</translation>
     </message>
     <message>
-        <source>Cannot write default address</source>
-        <translation>Standardadresse kann nicht geschrieben werden</translation>
-    </message>
-    <message>
         <source>Collateral not valid.</source>
         <translation>Sicherheitszahlung nicht gültig.</translation>
     </message>
     <message>
-        <source>Connect to a node to retrieve peer addresses, and disconnect</source>
-        <translation>Mit dem angegebenen Knoten verbinden, um Adressen von Gegenstellen abzufragen, danach trennen</translation>
-    </message>
-    <message>
-        <source>Connection options:</source>
-        <translation>Verbindungsoptionen:</translation>
-    </message>
-    <message>
         <source>Corrupted block database detected</source>
         <translation>Beschädigte Blockdatenbank erkannt</translation>
-    </message>
-    <message>
-        <source>Debugging/Testing options:</source>
-        <translation>Debugging-/Testoptionen:</translation>
-    </message>
-    <message>
-        <source>Do not load the wallet and disable wallet RPC calls</source>
-        <translation>Die Wallet nicht laden und Wallet-RPC-Aufrufe deaktivieren</translation>
     </message>
     <message>
         <source>Do you want to rebuild the block database now?</source>
@@ -3893,136 +4025,32 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Fehler, es konnte kein Port abgehört werden. Wenn dies so gewünscht wird -listen=0 verwenden.</translation>
     </message>
     <message>
-        <source>(1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)</source>
-        <translation>(1 = Transaktions-Metadaten wie z.B. Kontoinhaber behalten, 2 = Metadaten verwerfen)</translation>
-    </message>
-    <message>
         <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
         <translation>Warnung: -maxtxfee ist auf einen sehr hohen Wert gesetzt! Diese Gebühr könnte schon beim Senden einer einzelnen Transaktion fällig werden.</translation>
     </message>
     <message>
-        <source>A fee rate (in %s/kB) that will be used when fee estimation has insufficient data (default: %s)</source>
-        <translation>Höhe der Transaktionsgebühr (berechnet in %s/kB Transaktionsgröße) die benutzt wird, wenn die Gebührenabschätzung auf Grund unzureichender Daten nicht automatisch berechnet werden kann (Standard: %s)</translation>
-    </message>
-    <message>
-        <source>Accept relayed transactions received from whitelisted peers even when not relaying transactions (default: %d)</source>
-        <translation>Akzeptiere  weitergeleitete Transaktionen von erlaubten Peers , auch wenn das Weiterleiten von Transaktionen ausgeschaltet ist (Standard: %d)</translation>
-    </message>
-    <message>
-        <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
-        <translation>JSON-RPC Verbindungen von einer bestimmten Quelle zulassen. Für &lt;ip&gt; sind einzelne IPs (z.B. 1.2.3.4), Netzwerk/Netzmasken (z.B. 1.2.3.4/255.255.255.0) oder Netzwerk/CIDR (z.B. 1.2.3.4/24) erlaubt. Diese Option kann mehrmals eingetragen werden.</translation>
-    </message>
-    <message>
-        <source>Bind to given address and whitelist peers connecting to it. Use [host]:port notation for IPv6</source>
-        <translation>An die angegebene Adresse binden und Gegenstellen in die Liste der erlaubten Gegenstellen aufnehmen. Für IPv6 "[Host]:Port"-Schreibweise verwenden</translation>
-    </message>
-    <message>
-        <source>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</source>
-        <translation>Neue Dateien mit den System-Standardberechtigungen (anstatt 077) erzeugen (nur bei deaktiviertem Wallet möglich)</translation>
-    </message>
-    <message>
-        <source>Delete all wallet transactions and only recover those parts of the blockchain through -rescan on startup</source>
-        <translation>Lösche alle Wallet-Transaktionen stelle nur diese mittels -rescan beim nächsten Start des Wallets wieder her.</translation>
-    </message>
-    <message>
-        <source>Enable publish raw transactions of attempted InstantSend double spend in &lt;address&gt;</source>
-        <translation>Veröffentlichung der Transaktionsdaten eines versuchten InstantSend-DoubleSpends aktivieren &lt;address&gt;</translation>
-    </message>
-    <message>
-        <source>Enable publish transaction hashes of attempted InstantSend double spend in &lt;address&gt;</source>
-        <translation>Veröffentlichung des öffentlichen Transaktionshashes eines versuchten InstantSend-DoubleSpends aktivieren &lt;address&gt;</translation>
+        <source>Cannot provide specific connections and have addrman find outgoing connections at the same.</source>
+        <translation>Spezifische Verbindungen ermitteln und ausgehende Verbindungen durch addrman finden, ist nicht gleichzeitig möglich.</translation>
     </message>
     <message>
         <source>Found unconfirmed denominated outputs, will wait till they confirm to continue.</source>
         <translation>Unbestätigte für PrivateSend vorbereitete Ausgabebeträge gefunden, warte bis sie bestätigt sind bevor weitergemacht wird.</translation>
     </message>
     <message>
-        <source>How thorough the block verification of -checkblocks is (0-4, default: %u)</source>
-        <translation>Legt fest, wie gründlich die Blockverifikation von -checkblocks ist (0-4, Standard: %u)</translation>
-    </message>
-    <message>
-        <source>If paytxfee is not set, include enough fee so transactions begin confirmation on average within n blocks (default: %u)</source>
-        <translation>Falls paytxfee  nicht gesetzt wurde automatisch genug Transaktionsgebühren hinzufügen, um die Transaktion durchschnittlich innerhalb n Blöcken zu bestätigen (Standard: %u)</translation>
-    </message>
-    <message>
-        <source>If this block is in the chain assume that it and its ancestors are valid and potentially skip their script verification (0 to verify all, default: %s, testnet: %s)</source>
-        <translation>Ist dieser Block in der Chain, gehe davon aus dass dieser und seine Vorgänger gültig sind und überspringe deren Skript-Verifizierung (0 um alles zu verifizieren, Standard: %s, Testnet: %s)</translation>
+        <source>Invalid -socketevents ('%s') specified. Only these modes are supported: %s</source>
+        <translation>Ungültige -socketevents ('%s') spezifiziert. Nur diese Modi werden unterstützt: %s</translation>
     </message>
     <message>
         <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)</source>
         <translation>Ungültiger Betrag für -maxtxfee=&lt;amount&gt;: '%s' (Betrag muss mindestens minrelay von %s Gebühren sein um "hängende" Transaktionen zu vermeiden)</translation>
     </message>
     <message>
-        <source>Maintain a full transaction index, used by the getrawtransaction rpc call (default: %u)</source>
-        <translation>Einen vollständigen Transaktionsindex für den getrawtransaction RPC-Aufruf führen (Standard: %u)</translation>
-    </message>
-    <message>
-        <source>Maximum size of data in data carrier transactions we relay and mine (default: %u)</source>
-        <translation>Maximale Datengröße für von uns weitergegebenen Übermittlungstransaktionen (Standard: %u)</translation>
-    </message>
-    <message>
-        <source>Number of seconds to keep misbehaving peers from reconnecting (default: %u)</source>
-        <translation>Anzahl Sekunden, während denen sich nicht konform verhaltenden Gegenstellen die Wiederverbindung verweigert wird (Standard: %u)</translation>
-    </message>
-    <message>
-        <source>Output debugging information (default: %u, supplying &lt;category&gt; is optional)</source>
-        <translation>Debugging-Informationen ausgeben (Standard: %u, &lt;category&gt; anzugeben ist optional)</translation>
-    </message>
-    <message>
-        <source>Overrides minimum spork signers to change spork value. Only useful for regtest and devnet. Using this on mainnet or testnet will ban you.</source>
-        <translation>Spork-Wert durch ein Minimum an Spork-Unterzeichnern überschreiben. Nur für regtest und devnet verwendbar. Die Verwendung im Mainnet oder Testnet führt zum Bann.</translation>
-    </message>
-    <message>
-        <source>PrivateSend uses exact denominated amounts to send funds, you might simply need to mix some more coins.</source>
-        <translation>PrivateSend benutzt exakt gestückelte Beträge zum Versenden, Sie müssen dafür möglicherweise noch mehr RTM mischen.</translation>
-    </message>
-    <message>
-        <source>Use N separate smartnodes in parallel to mix funds (%u-%u, default: %u)</source>
-        <translation>N verschiedene Smartnodes verwenden, um Guthaben parallel zu mischen (%u-%u, Standard: %u)</translation>
-    </message>
-    <message>
-        <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)</source>
-        <translation>Separaten SOCKS5-Proxy verwenden, um Gegenstellen über versteckte Tor-Dienste zu erreichen (Standard: %s)</translation>
-    </message>
-    <message>
-        <source>User defined mnemonic for HD wallet (bip39). Only has effect during wallet creation/first start (default: randomly generated)</source>
-        <translation>Benutzerdefinierter Gedächtniscode für HD Wallet (BIP39). Nur gültig bei erstmaligem Start der Wallet (Standard: Zufallsgeneriert).</translation>
-    </message>
-    <message>
-        <source>User defined seed for HD wallet (should be in hex). Only has effect during wallet creation/first start (default: randomly generated)</source>
-        <translation>Benutzerdefinierter Seed für HD-Wallet (sollte im Hex-Format sein). Nur gültig bei erstmaligem Start der Wallet (Standard: Zufallsgeneriert).</translation>
-    </message>
-    <message>
-        <source>Whitelisted peers cannot be DoS banned and their transactions are always relayed, even if they are already in the mempool, useful e.g. for a gateway</source>
-        <translation>Erlaubte Gegenstellen können nicht wegen DoS ausgeschlossen werden und ihre Transaktionen werden immer weitergeleitet, sogar wenn sie schon im Memory-Pool sind. Dies ist z.B. für Gateways nützlich.</translation>
-    </message>
-    <message>
-        <source>(default: %s)</source>
-        <translation>(Standard: %s)</translation>
-    </message>
-    <message>
-        <source>Accept public REST requests (default: %u)</source>
-        <translation>Akzeptiere öffentliche REST-Anforderungen (Standard: %u)</translation>
-    </message>
-    <message>
-        <source>Always query for peer addresses via DNS lookup (default: %u)</source>
-        <translation>Peer-Adressen immer über DNS abfragen (Standard: %u)</translation>
+        <source>Transaction index can't be disabled with governance validation enabled. Either start with -disablegovernance command line switch or enable transaction index.</source>
+        <translation>Der Transaktionsindex nicht deaktiviert werden, solange die Governance-Validierung aktiviert ist. Der Transaktionsindex muss entweder aktiviert sein oder der Knoten muss mit dem Befehl -disablegovernance gestartet werden.</translation>
     </message>
     <message>
         <source>Can't mix: no compatible inputs found!</source>
         <translation>Mixen nicht möglich: Keine kompatiblen Inputs gefunden!</translation>
-    </message>
-    <message>
-        <source>Chain selection options:</source>
-        <translation>Chain Auswahloptionen:</translation>
-    </message>
-    <message>
-        <source>Connect through SOCKS5 proxy</source>
-        <translation>Über einen SOCKS5-Proxy verbinden</translation>
-    </message>
-    <message>
-        <source>Connect to KeePassHttp on port &lt;port&gt; (default: %u)</source>
-        <translation>Mit KeePassHttp auf &lt;port&gt; verbinden (Standard: %u)</translation>
     </message>
     <message>
         <source>Entry exceeds maximum size.</source>
@@ -4037,8 +4065,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Cache für Governance konnte nicht geladen werden aus</translation>
     </message>
     <message>
-        <source>Failed to load smartnode cache from</source>
-        <translation>Cache für Smartnodes konnte nicht geladen werden aus</translation>
+        <source>Failed to load masternode cache from</source>
+        <translation>Cache für Masternodes konnte nicht geladen werden aus</translation>
     </message>
     <message>
         <source>Found enough users, signing ( waiting %s )</source>
@@ -4049,16 +4077,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Genug Partner gefunden, signiere ... </translation>
     </message>
     <message>
-        <source>How many blocks to check at startup (default: %u, 0 = all)</source>
-        <translation>Wieviele Blöcke beim Starten geprüft werden sollen (Standard: %u, 0 = alle)</translation>
-    </message>
-    <message>
         <source>Importing...</source>
         <translation>Importiere...</translation>
-    </message>
-    <message>
-        <source>Include IP addresses in debug output (default: %u)</source>
-        <translation>IP-Adressen in die Debug-Ausgabe mit aufnehmen (Standard: %u)</translation>
     </message>
     <message>
         <source>Incompatible mode.</source>
@@ -4097,24 +4117,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Ungültige minimale Anzahl an Spork-Unterzeichnern durch -minsporkkeys spezifiziert</translation>
     </message>
     <message>
-        <source>Keep N RTM mixed (%u-%u, default: %u)</source>
-        <translation>Betrag welcher gemischt belassen wird. (%u-%u, Voreinstellung: %u) </translation>
-    </message>
-    <message>
-        <source>Keep at most &lt;n&gt; unconnectable transactions in memory (default: %u)</source>
-        <translation>Maximal &lt;n&gt; nicht-verbundene Zahlungen zwischenspeichern (Voreinstellung: %u)</translation>
-    </message>
-    <message>
         <source>Keypool ran out, please call keypoolrefill first</source>
         <translation>Schlüssel-Pool aufgebraucht, bitte rufen Sie zunächst "keypoolrefill" auf</translation>
-    </message>
-    <message>
-        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: %u or testnet: %u)</source>
-        <translation>&lt;port&gt;nach JSON-RPC-Verbindungen abhören (Standard: %u oder Testnetz: %u)</translation>
-    </message>
-    <message>
-        <source>Listen for connections on &lt;port&gt; (default: %u or testnet: %u)</source>
-        <translation>&lt;port&gt; nach Verbindungen abhören (Standard: %u oder Testnetz: %u)</translation>
     </message>
     <message>
         <source>Loading banlist...</source>
@@ -4125,124 +4129,44 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Lade Cache erfüllter Anfragen...</translation>
     </message>
     <message>
-        <source>Loading smartnode cache...</source>
-        <translation>Lade Smartnode-Cache...</translation>
+        <source>Loading masternode cache...</source>
+        <translation>Lade Masternode-Cache...</translation>
     </message>
     <message>
         <source>Lock is already in place.</source>
         <translation>Schon gesperrt.</translation>
     </message>
     <message>
-        <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: %u)</source>
-        <translation>Maximale Größe des Empfangspuffers pro Verbindung, &lt;n&gt; * 1000 Byte (Standard: %u)</translation>
-    </message>
-    <message>
-        <source>Maximum per-connection send buffer, &lt;n&gt;*1000 bytes (default: %u)</source>
-        <translation>Maximale Größe des Sendepuffers pro Verbindung, &lt;n&gt; * 1000 Byte (Standard: %u)</translation>
-    </message>
-    <message>
         <source>Mixing in progress...</source>
         <translation>Am Mixen...</translation>
-    </message>
-    <message>
-        <source>Mnemonic passphrase is too long, must be at most 256 characters</source>
-        <translation>Gedächtnis-Passphrase zu lang. Maximal 256 Zeichen zulässig</translation>
     </message>
     <message>
         <source>Need to specify a port with -whitebind: '%s'</source>
         <translation>Für -whitebind muss eine Portnummer angegeben werden: '%s'</translation>
     </message>
     <message>
-        <source>No Smartnodes detected.</source>
-        <translation>Keine Smartnodes gefunden.</translation>
+        <source>No Masternodes detected.</source>
+        <translation>Keine Masternodes gefunden.</translation>
     </message>
     <message>
-        <source>No compatible Smartnode found.</source>
-        <translation>Kein kompatibler Smartnode gefunden.</translation>
+        <source>No compatible Masternode found.</source>
+        <translation>Kein kompatibler Masternode gefunden.</translation>
     </message>
     <message>
         <source>Not enough funds to mix.</source>
         <translation>Nicht genug Guthaben zum Mischen vorhanden.</translation>
     </message>
     <message>
-        <source>Not in the Smartnode list.</source>
-        <translation>Nicht in der Smartnode-Liste.</translation>
+        <source>Not in the Masternode list.</source>
+        <translation>Nicht in der Masternode-Liste.</translation>
     </message>
     <message>
-        <source>Only connect to nodes in network &lt;net&gt; (ipv4, ipv6 or onion)</source>
-        <translation>Verbinde nur zu Knoten des Netztyps &lt;net&gt; (ipv4, ipv6 oder onion)</translation>
-    </message>
-    <message>
-        <source>Prepend debug output with timestamp (default: %u)</source>
-        <translation>Debugausgaben einen Zeitstempel voranstellen (Standard: %u)</translation>
-    </message>
-    <message>
-        <source>Rebuild chain state and block index from the blk*.dat files on disk</source>
-        <translation>Zustand der Chain und des Block-Index aus blk*.dat Dateien auf Datenträger wiederherstellen</translation>
-    </message>
-    <message>
-        <source>Rebuild chain state from the currently indexed blocks</source>
-        <translation>Zustand der Chain aus gegenwärtig indizierten Blöcken wiederherstellen</translation>
-    </message>
-    <message>
-        <source>Send trace/debug info to debug.log file (default: %u)</source>
-        <translation>Rückverfolgungs- und Debuginformationen in debug.log schreiben (Standard: %u)</translation>
-    </message>
-    <message>
-        <source>Set key pool size to &lt;n&gt; (default: %u)</source>
-        <translation>Größe des Schlüsselpools festlegen auf &lt;n&gt; (Standard: %u)</translation>
-    </message>
-    <message>
-        <source>Set the number of threads to service RPC calls (default: %d)</source>
-        <translation>Maximale Anzahl an Threads zur Verarbeitung von RPC-Anfragen festlegen (Standard: %d)</translation>
-    </message>
-    <message>
-        <source>Specify configuration file (default: %s)</source>
-        <translation>Konfigurationsdatei festlegen (Standard: %s)</translation>
-    </message>
-    <message>
-        <source>Specify connection timeout in milliseconds (minimum: 1, default: %d)</source>
-        <translation>Verbindungzeitüberschreitung in Millisekunden festlegen (Minimum: 1, Standard: %d)</translation>
-    </message>
-    <message>
-        <source>Specify pid file (default: %s)</source>
-        <translation>pid-Datei angeben (Standard: %s)</translation>
-    </message>
-    <message>
-        <source>Spend unconfirmed change when sending transactions (default: %u)</source>
-        <translation>Unbestätigtes Wechselgeld beim Senden von Transaktionen ausgeben (Standard: %u)</translation>
-    </message>
-    <message>
-        <source>Submitted to smartnode, waiting in queue %s</source>
-        <translation>An Smartnode übermittelt, wartet in Warteschlange %s</translation>
-    </message>
-    <message>
-        <source>Synchronization failed</source>
-        <translation>Synchronisation fehlgeschlagen</translation>
+        <source>Submitted to masternode, waiting in queue %s</source>
+        <translation>An Masternode übermittelt, wartet in Warteschlange %s</translation>
     </message>
     <message>
         <source>Synchronization finished</source>
         <translation>Synchronisation beendet</translation>
-    </message>
-    <message>
-        <source>Threshold for disconnecting misbehaving peers (default: %u)</source>
-        <translation>Schwellenwert, um Verbindungen zu sich nicht konform verhaltenden Gegenstellen zu beenden (Standard: %u)</translation>
-    </message>
-    <message>
-        <source>Too many %f denominations, removing.</source>
-        <translation>Zu viele %f Stückelungen, wird entfernt.</translation>
-    </message>
-    <message>
-        <source>Too many %f denominations, skipping.</source>
-        <translation>Zu viele %f Denominationen, überspringen.</translation>
-    </message>
-    <message>
-        <source>Tor control port password (default: empty)</source>
-        <translation>Tor Kontroll-Port Paßwort (Standard: nicht gesetzt)</translation>
-    </message>
-    <message>
-        <source>Tor control port to use if onion listening enabled (default: %s)</source>
-        <translation>Tor Kontroll-Port falls "Onion-Listening" aktiviert ist (Standard: %s)</translation>
     </message>
     <message>
         <source>Unable to start HTTP server. See debug log for details.</source>
@@ -4265,22 +4189,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Veraltete Option -tor wird nicht unterstützt, bitte -onion benutzen.</translation>
     </message>
     <message>
-        <source>Upgrade wallet to latest format on startup</source>
-        <translation>Wallet beim Neustart auf das neueste Format aktualisieren</translation>
-    </message>
-    <message>
-        <source>Use KeePass 2 integration using KeePassHttp plugin (default: %u)</source>
-        <translation>"KeePass 2"-Integration mit KeePassHttp-plugin (Standard: %u)</translation>
-    </message>
-    <message>
-        <source>Use UPnP to map the listening port (default: %u)</source>
-        <translation>UPnP verwenden, um eine Portweiterleitung einzurichten (Standard: %u)</translation>
-    </message>
-    <message>
-        <source>Use the test chain</source>
-        <translation>Nutze Test-Chain</translation>
-    </message>
-    <message>
         <source>User Agent comment (%s) contains unsafe characters.</source>
         <translation>Der "User Agent"-Text (%s) enthält unsichere Zeichen.</translation>
     </message>
@@ -4293,8 +4201,20 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Versuche erneut...</translation>
     </message>
     <message>
-        <source>Can't find random Smartnode.</source>
-        <translation>Kann keinen zufällig ausgewählten Smartnode finden</translation>
+        <source>Can't find random Masternode.</source>
+        <translation>Kann keinen zufällig ausgewählten Masternode finden</translation>
+    </message>
+    <message>
+        <source>%s can't be lower than %s</source>
+        <translation>%s kann nicht kleiner sein als %s</translation>
+    </message>
+    <message>
+        <source>%s is idle.</source>
+        <translation>%s ist untätig.</translation>
+    </message>
+    <message>
+        <source>%s request incomplete: %s</source>
+        <translation>%s-Anfrage unvollständig: %s</translation>
     </message>
     <message>
         <source>Can't mix while sync in progress.</source>
@@ -4309,96 +4229,20 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Invalides Zahlskript entdeckt.</translation>
     </message>
     <message>
-        <source>KeePassHttp id for the established association</source>
-        <translation>"KeePassHttp id" für bestehende verknüpfte Verbindungen.</translation>
-    </message>
-    <message>
-        <source>KeePassHttp key for AES encrypted communication with KeePass</source>
-        <translation>"KeePassHttp key" für die  AES-verschlüsselte Kommunikation mit "KeePass"</translation>
-    </message>
-    <message>
-        <source>Disable all Raptoreum specific functionality (Smartnodes, PrivateSend, InstantSend, Governance) (0-1, default: %u)</source>
-        <translation>Deaktiviere all Raptoreum-spezifischen Funktionen (Smartnodes, PrivateSend, InstantSend, Governance) (0-1, Standard: %u)</translation>
-    </message>
-    <message>
         <source>%s file contains all private keys from this wallet. Do not share it with anyone!</source>
         <translation>Die Datei %s beinhaltet alle privaten Schlüssel der Wallet. Diese sollten niemals weitergegeben werden!</translation>
     </message>
     <message>
-        <source>-smartnode option is deprecated and ignored, specifying -smartnodeblsprivkey is enough to start this node as a smartnode.</source>
-        <translation>Die -smartnode Option wird nicht mehr unterstützt und daher ignoriert -smartnodeblsprivkey reicht aus, um diese Node als Smartnode zu starten.</translation>
-    </message>
-    <message>
-        <source>Add a node to connect to and attempt to keep the connection open (see the `addnode` RPC command help for more info)</source>
-        <translation>Mit der angegebenen Node verbinden und versuchen die Verbindung aufrecht zu erhalten (für weitere Informationen wird auf die `addnode` RPC-Befehlshilfe verwiesen)</translation>
-    </message>
-    <message>
-        <source>Bind to given address to listen for JSON-RPC connections. This option is ignored unless -rpcallowip is also passed. Port is optional and overrides -rpcport. Use [host]:port notation for IPv6. This option can be specified multiple times (default: 127.0.0.1 and ::1 i.e., localhost, or if -rpcallowip has been specified, 0.0.0.0 and :: i.e., all addresses)</source>
-        <translation>An angegebene Adresse für JSON-RPC Verbindungen binden. Diese Option wird ignoriert, außer wenn -rpcallowip gesetzt ist. Der Port ist optional und überschreibt -rpcport. Up IPv6 zu nutzen, kann die [host]:port Notation genutzt werden. Diese Option kann mehrere male angegeben werden (Standard: 127.0.0.1, ::1 und localhost oder wenn -rpcallowip angegeben wurde, 0.0.0.0 und ::, also alle Adressen)</translation>
-    </message>
-    <message>
-        <source>Connect only to the specified node(s); -connect=0 disables automatic connections (the rules for this peer are the same as for -addnode)</source>
-        <translation>Nur mit spezifizierten Node(s) verbinden; -connect=0 um automatische Verbindungen zu deaktivieren (die Regeln für diesen Peer entsprechen denen für -addnode)</translation>
-    </message>
-    <message>
-        <source>Discover own IP addresses (default: 1 when listening and no -externalip or -proxy)</source>
-        <translation>Eigene IP-Adresse erkennen (Standard: 1, wenn -listen aktiv ist und nicht -externalip)</translation>
-    </message>
-    <message>
-        <source>Do not keep transactions in the mempool longer than &lt;n&gt; hours (default: %u)</source>
-        <translation>Transaktionen nicht länger als &lt;n&gt; Stunden im "Mempool" belassen (Standard: %u)</translation>
-    </message>
-    <message>
-        <source>Enable multiple PrivateSend mixing sessions per block, experimental (0-1, default: %u)</source>
-        <translation>Mehrere parallele  PrivateSend Mischprozesse pro Block erlauben, experimentell (0-1, Standard: %u)</translation>
-    </message>
-    <message>
-        <source>Execute command when a wallet InstantSend transaction is successfully locked (%s in cmd is replaced by TxID)</source>
-        <translation>Befehl ausführen wenn eine Wallet-Transaktion erfolgreich gesperrt wurde (%s im Befehl wird durch die TxID ersetzt)</translation>
-    </message>
-    <message>
-        <source>Extra transactions to keep in memory for compact block reconstructions (default: %u)</source>
-        <translation>Zusätzliche Transaktionen, die im Speicher bleiben, damit kompakte Blöcke ermöglicht werden können (Standard: %u)</translation>
+        <source>-masternode option is deprecated and ignored, specifying -masternodeblsprivkey is enough to start this node as a masternode.</source>
+        <translation>Die -masternode Option wird nicht mehr unterstützt und daher ignoriert -masternodeblsprivkey reicht aus, um diese Node als Masternode zu starten.</translation>
     </message>
     <message>
         <source>Failed to create backup, file already exists! This could happen if you restarted wallet in less than 60 seconds. You can continue if you are ok with this.</source>
         <translation>Datensicherung fehlgeschlagen, da diese Datei bereits existiert. Dies kann vorkommen, wenn das Wallet innerhalb von 60 Sekunden neu gestartet wurde. Sie können ohne Probleme weiterarbeiten, falls das so von Ihnen gewollt war.</translation>
     </message>
     <message>
-        <source>Fees (in %s/kB) smaller than this are considered zero fee for relaying, mining and transaction creation (default: %s)</source>
-        <translation>Niedrigere Gebühren (in %s pro Kb) als diese werden bei der Vermittlung als gebührenfrei angesehen (Standard: %s)</translation>
-    </message>
-    <message>
-        <source>Fees (in %s/kB) smaller than this are considered zero fee for transaction creation (default: %s)</source>
-        <translation>Niedrigere Gebühren (in %s pro Kb) als diese werden bei der Transaktionserzeugung als gebührenfrei angesehen (Standard: %s)</translation>
-    </message>
-    <message>
-        <source>If &lt;category&gt; is not supplied or if &lt;category&gt; = 1, output all debugging information.</source>
-        <translation>Wenn &lt;category&gt; nicht angegeben wird oder &lt;category&gt; = 1, jegliche Debugginginformationen ausgeben.</translation>
-    </message>
-    <message>
-        <source>Maintain a full address index, used to query for the balance, txids and unspent outputs for addresses (default: %u)</source>
-        <translation>Eingabe eines vollständigen Adreß-Indexes für Guthaben, Transaktions-IDs und Ausgaben für die Adressen (Standard: %u)</translation>
-    </message>
-    <message>
-        <source>Maintain a full spent index, used to query the spending txid and input index for an outpoint (default: %u)</source>
-        <translation>Eingabe eines vollständigen Indexes für Transaktions-IDs für Ausgaben und für den Eingangsindex für einen Ausgabepunkt (Standard: %u)</translation>
-    </message>
-    <message>
-        <source>Maintain a timestamp index for block hashes, used to query blocks hashes by a range of timestamps (default: %u)</source>
-        <translation>Zeitstempel-Index für Block-Hashes pflegen, um Blocks innerhalb eines gegebenen Zeitrahmens abzufragen (Standard: %u)</translation>
-    </message>
-    <message>
-        <source>Maintain at most &lt;n&gt; connections to peers (temporary service connections excluded) (default: %u)</source>
-        <translation>Maximal &lt;n&gt; Verbindungen zu Gegenstellen aufrechterhalten (temporäre Dienstverbindungen ausgenommen) (Standard: %u)</translation>
-    </message>
-    <message>
         <source>Make sure to encrypt your wallet and delete all non-encrypted backups after you have verified that the wallet works!</source>
         <translation>Verschlüsseln Sie ihre Wallet und löschen Sie alle unverschlüsselten Sicherungen nachdem Sie sichergestellt haben, dass diese funktioniert!</translation>
-    </message>
-    <message>
-        <source>Maximum total size of all orphan transactions in megabytes (default: %u)</source>
-        <translation>Maximale Größe aller verwaisten Transaktionen in Megabyte (Standard: %u)</translation>
     </message>
     <message>
         <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
@@ -4409,28 +4253,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Abschneiden ("prune"): die letzte Synchronistion des Wallet endete jenseits der abgeschnittenen Daten. Starten Sie das Wallet mit der Option -reindex neu oder downloaden Sie die komplette Blockchain erneut.</translation>
     </message>
     <message>
-        <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect used)</source>
-        <translation>Abfrage der Peer-Adressen über DNS, falls es wenige Adressen gibt (Standard: 1, außer wenn -connect konfiguriert wurde)</translation>
-    </message>
-    <message>
-        <source>Randomize credentials for every proxy connection. This enables Tor stream isolation (default: %u)</source>
-        <translation>Zugangsdaten für jede Proxy-Verbindung zufällig generieren. Diese ermöglicht Tors "stream isolation" Feature (Standard: %u)</translation>
-    </message>
-    <message>
         <source>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</source>
         <translation>Im "pruned"-Modus ist ein Überprüfen der Blockchain nicht möglich. Sie müssen dafür die Option -reindex benutzen, welche die gesamte Blockchain erneut downloaden wird.</translation>
-    </message>
-    <message>
-        <source>Set the smartnode BLS private key and enable the client to act as a smartnode</source>
-        <translation>Smartnode BLS PrivateKey setzen und den Client dazu verwenden, eine Smartnode zu starten</translation>
-    </message>
-    <message>
-        <source>Specify full path to directory for automatic wallet backups (must exist)</source>
-        <translation>Geben Die dem vollständigen Pfad für die automatische Wallet-Datensicherungen ein (der Pfad muß bereits existieren)</translation>
-    </message>
-    <message>
-        <source>Support filtering of blocks and transaction with bloom filters (default: %u)</source>
-        <translation>Unterstütze das Filtern von Blocks und Transaktionen über Bloom-Filter (Standard: %u)</translation>
     </message>
     <message>
         <source>The block database contains a block which appears to be from the future. This may be due to your computer's date and time being set incorrectly. Only rebuild the block database if you are sure that your computer's date and time are correct</source>
@@ -4445,28 +4269,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Die Gesamtlänge des Versions-Namens (%i) überschreitet die erlaubte Maximallänge (%i). Bitte verringern Sie Anzahl oder Größe der Eingaben für die Kommandozeilenoption -uacomments.</translation>
     </message>
     <message>
-        <source>Transaction index can't be disabled in full mode. Either start with -litemode command line switch or enable transaction index.</source>
-        <translation>Der Transaktionsindex kann bei einer Fullnode nicht deaktiviert werden. Der Transaktionsindex muss entweder aktiviert sein oder die Node muss mit dem Befehl -litemode gestartet werden.</translation>
-    </message>
-    <message>
-        <source>Tries to keep outbound traffic under the given target (in MiB per 24h), 0 = no limit (default: %d)</source>
-        <translation>Versucht die Menge des Ausgehenden Datenverkehrs unterhalb der angegebenen Maximalmenge (in MiB pro Tag) zu halten, 0 = keine Maximalmenge (Standard: %d)</translation>
-    </message>
-    <message>
-        <source>Unable to locate enough PrivateSend denominated funds for this transaction.</source>
-        <translation>Für diese Transaktion konnten nicht genug mit PrivateSend gestückelte Beträge gefunden werden.</translation>
-    </message>
-    <message>
         <source>Unsupported argument -socks found. Setting SOCKS version isn't possible anymore, only SOCKS5 proxies are supported.</source>
         <translation>Parameter -socks wird nicht mehr unterstützt. Setzen der SOCKS-Version ist nicht mehr möglich, es werden nur noch SOCKS5 Proxies unterstützt.</translation>
     </message>
     <message>
         <source>Unsupported argument -whitelistalwaysrelay ignored, use -whitelistrelay and/or -whitelistforcerelay.</source>
         <translation>Obsolete Option -whitelistalwaysrelay wird ignoriert, benutzen Sie -whitelistrelay und/oder -whitelistforcerelay.</translation>
-    </message>
-    <message>
-        <source>Use UPnP to map the listening port (default: 1 when listening and no -proxy)</source>
-        <translation>UPnP verwenden, um eine Portweiterleitung einzurichten (Standard: 1 wenn -listen=1 und -proxy gesetzt ist)</translation>
     </message>
     <message>
         <source>WARNING! Failed to replenish keypool, please unlock your wallet to do so.</source>
@@ -4489,68 +4297,52 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Sie müssen die Datenbank mit Hilfe von -reindex neu aufbauen, um zurück in den nicht abgeschnittenen/pruned Modus zu gehen. Dies wird die gesamte Blockchain downloaden</translation>
     </message>
     <message>
-        <source>(default: %u)</source>
-        <translation>(Standard: %u)</translation>
+        <source>-litemode is deprecated.</source>
+        <translation>-litemode ist veraltet.</translation>
     </message>
     <message>
         <source>-maxmempool must be at least %d MB</source>
         <translation>-maxmempool muß mindestens %d MB sein</translation>
     </message>
     <message>
-        <source>&lt;category&gt; can be:</source>
-        <translation>&lt;Kategorie&gt; kann sein:</translation>
-    </message>
-    <message>
-        <source>Append comment to the user agent string</source>
-        <translation>Kommentar an "Uder-Agent" Text anhängen</translation>
-    </message>
-    <message>
         <source>Automatic backups disabled</source>
         <translation>Automatische Datensicherungen sind deaktiviert.</translation>
-    </message>
-    <message>
-        <source>Automatically create Tor hidden service (default: %d)</source>
-        <translation>Automatisch versteckte Tor-Dienste erzeugen (Standard: %d)</translation>
     </message>
     <message>
         <source>ERROR! Failed to create automatic backup</source>
         <translation>FEHLER! Die automatische Datensicherung ist fehlgeschlagen</translation>
     </message>
     <message>
-        <source>Enable publish hash block in &lt;address&gt;</source>
-        <translation>Veröffentlichung des Blockhash in &lt;Adresse&gt; ermöglichen </translation>
-    </message>
-    <message>
-        <source>Enable publish hash of governance objects (like proposals) in &lt;address&gt;</source>
-        <translation>Veröffentlichung des Hash eines Governance Objects (z.B. ein Proposal) in &lt;address&gt; ermöglichen </translation>
-    </message>
-    <message>
-        <source>Enable publish hash of governance votes in &lt;address&gt;</source>
-        <translation>Veröffentlichung des Hash einer Governance Stimme in &lt;address&gt; ermöglichen </translation>
-    </message>
-    <message>
-        <source>Enable publish hash transaction (locked via InstantSend) in &lt;address&gt;</source>
-        <translation>Veröffentlichung des Transaktionshash (blockiert via InstantSend) in &lt;Adresse&gt; ermöglichen </translation>
-    </message>
-    <message>
-        <source>Enable publish hash transaction in &lt;address&gt;</source>
-        <translation>Veröffentlichung des Transaktionshash in &lt;Adresse&gt; ermöglichen </translation>
-    </message>
-    <message>
-        <source>Enable publish raw block in &lt;address&gt;</source>
-        <translation>Veröffentlichung des Originalblock in &lt;Adresse&gt; ermöglichen </translation>
-    </message>
-    <message>
-        <source>Enable publish raw transaction (locked via InstantSend) in &lt;address&gt;</source>
-        <translation>Veröffentlichung der Originaltransaktion (blockiert via InstantSend) in &lt;Adresse&gt; ermöglichen </translation>
-    </message>
-    <message>
-        <source>Enable publish raw transaction in &lt;address&gt;</source>
-        <translation>Veröffentlichung des Originaltransaktion in &lt;Adresse&gt; ermöglichen </translation>
+        <source>Error upgrading evo database</source>
+        <translation>Fehler bei der Aktualisierung der Evo-Datenbank</translation>
     </message>
     <message>
         <source>Error: A fatal internal error occurred, see debug.log for details</source>
         <translation>Fehler: ein nicht-behebbarer interner Fehler ist aufgetreten, Details sind in der Datei debug.log</translation>
+    </message>
+    <message>
+        <source>Error: failed to add socket to epollfd (epoll_ctl returned error %s)</source>
+        <translation>Fehler: Hinzufügung eines Sockets zu epollfd fehlgeschlagen (epoll_ctl meldet Fehler %s)</translation>
+    </message>
+    <message>
+        <source>Exceeded max tries.</source>
+        <translation>Maximale Zahl an Versuchen überschritten.</translation>
+    </message>
+    <message>
+        <source>Failed to clear fulfilled requests cache at</source>
+        <translation>Cache für erfüllte Anfragen konnte nicht geleert werden bei</translation>
+    </message>
+    <message>
+        <source>Failed to clear governance cache at</source>
+        <translation>Cache für Governance konnte nicht geleert werden bei</translation>
+    </message>
+    <message>
+        <source>Failed to clear masternode cache at</source>
+        <translation>Cache für Masternode konnte nicht geleert werden bei</translation>
+    </message>
+    <message>
+        <source>Failed to commit EvoDB</source>
+        <translation>Festlegen von EvoDB fehlgeschlagen</translation>
     </message>
     <message>
         <source>Failed to create backup %s!</source>
@@ -4569,36 +4361,24 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Sporks Cache konnte nicht geladen werden aus</translation>
     </message>
     <message>
-        <source>Fee (in %s/kB) to add to transactions you send (default: %s)</source>
-        <translation>Gebühr (in %s/kB), die gesendeten Transaktionen hinzugefügt wird (Standard: %s)</translation>
-    </message>
-    <message>
-        <source>Imports blocks from external blk000??.dat file on startup</source>
-        <translation>Blöcke aus externer Datei blk000??.dat importieren</translation>
-    </message>
-    <message>
-        <source>InstantSend options:</source>
-        <translation>InstantSend Optionen:</translation>
+        <source>Failed to rescan the wallet during initialization</source>
+        <translation>Rescan der Wallet während der Initialisierung fehlgeschlagen</translation>
     </message>
     <message>
         <source>Invalid amount for -fallbackfee=&lt;amount&gt;: '%s'</source>
         <translation>Ungültiger Betrag für -fallbackfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
-        <source>Invalid smartnodeblsprivkey. Please see documentation.</source>
-        <translation>Ungültiger smartnodeblsprivkey. Weitere Informationen befinden sich in der Dokumentation.</translation>
+        <source>Invalid masternodeblsprivkey. Please see documentation.</source>
+        <translation>Ungültiger masternodeblsprivkey. Weitere Informationen befinden sich in der Dokumentation.</translation>
     </message>
     <message>
-        <source>Keep the transaction memory pool below &lt;n&gt; megabytes (default: %u)</source>
-        <translation>Transaktionen im "Mempool" unterhalb von &lt;n&gt; halten (Standard: %u)</translation>
+        <source>It has been replaced by -disablegovernance.</source>
+        <translation>Es wurde durch -disablegovernance ersetzt.</translation>
     </message>
     <message>
-        <source>Last PrivateSend was too recent.</source>
-        <translation>Letzte PrivateSend-Transaktion ist noch zu neu.</translation>
-    </message>
-    <message>
-        <source>Last successful PrivateSend action was too recent.</source>
-        <translation>Die letzte erfolgreiche PrivateSend-Transaktion ist noch zu neu.</translation>
+        <source>Its replacement -disablegovernance has been forced instead.</source>
+        <translation>Der Ersatz -disablegovernance wurde stattdessen durchgeführt.</translation>
     </message>
     <message>
         <source>Loading block index...</source>
@@ -4621,28 +4401,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Lade Wallet...</translation>
     </message>
     <message>
-        <source>Location of the auth cookie (default: data dir)</source>
-        <translation>Ort des Berechtigungs-Cookies (default: data dir)</translation>
+        <source>Masternode queue is full.</source>
+        <translation>Warteschlange der Masternode ist voll.</translation>
     </message>
     <message>
-        <source>Make the wallet broadcast transactions</source>
-        <translation>Aktiviere die Übertragung von Transaktionen</translation>
-    </message>
-    <message>
-        <source>Smartnode options:</source>
-        <translation>Smartnode Optionen:</translation>
-    </message>
-    <message>
-        <source>Smartnode queue is full.</source>
-        <translation>Warteschlange der Smartnode ist voll.</translation>
-    </message>
-    <message>
-        <source>Smartnode:</source>
-        <translation>Smartnode:</translation>
-    </message>
-    <message>
-        <source>Minimum bytes per sigop in transactions we relay and mine (default: %u)</source>
-        <translation>Minimale Anzahl Bytes pro SigOp in Transaktionen, die weitergeleitet und gemined werden (Standard: %u)</translation>
+        <source>Masternode:</source>
+        <translation>Masternode:</translation>
     </message>
     <message>
         <source>Missing input transaction information.</source>
@@ -4657,14 +4421,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Keine passende Zerstückelungen zum Mixen gefunden.</translation>
     </message>
     <message>
-        <source>Node relay options:</source>
-        <translation>Vermittlungs-Optionen für Knoten:</translation>
-    </message>
-    <message>
-        <source>Non-standard public key detected.</source>
-        <translation>nicht Standard öffentlicher Schlüssel erkannt.</translation>
-    </message>
-    <message>
         <source>Not compatible with existing transactions.</source>
         <translation>Nicht kompatibel mit existierenden Transaktionen.</translation>
     </message>
@@ -4673,40 +4429,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Nicht genügend Datei-Deskriptoren verfügbar.</translation>
     </message>
     <message>
-        <source>Number of automatic wallet backups (default: %u)</source>
-        <translation>Anzahl automatischer Wallet-Sicherungskopien (Standard: %u)</translation>
-    </message>
-    <message>
-        <source>Options:</source>
-        <translation>Optionen:</translation>
-    </message>
-    <message>
-        <source>Password for JSON-RPC connections</source>
-        <translation>Passwort für JSON-RPC-Verbindungen</translation>
-    </message>
-    <message>
-        <source>Print version and exit</source>
-        <translation>Version anzeigen und beenden</translation>
-    </message>
-    <message>
-        <source>PrivateSend is idle.</source>
-        <translation>PrivateSend ist untätig.</translation>
-    </message>
-    <message>
-        <source>PrivateSend options:</source>
-        <translation>PrivateSend Optionen:</translation>
-    </message>
-    <message>
-        <source>PrivateSend request complete:</source>
-        <translation>PrivateSend-Anforderung fertiggestellt:</translation>
-    </message>
-    <message>
-        <source>PrivateSend request incomplete:</source>
-        <translation>PrivateSend-Anforderung unvollständig:</translation>
-    </message>
-    <message>
         <source>Prune cannot be configured with a negative value.</source>
         <translation>Prune/Abschneiden kann nicht mit einem negativen Wert konfiguriert werden.</translation>
+    </message>
+    <message>
+        <source>Prune mode is incompatible with -disablegovernance=false.</source>
+        <translation>Prune ist zu -disablegovernance=false nicht kompatibel.</translation>
     </message>
     <message>
         <source>Prune mode is incompatible with -txindex.</source>
@@ -4717,8 +4445,16 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Alte Blocks werden abgeschnitten/pruned...</translation>
     </message>
     <message>
-        <source>Rescan the block chain for missing wallet transactions on startup</source>
-        <translation>Blockkette erneut nach fehlenden Wallet-Transaktionen durchsuchen</translation>
+        <source>Specified -walletdir "%s" does not exist</source>
+        <translation>Spezifizierte -walletdir "%s" existiert nicht</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" is a relative path</source>
+        <translation>Spezifizierte -walletdir "%s" ist ein relativer Pfad</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" is not a directory</source>
+        <translation>Spezifizierte -walletdir "%s" ist kein Verzeichnis</translation>
     </message>
     <message>
         <source>Synchronizing blockchain...</source>
@@ -4727,6 +4463,10 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>The wallet will avoid paying less than the minimum relay fee.</source>
         <translation>Das Wallet verhindert Zahlungen, die die Mindesttransaktionsgebühr nicht berücksichtigen.</translation>
+    </message>
+    <message>
+        <source>This is expected because you are running a pruned node.</source>
+        <translation>Dies ist zu erwarten, da ein gekürzter (pruned) Knoten betrieben wird.</translation>
     </message>
     <message>
         <source>This is the minimum transaction fee you pay on every transaction.</source>
@@ -4761,16 +4501,16 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Kann auf diesem Computer nicht an %s binden. Evtl. wurde %s bereits gestartet.</translation>
     </message>
     <message>
+        <source>Unable to generate initial keys</source>
+        <translation>Initiale Schlüssel konnten nicht generiert werden</translation>
+    </message>
+    <message>
         <source>Upgrading UTXO database</source>
         <translation>Aktualisierung der UTXO Datenbank</translation>
     </message>
     <message>
-        <source>Use devnet chain with provided name</source>
-        <translation>Devnet Chain mit bereitgestelltem Namen verwenden</translation>
-    </message>
-    <message>
-        <source>Wallet debugging/testing options:</source>
-        <translation>Wallet Debugging-/Testoptionen:</translation>
+        <source>Wallet %s resides outside wallet directory %s</source>
+        <translation>Wallet %s liegt außerhalb des Wallet-Verzeichnisses %s</translation>
     </message>
     <message>
         <source>Wallet needed to be rewritten: restart %s to complete</source>
@@ -4785,16 +4525,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Neuer Datensicherung-Ordner %s konnte nicht angelegt werden!</translation>
     </message>
     <message>
-        <source>Whether to operate in a blocks only mode (default: %u)</source>
-        <translation>Arbeite im Block-Only-Modus (Standard: %u)</translation>
-    </message>
-    <message>
-        <source>You can not start a smartnode in lite mode.</source>
-        <translation>Eine Smartnode kann nicht im Lite-Modus gestartet werden,</translation>
-    </message>
-    <message>
-        <source>You can not start a smartnode with wallet enabled.</source>
-        <translation>Eine Smartnode kann nicht mit aktivierter Wallet gestartet werden.</translation>
+        <source>You can not start a masternode with wallet enabled.</source>
+        <translation>Eine Masternode kann nicht mit aktivierter Wallet gestartet werden.</translation>
     </message>
     <message>
         <source>You need to rebuild the database using -reindex to change -addressindex</source>
@@ -4809,10 +4541,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Sie müssen die Datenbank mit Hilfe von -reindex neu aufbauen, um -txindex zu verändern</translation>
     </message>
     <message>
-        <source>ZeroMQ notification options:</source>
-        <translation>ZeroMQ Benachrichtigung-Optionen:</translation>
-    </message>
-    <message>
         <source>no mixing available.</source>
         <translation>Mixing nicht verfügbar.</translation>
     </message>
@@ -4821,16 +4549,16 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Details finden Sie in debug.log</translation>
     </message>
     <message>
-        <source>RPC server options:</source>
-        <translation>RPC-Serveroptionen:</translation>
-    </message>
-    <message>
-        <source>Raptoreum Core</source>
-        <translation>Raptoreum Core</translation>
+        <source>Dash Core</source>
+        <translation>Dash Core</translation>
     </message>
     <message>
         <source>The %s developers</source>
         <translation>Die %s-Entwickler</translation>
+    </message>
+    <message>
+        <source>%s uses exact denominated amounts to send funds, you might simply need to mix some more coins.</source>
+        <translation>%s benutzt exakt gestückelte Beträge zum Versenden, Sie müssen dafür möglicherweise noch mehr DASH mischen.</translation>
     </message>
     <message>
         <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
@@ -4841,44 +4569,16 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Veröffentlicht unter der MIT-Softwarelizenz, siehe beiligende Datei %s oder %s.</translation>
     </message>
     <message>
-        <source>Enable use of PrivateSend for funds stored in this wallet (0-1, default: %u)</source>
-        <translation>Aktiviere PrivateSend für Guthaben, das in dieser Wallet gesichert wird (0-1, Standard: %u)</translation>
-    </message>
-    <message>
         <source>Error loading %s: You can't enable HD on an already existing non-HD wallet</source>
         <translation>Fehler beim Laden von %s: Sie können HD nicht bei einer bestehenden nicht-HD Wallet aktivieren</translation>
-    </message>
-    <message>
-        <source>Error loading wallet %s. -wallet parameter must only specify a filename (not a path).</source>
-        <translation>Fehler beim Laden von Wallet %s. -wallet parameter darf nur den Dateinamen angeben (nicht den Pfad).</translation>
     </message>
     <message>
         <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
         <translation>Lesen von %s fehlgeschlagen! Alle Schlüssel wurden korrekt gelesen, Transaktionsdaten bzw. Adressbucheinträge fehlen aber möglicherweise oder sind inkorrekt.</translation>
     </message>
     <message>
-        <source>Exclude debugging information for a category. Can be used in conjunction with -debug=1 to output debug logs for all categories except one or more specified categories.</source>
-        <translation>Debugging-Informationen für eine Kategorie ausschließen. Kann zusammen mit -debug=1 verwendet werden, damit Debug-Protokolle für alle Kategorien außer bei einer oder mehreren angegebenen Kategorien angezeigt werden.</translation>
-    </message>
-    <message>
-        <source>Force relay of transactions from whitelisted peers even if they violate local relay policy (default: %d)</source>
-        <translation>Leite Transaktionen von Peers auf der Positivliste auf jeden Fall weiter, auch wenn sie die lokale Weiterleitungsregeln verletzen (Standardeinstellung: %d)</translation>
-    </message>
-    <message>
         <source>Incorrect or no devnet genesis block found. Wrong datadir for devnet specified?</source>
         <translation>Fehlerhafter oder kein Genesis-Block gefunden. Falsches Datenverzeichnis für devnet ausgewählt? </translation>
-    </message>
-    <message>
-        <source>Maximum allowed median peer time offset adjustment. Local perspective of time may be influenced by peers forward or backward by this amount. (default: %u seconds)</source>
-        <translation>Maximal zulässige mediane Peer-Zeit-Offset-Einstellung. Lokale Perspektive der Zeit kann von Peers vorwärts oder rückwärts um diesen Betrag beeinflusst werden. (Voreinstellung: %u Sekunden)</translation>
-    </message>
-    <message>
-        <source>Maximum total fees (in %s) to use in a single wallet transaction or raw transaction; setting this too low may abort large transactions (default: %s)</source>
-        <translation>Maximale Gesamtgebühr (in %s) in einer Börsentransaktion; wird dies zu niedrig gesetzten können große Transaktionen abgebrochen werden (Standard: %s)</translation>
-    </message>
-    <message>
-        <source>Override spork address. Only useful for regtest and devnet. Using this on mainnet or testnet will ban you.</source>
-        <translation>Spork Adresse überschreiben. Nur für regtest und devnet nutzbar. Verwendung im Mainnet oder Testnet führt zur Sperrung.</translation>
     </message>
     <message>
         <source>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</source>
@@ -4887,18 +4587,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Please contribute if you find %s useful. Visit %s for further information about the software.</source>
         <translation>Wenn sie %s nützlich finden, sind Helfer sehr gern gesehen. Besuchen Sie %s um mehr über das Softwareprojekt zu erfahren.</translation>
-    </message>
-    <message>
-        <source>Reduce storage requirements by enabling pruning (deleting) of old blocks. This allows the pruneblockchain RPC to be called to delete specific blocks, and enables automatic pruning of old blocks if a target size in MiB is provided. This mode is incompatible with -txindex and -rescan. Warning: Reverting this setting requires re-downloading the entire blockchain. (default: 0 = disable pruning blocks, 1 = allow manual pruning via RPC, &gt;%u = automatically prune block files to stay under the specified target size in MiB)</source>
-        <translation>Speicherplatzanforderung durch Kürzen (Pruning) alter Blöcke reduzieren. Dies erlaubt das Aufrufen des sogenannten Pruneblockchain RPC zum Löschen spezifischer Blöcke und und aktiviert das automatische Pruning alter Blöcke, sofern eine Zielgröße in MIB angegeben wird. Dieser Modus ist nicht mit -txindex und -resacan kompatibel. Warnung: Das Rücksetzen dieser Einstellung erfordert das erneute Herunterladen der gesamten Blockchain. (Standard: 0 = deaktiviert das Pruning, 1 = erlaubt manuelles Pruning via RPC, &gt;%u = automatisches Pruning der Blockdateien, um angegebene Maximalgröße nicht zu überschreiten)</translation>
-    </message>
-    <message>
-        <source>Set lowest fee rate (in %s/kB) for transactions to be included in block creation. (default: %s)</source>
-        <translation>Niedrigste Gebühr (in %s/kB) für Transaktionen einstellen, die bei der Blockerzeugung berücksichtigt werden sollen. (default: %s)</translation>
-    </message>
-    <message>
-        <source>The fee rate (in %s/kB) that indicates your tolerance for discarding change by adding it to the fee (default: %s). Note: An output is discarded if it is dust at this rate, but we will always discard up to the dust relay fee and a discard fee above that is limited by the fee estimate for the longest target</source>
-        <translation>Die Gebührenrate (in %s/kB), welche die Toleranz für eine Änderung angibt, welche der Gebühr zugeschlagen wird (Standard: %s). Hinweis: Falls es sich bei einem Output aufgrund dieser Rate um Dust handelt, wird er verworfen, wobei wir jedoch immer bis zur Dust-Relaisgebühr und der darüber hinausgehenden Discard-Gebühr verwerfen werden, deren Gebührenschätzung auf die Höhe der Gebühr für das größte Target begrenzt ist.</translation>
     </message>
     <message>
         <source>This is the transaction fee you may discard if change is smaller than dust at this level</source>
@@ -4913,48 +4601,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Dieses Produkt enthält Software, die vom OpenSSL-Projekt zur Verwendung im OpenSSL-Toolkit %s entwickelt wird, von Eric Young geschriebene kryptographische Software und von Thomas Bernard geschriebene UPnP-Software.</translation>
     </message>
     <message>
-        <source>Unable to locate enough PrivateSend non-denominated funds for this transaction.</source>
-        <translation>Für diese Transaktion konnten nicht genug für PrivateSend nicht-gestückelte Beträge gefunden werden. </translation>
-    </message>
-    <message>
         <source>Unable to replay blocks. You will need to rebuild the database using -reindex-chainstate.</source>
         <translation>Blöcke können nicht wiederholt werden. Sie müssen die Datenbank mit Hilfe von -reindex-chainstate neu aufbauen.</translation>
     </message>
     <message>
-        <source>Use N separate smartnodes for each denominated input to mix funds (%u-%u, default: %u)</source>
-        <translation>N unterschiedliche Smartnodes benutzen, um Raptoreum zu anonymisieren (%u-%u, Standard: %u) </translation>
-    </message>
-    <message>
-        <source>Use hierarchical deterministic key generation (HD) after BIP39/BIP44. Only has effect during wallet creation/first start</source>
-        <translation>Nutze hierarchisch-deterministische Schlüssel-Generierung (HD) gemäß BIP39/BIP44. Nur gültig bei erstmaligem Start der Wallet. </translation>
-    </message>
-    <message>
-        <source>User defined mnemonic passphrase for HD wallet (BIP39). Only has effect during wallet creation/first start (default: empty string)</source>
-        <translation>Benutzerdefinierter Gedächtniscode für HD Wallet (BIP39). Nur gültig bei erstmaligem Start der Wallet (Standard: Leeres Zeichen). </translation>
-    </message>
-    <message>
-        <source>Username and hashed password for JSON-RPC connections. The field &lt;userpw&gt; comes in the format: &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;. A canonical python script is included in share/rpcuser. The client then connects normally using the rpcuser=&lt;USERNAME&gt;/rpcpassword=&lt;PASSWORD&gt; pair of arguments. This option can be specified multiple times</source>
-        <translation>Benutzername und gehashtes Passwort für JSON-RPC Verbindungen. Das Feld &lt;userpw&gt; kommt im Format: &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;. Ein kanonisches Pythonskript ist in share/rpcuser inbegriffen. Der client benutzt wie gehabt, die rpcuser/rpcpassword Parameter. Diese Option kann mehrere Male spezifiziert werden</translation>
-    </message>
-    <message>
-        <source>Wallet will not create transactions that violate mempool chain limits (default: %u)</source>
-        <translation>Das Wallet erzeugt keine Transaktionen, die das Mempool Chain Limit überschreiten (Standardeinstellung: %u)</translation>
-    </message>
-    <message>
         <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
         <translation>Warnung: wallet beschädigt, Datenrettung erfolgreich! Original %s wurde als %s in %s gespeichert. Falls Ihr Kontostand oder Transaktionen nicht korrekt sind, sollten Sie von einer Datensicherung wiederherstellen.</translation>
-    </message>
-    <message>
-        <source>Whether to save the mempool on shutdown and load on restart (default: %u)</source>
-        <translation>Ob der Mempool beim Schließen gespeichert und beim Neustart geladen werden soll (Standard: %u)</translation>
-    </message>
-    <message>
-        <source>Whitelist peers connecting from the given IP address (e.g. 1.2.3.4) or CIDR notated network (e.g. 1.2.3.0/24). Can be specified multiple times.</source>
-        <translation>Gegenstellen die sich von der angegebenen IP-Adresse (e.g. 1.2.3.4) oder CIDR Notation (eg. 1.2.3.0/24) aus verbinden immer zulassen. Kann mehrmals angegeben werden.</translation>
-    </message>
-    <message>
-        <source>You are starting in lite mode, most Raptoreum-specific functionality is disabled.</source>
-        <translation>Der Start findet im Lite-Modus statt, weswegen die meisten Raptoreum-spezifischen Funktionen deaktiviert wurden.</translation>
     </message>
     <message>
         <source>%d of last 100 blocks have unexpected version</source>
@@ -4973,10 +4625,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>%s wurde sehr hoch eingestellt!</translation>
     </message>
     <message>
-        <source>(press q to shutdown and continue later)</source>
-        <translation>(Drücke q zum beenden und fahre später fort)</translation>
-    </message>
-    <message>
         <source>-devnet can only be specified once</source>
         <translation>-devnet kann nur einmal angegeben werden</translation>
     </message>
@@ -4989,20 +4637,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>-rpcport muss angegeben werden, wenn -devnet und -server angeben wurden </translation>
     </message>
     <message>
-        <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
-        <translation>Eingehende Verbindungen annehmen (Standard: 1, wenn nicht -proxy oder -connect)</translation>
-    </message>
-    <message>
-        <source>Allow RFC1918 addresses to be relayed and connected to (default: %u)</source>
-        <translation>Erlaube RFC1918 Adressen weitergeleitet und verbunden zu werden (Standard: %u)</translation>
-    </message>
-    <message>
-        <source>Attempt to recover private keys from a corrupt wallet on startup</source>
-        <translation>Es wird versucht, private Schlüssel beim Starten aus einem beschädigtem Wallet wiederherzustellen</translation>
-    </message>
-    <message>
         <source>Cannot resolve -%s address: '%s'</source>
         <translation>Kann Adresse in -%s nicht auflösen: '%s'</translation>
+    </message>
+    <message>
+        <source>Cannot write to data directory '%s'; check permissions.</source>
+        <translation>Kann nicht in Datenverzeichnis '%s' schreiben; Berechtigungen prüfen.</translation>
     </message>
     <message>
         <source>Change index out of range</source>
@@ -5011,10 +4651,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Copyright (C)</source>
         <translation>Urheberrecht (C)</translation>
-    </message>
-    <message>
-        <source>Create up to N inputs of each denominated amount (%u-%u, default: %u)</source>
-        <translation>N unterschiedliche Denominationen benutzen, um Raptoreum zu anonymisieren (%u-%u, Standard: %u) </translation>
     </message>
     <message>
         <source>Error loading %s</source>
@@ -5033,20 +4669,16 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Fehler beim Laden von %s: Sie können HD nicht bei einer bestehenden HD Wallet deaktivieren</translation>
     </message>
     <message>
-        <source>Error loading wallet %s. -wallet filename must be a regular file.</source>
-        <translation>Fehler beim Laden von Wallet %s. -wallet Dateiname muss einer regulären Datei entsprechen.</translation>
-    </message>
-    <message>
         <source>Error loading wallet %s. Duplicate -wallet filename specified.</source>
         <translation>Fehler beim Laden von Wallet %s. Duplizierter -wallet Dateiname spezifiziert. </translation>
     </message>
     <message>
-        <source>Error loading wallet %s. Invalid characters in -wallet filename.</source>
-        <translation>Fehler beim Laden von Wallet %s. Ungültige Zeichen in -wallet Dateinamen.</translation>
-    </message>
-    <message>
         <source>Error upgrading chainstate database</source>
         <translation>Fehler bei der Aktualisierung einer Kettenstatus-Datenbank</translation>
+    </message>
+    <message>
+        <source>Error: failed to add socket to kqueuefd (kevent returned error %s)</source>
+        <translation>Fehler: Hinzufügung eines Sockets zu kqueuefd fehlgeschlagen (kevent meldet Fehler %s)</translation>
     </message>
     <message>
         <source>Failed to find mixing queue to join</source>
@@ -5055,6 +4687,10 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Failed to start a new mixing queue</source>
         <translation>Keine Warteschlange konnte zum mischen gestartet werden</translation>
+    </message>
+    <message>
+        <source>Incorrect -rescan mode, falling back to default value</source>
+        <translation>Falscher -Rescan-Modus, Zurückfallen auf Standardwert</translation>
     </message>
     <message>
         <source>Initialization sanity check failed. %s is shutting down.</source>
@@ -5085,20 +4721,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Lade P2P-Adressen...</translation>
     </message>
     <message>
-        <source>Print this help message and exit</source>
-        <translation>Drucke diese Hilfemeldung und beende</translation>
-    </message>
-    <message>
         <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
         <translation>-maxconnections wird wegen Systembeschränkungen von %d auf %d verringert.</translation>
-    </message>
-    <message>
-        <source>Relay and mine data carrier transactions (default: %u)</source>
-        <translation>"Data Carrier"-Transaktionen weiterleiten (Standard: %u)</translation>
-    </message>
-    <message>
-        <source>Relay non-P2SH multisig (default: %u)</source>
-        <translation>Nicht-P2SH-Multisig weiterleiten (Standard: %u)</translation>
     </message>
     <message>
         <source>Replaying blocks...</source>
@@ -5109,14 +4733,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Durchsuche erneut...</translation>
     </message>
     <message>
-        <source>Run in the background as a daemon and accept commands</source>
-        <translation>Als Hintergrunddienst ausführen und Befehle annehmen</translation>
-    </message>
-    <message>
-        <source>Send trace/debug info to console instead of debug.log file</source>
-        <translation>Rückverfolgungs- und Debuginformationen an die Konsole senden, anstatt sie in debug.log zu schreiben</translation>
-    </message>
-    <message>
         <source>Session not complete!</source>
         <translation>Sitzung ist nicht vollständig!</translation>
     </message>
@@ -5125,48 +4741,24 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Zeitüberschreitung der Sitzung.</translation>
     </message>
     <message>
-        <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
-        <translation>Größe des Datenbankcaches in Megabyte festlegen (%d bis %d, Standard: %d)</translation>
-    </message>
-    <message>
-        <source>Set maximum block size in bytes (default: %d)</source>
-        <translation>Maximale Blockgröße in Byte festlegen (Standard: %d)</translation>
-    </message>
-    <message>
-        <source>Show all debugging options (usage: --help -help-debug)</source>
-        <translation>Zeige alle Debuggingoptionen (Benutzung: --help -help-debug)</translation>
-    </message>
-    <message>
-        <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
-        <translation>Protokolldatei debug.log beim Starten des Clients kürzen (Standard: 1, wenn kein -debug)</translation>
-    </message>
-    <message>
         <source>Signing transaction failed</source>
         <translation>Signierung der Transaktion fehlgeschlagen</translation>
     </message>
     <message>
-        <source>Specify data directory</source>
-        <translation>Datenverzeichnis festlegen</translation>
+        <source>Specified blocks directory "%s" does not exist.</source>
+        <translation>Angegebenes Blockverzeichnis "%s" existiert nicht.</translation>
     </message>
     <message>
-        <source>Specify wallet file (within data directory)</source>
-        <translation>Wallet-Datei angeben (innerhalb des Datenverzeichnisses)</translation>
+        <source>Last queue was created too recently.</source>
+        <translation>Das letzte Queue wurde vor zu kurzer Zeit erstellt.</translation>
     </message>
     <message>
-        <source>Specify your own public address</source>
-        <translation>Die eigene öffentliche Adresse angeben</translation>
-    </message>
-    <message>
-        <source>Start PrivateSend automatically (0-1, default: %u)</source>
-        <translation>Aktiviere PrivateSend automatisch (0-1, Standard: %u)</translation>
+        <source>Last successful action was too recent.</source>
+        <translation>Letzte erfolgreiche Transaktion ist noch zu neu.</translation>
     </message>
     <message>
         <source>Starting network threads...</source>
         <translation>Netzwerk-Threads werden gestartet...</translation>
-    </message>
-    <message>
-        <source>Synchronization pending...</source>
-        <translation>Synchronisation steht bevor...</translation>
     </message>
     <message>
         <source>Synchronizing governance objects...</source>
@@ -5193,10 +4785,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Transaktion erfolgreich erstellt.</translation>
     </message>
     <message>
-        <source>Transaction fee and change calculation failed</source>
-        <translation>Berechnung der Transaktionsgebühr und des Wechselgeldes fehlgeschlagen</translation>
-    </message>
-    <message>
         <source>Transaction fees are too high.</source>
         <translation>Transaktionsgebühren sind zu hoch.</translation>
     </message>
@@ -5211,6 +4799,14 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
         <translation>Kann auf diesem Computer nicht an %s binden (von bind zurückgegebener Fehler: %s)</translation>
+    </message>
+    <message>
+        <source>Unable to locate enough mixed funds for this transaction.</source>
+        <translation>Für diese Transaktion konnten nicht genug gemischte Beträge gefunden werden.</translation>
+    </message>
+    <message>
+        <source>Unable to locate enough non-denominated funds for this transaction.</source>
+        <translation>Für diese Transaktion konnten nicht genug nicht mit gestückelte Beträge gefunden werden.</translation>
     </message>
     <message>
         <source>Unable to sign spork message, wrong key?</source>
@@ -5229,10 +4825,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Nicht unterstützte Protokollkategorie %s=%s.</translation>
     </message>
     <message>
-        <source>Username for JSON-RPC connections</source>
-        <translation>Benutzername für JSON-RPC-Verbindungen</translation>
-    </message>
-    <message>
         <source>Verifying blocks...</source>
         <translation>Verifiziere Blöcke...</translation>
     </message>
@@ -5241,24 +4833,32 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Nur noch wenige Schlüssel verfügbar: %d</translation>
     </message>
     <message>
-        <source>Wallet %s resides outside data directory %s</source>
-        <translation>Wallet %s liegt außerhalb des Datenverzeichnisses %s</translation>
-    </message>
-    <message>
         <source>Wallet is locked.</source>
         <translation>Wallet gesperrt.</translation>
     </message>
     <message>
-        <source>Wallet options:</source>
-        <translation>Wallet-Optionen:</translation>
-    </message>
-    <message>
-        <source>Wallet window title</source>
-        <translation>Fensterüberschrift des Wallet</translation>
-    </message>
-    <message>
         <source>Warning</source>
         <translation>Warnung</translation>
+    </message>
+    <message>
+        <source>Warning: %s is deprecated, please use %s instead</source>
+        <translation>Warnung: %s ist veraltet, verwende %s stattdessen</translation>
+    </message>
+    <message>
+        <source>Warning: can't use %s and %s together, will prefer %s</source>
+        <translation>Warnung: %s und %s können nicht zusammen verwendet werden, %s wird bevorzugt</translation>
+    </message>
+    <message>
+        <source>Warning: incorrect parameter %s, path must exist! Using default path.</source>
+        <translation>Warnung: Ungültiger Parameter %s. Pfad muss existieren! Nutze Standardpfad.</translation>
+    </message>
+    <message>
+        <source>You are starting with governance validation disabled.</source>
+        <translation>Validierung der Governance zum Start hin deaktiviert.</translation>
+    </message>
+    <message>
+        <source>You can not disable governance validation on a masternode.</source>
+        <translation>Governance-Validierung kann bei einer Masternode nicht deaktiviert werden.</translation>
     </message>
     <message>
         <source>Your entries added successfully.</source>

@@ -3,27 +3,13 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "primitives/block.h"
+#include <primitives/block.h>
 
-#include "hash.h"
-#include "streams.h"
-#include "tinyformat.h"
-#include "utilstrencodings.h"
-#include "crypto/common.h"
-#include "unordered_lru_cache.h"
-
-//commented out for now as window build error here
-//#include "util.h"
-//unordered_lru_cache<uint256, uint256, std::hash<uint256>, 1> powHashCache;
-//void initializePowCacheIfNeeded() {
-//	if(powHashCache.getMaxSize() == 1) {
-//		int powCacheSize = gArgs.GetArg("-powhashcache", DEFAULT_POW_CACHE_SIZE);
-//		powCacheSize = powCacheSize == 0 ? DEFAULT_POW_CACHE_SIZE : powCacheSize;
-//		powHashCache.setMaxSize(powCacheSize);
-//
-//	}
-//}
-unordered_lru_cache<uint256, uint256, std::hash<uint256>, 200000> powHashCache;
+#include <hash.h>
+#include <streams.h>
+#include <tinyformat.h>
+#include <utilstrencodings.h>
+#include <crypto/common.h>
 
 uint256 CBlockHeader::GetHash() const
 {

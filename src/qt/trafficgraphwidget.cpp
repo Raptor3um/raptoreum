@@ -2,8 +2,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "trafficgraphwidget.h"
-#include "clientmodel.h"
+#include <interfaces/node.h>
+#include <qt/trafficgraphwidget.h>
+#include <qt/clientmodel.h>
+#include <qt/guiutil.h>
 
 #include <boost/bind.hpp>
 
@@ -36,7 +38,7 @@ void TrafficGraphWidget::setClientModel(ClientModel *model)
 {
     clientModel = model;
     if(model) {
-        trafficGraphData.setLastBytes(model->getTotalBytesRecv(), model->getTotalBytesSent());
+        trafficGraphData.setLastBytes(model->node().getTotalBytesRecv(), model->node().getTotalBytesSent());
     }
 }
 
@@ -77,11 +79,16 @@ namespace
 void TrafficGraphWidget::paintEvent(QPaintEvent *)
 {
     QPainter painter(this);
-    painter.fillRect(rect(), Qt::black);
+    QRect drawRect = rect();
+    // First draw the border
+    painter.fillRect(drawRect, GUIUtil::getThemedQColor(GUIUtil::ThemedColor::BORDER_WIDGET));
+    painter.fillRect(drawRect.adjusted(1, 1, -1, -1), GUIUtil::getThemedQColor(GUIUtil::ThemedColor::BACKGROUND_WIDGET));
 
     if(fMax <= 0.0f) return;
 
-    QColor axisCol(Qt::gray);
+    QColor green = GUIUtil::getThemedQColor(GUIUtil::ThemedColor::GREEN);
+    QColor red = GUIUtil::getThemedQColor(GUIUtil::ThemedColor::RED);
+    QColor axisCol(GUIUtil::getThemedQColor(GUIUtil::ThemedColor::DEFAULT));
     QColor axisCol2;
     int h = height() - YMARGIN * 2;
     painter.setPen(axisCol);
@@ -94,7 +101,7 @@ void TrafficGraphWidget::paintEvent(QPaintEvent *)
 
     const QString units     = tr("KB/s");
     const float yMarginText = 2.0;
-    
+
     // draw lines
     painter.setPen(axisCol);
     for(float y = val; y < fMax; y += val) {
@@ -120,38 +127,109 @@ void TrafficGraphWidget::paintEvent(QPaintEvent *)
 
     if(!queue.empty()) {
         QPainterPath pIn;
+        QColor lucentGreen = green;
+        lucentGreen.setAlpha(128);
+
         paintPath(pIn, queue, boost::bind(chooseIn,_1));
-        painter.fillPath(pIn, QColor(0, 255, 0, 128));
-        painter.setPen(Qt::green);
+        painter.fillPath(pIn, lucentGreen);
+        painter.setPen(green);
         painter.drawPath(pIn);
 
         QPainterPath pOut;
+        QColor lucentRed = red;
+        lucentRed.setAlpha(128);
+
         paintPath(pOut, queue, boost::bind(chooseOut,_1));
-        painter.fillPath(pOut, QColor(255, 0, 0, 128));
-        painter.setPen(Qt::red);
+        painter.fillPath(pOut, lucentRed);
+        painter.setPen(red);
         painter.drawPath(pOut);
     }
 
-    // draw text on top of everything else
+    // draw text
     QRect textRect = painter.boundingRect(QRect(XMARGIN, YMARGIN + h - (h * val / fMax) - yMarginText, 0, 0), Qt::AlignLeft, QString("%1 %2").arg(val).arg(units));
     textRect.translate(0, -textRect.height());
-    painter.fillRect(textRect, Qt::black);
+    painter.fillRect(textRect, GUIUtil::getThemedQColor(GUIUtil::ThemedColor::BACKGROUND_WIDGET));
     painter.setPen(axisCol);
     painter.drawText(textRect, Qt::AlignLeft, QString("%1 %2").arg(val).arg(units));
     if(fMax / val <= 3.0f) {
         QRect textRect2 = painter.boundingRect(QRect(XMARGIN, YMARGIN + h - (h * val2 / fMax) - yMarginText, 0, 0), Qt::AlignLeft, QString("%1 %2").arg(val2).arg(units));
         textRect2.translate(0, -textRect2.height());
-        painter.fillRect(textRect2, Qt::black);
+        painter.fillRect(textRect2, GUIUtil::getThemedQColor(GUIUtil::ThemedColor::BACKGROUND_WIDGET));
         painter.setPen(axisCol2);
         painter.drawText(textRect2, Qt::AlignLeft, QString("%1 %2").arg(val2).arg(units));
     }
+
+    // Draw statistic rect on top of everything else
+    const int nPadding = 5;
+    const int nMarginStats = 20;
+    const QString strTotal = tr("Total");
+    const QString strReceived = tr("Received");
+    const QString strSent = tr("Sent");
+    // Get a bold font for the title and a normal one for the rest
+    QFont fontTotal = GUIUtil::getFont(GUIUtil::FontWeight::Bold, false, 16);
+    QFont fontInOut = GUIUtil::getFont(GUIUtil::FontWeight::Normal, false, 12);
+    // Use font metrics to determine minimum rect sizes depending on the font scale
+    QFontMetrics fmTotal(fontTotal);
+    QFontMetrics fmInOut(fontInOut);
+    const int nSizeMark = fmInOut.height() + 2 * nPadding;
+    const int nWidthText = fmInOut.width(strReceived) + 2 * nPadding;
+    const int nWidthBytes = fmInOut.width("1000 GB") + 2 * nPadding;
+    const int nHeightTotals = fmTotal.height() + 2 * nPadding;
+    const int nHeightInOut = fmInOut.height() + 2 * nPadding;
+    const int nWidthStats = nSizeMark + nWidthText + nWidthBytes + 2 * nPadding;
+    const int nHeightStats = nHeightTotals + 2 * nHeightInOut + 2 * nPadding;
+    auto addPadding = [&](QRect& rect, int nPadding) {
+        rect.adjust(nPadding, nPadding, -nPadding, -nPadding);
+    };
+    // Create top-level rects
+    QRect rectOuter = QRect(drawRect.width() - nWidthStats - nMarginStats, nMarginStats, nWidthStats, nHeightStats);
+    QRect rectContent = rectOuter;
+    QRect rectContentPadded = rectContent;
+    addPadding(rectContentPadded, nPadding);
+    QRect rectTotals(rectContentPadded.topLeft(), QSize(rectContentPadded.width(), nHeightTotals));
+    QRect rectIn(rectTotals.bottomLeft(), QSize(rectContentPadded.width(), nHeightInOut));
+    QRect rectOut(rectIn.bottomLeft(), QSize(rectContentPadded.width(), nHeightInOut));
+    // Create subrects for received
+    QRect rectInMark(rectIn.topLeft(), QSize(nSizeMark, nSizeMark));
+    QRect rectInText(rectInMark.topRight(), QSize(nWidthText, nHeightInOut));
+    QRect rectInBytes(rectInText.topRight(), QSize(nWidthBytes, nHeightInOut));
+    // Create subrects for sent
+    QRect rectOutMark(rectOut.topLeft(), QSize(nSizeMark, nSizeMark));
+    QRect rectOutText(rectOutMark.topRight(), QSize(nWidthText, nHeightInOut));
+    QRect rectOutBytes(rectOutText.topRight(), QSize(nWidthBytes, nHeightInOut));
+    // Add padding where required
+    addPadding(rectTotals, nPadding);
+    addPadding(rectInMark, 1.6 * nPadding);
+    addPadding(rectInText, nPadding);
+    addPadding(rectInBytes, nPadding);
+    addPadding(rectOutMark, 1.6 * nPadding);
+    addPadding(rectOutText, nPadding);
+    addPadding(rectOutBytes, nPadding);
+    // Finally draw it all
+    painter.setPen(QPen(GUIUtil::getThemedQColor(GUIUtil::ThemedColor::BORDER_NETSTATS), 1));
+    painter.drawRect(rectOuter);
+    painter.fillRect(rectContent, GUIUtil::getThemedQColor(GUIUtil::ThemedColor::BACKGROUND_NETSTATS));
+    painter.setPen(axisCol);
+    painter.setFont(fontTotal);
+    painter.drawText(rectTotals, Qt::AlignLeft, strTotal);
+    painter.setFont(fontInOut);
+    painter.drawText(rectInText, Qt::AlignLeft, strReceived);
+    painter.drawText(rectInBytes, Qt::AlignRight, GUIUtil::formatBytes(trafficGraphData.getLastBytesIn()));
+    painter.drawText(rectOutText, Qt::AlignLeft, strSent);
+    painter.drawText(rectOutBytes, Qt::AlignRight, GUIUtil::formatBytes(trafficGraphData.getLastBytesOut()));
+    painter.setPen(green);
+    painter.setBrush(green);
+    painter.drawEllipse(rectInMark);
+    painter.setPen(red);
+    painter.setBrush(red);
+    painter.drawEllipse(rectOutMark);
 }
 
 void TrafficGraphWidget::updateRates()
 {
     if(!clientModel) return;
 
-    bool updated = trafficGraphData.update(clientModel->getTotalBytesRecv(),clientModel->getTotalBytesSent());
+    bool updated = trafficGraphData.update(clientModel->node().getTotalBytesRecv(),clientModel->node().getTotalBytesSent());
 
     if (updated){
         float tmax = DEFAULT_SAMPLE_HEIGHT;
@@ -175,7 +253,7 @@ void TrafficGraphWidget::clear()
     trafficGraphData.clear();
     fMax = DEFAULT_SAMPLE_HEIGHT;
     if(clientModel) {
-        trafficGraphData.setLastBytes(clientModel->getTotalBytesRecv(), clientModel->getTotalBytesSent());
+        trafficGraphData.setLastBytes(clientModel->node().getTotalBytesRecv(), clientModel->node().getTotalBytesSent());
     }
     update();
 }

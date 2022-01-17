@@ -6,9 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>576</width>
-    <height>402</height>
+    <width>583</width>
+    <height>420</height>
    </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
   </property>
   <property name="windowTitle">
    <string>Options</string>
@@ -18,14 +24,87 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <widget class="QTabWidget" name="tabWidget">
-     <property name="currentIndex">
+    <layout class="QHBoxLayout" name="horizontalLayout_Buttons_2">
+     <property name="spacing">
       <number>0</number>
      </property>
-     <widget class="QWidget" name="tabMain">
-      <attribute name="title">
-       <string>&amp;Main</string>
-      </attribute>
+     <property name="topMargin">
+      <number>0</number>
+     </property>
+     <item>
+      <widget class="QPushButton" name="btnMain">
+       <property name="text">
+        <string>&amp;Main</string>
+       </property>
+       <property name="checkable">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btnWallet">
+       <property name="text">
+        <string>W&amp;allet</string>
+       </property>
+       <property name="checkable">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btnCoinJoin">
+       <property name="text">
+        <string notr="true">CoinJoin</string>
+       </property>
+       <property name="checkable">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btnNetwork">
+       <property name="text">
+        <string>&amp;Network</string>
+       </property>
+       <property name="checkable">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btnDisplay">
+       <property name="text">
+        <string>&amp;Display</string>
+       </property>
+       <property name="checkable">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btnAppearance">
+       <property name="text">
+        <string>&amp;Appearance</string>
+       </property>
+       <property name="checkable">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QStackedWidget" name="stackedWidgetOptions">
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>0</height>
+      </size>
+     </property>
+     <property name="currentIndex">
+      <number>5</number>
+     </property>
+     <widget class="QWidget" name="pageMain">
       <layout class="QVBoxLayout" name="verticalLayout_Main">
        <item>
         <widget class="QCheckBox" name="bitcoinAtStartup">
@@ -34,6 +113,36 @@
          </property>
          <property name="text">
           <string>&amp;Start %1 on system login</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="hideTrayIcon">
+         <property name="toolTip">
+          <string>Hide the icon from the system tray.</string>
+         </property>
+         <property name="text">
+          <string>&amp;Hide tray icon</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="minimizeToTray">
+         <property name="toolTip">
+          <string>Show only a tray icon after minimizing the window.</string>
+         </property>
+         <property name="text">
+          <string>&amp;Minimize to the tray instead of the taskbar</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="minimizeOnClose">
+         <property name="toolTip">
+          <string>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</string>
+         </property>
+         <property name="text">
+          <string>M&amp;inimize on close</string>
          </property>
         </widget>
        </item>
@@ -132,16 +241,9 @@
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="tabWallet">
-      <attribute name="title">
-       <string>W&amp;allet</string>
-      </attribute>
+     <widget class="QWidget" name="pageWallet">
       <layout class="QVBoxLayout" name="verticalLayout_Wallet">
        <item>
-        <widget class="QGroupBox" name="groupBox">
-         <property name="title">
-          <string>Expert</string>
-         </property>
          <layout class="QVBoxLayout" name="verticalLayout_2">
           <item>
            <widget class="QCheckBox" name="coinControlFeatures">
@@ -164,46 +266,6 @@
            </widget>
           </item>
           <item>
-           <widget class="QCheckBox" name="showAdvancedPSUI">
-            <property name="toolTip">
-             <string>Show additional information and buttons for PrivateSend on overview screen.</string>
-            </property>
-            <property name="text">
-             <string>Enable advanced PrivateSend interface</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="showPrivateSendPopups">
-            <property name="toolTip">
-             <string>Show system popups for PrivateSend mixing transactions&lt;br/&gt;just like for all other transaction types.</string>
-            </property>
-            <property name="text">
-             <string>Show popups for PrivateSend transactions</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="lowKeysWarning">
-            <property name="toolTip">
-             <string>Show warning dialog when PrivateSend detects that wallet has very low number of keys left.</string>
-            </property>
-            <property name="text">
-             <string>Warn if PrivateSend is running out of keys</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="privateSendMultiSession">
-            <property name="toolTip">
-             <string>Whether to use experimental PrivateSend mode with multiple mixing sessions per block.&lt;br/&gt;Note: You must use this feature carefully.&lt;br/&gt;Make sure you always have recent wallet (auto)backup in a safe place!</string>
-            </property>
-            <property name="text">
-             <string>Enable PrivateSend &amp;multi-session</string>
-            </property>
-           </widget>
-          </item>
-          <item>
            <widget class="QCheckBox" name="spendZeroConfChange">
             <property name="toolTip">
              <string>If you disable the spending of unconfirmed change, the change from a transaction&lt;br/&gt;cannot be used until that transaction has at least one confirmation.&lt;br/&gt;This also affects how your balance is computed.</string>
@@ -213,23 +275,89 @@
             </property>
            </widget>
           </item>
+          <item>
+           <widget class="QCheckBox" name="coinJoinEnabled">
+            <property name="toolTip">
+             <string>Show mixing interface on Overview screen and reveal an additional screen which allows to spend fully mixed coins only.&lt;br/&gt;A new tab with more settings will also appear in this dialog, please make sure to check them before mixing your coins.</string>
+            </property>
+            <property name="text">
+             <string notr="true">Enable CoinJoin features</string>
+            </property>
+           </widget>
+          </item>
          </layout>
+       </item>
+       <item>
+        <spacer name="verticalSpacer_Wallet">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="pageCoinJoin">
+      <layout class="QVBoxLayout" name="verticalLayout_4">
+       <item>
+        <widget class="QCheckBox" name="showAdvancedCJUI">
+         <property name="toolTip">
+          <string>Show additional information and buttons on overview screen.</string>
+         </property>
+         <property name="text">
+          <string>Enable advanced interface</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="showCoinJoinPopups">
+         <property name="toolTip">
+          <string>Show system popups for mixing transactions&lt;br/&gt;just like for all other transaction types.</string>
+         </property>
+         <property name="text">
+          <string>Show popups for mixing transactions</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="lowKeysWarning">
+         <property name="toolTip">
+          <string>Show warning dialog when the wallet has very low number of keys left.</string>
+         </property>
+         <property name="text">
+          <string>Warn if the wallet is running out of keys</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="coinJoinMultiSession">
+         <property name="toolTip">
+          <string>Whether to use experimental mode with multiple mixing sessions per block.&lt;br/&gt;Note: You must use this feature carefully.&lt;br/&gt;Make sure you always have recent wallet (auto)backup in a safe place!</string>
+         </property>
+         <property name="text">
+          <string>Enable &amp;multi-session</string>
+         </property>
         </widget>
        </item>
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_4_Wallet">
          <item>
-          <widget class="QLabel" name="label">
+          <widget class="QLabel" name="lblCoinJoinRoundsText">
            <property name="toolTip">
             <string>This setting determines the amount of individual smartnodes that an input will be mixed through.&lt;br/&gt;More rounds of mixing gives a higher degree of privacy, but also costs more in fees.</string>
            </property>
            <property name="text">
-            <string>PrivateSend rounds to use</string>
+            <string>Mixing rounds</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QSpinBox" name="privateSendRounds">
+          <widget class="QSpinBox" name="coinJoinRounds">
            <property name="minimum">
             <number>2</number>
            </property>
@@ -246,9 +374,9 @@
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout">
          <item>
-          <widget class="QLabel" name="label_2">
+          <widget class="QLabel" name="lblCoinJoinAmountText">
            <property name="toolTip">
-            <string>This amount acts as a threshold to turn off PrivateSend once it's reached.</string>
+            <string>This amount acts as a threshold to turn off mixing once it's reached.</string>
            </property>
            <property name="statusTip">
             <string notr="true"/>
@@ -263,12 +391,12 @@
             <string notr="true"/>
            </property>
            <property name="text">
-            <string>Target PrivateSend balance</string>
+            <string>Target balance</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QSpinBox" name="privateSendAmount">
+          <widget class="QSpinBox" name="coinJoinAmount">
            <property name="minimum">
             <number>2</number>
            </property>
@@ -286,7 +414,7 @@
         </layout>
        </item>
        <item>
-        <spacer name="verticalSpacer_Wallet">
+        <spacer name="verticalSpacerPS">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
          </property>
@@ -300,10 +428,7 @@
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="tabNetwork">
-      <attribute name="title">
-       <string>&amp;Network</string>
-      </attribute>
+     <widget class="QWidget" name="pageNetwork">
       <layout class="QVBoxLayout" name="verticalLayout_Network">
        <item>
         <widget class="QCheckBox" name="mapPortUpnp">
@@ -318,10 +443,10 @@
        <item>
         <widget class="QCheckBox" name="allowIncoming">
          <property name="toolTip">
-          <string>Accept connections from outside</string>
+          <string>Accept connections from outside.</string>
          </property>
          <property name="text">
-          <string>Allow incoming connections</string>
+          <string>Allow incomin&amp;g connections</string>
          </property>
         </widget>
        </item>
@@ -386,13 +511,13 @@
           <widget class="QLineEdit" name="proxyPort">
            <property name="minimumSize">
             <size>
-             <width>55</width>
+             <width>60</width>
              <height>0</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
-             <width>55</width>
+             <width>60</width>
              <height>16777215</height>
             </size>
            </property>
@@ -437,17 +562,7 @@
             <string>Shows if the supplied default SOCKS5 proxy is used to reach peers via this network type.</string>
            </property>
            <property name="text">
-            <string/>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLabel" name="proxyReachIPv4Label">
-           <property name="text">
             <string>IPv4</string>
-           </property>
-           <property name="textFormat">
-            <enum>Qt::PlainText</enum>
            </property>
           </widget>
          </item>
@@ -460,17 +575,7 @@
             <string>Shows if the supplied default SOCKS5 proxy is used to reach peers via this network type.</string>
            </property>
            <property name="text">
-            <string/>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLabel" name="proxyReachIPv6Label">
-           <property name="text">
             <string>IPv6</string>
-           </property>
-           <property name="textFormat">
-            <enum>Qt::PlainText</enum>
            </property>
           </widget>
          </item>
@@ -483,17 +588,7 @@
             <string>Shows if the supplied default SOCKS5 proxy is used to reach peers via this network type.</string>
            </property>
            <property name="text">
-            <string/>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLabel" name="proxyReachTorLabel">
-           <property name="text">
             <string>Tor</string>
-           </property>
-           <property name="textFormat">
-            <enum>Qt::PlainText</enum>
            </property>
           </widget>
          </item>
@@ -518,7 +613,7 @@
           <string>Connect to the Raptoreum network through a separate SOCKS5 proxy for Tor hidden services.</string>
          </property>
          <property name="text">
-          <string>Use separate SOCKS5 proxy to reach peers via Tor hidden services:</string>
+          <string>Use separate SOCKS&amp;5 proxy to reach peers via Tor hidden services:</string>
          </property>
         </widget>
        </item>
@@ -573,13 +668,13 @@
           <widget class="QLineEdit" name="proxyPortTor">
            <property name="minimumSize">
             <size>
-             <width>55</width>
+             <width>60</width>
              <height>0</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
-             <width>55</width>
+             <width>60</width>
              <height>16777215</height>
             </size>
            </property>
@@ -618,60 +713,7 @@
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="tabWindow">
-      <attribute name="title">
-       <string>&amp;Window</string>
-      </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout_Window">
-       <item>
-        <widget class="QCheckBox" name="hideTrayIcon">
-         <property name="toolTip">
-          <string>&amp;Hide the icon from the system tray.</string>
-         </property>
-         <property name="text">
-          <string>Hide tray icon</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QCheckBox" name="minimizeToTray">
-         <property name="toolTip">
-          <string>Show only a tray icon after minimizing the window.</string>
-         </property>
-         <property name="text">
-          <string>&amp;Minimize to the tray instead of the taskbar</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QCheckBox" name="minimizeOnClose">
-         <property name="toolTip">
-          <string>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</string>
-         </property>
-         <property name="text">
-          <string>M&amp;inimize on close</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <spacer name="verticalSpacer_Window">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>40</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-      </layout>
-     </widget>
-     <widget class="QWidget" name="tabDisplay">
-      <attribute name="title">
-       <string>&amp;Display</string>
-      </attribute>
+     <widget class="QWidget" name="pageDisplay">
       <layout class="QVBoxLayout" name="verticalLayout_Display">
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_1_Display">
@@ -727,20 +769,6 @@ https://www.transifex.com/projects/p/raptoreum/</string>
         </widget>
        </item>
        <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_4_Display" stretch="0,0">
-         <item>
-          <widget class="QLabel" name="themeLabel">
-           <property name="text">
-            <string>User Interface Theme:</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QValueComboBox" name="theme"/>
-         </item>
-        </layout>
-       </item>
-       <item>
         <widget class="Line" name="line">
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
@@ -793,7 +821,7 @@ https://www.transifex.com/projects/p/raptoreum/</string>
             <string>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items.&lt;br/&gt;%s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</string>
            </property>
            <property name="text">
-            <string>Third party transaction URLs</string>
+            <string>&amp;Third party transaction URLs</string>
            </property>
            <property name="buddy">
             <cstring>thirdPartyTxUrls</cstring>
@@ -824,6 +852,26 @@ https://www.transifex.com/projects/p/raptoreum/</string>
        </item>
       </layout>
      </widget>
+     <widget class="QWidget" name="pageAppearance">
+      <layout class="QVBoxLayout" name="verticalLayout_3">
+       <item>
+        <widget class="QWidget" name="widgetAppearance" native="true"/>
+       </item>
+       <item>
+        <spacer name="verticalSpacer_2">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
     </widget>
    </item>
    <item>
@@ -838,6 +886,9 @@ https://www.transifex.com/projects/p/raptoreum/</string>
           </property>
           <property name="textFormat">
            <enum>Qt::PlainText</enum>
+          </property>
+          <property name="wordWrap">
+           <bool>true</bool>
           </property>
          </widget>
         </item>
@@ -908,12 +959,6 @@ https://www.transifex.com/projects/p/raptoreum/</string>
          <height>0</height>
         </size>
        </property>
-       <property name="font">
-        <font>
-         <weight>75</weight>
-         <bold>true</bold>
-        </font>
-       </property>
        <property name="text">
         <string/>
        </property>
@@ -969,12 +1014,12 @@ https://www.transifex.com/projects/p/raptoreum/</string>
   <customwidget>
    <class>QValidatedLineEdit</class>
    <extends>QLineEdit</extends>
-   <header>qvalidatedlineedit.h</header>
+   <header>qt/qvalidatedlineedit.h</header>
   </customwidget>
   <customwidget>
    <class>QValueComboBox</class>
    <extends>QComboBox</extends>
-   <header>qvaluecombobox.h</header>
+   <header>qt/qvaluecombobox.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

@@ -2,6 +2,10 @@
 <context>
     <name>AddressBookPage</name>
     <message>
+        <source>Enter address or label to search</source>
+        <translation>輸入位址或標籤以進行搜索</translation>
+    </message>
+    <message>
         <source>Right-click to edit address or label</source>
         <translation>右鍵點一下來修改位址或標記</translation>
     </message>
@@ -70,11 +74,11 @@
         <translation>收款位址</translation>
     </message>
     <message>
-        <source>These are your Raptoreum addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <source>These are your Dash addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation>這些是你要付款過去的達世幣位址。在付錢之前，務必要檢查金額和收款位址是否正確。</translation>
     </message>
     <message>
-        <source>These are your Raptoreum addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
+        <source>These are your Dash addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
         <translation>這些是你用來收款的達世幣位址。建議在每次交易時，都使用一個新的收款位址。</translation>
     </message>
     <message>
@@ -130,6 +134,45 @@
     </message>
 </context>
 <context>
+    <name>AppearanceWidget</name>
+    <message>
+        <source>Lighter</source>
+        <translation>幼一點</translation>
+    </message>
+    <message>
+        <source>Bolder</source>
+        <translation>粗一點</translation>
+    </message>
+    <message>
+        <source>Font Weight Normal:</source>
+        <translation>字體粗細正常:</translation>
+    </message>
+    <message>
+        <source>Smaller</source>
+        <translation>細一點</translation>
+    </message>
+    <message>
+        <source>Bigger</source>
+        <translation>大一點</translation>
+    </message>
+    <message>
+        <source>Font Scale:</source>
+        <translation>字體比例:</translation>
+    </message>
+    <message>
+        <source>Font Family:</source>
+        <translation>字體系列:</translation>
+    </message>
+    <message>
+        <source>Theme:</source>
+        <translation>主題:</translation>
+    </message>
+    <message>
+        <source>Font Weight Bold:</source>
+        <translation>字體粗體:</translation>
+    </message>
+</context>
+<context>
     <name>AskPassphraseDialog</name>
     <message>
         <source>Passphrase Dialog</source>
@@ -146,6 +189,10 @@
     <message>
         <source>Repeat new passphrase</source>
         <translation>重複新密碼</translation>
+    </message>
+    <message>
+        <source>Show password</source>
+        <translation>顯示密碼</translation>
     </message>
     <message>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
@@ -188,7 +235,7 @@
         <translation>確認錢包加密</translation>
     </message>
     <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR RTM&lt;/b&gt;!</source>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR DASH&lt;/b&gt;!</source>
         <translation>警告: 如果把錢包加密後又忘記密碼，你就會從此&lt;b&gt;失去其中所有的達世幣了&lt;/b&gt;！</translation>
     </message>
     <message>
@@ -198,10 +245,6 @@
     <message>
         <source>Wallet encrypted</source>
         <translation>錢包已加密</translation>
-    </message>
-    <message>
-        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your funds from being stolen by malware infecting your computer.</source>
-        <translation>%1 現在要關閉，好完成加密程序。請注意，加密錢包不能完全防止入侵你的電腦的惡意程式偷取達世幣。</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. Previous backups of the unencrypted wallet file contain the same HD seed and still have full access to all your funds just like the new, encrypted wallet.</source>
@@ -256,13 +299,20 @@
     </message>
 </context>
 <context>
+    <name>BitcoinAmountField</name>
+    <message>
+        <source>Amount in %1</source>
+        <translation>金額 %1</translation>
+    </message>
+</context>
+<context>
     <name>BitcoinGUI</name>
     <message>
-        <source>A fatal error occurred. Raptoreum Core can no longer continue safely and will quit.</source>
+        <source>A fatal error occurred. Dash Core can no longer continue safely and will quit.</source>
         <translation>發生致命錯誤。達世幣核心軟體不再能安全地繼續運行下去，程式將會關閉。</translation>
     </message>
     <message>
-        <source>Raptoreum Core</source>
+        <source>Dash Core</source>
         <translation>達世幣核心</translation>
     </message>
     <message>
@@ -286,7 +336,7 @@
         <translation>發送(&amp;S)</translation>
     </message>
     <message>
-        <source>Send coins to a Raptoreum address</source>
+        <source>Send coins to a Dash address</source>
         <translation>付錢給一個達世幣位址</translation>
     </message>
     <message>
@@ -294,7 +344,7 @@
         <translation>接收(&amp;R)</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and raptoreum: URIs)</source>
+        <source>Request payments (generates QR codes and dash: URIs)</source>
         <translation>要求付款(產生 QR Code 和達世幣付款協議的 URI)</translation>
     </message>
     <message>
@@ -306,11 +356,11 @@
         <translation>瀏覽交易紀錄</translation>
     </message>
     <message>
-        <source>&amp;Smartnodes</source>
+        <source>&amp;Masternodes</source>
         <translation>主節點(&amp;M)</translation>
     </message>
     <message>
-        <source>Browse smartnodes</source>
+        <source>Browse masternodes</source>
         <translation>瀏覽主節點</translation>
     </message>
     <message>
@@ -322,7 +372,7 @@
         <translation>結束應用程式</translation>
     </message>
     <message>
-        <source>Show information about Raptoreum Core</source>
+        <source>Show information about Dash Core</source>
         <translation>顯示達世幣核心的相關資訊</translation>
     </message>
     <message>
@@ -340,6 +390,10 @@
     <message>
         <source>&amp;About %1</source>
         <translation>關於%1(&amp;A)</translation>
+    </message>
+    <message>
+        <source>Send %1 funds to a Dash address</source>
+        <translation>發送 %1 的款項到一個達世幣位址</translation>
     </message>
     <message>
         <source>Modify configuration options for %1</source>
@@ -394,7 +448,7 @@
         <translation>簽署訊息(&amp;M)...</translation>
     </message>
     <message>
-        <source>Sign messages with your Raptoreum addresses to prove you own them</source>
+        <source>Sign messages with your Dash addresses to prove you own them</source>
         <translation>用達世幣位址簽署訊息來證明位址是你的</translation>
     </message>
     <message>
@@ -402,7 +456,7 @@
         <translation>驗證訊息(&amp;V)...</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified Raptoreum addresses</source>
+        <source>Verify messages to ensure they were signed with specified Dash addresses</source>
         <translation>驗證訊息是用來確定訊息是用指定的達世幣位址簽署的</translation>
     </message>
     <message>
@@ -431,11 +485,11 @@
     </message>
     <message>
         <source>&amp;Peers list</source>
-        <translation>節點列表(&amp;P)</translation>
+        <translation>對等用戶列表(&amp;P)</translation>
     </message>
     <message>
         <source>Show peers info</source>
-        <translation>節點列表資訊</translation>
+        <translation>對等用戶群列表資訊</translation>
     </message>
     <message>
         <source>Wallet &amp;Repair</source>
@@ -482,7 +536,7 @@
         <translation>開啓 &amp;URI...</translation>
     </message>
     <message>
-        <source>Open a raptoreum: URI or payment request</source>
+        <source>Open a dash: URI or payment request</source>
         <translation>開啓一個達世幣協議的 URI 或付款要求</translation>
     </message>
     <message>
@@ -490,7 +544,7 @@
         <translation>命令列選項(&amp;C)</translation>
     </message>
     <message>
-        <source>Show the %1 help message to get a list with possible Raptoreum command-line options</source>
+        <source>Show the %1 help message to get a list with possible Dash command-line options</source>
         <translation>顯示 %1 的說明訊息，來取得可用命令列選項的列表</translation>
     </message>
     <message>
@@ -498,16 +552,26 @@
         <translation>%1 客戶端軟體</translation>
     </message>
     <message>
-        <source>&amp;PrivateSend information</source>
-        <translation>匿名發送資訊(&amp;P)</translation>
+        <source>Wallet: %1
+</source>
+        <translation>錢包: %1
+</translation>
     </message>
     <message>
-        <source>Show the PrivateSend basic information</source>
-        <translation>顯示匿名發送基本信息</translation>
+        <source>Wallet is &lt;b&gt;unencrypted&lt;/b&gt;</source>
+        <translation>錢包 &lt;b&gt;未加密&lt;/b&gt;</translation>
     </message>
     <message>
         <source>&amp;File</source>
         <translation>檔案(&amp;F)</translation>
+    </message>
+    <message>
+        <source>%1 &amp;information</source>
+        <translation>%1 (&amp;I)資訊</translation>
+    </message>
+    <message>
+        <source>Show the %1 basic information</source>
+        <translation>顯示 %1 的基本信息</translation>
     </message>
     <message>
         <source>&amp;Settings</source>
@@ -526,7 +590,7 @@
         <translation>分頁工具列</translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to Raptoreum network</source>
+        <source>%n active connection(s) to Dash network</source>
         <translation><numerusform>%n 個運作中的達世幣網路連線</numerusform></translation>
     </message>
     <message>
@@ -555,7 +619,7 @@
     </message>
     <message>
         <source>Connecting to peers...</source>
-        <translation>正在連接其他節點...</translation>
+        <translation>正在連接其他對等用戶群...</translation>
     </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
@@ -664,10 +728,6 @@
         <translation>生成 HD 密鑰功能正 &lt;b&gt;啟用&lt;/b&gt;</translation>
     </message>
     <message>
-        <source>HD key generation is &lt;b&gt;disabled&lt;/b&gt;</source>
-        <translation>生成 HD 密鑰功能被 &lt;b&gt;禁用&lt;/b&gt;</translation>
-    </message>
-    <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
         <translation>錢包&lt;b&gt;已加密&lt;/b&gt;目前為&lt;b&gt;解鎖&lt;/b&gt;狀態</translation>
     </message>
@@ -747,8 +807,8 @@
         <translation>收款位址</translation>
     </message>
     <message>
-        <source>PS Rounds</source>
-        <translation>匿名發送循環</translation>
+        <source>Mixing Rounds</source>
+        <translation>混合循環次數</translation>
     </message>
     <message>
         <source>Date</source>
@@ -815,10 +875,6 @@
         <translation>請切換到“列表模式”來使用此功能。</translation>
     </message>
     <message>
-        <source>Non-mixed input selected. &lt;b&gt;PrivateSend will be disabled.&lt;/b&gt;&lt;br&gt;&lt;br&gt;If you still want to use PrivateSend, please deselect all non-mixed inputs first and then check the PrivateSend checkbox again.</source>
-        <translation>選擇了非匿名的輸入。 &lt;b&gt;匿名發送將會被禁用。&lt;/b&gt;&lt;br&gt;&lt;br&gt;如果你仍然想用匿名發送，請先取消選取所有非匿名的輸入，然後再勾選匿名發送的核取方塊。</translation>
-    </message>
-    <message>
         <source>(%1 locked)</source>
         <translation>(%1 鎖定)</translation>
     </message>
@@ -837,6 +893,30 @@
     <message>
         <source>Can vary +/- %1 duff(s) per input.</source>
         <translation>每組輸入可能有 +/- %1 個 duff(s) 的誤差。</translation>
+    </message>
+    <message>
+        <source>Some coins were unselected because they were spent.</source>
+        <translation>某些資金被取消選取，因為它們已經花費了。</translation>
+    </message>
+    <message>
+        <source>Some coins were unselected because they do not have enough mixing rounds.</source>
+        <translation>某些資金被取消選取，因為它們沒有足夠的混合次數。</translation>
+    </message>
+    <message>
+        <source>Show all coins</source>
+        <translation>顯示所有資金</translation>
+    </message>
+    <message>
+        <source>Hide %1 coins</source>
+        <translation>隱藏 %1 的資金</translation>
+    </message>
+    <message>
+        <source>Show all %1 coins</source>
+        <translation>顯示所有 %1 的資金</translation>
+    </message>
+    <message>
+        <source>Show spendable coins only</source>
+        <translation>只顯示可花費的資金</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -878,10 +958,6 @@
         <translation>跟這個位址簿項目關聯的位址。只有付款位址才能被修改。</translation>
     </message>
     <message>
-        <source>New receiving address</source>
-        <translation>新建收款位址</translation>
-    </message>
-    <message>
         <source>New sending address</source>
         <translation>新建付款位址</translation>
     </message>
@@ -894,7 +970,7 @@
         <translation>編輯付款位址</translation>
     </message>
     <message>
-        <source>The entered address "%1" is not a valid Raptoreum address.</source>
+        <source>The entered address "%1" is not a valid Dash address.</source>
         <translation>輸入的位址 %1 並不是有效的達世幣位址。</translation>
     </message>
     <message>
@@ -952,48 +1028,12 @@
         <translation>命令列選項</translation>
     </message>
     <message>
-        <source>Usage:</source>
-        <translation>用法:</translation>
+        <source>%1 information</source>
+        <translation>%1 資訊</translation>
     </message>
     <message>
-        <source>command-line options</source>
-        <translation>命令列選項</translation>
-    </message>
-    <message>
-        <source>UI Options:</source>
-        <translation>使用界面選項:</translation>
-    </message>
-    <message>
-        <source>Choose data directory on startup (default: %u)</source>
-        <translation>啓動時選擇資料目錄(預設值: %u)</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>設定語言，比如說 de_DE (預設值: 系統語系)</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>啓動時縮到最小</translation>
-    </message>
-    <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>設定付款請求時所使用的 SSL 根憑證 (預設值: 系統憑證庫)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: %u)</source>
-        <translation>顯示啓動畫面(預設值: %u)</translation>
-    </message>
-    <message>
-        <source>Reset all settings changed in the GUI</source>
-        <translation>重置所有在GUI 更改的設置</translation>
-    </message>
-    <message>
-        <source>PrivateSend information</source>
-        <translation>匿名發送資訊</translation>
-    </message>
-    <message>
-        <source>&lt;h3&gt;PrivateSend Basics&lt;/h3&gt; PrivateSend gives you true financial privacy by obscuring the origins of your funds. All the Raptoreum in your wallet is comprised of different "inputs" which you can think of as separate, discrete coins.&lt;br&gt; PrivateSend uses an innovative process to mix your inputs with the inputs of two other people, without having your coins ever leave your wallet. You retain control of your money at all times.&lt;hr&gt; &lt;b&gt;The PrivateSend process works like this:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;PrivateSend begins by breaking your transaction inputs down into standard denominations. These denominations are 0.001 RTM, 0.01 RTM, 0.1 RTM, 1 RTM and 10 RTM -- sort of like the paper money you use every day.&lt;/li&gt; &lt;li&gt;Your wallet then sends requests to specially configured software nodes on the network, called "smartnodes." These smartnodes are informed then that you are interested in mixing a certain denomination. No identifiable information is sent to the smartnodes, so they never know "who" you are.&lt;/li&gt; &lt;li&gt;When two other people send similar messages, indicating that they wish to mix the same denomination, a mixing session begins. The smartnode mixes up the inputs and instructs all three users' wallets to pay the now-transformed input back to themselves. Your wallet pays that denomination directly to itself, but in a different address (called a change address).&lt;/li&gt; &lt;li&gt;In order to fully obscure your funds, your wallet must repeat this process a number of times with each denomination. Each time the process is completed, it's called a "round." Each round of PrivateSend makes it exponentially more difficult to determine where your funds originated.&lt;/li&gt; &lt;li&gt;This mixing process happens in the background without any intervention on your part. When you wish to make a transaction, your funds will already be mixed. No additional waiting is required.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;IMPORTANT:&lt;/b&gt; Your wallet only contains 1000 of these "change addresses." Every time a mixing event happens, up to 9 of your addresses are used up. This means those 1000 addresses last for about 100 mixing events. When 900 of them are used, your wallet must create more addresses. It can only do this, however, if you have automatic backups enabled.&lt;br&gt; Consequently, users who have backups disabled will also have PrivateSend disabled. &lt;hr&gt;For more information, see the &lt;a href="https://docs.raptoreum.org/en/stable/wallets/raptoreumcore/privatesend-instantsend.html"&gt;PrivateSend documentation&lt;/a&gt;.</source>
-        <translation>&lt;h3&gt;匿名發送基礎知識&lt;/h3&gt; 匿名發送通過隱藏您的資金來源為您提供真正的財務隱私。您的錢包中所有的達世幣都由不同的“輸入”組成，您可以將其視為分開的離散硬幣。&lt;br&gt; 匿名發送使用創新的方法將您的輸入與其他兩個人的輸入相結合，而過程中不會讓您的達世幣離開您的錢包。每時每刻，您仍然控制著您的錢。&lt;hr&gt; &lt;b&gt;匿名發送的運作原理如下:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;匿名發送首先將您的交易分柝成多個標準面額的交易。這些標準面額分別為0.001 RTM, 0.01 RTM, 0.1 RTM, 1 RTM 和10 RTM --有點像您每天使用的紙幣。&lt;/li&gt; &lt;li&gt;您的錢包然後發送請求到網絡上有專門配置的軟件節點，稱為“主節點”。這些主節點會收到您希望混合一些資金的通知。沒有可識別的信息發送到主節點，所以他們永遠不會知道你是"誰"。&lt;/li&gt; &lt;li&gt;當另外兩個人發送類似的消息時，表示希望混合相同的面額的話，混合會話就會開始。相關的主節點會混合這些輸入，並指示所有三個用戶的錢包將已經轉換了輸入的交易支付給自己。你的錢包直接支付給自己，但是付給不同的位址 (稱之為找零位址)。&lt;/li&gt; &lt;li&gt;為了完全掩蓋您的資金來源，您的錢包必須以每個面額來重複此過程數次。每次這個過程完成後，都稱之為一個 "循環"。每個循環的匿名發送都會令確定您的資金來源的工作倍加困難。&lt;/li&gt; &lt;li&gt;這種混合過程在後台進行，而不需要您進行任何操作。當您想進行交易時，您的資金將已被匿名處理。不需再花額外的時間等待。&lt;/li&gt; &lt;/ol&gt; 重要:&lt;/b&gt; 您的錢包只能擁有1000個"找零位址。" 每次混合事件發生時，最多會使用9個找零位址。這意味著這1000個位址可以容許100次的混合事件。當其的中900個已經被使用後，您的錢包必須創建更多的位址。如果您啟用了自動備份，則只能夠這樣做。&lt;br&gt; 因此，禁用備份的用戶也將禁用匿名發送。 &lt;hr&gt;如欲了解更多信息請參閱 &lt;a href="https://docs.raptoreum.org/en/stable/wallets/raptoreumcore/privatesend-instantsend.html"&gt;匿名發送文檔&lt;/a&gt;。</translation>
+        <source>&lt;h3&gt;%1 Basics&lt;/h3&gt; %1 gives you true financial privacy by obscuring the origins of your funds. All the Dash in your wallet is comprised of different "inputs" which you can think of as separate, discrete coins.&lt;br&gt; %1 uses an innovative process to mix your inputs with the inputs of two or more other people, without having your coins ever leave your wallet. You retain control of your money at all times.&lt;hr&gt; &lt;b&gt;The %1 process works like this:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;%1 begins by breaking your transaction inputs down into standard denominations. These denominations are 0.001 DASH, 0.01 DASH, 0.1 DASH, 1 DASH and 10 DASH -- sort of like the paper money you use every day.&lt;/li&gt; &lt;li&gt;Your wallet then sends requests to specially configured software nodes on the network, called "masternodes." These masternodes are informed then that you are interested in mixing a certain denomination. No identifiable information is sent to the masternodes, so they never know "who" you are.&lt;/li&gt; &lt;li&gt;When two or more other people send similar messages, indicating that they wish to mix the same denomination, a mixing session begins. The masternode mixes up the inputs and instructs all three users' wallets to pay the now-transformed input back to themselves. Your wallet pays that denomination directly to itself, but in a different address (called a change address).&lt;/li&gt; &lt;li&gt;In order to fully obscure your funds, your wallet must repeat this process a number of times with each denomination. Each time the process is completed, it's called a "round." Each round of %1 makes it exponentially more difficult to determine where your funds originated.&lt;/li&gt; &lt;li&gt;This mixing process happens in the background without any intervention on your part. When you wish to make a transaction, your funds will already be mixed. No additional waiting is required.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;IMPORTANT:&lt;/b&gt; Your wallet only contains 1000 of these "change addresses." Every time a mixing event happens, up to 9 of your addresses are used up. This means those 1000 addresses last for about 100 mixing events. When 900 of them are used, your wallet must create more addresses. It can only do this, however, if you have automatic backups enabled.&lt;br&gt; Consequently, users who have backups disabled will also have %1 disabled. &lt;hr&gt;For more information, see the &lt;a style="%2" href="%3"&gt;%1 documentation&lt;/a&gt;.</source>
+        <translation>&lt;h3&gt;%1 基礎知識&lt;/h3&gt; %1 通過隱藏您的資金來源為您提供真正的財務隱私。您的錢包中所有的達世幣都由不同的“輸入”組成，您可以將其視為分開的離散硬幣。&lt;br&gt; %1 使用創新的方法將您的輸入與其他兩個人的輸入相結合，而過程中不會讓您的達世幣離開您的錢包。每時每刻，您仍然控制著您的錢。&lt;hr&gt; &lt;b&gt; %1 的運作原理如下:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;%1 首先將您的交易分柝成多個標準面額的交易。這些標準面額分別為 0.001 DASH, 0.01 DASH, 0.1 DASH, 1 DASH 和 10 DASH -- 有點像您每天使用的紙幣。&lt;/li&gt; &lt;li&gt;您的錢包然後發送請求到網絡上有專門配置的軟件節點，稱為“主節點”。這些主節點會收到您希望混合一些資金的通知。沒有可識別的信息發送到主節點，所以他們永遠不會知道你是"誰"。&lt;/li&gt; &lt;li&gt;當另外兩個人發送類似的消息時，表示希望混合相同的面額的話，混合會話就會開始。相關的主節點會混合這些輸入，並指示所有三個用戶的錢包將已經轉換了輸入的交易支付給自己。你的錢包直接支付給自己，但是付給不同的位址 (稱之為找零位址)。&lt;/li&gt; &lt;li&gt;為了完全掩蓋您的資金來源，您的錢包必須以每個面額來重複此過程數次。每次這個過程完成後，都稱之為一個 "循環"。每個循環的 %1 都會令確定您的資金來源的工作倍加困難。&lt;/li&gt; &lt;li&gt;這種混合過程在後台進行，而不需要您進行任何操作。當您想進行交易時，您的資金將已被匿名處理。不需再花額外的時間等待。&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;重要:&lt;/b&gt; 您的錢包只能擁有1000個"找零位址。" 每次混合事件發生時，最多會使用9個找零位址。這意味著這1000個位址可以容許100次的混合事件。當其的中900個已經被使用後，您的錢包必須創建更多的位址。如果您啟用了自動備份，則只能夠這樣做。&lt;br&gt; 因此，禁用備份的用戶也將禁用 %1。&lt;hr&gt;如欲了解更多信息，請參閱 &lt;a style="%2" href="%3"&gt;%1 的文檔&lt;/a&gt;.</translation>
     </message>
 </context>
 <context>
@@ -1039,8 +1079,8 @@
         <translation>在這個目錄中大約會存放 %1 GB 的資料。</translation>
     </message>
     <message>
-        <source>%1 will download and store a copy of the Raptoreum block chain.</source>
-        <translation>%1 會下載 Raptoreum 區塊鏈並且儲存一份副本。</translation>
+        <source>%1 will download and store a copy of the Dash block chain.</source>
+        <translation>%1 會下載 Dash 區塊鏈並且儲存一份副本。</translation>
     </message>
     <message>
         <source>The wallet will also be stored in this directory.</source>
@@ -1064,7 +1104,7 @@
     </message>
 </context>
 <context>
-    <name>SmartnodeList</name>
+    <name>MasternodeList</name>
     <message>
         <source>Form</source>
         <translation>表單</translation>
@@ -1082,7 +1122,7 @@
         <translation>篩選列表:</translation>
     </message>
     <message>
-        <source>Filter smartnode list</source>
+        <source>Filter masternode list</source>
         <translation>篩選主節點列表</translation>
     </message>
     <message>
@@ -1090,11 +1130,11 @@
         <translation>節點數:</translation>
     </message>
     <message>
-        <source>Show only smartnodes this wallet has keys for.</source>
+        <source>Show only masternodes this wallet has keys for.</source>
         <translation>僅顯示此錢包中有密鑰的主節點。</translation>
     </message>
     <message>
-        <source>My smartnodes only</source>
+        <source>My masternodes only</source>
         <translation>只顯示我的主節點</translation>
     </message>
     <message>
@@ -1146,6 +1186,10 @@
         <translation>複製抵押品出點</translation>
     </message>
     <message>
+        <source>Updating...</source>
+        <translation>更新中...</translation>
+    </message>
+    <message>
         <source>ENABLED</source>
         <translation>已啟用</translation>
     </message>
@@ -1174,7 +1218,15 @@
         <translation>沒有</translation>
     </message>
     <message>
-        <source>Additional information for DIP3 Smartnode %1</source>
+        <source>Filter by any property (e.g. address or protx hash)</source>
+        <translation>按任何屬性過濾 (例如 位址 或 protx 哈希值)</translation>
+    </message>
+    <message>
+        <source>Please wait...</source>
+        <translation>請稍候...</translation>
+    </message>
+    <message>
+        <source>Additional information for DIP3 Masternode %1</source>
         <translation>關於DIP3主節點%1 的附加信息</translation>
     </message>
 </context>
@@ -1185,11 +1237,11 @@
         <translation>表單</translation>
     </message>
     <message>
-        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the Raptoreum network, as detailed below.</source>
+        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the Dash network, as detailed below.</source>
         <translation>最近的交易可能尚未顯示，因此您的錢包的餘額可能不正確。 一旦你的錢包完成與達世幣網絡的同步，這個信息將是正確的，如下所述。</translation>
     </message>
     <message>
-        <source>Attempting to spend Raptoreum that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
+        <source>Attempting to spend Dash that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
         <translation>假如您正在嘗試花費尚未顯示出來的結餘，這個交易將不會被網絡所接受。</translation>
     </message>
     <message>
@@ -1283,59 +1335,83 @@
         <translation>錢包(&amp;W)</translation>
     </message>
     <message>
-        <source>Show additional tab listing all your smartnodes in first sub-tab&lt;br/&gt;and all smartnodes on the network in second sub-tab.</source>
+        <source>&amp;Appearance</source>
+        <translation>外觀(&amp;A)</translation>
+    </message>
+    <message>
+        <source>Show additional tab listing all your masternodes in first sub-tab&lt;br/&gt;and all masternodes on the network in second sub-tab.</source>
         <translation>顯示其他標籤，在第一個子標籤列出所有您的主節點&lt;br/&gt;在第二個子標籤列出所有網絡上的主節點。</translation>
     </message>
     <message>
-        <source>Show Smartnodes Tab</source>
+        <source>Show Masternodes Tab</source>
         <translation>顯示主節點標籤頁</translation>
-    </message>
-    <message>
-        <source>Show additional information and buttons for PrivateSend on overview screen.</source>
-        <translation>在概覽屏幕上顯示匿名發送的其他信息和按鈕。</translation>
-    </message>
-    <message>
-        <source>Enable advanced PrivateSend interface</source>
-        <translation>啟用進階匿名發送界面</translation>
-    </message>
-    <message>
-        <source>Show warning dialog when PrivateSend detects that wallet has very low number of keys left.</source>
-        <translation>當匿名發送檢測到錢包具有非常少的公鑰時，就顯示警告對話框。</translation>
-    </message>
-    <message>
-        <source>Warn if PrivateSend is running out of keys</source>
-        <translation>如果匿名發送用完公鑰就發出警告</translation>
-    </message>
-    <message>
-        <source>Whether to use experimental PrivateSend mode with multiple mixing sessions per block.&lt;br/&gt;Note: You must use this feature carefully.&lt;br/&gt;Make sure you always have recent wallet (auto)backup in a safe place!</source>
-        <translation>是否使用實驗性質的匿名發送模式，當中每個區塊都會有多個混合會話。.&lt;br/&gt;注意 : 您必須小心使用此功能。&lt;br/&gt; 確保你總是有最近的錢包 (自動) 備份在一個安全的地方！</translation>
-    </message>
-    <message>
-        <source>Enable PrivateSend &amp;multi-session</source>
-        <translation>啟用匿名發送多重會話</translation>
     </message>
     <message>
         <source>If you disable the spending of unconfirmed change, the change from a transaction&lt;br/&gt;cannot be used until that transaction has at least one confirmation.&lt;br/&gt;This also affects how your balance is computed.</source>
         <translation>如果你關掉「可以花還沒確認的零錢」，那麼交易中找零的零錢&lt;br/&gt;就必須要等交易至少有一次確認後，才能夠使用。&lt;br/&gt;這也會影響餘額的計算方式。</translation>
     </message>
     <message>
-        <source>PrivateSend rounds to use</source>
-        <translation>匿名發送的循環次數</translation>
+        <source>Show mixing interface on Overview screen and reveal an additional screen which allows to spend fully mixed coins only.&lt;br/&gt;A new tab with more settings will also appear in this dialog, please make sure to check them before mixing your coins.</source>
+        <translation>在概覽屏幕上顯示混合界面，並顯示一個僅允許使用完全混合了的資金的屏幕。&lt;br/&gt;該對話框中還將出現一個具有更多設定的新標籤，請確保在混合資金之前檢查這些設定。</translation>
     </message>
     <message>
-        <source>This amount acts as a threshold to turn off PrivateSend once it's reached.</source>
-        <translation>此金額為關閉匿名發送的門檻。</translation>
+        <source>Show additional information and buttons on overview screen.</source>
+        <translation>在概述屏幕上顯示其他信息和按鈕。</translation>
     </message>
     <message>
-        <source>Target PrivateSend balance</source>
-        <translation>目標匿名發送餘額</translation>
+        <source>Enable advanced interface</source>
+        <translation>啟用進階界面</translation>
     </message>
     <message>
-        <source>Automatically open the Raptoreum Core client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <source>Show system popups for mixing transactions&lt;br/&gt;just like for all other transaction types.</source>
+        <translation>顯示混合交易的系統彈出窗口&lt;br/&gt;就像所有其他交易類型一樣。</translation>
+    </message>
+    <message>
+        <source>Show popups for mixing transactions</source>
+        <translation>顯示混合交易的彈出式窗口</translation>
+    </message>
+    <message>
+        <source>Show warning dialog when the wallet has very low number of keys left.</source>
+        <translation>當檢測到錢包尚餘非常少的公鑰時，就顯示警告對話框。</translation>
+    </message>
+    <message>
+        <source>Warn if the wallet is running out of keys</source>
+        <translation>如果錢包快要用完公鑰就發出警告</translation>
+    </message>
+    <message>
+        <source>Whether to use experimental mode with multiple mixing sessions per block.&lt;br/&gt;Note: You must use this feature carefully.&lt;br/&gt;Make sure you always have recent wallet (auto)backup in a safe place!</source>
+        <translation>是否使用實驗性質的模式，當中每個區塊都會有多個混合會話。注意 : 您必須小心使用此功能。&lt;br/&gt;確保你總是有最近的錢包 (自動) 備份在一個安全的地方！</translation>
+    </message>
+    <message>
+        <source>Enable &amp;multi-session</source>
+        <translation>啟用多重會話的發送</translation>
+    </message>
+    <message>
+        <source>Mixing rounds</source>
+        <translation>混合循環次數</translation>
+    </message>
+    <message>
+        <source>This amount acts as a threshold to turn off mixing once it's reached.</source>
+        <translation>此金額為關閉混合交易的門檻。</translation>
+    </message>
+    <message>
+        <source>Target balance</source>
+        <translation>目標結餘</translation>
+    </message>
+    <message>
+        <source>Automatically open the Dash Core client port on the router. This only works when your router supports UPnP and it is enabled.</source>
         <translation>自動在路由器上開放達世幣核心客戶端的通訊埠。只有在你的路由器支援且開啓「通用即插即用」協定(UPnP)時才有作用。</translation>
     </message>
     <message>
-        <source>Connect to the Raptoreum network through a SOCKS5 proxy.</source>
+        <source>Accept connections from outside.</source>
+        <translation>接受來自外部的連接。</translation>
+    </message>
+    <message>
+        <source>Allow incomin&amp;g connections</source>
+        <translation>允許傳入的連接</translation>
+    </message>
+    <message>
+        <source>Connect to the Dash network through a SOCKS5 proxy.</source>
         <translation>透過 SOCKS5 代理伺服器來連線到達世幣網路。</translation>
     </message>
     <message>
@@ -1344,7 +1420,19 @@
     </message>
     <message>
         <source>Shows if the supplied default SOCKS5 proxy is used to reach peers via this network type.</source>
-        <translation>如果是使用提供的預設 SOCKS5 代理來連接到節點就加以顯示。</translation>
+        <translation>如果是使用提供的預設 SOCKS5 代理來連接到對等用戶群就加以顯示。</translation>
+    </message>
+    <message>
+        <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor hidden services:</source>
+        <translation>使用單獨的SOCKS＆5代理通過Tor隱藏服務到達對等用戶群:</translation>
+    </message>
+    <message>
+        <source>Hide the icon from the system tray.</source>
+        <translation>隱藏系統工具列中的圖示。</translation>
+    </message>
+    <message>
+        <source>&amp;Hide tray icon</source>
+        <translation>隱藏系統工具列圖示(&amp;H)</translation>
     </message>
     <message>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
@@ -1355,8 +1443,8 @@
         <translation>在交易頁籤的情境選單出現的第三方(比如說區塊探索網站)網址連結。&lt;br/&gt;網址中的 %s 會被取代為交易的雜湊值。可以用直線符號 | 來分隔多個連結。</translation>
     </message>
     <message>
-        <source>Expert</source>
-        <translation>專家</translation>
+        <source>&amp;Third party transaction URLs</source>
+        <translation>第三方交易網址(&amp;T)</translation>
     </message>
     <message>
         <source>Whether to show coin control features or not.</source>
@@ -1375,19 +1463,11 @@
         <translation>開啟錢幣控制功能(&amp;C)</translation>
     </message>
     <message>
-        <source>Show system popups for PrivateSend mixing transactions&lt;br/&gt;just like for all other transaction types.</source>
-        <translation>顯示匿名發送混合交易的系統彈出窗口 &lt;br/&gt;就像所有其他交易類型一樣。</translation>
-    </message>
-    <message>
-        <source>Show popups for PrivateSend transactions</source>
-        <translation>顯示匿名發送交易的彈出式窗口</translation>
-    </message>
-    <message>
         <source>&amp;Spend unconfirmed change</source>
         <translation>可以花還沒確認的零錢(&amp;S)</translation>
     </message>
     <message>
-        <source>This setting determines the amount of individual smartnodes that an input will be mixed through.&lt;br/&gt;More rounds of mixing gives a higher degree of privacy, but also costs more in fees.</source>
+        <source>This setting determines the amount of individual masternodes that an input will be mixed through.&lt;br/&gt;More rounds of mixing gives a higher degree of privacy, but also costs more in fees.</source>
         <translation>這項設置決定輸入的資金將會經過多少個主節點進行匿名處理。&lt;br/&gt;多輪的匿名化處理提供了更高程度的隱私，但也花費更多的費用。</translation>
     </message>
     <message>
@@ -1397,14 +1477,6 @@
     <message>
         <source>Map port using &amp;UPnP</source>
         <translation>用 &amp;UPnP 設定通訊埠對應</translation>
-    </message>
-    <message>
-        <source>Accept connections from outside</source>
-        <translation>接受外來連線</translation>
-    </message>
-    <message>
-        <source>Allow incoming connections</source>
-        <translation>接受外來連線</translation>
     </message>
     <message>
         <source>Proxy &amp;IP:</source>
@@ -1424,7 +1496,7 @@
     </message>
     <message>
         <source>Used for reaching peers via:</source>
-        <translation>透過以下方式連接節點:</translation>
+        <translation>透過以下方式連接對等用戶群:</translation>
     </message>
     <message>
         <source>IPv4</source>
@@ -1439,24 +1511,8 @@
         <translation>Tor</translation>
     </message>
     <message>
-        <source>Connect to the Raptoreum network through a separate SOCKS5 proxy for Tor hidden services.</source>
+        <source>Connect to the Dash network through a separate SOCKS5 proxy for Tor hidden services.</source>
         <translation>透過另一個SOCKS5 代理伺服器作為Tor隱藏服務來連線到達世幣網路。</translation>
-    </message>
-    <message>
-        <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services:</source>
-        <translation>使用另外的 SOCK5 代理伺服器，並透過 Tor 隱藏服務跟節點聯繫:</translation>
-    </message>
-    <message>
-        <source>&amp;Window</source>
-        <translation>視窗(&amp;)</translation>
-    </message>
-    <message>
-        <source>&amp;Hide the icon from the system tray.</source>
-        <translation>從系統托盤中隱藏圖示。(&amp;H)</translation>
-    </message>
-    <message>
-        <source>Hide tray icon</source>
-        <translation>隱藏托盤圖示</translation>
     </message>
     <message>
         <source>Show only a tray icon after minimizing the window.</source>
@@ -1484,13 +1540,9 @@
     </message>
     <message>
         <source>Language missing or translation incomplete? Help contributing translations here:
-https://www.transifex.com/projects/p/raptoreum/</source>
+https://www.transifex.com/projects/p/dash/</source>
         <translation>缺少相關語言或翻譯不完整？請到這裡協助翻譯
-https://www.transifex.com/projects/p/raptoreum/</translation>
-    </message>
-    <message>
-        <source>User Interface Theme:</source>
-        <translation>用戶界面主題：</translation>
+https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <source>&amp;Unit to show amounts in:</source>
@@ -1503,10 +1555,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Decimal digits</source>
         <translation>小數位數</translation>
-    </message>
-    <message>
-        <source>Third party transaction URLs</source>
-        <translation>交易的第三方網址連結</translation>
     </message>
     <message>
         <source>Active command-line options that override above options:</source>
@@ -1529,12 +1577,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>取消(&amp;C)</translation>
     </message>
     <message>
-        <source>default</source>
-        <translation>預設值</translation>
+        <source>Enable %1 features</source>
+        <translation>啟用 %1 功能</translation>
     </message>
     <message>
-        <source>none</source>
-        <translation>無</translation>
+        <source>default</source>
+        <translation>預設值</translation>
     </message>
     <message>
         <source>Confirm options reset</source>
@@ -1564,7 +1612,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>表單</translation>
     </message>
     <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Raptoreum network after a connection is established, but this process has not completed yet.</source>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Dash network after a connection is established, but this process has not completed yet.</source>
         <translation>顯示的資訊可能是過期的。跟達世幣網路的連線建立後，你的錢包會自動和網路同步，但是這個步驟還沒完成。</translation>
     </message>
     <message>
@@ -1628,10 +1676,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>能夠花費：</translation>
     </message>
     <message>
-        <source>PrivateSend</source>
-        <translation>匿名發送</translation>
-    </message>
-    <message>
         <source>Status:</source>
         <translation>狀況:</translation>
     </message>
@@ -1648,7 +1692,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>金額和循環次數:</translation>
     </message>
     <message>
-        <source>0 RTM / 0 Rounds</source>
+        <source>0 DASH / 0 Rounds</source>
         <translation>0 達世幣 / 0 循環次數</translation>
     </message>
     <message>
@@ -1668,16 +1712,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>啟動/停止混合</translation>
     </message>
     <message>
-        <source>PrivateSend Balance:</source>
-        <translation>匿名發送餘額:</translation>
-    </message>
-    <message>
-        <source>The denominations you submitted to the Smartnode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
+        <source>The denominations you submitted to the Masternode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
         <translation>你提交到主節點的面額。&lt;br&gt;為了混合，其他用戶必須提交完全一樣的面額。</translation>
-    </message>
-    <message>
-        <source>(Last Message)</source>
-        <translation>(最近一次信息)</translation>
     </message>
     <message>
         <source>out of sync</source>
@@ -1688,28 +1724,24 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>自動備份已停用，無法進行混合!</translation>
     </message>
     <message>
-        <source>Start Mixing</source>
-        <translation>開始混合</translation>
-    </message>
-    <message>
-        <source>Stop Mixing</source>
-        <translation>停止混合</translation>
-    </message>
-    <message>
         <source>No inputs detected</source>
         <translation>沒有檢測到任何輸入</translation>
+    </message>
+    <message>
+        <source>%1 Balance</source>
+        <translation>%1 結餘</translation>
     </message>
     <message numerus="yes">
         <source>%n Rounds</source>
         <translation><numerusform>%n 次循環</numerusform></translation>
     </message>
     <message>
-        <source>Found enough compatible inputs to anonymize %1</source>
-        <translation>找到足夠的相容的輸入進行匿名處理 %1</translation>
+        <source>Found enough compatible inputs to mix %1</source>
+        <translation>找到足夠的兼容輸入並用來混合 %1</translation>
     </message>
     <message>
-        <source>Not enough compatible inputs to anonymize &lt;span style='color:red;'&gt;%1&lt;/span&gt;,&lt;br&gt;will anonymize &lt;span style='color:red;'&gt;%2&lt;/span&gt; instead</source>
-        <translation>沒有足夠相容的輸入來進行匿名處理&lt;span style='color:red;'&gt;%1&lt;/span&gt;,&lt;br&gt;將匿名處理 &lt;span style='color:red;'&gt;%2&lt;/span&gt; 作為代替</translation>
+        <source>Not enough compatible inputs to mix &lt;span style='%1'&gt;%2&lt;/span&gt;,&lt;br&gt;will mix &lt;span style='%1'&gt;%3&lt;/span&gt; instead</source>
+        <translation>沒有足夠的兼容輸入以進行混合 &lt;span style='%1'&gt;%2&lt;/span&gt;,&lt;br&gt;將會混合 &lt;span style='%1'&gt;%3&lt;/span&gt; 來代替</translation>
     </message>
     <message>
         <source>Overall progress</source>
@@ -1736,6 +1768,26 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>餘下鑰: %1</translation>
     </message>
     <message>
+        <source>Start %1</source>
+        <translation>啟動 %1</translation>
+    </message>
+    <message>
+        <source>If you don't want to see internal %1 fees/transactions select "Most Common" as Type on the "Transactions" tab.</source>
+        <translation>如果你不希望看到內部 %1 手續費/交易，請在"交易"種類標籤中選擇 "最常用的" 標籤。</translation>
+    </message>
+    <message>
+        <source>%1 requires at least %2 to use.</source>
+        <translation>%1 要求至少有 %2 才能使用。</translation>
+    </message>
+    <message>
+        <source>Wallet is locked and user declined to unlock. Disabling %1.</source>
+        <translation>錢包被鎖定，用戶拒絕解鎖。正在停用 %1。</translation>
+    </message>
+    <message>
+        <source>Stop %1</source>
+        <translation>停用 %1</translation>
+    </message>
+    <message>
         <source>Disabled</source>
         <translation>己禁用</translation>
     </message>
@@ -1744,8 +1796,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>自上次自動備份後，尚餘小量的公鑰!</translation>
     </message>
     <message>
-        <source>We are about to create a new automatic backup for you, however &lt;span style='color:red;'&gt; you should always make sure you have backups saved in some safe place&lt;/span&gt;!</source>
-        <translation>我們即將為您創建一個新的自動備份，但&lt;span style='color.red;'&gt;您應該始終確保 您有另外的一些備份保存在安全的位置&lt;/span&gt;!</translation>
+        <source>We are about to create a new automatic backup for you, however &lt;span style='%1'&gt; you should always make sure you have backups saved in some safe place&lt;/span&gt;!</source>
+        <translation>我們即將為您創建一個新的自動備份，但&lt;span style='%1'&gt;您應該始終確保 您有另外的一些備份保存在安全的位置&lt;/span&gt;!</translation>
     </message>
     <message>
         <source>Note: You can turn this message off in options.</source>
@@ -1775,24 +1827,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <source>WARNING! Failed to replenish keypool, please unlock your wallet to do so.</source>
         <translation>警告! 無法補充公鑰池，請解鎖您的錢包。</translation>
     </message>
-    <message>
-        <source>Last PrivateSend message:
-</source>
-        <translation>最近收到的匿名發送訊息:
-</translation>
-    </message>
-    <message>
-        <source>If you don't want to see internal PrivateSend fees/transactions select "Most Common" as Type on the "Transactions" tab.</source>
-        <translation>如果你不希望看到內部匿名發送手續費/交易，請在"交易"種類標籤中選擇 "最常用的" 。</translation>
-    </message>
-    <message>
-        <source>PrivateSend requires at least %1 to use.</source>
-        <translation>匿名發送要求至少 %1 才能使用</translation>
-    </message>
-    <message>
-        <source>Wallet is locked and user declined to unlock. Disabling PrivateSend.</source>
-        <translation>錢包被鎖定，用戶拒絕解鎖。正在停用匿名發送。</translation>
-    </message>
 </context>
 <context>
     <name>PaymentServer</name>
@@ -1801,12 +1835,16 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>要求付款時發生錯誤</translation>
     </message>
     <message>
-        <source>Cannot start raptoreum: click-to-pay handler</source>
+        <source>Cannot start dash: click-to-pay handler</source>
         <translation>無法啟動達世幣 : 點擊支付處理程序</translation>
     </message>
     <message>
         <source>URI handling</source>
         <translation>URI 處理</translation>
+    </message>
+    <message>
+        <source>'dash://' is not a valid URI. Use 'dash:' instead.</source>
+        <translation>'dash://' 不是有效的URI。請用'dash:' 來代替。</translation>
     </message>
     <message>
         <source>Payment request fetch URL is invalid: %1</source>
@@ -1817,7 +1855,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>無效的付款位址 %1</translation>
     </message>
     <message>
-        <source>URI cannot be parsed! This can be caused by an invalid Raptoreum address or malformed URI parameters.</source>
+        <source>URI cannot be parsed! This can be caused by an invalid Dash address or malformed URI parameters.</source>
         <translation>沒辦法解析 URI 位址！可能是因為達世幣位址無效，或是 URI 參數格式錯誤。</translation>
     </message>
     <message>
@@ -1903,9 +1941,57 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <source>Ping</source>
         <translation>Ping</translation>
     </message>
+    <message>
+        <source>Sent</source>
+        <translation>發送</translation>
+    </message>
+    <message>
+        <source>Received</source>
+        <translation>已收到</translation>
+    </message>
 </context>
 <context>
     <name>QObject</name>
+    <message>
+        <source>Choose data directory on startup (default: %u)</source>
+        <translation>啓動時選擇資料目錄(預設值: %u)</translation>
+    </message>
+    <message>
+        <source>Set the font family. Possible values: %1. (default: %2)</source>
+        <translation>設置字體系列。 可能的值: %1. (預設值: %2)</translation>
+    </message>
+    <message>
+        <source>Set a scale factor which gets applied to the base font size. Possible range %1 (smallest fonts) to %2 (largest fonts). (default: %3)</source>
+        <translation>設置比例因子，該比例因子將應用於基本字體大小。 可能的範圍是 %1 (最小字體) to %2 (最大字體). (預定值: %3)</translation>
+    </message>
+    <message>
+        <source>Set the font weight for bold texts. Possible range %1 to %2 (default: %3)</source>
+        <translation>設置粗體文本的字體粗幼。 可能的範圍是 %1 to %2 (預定值: %3)</translation>
+    </message>
+    <message>
+        <source>Set the font weight for normal texts. Possible range %1 to %2 (default: %3)</source>
+        <translation>設置普通文本的字體粗幼。 可能的範圍是 %1 to %2 (預設值: %3)</translation>
+    </message>
+    <message>
+        <source>Set language, for example "de_DE" (default: system locale)</source>
+        <translation>設定語言，比如說 de_DE (預設值: 系統語系)</translation>
+    </message>
+    <message>
+        <source>Start minimized</source>
+        <translation>啓動時縮到最小</translation>
+    </message>
+    <message>
+        <source>Reset all settings changed in the GUI</source>
+        <translation>重置所有在GUI 更改的設置</translation>
+    </message>
+    <message>
+        <source>Set SSL root certificates for payment request (default: -system-)</source>
+        <translation>設定付款請求時所使用的 SSL 根憑證 (預設值: 系統憑證庫)</translation>
+    </message>
+    <message>
+        <source>Show splash screen on startup (default: %u)</source>
+        <translation>顯示啓動畫面(預設值: %u)</translation>
+    </message>
     <message>
         <source>%1 didn't yet exit safely...</source>
         <translation>%1 還沒有安全地結束...</translation>
@@ -1915,8 +2001,20 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>金額</translation>
     </message>
     <message>
-        <source>Enter a Raptoreum address (e.g. %1)</source>
+        <source>Enter a Dash address (e.g. %1)</source>
         <translation>輸入達世幣位址 (例如 %1)</translation>
+    </message>
+    <message>
+        <source>Appearance Setup</source>
+        <translation>外觀設定</translation>
+    </message>
+    <message>
+        <source>Please choose your preferred settings for the appearance of %1</source>
+        <translation>請為 %1 的外觀選項選擇您所喜好的設定</translation>
+    </message>
+    <message>
+        <source>This can also be adjusted later in the "Appearance" tab of the preferences.</source>
+        <translation>您稍後可以在 "外觀" 偏好設定的選項頁中進行調整。</translation>
     </message>
     <message>
         <source>%1 d</source>
@@ -1975,6 +2073,22 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>%1又 %2</translation>
     </message>
     <message>
+        <source>%1 B</source>
+        <translation>%1 B</translation>
+    </message>
+    <message>
+        <source>%1 KB</source>
+        <translation>%1 KB</translation>
+    </message>
+    <message>
+        <source>%1 MB</source>
+        <translation>%1 MB</translation>
+    </message>
+    <message>
+        <source>%1 GB</source>
+        <translation>%1 GB</translation>
+    </message>
+    <message>
         <source>unknown</source>
         <translation>未知</translation>
     </message>
@@ -1992,6 +2106,34 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Error: %1</source>
         <translation>錯誤: %1</translation>
+    </message>
+    <message>
+        <source>Error: Failed to load application fonts.</source>
+        <translation>錯誤: 無法加載應用程序字體。</translation>
+    </message>
+    <message>
+        <source>Error: Specified font-family invalid. Valid values: %1.</source>
+        <translation>錯誤: 指定的字體系列無效。 有效值: %1。</translation>
+    </message>
+    <message>
+        <source>Error: Specified font-weight-normal invalid. Valid range %1 to %2.</source>
+        <translation>錯誤: 指定的 font-weight-normal 無效。 有效範圍 %1 到 %2。</translation>
+    </message>
+    <message>
+        <source>Error: Specified font-weight-bold invalid. Valid range %1 to %2.</source>
+        <translation>錯誤: 指定的 font-weight-bold 無效。 有效範圍 %1 到%2。</translation>
+    </message>
+    <message>
+        <source>Error: Specified font-scale invalid. Valid range %1 to %2.</source>
+        <translation>錯誤: 指定的字體比例無效。 有效範圍 %1 到 %2。</translation>
+    </message>
+    <message>
+        <source>Error: Invalid -custom-css-dir path.</source>
+        <translation>錯誤: 無效的 -custom-css-dir 路徑。</translation>
+    </message>
+    <message>
+        <source>Error: %1 CSS file(s) missing in -custom-css-dir path.</source>
+        <translation>錯誤:  -custom-css-dir 路徑中缺少 %1 個CSS 文件。</translation>
     </message>
 </context>
 <context>
@@ -2114,7 +2256,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>區塊鏈</translation>
     </message>
     <message>
-        <source>Number of Smartnodes</source>
+        <source>Number of Masternodes</source>
         <translation>主節點數目</translation>
     </message>
     <message>
@@ -2142,10 +2284,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>網路流量(&amp;N)</translation>
     </message>
     <message>
-        <source>Totals</source>
-        <translation>總計</translation>
-    </message>
-    <message>
         <source>Received</source>
         <translation>接收</translation>
     </message>
@@ -2155,15 +2293,19 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <source>&amp;Peers</source>
-        <translation>節點(&amp;P)</translation>
+        <translation>對等用戶(&amp;P)</translation>
+    </message>
+    <message>
+        <source>Wallet:</source>
+        <translation>錢包: </translation>
     </message>
     <message>
         <source>Banned peers</source>
-        <translation>已禁止的節點</translation>
+        <translation>已禁止的對等用戶群</translation>
     </message>
     <message>
         <source>Select a peer to view detailed information.</source>
-        <translation>選擇一個節點來查看詳細資訊。</translation>
+        <translation>選擇一個對等用戶來查看詳細資訊。</translation>
     </message>
     <message>
         <source>Whitelisted</source>
@@ -2190,6 +2332,22 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>己同步的區塊</translation>
     </message>
     <message>
+        <source>Rescan blockchain files 1</source>
+        <translation>重新掃描區塊鏈文件 1</translation>
+    </message>
+    <message>
+        <source>Rescan blockchain files 2</source>
+        <translation>重新掃描區塊鏈文件 2</translation>
+    </message>
+    <message>
+        <source>-rescan=1: Rescan the block chain for missing wallet transactions starting from wallet creation time.</source>
+        <translation>-rescan=1: 從錢包創建時間開始，重新掃描區塊鏈以尋找漏掉的錢包交易。</translation>
+    </message>
+    <message>
+        <source>-rescan=2: Rescan the block chain for missing wallet transactions starting from genesis block.</source>
+        <translation>-rescan=2: 從創世區塊開始重新掃描區塊鏈以尋找漏掉的錢包交易。</translation>
+    </message>
+    <message>
         <source>Wallet Path</source>
         <translation>錢包路徑</translation>
     </message>
@@ -2202,12 +2360,20 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>數據目錄</translation>
     </message>
     <message>
+        <source>Last block hash</source>
+        <translation>最後一個區塊的哈希值</translation>
+    </message>
+    <message>
         <source>Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.</source>
         <translation>從目前的資料目錄下開啓 %1 的除錯紀錄檔。當紀錄檔很大時，可能會花好幾秒的時間。</translation>
     </message>
     <message>
         <source>InstantSend locks</source>
         <translation>即時到帳鎖定</translation>
+    </message>
+    <message>
+        <source>(none)</source>
+        <translation>(none)</translation>
     </message>
     <message>
         <source>Decrease font size</source>
@@ -2220,6 +2386,14 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>&amp;Reset</source>
         <translation>重置(&amp;R)</translation>
+    </message>
+    <message>
+        <source>Node Type</source>
+        <translation>節點種類</translation>
+    </message>
+    <message>
+        <source>PoSe Score</source>
+        <translation>PoSe 評分</translation>
     </message>
     <message>
         <source>Services</source>
@@ -2270,10 +2444,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>搶救錢包</translation>
     </message>
     <message>
-        <source>Rescan blockchain files</source>
-        <translation>重新掃描區塊鏈文件</translation>
-    </message>
-    <message>
         <source>Recover transactions 1</source>
         <translation>復原交易 1</translation>
     </message>
@@ -2292,10 +2462,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>-salvagewallet: Attempt to recover private keys from a corrupt wallet.dat.</source>
         <translation>-salvagewallet: 嘗試從損壞的 wallet.dat 裡恢復私鑰。</translation>
-    </message>
-    <message>
-        <source>-rescan: Rescan the block chain for missing wallet transactions.</source>
-        <translation>-rescan: 重新掃描區塊鏈，來尋找錢包可能漏掉的交易。</translation>
     </message>
     <message>
         <source>-zapwallettxes=1: Recover transactions from blockchain (keep meta-data, e.g. account owner).</source>
@@ -2354,12 +2520,16 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>歡迎使用 %1 的 RPC 主控台。</translation>
     </message>
     <message>
-        <source>Type &lt;b&gt;help&lt;/b&gt; for an overview of available commands.</source>
-        <translation>請鍵入 &lt;b&gt;help&lt;/b&gt; 來查看可用指令的簡介。</translation>
-    </message>
-    <message>
         <source>Use up and down arrows to navigate history, and %1 to clear screen.</source>
         <translation>請用上下游標鍵來瀏覽先前指令的紀錄，並用%1來清除畫面。</translation>
+    </message>
+    <message>
+        <source>Type %1 for an overview of available commands.</source>
+        <translation>鍵入 %1 以獲取可用命令的概述。</translation>
+    </message>
+    <message>
+        <source>For more information on using this console type %1.</source>
+        <translation>有關使用此控制台的更多信息，請鍵入 %1。</translation>
     </message>
     <message>
         <source>WARNING: Scammers have been active, telling users to type commands here, stealing their wallet contents. Do not use this console without fully understanding the ramifications of a command.</source>
@@ -2382,20 +2552,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>總計: %1 (已啟用: %2)</translation>
     </message>
     <message>
-        <source>%1 B</source>
-        <translation>%1 B (位元組)</translation>
+        <source>Executing command without any wallet</source>
+        <translation>在沒有任何錢包的情況下執行命令</translation>
     </message>
     <message>
-        <source>%1 KB</source>
-        <translation>%1 KB (千位元組)</translation>
-    </message>
-    <message>
-        <source>%1 MB</source>
-        <translation>%1 MB (百萬位元組)</translation>
-    </message>
-    <message>
-        <source>%1 GB</source>
-        <translation>%1 GB (十億位元組)</translation>
+        <source>Executing command using "%1" wallet</source>
+        <translation>使用 "%1" 錢包執行命令</translation>
     </message>
     <message>
         <source>(node id: %1)</source>
@@ -2426,6 +2588,18 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>不是</translation>
     </message>
     <message>
+        <source>Regular</source>
+        <translation>正常</translation>
+    </message>
+    <message>
+        <source>Masternode</source>
+        <translation>主節點</translation>
+    </message>
+    <message>
+        <source>Verified Masternode</source>
+        <translation>已驗證的主節點</translation>
+    </message>
+    <message>
         <source>Unknown</source>
         <translation>不明</translation>
     </message>
@@ -2433,15 +2607,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
-        <source>Reuse one of the previously used receiving addresses.&lt;br&gt;Reusing addresses has security and privacy issues.&lt;br&gt;Do not use this unless re-generating a payment request made before.</source>
-        <translation>重新使用以前用過的接收地址。&lt;br&gt;重複使用地址會產生安全和私隱問題。&lt;br&gt;不要使用這個選項，除非再次生成之前提出的支付請求。</translation>
-    </message>
-    <message>
-        <source>R&amp;euse an existing receiving address (not recommended)</source>
-        <translation>重複使用現有的收款位址(不建議)(&amp;e)</translation>
-    </message>
-    <message>
-        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Raptoreum network.</source>
+        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Dash network.</source>
         <translation>附加在付款要求中的訊息，可以不填，打開要求內容時會顯示。注意: 這個訊息不會隨著付款送到達世幣網路上。</translation>
     </message>
     <message>
@@ -2453,7 +2619,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>跟新收款位址關聯的標記，可以不填。</translation>
     </message>
     <message>
-        <source>An optional message to attach to the payment request, which will be displayed when the request is opened.&lt;br&gt;Note: The message will not be sent with the payment over the Raptoreum network.</source>
+        <source>An optional message to attach to the payment request, which will be displayed when the request is opened.&lt;br&gt;Note: The message will not be sent with the payment over the Dash network.</source>
         <translation>附加在付款要求中的訊息，可以不填，打開要求內容時會顯示。&lt;br&gt;注意: 這個訊息不會隨著付款送到達世幣網路上。</translation>
     </message>
     <message>
@@ -2503,6 +2669,14 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Remove</source>
         <translation>刪掉</translation>
+    </message>
+    <message>
+        <source>Enter a label to associate with the new receiving address</source>
+        <translation>輸入標籤，用來標示新的收款位址</translation>
+    </message>
+    <message>
+        <source>Enter a message to attach to the payment request</source>
+        <translation>輸入信息並附加到支付請求上</translation>
     </message>
     <message>
         <source>Copy URI</source>
@@ -2566,6 +2740,10 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Message</source>
         <translation>訊息</translation>
+    </message>
+    <message>
+        <source>Wallet</source>
+        <translation>錢包</translation>
     </message>
     <message>
         <source>Resulting URI too long, try to reduce the text for label / message.</source>
@@ -2682,15 +2860,11 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>目標確認時間:</translation>
     </message>
     <message>
-        <source>PrivateSend</source>
-        <translation>匿名發送</translation>
-    </message>
-    <message>
         <source>If the custom fee is set to 1000 duffs and the transaction is only 250 bytes, then "per kilobyte" only pays 250 duffs in fee,&lt;br /&gt;while "at least" pays 1000 duffs. For transactions bigger than a kilobyte both pay by kilobyte.</source>
         <translation>如果自訂手續費設定為 1000 duffs ，而交易資料大小只有 250 個位元組的話，那麽選擇「每千位元組」就只會付 250 duffs 的手續費，&lt;br /&gt;而「至少」會支付 1000 duffs。但是如果交易資料大小超過一千個位元組，那麽兩者都是每千位元組的費用。</translation>
     </message>
     <message>
-        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks.&lt;br /&gt;But be aware that this can end up in a never confirming transaction once there is more demand for raptoreum transactions than the network can process.</source>
+        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks.&lt;br /&gt;But be aware that this can end up in a never confirming transaction once there is more demand for dash transactions than the network can process.</source>
         <translation>當交易量少於區塊可容納的空間時，只付最低手續費不會有什麽問題。&lt;br /&gt;但是當交易量的需求成長到超過整體網路可以處理的量時，可能會造成一筆一直不會被確認的交易。</translation>
     </message>
     <message>
@@ -2786,6 +2960,10 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>%1 (%2 個區塊)</translation>
     </message>
     <message>
+        <source>from wallet %1</source>
+        <translation>從錢包 %1</translation>
+    </message>
+    <message>
         <source>using</source>
         <translation>使用</translation>
     </message>
@@ -2810,16 +2988,24 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>&lt;b&gt;(在 %2 中 %1 個項目顯示出來)&lt;/b&gt;</translation>
     </message>
     <message>
-        <source>PrivateSend funds only</source>
-        <translation>只限匿名發送資金</translation>
+        <source>S&amp;end mixed funds</source>
+        <translation>(&amp;e) 發送已經混合的資金</translation>
+    </message>
+    <message>
+        <source>Confirm the %1 send action</source>
+        <translation>確認 %1 的發送動作</translation>
+    </message>
+    <message>
+        <source>%1 funds only</source>
+        <translation>只限 %1 的資金</translation>
     </message>
     <message>
         <source>any available funds</source>
         <translation>任何可用資金</translation>
     </message>
     <message>
-        <source>(PrivateSend transactions have higher fees usually due to no change output being allowed)</source>
-        <translation>(由於不允許更改輸出，匿名發送的交易費用會較高)</translation>
+        <source>(%1 transactions have higher fees usually due to no change output being allowed)</source>
+        <translation>(由於不允許更改輸出的關係，%1 的交易手續費用會較高)</translation>
     </message>
     <message>
         <source>Transaction size: %1</source>
@@ -2834,8 +3020,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation><numerusform>此交易將消耗 %n 個輸入</numerusform></translation>
     </message>
     <message>
-        <source>Warning: Using PrivateSend with %1 or more inputs can harm your privacy and is not recommended</source>
-        <translation>警告: 將匿名發送資金與 %1 或更多輸入配合使用會損害您的隱私，因此不建議使用</translation>
+        <source>Warning: Using %1 with %2 or more inputs can harm your privacy and is not recommended</source>
+        <translation>警告: 在 %1 中使用 %2 或更多的輸入會損害您的隱私，因此不建議使用</translation>
     </message>
     <message>
         <source>Confirm send coins</source>
@@ -2886,7 +3072,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation><numerusform>預計可在 %n 個區塊內開始確認。</numerusform></translation>
     </message>
     <message>
-        <source>Warning: Invalid Raptoreum address</source>
+        <source>Warning: Invalid Dash address</source>
         <translation>警告: 無效的達世幣位址</translation>
     </message>
     <message>
@@ -2917,7 +3103,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>付給:(&amp;T)</translation>
     </message>
     <message>
-        <source>The Raptoreum address to send the payment to</source>
+        <source>The Dash address to send the payment to</source>
         <translation>接收付款的達世幣位址</translation>
     </message>
     <message>
@@ -2953,7 +3139,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>金額:(&amp;A)</translation>
     </message>
     <message>
-        <source>The fee will be deducted from the amount being sent. The recipient will receive a lower amount of Raptoreum than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
+        <source>The fee will be deducted from the amount being sent. The recipient will receive a lower amount of Dash than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
         <translation>手續費將從發送金額中扣除。接收者將收到的達世幣金額將會比您在金額字段中輸入的金額為少。 如果選擇了多個收款人，該費用將會被平均攤分。</translation>
     </message>
     <message>
@@ -2961,11 +3147,15 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>從金額中扣除費用(&amp;u)</translation>
     </message>
     <message>
+        <source>Use available balance</source>
+        <translation>使用可用餘額</translation>
+    </message>
+    <message>
         <source>Message:</source>
         <translation>訊息:</translation>
     </message>
     <message>
-        <source>A message that was attached to the raptoreum: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Raptoreum network.</source>
+        <source>A message that was attached to the dash: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Dash network.</source>
         <translation>附加在達世幣付款協議 URI 中的訊息，會和交易內容一起存起來，給你自己做參考。注意: 這個訊息不會送到達世幣網路上。</translation>
     </message>
     <message>
@@ -3018,11 +3208,11 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>簽署訊息(&amp;S)</translation>
     </message>
     <message>
-        <source>You can sign messages/agreements with your addresses to prove you can receive Raptoreum sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
+        <source>You can sign messages/agreements with your addresses to prove you can receive Dash sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
         <translation>你可以用自己的位址簽署訊息/協議，來證明你對位址的所有權。但是請小心，不要簽署語意含糊不清的內容，因為釣魚式詐騙可能會用騙你簽署的手法來冒充是你。只有在語句中的細節你都同意時才簽署。</translation>
     </message>
     <message>
-        <source>The Raptoreum address to sign the message with</source>
+        <source>The Dash address to sign the message with</source>
         <translation>用來簽署訊息的達世幣位址</translation>
     </message>
     <message>
@@ -3054,7 +3244,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>複製目前的簽章到系統剪貼簿</translation>
     </message>
     <message>
-        <source>Sign the message to prove you own this Raptoreum address</source>
+        <source>Sign the message to prove you own this Dash address</source>
         <translation>簽署這個訊息來證明這個達世幣位址是你的</translation>
     </message>
     <message>
@@ -3078,11 +3268,11 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>請在下面輸入簽署的位址，訊息(請確定完整複製了所包含的換行，空格，跳位符號等等)，以及簽章，來驗證這個訊息。請小心，除了訊息內容以外，不要對簽章本身過度解讀，以避免被用「中間人攻擊法」詐騙。請注意，這僅僅是證明簽名方接收的地址，它不能證明任何交易的發送人！</translation>
     </message>
     <message>
-        <source>The Raptoreum address the message was signed with</source>
+        <source>The Dash address the message was signed with</source>
         <translation>簽署這個訊息的達世幣位址</translation>
     </message>
     <message>
-        <source>Verify the message to ensure it was signed with the specified Raptoreum address</source>
+        <source>Verify the message to ensure it was signed with the specified Dash address</source>
         <translation>驗證這個訊息來確定是用指定的達世幣位址簽署的</translation>
     </message>
     <message>
@@ -3094,8 +3284,20 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>重設所有訊息驗證欄位</translation>
     </message>
     <message>
+        <source>Enter a message to be signed</source>
+        <translation>輸入要簽名的消息</translation>
+    </message>
+    <message>
         <source>Click "Sign Message" to generate signature</source>
         <translation>請按一下「簽署訊息」來產生簽章</translation>
+    </message>
+    <message>
+        <source>Enter a message to be verified</source>
+        <translation>輸入要驗證的消息</translation>
+    </message>
+    <message>
+        <source>Enter a signature for the message to be verified</source>
+        <translation>輸入要驗證的消息的簽名</translation>
     </message>
     <message>
         <source>The entered address is invalid.</source>
@@ -3152,16 +3354,24 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <source>[testnet]</source>
         <translation>[testnet]</translation>
     </message>
-    <message>
-        <source>Version %1</source>
-        <translation>版本 %1</translation>
-    </message>
 </context>
 <context>
     <name>TrafficGraphWidget</name>
     <message>
         <source>KB/s</source>
         <translation>KB/s</translation>
+    </message>
+    <message>
+        <source>Total</source>
+        <translation>總金額:</translation>
+    </message>
+    <message>
+        <source>Received</source>
+        <translation>接收</translation>
+    </message>
+    <message>
+        <source>Sent</source>
+        <translation>發送</translation>
     </message>
 </context>
 <context>
@@ -3177,10 +3387,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>conflicted</source>
         <translation>發生衝突</translation>
-    </message>
-    <message>
-        <source>%1/offline</source>
-        <translation>%1 次/離線</translation>
     </message>
     <message>
         <source>0/unconfirmed, %1</source>
@@ -3207,24 +3413,16 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>確認 %1 次</translation>
     </message>
     <message>
-        <source>locked via LLMQ based ChainLocks</source>
-        <translation>透過基於LLMQ 的 ChainLocks鎖定的</translation>
+        <source>locked via ChainLocks</source>
+        <translation>通過 ChainLocks 鎖定的</translation>
     </message>
     <message>
-        <source>verified via LLMQ based InstantSend</source>
-        <translation>經基於LLMQ 的 ChainLocks驗證的</translation>
+        <source>verified via InstantSend</source>
+        <translation>經即時到帳系統核實</translation>
     </message>
     <message>
         <source>Status</source>
         <translation>狀態</translation>
-    </message>
-    <message>
-        <source>, has not been successfully broadcast yet</source>
-        <translation>，尚未成功廣播</translation>
-    </message>
-    <message numerus="yes">
-        <source>, broadcast through %n node(s)</source>
-        <translation><numerusform>，已通過%n 個節點廣播 </numerusform></translation>
     </message>
     <message>
         <source>Date</source>
@@ -3381,10 +3579,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>至 %1 個數據塊時開啟</translation>
     </message>
     <message>
-        <source>Offline</source>
-        <translation>離線</translation>
-    </message>
-    <message>
         <source>Unconfirmed</source>
         <translation>未確認</translation>
     </message>
@@ -3409,12 +3603,16 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>未成熟金額 (%1  次確認，經 %2 次確認後方可使用)</translation>
     </message>
     <message>
-        <source>This block was not received by any other nodes and will probably not be accepted!</source>
-        <translation>沒有其他節點收到這個區塊，也許它不會被接受！</translation>
-    </message>
-    <message>
         <source>Generated but not accepted</source>
         <translation>已生成但未被接受</translation>
+    </message>
+    <message>
+        <source>verified via InstantSend</source>
+        <translation>經即時到帳系統核實</translation>
+    </message>
+    <message>
+        <source>locked via ChainLocks</source>
+        <translation>通過 ChainLocks 鎖定的</translation>
     </message>
     <message>
         <source>Received with</source>
@@ -3425,8 +3623,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>收款來自</translation>
     </message>
     <message>
-        <source>Received via PrivateSend</source>
-        <translation>經由匿名發送收到</translation>
+        <source>Received via %1</source>
+        <translation>經由 %1 收到的</translation>
     </message>
     <message>
         <source>Sent to</source>
@@ -3441,24 +3639,24 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>開採所得</translation>
     </message>
     <message>
-        <source>PrivateSend Denominate</source>
-        <translation>匿名發送除名</translation>
+        <source>%1 Mixing</source>
+        <translation>%1 混合中</translation>
     </message>
     <message>
-        <source>PrivateSend Collateral Payment</source>
-        <translation>匿名發送抵押品付款</translation>
+        <source>%1 Collateral Payment</source>
+        <translation>%1 抵押品付款</translation>
     </message>
     <message>
-        <source>PrivateSend Make Collateral Inputs</source>
-        <translation>用作匿名發送抵押品的輸入</translation>
+        <source>%1 Make Collateral Inputs</source>
+        <translation>用作 %1 抵押品的輸入</translation>
     </message>
     <message>
-        <source>PrivateSend Create Denominations</source>
-        <translation>匿名發送產生的除名資金</translation>
+        <source>%1 Create Denominations</source>
+        <translation>%1 所產生的除名資金</translation>
     </message>
     <message>
-        <source>PrivateSend</source>
-        <translation>匿名發送</translation>
+        <source>%1 Send</source>
+        <translation>%1 發送</translation>
     </message>
     <message>
         <source>watch-only</source>
@@ -3489,10 +3687,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>決定是否有一個僅限查看的位址參與這次的交易</translation>
     </message>
     <message>
-        <source>Whether or not this transaction was locked by InstantSend.</source>
-        <translation>這交易是否被即時到帳鎖定。</translation>
-    </message>
-    <message>
         <source>User-defined intent/purpose of the transaction.</source>
         <translation>用戶定義的意圖/交易的目的。</translation>
     </message>
@@ -3506,14 +3700,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>All</source>
         <translation>全部</translation>
-    </message>
-    <message>
-        <source>Locked by InstantSend</source>
-        <translation>被即時到帳鎖定</translation>
-    </message>
-    <message>
-        <source>Not locked by InstantSend</source>
-        <translation>沒有被即時到帳鎖定</translation>
     </message>
     <message>
         <source>Today</source>
@@ -3552,24 +3738,24 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>付款給</translation>
     </message>
     <message>
-        <source>PrivateSend</source>
-        <translation>匿名發送</translation>
+        <source>%1 Send</source>
+        <translation>%1 發送</translation>
     </message>
     <message>
-        <source>PrivateSend Make Collateral Inputs</source>
-        <translation>用作匿名發送抵押品的輸入</translation>
+        <source>%1 Make Collateral Inputs</source>
+        <translation>用作 %1 抵押品的輸入</translation>
     </message>
     <message>
-        <source>PrivateSend Create Denominations</source>
-        <translation>匿名發送產生的除名資金</translation>
+        <source>%1 Create Denominations</source>
+        <translation>%1 所產生的除名資金</translation>
     </message>
     <message>
-        <source>PrivateSend Denominate</source>
-        <translation>匿名發送除名</translation>
+        <source>%1 Mixing</source>
+        <translation>%1 混合中</translation>
     </message>
     <message>
-        <source>PrivateSend Collateral Payment</source>
-        <translation>匿名發送抵押品付款</translation>
+        <source>%1 Collateral Payment</source>
+        <translation>%1 抵押品付款</translation>
     </message>
     <message>
         <source>To yourself</source>
@@ -3584,8 +3770,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>其它</translation>
     </message>
     <message>
-        <source>Enter address or label to search</source>
-        <translation>請輸入要搜尋的位址或標記</translation>
+        <source>Enter address, transaction id, or label to search</source>
+        <translation>輸入位址，交易ID或標籤以進行搜索</translation>
     </message>
     <message>
         <source>Min amount</source>
@@ -3755,36 +3941,16 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <source>The wallet data was successfully saved to %1.</source>
         <translation>錢包的資料已經成功儲存到 %1 了。</translation>
     </message>
+    <message>
+        <source>Cancel</source>
+        <translation>取消</translation>
+    </message>
 </context>
 <context>
-    <name>raptoreum-core</name>
-    <message>
-        <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
-        <translation>和指定的位址繫結，並且一直在指定位址聽候連線。IPv6 請用 [主機]:通訊埠 這種格式</translation>
-    </message>
+    <name>dash-core</name>
     <message>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
         <translation>錯誤: 聽候外來連線失敗(回傳錯誤 %s)</translation>
-    </message>
-    <message>
-        <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
-        <translation>當收到相關警示，或發現相當長的分支時，所要執行的指令(指令中的 %s 會被取代成警示訊息)</translation>
-    </message>
-    <message>
-        <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
-        <translation>當錢包有交易改變時要執行的指令(指令中的 %s 會被取代成交易識別碼)</translation>
-    </message>
-    <message>
-        <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
-        <translation>當最新區塊改變時要執行的指令(指令中的 %s 會被取代成區塊雜湊值)</translation>
-    </message>
-    <message>
-        <source>Name to construct url for KeePass entry that stores the wallet passphrase</source>
-        <translation>為存儲在這個電子錢包的密碼，構建KeePass 入口的URL命名</translation>
-    </message>
-    <message>
-        <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
-        <translation>設定指令碼驗證的執行緒數目 (%u 到 %d，0 表示程式自動決定，小於 0 表示保留處理器核心不用的數目，預設值: %d)</translation>
     </message>
     <message>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
@@ -3796,55 +3962,23 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
-        <translation>警告: 我們和某些連線的節點對於區塊鏈結的決定不同！你可能需要升級，或是需要等其它的節點升級。</translation>
-    </message>
-    <message>
-        <source>Accept command line and JSON-RPC commands</source>
-        <translation>接受指令列和 JSON-RPC 指令</translation>
-    </message>
-    <message>
-        <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
-        <translation>允許對 -addnode, -seednode, -connect 的參數使用域名查詢</translation>
+        <translation>警告: 我們和某些連線的對等用戶群對於區塊鏈結的決定不同！你可能需要升級，或是需要等其它的對等用戶升級。</translation>
     </message>
     <message>
         <source>Already have that input.</source>
         <translation>該輸入已經存在。</translation>
     </message>
     <message>
-        <source>Block creation options:</source>
-        <translation>區塊製造選項:</translation>
-    </message>
-    <message>
         <source>Cannot downgrade wallet</source>
         <translation>沒辦法把錢包格式降級</translation>
-    </message>
-    <message>
-        <source>Cannot write default address</source>
-        <translation>沒辦法把預設位址寫進去</translation>
     </message>
     <message>
         <source>Collateral not valid.</source>
         <translation>抵押品無效。</translation>
     </message>
     <message>
-        <source>Connect to a node to retrieve peer addresses, and disconnect</source>
-        <translation>連線到某個節點來取得其它節點的位址，然後斷線</translation>
-    </message>
-    <message>
-        <source>Connection options:</source>
-        <translation>連線選項:</translation>
-    </message>
-    <message>
         <source>Corrupted block database detected</source>
         <translation>發現區塊資料庫壞掉了</translation>
-    </message>
-    <message>
-        <source>Debugging/Testing options:</source>
-        <translation>除錯與測試選項</translation>
-    </message>
-    <message>
-        <source>Do not load the wallet and disable wallet RPC calls</source>
-        <translation>不要載入錢包，並且拿掉錢包相關的 RPC 功能請求。</translation>
     </message>
     <message>
         <source>Do you want to rebuild the block database now?</source>
@@ -3891,136 +4025,32 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>在任意的通訊埠聽候失敗。如果你希望這樣的話，可以設定 -listen=0.</translation>
     </message>
     <message>
-        <source>(1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)</source>
-        <translation>(1 表示保留交易描述資料，像是帳戶使用者和付款請求資訊；2 表示丟掉交易描述資料)</translation>
-    </message>
-    <message>
         <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
         <translation>-maxtxfee設置得非常高! 這樣多的費用將在一筆交易中支付。</translation>
     </message>
     <message>
-        <source>A fee rate (in %s/kB) that will be used when fee estimation has insufficient data (default: %s)</source>
-        <translation>費用估算數據不足時將使用的費用 (以 %s/kB 為單位)  (預設值: %s)</translation>
-    </message>
-    <message>
-        <source>Accept relayed transactions received from whitelisted peers even when not relaying transactions (default: %d)</source>
-        <translation>即使在沒有中繼交易發生的情況下仍然接受來自節點白名單的中繼交易  (預設值: %d)</translation>
-    </message>
-    <message>
-        <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
-        <translation>允許指定的來源建立 JSON-RPC 連線。&lt;ip&gt; 的有效值可以是一個單獨位址(像是 1.2.3.4)，一個網段/網段罩遮值(例如 1.2.3.4/255.255.255.0)，或是網段/CIDR值(像是 1.2.3.4/24)。這個選項可以設定多次。</translation>
-    </message>
-    <message>
-        <source>Bind to given address and whitelist peers connecting to it. Use [host]:port notation for IPv6</source>
-        <translation>和指定的位址繫結，並且把連線過來的節點放進白名單。IPv6 請用 [主機]:通訊埠 這種格式</translation>
-    </message>
-    <message>
-        <source>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</source>
-        <translation>用系統預設權限來造出新的檔案，而不是用使用者權限罩遮(umask)值 077 (只有在關掉錢包功能時才有作用)。</translation>
-    </message>
-    <message>
-        <source>Delete all wallet transactions and only recover those parts of the blockchain through -rescan on startup</source>
-        <translation>清掉錢包裡的所有交易資料，並且在下次啟動時，使用 -rescan 來從區塊鏈中復原回來。</translation>
-    </message>
-    <message>
-        <source>Enable publish raw transactions of attempted InstantSend double spend in &lt;address&gt;</source>
-        <translation>在&lt;address&gt;中啟用嘗試發布雙重花費的即時到帳交易的原始交易</translation>
-    </message>
-    <message>
-        <source>Enable publish transaction hashes of attempted InstantSend double spend in &lt;address&gt;</source>
-        <translation>在&lt;address&gt;中啟用嘗試發布雙重花費的即時到帳交易的哈希值</translation>
+        <source>Cannot provide specific connections and have addrman find outgoing connections at the same.</source>
+        <translation>無法提供特定的連接，並且讓addrman同時找到傳出的連接。</translation>
     </message>
     <message>
         <source>Found unconfirmed denominated outputs, will wait till they confirm to continue.</source>
         <translation>找到未確認的己除名資金輸出，將等待，直到它們確認再繼續。</translation>
     </message>
     <message>
-        <source>How thorough the block verification of -checkblocks is (0-4, default: %u)</source>
-        <translation>使用 -checkblocks 檢查區塊的仔細程度(0-4，預設值: %u)</translation>
-    </message>
-    <message>
-        <source>If paytxfee is not set, include enough fee so transactions begin confirmation on average within n blocks (default: %u)</source>
-        <translation>當沒有設定 paytxfee 時，自動包含可以讓交易能在平均 n 個區塊內開始確認的手續費(預設值: %u)</translation>
-    </message>
-    <message>
-        <source>If this block is in the chain assume that it and its ancestors are valid and potentially skip their script verification (0 to verify all, default: %s, testnet: %s)</source>
-        <translation>如果在這條鏈中的區塊假設它和它之前的區塊是有效的，並有可能跳過他們的腳本驗證 (0 是驗證全部, 預設值: %s, 測試網: %s)</translation>
+        <source>Invalid -socketevents ('%s') specified. Only these modes are supported: %s</source>
+        <translation>指定的 -socketevents ('%s') 無效。僅支持以下模式: %s</translation>
     </message>
     <message>
         <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)</source>
         <translation>-maxtxfee=&lt;amount&gt;: '%s' 的金額無效 (必須大於最低轉發手續費 %s 以避免交易無法確認)</translation>
     </message>
     <message>
-        <source>Maintain a full transaction index, used by the getrawtransaction rpc call (default: %u)</source>
-        <translation>維護全部交易的索引，用在 getrawtransaction 這個 RPC 請求(預設值: %u)</translation>
-    </message>
-    <message>
-        <source>Maximum size of data in data carrier transactions we relay and mine (default: %u)</source>
-        <translation>轉發和開採時，對只帶資料的交易的大小上限(預設值: %u)</translation>
-    </message>
-    <message>
-        <source>Number of seconds to keep misbehaving peers from reconnecting (default: %u)</source>
-        <translation>避免與異常的節點重新連線的秒數(預設: %u)</translation>
-    </message>
-    <message>
-        <source>Output debugging information (default: %u, supplying &lt;category&gt; is optional)</source>
-        <translation>輸出除錯資訊(預設值: %u, 不一定要指定 &lt;category&gt;)</translation>
-    </message>
-    <message>
-        <source>Overrides minimum spork signers to change spork value. Only useful for regtest and devnet. Using this on mainnet or testnet will ban you.</source>
-        <translation>覆蓋最小叉勺簽名來改變叉勺值。只對regtest和devnet有用。在mainnet或testnet上使用它的話將封鎖你。</translation>
-    </message>
-    <message>
-        <source>PrivateSend uses exact denominated amounts to send funds, you might simply need to mix some more coins.</source>
-        <translation>匿名發送要求使用準確的已除名資金來發送，你可能需要再匿名處理一些資金。</translation>
-    </message>
-    <message>
-        <source>Use N separate smartnodes in parallel to mix funds (%u-%u, default: %u)</source>
-        <translation>使用 N 個單獨的主節點來進行並聯混合資金 (%u-%u, 預設值: %u)</translation>
-    </message>
-    <message>
-        <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)</source>
-        <translation>使用另外的 SOCK5 代理伺服器，來透過 Tor 隱藏服務跟節點聯繫(預設值: %s)</translation>
-    </message>
-    <message>
-        <source>User defined mnemonic for HD wallet (bip39). Only has effect during wallet creation/first start (default: randomly generated)</source>
-        <translation>用戶自定義的HD錢包 (bip39)。僅在創建錢包/首次啟動時有效(預設值: 隨機生成)</translation>
-    </message>
-    <message>
-        <source>User defined seed for HD wallet (should be in hex). Only has effect during wallet creation/first start (default: randomly generated)</source>
-        <translation>用戶自定義的HD錢包種子 (應該是十六進制)。僅在創建錢包/首次啟動時有效(預設值: 隨機生成)</translation>
-    </message>
-    <message>
-        <source>Whitelisted peers cannot be DoS banned and their transactions are always relayed, even if they are already in the mempool, useful e.g. for a gateway</source>
-        <translation>在白名單中的節點不會因為偵測到阻斷服務攻擊而被停用。來自這些節點的交易也一定會被轉發，即使說交易本來就在記憶池裡了也一樣。適用於像是閘道伺服器。</translation>
-    </message>
-    <message>
-        <source>(default: %s)</source>
-        <translation>(預設值: %s)</translation>
-    </message>
-    <message>
-        <source>Accept public REST requests (default: %u)</source>
-        <translation>接受公開的REST請求 (預設值: %u)</translation>
-    </message>
-    <message>
-        <source>Always query for peer addresses via DNS lookup (default: %u)</source>
-        <translation>是否一定要用域名查詢來搜尋節點 (預設值: %u)</translation>
+        <source>Transaction index can't be disabled with governance validation enabled. Either start with -disablegovernance command line switch or enable transaction index.</source>
+        <translation>無法在治理驗證啟用的情況下禁用事務索引。要麼使用-disablegovernance命令行選項，否則就啟用事務索引。</translation>
     </message>
     <message>
         <source>Can't mix: no compatible inputs found!</source>
         <translation>無法開始混合:沒有找到相容的輸入!</translation>
-    </message>
-    <message>
-        <source>Chain selection options:</source>
-        <translation>選擇區塊鏈選項:</translation>
-    </message>
-    <message>
-        <source>Connect through SOCKS5 proxy</source>
-        <translation>透過 SOCKS5 代理伺服器連線</translation>
-    </message>
-    <message>
-        <source>Connect to KeePassHttp on port &lt;port&gt; (default: %u)</source>
-        <translation>使用端口&lt;port&gt; 連接到 KeePassHttp (預設值: %u)</translation>
     </message>
     <message>
         <source>Entry exceeds maximum size.</source>
@@ -4035,7 +4065,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>無法載入治理緩存</translation>
     </message>
     <message>
-        <source>Failed to load smartnode cache from</source>
+        <source>Failed to load masternode cache from</source>
         <translation>無法載入主節點緩存</translation>
     </message>
     <message>
@@ -4047,16 +4077,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>找到足夠多的用戶，簽署中 ...</translation>
     </message>
     <message>
-        <source>How many blocks to check at startup (default: %u, 0 = all)</source>
-        <translation>啓動時檢查的區塊數(預設值: %u, 指定 0 =全部)</translation>
-    </message>
-    <message>
         <source>Importing...</source>
         <translation>正在匯入中...</translation>
-    </message>
-    <message>
-        <source>Include IP addresses in debug output (default: %u)</source>
-        <translation>在除錯輸出內容中包含網際網路位址(預設值: %u)</translation>
     </message>
     <message>
         <source>Incompatible mode.</source>
@@ -4095,24 +4117,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>使用-minsporkkeys 指定的最低叉勺簽名者數目無效</translation>
     </message>
     <message>
-        <source>Keep N RTM mixed (%u-%u, default: %u)</source>
-        <translation>保留 N 個已經匿名處理的達世幣 (%u-%u, 預設值: %u)</translation>
-    </message>
-    <message>
-        <source>Keep at most &lt;n&gt; unconnectable transactions in memory (default: %u)</source>
-        <translation>保留最多 &lt;n&gt; 個不可連接的交易於記憶體 (預設值: %u)</translation>
-    </message>
-    <message>
         <source>Keypool ran out, please call keypoolrefill first</source>
         <translation>Keypool 用完了，請先調用 keypoolrefill </translation>
-    </message>
-    <message>
-        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: %u or testnet: %u)</source>
-        <translation>在通訊埠 &lt;port&gt; 聽候 JSON-RPC 連線(預設值: %u, 或若為測試網路: %u)</translation>
-    </message>
-    <message>
-        <source>Listen for connections on &lt;port&gt; (default: %u or testnet: %u)</source>
-        <translation>在通訊埠 &lt;port&gt; 聽候連線(預設值: %u, 或若為測試網路: %u)</translation>
     </message>
     <message>
         <source>Loading banlist...</source>
@@ -4123,7 +4129,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>正在載入己滿足要求的緩存...</translation>
     </message>
     <message>
-        <source>Loading smartnode cache...</source>
+        <source>Loading masternode cache...</source>
         <translation>正在載入主節點緩存...</translation>
     </message>
     <message>
@@ -4131,31 +4137,19 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>已經鎖定。</translation>
     </message>
     <message>
-        <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: %u)</source>
-        <translation>每個連線的接收緩衝區大小上限為 &lt;n&gt;*1000 個位元組(預設值: %u)</translation>
-    </message>
-    <message>
-        <source>Maximum per-connection send buffer, &lt;n&gt;*1000 bytes (default: %u)</source>
-        <translation>每個連線的傳送緩衝區大小上限為 &lt;n&gt;*1000 個位元組(預設值: %u)</translation>
-    </message>
-    <message>
         <source>Mixing in progress...</source>
         <translation>正在進行混合...</translation>
-    </message>
-    <message>
-        <source>Mnemonic passphrase is too long, must be at most 256 characters</source>
-        <translation>助記密碼太長，不得超過256個字符</translation>
     </message>
     <message>
         <source>Need to specify a port with -whitebind: '%s'</source>
         <translation>指定 -whitebind 時必須包含通訊埠: '%s'</translation>
     </message>
     <message>
-        <source>No Smartnodes detected.</source>
+        <source>No Masternodes detected.</source>
         <translation>沒有檢測到主節點。</translation>
     </message>
     <message>
-        <source>No compatible Smartnode found.</source>
+        <source>No compatible Masternode found.</source>
         <translation>沒有找到相容的主節點。</translation>
     </message>
     <message>
@@ -4163,84 +4157,16 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>沒有足夠的資金以供混合使用。</translation>
     </message>
     <message>
-        <source>Not in the Smartnode list.</source>
+        <source>Not in the Masternode list.</source>
         <translation>不在主節點列表中。</translation>
     </message>
     <message>
-        <source>Only connect to nodes in network &lt;net&gt; (ipv4, ipv6 or onion)</source>
-        <translation>只會連接到網絡節點 &lt;net&gt;  (IPv4，IPv6或onion)</translation>
-    </message>
-    <message>
-        <source>Prepend debug output with timestamp (default: %u)</source>
-        <translation>在除錯輸出內容前附加時間(預設值: %u)</translation>
-    </message>
-    <message>
-        <source>Rebuild chain state and block index from the blk*.dat files on disk</source>
-        <translation>從磁盤上的blk*.dat 文件重建區塊鏈狀態和區塊的索引</translation>
-    </message>
-    <message>
-        <source>Rebuild chain state from the currently indexed blocks</source>
-        <translation>從當前的索引區塊 重建區塊鏈狀態</translation>
-    </message>
-    <message>
-        <source>Send trace/debug info to debug.log file (default: %u)</source>
-        <translation>發送追蹤或除錯資訊到debug.log 中 (預設值: %u)</translation>
-    </message>
-    <message>
-        <source>Set key pool size to &lt;n&gt; (default: %u)</source>
-        <translation>設定密鑰池大小為 &lt;n&gt; (預設值: %u)</translation>
-    </message>
-    <message>
-        <source>Set the number of threads to service RPC calls (default: %d)</source>
-        <translation>設定處理 RPC 服務請求的執行緒數目(預設值: %d)</translation>
-    </message>
-    <message>
-        <source>Specify configuration file (default: %s)</source>
-        <translation>指定設定檔(預設值: %s)</translation>
-    </message>
-    <message>
-        <source>Specify connection timeout in milliseconds (minimum: 1, default: %d)</source>
-        <translation>指定連線在幾毫秒後逾時 (最少值: 1, 預設值: %d)</translation>
-    </message>
-    <message>
-        <source>Specify pid file (default: %s)</source>
-        <translation>指定行程識別碼檔案(預設值: %s)</translation>
-    </message>
-    <message>
-        <source>Spend unconfirmed change when sending transactions (default: %u)</source>
-        <translation>傳送交易時可以花還沒確認的零錢(預設值: %u)</translation>
-    </message>
-    <message>
-        <source>Submitted to smartnode, waiting in queue %s</source>
+        <source>Submitted to masternode, waiting in queue %s</source>
         <translation>己經提交到主節點，在隊列%s 中等待 </translation>
-    </message>
-    <message>
-        <source>Synchronization failed</source>
-        <translation>同步失敗</translation>
     </message>
     <message>
         <source>Synchronization finished</source>
         <translation>同步完成</translation>
-    </message>
-    <message>
-        <source>Threshold for disconnecting misbehaving peers (default: %u)</source>
-        <translation>與異常的節點斷線的臨界值 (預設: %u)</translation>
-    </message>
-    <message>
-        <source>Too many %f denominations, removing.</source>
-        <translation>太多 %f 輸入金額，正在移除。</translation>
-    </message>
-    <message>
-        <source>Too many %f denominations, skipping.</source>
-        <translation>太多 %f 輸入金額，正在移除。</translation>
-    </message>
-    <message>
-        <source>Tor control port password (default: empty)</source>
-        <translation>Tor控制端口密碼 (預設值: 空白)</translation>
-    </message>
-    <message>
-        <source>Tor control port to use if onion listening enabled (default: %s)</source>
-        <translation>Tor控制端口設定，如果啟用了洋蔥聽侯 (預設值: %s)</translation>
     </message>
     <message>
         <source>Unable to start HTTP server. See debug log for details.</source>
@@ -4263,22 +4189,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>找到不再支援的 -tor 參數，請改用 -onion 參數。</translation>
     </message>
     <message>
-        <source>Upgrade wallet to latest format on startup</source>
-        <translation>啟動時把錢包升級至最新格式</translation>
-    </message>
-    <message>
-        <source>Use KeePass 2 integration using KeePassHttp plugin (default: %u)</source>
-        <translation>用 KeePass 2 整合，使用KeePassHttp插件 (預設值: %u)</translation>
-    </message>
-    <message>
-        <source>Use UPnP to map the listening port (default: %u)</source>
-        <translation>使用通用隨插即用協定來設定對應的服務連接埠 (預設值: %u)</translation>
-    </message>
-    <message>
-        <source>Use the test chain</source>
-        <translation>使用測試鏈</translation>
-    </message>
-    <message>
         <source>User Agent comment (%s) contains unsafe characters.</source>
         <translation>用戶代理註釋 (%s) 包含不安全的字符。</translation>
     </message>
@@ -4291,8 +4201,20 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>將重新嘗試...</translation>
     </message>
     <message>
-        <source>Can't find random Smartnode.</source>
+        <source>Can't find random Masternode.</source>
         <translation>找不到隨機主節點。</translation>
+    </message>
+    <message>
+        <source>%s can't be lower than %s</source>
+        <translation>%s 付款額不能低於 %s</translation>
+    </message>
+    <message>
+        <source>%s is idle.</source>
+        <translation>%s 處於閒置狀態。</translation>
+    </message>
+    <message>
+        <source>%s request incomplete: %s</source>
+        <translation>%s 的相關請求未完成: %s</translation>
     </message>
     <message>
         <source>Can't mix while sync in progress.</source>
@@ -4307,96 +4229,20 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>檢測到無效的腳本。</translation>
     </message>
     <message>
-        <source>KeePassHttp id for the established association</source>
-        <translation>KeePassHttp id，甪作建立關聯</translation>
-    </message>
-    <message>
-        <source>KeePassHttp key for AES encrypted communication with KeePass</source>
-        <translation>KeePassHttp  的密鑰，用作與KeePass 的AES加密通信</translation>
-    </message>
-    <message>
-        <source>Disable all Raptoreum specific functionality (Smartnodes, PrivateSend, InstantSend, Governance) (0-1, default: %u)</source>
-        <translation>禁止所有達世幣的附加功能 (主節點，匿名發送，即時到帳，預算案) (0-1，預設值: %u)</translation>
-    </message>
-    <message>
         <source>%s file contains all private keys from this wallet. Do not share it with anyone!</source>
         <translation>%s 文件包含此錢包中的所有私鑰。 不要與任何人分享!</translation>
     </message>
     <message>
-        <source>-smartnode option is deprecated and ignored, specifying -smartnodeblsprivkey is enough to start this node as a smartnode.</source>
-        <translation>-smartnode 選項已被棄用並被忽略, 指定 -smartnodeblsprivkey 足以將本節點作為主節點啟動。</translation>
-    </message>
-    <message>
-        <source>Add a node to connect to and attempt to keep the connection open (see the `addnode` RPC command help for more info)</source>
-        <translation>增加一個要連線的節線，並試著保持對它的連線暢通 (詳情參見 `addnode` RPC 命令的幫助)</translation>
-    </message>
-    <message>
-        <source>Bind to given address to listen for JSON-RPC connections. This option is ignored unless -rpcallowip is also passed. Port is optional and overrides -rpcport. Use [host]:port notation for IPv6. This option can be specified multiple times (default: 127.0.0.1 and ::1 i.e., localhost, or if -rpcallowip has been specified, 0.0.0.0 and :: i.e., all addresses)</source>
-        <translation>和指定的位址繫結以聽候 JSON-RPC 連線。除非也傳遞了-rpcallowip，否則將忽略此選項。端口是可選的，並覆蓋-rpcport。IPv6 請用 [主機]:通訊埠 這種格式。這個選項可以設定多次。(預設值: 127.0.0.1 and ::1 i.e., localhost, 或 假如 -rpcallowip 已被指定, 0.0.0.0 and :: i.e., all addresses)</translation>
-    </message>
-    <message>
-        <source>Connect only to the specified node(s); -connect=0 disables automatic connections (the rules for this peer are the same as for -addnode)</source>
-        <translation>僅連接到指定的節點(s); -connect=0 禁用自動連接 (對這個節點的規則與 -addnode的規則相同)</translation>
-    </message>
-    <message>
-        <source>Discover own IP addresses (default: 1 when listening and no -externalip or -proxy)</source>
-        <translation>找出自己的網際網路位址(預設值: 當有聽候連線且沒有 -externalip 或代理伺服器時為 1)</translation>
-    </message>
-    <message>
-        <source>Do not keep transactions in the mempool longer than &lt;n&gt; hours (default: %u)</source>
-        <translation>在內存池中的交易不要存放超過 &lt;n&gt; 小時 (預設值: %u)</translation>
-    </message>
-    <message>
-        <source>Enable multiple PrivateSend mixing sessions per block, experimental (0-1, default: %u)</source>
-        <translation>允許在每個區塊中使用多用匿名發送的會話，實驗性功能 (0-1，預設值 : %u)</translation>
-    </message>
-    <message>
-        <source>Execute command when a wallet InstantSend transaction is successfully locked (%s in cmd is replaced by TxID)</source>
-        <translation>當錢包有交易改變時要執行的指令(指令中的 %s 會被取代成交易識別碼)</translation>
-    </message>
-    <message>
-        <source>Extra transactions to keep in memory for compact block reconstructions (default: %u)</source>
-        <translation>為壓緊區塊重建而在內存中保留的額外交易 (預設值: %u)</translation>
+        <source>-masternode option is deprecated and ignored, specifying -masternodeblsprivkey is enough to start this node as a masternode.</source>
+        <translation>-masternode 選項已被棄用並被忽略, 指定 -masternodeblsprivkey 足以將本節點作為主節點啟動。</translation>
     </message>
     <message>
         <source>Failed to create backup, file already exists! This could happen if you restarted wallet in less than 60 seconds. You can continue if you are ok with this.</source>
         <translation>無法創建備份，文件已經存在! 如果您在60秒內重新啟動錢包，則可能發生這種情況。 如果你覺得這樣沒問題的話，你可以繼續。</translation>
     </message>
     <message>
-        <source>Fees (in %s/kB) smaller than this are considered zero fee for relaying, mining and transaction creation (default: %s)</source>
-        <translation>當在建立交易、中繼交易和採礦時，如果每千位元組(%s/Kb)的手續費比這個值低，就視為沒付手續費 (預設值: %s)</translation>
-    </message>
-    <message>
-        <source>Fees (in %s/kB) smaller than this are considered zero fee for transaction creation (default: %s)</source>
-        <translation>當建立交易時，如果每千位元組(%s/Kb)的手續費比這個值低，就視為沒付手續費 (預設值: %s)</translation>
-    </message>
-    <message>
-        <source>If &lt;category&gt; is not supplied or if &lt;category&gt; = 1, output all debugging information.</source>
-        <translation>如果沒有提供  &lt;category&gt; 又或者 &lt;category&gt; = 1，就會輸出所有的除錯資訊。</translation>
-    </message>
-    <message>
-        <source>Maintain a full address index, used to query for the balance, txids and unspent outputs for addresses (default: %u)</source>
-        <translation>維護一個完整的地址索引，用於查詢餘額，txids和未使用的位址輸出 (預設值: %u)</translation>
-    </message>
-    <message>
-        <source>Maintain a full spent index, used to query the spending txid and input index for an outpoint (default: %u)</source>
-        <translation>維護一個完整的花費索引，用於查詢支出的 txid 與及出點的輸入索引 (預設值: %u)</translation>
-    </message>
-    <message>
-        <source>Maintain a timestamp index for block hashes, used to query blocks hashes by a range of timestamps (default: %u)</source>
-        <translation>維持一個區塊哈希值的時間戳索引，用於通過一系列時間戳來查詢區塊哈希值 (預設值: %u)</translation>
-    </message>
-    <message>
-        <source>Maintain at most &lt;n&gt; connections to peers (temporary service connections excluded) (default: %u)</source>
-        <translation>維持與節點連線數的上限為 &lt;n&gt; 個 (臨時服務連接除外) (預設值: %u)</translation>
-    </message>
-    <message>
         <source>Make sure to encrypt your wallet and delete all non-encrypted backups after you have verified that the wallet works!</source>
         <translation>請確保加密您的錢包，並在驗證您的錢包能夠運作後刪除所有未加密的備份!</translation>
-    </message>
-    <message>
-        <source>Maximum total size of all orphan transactions in megabytes (default: %u)</source>
-        <translation>以MB為單位，把所有孤兒交易的總大小增加到最大 (預設值: %u)</translation>
     </message>
     <message>
         <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
@@ -4407,28 +4253,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>修剪 : 最後的錢包同步超出了修剪的數據。你需要用-reindex (在修剪節點的情況下再次下載整個區塊鏈)</translation>
     </message>
     <message>
-        <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect used)</source>
-        <translation>如果位址低，則通過DNS查找來查詢對等位址 (預設值: 1 除非使用了 -connect )</translation>
-    </message>
-    <message>
-        <source>Randomize credentials for every proxy connection. This enables Tor stream isolation (default: %u)</source>
-        <translation>隨機化每個代理連接的憑證。這能使Tor流隔離 (預設值: %u)</translation>
-    </message>
-    <message>
         <source>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</source>
         <translation>在修剪模式下不能重新掃描區塊資料。你需要使用-reindex 這將再次下載整個區塊鏈。</translation>
-    </message>
-    <message>
-        <source>Set the smartnode BLS private key and enable the client to act as a smartnode</source>
-        <translation>設置主節點 BLS 私鑰並使客戶端能夠充當主節點</translation>
-    </message>
-    <message>
-        <source>Specify full path to directory for automatic wallet backups (must exist)</source>
-        <translation>指定電子錢包自動備份目錄的完整路徑 (必須存在)</translation>
-    </message>
-    <message>
-        <source>Support filtering of blocks and transaction with bloom filters (default: %u)</source>
-        <translation>支援通過布隆過濾器來過濾區塊和交易 (預設值: %u)</translation>
     </message>
     <message>
         <source>The block database contains a block which appears to be from the future. This may be due to your computer's date and time being set incorrectly. Only rebuild the block database if you are sure that your computer's date and time are correct</source>
@@ -4443,28 +4269,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>網絡版本字符串的總長度  (%i) 超過最大長度 (%i)。減少uacomments參數的數量或大小。</translation>
     </message>
     <message>
-        <source>Transaction index can't be disabled in full mode. Either start with -litemode command line switch or enable transaction index.</source>
-        <translation>無法在完整模式下禁用事務索引。 要麼使用-litemode命令行選項，不然就啟用事務索引。</translation>
-    </message>
-    <message>
-        <source>Tries to keep outbound traffic under the given target (in MiB per 24h), 0 = no limit (default: %d)</source>
-        <translation>嘗試保持指定目標下的出站流量 (以每24小時多少MB計算), 0 = 沒有限制 (預設值: %d)</translation>
-    </message>
-    <message>
-        <source>Unable to locate enough PrivateSend denominated funds for this transaction.</source>
-        <translation>在本之交易中，無法找到足夠的匿名發送已除名資金。</translation>
-    </message>
-    <message>
         <source>Unsupported argument -socks found. Setting SOCKS version isn't possible anymore, only SOCKS5 proxies are supported.</source>
         <translation>找到不再支援的 -socks 參數。現在只支援 SOCKS5 協定的代理伺服器了，因為不再能夠指定 SOCKS 協定版本。</translation>
     </message>
     <message>
         <source>Unsupported argument -whitelistalwaysrelay ignored, use -whitelistrelay and/or -whitelistforcerelay.</source>
         <translation>不支持的參數 -whiteelistalwaysrelay 已忽略，請使用-whitelistrelay和/或-whitelistforcerelay。</translation>
-    </message>
-    <message>
-        <source>Use UPnP to map the listening port (default: 1 when listening and no -proxy)</source>
-        <translation>使用通用即插即用協定 (UPnP)，來設定聽候連線的通訊埠的對應(預設值: 當有聽候連線和沒有代理伺服器時為 1)</translation>
     </message>
     <message>
         <source>WARNING! Failed to replenish keypool, please unlock your wallet to do so.</source>
@@ -4487,68 +4297,52 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>您需要使用-reindex 來重建數據庫以回到未修剪模式。 這將重新下載整個區塊鏈</translation>
     </message>
     <message>
-        <source>(default: %u)</source>
-        <translation>(預設值: %u)</translation>
+        <source>-litemode is deprecated.</source>
+        <translation>-litemode 已被棄用。</translation>
     </message>
     <message>
         <source>-maxmempool must be at least %d MB</source>
         <translation>-maxmempool 必須至少為 %d MB</translation>
     </message>
     <message>
-        <source>&lt;category&gt; can be:</source>
-        <translation>&lt;category&gt; 可以是:</translation>
-    </message>
-    <message>
-        <source>Append comment to the user agent string</source>
-        <translation>將註釋附加到用戶代理字符串</translation>
-    </message>
-    <message>
         <source>Automatic backups disabled</source>
         <translation>自動備份已停用</translation>
-    </message>
-    <message>
-        <source>Automatically create Tor hidden service (default: %d)</source>
-        <translation>自動創建Tor匿名服務 (預設值: %d)</translation>
     </message>
     <message>
         <source>ERROR! Failed to create automatic backup</source>
         <translation>錯誤! 無法創建自動備份</translation>
     </message>
     <message>
-        <source>Enable publish hash block in &lt;address&gt;</source>
-        <translation>在&lt;address&gt;啟用發布哈希區塊</translation>
-    </message>
-    <message>
-        <source>Enable publish hash of governance objects (like proposals) in &lt;address&gt;</source>
-        <translation>在 &lt;address&gt;中啟用發布治理對象的哈希值(例如 提案)</translation>
-    </message>
-    <message>
-        <source>Enable publish hash of governance votes in &lt;address&gt;</source>
-        <translation>在 &lt;address&gt;啟用發布治理投票的哈希值</translation>
-    </message>
-    <message>
-        <source>Enable publish hash transaction (locked via InstantSend) in &lt;address&gt;</source>
-        <translation>在 &lt;address&gt; 中啟用發布哈希交易 (通過InstantSend來鎖定)</translation>
-    </message>
-    <message>
-        <source>Enable publish hash transaction in &lt;address&gt;</source>
-        <translation>在 &lt;address&gt; 中啟用發布哈希交易</translation>
-    </message>
-    <message>
-        <source>Enable publish raw block in &lt;address&gt;</source>
-        <translation>在 &lt;address&gt; 中啟用發布原始區塊</translation>
-    </message>
-    <message>
-        <source>Enable publish raw transaction (locked via InstantSend) in &lt;address&gt;</source>
-        <translation>在 &lt;address&gt; 中啟用發布原始交易 (通過 InstantSend 來鎖定)</translation>
-    </message>
-    <message>
-        <source>Enable publish raw transaction in &lt;address&gt;</source>
-        <translation>在 &lt;address&gt; 中啟用發布原始交易</translation>
+        <source>Error upgrading evo database</source>
+        <translation>升級evo數據庫時出錯</translation>
     </message>
     <message>
         <source>Error: A fatal internal error occurred, see debug.log for details</source>
         <translation>錯誤:發生一個致命的內部錯誤，請到debug.log查看更多細節</translation>
+    </message>
+    <message>
+        <source>Error: failed to add socket to epollfd (epoll_ctl returned error %s)</source>
+        <translation>錯誤: 無法將套接字添加到 epollfd (epoll_ctl 傳回錯誤 %s)</translation>
+    </message>
+    <message>
+        <source>Exceeded max tries.</source>
+        <translation>超過最大嘗試的次數。</translation>
+    </message>
+    <message>
+        <source>Failed to clear fulfilled requests cache at</source>
+        <translation>無法清除位於緩存中的已完成請求</translation>
+    </message>
+    <message>
+        <source>Failed to clear governance cache at</source>
+        <translation>無法清除位於緩存中的治理項目</translation>
+    </message>
+    <message>
+        <source>Failed to clear masternode cache at</source>
+        <translation>無法清除位於緩存中的主節點資料</translation>
+    </message>
+    <message>
+        <source>Failed to commit EvoDB</source>
+        <translation>提交EvoDB失敗</translation>
     </message>
     <message>
         <source>Failed to create backup %s!</source>
@@ -4567,36 +4361,24 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>無法載入勺叉緩存</translation>
     </message>
     <message>
-        <source>Fee (in %s/kB) to add to transactions you send (default: %s)</source>
-        <translation>交易付款時(每 %s/kB)的交易手續費 (預設值: %s)</translation>
-    </message>
-    <message>
-        <source>Imports blocks from external blk000??.dat file on startup</source>
-        <translation>啟動時從其它來源的 blk000??.dat 檔匯入區塊</translation>
-    </message>
-    <message>
-        <source>InstantSend options:</source>
-        <translation>即時到帳選項:</translation>
+        <source>Failed to rescan the wallet during initialization</source>
+        <translation>初始化期間無法重新掃描錢包</translation>
     </message>
     <message>
         <source>Invalid amount for -fallbackfee=&lt;amount&gt;: '%s'</source>
         <translation>設定 -fallbackfee=&lt;amount&gt; 的金額無效: '%s'</translation>
     </message>
     <message>
-        <source>Invalid smartnodeblsprivkey. Please see documentation.</source>
-        <translation>無效的smartnodeblsprivkey。請參閱文檔。</translation>
+        <source>Invalid masternodeblsprivkey. Please see documentation.</source>
+        <translation>無效的masternodeblsprivkey。請參閱文檔。</translation>
     </message>
     <message>
-        <source>Keep the transaction memory pool below &lt;n&gt; megabytes (default: %u)</source>
-        <translation>把交易內存池限制在 &lt;n&gt; MB 以下(預設值: %u)</translation>
+        <source>It has been replaced by -disablegovernance.</source>
+        <translation>它已由 -disablegovernance 所代替。</translation>
     </message>
     <message>
-        <source>Last PrivateSend was too recent.</source>
-        <translation>距離上一次匿名發送的時間過短。</translation>
-    </message>
-    <message>
-        <source>Last successful PrivateSend action was too recent.</source>
-        <translation>距離上一次成功送出匿名發送的時間過短。</translation>
+        <source>Its replacement -disablegovernance has been forced instead.</source>
+        <translation>替代命令 -disablegovernance 已被強制執行。</translation>
     </message>
     <message>
         <source>Loading block index...</source>
@@ -4619,28 +4401,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>正在載入錢包資料...</translation>
     </message>
     <message>
-        <source>Location of the auth cookie (default: data dir)</source>
-        <translation>auth cookie的位置 (預設值 : data dir)</translation>
-    </message>
-    <message>
-        <source>Make the wallet broadcast transactions</source>
-        <translation>讓錢包廣播交易</translation>
-    </message>
-    <message>
-        <source>Smartnode options:</source>
-        <translation>主節點選項:</translation>
-    </message>
-    <message>
-        <source>Smartnode queue is full.</source>
+        <source>Masternode queue is full.</source>
         <translation>主節點隊列已滿。</translation>
     </message>
     <message>
-        <source>Smartnode:</source>
+        <source>Masternode:</source>
         <translation>主節點:</translation>
-    </message>
-    <message>
-        <source>Minimum bytes per sigop in transactions we relay and mine (default: %u)</source>
-        <translation>在中繼和開採交易中，每個sigop中的最小字節數 (預設值: %u)</translation>
     </message>
     <message>
         <source>Missing input transaction information.</source>
@@ -4655,14 +4421,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>沒有找到匹配的金額用作資金混合。</translation>
     </message>
     <message>
-        <source>Node relay options:</source>
-        <translation>節點轉播選項:</translation>
-    </message>
-    <message>
-        <source>Non-standard public key detected.</source>
-        <translation>檢測到非標準的公鑰。</translation>
-    </message>
-    <message>
         <source>Not compatible with existing transactions.</source>
         <translation>與現有的交易不兼容。</translation>
     </message>
@@ -4671,40 +4429,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>檔案描述元不足。</translation>
     </message>
     <message>
-        <source>Number of automatic wallet backups (default: %u)</source>
-        <translation>自動備份的錢包數目 (預設值: %u)</translation>
-    </message>
-    <message>
-        <source>Options:</source>
-        <translation>選項:</translation>
-    </message>
-    <message>
-        <source>Password for JSON-RPC connections</source>
-        <translation>JSON-RPC 連線密碼</translation>
-    </message>
-    <message>
-        <source>Print version and exit</source>
-        <translation>列印版本並退出</translation>
-    </message>
-    <message>
-        <source>PrivateSend is idle.</source>
-        <translation>匿名發送處於閒置狀態。</translation>
-    </message>
-    <message>
-        <source>PrivateSend options:</source>
-        <translation>匿名發送選項:</translation>
-    </message>
-    <message>
-        <source>PrivateSend request complete:</source>
-        <translation>完成匿名發送請求:</translation>
-    </message>
-    <message>
-        <source>PrivateSend request incomplete:</source>
-        <translation>未完成匿名發送請求:</translation>
-    </message>
-    <message>
         <source>Prune cannot be configured with a negative value.</source>
         <translation>修剪不能設置為負值。</translation>
+    </message>
+    <message>
+        <source>Prune mode is incompatible with -disablegovernance=false.</source>
+        <translation>修剪模式與-disablegovernance = false 並不兼容。</translation>
     </message>
     <message>
         <source>Prune mode is incompatible with -txindex.</source>
@@ -4715,8 +4445,16 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>修剪儲存區塊...</translation>
     </message>
     <message>
-        <source>Rescan the block chain for missing wallet transactions on startup</source>
-        <translation>啟動時重新掃描區塊鏈，來尋找錢包可能漏掉的交易。</translation>
+        <source>Specified -walletdir "%s" does not exist</source>
+        <translation>指定的 -walletdir "%s" 不存在</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" is a relative path</source>
+        <translation>指定的 -walletdir "%s" 是一個相對路徑</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" is not a directory</source>
+        <translation>指定的 -walletdir "%s" 不是一個目錄</translation>
     </message>
     <message>
         <source>Synchronizing blockchain...</source>
@@ -4725,6 +4463,10 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>The wallet will avoid paying less than the minimum relay fee.</source>
         <translation>錢包軟體會付多於最小轉發費用的手續費。</translation>
+    </message>
+    <message>
+        <source>This is expected because you are running a pruned node.</source>
+        <translation>這是在預期中的，因為您正在運行修剪了的節點。</translation>
     </message>
     <message>
         <source>This is the minimum transaction fee you pay on every transaction.</source>
@@ -4759,16 +4501,16 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>沒辦法繫結在這台電腦上的 %s 。%s 可能已經在執行了。</translation>
     </message>
     <message>
+        <source>Unable to generate initial keys</source>
+        <translation>無法生成初始密鑰</translation>
+    </message>
+    <message>
         <source>Upgrading UTXO database</source>
         <translation>正在升級 UTXO 資料庫</translation>
     </message>
     <message>
-        <source>Use devnet chain with provided name</source>
-        <translation>以提供的名稱來使用devnet </translation>
-    </message>
-    <message>
-        <source>Wallet debugging/testing options:</source>
-        <translation>錢包除錯與測試選項:</translation>
+        <source>Wallet %s resides outside wallet directory %s</source>
+        <translation>錢包 %s 位處於錢包目錄 %s 外</translation>
     </message>
     <message>
         <source>Wallet needed to be rewritten: restart %s to complete</source>
@@ -4783,15 +4525,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>無法創建錢包備份資料夾%s</translation>
     </message>
     <message>
-        <source>Whether to operate in a blocks only mode (default: %u)</source>
-        <translation>是否在區塊模式下操作 (預設值: %u)</translation>
-    </message>
-    <message>
-        <source>You can not start a smartnode in lite mode.</source>
-        <translation>您無法在精簡模式下啟動主節點。</translation>
-    </message>
-    <message>
-        <source>You can not start a smartnode with wallet enabled.</source>
+        <source>You can not start a masternode with wallet enabled.</source>
         <translation>您無法在啟用了錢包的情況下啟動主節點。</translation>
     </message>
     <message>
@@ -4807,10 +4541,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>改變 -txindex 參數後，必須要用 -reindex 參數來重建資料庫</translation>
     </message>
     <message>
-        <source>ZeroMQ notification options:</source>
-        <translation>ZeroMQ 通知選項:</translation>
-    </message>
-    <message>
         <source>no mixing available.</source>
         <translation>無法進行混合。</translation>
     </message>
@@ -4819,16 +4549,16 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>詳細信息請參閱debug.log。</translation>
     </message>
     <message>
-        <source>RPC server options:</source>
-        <translation>RPC 伺服器選項:</translation>
-    </message>
-    <message>
-        <source>Raptoreum Core</source>
+        <source>Dash Core</source>
         <translation>達世幣核心</translation>
     </message>
     <message>
         <source>The %s developers</source>
         <translation>%s 開發人員</translation>
+    </message>
+    <message>
+        <source>%s uses exact denominated amounts to send funds, you might simply need to mix some more coins.</source>
+        <translation>%s 需要使用準確的已除名資金來發送，你可能需要再混合一資金來達到所需要求。</translation>
     </message>
     <message>
         <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
@@ -4839,44 +4569,16 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>依據 MIT 軟體授權條款散布，詳情請見附帶的 %s 檔案或是 %s</translation>
     </message>
     <message>
-        <source>Enable use of PrivateSend for funds stored in this wallet (0-1, default: %u)</source>
-        <translation>對存儲在此錢包中的資金啟用匿名發送 (0-1, 預設值: %u)</translation>
-    </message>
-    <message>
         <source>Error loading %s: You can't enable HD on an already existing non-HD wallet</source>
         <translation>加載%s時出錯: 您不能夠在非HD錢包上啟用HD功能</translation>
-    </message>
-    <message>
-        <source>Error loading wallet %s. -wallet parameter must only specify a filename (not a path).</source>
-        <translation>加載錢包 %s 時出錯。 -wallet 參數只能指定文件名 (而不是路徑)。</translation>
     </message>
     <message>
         <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
         <translation>讀取錢包檔 %s 時發生錯誤！所有的密鑰都正確讀取了，但是交易資料或位址簿資料可能會缺少或不正確。</translation>
     </message>
     <message>
-        <source>Exclude debugging information for a category. Can be used in conjunction with -debug=1 to output debug logs for all categories except one or more specified categories.</source>
-        <translation>排除個別類別的調試信息。可以與-debug = 1結合使用，以輸出除一個或多個指定類別以外的所有類別的調試日誌。</translation>
-    </message>
-    <message>
-        <source>Force relay of transactions from whitelisted peers even if they violate local relay policy (default: %d)</source>
-        <translation>強制轉發從白名點節點收到的交易，即使它們違反了本機的轉發準則(預設值: %d)</translation>
-    </message>
-    <message>
         <source>Incorrect or no devnet genesis block found. Wrong datadir for devnet specified?</source>
         <translation>devnet 的創世區塊不正確或找不到。devnet 的資料目錄錯了嗎?</translation>
-    </message>
-    <message>
-        <source>Maximum allowed median peer time offset adjustment. Local perspective of time may be influenced by peers forward or backward by this amount. (default: %u seconds)</source>
-        <translation>跟其他節點的時間差最高可接受的中位數值。本機所認為的時間可能會被其他節點影響，往前或往後在這個值之內。(預設值: %u 秒)</translation>
-    </message>
-    <message>
-        <source>Maximum total fees (in %s) to use in a single wallet transaction or raw transaction; setting this too low may abort large transactions (default: %s)</source>
-        <translation>允許一次錢包交易或未加工交易付出的最高總手續費(單位是 %s)；設定太低的話，可能會無法進行資料量大的交易(預設值: %s)</translation>
-    </message>
-    <message>
-        <source>Override spork address. Only useful for regtest and devnet. Using this on mainnet or testnet will ban you.</source>
-        <translation>覆蓋spork地址。 只對regtest和devnet有用。 在mainnet或testnet上使用它的話將封鎖你。</translation>
     </message>
     <message>
         <source>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</source>
@@ -4885,18 +4587,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Please contribute if you find %s useful. Visit %s for further information about the software.</source>
         <translation>如果你覺得 %s 有用，可以幫助我們。關於這個軟體的更多資訊請見 %s。</translation>
-    </message>
-    <message>
-        <source>Reduce storage requirements by enabling pruning (deleting) of old blocks. This allows the pruneblockchain RPC to be called to delete specific blocks, and enables automatic pruning of old blocks if a target size in MiB is provided. This mode is incompatible with -txindex and -rescan. Warning: Reverting this setting requires re-downloading the entire blockchain. (default: 0 = disable pruning blocks, 1 = allow manual pruning via RPC, &gt;%u = automatically prune block files to stay under the specified target size in MiB)</source>
-        <translation>修剪(刪除)掉老舊區塊以降低需要的儲存空間。這樣會增加一個 RPC 指令 pruneblockchain，可以使用它來刪除指定的區塊；也可以指定目標儲存空間大小，以啟用對老舊區塊的自動修剪功能。這個模式跟 -txindex 和 -rescan 參數不相容。警告: 還原回不修剪模式會需要重新下載一整個區塊鏈。(預設值: 0 表示不修剪區塊，1 表示允許使用 RPC 指令做修剪，&gt;%u 的值表示為區塊資料的目標大小，單位是百萬位元組，MiB)</translation>
-    </message>
-    <message>
-        <source>Set lowest fee rate (in %s/kB) for transactions to be included in block creation. (default: %s)</source>
-        <translation>設定製造區塊時，所要包含交易每千位元組的最低手續費(單位是 %s)。(預設值: %s)</translation>
-    </message>
-    <message>
-        <source>The fee rate (in %s/kB) that indicates your tolerance for discarding change by adding it to the fee (default: %s). Note: An output is discarded if it is dust at this rate, but we will always discard up to the dust relay fee and a discard fee above that is limited by the fee estimate for the longest target</source>
-        <translation>費率 (以 %s/kB 為單位) ，用於表示您將更改添加到費用中以捨棄更改的容忍度 (預設值: %s).  注意: 如果此輸出為粉塵，則將丟棄該輸出，但我們將始終丟棄最高為粉塵中繼的費用，並且高於最高最長目標費用估算值限制的丟棄費</translation>
     </message>
     <message>
         <source>This is the transaction fee you may discard if change is smaller than dust at this level</source>
@@ -4911,48 +4601,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>此產品包含了由 OpenSSL Project 所開發的 OpenSSL Toolkit 軟體 %s, 由 Eric Young 撰寫的加解密軟體，以及由 Thomas Bernard 所撰寫的 UPnP 軟體。</translation>
     </message>
     <message>
-        <source>Unable to locate enough PrivateSend non-denominated funds for this transaction.</source>
-        <translation>在本之交易中，無法找到足夠的匿名發送未除名資金。</translation>
-    </message>
-    <message>
         <source>Unable to replay blocks. You will need to rebuild the database using -reindex-chainstate.</source>
         <translation>無法重播區塊。您將需要使用-reindex-chainstate來重建數據庫。</translation>
     </message>
     <message>
-        <source>Use N separate smartnodes for each denominated input to mix funds (%u-%u, default: %u)</source>
-        <translation>使用 N 個單獨的主節點來為個別已除名輸入來混合資金 (%u-%u, 預設值: %u)</translation>
-    </message>
-    <message>
-        <source>Use hierarchical deterministic key generation (HD) after BIP39/BIP44. Only has effect during wallet creation/first start</source>
-        <translation>在bip39/bip44之後 使用分層確定性(HD) 規則生成密鑰。僅在創建錢包/首次啟動時才有效</translation>
-    </message>
-    <message>
-        <source>User defined mnemonic passphrase for HD wallet (BIP39). Only has effect during wallet creation/first start (default: empty string)</source>
-        <translation>用於HD錢包 (bip39) 的用戶自定義助記符密碼。僅在創建錢包/首次啟動時有效 (預設值: 空的字符串)</translation>
-    </message>
-    <message>
-        <source>Username and hashed password for JSON-RPC connections. The field &lt;userpw&gt; comes in the format: &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;. A canonical python script is included in share/rpcuser. The client then connects normally using the rpcuser=&lt;USERNAME&gt;/rpcpassword=&lt;PASSWORD&gt; pair of arguments. This option can be specified multiple times</source>
-        <translation>JSON-RPC 連線要用的使用者名稱和雜湊密碼。&lt;userpw&gt; 的格式是：&lt;使用者名稱&gt;:&lt;調味值&gt;$&lt;雜湊值&gt;。在 share/rpcuser 目錄下有一個示範的 python 程式。之後客戶端程式就可以用這對參數正常連線：rpcuser=&lt;使用者名稱&gt; 和 rpcpassword=&lt;密碼&gt;。這個選項可以給很多次。</translation>
-    </message>
-    <message>
-        <source>Wallet will not create transactions that violate mempool chain limits (default: %u)</source>
-        <translation>錢包軟體不會產生違反記憶池交易鏈限制的交易(預設值: %u)</translation>
-    </message>
-    <message>
         <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
         <translation>警告: 錢包檔壞掉，但資料被救回來了！原來的檔案 %s 改儲存為 %s，在目錄 %s 下。 如果餘額或交易資料有誤的話，你應該要從備份資料復原回來。</translation>
-    </message>
-    <message>
-        <source>Whether to save the mempool on shutdown and load on restart (default: %u)</source>
-        <translation>是否在關閉時保存內存池並在重新啟動時加載 (預設值: %u)</translation>
-    </message>
-    <message>
-        <source>Whitelist peers connecting from the given IP address (e.g. 1.2.3.4) or CIDR notated network (e.g. 1.2.3.0/24). Can be specified multiple times.</source>
-        <translation>把來自指定位址(例如：1.2.3.4)或 CIDR 格式網段(例如：1.2.3.0/24)的節點放進白名單。這個選項可以設定多次。</translation>
-    </message>
-    <message>
-        <source>You are starting in lite mode, most Raptoreum-specific functionality is disabled.</source>
-        <translation>您現在使用的是精簡模式，大多數達世幣特定的功能已禁用。</translation>
     </message>
     <message>
         <source>%d of last 100 blocks have unexpected version</source>
@@ -4971,10 +4625,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>%s 的設定值異常大！</translation>
     </message>
     <message>
-        <source>(press q to shutdown and continue later)</source>
-        <translation>(按q關閉並稍後繼續)</translation>
-    </message>
-    <message>
         <source>-devnet can only be specified once</source>
         <translation>-devnet 只能指定一次</translation>
     </message>
@@ -4987,20 +4637,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>當指定 -devnet 和 -server 時，必須指定 -rpcport</translation>
     </message>
     <message>
-        <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
-        <translation>是否接受外來連線(預設值: 當沒有 -proxy 或 -connect 時為 1)</translation>
-    </message>
-    <message>
-        <source>Allow RFC1918 addresses to be relayed and connected to (default: %u)</source>
-        <translation>允許 RFC1918 位址能被中繼並連接到 (預設值: %u)</translation>
-    </message>
-    <message>
-        <source>Attempt to recover private keys from a corrupt wallet on startup</source>
-        <translation>啟動時嘗試從壞掉的錢包檔復原密鑰</translation>
-    </message>
-    <message>
         <source>Cannot resolve -%s address: '%s'</source>
         <translation>沒辦法解析 -%s 參數指定的位址: '%s'</translation>
+    </message>
+    <message>
+        <source>Cannot write to data directory '%s'; check permissions.</source>
+        <translation>無法寫入數據到目錄 '%s'; 請檢查相關權限。</translation>
     </message>
     <message>
         <source>Change index out of range</source>
@@ -5009,10 +4651,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Copyright (C)</source>
         <translation>版權 (C)</translation>
-    </message>
-    <message>
-        <source>Create up to N inputs of each denominated amount (%u-%u, default: %u)</source>
-        <translation>每個面額最多創建N個輸入 (%u-%u, 預設值: %u)</translation>
     </message>
     <message>
         <source>Error loading %s</source>
@@ -5031,20 +4669,16 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>加載%s時出錯: 您不能在HD錢包上禁用HD功能</translation>
     </message>
     <message>
-        <source>Error loading wallet %s. -wallet filename must be a regular file.</source>
-        <translation>加載錢包 %s 時出錯。 -wallet 文件名必須是常規文件。</translation>
-    </message>
-    <message>
         <source>Error loading wallet %s. Duplicate -wallet filename specified.</source>
         <translation>加載錢包 %s 時出錯。 指定了重複的-wallet文件名。</translation>
     </message>
     <message>
-        <source>Error loading wallet %s. Invalid characters in -wallet filename.</source>
-        <translation>加載錢包 %s 時出錯。-wallet 文件名中有無效的字符。</translation>
-    </message>
-    <message>
         <source>Error upgrading chainstate database</source>
         <translation>升級區塊鏈狀態資料庫時發生錯誤</translation>
+    </message>
+    <message>
+        <source>Error: failed to add socket to kqueuefd (kevent returned error %s)</source>
+        <translation>錯誤: 無法將套接字添加到 kqueuefd (kevent 傳回錯誤 %s)</translation>
     </message>
     <message>
         <source>Failed to find mixing queue to join</source>
@@ -5053,6 +4687,10 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Failed to start a new mixing queue</source>
         <translation>無法開始一個新的混合隊列</translation>
+    </message>
+    <message>
+        <source>Incorrect -rescan mode, falling back to default value</source>
+        <translation>不正確的 -rescan 模式，恢復到預設值</translation>
     </message>
     <message>
         <source>Initialization sanity check failed. %s is shutting down.</source>
@@ -5083,20 +4721,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>正在載入 P2P 位址資料...</translation>
     </message>
     <message>
-        <source>Print this help message and exit</source>
-        <translation>顯示說明訊息後結束</translation>
-    </message>
-    <message>
         <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
         <translation>由於系統的限制，把-maxconnections 由%d 減至 %d </translation>
-    </message>
-    <message>
-        <source>Relay and mine data carrier transactions (default: %u)</source>
-        <translation>允許轉發和開採只帶資料的交易(預設值: %u)</translation>
-    </message>
-    <message>
-        <source>Relay non-P2SH multisig (default: %u)</source>
-        <translation>允許轉發非 P2SH 的多簽章交易(預設值: %u)</translation>
     </message>
     <message>
         <source>Replaying blocks...</source>
@@ -5107,14 +4733,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>正在重新掃描...</translation>
     </message>
     <message>
-        <source>Run in the background as a daemon and accept commands</source>
-        <translation>用護靈模式在背後執行並接受指令</translation>
-    </message>
-    <message>
-        <source>Send trace/debug info to console instead of debug.log file</source>
-        <translation>在終端機顯示追蹤或除錯資訊，而不是寫到檔案 debug.log 中</translation>
-    </message>
-    <message>
         <source>Session not complete!</source>
         <translation>會話未完成!</translation>
     </message>
@@ -5123,48 +4741,24 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>會話超時。</translation>
     </message>
     <message>
-        <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
-        <translation>設定資料庫快取大小是多少百萬位元組(MB，範圍: %d 到 %d，預設值: %d)</translation>
-    </message>
-    <message>
-        <source>Set maximum block size in bytes (default: %d)</source>
-        <translation>設置最大區塊的大小，以字節為單位 (預設: %d)</translation>
-    </message>
-    <message>
-        <source>Show all debugging options (usage: --help -help-debug)</source>
-        <translation>顯示所有的除錯選項 (用法: --help --help-debug)</translation>
-    </message>
-    <message>
-        <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
-        <translation>客戶端軟體啓動時把 debug.log 檔縮小(預設值: 當沒有 -debug 時為 1)</translation>
-    </message>
-    <message>
         <source>Signing transaction failed</source>
         <translation>簽署交易失敗</translation>
     </message>
     <message>
-        <source>Specify data directory</source>
-        <translation>指定資料目錄</translation>
+        <source>Specified blocks directory "%s" does not exist.</source>
+        <translation>指定的區塊目錄 "%s" 不存在。</translation>
     </message>
     <message>
-        <source>Specify wallet file (within data directory)</source>
-        <translation>指定錢包檔(在資料目錄當中)</translation>
+        <source>Last queue was created too recently.</source>
+        <translation>距離上一個隊列的時間過短。</translation>
     </message>
     <message>
-        <source>Specify your own public address</source>
-        <translation>指定自己的公開位址</translation>
-    </message>
-    <message>
-        <source>Start PrivateSend automatically (0-1, default: %u)</source>
-        <translation>自動啟動匿名發送 (0-1, 預設值: %u)</translation>
+        <source>Last successful action was too recent.</source>
+        <translation>距離上一次成功執行的時間過短。</translation>
     </message>
     <message>
         <source>Starting network threads...</source>
         <translation>正在啟動網路執行緒...</translation>
-    </message>
-    <message>
-        <source>Synchronization pending...</source>
-        <translation>正在等候同步...</translation>
     </message>
     <message>
         <source>Synchronizing governance objects...</source>
@@ -5191,10 +4785,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>創建交易成功。</translation>
     </message>
     <message>
-        <source>Transaction fee and change calculation failed</source>
-        <translation>交易費用和找零計算失敗</translation>
-    </message>
-    <message>
         <source>Transaction fees are too high.</source>
         <translation>交易手續費過高。</translation>
     </message>
@@ -5209,6 +4799,14 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
         <translation>無法和這台電腦上的 %s 繫結(回傳錯誤 %s)</translation>
+    </message>
+    <message>
+        <source>Unable to locate enough mixed funds for this transaction.</source>
+        <translation>無法為此交易找到足夠的已混合資金。</translation>
+    </message>
+    <message>
+        <source>Unable to locate enough non-denominated funds for this transaction.</source>
+        <translation>無法為此交易找到足夠的未除名資金。</translation>
     </message>
     <message>
         <source>Unable to sign spork message, wrong key?</source>
@@ -5227,10 +4825,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>不支持的日誌記錄類別 %s=%s.</translation>
     </message>
     <message>
-        <source>Username for JSON-RPC connections</source>
-        <translation>JSON-RPC 連線使用者名稱</translation>
-    </message>
-    <message>
         <source>Verifying blocks...</source>
         <translation>正在驗證區塊資料...</translation>
     </message>
@@ -5239,24 +4833,32 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>尚餘小量的公鑰: %d</translation>
     </message>
     <message>
-        <source>Wallet %s resides outside data directory %s</source>
-        <translation>錢包檔 %s 沒有在資料目錄 %s 裡面</translation>
-    </message>
-    <message>
         <source>Wallet is locked.</source>
         <translation>錢包被鎖定。</translation>
     </message>
     <message>
-        <source>Wallet options:</source>
-        <translation>錢包選項:</translation>
-    </message>
-    <message>
-        <source>Wallet window title</source>
-        <translation>錢包窗口標題</translation>
-    </message>
-    <message>
         <source>Warning</source>
         <translation>警告</translation>
+    </message>
+    <message>
+        <source>Warning: %s is deprecated, please use %s instead</source>
+        <translation>警告: %s 已被淘汰，請改用 %s </translation>
+    </message>
+    <message>
+        <source>Warning: can't use %s and %s together, will prefer %s</source>
+        <translation>警告: 不能同時使用 %s 和 %s，將會把 %s 作為首選</translation>
+    </message>
+    <message>
+        <source>Warning: incorrect parameter %s, path must exist! Using default path.</source>
+        <translation>警告 : 不正確的參數 %s，路徑必須存在!  請使用預設路徑。</translation>
+    </message>
+    <message>
+        <source>You are starting with governance validation disabled.</source>
+        <translation>您啟用了禁用治理驗證的選項。</translation>
+    </message>
+    <message>
+        <source>You can not disable governance validation on a masternode.</source>
+        <translation>您不能在主節點上禁用治理驗證。</translation>
     </message>
     <message>
         <source>Your entries added successfully.</source>

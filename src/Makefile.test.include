@@ -11,16 +11,17 @@ TEST_SRCDIR = test
 TEST_BINARY=test/test_raptoreum$(EXEEXT)
 
 JSON_TEST_FILES = \
-  test/data/script_tests.json \
-  test/data/base58_keys_valid.json \
+  test/data/blockfilters.json \
   test/data/base58_encode_decode.json \
-  test/data/base58_keys_invalid.json \
   test/data/bip39_vectors.json \
+  test/data/key_io_valid.json \
+  test/data/key_io_invalid.json \
   test/data/proposals_valid.json \
   test/data/proposals_invalid.json \
+  test/data/script_tests.json \
+  test/data/sighash.json \
   test/data/tx_invalid.json \
-  test/data/tx_valid.json \
-  test/data/sighash.json
+  test/data/tx_valid.json
 
 RAW_TEST_FILES =
 
@@ -36,12 +37,16 @@ BITCOIN_TESTS =\
   test/base32_tests.cpp \
   test/base58_tests.cpp \
   test/base64_tests.cpp \
+  test/bech32_tests.cpp \
   test/bip32_tests.cpp \
   test/bip39_tests.cpp \
+  test/blockchain_tests.cpp \
   test/blockencodings_tests.cpp \
+  test/blockfilter_tests.cpp \
   test/bloom_tests.cpp \
   test/bls_tests.cpp \
   test/bswap_tests.cpp \
+  test/checkdatasig_tests.cpp \
   test/checkqueue_tests.cpp \
   test/cachemap_tests.cpp \
   test/cachemultimap_tests.cpp \
@@ -49,18 +54,22 @@ BITCOIN_TESTS =\
   test/compress_tests.cpp \
   test/crypto_tests.cpp \
   test/cuckoocache_tests.cpp \
-  test/DoS_tests.cpp \
+  test/denialofservice_tests.cpp \
+  test/dip0020opcodes_tests.cpp \
   test/evo_deterministicmns_tests.cpp \
   test/evo_simplifiedmns_tests.cpp \
   test/getarg_tests.cpp \
   test/governance_validators_tests.cpp \
   test/hash_tests.cpp \
+  test/key_io_tests.cpp \
   test/key_tests.cpp \
+  test/lcg.h \
   test/limitedmap_tests.cpp \
   test/dbwrapper_tests.cpp \
   test/main_tests.cpp \
   test/mempool_tests.cpp \
   test/merkle_tests.cpp \
+  test/merkleblock_tests.cpp \
   test/miner_tests.cpp \
   test/multisig_tests.cpp \
   test/net_tests.cpp \
@@ -76,9 +85,9 @@ BITCOIN_TESTS =\
   test/rpc_tests.cpp \
   test/sanity_tests.cpp \
   test/scheduler_tests.cpp \
-  test/script_P2SH_tests.cpp \
-  test/script_P2PK_tests.cpp \
-  test/script_P2PKH_tests.cpp \
+  test/script_p2sh_tests.cpp \
+  test/script_p2pk_tests.cpp \
+  test/script_p2pkh_tests.cpp \
   test/script_tests.cpp \
   test/script_standard_tests.cpp \
   test/scriptnum_tests.cpp \
@@ -94,23 +103,25 @@ BITCOIN_TESTS =\
   test/timedata_tests.cpp \
   test/torcontrol_tests.cpp \
   test/transaction_tests.cpp \
+  test/txvalidation_tests.cpp \
   test/txvalidationcache_tests.cpp \
   test/versionbits_tests.cpp \
   test/uint256_tests.cpp \
-  test/univalue_tests.cpp \
   test/util_tests.cpp
 
 if ENABLE_WALLET
 BITCOIN_TESTS += \
+  wallet/test/coinjoin_tests.cpp \
   wallet/test/wallet_test_fixture.cpp \
   wallet/test/wallet_test_fixture.h \
   wallet/test/accounting_tests.cpp \
   wallet/test/wallet_tests.cpp \
-  wallet/test/crypto_tests.cpp
+  wallet/test/wallet_crypto_tests.cpp \
+  wallet/test/coinselector_tests.cpp
 endif
 
 test_test_raptoreum_SOURCES = $(BITCOIN_TESTS) $(JSON_TEST_FILES) $(RAW_TEST_FILES)
-test_test_raptoreum_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -I$(builddir)/test/ $(TESTDEFS) $(EVENT_CFLAGS)
+test_test_raptoreum_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(TESTDEFS) $(EVENT_CFLAGS)
 test_test_raptoreum_LDADD =
 if ENABLE_WALLET
 test_test_raptoreum_LDADD += $(LIBBITCOIN_WALLET)
@@ -167,6 +178,8 @@ raptoreum_test_clean : FORCE
 check-local:
 	@echo "Running test/util/bitcoin-util-test.py..."
 	$(PYTHON) $(top_builddir)/test/util/bitcoin-util-test.py
+	@echo "Running test/util/rpcauth-test.py..."
+	$(PYTHON) $(top_builddir)/test/util/rpcauth-test.py
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C secp256k1 check
 if EMBEDDED_UNIVALUE
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C univalue check

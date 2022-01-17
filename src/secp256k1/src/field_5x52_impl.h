@@ -4,15 +4,14 @@
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
  **********************************************************************/
 
-#ifndef _SECP256K1_FIELD_REPR_IMPL_H_
-#define _SECP256K1_FIELD_REPR_IMPL_H_
+#ifndef SECP256K1_FIELD_REPR_IMPL_H
+#define SECP256K1_FIELD_REPR_IMPL_H
 
 #if defined HAVE_CONFIG_H
 #include "libsecp256k1-config.h"
 #endif
 
 #include "util.h"
-#include "num.h"
 #include "field.h"
 
 #if defined(USE_ASM_X86_64)
@@ -422,6 +421,7 @@ static void secp256k1_fe_mul(secp256k1_fe *r, const secp256k1_fe *a, const secp2
     secp256k1_fe_verify(a);
     secp256k1_fe_verify(b);
     VERIFY_CHECK(r != b);
+    VERIFY_CHECK(a != b);
 #endif
     secp256k1_fe_mul_inner(r->n, a->n, b->n);
 #ifdef VERIFY
@@ -493,4 +493,4 @@ static SECP256K1_INLINE void secp256k1_fe_from_storage(secp256k1_fe *r, const se
 #endif
 }
 
-#endif
+#endif /* SECP256K1_FIELD_REPR_IMPL_H */

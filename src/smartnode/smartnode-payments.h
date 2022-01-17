@@ -6,20 +6,20 @@
 #ifndef SMARTNODE_PAYMENTS_H
 #define SMARTNODE_PAYMENTS_H
 
-#include "util.h"
-#include "core_io.h"
-#include "key.h"
-#include "net_processing.h"
-#include "utilstrencodings.h"
+#include <util.h>
+#include <core_io.h>
+#include <key.h>
+#include <net_processing.h>
+#include <utilstrencodings.h>
 
-#include "evo/deterministicmns.h"
+#include <evo/deterministicmns.h>
 
 class CSmartnodePayments;
 
 /// TODO: all 4 functions do not belong here really, they should be refactored/moved somewhere (main.cpp ?)
 bool IsBlockValueValid(const CBlock& block, int nBlockHeight, CAmount blockReward, std::string& strErrorRet);
 bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight, CAmount blockReward, CAmount specialTxFees);
-void FillBlockPayments(CMutableTransaction& txNew, int nBlockHeight, CAmount mintReward, std::vector<CTxOut>& voutSmartnodePaymentsRet, std::vector<CTxOut>& voutSuperblockPaymentsRet, CAmount nFees, CAmount specialTxFees = 0);
+void FillBlockPayments(CMutableTransaction& txNew, int nBlockHeight, CAmount blockReward, std::vector<CTxOut>& voutSmartnodePaymentsRet, std::vector<CTxOut>& voutSuperblockPaymentsRet, CAmount nFees, CAmount specialTxFees = 0);
 std::map<int, std::string> GetRequiredPaymentsStrings(int nStartHeight, int nEndHeight);
 
 extern CSmartnodePayments mnpayments;
@@ -32,11 +32,10 @@ extern CSmartnodePayments mnpayments;
 class CSmartnodePayments
 {
 public:
-    bool GetBlockTxOuts(int nBlockHeight, CAmount blockReward, std::vector<CTxOut>& voutSmartnodePaymentsRet, CAmount specialTxFee) const;
-    bool IsTransactionValid(const CTransaction& txNew, int nBlockHeight, CAmount blockReward, CAmount specialTxFee) const;
-    bool IsScheduled(const CDeterministicMNCPtr& dmn, int nNotBlockHeight) const;
+    static bool GetBlockTxOuts(int nBlockHeight, CAmount blockReward, std::vector<CTxOut>& voutSmartnodePaymentsRet, CAmount specialTxFee);
+    static bool IsTransactionValid(const CTransaction& txNew, int nBlockHeight, CAmount blockReward, CAmount specialTxFee);
 
-    bool GetSmartnodeTxOuts(int nBlockHeight, CAmount blockReward, std::vector<CTxOut>& voutSmartnodePaymentsRet, CAmount specialTxFee) const;
+    static bool GetSmartnodeTxOuts(int nBlockHeight, CAmount blockReward, std::vector<CTxOut>& voutSmartnodePaymentsRet, CAmount specialTxFee);
 };
 
 #endif

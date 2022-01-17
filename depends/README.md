@@ -22,11 +22,35 @@ Common `host-platform-triplets` for cross compilation are:
 
 - `i686-w64-mingw32` for Win32
 - `x86_64-w64-mingw32` for Win64
-- `x86_64-apple-darwin11` for MacOSX
+- `x86_64-apple-darwin14` for MacOSX
 - `arm-linux-gnueabihf` for Linux ARM 32 bit
 - `aarch64-linux-gnu` for Linux ARM 64 bit
+- `riscv32-linux-gnu` for Linux RISC-V 32 bit
+- `riscv64-linux-gnu` for Linux RISC-V 64 bit
 
 No other options are needed, the paths are automatically configured.
+
+Install the required dependencies: Ubuntu & Debian
+--------------------------------------------------
+
+For macOS cross compilation:
+
+    sudo apt-get install curl librsvg2-bin libtiff-tools bsdmainutils imagemagick libcap-dev libz-dev libbz2-dev python-setuptools
+
+For Win32/Win64 cross compilation:
+
+- see [build-windows.md](../doc/build-windows.md#cross-compilation-for-ubuntu-and-windows-subsystem-for-linux)
+
+For linux (including i386, ARM) cross compilation:
+
+    sudo apt-get install curl g++-aarch64-linux-gnu g++-4.8-aarch64-linux-gnu gcc-4.8-aarch64-linux-gnu binutils-aarch64-linux-gnu g++-arm-linux-gnueabihf g++-4.8-arm-linux-gnueabihf gcc-4.8-arm-linux-gnueabihf binutils-arm-linux-gnueabihf g++-4.8-multilib gcc-4.8-multilib binutils-gold bsdmainutils
+
+For linux RISC-V 64-bit cross compilation (there are no packages for 32-bit):
+
+    sudo apt-get install curl g++-riscv64-linux-gnu binutils-riscv64-linux-gnu
+
+RISC-V known issue: gcc-7.3.0 and gcc-7.3.1 result in a broken `test_dash` executable (see https://github.com/bitcoin/bitcoin/pull/13543),
+this is apparently fixed in gcc-8.1.0.
 
 Dependency Options:
 The following can be set when running make: make FOO=bar

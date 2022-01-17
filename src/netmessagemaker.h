@@ -6,13 +6,13 @@
 #ifndef BITCOIN_NETMESSAGEMAKER_H
 #define BITCOIN_NETMESSAGEMAKER_H
 
-#include "net.h"
-#include "serialize.h"
+#include <net.h>
+#include <serialize.h>
 
 class CNetMsgMaker
 {
 public:
-    CNetMsgMaker(int nVersionIn) : nVersion(nVersionIn){}
+    explicit CNetMsgMaker(int nVersionIn) : nVersion(nVersionIn){}
 
     template <typename... Args>
     CSerializedNetMsg Make(int nFlags, std::string sCommand, Args&&... args) const

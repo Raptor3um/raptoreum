@@ -9,12 +9,13 @@
  *      Author: Tri Nguyen
  */
 
-#include "founder_payment.h"
+#include <founder_payment.h>
+#include <rpc/server.h>
 
-#include "util.h"
-#include "chainparams.h"
+#include <util.h>
+#include <chainparams.h>
 #include <boost/foreach.hpp>
-#include "base58.h"
+#include <key_io.h>
 
 CAmount FounderPayment::getFounderPaymentAmount(int blockHeight, CAmount blockReward) {
 	 if (blockHeight <= startBlock){
@@ -31,17 +32,18 @@ CAmount FounderPayment::getFounderPaymentAmount(int blockHeight, CAmount blockRe
 
 void FounderPayment::FillFounderPayment(CMutableTransaction& txNew, int nBlockHeight, CAmount blockReward, CTxOut& txoutFounderRet) {
     // make sure it's not filled yet
-	CAmount founderPayment = getFounderPaymentAmount(nBlockHeight, blockReward);
+    CAmount founderPayment = getFounderPaymentAmount(nBlockHeight, blockReward);
 //	if(founderPayment == 0) {
 //	    LogPrintf("FounderPayment::FillFounderPayment -- Founder payment has not started\n");
 //	    return;
 //
 //	}
-	txoutFounderRet = CTxOut();
-    CScript payee;
-    // fill payee with the foundFounderRewardStrcutureFounderRewardStrcutureer address
-    CBitcoinAddress cbAddress(founderAddress);
-	payee = GetScriptForDestination(cbAddress.Get());
+    txoutFounderRet = CTxOut();
+	  // fill payee with the foundFounderRewardStrcutureFounderRewardStrcutureer address
+	  CTxDestination founderAddr = DecodeDestination(founderAddress);
+	  if(!IsValidDestination(founderAddr))
+	    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Invalid Raptoreum Founder Address: %s", founderAddress.c_str()));
+	  CScript payee = GetScriptForDestination(founderAddr);
     // GET FOUNDER PAYMENT VARIABLES SETUP
 
     // split reward between miner ...
@@ -52,9 +54,8 @@ void FounderPayment::FillFounderPayment(CMutableTransaction& txNew, int nBlockHe
 }
 
 bool FounderPayment::IsBlockPayeeValid(const CTransaction& txNew, const int height, const CAmount blockReward) {
-	CScript payee;
 	// fill payee with the founder address
-	payee = GetScriptForDestination(CBitcoinAddress(founderAddress).Get());
+	CScript payee = GetScriptForDestination(DecodeDestination(founderAddress));
 	const CAmount founderReward = getFounderPaymentAmount(height, blockReward);
 	//std::cout << "founderReward = " << founderReward << endl;
 	BOOST_FOREACH(const CTxOut& out, txNew.vout) {

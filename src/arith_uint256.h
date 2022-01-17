@@ -27,7 +27,7 @@ template<unsigned int BITS>
 class base_uint
 {
 protected:
-    enum { WIDTH=BITS/32 };
+    static constexpr int WIDTH = BITS / 32;
     uint32_t pn[WIDTH];
 public:
 
@@ -87,7 +87,7 @@ public:
         base_uint ret;
         for (int i = 0; i < WIDTH; i++)
             ret.pn[i] = ~pn[i];
-        ret++;
+        ++ret;
         return ret;
     }
 

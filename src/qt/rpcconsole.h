@@ -5,25 +5,30 @@
 #ifndef BITCOIN_QT_RPCCONSOLE_H
 #define BITCOIN_QT_RPCCONSOLE_H
 
-#include "guiutil.h"
-#include "peertablemodel.h"
-#include "trafficgraphdata.h"
+#include <qt/guiutil.h>
+#include <qt/peertablemodel.h>
+#include <qt/trafficgraphdata.h>
 
-#include "net.h"
+#include <net.h>
 
 #include <QWidget>
 #include <QCompleter>
 #include <QThread>
 
 class ClientModel;
-class PlatformStyle;
 class RPCTimerInterface;
+class WalletModel;
+
+namespace interfaces {
+    class Node;
+}
 
 namespace Ui {
     class RPCConsole;
 }
 
 QT_BEGIN_NAMESPACE
+class QButtonGroup;
 class QMenu;
 class QItemSelection;
 QT_END_NAMESPACE
@@ -34,15 +39,17 @@ class RPCConsole: public QWidget
     Q_OBJECT
 
 public:
-    explicit RPCConsole(const PlatformStyle *platformStyle, QWidget *parent);
+    explicit RPCConsole(interfaces::Node& node, QWidget* parent, Qt::WindowFlags flags);
     ~RPCConsole();
 
-    static bool RPCParseCommandLine(std::string &strResult, const std::string &strCommand, bool fExecute, std::string * const pstrFilteredOut = nullptr);
-    static bool RPCExecuteCommandLine(std::string &strResult, const std::string &strCommand, std::string * const pstrFilteredOut = nullptr) {
-        return RPCParseCommandLine(strResult, strCommand, true, pstrFilteredOut);
+    static bool RPCParseCommandLine(interfaces::Node* node, std::string &strResult, const std::string &strCommand, bool fExecute, std::string * const pstrFilteredOut = nullptr, const std::string *walletID = nullptr);
+    static bool RPCExecuteCommandLine(interfaces::Node& node, std::string &strResult, const std::string &strCommand, std::string * const pstrFilteredOut = nullptr, const std::string *walletID = nullptr) {
+        return RPCParseCommandLine(&node, strResult, strCommand, true, pstrFilteredOut, walletID);
     }
 
     void setClientModel(ClientModel *model);
+    void addWallet(WalletModel * const walletModel);
+    void removeWallet(WalletModel* const walletModel);
 
     enum MessageClass {
         MC_ERROR,
@@ -65,17 +72,18 @@ protected:
     void keyPressEvent(QKeyEvent *);
 
 private Q_SLOTS:
+    /** custom tab buttons clicked */
+    void showPage(int index);
     void on_lineEdit_returnPressed();
-    void on_tabWidget_currentChanged(int index);
+    void on_stackedWidgetRPC_currentChanged(int index);
     /** open the debug.log from the current datadir */
     void on_openDebugLogfileButton_clicked();
     /** change the time range of the network traffic graph */
     void on_sldGraphRange_valueChanged(int value);
-    /** update traffic statistics */
-    void updateTrafficStats(quint64 totalBytesIn, quint64 totalBytesOut);
     void resizeEvent(QResizeEvent *event);
     void showEvent(QShowEvent *event);
     void hideEvent(QHideEvent *event);
+    void changeEvent(QEvent* e);
     /** Show custom context menu on Peers tab */
     void showPeersTableContextMenu(const QPoint& point);
     /** Show custom context menu on Bans tab */
@@ -90,15 +98,16 @@ public Q_SLOTS:
     void fontBigger();
     void fontSmaller();
     void setFontSize(int newSize);
-    
+
     /** Wallet repair options */
     void walletSalvage();
-    void walletRescan();
+    void walletRescan1();
+    void walletRescan2();
     void walletZaptxes1();
     void walletZaptxes2();
     void walletUpgrade();
     void walletReindex();
-    
+
     /** Append the message to the message widget */
     void message(int category, const QString &message, bool html = false);
     /** Set number of connections shown in the UI */
@@ -107,8 +116,8 @@ public Q_SLOTS:
     void setNetworkActive(bool networkActive);
     /** Update number of smartnodes shown in the UI */
     void updateSmartnodeCount();
-    /** Set number of blocks and last block date shown in the UI */
-    void setNumBlocks(int count, const QDateTime& blockDate, double nVerificationProgress, bool headers);
+    /** Set number of blocks, last block date and last block hash shown in the UI */
+    void setNumBlocks(int count, const QDateTime& blockDate, const QString& blockHash, double nVerificationProgress, bool headers);
     /** Set size (number of transactions and memory usage) of the mempool in the UI */
     void setMempoolSize(long numberOfTxs, size_t dynUsage);
     /** Set number of InstantSend locks */
@@ -135,18 +144,21 @@ public Q_SLOTS:
 Q_SIGNALS:
     // For RPC command executor
     void stopExecutor();
-    void cmdRequest(const QString &command);
+    void cmdRequest(const QString &command, const QString &walletID);
     /** Get restart command-line parameters and handle restart */
     void handleRestart(QStringList args);
 
 private:
-    static QString FormatBytes(quint64 bytes);
     void startExecutor();
     void setTrafficGraphRange(TrafficGraphData::GraphRange range);
     /** Build parameter list for restart */
     void buildParameterlist(QString arg);
     /** show detailed information on ui about selected node */
     void updateNodeDetail(const CNodeCombinedStats *stats);
+    /** Set required icons for buttons inside the dialog */
+    void setButtonIcons();
+    /** Reload some themes related widgets */
+    void reloadThemedWidgets();
 
     enum ColumnWidths
     {
@@ -158,19 +170,21 @@ private:
 
     };
 
+    interfaces::Node& m_node;
     Ui::RPCConsole *ui;
+    QButtonGroup* pageButtons;
     ClientModel *clientModel;
     QStringList history;
     int historyPtr;
     QString cmdBeforeBrowsing;
     QList<NodeId> cachedNodeids;
-    const PlatformStyle *platformStyle;
     RPCTimerInterface *rpcTimerInterface;
     QMenu *peersTableContextMenu;
     QMenu *banTableContextMenu;
     int consoleFontSize;
     QCompleter *autoCompleter;
     QThread thread;
+    QString m_last_wallet_id;
 
     /** Update UI with latest network info from model. */
     void updateNetworkState();

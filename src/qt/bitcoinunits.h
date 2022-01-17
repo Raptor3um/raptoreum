@@ -7,7 +7,7 @@
 #ifndef BITCOIN_QT_BITCOINUNITS_H
 #define BITCOIN_QT_BITCOINUNITS_H
 
-#include "amount.h"
+#include <amount.h>
 
 #include <QAbstractListModel>
 #include <QString>
@@ -112,6 +112,7 @@ public:
     };
     int rowCount(const QModelIndex &parent) const;
     QVariant data(const QModelIndex &index, int role) const;
+    QVariant data(const int &row, int role) const;
     ///@}
 
     static QString removeSpaces(QString text)

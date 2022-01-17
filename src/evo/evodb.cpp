@@ -3,9 +3,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "evodb.h"
+#include <evo/evodb.h>
 
-CEvoDB* evoDb;
+std::unique_ptr<CEvoDB> evoDb;
 
 CEvoDBScopedCommitter::CEvoDBScopedCommitter(CEvoDB &_evoDB) :
     evoDB(_evoDB)
@@ -54,6 +54,7 @@ void CEvoDB::RollbackCurTransaction()
 
 bool CEvoDB::CommitRootTransaction()
 {
+    LOCK(cs);
     assert(curDBTransaction.IsClean());
     rootDBTransaction.Commit();
     bool ret = db.WriteBatch(rootBatch);
@@ -66,11 +67,10 @@ bool CEvoDB::VerifyBestBlock(const uint256& hash)
     // Make sure evodb is consistent.
     // If we already have best block hash saved, the previous block should match it.
     uint256 hashBestBlock;
-    bool fHasBestBlock = Read(EVODB_BEST_BLOCK, hashBestBlock);
-    uint256 hashBlockIndex = fHasBestBlock ? hash : uint256();
-    assert(hashBestBlock == hashBlockIndex);
-
-    return fHasBestBlock || hashBestBlock == uint256();
+    if (!Read(EVODB_BEST_BLOCK, hashBestBlock)) {
+        return false;
+    }
+    return hashBestBlock == hash;
 }
 
 void CEvoDB::WriteBestBlock(const uint256& hash)

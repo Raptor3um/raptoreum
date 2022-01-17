@@ -2,24 +2,26 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#define BOOST_TEST_MODULE Bitcoin Test Suite
+#define BOOST_TEST_MODULE Dash Test Suite
 
-#include "net.h"
-#include "stacktraces.h"
+#include <net.h>
+#include <stacktraces.h>
+
+#include <memory>
 
 #include <boost/test/unit_test.hpp>
 #include <boost/test/unit_test_monitor.hpp>
 
 std::unique_ptr<CConnman> g_connman;
 
-void Shutdown(void* parg)
+[[noreturn]] void Shutdown(void* parg)
 {
-  exit(EXIT_SUCCESS);
+  std::exit(EXIT_SUCCESS);
 }
 
-void StartShutdown()
+[[noreturn]] void StartShutdown()
 {
-  exit(EXIT_SUCCESS);
+  std::exit(EXIT_SUCCESS);
 }
 
 bool ShutdownRequested()

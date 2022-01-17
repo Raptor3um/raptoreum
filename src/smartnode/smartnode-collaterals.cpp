@@ -5,7 +5,7 @@
  *      Author: tri
  */
 
-#include "smartnode-collaterals.h"
+#include <smartnode/smartnode-collaterals.h>
 #include <limits.h>
 #include <iostream>
 
