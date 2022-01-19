@@ -28,6 +28,7 @@
 
 #include <coinjoin/coinjoin.h>
 #include <governance/governance-object.h>
+#include <evo/providertx.h>
 
 #include <algorithm>
 #include <atomic>

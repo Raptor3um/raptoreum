@@ -373,7 +373,6 @@ libraptoreum_server_a_SOURCES = \
   rpc/util.cpp \
   rpc/rpcfuture.cpp \
   script/sigcache.cpp \
-  script/ismine.cpp \
   spork.cpp \
   statsd_client.cpp \
   timedata.cpp \
@@ -596,6 +595,7 @@ libraptoreum_common_a_SOURCES = \
   protocol.cpp \
   saltedhasher.cpp \
   scheduler.cpp \
+  script/ismine.cpp \
   script/sign.cpp \
   script/standard.cpp \
   warnings.cpp \
@@ -661,10 +661,10 @@ endif
 
 raptoreumd_LDADD = \
   $(LIBBITCOIN_SERVER) \
+  $(LIBBITCOIN_WALLET) \
   $(LIBBITCOIN_COMMON) \
   $(LIBUNIVALUE) \
   $(LIBBITCOIN_UTIL) \
-  $(LIBBITCOIN_WALLET) \
   $(LIBBITCOIN_ZMQ) \
   $(LIBBITCOIN_CONSENSUS) \
   $(LIBBITCOIN_CRYPTO) \

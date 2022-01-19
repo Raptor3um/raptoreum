@@ -2028,6 +2028,41 @@ int64_t CWalletTx::GetTxTime() const
     return n ? n : nTimeReceived;
 }
 
+bool CWalletTx::isFutureSpendable(unsigned int outputIndex) const
+{
+  bool isCoinSpendable;
+  if(tx->nType == TRANSACTION_FUTURE)
+  {
+    int maturity = GetDepthInMainChain();
+    int64_t adjustCurrentTime = GetAdjustedTime();
+    uint32_t confirmedTime = GetTxTime();
+    CFutureTx futureTx;
+    if(GetTxPayload(tx->vExtraPayload, futureTx))
+    {
+      if(futureTx.lockOutputIndex == outputIndex)
+      {
+        bool isBlockMature = futureTx.maturity > 0 && maturity >- futureTx.maturity;
+        bool isTimeMature = futureTx.lockTime > 0 && adjustCurrentTime - confirmedTime >= futureTx.lockTime;
+        isCoinSpendable = isBlockMature || isTimeMature;
+      }
+      else
+      {
+        isCoinSpendable = true;
+      }
+    }
+    else
+    {
+      isCoinSpendable = false;
+    }
+  }
+  else
+  {
+    isCoinSpendable = true;
+  }
+
+  return isCoinSpendable;
+}
+
 // Helper for producing a max-sized low-S signature (eg 72 bytes)
 bool CWallet::DummySignInput(CTxIn &tx_in, const CTxOut &txout) const
 {
@@ -4810,7 +4845,6 @@ void CWallet::ListLockedCoins(std::vector<COutPoint>& vOutpts) const
 void CWallet::ListProTxCoins(std::vector<COutPoint>& vOutpts) const
 {
     auto mnList = deterministicMNManager->GetListAtChainTip();
-{
     AssertLockHeld(cs_wallet);
     for (const auto &o : setWalletUTXO) {
         auto it = mapWallet.find(o.hash);
@@ -4821,16 +4855,6 @@ void CWallet::ListProTxCoins(std::vector<COutPoint>& vOutpts) const
             }
         }
     }
-}
-
-void CWallet::ListProTxCoins(int height, std::vector<COutPoint>& vOutpts)
-{
-    GetProTxCoins(deterministicMNManager->GetListForBlock(chainActive[height]), vOutpts);
-}
-
-void CWallet::ListProTxCoins(std::vector<COutPoint>& vOutpts)
-{
-    GetProTxCoins(deterministicMNManager->GetListAtChainTip(), vOutpts);
 }
 
 /** @} */ // end of Actions

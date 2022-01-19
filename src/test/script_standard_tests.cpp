@@ -112,6 +112,7 @@ BOOST_AUTO_TEST_CASE(script_standard_Solver_failure)
     pubkey = key.GetPubKey();
 
     CScript s;
+    txnouttype whichType;
     std::vector<std::vector<unsigned char> > solutions;
 
     // TX_PUBKEY with incorrectly sized pubkey

@@ -126,9 +126,9 @@ bool CDeterministicMNList::IsMNValid(const CDeterministicMNCPtr& dmn)
 	Coin coin;
 	//should this be call directly or use pcoinsTip->GetCoin(outpoint, coin) without locking cs_main
 	bool isValidUtxo = GetUTXOCoin(dmn->collateralOutpoint, coin);
-{
-    int height = chainActive.Tip() == nullptr ? 0 : chainActive.Tip()->nHeight;
-    return IsMNValid(dmn, height);
+  SmartnodeCollaterals collaterals = Params().GetConsensus().nCollaterals;
+  int nHeight = chainActive.Tip() == nullptr ? 0 : chainActive.Tip()->nHeight;
+  return !IsMNPoSeBanned(dmn) && (isValidUtxo && collaterals.isPayableCollateral(nHeight, coin.out.nValue));
 }
 
 bool CDeterministicMNList::IsMNPoSeBanned(const CDeterministicMNCPtr& dmn)
