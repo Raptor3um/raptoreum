@@ -11,6 +11,7 @@
 #include <validation.h>
 #include <miner.h>
 #include <net_processing.h>
+#include <pow.h>
 #include <ui_interface.h>
 #include <streams.h>
 #include <rpc/server.h>
@@ -51,6 +52,7 @@ extern bool fPrintToConsole;
 extern void noui_connect();
 
 BasicTestingSetup::BasicTestingSetup(const std::string& chainName)
+  : m_path_root(fs::temp_directory_path() / "test_raptoreum" / strprintf("%lu_%i", (unsigned long)GetTime(), (int)(InsecureRandRange(1 << 30))))
 {
         SHA256AutoDetect();
         RandomInit();
@@ -60,7 +62,7 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName)
         SetupNetworking();
         InitSignatureCache();
         InitScriptExecutionCache();
-        CPrivateSend::InitStandardDenominations();
+        CCoinJoin::InitStandardDenominations();
         fPrintToDebugLog = false; // don't want to write to debug.log file
         fCheckBlockIndex = true;
         SelectParams(chainName);
@@ -74,19 +76,26 @@ BasicTestingSetup::~BasicTestingSetup()
         deterministicMNManager.reset();
         evoDb.reset();
 
+        fs::remove_all(m_path_root);
         ECC_Stop();
+}
+
+fs::path BasicTestingSetup::SetDataDir(const std::string& name)
+{
+  fs::path ret = m_path_root / name;
+  fs::create_directories(ret);
+  gArgs.ForceSetArg("-datadir", ret.string());
+  return ret;
 }
 
 TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(chainName)
 {
+    SetDataDir("tempdir");
     const CChainParams& chainparams = Params();
         // Ideally we'd move all the RPC tests to the functional testing framework
         // instead of unit tests, but for now we need these here.
         RegisterAllCoreRPCCommands(tableRPC);
         ClearDatadirCache();
-        pathTemp = fs::temp_directory_path() / strprintf("test_raptoreum_%lu_%i", (unsigned long)GetTime(), (int)(InsecureRandRange(100000)));
-        fs::create_directories(pathTemp);
-        gArgs.ForceSetArg("-datadir", pathTemp.string());
 
         // We have to run a scheduler thread to prevent ActivateBestChain
         // from blocking due to queue overrun.
@@ -111,7 +120,7 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
         nScriptCheckThreads = 3;
         for (int i=0; i < nScriptCheckThreads-1; i++)
             threadGroup.create_thread(&ThreadScriptCheck);
-        peerLogic.reset(new PeerLogicValidation(connman, scheduler));
+        peerLogic.reset(new PeerLogicValidation(connman, scheduler, true));
 }
 
 TestingSetup::~TestingSetup()
@@ -129,7 +138,6 @@ TestingSetup::~TestingSetup()
         llmq::DestroyLLMQSystem();
         pcoinsdbview.reset();
         pblocktree.reset();
-        fs::remove_all(pathTemp);
 }
 
 TestChainSetup::TestChainSetup(int blockCount) : TestingSetup(CBaseChainParams::REGTEST)
@@ -196,7 +204,7 @@ CBlock TestChainSetup::CreateBlock(const std::vector<CMutableTransaction>& txns,
             BOOST_ASSERT(false);
         }
         CValidationState state;
-        if (!CalcCbTxMerkleRootMNList(block, chainActive.Tip(), cbTx.merkleRootMNList, state)) {
+        if (!CalcCbTxMerkleRootMNList(block, chainActive.Tip(), cbTx.merkleRootMNList, state, *pcoinsTip.get())) {
             BOOST_ASSERT(false);
         }
         if (!CalcCbTxMerkleRootQuorums(block, chainActive.Tip(), cbTx.merkleRootQuorums, state)) {

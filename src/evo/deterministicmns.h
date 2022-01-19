@@ -382,16 +382,6 @@ public:
     }
 
     template <typename Callback>
-    void ForEachMN(bool onlyValid, int height, Callback&& cb) const
-    {
-        for (const auto& p : mnMap) {
-            if (!onlyValid || IsMNValid(p.second, height)) {
-                cb(p.second);
-            }
-        }
-    }
-    
-    template <typename Callback>
     void ForEachMN(bool onlyValid, Callback&& cb) const
     {
         for (const auto& p : mnMap) {

@@ -1343,7 +1343,7 @@ UniValue protx_list(const JSONRPCRequest& request)
         }
 
         std::vector<COutPoint> vOutpts;
-        pwallet->ListProTxCoins(height, vOutpts);
+        pwallet->ListProTxCoins(vOutpts);
         std::set<COutPoint> setOutpts;
         for (const auto& outpt : vOutpts) {
             setOutpts.emplace(outpt);
@@ -1376,7 +1376,7 @@ UniValue protx_list(const JSONRPCRequest& request)
 
         CDeterministicMNList mnList = deterministicMNManager->GetListForBlock(chainActive[height]);
         bool onlyValid = type == "valid";
-        mnList.ForEachMN(onlyValid, height, [&](const CDeterministicMNCPtr& dmn) {
+        mnList.ForEachMN(onlyValid, [&](const CDeterministicMNCPtr& dmn) {
             ret.push_back(BuildDMNListEntry(pwallet, dmn, detailed));
         });
     } else {

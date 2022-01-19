@@ -10,6 +10,19 @@
 #include <tinyformat.h>
 #include <utilstrencodings.h>
 #include <crypto/common.h>
+#include <unordered_lru_cache.h>
+#include <util.h>
+
+unordered_lru_cache<uint256, uint256, std::hash<uint256>, 1> powHashCache;
+
+void initializePowCacheIfNeeded() {
+ 	if(powHashCache.getMaxSize() == 1) {
+ 		int powCacheSize = gArgs.GetArg("-powhashcache", DEFAULT_POW_CACHE_SIZE);
+ 		powCacheSize = powCacheSize == 0 ? DEFAULT_POW_CACHE_SIZE : powCacheSize;
+ 		powHashCache.setMaxSize(powCacheSize);
+
+ 	}
+}
 
 uint256 CBlockHeader::GetHash() const
 {
