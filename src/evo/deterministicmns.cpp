@@ -13,6 +13,7 @@
 #include <ui_interface.h>
 #include <validation.h>
 #include <validationinterface.h>
+#include <spork.h>
 
 #include <llmq/quorums_commitment.h>
 #include <llmq/quorums_utils.h>
@@ -728,8 +729,10 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
             newList.UpdateMN(dmn->proTxHash, newState);
         }
     });
-   	DecreasePoSePenalties(newList);
-
+    bool isDecrease = sporkManager.IsSporkActive(SPORK_21_LOW_LLMQ_PARAMS) ? nHeight % 30 == 0 : nHeight % 2 == 0;
+    if(isDecrease) {
+        DecreasePoSePenalties(newList);
+    }
     // we skip the coinbase
     for (int i = 1; i < (int)block.vtx.size(); i++) {
         const CTransaction& tx = *block.vtx[i];
@@ -924,6 +927,7 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
     }
 
     mnListRet = std::move(newList);
+    UpdateLLMQParams(mnListRet.GetAllMNsCount(), nHeight, sporkManager.IsSporkActive(SPORK_21_LOW_LLMQ_PARAMS));
     return true;
 }
 
@@ -1030,7 +1034,8 @@ CDeterministicMNList CDeterministicMNManager::GetListForBlock(const CBlockIndex*
             }
         }
     }
-
+    // is this needed?
+    UpdateLLMQParams(snapshot.GetAllMNsCount(), snapshot.GetHeight(), sporkManager.IsSporkActive(SPORK_21_LOW_LLMQ_PARAMS));
     return snapshot;
 }
 
