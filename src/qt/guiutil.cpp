@@ -1186,7 +1186,7 @@ void loadStyleSheet(bool fForceUpdate)
 
         std::vector<QString> vecFiles;
         // If light/dark theme is used load general styles first
-        if (dashThemeActive()) {
+        if (raptoreumThemeActive()) {
             vecFiles.push_back(pathToFile(generalTheme));
         }
         vecFiles.push_back(pathToFile(getActiveTheme()));
