@@ -38,7 +38,7 @@ public:
     //! at which height this containing transaction was included in the active block chain
     uint32_t nHeight : 31;
 
-    uint16_t nType;
+    uint16_t nType=0;
 
     std::vector<uint8_t> vExtraPayload;
 
@@ -49,9 +49,6 @@ public:
     	out(std::move(outIn)), fCoinBase(fCoinBaseIn), nHeight(nHeightIn), nType(type), vExtraPayload(extraPayload){}
     Coin(const CTxOut& outIn, int nHeightIn, bool fCoinBaseIn, uint16_t type, std::vector<uint8_t> extraPayload) :
       out(outIn), fCoinBase(fCoinBaseIn),nHeight(nHeightIn), nType(type), vExtraPayload(extraPayload) {}
-
-    Coin(CTxOut&& outIn, int nHeightIn, bool fCoinBaseIn) : out(std::move(outIn)), fCoinBase(fCoinBaseIn), nHeight(nHeightIn) {}
- 	  Coin(const CTxOut& outIn, int nHeightIn, bool fCoinBaseIn) : out(outIn), fCoinBase(fCoinBaseIn),nHeight(nHeightIn) {}
 
     void Clear() {
         out.SetNull();

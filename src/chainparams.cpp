@@ -565,10 +565,10 @@ public:
         // Raptoreum BIP44 coin type is '5'
         std::string strExtCoinType = gArgs.GetArg("-extcoinindex", "");
         nExtCoinType = strExtCoinType.empty() ? 10226 : std::stoi(strExtCoinType);
-        if(gArgs.GetChainName() == CBaseChainParams::MAIN) {
-        	std::cout << "mainnet is disable" << endl;
-        	exit(0);
-        }
+//        if(gArgs.GetChainName() == CBaseChainParams::MAIN) {
+//        	std::cout << "mainnet is disable" << endl;
+//        	exit(0);
+//        }
         std::vector<FounderRewardStructure> rewardStructures = {  {INT_MAX, 5} };// 5% founder/dev fee forever
         consensus.nFounderPayment = FounderPayment(rewardStructures, 250);
         consensus.nCollaterals = SmartnodeCollaterals(

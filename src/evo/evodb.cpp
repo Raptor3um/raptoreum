@@ -66,6 +66,12 @@ bool CEvoDB::VerifyBestBlock(const uint256& hash)
 {
     // Make sure evodb is consistent.
     // If we already have best block hash saved, the previous block should match it.
+//    uint256 hashBestBlock;
+//    bool fHasBestBlock = Read(EVODB_BEST_BLOCK, hashBestBlock);
+//    uint256 hashBlockIndex = fHasBestBlock ? hash : uint256();
+//    assert(hashBestBlock == hashBlockIndex);
+//
+//    return fHasBestBlock || hashBestBlock == uint256();
     uint256 hashBestBlock;
     if (!Read(EVODB_BEST_BLOCK, hashBestBlock)) {
         return false;
