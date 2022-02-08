@@ -286,7 +286,7 @@ void setupAddressWidget(QValidatedLineEdit *widget, QWidget *parent, bool fAllow
     widget->setCheckValidator(new BitcoinAddressCheckValidator(parent));
 }
 
-void setupAppearance(QWidget* parent, OptionsModel* model)
+/* void setupAppearance(QWidget* parent, OptionsModel* model)
 {
     if (!QSettings().value("fAppearanceSetupDone", false).toBool()) {
         // Create the dialog
@@ -326,7 +326,7 @@ void setupAppearance(QWidget* parent, OptionsModel* model)
         // And fire it!
         dlg.exec();
     }
-}
+} */
 
 void setupAppearance(QWidget* parent, OptionsModel* model)
 {

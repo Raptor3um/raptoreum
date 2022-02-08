@@ -250,7 +250,7 @@ public:
     // Send futures to a list of recipients
     SendFuturesReturn sendFutures(WalletModelFuturesTransaction &transaction);
 
-    // Return status record for SendFutures, contains error id + information
+/*     // Return status record for SendFutures, contains error id + information
     struct SendFuturesReturn
     {
         SendFuturesReturn(StatusCode _status = OK, QString _reasonCommitFailed = "")
@@ -266,10 +266,11 @@ public:
     SendFuturesReturn prepareFuturesTransaction(WalletModelFuturesTransaction &transaction, const CCoinControl& coinControl);
 
     // Send futures to a list of recipients
-    SendFuturesReturn sendFutures(WalletModelFuturesTransaction &transaction);
+    SendFuturesReturn sendFutures(WalletModelFuturesTransaction &transaction); */
 
     // Wallet encryption
     bool setWalletEncrypted(bool encrypted, const SecureString &passphrase);
+
     // Passphrase only needed when unlocking
     bool setWalletLocked(bool locked, const SecureString &passPhrase=SecureString(), bool fMixing=false);
     bool changePassphrase(const SecureString &oldPass, const SecureString &newPass);
@@ -376,8 +377,8 @@ Q_SIGNALS:
     //Futures sent: from wallet, to recipient, in (serialized) transaction:
     void futuresSent(CWallet* wallet, SendFuturesRecipient recipient, QByteArray transaction);
 
-    //Futures sent: from wallet, to recipient, in (serialized) transaction:
-    void futuresSent(CWallet* wallet, SendFuturesRecipient recipient, QByteArray transaction);
+    /* //Futures sent: from wallet, to recipient, in (serialized) transaction:
+    void futuresSent(CWallet* wallet, SendFuturesRecipient recipient, QByteArray transaction); */
 
     // Show progress dialog e.g. for rescan
     void showProgress(const QString &title, int nProgress);

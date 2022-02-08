@@ -623,12 +623,12 @@ void BitcoinGUI::createToolBars()
         tabGroup->addButton(coinJoinCoinsButton);
 
         QSettings settings;
-        if (settings.value("fShowMasternodesTab").toBool()) {
-            masternodeButton = new QToolButton(this);
-            masternodeButton->setText(tr("&Masternodes"));
-            masternodeButton->setStatusTip(tr("Browse masternodes"));
-            tabGroup->addButton(masternodeButton);
-            connect(masternodeButton, SIGNAL(clicked()), this, SLOT(gotoMasternodePage()));
+        if (settings.value("fShowSmartnodesTab").toBool()) {
+            smartnodeButton = new QToolButton(this);
+            smartnodeButton->setText(tr("&Smartnodes"));
+            smartnodeButton->setStatusTip(tr("Browse smartnodes"));
+            tabGroup->addButton(smartnodeButton);
+            connect(smartnodeButton, SIGNAL(clicked()), this, SLOT(gotoSmartnodePage()));
         }
 
         connect(overviewButton, SIGNAL(clicked()), this, SLOT(gotoOverviewPage()));
@@ -850,9 +850,9 @@ void BitcoinGUI::setWalletActionsEnabled(bool enabled)
         coinJoinCoinsButton->setEnabled(enabled && clientModel->coinJoinOptions().isEnabled());
         receiveCoinsButton->setEnabled(enabled);
         historyButton->setEnabled(enabled);
-        if (masternodeButton != nullptr) {
+        if (smartnodeButton != nullptr) {
             QSettings settings;
-            masternodeButton->setEnabled(enabled && settings.value("fShowMasternodesTab").toBool());
+            smartnodeButton->setEnabled(enabled && settings.value("fShowSmartnodesTab").toBool());
         }
     }
 #endif // ENABLE_WALLET
@@ -1169,11 +1169,11 @@ void BitcoinGUI::updateProgressBarVisibility()
         return;
     }
     // Show the progress bar label if the network is active + we are out of sync or we have no connections.
-    bool fShowProgressBarLabel = m_node.getNetworkActive() && (!m_node.masternodeSync().isSynced() || clientModel->getNumConnections() == 0);
+    bool fShowProgressBarLabel = m_node.getNetworkActive() && (!m_node.smartnodeSync().isSynced() || clientModel->getNumConnections() == 0);
     // Show the progress bar only if the the network active + we are not synced + we have any connection. Unlike with the label
     // which gives an info text about the connecting phase there is no reason to show the progress bar if we don't have connections
     // since it will not get any updates in this case.
-    bool fShowProgressBar = m_node.getNetworkActive() && !m_node.masternodeSync().isSynced() && clientModel->getNumConnections() > 0;
+    bool fShowProgressBar = m_node.getNetworkActive() && !m_node.smartnodeSync().isSynced() && clientModel->getNumConnections() > 0;
     progressBarLabel->setVisible(fShowProgressBarLabel);
     progressBar->setVisible(fShowProgressBar);
 }

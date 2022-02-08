@@ -37,11 +37,11 @@ public:
 
     bool operator<(const QTableWidgetItem& other) const
     {
-        return itemData < ((CMasternodeListWidgetItem*)&other)->itemData;
+        return itemData < ((CSmartnodeListWidgetItem*)&other)->itemData;
     }
 };
 
-MasternodeList::MasternodeList(QWidget* parent) :
+SmartnodeList::SmartnodeList(QWidget* parent) :
     QWidget(parent),
     ui(new Ui::SmartnodeList),
     clientModel(0),
@@ -242,7 +242,7 @@ void SmartnodeList::updateDIP3List()
             nNextPayment = nextPayments[dmn->proTxHash];
             strNextPayment = QString::number(nNextPayment);
         }
-        QTableWidgetItem* nextPaymentItem = new CMasternodeListWidgetItem<int>(strNextPayment, nNextPayment);
+        QTableWidgetItem* nextPaymentItem = new CSmartnodeListWidgetItem<int>(strNextPayment, nNextPayment);
 
         CTxDestination payeeDest;
         QString payeeStr = tr("UNKNOWN");
@@ -266,7 +266,7 @@ void SmartnodeList::updateDIP3List()
                 operatorRewardStr += tr("but not claimed");
             }
         }
-        QTableWidgetItem* operatorRewardItem = new CMasternodeListWidgetItem<uint16_t>(operatorRewardStr, dmn->nOperatorReward);
+        QTableWidgetItem* operatorRewardItem = new CSmartnodeListWidgetItem<uint16_t>(operatorRewardStr, dmn->nOperatorReward);
 
         QString collateralStr = tr("UNKNOWN");
         auto collateralDestIt = mapCollateralDests.find(dmn->proTxHash);
