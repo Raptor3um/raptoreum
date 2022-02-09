@@ -68,6 +68,8 @@
 #include <llmq/quorums_signing.h>
 #include <llmq/quorums_utils.h>
 
+#include <primitives/powcache.h>
+
 #include <statsd_client.h>
 
 #include <stdint.h>
@@ -281,6 +283,8 @@ void PrepareShutdown()
             CFlatDB<CGovernanceManager> flatdb3("governance.dat", "magicGovernanceCache");
             flatdb3.Dump(governance);
         }
+        CFlatDB<CPowCache> flatdb7("powcache.dat", "powCache");
+        flatdb7.Dump(CPowCache::Instance());
     }
 
     // After the threads that potentially access these pointers have been stopped,
@@ -2214,6 +2218,19 @@ bool AppInitMain()
         CNetFulfilledRequestManager netfulfilledmanTmp;
         if(!flatdb4.Dump(netfulfilledmanTmp)) {
             return InitError(_("Failed to clear fulfilled requests cache at") + "\n" + (pathDB / strDBName).string());
+        }
+    }
+
+    strDBName = "powcache.dat";
+    uiInterface.InitMessage(_("Loading POW cache..."));
+    CFlatDB<CPowCache> flatdb7(strDBName, "powCache");
+    if (fLoadCacheFiles) {
+        if(!flatdb7.Load(CPowCache::Instance())) {
+            return InitError(_("Failed to load POW cache from") + "\n" + (pathDB / strDBName).string());
+        }
+    } else {
+        if(!flatdb7.Dump(CPowCache::Instance())) {
+            return InitError(_("Failed to clear POW cache at") + "\n" + (pathDB / strDBName).string());
         }
     }
 

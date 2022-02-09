@@ -11,7 +11,7 @@
 template<typename Key, typename Value, typename Hasher, size_t MaxSize = 0, size_t TruncateThreshold = 0>
 class unordered_lru_cache
 {
-private:
+protected:
     typedef std::unordered_map<Key, std::pair<Value, int64_t>, Hasher> MapType;
 
     MapType cacheMap;
@@ -24,7 +24,7 @@ public:
         maxSize(_maxSize),
         truncateThreshold(_truncateThreshold == 0 ? _maxSize * 2 : _truncateThreshold)
     {
-        // either specify maxSize through template arguments or the contructor and fail otherwise
+        // either specify maxSize through template arguments or the constructor and fail otherwise
         assert(_maxSize != 0);
     }
 

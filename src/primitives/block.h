@@ -9,6 +9,8 @@
 #include <primitives/transaction.h>
 #include <serialize.h>
 #include <uint256.h>
+#include <util.h>
+#include <unordered_lru_cache.h>
 
 
 /** Nodes collect new transactions into a block, hash them into a hash tree,
