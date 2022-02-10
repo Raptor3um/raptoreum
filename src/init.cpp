@@ -2221,17 +2221,12 @@ bool AppInitMain()
         }
     }
 
+    // Always load the powcache if available:
     strDBName = "powcache.dat";
     uiInterface.InitMessage(_("Loading POW cache..."));
     CFlatDB<CPowCache> flatdb7(strDBName, "powCache");
-    if (fLoadCacheFiles) {
-        if(!flatdb7.Load(CPowCache::Instance())) {
-            return InitError(_("Failed to load POW cache from") + "\n" + (pathDB / strDBName).string());
-        }
-    } else {
-        if(!flatdb7.Dump(CPowCache::Instance())) {
-            return InitError(_("Failed to clear POW cache at") + "\n" + (pathDB / strDBName).string());
-        }
+    if(!flatdb7.Load(CPowCache::Instance())) {
+        return InitError(_("Failed to load POW cache from") + "\n" + (pathDB / strDBName).string());
     }
 
     // ********************************************************* Step 10c: schedule Raptoreum-specific tasks
