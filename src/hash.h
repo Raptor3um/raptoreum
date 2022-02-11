@@ -332,6 +332,6 @@ inline uint256 HashGR(const T1 pbegin, const T1 pend, const uint256 PrevBlockHas
 		coreHash(toHash, &hash[i], lenToHash, coreSelection);
 		cnHash(&hash[i-1], &hash[i], lenToHash, cnSelection);
 	}
-	return hash[17].trim256();;
+	return hash[17].trim256();
 }
 #endif // BITCOIN_HASH_H

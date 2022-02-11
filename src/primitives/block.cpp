@@ -4,25 +4,11 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <primitives/block.h>
-
+#include <primitives/powcache.h>
+#include <uint256.h>
 #include <hash.h>
-#include <streams.h>
-#include <tinyformat.h>
 #include <utilstrencodings.h>
-#include <crypto/common.h>
-#include <unordered_lru_cache.h>
 #include <util.h>
-
-unordered_lru_cache<uint256, uint256, std::hash<uint256>, 1> powHashCache;
-
-void initializePowCacheIfNeeded() {
- 	if(powHashCache.getMaxSize() == 1) {
- 		int powCacheSize = gArgs.GetArg("-powhashcache", DEFAULT_POW_CACHE_SIZE);
- 		powCacheSize = powCacheSize == 0 ? DEFAULT_POW_CACHE_SIZE : powCacheSize;
- 		powHashCache.setMaxSize(powCacheSize);
-
- 	}
-}
 
 uint256 CBlockHeader::GetHash() const
 {
@@ -31,19 +17,16 @@ uint256 CBlockHeader::GetHash() const
 
 uint256 CBlockHeader::GetPOWHash() const
 {
-
-//	initializePowCacheIfNeeded();
 	uint256 headerHash = GetHash();
 	uint256 powHash;
-	if(powHashCache.get(headerHash, powHash)) {
-		//do nothing
-	} else {
+	if (!CPowCache::Instance().get(headerHash, powHash))
+    {
+        // Not found, hash and save
 		powHash = HashGR(BEGIN(nVersion), END(nNonce), hashPrevBlock);
-		powHashCache.insert(headerHash, powHash);
+		CPowCache::Instance().insert(headerHash, powHash);
 	}
 	return powHash;
 }
-
 
 std::string CBlock::ToString() const
 {
