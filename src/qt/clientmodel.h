@@ -51,7 +51,7 @@ public:
     ~ClientModel();
 
     interfaces::Node& node() const { return m_node; }
-    interfaces::Masternode::Sync& masternodeSync() const { return m_node.masternodeSync(); }
+    interfaces::Smartnode::Sync& smartnodeSync() const { return m_node.smartnodeSync(); }
 #ifdef ENABLE_WALLET
     interfaces::CoinJoin::Options& coinJoinOptions() const { return m_node.coinJoinOptions(); }
 #endif
