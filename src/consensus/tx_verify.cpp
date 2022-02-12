@@ -21,7 +21,7 @@
 #include <coins.h>
 #include <utilmoneystr.h>
 
-extern CChain chainActive;
+extern CChain& chainActive;
 
 static void checkSpecialTxFee(const CTransaction &tx, CAmount& nFeeTotal, CAmount& specialTxFee) {
 	if(tx.nVersion >= 3) {
