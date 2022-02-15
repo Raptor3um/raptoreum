@@ -1,0 +1,36 @@
+{
+//
+  "txid" : "id",        (string) The transaction id (same as provided)
+  "type" : n,           (numeric) The type of transaction
+  "version" : n,          (numeric) The version
+  "locktime" : ttt,       (numeric) The lock time
+  "vin" : [               (array of json objects)
+     ...
+  ],
+  "vout" : [              (array of json objects)
+     ...
+  ],
+  "extraPayloadSize" : n    (numeric) Size of DIP2 extra payload. Only present if it's a special TX
+  "assets" : [
+	 {
+		"name": "string",
+		"txid" : "assetId",
+		"type" : "type of asset transaction",
+		"version" : "transaction version of this asset",
+		"locktime" : "locktime",
+		"vin" : [
+			...
+		],
+		"vout" : [
+			...
+		],
+		"extraPayloadSize" : n  
+	 }
+     ,...
+   ]
+}
+
+Create Asset Transaction,
+
+the vin of create asset transaction would be a coinbase vin
+the vout of create asset transaction would be the initial mint asset amount, can be empty if no asset is mint during token creation

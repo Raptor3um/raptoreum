@@ -26,6 +26,7 @@ class CCoinControl;
 class CKey;
 class CWallet;
 struct CRecipient;
+struct FuturePartialPayload;
 
 namespace interfaces {
 
@@ -36,7 +37,6 @@ struct WalletBalances;
 struct WalletTx;
 struct WalletTxOut;
 struct WalletTxStatus;
-
 using WalletOrderForm = std::vector<std::pair<std::string, std::string>>;
 using WalletValueMap = std::map<std::string, std::string>;
 
@@ -161,7 +161,10 @@ public:
         bool sign,
         int& change_pos,
         CAmount& fee,
-        std::string& fail_reason) = 0;
+        std::string& fail_reason,
+        int nExtraPayloadSize = 0,
+        CAmount specialFees = 0,
+        FuturePartialPayload* fpp = nullptr) = 0;
 
     //! Return whether transaction can be abandoned.
     virtual bool transactionCanBeAbandoned(const uint256& txid) = 0;
@@ -200,6 +203,7 @@ public:
     //! Get balances.
     virtual WalletBalances getBalances() = 0;
 
+    virtual std::map<CTxDestination, CAmount> GetAddressBalances() = 0;
     //! Get balances if possible without blocking.
     virtual bool tryGetBalances(WalletBalances& balances, int& num_blocks) = 0;
 

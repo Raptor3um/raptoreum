@@ -12,6 +12,8 @@
 #include <qt/bitcoinunits.h>
 #include <qt/guiutil.h>
 #include <qt/optionsmodel.h>
+#include <qt/walletmodel.h>
+#include <key_io.h>
 
 #include <future/fee.h> // future fee
 
@@ -100,17 +102,7 @@ void SendFuturesEntry::on_addressBookButton_clicked()
 
 void SendFuturesEntry::on_payTo_textChanged(const QString &address)
 {
-    SendFuturesRecipient rcp;
-    if(GUIUtil::parseBitcoinURI(address, &rcp))
-    {
-      ui->payTo->blockSignals(true);
-      setValue(rcp);
-      ui->payTo->blockSignals(false);
-    }
-    else
-    {
-      updateLabel(address);
-    }
+    updateLabel(address);
 }
 
 void SendFuturesEntry::setModel(WalletModel *_model)
@@ -160,7 +152,7 @@ void SendFuturesEntry::deleteClicked()
     Q_EMIT removeEntry(this);
 }
 
-bool SendFuturesEntry::validate()
+bool SendFuturesEntry::validate(interfaces::Node& node)
 {
     if (!model)
         return false;
@@ -196,7 +188,7 @@ bool SendFuturesEntry::validate()
     }
 
     // Reject dust outputs:
-    if (retval && GUIUtil::isDust(ui->payTo->text(), ui->payAmount->value())) {
+    if (retval && GUIUtil::isDust(node, ui->payTo->text(), ui->payAmount->value())) {
         ui->payAmount->setValid(false);
         retval = false;
     }

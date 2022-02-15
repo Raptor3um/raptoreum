@@ -13,6 +13,7 @@
 #include <qt/overviewpage.h>
 #include <qt/receivecoinsdialog.h>
 #include <qt/sendcoinsdialog.h>
+#include <qt/sendfuturesdialog.h>
 #include <qt/signverifymessagedialog.h>
 #include <qt/transactionrecord.h>
 #include <qt/transactiontablemodel.h>
@@ -276,14 +277,6 @@ void WalletView::gotoCoinJoinCoinsPage(QString addr)
 
     if (!addr.isEmpty())
         coinJoinCoinsPage->setAddress(addr);
-}
-
-void WalletView::gotoSendFuturesPage(QString addr)
-{
-    setCurrentWidget(sendFuturesPage);
-
-    if (!addr.isEmpty())
-        sendFuturesPage->setAddress(addr);
 }
 
 void WalletView::gotoSendFuturesPage(QString addr)

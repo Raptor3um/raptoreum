@@ -331,13 +331,6 @@ void setupAddressWidget(QValidatedLineEdit *widget, QWidget *parent, bool fAllow
 void setupAppearance(QWidget* parent, OptionsModel* model)
 {
     if (!QSettings().value("fAppearanceSetupDone", false).toBool()) {
-        // First make sure SystemDefault has reasonable default values if it does not support the full range of weights.
-        if (fontFamily == FontFamily::SystemDefault && getSupportedWeights().size() < 4) {
-            fontWeightNormal = mapSupportedWeights[FontFamily::SystemDefault].front();
-            fontWeightBold = mapSupportedWeights[FontFamily::SystemDefault].back();
-            QSettings().setValue("fontWeightNormal", weightToArg(fontWeightNormal));
-            QSettings().setValue("fontWeightBold", weightToArg(fontWeightBold));
-        }
         // Create the dialog
         QDialog dlg(parent);
         dlg.setObjectName("AppearanceSetup");

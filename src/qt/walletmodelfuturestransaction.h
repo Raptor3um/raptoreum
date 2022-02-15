@@ -17,27 +17,26 @@ class CReserveKey;
 class CWallet;
 class CWalletTx;
 //class CFutureTx;
+namespace interfaces {
+    class Node;
+    class PendingWalletTx;
+}
 
 /** Data model for a walletmodel future transaction. */
 class WalletModelFuturesTransaction
 {
 public:
     explicit WalletModelFuturesTransaction(const QList<SendFuturesRecipient> &recipients);
-    ~WalletModelFuturesTransaction();
-
     QList<SendFuturesRecipient> getRecipients() const;
 
     //CFutureTx *getTransaction();
     CWalletTx *getTransaction() const;
     unsigned int getTransactionSize() const;
-
+    std::unique_ptr<interfaces::PendingWalletTx>& getWtx();
     void setTransactionFee(const CAmount& newFee);
     CAmount getTransactionFee() const;
 
     CAmount getTotalTransactionAmount() const;
-
-    void newPossibleKeyChange(CWallet *wallet);
-    CReserveKey *getPossibleKeyChange();
 
     void reassignAmounts(); // needed for the subtract-fee-from-amount feature
 
@@ -45,9 +44,7 @@ public:
 
 private:
     QList<SendFuturesRecipient> recipients;
-    //CFutureTx *walletTransaction;
-    CWalletTx *walletTransaction;
-    std::unique_ptr<CReserveKey> keyChange;
+    std::unique_ptr<interfaces::PendingWalletTx> wtx;
     CAmount fee;
 };
 

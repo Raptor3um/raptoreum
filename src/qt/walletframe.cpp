@@ -116,15 +116,6 @@ bool WalletFrame::handlePaymentRequest(const SendCoinsRecipient &recipient)
     return walletView->handlePaymentRequest(recipient);
 }
 
-bool WalletFrame::handlePaymentRequest(const SendFuturesRecipient &recipient)
-{
-  WalletView *walletView = currentWalletView();
-  if(!walletView)
-    return false;
-
-  return walletView->handlePaymentRequest(recipient);
-}
-
 void WalletFrame::showOutOfSyncWarning(bool fShow)
 {
     bOutOfSync = fShow;
