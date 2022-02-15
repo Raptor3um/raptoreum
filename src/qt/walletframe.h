@@ -44,8 +44,6 @@ public:
 
     bool handlePaymentRequest(const SendCoinsRecipient& recipient);
 
-    bool handlePaymentRequest(const SendFuturesRecipient& recipient);
-
     void showOutOfSyncWarning(bool fShow);
 
 Q_SIGNALS:

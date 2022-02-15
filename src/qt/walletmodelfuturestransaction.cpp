@@ -11,31 +11,26 @@
 
 WalletModelFuturesTransaction::WalletModelFuturesTransaction(const QList<SendFuturesRecipient> &_recipients) :
     recipients(_recipients),
-    walletTransaction(0),
     fee(0)
 {
     //walletTransaction = new CFutureTx();
-    walletTransaction = new CWalletTx();
+   // walletTransaction = new CWalletTx();
 }
 
-WalletModelFuturesTransaction::~WalletModelFuturesTransaction()
+std::unique_ptr<interfaces::PendingWalletTx>& WalletModelFuturesTransaction::getWtx()
 {
-    delete walletTransaction;
+    return wtx;
 }
+
 
 QList<SendFuturesRecipient> WalletModelFuturesTransaction::getRecipients() const
 {
     return recipients;
 }
 
-CWalletTx *WalletModelFuturesTransaction::getTransaction() const
+unsigned int WalletModelFuturesTransaction::getTransactionSize() const
 {
-    return walletTransaction;
-}
-
-unsigned int WalletModelFuturesTransaction::getTransactionSize()
-{
-    return (!walletTransaction ? 0 : (::GetSerializeSize(walletTransaction->tx, SER_NETWORK, PROTOCOL_VERSION)));
+    return wtx != nullptr ? ::GetSerializeSize(wtx->get(), SER_NETWORK, PROTOCOL_VERSION) : 0;
 }
 
 CAmount WalletModelFuturesTransaction::getTransactionFee() const
@@ -59,13 +54,19 @@ void WalletModelFuturesTransaction::assignFuturePayload() {
 			ftx.nVersion = CFutureTx::CURRENT_VERSION;
 			ftx.lockOutputIndex = 0;
 			ftx.updatableByDestination = false;
-			for (const auto& txout : walletTransaction->tx->vout) {
-				CScript scriptPubKey = GetScriptForDestination(DecodeDestination(rcp.address.toStdString()));
-				if (txout.scriptPubKey == scriptPubKey) {
-					rcp.amount = txout.nValue;
-					ftx.lockTime = rcp.locktime - GetAdjustedTime();
-					ftx.maturity = rcp.maturity;
-					break;
+            const payments::PaymentDetails& details = rcp.paymentRequest.getDetails();
+            for (int j = 0; j < details.outputs_size(); j++) {
+                const payments::Output& out = details.outputs(j);
+                if (out.amount() <= 0) continue;
+                const unsigned char* scriptStr = (const unsigned char*)out.script().data();
+                CScript scriptPubKey(scriptStr, scriptStr+out.script().size());
+                for (const auto& txout : wtx->get().vout) {
+                    if (txout.scriptPubKey == scriptPubKey) {
+                        rcp.amount = txout.nValue;
+                        ftx.lockTime = rcp.locktime - GetAdjustedTime();
+                        ftx.maturity = rcp.maturity;
+                        break;
+                    }
 				}
 				ftx.lockOutputIndex++;
 			}
@@ -91,7 +92,7 @@ void WalletModelFuturesTransaction::reassignAmounts()
                 if (out.amount() <= 0) continue;
                 const unsigned char* scriptStr = (const unsigned char*)out.script().data();
                 CScript scriptPubKey(scriptStr, scriptStr+out.script().size());
-                for (const auto& txout : walletTransaction->tx->vout) {
+                for (const auto& txout : wtx->get().vout) {
                     if (txout.scriptPubKey == scriptPubKey) {
                         subtotal += txout.nValue;
                         break;
@@ -103,10 +104,8 @@ void WalletModelFuturesTransaction::reassignAmounts()
         else // normal recipient (no payment request)
         {
             CFutureTx ftx;
-            for (const auto& txout : walletTransaction->tx->vout) {
-                std::string rcpAddr = rcp.address.toStrString();
-                CTxDestination dest = DecodeDestination(rcpAddr);
-                CScript scriptPubKey = GetScriptForDestination(EncodeDestination(rcp.address.toStdString()));
+            for (const auto& txout : wtx->get().vout) {
+                CScript scriptPubKey = GetScriptForDestination(DecodeDestination(rcp.address.toStdString()));
                 if (txout.scriptPubKey == scriptPubKey) {
                     rcp.amount = txout.nValue;
                     break;
@@ -116,7 +115,7 @@ void WalletModelFuturesTransaction::reassignAmounts()
     }
 }
 
-CAmount WalletModelFuturesTransaction::getTotalTransactionAmount()
+CAmount WalletModelFuturesTransaction::getTotalTransactionAmount() const
 {
     CAmount totalTransactionAmount = 0;
     for (const SendFuturesRecipient &rcp : recipients)
@@ -124,14 +123,4 @@ CAmount WalletModelFuturesTransaction::getTotalTransactionAmount()
         totalTransactionAmount += rcp.amount;
     }
     return totalTransactionAmount;
-}
-
-void WalletModelFuturesTransaction::newPossibleKeyChange(CWallet *wallet)
-{
-    keyChange.reset(new CReserveKey(wallet));
-}
-
-CReserveKey *WalletModelFuturesTransaction::getPossibleKeyChange()
-{
-    return keyChange.get();
 }

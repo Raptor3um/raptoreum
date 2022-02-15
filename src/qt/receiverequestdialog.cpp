@@ -124,12 +124,6 @@ void ReceiveRequestDialog::setInfo(const SendCoinsRecipient &_info)
     update();
 }
 
-void ReceiveRequestDialog::set_info(const SendFuturesRecipient &__info)
-{
-  this->info = __info;
-  update();
-}
-
 void ReceiveRequestDialog::update()
 {
     if(!model)

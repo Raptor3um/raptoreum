@@ -30,7 +30,7 @@ public:
     ~SendFuturesEntry();
 
     void setModel(WalletModel *model);
-    bool validate();
+    bool validate(interfaces::Node& node);
     SendFuturesRecipient getValue();
 
     /** Return whether the entry is still empty and unedited */
