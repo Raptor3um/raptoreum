@@ -62,7 +62,7 @@ QString TransactionDesc::FormatTxStatus(const interfaces::WalletTx& wtx, const i
     }
 }
 
-QString TransactionDesc::FutureTxDescToHTML(const interfaces::WalletTx& wtx, const interfaces::WalletTxStatus& status, const CFutureTx& ftx, int unit)
+QString TransactionDesc::FutureTxDescToHTML(const interfaces::WalletTx& wtx, const interfaces::WalletTxStatus& status, CFutureTx& ftx, int unit)
 {
     //
     // Future Transaction HTML Description
