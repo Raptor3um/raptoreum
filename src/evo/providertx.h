@@ -254,8 +254,8 @@ public:
 	bool updatableByDestination = false; // true to allow some information of this transaction to be change by lockOutput address
 	uint16_t exChainType = 0; // external chain type. each 15 bit unsign number will be map to a external chain. i.e 0 for btc
 	CScript externalPayoutScript;
-  uint256 externalTxid;
-  uint16_t externalConfirmations = 0;
+    uint256 externalTxid;
+    uint16_t externalConfirmations = 0;
 	uint256 inputsHash; // replay protection
 
 public:
@@ -265,7 +265,7 @@ public:
 	inline void SerializationOp(Stream& s, Operation ser_action)
 	{
 		READWRITE(nVersion);
-    READWRITE(maturity);
+        READWRITE(maturity);
 		READWRITE(lockTime);
 		READWRITE(lockOutputIndex);
 		READWRITE(updatableByDestination);
