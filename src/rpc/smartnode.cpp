@@ -441,9 +441,9 @@ UniValue smartnode_payments(const JSONRPCRequest& request)
 
         std::vector<CTxOut> voutSmartnodePayments, voutDummy;
         CMutableTransaction dummyTx;
-        CAmount nFees, specialTxFees;
+        CAmount specialTxFees;
         CAmount blockReward = nBlockFees + GetBlockSubsidy(pindex->pprev->nBits, pindex->pprev->nHeight, Params().GetConsensus());
-        FillBlockPayments(dummyTx, pindex->nHeight, blockReward, voutSmartnodePayments, voutDummy, nFees, specialTxFees);
+        FillBlockPayments(dummyTx, pindex->nHeight, blockReward, voutSmartnodePayments, voutDummy, specialTxFees);
 
         UniValue blockObj(UniValue::VOBJ);
         CAmount payedPerBlock{0};

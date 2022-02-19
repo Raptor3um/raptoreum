@@ -226,7 +226,7 @@ CDeterministicMNCPtr CDeterministicMNList::GetMNPayee() const
 //    if ((nHeight < 900 &&  mnMap.size() == 0)||(nHeight >= 900 && mnMap.size() <= 10)) {
 //        return nullptr;
 //    }
-	if(mnMap.size() < 10 && Params().NetworkIDString().compare("main") == 0) {
+	if(mnMap.size() <= 10 && Params().NetworkIDString().compare("main") == 0) {
 		return nullptr;
 	}
 

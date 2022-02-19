@@ -148,3 +148,4 @@ dist/
 *.conf
 .settings/language.settings.xml
 
+/raptoreum.iml
