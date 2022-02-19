@@ -33,7 +33,7 @@ private:
     TransactionDesc() {}
 
     static QString FormatTxStatus(const interfaces::WalletTx& wtx, const interfaces::WalletTxStatus& status, bool inMempool, int numBlocks, int64_t adjustedTime);
-    static QString FutureTxDescToHTML(const interfaces::WalletTx& wtx, const interfaces::WalletTxStatus& status, const CFutureTx& ftx, int unit);
+    static QString FutureTxDescToHTML(const interfaces::WalletTx& wtx, const interfaces::WalletTxStatus& status, CFutureTx& ftx, int unit);
 
 };
 
