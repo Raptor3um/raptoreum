@@ -205,7 +205,7 @@ bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight, CAmount bloc
     return false;
 }
 
-void FillBlockPayments(CMutableTransaction& txNew, int nBlockHeight, CAmount blockReward, std::vector<CTxOut>& voutSmartnodePaymentsRet, std::vector<CTxOut>& voutSuperblockPaymentsRet, CAmount nFees, CAmount specialTxFees)
+void FillBlockPayments(CMutableTransaction& txNew, int nBlockHeight, CAmount blockReward, std::vector<CTxOut>& voutSmartnodePaymentsRet, std::vector<CTxOut>& voutSuperblockPaymentsRet, CAmount specialTxFees)
 {
     // only create superblocks if spork is enabled AND if superblock is actually triggered
     // (height should be validated inside)

@@ -195,10 +195,11 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     coinbaseTx.vout[0].scriptPubKey = scriptPubKeyIn;
 
     // NOTE: unlike in bitcoin, we need to pass PREVIOUS block height here
-    CAmount blockReward = nFees + nSpecialTxFees + GetBlockSubsidy(pindexPrev->nBits, pindexPrev->nHeight, Params().GetConsensus());
+    CAmount normalBlockReward = nFees + GetBlockSubsidy(pindexPrev->nBits, pindexPrev->nHeight, Params().GetConsensus());
+    CAmount blockRewardWithSpecialtx = normalBlockReward + nSpecialTxFees;
 
     // Compute regular coinbase transaction.
-    coinbaseTx.vout[0].nValue = blockReward;
+    coinbaseTx.vout[0].nValue = blockRewardWithSpecialtx;
 
     if (!fDIP0003Active_context) {
         coinbaseTx.vin[0].scriptSig = CScript() << nHeight << OP_0;
@@ -227,9 +228,9 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
 
     // Update coinbase transaction with additional info about smartnode and governance payments,
     // get some info back to pass to getblocktemplate
-    FillBlockPayments(coinbaseTx, nHeight, blockReward, pblocktemplate->voutSmartnodePayments, pblocktemplate->voutSuperblockPayments, nFees, nSpecialTxFees);
+    FillBlockPayments(coinbaseTx, nHeight, normalBlockReward, pblocktemplate->voutSmartnodePayments, pblocktemplate->voutSuperblockPayments, nSpecialTxFees);
     FounderPayment founderPayment = chainparams.GetConsensus().nFounderPayment;
-    founderPayment.FillFounderPayment(coinbaseTx, nHeight, blockReward, pblock->txoutFounder);
+    founderPayment.FillFounderPayment(coinbaseTx, nHeight, normalBlockReward, pblock->txoutFounder);
  	  pblock->vtx[0] = MakeTransactionRef(std::move(coinbaseTx));
     pblocktemplate->vTxFees[0] = -nFees;
     pblocktemplate->vSpecialTxFees[0] = -nSpecialTxFees;
