@@ -30,11 +30,13 @@ inline bool GetTxPayload(const std::vector<unsigned char>& payload, T& obj)
     }
     return ds.empty();
 }
+
 template <typename T>
 inline bool GetTxPayload(const CMutableTransaction& tx, T& obj)
 {
     return GetTxPayload(tx.vExtraPayload, obj);
 }
+
 template <typename T>
 inline bool GetTxPayload(const CTransaction& tx, T& obj)
 {
