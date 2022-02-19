@@ -62,7 +62,7 @@ QString TransactionDesc::FormatTxStatus(const interfaces::WalletTx& wtx, const i
     }
 }
 
-QString TransactionDesc::FutureTxDescToHTML(const interfaces::WalletTx& wtx, const CFutureTx& ftx, int unit)
+QString TransactionDesc::FutureTxDescToHTML(const interfaces::WalletTx& wtx, const interfaces::WalletTxStatus& status, const CFutureTx& ftx, int unit)
 {
     //
     // Future Transaction HTML Description
@@ -74,22 +74,15 @@ QString TransactionDesc::FutureTxDescToHTML(const interfaces::WalletTx& wtx, con
 
     if (GetTxPayload(wtx.tx->vExtraPayload, ftx)) {
 
-        // Find the block the tx is in
-        CBlockIndex* pindex = nullptr;
-        BlockMap::iterator mi = mapBlockIndex.find(wtx.hashBlock());
-        if (mi != mapBlockIndex.end())
-            pindex = (*mi).second;
-
         CAmount ftxValue = wtx.tx->vout[0].nValue;
-        int txBlock = pindex ? pindex->nHeight : std::numeric_limits<int>::max();
+        int txBlock = status.block_height;
         int currentHeight = chainActive.Height();
         int64_t nTime = wtx.time;
         int maturityBlock = (txBlock + ftx.maturity);
         int64_t maturityTime = (nTime + ftx.lockTime);
 
-        
         strHTML += "<b>Future Amount:</b> " + BitcoinUnits::formatHtmlWithUnit(unit, ftxValue) + "<br>";
-        if (wtx.IsInMainChain())
+        if (status.is_in_main_chain)
         {
         	if(ftx.maturity >= 0) {
 				strHTML += tr("<b>Maturity Block:</b> %1").arg(maturityBlock);
@@ -132,7 +125,6 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
     interfaces::WalletOrderForm orderForm;
     bool inMempool;
     interfaces::WalletTx wtx = wallet.getWalletTxDetails(rec->hash, status, orderForm, inMempool, numBlocks, adjustedTime);
-
     QString strHTML;
 
     strHTML.reserve(4000);
@@ -154,7 +146,7 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
     if (wtx.tx->nType == TRANSACTION_FUTURE)
     {
         CFutureTx ftx;
-        strHTML += FutureTxDescToHTML(wtx, ftx, unit);
+        strHTML += FutureTxDescToHTML(wtx, status, ftx, unit);
     }
     //
     // From
