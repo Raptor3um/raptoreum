@@ -166,14 +166,14 @@ bool CGovernanceVote::Sign(const CKey& key, const CKeyID& keyID)
 
     // Harden Spork6 so that it is active on testnet and no other networks
     if (Params().NetworkIDString() == CBaseChainParams::TESTNET) {
-        uint256 hash = GetSignatureHash();
+        uint256 signatureHash = GetSignatureHash();
 
-        if (!CHashSigner::SignHash(hash, key, vchSig)) {
+        if (!CHashSigner::SignHash(signatureHash, key, vchSig)) {
             LogPrintf("CGovernanceVote::Sign -- SignHash() failed\n");
             return false;
         }
 
-        if (!CHashSigner::VerifyHash(hash, keyID, vchSig, strError)) {
+        if (!CHashSigner::VerifyHash(signatureHash, keyID, vchSig, strError)) {
             LogPrintf("CGovernanceVote::Sign -- VerifyHash() failed, error: %s\n", strError);
             return false;
         }
@@ -201,9 +201,7 @@ bool CGovernanceVote::CheckSignature(const CKeyID& keyID) const
 
     // Harden Spork6 so that it is active on testnet and no other networks
     if (Params().NetworkIDString() == CBaseChainParams::TESTNET) {
-        uint256 hash = GetSignatureHash();
-
-        if (!CHashSigner::VerifyHash(hash, keyID, vchSig, strError)) {
+        if (!CHashSigner::VerifyHash(GetSignatureHash(), keyID, vchSig, strError)) {
             LogPrint(BCLog::GOBJECT, "CGovernanceVote::IsValid -- VerifyHash() failed, error: %s\n", strError);
             return false;
         }
@@ -224,8 +222,7 @@ bool CGovernanceVote::CheckSignature(const CKeyID& keyID) const
 
 bool CGovernanceVote::Sign(const CBLSSecretKey& key)
 {
-    uint256 hash = GetSignatureHash();
-    CBLSSignature sig = key.Sign(hash);
+    CBLSSignature sig = key.Sign(GetSignatureHash());
     if (!sig.IsValid()) {
         return false;
     }

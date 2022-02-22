@@ -5,6 +5,7 @@
 #ifndef SMARTNODE_SYNC_H
 #define SMARTNODE_SYNC_H
 
+#include <atomic>
 #include <chain.h>
 #include <net.h>
 
@@ -30,22 +31,22 @@ class CSmartnodeSync
 {
 private:
     // Keep track of current asset
-    int nCurrentAsset;
+    std::atomic<int> nCurrentAsset{SMARTNODE_SYNC_BLOCKCHAIN};
     // Count peers we've requested the asset from
-    int nTriedPeerCount;
+    std::atomic<int> nTriedPeerCount{0};
 
     // Time when current smartnode asset sync started
-    int64_t nTimeAssetSyncStarted;
+    std::atomic<int64_t> nTimeAssetSyncStarted{0};
     // ... last bumped
-    int64_t nTimeLastBumped;
+    std::atomic<int64_t> nTimeLastBumped{0};
 
     /// Set to true if best header is reached in CSmartnodeSync::UpdatedBlockTip
-    bool fReachedBestHeader{false};
+    std::atomic<bool> fReachedBestHeader{false};
     /// Last time UpdateBlockTip has been called
-    int64_t nTimeLastUpdateBlockTip{0};
+    std::atomic<int64_t> nTimeLastUpdateBlockTip{0};
 
 public:
-    CSmartnodeSync() { Reset(true, false); }
+    CSmartnodeSync();
 
 
     static void SendGovernanceSyncRequest(CNode* pnode, CConnman& connman);

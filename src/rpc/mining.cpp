@@ -159,6 +159,7 @@ UniValue generateBlocks(std::shared_ptr<CReserveScript> coinbaseScript, int nGen
         //mark script as important because it was used at least for one coinbase output if the script came from the wallet
         if (keepScript)
         {
+            LOCK(cs_main);
             coinbaseScript->KeepScript();
         }
     }

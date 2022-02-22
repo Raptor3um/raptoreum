@@ -1272,8 +1272,8 @@ UniValue BuildDMNListEntry(CWallet* pwallet, const CDeterministicMNCPtr& dmn, bo
     int confirmations = GetUTXOConfirmations(dmn->collateralOutpoint);
     o.pushKV("confirmations", confirmations);
 
+#ifdef ENABLE_WALLET
     bool hasOwnerKey = CheckWalletOwnsKey(pwallet, dmn->pdmnState->keyIDOwner);
-    bool hasOperatorKey = false; //CheckWalletOwnsKey(dmn->pdmnState->keyIDOperator);
     bool hasVotingKey = CheckWalletOwnsKey(pwallet, dmn->pdmnState->keyIDVoting);
 
     bool ownsCollateral = false;
@@ -1283,11 +1283,10 @@ UniValue BuildDMNListEntry(CWallet* pwallet, const CDeterministicMNCPtr& dmn, bo
         ownsCollateral = CheckWalletOwnsScript(pwallet, collateralTx->vout[dmn->collateralOutpoint.n].scriptPubKey);
     }
 
-#ifdef ENABLE_WALLET
     if (pwallet) {
         UniValue walletObj(UniValue::VOBJ);
         walletObj.pushKV("hasOwnerKey", hasOwnerKey);
-        walletObj.pushKV("hasOperatorKey", hasOperatorKey);
+        walletObj.pushKV("hasOperatorKey", false);
         walletObj.pushKV("hasVotingKey", hasVotingKey);
         walletObj.pushKV("ownsCollateral", ownsCollateral);
         walletObj.pushKV("ownsPayeeScript", CheckWalletOwnsScript(pwallet, dmn->pdmnState->scriptPayout));
