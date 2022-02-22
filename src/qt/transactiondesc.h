@@ -16,8 +16,9 @@ class Node;
 class Wallet;
 struct WalletTx;
 struct WalletTxStatus;
-struct FutureTx;
 }
+class CFutureTx;
+
 
 /** Provide a human-readable extended HTML description of a transaction.
  */
@@ -32,7 +33,7 @@ private:
     TransactionDesc() {}
 
     static QString FormatTxStatus(const interfaces::WalletTx& wtx, const interfaces::WalletTxStatus& status, bool inMempool, int numBlocks, int64_t adjustedTime);
-    static QString FutureTxDescToHTML(const interface::WalletTx& wtx, const interface::FutureTx& ftx, int unit);
+    static QString FutureTxDescToHTML(const interfaces::WalletTx& wtx, const interfaces::WalletTxStatus& status, CFutureTx& ftx, int unit);
 
 };
 

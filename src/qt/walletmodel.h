@@ -12,6 +12,7 @@
 
 #include <qt/paymentrequestplus.h>
 #include <qt/walletmodeltransaction.h>
+#include <qt/walletmodelfuturestransaction.h>
 
 #include <interfaces/wallet.h>
 #include <support/allocators/secure.h>
@@ -208,6 +209,9 @@ public:
     AddressTableModel *getAddressTableModel();
     TransactionTableModel *getTransactionTableModel();
     RecentRequestsTableModel *getRecentRequestsTableModel();
+    std::map<CTxDestination, CAmount> getAddressBalances() const;
+    CAmount getBalance(const CCoinControl &coinControl) const;
+
 
     EncryptionStatus getEncryptionStatus() const;
 
@@ -375,7 +379,7 @@ Q_SIGNALS:
     void coinsSent(WalletModel* wallet, SendCoinsRecipient recipient, QByteArray transaction);
 
     //Futures sent: from wallet, to recipient, in (serialized) transaction:
-    void futuresSent(CWallet* wallet, SendFuturesRecipient recipient, QByteArray transaction);
+    void futuresSent(WalletModel* wallet, SendFuturesRecipient recipient, QByteArray transaction);
 
     /* //Futures sent: from wallet, to recipient, in (serialized) transaction:
     void futuresSent(CWallet* wallet, SendFuturesRecipient recipient, QByteArray transaction); */

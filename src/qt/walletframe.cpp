@@ -116,15 +116,6 @@ bool WalletFrame::handlePaymentRequest(const SendCoinsRecipient &recipient)
     return walletView->handlePaymentRequest(recipient);
 }
 
-bool WalletFrame::handlePaymentRequest(const SendFuturesRecipient &recipient)
-{
-  WalletView *walletView = currentWalletView();
-  if(!walletView)
-    return false;
-
-  return walletView->handlePaymentRequest(recipient);
-}
-
 void WalletFrame::showOutOfSyncWarning(bool fShow)
 {
     bOutOfSync = fShow;
@@ -168,12 +159,18 @@ void WalletFrame::gotoSendCoinsPage(QString addr)
         i.value()->gotoSendCoinsPage(addr);
 }
 
+void WalletFrame::gotoSendFuturesPage(QString addr)
+{
+    QMap<QString, WalletView*>::const_iterator i;
+    for (i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i)
+        i.value()->gotoSendFuturesPage(addr);
+}
+
 void WalletFrame::gotoCoinJoinCoinsPage(QString addr)
 {
     QMap<QString, WalletView*>::const_iterator i;
-    for (auto i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i) {
+    for (i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i)
         i.value()->gotoCoinJoinCoinsPage(addr);
-    }
 }
 
 void WalletFrame::gotoSignMessageTab(QString addr)

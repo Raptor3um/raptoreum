@@ -62,6 +62,61 @@ QString TransactionDesc::FormatTxStatus(const interfaces::WalletTx& wtx, const i
     }
 }
 
+QString TransactionDesc::FutureTxDescToHTML(const interfaces::WalletTx& wtx, const interfaces::WalletTxStatus& status, CFutureTx& ftx, int unit)
+{
+    //
+    // Future Transaction HTML Description
+    //
+
+    QString strHTML;
+
+    strHTML += "<hr><b>Future Transaction:</b><br><br>";
+
+    if (GetTxPayload(wtx.tx->vExtraPayload, ftx)) {
+
+        CAmount ftxValue = wtx.tx->vout[0].nValue;
+        int txBlock = status.block_height;
+        int currentHeight = chainActive.Height();
+        int64_t nTime = wtx.time;
+        int maturityBlock = (txBlock + ftx.maturity);
+        int64_t maturityTime = (nTime + ftx.lockTime);
+
+        strHTML += "<b>Future Amount:</b> " + BitcoinUnits::formatHtmlWithUnit(unit, ftxValue) + "<br>";
+        if (status.is_in_main_chain)
+        {
+        	if(ftx.maturity >= 0) {
+				strHTML += tr("<b>Maturity Block:</b> %1").arg(maturityBlock);
+				if(maturityBlock >= currentHeight)
+				{
+					int remainingBlocks = (maturityBlock - currentHeight);
+					 strHTML += tr(" (<em>%1 Blocks left</em>)<br>").arg(remainingBlocks);
+				}
+				else
+				{
+					int remainingBlocks = (currentHeight - maturityBlock);
+					strHTML += tr(" (<em>%1 Blocks ago</em>)<br>").arg(remainingBlocks);
+				}
+        	} else {
+        		strHTML += tr("<b>Maturity Block:</b> Never<br>");
+        	}
+        }
+
+        strHTML += "<b>Maturity Time:</b> " + (ftx.lockTime >=0 ? GUIUtil::dateTimeStr(maturityTime) : "Never") + "<br>";
+        strHTML += tr("<b>Locked Time:</b><em> %1 seconds</em><br>").arg(ftx.lockTime);
+        strHTML += tr("<b>Locked Output Index:</b> %1<br>").arg(ftx.lockOutputIndex);
+        
+    }
+    else
+    {
+        strHTML += "<em>Waiting for sync...</em><br>";
+    }
+
+    strHTML += "<hr><br>";
+    
+
+    return strHTML;
+}
+
 QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wallet, TransactionRecord *rec, int unit)
 {
     int numBlocks;
@@ -70,7 +125,6 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
     interfaces::WalletOrderForm orderForm;
     bool inMempool;
     interfaces::WalletTx wtx = wallet.getWalletTxDetails(rec->hash, status, orderForm, inMempool, numBlocks, adjustedTime);
-
     QString strHTML;
 
     strHTML.reserve(4000);
@@ -92,7 +146,7 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
     if (wtx.tx->nType == TRANSACTION_FUTURE)
     {
         CFutureTx ftx;
-        strHTML += FutureTxDescToHTML(wtx, ftx, unit);
+        strHTML += FutureTxDescToHTML(wtx, status, ftx, unit);
     }
     //
     // From

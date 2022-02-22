@@ -200,7 +200,6 @@ TransactionView::TransactionView(QWidget* parent) :
     connect(showDetailsAction, SIGNAL(triggered()), this, SLOT(showDetails()));
     connect(showAddressQRCodeAction, SIGNAL(triggered()), this, SLOT(showAddressQRCode()));
 
-    updatePrivateSendVisibility();
 }
 
 void TransactionView::setModel(WalletModel *_model)
