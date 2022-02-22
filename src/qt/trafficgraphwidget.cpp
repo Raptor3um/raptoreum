@@ -7,7 +7,7 @@
 #include <qt/clientmodel.h>
 #include <qt/guiutil.h>
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 
 #include <QPainter>
 #include <QColor>
