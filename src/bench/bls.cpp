@@ -355,7 +355,7 @@ static void BLS_Verify_BatchedParallel(benchmark::State& state)
     }
     cancel = true;
     while (blsWorker.IsAsyncVerifyInProgress()) {
-        MilliSleep(100);
+        UninterruptibleSleep(std::chrono::milliseconds{100});
     }
 }
 

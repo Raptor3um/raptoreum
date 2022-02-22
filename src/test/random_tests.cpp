@@ -48,11 +48,18 @@ BOOST_AUTO_TEST_CASE(fastrandom_tests)
         BOOST_CHECK(GetRand(std::numeric_limits<uint64_t>::max()) != uint64_t{10393729187455219830U});
         BOOST_CHECK(GetRandInt(std::numeric_limits<int>::max()) != int{769702006});
     }
-    FastRandomContext ctx3;
-    FastRandomContext ctx4;
-    BOOST_CHECK(ctx3.rand64() != ctx4.rand64()); // extremely unlikely to be equal
-    BOOST_CHECK(ctx3.rand256() != ctx4.rand256());
-    BOOST_CHECK(ctx3.randbytes(7) != ctx4.randbytes(7));
+    {
+      FastRandomContext ctx3, ctx4;
+      BOOST_CHECK(ctx3.rand64() != ctx4.rand64()); // extremely unlikely to be equal
+    }
+    {
+      FastRandomContext ctx3, ctx4;
+      BOOST_CHECK(ctx3.rand256() != ctx4.rand256());
+    }
+    {
+      FastRandomContext ctx3, ctx4;
+      BOOST_CHECK(ctx3.randbytes(7) != ctx4.randbytes(7));
+    }
 }
 
 BOOST_AUTO_TEST_CASE(fastrandom_randbits)
@@ -80,7 +87,7 @@ BOOST_AUTO_TEST_CASE(stdrandom_test)
         BOOST_CHECK(x >= 3);
         BOOST_CHECK(x <= 9);
 
-        std::vector<int> test{1,2,3,4,5,6,7,8,9,10};
+        std::vector<int> test{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
         std::shuffle(test.begin(), test.end(), ctx);
         for (int j = 1; j <= 10; ++j) {
             BOOST_CHECK(std::find(test.begin(), test.end(), j) != test.end());
@@ -90,7 +97,6 @@ BOOST_AUTO_TEST_CASE(stdrandom_test)
             BOOST_CHECK(std::find(test.begin(), test.end(), j) != test.end());
         }
     }
-
 }
 
 /** Test that Shuffle reaches every permutation with equal probability. */

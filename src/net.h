@@ -50,13 +50,13 @@ namespace boost {
     class thread_group;
 } // namespace boost
 
-/** Time between pings automatically sent out for latency probing and keepalive (in seconds). */
+/** Time between pings automatically sent out for latency probing and keepalive. */
 static const int PING_INTERVAL = 2 * 60;
 /** Time after which to disconnect, after waiting for a ping response (or inactivity). */
 static const int TIMEOUT_INTERVAL = 20 * 60;
 /** Minimum time between warnings printed to log. */
 static const int WARNING_INTERVAL = 10 * 60;
-/** Run the feeler connection loop once every 2 minutes or 120 seconds. **/
+/** Run the feeler connection loop once every 2 minutes. **/
 static const int FEELER_INTERVAL = 120;
 /** The maximum number of entries in an 'inv' protocol message */
 static const unsigned int MAX_INV_SZ = 50000;
@@ -76,12 +76,6 @@ static const int MAX_ADDNODE_CONNECTIONS = 8;
 static const int INBOUND_EVICTION_PROTECTION_TIME = 1;
 /** -listen default */
 static const bool DEFAULT_LISTEN = true;
-/** -upnp default */
-#ifdef USE_UPNP
-static const bool DEFAULT_UPNP = USE_UPNP;
-#else
-static const bool DEFAULT_UPNP = false;
-#endif
 /** The maximum number of peer connections to maintain.
  *  Smartnodes are forced to accept at least this many connections
  */
@@ -453,12 +447,12 @@ public:
     // response true if the limit for serving historical blocks has been reached
     bool OutboundTargetReached(bool historicalBlockServingLimit);
 
-    //!response the bytes left in the current max outbound cycle
-    // in case of no limit, it will always response 0
+    //! response the bytes left in the current max outbound cycle
+    //! in case of no limit, it will always response 0
     uint64_t GetOutboundTargetBytesLeft();
 
-    //!response the time in second left in the current max outbound cycle
-    // in case of no limit, it will always response 0
+    //! returns the time left in the current max outbound cycle
+    //! in case of no limit, it will always return 0
     uint64_t GetMaxOutboundTimeLeftInCycle();
 
     uint64_t GetTotalBytesRecv();
@@ -557,8 +551,8 @@ private:
     void UnregisterEvents(CNode* pnode);
 
     // Network usage totals
-    CCriticalSection cs_totalBytesRecv;
-    CCriticalSection cs_totalBytesSent;
+    RecursiveMutex cs_totalBytesRecv;
+    RecursiveMutex cs_totalBytesSent;
     uint64_t nTotalBytesRecv GUARDED_BY(cs_totalBytesRecv);
     uint64_t nTotalBytesSent GUARDED_BY(cs_totalBytesSent);
 
@@ -581,23 +575,23 @@ private:
     std::vector<ListenSocket> vhListenSocket;
     std::atomic<bool> fNetworkActive;
     banmap_t setBanned GUARDED_BY(cs_setBanned);
-    CCriticalSection cs_setBanned;
+    RecursiveMutex cs_setBanned;
     bool setBannedIsDirty GUARDED_BY(cs_setBanned);
     bool fAddressesInitialized;
     CAddrMan addrman;
     std::deque<std::string> vOneShots GUARDED_BY(cs_vOneShots);
-    CCriticalSection cs_vOneShots;
+    RecursiveMutex cs_vOneShots;
     std::vector<std::string> vAddedNodes GUARDED_BY(cs_vAddedNodes);
-    CCriticalSection cs_vAddedNodes;
+    RecursiveMutex cs_vAddedNodes;
     std::vector<uint256> vPendingSmartnodes;
     std::map<std::pair<Consensus::LLMQType, uint256>, std::set<uint256>> smartnodeQuorumNodes; // protected by cs_vPendingSmartnodes
     std::map<std::pair<Consensus::LLMQType, uint256>, std::set<uint256>> smartnodeQuorumRelayMembers; // protected by cs_vPendingSmartnodes
     std::set<uint256> smartnodePendingProbes;
-    mutable CCriticalSection cs_vPendingSmartnodes;
+    mutable RecursiveMutex cs_vPendingSmartnodes;
     std::vector<CNode*> vNodes;
     std::list<CNode*> vNodesDisconnected;
     std::unordered_map<SOCKET, CNode*> mapSocketToNode;
-    mutable CCriticalSection cs_vNodes;
+    mutable RecursiveMutex cs_vNodes;
     std::atomic<NodeId> nLastNodeId;
     unsigned int nPrevNodeCount;
 
@@ -622,7 +616,7 @@ private:
     bool fMsgProcWake;
 
     std::condition_variable condMsgProc;
-    std::mutex mutexMsgProc;
+    Mutex mutexMsgProc;
     std::atomic<bool> flagInterruptMsgProc;
 
     CThreadInterrupt interruptNet;
@@ -646,7 +640,7 @@ private:
     std::unordered_map<NodeId, CNode*> mapSendableNodes GUARDED_BY(cs_vNodes);
     /** Protected by cs_mapNodesWithDataToSend */
     std::unordered_map<NodeId, CNode*> mapNodesWithDataToSend GUARDED_BY(cs_mapNodesWithDataToSend);
-    mutable CCriticalSection cs_mapNodesWithDataToSend;
+    mutable RecursiveMutex cs_mapNodesWithDataToSend;
 
     std::thread threadDNSAddressSeed;
     std::thread threadSocketHandler;
@@ -666,9 +660,6 @@ private:
 };
 extern std::unique_ptr<CConnman> g_connman;
 void Discover();
-void StartMapPort();
-void InterruptMapPort();
-void StopMapPort();
 unsigned short GetListenPort();
 bool BindListenPort(const CService &bindAddr, std::string& strError, bool fWhitelisted = false);
 
@@ -711,7 +702,7 @@ enum
     LOCAL_NONE,   // unknown
     LOCAL_IF,     // address a local interface listens on
     LOCAL_BIND,   // address explicit bound to
-    LOCAL_UPNP,   // address reported by UPnP
+    LOCAL_MAPPED,   // address reported by UPnP or NAT-PMP
     LOCAL_MANUAL, // address explicitly specified (-externalip=)
 
     LOCAL_MAX
@@ -745,7 +736,7 @@ struct LocalServiceInfo {
     int nPort;
 };
 
-extern CCriticalSection cs_mapLocalHost;
+extern RecursiveMutex cs_mapLocalHost;
 extern std::map<CNetAddr, LocalServiceInfo> mapLocalHost GUARDED_BY(cs_mapLocalHost);
 typedef std::map<std::string, uint64_t> mapMsgCmdSize; //command, total bytes
 
@@ -800,10 +791,10 @@ public:
     CMessageHeader hdr;             // complete header
     unsigned int nHdrPos;
 
-    CDataStream vRecv;              // received message data
+    CDataStream vRecv;              //!< received message data
     unsigned int nDataPos;
 
-    int64_t nTime;                  // time (in microseconds) of message receipt.
+    int64_t nTime;                  //!< time of message receipt.
 
     CNetMessage(const CMessageHeader::MessageStartChars& pchMessageStartIn, int nTypeIn, int nVersionIn) : hdrbuf(nTypeIn, nVersionIn), hdr(pchMessageStartIn), vRecv(nTypeIn, nVersionIn) {
         hdrbuf.resize(24);
@@ -846,15 +837,15 @@ public:
     uint64_t nSendBytes GUARDED_BY(cs_vSend);
     std::list<std::vector<unsigned char>> vSendMsg GUARDED_BY(cs_vSend);
     std::atomic<size_t> nSendMsgSize;
-    CCriticalSection cs_vSend;
-    CCriticalSection cs_hSocket;
-    CCriticalSection cs_vRecv;
+    RecursiveMutex cs_vSend;
+    RecursiveMutex cs_hSocket;
+    RecursiveMutex cs_vRecv;
 
-    CCriticalSection cs_vProcessMsg;
+    RecursiveMutex cs_vProcessMsg;
     std::list<CNetMessage> vProcessMsg GUARDED_BY(cs_vProcessMsg);
     size_t nProcessQueueSize;
 
-    CCriticalSection cs_sendProcessing;
+    RecursiveMutex cs_sendProcessing;
 
     std::deque<CInv> vRecvGetData;
     uint64_t nRecvBytes GUARDED_BY(cs_vRecv);
@@ -878,24 +869,24 @@ public:
     // store the sanitized version in cleanSubVer. The original should be used when dealing with
     // the network or wire types and the cleaned string used when displayed or logged.
     std::string strSubVer GUARDED_BY(cs_SubVer), cleanSubVer GUARDED_BY(cs_SubVer);
-    CCriticalSection cs_SubVer; // used for both cleanSubVer and strSubVer
+    RecursiveMutex cs_SubVer; // used for both cleanSubVer and strSubVer
     bool fWhitelisted; // This peer can bypass DoS banning.
     bool fFeeler; // If true this node is being used as a short lived feeler.
     bool fOneShot;
     bool m_manual_connection;
-    bool fClient;
-    bool m_limited_node; //after BIP159
+    bool fClient; // set by version message
+    bool m_limited_node; // after BIP159, set by version message
     const bool fInbound;
     std::atomic_bool fSuccessfullyConnected;
     std::atomic_bool fDisconnect;
     std::atomic<int64_t> nDisconnectLingerTime{0};
     std::atomic_bool fSocketShutdown{false};
-    std::atomic_bool fOtherSideDisconnected { false };
-    // We use fRelayTxes for two purposes -
+    std::atomic_bool fOtherSideDisconnected{false};
+    // We use fRelayTxes for two purposes
     // a) it allows us to not relay tx invs before receiving the peer's version message
     // b) the peer may tell us in its version message that we should not relay tx invs
     //    unless it loads a bloom filter.
-    bool fRelayTxes; //protected by cs_filter
+    bool fRelayTxes GUARDED_BY(cs_filter);
     bool fSentAddr;
     // If 'true' this node will be disconnected on CSmartnodeMan::ProcessSmartnodeConnections()
     bool m_smartnode_connection;
@@ -904,7 +895,7 @@ public:
     // If 'true', we identified it as an intra-quorum relay connection
     bool m_smartnode_iqr_connection{false};
     CSemaphoreGrant grantOutbound;
-    CCriticalSection cs_filter;
+    RecursiveMutex cs_filter;
     std::unique_ptr<CBloomFilter> pfilter PT_GUARDED_BY(cs_filter){nullptr};
     std::atomic<int> nRefCount;
 
@@ -917,7 +908,6 @@ public:
     std::atomic_bool fCanSendData;
 
 protected:
-
     mapMsgCmdSize mapSendBytesPerMsgCmd;
     mapMsgCmdSize mapRecvBytesPerMsgCmd GUARDED_BY(cs_vRecv);
 
@@ -944,7 +934,7 @@ public:
     std::vector<uint256> vInventoryBlockToSend GUARDED_BY(cs_inventory);
     // List of non-tx/non-block inventory items
     std::vector<CInv> vInventoryOtherToSend;
-    CCriticalSection cs_inventory;
+    RecursiveMutex cs_inventory;
     std::chrono::microseconds nNextInvSend{0};
     // Used for headers announcements - unfiltered blocks to relay
     // Also protected by cs_inventory
@@ -974,7 +964,7 @@ public:
     std::atomic<bool> fSendDSQueue{false};
 
     // Challenge sent in VERSION to be answered with MNAUTH (only happens between MNs)
-    mutable CCriticalSection cs_mnauth;
+    mutable RecursiveMutex cs_mnauth;
     uint256 sentMNAuthChallenge;
     uint256 receivedMNAuthChallenge;
     uint256 verifiedProRegTxHash;
@@ -1001,12 +991,12 @@ private:
     int nSendVersion;
     std::list<CNetMessage> vRecvMsg;  // Used only by SocketHandler thread
 
-    mutable CCriticalSection cs_addrName;
+    mutable RecursiveMutex cs_addrName;
     std::string addrName GUARDED_BY(cs_addrName);
 
     // Our address, as reported by the peer
     CService addrLocal GUARDED_BY(cs_addrLocal);
-    mutable CCriticalSection cs_addrLocal;
+    mutable RecursiveMutex cs_addrLocal;
 public:
 
     NodeId GetId() const {

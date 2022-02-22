@@ -183,6 +183,7 @@ protected:
 
     int nType;
     int nVersion;
+
 public:
 
     typedef vector_type::allocator_type   allocator_type;

@@ -20,6 +20,7 @@
 #include <wallet/coincontrol.h>
 #include <ui_interface.h>
 #include <txmempool.h>
+#include <validation.h>
 #include <policy/fees.h>
 #include <wallet/fees.h>
 #include <wallet/wallet.h>

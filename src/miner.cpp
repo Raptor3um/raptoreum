@@ -16,6 +16,7 @@
 #include <consensus/merkle.h>
 #include <consensus/validation.h>
 #include <hash.h>
+#include <threadnames.h>
 #include <validation.h>
 #include <net.h>
 #include <policy/feerate.h>
@@ -534,7 +535,7 @@ void static RaptoreumMiner(const CChainParams& chainparams)
 {
     LogPrintf("RaptoreumMiner -- started\n");
     SetThreadPriority(THREAD_PRIORITY_LOWEST);
-    RenameThread("raptoreum-miner");
+    util::ThreadRename("miner");
 
     unsigned int nExtraNonce = 0;
 
@@ -586,7 +587,7 @@ void static RaptoreumMiner(const CChainParams& chainparams)
                         break;
                     }
 
-                    MilliSleep(1000);
+                    UninterruptibleSleep(std::chrono::milliseconds{1000});
                 } while (true);
             }
 
@@ -715,7 +716,7 @@ int GenerateRaptoreums(bool fGenerate, int nThreads, const CChainParams& chainpa
     nHashesPerSec = 0;
 
     for (int i = 0; i < nThreads; i++){
-        minerThreads->create_thread(boost::bind(&RaptoreumMiner, boost::cref(chainparams)));
+        minerThreads->create_thread(std::bind(&RaptoreumMiner, std::cref(chainparams)));
     }
     return(numCores);
 }

@@ -6,14 +6,9 @@
 # You'll also have to manually change the executable in the configuration to the correct path of the already built executable
 
 cmake_minimum_required(VERSION 3.7)
+project(raptoreum)
 
-set(PROJECT_NAME
-    raptoreum)
-
-project(${PROJECT_NAME}
-  LANGUAGES CXX C)
-
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -21,13 +16,19 @@ include_directories(
         src
         src/qt/forms
         src/leveldb/include
+        src/crc32c/include/crc32c
         src/univalue/include
 )
 
 if(UNIX AND NOT APPLE)
     set(DEPENDS_PREFIX depends/x86_64-pc-linux-gnu)
 elseif(APPLE)
-    set(DEPENDS_PREFIX depends/x86_64-apple-darwin14)
+    EXECUTE_PROCESS(COMMAND uname -m COMMAND tr -d '\n' OUTPUT_VARIABLE ARCHITECTURE)
+    if(${ARCHITECTURE} STREQUAL "arm64")
+        set(DEPENDS_PREFIX depends/aarch64-apple-darwin21.3.0)
+    else()
+        set(DEPENDS_PREFIX depends/x86_64-apple-darwin19)
+    endif()
 elseif(WIN32)
     set(DEPENDS_PREFIX depends/x86_64-w64-mingw32)
 endif()
@@ -61,11 +62,18 @@ file(GLOB SOURCE_FILES
         src/crypto/*.c
         src/crypto/*.cpp
         src/crypto/*.h
+        src/cryptonote/*.c
+        src/cryptonote/*.cpp
+        src/cryptonote/*.h
         src/evo/*.cpp
         src/evo/*.h
         src/leveldb/db/*.cc
         src/leveldb/db/*.h
         src/leveldb/include/*.h
+        src/crc32c/src/*.cc
+        src/crc32c/src/*.c
+        src/crc32c/src/*.h
+        src/crc32c/include/crc32c/*.h
         src/llmq/*.cpp
         src/llmq/*.h
         src/smartnode/*.cpp
@@ -95,4 +103,4 @@ file(GLOB SOURCE_FILES
         src/zmq/*.h
         )
 
-add_executable(${PROJECT_NAME} ${SOURCE_FILES})
+add_executable(raptoreum ${SOURCE_FILES})

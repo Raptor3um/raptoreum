@@ -19,7 +19,7 @@ class CPowCache : public unordered_lru_cache<uint256, uint256, std::hash<uint256
 
         int  nVersion;
         bool bValidate;
-        CCriticalSection cs;
+        RecursiveMutex cs;
 
     public:
         static CPowCache& Instance();

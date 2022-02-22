@@ -25,9 +25,12 @@
 #include <warnings.h>
 
 #include <stdint.h>
+#include <functional>
 
 #include <QDebug>
 #include <QTimer>
+
+namespace pl = std::placeholders;
 
 static int64_t nLastHeaderTipUpdateNotification = 0;
 static int64_t nLastBlockTipUpdateNotification = 0;
@@ -282,15 +285,15 @@ static void NotifyAdditionalDataSyncProgressChanged(ClientModel *clientmodel, do
 void ClientModel::subscribeToCoreSignals()
 {
     // Connect signals to client
-    m_handler_show_progress = m_node.handleShowProgress(boost::bind(ShowProgress, this, _1, _2));
-    m_handler_notify_num_connections_changed = m_node.handleNotifyNumConnectionsChanged(boost::bind(NotifyNumConnectionsChanged, this, _1));
-    m_handler_notify_network_active_changed = m_node.handleNotifyNetworkActiveChanged(boost::bind(NotifyNetworkActiveChanged, this, _1));
-    m_handler_notify_alert_changed = m_node.handleNotifyAlertChanged(boost::bind(NotifyAlertChanged, this));
-    m_handler_banned_list_changed = m_node.handleBannedListChanged(boost::bind(BannedListChanged, this));
-    m_handler_notify_block_tip = m_node.handleNotifyBlockTip(boost::bind(BlockTipChanged, this, _1, _2,_3, _4, _5, false));
-    m_handler_notify_header_tip = m_node.handleNotifyHeaderTip(boost::bind(BlockTipChanged, this, _1, _2, _3, _4, _5, true));
-    m_handler_notify_smartnodelist_changed = m_node.handleNotifySmartnodeListChanged(boost::bind(NotifySmartnodeListChanged, this, _1));
-    m_handler_notify_additional_data_sync_progess_changed = m_node.handleNotifyAdditionalDataSyncProgressChanged(boost::bind(NotifyAdditionalDataSyncProgressChanged, this, _1));
+    m_handler_show_progress = m_node.handleShowProgress(std::bind(ShowProgress, this, pl::_1, pl::_2));
+    m_handler_notify_num_connections_changed = m_node.handleNotifyNumConnectionsChanged(std::bind(NotifyNumConnectionsChanged, this, pl::_1));
+    m_handler_notify_network_active_changed = m_node.handleNotifyNetworkActiveChanged(std::bind(NotifyNetworkActiveChanged, this, pl::_1));
+    m_handler_notify_alert_changed = m_node.handleNotifyAlertChanged(std::bind(NotifyAlertChanged, this));
+    m_handler_banned_list_changed = m_node.handleBannedListChanged(std::bind(BannedListChanged, this));
+    m_handler_notify_block_tip = m_node.handleNotifyBlockTip(std::bind(BlockTipChanged, this, pl::_1, pl::_2,pl::_3, pl::_4, pl::_5, false));
+    m_handler_notify_header_tip = m_node.handleNotifyHeaderTip(std::bind(BlockTipChanged, this, pl::_1, pl::_2, pl::_3, pl::_4, pl::_5, true));
+    m_handler_notify_smartnodelist_changed = m_node.handleNotifySmartnodeListChanged(std::bind(NotifySmartnodeListChanged, this, pl::_1));
+    m_handler_notify_additional_data_sync_progess_changed = m_node.handleNotifyAdditionalDataSyncProgressChanged(std::bind(NotifyAdditionalDataSyncProgressChanged, this, pl::_1));
 }
 
 void ClientModel::unsubscribeFromCoreSignals()

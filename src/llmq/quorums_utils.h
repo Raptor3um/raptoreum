@@ -20,7 +20,7 @@ namespace llmq
 
 // Use a separate cache instance instead of versionbitscache to avoid locking cs_main
 // and dealing with all kinds of deadlocks.
-extern CCriticalSection cs_llmq_vbc;
+extern RecursiveMutex cs_llmq_vbc;
 extern VersionBitsCache llmq_versionbitscache;
 
 static const bool DEFAULT_ENABLE_QUORUM_DATA_RECOVERY = true;

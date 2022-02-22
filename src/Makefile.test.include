@@ -128,11 +128,11 @@ if ENABLE_WALLET
 test_test_raptoreum_LDADD += $(LIBBITCOIN_WALLET)
 endif
 test_test_raptoreum_LDADD += $(LIBBITCOIN_SERVER) $(LIBBITCOIN_CLI) $(LIBBITCOIN_COMMON) $(LIBBITCOIN_UTIL) $(LIBBITCOIN_CONSENSUS) $(LIBBITCOIN_CRYPTO) $(LIBUNIVALUE) \
-  $(LIBLEVELDB) $(LIBLEVELDB_SSE42) $(LIBMEMENV) $(BACKTRACE_LIB) $(BOOST_LIBS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) $(LIBSECP256K1) $(EVENT_LIBS) $(EVENT_PTHREADS_LIBS)
+  $(LIBLEVELDB) $(LIBLEVELDB_SSE42) $(LIBMEMENV) $(BACKTRACE_LIB) $(BOOST_LIBS) $(LIBSECP256K1) $(EVENT_LIBS) $(EVENT_PTHREADS_LIBS)
 test_test_raptoreum_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 
-test_test_raptoreum_LDADD += $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(BLS_LIBS)
-test_test_raptoreum_LDFLAGS = $(LDFLAGS_WRAP_EXCEPTIONS) $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS) $(PTHREAD_FLAGS) -static
+test_test_raptoreum_LDADD += $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(BLS_LIBS)
+test_test_raptoreum_LDFLAGS = $(LDFLAGS_WRAP_EXCEPTIONS) $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) -static
 
 if ENABLE_ZMQ
 test_test_raptoreum_LDADD += $(ZMQ_LIBS)
@@ -182,9 +182,25 @@ check-local:
 	@echo "Running test/util/rpcauth-test.py..."
 	$(PYTHON) $(top_builddir)/test/util/rpcauth-test.py
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C secp256k1 check
-if EMBEDDED_UNIVALUE
-	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C univalue check
-endif
+
+UNIVALUE_TESTS = univalue/test/object univalue/test/unitester univalue/test/no_nul
+noinst_PROGRAMS += $(UNIVALUE_TESTS)
+TESTS += $(UNIVALUE_TESTS)
+
+univalue_test_unitester_SOURCES = $(UNIVALUE_TEST_UNITESTER_INT)
+univalue_test_unitester_LDADD = $(LIBUNIVALUE)
+univalue_test_unitester_CPPFLAGS = -I$(srcdir)/$(UNIVALUE_INCLUDE_DIR_INT) -DJSON_TEST_SRC=\"$(srcdir)/$(UNIVALUE_TEST_DATA_DIR_INT)\"
+univalue_test_unitester_LDFLAGS = -static $(LIBTOOL_APP_LDFLAGS)
+
+univalue_test_no_nul_SOURCES = $(UNIVALUE_TEST_NO_NUL_INT)
+univalue_test_no_nul_LDADD = $(LIBUNIVALUE)
+univalue_test_no_nul_CPPFLAGS = -I$(srcdir)/$(UNIVALUE_INCLUDE_DIR_INT)
+univalue_test_no_nul_LDFLAGS = -static $(LIBTOOL_APP_LDFLAGS)
+
+univalue_test_object_SOURCES = $(UNIVALUE_TEST_OBJECT_INT)
+univalue_test_object_LDADD = $(LIBUNIVALUE)
+univalue_test_object_CPPFLAGS = -I$(srcdir)/$(UNIVALUE_INCLUDE_DIR_INT)
+univalue_test_object_LDFLAGS = -static $(LIBTOOL_APP_LDFLAGS)
 
 test/data/%.json.h: test/data/%.json
 	@$(MKDIR_P) $(@D)

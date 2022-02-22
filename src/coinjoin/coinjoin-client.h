@@ -177,7 +177,7 @@ private:
 
     // TODO: or map<denom, CCoinJoinClientSession> ??
     std::deque<CCoinJoinClientSession> deqSessions;
-    mutable CCriticalSection cs_deqsessions;
+    mutable RecursiveMutex cs_deqsessions;
 
     bool fMixing{false};
 

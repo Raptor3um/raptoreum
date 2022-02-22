@@ -41,7 +41,16 @@ EXCLUDE = [
 ]
 EXCLUDE_COMPILED = re.compile('|'.join([fnmatch.translate(m) for m in EXCLUDE]))
 
-INCLUDE = ['*.h', '*.cpp', '*.cc', '*.c', '*.py']
+EXCLUDE_DIRS = [
+    # git subtrees
+    "src/crypto/ctaes/",
+    "src/leveldb/",
+    "src/secp256k1/",
+    "src/univalue/",
+    "src/crc32c/",
+]
+
+INCLUDE = ['*.h', '*.cpp', '*.cc', '*.c', '*.mm', '*.py', '*.sh', '*.bash-completion']
 INCLUDE_COMPILED = re.compile('|'.join([fnmatch.translate(m) for m in INCLUDE]))
 
 def applies_to_file(filename):

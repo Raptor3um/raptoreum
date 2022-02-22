@@ -8,6 +8,7 @@
 #include <netbase.h>
 #include <net.h>
 #include <util.h>
+#include <utiltime.h>
 #include <crypto/hmac_sha256.h>
 
 #include <vector>
@@ -755,7 +756,7 @@ void StartTorControl()
         return;
     }
 
-    torControlThread = std::thread(std::bind(&TraceThread<void (*)()>, "torcontrol", &TorControlThread));
+    torControlThread = std::thread(&TraceThread<std::function<void()>>, "torcontrol", &TorControlThread);
 }
 
 void InterruptTorControl()

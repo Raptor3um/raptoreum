@@ -305,7 +305,7 @@ bool CCoinJoinBaseSession::IsValidInOuts(const std::vector<CTxIn>& vin, const st
 // Definitions for static data members
 std::vector<CAmount> CCoinJoin::vecStandardDenominations;
 std::map<uint256, CCoinJoinBroadcastTx> CCoinJoin::mapDSTX;
-CCriticalSection CCoinJoin::cs_mapdstx;
+RecursiveMutex CCoinJoin::cs_mapdstx;
 
 void CCoinJoin::InitStandardDenominations()
 {

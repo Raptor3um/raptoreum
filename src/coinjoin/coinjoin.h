@@ -360,7 +360,7 @@ public:
 class CCoinJoinBaseSession
 {
 protected:
-    mutable CCriticalSection cs_coinjoin;
+    mutable RecursiveMutex cs_coinjoin;
 
     std::vector<CCoinJoinEntry> vecEntries; // Masternode/clients entries
 
@@ -398,7 +398,7 @@ public:
 class CCoinJoinBaseManager
 {
 protected:
-    mutable CCriticalSection cs_vecqueue;
+    mutable RecursiveMutex cs_vecqueue;
 
     // The current mixing sessions in progress on the network
     std::vector<CCoinJoinQueue> vecCoinJoinQueue;
@@ -428,7 +428,7 @@ private:
     static std::vector<CAmount> vecStandardDenominations;
     static std::map<uint256, CCoinJoinBroadcastTx> mapDSTX;
 
-    static CCriticalSection cs_mapdstx;
+    static RecursiveMutex cs_mapdstx;
 
     static void CheckDSTXes(const CBlockIndex* pindex);
 

@@ -45,8 +45,7 @@ void CConnmanTest::ClearNodes()
     g_connman->mapNodesWithDataToSend.clear();
 }
 
-uint256 insecure_rand_seed = GetRandHash();
-FastRandomContext insecure_rand_ctx(insecure_rand_seed);
+FastRandomContext insecure_rand_ctx;
 
 extern bool fPrintToConsole;
 extern void noui_connect();
@@ -55,8 +54,8 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName)
   : m_path_root(fs::temp_directory_path() / "test_raptoreum" / strprintf("%lu_%i", (unsigned long)GetTime(), (int)(InsecureRandRange(1 << 30))))
 {
         SHA256AutoDetect();
-        RandomInit();
         ECC_Start();
+        RandomInit();
         BLSInit();
         SetupEnvironment();
         SetupNetworking();
@@ -99,10 +98,10 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
 
         // We have to run a scheduler thread to prevent ActivateBestChain
         // from blocking due to queue overrun.
-        threadGroup.create_thread(boost::bind(&CScheduler::serviceQueue, &scheduler));
+        threadGroup.create_thread(std::bind(&CScheduler::serviceQueue, &scheduler));
         GetMainSignals().RegisterBackgroundSignalScheduler(scheduler);
         mempool.setSanityCheck(1.0);
-        g_connman = std::unique_ptr<CConnman>(new CConnman(0x1337, 0x1337)); // Deterministic randomness for tests.
+        g_connman = MakeUnique<CConnman>(0x1337, 0x1337); // Deterministic randomness for tests.
         connman = g_connman.get();
         pblocktree.reset(new CBlockTreeDB(1 << 20, true));
         pcoinsdbview.reset(new CCoinsViewDB(1 << 23, true));
@@ -117,9 +116,9 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
                 throw std::runtime_error("ActivateBestChain failed.");
             }
         }
-        nScriptCheckThreads = 3;
-        for (int i=0; i < nScriptCheckThreads-1; i++)
-            threadGroup.create_thread(&ThreadScriptCheck);
+        int script_threads = 3;
+        for (int i=0; i < script_threads-1; i++)
+            StartScriptCheckWorkerThreads(script_threads);
         peerLogic.reset(new PeerLogicValidation(connman, scheduler, true));
 }
 

@@ -80,7 +80,7 @@ static RetFormat ParseDataFormat(std::string& param, const std::string& strReq)
     param = strReq.substr(0, pos);
     const std::string suff(strReq, pos + 1);
 
-    for (unsigned int i = 0; i < ARRAYLEN(rf_names); i++)
+    for (unsigned int i = 0; i < std::size(rf_names); i++)
         if (suff == rf_names[i].name)
             return rf_names[i].rf;
 
@@ -92,7 +92,7 @@ static RetFormat ParseDataFormat(std::string& param, const std::string& strReq)
 static std::string AvailableDataFormatsString()
 {
     std::string formats;
-    for (unsigned int i = 0; i < ARRAYLEN(rf_names); i++)
+    for (unsigned int i = 0; i < std::size(rf_names); i++)
         if (strlen(rf_names[i].name) > 0) {
             formats.append(".");
             formats.append(rf_names[i].name);
@@ -445,6 +445,7 @@ static bool rest_getutxos(HTTPRequest* req, const std::string& strURIPart)
         // convert hex to bin, continue then with bin part
         std::vector<unsigned char> strRequestV = ParseHex(strRequestMutable);
         strRequestMutable.assign(strRequestV.begin(), strRequestV.end());
+        [[fallthrough]];
     }
 
     case RetFormat::BINARY: {
@@ -589,7 +590,7 @@ static const struct {
 
 bool StartREST()
 {
-    for (unsigned int i = 0; i < ARRAYLEN(uri_prefixes); i++)
+    for (unsigned int i = 0; i < std::size(uri_prefixes); i++)
         RegisterHTTPHandler(uri_prefixes[i].prefix, false, uri_prefixes[i].handler);
     return true;
 }
@@ -600,6 +601,6 @@ void InterruptREST()
 
 void StopREST()
 {
-    for (unsigned int i = 0; i < ARRAYLEN(uri_prefixes); i++)
+    for (unsigned int i = 0; i < std::size(uri_prefixes); i++)
         UnregisterHTTPHandler(uri_prefixes[i].prefix, false);
 }

@@ -25,7 +25,7 @@ BOOST_FIXTURE_TEST_SUITE(util_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(util_criticalsection)
 {
-    CCriticalSection cs;
+    RecursiveMutex cs;
 
     do {
         LOCK(cs);
@@ -157,7 +157,6 @@ BOOST_AUTO_TEST_CASE(util_HexStr)
         "5f1df16b2b704c8a578d0bbaf74d385cde12c11ee50455f3c438ef4c3fbcf649b6de611feae06279a60939e028a8d65c10b73071a6f16719274855feb0fd8a6704"
     );
 }
-
 
 BOOST_AUTO_TEST_CASE(util_DateTimeStrFormat)
 {
@@ -801,7 +800,7 @@ BOOST_AUTO_TEST_CASE(util_time_GetTime)
     SetMockTime(111);
     // Check that mock time does not change after a sleep
     for (const auto& num_sleep : {0, 1}) {
-        MilliSleep(num_sleep);
+        UninterruptibleSleep(std::chrono::milliseconds{num_sleep});
         BOOST_CHECK_EQUAL(111, GetTime()); // Deprecated time getter
         BOOST_CHECK_EQUAL(111, GetTime<std::chrono::seconds>().count());
         BOOST_CHECK_EQUAL(111000, GetTime<std::chrono::milliseconds>().count());
@@ -812,7 +811,7 @@ BOOST_AUTO_TEST_CASE(util_time_GetTime)
     // Check that system time changes after a sleep
     const auto ms_0 = GetTime<std::chrono::milliseconds>();
     const auto us_0 = GetTime<std::chrono::microseconds>();
-    MilliSleep(1);
+    UninterruptibleSleep(std::chrono::milliseconds{1});
     BOOST_CHECK(ms_0 < GetTime<std::chrono::milliseconds>());
     BOOST_CHECK(us_0 < GetTime<std::chrono::microseconds>());
 }

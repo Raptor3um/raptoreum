@@ -162,7 +162,7 @@ private:
     mutable std::unordered_map<SporkId, bool> mapSporksCachedActive;
     mutable std::unordered_map<SporkId, int64_t> mapSporksCachedValues;
 
-    mutable CCriticalSection cs;
+    mutable RecursiveMutex cs;
     std::unordered_map<uint256, CSporkMessage> mapSporksByHash;
     std::unordered_map<SporkId, std::map<CKeyID, CSporkMessage> > mapSporksActive;
 

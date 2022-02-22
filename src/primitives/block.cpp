@@ -11,7 +11,7 @@
 #include <util.h>
 #include <utilstrencodings.h>
 
-static CCriticalSection cs_pow;
+static RecursiveMutex cs_pow;
 
 uint256 CBlockHeader::GetHash() const
 {

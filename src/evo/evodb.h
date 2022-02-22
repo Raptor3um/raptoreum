@@ -33,7 +33,7 @@ public:
 class CEvoDB
 {
 public:
-    CCriticalSection cs;
+    RecursiveMutex cs;
 private:
     CDBWrapper db;
 

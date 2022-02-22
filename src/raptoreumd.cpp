@@ -19,6 +19,7 @@
 #include <util.h>
 #include <httpserver.h>
 #include <httprpc.h>
+#include <threadnames.h>
 #include <utilstrencodings.h>
 #include <walletinitinterface.h>
 #include <stacktraces.h>
@@ -43,11 +44,11 @@
  * Use the buttons <code>Namespaces</code>, <code>Classes</code> or <code>Files</code> at the top of the page to start navigating the code.
  */
 
-void WaitForShutdown()
+static void WaitForShutdown()
 {
     while (!ShutdownRequested())
     {
-        MilliSleep(200);
+        UninterruptibleSleep(std::chrono::milliseconds{200});
     }
     Interrupt();
 }
@@ -56,9 +57,11 @@ void WaitForShutdown()
 //
 // Start
 //
-bool AppInit(int argc, char* argv[])
+static bool AppInit(int argc, char* argv[])
 {
     bool fRet = false;
+
+    util::ThreadSetInternalName("init");
 
     //
     // Parameters
@@ -92,7 +95,7 @@ bool AppInit(int argc, char* argv[])
             strUsage += "\n" + gArgs.GetHelpMessage();
         }
 
-        fprintf(stdout, "%s", strUsage.c_str());
+        tfm::format(std::cout, "%s", strUsage.c_str());
         return true;
     }
 
@@ -101,33 +104,33 @@ bool AppInit(int argc, char* argv[])
         bool datadirFromCmdLine = gArgs.IsArgSet("-datadir");
         if (datadirFromCmdLine && !fs::is_directory(GetDataDir(false)))
         {
-            fprintf(stderr, "Error: Specified data directory \"%s\" does not exist.\n", gArgs.GetArg("-datadir", "").c_str());
+            tfm::format(std::cerr, "Error: Specified data directory \"%s\" does not exist.\n", gArgs.GetArg("-datadir", "").c_str());
             return false;
         }
         try
         {
             gArgs.ReadConfigFile(gArgs.GetArg("-conf", BITCOIN_CONF_FILENAME));
         } catch (const std::exception& e) {
-            fprintf(stderr,"Error reading configuration file: %s\n", e.what());
+            tfm::format(std::cerr,"Error reading configuration file: %s\n", e.what());
             return false;
         }
         if (!datadirFromCmdLine && !fs::is_directory(GetDataDir(false)))
         {
-            fprintf(stderr, "Error: Specified data directory \"%s\" from config file does not exist.\n", gArgs.GetArg("-datadir", "").c_str());
+            tfm::format(std::cerr, "Error: Specified data directory \"%s\" from config file does not exist.\n", gArgs.GetArg("-datadir", "").c_str());
             return EXIT_FAILURE;
         }
         // Check for -testnet or -regtest parameter (Params() calls are only valid after this clause)
         try {
             SelectParams(gArgs.GetChainName());
         } catch (const std::exception& e) {
-            fprintf(stderr, "Error: %s\n", e.what());
+            tfm::format(std::cerr, "Error: %s\n", e.what());
             return false;
         }
 
         // Error out when loose non-argument tokens are encountered on command line
         for (int i = 1; i < argc; i++) {
             if (!IsSwitchChar(argv[i][0])) {
-                fprintf(stderr, "Error: Command line contains unexpected token '%s', see raptoreumd -h for a list of options.\n", argv[i]);
+                tfm::format(std::cerr, "Error: Command line contains unexpected token '%s', see raptoreumd -h for a list of options.\n", argv[i]);
                 return false;
             }
         }
@@ -159,18 +162,18 @@ bool AppInit(int argc, char* argv[])
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #endif
-            fprintf(stdout, "Raptoreum Core server starting\n");
+            tfm::format(std::cout, "Raptoreum Core server starting\n");
 
             // Daemonize
             if (daemon(1, 0)) { // don't chdir (1), do close FDs (0)
-                fprintf(stderr, "Error: daemon() failed: %s\n", strerror(errno));
+                tfm::format(std::cerr, "Error: daemon() failed: %s\n", strerror(errno));
                 return false;
             }
 #if defined(MAC_OSX)
 #pragma GCC diagnostic pop
 #endif
 #else
-            fprintf(stderr, "Error: -daemon is not supported on this operating system\n");
+            tfm::format(std::cerr, "Error: -daemon is not supported on this operating system\n");
             return false;
 #endif // HAVE_DECL_DAEMON
         }

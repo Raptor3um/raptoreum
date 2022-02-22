@@ -16,7 +16,7 @@
 namespace llmq
 {
 
-CCriticalSection cs_llmq_vbc;
+RecursiveMutex cs_llmq_vbc;
 VersionBitsCache llmq_versionbitscache;
 
 std::vector<CDeterministicMNCPtr> CLLMQUtils::GetAllQuorumMembers(Consensus::LLMQType llmqType, const CBlockIndex* pindexQuorum)
@@ -24,7 +24,7 @@ std::vector<CDeterministicMNCPtr> CLLMQUtils::GetAllQuorumMembers(Consensus::LLM
     if(!IsQuorumTypeEnabled(llmqType, pindexQuorum->pprev)) {
         return {};
     }
-    static CCriticalSection cs_members;
+    static RecursiveMutex cs_members;
     static std::map<Consensus::LLMQType, unordered_lru_cache<uint256, std::vector<CDeterministicMNCPtr>, StaticSaltedHasher>> mapQuorumMembers;
 
     std::vector<CDeterministicMNCPtr> quorumMembers;
@@ -181,7 +181,7 @@ std::set<size_t> CLLMQUtils::CalcDeterministicWatchConnections(Consensus::LLMQTy
 {
     static uint256 qwatchConnectionSeed;
     static std::atomic<bool> qwatchConnectionSeedGenerated{false};
-    static CCriticalSection qwatchConnectionSeedCs;
+    static RecursiveMutex qwatchConnectionSeedCs;
     if (!qwatchConnectionSeedGenerated) {
         LOCK(qwatchConnectionSeedCs);
         qwatchConnectionSeed = GetRandHash();

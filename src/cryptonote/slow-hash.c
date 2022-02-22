@@ -191,7 +191,7 @@ static inline void xor_blocks_dst(const uint8_t* a, const uint8_t* b, uint8_t* d
     ((uint64_t*) dst)[1] = ((uint64_t*) a)[1] ^ ((uint64_t*) b)[1];
 }
 
-void cn_slow_hash(const char* input, char* output, int len, int variant, uint32_t page_size, uint32_t iterations, size_t aes_rounds)
+void cn_slow_hash(const char* input, char* output, uint32_t len, int variant, uint32_t page_size, uint32_t iterations, size_t aes_rounds)
 {
   union cn_slow_hash_state state;
   uint8_t text[INIT_SIZE_BYTE];

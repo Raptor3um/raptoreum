@@ -16,7 +16,7 @@
 #define XMARGIN                 10
 #define YMARGIN                 10
 
-#define DEFAULT_SAMPLE_HEIGHT    1.1f
+#define DEFAULT_SAMPLE_HEIGHT   1.1f
 
 TrafficGraphWidget::TrafficGraphWidget(QWidget *parent) :
     QWidget(parent),
@@ -44,7 +44,6 @@ int TrafficGraphWidget::getGraphRangeMins() const
 {
     return nMins;
 }
-
 
 void TrafficGraphWidget::paintPath(QPainterPath &path, const TrafficGraphData::SampleQueue &queue, SampleChooser chooser)
 {

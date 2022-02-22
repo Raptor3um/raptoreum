@@ -22,7 +22,8 @@ Common `host-platform-triplets` for cross compilation are:
 
 - `i686-w64-mingw32` for Win32
 - `x86_64-w64-mingw32` for Win64
-- `x86_64-apple-darwin14` for MacOSX
+- `x86_64-apple-darwin` for macOS
+- `arm64-apple-darwin` for ARM macOS <-> Apple Silicon M1 Family CPU's
 - `arm-linux-gnueabihf` for Linux ARM 32 bit
 - `aarch64-linux-gnu` for Linux ARM 64 bit
 - `riscv32-linux-gnu` for Linux RISC-V 32 bit
@@ -53,18 +54,26 @@ RISC-V known issue: gcc-7.3.0 and gcc-7.3.1 result in a broken `test_raptoreum` 
 this is apparently fixed in gcc-8.1.0.
 
 Dependency Options:
-The following can be set when running make: make FOO=bar
+The following can be set when running make: `make FOO=bar`
 
-    SOURCES_PATH: downloaded sources will be placed here
-    BASE_CACHE: built packages will be placed here
-    SDK_PATH: Path where sdk's can be found (used by OSX)
-    FALLBACK_DOWNLOAD_PATH: If a source file can't be fetched, try here before giving up
-    NO_QT: Don't download/build/cache qt and its dependencies
-    NO_WALLET: Don't download/build/cache libs needed to enable the wallet
-    NO_UPNP: Don't download/build/cache packages needed for enabling upnp
-    DEBUG: disable some optimizations and enable more runtime checking
-    HOST_ID_SALT: Optional salt to use when generating host package ids
-    BUILD_ID_SALT: Optional salt to use when generating build package ids
+    - `SOURCES_PATH`: downloaded sources will be placed here
+    - `BASE_CACHE`: built packages will be placed here
+    - `SDK_PATH`: Path where sdk's can be found (used by OSX)
+    - `FALLBACK_DOWNLOAD_PATH`: If a source file can't be fetched, try here before giving up
+    - `NO_QT`: Don't download/build/cache qt and its dependencies
+    - `NO_WALLET`: Don't download/build/cache libs needed to enable the wallet
+    - `NO_UPNP`: Don't download/build/cache packages needed for enabling upnp
+    - `NO_NATPMP`
+    - `ALLOW_HOST_PACKAGES`: Packages that are missed in dependencies (due to `NO_*` option
+      or build script logic) are searched for among the host system packaging using
+      `pkg-config`. It allows building with packages of other (newer) versions.
+    - `MULTIPROCESS`: build libmultiprocess (experimental, require cmake)
+    - `DEBUG`: disable some optimizations and enable more runtime checking
+    - `HOST_ID_SALT`: Optional salt to use when generating host package ids
+    - `BUILD_ID_SALT`: Optional salt to use when generating build package ids
+    - `FORCE_USE_SYSTEM_CLANG`: (EXPERTS_ONLY!!!) When cross-compiling for macOS, 
+      use Clang found in the system's `$PATH` rather than the default prebuilt
+      release of Clang from llvm.org. Clang 8 or later is required.
 
 If some packages are not built, for example `make NO_WALLET=1`, the appropriate
 options will be passed to Raptoreum Core's configure. In this case, `--disable-wallet`.

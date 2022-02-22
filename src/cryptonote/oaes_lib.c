@@ -40,7 +40,9 @@ static const char _NR[] = {
 #include <stdlib.h>
 #include <stdio.h>
 
-#if !defined(__APPLE__)
+#ifdef __APPLE__
+#include <malloc/malloc.h>
+#else
 #include <malloc.h>
 #endif
 

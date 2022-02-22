@@ -84,7 +84,7 @@ public:
 class CInstantSendManager : public CRecoveredSigsListener
 {
 private:
-    mutable CCriticalSection cs;
+    mutable RecursiveMutex cs;
     CInstantSendDb db;
 
     std::atomic<bool> fUpgradedDB{false};

@@ -10,7 +10,6 @@
 
 #include <support/allocators/secure.h>
 #include <chainparamsbase.h>
-#include <ctpl.h>
 #include <random.h>
 #include <serialize.h>
 #include <stacktraces.h>
@@ -69,10 +68,6 @@
 #include <shlobj.h>
 #endif
 
-#ifdef HAVE_SYS_PRCTL_H
-#include <sys/prctl.h>
-#endif
-
 #ifdef HAVE_MALLOPT_ARENA_MAX
 #include <malloc.h>
 #endif
@@ -84,9 +79,6 @@
 #include <boost/program_options/detail/config_file.hpp>
 #include <boost/program_options/parsers.hpp>
 #include <boost/thread.hpp>
-#include <openssl/crypto.h>
-#include <openssl/rand.h>
-#include <openssl/conf.h>
 
 // Application startup time (used for uptime calculation)
 const int64_t nStartupTime = GetTime();
@@ -109,54 +101,6 @@ const char * const BITCOIN_PID_FILENAME = "raptoreumd.pid";
 ArgsManager gArgs;
 
 CTranslationInterface translationInterface;
-
-/** Init OpenSSL library multithreading support */
-static std::unique_ptr<CCriticalSection[]> ppmutexOpenSSL;
-void locking_callback(int mode, int i, const char* file, int line) NO_THREAD_SAFETY_ANALYSIS
-{
-    if (mode & CRYPTO_LOCK) {
-        ENTER_CRITICAL_SECTION(ppmutexOpenSSL[i]);
-    } else {
-        LEAVE_CRITICAL_SECTION(ppmutexOpenSSL[i]);
-    }
-}
-
-// Singleton for wrapping OpenSSL setup/teardown.
-class CInit
-{
-public:
-    CInit()
-    {
-        // Init OpenSSL library multithreading support
-        ppmutexOpenSSL.reset(new CCriticalSection[CRYPTO_num_locks()]);
-        CRYPTO_set_locking_callback(locking_callback);
-
-        // OpenSSL can optionally load a config file which lists optional loadable modules and engines.
-        // We don't use them so we don't require the config. However some of our libs may call functions
-        // which attempt to load the config file, possibly resulting in an exit() or crash if it is missing
-        // or corrupt. Explicitly tell OpenSSL not to try to load the file. The result for our libs will be
-        // that the config appears to have been loaded and there are no modules/engines available.
-        OPENSSL_no_config();
-
-#ifdef WIN32
-        // Seed OpenSSL PRNG with current contents of the screen
-        RAND_screen();
-#endif
-
-        // Seed OpenSSL PRNG with performance counter
-        RandAddSeed();
-    }
-    ~CInit()
-    {
-        // Securely erase the memory used by the PRNG
-        RAND_cleanup();
-        // Shutdown OpenSSL library multithreading support
-        CRYPTO_set_locking_callback(nullptr);
-        // Clear the set of locks now to maintain symmetry with the constructor.
-        ppmutexOpenSSL.reset();
-    }
-}
-instance_of_cinit;
 
 /** A map that contains all the currently held directory locks. After
  * successful locking, these will be held here until the global destructor
@@ -661,7 +605,7 @@ void PrintExceptionContinue(const std::exception_ptr pex, const char* pszExcepti
 {
     std::string message = strprintf("\"%s\" raised an exception\n%s", pszExceptionOrigin, GetPrettyExceptionStr(pex));
     LogPrintf("\n\n************************\n%s\n", message);
-    fprintf(stderr, "\n\n************************\n%s\n", message.c_str());
+    tfm::format(std::cerr, "\n\n************************\n%s\n", message.c_str());
 }
 
 fs::path GetDefaultDataDir()
@@ -694,7 +638,7 @@ static fs::path g_blocks_path_cached;
 static fs::path g_blocks_path_cache_net_specific;
 static fs::path pathCached;
 static fs::path pathCachedNetSpecific;
-static CCriticalSection csPathCached;
+static RecursiveMutex csPathCached;
 
 const fs::path &GetBlocksDir(bool fNetSpecific)
 {
@@ -874,8 +818,7 @@ void CreatePidFile(const fs::path &path, pid_t pid)
 bool RenameOver(fs::path src, fs::path dest)
 {
 #ifdef WIN32
-    return MoveFileExA(src.string().c_str(), dest.string().c_str(),
-                       MOVEFILE_REPLACE_EXISTING) != 0;
+    return MoveFileExA(src.string().c_str(), dest.string().c_str(), MOVEFILE_REPLACE_EXISTING) != 0;
 #else
     int rc = std::rename(src.string().c_str(), dest.string().c_str());
     return (rc == 0);
@@ -914,7 +857,7 @@ bool FileCommit(FILE *file)
         return false;
     }
 #else
-    #if defined(__linux__) || defined(__NetBSD__)
+    #if HAVE_FDATASYNC
     if (fdatasync(fileno(file)) != 0 && errno != EINVAL) { // Ignore EINVAL for filesystems that don't support sync
         LogPrintf("%s: fdatasync failed: %d\n", __func__, errno);
         return false;
@@ -992,11 +935,12 @@ void AllocateFileRange(FILE *file, unsigned int offset, unsigned int length) {
         fcntl(fileno(file), F_PREALLOCATE, &fst);
     }
     ftruncate(fileno(file), fst.fst_length);
-#elif defined(__linux__)
+#else
+    #if defined(HAVE_POSIX_FALLOCATE)
     // Version using posix_fallocate
     off_t nEndPos = (off_t)offset + length;
     posix_fallocate(fileno(file), 0, nEndPos);
-#else
+    #endif
     // Fallback version
     // TODO: just write one byte per block
     static const char buf[65536] = {};
@@ -1032,76 +976,6 @@ void runCommand(const std::string& strCommand)
     int nErr = ::system(strCommand.c_str());
     if (nErr)
         LogPrintf("runCommand error: system(%s) returned %d\n", strCommand, nErr);
-}
-
-void RenameThread(const char* name)
-{
-#if defined(PR_SET_NAME)
-    // Only the first 15 characters are used (16 - NUL terminator)
-    ::prctl(PR_SET_NAME, name, 0, 0, 0);
-#elif (defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__DragonFly__))
-    pthread_set_name_np(pthread_self(), name);
-
-#elif defined(MAC_OSX)
-    pthread_setname_np(name);
-#else
-    // Prevent warnings for unused parameters...
-    (void)name;
-#endif
-    LogPrintf("%s: thread new name %s\n", __func__, name);
-}
-
-std::string GetThreadName()
-{
-    char name[16];
-#if defined(PR_GET_NAME)
-    // Only the first 15 characters are used (16 - NUL terminator)
-    ::prctl(PR_GET_NAME, name, 0, 0, 0);
-#elif defined(MAC_OSX)
-    pthread_getname_np(pthread_self(), name, 16);
-// #elif (defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__DragonFly__))
-// #else
-    // no get_name here
-#endif
-    return std::string(name);
-}
-
-void RenameThreadPool(ctpl::thread_pool& tp, const char* baseName)
-{
-    auto cond = std::make_shared<std::condition_variable>();
-    auto mutex = std::make_shared<std::mutex>();
-    std::atomic<int> doneCnt(0);
-    std::map<int, std::future<void> > futures;
-
-    for (int i = 0; i < tp.size(); i++) {
-        futures[i] = tp.push([baseName, i, cond, mutex, &doneCnt](int threadId) {
-            RenameThread(strprintf("%s-%d", baseName, i).c_str());
-            std::unique_lock<std::mutex> l(*mutex);
-            doneCnt++;
-            cond->wait(l);
-        });
-    }
-
-    do {
-        // Always sleep to let all threads acquire locks
-        MilliSleep(10);
-        // `doneCnt` should be at least `futures.size()` if tp size was increased (for whatever reason),
-        // or at least `tp.size()` if tp size was decreased and queue was cleared
-        // (which can happen on `stop()` if we were not fast enough to get all jobs to their threads).
-    } while (doneCnt < futures.size() && doneCnt < tp.size());
-
-    cond->notify_all();
-
-    // Make sure no one is left behind, just in case
-    for (auto& pair : futures) {
-        auto& f = pair.second;
-        if (f.valid() && f.wait_for(std::chrono::milliseconds(2000)) == std::future_status::timeout) {
-            LogPrintf("%s: %s-%d timed out\n", __func__, baseName, pair.first);
-            // Notify everyone again
-            cond->notify_all();
-            break;
-        }
-    }
 }
 
 void SetupEnvironment()

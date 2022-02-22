@@ -197,9 +197,7 @@ void CSigSharesManager::StartWorkerThread()
         assert(false);
     }
 
-    workThread = std::thread(&TraceThread<std::function<void()> >,
-        "sigshares",
-        std::function<void()>(std::bind(&CSigSharesManager::WorkThreadMain, this)));
+    workThread = std::thread(&TraceThread<std::function<void()> >, "sigshares", std::function<void()>(std::bind(&CSigSharesManager::WorkThreadMain, this)));
 }
 
 void CSigSharesManager::StopWorkerThread()

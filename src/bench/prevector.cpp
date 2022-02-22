@@ -96,34 +96,3 @@ PREVECTOR_TEST(Clear, 80 * 1000 * 1000, 70 * 1000 * 1000)
 PREVECTOR_TEST(Destructor, 800 * 1000 * 1000, 800 * 1000 * 1000)
 PREVECTOR_TEST(Resize, 80 * 1000 * 1000, 70 * 1000 * 1000)
 PREVECTOR_TEST(Deserialize, 6800, 52000)
-
-#include <vector>
-
-typedef prevector<28, unsigned char> prevec;
-
-static void PrevectorAssign(benchmark::State& state)
-{
-    prevec t;
-    t.resize(28);
-    std::vector<unsigned char> v;
-    while (state.KeepRunning()) {
-        prevec::const_iterator b = t.begin() + 5;
-        prevec::const_iterator e = b + 20;
-        v.assign(b, e);
-    }
-}
-
-static void PrevectorAssignTo(benchmark::State& state)
-{
-    prevec t;
-    t.resize(28);
-    std::vector<unsigned char> v;
-    while (state.KeepRunning()) {
-        prevec::const_iterator b = t.begin() + 5;
-        prevec::const_iterator e = b + 20;
-        t.assign_to(b, e, v);
-    }
-}
-
-BENCHMARK(PrevectorAssign, 90 * 1000 * 1000)
-BENCHMARK(PrevectorAssignTo, 700 * 1000 * 1000)

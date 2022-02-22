@@ -18,8 +18,13 @@
 #include <util.h>
 #include <utilstrencodings.h>
 
+#include <algorithm>
+#include <cmath>
+#include <functional>
 #include <memory>
 #include <stdio.h>
+#include <string>
+#include <tuple>
 
 #include <event2/buffer.h>
 #include <event2/keyvalq_struct.h>
@@ -103,38 +108,38 @@ static int AppInitRPC(int argc, char* argv[])
             strUsage += "\n" + gArgs.GetHelpMessage();
         }
 
-        fprintf(stdout, "%s", strUsage.c_str());
+        tfm::format(std::cout, "%s", strUsage.c_str());
         if (argc < 2) {
-            fprintf(stderr, "Error: too few parameters\n");
+            tfm::format(std::cerr, "Error: too few parameters\n");
             return EXIT_FAILURE;
         }
         return EXIT_SUCCESS;
     }
     bool datadirFromCmdLine = gArgs.IsArgSet("-datadir");
     if (datadirFromCmdLine && !fs::is_directory(GetDataDir(false))) {
-        fprintf(stderr, "Error: Specified data directory \"%s\" does not exist.\n", gArgs.GetArg("-datadir", "").c_str());
+        tfm::format(std::cerr, "Error: Specified data directory \"%s\" does not exist.\n", gArgs.GetArg("-datadir", "").c_str());
         return EXIT_FAILURE;
     }
     try {
         gArgs.ReadConfigFile(gArgs.GetArg("-conf", BITCOIN_CONF_FILENAME));
     } catch (const std::exception& e) {
-        fprintf(stderr,"Error reading configuration file: %s\n", e.what());
+        tfm::format(std::cerr,"Error reading configuration file: %s\n", e.what());
         return EXIT_FAILURE;
     }
     if (!datadirFromCmdLine && !fs::is_directory(GetDataDir(false))) {
-        fprintf(stderr, "Error: Specified data directory \"%s\" from config file does not exist.\n", gArgs.GetArg("-datadir", "").c_str());
+        tfm::format(std::cerr, "Error: Specified data directory \"%s\" from config file does not exist.\n", gArgs.GetArg("-datadir", "").c_str());
         return EXIT_FAILURE;
     }
     // Check for -testnet or -regtest parameter (BaseParams() calls are only valid after this clause)
     try {
         SelectBaseParams(gArgs.GetChainName());
     } catch (const std::exception& e) {
-        fprintf(stderr, "Error: %s\n", e.what());
+        tfm::format(std::cerr, "Error: %s\n", e.what());
         return EXIT_FAILURE;
     }
     if (gArgs.GetBoolArg("-rpcssl", false))
     {
-        fprintf(stderr, "Error: SSL mode for RPC (-rpcssl) is no longer supported.\n");
+        tfm::format(std::cerr, "Error: SSL mode for RPC (-rpcssl) is no longer supported.\n");
         return EXIT_FAILURE;
     }
     return CONTINUE_EXECUTION;
@@ -151,7 +156,7 @@ struct HTTPReply
     std::string body;
 };
 
-const char *http_errorstring(int code)
+static const char *http_errorstring(int code)
 {
     switch(code) {
 #if LIBEVENT_VERSION_NUMBER >= 0x02010300
@@ -401,7 +406,7 @@ static UniValue CallRPC(BaseRequestHandler *rh, const std::string& strMethod, co
     return reply;
 }
 
-int CommandLineRPC(int argc, char *argv[])
+static int CommandLineRPC(int argc, char *argv[])
 {
     std::string strPrint;
     int nRet = 0;
@@ -484,14 +489,11 @@ int CommandLineRPC(int argc, char *argv[])
             }
             catch (const CConnectionFailed&) {
                 if (fWait)
-                    MilliSleep(1000);
+                    UninterruptibleSleep(std::chrono::milliseconds{1000});
                 else
                     throw;
             }
         } while (fWait);
-    }
-    catch (const boost::thread_interrupted&) {
-        throw;
     }
     catch (const std::exception& e) {
         strPrint = std::string("error: ") + e.what();
@@ -503,7 +505,7 @@ int CommandLineRPC(int argc, char *argv[])
     }
 
     if (strPrint != "") {
-        fprintf((nRet == 0 ? stdout : stderr), "%s\n", strPrint.c_str());
+        tfm::format(nRet == 0 ? std::cout : std::cerr, "%s\n", strPrint.c_str());
     }
     return nRet;
 }
@@ -515,7 +517,7 @@ int main(int argc, char* argv[])
 
     SetupEnvironment();
     if (!SetupNetworking()) {
-        fprintf(stderr, "Error: Initializing networking failed\n");
+        tfm::format(std::cerr, "Error: Initializing networking failed\n");
         return EXIT_FAILURE;
     }
 

@@ -109,6 +109,7 @@ build
 test_raptoreum.coverage/
 total.coverage/
 coverage_percent.txt
+/cov_tool_wraper.sh
 
 #build tests
 linux-coverage-build

@@ -25,7 +25,7 @@ class CSmartnodeMetaInfo
     friend class CSmartnodeMetaMan;
 
 private:
-    mutable CCriticalSection cs;
+    mutable RecursiveMutex cs;
 
     uint256 proTxHash;
 
@@ -91,7 +91,7 @@ class CSmartnodeMetaMan
 private:
     static const std::string SERIALIZATION_VERSION_STRING;
 
-    CCriticalSection cs;
+    RecursiveMutex cs;
 
     std::map<uint256, CSmartnodeMetaInfoPtr> metaInfos;
     std::vector<uint256> vecDirtyGovernanceObjectHashes;

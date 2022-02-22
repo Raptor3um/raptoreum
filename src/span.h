@@ -7,6 +7,7 @@
 
 #include <type_traits>
 #include <cstddef>
+#include <algorithm>
 
 /** A Span is an object that can refer to a contiguous sequence of objects.
  *
@@ -21,9 +22,44 @@ class Span
 public:
     constexpr Span() noexcept : m_data(nullptr), m_size(0) {}
     constexpr Span(C* data, std::ptrdiff_t size) noexcept : m_data(data), m_size(size) {}
+    constexpr Span(C* data, C* end) noexcept : m_data(data), m_size(end - data) {}
+
+    /** Implicit conversion of spans between compatible types.
+     *
+     * Specifically, if a pointer ti an array of type O can be implicitly converted to a pointer to an array of type
+     * C, then permit implicit conversion of Span<O> to Span<C>. This matches the behavior of the corresponding
+     * C++20 std::span constructor.
+     *
+     * For example this means that a Span<T> can be converted into a Span<const T>.
+     */
+    template<typename O, typename std::enable_if<std::is_convertible<O (*)[], C (*)[]>::value, int>::type = 0>
+    constexpr Span(const Span<O>& other) noexcept : m_data(other.m_data), m_size(other.m_size) { }
+
+    /** Default copy constructor. */
+    constexpr Span(const Span&) noexcept = default;
+
+    /** Default assignment operator. */
+    Span& operator=(const Span& other) noexcept = default;
 
     constexpr C* data() const noexcept { return m_data; }
+    constexpr C* begin() const noexcept { return m_data; }
+    constexpr C* end() const noexcept { return m_data + m_size; }
     constexpr std::ptrdiff_t size() const noexcept { return m_size; }
+    constexpr C& operator[](std::ptrdiff_t pos) const noexcept { return m_data[pos]; }
+
+    constexpr Span<C> subspan(std::ptrdiff_t offset) const noexcept { return Span<C>(m_data + offset, m_size - offset); }
+    constexpr Span<C> subspan(std::ptrdiff_t offset, std::ptrdiff_t count) const noexcept { return Span<C>(m_data + offset, count); }
+    constexpr Span<C> first(std::ptrdiff_t count) const noexcept { return Span<C>(m_data, count); }
+    constexpr Span<C> last(std::ptrdiff_t count) const noexcept { return Span<C>(m_data + m_size - count, count); }
+
+    friend constexpr bool operator==(const Span& a, const Span& b) noexcept { return a.size() == b.size() && std::equal(a.begin(), a.end(), b.begin()); }
+    friend constexpr bool operator!=(const Span& a, const Span& b) noexcept { return !(a == b); }
+    friend constexpr bool operator<(const Span& a, const Span& b) noexcept { return std::lexicographical_compare(a.begin(), a.end(), b.begin(), b.end()); }
+    friend constexpr bool operator<=(const Span& a, const Span& b) noexcept { return !(b < a); }
+    friend constexpr bool operator>(const Span& a, const Span& b) noexcept { return (b < a); }
+    friend constexpr bool operator>=(const Span& a, const Span& b) noexcept { return !(a < b); }
+
+    template<typename O> friend class Span;
 };
 
 /** Create a span to a container exposing data() and size().
@@ -34,7 +70,22 @@ public:
  *
  * std::span will have a constructor that implements this functionality directly.
  */
+template<typename A, int N>
+constexpr Span<A> MakeSpan(A (&a)[N]) { return Span<A>(a, N); }
+
 template<typename V>
 constexpr Span<typename std::remove_pointer<decltype(std::declval<V>().data())>::type> MakeSpan(V& v) { return Span<typename std::remove_pointer<decltype(std::declval<V>().data())>::type>(v.data(), v.size()); }
+
+// Helper functions to safely cast to unsigned char pointers.
+inline unsigned char* UCharCast(char* c) { return (unsigned char*)c; }
+inline unsigned char* UCharCast(unsigned char* c) { return c; }
+inline const unsigned char* UCharCast(const char* c) { return (unsigned char*)c; }
+inline const unsigned char* UCharCast(const unsigned char* c) { return c; }
+
+// Helper function to safely convert a Span to a Span<[const] unsigned char>.
+template <typename T> constexpr auto UCharSpanCast(Span<T> s) -> Span<typename std::remove_pointer<decltype(UCharCast(s.data()))>::type> { return {UCharCast(s.data()), s.size()}; }
+
+/** Like MakeSpan, but for (const) unsigned char member types only. Only works for (un)signed char containers. */
+template <typename V> constexpr auto MakeUCharSpan(V&& v) -> decltype(UCharSpanCast(MakeSpan(std::forward<V>(v)))) { return UCharSpanCast(MakeSpan(std::forward<V>(v))); }
 
 #endif

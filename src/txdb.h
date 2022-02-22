@@ -115,7 +115,7 @@ private:
 class CBlockTreeDB : public CDBWrapper
 {
 private:
-    CCriticalSection cs;
+    RecursiveMutex cs;
     unordered_limitedmap<uint256, bool> mapHasTxIndexCache;
 
 public:

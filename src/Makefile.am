@@ -4,11 +4,15 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-DIST_SUBDIRS = secp256k1 univalue
+# Pattern rule to print variables, e.g. make print-top_srcdir
+print-%: FORCE
+    @echo '$*'='$($*)'
 
-AM_LDFLAGS = $(LIBTOOL_LDFLAGS) $(HARDENED_LDFLAGS) $(GPROF_LDFLAGS) $(SANITIZER_LDFLAGS)
-AM_CXXFLAGS = $(HARDENED_CXXFLAGS) $(ERROR_CXXFLAGS) $(GPROF_CXXFLAGS) $(SANITIZER_CXXFLAGS)
-AM_CPPFLAGS = $(HARDENED_CPPFLAGS)
+DIST_SUBDIRS = secp256k1
+
+AM_LDFLAGS = $(LIBTOOL_LDFLAGS) $(HARDENED_LDFLAGS) $(GPROF_LDFLAGS) $(SANITIZER_LDFLAGS) $(LTO_LDFLAGS)
+AM_CXXFLAGS = $(DEBUG_CXXFLAGS) $(HARDENED_CXXFLAGS) $(WARN_CXXFLAGS) $(NOWARN_CXXFLAGS) $(ERROR_CXXFLAGS) $(GPROF_CXXFLAGS) $(SANITIZER_CXXFLAGS) $(LTO_CXXFLAGS)
+AM_CPPFLAGS = $(DEBUG_CPPFLAGS) $(HARDENED_CPPFLAGS)
 AM_LIBTOOLFLAGS = --preserve-dup-deps
 PTHREAD_FLAGS = $(PTHREAD_CFLAGS) $(PTHREAD_LIBS)
 EXTRA_LIBRARIES =
@@ -31,21 +35,9 @@ BACKTRACE_LIB = -ldbghelp -lbacktrace
 else
 BACKTRACE_LIB = -lbacktrace
 endif
-endif #ENABLE_STACKTRACES
+endif # ENABLE_STACKTRACES
 
-if EMBEDDED_UNIVALUE
-LIBUNIVALUE = univalue/libunivalue.la
-
-$(LIBUNIVALUE): $(wildcard univalue/lib/*) $(wildcard univalue/include/*)
-	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C $(@D) $(@F)
-else
-LIBUNIVALUE = $(UNIVALUE_LIBS)
-endif
-
-BITCOIN_INCLUDES=-I$(builddir) $(BDB_CPPFLAGS) $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS) $(CRYPTO_CFLAGS) $(SSL_CFLAGS)
-
-BITCOIN_INCLUDES += -I$(srcdir)/secp256k1/include
-BITCOIN_INCLUDES += $(UNIVALUE_CFLAGS)
+BITCOIN_INCLUDES=-I$(builddir) -I$(srcdir)/secp256k1/include -I$(srcdir)/$(UNIVALUE_INCLUDE_DIR_INT) $(BDB_CPPFLAGS) $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS) $(CRYPTO_CFLAGS) $(SSL_CFLAGS)
 
 BLS_LIBS=-lbls-dash -lgmp
 
@@ -54,7 +46,7 @@ LIBBITCOIN_COMMON=libraptoreum_common.a
 LIBBITCOIN_CONSENSUS=libraptoreum_consensus.a
 LIBBITCOIN_CLI=libraptoreum_cli.a
 LIBBITCOIN_UTIL=libraptoreum_util.a
-LIBBITCOIN_CRYPTO_BASE=crypto/libraptoreum_crypto_base.a
+LIBBITCOIN_CRYPTO=crypto/libraptoreum_crypto.a
 LIBBITCOINQT=qt/libraptoreumqt.a
 LIBSECP256K1=secp256k1/libsecp256k1.la
 
@@ -68,7 +60,6 @@ if ENABLE_WALLET
 LIBBITCOIN_WALLET=libraptoreum_wallet.a
 endif
 
-LIBBITCOIN_CRYPTO= $(LIBBITCOIN_CRYPTO_BASE)
 if ENABLE_SSE41
 LIBBITCOIN_CRYPTO_SSE41 = crypto/libraptoreum_crypto_sse41.a
 LIBBITCOIN_CRYPTO += $(LIBBITCOIN_CRYPTO_SSE41)
@@ -77,9 +68,13 @@ if ENABLE_AVX2
 LIBBITCOIN_CRYPTO_AVX2 = crypto/libraptoreum_crypto_avx2.a
 LIBBITCOIN_CRYPTO += $(LIBBITCOIN_CRYPTO_AVX2)
 endif
-if ENABLE_SHANI
-LIBBITCOIN_CRYPTO_SHANI = crypto/libraptoreum_crypto_shani.a
-LIBBITCOIN_CRYPTO += $(LIBBITCOIN_CRYPTO_SHANI)
+if ENABLE_X86_SHANI
+LIBBITCOIN_CRYPTO_X86_SHANI = crypto/libraptoreum_crypto_x86_shani.a
+LIBBITCOIN_CRYPTO += $(LIBBITCOIN_CRYPTO_X86_SHANI)
+endif
+if ENABLE_ARM_SHANI
+LIBBITCOIN_CRYPTO_ARM_SHANI = crypto/libraptoreum_crypto_arm_shani.a
+LIBBITCOIN_CRYPTO += $(LIBBITCOIN_CRYPTO_ARM_SHANI)
 endif
 
 $(LIBSECP256K1): $(wildcard secp256k1/src/*.h) $(wildcard secp256k1/src/*.c) $(wildcard secp256k1/include/*)
@@ -98,6 +93,7 @@ EXTRA_LIBRARIES += \
   $(LIBBITCOIN_ZMQ)
 
 lib_LTLIBRARIES = $(LIBBITCOINCONSENSUS)
+noinst_LTLIBRARIES =
 
 bin_PROGRAMS =
 noinst_PROGRAMS =
@@ -146,6 +142,7 @@ BITCOIN_CORE_H = \
   coins.h \
   compat.h \
   compat/byteswap.h \
+  compat/cpuid.h \
   compat/endian.h \
   compat/sanity.h \
   compressor.h \
@@ -203,12 +200,14 @@ BITCOIN_CORE_H = \
   llmq/quorums_signing_shares.h \
   llmq/quorums_utils.h \
   logging.h \
+  logging_timer.h \
   smartnode/activesmartnode.h \
   smartnode/smartnode-meta.h \
   smartnode/smartnode-payments.h \
   smartnode/smartnode-sync.h \
   smartnode/smartnode-utils.h \
   smartnode/smartnode-collaterals.h \
+  mapport.h \
   memusage.h \
   merkleblock.h \
   messagesigner.h \
@@ -227,8 +226,8 @@ BITCOIN_CORE_H = \
   pow.h \
   protocol.h \
   random.h \
+  randomenv.h \
   reverse_iterator.h \
-  reverselock.h \
   rpc/blockchain.h \
   rpc/client.h \
   rpc/mining.h \
@@ -266,6 +265,7 @@ BITCOIN_CORE_H = \
   undo.h \
   unordered_lru_cache.h \
   util.h \
+  utilmacro.h \
   utilmemory.h \
   utilmoneystr.h \
   utiltime.h \
@@ -297,7 +297,7 @@ obj/build.h: FORCE
 libraptoreum_util_a-clientversion.$(OBJEXT): obj/build.h
 
 # server: shared between raptoreumd and raptoreum-qt
-libraptoreum_server_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(MINIUPNPC_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
+libraptoreum_server_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(MINIUPNPC_CPPFLAGS) $(NATPMP_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
 libraptoreum_server_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libraptoreum_server_a_SOURCES = \
   addrdb.cpp \
@@ -322,6 +322,7 @@ libraptoreum_server_a_SOURCES = \
   httprpc.cpp \
   httpserver.cpp \
   init.cpp \
+  mapport.cpp \
   dbwrapper.cpp \
   governance/governance.cpp \
   governance/governance-classes.cpp \
@@ -419,9 +420,9 @@ libraptoreum_wallet_a_SOURCES = \
   $(BITCOIN_CORE_H)
 
 # crypto primitives library
-crypto_libraptoreum_crypto_base_a_CPPFLAGS = $(AM_CPPFLAGS) $(PIC_FLAGS)
-crypto_libraptoreum_crypto_base_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS) $(PIC_FLAGS)
-crypto_libraptoreum_crypto_base_a_SOURCES = \
+crypto_libraptoreum_crypto_a_CPPFLAGS = $(AM_CPPFLAGS) $(PIC_FLAGS)
+crypto_libraptoreum_crypto_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS) $(PIC_FLAGS)
+crypto_libraptoreum_crypto_a_SOURCES = \
   crypto/aes.cpp \
   crypto/aes.h \
   crypto/chacha_poly_aead.h \
@@ -478,36 +479,10 @@ crypto_libraptoreum_crypto_base_a_SOURCES = \
   crypto/sph_sha2.h \
   crypto/sph_types.h \
   crypto/sha512.cpp \
-  cryptonote/aesb.c \
-  cryptonote/c_blake256.c \
-  cryptonote/c_groestl.c \
-  cryptonote/c_jh.c \
-  cryptonote/c_keccak.c \
-  cryptonote/c_skein.c \
-  cryptonote/slow-hash.c \
-  cryptonote/hash-ops.c \
-  cryptonote/oaes_lib.c \
-  cryptonote/wild_keccak.cpp \
-  cryptonote/c_blake256.h \
-  cryptonote/c_groestl.h \
-  cryptonote/c_jh.h \
-  cryptonote/c_keccak.h \
-  cryptonote/crypto.h \
-  cryptonote/c_skein.h \
-  cryptonote/groestl_tables.h \
-  cryptonote/slow-hash.h \
-  cryptonote/int-util.h \
-  cryptonote/oaes_config.h \
-  cryptonote/hash-ops.h \
-  cryptonote/oaes_lib.h \
-  cryptonote/skein_port.h \
-  cryptonote/variant2_int_sqrt.h \
-  cryptonote/wild_keccak.h \
-  cryptonote/warnings.h \
   crypto/sha512.h
 
 if USE_ASM
-crypto_libraptoreum_crypto_base_a_SOURCES += crypto/sha256_sse4.cpp
+crypto_libraptoreum_crypto_a_SOURCES += crypto/sha256_sse4.cpp
 endif
 
 crypto_libraptoreum_crypto_sse41_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
@@ -522,11 +497,45 @@ crypto_libraptoreum_crypto_avx2_a_CXXFLAGS += $(AVX2_CXXFLAGS)
 crypto_libraptoreum_crypto_avx2_a_CPPFLAGS += -DENABLE_AVX2
 crypto_libraptoreum_crypto_avx2_a_SOURCES = crypto/sha256_avx2.cpp
 
-crypto_libraptoreum_crypto_shani_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-crypto_libraptoreum_crypto_shani_a_CPPFLAGS = $(AM_CPPFLAGS)
-crypto_libraptoreum_crypto_shani_a_CXXFLAGS += $(SHANI_CXXFLAGS)
-crypto_libraptoreum_crypto_shani_a_CPPFLAGS += -DENABLE_SHANI
-crypto_libraptoreum_crypto_shani_a_SOURCES = crypto/sha256_shani.cpp
+crypto_libraptoreum_crypto_a_SOURCES += \
+  cryptonote/aesb.c \
+  cryptonote/c_blake256.c \
+  cryptonote/c_groestl.c \
+  cryptonote/c_jh.c \
+  cryptonote/c_keccak.c \
+  cryptonote/c_skein.c \
+  cryptonote/oaes_lib.c \
+  cryptonote/hash-ops.c \
+  cryptonote/slow-hash.c \
+  cryptonote/wild_keccak.cpp \
+  cryptonote/c_blake256.h \
+  cryptonote/c_groestl.h \
+  cryptonote/c_jh.h \
+  cryptonote/c_keccak.h \
+  cryptonote/crypto.h \
+  cryptonote/c_skein.h \
+  cryptonote/groestl_tables.h \
+  cryptonote/int-util.h \
+  cryptonote/oaes_config.h \
+  cryptonote/hash-ops.h \
+  cryptonote/oaes_lib.h \
+  cryptonote/skein_port.h \
+  cryptonote/variant2_int_sqrt.h \
+  cryptonote/wild_keccak.h \
+  cryptonote/slow-hash.h \
+  cryptonote/warnings.h
+
+crypto_libraptoreum_crypto_x86_shani_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+crypto_libraptoreum_crypto_x86_shani_a_CPPFLAGS = $(AM_CPPFLAGS)
+crypto_libraptoreum_crypto_x86_shani_a_CXXFLAGS += $(X86_SHANI_CXXFLAGS)
+crypto_libraptoreum_crypto_x86_shani_a_CPPFLAGS += -DENABLE_X86_SHANI
+crypto_libraptoreum_crypto_x86_shani_a_SOURCES = crypto/sha256_x86_shani.cpp
+
+crypto_libraptoreum_crypto_arm_shani_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+crypto_libraptoreum_crypto_arm_shani_a_CPPFLAGS = $(AM_CPPFLAGS)
+crypto_libraptoreum_crypto_arm_shani_a_CXXFLAGS += $(ARM_SHANI_CXXFLAGS)
+crypto_libraptoreum_crypto_arm_shani_a_CPPFLAGS += -DENABLE_ARM_SHANI
+crypto_libraptoreum_crypto_arm_shani_a_SOURCES = crypto/sha256_arm_shani.cpp
 
 # consensus: shared between all executables that validate any consensus rules.
 libraptoreum_consensus_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
@@ -538,14 +547,15 @@ libraptoreum_consensus_a_SOURCES = \
   arith_uint256.h \
   bls/bls.cpp \
   bls/bls.h \
-  consensus/merkle.cpp \
-  consensus/merkle.h \
-  consensus/params.h \
-  consensus/validation.h \
   hash_selection.h \
   hash_selection.cpp \
   hash.cpp \
   hash.h \
+  cryptonote/slow-hash.h \
+  consensus/merkle.cpp \
+  consensus/merkle.h \
+  consensus/params.h \
+  consensus/validation.h \
   prevector.h \
   primitives/block.cpp \
   primitives/block.h \
@@ -605,7 +615,7 @@ libraptoreum_common_a_SOURCES = \
 
 # util: shared between all executables.
 # This library *must* be included to make sure that the glibc
-# backward-compatibility objects and their sanity checks are linked.
+# sanity checks are linked.
 libraptoreum_util_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libraptoreum_util_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libraptoreum_util_a_SOURCES = \
@@ -625,21 +635,19 @@ libraptoreum_util_a_SOURCES = \
   interfaces/node.cpp \
   logging.cpp \
   random.cpp \
+  randomenv.cpp \
   rpc/protocol.cpp \
   stacktraces.cpp \
   support/cleanse.cpp \
   sync.cpp \
   threadinterrupt.cpp \
+  threadnames.cpp \
+  threadnames.h \
   util.cpp \
   utilmoneystr.cpp \
   utilstrencodings.cpp \
   utiltime.cpp \
   $(BITCOIN_CORE_H)
-
-if GLIBC_BACK_COMPAT
-libraptoreum_util_a_SOURCES += compat/glibc_compat.cpp
-AM_LDFLAGS += -Wl,--wrap=log2f -Wl,--wrap=__divmoddi4
-endif
 
 # cli: shared between raptoreum-cli and raptoreum-qt
 libraptoreum_cli_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
@@ -675,7 +683,7 @@ raptoreumd_LDADD = \
   $(LIBMEMENV) \
   $(LIBSECP256K1)
 
-raptoreumd_LDADD += $(BACKTRACE_LIB) $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(BLS_LIBS)
+raptoreumd_LDADD += $(BACKTRACE_LIB) $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(BLS_LIBS)
 
 # raptoreum-cli binary #
 raptoreum_cli_SOURCES = raptoreum-cli.cpp
@@ -692,6 +700,7 @@ raptoreum_cli_LDADD = \
   $(LIBUNIVALUE) \
   $(LIBBITCOIN_UTIL) \
   $(LIBBITCOIN_CRYPTO)
+
 raptoreum_cli_LDADD += $(BACKTRACE_LIB) $(BOOST_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS) $(BLS_LIBS)
 #
 
@@ -719,13 +728,9 @@ raptoreum_tx_LDADD += $(BACKTRACE_LIB) $(BOOST_LIBS) $(CRYPTO_LIBS) $(BLS_LIBS)
 # raptoreumconsensus library #
 if BUILD_BITCOIN_LIBS
 include_HEADERS = script/raptoreumconsensus.h
-libraptoreumconsensus_la_SOURCES = support/cleanse.cpp $(crypto_libraptoreum_crypto_base_a_SOURCES) $(libraptoreum_consensus_a_SOURCES)
+libraptoreumconsensus_la_SOURCES = support/cleanse.cpp $(crypto_libraptoreum_crypto_a_SOURCES) $(libraptoreum_consensus_a_SOURCES)
 
-if GLIBC_BACK_COMPAT
-  libraptoreumconsensus_la_SOURCES += compat/glibc_compat.cpp
-endif
-
-libraptoreumconsensus_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+libraptoreumconsensus_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS)
 libraptoreumconsensus_la_LIBADD = $(LIBSECP256K1) $(BLS_LIBS)
 libraptoreumconsensus_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include -DBUILD_BITCOIN_INTERNAL
 libraptoreumconsensus_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
@@ -744,6 +749,7 @@ CLEANFILES = $(EXTRA_LIBRARIES)
 CLEANFILES += *.gcda *.gcno
 CLEANFILES += compat/*.gcda compat/*.gcno
 CLEANFILES += consensus/*.gcda consensus/*.gcno
+CLEANFILES += crc32c/src/*.gcda crc32c/src/*.gcno
 CLEANFILES += crypto/*.gcda crypto/*.gcno
 CLEANFILES += policy/*.gcda policy/*.gcno
 CLEANFILES += primitives/*.gcda primitives/*.gcno
@@ -771,7 +777,6 @@ $(top_srcdir)/$(subdir)/config/raptoreum-config.h.in:  $(am__configure_deps)
 
 clean-local:
 	-$(MAKE) -C secp256k1 clean
-	-$(MAKE) -C univalue clean
 	-rm -f leveldb/*/*.gcda leveldb/*/*.gcno leveldb/helpers/memenv/*.gcda leveldb/helpers/memenv/*.gcno
 	-rm -f config.h
 	-rm -rf test/__pycache__
@@ -783,17 +788,14 @@ clean-local:
 	$(AM_V_GEN) $(WINDRES) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(CPPFLAGS) -DWINDRES_PREPROC -i $< -o $@
 
 check-symbols: $(bin_PROGRAMS)
-if GLIBC_BACK_COMPAT
-	@echo "Checking glibc back compat..."
-	$(AM_V_at) READELF=$(READELF) CPPFILT=$(CPPFILT) $(top_srcdir)/contrib/devtools/symbol-check.py < $(bin_PROGRAMS)
-endif
+	@echo "Running symbol and dynamic library checks..."
+	$(AM_V_at) $(PYTHON) $(top_srcdir)/contrib/devtools/symbol-check.py $(bin_PROGRAMS)
 
 check-security: $(bin_PROGRAMS)
 if HARDEN
 	@echo "Checking binary security..."
-	$(AM_V_at) READELF=$(READELF) OBJDUMP=$(OBJDUMP) $(top_srcdir)/contrib/devtools/security-check.py < $(bin_PROGRAMS)
+	$(AM_V_at) $(PYTHON) $(top_srcdir)/contrib/devtools/security-check.py $(bin_PROGRAMS)
 endif
-
 
 osx_debug: $(bin_PROGRAMS)
 	for i in $(bin_PROGRAMS); do mkdir -p $$i.dSYM/Contents/Resources/DWARF && $(DSYMUTIL_FLAT) -o $$i.dSYM/Contents/Resources/DWARF/$$(basename $$i) $$i &> /dev/null ; done
@@ -802,9 +804,8 @@ osx_debug: $(bin_PROGRAMS)
 	@test -f $(PROTOC)
 	$(AM_V_GEN) $(PROTOC) --cpp_out=$(@D) --proto_path=$(<D) $<
 
-if EMBEDDED_LEVELDB
+include Makefile.crc32c.include
 include Makefile.leveldb.include
-endif
 
 if ENABLE_TESTS
 include Makefile.test.include
@@ -821,3 +822,5 @@ endif
 if ENABLE_QT_TESTS
 include Makefile.qttest.include
 endif
+
+include Makefile.univalue.include

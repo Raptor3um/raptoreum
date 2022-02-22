@@ -18,11 +18,15 @@
 #include <uint256.h>
 #include <util.h>
 
+#include <functional>
+
 #include <QColor>
 #include <QDateTime>
 #include <QDebug>
 #include <QIcon>
 #include <QList>
+
+namespace pl = std::placeholders;
 
 // Amount column is right-aligned it contains numbers
 static int column_alignments[] = {
@@ -832,9 +836,9 @@ static void ShowProgress(TransactionTableModel *ttm, const std::string &title, i
 void TransactionTableModel::subscribeToCoreSignals()
 {
     // Connect signals to wallet
-    m_handler_transaction_changed = walletModel->wallet().handleTransactionChanged(boost::bind(NotifyTransactionChanged, this, _1, _2));
-    m_handler_address_book_changed = walletModel->wallet().handleAddressBookChanged(boost::bind(NotifyAddressBookChanged, this, _1, _2, _3, _4, _5));
-    m_handler_show_progress = walletModel->wallet().handleShowProgress(boost::bind(ShowProgress, this, _1, _2));
+    m_handler_transaction_changed = walletModel->wallet().handleTransactionChanged(std::bind(NotifyTransactionChanged, this, pl::_1, pl::_2));
+    m_handler_address_book_changed = walletModel->wallet().handleAddressBookChanged(std::bind(NotifyAddressBookChanged, this, pl::_1, pl::_2, pl::_3, pl::_4, pl::_5));
+    m_handler_show_progress = walletModel->wallet().handleShowProgress(std::bind(ShowProgress, this, pl::_1, pl::_2));
 }
 
 void TransactionTableModel::unsubscribeFromCoreSignals()

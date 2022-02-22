@@ -66,7 +66,7 @@ private:
     WalletModel* walletModel;
 
     // Protects tableWidgetSmartnodesDIP3
-    CCriticalSection cs_dip3list;
+    RecursiveMutex cs_dip3list;
 
     QString strCurrentFilterDIP3;
 

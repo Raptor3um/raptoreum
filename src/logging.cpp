@@ -6,6 +6,7 @@
 #include <logging.h>
 #include <util.h>
 #include <utilstrencodings.h>
+#include <threadnames.h>
 
 #include <list>
 #include <mutex>
@@ -124,10 +125,11 @@ const CLogCategoryDesc LogCategories[] =
     {BCLog::COINDB, "coindb"},
     {BCLog::QT, "qt"},
     {BCLog::LEVELDB, "leveldb"},
+    {BCLog::LOCK, "lock"},
     {BCLog::ALL, "1"},
     {BCLog::ALL, "all"},
 
-    //Start Dash
+    //Start Raptoreum
     {BCLog::CHAINLOCKS, "chainlocks"},
     {BCLog::GOBJECT, "gobject"},
     {BCLog::INSTANTSEND, "instantsend"},
@@ -140,7 +142,7 @@ const CLogCategoryDesc LogCategories[] =
     {BCLog::COINJOIN, "coinjoin"},
     {BCLog::SPORK, "spork"},
     {BCLog::NETCONN, "netconn"},
-    //End Dash
+    //End Raptoreum
 };
 
 bool GetLogCategory(uint64_t *f, const std::string *str)
@@ -266,7 +268,7 @@ static std::string LogThreadNameStr(const std::string &str, std::atomic_bool *fS
     if (!fLogThreadNames)
         return str;
 
-    std::string strThreadName = GetThreadName();
+    std::string strThreadName = util::GetThreadName();
 
     if (*fStartedNewLine)
         strThreadLogged = strprintf("%16s | %s", strThreadName.c_str(), str.c_str());

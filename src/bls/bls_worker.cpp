@@ -8,6 +8,7 @@
 #include <serialize.h>
 
 #include <util.h>
+#include <threadnames.h>
 
 template <typename T>
 bool VerifyVectorHelper(const std::vector<T>& vec, size_t start, size_t count)
@@ -64,7 +65,7 @@ void CBLSWorker::Start()
     int workerCount = std::thread::hardware_concurrency() / 2;
     workerCount = std::max(std::min(1, workerCount), 4);
     workerPool.resize(workerCount);
-    RenameThreadPool(workerPool, "raptoreum-bls-worker");
+    util::RenameThreadPool(workerPool, "rtm-bls-worker");
 }
 
 void CBLSWorker::Stop()

@@ -25,7 +25,7 @@
 #include <memory> // for unique_ptr
 #include <unordered_map>
 
-static CCriticalSection cs_rpcWarmup;
+static RecursiveMutex cs_rpcWarmup;
 static bool fRPCRunning = false;
 static bool fRPCInWarmup GUARDED_BY(cs_rpcWarmup) = true;
 static std::string rpcWarmupStatus GUARDED_BY(cs_rpcWarmup) = "RPC server started";
@@ -312,7 +312,7 @@ UniValue stop(const JSONRPCRequest& jsonRequest)
     // this reply will get back to the client.
     StartShutdown();
     if (jsonRequest.params[0].isNum()) {
-        MilliSleep(jsonRequest.params[0].get_int());
+        UninterruptibleSleep(std::chrono::milliseconds{jsonRequest.params[0].get_int()});
     }
     return "Raptoreum Core server stopping";
 }

@@ -58,7 +58,7 @@ class CChainLocksHandler : public CRecoveredSigsListener
 private:
     CScheduler* scheduler;
     boost::thread* scheduler_thread;
-    CCriticalSection cs;
+    RecursiveMutex cs;
     bool tryLockChainTipScheduled{false};
     bool isEnabled{false};
     bool isEnforced{false};

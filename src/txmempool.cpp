@@ -17,7 +17,11 @@
 #include <util.h>
 #include <utilmoneystr.h>
 #include <utiltime.h>
+#include <validation.h>
+#include <validationinterface.h>
 #include <hash.h>
+
+#include <optional>
 
 #include <evo/specialtx.h>
 #include <evo/providertx.h>
@@ -27,23 +31,22 @@
 #include <future/utils.h>
 
 
-CTxMemPoolEntry::CTxMemPoolEntry(const CTransactionRef& _tx, const CAmount& _nFee, const CAmount& _specialTxFee, int64_t _nTime, unsigned int _entryHeight, bool _spendsCoinbase, unsigned int _sigOps, LockPoints lp) :
-    tx(_tx), nFee(_nFee), specialTxFee(_specialTxFee) ,nTime(_nTime), entryHeight(_entryHeight), spendsCoinbase(_spendsCoinbase), sigOpCount(_sigOps), lockPoints(lp)
-{
-    nTxSize = ::GetSerializeSize(*_tx, SER_NETWORK, PROTOCOL_VERSION);
-    nUsageSize = RecursiveDynamicUsage(tx);
-
-    nCountWithDescendants = 1;
-    nSizeWithDescendants = nTxSize;
-    nModFeesWithDescendants = nFee;
-
-    feeDelta = 0;
-
-    nCountWithAncestors = 1;
-    nSizeWithAncestors = nTxSize;
-    nModFeesWithAncestors = nFee;
-    nSigOpCountWithAncestors = sigOpCount;
-}
+CTxMemPoolEntry::CTxMemPoolEntry(const CTransactionRef& tx, CAmount fee, CAmount special_TxFee, int64_t time, unsigned int entry_height, bool spends_coinbase, unsigned int sigops_count, LockPoints lp)
+  : tx{tx},
+  nFee{fee},
+  specialTxFee{special_TxFee},
+  nTime{time},
+  entryHeight{entry_height},
+  spendsCoinbase{spends_coinbase},
+  sigOpCount{sigops_count},
+  lockPoints{lp},
+  nTxSize(::GetSerializeSize(*tx, SER_NETWORK, PROTOCOL_VERSION)),
+  nUsageSize{RecursiveDynamicUsage(tx)},
+  nSizeWithDescendants{nTxSize},
+  nModFeesWithDescendants{nFee},
+  nSizeWithAncestors{nTxSize},
+  nModFeesWithAncestors{nFee},
+  nSigOpCountWithAncestors{sigOpCount} {}
 
 void CTxMemPoolEntry::UpdateFeeDelta(int64_t newFeeDelta)
 {
@@ -1419,7 +1422,8 @@ void CTxMemPool::RemoveStaged(setEntries &stage, bool updateDescendants, MemPool
     }
 }
 
-int CTxMemPool::Expire(int64_t time) {
+int CTxMemPool::Expire(int64_t time)
+{
     LOCK(cs);
     indexed_transaction_set::index<entry_time>::type::iterator it = mapTx.get<entry_time>().begin();
     setEntries toremove;

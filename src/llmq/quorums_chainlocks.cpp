@@ -35,8 +35,9 @@ std::string CChainLockSig::ToString() const
 CChainLocksHandler::CChainLocksHandler()
 {
     scheduler = new CScheduler();
-    CScheduler::Function serviceLoop = boost::bind(&CScheduler::serviceQueue, scheduler);
-    scheduler_thread = new boost::thread(boost::bind(&TraceThread<CScheduler::Function>, "cl-schdlr", serviceLoop));
+    CScheduler::Function serviceLoop = std::bind(&CScheduler::serviceQueue, scheduler);
+    scheduler_thread = new boost::thread(std::bind(&TraceThread<CScheduler::Function>, "cl-schdlr", serviceLoop));
+    //scheduler->m_service_thread = std::thread([&] { TraceThread("cl-schdlr", [&] { scheduler->serviceQueue(); }); });
 }
 
 CChainLocksHandler::~CChainLocksHandler()
@@ -55,7 +56,7 @@ void CChainLocksHandler::Start()
         EnforceBestChainLock();
         // regularly retry signing the current chaintip as it might have failed before due to missing islocks
         TrySignChainTip();
-    }, 5000);
+    }, std::chrono::seconds{5});
 }
 
 void CChainLocksHandler::Stop()
@@ -177,7 +178,7 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, const llmq::CCha
     scheduler->scheduleFromNow([&]() {
         CheckActiveState();
         EnforceBestChainLock();
-    }, 0);
+    }, std::chrono::milliseconds{0});
 
     LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- processed new CLSIG (%s), peer=%d\n",
               __func__, clsig.ToString(), from);
@@ -221,7 +222,7 @@ void CChainLocksHandler::UpdatedBlockTip(const CBlockIndex* pindexNew)
         TrySignChainTip();
         LOCK(cs);
         tryLockChainTipScheduled = false;
-    }, 0);
+    }, std::chrono::milliseconds{0});
 }
 
 void CChainLocksHandler::CheckActiveState()

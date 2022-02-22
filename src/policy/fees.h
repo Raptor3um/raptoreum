@@ -256,7 +256,7 @@ private:
     std::vector<double> buckets;              // The upper-bound of the range for the bucket (inclusive)
     std::map<double, unsigned int> bucketMap; // Map of bucket upper-bound to index into all vectors by bucket
 
-    mutable CCriticalSection cs_feeEstimator;
+    mutable RecursiveMutex cs_feeEstimator;
 
     /** Process a transaction confirmed in a block*/
     bool processBlockTx(unsigned int nBlockHeight, const CTxMemPoolEntry* entry);

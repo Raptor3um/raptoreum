@@ -122,6 +122,7 @@ BASE_SCRIPTS= [
     'rpc_blockchain.py',
     'rpc_deprecated.py',
     'wallet_disable.py',
+    'p2p_addr_relay.py',
     'rpc_net.py',
     'wallet_keypool.py',
     'wallet_keypool_hd.py',

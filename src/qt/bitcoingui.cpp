@@ -38,6 +38,7 @@
 #include <qt/smartnodelist.h>
 
 #include <iostream>
+#include <functional>
 
 #include <QAction>
 #include <QApplication>
@@ -61,6 +62,8 @@
 #include <QToolButton>
 #include <QUrlQuery>
 #include <QVBoxLayout>
+
+namespace pl = std::placeholders;
 
 const std::string BitcoinGUI::DEFAULT_UIPLATFORM =
 #if defined(Q_OS_MAC)
@@ -1814,8 +1817,8 @@ static bool ThreadSafeMessageBox(BitcoinGUI *gui, const std::string& message, co
 void BitcoinGUI::subscribeToCoreSignals()
 {
     // Connect signals to client
-    m_handler_message_box = m_node.handleMessageBox(boost::bind(ThreadSafeMessageBox, this, _1, _2, _3));
-    m_handler_question = m_node.handleQuestion(boost::bind(ThreadSafeMessageBox, this, _1, _3, _4));
+    m_handler_message_box = m_node.handleMessageBox(std::bind(ThreadSafeMessageBox, this, pl::_1, pl::_2, pl::_3));
+    m_handler_question = m_node.handleQuestion(std::bind(ThreadSafeMessageBox, this, pl::_1, pl::_3, pl::_4));
 }
 
 void BitcoinGUI::unsubscribeFromCoreSignals()

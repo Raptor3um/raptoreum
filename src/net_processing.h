@@ -12,7 +12,7 @@
 #include <consensus/params.h>
 #include <sync.h>
 
-extern CCriticalSection cs_main;
+extern RecursiveMutex cs_main;
 
 /** Default for -maxorphantxsize, maximum size in megabytes the orphan map can grow before entries are removed */
 static const unsigned int DEFAULT_MAX_ORPHAN_TRANSACTIONS_SIZE = 10; // this allows around 100 TXs of max size (and many more of normal size)

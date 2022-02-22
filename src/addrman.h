@@ -189,7 +189,7 @@ class CAddrMan
 {
 private:
     //! critical section to protect the inner data structures
-    mutable CCriticalSection cs;
+    mutable RecursiveMutex cs;
 
     //! last used nId
     int nIdCount;

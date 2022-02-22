@@ -13,6 +13,7 @@
 
 #include <smartnode/activesmartnode.h>
 #include <chainparams.h>
+#include <threadnames.h>
 #include <smartnode/smartnode-sync.h>
 #include <net.h>
 #include <net_processing.h>
@@ -30,7 +31,7 @@ static const std::string DB_QUORUM_QUORUM_VVEC = "q_Qqvvec";
 
 CQuorumManager* quorumManager;
 
-CCriticalSection cs_data_requests;
+RecursiveMutex cs_data_requests;
 static std::unordered_map<std::pair<uint256, bool>, CQuorumDataRequest, StaticSaltedHasher> mapQuorumDataRequests;
 
 static uint256 MakeQuorumKey(const CQuorum& q)
@@ -170,7 +171,7 @@ void CQuorumManager::Start()
     int workerCount = std::thread::hardware_concurrency() / 2;
     workerCount = std::max(std::min(1, workerCount), 4);
     workerPool.resize(workerCount);
-    RenameThreadPool(workerPool, "raptoreum-q-mngr");
+    util::RenameThreadPool(workerPool, "rtm-quorum-mngr");
 }
 
 void CQuorumManager::Stop()

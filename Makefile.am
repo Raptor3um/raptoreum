@@ -4,12 +4,17 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+# Pattern rule to print variables, e.g. make print-top_srcdir
+print-%: FORCE
+        @echo '$*'='$($*)'
+
 ACLOCAL_AMFLAGS = -I build-aux/m4
 SUBDIRS = src
 if ENABLE_MAN
 SUBDIRS += doc/man
 endif
 .PHONY: deploy FORCE
+.INTERMEDIATE: $(COVERAGE_INFO)
 
 export PYTHONPATH
 
@@ -35,7 +40,7 @@ OSX_BACKGROUND_IMAGE_DPIS=36 72
 OSX_DSSTORE_GEN=$(top_srcdir)/contrib/macdeploy/custom_dsstore.py
 OSX_DEPLOY_SCRIPT=$(top_srcdir)/contrib/macdeploy/macdeployqtplus
 OSX_FANCY_PLIST=$(top_srcdir)/contrib/macdeploy/fancy.plist
-OSX_INSTALLER_ICONS=$(top_srcdir)/src/qt/res/icons/raptoreum.icns
+OSX_INSTALLER_ICONS=$(top_srcdir)/src/qt/res/icons/raptoreum.ico
 OSX_PLIST=$(top_builddir)/share/qt/Info.plist #not installed
 OSX_QT_TRANSLATIONS = da,de,es,hu,ru,uk,zh_CN,zh_TW
 
@@ -62,7 +67,7 @@ OSX_PACKAGING = $(OSX_DEPLOY_SCRIPT) $(OSX_INSTALLER_ICONS) \
   $(top_srcdir)/contrib/macdeploy/detached-sig-apply.sh \
   $(top_srcdir)/contrib/macdeploy/detached-sig-create.sh
 
-COVERAGE_INFO = baseline.info \
+COVERAGE_INFO = $(COV_TOOL_WRAPPER) baseline.info \
   test_raptoreum_filtered.info total_coverage.info \
   baseline_filtered.info functional_test.info functional_test_filtered.info \
   test_raptoreum_coverage.info test_raptoreum.info
@@ -70,6 +75,7 @@ COVERAGE_INFO = baseline.info \
 dist-hook:
 	-$(GIT) archive --format=tar HEAD -- src/clientversion.cpp | $(AMTAR) -C $(top_distdir) -xf -
 
+if TARGET_WINDOWS
 $(BITCOIN_WIN_INSTALLER): all-recursive
 	$(MKDIR_P) $(top_builddir)/release
 	STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM) $(BITCOIND_BIN) $(top_builddir)/release
@@ -79,6 +85,10 @@ $(BITCOIN_WIN_INSTALLER): all-recursive
 	  echo error: could not build $@
 	@echo built $@
 
+deploy: $(BITCOIN_WIN_INSTALLER)
+endif
+
+if TARGET_DARWIN
 $(OSX_APP)/Contents/PkgInfo:
 	$(MKDIR_P) $(@D)
 	@echo "APPL????" > $@
@@ -122,7 +132,7 @@ $(OSX_BACKGROUND_IMAGE): $(OSX_BACKGROUND_IMAGE).png $(OSX_BACKGROUND_IMAGE)@2x.
 	tiffutil -cathidpicheck $^ -out $@
 
 deploydir: $(OSX_DMG)
-else
+else !BUILD_DARWIN
 APP_DIST_DIR=$(top_builddir)/dist
 APP_DIST_EXTRAS=$(APP_DIST_DIR)/.background/$(OSX_BACKGROUND_IMAGE) $(APP_DIST_DIR)/.DS_Store $(APP_DIST_DIR)/Applications
 
@@ -149,14 +159,10 @@ $(APP_DIST_DIR)/$(OSX_APP)/Contents/MacOS/Raptoreum-Qt: $(OSX_APP_BUILT) $(OSX_P
 	INSTALLNAMETOOL=$(INSTALLNAMETOOL)  OTOOL=$(OTOOL) STRIP=$(STRIP) $(PYTHON) $(OSX_DEPLOY_SCRIPT) $(OSX_APP) -translations-dir=$(QT_TRANSLATION_DIR) -add-qt-tr $(OSX_QT_TRANSLATIONS) -verbose 2
 
 deploydir: $(APP_DIST_EXTRAS)
-endif
+endif !BUILD_DARWIN
 
-if TARGET_DARWIN
 appbundle: $(OSX_APP_BUILT)
 deploy: $(OSX_DMG)
-endif
-if TARGET_WINDOWS
-deploy: $(BITCOIN_WIN_INSTALLER)
 endif
 
 $(BITCOIN_QT_BIN): FORCE
@@ -169,9 +175,23 @@ $(BITCOIN_CLI_BIN): FORCE
 	$(MAKE) -C src $(@F)
 
 if USE_LCOV
-LCOV_FILTER_PATTERN=-p "/usr/include/" -p "src/leveldb/" -p "src/bench/" -p "src/univalue" -p "src/crypto/ctaes" -p "src/secp256k1"
+LCOV_FILTER_PATTERN = \
+	-p "/usr/include/" \
+	-p "/usr/lib/" \
+	-p "/usr/lib64/" \
+	-p "src/leveldb/" \
+	-p "src/crc32c/" \
+	-p "src/bench/" \
+	-p "src/univalue" \
+	-p "src/crypto/ctaes" \
+	-p "src/secp256k1" \
+	-p "depends"
 
-baseline.info:
+$(COV_TOOL_WRAPPER):
+  @echo 'exec $(COV_TOOL) "$$@"' > $(COV_TOOL_WRAPPER)
+  @chmod +x $(COV_TOOL_WRAPPER)
+
+baseline.info: $(COV_TOOL_WRAPPER)
 	$(LCOV) -c -i -d $(abs_builddir)/src -o $@
 
 baseline_filtered.info: baseline.info

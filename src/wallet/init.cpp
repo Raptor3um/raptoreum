@@ -416,10 +416,10 @@ void WalletInit::Start(CScheduler& scheduler) const
     }
 
     // Run a thread to flush wallet periodically
-    scheduler.scheduleEvery(MaybeCompactWalletDB, 500);
+    scheduler.scheduleEvery(MaybeCompactWalletDB, std::chrono::milliseconds{500});
 
     if (!fSmartnodeMode && CCoinJoinClientOptions::IsEnabled()) {
-        scheduler.scheduleEvery(std::bind(&DoCoinJoinMaintenance, std::ref(*g_connman)), 1 * 1000);
+        scheduler.scheduleEvery(std::bind(&DoCoinJoinMaintenance, std::ref(*g_connman)), std::chrono::milliseconds{1000});
     }
 }
 

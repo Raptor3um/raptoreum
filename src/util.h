@@ -22,6 +22,7 @@
 #include <logging.h>
 #include <sync.h>
 #include <tinyformat.h>
+#include <threadnames.h>
 #include <utiltime.h>
 #include <utilmemory.h>
 #include <amount.h>
@@ -37,7 +38,7 @@
 #include <vector>
 
 #include <boost/signals2/signal.hpp>
-#include <boost/thread/condition_variable.hpp> // for boost::thread_interrupted
+#include <boost/thread/condition_variable.hpp>
 
 // Debugging macros
 
@@ -172,7 +173,7 @@ class ArgsManager
 protected:
     friend class ArgsManagerHelper;
 
-    mutable CCriticalSection cs_args;
+    mutable RecursiveMutex cs_args;
     std::map<std::string, std::vector<std::string>> m_override_args;
     std::map<std::string, std::vector<std::string>> m_config_args;
     std::string m_network;
@@ -324,30 +325,21 @@ std::string HelpMessageOpt(const std::string& option, const std::string& message
  */
 int GetNumCores();
 
-void RenameThread(const char* name);
-std::string GetThreadName();
-
-namespace ctpl {
-    class thread_pool;
-}
-void RenameThreadPool(ctpl::thread_pool& tp, const char* baseName);
-
 /**
  * .. and a wrapper that just calls func once
  */
 template <typename Callable> void TraceThread(const std::string name,  Callable func)
 {
-    std::string s = "raptoreum-" + name;
-    RenameThread(s.c_str());
+    std::string namestr = "rtm-" + name;
+    util::ThreadRename(namestr.c_str());
     try
     {
         LogPrintf("%s thread start\n", name);
         func();
         LogPrintf("%s thread exit\n", name);
     }
-    catch (const boost::thread_interrupted&)
-    {
-        LogPrintf("%s thread interrupt\n", name);
+    catch (const std::exception& e) {
+        PrintExceptionContinue(std::current_exception(), name.c_str());
         throw;
     }
     catch (...) {

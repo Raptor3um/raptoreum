@@ -111,7 +111,7 @@ TransactionView::TransactionView(QWidget* parent) :
     amountWidget->setObjectName("amountWidget");
     hlayout->addWidget(amountWidget);
 
-    // Delay before filtering transactions in ms
+    // Delay before filtering transactions
     static const int input_filter_delay = 200;
 
     QTimer* amount_typing_delay = new QTimer(this);

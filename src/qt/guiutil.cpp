@@ -85,7 +85,7 @@ void ForceActivation();
 
 namespace GUIUtil {
 
-static CCriticalSection cs_css;
+static RecursiveMutex cs_css;
 // The default stylesheet directory
 static const QString defaultStylesheetDirectory = ":css";
 // The actual stylesheet directory

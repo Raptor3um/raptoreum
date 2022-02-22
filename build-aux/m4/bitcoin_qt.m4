@@ -5,8 +5,8 @@ dnl file COPYING or http://www.opensource.org/licenses/mit-license.php.
 dnl Helper for cases where a qt dependency is not met.
 dnl Output: If qt version is auto, set bitcoin_enable_qt to false. Else, exit.
 AC_DEFUN([BITCOIN_QT_FAIL],[
-  if test "x$bitcoin_qt_want_version" = xauto && test "x$bitcoin_qt_force" != xyes; then
-    if test "x$bitcoin_enable_qt" != xno; then
+  if test "$bitcoin_qt_want_version" = "auto" && test "$bitcoin_qt_force" != "yes"; then
+    if test "$bitcoin_enable_qt" != "no"; then
       AC_MSG_WARN([$1; raptoreum-qt frontend will not be built])
     fi
     bitcoin_enable_qt=no
@@ -17,7 +17,7 @@ AC_DEFUN([BITCOIN_QT_FAIL],[
 ])
 
 AC_DEFUN([BITCOIN_QT_CHECK],[
-  if test "x$bitcoin_enable_qt" != xno && test "x$bitcoin_qt_want_version" != xno; then
+  if test "$bitcoin_enable_qt" != "no" && test "$bitcoin_qt_want_version" != "no"; then
     true
     $1
   else
@@ -35,12 +35,12 @@ dnl Inputs: $4: If "yes", don't fail if $2 is not found.
 dnl Output: $1 is set to the path of $2 if found. $2 are searched in order.
 AC_DEFUN([BITCOIN_QT_PATH_PROGS],[
   BITCOIN_QT_CHECK([
-    if test "x$3" != x; then
-      AC_PATH_PROGS($1,$2,,$3)
+    if test "$3" != ""; then
+      AC_PATH_PROGS([$1], [$2], [], [$3])
     else
-      AC_PATH_PROGS($1,$2)
+      AC_PATH_PROGS([$1], [$2])
     fi
-    if test "x$$1" = x && test "x$4" != xyes; then
+    if test "$$1" = "" && test "$4" != "yes"; then
       BITCOIN_QT_FAIL([$1 not found])
     fi
   ])
@@ -57,14 +57,14 @@ AC_DEFUN([BITCOIN_QT_INIT],[
     [build raptoreum-qt GUI (default=auto)])],
     [
      bitcoin_qt_want_version=$withval
-     if test "x$bitcoin_qt_want_version" = xyes; then
+     if test "$bitcoin_qt_want_version" = "yes"; then
        bitcoin_qt_force=yes
        bitcoin_qt_want_version=auto
      fi
     ],
     [bitcoin_qt_want_version=auto])
 
-  AS_IF([test "x$with_gui" = xqt5_debug],
+  AS_IF([test "$with_gui" = "qt5_debug"],
         [AS_CASE([$host],
                  [*darwin*], [qt_lib_suffix=_debug],
                  [*mingw*], [qt_lib_suffix=d],
@@ -112,34 +112,33 @@ AC_DEFUN([BITCOIN_QT_CONFIGURE],[
   CPPFLAGS="$QT_INCLUDES $CPPFLAGS"
   CXXFLAGS="$PIC_FLAGS $CXXFLAGS"
   _BITCOIN_QT_IS_STATIC
-  if test "x$bitcoin_cv_static_qt" = xyes; then
+  if test "$bitcoin_cv_static_qt" = "yes"; then
     _BITCOIN_QT_FIND_STATIC_PLUGINS
-    AC_DEFINE(QT_STATICPLUGIN, 1, [Define this symbol if qt plugins are static])
+    AC_DEFINE([QT_STATICPLUGIN], [1], [Define this symbol if qt plugins are static])
     _BITCOIN_QT_CHECK_STATIC_PLUGINS([Q_IMPORT_PLUGIN(QMinimalIntegrationPlugin)],[-lqminimal])
-    AC_DEFINE(QT_QPA_PLATFORM_MINIMAL, 1, [Define this symbol if the minimal qt platform exists])
-    if test "x$TARGET_OS" = xwindows; then
+    AC_DEFINE([QT_QPA_PLATFORM_MINIMAL], [1], [Define this symbol if the minimal qt platform exists])
+    if test "$TARGET_OS" = "windows"; then
       _BITCOIN_QT_CHECK_STATIC_PLUGINS([Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin)],[-lqwindows])
-      AC_DEFINE(QT_QPA_PLATFORM_WINDOWS, 1, [Define this symbol if the qt platform is windows])
-    elif test "x$TARGET_OS" = xlinux; then
+      AC_DEFINE([QT_QPA_PLATFORM_WINDOWS], [1], [Define this symbol if the qt platform is windows])
+    elif test "$TARGET_OS" = "linux"; then
       _BITCOIN_QT_CHECK_STATIC_PLUGINS([Q_IMPORT_PLUGIN(QXcbIntegrationPlugin)],[-lqxcb -lxcb-static])
-      AC_DEFINE(QT_QPA_PLATFORM_XCB, 1, [Define this symbol if the qt platform is xcb])
-    elif test "x$TARGET_OS" = xdarwin; then
-      AX_CHECK_LINK_FLAG([[-framework IOKit]],[QT_LIBS="$QT_LIBS -framework IOKit"],[AC_MSG_ERROR(could not iokit framework)])
+      AC_DEFINE([QT_QPA_PLATFORM_XCB], [1], [Define this symbol if the qt platform is xcb])
+    elif test "$TARGET_OS" = "darwin"; then
       _BITCOIN_QT_CHECK_STATIC_PLUGINS([Q_IMPORT_PLUGIN(QCocoaIntegrationPlugin)],[-lqcocoa])
-      AC_DEFINE(QT_QPA_PLATFORM_COCOA, 1, [Define this symbol if the qt platform is cocoa])
+      AC_DEFINE([QT_QPA_PLATFORM_COCOA], [1], [Define this symbol if the qt platform is cocoa])
     fi
   fi
   CPPFLAGS=$TEMP_CPPFLAGS
   CXXFLAGS=$TEMP_CXXFLAGS
   ])
 
-  if test "x$qt_bin_path" = x; then
+  if test "$qt_bin_path" = ""; then
     qt_bin_path="`$PKG_CONFIG --variable=host_bins Qt5Core 2>/dev/null`"
   fi
 
-  if test "x$use_hardening" != xno; then
+  if test "$use_hardening" != "no"; then
     BITCOIN_QT_CHECK([
-    AC_MSG_CHECKING(whether -fPIE can be used with this Qt config)
+    AC_MSG_CHECKING([whether -fPIE can be used with this Qt config])
     TEMP_CPPFLAGS=$CPPFLAGS
     TEMP_CXXFLAGS=$CXXFLAGS
     CPPFLAGS="$QT_INCLUDES $CPPFLAGS"
@@ -155,15 +154,15 @@ AC_DEFUN([BITCOIN_QT_CONFIGURE],[
         choke
         #endif
       ]])],
-      [ AC_MSG_RESULT(yes); QT_PIE_FLAGS=$PIE_FLAGS ],
-      [ AC_MSG_RESULT(no); QT_PIE_FLAGS=$PIC_FLAGS]
+      [ AC_MSG_RESULT([yes]); QT_PIE_FLAGS=$PIE_FLAGS ],
+      [ AC_MSG_RESULT([no]); QT_PIE_FLAGS=$PIC_FLAGS]
     )
     CPPFLAGS=$TEMP_CPPFLAGS
     CXXFLAGS=$TEMP_CXXFLAGS
     ])
   else
     BITCOIN_QT_CHECK([
-    AC_MSG_CHECKING(whether -fPIC is needed with this Qt config)
+    AC_MSG_CHECKING([whether -fPIC is needed with this Qt config])
     TEMP_CPPFLAGS=$CPPFLAGS
     CPPFLAGS="$QT_INCLUDES $CPPFLAGS"
     AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
@@ -177,8 +176,8 @@ AC_DEFUN([BITCOIN_QT_CONFIGURE],[
         choke
         #endif
       ]])],
-      [ AC_MSG_RESULT(no)],
-      [ AC_MSG_RESULT(yes); QT_PIE_FLAGS=$PIC_FLAGS]
+      [ AC_MSG_RESULT([no])],
+      [ AC_MSG_RESULT([yes]); QT_PIE_FLAGS=$PIC_FLAGS]
     )
     CPPFLAGS=$TEMP_CPPFLAGS
     ])
@@ -197,7 +196,7 @@ AC_DEFUN([BITCOIN_QT_CONFIGURE],[
                     echo '<!DOCTYPE RCC><RCC version="1.0"/>' > conftest.qrc
                     $RCC --format-version 1 conftest.qrc >/dev/null 2>&1 && ac_cv_prog_rcc_accepts_format_version=yes
                     rm -f conftest.qrc])
-    if test "$ac_cv_prog_rcc_accepts_format_version" = yes; then
+    if test "$ac_cv_prog_rcc_accepts_format_version" = "yes"; then
       RCCFLAGS="--format-version 1"
     else
       RCCFLAGS=
@@ -210,13 +209,13 @@ AC_DEFUN([BITCOIN_QT_CONFIGURE],[
     *darwin*)
      BITCOIN_QT_CHECK([
        MOC_DEFS="${MOC_DEFS} -DQ_OS_MAC"
-       base_frameworks="-framework Foundation -framework ApplicationServices -framework AppKit"
-       AX_CHECK_LINK_FLAG([[$base_frameworks]],[QT_LIBS="$QT_LIBS $base_frameworks"],[AC_MSG_ERROR(could not find base frameworks)])
+       base_frameworks="-framework Foundation -framework AppKit"
+       AX_CHECK_LINK_FLAG([$base_frameworks], [QT_LIBS="$QT_LIBS $base_frameworks"], [AC_MSG_ERROR(could not find base frameworks)])
      ])
     ;;
     *mingw*)
        BITCOIN_QT_CHECK([
-         AX_CHECK_LINK_FLAG([[-mwindows]],[QT_LDFLAGS="$QT_LDFLAGS -mwindows"],[AC_MSG_WARN(-mwindows linker support not detected)])
+         AX_CHECK_LINK_FLAG([-mwindows], [QT_LDFLAGS="$QT_LDFLAGS -mwindows"], [AC_MSG_WARN([-mwindows linker support not detected])])
        ])
   esac
 
@@ -226,23 +225,23 @@ AC_DEFUN([BITCOIN_QT_CONFIGURE],[
   BITCOIN_QT_CHECK([
     bitcoin_enable_qt=yes
     bitcoin_enable_qt_test=yes
-    if test "x$have_qt_test" = xno; then
+    if test "$have_qt_test" = "no"; then
       bitcoin_enable_qt_test=no
     fi
     bitcoin_enable_qt_dbus=no
-    if test "x$use_dbus" != xno && test "x$have_qt_dbus" = xyes; then
+    if test "$use_dbus" != "no" && test "$have_qt_dbus" = "yes"; then
       bitcoin_enable_qt_dbus=yes
     fi
-    if test "x$use_dbus" = xyes && test "x$have_qt_dbus" = xno; then
+    if test "$use_dbus" = "yes" && test "$have_qt_dbus" = "no"; then
       AC_MSG_ERROR([libQtDBus not found. Install libQtDBus or remove --with-qtdbus.])
     fi
-    if test "x$LUPDATE" = x; then
+    if test "$LUPDATE" = ""; then
       AC_MSG_WARN([lupdate is required to update qt translations])
     fi
   ],[
     bitcoin_enable_qt=no
   ])
-  if test x$bitcoin_enable_qt = xyes; then
+  if test $bitcoin_enable_qt = "yes"; then
     AC_MSG_RESULT([$bitcoin_enable_qt ($qt_lib_prefix)])
   else
     AC_MSG_RESULT([$bitcoin_enable_qt])
@@ -253,9 +252,7 @@ AC_DEFUN([BITCOIN_QT_CONFIGURE],[
   AC_SUBST(QT_LIBS)
   AC_SUBST(QT_LDFLAGS)
   AC_SUBST(QT_DBUS_INCLUDES)
-  AC_SUBST(QT_DBUS_LIBS)
   AC_SUBST(QT_TEST_INCLUDES)
-  AC_SUBST(QT_TEST_LIBS)
   AC_SUBST(QT_SELECT, qt5)
   AC_SUBST(MOC_DEFS)
 ])
@@ -309,7 +306,7 @@ dnl Internal. Find paths necessary for linking qt static plugins
 dnl Inputs: qt_plugin_path. optional.
 dnl Outputs: QT_LIBS is appended
 AC_DEFUN([_BITCOIN_QT_FIND_STATIC_PLUGINS],[
-    if test "x$qt_plugin_path" != x; then
+    if test "$qt_plugin_path" != ""; then
       QT_LIBS="$QT_LIBS -L$qt_plugin_path/platforms"
       if test -d "$qt_plugin_path/accessible"; then
         QT_LIBS="$QT_LIBS -L$qt_plugin_path/accessible"
@@ -320,9 +317,9 @@ AC_DEFUN([_BITCOIN_QT_FIND_STATIC_PLUGINS],[
       PKG_CHECK_MODULES([QTDEVICEDISCOVERY], [Qt5DeviceDiscoverySupport${qt_lib_suffix}], [QT_LIBS="-lQt5DeviceDiscoverySupport${qt_lib_suffix} $QT_LIBS"])
       PKG_CHECK_MODULES([QTACCESSIBILITY], [Qt5AccessibilitySupport${qt_lib_suffix}], [QT_LIBS="-lQt5AccessibilitySupport${qt_lib_suffix} $QT_LIBS"])
       PKG_CHECK_MODULES([QTFB], [Qt5FbSupport${qt_lib_suffix}], [QT_LIBS="-lQt5FbSupport${qt_lib_suffix} $QT_LIBS"])
-      if test "x$TARGET_OS" = xlinux; then
+      if test "$TARGET_OS" = "linux"; then
         PKG_CHECK_MODULES([QTXCBQPA], [Qt5XcbQpa], [QT_LIBS="$QTXCBQPA_LIBS $QT_LIBS"])
-      elif test "x$TARGET_OS" = xdarwin; then
+      elif test "$TARGET_OS" = "darwin"; then
         PKG_CHECK_MODULES([QTCLIPBOARD], [Qt5ClipboardSupport${qt_lib_suffix}], [QT_LIBS="-lQt5ClipboardSupport${qt_lib_suffix} $QT_LIBS"])
         PKG_CHECK_MODULES([QTGRAPHICS], [Qt5GraphicsSupport${qt_lib_suffix}], [QT_LIBS="-lQt5GraphicsSupport${qt_lib_suffix} $QT_LIBS"])
         PKG_CHECK_MODULES([QTCGL], [Qt5CglSupport${qt_lib_suffix}], [QT_LIBS="-lQt5CglSupport${qt_lib_suffix} $QT_LIBS"])
@@ -355,7 +352,7 @@ AC_DEFUN([_BITCOIN_QT_FIND_LIBS],[
 
   BITCOIN_QT_CHECK([
     PKG_CHECK_MODULES([QT_TEST], [${qt_lib_prefix}Test${qt_lib_suffix} $qt_version], [QT_TEST_INCLUDES="$QT_TEST_CFLAGS"; have_qt_test=yes], [have_qt_test=no])
-    if test "x$use_dbus" != xno; then
+    if test "$use_dbus" != "no"; then
       PKG_CHECK_MODULES([QT_DBUS], [${qt_lib_prefix}DBus $qt_version], [QT_DBUS_INCLUDES="$QT_DBUS_CFLAGS"; have_qt_dbus=yes], [have_qt_dbus=no])
     fi
   ])

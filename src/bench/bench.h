@@ -5,6 +5,8 @@
 #ifndef BITCOIN_BENCH_BENCH_H
 #define BITCOIN_BENCH_BENCH_H
 
+#include <utilmacro.h>
+
 #include <functional>
 #include <limits>
 #include <map>

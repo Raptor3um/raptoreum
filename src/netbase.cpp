@@ -29,7 +29,7 @@
 #endif
 
 // Settings
-static CCriticalSection cs_proxyInfos;
+static RecursiveMutex cs_proxyInfos;
 static proxyType proxyInfo[NET_MAX] GUARDED_BY(cs_proxyInfos);
 static proxyType nameProxy GUARDED_BY(cs_proxyInfos);
 int nConnectTimeout = DEFAULT_CONNECT_TIMEOUT;
@@ -181,7 +181,7 @@ CService LookupNumeric(const char *pszName, int portDefault)
 struct timeval MillisToTimeval(int64_t nTimeout)
 {
     struct timeval timeout;
-    timeout.tv_sec  = nTimeout / 1000;
+    timeout.tv_sec = nTimeout / 1000;
     timeout.tv_usec = (nTimeout % 1000) * 1000;
     return timeout;
 }

@@ -16,11 +16,6 @@ class CWallet;
 class WalletInitInterface;
 extern const WalletInitInterface& g_wallet_init_interface;
 
-namespace boost
-{
-class thread_group;
-} // namespace boost
-
 void StartShutdown();
 void StartRestart();
 bool ShutdownRequested();

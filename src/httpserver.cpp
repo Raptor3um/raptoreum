@@ -2,11 +2,16 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#if defined(HAVE_CONFIG_H)
+#include <config/raptoreum-config.h>
+#endif
+
 #include <httpserver.h>
 
 #include <init.h>
 #include <chainparamsbase.h>
 #include <compat.h>
+#include <threadnames.h>
 #include <util.h>
 #include <utilstrencodings.h>
 #include <netbase.h>
@@ -18,7 +23,7 @@
 #include <memory>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+#include <string>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -74,7 +79,7 @@ class WorkQueue
 {
 private:
     /** Mutex protects entire object */
-    std::mutex cs;
+    Mutex cs;
     std::condition_variable cond;
     std::deque<std::unique_ptr<WorkItem>> queue;
     bool running;
@@ -93,7 +98,7 @@ public:
     /** Enqueue a work item */
     bool Enqueue(WorkItem* item)
     {
-        std::unique_lock<std::mutex> lock(cs);
+        LOCK(cs);
         if (queue.size() >= maxDepth) {
             return false;
         }
@@ -107,7 +112,7 @@ public:
         while (true) {
             std::unique_ptr<WorkItem> i;
             {
-                std::unique_lock<std::mutex> lock(cs);
+                WAIT_LOCK(cs, lock);
                 while (running && queue.empty())
                     cond.wait(lock);
                 if (!running)
@@ -121,7 +126,7 @@ public:
     /** Interrupt and exit loops */
     void Interrupt()
     {
-        std::unique_lock<std::mutex> lock(cs);
+        LOCK(cs);
         running = false;
         cond.notify_all();
     }
@@ -286,7 +291,7 @@ static void http_reject_request_cb(struct evhttp_request* req, void*)
 /** Event dispatcher thread */
 static bool ThreadHTTP(struct event_base* base, struct evhttp* http)
 {
-    RenameThread("raptoreum-http");
+    util::ThreadRename("http");
     LogPrint(BCLog::HTTP, "Entering http event loop\n");
     event_base_dispatch(base);
     // Event loop will be interrupted by InterruptHTTPServer()
@@ -337,9 +342,9 @@ static bool HTTPBindAddresses(struct evhttp* http)
 }
 
 /** Simple wrapper to set thread name and run work queue */
-static void HTTPWorkQueueRun(WorkQueue<HTTPClosure>* queue)
+static void HTTPWorkQueueRun(WorkQueue<HTTPClosure>* queue, int worker_num)
 {
-    RenameThread("raptoreum-httpworker");
+    util::ThreadRename(strprintf("httpworker.%i", worker_num).c_str());
     queue->Run();
 }
 
@@ -440,7 +445,7 @@ bool StartHTTPServer()
     threadHTTP = std::thread(ThreadHTTP, eventBase, eventHTTP);
 
     for (int i = 0; i < rpcThreads; i++) {
-        g_thread_http_workers.emplace_back(HTTPWorkQueueRun, workQueue);
+        g_thread_http_workers.emplace_back(HTTPWorkQueueRun, workQueue, i);
     }
     return true;
 }
@@ -503,7 +508,7 @@ static void httpevent_callback_fn(evutil_socket_t, short, void* data)
         delete self;
 }
 
-HTTPEvent::HTTPEvent(struct event_base* base, bool _deleteWhenTriggered, const std::function<void(void)>& _handler):
+HTTPEvent::HTTPEvent(struct event_base* base, bool _deleteWhenTriggered, const std::function<void()>& _handler):
     deleteWhenTriggered(_deleteWhenTriggered), handler(_handler)
 {
     ev = event_new(base, -1, 0, httpevent_callback_fn, this);
@@ -615,7 +620,12 @@ CService HTTPRequest::GetPeer()
         // evhttp retains ownership over returned address string
         const char* address = "";
         uint16_t port = 0;
+
+#ifdef HAVE_EVHTTP_CONNECTION_GET_PEER_CONST_CHAR
+        evhttp_connection_get_peer(con, &address, &port);
+#else
         evhttp_connection_get_peer(con, (char**)&address, &port);
+#endif // HAVE_EVHTTP_CONNECTION_GET_PEER_CONST_CHAR
         peer = LookupNumeric(address, port);
     }
     return peer;

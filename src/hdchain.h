@@ -42,7 +42,7 @@ private:
 
     std::map<uint32_t, CHDAccount> mapAccounts;
     // critical section to protect mapAccounts
-    mutable CCriticalSection cs_accounts;
+    mutable RecursiveMutex cs_accounts;
 
 public:
 
