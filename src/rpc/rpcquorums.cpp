@@ -532,7 +532,6 @@ void quorum_dkgsimerror_help()
 
 UniValue quorum_dkgsimerror(const JSONRPCRequest& request)
 {
-    auto cmd = request.params[0].get_str();
     if (request.fHelp || (request.params.size() != 3)) {
         quorum_dkgsimerror_help();
     }
@@ -625,7 +624,7 @@ UniValue quorum_getdata(const JSONRPCRequest& request)
     );
 }
 
-UniValue quorum(const JSONRPCRequest& request)
+UniValue _quorum(const JSONRPCRequest& request)
 {
     if (request.fHelp && request.params.empty()) {
         quorum_help();
@@ -759,7 +758,7 @@ UniValue verifyislock(const JSONRPCRequest& request)
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)
   //  --------------------- ------------------------  -----------------------
-    { "evo",                "quorum",                 &quorum,                 {}  },
+    { "evo",                "quorum",                 &_quorum,                 {}  },
     { "evo",                "verifychainlock",        &verifychainlock,        {"blockHash", "signature", "blockHeight"} },
     { "evo",                "verifyislock",           &verifyislock,           {"id", "txid", "signature", "maxHeight"}  },
 };
