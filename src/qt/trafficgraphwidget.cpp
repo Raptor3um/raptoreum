@@ -7,8 +7,6 @@
 #include <qt/clientmodel.h>
 #include <qt/guiutil.h>
 
-#include <boost/bind/bind.hpp>
-
 #include <QPainter>
 #include <QColor>
 #include <QTimer>
@@ -130,7 +128,7 @@ void TrafficGraphWidget::paintEvent(QPaintEvent *)
         QColor lucentGreen = green;
         lucentGreen.setAlpha(128);
 
-        paintPath(pIn, queue, boost::bind(chooseIn,_1));
+        paintPath(pIn, queue, std::bind(chooseIn, std::placeholders::_1));
         painter.fillPath(pIn, lucentGreen);
         painter.setPen(green);
         painter.drawPath(pIn);
@@ -139,7 +137,7 @@ void TrafficGraphWidget::paintEvent(QPaintEvent *)
         QColor lucentRed = red;
         lucentRed.setAlpha(128);
 
-        paintPath(pOut, queue, boost::bind(chooseOut,_1));
+        paintPath(pOut, queue, std::bind(chooseOut, std::placeholders::_1));
         painter.fillPath(pOut, lucentRed);
         painter.setPen(red);
         painter.drawPath(pOut);
