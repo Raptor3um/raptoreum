@@ -212,14 +212,6 @@ public:
         return ret;
     }
 
-    void SetHex(const char* psz) {
-    	base_uint<BITS> b;
-		for(int x=0; x<b.WIDTH; ++x) {
-			memcpy((char*)&b.pn[x], psz + x*4, 4);
-		}
-		*this = b;
-    }
-
     int CompareTo(const base_uint& b) const;
     bool EqualTo(uint64_t b) const;
 
@@ -245,6 +237,7 @@ public:
     int GET_WIDTH() const;
     uint32_t GET_PN(int index) const;
     std::string GetHex() const;
+    void SetHex(const char* str);
     void SetHex(const std::string& str);
     std::string ToString() const;
 
