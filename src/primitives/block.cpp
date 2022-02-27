@@ -17,14 +17,29 @@ uint256 CBlockHeader::GetHash() const
 
 uint256 CBlockHeader::GetPOWHash() const
 {
+    CPowCache& cache(CPowCache::Instance());
+
 	uint256 headerHash = GetHash();
 	uint256 powHash;
-	if (!CPowCache::Instance().get(headerHash, powHash))
+	if (!cache.get(headerHash, powHash))
     {
         // Not found, hash and save
 		powHash = HashGR(BEGIN(nVersion), END(nNonce), hashPrevBlock);
-		CPowCache::Instance().insert(headerHash, powHash);
+		cache.insert(headerHash, powHash);
 	}
+    else
+    {
+        if (cache.IsValidate())
+        {
+            // Validate PowCache and correct if needed
+            uint256 powHash2 = HashGR(BEGIN(nVersion), END(nNonce), hashPrevBlock);
+            if (powHash2 != powHash)
+            {
+                LogPrintf("PowCache failure: headerHash: %s, from cache: %s, computed: %s, correcting\n", headerHash.ToString(), powHash.ToString(), powHash2.ToString());
+        		cache.insert(headerHash, powHash2);
+            }
+        }
+    }
 	return powHash;
 }
 

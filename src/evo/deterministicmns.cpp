@@ -20,8 +20,9 @@
 
 #include <univalue.h>
 
-static const std::string DB_LIST_SNAPSHOT = "dmn_S";
-static const std::string DB_LIST_DIFF = "dmn_D";
+static const std::string DB_LIST_SNAPSHOT     = "dmn_S";
+static const std::string DB_LIST_DIFF         = "dmn_D";
+static const int         CACHE_CLEANUP_BLOCKS = 40;
 
 std::unique_ptr<CDeterministicMNManager> deterministicMNManager;
 
@@ -1086,6 +1087,12 @@ bool CDeterministicMNManager::IsDIP3Enforced(int nHeight)
 void CDeterministicMNManager::CleanupCache(int nHeight)
 {
     AssertLockHeld(cs);
+
+    // Don't run this every block, unnecessary overhead.
+    static int lastCleanupHeight = 0;
+    if (nHeight - lastCleanupHeight < CACHE_CLEANUP_BLOCKS)
+        return;
+    lastCleanupHeight = nHeight;
 
     std::vector<uint256> toDeleteLists;
     std::vector<uint256> toDeleteDiffs;

@@ -12,16 +12,20 @@ CPowCache& CPowCache::Instance()
 {
     if (CPowCache::instance == nullptr)
     {
-        int powCacheSize = gArgs.GetArg("-powhashcache", DEFAULT_POW_CACHE_SIZE);
+        int  powCacheSize     = gArgs.GetArg("-powcachesize", DEFAULT_POW_CACHE_SIZE);
+        bool powCacheValidate = gArgs.GetArg("-powcachevalidate", 0) > 0 ? true : false;
         powCacheSize = powCacheSize == 0 ? DEFAULT_POW_CACHE_SIZE : powCacheSize;
 
-        CPowCache::instance = new CPowCache(powCacheSize);
+        CPowCache::instance = new CPowCache(powCacheSize, powCacheValidate);
     }
     return *instance;
 }
 
-CPowCache::CPowCache(int maxSize) : unordered_lru_cache<uint256, uint256, std::hash<uint256>>(maxSize)
+CPowCache::CPowCache(int maxSize, bool validate) : unordered_lru_cache<uint256, uint256, std::hash<uint256>>(maxSize),
+   nVersion(CURRENT_VERSION),
+   bValidate(validate)
 {
+    if (bValidate) LogPrintf("PowCache: Validation and auto correction enabled\n");
 }
 
 CPowCache::~CPowCache()
@@ -40,6 +44,6 @@ void CPowCache::CheckAndRemove()
 std::string CPowCache::ToString() const
 {
     std::ostringstream info;
-    info << "Powcache: elements: " << (int)cacheMap.size();
+    info << "PowCache: elements: " << (int)cacheMap.size();
     return info.str();
 }
