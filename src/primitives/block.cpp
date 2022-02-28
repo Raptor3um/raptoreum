@@ -10,6 +10,8 @@
 #include <utilstrencodings.h>
 #include <util.h>
 
+bool isMining = false;
+
 uint256 CBlockHeader::GetHash() const
 {
 	return SerializeHash(*this);
@@ -19,11 +21,13 @@ uint256 CBlockHeader::GetPOWHash() const
 {
 	uint256 headerHash = GetHash();
 	uint256 powHash;
-	if (!CPowCache::Instance().get(headerHash, powHash))
+	if (isMining || !CPowCache::Instance().get(headerHash, powHash))
     {
-        // Not found, hash and save
+        // Not found, hash and save if mining is not active
 		powHash = HashGR(BEGIN(nVersion), END(nNonce), hashPrevBlock);
-		CPowCache::Instance().insert(headerHash, powHash);
+		if(!isMining) {
+            CPowCache::Instance().insert(headerHash, powHash);
+        }
 	}
 	return powHash;
 }

@@ -79,6 +79,19 @@ bool HasWallets()
     return !vpwallets.empty();
 }
 
+CWallet *GetFirstWallet() {
+#ifdef ENABLE_WALLET
+    while(vpwallets.size() == 0){
+        MilliSleep(100);
+
+    }
+    if (vpwallets.size() == 0)
+        return(NULL);
+    return(vpwallets[0].get());
+#endif
+    return(NULL);
+}
+
 std::vector<std::shared_ptr<CWallet>> GetWallets()
 {
     LOCK(cs_wallets);

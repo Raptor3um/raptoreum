@@ -62,6 +62,7 @@ uint64_t nMiningTimeStart = 0;
 double nHashesPerSec = 0;
 uint64_t nHashesDone = 0;
 std::string alsoHashString;
+extern bool isMining;
 
 int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev)
 {
@@ -530,10 +531,6 @@ static bool ProcessBlockFound(const CBlock* pblock, const CChainParams& chainpar
     return true;
 }
 
-CWallet *GetFirstWallet() {
-    return(NULL);
-}
-
 void static RaptoreumMiner(const CChainParams& chainparams)
 {
     LogPrintf("RaptoreumMiner -- started\n");
@@ -548,7 +545,6 @@ void static RaptoreumMiner(const CChainParams& chainparams)
     #ifdef ENABLE_WALLET
         pWallet = GetFirstWallet();
     #endif
-
     if (!EnsureWalletIsAvailable(pWallet, false)) {
         LogPrintf("RaptoreumMiner -- Wallet not available\n");
     }
@@ -561,7 +557,6 @@ void static RaptoreumMiner(const CChainParams& chainparams)
 
 
     std::shared_ptr<CReserveScript> coinbaseScript;
-
     pWallet->GetScriptForMining(coinbaseScript);
 
     //GetMainSignals().ScriptForMining(coinbaseScript);
@@ -576,6 +571,7 @@ void static RaptoreumMiner(const CChainParams& chainparams)
         // Throw an error if no script was provided.  This can happen
         // due to some internal error but also if the keypool is empty.
         // In the latter case, already the pointer is NULL.
+
         if (!coinbaseScript || coinbaseScript->reserveScript.empty())
         {
             throw std::runtime_error("No coinbase script available (mining requires a wallet)");
@@ -583,7 +579,6 @@ void static RaptoreumMiner(const CChainParams& chainparams)
 
 
         while (true) {
-
             if (chainparams.MiningRequiresPeers()) {
                 // Busy-wait for the network to come online so we don't waste time mining
                 // on an obsolete chain. In regtest mode we expect to fly solo.
@@ -603,9 +598,6 @@ void static RaptoreumMiner(const CChainParams& chainparams)
             unsigned int nTransactionsUpdatedLast = mempool.GetTransactionsUpdated();
             CBlockIndex* pindexPrev = chainActive.Tip();
             if(!pindexPrev) break;
-
-
-
             std::unique_ptr<CBlockTemplate> pblocktemplate(BlockAssembler(Params()).CreateNewBlock(coinbaseScript->reserveScript));
 
             if (!pblocktemplate.get())
@@ -616,8 +608,7 @@ void static RaptoreumMiner(const CChainParams& chainparams)
             CBlock *pblock = &pblocktemplate->block;
             HashSelection hashSelection(pblock->hashPrevBlock, {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14}, {0, 1, 2, 3, 4, 5});
 			alsoHashString.clear();
-			alsoHashString.append(hashSelection.getHashSelectionString());
-			LogPrintf("Algos: %s\n",hashSelection.getHashSelectionString());
+            alsoHashString.append(hashSelection.getHashSelectionString());
             IncrementExtraNonce(pblock, pindexPrev, nExtraNonce);
 
             LogPrintf("RaptoreumMiner -- Running miner with %u transactions in block (%u bytes)\n", pblock->vtx.size(),
@@ -687,11 +678,13 @@ void static RaptoreumMiner(const CChainParams& chainparams)
     }
     catch (const boost::thread_interrupted&)
     {
+        isMining = false;
         LogPrintf("RaptoreumMiner -- terminated\n");
         throw;
     }
     catch (const std::runtime_error &e)
     {
+        isMining = false;
         LogPrintf("RaptoreumMiner -- runtime error: %s\n", e.what());
         return;
     }
@@ -713,8 +706,9 @@ int GenerateRaptoreums(bool fGenerate, int nThreads, const CChainParams& chainpa
         minerThreads = NULL;
     }
 
-    if (nThreads == 0 || !fGenerate)
+    if (nThreads == 0 || !fGenerate) {
         return numCores;
+    }
 
     minerThreads = new boost::thread_group();
 
@@ -726,7 +720,7 @@ int GenerateRaptoreums(bool fGenerate, int nThreads, const CChainParams& chainpa
     for (int i = 0; i < nThreads; i++){
         minerThreads->create_thread(boost::bind(&RaptoreumMiner, boost::cref(chainparams)));
     }
-
+    isMining = true;
     return(numCores);
 }
 
