@@ -159,7 +159,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(interfaces::Wal
                     sub.type = TransactionRecord::Generated;
                 }
 
-                if(wtx.tx->nType == TRANSACTION_FUTURE)
+                if (wtx.tx->nType == TRANSACTION_FUTURE)
                 {
                     // Future TX Received
                     CTxDestination address;
@@ -263,7 +263,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(interfaces::Wal
             }
 
             CAmount nChange = wtx.change;
-            if(wtx.tx->nType == TRANSACTION_FUTURE)
+            if (wtx.tx->nType == TRANSACTION_FUTURE)
             {
                 sub.type = TransactionRecord::FutureSend;
                 CTxDestination address;
@@ -323,11 +323,41 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(interfaces::Wal
                     sub.txDest = wtx.txout_address[nOut];
                     sub.updateLabel(wallet);
                 }
+                else
+                {
+                    // Sent to IP, or other non-address transaction like OP_EVAL
+                    sub.type = TransactionRecord::SendToOther;
+                    sub.strAddress = mapValue["to"];
+                    sub.txDest = DecodeDestination(sub.strAddress);
+                }
+
+                if(mapValue["DS"] == "1")
+                {
+                    sub.type = TransactionRecord::CoinJoinSend;
+                }
+
+                CAmount nValue = txout.nValue;
+                /* Add fee to first output */
+                if (nTxFee > 0)
+                {
+                    nValue += nTxFee;
+                    nTxFee = 0;
+                }
+                sub.debit = -nValue;
+
                 parts.append(sub);
             }
         }
-       //LogPrintf("TransactionRecord::%s TxId: %s, vOutIdx: %d, Unhandled\n", __func__, hash.ToString(), vOutIdx);
+        else
+        {
+            //
+            // Mixed debit transaction, can't break down payees
+            //
+            parts.append(TransactionRecord(hash, nTime, TransactionRecord::Other, "", nNet, 0));
+            parts.last().involvesWatchAddress = involvesWatchAddress;
+        }
     }
+
     return parts;
 }
 
@@ -337,9 +367,9 @@ void TransactionRecord::updateStatus(const interfaces::WalletTx& wtx, const inte
 
     // Sort order, unrecorded transactions sort to the top
     status.sortKey = strprintf("%010d-%01d-%010u-%03d",
-                               wtxStatus.block_height,
-                               wtxStatus.is_coinbase ? 1 : 0,
-                               wtxStatus.time_received,
+        wtxStatus.block_height,
+        wtxStatus.is_coinbase ? 1 : 0,
+        wtxStatus.time_received,
         idx);
     status.countsForBalance = wtxStatus.is_trusted && !(wtxStatus.blocks_to_maturity > 0);
     status.depth = wtxStatus.depth_in_main_chain;
@@ -382,12 +412,11 @@ void TransactionRecord::updateStatus(const interfaces::WalletTx& wtx, const inte
             status.status = TransactionStatus::Confirmed;
         }
     }
-    //For Future transactions, determine maturity
-    else if(type == TransactionRecord::FutureReceive)
+    // For Future transactions, determine maturity
+    else if (type == TransactionRecord::FutureReceive)
     {
         CFutureTx ftx;
         getFutureTxStatus(wtx, wtxStatus, ftx);
-
     }
     else
     {

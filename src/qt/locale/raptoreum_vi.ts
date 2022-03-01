@@ -70,12 +70,12 @@
         <translation>Địa chỉ nhận</translation>
     </message>
     <message>
-        <source>These are your Dash addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Đây là các địa chỉ Dash của bạn để gửi thanh toán. Luôn luôn kiểm tra số tiền và địa chỉ nhận trước khi bạn gửi tiền.</translation>
+        <source>These are your Raptoreum addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation>Đây là các địa chỉ Raptoreum của bạn để gửi thanh toán. Luôn luôn kiểm tra số tiền và địa chỉ nhận trước khi bạn gửi tiền.</translation>
     </message>
     <message>
-        <source>These are your Dash addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Đây là các địa chỉ Dash của bạn để nhận thanh toán. Gợi ý là sử dụng một địa chỉ nhận mới cho mỗi giao dịch.</translation>
+        <source>These are your Raptoreum addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
+        <translation>Đây là các địa chỉ Raptoreum của bạn để nhận thanh toán. Gợi ý là sử dụng một địa chỉ nhận mới cho mỗi giao dịch.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -231,8 +231,8 @@
         <translation>Xác nhận mã hoá ví</translation>
     </message>
     <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR DASH&lt;/b&gt;!</source>
-        <translation>Chú ý: Nếu bạn mã hoá ví và mất mật khẩu, bạn sẽ &lt;b&gt;MẤT TẤT CẢ DASH CỦA BẠN&lt;/b&gt;!</translation>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR RTM&lt;/b&gt;!</source>
+        <translation>Chú ý: Nếu bạn mã hoá ví và mất mật khẩu, bạn sẽ &lt;b&gt;MẤT TẤT CẢ RTM CỦA BẠN&lt;/b&gt;!</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
@@ -304,12 +304,12 @@
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <source>A fatal error occurred. Dash Core can no longer continue safely and will quit.</source>
-        <translation>Có lỗi nghiêm trọng xảy ra. Dash Core không thể tiếp tục một cách an toàn được nên phải thoát ra.</translation>
+        <source>A fatal error occurred. Raptoreum Core can no longer continue safely and will quit.</source>
+        <translation>Có lỗi nghiêm trọng xảy ra. Raptoreum Core không thể tiếp tục một cách an toàn được nên phải thoát ra.</translation>
     </message>
     <message>
-        <source>Dash Core</source>
-        <translation>Dash Core</translation>
+        <source>Raptoreum Core</source>
+        <translation>Raptoreum Core</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -332,16 +332,16 @@
         <translation>&amp;Gửi</translation>
     </message>
     <message>
-        <source>Send coins to a Dash address</source>
-        <translation>Gửi tiền vào địa chỉ Dash</translation>
+        <source>Send coins to a Raptoreum address</source>
+        <translation>Gửi tiền vào địa chỉ Raptoreum</translation>
     </message>
     <message>
         <source>&amp;Receive</source>
         <translation>&amp;Nhận</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and dash: URIs)</source>
-        <translation>Yêu cầu thanh toán (sinh mã QR và dash: URIs)</translation>
+        <source>Request payments (generates QR codes and raptoreum: URIs)</source>
+        <translation>Yêu cầu thanh toán (sinh mã QR và raptoreum: URIs)</translation>
     </message>
     <message>
         <source>&amp;Transactions</source>
@@ -352,12 +352,12 @@
         <translation>Xem lịch sử giao dịch</translation>
     </message>
     <message>
-        <source>&amp;Masternodes</source>
-        <translation>&amp;Masternodes</translation>
+        <source>&amp;Smartnodes</source>
+        <translation>&amp;Smartnodes</translation>
     </message>
     <message>
-        <source>Browse masternodes</source>
-        <translation>Hiển thị các masternode</translation>
+        <source>Browse smartnodes</source>
+        <translation>Hiển thị các smartnode</translation>
     </message>
     <message>
         <source>E&amp;xit</source>
@@ -368,8 +368,8 @@
         <translation>Thoát ứng dụng</translation>
     </message>
     <message>
-        <source>Show information about Dash Core</source>
-        <translation>Hiển thị thông tin về Dash Core</translation>
+        <source>Show information about Raptoreum Core</source>
+        <translation>Hiển thị thông tin về Raptoreum Core</translation>
     </message>
     <message>
         <source>About &amp;Qt</source>
@@ -440,16 +440,16 @@
         <translation>Ký vào &amp;thông điệp...</translation>
     </message>
     <message>
-        <source>Sign messages with your Dash addresses to prove you own them</source>
-        <translation>Ký vào thông điệp với địa chỉ Dash để chứng minh bạn là chủ của chúng</translation>
+        <source>Sign messages with your Raptoreum addresses to prove you own them</source>
+        <translation>Ký vào thông điệp với địa chỉ Raptoreum để chứng minh bạn là chủ của chúng</translation>
     </message>
     <message>
         <source>&amp;Verify message...</source>
         <translation>&amp;Kiểm tra thông điệp...</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified Dash addresses</source>
-        <translation>Kiểm tra thông điệp để đảm bảo rằng nó đã được ký bằng địa chỉ Dash nhất định</translation>
+        <source>Verify messages to ensure they were signed with specified Raptoreum addresses</source>
+        <translation>Kiểm tra thông điệp để đảm bảo rằng nó đã được ký bằng địa chỉ Raptoreum nhất định</translation>
     </message>
     <message>
         <source>&amp;Information</source>
@@ -528,16 +528,16 @@
         <translation>Mở &amp;URI...</translation>
     </message>
     <message>
-        <source>Open a dash: URI or payment request</source>
-        <translation>Mở một dash: URI hoặc một yêu cầu thanh toán</translation>
+        <source>Open a raptoreum: URI or payment request</source>
+        <translation>Mở một raptoreum: URI hoặc một yêu cầu thanh toán</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
         <translation>&amp;Các Tuỳ chọn dòng lệnh</translation>
     </message>
     <message>
-        <source>Show the %1 help message to get a list with possible Dash command-line options</source>
-        <translation>Hiển thị %1 tin nhắn hỗ trợ để nhận được danh sách Dash command-line khả dụng</translation>
+        <source>Show the %1 help message to get a list with possible Raptoreum command-line options</source>
+        <translation>Hiển thị %1 tin nhắn hỗ trợ để nhận được danh sách Raptoreum command-line khả dụng</translation>
     </message>
     <message>
         <source>%1 client</source>
@@ -568,8 +568,8 @@
         <translation>Bảng Thanh công cụ</translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to Dash network</source>
-        <translation><numerusform>%n kết nối hiện thời tới mạng lưới của Dash</numerusform></translation>
+        <source>%n active connection(s) to Raptoreum network</source>
+        <translation><numerusform>%n kết nối hiện thời tới mạng lưới của Raptoreum</numerusform></translation>
     </message>
     <message>
         <source>Network activity disabled</source>
@@ -940,8 +940,8 @@
         <translation>Sửa địa chỉ gửi</translation>
     </message>
     <message>
-        <source>The entered address "%1" is not a valid Dash address.</source>
-        <translation>Địa chỉ vừa nhập "%1" không phải địa chỉ Dash hợp lệ.</translation>
+        <source>The entered address "%1" is not a valid Raptoreum address.</source>
+        <translation>Địa chỉ vừa nhập "%1" không phải địa chỉ Raptoreum hợp lệ.</translation>
     </message>
     <message>
         <source>The entered address "%1" is already in the address book.</source>
@@ -1041,8 +1041,8 @@
         <translation>Gần đúng %1 GB of data sẽ được lưu giữ trong danh mục này.</translation>
     </message>
     <message>
-        <source>%1 will download and store a copy of the Dash block chain.</source>
-        <translation>%1 sẽ download và lưu trữ một bản copy của Dash block chain.</translation>
+        <source>%1 will download and store a copy of the Raptoreum block chain.</source>
+        <translation>%1 sẽ download và lưu trữ một bản copy của Raptoreum block chain.</translation>
     </message>
     <message>
         <source>The wallet will also be stored in this directory.</source>
@@ -1066,7 +1066,7 @@
     </message>
 </context>
 <context>
-    <name>MasternodeList</name>
+    <name>SmartnodeList</name>
     <message>
         <source>Form</source>
         <translation>Từ</translation>
@@ -1084,20 +1084,20 @@
         <translation>Lọc danh sách:</translation>
     </message>
     <message>
-        <source>Filter masternode list</source>
-        <translation>Lọc danh sách masternode</translation>
+        <source>Filter smartnode list</source>
+        <translation>Lọc danh sách smartnode</translation>
     </message>
     <message>
         <source>Node Count:</source>
         <translation>Số lượng các nút:</translation>
     </message>
     <message>
-        <source>Show only masternodes this wallet has keys for.</source>
-        <translation>Chỉ hiển thị masternode mà có khoá trong ví này.</translation>
+        <source>Show only smartnodes this wallet has keys for.</source>
+        <translation>Chỉ hiển thị smartnode mà có khoá trong ví này.</translation>
     </message>
     <message>
-        <source>My masternodes only</source>
-        <translation>Chỉ các masternode của tôi</translation>
+        <source>My smartnodes only</source>
+        <translation>Chỉ các smartnode của tôi</translation>
     </message>
     <message>
         <source>Service</source>
@@ -1188,8 +1188,8 @@
         <translation>Vui lòng đợi...</translation>
     </message>
     <message>
-        <source>Additional information for DIP3 Masternode %1</source>
-        <translation>Thông tin thêm về DIP3 Masternode %1</translation>
+        <source>Additional information for DIP3 Smartnode %1</source>
+        <translation>Thông tin thêm về DIP3 Smartnode %1</translation>
     </message>
 </context>
 <context>
@@ -1199,12 +1199,12 @@
         <translation>Form</translation>
     </message>
     <message>
-        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the Dash network, as detailed below.</source>
-        <translation>Những giao dịch mới có thể chưa hiện ra, và do đó số dư trong ví của bạn có thể chưa chính xác. Những thông tin này sẽ chính xác một khi ví của bạn đã hoàn tất việc đồng bộ với mạng lưới của Dash, như cụ thể bên dưới.</translation>
+        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the Raptoreum network, as detailed below.</source>
+        <translation>Những giao dịch mới có thể chưa hiện ra, và do đó số dư trong ví của bạn có thể chưa chính xác. Những thông tin này sẽ chính xác một khi ví của bạn đã hoàn tất việc đồng bộ với mạng lưới của Raptoreum, như cụ thể bên dưới.</translation>
     </message>
     <message>
-        <source>Attempting to spend Dash that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
-        <translation>Việc chi tiêu Dash khi mà các giao dịch của nó chưa được đồng bộ hết sẽ không được chấp nhận bởi mạng lưới.</translation>
+        <source>Attempting to spend Raptoreum that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
+        <translation>Việc chi tiêu Raptoreum khi mà các giao dịch của nó chưa được đồng bộ hết sẽ không được chấp nhận bởi mạng lưới.</translation>
     </message>
     <message>
         <source>Number of blocks left</source>
@@ -1301,20 +1301,20 @@
         <translation>&amp;Giao diện</translation>
     </message>
     <message>
-        <source>Show additional tab listing all your masternodes in first sub-tab&lt;br/&gt;and all masternodes on the network in second sub-tab.</source>
-        <translation>Hiện thêm trang có danh sách tất cả các masternodes của bạn trong trang con thứ nhất &lt;br/&gt; và tất cả các masternode trên mạng trong trang con thứ hai.</translation>
+        <source>Show additional tab listing all your smartnodes in first sub-tab&lt;br/&gt;and all smartnodes on the network in second sub-tab.</source>
+        <translation>Hiện thêm trang có danh sách tất cả các smartnodes của bạn trong trang con thứ nhất &lt;br/&gt; và tất cả các smartnode trên mạng trong trang con thứ hai.</translation>
     </message>
     <message>
-        <source>Show Masternodes Tab</source>
-        <translation>Hiển thị trang Masternodes</translation>
+        <source>Show Smartnodes Tab</source>
+        <translation>Hiển thị trang Smartnodes</translation>
     </message>
     <message>
         <source>If you disable the spending of unconfirmed change, the change from a transaction&lt;br/&gt;cannot be used until that transaction has at least one confirmation.&lt;br/&gt;This also affects how your balance is computed.</source>
         <translation>Nếu bạn vô hiệu hóa các chi tiêu của phần tiền lẻ chưa được xác nhận, phần tiền lẻ từ một giao dịch &lt;br/&gt;không thể được sử dụng đến khi giao dịch đó nhận được ít nhất một xác nhận. &lt;br/&gt;Điều này ảnh hưởng đến cách tính số dư của bạn.</translation>
     </message>
     <message>
-        <source>Automatically open the Dash Core client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Tự động mở cổng cho phần mềm Dash Core trên rounter. Điều này chỉ hoạt động được khi rounter của bạn hỗ trợ UpnP và tính năng đó được bật lên.</translation>
+        <source>Automatically open the Raptoreum Core client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <translation>Tự động mở cổng cho phần mềm Raptoreum Core trên rounter. Điều này chỉ hoạt động được khi rounter của bạn hỗ trợ UpnP và tính năng đó được bật lên.</translation>
     </message>
     <message>
         <source>Accept connections from outside.</source>
@@ -1325,8 +1325,8 @@
         <translation>Cho phép &amp;nhận kết nối</translation>
     </message>
     <message>
-        <source>Connect to the Dash network through a SOCKS5 proxy.</source>
-        <translation>Kết nối với mạng lưới Dash thông qua một SOCK5 proxy.</translation>
+        <source>Connect to the Raptoreum network through a SOCKS5 proxy.</source>
+        <translation>Kết nối với mạng lưới Raptoreum thông qua một SOCK5 proxy.</translation>
     </message>
     <message>
         <source>&amp;Connect through SOCKS5 proxy (default proxy):</source>
@@ -1381,8 +1381,8 @@
         <translation>&amp;Tiêu phần trả lại chưa được xác nhận</translation>
     </message>
     <message>
-        <source>This setting determines the amount of individual masternodes that an input will be mixed through.&lt;br/&gt;More rounds of mixing gives a higher degree of privacy, but also costs more in fees.</source>
-        <translation>Thiết lập này xác định một khoản của mỗi masternode mà một đầu vào sẽ được trộn qua.  Thêm &lt;br/&gt; vòng trộn nữa sẽ cho một mức độ riêng tư cao hơn, nhưng nó cũng tốt phí nhiều hơn.</translation>
+        <source>This setting determines the amount of individual smartnodes that an input will be mixed through.&lt;br/&gt;More rounds of mixing gives a higher degree of privacy, but also costs more in fees.</source>
+        <translation>Thiết lập này xác định một khoản của mỗi smartnode mà một đầu vào sẽ được trộn qua.  Thêm &lt;br/&gt; vòng trộn nữa sẽ cho một mức độ riêng tư cao hơn, nhưng nó cũng tốt phí nhiều hơn.</translation>
     </message>
     <message>
         <source>&amp;Network</source>
@@ -1425,8 +1425,8 @@
         <translation>Tor</translation>
     </message>
     <message>
-        <source>Connect to the Dash network through a separate SOCKS5 proxy for Tor hidden services.</source>
-        <translation>Kết nối với mạng lưới Dash thông qua các proxy SOCKS5 riêng biệt cho các dịch vụ ẩn danh Tor.</translation>
+        <source>Connect to the Raptoreum network through a separate SOCKS5 proxy for Tor hidden services.</source>
+        <translation>Kết nối với mạng lưới Raptoreum thông qua các proxy SOCKS5 riêng biệt cho các dịch vụ ẩn danh Tor.</translation>
     </message>
     <message>
         <source>Show only a tray icon after minimizing the window.</source>
@@ -1454,9 +1454,9 @@
     </message>
     <message>
         <source>Language missing or translation incomplete? Help contributing translations here:
-https://www.transifex.com/projects/p/dash/</source>
+https://www.transifex.com/projects/p/raptoreum/</source>
         <translation>Ngôn ngữ ị thiếu hoặc việc dịch chưa hoàn tất? Tham gia dịch giúp tại đây:
-https://www.transifex.com/projects/p/dash/</translation>
+https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <source>&amp;Unit to show amounts in:</source>
@@ -1522,8 +1522,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Biểu mẫu</translation>
     </message>
     <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Dash network after a connection is established, but this process has not completed yet.</source>
-        <translation>Thông tin được hiển thị có thể đã lỗi thời. Ví của bạn sẽ tự động đồng bộ với mạng lưới Dash sau khi kết nối được thiết lập, tuy nhiên quá trình này chưa hoàn thành.</translation>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Raptoreum network after a connection is established, but this process has not completed yet.</source>
+        <translation>Thông tin được hiển thị có thể đã lỗi thời. Ví của bạn sẽ tự động đồng bộ với mạng lưới Raptoreum sau khi kết nối được thiết lập, tuy nhiên quá trình này chưa hoàn thành.</translation>
     </message>
     <message>
         <source>Available:</source>
@@ -1602,8 +1602,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Số tiền và số vòng:</translation>
     </message>
     <message>
-        <source>0 DASH / 0 Rounds</source>
-        <translation>0 DASH / 0 Vòng</translation>
+        <source>0 RTM / 0 Rounds</source>
+        <translation>0 RTM / 0 Vòng</translation>
     </message>
     <message>
         <source>Submitted Denom:</source>
@@ -1622,8 +1622,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Bắt đầu/Tắt việc trộn</translation>
     </message>
     <message>
-        <source>The denominations you submitted to the Masternode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
-        <translation>Mệnh giá mà bạn gửi cho Masternode. &lt;br&gt;Để trộn, những người dùng khác cũng cần gửi chính xác dùng loại mệnh giá đó.</translation>
+        <source>The denominations you submitted to the Smartnode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
+        <translation>Mệnh giá mà bạn gửi cho Smartnode. &lt;br&gt;Để trộn, những người dùng khác cũng cần gửi chính xác dùng loại mệnh giá đó.</translation>
     </message>
     <message>
         <source>out of sync</source>
@@ -1721,8 +1721,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Yêu cầu thanh toán bị lỗi</translation>
     </message>
     <message>
-        <source>Cannot start dash: click-to-pay handler</source>
-        <translation>Không thể khởi động dash: trình xử lý click-to-pay</translation>
+        <source>Cannot start raptoreum: click-to-pay handler</source>
+        <translation>Không thể khởi động raptoreum: trình xử lý click-to-pay</translation>
     </message>
     <message>
         <source>URI handling</source>
@@ -1737,8 +1737,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Địa chỉ thanh toán không hợp lệ %1</translation>
     </message>
     <message>
-        <source>URI cannot be parsed! This can be caused by an invalid Dash address or malformed URI parameters.</source>
-        <translation>URI không thể phân tích. Nó có thể bởi địa chỉ Dash không hợp lệ hoặc thông số URI dị hình.</translation>
+        <source>URI cannot be parsed! This can be caused by an invalid Raptoreum address or malformed URI parameters.</source>
+        <translation>URI không thể phân tích. Nó có thể bởi địa chỉ Raptoreum không hợp lệ hoặc thông số URI dị hình.</translation>
     </message>
     <message>
         <source>Payment request file handling</source>
@@ -1843,8 +1843,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Số lượng</translation>
     </message>
     <message>
-        <source>Enter a Dash address (e.g. %1)</source>
-        <translation>Hãy nhập một địa chỉ Dash (VD: %1)</translation>
+        <source>Enter a Raptoreum address (e.g. %1)</source>
+        <translation>Hãy nhập một địa chỉ Raptoreum (VD: %1)</translation>
     </message>
     <message>
         <source>Appearance Setup</source>
@@ -2098,8 +2098,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Block chain</translation>
     </message>
     <message>
-        <source>Number of Masternodes</source>
-        <translation>Số lượng Masternodes</translation>
+        <source>Number of Smartnodes</source>
+        <translation>Số lượng Smartnodes</translation>
     </message>
     <message>
         <source>Memory Pool</source>
@@ -2397,8 +2397,8 @@ https://www.transifex.com/projects/p/dash/</translation>
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
-        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Dash network.</source>
-        <translation>Một thông điệp tuỳ chọn để đính vào yêu cầu thanh toán, nó sẽ hiển thị khi yêu cầu được mở. Chú ý: Thông điệp sẽ không được gửi thông qua mạng lưới Dash.</translation>
+        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Raptoreum network.</source>
+        <translation>Một thông điệp tuỳ chọn để đính vào yêu cầu thanh toán, nó sẽ hiển thị khi yêu cầu được mở. Chú ý: Thông điệp sẽ không được gửi thông qua mạng lưới Raptoreum.</translation>
     </message>
     <message>
         <source>&amp;Message:</source>
@@ -2409,8 +2409,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Một nhãn tuỳ chọn để liên kết với địa chỉ nhận mới.</translation>
     </message>
     <message>
-        <source>An optional message to attach to the payment request, which will be displayed when the request is opened.&lt;br&gt;Note: The message will not be sent with the payment over the Dash network.</source>
-        <translation>Một thông điệp tuỳ chọn để đính vào yêu cầu thanh toán, nó sẽ hiển thị khi yêu cầu được mở.&lt;br&gt;Chú ý: Thông điệp sẽ không được gửi thông qua mạng lưới Dash.</translation>
+        <source>An optional message to attach to the payment request, which will be displayed when the request is opened.&lt;br&gt;Note: The message will not be sent with the payment over the Raptoreum network.</source>
+        <translation>Một thông điệp tuỳ chọn để đính vào yêu cầu thanh toán, nó sẽ hiển thị khi yêu cầu được mở.&lt;br&gt;Chú ý: Thông điệp sẽ không được gửi thông qua mạng lưới Raptoreum.</translation>
     </message>
     <message>
         <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
@@ -2650,8 +2650,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Nếu mức phí tuỳ chỉnh được đặt là 1000 duff và giao dịch chỉ có 250 byte, thì "theo kilobyte" chỉ trả 250 duff cho phí,&lt;br /&gt;trong khi "ít nhất" phải trả 1000 duff. Cho các giao dịch lớn hơn 1 kilobyte thì cả hai đều trả theo kilobyte.</translation>
     </message>
     <message>
-        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks.&lt;br /&gt;But be aware that this can end up in a never confirming transaction once there is more demand for dash transactions than the network can process.</source>
-        <translation>Chỉ trả phí tối thiểu cũng được chỉ khi mà có lượng giao dịch ít hơn không gian trong khối.&lt;br /&gt;Nhưng cần lưu ý là nó có thể xảy ra hiện tượng giao dịch không bao giờ được xác nhận một khi có nhiều nhu cầu giao dash hơn khả năng mà mạng lưới có thể xử lý được.</translation>
+        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks.&lt;br /&gt;But be aware that this can end up in a never confirming transaction once there is more demand for raptoreum transactions than the network can process.</source>
+        <translation>Chỉ trả phí tối thiểu cũng được chỉ khi mà có lượng giao dịch ít hơn không gian trong khối.&lt;br /&gt;Nhưng cần lưu ý là nó có thể xảy ra hiện tượng giao dịch không bao giờ được xác nhận một khi có nhiều nhu cầu giao raptoreum hơn khả năng mà mạng lưới có thể xử lý được.</translation>
     </message>
     <message>
         <source>per kilobyte</source>
@@ -2834,8 +2834,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation><numerusform>Ước lượng để bắt đầu xác thực trong vòng %n khối.</numerusform></translation>
     </message>
     <message>
-        <source>Warning: Invalid Dash address</source>
-        <translation>Cảnh báo: Địa chỉ Dash không hợp lệ</translation>
+        <source>Warning: Invalid Raptoreum address</source>
+        <translation>Cảnh báo: Địa chỉ Raptoreum không hợp lệ</translation>
     </message>
     <message>
         <source>Warning: Unknown change address</source>
@@ -2865,8 +2865,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Trả &amp;Cho</translation>
     </message>
     <message>
-        <source>The Dash address to send the payment to</source>
-        <translation>Địa chỉ Dash để gửi thanh toán</translation>
+        <source>The Raptoreum address to send the payment to</source>
+        <translation>Địa chỉ Raptoreum để gửi thanh toán</translation>
     </message>
     <message>
         <source>Choose previously used address</source>
@@ -2901,8 +2901,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>&amp;Số tiền:</translation>
     </message>
     <message>
-        <source>The fee will be deducted from the amount being sent. The recipient will receive a lower amount of Dash than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
-        <translation>Phí sẽ được trừ trong khoản tiền mà bạn gửi. Bên nhận sẽ nhận được một khoản nhỏ hơn số Dash mà bạn nhập vào ở trong trường số lượng. Nếu có nhiều người nhận được chọn, phí được chia đều cho mọi người.</translation>
+        <source>The fee will be deducted from the amount being sent. The recipient will receive a lower amount of Raptoreum than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
+        <translation>Phí sẽ được trừ trong khoản tiền mà bạn gửi. Bên nhận sẽ nhận được một khoản nhỏ hơn số Raptoreum mà bạn nhập vào ở trong trường số lượng. Nếu có nhiều người nhận được chọn, phí được chia đều cho mọi người.</translation>
     </message>
     <message>
         <source>S&amp;ubtract fee from amount</source>
@@ -2917,8 +2917,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Thông điệp:</translation>
     </message>
     <message>
-        <source>A message that was attached to the dash: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Dash network.</source>
-        <translation>Một thông điệp được đính với dash: URI đó sẽ được lưu trữ với các giao dịch cho các bạn tham khảo. Lưu ý: Thông điệp này sẽ không được gửi qua mạng Dash. </translation>
+        <source>A message that was attached to the raptoreum: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Raptoreum network.</source>
+        <translation>Một thông điệp được đính với raptoreum: URI đó sẽ được lưu trữ với các giao dịch cho các bạn tham khảo. Lưu ý: Thông điệp này sẽ không được gửi qua mạng Raptoreum. </translation>
     </message>
     <message>
         <source>This is an unauthenticated payment request.</source>
@@ -2970,12 +2970,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>&amp;Ký thông điệp</translation>
     </message>
     <message>
-        <source>You can sign messages/agreements with your addresses to prove you can receive Dash sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
-        <translation>Bạn có thể ký vào thông điệp/thoả thuận với địa chỉ của bạn để chứng minh bạn có thể nhận Dash đã gửi cho họ. Hãy cẩn thận không ký vào những gì mơ hồ hay ngẫu nhiên, như là thứ lừa đảo để lừa bạn ký xác nhận của bạn vào đó cho họ. Chỉ ký vào những gì mà bạn hoàn thoàn đồng ý.</translation>
+        <source>You can sign messages/agreements with your addresses to prove you can receive Raptoreum sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
+        <translation>Bạn có thể ký vào thông điệp/thoả thuận với địa chỉ của bạn để chứng minh bạn có thể nhận Raptoreum đã gửi cho họ. Hãy cẩn thận không ký vào những gì mơ hồ hay ngẫu nhiên, như là thứ lừa đảo để lừa bạn ký xác nhận của bạn vào đó cho họ. Chỉ ký vào những gì mà bạn hoàn thoàn đồng ý.</translation>
     </message>
     <message>
-        <source>The Dash address to sign the message with</source>
-        <translation>Địa chỉ Dash để ký cho thông điệp</translation>
+        <source>The Raptoreum address to sign the message with</source>
+        <translation>Địa chỉ Raptoreum để ký cho thông điệp</translation>
     </message>
     <message>
         <source>Choose previously used address</source>
@@ -3006,8 +3006,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Copy chữ ký hiện tại vào bộ đệm của hệ thống</translation>
     </message>
     <message>
-        <source>Sign the message to prove you own this Dash address</source>
-        <translation>Ký vào thông điệp để chứng tỏ bạn sở hữu địa chỉ Dash</translation>
+        <source>Sign the message to prove you own this Raptoreum address</source>
+        <translation>Ký vào thông điệp để chứng tỏ bạn sở hữu địa chỉ Raptoreum</translation>
     </message>
     <message>
         <source>Sign &amp;Message</source>
@@ -3030,12 +3030,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Hãy nhập vào địa chỉ của người nhận, thông điệp (hãy đảm bảo rằng bạn copy cả dấu xuống dòng, dấu cách, dấu tab,... một cách chính xác) và chữ ký bên dưới để kiểm tra thông điệp. Hãy cẩn thận để không đọc thêm vào phần chữ ký mà nó dùng để ký, để tránh bị đánh lừa bởi kiểu tấn công người trung gian. Chú ý đây chỉ để chứng minh chữ ký của bên nhận với địa chỉ đó, nó không thể chứng minh người gửi hoặc bất kỳ giao dich nào!</translation>
     </message>
     <message>
-        <source>The Dash address the message was signed with</source>
-        <translation>Địa chỉ Dash mà thông điệp được ký bởi</translation>
+        <source>The Raptoreum address the message was signed with</source>
+        <translation>Địa chỉ Raptoreum mà thông điệp được ký bởi</translation>
     </message>
     <message>
-        <source>Verify the message to ensure it was signed with the specified Dash address</source>
-        <translation>Kiểm tra lại thông điệp để đảm bảo rằng nó được ký với địa chỉ Dash cụ thể</translation>
+        <source>Verify the message to ensure it was signed with the specified Raptoreum address</source>
+        <translation>Kiểm tra lại thông điệp để đảm bảo rằng nó được ký với địa chỉ Raptoreum cụ thể</translation>
     </message>
     <message>
         <source>Verify &amp;Message</source>
@@ -3657,7 +3657,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     </context>
 <context>
-    <name>dash-core</name>
+    <name>raptoreum-core</name>
     <message>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
         <translation>Lỗi: Lắng nghe để nhận kết nối bị lỗi (lỗi trả về %s)</translation>
@@ -3775,8 +3775,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Không thể cache tải dữ liệu governance từ</translation>
     </message>
     <message>
-        <source>Failed to load masternode cache from</source>
-        <translation>Không thể tải cache dữ liệu về masternode từ</translation>
+        <source>Failed to load smartnode cache from</source>
+        <translation>Không thể tải cache dữ liệu về smartnode từ</translation>
     </message>
     <message>
         <source>Found enough users, signing ( waiting %s )</source>
@@ -3839,8 +3839,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Đang tải cache dữ liệu thực hiện...</translation>
     </message>
     <message>
-        <source>Loading masternode cache...</source>
-        <translation>Đang tải cache cho masternode...</translation>
+        <source>Loading smartnode cache...</source>
+        <translation>Đang tải cache cho smartnode...</translation>
     </message>
     <message>
         <source>Lock is already in place.</source>
@@ -3855,24 +3855,24 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Cần chỉ rõ một cổng với -whitebind: '%s'</translation>
     </message>
     <message>
-        <source>No Masternodes detected.</source>
+        <source>No Smartnodes detected.</source>
         <translation>Không tìm thấy các Master node.</translation>
     </message>
     <message>
-        <source>No compatible Masternode found.</source>
-        <translation>Không tìm thấy Masternode tương thích.</translation>
+        <source>No compatible Smartnode found.</source>
+        <translation>Không tìm thấy Smartnode tương thích.</translation>
     </message>
     <message>
         <source>Not enough funds to mix.</source>
         <translation>Không đủ tiền để trộn.</translation>
     </message>
     <message>
-        <source>Not in the Masternode list.</source>
-        <translation>Không có trong danh sách Masternode.</translation>
+        <source>Not in the Smartnode list.</source>
+        <translation>Không có trong danh sách Smartnode.</translation>
     </message>
     <message>
-        <source>Submitted to masternode, waiting in queue %s</source>
-        <translation>Đã được gửi cho masternode, đang đợi trong hàng đợi %s</translation>
+        <source>Submitted to smartnode, waiting in queue %s</source>
+        <translation>Đã được gửi cho smartnode, đang đợi trong hàng đợi %s</translation>
     </message>
     <message>
         <source>Synchronization finished</source>
@@ -3911,8 +3911,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Sẽ thử lại...</translation>
     </message>
     <message>
-        <source>Can't find random Masternode.</source>
-        <translation>Không tìm thấy Masternode ngẫu nhiên.</translation>
+        <source>Can't find random Smartnode.</source>
+        <translation>Không tìm thấy Smartnode ngẫu nhiên.</translation>
     </message>
     <message>
         <source>Can't mix while sync in progress.</source>
@@ -3931,8 +3931,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>File %s có chứa tất cả các khoá riêng từ ví này. Không nên chia sẻ nó với bất cứ ai.</translation>
     </message>
     <message>
-        <source>-masternode option is deprecated and ignored, specifying -masternodeblsprivkey is enough to start this node as a masternode.</source>
-        <translation>Tuỳ chọn -masternode không được sử dụng nữa và bị bỏ qua, việc chỉ rõ tham số -masternodeblsprivkey là đủ để khởi động một nút như là một masternode.</translation>
+        <source>-smartnode option is deprecated and ignored, specifying -smartnodeblsprivkey is enough to start this node as a smartnode.</source>
+        <translation>Tuỳ chọn -smartnode không được sử dụng nữa và bị bỏ qua, việc chỉ rõ tham số -smartnodeblsprivkey là đủ để khởi động một nút như là một smartnode.</translation>
     </message>
     <message>
         <source>Failed to create backup, file already exists! This could happen if you restarted wallet in less than 60 seconds. You can continue if you are ok with this.</source>
@@ -4035,8 +4035,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Không thể xoá bộ đệm quản trị tại </translation>
     </message>
     <message>
-        <source>Failed to clear masternode cache at</source>
-        <translation>Không thể xoá bộ đệm masternode tại </translation>
+        <source>Failed to clear smartnode cache at</source>
+        <translation>Không thể xoá bộ đệm smartnode tại </translation>
     </message>
     <message>
         <source>Failed to commit EvoDB</source>
@@ -4067,8 +4067,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Số lượng không hợp lệ cho -fallbackfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
-        <source>Invalid masternodeblsprivkey. Please see documentation.</source>
-        <translation>masternodeblsprivkey không hợp lệ. Hãy xem trong tài liệu.</translation>
+        <source>Invalid smartnodeblsprivkey. Please see documentation.</source>
+        <translation>smartnodeblsprivkey không hợp lệ. Hãy xem trong tài liệu.</translation>
     </message>
     <message>
         <source>It has been replaced by -disablegovernance.</source>
@@ -4099,12 +4099,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Đang tải ví...</translation>
     </message>
     <message>
-        <source>Masternode queue is full.</source>
-        <translation>Danh sách hàng đợi Masternode đã đầy.</translation>
+        <source>Smartnode queue is full.</source>
+        <translation>Danh sách hàng đợi Smartnode đã đầy.</translation>
     </message>
     <message>
-        <source>Masternode:</source>
-        <translation>Masternode:</translation>
+        <source>Smartnode:</source>
+        <translation>Smartnode:</translation>
     </message>
     <message>
         <source>Missing input transaction information.</source>
@@ -4223,8 +4223,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Không thể tạo được thư mục backup ví %s!</translation>
     </message>
     <message>
-        <source>You can not start a masternode with wallet enabled.</source>
-        <translation>Bạn không thể khởi động một masternode với ví được kích hoạt.</translation>
+        <source>You can not start a smartnode with wallet enabled.</source>
+        <translation>Bạn không thể khởi động một smartnode với ví được kích hoạt.</translation>
     </message>
     <message>
         <source>You need to rebuild the database using -reindex to change -addressindex</source>
@@ -4247,8 +4247,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>xem debug.log để biết thêm chi tiết.</translation>
     </message>
     <message>
-        <source>Dash Core</source>
-        <translation>Dash Core</translation>
+        <source>Raptoreum Core</source>
+        <translation>Raptoreum Core</translation>
     </message>
     <message>
         <source>The %s developers</source>
@@ -4507,8 +4507,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Bạn khởi động với tính năng xác thực quản trị bị tắt.</translation>
     </message>
     <message>
-        <source>You can not disable governance validation on a masternode.</source>
-        <translation>Bạn không thể tắt chế độ xác thực quản trị trên một masternode.</translation>
+        <source>You can not disable governance validation on a smartnode.</source>
+        <translation>Bạn không thể tắt chế độ xác thực quản trị trên một smartnode.</translation>
     </message>
     <message>
         <source>Your entries added successfully.</source>

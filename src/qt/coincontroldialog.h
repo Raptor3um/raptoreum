@@ -88,13 +88,6 @@ private:
 
     friend class CCoinControlWidgetItem;
 
-    enum class Mode {
-        NORMAL,
-        PRIVATESEND,
-    };
-
-    static CoinControlDialog::Mode mode;
-
 private Q_SLOTS:
     void showMenu(const QPoint &);
     void copyAmount();

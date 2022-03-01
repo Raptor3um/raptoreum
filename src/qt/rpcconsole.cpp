@@ -616,7 +616,7 @@ void RPCConsole::setClientModel(ClientModel *model)
         updateNetworkState();
         connect(model, SIGNAL(networkActiveChanged(bool)), this, SLOT(setNetworkActive(bool)));
 
-        connect(model, SIGNAL(smartnodeListChanged()), this, SLOT(updateMasternodeCount()));
+        connect(model, SIGNAL(smartnodeListChanged()), this, SLOT(updateSmartnodeCount()));
         clientModel->refreshSmartnodeList();
 
         connect(model, SIGNAL(mempoolSizeChanged(long,size_t)), this, SLOT(setMempoolSize(long,size_t)));
@@ -1257,9 +1257,9 @@ void RPCConsole::updateNodeDetail(const CNodeCombinedStats *stats)
         ui->peerPoSeScore->setText(tr("N/A"));
     } else {
         if (stats->nodeStats.verifiedProRegTxHash.IsNull()) {
-            ui->peerNodeType->setText(tr("Masternode"));
+            ui->peerNodeType->setText(tr("Smartnode"));
         } else {
-            ui->peerNodeType->setText(tr("Verified Masternode"));
+            ui->peerNodeType->setText(tr("Verified Smartnode"));
         }
         ui->peerPoSeScore->setText(QString::number(dmn->pdmnState->nPoSePenalty));
     }

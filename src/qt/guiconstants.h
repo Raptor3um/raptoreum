@@ -14,7 +14,7 @@ static const int MODEL_UPDATE_DELAY = 250;
 static const int MAX_PASSPHRASE_SIZE = 1024;
 
 /* RaptoreumGUI -- Size of icons in status bar */
-static const int STATUSBAR_ICONSIZE = 16;
+static const int STATUSBAR_ICONSIZE = 18;
 
 /* DashGUI -- Size of button icons e.g. in SendCoinEntry or SignVerifyMessageDialog */
 static const int BUTTON_ICONSIZE = 23;
@@ -40,7 +40,7 @@ static const int MAX_URI_LENGTH = 255;
 #define QR_IMAGE_SIZE 300
 
 /* Number of frames in spinner animation */
-#define SPINNER_FRAMES 90
+#define SPINNER_FRAMES 36
 
 #define QAPP_ORG_NAME "Raptoreum"
 #define QAPP_ORG_DOMAIN "raptoreum.com"

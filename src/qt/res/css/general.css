@@ -30,7 +30,7 @@ in the <theme.css> file.
 /* do not modify! section updated by update-css-files.py
 <colors>
 
-# Used colors in general.css for commit 44de8a93f2
+# Used colors in general.css for commit d1e3d76b1
 
 #00000000
 #222222
@@ -499,7 +499,7 @@ QProgressBar::chunk {
 QProgressDialog
 ******************************************************/
 
-.QProgressDialog {
+QProgressDialog {
 }
 
 /******************************************************

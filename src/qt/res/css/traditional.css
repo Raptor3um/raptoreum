@@ -17,15 +17,16 @@ Loaded in GUIUtil::loadStyleSheet() in guitil.cpp.
 /* do not modify! section updated by update-css-files.py
 <colors>
 
-# Used colors in traditional.css for commit 44de8a93f2
+# Used colors in traditional.css for commit d1e3d76b1
 
 #00000000
-#222222
 #333
 #fff
 #008de4
 #047ac2
+#222222
 #a84832
+#c79304
 #ccfafafa
 
 </colors>
@@ -37,7 +38,7 @@ QToolBar / QToolButton
 
 QToolBar QLabel#lblToolbarLogo {
     padding: 12px;
-    image: url(':/images/raptoreum_logo_toolbar_blue');
+    image: url(':/images/raptoreum_logo_toolbar');
     height: 2.5em;
 }
 
