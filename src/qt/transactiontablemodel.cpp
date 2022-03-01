@@ -202,9 +202,9 @@ public:
             // simply re-use the cached status.
             interfaces::WalletTxStatus wtxStatus;
             int64_t adjustedTime;
-            interfaces::WalletTx walletTx = wallet.getWalletTx(rec->hash);
             if (rec->statusUpdateNeeded(numBlocks, parent->getChainLockHeight()) && wallet.tryGetTxStatus(rec->hash, wtxStatus, adjustedTime)) {
-                rec->updateStatus(walletTx, wtxStatus, numBlocks, adjustedTime, parent->getChainLockHeight());
+                interfaces::WalletTx wtx = wallet.getWalletTx(rec->hash);
+                rec->updateStatus(wtx, wtxStatus, numBlocks, adjustedTime, parent->getChainLockHeight());
             }
             return rec;
         }
@@ -428,7 +428,6 @@ QString TransactionTableModel::formatTxToAddress(const TransactionRecord *wtx, b
     switch(wtx->type)
     {
     case TransactionRecord::RecvFromOther:
-    
         return QString::fromStdString(wtx->strAddress) + watchAddress;
     case TransactionRecord::RecvWithAddress:
     case TransactionRecord::RecvWithCoinJoin:
@@ -525,11 +524,12 @@ QVariant TransactionTableModel::txStatusDecoration(const TransactionRecord *wtx)
     case TransactionStatus::Confirming:
         switch(wtx->status.depth)
         {
-        case 1: return GUIUtil::getIcon("transaction_1", GUIUtil::ThemedColor::ORANGE);
-        case 2: return GUIUtil::getIcon("transaction_2", GUIUtil::ThemedColor::ORANGE);
-        case 3: return GUIUtil::getIcon("transaction_3", GUIUtil::ThemedColor::ORANGE);
-        case 4: return GUIUtil::getIcon("transaction_4", GUIUtil::ThemedColor::ORANGE);
-        default: return GUIUtil::getIcon("transaction_5", GUIUtil::ThemedColor::ORANGE);
+        case 1:  return GUIUtil::getIcon("transaction_1", GUIUtil::ThemedColor::ORANGE);
+        case 2:  return GUIUtil::getIcon("transaction_2", GUIUtil::ThemedColor::ORANGE);
+        case 3:  return GUIUtil::getIcon("transaction_3", GUIUtil::ThemedColor::ORANGE);
+        case 4:  return GUIUtil::getIcon("transaction_4", GUIUtil::ThemedColor::ORANGE);
+        case 5:  return GUIUtil::getIcon("transaction_5", GUIUtil::ThemedColor::ORANGE);
+        default: return GUIUtil::getIcon("transaction_6", GUIUtil::ThemedColor::ORANGE);
         };
     case TransactionStatus::Confirmed:
         return GUIUtil::getIcon("synced", GUIUtil::ThemedColor::GREEN);

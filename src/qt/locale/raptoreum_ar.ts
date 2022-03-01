@@ -235,7 +235,7 @@
         <translation>تأكيد تشفير المحفظة</translation>
     </message>
     <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR RTM&lt;/b&gt;!</source>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR RAPTOREUM&lt;/b&gt;!</source>
         <translation>تحذير: إذا قمت بتشفير محفظتك وفقدت كلمة المرور الخاص بك, ستفقد كل عملات داش الخاصة بك</translation>
     </message>
     <message>
@@ -392,10 +392,6 @@
         <translation>حوالي %1</translation>
     </message>
     <message>
-        <source>PrivateSend coins to a Dash address</source>
-        <translation>أرسل العملات المعدنية إلى عنوان داش</translation>
-    </message>
-    <message>
         <source>Modify configuration options for %1</source>
         <translation>تغيير خيارات الإعداد لأساس ل %1</translation>
     </message>
@@ -545,7 +541,7 @@
     </message>
     <message>
         <source>Show the %1 help message to get a list with possible Raptoreum command-line options</source>
-        <translation>عرض رسالة مساعدة%1 للحصول على قائمة مع خيارات سطر أوامر داش المحتملة</translation>
+        <translation>عرض رسالة مساعدة %1 للحصول على قائمة مع خيارات سطر أوامر داش المحتملة</translation>
     </message>
     <message>
         <source>%1 client</source>
@@ -1110,11 +1106,11 @@
         <translation>عدد نود</translation>
     </message>
     <message>
-        <source>Show only masternodes this wallet has keys for.</source>
+        <source>Show only smartnodes this wallet has keys for.</source>
         <translation>إظهار الرموز الرئيسية فقط تحتوي هذه المحفظة على مفاتيح.</translation>
     </message>
     <message>
-        <source>My masternodes only</source>
+        <source>My smartnodes only</source>
         <translation>ماسترنوداتي فقط</translation>
     </message>
     <message>
@@ -1206,7 +1202,7 @@
         <translation>ارجوك انتظر...</translation>
     </message>
     <message>
-        <source>Additional information for DIP3 Masternode %1</source>
+        <source>Additional information for DIP3 Smartnode %1</source>
         <translation>معلومات إضافية عن DIP3 ماسترنود %1</translation>
     </message>
 </context>
@@ -1319,7 +1315,7 @@
         <translation>&amp;مظهر خارجي</translation>
     </message>
     <message>
-        <source>Show additional tab listing all your masternodes in first sub-tab&lt;br/&gt;and all masternodes on the network in second sub-tab.</source>
+        <source>Show additional tab listing all your smartnodes in first sub-tab&lt;br/&gt;and all smartnodes on the network in second sub-tab.</source>
         <translation>عرض علامة تبويب إضافية تسرد جميع رموزك في أول علامة تبويب فرعية &lt;br/&gt;وجميع ماسترنود على الشبكة في علامة التبويب الفرعية الثانية.</translation>
     </message>
     <message>
@@ -1379,10 +1375,6 @@
         <translation>الهدف رصيد</translation>
     </message>
     <message>
-        <source>Target PrivateSend balance</source>
-        <translation>الهدف رصيد PrivateSend</translation>
-    </message>
-    <message>
         <source>Automatically open the Raptoreum Core client port on the router. This only works when your router supports UPnP and it is enabled.</source>
         <translation>فتح منفذ عميل داش كور تلقائيًا على جهاز التوجيه. هذا يعمل فقط عندما يدعم جهاز التوجيه الخاص بك UPnP وتمكينه.</translation>
     </message>
@@ -1395,7 +1387,7 @@
         <translation>السماح بالاتصالات الواردة</translation>
     </message>
     <message>
-        <source>Connect to the Dash network through a SOCKS5 proxy.</source>
+        <source>Connect to the Raptoreum network through a SOCKS5 proxy.</source>
         <translation>الاتصال بشبكة داش من خلال وكيل SOCKS5.</translation>
     </message>
     <message>
@@ -1451,7 +1443,7 @@
         <translation>اقضي على تغيير غير مؤكد</translation>
     </message>
     <message>
-        <source>This setting determines the amount of individual masternodes that an input will be mixed through.&lt;br/&gt;More rounds of mixing gives a higher degree of privacy, but also costs more in fees.</source>
+        <source>This setting determines the amount of individual smartnodes that an input will be mixed through.&lt;br/&gt;More rounds of mixing gives a higher degree of privacy, but also costs more in fees.</source>
         <translation>يحدد هذا الإعداد مقدار ماسترنود الفردية التي سيتم خلط المدخلات من خلالها.&lt;br/&gt; توفر المزيد من جولات الاختلاط درجة أعلى من الخصوصية ، ولكنها أيضًا تكلف رسومًا أكبر.</translation>
     </message>
     <message>
@@ -1524,7 +1516,7 @@
     </message>
     <message>
         <source>Language missing or translation incomplete? Help contributing translations here:
-https://www.transifex.com/projects/p/raptoreum/</source>
+https://www.transifex.com/projects/p/dash/</source>
         <translation>لغة مفقودة أو ترجمة غير مكتملة؟ مساعدة في المساهمة بالترجمات هنا:
 https://www.transifex.com/projects/p/dash/</translation>
     </message>
@@ -1692,7 +1684,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>بدأ/إنهاء/دمج</translation>
     </message>
     <message>
-        <source>The denominations you submitted to the Masternode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
+        <source>The denominations you submitted to the Smartnode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
         <translation>الفئات التي قدمتها إلى ماسترنود &lt;br&gt; لدمج ، يجب على المستخدمين الآخرين تقديم نفس الفئات نفسها.</translation>
     </message>
     <message>
@@ -2548,12 +2540,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>عادي</translation>
     </message>
     <message>
-        <source>Masternode</source>
+        <source>Smartnode</source>
         <translation>ماسترنود</translation>
     </message>
     <message>
-        <source>Verified Masternode</source>
-        <translation>التحقق من Masternode</translation>
+        <source>Verified Smartnode</source>
+        <translation>التحقق من Smartnode</translation>
     </message>
     <message>
         <source>Unknown</source>
@@ -2563,7 +2555,7 @@ https://www.transifex.com/projects/p/dash/</translation>
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
-        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Dash network.</source>
+        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Raptoreum network.</source>
         <translation>رسالة اختيارية لإرفاقها بطلب الدفع ، والتي سيتم عرضها عند فتح الطلب. ملاحظة: لن يتم إرسال الرسالة مع الدفع عبر شبكة داش.</translation>
     </message>
     <message>
@@ -3929,10 +3921,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>تم تحديد أحداث مأخذ توصيل غير صالحة ('%s'). يتم دعم هذه الأوضاع فقط: %s</translation>
     </message>
     <message>
-        <source>Invalid -socketevents ('%s') specified. Only these modes are supported: %s</source>
-        <translation>تم تحديد أحداث مأخذ توصيل غير صالحة ('%s'). يتم دعم هذه الأوضاع فقط: %s</translation>
-    </message>
-    <message>
         <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)</source>
         <translation>كمية غير صالحة لـ -maxtxfee = : '%s' &lt;amount&gt; (يجب أن تكون على الأقل رسوم minrelay %s لمنع المعاملات عالقة)</translation>
     </message>
@@ -4049,7 +4037,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>لا توجد أموال كافية للاختلاط.</translation>
     </message>
     <message>
-        <source>Not in the Masternode list.</source>
+        <source>Not in the Smartnode list.</source>
         <translation>ليس في قائمة ماسترنود.</translation>
     </message>
     <message>
@@ -4113,8 +4101,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>يحتوي ملف %s على جميع المفاتيح الخاصة من هذه المحفظة. لا تشاركه مع أي شخص!</translation>
     </message>
     <message>
-        <source>-masternode option is deprecated and ignored, specifying -masternodeblsprivkey is enough to start this node as a masternode.</source>
-        <translation>تم إهمال خيار -masternode وتجاهله ، مع تحديد -masternodeblsprivkey يكفي لبدء هذه العقدة كعقدة رئيسية.</translation>
+        <source>-smartnode option is deprecated and ignored, specifying -smartnodeblsprivkey is enough to start this node as a smartnode.</source>
+        <translation>تم إهمال خيار -smartnode وتجاهله ، مع تحديد -smartnodeblsprivkey يكفي لبدء هذه العقدة كعقدة رئيسية.</translation>
     </message>
     <message>
         <source>Failed to create backup, file already exists! This could happen if you restarted wallet in less than 60 seconds. You can continue if you are ok with this.</source>
@@ -4217,7 +4205,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>فشل مسح ذاكرة التخزين المؤقت للحوكمة في</translation>
     </message>
     <message>
-        <source>Failed to clear masternode cache at</source>
+        <source>Failed to clear smartnode cache at</source>
         <translation>فشل مسح ذاكرة التخزين المؤقت للرمز الرئيسي في</translation>
     </message>
     <message>
@@ -4249,8 +4237,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>المبلغ غير صالح fallbackfee = &lt;amount&gt; :'%s-</translation>
     </message>
     <message>
-        <source>Invalid masternodeblsprivkey. Please see documentation.</source>
-        <translation>masternodeblsprivkey غير صالح. يرجى الاطلاع على الوثائق.</translation>
+        <source>Invalid smartnodeblsprivkey. Please see documentation.</source>
+        <translation>smartnodeblsprivkey غير صالح. يرجى الاطلاع على الوثائق.</translation>
     </message>
     <message>
         <source>It has been replaced by -disablegovernance.</source>
@@ -4281,7 +4269,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>تحميل المحفظه</translation>
     </message>
     <message>
-        <source>Masternode queue is full.</source>
+        <source>Smartnode queue is full.</source>
         <translation>طابور ماسترنود ممتلئ.</translation>
     </message>
     <message>
@@ -4337,16 +4325,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>-walletdir المحدد "%s" ليس دليلاً</translation>
     </message>
     <message>
-        <source>Sync mempool from other nodes on start (default: %u)</source>
-        <translation>مزامنة mempool من العقد الأخرى عند البدء (الافتراضي: %u)</translation>
-    </message>
-    <message>
         <source>Synchronizing blockchain...</source>
         <translation>مزامنة بلوكشين...</translation>
-    </message>
-    <message>
-        <source>Target PrivateSend balance (%u-%u, default: %u)</source>
-        <translation>رصيد PrivateSend المستهدف (%u-%u ، الافتراضي: %u)</translation>
     </message>
     <message>
         <source>The wallet will avoid paying less than the minimum relay fee.</source>
@@ -4413,8 +4393,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>لم يكن قادراً على إنشاء مجلد النسخ الاحتياطي المحفظة %s!</translation>
     </message>
     <message>
-        <source>You can not start a masternode with wallet enabled.</source>
-        <translation>لا يمكنك بدء Masternode مع محفظة ممكنة.</translation>
+        <source>You can not start a smartnode with wallet enabled.</source>
+        <translation>لا يمكنك بدء Smartnode مع محفظة ممكنة.</translation>
     </message>
     <message>
         <source>You need to rebuild the database using -reindex to change -addressindex</source>
@@ -4437,7 +4417,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>انظر debug.log للحصول على التفاصيل.</translation>
     </message>
     <message>
-        <source>Dash Core</source>
+        <source>Raptoreum Core</source>
         <translation>جوهر الداش</translation>
     </message>
     <message>
@@ -4717,8 +4697,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>أنت تبدأ مع تعطيل التحقق من صحة الحكم.</translation>
     </message>
     <message>
-        <source>You can not disable governance validation on a masternode.</source>
-        <translation>لا يمكنك تعطيل التحقق من الحوكمة على Masternode.</translation>
+        <source>You can not disable governance validation on a smartnode.</source>
+        <translation>لا يمكنك تعطيل التحقق من الحوكمة على Smartnode.</translation>
     </message>
     <message>
         <source>Your entries added successfully.</source>

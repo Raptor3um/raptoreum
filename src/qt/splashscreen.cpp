@@ -40,39 +40,40 @@ SplashScreen::SplashScreen(interfaces::Node& node, Qt::WindowFlags f, const Netw
     setWindowFlags(Qt::FramelessWindowHint);
 
     // Geometries of splashscreen
-    int width = 380;
-    int height = 460;
-    int logoWidth = 270;
-    int logoHeight = 270;
+    int width = 480;
+    int height = 540;
+    int logoWidth = 480;
+    int logoHeight = 540;
 
     // set reference point, paddings
-    int paddingTop = 10;
-    int titleVersionVSpace = 25;
+    int paddingTop = 5;
+    int titleVersionVSpace = 20;
 
     float fontFactor            = 1.0;
     float scale = qApp->devicePixelRatio();
 
     // define text to place
-    QString titleText       = tr(PACKAGE_NAME);
-    QString versionText = QString::fromStdString(FormatFullVersion()).remove(0, 1);
-    QString titleAddText    = networkStyle->getTitleAddText();
+    QString titleText    = tr(PACKAGE_NAME);
+    QString versionText  = QString::fromStdString(FormatFullVersion()).remove(0, 1);
+    QString titleAddText = networkStyle->getTitleAddText();
 
     QFont fontNormal = GUIUtil::getFontNormal();
-    QFont fontBold = GUIUtil::getFontBold();
+    QFont fontBold   = GUIUtil::getFontBold();
 
     QPixmap pixmapLogo = networkStyle->getSplashImage();
     pixmapLogo.setDevicePixelRatio(scale);
 
+    // TODO: Do we want to shade the splash screen for testnet/devnet?
     // Adjust logo color based on the current theme
-    QImage imgLogo = pixmapLogo.toImage().convertToFormat(QImage::Format_ARGB32);
-    QColor logoColor = GUIUtil::getThemedQColor(GUIUtil::ThemedColor::BLUE);
-    for (int x = 0; x < imgLogo.width(); ++x) {
-        for (int y = 0; y < imgLogo.height(); ++y) {
-            const QRgb rgb = imgLogo.pixel(x, y);
-            imgLogo.setPixel(x, y, qRgba(logoColor.red(), logoColor.green(), logoColor.blue(), qAlpha(rgb)));
-        }
-    }
-    pixmapLogo.convertFromImage(imgLogo);
+    // QImage imgLogo = pixmapLogo.toImage().convertToFormat(QImage::Format_ARGB32);
+    // QColor logoColor = GUIUtil::getThemedQColor(GUIUtil::ThemedColor::BLUE);
+    // for (int x = 0; x < imgLogo.width(); ++x) {
+    //     for (int y = 0; y < imgLogo.height(); ++y) {
+    //         const QRgb rgb = imgLogo.pixel(x, y);
+    //         imgLogo.setPixel(x, y, qRgba(logoColor.red(), logoColor.green(), logoColor.blue(), qAlpha(rgb)));
+    //     }
+    // }
+    // pixmapLogo.convertFromImage(imgLogo);
 
     pixmap = QPixmap(width * scale, height * scale);
     pixmap.setDevicePixelRatio(scale);
@@ -83,8 +84,9 @@ SplashScreen::SplashScreen(interfaces::Node& node, Qt::WindowFlags f, const Netw
     QRect rect = QRect(1, 1, width - 2, height - 2);
     pixPaint.fillRect(rect, GUIUtil::getThemedQColor(GUIUtil::ThemedColor::BACKGROUND_WIDGET));
 
-    pixPaint.drawPixmap((width / 2) - (logoWidth / 2), (height / 2) - (logoHeight / 2) + 20, pixmapLogo.scaled(logoWidth * scale, logoHeight * scale, Qt::KeepAspectRatio, Qt::SmoothTransformation));
-    pixPaint.setPen(GUIUtil::getThemedQColor(GUIUtil::ThemedColor::DEFAULT));
+    pixPaint.drawPixmap((width / 2) - (logoWidth / 2), (height / 2) - (logoHeight / 2) + 0, pixmapLogo.scaled(logoWidth * scale, logoHeight * scale, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    //pixPaint.setPen(GUIUtil::getThemedQColor(GUIUtil::ThemedColor::DEFAULT));
+    pixPaint.setPen(Qt::white);
 
     // check font size and drawing with
     fontBold.setPointSize(50 * fontFactor);
@@ -95,32 +97,25 @@ SplashScreen::SplashScreen(interfaces::Node& node, Qt::WindowFlags f, const Netw
         fontFactor = 0.75;
     }
 
-    fontBold.setPointSize(50 * fontFactor);
-    pixPaint.setFont(fontBold);
-    fm = pixPaint.fontMetrics();
-    titleTextWidth  = fm.width(titleText);
-    int titleTextHeight = fm.height();
-    pixPaint.drawText((width / 2) - (titleTextWidth / 2), titleTextHeight + paddingTop, titleText);
-
     fontNormal.setPointSize(16 * fontFactor);
     pixPaint.setFont(fontNormal);
     fm = pixPaint.fontMetrics();
-    int versionTextWidth = fm.width(versionText);
-    pixPaint.drawText((width / 2) - (versionTextWidth / 2), titleTextHeight + paddingTop + titleVersionVSpace, versionText);
+    int versionTextWidth  = fm.width(versionText);
+    pixPaint.drawText((width / 2) - (versionTextWidth / 2), titleVersionVSpace, versionText);
 
     // draw additional text if special network
     if(!titleAddText.isEmpty()) {
-        fontBold.setPointSize(10 * fontFactor);
+        fontBold.setPointSize(24 * fontFactor);
         pixPaint.setFont(fontBold);
         fm = pixPaint.fontMetrics();
         int titleAddTextWidth = fm.width(titleAddText);
         // Draw the badge backround with the network-specific color
-        QRect badgeRect = QRect(width - titleAddTextWidth - 20, 5, width, fm.height() + 10);
+        QRect badgeRect = QRect(0, 0, titleAddTextWidth + 10, fm.height() + 10);
         QColor badgeColor = networkStyle->getBadgeColor();
         pixPaint.fillRect(badgeRect, badgeColor);
         // Draw the text itself using white color, regardless of the current theme
-        pixPaint.setPen(QColor(255, 255, 255));
-        pixPaint.drawText(width - titleAddTextWidth - 10, paddingTop + 10, titleAddText);
+        pixPaint.setPen(Qt::white);
+        pixPaint.drawText(5, fm.height(), titleAddText);
     }
 
     pixPaint.end();
@@ -168,7 +163,8 @@ static void InitMessage(SplashScreen *splash, const std::string &message)
         Qt::QueuedConnection,
         Q_ARG(QString, QString::fromStdString(message)),
         Q_ARG(int, Qt::AlignBottom | Qt::AlignHCenter),
-        Q_ARG(QColor, GUIUtil::getThemedQColor(GUIUtil::ThemedColor::DEFAULT)));
+        Q_ARG(QColor, Qt::white));
+//      Q_ARG(QColor, GUIUtil::getThemedQColor(GUIUtil::ThemedColor::DEFAULT)));
 }
 
 static void ShowProgress(SplashScreen *splash, const std::string &title, int nProgress, bool resume_possible)
