@@ -74,12 +74,12 @@
         <translation>Adresses de réception</translation>
     </message>
     <message>
-        <source>These are your Dash addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Voici vos adresses Dash pour l'envoi de paiements. Vérifiez toujours le montant et l'adresse de réception avant d'envoyer de l'argent.</translation>
+        <source>These are your Raptoreum addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation>Voici vos adresses Raptoreum pour l'envoi de paiements. Vérifiez toujours le montant et l'adresse de réception avant d'envoyer de l'argent.</translation>
     </message>
     <message>
-        <source>These are your Dash addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Voici vos adresses Dash pour la réception de paiements. Il est recommandé d'utiliser une nouvelle adresse de réception pour chaque transaction.</translation>
+        <source>These are your Raptoreum addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
+        <translation>Voici vos adresses Raptoreum pour la réception de paiements. Il est recommandé d'utiliser une nouvelle adresse de réception pour chaque transaction.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -235,8 +235,8 @@
         <translation>Confirmer le chiffrement du portefeuille</translation>
     </message>
     <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR DASH&lt;/b&gt;!</source>
-        <translation>Attention : si vous chiffrez votre portefeuille et perdez votre phrase de passe, vous &lt;b&gt;PERDREZ TOUS VOS DASHS&lt;/b&gt; !</translation>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR RTM&lt;/b&gt;!</source>
+        <translation>Attention : si vous chiffrez votre portefeuille et perdez votre phrase de passe, vous &lt;b&gt;PERDREZ TOUS VOS RTMS&lt;/b&gt; !</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
@@ -308,12 +308,12 @@
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <source>A fatal error occurred. Dash Core can no longer continue safely and will quit.</source>
-        <translation>Une erreur fatale est survenue. Dash ne peut plus continuer de façon sûre et va s'arrêter.</translation>
+        <source>A fatal error occurred. Raptoreum Core can no longer continue safely and will quit.</source>
+        <translation>Une erreur fatale est survenue. Raptoreum ne peut plus continuer de façon sûre et va s'arrêter.</translation>
     </message>
     <message>
-        <source>Dash Core</source>
-        <translation>Dash Core</translation>
+        <source>Raptoreum Core</source>
+        <translation>Raptoreum Core</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -336,16 +336,16 @@
         <translation>&amp;Envoyer</translation>
     </message>
     <message>
-        <source>Send coins to a Dash address</source>
-        <translation>Envoyer de l'argent à une adresse Dash</translation>
+        <source>Send coins to a Raptoreum address</source>
+        <translation>Envoyer de l'argent à une adresse Raptoreum</translation>
     </message>
     <message>
         <source>&amp;Receive</source>
         <translation>&amp;Recevoir</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and dash: URIs)</source>
-        <translation>Demande de paiements (génère des QR-codes et des URIs Dash)</translation>
+        <source>Request payments (generates QR codes and raptoreum: URIs)</source>
+        <translation>Demande de paiements (génère des QR-codes et des URIs Raptoreum)</translation>
     </message>
     <message>
         <source>&amp;Transactions</source>
@@ -356,12 +356,12 @@
         <translation>Parcourir l'historique des transactions</translation>
     </message>
     <message>
-        <source>&amp;Masternodes</source>
-        <translation>&amp;Masternodes</translation>
+        <source>&amp;Smartnodes</source>
+        <translation>&amp;Smartnodes</translation>
     </message>
     <message>
-        <source>Browse masternodes</source>
-        <translation>Consulter les masternodes</translation>
+        <source>Browse smartnodes</source>
+        <translation>Consulter les smartnodes</translation>
     </message>
     <message>
         <source>E&amp;xit</source>
@@ -372,8 +372,8 @@
         <translation>Quitter l’application</translation>
     </message>
     <message>
-        <source>Show information about Dash Core</source>
-        <translation>Affichez des informations à propos de  Dash Core</translation>
+        <source>Show information about Raptoreum Core</source>
+        <translation>Affichez des informations à propos de  Raptoreum Core</translation>
     </message>
     <message>
         <source>About &amp;Qt</source>
@@ -392,8 +392,8 @@
         <translation>À &amp;propos de %1</translation>
     </message>
     <message>
-        <source>Send %1 funds to a Dash address</source>
-        <translation>Envoyer des fonds %1 à une adresse Dash</translation>
+        <source>Send %1 funds to a Raptoreum address</source>
+        <translation>Envoyer des fonds %1 à une adresse Raptoreum</translation>
     </message>
     <message>
         <source>Modify configuration options for %1</source>
@@ -448,16 +448,16 @@
         <translation>&amp;Signer le message...</translation>
     </message>
     <message>
-        <source>Sign messages with your Dash addresses to prove you own them</source>
-        <translation>Signer les messages avec votre adresses Dash pour prouver que vous en êtes l'auteur</translation>
+        <source>Sign messages with your Raptoreum addresses to prove you own them</source>
+        <translation>Signer les messages avec votre adresses Raptoreum pour prouver que vous en êtes l'auteur</translation>
     </message>
     <message>
         <source>&amp;Verify message...</source>
         <translation>&amp;Vérifier un message...</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified Dash addresses</source>
-        <translation>Vérifier les messages pour vous assurer qu'ils ont été signés avec les adresses Dash spécifiées</translation>
+        <source>Verify messages to ensure they were signed with specified Raptoreum addresses</source>
+        <translation>Vérifier les messages pour vous assurer qu'ils ont été signés avec les adresses Raptoreum spécifiées</translation>
     </message>
     <message>
         <source>&amp;Information</source>
@@ -536,16 +536,16 @@
         <translation>Ouvrir une &amp;URI...</translation>
     </message>
     <message>
-        <source>Open a dash: URI or payment request</source>
-        <translation>Ouvrir une URI ou demande de paiement Dash</translation>
+        <source>Open a raptoreum: URI or payment request</source>
+        <translation>Ouvrir une URI ou demande de paiement Raptoreum</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
         <translation>Options de ligne de &amp;commande</translation>
     </message>
     <message>
-        <source>Show the %1 help message to get a list with possible Dash command-line options</source>
-        <translation>Afficher le message d’aide de %1 pour obtenir la liste des options de ligne de commande Dash possibles.</translation>
+        <source>Show the %1 help message to get a list with possible Raptoreum command-line options</source>
+        <translation>Afficher le message d’aide de %1 pour obtenir la liste des options de ligne de commande Raptoreum possibles.</translation>
     </message>
     <message>
         <source>%1 client</source>
@@ -590,8 +590,8 @@
         <translation>Barre d'outils des onglets</translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to Dash network</source>
-        <translation><numerusform>%n connexion active au réseau Dash </numerusform><numerusform>%n connexions actives au réseau Dash </numerusform></translation>
+        <source>%n active connection(s) to Raptoreum network</source>
+        <translation><numerusform>%n connexion active au réseau Raptoreum </numerusform><numerusform>%n connexions actives au réseau Raptoreum </numerusform></translation>
     </message>
     <message>
         <source>Network activity disabled</source>
@@ -970,8 +970,8 @@
         <translation>Modifier l’adresse d'envoi</translation>
     </message>
     <message>
-        <source>The entered address "%1" is not a valid Dash address.</source>
-        <translation>L'adresse d'entrée « %1 » n'est pas une adresse Dash valide</translation>
+        <source>The entered address "%1" is not a valid Raptoreum address.</source>
+        <translation>L'adresse d'entrée « %1 » n'est pas une adresse Raptoreum valide</translation>
     </message>
     <message>
         <source>The entered address "%1" is already in the address book.</source>
@@ -1032,8 +1032,8 @@
         <translation>Information %1</translation>
     </message>
     <message>
-        <source>&lt;h3&gt;%1 Basics&lt;/h3&gt; %1 gives you true financial privacy by obscuring the origins of your funds. All the Dash in your wallet is comprised of different "inputs" which you can think of as separate, discrete coins.&lt;br&gt; %1 uses an innovative process to mix your inputs with the inputs of two or more other people, without having your coins ever leave your wallet. You retain control of your money at all times.&lt;hr&gt; &lt;b&gt;The %1 process works like this:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;%1 begins by breaking your transaction inputs down into standard denominations. These denominations are 0.001 DASH, 0.01 DASH, 0.1 DASH, 1 DASH and 10 DASH -- sort of like the paper money you use every day.&lt;/li&gt; &lt;li&gt;Your wallet then sends requests to specially configured software nodes on the network, called "masternodes." These masternodes are informed then that you are interested in mixing a certain denomination. No identifiable information is sent to the masternodes, so they never know "who" you are.&lt;/li&gt; &lt;li&gt;When two or more other people send similar messages, indicating that they wish to mix the same denomination, a mixing session begins. The masternode mixes up the inputs and instructs all three users' wallets to pay the now-transformed input back to themselves. Your wallet pays that denomination directly to itself, but in a different address (called a change address).&lt;/li&gt; &lt;li&gt;In order to fully obscure your funds, your wallet must repeat this process a number of times with each denomination. Each time the process is completed, it's called a "round." Each round of %1 makes it exponentially more difficult to determine where your funds originated.&lt;/li&gt; &lt;li&gt;This mixing process happens in the background without any intervention on your part. When you wish to make a transaction, your funds will already be mixed. No additional waiting is required.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;IMPORTANT:&lt;/b&gt; Your wallet only contains 1000 of these "change addresses." Every time a mixing event happens, up to 9 of your addresses are used up. This means those 1000 addresses last for about 100 mixing events. When 900 of them are used, your wallet must create more addresses. It can only do this, however, if you have automatic backups enabled.&lt;br&gt; Consequently, users who have backups disabled will also have %1 disabled. &lt;hr&gt;For more information, see the &lt;a style="%2" href="%3"&gt;%1 documentation&lt;/a&gt;.</source>
-        <translation>&lt;h3&gt;Ce qu'il faut savoir sur %1&lt;/h3&gt; %1 vous donne une véritable confidentialité financière en obscurcissant l'origine de vos fonds. Tous les dashs de votre portefeuille sont répartis en différentes "entrées", qu'on peut se représenter comme des pièces distinctes.&lt;br&gt; %1 utilise une procédure innovante pour mélanger vos entrées avec les entrées de deux autres personnes, sans que vos fonds ne quittent jamais votre portefeuille. Vous gardez le contrôle de votre argent à tout moment.&lt;hr&gt; &lt;b&gt;La procédure %1 fonctionne comme ceci :&lt;/b&gt;&lt;ol type="1"&gt; %1 commence par diviser vos entrées de transaction en coupures standard. Ces coupures sont de 0.001 DASH, 0.01 DASH, 0.1 DASH, 1 DASH et 10 DASH — un peu comme pour les billets de banque que vous utilisez tous les jours.&lt;/li&gt; &lt;li&gt;Votre portefeuille envoie alors des requêtes à des serveurs spécifiques sur le réseau, appelés "masternodes". Ces masternodes sont informés que vous souhaiteriez mélanger certaines coupures. Aucune information permettant de vous identifier n'est envoyée aux masternodes, qui ne savent donc jamais "qui" vous êtes.&lt;/li&gt; &lt;li&gt;Quand deux autres personnes envoient des requêtes similaires, indiquant qu'elles veulent mélanger les mêmes coupures, alors commence une session de mélange. Le masternode mélange les entrées et demande aux portefeuilles des trois utilisateurs de payer l'entrée, désormais transformée, à eux-mêmes. Votre portefeuille paie cette coupure directement à lui-même, mais à une adresse différente (appelée une adresse de monnaie rendue).&lt;/li&gt; &lt;li&gt;Afin d'obscurcir complètement vos fonds, votre portefeuille doit répéter cette procédure un certain nombre de fois avec chaque coupure. Une procédure terminée s'appelle un "cycle". Chaque cycle %1 rend exponentiellement plus difficile de déterminer d'où viennent vos fonds.&lt;/li&gt; &lt;li&gt;Cette procédure de mélange intervient en arrière-plan, sans aucune intervention de votre part. Quand vous souhaiterez faire une transaction, vos fonds seront déjà mélangés. Aucune autre attente ne sera nécessaire.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;IMPORTANT :&lt;/b&gt; Votre portefeuille ne contient que 1000 de ces "adresses de monnaie rendue". À chaque opération de mélange, jusqu'à 9 de ces adresses sont utilisées. Cela signifie que ces 1000 adresses couvrent environ 100 opérations de mélange. Quand 900 d'entre elles sont utilisées, votre portefeuille doit créer de nouvelles adresses. Cependant il ne peut le faire que si vous avez activé les sauvegardes automatiques.&lt;br&gt; En conséquence, les utilisateurs qui ont désactivé les sauvegardes ont aussi %1 désactivé. &lt;hr&gt;Pour en savoir plus, voir la &lt;a style="%2" href="%3"&gt;documentation %1&lt;/a&gt;.   </translation>
+        <source>&lt;h3&gt;%1 Basics&lt;/h3&gt; %1 gives you true financial privacy by obscuring the origins of your funds. All the Raptoreum in your wallet is comprised of different "inputs" which you can think of as separate, discrete coins.&lt;br&gt; %1 uses an innovative process to mix your inputs with the inputs of two or more other people, without having your coins ever leave your wallet. You retain control of your money at all times.&lt;hr&gt; &lt;b&gt;The %1 process works like this:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;%1 begins by breaking your transaction inputs down into standard denominations. These denominations are 0.001 RTM, 0.01 RTM, 0.1 RTM, 1 RTM and 10 RTM -- sort of like the paper money you use every day.&lt;/li&gt; &lt;li&gt;Your wallet then sends requests to specially configured software nodes on the network, called "smartnodes." These smartnodes are informed then that you are interested in mixing a certain denomination. No identifiable information is sent to the smartnodes, so they never know "who" you are.&lt;/li&gt; &lt;li&gt;When two or more other people send similar messages, indicating that they wish to mix the same denomination, a mixing session begins. The smartnode mixes up the inputs and instructs all three users' wallets to pay the now-transformed input back to themselves. Your wallet pays that denomination directly to itself, but in a different address (called a change address).&lt;/li&gt; &lt;li&gt;In order to fully obscure your funds, your wallet must repeat this process a number of times with each denomination. Each time the process is completed, it's called a "round." Each round of %1 makes it exponentially more difficult to determine where your funds originated.&lt;/li&gt; &lt;li&gt;This mixing process happens in the background without any intervention on your part. When you wish to make a transaction, your funds will already be mixed. No additional waiting is required.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;IMPORTANT:&lt;/b&gt; Your wallet only contains 1000 of these "change addresses." Every time a mixing event happens, up to 9 of your addresses are used up. This means those 1000 addresses last for about 100 mixing events. When 900 of them are used, your wallet must create more addresses. It can only do this, however, if you have automatic backups enabled.&lt;br&gt; Consequently, users who have backups disabled will also have %1 disabled. &lt;hr&gt;For more information, see the &lt;a style="%2" href="%3"&gt;%1 documentation&lt;/a&gt;.</source>
+        <translation>&lt;h3&gt;Ce qu'il faut savoir sur %1&lt;/h3&gt; %1 vous donne une véritable confidentialité financière en obscurcissant l'origine de vos fonds. Tous les raptoreums de votre portefeuille sont répartis en différentes "entrées", qu'on peut se représenter comme des pièces distinctes.&lt;br&gt; %1 utilise une procédure innovante pour mélanger vos entrées avec les entrées de deux autres personnes, sans que vos fonds ne quittent jamais votre portefeuille. Vous gardez le contrôle de votre argent à tout moment.&lt;hr&gt; &lt;b&gt;La procédure %1 fonctionne comme ceci :&lt;/b&gt;&lt;ol type="1"&gt; %1 commence par diviser vos entrées de transaction en coupures standard. Ces coupures sont de 0.001 RTM, 0.01 RTM, 0.1 RTM, 1 RTM et 10 RTM — un peu comme pour les billets de banque que vous utilisez tous les jours.&lt;/li&gt; &lt;li&gt;Votre portefeuille envoie alors des requêtes à des serveurs spécifiques sur le réseau, appelés "smartnodes". Ces smartnodes sont informés que vous souhaiteriez mélanger certaines coupures. Aucune information permettant de vous identifier n'est envoyée aux smartnodes, qui ne savent donc jamais "qui" vous êtes.&lt;/li&gt; &lt;li&gt;Quand deux autres personnes envoient des requêtes similaires, indiquant qu'elles veulent mélanger les mêmes coupures, alors commence une session de mélange. Le smartnode mélange les entrées et demande aux portefeuilles des trois utilisateurs de payer l'entrée, désormais transformée, à eux-mêmes. Votre portefeuille paie cette coupure directement à lui-même, mais à une adresse différente (appelée une adresse de monnaie rendue).&lt;/li&gt; &lt;li&gt;Afin d'obscurcir complètement vos fonds, votre portefeuille doit répéter cette procédure un certain nombre de fois avec chaque coupure. Une procédure terminée s'appelle un "cycle". Chaque cycle %1 rend exponentiellement plus difficile de déterminer d'où viennent vos fonds.&lt;/li&gt; &lt;li&gt;Cette procédure de mélange intervient en arrière-plan, sans aucune intervention de votre part. Quand vous souhaiterez faire une transaction, vos fonds seront déjà mélangés. Aucune autre attente ne sera nécessaire.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;IMPORTANT :&lt;/b&gt; Votre portefeuille ne contient que 1000 de ces "adresses de monnaie rendue". À chaque opération de mélange, jusqu'à 9 de ces adresses sont utilisées. Cela signifie que ces 1000 adresses couvrent environ 100 opérations de mélange. Quand 900 d'entre elles sont utilisées, votre portefeuille doit créer de nouvelles adresses. Cependant il ne peut le faire que si vous avez activé les sauvegardes automatiques.&lt;br&gt; En conséquence, les utilisateurs qui ont désactivé les sauvegardes ont aussi %1 désactivé. &lt;hr&gt;Pour en savoir plus, voir la &lt;a style="%2" href="%3"&gt;documentation %1&lt;/a&gt;.   </translation>
     </message>
 </context>
 <context>
@@ -1079,8 +1079,8 @@
         <translation>Approximativement %1 Go de données seront stockés dans ce répertoire.</translation>
     </message>
     <message>
-        <source>%1 will download and store a copy of the Dash block chain.</source>
-        <translation>%1 téléchargera et stockera une copie de la chaîne de blocs Dash.</translation>
+        <source>%1 will download and store a copy of the Raptoreum block chain.</source>
+        <translation>%1 téléchargera et stockera une copie de la chaîne de blocs Raptoreum.</translation>
     </message>
     <message>
         <source>The wallet will also be stored in this directory.</source>
@@ -1104,7 +1104,7 @@
     </message>
 </context>
 <context>
-    <name>MasternodeList</name>
+    <name>SmartnodeList</name>
     <message>
         <source>Form</source>
         <translation>Formulaire</translation>
@@ -1122,20 +1122,20 @@
         <translation>Filtrer la liste :</translation>
     </message>
     <message>
-        <source>Filter masternode list</source>
-        <translation>Filtrer la liste des masternodes</translation>
+        <source>Filter smartnode list</source>
+        <translation>Filtrer la liste des smartnodes</translation>
     </message>
     <message>
         <source>Node Count:</source>
         <translation>Nombre de nœuds :</translation>
     </message>
     <message>
-        <source>Show only masternodes this wallet has keys for.</source>
-        <translation>N'afficher que les masternodes dont les clés sont dans ce portefeuille</translation>
+        <source>Show only smartnodes this wallet has keys for.</source>
+        <translation>N'afficher que les smartnodes dont les clés sont dans ce portefeuille</translation>
     </message>
     <message>
-        <source>My masternodes only</source>
-        <translation>Seulement mes masternodes</translation>
+        <source>My smartnodes only</source>
+        <translation>Seulement mes smartnodes</translation>
     </message>
     <message>
         <source>Service</source>
@@ -1226,8 +1226,8 @@
         <translation>Veuillez patienter…</translation>
     </message>
     <message>
-        <source>Additional information for DIP3 Masternode %1</source>
-        <translation>Infos supplémentaires pour le masternode DIP3 %1</translation>
+        <source>Additional information for DIP3 Smartnode %1</source>
+        <translation>Infos supplémentaires pour le smartnode DIP3 %1</translation>
     </message>
 </context>
 <context>
@@ -1237,12 +1237,12 @@
         <translation>Formulaire</translation>
     </message>
     <message>
-        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the Dash network, as detailed below.</source>
-        <translation>Les transactions récentes ne sont peut-être pas encore visibles ; le solde de votre portefeuille peut donc être incorrect. Ces informations seront correctes dès que votre portefeuille aura terminé sa synchronisation avec le réseau Dash, comme précisé ci-dessous.</translation>
+        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the Raptoreum network, as detailed below.</source>
+        <translation>Les transactions récentes ne sont peut-être pas encore visibles ; le solde de votre portefeuille peut donc être incorrect. Ces informations seront correctes dès que votre portefeuille aura terminé sa synchronisation avec le réseau Raptoreum, comme précisé ci-dessous.</translation>
     </message>
     <message>
-        <source>Attempting to spend Dash that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
-        <translation>Les tentatives de dépenser des dashs affectés par des transactions non encore affichées seront rejetées par le réseau.</translation>
+        <source>Attempting to spend Raptoreum that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
+        <translation>Les tentatives de dépenser des raptoreums affectés par des transactions non encore affichées seront rejetées par le réseau.</translation>
     </message>
     <message>
         <source>Number of blocks left</source>
@@ -1339,12 +1339,12 @@
         <translation>&amp;Apparence</translation>
     </message>
     <message>
-        <source>Show additional tab listing all your masternodes in first sub-tab&lt;br/&gt;and all masternodes on the network in second sub-tab.</source>
-        <translation>Ajouter un onglet montrant tous vos masternodes dans le premier sous-onglet&lt;br/&gt;et tous les masternodes du réseau dans le second.</translation>
+        <source>Show additional tab listing all your smartnodes in first sub-tab&lt;br/&gt;and all smartnodes on the network in second sub-tab.</source>
+        <translation>Ajouter un onglet montrant tous vos smartnodes dans le premier sous-onglet&lt;br/&gt;et tous les smartnodes du réseau dans le second.</translation>
     </message>
     <message>
-        <source>Show Masternodes Tab</source>
-        <translation>Afficher l'onglet Masternodes</translation>
+        <source>Show Smartnodes Tab</source>
+        <translation>Afficher l'onglet Smartnodes</translation>
     </message>
     <message>
         <source>If you disable the spending of unconfirmed change, the change from a transaction&lt;br/&gt;cannot be used until that transaction has at least one confirmation.&lt;br/&gt;This also affects how your balance is computed.</source>
@@ -1399,8 +1399,8 @@
         <translation>Solde cible</translation>
     </message>
     <message>
-        <source>Automatically open the Dash Core client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Ouvrir automatiquement le port du client Dash Core sur le routeur. Cela ne fonctionne que si votre routeur supporte UPnP et est activé.</translation>
+        <source>Automatically open the Raptoreum Core client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <translation>Ouvrir automatiquement le port du client Raptoreum Core sur le routeur. Cela ne fonctionne que si votre routeur supporte UPnP et est activé.</translation>
     </message>
     <message>
         <source>Accept connections from outside.</source>
@@ -1411,8 +1411,8 @@
         <translation>Autoriser les connexions entrantes (&amp;g)</translation>
     </message>
     <message>
-        <source>Connect to the Dash network through a SOCKS5 proxy.</source>
-        <translation>Se connecter au réseau Dash à travers un proxy SOCKS5.</translation>
+        <source>Connect to the Raptoreum network through a SOCKS5 proxy.</source>
+        <translation>Se connecter au réseau Raptoreum à travers un proxy SOCKS5.</translation>
     </message>
     <message>
         <source>&amp;Connect through SOCKS5 proxy (default proxy):</source>
@@ -1467,8 +1467,8 @@
         <translation>&amp;Dépenser l'argent non confirmé</translation>
     </message>
     <message>
-        <source>This setting determines the amount of individual masternodes that an input will be mixed through.&lt;br/&gt;More rounds of mixing gives a higher degree of privacy, but also costs more in fees.</source>
-        <translation>Ce paramètre détermine le nombre de masternodes uniques par lesquels une entrée sera mélangée.&lt;br/&gt;Plus le nombre de cycles de mélange est important, plus le degré de confidentialité est élevé, mais les frais associés sont d'autant plus importants.</translation>
+        <source>This setting determines the amount of individual smartnodes that an input will be mixed through.&lt;br/&gt;More rounds of mixing gives a higher degree of privacy, but also costs more in fees.</source>
+        <translation>Ce paramètre détermine le nombre de smartnodes uniques par lesquels une entrée sera mélangée.&lt;br/&gt;Plus le nombre de cycles de mélange est important, plus le degré de confidentialité est élevé, mais les frais associés sont d'autant plus importants.</translation>
     </message>
     <message>
         <source>&amp;Network</source>
@@ -1511,8 +1511,8 @@
         <translation>Tor</translation>
     </message>
     <message>
-        <source>Connect to the Dash network through a separate SOCKS5 proxy for Tor hidden services.</source>
-        <translation>Se connecter au réseau Dash via un proxy SOCKS5 séparé pour les services cachés Tor.</translation>
+        <source>Connect to the Raptoreum network through a separate SOCKS5 proxy for Tor hidden services.</source>
+        <translation>Se connecter au réseau Raptoreum via un proxy SOCKS5 séparé pour les services cachés Tor.</translation>
     </message>
     <message>
         <source>Show only a tray icon after minimizing the window.</source>
@@ -1540,9 +1540,9 @@
     </message>
     <message>
         <source>Language missing or translation incomplete? Help contributing translations here:
-https://www.transifex.com/projects/p/dash/</source>
+https://www.transifex.com/projects/p/raptoreum/</source>
         <translation>Langage manquant ou traduction incomplète ? Participez aux traductions ici :
-https://www.transifex.com/projects/p/dash/</translation>
+https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <source>&amp;Unit to show amounts in:</source>
@@ -1612,8 +1612,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Formulaire</translation>
     </message>
     <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Dash network after a connection is established, but this process has not completed yet.</source>
-        <translation>L'information affichée peut être obsolète. Votre portefeuille se synchronise automatiquement avec le réseau Dash lorsque la connection est établie, mais ce processus n'est pas encore terminé.</translation>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Raptoreum network after a connection is established, but this process has not completed yet.</source>
+        <translation>L'information affichée peut être obsolète. Votre portefeuille se synchronise automatiquement avec le réseau Raptoreum lorsque la connection est établie, mais ce processus n'est pas encore terminé.</translation>
     </message>
     <message>
         <source>Available:</source>
@@ -1692,8 +1692,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Montant et cycles :</translation>
     </message>
     <message>
-        <source>0 DASH / 0 Rounds</source>
-        <translation>0 DASH / 0 cycles</translation>
+        <source>0 RTM / 0 Rounds</source>
+        <translation>0 RTM / 0 cycles</translation>
     </message>
     <message>
         <source>Submitted Denom:</source>
@@ -1712,8 +1712,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Démarrer/Arrêter le mélange</translation>
     </message>
     <message>
-        <source>The denominations you submitted to the Masternode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
-        <translation>Les coupures que vous avez soumises au masternode.&lt;br&gt;Pour mélanger, d'autres utilisateurs doivent soumettre des coupures de même montant.</translation>
+        <source>The denominations you submitted to the Smartnode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
+        <translation>Les coupures que vous avez soumises au smartnode.&lt;br&gt;Pour mélanger, d'autres utilisateurs doivent soumettre des coupures de même montant.</translation>
     </message>
     <message>
         <source>out of sync</source>
@@ -1835,16 +1835,16 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Erreur de demande de paiement</translation>
     </message>
     <message>
-        <source>Cannot start dash: click-to-pay handler</source>
-        <translation>Impossible de démarrer le gestionnaire Dash click-to-pay</translation>
+        <source>Cannot start raptoreum: click-to-pay handler</source>
+        <translation>Impossible de démarrer le gestionnaire Raptoreum click-to-pay</translation>
     </message>
     <message>
         <source>URI handling</source>
         <translation>Gestion des URI</translation>
     </message>
     <message>
-        <source>'dash://' is not a valid URI. Use 'dash:' instead.</source>
-        <translation>'dash://' n'est pas un URI valide. Utilisez 'dash:' à la place.</translation>
+        <source>'raptoreum://' is not a valid URI. Use 'raptoreum:' instead.</source>
+        <translation>'raptoreum://' n'est pas un URI valide. Utilisez 'raptoreum:' à la place.</translation>
     </message>
     <message>
         <source>Payment request fetch URL is invalid: %1</source>
@@ -1855,8 +1855,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Adresse de paiement %1 invalide</translation>
     </message>
     <message>
-        <source>URI cannot be parsed! This can be caused by an invalid Dash address or malformed URI parameters.</source>
-        <translation>L'URI ne peut être analysée ! Cela peut provenir d'une adresse Dash invalide, ou de paramètres d'URI mal composés.</translation>
+        <source>URI cannot be parsed! This can be caused by an invalid Raptoreum address or malformed URI parameters.</source>
+        <translation>L'URI ne peut être analysée ! Cela peut provenir d'une adresse Raptoreum invalide, ou de paramètres d'URI mal composés.</translation>
     </message>
     <message>
         <source>Payment request file handling</source>
@@ -2001,8 +2001,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Montant</translation>
     </message>
     <message>
-        <source>Enter a Dash address (e.g. %1)</source>
-        <translation>Entrez une adresse Dash (e.g. %1)</translation>
+        <source>Enter a Raptoreum address (e.g. %1)</source>
+        <translation>Entrez une adresse Raptoreum (e.g. %1)</translation>
     </message>
     <message>
         <source>Appearance Setup</source>
@@ -2256,8 +2256,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Chaîne de blocs</translation>
     </message>
     <message>
-        <source>Number of Masternodes</source>
-        <translation>Nombre de masternodes</translation>
+        <source>Number of Smartnodes</source>
+        <translation>Nombre de smartnodes</translation>
     </message>
     <message>
         <source>Memory Pool</source>
@@ -2592,12 +2592,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Normal</translation>
     </message>
     <message>
-        <source>Masternode</source>
-        <translation>Masternode</translation>
+        <source>Smartnode</source>
+        <translation>Smartnode</translation>
     </message>
     <message>
-        <source>Verified Masternode</source>
-        <translation>Masternode vérifié</translation>
+        <source>Verified Smartnode</source>
+        <translation>Smartnode vérifié</translation>
     </message>
     <message>
         <source>Unknown</source>
@@ -2607,8 +2607,8 @@ https://www.transifex.com/projects/p/dash/</translation>
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
-        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Dash network.</source>
-        <translation>Un message optionnel à joindre à la demande de paiement, qui sera affiché quand la demande sera ouverte. Note : ce message ne sera pas envoyé avec le paiement à travers le réseau Dash.</translation>
+        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Raptoreum network.</source>
+        <translation>Un message optionnel à joindre à la demande de paiement, qui sera affiché quand la demande sera ouverte. Note : ce message ne sera pas envoyé avec le paiement à travers le réseau Raptoreum.</translation>
     </message>
     <message>
         <source>&amp;Message:</source>
@@ -2619,8 +2619,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Une étiquette optionnelle à associer à la nouvelle adresse de réception.</translation>
     </message>
     <message>
-        <source>An optional message to attach to the payment request, which will be displayed when the request is opened.&lt;br&gt;Note: The message will not be sent with the payment over the Dash network.</source>
-        <translation>Un message optionnel à joindre à la demande de paiement, qui sera affiché quand la demande sera ouverte.&lt;br&gt;Note : ce message ne sera pas envoyé avec le paiement à travers le réseau Dash.</translation>
+        <source>An optional message to attach to the payment request, which will be displayed when the request is opened.&lt;br&gt;Note: The message will not be sent with the payment over the Raptoreum network.</source>
+        <translation>Un message optionnel à joindre à la demande de paiement, qui sera affiché quand la demande sera ouverte.&lt;br&gt;Note : ce message ne sera pas envoyé avec le paiement à travers le réseau Raptoreum.</translation>
     </message>
     <message>
         <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
@@ -2864,7 +2864,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Si les frais personnalisés sont à 1000 duffs et que la transaction fait seulement 250 octets, alors "par kilooctet" coûtera seulement 250 duffs de frais,&lt;br /&gt;alors que "au moins" coûtera 1000 duffs. Pour les transactions de plus d'un kilooctet, les deux coûts seront calculés au kilooctet.</translation>
     </message>
     <message>
-        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks.&lt;br /&gt;But be aware that this can end up in a never confirming transaction once there is more demand for dash transactions than the network can process.</source>
+        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks.&lt;br /&gt;But be aware that this can end up in a never confirming transaction once there is more demand for raptoreum transactions than the network can process.</source>
         <translation>Payer les frais minimaux fonctionne tant que le volume des transactions est inférieur à l'espace libre dans les blocs.&lt;br/&gt;Gardez à l'esprit que cette option peut entraîner des transactions qui ne seront jamais confirmées si la demande excède la capacité du réseau.</translation>
     </message>
     <message>
@@ -3072,8 +3072,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation><numerusform>Le début de confirmation est estimé dans %n bloc.</numerusform><numerusform>Le début de confirmation est estimé dans les %n blocs.</numerusform></translation>
     </message>
     <message>
-        <source>Warning: Invalid Dash address</source>
-        <translation>Attention : adresse Dash invalide</translation>
+        <source>Warning: Invalid Raptoreum address</source>
+        <translation>Attention : adresse Raptoreum invalide</translation>
     </message>
     <message>
         <source>Warning: Unknown change address</source>
@@ -3103,8 +3103,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>&amp;Payer à :</translation>
     </message>
     <message>
-        <source>The Dash address to send the payment to</source>
-        <translation>L'adresse Dash à laquelle envoyer de la monnaie</translation>
+        <source>The Raptoreum address to send the payment to</source>
+        <translation>L'adresse Raptoreum à laquelle envoyer de la monnaie</translation>
     </message>
     <message>
         <source>Choose previously used address</source>
@@ -3139,8 +3139,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>&amp;Montant :</translation>
     </message>
     <message>
-        <source>The fee will be deducted from the amount being sent. The recipient will receive a lower amount of Dash than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
-        <translation>Les frais vont être déduits du montant envoyé. Le destinataire recevra moins de dashs que ce que vous avez indiqué dans la case montant. S'il y a plusieurs destinataires, les frais seront partagés équitablement.</translation>
+        <source>The fee will be deducted from the amount being sent. The recipient will receive a lower amount of Raptoreum than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
+        <translation>Les frais vont être déduits du montant envoyé. Le destinataire recevra moins de raptoreums que ce que vous avez indiqué dans la case montant. S'il y a plusieurs destinataires, les frais seront partagés équitablement.</translation>
     </message>
     <message>
         <source>S&amp;ubtract fee from amount</source>
@@ -3155,8 +3155,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Message :</translation>
     </message>
     <message>
-        <source>A message that was attached to the dash: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Dash network.</source>
-        <translation>Un message joint à l'URI Dash qui sera sauvegardé avec la transaction pour référence. Note : ce message ne sera pas envoyé à travers le réseau Dash.</translation>
+        <source>A message that was attached to the raptoreum: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Raptoreum network.</source>
+        <translation>Un message joint à l'URI Raptoreum qui sera sauvegardé avec la transaction pour référence. Note : ce message ne sera pas envoyé à travers le réseau Raptoreum.</translation>
     </message>
     <message>
         <source>This is an unauthenticated payment request.</source>
@@ -3208,12 +3208,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>&amp;Signer un message</translation>
     </message>
     <message>
-        <source>You can sign messages/agreements with your addresses to prove you can receive Dash sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
-        <translation>Vous pouvez signer des messages ou contrats avec vos adresses, et ainsi prouver que vous pouvez y recevoir des dashs. Faites attention de ne pas signer quoi que ce soit de vague ou d'aléatoire, car des attaques d'hameçonnage peuvent essayer d'usurper votre identité en utilisant votre signature. Ne signez que des déclarations très détaillées et avec lesquelles vous êtes entièrement d'accord.</translation>
+        <source>You can sign messages/agreements with your addresses to prove you can receive Raptoreum sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
+        <translation>Vous pouvez signer des messages ou contrats avec vos adresses, et ainsi prouver que vous pouvez y recevoir des raptoreums. Faites attention de ne pas signer quoi que ce soit de vague ou d'aléatoire, car des attaques d'hameçonnage peuvent essayer d'usurper votre identité en utilisant votre signature. Ne signez que des déclarations très détaillées et avec lesquelles vous êtes entièrement d'accord.</translation>
     </message>
     <message>
-        <source>The Dash address to sign the message with</source>
-        <translation>L'adresse Dash avec laquelle signer le message</translation>
+        <source>The Raptoreum address to sign the message with</source>
+        <translation>L'adresse Raptoreum avec laquelle signer le message</translation>
     </message>
     <message>
         <source>Choose previously used address</source>
@@ -3244,8 +3244,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Copier la signature actuelle dans le presse-papier</translation>
     </message>
     <message>
-        <source>Sign the message to prove you own this Dash address</source>
-        <translation>Signer le message pour prouver que vous possédez cette adresse Dash</translation>
+        <source>Sign the message to prove you own this Raptoreum address</source>
+        <translation>Signer le message pour prouver que vous possédez cette adresse Raptoreum</translation>
     </message>
     <message>
         <source>Sign &amp;Message</source>
@@ -3268,12 +3268,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Saisir ci-dessous l'adresse du destinataire, le message (assurez-vous d'avoir copié exactement les retours à la ligne, les espaces, tabulations, etc.) et la signature pour vérifier le message. Faites attention à ne pas déduire davantage de la signature que ce qui est contenu dans le message signé lui-même, pour éviter d'être trompé par une attaque "man in the middle". Gardez à l'esprit que cette opération prouve uniquement que le signataire peut recevoir des fonds à l'adresse donnée, cela ne prouve pas l'identité de l'expéditeur d'une transaction !</translation>
     </message>
     <message>
-        <source>The Dash address the message was signed with</source>
-        <translation>L'adresse Dash avec laquelle le message a été signé</translation>
+        <source>The Raptoreum address the message was signed with</source>
+        <translation>L'adresse Raptoreum avec laquelle le message a été signé</translation>
     </message>
     <message>
-        <source>Verify the message to ensure it was signed with the specified Dash address</source>
-        <translation>Vérifier le message pour s'assurer qu'il a été signé avec l'adresse Dash spécifiée</translation>
+        <source>Verify the message to ensure it was signed with the specified Raptoreum address</source>
+        <translation>Vérifier le message pour s'assurer qu'il a été signé avec l'adresse Raptoreum spécifiée</translation>
     </message>
     <message>
         <source>Verify &amp;Message</source>
@@ -3947,7 +3947,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
 </context>
 <context>
-    <name>dash-core</name>
+    <name>raptoreum-core</name>
     <message>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
         <translation>Erreur : l'écoute des connexions entrantes a échoué (erreur retournée : %s)</translation>
@@ -4065,8 +4065,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Échec du chargement du cache de gouvernance depuis</translation>
     </message>
     <message>
-        <source>Failed to load masternode cache from</source>
-        <translation>Échec du chargement du cache des masternodes depuis</translation>
+        <source>Failed to load smartnode cache from</source>
+        <translation>Échec du chargement du cache des smartnodes depuis</translation>
     </message>
     <message>
         <source>Found enough users, signing ( waiting %s )</source>
@@ -4129,8 +4129,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Chargement du cache des requêtes exécutées...</translation>
     </message>
     <message>
-        <source>Loading masternode cache...</source>
-        <translation>Chargement du cache de masternode...</translation>
+        <source>Loading smartnode cache...</source>
+        <translation>Chargement du cache de smartnode...</translation>
     </message>
     <message>
         <source>Lock is already in place.</source>
@@ -4145,24 +4145,24 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Un port doit être spécifié avec -whitebind: '%s'</translation>
     </message>
     <message>
-        <source>No Masternodes detected.</source>
-        <translation>Aucun masternode détecté.</translation>
+        <source>No Smartnodes detected.</source>
+        <translation>Aucun smartnode détecté.</translation>
     </message>
     <message>
-        <source>No compatible Masternode found.</source>
-        <translation>Aucun masternode compatible trouvé.</translation>
+        <source>No compatible Smartnode found.</source>
+        <translation>Aucun smartnode compatible trouvé.</translation>
     </message>
     <message>
         <source>Not enough funds to mix.</source>
         <translation>Pas assez de fonds à mélanger.</translation>
     </message>
     <message>
-        <source>Not in the Masternode list.</source>
-        <translation>Absent de la liste des masternodes.</translation>
+        <source>Not in the Smartnode list.</source>
+        <translation>Absent de la liste des smartnodes.</translation>
     </message>
     <message>
-        <source>Submitted to masternode, waiting in queue %s</source>
-        <translation>Soumis au masternode, dans la file d'attente %s</translation>
+        <source>Submitted to smartnode, waiting in queue %s</source>
+        <translation>Soumis au smartnode, dans la file d'attente %s</translation>
     </message>
     <message>
         <source>Synchronization finished</source>
@@ -4201,8 +4201,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Va réessayer ...</translation>
     </message>
     <message>
-        <source>Can't find random Masternode.</source>
-        <translation>Masternode aléatoire introuvable.</translation>
+        <source>Can't find random Smartnode.</source>
+        <translation>Smartnode aléatoire introuvable.</translation>
     </message>
     <message>
         <source>%s can't be lower than %s</source>
@@ -4233,8 +4233,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Le fichier %s contient toutes les clés privées de ce portefeuille. Ne le partagez avec personne !</translation>
     </message>
     <message>
-        <source>-masternode option is deprecated and ignored, specifying -masternodeblsprivkey is enough to start this node as a masternode.</source>
-        <translation>L'option -masternode est obsolète et ignorée. Indiquer -masternodeblsprivkey suffit à démarrer ce nœud en tant que masternode.</translation>
+        <source>-smartnode option is deprecated and ignored, specifying -smartnodeblsprivkey is enough to start this node as a smartnode.</source>
+        <translation>L'option -smartnode est obsolète et ignorée. Indiquer -smartnodeblsprivkey suffit à démarrer ce nœud en tant que smartnode.</translation>
     </message>
     <message>
         <source>Failed to create backup, file already exists! This could happen if you restarted wallet in less than 60 seconds. You can continue if you are ok with this.</source>
@@ -4337,8 +4337,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Échec de l'effacement du cache de gouvernance à</translation>
     </message>
     <message>
-        <source>Failed to clear masternode cache at</source>
-        <translation>Échec de l'effacement du cache masternode à</translation>
+        <source>Failed to clear smartnode cache at</source>
+        <translation>Échec de l'effacement du cache smartnode à</translation>
     </message>
     <message>
         <source>Failed to commit EvoDB</source>
@@ -4369,8 +4369,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Montant invalide pour -fallbackfee=&lt;montant&gt; : « %s »</translation>
     </message>
     <message>
-        <source>Invalid masternodeblsprivkey. Please see documentation.</source>
-        <translation>masternodeblsprivkey invalide. Veuillez vous référer à la documentation.</translation>
+        <source>Invalid smartnodeblsprivkey. Please see documentation.</source>
+        <translation>smartnodeblsprivkey invalide. Veuillez vous référer à la documentation.</translation>
     </message>
     <message>
         <source>It has been replaced by -disablegovernance.</source>
@@ -4401,12 +4401,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Chargement du portefeuille...</translation>
     </message>
     <message>
-        <source>Masternode queue is full.</source>
-        <translation>La file d'attente du masternode est pleine.</translation>
+        <source>Smartnode queue is full.</source>
+        <translation>La file d'attente du smartnode est pleine.</translation>
     </message>
     <message>
-        <source>Masternode:</source>
-        <translation>Masternode :</translation>
+        <source>Smartnode:</source>
+        <translation>Smartnode :</translation>
     </message>
     <message>
         <source>Missing input transaction information.</source>
@@ -4525,8 +4525,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>La création du répertoire de sauvegarde du portefeuille %s a échoué !</translation>
     </message>
     <message>
-        <source>You can not start a masternode with wallet enabled.</source>
-        <translation>Impossible de démarrer un masternode avec le portefeuille activé.</translation>
+        <source>You can not start a smartnode with wallet enabled.</source>
+        <translation>Impossible de démarrer un smartnode avec le portefeuille activé.</translation>
     </message>
     <message>
         <source>You need to rebuild the database using -reindex to change -addressindex</source>
@@ -4549,8 +4549,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>voir le fichier debug.log pour les détails.</translation>
     </message>
     <message>
-        <source>Dash Core</source>
-        <translation>Dash Core</translation>
+        <source>Raptoreum Core</source>
+        <translation>Raptoreum Core</translation>
     </message>
     <message>
         <source>The %s developers</source>
@@ -4857,8 +4857,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Vous démarrez avec la validation de gouvernance désactivée.</translation>
     </message>
     <message>
-        <source>You can not disable governance validation on a masternode.</source>
-        <translation>Impossible de désactiver la validation de gouvernance sur un masternode.</translation>
+        <source>You can not disable governance validation on a smartnode.</source>
+        <translation>Impossible de désactiver la validation de gouvernance sur un smartnode.</translation>
     </message>
     <message>
         <source>Your entries added successfully.</source>
