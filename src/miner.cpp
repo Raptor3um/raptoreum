@@ -630,11 +630,10 @@ void static RaptoreumMiner(const CChainParams& chainparams)
             arith_uint256 hashTarget = arith_uint256().SetCompact(pblock->nBits);
             while (true)
             {
-
                 uint256 hash;
                 while (true)
                 {
-                    hash = pblock->GetPOWHash();
+                    hash = pblock->ComputeHash();
                     if (UintToArith256(hash) <= hashTarget)
                     {
                         // Found a solution

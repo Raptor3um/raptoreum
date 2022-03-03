@@ -9,36 +9,42 @@
 #include <hash.h>
 #include <utilstrencodings.h>
 #include <util.h>
+#include <sync.h>
+
+static CCriticalSection cs_pow;
 
 uint256 CBlockHeader::GetHash() const
 {
 	return SerializeHash(*this);
 }
 
-uint256 CBlockHeader::GetPOWHash() const
+uint256 CBlockHeader::ComputeHash() const
+{
+    return HashGR(BEGIN(nVersion), END(nNonce), hashPrevBlock);
+}
+
+uint256 CBlockHeader::GetPOWHash(bool readCache) const
 {
     CPowCache& cache(CPowCache::Instance());
 
 	uint256 headerHash = GetHash();
 	uint256 powHash;
-	if (!cache.get(headerHash, powHash))
+    bool    found = false;
+
+    LOCK(cs_pow);
+	if (readCache)
     {
-        // Not found, hash and save
-		powHash = HashGR(BEGIN(nVersion), END(nNonce), hashPrevBlock);
-		cache.insert(headerHash, powHash);
+        found = cache.get(headerHash, powHash);
 	}
-    else
+
+    if (!found || cache.IsValidate())
     {
-        if (cache.IsValidate())
+        uint256 powHash2 = ComputeHash();
+        if (found && powHash2 != powHash)
         {
-            // Validate PowCache and correct if needed
-            uint256 powHash2 = HashGR(BEGIN(nVersion), END(nNonce), hashPrevBlock);
-            if (powHash2 != powHash)
-            {
-                LogPrintf("PowCache failure: headerHash: %s, from cache: %s, computed: %s, correcting\n", headerHash.ToString(), powHash.ToString(), powHash2.ToString());
-        		cache.insert(headerHash, powHash2);
-            }
+            LogPrintf("PowCache failure: headerHash: %s, from cache: %s, computed: %s, correcting\n", headerHash.ToString(), powHash.ToString(), powHash2.ToString());
         }
+        cache.insert(headerHash, powHash2);
     }
 	return powHash;
 }

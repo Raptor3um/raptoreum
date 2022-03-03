@@ -64,8 +64,14 @@ public:
         return (nBits == 0);
     }
 
+    /// Compute the Header Hash from the block
     uint256 GetHash() const;
-    uint256 GetPOWHash() const;
+
+    /// Compute the POW hash using GhostRider algorithm
+    uint256 ComputeHash() const;
+
+    /// Caching lookup/computation of POW hash using GhostRider algorithm
+    uint256 GetPOWHash(bool readCache = true) const;
 
     int64_t GetBlockTime() const
     {
