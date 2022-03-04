@@ -17,21 +17,21 @@ class CPowCache : public unordered_lru_cache<uint256, uint256, std::hash<uint256
         static CPowCache* instance;
         static const int CURRENT_VERSION = 1;
 
-        int nVersion;
+        int  nVersion;
+        bool bValidate;
         CCriticalSection cs;
 
     public:
         static CPowCache& Instance();
 
-        CPowCache(int maxSize = DEFAULT_POW_CACHE_SIZE);
+        CPowCache(int maxSize = DEFAULT_POW_CACHE_SIZE, bool validate = false);
         virtual ~CPowCache();
 
         void Clear();
         void CheckAndRemove();
+        bool IsValidate() const { return bValidate; }
 
         std::string ToString() const;
-
-
 
         ADD_SERIALIZE_METHODS
 
@@ -54,6 +54,7 @@ class CPowCache : public unordered_lru_cache<uint256, uint256, std::hash<uint256
                     READWRITE(powHash);
                     insert(headerHash, powHash);
                 }
+                nVersion = CURRENT_VERSION;
             }
             else
             {
