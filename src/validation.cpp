@@ -1089,6 +1089,17 @@ static bool WriteBlockToDisk(const CBlock& block, CDiskBlockPos& pos, const CMes
     return true;
 }
 
+bool CheckPOW(const CBlock& block, const Consensus::Params& consensusParams)
+{
+    if (!CheckProofOfWork(block.GetPOWHash(), block.nBits, consensusParams)) {
+        LogPrintf("CheckPOW: CheckProofOfWork failed for %s, retesting without POW cache\n", block.GetHash().ToString());
+
+        // Retest without POW cache in case cache was corrupted:
+        return CheckProofOfWork(block.GetPOWHash(false), block.nBits, consensusParams);
+    }
+    return true;
+}
+
 bool ReadBlockFromDisk(CBlock& block, const CDiskBlockPos& pos, const Consensus::Params& consensusParams)
 {
     block.SetNull();
@@ -1101,21 +1112,13 @@ bool ReadBlockFromDisk(CBlock& block, const CDiskBlockPos& pos, const Consensus:
     // Read block
     try {
         filein >> block;
-    }
-    catch (const std::exception& e) {
+    } catch (const std::exception& e) {
         return error("%s: Deserialize or I/O error - %s at %s", __func__, e.what(), pos.ToString());
     }
 
     // Check the header
-    if (!CheckProofOfWork(block.GetPOWHash(), block.nBits, consensusParams))
-    {
-        LogPrintf("ReadBlockFromDisk: CheckProofOfWork failed for %s, retesting without POW cache\n", block.GetHash().ToString());
-
-        // Retest without POW cache in case cache was corrupted:
-        if (!CheckProofOfWork(block.GetPOWHash(false), block.nBits, consensusParams))
-        {
-            return error("ReadBlockFromDisk: Errors in block header at %s", pos.ToString());
-        }
+    if (!CheckPOW(block, consensusParams)) {
+        return error("ReadBlockFromDisk: Errors in block header at %s", pos.ToString());
     }
 
     return true;
@@ -1164,58 +1167,57 @@ NOTE:   unlike bitcoin we are using PREVIOUS block height here,
 */
 CAmount GetBlockSubsidy(int nPrevBits, int nPrevHeight, const Consensus::Params& consensusParams, bool fSuperblockPartOnly)
 {
-//	if(Params().NetworkIDString() == "main") {
-//		std::cout << "This is Testnet only build" << endl;
-//		exit(1);
-//	}
-	double nSubsidy = 5000; // (declaring the reward variable and its original/default amount)
-	const short owlings = 21262; // amount of blocks between 2 owlings
-	int multiplier; // integer number of owlings
-	int tempHeight; // number of blocks since last anchor
-	if (nPrevHeight < 720) {
-		nSubsidy = 4;
-	} else if ( (nPrevHeight > 553531) && (nPrevHeight < 2105657) ){
-		tempHeight = nPrevHeight - 553532;
-		multiplier = tempHeight / owlings;
-		nSubsidy -= (multiplier*10 +10);
-	} else if ( (nPrevHeight > 2105657) && (nPrevHeight < 5273695) ) {
-		tempHeight = nPrevHeight - 2105658;
-		multiplier = tempHeight / owlings;
-		nSubsidy -= (multiplier*20 + 750);
-	} else if ( (nPrevHeight > 5273695) && (nPrevHeight < 7378633) ) {
-		tempHeight = nPrevHeight - 5273696;
-		multiplier = tempHeight / owlings;
-		nSubsidy -= (multiplier*10 + 3720);
-	} else if ( (nPrevHeight > 7378633) && (nPrevHeight < 8399209) ){
-		tempHeight = nPrevHeight - 7378634;
-		multiplier = tempHeight / owlings;
-		nSubsidy -= (multiplier * 5 + 4705);
-	} else if ( (nPrevHeight > 8399209) && (nPrevHeight < 14735285) ){
-		nSubsidy = 55;
-	} else if ( (nPrevHeight > 14735285) && (nPrevHeight < 15798385) ){
-	   tempHeight = nPrevHeight - 14735286;
-	   multiplier = tempHeight / owlings;
-	   nSubsidy -= (multiplier + 4946);
-	} else if ( (nPrevHeight > 15798385) && (nPrevHeight < 25844304) ){
-		nSubsidy = 5;
-	} else if (nPrevHeight > 125844304) {
-		nSubsidy = 0.001;
-	}
-	return nSubsidy * COIN;
+    // if (Params().NetworkIDString() == "main") {
+    //     std::cout << "This is Testnet only build" << endl;
+    //     exit(1);
+    // }
+    double nSubsidy = 5000;      // (declaring the reward variable and its original/default amount)
+    const short owlings = 21262; // amount of blocks between 2 owlings
+    int multiplier;              // integer number of owlings
+    int tempHeight;              // number of blocks since last anchor
+    if (nPrevHeight < 720) {
+        nSubsidy = 4;
+    } else if ((nPrevHeight > 553531) && (nPrevHeight < 2105657)) {
+        tempHeight = nPrevHeight - 553532;
+        multiplier = tempHeight / owlings;
+        nSubsidy -= (multiplier * 10 + 10);
+    } else if ((nPrevHeight > 2105657) && (nPrevHeight < 5273695)) {
+        tempHeight = nPrevHeight - 2105658;
+        multiplier = tempHeight / owlings;
+        nSubsidy -= (multiplier * 20 + 750);
+    } else if ((nPrevHeight > 5273695) && (nPrevHeight < 7378633)) {
+        tempHeight = nPrevHeight - 5273696;
+        multiplier = tempHeight / owlings;
+        nSubsidy -= (multiplier * 10 + 3720);
+    } else if ((nPrevHeight > 7378633) && (nPrevHeight < 8399209)) {
+        tempHeight = nPrevHeight - 7378634;
+        multiplier = tempHeight / owlings;
+        nSubsidy -= (multiplier * 5 + 4705);
+    } else if ((nPrevHeight > 8399209) && (nPrevHeight < 14735285)) {
+        nSubsidy = 55;
+    } else if ((nPrevHeight > 14735285) && (nPrevHeight < 15798385)) {
+        tempHeight = nPrevHeight - 14735286;
+        multiplier = tempHeight / owlings;
+        nSubsidy -= (multiplier + 4946);
+    } else if ((nPrevHeight > 15798385) && (nPrevHeight < 25844304)) {
+        nSubsidy = 5;
+    } else if (nPrevHeight > 125844304) {
+        nSubsidy = 0.001;
+    }
+    return nSubsidy * COIN;
 }
 
 CAmount GetSmartnodePayment(int nHeight, CAmount blockValue, CAmount specialTxFees)
 {
-	size_t mnCount = chainActive.Tip() == nullptr ? 0 : deterministicMNManager->GetListForBlock(chainActive.Tip()).GetAllMNsCount();
+    size_t mnCount = chainActive.Tip() == nullptr ? 0 : deterministicMNManager->GetListForBlock(chainActive.Tip()).GetAllMNsCount();
 
-	if(mnCount >= 10 || Params().NetworkIDString().compare("test") == 0) {
-		int percentage = Params().GetConsensus().nCollaterals.getRewardPercentage(nHeight);
-		CAmount specialFeeReward = specialTxFees * Params().GetConsensus().nFutureRewardShare.smartnode;
-		return blockValue * percentage / 100 + specialFeeReward;
-	} else {
-		return 0;
-	}
-
+    if (mnCount >= 10 || Params().NetworkIDString().compare("test") == 0) {
+        int percentage = Params().GetConsensus().nCollaterals.getRewardPercentage(nHeight);
+        CAmount specialFeeReward = specialTxFees * Params().GetConsensus().nFutureRewardShare.smartnode;
+        return blockValue * percentage / 100 + specialFeeReward;
+    } else {
+        return 0;
+    }
 }
 
 bool IsInitialBlockDownload()
@@ -1767,29 +1769,29 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
                 }
 
                 if (fAddressIndex) {
-                    const Coin &coin = view.AccessCoin(tx.vin[j].prevout);
-                    const CTxOut &prevout = coin.out;
+                    const Coin& coin = view.AccessCoin(tx.vin[j].prevout);
+                    const CTxOut& prevout = coin.out;
                     CFutureTx ftx;
-					int spendableHeight = coin.nHeight;
-					int64_t spenableTime = 0;
-					int lockOutputIndex = -1;
-					if (coin.nType == TRANSACTION_FUTURE) {
-						if (GetTxPayload(coin.vExtraPayload, ftx)) {
-							lockOutputIndex = ftx.lockOutputIndex;
-							if (ftx.maturity >= 0) {
-								spendableHeight += ftx.maturity;
-							} else {
-								spendableHeight = -1;
-							}
-							if (ftx.lockTime >= 0) {
-								spenableTime += ftx.lockTime;
-							} else {
-								spenableTime = -1;
-							}
-						}
-					}
+                    int spendableHeight = coin.nHeight;
+                    int64_t spenableTime = 0;
+                    int lockOutputIndex = -1;
+                    if (coin.nType == TRANSACTION_FUTURE) {
+                        if (GetTxPayload(coin.vExtraPayload, ftx)) {
+                            lockOutputIndex = ftx.lockOutputIndex;
+                            if (ftx.maturity >= 0) {
+                                spendableHeight += ftx.maturity;
+                            } else {
+                                spendableHeight = -1;
+                            }
+                            if (ftx.lockTime >= 0) {
+                                spenableTime += ftx.lockTime;
+                            } else {
+                                spenableTime = -1;
+                            }
+                        }
+                    }
                     if (prevout.scriptPubKey.IsPayToScriptHash()) {
-                        std::vector<unsigned char> hashBytes(prevout.scriptPubKey.begin()+2, prevout.scriptPubKey.begin()+22);
+                        std::vector<unsigned char> hashBytes(prevout.scriptPubKey.begin() + 2, prevout.scriptPubKey.begin() + 22);
 
                         // undo spending activity
                         addressIndex.push_back(std::make_pair(CAddressIndexKey(2, uint160(hashBytes), pindex->nHeight, i, hash, j, true), prevout.nValue * -1));
@@ -1815,7 +1817,6 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
                         continue;
                     }
                 }
-
             }
             // At this point, all of txundo.vprevout should have been moved out.
         }
@@ -2040,23 +2041,23 @@ static int64_t nTimeCallbacks = 0;
 static int64_t nTimeTotal = 0;
 static int64_t nBlocksTotal = 0;
 
-void getFutureMaturity(const CTransaction& tx, int &lockOutputIndex,
-		CFutureTx &ftx, int &spendableHeight, int64_t &spenableTime) {
-	if (tx.nType == TRANSACTION_FUTURE) {
-		if (GetTxPayload(tx, ftx)) {
-			lockOutputIndex = ftx.lockOutputIndex;
-			if (ftx.maturity >= 0) {
-				spendableHeight += ftx.maturity;
-			} else {
-				spendableHeight = -1;
-			}
-			if (ftx.lockTime >= 0) {
-				spenableTime += ftx.lockTime;
-			} else {
-				spenableTime = -1;
-			}
-		}
-	}
+void getFutureMaturity(const CTransaction& tx, int& lockOutputIndex, CFutureTx& ftx, int& spendableHeight, int64_t& spenableTime)
+{
+    if (tx.nType == TRANSACTION_FUTURE) {
+        if (GetTxPayload(tx, ftx)) {
+            lockOutputIndex = ftx.lockOutputIndex;
+            if (ftx.maturity >= 0) {
+                spendableHeight += ftx.maturity;
+            } else {
+                spendableHeight = -1;
+            }
+            if (ftx.lockTime >= 0) {
+                spenableTime += ftx.lockTime;
+            } else {
+                spenableTime = -1;
+            }
+        }
+    }
 }
 /** Apply the effects of this block (with given index) on the UTXO set represented by coins.
  *  Validity checks that depend on the UTXO set are also done; ConnectBlock()
@@ -2223,9 +2224,9 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
             }
 
             if (!MoneyRange(specialTxFees)) {
-				return state.DoS(100, error("%s: accumulated specialTxFees in the block out of range.", __func__),
-								 REJECT_INVALID, "bad-txns-accumulated-specialTxFees-outofrange");
-			}
+                return state.DoS(100, error("%s: accumulated specialTxFees in the block out of range.", __func__),
+                    REJECT_INVALID, "bad-txns-accumulated-specialTxFees-outofrange");
+            }
 
             // Check that transaction is BIP68 final
             // BIP68 lock checks (as opposed to nLockTime checks) must
@@ -2303,22 +2304,22 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
         }
 
         if (fAddressIndex) {
-        	CFutureTx ftx;
-        	int spendableHeight = pindex->nHeight;
-        	int64_t spenableTime = pindex->nTime;
-        	int lockOutputIndex = -1;
-			getFutureMaturity(tx, lockOutputIndex, ftx, spendableHeight,
-					spenableTime);
+            CFutureTx ftx;
+            int spendableHeight = pindex->nHeight;
+            int64_t spenableTime = pindex->nTime;
+            int lockOutputIndex = -1;
+            getFutureMaturity(tx, lockOutputIndex, ftx, spendableHeight,
+                spenableTime);
             for (unsigned int k = 0; k < tx.vout.size(); k++) {
-                const CTxOut &out = tx.vout[k];
+                const CTxOut& out = tx.vout[k];
                 int vSpendableHeight = pindex->nHeight;
-				int64_t vSpenableTime = pindex->nTime;
-				if(lockOutputIndex == k) {
-					vSpendableHeight = spendableHeight;
-					vSpenableTime = spenableTime;
-				}
+                int64_t vSpenableTime = pindex->nTime;
+                if (lockOutputIndex == k) {
+                    vSpendableHeight = spendableHeight;
+                    vSpenableTime = spenableTime;
+                }
                 if (out.scriptPubKey.IsPayToScriptHash()) {
-                    std::vector<unsigned char> hashBytes(out.scriptPubKey.begin()+2, out.scriptPubKey.begin()+22);
+                    std::vector<unsigned char> hashBytes(out.scriptPubKey.begin() + 2, out.scriptPubKey.begin() + 22);
 
                     // record receiving activity
                     addressIndex.push_back(std::make_pair(CAddressIndexKey(2, uint160(hashBytes), pindex->nHeight, i, txhash, k, false), out.nValue));
@@ -2327,7 +2328,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
                     addressUnspentIndex.push_back(std::make_pair(CAddressUnspentKey(2, uint160(hashBytes), txhash, k), CAddressUnspentValue(out.nValue, out.scriptPubKey, pindex->nHeight, vSpendableHeight, vSpenableTime)));
 
                 } else if (out.scriptPubKey.IsPayToPublicKeyHash()) {
-                    std::vector<unsigned char> hashBytes(out.scriptPubKey.begin()+3, out.scriptPubKey.begin()+23);
+                    std::vector<unsigned char> hashBytes(out.scriptPubKey.begin() + 3, out.scriptPubKey.begin() + 23);
 
                     // record receiving activity
                     addressIndex.push_back(std::make_pair(CAddressIndexKey(1, uint160(hashBytes), pindex->nHeight, i, txhash, k, false), out.nValue));
@@ -2336,13 +2337,12 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
                     addressUnspentIndex.push_back(std::make_pair(CAddressUnspentKey(1, uint160(hashBytes), txhash, k), CAddressUnspentValue(out.nValue, out.scriptPubKey, pindex->nHeight, vSpendableHeight, vSpenableTime)));
 
                 } else if (out.scriptPubKey.IsPayToPublicKey()) {
-                    uint160 hashBytes(Hash160(out.scriptPubKey.begin()+1, out.scriptPubKey.end()-1));
+                    uint160 hashBytes(Hash160(out.scriptPubKey.begin() + 1, out.scriptPubKey.end() - 1));
                     addressIndex.push_back(std::make_pair(CAddressIndexKey(1, hashBytes, pindex->nHeight, i, txhash, k, false), out.nValue));
                     addressUnspentIndex.push_back(std::make_pair(CAddressUnspentKey(1, hashBytes, txhash, k), CAddressUnspentValue(out.nValue, out.scriptPubKey, pindex->nHeight, vSpendableHeight, vSpenableTime)));
                 } else {
                     continue;
                 }
-
             }
         }
 
@@ -3611,23 +3611,16 @@ static bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, 
 static bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW = true)
 {
     // Check proof of work matches claimed amount
-    if (fCheckPOW && !CheckProofOfWork(block.GetPOWHash(), block.nBits, consensusParams))
-    {
-        LogPrintf("CheckBlockHeader: CheckProofOfWork failed for %s, retesting without POW cache\n", block.GetHash().ToString());
-
-        // Retest without POW cache in case cache was corrupted:
-        if (!CheckProofOfWork(block.GetPOWHash(false), block.nBits, consensusParams))
-        {
-            return state.DoS(50, false, REJECT_INVALID, "high-hash", false, "proof of work failed");
-        }
+    if (!CheckPOW(block, consensusParams)) {
+        return state.DoS(50, false, REJECT_INVALID, "high-hash", false, "proof of work failed");
     }
 
     // Check DevNet
     if (!consensusParams.hashDevnetGenesisBlock.IsNull() &&
-            block.hashPrevBlock == consensusParams.hashGenesisBlock &&
-            block.GetHash() != consensusParams.hashDevnetGenesisBlock) {
+        block.hashPrevBlock == consensusParams.hashGenesisBlock &&
+        block.GetHash() != consensusParams.hashDevnetGenesisBlock) {
         return state.DoS(100, error("CheckBlockHeader(): wrong devnet genesis"),
-                         REJECT_INVALID, "devnet-genesis");
+            REJECT_INVALID, "devnet-genesis");
     }
 
     return true;
