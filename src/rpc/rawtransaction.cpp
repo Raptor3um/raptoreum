@@ -476,6 +476,8 @@ UniValue createrawtransaction(const JSONRPCRequest& request)
     }
 
     std::set<CTxDestination> destinations;
+    bool hasFuture = false;
+    CFutureTx ftx;
     if (!outputs_is_obj) {
         // Translate array of key-value pairs into dict
         UniValue outputs_dict = UniValue(UniValue::VOBJ);
@@ -508,13 +510,41 @@ UniValue createrawtransaction(const JSONRPCRequest& request)
             }
 
             CScript scriptPubKey = GetScriptForDestination(destination);
-            CAmount nAmount = AmountFromValue(outputs[name_]);
-
+            UniValue sendToValue = outputs[name_];
+            CAmount nAmount;
+            if(sendToValue.isObject()) {
+                if(hasFuture) {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("can only send future to one address"));
+                }
+                if(sendToValue["future_maturity"].isNull()) {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("no future_maturity is specified "));
+                }
+                if(sendToValue["future_locktime"].isNull()) {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("no future_locktime is specified "));
+                }
+                if(sendToValue["future_amount"].isNull()) {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("no future_amount is specified "));
+                }
+                hasFuture = true;
+                nAmount = AmountFromValue(sendToValue["future_amount"]);
+                ftx.lockOutputIndex = rawTx.vout.size();
+                ftx.nVersion = CFutureTx::CURRENT_VERSION;
+                ftx.maturity = sendToValue["future_maturity"].get_int();
+                ftx.lockTime = sendToValue["future_locktime"].get_int();
+                ftx.updatableByDestination = false;
+                rawTx.nType = TRANSACTION_FUTURE;
+                rawTx.nVersion = 3;
+            } else {
+                nAmount = AmountFromValue(sendToValue);
+            }
             CTxOut out(nAmount, scriptPubKey);
             rawTx.vout.push_back(out);
         }
     }
-
+    if(hasFuture) {
+        UpdateSpecialTxInputsHash(rawTx, ftx);
+        SetTxPayload(rawTx, ftx);
+    }
     return EncodeHexTx(rawTx);
 }
 
@@ -1123,6 +1153,7 @@ UniValue sendrawtransaction(const JSONRPCRequest& request)
         // push to local node and sync with wallets
         CValidationState state;
         bool fMissingInputs;
+        LogPrintf("::AcceptToMemoryPool\n");
         if (!AcceptToMemoryPool(mempool, state, std::move(tx), &fMissingInputs,
                                 fBypassLimits /* bypass_limits */, nMaxRawTxFee)) {
             if (state.IsInvalid()) {
@@ -1139,7 +1170,9 @@ UniValue sendrawtransaction(const JSONRPCRequest& request)
             // where a user might call sendrawtransaction with a transaction
             // to/from their wallet, immediately call some wallet RPC, and get
             // a stale result because callbacks have not yet been processed.
+            LogPrintf("::CallFunctionInValidationInterfaceQueue\n");
             CallFunctionInValidationInterfaceQueue([&promise] {
+                LogPrintf("::promise.set_value()\n");
                 promise.set_value();
             });
         }
@@ -1152,11 +1185,12 @@ UniValue sendrawtransaction(const JSONRPCRequest& request)
     }
 
     } // cs_main
-
+    LogPrintf("::promise.get_future().wait()\n");
     promise.get_future().wait();
 
     if(!g_connman)
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
+    LogPrintf("::RelayTransaction\n");
 
     g_connman->RelayTransaction(*tx);
 

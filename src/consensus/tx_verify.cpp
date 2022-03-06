@@ -311,6 +311,7 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
         return state.DoS(100, false, REJECT_INVALID, "bad-txns-fee-outofrange");
     }
     txfee = txfee_aux;
+    LogPrintf("txfee: %s\n", FormatMoney(txfee));
 	checkSpecialTxFee(tx, txfee, specialTxFee);
 	if(txfee < 0) {
 		return state.DoS(100, false, REJECT_INVALID, "bad-txns-fee-too-low", false,

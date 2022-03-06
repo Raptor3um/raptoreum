@@ -331,7 +331,7 @@ QMenuBar {
     border-color: #4a4a4b;
 }
 
-QMenu::item {
+QMenuBar::item {
     color: #c7c7c7;
 }
 

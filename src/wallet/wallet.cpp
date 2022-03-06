@@ -3887,7 +3887,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
                 }
 
                 CTxOut newTxOut;
-                const CAmount nAmountLeft = nValueIn - nValue;
+                const CAmount nAmountLeft = nValueIn - nValue - specialFees;
                 auto getChange = [&]() {
                     if (nSubtractFeeFromAmount > 0) {
                         return nAmountLeft;

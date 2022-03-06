@@ -62,7 +62,6 @@ uint64_t nMiningTimeStart = 0;
 double nHashesPerSec = 0;
 uint64_t nHashesDone = 0;
 std::string alsoHashString;
-extern bool isMining;
 
 int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev)
 {
@@ -677,13 +676,11 @@ void static RaptoreumMiner(const CChainParams& chainparams)
     }
     catch (const boost::thread_interrupted&)
     {
-        isMining = false;
         LogPrintf("RaptoreumMiner -- terminated\n");
         throw;
     }
     catch (const std::runtime_error &e)
     {
-        isMining = false;
         LogPrintf("RaptoreumMiner -- runtime error: %s\n", e.what());
         return;
     }
@@ -719,7 +716,6 @@ int GenerateRaptoreums(bool fGenerate, int nThreads, const CChainParams& chainpa
     for (int i = 0; i < nThreads; i++){
         minerThreads->create_thread(boost::bind(&RaptoreumMiner, boost::cref(chainparams)));
     }
-    isMining = true;
     return(numCores);
 }
 

@@ -160,6 +160,7 @@ static std::string SignAndSendSpecialTx(const CMutableTransaction& tx)
     JSONRPCRequest sendRequest;
     sendRequest.params.setArray();
     sendRequest.params.push_back(signResult["hex"].get_str());
+    //return signResult["hex"].get_str();
     return sendrawtransaction(sendRequest).get_str();
 }
 #endif
