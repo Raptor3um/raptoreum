@@ -119,7 +119,7 @@ if ENABLE_WALLET
 BITCOIN_TESTS += \
   wallet/test/coinjoin_tests.cpp \
   wallet/test/wallet_test_fixture.cpp \
-  wallet/test/wallet_test_fixture.h \
+  wallet/test/db_tests.cpp \
   wallet/test/wallet_tests.cpp \
   wallet/test/wallet_crypto_tests.cpp \
   wallet/test/coinselector_tests.cpp
