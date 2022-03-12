@@ -4,7 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test mempool persistence.
 
-By default, dashd will dump mempool on shutdown and
+By default, raptoreumd will dump mempool on shutdown and
 then reload it on startup. This can be overridden with
 the -persistmempool=0 command line option.
 
@@ -71,7 +71,7 @@ class MempoolPersistTest(BitcoinTestFramework):
         self.start_node(1, extra_args=["-persistmempool=0"])
         self.start_node(0)
         self.start_node(2)
-        # Give dashd a second to reload the mempool
+        # Give raptoreumd a second to reload the mempool
         wait_until(lambda: len(self.nodes[0].getrawmempool()) == 5, timeout=1)
         wait_until(lambda: len(self.nodes[2].getrawmempool()) == 5, timeout=1)
         # The others have loaded their mempool. If node_1 loaded anything, we'd probably notice by now:
@@ -106,7 +106,7 @@ class MempoolPersistTest(BitcoinTestFramework):
         self.start_node(1, extra_args=[])
         wait_until(lambda: len(self.nodes[1].getrawmempool()) == 5)
 
-        self.log.debug("Prevent dashd from writing mempool.dat to disk. Verify that `savemempool` fails")
+        self.log.debug("Prevent raptoreumd from writing mempool.dat to disk. Verify that `savemempool` fails")
         # to test the exception we are creating a tmp folder called mempool.dat.new
         # which is an implementation detail that could change and break this test
         mempooldotnew1 = mempooldat1 + '.new'

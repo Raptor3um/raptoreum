@@ -97,7 +97,7 @@ class DashZMQTest (DashTestFramework):
         self.set_dash_test_params(4, 3, fast_dip3_enforcement=True, extra_args=[node0_extra_args, [], [], []])
 
     def run_test(self):
-        # Check that dashd has been built with ZMQ enabled.
+        # Check that raptoreumd has been built with ZMQ enabled.
         config = configparser.ConfigParser()
         config.read_file(open(self.options.configfile))
 
