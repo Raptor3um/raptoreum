@@ -39,8 +39,9 @@ uint256 CBlockHeader::GetPOWHash(bool readCache) const
     if (!found || cache.IsValidate()) {
         uint256 powHash2 = ComputeHash();
         if (found && powHash2 != powHash) {
-            LogPrintf("PowCache failure: headerHash: %s, from cache: %s, computed: %s, correcting\n", headerHash.ToString(), powHash.ToString(), powHash2.ToString());
+           LogPrintf("PowCache failure: headerHash: %s, from cache: %s, computed: %s, correcting\n", headerHash.ToString(), powHash.ToString(), powHash2.ToString());
         }
+        cache.erase(headerHash); // If it exists, replace it
         cache.insert(headerHash, powHash2);
     }
     return powHash;
