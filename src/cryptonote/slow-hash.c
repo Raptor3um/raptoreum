@@ -196,7 +196,7 @@ void cn_slow_hash(const char* input, char* output, int len, int variant, uint32_
   union cn_slow_hash_state state;
   uint8_t text[INIT_SIZE_BYTE];
   uint8_t a[AES_BLOCK_SIZE];
-  uint8_t b[AES_BLOCK_SIZE];
+  uint8_t b[AES_BLOCK_SIZE * 2];
   uint8_t c[AES_BLOCK_SIZE];
   uint8_t aes_key[AES_KEY_SIZE];
   oaes_ctx* aes_ctx;
@@ -295,7 +295,7 @@ void cn_slow_hash(const char* input, char* output, int len, int variant, uint32_
 }
 
 void cn_fast_hash(const char* input, char* output, uint32_t len) {
-  union hash_state state;
-  hash_process(&state, (const uint8_t*) input, len);
-  memcpy(output, &state, HASH_SIZE);
+    union hash_state state;
+    hash_process(&state, (const uint8_t*) input, len);
+    memcpy(output, &state, HASH_SIZE);
 }
