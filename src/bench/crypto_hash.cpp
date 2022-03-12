@@ -213,6 +213,48 @@ static void HASH_GR_2048b_single(benchmark::State& state)
         hash = HashGR(in.begin(), in.end(), uint256());
 }
 
+
+static void HashCn(benchmark::State& state, int hashSelection)
+{
+    uint512 hashIn;
+    uint512 hashOut;
+    while (state.KeepRunning())
+    {
+        cnHash(&hashIn, &hashOut, 64, hashSelection);
+        hashIn = hashOut;
+    }
+}
+
+static void HASH_CN_cryptonight_dark_hash(benchmark::State& state)
+{
+    HashCn(state, 0);
+}
+
+static void HASH_CN_cryptonight_darklite_hash(benchmark::State& state)
+{
+    HashCn(state, 1);
+}
+
+static void HASH_CN_cryptonight_cnfast_hash(benchmark::State& state)
+{
+    HashCn(state, 2);
+}
+
+static void HASH_CN_cryptonight_cnlite_hash(benchmark::State& state)
+{
+    HashCn(state, 3);
+}
+
+static void HASH_CN_cryptonight_turtle_hash(benchmark::State& state)
+{
+    HashCn(state, 4);
+}
+
+static void HASH_CN_cryptonight_turtlelite_hash(benchmark::State& state)
+{
+    HashCn(state, 5);
+}
+
 BENCHMARK(HASH_RIPEMD160, 440);
 BENCHMARK(HASH_SHA1, 570);
 BENCHMARK(HASH_SHA256, 340);
@@ -239,3 +281,10 @@ BENCHMARK(HASH_GR_1024b_single, 50 * 1000);
 BENCHMARK(HASH_GR_2048b_single, 50 * 1000);
 BENCHMARK(FastRandom_32bit, 110 * 1000 * 1000);
 BENCHMARK(FastRandom_1bit, 440 * 1000 * 1000);
+
+BENCHMARK(HASH_CN_cryptonight_dark_hash,       24);
+BENCHMARK(HASH_CN_cryptonight_darklite_hash,   27);
+BENCHMARK(HASH_CN_cryptonight_cnfast_hash,     6);
+BENCHMARK(HASH_CN_cryptonight_cnlite_hash,     10);
+BENCHMARK(HASH_CN_cryptonight_turtle_hash,     58);
+BENCHMARK(HASH_CN_cryptonight_turtlelite_hash, 62);

@@ -194,25 +194,17 @@ void coreHash(const void *toHash, uint512* hash, int lenToHash, int hashSelectio
 }
 
 void cnHash(uint512* toHash, uint512* hash, int lenToHash, int hashSelection) {
-	switch(hashSelection)
-	{
-	 case 0:
-		crypto::cryptonight_dark_hash(reinterpret_cast<const char*>(toHash), reinterpret_cast<char*>(hash), lenToHash, 1);
-  	break;
-	 case 1:
-		crypto::cryptonight_darklite_hash(reinterpret_cast<const char*>(toHash), reinterpret_cast<char*>(hash), lenToHash, 1);
-		break;
-	 case 2:
-		crypto::cryptonight_cnfast_hash(reinterpret_cast<const char*>(toHash), reinterpret_cast<char*>(hash), lenToHash, 1);
-		break;
-	 case 3:
-	  crypto::cryptonight_cnlite_hash(reinterpret_cast<const char*>(toHash), reinterpret_cast<char*>(hash), lenToHash, 1);
-		break;
-	 case 4:
-		crypto::cryptonight_turtle_hash(reinterpret_cast<const char*>(toHash), reinterpret_cast<char*>(hash), lenToHash, 1);
-		break;
-	 case 5:
-		crypto::cryptonight_turtlelite_hash(reinterpret_cast<const char*>(toHash), reinterpret_cast<char*>(hash), lenToHash, 1);
-		break;
-	}
+
+    const char* input  = reinterpret_cast<char*>(toHash->begin());
+    char*       output = reinterpret_cast<char*>(hash->begin());
+
+    switch (hashSelection)
+    {
+        case 0 : crypto::cryptonight_dark_hash      (input, output, lenToHash, 1); break;
+        case 1 : crypto::cryptonight_darklite_hash  (input, output, lenToHash, 1); break;
+        case 2 : crypto::cryptonight_cnfast_hash    (input, output, lenToHash, 1); break;
+        case 3 : crypto::cryptonight_cnlite_hash    (input, output, lenToHash, 1); break;
+        case 4 : crypto::cryptonight_turtle_hash    (input, output, lenToHash, 1); break;
+        case 5 : crypto::cryptonight_turtlelite_hash(input, output, lenToHash, 1); break;
+    }
 }
