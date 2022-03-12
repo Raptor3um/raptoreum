@@ -793,8 +793,8 @@
         <translation>受取額が現在のダスト閾値を下回る場合にはこのラベルは赤くなります。</translation>
     </message>
     <message>
-        <source>Can vary +/- %1 duff(s) per input.</source>
-        <translation>インプットごとに +/- %1 duff(s) が変更可能 </translation>
+        <source>Can vary +/- %1 ruff(s) per input.</source>
+        <translation>インプットごとに +/- %1 ruff(s) が変更可能 </translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -2391,8 +2391,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>検証時間ターゲット:</translation>
     </message>
     <message>
-        <source>If the custom fee is set to 1000 duffs and the transaction is only 250 bytes, then "per kilobyte" only pays 250 duffs in fee,&lt;br /&gt;while "at least" pays 1000 duffs. For transactions bigger than a kilobyte both pay by kilobyte.</source>
-        <translation>カスタマイズされた手数料が1000duffsに設定され、トランザクションが250 bytesしかなかった場合、キロバイトあたりでは250 duffsしか手数料を支払いませんが&lt;br /&gt;最低でも1000 duffs支払います。1キロバイト以上のトランザクションに対しては、1キロバイトあたり1000duffs支払います。</translation>
+        <source>If the custom fee is set to 1000 ruffs and the transaction is only 250 bytes, then "per kilobyte" only pays 250 ruffs in fee,&lt;br /&gt;while "at least" pays 1000 ruffs. For transactions bigger than a kilobyte both pay by kilobyte.</source>
+        <translation>カスタマイズされた手数料が1000ruffsに設定され、トランザクションが250 bytesしかなかった場合、キロバイトあたりでは250 ruffsしか手数料を支払いませんが&lt;br /&gt;最低でも1000 ruffs支払います。1キロバイト以上のトランザクションに対しては、1キロバイトあたり1000ruffs支払います。</translation>
     </message>
     <message>
         <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks.&lt;br /&gt;But be aware that this can end up in a never confirming transaction once there is more demand for Raptoreum transactions than the network can process.</source>
