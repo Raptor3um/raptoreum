@@ -201,7 +201,7 @@ BITCOIN_CORE_H = \
   llmq/quorums_signing.h \
   llmq/quorums_signing_shares.h \
   llmq/quorums_utils.h \
-  loggibng.h \
+  logging.h \
   smartnode/activesmartnode.h \
   smartnode/smartnode-meta.h \
   smartnode/smartnode-payments.h \

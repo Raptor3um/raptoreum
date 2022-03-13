@@ -153,7 +153,7 @@ std::string GetHelpString(int nParamNum, std::string strParamName)
             "                              between 0.00 and 100.00.\n"
         },
         {"ownerAddress",
-            "%d. \"ownerAddress\"             (string, required) The dash address to use for payee updates and proposal voting.\n"
+            "%d. \"ownerAddress\"             (string, required) The raptoreum address to use for payee updates and proposal voting.\n"
             "                              The corresponding private key does not have to be known by your wallet.\n"
             "                              The address must be unused and must differ from the collateralAddress.\n"
         },
@@ -469,23 +469,22 @@ static std::string SignAndSendSpecialTx(const CMutableTransaction& tx, bool fSub
 void protx_register_fund_help(CWallet* const pwallet)
 {
     throw std::runtime_error(
-            "protx register_fund \"collateralAddress\" \"ipAndPort\" \"ownerAddress\" \"operatorPubKey\" \"votingAddress\" operatorReward \"payoutAddress\" ( \"fundAddress\" submit )\n"
-            "\nCreates, funds and sends a ProTx to the network. The resulting transaction will move 1000 Dash\n"
+            "protx register_fund \"collateralAddress\" \"collateralAmount\" \"ipAndPort\" \"ownerAddress\" \"operatorPubKey\" \"votingAddress\" operatorReward \"payoutAddress\" ( \"fundAddress\" submit )\n"
+            "\nCreates, funds and sends a ProTx to the network. The resulting transaction will move the specified collateralAmount of RTM\n"
             "to the address specified by collateralAddress and will then function as the collateral of your\n"
             "smartnode.\n"
-            "A few of the limitations you see in the arguments are temporary and might be lifted after DIP3\n"
-            "is fully deployed.\n"
             + HelpRequiringPassphrase(pwallet) + "\n"
             "\nArguments:\n"
-            + GetHelpString(1, "collateralAddress")
-            + GetHelpString(2, "ipAndPort")
-            + GetHelpString(3, "ownerAddress")
-            + GetHelpString(4, "operatorPubKey_register")
-            + GetHelpString(5, "votingAddress_register")
-            + GetHelpString(6, "operatorReward")
-            + GetHelpString(7, "payoutAddress_register")
-            + GetHelpString(8, "fundAddress")
-            + GetHelpString(9, "submit") +
+            + GetHelpString(1,  "collateralAddress")
+            + GetHelpString(2,  "collateralAmount")
+            + GetHelpString(3,  "ipAndPort")
+            + GetHelpString(4,  "ownerAddress")
+            + GetHelpString(5,  "operatorPubKey_register")
+            + GetHelpString(6,  "votingAddress_register")
+            + GetHelpString(7,  "operatorReward")
+            + GetHelpString(9,  "payoutAddress_register")
+            + GetHelpString(10, "fundAddress")
+            + GetHelpString(11, "submit") +
             "\nResult (if \"submit\" is not set or set to true):\n"
             "\"txid\"                        (string) The transaction id.\n"
             "\nResult (if \"submit\" is set to false):\n"
@@ -594,9 +593,9 @@ UniValue protx_register(const JSONRPCRequest& request)
     bool isFundRegister = request.params[0].get_str() == "register_fund";
     bool isPrepareRegister = request.params[0].get_str() == "register_prepare";
 
-    if (isFundRegister && (request.fHelp || (request.params.size() < 8 || request.params.size() > 10))) {
+    if (isFundRegister && (request.fHelp || (request.params.size() != 9 && request.params.size() != 10))) {
         protx_register_fund_help(pwallet);
-    } else if (isExternalRegister && (request.fHelp || (request.params.size() < 9 || request.params.size() > 11))) {
+    } else if (isExternalRegister && (request.fHelp || (request.params.size() != 9 && request.params.size() != 10))) {
         protx_register_help(pwallet);
     } else if (isPrepareRegister && (request.fHelp || (request.params.size() != 9 && request.params.size() != 10))) {
         protx_register_prepare_help();
@@ -620,9 +619,11 @@ UniValue protx_register(const JSONRPCRequest& request)
     if (isFundRegister) {
         CTxDestination collateralDest = DecodeDestination(request.params[paramIdx].get_str());
         if (!IsValidDestination(collateralDest)) {
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("invalid collaterall address: %s", request.params[paramIdx].get_str()));
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("invalid collateral address: %s", request.params[paramIdx].get_str()));
         }
         CScript collateralScript = GetScriptForDestination(collateralDest);
+        collateralAmount = ParseInt32V(request.params[paramIdx + 1], "collateralAmount") * COIN;
+        isValidCollateral(collateralAmount);
 
         CTxOut collateralTxOut(collateralAmount, collateralScript);
         tx.vout.emplace_back(collateralTxOut);
@@ -688,7 +689,7 @@ UniValue protx_register(const JSONRPCRequest& request)
     if (!request.params[paramIdx + 6].isNull()) {
         fundDest = DecodeDestination(request.params[paramIdx + 6].get_str());
         if (!IsValidDestination(fundDest))
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Dash address: ") + request.params[paramIdx + 6].get_str());
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Raptoreum address: ") + request.params[paramIdx + 6].get_str());
     }
 
     FundSpecialTx(pwallet, tx, ptx, fundDest);
@@ -860,7 +861,7 @@ UniValue protx_update_service(const JSONRPCRequest& request)
     if (!request.params[5].isNull()) {
         feeSource = DecodeDestination(request.params[5].get_str());
         if (!IsValidDestination(feeSource))
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Dash address: ") + request.params[5].get_str());
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Raptoreum address: ") + request.params[5].get_str());
     } else {
         if (ptx.scriptOperatorPayout != CScript()) {
             // use operator reward address as default source for fees
@@ -958,7 +959,7 @@ UniValue protx_update_registrar(const JSONRPCRequest& request)
     if (!request.params[5].isNull()) {
         feeSourceDest = DecodeDestination(request.params[5].get_str());
         if (!IsValidDestination(feeSourceDest))
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Dash address: ") + request.params[5].get_str());
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Raptoreum address: ") + request.params[5].get_str());
     }
 
     FundSpecialTx(pwallet, tx, ptx, feeSourceDest);
@@ -1032,7 +1033,7 @@ UniValue protx_revoke(const JSONRPCRequest& request)
     if (!request.params[4].isNull()) {
         CTxDestination feeSourceDest = DecodeDestination(request.params[4].get_str());
         if (!IsValidDestination(feeSourceDest))
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Dash address: ") + request.params[4].get_str());
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Raptoreum address: ") + request.params[4].get_str());
         FundSpecialTx(pwallet, tx, ptx, feeSourceDest);
     } else if (dmn->pdmnState->scriptOperatorPayout != CScript()) {
         // Using funds from previousely specified operator payout address
@@ -1158,7 +1159,7 @@ UniValue protx_quick_setup(const JSONRPCRequest& request) {
 
 	if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
 		return NullUniValue;
-//register_fund "collateralAddress" "ipAndPort" "ownerAddress" "operatorPubKey" "votingAddress" operatorReward "payoutAddress" ( "fundAddress" )
+//register_fund "collateralAddress" "collateralAmount" "ipAndPort" "ownerAddress" "operatorPubKey" "votingAddress" operatorReward "payoutAddress" ( "fundAddress" )
 //register_prepare "collateralHash" collateralIndex "ipAndPort" "ownerAddress" "operatorPubKey" "votingAddress" operatorReward "payoutAddress" ( "feeSourceAddress" )
 	//bls_generate
 	EnsureWalletIsUnlocked(pwallet);
