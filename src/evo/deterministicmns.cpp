@@ -96,7 +96,11 @@ void CDeterministicMN::ToJson(UniValue& obj) const
     if (GetUTXOCoin(collateralOutpoint, coin)) {
         CTxDestination dest;
         if (ExtractDestination(coin.out.scriptPubKey, dest)) {
+    		SmartnodeCollaterals collaterals = Params().GetConsensus().nCollaterals;
+    		int nHeight = chainActive.Tip() == nullptr ? 0 : chainActive.Tip()->nHeight;
             obj.pushKV("collateralAddress", EncodeDestination(dest));
+            obj.pushKV("collateralAmount", coin.out.nValue / COIN);
+            obj.pushKV("needToUpgrade", !collaterals.isPayableCollateral(nHeight, coin.out.nValue));
         }
     }
 
@@ -122,15 +126,36 @@ bool CDeterministicMNList::IsMNPoSeBanned(const uint256& proTxHash) const
     return IsMNPoSeBanned(*p);
 }
 
+bool CDeterministicMNList::IsMNValid(const CDeterministicMNCPtr& dmn, int height)
+{
+    uint256 mnHash = dmn.get()->collateralOutpoint.hash;
+    Coin coin;
+    // Should this be called directly or use pcoinsTip->GetCoin(outpoint, coin) without locking cs_main
+    bool isValidUtxo = GetUTXOCoin(dmn->collateralOutpoint, coin, height);
+    SmartnodeCollaterals collaterals = Params().GetConsensus().nCollaterals;
+
+    int64_t amount = coin.out.nValue;
+
+    int tipHeight = chainActive.Tip() == nullptr ? 0 : chainActive.Tip()->nHeight;
+    if (height != tipHeight) {
+        int outputIndex = dmn.get()->collateralOutpoint.n;
+        CSpentIndexKey key(mnHash, outputIndex);
+        CSpentIndexValue value;
+
+        if (GetSpentIndex(key, value)) {
+            // Look at the amount held before it was spent (at this height):
+            if (value.blockHeight > height) {
+                amount = value.satoshis;
+            }
+        }
+    }
+    return !IsMNPoSeBanned(dmn) && (isValidUtxo && collaterals.isPayableCollateral(height, amount));
+}
+
 bool CDeterministicMNList::IsMNValid(const CDeterministicMNCPtr& dmn)
 {
-	uint256 mnHash = dmn.get()->collateralOutpoint.hash;
-	Coin coin;
-	//should this be call directly or use pcoinsTip->GetCoin(outpoint, coin) without locking cs_main
-	bool isValidUtxo = GetUTXOCoin(dmn->collateralOutpoint, coin);
-  SmartnodeCollaterals collaterals = Params().GetConsensus().nCollaterals;
-  int nHeight = chainActive.Tip() == nullptr ? 0 : chainActive.Tip()->nHeight;
-  return !IsMNPoSeBanned(dmn) && (isValidUtxo && collaterals.isPayableCollateral(nHeight, coin.out.nValue));
+    int height = chainActive.Tip() == nullptr ? 0 : chainActive.Tip()->nHeight;
+    return IsMNValid(dmn, height);
 }
 
 bool CDeterministicMNList::IsMNPoSeBanned(const CDeterministicMNCPtr& dmn)

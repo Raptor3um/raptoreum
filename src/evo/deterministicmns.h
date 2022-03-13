@@ -382,6 +382,16 @@ public:
     }
 
     template <typename Callback>
+    void ForEachMN(bool onlyValid, int height, Callback&& cb) const
+    {
+        for (const auto& p : mnMap) {
+            if (!onlyValid || IsMNValid(p.second, height)) {
+                cb(p.second);
+            }
+        }
+    }
+
+    template <typename Callback>
     void ForEachMN(bool onlyValid, Callback&& cb) const
     {
         for (const auto& p : mnMap) {
@@ -415,6 +425,7 @@ public:
 
     bool IsMNValid(const uint256& proTxHash) const;
     bool IsMNPoSeBanned(const uint256& proTxHash) const;
+    static bool IsMNValid(const CDeterministicMNCPtr& dmn, int height);
     static bool IsMNValid(const CDeterministicMNCPtr& dmn);
     static bool IsMNPoSeBanned(const CDeterministicMNCPtr& dmn);
 
