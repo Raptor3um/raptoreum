@@ -4842,9 +4842,8 @@ void CWallet::ListLockedCoins(std::vector<COutPoint>& vOutpts) const
     }
 }
 
-void CWallet::ListProTxCoins(std::vector<COutPoint>& vOutpts) const
+void CWallet::GetProTxCoins(const CDeterministicMNList& mnList, std::vector<COutPoint>& vOutpts) const
 {
-    auto mnList = deterministicMNManager->GetListAtChainTip();
     AssertLockHeld(cs_wallet);
     for (const auto &o : setWalletUTXO) {
         auto it = mapWallet.find(o.hash);
@@ -4855,6 +4854,16 @@ void CWallet::ListProTxCoins(std::vector<COutPoint>& vOutpts) const
             }
         }
     }
+}
+
+void CWallet::ListProTxCoins(int height, std::vector<COutPoint>& vOutpts) const
+{
+    GetProTxCoins(deterministicMNManager->GetListForBlock(chainActive[height]), vOutpts);
+}
+
+void CWallet::ListProTxCoins(std::vector<COutPoint>& vOutpts) const
+{
+    GetProTxCoins(deterministicMNManager->GetListAtChainTip(), vOutpts);
 }
 
 /** @} */ // end of Actions
