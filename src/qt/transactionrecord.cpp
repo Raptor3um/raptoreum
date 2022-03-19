@@ -114,252 +114,250 @@ void TransactionRecord::getFutureTxStatus(const interfaces::WalletTx& wtx, const
 QList<TransactionRecord> TransactionRecord::decomposeTransaction(interfaces::Wallet& wallet, const interfaces::WalletTx& wtx)
 {
     QList<TransactionRecord> parts;
-    int64_t nTime = wtx.time;
+    isminefilter creditMineTypes = 0;
+    isminefilter debitMineTypes = 0;
+
+    int64_t nTime = wtx.time; // TODO: Should this be GetConfirmationTime?
     CAmount nCredit = wtx.credit;
     CAmount nDebit = wtx.debit;
     CAmount nNet = nCredit - nDebit;
+    CAmount nTxFee = nDebit - wtx.tx->GetValueOut();
     uint256 hash = wtx.tx->GetHash();
-    std::map<std::string, std::string> mapValue = wtx.value_map;
-    auto node = interfaces::MakeNode();
-    auto& coinJoinOptions = node->coinJoinOptions();
+    bool isFuture = wtx.tx->nType == TRANSACTION_FUTURE;
 
-    if (nNet > 0 || wtx.is_coinbase)
+    for (isminetype mine : wtx.txout_is_mine)
     {
-        //
-        // Credit
-        //
-        for(unsigned int i = 0; i < wtx.tx->vout.size(); i++)
-        {
-            const CTxOut& txout = wtx.tx->vout[i];
-            isminetype mine = wtx.txout_is_mine[i];
-            if(mine)
-            {
-                TransactionRecord sub(hash, nTime);
-                sub.idx = i; // vout index
-                sub.credit = txout.nValue;
-                sub.involvesWatchAddress = mine & ISMINE_WATCH_ONLY;
-                if (wtx.txout_address_is_mine[i])
-                {
-                    // Received by Raptoreum Address
-                    sub.type = TransactionRecord::RecvWithAddress;
-                    sub.strAddress = EncodeDestination(wtx.txout_address[i]);
-                    sub.txDest = wtx.txout_address[i];
-                    sub.updateLabel(wallet);
-                }
-                else
-                {
-                    // Received by IP connection (deprecated features), or a multisignature or other non-simple transaction
-                    sub.type = TransactionRecord::RecvFromOther;
-                    sub.strAddress = mapValue["from"];
-                    sub.txDest = DecodeDestination(sub.strAddress);
-                }
-                if (wtx.is_coinbase)
-                {
-                    // Generated
-                    sub.type = TransactionRecord::Generated;
-                }
-
-                if (wtx.tx->nType == TRANSACTION_FUTURE)
-                {
-                    // Future TX Received
-                    CTxDestination address;
-                    if (ExtractDestination(wtx.tx->vout[1].scriptPubKey, address))
-                    {
-                        // Received by Raptoreum Address
-                        sub.type = TransactionRecord::FutureReceive;
-                        sub.strAddress = EncodeDestination(address);
-                        sub.txDest = address;
-                    }
-                }
-                
-                parts.append(sub);
-            }
-        }
+        creditMineTypes |= mine;
     }
-    else
+
+    for (isminetype mine : wtx.txin_is_mine)
     {
-        bool involvesWatchAddress = false;
+        debitMineTypes |= mine;
+    }
+
+    std::map<std::string, std::string> mapValue = wtx.value_map;
+
+    // Combinations of transactions:
+    // NB: This treats all watched addresses like a single, other wallet
+
+    // A/B: Generated:
+    // A: coinbase -> self    Generated
+    // B: coinbase -> watched Generated (watched)
+
+    // C/D: SendToSelf, PrivateSend*
+    // C: self    -> self     Send to self
+    // D: watched -> watched  Send to self (watched)
+
+    // E/F: SendToAddress, SendToOther, watched: ReceiveWithAddress, RecvFromOther + FutureSend, FutureReceive
+    // These create one or two records (one normal, possibly one watched):
+    // E: self     -> other   Send from wallet to external
+    // F: self     -> watched Send from wallet to watched external (and watched receive)
+
+    // G/H: SendToAddress, SendToOther, watched: ReceiveWithAddress, RecvFromOther + FutureSend, FutureReceive
+    // These create one or two records (one normal, possibly one watched):
+    // G: other    -> self    Send from watched to wallet no change
+    // H: watched  -> self    Send from watched to wallet with change
+
+    // I/J: Watched, nothing in wallet: out of watched: FutureSend, SendToOther, into watched: FutureReceived, RecvFromOther
+    // This handles transactions betwen watched addresses and unmonitored addresses
+    // I: watched  -> other   Send from watched address to other
+    // J: other    -> watched Send from other address to watched
+
+    // LogPrintf("TransactionRecord::%s TxId: %s debitMineTypes: %02X, creditMineTypes: %02X, debit: %s, credit: %s, ValueOut: %s, TxFee: %s, nType: %d\n",
+    //         __func__, hash.ToString(), debitMineTypes, creditMineTypes, FormatMoney(nDebit), FormatMoney(nCredit), FormatMoney(wtx.tx->GetValueOut()), FormatMoney(nTxFee), wtx.tx->nType);
+
+    for (unsigned int vOutIdx = 0; vOutIdx < wtx.tx->vout.size(); ++vOutIdx)
+    {
+        const CTxOut& txout = wtx.tx->vout[vOutIdx];
+
+        isminetype mine = wtx.txout_is_mine[vOutIdx];
+
+        TransactionRecord sub(hash, nTime);
+        CTxDestination address;
+        bool validDestination = ExtractDestination(txout.scriptPubKey, address);
+        sub.idx = vOutIdx;
+        sub.credit = txout.nValue;
+        sub.strAddress = validDestination ? EncodeDestination(address) : mapValue["from"];
+        //TODO: sub.address.SetString(sub.strAddress);
+        sub.txDest = address;
+        sub.updateLabel(wallet);
+
+        // Check if all inputs are from wallet and if output are to wallet
+        bool fAllFromMeDenom = true;
+        int nFromMe = 0;
+        bool inputInvolvesWatchAddress = false;
+        bool outputInvolvesWatchAddress = false;
         isminetype fAllFromMe = ISMINE_SPENDABLE;
         for (isminetype mine : wtx.txin_is_mine)
         {
-            if(mine & ISMINE_WATCH_ONLY) involvesWatchAddress = true;
-            if(fAllFromMe > mine) fAllFromMe = mine;
+            if (mine & ISMINE_WATCH_ONLY) inputInvolvesWatchAddress = true;
+            if (fAllFromMe > mine) fAllFromMe = mine;
         }
 
         isminetype fAllToMe = ISMINE_SPENDABLE;
         for (isminetype mine : wtx.txout_is_mine)
         {
-            if(mine & ISMINE_WATCH_ONLY) involvesWatchAddress = true;
-            if(fAllToMe > mine) fAllToMe = mine;
+            if (mine & ISMINE_WATCH_ONLY) outputInvolvesWatchAddress = true;
+            if (fAllToMe > mine) fAllToMe = mine;
         }
 
-        if(wtx.is_denominate) {
-            parts.append(TransactionRecord(hash, nTime, TransactionRecord::CoinJoinMixing, "", -nDebit, nCredit));
-            parts.last().involvesWatchAddress = false;   // maybe pass to TransactionRecord as constructor argument
-        }
-        else if (fAllFromMe && fAllToMe)
+        // LogPrintf("TransactionRecord::%s TxId: %s vOutIdx: %d, CoinBase: %d, AllFromMe: %d, AllToMe: %d, inputWatch: %d, outputWatch: %d\n",
+        //         __func__, hash.ToString(), vOutIdx, wtx.is_coinbase, fAllFromMe, fAllToMe, inputInvolvesWatchAddress, outputInvolvesWatchAddress);
+
+        // A/B Generated:
+        // A: coinbase -> self    Generated
+        // B: coinbase -> watched Generated (watched)
+        if (wtx.is_coinbase && mine)
         {
-            // Payment to self
-            // TODO: this section still not accurate but covers most cases,
-            // might need some additional work however
+            sub.type = TransactionRecord::Generated;
+            sub.involvesWatchAddress = creditMineTypes & ISMINE_WATCH_ONLY;
+            parts.append(sub);
+            continue;
+        }
 
-            TransactionRecord sub(hash, nTime);
-            // Payment to self by default
-            sub.type = TransactionRecord::SendToSelf;
-            sub.strAddress = "";
-
-            if(mapValue["DS"] == "1")
-            {
-                sub.type = TransactionRecord::CoinJoinSend;
-                CTxDestination address;
-                if (ExtractDestination(wtx.tx->vout[0].scriptPubKey, address))
-                {
-                    // Sent to Dash Address
-                    sub.strAddress = EncodeDestination(address);
-                    sub.txDest = address;
-                    sub.updateLabel(wallet);
-                }
-                else
-                {
-                    // Sent to IP, or other non-address transaction like OP_EVAL
-                    sub.strAddress = mapValue["to"];
-                    sub.txDest = DecodeDestination(sub.strAddress);
-                }
-            }
-            else
-            {
-                sub.idx = parts.size();
-                if(wtx.tx->vin.size() == 1 && wtx.tx->vout.size() == 1
-                    && coinJoinOptions.isCollateralAmount(nDebit)
-                    && coinJoinOptions.isCollateralAmount(nCredit)
-                    && coinJoinOptions.isCollateralAmount(-nNet))
-                {
-                    sub.type = TransactionRecord::CoinJoinCollateralPayment;
-                } else {
-                    bool fMakeCollateral{false};
-                    if (wtx.tx->vout.size() == 2) {
-                        CAmount nAmount0 = wtx.tx->vout[0].nValue;
-                        CAmount nAmount1 = wtx.tx->vout[1].nValue;
-                        // <case1>, see CCoinJoinClientSession::MakeCollateralAmounts
-                        fMakeCollateral = (nAmount0 == coinJoinOptions.getMaxCollateralAmount() && !coinJoinOptions.isDenominated(nAmount1) && nAmount1 >= coinJoinOptions.getMinCollateralAmount()) ||
-                                          (nAmount1 == coinJoinOptions.getMaxCollateralAmount() && !coinJoinOptions.isDenominated(nAmount0) && nAmount0 >= coinJoinOptions.getMinCollateralAmount()) ||
-                        // <case2>, see CCoinJoinClientSession::MakeCollateralAmounts
-                                          (nAmount0 == nAmount1 && coinJoinOptions.isCollateralAmount(nAmount0));
-                    } else if (wtx.tx->vout.size() == 1) {
-                        // <case3>, see CCoinJoinClientSession::MakeCollateralAmounts
-                        fMakeCollateral = coinJoinOptions.isCollateralAmount(wtx.tx->vout[0].nValue);
-                    }
-                    if (fMakeCollateral) {
-                        sub.type = TransactionRecord::CoinJoinMakeCollaterals;
-                    } else {
-                        for (const auto& txout : wtx.tx->vout) {
-                            if (coinJoinOptions.isDenominated(txout.nValue)) {
-                                sub.type = TransactionRecord::CoinJoinCreateDenominations;
-                                break; // Done, it's definitely a tx creating mixing denoms, no need to look any further
-                            }
-                        }
-                    }
-                }
-            }
-
+        // C/D: SendToSelf, PrivateSend*
+        // C: self    -> self     Send to self
+        // D: watched -> watched  Send to self (watched)
+        if (fAllFromMe && fAllToMe && (debitMineTypes == creditMineTypes))
+        {
             CAmount nChange = wtx.change;
-            if (wtx.tx->nType == TRANSACTION_FUTURE)
-            {
-                sub.type = TransactionRecord::FutureSend;
-                CTxDestination address;
-                if (ExtractDestination(wtx.tx->vout[0].scriptPubKey, address))
-                {
-                    // Sent to Raptoreum Address
-                    sub.strAddress = EncodeDestination(address);
-                    sub.txDest = address;
-                }
-            }
-
             sub.debit = -(nDebit - nChange);
             sub.credit = nCredit - nChange;
-            parts.append(sub);
-            parts.last().involvesWatchAddress = involvesWatchAddress;   // maybe pass to TransactionRecord as constructor argument
-        }
-        else if (fAllFromMe)
-        {
-            //
-            // Debit
-            //
-            CAmount nTxFee = nDebit - wtx.tx->GetValueOut();
+            sub.involvesWatchAddress = inputInvolvesWatchAddress;
 
-            bool fDone = false;
-            if(wtx.tx->vin.size() == 1 && wtx.tx->vout.size() == 1
-                && coinJoinOptions.isCollateralAmount(nDebit)
-                && nCredit == 0 // OP_RETURN
-                && coinJoinOptions.isCollateralAmount(-nNet))
+            if (wtx.is_denominate)
             {
-                TransactionRecord sub(hash, nTime);
-                sub.idx = 0;
-                sub.type = TransactionRecord::CoinJoinCollateralPayment;
+                sub.type = TransactionRecord::CoinJoinCreateDenominations;
                 sub.debit = -nDebit;
+                sub.credit = nCredit;
                 parts.append(sub);
-                fDone = true;
+                break; // Only report first of the batch
             }
 
-            for (unsigned int nOut = 0; nOut < wtx.tx->vout.size() && !fDone; nOut++)
+            if (mapValue["DS"] == "1")
             {
-                const CTxOut& txout = wtx.tx->vout[nOut];
-                TransactionRecord sub(hash, nTime);
-                sub.idx = nOut;
-                sub.involvesWatchAddress = involvesWatchAddress;
+                sub.type = TransactionRecord::CoinJoinSend;
+                CAmount nChange = wtx.change;
+                parts.append(sub);
+                break; // Only report first of the batch
+            } 
 
-                if(wtx.txout_is_mine[nOut])
-                {
-                    // Ignore parts sent to self, as this is usually the change
-                    // from a transaction sent back to our own address.
-                    continue;
-                }
 
-                if (!boost::get<CNoDestination>(&wtx.txout_address[nOut]))
-                {
-                    // Sent to Raptoreum Address
-                    sub.type = TransactionRecord::SendToAddress;
-                    sub.strAddress = EncodeDestination(wtx.txout_address[nOut]);
-                    sub.txDest = wtx.txout_address[nOut];
-                    sub.updateLabel(wallet);
-                }
-                else
-                {
-                    // Sent to IP, or other non-address transaction like OP_EVAL
-                    sub.type = TransactionRecord::SendToOther;
-                    sub.strAddress = mapValue["to"];
-                    sub.txDest = DecodeDestination(sub.strAddress);
-                }
+            sub.type = TransactionRecord::SendToSelf;
 
-                if(mapValue["DS"] == "1")
+            sub.idx = parts.size();
+            if (wtx.tx->vin.size() == 1 && wtx.tx->vout.size() == 1
+                && CCoinJoin::IsCollateralAmount(nDebit)
+                && CCoinJoin::IsCollateralAmount(nCredit)
+                && CCoinJoin::IsCollateralAmount(-nNet))
+            {
+                sub.type = TransactionRecord::CoinJoinCollateralPayment;
+            } 
+            else 
+            {
+                for (const auto& txout : wtx.tx->vout)
                 {
-                    sub.type = TransactionRecord::CoinJoinSend;
+                    if (txout.nValue == CCoinJoin::GetMaxCollateralAmount()) {
+                        sub.type = TransactionRecord::CoinJoinMakeCollaterals;
+                        continue; // Keep looking, could be a part of PrivateSendCreateDenominations
+                    } else if (CCoinJoin::IsDenominatedAmount(txout.nValue)) {
+                        sub.type = TransactionRecord::CoinJoinCreateDenominations;
+                        break; // Done, it's definitely a tx creating mixing denoms, no need to look any further
+                    }
                 }
+            }
+            parts.append(sub);
+            break; // Only report vout[0], consider the other outputs change
+        }
 
-                CAmount nValue = txout.nValue;
-                /* Add fee to first output */
-                if (nTxFee > 0)
-                {
-                    nValue += nTxFee;
-                    nTxFee = 0;
-                }
-                sub.debit = -nValue;
+        // E/F: SendToAddress, SendToOther, watched: ReceiveWithAddress, RecvFromOther + FutureSend, FutureReceive
+        // These create one or two records (one normal, possibly one watched):
+        // E: self     -> other   Send from wallet to external
+        // F: self     -> watched Send from wallet to watched external (and watched receive)
+        if (debitMineTypes & ISMINE_SPENDABLE && !(mine & ISMINE_SPENDABLE))
+        {
+            // Generate one or two records - sent from wallet, received by watched:
+            sub.type = isFuture ? TransactionRecord::FutureSend : (validDestination ? TransactionRecord::SendToAddress : TransactionRecord::SendToOther);
 
+            // Sent from wallet:
+            sub.involvesWatchAddress = false;
+            sub.debit = -(txout.nValue + nTxFee);
+            nTxFee = 0; // Add fee to first output
+            sub.credit = 0;
+            parts.append(sub);
+
+            // If received by Watch, add a receive transaction on the watched side:
+            if (mine & ISMINE_WATCH_ONLY)
+            {
+                sub.involvesWatchAddress = true;
+                sub.type = isFuture ? TransactionRecord::FutureReceive : (validDestination ? TransactionRecord::RecvWithAddress : TransactionRecord::RecvFromOther);
+                sub.debit = 0;
+                sub.credit = txout.nValue;
                 parts.append(sub);
             }
+            continue;
         }
-        else
-        {
-            //
-            // Mixed debit transaction, can't break down payees
-            //
-            parts.append(TransactionRecord(hash, nTime, TransactionRecord::Other, "", nNet, 0));
-            parts.last().involvesWatchAddress = involvesWatchAddress;
-        }
-    }
 
-    return parts;
-}
+        // G/H: SendToAddress, SendToOther, watched: ReceiveWithAddress, RecvFromOther + FutureSend, FutureReceive
+        // These create one or two records (one normal, possibly one watched):
+        // G: other    -> self    Send from watched to wallet no change
+        // H: watched  -> self    Send from watched to wallet with change
+        if (!(debitMineTypes & ISMINE_SPENDABLE) && mine & ISMINE_SPENDABLE)
+        {
+            // Generate one or two records - receive with wallet, sent by watched:
+            sub.involvesWatchAddress = false;
+            sub.type = isFuture ? TransactionRecord::FutureReceive : (validDestination ? TransactionRecord::RecvWithAddress : TransactionRecord::RecvFromOther);
+
+            // Received with wallet:
+            sub.credit = txout.nValue;
+            parts.append(sub);
+
+            // If sent by Watch, add a sent transaction on the watched side:
+            if (debitMineTypes & ISMINE_WATCH_ONLY)
+            {
+                sub.involvesWatchAddress = true;
+                sub.type = isFuture ? TransactionRecord::FutureSend : (validDestination ? TransactionRecord::SendToAddress : TransactionRecord::SendToOther);
+                sub.debit = -(txout.nValue + nTxFee);
+                nTxFee = 0; // Add fee to first output
+                sub.credit = 0;
+                parts.append(sub);
+            }
+            continue;
+        }
+
+        // I/J: xxx SendToAddress, SendToOther, watched: ReceiveWithAddress, RecvFromOther + FutureSend, FutureReceive
+        // This handles watched addresses going to unmonitored addresses
+        // I: watched  -> other   Send from watched address to other
+        // J: other    -> watched Send from other address to watched
+        if (!(debitMineTypes & ISMINE_SPENDABLE) && !(mine & ISMINE_SPENDABLE))
+        {
+            sub.involvesWatchAddress = true;
+
+            // Sent by watched address:
+            if (inputInvolvesWatchAddress)
+            {
+                sub.type = isFuture ? TransactionRecord::FutureSend : TransactionRecord::SendToOther;
+                sub.debit = -(txout.nValue + nTxFee);
+                nTxFee = 0; // Add fee to first output
+                sub.credit = 0;
+                parts.append(sub);
+            }
+
+            // If received by Watch, add a receive transaction on the watched side:
+            if (outputInvolvesWatchAddress)
+            {
+                sub.involvesWatchAddress = true;
+                sub.type = isFuture ? TransactionRecord::FutureReceive : TransactionRecord::RecvFromOther;
+                sub.debit = 0;
+                sub.credit = txout.nValue;
+                parts.append(sub);
+            }
+            continue;
+        }
+
+        LogPrintf("TransactionRecord::%s TxId: %s, vOutIdx: %d, Unhandled\n", __func__, hash.ToString(), vOutIdx);
+    }
+    return parts;}
 
 void TransactionRecord::updateStatus(const interfaces::WalletTx& wtx, const interfaces::WalletTxStatus& wtxStatus, int numBlocks, int64_t adjustedTime, int chainLockHeight)
 {
