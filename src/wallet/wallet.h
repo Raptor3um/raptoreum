@@ -271,6 +271,11 @@ public:
      * >=1 : this many blocks deep in the main chain
      */
     int GetDepthInMainChain() const;
+    /**
+     *
+     * @return -1 if it is not yet confirmed otherwise return time it was included in the block
+     */
+    int64_t GetConfirmationTime() const;
     bool IsInMainChain() const { return GetDepthInMainChain() > 0; }
     bool IsLockedByInstantSend() const;
     bool IsChainLocked() const;
@@ -1089,7 +1094,7 @@ public:
      * selected by SelectCoins(); Also create the change output, when needed
      * @note passing nChangePosInOut as -1 will result in setting a random position
      */
-    bool CreateTransaction(const std::vector<CRecipient>& vecSend, CTransactionRef& tx, CReserveKey& reservekey, CAmount& nFeeRet, int& nChangePosInOut, std::string& strFailReason, const CCoinControl& coin_control, bool sign = true, int nExtraPayloadSize = 0, CAmount specialFees = 0, FuturePartialPayload* fpp = nullptr);
+    bool CreateTransaction(const std::vector<CRecipient>& vecSend, CTransactionRef& tx, CReserveKey& reservekey, CAmount& nFeeRet, int& nChangePosInOut, std::string& strFailReason, const CCoinControl& coin_control, bool sign = true, int nExtraPayloadSize = 0, FuturePartialPayload* fpp = nullptr);
     bool CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::vector<std::pair<std::string, std::string>> orderForm, std::string fromAccount, CReserveKey& reservekey, CConnman* connman, CValidationState& state);
 
     bool CreateCollateralTransaction(CMutableTransaction& txCollateral, std::string& strReason);

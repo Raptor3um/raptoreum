@@ -57,7 +57,6 @@ bool FounderPayment::IsBlockPayeeValid(const CTransaction& txNew, const int heig
 	// fill payee with the founder address
 	CScript payee = GetScriptForDestination(DecodeDestination(founderAddress));
 	const CAmount founderReward = getFounderPaymentAmount(height, blockReward);
-	//std::cout << "founderReward = " << founderReward << endl;
 	BOOST_FOREACH(const CTxOut& out, txNew.vout) {
 		if(out.scriptPubKey == payee && out.nValue >= founderReward) {
 			return true;

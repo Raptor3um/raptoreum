@@ -1153,7 +1153,6 @@ UniValue sendrawtransaction(const JSONRPCRequest& request)
         // push to local node and sync with wallets
         CValidationState state;
         bool fMissingInputs;
-        LogPrintf("::AcceptToMemoryPool\n");
         if (!AcceptToMemoryPool(mempool, state, std::move(tx), &fMissingInputs,
                                 fBypassLimits /* bypass_limits */, nMaxRawTxFee)) {
             if (state.IsInvalid()) {
@@ -1170,9 +1169,7 @@ UniValue sendrawtransaction(const JSONRPCRequest& request)
             // where a user might call sendrawtransaction with a transaction
             // to/from their wallet, immediately call some wallet RPC, and get
             // a stale result because callbacks have not yet been processed.
-            LogPrintf("::CallFunctionInValidationInterfaceQueue\n");
             CallFunctionInValidationInterfaceQueue([&promise] {
-                LogPrintf("::promise.set_value()\n");
                 promise.set_value();
             });
         }
@@ -1185,12 +1182,10 @@ UniValue sendrawtransaction(const JSONRPCRequest& request)
     }
 
     } // cs_main
-    LogPrintf("::promise.get_future().wait()\n");
     promise.get_future().wait();
 
     if(!g_connman)
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
-    LogPrintf("::RelayTransaction\n");
 
     g_connman->RelayTransaction(*tx);
 

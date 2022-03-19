@@ -69,6 +69,10 @@ public:
 
     bool fSubtractFeeFromAmount; // memory only
 
+    bool isFutureOutput = false;
+    int maturity;
+    int64_t locktime;
+
     static const int CURRENT_VERSION = 1;
     int nVersion;
 
@@ -100,6 +104,12 @@ public:
             if (!sPaymentRequest.empty())
                 paymentRequest.parse(QByteArray::fromRawData(sPaymentRequest.data(), sPaymentRequest.size()));
             authenticatedMerchant = QString::fromStdString(sAuthenticatedMerchant);
+        }
+
+        if(isFutureOutput) {
+            READWRITE(isFutureOutput);
+            READWRITE(maturity);
+            READWRITE(locktime);
         }
     }
 };

@@ -15,7 +15,7 @@
 #include <QApplication>
 #include <QClipboard>
 
-SendCoinsEntry::SendCoinsEntry(QWidget* parent) :
+SendCoinsEntry::SendCoinsEntry(QWidget* parent, bool hideFuture) :
     QStackedWidget(parent),
     ui(new Ui::SendCoinsEntry),
     model(0)
@@ -36,10 +36,15 @@ SendCoinsEntry::SendCoinsEntry(QWidget* parent) :
     GUIUtil::setFont({ui->payToLabel,
                      ui->labellLabel,
                      ui->amountLabel,
-                     ui->messageLabel}, GUIUtil::FontWeight::Normal, 15);
+                     ui->messageLabel,
+                     ui->maturityLb,
+                     ui->locktimeLb}, GUIUtil::FontWeight::Normal, 15);
 
     GUIUtil::updateFonts();
-
+    this->futureToggleChanged();
+    ui->futureCb->setVisible(!hideFuture);
+    ui->maturity->setValidator(new QIntValidator(-1, INT_MAX, this));
+    ui->locktime->setValidator(new QIntValidator(-1, INT_MAX, this));
     // Connect signals
     connect(ui->payAmount, SIGNAL(valueChanged()), this, SIGNAL(payAmountChanged()));
     connect(ui->checkboxSubtractFeeFromAmount, SIGNAL(toggled(bool)), this, SIGNAL(subtractFeeFromAmountChanged()));
@@ -47,6 +52,7 @@ SendCoinsEntry::SendCoinsEntry(QWidget* parent) :
     connect(ui->deleteButton_is, SIGNAL(clicked()), this, SLOT(deleteClicked()));
     connect(ui->deleteButton_s, SIGNAL(clicked()), this, SLOT(deleteClicked()));
     connect(ui->useAvailableBalanceButton, SIGNAL(clicked()), this, SLOT(useAvailableBalanceClicked()));
+    connect(ui->futureCb, SIGNAL(toggled(bool)), this, SLOT(futureToggleChanged()));
 }
 
 SendCoinsEntry::~SendCoinsEntry()
@@ -113,7 +119,8 @@ void SendCoinsEntry::clear()
     ui->payTo_s->clear();
     ui->memoTextLabel_s->clear();
     ui->payAmount_s->clear();
-
+    ui->maturity->setText("100");
+    ui->locktime->setText("100");
     // update the display unit, to not use the default ("BTC")
     updateDisplayUnit();
 }
@@ -121,6 +128,14 @@ void SendCoinsEntry::clear()
 void SendCoinsEntry::checkSubtractFeeFromAmount()
 {
     ui->checkboxSubtractFeeFromAmount->setChecked(true);
+}
+
+void SendCoinsEntry::futureToggleChanged() {
+    bool isFuture = ui->futureCb->isChecked();
+    ui->maturityLb->setVisible(isFuture);
+    ui->maturity->setVisible(isFuture);
+    ui->locktime->setVisible(isFuture);
+    ui->locktimeLb->setVisible(isFuture);
 }
 
 void SendCoinsEntry::deleteClicked()
@@ -184,7 +199,11 @@ SendCoinsRecipient SendCoinsEntry::getValue()
     recipient.amount = ui->payAmount->value();
     recipient.message = ui->messageTextLabel->text();
     recipient.fSubtractFeeFromAmount = (ui->checkboxSubtractFeeFromAmount->checkState() == Qt::Checked);
-
+    if(ui->futureCb->isChecked()) {
+        recipient.isFutureOutput = true;
+        recipient.maturity = std::stoi(ui->maturity->text().toStdString());
+        recipient.locktime = std::stol(ui->locktime->text().toStdString());
+    }
     return recipient;
 }
 

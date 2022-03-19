@@ -84,16 +84,14 @@ UniValue futuretx_send(const JSONRPCRequest& request)
   tx.nVersion = 3;
   tx.nType = TRANSACTION_FUTURE;
 
-	CFutureTx ftx;
-	ftx.nVersion = CFutureTx::CURRENT_VERSION;
-	ftx.lockTime = ParseInt32V(request.params[5], "lockTime");
-	ftx.maturity = ParseInt32V(request.params[4], "maturity");
-	ftx.lockOutputIndex = 0;
-	ftx.updatableByDestination = false;
+  CFutureTx ftx;
+  ftx.nVersion = CFutureTx::CURRENT_VERSION;
+  ftx.lockTime = ParseInt32V(request.params[5], "lockTime");
+  ftx.maturity = ParseInt32V(request.params[4], "maturity");
+  ftx.lockOutputIndex = 0;
+  ftx.updatableByDestination = false;
 
-	CAmount amount = AmountFromValue(request.params[1]);
-	CAmount futureFee = getFutureFees();
-
+  CAmount amount = AmountFromValue(request.params[1]);
   CTxDestination toAddress = DecodeDestination(request.params[3].get_str());
   if(!IsValidDestination(toAddress))
     throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Invalid Receipent Raptoreum address: %s", request.params[3].get_str()));
@@ -106,7 +104,7 @@ UniValue futuretx_send(const JSONRPCRequest& request)
   if(!IsValidDestination(fromAddress))
     throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Invalid Sender Raptoreum address: %s", request.params[2].get_str()));
 
-  FundSpecialTx(pwallet, tx, ftx, fromAddress, futureFee);
+  FundSpecialTx(pwallet, tx, ftx, fromAddress);
   //double check to be sure lockOutputIndex is to update to new index if it change because of FundSpecialTx
   for (const auto& txOut : tx.vout)
   {

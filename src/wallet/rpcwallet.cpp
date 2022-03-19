@@ -436,7 +436,7 @@ UniValue getaddressesbyaccount(const JSONRPCRequest& request)
     return ret;
 }
 
-static CTransactionRef SendMoney(CWallet * const pwallet, const CTxDestination &address, CAmount nValue, bool fSubtractFeeFromAmount, const CCoinControl& coin_control, mapValue_t mapValue, std::string fromAccount)
+static CTransactionRef SendMoney(CWallet * const pwallet, const CTxDestination &address, CAmount nValue, bool fSubtractFeeFromAmount, const CCoinControl& coin_control, mapValue_t mapValue, std::string fromAccount, FuturePartialPayload* fpp = nullptr)
 {
     CAmount curBalance = pwallet->GetBalance();
 
@@ -467,7 +467,8 @@ static CTransactionRef SendMoney(CWallet * const pwallet, const CTxDestination &
     CRecipient recipient = {scriptPubKey, nValue, fSubtractFeeFromAmount};
     vecSend.push_back(recipient);
     CTransactionRef tx;
-    if (!pwallet->CreateTransaction(vecSend, tx, reservekey, nFeeRequired, nChangePosRet, strError, coin_control)) {
+    if (!pwallet->CreateTransaction(vecSend, tx, reservekey, nFeeRequired, nChangePosRet, strError, coin_control,
+                                    true, 0, fpp)) {
         if (!fSubtractFeeFromAmount && nValue + nFeeRequired > curBalance)
             strError = strprintf("Error: This transaction requires a transaction fee of at least %s", FormatMoney(nFeeRequired));
         throw JSONRPCError(RPC_WALLET_ERROR, strError);
@@ -489,7 +490,7 @@ UniValue sendtoaddress(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() < 2 || request.params.size() > 9)
+    if (request.fHelp || request.params.size() < 2 || request.params.size() > 10)
         throw std::runtime_error(
             "sendtoaddress \"address\" amount ( \"comment\" \"comment_to\" subtractfeefromamount use_is use_cj conf_target \"estimate_mode\")\n"
             "\nSend an amount to a given address.\n"
@@ -497,6 +498,11 @@ UniValue sendtoaddress(const JSONRPCRequest& request)
             "\nArguments:\n"
             "1. \"address\"            (string, required) The raptoreum address to send to.\n"
             "2. \"amount\"             (numeric or string, required) The amount in " + CURRENCY_UNIT + " to send. eg 0.1\n"
+            "3. \"future\n\"            (string, optional) A comment used to store what the transaction is for. \n"
+            "      {\n"
+            "         \"future_maturity\":n,\n"
+            "         \"future_locktime\":n\n"
+            "      }\n"
             "3. \"comment\"            (string, optional) A comment used to store what the transaction is for. \n"
             "                             This is not part of the transaction, just kept in your wallet.\n"
             "4. \"comment_to\"         (string, optional) A comment to store the name of the person or organization \n"
@@ -514,10 +520,11 @@ UniValue sendtoaddress(const JSONRPCRequest& request)
             "\nResult:\n"
             "\"txid\"                  (string) The transaction id.\n"
             "\nExamples:\n"
-            + HelpExampleCli("sendtoaddress", "\"XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwG\" 0.1")
-            + HelpExampleCli("sendtoaddress", "\"XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwG\" 0.1 \"donation\" \"seans outpost\"")
-            + HelpExampleCli("sendtoaddress", "\"XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwG\" 0.1 \"\" \"\" true")
-            + HelpExampleRpc("sendtoaddress", "\"XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwG\", 0.1, \"donation\", \"seans outpost\"")
+            + HelpExampleCli("sendtoaddress", "\"RwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwG\" 0.1")
+            + HelpExampleCli("sendtoaddress", "\"RwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwG\" 0.1 '{\"future_maturity\":100, \"future_locktime\": 10000}'")
+            + HelpExampleCli("sendtoaddress", "\"RwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwG\" 0.1 \"donation\" \"seans outpost\"")
+            + HelpExampleCli("sendtoaddress", "\"RwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwG\" 0.1 \"\" \"\" true")
+            + HelpExampleRpc("sendtoaddress", "\"RwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwG\", 0.1, \"donation\", \"seans outpost\"")
         );
 
     // Make sure the results are valid at least up to the most recent block
@@ -539,35 +546,57 @@ UniValue sendtoaddress(const JSONRPCRequest& request)
 
     // Wallet comments
     mapValue_t mapValue;
-    if (!request.params[2].isNull() && !request.params[2].get_str().empty())
-        mapValue["comment"] = request.params[2].get_str();
-    if (!request.params[3].isNull() && !request.params[3].get_str().empty())
-        mapValue["to"] = request.params[3].get_str();
+    FuturePartialPayload fpp;
+    bool hasFuture = false;
+    int nextParamsIndex = 2;
+    if (!request.params[nextParamsIndex].isNull()) {
+        if(request.params[nextParamsIndex].isObject()) {
+            if (request.params[nextParamsIndex]["future_maturity"].isNull()) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("no future_maturity is specified "));
+            }
+            if (request.params[nextParamsIndex]["future_locktime"].isNull()) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("no future_locktime is specified "));
+            }
 
+            hasFuture = true;
+            fpp.maturity = request.params[nextParamsIndex]["future_maturity"].get_int();
+            fpp.locktime = request.params[nextParamsIndex]["future_locktime"].get_int();
+            fpp.futureRecScript = GetScriptForDestination(dest);
+            nextParamsIndex++;
+        }
+    }
+    if(request.params[nextParamsIndex].isStr() && !request.params[nextParamsIndex].get_str().empty()) {
+        mapValue["comment"] = request.params[nextParamsIndex].get_str();
+    }
+    nextParamsIndex++;
+    if (!request.params[nextParamsIndex].isNull() && !request.params[nextParamsIndex].get_str().empty())
+        mapValue["to"] = request.params[nextParamsIndex].get_str();
+    nextParamsIndex++;
     bool fSubtractFeeFromAmount = false;
-    if (!request.params[4].isNull()) {
-        fSubtractFeeFromAmount = request.params[4].get_bool();
+    if (!request.params[nextParamsIndex].isNull()) {
+        fSubtractFeeFromAmount = request.params[nextParamsIndex].get_bool();
     }
 
     CCoinControl coin_control;
-
-    if (!request.params[6].isNull()) {
-        coin_control.UseCoinJoin(request.params[6].get_bool());
+    nextParamsIndex++;
+    if (!request.params[nextParamsIndex].isNull()) {
+        coin_control.UseCoinJoin(request.params[nextParamsIndex].get_bool());
     }
-
-    if (!request.params[7].isNull()) {
-        coin_control.m_confirm_target = ParseConfirmTarget(request.params[7]);
+    nextParamsIndex++;
+    if (!request.params[nextParamsIndex].isNull()) {
+        coin_control.m_confirm_target = ParseConfirmTarget(request.params[nextParamsIndex]);
     }
-
-    if (!request.params[8].isNull()) {
-        if (!FeeModeFromString(request.params[8].get_str(), coin_control.m_fee_mode)) {
+    nextParamsIndex++;
+    if (!request.params[nextParamsIndex].isNull()) {
+        if (!FeeModeFromString(request.params[nextParamsIndex].get_str(), coin_control.m_fee_mode)) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid estimate_mode parameter");
         }
     }
 
     EnsureWalletIsUnlocked(pwallet);
 
-    CTransactionRef tx = SendMoney(pwallet, dest, nAmount, fSubtractFeeFromAmount, coin_control, std::move(mapValue), {} /* fromAccount */);
+    CTransactionRef tx = SendMoney(pwallet, dest, nAmount, fSubtractFeeFromAmount, coin_control,
+                                   std::move(mapValue), {} /* fromAccount */, hasFuture ? &fpp : nullptr);
     return tx->GetHash().GetHex();
 }
 
@@ -4406,7 +4435,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "loadwallet",               &loadwallet,               {"filename"} },
     { "wallet",             "lockunspent",                      &lockunspent,                   {"unlock","transactions"} },
     { "wallet",             "sendmany",                         &sendmany,                      {"fromaccount|dummy","amounts","minconf","addlocked","comment","subtractfeefrom","use_is","use_cj","conf_target","estimate_mode"} },
-    { "wallet",             "sendtoaddress",                    &sendtoaddress,                 {"address","amount","comment","comment_to","subtractfeefromamount","use_is","use_cj","conf_target","estimate_mode"} },
+    { "wallet",             "sendtoaddress",                    &sendtoaddress,                 {"address","amount","future", "comment","comment_to","subtractfeefromamount","use_is","use_cj","conf_target","estimate_mode"} },
     { "wallet",             "settxfee",                         &settxfee,                      {"amount"} },
     { "wallet",             "setcoinjoinrounds",     &setcoinjoinrounds,     {"rounds"} },
     { "wallet",             "setcoinjoinamount",     &setcoinjoinamount,     {"amount"} },

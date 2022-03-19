@@ -42,14 +42,11 @@ static const char *validateFutureCoin(const Coin& coin, int nSpendHeight) {
 		CBlockIndex* confirmedBlockIndex = chainActive[coin.nHeight];
 		if(confirmedBlockIndex) {
 			int64_t adjustCurrentTime = GetAdjustedTime();
-			uint32_t confirmedTime = confirmedBlockIndex->nTime;
+			uint32_t confirmedTime = confirmedBlockIndex->GetBlockTime();
 			CFutureTx futureTx;
-			//std::cout << "futuretx checking" << endl;
 			if(GetTxPayload(coin.vExtraPayload, futureTx)) {
-				//std::cout << "futuretx extract" << endl;
 				bool isBlockMature = futureTx.maturity > 0 && nSpendHeight - coin.nHeight >= futureTx.maturity;
 				bool isTimeMature = futureTx.lockTime > 0 && adjustCurrentTime - confirmedTime  >= futureTx.lockTime;
-				//std::cout << "isBlockMature " << isBlockMature << " isTimeMature " << isTimeMature << endl;
 				bool canSpend = isBlockMature || isTimeMature;
 				if(!canSpend) {
 					return "bad-txns-premature-spend-of-future";
@@ -251,7 +248,6 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, int nHeig
 		FounderPayment founderPayment = Params().GetConsensus().nFounderPayment;
 		CAmount founderReward = founderPayment.getFounderPaymentAmount(nHeight, blockReward);
 		int founderStartHeight = founderPayment.getStartBlock();
-		//std::cout << "height=" << nHeight << ", reward=" << founderReward << endl;
 		if(nHeight > founderStartHeight && founderReward && !founderPayment.IsBlockPayeeValid(tx,nHeight,blockReward)) {
 			return state.DoS(100, false, REJECT_INVALID, "bad-cb-founder-payment-not-found");
 		}
@@ -311,7 +307,6 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
         return state.DoS(100, false, REJECT_INVALID, "bad-txns-fee-outofrange");
     }
     txfee = txfee_aux;
-    LogPrintf("txfee: %s\n", FormatMoney(txfee));
 	checkSpecialTxFee(tx, txfee, specialTxFee);
 	if(txfee < 0) {
 		return state.DoS(100, false, REJECT_INVALID, "bad-txns-fee-too-low", false,

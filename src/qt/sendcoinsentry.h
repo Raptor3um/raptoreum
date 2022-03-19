@@ -25,7 +25,7 @@ class SendCoinsEntry : public QStackedWidget
     Q_OBJECT
 
 public:
-    explicit SendCoinsEntry(QWidget* parent = 0);
+    explicit SendCoinsEntry(QWidget* parent = 0, bool hideFuture = false);
     ~SendCoinsEntry();
 
     void setModel(WalletModel *model);
@@ -63,6 +63,7 @@ private Q_SLOTS:
     void on_addressBookButton_clicked();
     void on_pasteButton_clicked();
     void updateDisplayUnit();
+    void futureToggleChanged();
 
 protected:
     void changeEvent(QEvent* e);
