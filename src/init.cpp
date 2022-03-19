@@ -2096,7 +2096,22 @@ bool AppInitMain()
         ::feeEstimator.Read(est_filein);
     fFeeEstimatesInitialized = true;
 
-    // ********************************************************* Step 8: load wallet
+    // ********************************************************* Step 8a: load powcache.dat
+
+    {
+        fs::path pathDB = GetDataDir();
+        std::string strDBName = "powcache.dat";
+
+        // Always load the powcache if available:
+        uiInterface.InitMessage(_("Loading POW cache..."));
+        CFlatDB<CPowCache> flatdb7(strDBName, "powCache");
+        if(!flatdb7.Load(CPowCache::Instance())) {
+            return InitError(_("Failed to load POW cache from") + "\n" + (pathDB / strDBName).string());
+        }
+    }
+
+    // ********************************************************* Step 8b: load wallet
+
     if (!g_wallet_init_interface.Open()) return false;
 
     // As InitLoadWallet can take several minutes, it's possible the user
@@ -2218,14 +2233,6 @@ bool AppInitMain()
         if(!flatdb4.Dump(netfulfilledmanTmp)) {
             return InitError(_("Failed to clear fulfilled requests cache at") + "\n" + (pathDB / strDBName).string());
         }
-    }
-
-    // Always load the powcache if available:
-    strDBName = "powcache.dat";
-    uiInterface.InitMessage(_("Loading POW cache..."));
-    CFlatDB<CPowCache> flatdb7(strDBName, "powCache");
-    if(!flatdb7.Load(CPowCache::Instance())) {
-        return InitError(_("Failed to load POW cache from") + "\n" + (pathDB / strDBName).string());
     }
 
     // ********************************************************* Step 10c: schedule Raptoreum-specific tasks
