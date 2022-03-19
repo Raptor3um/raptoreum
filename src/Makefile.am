@@ -6,10 +6,11 @@
 
 DIST_SUBDIRS = secp256k1 univalue
 
-AM_LDFLAGS = $(PTHREAD_CFLAGS) $(LIBTOOL_LDFLAGS) $(HARDENED_LDFLAGS) $(GPROF_LDFLAGS) $(SANITIZER_LDFLAGS)
+AM_LDFLAGS = $(LIBTOOL_LDFLAGS) $(HARDENED_LDFLAGS) $(GPROF_LDFLAGS) $(SANITIZER_LDFLAGS)
 AM_CXXFLAGS = $(HARDENED_CXXFLAGS) $(ERROR_CXXFLAGS) $(GPROF_CXXFLAGS) $(SANITIZER_CXXFLAGS)
 AM_CPPFLAGS = $(HARDENED_CPPFLAGS)
 AM_LIBTOOLFLAGS = --preserve-dup-deps
+PTHREAD_FLAGS = $(PTHREAD_CFLAGS) $(PTHREAD_LIBS)
 EXTRA_LIBRARIES =
 
 if ENABLE_STACKTRACES
@@ -655,7 +656,7 @@ nodist_libraptoreum_util_a_SOURCES = $(srcdir)/obj/build.h
 raptoreumd_SOURCES = raptoreumd.cpp
 raptoreumd_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 raptoreumd_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-raptoreumd_LDFLAGS = $(LDFLAGS_WRAP_EXCEPTIONS) $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+raptoreumd_LDFLAGS = $(LDFLAGS_WRAP_EXCEPTIONS) $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
 
 if TARGET_WINDOWS
 raptoreumd_SOURCES += raptoreumd-res.rc
@@ -681,7 +682,7 @@ raptoreumd_LDADD += $(BACKTRACE_LIB) $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRY
 raptoreum_cli_SOURCES = raptoreum-cli.cpp
 raptoreum_cli_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(EVENT_CFLAGS)
 raptoreum_cli_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-raptoreum_cli_LDFLAGS = $(LDFLAGS_WRAP_EXCEPTIONS) $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+raptoreum_cli_LDFLAGS = $(LDFLAGS_WRAP_EXCEPTIONS) $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
 
 if TARGET_WINDOWS
 raptoreum_cli_SOURCES += raptoreum-cli-res.rc
@@ -699,7 +700,7 @@ raptoreum_cli_LDADD += $(BACKTRACE_LIB) $(BOOST_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS)
 raptoreum_tx_SOURCES = raptoreum-tx.cpp
 raptoreum_tx_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 raptoreum_tx_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-raptoreum_tx_LDFLAGS = $(LDFLAGS_WRAP_EXCEPTIONS) $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+raptoreum_tx_LDFLAGS = $(LDFLAGS_WRAP_EXCEPTIONS) $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
 
 if TARGET_WINDOWS
 raptoreum_tx_SOURCES += raptoreum-tx-res.rc
@@ -725,7 +726,7 @@ if GLIBC_BACK_COMPAT
   libraptoreumconsensus_la_SOURCES += compat/glibc_compat.cpp
 endif
 
-libraptoreumconsensus_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS)
+libraptoreumconsensus_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 libraptoreumconsensus_la_LIBADD = $(LIBSECP256K1) $(BLS_LIBS)
 libraptoreumconsensus_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include -DBUILD_BITCOIN_INTERNAL
 libraptoreumconsensus_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)

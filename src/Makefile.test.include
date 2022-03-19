@@ -132,7 +132,7 @@ test_test_raptoreum_LDADD += $(LIBBITCOIN_SERVER) $(LIBBITCOIN_CLI) $(LIBBITCOIN
 test_test_raptoreum_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 
 test_test_raptoreum_LDADD += $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(BLS_LIBS)
-test_test_raptoreum_LDFLAGS = $(LDFLAGS_WRAP_EXCEPTIONS) $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) -static
+test_test_raptoreum_LDFLAGS = $(LDFLAGS_WRAP_EXCEPTIONS) $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS) $(PTHREAD_FLAGS) -static
 
 if ENABLE_ZMQ
 test_test_raptoreum_LDADD += $(ZMQ_LIBS)
@@ -143,7 +143,7 @@ endif
 test_test_raptoreum_fuzzy_SOURCES = test/test_raptoreum_fuzzy.cpp
 test_test_raptoreum_fuzzy_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 test_test_raptoreum_fuzzy_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-test_test_raptoreum_fuzzy_LDFLAGS = $(LDFLAGS_WRAP_EXCEPTIONS) $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+test_test_raptoreum_fuzzy_LDFLAGS = $(LDFLAGS_WRAP_EXCEPTIONS) $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
 
 test_test_raptoreum_fuzzy_LDADD = \
   $(LIBUNIVALUE) \
