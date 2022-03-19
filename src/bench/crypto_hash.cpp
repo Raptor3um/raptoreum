@@ -282,9 +282,9 @@ BENCHMARK(HASH_GR_2048b_single, 50 * 1000);
 BENCHMARK(FastRandom_32bit, 110 * 1000 * 1000);
 BENCHMARK(FastRandom_1bit, 440 * 1000 * 1000);
 
-BENCHMARK(HASH_CN_cryptonight_dark_hash,       24);
-BENCHMARK(HASH_CN_cryptonight_darklite_hash,   27);
-BENCHMARK(HASH_CN_cryptonight_cnfast_hash,     6);
-BENCHMARK(HASH_CN_cryptonight_cnlite_hash,     10);
-BENCHMARK(HASH_CN_cryptonight_turtle_hash,     58);
-BENCHMARK(HASH_CN_cryptonight_turtlelite_hash, 62);
+BENCHMARK(HASH_CN_cryptonight_dark_hash,       120);
+BENCHMARK(HASH_CN_cryptonight_darklite_hash,   135);
+BENCHMARK(HASH_CN_cryptonight_cnfast_hash,      30);
+BENCHMARK(HASH_CN_cryptonight_cnlite_hash,      50);
+BENCHMARK(HASH_CN_cryptonight_turtle_hash,     290);
+BENCHMARK(HASH_CN_cryptonight_turtlelite_hash, 310);
