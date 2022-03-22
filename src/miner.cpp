@@ -608,6 +608,7 @@ void static RaptoreumMiner(const CChainParams& chainparams)
             HashSelection hashSelection(pblock->hashPrevBlock, {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14}, {0, 1, 2, 3, 4, 5});
 			alsoHashString.clear();
             alsoHashString.append(hashSelection.getHashSelectionString());
+            LogPrintf("Algos: %s\n",hashSelection.getHashSelectionString());
             IncrementExtraNonce(pblock, pindexPrev, nExtraNonce);
 
             LogPrintf("RaptoreumMiner -- Running miner with %u transactions in block (%u bytes)\n", pblock->vtx.size(),

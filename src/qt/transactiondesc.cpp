@@ -74,7 +74,7 @@ QString TransactionDesc::FutureTxDescToHTML(const interfaces::WalletTx& wtx, con
 
     if (GetTxPayload(wtx.tx->vExtraPayload, ftx)) {
 
-        CAmount ftxValue = wtx.tx->vout[0].nValue;
+        CAmount ftxValue = wtx.tx->vout[ftx.lockOutputIndex].nValue;
         int txBlock = status.block_height;
         int currentHeight = chainActive.Height();
         int64_t nTime = wtx.time;

@@ -11,6 +11,7 @@
 #include <qt/addresstablemodel.h>
 #include <qt/guiutil.h>
 #include <qt/optionsmodel.h>
+#include <future/fee.h>
 
 #include <QApplication>
 #include <QClipboard>
@@ -132,10 +133,17 @@ void SendCoinsEntry::checkSubtractFeeFromAmount()
 
 void SendCoinsEntry::futureToggleChanged() {
     bool isFuture = ui->futureCb->isChecked();
+    if(isFuture) {
+        char feeDisplay[18];
+        sprintf(feeDisplay, "%ld RTM", (getFutureFees()/COIN));
+        ui->feeDisplay->setText(feeDisplay);
+    }
     ui->maturityLb->setVisible(isFuture);
     ui->maturity->setVisible(isFuture);
     ui->locktime->setVisible(isFuture);
     ui->locktimeLb->setVisible(isFuture);
+    ui->feeDisplay->setVisible(isFuture);
+    ui->feeLb->setVisible(isFuture);
 }
 
 void SendCoinsEntry::deleteClicked()
@@ -199,6 +207,7 @@ SendCoinsRecipient SendCoinsEntry::getValue()
     recipient.amount = ui->payAmount->value();
     recipient.message = ui->messageTextLabel->text();
     recipient.fSubtractFeeFromAmount = (ui->checkboxSubtractFeeFromAmount->checkState() == Qt::Checked);
+    //std::cout << " ui->futureCb->isChecked() " << ui->futureCb->isChecked() << "\n";
     if(ui->futureCb->isChecked()) {
         recipient.isFutureOutput = true;
         recipient.maturity = std::stoi(ui->maturity->text().toStdString());

@@ -330,26 +330,6 @@ void SendCoinsDialog::send(QList<SendCoinsRecipient> recipients)
             else // just address
             {
                 recipientElement = tr("%1 to %2").arg(amount, address);
-                if(rcp.isFutureOutput) {
-                    hasFuture = true;
-                    if(recipients[0].maturity > 0) {
-                        recipientElement.append(tr("Confirmations in: <b>%1 blocks</b><br />").arg(recipients[0].maturity));
-                    }
-                    if(recipients[0].locktime > 0) {
-                        recipientElement.append(tr("Time in: <b>%1 secibds from first confirmed</b><br />")
-                                                      .arg(recipients[0].locktime));
-                    }
-                    if(recipients[0].maturity > 0 && recipients[0].locktime > 0) {
-                        int calcBlock = (recipients[0].maturity * 2 * 60);
-                        if(calcBlock < recipients[0].locktime) {
-                            recipientElement.append("This transaction will likely mature based on confirmations.");
-                        } else {
-                            recipientElement.append("This transaction will likely mature based on time.");
-                        }
-                    } else if(recipients[0].maturity <= 0 && recipients[0].locktime <= 0){
-                        recipientElement.append("<span style='" + GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_ERROR) + "'><b>No maturity is set. Transaction will mature as normal.</b></span>");
-                    }
-                }
             }
         }
         else if(!rcp.authenticatedMerchant.isEmpty()) // authenticated payment request
@@ -359,6 +339,27 @@ void SendCoinsDialog::send(QList<SendCoinsRecipient> recipients)
         else // unauthenticated payment request
         {
             recipientElement = tr("%1 to %2").arg(amount, address);
+        }
+        //std::cout << rcp.amount << " is future output " << rcp.isFutureOutput << "\n";
+        if(rcp.isFutureOutput) {
+            hasFuture = true;
+            if(recipients[0].maturity > 0) {
+                recipientElement.append(tr("<br>Confirmations in: <b>%1 blocks</b><br />").arg(recipients[0].maturity));
+            }
+            if(recipients[0].locktime > 0) {
+                recipientElement.append(tr("Time in: <b>%1 seconds from first confirmed</b><br />")
+                                                .arg(recipients[0].locktime));
+            }
+            if(recipients[0].maturity > 0 && recipients[0].locktime > 0) {
+                int calcBlock = (recipients[0].maturity * 2 * 60);
+                if(calcBlock < recipients[0].locktime) {
+                    recipientElement.append("This transaction will likely mature based on confirmations.");
+                } else {
+                    recipientElement.append("This transaction will likely mature based on time.");
+                }
+            } else if(recipients[0].maturity <= 0 && recipients[0].locktime <= 0){
+                recipientElement.append("<span style='" + GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_ERROR) + "'><b>No maturity is set. Transaction will mature as normal.</b></span>");
+            }
         }
 
         formatted.append(recipientElement);

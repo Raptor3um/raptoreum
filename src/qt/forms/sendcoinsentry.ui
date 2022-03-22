@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>729</width>
-    <height>147</height>
+    <height>182</height>
    </rect>
   </property>
   <property name="focusPolicy">
@@ -251,6 +251,20 @@
         </property>
         <property name="text">
          <string>100</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="feeLb">
+        <property name="text">
+         <string>Fee:</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="feeDisplay">
+        <property name="text">
+         <string/>
         </property>
        </widget>
       </item>

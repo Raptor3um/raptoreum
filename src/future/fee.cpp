@@ -8,6 +8,9 @@
 #include <evo/providertx.h>
 
 CAmount getFutureFees() {
+    if(sporkManager.IsSporkActive(SPORK_22_SPEICAL_TX_FEE)) {
+        return 0;
+    }
 	int64_t specialTxValue = sporkManager.GetSporkValue(SPORK_22_SPEICAL_TX_FEE);
 	int futureTxFee = specialTxValue & 0xff;
 	return futureTxFee * COIN;

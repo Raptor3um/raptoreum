@@ -11,6 +11,7 @@
 
 #include <chainparams.h>
 #include <future/fee.h>
+#include <spork.h>
 //#include <future/utils.h>
 #include <evo/specialtx.h>
 #include <evo/providertx.h>
@@ -29,8 +30,12 @@ static void checkSpecialTxFee(const CTransaction &tx, CAmount& nFeeTotal, CAmoun
 		case TRANSACTION_FUTURE:
 			CFutureTx ftx;
 			if(GetTxPayload(tx.vExtraPayload, ftx)) {
-				specialTxFee = getFutureFees();
-				nFeeTotal -= specialTxFee;
+                if(sporkManager.IsSporkActive(SPORK_22_SPEICAL_TX_FEE)) {
+                    specialTxFee = getFutureFees();
+                    nFeeTotal -= specialTxFee;
+                } else {
+                    specialTxFee = -1;
+                }
 			}
 			break;
 		}
@@ -308,6 +313,10 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
     }
     txfee = txfee_aux;
 	checkSpecialTxFee(tx, txfee, specialTxFee);
+
+    if(specialTxFee < 0) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-txns-future-not-enable");
+    }
 	if(txfee < 0) {
 		return state.DoS(100, false, REJECT_INVALID, "bad-txns-fee-too-low", false,
 		            strprintf("fee (%s), special tx fee (%s)", FormatMoney(txfee), FormatMoney(specialTxFee)));

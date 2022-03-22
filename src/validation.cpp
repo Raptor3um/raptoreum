@@ -4064,7 +4064,6 @@ bool TestBlockValidity(CValidationState& state, const CChainParams& chainparams,
 {
     AssertLockHeld(cs_main);
     assert(pindexPrev && pindexPrev == chainActive.Tip());
-    LogPrintf("TestBlockValidity::fCheckMerkleRoot %d\n", fCheckMerkleRoot);
     uint256 hash = block.GetHash();
     if (llmq::chainLocksHandler->HasConflictingChainLock(pindexPrev->nHeight + 1, hash)) {
         return state.DoS(10, error("%s: conflicting with chainlock", __func__), REJECT_INVALID, "bad-chainlock");
