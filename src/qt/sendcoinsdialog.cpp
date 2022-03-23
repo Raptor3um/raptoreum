@@ -398,7 +398,7 @@ void SendCoinsDialog::send(QList<SendCoinsRecipient> recipients)
     }
 
     CAmount txFee = currentTransaction.getTransactionFee();
-    txFee += hasFuture ? getFutureFees() : 0;
+    txFee += hasFuture ? getFutureFeesCoin() : 0;
     if(txFee > 0)
     {
         // append fee string if a fee is required

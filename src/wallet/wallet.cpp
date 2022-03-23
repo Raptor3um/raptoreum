@@ -3662,7 +3662,8 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
       ftx.maturity = fpp->maturity;
       ftx.lockOutputIndex = 0;
       ftx.updatableByDestination = false;
-      specialFees = getFutureFees();
+      ftx.fee = getFutureFees();
+      specialFees = getFutureFeesCoin();
     }
     // Discourage fee sniping.
     //

@@ -8,6 +8,7 @@
 #include <amount.h>
 #include <coins.h>
 
+CAmount getFutureFeesCoin();
 CAmount getFutureFees();
 
 //void maybeSetPayload(Coin& coin, const COutPoint& outpoint, const int16_t& nType, const std::vector<uint8_t>& vExtraPayload);

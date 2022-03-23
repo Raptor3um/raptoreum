@@ -766,7 +766,7 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
 
         CAmount nFees = 0;
         CAmount specialTxFees = 0;
-        if (!Consensus::CheckTxInputs(tx, state, view, GetSpendHeight(view), nFees, specialTxFees)) {
+        if (!Consensus::CheckTxInputs(tx, state, view, GetSpendHeight(view), nFees, specialTxFees, true)) {
             return error("%s: Consensus::CheckTxInputs: %s, %s", __func__, tx.GetHash().ToString(), FormatStateMessage(state));
         }
 
@@ -2209,7 +2209,8 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
         {
             CAmount txfee = 0;
             CAmount specialTxFee = 0;
-            if (!Consensus::CheckTxInputs(tx, state, view, pindex->nHeight, txfee, specialTxFee)) {
+            bool isSyncing = IsInitialBlockDownload();
+            if (!Consensus::CheckTxInputs(tx, state, view, pindex->nHeight, txfee, specialTxFee, !isSyncing)) {
                 return error("%s: Consensus::CheckTxInputs: %s, %s", __func__, tx.GetHash().ToString(), FormatStateMessage(state));
             }
             nFees += txfee;

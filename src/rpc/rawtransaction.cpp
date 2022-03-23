@@ -36,6 +36,7 @@
 #include <evo/cbtx.h>
 #include <rpc/specialtx_utilities.h>
 #include <future/utils.h>
+#include <future/fee.h>
 
 #include <llmq/quorums_chainlocks.h>
 #include <llmq/quorums_commitment.h>
@@ -540,6 +541,7 @@ UniValue createrawtransaction(const JSONRPCRequest& request)
                 ftx.nVersion = CFutureTx::CURRENT_VERSION;
                 ftx.maturity = sendToValue["future_maturity"].get_int();
                 ftx.lockTime = sendToValue["future_locktime"].get_int();
+                ftx.fee = getFutureFees();
                 ftx.updatableByDestination = false;
                 rawTx.nType = TRANSACTION_FUTURE;
                 rawTx.nVersion = 3;

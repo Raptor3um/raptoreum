@@ -251,6 +251,7 @@ public:
 	int32_t maturity; // number of confirmations to be matured and spendable.
 	int32_t lockTime; // number of seconds for this transaction to be spendable
 	uint16_t lockOutputIndex; // vout index that is locked in this transaction
+    uint16_t fee; // fee was paid for this future in addition to miner fee. it is a whole non-decimal point value.
 	bool updatableByDestination = false; // true to allow some information of this transaction to be change by lockOutput address
 	uint16_t exChainType = 0; // external chain type. each 15 bit unsign number will be map to a external chain. i.e 0 for btc
 	CScript externalPayoutScript;

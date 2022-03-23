@@ -84,7 +84,9 @@ static bool CheckInputsHash(const CTransaction& tx, const ProTx& proTx, CValidat
 
 bool CheckFutureTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state)
 {
-    if(!sporkManager.IsSporkActive(SPORK_22_SPEICAL_TX_FEE)) {
+    int height = chainActive.Tip() == nullptr ? 0 : chainActive.Tip()->nHeight;
+    bool isFutureActive = height >= Params().GetConsensus().nFutureForkBlock;
+    if(isFutureActive) {
         return state.DoS(100, false, REJECT_INVALID, "future-not-enabled");
     }
     if (tx.nType != TRANSACTION_FUTURE) {
