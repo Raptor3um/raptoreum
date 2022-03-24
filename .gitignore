@@ -149,3 +149,5 @@ dist/
 .settings/language.settings.xml
 
 /raptoreum.iml
+/testnet3_binary/
+/testnet4/

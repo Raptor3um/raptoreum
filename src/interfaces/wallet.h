@@ -163,7 +163,6 @@ public:
         CAmount& fee,
         std::string& fail_reason,
         int nExtraPayloadSize = 0,
-        CAmount specialFees = 0,
         FuturePartialPayload* fpp = nullptr) = 0;
 
     //! Return whether transaction can be abandoned.

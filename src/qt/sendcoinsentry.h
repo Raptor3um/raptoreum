@@ -25,7 +25,7 @@ class SendCoinsEntry : public QStackedWidget
     Q_OBJECT
 
 public:
-    explicit SendCoinsEntry(QWidget* parent = 0);
+    explicit SendCoinsEntry(QWidget* parent = 0, bool hideFuture = false);
     ~SendCoinsEntry();
 
     void setModel(WalletModel *model);
@@ -38,6 +38,7 @@ public:
     void setValue(const SendCoinsRecipient &value);
     void setAddress(const QString &address);
     void setAmount(const CAmount &amount);
+    void SetFutureVisible(const bool visible);
 
     /** Set up the tab chain manually, as Qt messes up the tab chain by default in some cases
      *  (issue https://bugreports.qt-project.org/browse/QTBUG-10907).
@@ -63,6 +64,7 @@ private Q_SLOTS:
     void on_addressBookButton_clicked();
     void on_pasteButton_clicked();
     void updateDisplayUnit();
+    void futureToggleChanged();
 
 protected:
     void changeEvent(QEvent* e);

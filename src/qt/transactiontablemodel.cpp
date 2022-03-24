@@ -95,7 +95,7 @@ public:
         if (hash == uint256() && status == CT_UPDATED)
         {
             parent->beginResetModel();
-            refreshWallet();
+            refreshWallet(wallet);
             parent->endResetModel();
             return;
         }

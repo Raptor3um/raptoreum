@@ -36,6 +36,7 @@
 #include <evo/cbtx.h>
 #include <rpc/specialtx_utilities.h>
 #include <future/utils.h>
+#include <future/fee.h>
 
 #include <llmq/quorums_chainlocks.h>
 #include <llmq/quorums_commitment.h>
@@ -402,6 +403,15 @@ UniValue createrawtransaction(const JSONRPCRequest& request)
             "      \"address\": x.xxx,    (obj, optional) A key-value pair. The key (string) is the dash address, the value (float or string) is the amount in " + CURRENCY_UNIT + "\n"
             "    },\n"
             "    {\n"
+            "      \"address\":           (obj, optional) A key-value pair. The key (string) is the raptoreum address, value is a json string, numberic pair for future_maturity, future_locktime, and future_amount\n"
+            "                                   There can only one address contain future information. A future transaction is mature when there is enough confiration (future_maturity) or time (future_locktime)\n"
+            "        {\n"
+            "           \"future_maturity\":n, (numeric, required) number of confirmation for this future to mature.\n"
+            "           \"future_locktime\":n  (numeric, required) total time in seconds from its first confirmation for this future to mature\n"
+            "           \"future_amount\":n    (numeric, required) raptoreum amount to be locked\n"
+            "         }\n"
+            "    },\n"                                                                                                                                                                                                                                                                                                                                              "    },\n"
+            "    {\n"
             "      \"data\": \"hex\"        (obj, optional) A key-value pair. The key must be \"data\", the value is hex encoded data\n"
             "    }\n"
             "    ,...                     More key-value pairs of the above form. For compatibility reasons, a dictionary, which holds the key-value pairs directly, is also\n"
@@ -476,6 +486,8 @@ UniValue createrawtransaction(const JSONRPCRequest& request)
     }
 
     std::set<CTxDestination> destinations;
+    bool hasFuture = false;
+    CFutureTx ftx;
     if (!outputs_is_obj) {
         // Translate array of key-value pairs into dict
         UniValue outputs_dict = UniValue(UniValue::VOBJ);
@@ -508,13 +520,42 @@ UniValue createrawtransaction(const JSONRPCRequest& request)
             }
 
             CScript scriptPubKey = GetScriptForDestination(destination);
-            CAmount nAmount = AmountFromValue(outputs[name_]);
-
+            UniValue sendToValue = outputs[name_];
+            CAmount nAmount;
+            if(sendToValue.isObject()) {
+                if(hasFuture) {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("can only send future to one address"));
+                }
+                if(sendToValue["future_maturity"].isNull()) {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("no future_maturity is specified "));
+                }
+                if(sendToValue["future_locktime"].isNull()) {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("no future_locktime is specified "));
+                }
+                if(sendToValue["future_amount"].isNull()) {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("no future_amount is specified "));
+                }
+                hasFuture = true;
+                nAmount = AmountFromValue(sendToValue["future_amount"]);
+                ftx.lockOutputIndex = rawTx.vout.size();
+                ftx.nVersion = CFutureTx::CURRENT_VERSION;
+                ftx.maturity = sendToValue["future_maturity"].get_int();
+                ftx.lockTime = sendToValue["future_locktime"].get_int();
+                ftx.fee = getFutureFees();
+                ftx.updatableByDestination = false;
+                rawTx.nType = TRANSACTION_FUTURE;
+                rawTx.nVersion = 3;
+            } else {
+                nAmount = AmountFromValue(sendToValue);
+            }
             CTxOut out(nAmount, scriptPubKey);
             rawTx.vout.push_back(out);
         }
     }
-
+    if(hasFuture) {
+        UpdateSpecialTxInputsHash(rawTx, ftx);
+        SetTxPayload(rawTx, ftx);
+    }
     return EncodeHexTx(rawTx);
 }
 
@@ -1152,7 +1193,6 @@ UniValue sendrawtransaction(const JSONRPCRequest& request)
     }
 
     } // cs_main
-
     promise.get_future().wait();
 
     if(!g_connman)

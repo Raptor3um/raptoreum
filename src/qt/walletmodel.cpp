@@ -20,8 +20,6 @@
 #include <util.h> // for GetBoolArg
 #include <wallet/coincontrol.h>
 #include <wallet/wallet.h>
-#include <future/fee.h>
-
 #include <spork.h>
 
 #include <stdint.h>
@@ -184,7 +182,8 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
 
     QSet<QString> setAddress; // Used to detect duplicates
     int nAddresses = 0;
-
+    FuturePartialPayload fpp;
+    bool hasFuture = false;
     // Pre-check input data for validity
     for (const SendCoinsRecipient &rcp : recipients)
     {
@@ -227,6 +226,13 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
 
             CScript scriptPubKey = GetScriptForDestination(DecodeDestination(rcp.address.toStdString()));
             CRecipient recipient = {scriptPubKey, rcp.amount, rcp.fSubtractFeeFromAmount};
+            if(rcp.isFutureOutput) {
+                hasFuture = true;
+                fpp.futureRecScript = scriptPubKey;
+                fpp.maturity = rcp.maturity;
+                fpp.locktime = rcp.locktime;
+            }
+
             vecSend.push_back(recipient);
 
             total += rcp.amount;
@@ -249,7 +255,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
     int nChangePosRet = -1;
 
     auto& newTx = transaction.getWtx();
-    newTx = m_wallet->createTransaction(vecSend, coinControl, true /* sign */, nChangePosRet, nFeeRequired, strFailReason);
+    newTx = m_wallet->createTransaction(vecSend, coinControl, true /* sign */, nChangePosRet, nFeeRequired, strFailReason, 0, hasFuture ? &fpp : nullptr);
     transaction.setTransactionFee(nFeeRequired);
     if (fSubtractFeeFromAmount && newTx)
         transaction.reassignAmounts();
@@ -440,8 +446,7 @@ WalletModel::SendFuturesReturn WalletModel::prepareFuturesTransaction(WalletMode
     int nChangePosRet = -1;
 
     auto& newTx = transaction.getWtx();
-    CAmount futureFee = getFutureFees();
-    newTx = m_wallet->createTransaction(vecSend, coinControl, true /* sign */, nChangePosRet, nFeeRequired, strFailReason, 0, futureFee, &fpp);
+    newTx = m_wallet->createTransaction(vecSend, coinControl, true /* sign */, nChangePosRet, nFeeRequired, strFailReason, 0, &fpp);
     transaction.setTransactionFee(nFeeRequired);
     if (newTx) {
         transaction.reassignAmounts();

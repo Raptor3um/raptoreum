@@ -24,7 +24,7 @@ std::vector<CSporkDef> sporkDefs = {
     MAKE_SPORK_DEF(SPORK_17_QUORUM_DKG_ENABLED,            4070908800ULL), // OFF
     MAKE_SPORK_DEF(SPORK_19_CHAINLOCKS_ENABLED,            4070908800ULL), // OFF
     MAKE_SPORK_DEF(SPORK_21_LOW_LLMQ_PARAMS,               4070908800ULL), // OFF
-    MAKE_SPORK_DEF(SPORK_22_SPEICAL_TX_FEE,                100ULL), // default values for special tx fee
+    MAKE_SPORK_DEF(SPORK_22_SPECIAL_TX_FEE,                4070908800ULL), // OFF mean chain would take any fee for special tx as valid
     MAKE_SPORK_DEF(SPORK_23_QUORUM_ALL_CONNECTED,          4070908800ULL), // OFF
     MAKE_SPORK_DEF(SPORK_24_PS_MORE_PARTICIPANTS,          4070908800ULL), // OFF
     MAKE_SPORK_DEF(SPORK_25_QUORUM_POSE,                   4070908800ULL), // OFF

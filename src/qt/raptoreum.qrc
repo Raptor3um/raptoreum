@@ -1,5 +1,7 @@
 <!DOCTYPE RCC><RCC version="1.0">
     <qresource prefix="/icons">
+        <file alias="about">res/icons/about.png</file>
+        <file alias="about_qt">res/icons/about_qt.png</file>
         <file alias="add">res/icons/add.png</file>
         <file alias="address-book">res/icons/address-book.png</file>
         <file alias="arrow_left">res/icons/arrow_left.png</file>

@@ -208,6 +208,7 @@ struct Params {
     FutureRewardShare nFutureRewardShare;
     SmartnodeCollaterals nCollaterals;
     int smartnodePaymentFixedBlock;
+    int nFutureForkBlock;
 
 };
 } // namespace Consensus

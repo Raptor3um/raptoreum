@@ -7,10 +7,16 @@
 #include <evo/specialtx.h>
 #include <evo/providertx.h>
 
-CAmount getFutureFees() {
-	int64_t specialTxValue = sporkManager.GetSporkValue(SPORK_22_SPEICAL_TX_FEE);
-	int futureTxFee = specialTxValue & 0xff;
-	return futureTxFee * COIN;
+CAmount getFutureFeesCoin() {
+	return getFutureFees() * COIN;
+}
+
+uint16_t getFutureFees() {
+    if(!sporkManager.IsSporkActive(SPORK_22_SPECIAL_TX_FEE)) {
+        return 0;
+    }
+    int64_t specialTxValue = sporkManager.GetSporkValue(SPORK_22_SPECIAL_TX_FEE);
+    return specialTxValue & 0xff;
 }
 
 //void maybeSetPayload(Coin& coin, const COutPoint& outpoint, const int16_t& nType, const std::vector<uint8_t>& vExtraPayload) {

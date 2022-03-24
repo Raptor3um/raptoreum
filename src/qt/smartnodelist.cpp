@@ -229,6 +229,12 @@ void SmartnodeList::updateDIP3List()
         // Address, Protocol, Status, Active Seconds, Last Seen, Pub Key
         auto addr_key = dmn->pdmnState->addr.GetKey();
         QByteArray addr_ba(reinterpret_cast<const char*>(addr_key.data()), addr_key.size());
+        Coin coin;
+        //should this be call directly or use pcoinsTip->GetCoin(outpoint, coin) without locking cs_main
+        bool isValidUtxo = GetUTXOCoin(dmn->collateralOutpoint, coin);
+        SmartnodeCollaterals collaterals = Params().GetConsensus().nCollaterals;
+        int nHeight = chainActive.Tip() == nullptr ? 0 : chainActive.Tip()->nHeight;
+        QTableWidgetItem* collateralAmountItem = new QTableWidgetItem(!isValidUtxo ? tr("Invalid") : QString::number(coin.out.nValue / COIN));
         QTableWidgetItem* addressItem = new CSmartnodeListWidgetItem<QByteArray>(QString::fromStdString(dmn->pdmnState->addr.ToString()), addr_ba);
         QTableWidgetItem* statusItem = new QTableWidgetItem(mnList.IsMNValid(dmn) ? tr("ENABLED") : (mnList.IsMNPoSeBanned(dmn) ? tr("POSE_BANNED") : tr("UNKNOWN")));
         QTableWidgetItem* PoSeScoreItem = new CSmartnodeListWidgetItem<int>(QString::number(dmn->pdmnState->nPoSePenalty), dmn->pdmnState->nPoSePenalty);
@@ -292,6 +298,7 @@ void SmartnodeList::updateDIP3List()
                           payeeItem->text() + " " +
                           operatorRewardItem->text() + " " +
                           collateralItem->text() + " " +
+                          collateralAmountItem->text() + " " +
                           ownerItem->text() + " " +
                           votingItem->text() + " " +
                           proTxHashItem->text();

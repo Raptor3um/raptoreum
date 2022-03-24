@@ -11,6 +11,7 @@
 
 #include <chainparams.h>
 #include <future/fee.h>
+#include <spork.h>
 //#include <future/utils.h>
 #include <evo/specialtx.h>
 #include <evo/providertx.h>
@@ -23,18 +24,26 @@
 
 extern CChain& chainActive;
 
-static void checkSpecialTxFee(const CTransaction &tx, CAmount& nFeeTotal, CAmount& specialTxFee) {
+static bool checkSpecialTxFee(const CTransaction &tx, CAmount& nFeeTotal, CAmount& specialTxFee, bool fFeeVerify = false) {
 	if(tx.nVersion >= 3) {
 		switch(tx.nType){
 		case TRANSACTION_FUTURE:
 			CFutureTx ftx;
 			if(GetTxPayload(tx.vExtraPayload, ftx)) {
-				specialTxFee = getFutureFees();
-				nFeeTotal -= specialTxFee;
+                if(!Params().IsFutureActive(chainActive.Tip())) {
+                    return false;
+                }
+                bool futureEnabled = sporkManager.IsSporkActive(SPORK_22_SPECIAL_TX_FEE);
+                if(futureEnabled && fFeeVerify && ftx.fee != getFutureFees()) {
+                    return false;
+                }
+                specialTxFee = ftx.fee * COIN;
+                nFeeTotal -= specialTxFee;
 			}
 			break;
 		}
 	}
+    return true;
 }
 
 static const char *validateFutureCoin(const Coin& coin, int nSpendHeight) {
@@ -42,14 +51,11 @@ static const char *validateFutureCoin(const Coin& coin, int nSpendHeight) {
 		CBlockIndex* confirmedBlockIndex = chainActive[coin.nHeight];
 		if(confirmedBlockIndex) {
 			int64_t adjustCurrentTime = GetAdjustedTime();
-			uint32_t confirmedTime = confirmedBlockIndex->nTime;
+			uint32_t confirmedTime = confirmedBlockIndex->GetBlockTime();
 			CFutureTx futureTx;
-			//std::cout << "futuretx checking" << endl;
 			if(GetTxPayload(coin.vExtraPayload, futureTx)) {
-				//std::cout << "futuretx extract" << endl;
 				bool isBlockMature = futureTx.maturity > 0 && nSpendHeight - coin.nHeight >= futureTx.maturity;
 				bool isTimeMature = futureTx.lockTime > 0 && adjustCurrentTime - confirmedTime  >= futureTx.lockTime;
-				//std::cout << "isBlockMature " << isBlockMature << " isTimeMature " << isTimeMature << endl;
 				bool canSpend = isBlockMature || isTimeMature;
 				if(!canSpend) {
 					return "bad-txns-premature-spend-of-future";
@@ -72,7 +78,7 @@ bool IsFinalTx(const CTransaction &tx, int nBlockHeight, int64_t nBlockTime)
     if ((int64_t)tx.nLockTime < ((int64_t)tx.nLockTime < LOCKTIME_THRESHOLD ? (int64_t)nBlockHeight : nBlockTime))
         return true;
     for (const auto& txin : tx.vin) {
-        if (!(txin.nSequence == CTxIn::SEQUENCE_FINAL))
+        if (txin.nSequence != CTxIn::SEQUENCE_FINAL)
             return false;
     }
     return true;
@@ -251,7 +257,6 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, int nHeig
 		FounderPayment founderPayment = Params().GetConsensus().nFounderPayment;
 		CAmount founderReward = founderPayment.getFounderPaymentAmount(nHeight, blockReward);
 		int founderStartHeight = founderPayment.getStartBlock();
-		//std::cout << "height=" << nHeight << ", reward=" << founderReward << endl;
 		if(nHeight > founderStartHeight && founderReward && !founderPayment.IsBlockPayeeValid(tx,nHeight,blockReward)) {
 			return state.DoS(100, false, REJECT_INVALID, "bad-cb-founder-payment-not-found");
 		}
@@ -266,7 +271,7 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, int nHeig
     return true;
 }
 
-bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight, CAmount& txfee, CAmount& specialTxFee)
+bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight, CAmount& txfee, CAmount& specialTxFee, bool fFeeVerify)
 {
     // are the actual inputs available?
     if (!inputs.HaveInputs(tx)) {
@@ -311,7 +316,12 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
         return state.DoS(100, false, REJECT_INVALID, "bad-txns-fee-outofrange");
     }
     txfee = txfee_aux;
-	checkSpecialTxFee(tx, txfee, specialTxFee);
+
+	if(!checkSpecialTxFee(tx, txfee, specialTxFee, fFeeVerify)) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-txns-wrong-future-fee-or-not-enable");
+
+    }
+
 	if(txfee < 0) {
 		return state.DoS(100, false, REJECT_INVALID, "bad-txns-fee-too-low", false,
 		            strprintf("fee (%s), special tx fee (%s)", FormatMoney(txfee), FormatMoney(specialTxFee)));
