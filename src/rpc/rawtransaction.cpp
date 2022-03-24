@@ -400,7 +400,7 @@ UniValue createrawtransaction(const JSONRPCRequest& request)
             "2. \"outputs\"               (array, required) a json array with outputs (key-value pairs)\n"
             "   [\n"
             "    {\n"
-            "      \"address\": x.xxx,    (obj, optional) A key-value pair. The key (string) is the dash address, the value (float or string) is the amount in " + CURRENCY_UNIT + "\n"
+            "      \"address\": x.xxx,    (obj, optional) A key-value pair. The key (string) is the raptoreum address, the value (float or string) is the amount in " + CURRENCY_UNIT + "\n"
             "    },\n"
             "    {\n"
             "      \"address\":           (obj, optional) A key-value pair. The key (string) is the raptoreum address, value is a json string, numberic pair for future_maturity, future_locktime, and future_amount\n"
@@ -536,6 +536,7 @@ UniValue createrawtransaction(const JSONRPCRequest& request)
                     throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("no future_amount is specified "));
                 }
                 hasFuture = true;
+                nAmount = AmountFromValue(sendToValue["future_amount"]);
                 nAmount = AmountFromValue(sendToValue["future_amount"]);
                 ftx.lockOutputIndex = rawTx.vout.size();
                 ftx.nVersion = CFutureTx::CURRENT_VERSION;

@@ -31,7 +31,7 @@ SendCoinsEntry::SendCoinsEntry(QWidget* parent, bool hideFuture) :
 
     setButtonIcons();
 
-    // normal dash address field
+    // normal raptoreum address field
     GUIUtil::setupAddressWidget(ui->payTo, this, true);
 
     GUIUtil::setFont({ui->payToLabel,
