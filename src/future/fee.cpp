@@ -11,8 +11,8 @@ CAmount getFutureFeesCoin() {
 	return getFutureFees() * COIN;
 }
 
-CAmount getFutureFees() {
-    if(sporkManager.IsSporkActive(SPORK_22_SPEICAL_TX_FEE)) {
+uint16_t getFutureFees() {
+    if(!sporkManager.IsSporkActive(SPORK_22_SPEICAL_TX_FEE)) {
         return 0;
     }
     int64_t specialTxValue = sporkManager.GetSporkValue(SPORK_22_SPEICAL_TX_FEE);

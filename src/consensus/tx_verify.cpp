@@ -30,9 +30,7 @@ static bool checkSpecialTxFee(const CTransaction &tx, CAmount& nFeeTotal, CAmoun
 		case TRANSACTION_FUTURE:
 			CFutureTx ftx;
 			if(GetTxPayload(tx.vExtraPayload, ftx)) {
-                int height = chainActive.Tip() == nullptr ? 0 : chainActive.Tip()->nHeight;
-                bool isFutureActive = height >= Params().GetConsensus().nFutureForkBlock;
-                if(!isFutureActive) {
+                if(!Params().IsFutureActive(chainActive.Tip())) {
                     return false;
                 }
                 bool futureEnabled = sporkManager.IsSporkActive(SPORK_22_SPEICAL_TX_FEE);
@@ -80,7 +78,7 @@ bool IsFinalTx(const CTransaction &tx, int nBlockHeight, int64_t nBlockTime)
     if ((int64_t)tx.nLockTime < ((int64_t)tx.nLockTime < LOCKTIME_THRESHOLD ? (int64_t)nBlockHeight : nBlockTime))
         return true;
     for (const auto& txin : tx.vin) {
-        if (!(txin.nSequence == CTxIn::SEQUENCE_FINAL))
+        if (txin.nSequence != CTxIn::SEQUENCE_FINAL)
             return false;
     }
     return true;

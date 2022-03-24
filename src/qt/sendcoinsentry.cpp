@@ -135,7 +135,7 @@ void SendCoinsEntry::futureToggleChanged() {
     bool isFuture = ui->futureCb->isChecked();
     if(isFuture) {
         char feeDisplay[18];
-        sprintf(feeDisplay, "%ld RTM", getFutureFees());
+        sprintf(feeDisplay, "%d RTM", getFutureFees());
         ui->feeDisplay->setText(feeDisplay);
     }
     ui->maturityLb->setVisible(isFuture);
@@ -330,4 +330,12 @@ bool SendCoinsEntry::updateLabel(const QString &address)
     }
 
     return false;
+}
+
+void SendCoinsEntry::SetFutureVisible(bool visible) {
+    if(!visible) {
+        ui->futureCb->setChecked(false);
+    }
+    futureToggleChanged();
+    ui->futureCb->setVisible(visible);
 }

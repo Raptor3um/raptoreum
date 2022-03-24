@@ -265,7 +265,7 @@ void WalletView::gotoReceiveCoinsPage()
 void WalletView::gotoSendCoinsPage(QString addr)
 {
     setCurrentWidget(sendCoinsPage);
-
+    sendCoinsPage->OnDisplay();
     if (!addr.isEmpty()) {
         sendCoinsPage->setAddress(addr);
     }

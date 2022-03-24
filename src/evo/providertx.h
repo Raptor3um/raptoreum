@@ -269,7 +269,8 @@ public:
         READWRITE(maturity);
 		READWRITE(lockTime);
 		READWRITE(lockOutputIndex);
-		READWRITE(updatableByDestination);
+        READWRITE(fee);
+        READWRITE(updatableByDestination);
 		READWRITE(exChainType);
 		READWRITE(externalPayoutScript);
 		READWRITE(externalTxid);
@@ -286,7 +287,8 @@ public:
 		obj.pushKV("maturity", maturity);
 		obj.pushKV("lockTime",(int)lockTime);
 		obj.pushKV("lockOutputIndex", (int)lockOutputIndex);
-		obj.pushKV("updatableByDestination", updatableByDestination);
+        obj.pushKV("fee", fee);
+        obj.pushKV("updatableByDestination", updatableByDestination);
 		obj.pushKV("exChainType", exChainType);
 		CTxDestination dest;
 		if (ExtractDestination(externalPayoutScript, dest)) {

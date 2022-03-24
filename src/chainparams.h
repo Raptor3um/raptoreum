@@ -10,6 +10,7 @@
 #include <consensus/params.h>
 #include <primitives/block.h>
 #include <protocol.h>
+#include <chain.h>
 
 #include <memory>
 #include <vector>
@@ -100,6 +101,11 @@ public:
     int PoolMaxParticipants() const { return nPoolMaxParticipants; }
     int PoolNewMaxParticipants() const { return nPoolNewMaxParticipants; }
     int FulfilledRequestExpireTime() const { return nFulfilledRequestExpireTime; }
+    bool IsFutureActive(CBlockIndex *index) const {
+        int height = index == nullptr ? 0 : index->nHeight;
+        cout << "IsFutureActive height " << height << "\n";
+        return height >= GetConsensus().nFutureForkBlock;
+    };
     const std::vector<std::string>& SporkAddresses() const { return vSporkAddresses; }
     int MinSporkKeys() const { return nMinSporkKeys; }
     bool BIP9CheckSmartnodesUpgraded() const { return fBIP9CheckSmartnodesUpgraded; }
