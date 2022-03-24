@@ -237,7 +237,7 @@ void SendCoinsDialog::OnDisplay() {
     for (int i = 0; i < ui->entries->count(); ++i) {
         SendCoinsEntry *entry = qobject_cast<SendCoinsEntry*>(ui->entries->itemAt(i)->widget());
         if(entry) {
-            entry->SetFutureVisible(sporkManager.IsSporkActive(SPORK_22_SPEICAL_TX_FEE) && i == 0);
+            entry->SetFutureVisible(sporkManager.IsSporkActive(SPORK_22_SPECIAL_TX_FEE) && i == 0);
         }
     }
 }
@@ -517,7 +517,7 @@ void SendCoinsDialog::accept()
 SendCoinsEntry *SendCoinsDialog::addEntry()
 {
 
-    SendCoinsEntry* entry = new SendCoinsEntry(this, sporkManager.IsSporkActive(SPORK_22_SPEICAL_TX_FEE)
+    SendCoinsEntry* entry = new SendCoinsEntry(this, sporkManager.IsSporkActive(SPORK_22_SPECIAL_TX_FEE)
                                                                             && ui->entries->count() != 0);
     entry->setModel(model);
     ui->entries->addWidget(entry);

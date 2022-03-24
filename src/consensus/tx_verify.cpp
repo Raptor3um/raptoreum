@@ -33,7 +33,7 @@ static bool checkSpecialTxFee(const CTransaction &tx, CAmount& nFeeTotal, CAmoun
                 if(!Params().IsFutureActive(chainActive.Tip())) {
                     return false;
                 }
-                bool futureEnabled = sporkManager.IsSporkActive(SPORK_22_SPEICAL_TX_FEE);
+                bool futureEnabled = sporkManager.IsSporkActive(SPORK_22_SPECIAL_TX_FEE);
                 if(futureEnabled && fFeeVerify && ftx.fee != getFutureFees()) {
                     return false;
                 }

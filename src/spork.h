@@ -28,7 +28,7 @@ enum SporkId : int32_t {
     SPORK_17_QUORUM_DKG_ENABLED                            = 10016,
     SPORK_19_CHAINLOCKS_ENABLED                            = 10018,
     SPORK_21_LOW_LLMQ_PARAMS                        	   = 10020,
-    SPORK_22_SPEICAL_TX_FEE                                = 10021,
+    SPORK_22_SPECIAL_TX_FEE                                = 10021,
     SPORK_23_QUORUM_ALL_CONNECTED                          = 10023,
     SPORK_24_PS_MORE_PARTICIPANTS                          = 10024,
     SPORK_25_QUORUM_POSE                                   = 10025,
