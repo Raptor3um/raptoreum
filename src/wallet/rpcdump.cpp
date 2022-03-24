@@ -305,6 +305,47 @@ UniValue importaddress(const JSONRPCRequest& request)
     return NullUniValue;
 }
 
+UniValue removeaddress(const JSONRPCRequest& request)
+{
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    CWallet* const pwallet = wallet.get();
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
+
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 4)
+        throw std::runtime_error(
+            "removeaddress \"address\"\n"
+            "\nRemoves a watch-only address. Requires a new wallet backup.\n"
+            "\nArguments:\n"
+            "1. \"address\"           (string, required) The watch-only address\n"
+            "\nExample:\n"
+            "\nRemove a watch-only address\n"
+            + HelpExampleCli("removeaddress", "\"address\"") +
+            "\nAs a JSON-RPC call\n"
+            + HelpExampleRpc("removeaddress", "\"address\"")
+        );
+
+    LOCK2(cs_main, pwallet->cs_wallet);
+    CTxDestination address = DecodeDestination(request.params[0].get_str());
+    if (IsValidDestination(address)) {
+        if (!(IsMine(*pwallet, address) & ISMINE_WATCH_ONLY)) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Raptoreum address - must be watch-only");
+        }
+        // Remove from address book
+        pwallet->DelAddressBook(address);
+
+        // And remove the transactions:
+        CScript script = GetScriptForDestination(address);
+        pwallet->RemoveWatchOnly(script);
+        pwallet->MarkDirty();
+    } else {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Raptoreum address");
+    }
+
+    return NullUniValue;
+}
+
 UniValue importprunedfunds(const JSONRPCRequest& request)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
