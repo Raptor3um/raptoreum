@@ -16,10 +16,10 @@
 #include <univalue.h>
 
 class CBlockIndex;
+
 class CCoinsViewCache;
 
-class CProRegTx
-{
+class CProRegTx {
 public:
     static const uint16_t CURRENT_VERSION = 1;
 
@@ -27,7 +27,7 @@ public:
     uint16_t nVersion{CURRENT_VERSION};                    // message version
     uint16_t nType{0};                                     // only 0 supported for now
     uint16_t nMode{0};                                     // only 0 supported for now
-    COutPoint collateralOutpoint{uint256(), (uint32_t)-1}; // if hash is null, we refer to a ProRegTx output
+    COutPoint collateralOutpoint{uint256(), (uint32_t) -1}; // if hash is null, we refer to a ProRegTx output
     CService addr;
     CKeyID keyIDOwner;
     CBLSPublicKey pubKeyOperator;
@@ -40,9 +40,8 @@ public:
 public:
     ADD_SERIALIZE_METHODS;
 
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
-    {
+    template<typename Stream, typename Operation>
+    inline void SerializationOp(Stream &s, Operation ser_action) {
         READWRITE(nVersion);
         READWRITE(nType);
         READWRITE(nMode);
@@ -65,13 +64,12 @@ public:
 
     std::string ToString() const;
 
-    void ToJson(UniValue& obj) const
-    {
+    void ToJson(UniValue &obj) const {
         obj.clear();
         obj.setObject();
         obj.pushKV("version", nVersion);
         obj.pushKV("collateralHash", collateralOutpoint.hash.ToString());
-        obj.pushKV("collateralIndex", (int)collateralOutpoint.n);
+        obj.pushKV("collateralIndex", (int) collateralOutpoint.n);
         obj.pushKV("service", addr.ToString(false));
         obj.pushKV("ownerAddress", EncodeDestination(keyIDOwner));
         obj.pushKV("votingAddress", EncodeDestination(keyIDVoting));
@@ -81,14 +79,13 @@ public:
             obj.pushKV("payoutAddress", EncodeDestination(dest));
         }
         obj.pushKV("pubKeyOperator", pubKeyOperator.ToString());
-        obj.pushKV("operatorReward", (double)nOperatorReward / 100);
+        obj.pushKV("operatorReward", (double) nOperatorReward / 100);
 
         obj.pushKV("inputsHash", inputsHash.ToString());
     }
 };
 
-class CProUpServTx
-{
+class CProUpServTx {
 public:
     static const uint16_t CURRENT_VERSION = 1;
 
@@ -103,9 +100,8 @@ public:
 public:
     ADD_SERIALIZE_METHODS;
 
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
-    {
+    template<typename Stream, typename Operation>
+    inline void SerializationOp(Stream &s, Operation ser_action) {
         READWRITE(nVersion);
         READWRITE(proTxHash);
         READWRITE(addr);
@@ -119,8 +115,7 @@ public:
 public:
     std::string ToString() const;
 
-    void ToJson(UniValue& obj) const
-    {
+    void ToJson(UniValue &obj) const {
         obj.clear();
         obj.setObject();
         obj.pushKV("version", nVersion);
@@ -134,8 +129,7 @@ public:
     }
 };
 
-class CProUpRegTx
-{
+class CProUpRegTx {
 public:
     static const uint16_t CURRENT_VERSION = 1;
 
@@ -152,9 +146,8 @@ public:
 public:
     ADD_SERIALIZE_METHODS;
 
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
-    {
+    template<typename Stream, typename Operation>
+    inline void SerializationOp(Stream &s, Operation ser_action) {
         READWRITE(nVersion);
         READWRITE(proTxHash);
         READWRITE(nMode);
@@ -170,8 +163,7 @@ public:
 public:
     std::string ToString() const;
 
-    void ToJson(UniValue& obj) const
-    {
+    void ToJson(UniValue &obj) const {
         obj.clear();
         obj.setObject();
         obj.pushKV("version", nVersion);
@@ -186,8 +178,7 @@ public:
     }
 };
 
-class CProUpRevTx
-{
+class CProUpRevTx {
 public:
     static const uint16_t CURRENT_VERSION = 1;
 
@@ -210,9 +201,8 @@ public:
 public:
     ADD_SERIALIZE_METHODS;
 
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
-    {
+    template<typename Stream, typename Operation>
+    inline void SerializationOp(Stream &s, Operation ser_action) {
         READWRITE(nVersion);
         READWRITE(proTxHash);
         READWRITE(nReason);
@@ -225,16 +215,16 @@ public:
 public:
     std::string ToString() const;
 
-    void ToJson(UniValue& obj) const
-    {
+    void ToJson(UniValue &obj) const {
         obj.clear();
         obj.setObject();
         obj.pushKV("version", nVersion);
         obj.pushKV("proTxHash", proTxHash.ToString());
-        obj.pushKV("reason", (int)nReason);
+        obj.pushKV("reason", (int) nReason);
         obj.pushKV("inputsHash", inputsHash.ToString());
     }
 };
+
 /**
  * Future transaction is a transaction locks by maturity (number of block confirmation) or
  * by lockTime (number of second from its first confirm time) whichever come later.
@@ -245,69 +235,73 @@ public:
  */
 class CFutureTx {
 public:
-	static const uint16_t CURRENT_VERSION = 1;
+    static const uint16_t CURRENT_VERSION = 1;
 
-	uint16_t nVersion{CURRENT_VERSION};// message version
-	int32_t maturity; // number of confirmations to be matured and spendable.
-	int32_t lockTime; // number of seconds for this transaction to be spendable
-	uint16_t lockOutputIndex; // vout index that is locked in this transaction
+    uint16_t nVersion{CURRENT_VERSION};// message version
+    int32_t maturity; // number of confirmations to be matured and spendable.
+    int32_t lockTime; // number of seconds for this transaction to be spendable
+    uint16_t lockOutputIndex; // vout index that is locked in this transaction
     uint16_t fee; // fee was paid for this future in addition to miner fee. it is a whole non-decimal point value.
-	bool updatableByDestination = false; // true to allow some information of this transaction to be change by lockOutput address
-	uint16_t exChainType = 0; // external chain type. each 15 bit unsign number will be map to a external chain. i.e 0 for btc
-	CScript externalPayoutScript;
+    bool updatableByDestination = false; // true to allow some information of this transaction to be change by lockOutput address
+    uint16_t exChainType = 0; // external chain type. each 15 bit unsign number will be map to a external chain. i.e 0 for btc
+    CScript externalPayoutScript;
     uint256 externalTxid;
     uint16_t externalConfirmations = 0;
-	uint256 inputsHash; // replay protection
+    uint256 inputsHash; // replay protection
 
 public:
-	ADD_SERIALIZE_METHODS;
+    ADD_SERIALIZE_METHODS;
 
-	template <typename Stream, typename Operation>
-	inline void SerializationOp(Stream& s, Operation ser_action)
-	{
-		READWRITE(nVersion);
+    template<typename Stream, typename Operation>
+    inline void SerializationOp(Stream &s, Operation ser_action) {
+        READWRITE(nVersion);
         READWRITE(maturity);
-		READWRITE(lockTime);
-		READWRITE(lockOutputIndex);
+        READWRITE(lockTime);
+        READWRITE(lockOutputIndex);
         READWRITE(fee);
         READWRITE(updatableByDestination);
-		READWRITE(exChainType);
-		READWRITE(externalPayoutScript);
-		READWRITE(externalTxid);
-		READWRITE(externalConfirmations);
-		READWRITE(inputsHash);
-	}
-  std::string ToString() const;
+        READWRITE(exChainType);
+        READWRITE(externalPayoutScript);
+        READWRITE(externalTxid);
+        READWRITE(externalConfirmations);
+        READWRITE(inputsHash);
+    }
 
-	void ToJson(UniValue& obj) const
-	{
-		obj.clear();
-		obj.setObject();
-		obj.pushKV("version", nVersion);
-		obj.pushKV("maturity", maturity);
-		obj.pushKV("lockTime",(int)lockTime);
-		obj.pushKV("lockOutputIndex", (int)lockOutputIndex);
+    std::string ToString() const;
+
+    void ToJson(UniValue &obj) const {
+        obj.clear();
+        obj.setObject();
+        obj.pushKV("version", nVersion);
+        obj.pushKV("maturity", maturity);
+        obj.pushKV("lockTime", (int) lockTime);
+        obj.pushKV("lockOutputIndex", (int) lockOutputIndex);
         obj.pushKV("fee", fee);
         obj.pushKV("updatableByDestination", updatableByDestination);
-		obj.pushKV("exChainType", exChainType);
-		CTxDestination dest;
-		if (ExtractDestination(externalPayoutScript, dest)) {
-		  obj.pushKV("votingAddress", EncodeDestination(dest));
-		} else {
-			obj.pushKV("externalPayoutAddress", "N/A");
-		}
-		obj.pushKV("externalTxid", externalTxid.ToString());
-		obj.pushKV("externalConfirmations", (int)externalConfirmations);
-		obj.pushKV("inputsHash", inputsHash.ToString());
-	}
+        obj.pushKV("exChainType", exChainType);
+        CTxDestination dest;
+        if (ExtractDestination(externalPayoutScript, dest)) {
+            obj.pushKV("votingAddress", EncodeDestination(dest));
+        } else {
+            obj.pushKV("externalPayoutAddress", "N/A");
+        }
+        obj.pushKV("externalTxid", externalTxid.ToString());
+        obj.pushKV("externalConfirmations", (int) externalConfirmations);
+        obj.pushKV("inputsHash", inputsHash.ToString());
+    }
 };
 
 
+bool CheckFutureTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CValidationState &state);
 
-bool CheckFutureTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state);
-bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, const CCoinsViewCache& view);
-bool CheckProUpServTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state);
-bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, const CCoinsViewCache& view);
-bool CheckProUpRevTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state);
+bool CheckProRegTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CValidationState &state,
+                   const CCoinsViewCache &view);
+
+bool CheckProUpServTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CValidationState &state);
+
+bool CheckProUpRegTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CValidationState &state,
+                     const CCoinsViewCache &view);
+
+bool CheckProUpRevTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CValidationState &state);
 
 #endif // BITCOIN_EVO_PROVIDERTX_H
