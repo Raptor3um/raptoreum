@@ -434,6 +434,7 @@ void BitcoinGUI::createActions()
     unlockWalletAction = new QAction(tr("&Unlock Wallet..."), this);
     unlockWalletAction->setToolTip(tr("Unlock wallet"));
     lockWalletAction = new QAction(tr("&Lock Wallet"), this);
+  
     signMessageAction = new QAction(QIcon(":/icons/edit"), tr("Sign &message..."), this);
     signMessageAction->setStatusTip(tr("Sign messages with your Raptoreum addresses to prove you own them"));
     verifyMessageAction = new QAction(QIcon(":/icons/transaction_0"), tr("&Verify message..."), this);
@@ -443,6 +444,7 @@ void BitcoinGUI::createActions()
     openInfoAction->setStatusTip(tr("Show diagnostic information"));
     openRPCConsoleAction = new QAction(QIcon(":/icons/debugwindow"), tr("&Debug console"), this);
     openRPCConsoleAction->setStatusTip(tr("Open debugging console"));
+
     openGraphAction = new QAction(QIcon(":/icons/connect_4"), tr("&Network Monitor"), this);
     openGraphAction->setStatusTip(tr("Show network monitor"));
     openPeersAction = new QAction(QIcon(":/icons/connect_4"), tr("&Peers list"), this);

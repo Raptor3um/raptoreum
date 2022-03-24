@@ -7,7 +7,6 @@
 #include <qt/guiutil.h>
 #include <netbase.h>
 #include <qt/walletmodel.h>
-#include <validation.h>
 
 #include <univalue.h>
 
@@ -316,7 +315,6 @@ void SmartnodeList::updateDIP3List()
         ui->tableWidgetSmartnodesDIP3->setItem(0, COLUMN_PAYOUT_ADDRESS, payeeItem);
         ui->tableWidgetSmartnodesDIP3->setItem(0, COLUMN_OPERATOR_REWARD, operatorRewardItem);
         ui->tableWidgetSmartnodesDIP3->setItem(0, COLUMN_COLLATERAL_ADDRESS, collateralItem);
-        ui->tableWidgetSmartnodesDIP3->setItem(0, COLUMN_COLLATERAL_AMOUNT, collateralAmountItem);
         ui->tableWidgetSmartnodesDIP3->setItem(0, COLUMN_OWNER_ADDRESS, ownerItem);
         ui->tableWidgetSmartnodesDIP3->setItem(0, COLUMN_VOTING_ADDRESS, votingItem);
         ui->tableWidgetSmartnodesDIP3->setItem(0, COLUMN_PROTX_HASH, proTxHashItem);
