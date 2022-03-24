@@ -89,7 +89,7 @@ struct CNodeStateStats {
 bool GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats);
 bool IsBanned(NodeId nodeid);
 
-// Upstream moved this into net_processing.cpp (13417), however since we use Misbehaving in a number of dash specific
+// Upstream moved this into net_processing.cpp (13417), however since we use Misbehaving in a number of raptoreum specific
 // files such as mnauth.cpp and governance.cpp it makes sense to keep it in the header
 /** Increase a node's misbehavior score. */
 void Misbehaving(NodeId nodeid, int howmuch, const std::string& message="") EXCLUSIVE_LOCKS_REQUIRED(cs_main);

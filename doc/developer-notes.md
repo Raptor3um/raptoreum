@@ -21,7 +21,7 @@ Developer Notes
     - [Threads](#threads)
     - [Ignoring IDE/editor files](#ignoring-ideeditor-files)
 - [Development guidelines](#development-guidelines)
-    - [General Dash Core](#general-dash-core)
+    - [General Raptoreum Core](#general-raptoreum-core)
     - [Wallet](#wallet)
     - [General C++](#general-c)
     - [C++ data structures](#c-data-structures)
@@ -219,7 +219,7 @@ that run in `-regtest` mode.
 
 ### DEBUG_LOCKORDER
 
-Dash Core is a multi-threaded application, and deadlocks or other
+Raptoreum Core is a multi-threaded application, and deadlocks or other
 multi-threading bugs can be very difficult to track down. The `--enable-debug`
 configure option adds `-DDEBUG_LOCKORDER` to the compiler flags. This inserts
 run-time checks to keep track of which locks are held, and adds warnings to the
@@ -229,7 +229,7 @@ debug.log file if inconsistencies are detected.
 
 Valgrind is a programming tool for memory debugging, memory leak detection, and
 profiling. The repo contains a Valgrind suppressions file
-([`valgrind.supp`](https://github.com/dashpay/dash/blob/master/contrib/valgrind.supp))
+([`valgrind.supp`](https://github.com/Raptor3um/raptoreum/blob/master/contrib/valgrind.supp))
 which includes known Valgrind warnings in our dependencies that cannot be fixed
 in-tree. Example use:
 
@@ -258,7 +258,7 @@ make cov
 
 **Sanitizers**
 
-Dash Core can be compiled with various "sanitizers" enabled, which add
+Raptoreum Core can be compiled with various "sanitizers" enabled, which add
 instrumentation for issues regarding things like memory safety, thread race
 conditions, or undefined behavior. This is controlled with the
 `--with-sanitizers` configure flag, which should be a comma separated list of
@@ -933,7 +933,7 @@ A few guidelines for introducing and reviewing new RPC interfaces:
   RPCs whose behavior does *not* depend on the current chainstate may omit this
   call.
 
-  - *Rationale*: In previous versions of Dash Core, the wallet was always
+  - *Rationale*: In previous versions of Raptoreum Core, the wallet was always
     in-sync with the chainstate (by virtue of them all being updated in the
     same cs_main lock). In order to maintain the behavior that wallet RPCs
     return results as of at least the highest best-known block an RPC

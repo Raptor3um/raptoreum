@@ -153,7 +153,7 @@ Help
 ---------------------
 `-?` will print a list of options and exit:
 
-    src/bench/bench_dash -?
+    src/bench/bench_raptoreum -?
 
 Notes
 ---------------------

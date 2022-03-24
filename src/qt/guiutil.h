@@ -320,7 +320,7 @@ namespace GUIUtil
     /** get font size with GUIUtil::fontScale applied */
     double getScaledFontSize(int nSize);
 
-    /** Load dash specific appliciation fonts */
+    /** Load raptoreum specific appliciation fonts */
     bool loadFonts();
     /** Check if the fonts have been loaded successfully */
     bool fontsLoaded();
