@@ -59,10 +59,6 @@ if test -z $enable_zmq && test -n "@no_zmq@"; then
   enable_zmq=no
 fi
 
-if test -n $disable_bip70 && test -n "@disable_bip70@"; then
-  disable_bip70=no
-fi
-
 if test -n "@debug@" && test -z "@no_qt@" && test "$with_gui" != "no"; then
   with_gui=qt5_debug
 fi

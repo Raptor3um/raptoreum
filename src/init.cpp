@@ -2301,7 +2301,7 @@ bool AppInitMain()
         vImportFiles.push_back(strFile);
     }
 
-    threadImport = std::thread(&TraceThread<std::function<void()>>, "raptoreum-loadblk", [=] { ThreadImport(vImportFiles); });
+    threadImport = std::thread(&TraceThread<std::function<void()>>, "loadblk", [=] { ThreadImport(vImportFiles); });
     //threadGroup.create_thread(std::bind(&ThreadImport, vImportFiles));
 
     // Wait for genesis block to be processed

@@ -6,7 +6,7 @@
 
 # Pattern rule to print variables, e.g. make print-top_srcdir
 print-%: FORCE
-    @echo '$*'='$($*)'
+	@echo '$*'='$($*)'
 
 DIST_SUBDIRS = secp256k1
 
@@ -264,11 +264,12 @@ BITCOIN_CORE_H = \
   ui_interface.h \
   undo.h \
   unordered_lru_cache.h \
-  util.h \
   utilmacro.h \
-  utilmemory.h \
   utilmoneystr.h \
+  util.h \
+  threadnames.h \
   utiltime.h \
+  utilmemory.h \
   validation.h \
   validationinterface.h \
   versionbits.h \
@@ -356,6 +357,7 @@ libraptoreum_server_a_SOURCES = \
   netfulfilledman.cpp \
   net_processing.cpp \
   node/coinstats.cpp \
+  ui_interface.cpp \
   noui.cpp \
   policy/fees.cpp \
   policy/policy.cpp \
@@ -380,7 +382,6 @@ libraptoreum_server_a_SOURCES = \
   torcontrol.cpp \
   txdb.cpp \
   txmempool.cpp \
-  ui_interface.cpp \
   validation.cpp \
   validationinterface.cpp \
   versionbits.cpp \
@@ -541,12 +542,12 @@ crypto_libraptoreum_crypto_arm_shani_a_SOURCES = crypto/sha256_arm_shani.cpp
 libraptoreum_consensus_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libraptoreum_consensus_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libraptoreum_consensus_a_SOURCES = \
-  amount.h \
-  founder_payment.h \
   arith_uint256.cpp \
   arith_uint256.h \
   bls/bls.cpp \
   bls/bls.h \
+  amount.h \
+  founder_payment.h \
   hash_selection.h \
   hash_selection.cpp \
   hash.cpp \
@@ -556,6 +557,8 @@ libraptoreum_consensus_a_SOURCES = \
   consensus/merkle.h \
   consensus/params.h \
   consensus/validation.h \
+  sync.cpp \
+  sync.h \
   prevector.h \
   primitives/block.cpp \
   primitives/block.h \
@@ -574,7 +577,6 @@ libraptoreum_consensus_a_SOURCES = \
   script/script_error.h \
   serialize.h \
   span.h \
-  streams.h \
   tinyformat.h \
   uint256.cpp \
   uint256.h \
@@ -642,9 +644,9 @@ libraptoreum_util_a_SOURCES = \
   sync.cpp \
   threadinterrupt.cpp \
   threadnames.cpp \
-  threadnames.h \
   util.cpp \
   utilmoneystr.cpp \
+  threadnames.cpp \
   utilstrencodings.cpp \
   utiltime.cpp \
   $(BITCOIN_CORE_H)
@@ -673,8 +675,8 @@ raptoreumd_LDADD = \
   $(LIBBITCOIN_SERVER) \
   $(LIBBITCOIN_WALLET) \
   $(LIBBITCOIN_COMMON) \
-  $(LIBUNIVALUE) \
   $(LIBBITCOIN_UTIL) \
+  $(LIBUNIVALUE) \
   $(LIBBITCOIN_ZMQ) \
   $(LIBBITCOIN_CONSENSUS) \
   $(LIBBITCOIN_CRYPTO) \

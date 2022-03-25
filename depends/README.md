@@ -20,7 +20,7 @@ created. To use it for Raptoreum:
 
 Common `host-platform-triplets` for cross compilation are:
 
-- `i686-w64-mingw32` for Win32
+- `x86_64-pc-linux-gnu` for x86 Linux
 - `x86_64-w64-mingw32` for Win64
 - `x86_64-apple-darwin` for macOS
 - `arm64-apple-darwin` for ARM macOS <-> Apple Silicon M1 Family CPU's
@@ -36,24 +36,26 @@ Install the required dependencies: Ubuntu & Debian
 
 For macOS cross compilation:
 
-    sudo apt-get install curl librsvg2-bin libtiff-tools bsdmainutils imagemagick libcap-dev libz-dev libbz2-dev python-setuptools
+    sudo apt-get install cmake curl librsvg2-bin libtiff-tools bsdmainutils imagemagick libcap-dev libz-dev libbz2-dev python3-setuptools libtinfo5 xorriso
 
-For Win32/Win64 cross compilation:
+For Win64 cross compilation:
 
 - see [build-windows.md](../doc/build-windows.md#cross-compilation-for-ubuntu-and-windows-subsystem-for-linux)
 
 For linux (including i386, ARM) cross compilation:
 
-    sudo apt-get install curl g++-aarch64-linux-gnu g++-4.8-aarch64-linux-gnu gcc-4.8-aarch64-linux-gnu binutils-aarch64-linux-gnu g++-arm-linux-gnueabihf g++-4.8-arm-linux-gnueabihf gcc-4.8-arm-linux-gnueabihf binutils-arm-linux-gnueabihf g++-4.8-multilib gcc-4.8-multilib binutils-gold bsdmainutils
+    sudo apt-get install make automake cmake curl g++-multilib libtool binutils-gold bsdmainutils pkg-config python3 patch bison
 
-For linux RISC-V 64-bit cross compilation (there are no packages for 32-bit):
+For linux ARM cross compilation
 
-    sudo apt-get install curl g++-riscv64-linux-gnu binutils-riscv64-linux-gnu
+	sudo apt-get install g++-arm-linux-gnueabihf binutils-arm-linux-gnueabihf
 
-RISC-V known issue: gcc-7.3.0 and gcc-7.3.1 result in a broken `test_raptoreum` executable (see https://github.com/bitcoin/bitcoin/pull/13543),
-this is apparently fixed in gcc-8.1.0.
+For linux AARCH64 cross compilation
+
+	sudo apt-get install g++-aarch64-linux-gnu binutils-aarch64-linux-gnu
 
 Dependency Options:
+
 The following can be set when running make: `make FOO=bar`
 
     - `SOURCES_PATH`: downloaded sources will be placed here
@@ -61,19 +63,22 @@ The following can be set when running make: `make FOO=bar`
     - `SDK_PATH`: Path where sdk's can be found (used by OSX)
     - `FALLBACK_DOWNLOAD_PATH`: If a source file can't be fetched, try here before giving up
     - `NO_QT`: Don't download/build/cache qt and its dependencies
+    - `NO_QR`: Don't download/build/cache packages needed for enabling qrencode
+    - `NO_ZMQ`: Don't download/build/cache packages needed for enabling ZeroMQ
     - `NO_WALLET`: Don't download/build/cache libs needed to enable the wallet
+    - `NO_BDB`: Don't download/build/cache BerkeleyDB
     - `NO_UPNP`: Don't download/build/cache packages needed for enabling upnp
-    - `NO_NATPMP`
+    - `NO_NATPMP`: Don't download/build/cache packages needed for enabling NAT-PMP</dd>
     - `ALLOW_HOST_PACKAGES`: Packages that are missed in dependencies (due to `NO_*` option
-      or build script logic) are searched for among the host system packaging using
+       or build script logic) are searched for among the host system packaging using
       `pkg-config`. It allows building with packages of other (newer) versions.
     - `MULTIPROCESS`: build libmultiprocess (experimental, require cmake)
     - `DEBUG`: disable some optimizations and enable more runtime checking
     - `HOST_ID_SALT`: Optional salt to use when generating host package ids
     - `BUILD_ID_SALT`: Optional salt to use when generating build package ids
-    - `FORCE_USE_SYSTEM_CLANG`: (EXPERTS_ONLY!!!) When cross-compiling for macOS, 
-      use Clang found in the system's `$PATH` rather than the default prebuilt
-      release of Clang from llvm.org. Clang 8 or later is required.
+    - `FORCE_USE_SYSTEM_CLANG`: (EXPERTS_ONLY!!!) When cross-compiling for macOS,
+       use Clang found in the system's `$PATH` rather than the default prebuilt
+       release of Clang from llvm.org. Clang 8 or later is required.
 
 If some packages are not built, for example `make NO_WALLET=1`, the appropriate
 options will be passed to Raptoreum Core's configure. In this case, `--disable-wallet`.

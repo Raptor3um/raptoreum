@@ -10,7 +10,6 @@
 #include <serialize.h>
 #include <uint256.h>
 #include <unordered_lru_cache.h>
-#include <util.h>
 
 
 /** Nodes collect new transactions into a block, hash them into a hash tree,

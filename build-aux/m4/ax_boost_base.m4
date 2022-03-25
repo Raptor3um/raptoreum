@@ -33,7 +33,7 @@
 #   and this notice are preserved. This file is offered as-is, without any
 #   warranty.
 
-#serial 48
+#serial 49
 
 # example boost program (need to pass version)
 m4_define([_AX_BOOST_BASE_PROGRAM],
@@ -114,7 +114,7 @@ AC_DEFUN([_AX_BOOST_BASE_RUNDETECT],[
     AS_CASE([${host_cpu}],
       [x86_64],[libsubdirs="lib64 libx32 lib lib64"],
       [mips*64*],[libsubdirs="lib64 lib32 lib lib64"],
-      [ppc64|powerpc64|s390x|sparc64|aarch64|ppc64le|powerpc64le|riscv64],[libsubdirs="lib64 lib lib64"],
+      [ppc64|powerpc64|s390x|sparc64|aarch64|ppc64le|powerpc64le|riscv64|e2k],[libsubdirs="lib64 lib lib64"],
       [libsubdirs="lib"]
     )
 
@@ -151,7 +151,7 @@ AC_DEFUN([_AX_BOOST_BASE_RUNDETECT],[
         else
             search_libsubdirs="$multiarch_libsubdir $libsubdirs"
         fi
-        for _AX_BOOST_BASE_boost_path_tmp in /usr /usr/local /opt /opt/local /opt/homebrew; do
+        for _AX_BOOST_BASE_boost_path_tmp in /usr /usr/local /opt /opt/local /opt/homebrew ; do
             if test -d "$_AX_BOOST_BASE_boost_path_tmp/include/boost" && test -r "$_AX_BOOST_BASE_boost_path_tmp/include/boost" ; then
                 for libsubdir in $search_libsubdirs ; do
                     if ls "$_AX_BOOST_BASE_boost_path_tmp/$libsubdir/libboost_"* >/dev/null 2>&1 ; then break; fi
@@ -178,9 +178,9 @@ AC_DEFUN([_AX_BOOST_BASE_RUNDETECT],[
     export LDFLAGS
 
     AC_REQUIRE([AC_PROG_CXX])
-    AC_LANG_PUSH([C++])
+    AC_LANG_PUSH(C++)
         AC_COMPILE_IFELSE([_AX_BOOST_BASE_PROGRAM($WANT_BOOST_VERSION)],[
-        AC_MSG_RESULT([yes])
+        AC_MSG_RESULT(yes)
     succeeded=yes
     found_system=yes
         ],[
@@ -191,7 +191,7 @@ AC_DEFUN([_AX_BOOST_BASE_RUNDETECT],[
 
     dnl if we found no boost with system layout we search for boost libraries
     dnl built and installed without the --layout=system option or for a staged(not installed) version
-    if test "$succeeded" != "yes"; then
+    if test "$succeeded" != "yes" ; then
         CPPFLAGS="$CPPFLAGS_SAVED"
         LDFLAGS="$LDFLAGS_SAVED"
         BOOST_CPPFLAGS=
@@ -226,7 +226,7 @@ AC_DEFUN([_AX_BOOST_BASE_RUNDETECT],[
                 fi
             fi
         else
-            if test "$cross_compiling" != "yes"; then
+            if test "$cross_compiling" != "yes" ; then
                 for _AX_BOOST_BASE_boost_path in /usr /usr/local /opt /opt/local /opt/homebrew ; do
                     if test -d "$_AX_BOOST_BASE_boost_path" && test -r "$_AX_BOOST_BASE_boost_path" ; then
                         for i in `ls -d $_AX_BOOST_BASE_boost_path/include/boost-* 2>/dev/null`; do
@@ -260,7 +260,7 @@ AC_DEFUN([_AX_BOOST_BASE_RUNDETECT],[
                         stage_version_shorten=`expr $stage_version : '\([[0-9]]*\.[[0-9]]*\)'`
                     V_CHECK=`expr $stage_version_shorten \>\= $_version`
                     if test "$V_CHECK" = "1" && test -z "$_AX_BOOST_BASE_boost_lib_path" ; then
-                        AC_MSG_NOTICE([We will use a staged boost library from $BOOST_ROOT])
+                        AC_MSG_NOTICE(We will use a staged boost library from $BOOST_ROOT)
                         BOOST_CPPFLAGS="-I$BOOST_ROOT"
                         BOOST_LDFLAGS="-L$BOOST_ROOT/stage/$libsubdir"
                     fi
@@ -273,9 +273,9 @@ AC_DEFUN([_AX_BOOST_BASE_RUNDETECT],[
         LDFLAGS="$LDFLAGS $BOOST_LDFLAGS"
         export LDFLAGS
 
-        AC_LANG_PUSH([C++])
+        AC_LANG_PUSH(C++)
             AC_COMPILE_IFELSE([_AX_BOOST_BASE_PROGRAM($WANT_BOOST_VERSION)],[
-            AC_MSG_RESULT([yes])
+            AC_MSG_RESULT(yes)
         succeeded=yes
         found_system=yes
             ],[
@@ -285,14 +285,14 @@ AC_DEFUN([_AX_BOOST_BASE_RUNDETECT],[
 
     if test "$succeeded" != "yes" ; then
         if test "$_version" = "0" ; then
-            AC_MSG_NOTICE([We could not detect the boost libraries (version $1 or higher). If you have a staged boost library (still not installed) please specify \$BOOST_ROOT in your environment and do not give a PATH to --with-boost option.  If you are sure you have boost installed, then check your version number looking in <boost/version.hpp>. See http://randspringer.de/boost for more documentation.])
+            AC_MSG_NOTICE([[We could not detect the boost libraries (version $1 or higher). If you have a staged boost library (still not installed) please specify \$BOOST_ROOT in your environment and do not give a PATH to --with-boost option.  If you are sure you have boost installed, then check your version number looking in <boost/version.hpp>. See http://randspringer.de/boost for more documentation.]])
         else
             AC_MSG_NOTICE([Your boost libraries seems to old (version $_version).])
         fi
         # execute ACTION-IF-NOT-FOUND (if present):
         ifelse([$3], , :, [$3])
     else
-        AC_DEFINE([HAVE_BOOST], [1], [Define if the Boost library is available])
+        AC_DEFINE(HAVE_BOOST,,[define if the Boost library is available])
         # execute ACTION-IF-FOUND (if present):
         ifelse([$2], , :, [$2])
     fi

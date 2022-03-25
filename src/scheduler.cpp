@@ -69,6 +69,20 @@ void CScheduler::serviceQueue()
     newTaskScheduled.notify_one();
 }
 
+void CScheduler::stop(bool drain)
+{
+    {
+        LOCK(newTaskMutex);
+        if (drain)
+            stopWhenEmpty = true;
+        else
+            stopRequested = true;
+    }
+    newTaskScheduled.notify_all();
+    if (m_service_thread.joinable())
+        m_service_thread.join();
+}
+
 void CScheduler::schedule(CScheduler::Function f, std::chrono::system_clock::time_point t)
 {
     {

@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(manythreads)
     }
 
     // Drain the task queue then exit threads
-    microTasks.StopWhenDrained();
+    microTasks.stop(true);
     // wait until all the threads are done
     for (auto& thread : microThreads) {
         if (thread.joinable()) thread.join();
@@ -141,7 +141,7 @@ BOOST_AUTO_TEST_CASE(singlethreadedscheduler_ordered)
     }
 
     // finish up
-    scheduler.StopWhenDrained();
+    scheduler.stop(true);
     for (auto& thread : threads) {
         if (thread.joinable()) thread.join();
     }

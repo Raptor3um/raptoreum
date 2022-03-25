@@ -6,7 +6,6 @@
 #define RTM_POWCACHE_H
 
 #include <uint256.h>
-#include <sync.h>
 #include <serialize.h>
 #include <unordered_lru_cache.h>
 #include <util.h>
@@ -19,7 +18,6 @@ class CPowCache : public unordered_lru_cache<uint256, uint256, std::hash<uint256
 
         int  nVersion;
         bool bValidate;
-        RecursiveMutex cs;
 
     public:
         static CPowCache& Instance();
@@ -38,7 +36,6 @@ class CPowCache : public unordered_lru_cache<uint256, uint256, std::hash<uint256
         template <typename Stream, typename Operation>
         inline void SerializationOp(Stream& s, Operation ser_action)
         {
-            LOCK(cs);
             READWRITE(nVersion);
 
             uint64_t cacheSize = (uint64_t)cacheMap.size();

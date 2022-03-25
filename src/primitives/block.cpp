@@ -11,7 +11,8 @@
 #include <util.h>
 #include <utilstrencodings.h>
 
-static RecursiveMutex cs_pow;
+static RecursiveMutex cs_powHash;
+static uint256 powHash GUARDED_BY(cs_powHash);
 
 uint256 CBlockHeader::GetHash() const
 {
@@ -31,7 +32,7 @@ uint256 CBlockHeader::GetPOWHash(bool readCache) const
     uint256 powHash;
     bool found = false;
 
-    LOCK(cs_pow);
+    LOCK(cs_powHash);
     if (readCache) {
         found = cache.get(headerHash, powHash);
     }

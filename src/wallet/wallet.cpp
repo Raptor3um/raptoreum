@@ -83,7 +83,7 @@ bool HasWallets()
 CWallet *GetFirstWallet() {
 #ifdef ENABLE_WALLET
     while(vpwallets.size() == 0){
-        MilliSleep(100);
+        UninterruptibleSleep(std::chrono::milliseconds{50});
 
     }
     if (vpwallets.size() == 0)

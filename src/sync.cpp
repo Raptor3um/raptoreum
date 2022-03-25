@@ -14,10 +14,10 @@
 #include <utilstrencodings.h>
 #include <threadnames.h>
 
-#include <system_error>
 #include <map>
 #include <mutex>
 #include <set>
+#include <system_error>
 #include <thread>
 #include <type_traits>
 #include <unordered_map>
@@ -51,7 +51,7 @@ struct CLockLocation {
 
     std::string ToString() const
     {
-        return strprintf("%s:%s%s (in thread %s)", mutexName, itostr(sourceFile), sourceLine, (fTry ? " (TRY)" : ""), m_thread_name);
+        return strprintf("%s:%s%s (in thread %s)", mutexName, sourceFile, itostr(sourceLine), (fTry ? " (TRY)" : ""), m_thread_name);
     }
 
     std::string Name() const
@@ -156,7 +156,7 @@ static void push_lock(MutexType* c, const CLockLocation& locklocation)
     std::lock_guard<std::mutex> lock(lockdata.dd_mutex);
 
     LockStack& lock_stack = lockdata.m_lock_stacks[std::this_thread::get_id()];
-    lock_stack.emplace_back(c, locklockation);
+    lock_stack.emplace_back(c, locklocation);
     for (size_t j = 0; j < lock_stack.size() - 1; ++j) {
         const LockStackItem& i = lock_stack[j];
         if (i.first == c) {
@@ -167,7 +167,7 @@ static void push_lock(MutexType* c, const CLockLocation& locklocation)
             // at position `j` and at the end (which we added just before this loop).
             // Can't allow locking the same (non-recursive) mutex two times from the
             // same thread as that results in an undefined beheavior.
-            auto lock_stack_copy = lock_stacks;
+            auto lock_stack_copy = lock_stack;
             lock_stack.pop_back();
             double_lock_detected(c, lock_stack_copy);
             // double_lock_detected() dies not return.
@@ -208,9 +208,9 @@ void EnterCritical(const char* pszName, const char* pszFile, int nLine, MutexTyp
     push_lock(cs, CLockLocation(pszName, pszFile, nLine, fTry, util::ThreadGetInternalName()));
 }
 template void EnterCritical(const char*, const char*, int, Mutex*, bool);
-template void EnterCritical(const char*, const char*, int, RecursiveMutex*, bool)
-template void EnterCritical(const char*, const char*, int, std::mutex*, bool)
-template void EnterCritical(const char*, const char*, int, std::recursive_mutex*, bool)
+template void EnterCritical(const char*, const char*, int, RecursiveMutex*, bool);
+template void EnterCritical(const char*, const char*, int, std::mutex*, bool);
+template void EnterCritical(const char*, const char*, int, std::recursive_mutex*, bool);
 
 void CheckLastCritical(void* cs, std::string& lockname, const char* guardname, const char* file, int line)
 {
@@ -260,7 +260,7 @@ static bool LockHeld(void* mutex)
     LockData& lockdata = GetLockData();
     std::lock_guard<std::mutex> lock(lockdata.dd_mutex);
 
-    const LockStack& lock_stack = lockdata.m_lock_stacks[std::this_thread::get_id()]
+    const LockStack& lock_stack = lockdata.m_lock_stacks[std::this_thread::get_id()];
     for (const LockStackItem& i : lock_stack) {
         if (i.first == mutex) return true;
     }
