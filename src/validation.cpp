@@ -1089,7 +1089,6 @@ bool CheckPOW(const CBlock& block, const Consensus::Params& consensusParams)
 {
     if (!CheckProofOfWork(block.GetPOWHash(), block.nBits, consensusParams)) {
         LogPrintf("CheckPOW: CheckProofOfWork failed for %s, retesting without POW cache\n", block.GetHash().ToString());
-
         // Retest without POW cache in case cache was corrupted:
         return CheckProofOfWork(block.GetPOWHash(false), block.nBits, consensusParams);
     }
