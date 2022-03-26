@@ -206,28 +206,8 @@ QString getThemedStyleQString(ThemedStyle style)
 
 QIcon getIcon(const QString& strIcon, const ThemedColor color, const ThemedColor colorAlternative, const QString& strIconPath)
 {
-    QColor qcolor = getThemedQColor(color);
-    QColor qcolorAlternative = getThemedQColor(colorAlternative);
     QIcon icon(strIconPath + strIcon);
-    QIcon themedIcon;
-    for (const QSize& size : icon.availableSizes()) {
-        QImage image(icon.pixmap(size).toImage());
-        image = image.convertToFormat(QImage::Format_ARGB32);
-        for (int x = 0; x < image.width(); ++x) {
-            for (int y = 0; y < image.height(); ++y) {
-                const QRgb rgb = image.pixel(x, y);
-                QColor* pColor;
-                if ((rgb & RGB_MASK) < RGB_HALF) {
-                    pColor = &qcolor;
-                } else {
-                    pColor = &qcolorAlternative;
-                }
-                image.setPixel(x, y, qRgba(pColor->red(), pColor->green(), pColor->blue(), qAlpha(rgb)));
-            }
-        }
-        themedIcon.addPixmap(QPixmap::fromImage(image));
-    }
-    return themedIcon;
+    return icon;
 }
 
 QIcon getIcon(const QString& strIcon, const ThemedColor color, const QString& strIconPath)
