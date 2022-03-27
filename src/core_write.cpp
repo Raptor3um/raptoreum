@@ -17,7 +17,7 @@
 #include <utilmoneystr.h>
 #include <utilstrencodings.h>
 
-#include <spentindex.h>
+#include <indices/spentindex.h>
 
 #include <evo/cbtx.h>
 #include <evo/providertx.h>

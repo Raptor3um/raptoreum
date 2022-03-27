@@ -20,7 +20,7 @@
 #include <script/script_error.h>
 #include <sync.h>
 #include <versionbits.h>
-#include <spentindex.h>
+#include <indices/spentindex.h>
 
 #include <algorithm>
 #include <exception>
