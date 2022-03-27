@@ -332,6 +332,7 @@ public:
     interfaces::CoinJoin::Client& coinJoin() const { return m_wallet->coinJoin(); }
 
     QString getWalletName() const;
+    QString getDisplayName() const;
 
     bool isMultiwallet();
 private:

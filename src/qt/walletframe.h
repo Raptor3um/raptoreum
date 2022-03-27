@@ -15,6 +15,7 @@ class SendCoinsRecipient;
 class WalletModel;
 class WalletView;
 class SendFuturesRecipient;
+class SmartnodeList;
 
 QT_BEGIN_NAMESPACE
 class QStackedWidget;
@@ -38,8 +39,8 @@ public:
     void setClientModel(ClientModel *clientModel);
 
     bool addWallet(WalletModel *walletModel);
-    bool setCurrentWallet(const QString& name);
-    bool removeWallet(const QString &name);
+    bool setCurrentWallet(WalletModel* wallet_model);
+    bool removeWallet(WalletModel* wallet_model);
     void removeAllWallets();
 
     bool handlePaymentRequest(const SendCoinsRecipient& recipient);
@@ -54,7 +55,8 @@ private:
     QStackedWidget *walletStack;
     BitcoinGUI *gui;
     ClientModel *clientModel;
-    QMap<QString, WalletView*> mapWalletViews;
+    QMap<WalletModel*, WalletView*> mapWalletViews;
+    SmartnodeList* smartnodeListPage;
 
     bool bOutOfSync;
 

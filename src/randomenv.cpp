@@ -214,7 +214,7 @@ void AddAllCPUID(CSHA512& hasher)
     }
   }
   // Iterate over all extended leaves
-  AddCPUID(hasher, 0x80000000, 0, ax, bx, cx, ds); // Returns max extended leaf in ax
+  AddCPUID(hasher, 0x80000000, 0, ax, bx, cx, dx); // Returns max extended leaf in ax
   uint32_t ext_max = ax;
   for (uint32_t leaf = 0x80000001; leaf <= ext_max && leaf <= 0x800000FF; ++leaf) {
     AddCPUID(hasher, leaf, 0, ax, bx, cx, dx);

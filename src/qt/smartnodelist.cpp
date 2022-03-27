@@ -93,6 +93,7 @@ SmartnodeList::SmartnodeList(QWidget* parent) :
     ui->tableWidgetSmartnodesDIP3->setContextMenuPolicy(Qt::CustomContextMenu);
 
     ui->filterLineEditDIP3->setPlaceholderText(tr("Filter by any property (e.g. address or protx hash)"));
+    ui->checkBoxMySmartnodesOnly->setEnabled(false);
 
     QAction* copyProTxHashAction = new QAction(tr("Copy ProTx Hash"), this);
     QAction* copyCollateralOutpointAction = new QAction(tr("Copy Collateral Outpoint"), this);
@@ -128,6 +129,7 @@ void SmartnodeList::setClientModel(ClientModel* model)
 void SmartnodeList::setWalletModel(WalletModel* model)
 {
     this->walletModel = model;
+    ui->checkBoxMySmartnodesOnly->setEnabled(model != nullptr);
 }
 
 void SmartnodeList::showContextMenuDIP3(const QPoint& point)

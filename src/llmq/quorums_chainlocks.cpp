@@ -13,6 +13,7 @@
 #include <scheduler.h>
 #include <spork.h>
 #include <txmempool.h>
+#include <thread.h>
 #include <validation.h>
 
 namespace llmq
@@ -34,18 +35,15 @@ std::string CChainLockSig::ToString() const
 
 CChainLocksHandler::CChainLocksHandler()
 {
-    scheduler = new CScheduler();
-    CScheduler::Function serviceLoop = std::bind(&CScheduler::serviceQueue, scheduler);
-    scheduler_thread = new boost::thread(std::bind(&TraceThread<CScheduler::Function>, "cl-schdlr", serviceLoop));
-    //scheduler->m_service_thread = std::thread([&] { TraceThread("cl-schdlr", [&] { scheduler->serviceQueue(); }); });
+	scheduler = std::make_unique<CScheduler>();
+    CScheduler::Function serviceLoop = std::bind(&CScheduler::serviceQueue, scheduler.get());
+    scheduler_thread = make_unique<std::thread>(std::bind(&TraceCL<CScheduler::Function>, "cl-schdlr", serviceLoop));
 }
 
 CChainLocksHandler::~CChainLocksHandler()
 {
-    scheduler_thread->interrupt();
+    scheduler->stop();
     scheduler_thread->join();
-    delete scheduler_thread;
-    delete scheduler;
 }
 
 void CChainLocksHandler::Start()

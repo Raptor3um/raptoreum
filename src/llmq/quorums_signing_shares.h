@@ -372,8 +372,8 @@ class CSigSharesManager : public CRecoveredSigsListener
 private:
     RecursiveMutex cs;
 
-    std::thread workThread;
-    CThreadInterrupt workInterrupt;
+    std::thread sigWorkThread;
+    CThreadInterrupt sigWorkInterrupt;
 
     SigShareMap<CSigShare> sigShares;
     std::unordered_map<uint256, CSignedSession, StaticSaltedHasher> signedSessions;
@@ -397,11 +397,11 @@ public:
     CSigSharesManager();
     ~CSigSharesManager();
 
-    void StartWorkerThread();
-    void StopWorkerThread();
+    void StartSigWorkerThread();
+    void StopSigWorkerThread();
     void RegisterAsRecoveredSigsListener();
     void UnregisterAsRecoveredSigsListener();
-    void InterruptWorkerThread();
+    void InterruptSigWorkerThread();
 
 public:
     void ProcessMessage(CNode* pnode, const std::string& strCommand, CDataStream& vRecv);
@@ -453,7 +453,7 @@ private:
     void CollectSigSharesToSendConcentrated(std::unordered_map<NodeId, std::vector<CSigShare>>& sigSharesToSend, const std::vector<CNode*>& vNodes);
     void CollectSigSharesToAnnounce(std::unordered_map<NodeId, std::unordered_map<uint256, CSigSharesInv, StaticSaltedHasher>>& sigSharesToAnnounce);
     void SignPendingSigShares();
-    void WorkThreadMain();
+    void SigWorkThreadMain();
 };
 
 extern CSigSharesManager* quorumSigSharesManager;

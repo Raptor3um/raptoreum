@@ -22,6 +22,7 @@
 #include <scheduler.h>
 #include <ui_interface.h>
 #include <utilstrencodings.h>
+#include <thread.h>
 #include <validation.h>
 
 #include <smartnode/smartnode-meta.h>
@@ -2033,7 +2034,7 @@ void CConnman::ThreadSocketHandler()
 void CConnman::WakeMessageHandler()
 {
     {
-        std::lock_guard<std::mutex> lock(mutexMsgProc);
+        WAIT_LOCK(mutexMsgProc, lock);
         fMsgProcWake = true;
     }
     condMsgProc.notify_one();
@@ -3104,15 +3105,15 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
 #endif
 
     // Send and receive from sockets, accept connections
-    threadSocketHandler = std::thread(&TraceThread<std::function<void()> >, "net", std::function<void()>(std::bind(&CConnman::ThreadSocketHandler, this)));
+    threadSocketHandler = std::thread(&util::TraceThread, "net", [this] { ThreadSocketHandler(); });
 
     if (!gArgs.GetBoolArg("-dnsseed", true))
         LogPrintf("DNS seeding disabled\n");
     else
-        threadDNSAddressSeed = std::thread(&TraceThread<std::function<void()> >, "dnsseed", std::function<void()>(std::bind(&CConnman::ThreadDNSAddressSeed, this)));
+        threadDNSAddressSeed = std::thread(&util::TraceThread, "dnsseed", [this] { ThreadDNSAddressSeed(); });
 
     // Initiate outbound connections from -addnode
-    threadOpenAddedConnections = std::thread(&TraceThread<std::function<void()> >, "addcon", std::function<void()>(std::bind(&CConnman::ThreadOpenAddedConnections, this)));
+    threadOpenAddedConnections = std::thread(&util::TraceThread, "addcon", [this] { ThreadOpenAddedConnections(); });
 
     if (connOptions.m_use_addrman_outgoing && !connOptions.m_specified_outgoing.empty()) {
         if (clientInterface) {
@@ -3123,13 +3124,13 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
         return false;
     }
     if (connOptions.m_use_addrman_outgoing || !connOptions.m_specified_outgoing.empty())
-        threadOpenConnections = std::thread(&TraceThread<std::function<void()> >, "opencon", std::function<void()>(std::bind(&CConnman::ThreadOpenConnections, this, connOptions.m_specified_outgoing)));
+        threadOpenConnections = std::thread(&util::TraceThread, "opencon", [this, connect = connOptions.m_specified_outgoing] { ThreadOpenConnections(connect); });
 
     // Initiate smartnode connections
-    threadOpenSmartnodeConnections = std::thread(&TraceThread<std::function<void()> >, "mncon", std::function<void()>(std::bind(&CConnman::ThreadOpenSmartnodeConnections, this)));
+    threadOpenSmartnodeConnections = std::thread(&util::TraceThread, "mncon", [this] { ThreadOpenSmartnodeConnections(); });
 
     // Process messages
-    threadMessageHandler = std::thread(&TraceThread<std::function<void()> >, "msghand", std::function<void()>(std::bind(&CConnman::ThreadMessageHandler, this)));
+    threadMessageHandler = std::thread(&util::TraceThread, "msghand", [this] { ThreadMessageHandler(); });
 
     // Dump network addresses
     scheduler.scheduleEvery([this] { DumpData(); }, DUMP_ADDRESSES_INTERVAL);

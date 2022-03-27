@@ -23,6 +23,9 @@
 class WalletInit : public WalletInitInterface {
 public:
 
+    //! Was the wallet component compile in.
+    bool HasWalletSupport() const override { return true; }
+
     //! Return the wallets help message.
     void AddWalletOptions() const override;
 
@@ -445,8 +448,12 @@ void WalletInit::Stop() const
 
 void WalletInit::Close() const
 {
-    for (const std::shared_ptr<CWallet>& pwallet : GetWallets()) {
-        RemoveWallet(pwallet);
+    auto wallets = GetWallets();
+    while (!wallets.empty()) {
+        auto wallet = wallets.back();
+        wallets.pop_back();
+        RemoveWallet(wallet);
+        UnloadWallet(std::move(wallet));
     }
 }
 

@@ -13,9 +13,6 @@
 class CScheduler;
 class CWallet;
 
-class WalletInitInterface;
-extern const WalletInitInterface& g_wallet_init_interface;
-
 void StartShutdown();
 void StartRestart();
 bool ShutdownRequested();

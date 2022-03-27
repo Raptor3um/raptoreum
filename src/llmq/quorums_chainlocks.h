@@ -15,7 +15,7 @@
 #include <atomic>
 #include <unordered_set>
 
-#include <boost/thread.hpp>
+#include <threadnames.h>
 
 class CBlockIndex;
 class CScheduler;
@@ -56,32 +56,32 @@ class CChainLocksHandler : public CRecoveredSigsListener
     static const int64_t WAIT_FOR_ISLOCK_TIMEOUT = 10 * 60;
 
 private:
-    CScheduler* scheduler;
-    boost::thread* scheduler_thread;
-    RecursiveMutex cs;
+    std::unique_ptr<CScheduler> scheduler;
+    std::unique_ptr<std::thread> scheduler_thread;
+    mutable Mutex cs;
     bool tryLockChainTipScheduled{false};
     bool isEnabled{false};
     bool isEnforced{false};
 
-    uint256 bestChainLockHash;
-    CChainLockSig bestChainLock;
+    uint256 bestChainLockHash GUARDED_BY(cs);
+    CChainLockSig bestChainLock GUARDED_BY(cs);
 
-    CChainLockSig bestChainLockWithKnownBlock;
-    const CBlockIndex* bestChainLockBlockIndex{nullptr};
-    const CBlockIndex* lastNotifyChainLockBlockIndex{nullptr};
+    CChainLockSig bestChainLockWithKnownBlock GUARDED_BY(cs);
+    const CBlockIndex* bestChainLockBlockIndex GUARDED_BY(cs) {nullptr};
+    const CBlockIndex* lastNotifyChainLockBlockIndex GUARDED_BY(cs) {nullptr};
 
-    int32_t lastSignedHeight{-1};
-    uint256 lastSignedRequestId;
-    uint256 lastSignedMsgHash;
+    int32_t lastSignedHeight GUARDED_BY(cs) {-1};
+    uint256 lastSignedRequestId GUARDED_BY(cs);
+    uint256 lastSignedMsgHash GUARDED_BY(cs);
 
     // We keep track of txids from recently received blocks so that we can check if all TXs got islocked
     typedef std::unordered_map<uint256, std::shared_ptr<std::unordered_set<uint256, StaticSaltedHasher>>> BlockTxs;
-    BlockTxs blockTxs;
-    std::unordered_map<uint256, int64_t> txFirstSeenTime;
+    BlockTxs blockTxs GUARDED_BY(cs);
+    std::unordered_map<uint256, int64_t> txFirstSeenTime GUARDED_BY(cs);
 
-    std::map<uint256, int64_t> seenChainLocks;
+    std::map<uint256, int64_t> seenChainLocks GUARDED_BY(cs);
 
-    int64_t lastCleanupTime{0};
+    int64_t lastCleanupTime GUARDED_BY(cs) {0};
 
 public:
     explicit CChainLocksHandler();
@@ -124,6 +124,13 @@ private:
 extern CChainLocksHandler* chainLocksHandler;
 
 bool AreChainLocksEnabled();
+
+template<typename Callable> void TraceCL(const std::string name, Callable func)
+{
+  std::string namestr = "rtm-" + name; util::ThreadRename(namestr.c_str());
+  try { LogPrintf("%s thread start\n", name); func(); LogPrintf("%s thread stop\n", name); }
+  catch (...) { PrintExceptionContinue(std::current_exception(), name.c_str()); throw; }
+}
 
 } // namespace llmq
 

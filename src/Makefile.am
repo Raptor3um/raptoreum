@@ -267,6 +267,7 @@ BITCOIN_CORE_H = \
   utilmacro.h \
   utilmoneystr.h \
   util.h \
+  thread.h \
   threadnames.h \
   utiltime.h \
   utilmemory.h \
@@ -386,6 +387,10 @@ libraptoreum_server_a_SOURCES = \
   validationinterface.cpp \
   versionbits.cpp \
   $(BITCOIN_CORE_H)
+
+if !ENABLE_WALLET
+libraptoreum_server_a_SOURCES += dummywallet.cpp
+endif
 
 if ENABLE_ZMQ
 libraptoreum_zmq_a_CPPFLAGS = $(BITCOIN_INCLUDES) $(ZMQ_CFLAGS)
@@ -643,10 +648,10 @@ libraptoreum_util_a_SOURCES = \
   support/cleanse.cpp \
   sync.cpp \
   threadinterrupt.cpp \
+  thread.cpp \
   threadnames.cpp \
   util.cpp \
   utilmoneystr.cpp \
-  threadnames.cpp \
   utilstrencodings.cpp \
   utiltime.cpp \
   $(BITCOIN_CORE_H)

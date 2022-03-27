@@ -12,6 +12,8 @@ class CRPCTable;
 
 class WalletInitInterface {
 public:
+    /** Is the wallet component enabled */
+    virtual bool HasWalletSupport() const = 0;
     /** Get wallet help string */
     virtual void AddWalletOptions() const = 0;
     /** Check wallet parameter interaction */
@@ -31,7 +33,7 @@ public:
     /** Close wallets */
     virtual void Close() const = 0;
 
-    // Dash Specific WalletInitInterface
+    // Raptoreum Specific WalletInitInterface
     virtual void AutoLockSmartnodeCollaterals() const = 0;
     virtual void InitCoinJoinSettings() const = 0;
     virtual void InitKeePass() const = 0;
@@ -39,5 +41,7 @@ public:
 
     virtual ~WalletInitInterface() {}
 };
+
+extern const WalletInitInterface& g_wallet_init_interface;
 
 #endif // BITCOIN_WALLETINITINTERFACE_H

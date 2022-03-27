@@ -108,6 +108,10 @@ std::shared_ptr<CWallet> GetWallet(const std::string& name)
     return nullptr;
 }
 
+static Mutex g_wallet_release_mutex;
+static std::condition_variable g_wallet_release_cv;
+static std::set<CWallet> g_unloading_wallet_set;
+
 /** Transaction fee set by the user */
 CFeeRate payTxFee(DEFAULT_TRANSACTION_FEE);
 unsigned int nTxConfirmTarget = DEFAULT_TX_CONFIRM_TARGET;
@@ -130,10 +134,45 @@ CFeeRate CWallet::m_discard_rate = CFeeRate(DEFAULT_DISCARD_FEE);
 // Custom deleter for shared_ptr<CWallet>.
 static void ReleaseWallet(CWallet* wallet)
 {
+    // Unregister and delete the wallet right after BlockUntilSyncedToCurrentChain
+    // so that it is in sync with the current chainstate.
     LogPrintf("Releasing wallet %s\n", wallet->GetName());
     wallet->BlockUntilSyncedToCurrentChain();
     wallet->Flush();
+    UnregisterValidationInterface(wallet);
     delete wallet;
+    // Wallet is now released, notify UnloadWallet, if any.
+    {
+        LOCK(g_wallet_release_mutrex);
+        if (g_unloading_wallet_set.erase(wallet) == 0) {
+            // UnloadWallet was not called for this wallet, all done.
+            return;
+        }
+    }
+    g_wallet_release_cv.notify_all();
+}
+
+void UnloadWallet(std::shared_ptr<CWallet>&& wallet)
+{
+    // Mark wallet for unloading.
+    CWallet* pwallet = wallet.get();
+    {
+        LOCK(g_wallet_release_mutex);
+        auto it = g_unloading_wallet_set.insert(pwallet);
+        assert(it.second);
+    }
+    // The wallet can be in use so it is not possible to explicity unload here.
+    // Notify the unload intent so that all remaining shared pointers
+    // are released.
+    pwallet->NotifyUnload();
+    // Time to ditch our shared_ptr and wait for ReleaseWallet call.
+    wallet.reset();
+    {
+        WAIT_LOCK(g_wallet_release_mutex, lock);
+        while (g_unloading_wallet_set.count(pwallet) == 1) {
+            g_wallet_release_cv.wait(lock);
+        }
+    }
 }
 
 const uint256 CMerkleTx::ABANDON_HASH(uint256S("0000000000000000000000000000000000000000000000000000000000000001"));

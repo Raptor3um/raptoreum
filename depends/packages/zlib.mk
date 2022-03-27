@@ -14,14 +14,14 @@ $(package)_build_opts_darwin+=ARFLAGS="-o"
 endef
 
 define $(package)_config_cmds
-  ./configure --static --prefix=$(host_prefix)
+  env $($(package)_config_opts) ./configure --static --prefix=$(host_prefix)
 endef
 
 define $(package)_build_cmds
-  $(MAKE) $($(package)_build_opts) libz.a
+  $(MAKE) libz.a
 endef
 
 define $(package)_stage_cmds
-  $(MAKE) DESTDIR=$($(package)_staging_dir) install $($(package)_build_opts)
+  $(MAKE) DESTDIR=$($(package)_staging_dir) install
 endef
 

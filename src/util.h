@@ -22,7 +22,6 @@
 #include <logging.h>
 #include <sync.h>
 #include <tinyformat.h>
-#include <threadnames.h>
 #include <utiltime.h>
 #include <utilmemory.h>
 #include <amount.h>
@@ -324,29 +323,6 @@ std::string HelpMessageOpt(const std::string& option, const std::string& message
  * @note This does count virtual cores, such as those provided by HyperThreading.
  */
 int GetNumCores();
-
-/**
- * .. and a wrapper that just calls func once
- */
-template <typename Callable> void TraceThread(const std::string name,  Callable func)
-{
-    std::string namestr = "rtm-" + name;
-    util::ThreadRename(namestr.c_str());
-    try
-    {
-        LogPrintf("%s thread start\n", name);
-        func();
-        LogPrintf("%s thread exit\n", name);
-    }
-    catch (const std::exception& e) {
-        PrintExceptionContinue(std::current_exception(), name.c_str());
-        throw;
-    }
-    catch (...) {
-        PrintExceptionContinue(std::current_exception(), name.c_str());
-        throw;
-    }
-}
 
 std::string CopyrightHolders(const std::string& strPrefix, unsigned int nStartYear, unsigned int nEndYear);
 

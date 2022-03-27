@@ -73,11 +73,6 @@ Q_DECLARE_METATYPE(bool*)
 Q_DECLARE_METATYPE(CAmount)
 Q_DECLARE_METATYPE(uint256)
 
-static void InitMessage(const std::string &message)
-{
-    LogPrintf("init message: %s\n", message);
-}
-
 /*
    Translate string to current locale using Qt.
  */
@@ -450,7 +445,7 @@ void BitcoinApplication::addWallet(WalletModel* walletModel)
     window->addWallet(walletModel);
 
     if (m_wallet_models.empty()) {
-        window->setCurrentWallet(walletModel->getWalletName());
+        window->setCurrentWallet(walletModel);
     }
 
     connect(walletModel, SIGNAL(coinsSent(WalletModel*, SendCoinsRecipient, QByteArray)),
@@ -583,6 +578,11 @@ int main(int argc, char *argv[])
     util::ThreadSetInternalName("main");
 
     std::unique_ptr<interfaces::Node> node = interfaces::MakeNode();
+
+    // Subscribe to global signals from core
+    std::unique_ptr<interfaces::Handler> handler_message_box = node->handleMessageBox(noui_ThreadSafeMessageBox);
+    std::unique_ptr<interfaces::Handler> handler_question = node->handleQuestion(noui_ThreadSafeQuestion);
+    std::unique_ptr<interfaces::Handler> handler_init_message = node->handleInitMessage(noui_InitMessage);
 
     /// 1. Parse command-line options. These take precedence over anything else.
     // Command-line options take precedence:
@@ -810,9 +810,6 @@ int main(int argc, char *argv[])
         QMessageBox::warning(0, QObject::tr(PACKAGE_NAME),
                                 "Warning: UI debug mode (-debug-ui) enabled" + QString(gArgs.IsArgSet("-custom-css-dir") ? "." : " without a custom css directory set with -custom-css-dir."));
     }
-
-    // Subscribe to global signals from core
-    std::unique_ptr<interfaces::Handler> handler = node->handleInitMessage(InitMessage);
 
     if (gArgs.GetBoolArg("-splash", DEFAULT_SPLASHSCREEN) && !gArgs.GetBoolArg("-min", false))
         app.createSplashScreen(networkStyle.data());

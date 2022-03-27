@@ -76,7 +76,7 @@ static bool g_rdseed_supported = false;
 static constexpr uint32_t CPUID_F1_ECX_RDRAND = 0x40000000;
 static constexpr uint32_t CPUID_F7_EBX_RDSEED = 0x00040000;
 #ifdef bit_RDRND
-static_assert(COUID_F1_ECX_RDRAND == bit_RDRND, "Unexpected value for bit_RDRND");
+static_assert(CPUID_F1_ECX_RDRAND == bit_RDRND, "Unexpected value for bit_RDRND");
 #endif
 #ifdef bit_RDSEED
 static_assert(CPUID_F7_EBX_RDSEED == bit_RDSEED, "Unexpected value for bit_RDSEED");

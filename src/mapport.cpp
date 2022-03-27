@@ -16,6 +16,7 @@
 #include <netbase.h>
 #include <threadinterrupt.h>
 #include <util.h>
+#include <thread.h>
 
 #ifdef USE_NATPMP
 #include <compat.h>
@@ -259,7 +260,7 @@ void StartThreadMapPort()
 {
   if (!g_mapport_thread.joinable()) {
     assert(!g_mapport_interrupt);
-    g_mapport_thread = std::thread(&TraceThread<void (*)()>, "mapport", &ThreadMapPort);
+    g_mapport_thread = std::thread(&util::TraceThread, "mapport", &ThreadMapPort);
   }
 }
 

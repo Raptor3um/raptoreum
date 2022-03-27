@@ -24,8 +24,6 @@
 #include <walletinitinterface.h>
 #include <stacktraces.h>
 
-#include <boost/thread.hpp>
-
 #include <stdio.h>
 
 /* Introduction text for doxygen: */
@@ -44,19 +42,6 @@
  * Use the buttons <code>Namespaces</code>, <code>Classes</code> or <code>Files</code> at the top of the page to start navigating the code.
  */
 
-static void WaitForShutdown()
-{
-    while (!ShutdownRequested())
-    {
-        UninterruptibleSleep(std::chrono::milliseconds{200});
-    }
-    Interrupt();
-}
-
-//////////////////////////////////////////////////////////////////////////////
-//
-// Start
-//
 static bool AppInit(int argc, char* argv[])
 {
     bool fRet = false;
@@ -188,12 +173,10 @@ static bool AppInit(int argc, char* argv[])
         PrintExceptionContinue(std::current_exception(), "AppInit()");
     }
 
-    if (!fRet)
-    {
-        Interrupt();
-    } else {
+    if (fRet) {
         WaitForShutdown();
     }
+    Interrupt();
     Shutdown();
 
     return fRet;

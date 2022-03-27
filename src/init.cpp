@@ -44,6 +44,7 @@
 #include <torcontrol.h>
 #include <ui_interface.h>
 #include <util.h>
+#include <thread.h>
 #include <threadnames.h>
 #include <utilmoneystr.h>
 #include <validation.h>
@@ -110,30 +111,6 @@ static const bool DEFAULT_STOPAFTERBLOCKIMPORT = false;
 
 std::unique_ptr<CConnman> g_connman;
 std::unique_ptr<PeerLogicValidation> peerLogic;
-
-#if !(ENABLE_WALLET)
-class DummyWalletInit : public WalletInitInterface {
-public:
-
-    void AddWalletOptions() const override {}
-    bool ParameterInteraction() const override {return true;}
-    void RegisterRPC(CRPCTable &) const override {}
-    bool Verify() const override {return true;}
-    bool Open() const override {LogPrintf("No wallet support compiled in!\n"); return true;}
-    void Start(CScheduler& scheduler) const override {}
-    void Flush() const override {}
-    void Stop() const override {}
-    void Close() const override {}
-
-    // Raptoreum Specific WalletInitInterface InitCoinJoinSettings
-    void AutoLockSmartnodeCollaterals() const override {}
-    void InitCoinJoinSettings() const override {}
-    void InitKeePass() const override {}
-    bool InitAutoBackup() const override {return true;}
-};
-
-const WalletInitInterface& g_wallet_init_interface = DummyWalletInit();
-#endif
 
 static CDSNotificationInterface* pdsNotificationInterface = nullptr;
 
@@ -219,7 +196,6 @@ static std::unique_ptr<ECCVerifyHandle> globalVerifyHandle;
 
 static CScheduler scheduler;
 
-static std::thread threadImport;
 
 void Interrupt()
 {
@@ -230,18 +206,18 @@ void Interrupt()
     InterruptTorControl();
     llmq::InterruptLLMQSystem();
     InterruptMapPort();
-    if (g_connman)
+    if (g_connman) {
         g_connman->Interrupt();
+    }
 }
 
 /** Preparing steps before shutting down or restarting the wallet */
 void PrepareShutdown()
 {
+    static Mutex g_shutdown_mutex;
+    TRY_LOCK(g_shutdown_mutex, lock_shutdown);
+    if (!lock_shutdown) return;
     LogPrintf("%s: In progress...\n", __func__);
-    static RecursiveMutex cs_Shutdown;
-    TRY_LOCK(cs_Shutdown, lockShutdown);
-    if (!lockShutdown)
-        return;
 
     /// Note: Shutdown() must be able to handle cases in which initialization failed part of the way,
     /// for example if the data directory was found to be locked.
@@ -274,9 +250,11 @@ void PrepareShutdown()
     // After everything has been shut down, but before things get flushed, stop the
     // CScheduler/checkqueue, scheduler and load block thread.
     scheduler.stop();
-    if (threadImport.joinable()) threadImport.join();
+    if (m_load_block.joinable()) m_load_block.join();
     StopScriptCheckWorkerThreads();
 
+    peerLogic.reset();
+    g_connman.reset();
     // After there are no more peers/RPC left to give us new data which may generate
     // CValidationInterface callbacks, flush them...
     GetMainSignals().FlushBackgroundCallbacks();
@@ -373,6 +351,7 @@ void PrepareShutdown()
         LogPrintf("%s: Unable to remove pidfile: %s\n", __func__, e.what());
     }
 #endif
+    g_wallet_init_interface.Close();
     UnregisterAllValidationInterfaces();
     GetMainSignals().UnregisterBackgroundSignalScheduler();
     GetMainSignals().UnregisterWithMempoolSignals(mempool);
@@ -394,7 +373,6 @@ void Shutdown()
         PrepareShutdown();
     }
     // Shutdown part 2: delete wallet instance
-    g_wallet_init_interface.Close();
     globalVerifyHandle.reset();
     ECC_Stop();
     LogPrintf("%s: done\n", __func__);
@@ -1147,9 +1125,12 @@ bool AppInitBasicSetup()
     PSETPROCDEPPOL setProcDEPPol = (PSETPROCDEPPOL)GetProcAddress(GetModuleHandleA("Kernel32.dll"), "SetProcessDEPPolicy");
     if (setProcDEPPol != nullptr) setProcDEPPol(PROCESS_DEP_ENABLE);
 #endif
+    if (!InitShutdownState()) {
+        return InitError("Initializing wait-for-shutdown state failed.");
 
-    if (!SetupNetworking())
+    if (!SetupNetworking()) {
         return InitError("Initializing networking failed");
+    }
 
 #ifndef WIN32
     if (!gArgs.GetBoolArg("-sysperms", false)) {
@@ -1713,7 +1694,7 @@ bool AppInitMain()
     }
 
     // Start the lightweight task scheduler thread
-    scheduler.m_service_thread = std::thread([&] { TraceThread("scheduler", [&] { scheduler.serviceQueue(); }); });
+    scheduler.m_service_thread = std::thread([&] { util::TraceThread("scheduler", [&] { scheduler.serviceQueue(); }); });
 
     // Gather some entropy once per minute.
     scheduler.scheduleEvery([] { RandAddPeriodic(); }, std::chrono::minutes{1});
@@ -2301,8 +2282,7 @@ bool AppInitMain()
         vImportFiles.push_back(strFile);
     }
 
-    threadImport = std::thread(&TraceThread<std::function<void()>>, "loadblk", [=] { ThreadImport(vImportFiles); });
-    //threadGroup.create_thread(std::bind(&ThreadImport, vImportFiles));
+    std::thread m_load_block[](&util::TraceThread, "loadblk", [=] { ThreadImport(vImportFiles); });
 
     // Wait for genesis block to be processed
     {

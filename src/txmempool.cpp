@@ -21,6 +21,7 @@
 #include <validationinterface.h>
 #include <hash.h>
 
+#include <cmath>
 #include <optional>
 
 #include <evo/specialtx.h>
