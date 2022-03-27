@@ -117,8 +117,6 @@ endif
 BITCOIN_CORE_H = \
   addrdb.h \
   addressindex.h \
-  spentindex.h \
-  indices/future_index.h \
   addrman.h \
   attributes.h \
   base58.h \
@@ -178,6 +176,8 @@ BITCOIN_CORE_H = \
   fs.h \
   httprpc.h \
   httpserver.h \
+  indices/spentindex.h \
+  indices/future_index.h \
   indirectmap.h \
   init.h \
   interfaces/handler.h \
