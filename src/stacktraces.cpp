@@ -12,9 +12,9 @@
 #include <logging.h>
 #include <random.h>
 #include <streams.h>
+#include <threadsafety.h>
 #include <utilstrencodings.h>
 
-#include <mutex>
 #include <map>
 #include <vector>
 #include <memory>
@@ -171,8 +171,8 @@ static __attribute__((noinline)) std::vector<uint64_t> GetStackFrames(size_t ski
     static BOOL symInitialized = SymInitialize(GetCurrentProcess(), nullptr, TRUE);
 
     // dbghelp is not thread safe
-    static std::mutex m;
-    std::lock_guard<std::mutex> l(m);
+    static StdMutex m;
+    StdLockGuard l(m);
 
     HANDLE process = GetCurrentProcess();
     HANDLE thread = GetCurrentThread();
@@ -546,12 +546,12 @@ static void PrintCrashInfo(const crash_info& ci)
 {
     auto str = GetCrashInfoStr(ci);
     LogPrintf("%s", str); /* Continued */
-    fprintf(stderr, "%s", str.c_str());
+    tfm::format(std::cerr, "%s", str.c_str());
     fflush(stderr);
 }
 
 #ifdef ENABLE_CRASH_HOOKS
-static std::mutex g_stacktraces_mutex;
+static StdMutex g_stacktraces_mutex;
 static std::map<void*, std::shared_ptr<std::vector<uint64_t>>> g_stacktraces;
 
 #if CRASH_HOOKS_WRAPPED_CXX_ABI
@@ -614,7 +614,7 @@ extern "C" void* __attribute__((noinline)) WRAPPED_NAME(__cxa_allocate_exception
 
     void* p = __real___cxa_allocate_exception(thrown_size);
 
-    std::lock_guard<std::mutex> l(g_stacktraces_mutex);
+    StdLockGuard l(g_stacktraces_mutex);
     g_stacktraces.emplace(p, st);
     return p;
 }
@@ -623,7 +623,7 @@ extern "C" void __attribute__((noinline)) WRAPPED_NAME(__cxa_free_exception)(voi
 {
     __real___cxa_free_exception(thrown_exception);
 
-    std::lock_guard<std::mutex> l(g_stacktraces_mutex);
+    StdLockGuard l(g_stacktraces_mutex);
     g_stacktraces.erase(thrown_exception);
 }
 
@@ -687,7 +687,7 @@ static std::shared_ptr<std::vector<uint64_t>> GetExceptionStacktrace(const std::
 #ifdef ENABLE_CRASH_HOOKS
     void* p = *(void**)&e;
 
-    std::lock_guard<std::mutex> l(g_stacktraces_mutex);
+    StdLockGuard l(g_stacktraces_mutex);
     auto it = g_stacktraces.find(p);
     if (it == g_stacktraces.end()) {
         return nullptr;

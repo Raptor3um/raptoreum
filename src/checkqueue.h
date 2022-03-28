@@ -7,8 +7,7 @@
 
 #include <sync.h>
 #include <tinyformat.h>
-#include <util.h>
-#include <threadnames.h>
+#include <utilthreadnames.h>
 
 #include <algorithm>
 #include <vector>
@@ -88,7 +87,7 @@ private:
                     nTotal++;
                 }
                 // logically, the do loop starts here
-                while (queue.empty()) {
+                while (queue.empty() && !m_request_stop) {
                     if (fMaster && nTodo == 0) {
                         nTotal--;
                         bool fRet = fAllOk;
@@ -181,7 +180,7 @@ public:
 
         if (vChecks.size() == 1) {
             m_worker_cv.notify_one();
-        } else {
+        } else if (vChecks.size() > 1) {
             m_worker_cv.notify_all();
         }
     }

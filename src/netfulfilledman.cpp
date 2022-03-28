@@ -4,8 +4,8 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chainparams.h>
-#include <init.h>
 #include <netfulfilledman.h>
+#include <shutdown.h>
 #include <util.h>
 
 CNetFulfilledRequestManager netfulfilledman;

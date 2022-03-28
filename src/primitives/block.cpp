@@ -11,6 +11,9 @@
 #include <util.h>
 #include <utilstrencodings.h>
 
+#define BEGIN(a) ((char*)&(a))
+#define END(a) ((char*)&((&(a))[1]))
+
 static RecursiveMutex cs_powHash;
 static uint256 powHash GUARDED_BY(cs_powHash);
 

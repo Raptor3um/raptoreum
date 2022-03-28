@@ -11,7 +11,6 @@
 #include <qt/guiutil.h>
 #include <qt/walletmodel.h>
 
-#include <init.h>
 #include <key_io.h>
 #include <utilstrencodings.h>
 #include <validation.h> // For strMessageMagic
@@ -33,7 +32,7 @@ SignVerifyMessageDialog::SignVerifyMessageDialog(QWidget* parent) :
     pageButtons = new QButtonGroup(this);
     pageButtons->addButton(ui->btnSignMessage, pageButtons->buttons().size());
     pageButtons->addButton(ui->btnVerifyMessage, pageButtons->buttons().size());
-    connect(pageButtons, SIGNAL(buttonClicked(int)), this, SLOT(showPage(int)));
+    connect(pageButtons, QOverload<int>::of(&QButtonGroup::buttonClicked), this, &SignVerifyMessageDialog::showPage);
 
     ui->messageIn_SM->setPlaceholderText(tr("Enter a message to be signed"));
     ui->signatureOut_SM->setPlaceholderText(tr("Click \"Sign Message\" to generate signature"));

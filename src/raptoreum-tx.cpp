@@ -33,6 +33,8 @@ static bool fCreateBlank;
 static std::map<std::string,UniValue> registers;
 static const int CONTINUE_EXECUTION=-1;
 
+const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
+
 static void SetupBitcoinTxArgs()
 {
     gArgs.AddArg("-?", "This help message", false, OptionsCategory::OPTIONS);
@@ -62,6 +64,10 @@ static void SetupBitcoinTxArgs()
 
     gArgs.AddArg("load=NAME:FILENAME", "Load JSON file FILENAME into register NAME", false, OptionsCategory::REGISTER_COMMANDS);
     gArgs.AddArg("set=NAME:JSON-STRING", "Set register NAME to given JSON-STRING", false, OptionsCategory::REGISTER_COMMANDS);
+
+    // Hidden
+    gArgs.AddArg("-h", "", false, OptionsCategory::HIDDEN);
+    gArgs.AddArg("-help", "", false, OptionsCategory::HIDDEN);
 }
 
 //
@@ -74,7 +80,11 @@ static int AppInitRawTx(int argc, char* argv[])
     // Parameters
     //
     SetupBitcoinTxArgs();
-    gArgs.ParseParameters(argc, argv);
+    std::string error;
+    if (!gArgs.ParseParameters(argc, argv, error)) {
+        tfm::format(std::cerr, "Error parsing command line arguments: %s\n", error.c_str());
+        return EXIT_FAILURE;
+    }
 
     if (gArgs.IsArgSet("-printcrashinfo")) {
         std::cout << GetCrashInfoStrFromSerializedStr(gArgs.GetArg("-printcrashinfo", "")) << std::endl;
@@ -91,7 +101,7 @@ static int AppInitRawTx(int argc, char* argv[])
 
     fCreateBlank = gArgs.GetBoolArg("-create", false);
 
-    if (argc<2 || gArgs.IsArgSet("-?") || gArgs.IsArgSet("-h") || gArgs.IsArgSet("-help"))
+    if (argc < 2 || HelpRequested(gArgs))
     {
         // First part of help message is specific to this utility
         std::string strUsage = strprintf("%s raptoreum-tx utility version", PACKAGE_NAME) + " " + FormatFullVersion() + "\n\n" +

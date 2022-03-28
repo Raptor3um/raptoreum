@@ -6,7 +6,6 @@
 #include <base58.h>
 #include <consensus/validation.h>
 #include <core_io.h>
-#include <init.h>
 #include <messagesigner.h>
 #include <rpc/server.h>
 #include <txmempool.h>

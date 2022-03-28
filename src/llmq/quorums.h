@@ -19,8 +19,6 @@
 #include <bls/bls.h>
 #include <bls/bls_worker.h>
 
-#include <ctpl.h>
-
 class CNode;
 
 namespace llmq

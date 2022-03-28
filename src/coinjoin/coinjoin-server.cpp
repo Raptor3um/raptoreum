@@ -8,12 +8,12 @@
 #include <smartnode/activesmartnode.h>
 #include <consensus/validation.h>
 #include <core_io.h>
-#include <init.h>
 #include <smartnode/smartnode-meta.h>
 #include <smartnode/smartnode-sync.h>
 #include <net_processing.h>
 #include <netmessagemaker.h>
 #include <script/interpreter.h>
+#include <shutdown.h>
 #include <txmempool.h>
 #include <util.h>
 #include <utilmoneystr.h>

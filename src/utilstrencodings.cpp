@@ -4,9 +4,11 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <utilstrencodings.h>
+#include <utilstring.h>
 
 #include <tinyformat.h>
 
+#include <algorithm>
 #include <cstdlib>
 #include <cstring>
 #include <errno.h>
@@ -19,6 +21,7 @@ static const std::string SAFE_CHARS[] =
     CHARS_ALPHA_NUM + " .,;-_/:?@()", // SAFE_CHARS_DEFAULT
     CHARS_ALPHA_NUM + " .,;-_?@", // SAFE_CHARS_UA_COMMENT
     CHARS_ALPHA_NUM + ".-_", // SAFE_CHARS_FILENAME
+    CHARS_ALPHA_NUM + "!*'();:@&=+$,/?#[]-_.~%", // SAFE_CHARS_URI
 };
 
 std::string SanitizeString(const std::string& str, int rule)
@@ -84,7 +87,7 @@ std::vector<unsigned char> ParseHex(const char* psz)
     std::vector<unsigned char> vch;
     while (true)
     {
-        while (isspace(*psz))
+        while (IsSpace(*psz))
             psz++;
         signed char c = HexDigit(*psz++);
         if (c == (signed char)-1)
@@ -261,11 +264,11 @@ std::string DecodeBase32(const std::string& str)
     return std::string((const char*)vchRet.data(), vchRet.size());
 }
 
-NODISCARD static bool ParsePrechecks(const std::string& str)
+[[nodiscard]] static bool ParsePrechecks(const std::string& str)
 {
     if (str.empty()) // No empty string allowed
         return false;
-    if (str.size() >= 1 && (isspace(str[0]) || isspace(str[str.size()-1]))) // No padding allowed
+    if (str.size() >= 1 && (IsSpace(str[0]) || IsSpace(str[str.size()-1]))) // No padding allowed
         return false;
     if (str.size() != strlen(str.c_str())) // No embedded NUL characters allowed
         return false;
@@ -542,4 +545,38 @@ bool ParseFixedPoint(const std::string &val, int decimals, int64_t *amount_out)
         *amount_out = mantissa;
 
     return true;
+}
+
+std::string HexStr(const Span<const uint8_t> s)
+{
+    std::string rv(s.size() * 2, '\0');
+    static constexpr char hexmap[16] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
+    auto it = rv.begin();
+    for (uint8_t v : s) {
+        *it++ = hexmap[v >> 4];
+        *it++ = hexmap[v & 15];
+    }
+    assert(it == rv.end());
+    return rv;
+}
+
+std::string ToLower(const std::string& str)
+{
+    std::string r;
+    for (auto ch : str) r += ToLower((unsigned char)ch);
+    return r;
+}
+
+std::string ToUpper(const std::string& str)
+{
+    std::string r;
+    for (auto ch : str) r += ToUpper((unsigned char)ch);
+    return r;
+}
+
+std::string Capitalize(std::string str)
+{
+    if (str.empty()) return str;
+    str[0] = ToUpper(str.front());
+    return str;
 }

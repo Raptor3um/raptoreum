@@ -8,14 +8,14 @@
 
 #include <httpserver.h>
 
-#include <init.h>
 #include <chainparamsbase.h>
 #include <compat.h>
-#include <threadnames.h>
 #include <util.h>
 #include <utilstrencodings.h>
+#include <utilthreadnames.h>
 #include <netbase.h>
 #include <rpc/protocol.h> // For HTTP status codes
+#include <shutdown.h>
 #include <sync.h>
 #include <ui_interface.h>
 
@@ -80,14 +80,13 @@ class WorkQueue
 private:
     /** Mutex protects entire object */
     Mutex cs;
-    std::condition_variable cond;
-    std::deque<std::unique_ptr<WorkItem>> queue;
-    bool running;
+    std::condition_variable cond GUARDED_BY(cs);
+    std::deque<std::unique_ptr<WorkItem>> queue GUARDED_BY(cs);
+    bool running GUARDED_BY(cs);
     size_t maxDepth;
 
 public:
-    explicit WorkQueue(size_t _maxDepth) : running(true),
-                                 maxDepth(_maxDepth)
+    explicit WorkQueue(size_t _maxDepth) : running(true), maxDepth(_maxDepth)
     {
     }
     /** Precondition: worker threads have all stopped (they have been joined).
@@ -135,8 +134,10 @@ public:
 struct HTTPPathHandler
 {
     HTTPPathHandler() {}
-    HTTPPathHandler(std::string _prefix, bool _exactMatch, HTTPRequestHandler _handler):
-        prefix(_prefix), exactMatch(_exactMatch), handler(_handler)
+    HTTPPathHandler(std::string _prefix, bool _exactMatch, HTTPRequestHandler _handler)
+        : prefix(_prefix),
+          exactMatch(_exactMatch),
+          handler(_handler)
     {
     }
     std::string prefix;
@@ -153,7 +154,7 @@ struct evhttp* eventHTTP = nullptr;
 //! List of subnets to allow RPC connections from
 static std::vector<CSubNet> rpc_allow_subnets;
 //! Work queue for handling longer requests off the event loop thread
-static WorkQueue<HTTPClosure>* workQueue = nullptr;
+static std::unique_ptr<WorkQueue<HTTPClosure>> g_work_queue{nullptr};
 //! Handlers for (sub)paths
 std::vector<HTTPPathHandler> pathHandlers;
 //! Bound listening sockets
@@ -202,20 +203,20 @@ static bool InitHTTPAllowList()
 static std::string RequestMethodString(HTTPRequest::RequestMethod m)
 {
     switch (m) {
-    case HTTPRequest::GET:
-        return "GET";
-        break;
-    case HTTPRequest::POST:
-        return "POST";
-        break;
-    case HTTPRequest::HEAD:
-        return "HEAD";
-        break;
-    case HTTPRequest::PUT:
-        return "PUT";
-        break;
-    default:
-        return "unknown";
+        case HTTPRequest::GET:
+            return "GET";
+            break;
+        case HTTPRequest::POST:
+            return "POST";
+            break;
+        case HTTPRequest::HEAD:
+            return "HEAD";
+            break;
+        case HTTPRequest::PUT:
+            return "PUT";
+            break;
+        default:
+            return "unknown";
     }
 }
 
@@ -232,22 +233,23 @@ static void http_request_cb(struct evhttp_request* req, void* arg)
             }
         }
     }
-    std::unique_ptr<HTTPRequest> hreq(new HTTPRequest(req));
-
-    LogPrint(BCLog::HTTP, "Received a %s request for %s from %s\n",
-             RequestMethodString(hreq->GetRequestMethod()), hreq->GetURI(), hreq->GetPeer().ToString());
+    auto hreq{std::make_unique<HTTPRequest>(req)};
 
     // Early address-based allow check
     if (!ClientAllowed(hreq->GetPeer())) {
+        LogPrint(BCLog::HTTP, "HTTP request from %s rejected; Client network is not allowed RPC access\n", hreq->GetPeer().ToString());
         hreq->WriteReply(HTTP_FORBIDDEN);
         return;
     }
 
     // Early reject unknown HTTP methods
     if (hreq->GetRequestMethod() == HTTPRequest::UNKNOWN) {
+        LogPrint(BCLog::HTTP, "HTTP request from %s rejected: Unknown HTTP request method\n", hreq->GetPeer().ToString());
         hreq->WriteReply(HTTP_BADMETHOD);
         return;
     }
+
+    LogPrint(BCLog::HTTP, "Received a %s request for %s from %s\n", RequestMethodString(hreq->GetRequestMethod()), SanitizeString(hreq->GetURI(), SAFE_CHARS_URI).substr(0, 100), hreq->GetPeer().ToString());
 
     // Find registered handler for prefix
     std::string strURI = hreq->GetURI();
@@ -269,10 +271,10 @@ static void http_request_cb(struct evhttp_request* req, void* arg)
     // Dispatch to worker thread
     if (i != iend) {
         std::unique_ptr<HTTPWorkItem> item(new HTTPWorkItem(std::move(hreq), path, i->handler));
-        assert(workQueue);
-        if (workQueue->Enqueue(item.get()))
+        assert(g_work_queue);
+        if (g_work_queue->Enqueue(item.get())) {
             item.release(); /* if true, queue took ownership */
-        else {
+        } else {
             LogPrintf("WARNING: request rejected because http work queue depth exceeded, it can be increased with the -rpcworkqueue= setting\n");
             item->req->WriteReply(HTTP_INTERNAL, "Work queue depth exceeded");
         }
@@ -344,7 +346,7 @@ static bool HTTPBindAddresses(struct evhttp* http)
 /** Simple wrapper to set thread name and run work queue */
 static void HTTPWorkQueueRun(WorkQueue<HTTPClosure>* queue, int worker_num)
 {
-    util::ThreadRename(strprintf("httpworker.%i", worker_num).c_str());
+    util::ThreadRename(strprintf("httpworker.%i", worker_num));
     queue->Run();
 }
 
@@ -379,8 +381,8 @@ bool InitHTTPServer()
     // Update libevent's log handling. Returns false if our version of
     // libevent doesn't support debug logging, in which case we should
     // clear the BCLog::LIBEVENT flag.
-    if (!UpdateHTTPServerLogging(logCategories & BCLog::LIBEVENT)) {
-        logCategories &= ~BCLog::LIBEVENT;
+    if (!UpdateHTTPServerLogging(LogInstance().WillLogCategory(BCLog::LIBEVENT))) {
+        LogInstance().DisableCategory(BCLog::LIBEVENT);
     }
 
 #ifdef WIN32
@@ -413,7 +415,7 @@ bool InitHTTPServer()
     int workQueueDepth = std::max((long)gArgs.GetArg("-rpcworkqueue", DEFAULT_HTTP_WORKQUEUE), 1L);
     LogPrintf("HTTP: creating work queue of depth %d\n", workQueueDepth);
 
-    workQueue = new WorkQueue<HTTPClosure>(workQueueDepth);
+    g_work_queue = std::make_unique<WorkQueue<HTTPClosure>>(workQueueDepth);
     // transfer ownership to eventBase/HTTP via .release()
     eventBase = base_ctr.release();
     eventHTTP = http_ctr.release();
@@ -434,10 +436,10 @@ bool UpdateHTTPServerLogging(bool enable) {
 #endif
 }
 
-std::thread threadHTTP;
+static std::thread threadHTTP;
 static std::vector<std::thread> g_thread_http_workers;
 
-bool StartHTTPServer()
+void StartHTTPServer()
 {
     LogPrint(BCLog::HTTP, "Starting HTTP server\n");
     int rpcThreads = std::max((long)gArgs.GetArg("-rpcthreads", DEFAULT_HTTP_THREADS), 1L);
@@ -445,9 +447,8 @@ bool StartHTTPServer()
     threadHTTP = std::thread(ThreadHTTP, eventBase, eventHTTP);
 
     for (int i = 0; i < rpcThreads; i++) {
-        g_thread_http_workers.emplace_back(HTTPWorkQueueRun, workQueue, i);
+        g_thread_http_workers.emplace_back(HTTPWorkQueueRun, g_work_queue.get(), i);
     }
-    return true;
 }
 
 void InterruptHTTPServer()
@@ -457,21 +458,20 @@ void InterruptHTTPServer()
         // Reject requests on current connections
         evhttp_set_gencb(eventHTTP, http_reject_request_cb, nullptr);
     }
-    if (workQueue)
-        workQueue->Interrupt();
+    if (g_work_queue) {
+        g_work_queue->Interrupt();
+    }
 }
 
 void StopHTTPServer()
 {
     LogPrint(BCLog::HTTP, "Stopping HTTP server\n");
-    if (workQueue) {
+    if (g_work_queue) {
         LogPrint(BCLog::HTTP, "Waiting for HTTP worker threads to exit\n");
-        for (auto& thread: g_thread_http_workers) {
+        for (auto& thread : g_thread_http_workers) {
             thread.join();
         }
         g_thread_http_workers.clear();
-        delete workQueue;
-        workQueue = nullptr;
     }
     // Unlisten sockets, these are what make the event loop running, which means
     // that after this and all connections are closed the event loop will quit.
@@ -491,6 +491,7 @@ void StopHTTPServer()
         event_base_free(eventBase);
         eventBase = nullptr;
     }
+    g_work_queue.reset();
     LogPrint(BCLog::HTTP, "Stopped HTTP server\n");
 }
 
@@ -508,8 +509,8 @@ static void httpevent_callback_fn(evutil_socket_t, short, void* data)
         delete self;
 }
 
-HTTPEvent::HTTPEvent(struct event_base* base, bool _deleteWhenTriggered, const std::function<void()>& _handler):
-    deleteWhenTriggered(_deleteWhenTriggered), handler(_handler)
+HTTPEvent::HTTPEvent(struct event_base* base, bool _deleteWhenTriggered, const std::function<void()>& _handler)
+    : deleteWhenTriggered(_deleteWhenTriggered), handler(_handler)
 {
     ev = event_new(base, -1, 0, httpevent_callback_fn, this);
     assert(ev);
@@ -525,8 +526,8 @@ void HTTPEvent::trigger(struct timeval* tv)
     else
         evtimer_add(ev, tv); // trigger after timeval passed
 }
-HTTPRequest::HTTPRequest(struct evhttp_request* _req) : req(_req),
-                                                       replySent(false)
+HTTPRequest::HTTPRequest(struct evhttp_request* _req)
+    : req(_req), replySent(false)
 {
 }
 HTTPRequest::~HTTPRequest()
@@ -639,21 +640,21 @@ std::string HTTPRequest::GetURI()
 HTTPRequest::RequestMethod HTTPRequest::GetRequestMethod()
 {
     switch (evhttp_request_get_command(req)) {
-    case EVHTTP_REQ_GET:
-        return GET;
-        break;
-    case EVHTTP_REQ_POST:
-        return POST;
-        break;
-    case EVHTTP_REQ_HEAD:
-        return HEAD;
-        break;
-    case EVHTTP_REQ_PUT:
-        return PUT;
-        break;
-    default:
-        return UNKNOWN;
-        break;
+        case EVHTTP_REQ_GET:
+            return GET;
+            break;
+        case EVHTTP_REQ_POST:
+            return POST;
+            break;
+        case EVHTTP_REQ_HEAD:
+            return HEAD;
+            break;
+        case EVHTTP_REQ_PUT:
+            return PUT;
+            break;
+        default:
+            return UNKNOWN;
+            break;
     }
 }
 

@@ -8,15 +8,15 @@
 #include <consensus/consensus.h>
 #include <consensus/validation.h>
 #include <crypto/sha256.h>
-#include <validation.h>
 #include <miner.h>
 #include <net_processing.h>
 #include <pow.h>
-#include <ui_interface.h>
-#include <streams.h>
-#include <rpc/server.h>
 #include <rpc/register.h>
+#include <rpc/server.h>
 #include <script/sigcache.h>
+#include <streams.h>
+#include <ui_interface.h>
+#include <validation.h>
 
 #include <coinjoin/coinjoin.h>
 #include <evo/specialtx.h>
@@ -25,6 +25,8 @@
 #include <llmq/quorums_init.h>
 
 #include <memory>
+
+const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 
 void CConnmanTest::AddNode(CNode& node)
 {
@@ -62,7 +64,6 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName)
         InitSignatureCache();
         InitScriptExecutionCache();
         CCoinJoin::InitStandardDenominations();
-        fPrintToDebugLog = false; // don't want to write to debug.log file
         fCheckBlockIndex = true;
         SelectParams(chainName);
         evoDb.reset(new CEvoDB(1 << 20, true, true));

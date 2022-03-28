@@ -47,13 +47,13 @@ SendCoinsEntry::SendCoinsEntry(QWidget* parent, bool hideFuture) :
     ui->maturity->setValidator(new QIntValidator(-1, INT_MAX, this));
     ui->locktime->setValidator(new QIntValidator(-1, INT_MAX, this));
     // Connect signals
-    connect(ui->payAmount, SIGNAL(valueChanged()), this, SIGNAL(payAmountChanged()));
-    connect(ui->checkboxSubtractFeeFromAmount, SIGNAL(toggled(bool)), this, SIGNAL(subtractFeeFromAmountChanged()));
-    connect(ui->deleteButton, SIGNAL(clicked()), this, SLOT(deleteClicked()));
-    connect(ui->deleteButton_is, SIGNAL(clicked()), this, SLOT(deleteClicked()));
-    connect(ui->deleteButton_s, SIGNAL(clicked()), this, SLOT(deleteClicked()));
-    connect(ui->useAvailableBalanceButton, SIGNAL(clicked()), this, SLOT(useAvailableBalanceClicked()));
-    connect(ui->futureCb, SIGNAL(toggled(bool)), this, SLOT(futureToggleChanged()));
+    connect(ui->payAmount, &BitcoinAmountField::valueChanged, this, &SendCoinsEntry::payAmountChanged);
+    connect(ui->checkboxSubtractFeeFromAmount, &QCheckBox::toggled, this, &SendCoinsEntry::subtractFeeFromAmountChanged);
+    connect(ui->deleteButton, &QPushButton::clicked, this, &SendCoinsEntry::deleteClicked);
+    connect(ui->deleteButton_is, &QPushButton::clicked, this, &SendCoinsEntry::deleteClicked);
+    connect(ui->deleteButton_s, &QPushButton::clicked, this, &SendCoinsEntry::deleteClicked);
+    connect(ui->useAvailableBalanceButton, &QPushButton::clicked, this, &SendCoinsEntry::useAvailableBalanceClicked);
+    connect(ui->futureCb, &QCheckBox::toggled, this, &SendCoinsEntry::futureToggleChanged);
 }
 
 SendCoinsEntry::~SendCoinsEntry()
@@ -97,7 +97,7 @@ void SendCoinsEntry::setModel(WalletModel *_model)
     this->model = _model;
 
     if (_model && _model->getOptionsModel())
-        connect(_model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
+        connect(_model->getOptionsModel(), &OptionsModel::displayUnitChanged, this, &SendCoinsEntry::updateDisplayUnit);
 
     clear();
 }

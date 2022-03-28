@@ -523,31 +523,19 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             ssKey >> strAddress;
             ssKey >> strKey;
             ssValue >> strValue;
-            if (!pwallet->LoadDestData(DecodeDestination(strAddress), strKey, strValue))
-            {
-                strErr = "Error reading wallet database: LoadDestData failed";
-                return false;
-            }
+            pwallet->LoadDestData(DecodeDestination(strAddress), strKey, strValue);
         }
         else if (strType == "hdchain")
         {
             CHDChain chain;
             ssValue >> chain;
-            if (!pwallet->SetHDChainSingle(chain, true))
-            {
-                strErr = "Error reading wallet database: SetHDChain failed";
-                return false;
-            }
+            pwallet->SetHDChainSingle(chain, true);
         }
         else if (strType == "chdchain")
         {
             CHDChain chain;
             ssValue >> chain;
-            if (!pwallet->SetCryptedHDChainSingle(chain, true))
-            {
-                strErr = "Error reading wallet database: SetHDCryptedChain failed";
-                return false;
-            }
+            pwallet->SetCryptedHDChainSingle(chain, true);
         }
         else if (strType == "hdpubkey")
         {

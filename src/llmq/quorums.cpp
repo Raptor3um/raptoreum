@@ -13,7 +13,6 @@
 
 #include <smartnode/activesmartnode.h>
 #include <chainparams.h>
-#include <threadnames.h>
 #include <smartnode/smartnode-sync.h>
 #include <net.h>
 #include <net_processing.h>
@@ -171,7 +170,7 @@ void CQuorumManager::Start()
     int workerCount = std::thread::hardware_concurrency() / 2;
     workerCount = std::max(std::min(1, workerCount), 4);
     workerPool.resize(workerCount);
-    util::RenameThreadPool(workerPool, "rtm-quorum-mngr");
+    RenameThreadPool(workerPool, "q-mngr");
 }
 
 void CQuorumManager::Stop()

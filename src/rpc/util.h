@@ -6,11 +6,10 @@
 #define BITCOIN_RPC_UTIL_H
 
 #include <pubkey.h>
+#include <protocol.h>
 #include <script/standard.h>
 #include <univalue.h>
 #include <utilstrencodings.h>
-
-#include <boost/variant/static_visitor.hpp>
 
 #include <string>
 #include <vector>
@@ -24,5 +23,8 @@ CPubKey AddrToPubKey(CKeyStore* const keystore, const std::string& addr_in);
 CScript CreateMultisigRedeemscript(const int required, const std::vector<CPubKey>& pubkeys);
 
 UniValue DescribeAddress(const CTxDestination& dest);
+
+/** Returns given services flags a list of humanly readable (known) network services */
+UniValue GetServicesNames(ServiceFlags services);
 
 #endif // BITCOIN_RPC_UTIL_H

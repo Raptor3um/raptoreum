@@ -19,26 +19,11 @@
 
 #include <wallet/rpcwallet.h>
 
-#include <fstream>
 #include <stdint.h>
 
 #include <boost/algorithm/string.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <univalue.h>
-
-int64_t static DecodeDumpTime(const std::string &str) {
-    static const boost::posix_time::ptime epoch = boost::posix_time::from_time_t(0);
-    static const std::locale loc(std::locale::classic(),
-        new boost::posix_time::time_input_facet("%Y-%m-%dT%H:%M:%SZ"));
-    std::istringstream iss(str);
-    iss.imbue(loc);
-    boost::posix_time::ptime ptime(boost::date_time::not_a_date_time);
-    iss >> ptime;
-    if (ptime.is_not_a_date_time())
-        return 0;
-    return (ptime - epoch).total_seconds();
-}
 
 std::string static EncodeDumpString(const std::string &str) {
     std::stringstream ret;
@@ -232,7 +217,7 @@ UniValue importaddress(const JSONRPCRequest& request)
             "importaddress \"address\" ( \"label\" rescan p2sh )\n"
             "\nAdds an address or script (in hex) that can be watched as if it were in your wallet but cannot be used to spend. Requires a new wallet backup.\n"
             "\nArguments:\n"
-            "1. \"address\"          (string, required) The Dash address (or hex-encoded script)\n"
+            "1. \"address\"          (string, required) The Raptoreum address (or hex-encoded script)\n"
             "2. \"label\"            (string, optional, default=\"\") An optional label\n"
             "3. rescan               (boolean, optional, default=true) Rescan the wallet for transactions\n"
             "4. p2sh                 (boolean, optional, default=false) Add the P2SH version of the script as well\n"
@@ -286,7 +271,7 @@ UniValue importaddress(const JSONRPCRequest& request)
             std::vector<unsigned char> data(ParseHex(request.params[0].get_str()));
             ImportScript(pwallet, CScript(data.begin(), data.end()), strLabel, fP2SH);
         } else {
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Dash address or script");
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Raptoreum address or script");
         }
     }
     if (fRescan)
@@ -559,8 +544,8 @@ UniValue importwallet(const JSONRPCRequest& request)
 
         EnsureWalletIsUnlocked(pwallet);
 
-        std::ifstream file;
-        file.open(request.params[0].get_str().c_str(), std::ios::in | std::ios::ate);
+        fsbridge::ifstream file;
+        file.open(request.params[0].get_str(), std::ios::in | std::ios::ate);
         if (!file.is_open()) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot open wallet dump file");
         }
@@ -592,7 +577,7 @@ UniValue importwallet(const JSONRPCRequest& request)
                     LogPrintf("Skipping import of %s (key already present)\n", EncodeDestination(keyid));
                     continue;
                 }
-                int64_t nTime = DecodeDumpTime(vstr[1]);
+                int64_t nTime = ParseISO8601DateTime(vstr[1]);
                 std::string strLabel;
                 bool fLabel = true;
                 for (unsigned int nStr = 2; nStr < vstr.size(); nStr++) {
@@ -628,7 +613,7 @@ UniValue importwallet(const JSONRPCRequest& request)
                     fGood = false;
                     continue;
                 }
-                int64_t birth_time = DecodeDumpTime(vstr[1]);
+                int64_t birth_time = ParseISO8601DateTime(vstr[1]);
                 if (birth_time > 0) {
                     pwallet->m_script_metadata[CScriptID(script)].nCreateTime = birth_time;
                     nTimeBegin = std::min(nTimeBegin, birth_time);
@@ -685,7 +670,7 @@ UniValue importelectrumwallet(const JSONRPCRequest& request)
 
     EnsureWalletIsUnlocked(pwallet);
 
-    std::ifstream file;
+    fsbridge::ifstream file;
     std::string strFileName = request.params[0].get_str();
     size_t nDotPos = strFileName.find_last_of(".");
     if(nDotPos == std::string::npos)
@@ -695,7 +680,7 @@ UniValue importelectrumwallet(const JSONRPCRequest& request)
     if(strFileExt != "json" && strFileExt != "csv")
         throw JSONRPCError(RPC_INVALID_PARAMETER, "File has wrong extension, should be .json or .csv");
 
-    file.open(strFileName.c_str(), std::ios::in | std::ios::ate);
+    file.open(strFileName, std::ios::in | std::ios::ate);
     if (!file.is_open())
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot open Electrum wallet export file");
 
@@ -824,7 +809,7 @@ UniValue dumpprivkey(const JSONRPCRequest& request)
     std::string strAddress = request.params[0].get_str();
     CTxDestination dest = DecodeDestination(strAddress);
     if (!IsValidDestination(dest)) {
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Dash address");
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Raptoreum address");
     }
     const CKeyID *keyID = boost::get<CKeyID>(&dest);
     if (!keyID) {
@@ -914,20 +899,20 @@ UniValue dumpwallet(const JSONRPCRequest& request)
 
     EnsureWalletIsUnlocked(pwallet);
 
-    boost::filesystem::path filepath = request.params[0].get_str();
-    filepath = boost::filesystem::absolute(filepath);
+    fs::path filepath = request.params[0].get_str();
+    filepath = fs::absolute(filepath);
 
     /* Prevent arbitrary files from being overwritten. There have been reports
      * that users have overwritten wallet files this way:
      * https://github.com/bitcoin/bitcoin/issues/9934
      * It may also avoid other security issues.
      */
-    if (boost::filesystem::exists(filepath)) {
+    if (fs::exists(filepath)) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, filepath.string() + " already exists. If you are sure this is what you want, move it out of the way first");
     }
 
-    std::ofstream file;
-    file.open(filepath.string().c_str());
+    fsbridge::ofstream file;
+    file.open(filepath);
     if (!file.is_open())
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot open wallet dump file");
 
@@ -949,7 +934,7 @@ UniValue dumpwallet(const JSONRPCRequest& request)
     std::sort(vKeyBirth.begin(), vKeyBirth.end());
 
     // produce output
-    file << strprintf("# Wallet dump created by Dash Core %s\n", CLIENT_BUILD);
+    file << strprintf("# Wallet dump created by Raptoreum Core %s\n", CLIENT_BUILD);
     file << strprintf("# * Created on %s\n", FormatISO8601DateTime(GetTime()));
     file << strprintf("# * Best block at time of backup was %i (%s),\n", chainActive.Height(), chainActive.Tip()->GetBlockHash().ToString());
     file << strprintf("#   mined on %s\n", FormatISO8601DateTime(chainActive.Tip()->GetBlockTime()));

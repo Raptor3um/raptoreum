@@ -15,11 +15,18 @@
 #include <saltedhasher.h>
 #include <sync.h>
 
+#if defined(MAC_OSX)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#endif
 #include <immer/map.hpp>
 #include <immer/map_transient.hpp>
 
 #include <unordered_map>
 
+#if defined(MAC_OSX)
+#pragma clang diagnostic pop
+#endif
 class CBlock;
 class CBlockIndex;
 class CValidationState;
@@ -303,7 +310,6 @@ inline void SerReadWrite(Stream& s, immer::map<K, T, Hash, Equal>& obj, CSerActi
     ::UnserializeImmerMap(s, obj);
 }
 
-
 class CDeterministicMNList
 {
 public:
@@ -338,6 +344,11 @@ public:
         READWRITE(nHeight);
         READWRITE(nTotalRegisteredCount);
     }
+
+#if defined(MAC_OSX)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#endif
 
     template<typename Stream>
     void Serialize(Stream& s) const
@@ -527,7 +538,7 @@ public:
 
 private:
     template <typename T>
-    NODISCARD bool AddUniqueProperty(const CDeterministicMNCPtr& dmn, const T& v)
+    [[nodiscard]] bool AddUniqueProperty(const CDeterministicMNCPtr& dmn, const T& v)
     {
         static const T nullValue;
         if (v == nullValue) {
@@ -547,7 +558,7 @@ private:
         return true;
     }
     template <typename T>
-    NODISCARD bool DeleteUniqueProperty(const CDeterministicMNCPtr& dmn, const T& oldValue)
+    [[nodiscard]] bool DeleteUniqueProperty(const CDeterministicMNCPtr& dmn, const T& oldValue)
     {
         static const T nullValue;
         if (oldValue == nullValue) {
@@ -567,7 +578,7 @@ private:
         return true;
     }
     template <typename T>
-    NODISCARD bool UpdateUniqueProperty(const CDeterministicMNCPtr& dmn, const T& oldValue, const T& newValue)
+    [[nodiscard]] bool UpdateUniqueProperty(const CDeterministicMNCPtr& dmn, const T& oldValue, const T& newValue)
     {
         if (oldValue == newValue) {
             return true;
@@ -722,5 +733,9 @@ private:
 };
 
 extern std::unique_ptr<CDeterministicMNManager> deterministicMNManager;
+
+#if defined(MAC_OSX)
+#pragma clang diagnostic pop
+#endif
 
 #endif //RAPTOREUM_DETERMINISTICMNS_H

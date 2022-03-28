@@ -23,8 +23,10 @@
 #include <vector>
 
 class CCoinControl;
+class CFeeRate;
 class CKey;
 class CWallet;
+enum class FeeReason;
 struct CRecipient;
 struct FuturePartialPayload;
 
@@ -247,6 +249,15 @@ public:
     //! Return wallet transaction output information.
     virtual std::vector<WalletTxOut> getCoins(const std::vector<COutPoint>& outputs) = 0;
 
+    //! Get required fee
+    virtual CAmount getRequiredFee(unsigned int tx_bytes) = 0;
+
+    //! Get minimum fee.
+    virtual CAmount getMinimumFee(unsigned int tx_bytes, const CCoinControl& coin_control, int* returned_target, FeeReason* reason) = 0;
+
+    //! Get tx confirm target.
+    virtual unsigned int getConfirmTarget() = 0;
+
     // Return whether HD enabled.
     virtual bool hdEnabled() = 0;
 
@@ -384,8 +395,8 @@ struct WalletTxOut
     bool is_spent = false;
 };
 
-//! Return implementation of Wallet interface. This function will be undefined
-//! in builds where ENABLE_WALLET is false.
+//! Return implementation of Wallet interface. This function is defined is
+//! dummywallet.cpp and throws if the wallet component is not compiled.
 std::unique_ptr<Wallet> MakeWallet(const std::shared_ptr<CWallet>& wallet);
 
 } // namespace interfaces

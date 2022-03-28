@@ -9,7 +9,6 @@
 #include <coins.h>
 #include <consensus/validation.h>
 #include <core_io.h>
-#include <init.h>
 #include <keystore.h>
 #include <validation.h>
 #include <validationinterface.h>

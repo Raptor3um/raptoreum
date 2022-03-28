@@ -13,7 +13,6 @@
 #include <smartnode/smartnode-sync.h>
 #include <net_processing.h>
 #include <spork.h>
-#include <thread.h>
 #include <validation.h>
 
 #include <cxxtimer.hpp>
@@ -412,17 +411,18 @@ std::vector<uint256> CInstantSendDb::RemoveChainedInstantSendLocks(const uint256
 CInstantSendManager::CInstantSendManager(CDBWrapper& _llmqDb) :
     db(_llmqDb)
 {
-    isendWorkInterrupt.reset();
+    workInterrupt.reset();
 }
 
 CInstantSendManager::~CInstantSendManager() = default;
 
 void CInstantSendManager::Start()
 {
-    if (!isendWorkThread.joinable()) {
-        assert(!isendWorkInterrupt);
-        isendWorkThread = std::thread(&util::TraceThread, "isman", [this] { IsendWorkThreadMain(); });
+    if (workThread.joinable()) {
+        assert(false);
     }
+
+    workThread = std::thread(&TraceThread<std::function<void()> >, "isman", std::function<void()>(std::bind(&CInstantSendManager::WorkThreadMain, this)));
 
     quorumSigningManager->RegisterRecoveredSigsListener(this);
 }
@@ -432,18 +432,18 @@ void CInstantSendManager::Stop()
     quorumSigningManager->UnregisterRecoveredSigsListener(this);
 
     // make sure to call InterruptWorkerThread() first
-    if (!isendWorkInterrupt) {
+    if (!workInterrupt) {
         assert(false);
     }
 
-    if (isendWorkThread.joinable()) {
-        isendWorkThread.join();
+    if (workThread.joinable()) {
+        workThread.join();
     }
 }
 
-void CInstantSendManager::InterruptIsendWorkerThread()
+void CInstantSendManager::InterruptWorkerThread()
 {
-    isendWorkInterrupt();
+    workInterrupt();
 }
 
 void CInstantSendManager::ProcessTx(const CTransaction& tx, bool fRetroactive, const Consensus::Params& params)
@@ -1594,13 +1594,13 @@ size_t CInstantSendManager::GetInstantSendLockCount() const
     return db.GetInstantSendLockCount();
 }
 
-void CInstantSendManager::IsendWorkThreadMain()
+void CInstantSendManager::WorkThreadMain()
 {
-    while (!isendWorkInterrupt) {
+    while (!workInterrupt) {
         bool fMoreWork = ProcessPendingInstantSendLocks();
         ProcessPendingRetryLockTxs();
 
-        if (!fMoreWork && !isendWorkInterrupt.sleep_for(std::chrono::milliseconds(100))) {
+        if (!fMoreWork && !workInterrupt.sleep_for(std::chrono::milliseconds(100))) {
             return;
         }
     }

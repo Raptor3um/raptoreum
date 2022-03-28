@@ -8,16 +8,15 @@
 #include <rpc/server.h>
 
 #include <fs.h>
-#include <init.h>
 #include <key_io.h>
 #include <random.h>
+#include <shutdown.h>
 #include <sync.h>
 #include <ui_interface.h>
 #include <util.h>
 #include <utilstrencodings.h>
 
 #include <boost/signals2/signal.hpp>
-#include <boost/algorithm/string/case_conv.hpp> // for to_upper()
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
 
@@ -188,7 +187,7 @@ bool ParseBoolV(const UniValue& v, const std::string &strName)
     else if (v.isStr())
         strBool = v.get_str();
 
-    std::transform(strBool.begin(), strBool.end(), strBool.begin(), ::tolower);
+    strBool = ToLower(strBool);
 
     if (strBool == "true" || strBool == "yes" || strBool == "1") {
         return true;
@@ -248,9 +247,7 @@ std::string CRPCTable::help(const std::string& strCommand, const std::string& st
                     if (!category.empty())
                         strRet += "\n";
                     category = pcmd->category;
-                    std::string firstLetter = category.substr(0,1);
-                    boost::to_upper(firstLetter);
-                    strRet += "== " + firstLetter + category.substr(1) + " ==\n";
+                    strRet += "== " + Capitalize(category) + " ==\n";
                 }
             }
             strRet += strHelp + "\n";
@@ -379,12 +376,11 @@ bool CRPCTable::appendCommand(const std::string& name, const CRPCCommand* pcmd)
     return true;
 }
 
-bool StartRPC()
+void StartRPC()
 {
     LogPrint(BCLog::RPC, "Starting RPC\n");
     fRPCRunning = true;
     g_rpcSignals.Started();
-    return true;
 }
 
 void InterruptRPC()
@@ -668,7 +664,7 @@ void RPCUnsetTimerInterface(RPCTimerInterface *iface)
         timerInterface = nullptr;
 }
 
-void RPCRunLater(const std::string& name, std::function<void(void)> func, int64_t nSeconds)
+void RPCRunLater(const std::string& name, std::function<void()> func, int64_t nSeconds)
 {
     if (!timerInterface)
         throw JSONRPCError(RPC_INTERNAL_ERROR, "No timer handler registered for RPC");

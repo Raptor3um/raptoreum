@@ -68,8 +68,8 @@ public:
     };
 
 protected:
-    virtual bool eventFilter(QObject* obj, QEvent *event);
-    void keyPressEvent(QKeyEvent *);
+    virtual bool eventFilter(QObject* obj, QEvent *event) override;
+    void keyPressEvent(QKeyEvent *) override;
 
 private Q_SLOTS:
     /** custom tab buttons clicked */
@@ -80,10 +80,10 @@ private Q_SLOTS:
     void on_openDebugLogfileButton_clicked();
     /** change the time range of the network traffic graph */
     void on_sldGraphRange_valueChanged(int value);
-    void resizeEvent(QResizeEvent *event);
-    void showEvent(QShowEvent *event);
-    void hideEvent(QHideEvent *event);
-    void changeEvent(QEvent* e);
+    void resizeEvent(QResizeEvent *event) override;
+    void showEvent(QShowEvent *event) override;
+    void hideEvent(QHideEvent *event) override;
+    void changeEvent(QEvent* e) override;
     /** Show custom context menu on Peers tab */
     void showPeersTableContextMenu(const QPoint& point);
     /** Show custom context menu on Bans tab */
@@ -109,13 +109,16 @@ public Q_SLOTS:
     void walletReindex();
 
     /** Append the message to the message widget */
-    void message(int category, const QString &message, bool html = false);
+    void message(int category, const QString &msg) { message(category, msg, false); }
+    void message(int category, const QString &message, bool html);
     /** Set number of connections shown in the UI */
     void setNumConnections(int count);
     /** Set network state shown in the UI */
     void setNetworkActive(bool networkActive);
     /** Update number of smartnodes shown in the UI */
     void updateSmartnodeCount();
+    /** Set latest chainlocked hash and height shown in the UI */
+    void setChainLock(const QString& bestChainLockHash, int bestChainLockHeight);
     /** Set number of blocks, last block date and last block hash shown in the UI */
     void setNumBlocks(int count, const QDateTime& blockDate, const QString& blockHash, double nVerificationProgress, bool headers);
     /** Set size (number of transactions and memory usage) of the mempool in the UI */
@@ -143,7 +146,6 @@ public Q_SLOTS:
 
 Q_SIGNALS:
     // For RPC command executor
-    void stopExecutor();
     void cmdRequest(const QString &command, const WalletModel* wallet_model);
     /** Get restart command-line parameters and handle restart */
     void handleRestart(QStringList args);

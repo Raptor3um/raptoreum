@@ -13,7 +13,7 @@
 #include <scheduler.h>
 #include <spork.h>
 #include <txmempool.h>
-#include <thread.h>
+#include <ui_interface.h>
 #include <validation.h>
 
 namespace llmq
@@ -33,11 +33,10 @@ std::string CChainLockSig::ToString() const
     return strprintf("CChainLockSig(nHeight=%d, blockHash=%s)", nHeight, blockHash.ToString());
 }
 
-CChainLocksHandler::CChainLocksHandler()
+CChainLocksHandler::CChainLocksHandler() : scheduler(std::make_unique<CScheduler>())
 {
-	scheduler = std::make_unique<CScheduler>();
     CScheduler::Function serviceLoop = std::bind(&CScheduler::serviceQueue, scheduler.get());
-    scheduler_thread = make_unique<std::thread>(std::bind(&TraceCL<CScheduler::Function>, "cl-schdlr", serviceLoop));
+    scheduler_thread = std::make_unique<std::thread>(std::bind(&TraceThread<CScheduler::Function>, "cl-schdlr", serviceLoop));
 }
 
 CChainLocksHandler::~CChainLocksHandler()
@@ -54,7 +53,7 @@ void CChainLocksHandler::Start()
         EnforceBestChainLock();
         // regularly retry signing the current chaintip as it might have failed before due to missing islocks
         TrySignChainTip();
-    }, std::chrono::seconds{5});
+    }, 5 * 1000);
 }
 
 void CChainLocksHandler::Stop()
@@ -176,7 +175,7 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, const llmq::CCha
     scheduler->scheduleFromNow([&]() {
         CheckActiveState();
         EnforceBestChainLock();
-    }, std::chrono::milliseconds{0});
+    }, 0);
 
     LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- processed new CLSIG (%s), peer=%d\n",
               __func__, clsig.ToString(), from);
@@ -220,7 +219,7 @@ void CChainLocksHandler::UpdatedBlockTip(const CBlockIndex* pindexNew)
         TrySignChainTip();
         LOCK(cs);
         tryLockChainTipScheduled = false;
-    }, std::chrono::milliseconds{0});
+    }, 0);
 }
 
 void CChainLocksHandler::CheckActiveState()
@@ -567,6 +566,7 @@ void CChainLocksHandler::EnforceBestChainLock()
 
     if (pindexNotify) {
         GetMainSignals().NotifyChainLock(pindexNotify, clsig);
+        uiInterface.NotifyChainLock(clsig->blockHash.ToString(), clsig->nHeight);
     }
 }
 

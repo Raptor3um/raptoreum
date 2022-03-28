@@ -343,7 +343,7 @@ if test "$enable_debug" = "yes"; then
     [AX_CHECK_COMPILE_FLAG([-g], [DEBUG_CXXFLAGS="$DEBUG_CXXFLAGS -g"], [], [$CXXFLAG_WERROR])],
     [$CXXFLAG_WERROR])
 
-  AX_CHECK_PREPROC_FLAG([-DDEBUG],                  [DEBUG_CPPFLAGS="$DEBUG_CPPFLAGS -DDEBUG"],                  [], [$CXXFLAG_WERROR])
+  AX_CHECK_PREPROC_FLAG([-DDEBUG_CORE],             [DEBUG_CPPFLAGS="$DEBUG_CPPFLAGS -DDEBUG_CORE"],             [], [$CXXFLAG_WERROR])
   AX_CHECK_PREPROC_FLAG([-DDEBUG_LOCKORDER],        [DEBUG_CPPFLAGS="$DEBUG_CPPFLAGS -DDEBUG_LOCKORDER"],        [], [$CXXFLAG_WERROR])
   AX_CHECK_PREPROC_FLAG([-DABORT_ON_FAILED_ASSUME], [DEBUG_CPPFLAGS="$DEBUG_CPPFLAGS -DABORT_ON_FAILED_ASSUME"], [], [£CXXFLAG_WERROR])
   AX_CHECK_COMPILE_FLAG([-ftrapv],                  [DEBUG_CXXFLAGS="$DEBUG_CXXFLAGS -ftrapv"],                  [], [$CXXFLAG_WERROR])
@@ -668,7 +668,7 @@ case $host in
        AC_MSG_ERROR([windres not found])
      fi
 
-     CPPFLAGS="$CPPFLAGS -D_MT -DWIN32 -D_WINDOWS -D_WIN32_WINNT=0x0601 -D_WIN32_IE=0x0501 -DWIN32_LEAN_AND_MEAN"
+     CPPFLAGS="$CPPFLAGS -D_MT -DWIN32 -D_WINDOWS -DBOOST_THREAD_USE_LIB -D_WIN32_WINNT=0x0601"
 
      dnl libtool insists upon adding -nostdlib and a list of objects/libs to link against.
      dnl That breaks our ability to build dll's with static libgcc/libstdc++/libssp. Override
@@ -1136,7 +1136,7 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <sys/types.h>
     #error "Do not use sysctl on Linux. It is deprecated even when it works"
     #endif
     static int name[2] = {CTL_KERN, KERN_ARND};
-    sysctl(NAME, 2, nullptr, nullptr, nullptr, 0); ]] ) ],
+    sysctl(name, 2, nullptr, nullptr, nullptr, 0); ]] ) ],
  [ AC_MSG_RESULT([yes]); AC_DEFINE([HAVE_SYSCTL_ARND], [1], [Define this symbol if the BSD sysctl(KERN_ARND) is available])  ],
  [ AC_MSG_RESULT([no])]
 )
@@ -1370,14 +1370,13 @@ if test "$use_boost" = "yes"; then
   fi
   AX_BOOST_FILESYSTEM
   AX_BOOST_SYSTEM
-  AX_BOOST_PROGRAM_OPTIONS
   AX_BOOST_THREAD
 
   if test "$suppress_external_warnings" != "no"; then
     BOOST_CPPFLAGS=SUPPRESS_WARNINGS($BOOST_CPPFLAGS)
   fi
 
-  BOOST_LIBS="$BOOST_LDFLAGS $BOOST_FILESYSTEM_LIB $BOOST_SYSTEM_LIB $BOOST_PROGRAM_OPTIONS_LIB $BOOST_THREAD_LIB"
+  BOOST_LIBS="$BOOST_LDFLAGS $BOOST_FILESYSTEM_LIB $BOOST_SYSTEM_LIB $BOOST_THREAD_LIB"
 fi
 
 dnl Check for reduced exports

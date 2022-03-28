@@ -11,14 +11,13 @@
 #include <functional>
 #include <utility>
 
-CScheduler::CScheduler()
+CScheduler::CScheduler() : nThreadsServicingQueue(0), stopRequested(false), stopWhenEmpty(false)
 {
 }
 
 CScheduler::~CScheduler()
 {
     assert(nThreadsServicingQueue == 0);
-    if (stopWhenEmpty) assert(taskQueue.empty());
 }
 
 void CScheduler::serviceQueue()
@@ -79,8 +78,6 @@ void CScheduler::stop(bool drain)
             stopRequested = true;
     }
     newTaskScheduled.notify_all();
-    if (m_service_thread.joinable())
-        m_service_thread.join();
 }
 
 void CScheduler::schedule(CScheduler::Function f, std::chrono::system_clock::time_point t)
@@ -92,16 +89,20 @@ void CScheduler::schedule(CScheduler::Function f, std::chrono::system_clock::tim
     newTaskScheduled.notify_one();
 }
 
-
-static void Repeat(CScheduler& s, CScheduler::Function f, std::chrono::milliseconds delta)
+void CScheduler::scheduleFromNow(CScheduler::Function f, int64_t deltaMilliSeconds)
 {
-    f();
-    s.scheduleFromNow([=, &s] { Repeat(s, f, delta); }, delta);
+    schedule(f, std::chrono::system_clock::now() + std::chrono::milliseconds(deltaMilliSeconds));
 }
 
-void CScheduler::scheduleEvery(CScheduler::Function f, std::chrono::milliseconds delta)
+static void Repeat(CScheduler* s, CScheduler::Function f, int64_t deltaMilliSeconds)
 {
-    scheduleFromNow([this, f, delta] { Repeat(*this, f, delta); }, delta);;
+    f();
+    s->scheduleFromNow(std::bind(&Repeat, s, f, deltaMilliSeconds), deltaMilliSeconds);
+}
+
+void CScheduler::scheduleEvery(CScheduler::Function f, int64_t deltaMilliSeconds)
+{
+    scheduleFromNow(std::bind(&Repeat, this, f, deltaMilliSeconds), deltaMilliSeconds);
 }
 
 size_t CScheduler::getQueueInfo(std::chrono::system_clock::time_point &first, std::chrono::system_clock::time_point &last) const

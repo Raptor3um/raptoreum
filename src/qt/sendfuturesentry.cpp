@@ -4,6 +4,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#if defined(HAVE_CONFIG_H)
+#include <config/raptoreum-config.h>
+#endif
+
 #include <qt/sendfuturesentry.h>
 #include <qt/forms/ui_sendfuturesentry.h>
 
@@ -64,16 +68,16 @@ SendFuturesEntry::SendFuturesEntry(QWidget* parent) :
     ui->ftxLockTime->setMinimumDate( QDate::currentDate() );
 
     // Connect signals
-    connect(ui->payAmount, SIGNAL(valueChanged()), this, SIGNAL(payAmountChanged()));
-    //connect(ui->checkboxSubtractFeeFromAmount, SIGNAL(toggled(bool)), this, SIGNAL(subtractFeeFromAmountChanged()));
-    //connect(ui->deleteButton, SIGNAL(clicked()), this, SLOT(deleteClicked()));
-    //connect(ui->deleteButton_is, SIGNAL(clicked()), this, SLOT(deleteClicked()));
-    //connect(ui->deleteButton_s, SIGNAL(clicked()), this, SLOT(deleteClicked()));
+    connect(ui->payAmount, &BitcoinAmountField::valueChanged, this, &SendFuturesEntry::payAmountChanged);
+    //connect(ui->checkboxSubtractFeeFromAmount, &QCheckBox::toggled, this, &SendFuturesEntry::subtractFeeFromAmountChanged);
+    //connect(ui->deleteButton, &QPushButton::clicked, this, &SendFuturesEntry::deleteClicked);
+    //connect(ui->deleteButton_is, &QPushButton::clicked, this, &SendFuturesEntry::deleteClicked);
+    //connect(ui->deleteButton_s, &QPushButton::clicked, this, &SendFuturesEntry::deleteClicked);
 
     //Connect signals for future tx pay from field
-    connect(ui->payFrom, SIGNAL(currentTextChanged(const QString &)), this, SIGNAL(payFromChanged(const QString &)));
+    connect(ui->payFrom, &QComboBox::currentTextChanged, this, &SendFuturesEntry::payFromChanged);
     //Connect signals for FTX maturity fields
-    connect(ui->ftxLockTime, SIGNAL(dateTimeChanged (QDateTime)), this, SLOT(updateLockTimeField (QDateTime)));
+    connect(ui->ftxLockTime, &QDateTimeEdit::dateTimeChanged, this, &SendFuturesEntry::updateLockTimeField);
 }
 
 SendFuturesEntry::~SendFuturesEntry()
@@ -111,8 +115,8 @@ void SendFuturesEntry::setModel(WalletModel *_model)
 
     if (_model && _model->getOptionsModel())
     {
-        connect(_model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
-        connect(_model, SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)), this, SLOT(setupPayFrom()));
+        connect(_model->getOptionsModel(), &OptionsModel::displayUnitChanged, this, &SendFuturesEntry::updateDisplayUnit);
+        connect(_model, &WalletModel::balanceChanged, this, &SendFuturesEntry::setupPayFrom);
     }
     clear();
 }
@@ -338,7 +342,7 @@ void SendFuturesEntry::updateLockTimeField(const QDateTime & dateTime)
     //Calculate seconds from now to the chosen datetime value
     qint64 futureTime = currentDateTime.secsTo(dateTime) > 0 ? currentDateTime.secsTo(dateTime) : -1;
     QString int_string = QString::number(futureTime);
-    
+
     //set the seconds in this field for handling
     ui->ftxLockTimeField->setText(int_string);
 }

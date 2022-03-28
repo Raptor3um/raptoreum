@@ -65,7 +65,7 @@ private Q_SLOTS:
     void setupPayFrom();
 
 protected:
-    void changeEvent(QEvent* e);
+    void changeEvent(QEvent* e) override;
 
 private:
     SendFuturesRecipient recipient;

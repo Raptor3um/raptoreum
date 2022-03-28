@@ -25,6 +25,7 @@
 #include <primitives/block.h>
 #include <rpc/server.h>
 #include <scheduler.h>
+#include <shutdown.h>
 #include <sync.h>
 #include <txmempool.h>
 #include <ui_interface.h>
@@ -35,20 +36,22 @@
 #if defined(HAVE_CONFIG_H)
 #include <config/raptoreum-config.h>
 #endif
-#ifdef ENABLE_WALLET
+
+#include <coinjoin/coinjoin.h>
 #include <coinjoin/coinjoin-client-options.h>
-#include <wallet/fees.h>
-#include <wallet/wallet.h>
-#define CHECK_WALLET(x) x
-#else
-#define CHECK_WALLET(x) throw std::logic_error("Wallet function called in non-wallet build.")
-#endif
 
 #include <atomic>
-#include <boost/thread/thread.hpp>
 #include <univalue.h>
 
+class CWallet;
+fs::path GetWalletDir();
+std::vector<fs::path> ListWalletDir();
+std::vector<std::shared_ptr<CWallet>> GetWallets();
+
 namespace interfaces {
+
+class Wallet;
+
 namespace {
 
 class EVOImpl : public EVO
@@ -75,21 +78,20 @@ public:
 class SmartnodeSyncImpl : public Smartnode::Sync
 {
 public:
-    bool isSynced()
+    bool isSynced() override
     {
         return smartnodeSync.IsSynced();
     }
-    bool isBlockchainSynced()
+    bool isBlockchainSynced() override
     {
         return smartnodeSync.IsBlockchainSynced();
     }
-    std::string getSyncStatus()
+    std::string getSyncStatus() override
     {
         return smartnodeSync.GetSyncStatus();
     }
 };
 
-#ifdef ENABLE_WALLET
 class CoinJoinOptionsImpl : public CoinJoin::Options
 {
 public:
@@ -150,30 +152,29 @@ public:
         return CCoinJoin::GetStandardDenominations();
     }
 };
-#endif
 
 class NodeImpl : public Node
 {
     EVOImpl m_evo;
     LLMQImpl m_llmq;
     SmartnodeSyncImpl m_smartnodeSync;
-#ifdef ENABLE_WALLET
     CoinJoinOptionsImpl m_coinjoin;
-#endif
 
-    void parseParameters(int argc, const char* const argv[]) override
+    bool parseParameters(int argc, const char* const argv[], std::string& error) override
     {
-        gArgs.ParseParameters(argc, argv);
+        return gArgs.ParseParameters(argc, argv, error);
     }
-    void readConfigFile(const std::string& conf_path) override { gArgs.ReadConfigFile(conf_path); }
+    bool readConfigFiles(std::string& error) override { return gArgs.ReadConfigFiles(error, true); }
     bool softSetArg(const std::string& arg, const std::string& value) override { return gArgs.SoftSetArg(arg, value); }
     bool softSetBoolArg(const std::string& arg, bool value) override { return gArgs.SoftSetBoolArg(arg, value); }
     void selectParams(const std::string& network) override { SelectParams(network); }
+    uint64_t getAssumedBlockchainSize() override { return Params().AssumedBlockchainSize(); }
+    uint64_t getAssumedChainStateSize() override { return Params().AssumedChainStateSize(); }
     std::string getNetwork() override { return Params().NetworkIDString(); }
     void initLogging() override { InitLogging(); }
     void initParameterInteraction() override { InitParameterInteraction(); }
     std::string getWarnings(const std::string& type) override { return GetWarnings(type); }
-    uint64_t getLogCategories() override { return ::logCategories; }
+    uint64_t getLogCategories() override { return LogInstance().GetCategoryMask(); }
     bool baseInitialize() override
     {
         return AppInitBasicSetup() && AppInitParameterInteraction() && AppInitSanityChecks() &&
@@ -184,6 +185,12 @@ class NodeImpl : public Node
     {
         Interrupt();
         Shutdown();
+    }
+    void appPrepareShutdown() override
+    {
+        Interrupt();
+        StartRestart();
+        PrepareShutdown();
     }
     void startShutdown() override { StartShutdown(); }
     bool shutdownRequested() override { return ShutdownRequested(); }
@@ -304,20 +311,6 @@ class NodeImpl : public Node
         }
     }
     bool getNetworkActive() override { return g_connman && g_connman->GetNetworkActive(); }
-    unsigned int getTxConfirmTarget() override { CHECK_WALLET(return ::nTxConfirmTarget); }
-    CAmount getRequiredFee(unsigned int tx_bytes) override { CHECK_WALLET(return GetRequiredFee(tx_bytes)); }
-    CAmount getMinimumFee(unsigned int tx_bytes,
-        const CCoinControl& coin_control,
-        int* returned_target,
-        FeeReason* reason) override
-    {
-        FeeCalculation fee_calc;
-        CAmount result;
-        CHECK_WALLET(result = GetMinimumFee(tx_bytes, coin_control, ::mempool, ::feeEstimator, &fee_calc));
-        if (returned_target) *returned_target = fee_calc.returnedTarget;
-        if (reason) *reason = fee_calc.reason;
-        return result;
-    }
     CAmount getMaxTxFee() override { return ::maxTxFee; }
     CFeeRate estimateSmartFee(int num_blocks, bool conservative, int* returned_target = nullptr) override
     {
@@ -345,73 +338,85 @@ class NodeImpl : public Node
         LOCK(::cs_main);
         return ::pcoinsTip->GetCoin(output, coin);
     }
+    std::string getWalletDir() override
+    {
+        return GetWalletDir().string();
+    }
+    std::vector<std::string> listWalletDir() override
+    {
+        std::vector<std::string> paths;
+        for (auto& path : ListWalletDir()) {
+            paths.push_back(path.string());
+        }
+        return paths;
+    }
     std::vector<std::unique_ptr<Wallet>> getWallets() override
     {
-#ifdef ENABLE_WALLET
         std::vector<std::unique_ptr<Wallet>> wallets;
         for (const std::shared_ptr<CWallet>& wallet : GetWallets()) {
             wallets.emplace_back(MakeWallet(wallet));
         }
         return wallets;
-#else
         throw std::logic_error("Node::getWallets() called in non-wallet build.");
-#endif
     }
     EVO& evo() override { return m_evo; }
     LLMQ& llmq() override { return m_llmq; }
     Smartnode::Sync& smartnodeSync() override { return m_smartnodeSync; }
-#ifdef ENABLE_WALLET
     CoinJoin::Options& coinJoinOptions() override { return m_coinjoin; }
-#endif
 
     std::unique_ptr<Handler> handleInitMessage(InitMessageFn fn) override
     {
-        return MakeHandler(::uiInterface.InitMessage.connect(fn));
+        return MakeHandler(::uiInterface.InitMessage_connect(fn));
     }
     std::unique_ptr<Handler> handleMessageBox(MessageBoxFn fn) override
     {
-        return MakeHandler(::uiInterface.ThreadSafeMessageBox.connect(fn));
+        return MakeHandler(::uiInterface.ThreadSafeMessageBox_connect(fn));
     }
     std::unique_ptr<Handler> handleQuestion(QuestionFn fn) override
     {
-        return MakeHandler(::uiInterface.ThreadSafeQuestion.connect(fn));
+        return MakeHandler(::uiInterface.ThreadSafeQuestion_connect(fn));
     }
     std::unique_ptr<Handler> handleShowProgress(ShowProgressFn fn) override
     {
-        return MakeHandler(::uiInterface.ShowProgress.connect(fn));
+        return MakeHandler(::uiInterface.ShowProgress_connect(fn));
     }
     std::unique_ptr<Handler> handleLoadWallet(LoadWalletFn fn) override
     {
-        CHECK_WALLET(
-            return MakeHandler(::uiInterface.LoadWallet.connect([fn](std::shared_ptr<CWallet> wallet) { fn(MakeWallet(wallet)); })));
+        return MakeHandler(::uiInterface.LoadWallet_connect([fn](std::shared_ptr<CWallet> wallet) { fn(MakeWallet(wallet)); }));
     }
     std::unique_ptr<Handler> handleNotifyNumConnectionsChanged(NotifyNumConnectionsChangedFn fn) override
     {
-        return MakeHandler(::uiInterface.NotifyNumConnectionsChanged.connect(fn));
+        return MakeHandler(::uiInterface.NotifyNumConnectionsChanged_connect(fn));
     }
     std::unique_ptr<Handler> handleNotifyNetworkActiveChanged(NotifyNetworkActiveChangedFn fn) override
     {
-        return MakeHandler(::uiInterface.NotifyNetworkActiveChanged.connect(fn));
+        return MakeHandler(::uiInterface.NotifyNetworkActiveChanged_connect(fn));
     }
     std::unique_ptr<Handler> handleNotifyAlertChanged(NotifyAlertChangedFn fn) override
     {
-        return MakeHandler(::uiInterface.NotifyAlertChanged.connect(fn));
+        return MakeHandler(::uiInterface.NotifyAlertChanged_connect(fn));
     }
     std::unique_ptr<Handler> handleBannedListChanged(BannedListChangedFn fn) override
     {
-        return MakeHandler(::uiInterface.BannedListChanged.connect(fn));
+        return MakeHandler(::uiInterface.BannedListChanged_connect(fn));
     }
     std::unique_ptr<Handler> handleNotifyBlockTip(NotifyBlockTipFn fn) override
     {
-        return MakeHandler(::uiInterface.NotifyBlockTip.connect([fn](bool initial_download, const CBlockIndex* block) {
+        return MakeHandler(::uiInterface.NotifyBlockTip_connect([fn](bool initial_download, const CBlockIndex* block) {
             fn(initial_download, block->nHeight, block->GetBlockTime(), block->GetBlockHash().ToString(),
                 GuessVerificationProgress(Params().TxData(), block));
+        }));
+    }
+    std::unique_ptr<Handler> handleNotifyChainLock(NotifyChainLockFn fn) override
+    {
+        return MakeHandler(::uiInterface.NotifyChainLock_connect([fn](const std::string& bestChainLockHash, int bestChainLockHeight) {
+            fn(bestChainLockHash, bestChainLockHeight);
         }));
     }
     std::unique_ptr<Handler> handleNotifyHeaderTip(NotifyHeaderTipFn fn) override
     {
         return MakeHandler(
-            ::uiInterface.NotifyHeaderTip.connect([fn](bool initial_download, const CBlockIndex* block) {
+            ::uiInterface.NotifyHeaderTip_connect([fn](bool initial_download, const CBlockIndex* block) {
                 fn(initial_download, block->nHeight, block->GetBlockTime(), block->GetBlockHash().ToString(),
                     GuessVerificationProgress(Params().TxData(), block));
             }));
@@ -419,14 +424,14 @@ class NodeImpl : public Node
     std::unique_ptr<Handler> handleNotifySmartnodeListChanged(NotifySmartnodeListChangedFn fn) override
     {
         return MakeHandler(
-            ::uiInterface.NotifySmartnodeListChanged.connect([fn](const CDeterministicMNList& newList) {
+            ::uiInterface.NotifySmartnodeListChanged_connect([fn](const CDeterministicMNList& newList) {
                 fn(newList);
             }));
     }
     std::unique_ptr<Handler> handleNotifyAdditionalDataSyncProgressChanged(NotifyAdditionalDataSyncProgressChangedFn fn) override
     {
         return MakeHandler(
-            ::uiInterface.NotifyAdditionalDataSyncProgressChanged.connect([fn](double nSyncProgress) {
+            ::uiInterface.NotifyAdditionalDataSyncProgressChanged_connect([fn](double nSyncProgress) {
                 fn(nSyncProgress);
             }));
     }

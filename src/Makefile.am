@@ -39,7 +39,7 @@ endif # ENABLE_STACKTRACES
 
 BITCOIN_INCLUDES=-I$(builddir) -I$(srcdir)/secp256k1/include -I$(srcdir)/$(UNIVALUE_INCLUDE_DIR_INT) $(BDB_CPPFLAGS) $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS) $(CRYPTO_CFLAGS) $(SSL_CFLAGS)
 
-BLS_LIBS=-lbls-dash -lgmp
+BLS_LIBS=-lbls-dash -lrelic_s
 
 LIBBITCOIN_SERVER=libraptoreum_server.a
 LIBBITCOIN_COMMON=libraptoreum_common.a
@@ -151,7 +151,7 @@ BITCOIN_CORE_H = \
   core_io.h \
   core_memusage.h \
   cuckoocache.h \
-  ctpl.h \
+  ctpl_stl.h \
   cxxtimer.hpp \
   evo/cbtx.h \
   evo/deterministicmns.h \
@@ -243,6 +243,7 @@ BITCOIN_CORE_H = \
   script/sigcache.h \
   script/sign.h \
   script/standard.h \
+  shutdown.h \
   spork.h \
   stacktraces.h \
   streams.h \
@@ -267,9 +268,9 @@ BITCOIN_CORE_H = \
   utilmacro.h \
   utilmoneystr.h \
   util.h \
-  thread.h \
-  threadnames.h \
   utiltime.h \
+  utilstring.h \
+  utilthreadnames.h \
   utilmemory.h \
   validation.h \
   validationinterface.h \
@@ -311,6 +312,7 @@ libraptoreum_server_a_SOURCES = \
   chain.cpp \
   checkpoints.cpp \
   coinjoin/coinjoin.cpp \
+  coinjoin/coinjoin-client-options.cpp\
   coinjoin/coinjoin-server.cpp \
   consensus/tx_verify.cpp \
   dsnotificationinterface.cpp \
@@ -321,6 +323,7 @@ libraptoreum_server_a_SOURCES = \
   evo/providertx.cpp \
   evo/simplifiedmns.cpp \
   evo/specialtx.cpp \
+  shutdown.cpp \
   httprpc.cpp \
   httpserver.cpp \
   init.cpp \
@@ -393,7 +396,7 @@ libraptoreum_server_a_SOURCES += dummywallet.cpp
 endif
 
 if ENABLE_ZMQ
-libraptoreum_zmq_a_CPPFLAGS = $(BITCOIN_INCLUDES) $(ZMQ_CFLAGS)
+libraptoreum_zmq_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(ZMQ_CFLAGS)
 libraptoreum_zmq_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libraptoreum_zmq_a_SOURCES = \
   zmq/zmqabstractnotifier.cpp \
@@ -648,12 +651,12 @@ libraptoreum_util_a_SOURCES = \
   support/cleanse.cpp \
   sync.cpp \
   threadinterrupt.cpp \
-  thread.cpp \
-  threadnames.cpp \
   util.cpp \
   utilmoneystr.cpp \
   utilstrencodings.cpp \
+  utilstring.cpp \
   utiltime.cpp \
+  utilthreadnames.cpp \
   $(BITCOIN_CORE_H)
 
 # cli: shared between raptoreum-cli and raptoreum-qt
@@ -679,9 +682,10 @@ endif
 raptoreumd_LDADD = \
   $(LIBBITCOIN_SERVER) \
   $(LIBBITCOIN_WALLET) \
+  $(LIBBITCOIN_SERVER) \
   $(LIBBITCOIN_COMMON) \
-  $(LIBBITCOIN_UTIL) \
   $(LIBUNIVALUE) \
+  $(LIBBITCOIN_UTIL) \
   $(LIBBITCOIN_ZMQ) \
   $(LIBBITCOIN_CONSENSUS) \
   $(LIBBITCOIN_CRYPTO) \
@@ -690,7 +694,7 @@ raptoreumd_LDADD = \
   $(LIBMEMENV) \
   $(LIBSECP256K1)
 
-raptoreumd_LDADD += $(BACKTRACE_LIB) $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(BLS_LIBS)
+raptoreumd_LDADD += $(BACKTRACE_LIB) $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(BLS_LIBS) $(GMP_LIBS)
 
 # raptoreum-cli binary #
 raptoreum_cli_SOURCES = raptoreum-cli.cpp
@@ -708,7 +712,7 @@ raptoreum_cli_LDADD = \
   $(LIBBITCOIN_UTIL) \
   $(LIBBITCOIN_CRYPTO)
 
-raptoreum_cli_LDADD += $(BACKTRACE_LIB) $(BOOST_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS) $(BLS_LIBS)
+raptoreum_cli_LDADD += $(BACKTRACE_LIB) $(BOOST_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS) $(BLS_LIBS) $(GMP_LIBS)
 #
 
 # raptoreum-tx binary #
@@ -729,7 +733,7 @@ raptoreum_tx_LDADD = \
   $(LIBBITCOIN_CRYPTO) \
   $(LIBSECP256K1)
 
-raptoreum_tx_LDADD += $(BACKTRACE_LIB) $(BOOST_LIBS) $(CRYPTO_LIBS) $(BLS_LIBS)
+raptoreum_tx_LDADD += $(BACKTRACE_LIB) $(BOOST_LIBS) $(CRYPTO_LIBS) $(BLS_LIBS) $(GMP_LIBS)
 #
 
 # raptoreumconsensus library #
@@ -738,7 +742,7 @@ include_HEADERS = script/raptoreumconsensus.h
 libraptoreumconsensus_la_SOURCES = support/cleanse.cpp $(crypto_libraptoreum_crypto_a_SOURCES) $(libraptoreum_consensus_a_SOURCES)
 
 libraptoreumconsensus_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS)
-libraptoreumconsensus_la_LIBADD = $(LIBSECP256K1) $(BLS_LIBS)
+libraptoreumconsensus_la_LIBADD = $(LIBSECP256K1) $(BLS_LIBS) $(GMP_LIBS)
 libraptoreumconsensus_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include -DBUILD_BITCOIN_INTERNAL
 libraptoreumconsensus_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 
@@ -768,11 +772,7 @@ CLEANFILES += wallet/test/*.gcda wallet/test/*.gcno
 CLEANFILES += zmq/*.gcda zmq/*.gcno
 CLEANFILES += obj/build.h
 
-IMMER_DIST = immer
-
 EXTRA_DIST = $(CTAES_DIST)
-EXTRA_DIST += $(IMMER_DIST)
-
 
 config/raptoreum-config.h: config/stamp-h1
 	@$(MAKE) -C $(top_builddir) $(subdir)/$(@)

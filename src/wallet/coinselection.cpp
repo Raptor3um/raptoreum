@@ -3,10 +3,13 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <wallet/coinselection.h>
+
 #include <util.h>
 #include <utilmoneystr.h>
 
 #include <coinjoin/coinjoin.h>
+
+#include <boost/optional.hpp>
 
 // Descending order comparator
 struct {

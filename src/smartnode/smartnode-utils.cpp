@@ -8,8 +8,9 @@
 #ifdef ENABLE_WALLET
 #include <coinjoin/coinjoin-client.h>
 #endif
-#include <init.h>
 #include <smartnode/smartnode-sync.h>
+#include <net.h>
+#include <shutdown.h>
 #include <validation.h>
 
 struct CompareScoreMN

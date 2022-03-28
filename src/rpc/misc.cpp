@@ -10,7 +10,6 @@
 #include <consensus/consensus.h>
 #include <core_io.h>
 #include <evo/mnauth.h>
-#include <init.h>
 #include <httpserver.h>
 #include <key_io.h>
 #include <net.h>
@@ -41,46 +40,6 @@
 #include <boost/algorithm/string.hpp>
 
 #include <univalue.h>
-
-UniValue debug(const JSONRPCRequest& request)
-{
-    if (request.fHelp || request.params.size() != 1)
-        throw std::runtime_error(
-            "debug \"category\"\n"
-            "Change debug category on the fly. Specify single category or use '+' to specify many.\n"
-            "The valid debug categories are: " + ListLogCategories() + ".\n"
-            "libevent logging is configured on startup and cannot be modified by this RPC during runtime.\n"
-            "There are also a few meta-categories:\n"
-            " - \"all\", \"1\" and \"\" activate all categories at once;\n"
-            " - \"raptoreum\" activates all Raptoreum-specific categories at once;\n"
-            " - \"none\" (or \"0\") deactivates all categories at once.\n"
-            "Note: If specified category doesn't match any of the above, no error is thrown.\n"
-            "\nArguments:\n"
-            "1. \"category\"          (string, required) The name of the debug category to turn on.\n"
-            "\nResult:\n"
-            "  result               (string) \"Debug mode: \" followed by the specified category.\n"
-            "\nExamples:\n"
-            + HelpExampleCli("debug", "raptoreum")
-            + HelpExampleRpc("debug", "raptoreum+net")
-        );
-
-    std::string strMode = request.params[0].get_str();
-    logCategories = BCLog::NONE;
-
-    std::vector<std::string> categories;
-    boost::split(categories, strMode, boost::is_any_of("+"));
-
-    if (std::find(categories.begin(), categories.end(), std::string("0")) == categories.end()) {
-        for (const auto& cat : categories) {
-            uint64_t flag;
-            if (GetLogCategory(&flag, &cat)) {
-                logCategories |= flag;
-            }
-        }
-    }
-
-    return "Debug mode: " + ListActiveLogCategoriesString();
-}
 
 UniValue mnsync(const JSONRPCRequest& request)
 {
@@ -1038,21 +997,22 @@ UniValue getmemoryinfo(const JSONRPCRequest& request)
     }
 }
 
-uint64_t getCategoryMask(UniValue cats) {
+void EnableOrDisableLogCategories(UniValue cats, bool enable) {
     cats = cats.get_array();
-    uint64_t mask = 0;
     for (unsigned int i = 0; i < cats.size(); ++i) {
-        uint64_t flag = 0;
         std::string cat = cats[i].get_str();
-        if (!GetLogCategory(&flag, &cat)) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "unknown logging category " + cat);
+
+        bool success;
+        if (enable) {
+        	success = LogInstance().EnableCategory(cat);
+        } else {
+        	success = LogInstance().DisableCategory(cat);
         }
-        if (flag == BCLog::NONE) {
-            return 0;
+
+        if (!success) {
+        	throw JSONRPCError(RPC_INVALID_PARAMETER, "Unknown logging category " + cat);
         }
-        mask |= flag;
     }
-    return mask;
 }
 
 UniValue logging(const JSONRPCRequest& request)
@@ -1065,7 +1025,7 @@ UniValue logging(const JSONRPCRequest& request)
             "When called with arguments, adds or removes categories from debug logging and return the lists above.\n"
             "The arguments are evaluated in order \"include\", \"exclude\".\n"
             "If an item is both included and excluded, it will thus end up being excluded.\n"
-            "The valid logging categories are: " + ListLogCategories() + "\n"
+            "The valid logging categories are: " + LogInstance().LogCategoriesString() + "\n"
             "In addition, the following are available as category names with special meanings:\n"
             "  - \"all\",  \"1\" : represent all logging categories.\n"
             "  - \"raptoreum\" activates all Raptoreum-specific categories at once.\n"
@@ -1093,33 +1053,33 @@ UniValue logging(const JSONRPCRequest& request)
         );
     }
 
-    uint64_t originalLogCategories = logCategories;
+    uint32_t original_log_categories = LogInstance().GetCategoryMask();;
     if (request.params[0].isArray()) {
-        logCategories |= getCategoryMask(request.params[0]);
+        EnableOrDisableLogCategories(request.params[0], true);
     }
 
     if (request.params[1].isArray()) {
-        logCategories &= ~getCategoryMask(request.params[1]);
+        EnableOrDisableLogCategories(request.params[1], false);
     }
+    uint32_t updated_log_categories = LogInstance().GetCategoryMask();
+    uint32_t changed_log_categories = original_log_categories ^ updated_log_categories;
 
     // Update libevent logging if BCLog::LIBEVENT has changed.
     // If the library version doesn't allow it, UpdateHTTPServerLogging() returns false,
     // in which case we should clear the BCLog::LIBEVENT flag.
     // Throw an error if the user has explicitly asked to change only the libevent
     // flag and it failed.
-    uint64_t changedLogCategories = originalLogCategories ^ logCategories;
-    if (changedLogCategories & BCLog::LIBEVENT) {
-        if (!UpdateHTTPServerLogging(logCategories & BCLog::LIBEVENT)) {
-            logCategories &= ~BCLog::LIBEVENT;
-            if (changedLogCategories == BCLog::LIBEVENT) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "libevent logging cannot be updated when using libevent before v2.1.1.");
-            }
-        }
+    if (changed_log_categories & BCLog::LIBEVENT) {
+    	if (!UpdateHTTPServerLogging(LogInstance().WillLogCategory(BCLog::LIBEVENT))) {
+    		LogInstance().DisableCategory(BCLog::LIBEVENT);
+    		if (changed_log_categories == BCLog::LIBEVENT) {
+    			throw JSONRPCError(RPC_INVALID_PARAMETER, "libevent logging cannot be updated when using libevent before v2.1.1.");
+    		}
+    	}
     }
 
     UniValue result(UniValue::VOBJ);
-    std::vector<CLogCategoryActive> vLogCatActive = ListActiveLogCategories();
-    for (const auto& logCatActive : vLogCatActive) {
+    for (const auto& logCatActive : LogInstance().LogCategoriesList()) {
         result.pushKV(logCatActive.category, logCatActive.active);
     }
 
@@ -1154,7 +1114,6 @@ static UniValue getinfo_deprecated(const JSONRPCRequest& request)
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         argNames
   //  --------------------- ------------------------  -----------------------  ----------
-    { "control",            "debug",                  &debug,                  {} },
     { "control",            "getmemoryinfo",          &getmemoryinfo,          {"mode"} },
     { "control",            "logging",                &logging,                {"include", "exclude"}},
     { "util",               "validateaddress",        &validateaddress,        {"address"} }, /* uses wallet if enabled */

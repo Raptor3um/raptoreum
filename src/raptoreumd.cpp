@@ -16,15 +16,18 @@
 #include <rpc/server.h>
 #include <init.h>
 #include <noui.h>
+#include <shutdown.h>
 #include <util.h>
 #include <httpserver.h>
 #include <httprpc.h>
-#include <threadnames.h>
 #include <utilstrencodings.h>
+#include <utilthreadnames.h>
 #include <walletinitinterface.h>
 #include <stacktraces.h>
 
 #include <stdio.h>
+
+const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 
 /* Introduction text for doxygen: */
 
@@ -53,10 +56,11 @@ static bool AppInit(int argc, char* argv[])
     //
     // If Qt is used, parameters/raptoreum.conf are parsed in qt/dash.cpp's main()
     SetupServerArgs();
-#if HAVE_DECL_DAEMON
-    gArgs.AddArg("-daemon", "Run in the background as a daemon and accept commands", false, OptionsCategory::OPTIONS);
-#endif
-    gArgs.ParseParameters(argc, argv);
+    std::string error;
+    if (!gArgs.ParseParameters(argc, argv, error)) {
+        tfm::format(std::cerr, "Error parsing command line arguments: %s\n", error.c_str());
+        return false;
+    }
 
     if (gArgs.IsArgSet("-printcrashinfo")) {
         std::cout << GetCrashInfoStrFromSerializedStr(gArgs.GetArg("-printcrashinfo", "")) << std::endl;
@@ -64,19 +68,16 @@ static bool AppInit(int argc, char* argv[])
     }
 
     // Process help and version before taking care about datadir
-    if (gArgs.IsArgSet("-?") || gArgs.IsArgSet("-h") ||  gArgs.IsArgSet("-help") || gArgs.IsArgSet("-version"))
-    {
-        std::string strUsage = strprintf("%s Daemon", PACKAGE_NAME) + " version " + FormatFullVersion() + "\n";
+    if (HelpRequested(gArgs) || gArgs.IsArgSet("-version")) {
+        std::string strUsage = PACKAGE_NAME " Daemon version " + FormatFullVersion() + "\n";
 
         if (gArgs.IsArgSet("-version"))
         {
-            strUsage += FormatParagraph(LicenseInfo());
+            strUsage += FormatParagraph(LicenseInfo()) + "\n";
         }
         else
         {
-            strUsage += "\nUsage:\n"
-                  "  raptoreumd [options]                     " + strprintf("Start %s Daemon", PACKAGE_NAME) + "\n";
-
+            strUsage += "\nUsage:  raptoreumd [options]           Start " PACKAGE_NAME " Daemon\n";
             strUsage += "\n" + gArgs.GetHelpMessage();
         }
 
@@ -92,11 +93,9 @@ static bool AppInit(int argc, char* argv[])
             tfm::format(std::cerr, "Error: Specified data directory \"%s\" does not exist.\n", gArgs.GetArg("-datadir", "").c_str());
             return false;
         }
-        try
-        {
-            gArgs.ReadConfigFile(gArgs.GetArg("-conf", BITCOIN_CONF_FILENAME));
-        } catch (const std::exception& e) {
-            tfm::format(std::cerr,"Error reading configuration file: %s\n", e.what());
+
+        if (!gArgs.ReadConfigFiles(error, true)) {
+            tfm::format(std::cerr, "Error reading configuration file: %s\n", error.c_str());
             return false;
         }
         if (!datadirFromCmdLine && !fs::is_directory(GetDataDir(false)))
@@ -187,6 +186,10 @@ int main(int argc, char* argv[])
     RegisterPrettyTerminateHander();
     RegisterPrettySignalHandlers();
 
+#ifdef WIN32
+    util::WinCmdLineArgs winArgs;
+    std::tie(argc, argv) = winArgs.get();
+#endif
     SetupEnvironment();
 
     // Connect raptoreumd signal handlers

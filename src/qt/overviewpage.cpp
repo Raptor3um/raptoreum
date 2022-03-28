@@ -40,8 +40,7 @@ public:
 
     }
 
-    inline void paint(QPainter *painter, const QStyleOptionViewItem &option,
-                      const QModelIndex &index ) const
+    inline void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index ) const override
     {
         painter->save();
 
@@ -99,7 +98,7 @@ public:
         painter->restore();
     }
 
-    inline QSize sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const
+    inline QSize sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const override
     {
         return QSize(ITEM_HEIGHT, ITEM_HEIGHT);
     }
@@ -146,14 +145,16 @@ OverviewPage::OverviewPage(QWidget* parent) :
     // Note: minimum height of listTransactions will be set later in updateAdvancedCJUI() to reflect actual settings
     ui->listTransactions->setAttribute(Qt::WA_MacShowFocusRect, false);
 
-    connect(ui->listTransactions, SIGNAL(clicked(QModelIndex)), this, SLOT(handleTransactionClicked(QModelIndex)));
+    connect(ui->listTransactions, &QListView::clicked, this, &OverviewPage::handleTransactionClicked);
 
     // init "out of sync" warning labels
     ui->labelWalletStatus->setText("(" + tr("out of sync") + ")");
     ui->labelCoinJoinSyncStatus->setText("(" + tr("out of sync") + ")");
     ui->labelTransactionsStatus->setText("(" + tr("out of sync") + ")");
 
-    ui->labelAnonymizedText->setText(tr("%1 Balance").arg("CoinJoin"));
+    QString strCoinJoinName = QString::fromStdString(gCoinJoinName);
+    ui->labelCoinJoinHeader->setText(strCoinJoinName);
+    ui->labelAnonymizedText->setText(tr("%1 Balance").arg(strCoinJoinName));
 
     // hide PS frame (helps to preserve saved size)
     // we'll setup and make it visible in coinJoinStatus() later
@@ -163,7 +164,7 @@ OverviewPage::OverviewPage(QWidget* parent) :
     showOutOfSyncWarning(true);
 
     timer = new QTimer(this);
-    connect(timer, SIGNAL(timeout()), this, SLOT(coinJoinStatus()));
+    connect(timer, &QTimer::timeout, [this]{ coinJoinStatus(); });
 }
 
 void OverviewPage::handleTransactionClicked(const QModelIndex &index)
@@ -179,7 +180,6 @@ void OverviewPage::handleOutOfSyncWarningClicks()
 
 OverviewPage::~OverviewPage()
 {
-    if(timer) disconnect(timer, SIGNAL(timeout()), this, SLOT(coinJoinStatus()));
     delete ui;
 }
 
@@ -246,7 +246,7 @@ void OverviewPage::setClientModel(ClientModel *model)
     if(model)
     {
         // Show warning if this is a prerelease version
-        connect(model, SIGNAL(alertsChanged(QString)), this, SLOT(updateAlerts(QString)));
+        connect(model, &ClientModel::alertsChanged, this, &OverviewPage::updateAlerts);
         updateAlerts(model->getStatusBarWarnings());
     }
 }
@@ -262,18 +262,18 @@ void OverviewPage::setWalletModel(WalletModel *model)
         interfaces::Wallet& wallet = model->wallet();
         interfaces::WalletBalances balances = wallet.getBalances();
         setBalance(balances);
-        connect(model, SIGNAL(balanceChanged(interfaces::WalletBalances)), this, SLOT(setBalance(interfaces::WalletBalances)));
+        connect(model, &WalletModel::balanceChanged, this, &OverviewPage::setBalance);
 
-        connect(model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
+        connect(model->getOptionsModel(), &OptionsModel::displayUnitChanged, this, &OverviewPage::updateDisplayUnit);
         updateWatchOnlyLabels(wallet.haveWatchOnly() || gArgs.GetBoolArg("-debug-ui", false));
-        connect(model, SIGNAL(notifyWatchonlyChanged(bool)), this, SLOT(updateWatchOnlyLabels(bool)));
+        connect(model, &WalletModel::notifyWatchonlyChanged, this, &OverviewPage::updateWatchOnlyLabels);
 
         // explicitly update PS frame and transaction list to reflect actual settings
         updateAdvancedCJUI(model->getOptionsModel()->getShowAdvancedCJUI());
 
-        connect(model->getOptionsModel(), SIGNAL(coinJoinRoundsChanged()), this, SLOT(updateCoinJoinProgress()));
-        connect(model->getOptionsModel(), SIGNAL(coinJoinAmountChanged()), this, SLOT(updateCoinJoinProgress()));
-        connect(model->getOptionsModel(), SIGNAL(AdvancedCJUIChanged(bool)), this, SLOT(updateAdvancedCJUI(bool)));
+        connect(model->getOptionsModel(), &OptionsModel::coinJoinRoundsChanged, this, &OverviewPage::updateCoinJoinProgress);
+        connect(model->getOptionsModel(), &OptionsModel::coinJoinAmountChanged, this, &OverviewPage::updateCoinJoinProgress);
+        connect(model->getOptionsModel(), &OptionsModel::AdvancedCJUIChanged, this, &OverviewPage::updateAdvancedCJUI);
         connect(model->getOptionsModel(), &OptionsModel::coinJoinEnabledChanged, [=]() {
             coinJoinStatus(true);
         });
@@ -282,7 +282,7 @@ void OverviewPage::setWalletModel(WalletModel *model)
         // we'll handle automatic backups and user warnings in coinJoinStatus()
         walletModel->coinJoin().disableAutobackups();
 
-        connect(ui->toggleCoinJoin, SIGNAL(clicked()), this, SLOT(toggleCoinJoin()));
+        connect(ui->toggleCoinJoin, &QPushButton::clicked, this, &OverviewPage::toggleCoinJoin);
 
         // coinjoin buttons will not react to spacebar must be clicked on
         ui->toggleCoinJoin->setFocusPolicy(Qt::NoFocus);
@@ -506,6 +506,7 @@ void OverviewPage::coinJoinStatus(bool fForce)
     }
     ui->labelCoinJoinEnabled->setToolTip(strKeysLeftText);
 
+    QString strCoinJoinName = QString::fromStdString(gCoinJoinName);
     if (!walletModel->coinJoin().isMixing()) {
         if (nBestHeight != walletModel->coinJoin().getCachedBlocks()) {
             walletModel->coinJoin().setCachedBlocks(nBestHeight);
@@ -513,7 +514,7 @@ void OverviewPage::coinJoinStatus(bool fForce)
         }
 
         setWidgetsVisible(false);
-        ui->toggleCoinJoin->setText(tr("Start %1").arg("CoinJoin"));
+        ui->toggleCoinJoin->setText(tr("Start %1").arg(strCoinJoinName));
 
         QString strEnabled = tr("Disabled");
         // Show how many keys left in advanced PS UI mode only
@@ -541,7 +542,7 @@ void OverviewPage::coinJoinStatus(bool fForce)
                                 tr("Note: You can turn this message off in options.");
             ui->labelCoinJoinEnabled->setToolTip(strWarn);
             LogPrint(BCLog::COINJOIN, "OverviewPage::coinJoinStatus -- Very low number of keys left since last automatic backup, warning user and trying to create new backup...\n");
-            QMessageBox::warning(this, "CoinJoin", strWarn, QMessageBox::Ok, QMessageBox::Ok);
+            QMessageBox::warning(this, strCoinJoinName, strWarn, QMessageBox::Ok, QMessageBox::Ok);
         } else {
             LogPrint(BCLog::COINJOIN, "OverviewPage::coinJoinStatus -- Very low number of keys left since last automatic backup, skipping warning and trying to create new backup...\n");
         }
@@ -553,15 +554,14 @@ void OverviewPage::coinJoinStatus(bool fForce)
                 // It's still more or less safe to continue but warn user anyway
                 LogPrint(BCLog::COINJOIN, "OverviewPage::coinJoinStatus -- WARNING! Something went wrong on automatic backup: %s\n", strBackupWarning.toStdString());
 
-                QMessageBox::warning(this, "CoinJoin",
-                    tr("WARNING! Something went wrong on automatic backup") + ":<br><br>" + strBackupWarning,
+                QMessageBox::warning(this, strCoinJoinName, tr("WARNING! Something went wrong on automatic backup") + ":<br><br>" + strBackupWarning,
                     QMessageBox::Ok, QMessageBox::Ok);
             }
             if (!strBackupError.isEmpty()) {
                 // Things are really broken, warn user and stop mixing immediately
                 LogPrint(BCLog::COINJOIN, "OverviewPage::coinJoinStatus -- ERROR! Failed to create automatic backup: %s\n", strBackupError.toStdString());
 
-                QMessageBox::warning(this, "CoinJoin",
+                QMessageBox::warning(this, strCoinJoinName,
                     tr("ERROR! Failed to create automatic backup") + ":<br><br>" + strBackupError + "<br>" +
                     tr("Mixing is disabled, please close your wallet and fix the issue!"),
                     QMessageBox::Ok, QMessageBox::Ok);
@@ -606,9 +606,9 @@ void OverviewPage::toggleCoinJoin(){
     QSettings settings;
     // Popup some information on first mixing
     QString hasMixed = settings.value("hasMixed").toString();
+    QString strCoinJoinName = QString::fromStdString(gCoinJoinName);
     if(hasMixed.isEmpty()){
-        QMessageBox::information(this, "CoinJoin",
-                tr("If you don't want to see internal %1 fees/transactions select \"Most Common\" as Type on the \"Transactions\" tab.").arg("CoinJoin"),
+        QMessageBox::information(this, strCoinJoinName, tr("If you don't want to see internal %1 fees/transactions select \"Most Common\" as Type on the \"Transactions\" tab.").arg(strCoinJoinName),
                 QMessageBox::Ok, QMessageBox::Ok);
         settings.setValue("hasMixed", "hasMixed");
     }
@@ -618,9 +618,7 @@ void OverviewPage::toggleCoinJoin(){
         const CAmount nMinAmount = options.getSmallestDenomination() + options.getMaxCollateralAmount();
         if(m_balances.balance < nMinAmount) {
             QString strMinAmount(BitcoinUnits::formatWithUnit(nDisplayUnit, nMinAmount));
-            QMessageBox::warning(this, "CoinJoin",
-                tr("%1 requires at least %2 to use.").arg("CoinJoin").arg(strMinAmount),
-                QMessageBox::Ok, QMessageBox::Ok);
+            QMessageBox::warning(this, strCoinJoinName, tr("%1 requires at least %2 to use.").arg(strCoinJoinName).arg(strMinAmount), QMessageBox::Ok, QMessageBox::Ok);
             return;
         }
 
@@ -632,9 +630,7 @@ void OverviewPage::toggleCoinJoin(){
             {
                 //unlock was cancelled
                 walletModel->coinJoin().resetCachedBlocks();
-                QMessageBox::warning(this, "CoinJoin",
-                    tr("Wallet is locked and user declined to unlock. Disabling %1.").arg("CoinJoin"),
-                    QMessageBox::Ok, QMessageBox::Ok);
+                QMessageBox::warning(this, strCoinJoinName,  tr("Wallet is locked and user declined to unlock. Disabling %1.").arg(strCoinJoinName), QMessageBox::Ok, QMessageBox::Ok);
                 LogPrint(BCLog::COINJOIN, "OverviewPage::toggleCoinJoin -- Wallet is locked and user declined to unlock. Disabling CoinJoin.\n");
                 return;
             }
@@ -645,11 +641,11 @@ void OverviewPage::toggleCoinJoin(){
     walletModel->coinJoin().resetCachedBlocks();
 
     if (walletModel->coinJoin().isMixing()) {
-        ui->toggleCoinJoin->setText(tr("Start %1").arg("CoinJoin"));
+        ui->toggleCoinJoin->setText(tr("Start %1").arg(strCoinJoinName));
         walletModel->coinJoin().resetPool();
         walletModel->coinJoin().stopMixing();
     } else {
-        ui->toggleCoinJoin->setText(tr("Stop %1").arg("CoinJoin"));
+        ui->toggleCoinJoin->setText(tr("Stop %1").arg(strCoinJoinName));
         walletModel->coinJoin().startMixing();
     }
 }

@@ -1,8 +1,12 @@
 // Copyright (c) 2011-2015 The Bitcoin Core developers
 // Copyright (c) 2014-2020 The Dash Core developers
-// Copyright (c) 2020-2021 The Raptoreum developers
+// Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// file COPYING or https://opensource.org/licenses/mit-license.php.
+
+#if defined(HAVE_CONFIG_H)
+#include <config/raptoreum-config.h>
+#endif
 
 #include <qt/sendfuturesdialog.h>
 #include <qt/forms/ui_sendfuturesdialog.h>
@@ -54,13 +58,13 @@ int getFTXIndexForConfTarget(int target) {
     return confTargets.size() - 1;
 }
 
-SendFuturesDialog::SendFuturesDialog(QWidget* parent) :
-    QDialog(parent),
-    ui(new Ui::SendFuturesDialog),
-    clientModel(nullptr),
-    model(nullptr),
-    m_coin_control(new CCoinControl),
-    fNewRecipientAllowed(true)
+SendFuturesDialog::SendFuturesDialog(QWidget* parent)
+    : QDialog(parent),
+      ui(new Ui::SendFuturesDialog),
+      clientModel(nullptr),
+      model(nullptr),
+      m_coin_control(new CCoinControl),
+      fNewRecipientAllowed(true)
 {
     ui->setupUi(this);
 
@@ -89,9 +93,9 @@ SendFuturesDialog::SendFuturesDialog(QWidget* parent) :
 
     GUIUtil::updateFonts();
     /**
-     * 
+     *
      * Hide unused UI elements for Future TX - functionality will remain intact for repurposing
-     * 
+     *
      */
     //hide add recipient button
     //ui->addButton->hide();
@@ -101,13 +105,13 @@ SendFuturesDialog::SendFuturesDialog(QWidget* parent) :
     //ui->buttonChooseFee->hide();
     //ui->fallbackFeeWarningLabel->hide();
 
-    connect(ui->addButton, SIGNAL(clicked()), this, SLOT(addEntry()));
-    connect(ui->clearButton, SIGNAL(clicked()), this, SLOT(clear()));
+    connect(ui->addButton, &QPushButton::clicked, this, &SendFuturesDialog::addEntry);
+    connect(ui->clearButton, &QPushButton::clicked, this, &SendFuturesDialog::clear);
 
     // Coin Control
-//    connect(ui->pushButtonCoinControl, SIGNAL(clicked()), this, SLOT(coinControlButtonClicked()));
-//    connect(ui->checkBoxCoinControlChange, SIGNAL(stateChanged(int)), this, SLOT(coinControlChangeChecked(int)));
-//    connect(ui->lineEditCoinControlChange, SIGNAL(textEdited(const QString &)), this, SLOT(coinControlChangeEdited(const QString &)));
+//    connect(ui->pushButtonCoinControl, &QPushButton::clicked, this, &SendFuturesDialog::coinControlButtonClicked);
+//    connect(ui->checkBoxCoinControlChange, &QCheckBox::stateChanged, this, &SendFuturesDialog::coinControlChangeChecked);
+//    connect(ui->lineEditCoinControlChange, &QValidatedLineEdit::textEdited, this, &SendFuturesDialog::coinControlChangeEdited);
 
     // Raptoreum specific
     QSettings settings;
@@ -135,13 +139,13 @@ SendFuturesDialog::SendFuturesDialog(QWidget* parent) :
     QAction *clipboardBytesAction = new QAction(tr("Copy bytes"), this);
     QAction *clipboardLowOutputAction = new QAction(tr("Copy dust"), this);
     QAction *clipboardChangeAction = new QAction(tr("Copy change"), this);
-    connect(clipboardQuantityAction, SIGNAL(triggered()), this, SLOT(coinControlClipboardQuantity()));
-    connect(clipboardAmountAction, SIGNAL(triggered()), this, SLOT(coinControlClipboardAmount()));
-    connect(clipboardFeeAction, SIGNAL(triggered()), this, SLOT(coinControlClipboardFee()));
-    connect(clipboardAfterFeeAction, SIGNAL(triggered()), this, SLOT(coinControlClipboardAfterFee()));
-    connect(clipboardBytesAction, SIGNAL(triggered()), this, SLOT(coinControlClipboardBytes()));
-    connect(clipboardLowOutputAction, SIGNAL(triggered()), this, SLOT(coinControlClipboardLowOutput()));
-    connect(clipboardChangeAction, SIGNAL(triggered()), this, SLOT(coinControlClipboardChange()));
+    connect(clipboardQuantityAction, &QAction::triggered, this, &SendFuturesDialog::coinControlClipboardQuantity);
+    connect(clipboardAmountAction, &QAction::triggered, this, &SendFuturesDialog::coinControlClipboardAmount);
+    connect(clipboardFeeAction, &QAction::triggered, this, &SendFuturesDialog::coinControlClipboardFee);
+    connect(clipboardAfterFeeAction, &QAction::triggered, this, &SendFuturesDialog::coinControlClipboardAfterFee);
+    connect(clipboardBytesAction, &QAction::triggered, this, &SendFuturesDialog::coinControlClipboardBytes);
+    connect(clipboardLowOutputAction, &QAction::triggered, this, &SendFuturesDialog::coinControlClipboardLowOutput);
+    connect(clipboardChangeAction, &QAction::triggered, this, &SendFuturesDialog::coinControlClipboardChange);
     ui->labelCoinControlQuantity->addAction(clipboardQuantityAction);
     ui->labelCoinControlAmount->addAction(clipboardAmountAction);
     ui->labelCoinControlFee->addAction(clipboardFeeAction);
@@ -160,7 +164,7 @@ SendFuturesDialog::SendFuturesDialog(QWidget* parent) :
     if (!settings.contains("nSmartFeeSliderPosition"))
         settings.setValue("nSmartFeeSliderPosition", 0);*/
     if (!settings.contains("nTransactionFee"))
-        settings.setValue("nTransactionFee", (qint64)DEFAULT_TRANSACTION_FEE);
+        settings.setValue("nTransactionFee", (qint64)DEFAULT_PAY_TX_FEE);
 //    if (!settings.contains("fPayOnlyMinFee"))
 //        settings.setValue("fPayOnlyMinFee", false);
 
@@ -188,7 +192,7 @@ void SendFuturesDialog::setClientModel(ClientModel *_clientModel)
     this->clientModel = _clientModel;
 /*
     if (_clientModel) {
-        connect(_clientModel, SIGNAL(numBlocksChanged(int,QDateTime,double,bool)), this, SLOT(updateSmartFeeLabel()));
+        connect(_clientModel, &ClientModel::numBlocksChanged, this, &SendFuturesDialog::updateSmartFeeLabel);
     }*/
 }
 
@@ -208,13 +212,13 @@ void SendFuturesDialog::setModel(WalletModel *_model)
         }
         interfaces::WalletBalances balances = _model->wallet().getBalances();
         setBalance(balances);
-        connect(_model, SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)), this, SLOT(setBalance(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)));
-        connect(_model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
+        connect(_model, &WalletModel::balanceChanged, this, &SendFuturesDialog::setBalance);
+        connect(_model->getOptionsModel(), &OptionsModel::displayUnitChanged, this, &SendFuturesDialog::updateDisplayUnit);
         updateDisplayUnit();
 
         // Coin Control
-        connect(_model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(coinControlUpdateLabels()));
-        connect(_model->getOptionsModel(), SIGNAL(coinControlFeaturesChanged(bool)), this, SLOT(coinControlFeatureChanged(bool)));
+        connect(_model->getOptionsModel(), &OptionsModel::displayUnitChanged, this, &SendFuturesDialog::coinControlUpdateLabels);
+        connect(_model->getOptionsModel(), &OptionsModel::coinControlFeaturesChanged, this, &SendFuturesDialog::coinControlFeatureChanged);
         /**************  DISABLE FOR FUTURES UNTIL READY FOR USE *****************/
         ui->frameCoinControl->setVisible(_model->getOptionsModel()->getCoinControlFeatures());
         //ui->frameCoinControl->setVisible(false);
@@ -224,14 +228,14 @@ void SendFuturesDialog::setModel(WalletModel *_model)
         for (const int &n : confTargets) {
             ui->confTargetSelector->addItem(tr("%1 (%2 blocks)").arg(GUIUtil::formatNiceTimeOffset(n*Params().GetConsensus().nPowTargetSpacing)).arg(n));
         }
-//        connect(ui->confTargetSelector, SIGNAL(currentIndexChanged(int)), this, SLOT(updateSmartFeeLabel()));
-//        connect(ui->confTargetSelector, SIGNAL(currentIndexChanged(int)), this, SLOT(coinControlUpdateLabels()));
-//        connect(ui->groupFee, SIGNAL(buttonClicked(int)), this, SLOT(updateFeeSectionControls()));
-//        connect(ui->groupFee, SIGNAL(buttonClicked(int)), this, SLOT(coinControlUpdateLabels()));
-        connect(ui->customFee, SIGNAL(valueChanged()), this, SLOT(coinControlUpdateLabels()));
-//        connect(ui->checkBoxMinimumFee, SIGNAL(stateChanged(int)), this, SLOT(setMinimumFee()));
-//        connect(ui->checkBoxMinimumFee, SIGNAL(stateChanged(int)), this, SLOT(updateFeeSectionControls()));
-//        connect(ui->checkBoxMinimumFee, SIGNAL(stateChanged(int)), this, SLOT(coinControlUpdateLabels()));
+        connect(ui->confTargetSelector, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &SendFuturesDialog::updateFtxFeeLabel);
+//        connect(ui->confTargetSelector, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &SendFuturesDialog::coinControlUpdateLabels);
+//        connect(ui->groupFee, static_cast<void (QButtonGroup::*)(int)>(&QButtonGroup::buttonClicked), this, &SendFuturesDialog::updateFeeSectionControls);
+//        connect(ui->groupFee, static_cast<void (QButtonGroup::*)(int)>(&QButtonGroup::buttonClicked), this, &SendFuturesDialog::coinControlUpdateLabels);
+        connect(ui->customFee, &BitcoinAmountField::valueChanged, this, &SendFuturesDialog::coinControlUpdateLabels);
+//        connect(ui->checkBoxMinimumFee, &QCheckBox::stateChanged, this, &SendFuturesDialog::setMinimumFee);
+//        connect(ui->checkBoxMinimumFee, &QCheckBox::stateChanged, this, &SendFuturesDialog::updateFeeSectionControls);
+//        connect(ui->checkBoxMinimumFee, &QCheckBox::stateChanged, this, &SendFuturesDialog::coinControlUpdateLabels);
 //        ui->customFee->setSingleStep(CWallet::GetRequiredFee(1000));
 //        updateFeeSectionControls();
 //        updateMinFeeLabel();
@@ -249,7 +253,7 @@ void SendFuturesDialog::setModel(WalletModel *_model)
             settings.remove("nSmartFeeSliderPosition");
         }*/
         if (settings.value("nConfTarget").toInt() == 0)
-            ui->confTargetSelector->setCurrentIndex(getFTXIndexForConfTarget(model->node().getTxConfirmTarget()));
+            ui->confTargetSelector->setCurrentIndex(getFTXIndexForConfTarget(model->wallet().getConfirmTarget()));
         else
             ui->confTargetSelector->setCurrentIndex(getFTXIndexForConfTarget(settings.value("nConfTarget").toInt()));
     }
@@ -545,11 +549,11 @@ SendFuturesEntry *SendFuturesDialog::addEntry()
     SendFuturesEntry* entry = new SendFuturesEntry(this);
     entry->setModel(model);
     ui->entries->addWidget(entry);
-    //connect(entry, SIGNAL(removeEntry(SendFuturesEntry*)), this, SLOT(removeEntry(SendFuturesEntry*)));
-    connect(entry, SIGNAL(payAmountChanged()), this, SLOT(coinControlUpdateLabels()));
-    //connect(entry, SIGNAL(subtractFeeFromAmountChanged()), this, SLOT(coinControlUpdateLabels()));
+    //connect(entry, &SendFuturesEntry::removeEntry, this, &SendFuturesDialog::removeEntry);
+    connect(entry, &SendFuturesEntry::payAmountChanged, this, &SendFuturesDialog::coinControlUpdateLabels);
+    //connect(entry, &SendFuturesEntry::subtractFeeFromAmountChanged, this, &SendFuturesDialog::coinControlUpdateLabels);
 
-    connect(entry, SIGNAL(payFromChanged(const QString &)), this, SLOT(updateFTXpayFromLabels()));
+    connect(entry, &SendFuturesEntry::payFromChanged, this, &SendFuturesDialog::updateFTXpayFromLabels);
 
     // Focus the field, so that entry can start immediately
     entry->clear();
@@ -754,7 +758,7 @@ void SendFuturesDialog::on_buttonMinimizeFee_clicked()
 
 void SendFuturesDialog::setMinimumFee()
 {
-    ui->customFee->setValue(model->node().getRequiredFee(1000));
+    ui->customFee->setValue(model->wallet().getRequiredFee(1000));
 }
 
 void SendFuturesDialog::updateFtxFeeLabel()
@@ -792,7 +796,7 @@ void SendFuturesDialog::updateMinFeeLabel()
 {
     if (model && model->getOptionsModel())
         ui->checkBoxMinimumFee->setText(tr("Pay only the required fee of %1").arg(
-            BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), model->node().getRequiredFee(1000)) + "/kB")
+            BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), model->wallet().getRequiredFee(1000)) + "/kB")
         );
 }
 
@@ -826,7 +830,7 @@ void SendFuturesDialog::updateSmartFeeLabel()
     coin_control.m_feerate.reset(); // Explicitly use only fee estimation rate for smart fee labels
     int returned_target;
     FeeReason reason;
-    CFeeRate feeRate = CFeeRate(model->node().getMinimumFee(1000, *m_coin_control, &returned_target, &reason));
+    CFeeRate feeRate = CFeeRate(model->wallet().getMinimumFee(1000, *m_coin_control, &returned_target, &reason));
 
     ui->labelSmartFee->setText(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), feeRate.GetFeePerK()) + "/kB");
 
@@ -1075,7 +1079,7 @@ FutureConfirmationDialog::FutureConfirmationDialog(const QString &title, const Q
     setDefaultButton(QMessageBox::Cancel);
     yesButton = button(QMessageBox::Yes);
     updateYesButton();
-    connect(&countDownTimer, SIGNAL(timeout()), this, SLOT(countDown()));
+    connect(&countDownTimer, &QTimer::timeout, this, &FutureConfirmationDialog::countDown);
 }
 
 int FutureConfirmationDialog::exec()

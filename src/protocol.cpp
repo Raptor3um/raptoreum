@@ -270,8 +270,7 @@ const char* CInv::GetCommandInternal() const
         case MSG_QUORUM_RECOVERED_SIG:          return NetMsgType::QSIGREC;
         case MSG_CLSIG:                         return NetMsgType::CLSIG;
         case MSG_ISLOCK:                        return NetMsgType::ISLOCK;
-        default:
-            return nullptr;
+        default:                                return nullptr;
     }
 }
 
@@ -297,4 +296,47 @@ std::string CInv::ToString() const
 const std::vector<std::string> &getAllNetMessageTypes()
 {
     return allNetMessageTypesVec;
+}
+
+/**
+ * Convert a service flag (NODE_*) to a human readable srting.
+ * It supports unknown service flags which will be returned as "UNKNOWN[...]".
+ * @param[in] bit the service flag is calculated as (1 << bit)
+ */
+static std::string serviceFlagToStr(size_t bit)
+{
+    const uint64_t service_flag = 1ULL << bit;
+    switch ((ServiceFlags)service_flag) {
+        case NODE_NONE: abort(); // impossible situation
+        case NODE_NETWORK:         return "NETWORK";
+        case NODE_GETUTXO:         return "GETUTXO";
+        case NODE_BLOOM:           return "BLOOM";
+        case NODE_XTHIN:           return "XTHIN";
+        case NODE_NETWORK_LIMITED: return "NETWORK_LIMITED";
+        // Not using default, so we get wqrned when a case is missing
+    }
+
+    std::ostringstream stream;
+    stream.imbue(std::locale::classic());
+    stream << "UNKNOWN[";
+    if (bit < 8) {
+        stream << service_flag;
+    } else {
+        stream << "2^" << bit;
+    }
+    stream << "]";
+    return stream.str();
+}
+
+std::vector<std::string> serviceFlagsToStr(uint64_t flags)
+{
+    std::vector<std::string> str_flags;
+
+    for (size_t i = 0; i < sizeof(flags) * 8; ++i) {
+        if (flags & (1ULL << i)) {
+            str_flags.emplace_back(serviceFlagToStr(i));
+        }
+    }
+
+    return str_flags;
 }

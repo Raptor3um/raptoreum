@@ -9,11 +9,9 @@
 
 #include <smartnode/activesmartnode.h>
 #include <bls/bls_batchverifier.h>
-#include <init.h>
 #include <net_processing.h>
 #include <netmessagemaker.h>
 #include <spork.h>
-#include <thread.h>
 #include <validation.h>
 
 #include <cxxtimer.hpp>
@@ -186,29 +184,30 @@ void CSigSharesNodeState::RemoveSession(const uint256& signHash)
 
 CSigSharesManager::CSigSharesManager()
 {
-    sigWorkInterrupt.reset();
+    workInterrupt.reset();
 }
 
 CSigSharesManager::~CSigSharesManager() = default;
 
-void CSigSharesManager::StartSigWorkerThread()
+void CSigSharesManager::StartWorkerThread()
 {
     // can't start new thread if we have one running already
-    if (!sigWorkThread.joinable()) {
-        assert(!sigWorkInterrupt);
-        sigWorkThread = std::thread(&util::TraceThread, "sigshares", [this] { SigWorkThreadMain(); });
-     }
-}
-
-void CSigSharesManager::StopSigWorkerThread()
-{
-    // make sure to call InterruptWorkerThread() first
-    if (!sigWorkInterrupt) {
+    if (workThread.joinable()) {
         assert(false);
     }
 
-    if (sigWorkThread.joinable()) {
-        sigWorkThread.join();
+    workThread = std::thread(&TraceThread<std::function<void()> >, "sigshares", std::function<void()>(std::bind(&CSigSharesManager::WorkThreadMain, this)));
+}
+
+void CSigSharesManager::StopWorkerThread()
+{
+    // make sure to call InterruptWorkerThread() first
+    if (!workInterrupt) {
+        assert(false);
+    }
+
+    if (workThread.joinable()) {
+        workThread.join();
     }
 }
 
@@ -222,9 +221,9 @@ void CSigSharesManager::UnregisterAsRecoveredSigsListener()
     quorumSigningManager->UnregisterRecoveredSigsListener(this);
 }
 
-void CSigSharesManager::InterruptSigWorkerThread()
+void CSigSharesManager::InterruptWorkerThread()
 {
-    sigWorkInterrupt();
+    workInterrupt();
 }
 
 void CSigSharesManager::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv)
@@ -1497,13 +1496,13 @@ void CSigSharesManager::BanNode(NodeId nodeId)
     nodeState.banned = true;
 }
 
-void CSigSharesManager::SigWorkThreadMain()
+void CSigSharesManager::WorkThreadMain()
 {
     int64_t lastSendTime = 0;
 
-    while (!sigWorkInterrupt) {
+    while (!workInterrupt) {
         if (!quorumSigningManager || !g_connman) {
-            if (!sigWorkInterrupt.sleep_for(std::chrono::milliseconds(100))) {
+            if (!workInterrupt.sleep_for(std::chrono::milliseconds(100))) {
                 return;
             }
             continue;
@@ -1525,7 +1524,7 @@ void CSigSharesManager::SigWorkThreadMain()
         quorumSigningManager->Cleanup();
 
         // TODO Wakeup when pending signing is needed?
-        if (!fMoreWork && !sigWorkInterrupt.sleep_for(std::chrono::milliseconds(100))) {
+        if (!fMoreWork && !workInterrupt.sleep_for(std::chrono::milliseconds(100))) {
             return;
         }
     }

@@ -562,7 +562,7 @@ UniValue smartnodelist(const JSONRPCRequest& request)
     if (!request.params[0].isNull()) strMode = request.params[0].get_str();
     if (!request.params[1].isNull()) strFilter = request.params[1].get_str();
 
-    std::transform(strMode.begin(), strMode.end(), strMode.begin(), ::tolower);
+    strMode = ToLower(strMode);
 
     if (request.fHelp || (
                 strMode != "addr" && strMode != "full" && strMode != "info" && strMode != "json" &&

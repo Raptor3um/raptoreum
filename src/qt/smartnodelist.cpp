@@ -36,7 +36,7 @@ public:
         QTableWidgetItem(text, type),
         itemData(data) {}
 
-    bool operator<(const QTableWidgetItem& other) const
+    bool operator<(const QTableWidgetItem& other) const override
     {
         return itemData < ((CSmartnodeListWidgetItem*)&other)->itemData;
     }
@@ -100,13 +100,13 @@ SmartnodeList::SmartnodeList(QWidget* parent) :
     contextMenuDIP3 = new QMenu(this);
     contextMenuDIP3->addAction(copyProTxHashAction);
     contextMenuDIP3->addAction(copyCollateralOutpointAction);
-    connect(ui->tableWidgetSmartnodesDIP3, SIGNAL(customContextMenuRequested(const QPoint&)), this, SLOT(showContextMenuDIP3(const QPoint&)));
-    connect(ui->tableWidgetSmartnodesDIP3, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(extraInfoDIP3_clicked()));
-    connect(copyProTxHashAction, SIGNAL(triggered()), this, SLOT(copyProTxHash_clicked()));
-    connect(copyCollateralOutpointAction, SIGNAL(triggered()), this, SLOT(copyCollateralOutpoint_clicked()));
+    connect(ui->tableWidgetSmartnodesDIP3, &QTableWidget::customContextMenuRequested, this, &SmartnodeList::showContextMenuDIP3);
+    connect(ui->tableWidgetSmartnodesDIP3, &QTableWidget::doubleClicked, this, &SmartnodeList::extraInfoDIP3_clicked);
+    connect(copyProTxHashAction, &QAction::triggered, this, &SmartnodeList::copyProTxHash_clicked);
+    connect(copyCollateralOutpointAction, &QAction::triggered, this, &SmartnodeList::copyCollateralOutpoint_clicked);
 
     timer = new QTimer(this);
-    connect(timer, SIGNAL(timeout()), this, SLOT(updateDIP3ListScheduled()));
+    connect(timer, &QTimer::timeout, this, &SmartnodeList::updateDIP3ListScheduled);
     timer->start(1000);
 
     GUIUtil::updateFonts();
@@ -122,7 +122,7 @@ void SmartnodeList::setClientModel(ClientModel* model)
     this->clientModel = model;
     if (model) {
         // try to update list when smartnode count changes
-        connect(clientModel, SIGNAL(smartnodeListChanged()), this, SLOT(handleSmartnodeListChanged()));
+        connect(clientModel, &ClientModel::smartnodeListChanged, this, &SmartnodeList::handleSmartnodeListChanged);
     }
 }
 

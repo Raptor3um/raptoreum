@@ -59,6 +59,7 @@ BITCOIN_TESTS =\
   test/dip0020opcodes_tests.cpp \
   test/evo_deterministicmns_tests.cpp \
   test/evo_simplifiedmns_tests.cpp \
+  test/ts_tests.cpp \
   test/getarg_tests.cpp \
   test/governance_validators_tests.cpp \
   test/hash_tests.cpp \
@@ -101,6 +102,7 @@ BITCOIN_TESTS =\
   test/test_raptoreum.cpp \
   test/test_raptoreum.h \
   test/test_raptoreum_main.cpp \
+  test/util_threadnames_test.cpp \
   test/timedata_tests.cpp \
   test/torcontrol_tests.cpp \
   test/transaction_tests.cpp \

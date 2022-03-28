@@ -19,7 +19,6 @@
 #include <utilstrencodings.h>
 
 #include <algorithm>
-#include <cmath>
 #include <functional>
 #include <memory>
 #include <stdio.h>
@@ -31,6 +30,8 @@
 #include <support/events.h>
 
 #include <univalue.h>
+
+const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 
 static const char DEFAULT_RPCCONNECT[] = "127.0.0.1";
 static const int DEFAULT_HTTP_CLIENT_TIMEOUT=900;
@@ -49,6 +50,7 @@ static void SetupCliArgs()
     gArgs.AddArg("-named", strprintf("Pass named instead of positional arguments (default: %s)", DEFAULT_NAMED), false, OptionsCategory::OPTIONS);
     gArgs.AddArg("-rpcclienttimeout=<n>", strprintf("Timeout in seconds during HTTP requests, or 0 for no timeout. (default: %d)", DEFAULT_HTTP_CLIENT_TIMEOUT), false, OptionsCategory::OPTIONS);
     gArgs.AddArg("-rpcconnect=<ip>", strprintf("Send commands to node running on <ip> (default: %s)", DEFAULT_RPCCONNECT), false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-rpccookiefile=<loc>", _("Location of the auth cookie. Relative paths will be prefixed by net-specific datadir location. (default: data dir)"), false, OptionsCategory::OPTIONS);
     gArgs.AddArg("-rpcpassword=<pw>", "Password for JSON-RPC connections", false, OptionsCategory::OPTIONS);
     gArgs.AddArg("-rpcport=<port>", strprintf("Connect to JSON-RPC on <port> (default: %u or testnet: %u)", defaultBaseParams->RPCPort(), testnetBaseParams->RPCPort()), false, OptionsCategory::OPTIONS);
     gArgs.AddArg("-rpcuser=<user>", "Username for JSON-RPC connections", false, OptionsCategory::OPTIONS);
@@ -58,6 +60,10 @@ static void SetupCliArgs()
     gArgs.AddArg("-stdinrpcpass", strprintf("Read RPC password from standard input as a single line.  When combined with -stdin, the first line from standard input is used for the RPC password."), false, OptionsCategory::OPTIONS);
 
     SetupChainParamsBaseOptions();
+
+    // Hidden
+    gArgs.AddArg("-h", "", false, OptionsCategory::HIDDEN);
+    gArgs.AddArg("-help", "", false, OptionsCategory::HIDDEN);
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -89,14 +95,18 @@ static int AppInitRPC(int argc, char* argv[])
     // Parameters
     //
     SetupCliArgs();
-    gArgs.ParseParameters(argc, argv);
+    std::string error;
+    if (!gArgs.ParseParameters(argc, argv, error)) {
+        tfm::format(std::cerr, "Error parsing command line arguments: %s\n", error.c_str());
+        return EXIT_FAILURE;
+    }
 
     if (gArgs.IsArgSet("-printcrashinfo")) {
         std::cout << GetCrashInfoStrFromSerializedStr(gArgs.GetArg("-printcrashinfo", "")) << std::endl;
         return true;
     }
 
-    if (argc<2 || gArgs.IsArgSet("-?") || gArgs.IsArgSet("-h") || gArgs.IsArgSet("-help") || gArgs.IsArgSet("-version")) {
+    if (argc < 2 || gArgs.IsArgSet("-version")) {
         std::string strUsage = strprintf("%s RPC client version", PACKAGE_NAME) + " " + FormatFullVersion() + "\n";
         if (!gArgs.IsArgSet("-version")) {
             strUsage += "\nUsage:\n"
@@ -120,10 +130,8 @@ static int AppInitRPC(int argc, char* argv[])
         tfm::format(std::cerr, "Error: Specified data directory \"%s\" does not exist.\n", gArgs.GetArg("-datadir", "").c_str());
         return EXIT_FAILURE;
     }
-    try {
-        gArgs.ReadConfigFile(gArgs.GetArg("-conf", BITCOIN_CONF_FILENAME));
-    } catch (const std::exception& e) {
-        tfm::format(std::cerr,"Error reading configuration file: %s\n", e.what());
+    if (!gArgs.ReadConfigFiles(error, true)) {
+        tfm::format(std::cerr, "Error reading configuration file: %s\n", error.c_str());
         return EXIT_FAILURE;
     }
     if (!datadirFromCmdLine && !fs::is_directory(GetDataDir(false))) {
@@ -515,6 +523,10 @@ int main(int argc, char* argv[])
     RegisterPrettyTerminateHander();
     RegisterPrettySignalHandlers();
 
+#ifdef WIN32
+    util::WinCmdLineArgs winArgs;
+    std::tie(argc, argv) = winArgs.get();
+#endif
     SetupEnvironment();
     if (!SetupNetworking()) {
         tfm::format(std::cerr, "Error: Initializing networking failed\n");

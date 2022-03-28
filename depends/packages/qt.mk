@@ -8,11 +8,11 @@ $(package)_dependencies=zlib
 $(package)_linux_dependencies=freetype fontconfig libxcb
 $(package)_qt_libs=corelib network widgets gui plugins testlib
 $(package)_patches=fix_qt_pkgconfig.patch mac-qmake.conf fix_configure_mac.patch fix_no_printer.patch fix_riscv64_arch.patch
-$(package)_patches+= fix_rcc_determinism.patch xkb-default.patch no-xlib.patch dont_hardcode_x86_64.patch
-$(package)_patches+= fix_android_qmake_conf.patch fix_android_jni_static.patch dont_hardcode_pwd.patch
-$(package)_patches+= freetype_back_compat.patch drop_lrelease_dependency.patch fix_powerpc_libpng.patch
-$(package)_patches+= fix_mingw_cross_compile.patch fix_qpainter_non_determinism.patch
-$(package)_patches+= fix_limits_header.patch
+$(package)_patches += fix_rcc_determinism.patch xkb-default.patch no-xlib.patch
+$(package)_patches += fix_android_qmake_conf.patch fix_android_jni_static.patch dont_hardcode_pwd.patch
+$(package)_patches += freetype_back_compat.patch drop_lrelease_dependency.patch fix_powerpc_libpng.patch
+$(package)_patches += fix_mingw_cross_compile.patch fix_qpainter_non_determinism.patch
+$(package)_patches += fix_limits_header.patch
 
 # Update OSX_QT_TRANSLATIONS when this is updated
 $(package)_qttranslations_file_name=qttranslations-$($(package)_suffix)
@@ -63,6 +63,7 @@ $(package)_config_opts += -no-xinput2
 $(package)_config_opts += -nomake examples
 $(package)_config_opts += -nomake tests
 $(package)_config_opts += -opensource
+#$(package)_config_opts += -openssl-linked
 $(package)_config_opts += -optimized-tools
 $(package)_config_opts += -pch
 $(package)_config_opts += -pkg-config
@@ -107,18 +108,17 @@ $(package)_config_opts += -no-feature-xml
 
 $(package)_config_opts_darwin = -no-dbus
 $(package)_config_opts_darwin += -no-opengl
+$(package)_config_opts_darwin += QMAKE_MACOSX_DEPLOYMENT_TARGET=$(OSX_MIN_VERSION)
 
 ifneq ($(build_os),darwin)
 $(package)_config_opts_darwin += -xplatform macx-clang-linux
 $(package)_config_opts_darwin += -device-option MAC_SDK_PATH=$(OSX_SDK)
 $(package)_config_opts_darwin += -device-option MAC_SDK_VERSION=$(OSX_SDK_VERSION)
 $(package)_config_opts_darwin += -device-option CROSS_COMPILE="$(host)-"
-$(package)_config_opts_darwin += -device-option MAC_MIN_VERSION=$(OSX_MIN_VERSION)
 $(package)_config_opts_darwin += -device-option MAC_TARGET=$(host)
 $(package)_config_opts_darwin += -device-option XCODE_VERSION=$(XCODE_VERSION)
 endif
 
-# for macOS on Apple Silicon (ARM) see https://bugreports.qt.io/browse/QTBUG-85279
 $(package)_config_opts_aarch64_darwin += -device-option QMAKE_APPLE_DEVICE_ARCHS=arm64
 
 $(package)_config_opts_linux  = -qt-xkbcommon-x11
@@ -220,7 +220,6 @@ define $(package)_preprocess_cmds
   patch -p1 -i $($(package)_patch_dir)/fix_android_jni_static.patch && \
   patch -p1 -i $($(package)_patch_dir)/fix_riscv64_arch.patch && \
   patch -p1 -i $($(package)_patch_dir)/no-xlib.patch && \
-  patch -p1 -i $($(package)_patch_dir)/dont_hardcode_x86_64.patch && \
   patch -p1 -i $($(package)_patch_dir)/fix_mingw_cross_compile.patch && \
   patch -p1 -i $($(package)_patch_dir)/fix_qpainter_non_determinism.patch &&\
   patch -p1 -i $($(package)_patch_dir)/fix_limits_header.patch && \

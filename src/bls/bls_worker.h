@@ -8,7 +8,7 @@
 
 #include <bls/bls.h>
 
-#include <ctpl.h>
+#include <ctpl_stl.h>
 
 #include <future>
 #include <mutex>

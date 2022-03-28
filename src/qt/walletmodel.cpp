@@ -47,17 +47,20 @@ WalletModel::WalletModel(std::unique_ptr<interfaces::Wallet> wallet, interfaces:
     transactionTableModel = new TransactionTableModel(this);
     recentRequestsTableModel = new RecentRequestsTableModel(this);
 
-    // This timer will be fired repeatedly to update the balance
-    pollTimer = new QTimer(this);
-    connect(pollTimer, SIGNAL(timeout()), this, SLOT(pollBalanceChanged()));
-    pollTimer->start(MODEL_UPDATE_DELAY);
-
     subscribeToCoreSignals();
 }
 
 WalletModel::~WalletModel()
 {
     unsubscribeFromCoreSignals();
+}
+
+void WalletModel::startPollBalance()
+{
+    // This timer will be fired repeatedly to update the balance
+    QTimer* timer = new QTimer(this);
+    connect(timer, &QTimer::timeout, this, &WalletModel::pollBalanceChanged);
+    timer->start(MODEL_UPDATE_DELAY);
 }
 
 void WalletModel::updateStatus()
@@ -802,7 +805,7 @@ QString WalletModel::getWalletName() const
 
 QString WalletModel::getDisplayName() const
 {
-    const Qstring name = getWalletName();
+    const QString name = getWalletName();
     return name.isEmpty() ? "["+tr("default wallet")+"]" : name;
 }
 

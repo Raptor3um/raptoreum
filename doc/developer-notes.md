@@ -7,8 +7,8 @@ Developer Notes
 - [Developer Notes](#developer-notes)
     - [Coding Style (General)](#coding-style-general)
     - [Coding Style (C++)](#coding-style-c)
-    - [Doxygen comments](#doxygen-comments)
     - [Coding Style (Python)](#coding-style-python)
+    - [Coding Style (Doxygen-compatible comments)](#coding-style-doxygen-compatible-comments)
     - [Development tips and tricks](#development-tips-and-tricks)
         - [Compiling for debugging](#compiling-for-debugging)
         - [Compiling for gprof profiling](#compiling-for-gprof-profiling)
@@ -119,10 +119,17 @@ public:
 } // namespace foo
 ```
 
-Doxygen comments
------------------
+Coding Style (Python)
+---------------------
 
-To facilitate the generation of documentation, use doxygen-compatible comment blocks for functions, methods and fields.
+Refer to [/test/functional/README.md#style-guidelines](/test/functional/README.md#style-guidelines).
+
+Coding Style (Doxygen-compatible comments)
+------------------------------------------
+
+The Raptoreum uses [Doxygen](https://www.doxygen.nl/) to generate its official documentation.
+
+Use Doxygen-compatible comment blocks for functions, methods and fields.
 
 For example, to describe a function use:
 ```c++

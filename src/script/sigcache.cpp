@@ -12,10 +12,9 @@
 #include <util.h>
 
 #include <cuckoocache.h>
-#include <algorithm>
-#include <mutex>
-#include <shared_mutex>
-#include <vector>
+
+#include <boost/thread/lock_types.hpp>
+#include <boost/thread.hpp>
 
 namespace {
 /**
@@ -30,7 +29,7 @@ private:
     uint256 nonce;
     typedef CuckooCache::cache<uint256, SignatureCacheHasher> map_type;
     map_type setValid;
-    std::shared_mutex cs_sigcache;
+    boost::shared_mutex cs_sigcache;
 
 public:
     CSignatureCache()
@@ -47,13 +46,13 @@ public:
     bool
     Get(const uint256& entry, const bool erase)
     {
-        std::shared_lock<std::shared_mutex> lock(cs_sigcache);
+        boost::shared_lock<boost::shared_mutex> lock(cs_sigcache);
         return setValid.contains(entry, erase);
     }
 
     void Set(uint256& entry)
     {
-        std::unique_lock<std::shared_mutex> lock(cs_sigcache);
+        boost::unique_lock<boost::shared_mutex> lock(cs_sigcache);
         setValid.insert(entry);
     }
     uint32_t setup_bytes(size_t n)

@@ -8,7 +8,6 @@
 #include <netbase.h>
 #include <net.h>
 #include <util.h>
-#include <thread.h>
 #include <utiltime.h>
 #include <crypto/hmac_sha256.h>
 
@@ -94,7 +93,7 @@ public:
     /**
      * Disconnect from Tor control port.
      */
-    bool Disconnect();
+    void Disconnect();
 
     /** Send a command, register a handler for the reply.
      * A trailing CRLF is automatically added.
@@ -226,12 +225,11 @@ bool TorControlConnection::Connect(const std::string &target, const ConnectionCB
     return true;
 }
 
-bool TorControlConnection::Disconnect()
+void TorControlConnection::Disconnect()
 {
     if (b_conn)
         bufferevent_free(b_conn);
     b_conn = nullptr;
-    return true;
 }
 
 bool TorControlConnection::Command(const std::string &cmd, const ReplyHandlerCB& reply_handler)
@@ -757,7 +755,7 @@ void StartTorControl()
         return;
     }
 
-    torControlThread = std::thread(&util::TraceThread, "torcontrol", &TorControlThread);
+    torControlThread = std::thread(std::bind(&TraceThread<void (*)()>, "torcontrol", &TorControlThread));
 }
 
 void InterruptTorControl()

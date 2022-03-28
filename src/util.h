@@ -21,9 +21,10 @@
 #include <fs.h>
 #include <logging.h>
 #include <sync.h>
+#include <utilthreadnames.h>
 #include <tinyformat.h>
-#include <utiltime.h>
 #include <utilmemory.h>
+#include <utiltime.h>
 #include <amount.h>
 
 #include <atomic>
@@ -34,9 +35,9 @@
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
-#include <boost/signals2/signal.hpp>
 #include <boost/thread/condition_variable.hpp>
 
 // Debugging macros
@@ -55,33 +56,24 @@
 extern bool fSmartnodeMode;
 extern bool fDisableGovernance;
 extern int nWalletBackups;
+extern const std::string gCoinJoinName;
 
 // Application startup time (used for uptime calculation)
 int64_t GetStartupTime();
 
 static const int DEFAULT_POW_CACHE_SIZE = 150000;
 
-/** Signals for translation. */
-class CTranslationInterface
-{
-public:
-    /** Translate a message to the native language of the user. */
-    boost::signals2::signal<std::string (const char* psz)> Translate;
-};
-
-extern CTranslationInterface translationInterface;
-
 extern const char * const BITCOIN_CONF_FILENAME;
-extern const char * const BITCOIN_PID_FILENAME;
 
+/** Translate a message to the native user language. */
+const extern std::function<std::string(const char*)> G_TRANSLATION_FUN;
 /**
- * Translation function: Call Translate signal on UI interface, which returns a boost::optional result.
- * If no translation slot is registered, nothing is returned, and simply return the input.
+ * Translation function:
+ * If no translation function is simply return the input.
  */
 inline std::string _(const char* psz)
 {
-    boost::optional<std::string> rv = translationInterface.Translate(psz);
-    return rv ? (*rv) : psz;
+    return G_TRANSLATION_FUN ? (G_TRANSLATION_FUN)(psz) : psz;
 }
 
 void SetupEnvironment();
@@ -90,7 +82,7 @@ bool SetupNetworking();
 template<typename... Args>
 bool error(const char* fmt, const Args&... args)
 {
-    LogPrintStr("ERROR: " + SafeStringFormat(fmt, args...) + "\n");
+    LogPrintf("ERROR: %s\n", SafeStringFormat(fmt, args...));
     return false;
 }
 
@@ -101,6 +93,7 @@ int RaiseFileDescriptorLimit(int nMinFD);
 void AllocateFileRange(FILE *file, unsigned int offset, unsigned int length);
 bool RenameOver(fs::path src, fs::path dest);
 bool LockDirectory(const fs::path& directory, const std::string lockfile_name, bool probe_only=false);
+void UnlockDirectory(const fs::path& dirctory, const std::string& lockfile_name);
 bool DirIsWritable(const fs::path& directory);
 
 /** Release all directory locks. This is used for unit testing only, at runtime
@@ -110,15 +103,12 @@ void ReleaseDirectoryLocks();
 
 bool TryCreateDirectories(const fs::path& p);
 fs::path GetDefaultDataDir();
-const fs::path &GetBlocksDir(bool fNetSpecific = true);
+// The blocks directory is always network specific.
+const fs::path &GetBlocksDir();
 const fs::path &GetDataDir(bool fNetSpecific = true);
 fs::path GetBackupsDir();
 void ClearDatadirCache();
 fs::path GetConfigFile(const std::string& confPath);
-#ifndef WIN32
-fs::path GetPidFile();
-void CreatePidFile(const fs::path &path, pid_t pid);
-#endif
 #ifdef WIN32
 fs::path GetSpecialFolderPath(int nFolder, bool fCreate = true);
 #endif
@@ -143,8 +133,7 @@ inline bool IsSwitchChar(char c)
 #endif
 }
 
-enum class OptionsCategory
-{
+enum class OptionsCategory {
     OPTIONS,
     CONNECTION,
     INDEXING,
@@ -164,7 +153,15 @@ enum class OptionsCategory
     RPC,
     GUI,
     COMMANDS,
-    REGISTER_COMMANDS
+    REGISTER_COMMANDS,
+
+    HIDDEN // Always the last option to avoid printing these in the help.
+};
+
+struct SectionInfo {
+    std::string m_name;
+    std::string m_file;
+    int m_line;
 };
 
 class ArgsManager
@@ -172,14 +169,29 @@ class ArgsManager
 protected:
     friend class ArgsManagerHelper;
 
-    mutable RecursiveMutex cs_args;
-    std::map<std::string, std::vector<std::string>> m_override_args;
-    std::map<std::string, std::vector<std::string>> m_config_args;
-    std::string m_network;
-    std::set<std::string> m_network_only_args;
-    std::map<std::pair<OptionsCategory, std::string>, std::pair<std::string, bool>> m_available_args;
+    struct Arg
+    {
+        std::string m_help_param;
+        std::string m_help_text;
+        bool m_debug_only;
 
-    void ReadConfigStream(std::istream& stream);
+        Arg(const std::string& help_param, const std::string& help_text, bool debug_only)
+            : m_help_param(help_param),
+              m_help_text(help_text),
+              m_debug_only(debug_only)
+        {};
+    };
+
+    mutable RecursiveMutex cs_args;
+    std::map<std::string, std::vector<std::string>> m_override_args GUARDED_BY(cs_args);
+    std::map<std::string, std::vector<std::string>> m_command_line_args GUARDED_BY(cs_args);
+    std::map<std::string, std::vector<std::string>> m_config_args GUARDED_BY(cs_args);
+    std::string m_network GUARDED_BY(cs_args);
+    std::set<std::string> m_network_only_args GUARDED_BY(cs_args);
+    std::map<OptionsCategory, std::map<std::string, Arg>> m_available_args GUARDED_BY(cs_args);
+    std::list<SectionInfo> m_config_sections GUARDED_BY(cs_args);
+
+    [[nodiscard]] bool ReadConfigStream(std::istream& stream, const std::string& filepath, std::string& error, bool ignore_invalid_keys = false);
 
 public:
     ArgsManager();
@@ -189,16 +201,26 @@ public:
      */
     void SelectConfigNetwork(const std::string& network);
 
-    void ParseParameters(int argc, const char*const argv[]);
-    void ReadConfigFile(const std::string& confPath);
+    bool ParseParameters(int argc, const char* const argv[], std::string& error);
+    [[nodiscard]] bool ReadConfigFiles(std::string& error, bool ignore_invalid_keys = false);
 
     /**
      * Log warnings for options in m_section_only_args when
-     * they are specified in the default section but not overridden
-     * on the command line or in a network-specific section in the
-     * config file.
+     * they are specified in the default section but not overriden
+     * on the command line or in a network-specific section
+     * in the config file.
      */
-    void WarnForSectionOnlyArgs();
+    const std::set<std::string> GetUnsuitableSectionOnlyArgs() const;
+
+    /**
+     * Log warnings for unrecognized section names in the config file.
+     */
+    const std::list<SectionInfo> GetUnrecognizedSections() const;
+
+    /**
+     * Return the map of all the args passed via command line.
+     */
+    const std::map<std::string, std::vector<std::string>> GetCommandLineArgs() const;
 
     /**
      * Return a vector of strings of the given argument
@@ -294,12 +316,26 @@ public:
     void AddArg(const std::string& name, const std::string& help, const bool debug_only, const OptionsCategory& cat);
 
     /**
-     * Get the help string
+     * Add many hidden arguments
      */
-    std::string GetHelpMessage();
+    void AddHiddenArgs(const std::vector<std::string>& args);
+
+    /**
+     * Clear available arguments
+     */
+    void ClearArgs() {
+        LOCK(cs_args);
+        m_available_args.clear();
+    }
+
+    std::string GetHelpMessage() const;
+
+    bool IsArgKnown(const std::string& key) const;
 };
 
 extern ArgsManager gArgs;
+
+bool HelpRequested(const ArgsManager& args);
 
 /**
  * Format a string to be used as group of options in help messages
@@ -324,6 +360,31 @@ std::string HelpMessageOpt(const std::string& option, const std::string& message
  */
 int GetNumCores();
 
+namespace ctpl {
+	class thread_pool;
+}
+void RenameThreadPool(ctpl::thread_pool& tp, const char* baseName);
+
+template <typename Callable> void TraceThread(const std::string name,  Callable func)
+{
+    util::ThreadRename(name.c_str());
+    try
+    {
+        LogPrintf("%s thread start\n", name);
+        func();
+        LogPrintf("%s thread exit\n", name);
+    }
+    catch (const boost::thread_interrupted&)
+    {
+        LogPrintf("%s thread interrupt\n", name);
+        throw;
+    }
+    catch (...) {
+        PrintExceptionContinue(std::current_exception(), name.c_str());
+        throw;
+    }
+}
+
 std::string CopyrightHolders(const std::string& strPrefix, unsigned int nStartYear, unsigned int nEndYear);
 
 /**
@@ -336,5 +397,24 @@ std::string CopyrightHolders(const std::string& strPrefix, unsigned int nStartYe
 int ScheduleBatchPriority(void);
 
 void SetThreadPriority(int nPriority);
+
+namespace util {
+
+#ifdef WIN32
+class WinCmdLineArgs
+{
+public:
+    WinCmdLineArgs();
+    ~WinCmdLineArgs();
+    std::pair<int, char**> get();
+
+private:
+    int argc;
+    char** argv;
+    std::vector<std::string> args;
+};
+#endif
+
+} // namespace util
 
 #endif // BITCOIN_UTIL_H

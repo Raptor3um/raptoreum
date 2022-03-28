@@ -24,10 +24,6 @@
 #include <cmath>
 
 static const uint64_t GB_BYTES = 1000000000LL;
-/* Minimum free space (in GB) needed for data directory */
-static const uint64_t BLOCK_CHAIN_SIZE = 3;
-/* Minimum free space (in GB) needed for data directory when pruned; Does not include prune target */
-static const uint64_t CHAIN_STATE_SIZE = 1;
 /* Total required space (in GB) depending on user choice (prune, not prune) */
 static uint64_t requiredSpace;
 
@@ -116,11 +112,13 @@ void FreespaceChecker::check()
 }
 
 
-Intro::Intro(QWidget *parent) :
+Intro::Intro(QWidget *parent, uint64_t blockchain_size, uint64_t chain_state_size) :
     QDialog(parent),
     ui(new Ui::Intro),
-    thread(0),
-    signalled(false)
+    thread(nullptr),
+    signalled(false),
+    m_blockchain_size(blockchain_size),
+    m_chain_state_size(chain_state_size)
 {
     ui->setupUi(this);
     ui->welcomeLabel->setText(ui->welcomeLabel->text().arg(tr(PACKAGE_NAME)));
@@ -128,14 +126,14 @@ Intro::Intro(QWidget *parent) :
 
     ui->lblExplanation1->setText(ui->lblExplanation1->text()
         .arg(tr(PACKAGE_NAME))
-        .arg(BLOCK_CHAIN_SIZE)
+        .arg(m_blockchain_size)
         .arg(2021)
         .arg("Raptoreum")
     );
     ui->lblExplanation2->setText(ui->lblExplanation2->text().arg(tr(PACKAGE_NAME)));
 
     uint64_t pruneTarget = std::max<int64_t>(0, gArgs.GetArg("-prune", 0));
-    requiredSpace = BLOCK_CHAIN_SIZE;
+    requiredSpace = m_blockchain_size;
     QString storageRequiresMsg = tr("At least %1 GB of data will be stored in this directory, and it will grow over time.");
     if (pruneTarget) {
         uint64_t prunedGBs = std::ceil(pruneTarget * 1024 * 1024.0 / GB_BYTES);
@@ -147,7 +145,7 @@ Intro::Intro(QWidget *parent) :
     } else {
         ui->lblExplanation3->setVisible(false);
     }
-    requiredSpace += CHAIN_STATE_SIZE;
+    requiredSpace += m_chain_state_size;
     ui->sizeWarningLabel->setText(
         tr("%1 will download and store a copy of the Raptoreum block chain.").arg(tr(PACKAGE_NAME)) + " " +
         storageRequiresMsg.arg(requiredSpace) + " " +
@@ -160,7 +158,7 @@ Intro::~Intro()
 {
     delete ui;
     /* Ensure thread is finished before it is deleted */
-    Q_EMIT stopThread();
+    thread->quit();
     thread->wait();
 }
 
@@ -205,8 +203,15 @@ bool Intro::pickDataDirectory(interfaces::Node& node)
 
     if(!fs::exists(GUIUtil::qstringToBoostPath(dataDir)) || gArgs.GetBoolArg("-choosedatadir", DEFAULT_CHOOSE_DATADIR) || dataDirDefaultCurrent != dataDirDefaultSettings)
     {
+        /* Use selectParams here to guarantee Params() can be used by node interface */
+        try {
+            node.selectParams(gArgs.GetChainName());
+        } catch (const std::exception&) {
+            return false;
+        }
+
         /* Let the user choose one */
-        Intro intro;
+        Intro intro(0, node.getAssumedChainStateSize(), node.getAssumedChainStateSize());
         GUIUtil::disableMacFocusRect(&intro);
         GUIUtil::loadStyleSheet(true);
         intro.setDataDirectory(dataDirDefaultCurrent);
@@ -309,11 +314,10 @@ void Intro::startThread()
     FreespaceChecker *executor = new FreespaceChecker(this);
     executor->moveToThread(thread);
 
-    connect(executor, SIGNAL(reply(int,QString,quint64)), this, SLOT(setStatus(int,QString,quint64)));
-    connect(this, SIGNAL(requestCheck()), executor, SLOT(check()));
+    connect(executor, &FreespaceChecker::reply, this, &Intro::setStatus);
+    connect(this, &Intro::requestCheck, executor, &FreespaceChecker::check);
     /*  make sure executor object is deleted in its own thread */
-    connect(this, SIGNAL(stopThread()), executor, SLOT(deleteLater()));
-    connect(this, SIGNAL(stopThread()), thread, SLOT(quit()));
+    connect(thread, &QThread::finished, executor, &QObject::deleteLater);
 
     thread->start();
 }

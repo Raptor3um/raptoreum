@@ -892,7 +892,7 @@ https://www.transifex.com/projects/p/raptoreum/</string>
         <item>
          <widget class="QLabel" name="overriddenByCommandLineInfoLabel">
           <property name="text">
-           <string>Active command-line options that override above options:</string>
+           <string>Options set in this dialog are overriden by the command_line or in the configuration file:</string>
           </property>
           <property name="textFormat">
            <enum>Qt::PlainText</enum>

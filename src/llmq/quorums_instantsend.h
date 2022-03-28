@@ -89,8 +89,8 @@ private:
 
     std::atomic<bool> fUpgradedDB{false};
 
-    std::thread isendWorkThread;
-    CThreadInterrupt isendWorkInterrupt;
+    std::thread workThread;
+    CThreadInterrupt workInterrupt;
 
     /**
      * Request ids of inputs that we signed. Used to determine if a recovered signature belongs to an
@@ -128,7 +128,7 @@ public:
 
     void Start();
     void Stop();
-    void InterruptIsendWorkerThread();
+    void InterruptWorkerThread();
 
 public:
     void ProcessTx(const CTransaction& tx, bool fRetroactive, const Consensus::Params& params);
@@ -180,7 +180,7 @@ public:
 
     size_t GetInstantSendLockCount() const;
 
-    void IsendWorkThreadMain();
+    void WorkThreadMain();
 };
 
 extern CInstantSendManager* quorumInstantSendManager;

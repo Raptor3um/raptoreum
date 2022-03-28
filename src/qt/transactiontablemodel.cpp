@@ -13,10 +13,10 @@
 #include <core_io.h>
 #include <interfaces/handler.h>
 #include <interfaces/node.h>
-#include <validation.h>
 #include <sync.h>
 #include <uint256.h>
 #include <util.h>
+#include <validation.h>
 
 #include <functional>
 
@@ -249,7 +249,7 @@ TransactionTableModel::TransactionTableModel(WalletModel *parent):
     columns << QString() << QString() << tr("Date") << tr("Type") << tr("Address / Label") << BitcoinUnits::getAmountColumnTitle(walletModel->getOptionsModel()->getDisplayUnit());
     priv->refreshWallet(walletModel->wallet());
 
-    connect(walletModel->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
+    connect(walletModel->getOptionsModel(), &OptionsModel::displayUnitChanged, this, &TransactionTableModel::updateDisplayUnit);
 
     subscribeToCoreSignals();
 }
@@ -393,7 +393,7 @@ QString TransactionTableModel::formatTxType(const TransactionRecord *wtx) const
     case TransactionRecord::RecvFromOther:
         return tr("Received from");
     case TransactionRecord::RecvWithCoinJoin:
-        return tr("Received via %1").arg("CoinJoin");
+        return tr("Received via %1").arg(QString::fromStdString(gCoinJoinName));
     case TransactionRecord::SendToAddress:
     case TransactionRecord::SendToOther:
         return tr("Sent to");
@@ -406,15 +406,15 @@ QString TransactionTableModel::formatTxType(const TransactionRecord *wtx) const
     case TransactionRecord::FutureReceive:
         return tr("Future Receive");
     case TransactionRecord::CoinJoinMixing:
-        return tr("%1 Mixing").arg("CoinJoin");
+        return tr("%1 Mixing").arg(QString::fromStdString(gCoinJoinName));
     case TransactionRecord::CoinJoinCollateralPayment:
-        return tr("%1 Collateral Payment").arg("CoinJoin");
+        return tr("%1 Collateral Payment").arg(QString::fromStdString(gCoinJoinName));
     case TransactionRecord::CoinJoinMakeCollaterals:
-        return tr("%1 Make Collateral Inputs").arg("CoinJoin");
+        return tr("%1 Make Collateral Inputs").arg(QString::fromStdString(gCoinJoinName));
     case TransactionRecord::CoinJoinCreateDenominations:
-        return tr("%1 Create Denominations").arg("CoinJoin");
+        return tr("%1 Create Denominations").arg(QString::fromStdString(gCoinJoinName));
     case TransactionRecord::CoinJoinSend:
-        return tr("%1 Send").arg("CoinJoin");
+        return tr("%1 Send").arg(QString::fromStdString(gCoinJoinName));
 
     default:
         return QString();

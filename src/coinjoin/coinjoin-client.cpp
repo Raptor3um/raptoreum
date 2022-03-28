@@ -7,12 +7,12 @@
 
 #include <consensus/validation.h>
 #include <core_io.h>
-#include <init.h>
 #include <smartnode/smartnode-payments.h>
 #include <smartnode/smartnode-sync.h>
 #include <smartnode/smartnode-meta.h>
 #include <netmessagemaker.h>
 #include <script/sign.h>
+#include <shutdown.h>
 #include <txmempool.h>
 #include <util.h>
 #include <utilmoneystr.h>
@@ -315,7 +315,7 @@ std::string CCoinJoinClientSession::GetStatus(bool fWaitForBlock)
 
     switch (nState) {
     case POOL_STATE_IDLE:
-        return strprintf(_("%s is idle."), "CoinJoin");
+        return strprintf(_("%s is idle."), gCoinJoinName);
     case POOL_STATE_QUEUE:
         if (nStatusMessageProgress % 70 <= 30)
             strSuffix = ".";
@@ -337,7 +337,7 @@ std::string CCoinJoinClientSession::GetStatus(bool fWaitForBlock)
             strSuffix = "...";
         return strprintf(_("Found enough users, signing ( waiting %s )"), strSuffix);
     case POOL_STATE_ERROR:
-        return strprintf(_("%s request incomplete: %s"), "CoinJoin", strLastMessage) + " " + _("Will retry...");
+        return strprintf(_("%s request incomplete: %s"), gCoinJoinName, strLastMessage) + " " + _("Will retry...");
     default:
         return strprintf(_("Unknown state: id = %u"), nState);
     }
@@ -1521,7 +1521,7 @@ bool CCoinJoinClientSession::CreateCollateralTransaction(CMutableTransaction& tx
     mixingWallet.AvailableCoins(vCoins, true, &coin_control);
 
     if (vCoins.empty()) {
-        strReason = "CoinJoin requires a collateral transaction and could not locate an acceptable input!";
+        strReason = strprintf("%s requires a collateral transaction and could not locate an acceptable input!", gCoinJoinName);
         return false;
     }
 

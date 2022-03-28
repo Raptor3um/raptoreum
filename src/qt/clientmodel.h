@@ -52,9 +52,7 @@ public:
 
     interfaces::Node& node() const { return m_node; }
     interfaces::Smartnode::Sync& smartnodeSync() const { return m_node.smartnodeSync(); }
-#ifdef ENABLE_WALLET
     interfaces::CoinJoin::Options& coinJoinOptions() const { return m_node.coinJoinOptions(); }
-#endif
     OptionsModel *getOptionsModel();
     PeerTableModel *getPeerTableModel();
     BanTableModel *getBanTableModel();
@@ -91,6 +89,7 @@ private:
     std::unique_ptr<interfaces::Handler> m_handler_notify_alert_changed;
     std::unique_ptr<interfaces::Handler> m_handler_banned_list_changed;
     std::unique_ptr<interfaces::Handler> m_handler_notify_block_tip;
+    std::unique_ptr<interfaces::Handler> m_handler_notify_chainlock;
     std::unique_ptr<interfaces::Handler> m_handler_notify_header_tip;
     std::unique_ptr<interfaces::Handler> m_handler_notify_smartnodelist_changed;
     std::unique_ptr<interfaces::Handler> m_handler_notify_additional_data_sync_progess_changed;
@@ -112,6 +111,7 @@ private:
 Q_SIGNALS:
     void numConnectionsChanged(int count);
     void smartnodeListChanged() const;
+    void chainLockChanged(const QString& bestChainLockHash, int bestChainLockHeight);
     void numBlocksChanged(int count, const QDateTime& blockDate, const QString& blockHash, double nVerificationProgress, bool header);
     void additionalDataSyncProgressChanged(double nSyncProgress);
     void mempoolSizeChanged(long count, size_t mempoolSizeInBytes);

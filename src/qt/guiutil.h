@@ -36,6 +36,7 @@ class QButtonGroup;
 class QDateTime;
 class QFont;
 class QLineEdit;
+class QProgressDialog;
 class QUrl;
 class QWidget;
 QT_END_NAMESPACE
@@ -155,9 +156,7 @@ namespace GUIUtil
       @param[out] selectedSuffixOut  Pointer to return the suffix (file type) that was selected (or 0).
                   Can be useful when choosing the save file format based on suffix.
      */
-    QString getSaveFileName(QWidget *parent, const QString &caption, const QString &dir,
-        const QString &filter,
-        QString *selectedSuffixOut);
+    QString getSaveFileName(QWidget *parent, const QString &caption, const QString &dir, const QString &filter, QString *selectedSuffixOut);
 
     /** Get open filename, convenience wrapper for QFileDialog::getOpenFileName.
 
@@ -168,9 +167,7 @@ namespace GUIUtil
       @param[out] selectedSuffixOut  Pointer to return the suffix (file type) that was selected (or 0).
                   Can be useful when choosing the save file format based on suffix.
      */
-    QString getOpenFileName(QWidget *parent, const QString &caption, const QString &dir,
-        const QString &filter,
-        QString *selectedSuffixOut);
+    QString getOpenFileName(QWidget *parent, const QString &caption, const QString &dir, const QString &filter, QString *selectedSuffixOut);
 
     /** Get connection type to call object slot in GUI thread with invokeMethod. The call will be blocking.
 
@@ -206,10 +203,25 @@ namespace GUIUtil
         explicit ToolTipToRichTextFilter(int size_threshold, QObject *parent = 0);
 
     protected:
-        bool eventFilter(QObject *obj, QEvent *evt);
+        bool eventFilter(QObject *obj, QEvent *evt) override;
 
     private:
         int size_threshold;
+    };
+
+    /**
+     * Qt event filter lthat intercepts QEvent::FocusOut events for QLabel objects,
+     * and resets their 'textInteractionFlags' property to get rid of the visible cursor.
+     *
+     * This is a temporary fix of QTBUG-59514.
+     */
+    class LabelOutOfFocusEventFilter : public QObject
+    {
+        Q_OBJECT
+
+    public:
+        explicit LabelOutOfFocusEventFilter(QObject* parent);
+        bool eventFilter(QObject* watched, QEvent* event) override;
     };
 
     /**
@@ -414,7 +426,7 @@ namespace GUIUtil
          */
         void clicked(const QPoint& point);
     protected:
-        void mouseReleaseEvent(QMouseEvent *event);
+        void mouseReleaseEvent(QMouseEvent *event) override;
     };
 
     class ClickableProgressBar : public QProgressBar
@@ -427,7 +439,7 @@ namespace GUIUtil
          */
         void clicked(const QPoint& point);
     protected:
-        void mouseReleaseEvent(QMouseEvent *event);
+        void mouseReleaseEvent(QMouseEvent *event) override;
     };
 
     typedef ClickableProgressBar ProgressBar;
@@ -442,8 +454,11 @@ namespace GUIUtil
         void keyEscapePressed();
 
     private:
-        bool eventFilter(QObject *object, QEvent *event);
+        bool eventFilter(QObject *object, QEvent *event) override;
     };
+
+    // Fix known bugs in QProgressDialog class.
+    void PolishProgressDialog(QProgressDialog* dialog);
 } // namespace GUIUtil
 
 #endif // BITCOIN_QT_GUIUTIL_H

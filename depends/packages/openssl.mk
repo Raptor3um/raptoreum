@@ -26,7 +26,7 @@ $(package)_config_opts+=no-unit-test
 $(package)_config_opts+=no-weak-ssl-ciphers
 $(package)_config_opts+=no-zlib
 $(package)_config_opts+=no-zlib-dynamic
-$(package)_config_opts += $($(package)_cflags) $($(package)_cppflags)
+#$(package)_config_opts += $($(package)_cflags) $($(package)_cppflags)
 $(package)_config_opts_linux=-fPIC -Wa,--noexecstack
 $(package)_config_opts_x86_64_linux=linux-x86_64
 $(package)_config_opts_i686_linux=linux-generic32
@@ -38,10 +38,10 @@ $(package)_config_opts_mips_linux=linux-generic32
 $(package)_config_opts_powerpc_linux=linux-generic32
 $(package)_config_opts_riscv32_linux=linux-generic32
 $(package)_config_opts_riscv64_linux=linux-generic64
-$(package)_config_opts_x86_64_darwin=darwin64-x86_64
-$(package)_config_opts_arm64_darwin=darwin64-arm64
-$(package)_config_opts_aarch64_darwin=darwin64-arm64
-$(package)_config_opts_x86_64_mingw32=mingw64
+$(package)_config_opts_x86_64_darwin=darwin64-x86_64-cc
+$(package)_config_opts_arm64_darwin=--static darwin64-arm64-cc
+$(package)_config_opts_aarch64_darwin=--static darwin64-arm64-cc
+$(package)_config_opts_x86_64_mingw32=--static mingw64
 $(package)_config_opts_i686_mingw32=mingw
 endef
 
@@ -54,7 +54,7 @@ define $(package)_config_cmds
 endef
 
 define $(package)_build_cmds
-  $(MAKE) build_libs
+  $(MAKE) build_libs libcrypto.pc libssl.pc openssl.pc
 endef
 
 define $(package)_stage_cmds

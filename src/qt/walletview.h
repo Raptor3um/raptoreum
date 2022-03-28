@@ -16,6 +16,7 @@ class OverviewPage;
 class ReceiveCoinsDialog;
 class SendCoinsDialog;
 class SendFuturesDialog;
+class SendFuturesRecipient;
 class SendCoinsRecipient;
 class TransactionView;
 class WalletModel;

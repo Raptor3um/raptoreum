@@ -128,7 +128,7 @@ public:
     bool ReadBlockFileInfo(int nFile, CBlockFileInfo &info);
     bool ReadLastBlockFile(int &nFile);
     bool WriteReindexing(bool fReindexing);
-    bool ReadReindexing(bool &fReindexing);
+    void ReadReindexing(bool &fReindexing);
     bool HasTxIndex(const uint256 &txid);
     bool ReadTxIndex(const uint256 &txid, CDiskTxPos &pos);
     bool WriteTxIndex(const std::vector<std::pair<uint256, CDiskTxPos> > &vect);

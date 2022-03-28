@@ -65,7 +65,7 @@ void ConfirmSend(QString* text = nullptr, bool cancel = false)
             }
         }
         delete callback;
-    }), SLOT(call()));
+    }), &Callback::call);
 }
 
 //! Send coins to address and return txid.

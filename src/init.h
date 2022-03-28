@@ -13,9 +13,10 @@
 class CScheduler;
 class CWallet;
 
-void StartShutdown();
-void StartRestart();
-bool ShutdownRequested();
+namespace boost {
+class thread_group;
+} // namespace boost
+
 /** Interrupt threads */
 void Interrupt();
 void Shutdown();

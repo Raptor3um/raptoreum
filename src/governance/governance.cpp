@@ -7,13 +7,13 @@
 #include <consensus/validation.h>
 #include <governance/governance-classes.h>
 #include <governance/governance-validators.h>
-#include <init.h>
 #include <smartnode/smartnode-meta.h>
 #include <smartnode/smartnode-sync.h>
 #include <messagesigner.h>
 #include <net_processing.h>
 #include <netfulfilledman.h>
 #include <netmessagemaker.h>
+#include <shutdown.h>
 #include <spork.h>
 #include <validation.h>
 

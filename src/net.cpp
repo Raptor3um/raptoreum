@@ -22,7 +22,6 @@
 #include <scheduler.h>
 #include <ui_interface.h>
 #include <utilstrencodings.h>
-#include <thread.h>
 #include <validation.h>
 
 #include <smartnode/smartnode-meta.h>
@@ -55,7 +54,7 @@
 #include <math.h>
 
 // How often to dump addresses to banlist.dat
-static constexpr std::chrono::minutes DUMP_ADDRESSES_INTERVAL{15};
+static constexpr int DUMP_ADDRESSES_INTERVAL = 15 * 60;
 
 // We add a random period time (0 to 1 seconds) to feeler connections to prevent synchronization.
 #define FEELER_SLEEP_WINDOW 1
@@ -68,17 +67,6 @@ static constexpr std::chrono::minutes DUMP_ADDRESSES_INTERVAL{15};
 // MSG_DONTWAIT is not available on some platforms, if it doesn't exist define it as 0
 #if !defined(MSG_DONTWAIT)
 #define MSG_DONTWAIT 0
-#endif
-
-// Fix for ancient MinGW versions, that don't have defined these in ws2tcpip.h.
-// Todo: Can be removed when our pull-tester is upgraded to a modern MinGW version.
-#ifdef WIN32
-#ifndef PROTECTION_LEVEL_UNRESTRICTED
-#define PROTECTION_LEVEL_UNRESTRICTED 10
-#endif
-#ifndef IPV6_PROTECTION_LEVEL
-#define IPV6_PROTECTION_LEVEL 23
-#endif
 #endif
 
 /** Used to pass flags to the Bind() function */
@@ -265,12 +253,11 @@ bool AddLocal(const CNetAddr &addr, int nScore)
     return AddLocal(CService(addr, GetListenPort()), nScore);
 }
 
-bool RemoveLocal(const CService& addr)
+void RemoveLocal(const CService& addr)
 {
     LOCK(cs_mapLocalHost);
     LogPrintf("RemoveLocal(%s)\n", addr.ToString());
     mapLocalHost.erase(addr);
-    return true;
 }
 
 /** Make a particular network entirely off-limits (no automatic connects to it) */
@@ -316,15 +303,13 @@ bool IsLocal(const CService& addr)
 /** check whether a given network is one we can probably connect to */
 bool IsReachable(enum Network net)
 {
-    LOCK(cs_mapLocalHost);
-    return !vfLimited[net];
+    return !IsLimited(net);
 }
 
 /** check whether a given address is in a network we can probably connect to */
 bool IsReachable(const CNetAddr& addr)
 {
-    enum Network net = addr.GetNetwork();
-    return IsReachable(net);
+    return IsReachable(addr.GetNetwork());
 }
 
 
@@ -1472,7 +1457,7 @@ void CConnman::CalculateNumConnectionsChangedStats()
     statsClient.gauge("peers.torConnections", torNodes, 1.0f);
 }
 
-void CConnman::InactivityCheck(CNode *pnode)
+void CConnman::InactivityCheck(CNode *pnode) const
 {
     int64_t nTime = GetSystemTimeInSeconds();
     if (nTime - pnode->nTimeConnected > m_peer_connect_timeout)
@@ -2034,7 +2019,7 @@ void CConnman::ThreadSocketHandler()
 void CConnman::WakeMessageHandler()
 {
     {
-        WAIT_LOCK(mutexMsgProc, lock);
+        LOCK(mutexMsgProc);
         fMsgProcWake = true;
     }
     condMsgProc.notify_one();
@@ -2725,7 +2710,7 @@ void CConnman::ThreadMessageHandler()
 
         WAIT_LOCK(mutexMsgProc, lock);
         if (!fMoreWork) {
-            condMsgProc.wait_until(lock, std::chrono::steady_clock::now() + std::chrono::milliseconds(100), [this] { return fMsgProcWake; });
+            condMsgProc.wait_until(lock, std::chrono::steady_clock::now() + std::chrono::milliseconds(100), [this]() EXCLUSIVE_LOCKS_REQUIRED(mutexMsgProc) { return fMsgProcWake; });
         }
         fMsgProcWake = false;
     }
@@ -3105,15 +3090,16 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
 #endif
 
     // Send and receive from sockets, accept connections
-    threadSocketHandler = std::thread(&util::TraceThread, "net", [this] { ThreadSocketHandler(); });
+    threadSocketHandler = std::thread(&TraceThread<std::function<void()> >, "net", std::function<void()>(std::bind(&CConnman::ThreadSocketHandler, this)));
 
     if (!gArgs.GetBoolArg("-dnsseed", true))
         LogPrintf("DNS seeding disabled\n");
     else
-        threadDNSAddressSeed = std::thread(&util::TraceThread, "dnsseed", [this] { ThreadDNSAddressSeed(); });
+        threadDNSAddressSeed = std::thread(&TraceThread<std::function<void()> >, "dnsseed", std::function<void()>(std::bind(&CConnman::ThreadDNSAddressSeed, this)));
+
 
     // Initiate outbound connections from -addnode
-    threadOpenAddedConnections = std::thread(&util::TraceThread, "addcon", [this] { ThreadOpenAddedConnections(); });
+    threadOpenAddedConnections = std::thread(&TraceThread<std::function<void()> >, "addcon", std::function<void()>(std::bind(&CConnman::ThreadOpenAddedConnections, this)));
 
     if (connOptions.m_use_addrman_outgoing && !connOptions.m_specified_outgoing.empty()) {
         if (clientInterface) {
@@ -3124,16 +3110,16 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
         return false;
     }
     if (connOptions.m_use_addrman_outgoing || !connOptions.m_specified_outgoing.empty())
-        threadOpenConnections = std::thread(&util::TraceThread, "opencon", [this, connect = connOptions.m_specified_outgoing] { ThreadOpenConnections(connect); });
+        threadOpenConnections = std::thread(&TraceThread<std::function<void()> >, "opencon", std::function<void()>(std::bind(&CConnman::ThreadOpenConnections, this, connOptions.m_specified_outgoing)));
 
     // Initiate smartnode connections
-    threadOpenSmartnodeConnections = std::thread(&util::TraceThread, "mncon", [this] { ThreadOpenSmartnodeConnections(); });
+    threadOpenSmartnodeConnections = std::thread(&TraceThread<std::function<void()> >, "mncon", std::function<void()>(std::bind(&CConnman::ThreadOpenSmartnodeConnections, this)));
 
     // Process messages
-    threadMessageHandler = std::thread(&util::TraceThread, "msghand", [this] { ThreadMessageHandler(); });
+    threadMessageHandler = std::thread(&TraceThread<std::function<void()> >, "msghand", std::function<void()>(std::bind(&CConnman::ThreadMessageHandler, this)));
 
     // Dump network addresses
-    scheduler.scheduleEvery([this] { DumpData(); }, DUMP_ADDRESSES_INTERVAL);
+    scheduler.scheduleEvery(std::bind(&CConnman::DumpData, this), DUMP_ADDRESSES_INTERVAL * 1000);
 
     return true;
 }
@@ -3164,7 +3150,7 @@ void CExplicitNetCleanup::callCleanup()
 void CConnman::Interrupt()
 {
     {
-        std::lock_guard<std::mutex> lock(mutexMsgProc);
+        LOCK(mutexMsgProc);
         flagInterruptMsgProc = true;
     }
     condMsgProc.notify_all();

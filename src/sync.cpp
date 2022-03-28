@@ -8,11 +8,11 @@
 #endif
 
 #include <sync.h>
+#include <tinyformat.h>
 
 #include <logging.h>
-#include <tinyformat.h>
 #include <utilstrencodings.h>
-#include <threadnames.h>
+#include <utilthreadnames.h>
 
 #include <map>
 #include <mutex>
@@ -51,7 +51,9 @@ struct CLockLocation {
 
     std::string ToString() const
     {
-        return strprintf("%s:%s%s (in thread %s)", mutexName, sourceFile, itostr(sourceLine), (fTry ? " (TRY)" : ""), m_thread_name);
+        return strprintf(
+            "%s %s:%s%s (in thread %s)",
+            mutexName, sourceFile, itostr(sourceLine), (fTry ? " (TRY)" : ""), m_thread_name);
     }
 
     std::string Name() const

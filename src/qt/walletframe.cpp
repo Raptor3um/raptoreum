@@ -45,14 +45,14 @@ void WalletFrame::setClientModel(ClientModel *_clientModel)
     smartnodeListPage->setClientModel(_clientModel);
 }
 
-bool WalletFrame::addWallet(WalletModel *walletModel)
+void WalletFrame::addWallet(WalletModel *walletModel)
 {
     if (!gui || !clientModel || !walletModel) {
-        return false;
+        return;
     }
 
-    if (mapWalletViews.count(wallet_model) > 0) {
-        return false;
+    if (mapWalletViews.count(walletModel) > 0) {
+        return;
     }
 
     WalletView* walletView = new WalletView(this);
@@ -69,37 +69,31 @@ bool WalletFrame::addWallet(WalletModel *walletModel)
     }
 
     walletStack->addWidget(walletView);
-    mapWalletViews[wallet_model] = walletView;
+    mapWalletViews[walletModel] = walletView;
 
     // Ensure a walletView is able to show the main window
-    connect(walletView, SIGNAL(showNormalIfMinimized()), gui, SLOT(showNormalIfMinimized()));
+    connect(walletView, &WalletView::showNormalIfMinimized, [this] { gui->showNormalIfMinimized(); });
 
-    connect(walletView, SIGNAL(outOfSyncWarningClicked()), this, SLOT(outOfSyncWarningClicked()));
-
-    return true;
+    connect(walletView, &WalletView::outOfSyncWarningClicked, this, &WalletFrame::outOfSyncWarningClicked);
 }
 
-bool WalletFrame::setCurrentWallet(WalletModel* wallet_model)
+void WalletFrame::setCurrentWallet(WalletModel* wallet_model)
 {
-    if (mapWalletViews.count(name) == 0)
-        return false;
+    if (mapWalletViews.count(wallet_model) == 0) return;
 
     WalletView *walletView = mapWalletViews.value(wallet_model);
     walletStack->setCurrentWidget(walletView);
     assert(walletView);
     walletView->updateEncryptionStatus();
-    return true;
 }
 
-bool WalletFrame::removeWallet(WalletModel* wallet_model)
+void WalletFrame::removeWallet(WalletModel* wallet_model)
 {
-    if (mapWalletViews.count(wallet_model) == 0)
-        return false;
+    if (mapWalletViews.count(wallet_model) == 0) return;
 
     WalletView *walletView = mapWalletViews.take(wallet_model);
     walletStack->removeWidget(walletView);
     delete walletView;
-    return true;
 }
 
 void WalletFrame::removeAllWallets()
@@ -247,9 +241,15 @@ void WalletFrame::usedReceivingAddresses()
         walletView->usedReceivingAddresses();
 }
 
-WalletView *WalletFrame::currentWalletView()
+WalletView* WalletFrame::currentWalletView() const
 {
     return qobject_cast<WalletView*>(walletStack->currentWidget());
+}
+
+WalletModel* WalletFrame::currentWalletModel() const
+{
+    WalletView* wallet_view = currentWalletView();
+    return wallet_view ? wallet_view->getWalletModel() : nullptr;
 }
 
 void WalletFrame::outOfSyncWarningClicked()

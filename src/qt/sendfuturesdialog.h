@@ -35,7 +35,7 @@ class SendFuturesDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit SendFuturesDialog(QWidget* parent = 0);
+    explicit SendFuturesDialog(QWidget* parent = nullptr);
     ~SendFuturesDialog();
 
     void setClientModel(ClientModel *clientModel);
@@ -51,11 +51,14 @@ public:
 
 public Q_SLOTS:
     void clear();
-    void reject();
-    void accept();
+    void reject() override;
+    void accept() override;
     SendFuturesEntry *addEntry();
     void updateTabsAndLabels();
     void setBalance(const interfaces::WalletBalances& balances);
+
+Q_SIGNALS:
+    void coinsSent(const uint256& txid);
 
 private:
     Ui::SendFuturesDialog *ui;
@@ -114,8 +117,8 @@ class FutureConfirmationDialog : public QMessageBox
     Q_OBJECT
 
 public:
-    FutureConfirmationDialog(const QString &title, const QString &text, int secDelay = 0, QWidget *parent = 0);
-    int exec();
+    FutureConfirmationDialog(const QString &title, const QString &text, int secDelay = 0, QWidget *parent = nullptr);
+    int exec() override;
 
 private Q_SLOTS:
     void countDown();

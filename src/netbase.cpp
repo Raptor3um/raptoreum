@@ -11,6 +11,7 @@
 #include <random.h>
 #include <tinyformat.h>
 #include <util.h>
+#include <utiltime.h>
 #include <utilstrencodings.h>
 
 #include <atomic>
@@ -19,7 +20,6 @@
 #include <fcntl.h>
 #endif
 
-#include <boost/algorithm/string/case_conv.hpp> // for to_lower()
 #ifdef USE_POLL
 #include <poll.h>
 #endif
@@ -39,8 +39,8 @@ bool fNameLookup = DEFAULT_NAME_LOOKUP;
 static const int SOCKS5_RECV_TIMEOUT = 20 * 1000;
 static std::atomic<bool> interruptSocks5Recv(false);
 
-enum Network ParseNetwork(std::string net) {
-    boost::to_lower(net);
+enum Network ParseNetwork(const std::string& net_in) {
+    std::string net = ToLower(net_in);
     if (net == "ipv4") return NET_IPV4;
     if (net == "ipv6") return NET_IPV6;
     if (net == "onion") return NET_ONION;
@@ -79,11 +79,7 @@ bool static LookupIntern(const char *pszName, std::vector<CNetAddr>& vIP, unsign
     aiHint.ai_socktype = SOCK_STREAM;
     aiHint.ai_protocol = IPPROTO_TCP;
     aiHint.ai_family = AF_UNSPEC;
-#ifdef WIN32
-    aiHint.ai_flags = fAllowLookup ? 0 : AI_NUMERICHOST;
-#else
     aiHint.ai_flags = fAllowLookup ? AI_ADDRCONFIG : AI_NUMERICHOST;
-#endif
     struct addrinfo *aiRes = nullptr;
     int nErr = getaddrinfo(pszName, nullptr, &aiHint, &aiRes);
     if (nErr)
@@ -176,14 +172,6 @@ CService LookupNumeric(const char *pszName, int portDefault)
     if(!Lookup(pszName, addr, portDefault, false))
         addr = CService();
     return addr;
-}
-
-struct timeval MillisToTimeval(int64_t nTimeout)
-{
-    struct timeval timeout;
-    timeout.tv_sec = nTimeout / 1000;
-    timeout.tv_usec = (nTimeout % 1000) * 1000;
-    return timeout;
 }
 
 /** SOCKS version */

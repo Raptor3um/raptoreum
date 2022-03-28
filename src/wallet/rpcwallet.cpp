@@ -29,8 +29,6 @@
 #include <wallet/walletdb.h>
 #include <wallet/walletutil.h>
 
-#include <init.h>  // For StartShutdown
-
 #include <coinjoin/coinjoin-client.h>
 #include <coinjoin/coinjoin-client-options.h>
 #include <llmq/quorums_chainlocks.h>
@@ -80,7 +78,7 @@ bool EnsureWalletIsAvailable(CWallet * const pwallet, bool avoidException)
     if (avoidException) return false;
     if (!HasWallets()) {
         throw JSONRPCError(
-            RPC_METHOD_NOT_FOUND, "Method not found (wallet method is disabled because no wallet is loaded)");
+            RPC_WALLET_NOT_FOUND, "No wallet is loaded. Load a wallet using loadwallet or create a new one with createwallet. (Note: A default wallet is no longer automatically created)");
     }
     throw JSONRPCError(RPC_WALLET_NOT_SPECIFIED,
         "Wallet file not specified (must request wallet RPC through /wallet/<filename> uri-path).");
@@ -2947,10 +2945,10 @@ UniValue settxfee(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() < 1 || request.params.size() > 1)
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 1) {
         throw std::runtime_error(
             "settxfee amount\n"
-            "\nSet the transaction fee per kB. Overwrites the paytxfee parameter.\n"
+            "\nSet the transaction fee per kB for the wallet. Overrides the global -paytxfee command line parameter.\n"
             "\nArguments:\n"
             "1. amount         (numeric or string, required) The transaction fee in " + CURRENCY_UNIT + "/kB\n"
             "\nResult:\n"
@@ -2959,13 +2957,13 @@ UniValue settxfee(const JSONRPCRequest& request)
             + HelpExampleCli("settxfee", "0.00001")
             + HelpExampleRpc("settxfee", "0.00001")
         );
+    }
 
     LOCK2(cs_main, pwallet->cs_wallet);
 
-    // Amount
     CAmount nAmount = AmountFromValue(request.params[0]);
 
-    payTxFee = CFeeRate(nAmount, 1000);
+    pwallet->m_pay_tx_fee = CFeeRate(nAmount, 1000);
     return true;
 }
 
@@ -3102,7 +3100,7 @@ UniValue getwalletinfo(const JSONRPCRequest& request)
     obj.pushKV("keys_left",     pwallet->nKeysLeftSinceAutoBackup);
     if (pwallet->IsCrypted())
         obj.pushKV("unlocked_until", pwallet->nRelockTime);
-    obj.pushKV("paytxfee",      ValueFromAmount(payTxFee.GetFeePerK()));
+    obj.pushKV("paytxfee",      ValueFromAmount(pwallet->m_pay_tx_fee.GetFeePerK()));
     if (fHDEnabled) {
         obj.pushKV("hdchainid", hdChainCurrent.GetID().GetHex());
         obj.pushKV("hdaccountcount", (int64_t)hdChainCurrent.CountAccounts());
@@ -3139,6 +3137,38 @@ UniValue getwalletinfo(const JSONRPCRequest& request)
         obj.pushKV("scanning", false);
     }
     return obj;
+}
+
+UniValue listwalletdir(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() != 0) {
+        throw std::runtime_error(
+            "listwalletdir\n"
+            "Returns a list of wallets in the wallet directory.\n"
+            "{\n"
+            "  \"wallets\" : [                (json array of objects)\n"
+            "    {\n"
+            "      \"name\" : \"name\"          (string) The Wallet name\n"
+            "    }\n"
+            "    ,...\n"
+            "  ]\n"
+            "}\n"
+            "\nExamples:\n"
+            + HelpExampleCli("listwalletdir", "")
+            + HelpExampleCli("listwalletdir", "")
+        );
+    }
+
+    UniValue wallets(UniValue::VARR);
+    for (const auto& path : ListWalletDir()) {
+        UniValue wallet(UniValue::VOBJ);
+        wallet.pushKV("name", path.string());
+        wallets.push_back(wallet);
+    }
+
+    UniValue result(UniValue::VOBJ);
+    result.pushKV("wallets", wallets);
+    return result;
 }
 
 UniValue listwallets(const JSONRPCRequest& request)
@@ -4426,6 +4456,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "listsinceblock",                   &listsinceblock,                   {"blockhash","target_confirmations","include_watchonly","include_removed"} },
     { "wallet",             "listtransactions",                 &listtransactions,                 {"account|label|dummy","count","skip","include_watchonly"} },
     { "wallet",             "listunspent",                      &listunspent,                      {"minconf","maxconf","addresses","include_unsafe","query_options"} },
+    { "wallet",             "listwalletdir",                    &listwalletdir,                    {} },
     { "wallet",             "listwallets",                      &listwallets,                      {} },
     { "wallet",             "loadwallet",                       &loadwallet,                       {"filename"} },
     { "wallet",             "lockunspent",                      &lockunspent,                      {"unlock","transactions"} },

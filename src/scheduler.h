@@ -9,7 +9,6 @@
 #include <functional>
 #include <list>
 #include <map>
-#include <thread>
 
 #include <sync.h>
 
@@ -37,18 +36,13 @@ public:
     CScheduler();
     ~CScheduler();
 
-    std::thread m_service_thread;
-
     typedef std::function<void ()> Function;
 
     // Call func at/after time t
     void schedule(Function f, std::chrono::system_clock::time_point t);
 
     /** Call f once after the delta has passed */
-    void scheduleFromNow(Function f, std::chrono::milliseconds delta)
-    {
-        schedule(std::move(f), std::chrono::system_clock::now() + delta);
-    }
+    void scheduleFromNow(Function f, int64_t deltaMilliSeconds);
 
     /**
      * Repeat f until the scheduler is stopped.
@@ -57,9 +51,10 @@ public:
      * it is rescheduled to run again after delta.
      * If you need more accurate scheduling, don't use this method.
      */
-    void scheduleEvery(Function f, std::chrono::milliseconds delta);
+    void scheduleEvery(Function f, int64_t deltaMilliSeconds);
 
     // Services the queue 'forever'. Should be run in a thread,
+    // and interrupted using boost::interrupt_threaf
     void serviceQueue();
 
     /** Tell any threads running serviceQueue to stop as soon as the current task is done */
