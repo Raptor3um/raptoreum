@@ -735,6 +735,7 @@ UniValue protx_register(const JSONRPCRequest& request)
             UniValue ret(UniValue::VOBJ);
             ret.pushKV("tx", EncodeHexTx(tx));
             ret.pushKV("collateralAddress", EncodeDestination(txDest));
+            ret.push_back(Pair("collateralAmount", collateralAmount / COIN));
             ret.pushKV("signMessage", ptx.MakeSignString());
             return ret;
         } else {
