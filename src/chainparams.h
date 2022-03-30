@@ -103,7 +103,6 @@ public:
     int FulfilledRequestExpireTime() const { return nFulfilledRequestExpireTime; }
     bool IsFutureActive(CBlockIndex *index) const {
         int height = index == nullptr ? 0 : index->nHeight;
-        cout << "IsFutureActive height " << height << "\n";
         return height >= GetConsensus().nFutureForkBlock;
     };
     const std::vector<std::string>& SporkAddresses() const { return vSporkAddresses; }

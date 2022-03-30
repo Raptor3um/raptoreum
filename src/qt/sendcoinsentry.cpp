@@ -210,8 +210,8 @@ SendCoinsRecipient SendCoinsEntry::getValue()
     //std::cout << " ui->futureCb->isChecked() " << ui->futureCb->isChecked() << "\n";
     if(ui->futureCb->isChecked()) {
         recipient.isFutureOutput = true;
-        recipient.maturity = std::stoi(ui->maturity->text().toStdString());
-        recipient.locktime = std::stol(ui->locktime->text().toStdString());
+        recipient.maturity = ui->maturity->text().isEmpty() ? -1 : std::stoi(ui->maturity->text().toStdString());
+        recipient.locktime = ui->locktime->text().isEmpty() ? -1 : std::stol(ui->locktime->text().toStdString());
     }
     return recipient;
 }
