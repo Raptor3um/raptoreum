@@ -61,12 +61,12 @@ struct CFutureIndexValue {
 
     void SetNull()
     {
-        confirmedHeight = 0;
-        lockedToHeight = 0;
-        lockedToTime = 0;
         satoshis = 0;
         addressType = 0;
         addressHash.SetNull();
+        confirmedHeight = 0;
+        lockedToHeight = 0;
+        lockedToTime = 0;
     }
 
     bool IsNull() const
@@ -75,7 +75,7 @@ struct CFutureIndexValue {
     }
 };
 
-struct IndexKeyCompare {
+struct CIndexKeyCompare {
     bool operator()(const IndexKey& a, const IndexKey& b) const
     {
         if (a.txid == b.txid) {
@@ -86,8 +86,9 @@ struct IndexKeyCompare {
     }
 };
 
+typedef std::map<CFutureIndexKey, CFutureIndexValue, CFutureIndexKeyCompare> mapFutureIndex;
 struct CFutureIndexTxInfo {
-    std::map<CFutureIndexKey, CFutureIndexValue, IndexKeyCompare> mSpentInfo;
+    mapFutureIndex mFutureInfo;
 };
 
 #endif

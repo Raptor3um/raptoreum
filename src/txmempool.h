@@ -14,6 +14,7 @@
 #include <string>
 
 #include <addressindex.h>
+#include <indices/future_index.h>
 #include <indices/spentindex.h>
 #include <amount.h>
 #include <coins.h>
@@ -521,9 +522,11 @@ private:
     typedef std::map<uint256, std::vector<CMempoolAddressDeltaKey> > addressDeltaMapInserted;
     addressDeltaMapInserted mapAddressInserted;
 
-    typedef std::map<CSpentIndexKey, CSpentIndexValue, CSpentIndexKeyCompare> mapSpentIndex;
-    mapSpentIndex mapSpent;
+    mapFutureIndex mapFuture;
+    typedef std::map<uint256, CFutureIndexKey> mapFutureIndexInserted;
+    mapFutureIndexInserted mapFutureInserted;
 
+    mapSpentIndex mapSpent;
     typedef std::map<uint256, std::vector<CSpentIndexKey> > mapSpentIndexInserted;
     mapSpentIndexInserted mapSpentInserted;
 
@@ -570,8 +573,12 @@ public:
                          std::vector<std::pair<CMempoolAddressDeltaKey, CMempoolAddressDelta> > &results);
     bool removeAddressIndex(const uint256 txhash);
 
-    void addSpentIndex(const CTxMemPoolEntry &entry, const CCoinsViewCache &view);
-    bool getSpentIndex(CSpentIndexKey &key, CSpentIndexValue &value);
+    void addFutureIndex(const CTxMemPoolEntry& entry, const CCoinsViewCache& view);
+    bool getFutureIndex(CFutureIndexKey& key, CFutureIndexValue& value);
+    bool removeFutureIndex(const uint256 txhash);
+
+    void addSpentIndex(const CTxMemPoolEntry& entry, const CCoinsViewCache& view);
+    bool getSpentIndex(CSpentIndexKey& key, CSpentIndexValue& value);
     bool removeSpentIndex(const uint256 txhash);
 
     void removeRecursive(const CTransaction &tx, MemPoolRemovalReason reason = MemPoolRemovalReason::UNKNOWN);
