@@ -366,6 +366,16 @@ public:
         }
         SyncWithValidationInterfaceQueue();
     }
+    void waitForNotificationsIfNewBlocksConnected(const uint256& old_tip) override
+    {
+        if (!old_tip.IsNull()) {
+            LOCK(::cs_main);
+            if (old_tip == ::chainActive.Tip()->GetBlockHash()) return;
+            CBlockIndex* block = LookupBlockIndex(old_tip);
+            if (block && block->GetAncestor(::chainActive.Height()) == ::chainActive.Tip()) return;
+        }
+        SyncWithValidationInterfaceQueue();
+    }
     std::unique_ptr<Handler> handleRpc(const CRPCCommand& command) override
     {
         return MakeUnique<RpcHandlerImpl>(command);
