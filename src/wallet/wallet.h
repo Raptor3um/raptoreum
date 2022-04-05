@@ -544,11 +544,8 @@ public:
 
     int64_t GetTxTime() const;
 
-    // RelayWalletTransaction may only be called if fBroadcastTransactions!
-    bool RelayWalletTransaction(interfaces::Chain::Lock& locked_chain);
-
-    /** Pass this transaction to the mempool. Fails if absolute fee exceeds absurd fee. */
-    bool AcceptToMemoryPool(interfaces::Chain::Lock& locked_chain, CValidationState& state);
+    // Pass this transaction to node for mempool insertion and relay to peers if flag set to true
+    bool SubmitMemoryPoolAndRelay(std::string& err_string, bool relay, interfaces::Chain::Lock& locked_chain);
 
     std::set<uint256> GetConflicts() const;
 };

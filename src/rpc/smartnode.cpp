@@ -8,7 +8,11 @@
 #include <clientversion.h>
 #include <init.h>
 #include <index/txindex.h>
+#include <node/context.h>
+#include <net.h>
 #include <netbase.h>
+#include <rpc/blockchain.h>
+#include <rpc/server.h>
 #include <rpc/util.h>
 #include <rpc/server.h>
 #include <validation.h>
@@ -88,8 +92,8 @@ static UniValue smartnode_connect(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Incorrect smartnode address %s", strAddress));
 
     // TODO: Pass CConnman instance somehow and don't use global variable.
-    g_connman->OpenSmartnodeConnection(CAddress(addr, NODE_NETWORK));
-    if (!g_connman->IsConnected(CAddress(addr, NODE_NETWORK), CConnman::AllNodes))
+    g_rpc_node->connman->OpenSmartnodeConnection(CAddress(addr, NODE_NETWORK));
+    if (!g_rpc_node->connman->IsConnected(CAddress(addr, NODE_NETWORK), CConnman::AllNodes))
         throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Couldn't connect to smartnode %s", strAddress));
 
     return "successfully connected";

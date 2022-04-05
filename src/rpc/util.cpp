@@ -11,8 +11,6 @@
 #include <util/strencodings.h>
 #include <util/system.h>
 
-InitInterfaces* g_rpc_interfaces = nullptr;
-
 void RPCTypeCheck(const UniValue& params,
                   const std::list<UniValueType>& typesExpected,
                   bool fAllowNull)

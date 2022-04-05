@@ -4,6 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <fs.h>
+#include <node/context.h>
 #include <streams.h>
 #include <wallet/salvage.h>
 #include <wallet/wallet.h>
@@ -115,7 +116,8 @@ bool RecoverDatabaseFile(const fs::path& file_path)
         return false;
     }
 
-    auto chain = interfaces::MakeChain();
+    NodeContext node;
+    auto chain = interfaces::MakeChain(node);
     DbTxn* ptxn = env->TxnBegin();
     CWallet dummyWallet(chain.get(), WalletLocation(), WalletDatabase::CreateDummy());
     for (KeyValPair& row : salvagedData)

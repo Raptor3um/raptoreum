@@ -5,6 +5,8 @@
 
 #include <chainparams.h>
 #include <index/txindex.h>
+#include <node/context.h>
+#include <rpc/blockchain.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
 #include <validation.h>
@@ -197,7 +199,7 @@ UniValue quorum_dkgstatus(const JSONRPCRequest& request)
             auto allConnections = llmq::CLLMQUtils::GetQuorumConnections(params.type, pindexQuorum, activeSmartnodeInfo.proTxHash, false);
             auto outboundConnections = llmq::CLLMQUtils::GetQuorumConnections(params.type, pindexQuorum, activeSmartnodeInfo.proTxHash, true);
             std::map<uint256, CAddress> foundConnections;
-            g_connman->ForEachNode([&](const CNode* pnode) {
+            g_rpc_node->connman->ForEachNode([&](const CNode* pnode) {
                 if (!pnode->verifiedProRegTxHash.IsNull() && allConnections.count(pnode->verifiedProRegTxHash)) {
                     foundConnections.emplace(pnode->verifiedProRegTxHash, pnode->addr);
                 }
@@ -608,7 +610,7 @@ UniValue quorum_getdata(const JSONRPCRequest& request)
         LOCK(cs_main);
         pQuorumIndex = LookupBlockIndex(quorumHash);
     }
-    return g_connman->ForNode(nodeId, [&](CNode* pNode) {
+    return g_rpc_node->connman->ForNode(nodeId, [&](CNode* pNode) {
         return llmq::quorumManager->RequestQuorumData(pNode, llmqType, pQuorumIndex, nDataMask, proTxHash);
     });
 }

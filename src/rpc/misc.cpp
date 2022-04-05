@@ -14,6 +14,7 @@
 #include <key_io.h>
 #include <net.h>
 #include <netbase.h>
+#include <node/context.h>
 #include <rpc/blockchain.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
@@ -63,7 +64,7 @@ static UniValue mnsync(const JSONRPCRequest& request)
 
     if(strMode == "next")
     {
-        smartnodeSync.SwitchToNextAsset(*g_connman);
+        smartnodeSync.SwitchToNextAsset(*g_rpc_node->connman);
         return "sync updated to " + smartnodeSync.GetAssetName();
     }
 
@@ -127,14 +128,14 @@ static UniValue spork(const JSONRPCRequest& request)
         if(nSporkID == SPORK_INVALID)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid spork name");
 
-        if (!g_connman)
+        if (!g_rpc_node->connman)
             throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
 
         // SPORK VALUE
         int64_t nValue = request.params[1].get_int64();
 
         //broadcast new spork
-        if(sporkManager.UpdateSpork(nSporkID, nValue, *g_connman)){
+        if(sporkManager.UpdateSpork(nSporkID, nValue, *g_rpc_node->connman)){
             return "success";
         } else {
             RPCHelpMan{"spork",
@@ -520,7 +521,7 @@ static UniValue mnauth(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "publicKey invalid");
     }
 
-    bool fSuccess = g_connman->ForNode(nodeId, CConnman::AllNodes, [&](CNode* pNode){
+    bool fSuccess = g_rpc_node->connman->ForNode(nodeId, CConnman::AllNodes, [&](CNode* pNode){
         LOCK(pNode->cs_mnauth);
         pNode->verifiedProRegTxHash = proTxHash;
         pNode->verifiedPubKeyHash = publicKey.GetHash();

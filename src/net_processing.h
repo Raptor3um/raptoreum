@@ -100,4 +100,7 @@ void EraseObjectRequest(NodeId nodeId, const CInv& inv);
 void RequestObject(NodeId nodeId, const CInv& inv, std::chrono::microseconds current_time, bool fForce=false);
 size_t GetRequestedObjectCount(NodeId nodeId);
 
+/** Relay transaction to every node */
+void RelayTransaction(const uint256&, const CConnman& connman);
+
 #endif // BITCOIN_NET_PROCESSING_H

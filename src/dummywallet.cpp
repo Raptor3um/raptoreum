@@ -20,10 +20,10 @@ class Wallet;
 class DummyWalletInit : public WalletInitInterface {
 public:
 
-	bool HasWalletSupport() const override { return false; }
-	void AddWalletOptions() const override;
-	bool ParameterInteraction() const override { return true; }
-	void Construct(InitInterfaces& interfaces) const override { LogPrintf("No wallet support compiled in!\n"); }
+    bool HasWalletSupport() const override {return false;}
+    void AddWalletOptions() const override;
+    bool ParameterInteraction() const override {return true;}
+    void Construct(NodeContext& node) const override {LogPrintf("No wallet support compiled in!\n");}
 
 	// Raptoreum specific code
 	void AutoLockSmartnodeCollaterals() const override {}

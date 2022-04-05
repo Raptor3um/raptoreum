@@ -3,6 +3,7 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <node/context.h>
 #include <validation.h>
 #ifdef ENABLE_WALLET
 #include <coinjoin/coinjoin-client.h>
@@ -10,6 +11,7 @@
 #include <wallet/rpcwallet.h>
 #endif // ENABLE_WALLET
 #include <coinjoin/coinjoin-server.h>
+#include <rpc/blockchain.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
 #include <util/strencodings.h>
@@ -62,7 +64,7 @@ static UniValue coinjoin(const JSONRPCRequest& request)
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Mixing has been started already.");
         }
 
-        bool result = it->second->DoAutomaticDenominating(*g_connman);
+        bool result = it->second->DoAutomaticDenominating(*g_rpc_node->connman);
         return "Mixing " + (result ? "started successfully" : ("start failed: " + it->second->GetStatuses() + ", will retry"));
     }
 

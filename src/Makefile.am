@@ -236,6 +236,7 @@ BITCOIN_CORE_H = \
   netmessagemaker.h \
   node/coin.h \
   node/coinstats.h \
+  node/context.h \
   node/transaction.h \
   noui.h \
   optional.h \
@@ -401,6 +402,7 @@ libraptoreum_server_a_SOURCES = \
   net_processing.cpp \
   node/coin.cpp \
   node/coinstats.cpp \
+  node/context.cpp \
   node/transaction.cpp \
   ui_interface.cpp \
   noui.cpp \

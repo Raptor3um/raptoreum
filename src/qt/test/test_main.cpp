@@ -52,15 +52,17 @@ extern void noui_connect();
 // This is all you need to run all the tests
 int main(int argc, char *argv[])
 {
-    SetupEnvironment();
-    SetupNetworking();
-    SelectParams(CBaseChainParams::REGTEST);
-    noui_connect();
-    ClearDatadirCache();
-    fs::path pathTemp = fs::temp_directory_path() / strprintf("test_raptoreum-qt_%lu_%i", (unsigned long)GetTime(), (int)GetRand(100000));
-    fs::create_directories(pathTemp);
-    gArgs.ForceSetArg("-datadir", pathTemp.string());
-    auto node = interfaces::MakeNode();
+    // Initialize persistent globals with the testing setup state for sanity.
+    // E.g. -datadir in gArgs is set to a temp directory dummy value (instead
+    // of defaulting to the default datadir), or globalChainParams is set to
+    // regtest params.
+    //
+    // All tests must use their own testing setup (if needed).
+    {
+        BasicTestingSetup dummy{CBaseChainParams::REGTEST};
+    }
+
+    std::unique_ptr<interfaces::Node> node = interfaces::MakeNode();
 
     bool fInvalid = false;
 
@@ -86,7 +88,7 @@ int main(int argc, char *argv[])
     if (QTest::qExec(&test1) != 0) {
         fInvalid = true;
     }
-    RPCNestedTests test2;
+    RPCNestedTests test2(*node);
     if (QTest::qExec(&test2) != 0) {
         fInvalid = true;
     }
@@ -95,7 +97,7 @@ int main(int argc, char *argv[])
         fInvalid = true;
     }
 #if defined(ENABLE_WALLET)
-    WalletTests test4;
+    WalletTests test4(*node);
     if (QTest::qExec(&test4) != 0) {
         fInvalid = true;
     }

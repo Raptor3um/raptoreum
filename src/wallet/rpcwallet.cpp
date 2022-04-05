@@ -9,11 +9,12 @@
 #include <chain.h>
 #include <core_io.h>
 #include <httpserver.h>
-#include <init.h>
 #include <interfaces/chain.h>
-#include <net.h>
+#include <node/context.h>
 #include <policy/feerate.h>
 #include <policy/fees.h>
+#include <rpc/blockchain.h>
+#include <rpc/mining.h>
 #include <rpc/rawtransaction_util.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
@@ -2753,7 +2754,7 @@ static UniValue loadwallet(const JSONRPCRequest& request)
     }
 
     std::string error, warning;
-    std::shared_ptr<CWallet> const wallet = LoadWallet(*g_rpc_interfaces->chain, location, error, warning);
+    std::shared_ptr<CWallet> const wallet = LoadWallet(*g_rpc_chain, location, error, warning);
     if (!wallet) throw JSONRPCError(RPC_WALLET_ERROR, error);
 
     UniValue obj(UniValue::VOBJ);
@@ -2807,7 +2808,7 @@ static UniValue createwallet(const JSONRPCRequest& request)
     std::string error;
     std::string warning;
     std::shared_ptr<CWallet> wallet;
-    WalletCreationStatus status = CreateWallet(*g_rpc_interfaces->chain, passphrase, flags, request.params[0].get_str(), error, warning, wallet);
+    WalletCreationStatus status = CreateWallet(*g_rpc_chain, passphrase, flags, request.params[0].get_str(), error, warnings, wallet);
     switch (status) {
         case WalletCreationStatus::CREATION_FAILED:
             throw JSONRPCError(RPC_WALLET_ERROR, error);
@@ -3818,3 +3819,5 @@ void RegisterWalletRPCCommands(interfaces::Chain& chain, std::vector<std::unique
     for (unsigned int vcidx = 0; vcidx < ARRAYLEN(commands); vcidx++)
         handlers.emplace_back(chain.handleRpc(commands[vcidx]));
 }
+
+interfaces::Chain* g_rpc_chain = nullptr;

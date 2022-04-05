@@ -23,9 +23,6 @@ class CKeyStore;
 class CPubKey;
 class CScript;
 struct Sections;
-struct InitInterfaces;
-
-extern InitInterfaces* g_rpc_interfaces;
 
 /** Wrapper for UniValue::VType, which includes typeAny:
  * Used to denote don't care type. */

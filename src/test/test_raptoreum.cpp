@@ -14,6 +14,7 @@
 #include <miner.h>
 #include <net_processing.h>
 #include <pow.h>
+#include <rpc/blockchain.h>
 #include <rpc/register.h>
 #include <rpc/server.h>
 #include <script/sigcache.h>
@@ -85,6 +86,7 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
     const CChainParams& chainparams = Params();
     // Ideally we'd move all the RPC tests to the functional testing framework
     // instead of unit tests, but for now we need these here.
+    g_rpc_node = &m_node;
     RegisterAllCoreRPCCommands(tableRPC);
     ClearDatadirCache();
 
@@ -93,8 +95,8 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
     threadGroup.create_thread(std::bind(&CScheduler::serviceQueue, &scheduler));
     GetMainSignals().RegisterBackgroundSignalScheduler(scheduler);
     mempool.setSanityCheck(1.0);
-    g_banman = MakeUnique<BanMan>(GetDataDir() / "banlist.dat", nullptr, DEFAULT_MISBEHAVING_BANTIME);
-    g_connman = MakeUnique<CConnman>(0x1337, 0x1337); // Deterministic randomness for tests.
+    m_node.banman = MakeUnique<BanMan>(GetDataDir() / "banlist.dat", nullptr, DEFAULT_MISBEHAVING_BANTIME);
+    m_node.connman = MakeUnique<CConnman>(0x1337, 0x1337); // Deterministic randomness for tests.
     pblocktree.reset(new CBlockTreeDB(1 << 20, true));
     g_chainstate = MakeUnique<CChainState>();
     ::ChainstateActive().InitCoinsDB(
@@ -122,6 +124,7 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
 TestingSetup::~TestingSetup()
 {
     scheduler.stop();
+    deterministicMNManager.reset();
     llmq::InterruptLLMQSystem();
     llmq::StopLLMQSystem();
     g_txindex->Interrupt();
@@ -132,8 +135,9 @@ TestingSetup::~TestingSetup()
     StopScriptCheckWorkerThreads();
     GetMainSignals().FlushBackgroundCallbacks();
     GetMainSignals().UnregisterBackgroundSignalScheduler();
-    g_connman.reset();
-    g_banman.reset();
+    g_rpc_node = nullptr;
+    m_node.connman.reset();
+    m_node.banman.reset();
     UnloadBlockIndex();
     g_chainstate.reset();
     llmq::DestroyLLMQSystem();

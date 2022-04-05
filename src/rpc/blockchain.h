@@ -8,6 +8,7 @@
 class CBlock;
 class CBlockIndex;
 class UniValue;
+struct NodeContext;
 
 /**
  * Get the difficulty of the net wrt to the given block index, or the chain tip if
@@ -32,5 +33,10 @@ UniValue mempoolToJSON(bool fVerbose = false);
 
 /** Block header to JSON */
 UniValue blockheaderToJSON(const CBlockIndex* blockindex);
+
+//! Pointer to node state that needs to be declared as a global to be accessible
+//! RPC methods. Due to limitations of the RPC framework, there's currently no
+//! direct way to pass in state to RPC methods without globals.
+extern NodeContext* g_rpc_node;
 
 #endif

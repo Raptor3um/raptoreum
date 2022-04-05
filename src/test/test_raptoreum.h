@@ -10,6 +10,7 @@
 #include <chainparamsbase.h>
 #include <fs.h>
 #include <key.h>
+#include <node/context.h>
 #include <pubkey.h>
 #include <random.h>
 #include <scheduler.h>
@@ -60,17 +61,15 @@ struct BasicTestingSetup {
     fs::path SetDataDir(const std::string& name);
 
 private:
+    std::unique_ptr<CConnman> connman;
     const fs::path m_path_root;
 };
 
 /** Testing setup that configures a complete environment.
  * Included are data directory, coins database, script check threads setup.
  */
-class CConnman;
-class CNode;
-
-class PeerLogicValidation;
-struct TestingSetup: public BasicTestingSetup {
+struct TestingSetup : public BasicTestingSetup {
+    NodeContext m_node;
     boost::thread_group threadGroup;
     CScheduler scheduler;
 
