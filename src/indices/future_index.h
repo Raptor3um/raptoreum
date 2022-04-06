@@ -28,7 +28,7 @@ struct CFutureIndexValue {
     int addressType;
     uint160 addressHash;
     int confirmedHeight;
-    uint32_t lockedToHeight;
+    int32_t lockedToHeight;
     int64_t lockedToTime;
 
     ADD_SERIALIZE_METHODS;

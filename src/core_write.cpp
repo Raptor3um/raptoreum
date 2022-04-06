@@ -17,6 +17,7 @@
 #include <utilmoneystr.h>
 #include <utilstrencodings.h>
 
+#include <indices/future_index.h>
 #include <indices/spentindex.h>
 
 #include <evo/cbtx.h>
@@ -161,7 +162,7 @@ void ScriptPubKeyToUniv(const CScript& scriptPubKey, UniValue& out, bool fInclud
     out.pushKV("addresses", a);
 }
 
-void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry, bool include_hex, const CSpentIndexTxInfo* ptxSpentInfo)
+void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry, bool include_hex, const CSpentIndexTxInfo* ptxSpentInfo, const CFutureIndexTxInfo* ptxFutureInfo)
 {
     uint256 txid = tx.GetHash();
     entry.pushKV("txid", txid.GetHex());
@@ -191,6 +192,25 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
                     auto spentInfo = it->second;
                     in.pushKV("value", ValueFromAmount(spentInfo.satoshis));
                     in.pushKV("valueSat", spentInfo.satoshis);
+                    if (spentInfo.addressType == 1) {
+                        in.pushKV("address", EncodeDestination(CKeyID(spentInfo.addressHash)));
+                    } else if (spentInfo.addressType == 2) {
+                        in.pushKV("address", EncodeDestination(CScriptID(spentInfo.addressHash)));
+                    }
+                }
+            }
+
+            // Add future tx info if futureindex enabled
+            if (ptxFutureInfo != nullptr) {
+                CFutureIndexKey futureKey(txin.prevout.hash, txin.prevout.n);
+                auto it = ptxFutureInfo->mFutureInfo.find(futureKey);
+                if (it != ptxFutureInfo->mFutureInfo.end()) {
+                    auto spentInfo = it->second;
+                    in.pushKV("value", ValueFromAmount(spentInfo.satoshis));
+                    in.pushKV("valueSat", spentInfo.satoshis);
+                    in.pushKV("lockHeight", spentInfo.lockedToHeight);
+                    in.pushKV("lockTime", spentInfo.lockedToTime);
+                    in.pushKV("confirmedHeight", spentInfo.confirmedHeight);
                     if (spentInfo.addressType == 1) {
                         in.pushKV("address", EncodeDestination(CKeyID(spentInfo.addressHash)));
                     } else if (spentInfo.addressType == 2) {

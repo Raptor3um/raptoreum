@@ -168,6 +168,7 @@ extern int nScriptCheckThreads;
 extern bool fTxIndex;
 extern bool fAddressIndex;
 extern bool fTimestampIndex;
+extern bool fFutureIndex;
 extern bool fSpentIndex;
 extern bool fIsBareMultisigStd;
 extern bool fRequireStandard;

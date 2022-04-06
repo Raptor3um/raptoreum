@@ -226,6 +226,7 @@ bool fTxIndex = true;
 bool fAddressIndex = false;
 bool fFutureIndex = false;
 bool fTimestampIndex = false;
+bool fFutureIndex = false;
 bool fSpentIndex = false;
 bool fHavePruned = false;
 bool fPruneMode = false;
@@ -896,6 +897,11 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
             pool.addSpentIndex(entry, view);
         }
 
+        // Add memory future index
+        if (fFutureIndex) {
+            pool.addFutureIndex(entry, view);
+        }
+
         if (!bypass_limits) {
             LimitMempoolSize(pool, gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000, gArgs.GetArg("-mempoolexpiry", DEFAULT_MEMPOOL_EXPIRY) * 60 * 60);
             if (!pool.exists(hash))
@@ -947,6 +953,20 @@ bool GetTimestampIndex(const unsigned int &high, const unsigned int &low, std::v
 
     if (!pblocktree->ReadTimestampIndex(high, low, hashes))
         return error("Unable to get hashes for timestamps");
+
+    return true;
+}
+
+bool GetFutureIndex(CFutureIndexKey &key, CFutureIndexValue &value)
+{
+    if (!fFutureIndex)
+        return false;
+
+    if (mempool.getFutureIndex(key, value))
+        return true;
+
+    if (!pblocktree->ReadFutureIndex(key, value))
+        return false;
 
     return true;
 }
@@ -1758,6 +1778,11 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
 
                 const CTxIn input = tx.vin[j];
 
+                if (fFutureIndex) {
+                    // undo and delete the future index
+                    futureIndex.push_back(std::make_pair(CFutureIndexKey(input.prevout.hash, input.prevout.n), CFutureIndexValue()));
+                }
+
                 if (fSpentIndex) {
                     // undo and delete the spent index
                     spentIndex.push_back(std::make_pair(CSpentIndexKey(input.prevout.hash, input.prevout.n), CSpentIndexValue()));
@@ -1817,6 +1842,13 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
         }
     }
 
+
+    if (fFutureIndex) {
+        if (!pblocktree->UpdateFutureIndex(futureIndex)) {
+            AbortNode("Failed to delete future index");
+            return DISCONNECT_FAILED;
+        }
+    }
 
     if (fSpentIndex) {
         if (!pblocktree->UpdateSpentIndex(spentIndex)) {
@@ -4446,6 +4478,10 @@ bool static LoadBlockIndexDB(const CChainParams& chainparams) EXCLUSIVE_LOCKS_RE
     // Check whether we have a spent index
     pblocktree->ReadFlag("spentindex", fSpentIndex);
     LogPrintf("%s: spent index %s\n", __func__, fSpentIndex ? "enabled" : "disabled");
+
+    // Check whether we have a future index
+    pblocktree->ReadFlag("futureindex", fFutureIndex);
+    LogPrintf("%s: future index %s\n", __func__, fFutureIndex ? "enabled" : "disabled");
 
     // Check whether we have a future index
    pblocktree->ReadFlag("futureindex", fFutureIndex);

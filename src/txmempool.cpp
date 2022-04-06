@@ -585,51 +585,17 @@ void CTxMemPool::addFutureIndex(const CTxMemPoolEntry &entry, const CCoinsViewCa
             int64_t      toTime   = GetAdjustedTime() + ftx.lockTime;
 
             CFutureIndexValue value = CFutureIndexValue(txOut.nValue, addressType, addressHash, entry.GetHeight(), toHeight, toTime);//  txhash, j, -1, prevout.nValue, addressType, addressHash);
-            mapFutureInserted.insert(std::make_pair(key, value));
-        }
-
-        std::vector<CFutureIndexKey> inserted;
-
-        uint256 txhash = tx.GetHash();
-        for (unsigned int j = 0; j < tx.vin.size(); j++) {
-            const CTxIn input = tx.vin[j];
-            const Coin& coin = view.AccessCoin(input.prevout);
-            const CTxOut &prevout = coin.out;
-            uint160 addressHash;
-            int addressType;
-
-                {
-                    if (prevout.scriptPubKey.IsPayToScriptHash()) {
-                        addressHash = uint160(std::vector<unsigned char> (prevout.scriptPubKey.begin()+2, prevout.scriptPubKey.begin()+22));
-                        addressType = 2;
-                    } else if (prevout.scriptPubKey.IsPayToPublicKeyHash()) {
-                        addressHash = uint160(std::vector<unsigned char> (prevout.scriptPubKey.begin()+3, prevout.scriptPubKey.begin()+23));
-                        addressType = 1;
-                    } else if (prevout.scriptPubKey.IsPayToPublicKey()) {
-                        addressHash = Hash160(prevout.scriptPubKey.begin()+1, prevout.scriptPubKey.end()-1);
-                        addressType = 1;
-                    } else {
-                        addressHash.SetNull();
-                        addressType = 0;
-                    }
-
-                    CFutureIndexKey key = CFutureIndexKey(input.prevout.hash, input.prevout.n);
-                    CFutureIndexValue value = CFutureIndexValue(prevout.nValue, addressType, addressHash, entry.GetHeight(), toHeight, totime);//  txhash, j, -1, prevout.nValue, addressType, addressHash);
-
-                    mapFuture.insert(std::make_pair(key, value));
-                    inserted.push_back(key);
+            mapFuture.insert(std::make_pair(key, value));
+            mapFutureInserted.insert(make_pair(tx.GetHash(), key));
         }
     }
-
-    mapFutureInserted.insert(make_pair(txhash, inserted));
 }
 
 bool CTxMemPool::getFutureIndex(CFutureIndexKey &key, CFutureIndexValue &value)
 {
     LOCK(cs);
-    mapFutureIndex::iterator it;
 
-    it = mapFuture.find(key);
+    mapFutureIndex::iterator it = mapFuture.find(key);
     if (it != mapFuture.end()) {
         value = it->second;
         return true;
@@ -640,16 +606,13 @@ bool CTxMemPool::getFutureIndex(CFutureIndexKey &key, CFutureIndexValue &value)
 bool CTxMemPool::removeFutureIndex(const uint256 txhash)
 {
     LOCK(cs);
-    mapFutureIndexInserted::iterator it = mapFutureInserted.find(txhash);
 
+    mapFutureIndexInserted::iterator it = mapFutureInserted.find(txhash);
     if (it != mapFutureInserted.end()) {
-        std::vector<CFutureIndexKey> keys = (*it).second;
-        for (std::vector<CFutureIndexKey>::iterator mit = keys.begin(); mit != keys.end(); mit++) {
-            mapFuture.erase(*mit);
-        }
+        CFutureIndexKey key = (*it).second;
+            mapFuture.erase(key);
         mapFutureInserted.erase(it);
     }
-
     return true;
 }
 
