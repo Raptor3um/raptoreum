@@ -976,7 +976,7 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
 
                     // Drop the signature, since there's no way for a signature to sign itself
                     if (sigversion == SigVersion::BASE) {
-                        FindAndDelete(scriptCode, CScript(vchSig));
+                        FindAndDelete(scriptCode, CScript() << vchSig);
                     }
 
                     if (!CheckSignatureEncoding(vchSig, flags, serror) || !CheckPubKeyEncoding(vchPubKey, flags, sigversion, serror)) {
@@ -1083,7 +1083,7 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                     {
                         valtype& vchSig = stacktop(-isig-k);
                         if (sigversion == SigVersion::BASE) {
-                            FindAndDelete(scriptCode, CScript(vchSig));
+                            FindAndDelete(scriptCode, CScript() << vchSig);
                         }
                     }
 

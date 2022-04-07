@@ -80,10 +80,10 @@ public:
     EditStatus getEditStatus() const { return editStatus; }
 
 private:
-    WalletModel *walletModel;
-    AddressTablePriv *priv;
+    WalletModel* const walletModel;
+    AddressTablePriv *priv = nullptr;
     QStringList columns;
-    EditStatus editStatus;
+    EditStatus editStatus = OK;
 
     /** Notify listeners that data changed. */
     void emitDataChanged(int index);

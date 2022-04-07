@@ -77,4 +77,12 @@ std::string ToString(const T& t)
     return oss.str();
 }
 
+/**
+ * Check if a string does not contain any embedded NUL (\0) characters
+ */
+ [[nodiscard]] inline bool ValidAsCString(const std::string& str) noexcept
+ {
+     return str.size() == strlen(str.c_str());
+ }
+
 #endif // BITCOIN_STRENCODINGS_H

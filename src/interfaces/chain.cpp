@@ -184,22 +184,11 @@ class LockingStateImpl : public LockImpl, public UniqueLock<RecursiveMutex>
     using UniqueLock::UniqueLock;
 };
 
-class NotificationsHandlerImpl : public Handler, CValidationInterface
+class NotificationsProxy : public CValidationInterface
 {
 public:
-    explicit NotificationsHandlerImpl(Chain& chain, Chain::Notifications& notifications)
-        : m_chain(chain), m_notifications(&notifications)
-    {
-        RegisterValidationInterface(this);
-    }
-    ~NotificationsHandlerImpl() override { disconnect(); }
-    void disconnect() override
-    {
-        if (m_notifications) {
-            m_notifications = nullptr;
-            UnregisterValidationInterface(this);
-        }
-    }
+    explicit NotificationsProxy(std::shared_ptr<Chain::Notifications> notifications) : m_notifications(std::move(notifications)) {}
+    virtual ~NotificationsProxy() = default;
     void TransactionAddedToMempool(const CTransactionRef& tx, int64_t nAcceptTime) override
     {
         m_notifications->TransactionAddedToMempool(tx, nAcceptTime);
@@ -229,9 +218,27 @@ public:
         auto locked_chain = m_chain.assumeLocked();
         m_notifications->ResendWalletTransactions(*locked_chain, best_block_time);
     }
-    Chain& m_chain;
-    Chain::Notifications* m_notifications;
+    std::shared_ptr<Chain::Notifications> m_notifications;
 };
+
+class NotificationsHandlerImpl : public Handler
+{
+public:
+    explicit NotificationsHandlerImpl(std::shared_ptr<Chain::Notifications> notifications)
+        : m_proxy(std::make_shared<NotificationsProxy>(std::move(notifications)))
+    {
+        RegisterSharedValidationInterface(m_proxy);
+    }
+    ~NotificationsHandlerImpl() override { disconnect(); }
+    void disconnect() override
+    {
+        if (m_proxy) {
+            UnregisterSharedValidationInterface(m_proxy);
+            m_proxy.reset();
+        }
+    }
+    std::shared_ptr<NotificationsProxy> m_proxy;
+}
 
 class RpcHandlerImpl : public Handler
 {
@@ -368,14 +375,26 @@ public:
     {
         ::uiInterface.ShowProgress(title, progress, resume_possible);
     }
-    std::unique_ptr<Handler> handleNotifications(Notifications& notifications) override
+    std::unique_ptr<Handler> handleNotifications(std::shared_ptr<Notifications> notifications) override
     {
-        return MakeUnique<NotificationsHandlerImpl>(*this, notifications);
+        return MakeUnique<NotificationsHandlerImpl>(std::move(notifications));
     }
     void waitForNotifications() override { SyncWithValidationInterfaceQueue(); }
     std::unique_ptr<Handler> handleRpc(const CRPCCommand& command) override
     {
         return MakeUnique<RpcHandlerImpl>(command);
+    }
+    bool rpcEnableDeprecated(const std::string& method) override { return IsDeprecatedRPCEnabled(method); }
+    void rpcRunLater(const std::string& name, std::function<void()> fn, int64_t seconds) override
+    {
+        RPCRunLater(name, std::move(fn), seconds);
+    }
+    void requestMempoolTransactions(Notifications& notifications) override
+    {
+        LOCK2(::cs_main, ::mempool.cs);
+        for (const CTxMemPoolEntry& entry : ::mempool.mapTx) {
+            notifications.TransactionAddedToMempool(entry.GetSharedTx(), 0);
+        }
     }
 };
 } // namespace

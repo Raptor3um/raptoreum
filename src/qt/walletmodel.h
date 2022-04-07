@@ -52,7 +52,7 @@ QT_END_NAMESPACE
 class SendCoinsRecipient
 {
 public:
-    explicit SendCoinsRecipient() : amount(0), fSubtractFeeFromAmount(false), nVersion(SendCoinsRecipient::CURRENT_VERSION) { }
+    explicit SendCoinsRecipient() : amount(0), fSubtractFeeFromAmount(false), nVersion(SendCoinsRecipient::CURRENT_VERSION) {}
     explicit SendCoinsRecipient(const QString &addr, const QString &_label, const CAmount& _amount, const QString &_message):
         address(addr), label(_label), amount(_amount), message(_message), fSubtractFeeFromAmount(false), nVersion(SendCoinsRecipient::CURRENT_VERSION) {}
 
@@ -130,7 +130,7 @@ public:
 class SendFuturesRecipient
 {
 public:
-    explicit SendFuturesRecipient() : amount(0), nVersion(SendFuturesRecipient::CURRENT_VERSION) { }
+    explicit SendFuturesRecipient() : amount(0), nVersion(SendFuturesRecipient::CURRENT_VERSION) {}
     explicit SendFuturesRecipient(const QString &payFrom, const QString &addr, const QString &_label, const CAmount& _amount, const QString &_message, const int &_maturity, const int64_t &_locktime):
         address(addr), label(_label), amount(_amount), message(_message), maturity(_maturity), locktime(_locktime), nVersion(SendCoinsRecipient::CURRENT_VERSION) {}
 
@@ -285,24 +285,6 @@ public:
     // Send futures to a list of recipients
     SendFuturesReturn sendFutures(WalletModelFuturesTransaction &transaction);
 
-/*     // Return status record for SendFutures, contains error id + information
-    struct SendFuturesReturn
-    {
-        SendFuturesReturn(StatusCode _status = OK, QString _reasonCommitFailed = "")
-            : status(_status),
-              reasonCommitFailed(_reasonCommitFailed)
-        {
-        }
-        StatusCode status;
-        QString reasonCommitFailed;
-    };
-
-    // prepare futures transaction for getting txfee before sending coins
-    SendFuturesReturn prepareFuturesTransaction(WalletModelFuturesTransaction &transaction, const CCoinControl& coinControl);
-
-    // Send futures to a list of recipients
-    SendFuturesReturn sendFutures(WalletModelFuturesTransaction &transaction); */
-
     // Wallet encryption
     bool setWalletEncrypted(bool encrypted, const SecureString &passphrase);
 
@@ -323,16 +305,19 @@ public:
 
         bool isValid() const { return valid; }
 
-        // Copy operator and constructor transfer the context
-        UnlockContext(const UnlockContext& obj) { CopyFrom(obj); }
-        UnlockContext& operator=(const UnlockContext& rhs) { CopyFrom(rhs); return *this; }
+        // Copy constructor is disabled.
+        UnlockContext(const UnlockContext&) = delete;
+        // Move operator and constructor transfer the context.
+        UnlockContext(UnlockContext&& obj) { CopyFrom(std::move(obj)); }
+        UnlockContext& operator=(UnlockContext&& rhs) { CopyFrom(std::move(rhs)); return *this; }
     private:
         WalletModel *wallet;
         bool valid;
         mutable bool was_locked; // mutable, as it can be set to false by copying
         mutable bool was_mixing; // mutable, as it can be set to false by copying
 
-        void CopyFrom(const UnlockContext& rhs);
+        UnlockContext& operator=(const UnlockContext&) = default;
+        void CopyFrom(UnlockContext&& rhs);
     };
 
     UnlockContext requestUnlock(bool fForMixingOnly=false);

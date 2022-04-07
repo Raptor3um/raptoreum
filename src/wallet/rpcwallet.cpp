@@ -2056,12 +2056,12 @@ UniValue walletpassphrase(const JSONRPCRequest& request)
     pwallet->nRelockTime = GetTime() + nSleepTime;
 
     std::weak_ptr<CWallet> weak_wallet = wallet;
-    RPCRunLater(strprintf("lockwallet(%s)", pwallet->GetName()), [weak_wallet] {
-      if (auto shared_wallet = weak_wallet.lock()) {
-        LOCK(shared_wallet->cs_wallet);
-        shared_wallet->Lock();
-        shared_wallet->nRelockTime = 0;
-      }
+    pwallet->chain().rpcRunLater(strprintf("lockwallet(%s)", pwallet->GetName()), [weak_wallet] {
+        if (auto shared_wallet = weak_wallet.lock()) {
+            LOCK(shared_wallet->cs_wallet);
+            shared_wallet->Lock();
+            shared_wallet->nRelockTime = 0;
+        }
     }, nSleepTime);
 
     return NullUniValue;

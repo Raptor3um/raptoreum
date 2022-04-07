@@ -189,9 +189,15 @@ std::vector<unsigned char> DecodeBase64(const char* p, bool* pf_invalid)
     return ret;
 }
 
-std::string DecodeBase64(const std::string& str)
+std::string DecodeBase64(const std::string& str, bool* pf_invalid)
 {
-    std::vector<unsigned char> vchRet = DecodeBase64(str.c_str());
+    if (!ValidAsCString(str)) {
+        if (pf_invalid) {
+            *pf_invalid = true;
+        }
+        return {};
+    }
+    std::vector<unsigned char> vchRet = DecodeBase64(str.c_str(), pf_invalid);
     return std::string((const char*)vchRet.data(), vchRet.size());
 }
 
@@ -258,9 +264,14 @@ std::vector<unsigned char> DecodeBase32(const char* p, bool* pf_invalid)
     return ret;
 }
 
-std::string DecodeBase32(const std::string& str)
+std::string DecodeBase32(const std::string& str, bool* pf_invalid)
 {
-    std::vector<unsigned char> vchRet = DecodeBase32(str.c_str());
+    if (!ValidAsCString(str)) {
+        if (pf_invalid) {
+            *pf_invalid = true;
+        }
+    }
+    std::vector<unsigned char> vchRet = DecodeBase32(str.c_str(), pf_invalid);
     return std::string((const char*)vchRet.data(), vchRet.size());
 }
 
@@ -270,7 +281,7 @@ std::string DecodeBase32(const std::string& str)
         return false;
     if (str.size() >= 1 && (IsSpace(str[0]) || IsSpace(str[str.size()-1]))) // No padding allowed
         return false;
-    if (str.size() != strlen(str.c_str())) // No embedded NUL characters allowed
+    if (!ValidAsCString(str)) // No embedded NUL characters allowed
         return false;
     return true;
 }
@@ -582,13 +593,14 @@ std::string Capitalize(std::string str)
 
 std::string HexStr(const Span<const uint8_t> s)
 {
-    std::string rv;
+    std::string rv(s.size() * 2, '\0');
     static constexpr char hexmap[16] = { '0', '1', '2', '3', '4', '5', '6', '7',
                                          '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
-    rv.reserve(s.size() * 2);
-    for (uint8_t v: s) {
-        rv.push_back(hexmap[v >> 4]);
-        rv.push_back(hexmap[v & 15]);
+    auto it = rv.begin();
+    for (uint8_t v : s) {
+        *it++ = hexmap[v >> 4];
+        *it++ = hexmap[v & 15];
     }
+    assert(it == rv.end());
     return rv;
 }

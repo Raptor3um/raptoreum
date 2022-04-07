@@ -63,7 +63,7 @@ void NetworkStyle::rotateColors(QImage& img, const int iconColorHueShift, const 
 }
 
 // titleAddText needs to be const char* for tr()
-NetworkStyle::NetworkStyle(const QString &_appName, const int iconColorHueShift, const int iconColorSaturationReduction, const char *_titleAddText):
+NetworkStyle::NetworkStyle(const QString& _appName, const int iconColorHueShift, const int iconColorSaturationReduction, const char* _titleAddText):
     appName(_appName),
     titleAddText(qApp->translate("SplashScreen", _titleAddText)),
     badgeColor(QColor(0, 141, 228))

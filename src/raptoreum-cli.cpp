@@ -128,17 +128,12 @@ static int AppInitRPC(int argc, char* argv[])
         }
         return EXIT_SUCCESS;
     }
-    bool datadirFromCmdLine = gArgs.IsArgSet("-datadir");
-    if (datadirFromCmdLine && !fs::is_directory(GetDataDir(false))) {
+    if (!CheckDataDirOption()) {
         tfm::format(std::cerr, "Error: Specified data directory \"%s\" does not exist.\n", gArgs.GetArg("-datadir", ""));
         return EXIT_FAILURE;
     }
     if (!gArgs.ReadConfigFiles(error, true)) {
         tfm::format(std::cerr, "Error reading configuration file: %s\n", error);
-        return EXIT_FAILURE;
-    }
-    if (!datadirFromCmdLine && !fs::is_directory(GetDataDir(false))) {
-        tfm::format(std::cerr, "Error: Specified data directory \"%s\" from config file does not exist.\n", gArgs.GetArg("-datadir", ""));
         return EXIT_FAILURE;
     }
     // Check for -testnet or -regtest parameter (BaseParams() calls are only valid after this clause)
@@ -263,11 +258,6 @@ public:
             return batch[ID_BLOCKCHAININFO];
         }
         result.pushKV("version", batch[ID_NETWORKINFO]["result"]["version"]);
-        result.pushKV("protocolversion", batch[ID_NETWORKINFO]["result"]["protocolversion"]);
-        if (!batch[ID_WALLETINFO].isNull()) {
-            result.pushKV("walletversion", batch[ID_WALLETINFO]["result"]["walletversion"]);
-            result.pushKV("balance", batch[ID_WALLETINFO]["result"]["balance"]);
-        }
         result.pushKV("blocks", batch[ID_BLOCKCHAININFO]["result"]["blocks"]);
         result.pushKV("timeoffset", batch[ID_NETWORKINFO]["result"]["timeoffset"]);
         result.pushKV("connections", batch[ID_NETWORKINFO]["result"]["connections"]);
@@ -275,10 +265,8 @@ public:
         result.pushKV("difficulty", batch[ID_BLOCKCHAININFO]["result"]["difficulty"]);
         result.pushKV("testnet", UniValue(batch[ID_BLOCKCHAININFO]["result"]["chain"].get_str() == "test"));
         if (!batch[ID_WALLETINFO].isNull()) {
-            result.pushKV("walletversion", batch[ID_WALLETINFO]["result"]["walletversion"]);
             result.pushKV("balance", batch[ID_WALLETINFO]["result"]["balance"]);
             result.pushKV("coinjoin_balance", batch[ID_WALLETINFO]["result"]["coinjoin_balance"]);
-            result.pushKV("keypoololdest", batch[ID_WALLETINFO]["result"]["keypoololdest"]);
             result.pushKV("keypoolsize", batch[ID_WALLETINFO]["result"]["keypoolsize"]);
             if (!batch[ID_WALLETINFO]["result"]["unlocked_until"].isNull()) {
                 result.pushKV("unlocked_until", batch[ID_WALLETINFO]["result"]["unlocked_until"]);

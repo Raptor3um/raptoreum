@@ -1669,15 +1669,15 @@ fi
 
 # dnl When compiled natively on MacOS, we need to specify -flat to avoid producing a dSYM bundle.
 # dnl When cross-compiled on linux, we are using a differewnt version of the tool that only support flat symbol files.
-# AC_MSG_CHECKING([whether dsymutil needs -flat])
-# if test "$DSYMUTIL" != "" && ($DSYMUTIL --help | grep -q \\-flat); then
-#   AC_MSG_RESULT([yes])
-#   DSYMUTIL_FLAT="$DSYMUTIL -flat"
-# else
-#   AC_MSG_RESULT([no])
-#   DSYMUTIL_FLAT="$DSYMUTIL"
-# fi
-# AC_MSG_RESULT([$dsymutil_needs_flat])
+AC_MSG_CHECKING([whether dsymutil needs -flat])
+if test "$DSYMUTIL" != "" && ($DSYMUTIL --help | grep -q \\-flat); then
+  AC_MSG_RESULT([yes])
+  DSYMUTIL_FLAT="$DSYMUTIL -flat"
+else
+  AC_MSG_RESULT([no])
+  DSYMUTIL_FLAT="$DSYMUTIL"
+fi
+AC_MSG_RESULT([$dsymutil_needs_flat])
 
 if test "$build_bitcoin_wallet$build_bitcoin_cli$build_bitcoin_tx$build_bitcoin_libs$build_bitcoind$bitcoin_enable_qt$use_bench$use_tests" = "nononononononono"; then
   AC_MSG_ERROR([No targets! Please specify at least one of: --with-utils --with-libs --with-daemon --with-gui --enable-bench or --enable-tests])
@@ -1777,7 +1777,7 @@ AC_SUBST(NATPMP_LIBS)
 AC_SUBST(CRYPTO_LIBS)
 AC_SUBST(SSL_LIBS)
 AC_SUBST(GMP_LIBS)
-#AC_SUBST(DSYMUTIL_FLAT)
+AC_SUBST(DSYMUTIL_FLAT)
 AC_SUBST(HAVE_GMTIME_R)
 AC_SUBST(HAVE_FDATASYNC)
 AC_SUBST(HAVE_FULLFSYNC)

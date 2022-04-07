@@ -89,19 +89,13 @@ static bool AppInit(int argc, char* argv[])
 
     try
     {
-        bool datadirFromCmdLine = gArgs.IsArgSet("-datadir");
-        if (datadirFromCmdLine && !fs::is_directory(GetDataDir(false)))
+        if (!CheckDataDirOption()) {
         {
             return InitError(strprintf("Error: Specified data directory \"%s\" does not exist.\n", gArgs.GetArg("-datadir", "")));
         }
 
         if (!gArgs.ReadConfigFiles(error, true)) {
             return InitError(strprintf("Error reading configuration file: %s\n", error));
-        }
-        if (!datadirFromCmdLine && !fs::is_directory(GetDataDir(false)))
-        {
-            tfm::format(std::cerr, "Error: Specified data directory \"%s\" from config file does not exist.\n", gArgs.GetArg("-datadir", ""));
-            return EXIT_FAILURE;
         }
         // Check for -testnet or -regtest parameter (Params() calls are only valid after this clause)
         try {

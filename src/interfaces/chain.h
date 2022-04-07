@@ -39,7 +39,27 @@ namespace interfaces {
 class Wallet;
 class Handler;
 
-//! Interface for giving wallet processes access to blockchain state.
+//! Interface giving clients (wallet processes, maybe other analysis tools in
+//! the future) ability to access to the chain state, receive notifications,
+//! estimate fees, and submit transactions.
+//!
+//! TODO: Current chain methods are too low level, exposing too much of the
+//! internal workings of the bitcoin node, and not being very convenient to use.
+//! Chain methods should be cleaned up and simplified over time. Examples:
+//!
+//! * The Chain::lock() method, which lets clients delay chain tip updates
+//!   should be removed when clients are able to respond to updates
+//!   asynchronously
+//!   (https://github.com/bitcoin/bitcoin/pull/10973#issuecomment-380101269).
+//!
+//! * The initMessages() and loadWallet() methods which the wallet uses to send
+//!   notifications to the GUI should go away when GUI and wallet can directly
+//!   communicate with each other without going through the node
+//!   (https://github.com/bitcoin/bitcoin/pull/15288#discussion_r253321096).
+//!
+//! * The handleRpc, registerRpcs, rpcEnableDeprecated methods and other RPC
+//!   methods can go away if wallets listen for HTTP requests on their own
+//!   ports instead of registering to handle requests on the node HTTP port.
 class Chain
 {
 public:
@@ -239,7 +259,7 @@ public:
     };
 
     //! Register handler for notifications.
-    virtual std::unique_ptr<Handler> handleNotifications(Notifications& notifications) = 0;
+    virtual std::unique_ptr<Handler> handleNotifications(std::shared_ptr<Notifications> notifications) = 0;
 
     //! Wait for pending notifications to be handled.
     virtual void waitForNotifications() = 0;
@@ -247,6 +267,22 @@ public:
     //! Register handler for RPC. Command is not copied, so reference
     //! needs to remain valid until Handler is disconnected.
     virtual std::unique_ptr<Handler> handleRpc(const CRPCCommand& command) = 0;
+
+    //! Check if deprecated RPC is enabled.
+    virtual bool rpcEnableDeprecated(const std::string& method) = 0;
+
+    //! Run function after given number of seconds. Cancel any previous calls with same name.
+    virtual void rpcRunLater(const std::string& name, std::function<void()> fn, int64_t seconds) = 0;
+
+    //! Synchronously send TransactionAddedToMempool notifications about all
+    //! current mempool transactions to the specified handler and return after
+    //! the last one is sent. These notifications aren't coordinated with async
+    //! notifications sent by handleNotifications, so out of date async
+    //! notifications from handleNotifications can arrive during and after
+    //! synchronous notifications from requestMempoolTransactions. Clients need
+    //! to be prepared to handle this by ignoring notifications about unknown
+    //! removed transactions and already added new transactions.
+    virtual void requestMempoolTransactions(Notifications& notifications) = 0;
 };
 
 //! Interface to let node manage chain clients (wallets, or maybe tools for

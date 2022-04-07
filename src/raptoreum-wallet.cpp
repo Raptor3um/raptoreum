@@ -47,8 +47,8 @@ static bool WalletAppInit(int argc, char* argv[])
     }
     if (argc < 2 || HelpRequested(gArgs)) {
         std::string usage = strprintf("%s raptoreum-wallet version", PACKAGE_NAME) + " " + FormatFullVersion() + "\n\n" +
-                                      "wallet-tool is an offline tool for creating and interacting with Raptoreum Core wallet files.\n" +
-                                      "By default wallet-tool will act on wallets in the default mainnet wallet directory in the datadir.\n" +
+                                      "raptoreum-wallet is an offline tool for creating and interacting with Raptoreum Core wallet files.\n" +
+                                      "By default raptoreum-wallet will act on wallets in the default mainnet wallet directory in the datadir.\n" +
                                       "To change the target wallet, use the -datadir, -wallet and -testnet/-regtest arguments.\n\n" +
                                       "Usage:\n" +
                                      "  raptoreum-wallet [options] <command>\n\n" +
@@ -61,7 +61,7 @@ static bool WalletAppInit(int argc, char* argv[])
     // check for printtoconsole, allow -debug
     LogInstance().m_print_to_console = gArgs.GetBoolArg("-printtoconsole", gArgs.GetBoolArg("-debug", false));
 
-    if (!fs::is_directory(GetDataDir(false))) {
+    if (!CheckDataDirOption()) {
         tfm::format(std::cerr, "Error: Specified data directory \"%s\" does not exist.\n", gArgs.GetArg("-datadir", ""));
         return false;
     }

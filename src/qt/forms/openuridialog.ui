@@ -31,7 +31,11 @@
       </widget>
      </item>
      <item>
-      <widget class="QValidatedLineEdit" name="uriEdit"/>
+      <widget class="QValidatedLineEdit" name="uriEdit">
+       <property name="placeholderText">
+        <string notr="true">raptoreum:</string>
+       </property>
+      </widget>
      </item>
      <item>
       <widget class="QPushButton" name="selectFileButton">

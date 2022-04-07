@@ -106,6 +106,7 @@ fs::path GetDefaultDataDir();
 const fs::path &GetBlocksDir();
 const fs::path &GetDataDir(bool fNetSpecific = true);
 fs::path GetBackupsDir();
+bool CheckDataDirOption();
 void ClearDatadirCache();
 fs::path GetConfigFile(const std::string& confPath);
 #ifdef WIN32

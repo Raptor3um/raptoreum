@@ -19,6 +19,7 @@
 #include <net.h>
 #include <node/transaction.h>
 #include <policy/policy.h>
+#include <policy/settings.h>
 #include <primitives/transaction.h>
 #include <rpc/rawtransaction_util.h>
 #include <rpc/server.h>

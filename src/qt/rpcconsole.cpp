@@ -453,13 +453,7 @@ void RPCExecutor::request(const QString &command, const WalletModel* wallet_mode
 RPCConsole::RPCConsole(interfaces::Node& node, QWidget* parent, Qt::WindowFlags flags) :
     QWidget(parent, flags),
     m_node(node),
-    ui(new Ui::RPCConsole),
-    clientModel(0),
-    historyPtr(0),
-    peersTableContextMenu(0),
-    banTableContextMenu(0),
-    consoleFontSize(0),
-    pageButtons(0)
+    ui(new Ui::RPCConsole)
 {
     ui->setupUi(this);
 
@@ -732,6 +726,7 @@ void RPCConsole::setClientModel(ClientModel *model)
         autoCompleter->popup()->setItemDelegate(new QStyledItemDelegate(this));
         autoCompleter->popup()->setObjectName("rpcAutoCompleter");
         autoCompleter->setModelSorting(QCompleter::CaseSensitivelySortedModel);
+        ui->lineEdit->setEnabled(true);
         ui->lineEdit->setCompleter(autoCompleter);
         autoCompleter->popup()->installEventFilter(this);
         // Start thread to execute RPC commands.
@@ -1069,12 +1064,8 @@ void RPCConsole::on_lineEdit_returnPressed()
 
         cmdBeforeBrowsing = QString();
 
-        WalletModel* wallet_model{nullptr};
 #ifdef ENABLE_WALLET
-        const int wallet_index = ui->WalletSelector->currentIndex();
-        if (wallet_index > 0) {
-            wallet_model = ui->WalletSelector->itemData(wallet_index).value<WalletModel*>();
-        }
+        WalletModel* wallet_model = ui->WalletSelector->currentData().value<WalletModel*>();
 
         if (m_last_wallet_model != wallet_model) {
             if (wallet_model) {

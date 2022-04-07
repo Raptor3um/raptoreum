@@ -11,33 +11,17 @@
 
 #include <optional>
 
-struct WalletTestingSetup {
-    std::unique_ptr<interfaces::Chain> m_chain = interfaces::MakeChain();
-    CWallet m_wallet;
-
-    WalletTestingSetup()
-        : m_wallet{*m_chain.get(), WalletLocation(), WalletDatabase::CreateMock()}
-    {
-    }
-
-    void handleNotifications()
-    {
-        m_wallet.m_chain_notifications_handler = m_chain->handleNotifications(m_wallet);
-    }
-};
-
 static void WalletBalance(benchmark::Bench& bench, const bool set_dirty, const bool add_watchonly, const bool add_mine, const uint32_t epoch_iters)
 {
     const auto& ADDRESS_WATCHONLY = ADDRESS_B58T_UNSPENDABLE;
 
-    WalletTestingSetup wallet_t{};
-    auto& wallet = wallet_t.m_wallet;
+    std::unique_ptr<interfaces::Chain> chain = interfaces::MakeChain();
+    CWallet wallet{chain.get(), WalletLocation(), WalletDatabase::CreateMock()};
     {
         bool first_run;
         if (wallet.LoadWallet(first_run) != DBErrors::LOAD_OK) assert(false);
-        wallet_t.handleNotifications();
     }
-
+    auto handler = chain->handleNotifications({ &wallet, [](CWallet*) {} });
 
     const std::optional<std::string> address_mine{add_mine ? std::optional<std::string>{getnewaddress(wallet)} : std::nullopt};
     if (add_watchonly) importaddress(wallet, ADDRESS_WATCHONLY);
