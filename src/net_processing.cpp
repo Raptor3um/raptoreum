@@ -3989,7 +3989,10 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
 
         // Start block sync
         if (pindexBestHeader == nullptr)
+        {
             pindexBestHeader = chainActive.Tip();
+            atomicHeaderHeight = pindexBestHeader ? pindexBestHeader->nHeight : -1;
+        }
         bool fFetch = state.fPreferredDownload || (nPreferredDownload == 0 && !pto->fClient && !pto->fOneShot); // Download if this is a nice peer, or we have no nice peers and this one might do.
         if (!state.fSyncStarted && !pto->fClient && !fImporting && !fReindex && pto->CanRelay()) {
             // Only actively request headers from a single peer, unless we're close to end of initial download.

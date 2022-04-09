@@ -1433,12 +1433,20 @@ UniValue getblockchaininfo(const JSONRPCRequest& request)
             + HelpExampleRpc("getblockchaininfo", "")
         );
 
-    LOCK(cs_main);
-
-    std::string strChainName = gArgs.IsArgSet("-devnet") ? gArgs.GetDevNetName() : Params().NetworkIDString();
-
     UniValue obj(UniValue::VOBJ);
-    obj.pushKV("chain",                 strChainName);
+    std::string strChainName = gArgs.IsArgSet("-devnet") ? gArgs.GetDevNetName() : Params().NetworkIDString();
+    obj.pushKV("chain", strChainName);
+
+    if (fProcessingHeaders)
+    {
+        // We don't want to wait a long time for processing headers, just give out some basic information without a lock
+        obj.pushKV("blocks",  chainActive.AtomicHeight());
+        obj.pushKV("headers", atomicHeaderHeight);
+        obj.pushKV("warnings", GetWarnings("statusbar"));
+        return obj;
+    }
+
+    LOCK(cs_main);
     obj.pushKV("blocks",                (int)chainActive.Height());
     obj.pushKV("headers",               pindexBestHeader ? pindexBestHeader->nHeight : -1);
     obj.pushKV("bestblockhash",         chainActive.Tip()->GetBlockHash().GetHex());
@@ -1467,7 +1475,7 @@ UniValue getblockchaininfo(const JSONRPCRequest& request)
     }
 
     const Consensus::Params& consensusParams = Params().GetConsensus();
-    CBlockIndex* tip = chainActive.Tip();
+    // CBlockIndex* tip = chainActive.Tip();
     UniValue softforks(UniValue::VARR);
     UniValue bip9_softforks(UniValue::VOBJ);
     // sorted by activation block

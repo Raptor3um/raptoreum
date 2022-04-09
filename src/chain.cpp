@@ -11,13 +11,16 @@
 void CChain::SetTip(CBlockIndex *pindex) {
     if (pindex == nullptr) {
         vChain.clear();
-        return;
     }
-    vChain.resize(pindex->nHeight + 1);
-    while (pindex && vChain[pindex->nHeight] != pindex) {
-        vChain[pindex->nHeight] = pindex;
-        pindex = pindex->pprev;
+    else
+    {
+        vChain.resize(pindex->nHeight + 1);
+        while (pindex && vChain[pindex->nHeight] != pindex) {
+            vChain[pindex->nHeight] = pindex;
+            pindex = pindex->pprev;
+        }
     }
+    atomicHeight = Height();
 }
 
 CBlockLocator CChain::GetLocator(const CBlockIndex *pindex) const {
