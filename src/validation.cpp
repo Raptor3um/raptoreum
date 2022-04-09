@@ -222,6 +222,8 @@ uint256 g_best_block;
 int nScriptCheckThreads = 0;
 std::atomic_bool fImporting(false);
 std::atomic_bool fReindex(false);
+std::atomic_bool fProcessingHeaders(false);
+std::atomic<int> atomicHeaderHeight(0);
 bool fTxIndex = true;
 bool fAddressIndex = false;
 bool fFutureIndex = false;
@@ -3229,6 +3231,7 @@ bool CChainState::InvalidateBlock(CValidationState& state, const CChainParams& c
     if (pindex == pindexBestHeader) {
         pindexBestInvalid = pindexBestHeader;
         pindexBestHeader = pindexBestHeader->pprev;
+        atomicHeaderHeight = pindexBestHeader ? pindexBestHeader->nHeight : -1;
     }
 
     DisconnectedBlockTransactions disconnectpool;
@@ -3246,6 +3249,7 @@ bool CChainState::InvalidateBlock(CValidationState& state, const CChainParams& c
         if (pindexOldTip == pindexBestHeader) {
             pindexBestInvalid = pindexBestHeader;
             pindexBestHeader = pindexBestHeader->pprev;
+            atomicHeaderHeight = pindexBestHeader ? pindexBestHeader->nHeight : -1;            
         }
     }
 
@@ -3304,6 +3308,7 @@ bool CChainState::MarkConflictingBlock(CValidationState& state, const CChainPara
 
     if (pindex == pindexBestHeader) {
         pindexBestHeader = pindexBestHeader->pprev;
+        atomicHeaderHeight = pindexBestHeader ? pindexBestHeader->nHeight : -1;
     }
 
     DisconnectedBlockTransactions disconnectpool;
@@ -3320,6 +3325,7 @@ bool CChainState::MarkConflictingBlock(CValidationState& state, const CChainPara
         }
         if (pindexOldTip == pindexBestHeader) {
             pindexBestHeader = pindexBestHeader->pprev;
+            atomicHeaderHeight = pindexBestHeader ? pindexBestHeader->nHeight : -1;
         }
     }
 
@@ -3453,8 +3459,10 @@ CBlockIndex* CChainState::AddToBlockIndex(const CBlockHeader& block, enum BlockS
     pindexNew->nChainWork = (pindexNew->pprev ? pindexNew->pprev->nChainWork : 0) + GetBlockProof(*pindexNew);
     if (nStatus & BLOCK_VALID_MASK) {
         pindexNew->RaiseValidity(nStatus);
-        if (pindexBestHeader == nullptr || pindexBestHeader->nChainWork < pindexNew->nChainWork)
+        if (pindexBestHeader == nullptr || pindexBestHeader->nChainWork < pindexNew->nChainWork) {
             pindexBestHeader = pindexNew;
+            atomicHeaderHeight = pindexBestHeader ? pindexBestHeader->nHeight : -1;
+        }
     } else {
         pindexNew->RaiseValidity(BLOCK_VALID_TREE); // required validity level
         pindexNew->nStatus |= nStatus;
@@ -3900,19 +3908,26 @@ bool CChainState::AcceptBlockHeader(const CBlockHeader& block, CValidationState&
 // Exposed wrapper for AcceptBlockHeader
 bool ProcessNewBlockHeaders(const std::vector<CBlockHeader>& headers, CValidationState& state, const CChainParams& chainparams, const CBlockIndex** ppindex, CBlockHeader *first_invalid)
 {
-    if (first_invalid != nullptr) first_invalid->SetNull();
+    if (first_invalid != nullptr)
+        first_invalid->SetNull();
+
+    // Scoped for the lock
     {
+        // This lock can be held for a long time.  Use the flag to warn others
+        fProcessingHeaders = true;
         LOCK(cs_main);
         for (const CBlockHeader& header : headers) {
             CBlockIndex *pindex = nullptr; // Use a temp pindex instead of ppindex to avoid a const_cast
             if (!g_chainstate.AcceptBlockHeader(header, state, chainparams, &pindex)) {
                 if (first_invalid) *first_invalid = header;
+                fProcessingHeaders = false;
                 return false;
             }
             if (ppindex) {
                 *ppindex = pindex;
             }
         }
+        fProcessingHeaders = false;
     }
     NotifyHeaderTip();
     return true;
@@ -4374,8 +4389,10 @@ bool CChainState::LoadBlockIndex(const Consensus::Params& consensus_params, CBlo
             pindexBestInvalid = pindex;
         if (pindex->pprev)
             pindex->BuildSkip();
-        if (pindex->IsValid(BLOCK_VALID_TREE) && (pindexBestHeader == nullptr || CBlockIndexWorkComparator()(pindexBestHeader, pindex)))
+        if (pindex->IsValid(BLOCK_VALID_TREE) && (pindexBestHeader == nullptr || CBlockIndexWorkComparator()(pindexBestHeader, pindex))) {
             pindexBestHeader = pindex;
+            atomicHeaderHeight = pindexBestHeader ? pindexBestHeader->nHeight : -1;
+        }
     }
 
     return true;
