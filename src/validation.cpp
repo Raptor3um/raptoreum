@@ -1700,6 +1700,7 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
 
     std::vector<std::pair<CAddressIndexKey, CAmount> > addressIndex;
     std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> > addressUnspentIndex;
+    std::vector<std::pair<CFutureIndexKey, CFutureIndexValue> > futureIndex;
     std::vector<std::pair<CSpentIndexKey, CSpentIndexValue> > spentIndex;
 
     if (!UndoSpecialTxsInBlock(block, pindex)) {
@@ -1779,7 +1780,7 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
                 const CTxIn input = tx.vin[j];
 
                 if (fFutureIndex) {
-                    // undo and delete the future index
+                    // undo and delete the future index (may not exist, but that's ok)
                     futureIndex.push_back(std::make_pair(CFutureIndexKey(input.prevout.hash, input.prevout.n), CFutureIndexValue()));
                 }
 
@@ -1793,7 +1794,7 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
                     const CTxOut& prevout = coin.out;
                     CFutureTx ftx;
                     int spendableHeight = coin.nHeight;
-                    int64_t spenableTime = 0;
+                    int64_t spendableTime = 0;
                     int lockOutputIndex = -1;
                     if (coin.nType == TRANSACTION_FUTURE) {
                         if (GetTxPayload(coin.vExtraPayload, ftx)) {
@@ -1804,9 +1805,9 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
                                 spendableHeight = -1;
                             }
                             if (ftx.lockTime >= 0) {
-                                spenableTime += ftx.lockTime;
+                                spendableTime += ftx.lockTime;
                             } else {
-                                spenableTime = -1;
+                                spendableTime = -1;
                             }
                         }
                     }
@@ -1817,7 +1818,7 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
                         addressIndex.push_back(std::make_pair(CAddressIndexKey(2, uint160(hashBytes), pindex->nHeight, i, hash, j, true), prevout.nValue * -1));
 
                         // restore unspent index
-                        addressUnspentIndex.push_back(std::make_pair(CAddressUnspentKey(2, uint160(hashBytes), input.prevout.hash, input.prevout.n), CAddressUnspentValue(prevout.nValue, prevout.scriptPubKey, undoHeight, spendableHeight, spenableTime)));
+                        addressUnspentIndex.push_back(std::make_pair(CAddressUnspentKey(2, uint160(hashBytes), input.prevout.hash, input.prevout.n), CAddressUnspentValue(prevout.nValue, prevout.scriptPubKey, undoHeight, spendableHeight, spendableTime)));
 
 
                     } else if (prevout.scriptPubKey.IsPayToPublicKeyHash()) {
@@ -1827,7 +1828,7 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
                         addressIndex.push_back(std::make_pair(CAddressIndexKey(1, uint160(hashBytes), pindex->nHeight, i, hash, j, true), prevout.nValue * -1));
 
                         // restore unspent index
-                        addressUnspentIndex.push_back(std::make_pair(CAddressUnspentKey(1, uint160(hashBytes), input.prevout.hash, input.prevout.n), CAddressUnspentValue(prevout.nValue, prevout.scriptPubKey, undoHeight, spendableHeight, spenableTime)));
+                        addressUnspentIndex.push_back(std::make_pair(CAddressUnspentKey(1, uint160(hashBytes), input.prevout.hash, input.prevout.n), CAddressUnspentValue(prevout.nValue, prevout.scriptPubKey, undoHeight, spendableHeight, spendableTime)));
 
                     } else if (prevout.scriptPubKey.IsPayToPublicKey()) {
                         uint160 hashBytes(Hash160(prevout.scriptPubKey.begin()+1, prevout.scriptPubKey.end()-1));
@@ -2068,7 +2069,7 @@ static int64_t nTimeCallbacks = 0;
 static int64_t nTimeTotal = 0;
 static int64_t nBlocksTotal = 0;
 
-void getFutureMaturity(const CTransaction& tx, int& lockOutputIndex, CFutureTx& ftx, int& spendableHeight, int64_t& spenableTime)
+void getFutureMaturity(const CTransaction& tx, int& lockOutputIndex, CFutureTx& ftx, int& spendableHeight, int64_t& spendableTime)
 {
     if (tx.nType == TRANSACTION_FUTURE) {
         if (GetTxPayload(tx, ftx)) {
@@ -2079,9 +2080,9 @@ void getFutureMaturity(const CTransaction& tx, int& lockOutputIndex, CFutureTx& 
                 spendableHeight = -1;
             }
             if (ftx.lockTime >= 0) {
-                spenableTime += ftx.lockTime;
+                spendableTime += ftx.lockTime;
             } else {
-                spenableTime = -1;
+                spendableTime = -1;
             }
         }
     }
@@ -2214,6 +2215,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
     std::vector<std::pair<CAddressIndexKey, CAmount> > addressIndex;
     std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> > addressUnspentIndex;
     std::vector<std::pair<CSpentIndexKey, CSpentIndexValue> > spentIndex;
+    std::vector<std::pair<CFutureIndexKey, CFutureIndexValue> > futureIndex;
 
     std::vector<PrecomputedTransactionData> txdata;
     txdata.reserve(block.vtx.size()); // Required so that pointers to individual PrecomputedTransactionData don't get invalidated
@@ -2269,7 +2271,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
                                  REJECT_INVALID, "bad-txns-nonfinal");
             }
 
-            if (fAddressIndex || fSpentIndex)
+            if (fAddressIndex || fSpentIndex || fFutureIndex)
             {
                 for (size_t j = 0; j < tx.vin.size(); j++) {
                     const CTxIn input = tx.vin[j];
@@ -2305,6 +2307,12 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
                         // and to find the amount and address from an input
                         spentIndex.push_back(std::make_pair(CSpentIndexKey(input.prevout.hash, input.prevout.n), CSpentIndexValue(txhash, j, pindex->nHeight, prevout.nValue, addressType, hashBytes)));
                     }
+xxx
+                    if (fFutureIndex) {
+                        // add the spent index to determine the txid and input that spent an output
+                        // and to find the amount and address from an input
+                        futureIndex.push_back(std::make_pair(CFutureIndexKey(input.prevout.hash, input.prevout.n), CFutureIndexValue(txhash, j, pindex->nHeight, prevout.nValue, addressType, hashBytes)));
+                    }
                 }
 
             }
@@ -2334,17 +2342,17 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
         if (fAddressIndex) {
             CFutureTx ftx;
             int spendableHeight = pindex->nHeight;
-            int64_t spenableTime = pindex->nTime;
+            int64_t spendableTime = pindex->nTime;
             int lockOutputIndex = -1;
             getFutureMaturity(tx, lockOutputIndex, ftx, spendableHeight,
-                spenableTime);
+                spendableTime);
             for (unsigned int k = 0; k < tx.vout.size(); k++) {
                 const CTxOut& out = tx.vout[k];
                 int vSpendableHeight = pindex->nHeight;
-                int64_t vSpenableTime = pindex->nTime;
+                int64_t vSpendableTime = pindex->nTime;
                 if (lockOutputIndex == k) {
                     vSpendableHeight = spendableHeight;
-                    vSpenableTime = spenableTime;
+                    vSpendableTime = spendableTime;
                 }
                 if (out.scriptPubKey.IsPayToScriptHash()) {
                     std::vector<unsigned char> hashBytes(out.scriptPubKey.begin() + 2, out.scriptPubKey.begin() + 22);
@@ -2353,7 +2361,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
                     addressIndex.push_back(std::make_pair(CAddressIndexKey(2, uint160(hashBytes), pindex->nHeight, i, txhash, k, false), out.nValue));
 
                     // record unspent output
-                    addressUnspentIndex.push_back(std::make_pair(CAddressUnspentKey(2, uint160(hashBytes), txhash, k), CAddressUnspentValue(out.nValue, out.scriptPubKey, pindex->nHeight, vSpendableHeight, vSpenableTime)));
+                    addressUnspentIndex.push_back(std::make_pair(CAddressUnspentKey(2, uint160(hashBytes), txhash, k), CAddressUnspentValue(out.nValue, out.scriptPubKey, pindex->nHeight, vSpendableHeight, vSpendableTime)));
 
                 } else if (out.scriptPubKey.IsPayToPublicKeyHash()) {
                     std::vector<unsigned char> hashBytes(out.scriptPubKey.begin() + 3, out.scriptPubKey.begin() + 23);
@@ -2362,12 +2370,12 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
                     addressIndex.push_back(std::make_pair(CAddressIndexKey(1, uint160(hashBytes), pindex->nHeight, i, txhash, k, false), out.nValue));
 
                     // record unspent output
-                    addressUnspentIndex.push_back(std::make_pair(CAddressUnspentKey(1, uint160(hashBytes), txhash, k), CAddressUnspentValue(out.nValue, out.scriptPubKey, pindex->nHeight, vSpendableHeight, vSpenableTime)));
+                    addressUnspentIndex.push_back(std::make_pair(CAddressUnspentKey(1, uint160(hashBytes), txhash, k), CAddressUnspentValue(out.nValue, out.scriptPubKey, pindex->nHeight, vSpendableHeight, vSpendableTime)));
 
                 } else if (out.scriptPubKey.IsPayToPublicKey()) {
                     uint160 hashBytes(Hash160(out.scriptPubKey.begin() + 1, out.scriptPubKey.end() - 1));
                     addressIndex.push_back(std::make_pair(CAddressIndexKey(1, hashBytes, pindex->nHeight, i, txhash, k, false), out.nValue));
-                    addressUnspentIndex.push_back(std::make_pair(CAddressUnspentKey(1, hashBytes, txhash, k), CAddressUnspentValue(out.nValue, out.scriptPubKey, pindex->nHeight, vSpendableHeight, vSpenableTime)));
+                    addressUnspentIndex.push_back(std::make_pair(CAddressUnspentKey(1, hashBytes, txhash, k), CAddressUnspentValue(out.nValue, out.scriptPubKey, pindex->nHeight, vSpendableHeight, vSpendableTime)));
                 } else {
                     continue;
                 }
