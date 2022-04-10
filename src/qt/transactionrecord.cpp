@@ -240,7 +240,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(interfaces::Wal
                 CAmount nChange = wtx.change;
                 parts.append(sub);
                 break; // Only report first of the batch
-            } 
+            }
 
 
             sub.type = TransactionRecord::SendToSelf;
@@ -252,8 +252,8 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(interfaces::Wal
                 && CCoinJoin::IsCollateralAmount(-nNet))
             {
                 sub.type = TransactionRecord::CoinJoinCollateralPayment;
-            } 
-            else 
+            }
+            else
             {
                 for (const auto& txout : wtx.tx->vout)
                 {

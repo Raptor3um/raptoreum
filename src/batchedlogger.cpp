@@ -21,6 +21,6 @@ void CBatchedLogger::Flush()
     if (!accept || msg.empty()) {
         return;
     }
-    LogInstance().LogPrintBatchedStr(strprintf("%s:\n%s", header, msg));
+    LogPrint(BCLog::QUORUMS, "Service at: %s:\n%s", header, msg);
     msg.clear();
 }

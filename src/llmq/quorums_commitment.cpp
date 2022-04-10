@@ -23,7 +23,7 @@ CFinalCommitment::CFinalCommitment(const Consensus::LLMQParams& params, const ui
 }
 
 #define LogPrintfFinalCommitment(...) do { \
-    LogInstance().LogPrintBatchedStr(strprintf("CFinalCommitment::%s -- %s", __func__, tinyformat::format(__VA_ARGS__))); \
+    LogPrint(BCLog::QUORUMS, "CFinalCommitment::%s -- %s", __func__, tinyformat::format(__VA_ARGS__)); \
 } while(0)
 
 bool CFinalCommitment::Verify(const CBlockIndex* pQuorumIndex, bool checkSigs) const

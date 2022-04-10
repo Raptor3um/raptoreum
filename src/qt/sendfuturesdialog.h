@@ -78,8 +78,6 @@ private:
     // Update the passed in CCoinControl with state from the GUI
     void updateCoinControlState(CCoinControl& ctrl);
 
-    void showEvent(QShowEvent* event);
-
 private Q_SLOTS:
     void on_sendButton_clicked();
     void on_buttonChooseFee_clicked();

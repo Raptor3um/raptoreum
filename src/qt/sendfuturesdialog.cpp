@@ -812,15 +812,6 @@ void SendFuturesDialog::updateCoinControlState(CCoinControl& ctrl)
     ctrl.m_confirm_target = getFTXConfTargetForIndex(ui->confTargetSelector->currentIndex());
 }
 
-void SendFuturesDialog::showEvent(QShowEvent* event)
-{
-  QWidget::showEvent(event);
-  if(!event->spontaneous())
-  {
-//    CoinControlDialog::usePrivateSend(fPrivateSend);
-  }
-}
-
 void SendFuturesDialog::updateSmartFeeLabel()
 {
     if(!model || !model->getOptionsModel())
@@ -897,7 +888,7 @@ void SendFuturesDialog::coinControlFeatureChanged(bool checked)
     //hide for futures until ready for implementation
     //ui->frameCoinControl->setVisible(checked);
     ui->frameCoinControl->setVisible(false);
-    
+
     //Disable check on control dialog for Future TX
     //if (!checked && model) // coin control features disabled
     m_coin_control->SetNull(false);

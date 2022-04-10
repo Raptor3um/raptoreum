@@ -344,7 +344,7 @@ void RandAddStaticEnv(CSHA512& hasher)
 #  endif
 #  ifdef AT_EXECFN
   const char* exec_str = (const char*)getauxval(AT_EXECFN);
-  if (exec_str) heater.Write((const unsigned char*)exec_str, strlen(exec_str) + 1);
+  if (exec_str) hasher.Write((const unsigned char*)exec_str, strlen(exec_str) + 1);
 # endif
 #endif // HAVE_STRONG_GETAUXVAL
 

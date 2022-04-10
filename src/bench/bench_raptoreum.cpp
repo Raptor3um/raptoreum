@@ -63,7 +63,7 @@ int main(int argc, char** argv)
     std::string error;
     if (!gArgs.ParseParameters(argc, argv, error)) {
         tfm::format(std::cerr, "Error parsing command line arguments: %s\n", error.c_str());
-        return false;
+        return EXIT_FAILURE;
     }
 
     if (gArgs.IsArgSet("-?") || gArgs.IsArgSet("-h") || gArgs.IsArgSet("-help")) {

@@ -192,9 +192,10 @@ struct TestArgsManager : public ArgsManager
         {
             LOCK(cs_args);
             m_config_args.clear();
+            m_config_sections.clear();
         }
         std::string error;
-        ReadConfigStream(streamConfig, error);
+        BOOST_REQUIRE(ReadConfigStream(streamConfig, "", error));
     }
     void SetNetworkOnlyArg(const std::string arg)
     {
@@ -204,7 +205,7 @@ struct TestArgsManager : public ArgsManager
     void SetupArgs(int argv, const char* args[])
     {
         for (int i = 0; i < argv; ++i) {
-            AddArg(arg[i], "", false, OptionsCategory::OPTIONS);
+            AddArg(args[i], "", false, OptionsCategory::OPTIONS);
         }
     }
 };
@@ -215,10 +216,9 @@ BOOST_AUTO_TEST_CASE(util_ParseParameters)
     const char* avail_args[] = {"-a", "-b", "-ccc", "-d"};
     const char *argv_test[] = {"-ignored", "-a", "-b", "-ccc=argument", "-ccc=multiple", "f", "-d=e"};
 
-    testArgs.ParseParameters(0, (char**)argv_test);
     std::string error;
     testArgs.SetupArgs(4, avail_args);
-    testAegs.ParseParameters(0, (char**)argv_test, error);
+    testArgs.ParseParameters(0, (char**)argv_test, error);
     BOOST_CHECK(testArgs.GetOverrideArgs().empty() && testArgs.GetConfigArgs().empty());
 
     testArgs.ParseParameters(1, (char**)argv_test, error);
@@ -245,9 +245,11 @@ BOOST_AUTO_TEST_CASE(util_ParseParameters)
 BOOST_AUTO_TEST_CASE(util_GetBoolArg)
 {
     TestArgsManager testArgs;
-    const char *argv_test[] = {"-a", "-b", "-c", "-d", "-e", "-f"};
-        "ignored", "-a", "-nob", "-c=0", "-d=1", "-e=false", "-f=true"};
-    testArgs.ParseParameters(7, (char**)argv_test);
+    const char* avail_args[] = {"-a", "-b", "-c", "-d", "-e", "-f"};
+    const char *argv_test[] = {"ignored", "-a", "-nob", "-c=0", "-d=1", "-e=false", "-f=true"};
+    std::string error;
+    testArgs.SetupArgs(6, avail_args);
+    testArgs.ParseParameters(7, (char**)argv_test, error);
 
     // Each letter should be set.
     for (char opt : "abcdef")
@@ -281,7 +283,9 @@ BOOST_AUTO_TEST_CASE(util_GetBoolArgEdgeCases)
     // Params test
     const char* avail_args[] = {"-foo", "-bar"};
     const char *argv_test[] = {"ignored", "-nofoo", "-foo", "-nobar=0"};
-    testArgs.ParseParameters(4, (char**)argv_test);
+    testArgs.SetupArgs(2, avail_args);
+    std::string error;
+    testArgs.ParseParameters(4, (char**)argv_test, error);
 
     // This was passed twice, second one overrides the negative setting.
     BOOST_CHECK(!testArgs.IsArgNegated("-foo"));
@@ -293,7 +297,7 @@ BOOST_AUTO_TEST_CASE(util_GetBoolArgEdgeCases)
 
     // Config test
     const char *conf_test = "nofoo=1\nfoo=1\nnobar=0\n";
-    testArgs.ParseParameters(1, (char**)argv_test);
+    testArgs.ParseParameters(1, (char**)argv_test, error);
     testArgs.ReadConfigString(conf_test);
 
     // This was passed twice, second one overrides the negative setting,

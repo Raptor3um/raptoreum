@@ -163,6 +163,7 @@ const CLogCategoryDesc LogCategories[] =
 	{BCLog::COINJOIN, "coinjoin"},
 	{BCLog::SPORK, "spork"},
 	{BCLog::NETCONN, "netconn"},
+	{BCLog::QUORUMS, "quorums"},
 	{BCLog::RTM, "raptoreum"},
 	//End Raptoreum
 };
@@ -224,48 +225,6 @@ std::string BCLog::Logger::LogTimestampStr(const std::string& str)
 	}
 
 	return strStamped;
-}
-
-void BCLog::Logger::LogPrintBatchedStr(const std::string& str)
-{
-    StdLockGuard scoped_lock(m_cs);
-    std::string str_prefixed = str;
-
-    if (m_log_threadnames && m_started_new_line) {
-        // 16 chars total, "rtm-" is 4 of them and another 1 is a NUL terminator
-        str_prefixed.insert(0, "[" + strprintf("%11s", util::ThreadGetInternalName()) + "] ");
-    }
-
-    str_prefixed = LogTimestampStr(str_prefixed);
-
-    m_started_new_line = !str.empty() && str[str.size()-1] == '\n';
-
-    if (m_buffering) {
-        // buffer if we haven't started logging yet
-        m_msgs_before_open.push_back(str_prefixed);
-        return;
-    }
-
-    if (m_print_to_console) {
-        // print to console
-        fwrite(str_prefixed.data(), 1, str_prefixed.size(), stdout);
-        fflush(stdout);
-    }
-    if (m_print_to_file) {
-        assert(m_fileout != nullptr);
-
-        // reopen the log file, if requested
-        if (m_reopen_file) {
-            m_reopen_file = false;
-            FILE* new_fileout = fsbridge::fopen(m_file_path, "a");
-            if (new_fileout) {
-                setbuf(new_fileout, nullptr); // unbuffered
-                fclose(m_fileout);
-                m_fileout = new_fileout;
-            }
-        }
-        FileWriteStr(str_prefixed, m_fileout);
-    }
 }
 
 void BCLog::Logger::LogPrintStr(const std::string& str, const std::string& logging_function, const std::string& source_file, const int source_line)

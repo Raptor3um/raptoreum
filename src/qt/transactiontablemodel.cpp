@@ -59,8 +59,8 @@ struct TxLessThan
 class TransactionTablePriv
 {
 public:
-    TransactionTablePriv(TransactionTableModel *_parent) :
-        parent(_parent)
+    TransactionTablePriv(TransactionTableModel *_parent)
+        : parent(_parent)
     {
     }
 
@@ -105,10 +105,8 @@ public:
         }
 
         // Find bounds of this transaction in model
-        QList<TransactionRecord>::iterator lower = qLowerBound(
-            cachedWallet.begin(), cachedWallet.end(), hash, TxLessThan());
-        QList<TransactionRecord>::iterator upper = qUpperBound(
-            cachedWallet.begin(), cachedWallet.end(), hash, TxLessThan());
+        QList<TransactionRecord>::iterator lower = qLowerBound(cachedWallet.begin(), cachedWallet.end(), hash, TxLessThan());
+        QList<TransactionRecord>::iterator upper = qUpperBound(cachedWallet.begin(), cachedWallet.end(), hash, TxLessThan());
         int lowerIndex = (lower - cachedWallet.begin());
         int upperIndex = (upper - cachedWallet.begin());
         bool inModel = (lower != upper);
@@ -143,8 +141,7 @@ public:
                     break;
                 }
                 // Added -- insert at the right position
-                QList<TransactionRecord> toInsert =
-                        TransactionRecord::decomposeTransaction(wallet, wtx);
+                QList<TransactionRecord> toInsert = TransactionRecord::decomposeTransaction(wallet, wtx);
                 if(!toInsert.isEmpty()) /* only if something to insert */
                 {
                     parent->beginInsertRows(QModelIndex(), lowerIndex, lowerIndex+toInsert.size()-1);
@@ -239,12 +236,12 @@ public:
     }
 };
 
-TransactionTableModel::TransactionTableModel(WalletModel *parent):
-        QAbstractTableModel(parent),
-        walletModel(parent),
-        priv(new TransactionTablePriv(this)),
-        fProcessingQueuedTransactions(false),
-        cachedChainLockHeight(-1)
+TransactionTableModel::TransactionTableModel(WalletModel *parent)
+    : QAbstractTableModel(parent),
+      walletModel(parent),
+      priv(new TransactionTablePriv(this)),
+      fProcessingQueuedTransactions(false),
+      cachedChainLockHeight(-1)
 {
     columns << QString() << QString() << tr("Date") << tr("Type") << tr("Address / Label") << BitcoinUnits::getAmountColumnTitle(walletModel->getOptionsModel()->getDisplayUnit());
     priv->refreshWallet(walletModel->wallet());
@@ -275,8 +272,7 @@ void TransactionTableModel::updateTransaction(const QString &hash, int status, b
     priv->updateWallet(walletModel->wallet(), updated, status, showTransaction);
 }
 
-void TransactionTableModel::updateAddressBook(const QString& address, const QString& label, bool isMine,
-                                              const QString& purpose, int status)
+void TransactionTableModel::updateAddressBook(const QString& address, const QString& label, bool isMine, const QString& purpose, int status)
 {
     priv->updateAddressBook(walletModel->wallet(), address, label, isMine, purpose, status);
 }
@@ -767,8 +763,10 @@ struct TransactionNotification
 {
 public:
     TransactionNotification() {}
-    TransactionNotification(uint256 _hash, ChangeType _status, bool _showTransaction):
-        hash(_hash), status(_status), showTransaction(_showTransaction) {}
+    TransactionNotification(uint256 _hash, ChangeType _status, bool _showTransaction)
+        : hash(_hash), status(_status), showTransaction(_showTransaction)
+    {
+    }
 
     void invoke(QObject *ttm)
     {

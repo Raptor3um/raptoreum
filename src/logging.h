@@ -72,9 +72,10 @@ namespace BCLog {
         COINJOIN    = ((uint64_t)1 << 41),
         SPORK       = ((uint64_t)1 << 42),
         NETCONN     = ((uint64_t)1 << 43),
+        QUORUMS     = ((uint64_t)1 << 44),
 
         RTM         = CHAINLOCKS | GOBJECT | INSTANTSEND | KEEPASS | LLMQ | LLMQ_DKG | LLMQ_SIGS
-                      | MNPAYMENTS | MNSYNC | COINJOIN | SPORK | NETCONN,
+                      | MNPAYMENTS | MNSYNC | COINJOIN | SPORK | NETCONN | QUORUMS,
 
         NET_NETCONN = NET | NETCONN, // use this to have something logged in NET and NETCONN as well
         //End Raptoreum
@@ -118,8 +119,6 @@ namespace BCLog {
 
     	/** Send a string to ne log output */
     	void LogPrintStr(const std::string& str, const std::string& logging_function, const std::string& source_file, const int source_line);
-
-    	void LogPrintBatchedStr(const std::string& str);
 
     	/** Returns wheter logs will be written to any output */
     	bool Enabled() const
@@ -178,20 +177,6 @@ std::string SafeStringFormat(const std::string& fmt, const Args&... args)
 }
 
 template <typename... Args>
-static inline void LogPrintf__(const char* fmt, const Args&... args)
-{
-  if (LogInstance().Enabled()) {
-    std::string log_msg;
-    try {
-      log_msg = tfm::format(fmt, args...);
-    } catch (tinyformat::format_error& fmterr) {
-      log_msg = "Error \"" + std::string(fmterr.what()) + "\" while formatting log message: " + fmt;
-    }
-    LogInstance().LogPrintBatchedStr(log_msg);
-  }
-}
-
-template <typename... Args>
 static inline void LogPrintf_(const std::string& logging_function, const std::string& source_file, const int source_line, const char* fmt, const Args&... args)
 {
     if (LogInstance().Enabled()) {
@@ -206,11 +191,7 @@ static inline void LogPrintf_(const std::string& logging_function, const std::st
     }
 }
 
-#define LogPrintf(...)                                     \
-  do {                                                     \
-    LogPrintf_(__func__, __FILE__, __LINE__, __VA_ARGS__); \
-    LogPrintf__(__VA_ARGS__);                              \
-  } while (0)
+#define LogPrintf(...) LogPrintf_(__func__, __FILE__, __LINE__, __VA_ARGS__)
 
 // Use a macro instead of a function for conditional logging to prevent
 // evaluating arguments when logging for the category is not enabled.

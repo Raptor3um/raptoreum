@@ -32,7 +32,7 @@ static void ResetArgs(const std::string& strArg)
     gArgs.ParseParameters(vecChar.size(), vecChar.data(), error);
 }
 
-static void SetupArg(const std::vector<std::string>& args)
+static void SetupArgs(const std::vector<std::string>& args)
 {
     gArgs.ClearArgs();
     for (const std::string& arg : args) {
