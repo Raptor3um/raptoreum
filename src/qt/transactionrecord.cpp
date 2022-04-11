@@ -82,7 +82,7 @@ void TransactionRecord::getFutureTxStatus(const interfaces::WalletTx& wtx, const
                 status.status = TransactionStatus::OpenUntilBlock;
                 status.open_for = maturityBlock;
             }
-            if (maturityTime >= GetAdjustedTime() {
+            if (maturityTime >= GetAdjustedTime()) {
                 status.status = TransactionStatus::OpenUntilDate;
                 status.open_for = maturityTime;
             }

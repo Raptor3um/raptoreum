@@ -9,8 +9,10 @@
 
 #include <algorithm>
 
+#include <QApplication>
 #include <QMutexLocker>
 #include <QThread>
+#include <QWindow>
 
 WalletController::WalletController(interfaces::Node& node, OptionsModel* options_model, QObject* parent)
     : QObject(parent),
@@ -54,7 +56,24 @@ WalletModel* WalletController::getOrCreateWallet(std::unique_ptr<interfaces::Wal
     WalletModel* wallet_model = new WalletModel(std::move(wallet), m_node, m_options_model, nullptr);
     m_wallets.push_back(wallet_model);
 
-    connect(wallet_model, &WalletModel::unload, [this, wallet_model] { removeAndDeleteWallet(wallet_model); });
+    // WalletModel::startPollBalance needs to be called in a thread managed by
+    // Qt because of startTimer. Considering the current thread can be a RPC
+    // thread, better delegate the calling to Qt with Qt::AutoConnection.
+    const bool called = QMetaObject::invokeMethod(wallet_model, "startPollBalance");
+    assert(called);
+
+    connect(wallet_model, &WalletModel::unload, [this, wallet_model] {
+        // Defer removeAndDeleteWallet when no model widget is active.
+        if (QApplication::activeModalWidget()) {
+            connect(qApp, &QApplication::focusWindowChanged, wallet_model, [this, wallet_model]() {
+                if (!QApplication::activeModalWidget()) {
+                    removeAndDeleteWallet(wallet_model);
+                }
+            }, Qt::QueuedConnection);
+        } else {
+            removeAndDeleteWallet(wallet_model);
+        }
+    });
 
     // Re-emit coinsSent signal from wallet model.
     connect(wallet_model, &WalletModel::coinsSent, this, &WalletController::coinsSent);
@@ -65,7 +84,8 @@ WalletModel* WalletController::getOrCreateWallet(std::unique_ptr<interfaces::Wal
     } else {
         // Handler callback runs in a different thread so fix wallet model thread affinity.
         wallet_model->moveToThread(thread());
-        QMetaObject::invokeMethod(this, "addWallet", Qt::QueuedConnection, Q_ARG(WalletModel*, wallet_model));
+        bool invoked = QMetaObject::invokeMethod(this, "addWallet", Qt::QueuedConnection, Q_ARG(WalletModel*, wallet_model));
+        assert(invoked);
     }
 
     return wallet_model;
