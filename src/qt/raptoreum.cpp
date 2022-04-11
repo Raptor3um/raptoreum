@@ -26,7 +26,7 @@
 
 #ifdef ENABLE_WALLET
 #include <qt/paymentserver.h>
-#include <qt/walletmodel.h>
+#include <qt/walletcontroller.h>
 #endif
 
 #include <interfaces/handler.h>
@@ -134,7 +134,8 @@ void DebugMessageHandler(QtMsgType type, const QMessageLogContext& context, cons
     }
 }
 
-BitcoinCore::BitcoinCore(interfaces::Node& node) : QObject(), m_node(node)
+BitcoinCore::BitcoinCore(interfaces::Node& node)
+    : QObject(), m_node(node)
 {
 }
 
@@ -197,16 +198,12 @@ static const char* qt_argv = "rtm-qt";
 
 BitcoinApplication::BitcoinApplication(interfaces::Node& node)
     : QApplication(qt_argc, const_cast<char **>(&qt_argv)),
-      coreThread(0),
+      coreThread(nullptr),
       m_node(node),
-      optionsModel(0),
-      clientModel(0),
-      window(0),
-      pollShutdownTimer(0),
-#ifdef ENABLE_WALLET
-      paymentServer(0),
-      m_wallet_models(),
-#endif
+      optionsModel(nullptr),
+      clientModel(nullptr),
+      window(nullptr),
+      pollShutdownTimer(nullptr),
       returnValue(0)
 {
     setQuitOnLastWindowClosed(false);
@@ -223,10 +220,10 @@ BitcoinApplication::~BitcoinApplication()
     }
 
     delete window;
-    window = 0;
+    window = nullptr;
 #ifdef ENABLE_WALLET
     delete paymentServer;
-    paymentServer = 0;
+    paymentServer = nullptr;
 #endif
     // Delete Qt-settings if user clicked on "Reset Options"
     QSettings settings;
@@ -235,7 +232,7 @@ BitcoinApplication::~BitcoinApplication()
         settings.sync();
     }
     delete optionsModel;
-    optionsModel = 0;
+    optionsModel = nullptr;
 }
 
 #ifdef ENABLE_WALLET
@@ -261,7 +258,7 @@ void BitcoinApplication::createSplashScreen(const NetworkStyle *networkStyle)
 {
     SplashScreen *splash = new SplashScreen(m_node, nullptr, networkStyle);
     // We don't hold a direct pointer to the splash screen after creation, but the splash
-    // screen will take care of deleting itself when slotFinish happens.
+    // screen will take care of deleting itself when finish() happens.
     splash->show();
     connect(this, &BitcoinApplication::splashFinished, splash, &SplashScreen::finish);
     connect(this, &BitcoinApplication::requestedShutdown, splash, &QWidget::close);
@@ -269,7 +266,7 @@ void BitcoinApplication::createSplashScreen(const NetworkStyle *networkStyle)
 
 bool BitcoinApplication::baseInitialize()
 {
-  return m_node.baseInitialize();
+    return m_node.baseInitialize();
 }
 
 void BitcoinApplication::startThread()
@@ -332,45 +329,14 @@ void BitcoinApplication::requestShutdown()
     pollShutdownTimer->stop();
 
 #ifdef ENABLE_WALLET
-    window->removeAllWallets();
-    for (WalletModel *walletModel : m_wallet_models) {
-        delete walletModel;
-    }
-    m_wallet_models.clear();
+    delete m_wallet_controller;
+    m_wallet_controller = nullptr;
 #endif
     delete clientModel;
     clientModel = nullptr;
 
     // Request shutdown from core thread
     Q_EMIT requestedShutdown();
-}
-
-void BitcoinApplication::addWallet(WalletModel* walletModel)
-{
-#ifdef ENABLE_WALLET
-    window->addWallet(walletModel);
-
-    if (m_wallet_models.empty()) {
-        window->setCurrentWallet(walletModel);
-    }
-
-#ifdef ENABLE_BIP70
-    connect(walletModel, &WalletModel::coinsSent, paymentServer, &PaymentServer::fetchPaymentACK);
-#endif
-    connect(walletModel, &WalletModel::unload, this, &BitcoinApplication::removeWallet);
-
-    m_wallet_models.push_back(walletModel);
-#endif
-}
-
-void BitcoinApplication::removeWallet()
-{
-#ifdef ENABLE_WALLET
-    WalletModel* walletModel = static_cast<WalletModel*>(sender());
-    m_wallet_models.erase(std::find(m_wallet_models.begin(), m_wallet_models.end(), walletModel));
-    window->removeWallet(walletModel);
-    walletModel->deleteLater();
-#endif
 }
 
 void BitcoinApplication::initializeResult(bool success)
@@ -383,25 +349,22 @@ void BitcoinApplication::initializeResult(bool success)
         // Log this only after AppInitMain finishes, as then logging setup is guaranteed complete
         qWarning() << "Platform customization:" << gArgs.GetArg("-uiplatform", BitcoinGUI::DEFAULT_UIPLATFORM).c_str();
 #ifdef ENABLE_WALLET
+        m_wallet_controller = new WalletController(m_node, optionsModel, this);
 #ifdef ENABLE_BIP70
         PaymentServer::LoadRootCAs();
 #endif
-       if (paymentServer)  paymentServer->setOptionsModel(optionsModel);
+        if (paymentServer) {
+            paymentServer->setOptionsModel(optionsModel);
+#ifdef ENABLE_BIP70
+            connect(m_wallet_controller, &WalletController::coinsSent, paymentServer, &PaymentServer::fetchPaymentACK);
+#endif
+        }
 #endif
 
         clientModel = new ClientModel(m_node, optionsModel);
         window->setClientModel(clientModel);
-
 #ifdef ENABLE_WALLET
-        m_handler_load_wallet = m_node.handleLoadWallet([this](std::unique_ptr<interfaces::Wallet> wallet) {
-            WalletModel* wallet_model = new WalletModel(std::move(wallet), m_node, optionsModel, nullptr);
-            wallet_model->moveToThread(thread());
-            QMetaObject::invokeMethod(this, "addWallet", Qt::QueuedConnection, Q_ARG(WalletModel*, wallet_model));
-        });
-
-        for (auto& wallet : m_node.getWallets()) {
-            addWallet(new WalletModel(std::move(wallet), m_node, optionsModel));
-        }
+        window->setWalletController(m_wallet_controller);
 #endif
 
         // If -min option passed, start window minimized (iconified) or minimized to tray.
@@ -422,12 +385,12 @@ void BitcoinApplication::initializeResult(bool success)
         // Now that initialization/startup is done, process any command-line
         // raptoreum: URIs or payment requests:
         if (paymentServer) {
-          connect(paymentServer, &PaymentServer::receivedPaymentRequest, window, &BitcoinGUI::handlePaymentRequest);
-          connect(window, &BitcoinGUI::receivedURI, paymentServer, &PaymentServer::handleURIOrFile);
-          connect(paymentServer, &PaymentServer::message, [this](const QString& title, const QString& message, unsigned int style) {
-            window->message(title, message, style);
-          });
-          QTimer::singleShot(100, paymentServer, &PaymentServer::uiReady);
+            connect(paymentServer, &PaymentServer::receivedPaymentRequest, window, &BitcoinGUI::handlePaymentRequest);
+            connect(window, &BitcoinGUI::receivedURI, paymentServer, &PaymentServer::handleURIOrFile);
+            connect(paymentServer, &PaymentServer::message, [this](const QString& title, const QString& message, unsigned int style) {
+                window->message(title, message, style);
+            });
+            QTimer::singleShot(100, paymentServer, &PaymentServer::uiReady);
         }
 #endif
         pollShutdownTimer->start(200);

@@ -574,7 +574,7 @@ SendFuturesEntry *SendFuturesDialog::addEntry()
 
 void SendFuturesDialog::updateTabsAndLabels()
 {
-    setupTabChain(0);
+    setupTabChain(nullptr);
     coinControlUpdateLabels();
 }
 
@@ -611,7 +611,7 @@ QWidget *SendFuturesDialog::setupTabChain(QWidget *prev)
 
 void SendFuturesDialog::setAddress(const QString &address)
 {
-    SendFuturesEntry *entry = 0;
+    SendFuturesEntry *entry = nullptr;
     // Replace the first entry if it is still unused
     if(ui->entries->count() == 1)
     {
@@ -634,7 +634,7 @@ void SendFuturesDialog::pasteEntry(const SendFuturesRecipient &rv)
     if(!fNewRecipientAllowed)
         return;
 
-    SendFuturesEntry *entry = 0;
+    SendFuturesEntry *entry = nullptr;
     // Replace the first entry if it is still unused
     if(ui->entries->count() == 1)
     {

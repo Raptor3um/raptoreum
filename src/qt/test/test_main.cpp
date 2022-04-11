@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
 {
     SetupEnvironment();
     SetupNetworking();
-    SelectParams(CBaseChainParams::TESTNET);
+    SelectParams(CBaseChainParams::REGTEST);
     noui_connect();
     ClearDatadirCache();
     fs::path pathTemp = fs::temp_directory_path() / strprintf("test_raptoreum-qt_%lu_%i", (unsigned long)GetTime(), (int)GetRand(100000));

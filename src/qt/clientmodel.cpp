@@ -36,9 +36,9 @@ ClientModel::ClientModel(interfaces::Node& node, OptionsModel *_optionsModel, QO
     QObject(parent),
     m_node(node),
     optionsModel(_optionsModel),
-    peerTableModel(0),
-    banTableModel(0),
-    m_thread(new QThread(this))
+    peerTableModel(nullptr),
+    banTableModel(nullptr),
+    pollTimer(nullptr)
 {
     cachedBestHeaderHeight = -1;
     cachedBestHeaderTime = -1;

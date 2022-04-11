@@ -48,6 +48,7 @@ QT_MOC_CPP = \
   qt/moc_coincontroldialog.cpp \
   qt/moc_coincontroltreewidget.cpp \
   qt/moc_csvmodelwriter.cpp \
+  qt/moc_raptoreum.cpp \
   qt/moc_editaddressdialog.cpp \
   qt/moc_guiutil.cpp \
   qt/moc_intro.cpp \
@@ -83,6 +84,7 @@ QT_MOC_CPP = \
   qt/moc_transactiontablemodel.cpp \
   qt/moc_transactionview.cpp \
   qt/moc_utilitydialog.cpp \
+  qt/moc_walletcontroller.cpp \
   qt/moc_walletframe.cpp \
   qt/moc_walletmodel.cpp \
   qt/moc_walletview.cpp
@@ -170,6 +172,7 @@ BITCOIN_QT_H = \
   qt/transactiontablemodel.h \
   qt/transactionview.h \
   qt/utilitydialog.h \
+  qt/walletcontroller.h \
   qt/walletframe.h \
   qt/walletmodel.h \
   qt/walletmodeltransaction.h \
@@ -250,6 +253,7 @@ BITCOIN_QT_BASE_CPP = \
   qt/peertablemodel.cpp \
   qt/qvalidatedlineedit.cpp \
   qt/qvaluecombobox.cpp \
+  qt/raptoreum.cpp \
   qt/rpcconsole.cpp \
   qt/splashscreen.cpp \
   qt/trafficgraphdata.cpp \
@@ -284,6 +288,7 @@ BITCOIN_QT_WALLET_CPP = \
   qt/transactionrecord.cpp \
   qt/transactiontablemodel.cpp \
   qt/transactionview.cpp \
+  qt/walletcontroller.cpp \
   qt/walletframe.cpp \
   qt/walletmodel.cpp \
   qt/walletmodeltransaction.cpp \
@@ -395,7 +400,7 @@ if TARGET_DARWIN
   qt_libraptoreumqt_a_SOURCES += $(BITCOIN_MM)
 endif
 
-nodist_qt_libraptoreumqt_a_SOURCES = $(QT_MOC_CPP) $(QT_MOC) $(PROTOBUF_CC) $(QT_QRC_CPP) $(QT_QRC_LOCALE_CPP) $(PROTOBUF_H)
+nodist_qt_libraptoreumqt_a_SOURCES = $(QT_MOC_CPP) $(QT_MOC) $(PROTOBUF_CC) $(PROTOBUF_H) $(QT_QRC_CPP) $(QT_QRC_LOCALE_CPP)
 
 # forms/foo.h -> forms/ui_foo.h
 QT_FORMS_H=$(join $(dir $(QT_FORMS_UI)),$(addprefix ui_, $(notdir $(QT_FORMS_UI:.ui=.h))))
@@ -425,7 +430,7 @@ endif
 if ENABLE_ZMQ
 qt_raptoreum_qt_LDADD += $(LIBBITCOIN_ZMQ) $(ZMQ_LIBS)
 endif
-qt_raptoreum_qt_LDADD += $(LIBBITCOIN_CLI) $(LIBBITCOIN_COMMON) $(LIBBITCOIN_UTIL) $(LIBBITCOIN_CONSENSUS) $(LIBBITCOIN_CRYPTO) $(LIBUNIVALUE) $(LIBLEVELDB) $(LIBMEMENV) $(BACKTRACE_LIB) $(BOOST_LIBS) $(QT_LIBS) $(QT_DBUS_LIBS) $(QR_LIBS) $(PROTOBUF_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS) $(LIBSECP256K1) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(BLS_LIBS) $(GMP_LIBS)
+qt_raptoreum_qt_LDADD += $(LIBBITCOIN_CLI) $(LIBBITCOIN_COMMON) $(LIBBITCOIN_UTIL) $(LIBBITCOIN_CONSENSUS) $(LIBBITCOIN_CRYPTO) $(LIBUNIVALUE) $(LIBLEVELDB) $(LIBLEVELDB_SSE42) $(LIBMEMENV) $(BACKTRACE_LIB) $(BOOST_LIBS) $(QT_LIBS) $(QT_DBUS_LIBS) $(QR_LIBS) $(PROTOBUF_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS) $(LIBSECP256K1) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(BLS_LIBS) $(GMP_LIBS)
 qt_raptoreum_qt_LDFLAGS = $(LDFLAGS_WRAP_EXCEPTIONS) $(RELDFLAGS) $(AM_LDFLAGS) $(QT_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
 qt_raptoreum_qt_LIBTOOLFLAGS = $(AM_LIBTOOLFLAGS) --tag CXX
 

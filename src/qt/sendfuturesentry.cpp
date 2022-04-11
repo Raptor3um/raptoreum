@@ -31,7 +31,7 @@
 SendFuturesEntry::SendFuturesEntry(QWidget* parent) :
     QStackedWidget(parent),
     ui(new Ui::SendFuturesEntry),
-    model(0)
+    model(nullptr)
 {
     ui->setupUi(this);
 
@@ -187,7 +187,7 @@ bool SendFuturesEntry::validate(interfaces::Node& node)
     }
 
     // Sending a zero amount is invalid
-    if (ui->payAmount->value(0) <= 0)
+    if (ui->payAmount->value(nullptr) <= 0)
     {
         ui->payAmount->setValid(false);
         retval = false;

@@ -36,9 +36,9 @@
 namespace pl = std::placeholders;
 
 WalletModel::WalletModel(std::unique_ptr<interfaces::Wallet> wallet, interfaces::Node& node, OptionsModel *_optionsModel, QObject *parent) :
-    QObject(parent), m_wallet(std::move(wallet)), m_node(node), optionsModel(_optionsModel), addressTableModel(0),
-    transactionTableModel(0),
-    recentRequestsTableModel(0),
+    QObject(parent), m_wallet(std::move(wallet)), m_node(node), optionsModel(_optionsModel), addressTableModel(nullptr),
+    transactionTableModel(nullptr),
+    recentRequestsTableModel(nullptr),
     cachedEncryptionStatus(Unencrypted),
     cachedNumBlocks(-1),
     cachedNumISLocks(0),

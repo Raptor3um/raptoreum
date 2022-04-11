@@ -34,6 +34,7 @@ class RPCConsole;
 class SendCoinsRecipient;
 class SendFuturesRecipient;
 class UnitDisplayStatusBarControl;
+class WalletController;
 class WalletFrame;
 class WalletModel;
 class HelpMessageDialog;
@@ -76,6 +77,9 @@ public:
         The client model represents the part of the core that communicates with the P2P network, and is wallet-agnostic.
     */
     void setClientModel(ClientModel *clientModel);
+#ifdef ENABLE_WALLET
+    void setWalletController(WalletController* wallet_controller);
+#endif
 
 #ifdef ENABLE_WALLET
     /** Set the wallet model.
@@ -107,6 +111,7 @@ protected:
 
 private:
     interfaces::Node& m_node;
+    WalletController* m_wallet_controller{nullptr};
     std::unique_ptr<interfaces::Handler> m_handler_message_box;
     std::unique_ptr<interfaces::Handler> m_handler_question;
     ClientModel* clientModel = nullptr;
@@ -233,7 +238,7 @@ private:
 Q_SIGNALS:
     /** Signal raised when a URI was entered or dragged to the GUI */
     void receivedURI(const QString &uri);
-
+    /** Signal raised when RPC console shown */
     void consoleShown(RPCConsole* console);
     /** Restart handling */
     void requestedRestart(QStringList args);

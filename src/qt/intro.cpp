@@ -232,8 +232,7 @@ bool Intro::pickDataDirectory(interfaces::Node& node)
                 }
                 break;
             } catch (const fs::filesystem_error&) {
-                QMessageBox::critical(0, PACKAGE_NAME,
-                    tr("Error: Specified data directory \"%1\" cannot be created.").arg(dataDir));
+                QMessageBox::critical(nullptr, tr(PACKAGE_NAME), tr("Error: Specified data directory \"%1\" cannot be created.").arg(dataDir));
                 /* fall through, back to choosing screen */
             }
         }
@@ -292,7 +291,7 @@ void Intro::on_dataDirectory_textChanged(const QString &dataDirStr)
 
 void Intro::on_ellipsisButton_clicked()
 {
-    QString dir = QDir::toNativeSeparators(QFileDialog::getExistingDirectory(0, "Choose data directory", ui->dataDirectory->text()));
+    QString dir = QDir::toNativeSeparators(QFileDialog::getExistingDirectory(nullptr, "Choose data directory", ui->dataDirectory->text()));
     if(!dir.isEmpty())
         ui->dataDirectory->setText(dir);
 }

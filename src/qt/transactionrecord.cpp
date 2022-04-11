@@ -59,24 +59,16 @@ int TransactionRecord::getFutureTxMaturityTime(const CWalletTx &wtx, CFutureTx &
 
 /* Return positive answer if future transaction has matured.
  */
-bool TransactionRecord::isFutureTxMatured(const CWalletTx &wtx, CFutureTx &ftx)
-{
-    if (chainActive.Height() >= getFutureTxMaturityBlock(wtx, ftx) || GetAdjustedTime() >= getFutureTxMaturityTime(wtx, ftx))
-    {
+bool TransactionRecord::isFutureTxMatured(const CWalletTx &wtx, CFutureTx &ftx) {
+    if (chainActive.Height() >= getFutureTxMaturityBlock(wtx, ftx) || GetAdjustedTime() >= getFutureTxMaturityTime(wtx, ftx)) {
         return true;
-    }
-    else
-    {
+    } else {
         return false;
     }
 }
 
-void TransactionRecord::getFutureTxStatus(const interfaces::WalletTx& wtx, const interfaces::WalletTxStatus& wtxStatus, CFutureTx &ftx)
-{
-
-    if (GetTxPayload(wtx.tx->vExtraPayload, ftx))
-    {
-
+void TransactionRecord::getFutureTxStatus(const interfaces::WalletTx& wtx, const interfaces::WalletTxStatus& wtxStatus, CFutureTx &ftx) {
+    if (GetTxPayload(wtx.tx->vExtraPayload, ftx)) {
         int maturityBlock = wtxStatus.block_height + ftx.maturity;
         int64_t maturityTime = wtxStatus.time_received + ftx.lockTime;
         int currentHeight = chainActive.Height();
@@ -86,22 +78,18 @@ void TransactionRecord::getFutureTxStatus(const interfaces::WalletTx& wtx, const
         } else {
             status.countsForBalance = false;
            //display transaction is mature in x blocks or transaction is mature in days hh:mm:ss
-            if(maturityBlock >= chainActive.Height())
-            {
+            if (maturityBlock >= chainActive.Height()) {
                 status.status = TransactionStatus::OpenUntilBlock;
                 status.open_for = maturityBlock;
             }
-            if(maturityTime >= GetAdjustedTime())
-            {
+            if (maturityTime >= GetAdjustedTime() {
                 status.status = TransactionStatus::OpenUntilDate;
                 status.open_for = maturityTime;
             }
 
         }
 
-    }
-    else
-    {
+    } else {
         //not in main chain - new transaction
         status.status = TransactionStatus::NotAccepted;
     }
@@ -111,8 +99,7 @@ void TransactionRecord::getFutureTxStatus(const interfaces::WalletTx& wtx, const
 /*
  * Decompose CWallet transaction to model transaction records.
  */
-QList<TransactionRecord> TransactionRecord::decomposeTransaction(interfaces::Wallet& wallet, const interfaces::WalletTx& wtx)
-{
+QList<TransactionRecord> TransactionRecord::decomposeTransaction(interfaces::Wallet& wallet, const interfaces::WalletTx& wtx) {
     QList<TransactionRecord> parts;
     isminefilter creditMineTypes = 0;
     isminefilter debitMineTypes = 0;
@@ -376,64 +363,43 @@ void TransactionRecord::updateStatus(const interfaces::WalletTx& wtx, const inte
     status.lockedByChainLocks = wtxStatus.is_chainlocked;
     status.lockedByInstantSend = wtxStatus.is_islocked;
 
-    if (!wtxStatus.is_final)
-    {
-        if (wtxStatus.lock_time < LOCKTIME_THRESHOLD)
-        {
+    if (!wtxStatus.is_final) {
+        if (wtxStatus.lock_time < LOCKTIME_THRESHOLD) {
             status.status = TransactionStatus::OpenUntilBlock;
             status.open_for = wtxStatus.lock_time - numBlocks;
-        }
-        else
-        {
+        } else {
             status.status = TransactionStatus::OpenUntilDate;
             status.open_for = wtxStatus.lock_time;
         }
     }
     // For generated transactions, determine maturity
-    else if(type == TransactionRecord::Generated)
-    {
-        if (wtxStatus.blocks_to_maturity > 0)
-        {
+    else if(type == TransactionRecord::Generated) {
+        if (wtxStatus.blocks_to_maturity > 0) {
             status.status = TransactionStatus::Immature;
 
-            if (wtxStatus.is_in_main_chain)
-            {
+            if (wtxStatus.is_in_main_chain) {
                 status.matures_in = wtxStatus.blocks_to_maturity;
-            }
-            else
-            {
+            } else {
                 status.status = TransactionStatus::NotAccepted;
             }
-        }
-        else
-        {
+        } else {
             status.status = TransactionStatus::Confirmed;
         }
     }
     // For Future transactions, determine maturity
-    else if (type == TransactionRecord::FutureReceive)
-    {
+    else if (type == TransactionRecord::FutureReceive) {
         CFutureTx ftx;
         getFutureTxStatus(wtx, wtxStatus, ftx);
-    }
-    else
-    {
-        if (status.depth < 0)
-        {
+    } else {
+        if (status.depth < 0) {
             status.status = TransactionStatus::Conflicted;
-        }
-        else if (status.depth == 0)
-        {
+        } else if (status.depth == 0) {
             status.status = TransactionStatus::Unconfirmed;
             if (wtxStatus.is_abandoned)
                 status.status = TransactionStatus::Abandoned;
-        }
-        else if (status.depth < RecommendedNumConfirmations && !status.lockedByChainLocks)
-        {
+        } else if (status.depth < RecommendedNumConfirmations && !status.lockedByChainLocks) {
             status.status = TransactionStatus::Confirming;
-        }
-        else
-        {
+        } else {
             status.status = TransactionStatus::Confirmed;
         }
     }

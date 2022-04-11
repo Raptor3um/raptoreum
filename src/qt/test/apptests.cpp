@@ -5,6 +5,7 @@
 #include <qt/test/apptests.h>
 
 #include <chainparams.h>
+#include <init.h>
 #include <qt/raptoreum.h>
 #include <qt/bitcoingui.h>
 #include <qt/networkstyle.h>
@@ -14,6 +15,9 @@
 
 #if defined(HAVE_CONFIG_H)
 #include <config/raptoreum-config.h>
+#endif
+#ifdef ENABLE_WALLET
+#include <wallet/db.h>
 #endif
 
 #include <QAction>
@@ -45,7 +49,7 @@ void TestRpcCommand(RPCConsole* console)
     QString output = messagesWidget->toPlainText();
     UniValue value;
     value.read(output.right(output.size() - output.indexOf("{")).toStdString());
-    QCOMPARE(value["chain"].get_str(), std::string("testnet"));
+    QCOMPARE(value["chain"].get_str(), std::string("regtest"));
 }
 } // namespace
 
