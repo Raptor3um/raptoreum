@@ -2652,17 +2652,20 @@ void CConnman::ThreadOpenSmartnodeConnections()
         CDeterministicMNCPtr connectToDmn;
         bool isProbe = false;
         { // don't hold lock while calling OpenSmartnodeConnection as cs_main is locked deep inside
-            LOCK2(cs_vNodes, cs_vPendingSmartnodes);
-
-            if (!vPendingSmartnodes.empty()) {
-                auto dmn = mnList.GetValidMN(vPendingSmartnodes.front());
-                vPendingSmartnodes.erase(vPendingSmartnodes.begin());
-                if (dmn && !connectedNodes.count(dmn->pdmnState->addr) && !IsSmartnodeOrDisconnectRequested(dmn->pdmnState->addr)) {
-                    connectToDmn = dmn;
-                    LogPrint(BCLog::NET_NETCONN, "CConnman::%s -- opening pending smartnode connection to %s, service=%s\n", __func__, dmn->proTxHash.ToString(), dmn->pdmnState->addr.ToString(false));
+            {
+                // GetValidMN also acquires cs_main (GetUTXOCoin), avoid a deadlock with cs_vNodes by locking only cs_vPendingSmartnodes here
+                LOCK(cs_vPendingSmartnodes);
+                if (!vPendingSmartnodes.empty()) {
+                    auto dmn = mnList.GetValidMN(vPendingSmartnodes.front());
+                    vPendingSmartnodes.erase(vPendingSmartnodes.begin());
+                    if (dmn && !connectedNodes.count(dmn->pdmnState->addr) && !IsSmartnodeOrDisconnectRequested(dmn->pdmnState->addr)) {
+                        connectToDmn = dmn;
+                        LogPrint(BCLog::NET_NETCONN, "CConnman::%s -- opening pending smartnode connection to %s, service=%s\n", __func__, dmn->proTxHash.ToString(), dmn->pdmnState->addr.ToString(false));
+                    }
                 }
             }
 
+            LOCK2(cs_vNodes, cs_vPendingSmartnodes);
             if (!connectToDmn) {
                 std::vector<CDeterministicMNCPtr> pending;
                 for (const auto& group : smartnodeQuorumNodes) {
