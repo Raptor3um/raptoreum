@@ -6,6 +6,8 @@
 #ifndef BITCOIN_CHAIN_H
 #define BITCOIN_CHAIN_H
 
+#include <atomic>
+
 #include <arith_uint256.h>
 #include <consensus/params.h>
 #include <primitives/block.h>
