@@ -3,7 +3,7 @@ define(_CLIENT_VERSION_MAJOR, 0)
 define(_CLIENT_VERSION_MINOR, 17)
 define(_CLIENT_VERSION_REVISION, 0)
 define(_CLIENT_VERSION_BUILD, 0)
-define(_CLIENT_VERSION_RC, 0)
+define(_CLIENT_VERSION_RC, 1)
 define(_CLIENT_VERSION_IS_RELEASE, false)
 define(_COPYRIGHT_YEAR, 2022)
 define(_COPYRIGHT_HOLDERS,[The %s developers])
@@ -107,6 +107,9 @@ AC_PATH_PROG([GIT], [git])
 AC_PATH_PROG([CCACHE], [ccache])
 AC_PATH_PROG([XGETTEXT], [xgettext])
 AC_PATH_PROG([HEXDUMP], [hexdump])
+AC_PATH_TOOL([READELF], [readelf])
+AC_PATH_TOOL([CPPFILT], [c++filt])
+AC_PATH_TOOL([DSYMUTIL], [dsymutil])
 AC_PATH_TOOL([OBJCOPY], [objcopy])
 AC_PATH_PROG([DOXYGEN], [doxygen])
 AM_CONDITIONAL([HAVE_DOXYGEN], [test -n "$DOXYGEN"])
@@ -114,84 +117,74 @@ AM_CONDITIONAL([HAVE_DOXYGEN], [test -n "$DOXYGEN"])
 AC_ARG_VAR([PYTHONPATH], [Augments the default search path for python module files])
 
 AC_ARG_ENABLE([wallet],
-    [AS_HELP_STRING([--disable-wallet],
-    [disable wallet (enabled by default)])],
+    [AS_HELP_STRING([--disable-wallet], [disable wallet (enabled by default)])],
     [enable_wallet=$enableval],
     [enable_wallet=auto])
 
 AC_ARG_WITH([bdb],
-    [AS_HELP_STRING([--without-bdb],
-    [disable bdb wallet support (default is enabled if wallet is enabled)])],
+    [AS_HELP_STRING([--without-bdb], [disable bdb wallet support (default is enabled if wallet is enabled)])],
     [use_bdb=$withval],
     [use_bdb=auto])
 
 AC_ARG_WITH([miniupnpc],
-    [AS_HELP_STRING([--with-miniupnpc],
-    [enable UPNP (default is yes if libminiupnpc is found)])],
+    [AS_HELP_STRING([--with-miniupnpc], [enable UPNP (default is yes if libminiupnpc is found)])],
     [use_upnp=$withval],
     [use_upnp=auto])
 
 AC_ARG_ENABLE([upnp-default],
-    [AS_HELP_STRING([--enable-upnp-default],
-    [if UPNP is enabled, turn it on at startup (default is no)])],
+    [AS_HELP_STRING([--enable-upnp-default], [if UPNP is enabled, turn it on at startup (default is no)])],
     [use_upnp_default=$enableval],
     [use_upnp_default=no])
 
 AC_ARG_WITH([natpmp],
-            [AS_HELP_STRING([--with-natpmp],
-                            [enable NAT-PMP (default is yes if libnatpmp is founr)])],
-            [use_natpmp=$withval],
-            [use_natpmp=auto])
+    [AS_HELP_STRING([--with-natpmp], [enable NAT-PMP (default is yes if libnatpmp is founr)])],
+    [use_natpmp=$withval],
+    [use_natpmp=auto])
 
 AC_ARG_ENABLE([natpmp-default],
-              [AS_HELP_STRING([--enabler-natpmp-default],
-                              [if NAT-PMP is enabled, turn it on at startup (default is no)])],
-              [use_natpmp_default=$enableval],
-              [use_natpmp_default=no])
+    [AS_HELP_STRING([--enabler-natpmp-default], [if NAT-PMP is enabled, turn it on at startup (default is no)])],
+    [use_natpmp_default=$enableval],
+    [use_natpmp_default=no])
 
-AC_ARG_ENABLE(tests,
-    AS_HELP_STRING([--disable-tests],[do not compile tests (default is to compile)]),
+AC_ARG_ENABLE([tests],
+    [AS_HELP_STRING([--disable-tests], [do not compile tests (default is to compile)])],
     [use_tests=$enableval],
     [use_tests=yes])
 
-AC_ARG_ENABLE(gui-tests,
-    AS_HELP_STRING([--disable-gui-tests],[do not compile GUI tests (default is to compile if GUI and tests enabled)]),
+AC_ARG_ENABLE([gui-tests],
+    [AS_HELP_STRING([--disable-gui-tests],[do not compile GUI tests (default is to compile if GUI and tests enabled)])],
     [use_gui_tests=$enableval],
     [use_gui_tests=$use_tests])
 
-AC_ARG_ENABLE(bench,
-    AS_HELP_STRING([--disable-bench],[do not compile benchmarks (default is to compile)]),
+AC_ARG_ENABLE([bench],
+    [AS_HELP_STRING([--disable-bench],[do not compile benchmarks (default is to compile)])],
     [use_bench=$enableval],
     [use_bench=yes])
 
 AC_ARG_ENABLE([extended-functional-tests],
-    AS_HELP_STRING([--enable-extended-functional-tests], [enable expensive functional tests when using lcov (default no)]),
+    [AS_HELP_STRING([--enable-extended-functional-tests], [enable expensive functional tests when using lcov (default no)])],
     [use_extended_functional_tests=$enableval],
     [use_extended_functional_tests=no])
 
 AC_ARG_WITH([qrencode],
-  [AS_HELP_STRING([--with-qrencode],
-  [enable QR code support (default is yes if qt is enabled and libqrencode is found)])],
-  [use_qr=$withval],
-  [use_qr=auto])
+    [AS_HELP_STRING([--with-qrencode], [enable QR code support (default is yes if qt is enabled and libqrencode is found)])],
+    [use_qr=$withval],
+    [use_qr=auto])
 
 AC_ARG_ENABLE([hardening],
-  [AS_HELP_STRING([--disable-hardening],
-  [do not attempt to harden the resulting executables (default is to harden when possible)])],
-  [use_hardening=$enableval],
-  [use_hardening=auto])
+    [AS_HELP_STRING([--disable-hardening], [do not attempt to harden the resulting executables (default is to harden when possible)])],
+    [use_hardening=$enableval],
+    [use_hardening=auto])
 
 AC_ARG_ENABLE([reduce-exports],
-  [AS_HELP_STRING([--enable-reduce-exports],
-  [attempt to reduce exported symbols in the resulting executables (default is no)])],
-  [use_reduce_exports=$enableval],
-  [use_reduce_exports=no])
+    [AS_HELP_STRING([--enable-reduce-exports], [attempt to reduce exported symbols in the resulting executables (default is no)])],
+    [use_reduce_exports=$enableval],
+    [use_reduce_exports=no])
 
 AC_ARG_ENABLE([ccache],
-  [AS_HELP_STRING([--disable-ccache],
-  [do not use ccache for building (default is to use if found)])],
-  [use_ccache=$enableval],
-  [use_ccache=auto])
+    [AS_HELP_STRING([--disable-ccache], [do not use ccache for building (default is to use if found)])],
+    [use_ccache=$enableval],
+    [use_ccache=auto])
 
 dnl Suppress warnings from external headers like Boost, Qt.
 dnl May be useful if warnings from external headers clutter the build output
@@ -203,26 +196,21 @@ AC_ARG_ENABLE([suppress-external-warnings],
   [suppress_external_warnings=no])
 
 AC_ARG_ENABLE([lcov],
-  [AS_HELP_STRING([--enable-lcov],
-  [enable lcov testing (default is no)])],
+  [AS_HELP_STRING([--enable-lcov], [enable lcov testing (default is no)])],
   [use_lcov=$enableval],
   [use_lcov=no])
 
 AC_ARG_ENABLE([lcov-branch-coverage],
-  [AS_HELP_STRING([--enable-lcov-branch-coverage],
-  [enable lcov testing branch coverage (default is no)])],
+  [AS_HELP_STRING([--enable-lcov-branch-coverage], [enable lcov testing branch coverage (default is no)])],
   [use_lcov_branch=yes],
   [use_lcov_branch=no])
 
-AC_ARG_ENABLE([threadlocal],
-  [AS_HELP_STRING([--enable-threadlocal],
+AC_ARG_ENABLE([threadlocal], [AS_HELP_STRING([--enable-threadlocal],
   [enable features that depend on the c++ thread_local keyword (currently just thread names in debug logs). (default is to enable if there is platform support)])],
-  [use_thread_local=$enableval],
-  [use_thread_local=auto])
+  [use_thread_local=$enableval], [use_thread_local=auto])
 
 AC_ARG_ENABLE([asm],
-  [AS_HELP_STRING([--disable-asm],
-  [disable assembly routines (enabled by default)])],
+  [AS_HELP_STRING([--disable-asm], [disable assembly routines (enabled by default)])],
   [use_asm=$enableval],
   [use_asm=yes])
 
@@ -231,46 +219,43 @@ if test "$use_asm" = "yes"; then
 fi
 
 AC_ARG_ENABLE([zmq],
-  [AS_HELP_STRING([--disable-zmq],
-  [disable ZMQ notifications])],
+  [AS_HELP_STRING([--disable-zmq], [disable ZMQ notifications])],
   [use_zmq=$enableval],
   [use_zmq=yes])
 
-AC_ARG_WITH([protoc-bindir],[AS_HELP_STRING([--with-protoc-bindir=BIN_DIR],[specify protoc bin path])], [protoc_bin_path=$withval], [])
+AC_ARG_WITH([bip70],
+  [AS_HELP_STRING([--enable-bip70], [enable BIP70 (payment protocol) support at the GUI (disabled by default)])],
+  [enable_bip70=$enableval],
+  [enable_bip70=no])
 
-AC_ARG_ENABLE(man,
-    [AS_HELP_STRING([--disable-man],
-                    [do not install man pages (default is to install)])],,
-    enable_man=yes)
-AM_CONDITIONAL(ENABLE_MAN, test "$enable_man" != "no")
+AC_ARG_WITH([protoc-bindir], [AS_HELP_STRING([--with-protoc-bindir=BIN_DIR], [specify protoc bin path])], [protoc_bin_path=$withval], [])
+
+AC_ARG_ENABLE(man, [AS_HELP_STRING([--disable-man], [do not install man pages (default is to install)])],, enable_man=yes)
+AM_CONDITIONAL([ENABLE_MAN], [test "$enable_man" != "no"])
 
 dnl Enable debug
 AC_ARG_ENABLE([debug],
-    [AS_HELP_STRING([--enable-debug],
-                    [use debug compiler flags and macros (default is no)])],
-    [enable_debug=$enableval],
-    [enable_debug=no])
+  [AS_HELP_STRING([--enable-debug], [use debug compiler flags and macros (default is no)])],
+  [enable_debug=$enableval],
+  [enable_debug=no])
 
 dnl Enable exception stacktraces
 AC_ARG_ENABLE([stacktraces],
-    [AS_HELP_STRING([--enable-stacktraces],
-                    [gather and print exception stack traces (default is yes)])],
-    [enable_stacktraces=$enableval],
-    [enable_stacktraces=yes])
+  [AS_HELP_STRING([--enable-stacktraces], [gather and print exception stack traces (default is yes)])],
+  [enable_stacktraces=$enableval],
+  [enable_stacktraces=yes])
 
 dnl Enable crash hooks
 AC_ARG_ENABLE([crash-hooks],
-    [AS_HELP_STRING([--enable-crash-hooks],
-                    [hook into exception/signal/assert handling to gather stack traces (default is no)])],
-    [enable_crashhooks=$enableval],
-    [enable_crashhooks=no])
+  [AS_HELP_STRING([--enable-crash-hooks], [hook into exception/signal/assert handling to gather stack traces (default is no)])],
+  [enable_crashhooks=$enableval],
+  [enable_crashhooks=no])
 
 dnl Enable in-wallet miner
 AC_ARG_ENABLE([miner],
-    [AS_HELP_STRING([--enable-miner],
-                    [enable in-wallet miner (default is yes)])],
-    [enable_miner=$enableval],
-    [enable_miner=yes])
+  [AS_HELP_STRING([--enable-miner], [enable in-wallet miner (default is yes)])],
+  [enable_miner=$enableval],
+  [enable_miner=yes])
 
 AM_CONDITIONAL([ENABLE_MINER], [test "$enable_miner" = "yes"])
 if test "$enable_miner" = "yes"; then
@@ -328,7 +313,9 @@ case $host in
 esac
 
 if test "$enable_debug" = "yes"; then
-  dnl Clear default -g -O2 flags
+  dnl If debugging is enabled and the user hasn't overriden CXXFLAGS,
+  dnl clear them to prevent autoconfs "-g -O2" being added.
+  dnl Otherwise we'd end up with "-O0 -g3 -g -O2"
   if test "$CXXFLAGS_overridden" = "no"; then
   CXXFLAGS=""
   fi
@@ -377,16 +364,14 @@ AX_CHECK_COMPILE_FLAG([-Wa,-mbig-obj], [CXXFLAGS="$CXXFLAGS -Wa,-mbig-obj"],,,)
 
 if test "$enable_lto" = "yes"; then
   AX_CHECK_COMPILE_FLAG([-flto], [LTO_CXXFLAGS="$LTO_CXXFLAGS -flto"], [AC_MSG_ERROR([compile failed with -flto])], [$CXXFLAG_WERROR])
-  AX_CHECK_LINK_FLAG([-flto], [LTO_LDFLAGS="$LTO_LDFLAGS -flto"], [AC_MSG_ERROR([link failed with -flto])], [$CXXFLAG_WERROR])
+  AX_CHECK_LINK_FLAG([-flto],    [LTO_LDFLAGS="$LTO_LDFLAGS -flto"],   [AC_MSG_ERROR([link failed with -flto])],    [$CXXFLAG_WERROR])
 fi
 
 if test "$use_sanitizers" != ""; then
   dnl First check if the compiler accepts flags. If an incompatible pair like
   dnl -fsanitize=address,thread is used here, this check will fail. This will also
   dnl fail if a bad argument is passed, e.g. -fsanitize=undefined
-  AX_CHECK_COMPILE_FLAG(
-    [-fsanitize=$use_sanitizers],
-    [SANITIZER_CXXFLAGS="-fsanitize=$use_sanitizers"],
+  AX_CHECK_COMPILE_FLAG([-fsanitize=$use_sanitizers], [SANITIZER_CXXFLAGS="-fsanitize=$use_sanitizers"],
     [AC_MSG_ERROR([compiler did not accept requested flags])])
 
   dnl Some compilers (e.g. GCC) require additional libraries like libasan,
@@ -394,11 +379,8 @@ if test "$use_sanitizers" != ""; then
   dnl flag. This is a separate check so we can give a better error message when
   dnl the sanitize flags are supported by the compiler but the actual sanitizer
   dnl libs are missing.
-  AX_CHECK_LINK_FLAG(
-    [-fsanitize=$use_sanitizers],
-    [SANITIZER_LDFLAGS="-fsanitize=$use_sanitizers"],
-    [AC_MSG_ERROR([linker did not accept requested flags, you are missing required libraries])],
-    [],
+  AX_CHECK_LINK_FLAG([-fsanitize=$use_sanitizers], [SANITIZER_LDFLAGS="-fsanitize=$use_sanitizers"],
+    [AC_MSG_ERROR([linker did not accept requested flags, you are missing required libraries])], [],
     [AC_LANG_PROGRAM([[
     #include <cstdint>
     #include <cstddef>
@@ -462,7 +444,7 @@ if test "$CXXFLAGS_overridden" = "no"; then
 fi
 
 dnl Do not allow extended (non-ASCII) symbols in identifiers. This is easier for code review.
-AX_CHECK_COMPILE_FLAG([-fno-extended-identifiers], [CXXFLAGS="$CXXFLAGS -fno-extended-identifiers"], [], [$CXXFLAG_WERROR])
+AX_CHECK_COMPILE_FLAG([-fno-extended-identifiers], [CORE_CXXFLAGS="$CORE_CXXFLAGS -fno-extended-identifiers"], [], [$CXXFLAG_WERROR])
 
 enable_sse42=no
 enable_sse41=no
@@ -611,7 +593,7 @@ CXXFLAGS="$TEMP_CXXFLAGS"
 
 fi
 
-CPPFLAGS="$CPPFLAGS -DHAVE_BUILD_INFO"
+CORE_CPPFLAGS="$CORE_CPPFLAGS -DHAVE_BUILD_INFO"
 
 AC_ARG_WITH([utils],
   [AS_HELP_STRING([--with-utils],
@@ -668,7 +650,7 @@ case $host in
        AC_MSG_ERROR([windres not found])
      fi
 
-     CPPFLAGS="$CPPFLAGS -D_MT -DWIN32 -D_WINDOWS -DBOOST_THREAD_USE_LIB -D_WIN32_WINNT=0x0601"
+     CORE_CPPFLAGS="$CORE_CPPFLAGS -D_MT -DWIN32 -D_WINDOWS -DBOOST_THREAD_USE_LIB -D_WIN32_WINNT=0x0601"
 
      dnl libtool insists upon adding -nostdlib and a list of objects/libs to link against.
      dnl That breaks our ability to build dll's with static libgcc/libstdc++/libssp. Override
@@ -679,7 +661,7 @@ case $host in
      postdeps_CXX=
 
      dnl We require Windows 7 (NT 6.1) or later
-     AX_CHECK_LINK_FLAG([-Wl,--major-subsystem-version -Wl,6 -Wl,--minor-subsystem-version -Wl,1], [LDFLAGS="$LDFLAGS -Wl,--major-subsystem-version -Wl,6 -Wl,--minor-subsystem-version -Wl,1"], [], [$LDFLAG_WERROR])
+     AX_CHECK_LINK_FLAG([-Wl,--major-subsystem-version -Wl,6 -Wl,--minor-subsystem-version -Wl,1], [CORE_LDFLAGS="$CORE_LDFLAGS -Wl,--major-subsystem-version -Wl,6 -Wl,--minor-subsystem-version -Wl,1"], [], [$LDFLAG_WERROR])
      ;;
   *darwin*)
      TARGET_OS=darwin
@@ -722,20 +704,20 @@ case $host in
              if test "$use_upnp" != "no" && $BREW list --versions miniupnpc >/dev/null; then
                miniupnpc_prefix=$($BREW --prefix miniupnpc 2>/dev/null)
                if test "$suppress_external_warnings" != "no"; then
-                 CPPFLAGS="$CPPFLAGS -isystem $miniupnpc_prefix/include"
+                 CORE_CPPFLAGS="$CORE_CPPFLAGS -isystem $miniupnpc_prefix/include"
                else
-                 CPPFLAGS="$CPPFLAGS -I$miniupnpc_prefix/include"
+                 CORE_CPPFLAGS="$CORE_CPPFLAGS -I$miniupnpc_prefix/include"
                fi
-               LDFLAGS="$LDFLAGS -L$miniupnpc_prefix/lib"
+               CORE_LDFLAGS="$CORE_LDFLAGS -L$miniupnpc_prefix/lib"
              fi
              if test "$use_natpmp" != "no" && $BREW list --version libnatpmp >/dev/null; then
                libnatpmp_prefix=$($BREW --prefix libnatpmp 2>/dev/null)
                if test "$suppress_external_warnings" != "no"; then
-                 CPPFLAGS="$CPPFLAGS -isystem $libnatpmp_prefix/include"
+                 CORE_CPPFLAGS="$CORE_CPPFLAGS -isystem $libnatpmp_prefix/include"
                else
-                 CPPFLAGS="$CPPFLAGS -I$libnatpmp_prefix/include"
+                 CORE_CPPFLAGS="$CORE_CPPFLAGS -I$libnatpmp_prefix/include"
                fi
-               LDFLAGS="$LDFLAGS -L$libnatpmp_prefix/lib"
+               CORE_LDFLAGS="$CORE_LDFLAGS -L$libnatpmp_prefix/lib"
              fi
              ;;
          esac
@@ -764,8 +746,8 @@ case $host in
        esac
      fi
 
-     AX_CHECK_LINK_FLAG([-Wl,-headerpad_max_install_names], [LDFLAGS="$LDFLAGS -Wl,-headerpad_max_install_names"], [], [$LDFLAG_WERROR])
-     CPPFLAGS="$CPPFLAGS -DMAC_OSX -DOBJC_OLD_DISPATCH_PROTOTYPES=0"
+     AX_CHECK_LINK_FLAG([-Wl,-headerpad_max_install_names], [CORE_LDFLAGS="$CORE_LDFLAGS -Wl,-headerpad_max_install_names"], [], [$LDFLAG_WERROR])
+     CORE_CPPFLAGS="$CORE_CPPFLAGS -DMAC_OSX -DOBJC_OLD_DISPATCH_PROTOTYPES=0"
      OBJCXXFLAGS="$CXXFLAGS"
      ;;
    *linux*)
@@ -812,12 +794,17 @@ if test "$use_lcov" = "yes"; then
   AC_SUBST(COV_TOOL_WRAPPER, "cov_tool_wrapper.sh")
   LCOV="$LCOV --gcov-tool $(pwd)/$COV_TOOL_WRAPPER"
 
-  AX_CHECK_LINK_FLAG([--coverage], [LDFLAGS="$LDFLAGS --coverage"],
+  AX_CHECK_LINK_FLAG([--coverage], [CORE_LDFLAGS="$CORE_LDFLAGS --coverage"],
     [AC_MSG_ERROR([lcov testing requested but --coverage linker flag does not work])])
-  AX_CHECK_COMPILE_FLAG([--coverage],[CXXFLAGS="$CXXFLAGS --coverage"],
+  AX_CHECK_COMPILE_FLAG([--coverage],[CORE_CXXFLAGS="$CORE_CXXFLAGS --coverage"],
     [AC_MSG_ERROR([lcov testing requested but --coverage flag does not work])])
-  AC_DEFINE([USE_COVERAGE], [1], [Define this symbol if coverage is enabled])
-  CXXFLAGS="$CXXFLAGS -Og"
+  dnl If coverage is enabled and the user hasn't overriden CXXFLAGS,
+  dnl clear them to prevent autoconfs "-g -O2" being added.
+  dnl Otherwise we'd end up with "--coverage -Og -O0 -g -O2".
+  if test "$CXXFLAGS_overridden" = "no"; then
+    CXXFLAGS=""
+  fi
+  CORE_CXXFLAGS="CORE_CXXFLAGS -Og -O0"
 fi
 
 if test "$use_lcov_branch" != "no"; then
@@ -840,13 +827,13 @@ AC_FUNC_STRERROR_R
 if test "$ac_cv_sys_file_offset_bits" != "" &&
    test "$ac_cv_sys_file_offset_bits" != "no" &&
    test "$ac_cv_sys_file_offset_bits" != "unknown"; then
-  CPPFLAGS="$CPPFLAGS -D_FILE_OFFSET_BITS=$ac_cv_sys_file_offset_bits"
+  CORE_CPPFLAGS="$CORE_CPPFLAGS -D_FILE_OFFSET_BITS=$ac_cv_sys_file_offset_bits"
 fi
 
 if test "$ac_cv_sys_large_files" != "" &&
    test "$ac_cv_sys_large_files" != "no" &&
    test "$ac_cv_sys_large_files" != "unknown"; then
-  CPPFLAGS="$CPPFLAGS -D_LARGE_FILES=$ac_cv_sys_large_files"
+  CORE_CPPFLAGS="$CORE_CPPFLAGS -D_LARGE_FILES=$ac_cv_sys_large_files"
 fi
 
 AC_SEARCH_LIBS([clock_gettime],[rt])
@@ -874,9 +861,15 @@ if test "$TARGET_OS" != "windows"; then
 fi
 
 dnl Check for OpenSSL.
-AC_CHECK_HEADERS([openssl/crypto.h openssl/ssl.h])
+AC_CHECK_HEADER([openssl/crypto.h])
 AC_CHECK_LIB([crypto], [main], [CRYPTO_LIBS=-lcrypto], [AC_MSG_ERROR([crypto library missing])])
+AC_CHECK_HEADER([openssl/ssl.h])
 AC_CHECK_LIB([ssl], [main], [SSL_LIBS=-lssl], [AC_MSG_ERROR([ssl library missing])])
+
+dnl Check for BIP70 Protocol Buffers
+if test "$enable_bip70" != "no"; then
+  BITCOIN_QT_CHECK([PKG_CHECK_MODULES([PROTOBUF], [protobuf], [have_protobuf=yes], [have_protobuf=no])])
+fi
 
 dnl All versions of gcc that we commonly use for building are subject to bug
 dnl https://gcc.gnu.org/bugzilla/show_bug.cgi?id=90384. To work around that,
@@ -938,8 +931,8 @@ dnl These flags are specific do ld64, and may cause issues with other linkers.
 dnl For example: GNU ld will interpret -dead_strip as a -de and then try and use
 dnl "ad_strip" as the symbol for the entry point.
 if test "$TARGET_OS" = "darwin"; then
-  AX_CHECK_LINK_FLAG([-Wl,-dead_strip],        [LDFLAGS="$LDFLAGS -Wl,-dead_strip"],                     [], [$LDFLAG_WERROR])
-  AX_CHECK_LINK_FLAG([-Wl,-dead_strip_dylibs], [LDFLAGS="$LDFLAGS -Wl,-dead_strip_dylibs"],              [], [$LDFLAG_WERROR])
+  AX_CHECK_LINK_FLAG([-Wl,-dead_strip],        [CORE_LDFLAGS="$CORE_LDFLAGS -Wl,-dead_strip"],           [], [$LDFLAG_WERROR])
+  AX_CHECK_LINK_FLAG([-Wl,-dead_strip_dylibs], [CORE_LDFLAGS="$CORE_LDFLAGS -Wl,-dead_strip_dylibs"],    [], [$LDFLAG_WERROR])
   AX_CHECK_LINK_FLAG([-Wl,-bind_at_load],      [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,-bind_at_load"], [], [$LDFLAG_WERROR])
 fi
 
@@ -984,20 +977,20 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[
  [ AC_MSG_RESULT([no]); have_clzll=no;]
 )
 
-dnl Check for mallopt(M_ARENA_MAX) (to set glibc arenas)
-AC_MSG_CHECKING([for mallopt M_ARENA_MAX])
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <malloc.h>]],
- [[ mallopt(M_ARENA_MAX, 1); ]])],
- [ AC_MSG_RESULT([yes]); AC_DEFINE([HAVE_MALLOPT_ARENA_MAX], [1], [Define this symbol if you have mallopt with M_ARENA_MAX]) ],
- [ AC_MSG_RESULT([no])]
-)
-
 dnl Check for malloc_info (for memory statistics information in getmemoryinfo)
 AC_MSG_CHECKING([for getmemoryinfo])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <malloc.h>]],
  [[ int f = malloc_info(0, NULL); ]])],
  [ AC_MSG_RESULT([yes]); AC_DEFINE([HAVE_MALLOC_INFO], [1], [Define this symbol if you have malloc_info]) ],
  [ AC_MSG_RESULT([no])]
+)
+
+dnl Check for mallopt(M_ARENA_MAX) (to set glibc arenas)
+AC_MSG_CHECKING([for mallopt M_ARENA_MAX])
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <malloc.h>]],
+  [[ mallopt(M_ARENA_MAX, 1); ]])],
+  [ AC_MSG_RESULT([yes]); AC_DEFINE([HAVE_MALLOPT_ARENA_MAX], [1], [Define this symbol if you have mallopt with M_ARENA_MAX]) ],
+  [ AC_MSG_RESULT([no])]
 )
 
 dnl Check for posix_fallocate
@@ -1270,7 +1263,7 @@ if test "$enable_fuzz" = "yes"; then
   AX_CHECK_LINK_FLAG(
     [-fsanitize=$use_sanitizers],
     [AC_MSG_RESULT([no])],
-    [AC_MSG_RESULT([yes]); CPPFLAGS="$CPPFLAGS -DPROVIDE_FUZZ_MAIN_FUNCTION"],
+    [AC_MSG_RESULT([yes]); CORE_CPPFLAGS="$CORE_CPPFLAGS -DPROVIDE_FUZZ_MAIN_FUNCTION"],
     [],
     [AC_LANG_PROGRAM([[
       #include <cstdint>
@@ -1283,8 +1276,8 @@ if test "$enable_fuzz" = "yes"; then
 else
   BITCOIN_QT_INIT
 
-  dnl sets $bitcoin_enable_qt, $bitcoin_enable_qt_test, $bitcoin_enable_qt_dbus
-  BITCOIN_QT_CONFIGURE([5.9.5])
+  dnl sets $bitcoin_enable_qt, $bitcoin_enable_qt_test, $bitcoin_enable_qt_dbus.
+  BITCOIN_QT_CONFIGURE([5.11.3])
 
   dnl Keep a copy of the original $QT_INCLUDES and use it when invoking qt's moc
   QT_INCLUDES_UNSUPPRESSED=$QT_INCLUDES
@@ -1294,7 +1287,7 @@ else
     QT_TEST_INCLUDES=SUPPRESS_WARNINGS($QT_TEST_INCLUDES)
   fi
 
-  CPPFLAGS="$CPPFLAGS -DPROVIDE_FUZZ_MAIN_FUNCTION"
+  CORE_CPPFLAGS="$CORE_CPPFLAGS -DPROVIDE_FUZZ_MAIN_FUNCTION"
 fi
 
 if test "$enable_wallet" != "no"; then
@@ -1381,7 +1374,7 @@ fi
 
 dnl Check for reduced exports
 if test "$use_reduce_exports" = "yes"; then
-  AX_CHECK_COMPILE_FLAG([-fvisibility=hidden],[CXXFLAGS="$CXXFLAGS -fvisibility=hidden"],
+  AX_CHECK_COMPILE_FLAG([-fvisibility=hidden],[CORE_CXXFLAGS="$CORE_CXXFLAGS -fvisibility=hidden"],
   [AC_MSG_ERROR([Cannot set default symbol visibility. Use --disable-reduce-exports.])], [$CXXFLAG_WERROR])
   AX_CHECK_LINK_FLAG([-Wl,--exclude-libs,ALL], [RELDFLAGS="-Wl,--exclude-libs,ALL"], [], [$LDFLAG_WERROR])
 fi
@@ -1431,8 +1424,6 @@ if test "$use_qr" != "no"; then
   BITCOIN_QT_CHECK([PKG_CHECK_MODULES([QR], [libqrencode], [have_qrencode=yes], [have_qrencode=no])])
 fi
 
-BITCOIN_QT_CHECK(AC_CHECK_LIB([protobuf] ,[main],[PROTOBUF_LIBS=-lprotobuf], BITCOIN_QT_FAIL(libprotobuf not found)))
-
 dnl ZMQ check
 
 if test "$use_zmq" = "yes"; then
@@ -1454,6 +1445,10 @@ if test "$use_zmq" = "yes"; then
   esac
 fi
 
+if test "$enable_bip70" != "no"; then
+  BITCOIN_QT_CHECK([AC_CHECK_LIB([protobuf], [main], [PROTOBUF_LIBS=-lprotobuf], [have_protobuf=no])])
+fi
+
 save_CXXFLAGS="${CXXFLAGS}"
 CXXFLAGS="${CXXFLAGS} ${CRYPTO_CFLAGS} ${SSL_CFLAGS}"
 AC_CHECK_DECLS([EVP_MD_CTX_new],,,[AC_INCLUDES_DEFAULT
@@ -1461,7 +1456,13 @@ AC_CHECK_DECLS([EVP_MD_CTX_new],,,[AC_INCLUDES_DEFAULT
 ])
 CXXFLAGS="${save_CXXFLAGS}"
 
-BITCOIN_QT_PATH_PROGS([PROTOC], [protoc], [$protoc_bin_path])
+dnl Check for gmp
+AC_CHECK_HEADER([gmp.h])
+AC_CHECK_LIB([gmp], [__gmpz_init], [GMP_LIBS=-lgmp], [AC_MSG_ERROR([libgmp missing])])
+
+if test "$enable_bip70" != "no"; then
+  BITCOIN_QT_PATH_PROGS([PROTOC], [protoc], $protoc_bin_path)
+fi
 
 AC_MSG_CHECKING([whether to build raptoreumd])
 AM_CONDITIONAL([BUILD_BITCOIND], [test $build_bitcoind = "yes"])
@@ -1604,6 +1605,15 @@ if test "$bitcoin_enable_qt" != "no"; then
   else
     AC_MSG_RESULT([no])
   fi
+
+  AC_MSG_CHECKING([whether to build BIP70 Support])
+  if test "$enable_bip70" != "no"; then
+    AC_DEFINE([ENABLE_BIP70], [1], [Define if BIP70 support should be compiled in])
+    enable_bip70=yes
+    AC_MSG_RESULT([yes])
+  else
+    AC_MSG_RESULT([no])
+  fi
 fi
 
 AM_CONDITIONAL([ENABLE_ZMQ], [test "$use_zmq" = "yes"])
@@ -1649,6 +1659,7 @@ AM_CONDITIONAL([USE_BDB], [test "$use_bdb" = "yes"])
 AM_CONDITIONAL([ENABLE_TESTS], [test "$BUILD_TEST" = "yes"])
 AM_CONDITIONAL([ENABLE_QT], [test "$bitcoin_enable_qt" = "yes"])
 AM_CONDITIONAL([ENABLE_QT_TESTS], [test "$BUILD_TEST_QT" = "yes"])
+AM_CONDITIONAL([ENABLE_BIP70], [test "$enable_bip70" = "yes"])
 AM_CONDITIONAL([ENABLE_BENCH], [test "$use_bench" = "yes"])
 AM_CONDITIONAL([USE_QRCODE], [test "$use_qr" = "yes"])
 AM_CONDITIONAL([USE_LCOV], [test "$use_lcov" = "yes"])
@@ -1693,6 +1704,9 @@ AC_SUBST(BITCOIN_CLI_NAME)
 AC_SUBST(BITCOIN_TX_NAME)
 
 AC_SUBST(RELDFLAGS)
+AC_SUBST(CORE_LDFLAGS)
+AC_SUBST(CORE_CPPFLAGS)
+AC_SUBST(CORE_CXXFLAGS)
 AC_SUBST(DEBUG_CPPFLAGS)
 AC_SUBST(WARN_CXXFLAGS)
 AC_SUBST(NOWARN_CXXFLAGS)
@@ -1727,7 +1741,6 @@ AC_SUBST(NATPMP_CPPFLAGS)
 AC_SUBST(NATPMP_LIBS)
 AC_SUBST(CRYPTO_LIBS)
 AC_SUBST(SSL_LIBS)
-AC_SUBST(PROTOBUF_LIBS)
 AC_SUBST(DSYMUTIL_FLAT)
 AC_SUBST(HAVE_GMTIME_R)
 AC_SUBST(HAVE_FDATASYNC)
@@ -1737,6 +1750,7 @@ AC_SUBST(HAVE_BUILTIN_PREFETCH)
 AC_SUBST(HAVE_MM_PREFETCH)
 AC_SUBST(HAVE_STRONG_GETAUXVAL)
 AC_SUBST(HAVE_EVHTTP_CONNECTION_GET_PEER_CONST_CHAR)
+AC_SUBST(PROTOBUF_LIBS)
 AC_CONFIG_FILES([Makefile src/Makefile doc/man/Makefile share/setup.nsi share/qt/Info.plist test/config.ini])
 AC_CONFIG_FILES([contrib/devtools/split-debug.sh],[chmod +x contrib/devtools/split-debug.sh])
 AM_COND_IF([HAVE_DOXYGEN], [AC_CONFIG_FILES([doc/Doxyfile])])
@@ -1789,7 +1803,8 @@ if test "$enable_wallet" != "no"; then
     echo "    with bdb          = $use_bdb"
 fi
 echo "  with gui / qt       = $bitcoin_enable_qt"
-if test $bitcoin_enable_qt != "no"; then
+if test "$bitcoin_enable_qt" != "no"; then
+    echo "    with_bip70        = $enable_bip70"
     echo "    with qr           = $use_qr"
 fi
 echo "  with zmq            = $use_zmq"
@@ -1812,9 +1827,9 @@ echo "  build os            = $build_os"
 echo
 echo "  CC                  = $CC"
 echo "  CFLAGS              = $PTHREAD_CFLAGS $CFLAGS"
-echo "  CPPFLAGS            = $DEBUG_CPPFLAGS $HARDENED_CPPFLAGS $CPPFLAGS"
+echo "  CPPFLAGS            = $DEBUG_CPPFLAGS $HARDENED_CPPFLAGS $CORE_CPPFLAGS $CPPFLAGS"
 echo "  CXX                 = $CXX"
-echo "  CXXFLAGS            = $LTO_CXXFLAGS $DEBUG_CXXFLAGS $HARDENED_CXXFLAGS $WARN_CXXFLAGS $NOWARN_CXXFLAGS $ERROR_CXXFLAGS $GPROF_CXXFLAGS $CXXFLAGS"
-echo "  LDFLAGS             = $LTO_LDFLAGS $PTHREAD_LIBS $HARDENED_LDFLAGS $GPROF_LDFLAGS $LDFLAGS"
+echo "  CXXFLAGS            = $LTO_CXXFLAGS $DEBUG_CXXFLAGS $HARDENED_CXXFLAGS $WARN_CXXFLAGS $NOWARN_CXXFLAGS $ERROR_CXXFLAGS $GPROF_CXXFLAGS $CORE_CXXFLAGS $CXXFLAGS"
+echo "  LDFLAGS             = $LTO_LDFLAGS $PTHREAD_LIBS $HARDENED_LDFLAGS $GPROF_LDFLAGS $CORE_LDFLAGS $LDFLAGS"
 echo "  ARFLAGS             = $ARFLAGS"
 echo

@@ -4,6 +4,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#if defined(HAVE_CONFIG_H)
+#include <config/raptoreum-config.h>
+#endif
+
 #include <qt/sendcoinsdialog.h>
 #include <qt/forms/ui_sendcoinsdialog.h>
 
@@ -330,7 +334,9 @@ void SendCoinsDialog::send(QList<SendCoinsRecipient> recipients)
 
         QString recipientElement;
 
+#ifdef ENABLE_BIP70
         if (!rcp.paymentRequest.IsInitialized()) // normal payment
+#endif
         {
             if(rcp.label.length() > 0) // label with address
             {
@@ -342,6 +348,7 @@ void SendCoinsDialog::send(QList<SendCoinsRecipient> recipients)
                 recipientElement = tr("%1 to %2").arg(amount, address);
             }
         }
+#ifdef ENABLE_BIP70
         else if(!rcp.authenticatedMerchant.isEmpty()) // authenticated payment request
         {
             recipientElement = tr("%1 to %2").arg(amount, GUIUtil::HtmlEscape(rcp.authenticatedMerchant));
@@ -350,6 +357,8 @@ void SendCoinsDialog::send(QList<SendCoinsRecipient> recipients)
         {
             recipientElement = tr("%1 to %2").arg(amount, address);
         }
+#endif
+
         //std::cout << rcp.amount << " is future output " << rcp.isFutureOutput << "\n";
         if(rcp.isFutureOutput) {
             hasFuture = true;

@@ -447,7 +447,9 @@ void BitcoinApplication::addWallet(WalletModel* walletModel)
         window->setCurrentWallet(walletModel);
     }
 
+#ifdef ENABLE_BIP70
     connect(walletModel, &WalletModel::coinsSent, paymentServer, &PaymentServer::fetchPaymentACK);
+#endif
     connect(walletModel, &WalletModel::unload, this, &BitcoinApplication::removeWallet);
 
     m_wallet_models.push_back(walletModel);
@@ -474,7 +476,9 @@ void BitcoinApplication::initializeResult(bool success)
         // Log this only after AppInitMain finishes, as then logging setup is guaranteed complete
         qWarning() << "Platform customization:" << gArgs.GetArg("-uiplatform", BitcoinGUI::DEFAULT_UIPLATFORM).c_str();
 #ifdef ENABLE_WALLET
+#ifdef ENABLE_BIP70
         PaymentServer::LoadRootCAs();
+#endif
         paymentServer->setOptionsModel(optionsModel);
 #endif
 
@@ -484,7 +488,6 @@ void BitcoinApplication::initializeResult(bool success)
 #ifdef ENABLE_WALLET
         m_handler_load_wallet = m_node.handleLoadWallet([this](std::unique_ptr<interfaces::Wallet> wallet) {
             WalletModel* wallet_model = new WalletModel(std::move(wallet), m_node, optionsModel, nullptr);
-            // Fix wallet model thread affinity.
             wallet_model->moveToThread(thread());
             QMetaObject::invokeMethod(this, "addWallet", Qt::QueuedConnection, Q_ARG(WalletModel*, wallet_model));
         });
@@ -545,7 +548,7 @@ WId BitcoinApplication::getMainWinId() const
 
 static void SetupUIArgs()
 {
-#ifdef ENABLE_WALLET
+#if defined(ENABLE_WALLET) && defined(ENABLE_BIP70)
     gArgs.AddArg("-allowselfsignedrootcertificates", strprintf("Allow self signed root certificates (default: %u)", DEFAULT_SELFSIGNED_ROOTCERTS), true, OptionsCategory::GUI);
 #endif
     gArgs.AddArg("-choosedatadir", strprintf(QObject::tr("Choose data directory on startup (default: %u)").toStdString(), DEFAULT_CHOOSE_DATADIR), false, OptionsCategory::GUI);
@@ -564,6 +567,7 @@ static void SetupUIArgs()
     gArgs.AddArg("-windowtitle=<name>", _("Sets a window title which is appended to \"Raptoreum Core - \""), false, OptionsCategory::GUI);
 }
 
+#ifndef BITCOIN_QT_TEST
 int main(int argc, char *argv[])
 {
     RegisterPrettyTerminateHander();
@@ -601,9 +605,6 @@ int main(int argc, char *argv[])
     //   IMPORTANT if it is no longer a typedef use the normal variant above
     qRegisterMetaType< CAmount >("CAmount");
     qRegisterMetaType< std::function<void()> >("std::function<void()>");
-#ifdef ENABLE_WALLET
-    qRegisterMetaType<WalletModel*>("WalletModel*");
-#endif
 
     /// 2. Parse command-line options. We do this after qt in order to show an error if there are
     //     problems parsing these.
@@ -829,3 +830,4 @@ int main(int argc, char *argv[])
     }
     return rv;
 }
+#endif // BITCOIN_QT_TEST

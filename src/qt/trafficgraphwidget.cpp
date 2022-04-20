@@ -8,6 +8,7 @@
 #include <qt/guiutil.h>
 
 #include <QPainter>
+#include <QPainterPath>
 #include <QColor>
 #include <QTimer>
 

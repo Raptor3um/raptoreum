@@ -1,8 +1,8 @@
 .NOTPARALLEL :
 
 # Pattern rule to print variables, e.g. make print-top_srcdir
-print-%: FORCE
-	@echo '$*'='$($*)'
+print-%:
+	@echo $* = $($*)
 
 # When invoking a sub-make, keep only the command line variable definitions
 # matching the pattern in the filter function.
@@ -33,10 +33,11 @@ WORK_PATH = $(BASEDIR)/work
 BASE_CACHE ?= $(BASEDIR)/built
 SDK_PATH ?= $(BASEDIR)/SDKs
 NO_QT ?=
+PROTOBUF ?=
+NO_QR ?=
 NO_WALLET ?=
 NO_UPNP ?=
 NO_NATPMP ?=
-MULTIPROCESS ?=
 FALLBACK_DOWNLOAD_PATH ?= https://bitcoincore.org/depends-sources
 
 BUILD = $(shell ./config.guess)
@@ -100,50 +101,43 @@ include builders/$(build_os).mk
 include builders/default.mk
 include packages/packages.mk
 
-# Previousely, we directly invoked the well-known prgrams using $(shell ...)
-# to construct build_id_string. However, that was problematic because:
-#
-# 1. When invoking a shell, GNU Make special-cases exit code 127 (command not
-#    found) by not capturing the output but instead passing it through. This is
-#    not done for any other exit code.
-#
-# 2. Characters like '#' (from these programs' output) would end up in make
-#    variables like build_id_string, which would be wrongly interpreted by make
-#    when these variables were used.
-#
-# Therefore, we should avoid having arbitrary strings in make variables where
-# possible. The gen_id script used here hashes the output to construct a
-# "make-safe" id.
-#
-# Also note that these lines need to be:
-#
-#     1. After including {hosts,builders}/*.mk, since they rely on the tool
-#        variables (e.g. build_CC, host_STRIP, etc.) to be set.
-#
-#     2. Before including packages/*.mk (excluding packages/packages.mk), since
-#        they rely on the build_id variables
-#
-build_id:=$(shell env CC='$(build_CC)' CXX='$(build_CXX)' AR='$(build_AR)' RANLIB='$(build_RANLIB)' STRIP='$(build_STRIP)' SHA256SUM='$(build_SHA256SUM)' DEBUG='$(DEBUG)' ./gen_id '$(BUILD_ID_SALT)')
- $(host_arch)_$(host_os)_id:=$(shell env CC='$(host_CC)' CXX='$(host_CXX)' AR='$(host_AR)' RANLIB='$(host_RANLIB)' STRIP='$(host_STRIP)' SHA256SUM='$(build_SHA256SUM)' DEBUG='$(DEBUG)' ./gen_id '$(HOST_ID_SALT)')
+build_id_string:=$(BUILD_ID_SALT)
+build_id_string+=$(shell $(build_CC) --version 2>/dev/null)
+build_id_string+=$(shell $(build_AR) --version 2>/dev/null)
+build_id_string+=$(shell $(build_CXX) --version 2>/dev/null)
+build_id_string+=$(shell $(build_RANLIB) --version 2>/dev/null)
+build_id_string+=$(shell $(build_STRIP) --version 2>/dev/null)
 
-qt_packages_$(NO_QT) = $(qt_packages) $(qt_$(host_os)_packages) $(qt_$(host_arch)_$(host_os)_packages)
+$(host_arch)_$(host_os)_id_string:=$(HOST_ID_SALT)
+$(host_arch)_$(host_os)_id_string+=$(shell $(host_CC) --version 2>/dev/null)
+$(host_arch)_$(host_os)_id_string+=$(shell $(host_AR) --version 2>/dev/null)
+$(host_arch)_$(host_os)_id_string+=$(shell $(host_CXX) --version 2>/dev/null)
+$(host_arch)_$(host_os)_id_string+=$(shell $(host_RANLIB) --version 2>/dev/null)
+$(host_arch)_$(host_os)_id_string+=$(shell $(host_STRIP) --version 2>/dev/null)
+
+ifneq ($(strip $(FORCE_USE_SYSTEM_CLANG)),)
+# Make sure that cache is invalidated when switching between system and
+# depends-managed, pinned clang
+build_id_string+=system_clang
+$(host_arch)_$(host_os)_id_string+=system_clang
+endif
+
+qrencode_packages_$(NO_QR) = $(qrencode_$(host_os)_packages)
+
+qt_packages_$(NO_QT) = $(qt_packages) $(qt_$(host_os)_packages) $(qt_$(host_arch)_$(host_os)_packages) $(qrencode_packages_)
+
 wallet_packages_$(NO_WALLET) = $(wallet_packages)
-
 upnp_packages_$(NO_UPNP) = $(upnp_packages)
 natpmp_packages_$(NO_NATPMP) = $(natpmp_packages)
 
-multiprocess_packages_$(MULTIPROCESS) = $(multiprocess_packages)
+protobuf_packages_$(PROTOBUF) = $(protobuf_packages)
 
 packages += $($(host_arch)_$(host_os)_packages) $($(host_os)_packages) $(qt_packages_) $(wallet_packages_) $(upnp_packages_) $(natpmp_packages_)
 native_packages += $($(host_arch)_$(host_os)_native_packages) $($(host_os)_native_packages)
 
-ifneq ($(qt_packages_),)
-native_packages += $(qt_native_packages)
-endif
-
-ifeq ($(multiprocess_packages_),)
-packages += $(multiprocess_packages)
-native_packages += $(multiprocess_native_packages)
+ifeq ($(protobuf_packages_),)
+native_packages += $(protobuf_native_packages)
+packages += $(protobuf_packages)
 endif
 
 all_packages = $(packages) $(native_packages)
@@ -162,7 +156,7 @@ $(host_prefix)/.stamp_$(final_build_id): $(native_packages) $(packages)
 	mkdir -p $(@D)
 	echo copying packages: $^
 	echo to: $(@D)
-	cd $(@D); $(foreach package,$^, $(build_TAR) xf $($(package)_cached); )
+	cd $(@D); $(foreach package,$^, tar xf $($(package)_cached); )
 	touch $@
 
 # $PATH is not preserved between ./configure and make by convention. It is
@@ -206,13 +200,14 @@ $(host_prefix)/share/config.site : config.site.in $(host_prefix)/.stamp_$(final_
             -e 's|@LDFLAGS@|$(strip $(host_LDFLAGS) $(host_$(release_type)_LDFLAGS))|' \
             -e 's|@allow_host_packages@|$(ALLOW_HOST_PACKAGES)|' \
             -e 's|@no_qt@|$(NO_QT)|' \
+            -e 's|@no_qr@|$(NO_QR)|' \
+            -e 's|@enable_bip70@|$(PROTOBUF)|' \
             -e 's|@no_wallet@|$(NO_WALLET)|' \
             -e 's|@no_upnp@|$(NO_UPNP)|' \
             -e 's|@no_natpmp@|$(NO_NATPMP)|' \
-            -e 's|@multiprocess@|$(MULTIPROCESS)|' \
             -e 's|@debug@|$(DEBUG)|' \
             $< > $@
-	     touch $@
+	      touch $@
 
 
 define check_or_remove_cached
@@ -260,5 +255,4 @@ download: download-osx download-linux download-win
 $(foreach package,$(all_packages),$(eval $(call ext_add_stages,$(package))))
 
 .PHONY: install cached clean clean-all download-one download-osx download-linux download-win download check-packages check-sources
-.PHONY: FORCE
 $(V).SILENT:

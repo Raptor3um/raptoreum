@@ -10,11 +10,11 @@ SetCompressor /SOLID lzma
 !define URL https://raptoreum.com/
 
 # MUI Symbol Definitions
-!define MUI_ICON "/Users/michal/work/rtm_develop/raptoreum/share/pixmaps/raptoreum.ico"
-!define MUI_WELCOMEFINISHPAGE_BITMAP "/Users/michal/work/rtm_develop/raptoreum/share/pixmaps/nsis-wizard.bmp"
+!define MUI_ICON "/home/michal/work/rtm-qt/raptoreum/share/pixmaps/raptoreum.ico"
+!define MUI_WELCOMEFINISHPAGE_BITMAP "/home/michal/work/rtm-qt/raptoreum/share/pixmaps/nsis-wizard.bmp"
 !define MUI_HEADERIMAGE
 !define MUI_HEADERIMAGE_RIGHT
-!define MUI_HEADERIMAGE_BITMAP "/Users/michal/work/rtm_develop/raptoreum/share/pixmaps/nsis-header.bmp"
+!define MUI_HEADERIMAGE_BITMAP "/home/michal/work/rtm-qt/raptoreum/share/pixmaps/nsis-header.bmp"
 !define MUI_FINISHPAGE_NOAUTOCLOSE
 !define MUI_STARTMENUPAGE_REGISTRY_ROOT HKLM
 !define MUI_STARTMENUPAGE_REGISTRY_KEY ${REGKEY}
@@ -23,7 +23,7 @@ SetCompressor /SOLID lzma
 !define MUI_FINISHPAGE_RUN "$WINDIR\explorer.exe"
 !define MUI_FINISHPAGE_RUN_PARAMETERS $INSTDIR\raptoreum-qt
 !define MUI_UNICON "${NSISDIR}\Contrib\Graphics\Icons\modern-uninstall.ico"
-!define MUI_UNWELCOMEFINISHPAGE_BITMAP "/Users/michal/work/rtm_develop/raptoreum/share/pixmaps/nsis-wizard.bmp"
+!define MUI_UNWELCOMEFINISHPAGE_BITMAP "/home/michal/work/rtm-qt/raptoreum/share/pixmaps/nsis-wizard.bmp"
 !define MUI_UNFINISHPAGE_NOAUTOCLOSE
 
 # Included files
@@ -49,7 +49,7 @@ Var StartMenuGroup
 !insertmacro MUI_LANGUAGE English
 
 # Installer attributes
-OutFile /Users/michal/work/rtm_develop/raptoreum/raptoreumcore-${VERSION}-win@WINDOWS_BITS@-setup.exe
+OutFile /home/michal/work/rtm-qt/raptoreum/raptoreumcore-${VERSION}-win@WINDOWS_BITS@-setup.exe
 !if "@WINDOWS_BITS@" == "64"
 InstallDir $PROGRAMFILES64\RaptoreumCore
 !else
@@ -74,14 +74,14 @@ ShowUninstDetails show
 Section -Main SEC0000
     SetOutPath $INSTDIR
     SetOverwrite on
-    File /Users/michal/work/rtm_develop/raptoreum/release/raptoreum-qt
-    File /oname=COPYING.txt /Users/michal/work/rtm_develop/raptoreum/COPYING
-    File /oname=readme.txt /Users/michal/work/rtm_develop/raptoreum/doc/README_windows.txt
+    File /home/michal/work/rtm-qt/raptoreum/release/raptoreum-qt
+    File /oname=COPYING.txt /home/michal/work/rtm-qt/raptoreum/COPYING
+    File /oname=readme.txt /home/michal/work/rtm-qt/raptoreum/doc/README_windows.txt
     SetOutPath $INSTDIR\daemon
-    File /Users/michal/work/rtm_develop/raptoreum/release/raptoreumd
-    File /Users/michal/work/rtm_develop/raptoreum/release/raptoreum-cli
+    File /home/michal/work/rtm-qt/raptoreum/release/raptoreumd
+    File /home/michal/work/rtm-qt/raptoreum/release/raptoreum-cli
     SetOutPath $INSTDIR\doc
-    File /r /x Makefile* /Users/michal/work/rtm_develop/raptoreum/doc\*.*
+    File /r /x Makefile* /home/michal/work/rtm-qt/raptoreum/doc\*.*
     SetOutPath $INSTDIR
     WriteRegStr HKCU "${REGKEY}\Components" Main 1
 SectionEnd

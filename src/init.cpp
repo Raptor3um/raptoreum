@@ -458,8 +458,8 @@ void SetupServerArgs()
                                             "-dbcrashratio", "-forcecompactdb", "-printcrashinfo", "-blockminsize",
                                             "-daemon", "-logthreadnames", "-whitelistalwaysrelay",
                                             // GUI Args. These will be overwritten by SetupUIArgs for the GUI
-                                            "-allowselfsignedrootcertificates", "-choosedatadir", "-lang=<lang>", "-min",
-                                            "-resetguisettings", "-rootcertificates=<file>", "-splash", "-uiplatform"};
+                                            "-choosedatadir", "-lang=<lang>", "-min", "-resetguisettings", "-splash",
+                                            "-allowselfsignedrootcertificates", "-rootcertificates=<file>", "-uiplatform"};
 
     // Set all of the args and their help
     // When adding new options to the categories, please keep and ensure alphabetical ordering.
