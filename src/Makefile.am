@@ -425,6 +425,7 @@ libraptoreum_wallet_a_SOURCES = \
   coinjoin/coinjoin-util.cpp \
   interfaces/wallet.cpp \
   keepass.cpp \
+  wallet/coincontrol.cpp \
   wallet/crypter.cpp \
   wallet/db.cpp \
   wallet/fees.cpp \

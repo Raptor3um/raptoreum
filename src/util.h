@@ -412,6 +412,7 @@ void SetThreadPriority(int nPriority);
 
 namespace util {
 
+//! Simplification of std isertion
 template <typename Tdst, typename Tsrc>
 inline void insert(Tdst& dst, const Tsrc& src) {
   dst.insert(dst.begin(), src.begin(), src.end());

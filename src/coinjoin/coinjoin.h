@@ -462,6 +462,7 @@ public:
     static CAmount GetMaxCollateralAmount() { return GetCollateralAmount() * 4; }
 
     static bool IsCollateralAmount(CAmount nInputAmount);
+    static int CalculateAmountPriority(CAmount nInputAmount);
 
     static void AddDSTX(const CCoinJoinBroadcastTx& dstx);
     static CCoinJoinBroadcastTx GetDSTX(const uint256& hash);
