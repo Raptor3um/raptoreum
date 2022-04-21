@@ -85,9 +85,8 @@ libconftest.dylib*
 # Compilation and Qt preprocessor part
 *.qm
 Makefile
-raptoreum-qt
+src/qt/raptoreum-qt
 Raptoreum-Qt.app
-background.tiff*
 !/depends/Makefile
 
 # Unit-tests
@@ -101,7 +100,7 @@ qrc_*.cpp
 .DS_Store
 build
 *.dSYM
-
+._*
 #lcov
 *.gcno
 *.gcda
@@ -152,3 +151,6 @@ dist/
 /raptoreum.iml
 /testnet3_binary/
 /testnet4/
+
+osx_volname
+dist/

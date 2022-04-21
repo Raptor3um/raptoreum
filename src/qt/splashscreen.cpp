@@ -20,7 +20,6 @@
 #include <interfaces/wallet.h>
 #include <ui_interface.h>
 #include <util.h>
-#include <version.h>
 
 #include <functional>
 
@@ -56,7 +55,7 @@ SplashScreen::SplashScreen(interfaces::Node& node, Qt::WindowFlags f, const Netw
     float scale = qApp->devicePixelRatio();
 
     // define text to place
-    QString titleText    = tr(PACKAGE_NAME);
+    QString titleText    = PACKAGE_NAME;
     QString versionText  = QString::fromStdString(FormatFullVersion()).remove(0, 1);
     QString titleAddText = networkStyle->getTitleAddText();
 
@@ -148,10 +147,8 @@ bool SplashScreen::eventFilter(QObject * obj, QEvent * ev) {
     return QObject::eventFilter(obj, ev);
 }
 
-void SplashScreen::slotFinish(QWidget *mainWin)
+void SplashScreen::finish()
 {
-    Q_UNUSED(mainWin);
-
     /* If the window is minimized, hide() will be ignored. */
     /* Make sure we de-minimize the splashscreen window before hiding */
     if (isMinimized())
@@ -162,12 +159,13 @@ void SplashScreen::slotFinish(QWidget *mainWin)
 
 static void InitMessage(SplashScreen *splash, const std::string &message)
 {
-    QMetaObject::invokeMethod(splash, "showMessage",
+    bool invoked = QMetaObject::invokeMethod(splash, "showMessage",
         Qt::QueuedConnection,
         Q_ARG(QString, QString::fromStdString(message)),
         Q_ARG(int, Qt::AlignBottom | Qt::AlignHCenter),
         Q_ARG(QColor, Qt::white));
 //      Q_ARG(QColor, GUIUtil::getThemedQColor(GUIUtil::ThemedColor::DEFAULT)));
+    assert(invoked);
 }
 
 static void ShowProgress(SplashScreen *splash, const std::string &title, int nProgress, bool resume_possible)

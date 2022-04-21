@@ -7,7 +7,6 @@
 #ifndef BITCOIN_QT_CLIENTMODEL_H
 #define BITCOIN_QT_CLIENTMODEL_H
 
-#include <evo/deterministicmns.h>
 #include <interfaces/node.h>
 #include <sync.h>
 
@@ -40,6 +39,9 @@ enum NumConnections {
     CONNECTIONS_OUT  = (1U << 1),
     CONNECTIONS_ALL  = (CONNECTIONS_IN | CONNECTIONS_OUT),
 };
+
+class CDeterministicMNList;
+typedef std::shared_ptr<CDeterministicMNList> CDeterministicMNListPtr;
 
 /** Model for Raptoreum network client. */
 class ClientModel : public QObject
@@ -97,13 +99,14 @@ private:
     PeerTableModel *peerTableModel;
     BanTableModel *banTableModel;
 
-    QTimer *pollTimer;
+    //! A thread tp interact with m_node asynchronously
+    QThread* const m_thread;
 
     // The cache for mn list is not technically needed because CDeterministicMNManager
     // caches it internally for recent blocks but it's not enough to get consistent
     // representation of the list in UI during initial sync/reindex, so we cache it here too.
     mutable RecursiveMutex cs_mnlinst; // protects mnListCached
-    CDeterministicMNList mnListCached;
+    CDeterministicMNListPtr mnListCached;
 
     void subscribeToCoreSignals();
     void unsubscribeFromCoreSignals();
@@ -126,7 +129,6 @@ Q_SIGNALS:
     void showProgress(const QString &title, int nProgress);
 
 public Q_SLOTS:
-    void updateTimer();
     void updateNumConnections(int numConnections);
     void updateNetworkActive(bool networkActive);
     void updateAlert();

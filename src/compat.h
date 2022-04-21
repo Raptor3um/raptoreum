@@ -10,20 +10,7 @@
 #include <config/raptoreum-config.h>
 #endif
 
-#include <type_traits>
-
-// GCC 4.8 is missing some C++11 type_traits,
-// https://www.gnu.org/software/gcc/gcc-5/changes.html
-#if defined(__GNUC__) && !defined(__clang__) && __GNUC__ < 5
-#define IS_TRIVIALLY_CONSTRUCTIBLE std::has_trivial_default_constructor
-#else
-#define IS_TRIVIALLY_CONSTRUCTIBLE std::is_trivially_default_constructible
-#endif
-
 #ifdef WIN32
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN 1
-#endif
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
@@ -104,10 +91,6 @@ typedef int32_t ssize_t;
 #ifndef THREAD_PRIORITY_ABOVE_NORMAL
 #define THREAD_PRIORITY_ABOVE_NORMAL    (-2)
 #endif
-
-#if HAVE_DECL_STRNLEN == 0
-size_t strnlen( const char *start, size_t max_len);
-#endif // HAVE_DECL_STRNLEN
 
 #ifndef WIN32
 typedef void* sockopt_arg_type;

@@ -23,8 +23,8 @@ class ConfArgsTest(BitcoinTestFramework):
             conf.write('includeconf={}\n'.format(inc_conf_file_path))
 
         with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
-            conf.write('-dash=1\n')
-        self.nodes[0].assert_start_raises_init_error(expected_msg='Error reading configuration file: parse error on line 1: -dash=1, options in configuration file must be specified without leading -')
+            conf.write('-raptoreum=1\n')
+        self.nodes[0].assert_start_raises_init_error(expected_msg='Error reading configuration file: parse error on line 1: -raptoreum=1, options in configuration file must be specified without leading -')
 
         with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
             conf.write('nono\n')

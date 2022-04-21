@@ -398,7 +398,7 @@ struct X509Deleter {
 
 namespace // Anon namnespace
 {
-    std:unique_ptr<X509_STORE, X509StoreDeleter> certStore;
+    std::unique_ptr<X509_STORE, X509StoreDeleter> certStore;
 }
 
 static void ReportInvalidCertificate(const QSslCertificate& cert)
@@ -437,7 +437,7 @@ void PaymentServer::LoadRootCAs(X509_STORE* _store)
 
     certList = QSslCertificate::fromPath(certFile);
     // Use those certificateswhen fetching payment request, too:
-    QSslConfiguration::defaultConfiguration().setCertificates(certList);
+    QSslConfiguration::defaultConfiguration().setCaCertificates(certList);
   } else {
     certList = QSslConfiguration::systemCaCertificates();
   }
@@ -461,11 +461,11 @@ void PaymentServer::LoadRootCAs(X509_STORE* _store)
       continue;
     }
 
-    QByteArray certData = fert.toDer();
+    QByteArray certData = cert.toDer();
     const unsigned char *data = (const unsigned char *)certData.data();
 
     std::unique_ptr<X509, X509Deleter> x509(d2i_X509(0, &data, certData.size()));
-    if (x509 && X509_STORE_add_cert(certStore.get(), X509.get())) {
+    if (x509 && X509_STORE_add_cert(certStore.get(), x509.get())) {
       // Note: X509_STORE increases the reference count to the X509 object,
       // we still have to release our refernce to it.
       ++nRootCerts;

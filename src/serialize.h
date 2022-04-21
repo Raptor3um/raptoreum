@@ -9,8 +9,6 @@
 #include <compat/endian.h>
 
 #include <algorithm>
-#include <cstring>
-#include <assert.h>
 #include <ios>
 #include <limits>
 #include <list>
@@ -145,25 +143,25 @@ template<typename Stream> inline uint64_t ser_readdata64(Stream &s)
 inline uint64_t ser_double_to_uint64(double x)
 {
     uint64_t tmp;
-    std::memcpy(&tmp, &x, sizeof(x));
+    memcpy(&tmp, &x, sizeof(x));
     return tmp;
 }
 inline uint32_t ser_float_to_uint32(float x)
 {
     uint32_t tmp;
-    std::memcpy(&tmp, &x, sizeof(x));
+    memcpy(&tmp, &x, sizeof(x));
     return tmp;
 }
 inline double ser_uint64_to_double(uint64_t y)
 {
     double tmp;
-    std::memcpy(&tmp, &y, sizeof(y));
+    memcpy(&tmp, &y, sizeof(y));
     return tmp;
 }
 inline float ser_uint32_to_float(uint32_t y)
 {
     float tmp;
-    std::memcpy(&tmp, &y, sizeof(y));
+    memcpy(&tmp, &y, sizeof(y));
     return tmp;
 }
 

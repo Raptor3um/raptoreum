@@ -6,9 +6,6 @@
 #include <policy/policy.h>
 #include <txmempool.h>
 
-#include <list>
-#include <vector>
-
 static void AddTx(const CTransaction& tx, const CAmount& nFee, const CAmount& specialTxFee, CTxMemPool& pool) EXCLUSIVE_LOCKS_REQUIRED(pool.cs)
 {
     int64_t nTime = 0;

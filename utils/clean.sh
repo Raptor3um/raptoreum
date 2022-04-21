@@ -68,13 +68,15 @@ clean_dirs .deps
 clean_dirs .libs
 clean_dirs __pycache__
 
-clean_exe src/bench/bench_bitcoin
+clean_exe src/bench/bench_raptoreum
 clean_exe src/raptoreum-cli
 clean_exe src/raptoreumd
 clean_exe src/raptoreum-gtest
 clean_exe src/raptoreum-tx
 clean_exe src/test/test_raptoreum
 clean_exe src/test/test_raptoreum_fuzzy
+clean_exe src/qt/raptoreum-qt
+clean_exe src/qt/test/test_raptoreum-qt
 
 clean_exe src/leveldb/db_bench
 clean_exe src/leveldb/leveldbutil

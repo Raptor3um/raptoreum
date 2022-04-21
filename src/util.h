@@ -18,6 +18,7 @@
 
 #include <attributes.h>
 #include <compat.h>
+#include <compat/assumptions.h>
 #include <fs.h>
 #include <logging.h>
 #include <sync.h>
@@ -27,14 +28,11 @@
 #include <utiltime.h>
 #include <amount.h>
 
-#include <atomic>
 #include <exception>
 #include <map>
 #include <set>
 #include <stdint.h>
 #include <string>
-#include <unordered_map>
-#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -91,7 +89,7 @@ bool FileCommit(FILE *file);
 bool TruncateFile(FILE *file, unsigned int length);
 int RaiseFileDescriptorLimit(int nMinFD);
 void AllocateFileRange(FILE *file, unsigned int offset, unsigned int length);
-bool RenameOver(fs::path src, fs::path dest);
+[[nodiscard]] bool RenameOver(fs::path src, fs::path dest);
 bool LockDirectory(const fs::path& directory, const std::string lockfile_name, bool probe_only=false);
 void UnlockDirectory(const fs::path& dirctory, const std::string& lockfile_name);
 bool DirIsWritable(const fs::path& directory);
@@ -158,7 +156,8 @@ enum class OptionsCategory {
     HIDDEN // Always the last option to avoid printing these in the help.
 };
 
-struct SectionInfo {
+struct SectionInfo
+{
     std::string m_name;
     std::string m_file;
     int m_line;
@@ -166,6 +165,24 @@ struct SectionInfo {
 
 class ArgsManager
 {
+public:
+    enum Flags {
+        NONE = 0x00,
+        // Boolean options can accept negation syntaz -noOPTION or -noOPTION=1
+        ALLOW_BOOL = 0x01,
+        ALLOW_INT = 0x02,
+        ALLOW_STRING = 0x04,
+        ALLOW_ANY = ALLOW_BOOL | ALLOW_INT | ALLOW_STRING,
+        DEBUG_ONLY = 0x100,
+        /* Some options would cause cross-contamination if values for
+         * mainnet were used while running regtest/testnet (or vice-versa).
+         * Setting them as NETWORK_ONLY ensures that sharing a config file
+         * between mainnet and regtest/testnet will not cause problems
+         * due to these parameters by accident
+         */
+        NETWORK_ONLY = 0x200,
+    };
+
 protected:
     friend class ArgsManagerHelper;
 
@@ -173,13 +190,7 @@ protected:
     {
         std::string m_help_param;
         std::string m_help_text;
-        bool m_debug_only;
-
-        Arg(const std::string& help_param, const std::string& help_text, bool debug_only)
-            : m_help_param(help_param),
-              m_help_text(help_text),
-              m_debug_only(debug_only)
-        {};
+        unsigned int m_flags;
     };
 
     mutable RecursiveMutex cs_args;
@@ -313,7 +324,7 @@ public:
     /**
      * Add argument
      */
-    void AddArg(const std::string& name, const std::string& help, const bool debug_only, const OptionsCategory& cat);
+    void AddArg(const std::string& name, const std::string& help, unsigned int flags, const OptionsCategory& cat);
 
     /**
      * Add many hidden arguments
@@ -326,11 +337,12 @@ public:
     void ClearArgs() {
         LOCK(cs_args);
         m_available_args.clear();
+        m_network_only_args.clear();
     }
 
     std::string GetHelpMessage() const;
 
-    bool IsArgKnown(const std::string& key) const;
+    unsigned int FlagsOfKnownArg(const std::string& key) const;
 };
 
 extern ArgsManager gArgs;
@@ -394,24 +406,33 @@ std::string CopyrightHolders(const std::string& strPrefix, unsigned int nStartYe
  * @return The return value of sched_setschedule(), or 1 on systems without
  * sched_setchedule().
  */
-int ScheduleBatchPriority(void);
+int ScheduleBatchPriority();
 
 void SetThreadPriority(int nPriority);
 
 namespace util {
 
+template <typename Tdst, typename Tsrc>
+inline void insert(Tdst& dst, const Tsrc& src) {
+  dst.insert(dst.begin(), src.begin(), src.end());
+}
+template <typename TsetT, typename Tsrc>
+inline void insert(std::set<TsetT>& dst, const Tsrc& src) {
+  dst.insert(src.begin(), src.end());
+}
+
 #ifdef WIN32
 class WinCmdLineArgs
 {
 public:
-    WinCmdLineArgs();
-    ~WinCmdLineArgs();
-    std::pair<int, char**> get();
+  WinCmdLineArgs();
+  ~WinCmdLineArgs();
+  std::pair<int, char**> get();
 
 private:
-    int argc;
-    char** argv;
-    std::vector<std::string> args;
+  int argc;
+  char** argv;
+  std::vector<std::string> args;
 };
 #endif
 

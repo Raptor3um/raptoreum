@@ -7,8 +7,6 @@
 #include <util.h>
 #include <walletinitinterface.h>
 
-#include <stdio.h>
-
 class CWallet;
 
 class DummyWalletInit : public WalletInitInterface {

@@ -28,7 +28,7 @@ bool CheckCbTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidatio
 
     CCbTx cbTx;
     if (!GetTxPayload(tx, cbTx)) {
-    	std::cout << "fail to check GetTxPayload " << tx.ToString() << endl;
+    	std::cout << "fail to check GetTxPayload " << tx.ToString() << std::endl;
         return state.DoS(100, false, REJECT_INVALID, "bad-cbtx-payload");
     }
 
@@ -81,7 +81,7 @@ bool CheckCbTxMerkleRoots(const CBlock& block, const CBlockIndex* pindex, CValid
             return false;
         }
         if (calculatedMerkleRoot != cbTx.merkleRootMNList) {
-        	std::cout << "calculatedMerkleRoot !=  cbTx.merkleRootMNList " << calculatedMerkleRoot.GetHex() << "!=" <<  cbTx.merkleRootMNList.GetHex() << endl;
+        	std::cout << "calculatedMerkleRoot !=  cbTx.merkleRootMNList " << calculatedMerkleRoot.GetHex() << "!=" <<  cbTx.merkleRootMNList.GetHex() << std::endl;
             return state.DoS(100, false, REJECT_INVALID, "bad-cbtx-mnmerkleroot");
         }
 

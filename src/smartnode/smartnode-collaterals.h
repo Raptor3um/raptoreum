@@ -9,7 +9,7 @@
 #include <amount.h>
 #include <vector>
 #include <unordered_map>
-using namespace std;
+//using namespace std;
 
 #ifndef SRC_SMARTNODE_SMARTNODE_COLLATERALS_H_
 #define SRC_SMARTNODE_SMARTNODE_COLLATERALS_H_
@@ -26,12 +26,12 @@ struct RewardPercentage {
 
 class SmartnodeCollaterals {
 protected:
-	vector<Collateral> collaterals;
-	vector<RewardPercentage> rewardPercentages;
-	unordered_map<CAmount, int> collateralsHeightMap;
+	std::vector<Collateral> collaterals;
+	std::vector<RewardPercentage> rewardPercentages;
+	std::unordered_map<CAmount, int> collateralsHeightMap;
 
 public:
-	SmartnodeCollaterals(vector<Collateral> collaterals = {}, vector<RewardPercentage> rewardPercentages = {});
+	SmartnodeCollaterals(std::vector<Collateral> collaterals = {}, std::vector<RewardPercentage> rewardPercentages = {});
 	CAmount getCollateral(int height) const;
 	bool isValidCollateral(CAmount collateralAmount) const;
 	bool isPayableCollateral(int height,CAmount collateralAmount) const;

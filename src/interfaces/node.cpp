@@ -5,7 +5,6 @@
 #include <interfaces/node.h>
 
 #include <addrdb.h>
-#include <amount.h>
 #include <chain.h>
 #include <chainparams.h>
 #include <evo/deterministicmns.h>
@@ -40,7 +39,6 @@
 #include <coinjoin/coinjoin.h>
 #include <coinjoin/coinjoin-client-options.h>
 
-#include <atomic>
 #include <univalue.h>
 
 class CWallet;
@@ -160,6 +158,7 @@ class NodeImpl : public Node
     SmartnodeSyncImpl m_smartnodeSync;
     CoinJoinOptionsImpl m_coinjoin;
 
+    void initError(const std::string& message) override { InitError(message); }
     bool parseParameters(int argc, const char* const argv[], std::string& error) override
     {
         return gArgs.ParseParameters(argc, argv, error);

@@ -24,7 +24,7 @@
 #include <iostream>
 #include <unistd.h>
 
-using namespace std;
+//using namespace std;
 
 #ifdef ENABLE_WALLET
 extern UniValue signrawtransaction(const JSONRPCRequest& request);

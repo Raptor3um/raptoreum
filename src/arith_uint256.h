@@ -7,13 +7,11 @@
 #ifndef RAPTOREUM_ARITH_UINT256_H
 #define RAPTOREUM_ARITH_UINT256_H
 
-#include "crypto/common.h"
-#include <assert.h>
 #include <cstring>
+#include <limits>
 #include <stdexcept>
 #include <stdint.h>
 #include <string>
-#include <vector>
 
 class uint256;
 class uint512;

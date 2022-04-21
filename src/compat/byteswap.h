@@ -9,26 +9,13 @@
 #include <config/raptoreum-config.h>
 #endif
 
-#include <stdint.h>
+#include <cstdint>
 
 #if defined(HAVE_BYTESWAP_H)
 #include <byteswap.h>
 #endif
 
 #if defined(MAC_OSX)
-
-#if !defined(bswap_16)
-
-// macOS / Darwin features; we include a check for bswap_16 because
-// if it is already defined, protobuf has defined these macros for
-// us already; if it isn't, we do it ourselves. In either case,
-// we get the exact same results regardless which path was taken.
-#include <libkern/OSByteOrder.h>
-#define bswap_16(x) OSSwapInt16(x)
-#define bswap_32(x) OSSwapInt32(x)
-#define bswap_64(x) OSSwapInt64(x)
-
-#endif // !defined(bswap_16)
 
 #include <libkern/OSByteOrder.h>
 #define bswap_16(x) OSSwapInt16(x)

@@ -14,7 +14,6 @@
 #include <sync.h>
 #include "indices/future_index.h"
 
-#include <map>
 #include <memory>
 #include <string>
 #include <utility>

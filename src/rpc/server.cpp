@@ -7,8 +7,7 @@
 
 #include <rpc/server.h>
 
-#include <fs.h>
-#include <key_io.h>
+#include <chainparams.h>
 #include <random.h>
 #include <shutdown.h>
 #include <sync.h>

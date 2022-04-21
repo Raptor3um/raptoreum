@@ -6,11 +6,9 @@
 
 #include <chainparams.h>
 #include <httpserver.h>
-#include <key_io.h>
 #include <rpc/protocol.h>
 #include <rpc/server.h>
 #include <random.h>
-#include <sync.h>
 #include <util.h>
 #include <utilstrencodings.h>
 #include <ui_interface.h>

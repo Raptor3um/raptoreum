@@ -11,23 +11,20 @@
 #include <qt/guiutil.h>
 #include <qt/peertablemodel.h>
 
-#include <chain.h>
-#include <chainparams.h>
-#include <checkpoints.h>
+#include <evo/deterministicmns.h>
+
 #include <clientversion.h>
+#include <governance/governance-object.h>
 #include <interfaces/handler.h>
 #include <interfaces/node.h>
-#include <validation.h>
 #include <net.h>
-#include <txmempool.h>
-#include <ui_interface.h>
 #include <util.h>
-#include <warnings.h>
 
 #include <stdint.h>
 #include <functional>
 
 #include <QDebug>
+#include <QThread>
 #include <QTimer>
 
 namespace pl = std::placeholders;
@@ -41,15 +38,24 @@ ClientModel::ClientModel(interfaces::Node& node, OptionsModel *_optionsModel, QO
     optionsModel(_optionsModel),
     peerTableModel(0),
     banTableModel(0),
-    pollTimer(0)
+    m_thread(new QThread(this))
 {
     cachedBestHeaderHeight = -1;
     cachedBestHeaderTime = -1;
     peerTableModel = new PeerTableModel(m_node, this);
     banTableModel = new BanTableModel(m_node, this);
-    pollTimer = new QTimer(this);
-    connect(pollTimer, &QTimer::timeout, this, &ClientModel::updateTimer);
-    pollTimer->start(MODEL_UPDATE_DELAY);
+    mnListCached = std::make_shared<CDeterministicMNList>();
+
+    QTimer* timer = new QTimer;
+    timer->setInterval(MODEL_UPDATE_DELAY);
+    connect(timer, &QTimer::timeout, [this] {
+      Q_EMIT mempoolSizeChanged(m_node.getMempoolSize(), m_node.getMempoolDynamicUsage());
+      Q_EMIT islockCountChanged(m_node.llmq().getInstantSentLockCount());
+    });
+    connect(m_thread, &QThread::finished, timer, &QObject::deleteLater);
+    connect(m_thread, &QThread::started, [timer] { timer->start(); });
+    timer->moveToThread(m_thread);
+    m_thread->start();
 
     subscribeToCoreSignals();
 }
@@ -57,6 +63,9 @@ ClientModel::ClientModel(interfaces::Node& node, OptionsModel *_optionsModel, QO
 ClientModel::~ClientModel()
 {
     unsubscribeFromCoreSignals();
+
+    m_thread->quit();
+    m_thread->wait();
 }
 
 int ClientModel::getNumConnections(unsigned int flags) const
@@ -76,17 +85,17 @@ int ClientModel::getNumConnections(unsigned int flags) const
 void ClientModel::setSmartnodeList(const CDeterministicMNList& mnList)
 {
     LOCK(cs_mnlinst);
-    if (mnListCached.GetBlockHash() == mnList.GetBlockHash()) {
+    if (mnListCached->GetBlockHash() == mnList.GetBlockHash()) {
         return;
     }
-    mnListCached = mnList;
+    mnListCached = std::make_shared<CDeterministicMNList>(mnList);
     Q_EMIT smartnodeListChanged();
 }
 
 CDeterministicMNList ClientModel::getSmartnodeList() const
 {
     LOCK(cs_mnlinst);
-    return mnListCached;
+    return *mnListCached;
 }
 
 void ClientModel::refreshSmartnodeList()
@@ -121,14 +130,6 @@ int64_t ClientModel::getHeaderTipTime() const
         }
     }
     return cachedBestHeaderTime;
-}
-
-void ClientModel::updateTimer()
-{
-    // no locking required at this point
-    // the following calls will acquire the required lock
-    Q_EMIT mempoolSizeChanged(m_node.getMempoolSize(), m_node.getMempoolDynamicUsage());
-    Q_EMIT islockCountChanged(m_node.llmq().getInstantSentLockCount());
 }
 
 void ClientModel::updateNumConnections(int numConnections)
@@ -212,34 +213,39 @@ void ClientModel::updateBanlist()
 static void ShowProgress(ClientModel *clientmodel, const std::string &title, int nProgress)
 {
     // emits signal "showProgress"
-    QMetaObject::invokeMethod(clientmodel, "showProgress", Qt::QueuedConnection,
+    bool invoked = QMetaObject::invokeMethod(clientmodel, "showProgress", Qt::QueuedConnection,
                               Q_ARG(QString, QString::fromStdString(title)),
                               Q_ARG(int, nProgress));
+    assert(invoked);
 }
 
 static void NotifyNumConnectionsChanged(ClientModel *clientmodel, int newNumConnections)
 {
     // Too noisy: qDebug() << "NotifyNumConnectionsChanged: " + QString::number(newNumConnections);
-    QMetaObject::invokeMethod(clientmodel, "updateNumConnections", Qt::QueuedConnection,
+    bool invoked = QMetaObject::invokeMethod(clientmodel, "updateNumConnections", Qt::QueuedConnection,
                               Q_ARG(int, newNumConnections));
+    assert(invoked);
 }
 
 static void NotifyNetworkActiveChanged(ClientModel *clientmodel, bool networkActive)
 {
-    QMetaObject::invokeMethod(clientmodel, "updateNetworkActive", Qt::QueuedConnection,
+    bool invoked = QMetaObject::invokeMethod(clientmodel, "updateNetworkActive", Qt::QueuedConnection,
                               Q_ARG(bool, networkActive));
+    assert(invoked);
 }
 
 static void NotifyAlertChanged(ClientModel *clientmodel)
 {
     qDebug() << "NotifyAlertChanged";
-    QMetaObject::invokeMethod(clientmodel, "updateAlert", Qt::QueuedConnection);
+    bool invoked = QMetaObject::invokeMethod(clientmodel, "updateAlert", Qt::QueuedConnection);
+    assert(invoked);
 }
 
 static void BannedListChanged(ClientModel *clientmodel)
 {
     qDebug() << QString("%1: Requesting update for peer banlist").arg(__func__);
-    QMetaObject::invokeMethod(clientmodel, "updateBanlist", Qt::QueuedConnection);
+    bool invoked = QMetaObject::invokeMethod(clientmodel, "updateBanlist", Qt::QueuedConnection);
+    assert(invoked);
 }
 
 static void BlockTipChanged(ClientModel *clientmodel, bool initialSync, int height, int64_t blockTime, const std::string& strBlockHash, double verificationProgress, bool fHeader)
@@ -258,15 +264,16 @@ static void BlockTipChanged(ClientModel *clientmodel, bool initialSync, int heig
         clientmodel->cachedBestHeaderHeight = height;
         clientmodel->cachedBestHeaderTime = blockTime;
     }
-    // if we are in-sync, update the UI regardless of last update time
-    if (!initialSync || now - nLastUpdateNotification > MODEL_UPDATE_DELAY) {
+    // During initial sync, block notifications, and header notifications from reindexing are both throttled.
+    if (!initialSync || (fHeader && !clientmodel->node().getReindex()) || now - nLastUpdateNotification > MODEL_UPDATE_DELAY) {
         //pass an async signal to the UI thread
-        QMetaObject::invokeMethod(clientmodel, "numBlocksChanged", Qt::QueuedConnection,
+        bool invoked = QMetaObject::invokeMethod(clientmodel, "numBlocksChanged", Qt::QueuedConnection,
                                   Q_ARG(int, height),
                                   Q_ARG(QDateTime, QDateTime::fromTime_t(blockTime)),
                                   Q_ARG(QString, QString::fromStdString(strBlockHash)),
                                   Q_ARG(double, verificationProgress),
                                   Q_ARG(bool, fHeader));
+        assert(invoked);
         nLastUpdateNotification = now;
     }
 }
@@ -274,9 +281,10 @@ static void BlockTipChanged(ClientModel *clientmodel, bool initialSync, int heig
 static void NotifyChainLock(ClientModel *clientmodel, const std::string& bestChainLockHash, int bestChainLockHeight)
 {
     // emits signal "chainlockChanged"
-    QMetaObject::invokeMethod(clientmodel, "chainLockChanged", Qt::QueuedConnection,
+    bool invoked = QMetaObject::invokeMethod(clientmodel, "chainLockChanged", Qt::QueuedConnection,
                               Q_ARG(QString, QString::fromStdString(bestChainLockHash)),
                               Q_ARG(int, bestChainLockHeight));
+    assert(invoked);
 }
 
 static void NotifySmartnodeListChanged(ClientModel *clientmodel, const CDeterministicMNList& newList)
@@ -286,8 +294,9 @@ static void NotifySmartnodeListChanged(ClientModel *clientmodel, const CDetermin
 
 static void NotifyAdditionalDataSyncProgressChanged(ClientModel *clientmodel, double nSyncProgress)
 {
-    QMetaObject::invokeMethod(clientmodel, "additionalDataSyncProgressChanged", Qt::QueuedConnection,
+    bool invoked = QMetaObject::invokeMethod(clientmodel, "additionalDataSyncProgressChanged", Qt::QueuedConnection,
                               Q_ARG(double, nSyncProgress));
+    assert(invoked);
 }
 
 void ClientModel::subscribeToCoreSignals()

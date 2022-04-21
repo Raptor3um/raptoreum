@@ -11,7 +11,6 @@
 #include <streams.h>
 #include <util.h>
 #include <utilstrencodings.h>
-#include <version.h>
 
 #include <typeindex>
 

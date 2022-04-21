@@ -20,7 +20,6 @@
 #include <interfaces/node.h>
 #include <validation.h>
 #include <script/script.h>
-#include <timedata.h>
 #include <util.h>
 
 #include "evo/providertx.h"

@@ -27,7 +27,6 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <signal.h>
 
 #include <event2/thread.h>
 #include <event2/buffer.h>
@@ -368,13 +367,6 @@ bool InitHTTPServer()
 {
     if (!InitHTTPAllowList())
         return false;
-
-    if (gArgs.GetBoolArg("-rpcssl", false)) {
-        uiInterface.ThreadSafeMessageBox(
-            "SSL mode for RPC (-rpcssl) is no longer supported.",
-            "", CClientUIInterface::MSG_ERROR);
-        return false;
-    }
 
     // Redirect libevent's logging to our own log
     event_set_log_callback(&libevent_log_cb);

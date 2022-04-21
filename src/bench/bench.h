@@ -8,7 +8,6 @@
 #include <utilmacro.h>
 
 #include <functional>
-#include <limits>
 #include <map>
 #include <string>
 #include <vector>

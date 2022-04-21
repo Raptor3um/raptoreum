@@ -9,8 +9,6 @@
 #include <uint256.h>
 #include <founder_payment.h>
 #include <smartnode/smartnode-collaterals.h>
-#include <map>
-#include <string>
 
 namespace Consensus {
 

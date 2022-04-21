@@ -22,12 +22,10 @@
 #include <versionbits.h>
 #include <spentindex.h>
 
-#include <exception>
 #include <map>
 #include <memory>
 #include <set>
 #include <stdint.h>
-#include <string>
 #include <utility>
 #include <vector>
 

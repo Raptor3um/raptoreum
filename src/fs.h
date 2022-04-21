@@ -12,6 +12,7 @@
 #endif
 
 #include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
 
 /** Filesystem operations and types */
 namespace fs = boost::filesystem;
@@ -23,26 +24,26 @@ namespace fsbridge {
     class FileLock
     {
     public:
-    	FileLock() = delete;
-    	FileLock(const FileLock&) = delete;
-    	FileLock(FileLock&&) = delete;
-    	explicit FileLock(const fs::path& file);
-    	~FileLock();
-    	bool TryLock();
-    	std::string GetReason() { return reason; }
+      FileLock() = delete;
+      FileLock(const FileLock&) = delete;
+      FileLock(FileLock&&) = delete;
+      explicit FileLock(const fs::path& file);
+      ~FileLock();
+      bool TryLock();
+      std::string GetReason() { return reason; }
 
     private:
-    	std::string reason;
+      std::string reason;
 #ifndef WIN32
-			int fd = -1;
+      int fd = -1;
 #else
-			void* hFile = (void*)-1; // INVALID_HANDLE_VALUE
+      void* hFile = (void*)-1; // INVALID_HANDLE_VALUE
 #endif
-		};
+    };
 
-		std::string get_filesystem_error_message(const fs::filesystem_error& e);
+    std::string get_filesystem_error_message(const fs::filesystem_error& e);
 
-		// GNU libstdc++ specific workaround for opening UTF-8 paths on Windows.
+    // GNU libstdc++ specific workaround for opening UTF-8 paths on Windows.
     //
     // On Windows, it is only possible to reliably access multibyte file paths through
     // `wchar_t` APIs, not `char` APIs. But because the C++ standard doesn't

@@ -9,7 +9,11 @@
 #include <sync.h>
 #include <uint256.h>
 #include <util.h>
+#include <utiltime.h>
 #include <utilstrencodings.h>
+#include <logging.h>
+
+#include <mutex>
 
 #define BEGIN(a) ((char*)&(a))
 #define END(a) ((char*)&((&(a))[1]))

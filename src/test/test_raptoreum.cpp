@@ -6,6 +6,7 @@
 
 #include <chainparams.h>
 #include <consensus/consensus.h>
+#include <consensus/params.h>
 #include <consensus/validation.h>
 #include <crypto/sha256.h>
 #include <miner.h>

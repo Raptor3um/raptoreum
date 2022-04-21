@@ -5,7 +5,6 @@
 #include <policy/fees.h>
 #include <txmempool.h>
 #include <uint256.h>
-#include <util.h>
 
 #include <test/test_raptoreum.h>
 

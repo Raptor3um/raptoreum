@@ -16,7 +16,7 @@ A prefix will be generated that's suitable for plugging into Raptoreum's
 configure. In the above example, a dir named x86_64-w64-mingw32 will be
 created. To use it for Raptoreum:
 
-    ./configure --prefix=`pwd`/depends/x86_64-w64-mingw32
+    ./configure --prefix=$PWD/depends/x86_64-w64-mingw32
 
 Common `host-platform-triplets` for cross compilation are:
 
@@ -26,23 +26,29 @@ Common `host-platform-triplets` for cross compilation are:
 - `arm64-apple-darwin` for ARM macOS <-> Apple Silicon M1 Family CPU's
 - `arm-linux-gnueabihf` for Linux ARM 32 bit
 - `aarch64-linux-gnu` for Linux ARM 64 bit
-- `riscv32-linux-gnu` for Linux RISC-V 32 bit
-- `riscv64-linux-gnu` for Linux RISC-V 64 bit
+- `armv7a-linux-android` for Android ARM 32 bit
+- `aarch64-linux-android` for Android ARM 64 bit
+- `x86_64-linux-android` for Android x86 64 bit
 
-No other options are needed, the paths are automatically configured.
+The paths are automatically configured and no other options are needed unless targeting [Android](../doc/build-android.md).
 
-Install the required dependencies: Ubuntu & Debian
---------------------------------------------------
+### Install the required dependencies: Ubuntu & Debian
 
-For macOS cross compilation:
 
-    sudo apt-get install cmake curl librsvg2-bin libtiff-tools bsdmainutils imagemagick libcap-dev libz-dev libbz2-dev python3-setuptools libtinfo5 xorriso
+#### For macOS cross compilation:
 
-For Win64 cross compilation:
+    sudo apt-get install curl bsdmainutils cmake libz-dev libbz2-dev python3-setuptools libtinfo5 xorriso
+
+Note: You must obtain the macOS SDK before proceeding with a cross-compile.
+Under the depends directory, create a subdirectory `SDKs`.
+Then, place the extracted SDK under this new directory.
+For more information, see [SDK Extraction](../contrib/macdeploy/README.md#sdk-extraction).
+
+#### For Win64 cross compilation:
 
 - see [build-windows.md](../doc/build-windows.md#cross-compilation-for-ubuntu-and-windows-subsystem-for-linux)
 
-For linux (including i386, ARM) cross compilation:
+#### For linux (including i386, ARM) cross compilation:
 
     sudo apt-get install make automake cmake curl g++-multilib libtool binutils-gold bsdmainutils pkg-config python3 patch bison
 
@@ -54,30 +60,30 @@ For linux AARCH64 cross compilation
 
 	sudo apt-get install g++-aarch64-linux-gnu binutils-aarch64-linux-gnu
 
-Dependency Options:
+### Dependency Options:
 
 The following can be set when running make: `make FOO=bar`
 
-    - `SOURCES_PATH`: downloaded sources will be placed here
-    - `BASE_CACHE`: built packages will be placed here
-    - `SDK_PATH`: Path where sdk's can be found (used by OSX)
-    - `FALLBACK_DOWNLOAD_PATH`: If a source file can't be fetched, try here before giving up
-    - `NO_QT`: Don't download/build/cache qt and its dependencies
-    - `NO_QR`: Don't download/build/cache libs supporting QR Code reading
-    - `PROTOBUF`: build protobuf (used for BIP70 support)
-    - `NO_WALLET`: Don't download/build/cache libs needed to enable the wallet
-    - `NO_BDB`: Don't download/build/cache BerkeleyDB
-    - `NO_UPNP`: Don't download/build/cache packages needed for enabling upnp
-    - `NO_NATPMP`: Don't download/build/cache packages needed for enabling NAT-PMP</dd>
-    - `ALLOW_HOST_PACKAGES`: Packages that are missed in dependencies (due to `NO_*` option
-       or build script logic) are searched for among the host system packaging using
-      `pkg-config`. It allows building with packages of other (newer) versions.
-    - `DEBUG`: disable some optimizations and enable more runtime checking
-    - `HOST_ID_SALT`: Optional salt to use when generating host package ids
-    - `BUILD_ID_SALT`: Optional salt to use when generating build package ids
-    - `FORCE_USE_SYSTEM_CLANG`: (EXPERTS_ONLY!!!) When cross-compiling for macOS,
-       use Clang found in the system's `$PATH` rather than the default prebuilt
-       release of Clang from llvm.org. Clang 8 or later is required.
+- `SOURCES_PATH`: Downloaded sources will be placed here
+- `BASE_CACHE`: Built packages will be placed here
+- `SDK_PATH`: Path where sdk's can be found (used by OSX)
+- `FALLBACK_DOWNLOAD_PATH`: If a source file can't be fetched, try here before giving up
+- `NO_QT`: Don't download/build/cache qt and its dependencies
+- `NO_QR`: Don't download/build/cache libs supporting QR Code reading
+- `NO_PROTOBUF`: build protobuf (used for BIP70 support)
+- `NO_WALLET`: Don't download/build/cache libs needed to enable the wallet
+- `NO_BDB`: Don't download/build/cache BerkeleyDB
+- `NO_UPNP`: Don't download/build/cache packages needed for enabling upnp
+- `NO_NATPMP`: Don't download/build/cache packages needed for enabling NAT-PMP
+- `ALLOW_HOST_PACKAGES`: Packages that are missed in dependencies (due to <code>NO_*</code> option
+   or build script logic) are searched for among the host system packaging
+   using <code>pkg-config</code> it allows building with packages of other (newer) versions.
+- `DEBUG`: disable some optimizations and enable more runtime checking
+- `HOST_ID_SALT`: Optional salt to use when generating host package ids
+- `BUILD_ID_SALT`: Optional salt to use when generating build package ids
+- `FORCE_USE_SYSTEM_CLANG`: (EXPERTS_ONLY!!!) When cross-compiling for macOS,
+   use Clang found in the system's <code>$PATH</code> rather than the default prebuilt
+   release of Clang from llvm.org. Clang 8 or later is required.
 
 If some packages are not built, for example `make NO_WALLET=1`, the appropriate
 options will be passed to Raptoreum Core's configure. In this case, `--disable-wallet`.

@@ -160,7 +160,7 @@ bool CheckLLMQCommitment(const CTransaction& tx, const CBlockIndex* pindexPrev, 
     }
 
     if (!Params().GetConsensus().llmqs.count((Consensus::LLMQType)qcTx.commitment.llmqType)) {
-    	std::cout << "qcTx.commitment.llmqType " << qcTx.commitment.llmqType << endl;
+    	std::cout << "qcTx.commitment.llmqType " << qcTx.commitment.llmqType << std::endl;
         return state.DoS(100, false, REJECT_INVALID, "bad-qc-type");
     }
 

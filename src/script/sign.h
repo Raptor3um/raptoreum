@@ -6,7 +6,10 @@
 #ifndef BITCOIN_SCRIPT_SIGN_H
 #define BITCOIN_SCRIPT_SIGN_H
 
+#include <hash.h>
+#include <pubkey.h>
 #include <script/interpreter.h>
+#include <streams.h>
 
 class CKey;
 class CKeyID;

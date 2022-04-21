@@ -12,7 +12,6 @@
 #include <key.h>
 
 #include <unordered_map>
-#include <unordered_set>
 
 class CSporkMessage;
 class CSporkManager;

@@ -233,6 +233,8 @@ private:
 Q_SIGNALS:
     /** Signal raised when a URI was entered or dragged to the GUI */
     void receivedURI(const QString &uri);
+
+    void consoleShown(RPCConsole* console);
     /** Restart handling */
     void requestedRestart(QStringList args);
 

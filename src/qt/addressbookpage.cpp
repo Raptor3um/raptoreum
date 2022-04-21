@@ -321,8 +321,8 @@ void AddressBookPage::on_exportButton_clicked()
     writer.addColumn("Address", AddressTableModel::Address, Qt::EditRole);
 
     if(!writer.write()) {
-        QMessageBox::critical(this, tr("Exporting Failed"),
-            tr("There was an error trying to save the address list to %1. Please try again.").arg(filename));
+        //: %1 is a name of the file (e.g.: "addressbook.csv") that the Raptoreum addresses were exported to.
+        QMessageBox::critical(this, tr("Exporting Failed"), tr("There was an error trying to save the address list to %1. Please try again.", "An error message.").arg(filename));
     }
 }
 

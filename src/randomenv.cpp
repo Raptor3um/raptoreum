@@ -70,10 +70,10 @@ void RandAddSeedPerfmon(CSHA512& hasher)
     // This can take up to 2 seconds, so only do it every 10 minutes,
     // Initialize last_perform to 0 seconds, we don't skip the first call.
     static std::atomic<std::chrono::seconds> last_perfmon{0s};
-    auto last_time = last_perform.load();
+    auto last_time = last_perfmon.load();
     auto current_time = GetTime<std::chrono::seconds>();
     if (current_time < last_time + std::chrono::minutes{10}) return;
-    last_perform = current_time;
+    last_perfmon = current_time;
 
     std::vector<unsigned char> vData(250000, 0);
     long ret = 0;

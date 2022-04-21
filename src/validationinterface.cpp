@@ -17,8 +17,6 @@
 #include <llmq/quorums_chainlocks.h>
 #include <llmq/quorums_instantsend.h>
 
-#include <list>
-#include <atomic>
 #include <future>
 
 #include <boost/signals2/signal.hpp>

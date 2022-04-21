@@ -18,7 +18,6 @@
 #include <utiltime.h> // for GetTime()
 
 #include <stdlib.h>
-#include <chrono>
 #include <thread>
 
 #include <randomenv.h>
@@ -41,8 +40,6 @@
 #ifdef HAVE_SYSCTL_ARND
 #include <sys/sysctl.h>
 #endif
-
-#include <mutex>
 
 [[noreturn]] static void RandFailure()
 {

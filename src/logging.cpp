@@ -3,16 +3,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <fs.h>
 #include <logging.h>
 #include <util.h>
 #include <utilthreadnames.h>
 #include <utilstring.h>
 #include <utiltime.h>
-
-#include <algorithm>
-#include <array>
-#include <mutex>
 
 const char * const DEFAULT_DEBUGLOGFILE = "debug.log";
 

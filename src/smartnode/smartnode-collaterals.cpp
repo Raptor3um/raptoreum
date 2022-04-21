@@ -9,11 +9,11 @@
 #include <limits.h>
 #include <iostream>
 
-SmartnodeCollaterals::SmartnodeCollaterals(vector<Collateral> collaterals, vector<RewardPercentage> rewardPercentages) {
+SmartnodeCollaterals::SmartnodeCollaterals(std::vector<Collateral> collaterals, std::vector<RewardPercentage> rewardPercentages) {
 	this->collaterals = collaterals;
 	this->rewardPercentages = rewardPercentages;
 	for (auto& it : this->collaterals) {
-		collateralsHeightMap.insert(make_pair(it.amount, it.height));
+		collateralsHeightMap.insert(std::make_pair(it.amount, it.height));
 	}
 
 }

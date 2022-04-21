@@ -4,9 +4,8 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-# Pattern rule to print variables, e.g. make print-top_srcdir
 print-%:
-				@echo $* = $($*)
+	@echo '$*' = '$($*)'
 
 DIST_SUBDIRS = secp256k1
 
@@ -20,7 +19,6 @@ EXTRA_LIBRARIES =
 if ENABLE_STACKTRACES
 if ENABLE_CRASH_HOOKS
 if CRASH_HOOKS_WRAPPED_CXX_ABI
-# Wrap internal C++ ABI's so that we can attach stacktraces to exceptions
 LDFLAGS_WRAP_EXCEPTIONS = -Wl,-wrap,__cxa_allocate_exception -Wl,-wrap,__cxa_free_exception
 if TARGET_WINDOWS
 LDFLAGS_WRAP_EXCEPTIONS += -Wl,-wrap,_assert -Wl,-wrap,_wassert
@@ -35,11 +33,19 @@ BACKTRACE_LIB = -ldbghelp -lbacktrace
 else
 BACKTRACE_LIB = -lbacktrace
 endif
-endif # ENABLE_STACKTRACES
+endif #ENABLE_STACKTRACES
+
+lib_LTLIBRARIES =
+noinst_LTLIBRARIES =
+
+bin_PROGRAMS =
+noinst_PROGRAMS =
+TESTS =
+BENCHMARKS =
 
 BITCOIN_INCLUDES=-I$(builddir) -I$(srcdir)/secp256k1/include -I$(srcdir)/$(UNIVALUE_INCLUDE_DIR_INT) $(BDB_CPPFLAGS) $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS) $(CRYPTO_CFLAGS) $(SSL_CFLAGS)
 
-BLS_LIBS=-lbls-dash
+BLS_LIBS=-lbls-dash -lrelic_s
 
 LIBBITCOIN_SERVER=libraptoreum_server.a
 LIBBITCOIN_COMMON=libraptoreum_common.a
@@ -54,7 +60,7 @@ if ENABLE_ZMQ
 LIBBITCOIN_ZMQ=libraptoreum_zmq.a
 endif
 if BUILD_BITCOIN_LIBS
-LIBBITCOINCONSENSUS=libraptoreumconsensus.la
+LIBRAPTOREUMCONSENSUS=libraptoreumconsensus.la
 endif
 if ENABLE_WALLET
 LIBBITCOIN_WALLET=libraptoreum_wallet.a
@@ -92,20 +98,16 @@ EXTRA_LIBRARIES += \
   $(LIBBITCOIN_WALLET) \
   $(LIBBITCOIN_ZMQ)
 
-lib_LTLIBRARIES = $(LIBBITCOINCONSENSUS)
-noinst_LTLIBRARIES =
-
-bin_PROGRAMS =
-noinst_PROGRAMS =
-TESTS =
-BENCHMARKS =
-
 if BUILD_BITCOIND
   bin_PROGRAMS += raptoreumd
 endif
 
-if BUILD_BITCOIN_UTILS
-  bin_PROGRAMS += raptoreum-cli raptoreum-tx
+if BUILD_BITCOIN_CLI
+  bin_PROGRAMS += raptoreum-cli
+endif
+
+if BUILD_BITCOIN_TX
+  bin_PROGRAMS += raptoreum-tx
 endif
 
 .PHONY: FORCE check-symbols check-security
@@ -141,6 +143,7 @@ BITCOIN_CORE_H = \
   coinjoin/coinjoin-util.h \
   coins.h \
   compat.h \
+  compat/assumptions.h \
   compat/byteswap.h \
   compat/cpuid.h \
   compat/endian.h \
@@ -275,6 +278,7 @@ BITCOIN_CORE_H = \
   validation.h \
   validationinterface.h \
   versionbits.h \
+  versionbitsinfo.h \
   walletinitinterface.h \
   wallet/coincontrol.h \
   wallet/crypter.h \
@@ -306,6 +310,7 @@ libraptoreum_server_a_SOURCES = \
   addrdb.cpp \
   addrman.cpp \
   batchedlogger.cpp \
+  blockencodings.cpp \
   bloom.cpp \
   blockencodings.cpp \
   blockfilter.cpp \
@@ -315,6 +320,7 @@ libraptoreum_server_a_SOURCES = \
   coinjoin/coinjoin-client-options.cpp\
   coinjoin/coinjoin-server.cpp \
   consensus/tx_verify.cpp \
+  dbwrapper.cpp \
   dsnotificationinterface.cpp \
   evo/cbtx.cpp \
   evo/deterministicmns.cpp \
@@ -323,12 +329,11 @@ libraptoreum_server_a_SOURCES = \
   evo/providertx.cpp \
   evo/simplifiedmns.cpp \
   evo/specialtx.cpp \
-  shutdown.cpp \
   httprpc.cpp \
   httpserver.cpp \
   init.cpp \
+  interfaces/node.cpp \
   mapport.cpp \
-  dbwrapper.cpp \
   governance/governance.cpp \
   governance/governance-classes.cpp \
   governance/governance-object.cpp \
@@ -378,19 +383,23 @@ libraptoreum_server_a_SOURCES = \
   rpc/rpcquorums.cpp \
   rpc/server.cpp \
   rpc/coinjoin.cpp \
-  rpc/util.cpp \
   script/sigcache.cpp \
+  shutdown.cpp \
   spork.cpp \
   statsd_client.cpp \
   timedata.cpp \
   torcontrol.cpp \
   txdb.cpp \
   txmempool.cpp \
+  ui_interface.cpp \
   validation.cpp \
   validationinterface.cpp \
   versionbits.cpp \
   $(BITCOIN_CORE_H)
 
+if ENABLE_WALLET
+libraptoreum_server_a_SOURCES += wallet/init.cpp
+endif
 if !ENABLE_WALLET
 libraptoreum_server_a_SOURCES += dummywallet.cpp
 endif
@@ -516,6 +525,7 @@ crypto_libraptoreum_crypto_a_SOURCES += \
   cryptonote/oaes_lib.c \
   cryptonote/hash-ops.c \
   cryptonote/slow-hash.c \
+  cryptonote/slow-hash.h \
   cryptonote/wild_keccak.cpp \
   cryptonote/c_blake256.h \
   cryptonote/c_groestl.h \
@@ -531,7 +541,6 @@ crypto_libraptoreum_crypto_a_SOURCES += \
   cryptonote/skein_port.h \
   cryptonote/variant2_int_sqrt.h \
   cryptonote/wild_keccak.h \
-  cryptonote/slow-hash.h \
   cryptonote/warnings.h
 
 crypto_libraptoreum_crypto_x86_shani_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
@@ -565,8 +574,6 @@ libraptoreum_consensus_a_SOURCES = \
   consensus/merkle.h \
   consensus/params.h \
   consensus/validation.h \
-  sync.cpp \
-  sync.h \
   prevector.h \
   primitives/block.cpp \
   primitives/block.h \
@@ -585,6 +592,7 @@ libraptoreum_consensus_a_SOURCES = \
   script/script_error.h \
   serialize.h \
   span.h \
+  streams.h \
   tinyformat.h \
   uint256.cpp \
   uint256.h \
@@ -615,11 +623,14 @@ libraptoreum_common_a_SOURCES = \
   netbase.cpp \
   policy/feerate.cpp \
   protocol.cpp \
+  rpc/util.cpp \
   saltedhasher.cpp \
   scheduler.cpp \
   script/ismine.cpp \
   script/sign.cpp \
   script/standard.cpp \
+  versionbits.cpp \
+  versionbitsinfo.cpp \
   warnings.cpp \
   $(BITCOIN_CORE_H)
 
@@ -639,7 +650,6 @@ libraptoreum_util_a_SOURCES = \
   clientversion.cpp \
   compat/glibc_sanity.cpp \
   compat/glibcxx_sanity.cpp \
-  compat/strnlen.cpp \
   fs.cpp \
   interfaces/handler.cpp \
   interfaces/node.cpp \
@@ -663,6 +673,8 @@ libraptoreum_util_a_SOURCES = \
 libraptoreum_cli_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libraptoreum_cli_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libraptoreum_cli_a_SOURCES = \
+  compat/stdin.h \
+  compat/stdin.cpp \
   rpc/client.cpp \
   $(BITCOIN_CORE_H)
 
@@ -690,7 +702,6 @@ raptoreumd_LDADD = \
   $(LIBBITCOIN_CONSENSUS) \
   $(LIBBITCOIN_CRYPTO) \
   $(LIBLEVELDB) \
-  $(LIBLEVELDB_SSE42) \
   $(LIBMEMENV) \
   $(LIBSECP256K1)
 
@@ -738,10 +749,12 @@ raptoreum_tx_LDADD += $(BACKTRACE_LIB) $(BOOST_LIBS) $(CRYPTO_LIBS) $(BLS_LIBS) 
 
 # raptoreumconsensus library #
 if BUILD_BITCOIN_LIBS
+lib_LTLIBRARIES += $(LIBRAPTOREUMCONSENSUS)
+
 include_HEADERS = script/raptoreumconsensus.h
 libraptoreumconsensus_la_SOURCES = support/cleanse.cpp $(crypto_libraptoreum_crypto_a_SOURCES) $(libraptoreum_consensus_a_SOURCES)
 
-libraptoreumconsensus_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS)
+libraptoreumconsensus_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
 libraptoreumconsensus_la_LIBADD = $(LIBSECP256K1) $(BLS_LIBS) $(GMP_LIBS)
 libraptoreumconsensus_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include -DBUILD_BITCOIN_INTERNAL
 libraptoreumconsensus_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
@@ -809,9 +822,6 @@ if ENABLE_BIP70
 	@test -f $(PROTOC)
 	$(AM_V_GEN) $(PROTOC) --cpp_out=$(@D) --proto_path=$(<D) $<
 endif
-
-osx_debug: $(bin_PROGRAMS)
-	for i in $(bin_PROGRAMS); do mkdir -p $$i.dSYM/Contents/Resources/DWARF && $(DSYMUTIL_FLAT) -o $$i.dSYM/Contents/Resources/DWARF/$$(basename $$i) $$i &> /dev/null ; done
 
 include Makefile.crc32c.include
 include Makefile.leveldb.include

@@ -157,6 +157,7 @@ BASE_SCRIPTS= [
     'rpc_uptime.py',
     'wallet_resendwallettransactions.py',
     'feature_minchainwork.py',
+    'feature_filelock.py',
     'p2p_unrequested_blocks.py', # NOTE: needs dash_hash to pass
     'feature_shutdown.py',
     'rpc_coinjoin.py',

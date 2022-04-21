@@ -1,11 +1,12 @@
-Name "Raptoreum Core (@WINDOWS_BITS@-bit)"
+Name "Raptoreum Core (64-bit)"
 
 RequestExecutionLevel highest
 SetCompressor /SOLID lzma
+SetDateSave off
+Unicode true
 
 # General Symbol Definitions
 !define REGKEY "SOFTWARE\$(^Name)"
-!define VERSION 0.17.0
 !define COMPANY "Raptoreum Core project"
 !define URL https://raptoreum.com/
 
@@ -29,9 +30,7 @@ SetCompressor /SOLID lzma
 # Included files
 !include Sections.nsh
 !include MUI2.nsh
-!if "@WINDOWS_BITS@" == "64"
 !include x64.nsh
-!endif
 
 # Variables
 Var StartMenuGroup
@@ -49,24 +48,19 @@ Var StartMenuGroup
 !insertmacro MUI_LANGUAGE English
 
 # Installer attributes
-OutFile /home/michal/work/rtm-qt/raptoreum/raptoreumcore-${VERSION}-win@WINDOWS_BITS@-setup.exe
-!if "@WINDOWS_BITS@" == "64"
 InstallDir $PROGRAMFILES64\RaptoreumCore
-!else
-InstallDir $PROGRAMFILES\RaptoreumCore
-!endif
-CRCCheck on
+CRCCheck force
 XPStyle on
 BrandingText " "
 ShowInstDetails show
-VIProductVersion ${VERSION}.0
+VIProductVersion 0.17.0.0
 VIAddVersionKey ProductName "Raptoreum Core"
-VIAddVersionKey ProductVersion "${VERSION}"
+VIAddVersionKey ProductVersion "0.17.0rc2"
 VIAddVersionKey CompanyName "${COMPANY}"
 VIAddVersionKey CompanyWebsite "${URL}"
-VIAddVersionKey FileVersion "${VERSION}"
-VIAddVersionKey FileDescription ""
-VIAddVersionKey LegalCopyright ""
+VIAddVersionKey FileVersion "0.17.0rc2"
+VIAddVersionKey FileDescription "Installer for Raptoreum Core"
+VIAddVersionKey LegalCopyright "Copyright (C) 2020-2022 The Raptoreum Core developers"
 InstallDirRegKey HKCU "${REGKEY}" Path
 ShowUninstDetails show
 
@@ -80,6 +74,7 @@ Section -Main SEC0000
     SetOutPath $INSTDIR\daemon
     File /home/michal/work/rtm-qt/raptoreum/release/raptoreumd
     File /home/michal/work/rtm-qt/raptoreum/release/raptoreum-cli
+    File /home/michal/work/rtm-qt/raptoreum/release/raptoreum-tx
     SetOutPath $INSTDIR\doc
     File /r /x Makefile* /home/michal/work/rtm-qt/raptoreum/doc\*.*
     SetOutPath $INSTDIR
@@ -93,14 +88,14 @@ Section -post SEC0001
     !insertmacro MUI_STARTMENU_WRITE_BEGIN Application
     CreateDirectory $SMPROGRAMS\$StartMenuGroup
     CreateShortcut "$SMPROGRAMS\$StartMenuGroup\$(^Name).lnk" $INSTDIR\raptoreum-qt
-    CreateShortcut "$SMPROGRAMS\$StartMenuGroup\Raptoreum Core (testnet, @WINDOWS_BITS@-bit).lnk" "$INSTDIR\raptoreum-qt" "-testnet" "$INSTDIR\raptoreum-qt" 1
+    CreateShortcut "$SMPROGRAMS\$StartMenuGroup\Raptoreum Core (testnet, 64-bit).lnk" "$INSTDIR\raptoreum-qt" "-testnet" "$INSTDIR\raptoreum-qt" 1
     CreateShortcut "$SMPROGRAMS\$StartMenuGroup\Uninstall $(^Name).lnk" $INSTDIR\uninstall.exe
     !insertmacro MUI_STARTMENU_WRITE_END
     WriteRegStr HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)" DisplayName "$(^Name)"
-    WriteRegStr HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)" DisplayVersion "${VERSION}"
+    WriteRegStr HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)" DisplayVersion "0.17.0rc2"
     WriteRegStr HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)" Publisher "${COMPANY}"
     WriteRegStr HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)" URLInfoAbout "${URL}"
-    WriteRegStr HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)" DisplayIcon $INSTDIR\uninstall.exe
+    WriteRegStr HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)" DisplayIcon $INSTDIR\raptoreum-qt.exe
     WriteRegStr HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)" UninstallString $INSTDIR\uninstall.exe
     WriteRegDWORD HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)" NoModify 1
     WriteRegDWORD HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)" NoRepair 1
@@ -137,7 +132,7 @@ Section -un.post UNSEC0001
     DeleteRegKey HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)"
     Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\Uninstall $(^Name).lnk"
     Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\$(^Name).lnk"
-    Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\Raptoreum Core (testnet, @WINDOWS_BITS@-bit).lnk"
+    Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\Raptoreum Core (testnet, 64-bit).lnk"
     Delete /REBOOTOK "$SMSTARTUP\Raptoreum.lnk"
     Delete /REBOOTOK $INSTDIR\uninstall.exe
     Delete /REBOOTOK $INSTDIR\debug.log
@@ -159,7 +154,6 @@ SectionEnd
 # Installer functions
 Function .onInit
     InitPluginsDir
-!if "@WINDOWS_BITS@" == "64"
     ${If} ${RunningX64}
       ; disable registry redirection (enable access to 64-bit portion of registry)
       SetRegView 64
@@ -167,7 +161,6 @@ Function .onInit
       MessageBox MB_OK|MB_ICONSTOP "Cannot install 64-bit version on a 32-bit system."
       Abort
     ${EndIf}
-!endif
 FunctionEnd
 
 # Uninstaller functions

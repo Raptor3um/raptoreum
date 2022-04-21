@@ -12,19 +12,16 @@
 #include <chainparams.h>
 #include <clientversion.h>
 #include <compat.h>
-#include <fs.h>
-#include <rpc/server.h>
 #include <init.h>
 #include <noui.h>
 #include <shutdown.h>
+#include <ui_interface.h>
 #include <util.h>
-#include <httpserver.h>
-#include <httprpc.h>
 #include <utilstrencodings.h>
 #include <utilthreadnames.h>
-#include <walletinitinterface.h>
 #include <stacktraces.h>
 
+#include <functional>
 #include <stdio.h>
 
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
@@ -54,12 +51,11 @@ static bool AppInit(int argc, char* argv[])
     //
     // Parameters
     //
-    // If Qt is used, parameters/raptoreum.conf are parsed in qt/dash.cpp's main()
+    // If Qt is used, parameters/raptoreum.conf are parsed in qt/raptoreum.cpp's main()
     SetupServerArgs();
     std::string error;
     if (!gArgs.ParseParameters(argc, argv, error)) {
-        tfm::format(std::cerr, "Error parsing command line arguments: %s\n", error.c_str());
-        return false;
+        return InitError(strprintf("Error parsing command line arguments: %s\n", error));
     }
 
     if (gArgs.IsArgSet("-printcrashinfo")) {
@@ -77,11 +73,11 @@ static bool AppInit(int argc, char* argv[])
         }
         else
         {
-            strUsage += "\nUsage:  raptoreumd [options]           Start " PACKAGE_NAME " Daemon\n";
+            strUsage += "\nUsage: raptoreumd [options]           Start " PACKAGE_NAME " Daemon\n";
             strUsage += "\n" + gArgs.GetHelpMessage();
         }
 
-        tfm::format(std::cout, "%s", strUsage.c_str());
+        tfm::format(std::cout, "%s", strUsage);
         return true;
     }
 
@@ -90,32 +86,28 @@ static bool AppInit(int argc, char* argv[])
         bool datadirFromCmdLine = gArgs.IsArgSet("-datadir");
         if (datadirFromCmdLine && !fs::is_directory(GetDataDir(false)))
         {
-            tfm::format(std::cerr, "Error: Specified data directory \"%s\" does not exist.\n", gArgs.GetArg("-datadir", "").c_str());
-            return false;
+            return InitError(strprintf("Error: Specified data directory \"%s\" does not exist.\n", gArgs.GetArg("-datadir", "")));
         }
 
         if (!gArgs.ReadConfigFiles(error, true)) {
-            tfm::format(std::cerr, "Error reading configuration file: %s\n", error.c_str());
-            return false;
+            return InitError(strprintf("Error reading configuration file: %s\n", error));
         }
         if (!datadirFromCmdLine && !fs::is_directory(GetDataDir(false)))
         {
-            tfm::format(std::cerr, "Error: Specified data directory \"%s\" from config file does not exist.\n", gArgs.GetArg("-datadir", "").c_str());
+            tfm::format(std::cerr, "Error: Specified data directory \"%s\" from config file does not exist.\n", gArgs.GetArg("-datadir", ""));
             return EXIT_FAILURE;
         }
         // Check for -testnet or -regtest parameter (Params() calls are only valid after this clause)
         try {
             SelectParams(gArgs.GetChainName());
         } catch (const std::exception& e) {
-            tfm::format(std::cerr, "Error: %s\n", e.what());
-            return false;
+          return InitError(strprintf("%s\n", e.what()));
         }
 
         // Error out when loose non-argument tokens are encountered on command line
         for (int i = 1; i < argc; i++) {
             if (!IsSwitchChar(argv[i][0])) {
-                tfm::format(std::cerr, "Error: Command line contains unexpected token '%s', see raptoreumd -h for a list of options.\n", argv[i]);
-                return false;
+                return InitError(strprintf("Error: Command line contains unexpected token '%s', see raptoreumd -h for a list of options.\n", argv[i]));
             }
         }
 
@@ -146,19 +138,17 @@ static bool AppInit(int argc, char* argv[])
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #endif
-            tfm::format(std::cout, "Raptoreum Core server starting\n");
+            tfm::format(std::cout, PACKAGE_NAME "daemon starting\n");
 
             // Daemonize
             if (daemon(1, 0)) { // don't chdir (1), do close FDs (0)
-                tfm::format(std::cerr, "Error: daemon() failed: %s\n", strerror(errno));
-                return false;
+                return InitError(strprintf("daemon() failed: %s\n", strerror(errno)));
             }
 #if defined(MAC_OSX)
 #pragma GCC diagnostic pop
 #endif
 #else
-            tfm::format(std::cerr, "Error: -daemon is not supported on this operating system\n");
-            return false;
+            return InitError("-daemon is not supported on this operating system\n");
 #endif // HAVE_DECL_DAEMON
         }
         // Lock data directory after daemonization

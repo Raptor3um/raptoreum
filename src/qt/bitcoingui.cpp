@@ -36,7 +36,6 @@
 #include <util.h>
 #include <qt/smartnodelist.h>
 
-#include <iostream>
 #include <functional>
 
 #include <QAction>
@@ -108,6 +107,7 @@ BitcoinGUI::BitcoinGUI(interfaces::Node& node, const NetworkStyle* networkStyle,
          * the central widget is the rpc console.
          */
         setCentralWidget(rpcConsole);
+        Q_EMIT consoleShown(rpcConsole);
     }
 
     // Accept D&D of URIs
@@ -148,6 +148,7 @@ BitcoinGUI::BitcoinGUI(interfaces::Node& node, const NetworkStyle* networkStyle,
     labelConnectionsIcon = new GUIUtil::ClickableLabel();
 
     labelBlocksIcon = new GUIUtil::ClickableLabel();
+#ifdef ENABLE_WALLET
     if(enableWallet)
     {
         frameBlocksLayout->addStretch();
@@ -156,6 +157,7 @@ BitcoinGUI::BitcoinGUI(interfaces::Node& node, const NetworkStyle* networkStyle,
         frameBlocksLayout->addWidget(labelWalletHDStatusIcon);
         frameBlocksLayout->addWidget(labelWalletEncryptionIcon);
     }
+#endif
     frameBlocksLayout->addStretch();
     frameBlocksLayout->addWidget(labelConnectionsIcon);
     frameBlocksLayout->addStretch();
@@ -362,15 +364,15 @@ void BitcoinGUI::createActions()
     quitAction->setStatusTip(tr("Quit application"));
     quitAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Q));
     quitAction->setMenuRole(QAction::QuitRole);
-    aboutAction = new QAction(QIcon(":/icons/about"), tr("&About %1").arg(tr(PACKAGE_NAME)), this);
-    aboutAction->setStatusTip(tr("Show information about Raptoreum Core"));
+    aboutAction = new QAction(QIcon(":/icons/about"), tr("&About %1").arg(PACKAGE_NAME), this);
+    aboutAction->setStatusTip(tr("Show information about %1").arg(PACKAGE_NAME));
     aboutAction->setMenuRole(QAction::AboutRole);
     aboutAction->setEnabled(false);
     aboutQtAction = new QAction(QIcon(":/icons/about_qt"), tr("About &Qt"), this);
     aboutQtAction->setStatusTip(tr("Show information about Qt"));
     aboutQtAction->setMenuRole(QAction::AboutQtRole);
     optionsAction = new QAction(QIcon(":/icons/configure"), tr("&Options..."), this);
-    optionsAction->setStatusTip(tr("Modify configuration options for %1").arg(tr(PACKAGE_NAME)));
+    optionsAction->setStatusTip(tr("Modify configuration options for %1").arg(PACKAGE_NAME));
     optionsAction->setMenuRole(QAction::PreferencesRole);
     optionsAction->setEnabled(false);
     toggleHideAction = new QAction(QIcon(":/icons/about"), tr("&Show / Hide"), this);
@@ -411,6 +413,7 @@ void BitcoinGUI::createActions()
     // initially disable the debug window menu items
     openInfoAction->setEnabled(false);
     openRPCConsoleAction->setEnabled(false);
+    openRPCConsoleAction->setObjectName("openRPCConsoleAction");
     openGraphAction->setEnabled(false);
     openPeersAction->setEnabled(false);
     openRepairAction->setEnabled(false);
@@ -425,7 +428,7 @@ void BitcoinGUI::createActions()
 
     showHelpMessageAction = new QAction(QIcon(":/icons/configure"), tr("&Command-line options"), this);
     showHelpMessageAction->setMenuRole(QAction::NoRole);
-    showHelpMessageAction->setStatusTip(tr("Show the %1 help message to get a list with possible Raptoreum command-line options").arg(tr(PACKAGE_NAME)));
+    showHelpMessageAction->setStatusTip(tr("Show the %1 help message to get a list with possible Raptoreum command-line options").arg(PACKAGE_NAME));
 
     showCoinJoinHelpAction = new QAction(QIcon(":/icons/configure"), tr("%1 &information").arg(strCoinJoinName), this);
     showCoinJoinHelpAction->setMenuRole(QAction::NoRole);
@@ -582,6 +585,7 @@ void BitcoinGUI::createToolBars()
         coinJoinCoinsButton->setText(coinJoinCoinsMenuAction->text());
         coinJoinCoinsButton->setStatusTip(coinJoinCoinsMenuAction->statusTip());
         tabGroup->addButton(coinJoinCoinsButton);
+#endif
 
         QSettings settings;
         if (settings.value("fShowSmartnodesTab").toBool()) {
@@ -593,6 +597,7 @@ void BitcoinGUI::createToolBars()
             smartnodeButton->setEnabled(true);
         }
 
+#ifdef ENABLE_WALLET
         connect(overviewButton, &QToolButton::clicked, this, &BitcoinGUI::gotoOverviewPage);
         connect(sendCoinsButton, &QToolButton::clicked, [this]{ gotoSendCoinsPage(); });
         connect(sendFuturesButton, &QToolButton::clicked, [this]{ gotoSendFuturesPage(); });
@@ -614,7 +619,6 @@ void BitcoinGUI::createToolBars()
         overviewButton->setChecked(true);
         GUIUtil::updateFonts();
 
-#ifdef ENABLE_WALLET
         m_wallet_selector = new QComboBox(this);
         m_wallet_selector->setSizeAdjustPolicy(QComboBox::AdjustToContents);
         connect(m_wallet_selector, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &BitcoinGUI::setCurrentWalletBySelectorIndex);
@@ -630,7 +634,6 @@ void BitcoinGUI::createToolBars()
         walletSelector->setLayout(walletSelectorLayout);
         m_wallet_selector_action = appToolBar->insertWidget(appToolBarLogoAction, walletSelector);
         m_wallet_selector_action->setVisible(false);
-#endif
 
         QLabel *logoLabel = new QLabel();
         logoLabel->setObjectName("lblToolbarLogo");
@@ -837,9 +840,11 @@ void BitcoinGUI::createTrayIcon()
 {
     assert(QSystemTrayIcon::isSystemTrayAvailable());
 
-    trayIcon = new QSystemTrayIcon(m_network_style->getTrayAndWindowIcon(), this);
-    QString toolTip = tr("%1 client").arg(tr(PACKAGE_NAME)) + " " + m_network_style->getTitleAddText();
-    trayIcon->setToolTip(toolTip);
+    if (QSystemTrayIcon::isSystemTrayAvailable()) {
+      trayIcon = new QSystemTrayIcon(m_network_style->getTrayAndWindowIcon(), this);
+      QString toolTip = tr("%1 client").arg(PACKAGE_NAME) + " " + m_network_style->getTitleAddText();
+      trayIcon->setToolTip(toolTip);
+    }
 }
 
 void BitcoinGUI::createIconMenu(QMenu *pmenu)
@@ -847,6 +852,7 @@ void BitcoinGUI::createIconMenu(QMenu *pmenu)
     // Configuration of the tray icon (or dock icon) icon menu
     pmenu->addAction(toggleHideAction);
     pmenu->addSeparator();
+#ifdef ENABLE_WALLET
     if (enableWallet) {
         pmenu->addAction(sendCoinsMenuAction);
         pmenu->addAction(sendFuturesMenuAction);
@@ -857,19 +863,24 @@ void BitcoinGUI::createIconMenu(QMenu *pmenu)
         pmenu->addAction(verifyMessageAction);
         pmenu->addSeparator();
     }
+#endif
     pmenu->addAction(optionsAction);
     pmenu->addAction(openInfoAction);
     pmenu->addAction(openRPCConsoleAction);
     pmenu->addAction(openGraphAction);
     pmenu->addAction(openPeersAction);
+#ifdef ENABLE_WALLET
     if (enableWallet) {
         pmenu->addAction(openRepairAction);
     }
+#endif
     pmenu->addSeparator();
     pmenu->addAction(openConfEditorAction);
+#ifdef ENABLE_WALLET
     if (enableWallet) {
         pmenu->addAction(showBackupsAction);
     }
+#endif
 #ifndef Q_OS_MAC // This is built-in on Mac
     pmenu->addSeparator();
     pmenu->addAction(quitAction);
@@ -920,6 +931,7 @@ void BitcoinGUI::aboutClicked()
 void BitcoinGUI::showDebugWindow()
 {
     GUIUtil::bringToFront(rpcConsole);
+    Q_EMIT consoleShown(rpcConsole);
 }
 
 void BitcoinGUI::showInfo()
@@ -1700,7 +1712,7 @@ void BitcoinGUI::updateWalletStatus()
 
 void BitcoinGUI::updateWindowTitle()
 {
-    QString window_title = tr(PACKAGE_NAME);
+    QString window_title = PACKAGE_NAME;
 #ifdef ENABLE_WALLET
     if (walletFrame) {
         WalletModel* const wallet_model = walletFrame->currentWalletModel();
@@ -1788,12 +1800,13 @@ static bool ThreadSafeMessageBox(BitcoinGUI* gui, const std::string& message, co
     style &= ~CClientUIInterface::SECURE;
     bool ret = false;
     // In case of modal message, use blocking connection to wait for user to click a button
-    QMetaObject::invokeMethod(gui, "message",
+    bool invoked = QMetaObject::invokeMethod(gui, "message",
                                modal ? GUIUtil::blockingGUIThreadConnection() : Qt::QueuedConnection,
                                Q_ARG(QString, QString::fromStdString(caption)),
                                Q_ARG(QString, QString::fromStdString(message)),
                                Q_ARG(unsigned int, style),
                                Q_ARG(bool*, &ret));
+    assert(invoked);
     return ret;
 }
 

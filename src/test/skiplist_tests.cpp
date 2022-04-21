@@ -3,7 +3,6 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chain.h>
-#include <util.h>
 #include <test/test_raptoreum.h>
 
 #include <vector>

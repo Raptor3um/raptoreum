@@ -77,7 +77,7 @@ case "$CONFIGURE_FLAGS" in
     DEBUG=
 ;;esac
 
-HOST="$HOST" BUILD="$BUILD" "$MAKE" "$@" -C ./depends/ DEBUG="$DEBUG"
+HOST="$HOST" BUILD="$BUILD" "$MAKE" "$@" -C depends DEBUG="$DEBUG"
 
 if [ "${BUILD_STAGE:-all}" = "depends" ]
 then

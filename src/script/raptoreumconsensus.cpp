@@ -95,7 +95,7 @@ int raptoreumconsensus_verify_script(const unsigned char *scriptPubKey, unsigned
         set_error(err, raptoreumconsensus_ERR_OK);
 
         PrecomputedTransactionData txdata(tx);
-		CAmount am(0);
+        CAmount am(0);
         return VerifyScript(tx.vin[nIn].scriptSig, CScript(scriptPubKey, scriptPubKey + scriptPubKeyLen), flags, TransactionSignatureChecker(&tx, nIn, am, txdata), nullptr);
     } catch (const std::exception&) {
         return set_error(err, raptoreumconsensus_ERR_TX_DESERIALIZE); // Error deserializing
@@ -105,5 +105,5 @@ int raptoreumconsensus_verify_script(const unsigned char *scriptPubKey, unsigned
 unsigned int raptoreumconsensus_version()
 {
     // Just use the API version for now
-    return BITCOINCONSENSUS_API_VER;
+    return RAPTOREUMCONSENSUS_API_VER;
 }

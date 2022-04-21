@@ -1130,21 +1130,21 @@ UniValue signMessage(CWallet * const pwallet, std::string strAddress, std::strin
 	return EncodeBase64(&vchSig[0], vchSig.size());
 }
 
-UniValue createConfigFile(string blsPrivateKey, string ip, string address) {
+UniValue createConfigFile(std::string blsPrivateKey, std::string ip, std::string address) {
 
-	string fileName = get_current_dir() + "/" + address + "_raptoreum.conf";
-	ofstream configFile(fileName);
-	string username = generateRandomString(10, false);
-	string password = generateRandomString(20, true);
-	configFile << "rpcuser=" << username << endl;
-	configFile << "rpcpassword=" << password << endl;
+	std::string fileName = get_current_dir() + "/" + address + "_raptoreum.conf";
+	std::ofstream configFile(fileName);
+	std::string username = generateRandomString(10, false);
+	std::string password = generateRandomString(20, true);
+	configFile << "rpcuser=" << username << std::endl;
+	configFile << "rpcpassword=" << password << std::endl;
 	configFile << "rpcport=8484\n";
 	configFile << "rpcallowip=127.0.0.1\n";
 	configFile << "server=1\n";
 	configFile << "daemon=1\n";
 	configFile << "listen=1\n";
-	configFile << "smartnodeblsprivkey=" << blsPrivateKey << endl;
-	configFile << "externalip=" << ip << endl;
+	configFile << "smartnodeblsprivkey=" << blsPrivateKey << std::endl;
+	configFile << "externalip=" << ip << std::endl;
 	configFile.flush();
 	configFile.close();
 	return fileName;
@@ -1374,7 +1374,7 @@ UniValue protx_list(const JSONRPCRequest& request)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid height specified");
         }
 
-        cout << "protx_list: height" << height << ", chainActive.Height(): " << chainActive.Height() << ", fSpentIndex: " << fSpentIndex << endl;
+        std::cout << "protx_list: height" << height << ", chainActive.Height(): " << chainActive.Height() << ", fSpentIndex: " << fSpentIndex << std::endl;
 
         if (height != chainActive.Height() && !fSpentIndex)
         {

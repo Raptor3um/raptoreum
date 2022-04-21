@@ -11,6 +11,7 @@
 #include <tinyformat.h>
 #include <util.h>
 #include <utilstrencodings.h>
+#include <versionbitsinfo.h>
 
 #include <arith_uint256.h>
 
@@ -18,6 +19,9 @@
 #include <iostream>
 #include <string>
 #include <memory>
+
+#include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/split.hpp>
 
 #include <chainparamsseeds.h>
 
@@ -86,53 +90,6 @@ static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits
     const char* pszTimestamp = "The Times 22/Jan/2018 Raptoreum is name of the game for new generation of firms";
     const CScript genesisOutputScript = CScript() << ParseHex("040184710fa689ad5023690c80f3a49c8f13f8d45b8c857fbcbc8bc4a8e4d3eb4b10f4d4604fa08dce601aaf0f470216fe1b51850b4acf21b179c45070ac7b03a9") << OP_CHECKSIG;
     return CreateGenesisBlock(pszTimestamp, genesisOutputScript, nTime, nNonce, nBits, nVersion, genesisReward);
-}
-
-
-void CChainParams::UpdateVersionBitsParameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout, int64_t nWindowSize, int64_t nThresholdStart, int64_t nThresholdMin, int64_t nFalloffCoeff)
-{
-    consensus.vDeployments[d].nStartTime = nStartTime;
-    consensus.vDeployments[d].nTimeout = nTimeout;
-    if (nWindowSize != -1) {
-            consensus.vDeployments[d].nWindowSize = nWindowSize;
-    }
-    if (nThresholdStart != -1) {
-        consensus.vDeployments[d].nThresholdStart = nThresholdStart;
-    }
-    if (nThresholdMin != -1) {
-        consensus.vDeployments[d].nThresholdMin = nThresholdMin;
-    }
-    if (nFalloffCoeff != -1) {
-        consensus.vDeployments[d].nFalloffCoeff = nFalloffCoeff;
-    }
-}
-
-//void CChainParams::UpdateDIP3Parameters(int nActivationHeight, int nEnforcementHeight)
-//{
-//    consensus.DIP0003Height = nActivationHeight;
-//    consensus.DIP0003EnforcementHeight = nEnforcementHeight;
-//}
-
-void CChainParams::UpdateBudgetParameters(int nSmartnodePaymentsStartBlock, int nBudgetPaymentsStartBlock, int nSuperblockStartBlock)
-{
-    consensus.nSmartnodePaymentsStartBlock = nSmartnodePaymentsStartBlock;
-    consensus.nBudgetPaymentsStartBlock = nBudgetPaymentsStartBlock;
-    consensus.nSuperblockStartBlock = nSuperblockStartBlock;
-}
-
-void CChainParams::UpdateSubsidyAndDiffParams(int nMinimumDifficultyBlocks, int nHighSubsidyBlocks, int nHighSubsidyFactor)
-{
-    consensus.nMinimumDifficultyBlocks = nMinimumDifficultyBlocks;
-    consensus.nHighSubsidyBlocks = nHighSubsidyBlocks;
-    consensus.nHighSubsidyFactor = nHighSubsidyFactor;
-}
-
-void CChainParams::UpdateLLMQChainLocks(Consensus::LLMQType llmqType) {
-    consensus.llmqTypeChainLocks = llmqType;
-}
-
-void CChainParams::UpdateLLMQInstantSend(Consensus::LLMQType llmqType) {
-    consensus.llmqTypeInstantSend = llmqType;
 }
 
 static CBlock FindDevNetGenesisBlock(const CBlock &prevBlock, const CAmount& reward)
@@ -791,7 +748,7 @@ public:
  */
 class CDevNetParams : public CChainParams {
 public:
-    CDevNetParams() {
+    explicit CDevNetParams(const ArgsManager& args) {
         strNetworkID = "devnet";
         consensus.nSubsidyHalvingInterval = 210240;
         consensus.nSmartnodePaymentsStartBlock = 4010; // not true, but it's ok as long as it's less then nSmartnodePaymentsIncreaseBlock
@@ -854,6 +811,7 @@ public:
         m_assumed_blockchain_size = 0;
         m_assumed_chain_state_size = 0;
 
+        UpdateDevnetSubsidyAndDiffParametersFromArgs(args);
         genesis = CreateGenesisBlock(1417713337, 1096447, 0x207fffff, 1, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
         assert(consensus.hashGenesisBlock == uint256S("0x000008ca1832a4baf228eb1553c03d3a2c8e02399550dd6ea8d65cec3ef23d2e"));
@@ -894,6 +852,9 @@ public:
         consensus.llmqTypeInstantSend = Consensus::LLMQ_50_60;
         consensus.llmqTypePlatform = Consensus::LLMQ_100_67;
 
+        UpdateDevnetLLMQChainLocksFromArgs(args);
+        UpdateDevnetLLMQInstantSendFromArgs(args);
+
         fDefaultConsistencyChecks = false;
         fRequireStandard = false;
         fRequireRoutableExternalIP = true;
@@ -926,6 +887,26 @@ public:
             0.01                          // * estimated number of transactions per second
         };
     }
+
+    void UpdateDevnetSubsidyAndDiffParameters(int nMinimumDifficultyBlocks, int nHighSubsidyBlocks, int nHighSubsidyFactor)
+    {
+        consensus.nMinimumDifficultyBlocks = nMinimumDifficultyBlocks;
+        consensus.nHighSubsidyBlocks = nHighSubsidyBlocks;
+        consensus.nHighSubsidyFactor = nHighSubsidyFactor;
+    }
+    void UpdateDevnetSubsidyAndDiffParametersFromArgs(const ArgsManager& args);
+
+    void UpdateDevnetLLMQChainLocks(Consensus::LLMQType llmqType)
+    {
+        consensus.llmqTypeChainLocks = llmqType;
+    }
+    void UpdateDevnetLLMQChainLocksFromArgs(const ArgsManager& args);
+
+    void UpdateDevnetLLMQInstantSend(Consensus::LLMQType llmqType)
+    {
+        consensus.llmqTypeInstantSend = llmqType;
+    }
+    void UpdateDevnetLLMQInstantSendFromArgs(const ArgsManager& args);
 };
 
 /**
@@ -933,7 +914,7 @@ public:
  */
 class CRegTestParams : public CChainParams {
 public:
-    CRegTestParams() {
+    explicit CRegTestParams(const ArgsManager& args) {
         strNetworkID = "regtest";
         consensus.nSubsidyHalvingInterval = 150;
         consensus.nSmartnodePaymentsStartBlock = 240;
@@ -994,6 +975,9 @@ public:
         nPruneAfterHeight = 1000;
         m_assumed_blockchain_size = 0;
         m_assumed_chain_state_size = 0;
+
+        UpdateVersionBitsParametersFromArgs(args);
+        UpdateBudgetParametersFromArgs(args);
 
         genesis = CreateGenesisBlock(1614369600, 1130, 0x20001fff, 4, 5000 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
@@ -1061,7 +1045,157 @@ public:
         consensus.llmqTypeInstantSend = Consensus::LLMQ_5_60;
         consensus.llmqTypePlatform = Consensus::LLMQ_5_60;
     }
+
+    void UpdateVersionBitsParameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout, int64_t nWindowSize, int64_t nThresholdStart, int64_t nThresholdMin, int64_t nFalloffCoeff)
+    {
+        consensus.vDeployments[d].nStartTime = nStartTime;
+        consensus.vDeployments[d].nTimeout = nTimeout;
+        if (nWindowSize != -1) {
+            consensus.vDeployments[d].nWindowSize = nWindowSize;
+        }
+        if (nThresholdStart != -1) {
+            consensus.vDeployments[d].nThresholdStart = nThresholdStart;
+        }
+        if (nThresholdMin != -1) {
+            consensus.vDeployments[d].nThresholdMin = nThresholdMin;
+        }
+        if (nFalloffCoeff != -1) {
+            consensus.vDeployments[d].nFalloffCoeff = nFalloffCoeff;
+        }
+    }
+    void UpdateVersionBitsParametersFromArgs(const ArgsManager& args);
+
+    void UpdateBudgetParameters(int nSmartnodePaymentsStartBlock, int nBudgetPaymentsStartBlock, int nSuperblockStartBlock)
+    {
+        consensus.nSmartnodePaymentsStartBlock = nSmartnodePaymentsStartBlock;
+        consensus.nBudgetPaymentsStartBlock = nBudgetPaymentsStartBlock;
+        consensus.nSuperblockStartBlock = nSuperblockStartBlock;
+    }
+    void UpdateBudgetParametersFromArgs(const ArgsManager& args);
 };
+
+void CRegTestParams::UpdateVersionBitsParametersFromArgs(const ArgsManager& args)
+{
+    if (!args.IsArgSet("-vbparams")) return;
+
+    for (const std::string& strDeployment : args.GetArgs("-vbparams")) {
+        std::vector<std::string> vDeploymentParams;
+        boost::split(vDeploymentParams, strDeployment, boost::is_any_of(":"));
+        if (vDeploymentParams.size() != 3 && vDeploymentParams.size() != 5 && vDeploymentParams.size() != 7) {
+            throw std::runtime_error("Version bits parameters malformed, expecting "
+                    "<deployment>:<start>:<end> or "
+                    "<deployment>:<start>:<end>:<window>:<threshold> or "
+                    "<deployment>:<start>:<end>:<window>:<thresholdstart>:<thresholdmin>:<falloffcoeff>");
+        }
+        int64_t nStartTime, nTimeout, nWindowSize = -1, nThresholdStart = -1, nThresholdMin = -1, nFalloffCoeff = -1;
+        if (!ParseInt64(vDeploymentParams[1], &nStartTime)) {
+            throw std::runtime_error(strprintf("Invalid nStartTime (%s)", vDeploymentParams[1]));
+        }
+        if (!ParseInt64(vDeploymentParams[2], &nTimeout)) {
+            throw std::runtime_error(strprintf("Invalid nTimeout (%s)", vDeploymentParams[2]));
+        }
+        if (vDeploymentParams.size() >= 5) {
+            if (!ParseInt64(vDeploymentParams[3], &nWindowSize)) {
+                throw std::runtime_error(strprintf("Invalid nWindowSize (%s)", vDeploymentParams[3]));
+            }
+            if (!ParseInt64(vDeploymentParams[4], &nThresholdStart)) {
+                throw std::runtime_error(strprintf("Invalid nThresholdStart (%s)", vDeploymentParams[4]));
+            }
+        }
+        if (vDeploymentParams.size() == 7) {
+            if (!ParseInt64(vDeploymentParams[5], &nThresholdMin)) {
+                throw std::runtime_error(strprintf("Invalid nThresholdMin (%s)", vDeploymentParams[5]));
+            }
+            if (!ParseInt64(vDeploymentParams[6], &nFalloffCoeff)) {
+                throw std::runtime_error(strprintf("Invalid nFalloffCoeff (%s)", vDeploymentParams[6]));
+            }
+        }
+        bool found = false;
+        for (int j=0; j < (int)Consensus::MAX_VERSION_BITS_DEPLOYMENTS; ++j) {
+            if (vDeploymentParams[0] == VersionBitsDeploymentInfo[j].name) {
+                UpdateVersionBitsParameters(Consensus::DeploymentPos(j), nStartTime, nTimeout, nWindowSize, nThresholdStart, nThresholdMin, nFalloffCoeff);
+                found = true;
+                LogPrintf("Setting version bits activation parameters for %s to start=%ld, timeout=%ld, window=%ld, thresholdstart=%ld, thresholdmin=%ld, falloffcoeff=%ld\n",
+                          vDeploymentParams[0], nStartTime, nTimeout, nWindowSize, nThresholdStart, nThresholdMin, nFalloffCoeff);
+                break;
+            }
+        }
+        if (!found) {
+            throw std::runtime_error(strprintf("Invalid deployment (%s)", vDeploymentParams[0]));
+        }
+    }
+}
+
+void CRegTestParams::UpdateBudgetParametersFromArgs(const ArgsManager& args)
+{
+    if (!args.IsArgSet("-budgetparams")) return;
+
+    std::string strParams = args.GetArg("-budgetparams", "");
+    std::vector<std::string> vParams;
+    boost::split(vParams, strParams, boost::is_any_of(":"));
+    if (vParams.size() != 3) {
+        throw std::runtime_error("Budget parameters malformed, expecting <masternode>:<budget>:<superblock>");
+    }
+    int nSmartnodePaymentsStartBlock, nBudgetPaymentsStartBlock, nSuperblockStartBlock;
+    if (!ParseInt32(vParams[0], &nSmartnodePaymentsStartBlock)) {
+        throw std::runtime_error(strprintf("Invalid smartnode start height (%s)", vParams[0]));
+    }
+    if (!ParseInt32(vParams[1], &nBudgetPaymentsStartBlock)) {
+        throw std::runtime_error(strprintf("Invalid budget start block (%s)", vParams[1]));
+    }
+    if (!ParseInt32(vParams[2], &nSuperblockStartBlock)) {
+        throw std::runtime_error(strprintf("Invalid superblock start height (%s)", vParams[2]));
+    }
+    LogPrintf("Setting budget parameters to smartnode=%ld, budget=%ld, superblock=%ld\n", nSmartnodePaymentsStartBlock, nBudgetPaymentsStartBlock, nSuperblockStartBlock);
+    UpdateBudgetParameters(nSmartnodePaymentsStartBlock, nBudgetPaymentsStartBlock, nSuperblockStartBlock);
+}
+
+void CDevNetParams::UpdateDevnetSubsidyAndDiffParametersFromArgs(const ArgsManager& args)
+{
+    if (!args.IsArgSet("-minimumdifficultyblocks") && !args.IsArgSet("-highsubsidyblocks") && !args.IsArgSet("-highsubsidyfactor")) return;
+
+    int nMinimumDifficultyBlocks = gArgs.GetArg("-minimumdifficultyblocks", consensus.nMinimumDifficultyBlocks);
+    int nHighSubsidyBlocks = gArgs.GetArg("-highsubsidyblocks", consensus.nHighSubsidyBlocks);
+    int nHighSubsidyFactor = gArgs.GetArg("-highsubsidyfactor", consensus.nHighSubsidyFactor);
+    LogPrintf("Setting minimumdifficultyblocks=%ld, highsubsidyblocks=%ld, highsubsidyfactor=%ld\n", nMinimumDifficultyBlocks, nHighSubsidyBlocks, nHighSubsidyFactor);
+    UpdateDevnetSubsidyAndDiffParameters(nMinimumDifficultyBlocks, nHighSubsidyBlocks, nHighSubsidyFactor);
+}
+
+void CDevNetParams::UpdateDevnetLLMQChainLocksFromArgs(const ArgsManager& args)
+{
+    if (!args.IsArgSet("-llmqchainlocks")) return;
+
+    std::string strLLMQType = gArgs.GetArg("-llmqchainlocks", consensus.llmqs.at(consensus.llmqTypeChainLocks).name);
+    Consensus::LLMQType llmqType = Consensus::LLMQ_NONE;
+    for (const auto& p : consensus.llmqs) {
+        if (p.second.name == strLLMQType) {
+            llmqType = p.first;
+        }
+    }
+    if (llmqType == Consensus::LLMQ_NONE) {
+        throw std::runtime_error("Invalid LLMQ type specified for -llmqchainlocks.");
+    }
+    LogPrintf("Setting llmqchainlocks to size=%ld\n", llmqType);
+    UpdateDevnetLLMQChainLocks(llmqType);
+}
+
+void CDevNetParams::UpdateDevnetLLMQInstantSendFromArgs(const ArgsManager& args)
+{
+    if (!args.IsArgSet("-llmqinstantsend")) return;
+
+    std::string strLLMQType = gArgs.GetArg("-llmqinstantsend", consensus.llmqs.at(consensus.llmqTypeInstantSend).name);
+    Consensus::LLMQType llmqType = Consensus::LLMQ_NONE;
+    for (const auto& p : consensus.llmqs) {
+        if (p.second.name == strLLMQType) {
+            llmqType = p.first;
+        }
+    }
+    if (llmqType == Consensus::LLMQ_NONE) {
+        throw std::runtime_error("Invalid LLMQ type specified for -llmqinstantsend.");
+    }
+    LogPrintf("Setting llmqinstantsend to size=%ld\n", llmqType);
+    UpdateDevnetLLMQInstantSend(llmqType);
+}
 
 static std::unique_ptr<CChainParams> globalChainParams;
 
@@ -1077,9 +1211,10 @@ std::unique_ptr<CChainParams> CreateChainParams(const std::string& chain)
     else if (chain == CBaseChainParams::TESTNET)
         return std::unique_ptr<CChainParams>(new CTestNetParams());
     else if (chain == CBaseChainParams::DEVNET) {
-        return std::unique_ptr<CChainParams>(new CDevNetParams());
+        return std::unique_ptr<CChainParams>(new CDevNetParams(gArgs));
     } else if (chain == CBaseChainParams::REGTEST)
-        return std::unique_ptr<CChainParams>(new CRegTestParams());
+        return std::unique_ptr<CChainParams>(new CRegTestParams(gArgs));
+
     throw std::runtime_error(strprintf("%s: Unknown chain %s.", __func__, chain));
 }
 
@@ -1087,36 +1222,6 @@ void SelectParams(const std::string& network)
 {
     SelectBaseParams(network);
     globalChainParams = CreateChainParams(network);
-}
-
-void UpdateVersionBitsParameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout, int64_t nWindowSize, int64_t nThresholdStart, int64_t nThresholdMin, int64_t nFalloffCoeff)
-{
-    globalChainParams->UpdateVersionBitsParameters(d, nStartTime, nTimeout, nWindowSize, nThresholdStart, nThresholdMin, nFalloffCoeff);
-}
-
-//void UpdateDIP3Parameters(int nActivationHeight, int nEnforcementHeight)
-//{
-//    globalChainParams->UpdateDIP3Parameters(nActivationHeight, nEnforcementHeight);
-//}
-
-void UpdateBudgetParameters(int nSmartnodePaymentsStartBlock, int nBudgetPaymentsStartBlock, int nSuperblockStartBlock)
-{
-    globalChainParams->UpdateBudgetParameters(nSmartnodePaymentsStartBlock, nBudgetPaymentsStartBlock, nSuperblockStartBlock);
-}
-
-void UpdateDevnetSubsidyAndDiffParams(int nMinimumDifficultyBlocks, int nHighSubsidyBlocks, int nHighSubsidyFactor)
-{
-    globalChainParams->UpdateSubsidyAndDiffParams(nMinimumDifficultyBlocks, nHighSubsidyBlocks, nHighSubsidyFactor);
-}
-
-void UpdateDevnetLLMQChainLocks(Consensus::LLMQType llmqType)
-{
-    globalChainParams->UpdateLLMQChainLocks(llmqType);
-}
-
-void UpdateDevnetLLMQInstantSend(Consensus::LLMQType llmqType)
-{
-    globalChainParams->UpdateLLMQInstantSend(llmqType);
 }
 
 void UpdateLLMQParams(size_t totalMnCount, int height, bool lowLLMQParams) {

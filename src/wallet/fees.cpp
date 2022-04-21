@@ -7,7 +7,6 @@
 
 #include <policy/policy.h>
 #include <txmempool.h>
-#include <util.h>
 #include <validation.h>
 #include <wallet/coincontrol.h>
 #include <wallet/wallet.h>

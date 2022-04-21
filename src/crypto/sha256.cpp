@@ -7,7 +7,6 @@
 
 #include <assert.h>
 #include <string.h>
-#include <atomic>
 
 #include <compat/cpuid.h>
 

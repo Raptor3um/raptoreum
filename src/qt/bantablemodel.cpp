@@ -9,8 +9,6 @@
 #include <qt/guiutil.h>
 
 #include <interfaces/node.h>
-#include <sync.h>
-#include <utiltime.h>
 
 #include <QDebug>
 #include <QList>
