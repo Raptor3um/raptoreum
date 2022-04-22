@@ -164,6 +164,8 @@ extern CConditionVariable g_best_block_cv;
 extern uint256 g_best_block;
 extern std::atomic_bool fImporting;
 extern std::atomic_bool fReindex;
+extern std::atomic_bool fProcessingHeaders;
+extern std::atomic<int> atomicHeaderHeight;
 extern int nScriptCheckThreads;
 extern bool fTxIndex;
 extern bool fAddressIndex;

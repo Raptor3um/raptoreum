@@ -68,6 +68,7 @@ SmartnodeList::SmartnodeList(QWidget* parent) :
     int columnPayeeWidth = 130;
     int columnOperatorRewardWidth = 130;
     int columnCollateralWidth = 130;
+    int columnCollateralAmountWidth = 130;
     int columnOwnerWidth = 130;
     int columnVotingWidth = 130;
 
@@ -80,6 +81,7 @@ SmartnodeList::SmartnodeList(QWidget* parent) :
     ui->tableWidgetSmartnodesDIP3->setColumnWidth(COLUMN_PAYOUT_ADDRESS, columnPayeeWidth);
     ui->tableWidgetSmartnodesDIP3->setColumnWidth(COLUMN_OPERATOR_REWARD, columnOperatorRewardWidth);
     ui->tableWidgetSmartnodesDIP3->setColumnWidth(COLUMN_COLLATERAL_ADDRESS, columnCollateralWidth);
+    ui->tableWidgetSmartnodesDIP3->setColumnWidth(COLUMN_COLLATERAL_AMOUNT, columnCollateralAmountWidth);
     ui->tableWidgetSmartnodesDIP3->setColumnWidth(COLUMN_OWNER_ADDRESS, columnOwnerWidth);
     ui->tableWidgetSmartnodesDIP3->setColumnWidth(COLUMN_VOTING_ADDRESS, columnVotingWidth);
 
@@ -316,6 +318,7 @@ void SmartnodeList::updateDIP3List()
         ui->tableWidgetSmartnodesDIP3->setItem(0, COLUMN_PAYOUT_ADDRESS, payeeItem);
         ui->tableWidgetSmartnodesDIP3->setItem(0, COLUMN_OPERATOR_REWARD, operatorRewardItem);
         ui->tableWidgetSmartnodesDIP3->setItem(0, COLUMN_COLLATERAL_ADDRESS, collateralItem);
+        ui->tableWidgetSmartnodesDIP3->setItem(0, COLUMN_COLLATERAL_AMOUNT, collateralAmountItem);
         ui->tableWidgetSmartnodesDIP3->setItem(0, COLUMN_OWNER_ADDRESS, ownerItem);
         ui->tableWidgetSmartnodesDIP3->setItem(0, COLUMN_VOTING_ADDRESS, votingItem);
         ui->tableWidgetSmartnodesDIP3->setItem(0, COLUMN_PROTX_HASH, proTxHashItem);
