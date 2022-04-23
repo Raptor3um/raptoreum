@@ -2651,7 +2651,8 @@ void CConnman::ThreadOpenSmartnodeConnections()
 
         CDeterministicMNCPtr connectToDmn;
         bool isProbe = false;
-        { // don't hold lock while calling OpenSmartnodeConnection as cs_main is locked deep inside
+        {
+            LOCK(cs_main); // Lock cs_main first to avoid deadlocks (it is recursively locked deeper)
             LOCK2(cs_vNodes, cs_vPendingSmartnodes);
 
             if (!vPendingSmartnodes.empty()) {
