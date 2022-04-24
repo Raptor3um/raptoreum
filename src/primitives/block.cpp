@@ -11,8 +11,6 @@
 #include <util.h>
 #include <utilstrencodings.h>
 
-static CCriticalSection cs_pow;
-
 uint256 CBlockHeader::GetHash() const
 {
     return SerializeHash(*this);
@@ -25,13 +23,13 @@ uint256 CBlockHeader::ComputeHash() const
 
 uint256 CBlockHeader::GetPOWHash(bool readCache) const
 {
+    LOCK(cs_pow);
     CPowCache& cache(CPowCache::Instance());
 
     uint256 headerHash = GetHash();
     uint256 powHash;
     bool found = false;
 
-    LOCK(cs_pow);
     if (readCache) {
         found = cache.get(headerHash, powHash);
     }
