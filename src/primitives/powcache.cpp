@@ -35,10 +35,6 @@ void CPowCache::DoMaintenance()
         CFlatDB<CPowCache> flatDb("powcache.dat", "powCache");
         flatDb.Dump(*this);
     }
-    else
-    {
-        LogPrintf("CPowCache::DoMaintenance skipped -  loaded size: %d, cache size: %d\n", nLoadedSize, cacheMap.size());
-    }
 }
 
 CPowCache::CPowCache(int maxSize, bool validate) : unordered_lru_cache<uint256, uint256, std::hash<uint256>>(maxSize),
