@@ -96,7 +96,7 @@ int main(int argc, char** argv)
     double scaling_factor = boost::lexical_cast<double>(scaling_str);
 
 
-    std::unique_ptr<benchmark::Printer> printer(new benchmark::ConsolePrinter());
+    std::unique_ptr<benchmark::Printer> printer = MakeUnique<benchmark::ConsolePrinter>();
     std::string printer_arg = gArgs.GetArg("-printer", DEFAULT_BENCH_PRINTER);
     if ("plot" == printer_arg) {
         printer.reset(new benchmark::PlotlyPrinter(
