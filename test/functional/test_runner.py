@@ -114,6 +114,7 @@ BASE_SCRIPTS= [
     'rpc_users.py',
     'feature_proxy.py',
     'rpc_signrawtransaction.py',
+    'wallet_groups.py',
     'p2p_disconnect_ban.py',
     'feature_addressindex.py',
     'feature_timestampindex.py',
