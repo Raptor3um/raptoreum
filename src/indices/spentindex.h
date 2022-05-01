@@ -76,18 +76,7 @@ struct CSpentIndexValue {
     }
 };
 
-struct CSpentIndexKeyCompare {
-    bool operator()(const CSpentIndexKey& a, const CSpentIndexKey& b) const
-    {
-        if (a.txid == b.txid) {
-            return a.outputIndex < b.outputIndex;
-        } else {
-            return a.txid < b.txid;
-        }
-    }
-};
-
-typedef std::map<CSpentIndexKey, CSpentIndexValue, CSpentIndexKeyCompare> mapSpentIndex;
+typedef std::map<CSpentIndexKey, CSpentIndexValue, CIndexKeyCompare> mapSpentIndex;
 struct CSpentIndexTxInfo {
     mapSpentIndex mSpentInfo;
 };

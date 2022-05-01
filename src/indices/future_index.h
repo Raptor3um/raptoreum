@@ -75,18 +75,7 @@ struct CFutureIndexValue {
     }
 };
 
-struct CIndexKeyCompare {
-    bool operator()(const IndexKey& a, const IndexKey& b) const
-    {
-        if (a.txid == b.txid) {
-            return a.outputIndex < b.outputIndex;
-        } else {
-            return a.txid < b.txid;
-        }
-    }
-};
-
-typedef std::map<CFutureIndexKey, CFutureIndexValue, CFutureIndexKeyCompare> mapFutureIndex;
+typedef std::map<CFutureIndexKey, CFutureIndexValue, CIndexKeyCompare> mapFutureIndex;
 struct CFutureIndexTxInfo {
     mapFutureIndex mFutureInfo;
 };

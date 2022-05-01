@@ -40,4 +40,16 @@ struct IndexKey {
         outputIndex = 0;
     }
 };
+
+struct CIndexKeyCompare {
+    bool operator()(const IndexKey& a, const IndexKey& b) const
+    {
+        if (a.txid == b.txid) {
+            return a.outputIndex < b.outputIndex;
+        } else {
+            return a.txid < b.txid;
+        }
+    }
+};
+
 #endif
