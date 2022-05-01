@@ -14,8 +14,8 @@
 #include <string>
 
 #include <addressindex.h>
+#include <indices/spent_index.h>
 #include <indices/future_index.h>
-#include <indices/spentindex.h>
 #include <amount.h>
 #include <coins.h>
 #include <indirectmap.h>

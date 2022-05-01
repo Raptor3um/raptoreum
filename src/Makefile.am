@@ -176,7 +176,7 @@ BITCOIN_CORE_H = \
   fs.h \
   httprpc.h \
   httpserver.h \
-  indices/spentindex.h \
+  indices/spent_index.h \
   indices/future_index.h \
   indirectmap.h \
   init.h \

@@ -18,7 +18,7 @@
 #include <utilstrencodings.h>
 
 #include <indices/future_index.h>
-#include <indices/spentindex.h>
+#include <indices/spent_index.h>
 
 #include <evo/cbtx.h>
 #include <evo/providertx.h>

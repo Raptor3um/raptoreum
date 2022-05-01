@@ -10,8 +10,8 @@
 #include <dbwrapper.h>
 #include <chain.h>
 #include <limitedmap.h>
+#include <indices/spent_index.h>
 #include <indices/future_index.h>
-#include <indices/spentindex.h>
 #include <sync.h>
 
 #include <map>

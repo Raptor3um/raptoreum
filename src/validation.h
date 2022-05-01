@@ -20,7 +20,8 @@
 #include <script/script_error.h>
 #include <sync.h>
 #include <versionbits.h>
-#include <indices/spentindex.h>
+#include <indices/spent_index.h>
+#include <indices/future_index.h>
 
 #include <algorithm>
 #include <exception>
@@ -415,6 +416,7 @@ public:
 
 bool GetTimestampIndex(const unsigned int &high, const unsigned int &low, std::vector<uint256> &hashes);
 bool GetSpentIndex(CSpentIndexKey &key, CSpentIndexValue &value);
+bool GetFutureIndex(CFutureIndexKey &key, CFutureIndexValue &value);
 bool GetAddressIndex(uint160 addressHash, int type, std::vector<std::pair<CAddressIndexKey, CAmount> > &addressIndex, int start = 0, int end = 0);
 bool GetAddressUnspent(uint160 addressHash, int type, std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> > &unspentOutputs);
 /** Initializes the script-execution cache */
