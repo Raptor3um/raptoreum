@@ -550,6 +550,73 @@ bool CTxMemPool::removeAddressIndex(const uint256 txhash)
     return true;
 }
 
+void CTxMemPool::addFutureIndex(const CTxMemPoolEntry &entry, const CCoinsViewCache &view)
+{
+    LOCK(cs);
+
+    const CTransaction& tx = entry.GetTx();
+    if (tx.nVersion >= 3 && tx.nType == TRANSACTION_FUTURE)
+    {
+        CFutureTx ftx;
+        if (GetTxPayload(tx.vExtraPayload, ftx))
+        {
+            // TODO: How to handle lockOutputIndex out of range?  Log error and ignore or throw?
+
+            CFutureIndexKey key = CFutureIndexKey(tx.GetHash(), ftx.lockOutputIndex);
+            CTxOut txOut = tx.vout[ftx.lockOutputIndex];
+
+            uint160 addressHash;
+            int addressType;
+            if (txOut.scriptPubKey.IsPayToScriptHash()) {
+                addressHash = uint160(std::vector<unsigned char> (txOut.scriptPubKey.begin()+2, txOut.scriptPubKey.begin()+22));
+                addressType = 2;
+            } else if (txOut.scriptPubKey.IsPayToPublicKeyHash()) {
+                addressHash = uint160(std::vector<unsigned char> (txOut.scriptPubKey.begin()+3, txOut.scriptPubKey.begin()+23));
+                addressType = 1;
+            } else if (txOut.scriptPubKey.IsPayToPublicKey()) {
+                addressHash = Hash160(txOut.scriptPubKey.begin()+1, txOut.scriptPubKey.end()-1);
+                addressType = 1;
+            } else {
+                addressHash.SetNull();
+                addressType = 0;
+            }
+
+            unsigned int toHeight = entry.GetHeight() + ftx.maturity;
+            int64_t      toTime   = GetAdjustedTime() + ftx.lockTime;
+
+            CFutureIndexValue value = CFutureIndexValue(txOut.nValue, addressType, addressHash, entry.GetHeight(), toHeight, toTime);//  txhash, j, -1, prevout.nValue, addressType, addressHash);
+            mapFuture.insert(std::make_pair(key, value));
+            mapFutureInserted.insert(make_pair(tx.GetHash(), key));
+        }
+    }
+}
+
+bool CTxMemPool::getFutureIndex(CFutureIndexKey &key, CFutureIndexValue &value)
+{
+    LOCK(cs);
+
+    mapFutureIndex::iterator it = mapFuture.find(key);
+    if (it != mapFuture.end()) {
+        value = it->second;
+        return true;
+    }
+    return false;
+}
+
+bool CTxMemPool::removeFutureIndex(const uint256 txhash)
+{
+    LOCK(cs);
+
+    mapFutureIndexInserted::iterator it = mapFutureInserted.find(txhash);
+    if (it != mapFutureInserted.end()) {
+        CFutureIndexKey key = (*it).second;
+            mapFuture.erase(key);
+        mapFutureInserted.erase(it);
+    }
+    return true;
+}
+
+
 void CTxMemPool::addSpentIndex(const CTxMemPoolEntry &entry, const CCoinsViewCache &view)
 {
     LOCK(cs);
