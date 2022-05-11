@@ -15,40 +15,40 @@
 // a block off the wire, but before we can relay the block on to peers using
 // compact block relay.
 
-static void DeserializeBlockTest(benchmark::State& state)
+static void DeserializeBlockTest(benchmark::Bench& bench)
 {
-    CDataStream stream((const char*)raw_bench::block813851,
-            (const char*)&raw_bench::block813851[sizeof(raw_bench::block813851)],
+    CDataStream stream((const char*)raw_bench::block213851,
+            (const char*)&raw_bench::block213851[sizeof(raw_bench::block213851)],
             SER_NETWORK, PROTOCOL_VERSION);
     char a = '\0';
     stream.write(&a, 1); // Prevent compaction
 
-    while (state.KeepRunning()) {
+    bench.unit("block").run([&] {
         CBlock block;
         stream >> block;
-        assert(stream.Rewind(sizeof(raw_bench::block813851)));
-    }
+        assert(stream.Rewind(sizeof(raw_bench::block213851)));
+    });
 }
 
-static void DeserializeAndCheckBlockTest(benchmark::State& state)
+static void DeserializeAndCheckBlockTest(benchmark::Bench& bench)
 {
-    CDataStream stream((const char*)raw_bench::block813851,
-            (const char*)&raw_bench::block813851[sizeof(raw_bench::block813851)],
+    CDataStream stream((const char*)raw_bench::block213851,
+            (const char*)&raw_bench::block213851[sizeof(raw_bench::block213851)],
             SER_NETWORK, PROTOCOL_VERSION);
     char a = '\0';
     stream.write(&a, 1); // Prevent compaction
 
     const auto chainParams = CreateChainParams(CBaseChainParams::MAIN);
 
-    while (state.KeepRunning()) {
+    bench.unit("block").run([&] {
         CBlock block; // Note that CBlock caches its checked state, so we need to recreate it here
         stream >> block;
-        assert(stream.Rewind(sizeof(raw_bench::block813851)));
+        assert(stream.Rewind(sizeof(raw_bench::block213851)));
 
         CValidationState validationState;
         assert(CheckBlock(block, validationState, chainParams->GetConsensus(), block.GetBlockTime()));
-    }
+    });
 }
 
-BENCHMARK(DeserializeBlockTest, 130);
-BENCHMARK(DeserializeAndCheckBlockTest, 160);
+BENCHMARK(DeserializeBlockTest);
+BENCHMARK(DeserializeAndCheckBlockTest);

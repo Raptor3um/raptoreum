@@ -68,13 +68,13 @@ struct DKG
         //assert(worker.VerifyVerificationVector(*members[memberIdx].quorumVvec));
     }
 
-    void Bench_BuildQuorumVerificationVectors(benchmark::State& state, bool parallel)
+    void Bench_BuildQuorumVerificationVectors(benchmark::Bench& bench, bool parallel)
     {
         ReceiveVvecs();
 
-        while (state.KeepRunning()) {
+        bench.run([&] {
             BuildQuorumVerificationVector(parallel);
-        }
+        });
     }
 
     void VerifyContributionShares(size_t whoAmI, const std::set<size_t>& invalidIndexes, bool parallel, bool aggregated)
@@ -89,13 +89,13 @@ struct DKG
         }
     }
 
-    void Bench_VerifyContributionShares(benchmark::State& state, int invalidCount, bool parallel, bool aggregated)
+    void Bench_VerifyContributionShares(benchmark::Bench& bench, int invalidCount, bool parallel, bool aggregated)
     {
         ReceiveVvecs();
 
         // Benchmark.
         size_t memberIdx = 0;
-        while (state.KeepRunning()) {
+        bench.run([&] {
             auto& m = members[memberIdx];
 
             ReceiveShares(memberIdx);
@@ -110,7 +110,7 @@ struct DKG
             VerifyContributionShares(memberIdx, invalidIndexes, parallel, aggregated);
 
             memberIdx = (memberIdx + 1) % members.size();
-        }
+        });
     }
 };
 
@@ -141,12 +141,12 @@ void CleanupBLSDkgTests()
 
 
 #define BENCH_BuildQuorumVerificationVectors(name, quorumSize, parallel, num_iters_for_one_second) \
-    static void BLSDKG_BuildQuorumVerificationVectors_##name##_##quorumSize(benchmark::State& state) \
+    static void BLSDKG_BuildQuorumVerificationVectors_##name##_##quorumSize(benchmark::Bench& bench) \
     { \
         InitIfNeeded(); \
-        dkg##quorumSize->Bench_BuildQuorumVerificationVectors(state, parallel); \
+        dkg##quorumSize->Bench_BuildQuorumVerificationVectors(bench, parallel); \
     } \
-    BENCHMARK(BLSDKG_BuildQuorumVerificationVectors_##name##_##quorumSize, num_iters_for_one_second)
+    BENCHMARK(BLSDKG_BuildQuorumVerificationVectors_##name##_##quorumSize)
 
 BENCH_BuildQuorumVerificationVectors(simple, 10, false, 11000)
 BENCH_BuildQuorumVerificationVectors(simple, 100, false, 110)
@@ -160,12 +160,12 @@ BENCH_BuildQuorumVerificationVectors(parallel, 400, true, 8)
 
 
 #define BENCH_VerifyContributionShares(name, quorumSize, invalidCount, parallel, aggregated, num_iters_for_one_second) \
-    static void BLSDKG_VerifyContributionShares_##name##_##quorumSize(benchmark::State& state) \
+    static void BLSDKG_VerifyContributionShares_##name##_##quorumSize(benchmark::Bench& bench) \
     { \
         InitIfNeeded(); \
-        dkg##quorumSize->Bench_VerifyContributionShares(state, invalidCount, parallel, aggregated); \
+        dkg##quorumSize->Bench_VerifyContributionShares(bench, invalidCount, parallel, aggregated); \
     } \
-    BENCHMARK(BLSDKG_VerifyContributionShares_##name##_##quorumSize, num_iters_for_one_second)
+    BENCHMARK(BLSDKG_VerifyContributionShares_##name##_##quorumSize)
 
 BENCH_VerifyContributionShares(simple, 10, 5, false, false, 70)
 BENCH_VerifyContributionShares(simple, 100, 5, false, false, 1)
