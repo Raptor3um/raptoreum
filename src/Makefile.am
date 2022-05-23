@@ -180,6 +180,7 @@ BITCOIN_CORE_H = \
   indices/future_index.h \
   indirectmap.h \
   init.h \
+  interfaces/chain.h \
   interfaces/handler.h \
   interfaces/node.h \
   interfaces/wallet.h \
@@ -331,6 +332,9 @@ libraptoreum_server_a_SOURCES = \
   evo/specialtx.cpp \
   httprpc.cpp \
   httpserver.cpp \
+  interfaces/chain.cpp \
+  interfaces/handler.cpp \
+  interfaces/node.cpp \
   init.cpp \
   interfaces/node.cpp \
   mapport.cpp \
@@ -652,8 +656,6 @@ libraptoreum_util_a_SOURCES = \
   compat/glibc_sanity.cpp \
   compat/glibcxx_sanity.cpp \
   fs.cpp \
-  interfaces/handler.cpp \
-  interfaces/node.cpp \
   logging.cpp \
   random.cpp \
   randomenv.cpp \

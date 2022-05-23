@@ -44,6 +44,8 @@
 #ifdef ENABLE_WALLET
 extern UniValue signrawtransaction(const JSONRPCRequest& request);
 extern UniValue sendrawtransaction(const JSONRPCRequest& request);
+#else
+class CWallet;
 #endif//ENABLE_WALLET
 
 std::string get_current_dir()
@@ -328,8 +330,8 @@ static void FundSpecialTx(CWallet* pwallet, CMutableTransaction& tx, const Speci
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
 
-    LOCK2(cs_main, mempool.cs);
-    LOCK(pwallet->cs_wallet);
+    auto locked_chain = pwallet->chain().lock();
+    LOCK2(mempool.cs, pwallet->cs_wallet);
 
     CTxDestination nodest = CNoDestination();
     if (fundDest == nodest) {
@@ -360,7 +362,7 @@ static void FundSpecialTx(CWallet* pwallet, CMutableTransaction& tx, const Speci
     coinControl.fRequireAllInputs = false;
 
     std::vector<COutput> vecOutputs;
-    pwallet->AvailableCoins(vecOutputs);
+    pwallet->AvailableCoins(*locked_chain, vecOutputs);
 
     for (const auto& out : vecOutputs) {
         CTxDestination txDest;
@@ -379,7 +381,7 @@ static void FundSpecialTx(CWallet* pwallet, CMutableTransaction& tx, const Speci
     int nChangePos = -1;
     std::string strFailReason;
 
-    if (!pwallet->CreateTransaction(vecSend, newTx, reservekey, nFee, nChangePos, strFailReason, coinControl, false, tx.vExtraPayload.size())) {
+    if (!pwallet->CreateTransaction(*locked_chain, vecSend, newTx, reservekey, nFee, nChangePos, strFailReason, coinControl, false, tx.vExtraPayload.size())) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, strFailReason);
     }
 
@@ -1231,21 +1233,15 @@ void protx_list_help()
   );
 }
 
+#ifdef ENABLE_WALLET
 static bool CheckWalletOwnsKey(CWallet* pwallet, const CKeyID& keyID) {
-#ifndef ENABLE_WALLET
-    return false;
-#else
     if (!pwallet) {
         return false;
     }
     return pwallet->HaveKey(keyID);
-#endif
 }
 
 static bool CheckWalletOwnsScript(CWallet* pwallet, const CScript& script) {
-#ifndef ENABLE_WALLET
-    return false;
-#else
     if (!pwallet) {
         return false;
     }
@@ -1257,8 +1253,8 @@ static bool CheckWalletOwnsScript(CWallet* pwallet, const CScript& script) {
         }
     }
     return false;
-#endif
 }
+#endif
 
 UniValue BuildDMNListEntry(CWallet* pwallet, const CDeterministicMNCPtr& dmn, bool detailed)
 {

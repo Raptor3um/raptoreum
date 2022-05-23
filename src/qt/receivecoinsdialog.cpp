@@ -84,6 +84,9 @@ void ReceiveCoinsDialog::setModel(WalletModel *_model)
         connect(tableView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &ReceiveCoinsDialog::recentRequestsView_selectionChanged);
         // Last 2 columns are set by the columnResizingFixer, when the table geometry is ready.
         columnResizingFixer = new GUIUtil::TableViewLastColumnResizingFixer(tableView, AMOUNT_MINIMUM_COLUMN_WIDTH, DATE_COLUMN_WIDTH, this);
+
+        // eventually disable the main receive button if private key operations are disabled.
+        ui->receiveButton->setEnabled(!model->privateKeysDisabled());
     }
 }
 

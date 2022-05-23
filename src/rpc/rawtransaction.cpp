@@ -613,7 +613,6 @@ UniValue decoderawtransaction(const JSONRPCRequest& request)
             + HelpExampleRpc("decoderawtransaction", "\"hexstring\"")
         );
 
-    LOCK(cs_main);
     RPCTypeCheck(request.params, {UniValue::VSTR});
 
     CMutableTransaction mtx;
@@ -770,13 +769,13 @@ UniValue combinerawtransaction(const JSONRPCRequest& request)
             }
         }
 
-        UpdateTransaction(mergedTx, i, sigdata);
+        UpdateInput(txin, sigdata);
     }
 
     return EncodeHexTx(mergedTx);
 }
 
-UniValue SignTransaction(CMutableTransaction& mtx, const UniValue& prevTxsUnival, CBasicKeyStore *keystore, bool is_temp_keystore, const UniValue& hashType)
+UniValue SignTransaction(interfaces::Chain& chain, CMutableTransaction& mtx, const UniValue& prevTxsUnival, CBasicKeyStore *keystore, bool is_temp_keystore, const UniValue& hashType)
 {
     // Fetch previous transactions (inputs):
     CCoinsView viewDummy;
@@ -903,7 +902,7 @@ UniValue SignTransaction(CMutableTransaction& mtx, const UniValue& prevTxsUnival
         }
         sigdata = CombineSignatures(prevPubKey, TransactionSignatureChecker(&txConst, i, amount), sigdata, DataFromTransaction(mtx, i));
 
-        UpdateTransaction(mtx, i, sigdata);
+        UpdateInput(txin, sigdata);
 
         ScriptError serror = SCRIPT_ERR_OK;
         if (!VerifyScript(txin.scriptSig, prevPubKey, STANDARD_SCRIPT_VERIFY_FLAGS, TransactionSignatureChecker(&txConst, i, amount), &serror)) {
@@ -1003,7 +1002,7 @@ UniValue signrawtransactionwithkey(const JSONRPCRequest& request)
         keystore.AddKey(key);
     }
 
-    return SignTransaction(mtx, request.params[2], &keystore, true, request.params[3]);
+    return SignTransaction(*g_rpc_interfaces->chain, mtx, request.params[2], &keystore, true, request.params[3]);
 }
 
 UniValue signrawtransaction(const JSONRPCRequest& request)

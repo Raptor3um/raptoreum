@@ -185,7 +185,8 @@ public:
     //! Try to get updated status for a particular transaction, if possible without blocking.
     virtual bool tryGetTxStatus(const uint256& txid,
         WalletTxStatus& tx_status,
-        int64_t& adjusted_time) = 0;
+        int64_t& adjusted_time,
+        int64_t& block_time) = 0;
 
     //! Get transaction details.
     virtual WalletTx getWalletTxDetails(const uint256& txid,
@@ -204,7 +205,6 @@ public:
     //! Get balances.
     virtual WalletBalances getBalances() = 0;
 
-    virtual std::map<CTxDestination, CAmount> GetAddressBalances() = 0;
     //! Get balances if possible without blocking.
     virtual bool tryGetBalances(WalletBalances& balances, int& num_blocks) = 0;
 
@@ -261,6 +261,9 @@ public:
     // Return whether HD enabled.
     virtual bool hdEnabled() = 0;
 
+    // Check is a creation wallet flag is set.
+    virtual bool IsWalletFlagSet(uint64_t flag) = 0;
+
     virtual CoinJoin::Client& coinJoin() = 0;
 
     //! Register handler for unload message.
@@ -312,7 +315,6 @@ public:
     //! Send pending transaction and commit to wallet.
     virtual bool commit(WalletValueMap value_map,
         WalletOrderForm order_form,
-        std::string from_account,
         std::string& reject_reason) = 0;
 };
 

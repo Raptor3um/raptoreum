@@ -36,7 +36,8 @@ public:
     CTransactionBuilderTestSetup()
     {
         CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
-        wallet = MakeUnique<CWallet>(WalletLocation(), WalletDatabase::CreateMock());
+        chain = interfaces::MakeChain();
+        wallet = MakeUnique<CWallet>(*chain, WalletLocation(), WalletDatabase::CreateMock());
         bool firstRun;
         wallet->LoadWallet(firstRun);
         AddWallet(wallet);
@@ -46,7 +47,8 @@ public:
         }
         WalletRescanReserver reserver(wallet.get());
         reserver.reserve();
-        wallet->ScanForWalletTransactions(chainActive.Genesis(), nullptr, reserver);
+        const CBlockIndex *stop_block, *failed_block;
+        wallet->ScanForWalletTransactions(chainActive.Genesis(), nullptr, reserver, failed_block, stop_block);
     }
 
     ~CTransactionBuilderTestSetup()
@@ -54,6 +56,7 @@ public:
         RemoveWallet(wallet);
     }
 
+    std::shared_ptr<interfaces::Chain> chain;
     std::shared_ptr<CWallet> wallet;
 
     CWalletTx& AddTxToChain(uint256 nTxHash)
@@ -83,11 +86,13 @@ public:
         CPubKey pubKey;
         BOOST_CHECK(destKey.GetReservedKey(pubKey, false));
         tallyItem.txdest = pubKey.GetID();
-
         for (CAmount nAmount : vecAmounts) {
-            BOOST_CHECK(wallet->CreateTransaction({{GetScriptForDestination(tallyItem.txdest), nAmount, false}}, tx, reserveKey, nFeeRet, nChangePosRet, strError, coinControl));
+            {
+                auto locked_chain = chain->lock();
+                BOOST_CHECK(wallet->CreateTransaction(*locked_chain, {{GetScriptForDestination(tallyItem.txdest), nAmount, false}}, tx, reserveKey, nFeeRet, nChangePosRet, strError, coinControl));
+            }
             CValidationState state;
-            BOOST_CHECK(wallet->CommitTransaction(tx, {}, {}, {}, reserveKey, nullptr, state));
+            BOOST_CHECK(wallet->CommitTransaction(tx, {}, {}, reserveKey, nullptr, state));
             AddTxToChain(tx->GetHash());
             for (size_t n = 0; n < tx->vout.size(); ++n) {
                 if (nChangePosRet != -1 && n == nChangePosRet) {

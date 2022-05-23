@@ -17,8 +17,16 @@
 #include <txmempool.h>
 
 #include <memory>
+#include <type_traits>
 
 #include <boost/thread.hpp>
+
+// Enable BOOST_CHECK_EQUAL for enum class types
+template <typename T>
+std::ostream& operator<<(typename std::enable_if<std::is_enum<T>::value, std::ostream>::type& stream, const T& e)
+{
+  return stream << static_cast<typename std::underlying_type<T>::type>(e);
+}
 
 extern FastRandomContext insecure_rand_ctx;
 
@@ -37,6 +45,8 @@ static inline uint256 InsecureRand256() { return insecure_rand_ctx.rand256(); }
 static inline uint64_t InsecureRandBits(int bits) { return insecure_rand_ctx.randbits(bits); }
 static inline uint64_t InsecureRandRange(uint64_t range) { return insecure_rand_ctx.randrange(range); }
 static inline bool InsecureRandBool() { return insecure_rand_ctx.randbool(); }
+
+static constexpr CAmount CENT{1000000};
 
 /** Basic testing setup.
  * This just configures logging and chain parameters.

@@ -583,8 +583,8 @@ bool RPCConsole::eventFilter(QObject* obj, QEvent *event)
         case Qt::Key_Enter:
             // forward these events to lineEdit
             if(obj == autoCompleter->popup()) {
-                autoCompleter->popup()->hide();
                 QApplication::postEvent(ui->lineEdit, new QKeyEvent(*keyevt));
+                autoCompleter->popup()->hide();
                 return true;
             }
             break;
@@ -1146,10 +1146,9 @@ void RPCConsole::startExecutor()
 
 void RPCConsole::on_stackedWidgetRPC_currentChanged(int index)
 {
-    if (ui->stackedWidgetRPC->widget(index) == ui->pageConsole)
+    if (ui->stackedWidgetRPC->widget(index) == ui->pageConsole) {
         ui->lineEdit->setFocus();
-    else if (ui->stackedWidgetRPC->widget(index) != ui->pagePeers)
-        clearSelectedNode();
+    }
 }
 
 void RPCConsole::on_openDebugLogfileButton_clicked()

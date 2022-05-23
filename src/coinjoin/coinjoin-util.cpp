@@ -141,7 +141,7 @@ CTransactionBuilder::CTransactionBuilder(std::shared_ptr<CWallet> pwalletIn, con
             SignatureData sigdata;
             bool res = ProduceSignature(DummySignatureCreator(pwallet.get()), scriptPubKey, sigdata);
             assert(res);
-            UpdateTransaction(dummyTx, nIn, sigdata);
+            UpdateInput(dummyTx.vin[nIn], sigdata);
             nIn++;
         }
     }
@@ -277,7 +277,7 @@ bool CTransactionBuilder::Commit(std::string& strResult)
     }
 
     CTransactionRef tx;
-    if (!pwallet->CreateTransaction(vecSend, tx, dummyReserveKey, nFeeRet, nChangePosRet, strResult, coinControl)) {
+    if (!pwallet->CreateTransaction(*pwallet->chain().lock(), vecSend, tx, dummyReserveKey, nFeeRet, nChangePosRet, strResult, coinControl)) {
         return false;
     }
 
@@ -313,7 +313,7 @@ bool CTransactionBuilder::Commit(std::string& strResult)
     }
 
     CValidationState state;
-    if (!pwallet->CommitTransaction(tx, {}, {}, {}, dummyReserveKey, g_connman.get(), state)) {
+    if (!pwallet->CommitTransaction(tx, {}, {}, dummyReserveKey, g_connman.get(), state)) {
         strResult = state.GetRejectReason();
         return false;
     }

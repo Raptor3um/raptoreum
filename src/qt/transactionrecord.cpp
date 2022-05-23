@@ -6,6 +6,7 @@
 
 #include <qt/transactionrecord.h>
 
+#include <chain.h>
 #include <consensus/consensus.h>
 #include <interfaces/wallet.h>
 #include <interfaces/node.h>
@@ -19,6 +20,7 @@
 
 #include <stdint.h>
 
+#include <QDateTime>
 
 /* Return positive answer if transaction should be shown in list.
  */
@@ -344,9 +346,10 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(interfaces::Wal
 
         LogPrintf("TransactionRecord::%s TxId: %s, vOutIdx: %d, Unhandled\n", __func__, hash.ToString(), vOutIdx);
     }
-    return parts;}
+    return parts;
+}
 
-void TransactionRecord::updateStatus(const interfaces::WalletTx& wtx, const interfaces::WalletTxStatus& wtxStatus, int numBlocks, int64_t adjustedTime, int chainLockHeight)
+void TransactionRecord::updateStatus(const interfaces::WalletTx& wtx, const interfaces::WalletTxStatus& wtxStatus, int numBlocks, int64_t adjustedTime, int chainLockHeight, int64_t block_time)
 {
     // Determine transaction status
 
@@ -363,7 +366,8 @@ void TransactionRecord::updateStatus(const interfaces::WalletTx& wtx, const inte
     status.lockedByChainLocks = wtxStatus.is_chainlocked;
     status.lockedByInstantSend = wtxStatus.is_islocked;
 
-    if (!wtxStatus.is_final) {
+    const bool up_to_date = ((int64_t)QDateTime::currentMSecsSinceEpoch() / 1000 - block_time < MAX_BLOCK_TIME_GAP);
+    if (up_to_date && !wtxStatus.is_final) {
         if (wtxStatus.lock_time < LOCKTIME_THRESHOLD) {
             status.status = TransactionStatus::OpenUntilBlock;
             status.open_for = wtxStatus.lock_time - numBlocks;

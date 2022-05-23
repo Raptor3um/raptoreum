@@ -17,6 +17,9 @@
 class CKeyStore;
 class CPubKey;
 class CScript;
+struct InitInterfaces;
+
+extern InitInterfaces* g_rpc_interfaces;
 
 CPubKey HexToPubKey(const std::string& hex_in);
 CPubKey AddrToPubKey(CKeyStore* const keystore, const std::string& addr_in);

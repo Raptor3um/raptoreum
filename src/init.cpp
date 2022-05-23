@@ -23,6 +23,7 @@
 #include <fs.h>
 #include <httpserver.h>
 #include <httprpc.h>
+#include <interfaces/chain.h>
 #include <key.h>
 #include <mapport.h>
 #include <validation.h>
@@ -36,6 +37,7 @@
 #include <rpc/server.h>
 #include <rpc/register.h>
 #include <rpc/blockchain.h>
+#include <rpc/util.h>
 #include <script/standard.h>
 #include <script/sigcache.h>
 #include <scheduler.h>
@@ -214,7 +216,7 @@ void Interrupt()
 }
 
 /** Preparing steps before shutting down or restarting the wallet */
-void PrepareShutdown()
+void PrepareShutdown(InitInterfaces& interfaces)
 {
     static Mutex g_shutdown_mutex;
     TRY_LOCK(g_shutdown_mutex, lock_shutdown);
@@ -238,7 +240,9 @@ void PrepareShutdown()
     std::string statusmessage;
     bool fRPCInWarmup = RPCIsInWarmup(&statusmessage);
 
-    g_wallet_init_interface.Flush();
+    for (const auto& client : interfaces.chain_clients) {
+      client->flush();
+    }
     StopMapPort();
 
     // Because these depend on each-other, we make sure that neither can be
@@ -322,7 +326,9 @@ void PrepareShutdown()
         deterministicMNManager.reset();
         evoDb.reset();
     }
-    g_wallet_init_interface.Stop();
+    for (const auto& client : interfaces.chain_clients) {
+      client->stop();
+    }
 
 #if ENABLE_ZMQ
     if (g_zmq_notification_interface) {
@@ -354,7 +360,7 @@ void PrepareShutdown()
         LogPrintf("%s: Unable to remove PID file: %s\n", __func__, e.what());
     }
 #endif
-    g_wallet_init_interface.Close();
+    interfaces.chain_clients.clear();
     UnregisterAllValidationInterfaces();
     GetMainSignals().UnregisterBackgroundSignalScheduler();
     GetMainSignals().UnregisterWithMempoolSignals(mempool);
@@ -369,11 +375,11 @@ void PrepareShutdown()
 * called implicitly when the parent object is deleted. In this case we have to skip the
 * PrepareShutdown() part because it was already executed and just delete the wallet instance.
 */
-void Shutdown()
+void Shutdown(InitInterfaces& interfaces)
 {
     // Shutdown part 1: prepare shutdown
     if(!RestartRequested()) {
-        PrepareShutdown();
+        PrepareShutdown(interfaces);
     }
     // Shutdown part 2: delete wallet instance
     globalVerifyHandle.reset();
@@ -1508,7 +1514,7 @@ bool AppInitLockDataDirectory()
     return true;
 }
 
-bool AppInitMain()
+bool AppInitMain(InitInterfaces& interfaces)
 {
     const CChainParams& chainparams = Params();
     // ********************************************************* Step 4a: application initialization
@@ -1533,7 +1539,16 @@ bool AppInitMain()
         LogPrintf("Startup time: %s\n", FormatISO8601DateTime(GetTime()));
     LogPrintf("Default data directory %s\n", GetDefaultDataDir().string());
     LogPrintf("Using data directory %s\n", GetDataDir().string());
-    LogPrintf("Using config file %s\n", GetConfigFile(gArgs.GetArg("-conf", BITCOIN_CONF_FILENAME)).string());
+
+    fs::path config_file_path = GetConfigFile(gArgs.GetArg("-conf", BITCOIN_CONF_FILENAME));
+    if (fs::exist(config_file_path)) {
+      LogPrintf("Config file: %s\n", config_file_path.string());
+    } else if (gArgs.IsArgSet("-conf")) {
+      InitWarning(strprintf(_("The specified config file %s does not exist\n"), config_file_path.string()));
+    } else {
+      LogPrintf("Config file: %s not found, skipping\n", config_file_path.string());
+    }
+
     LogPrintf("Using at most %i automatic connections (%i file descriptors available)\n", nMaxConnections, nFD);
 
     // Warn about relative -datadir path.
@@ -1603,11 +1618,20 @@ bool AppInitMain()
 
     tableRPC.InitPlatformRestrictions();
 
+    // Create client interfaces for wallets that are supposed to be loaded
+    // according to `-wallet` and `-disabewallet` options. This only constructs
+    // the interfaces. It doesn't load wallet data. Wallets actually get loaded
+    // when `load()` and `start()` interface methods are called below.
+    g_wallet_init_interface.Construct(interfaces);
+
     /* Register RPC commands regardless of -server setting so they will be
      * available in the GUI RPC console even if external calls are disabled.
      */
     RegisterAllCoreRPCCommands(tableRPC);
-    g_wallet_init_interface.RegisterRPC(tableRPC);
+    for (const auto& client : interfaces.chain_clients) {
+      client->registerRpcs();
+    }
+    g_rpc_interfaces = &interfaces;
 #if ENABLE_ZMQ
     RegisterZMQRPCCommands(tableRPC);
 #endif
@@ -1627,7 +1651,11 @@ bool AppInitMain()
     // ********************************************************* Step 5: verify wallet database integrity
 
     if (!g_wallet_init_interface.InitAutoBackup()) return false;
-    if (!g_wallet_init_interface.Verify()) return false;
+    for (const auto& client : interfaces.chain_clients) {
+      if (!client->verify()) {
+        return false;
+      }
+    }
 
     // Initialize KeePass Integration
     g_wallet_init_interface.InitKeePass();
@@ -2020,8 +2048,11 @@ bool AppInitMain()
     }
 
     // ********************************************************* Step 8b: load wallet
-
-    if (!g_wallet_init_interface.Open()) return false;
+    for (const auto& client : interfaces.chain_clients) {
+      if (!client->load()) {
+        return false;
+      }
+    }
 
     // As InitLoadWallet can take several minutes, it's possible the user
     // requested to kill the GUI during the last operation. If so, exit.
@@ -2315,7 +2346,9 @@ bool AppInitMain()
     SetRPCWarmupFinished();
     uiInterface.InitMessage(_("Done loading"));
 
-    g_wallet_init_interface.Start(scheduler);
+    for (const auto& client : interfaces.chain_clients) {
+      client->start(scheduler);
+    }
 
     return true;
 }

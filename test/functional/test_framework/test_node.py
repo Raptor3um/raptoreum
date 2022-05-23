@@ -325,6 +325,14 @@ class TestNodeCLIAttr:
     def get_request(self, *args, **kwargs):
         return lambda: self(*args, **kwargs)
 
+    def arg_to_cli(arg):
+        if isinstance(arg, bool):
+            return str(arg).lower()
+        elif isinstance(arg, dict) or isinstance(arg, list):
+            return json.dumps(arg)
+        else:
+            return str(arg)
+
 class TestNodeCLI():
     """Interface to raptoreum-cli for an individual node"""
 
@@ -356,9 +364,8 @@ class TestNodeCLI():
 
     def send_cli(self, command=None, *args, **kwargs):
         """Run raptoreum-cli command. Deserializes returned string as python object."""
-
-        pos_args = [str(arg) for arg in args]
-        named_args = [str(key) + "=" + str(value) for (key, value) in kwargs.items()]
+        pos_args = [arg_to_cli(arg) for arg in args]
+        named_args = [str(key) + "=" + arg_to_cli(value) for (key, value) in kwargs.items()]
         assert not (pos_args and named_args), "Cannot use positional arguments and named arguments in the same raptoreum-cli call"
         p_args = [self.binary, "-datadir=" + self.datadir] + self.options
         if named_args:

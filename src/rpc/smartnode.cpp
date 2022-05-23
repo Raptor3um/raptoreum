@@ -209,14 +209,15 @@ UniValue smartnode_outputs(const JSONRPCRequest& request)
     if (request.fHelp)
         smartnode_outputs_help();
 
-    LOCK2(cs_main, pwallet->cs_wallet);
-
     // Find possible candidates
     std::vector<COutput> vPossibleCoins;
     CCoinControl coin_control;
     coin_control.nCoinType = CoinType::ONLY_SMARTNODE_COLLATERAL;
-    pwallet->AvailableCoins(vPossibleCoins, true, &coin_control);
-
+    {
+      auto locked_chain = pwallet->chain().lock();
+      LOCK(pwallet->cs_wallet);
+      pwallet->AvailableCoins(*locked_chain, vPossibleCoins, true, &coin_control);
+    }
     UniValue obj(UniValue::VOBJ);
     for (const auto& out : vPossibleCoins) {
         obj.pushKV(out.tx->GetHash().ToString(), strprintf("%d", out.i));

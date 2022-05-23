@@ -21,6 +21,7 @@
 #include <validation.h>
 
 #include <atomic>
+#include <string>
 
 #include <boost/thread.hpp>
 
@@ -162,27 +163,6 @@ bool WalletBatch::WriteMinVersion(int nVersion)
     return WriteIC(std::string("minversion"), nVersion);
 }
 
-bool WalletBatch::ReadAccount(const std::string& strAccount, CAccount& account)
-{
-    account.SetNull();
-    return m_batch.Read(std::make_pair(std::string("acc"), strAccount), account);
-}
-
-bool WalletBatch::WriteAccount(const std::string& strAccount, const CAccount& account)
-{
-    return WriteIC(std::make_pair(std::string("acc"), strAccount), account);
-}
-
-bool WalletBatch::EraseAccount(const std::string& strAccount)
-{
-    return EraseIC(std::make_pair(std::string("acc"), strAccount));
-}
-
-bool WalletBatch::WriteAccountingEntry(const uint64_t nAccEntryNum, const CAccountingEntry& acentry)
-{
-    return WriteIC(std::make_pair(std::string("acentry"), std::make_pair(acentry.strAccount, nAccEntryNum)), acentry);
-}
-
 bool WalletBatch::ReadCoinJoinSalt(uint256& salt, bool fLegacy)
 {
     // TODO: Remove legacy checks after few major releases
@@ -197,61 +177,6 @@ bool WalletBatch::WriteCoinJoinSalt(const uint256& salt)
 bool WalletBatch::WriteGovernanceObject(const CGovernanceObject& obj)
 {
     return WriteIC(std::make_pair(std::string("gobject"), obj.GetHash()), obj, false);
-}
-
-CAmount WalletBatch::GetAccountCreditDebit(const std::string& strAccount)
-{
-    std::list<CAccountingEntry> entries;
-    ListAccountCreditDebit(strAccount, entries);
-
-    CAmount nCreditDebit = 0;
-    for (const CAccountingEntry& entry : entries)
-        nCreditDebit += entry.nCreditDebit;
-
-    return nCreditDebit;
-}
-
-void WalletBatch::ListAccountCreditDebit(const std::string& strAccount, std::list<CAccountingEntry>& entries)
-{
-    bool fAllAccounts = (strAccount == "*");
-
-    Dbc* pcursor = m_batch.GetCursor();
-    if (!pcursor)
-        throw std::runtime_error(std::string(__func__) + ": cannot create DB cursor");
-    bool setRange = true;
-    while (true)
-    {
-        // Read next record
-        CDataStream ssKey(SER_DISK, CLIENT_VERSION);
-        if (setRange)
-            ssKey << std::make_pair(std::string("acentry"), std::make_pair((fAllAccounts ? std::string("") : strAccount), uint64_t(0)));
-        CDataStream ssValue(SER_DISK, CLIENT_VERSION);
-        int ret = m_batch.ReadAtCursor(pcursor, ssKey, ssValue, setRange);
-        setRange = false;
-        if (ret == DB_NOTFOUND)
-            break;
-        else if (ret != 0)
-        {
-            pcursor->close();
-            throw std::runtime_error(std::string(__func__) + ": error scanning DB");
-        }
-
-        // Unserialize
-        std::string strType;
-        ssKey >> strType;
-        if (strType != "acentry")
-            break;
-        CAccountingEntry acentry;
-        ssKey >> acentry.strAccount;
-        if (!fAllAccounts && acentry.strAccount != strAccount)
-            break;
-
-        ssValue >> acentry;
-        ssKey >> acentry.nEntryNo;
-        entries.push_back(acentry);
-    }
-
-    pcursor->close();
 }
 
 class CWalletScanState {
@@ -313,8 +238,9 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
                 {
                     char fTmp;
                     char fUnused;
-                    ssValue >> fTmp >> fUnused >> wtx.strFromAccount;
-                    strErr = strprintf("LoadWallet() upgrading tx ver=%d %d '%s' %s", wtx.fTimeReceivedIsTxTime, fTmp, wtx.strFromAccount, hash.ToString());
+                    std::string unused_string;
+                    ssValue >> fTmp >> fUnused >> unused_string;
+                    strErr = strprintf("LoadWallet() upgrading tx ver=%d %d %s", wtx.fTimeReceivedIsTxTime, fTmp, hash.ToString());
                     wtx.fTimeReceivedIsTxTime = fTmp;
                 }
                 else
@@ -329,25 +255,6 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
                 wss.fAnyUnordered = true;
 
             pwallet->LoadToWallet(wtx);
-        }
-        else if (strType == "acentry")
-        {
-            std::string strAccount;
-            ssKey >> strAccount;
-            uint64_t nNumber;
-            ssKey >> nNumber;
-            if (nNumber > pwallet->nAccountingEntryNumber)
-            {
-                pwallet->nAccountingEntryNumber = nNumber;
-            }
-
-            if (!wss.fAnyUnordered)
-            {
-                CAccountingEntry acentry;
-                ssValue >> acentry;
-                if (acentry.nOrderPos == -1)
-                    wss.fAnyUnordered = true;
-            }
         }
         else if (strType == "watchs")
         {
@@ -571,8 +478,15 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
                 strErr = "Invalid governance object: LoadGovernanceObject";
                 return false;
             }
+        } else if (strType == "flags") {
+          uint64_t flags;
+          ssValue >> flags;
+          if (!pwallet->SetWalletFlags(flags, true)) {
+            strErr = "Error reading wallet database: Unknown non-tolerable wallet flags found";
+            return false;
+          }
         }
-        else if (strType != "bestblock" && strType != "bestblock_nomerkle"){
+        else if (strType != "bestblock" && strType != "bestblock_nomerkle" && strType != "minversion") {
             wss.m_unknown_records++;
         }
     } catch (...)
@@ -609,7 +523,7 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
         Dbc* pcursor = m_batch.GetCursor();
         if (!pcursor)
         {
-            LogPrintf("Error getting wallet database cursor\n");
+            pwallet->WalletLogPrintf("Error getting wallet database cursor\n");
             return DBErrors::CORRUPT;
         }
 
@@ -623,7 +537,7 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
                 break;
             else if (ret != 0)
             {
-                LogPrintf("Error reading next record from wallet database\n");
+                pwallet->WalletLogPrintf("Error reading next record from wallet database\n");
                 return DBErrors::CORRUPT;
             }
 
@@ -633,10 +547,11 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
             {
                 // losing keys is considered a catastrophic error, anything else
                 // we assume the user can live with:
-                if (IsKeyType(strType) || strType == "defaultkey")
+                if (IsKeyType(strType) || strType == "defaultkey") {
                     result = DBErrors::CORRUPT;
-                else
-                {
+                } else if (strType == "flags") {
+                  result = DBErrors::TOO_NEW;
+                } else {
                     // Leave other errors alone, if we try to fix them we might make things worse.
                     fNoncriticalErrors = true; // ... but do warn the user there is something wrong.
                     if (strType == "tx")
@@ -645,13 +560,13 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
                 }
             }
             if (!strErr.empty())
-                LogPrintf("%s\n", strErr);
+                pwallet->WalletLogPrintf("%s\n", strErr);
         }
         pcursor->close();
 
         // Store initial external keypool size since we mostly use external keys in mixing
         pwallet->nKeysLeftSinceAutoBackup = pwallet->KeypoolCountExternalKeys();
-        LogPrintf("nKeysLeftSinceAutoBackup: %d\n", pwallet->nKeysLeftSinceAutoBackup);
+        pwallet->WalletLogPrintf("nKeysLeftSinceAutoBackup: %d\n", pwallet->nKeysLeftSinceAutoBackup);
     }
     catch (const boost::thread_interrupted&) {
         throw;
@@ -668,9 +583,9 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
     if (result != DBErrors::LOAD_OK)
         return result;
 
-    LogPrintf("nFileVersion = %d\n", wss.nFileVersion);
+    pwallet->WalletLogPrintf("nFileVersion = %d\n", wss.nFileVersion);
 
-    LogPrintf("Keys: %u plaintext, %u encrypted, %u total; Watch scripts: %u; HD PubKeys: %u; Metadata: %u; Unknown wallet records: %u\n",
+    pwallet->WalletLogPrintf("Keys: %u plaintext, %u encrypted, %u total; Watch scripts: %u; HD PubKeys: %u; Metadata: %u; Unknown wallet records: %u\n",
            wss.nKeys, wss.nCKeys, wss.nKeys + wss.nCKeys,
            wss.nWatchKeys, wss.nHDPubKeys, wss.nKeyMeta, wss.m_unknown_records);
 
@@ -690,12 +605,6 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
 
     if (wss.fAnyUnordered)
         result = pwallet->ReorderTransactions();
-
-    pwallet->laccentries.clear();
-    ListAccountCreditDebit("*", pwallet->laccentries);
-    for (CAccountingEntry& entry : pwallet->laccentries) {
-        pwallet->wtxOrdered.insert(make_pair(entry.nOrderPos, CWallet::TxPair(nullptr, &entry)));
-    }
 
     return result;
 }
@@ -923,6 +832,11 @@ bool WalletBatch::WriteHDPubKey(const CHDPubKey& hdPubKey, const CKeyMetadata& k
         return false;
 
     return WriteIC(std::make_pair(std::string("hdpubkey"), hdPubKey.extPubKey.pubkey), hdPubKey, false);
+}
+
+bool WalletBatch::WriteWalletFlags(const uint64_t flags)
+{
+  return WriteIC(std::string("flags"), flags);
 }
 
 bool WalletBatch::TxnBegin()

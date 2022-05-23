@@ -807,8 +807,10 @@ bool CCoinJoinClientSession::DoAutomaticDenominating(CConnman& connman, bool fDr
             return false;
         }
 
+        const auto bal = mixingWallet.GetBalance();
+
         // check if there is anything left to do
-        CAmount nBalanceAnonymized = mixingWallet.GetAnonymizedBalance();
+        CAmount nBalanceAnonymized = bal.m_anonymized;
         nBalanceNeedsAnonymized = CCoinJoinClientOptions::GetAmount() * COIN - nBalanceAnonymized;
 
         if (nBalanceNeedsAnonymized < 0) {
@@ -838,8 +840,8 @@ bool CCoinJoinClientSession::DoAutomaticDenominating(CConnman& connman, bool fDr
         // excluding denoms
         CAmount nBalanceAnonimizableNonDenom = mixingWallet.GetAnonymizableBalance(true);
         // denoms
-        CAmount nBalanceDenominatedConf = mixingWallet.GetDenominatedBalance();
-        CAmount nBalanceDenominatedUnconf = mixingWallet.GetDenominatedBalance(true);
+        CAmount nBalanceDenominatedConf = bal.m_denominated_trusted;
+        CAmount nBalanceDenominatedUnconf = bal.m_denominated_untrusted_pending;
         CAmount nBalanceDenominated = nBalanceDenominatedConf + nBalanceDenominatedUnconf;
         CAmount nBalanceToDenominate = CCoinJoinClientOptions::GetAmount() * COIN - nBalanceDenominated;
 
@@ -1512,13 +1514,14 @@ bool CCoinJoinClientSession::MakeCollateralAmounts(const CompactTallyItem& tally
 
 bool CCoinJoinClientSession::CreateCollateralTransaction(CMutableTransaction& txCollateral, std::string& strReason)
 {
-    LOCK2(cs_main, mixingWallet.cs_wallet);
+    auto locked_chain = mixingWallet.chain().lock();
+    LOCK2(mixingWallet.cs_wallet);
 
     std::vector<COutput> vCoins;
     CCoinControl coin_control;
     coin_control.nCoinType = CoinType::ONLY_COINJOIN_COLLATERAL;
 
-    mixingWallet.AvailableCoins(vCoins, true, &coin_control);
+    mixingWallet.AvailableCoins(*locked_chain, vCoins, true, &coin_control);
 
     if (vCoins.empty()) {
         strReason = strprintf("%s requires a collateral transaction and could not locate an acceptable input!", gCoinJoinName);

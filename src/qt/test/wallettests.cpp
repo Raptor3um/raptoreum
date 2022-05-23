@@ -1,6 +1,7 @@
 #include <qt/test/wallettests.h>
 
 #include <coinjoin/coinjoin-client.h>
+#include <interfaces/chain.h>
 #include <interfaces/node.h>
 #include <qt/bitcoinamountfield.h>
 #include <qt/callback.h>
@@ -119,7 +120,8 @@ void TestGUI()
     for (int i = 0; i < 5; ++i) {
         test.CreateAndProcessBlock({}, GetScriptForRawPubKey(test.coinbaseKey.GetPubKey()));
     }
-    std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>(WalletLocation(), WalletDatabase::CreateMock());
+    auto chain = interfaces::MakeChain();
+    std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>(*chain, WalletLocation(), WalletDatabase::CreateMock());
     AddWallet(wallet);
     bool firstRun;
     wallet->LoadWallet(firstRun);
@@ -129,10 +131,16 @@ void TestGUI()
         wallet->AddKeyPubKey(test.coinbaseKey, test.coinbaseKey.GetPubKey());
     }
     {
-        LOCK(cs_main);
+        auto locked_chain = wallet->chain().lock();
         WalletRescanReserver reserver(wallet.get());
         reserver.reserve();
-        wallet->ScanForWalletTransactions(chainActive.Genesis(), nullptr, reserver, true);
+        const CBlockIndex* const null_block = nullptr;
+        const CBlockIndex *stop_block, *failed_block;
+        QCOMPARE(
+          wallet->ScanForWalletTransactions(chainActive.Genesis(), nullptr, reserver, failed_block, stop_block, true),
+          CWallet::ScanResult::SUCCESS);
+        QCOMPARE(stop_block, chainActive.Tip());
+        QCOMPARE(failed_block, null_block);
     }
     wallet->SetBroadcastTransactions(true);
 
@@ -224,5 +232,11 @@ void TestGUI()
 
 void WalletTests::walletTests()
 {
-    TestGUI();
+#ifdef Q_OS_MAC
+  if (QApplication::platformName() == "minimal") {
+    QWARN("Skipping WalletTests on mac build with 'minimal' platform set due to Qt bugs. To run AppTests, invoke with 'test_raptoreum-qt -platform cocoa' on mac or use a linux or windows build.");
+    return;
+  }
+#endif
+  TestGUI();
 }

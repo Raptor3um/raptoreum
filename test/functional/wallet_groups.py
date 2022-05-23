@@ -5,6 +5,8 @@
 """Test wallet group functionality."""
 
 from test_framework.test_framework import BitcoinTestFramework
+from test_framework.mininode import FromHex, ToHex
+from test_framework.messages import CTransaction
 from test_framework.util import (
     assert_equal,
 )
@@ -62,6 +64,25 @@ class WalletGroupTest(BitcoinTestFramework):
         v.sort()
         assert_approx(v[0], 0.2)
         assert_approx(v[1], 1.3, 0.0001)
+
+        # Empty out node2's wallet
+        self.node[2].sendtoaddress(address=self.nodes[0].getnewaddress(), amount=self.nodes[2].getbalance(), substractfeefromamount=True)
+        self.sync_all()
+        self.nodes[0].generate(1)
+
+        for i in range(5):
+          raw_tx = self.nodes[0].createrawtransaction([{"txid":"0"*64, "vout":0}], [{addr2[0]: 0.05}])
+          tx = FromHex(CTransaction(), raw_tx)
+          tx.vin = []
+          tx.vout = [tx.vout[0]] * 2000
+          funded_tx = self.nodes[0].fundrawtransaction(ToHex(tx))
+          signed_tx = self.nodes[0].signrawtransactionwithwallet(funded_tx['hex'])
+          self.nodes[0].sendrawtransaction(signed_tx['hex'])
+          self.nodes[0].generate(1)
+
+        self.sync_all()
+
+        assert self.nodes[2].sendtoaddress(address=addr2[0], amount=5)
 
 if __name__ == '__main__':
     WalletGroupTest().main ()

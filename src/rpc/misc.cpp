@@ -1044,12 +1044,12 @@ UniValue logging(const JSONRPCRequest& request)
             "     ]\n"
             "\nResult:\n"
             "{                   (json object where keys are the logging categories, and values indicates its status\n"
-            "  \"category\": 0|1,  (numeric) if being debug logged or not. 0:inactive, 1:active\n"
+            "  \"category\": true|false,  (bool) if being debug logged or not. false:inactive, true:active\n"
             "  ...\n"
             "}\n"
             "\nExamples:\n"
             + HelpExampleCli("logging", "\"[\\\"all\\\"]\" \"[\\\"http\\\"]\"")
-            + HelpExampleRpc("logging", "[\"all\"], \"[libevent]\"")
+            + HelpExampleRpc("logging", "[\"all\"], [\"libevent\"]")
         );
     }
 
@@ -1099,18 +1099,6 @@ UniValue echo(const JSONRPCRequest& request)
     return request.params;
 }
 
-static UniValue getinfo_deprecated(const JSONRPCRequest& request)
-{
-    throw JSONRPCError(RPC_METHOD_NOT_FOUND,
-        "getinfo\n"
-        "\nThis call was removed in version 0.16.0. Use the appropriate fields from:\n"
-        "- getblockchaininfo: blocks, difficulty, chain\n"
-        "- getnetworkinfo: version, protocolversion, timeoffset, connections, proxy, relayfee, warnings\n"
-        "- getwalletinfo: balance, coinjoin_balance, keypoololdest, keypoolsize, paytxfee, unlocked_until, walletversion\n"
-        "\nraptoreum-cli has the option -getinfo to collect and format these in the old format."
-    );
-}
-
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         argNames
   //  --------------------- ------------------------  -----------------------  ----------
@@ -1137,7 +1125,6 @@ static const CRPCCommand commands[] =
     { "hidden",             "setmocktime",            &setmocktime,            {"timestamp"}},
     { "hidden",             "echo",                   &echo,                   {"arg0","arg1","arg2","arg3","arg4","arg5","arg6","arg7","arg8","arg9"}},
     { "hidden",             "echojson",               &echo,                   {"arg0","arg1","arg2","arg3","arg4","arg5","arg6","arg7","arg8","arg9"}},
-    { "hidden",             "getinfo",                &getinfo_deprecated,     {}},
     { "hidden",             "mnauth",                 &mnauth,                 {"nodeId", "proTxHash", "publicKey"}},
 };
 

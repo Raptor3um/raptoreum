@@ -6,7 +6,7 @@
 
 TESTS += test/test_raptoreum
 bin_PROGRAMS += test/test_raptoreum
-#noinst_PROGRAMS += test/test_raptoreum_fuzzy
+noinst_PROGRAMS += test/test_raptoreum_fuzzy
 TEST_SRCDIR = test
 TEST_BINARY=test/test_raptoreum$(EXEEXT)
 

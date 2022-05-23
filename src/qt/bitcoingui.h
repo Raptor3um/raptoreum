@@ -15,7 +15,6 @@
 #include <QLabel>
 #include <QMainWindow>
 #include <QMap>
-#include <QMenu>
 #include <QPoint>
 #include <QPushButton>
 #include <QSystemTrayIcon>
@@ -49,6 +48,7 @@ QT_BEGIN_NAMESPACE
 class QAction;
 class QButtonGroup;
 class QComboBox;
+class QMenu;
 class QProgressBar;
 class QProgressDialog;
 class QToolButton;
@@ -169,7 +169,7 @@ private:
     QComboBox* m_wallet_selector = nullptr;
 
     QSystemTrayIcon* trayIcon = nullptr;
-    QMenu* trayIconMenu = nullptr;
+    const std::unique_ptr<QMenu> trayIconMenu;
     QMenu* dockIconMenu = nullptr;
     Notificator* notificator = nullptr;
     RPCConsole* rpcConsole = nullptr;
