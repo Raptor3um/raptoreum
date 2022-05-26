@@ -33,6 +33,7 @@ uint256 CBlockHeader::ComputeHash() const
 
 uint256 CBlockHeader::GetPOWHash(bool readCache) const
 {
+    LOCK(cs_pow);
     CPowCache& cache(CPowCache::Instance());
 
     uint256 headerHash = GetHash();
@@ -40,6 +41,7 @@ uint256 CBlockHeader::GetPOWHash(bool readCache) const
     bool found = false;
 
     LOCK(cs_powHash);
+
     if (readCache) {
         found = cache.get(headerHash, powHash);
     }

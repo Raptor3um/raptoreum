@@ -5,8 +5,13 @@
 #include <string>
 
 #include <primitives/powcache.h>
+#include <primitives/block.h>
+#include <flat-database.h>
 #include <hash.h>
+#include <sync.h>
 #include <util.h>
+
+CCriticalSection cs_pow;
 
 CPowCache* CPowCache::instance = nullptr;
 
@@ -23,8 +28,20 @@ CPowCache& CPowCache::Instance()
     return *instance;
 }
 
+void CPowCache::DoMaintenance()
+{
+    LOCK(cs_pow);
+    // If cache has grown enough, save it:
+    if (cacheMap.size() - nLoadedSize > 100)
+    {
+        CFlatDB<CPowCache> flatDb("powcache.dat", "powCache");
+        flatDb.Dump(*this);
+    }
+}
+
 CPowCache::CPowCache(int maxSize, bool validate) : unordered_lru_cache<uint256, uint256, std::hash<uint256>>(maxSize),
    nVersion(CURRENT_VERSION),
+   nLoadedSize(0),
    bValidate(validate)
 {
     if (bValidate) LogPrintf("PowCache: Validation and auto correction enabled\n");

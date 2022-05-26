@@ -10,6 +10,8 @@
 #include <unordered_lru_cache.h>
 #include <util.h>
 
+extern CCriticalSection cs_pow;
+
 class CPowCache : public unordered_lru_cache<uint256, uint256, std::hash<uint256>>
 {
     private:
@@ -17,10 +19,12 @@ class CPowCache : public unordered_lru_cache<uint256, uint256, std::hash<uint256
         static const int CURRENT_VERSION = 1;
 
         int  nVersion;
+        int  nLoadedSize;
         bool bValidate;
 
     public:
         static CPowCache& Instance();
+
 
         CPowCache(int maxSize = DEFAULT_POW_CACHE_SIZE, bool validate = false);
         virtual ~CPowCache();
@@ -28,6 +32,7 @@ class CPowCache : public unordered_lru_cache<uint256, uint256, std::hash<uint256
         void Clear();
         void CheckAndRemove();
         bool IsValidate() const { return bValidate; }
+        void DoMaintenance();
 
         std::string ToString() const;
 
@@ -52,6 +57,7 @@ class CPowCache : public unordered_lru_cache<uint256, uint256, std::hash<uint256
                     insert(headerHash, powHash);
                 }
                 nVersion = CURRENT_VERSION;
+                nLoadedSize = cacheMap.size();
             }
             else
             {
@@ -62,6 +68,7 @@ class CPowCache : public unordered_lru_cache<uint256, uint256, std::hash<uint256
                     READWRITE(headerHash);
                     READWRITE(powHash);
                 };
+                nLoadedSize = cacheMap.size(); // The size on disk is current
             }
         }
 };

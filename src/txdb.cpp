@@ -7,6 +7,7 @@
 
 #include <chainparams.h>
 #include <hash.h>
+#include <key_io.h>
 #include <random.h>
 #include <pow.h>
 #include <shutdown.h>
@@ -295,10 +296,17 @@ bool CBlockTreeDB::ReadFutureIndex(CFutureIndexKey &key, CFutureIndexValue &valu
 
 bool CBlockTreeDB::UpdateFutureIndex(const std::vector<std::pair<CFutureIndexKey, CFutureIndexValue> >&vect) {
     CDBBatch batch(*this);
+    if (vect.size() > 0)
+       LogPrintf("UpdateFutureIndex\n");
     for (std::vector<std::pair<CFutureIndexKey,CFutureIndexValue> >::const_iterator it=vect.begin(); it!=vect.end(); it++) {
         if (it->second.IsNull()) {
+            LogPrintf("   Remove TxHash: %s, vOutIdx: %d\n", it->first.txid.ToString(), it->first.outputIndex);
             batch.Erase(std::make_pair(DB_FUTUREINDEX, it->first));
         } else {
+            string address = EncodeDestination(CKeyID(it->second.addressHash));
+            LogPrintf("   Add TxHash: %s, vOutIdx: %d", it->first.txid.ToString(), it->first.outputIndex);
+            LogPrintf(" (%s, %d, %d, %d, %d, %ld)\n", 
+            address, it->second.addressType, it->second.confirmedHeight, it->second.lockedToHeight, it->second.lockedToTime, it->second.satoshis);
             batch.Write(std::make_pair(DB_FUTUREINDEX, it->first), it->second);
         }
     }

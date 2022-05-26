@@ -1089,7 +1089,8 @@ void InitParameterInteraction()
     bool fAdditionalIndexes =
         gArgs.GetBoolArg("-addressindex", DEFAULT_ADDRESSINDEX) ||
         gArgs.GetBoolArg("-spentindex", DEFAULT_SPENTINDEX) ||
-        gArgs.GetBoolArg("-timestampindex", DEFAULT_TIMESTAMPINDEX);
+        gArgs.GetBoolArg("-timestampindex", DEFAULT_TIMESTAMPINDEX) ||
+        gArgs.GetBoolArg("-futureindex", DEFAULT_FUTUREINDEX);
 
     if (fAdditionalIndexes && gArgs.GetArg("-checklevel", DEFAULT_CHECKLEVEL) < 4) {
         gArgs.ForceSetArg("-checklevel", "4");
@@ -1864,6 +1865,12 @@ bool AppInitMain()
                     break;
                 }
 
+                // Check for changed -futureindex state
+                if (fFutureIndex != gArgs.GetBoolArg("-futureindex", DEFAULT_FUTUREINDEX)) {
+                    strLoadError = _("You need to rebuild the database using -reindex to change -futureindex");
+                    break;
+                }
+
                 // Check for changed -prune state.  What we are concerned about is a user who has pruned blocks
                 // in the past, but is now trying to run unpruned.
                 if (fHavePruned && !fPruneMode) {
@@ -2148,6 +2155,9 @@ bool AppInitMain()
     if (fSmartnodeMode) {
         scheduler.scheduleEvery(std::bind(&CCoinJoinServer::DoMaintenance, std::ref(coinJoinServer), std::ref(*g_connman)), 1000);
     }
+
+    // Periodic flush of POW Cache if cache has grown enough
+    scheduler.scheduleEvery(std::bind(&CPowCache::DoMaintenance, &CPowCache::Instance()), 60 * 1000);
 
     if (gArgs.GetBoolArg("-statsenabled", DEFAULT_STATSD_ENABLE)) {
         int nStatsPeriod = std::min(std::max((int)gArgs.GetArg("-statsperiod", DEFAULT_STATSD_PERIOD), MIN_STATSD_PERIOD), MAX_STATSD_PERIOD);
