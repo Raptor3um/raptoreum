@@ -444,7 +444,7 @@ static std::string SignAndSendSpecialTx(const CMutableTransaction& tx, bool fSub
     LOCK(cs_main);
 
     CValidationState state;
-    if (!CheckSpecialTx(CTransaction(tx), chainActive.Tip(), state, *pcoinsTip.get())) {
+    if (!CheckSpecialTx(CTransaction(tx), ::ChainActive().Tip(), state, *pcoinsTip.get())) {
         throw std::runtime_error(FormatStateMessage(state));
     }
     } // cs_main
@@ -575,7 +575,7 @@ bool isValidCollateral(CAmount collateralAmount) {
 	if (!collaterals.isValidCollateral(collateralAmount)) {
 		throw JSONRPCError(RPC_INVALID_COLLATERAL_AMOUNT, strprintf("invalid collateral amount: amount=%d\n", collateralAmount/COIN));
 	}
-	int nHeight = chainActive.Height();
+	int nHeight = ::ChainActive().Height();
 	if(!collaterals.isPayableCollateral(nHeight, collateralAmount)) {
 		throw JSONRPCError(RPC_INVALID_COLLATERAL_AMOUNT, strprintf("collateral amount is not a payable amount: amount=%d", collateralAmount/COIN));
 	}
@@ -1333,8 +1333,8 @@ UniValue protx_list(const JSONRPCRequest& request)
 
         bool detailed = !request.params[2].isNull() ? ParseBoolV(request.params[2], "detailed") : false;
 
-        int height = !request.params[3].isNull() ? ParseInt32V(request.params[3], "height") : chainActive.Height();
-        if (height < 1 || height > chainActive.Height()) {
+        int height = !request.params[3].isNull() ? ParseInt32V(request.params[3], "height") : ::ChainActive().Height();
+        if (height < 1 || height > ::ChainActive().Height()) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid height specified");
         }
 
@@ -1345,7 +1345,7 @@ UniValue protx_list(const JSONRPCRequest& request)
             setOutpts.emplace(outpt);
         }
 
-        CDeterministicMNList mnList = deterministicMNManager->GetListForBlock(chainActive[height]);
+        CDeterministicMNList mnList = deterministicMNManager->GetListForBlock(::ChainActive()[height]);
         mnList.ForEachMN(false, [&](const CDeterministicMNCPtr& dmn) {
             if (setOutpts.count(dmn->collateralOutpoint) ||
                 CheckWalletOwnsKey(pwallet, dmn->pdmnState->keyIDOwner) ||
@@ -1365,19 +1365,19 @@ UniValue protx_list(const JSONRPCRequest& request)
 
         bool detailed = !request.params[2].isNull() ? ParseBoolV(request.params[2], "detailed") : false;
 
-        int height = !request.params[3].isNull() ? ParseInt32V(request.params[3], "height") : chainActive.Height();
-        if (height < 1 || height > chainActive.Height()) {
+        int height = !request.params[3].isNull() ? ParseInt32V(request.params[3], "height") : ::ChainActive().Height();
+        if (height < 1 || height > ::ChainActive().Height()) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid height specified");
         }
 
-        std::cout << "protx_list: height" << height << ", chainActive.Height(): " << chainActive.Height() << ", fSpentIndex: " << fSpentIndex << std::endl;
+        std::cout << "protx_list: height" << height << ", ::ChainActive().Height(): " << ::ChainActive().Height() << ", fSpentIndex: " << fSpentIndex << std::endl;
 
-        if (height != chainActive.Height() && !fSpentIndex)
+        if (height != ::ChainActive().Height() && !fSpentIndex)
         {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "specifying height requires spentindex enabled");
         }
 
-        CDeterministicMNList mnList = deterministicMNManager->GetListForBlock(chainActive[height]);
+        CDeterministicMNList mnList = deterministicMNManager->GetListForBlock(::ChainActive()[height]);
         bool onlyValid = type == "valid";
         mnList.ForEachMN(onlyValid, height, [&](const CDeterministicMNCPtr& dmn) {
             ret.push_back(BuildDMNListEntry(pwallet, dmn, detailed));
@@ -1445,9 +1445,9 @@ static uint256 ParseBlock(const UniValue& v, std::string strName)
         return ParseHashV(v, strName);
     } catch (...) {
         int h = ParseInt32V(v, strName);
-        if (h < 1 || h > chainActive.Height())
+        if (h < 1 || h > ::ChainActive().Height())
             throw std::runtime_error(strprintf("%s must be a block hash or chain height and not %s", strName, v.getValStr()));
-        return *chainActive[h]->phashBlock;
+        return *::ChainActive()[h]->phashBlock;
     }
 }
 

@@ -269,7 +269,7 @@ bool CSmartnodePayments::GetBlockTxOuts(int nBlockHeight, CAmount blockReward, s
     const CBlockIndex* pindex;
     {
         LOCK(cs_main);
-        pindex = chainActive[nBlockHeight - 1];
+        pindex = ::ChainActive()[nBlockHeight - 1];
     }
 
     auto dmnPayee = deterministicMNManager->GetListForBlock(pindex).GetMNPayee();

@@ -238,7 +238,7 @@ void SmartnodeList::updateDIP3List()
         //should this be call directly or use pcoinsTip->GetCoin(outpoint, coin) without locking cs_main
         bool isValidUtxo = GetUTXOCoin(dmn->collateralOutpoint, coin);
         SmartnodeCollaterals collaterals = Params().GetConsensus().nCollaterals;
-        int nHeight = chainActive.Tip() == nullptr ? 0 : chainActive.Tip()->nHeight;
+        int nHeight = ::ChainActive().Tip() == nullptr ? 0 : ::ChainActive().Tip()->nHeight;
         QTableWidgetItem* collateralAmountItem = new QTableWidgetItem(!isValidUtxo ? tr("Invalid") : QString::number(coin.out.nValue / COIN));
         QTableWidgetItem* addressItem = new CSmartnodeListWidgetItem<QByteArray>(QString::fromStdString(dmn->pdmnState->addr.ToString()), addr_ba);
         QTableWidgetItem* statusItem = new QTableWidgetItem(mnList.IsMNValid(dmn) ? tr("ENABLED") : (mnList.IsMNPoSeBanned(dmn) ? tr("POSE_BANNED") : tr("UNKNOWN")));

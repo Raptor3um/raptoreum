@@ -585,8 +585,8 @@ bool CGovernanceObject::IsCollateralValid(std::string& strError, bool& fMissingC
     int nConfirmationsIn = 0;
     if (nBlockHash != uint256()) {
         CBlockIndex* pindex = LookupBlockIndex(nBlockHash);
-        if (pindex && chainActive.Contains(pindex)) {
-            nConfirmationsIn += chainActive.Height() - pindex->nHeight + 1;
+        if (pindex && ::ChainActive().Contains(pindex)) {
+            nConfirmationsIn += ::ChainActive().Height() - pindex->nHeight + 1;
         }
     }
 

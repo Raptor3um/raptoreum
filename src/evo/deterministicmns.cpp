@@ -97,7 +97,7 @@ void CDeterministicMN::ToJson(UniValue& obj) const
         CTxDestination dest;
         if (ExtractDestination(coin.out.scriptPubKey, dest)) {
     		SmartnodeCollaterals collaterals = Params().GetConsensus().nCollaterals;
-    		int nHeight = chainActive.Tip() == nullptr ? 0 : chainActive.Tip()->nHeight;
+    		int nHeight = ::ChainActive().Tip() == nullptr ? 0 : ::ChainActive().Tip()->nHeight;
             obj.pushKV("collateralAddress", EncodeDestination(dest));
             obj.pushKV("collateralAmount", coin.out.nValue / COIN);
             obj.pushKV("needToUpgrade", !collaterals.isPayableCollateral(nHeight, coin.out.nValue));
@@ -136,7 +136,7 @@ bool CDeterministicMNList::IsMNValid(const CDeterministicMNCPtr& dmn, int height
 
     int64_t amount = coin.out.nValue;
 
-    int tipHeight = chainActive.Tip() == nullptr ? 0 : chainActive.Tip()->nHeight;
+    int tipHeight = ::ChainActive().Tip() == nullptr ? 0 : ::ChainActive().Tip()->nHeight;
     if (height != tipHeight) {
         int outputIndex = dmn.get()->collateralOutpoint.n;
         CSpentIndexKey key(mnHash, outputIndex);
@@ -154,7 +154,7 @@ bool CDeterministicMNList::IsMNValid(const CDeterministicMNCPtr& dmn, int height
 
 bool CDeterministicMNList::IsMNValid(const CDeterministicMNCPtr& dmn)
 {
-    int height = chainActive.Tip() == nullptr ? 0 : chainActive.Tip()->nHeight;
+    int height = ::ChainActive().Tip() == nullptr ? 0 : ::ChainActive().Tip()->nHeight;
     return IsMNValid(dmn, height);
 }
 
@@ -248,7 +248,7 @@ static bool CompareByLastPaid(const CDeterministicMNCPtr& _a, const CDeterminist
 
 CDeterministicMNCPtr CDeterministicMNList::GetMNPayee() const
 {
-//	int nHeight = chainActive.Tip() == nullptr ? 0 : chainActive.Tip()->nHeight;
+//	int nHeight = ::ChainActive().Tip() == nullptr ? 0 : ::ChainActive().Tip()->nHeight;
 //    if ((nHeight < 900 &&  mnMap.size() == 0)||(nHeight >= 900 && mnMap.size() <= 10)) {
 //        return nullptr;
 //    }
@@ -1216,7 +1216,7 @@ bool CDeterministicMNManager::UpgradeDBIfNeeded()
 {
     LOCK(cs_main);
 
-    if (chainActive.Tip() == nullptr) {
+    if (::ChainActive().Tip() == nullptr) {
         // should have no records
         return evoDb.IsEmpty();
     }
@@ -1228,7 +1228,7 @@ bool CDeterministicMNManager::UpgradeDBIfNeeded()
     // Removing the old EVODB_BEST_BLOCK value early results in older version to crash immediately, even if the upgrade
     // process is cancelled in-between. But if the new version sees that the old EVODB_BEST_BLOCK is already removed,
     // then we must assume that the upgrade process was already running before but was interrupted.
-    if (chainActive.Height() > 1 && !evoDb.GetRawDB().Exists(std::string("b_b"))) {
+    if (::ChainActive().Height() > 1 && !evoDb.GetRawDB().Exists(std::string("b_b"))) {
         return false;
     }
     evoDb.GetRawDB().Erase(std::string("b_b"));
@@ -1236,7 +1236,7 @@ bool CDeterministicMNManager::UpgradeDBIfNeeded()
     if (Params().GetConsensus().DIP0003Enabled) {
         // not reached DIP3 height yet, so no upgrade needed
         auto dbTx = evoDb.BeginTransaction();
-        evoDb.WriteBestBlock(chainActive.Tip()->GetBlockHash());
+        evoDb.WriteBestBlock(::ChainActive().Tip()->GetBlockHash());
         dbTx->Commit();
         return true;
     }
@@ -1247,10 +1247,10 @@ bool CDeterministicMNManager::UpgradeDBIfNeeded()
 
     CDeterministicMNList curMNList;
     curMNList.SetHeight(1);
-    curMNList.SetBlockHash(chainActive[1]->GetBlockHash());
+    curMNList.SetBlockHash(::ChainActive()[1]->GetBlockHash());
 
-    for (int nHeight = 1; nHeight <= chainActive.Height(); nHeight++) {
-        auto pindex = chainActive[nHeight];
+    for (int nHeight = 1; nHeight <= ::ChainActive().Height(); nHeight++) {
+        auto pindex = ::ChainActive()[nHeight];
 
         CDeterministicMNList newMNList;
         UpgradeDiff(batch, pindex, curMNList, newMNList);
@@ -1270,7 +1270,7 @@ bool CDeterministicMNManager::UpgradeDBIfNeeded()
 
     // Writing EVODB_BEST_BLOCK (which is b_b2 now) marks the DB as upgraded
     auto dbTx = evoDb.BeginTransaction();
-    evoDb.WriteBestBlock(chainActive.Tip()->GetBlockHash());
+    evoDb.WriteBestBlock(::ChainActive().Tip()->GetBlockHash());
     dbTx->Commit();
 
     evoDb.GetRawDB().CompactFull();

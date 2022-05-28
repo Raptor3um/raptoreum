@@ -59,11 +59,11 @@ UniValue quorum_list(const JSONRPCRequest& request)
 
     UniValue ret(UniValue::VOBJ);
 
-    for (auto& type : llmq::CLLMQUtils::GetEnabledQuorumTypes(chainActive.Tip())) {
+    for (auto& type : llmq::CLLMQUtils::GetEnabledQuorumTypes(::ChainActive().Tip())) {
         const auto& params = llmq::GetLLMQParams(type);
         UniValue v(UniValue::VARR);
 
-        auto quorums = llmq::quorumManager->ScanQuorums(type, chainActive.Tip(), count > -1 ? count : params.signingActiveQuorumCount);
+        auto quorums = llmq::quorumManager->ScanQuorums(type, ::ChainActive().Tip(), count > -1 ? count : params.signingActiveQuorumCount);
         for (auto& q : quorums) {
             v.push_back(q->qc.quorumHash.ToString());
         }
@@ -181,15 +181,15 @@ UniValue quorum_dkgstatus(const JSONRPCRequest& request)
     auto ret = status.ToJson(detailLevel);
 
     LOCK(cs_main);
-    int tipHeight = chainActive.Height();
+    int tipHeight = ::ChainActive().Height();
 
     UniValue minableCommitments(UniValue::VOBJ);
     UniValue quorumConnections(UniValue::VOBJ);
-    for (const auto& type : llmq::CLLMQUtils::GetEnabledQuorumTypes(chainActive.Tip())) {
+    for (const auto& type : llmq::CLLMQUtils::GetEnabledQuorumTypes(::ChainActive().Tip())) {
         const auto& params = llmq::GetLLMQParams(type);
 
         if (fSmartnodeMode) {
-            const CBlockIndex* pindexQuorum = chainActive[tipHeight - (tipHeight % params.dkgInterval)];
+            const CBlockIndex* pindexQuorum = ::ChainActive()[tipHeight - (tipHeight % params.dkgInterval)];
             auto allConnections = llmq::CLLMQUtils::GetQuorumConnections(params.type, pindexQuorum, activeSmartnodeInfo.proTxHash, false);
             auto outboundConnections = llmq::CLLMQUtils::GetQuorumConnections(params.type, pindexQuorum, activeSmartnodeInfo.proTxHash, true);
             std::map<uint256, CAddress> foundConnections;
@@ -258,7 +258,7 @@ UniValue quorum_memberof(const JSONRPCRequest& request)
     const CBlockIndex* pindexTip;
     {
         LOCK(cs_main);
-        pindexTip = chainActive.Tip();
+        pindexTip = ::ChainActive().Tip();
     }
 
     auto mnList = deterministicMNManager->GetListForBlock(pindexTip);

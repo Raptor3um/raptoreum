@@ -320,7 +320,7 @@ UniValue smartnode_winners(const JSONRPCRequest& request)
     const CBlockIndex* pindexTip{nullptr};
     {
         LOCK(cs_main);
-        pindexTip = chainActive.Tip();
+        pindexTip = ::ChainActive().Tip();
         if (!pindexTip) return NullUniValue;
     }
 
@@ -401,7 +401,7 @@ UniValue smartnode_payments(const JSONRPCRequest& request)
 
     if (request.params[1].isNull()) {
         LOCK(cs_main);
-        pindex = chainActive.Tip();
+        pindex = ::ChainActive().Tip();
     } else {
         LOCK(cs_main);
         uint256 blockHash = ParseHashV(request.params[1], "blockhash");
@@ -480,7 +480,7 @@ UniValue smartnode_payments(const JSONRPCRequest& request)
 
         if (nCount > 0) {
             LOCK(cs_main);
-            pindex = chainActive.Next(pindex);
+            pindex = ::ChainActive().Next(pindex);
         } else {
             pindex = pindex->pprev;
         }
@@ -593,7 +593,7 @@ UniValue smartnodelist(const JSONRPCRequest& request)
         }
 
         LOCK(cs_main);
-        const CBlockIndex* pindex = chainActive[dmn->pdmnState->nLastPaidHeight];
+        const CBlockIndex* pindex = ::ChainActive()[dmn->pdmnState->nLastPaidHeight];
         return (int)pindex->nTime;
     };
 

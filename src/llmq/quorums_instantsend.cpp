@@ -601,7 +601,7 @@ bool CInstantSendManager::CheckCanLock(const COutPoint& outpoint, bool printDebu
     {
         LOCK(cs_main);
         pindexMined = LookupBlockIndex(hashBlock);
-        nTxAge = chainActive.Height() - pindexMined->nHeight + 1;
+        nTxAge = ::ChainActive().Height() - pindexMined->nHeight + 1;
     }
 
     if (nTxAge < nInstantSendConfirmationsRequired) {
@@ -1407,7 +1407,7 @@ void CInstantSendManager::RemoveConflictingLock(const uint256& islockHash, const
     int tipHeight;
     {
         LOCK(cs_main);
-        tipHeight = chainActive.Height();
+        tipHeight = ::ChainActive().Height();
     }
 
     LOCK(cs);

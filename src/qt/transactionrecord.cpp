@@ -40,7 +40,7 @@ int TransactionRecord::getTransactionBlockHeight(const CWalletTx &wtx)
     if (mi != mapBlockIndex.end())
         pindex = (*mi).second;
 
-    int txBlock = pindex ? pindex->nHeight : chainActive.Height();
+    int txBlock = pindex ? pindex->nHeight : ::ChainActive().Height();
 
     return txBlock;
 }
@@ -62,7 +62,7 @@ int TransactionRecord::getFutureTxMaturityTime(const CWalletTx &wtx, CFutureTx &
 /* Return positive answer if future transaction has matured.
  */
 bool TransactionRecord::isFutureTxMatured(const CWalletTx &wtx, CFutureTx &ftx) {
-    if (chainActive.Height() >= getFutureTxMaturityBlock(wtx, ftx) || GetAdjustedTime() >= getFutureTxMaturityTime(wtx, ftx)) {
+    if (::ChainActive().Height() >= getFutureTxMaturityBlock(wtx, ftx) || GetAdjustedTime() >= getFutureTxMaturityTime(wtx, ftx)) {
         return true;
     } else {
         return false;
@@ -73,14 +73,14 @@ void TransactionRecord::getFutureTxStatus(const interfaces::WalletTx& wtx, const
     if (GetTxPayload(wtx.tx->vExtraPayload, ftx)) {
         int maturityBlock = wtxStatus.block_height + ftx.maturity;
         int64_t maturityTime = wtxStatus.time_received + ftx.lockTime;
-        int currentHeight = chainActive.Height();
+        int currentHeight = ::ChainActive().Height();
         //transaction depth in chain against maturity OR relative seconds of transaction against lockTime
         if (currentHeight >= maturityBlock || GetAdjustedTime() >= maturityTime) {
             status.status = TransactionStatus::Confirmed;
         } else {
             status.countsForBalance = false;
            //display transaction is mature in x blocks or transaction is mature in days hh:mm:ss
-            if (maturityBlock >= chainActive.Height()) {
+            if (maturityBlock >= ::ChainActive().Height()) {
                 status.status = TransactionStatus::OpenUntilBlock;
                 status.open_for = maturityBlock;
             }

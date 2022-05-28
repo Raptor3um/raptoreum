@@ -79,7 +79,7 @@ QString TransactionDesc::FutureTxDescToHTML(const interfaces::WalletTx& wtx, con
 
         CAmount ftxValue = wtx.tx->vout[ftx.lockOutputIndex].nValue;
         int txBlock = status.block_height;
-        int currentHeight = chainActive.Height();
+        int currentHeight = ::ChainActive().Height();
         int64_t nTime = wtx.time;
         int maturityBlock = (txBlock + ftx.maturity);
         int64_t maturityTime = (nTime + ftx.lockTime);

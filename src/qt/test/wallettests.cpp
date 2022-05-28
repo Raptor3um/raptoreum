@@ -121,7 +121,7 @@ void TestGUI()
         test.CreateAndProcessBlock({}, GetScriptForRawPubKey(test.coinbaseKey.GetPubKey()));
     }
     auto chain = interfaces::MakeChain();
-    std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>(*chain, WalletLocation(), WalletDatabase::CreateMock());
+    std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>(*chain, WalletLocation(), CreateMockWalletDatabase());
     AddWallet(wallet);
     bool firstRun;
     wallet->LoadWallet(firstRun);
@@ -137,9 +137,9 @@ void TestGUI()
         const CBlockIndex* const null_block = nullptr;
         const CBlockIndex *stop_block, *failed_block;
         QCOMPARE(
-          wallet->ScanForWalletTransactions(chainActive.Genesis(), nullptr, reserver, failed_block, stop_block, true),
+          wallet->ScanForWalletTransactions(::ChainActive().Genesis(), nullptr, reserver, failed_block, stop_block, true),
           CWallet::ScanResult::SUCCESS);
-        QCOMPARE(stop_block, chainActive.Tip());
+        QCOMPARE(stop_block, ::ChainActive().Tip());
         QCOMPARE(failed_block, null_block);
     }
     wallet->SetBroadcastTransactions(true);

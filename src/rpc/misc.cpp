@@ -758,7 +758,7 @@ UniValue getaddressbalance(const JSONRPCRequest& request)
     int nHeight;
     {
         LOCK(cs_main);
-        nHeight = chainActive.Height();
+        nHeight = ::ChainActive().Height();
     }
 
     CAmount balance = 0;

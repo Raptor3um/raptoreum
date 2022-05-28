@@ -28,7 +28,7 @@
 #include <univalue.h>
 
 #ifdef ENABLE_WALLET
-#include <db_cxx.h>
+#include <wallet/db.h>
 #endif
 
 #include <QButtonGroup>
@@ -40,10 +40,11 @@
 #include <QMessageBox>
 #include <QScrollBar>
 #include <QSettings>
+#include <QString>
+#include <QStringList>
 #include <QSignalMapper>
 #include <QTime>
 #include <QTimer>
-#include <QStringList>
 #include <QStyledItemDelegate>
 
 // TODO: add a scrollback limit, as there is currently none
@@ -517,7 +518,7 @@ RPCConsole::RPCConsole(interfaces::Node& node, QWidget* parent, Qt::WindowFlags 
 
     // set library version labels
 #ifdef ENABLE_WALLET
-    ui->berkeleyDBVersion->setText(DbEnv::version(0, 0, 0));
+    ui->berkeleyDBVersion->setText(QString::fromStdString(BerkeleyDatabaseVersion()));
     std::string walletPath = GetDataDir().string();
     walletPath += QDir::separator().toLatin1() + gArgs.GetArg("-wallet", "wallet.dat");
     ui->wallet_path->setText(QString::fromStdString(walletPath));

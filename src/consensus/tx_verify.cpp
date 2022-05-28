@@ -22,7 +22,7 @@
 #include <coins.h>
 #include <utilmoneystr.h>
 
-extern CChain& chainActive;
+CChain& ChainActive();
 
 static bool checkSpecialTxFee(const CTransaction &tx, CAmount& nFeeTotal, CAmount& specialTxFee, bool fFeeVerify = false) {
 	if(tx.nVersion >= 3) {
@@ -30,7 +30,7 @@ static bool checkSpecialTxFee(const CTransaction &tx, CAmount& nFeeTotal, CAmoun
 		case TRANSACTION_FUTURE:
 			CFutureTx ftx;
 			if(GetTxPayload(tx.vExtraPayload, ftx)) {
-                if(!Params().IsFutureActive(chainActive.Tip())) {
+                if(!Params().IsFutureActive(::ChainActive().Tip())) {
                     return false;
                 }
                 bool futureEnabled = sporkManager.IsSporkActive(SPORK_22_SPECIAL_TX_FEE);
@@ -48,7 +48,7 @@ static bool checkSpecialTxFee(const CTransaction &tx, CAmount& nFeeTotal, CAmoun
 
 static const char *validateFutureCoin(const Coin& coin, int nSpendHeight) {
 	if(coin.nType == TRANSACTION_FUTURE) {
-		CBlockIndex* confirmedBlockIndex = chainActive[coin.nHeight];
+		CBlockIndex* confirmedBlockIndex = ::ChainActive()[coin.nHeight];
 		if(confirmedBlockIndex) {
 			int64_t adjustCurrentTime = GetAdjustedTime();
 			uint32_t confirmedTime = confirmedBlockIndex->GetBlockTime();
