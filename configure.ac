@@ -1334,7 +1334,9 @@ dnl Check fot libnatpmp
 if test "$use_natpmp" != "no"; then
   TEMP_CPPFLAGS="$CPPFLAGS"
   CPPFLAGS="$CPPFLAGS $NATPMP_CPPFLAGS"
-  AC_CHECK_HEADERS([natpmp.h], [AC_CHECK_LIB([natpmp], [initnatpmp], [NATPMP_LIBS="$NATPMP_LIBS -lnatpmp"], [have_natpmp=no], [$NATPMP_LIBS])], [have_natpmp=no])
+  AC_CHECK_HEADERS([natpmp.h],
+                   [AC_CHECK_LIB([natpmp], [initnatpmp], [NATPMP_LIBS="$NATPMP_LIBS -lnatpmp"], [have_natpmp=no], [$NATPMP_LIBS])],
+                   [have_natpmp=no])
   CPPFLAGS="$TEMP_CPPFLAGS"
 fi
 
@@ -1432,12 +1434,15 @@ if test "$use_libevent" = "yes"; then
 fi
 
 if test "$enable_bip70" != "no"; then
+  BITCOIN_QT_CHECK([PKG_CHECK_MODULES([PROTOBUF], [protobuf], [have_protobuf=yes], [have_protobuf=no])])
   BITCOIN_QT_CHECK([AC_CHECK_LIB([protobuf], [main], [PROTOBUF_LIBS=-lprotobuf], [have_protobuf=no])])
 fi
 
 dnl QR Code encoding library check
 if test "$use_qr" != "no"; then
   BITCOIN_QT_CHECK([PKG_CHECK_MODULES([QR], [libqrencode], [have_qrencode=yes], [have_qrencode=no])])
+  BITCOIN_QT_CHECK([AC_CHECK_HEADER([qrencode.h],, [have_qrencode=no])])
+  BITCOIN_QT_CHECK([AC_CHECK_LIB([qrencode], [main], [QR_LIBS=-lqrencode], [have_qrencode=no])])
 fi
 
 dnl ZMQ check
@@ -1548,7 +1553,7 @@ else
     fi
     AC_MSG_RESULT([$use_upnp_default])
     AC_DEFINE_UNQUOTED([USE_UPNP], [$upnp_setting], [UPnP support not compiled if undefined, otherwise value (0 or 1) determines default state])
-    AS_CASE([$host_os], [*mingw*], [MINIUPNPC_CPPFLAGS="-DSTATICLIB -DMINIUPNP_STATICLIB"])
+    AS_CASE([$host_os], [*mingw*], [MINIUPNPC_CPPFLAGS="$MINIUPNPC_CPPFLAGS -DSTATICLIB -DMINIUPNP_STATICLIB"])
   else
     AC_MSG_RESULT([no])
   fi
@@ -1574,7 +1579,7 @@ else
     fi
     AC_MSG_RESULT([$use_natpmp_default])
     AC_DEFINE_UNQUOTED([USE_NATPMP], [$natpmp_setting], [NAT-PMP support not compiled if undefined, otherwise value (0 or 1) determine default state])
-    AS_CASE([$host_os], [*mingw*], [NATPMP_CPPFLAGS="-DSTATICLIB -DNATPMP_STATICLIB"])
+    AS_CASE([$host_os], [*mingw*], [NATPMP_CPPFLAGS="$NATPMP_CPPFLAGS -DSTATICLIB -DNATPMP_STATICLIB"])
   else
     AC_MSG_RESULT([no])
   fi
@@ -1583,12 +1588,10 @@ fi
 dnl these are only used when qt is enabled
 BUILD_TEST_QT=""
 if test "$bitcoin_enable_qt" != "no"; then
-  use_dbus=no
   dnl enable dbus support
   AC_MSG_CHECKING([whether to build GUI with support for D-Bus])
   if test "$bitcoin_enable_qt_dbus" != "no"; then
     AC_DEFINE([USE_DBUS], [1], [Define if dbus support should be compiled in])
-    use_dbus=yes
   fi
   AC_MSG_RESULT([$bitcoin_enable_qt_dbus])
 
@@ -1679,7 +1682,6 @@ AM_CONDITIONAL([ENABLE_QT_TESTS], [test "$BUILD_TEST_QT" = "yes"])
 AM_CONDITIONAL([ENABLE_BIP70], [test "$enable_bip70" = "yes"])
 AM_CONDITIONAL([ENABLE_BENCH], [test "$use_bench" = "yes"])
 AM_CONDITIONAL([USE_QRCODE], [test "$use_qr" = "yes"])
-AM_CONDITIONAL([USE_DBUS], [test "$use_dbus" = "yes"])
 AM_CONDITIONAL([USE_LCOV], [test "$use_lcov" = "yes"])
 AM_CONDITIONAL([USE_LIBEVENT], [test "$use_libevent" = "yes"])
 AM_CONDITIONAL([HARDEN], [test "$use_hardening" = "yes"])
@@ -1752,7 +1754,6 @@ AC_SUBST(LIBTOOL_APP_LDFLAGS)
 AC_SUBST(USE_BDB)
 AC_SUBST(USE_UPNP)
 AC_SUBST(USE_QRCODE)
-AC_SUBST(USE_DBUS)
 AC_SUBST(BOOST_LIBS)
 AC_SUBST(TESTDEFS)
 AC_SUBST(MINIUPNPC_CPPFLAGS)
@@ -1818,7 +1819,7 @@ if test "$enable_wallet" != "no"; then
     echo "    with bdb          = $use_bdb"
 fi
 echo "  with gui / qt       = $bitcoin_enable_qt"
-if test "$bitcoin_enable_qt" != "no"; then
+if test $bitcoin_enable_qt != "no"; then
     echo "    with_bip70        = $enable_bip70"
     echo "    with qr           = $use_qr"
 fi
@@ -1828,7 +1829,6 @@ echo "  with bench          = $use_bench"
 echo "  with upnp           = $use_upnp"
 echo "  with natpmp         = $use_natpmp"
 echo "  use asm             = $use_asm"
-echo "  use dbus            = $use_dbus"
 echo "  sanitizers          = $use_sanitizers"
 echo "  debug enabled       = $enable_debug"
 echo "  stacktraces enabled = $enable_stacktraces"

@@ -672,7 +672,7 @@ void BitcoinGUI::setClientModel(ClientModel *_clientModel)
         if (trayIcon) {
             // do so only if trayIcon is already set
             trayIcon->setContextMenu(trayIconMenu.get());
-            createIconMenu(trayIconMenu);
+            createIconMenu(trayIconMenu.get());
 
 #ifndef Q_OS_MAC
             // Show main window on tray icon click

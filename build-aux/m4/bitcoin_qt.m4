@@ -1,6 +1,7 @@
 dnl Copyright (c) 2013-2016 The Bitcoin Core developers
 dnl Distributed under the MIT software license, see the accompanying
 dnl file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 dnl Helper for cases where a qt dependency is not met.
 dnl Output: If qt version is auto, set bitcoin_enable_qt to false. Else, exit.
 AC_DEFUN([BITCOIN_QT_FAIL],[
@@ -77,11 +78,19 @@ AC_DEFUN([BITCOIN_QT_INIT],[
   AC_ARG_WITH([qt-translationdir],[AS_HELP_STRING([--with-qt-translationdir=PLUGIN_DIR],[specify qt translation path (overridden by pkgconfig)])], [qt_translation_path=$withval], [])
   AC_ARG_WITH([qt-bindir],[AS_HELP_STRING([--with-qt-bindir=BIN_DIR],[specify qt bin path])], [qt_bin_path=$withval], [])
 
-  use_dbus=$withval
+  AC_ARG_WITH([qtdbus],
+    [AS_HELP_STRING([--with-qtdbus],
+    [enable DBus support (default is yes if qt is enabled and QtDBus is found, except on Android)])],
+    [use_dbus=$withval],
+    [use_dbus=auto])
+
   dnl Android doesn't support D-Bus and certainly doesn't use it for notifications
   case $host in
-    *android*) use_dbus=no ;;
-    *mingw32*) use_dbus=no ;;
+    *android*)
+      if test "$use_dbus" != "yes"; then
+        use_dbus=no
+      fi
+    ;;
   esac
 
   AC_SUBST(QT_TRANSLATION_DIR,$qt_translation_path)
@@ -249,11 +258,11 @@ AC_DEFUN([BITCOIN_QT_CONFIGURE],[
       bitcoin_enable_qt_test=no
     fi
     bitcoin_enable_qt_dbus=no
-    if test "$use_dbus" != "no" && test "$have_qt_bus" = "yes"; then
-      bitcoin_enable_qt_bus=yes
+    if test "$use_dbus" != "no" && test "$have_qt_dbus" = "yes"; then
+      bitcoin_enable_qt_dbus=yes
     fi
-    if test "$use_dbus" = "yes" && test "$have_qt_bus" = "no"; then
-      AC_MSG_ERROR([libQtDBus not found.])
+    if test "$use_dbus" = "yes" && test "$have_qt_dbus" = "no"; then
+      AC_MSG_ERROR([libQtDBus not found. Install libQtDBus or remove --with-qtdbus.])
     fi
     if test "$LUPDATE" = ""; then
       AC_MSG_WARN([lupdate tool is required to update Qt translations.])
@@ -264,7 +273,7 @@ AC_DEFUN([BITCOIN_QT_CONFIGURE],[
   ],[
     bitcoin_enable_qt=no
   ])
-  if test $bitcoin_enable_qt = "yes"; then
+  if test "$bitcoin_enable_qt" = "yes"; then
     AC_MSG_RESULT([$bitcoin_enable_qt ($qt_lib_prefix)])
   else
     AC_MSG_RESULT([$bitcoin_enable_qt])
@@ -390,13 +399,11 @@ AC_DEFUN([_BITCOIN_QT_FIND_LIBS],[
     PKG_CHECK_MODULES([QT_NETWORK], [${qt_lib_prefix}Network${qt_lib_suffix} $qt_version], [QT_INCLUDES="$QT_NETWORK_CFLAGS $QT_INCLUDES" QT_LIBS="$QT_NETWORK_LIBS $QT_LIBS"],
                       [BITCOIN_QT_FAIL([${qt_lib_prefix}Network${qt_lib_suffix} $qt_version not found])])
   ])
-  if test "$use_dbus" != "no"; then
-    BITCOIN_QT_CHECK([
-      PKG_CHECK_MODULES([QT_DBUS], [${qt_lib_prefix}DBus $qt_version], [QT_DBUS_INCLUDES="$QT_DBUS_CFLAGS"; have_qt_dbus=yes], [have_qt_dbus=no])
-  fi
-  ])
 
   BITCOIN_QT_CHECK([
     PKG_CHECK_MODULES([QT_TEST], [${qt_lib_prefix}Test${qt_lib_suffix} $qt_version], [QT_TEST_INCLUDES="$QT_TEST_CFLAGS"; have_qt_test=yes], [have_qt_test=no])
+    if test "$use_dbus" != "no"; then
+      PKG_CHECK_MODULES([QT_DBUS], [${qt_lib_prefix}DBus $qt_version], [QT_DBUS_INCLUDES="$QT_DBUS_CFLAGS"; have_qt_dbus=yes], [have_qt_dbus=no])
+    fi
   ])
 ])

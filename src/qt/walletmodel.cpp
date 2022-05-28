@@ -167,11 +167,6 @@ bool WalletModel::validateAddress(const QString &address)
     return IsValidDestinationString(address.toStdString());
 }
 
-std::map<CTxDestination, CAmount> WalletModel::getAddressBalances() const
-{
-    return wallet().GetAddressBalances();
-}
-
 WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransaction &transaction, const CCoinControl& coinControl)
 {
     CAmount total = 0;
@@ -520,7 +515,7 @@ WalletModel::SendFuturesReturn WalletModel::sendFutures(WalletModelFuturesTransa
         mapValue_t mapValue;
         auto& newTx = transaction.getWtx();
         std::string rejectReason;
-        if (!newTx->commit(std::move(mapValue), std::move(vOrderForm), {} /* fromAccount */, rejectReason))
+        if (!newTx->commit(std::move(mapValue), std::move(vOrderForm), rejectReason))
             return SendFuturesReturn(TransactionCommitFailed, QString::fromStdString(rejectReason));
 
         CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);

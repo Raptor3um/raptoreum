@@ -557,7 +557,7 @@ SendFuturesEntry *SendFuturesDialog::addEntry()
     connect(entry, &SendFuturesEntry::payAmountChanged, this, &SendFuturesDialog::coinControlUpdateLabels);
     //connect(entry, &SendFuturesEntry::subtractFeeFromAmountChanged, this, &SendFuturesDialog::coinControlUpdateLabels);
 
-    connect(entry, &SendFuturesEntry::payFromChanged, this, &SendFuturesDialog::updateFTXpayFromLabels);
+    //connect(entry, &SendFuturesEntry::payFromChanged, this, &SendFuturesDialog::updateFTXpayFromLabels);
 
     // Focus the field, so that entry can start immediately
     entry->clear();
@@ -685,7 +685,7 @@ void SendFuturesDialog::updateDisplayUnit()
 //    updateSmartFeeLabel();
     //FTX specific labels
     updateFtxFeeLabel();
-    updateFTXpayFromLabels();
+    //updateFTXpayFromLabels();
 }
 
 void SendFuturesDialog::processSendFuturesReturn(const WalletModel::SendFuturesReturn &sendFuturesReturn, const QString &msgArg)
@@ -820,9 +820,8 @@ void SendFuturesDialog::updateSmartFeeLabel()
 {
     if(!model || !model->getOptionsModel())
         return;
-    CCoinControl coin_control;
-    updateCoinControlState(coin_control);
-    coin_control.m_feerate.reset(); // Explicitly use only fee estimation rate for smart fee labels
+    updateCoinControlState(*m_coin_control);
+    m_coin_control->m_feerate.reset(); // Explicitly use only fee estimation rate for smart fee labels
     int returned_target;
     FeeReason reason;
     CFeeRate feeRate = CFeeRate(model->wallet().getMinimumFee(1000, *m_coin_control, &returned_target, &reason));
@@ -986,7 +985,7 @@ void SendFuturesDialog::coinControlUpdateLabels()
     updateCoinControlState(*m_coin_control);
 
     //Update FTX specific labels
-    updateFTXpayFromLabels();
+    //updateFTXpayFromLabels();
 
     // set pay amounts
     CoinControlDialog::payAmounts.clear();
@@ -1022,6 +1021,7 @@ void SendFuturesDialog::coinControlUpdateLabels()
     }
 }
 
+/*
 //Future pay from: update labels
 void SendFuturesDialog::updateFTXpayFromLabels()
 {
@@ -1066,6 +1066,7 @@ void SendFuturesDialog::updateFTXpayFromLabels()
     }
 
 }
+*/
 
 FutureConfirmationDialog::FutureConfirmationDialog(const QString &title, const QString &text, int _secDelay,
     QWidget *parent) :

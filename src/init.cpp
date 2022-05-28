@@ -1541,7 +1541,7 @@ bool AppInitMain(InitInterfaces& interfaces)
     LogPrintf("Using data directory %s\n", GetDataDir().string());
 
     fs::path config_file_path = GetConfigFile(gArgs.GetArg("-conf", BITCOIN_CONF_FILENAME));
-    if (fs::exist(config_file_path)) {
+    if (fs::exists(config_file_path)) {
       LogPrintf("Config file: %s\n", config_file_path.string());
     } else if (gArgs.IsArgSet("-conf")) {
       InitWarning(strprintf(_("The specified config file %s does not exist\n"), config_file_path.string()));

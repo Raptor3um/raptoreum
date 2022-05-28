@@ -140,8 +140,8 @@ public:
  */
 
 class CQuorum;
-typedef std::shared_ptr<CQuorum> CQuorumPtr;
-typedef std::shared_ptr<const CQuorum> CQuorumCPtr;
+using CQuorumPtr = std::shared_ptr<CQuorum>;
+using CQuorumCPtr = std::shared_ptr<const CQuorum>;
 
 class CQuorum
 {

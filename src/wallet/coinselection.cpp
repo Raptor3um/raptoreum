@@ -276,7 +276,7 @@ bool KnapsackSolver(const CAmount& nTargetValue, std::vector<OutputGroup>& group
         applicable_groups.clear();
         nTotalLower = 0;
         for (const OutputGroup& group : groups) {
-          if (tryDenom == 0 && CCoinJoin::IsDenominatedAmount(group.m_value) {
+          if (tryDenom == 0 && CCoinJoin::IsDenominatedAmount(group.m_value)) {
             continue; // we don't want denom values on first run
             }
             if (group.m_value == nTargetValue) {
@@ -308,7 +308,7 @@ bool KnapsackSolver(const CAmount& nTargetValue, std::vector<OutputGroup>& group
                     // we looked at everything possible and didn't find anything, no luck
                     return false;
             }
-            util::insert(setCoinsRet, lowest_optputs;
+            util::insert(setCoinsRet, lowest_larger->m_outputs);
             nValueRet += lowest_larger->m_value;
             // There is no change in PS, so we know the fee beforehand,
             // can see if we exceeded the max fee and thus fail quickly.
@@ -337,7 +337,7 @@ bool KnapsackSolver(const CAmount& nTargetValue, std::vector<OutputGroup>& group
     } else {
       std::string s = "CWallet::SelectCoinsMinConf best subset: ";
       for (unsigned int i = 0; i < applicable_groups.size(); i++) {
-        if (vfBest[i] {
+        if (vfBest[i]) {
           util::insert(setCoinsRet, applicable_groups[i].m_outputs);
           nValueRet += applicable_groups[i].m_value;
           s += FormatMoney(applicable_groups[i].m_value) + " ";

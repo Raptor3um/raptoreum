@@ -161,13 +161,13 @@ public: // Types
     };
 
 
-    typedef CacheMap<uint256, CGovernanceObject*> object_ref_cm_t;
+    using object_ref_cm_t = CacheMap<uint256, CGovernanceObject*>;
 
-    typedef CacheMultiMap<uint256, vote_time_pair_t> vote_cmm_t;
+    using vote_cmm_t = CacheMultiMap<uint256, vote_time_pair_t>;
 
-    typedef std::map<COutPoint, last_object_rec> txout_m_t;
+    using txout_m_t = std::map<COutPoint, last_object_rec>;
 
-    typedef std::set<uint256> hash_s_t;
+    using hash_s_t = std::set<uint256>;
 
 private:
     static const int MAX_CACHE_SIZE = 1000000;

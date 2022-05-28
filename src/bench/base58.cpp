@@ -47,9 +47,9 @@ static void Base58Decode(benchmark::Bench& bench)
 {
     const char* addr = "17VZNX1SN5NtKa8UQFxwQbFeFc3iqRYhem";
     std::vector<unsigned char> vch;
-    bench.batch(strlet(addr)).unit("byte").run([&] {
+    bench.batch(strlen(addr)).unit("byte").run([&] {
         (void) DecodeBase58(addr, vch);
-    }
+    });
 }
 
 

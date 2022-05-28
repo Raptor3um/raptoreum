@@ -5,7 +5,8 @@ $(package)_file_name=protobuf-cpp-$($(package)_version).tar.gz
 $(package)_sha256_hash=51cec99f108b83422b7af1170afd7aeb2dd77d2bcbb7b6bad1f92509e9ccf8cb
 
 define $(package)_set_vars
-  $(package)_config_opts=--prefix=$(build_prefix) --disable-shared --without-zlib
+  $(package)_config_opts=--disable-shared --without-zlib
+  $(package)_config_opts_darwin=--host=aarch64-apple-darwin
   $(package)_config_opts_linux=--with-pic
   $(package)_cxxflags=-std=c++17
 endef
@@ -15,13 +16,13 @@ define $(package)_config_cmds
 endef
 
 define $(package)_build_cmds
-  $(MAKE) -C src
+  $(MAKE) -C src protoc
 endef
 
 define $(package)_stage_cmds
-  $(MAKE) DESTDIR=$($(package)_staging_dir) -C src install
+  $(MAKE) -C src DESTDIR=$($(package)_staging_dir) install-strip
 endef
 
 define $(package)_postprocess_cmds
-  rm lib/libprotoc.a
+  rm -rf lib include
 endef

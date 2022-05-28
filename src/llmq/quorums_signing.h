@@ -15,7 +15,7 @@
 
 #include <unordered_map>
 
-typedef int64_t NodeId;
+using NodeId = int64_t;
 
 namespace llmq
 {

@@ -93,7 +93,7 @@ int main(int argc, char** argv)
 
     benchmark::Args args;
     args.regex_filter = gArgs.GetArg("-filter", DEFAULT_BENCH_FILTER);
-    args.is_list_only = gArgs.GetBoolsArg("-list", false);
+    args.is_list_only = gArgs.GetBoolArg("-list", false);
     args.asymptote = parseAsymptote(gArgs.GetArg("-asymptote", ""));
     args.output_csv = gArgs.GetArg("-output_csv", "");
     args.output_json = gArgs.GetArg("--output_json", "");

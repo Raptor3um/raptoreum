@@ -241,7 +241,7 @@ bool VerifyWallets(interfaces::Chain& chain, const std::vector<std::string>& wal
     return true;
 }
 
-void WalletInit::Construct(InitInterfaces& interfaces const
+void WalletInit::Construct(InitInterfaces& interfaces) const
 {
     if (gArgs.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET)) {
         LogPrintf("Wallet disabled!\n");

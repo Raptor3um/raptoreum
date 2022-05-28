@@ -34,7 +34,8 @@ template<typename SpecialTxPayload>
 static void FundSpecialTx(CWallet* pwallet, CMutableTransaction& tx, const SpecialTxPayload& payload, const CTxDestination& fundDest)
 {
     assert(pwallet != nullptr);
-    LOCK2(cs_main, pwallet->cs_wallet);
+    auto locked_chain = pwallet->chain().lock();
+    LOCK(pwallet->cs_wallet);
 
     CTxDestination nodest = CNoDestination();
     if (fundDest == nodest) {
@@ -65,7 +66,7 @@ static void FundSpecialTx(CWallet* pwallet, CMutableTransaction& tx, const Speci
     coinControl.fRequireAllInputs = false;
 
     std::vector<COutput> vecOutputs;
-    pwallet->AvailableCoins(vecOutputs);
+    pwallet->AvailableCoins(*locked_chain, vecOutputs);
 
     for (const auto& out : vecOutputs) {
         CTxDestination txDest;
@@ -84,7 +85,7 @@ static void FundSpecialTx(CWallet* pwallet, CMutableTransaction& tx, const Speci
     int nChangePos = -1;
     std::string strFailReason;
 
-    if (!pwallet->CreateTransaction(vecSend, wtx, reservekey, nFee, nChangePos, strFailReason, coinControl, false, tx.vExtraPayload.size())) {
+    if (!pwallet->CreateTransaction(*pwallet->chain().lock(), vecSend, wtx, reservekey, nFee, nChangePos, strFailReason, coinControl, false, tx.vExtraPayload.size())) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, strFailReason);
     }
 
@@ -103,13 +104,13 @@ static void FundSpecialTx(CWallet* pwallet, CMutableTransaction& tx, const Speci
 template<typename SpecialTxPayload>
 static void UpdateSpecialTxInputsHash(const CMutableTransaction& tx, SpecialTxPayload& payload)
 {
-    payload.inputsHash = CalcTxInputsHash(tx);
+    payload.inputsHash = CalcTxInputsHash(CTransaction(tx));
 }
 
 template<typename SpecialTxPayload>
 static void SignSpecialTxPayloadByHash(const CMutableTransaction& tx, SpecialTxPayload& payload, const CKey& key)
 {
-    UpdateSpecialTxInputsHash(tx, payload);
+    UpdateSpecialTxInputsHash(CTransaction(tx), payload);
     payload.vchSig.clear();
 
     uint256 hash = ::SerializeHash(payload);
@@ -121,7 +122,7 @@ static void SignSpecialTxPayloadByHash(const CMutableTransaction& tx, SpecialTxP
 template<typename SpecialTxPayload>
 static void SignSpecialTxPayloadByString(const CMutableTransaction& tx, SpecialTxPayload& payload, const CKey& key)
 {
-    UpdateSpecialTxInputsHash(tx, payload);
+    UpdateSpecialTxInputsHash(CTransaction(tx), payload);
     payload.vchSig.clear();
 
     std::string m = payload.MakeSignString();
@@ -133,7 +134,7 @@ static void SignSpecialTxPayloadByString(const CMutableTransaction& tx, SpecialT
 template<typename SpecialTxPayload>
 static void SignSpecialTxPayloadByHash(const CMutableTransaction& tx, SpecialTxPayload& payload, const CBLSSecretKey& key)
 {
-    UpdateSpecialTxInputsHash(tx, payload);
+    UpdateSpecialTxInputsHash(CTransaction(tx), payload);
 
     uint256 hash = ::SerializeHash(payload);
     payload.sig = key.Sign(hash);
@@ -144,8 +145,7 @@ static std::string SignAndSendSpecialTx(const CMutableTransaction& tx)
     LOCK(cs_main);
 
     CValidationState state;
-//    CCoinsViewCache view;
-    if (!CheckSpecialTx(tx, chainActive.Tip(), state, *pcoinsTip.get())) {
+    if (!CheckSpecialTx(CTransaction(tx), chainActive.Tip(), state, *pcoinsTip.get())) {
         throw std::runtime_error(FormatStateMessage(state));
     }
 

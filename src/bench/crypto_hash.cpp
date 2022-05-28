@@ -49,7 +49,7 @@ static void HASH_1MB_DSHA256(benchmark::Bench& bench)
     uint8_t hash[CSHA256::OUTPUT_SIZE];
     std::vector<uint8_t> in(BUFFER_SIZE,0);
     bench.batch(in.size()).unit("byte").minEpochIterations(10).run([&] {
-        CHash256().Write(in.data(), in.size()).Finalize(hash);
+        CHash256().Write(in).Finalize(hash);
     });
 }
 
@@ -68,6 +68,7 @@ static void HASH_DSHA256_0032b_single(benchmark::Bench& bench)
     std::vector<uint8_t> in(32,0);
     bench.minEpochIterations(100000).run([&] {
       CHash256().Write(in).Finalize(hash);
+    });
 }
 
 static void HASH_DSHA256_0080b_single(benchmark::Bench& bench)

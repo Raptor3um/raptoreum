@@ -75,7 +75,7 @@ SendFuturesEntry::SendFuturesEntry(QWidget* parent) :
     //connect(ui->deleteButton_s, &QPushButton::clicked, this, &SendFuturesEntry::deleteClicked);
 
     //Connect signals for future tx pay from field
-    connect(ui->payFrom, &QComboBox::currentTextChanged, this, &SendFuturesEntry::payFromChanged);
+    //connect(ui->payFrom, &QComboBox::currentTextChanged, this, &SendFuturesEntry::payFromChanged);
     //Connect signals for FTX maturity fields
     connect(ui->ftxLockTime, &QDateTimeEdit::dateTimeChanged, this, &SendFuturesEntry::updateLockTimeField);
 }
@@ -116,7 +116,7 @@ void SendFuturesEntry::setModel(WalletModel *_model)
     if (_model && _model->getOptionsModel())
     {
         connect(_model->getOptionsModel(), &OptionsModel::displayUnitChanged, this, &SendFuturesEntry::updateDisplayUnit);
-        connect(_model, &WalletModel::balanceChanged, this, &SendFuturesEntry::setupPayFrom);
+        //connect(_model, &WalletModel::balanceChanged, this, &SendFuturesEntry::setupPayFrom);
     }
     clear();
 }
@@ -218,7 +218,7 @@ SendFuturesRecipient SendFuturesEntry::getValue()
     //recipient.fSubtractFeeFromAmount = (ui->checkboxSubtractFeeFromAmount->checkState() == Qt::Checked);
 
     //Future TX
-    recipient.payFrom = ui->payFrom->currentText();
+//    recipient.payFrom = ui->payFrom->currentText();
     recipient.maturity = ui->ftxMaturity->value();
     recipient.locktime = ui->ftxLockTimeField->text().toInt();
 
@@ -303,7 +303,7 @@ void SendFuturesEntry::updateDisplayUnit()
         ui->payAmount->setDisplayUnit(model->getOptionsModel()->getDisplayUnit());
         ui->payAmount_is->setDisplayUnit(model->getOptionsModel()->getDisplayUnit());
         ui->payAmount_s->setDisplayUnit(model->getOptionsModel()->getDisplayUnit());
-        setupPayFrom();
+        //setupPayFrom();
     }
 }
 
@@ -353,6 +353,7 @@ void SendFuturesEntry::updateLockTimeField(const QDateTime & dateTime)
     ui->ftxLockTimeField->setText(int_string);
 }
 
+/*
 //Future coin control: update combobox
 void SendFuturesEntry::setupPayFrom()
 {
@@ -433,3 +434,4 @@ void SendFuturesEntry::setupPayFrom()
     ui->payFrom->setCurrentIndex(selected);
 
 }
+*/

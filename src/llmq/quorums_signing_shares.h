@@ -29,7 +29,7 @@ class CScheduler;
 namespace llmq
 {
 // <signHash, quorumMember>
-typedef std::pair<uint256, uint16_t> SigShareKey;
+using SigShareKey = std::pair<uint256, uint16_t>;
 
 class CSigShare
 {

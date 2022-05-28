@@ -51,10 +51,10 @@ public:
         WalletOrderForm order_form,
         std::string& reject_reason) override
     {
-        auto locked_chain = m_wallet->chain().lock();
-        LOCK2(mempool.cs, m_wallet->cs_wallet);
+        auto locked_chain = m_wallet.chain().lock();
+        LOCK2(mempool.cs, m_wallet.cs_wallet);
         CValidationState state;
-        if (!m_wallet->CommitTransaction(m_tx, std::move(value_map), std::move(order_form), m_key, g_connman.get(), state)) {
+        if (!m_wallet.CommitTransaction(m_tx, std::move(value_map), std::move(order_form), m_key, g_connman.get(), state)) {
             reject_reason = state.GetRejectReason();
             return false;
         }
@@ -67,7 +67,7 @@ public:
 };
 
 //! Construct wallet tx struct.
-WalletTx MakeWalletTx(interfaces::Chain::Lock& locked_chain, CWallet& wallet, const CWalletTx& wtx)
+static WalletTx MakeWalletTx(interfaces::Chain::Lock& locked_chain, CWallet& wallet, const CWalletTx& wtx)
 {
     WalletTx result;
     bool fInputDenomFound{false}, fOutputDenomFound{false};
@@ -107,7 +107,7 @@ WalletTx MakeWalletTx(interfaces::Chain::Lock& locked_chain, CWallet& wallet, co
 }
 
 //! Construct wallet tx status struct.
-WalletTxStatus MakeWalletTxStatus(interfaces::Chain::Lock& locked_chain, const CWalletTx& wtx)
+static WalletTxStatus MakeWalletTxStatus(interfaces::Chain::Lock& locked_chain, const CWalletTx& wtx)
 {
     LockAnnotation lock(::cs_main);
 
@@ -130,7 +130,7 @@ WalletTxStatus MakeWalletTxStatus(interfaces::Chain::Lock& locked_chain, const C
 }
 
 //! Construct wallet TxOut struct.
-WalletTxOut MakeWalletTxOut(interfaces::Chain::Lock& locked_chain, CWallet& wallet, const CWalletTx& wtx, int n, int depth) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
+static WalletTxOut MakeWalletTxOut(interfaces::Chain::Lock& locked_chain, CWallet& wallet, const CWalletTx& wtx, int n, int depth)
 {
     WalletTxOut result;
     result.txout = wtx.tx->vout[n];
@@ -524,7 +524,7 @@ public:
     }
     unsigned int getConfirmTarget() override { return m_wallet->m_confirm_target; }
     bool hdEnabled() override { return m_wallet->IsHDEnabled(); }
-    bool IsWalletFlagSet(uint64_t flag) override { return m_wallet.IsWalletFlagSet(flag); }
+    bool IsWalletFlagSet(uint64_t flag) override { return m_wallet->IsWalletFlagSet(flag); }
     CoinJoin::Client& coinJoin() override { return m_coinjoin; }
     std::unique_ptr<Handler> handleUnload(UnloadFn fn) override
     {

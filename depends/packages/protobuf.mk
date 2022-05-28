@@ -7,13 +7,9 @@ $(package)_dependencies=native_$(package)
 $(package)_cxxflags+=-std=c++17
 
 define $(package)_set_vars
-  $(package)_config_opts=--disable-shared --with-protoc=$(build_prefix)/bin/protoc --disable-dependency-tracking
+  $(package)_config_opts=--disable-shared --with-protoc=$(host_prefix)/native//bin/protoc
+  $(package)_config_opts_darwin=--host=aarch64-apple-darwin
   $(package)_config_opts_linux=--with-pic
-endef
-
-define $(package)_preprocess_cmds
-  cp -f $(BASEDIR)/config.guess $(BASEDIR)/config.sub . &&\
-  cp -f $(BASEDIR)/config.guess $(BASEDIR)/config.sub gtest/build-aux
 endef
 
 define $(package)_config_cmds
@@ -30,5 +26,5 @@ define $(package)_stage_cmds
 endef
 
 define $(package)_postprocess_cmds
-  rm lib/libprotoc.a lib/*.la
+  rm lib/libprotoc.a
 endef

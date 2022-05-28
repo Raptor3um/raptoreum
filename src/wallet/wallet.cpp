@@ -1973,7 +1973,7 @@ int64_t CWalletTx::GetTxTime() const
     return n ? n : nTimeReceived;
 }
 
-bool CWalletTx::isFutureSpendable(unsigned int outputIndex) const
+bool CWalletTx::isFutureSpendable(interfaces::Chain::Lock& locked_chain, unsigned int outputIndex) const
 {
   bool isCoinSpendable;
   if(tx->nType == TRANSACTION_FUTURE)
@@ -1981,7 +1981,7 @@ bool CWalletTx::isFutureSpendable(unsigned int outputIndex) const
 
     CFutureTx futureTx;
     if(GetTxPayload(tx->vExtraPayload, futureTx)) {
-        int maturity = GetDepthInMainChain();
+        int maturity = GetDepthInMainChain(locked_chain);
         int64_t adjustCurrentTime = GetAdjustedTime();
         uint32_t confirmedTime = GetConfirmationTime();
         // confirmedTime = currentTime if it is not confirmed so that time maturity math does not need special case
@@ -2015,7 +2015,7 @@ bool CWallet::DummySignInput(CTxIn &tx_in, const CTxOut &txout) const
     const CScript& scriptPubKey = txout.scriptPubKey;
     SignatureData sigdata;
 
-    if (!ProduceSignature(DummySignatureCreator(this), scriptPubKey, sigdata))
+    if (!ProduceSignature(*this, DUMMY_SIGNATURE_CREATOR, scriptPubKey, sigdata))
     {
         return false;
     } else {
@@ -2118,7 +2118,7 @@ void CWalletTx::GetAmounts(std::list<COutputEntry>& listReceived,
 
         if (!ExtractDestination(txout.scriptPubKey, address) && !txout.scriptPubKey.IsUnspendable())
         {
-            WalletLogPrintf("CWalletTx::GetAmounts: Unknown transaction type found, txid %s\n", this->GetHash().ToString());
+            pwallet->WalletLogPrintf("CWalletTx::GetAmounts: Unknown transaction type found, txid %s\n", this->GetHash().ToString());
             address = CNoDestination();
         }
 
@@ -2195,7 +2195,7 @@ CWallet::ScanResult CWallet::ScanForWalletTransactions(const CBlockIndex* const 
     }
 
     const CBlockIndex* pindex = pindexStart;
-    faile_block = nullptr;
+    failed_block = nullptr;
 
     if (pindex) WalletLogPrintf("Rescan started from block %d...\n", pindex->nHeight);
 
@@ -2582,7 +2582,7 @@ bool CWalletTx::InMempool() const
     return fInMempool;
 }
 
-bool CWalletTx::IsTrusted(intefaces::Chain::Lock& locked_chain) const
+bool CWalletTx::IsTrusted(interfaces::Chain::Lock& locked_chain) const
 {
     LockAnnotation lock(::cs_main);
 
@@ -2619,8 +2619,8 @@ bool CWalletTx::IsTrusted(intefaces::Chain::Lock& locked_chain) const
 
 bool CWalletTx::IsEquivalentTo(const CWalletTx& _tx) const
 {
-        CMutableTransaction tx1 = *this->tx;
-        CMutableTransaction tx2 = *_tx.tx;
+        CMutableTransaction tx1{*this->tx};
+        CMutableTransaction tx2{*_tx.tx};
         for (auto& txin : tx1.vin) txin.scriptSig = CScript();
         for (auto& txin : tx2.vin) txin.scriptSig = CScript();
         return CTransaction(tx1) == CTransaction(tx2);
@@ -2940,7 +2940,7 @@ void CWallet::AvailableCoins(interfaces::Chain::Lock& locked_chain, std::vector<
 
             bool fSpendableIn = ((mine & ISMINE_SPENDABLE) != ISMINE_NO) || (coinControl && coinControl->fAllowWatchOnly && (mine & ISMINE_WATCH_SOLVABLE) != ISMINE_NO);
             bool fSolvableIn = (mine & (ISMINE_SPENDABLE | ISMINE_WATCH_SOLVABLE)) != ISMINE_NO;
-            bool isCoinSpenable = pcoin->isFutureSpendable(i);
+            bool isCoinSpenable = pcoin->isFutureSpendable(locked_chain, i);
 
             vCoins.push_back(COutput(pcoin, i, nDepth, fSpendableIn, fSolvableIn, safeTx, pcoin->tx->nType == TRANSACTION_FUTURE, isCoinSpenable));
             // Checks the sum amount of all UTXO's.
@@ -2989,7 +2989,7 @@ std::map<CTxDestination, std::vector<COutput>> CWallet::ListCoins(interfaces::Ch
                 CTxDestination address;
                 if (ExtractDestination(FindNonChangeParentOutput(*it->second.tx, output.n).scriptPubKey, address)) {
                     result[address].emplace_back(
-                        &it->second, output.n, depth, true /* spendable */, true /* solvable */, false /* safe */, it->second.tx->nType == TRANSACTION_FUTURE, it->second.isFutureSpendable(output.n));
+                        &it->second, output.n, depth, true /* spendable */, true /* solvable */, false /* safe */, it->second.tx->nType == TRANSACTION_FUTURE, it->second.isFutureSpendable(locked_chain, output.n));
                 }
             }
         }
@@ -3096,6 +3096,8 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const CoinEligibil
 
 bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, const CCoinControl& coin_control, const CoinSelectionParams& coin_selection_params, bool& bnb_used) const
 {
+    auto locked_chain = chain().lock();
+    LOCK(cs_wallet);
     // Note: this function should never be used for "always free" tx types like dstx
 
     std::vector<COutput> vCoins(vAvailableCoins);
@@ -3146,7 +3148,7 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
                 // Make sure to include mixed preset inputs only,
                 // even if some non-mixed inputs were manually selected via CoinControl
                 if (!IsFullyMixed(outpoint)) continue;
-            } else if(!pcoin->isFutureSpendable(outpoint.n)) {
+            } else if(!pcoin->isFutureSpendable(*locked_chain, outpoint.n)) {
             	continue;
             }
             // Just to calculate the marginal byte size
@@ -3335,7 +3337,7 @@ bool CWallet::SelectCoinsGroupedByAddresses(std::vector<CompactTallyItem>& vecTa
         const CWalletTx& wtx = (*it).second;
 
         if(wtx.IsCoinBase() && wtx.GetBlocksToMaturity(*locked_chain) > 0) continue;
-        if(fSkipUnconfirmed && !wtx.IsTrusted(*locked_chan)) continue;
+        if(fSkipUnconfirmed && !wtx.IsTrusted(*locked_chain)) continue;
         if (wtx.GetDepthInMainChain(*locked_chain) < 0) continue;
 
         for (unsigned int i = 0; i < wtx.tx->vout.size(); i++) {
@@ -3702,7 +3704,7 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
                     for (const auto& coin : vecCoins) {
                         const CScript& scriptPubKey = coin.txout.scriptPubKey;
                         SignatureData sigdata;
-                        if (!ProduceSignature(DummySignatureCreator(this), scriptPubKey, sigdata)) {
+                        if (!ProduceSignature(*this, DUMMY_SIGNATURE_CREATOR, scriptPubKey, sigdata)) {
                             strFailReason = _("Signing transaction failed");
                             return false;
                         } else {
@@ -3895,14 +3897,13 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
 
         if (sign)
         {
-            CTransaction txNewConst(txNew);
             int nIn = 0;
             for(const auto& coin : vecCoins)
             {
                 const CScript& scriptPubKey = coin.txout.scriptPubKey;
                 SignatureData sigdata;
 
-                if (!ProduceSignature(TransactionSignatureCreator(this, &txNewConst, nIn, coin.txout.nValue, SIGHASH_ALL), scriptPubKey, sigdata))
+                if (!ProduceSignature(*this, MutableTransactionSignatureCreator(&txNew, nIn, coin.txout.nValue, SIGHASH_ALL), scriptPubKey, sigdata))
                 {
                     strFailReason = _("Signing transaction failed");
                     return false;
@@ -4816,7 +4817,7 @@ unsigned int CWallet::ComputeTimeSmart(const CWalletTx& wtx, bool rescanningOldB
                         continue;
                     }
                     int64_t nSmartTime;
-                    nSmartTime = pwtx->nTimeStart;
+                    nSmartTime = pwtx->nTimeSmart;
                     if (!nSmartTime) {
                         nSmartTime = pwtx->nTimeReceived;
                     }
@@ -5047,7 +5048,7 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
             }
 
             // ensure this wallet.dat can only be opened by clients supporting HD
-            walletInstane->WalletLogPrintf("Upgrading wallet to HD\n");
+            walletInstance->WalletLogPrintf("Upgrading wallet to HD\n");
             walletInstance->SetMinVersion(FEATURE_HD);
 
             // clean up

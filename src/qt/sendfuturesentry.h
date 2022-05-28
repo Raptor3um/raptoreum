@@ -53,7 +53,7 @@ public Q_SLOTS:
 Q_SIGNALS:
     void removeEntry(SendFuturesEntry *entry);
     void payAmountChanged();
-    void payFromChanged(const QString &address);
+    //void payFromChanged(const QString &address);
 
 private Q_SLOTS:
     void deleteClicked();
@@ -62,7 +62,7 @@ private Q_SLOTS:
     void on_pasteButton_clicked();
     void updateDisplayUnit();
     void updateLockTimeField(const QDateTime &dateTime);
-    void setupPayFrom();
+    //void setupPayFrom();
 
 protected:
     void changeEvent(QEvent* e) override;

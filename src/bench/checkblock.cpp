@@ -17,8 +17,8 @@
 
 static void DeserializeBlockTest(benchmark::Bench& bench)
 {
-    CDataStream stream((const char*)raw_bench::block213851,
-            (const char*)&raw_bench::block213851[sizeof(raw_bench::block213851)],
+    CDataStream stream((const char*)raw_bench::block813851,
+            (const char*)&raw_bench::block813851[sizeof(raw_bench::block813851)],
             SER_NETWORK, PROTOCOL_VERSION);
     char a = '\0';
     stream.write(&a, 1); // Prevent compaction
@@ -26,14 +26,14 @@ static void DeserializeBlockTest(benchmark::Bench& bench)
     bench.unit("block").run([&] {
         CBlock block;
         stream >> block;
-        assert(stream.Rewind(sizeof(raw_bench::block213851)));
+        assert(stream.Rewind(sizeof(raw_bench::block813851)));
     });
 }
 
 static void DeserializeAndCheckBlockTest(benchmark::Bench& bench)
 {
-    CDataStream stream((const char*)raw_bench::block213851,
-            (const char*)&raw_bench::block213851[sizeof(raw_bench::block213851)],
+    CDataStream stream((const char*)raw_bench::block813851,
+            (const char*)&raw_bench::block813851[sizeof(raw_bench::block813851)],
             SER_NETWORK, PROTOCOL_VERSION);
     char a = '\0';
     stream.write(&a, 1); // Prevent compaction
@@ -43,7 +43,7 @@ static void DeserializeAndCheckBlockTest(benchmark::Bench& bench)
     bench.unit("block").run([&] {
         CBlock block; // Note that CBlock caches its checked state, so we need to recreate it here
         stream >> block;
-        assert(stream.Rewind(sizeof(raw_bench::block213851)));
+        assert(stream.Rewind(sizeof(raw_bench::block813851)));
 
         CValidationState validationState;
         assert(CheckBlock(block, validationState, chainParams->GetConsensus(), block.GetBlockTime()));

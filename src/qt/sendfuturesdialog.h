@@ -101,7 +101,7 @@ private Q_SLOTS:
     void updateMinFeeLabel();
     void updateSmartFeeLabel();
     void updateFtxFeeLabel();
-    void updateFTXpayFromLabels();
+    //void updateFTXpayFromLabels();
 
 Q_SIGNALS:
     // Fired when a message should be reported to the user

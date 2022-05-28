@@ -489,7 +489,7 @@ bool CCoinJoinClientSession::SendDenominate(const std::vector<std::pair<CTxDSIn,
     LogPrint(BCLog::COINJOIN, "CCoinJoinClientSession::SendDenominate -- Submitting partial tx %s", tx.ToString()); /* Continued */
 
     // store our entry for later use
-    vecEntries.emplace_back(vecTxDSInTmp, vecTxOutTmp, txMyCollateral);
+    vecEntries.emplace_back(vecTxDSInTmp, vecTxOutTmp, CTransaction(txMyCollateral));
     RelayIn(vecEntries.back(), connman);
     nTimeLastSuccessfulStep = GetTime();
 
@@ -556,7 +556,7 @@ bool CCoinJoinClientSession::SignFinalTransaction(const CTransaction& finalTrans
     if (fSmartnodeMode || pnode == nullptr) return false;
     if (!mixingSmartnode) return false;
 
-    finalMutableTransaction = finalTransactionNew;
+    finalMutableTransaction = CMutableTransaction{finalTransactionNew};
     LogPrint(BCLog::COINJOIN, "CCoinJoinClientSession::%s -- finalMutableTransaction=%s", __func__, finalMutableTransaction.ToString()); /* Continued */
 
     // STEP 1: check final transaction general rules
@@ -920,7 +920,7 @@ bool CCoinJoinClientSession::DoAutomaticDenominating(CConnman& connman, bool fDr
                 return false;
             }
         } else {
-            if (!CCoinJoin::IsCollateralValid(txMyCollateral)) {
+            if (!CCoinJoin::IsCollateralValid(CTransaction(txMyCollateral))) {
                 LogPrint(BCLog::COINJOIN, "CCoinJoinClientSession::DoAutomaticDenominating -- invalid collateral, recreating...\n");
                 if (!CreateCollateralTransaction(txMyCollateral, strReason)) {
                     LogPrint(BCLog::COINJOIN, "CCoinJoinClientSession::DoAutomaticDenominating -- create collateral error: %s\n", strReason);
@@ -1515,7 +1515,7 @@ bool CCoinJoinClientSession::MakeCollateralAmounts(const CompactTallyItem& tally
 bool CCoinJoinClientSession::CreateCollateralTransaction(CMutableTransaction& txCollateral, std::string& strReason)
 {
     auto locked_chain = mixingWallet.chain().lock();
-    LOCK2(mixingWallet.cs_wallet);
+    LOCK(mixingWallet.cs_wallet);
 
     std::vector<COutput> vCoins;
     CCoinControl coin_control;

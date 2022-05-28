@@ -73,5 +73,5 @@ void benchmark::BenchRunner::RunAll(const Args& args)
     GenerateTemplateResults(benchmarkResults, args.output_csv, "# Benchmark, evals, iterations, total, min, max, median\n"
                                                                "{{#result}}{{name}}, {{epochs}}, {{average(iterations)}}, {{sumProduct(iterations, elapsed)}}, {{minimum(elapsed)}}, {{maximum(elapsed)}}, {{median(elapsed)}}\n"
                                                                "{{/result}}");
-    GenerateTemplateResults(benchmarkResults, args.output_json, ankerl::nanobench::template::json());
+    GenerateTemplateResults(benchmarkResults, args.output_json, ankerl::nanobench::templates::json());
 }

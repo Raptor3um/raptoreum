@@ -5,24 +5,8 @@ $(package)_suffix=everywhere-opensource-src-$($(package)_version).tar.xz
 $(package)_file_name=qtbase-$($(package)_suffix)
 $(package)_sha256_hash=26394ec9375d52c1592bd7b689b1619c6b8dbe9b6f91fdd5c355589787f3a0b6
 $(package)_dependencies=openssl
-ifeq ($(host), mingw32)
-$(package)_dependencies +=
-ifneq ($(host), android)
-$(package)_dependencies += dbus
-else
-$(package)_dependencies += dbus
-endif
-endif
 $(package)_linux_dependencies=freetype fontconfig libxcb libxkbcommon libxcb_util libxcb_util_render libxcb_util_keysyms libxcb_util_image libxcb_util_wm
 $(package)_qt_libs=corelib network widgets gui plugins testlib
-ifeq ($(host), mingw32)
-$(package)_qt_libs +=
-ifneq ($(host), android)
-$(package)_qt_libs += dbus
-else
-$(package)_qt_libs += dbus
-endif
-endif
 $(package)_linguist_tools = lrelease lupdate lconvert
 $(package)_patches = qt.pro
 $(package)_patches += qttools_src.pro
@@ -74,14 +58,6 @@ $(package)_config_opts += -no-libudev
 $(package)_config_opts += -no-mtdev
 $(package)_config_opts += -openssl-linked
 $(package)_config_opts += -feature-dtls
-ifeq ($(host), mingw32)
-$(package)_config_opts += no-dbus
-ifneq ($(host), android)
-$(package)_config_opts += -dbus-linked
-else
-$(package)_config_opts += -dbus-linked
-endif
-endif
 $(package)_config_opts += -no-openvg
 $(package)_config_opts += -no-reduce-relocations
 $(package)_config_opts += -no-schannel
@@ -149,7 +125,8 @@ $(package)_config_opts += -no-feature-vnc
 $(package)_config_opts += -no-feature-wizard
 $(package)_config_opts += -no-feature-xml
 
-$(package)_config_opts_darwin  = -no-opengl
+$(package)_config_opts_darwin = -no-dbus
+$(package)_config_opts_darwin += -no-opengl
 $(package)_config_opts_darwin += -pch
 $(package)_config_opts_darwin += -no-feature-corewlan
 $(package)_config_opts_darwin += -no-freetype
@@ -176,6 +153,7 @@ $(package)_config_opts_linux += -system-freetype
 $(package)_config_opts_linux += -fontconfig
 $(package)_config_opts_linux += -no-opengl
 $(package)_config_opts_linux += -no-feature-vulkan
+$(package)_config_opts_linux += -dbus-runtime
 $(package)_config_opts_arm_linux += -platform linux-g++ -xplatform raptoreum-linux-g++
 $(package)_config_opts_i686_linux  = -xplatform linux-g++-32
 ifneq (,$(findstring -stdlib=libc++,$($(1)_cxx)))
@@ -187,6 +165,7 @@ $(package)_config_opts_aarch64_linux = -xplatform linux-aarch64-gnu-g++
 $(package)_config_opts_riscv64_linux = -platform linux-g++ -xplatform raptoreum-linux-g++
 
 $(package)_config_opts_mingw32 = -no-opengl
+$(package)_config_opts_mingw32 += -no-dbus
 $(package)_config_opts_mingw32 += -no-freetype
 $(package)_config_opts_mingw32 += -xplatform win32-g++
 $(package)_config_opts_mingw32 += "QMAKE_CFLAGS = '$($(package)_cflags) $($(package)_cppflags)'"
@@ -208,6 +187,7 @@ $(package)_config_opts_android += -android-ndk $(ANDROID_NDK)
 $(package)_config_opts_android += -android-ndk-platform android-$(ANDROID_API_LEVEL)
 $(package)_config_opts_android += -android-ndk-host linux-x86_64
 $(package)_config_opts_android += -egl
+$(package)_config_opts_android += -no-dbus
 $(package)_config_opts_android += -opengl es2
 $(package)_config_opts_android += -qt-freetype
 $(package)_config_opts_android += -no-fontconfig

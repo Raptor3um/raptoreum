@@ -847,7 +847,7 @@ UniValue sendmany(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() < 2 || request.params.size > 10)
+    if (request.fHelp || request.params.size() < 2 || request.params.size() > 10)
         throw std::runtime_error(
             "sendmany \"\" {\"address\":amount,...} ( minconf addlocked \"comment\" [\"address\",...] substractfeefrom use_is use_cj conf_target \"estimate_mode|')\n"
             "\nSend multiple times. Amounts are double-precision floating point numbers.\n"
@@ -1438,7 +1438,7 @@ UniValue listtransactions(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if (request.fHelp) || request.params.size() > 4)
+    if (request.fHelp || request.params.size() > 4)
         throw std::runtime_error(
             "listtransactions ( \"label\" count skip include_watchonly)\n"
             "\nIf a label name is provided, this will return only incoming transactions paying to addresses with the specified label.\n"
@@ -1674,7 +1674,7 @@ UniValue listsinceblock(const JSONRPCRequest& request)
         CWalletTx tx = pairWtx.second;
 
         if (depth == -1 || tx.GetDepthInMainChain(*locked_chain) < depth) {
-            ListTransactions(*locked_chain, pwallet, tx, , 0, true, transactions, filter, nullptr /* filter_label */);
+            ListTransactions(*locked_chain, pwallet, tx, 0, true, transactions, filter, nullptr /* filter_label */);
         }
     }
 
@@ -2168,7 +2168,7 @@ UniValue encryptwallet(const JSONRPCRequest& request)
     strWalletPass = request.params[0].get_str().c_str();
 
     if (strWalletPass.empty()) {
-        thron JSONRPCError(RPC_INVALID_PARAMETER, "passphrase can not be empty");
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "passphrase can not be empty");
     }
 
     if (!pwallet->EncryptWallet(strWalletPass)) {
@@ -3351,7 +3351,7 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
     }
 
     UniValue result(UniValue::VOBJ);
-    result.pushKV("hex", EncodeHexTx(tx));
+    result.pushKV("hex", EncodeHexTx(CTransaction(tx)));
     result.pushKV("changepos", changePosition);
     result.pushKV("fee", ValueFromAmount(nFeeOut));
 
@@ -3875,7 +3875,7 @@ static const CRPCCommand commands[] =
 #endif // ENABLE_MINER
     { "hidden",             "instantsendtoaddress",             &instantsendtoaddress,             {} },
     { "hidden",             "resendwallettransactions",         &resendwallettransactions,         {} },
-    { "rawtransactions",    "fundrawtransaction",               &fundrawtransaction"               {"hexstring","options"} },
+    { "rawtransactions",    "fundrawtransaction",               &fundrawtransaction,               {"hexstring","options"} },
     { "wallet",             "abandontransaction",               &abandontransaction,               {"txid"} },
     { "wallet",             "abortrescan",                      &abortrescan,                      {} },
     { "wallet",             "addmultisigaddress",               &addmultisigaddress,               {"nrequired","keys","label"} },

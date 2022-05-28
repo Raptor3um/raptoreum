@@ -6,16 +6,14 @@
 #include <policy/policy.h>
 #include <txmempool.h>
 
-static void AddTx(const CTransaction& tx, const CAmount& nFee, const CAmount& specialTxFee, CTxMemPool& pool) EXCLUSIVE_LOCKS_REQUIRED(pool.cs)
+static void AddTx(const CMutableTransaction& tx, const CAmount& nFee, const CAmount& specialTxFee, CTxMemPool& pool) EXCLUSIVE_LOCKS_REQUIRED(pool.cs)
 {
     int64_t nTime = 0;
     unsigned int nHeight = 1;
     bool spendsCoinbase = false;
     unsigned int sigOpCost = 4;
     LockPoints lp;
-    pool.addUnchecked(tx.GetHash(), CTxMemPoolEntry(
-                                        MakeTransactionRef(tx), nFee, specialTxFee, nTime, nHeight,
-                                        spendsCoinbase, sigOpCost, lp));
+    pool.addUnchecked(CTxMemPoolEntry(MakeTransactionRef(tx), nFee, specialTxFee, nTime, nHeight, spendsCoinbase, sigOpCost, lp));
 }
 
 // Right now this is only testing eviction performance in an extremely small

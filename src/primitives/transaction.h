@@ -10,6 +10,7 @@
 #include <script/script.h>
 #include <serialize.h>
 #include <uint256.h>
+#include <tuple>
 
 /** Transaction types */
 enum {
@@ -212,7 +213,7 @@ public:
     // structure, including the hash.
     const std::vector<CTxIn> vin;
     const std::vector<CTxOut> vout;
-    const uint16_t nVersion;
+    const int16_t nVersion;
     const uint16_t nType;
     const uint32_t nLockTime;
     const std::vector<uint8_t> vExtraPayload; // only available for special transaction types
@@ -226,7 +227,7 @@ private:
 public:
     /** Construct a CTransaction that qualifies as IsNull() */
     CTransaction();
-    CTransaction(uint16_t version, uint16_t type);
+    CTransaction(int16_t version, uint16_t type);
 
     /** Convert a CMutableTransaction into a CTransaction. */
     CTransaction(const CMutableTransaction &tx);
@@ -252,9 +253,7 @@ public:
         return vin.empty() && vout.empty();
     }
 
-    const uint256& GetHash() const {
-        return hash;
-    }
+    const uint256& GetHash() const { return hash; }
 
     // Return sum of txouts.
     CAmount GetValueOut() const;
@@ -291,13 +290,13 @@ struct CMutableTransaction
 {
     std::vector<CTxIn> vin;
     std::vector<CTxOut> vout;
-    uint16_t nVersion;
+    int16_t nVersion;
     uint16_t nType;
     uint32_t nLockTime;
     std::vector<uint8_t> vExtraPayload; // only available for special transaction types
 
     CMutableTransaction();
-    CMutableTransaction(const CTransaction& tx);
+    explicit CMutableTransaction(const CTransaction& tx);
 
     ADD_SERIALIZE_METHODS;
 
@@ -306,7 +305,7 @@ struct CMutableTransaction
         int32_t n32bitVersion = this->nVersion | (this->nType << 16);
         READWRITE(n32bitVersion);
         if (ser_action.ForRead()) {
-            this->nVersion = (uint16_t) (n32bitVersion & 0xffff);
+            this->nVersion = (int16_t) (n32bitVersion & 0xffff);
             this->nType = (uint16_t) ((n32bitVersion >> 16) & 0xffff);
         }
         READWRITE(vin);

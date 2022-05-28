@@ -40,7 +40,7 @@ public:
     uint256 GetRequestId() const;
 };
 
-typedef std::shared_ptr<CInstantSendLock> CInstantSendLockPtr;
+using CInstantSendLockPtr = std::shared_ptr<CInstantSendLock>;
 
 class CInstantSendDb
 {
