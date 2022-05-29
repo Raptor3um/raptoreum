@@ -43,7 +43,6 @@
 #include <QDateTime>
 #include <QDebug>
 #include <QDesktopServices>
-#include <QDesktopWidget>
 #include <QDialogButtonBox>
 #include <QDoubleValidator>
 #include <QFileDialog>
@@ -52,6 +51,7 @@
 #include <QFontMetrics>
 #include <QKeyEvent>
 #include <QLineEdit>
+#include <QLocale>
 #include <QMouseEvent>
 #include <QPointer>
 #include <QProgressDialog>
@@ -214,7 +214,7 @@ void setIcon(QAbstractButton* button, const QString& strIcon, const ThemedColor 
 
 QString dateTimeStr(const QDateTime &date)
 {
-    return date.date().toString(Qt::SystemLocaleShortDate) + QString(" ") + date.toString("hh:mm");
+    return QLocale::system().toString(date.date(), QLocale::ShortFormat) + QString(" ") + date.toString("hh:mm");
 }
 
 QString dateTimeStr(qint64 nTime)
@@ -1793,7 +1793,7 @@ qreal calculateIdealFontSize(int width, const QString& text, QFont font, qreal m
     while(font_size >= minPointSize) {
         font.setPointSizeF(font_size);
         QFontMetrics fm(font);
-        if (fm.width(text) < width) {
+        if (TextWidth(fm, text) < width) {
             break;
         }
         font_size -= 0.5;
@@ -1831,6 +1831,29 @@ void PolishProgressDialog(QProgressDialog* dialog)
 #else
     Q_UNUSED(dialog);
 #endif
+}
+
+QDateTime StartOfDay(const QDate& date)
+{
+  return date.startOfDay();
+}
+
+int TextWidth(const QFontMetrics& fm, const QString& text)
+{
+  return fm.horizontalAdvance(text);
+}
+
+bool HasPixmap(const QLabel* label)
+{
+  return !label->pixmap(Qt::ReturnByValue).isNull();
+}
+
+QImage GetImage(const QLabel* label)
+{
+  if (!HasPixmap(label)) {
+    return QImage();
+  }
+  return label->pixmap(Qt::ReturnByValue).toImage();
 }
 
 } // namespace GUIUtil

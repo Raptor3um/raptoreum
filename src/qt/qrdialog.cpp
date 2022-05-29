@@ -16,9 +16,6 @@
 #include <QMouseEvent>
 #include <QPainter>
 #include <QPixmap>
-#if QT_VERSION < 0x050000
-#include <QUrl>
-#endif
 
 #if defined(HAVE_CONFIG_H)
 #include <config/raptoreum-config.h> /* for USE_QRCODE */
@@ -42,15 +39,12 @@ QRGeneralImageWidget::QRGeneralImageWidget(QWidget *parent):
 
 QImage QRGeneralImageWidget::exportImage()
 {
-    if(!pixmap())
-        return QImage();
-    return pixmap()->toImage();
+    return GUIUtil::GetImage(this);
 }
 
 void QRGeneralImageWidget::mousePressEvent(QMouseEvent *event)
 {
-    if(event->button() == Qt::LeftButton && pixmap())
-    {
+    if(event->button() == Qt::LeftButton && GUIUtil::HasPixmap(this)) {
         event->accept();
         QMimeData *mimeData = new QMimeData;
         mimeData->setImageData(exportImage());
@@ -65,7 +59,7 @@ void QRGeneralImageWidget::mousePressEvent(QMouseEvent *event)
 
 void QRGeneralImageWidget::saveImage()
 {
-    if(!pixmap())
+    if(!GUIUtil::HasPixmap(this))
         return;
     QString fn = GUIUtil::getSaveFileName(this, tr("Save QR Code"), QString(), tr("PNG Image (*.png)"), nullptr);
     if (!fn.isEmpty())
@@ -76,14 +70,14 @@ void QRGeneralImageWidget::saveImage()
 
 void QRGeneralImageWidget::copyImage()
 {
-    if(!pixmap())
+    if(!GUIUtil::HasPixmap(this))
         return;
     QApplication::clipboard()->setImage(exportImage());
 }
 
 void QRGeneralImageWidget::contextMenuEvent(QContextMenuEvent *event)
 {
-    if(!pixmap())
+    if(!GUIUtil::HasPixmap(this))
         return;
     contextMenu->exec(event->globalPos());
 }

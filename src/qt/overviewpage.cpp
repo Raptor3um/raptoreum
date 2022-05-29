@@ -19,6 +19,7 @@
 #include <coinjoin/coinjoin-client-options.h>
 
 #include <QAbstractItemDelegate>
+#include <QDateTime>
 #include <QPainter>
 #include <QSettings>
 #include <QTimer>
