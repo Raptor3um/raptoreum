@@ -16,6 +16,8 @@
 #include <consensus/merkle.h>
 #include <consensus/validation.h>
 #include <hash.h>
+#include <interfaces/chain.h>
+#include <interfaces/wallet.h>
 #include <validation.h>
 #include <net.h>
 #include <policy/feerate.h>
@@ -580,7 +582,7 @@ void static RaptoreumMiner(const CChainParams& chainparams)
                 // Busy-wait for the network to come online so we don't waste time mining
                 // on an obsolete chain. In regtest mode we expect to fly solo.
                 do {
-                    if ((g_connman->GetNodeCount(CConnman::CONNECTIONS_ALL) > 0) && !IsInitialBlockDownload()) {
+                    if ((g_connman->GetNodeCount(CConnman::CONNECTIONS_ALL) > 0) && !::ChainstateActive().IsInitialBlockDownload()) {
                         break;
                     }
 

@@ -25,7 +25,7 @@ namespace pl = std::placeholders;
 struct ValidationInterfaceConnections {
     boost::signals2::scoped_connection BlockChecked;
     boost::signals2::scoped_connection Broadcast;
-    boost::signals2::scoped_connection SetBestChain;
+    boost::signals2::scoped_connection ChainStateFlushed;
     boost::signals2::scoped_connection NotifyTransactionLock;
     boost::signals2::scoped_connection NotifyChainLock;
     boost::signals2::scoped_connection TransactionAddedToMempool;
@@ -52,7 +52,7 @@ struct MainSignalsInstance {
     boost::signals2::signal<void (const std::shared_ptr<const CBlock> &, const CBlockIndex *pindex, const std::vector<CTransactionRef>&)> BlockConnected;
     boost::signals2::signal<void (const std::shared_ptr<const CBlock> &, const CBlockIndex* pindexDisconnected)> BlockDisconnected;
     boost::signals2::signal<void (const CTransactionRef &, MemPoolRemovalReason)> TransactionRemovedFromMempool;
-    boost::signals2::signal<void (const CBlockLocator &)> SetBestChain;
+    boost::signals2::signal<void (const CBlockLocator &)> ChainStateFlushed;
     boost::signals2::signal<void (int64_t nBestBlockTime, CConnman* connman)> Broadcast;
     boost::signals2::signal<void (const CBlock&, const CValidationState&)> BlockChecked;
     boost::signals2::signal<void (const CBlockIndex *, const std::shared_ptr<const CBlock>&)> NewPoWValidBlock;
@@ -122,6 +122,7 @@ void RegisterValidationInterface(CValidationInterface* pwalletIn) {
     conns.UpdatedBlockTip = g_signals.m_internals->UpdatedBlockTip.connect(std::bind(&CValidationInterface::UpdatedBlockTip, pwalletIn, pl::_1, pl::_2, pl::_3));
     conns.SynchronousUpdatedBlockTip = g_signals.m_internals->SynchronousUpdatedBlockTip.connect(std::bind(&CValidationInterface::SynchronousUpdatedBlockTip, pwalletIn, pl::_1, pl::_2, pl::_3));
     conns.TransactionAddedToMempool = g_signals.m_internals->TransactionAddedToMempool.connect(std::bind(&CValidationInterface::TransactionAddedToMempool, pwalletIn, pl::_1, pl::_2));
+    conns.ChainStateFlushed = g_signals.m_internals->ChainStateFlushed.connect(std::bind(&CValidationInterface::ChainStateFlushed, pwalletIn, pl::_1));
     conns.BlockConnected = g_signals.m_internals->BlockConnected.connect(std::bind(&CValidationInterface::BlockConnected, pwalletIn, pl::_1, pl::_2, pl::_3));
     conns.BlockFound = g_signals.m_internals->BlockFound.connect(std::bind(&CValidationInterface::BlockFound, pwalletIn, pl::_1));
     conns.UpdatedBlockTip = g_signals.m_internals->UpdatedBlockTip.connect(std::bind(&CValidationInterface::UpdatedBlockTip, pwalletIn, pl::_1, pl::_2, pl::_3));
@@ -204,9 +205,9 @@ void CMainSignals::BlockDisconnected(const std::shared_ptr<const CBlock> &pblock
     });
 }
 
-void CMainSignals::SetBestChain(const CBlockLocator &locator) {
+void CMainSignals::ChainStateFlushed(const CBlockLocator &locator) {
     m_internals->m_schedulerClient.AddToProcessQueue([locator, this] {
-        m_internals->SetBestChain(locator);
+        m_internals->ChainStateFlushed(locator);
     });
 }
 

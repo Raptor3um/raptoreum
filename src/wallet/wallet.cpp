@@ -671,7 +671,7 @@ bool CWallet::ChangeWalletPassphrase(const SecureString& strOldWalletPassphrase,
     return false;
 }
 
-void CWallet::SetBestChain(const CBlockLocator& loc)
+void CWallet::ChainStateFlushed(const CBlockLocator& loc)
 {
     WalletBatch batch(*database);
     batch.WriteBestBlock(loc);
@@ -5068,7 +5068,7 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
         }
 
         auto locked_chain = chain.assumeLocked();
-        walletInstance->SetBestChain(::ChainActive().GetLocator());
+        walletInstance->ChainStateFlushed(::ChainActive().GetLocator());
 
         // Try to create wallet backup right after new wallet was created
         std::string strBackupWarning;
@@ -5219,7 +5219,7 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
             }
         }
         walletInstance->WalletLogPrintf("Rescan completed in %15dms\n", GetTimeMillis() - nStart);
-        walletInstance->SetBestChain(::ChainActive().GetLocator());
+        walletInstance->ChainStateFlushed(::ChainActive().GetLocator());
         walletInstance->database->IncrementUpdateCounter();
 
         // Restore wallet transaction metadata after -zapwallettxes=1

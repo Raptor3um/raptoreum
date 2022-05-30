@@ -304,7 +304,7 @@ void PrepareShutdown(InitInterfaces& interfaces)
 
     // FlushStateToDisk generates a SetBestChain callback, which we should avoid missing
     if (pcoinsTip != nullptr) {
-        FlushStateToDisk();
+        ::ChainstateActive().ForceFlushStateToDisk();
     }
 
     // Any future callbacks will be dropped. This should absolutely be safe - if
@@ -316,7 +316,7 @@ void PrepareShutdown(InitInterfaces& interfaces)
     {
         LOCK(cs_main);
         if (pcoinsTip != nullptr) {
-            FlushStateToDisk();
+            ::ChainstateActive().ForceFlushStateToDisk();
         }
         pcoinsTip.reset();
         pcoinscatcher.reset();
@@ -922,7 +922,7 @@ void PeriodicStats()
 {
     assert(gArgs.GetBoolArg("-statsenabled", DEFAULT_STATSD_ENABLE));
     CCoinsStats stats;
-    FlushStateToDisk();
+    ::ChainstateActive().ForceFlushStateToDisk();
     if (GetUTXOStats(pcoinsdbview.get(), stats)) {
         statsClient.gauge("utxoset.tx", stats.nTransactions, 1.0f);
         statsClient.gauge("utxoset.txOutputs", stats.nTransactionOutputs, 1.0f);
@@ -2070,7 +2070,7 @@ bool AppInitMain(InitInterfaces& interfaces)
         nLocalServices = ServiceFlags(nLocalServices & ~NODE_NETWORK);
         if (!fReindex) {
             uiInterface.InitMessage(_("Pruning blockstore..."));
-            PruneAndFlush();
+            ::ChainstateActive().PruneAndFlush();
         }
     }
 
