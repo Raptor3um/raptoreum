@@ -272,6 +272,7 @@ BITCOIN_CORE_H = \
   utilmacro.h \
   utilmoneystr.h \
   util.h \
+  utilasmap.h \
   utiltime.h \
   utilstring.h \
   utilthreadnames.h \
@@ -665,6 +666,7 @@ libraptoreum_util_a_SOURCES = \
   sync.cpp \
   threadinterrupt.cpp \
   util.cpp \
+  utilasmap.cpp \
   utilmoneystr.cpp \
   utilstrencodings.cpp \
   utilstring.cpp \
