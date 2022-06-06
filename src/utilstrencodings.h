@@ -106,7 +106,7 @@ constexpr inline bool IsSpace(char c) noexcept {
  * @returns true if the entire string could be parsed as valid integer,
  *   false if not the entire string could be parsed or when overflow or underflow occurred.
  */
-NODISCARD bool ParseUInt8(const std::string& str, uint8_t *out);
+[[nodiscard]] bool ParseUInt8(const std::string& str, uint8_t *out);
 
 /**
  * Convert decimal string to unsigned 32-bit integer with strict parse error feedback.
