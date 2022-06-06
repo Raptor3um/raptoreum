@@ -22,7 +22,7 @@ std::string base_blob<BITS>::GetHex() const
 {
     uint8_t m_data_rev[WIDTH];
     for (int i = 0; i < WIDTH; ++i) {
-        m_data_rev[i] = data[WIDTH - 1 - i];
+        m_data_rev[i] = m_data[WIDTH - 1 - i];
     }
     return HexStr(m_data_rev);
 }

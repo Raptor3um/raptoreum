@@ -630,9 +630,6 @@ std::string ArgsManager::GetHelpMessage() const
             case OptionsCategory::WALLET_HD:
                 usage += HelpMessageGroup("HD Wallet options:");
                 break;
-            case OptionsCategory::WALLET_KEEPASS:
-                usage += HelpMessageGroup("Wallet KeePass options:");
-                break;
             case OptionsCategory::WALLET_COINJOIN:
                 usage += HelpMessageGroup("Wallet CoinJoin options:");
                 break;

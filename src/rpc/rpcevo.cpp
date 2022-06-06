@@ -1129,7 +1129,7 @@ UniValue signMessage(CWallet * const pwallet, std::string strAddress, std::strin
 	if (!key.SignCompact(ss.GetHash(), vchSig))
 		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Sign failed");
 
-	return EncodeBase64(&vchSig[0], vchSig.size());
+	return EncodeBase64(vchSig);
 }
 
 UniValue createConfigFile(std::string blsPrivateKey, std::string ip, std::string address) {

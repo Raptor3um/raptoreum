@@ -63,7 +63,6 @@ namespace BCLog {
         CHAINLOCKS  = ((uint64_t)1 << 32),
         GOBJECT     = ((uint64_t)1 << 33),
         INSTANTSEND = ((uint64_t)1 << 34),
-        KEEPASS     = ((uint64_t)1 << 35),
         LLMQ        = ((uint64_t)1 << 36),
         LLMQ_DKG    = ((uint64_t)1 << 37),
         LLMQ_SIGS   = ((uint64_t)1 << 38),
@@ -74,7 +73,7 @@ namespace BCLog {
         NETCONN     = ((uint64_t)1 << 43),
         QUORUMS     = ((uint64_t)1 << 44),
 
-        RTM         = CHAINLOCKS | GOBJECT | INSTANTSEND | KEEPASS | LLMQ | LLMQ_DKG | LLMQ_SIGS
+        RTM         = CHAINLOCKS | GOBJECT | INSTANTSEND | LLMQ | LLMQ_DKG | LLMQ_SIGS
                       | MNPAYMENTS | MNSYNC | COINJOIN | SPORK | NETCONN | QUORUMS,
 
         NET_NETCONN = NET | NETCONN, // use this to have something logged in NET and NETCONN as well

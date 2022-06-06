@@ -25,7 +25,6 @@ public:
     // Raptoreum Specific WalletInitInterface
     virtual void AutoLockSmartnodeCollaterals() const = 0;
     virtual void InitCoinJoinSettings() const = 0;
-    virtual void InitKeePass() const = 0;
     virtual bool InitAutoBackup() const = 0;
 
     virtual ~WalletInitInterface() {}

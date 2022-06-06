@@ -186,7 +186,6 @@ BITCOIN_CORE_H = \
   interfaces/wallet.h \
   key.h \
   key_io.h \
-  keepass.h \
   keystore.h \
   dbwrapper.h \
   limitedmap.h \
@@ -429,7 +428,6 @@ libraptoreum_wallet_a_SOURCES = \
   coinjoin/coinjoin-client-options.cpp \
   coinjoin/coinjoin-util.cpp \
   interfaces/wallet.cpp \
-  keepass.cpp \
   wallet/coincontrol.cpp \
   wallet/crypter.cpp \
   wallet/db.cpp \

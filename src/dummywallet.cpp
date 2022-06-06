@@ -20,7 +20,6 @@ public:
 	// Raptoreum specific code
 	void AutoLockSmartnodeCollaterals() const override {}
 	void InitCoinJoinSettings() const override {}
-	void InitKeePass() const override {}
 	bool InitAutoBackup() const override { return true; }
 };
 
@@ -51,11 +50,6 @@ void DummyWalletInit::AddWalletOptions() const
         "-mnemonic=<text>",
         "-mnemonicpassphrase=<text>",
         "-usehd",
-        "-keepass",
-        "-keepassid=<id>",
-        "-keepasskey=<key>",
-        "-keepassname=<name>",
-        "-keepassport=<port>",
         "-enablecoinjoin",
         "-coinjoinamount=<n>",
         "-coinjoinautostart",

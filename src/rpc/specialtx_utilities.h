@@ -154,7 +154,7 @@ static std::string SignAndSendSpecialTx(const CMutableTransaction& tx)
 
     JSONRPCRequest signRequest;
     signRequest.params.setArray();
-    signRequest.params.push_back(HexStr(ds.begin(), ds.end()));
+    signRequest.params.push_back(HexStr(ds));
     UniValue signResult = signrawtransaction(signRequest);
 
     JSONRPCRequest sendRequest;
