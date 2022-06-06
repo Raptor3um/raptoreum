@@ -29,6 +29,12 @@
 
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 
+std::ostream& operator<<(std::ostream& os, const uint256& num)
+{
+  os << num.ToString();
+  return os;
+}
+
 void CConnmanTest::AddNode(CNode& node)
 {
     LOCK(g_connman->cs_vNodes);
