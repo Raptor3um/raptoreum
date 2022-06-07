@@ -43,11 +43,9 @@ static UniValue mnsync(const JSONRPCRequest& request)
             RPCHelpMan{"mnsync",
                 "Returns the sync status, updates to the next step or resets it entirely.\n",
                 {
-                    {"mode", RPCArg::Type::STR, false},
+                    {"mode", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "[status|next|reset]"},
                 }}
-                .ToString() +
-            "\nArguments:\n"
-            "1. mode     (string, required) [status|next|reset]\n"
+                .ToString()
         );
 
     std::string strMode = request.params[0].get_str();
@@ -106,11 +104,9 @@ UniValue spork(const JSONRPCRequest& request)
             RPCHelpMan{"spork",
                 "\nShows information about current state of sporks\n",
                 {
-                    {"command", RPCArg::Type::STR, false},
+                    {"command", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "'show' to show all current spork values, 'active' to show which sporks are active"},
                 }}
                 .ToString() +
-            "\nArguments:\n"
-            "1. \"command\"                     (string, required) 'show' to show all current spork values, 'active' to show which sporks are active\n"
             "\nResult:\n"
             "For 'show':\n"
             "{\n"
@@ -145,13 +141,10 @@ UniValue spork(const JSONRPCRequest& request)
                 RPCHelpMan{"spork",
                     "\nUpdate the value of the specific spork. Requires \"-sporkkey\" to be set to sign the message.\n",
                     {
-                        {"name", RPCArg::Type::STR, false},
-                        {"value", RPCArg::Type::NUM, false},
+                        {"name", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "The name of the spork to update"},
+                        {"value", RPCArg::Type::NUM, /* opt */ false, /* default_val */ "", "The new desired value of the spork"},
                     }}
                     .ToString() +
-                "\nArguments:\n"
-                "1. \"name\"              (string, required) The name of the spork to update\n"
-                "2. value               (number, required) The new desired value of the spork\n"
                 "\nResult:\n"
                 "  result               (string) \"success\" if spork value was updated or this help otherwise\n"
                 "\nExamples:\n"
@@ -169,11 +162,9 @@ UniValue validateaddress(const JSONRPCRequest& request)
             RPCHelpMan{"validateaddress",
                 "\nReturn information about the given raptoreum address.\n",
                 {
-                    {"address", RPCArg::Type::STR, false},
+                    {"address", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "The dash address to validate"},
                 }}
                 .ToString() +
-            "\nArguments:\n"
-            "1. \"address\"                    (string, required) The raptoreum address to validate\n"
             "\nResult:\n"
             "{\n"
             "  \"isvalid\" : true|false,       (boolean) If the address is valid or not. If not, this is the only property returned.\n"
@@ -214,22 +205,13 @@ UniValue createmultisig(const JSONRPCRequest& request)
                 "\nCreates a multi-signature address with n signature of m keys required.\n"
                 "It returns a json object with the address and redeemScript.\n",
                 {
-                    {"nrequired", RPCArg::Type::NUM, false},
-                    {"keys", RPCArg::Type::ARR,
+                    {"nrequired", RPCArg::Type::NUM, /* opt */ false, /* default_val */ "", "The number of required signatures out of the n keys."},
+                    {"keys", RPCArg::Type::ARR, /* opt */ false, /* default_val */ "", "A json array of hex-encoded public keys.",
                         {
-                            {"key", RPCArg::Type::STR_HEX, true},
-                        },
-                    false},
+                            {"key", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "The hex-encoded public key"},
+                        }},
                 }}
                 .ToString() +
-            "\nArguments:\n"
-            "1. nrequired                    (numeric, required) The number of required signatures out of the n keys.\n"
-            "2. \"keys\"                       (string, required) A json array of hex-encoded public keys\n"
-            "     [\n"
-            "       \"key\"                    (string) The hex-encoded public key\n"
-            "       ,...\n"
-            "     ]\n"
-
             "\nResult:\n"
             "{\n"
             "  \"address\":\"multisigaddress\",  (string) The value of the new multisig address.\n"
@@ -276,15 +258,11 @@ UniValue verifymessage(const JSONRPCRequest& request)
             RPCHelpMan{"verifymessage",
                 "\nVerify a signed message\n",
                 {
-                    {"address", RPCArg::Type::STR, false},
-                    {"signature", RPCArg::Type::STR, false},
-                    {"message", RPCArg::Type::STR, false},
+                    {"address", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "The dash address to use for the signature."},
+                    {"signature", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "The signature provided by the signer in base 64 encoding (see signmessage)."},
+                    {"message", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "The message that was signed."},
                 }}
                 .ToString() +
-            "\nArguments:\n"
-            "1. \"address\"         (string, required) The raptoreum address to use for the signature.\n"
-            "2. \"signature\"       (string, required) The signature provided by the signer in base 64 encoding (see signmessage).\n"
-            "3. \"message\"         (string, required) The message that was signed.\n"
             "\nResult:\n"
             "true|false   (boolean) If the signature is verified or not.\n"
             "\nExamples:\n"
@@ -338,13 +316,10 @@ UniValue signmessagewithprivkey(const JSONRPCRequest& request)
             RPCHelpMan{"signmessagewithprivkey",
                 "\nSign a message with the private key of an address\n",
                 {
-                    {"privkey", RPCArg::Type::STR, false},
-                    {"message", RPCArg::Type::STR, false},
+                    {"privkey", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "The private key to sign the message with."},
+                    {"message", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "The message to create a signature of."},
                 }}
                 .ToString() +
-            "\nArguments:\n"
-            "1. \"privkey\"         (string, required) The private key to sign the message with.\n"
-            "2. \"message\"         (string, required) The message to create a signature of.\n"
             "\nResult:\n"
             "\"signature\"          (string) The signature of the message encoded in base 64\n"
             "\nExamples:\n"
@@ -382,12 +357,10 @@ UniValue setmocktime(const JSONRPCRequest& request)
             RPCHelpMan{"setmocktime",
                 "\nSet the local time to given timestamp (-regtest only)\n",
                 {
-                    {"timestamp", RPCArg::Type::NUM, false},
+                    {"timestamp", RPCArg::Type::NUM, /* opt */ false, /* default_val */ "", "Unix seconds-since-epoch timestamp\n"
+            "   Pass 0 to go back to using the system time."},
                 }}
-                .ToString() +
-            "\nArguments:\n"
-            "1. timestamp  (integer, required) Unix seconds-since-epoch timestamp\n"
-            "   Pass 0 to go back to using the system time."
+                .ToString()
         );
 
     if (!Params().MineBlocksOnDemand())
@@ -413,16 +386,11 @@ UniValue mnauth(const JSONRPCRequest& request)
             RPCHelpMan{"mnauth",
                 "\nOverride MNAUTH processing results for the specified node with a user provided data (-regtest only).\n",
                 {
-                    {"nodeId", RPCArg::Type::NUM, false},
-                    {"proTxHash", RPCArg::Type::STR, false},
-                    {"publicKey", RPCArg::Type::STR, false},
+                    {"nodeId", RPCArg::Type::NUM, /* opt */ false, /* default_val */ "", "Internal peer id of the node the mock data gets added to."},
+                    {"proTxHash", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "The authenticated proTxHash as hex string."},
+                    {"publicKey", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "The authenticated public key as hex string."},
                 }}
-                .ToString() +
-            "\nArguments:\n"
-            "1. nodeId          (integer, required) Internal peer id of the node the mock data gets added to.\n"
-            "2. \"proTxHash\"     (string, required) The authenticated proTxHash as hex string.\n"
-            "3. \"publicKey\"     (string, required) The authenticated public key as hex string.\n"
-            );
+                .ToString());
 
     if (!Params().MineBlocksOnDemand())
         throw std::runtime_error("mnauth for regression testing (-regtest mode) only");
@@ -525,20 +493,12 @@ UniValue getaddressmempool(const JSONRPCRequest& request)
             RPCHelpMan{"getaddressmempool",
                 "\nReturns all mempool deltas for an address (requires addressindex to be enabled).\n",
                 {
-                    {"addresses", RPCArg::Type::ARR,
+                    {"addresses", RPCArg::Type::ARR, /* opt */ true, /* default_val */ "", "",
                         {
-                            {"address", RPCArg::Type::STR, true},
+                            {"address", RPCArg::Type::STR, /* opt */ true, /* default_val */ "", "The base58check encoded address"},
                         },
-                    true},
+                    },
                 }}.ToString() +
-            "\nArguments:\n"
-            "{\n"
-            "  \"addresses\"\n"
-            "    [\n"
-            "      \"address\"  (string) The base58check encoded address\n"
-            "      ,...\n"
-            "    ]\n"
-            "}\n"
             "\nResult:\n"
             "[\n"
             "  {\n"
@@ -603,20 +563,12 @@ UniValue getaddressutxos(const JSONRPCRequest& request)
             RPCHelpMan{"getaddressutxos",
                 "\nReturns all unspent outputs for an address (requires addressindex to be enabled).\n",
                 {
-                    {"addresses", RPCArg::Type::ARR,
+                    {"addresses", RPCArg::Type::ARR, /* opt */ true, /* default_val */ "", "",
                         {
-                            {"address", RPCArg::Type::STR, true},
+                            {"address", RPCArg::Type::STR, /* opt */ true, /* default_val */ "", "The base58check encoded address"},
                         },
-                    true},
+                    },
                 }}.ToString() +
-            "\nArguments:\n"
-            "{\n"
-            "  \"addresses\"\n"
-            "    [\n"
-            "      \"address\"  (string) The base58check encoded address\n"
-            "      ,...\n"
-            "    ]\n"
-            "}\n"
             "\nResult:\n"
             "[\n"
             "  {\n"
@@ -677,22 +629,12 @@ UniValue getaddressdeltas(const JSONRPCRequest& request)
             RPCHelpMan{"getaddressdeltas",
                 "\nReturns all changes for an address (requires addressindex to be enabled).\n",
                 {
-                    {"addresses", RPCArg::Type::ARR,
+                    {"addresses", RPCArg::Type::ARR, /* opt */ true, /* default_val */ "", "",
                         {
-                            {"address", RPCArg::Type::STR, true},
+                            {"address", RPCArg::Type::STR, /* opt */ true, /* default_val */ "", "The base58check encoded address"},
                         },
-                    true},
+                    },
                 }}.ToString() +
-            "\nArguments:\n"
-            "{\n"
-            "  \"addresses\"\n"
-            "    [\n"
-            "      \"address\"  (string) The base58check encoded address\n"
-            "      ,...\n"
-            "    ]\n"
-            "  \"start\" (number) The start block height\n"
-            "  \"end\" (number) The end block height\n"
-            "}\n"
             "\nResult:\n"
             "[\n"
             "  {\n"
@@ -772,20 +714,12 @@ UniValue getaddressbalance(const JSONRPCRequest& request)
             RPCHelpMan{"getaddressbalance",
                 "\nReturns the balance for an address(es) (requires addressindex to be enabled).\n",
                 {
-                    {"addresses", RPCArg::Type::ARR,
+                    {"addresses", RPCArg::Type::ARR, /* opt */ true, /* default_val */ "", "",
                         {
-                            {"address", RPCArg::Type::STR, true},
+                            {"address", RPCArg::Type::STR, /* opt */ true, /* default_val */ "", "The base58check encoded address"},
                         },
-                    true},
+                    },
                 }}.ToString() +
-            "\nArguments:\n"
-            "{\n"
-            "  \"addresses\"\n"
-            "    [\n"
-            "      \"address\"  (string) The base58check encoded address\n"
-            "      ,...\n"
-            "    ]\n"
-            "}\n"
             "\nResult:\n"
             "{\n"
             "  \"balance\": xxxxx,              (numeric) The current total balance in ruffs\n"
@@ -852,22 +786,12 @@ UniValue getaddresstxids(const JSONRPCRequest& request)
             RPCHelpMan{"getaddresstxids",
                 "\nReturns the txids for an address(es) (requires addressindex to be enabled).\n",
                 {
-                    {"addresses", RPCArg::Type::ARR,
+                    {"addresses", RPCArg::Type::ARR, /* opt */ true, /* default_val */ "", "",
                         {
-                            {"address", RPCArg::Type::STR, true},
+                            {"address", RPCArg::Type::STR, /* opt */ true, /* default_val */ "", "The base58check encoded address"},
                         },
-                    true},
+                    },
                 }}.ToString() +
-            "\nArguments:\n"
-            "{\n"
-            "  \"addresses\"\n"
-            "    [\n"
-            "      \"address\"  (string) The base58check encoded address\n"
-            "      ,...\n"
-            "    ]\n"
-            "  \"start\" (number) The start block height\n"
-            "  \"end\" (number) The end block height\n"
-            "}\n"
             "\nResult:\n"
             "[\n"
             "  \"transactionid\"  (string) The transaction id\n"
@@ -942,18 +866,13 @@ UniValue getspentinfo(const JSONRPCRequest& request)
             RPCHelpMan{"getspentinfo",
                 "\nReturns the txid and index where an output is spent.\n",
                 {
-                    {"request", RPCArg::Type::OBJ,
+                    {"request", RPCArg::Type::OBJ, /* opt */ true, /* default_val */ "", "",
                         {
-                            {"txid", RPCArg::Type::STR, true},
-                            {"index", RPCArg::Type::NUM, true},
+                            {"txid", RPCArg::Type::STR_HEX, /* opt */ true, /* default_val */ "", "The hex string of the txid"},
+                            {"index", RPCArg::Type::NUM, /* opt */ true, /* default_val */ "", "The start block height"},
                         },
-                    true},
+                    },
                 }}.ToString() +
-            "\nArguments:\n"
-            "{\n"
-            "  \"txid\" (string) The hex string of the txid\n"
-            "  \"index\" (number) The start block height\n"
-            "}\n"
             "\nResult:\n"
             "{\n"
             "  \"txid\"  (string) The transaction id\n"
@@ -1032,13 +951,11 @@ UniValue getmemoryinfo(const JSONRPCRequest& request)
             RPCHelpMan{"getmemoryinfo",
                 "Returns an object containing information about memory usage.\n",
                 {
-                    {"mode", RPCArg::Type::STR, true},
+                    {"mode", RPCArg::Type::STR, /* opt */ true, /* default_val */ "", "determines what kind of information is returned. This argument is optional, the default mode is \"stats\".\n"
+            "  - \"stats\" returns general statistics about memory usage in the daemon.\n"
+            "  - \"mallocinfo\" returns an XML string describing low-level heap state (only available if compiled with glibc 2.10+)."},
                 }}
                 .ToString() +
-            "\nArguments:\n"
-            "1. \"mode\"     (string, optional, default: \"stats\") Determines what kind of information is returned.\n"
-            "  - \"stats\" returns general statistics about memory usage in the daemon.\n"
-            "  - \"mallocinfo\" returns an XML string describing low-level heap state (only available if compiled with glibc 2.10+).\n"
             "\nResult (mode \"stats\"):\n"
             "{\n"
             "  \"locked\": {               (json object) Information about locked memory manager\n"
@@ -1109,21 +1026,16 @@ UniValue logging(const JSONRPCRequest& request)
             "  - \"none\", \"0\" : even if other logging categories are specified, ignore all of them.\n"
             ,
                 {
-                    {"include", RPCArg::Type::STR, true},
-                    {"exclude", RPCArg::Type::STR, true},
+                    {"include", RPCArg::Type::ARR, /* opt */ true, /* default_val */ "", "A json array of categories to add debug logging",
+                        {
+                            {"include_category", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "the valid logging category"},
+                        }},
+                    {"exclude", RPCArg::Type::ARR, /* opt */ true, /* default_val */ "", "A json array of categories to remove debug logging",
+                        {
+                            {"exclude_category", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "the valid logging category"},
+                        }},
                 }}
                 .ToString() +
-            "\nArguments:\n"
-            "1. \"include\"        (array of strings, optional) A json array of categories to add debug logging\n"
-            "     [\n"
-            "       \"category\"   (string) the valid logging category\n"
-            "       ,...\n"
-            "     ]\n"
-            "2. \"exclude\"        (array of strings, optional) A json array of categories to remove debug logging\n"
-            "     [\n"
-            "       \"category\"   (string) the valid logging category\n"
-            "       ,...\n"
-            "     ]\n"
             "\nResult:\n"
             "{                   (json object where keys are the logging categories, and values indicates its status\n"
             "  \"category\": true|false,  (bool) if being debug logged or not. false:inactive, true:active\n"

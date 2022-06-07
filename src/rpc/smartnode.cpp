@@ -43,14 +43,10 @@ void smartnode_list_help()
             RPCHelpMan{"smartnodelist",
                 "Get a list of smartnodes in different modes. This call is identical to 'smartnode list' call.\n",
                 {
-                    {"mode", RPCArg::Type::STR, true},
-                    {"filter", RPCArg::Type::STR, true},
+                    {"mode", RPCArg::Type::STR, /* opt */ true, /* default_val */ "json", "The mode to run list in"},
+                    {"filter", RPCArg::Type::STR, /* opt */ true, /* default_val */ "", "Filter results. Partial match by outpoint by default in all modes, additional matches in some modes are also available"},
                 }}
                 .ToString() +
-            "\nArguments:\n"
-            "1. \"mode\"      (string, optional/required to use filter, defaults = json) The mode to run list in\n"
-            "2. \"filter\"    (string, optional) Filter results. Partial match by outpoint by default in all modes,\n"
-            "                                    additional matches in some modes are also available\n"
             "\nAvailable modes:\n"
             "  addr           - Print ip address associated with a smartnode (can be additionally filtered, partial match)\n"
             "  full           - Print info in format 'status payee lastpaidtime lastpaidblock IP'\n"
@@ -89,11 +85,9 @@ void smartnode_connect_help()
         RPCHelpMan{"smartnode connect",
             "Connect to given smartnode\n",
             {
-                {"address", RPCArg::Type::STR, false},
+                {"address", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "The address of the smartnode to connect"},
             }}
-            .ToString() +
-        "\nArguments:\n"
-        "1. \"address\"      (string, required) The address of the smartnode to connect\n");
+            .ToString());
 }
 
 UniValue smartnode_connect(const JSONRPCRequest& request)
@@ -317,12 +311,9 @@ void smartnode_winners_help()
         RPCHelpMan{"smartnode winners",
             "Print list of smartnode winners\n",
             {
-                {"count", RPCArg::Type::NUM, true},
-                {"filter", RPCArg::Type::STR, true},
-            }}.ToString() +
-        "\nArguments:\n"
-        "1. count        (numeric, optional) number of last winners to return\n"
-        "2. filter       (string, optional) filter for returned winners\n");
+                {"count", RPCArg::Type::NUM, /* opt */ true, /* default_val */ "", "number of last winners to return"},
+                {"filter", RPCArg::Type::STR, /* opt */ true, /* default_val */ "", "filter for returned winners"},
+            }}.ToString());
 }
 
 UniValue smartnode_winners(const JSONRPCRequest& request)
@@ -376,15 +367,10 @@ void smartnode_payments_help()
         RPCHelpMan{"smartnode payments",
             "\nReturns an array of deterministic smartnodes and their payments for the specified block\n",
             {
-                {"blockhash", RPCArg::Type::STR, true},
-                {"count", RPCArg::Type::NUM, true},
+                {"blockhash", RPCArg::Type::STR_HEX, /* opt */ true, /* default_val */ "tip", "The hash of the starting block"},
+                {"count", RPCArg::Type::NUM, /* opt */ true, /* default_val */ "1", "The number of blocks to return. Will return <count> previous blocks if <count> is negative. Both 1 and -1 correspond to the chain tip."},
             }}
             .ToString() +
-        "\nArguments:\n"
-        "1. \"blockhash\"                       (string, optional, default=tip) The hash of the starting block\n"
-        "2. count                             (numeric, optional, default=1) The number of blocks to return.\n"
-        "                                     Will return <count> previous blocks if <count> is negative.\n"
-        "                                     Both 1 and -1 correspond to the chain tip.\n"
         "\nResult:\n"
         "  [                                  (array) Blocks\n"
         "    {\n"
@@ -520,10 +506,10 @@ UniValue smartnode_payments(const JSONRPCRequest& request)
     throw std::runtime_error(
         RPCHelpMan{"smartnode",
             "Set of commands to execute smartnode related actions\n",
-            {}}
+            {
+                {"command", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "The command to execute"},
+            }}
             .ToString() +
-        "\nArguments:\n"
-        "1. \"command\"        (string or set of strings, required) The command to execute\n"
         "\nAvailable commands:\n"
         "  count        - Get information about number of smartnodes\n"
         "  current      - DEPRECATED Print info on current smartnode winner to be paid the next block (calculated locally)\n"
