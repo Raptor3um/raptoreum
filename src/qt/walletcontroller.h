@@ -8,11 +8,13 @@
 #include <qt/walletmodel.h>
 #include <sync.h>
 
-#include <list>
+#include <map>
 #include <memory>
 #include <vector>
 
+#include <QMessageBox>
 #include <QMutex>
+#include <QThread>
 
 class OptionsModel;
 class PlatformStyle;
@@ -21,6 +23,8 @@ namespace interfaces {
 class Handler;
 class Node;
 } // namespace interfaces
+
+class OpenWalletActivity;
 
 /**
  * Controller betweem interfaces::Node, WalletModel instances and the GUI.
@@ -36,10 +40,11 @@ public:
     WalletController(interfaces::Node& node, OptionsModel* options_model, QObject* parent);
     ~WalletController();
 
-    std::vector<WalletModel*> getWallets() const;
+    std::vector<WalletModel*> getOpenWallets() const;
+    std::map<std::string, bool> listWalletDir() const;
 
-private Q_SLOTS:
-    void addWallet(WalletModel* wallet_model);
+    OpenWalletActivity* openWallet(const std::string& name, QWidget* parent = nullptr);
+    void closeWallet(WalletModel* wallet_model, QWidget* parent = nullptr);
 
 Q_SIGNALS:
     void walletAdded(WalletModel* wallet_model);
@@ -48,11 +53,34 @@ Q_SIGNALS:
     void coinsSent(WalletModel* wallet_model, SendCoinsRecipient recipient, QByteArray transaction);
 
 private:
+    QThread m_activity_thread;
     interfaces::Node& m_node;
     OptionsModel* const m_options_model;
     mutable QMutex m_mutex;
     std::vector<WalletModel*> m_wallets;
     std::unique_ptr<interfaces::Handler> m_handler_load_wallet;
+
+    friend class OpenWalletActivity;
+};
+
+class OpenWalletActivity : public QObject
+{
+    Q_OBJECT
+
+public:
+    OpenWalletActivity(WalletController* wallet_controller, const std::string& name);
+
+public Q_SLOTS:
+    void open();
+
+Q_SIGNALS:
+    void message(QMessageBox::Icon icon, const QString text);
+    void finished();
+    void opened(WalletModel* wallet_model);
+
+private:
+    WalletController* const m_wallet_controller;
+    std::string const m_name;
 };
 
 #endif // BITCOIN_QT_WALLETCONTROLLER_H
