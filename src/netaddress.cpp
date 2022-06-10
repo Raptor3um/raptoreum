@@ -6,8 +6,8 @@
 #include <netaddress.h>
 #include <netbase.h>
 #include <hash.h>
-#include <utilasmap.h>
-#include <utilstrencodings.h>
+#include <util/asmap.h>
+#include <util/strencodings.h>
 #include <tinyformat.h>
 
 #include <algorithm>

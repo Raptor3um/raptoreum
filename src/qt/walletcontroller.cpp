@@ -12,7 +12,7 @@
 
 #include <interfaces/handler.h>
 #include <interfaces/node.h>
-#include <utilstring.h>
+#include <util/string.h>
 
 #include <algorithm>
 
@@ -114,7 +114,7 @@ WalletModel* WalletController::getOrCreateWallet(std::unique_ptr<interfaces::Wal
     const bool called = QMetaObject::invokeMethod(wallet_model, "startPollBalance");
     assert(called);
 
-    connect(wallet_model, &WalletModel::unload, [this, wallet_model] {
+    connect(wallet_model, &WalletModel::unload, this, [this, wallet_model] {
         // Defer removeAndDeleteWallet when no model widget is active.
         if (QApplication::activeModalWidget()) {
             connect(qApp, &QApplication::focusWindowChanged, wallet_model, [this, wallet_model]() {
@@ -125,7 +125,7 @@ WalletModel* WalletController::getOrCreateWallet(std::unique_ptr<interfaces::Wal
         } else {
             removeAndDeleteWallet(wallet_model);
         }
-    });
+    }, Qt::QueuedConnection);
 
     // Re-emit coinsSent signal from wallet model.
     connect(wallet_model, &WalletModel::coinsSent, this, &WalletController::coinsSent);

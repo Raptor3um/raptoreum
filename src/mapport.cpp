@@ -15,7 +15,7 @@
 #include <netaddress.h>
 #include <netbase.h>
 #include <threadinterrupt.h>
-#include <util.h>
+#include <util/system.h>
 
 #ifdef USE_NATPMP
 #include <compat.h>

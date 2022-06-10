@@ -24,9 +24,9 @@
 #include <rpc/util.h>
 #include <shutdown.h>
 #include <txmempool.h>
-#include <util.h>
-#include <utilfees.h>
-#include <utilstrencodings.h>
+#include <util/system.h>
+#include <util/fees.h>
+#include <util/strencodings.h>
 #include <validationinterface.h>
 #include <versionbitsinfo.h>
 #include <warnings.h>

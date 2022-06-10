@@ -4,7 +4,7 @@
 
 #include <random.h>
 #include <scheduler.h>
-#include <utiltime.h>
+#include <util/time.h>
 
 #include <test/test_raptoreum.h>
 #include <boost/test/unit_test.hpp>

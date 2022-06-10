@@ -36,7 +36,7 @@
 #include <interfaces/handler.h>
 #include <interfaces/node.h>
 #include <ui_interface.h>
-#include <util.h>
+#include <util/system.h>
 #include <qt/smartnodelist.h>
 
 #include <functional>
@@ -867,10 +867,10 @@ void BitcoinGUI::setWalletController(WalletController* wallet_controller)
 void BitcoinGUI::addWallet(WalletModel* walletModel)
 {
     if (!walletFrame) return;
+    if (!walletFrame->addWallet(walletModel)) return;
     const QString display_name = walletModel->getDisplayName();
     setWalletActionsEnabled(true);
     rpcConsole->addWallet(walletModel);
-    walletFrame->addWallet(walletModel);
     m_wallet_selector->addItem(display_name, QVariant::fromValue(walletModel));
     if (m_wallet_selector->count() == 2) {
         m_wallet_selector_action->setVisible(true);

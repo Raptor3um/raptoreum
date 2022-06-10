@@ -285,16 +285,16 @@ BITCOIN_CORE_H = \
   ui_interface.h \
   undo.h \
   unordered_lru_cache.h \
-  utilmacro.h \
-  utilmoneystr.h \
-  util.h \
-  utilasmap.h \
-  utiltime.h \
-  utilstring.h \
-  utilthreadnames.h \
-  utilmemory.h \
-  utilerror.h \
-  utilfees.h \
+  util/macro.h \
+  util/moneystr.h \
+  util/system.h \
+  util/asmap.h \
+  util/time.h \
+  util/string.h \
+  util/threadnames.h \
+  util/memory.h \
+  util/error.h \
+  util/fees.h \
   validation.h \
   validationinterface.h \
   versionbits.h \
@@ -635,8 +635,8 @@ libraptoreum_consensus_a_SOURCES = \
   tinyformat.h \
   uint256.cpp \
   uint256.h \
-  utilstrencodings.cpp \
-  utilstrencodings.h \
+  util/strencodings.cpp \
+  util/strencodings.h \
   version.h
 
 # common: shared between raptoreumd, and raptoreum-qt and non-server tools
@@ -703,15 +703,15 @@ libraptoreum_util_a_SOURCES = \
   support/cleanse.cpp \
   sync.cpp \
   threadinterrupt.cpp \
-  util.cpp \
-  utilasmap.cpp \
-  utilmoneystr.cpp \
-  utilstrencodings.cpp \
-  utilstring.cpp \
-  utiltime.cpp \
-  utilthreadnames.cpp \
-  utilerror.cpp \
-  utilfees.cpp \
+  util/system.cpp \
+  util/asmap.cpp \
+  util/moneystr.cpp \
+  util/strencodings.cpp \
+  util/string.cpp \
+  util/time.cpp \
+  util/threadnames.cpp \
+  util/error.cpp \
+  util/fees.cpp \
   $(BITCOIN_CORE_H)
 
 # cli: shared between raptoreumd and raptoreum-qt

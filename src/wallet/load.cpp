@@ -10,7 +10,7 @@
 #include <coinjoin/coinjoin-client-options.h>
 #include <interfaces/chain.h>
 #include <scheduler.h>
-#include <util.h>
+#include <util/system.h>
 #include <wallet/wallet.h>
 
 bool VerifyWallets(interfaces::Chain& chain, const std::vector<std::string>& wallet_files)

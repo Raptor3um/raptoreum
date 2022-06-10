@@ -25,8 +25,8 @@
 #include <pow.h>
 #include <primitives/transaction.h>
 #include <timedata.h>
-#include <util.h>
-#include <utilmoneystr.h>
+#include <util/system.h>
+#include <util/moneystr.h>
 #include <smartnode/smartnode-payments.h>
 #include <smartnode/smartnode-sync.h>
 #include <validationinterface.h>

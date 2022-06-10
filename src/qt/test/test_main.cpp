@@ -13,7 +13,7 @@
 #include <qt/raptoreum.h>
 #include <qt/test/apptests.h>
 #include <qt/test/rpcnestedtests.h>
-#include <util.h>
+#include <util/system.h>
 #include <qt/test/uritests.h>
 #include <qt/test/compattests.h>
 #include <qt/test/trafficgraphdatatests.h>

@@ -29,9 +29,9 @@
 #include <shutdown.h>
 #include <timedata.h>
 #include <txmempool.h>
-#include <utilfees.h>
-#include <utilmoneystr.h>
-#include <utilerror.h>
+#include <util/fees.h>
+#include <util/moneystr.h>
+#include <util/error.h>
 #include <validation.h>
 #include <wallet/coincontrol.h>
 #include <wallet/coinselection.h>
@@ -57,6 +57,7 @@ static const size_t OUTPUT_GROUP_MAX_ENTRIES = 10;
 
 static RecursiveMutex cs_wallets;
 static std::vector<std::shared_ptr<CWallet>> vpwallets GUARDED_BY(cs_wallets);
+static std::list<LoadWalletFn> g_load_wallet_fns GUARDED_BY(cs_wallets);
 
 bool AddWallet(const std::shared_ptr<CWallet>& wallet)
 {
@@ -115,9 +116,18 @@ std::shared_ptr<CWallet> GetWallet(const std::string& name)
     return nullptr;
 }
 
+std::unique_ptr<interfaces::Handler> HandleLoadWallet(LoadWalletFn load_wallet)
+{
+    LOCK(cs_wallets);
+    auto it = g_load_wallet_fns.emplace(g_load_wallet_fns.end(), std::move(load_wallet));
+    return interfaces::MakeHandler([it] { LOCK(cs_wallets); g_load_wallet_fns.erase(it); });
+}
+
+static Mutex g_loading_wallet_mutex;
 static Mutex g_wallet_release_mutex;
 static std::condition_variable g_wallet_release_cv;
-static std::set<std::string> g_unloading_wallet_set;
+static std::set<std::string> g_loading_wallet_set GUARDED_BY(g_loading_wallet_mutex);
+static std::set<std::string> g_unloading_wallet_set GUARDED_BY(g_wallet_release_mutex);
 
 // Custom deleter for shared_ptr<CWallet>.
 static void ReleaseWallet(CWallet* wallet)
@@ -164,7 +174,7 @@ void UnloadWallet(std::shared_ptr<CWallet>&& wallet)
     }
 }
 
-std::shared_ptr<CWallet> LoadWallet(interfaces::Chain& chain, const WalletLocation& location, std::string& error, std::string& warning)
+std::shared_ptr<CWallet> LoadWalletInternal(interfaces::Chain& chain, const WalletLocation& location, std::string& error, std::string& warning)
 {
     try {
         if (!CWallet::Verify(chain, location, error, warning)) {
@@ -184,6 +194,19 @@ std::shared_ptr<CWallet> LoadWallet(interfaces::Chain& chain, const WalletLocati
         error = e.what();
         return nullptr;
     }
+}
+} // namespace
+
+std::shared_ptr<CWallet> LoadWallet(interfaces::Chain& chain, const WalletLocation& location, std::string& error, std::string& warning)
+{
+    auto result = WITH_LOCK(g_loading_wallet_mutex, return g_loading_wallet_set.insert(location.GetName()));
+    if (!result.second) {
+        error = "Wallet already being loading";
+        return nullptr;
+    }
+    auto wallet = LoadWalletInternal(chain, location, error, warnings);
+    WITH_LOCK(g_loading_wallet_mutex, g_loading_wallet_set.erase(result.first));
+    return wallet;
 }
 
 std::shared_ptr<CWallet> LoadWallet(interfaces::Chain& chain, const std::string& name, std::string& error, std::string& warning)
@@ -210,7 +233,7 @@ WalletCreationStatus CreateWallet(interfaces::Chain& chain, const SecureString& 
 
     // Wallet::Verify will check if we're trying to create a wallet with a duplicate name.
     std::string wallet_error;
-    if (!CWallet::Verify(chain, location, false, wallet_error, warning)) {
+    if (!CWallet::Verify(chain, location, wallet_error, warning)) {
         error = "Wallet file verification failed: " + wallet_error;
         return WalletCreationStatus::CREATION_FAILED;
     }
@@ -1995,7 +2018,7 @@ bool CWallet::CanGenerateKeys()
         return false;
     }
     // A wallet can generate keys if it has a non-null HD chain (IsHDEnabled) or it is a non-HD wallet (pre FEATURE_HD)
-    return IsHDEnabled() || nWalletVersion < FEATURE_HD;
+    return true;
 }
 
 bool CWallet::CanGetAddresses(bool internal)
@@ -5072,7 +5095,7 @@ bool CWallet::Verify(interfaces::Chain& chain, const WalletLocation& location, s
 
     // Keep same database environment instance across Verify/Recover calls below.
     // Let tempWallet hold the pointer to the corresponding wallet database.
-    std::unique_ptr<CWallet> tempWallet = MakeUnique<CWallet>(location, WalletDatabase::Create(wallet_path));
+    std::unique_ptr<CWallet> tempWallet = MakeUnique<CWallet>(chain, location, WalletDatabase::Create(wallet_path));
 
     try {
         if (!WalletBatch::VerifyEnvironment(wallet_path, error_string)) {
@@ -5092,7 +5115,7 @@ bool CWallet::Verify(interfaces::Chain& chain, const WalletLocation& location, s
 
 std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain, const WalletLocation& location, uint64_t wallet_creation_flags)
 {
-    const std::string& walletFile = location.GetName();
+    const std::string walletFile = location.GetName();
 
     // needed to restore wallet transaction meta data after -zapwallettxes
     std::vector<CWalletTx> vWtx;
@@ -5412,7 +5435,12 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
         }
     }
 
-    chain.loadWallet(interfaces::MakeWallet(walletInstance));
+    {
+        LOCK(cs_wallets);
+        for (auto& load_wallet : g_load_wallet_fns) {
+            load_wallet(interfaces::MakeWallet(walletInstance));
+        }
+    }
 
     // Register with the validation interface. It's ok to do this after rescan since we're still holding locked_chain.
     walletInstance->m_chain_notifications_handler = chain.handleNotifications(*walletInstance);

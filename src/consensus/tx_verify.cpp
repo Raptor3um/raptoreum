@@ -20,7 +20,7 @@
 // TODO remove the following dependencies
 #include <chain.h>
 #include <coins.h>
-#include <utilmoneystr.h>
+#include <util/moneystr.h>
 
 CChain& ChainActive();
 

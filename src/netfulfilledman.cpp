@@ -6,7 +6,7 @@
 #include <chainparams.h>
 #include <netfulfilledman.h>
 #include <shutdown.h>
-#include <util.h>
+#include <util/system.h>
 
 CNetFulfilledRequestManager netfulfilledman;
 

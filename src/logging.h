@@ -9,7 +9,7 @@
 #include <fs.h>
 #include <tinyformat.h>
 #include <threadsafety.h>
-#include <utilstring.h>
+#include <util/string.h>
 
 #include <atomic>
 #include <cstdint>

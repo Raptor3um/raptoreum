@@ -21,8 +21,8 @@
 #include <netbase.h>
 #include <rpc/server.h>
 #include <rpc/client.h>
-#include <utilstrencodings.h>
-#include <util.h>
+#include <util/strencodings.h>
+#include <util/system.h>
 #include <openssl/crypto.h>
 
 #include <univalue.h>

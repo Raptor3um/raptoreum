@@ -15,8 +15,8 @@
 #include <script/interpreter.h>
 #include <shutdown.h>
 #include <txmempool.h>
-#include <util.h>
-#include <utilmoneystr.h>
+#include <util/system.h>
+#include <util/moneystr.h>
 #include <validation.h>
 #include <version.h>
 

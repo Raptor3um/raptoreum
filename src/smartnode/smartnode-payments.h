@@ -6,11 +6,11 @@
 #ifndef SMARTNODE_PAYMENTS_H
 #define SMARTNODE_PAYMENTS_H
 
-#include <util.h>
+#include <util/system.h>
 #include <core_io.h>
 #include <key.h>
 #include <net_processing.h>
-#include <utilstrencodings.h>
+#include <util/strencodings.h>
 
 #include <evo/deterministicmns.h>
 

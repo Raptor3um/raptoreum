@@ -7,8 +7,8 @@
 #include <hdchain.h>
 #include <key_io.h>
 #include <tinyformat.h>
-#include <util.h>
-#include <utilstrencodings.h>
+#include <util/system.h>
+#include <util/strencodings.h>
 
 bool CHDChain::SetNull()
 {

@@ -16,7 +16,7 @@
 #include <evo/providertx.h>
 #include <evo/specialtx.h>
 
-#include <utilmoneystr.h>
+#include <util/moneystr.h>
 
 #include <stdint.h>
 

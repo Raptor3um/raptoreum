@@ -10,8 +10,8 @@
 #include <chainparamsbase.h>
 #include <consensus/consensus.h>
 #include <logging.h>
-#include <util.h>
-#include <utilstrencodings.h>
+#include <util/system.h>
+#include <util/strencodings.h>
 #include <wallet/wallettool.h>
 
 #include <stdio.h>

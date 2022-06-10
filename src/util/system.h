@@ -9,8 +9,8 @@
  * Server/client environment: argument handling, config file parsing,
  * thread wrappers, startup time
  */
-#ifndef BITCOIN_UTIL_H
-#define BITCOIN_UTIL_H
+#ifndef BITCOIN_UTIL_SYSTEM_H
+#define BITCOIN_UTIL_SYSTEM_H
 
 #if defined(HAVE_CONFIG_H)
 #include <config/raptoreum-config.h>
@@ -22,10 +22,10 @@
 #include <fs.h>
 #include <logging.h>
 #include <sync.h>
-#include <utilthreadnames.h>
+#include <util/threadnames.h>
 #include <tinyformat.h>
-#include <utilmemory.h>
-#include <utiltime.h>
+#include <util/memory.h>
+#include <util/time.h>
 #include <amount.h>
 
 #include <exception>
@@ -439,4 +439,4 @@ private:
 
 } // namespace util
 
-#endif // BITCOIN_UTIL_H
+#endif // BITCOIN_UTIL_SYSTEM_H

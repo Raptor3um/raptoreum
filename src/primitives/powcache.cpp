@@ -9,7 +9,7 @@
 #include <flat-database.h>
 #include <hash.h>
 #include <sync.h>
-#include <util.h>
+#include <util/system.h>
 
 CCriticalSection cs_pow;
 

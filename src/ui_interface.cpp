@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <ui_interface.h>
-#include <util.h>
+#include <util/system.h>
 
 #include <boost/signals2/last_value.hpp>
 #include <boost/signals2/signal.hpp>
@@ -17,7 +17,6 @@ struct UISignals {
 	boost::signals2::signal<CClientUIInterface::NotifyNumConnectionsChangedSig> NotifyNumConnectionsChanged;
 	boost::signals2::signal<CClientUIInterface::NotifyNetworkActiveChangedSig> NotifyNetworkActiveChanged;
 	boost::signals2::signal<CClientUIInterface::NotifyAlertChangedSig> NotifyAlertChanged;
-	boost::signals2::signal<CClientUIInterface::LoadWalletSig> LoadWallet;
 	boost::signals2::signal<CClientUIInterface::ShowProgressSig> ShowProgress;
 	boost::signals2::signal<CClientUIInterface::NotifyBlockTipSig> NotifyBlockTip;
 	boost::signals2::signal<CClientUIInterface::NotifyChainLockSig> NotifyChainLock;
@@ -40,7 +39,6 @@ ADD_SIGNALS_IMPL_WRAPPER(InitMessage);
 ADD_SIGNALS_IMPL_WRAPPER(NotifyNumConnectionsChanged);
 ADD_SIGNALS_IMPL_WRAPPER(NotifyNetworkActiveChanged);
 ADD_SIGNALS_IMPL_WRAPPER(NotifyAlertChanged);
-ADD_SIGNALS_IMPL_WRAPPER(LoadWallet);
 ADD_SIGNALS_IMPL_WRAPPER(ShowProgress);
 ADD_SIGNALS_IMPL_WRAPPER(NotifyBlockTip);
 ADD_SIGNALS_IMPL_WRAPPER(NotifyChainLock);
@@ -55,7 +53,6 @@ void CClientUIInterface::InitMessage(const std::string& message) { return g_ui_s
 void CClientUIInterface::NotifyNumConnectionsChanged(int newNumConnections) { return g_ui_signals.NotifyNumConnectionsChanged(newNumConnections); }
 void CClientUIInterface::NotifyNetworkActiveChanged(bool networkActive) { return g_ui_signals.NotifyNetworkActiveChanged(networkActive); }
 void CClientUIInterface::NotifyAlertChanged() { return g_ui_signals.NotifyAlertChanged(); }
-void CClientUIInterface::LoadWallet(std::unique_ptr<interfaces::Wallet>& wallet) { return g_ui_signals.LoadWallet(wallet); }
 void CClientUIInterface::ShowProgress(const std::string& title, int nProgress, bool resume_possible) { return g_ui_signals.ShowProgress(title, nProgress, resume_possible); }
 void CClientUIInterface::NotifyBlockTip(bool b, const CBlockIndex* i) { return g_ui_signals.NotifyBlockTip(b, i); }
 void CClientUIInterface::NotifyChainLock(const std::string& bestChainLockHash, int bestChainLockHeight) { return g_ui_signals.NotifyChainLock(bestChainLockHash, bestChainLockHeight); }

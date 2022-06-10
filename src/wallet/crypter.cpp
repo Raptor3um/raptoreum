@@ -6,7 +6,7 @@
 
 #include <crypto/aes.h>
 #include <crypto/sha512.h>
-#include <util.h>
+#include <util/system.h>
 
 #include <vector>
 

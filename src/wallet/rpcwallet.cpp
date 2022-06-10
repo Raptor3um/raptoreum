@@ -21,9 +21,9 @@
 #include <rpc/util.h>
 #include <timedata.h>
 #include <txmempool.h>
-#include <util.h>
-#include <utilfees.h>
-#include <utilmoneystr.h>
+#include <util/system.h>
+#include <util/fees.h>
+#include <util/moneystr.h>
 #include <validation.h>
 #include <wallet/coincontrol.h>
 #include <wallet/rpcwallet.h>

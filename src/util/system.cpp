@@ -5,14 +5,14 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util.h>
+#include <util/system.h>
 
 #include <support/allocators/secure.h>
 #include <chainparamsbase.h>
 #include <ctpl_stl.h>
 #include <stacktraces.h>
-#include <utilstrencodings.h>
-#include <utilstring.h>
+#include <util/strencodings.h>
+#include <util/string.h>
 
 #if (defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__DragonFly__))
 #include <pthread.h>

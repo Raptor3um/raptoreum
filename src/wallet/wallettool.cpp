@@ -5,7 +5,7 @@
 #include <base58.h>
 #include <fs.h>
 #include <interfaces/chain.h>
-#include <util.h>
+#include <util/system.h>
 #include <wallet/salvage.h>
 #include <wallet/wallet.h>
 #include <wallet/walletutil.h>

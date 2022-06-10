@@ -8,7 +8,7 @@
 #include <key_io.h>
 #include <messagesigner.h>
 #include <rpc/server.h>
-#include <utilmoneystr.h>
+#include <util/moneystr.h>
 #include <validation.h>
 
 #ifdef ENABLE_WALLET

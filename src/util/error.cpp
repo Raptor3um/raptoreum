@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <utilerror.h>
-#include <util.h>
+#include <util/error.h>
+#include <util/system.h>
 
 std::string TransactionErrorString(const TransactionError err)
 {

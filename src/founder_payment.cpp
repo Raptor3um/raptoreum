@@ -12,7 +12,7 @@
 #include <founder_payment.h>
 #include <rpc/server.h>
 
-#include <util.h>
+#include <util/system.h>
 #include <chainparams.h>
 #include <boost/foreach.hpp>
 #include <key_io.h>

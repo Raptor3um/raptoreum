@@ -10,7 +10,7 @@
 #include <logging.h>
 #include <logging_timer.h>
 #include <threadsafety.h>
-#include <utilmacro.h>
+#include <util/macro.h>
 
 #include <condition_variable>
 #include <mutex>

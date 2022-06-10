@@ -8,7 +8,7 @@
 
 #include <memory>
 #include <string>
-#include <util.h>
+#include <util/system.h>
 
 namespace interfaces {
 class Chain;

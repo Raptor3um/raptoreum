@@ -130,9 +130,11 @@ bool RecoverDatabaseFile(const fs::path& file_path)
             LOCK(dummyWallet.cs_wallet);
             fReadOK = ReadKeyValue(&dummyWallet, ssKey, ssValue, strType, strErr);
         }
+        /*
         if (!WalletBatch::IsKeyType(strType) && strType != DBKeys::HDCHAIN) {
             continue;
         }
+        */
         if (!fReadOK)
         {
             LogPrintf("WARNING: WalletBatch::Recover skipping %s: %s\n", strType, strErr);

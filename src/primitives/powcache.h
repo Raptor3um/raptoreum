@@ -8,7 +8,7 @@
 #include <uint256.h>
 #include <serialize.h>
 #include <unordered_lru_cache.h>
-#include <util.h>
+#include <util/system.h>
 
 extern CCriticalSection cs_pow;
 

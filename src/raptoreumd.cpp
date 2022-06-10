@@ -19,9 +19,9 @@
 #include <noui.h>
 #include <shutdown.h>
 #include <ui_interface.h>
-#include <util.h>
-#include <utilstrencodings.h>
-#include <utilthreadnames.h>
+#include <util/system.h>
+#include <util/strencodings.h>
+#include <util/threadnames.h>
 #include <stacktraces.h>
 
 #include <functional>

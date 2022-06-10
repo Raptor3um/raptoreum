@@ -7,7 +7,7 @@
 #include <governance/governance-object.h>
 #include <smartnode/smartnode-sync.h>
 #include <messagesigner.h>
-#include <util.h>
+#include <util/system.h>
 
 #include <evo/deterministicmns.h>
 

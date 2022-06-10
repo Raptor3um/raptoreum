@@ -16,8 +16,8 @@
 #include <streams.h>
 #include <tinyformat.h>
 #include <ui_interface.h>
-#include <util.h>
-#include <utilstrencodings.h>
+#include <util/system.h>
+#include <util/strencodings.h>
 #include <validationinterface.h>
 #include <script/ismine.h>
 #include <wallet/coincontrol.h>
@@ -43,6 +43,8 @@
 #include <utility>
 #include <vector>
 
+using LoadWalletFn = std::function<void(std::unique_ptr<interfaces::Wallet> wallet)>;
+
 //! Explicitly unload and delete the wallet.
 //  Blocks the current thread after signaling the unload intent so that all
 //  wallet clients release the wallet.
@@ -57,6 +59,7 @@ CWallet *GetFirstWallet();
 std::vector<std::shared_ptr<CWallet>> GetWallets();
 std::shared_ptr<CWallet> GetWallet(const std::string& name);
 std::shared_ptr<CWallet> LoadWallet(interfaces::Chain& chain, const WalletLocation& location, std::string& error, std::string& warning);
+std::unique_ptr<interfaces::Handler> HandleLoadWallet(LoadWalletFn load_wallet);
 
 enum class WalletCreationStatus {
     SUCCESS,

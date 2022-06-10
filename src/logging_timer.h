@@ -8,9 +8,9 @@
 #define BITCOIN_LOGGING_TIMER_H
 
 #include <logging.h>
-#include <utilmacro.h>
+#include <util/macro.h>
 #include <sync.h>
-#include <utiltime.h>
+#include <util/time.h>
 
 #include <chrono>
 #include <string>

@@ -17,7 +17,7 @@
 #include <rpc/util.h>
 #include <tinyformat.h>
 #include <univalue.h>
-#include <utilstrencodings.h>
+#include <util/strencodings.h>
 #include <validation.h>
 #include <txmempool.h>
 #include <future/utils.h>

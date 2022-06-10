@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_UTILTIME_H
-#define BITCOIN_UTILTIME_H
+#ifndef BITCOIN_UTIL_TIME_H
+#define BITCOIN_UTIL_TIME_H
 
 #include <compat.h>
 
@@ -74,4 +74,4 @@ struct timeval MillisToTimeval(std::chrono::milliseconds ms);
 /** Sanity check epoch match normal Unix epoch */
 bool ChronoSanityCheck();
 
-#endif // BITCOIN_UTILTIME_H
+#endif // BITCOIN_UTIL_TIME_H

@@ -20,8 +20,8 @@
 
 #include <clientversion.h>
 #include <init.h>
-#include <util.h>
-#include <utilstrencodings.h>
+#include <util/system.h>
+#include <util/strencodings.h>
 
 #include <stdio.h>
 

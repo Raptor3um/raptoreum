@@ -20,7 +20,7 @@
 #include <policy/policy.h>
 #include <key_io.h>
 #include <ui_interface.h>
-#include <util.h>
+#include <util/system.h>
 
 #include <cstdlib>
 #include <memory>

@@ -9,8 +9,8 @@
 #include <rpc/protocol.h>
 #include <rpc/server.h>
 #include <random.h>
-#include <util.h>
-#include <utilstrencodings.h>
+#include <util/system.h>
+#include <util/strencodings.h>
 #include <ui_interface.h>
 #include <walletinitinterface.h>
 #include <crypto/hmac_sha256.h>

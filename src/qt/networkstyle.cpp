@@ -11,7 +11,7 @@
 
 #include <chainparams.h>
 #include <tinyformat.h>
-#include <util.h>
+#include <util/system.h>
 
 #include <QApplication>
 

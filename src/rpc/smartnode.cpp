@@ -12,8 +12,8 @@
 #include <rpc/util.h>
 #include <rpc/server.h>
 #include <validation.h>
-#include <util.h>
-#include <utilmoneystr.h>
+#include <util/system.h>
+#include <util/moneystr.h>
 #include <txmempool.h>
 
 #include <evo/specialtx.h>

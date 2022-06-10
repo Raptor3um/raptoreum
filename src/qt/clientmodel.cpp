@@ -18,7 +18,7 @@
 #include <interfaces/handler.h>
 #include <interfaces/node.h>
 #include <net.h>
-#include <util.h>
+#include <util/system.h>
 
 #include <stdint.h>
 #include <functional>

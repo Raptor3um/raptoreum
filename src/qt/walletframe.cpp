@@ -46,13 +46,9 @@ void WalletFrame::setClientModel(ClientModel *_clientModel)
 
 bool WalletFrame::addWallet(WalletModel *walletModel)
 {
-    if (!gui || !clientModel || !walletModel) {
-        return false;
-    }
+    if (!gui || !clientModel || !walletModel) return false;
 
-    if (mapWalletViews.count(walletModel) > 0) {
-        return false;
-    }
+    if (mapWalletViews.count(walletModel) > 0) return false;
 
     WalletView* walletView = new WalletView(this);
     walletView->setBitcoinGUI(gui);

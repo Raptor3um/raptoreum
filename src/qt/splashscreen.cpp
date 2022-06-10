@@ -18,7 +18,7 @@
 #include <qt/guiutil.h>
 #include <qt/networkstyle.h>
 #include <ui_interface.h>
-#include <util.h>
+#include <util/system.h>
 
 #include <functional>
 

@@ -13,7 +13,7 @@
 #include <compat/cpuid.h>
 #include <crypto/sha512.h>
 #include <support/cleanse.h>
-#include <utiltime.h> // for GetTime()
+#include <util/time.h> // for GetTime()
 #ifdef WIN32
 #include <compat.h> // for Windows API
 #endif

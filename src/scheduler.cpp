@@ -5,7 +5,7 @@
 #include <scheduler.h>
 
 #include <random.h>
-#include <utiltime.h>
+#include <util/time.h>
 
 #include <assert.h>
 #include <functional>

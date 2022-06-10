@@ -6,7 +6,7 @@
 
 #include <netbase.h>
 #include <test/test_raptoreum.h>
-#include <utilstrencodings.h>
+#include <util/strencodings.h>
 
 #include <string>
 

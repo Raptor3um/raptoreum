@@ -7,8 +7,8 @@
 
 #include <netaddress.h>
 #include <ui_interface.h>
-#include <util.h>
-#include <utiltime.h>
+#include <util/system.h>
+#include <util/time.h>
 
 
 BanMan::BanMan(fs::path ban_file, CClientUIInterface* client_interface, int64_t default_ban_time)

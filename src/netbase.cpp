@@ -10,9 +10,9 @@
 #include <uint256.h>
 #include <random.h>
 #include <tinyformat.h>
-#include <util.h>
-#include <utiltime.h>
-#include <utilstrencodings.h>
+#include <util/system.h>
+#include <util/time.h>
+#include <util/strencodings.h>
 
 #include <atomic>
 #include <cstdint>

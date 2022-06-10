@@ -36,7 +36,7 @@
 #include <stacktraces.h>
 #include <ui_interface.h>
 #include <uint256.h>
-#include <util.h>
+#include <util/system.h>
 
 #include <memory>
 

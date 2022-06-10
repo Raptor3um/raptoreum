@@ -21,7 +21,7 @@
 #include <interfaces/node.h>
 #include <key_io.h>
 #include <ui_interface.h>
-#include <util.h> // for GetBoolArg
+#include <util/system.h> // for GetBoolArg
 #include <wallet/coincontrol.h>
 #include <wallet/wallet.h>
 #include <spork.h>

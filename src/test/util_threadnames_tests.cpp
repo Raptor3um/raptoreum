@@ -2,7 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <utilthreadnames.h>
+#include <util/threadnames.h>
 #include <test/test_raptoreum.h>
 
 #include <thread>

@@ -9,7 +9,7 @@
 export LC_ALL=C
 
 EXPECTED_CIRCULAR_DEPENDENCIES=(
-    "chainparamsbase -> util -> chainparamsbase"
+    "chainparamsbase -> util/system -> chainparamsbase"
     "checkpoints -> validation -> checkpoints"
     "index/txindex -> validation -> index/txindex"
     "policy/fees -> txmempool -> policy/fees"
@@ -68,7 +68,7 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
     "llmq/quorums_signing -> llmq/quorums_signing_shares -> llmq/quorums_signing"
     "llmq/quorums_signing -> net_processing -> llmq/quorums_signing"
     "llmq/quorums_signing_shares -> net_processing -> llmq/quorums_signing_shares"
-    "logging -> util -> logging"
+    "logging -> util/system -> logging"
     "masternode/masternode-payments -> net_processing -> masternode/masternode-payments"
     "masternode/masternode-payments -> validation -> masternode/masternode-payments"
     "masternode/masternode-sync -> net -> masternode/masternode-sync"
@@ -87,9 +87,9 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
     "llmq/quorums_chainlocks -> net_processing -> validationinterface -> llmq/quorums_chainlocks"
     "llmq/quorums_dkgsession -> llmq/quorums_dkgsessionmgr -> llmq/quorums_dkgsessionhandler -> llmq/quorums_dkgsession"
     "llmq/quorums_instantsend -> net_processing -> validationinterface -> llmq/quorums_instantsend"
-    "logging -> util -> random -> logging"
-    "logging -> util -> sync -> logging"
-    "logging -> util -> stacktraces -> logging"
+    "logging -> util/system -> random -> logging"
+    "logging -> util/system -> sync -> logging"
+    "logging -> util/system -> stacktraces -> logging"
     "coinjoin/coinjoin-client -> coinjoin/coinjoin-util -> wallet/wallet -> coinjoin/coinjoin-client"
     "qt/appearancewidget -> qt/guiutil -> qt/optionsdialog -> qt/appearancewidget"
     "qt/bitcoinaddressvalidator -> qt/guiutil -> qt/qvalidatedlineedit -> qt/bitcoinaddressvalidator"

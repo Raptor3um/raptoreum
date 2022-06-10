@@ -32,7 +32,7 @@
 #include <sync.h>
 #include <txmempool.h>
 #include <ui_interface.h>
-#include <util.h>
+#include <util/system.h>
 #include <validation.h>
 #include <warnings.h>
 
@@ -51,10 +51,9 @@ std::vector<fs::path> ListWalletDir();
 std::vector<std::shared_ptr<CWallet>> GetWallets();
 std::shared_ptr<CWallet> LoadWallet(interfaces::Chain& chain, const std::string& name, std::string& error, std::string& warning);
 WalletCreationStatus CreateWallet(interfaces::Chain& chain, const SecureString& passphrase, uint64_t wallet_creation_flags, const std::string& name, std::string& error, std::string& warning, std::shared_ptr<CWallet>& result);
+std::unique_ptr<interfaces::Handler> HandleLoadWallet(intercaces::Node::LoadWalletFn load_wallet);
 
 namespace interfaces {
-
-class Wallet;
 
 namespace {
 
@@ -407,7 +406,7 @@ public:
     }
     std::unique_ptr<Handler> handleLoadWallet(LoadWalletFn fn) override
     {
-        return MakeHandler(::uiInterface.LoadWallet_connect([fn](std::unique_ptr<Wallet>& wallet) { fn(std::move(wallet)); }));
+        return HandleLoadWallet(std::move(fn));
     }
     std::unique_ptr<Handler> handleNotifyNumConnectionsChanged(NotifyNumConnectionsChangedFn fn) override
     {
