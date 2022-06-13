@@ -12,8 +12,7 @@ interfaces.
 raptoreum-tx.
 
 The util tests are run as part of `make check` target. The functional
-tests are run by the travis continuous build process whenever a pull
-request is opened. Both sets of tests can also be run locally.
+tests and lint scripts can be run as explained in the sections below.
 
 # Running tests locally
 

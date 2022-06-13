@@ -679,7 +679,7 @@ private:
     WalletBatch *encrypted_batch = nullptr;
 
     //! the current wallet version: clients below this version are not able to load the wallet
-    int nWalletVersion = FEATURE_BASE;
+    int nWalletVersion GUARDED_BY(cs_wallet){FEATURE_BASE};
 
     //! the maximum wallet format version: memory-only variable that specifies to what version this wallet may be upgraded
     int nWalletMaxVersion = FEATURE_BASE;
@@ -736,7 +736,7 @@ private:
     void SyncTransaction(const CTransactionRef& tx, const uint256& block_hash, int posInBlock = 0, bool update_tx = true, bool rescanningOldBlock = false) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     /* HD derive new child key (on internal or external chain) */
-    void DeriveNewChildKey(WalletBatch &batch, const CKeyMetadata& metadata, CKey& secretRet, uint32_t nAccountIndex, bool fInternal /*= false*/) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    void DeriveNewChildKey(WalletBatch& batch, const CKeyMetadata& metadata, CKey& secretRet, uint32_t nAccountIndex, bool fInternal /*= false*/) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     std::set<int64_t> setInternalKeyPool GUARDED_BY(cs_wallet);
     std::set<int64_t> setExternalKeyPool GUARDED_BY(cs_wallet);
@@ -1163,7 +1163,7 @@ public:
 
     unsigned int GetKeyPoolSize() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet)
     {
-        AssertLockHeld(cs_wallet); // set{Ex,In}ternalKeyPool
+        AssertLockHeld(cs_wallet);
         return setInternalKeyPool.size() + setExternalKeyPool.size();
     }
 

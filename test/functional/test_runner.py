@@ -41,7 +41,23 @@ except UnicodeDecodeError:
     CROSS = "x "
     CIRCLE = "o "
 
-if os.name == 'posix':
+if os.name != 'nt' or sys.getwindowsversion() >= (10, 0, 14393):
+    if os.name == 'nt':
+        import ctypes
+        kernel32 = ctypes.windll.kernel32
+        ENABLE_VIRTUAL_TERMINAL_PROCESSING = 4
+        STD_OUTPUT_HANDLE = -11
+        STD_ERROR_HANDLE = -12
+        # Enable ascii color control to stdout
+        stdout = kernel32.GetStdHandle(STD_OUTPUT_HANDLE)
+        stdout_mode = ctypes.c_int32()
+        kernel32.GetConsoleMode(stdout, ctypes.byref(stdout_mode))
+        kernel32.SetConsoleMode(stdout, stdout_mode.value | ENABLE_VIRTUAL_TERMINAL_PROCESSING)
+        # Enable ascii color control to stderr
+        stderr = kernel32.GetStdHandle(STD_ERROR_HANDLE)
+        stderr_mode = ctypes.c_int32()
+        kernel32.GetConsoleMode(stderr, ctypes.byref(stderr_mode))
+        kernel32.SetConsoleMode(stderr, stderr_mode.value | ENABLE_VIRTUAL_TERMINAL_PROCESSING)
     # primitive formatting on supported
     # terminal via ANSI escape sequences:
     BOLD = ('\033[0m', '\033[1m')
@@ -52,11 +68,8 @@ if os.name == 'posix':
 TEST_EXIT_PASSED = 0
 TEST_EXIT_SKIPPED = 77
 
-# 30 minutes represented in seconds
-TRAVIS_TIMEOUT_DURATION = 30 * 60
-
-BASE_SCRIPTS= [
-    # Scripts that are run by the travis build process.
+BASE_SCRIPTS = [
+    # Scripts that are run by default.
     # Longest test should go first, to favor running tests in parallel
     'feature_dip3_deterministicmns.py', # NOTE: needs dash_hash to pass
     'feature_block_reward_reallocation.py',
@@ -189,7 +202,7 @@ BASE_SCRIPTS= [
 ]
 
 EXTENDED_SCRIPTS = [
-    # These tests are not run by the travis build process.
+    # These tests are not run by default.
     # Longest test should go first, to favor running tests in parallel
     'feature_pruning.py', # NOTE: Prune mode is incompatible with -txindex, should work with governance validation disabled though.
     # vv Tests less than 20m vv
@@ -504,7 +517,8 @@ class TestHandler:
             for job in self.jobs:
                 (name, start_time, proc, testdir, log_out, log_err) = job
                 if int(time.time() - start_time) > self.timeout_duration:
-                    # In travis, timeout individual tests (to stop tests hanging and not providing useful output).
+                    # Timeout individual tests if timeout is specified (to stop
+                    # tests hanging and not providing useful output).
                     proc.send_signal(signal.SIGINT)
                 if proc.poll() is not None:
                     log_out.seek(0), log_err.seek(0)
@@ -589,7 +603,7 @@ def check_script_list(*, src_dir, fail_on_warn):
     if len(missed_tests) != 0:
         print("%sWARNING!%s The following scripts are not being run: %s. Check the test lists in test_runner.py." % (BOLD[1], BOLD[0], str(missed_tests)))
         if fail_on_warn:
-            # On travis this warning is an error to prevent merging incomplete commits into master
+            # On CI this warning is an error to prevent merging incomplete commits into master
             sys.exit(1)
 
 class RPCCoverage():
