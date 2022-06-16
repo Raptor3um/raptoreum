@@ -120,15 +120,9 @@ public:
         return double(nCount) / double(nMax - nMin);
     }
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CRateCheckBuffer, obj)
     {
-        READWRITE(vecTimestamps);
-        READWRITE(nDataStart);
-        READWRITE(nDataEnd);
-        READWRITE(fBufferEmpty);
+        READWRITE(obj.vecTimestamps, obj.nDataStart, obj.nDataEnd, obj.fBufferEmpty);
     }
 };
 
@@ -147,13 +141,9 @@ public: // Types
         {
         }
 
-        ADD_SERIALIZE_METHODS;
-
-        template <typename Stream, typename Operation>
-        inline void SerializationOp(Stream& s, Operation ser_action)
+        SERIALIZE_METHODS(last_object_rec, obj)
         {
-            READWRITE(triggerBuffer);
-            READWRITE(fStatusOK);
+            READWRITE(obj.triggerBuffer, obj.fStatusOK);
         }
 
         CRateCheckBuffer triggerBuffer;
@@ -280,30 +270,29 @@ public:
     std::string ToString() const;
     UniValue ToJson() const;
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    template<typename Stream>
+    void Serialize(Stream& s) const
     {
         LOCK(cs);
-        std::string strVersion;
-        if (ser_action.ForRead()) {
-            Clear();
-            READWRITE(strVersion);
-            if (strVersion != SERIALIZATION_VERSION_STRING) {
-                return;
-            }
-        } else {
-            strVersion = SERIALIZATION_VERSION_STRING;
-            READWRITE(strVersion);
-        }
+        s << SERIALIZATION_VERSION_STRING << mapErasedGovernanceObjects
+          << cmapInvalidVotes << cmmapOrphanVotes << mapObjects
+          << mapLastSmartnodeObject << lastMNListForVotingKeys;
+    }
 
-        READWRITE(mapErasedGovernanceObjects);
-        READWRITE(cmapInvalidVotes);
-        READWRITE(cmmapOrphanVotes);
-        READWRITE(mapObjects);
-        READWRITE(mapLastSmartnodeObject);
-        READWRITE(lastMNListForVotingKeys);
+    template<typename Stream>
+    void Unserialize(Stream& s)
+    {
+        LOCK(cs);
+        Clear();
+
+        std::string strVersion;
+
+        s >> strVersion;
+        if (strVersion != SERIALIZATION_VERSION_STRING) return;
+
+        s >> mapErasedGovernanceObjects >> cmapInvalidVotes
+          >> cmmapOrphanVotes >> mapObjects
+          >> mapLastSmartnodeObject >> lastMNListForVotingKeys;
     }
 
     void UpdatedBlockTip(const CBlockIndex* pindex, CConnman& connman);

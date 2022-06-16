@@ -10,67 +10,55 @@
 #include <unordered_lru_cache.h>
 #include <util/system.h>
 
-extern CCriticalSection cs_pow;
+#include <cachemap.h>
 
 class CPowCache : public unordered_lru_cache<uint256, uint256, std::hash<uint256>>
 {
-    private:
-        static CPowCache* instance;
-        static const int CURRENT_VERSION = 1;
+private:
+    static CPowCache* instance;
 
-        int  nVersion;
-        int  nLoadedSize;
-        bool bValidate;
+public:
+    static const int CURRENT_VERSION = 1;
 
-    public:
-        static CPowCache& Instance();
+    bool bValidate;
+    int nVersion{CURRENT_VERSION};
 
+    static CPowCache& Instance();
 
-        CPowCache(int maxSize = DEFAULT_POW_CACHE_SIZE, bool validate = false);
-        virtual ~CPowCache();
+    CPowCache(int maxSize = DEFAULT_POW_CACHE_SIZE, bool validate = false);
+    virtual ~CPowCache();
 
-        void Clear();
-        void CheckAndRemove();
-        bool IsValidate() const { return bValidate; }
-        void DoMaintenance();
+    void Clear();
+    void CheckAndRemove();
+    bool IsValidate() const { return bValidate; }
 
-        std::string ToString() const;
+    std::string ToString() const;
 
-        ADD_SERIALIZE_METHODS
+    uint64_t cacheSize = cacheMap.size();
 
-        template <typename Stream, typename Operation>
-        inline void SerializationOp(Stream& s, Operation ser_action)
+    template<typename Stream>
+    void Serialize(Stream& s) const
+    {
+        s << nVersion << COMPACTSIZE(cacheSize);
+        for (auto it = cacheMap.begin(); it != cacheMap.end(); ++it)
         {
-            READWRITE(nVersion);
-
-            uint64_t cacheSize = (uint64_t)cacheMap.size();
-            READWRITE(COMPACTSIZE(cacheSize));
-
-            if (ser_action.ForRead())
-            {
-                uint256 headerHash;
-                uint256 powHash;
-                for (int i = 0; i < cacheSize; ++i)
-                {
-                    READWRITE(headerHash);
-                    READWRITE(powHash);
-                    insert(headerHash, powHash);
-                }
-                nVersion = CURRENT_VERSION;
-                nLoadedSize = cacheMap.size();
-            }
-            else
-            {
-                for (auto it = cacheMap.begin(); it != cacheMap.end(); ++it)
-                {
-                    uint256 headerHash = it->first;
-                    uint256 powHash    = it->second.first;
-                    READWRITE(headerHash);
-                    READWRITE(powHash);
-                };
-                nLoadedSize = cacheMap.size(); // The size on disk is current
-            }
+            uint256 headerHash = it->first;
+            uint256 powHash = it->second.first;
+            s << headerHash << powHash;
         }
+    }
+
+    template<typename Stream>
+    void Unserialize(Stream& s)
+    {
+        uint256 headerHash, powHash;
+        s >> nVersion >> COMPACTSIZE(cacheSize);
+        for (int i = 0; i < cacheSize; ++i)
+        {
+            s >> headerHash >> powHash;
+            insert(headerHash, powHash);
+        }
+    }
 };
 
 #endif // RTM_POWCACHE_H

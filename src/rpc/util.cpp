@@ -408,6 +408,18 @@ std::string RPCExamples::ToDescriptionString() const
     return m_examples.empty() ? m_examples : "\nExamples:\n" + m_examples;
 }
 
+bool RPCHelpMan::IsValidNumArgs(size_t num_args) const
+{
+    size_t num_required_args = 0;
+    for (size_t n = m_args.size(); n > 0; --n) {
+        if (!m_args.at(n - 1).IsOptional()) {
+            num_required_args = n;
+            break;
+        }
+    }
+    return num_required_args <= num_args && num_args <= m_args.size();
+}
+
 std::string RPCHelpMan::ToString() const
 {
     std::string ret;
@@ -416,12 +428,7 @@ std::string RPCHelpMan::ToString() const
     ret += m_name;
     bool is_optional{false};
     for (const auto& arg : m_args) {
-        bool optional;
-        if (arg.m_fallback.which() == 1) {
-            optional = true;
-        } else {
-            optional = RPCArg::Optional::NO != boost::get<RPCArg::Optional>(arg.m_fallback);
-        }
+        const bool optional = reg.IsOptional();
         ret += " ";
         if (optional) {
             if (!was_optional) ret += "( ";
@@ -463,6 +470,15 @@ std::string RPCHelpMan::ToString() const
     ret += m_examples.ToDescriptionString();
 
     return ret;
+}
+
+bool RPCArg::IsOptional() const
+{
+    if (m_fallback.which() == 1) {
+        return true;
+    } else {
+        return RPCArg::Optional::NO != boost::get<RPCArg::Optional>(m_fallback);
+    }
 }
 
 std::string RPCArg::ToDescriptionString() const

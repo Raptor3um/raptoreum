@@ -16,12 +16,9 @@ public:
 
     CHDAccount() : nExternalChainCounter(0), nInternalChainCounter(0) {}
 
-    ADD_SERIALIZE_METHODS;
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CHDAccount, obj)
     {
-        READWRITE(nExternalChainCounter);
-        READWRITE(nInternalChainCounter);
+        READWRITE(obj.nExternalChainCounter, obj.nInternalChainCounter);
     }
 };
 
@@ -29,20 +26,20 @@ public:
 class CHDChain
 {
 private:
+    mutable RecursiveMutex cs;
+
     static const int CURRENT_VERSION = 1;
-    int nVersion;
+    int nVersion GUARDED_BY(cs) {CURRENT_VERSION};
 
-    uint256 id;
+    uint256 id GUARDED_BY(cs);
 
-    bool fCrypted;
+    bool fCrypted GUARDED_BY(cs) {false};
 
-    SecureVector vchSeed;
-    SecureVector vchMnemonic;
-    SecureVector vchMnemonicPassphrase;
+    SecureVector vchSeed GUARDED_BY(cs);
+    SecureVector vchMnemonic GUARDED_BY(cs);
+    SecureVector vchMnemonicPassphrase GUARDED_BY(cs);
 
-    std::map<uint32_t, CHDAccount> mapAccounts;
-    // critical section to protect mapAccounts
-    mutable RecursiveMutex cs_accounts;
+    std::map<uint32_t, CHDAccount> GUARDED_BY(cs) mapAccounts;
 
 public:
 
@@ -57,18 +54,11 @@ public:
         mapAccounts(other.mapAccounts)
         {}
 
-    ADD_SERIALIZE_METHODS;
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CHDChain, obj)
     {
-        LOCK(cs_accounts);
-        READWRITE(this->nVersion);
-        READWRITE(id);
-        READWRITE(fCrypted);
-        READWRITE(vchSeed);
-        READWRITE(vchMnemonic);
-        READWRITE(vchMnemonicPassphrase);
-        READWRITE(mapAccounts);
+        LOCK(obj.cs);
+        READWRITE(obj.nVersion, obj.id, obj.fCrypted, obj.vchSeed,
+                  obj.vchMnemonic, obj.vchMnemonicPassphrase, obj.mapAccounts);
     }
 
     void swap(CHDChain& first, CHDChain& second) // nothrow
@@ -134,15 +124,9 @@ public:
 
     CHDPubKey() : nVersion(CHDPubKey::CURRENT_VERSION), nAccountIndex(0), nChangeIndex(0) {}
 
-    ADD_SERIALIZE_METHODS;
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CHDPubKey, obj)
     {
-        READWRITE(this->nVersion);
-        READWRITE(extPubKey);
-        READWRITE(hdchainID);
-        READWRITE(nAccountIndex);
-        READWRITE(nChangeIndex);
+        READWRITE(obj.nVersion, obj.extPubKey, obj.hdchainID, obj.nAccountIndex, obj.nChangeIndex);
     }
 
     std::string GetKeyPath() const;

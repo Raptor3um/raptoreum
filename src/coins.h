@@ -72,7 +72,7 @@ public:
         assert(!IsSpent());
         uint32_t code = nHeight * 2 + fCoinBase;
         ::Serialize(s, VARINT(code));
-        ::Serialize(s, CTxOutCompressor(REF(out)));
+        ::Serialize(s, Using<TxOutCompression>(out));
         ::Serialize(s, VARINT(nType));
         ::Serialize(s, vExtraPayload);
     }
@@ -83,7 +83,7 @@ public:
         ::Unserialize(s, VARINT(code));
         nHeight = code >> 1;
         fCoinBase = code & 1;
-        ::Unserialize(s, CTxOutCompressor(out));
+        ::Unserialize(s, Using<TxOutCompression>(out));
         ::Unserialize(s, VARINT(nType));
         ::Unserialize(s, vExtraPayload);
     }

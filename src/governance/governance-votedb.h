@@ -66,16 +66,10 @@ public:
     void RemoveVotesFromSmartnode(const COutPoint& outpointSmartnode);
     std::set<uint256> RemoveInvalidVotes(const COutPoint& outpointSmartnode, bool fProposal);
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CGovernanceObjectVoteFile, obj)
     {
-        READWRITE(nMemoryVotes);
-        READWRITE(listVotes);
-        if (ser_action.ForRead()) {
-            RebuildIndex();
-        }
+        READWRITE(obj.nMemoryVotes, obj.listVotes);
+        SER_READ(obj, obj.RebuildIndex());
     }
 
 private:

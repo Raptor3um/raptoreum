@@ -27,17 +27,11 @@ public:
     uint256 merkleRootQuorums;
 
 public:
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CCbTx, obj)
     {
-        READWRITE(nVersion);
-        READWRITE(nHeight);
-        READWRITE(merkleRootMNList);
-
-        if (nVersion >= 2) {
-            READWRITE(merkleRootQuorums);
+        READWRITE(obj.nVersion, obj.nHeight, obj.merkleRootMNList);
+        if (obj.nVersion >= 2) {
+            READWRITE(obj.merkleRootQuorums);
         }
     }
 

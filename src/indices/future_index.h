@@ -9,7 +9,30 @@
 #include <indices/index.h>
 #include <script/script.h>
 #include <serialize.h>
-#include <uint256.h>
+
+struct IndexKey {
+	uint256 txid;
+	unsigned int outputIndex;
+
+	SERIALIZE_METHODS(IndexKey, obj)
+	{
+		READWRITE(obj.txid, obj.outputIndex);
+	}
+
+	IndexKey(uint256 hash, unsigned int index) {
+		txid = hash;
+		outputIndex = index;
+	}
+
+	IndexKey() {
+		SetNull();
+	}
+
+	void SetNull() {
+		txid.SetNull();
+		outputIndex = 0;
+	}
+};
 
 struct CFutureIndexKey : IndexKey {
     CFutureIndexKey(uint256 hash, unsigned int index) :
@@ -31,17 +54,9 @@ struct CFutureIndexValue {
     int32_t lockedToHeight;
     int64_t lockedToTime;
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CFutureIndexValue, obj)
     {
-        READWRITE(satoshis);
-        READWRITE(addressType);
-        READWRITE(addressHash);
-        READWRITE(confirmedHeight);
-        READWRITE(lockedToHeight);
-        READWRITE(lockedToTime);
+        READWRITE(obj.satoshis, obj.addressType, obj.addressHash, obj.confirmedHeight, obj.lockedToHeight, obj.lockedToTime);
     }
 
     CFutureIndexValue(CAmount amount, int type, uint160 addrHash, int confirmedBlock, uint32_t toHeight, int64_t toTime) :

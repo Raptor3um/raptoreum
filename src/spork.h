@@ -26,7 +26,7 @@ enum SporkId : int32_t {
     SPORK_9_SUPERBLOCKS_ENABLED                            = 10008,
     SPORK_17_QUORUM_DKG_ENABLED                            = 10016,
     SPORK_19_CHAINLOCKS_ENABLED                            = 10018,
-    SPORK_21_LOW_LLMQ_PARAMS                        	   = 10020,
+    SPORK_21_LOW_LLMQ_PARAMS                               = 10020,
     SPORK_22_SPECIAL_TX_FEE                                = 10021,
     SPORK_23_QUORUM_ALL_CONNECTED                          = 10023,
     SPORK_24_PS_MORE_PARTICIPANTS                          = 10024,
@@ -97,14 +97,9 @@ public:
         {}
 
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
-        READWRITE(nSporkID);
-        READWRITE(nValue);
-        READWRITE(nTimeSigned);
-        READWRITE(vchSig);
+    SERIALIZE_METHODS(CSporkMessage, obj)
+    {
+        READWRITE(obj.nSporkID, obj.nValue, obj.nTimeSigned, obj.vchSig);
     }
 
     /**
@@ -179,27 +174,27 @@ public:
 
     CSporkManager();
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
-        std::string strVersion;
-        if(ser_action.ForRead()) {
-            READWRITE(strVersion);
-            if (strVersion != SERIALIZATION_VERSION_STRING) {
-                return;
-            }
-        } else {
-            strVersion = SERIALIZATION_VERSION_STRING;
-            READWRITE(strVersion);
-        }
-        // we don't serialize pubkey ids because pubkeys should be
-        // hardcoded or be setted with cmdline or options, should
-        // not reuse pubkeys from previous raptoreumd run
+    template<typename Stream>
+    void Serialize(Stream& s) const
+    {
+        // We don't serialize pubkey ids cus pubkeys should be
+        // hardcoded instead or be set with cmdline or options.
+        // Should not reuse pubkeys from previous raptoreumd run.
+        // We don't serialize private key to prevent its leakage.
         LOCK(cs);
-        READWRITE(mapSporksByHash);
-        READWRITE(mapSporksActive);
-        // we don't serialize private key to prevent its leakage
+        s << SERIALIZATION_VERSION_STRING << mapSporksByHash << mapSporksActive;
+    }
+
+    template<typename Stream>
+    void Unserialize(Stream& s)
+    {
+        LOCK(cs);
+        std::string strVersion;
+
+        s >> strVersion;
+        if (strVersion != SERIALIZATION_VERSION_STRING) return;
+
+        s >> mapSporksByHash >> mapSporksActive;
     }
 
     /**

@@ -40,21 +40,9 @@ namespace {
 struct CoinEntry {
     COutPoint* outpoint;
     char key;
-    explicit CoinEntry(const COutPoint* ptr) : outpoint(const_cast<COutPoint*>(ptr)), key(DB_COIN)  {}
+    explicit CoinEntry(const COutPoint* ptr) : outpoint(const_cast<COutPoint*>(ptr)), key(DB_COIN) {}
 
-    template<typename Stream>
-    void Serialize(Stream &s) const {
-        s << key;
-        s << outpoint->hash;
-        s << VARINT(outpoint->n);
-    }
-
-    template<typename Stream>
-    void Unserialize(Stream& s) {
-        s >> key;
-        s >> outpoint->hash;
-        s >> VARINT(outpoint->n);
-    }
+    SERIALIZE_METHODS(CoinEntry, obj) { READWRITE(obj.key, obj.outpoint->hash, VARINT(obj.outpoint->n)); }
 };
 
 }
@@ -493,7 +481,7 @@ public:
         vout.assign(vAvail.size(), CTxOut());
         for (unsigned int i = 0; i < vAvail.size(); i++) {
             if (vAvail[i])
-                ::Unserialize(s, CTxOutCompressor(vout[i]));
+                ::Unserialize(s, Using<TxOutCompression>(vout[i]));
         }
         // coinbase height
         ::Unserialize(s, VARINT(nHeight, VarIntMode::NONNEGATIVE_SIGNED));

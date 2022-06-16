@@ -11,7 +11,6 @@
 #include <sync.h>
 #include <util/system.h>
 
-CCriticalSection cs_pow;
 
 CPowCache* CPowCache::instance = nullptr;
 
@@ -20,7 +19,7 @@ CPowCache& CPowCache::Instance()
     if (CPowCache::instance == nullptr)
     {
         int  powCacheSize     = gArgs.GetArg("-powcachesize", DEFAULT_POW_CACHE_SIZE);
-        bool powCacheValidate = gArgs.GetArg("-powcachevalidate", 0) > 0 ? true : false;
+        powCacheValidate = gArgs.GetBoolArg("-powcachevalidate", false); // > 0 ? true : false;
         powCacheSize = powCacheSize == 0 ? DEFAULT_POW_CACHE_SIZE : powCacheSize;
 
         CPowCache::instance = new CPowCache(powCacheSize, powCacheValidate);
@@ -28,21 +27,10 @@ CPowCache& CPowCache::Instance()
     return *instance;
 }
 
-void CPowCache::DoMaintenance()
-{
-    LOCK(cs_pow);
-    // If cache has grown enough, save it:
-    if (cacheMap.size() - nLoadedSize > 100)
-    {
-        CFlatDB<CPowCache> flatDb("powcache.dat", "powCache");
-        flatDb.Dump(*this);
-    }
-}
-
-CPowCache::CPowCache(int maxSize, bool validate) : unordered_lru_cache<uint256, uint256, std::hash<uint256>>(maxSize),
-   nVersion(CURRENT_VERSION),
-   nLoadedSize(0),
-   bValidate(validate)
+CPowCache::CPowCache(int maxSize, bool validate)
+    : unordered_lru_cache<uint256, uint256, std::hash<uint256>>(maxSize)
+    , nVersion(CURRENT_VERSION)
+    , bValidate(validate)
 {
     if (bValidate) LogPrintf("PowCache: Validation and auto correction enabled\n");
 }

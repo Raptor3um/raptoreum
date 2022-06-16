@@ -12,10 +12,22 @@
 #include <serialize.h>
 #include <uint256.h>
 
-struct CSpentIndexKey : IndexKey {
-    CSpentIndexKey(uint256 t, unsigned int i) :
-        IndexKey(t, i)
+struct CSpentIndexKey {
+    uint256 txid;
+    unsigned int outputIndex;
+
+    SERIALIZE_METHODS(CSpentIndexKey, obj)
     {
+        READWRITE(obj.txid, obj.outputIndex);
+    }
+
+    CSpentIndexKey(uint256 t, unsigned int i) {
+        txid = t;
+        outputIndex = i;
+    }
+
+    CSpentIndexKey() {
+        SetNull();
     }
 
     CSpentIndexKey() :
@@ -32,17 +44,9 @@ struct CSpentIndexValue {
     int addressType;
     uint160 addressHash;
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CSpentIndexValue, obj)
     {
-        READWRITE(txid);
-        READWRITE(inputIndex);
-        READWRITE(blockHeight);
-        READWRITE(satoshis);
-        READWRITE(addressType);
-        READWRITE(addressHash);
+        READWRITE(obj.txid, obj.inputIndex, obj.blockHeight, obj.satoshis, obj.addressType, obj.addressHash);
     }
 
     CSpentIndexValue(uint256 t, unsigned int i, int h, CAmount s, int type, uint160 a) :
@@ -210,16 +214,9 @@ struct CAddressUnspentValue {
     int fSpendableHeight;
     int64_t fSpendableTime;
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CAddressUnspentValue, obj)
     {
-        READWRITE(satoshis);
-        READWRITE(script);
-        READWRITE(blockHeight);
-        READWRITE(fSpendableHeight);
-        READWRITE(fSpendableTime);
+        READWRITE(obj.satoshis, obj.script, obj.blockHeight, obj.fSpendableHeight, obj.fSpendableTime);
     }
 
     CAddressUnspentValue(CAmount sats, CScript scriptPubKey, int height, int spendableHeight, int spendableTime)

@@ -21,9 +21,7 @@
 struct nontrivial_t {
     int x;
     nontrivial_t() :x(-1) {}
-    ADD_SERIALIZE_METHODS
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {READWRITE(x);}
+    SERIALIZE_METHODS(nontrivial_t, obj) { READWRITE(obj.x); }
 };
 typedef prevector<28, unsigned char> prevec;
 
