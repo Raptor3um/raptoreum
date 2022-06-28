@@ -7,7 +7,6 @@
 #include <amount.h>
 #include <coinjoin/coinjoin-util.h>
 #include <coinjoin/coinjoin.h>
-#include <consensus/validation.h>
 #include <validation.h>
 #include <wallet/wallet.h>
 
@@ -80,7 +79,6 @@ public:
         CompactTallyItem tallyItem;
         CTransactionRef tx;
         CReserveKey destKey(wallet.get());
-        CReserveKey reserveKey(wallet.get());
         CAmount nFeeRet;
         int nChangePosRet = -1;
         std::string strError;
@@ -91,10 +89,9 @@ public:
         for (CAmount nAmount : vecAmounts) {
             {
                 auto locked_chain = chain->lock();
-                BOOST_CHECK(wallet->CreateTransaction(*locked_chain, {{GetScriptForDestination(tallyItem.txdest), nAmount, false}}, tx, reserveKey, nFeeRet, nChangePosRet, strError, coinControl));
+                BOOST_CHECK(wallet->CreateTransaction(*locked_chain, {{GetScriptForDestination(tallyItem.txdest), nAmount, false}}, tx, nFeeRet, nChangePosRet, strError, coinControl));
             }
-            CValidationState state;
-            BOOST_CHECK(wallet->CommitTransaction(tx, {}, {}, reserveKey, state));
+            wallet->CommitTransaction(tx, {}, {});
             AddTxToChain(tx->GetHash());
             for (size_t n = 0; n < tx->vout.size(); ++n) {
                 if (nChangePosRet != -1 && n == nChangePosRet) {

@@ -21,7 +21,7 @@ WalletModelFuturesTransaction::WalletModelFuturesTransaction(const QList<SendFut
    // walletTransaction = new CWalletTx();
 }
 
-std::unique_ptr<interfaces::PendingWalletTx>& WalletModelFuturesTransaction::getWtx()
+CTransactionRef& WalletModelFuturesTransaction::getWtx()
 {
     return wtx;
 }
@@ -34,7 +34,7 @@ QList<SendFuturesRecipient> WalletModelFuturesTransaction::getRecipients() const
 
 unsigned int WalletModelFuturesTransaction::getTransactionSize() const
 {
-    return wtx != nullptr ? ::GetSerializeSize(wtx->get(), SER_NETWORK, PROTOCOL_VERSION) : 0;
+    return wtx != nullptr ? ::GetSerializeSize(*wtx, SER_NETWORK, PROTOCOL_VERSION) : 0;
 }
 
 CAmount WalletModelFuturesTransaction::getTransactionFee() const
@@ -65,7 +65,7 @@ void WalletModelFuturesTransaction::assignFuturePayload() {
           if (out.amount() <= 0) continue;
           const unsigned char* scriptStr = (const unsigned char*)out.script().data();
           CScript scriptPubKey(scriptStr, scriptStr+out.script().size());
-          for (const auto& txout : wtx->get().vout) {
+          for (const auto& txout : wtx.get()->vout) {
               if (txout.scriptPubKey == scriptPubKey) {
                   rcp.amount = txout.nValue;
                   ftx.lockTime = rcp.locktime - GetAdjustedTime();
@@ -99,7 +99,7 @@ void WalletModelFuturesTransaction::reassignAmounts()
                 if (out.amount() <= 0) continue;
                 const unsigned char* scriptStr = (const unsigned char*)out.script().data();
                 CScript scriptPubKey(scriptStr, scriptStr+out.script().size());
-                for (const auto& txout : wtx->get().vout) {
+                for (const auto& txout : wtx.get()->vout) {
                     if (txout.scriptPubKey == scriptPubKey) {
                         subtotal += txout.nValue;
                         break;

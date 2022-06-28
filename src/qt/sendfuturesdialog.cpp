@@ -694,9 +694,7 @@ void SendFuturesDialog::processSendFuturesReturn(const WalletModel::SendFuturesR
     // Default to a warning message, override if error message is needed
     msgParams.second = CClientUIInterface::MSG_WARNING;
 
-    // This comment is specific to SendFuturesDialog usage of WalletModel::SendFuturesReturn.
-    // WalletModel::TransactionCommitFailed is used only in WalletModel::sendFutures()
-    // all others are used only in WalletModel::prepareTransaction()
+    // All status values are used only in WalletModel::prepareTransaction()
     switch(sendFuturesReturn.status)
     {
     case WalletModel::InvalidAddress:
@@ -718,12 +716,8 @@ void SendFuturesDialog::processSendFuturesReturn(const WalletModel::SendFuturesR
         msgParams.first = tr("Transaction creation failed!");
         msgParams.second = CClientUIInterface::MSG_ERROR;
         break;
-    case WalletModel::TransactionCommitFailed:
-        msgParams.first = tr("The transaction was rejected with the following reason: %1").arg(sendFuturesReturn.reasonCommitFailed);
-        msgParams.second = CClientUIInterface::MSG_ERROR;
-        break;
     case WalletModel::AbsurdFee:
-        msgParams.first = tr("A fee higher than %1 is considered an absurdly high fee.").arg(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), maxTxFee));
+        msgParams.first = tr("A fee higher than %1 is considered an absurdly high fee.").arg(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), model->wallet().getDefaultMaxTxFee()));
         break;
     case WalletModel::PaymentRequestExpired:
         msgParams.first = tr("Payment request expired.");

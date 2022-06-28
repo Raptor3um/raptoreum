@@ -209,7 +209,6 @@ public:
         AmountWithFeeExceedsBalance,
         DuplicateAddress,
         TransactionCreationFailed, // Error returned when wallet is still locked
-        TransactionCommitFailed,
         AbsurdFee,
         PaymentRequestExpired
     };

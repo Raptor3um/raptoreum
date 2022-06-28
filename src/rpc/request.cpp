@@ -5,13 +5,14 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <rpc/protocol.h>
+#include <rpc/request.h>
 
+#include <fs.h>
 #include <random.h>
+#include <rpc/protocol.h>
 #include <tinyformat.h>
 #include <util/system.h>
 #include <util/strencodings.h>
-#include <util/time.h>
 #include <version.h>
 
 /**
@@ -150,4 +151,53 @@ std::vector<UniValue> JSONRPCProcessBatchReply(const UniValue &in, size_t num)
         batch[id] = rec;
     }
     return batch;
+}
+
+void JSONRPCRequest::parse(const UniValue& valRequest)
+{
+    // Parse request
+    if (!valRequest.isObject())
+        throw JSONRPCError(RPC_INVALID_REQUEST, "Invalid Request object");
+    const UniValue& request = valRequest.get_obj();
+
+    // Parse id now so errors from here on will have the id
+    id = find_value(request, "id");
+
+    // Parse method
+    UniValue valMethod = find_value(request, "method");
+    if (valMethod.isNull())
+        throw JSONRPCError(RPC_INVALID_REQUEST, "Missing method");
+    if (!valMethod.isStr())
+        throw JSONRPCError(RPC_INVALID_REQUEST, "Method must be a string");
+    strMethod = valMethod.get_str();
+    if (strMethod != "getblocktemplate") {
+        if (fLogIPs)
+            LogPrint(BCLog::RPC, "ThreadRPCServer method=%s user=%s peeraddr=%s\n", SanitizeString(strMethod),
+                this->authUser, this->peerAddr);
+        else
+            LogPrint(BCLog::RPC, "ThreadRPCServer method=%s user=%s\n", SanitizeString(strMethod), this->authUser);
+    }
+
+    // Parse params
+    UniValue valParams = find_value(request, "params");
+    if (valParams.isArray() || valParams.isObject())
+        params = valParams;
+    else if (valParams.isNull())
+        params = UniValue(UniValue::VARR);
+    else
+        throw JSONRPCError(RPC_INVALID_REQUEST, "Params must be an array or object");
+}
+
+const JSONRPCRequest JSONRPCRequest::squashed() const
+{
+   if (params.empty()) {
+        return *this;
+    }
+    JSONRPCRequest new_request{*this};
+    new_request.strMethod = strMethod + params[0].get_str();
+    new_request.params.setArray();
+    for (unsigned int i = 1; i < params.size(); ++i) {
+        new_request.params.push_back(params[i]);
+    }
+    return new_request;
 }

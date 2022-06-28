@@ -17,26 +17,23 @@
 #include <univalue.h>
 
 #ifdef ENABLE_WALLET
-UniValue coinjoin(const JSONRPCRequest& request)
+static UniValue coinjoin(const JSONRPCRequest& request)
 {
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    CWallet* const pwallet = wallet.get();
-    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
-        return NullUniValue;
+    RPCHelpMan{"coinjoin",
+        "\nAvailable commands:\n"
+        "  start       - Start mixing\n"
+        "  stop        - Stop mixing\n"
+        "  reset       - Reset mixing",
+        {
+            {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "The command to execute"},
+        },
+        RPCResult{},
+        RPCExamples{""},
+    }.Check(request);
 
-    if (request.fHelp || request.params.size() != 1)
-        throw std::runtime_error(
-            RPCHelpMan{"coinjoin",
-                "",
-                {
-                    {"command", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "The command to execute"},
-                }}
-                .ToString() +
-            "\nAvailable commands:\n"
-            "  start       - Start mixing\n"
-            "  stop        - Stop mixing\n"
-            "  reset       - Reset mixing\n"
-        );
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    if (!wallet) return NullUniValue;
+    CWallet* const pwallet = wallet.get();
 
     if (fSmartnodeMode)
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Client-side mixing is not supported on smartnodes");
@@ -88,57 +85,60 @@ UniValue getpoolinfo(const JSONRPCRequest& request)
     throw std::runtime_error(
             RPCHelpMan{"getpoolinfo",
                 "DEPRECATED. Please use getcoinjoininfo instead.\n",
-            {}}
+            {},
+            RPCResult{},
+            RPCExamples{""},
             .ToString()
     );
 }
 
 UniValue getcoinjoininfo(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() != 0) {
-        throw std::runtime_error(
-            RPCHelpMan{"getcoinjoininfo",
-                "Returns an object containing an information about CoinJoin settings and state.\n",
-                {}}
-                .ToString() +
-            "\nResult (for regular nodes):\n"
-            "{\n"
-            "  \"enabled\": true|false,             (bool) Whether mixing functionality is enabled\n"
-            "  \"multisession\": true|false,        (bool) Whether CoinJoin Multisession option is enabled\n"
-            "  \"max_sessions\": xxx,               (numeric) How many parallel mixing sessions can there be at once\n"
-            "  \"max_rounds\": xxx,                 (numeric) How many rounds to mix\n"
-            "  \"max_amount\": xxx,                 (numeric) Target CoinJoin balance in " + CURRENCY_UNIT + "\n"
-            "  \"denoms_goal\": xxx,                (numeric) How many inputs of each denominated amount to target\n"
-            "  \"denoms_hardcap\": xxx,             (numeric) Maximum limit of how many inputs of each denominated amount to create\n"
-            "  \"queue_size\": xxx,                 (numeric) How many queues there are currently on the network\n"
-            "  \"running\": true|false,             (bool) Whether mixing is currently running\n"
-            "  \"sessions\":                        (array of json objects)\n"
-            "    [\n"
-            "      {\n"
-            "      \"protxhash\": \"...\",            (string) The ProTxHash of the smartnode\n"
-            "      \"outpoint\": \"txid-index\",      (string) The outpoint of the smartnode\n"
-            "      \"service\": \"host:port\",        (string) The IP address and port of the smartnode\n"
-            "      \"denomination\": xxx,           (numeric) The denomination of the mixing session in " + CURRENCY_UNIT + "\n"
-            "      \"state\": \"...\",                (string) Current state of the mixing session\n"
-            "      \"entries_count\": xxx,          (numeric) The number of entries in the mixing session\n"
-            "      }\n"
-            "      ,...\n"
-            "    ],\n"
-            "  \"keys_left\": xxx,                  (numeric) How many new keys are left since last automatic backup\n"
-            "  \"warnings\": \"...\"                  (string) Warnings if any\n"
-            "}\n"
-            "\nResult (for smartnodes):\n"
-            "{\n"
-            "  \"queue_size\": xxx,                 (numeric) How many queues there are currently on the network\n"
-            "  \"denomination\": xxx,               (numeric) The denomination of the mixing session in " + CURRENCY_UNIT + "\n"
-            "  \"state\": \"...\",                    (string) Current state of the mixing session\n"
-            "  \"entries_count\": xxx,              (numeric) The number of entries in the mixing session\n"
-            "}\n"
-            "\nExamples:\n"
-            + HelpExampleCli("getcoinjoininfo", "")
+    RPCHelpMan{"getcoinjoininfo",
+        "Returns an object containing an information about CoinJoin settings and state.\n",
+        {},
+        {
+            RPCResult{"for regular nodes",
+                RPCResult::Type::OBJ, "", "",
+                {
+                    {RPCResult::Type::BOOL, "enabled", "Whether mixing functionality is enabled"},
+                    {RPCResult::Type::BOOL, "multisession", "Whether CoinJoin Multisession option is enabled"},
+                    {RPCResult::Type::NUM, "max_sessions", "How many parallel mixing sessions can there be at once"},
+                    {RPCResult::Type::NUM, "max_rounds", "How many rounds to mix"},
+                    {RPCResult::Type::NUM, "max_amount", "Target CoinJoin balance in " + CURRENCY_UNIT + ""},
+                    {RPCResult::Type::NUM, "denoms_goal", "How many inputs of each denominated amount to target"},
+                    {RPCResult::Type::NUM, "denoms_hardcap", "Maximum limit of how many inputs of each denominated amount to create"},
+                    {RPCResult::Type::NUM, "queue_size", "How many queues there are currently on the network"},
+                    {RPCResult::Type::BOOL, "running", "Whether mixing is currently running"},
+                    {RPCResult::Type::ARR, "sessions", "",
+                    {
+                        {RPCResult::Type::OBJ, "", "",
+                        {
+                            {RPCResult::Type::STR_HEX, "protxhash", "The ProTxHash of the smartnode"},
+                            {RPCResult::Type::STR_HEX, "outpoint", "The outpoint of the smartnode"},
+                            {RPCResult::Type::STR, "service", "The IP address and port of the smartnode"},
+                            {RPCResult::Type::NUM, "denomination", "The denomination of the mixing session in " + CURRENCY_UNIT + ""},
+                            {RPCResult::Type::STR_HEX, "state", "Current state of the mixing session"},
+                            {RPCResult::Type::NUM, "entries_count", "The number of entries in the mixing session"},
+                        }},
+                    }},
+                    {RPCResult::Type::NUM, "keys_left", "How many new keys are left since last automatic backup"},
+                    {RPCResult::Type::STR, "warnings", "Warnings if any"},
+                }},
+            RPCResult{"for smartnodes",
+                RPCResult::Type::OBJ, "", "",
+                {
+                    {RPCResult::Type::NUM, "queue_size", "How many queues there are currently on the network"},
+                    {RPCResult::Type::NUM, "denomination", "The denomination of the mixing session in " + CURRENCY_UNIT + ""},
+                    {RPCResult::Type::STR_HEX, "state", "Current state of the mixing session"},
+                    {RPCResult::Type::NUM, "entries_count", "The number of entries in the mixing session"},
+                }},
+        },
+        RPCExamples{
+            HelpExampleCli("getcoinjoininfo", "")
             + HelpExampleRpc("getcoinjoininfo", "")
-        );
-    }
+        },
+    }.Check(request);
 
     UniValue obj(UniValue::VOBJ);
 

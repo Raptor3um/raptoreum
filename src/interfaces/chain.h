@@ -104,20 +104,11 @@ public:
         virtual bool haveBlockOnDisk(int height) = 0;
 
         //! Return height of the first block in the chain with timestamp equal
-        //! or greater than the given time, or nullopt if there is no block with
-        //! a high enough timestamp. Also return the block hash as an optional
-        //! output parameter (to avoid the cost of a second lookup in case this
-        //! information is needed.)
-        virtual Optional<int> findFirstBlockWithTime(int64_t time, uint256* hash) = 0;
-
-        //! Return height of the first block in the chain with timestamp equal
         //! or greater than the given time and height equal or greater than the
-        //! given height, or nullopt if there is no such block.
-        //!
-        //! Calling this with height 0 is equivalent to calling
-        //! findFirstBlockWithTime, but less efficient because it requires a
-        //! linear instead of a binary search.
-        virtual Optional<int> findFirstBlockWithTimeAndHeight(int64_t time, int height) = 0;
+        //! given height, or nullopt if there is no block with a high enough
+        //! timestamp and height. Also return the block hash as an optional output parameter
+        //! (to avoid the cost od a second lookup in case this information is needed).
+        virtual Optional<int> findFirstBlockWithTimeAndHeight(int64_t time, int height, uint256* hash) = 0;
 
         //! Return height of last block in the specified range which is pruned, or
         //! nullopt if no block in the range is pruned. Range is inclusive.
@@ -199,12 +190,6 @@ public:
 
     //! Relay dust fee setting (-dustrelayfee), reflecting lowest rate it's economical to spend.
     virtual CFeeRate relayDustFee() = 0;
-
-    //! Get node max tx fee setting (-maxtxfee).
-    //! This could be replaced by a per-wallet max fee, as proposed at
-    //! https://github.com/bitcoin/bitcoin/issues/15355
-    //! But for the time being, wallets call this to access the node setting.
-    virtual CAmount maxTxFee() = 0;
 
     //! Check if pruning is enabled.
     virtual bool getPruneMode() = 0;

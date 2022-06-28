@@ -7,12 +7,14 @@
 #define BITCOIN_RPC_SERVER_H
 
 #include <amount.h>
-#include <rpc/protocol.h>
+#include <rpc/request.h>
+#include <rpc/util.h>
 #include <uint256.h>
 
 #include <map>
 #include <stdint.h>
 #include <string>
+#include <functional>
 
 #include <univalue.h>
 
@@ -23,21 +25,6 @@ namespace RPCServer
     void OnStarted(std::function<void ()> slot);
     void OnStopped(std::function<void ()> slot);
 }
-
-class JSONRPCRequest
-{
-public:
-    UniValue id;
-    std::string strMethod;
-    UniValue params;
-    bool fHelp;
-    std::string URI;
-    std::string authUser;
-    std::string peerAddr;
-
-    JSONRPCRequest() : id(NullUniValue), params(NullUniValue), fHelp(false) {}
-    void parse(const UniValue& valRequest);
-};
 
 /** Query whether RPC is running */
 bool IsRPCRunning();
@@ -95,6 +82,7 @@ void RPCUnsetTimerInterface(RPCTimerInterface *iface);
 void RPCRunLater(const std::string& name, std::function<void()> func, int64_t nSeconds);
 
 typedef UniValue(*rpcfn_type)(const JSONRPCRequest& jsonRequest);
+typedef RPCHelpMan (*RpcMethodFnType)();
 
 class CRPCCommand
 {
@@ -109,6 +97,19 @@ public:
         : category(std::move(category)), name(std::move(name)), actor(std::move(actor)), argNames(std::move(args)),
           unique_id(unique_id)
     {
+    }
+
+    //! Simplified constructor taking plain RpcMethodFnType function pointer.
+    CRPCCommand(std::string category, std::string name_in, RpcMethodFnType fn, std::vector<std::string> args_in)
+        : CRPCCommand(
+              category,
+              fn().m_name,
+              [fn](const JSONRPCRequest& request, UniValue& result, bool) { result = fn().HandleRequest(request); return true; },
+              fn().GetArgNames(),
+              intptr_t(fn))
+    {
+        assert(fn().m_name == name_in);
+        assert(fn().GetArgNames() == args_in);
     }
 
     //! Simplified constructor taking plain rpcfn_type function pointer.
@@ -127,7 +128,7 @@ public:
 };
 
 /**
- * Raptoreum RPC command dispatcher.
+ * RPC command dispatcher.
  */
 class CRPCTable
 {

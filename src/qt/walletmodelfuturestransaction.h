@@ -19,7 +19,6 @@ class CWalletTx;
 //class CFutureTx;
 namespace interfaces {
     class Node;
-    class PendingWalletTx;
 }
 
 /** Data model for a walletmodel future transaction. */
@@ -32,7 +31,7 @@ public:
     //CFutureTx *getTransaction();
     CWalletTx *getTransaction() const;
     unsigned int getTransactionSize() const;
-    std::unique_ptr<interfaces::PendingWalletTx>& getWtx();
+    CTransactionRef& getWtx();
     void setTransactionFee(const CAmount& newFee);
     CAmount getTransactionFee() const;
 
@@ -44,7 +43,7 @@ public:
 
 private:
     QList<SendFuturesRecipient> recipients;
-    std::unique_ptr<interfaces::PendingWalletTx> wtx;
+    CTransactionRef wtx;
     CAmount fee;
 };
 

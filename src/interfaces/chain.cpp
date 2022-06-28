@@ -91,27 +91,13 @@ class LockImpl : public Chain::Lock, public UniqueLock<RecursiveMutex>
         CBlockIndex* block = ::ChainActive()[height];
         return block && ((block->nStatus & BLOCK_HAVE_DATA) != 0) && block->nTx > 0;
     }
-    Optional<int> findFirstBlockWithTime(int64_t time, uint256* hash) override
+    Optional<int> findFirstBlockWithTimeAndHeight(int64_t time, int height, uint256* hash) override
     {
         LockAnnotation lock(::cs_main);
-        CBlockIndex* block = ::ChainActive().FindEarliestAtLeast(time);
+        CBlockIndex* block = ::ChainActive().FindEarliestAtLeast(time, height);
         if (block) {
             if (hash) *hash = block->GetBlockHash();
             return block->nHeight;
-        }
-        return nullopt;
-    }
-    Optional<int> findFirstBlockWithTimeAndHeight(int64_t time, int height) override
-    {
-        // TODO: Could update CChain::FindEarliestAtLeast() to take a height
-        // parameter and use it with std::lower_bound() to make this
-        // implementation more efficient and allow combining
-        // findFirstBlockWithTime and findFirstBlockWithTimeAndHeight into one
-        // method.
-        for (CBlockIndex* block = ::ChainActive()[height]; block; block = ::ChainActive().Next(block)) {
-            if (block->GetBlockTime() >= time) {
-                return block->nHeight;
-            }
         }
         return nullopt;
     }
@@ -353,7 +339,6 @@ public:
     CFeeRate relayMinFee() override { return ::minRelayTxFee; }
     CFeeRate relayIncrementalFee() override { return ::incrementalRelayFee; }
     CFeeRate relayDustFee() override { return ::dustRelayFee; }
-    CAmount maxTxFee() override { return ::maxTxFee; }
     bool getPruneMode() override { return ::fPruneMode; }
     bool p2pEnabled() override { return g_connman != nullptr; }
     bool isReadyToBroadcast() override { return !::fImporting && !::fReindex && !::ChainstateActive().IsInitialBlockDownload(); }

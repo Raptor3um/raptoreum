@@ -24,8 +24,6 @@
 #include <smartnode/smartnode-payments.h>
 #include <smartnode/smartnode-sync.h>
 
-#include <rpc/server.h>
-
 #include <wallet/coincontrol.h>
 #include <wallet/rpcwallet.h>
 #ifdef ENABLE_WALLET
@@ -36,67 +34,54 @@
 #include <iomanip>
 #include <univalue.h>
 
-UniValue smartnodelist(const JSONRPCRequest& request);
+static UniValue smartnodelist(const JSONRPCRequest& request);
 
-void smartnode_list_help()
+static void smartnode_list_help(const JSONRPCRequest& request)
 {
-    throw std::runtime_error(
-            RPCHelpMan{"smartnodelist",
-                "Get a list of smartnodes in different modes. This call is identical to 'smartnode list' call.\n",
-                {
-                    {"mode", RPCArg::Type::STR, /* opt */ true, /* default_val */ "json", "The mode to run list in"},
-                    {"filter", RPCArg::Type::STR, /* opt */ true, /* default_val */ "", "Filter results. Partial match by outpoint by default in all modes, additional matches in some modes are also available"},
-                }}
-                .ToString() +
-            "\nAvailable modes:\n"
-            "  addr           - Print ip address associated with a smartnode (can be additionally filtered, partial match)\n"
-            "  full           - Print info in format 'status payee lastpaidtime lastpaidblock IP'\n"
-            "                   (can be additionally filtered, partial match)\n"
-            "  info           - Print info in format 'status payee IP'\n"
-            "                   (can be additionally filtered, partial match)\n"
-            "  json           - Print info in JSON format (can be additionally filtered, partial match)\n"
-            "  lastpaidblock  - Print the last block height a node was paid on the network\n"
-            "  lastpaidtime   - Print the last time a node was paid on the network\n"
-            "  owneraddress   - Print the smartnode owner Raptoreum address\n"
-            "  payee          - Print the smartnode payout Raptoreum address (can be additionally filtered,\n"
-            "                   partial match)\n"
-            "  pubKeyOperator - Print the smartnode operator public key\n"
-            "  status         - Print smartnode status: ENABLED / POSE_BANNED\n"
-            "                   (can be additionally filtered, partial match)\n"
-            "  votingaddress  - Print the smartnode voting Raptoreum address\n"
-        );
+    RPCHelpMan{"smartnodelist",
+        "Get a list of smartnodes in different modes. This call is identical to 'smartnode list' call.\n"
+        "\nAvailable modes:\n"
+        "  addr           - Print ip address associated with a smartnode (can be additionally filtered, partial match)\n"
+        "  full           - Print info in format 'status payee lastpaidtime lastpaidblock IP'\n"
+        "                   (can be additionally filtered, partial match)\n"
+        "  info           - Print info in format 'status payee IP'\n"
+        "                   (can be additionally filtered, partial match)\n"
+        "  json           - Print info in JSON format (can be additionally filtered, partial match)\n"
+        "  lastpaidblock  - Print the last block height a node was paid on the network\n"
+        "  lastpaidtime   - Print the last time a node was paid on the network\n"
+        "  owneraddress   - Print the smartnode owner Raptoreum address\n"
+        "  payee          - Print the smartnode payout Raptoreum address (can be additionally filtered,\n"
+        "                   partial match)\n"
+        "  pubKeyOperator - Print the smartnode operator public key\n"
+        "  status         - Print smartnode status: ENABLED / POSE_BANNED\n"
+        "                   (can be additionally filtered, partial match)\n"
+        "  votingaddress  - Print the smartnode voting Raptoreum address\n",
+        {
+            {"mode", RPCArg::Type::STR, /* default */ "json", "The mode to run list in"},
+            {"filter", RPCArg::Type::STR, /* default */ "", "Filter results. Partial match by outpoint by default in all modes, additional matches in some modes are also available"},
+        },
+        RPCResults{},
+        RPCExamples{""},
+    }.Check(request);
 }
 
-UniValue smartnode_list(const JSONRPCRequest& request)
+static void smartnode_connect_help(const JSONRPCRequest& request)
 {
-    if (request.fHelp)
-        smartnode_list_help();
-    JSONRPCRequest newRequest = request;
-    newRequest.params.setArray();
-    // forward params but skip "list"
-    for (unsigned int i = 1; i < request.params.size(); i++) {
-        newRequest.params.push_back(request.params[i]);
-    }
-    return smartnodelist(newRequest);
+    RPCHelpMan{"smartnode connect",
+        "Connect to given smartnode\n",
+        {
+            {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The address of the smartnode to connect"},
+        },
+        RPCResults{},
+        RPCExamples{""}
+    }.Check(request);
 }
 
-void smartnode_connect_help()
+static UniValue smartnode_connect(const JSONRPCRequest& request)
 {
-    throw std::runtime_error(
-        RPCHelpMan{"smartnode connect",
-            "Connect to given smartnode\n",
-            {
-                {"address", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "The address of the smartnode to connect"},
-            }}
-            .ToString());
-}
+    smartnode_connect_help(request);
 
-UniValue smartnode_connect(const JSONRPCRequest& request)
-{
-    if (request.fHelp || request.params.size() < 2)
-        smartnode_connect_help();
-
-    std::string strAddress = request.params[1].get_str();
+    std::string strAddress = request.params[0].get_str();
 
     CService addr;
     if (!Lookup(strAddress.c_str(), addr, 0, false))
@@ -110,18 +95,19 @@ UniValue smartnode_connect(const JSONRPCRequest& request)
     return "successfully connected";
 }
 
-void smartnode_count_help()
+static void smartnode_count_help(const JSONRPCRequest& request)
 {
-    throw std::runtime_error(
-        RPCHelpMan{"smartnode count",
-            "Get information about number of smartnodes.\n",
-        {}}.ToString());
+    RPCHelpMan{"smartnode count",
+        "Get information about number of smartnodes.\n",
+        {},
+        RPCResults{},
+        RPCExamples{""}
+    }.Check(request);
 }
 
-UniValue smartnode_count(const JSONRPCRequest& request)
+static UniValue smartnode_count(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() > 1)
-        smartnode_count_help();
+    smartnode_count_help(request);
 
     auto mnList = deterministicMNManager->GetListAtChainTip();
     int total = mnList.GetAllMNsCount();
@@ -133,7 +119,7 @@ UniValue smartnode_count(const JSONRPCRequest& request)
     return obj;
 }
 
-UniValue GetNextSmartnodeForPayment(int heightShift)
+static UniValue GetNextSmartnodeForPayment(int heightShift)
 {
     auto mnList = deterministicMNManager->GetListAtChainTip();
     auto payees = mnList.GetProjectedMNPayees(heightShift);
@@ -155,64 +141,66 @@ UniValue GetNextSmartnodeForPayment(int heightShift)
     return obj;
 }
 
-void smartnode_winner_help()
+static void smartnode_winner_help(const JSONRPCRequest& request)
 {
     if (!IsDeprecatedRPCEnabled("smartnode_winner")) {
         throw std::runtime_error("DEPRECATED: set -deprecatedrpc=smartnode_winner to enable it");
     }
 
-    throw std::runtime_error(
-        RPCHelpMan{"smartnode winner",
-            "Print info on next smartnode winner to vote for\n",
-        {}}.ToString());
+    RPCHelpMan{"smartnode winner",
+        "Print info on next smartnode winner to vote for\n",
+        {},
+        RPCResults{},
+        RPCExamples{""}
+    }.Check(request);
 }
 
-UniValue smartnode_winner(const JSONRPCRequest& request)
+static UniValue smartnode_winner(const JSONRPCRequest& request)
 {
-    if (request.fHelp || !IsDeprecatedRPCEnabled("smartnode_winner"))
-        smartnode_winner_help();
+    smartnode_winner_help(request);
 
     return GetNextSmartnodeForPayment(10);
 }
 
-void smartnode_current_help()
+static void smartnode_current_help(const JSONRPCRequest& request)
 {
     if (!IsDeprecatedRPCEnabled("smartnode_current")) {
         throw std::runtime_error("DEPRECATED: set -deprecatedrpc=smartnode_current to enable it");
     }
 
-    throw std::runtime_error(
-        RPCHelpMan{"smartnode current",
-            "Print info on current smartnode winner to be paid the next block (calculated locally)\n",
-            {}}.ToString());
+    RPCHelpMan{"smartnode current",
+        "Print info on current smartnode winner to be paid the next block (calculated locally)\n",
+        {},
+        RPCResults{},
+        RPCExamples{""}
+    }.Check(request);
 }
 
-UniValue smartnode_current(const JSONRPCRequest& request)
+static UniValue smartnode_current(const JSONRPCRequest& request)
 {
-    if (request.fHelp || !IsDeprecatedRPCEnabled("smartnode_current"))
-        smartnode_current_help();
+    smartnode_current_help(request);
 
     return GetNextSmartnodeForPayment(1);
 }
 
 #ifdef ENABLE_WALLET
-void smartnode_outputs_help()
+static void smartnode_outputs_help(const JSONRPCRequest& request)
 {
-    throw std::runtime_error(
-        RPCHelpMan{"smartnode outputs",
-            "Print smartnode compatible outputs\n",
-            {}}.ToString());
+    RPCHelpMan{"smartnode outputs",
+        "Print smartnode compatible outputs\n",
+        {},
+        RPCResults{},
+        RPCExamples{""}
+    }.Check(request);
 }
 
-UniValue smartnode_outputs(const JSONRPCRequest& request)
+static UniValue smartnode_outputs(const JSONRPCRequest& request)
 {
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    CWallet* const pwallet = wallet.get();
-    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
-        return NullUniValue;
+    smartnode_outputs_help(request);
 
-    if (request.fHelp)
-        smartnode_outputs_help();
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    if (!wallet) return NullUniValue;
+    CWallet* const pwallet = wallet.get();
 
     // Find possible candidates
     std::vector<COutput> vPossibleCoins;
@@ -233,18 +221,20 @@ UniValue smartnode_outputs(const JSONRPCRequest& request)
 
 #endif // ENABLE_WALLET
 
-void smartnode_status_help()
+static void smartnode_status_help(const JSONRPCRequest& request)
 {
-    throw std::runtime_error(
-        RPCHelpMan{"smartnode status",
-            "Print smartnode status information\n",
-            {}}.ToString());
+    RPCHelpMan{"smartnode status",
+        "Print smartnode status information\n",
+        {},
+        RPCResults{},
+        RPCExamples{""}
+    }.Check(request);
 }
 
-UniValue smartnode_status(const JSONRPCRequest& request)
+static UniValue smartnode_status(const JSONRPCRequest& request)
 {
     if (request.fHelp)
-        smartnode_status_help();
+        smartnode_status_help(request);
 
     if (!fSmartnodeMode)
         throw JSONRPCError(RPC_INTERNAL_ERROR, "This is not a smartnode");
@@ -306,21 +296,22 @@ std::string GetRequiredPaymentsString(int nBlockHeight, const CDeterministicMNCP
     return strPayments;
 }
 
-void smartnode_winners_help()
+static void smartnode_winners_help(const JSONRPCRequest& request)
 {
-    throw std::runtime_error(
-        RPCHelpMan{"smartnode winners",
-            "Print list of smartnode winners\n",
-            {
-                {"count", RPCArg::Type::NUM, /* opt */ true, /* default_val */ "", "number of last winners to return"},
-                {"filter", RPCArg::Type::STR, /* opt */ true, /* default_val */ "", "filter for returned winners"},
-            }}.ToString());
+    RPCHelpMan{"smartnode winners",
+        "Print list of smartnode winners\n",
+        {
+            {"count", RPCArg::Type::NUM, /* default */ "", "number of last winners to return"},
+            {"filter", RPCArg::Type::STR, /* default */ "", "filter for returned winners"},
+        },
+        RPCResults{},
+        RPCExamples{""}
+    }.Check(request);
 }
 
-UniValue smartnode_winners(const JSONRPCRequest& request)
+static UniValue smartnode_winners(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() > 3)
-        smartnode_winners_help();
+    smartnode_winners_help(request);
 
     const CBlockIndex* pindexTip{nullptr};
     {
@@ -332,12 +323,12 @@ UniValue smartnode_winners(const JSONRPCRequest& request)
     int nCount = 10;
     std::string strFilter = "";
 
-    if (!request.params[1].isNull()) {
-        nCount = atoi(request.params[1].get_str());
+    if (!request.params[0].isNull()) {
+        nCount = atoi(request.params[0].get_str());
     }
 
-    if (!request.params[2].isNull()) {
-        strFilter = request.params[2].get_str();
+    if (!request.params[1].isNull()) {
+        strFilter = request.params[1].get_str();
     }
 
     UniValue obj(UniValue::VOBJ);
@@ -362,44 +353,43 @@ UniValue smartnode_winners(const JSONRPCRequest& request)
 
     return obj;
 }
-void smartnode_payments_help()
+void smartnode_payments_help(const JSONRPCRequest& request)
 {
-    throw std::runtime_error(
-        RPCHelpMan{"smartnode payments",
-            "\nReturns an array of deterministic smartnodes and their payments for the specified block\n",
+    RPCHelpMan{"smartnode payments",
+        "\nReturns an array of deterministic smartnodes and their payments for the specified block\n",
+        {
+            {"blockhash", RPCArg::Type::STR_HEX, /* default */ "tip", "The hash of the starting block"},
+            {"count", RPCArg::Type::NUM, /* default */ "1", "The number of blocks to return. Will return <count> previous blocks if <count> is negative. Both 1 and -1 correspond to the chain tip."},
+        },
+        RPCResult{
+            RPCResult::Type::ARR, "", "Blocks",
             {
-                {"blockhash", RPCArg::Type::STR_HEX, /* opt */ true, /* default_val */ "tip", "The hash of the starting block"},
-                {"count", RPCArg::Type::NUM, /* opt */ true, /* default_val */ "1", "The number of blocks to return. Will return <count> previous blocks if <count> is negative. Both 1 and -1 correspond to the chain tip."},
-            }}
-            .ToString() +
-        "\nResult:\n"
-        "  [                                  (array) Blocks\n"
-        "    {\n"
-        "       \"height\" : n,                 (numeric) The height of the block\n"
-        "       \"blockhash\" : \"hash\",         (string) The hash of the block\n"
-        "       \"amount\": n                   (numeric) Amount received in this block by all smartnodes\n"
-        "       \"smartnodes\": [              (array) smartnodes that received payments in this block\n"
-        "          {\n"
-        "             \"proTxHash\": \"xxxx\",    (string) The hash of the corresponding ProRegTx\n"
-        "             \"amount\": n             (numeric) Amount received by this smartnode\n"
-        "             \"payees\": [             (array) Payees who received a share of this payment\n"
-        "                {\n"
-        "                  \"address\" : \"xxx\", (string) Payee address\n"
-        "                  \"script\" : \"xxx\",  (string) Payee scriptPubKey\n"
-        "                  \"amount\": n        (numeric) Amount received by this payee\n"
-        "                },...\n"
-        "             ]\n"
-        "          },...\n"
-        "       ]\n"
-        "    },...\n"
-        "  ]\n");
+                {RPCResult::Type::OBJ, "", "",
+                {
+                    {RPCResult::Type::NUM, "height", "The height of the block"},
+                    {RPCResult::Type::STR_HEX, "blockhash", "The hash of the block"},
+                    {RPCResult::Type::NUM, "amount", "Amount received in this block by all smartnodes"},
+                    {RPCResult::Type::ARR, "smartnodes", "Smartnodes that received payments in this block",
+                    {
+                        {RPCResult::Type::STR_HEX, "proTxHash", "The hash of the corresponding ProRegTx"},
+                        {RPCResult::Type::NUM, "amount", "Amount received by this smartnode"},
+                        {RPCResult::Type::ARR, "payees", "Payees who received a share of this payment",
+                        {
+                            {RPCResult::Type::STR, "address", "Payee address"},
+                            {RPCResult::Type::STR_HEX, "script", "Payee scriptPubKey"},
+                            {RPCResult::Type::NUM, "amount", "Amount received by this payee"},
+                        }},
+                    }},
+                }},
+            },
+        },
+        RPCExamples{""}
+    }.Check(request);
 }
 
 UniValue smartnode_payments(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() > 3) {
-        smartnode_payments_help();
-    }
+    smartnode_payments_help(request);
 
     CBlockIndex* pindex{nullptr};
 
@@ -407,19 +397,19 @@ UniValue smartnode_payments(const JSONRPCRequest& request)
         g_txindex->BlockUntilSyncedToCurrentChain();
     }
 
-    if (request.params[1].isNull()) {
+    if (request.params[0].isNull()) {
         LOCK(cs_main);
         pindex = ::ChainActive().Tip();
     } else {
         LOCK(cs_main);
-        uint256 blockHash = ParseHashV(request.params[1], "blockhash");
+        uint256 blockHash = ParseHashV(request.params[0], "blockhash");
         pindex = LookupBlockIndex(blockHash);
         if (pindex == nullptr) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
         }
     }
 
-    int64_t nCount = request.params.size() > 2 ? ParseInt64V(request.params[2], "count") : 1;
+    int64_t nCount = request.params.size() > 2 ? ParseInt64V(request.params[1], "count") : 1;
 
     // A temporary vector which is used to sort results properly (there is no "reverse" in/for UniValue)
     std::vector<UniValue> vecPayments;
@@ -508,13 +498,8 @@ UniValue smartnode_payments(const JSONRPCRequest& request)
 
 [[ noreturn ]] void smartnode_help()
 {
-    throw std::runtime_error(
-        RPCHelpMan{"smartnode",
-            "Set of commands to execute smartnode related actions\n",
-            {
-                {"command", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "The command to execute"},
-            }}
-            .ToString() +
+    RPCHelpMan{"smartnode",
+        "Set of commands to execute smartnode related actions\n"
         "\nAvailable commands:\n"
         "  count        - Get information about number of smartnodes\n"
         "  current      - DEPRECATED Print info on current smartnode winner to be paid the next block (calculated locally)\n"
@@ -525,47 +510,46 @@ UniValue smartnode_payments(const JSONRPCRequest& request)
         "  list         - Print list of all known smartnodes (see smartnodelist for more info)\n"
         "  payments     - Return information about smartnode payments in a mined block\n"
         "  winner       - DEPRECATED Print info on next smartnode winner to vote for\n"
-        "  winners      - Print list of smartnode winners\n"
-        );
+        "  winners      - Print list of smartnode winners\n",
+        {
+            {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "The command to execute"},
+        },
+        RPCResults{},
+        RPCExamples{""},
+    }.Throw();
 }
 
-UniValue smartnode(const JSONRPCRequest& request)
+static UniValue smartnode(const JSONRPCRequest& request)
 {
-    std::string strCommand;
-    if (!request.params[0].isNull()) {
-        strCommand = request.params[0].get_str();
-    }
+    const JSONRPCRequest new_request{request.strMethod == "smartnode" ? request.squashed() : request};
+    const std::string command{new_request.strMethod};
 
-    if (request.fHelp && strCommand.empty()) {
-        smartnode_help();
-    }
-
-    if (strCommand == "list") {
-        return smartnode_list(request);
-    } else if (strCommand == "connect") {
-        return smartnode_connect(request);
-    } else if (strCommand == "count") {
-        return smartnode_count(request);
-    } else if (strCommand == "current") {
-        return smartnode_current(request);
-    } else if (strCommand == "winner") {
-        return smartnode_winner(request);
+    if (command == "smartnodeconnect") {
+        return smartnode_connect(new_request);
+    } else if (command == "smartnodecount") {
+        return smartnode_count(new_request);
+    } else if (command == "smartnodecurrent") {
+        return smartnode_current(new_request);
+    } else if (command == "smartnodewinner") {
+        return smartnode_winner(new_request);
 #ifdef ENABLE_WALLET
-    } else if (strCommand == "outputs") {
-        return smartnode_outputs(request);
+    } else if (command == "smartnodeoutputs") {
+        return smartnode_outputs(new_request);
 #endif // ENABLE_WALLET
-    } else if (strCommand == "status") {
-        return smartnode_status(request);
-    } else if (strCommand == "payments") {
-        return smartnode_payments(request);
-    } else if (strCommand == "winners") {
-        return smartnode_winners(request);
+    } else if (command == "smartnodestatus") {
+        return smartnode_status(new_request);
+    } else if (command == "smartnodepayments") {
+        return smartnode_payments(new_request);
+    } else if (command == "smartnodewinners") {
+        return smartnode_winners(new_request);
+    } else if (command == "smartnodelist") {
+        return smartnodelist(new_request);
     } else {
         smartnode_help();
     }
 }
 
-UniValue smartnodelist(const JSONRPCRequest& request)
+static UniValue smartnodelist(const JSONRPCRequest& request)
 {
     std::string strMode = "json";
     std::string strFilter = "";
@@ -582,7 +566,7 @@ UniValue smartnodelist(const JSONRPCRequest& request)
                 strMode != "payee" && strMode != "pubkeyoperator" &&
                 strMode != "status"))
     {
-        smartnode_list_help();
+        smartnode_list_help(request);
     }
 
     UniValue obj(UniValue::VOBJ);
@@ -713,7 +697,7 @@ static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         argNames
   //  --------------------- ------------------------  -----------------------  ----------
     { "raptoreum",               "smartnode",             &smartnode,             {} },
-    { "raptoreum",               "smartnodelist",         &smartnodelist,         {} },
+    { "raptoreum",               "smartnodelist",         &smartnode,             {} },
 };
 
 void RegisterSmartnodeRPCCommands(CRPCTable &t)

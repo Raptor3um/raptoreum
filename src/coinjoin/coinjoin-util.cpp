@@ -3,7 +3,6 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <coinjoin/coinjoin-util.h>
-#include <consensus/validation.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
 #include <script/sign.h>
@@ -242,8 +241,8 @@ CAmount CTransactionBuilder::GetFee(unsigned int nBytes) const
     if (nRequiredFee > nFeeCalc) {
         nFeeCalc = nRequiredFee;
     }
-    if (nFeeCalc > ::maxTxFee) {
-        nFeeCalc = ::maxTxFee;
+    if (nFeeCalc > pwallet->m_default_max_tx_fee) {
+        nFeeCalc = pwallet->m_default_max_tx_fee;
     }
     return nFeeCalc;
 }
@@ -277,7 +276,7 @@ bool CTransactionBuilder::Commit(std::string& strResult)
     }
 
     CTransactionRef tx;
-    if (!pwallet->CreateTransaction(*pwallet->chain().lock(), vecSend, tx, dummyReserveKey, nFeeRet, nChangePosRet, strResult, coinControl)) {
+    if (!pwallet->CreateTransaction(*pwallet->chain().lock(), vecSend, tx, nFeeRet, nChangePosRet, strResult, coinControl)) {
         return false;
     }
 
@@ -312,11 +311,7 @@ bool CTransactionBuilder::Commit(std::string& strResult)
         return false;
     }
 
-    CValidationState state;
-    if (!pwallet->CommitTransaction(tx, {}, {}, dummyReserveKey, state)) {
-        strResult = state.GetRejectReason();
-        return false;
-    }
+    pwallet->CommitTransaction(tx, {}, {}));
 
     fKeepKeys = true;
 

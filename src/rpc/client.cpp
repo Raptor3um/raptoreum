@@ -29,12 +29,11 @@ static const CRPCConvertParam vRPCConvertParams[] =
 {
     { "setmocktime", 0, "timestamp" },
 #if ENABLE_MINER
-    { "generate", 0, "nblocks" },
-    { "generate", 1, "maxtries" },
     { "generatetoaddress", 0, "nblocks" },
     { "generatetoaddress", 2, "maxtries" },
-    { "setgenerate", 0, "generate" },
-    { "setgenerate", 1, "genproclimit" },
+    { "generatetodescriptor", 0, "num_blocks" },
+    { "generatetodescriptor", 2, "maxtries" },
+    { "generateblock", 1, "transactions" },
 #endif // ENABLE_MINER
     { "getnetworkhashps", 0, "nblocks" },
     { "getnetworkhashps", 1, "height" },
@@ -114,6 +113,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "signrawtransactionwithkey", 2, "prevtxs" },
     { "signrawtransactionwithwallet", 1, "prevtxs" },
     { "sendrawtransaction", 1, "allowhighfees" },
+    { "sendrawtransaction", 1, "maxfeerate" },
     { "sendrawtransaction", 2, "instantsend" },
     { "sendrawtransaction", 3, "bypasslimits" },
     { "combinerawtransaction", 0, "txs" },
