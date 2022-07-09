@@ -6,12 +6,11 @@
 #ifndef BITCOIN_QT_SENDFUTURESENTRY_H
 #define BITCOIN_QT_SENDFUTURESENTRY_H
 
-#include "walletmodel.h"
+#include <qt/walletmodel.h>
 
 #include <QStackedWidget>
 
 class WalletModel;
-class PlatformStyle;
 
 namespace Ui {
     class SendFuturesEntry;
@@ -27,11 +26,11 @@ class SendFuturesEntry : public QStackedWidget
     Q_OBJECT
 
 public:
-    explicit SendFuturesEntry(const PlatformStyle *platformStyle, QWidget *parent = 0);
+    explicit SendFuturesEntry(QWidget* parent = 0);
     ~SendFuturesEntry();
 
     void setModel(WalletModel *model);
-    bool validate();
+    bool validate(interfaces::Node& node);
     SendFuturesRecipient getValue();
 
     /** Return whether the entry is still empty and unedited */
@@ -39,6 +38,7 @@ public:
 
     void setValue(const SendFuturesRecipient &value);
     void setAddress(const QString &address);
+    void setAmount(const CAmount &amount);
 
     /** Set up the tab chain manually, as Qt messes up the tab chain by default in some cases
      *  (issue https://bugreports.qt-project.org/browse/QTBUG-10907).
@@ -54,7 +54,6 @@ Q_SIGNALS:
     void removeEntry(SendFuturesEntry *entry);
     void payAmountChanged();
     void payFromChanged(const QString &address);
-    void subtractFeeFromAmountChanged();
 
 private Q_SLOTS:
     void deleteClicked();
@@ -65,14 +64,16 @@ private Q_SLOTS:
     void updateLockTimeField(const QDateTime &dateTime);
     void setupPayFrom();
 
+protected:
+    void changeEvent(QEvent* e);
+
 private:
     SendFuturesRecipient recipient;
     Ui::SendFuturesEntry *ui;
     WalletModel *model;
-    const PlatformStyle *platformStyle;
 
+    void setButtonIcons();
     bool updateLabel(const QString &address);
-    
 };
 
 #endif // BITCOIN_QT_SENDFUTURESENTRY_H

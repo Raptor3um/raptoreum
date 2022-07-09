@@ -1,5 +1,5 @@
 // Copyright (c) 2015 The Bitcoin Core developers
-// Copyright (c) 2014-2019 The Dash Core developers
+// Copyright (c) 2014-2020 The Dash Core developers
 // Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -7,19 +7,26 @@
 #ifndef BITCOIN_TEST_TEST_RAPTOREUM_H
 #define BITCOIN_TEST_TEST_RAPTOREUM_H
 
-#include "chainparamsbase.h"
-#include "fs.h"
-#include "key.h"
-#include "pubkey.h"
-#include "random.h"
-#include "scheduler.h"
-#include "txdb.h"
-#include "txmempool.h"
+#include <chainparamsbase.h>
+#include <fs.h>
+#include <key.h>
+#include <pubkey.h>
+#include <random.h>
+#include <scheduler.h>
+#include <txdb.h>
+#include <txmempool.h>
+
+#include <memory>
 
 #include <boost/thread.hpp>
 
 extern uint256 insecure_rand_seed;
 extern FastRandomContext insecure_rand_ctx;
+
+/**
+ * Flag to make GetRand in random.h return the same number
+ */
+extern bool g_mock_deterministic_tests;
 
 static inline void SeedInsecureRand(bool fDeterministic = false)
 {
@@ -43,8 +50,13 @@ static inline bool InsecureRandBool() { return insecure_rand_ctx.randbool(); }
 struct BasicTestingSetup {
     ECCVerifyHandle globalVerifyHandle;
 
-    BasicTestingSetup(const std::string& chainName = CBaseChainParams::MAIN);
+    explicit BasicTestingSetup(const std::string& chainName = CBaseChainParams::MAIN);
     ~BasicTestingSetup();
+
+    fs::path SetDataDir(const std::string& name);
+
+private:
+    const fs::path m_path_root;
 };
 
 /** Testing setup that configures a complete environment.
@@ -59,14 +71,12 @@ struct CConnmanTest {
 
 class PeerLogicValidation;
 struct TestingSetup: public BasicTestingSetup {
-    CCoinsViewDB *pcoinsdbview;
-    fs::path pathTemp;
     boost::thread_group threadGroup;
     CConnman* connman;
     CScheduler scheduler;
     std::unique_ptr<PeerLogicValidation> peerLogic;
 
-    TestingSetup(const std::string& chainName = CBaseChainParams::MAIN);
+    explicit TestingSetup(const std::string& chainName = CBaseChainParams::MAIN);
     ~TestingSetup();
 };
 
@@ -128,7 +138,7 @@ struct TestMemPoolEntryHelper
     TestMemPoolEntryHelper() :
         nFee(0), specialTxFee(0), nTime(0), nHeight(1),
         spendsCoinbase(false), sigOpCount(4) { }
-    
+
     CTxMemPoolEntry FromTx(const CMutableTransaction &tx);
     CTxMemPoolEntry FromTx(const CTransaction &tx);
 
@@ -140,4 +150,7 @@ struct TestMemPoolEntryHelper
     TestMemPoolEntryHelper &SpendsCoinbase(bool _flag) { spendsCoinbase = _flag; return *this; }
     TestMemPoolEntryHelper &SigOps(unsigned int _sigops) { sigOpCount = _sigops; return *this; }
 };
+
+CBlock getBlock13b8a();
+
 #endif

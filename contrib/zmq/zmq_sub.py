@@ -30,9 +30,9 @@ import signal
 import struct
 import sys
 
-if not (sys.version_info.major >= 3 and sys.version_info.minor >= 5):
+if (sys.version_info.major, sys.version_info.minor) < (3, 5):
     print("This example only works with Python 3.5 and greater")
-    exit(1)
+    sys.exit(1)
 
 port = 28332
 

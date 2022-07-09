@@ -3,12 +3,12 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "raptoreumconsensus.h"
+#include <script/raptoreumconsensus.h>
 
-#include "primitives/transaction.h"
-#include "pubkey.h"
-#include "script/interpreter.h"
-#include "version.h"
+#include <primitives/transaction.h>
+#include <pubkey.h>
+#include <script/interpreter.h>
+#include <version.h>
 
 namespace {
 
@@ -40,7 +40,7 @@ public:
     }
 
     template<typename T>
-    TxInputStream& operator>>(T& obj)
+    TxInputStream& operator>>(T&& obj)
     {
         ::Unserialize(*this, obj);
         return *this;

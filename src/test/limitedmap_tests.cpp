@@ -2,9 +2,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "limitedmap.h"
+#include <limitedmap.h>
 
-#include "test/test_raptoreum.h"
+#include <test/test_raptoreum.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -50,10 +50,10 @@ BOOST_AUTO_TEST_CASE(limitedmap_test)
         // use the iterator to check for the expected key and value
         //BOOST_CHECK(it->first == i);
         //BOOST_CHECK(it->second == i + 1);
-        
+
         // use find to check for the value
         BOOST_CHECK(map.find(i)->second == i + 1);
-        
+
         // update and recheck
         auto jt = map.find(i);
         map.update(jt, i + 2);

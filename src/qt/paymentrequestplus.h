@@ -7,10 +7,11 @@
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#include "paymentrequest.pb.h"
+#include <qt/paymentrequest.pb.h>
 #pragma GCC diagnostic pop
 
-#include "base58.h"
+#include <amount.h>
+#include <script/script.h>
 
 #include <openssl/x509.h>
 

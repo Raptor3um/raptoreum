@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef _BITCOIN_PREVECTOR_H_
-#define _BITCOIN_PREVECTOR_H_
+#ifndef BITCOIN_PREVECTOR_H
+#define BITCOIN_PREVECTOR_H
 
 #include <assert.h>
 #include <stdlib.h>
@@ -222,6 +222,23 @@ private:
             new(static_cast<void*>(dst)) T(*first);
             ++dst;
             ++first;
+        }
+    }
+
+    void fill(T* dst, const_iterator first, const_iterator last) {
+        ptrdiff_t count = last - first;
+        fill(dst, &*first, count);
+    }
+
+    void fill(T* dst, const T* src, ptrdiff_t count) {
+        if (IS_TRIVIALLY_CONSTRUCTIBLE<T>::value) {
+            ::memmove(dst, src, count * sizeof(T));
+        } else {
+            for (ptrdiff_t i = 0; i < count; i++) {
+                new(static_cast<void*>(dst)) T(*src);
+                ++dst;
+                ++src;
+            }
         }
     }
 
@@ -538,7 +555,23 @@ public:
     const value_type* data() const {
         return item_ptr(0);
     }
+
+    template<typename V>
+    static void assign_to(const_iterator b, const_iterator e, V& v) {
+        // We know that internally the iterators are pointing to continues memory, so we can directly use the pointers here
+        // This avoids internal use of std::copy and operator++ on the iterators and instead allows efficient memcpy/memmove
+        if (IS_TRIVIALLY_CONSTRUCTIBLE<T>::value) {
+            auto s = e - b;
+            if (v.size() != s) {
+                v.resize(s);
+            }
+            ::memmove(v.data(), &*b, s);
+        } else {
+            v.assign(&*b, &*e);
+        }
+    }
 };
+
 #pragma pack(pop)
 
-#endif
+#endif // BITCOIN_PREVECTOR_H

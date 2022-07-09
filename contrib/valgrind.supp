@@ -1,0 +1,93 @@
+# Valgrind suppressions file for Raptoreum.
+#
+# Includes known Valgrind warnings in our dependencies that cannot be fixed
+# in-tree.
+#
+# Example use:
+# $ valgrind --suppressions=contrib/valgrind.supp src/test/test_dash
+# $ valgrind --suppressions=contrib/valgrind.supp --leak-check=full \
+#       --show-leak-kinds=all src/test/test_dash --log_level=test_suite
+{
+   Suppress libstdc++ warning - https://gcc.gnu.org/bugzilla/show_bug.cgi?id=65434
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   obj:*/libstdc++.*
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   obj:*/ld-*.so
+}
+{
+   Suppress libdb warning - https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=662917
+   Memcheck:Cond
+   obj:*/libdb_cxx-*.so
+   fun:__log_put
+   obj:*/libdb_cxx-*.so
+   fun:__log_put_record
+}
+{
+   Suppress leveldb warning (leveldb::InitModule()) - https://github.com/google/leveldb/issues/113
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   fun:_ZN7leveldbL10InitModuleEv
+}
+{
+   Suppress leveldb warning (leveldb::Env::Default()) - https://github.com/google/leveldb/issues/113
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   ...
+   fun:_ZN7leveldbL14InitDefaultEnvEv
+}
+
+{
+   Suppress key generation using unitialized values as part of random generation A (gen by GetStrongRandBytes)
+   Memcheck:Cond
+   fun:secp256k1_fe_normalize_var
+   fun:secp256k1_ec_pubkey_serialize
+   fun:_ZNK4CKey9GetPubKeyEv
+   ...
+   fun:main
+}
+
+{
+   Suppress key generation using unitialized values as part of random generation B (gen by GetStrongRandBytes)
+   Memcheck:Cond
+   ...
+   fun:_ZN4CKey10MakeNewKeyEb
+   fun:_Z19ECC_InitSanityCheckv
+   fun:_Z15InitSanityCheckv
+   fun:_Z19AppInitSanityChecksv
+   fun:_ZN10interfaces12_GLOBAL__N_18NodeImpl14baseInitializeEv
+   fun:main
+}
+
+{
+   Suppress key generation using unitialized values as part of random generation C (gen by GetStrongRandBytes)
+   Memcheck:Cond
+   ...
+   fun:_ZNK4CKey9GetPubKeyEv
+   fun:_Z19ECC_InitSanityCheckv
+   fun:_Z15InitSanityCheckv
+   fun:_Z19AppInitSanityChecksv
+   fun:_ZN10interfaces12_GLOBAL__N_18NodeImpl14baseInitializeEv
+   fun:main
+}
+
+{
+   Suppress key generation using unitialized values as part of random generation D (gen by GetStrongRandBytes)
+   Memcheck:Cond
+   ...
+   fun:_ZNK4CKey12VerifyPubKeyERK7CPubKey
+   ...
+   fun:main
+}
+
+{
+   Suppress key generation using unitialized values as part of random generation D (gen by GetStrongRandBytes)
+   Memcheck:Cond
+   fun:_Z7GetRandm
+   ...
+}

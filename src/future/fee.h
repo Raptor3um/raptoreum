@@ -5,10 +5,11 @@
 #ifndef RAPTOREUM_FEE_H
 #define RAPTOREUM_FEE_H
 
-#include "amount.h"
-#include "coins.h"
+#include <amount.h>
+#include <coins.h>
 
-CAmount getFutureFees();
+CAmount getFutureFeesCoin();
+uint16_t getFutureFees();
 
 //void maybeSetPayload(Coin& coin, const COutPoint& outpoint, const int16_t& nType, const std::vector<uint8_t>& vExtraPayload);
 

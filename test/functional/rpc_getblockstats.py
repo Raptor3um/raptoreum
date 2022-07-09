@@ -13,7 +13,6 @@ from test_framework.util import (
 )
 import json
 import os
-import time
 
 TESTSDIR = os.path.dirname(os.path.realpath(__file__))
 
@@ -81,11 +80,11 @@ class GetblockstatsTest(BitcoinTestFramework):
             'mocktime': int(self.mocktime),
             'stats': self.expected_stats,
         }
-        with open(filename, 'w') as f:
+        with open(filename, 'w', encoding="utf8") as f:
             json.dump(to_dump, f, sort_keys=True, indent=2)
 
     def load_test_data(self, filename):
-        with open(filename, 'r') as f:
+        with open(filename, 'r', encoding="utf8") as f:
             d = json.load(f)
             blocks = d['blocks']
             self.mocktime = d['mocktime']

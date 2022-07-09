@@ -1,12 +1,11 @@
-#ifndef SMARTNODELIST_H
-#define SMARTNODELIST_H
+#ifndef BITCOIN_QT_SMARTNODELIST_H
+#define BITCOIN_QT_SMARTNODELIST_H
 
-#include "platformstyle.h"
-#include "primitives/transaction.h"
-#include "sync.h"
-#include "util.h"
+#include <primitives/transaction.h>
+#include <sync.h>
+#include <util.h>
 
-#include "evo/deterministicmns.h"
+#include <evo/deterministicmns.h>
 
 #include <QMenu>
 #include <QTimer>
@@ -33,8 +32,24 @@ class SmartnodeList : public QWidget
     Q_OBJECT
 
 public:
-    explicit SmartnodeList(const PlatformStyle* platformStyle, QWidget* parent = 0);
+    explicit SmartnodeList(QWidget* parent = 0);
     ~SmartnodeList();
+
+    enum {
+        COLUMN_SERVICE,
+        COLUMN_STATUS,
+        COLUMN_POSE,
+        COLUMN_REGISTERED,
+        COLUMN_LAST_PAYMENT,
+        COLUMN_NEXT_PAYMENT,
+        COLUMN_PAYOUT_ADDRESS,
+        COLUMN_OPERATOR_REWARD,
+        COLUMN_COLLATERAL_ADDRESS,
+        COLUMN_COLLATERAL_AMOUNT,
+        COLUMN_OWNER_ADDRESS,
+        COLUMN_VOTING_ADDRESS,
+        COLUMN_PROTX_HASH,
+    };
 
     void setClientModel(ClientModel* clientModel);
     void setWalletModel(WalletModel* walletModel);
@@ -76,4 +91,4 @@ private Q_SLOTS:
     void handleSmartnodeListChanged();
     void updateDIP3ListScheduled();
 };
-#endif // SMARTNODELIST_H
+#endif // BITCOIN_QT_SMARTNODELIST_H

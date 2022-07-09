@@ -4,11 +4,10 @@
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
  **********************************************************************/
 
-#ifndef _SECP256K1_FIELD_REPR_IMPL_H_
-#define _SECP256K1_FIELD_REPR_IMPL_H_
+#ifndef SECP256K1_FIELD_REPR_IMPL_H
+#define SECP256K1_FIELD_REPR_IMPL_H
 
 #include "util.h"
-#include "num.h"
 #include "field.h"
 
 #ifdef VERIFY
@@ -486,7 +485,8 @@ SECP256K1_INLINE static void secp256k1_fe_mul_inner(uint32_t *r, const uint32_t 
     VERIFY_BITS(b[9], 26);
 
     /** [... a b c] is a shorthand for ... + a<<52 + b<<26 + c<<0 mod n.
-     *  px is a shorthand for sum(a[i]*b[x-i], i=0..x).
+     *  for 0 <= x <= 9, px is a shorthand for sum(a[i]*b[x-i], i=0..x).
+     *  for 9 <= x <= 18, px is a shorthand for sum(a[i]*b[x-i], i=(x-9)..9)
      *  Note that [x 0 0 0 0 0 0 0 0 0 0] = [x*R1 x*R0].
      */
 
@@ -1069,6 +1069,7 @@ static void secp256k1_fe_mul(secp256k1_fe *r, const secp256k1_fe *a, const secp2
     secp256k1_fe_verify(a);
     secp256k1_fe_verify(b);
     VERIFY_CHECK(r != b);
+    VERIFY_CHECK(a != b);
 #endif
     secp256k1_fe_mul_inner(r->n, a->n, b->n);
 #ifdef VERIFY
@@ -1158,4 +1159,4 @@ static SECP256K1_INLINE void secp256k1_fe_from_storage(secp256k1_fe *r, const se
 #endif
 }
 
-#endif
+#endif /* SECP256K1_FIELD_REPR_IMPL_H */

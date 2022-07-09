@@ -2,22 +2,22 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "data/tx_invalid.json.h"
-#include "data/tx_valid.json.h"
-#include "test/test_raptoreum.h"
+#include <test/data/tx_invalid.json.h>
+#include <test/data/tx_valid.json.h>
+#include <test/test_raptoreum.h>
 
-#include "clientversion.h"
-#include "checkqueue.h"
-#include "consensus/tx_verify.h"
-#include "consensus/validation.h"
-#include "core_io.h"
-#include "key.h"
-#include "keystore.h"
-#include "validation.h"
-#include "policy/policy.h"
-#include "script/script.h"
-#include "script/script_error.h"
-#include "utilstrencodings.h"
+#include <clientversion.h>
+#include <checkqueue.h>
+#include <consensus/tx_verify.h>
+#include <consensus/validation.h>
+#include <core_io.h>
+#include <key.h>
+#include <keystore.h>
+#include <validation.h>
+#include <policy/policy.h>
+#include <script/script.h>
+#include <script/script_error.h>
+#include <utilstrencodings.h>
 
 #include <map>
 #include <string>
@@ -45,6 +45,7 @@ static std::map<std::string, unsigned int> mapFlagNames = {
     {std::string("NULLFAIL"), (unsigned int) SCRIPT_VERIFY_NULLFAIL},
     {std::string("CHECKLOCKTIMEVERIFY"), (unsigned int) SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY},
     {std::string("CHECKSEQUENCEVERIFY"), (unsigned int) SCRIPT_VERIFY_CHECKSEQUENCEVERIFY},
+    {std::string("DIP0020_OPCODES"), (unsigned int) SCRIPT_ENABLE_DIP0020_OPCODES},
 };
 
 unsigned int ParseScriptFlags(std::string strFlags)

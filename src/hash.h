@@ -8,13 +8,13 @@
 #ifndef BITCOIN_HASH_H
 #define BITCOIN_HASH_H
 
-#include "crypto/ripemd160.h"
-#include "crypto/sha256.h"
-#include "prevector.h"
-#include "serialize.h"
-#include "uint256.h"
-#include "version.h"
-#include "hash_selection.h"
+#include <crypto/ripemd160.h>
+#include <crypto/sha256.h>
+#include <prevector.h>
+#include <serialize.h>
+#include <uint256.h>
+#include <version.h>
+#include <hash_selection.h>
 
 #include <vector>
 
@@ -88,20 +88,6 @@ inline uint256 Hash(const T1 p1begin, const T1 p1end,
     uint256 result;
     CHash256().Write(p1begin == p1end ? pblank : (const unsigned char*)&p1begin[0], (p1end - p1begin) * sizeof(p1begin[0]))
               .Write(p2begin == p2end ? pblank : (const unsigned char*)&p2begin[0], (p2end - p2begin) * sizeof(p2begin[0]))
-              .Finalize((unsigned char*)&result);
-    return result;
-}
-
-/** Compute the 256-bit hash of the concatenation of three objects. */
-template<typename T1, typename T2, typename T3>
-inline uint256 Hash(const T1 p1begin, const T1 p1end,
-                    const T2 p2begin, const T2 p2end,
-                    const T3 p3begin, const T3 p3end) {
-    static const unsigned char pblank[1] = {};
-    uint256 result;
-    CHash256().Write(p1begin == p1end ? pblank : (const unsigned char*)&p1begin[0], (p1end - p1begin) * sizeof(p1begin[0]))
-              .Write(p2begin == p2end ? pblank : (const unsigned char*)&p2begin[0], (p2end - p2begin) * sizeof(p2begin[0]))
-              .Write(p3begin == p3end ? pblank : (const unsigned char*)&p3begin[0], (p3end - p3begin) * sizeof(p3begin[0]))
               .Finalize((unsigned char*)&result);
     return result;
 }
@@ -226,7 +212,7 @@ private:
     Source* source;
 
 public:
-    CHashVerifier(Source* source_) : CHashWriter(source_->GetType(), source_->GetVersion()), source(source_) {}
+    explicit CHashVerifier(Source* source_) : CHashWriter(source_->GetType(), source_->GetVersion()), source(source_) {}
 
     void read(char* pch, size_t nSize)
     {
@@ -245,7 +231,7 @@ public:
     }
 
     template<typename T>
-    CHashVerifier<Source>& operator>>(T& obj)
+    CHashVerifier<Source>& operator>>(T&& obj)
     {
         // Unserialize from this stream
         ::Unserialize(*this, obj);
@@ -302,50 +288,44 @@ uint64_t SipHashUint256(uint64_t k0, uint64_t k1, const uint256& val);
 uint64_t SipHashUint256Extra(uint64_t k0, uint64_t k1, const uint256& val, uint32_t extra);
 
 /* ----------- Ghost Rider Hash ------------------------------------------------ */
-template<typename T1>
+template <typename T1>
 inline uint256 HashGR(const T1 pbegin, const T1 pend, const uint256 PrevBlockHash)
 {
-	static unsigned char pblank[1];
+    static unsigned char pblank[1];
 
-	uint512 hash[18];
-	HashSelection hashSelection(PrevBlockHash, {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14}, {0,1,2,3,4,5});
-	std::vector<int> randomCNs(hashSelection.getCnIndexes());
-	std::vector<int> coreHashIndexes(hashSelection.getAlgoIndexes());
-	for (int i=0;i<18;i++)
-	{
-		const void *toHash;
-		int lenToHash;
-		if (i == 0) {
-			toHash = (pbegin == pend ? pblank : static_cast<const void*>(&pbegin[0]));
-			lenToHash = (pend - pbegin) * sizeof(pbegin[0]);
-		} else {
-			toHash = static_cast<const void*>(&hash[i-1]);
-			lenToHash = 64;
-		}
-		int coreSelection;
-		int cnSelection = -1;
-		if(i < 5) {
-			coreSelection = coreHashIndexes[i];
-		} else if(i < 11) {
-			coreSelection = coreHashIndexes[i-1];
-		} else {
-			coreSelection = coreHashIndexes[i-2];
-		}
+    uint512 hash[18];
+    HashSelection hashSelection(PrevBlockHash, {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14}, {0, 1, 2, 3, 4, 5});
+    std::vector<int> randomCNs(hashSelection.getCnIndexes());
+    std::vector<int> coreHashIndexes(hashSelection.getAlgoIndexes());
+    for (int i = 0; i < 18; ++i) {
+        const void* toHash;
+        int lenToHash;
+        if (i == 0) {
+            toHash = (pbegin == pend ? pblank : static_cast<const void*>(&pbegin[0]));
+            lenToHash = (pend - pbegin) * sizeof(pbegin[0]);
+        } else {
+            toHash = static_cast<const void*>(&hash[i - 1]);
+            lenToHash = 64;
+        }
+        int coreSelection = -1;
+        int cnSelection   = -1;
+        if (i < 5) {
+            coreSelection = coreHashIndexes[i];
+        } else if (i == 5) {
+            cnSelection = randomCNs[0];
+        } else if (i < 11) {
+            coreSelection = coreHashIndexes[i - 1];
+        } else if (i == 11) {
+            cnSelection = randomCNs[1];
+        } else if (i < 17) {
+            coreSelection = coreHashIndexes[i - 2];
+        } else if (i == 17) {
+            cnSelection = randomCNs[2];
+        }
 
-		if(i==5) {
-			coreSelection = -1;
-			cnSelection = randomCNs[0];
-		}
-		if(i==11) {
-			coreSelection = -1;
-			cnSelection = randomCNs[1];
-		} if(i==17) {
-			coreSelection = -1;
-			cnSelection = randomCNs[2];
-		}
-		coreHash(toHash, &hash[i], lenToHash, coreSelection);
-		cnHash(&hash[i-1], &hash[i], lenToHash, cnSelection);
-	}
-	return hash[17].trim256();;
+        coreHash(toHash, &hash[i], lenToHash, coreSelection);
+        cnHash(&hash[i - 1], &hash[i], lenToHash, cnSelection);
+    }
+    return hash[17].trim256();
 }
 #endif // BITCOIN_HASH_H

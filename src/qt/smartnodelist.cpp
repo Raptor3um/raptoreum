@@ -1,23 +1,18 @@
-#include "smartnodelist.h"
-#include "ui_smartnodelist.h"
+#include <qt/smartnodelist.h>
+#include <qt/forms/ui_smartnodelist.h>
 
-#include "smartnode/activesmartnode.h"
-#include "clientmodel.h"
-#include "clientversion.h"
-#include "coins.h"
-#include "guiutil.h"
-#include "init.h"
-#include "smartnode/smartnode-sync.h"
-#include "netbase.h"
-#include "sync.h"
-#include "validation.h"
-#include "wallet/wallet.h"
-#include "walletmodel.h"
+#include <qt/clientmodel.h>
+#include <clientversion.h>
+#include <coins.h>
+#include <qt/guiutil.h>
+#include <netbase.h>
+#include <qt/walletmodel.h>
+#include <validation.h>
 
 #include <univalue.h>
 
 #include <QMessageBox>
-#include <QTimer>
+#include <QTableWidgetItem>
 #include <QtGui/QClipboard>
 
 int GetOffsetFromUtc()
@@ -31,7 +26,23 @@ int GetOffsetFromUtc()
 #endif
 }
 
-SmartnodeList::SmartnodeList(const PlatformStyle* platformStyle, QWidget* parent) :
+template <typename T>
+class CSmartnodeListWidgetItem : public QTableWidgetItem
+{
+    T itemData;
+
+public:
+    explicit CSmartnodeListWidgetItem(const QString& text, const T& data, int type = Type) :
+        QTableWidgetItem(text, type),
+        itemData(data) {}
+
+    bool operator<(const QTableWidgetItem& other) const
+    {
+        return itemData < ((CSmartnodeListWidgetItem*)&other)->itemData;
+    }
+};
+
+SmartnodeList::SmartnodeList(QWidget* parent) :
     QWidget(parent),
     ui(new Ui::SmartnodeList),
     clientModel(0),
@@ -42,6 +53,11 @@ SmartnodeList::SmartnodeList(const PlatformStyle* platformStyle, QWidget* parent
     mnListChanged(true)
 {
     ui->setupUi(this);
+
+    GUIUtil::setFont({ui->label_count_2,
+                      ui->countLabelDIP3
+                     }, GUIUtil::FontWeight::Bold, 14);
+    GUIUtil::setFont({ui->label_filter_2}, GUIUtil::FontWeight::Normal, 15);
 
     int columnAddressWidth = 200;
     int columnStatusWidth = 80;
@@ -56,29 +72,31 @@ SmartnodeList::SmartnodeList(const PlatformStyle* platformStyle, QWidget* parent
     int columnOwnerWidth = 130;
     int columnVotingWidth = 130;
 
-    ui->tableWidgetSmartnodesDIP3->setColumnWidth(0, columnAddressWidth);
-    ui->tableWidgetSmartnodesDIP3->setColumnWidth(1, columnStatusWidth);
-    ui->tableWidgetSmartnodesDIP3->setColumnWidth(2, columnPoSeScoreWidth);
-    ui->tableWidgetSmartnodesDIP3->setColumnWidth(3, columnRegisteredWidth);
-    ui->tableWidgetSmartnodesDIP3->setColumnWidth(4, columnLastPaidWidth);
-    ui->tableWidgetSmartnodesDIP3->setColumnWidth(5, columnNextPaymentWidth);
-    ui->tableWidgetSmartnodesDIP3->setColumnWidth(6, columnPayeeWidth);
-    ui->tableWidgetSmartnodesDIP3->setColumnWidth(7, columnOperatorRewardWidth);
-    ui->tableWidgetSmartnodesDIP3->setColumnWidth(8, columnCollateralWidth);
-    ui->tableWidgetSmartnodesDIP3->setColumnWidth(9, columnCollateralAmountWidth);
-    ui->tableWidgetSmartnodesDIP3->setColumnWidth(10, columnOwnerWidth);
-    ui->tableWidgetSmartnodesDIP3->setColumnWidth(11, columnVotingWidth);
+    ui->tableWidgetSmartnodesDIP3->setColumnWidth(COLUMN_SERVICE, columnAddressWidth);
+    ui->tableWidgetSmartnodesDIP3->setColumnWidth(COLUMN_STATUS, columnStatusWidth);
+    ui->tableWidgetSmartnodesDIP3->setColumnWidth(COLUMN_POSE, columnPoSeScoreWidth);
+    ui->tableWidgetSmartnodesDIP3->setColumnWidth(COLUMN_REGISTERED, columnRegisteredWidth);
+    ui->tableWidgetSmartnodesDIP3->setColumnWidth(COLUMN_LAST_PAYMENT, columnLastPaidWidth);
+    ui->tableWidgetSmartnodesDIP3->setColumnWidth(COLUMN_NEXT_PAYMENT, columnNextPaymentWidth);
+    ui->tableWidgetSmartnodesDIP3->setColumnWidth(COLUMN_PAYOUT_ADDRESS, columnPayeeWidth);
+    ui->tableWidgetSmartnodesDIP3->setColumnWidth(COLUMN_OPERATOR_REWARD, columnOperatorRewardWidth);
+    ui->tableWidgetSmartnodesDIP3->setColumnWidth(COLUMN_COLLATERAL_ADDRESS, columnCollateralWidth);
+    ui->tableWidgetSmartnodesDIP3->setColumnWidth(COLUMN_COLLATERAL_AMOUNT, columnCollateralAmountWidth);
+    ui->tableWidgetSmartnodesDIP3->setColumnWidth(COLUMN_OWNER_ADDRESS, columnOwnerWidth);
+    ui->tableWidgetSmartnodesDIP3->setColumnWidth(COLUMN_VOTING_ADDRESS, columnVotingWidth);
 
     // dummy column for proTxHash
     // TODO use a proper table model for the MN list
-    ui->tableWidgetSmartnodesDIP3->insertColumn(12);
-    ui->tableWidgetSmartnodesDIP3->setColumnHidden(12, true);
+    ui->tableWidgetSmartnodesDIP3->insertColumn(COLUMN_PROTX_HASH);
+    ui->tableWidgetSmartnodesDIP3->setColumnHidden(COLUMN_PROTX_HASH, true);
 
     ui->tableWidgetSmartnodesDIP3->setContextMenuPolicy(Qt::CustomContextMenu);
 
+    ui->filterLineEditDIP3->setPlaceholderText(tr("Filter by any property (e.g. address or protx hash)"));
+
     QAction* copyProTxHashAction = new QAction(tr("Copy ProTx Hash"), this);
     QAction* copyCollateralOutpointAction = new QAction(tr("Copy Collateral Outpoint"), this);
-    contextMenuDIP3 = new QMenu();
+    contextMenuDIP3 = new QMenu(this);
     contextMenuDIP3->addAction(copyProTxHashAction);
     contextMenuDIP3->addAction(copyCollateralOutpointAction);
     connect(ui->tableWidgetSmartnodesDIP3, SIGNAL(customContextMenuRequested(const QPoint&)), this, SLOT(showContextMenuDIP3(const QPoint&)));
@@ -89,6 +107,8 @@ SmartnodeList::SmartnodeList(const PlatformStyle* platformStyle, QWidget* parent
     timer = new QTimer(this);
     connect(timer, SIGNAL(timeout()), this, SLOT(updateDIP3ListScheduled()));
     timer->start(1000);
+
+    GUIUtil::updateFonts();
 }
 
 SmartnodeList::~SmartnodeList()
@@ -127,7 +147,7 @@ void SmartnodeList::updateDIP3ListScheduled()
     TRY_LOCK(cs_dip3list, fLockAcquired);
     if (!fLockAcquired) return;
 
-    if (!clientModel || ShutdownRequested()) {
+    if (!clientModel || clientModel->node().shutdownRequested()) {
         return;
     }
 
@@ -135,14 +155,14 @@ void SmartnodeList::updateDIP3ListScheduled()
     // after filter was last changed unless we want to force the update.
     if (fFilterUpdatedDIP3) {
         int64_t nSecondsToWait = nTimeFilterUpdatedDIP3 - GetTime() + SMARTNODELIST_FILTER_COOLDOWN_SECONDS;
-        ui->countLabelDIP3->setText(QString::fromStdString(strprintf("Please wait... %d", nSecondsToWait)));
+        ui->countLabelDIP3->setText(tr("Please wait...") + " " + QString::number(nSecondsToWait));
 
         if (nSecondsToWait <= 0) {
             updateDIP3List();
             fFilterUpdatedDIP3 = false;
         }
     } else if (mnListChanged) {
-        int64_t nMnListUpdateSecods = smartnodeSync.IsBlockchainSynced() ? SMARTNODELIST_UPDATE_SECONDS : SMARTNODELIST_UPDATE_SECONDS*10;
+        int64_t nMnListUpdateSecods = clientModel->smartnodeSync().isBlockchainSynced() ? SMARTNODELIST_UPDATE_SECONDS : SMARTNODELIST_UPDATE_SECONDS * 10;
         int64_t nSecondsToWait = nTimeUpdatedDIP3 - GetTime() + nMnListUpdateSecods;
 
         if (nSecondsToWait <= 0) {
@@ -154,7 +174,7 @@ void SmartnodeList::updateDIP3ListScheduled()
 
 void SmartnodeList::updateDIP3List()
 {
-    if (!clientModel || ShutdownRequested()) {
+    if (!clientModel || clientModel->node().shutdownRequested()) {
         return;
     }
 
@@ -164,11 +184,10 @@ void SmartnodeList::updateDIP3List()
     {
         // Get all UTXOs for each MN collateral in one go so that we can reduce locking overhead for cs_main
         // We also do this outside of the below Qt list update loop to reduce cs_main locking time to a minimum
-        LOCK(cs_main);
         mnList.ForEachMN(false, [&](const CDeterministicMNCPtr& dmn) {
             CTxDestination collateralDest;
             Coin coin;
-            if (GetUTXOCoin(dmn->collateralOutpoint, coin) && ExtractDestination(coin.out.scriptPubKey, collateralDest)) {
+            if (clientModel->node().getUnspentOutput(dmn->collateralOutpoint, coin) && ExtractDestination(coin.out.scriptPubKey, collateralDest)) {
                 mapCollateralDests.emplace(dmn->proTxHash, collateralDest);
             }
         });
@@ -177,7 +196,7 @@ void SmartnodeList::updateDIP3List()
     LOCK(cs_dip3list);
 
     QString strToFilter;
-    ui->countLabelDIP3->setText("Updating...");
+    ui->countLabelDIP3->setText(tr("Updating..."));
     ui->tableWidgetSmartnodesDIP3->setSortingEnabled(false);
     ui->tableWidgetSmartnodesDIP3->clearContents();
     ui->tableWidgetSmartnodesDIP3->setRowCount(0);
@@ -194,7 +213,7 @@ void SmartnodeList::updateDIP3List()
     std::set<COutPoint> setOutpts;
     if (walletModel && ui->checkBoxMySmartnodesOnly->isChecked()) {
         std::vector<COutPoint> vOutpts;
-        walletModel->listProTxCoins(vOutpts);
+        walletModel->wallet().listProTxCoins(vOutpts);
         for (const auto& outpt : vOutpts) {
             setOutpts.emplace(outpt);
         }
@@ -203,33 +222,40 @@ void SmartnodeList::updateDIP3List()
     mnList.ForEachMN(false, [&](const CDeterministicMNCPtr& dmn) {
         if (walletModel && ui->checkBoxMySmartnodesOnly->isChecked()) {
             bool fMySmartnode = setOutpts.count(dmn->collateralOutpoint) ||
-                walletModel->IsSpendable(dmn->pdmnState->keyIDOwner) ||
-                walletModel->IsSpendable(dmn->pdmnState->keyIDVoting) ||
-                walletModel->IsSpendable(dmn->pdmnState->scriptPayout) ||
-                walletModel->IsSpendable(dmn->pdmnState->scriptOperatorPayout);
+                walletModel->wallet().isSpendable(dmn->pdmnState->keyIDOwner) ||
+                walletModel->wallet().isSpendable(dmn->pdmnState->keyIDVoting) ||
+                walletModel->wallet().isSpendable(dmn->pdmnState->scriptPayout) ||
+                walletModel->wallet().isSpendable(dmn->pdmnState->scriptOperatorPayout);
             if (!fMySmartnode) return;
         }
         // populate list
         // Address, Protocol, Status, Active Seconds, Last Seen, Pub Key
+        auto addr_key = dmn->pdmnState->addr.GetKey();
+        QByteArray addr_ba(reinterpret_cast<const char*>(addr_key.data()), addr_key.size());
         Coin coin;
-		//should this be call directly or use pcoinsTip->GetCoin(outpoint, coin) without locking cs_main
-		bool isValidUtxo = GetUTXOCoin(dmn->collateralOutpoint, coin);
-		SmartnodeCollaterals collaterals = Params().GetConsensus().nCollaterals;
-		int nHeight = chainActive.Tip() == nullptr ? 0 : chainActive.Tip()->nHeight;
-	    QTableWidgetItem* collateralAmountItem = new QTableWidgetItem(!isValidUtxo ? tr("Invalid") : QString::number(coin.out.nValue / COIN));
-        QTableWidgetItem* addressItem = new QTableWidgetItem(QString::fromStdString(dmn->pdmnState->addr.ToString()));
-        QTableWidgetItem* statusItem = new QTableWidgetItem(mnList.IsMNValid(dmn) ? tr("ENABLED") :
-        		(mnList.IsMNPoSeBanned(dmn) ? tr("POSE_BANNED") :
-        				!collaterals.isPayableCollateral(nHeight, coin.out.nValue) ? tr("C_UPGRADE") : tr("UNKNOWN")));
-        QTableWidgetItem* PoSeScoreItem = new QTableWidgetItem(QString::number(dmn->pdmnState->nPoSePenalty));
-        QTableWidgetItem* registeredItem = new QTableWidgetItem(QString::number(dmn->pdmnState->nRegisteredHeight));
-        QTableWidgetItem* lastPaidItem = new QTableWidgetItem(QString::number(dmn->pdmnState->nLastPaidHeight));
-        QTableWidgetItem* nextPaymentItem = new QTableWidgetItem(nextPayments.count(dmn->proTxHash) ? QString::number(nextPayments[dmn->proTxHash]) : tr("UNKNOWN"));
+        //should this be call directly or use pcoinsTip->GetCoin(outpoint, coin) without locking cs_main
+        bool isValidUtxo = GetUTXOCoin(dmn->collateralOutpoint, coin);
+        SmartnodeCollaterals collaterals = Params().GetConsensus().nCollaterals;
+        int nHeight = chainActive.Tip() == nullptr ? 0 : chainActive.Tip()->nHeight;
+        QTableWidgetItem* collateralAmountItem = new QTableWidgetItem(!isValidUtxo ? tr("Invalid") : QString::number(coin.out.nValue / COIN));
+        QTableWidgetItem* addressItem = new CSmartnodeListWidgetItem<QByteArray>(QString::fromStdString(dmn->pdmnState->addr.ToString()), addr_ba);
+        QTableWidgetItem* statusItem = new QTableWidgetItem(mnList.IsMNValid(dmn) ? tr("ENABLED") : (mnList.IsMNPoSeBanned(dmn) ? tr("POSE_BANNED") : tr("UNKNOWN")));
+        QTableWidgetItem* PoSeScoreItem = new CSmartnodeListWidgetItem<int>(QString::number(dmn->pdmnState->nPoSePenalty), dmn->pdmnState->nPoSePenalty);
+        QTableWidgetItem* registeredItem = new CSmartnodeListWidgetItem<int>(QString::number(dmn->pdmnState->nRegisteredHeight), dmn->pdmnState->nRegisteredHeight);
+        QTableWidgetItem* lastPaidItem = new CSmartnodeListWidgetItem<int>(QString::number(dmn->pdmnState->nLastPaidHeight), dmn->pdmnState->nLastPaidHeight);
+
+        QString strNextPayment = "UNKNOWN";
+        int nNextPayment = 0;
+        if (nextPayments.count(dmn->proTxHash)) {
+            nNextPayment = nextPayments[dmn->proTxHash];
+            strNextPayment = QString::number(nNextPayment);
+        }
+        QTableWidgetItem* nextPaymentItem = new CSmartnodeListWidgetItem<int>(strNextPayment, nNextPayment);
 
         CTxDestination payeeDest;
         QString payeeStr = tr("UNKNOWN");
         if (ExtractDestination(dmn->pdmnState->scriptPayout, payeeDest)) {
-            payeeStr = QString::fromStdString(CBitcoinAddress(payeeDest).ToString());
+            payeeStr = QString::fromStdString(EncodeDestination(payeeDest));
         }
         QTableWidgetItem* payeeItem = new QTableWidgetItem(payeeStr);
 
@@ -240,7 +266,7 @@ void SmartnodeList::updateDIP3List()
             if (dmn->pdmnState->scriptOperatorPayout != CScript()) {
                 CTxDestination operatorDest;
                 if (ExtractDestination(dmn->pdmnState->scriptOperatorPayout, operatorDest)) {
-                    operatorRewardStr += tr("to %1").arg(QString::fromStdString(CBitcoinAddress(operatorDest).ToString()));
+                    operatorRewardStr += tr("to %1").arg(QString::fromStdString(EncodeDestination(operatorDest)));
                 } else {
                     operatorRewardStr += tr("to UNKNOWN");
                 }
@@ -248,19 +274,19 @@ void SmartnodeList::updateDIP3List()
                 operatorRewardStr += tr("but not claimed");
             }
         }
-        QTableWidgetItem* operatorRewardItem = new QTableWidgetItem(operatorRewardStr);
+        QTableWidgetItem* operatorRewardItem = new CSmartnodeListWidgetItem<uint16_t>(operatorRewardStr, dmn->nOperatorReward);
 
         QString collateralStr = tr("UNKNOWN");
         auto collateralDestIt = mapCollateralDests.find(dmn->proTxHash);
         if (collateralDestIt != mapCollateralDests.end()) {
-            collateralStr = QString::fromStdString(CBitcoinAddress(collateralDestIt->second).ToString());
+            collateralStr = QString::fromStdString(EncodeDestination(collateralDestIt->second));
         }
         QTableWidgetItem* collateralItem = new QTableWidgetItem(collateralStr);
 
-        QString ownerStr = QString::fromStdString(CBitcoinAddress(dmn->pdmnState->keyIDOwner).ToString());
+        QString ownerStr = QString::fromStdString(EncodeDestination(dmn->pdmnState->keyIDOwner));
         QTableWidgetItem* ownerItem = new QTableWidgetItem(ownerStr);
 
-        QString votingStr = QString::fromStdString(CBitcoinAddress(dmn->pdmnState->keyIDVoting).ToString());
+        QString votingStr = QString::fromStdString(EncodeDestination(dmn->pdmnState->keyIDVoting));
         QTableWidgetItem* votingItem = new QTableWidgetItem(votingStr);
 
         QTableWidgetItem* proTxHashItem = new QTableWidgetItem(QString::fromStdString(dmn->proTxHash.ToString()));
@@ -275,7 +301,7 @@ void SmartnodeList::updateDIP3List()
                           payeeItem->text() + " " +
                           operatorRewardItem->text() + " " +
                           collateralItem->text() + " " +
-						  collateralAmountItem->text() + " " +
+                          collateralAmountItem->text() + " " +
                           ownerItem->text() + " " +
                           votingItem->text() + " " +
                           proTxHashItem->text();
@@ -283,19 +309,19 @@ void SmartnodeList::updateDIP3List()
         }
 
         ui->tableWidgetSmartnodesDIP3->insertRow(0);
-        ui->tableWidgetSmartnodesDIP3->setItem(0, 0, addressItem);
-        ui->tableWidgetSmartnodesDIP3->setItem(0, 1, statusItem);
-        ui->tableWidgetSmartnodesDIP3->setItem(0, 2, PoSeScoreItem);
-        ui->tableWidgetSmartnodesDIP3->setItem(0, 3, registeredItem);
-        ui->tableWidgetSmartnodesDIP3->setItem(0, 4, lastPaidItem);
-        ui->tableWidgetSmartnodesDIP3->setItem(0, 5, nextPaymentItem);
-        ui->tableWidgetSmartnodesDIP3->setItem(0, 6, payeeItem);
-        ui->tableWidgetSmartnodesDIP3->setItem(0, 7, operatorRewardItem);
-        ui->tableWidgetSmartnodesDIP3->setItem(0, 8, collateralItem);
-        ui->tableWidgetSmartnodesDIP3->setItem(0, 9, collateralAmountItem);
-        ui->tableWidgetSmartnodesDIP3->setItem(0, 10, ownerItem);
-        ui->tableWidgetSmartnodesDIP3->setItem(0, 11, votingItem);
-        ui->tableWidgetSmartnodesDIP3->setItem(0, 12, proTxHashItem);
+        ui->tableWidgetSmartnodesDIP3->setItem(0, COLUMN_SERVICE, addressItem);
+        ui->tableWidgetSmartnodesDIP3->setItem(0, COLUMN_STATUS, statusItem);
+        ui->tableWidgetSmartnodesDIP3->setItem(0, COLUMN_POSE, PoSeScoreItem);
+        ui->tableWidgetSmartnodesDIP3->setItem(0, COLUMN_REGISTERED, registeredItem);
+        ui->tableWidgetSmartnodesDIP3->setItem(0, COLUMN_LAST_PAYMENT, lastPaidItem);
+        ui->tableWidgetSmartnodesDIP3->setItem(0, COLUMN_NEXT_PAYMENT, nextPaymentItem);
+        ui->tableWidgetSmartnodesDIP3->setItem(0, COLUMN_PAYOUT_ADDRESS, payeeItem);
+        ui->tableWidgetSmartnodesDIP3->setItem(0, COLUMN_OPERATOR_REWARD, operatorRewardItem);
+        ui->tableWidgetSmartnodesDIP3->setItem(0, COLUMN_COLLATERAL_ADDRESS, collateralItem);
+        ui->tableWidgetSmartnodesDIP3->setItem(0, COLUMN_COLLATERAL_AMOUNT, collateralAmountItem);
+        ui->tableWidgetSmartnodesDIP3->setItem(0, COLUMN_OWNER_ADDRESS, ownerItem);
+        ui->tableWidgetSmartnodesDIP3->setItem(0, COLUMN_VOTING_ADDRESS, votingItem);
+        ui->tableWidgetSmartnodesDIP3->setItem(0, COLUMN_PROTX_HASH, proTxHashItem);
     });
 
     ui->countLabelDIP3->setText(QString::number(ui->tableWidgetSmartnodesDIP3->rowCount()));
@@ -307,7 +333,7 @@ void SmartnodeList::on_filterLineEditDIP3_textChanged(const QString& strFilterIn
     strCurrentFilterDIP3 = strFilterIn;
     nTimeFilterUpdatedDIP3 = GetTime();
     fFilterUpdatedDIP3 = true;
-    ui->countLabelDIP3->setText(QString::fromStdString(strprintf("Please wait... %d", SMARTNODELIST_FILTER_COOLDOWN_SECONDS)));
+    ui->countLabelDIP3->setText(tr("Please wait...") + " " + QString::number(SMARTNODELIST_FILTER_COOLDOWN_SECONDS));
 }
 
 void SmartnodeList::on_checkBoxMySmartnodesOnly_stateChanged(int state)
@@ -329,11 +355,12 @@ CDeterministicMNCPtr SmartnodeList::GetSelectedDIP3MN()
 
         QItemSelectionModel* selectionModel = ui->tableWidgetSmartnodesDIP3->selectionModel();
         QModelIndexList selected = selectionModel->selectedRows();
+
         if (selected.count() == 0) return nullptr;
 
         QModelIndex index = selected.at(0);
         int nSelectedRow = index.row();
-        strProTxHash = ui->tableWidgetSmartnodesDIP3->item(nSelectedRow, 12)->text().toStdString();
+        strProTxHash = ui->tableWidgetSmartnodesDIP3->item(nSelectedRow, COLUMN_PROTX_HASH)->text().toStdString();
     }
 
     uint256 proTxHash;
@@ -346,15 +373,17 @@ CDeterministicMNCPtr SmartnodeList::GetSelectedDIP3MN()
 void SmartnodeList::extraInfoDIP3_clicked()
 {
     auto dmn = GetSelectedDIP3MN();
-
     if (!dmn) {
         return;
     }
+
     UniValue json(UniValue::VOBJ);
     dmn->ToJson(json);
+
     // Title of popup window
     QString strWindowtitle = tr("Additional information for DIP3 Smartnode %1").arg(QString::fromStdString(dmn->proTxHash.ToString()));
     QString strText = QString::fromStdString(json.write(2));
+
     QMessageBox::information(this, strWindowtitle, strText);
 }
 

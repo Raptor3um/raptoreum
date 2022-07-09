@@ -1,22 +1,18 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 #
 
-try:
-    import gdb
-except ImportError as e:
-    raise ImportError("This script must be run in GDB: ", str(e))
 import sys
 import os
-sys.path.append(os.getcwd())
 import common_helpers
+sys.path.append(os.getcwd())
 
 
 simple_types = ["CSmartnode", "CSmartnodeVerification",
                 "CSmartnodeBroadcast", "CSmartnodePing",
                 "CSmartnodeMan", "CDarksendQueue", "CDarkSendEntry",
-                "CTransaction", "CMutableTransaction", "CPrivateSendBaseSession",
-                "CPrivateSendBaseManager", "CPrivateSendClientSession",
-                "CPrivateSendClientManager", "CPrivateSendServer", "CSmartnodePayments",
+                "CTransaction", "CMutableTransaction", "CCoinJoinBaseSession",
+                "CCoinJoinBaseManager", "CCoinJoinClientSession",
+                "CCoinJoinClientManager", "CCoinJoinServer", "CSmartnodePayments",
                 "CSmartnodePaymentVote", "CSmartnodeBlockPayees",
                 "CSmartnodePayee", "CInstantSend", "CTxLockRequest",
                 "CTxLockVote", "CTxLockCandidate", "COutPoint",

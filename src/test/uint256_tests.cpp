@@ -1,10 +1,10 @@
 // Copyright (c) 2011-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-#include "arith_uint256.h"
-#include "uint256.h"
-#include "version.h"
-#include "test/test_raptoreum.h"
+#include <arith_uint256.h>
+#include <uint256.h>
+#include <version.h>
+#include <test/test_raptoreum.h>
 
 #include <boost/test/unit_test.hpp>
 #include <stdint.h>
@@ -264,6 +264,19 @@ BOOST_AUTO_TEST_CASE( conversion )
     BOOST_CHECK(arith_uint256(R2L.GetHex()) == UintToArith256(R2L));
     BOOST_CHECK(R1L.GetHex() == UintToArith256(R1L).GetHex());
     BOOST_CHECK(R2L.GetHex() == UintToArith256(R2L).GetHex());
+}
+
+BOOST_AUTO_TEST_CASE( operator_with_self )
+{
+    arith_uint256 v = UintToArith256(uint256S("02"));
+    v *= v;
+    BOOST_CHECK(v == UintToArith256(uint256S("04")));
+    v /= v;
+    BOOST_CHECK(v == UintToArith256(uint256S("01")));
+    v += v;
+    BOOST_CHECK(v == UintToArith256(uint256S("02")));
+    v -= v;
+    BOOST_CHECK(v == UintToArith256(uint256S("0")));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

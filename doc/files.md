@@ -17,7 +17,10 @@
 * mncache.dat: stores data for smartnode list
 * netfulfilled.dat: stores data about recently made network requests
 * peers.dat: peer IP address database (custom format)
-* wallet.dat: personal wallet (BDB) with keys and transactions
+* wallet.dat: personal wallet (BDB) with keys and transactions; moved to wallets/ directory on new installs since 0.16.0
+* wallets/database/*: BDB database environment; used for wallets since 0.16.0
+* wallets/db.log: wallet database log file; since 0.16.0
+* wallets/wallet.dat: personal wallet (BDB) with keys and transactions; since 0.16.0
 * .cookie: session RPC authentication cookie (written at start when cookie authentication is used, deleted on shutdown)
 * onion_private_key: cached Tor hidden service private key for `-listenonion`
 * guisettings.ini.bak: backup of former GUI settings after `-resetguisettings` is used

@@ -7,8 +7,8 @@
 
 #include <QDialog>
 
+class AddressBookSortFilterProxyModel;
 class AddressTableModel;
-class PlatformStyle;
 
 namespace Ui {
     class AddressBookPage;
@@ -18,7 +18,6 @@ QT_BEGIN_NAMESPACE
 class QItemSelection;
 class QMenu;
 class QModelIndex;
-class QSortFilterProxyModel;
 QT_END_NAMESPACE
 
 /** Widget that shows a list of sending or receiving addresses.
@@ -38,7 +37,7 @@ public:
         ForEditing  /**< Open address book for editing */
     };
 
-    explicit AddressBookPage(const PlatformStyle *platformStyle, Mode mode, Tabs tab, QWidget *parent);
+    explicit AddressBookPage(Mode mode, Tabs tab, QWidget* parent);
     ~AddressBookPage();
 
     void setModel(AddressTableModel *model);
@@ -53,7 +52,7 @@ private:
     Mode mode;
     Tabs tab;
     QString returnValue;
-    QSortFilterProxyModel *proxyModel;
+    AddressBookSortFilterProxyModel *proxyModel;
     QMenu *contextMenu;
     QAction *deleteAction; // to be able to explicitly disable it
     QString newAddressToSelect;

@@ -27,7 +27,7 @@ include_directories(
 if(UNIX AND NOT APPLE)
     set(DEPENDS_PREFIX depends/x86_64-pc-linux-gnu)
 elseif(APPLE)
-    set(DEPENDS_PREFIX depends/x86_64-apple-darwin11)
+    set(DEPENDS_PREFIX depends/x86_64-apple-darwin14)
 elseif(WIN32)
     set(DEPENDS_PREFIX depends/x86_64-w64-mingw32)
 endif()
@@ -41,6 +41,7 @@ endif()
 
 add_definitions(
         -DENABLE_CRASH_HOOKS=1
+        -DENABLE_STACKTRACES=1
         -DENABLE_WALLET=1
 )
 
@@ -51,6 +52,8 @@ file(GLOB SOURCE_FILES
         src/bench/*.h
         src/bls/*.cpp
         src/bls/*.h
+        src/coinjoin/*.cpp
+        src/coinjoin/*.h
         src/compat/*.cpp
         src/compat/*.h
         src/consensus/*.cpp
@@ -71,8 +74,6 @@ file(GLOB SOURCE_FILES
         src/policy/*.h
         src/primitives/*.cpp
         src/primitives/*.h
-        src/privatesend/*.cpp
-        src/privatesend/*.h
         src/qt/*.cpp
         src/qt/*.h
         src/qt/test/*.cpp

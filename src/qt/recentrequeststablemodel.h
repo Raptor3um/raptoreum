@@ -5,13 +5,11 @@
 #ifndef BITCOIN_QT_RECENTREQUESTSTABLEMODEL_H
 #define BITCOIN_QT_RECENTREQUESTSTABLEMODEL_H
 
-#include "walletmodel.h"
+#include <qt/walletmodel.h>
 
 #include <QAbstractTableModel>
 #include <QStringList>
 #include <QDateTime>
-
-class CWallet;
 
 class RecentRequestEntry
 {
@@ -60,7 +58,7 @@ class RecentRequestsTableModel: public QAbstractTableModel
     Q_OBJECT
 
 public:
-    explicit RecentRequestsTableModel(CWallet *wallet, WalletModel *parent);
+    explicit RecentRequestsTableModel(WalletModel *parent);
     ~RecentRequestsTableModel();
 
     enum ColumnIndex {

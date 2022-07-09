@@ -2,24 +2,24 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "base58.h"
-#include "consensus/validation.h"
-#include "core_io.h"
-#include "init.h"
-#include "messagesigner.h"
-#include "rpc/server.h"
-#include "utilmoneystr.h"
-#include "validation.h"
+#include <consensus/validation.h>
+#include <core_io.h>
+#include <init.h>
+#include <key_io.h>
+#include <messagesigner.h>
+#include <rpc/server.h>
+#include <utilmoneystr.h>
+#include <validation.h>
 
 #ifdef ENABLE_WALLET
-#include "wallet/coincontrol.h"
-#include "wallet/wallet.h"
-#include "wallet/rpcwallet.h"
+#include <wallet/coincontrol.h>
+#include <wallet/wallet.h>
+#include <wallet/rpcwallet.h>
 #endif//ENABLE_WALLET
 
-#include "netbase.h"
-#include "evo/specialtx.h"
-#include "evo/providertx.h"
+#include <netbase.h>
+#include <evo/specialtx.h>
+#include <evo/providertx.h>
 
 #include <iostream>
 #include <unistd.h>
@@ -31,7 +31,7 @@ extern UniValue signrawtransaction(const JSONRPCRequest& request);
 extern UniValue sendrawtransaction(const JSONRPCRequest& request);
 
 template<typename SpecialTxPayload>
-static void FundSpecialTx(CWallet* pwallet, CMutableTransaction& tx, const SpecialTxPayload& payload, const CTxDestination& fundDest, CAmount specialFees = 0)
+static void FundSpecialTx(CWallet* pwallet, CMutableTransaction& tx, const SpecialTxPayload& payload, const CTxDestination& fundDest)
 {
     assert(pwallet != nullptr);
     LOCK2(cs_main, pwallet->cs_wallet);
@@ -78,18 +78,18 @@ static void FundSpecialTx(CWallet* pwallet, CMutableTransaction& tx, const Speci
         throw JSONRPCError(RPC_INTERNAL_ERROR, "No funds at specified address");
     }
 
-    CWalletTx wtx;
+    CTransactionRef wtx;
     CReserveKey reservekey(pwallet);
     CAmount nFee;
     int nChangePos = -1;
     std::string strFailReason;
 
-    if (!pwallet->CreateTransaction(vecSend, wtx, reservekey, nFee, nChangePos, strFailReason, coinControl, false, tx.vExtraPayload.size(), specialFees)) {
+    if (!pwallet->CreateTransaction(vecSend, wtx, reservekey, nFee, nChangePos, strFailReason, coinControl, false, tx.vExtraPayload.size())) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, strFailReason);
     }
 
-    tx.vin = wtx.tx->vin;
-    tx.vout = wtx.tx->vout;
+    tx.vin = wtx->vin;
+    tx.vout = wtx->vout;
 
     if (dummyTxOutAdded && tx.vout.size() > 1) {
         // CreateTransaction added a change output, so we don't need the dummy txout anymore.
@@ -144,7 +144,8 @@ static std::string SignAndSendSpecialTx(const CMutableTransaction& tx)
     LOCK(cs_main);
 
     CValidationState state;
-    if (!CheckSpecialTx(tx, chainActive.Tip(), state)) {
+//    CCoinsViewCache view;
+    if (!CheckSpecialTx(tx, chainActive.Tip(), state, *pcoinsTip.get())) {
         throw std::runtime_error(FormatStateMessage(state));
     }
 
@@ -159,6 +160,7 @@ static std::string SignAndSendSpecialTx(const CMutableTransaction& tx)
     JSONRPCRequest sendRequest;
     sendRequest.params.setArray();
     sendRequest.params.push_back(signResult["hex"].get_str());
+    //return signResult["hex"].get_str();
     return sendrawtransaction(sendRequest).get_str();
 }
 #endif

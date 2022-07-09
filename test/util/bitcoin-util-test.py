@@ -28,7 +28,7 @@ import sys
 def main():
     config = configparser.ConfigParser()
     config.optionxform = str
-    config.readfp(open(os.path.join(os.path.dirname(__file__), "../config.ini")))
+    config.readfp(open(os.path.join(os.path.dirname(__file__), "../config.ini"), encoding="utf8"))
     env_conf = dict(config.items('environment'))
 
     parser = argparse.ArgumentParser(description=__doc__)
@@ -44,12 +44,12 @@ def main():
     # Add the format/level to the logger
     logging.basicConfig(format=formatter, level=level)
 
-    bctester(os.path.join(env_conf["SRCDIR"], "test/util/data"), "bitcoin-util-test.json", env_conf)
+    bctester(os.path.join(env_conf["SRCDIR"], "test", "util", "data"), "bitcoin-util-test.json", env_conf)
 
 def bctester(testDir, input_basename, buildenv):
     """ Loads and parses the input file, runs all tests and reports results"""
-    input_filename = testDir + "/" + input_basename
-    raw_data = open(input_filename).read()
+    input_filename = os.path.join(testDir, input_basename)
+    raw_data = open(input_filename, encoding="utf8").read()
     input_data = json.loads(raw_data)
 
     failed_testcases = []
@@ -77,7 +77,7 @@ def bctest(testDir, testObj, buildenv):
     are not as expected. Error is caught by bctester() and reported.
     """
     # Get the exec names and arguments
-    execprog = buildenv["BUILDDIR"] + "/src/" + testObj['exec'] + buildenv["EXEEXT"]
+    execprog = os.path.join(buildenv["BUILDDIR"], "src", testObj["exec"] + buildenv["EXEEXT"])
     execargs = testObj['args']
     execrun = [execprog] + execargs
 
@@ -85,23 +85,27 @@ def bctest(testDir, testObj, buildenv):
     stdinCfg = None
     inputData = None
     if "input" in testObj:
-        filename = testDir + "/" + testObj['input']
-        inputData = open(filename).read()
+        filename = os.path.join(testDir, testObj["input"])
+        inputData = open(filename, encoding="utf8").read()
         stdinCfg = subprocess.PIPE
 
     # Read the expected output data (if there is any)
     outputFn = None
     outputData = None
+    outputType = None
     if "output_cmp" in testObj:
         outputFn = testObj['output_cmp']
         outputType = os.path.splitext(outputFn)[1][1:]  # output type from file extension (determines how to compare)
         try:
-            outputData = open(testDir + "/" + outputFn).read()
+            outputData = open(os.path.join(testDir, outputFn), encoding="utf8").read()
         except:
             logging.error("Output file " + outputFn + " can not be opened")
             raise
         if not outputData:
             logging.error("Output data missing for " + outputFn)
+            raise Exception
+        if not outputType:
+            logging.error("Output file %s does not have a file extension" % outputFn)
             raise Exception
 
     # Run the test
@@ -153,7 +157,7 @@ def bctest(testDir, testObj, buildenv):
         want_error = testObj["error_txt"]
         # Compare error text
         # TODO: ideally, we'd compare the strings exactly and also assert
-        # That stderr is empty if no errors are expected. However, bitcoin-tx
+        # That stderr is empty if no errors are expected. However, dash-tx
         # emits DISPLAY errors when running as a windows application on
         # linux through wine. Just assert that the expected error text appears
         # somewhere in stderr.

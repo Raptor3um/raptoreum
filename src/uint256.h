@@ -1,6 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2019 The Dash Core developers
+// Copyright (c) 2014-2020 The Dash Core developers
 // Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -14,14 +14,14 @@
 #include <stdint.h>
 #include <string>
 #include <vector>
-#include "crypto/common.h"
+#include <crypto/common.h>
 
 /** Template base class for fixed-sized opaque blobs. */
 template<unsigned int BITS>
 class base_blob
 {
 protected:
-    enum { WIDTH=BITS/8 };
+    static constexpr int WIDTH = BITS / 8;
     uint8_t data[WIDTH];
 public:
     base_blob()
@@ -113,7 +113,6 @@ public:
 class uint160 : public base_blob<160> {
 public:
     uint160() {}
-    uint160(const base_blob<160>& b) : base_blob<160>(b) {}
     explicit uint160(const std::vector<unsigned char>& vch) : base_blob<160>(vch) {}
 };
 
@@ -125,16 +124,15 @@ public:
 class uint256 : public base_blob<256> {
 public:
     uint256() {}
-    uint256(const base_blob<256>& b) : base_blob<256>(b) {}
     explicit uint256(const std::vector<unsigned char>& vch) : base_blob<256>(vch) {}
 
     int GetNibble(int index) const
-	{
-		index = 63 - index;
-		if (index % 2 == 1)
-			return(data[index / 2] >> 4);
-		return(data[index / 2] & 0x0F);
-	}
+    {
+      index = 63 - index;
+      if(index % 2 == 1)
+        return(data[index / 2] >> 4);
+      return(data[index / 2] & 0x0F);
+    }
 
     /** A cheap hash function that just returns 64 bits from the result, it can be
      * used when the contents are considered uniformly random. It is not appropriate
@@ -182,6 +180,27 @@ public:
         return result;
     }
 };
+
+/* uint512 from const char *.
+* This is a separate function because the constructor uint512(const char*) can result
+* in dangerously catching uint512(0).
+*/
+inline uint512 uint512S(const char *str)
+{
+    uint512 rv;
+    rv.SetHex(str);
+    return rv;
+}
+/* uint512 from std::string.
+* This is a separate function because the constructor uint512(const std::string &str) can result
+* in dangerously catching uint512(0) via std::string(const char*).
+*/
+inline uint512 uint512S(const std::string& str)
+{
+    uint512 rv;
+    rv.SetHex(str);
+    return rv;
+}
 
 namespace std {
     template <>

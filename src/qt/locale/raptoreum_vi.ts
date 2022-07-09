@@ -130,6 +130,45 @@
     </message>
 </context>
 <context>
+    <name>AppearanceWidget</name>
+    <message>
+        <source>Lighter</source>
+        <translation>Sáng hơn</translation>
+    </message>
+    <message>
+        <source>Bolder</source>
+        <translation>Đậm hơn</translation>
+    </message>
+    <message>
+        <source>Font Weight Normal:</source>
+        <translation>Độ đậm Phông chữ Bình thường:</translation>
+    </message>
+    <message>
+        <source>Smaller</source>
+        <translation>Nhỏ hơn</translation>
+    </message>
+    <message>
+        <source>Bigger</source>
+        <translation>To hơn</translation>
+    </message>
+    <message>
+        <source>Font Scale:</source>
+        <translation>Cỡ chữ:</translation>
+    </message>
+    <message>
+        <source>Font Family:</source>
+        <translation>Tên font:</translation>
+    </message>
+    <message>
+        <source>Theme:</source>
+        <translation>Theme:</translation>
+    </message>
+    <message>
+        <source>Font Weight Bold:</source>
+        <translation>Độ đậm Font chứ Đậm:</translation>
+    </message>
+</context>
+<context>
     <name>AskPassphraseDialog</name>
     <message>
         <source>Passphrase Dialog</source>
@@ -146,6 +185,10 @@
     <message>
         <source>Repeat new passphrase</source>
         <translation>Nhập lại mật khẩu mới</translation>
+    </message>
+    <message>
+        <source>Show password</source>
+        <translation>Hiển thị mật khẩu</translation>
     </message>
     <message>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
@@ -200,10 +243,6 @@
         <translation>Ví đã được mã hoá.</translation>
     </message>
     <message>
-        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your funds from being stolen by malware infecting your computer.</source>
-        <translation>%1 sẽ được đóng bây giờ để hoàn thành tiến trình mã hoá. Hãy nhớ rằng mã hoá ví không thể hoàn toàn bảo vệ tiền của bạn khỏi bị ăn trộm bởi những mã độc đã thâm nhập máy tính của bạn.</translation>
-    </message>
-    <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. Previous backups of the unencrypted wallet file contain the same HD seed and still have full access to all your funds just like the new, encrypted wallet.</source>
         <translation>QUAN TRỌNG: Bất cứ sao lưu nào bạn đã làm trước đó với ví của bạn thì nên thay thế bằng phiên bản sao lưu mới nhất đã được mã hoá. Những bản sao lưu trước mà không mã hoá mà chứa HD Seed thì vẫn có toàn quyền truy cập đến tiền trong ví của bạn giống y như phiên bản ví mới đã được mã hoá.</translation>
     </message>
@@ -253,6 +292,13 @@
     <message>
         <source>Banned Until</source>
         <translation>Cấm đến khi</translation>
+    </message>
+</context>
+<context>
+    <name>BitcoinAmountField</name>
+    <message>
+        <source>Amount in %1</source>
+        <translation>Số tiền trong %1</translation>
     </message>
 </context>
 <context>
@@ -498,12 +544,8 @@
         <translation>%1 khách</translation>
     </message>
     <message>
-        <source>&amp;PrivateSend information</source>
-        <translation>Thông tin về &amp;PrivateSend</translation>
-    </message>
-    <message>
-        <source>Show the PrivateSend basic information</source>
-        <translation>Hiển thị những thông tin cơ bản về PrivateSend</translation>
+        <source>Wallet is &lt;b&gt;unencrypted&lt;/b&gt;</source>
+        <translation>Ví được &lt;b&gt;mở mã hoá&lt;/b&gt;</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -664,10 +706,6 @@
         <translation>Sinh khoá HD đang &lt;b&gt;Bật&lt;/b&gt;</translation>
     </message>
     <message>
-        <source>HD key generation is &lt;b&gt;disabled&lt;/b&gt;</source>
-        <translation>Sinh khoá HD đang &lt;b&gt;Tắt&lt;/b&gt;</translation>
-    </message>
-    <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
         <translation>Ví &lt;b&gt;đã được mã hoá&lt;/b&gt; và hiện tại &lt;b&gt;đã được mở&lt;/b&gt;</translation>
     </message>
@@ -747,8 +785,8 @@
         <translation>Nhận được với địa chỉ</translation>
     </message>
     <message>
-        <source>PS Rounds</source>
-        <translation>Các vòng PS</translation>
+        <source>Mixing Rounds</source>
+        <translation>Vòng trộn</translation>
     </message>
     <message>
         <source>Date</source>
@@ -815,10 +853,6 @@
         <translation>Hãy chuyển về "Chế độ danh sách" để sử dụng tính năng này.</translation>
     </message>
     <message>
-        <source>Non-mixed input selected. &lt;b&gt;PrivateSend will be disabled.&lt;/b&gt;&lt;br&gt;&lt;br&gt;If you still want to use PrivateSend, please deselect all non-mixed inputs first and then check the PrivateSend checkbox again.</source>
-        <translation>Đầu vào không trộn đã được chọn. &lt;b&gt;PrivateSend sẽ bị tắt.&lt;/b&gt;&lt;br&gt;&lt;br&gt;Nếu bạn vẫn muốn sử dụng PrivateSend, hãy bỏ chọn tất cả các đầu vào không được trộn trước rồi sau đó đánh dấu vào ô PrivateSend lần nữa.</translation>
-    </message>
-    <message>
         <source>(%1 locked)</source>
         <translation>(%1 được khoá)</translation>
     </message>
@@ -835,8 +869,24 @@
         <translation>Nhãn này sẽ chuyển sang đỏ nếu có địa chỉ nào nhận được một khoản nhỏ hơn ngưỡng nhỏ nhất định được gọi là bụi.</translation>
     </message>
     <message>
-        <source>Can vary +/- %1 duff(s) per input.</source>
-        <translation>Có thể thay đổi +/- %1 duff(s) cho mỗi đầu vào.</translation>
+        <source>Can vary +/- %1 ruff(s) per input.</source>
+        <translation>Có thể thay đổi +/- %1 ruff(s) cho mỗi đầu vào.</translation>
+    </message>
+    <message>
+        <source>Some coins were unselected because they were spent.</source>
+        <translation>Một số coin đã được bỏ chọn vì chúng đã được tiêu.</translation>
+    </message>
+    <message>
+        <source>Some coins were unselected because they do not have enough mixing rounds.</source>
+        <translation>Một số coin đã được bỏ chọn vì chúng chưa đủ số vòng trộn.</translation>
+    </message>
+    <message>
+        <source>Show all coins</source>
+        <translation>Hiển thị toàn bộ coin</translation>
+    </message>
+    <message>
+        <source>Show spendable coins only</source>
+        <translation>Chỉ hiển thị những coin tiêu được</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -876,10 +926,6 @@
     <message>
         <source>The address associated with this address list entry. This can only be modified for sending addresses.</source>
         <translation>Địa chỉ tương ứng với địa chỉ này trong danh sách đầu vào. Chỉ có thể thay đổi địa chỉ gửi đi.</translation>
-    </message>
-    <message>
-        <source>New receiving address</source>
-        <translation>Địa chỉ nhận mới</translation>
     </message>
     <message>
         <source>New sending address</source>
@@ -951,51 +997,7 @@
         <source>Command-line options</source>
         <translation>Các tuỳ chọn dòng lệnh</translation>
     </message>
-    <message>
-        <source>Usage:</source>
-        <translation>Cách dùng:</translation>
-    </message>
-    <message>
-        <source>command-line options</source>
-        <translation>tuỳ chọn dòng lệnh</translation>
-    </message>
-    <message>
-        <source>UI Options:</source>
-        <translation>Các tuỳ chọn giao diện:</translation>
-    </message>
-    <message>
-        <source>Choose data directory on startup (default: %u)</source>
-        <translation>Chọn thư mục dữ liệu khi khởi động (ngầm định: %u)</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Chọn ngôn ngữ, ví dụ "vn_VN" (ngầm định: theo hệ thống)</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Bắt đầu thu nhỏ</translation>
-    </message>
-    <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>Đặt chứng thực gốc cho yêu cầu thanh toán (ngầm định: -hệ thống-)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: %u)</source>
-        <translation>Hiển thị màn hình thông tin khi khởi động (ngầm định: %u)</translation>
-    </message>
-    <message>
-        <source>Reset all settings changed in the GUI</source>
-        <translation>Tái thiết lập tất cả các thông số thay đổi trên giao diện đồ hoạ</translation>
-    </message>
-    <message>
-        <source>PrivateSend information</source>
-        <translation>Thông tin PrivateSend</translation>
-    </message>
-    <message>
-        <source>&lt;h3&gt;PrivateSend Basics&lt;/h3&gt; PrivateSend gives you true financial privacy by obscuring the origins of your funds. All the Raptoreum in your wallet is comprised of different "inputs" which you can think of as separate, discrete coins.&lt;br&gt; PrivateSend uses an innovative process to mix your inputs with the inputs of two other people, without having your coins ever leave your wallet. You retain control of your money at all times.&lt;hr&gt; &lt;b&gt;The PrivateSend process works like this:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;PrivateSend begins by breaking your transaction inputs down into standard denominations. These denominations are 0.001 RTM, 0.01 RTM, 0.1 RTM, 1 RTM and 10 RTM -- sort of like the paper money you use every day.&lt;/li&gt; &lt;li&gt;Your wallet then sends requests to specially configured software nodes on the network, called "smartnodes." These smartnodes are informed then that you are interested in mixing a certain denomination. No identifiable information is sent to the smartnodes, so they never know "who" you are.&lt;/li&gt; &lt;li&gt;When two other people send similar messages, indicating that they wish to mix the same denomination, a mixing session begins. The smartnode mixes up the inputs and instructs all three users' wallets to pay the now-transformed input back to themselves. Your wallet pays that denomination directly to itself, but in a different address (called a change address).&lt;/li&gt; &lt;li&gt;In order to fully obscure your funds, your wallet must repeat this process a number of times with each denomination. Each time the process is completed, it's called a "round." Each round of PrivateSend makes it exponentially more difficult to determine where your funds originated.&lt;/li&gt; &lt;li&gt;This mixing process happens in the background without any intervention on your part. When you wish to make a transaction, your funds will already be mixed. No additional waiting is required.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;IMPORTANT:&lt;/b&gt; Your wallet only contains 1000 of these "change addresses." Every time a mixing event happens, up to 9 of your addresses are used up. This means those 1000 addresses last for about 100 mixing events. When 900 of them are used, your wallet must create more addresses. It can only do this, however, if you have automatic backups enabled.&lt;br&gt; Consequently, users who have backups disabled will also have PrivateSend disabled. &lt;hr&gt;For more information, see the &lt;a href="https://docs.raptoreum.org/en/stable/wallets/raptoreumcore/privatesend-instantsend.html"&gt;PrivateSend documentation&lt;/a&gt;.</source>
-        <translation>&lt;h3&gt;Cơ bản về PrivateSend&lt;/h3&gt; PrivateSend cho bạn sự thực sự riêng tư về tài chính bằng việc che dấu những nguồn cung. Tất cả Raptoreum trong ví của bạn bao gồm những "đầu vào" khác nhau mà bạn nghĩ đó là các coin riêng biệt và rời rạc.&lt;br&gt; PrivateSend sử dụng một tiến trình độc đáo để trộn các đầu vào của bạn với đầu vào của hai người khác, mà không làm cho các coin rời khỏi ví của bạn. Bạn vẫn giữ quyền kiểm soát tiền của bạn bất cứ lúc nào.&lt;hr&gt; &lt;b&gt;Quá trình PrivateSend làm việc như sau: &lt;/b&gt; &lt;ol type="1"&gt; &lt;li&gt;PrivateSend bắt đầu bằng việc chia các giao dịch đầu vào của bạn thành những mệnh giá chuẩn. Những mệnh giá đó là 0.001 RTM, 0.01 RTM, 0.1 RTM, 1 RTM, và 10 RTM -- cũng giống như các mệnh giá trên tiền giấy mà bạn sử dụng hàng ngày. &lt;/li&gt;&lt;li&gt;Ví của bạn sau đó gửi yêu cầu đến những nút phần mềm được cấu hình đặc biệt trên mạng gọi là các "smartnode". Những smartnode được báo rằng bạn quan tâm đến việc xáo trộn một mệnh giá nào đó. Không có thông tin định danh nào được gửi đến cho các smartnode, và như vậy họ không bao giờ biết bạn "là ai". &lt;/li&gt; &lt;li&gt;Khi hai người kia gửi những thông điệp tương tự, có nghĩa là họ muốn xáo trộn cùng loại mệnh giá, một phiên xáo trộn bắt đầu. Smartnode xáo trộn các đầu vào và hướng dẫn tất cả ví của cả ba người dùng để trả đầu vào đã được chuyển đổi trở lại cho chính họ. Ví của bạn sẽ trả mệnh giá đó trực tiếp cho nó, nhưng với một địa chỉ khác (được gọi là địa chỉ trả tiền lẻ). &lt;/li&gt; &lt;li&gt;Để thực sự che khuất nguồn tiền của bạn, ví của bạn phải lặp lại quy trình đó một số lần với mỗi mệnh giá nhất định. Mỗi lần tiến trình hoàn tất, nó được gọi là một "vòng". Mỗi vòng của PrivateSend làm nên độ khó bậc số mũ để xác định nguồn tiền của bạn đến từ đâu. &lt;/li&gt; &lt;li&gt;Quá trình xáo trộn này xảy ra trong chế độ nền mà không xen vào những việc khác của bạn. Khi bạn muốn thực hiện một giao dịch, nguồn tiền của bạn đã được ẩn danh rồi. Do đó bạn không cần phải đợi thêm gì nữa. &lt;/li&gt;&lt;/ol&gt; &lt;hr&gt; &lt;b&gt;QUAN TRỌNG:&lt;/b&gt; Ví của bạn chỉ có chứa 1000 "địa chỉ tiền trả lại". Mỗi lần một sự kiện xáo trộn xảy ra, có đến 9 địa chỉ sẽ được sử dụng. Điều đó có nghĩa với ví mới với 1000 địa chỉ thì dùng cho 100 lần trộn. Khi 900 địa chỉ đã được sử dụng, ví của bạn phải tạo thêm các địa chỉ mới. Nó chỉ có thể làm việc đó nếu bạn có chế độ tự động backup được bật&lt;br&gt; Kết quả là, những người dùng mà chế độ backup bị tắt sẽ có chế độ PrivateSend cũng bị tắt.&lt;hr&gt; Để biết thêm thông tin hãy xem &lt;a href="https://docs.raptoreum.org/en/stable/wallets/raptoreumcore/privatesend-instantsend.html"&gt;Tài liệu về PrivateSend&lt;/a&gt;.</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>Intro</name>
     <message>
@@ -1146,6 +1148,10 @@
         <translation>Copy các đầu ra của khoản đặt cọc</translation>
     </message>
     <message>
+        <source>Updating...</source>
+        <translation>Đang cập nhật...</translation>
+    </message>
+    <message>
         <source>ENABLED</source>
         <translation>BẬT</translation>
     </message>
@@ -1172,6 +1178,14 @@
     <message>
         <source>NONE</source>
         <translation>KHÔNG</translation>
+    </message>
+    <message>
+        <source>Filter by any property (e.g. address or protx hash)</source>
+        <translation>Lọc bởi bất kỳ thuộc tính nào (ví dụ địa chỉ hoặc protx hash)</translation>
+    </message>
+    <message>
+        <source>Please wait...</source>
+        <translation>Vui lòng đợi...</translation>
     </message>
     <message>
         <source>Additional information for DIP3 Smartnode %1</source>
@@ -1283,6 +1297,10 @@
         <translation>&amp;Ví</translation>
     </message>
     <message>
+        <source>&amp;Appearance</source>
+        <translation>&amp;Giao diện</translation>
+    </message>
+    <message>
         <source>Show additional tab listing all your smartnodes in first sub-tab&lt;br/&gt;and all smartnodes on the network in second sub-tab.</source>
         <translation>Hiện thêm trang có danh sách tất cả các smartnodes của bạn trong trang con thứ nhất &lt;br/&gt; và tất cả các smartnode trên mạng trong trang con thứ hai.</translation>
     </message>
@@ -1291,48 +1309,20 @@
         <translation>Hiển thị trang Smartnodes</translation>
     </message>
     <message>
-        <source>Show additional information and buttons for PrivateSend on overview screen.</source>
-        <translation>Hiển thị thêm thông tin và các nút cho PrivateSend trên màn hình tổng quát.</translation>
-    </message>
-    <message>
-        <source>Enable advanced PrivateSend interface</source>
-        <translation>Bật chế độ giao diện PrivateSend cao cấp</translation>
-    </message>
-    <message>
-        <source>Show warning dialog when PrivateSend detects that wallet has very low number of keys left.</source>
-        <translation>Hiển thị bảng hội thoại cảnh báo khi PrivateSend phát hiện ví chỉ còn rất ít khoá còn lại.</translation>
-    </message>
-    <message>
-        <source>Warn if PrivateSend is running out of keys</source>
-        <translation>Cảnh báo nếu PrivateSend đang thiếu khoá</translation>
-    </message>
-    <message>
-        <source>Whether to use experimental PrivateSend mode with multiple mixing sessions per block.&lt;br/&gt;Note: You must use this feature carefully.&lt;br/&gt;Make sure you always have recent wallet (auto)backup in a safe place!</source>
-        <translation>Cho dù sử dụng thí nghiệm chế độ PrivateSend với việc trộn nhiều phiên trên một khối.&lt;br/&gt;Chú ý: Bạn cần sử dụng tính năng này một cách thận trọng.&lt;br/&gt;Hãy đảm bảo rằng bạn luôn lưu trữ sao lưu (tự động) ví gần nhất ở nơi an toàn.</translation>
-    </message>
-    <message>
-        <source>Enable PrivateSend &amp;multi-session</source>
-        <translation>Bật chế độ đa &amp;kênh PrivateSend</translation>
-    </message>
-    <message>
         <source>If you disable the spending of unconfirmed change, the change from a transaction&lt;br/&gt;cannot be used until that transaction has at least one confirmation.&lt;br/&gt;This also affects how your balance is computed.</source>
         <translation>Nếu bạn vô hiệu hóa các chi tiêu của phần tiền lẻ chưa được xác nhận, phần tiền lẻ từ một giao dịch &lt;br/&gt;không thể được sử dụng đến khi giao dịch đó nhận được ít nhất một xác nhận. &lt;br/&gt;Điều này ảnh hưởng đến cách tính số dư của bạn.</translation>
     </message>
     <message>
-        <source>PrivateSend rounds to use</source>
-        <translation>Số vòng PrivateSend được dùng</translation>
-    </message>
-    <message>
-        <source>This amount acts as a threshold to turn off PrivateSend once it's reached.</source>
-        <translation>Số lượng này hoạt động như là một ngưỡng để tắt PrivateSend khi nó được chạm tới.</translation>
-    </message>
-    <message>
-        <source>Target PrivateSend balance</source>
-        <translation>Số dư đích cho PrivateSend</translation>
-    </message>
-    <message>
         <source>Automatically open the Raptoreum Core client port on the router. This only works when your router supports UPnP and it is enabled.</source>
         <translation>Tự động mở cổng cho phần mềm Raptoreum Core trên rounter. Điều này chỉ hoạt động được khi rounter của bạn hỗ trợ UpnP và tính năng đó được bật lên.</translation>
+    </message>
+    <message>
+        <source>Accept connections from outside.</source>
+        <translation>Chấp nhận các kết nối từ bên ngoài.</translation>
+    </message>
+    <message>
+        <source>Allow incomin&amp;g connections</source>
+        <translation>Cho phép &amp;nhận kết nối</translation>
     </message>
     <message>
         <source>Connect to the Raptoreum network through a SOCKS5 proxy.</source>
@@ -1347,6 +1337,18 @@
         <translation>Hiển thị nếu proxy SOCKS5 mặc định được cung cấp để dùng tiếp cận các thiết bị ngang hàng thông qua loại mạng này.</translation>
     </message>
     <message>
+        <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor hidden services:</source>
+        <translation>Sử dụng các proxy riêng biệt SOCKS&amp;5 để truy cập các nút ngang hàng trên các dịch vụ ẩn danh Tor:</translation>
+    </message>
+    <message>
+        <source>Hide the icon from the system tray.</source>
+        <translation>Ẩn biểu tượng khỏi khay hệ thống.</translation>
+    </message>
+    <message>
+        <source>&amp;Hide tray icon</source>
+        <translation>Ẩn biểu tượng &amp;khay hệ thống</translation>
+    </message>
+    <message>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
         <translation>Thu nhỏ thay vì thoát khỏi ứng dụng khi cửa sổ được đóng lại. Khi tuỳ chọn này được bật, ứng dụng sẽ được đóng chỉ sau khi chọn chức năng Thoát trên menu.</translation>
     </message>
@@ -1355,12 +1357,12 @@
         <translation>Địa chỉ URL của bên thứ ba (ví dụ: một trang duyệt block) mà xuất hiện trong trang về các giao dịch giống như một mục trong menu ngữ cảnh.&lt;br/&gt;%s trong địa chỉ URL được thay thế bằng mã băm của giao dịch. Nhiều địa chỉ URL được phân cách với nhau bởi một đường thẳng dọc |.</translation>
     </message>
     <message>
-        <source>Expert</source>
-        <translation>Chuyên gia</translation>
+        <source>&amp;Third party transaction URLs</source>
+        <translation>URL của giao dịch bên &amp;Thứ ba</translation>
     </message>
     <message>
         <source>Whether to show coin control features or not.</source>
-        <translation>Hiển thị hoặc không hiển thị tính năng coin control.</translation>
+        <translation>Hiển thị hoặc không hiển thị tính năng kiểm soát coin.</translation>
     </message>
     <message>
         <source>Automatically start %1 after logging in to the system.</source>
@@ -1372,15 +1374,7 @@
     </message>
     <message>
         <source>Enable coin &amp;control features</source>
-        <translation>Bật tính năng Coin &amp;control</translation>
-    </message>
-    <message>
-        <source>Show system popups for PrivateSend mixing transactions&lt;br/&gt;just like for all other transaction types.</source>
-        <translation>Hiển thị bảng hội thoại cho giao dịch trộn PrivateSend &lt;br/&gt;giống như cho tất các các loại giao dịch khác.</translation>
-    </message>
-    <message>
-        <source>Show popups for PrivateSend transactions</source>
-        <translation>Hiển thị yêu cầu xác nhận cho các giao dịch PrivateSend</translation>
+        <translation>Bật tính năng Kiểm soát &amp;Coin</translation>
     </message>
     <message>
         <source>&amp;Spend unconfirmed change</source>
@@ -1397,14 +1391,6 @@
     <message>
         <source>Map port using &amp;UPnP</source>
         <translation>Ánh xạ cổng sử dụng &amp;UPnP</translation>
-    </message>
-    <message>
-        <source>Accept connections from outside</source>
-        <translation>Chấp nhận kết nối từ bên ngoài</translation>
-    </message>
-    <message>
-        <source>Allow incoming connections</source>
-        <translation>Cho phép các kết nối tới</translation>
     </message>
     <message>
         <source>Proxy &amp;IP:</source>
@@ -1443,22 +1429,6 @@
         <translation>Kết nối với mạng lưới Raptoreum thông qua các proxy SOCKS5 riêng biệt cho các dịch vụ ẩn danh Tor.</translation>
     </message>
     <message>
-        <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services:</source>
-        <translation>Sử dụng các proxy SOCKS5 để kết nối với các đối tác thông qua dịch vụ ẩn danh Tor:</translation>
-    </message>
-    <message>
-        <source>&amp;Window</source>
-        <translation>&amp;Cửa sổ</translation>
-    </message>
-    <message>
-        <source>&amp;Hide the icon from the system tray.</source>
-        <translation>Ẩ&amp;n biểu tượng trên khay hệ thống.</translation>
-    </message>
-    <message>
-        <source>Hide tray icon</source>
-        <translation>Ẩn biểu tượng trên khay hệ thống</translation>
-    </message>
-    <message>
         <source>Show only a tray icon after minimizing the window.</source>
         <translation>Chỉ hiển thị biểu tượng ở khai sau khi thu nhỏ cửa sổ.</translation>
     </message>
@@ -1489,10 +1459,6 @@ https://www.transifex.com/projects/p/raptoreum/</source>
 https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
-        <source>User Interface Theme:</source>
-        <translation>Kiểu giao diện người dùng</translation>
-    </message>
-    <message>
         <source>&amp;Unit to show amounts in:</source>
         <translation>Đơn vị &amp;hiển thị số lượng:</translation>
     </message>
@@ -1503,10 +1469,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Decimal digits</source>
         <translation>Số các chữ số thập phân</translation>
-    </message>
-    <message>
-        <source>Third party transaction URLs</source>
-        <translation>URLs của giao dịch bên thứ ba</translation>
     </message>
     <message>
         <source>Active command-line options that override above options:</source>
@@ -1531,10 +1493,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>default</source>
         <translation>ngầm định</translation>
-    </message>
-    <message>
-        <source>none</source>
-        <translation>không có</translation>
     </message>
     <message>
         <source>Confirm options reset</source>
@@ -1628,10 +1586,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Có thể tiêu được:</translation>
     </message>
     <message>
-        <source>PrivateSend</source>
-        <translation>PrivateSend</translation>
-    </message>
-    <message>
         <source>Status:</source>
         <translation>Tình trạng:</translation>
     </message>
@@ -1668,16 +1622,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Bắt đầu/Tắt việc trộn</translation>
     </message>
     <message>
-        <source>PrivateSend Balance:</source>
-        <translation>Số dư PrivateSend:</translation>
-    </message>
-    <message>
         <source>The denominations you submitted to the Smartnode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
         <translation>Mệnh giá mà bạn gửi cho Smartnode. &lt;br&gt;Để trộn, những người dùng khác cũng cần gửi chính xác dùng loại mệnh giá đó.</translation>
-    </message>
-    <message>
-        <source>(Last Message)</source>
-        <translation>(Thông điệp cuối)</translation>
     </message>
     <message>
         <source>out of sync</source>
@@ -1688,14 +1634,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Tính năng tự động backup đã được tắt,  không thể trộn được!</translation>
     </message>
     <message>
-        <source>Start Mixing</source>
-        <translation>Bắt đầu Trộn</translation>
-    </message>
-    <message>
-        <source>Stop Mixing</source>
-        <translation>Dừng Trộn</translation>
-    </message>
-    <message>
         <source>No inputs detected</source>
         <translation>Phát hiện không có đầu vào</translation>
     </message>
@@ -1704,12 +1642,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation><numerusform>%n Vòng</numerusform></translation>
     </message>
     <message>
-        <source>Found enough compatible inputs to anonymize %1</source>
-        <translation>Đã tìm được đủ đầu vào tương thích để ẩn danh hoá %1</translation>
+        <source>Found enough compatible inputs to mix %1</source>
+        <translation>Đã tìm được đủ các đầu vào tương thích để trộn %1</translation>
     </message>
     <message>
-        <source>Not enough compatible inputs to anonymize &lt;span style='color:red;'&gt;%1&lt;/span&gt;,&lt;br&gt;will anonymize &lt;span style='color:red;'&gt;%2&lt;/span&gt; instead</source>
-        <translation>Không đủ đầu vào tương ứng để ẩn danh &lt;span style='color:red;'&gt;%1&lt;/span&gt;,&lt;br&gt;sẽ ẩn danh &lt;span style='color:red;'&gt;%2&lt;/span&gt; thay vào đó</translation>
+        <source>Not enough compatible inputs to mix &lt;span style='%1'&gt;%2&lt;/span&gt;,&lt;br&gt;will mix &lt;span style='%1'&gt;%3&lt;/span&gt; instead</source>
+        <translation>Không đủ các đầu vào tương thích để trộn &lt;span style='%1'&gt;%2&lt;/span&gt;,&lt;br&gt; thay vì vậy sẽ trộn &lt;span style='%1'&gt;%3&lt;/span&gt; </translation>
     </message>
     <message>
         <source>Overall progress</source>
@@ -1744,8 +1682,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Còn lại rất ít các khoá từ khi tự động backup lần cuối!</translation>
     </message>
     <message>
-        <source>We are about to create a new automatic backup for you, however &lt;span style='color:red;'&gt; you should always make sure you have backups saved in some safe place&lt;/span&gt;!</source>
-        <translation>Chúng tôi sẽ tạo một bản tự động backup cho bạn, tuy nhiên &lt;span style='color:red;'&gt;bạn nên luôn chắc chắn rằng bạn đã lưu backup ở nơi nào đó an toàn&lt;/span&gt;!</translation>
+        <source>We are about to create a new automatic backup for you, however &lt;span style='%1'&gt; you should always make sure you have backups saved in some safe place&lt;/span&gt;!</source>
+        <translation>Chúng tôi sẽ tạo một bản tự động backup cho bạn, tuy nhiên &lt;span style='%1'&gt;bạn nên luôn chắc chắn rằng bạn đã lưu backup ở nơi nào đó an toàn&lt;/span&gt;!</translation>
     </message>
     <message>
         <source>Note: You can turn this message off in options.</source>
@@ -1774,24 +1712,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>WARNING! Failed to replenish keypool, please unlock your wallet to do so.</source>
         <translation>CẢNH BÁO! Không thể bổ sung keypool, hãy mở khoá ví của bạn để làm việc đó.</translation>
-    </message>
-    <message>
-        <source>Last PrivateSend message:
-</source>
-        <translation>Thông điệp PrivateSend cuối cùng:
-</translation>
-    </message>
-    <message>
-        <source>If you don't want to see internal PrivateSend fees/transactions select "Most Common" as Type on the "Transactions" tab.</source>
-        <translation>Nếu bạn không muốn nhìn thấy thông tin nội bộ về phí/giao dich PrivateSend thì hãy chọn "Thông dụng nhất" là kiểu trên trang "Các giao dịch".</translation>
-    </message>
-    <message>
-        <source>PrivateSend requires at least %1 to use.</source>
-        <translation>PrivateSend yêu cầu ít nhất %1 để sử dụng.</translation>
-    </message>
-    <message>
-        <source>Wallet is locked and user declined to unlock. Disabling PrivateSend.</source>
-        <translation>Ví đã được khoá và người dùng từ chối mở khoá. Tắt chức năng PrivateSend.</translation>
     </message>
 </context>
 <context>
@@ -1903,6 +1823,14 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <source>Ping</source>
         <translation>Ping</translation>
     </message>
+    <message>
+        <source>Sent</source>
+        <translation>Đã gửi</translation>
+    </message>
+    <message>
+        <source>Received</source>
+        <translation>Đã nhận</translation>
+    </message>
 </context>
 <context>
     <name>QObject</name>
@@ -1917,6 +1845,18 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Enter a Raptoreum address (e.g. %1)</source>
         <translation>Hãy nhập một địa chỉ Raptoreum (VD: %1)</translation>
+    </message>
+    <message>
+        <source>Appearance Setup</source>
+        <translation>Thiết lập giao diện</translation>
+    </message>
+    <message>
+        <source>Please choose your preferred settings for the appearance of %1</source>
+        <translation>Hãy chọn thiết lập mà bạn ưa thích cho giao diện của %1</translation>
+    </message>
+    <message>
+        <source>This can also be adjusted later in the "Appearance" tab of the preferences.</source>
+        <translation>Cái này cũng có thể được điều chỉnh sau trong trang "Giao diện" của phần thiết lập tuỳ chọn.</translation>
     </message>
     <message>
         <source>%1 d</source>
@@ -1975,6 +1915,22 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>%1 và %2</translation>
     </message>
     <message>
+        <source>%1 B</source>
+        <translation>%1 B</translation>
+    </message>
+    <message>
+        <source>%1 KB</source>
+        <translation>%1 KB</translation>
+    </message>
+    <message>
+        <source>%1 MB</source>
+        <translation>%1 MB</translation>
+    </message>
+    <message>
+        <source>%1 GB</source>
+        <translation>%1 GB</translation>
+    </message>
+    <message>
         <source>unknown</source>
         <translation>không xác định</translation>
     </message>
@@ -1992,6 +1948,34 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Error: %1</source>
         <translation>Error: %1</translation>
+    </message>
+    <message>
+        <source>Error: Failed to load application fonts.</source>
+        <translation>Lỗi: Nạp font chữ không thành công.</translation>
+    </message>
+    <message>
+        <source>Error: Specified font-family invalid. Valid values: %1.</source>
+        <translation>Lỗi: Loại font được chọn không hợp lệ Giá trị hợp lệ: %1</translation>
+    </message>
+    <message>
+        <source>Error: Specified font-weight-normal invalid. Valid range %1 to %2.</source>
+        <translation>Lỗi: Độ đậm font chữ dạng thường được chọn không hợp lệ. Khoảng hợp lệ %1 đến %2.</translation>
+    </message>
+    <message>
+        <source>Error: Specified font-weight-bold invalid. Valid range %1 to %2.</source>
+        <translation>Lỗi: Độ đậm font chữ dạng chữ đậm được chọn không hợp lệ. Khoảng hợp lệ %1 đến %2.</translation>
+    </message>
+    <message>
+        <source>Error: Specified font-scale invalid. Valid range %1 to %2.</source>
+        <translation>Lỗi: Cỡ chữ được chọn không hợp lệ. Khoảng hợp lệ %1 đến %2.</translation>
+    </message>
+    <message>
+        <source>Error: Invalid -custom-css-dir path.</source>
+        <translation>Lỗi: Đường dẫn -custom-css-dir không hợp lệ.</translation>
+    </message>
+    <message>
+        <source>Error: %1 CSS file(s) missing in -custom-css-dir path.</source>
+        <translation>Lỗi: %1 File(s) CSS không tìm thấy trong đường dẫn -custom-css-dir.</translation>
     </message>
 </context>
 <context>
@@ -2142,10 +2126,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>&amp;Lưu lượng mạng</translation>
     </message>
     <message>
-        <source>Totals</source>
-        <translation>Tổng</translation>
-    </message>
-    <message>
         <source>Received</source>
         <translation>Đã nhận</translation>
     </message>
@@ -2200,6 +2180,10 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Datadir</source>
         <translation>Thư mục dữ liệu</translation>
+    </message>
+    <message>
+        <source>Last block hash</source>
+        <translation>Mã băm khối cuối</translation>
     </message>
     <message>
         <source>Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.</source>
@@ -2270,10 +2254,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Cứu ví</translation>
     </message>
     <message>
-        <source>Rescan blockchain files</source>
-        <translation>Quét lại file blockchain</translation>
-    </message>
-    <message>
         <source>Recover transactions 1</source>
         <translation>Phục hồi các giao dịch 1</translation>
     </message>
@@ -2292,10 +2272,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>-salvagewallet: Attempt to recover private keys from a corrupt wallet.dat.</source>
         <translation>-salvagewallet: Thử phục hồi khoá riêng từ tệp wallet.dat bị lỗi.</translation>
-    </message>
-    <message>
-        <source>-rescan: Rescan the block chain for missing wallet transactions.</source>
-        <translation>-rescan: Quét lại blockchain để tìm những giao dịch bị thiếu.</translation>
     </message>
     <message>
         <source>-zapwallettxes=1: Recover transactions from blockchain (keep meta-data, e.g. account owner).</source>
@@ -2354,12 +2330,16 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Welcome to the %1 RPC console.</translation>
     </message>
     <message>
-        <source>Type &lt;b&gt;help&lt;/b&gt; for an overview of available commands.</source>
-        <translation>Gõ &lt;b&gt;help&lt;/b&gt; để xem tổng thể các lệnh có thể dùng.</translation>
-    </message>
-    <message>
         <source>Use up and down arrows to navigate history, and %1 to clear screen.</source>
         <translation>Sử dụng các mũi tên lên và xuống để duyệt lịch sử, và %1 để xoá màn hình.</translation>
+    </message>
+    <message>
+        <source>Type %1 for an overview of available commands.</source>
+        <translation>Hãy nhập %1 để xem tổng thể những câu lệnh có thể dùng.</translation>
+    </message>
+    <message>
+        <source>For more information on using this console type %1.</source>
+        <translation>Để có thêm thông tin về việc sử dụng console này thì hãy nhập %1.</translation>
     </message>
     <message>
         <source>WARNING: Scammers have been active, telling users to type commands here, stealing their wallet contents. Do not use this console without fully understanding the ramifications of a command.</source>
@@ -2380,22 +2360,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Total: %1 (Enabled: %2)</source>
         <translation>Tổng số: %1 (Bật: %2)</translation>
-    </message>
-    <message>
-        <source>%1 B</source>
-        <translation>%1 B</translation>
-    </message>
-    <message>
-        <source>%1 KB</source>
-        <translation>%1 KB</translation>
-    </message>
-    <message>
-        <source>%1 MB</source>
-        <translation>%1 MB</translation>
-    </message>
-    <message>
-        <source>%1 GB</source>
-        <translation>%1 GB</translation>
     </message>
     <message>
         <source>(node id: %1)</source>
@@ -2432,14 +2396,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
 </context>
 <context>
     <name>ReceiveCoinsDialog</name>
-    <message>
-        <source>Reuse one of the previously used receiving addresses.&lt;br&gt;Reusing addresses has security and privacy issues.&lt;br&gt;Do not use this unless re-generating a payment request made before.</source>
-        <translation>Sử dụng lại địa chỉ đã được sử dụng để nhận trước đây.&lt;br&gt;Sử dụng lại địa chỉ nảy sinh vấn đề an ninh và riêng tư.&lt;br&gt;Đừng sử dụng nó trừ khi bạn tạo lại yêu cầu thanh toán mà bạn đã làm trước đây.</translation>
-    </message>
-    <message>
-        <source>R&amp;euse an existing receiving address (not recommended)</source>
-        <translation>Tái &amp;sử dụng lại địa chỉ nhận đã có (không khuyến khích)</translation>
-    </message>
     <message>
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Raptoreum network.</source>
         <translation>Một thông điệp tuỳ chọn để đính vào yêu cầu thanh toán, nó sẽ hiển thị khi yêu cầu được mở. Chú ý: Thông điệp sẽ không được gửi thông qua mạng lưới Raptoreum.</translation>
@@ -2503,6 +2459,14 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Remove</source>
         <translation>Xoá</translation>
+    </message>
+    <message>
+        <source>Enter a label to associate with the new receiving address</source>
+        <translation>Hãy nhập một nhãn để liên kết với địa chỉ mới nhận</translation>
+    </message>
+    <message>
+        <source>Enter a message to attach to the payment request</source>
+        <translation>Hãy nhâpn một thông điệp để đính kèm với yêu cầu thanh toán</translation>
     </message>
     <message>
         <source>Copy URI</source>
@@ -2615,7 +2579,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <source>Coin Control Features</source>
-        <translation>Tính năng Coin Control</translation>
+        <translation>Tính năng Kiểm soát Coin</translation>
     </message>
     <message>
         <source>Inputs...</source>
@@ -2682,12 +2646,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Thời gian xác nhận đối tượng:</translation>
     </message>
     <message>
-        <source>PrivateSend</source>
-        <translation>PrivateSend</translation>
-    </message>
-    <message>
-        <source>If the custom fee is set to 1000 duffs and the transaction is only 250 bytes, then "per kilobyte" only pays 250 duffs in fee,&lt;br /&gt;while "at least" pays 1000 duffs. For transactions bigger than a kilobyte both pay by kilobyte.</source>
-        <translation>Nếu mức phí tuỳ chỉnh được đặt là 1000 duff và giao dịch chỉ có 250 byte, thì "theo kilobyte" chỉ trả 250 duff cho phí,&lt;br /&gt;trong khi "ít nhất" phải trả 1000 duff. Cho các giao dịch lớn hơn 1 kilobyte thì cả hai đều trả theo kilobyte.</translation>
+        <source>If the custom fee is set to 1000 ruffs and the transaction is only 250 bytes, then "per kilobyte" only pays 250 ruffs in fee,&lt;br /&gt;while "at least" pays 1000 ruffs. For transactions bigger than a kilobyte both pay by kilobyte.</source>
+        <translation>Nếu mức phí tuỳ chỉnh được đặt là 1000 ruff và giao dịch chỉ có 250 byte, thì "theo kilobyte" chỉ trả 250 ruff cho phí,&lt;br /&gt;trong khi "ít nhất" phải trả 1000 ruff. Cho các giao dịch lớn hơn 1 kilobyte thì cả hai đều trả theo kilobyte.</translation>
     </message>
     <message>
         <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks.&lt;br /&gt;But be aware that this can end up in a never confirming transaction once there is more demand for raptoreum transactions than the network can process.</source>
@@ -2810,16 +2770,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>&lt;b&gt;(%1 của %2 các thành phần được hiển thị)&lt;/b&gt;</translation>
     </message>
     <message>
-        <source>PrivateSend funds only</source>
-        <translation>Ngân quỹ chỉ cho PrivateSend</translation>
-    </message>
-    <message>
         <source>any available funds</source>
         <translation>bất kỳ nguồn cung nào còn</translation>
-    </message>
-    <message>
-        <source>(PrivateSend transactions have higher fees usually due to no change output being allowed)</source>
-        <translation>(Các giao dịch PrivateSend có mức phí cao hơn thường do không được phép thay đổi đầu ra)</translation>
     </message>
     <message>
         <source>Transaction size: %1</source>
@@ -2832,10 +2784,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message numerus="yes">
         <source>This transaction will consume %n input(s)</source>
         <translation><numerusform>Giao dịch này sẽ dùng đến %n đầu vào</numerusform></translation>
-    </message>
-    <message>
-        <source>Warning: Using PrivateSend with %1 or more inputs can harm your privacy and is not recommended</source>
-        <translation>Cảnh báo: Sử dụng PrivateSend với %1 hoặc nhiều hơn các đầu vào có thể làm hại tính riêng tư cho bạn và nó không phải là điều được khuyến nghị</translation>
     </message>
     <message>
         <source>Confirm send coins</source>
@@ -2959,6 +2907,10 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>S&amp;ubtract fee from amount</source>
         <translation>T&amp;rừ phí từ số tiền gửi</translation>
+    </message>
+    <message>
+        <source>Use available balance</source>
+        <translation>Sử dụng số dư hiện thời</translation>
     </message>
     <message>
         <source>Message:</source>
@@ -3094,8 +3046,20 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Tái lập lại tất cả các trường kiểm tra</translation>
     </message>
     <message>
+        <source>Enter a message to be signed</source>
+        <translation>Nhập vào thông điệp cần ký</translation>
+    </message>
+    <message>
         <source>Click "Sign Message" to generate signature</source>
         <translation>Bấm "Ký Thông điệp" để sinh chữ ký</translation>
+    </message>
+    <message>
+        <source>Enter a message to be verified</source>
+        <translation>Nhập vào thông điệp cần kiểm tra</translation>
+    </message>
+    <message>
+        <source>Enter a signature for the message to be verified</source>
+        <translation>Hãy nhập một chữ ký cho thông điệp để được xác minh</translation>
     </message>
     <message>
         <source>The entered address is invalid.</source>
@@ -3152,16 +3116,20 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <source>[testnet]</source>
         <translation>[mạng thử]</translation>
     </message>
-    <message>
-        <source>Version %1</source>
-        <translation>Phiên bản %1</translation>
-    </message>
 </context>
 <context>
     <name>TrafficGraphWidget</name>
     <message>
         <source>KB/s</source>
         <translation>KB/s</translation>
+    </message>
+    <message>
+        <source>Received</source>
+        <translation>Đã nhận</translation>
+    </message>
+    <message>
+        <source>Sent</source>
+        <translation>Đã gửi</translation>
     </message>
 </context>
 <context>
@@ -3177,10 +3145,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>conflicted</source>
         <translation>xung đột</translation>
-    </message>
-    <message>
-        <source>%1/offline</source>
-        <translation>%1/ngắt kết nối</translation>
     </message>
     <message>
         <source>0/unconfirmed, %1</source>
@@ -3207,24 +3171,16 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>%1 xác nhận</translation>
     </message>
     <message>
-        <source>locked via LLMQ based ChainLocks</source>
-        <translation>đã được khoá bởi ChainLocks dựa trên LLMQ</translation>
+        <source>locked via ChainLocks</source>
+        <translation>được khoá với ChainLocks</translation>
     </message>
     <message>
-        <source>verified via LLMQ based InstantSend</source>
-        <translation>đã được xác thực bởi InstantSend dựa trên LLMQ</translation>
+        <source>verified via InstantSend</source>
+        <translation>đã được xác minh với InstantSend</translation>
     </message>
     <message>
         <source>Status</source>
         <translation>Trạng thái</translation>
-    </message>
-    <message>
-        <source>, has not been successfully broadcast yet</source>
-        <translation>, đã không được phát sóng thành công</translation>
-    </message>
-    <message numerus="yes">
-        <source>, broadcast through %n node(s)</source>
-        <translation><numerusform>, quảng bá thông qua %n điểm nút</numerusform></translation>
     </message>
     <message>
         <source>Date</source>
@@ -3381,10 +3337,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Mở đến khi %1</translation>
     </message>
     <message>
-        <source>Offline</source>
-        <translation>Ngắt kết nối</translation>
-    </message>
-    <message>
         <source>Unconfirmed</source>
         <translation>Chưa xác thực</translation>
     </message>
@@ -3409,12 +3361,16 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Chưa hoàn thành (%1 xác nhận, sẽ sẵn sàng sau %2)</translation>
     </message>
     <message>
-        <source>This block was not received by any other nodes and will probably not be accepted!</source>
-        <translation>Khối này đã không nhận được bởi bất kỳ các nút nào khác và có thể sẽ không được chấp nhận!</translation>
-    </message>
-    <message>
         <source>Generated but not accepted</source>
         <translation>Đã sinh nhưng không được chấp nhận</translation>
+    </message>
+    <message>
+        <source>verified via InstantSend</source>
+        <translation>đã được xác minh với InstantSend</translation>
+    </message>
+    <message>
+        <source>locked via ChainLocks</source>
+        <translation>được khoá với ChainLocks</translation>
     </message>
     <message>
         <source>Received with</source>
@@ -3423,10 +3379,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Received from</source>
         <translation>Nhận từ</translation>
-    </message>
-    <message>
-        <source>Received via PrivateSend</source>
-        <translation>Nhận được thông qua PrivateSend</translation>
     </message>
     <message>
         <source>Sent to</source>
@@ -3439,26 +3391,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Mined</source>
         <translation>Được đào</translation>
-    </message>
-    <message>
-        <source>PrivateSend Denominate</source>
-        <translation>Mệnh giá PrivateSend</translation>
-    </message>
-    <message>
-        <source>PrivateSend Collateral Payment</source>
-        <translation>Thanh toán đảm bảo cho PrivateSend</translation>
-    </message>
-    <message>
-        <source>PrivateSend Make Collateral Inputs</source>
-        <translation>PrivateSend Tạo Đặt Cọc Đầu Vào</translation>
-    </message>
-    <message>
-        <source>PrivateSend Create Denominations</source>
-        <translation>PrivateSend Tạo Các Mệnh Giá</translation>
-    </message>
-    <message>
-        <source>PrivateSend</source>
-        <translation>PrivateSend</translation>
     </message>
     <message>
         <source>watch-only</source>
@@ -3489,10 +3421,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Cho dù có hay không thì một địa chỉ chỉ theo dõi cũng liên quan đến giao dịch này.</translation>
     </message>
     <message>
-        <source>Whether or not this transaction was locked by InstantSend.</source>
-        <translation>Giao dịch này có được khoá hay không được khoá bởi InstantSend.</translation>
-    </message>
-    <message>
         <source>User-defined intent/purpose of the transaction.</source>
         <translation>Người dùng định nghĩa ý định/mục đích của giao dịch.</translation>
     </message>
@@ -3506,14 +3434,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>All</source>
         <translation>Tất cả</translation>
-    </message>
-    <message>
-        <source>Locked by InstantSend</source>
-        <translation>Đã được khoá bởi InstantSend</translation>
-    </message>
-    <message>
-        <source>Not locked by InstantSend</source>
-        <translation>Không được khoá bởi InstantSend</translation>
     </message>
     <message>
         <source>Today</source>
@@ -3552,26 +3472,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Gửi đến</translation>
     </message>
     <message>
-        <source>PrivateSend</source>
-        <translation>PrivateSend</translation>
-    </message>
-    <message>
-        <source>PrivateSend Make Collateral Inputs</source>
-        <translation>PrivateSend Tạo Đặt Cọc Đầu Vào</translation>
-    </message>
-    <message>
-        <source>PrivateSend Create Denominations</source>
-        <translation>PrivateSend Tạo Các Mệnh Giá</translation>
-    </message>
-    <message>
-        <source>PrivateSend Denominate</source>
-        <translation>Mệnh giá PrivateSend</translation>
-    </message>
-    <message>
-        <source>PrivateSend Collateral Payment</source>
-        <translation>PrivateSend Collateral Payment</translation>
-    </message>
-    <message>
         <source>To yourself</source>
         <translation>Đến bản thân bạn</translation>
     </message>
@@ -3584,8 +3484,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Khác</translation>
     </message>
     <message>
-        <source>Enter address or label to search</source>
-        <translation>Nhập địa chỉ hoặc nhãn để tìm</translation>
+        <source>Enter address, transaction id, or label to search</source>
+        <translation>Hãy nhập vào địa chỉ, mã giao dịch, hoặc nhãn để tìm kiếm</translation>
     </message>
     <message>
         <source>Min amount</source>
@@ -3755,36 +3655,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <source>The wallet data was successfully saved to %1.</source>
         <translation>Dữ liệu ví đã được lưu thành công vào %1.</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>raptoreum-core</name>
     <message>
-        <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
-        <translation>Liên kết với địa chỉ nhất định và luôn luôn lắng nghe trên đó. Sử dụng ký hiệu [host]:port cho IPv6</translation>
-    </message>
-    <message>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
         <translation>Lỗi: Lắng nghe để nhận kết nối bị lỗi (lỗi trả về %s)</translation>
-    </message>
-    <message>
-        <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
-        <translation>Thực hiện lệnh khi một cảnh báo liên quan được nhận hoặc chúng ta thấy sự phân nhánh thực sự dài (%s trong cmd được thay bởi message)</translation>
-    </message>
-    <message>
-        <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
-        <translation>Thực hiện lệnh khi một giao dịch ví thay đổi (%s trong cmd được thay thế bởi TxID)</translation>
-    </message>
-    <message>
-        <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
-        <translation>Thực hiện lệnh khi khối tốt nhất thay đổi (%s trong cmd được thay thế bởi giá trị băm của khối)</translation>
-    </message>
-    <message>
-        <source>Name to construct url for KeePass entry that stores the wallet passphrase</source>
-        <translation>Đặt tên để tạo dựng url cho các thành phần KeePass mà nó sẽ lưu giữ mật khẩu của ví</translation>
-    </message>
-    <message>
-        <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
-        <translation>Thiết lập số luồng của kịch bản kiểm tra (%u to %d, 0 = tự động, &lt;0 = để nhiều lõi miễn phí, ngầm định: %d)</translation>
     </message>
     <message>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
@@ -3799,52 +3675,20 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Cảnh báo: Chúng ta có vẻ không được sự đồng ý một cách đầy đủ từ các đối tác ngang hàng! Bạn cần nâng cấp hoặc các nút khác cần nâng cấp.</translation>
     </message>
     <message>
-        <source>Accept command line and JSON-RPC commands</source>
-        <translation>Chấp nhận dòng lệnh và các lệnh JSON-RPC</translation>
-    </message>
-    <message>
-        <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
-        <translation>Cho phép DNS tìm kiếm -addnode, -seednode và -connect</translation>
-    </message>
-    <message>
         <source>Already have that input.</source>
         <translation>Đã có đầu vào đó.</translation>
-    </message>
-    <message>
-        <source>Block creation options:</source>
-        <translation>Tuỳ chọn tạo khối:</translation>
     </message>
     <message>
         <source>Cannot downgrade wallet</source>
         <translation>Không thể hạ cấp ví</translation>
     </message>
     <message>
-        <source>Cannot write default address</source>
-        <translation>Không thể viết vào địa chỉ ngầm định</translation>
-    </message>
-    <message>
         <source>Collateral not valid.</source>
         <translation>Collateral không hợp lệ.</translation>
     </message>
     <message>
-        <source>Connect to a node to retrieve peer addresses, and disconnect</source>
-        <translation>Kết nối với một nút để lấy địa chỉ ngang hàng, và ngắt kết nối</translation>
-    </message>
-    <message>
-        <source>Connection options:</source>
-        <translation>Tuỳ chọn kết nối:</translation>
-    </message>
-    <message>
         <source>Corrupted block database detected</source>
         <translation>Phát hiện ra dữ liệu khối bị hỏng</translation>
-    </message>
-    <message>
-        <source>Debugging/Testing options:</source>
-        <translation>Tuỳ chọn Gỡ rối/Kiểm tra:</translation>
-    </message>
-    <message>
-        <source>Do not load the wallet and disable wallet RPC calls</source>
-        <translation>Không tải ví và tắt các lời gọi ví RPC</translation>
     </message>
     <message>
         <source>Do you want to rebuild the block database now?</source>
@@ -3891,136 +3735,32 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Không thành công khi lắng nghe trên các cổng. Sử dụng -listen=0 nếu bạn muốn nó.</translation>
     </message>
     <message>
-        <source>(1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)</source>
-        <translation>(1 = giữ lại dữ liệu tx, ví dụ chủ tài khoản và thông tin yêu cầu thanh toán, 2 = bỏ dữ liệu tx)</translation>
-    </message>
-    <message>
         <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
         <translation>-maxtxfee được thiết lập rất cao! Mức phí cao này có thể được trả chỉ cho một giao dịch.</translation>
     </message>
     <message>
-        <source>A fee rate (in %s/kB) that will be used when fee estimation has insufficient data (default: %s)</source>
-        <translation>Một tỷ lệ phí (theo %s/kB) sẽ được sử dụng khi việc tính phí không có đủ dữ liệu (ngầm định: %s)</translation>
-    </message>
-    <message>
-        <source>Accept relayed transactions received from whitelisted peers even when not relaying transactions (default: %d)</source>
-        <translation>Chấp nhận các giao dịch chuyển tiếp nhận được từ các nút ngang hàng trong danh sách trắng thậm chí đó không phải giao dịch chuyển tiếp (ngầm định: %d)</translation>
-    </message>
-    <message>
-        <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
-        <translation>Cho phép các kết nối JSON-RPC từ các nguồn nhất định. Các địa chỉ &lt;ip&gt; hợp lệ là các địa chỉ IP đơn (ví dụ: 1.2.3.4), một mạng/netmask (ví dụ: 1.2.3.4/255.255.255.0) hoặc một mạng/CIDR (ví dụ: 1.2.3.4/24). Tuỳ chọn này có thể chỉ ra nhiều lần.</translation>
-    </message>
-    <message>
-        <source>Bind to given address and whitelist peers connecting to it. Use [host]:port notation for IPv6</source>
-        <translation>Liên kết với địa chỉ cụ thể và đưa nó vào danh sách chấp nhận của các đối tác kết nối vào nó. Sử dụng cách viết [địa chỉ máy]:cổng cho IPv6</translation>
-    </message>
-    <message>
-        <source>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</source>
-        <translation>Tạo tệp mới với các quyền hệ thống ngầm định, thay vì umask 077 (chỉ có tác dụng với chức năng ví được tắt)</translation>
-    </message>
-    <message>
-        <source>Delete all wallet transactions and only recover those parts of the blockchain through -rescan on startup</source>
-        <translation>Xoá hết tất cả các giao dịch ví và chỉ phục hồi những phần đó của blockchain qua -rescan khi khởi động</translation>
-    </message>
-    <message>
-        <source>Enable publish raw transactions of attempted InstantSend double spend in &lt;address&gt;</source>
-        <translation>Cho phép công bố các giao dịch thô đã dùng InstantSend trong việc tiêu lặp ở &lt;address&gt;</translation>
-    </message>
-    <message>
-        <source>Enable publish transaction hashes of attempted InstantSend double spend in &lt;address&gt;</source>
-        <translation>Cho phép công bố các mã băm của giao dịch đã dùng InstantSend trong việc tiêu lặp ở &lt;address&gt;</translation>
+        <source>Cannot provide specific connections and have addrman find outgoing connections at the same.</source>
+        <translation>Không thể cung cấp những kết nối cụ thể và nhờ addrman tìm những kết nối tại cùng một thời điểm.</translation>
     </message>
     <message>
         <source>Found unconfirmed denominated outputs, will wait till they confirm to continue.</source>
         <translation>Đã thấy các mệnh giá đầu ra chưa được xác nhận, sẽ đợi đến khi chúng xác nhận để tiếp tục.</translation>
     </message>
     <message>
-        <source>How thorough the block verification of -checkblocks is (0-4, default: %u)</source>
-        <translation>Cách kiểm tra khối triệt để -checkblocks là (0-4, ngầm định: %u)</translation>
-    </message>
-    <message>
-        <source>If paytxfee is not set, include enough fee so transactions begin confirmation on average within n blocks (default: %u)</source>
-        <translation>Nếu paytxfee không được thiết lập, bao gồm đầy đủ phí để giao dịch bắt đầu xác nhận bình quân trong n khối (ngầm định: %u)</translation>
-    </message>
-    <message>
-        <source>If this block is in the chain assume that it and its ancestors are valid and potentially skip their script verification (0 to verify all, default: %s, testnet: %s)</source>
-        <translation>Nếu khối này nằm trong chuỗi giả định rằng nó và các khối trước nó là hợp lệ và có khả năng bỏ qua kịch bản kiểm tra (0 để kiểm tra tất cả, ngầm định: %s, testnet: %s)</translation>
+        <source>Invalid -socketevents ('%s') specified. Only these modes are supported: %s</source>
+        <translation>Thông số -socketevents ('%s') được chỉ định không hợp lệ. Chỉ có những chế độ được hỗ hỗ trợ sau: %s</translation>
     </message>
     <message>
         <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)</source>
         <translation>Số lượng không phù hợp cho -maxtxfee=&lt;số lượng&gt;: '%s' (phải bằng ít nhất mức phí chuyển tiếp tối thiểu %s để tránh tình trạng tắc các giao dịch)</translation>
     </message>
     <message>
-        <source>Maintain a full transaction index, used by the getrawtransaction rpc call (default: %u)</source>
-        <translation>Duy trì một chỉ mục giao dịch đầy đủ, sử dụng bởi lệnh gọi rpc getrawtransaction (ngầm định: %u)</translation>
-    </message>
-    <message>
-        <source>Maximum size of data in data carrier transactions we relay and mine (default: %u)</source>
-        <translation>Kích thước tối đa của dữ liệu trong các giao dịch cung cấp dữ liệu, chúng tôi chuyển tiếp và đào (ngầm định: %u)</translation>
-    </message>
-    <message>
-        <source>Number of seconds to keep misbehaving peers from reconnecting (default: %u)</source>
-        <translation>Số giây hạn chế để không cho phép các đối tác ngang hàng cư xử không đúng tiếp tục kết nối lại (ngầm định: %u)</translation>
-    </message>
-    <message>
-        <source>Output debugging information (default: %u, supplying &lt;category&gt; is optional)</source>
-        <translation>Thông tin gỡ rối đầu ra (ngầm định: %u, cung cấp &lt;category&gt;  là một tuỳ chọn)</translation>
-    </message>
-    <message>
-        <source>Overrides minimum spork signers to change spork value. Only useful for regtest and devnet. Using this on mainnet or testnet will ban you.</source>
-        <translation>Ghi đè yêu cầu về số người ký spork tối thiểu để thay đổi giá trị spork. Chỉ hữu ích cho regtest và devnet. Không được sử dụng cái này trên mainnet hoặc test net.</translation>
-    </message>
-    <message>
-        <source>PrivateSend uses exact denominated amounts to send funds, you might simply need to mix some more coins.</source>
-        <translation>PrivateSend sử dụng chính xác số tiền đã được phân mệnh giá để gửi, bạn chỉ đơn giản cần trộn thêm nhiều coin nữa.</translation>
-    </message>
-    <message>
-        <source>Use N separate smartnodes in parallel to mix funds (%u-%u, default: %u)</source>
-        <translation>Sử dụng N smartnode riêng biệt một cách song song để trộn ngân quỹ (%u-%u, ngầm định: %u)</translation>
-    </message>
-    <message>
-        <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)</source>
-        <translation>Sửa dụng các SOCKS5 proxy riêng biệt cho mỗi đối tác ngang hàng thông qua dịch vụ ẩn Tor (ngầm định: %s)</translation>
-    </message>
-    <message>
-        <source>User defined mnemonic for HD wallet (bip39). Only has effect during wallet creation/first start (default: randomly generated)</source>
-        <translation>Sử dụng gợi nhớ cho ví (bip39). Chỉ có tác dụng trong khi tạo ví/khởi động lần đầu (ngầm định: sinh ngẫu nhiên)</translation>
-    </message>
-    <message>
-        <source>User defined seed for HD wallet (should be in hex). Only has effect during wallet creation/first start (default: randomly generated)</source>
-        <translation>Sử dụng mẫu định trước cho ví HD (nên ở dạng số thập lục hex). Chỉ có tác dụng trong việc khởi tạo/khởi động lần đầu (ngầm định: sinh ngẫu nhiên)</translation>
-    </message>
-    <message>
-        <source>Whitelisted peers cannot be DoS banned and their transactions are always relayed, even if they are already in the mempool, useful e.g. for a gateway</source>
-        <translation>Cái điểm ngang hàng trong danh sách trắng không thể bị cấm DoS và các giao dịch của nó luôn được chuyển tiếp, thậm chí cả khi nó đã có trong mempool, hữu ích ví dụ như cho một cửa ngõ</translation>
-    </message>
-    <message>
-        <source>(default: %s)</source>
-        <translation>(ngầm định: %s)</translation>
-    </message>
-    <message>
-        <source>Accept public REST requests (default: %u)</source>
-        <translation>Chấp nhận các yêu cầu REST công khai (ngầm định: %u)</translation>
-    </message>
-    <message>
-        <source>Always query for peer addresses via DNS lookup (default: %u)</source>
-        <translation>Luôn luôn tìm kiếm địa chỉ các đối tác ngang hàng thông qua tìm kiếm DNS (ngầm định: %u)</translation>
+        <source>Transaction index can't be disabled with governance validation enabled. Either start with -disablegovernance command line switch or enable transaction index.</source>
+        <translation>Chỉ mục giao dịch không thể tắt với tính năng xác thực quản trị đã được bật. Thay vào đó hãy khởi động với câu lệnh -disablegovernance hoặc bật chế độ chỉ mục giao dịch.</translation>
     </message>
     <message>
         <source>Can't mix: no compatible inputs found!</source>
         <translation>Không thể trộn: không thấy đầu vào tương thích!</translation>
-    </message>
-    <message>
-        <source>Chain selection options:</source>
-        <translation>Các tuỳ chọn lựa chọn chuỗi:</translation>
-    </message>
-    <message>
-        <source>Connect through SOCKS5 proxy</source>
-        <translation>Kết nối thông qua SOCKS 5 proxy</translation>
-    </message>
-    <message>
-        <source>Connect to KeePassHttp on port &lt;port&gt; (default: %u)</source>
-        <translation>Kết nối tới KeePassHttp trên cổng &lt;port&gt; (ngầm định: %u)</translation>
     </message>
     <message>
         <source>Entry exceeds maximum size.</source>
@@ -4047,16 +3787,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Đã kiếm đủ người dùng, đang ký ...</translation>
     </message>
     <message>
-        <source>How many blocks to check at startup (default: %u, 0 = all)</source>
-        <translation>Bao nhiêu khối để kiểm tra khi khởi động (ngầm định: %u, 0 = tất cả)</translation>
-    </message>
-    <message>
         <source>Importing...</source>
         <translation>Đang nạp...</translation>
-    </message>
-    <message>
-        <source>Include IP addresses in debug output (default: %u)</source>
-        <translation>Kèm địa chỉ IP trong thông tin gỡ rối đầu ra (ngầm định: %u)</translation>
     </message>
     <message>
         <source>Incompatible mode.</source>
@@ -4095,24 +3827,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Số lượng người ký tối thiểu cho spork được chỉ bởi -minsporkkeys không hợp lệ</translation>
     </message>
     <message>
-        <source>Keep N RTM mixed (%u-%u, default: %u)</source>
-        <translation>Giữ N RTM được trộn (%u-%u, ngầm định: %u)</translation>
-    </message>
-    <message>
-        <source>Keep at most &lt;n&gt; unconnectable transactions in memory (default: %u)</source>
-        <translation>Giữ nhiều nhất &lt;n&gt;giao dịch không thể được kết nối trong bộ nhớ (ngầm định: %u)</translation>
-    </message>
-    <message>
         <source>Keypool ran out, please call keypoolrefill first</source>
         <translation>Keypool đã hết, hãy gọi keypoolrefill trước</translation>
-    </message>
-    <message>
-        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: %u or testnet: %u)</source>
-        <translation>Lắng nghe kết nối JSON-RPC trên &lt;cổng&gt; (ngầm định: %u hoặc mạng thử: %u)</translation>
-    </message>
-    <message>
-        <source>Listen for connections on &lt;port&gt; (default: %u or testnet: %u)</source>
-        <translation>Lắng nghe kết nối từ &lt;cổng&gt; (ngầm định: %u hoặc mạng thử: %u)</translation>
     </message>
     <message>
         <source>Loading banlist...</source>
@@ -4131,20 +3847,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Khoá đã sẵn sàng.</translation>
     </message>
     <message>
-        <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: %u)</source>
-        <translation>Tối đa cho bộ đệm nhận của mỗi kết nối, &lt;n&gt;*1000 bytes (ngầm định: %u)</translation>
-    </message>
-    <message>
-        <source>Maximum per-connection send buffer, &lt;n&gt;*1000 bytes (default: %u)</source>
-        <translation>Tối đa cho bộ đệm gửi của mỗi kết nối, &lt;n&gt;*1000 bytes (ngầm định: %u)</translation>
-    </message>
-    <message>
         <source>Mixing in progress...</source>
         <translation>Đang trong quá trình trộn...</translation>
-    </message>
-    <message>
-        <source>Mnemonic passphrase is too long, must be at most 256 characters</source>
-        <translation>Câu gợi nhớ quá dài, nó chỉ được dài nhất là 256 ký tự</translation>
     </message>
     <message>
         <source>Need to specify a port with -whitebind: '%s'</source>
@@ -4167,80 +3871,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Không có trong danh sách Smartnode.</translation>
     </message>
     <message>
-        <source>Only connect to nodes in network &lt;net&gt; (ipv4, ipv6 or onion)</source>
-        <translation>Chỉ kết nối với các nút trong mạng &lt;net&gt; (IPv4, IPv6 hoặc onion)</translation>
-    </message>
-    <message>
-        <source>Prepend debug output with timestamp (default: %u)</source>
-        <translation>Thêm tiền tố đầu ra debug với dấu thời gian (ngầm định: %u)</translation>
-    </message>
-    <message>
-        <source>Rebuild chain state and block index from the blk*.dat files on disk</source>
-        <translation>Tái tạo chuỗi trạng thái và chỉ mục khối từ các file blk*.dat trên đĩa</translation>
-    </message>
-    <message>
-        <source>Rebuild chain state from the currently indexed blocks</source>
-        <translation>Tái tạo chuỗi trạng thái từ chỉ mục khối</translation>
-    </message>
-    <message>
-        <source>Send trace/debug info to debug.log file (default: %u)</source>
-        <translation>Gửi thông tin trace/debug vào file debug.log (ngầm định: %u)</translation>
-    </message>
-    <message>
-        <source>Set key pool size to &lt;n&gt; (default: %u)</source>
-        <translation>Thiết lập kích thước pool đến &lt;n&gt; (ngầm định: %u)</translation>
-    </message>
-    <message>
-        <source>Set the number of threads to service RPC calls (default: %d)</source>
-        <translation>Thiết lập số luồng phục vụ các lời gọi RPC (ngầm định: %d)</translation>
-    </message>
-    <message>
-        <source>Specify configuration file (default: %s)</source>
-        <translation>Hãy chỉ rõ tệp cấu hình (ngầm định: %s)</translation>
-    </message>
-    <message>
-        <source>Specify connection timeout in milliseconds (minimum: 1, default: %d)</source>
-        <translation>Hãy xác định thời gian hết hạn tính theo milli giây (tối thiểu: 1, ngầm định: %d)</translation>
-    </message>
-    <message>
-        <source>Specify pid file (default: %s)</source>
-        <translation>Hãy chỉ rõ tệp pid (ngầm định: %s)</translation>
-    </message>
-    <message>
-        <source>Spend unconfirmed change when sending transactions (default: %u)</source>
-        <translation>Tiên các khoản trả lại chưa được xác nhận khi gửi các giao dịch (ngầm định: %u)</translation>
-    </message>
-    <message>
         <source>Submitted to smartnode, waiting in queue %s</source>
         <translation>Đã được gửi cho smartnode, đang đợi trong hàng đợi %s</translation>
     </message>
     <message>
-        <source>Synchronization failed</source>
-        <translation>Đồng bộ thất bại</translation>
-    </message>
-    <message>
         <source>Synchronization finished</source>
         <translation>Đồng bộ đã hoàn thành</translation>
-    </message>
-    <message>
-        <source>Threshold for disconnecting misbehaving peers (default: %u)</source>
-        <translation>Ngưỡng ngắt kết nối khi đối tác ngang hàng cư xử không đúng (ngầm định: %u)</translation>
-    </message>
-    <message>
-        <source>Too many %f denominations, removing.</source>
-        <translation>Có quá nhiều mệnh giá %f, đang xoá.</translation>
-    </message>
-    <message>
-        <source>Too many %f denominations, skipping.</source>
-        <translation>Có quá nhiều mệnh giá %f, đang bỏ qua.</translation>
-    </message>
-    <message>
-        <source>Tor control port password (default: empty)</source>
-        <translation>Mật khẩu kiểm soát cổng Tor (ngầm định: bỏ trống)</translation>
-    </message>
-    <message>
-        <source>Tor control port to use if onion listening enabled (default: %s)</source>
-        <translation>Bật cơ chế lắng nghe onion để có thể sử dụng cổng điều khiển Tor (ngầm định: %s)</translation>
     </message>
     <message>
         <source>Unable to start HTTP server. See debug log for details.</source>
@@ -4261,22 +3897,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Unsupported argument -tor found, use -onion.</source>
         <translation>Tuỳ chọn không được hỗ trợ -tor, hãy sử dụng -onion.</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format on startup</source>
-        <translation>Nâng cấp ví lên định dạng mới nhất khi khởi động</translation>
-    </message>
-    <message>
-        <source>Use KeePass 2 integration using KeePassHttp plugin (default: %u)</source>
-        <translation>Sử dụng tích hợp KeePass 2 dùng KeePassHttp plugin (ngầm định: %u)</translation>
-    </message>
-    <message>
-        <source>Use UPnP to map the listening port (default: %u)</source>
-        <translation>Sử dụng UPnP để ánh xạ cổng lắng nghe (ngầm định: %u)</translation>
-    </message>
-    <message>
-        <source>Use the test chain</source>
-        <translation>Sử dụng chuỗi thử</translation>
     </message>
     <message>
         <source>User Agent comment (%s) contains unsafe characters.</source>
@@ -4307,18 +3927,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Kịch bản được phát hiện không hợp lệ.</translation>
     </message>
     <message>
-        <source>KeePassHttp id for the established association</source>
-        <translation>KeePassHttp id cho thiết lập sự kết hợp</translation>
-    </message>
-    <message>
-        <source>KeePassHttp key for AES encrypted communication with KeePass</source>
-        <translation>Khoá KeePassHttp cho liên lạc mã hoá AES với KeePass</translation>
-    </message>
-    <message>
-        <source>Disable all Raptoreum specific functionality (Smartnodes, PrivateSend, InstantSend, Governance) (0-1, default: %u)</source>
-        <translation>Tắt tất cả các chức năng đắc trưng của Raptoreum (Smartnode, PrivateSend, InstantSend, Governance) (0-1, ngầm định: %u)</translation>
-    </message>
-    <message>
         <source>%s file contains all private keys from this wallet. Do not share it with anyone!</source>
         <translation>File %s có chứa tất cả các khoá riêng từ ví này. Không nên chia sẻ nó với bất cứ ai.</translation>
     </message>
@@ -4327,76 +3935,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Tuỳ chọn -smartnode không được sử dụng nữa và bị bỏ qua, việc chỉ rõ tham số -smartnodeblsprivkey là đủ để khởi động một nút như là một smartnode.</translation>
     </message>
     <message>
-        <source>Add a node to connect to and attempt to keep the connection open (see the `addnode` RPC command help for more info)</source>
-        <translation>Thêm một nút để kết nối và cố gắng giữ kết nối (xem hỗ trợ cho câu lệnh RPC `addnode` để có thêm thông tin)</translation>
-    </message>
-    <message>
-        <source>Bind to given address to listen for JSON-RPC connections. This option is ignored unless -rpcallowip is also passed. Port is optional and overrides -rpcport. Use [host]:port notation for IPv6. This option can be specified multiple times (default: 127.0.0.1 and ::1 i.e., localhost, or if -rpcallowip has been specified, 0.0.0.0 and :: i.e., all addresses)</source>
-        <translation>Ràng buộc với địa chỉ được cho để lắng nghe cho các kết nối JSON-RPC. Tuỳ chọn này được bỏ qua trừ khi tham số -rpcport được cung cấp. Cổng là tuỳ chọn và được thay thế bởi -rpcport. Sử dụng cách viết [host]:port cho IPv6. Tham số này có thể sử dụng nhiều lần (ngầm định: 127.0.0.1 và ::1 cho localhost, hoặc nếu tham số -rpcallowip được xác định, 0.0.0.0 và :: cho tất cả các địa chỉ)</translation>
-    </message>
-    <message>
-        <source>Connect only to the specified node(s); -connect=0 disables automatic connections (the rules for this peer are the same as for -addnode)</source>
-        <translation>Chỉ kết nối đến (các) nút cụ thể; -connect=0 là tắt các kết nối tự động (quy tắc cho nút này là giống như với -addnode)</translation>
-    </message>
-    <message>
-        <source>Discover own IP addresses (default: 1 when listening and no -externalip or -proxy)</source>
-        <translation>Tự phát hiện địa chỉ IP (ngầm định: 1 khi nghe và không dùng -externalip hoặc -proxy)</translation>
-    </message>
-    <message>
-        <source>Do not keep transactions in the mempool longer than &lt;n&gt; hours (default: %u)</source>
-        <translation>Không giữ các giao dịch trong mempool lâu hơn &lt;n&gt; giờ (ngầm định: %u)</translation>
-    </message>
-    <message>
-        <source>Enable multiple PrivateSend mixing sessions per block, experimental (0-1, default: %u)</source>
-        <translation>Cho phép nhiều phiên trộn PrivateSend cho mỗi khối, thí nghiệm (0-1, ngầm định: %u)</translation>
-    </message>
-    <message>
-        <source>Execute command when a wallet InstantSend transaction is successfully locked (%s in cmd is replaced by TxID)</source>
-        <translation>Thực hiện lên khi một giao dịch InstantSend được khoá thành công (%s trong cmd được thay thế bằng TxID)</translation>
-    </message>
-    <message>
-        <source>Extra transactions to keep in memory for compact block reconstructions (default: %u)</source>
-        <translation>Những giao dịch khác được giữ ở trong bộ nhớ cho việc tái xây dựng các khối được gọn gàng (ngầm định: %u)</translation>
-    </message>
-    <message>
         <source>Failed to create backup, file already exists! This could happen if you restarted wallet in less than 60 seconds. You can continue if you are ok with this.</source>
         <translation>Không tạo được file dự phòng, file đã tồn tại rồi! Điều này có thể xảy ra nếu bạn khởi động lại ví trong ít hơn 60 giây. Bạn có thể tiếp tục nếu bạn đồng ý với việc đó.</translation>
     </message>
     <message>
-        <source>Fees (in %s/kB) smaller than this are considered zero fee for relaying, mining and transaction creation (default: %s)</source>
-        <translation>Phí (theo %s/kB) nhỏ hơn giá trị này được xem là không phí cho việc chuyển tiếp, đào và tạo giao dịch (ngầm định: %s)</translation>
-    </message>
-    <message>
-        <source>Fees (in %s/kB) smaller than this are considered zero fee for transaction creation (default: %s)</source>
-        <translation>Phí (theo %s/kB) nhỏ hơn giá trị này được xem là không phí cho việc tạo giao dịch (ngầm định: %s)</translation>
-    </message>
-    <message>
-        <source>If &lt;category&gt; is not supplied or if &lt;category&gt; = 1, output all debugging information.</source>
-        <translation>Nếu &lt;category&gt; không được cung cấp hoặc nếu &lt;category&gt; = 1, xuất tất cả các thông tin gỡ lỗi.</translation>
-    </message>
-    <message>
-        <source>Maintain a full address index, used to query for the balance, txids and unspent outputs for addresses (default: %u)</source>
-        <translation>Duy trì một chỉ mục địa chỉ đầy đủ, được dùng để tra cứu số dư, txids và những khoản tiền còn chưa tiêu của các địa chỉ (ngầm định: %u)</translation>
-    </message>
-    <message>
-        <source>Maintain a full spent index, used to query the spending txid and input index for an outpoint (default: %u)</source>
-        <translation>Duy trì một chỉ mục địa chỉ đầy đủ, được dùng để tra cứu txids và những khoản tiền còn chưa tiêu của các địa chỉ (ngầm định: %u)</translation>
-    </message>
-    <message>
-        <source>Maintain a timestamp index for block hashes, used to query blocks hashes by a range of timestamps (default: %u)</source>
-        <translation>Duy trì một chỉ mục đầy đủ các đánh dấu thời gian cho các giá trị băm của khối, được dùng để tra cứu số các giá trị băm trong một khoảng thời gian xác định (ngầm định: %u)</translation>
-    </message>
-    <message>
-        <source>Maintain at most &lt;n&gt; connections to peers (temporary service connections excluded) (default: %u)</source>
-        <translation>Duy trì nhiều nhất &lt;n&gt; kết nối đến các nút ngang hàng (các kết nối dịch vụ tạm thời không được tính) (ngầm định: %u)</translation>
-    </message>
-    <message>
         <source>Make sure to encrypt your wallet and delete all non-encrypted backups after you have verified that the wallet works!</source>
         <translation>Hãy chắc chắn rằng bạn sẽ mã hoá ví của bạn và xoá đi tất cả các bản sao lưu của ví mà không có mã hoá sau kiểm tra ví đã hoạt động tốt!</translation>
-    </message>
-    <message>
-        <source>Maximum total size of all orphan transactions in megabytes (default: %u)</source>
-        <translation>Kích thước tổng tối đa của tất cả các giao dịch mồ côi theo megabyte (ngầm định: %u)</translation>
     </message>
     <message>
         <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
@@ -4407,28 +3951,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Xén tỉa: việc đồng bộ ví mới đây đã đi quá dữ liệu được xén tỉa. Bạn cần -reindex (download toàn bộ blockchain lần nữa trong trường hợp các nút bị xén tỉa)</translation>
     </message>
     <message>
-        <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect used)</source>
-        <translation>Truy vấn địa chỉ đối tác ngang hàng thông qua tra cứu DNS, nếu có ít địa chỉ (ngầm định: 1 trừ trường hợp -connect được sử dụng)</translation>
-    </message>
-    <message>
-        <source>Randomize credentials for every proxy connection. This enables Tor stream isolation (default: %u)</source>
-        <translation>Ngẫu nhiên hoá các chứng thư cho mỗi kết nối qua proxy. Nó bật Tor stream isolation (ngầm định: %u)</translation>
-    </message>
-    <message>
         <source>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</source>
         <translation>Rescans là không thể trong chế độ xén tỉa. Bạn cần sử dụng -reindex mà nó sẽ tải xuống toàn bộ blockchain lại.</translation>
-    </message>
-    <message>
-        <source>Set the smartnode BLS private key and enable the client to act as a smartnode</source>
-        <translation>Thiết lập khoá riêng BLS cho smartnode và bật phần mềm để nó hoạt động như là một smartnode</translation>
-    </message>
-    <message>
-        <source>Specify full path to directory for automatic wallet backups (must exist)</source>
-        <translation>Hãy chỉ đường dẫn đầy đủ đến thư mục dành cho việc tự động backup ví (thư mục phải được tạo sẵn)</translation>
-    </message>
-    <message>
-        <source>Support filtering of blocks and transaction with bloom filters (default: %u)</source>
-        <translation>Hỗ trợ việc lọc các khối và giao dịch với bộ lọc bloom (ngầm định: %u)</translation>
     </message>
     <message>
         <source>The block database contains a block which appears to be from the future. This may be due to your computer's date and time being set incorrectly. Only rebuild the block database if you are sure that your computer's date and time are correct</source>
@@ -4443,28 +3967,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Tổng độ dài của chuỗi phiên bản mạng (%i) vượt qua độ dài tối đa (%i). Hãy giảm số hoặc kích thước của uacomments.</translation>
     </message>
     <message>
-        <source>Transaction index can't be disabled in full mode. Either start with -litemode command line switch or enable transaction index.</source>
-        <translation>Chỉ số giao dịch không thể được tắt trong chế độ đầy đủ. Cả việc khởi động với câu lệnh với tuỳ chọn -litemode hoặc cho phép chỉ số giao dịch.</translation>
-    </message>
-    <message>
-        <source>Tries to keep outbound traffic under the given target (in MiB per 24h), 0 = no limit (default: %d)</source>
-        <translation>Thử giữ cho thông lượng mạng truyền ra dưới ngưỡng (theo MiB mỗi 24 giờ), 0 = không giới hạn (ngầm định: %d)</translation>
-    </message>
-    <message>
-        <source>Unable to locate enough PrivateSend denominated funds for this transaction.</source>
-        <translation>Không tìm đủ nguồn tiền PrivateSend denominated cho giao dịch này.</translation>
-    </message>
-    <message>
         <source>Unsupported argument -socks found. Setting SOCKS version isn't possible anymore, only SOCKS5 proxies are supported.</source>
         <translation>Tìm thấy tham số không được hỗ trợ -socks. Thiết lập phiên bản SOCKS không còn hiệu lực nữa, chỉ có proxy SOCKS5 mới được hỗ trợ.</translation>
     </message>
     <message>
         <source>Unsupported argument -whitelistalwaysrelay ignored, use -whitelistrelay and/or -whitelistforcerelay.</source>
         <translation>Tham số không được hỗ trợ -whitelistalwaysrelay đã bị bỏ qua, hãy sử dụng -whitelistrelay và/hoặc -whitelistforcerelay.</translation>
-    </message>
-    <message>
-        <source>Use UPnP to map the listening port (default: 1 when listening and no -proxy)</source>
-        <translation>Sử dụng UPnP để ánh xạ các cổng lắng nghe (ngầm định: 1 khi nghe và không -proxy)</translation>
     </message>
     <message>
         <source>WARNING! Failed to replenish keypool, please unlock your wallet to do so.</source>
@@ -4487,68 +3995,52 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Bạn cần tái lập lại cơ sở dữ liệu sử dụng -reindex để quay trở lại chế độ không bị xén tỉa. Điều này sẽ làm tải lại toàn bộ blockchain</translation>
     </message>
     <message>
-        <source>(default: %u)</source>
-        <translation>(ngầm định: %u)</translation>
+        <source>-litemode is deprecated.</source>
+        <translation>-litemode không được dùng nữa.</translation>
     </message>
     <message>
         <source>-maxmempool must be at least %d MB</source>
         <translation>-maxmempool phải ít nhất %d MB</translation>
     </message>
     <message>
-        <source>&lt;category&gt; can be:</source>
-        <translation>&lt;category&gt; có thể là:</translation>
-    </message>
-    <message>
-        <source>Append comment to the user agent string</source>
-        <translation>Thêm bình luận vào thông tin user agent</translation>
-    </message>
-    <message>
         <source>Automatic backups disabled</source>
         <translation>Tự động backup đã bị tắt</translation>
-    </message>
-    <message>
-        <source>Automatically create Tor hidden service (default: %d)</source>
-        <translation>Tự động tạo dịch vụ ẩn Tor (ngầm định: %d)</translation>
     </message>
     <message>
         <source>ERROR! Failed to create automatic backup</source>
         <translation>LỖI: Thất bại trong việc backup tự động</translation>
     </message>
     <message>
-        <source>Enable publish hash block in &lt;address&gt;</source>
-        <translation>Cho phép xuất bản khối băm trong &lt;address&gt;</translation>
-    </message>
-    <message>
-        <source>Enable publish hash of governance objects (like proposals) in &lt;address&gt;</source>
-        <translation>Cho phép xuất bản hash cho đối tượng quản trị (như các đề xuất) trong &lt;address&gt;</translation>
-    </message>
-    <message>
-        <source>Enable publish hash of governance votes in &lt;address&gt;</source>
-        <translation>Cho phép xuất bản hash của các biểu quyết quản trị trong &lt;address&gt;</translation>
-    </message>
-    <message>
-        <source>Enable publish hash transaction (locked via InstantSend) in &lt;address&gt;</source>
-        <translation>Cho phép công bố hash transaction (khoá thông qua InstantSend) trong &lt;address&gt;</translation>
-    </message>
-    <message>
-        <source>Enable publish hash transaction in &lt;address&gt;</source>
-        <translation>Cho phép công bố hash transaction trong &lt;address&gt;</translation>
-    </message>
-    <message>
-        <source>Enable publish raw block in &lt;address&gt;</source>
-        <translation>Cho phép công bố các khối thô trong &lt;address&gt;</translation>
-    </message>
-    <message>
-        <source>Enable publish raw transaction (locked via InstantSend) in &lt;address&gt;</source>
-        <translation>Cho phép công bố các giao dịch thô (được khoá qua InstantSend) trong &lt;address&gt;</translation>
-    </message>
-    <message>
-        <source>Enable publish raw transaction in &lt;address&gt;</source>
-        <translation>Cho phép công bố giao dịch thô trong &lt;address&gt;</translation>
+        <source>Error upgrading evo database</source>
+        <translation>Lỗi nâng cấp cơ sở dữ liệu evo</translation>
     </message>
     <message>
         <source>Error: A fatal internal error occurred, see debug.log for details</source>
         <translation>Lỗi: Một lỗi bên trong trầm trọng đã xảy ra, hãy xem file debug.log để biết thêm chi tiết</translation>
+    </message>
+    <message>
+        <source>Error: failed to add socket to epollfd (epoll_ctl returned error %s)</source>
+        <translation>Lỗi: Không thành công trong việc thêm socket vào epolfd (epoll_ctl trả về lỗi %s)</translation>
+    </message>
+    <message>
+        <source>Exceeded max tries.</source>
+        <translation>Vượt quá số lần thử tối đa.</translation>
+    </message>
+    <message>
+        <source>Failed to clear fulfilled requests cache at</source>
+        <translation>Không thể xoá bộ nhớ đệm về các yêu cầu đã được thực hiện tại </translation>
+    </message>
+    <message>
+        <source>Failed to clear governance cache at</source>
+        <translation>Không thể xoá bộ đệm quản trị tại </translation>
+    </message>
+    <message>
+        <source>Failed to clear smartnode cache at</source>
+        <translation>Không thể xoá bộ đệm smartnode tại </translation>
+    </message>
+    <message>
+        <source>Failed to commit EvoDB</source>
+        <translation>Không thể cập nhật vào EvoDB</translation>
     </message>
     <message>
         <source>Failed to create backup %s!</source>
@@ -4567,16 +4059,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Thất bại việc tải dữ liệu sporks cache từ</translation>
     </message>
     <message>
-        <source>Fee (in %s/kB) to add to transactions you send (default: %s)</source>
-        <translation>Phí (theo %s/kB) để thêm vào giao dịch mà bạn gửi (ngầm định: %s)</translation>
-    </message>
-    <message>
-        <source>Imports blocks from external blk000??.dat file on startup</source>
-        <translation>Nhập các khối từ các file ngoài blk000??.dat khi khởi động</translation>
-    </message>
-    <message>
-        <source>InstantSend options:</source>
-        <translation>Các tuỳ chọn InstantSend:</translation>
+        <source>Failed to rescan the wallet during initialization</source>
+        <translation>Không thể quét lại ví trong quá trình khởi tạo</translation>
     </message>
     <message>
         <source>Invalid amount for -fallbackfee=&lt;amount&gt;: '%s'</source>
@@ -4587,16 +4071,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>smartnodeblsprivkey không hợp lệ. Hãy xem trong tài liệu.</translation>
     </message>
     <message>
-        <source>Keep the transaction memory pool below &lt;n&gt; megabytes (default: %u)</source>
-        <translation>Giữ cho bể nhớ giao dịch dưới &lt;n&gt; megabytes (ngầm định: %u)</translation>
+        <source>It has been replaced by -disablegovernance.</source>
+        <translation>Nó đã được thay thế bởi -disablegovernance.</translation>
     </message>
     <message>
-        <source>Last PrivateSend was too recent.</source>
-        <translation>Lần gửi PrivateSend mới nhất quá gần.</translation>
-    </message>
-    <message>
-        <source>Last successful PrivateSend action was too recent.</source>
-        <translation>PrivateSend mới nhất được thực hiện quá gần đây.</translation>
+        <source>Its replacement -disablegovernance has been forced instead.</source>
+        <translation>Sự thay thế -disablegovernance đã bị buộc phải thực hiện.</translation>
     </message>
     <message>
         <source>Loading block index...</source>
@@ -4619,28 +4099,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Đang tải ví...</translation>
     </message>
     <message>
-        <source>Location of the auth cookie (default: data dir)</source>
-        <translation>Vị trí của auth cookie (ngầm định: thư mục dữ liệu)</translation>
-    </message>
-    <message>
-        <source>Make the wallet broadcast transactions</source>
-        <translation>Làm cho ví truyền rộng các giao dịch</translation>
-    </message>
-    <message>
-        <source>Smartnode options:</source>
-        <translation>Tuỳ chọn Smartnode:</translation>
-    </message>
-    <message>
         <source>Smartnode queue is full.</source>
         <translation>Danh sách hàng đợi Smartnode đã đầy.</translation>
     </message>
     <message>
         <source>Smartnode:</source>
         <translation>Smartnode:</translation>
-    </message>
-    <message>
-        <source>Minimum bytes per sigop in transactions we relay and mine (default: %u)</source>
-        <translation>Số bytes tối thiểu mỗi sigop trong các giao dịch chúng ta chuyển tiếp và đào (ngầm định: %u)</translation>
     </message>
     <message>
         <source>Missing input transaction information.</source>
@@ -4655,14 +4119,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Không tìm thấy mệnh giá tương ứng để trộn.</translation>
     </message>
     <message>
-        <source>Node relay options:</source>
-        <translation>Tuỳ chọn trung chuyển nút:</translation>
-    </message>
-    <message>
-        <source>Non-standard public key detected.</source>
-        <translation>Phát hiện thấy khoá công khai không hợp chuẩn.</translation>
-    </message>
-    <message>
         <source>Not compatible with existing transactions.</source>
         <translation>Không tương thích với các giao dịch hiện tại.</translation>
     </message>
@@ -4671,40 +4127,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Chưa có đủ thông tin mô tả tệp.</translation>
     </message>
     <message>
-        <source>Number of automatic wallet backups (default: %u)</source>
-        <translation>Số lượng ví tự động backup (ngầm định: %u)</translation>
-    </message>
-    <message>
-        <source>Options:</source>
-        <translation>Tuỳ chọn:</translation>
-    </message>
-    <message>
-        <source>Password for JSON-RPC connections</source>
-        <translation>Mật khẩu cho kết nối JSON-RPC</translation>
-    </message>
-    <message>
-        <source>Print version and exit</source>
-        <translation>In ra phiên bản và thoát</translation>
-    </message>
-    <message>
-        <source>PrivateSend is idle.</source>
-        <translation>PrivateSend đang nghỉ</translation>
-    </message>
-    <message>
-        <source>PrivateSend options:</source>
-        <translation>Các tuỳ chọn PrivateSend:</translation>
-    </message>
-    <message>
-        <source>PrivateSend request complete:</source>
-        <translation>Yêu cầu gửi PrivateSend đã hoàn thành:</translation>
-    </message>
-    <message>
-        <source>PrivateSend request incomplete:</source>
-        <translation>Yêu cầu gửi PrivateSend không hoàn thành:</translation>
-    </message>
-    <message>
         <source>Prune cannot be configured with a negative value.</source>
         <translation>Xén-tỉa không thể được cấu hình với một giá trị âm.</translation>
+    </message>
+    <message>
+        <source>Prune mode is incompatible with -disablegovernance=false.</source>
+        <translation>Chế độ xén bỏ không tương thích với -disablegovernance=false.</translation>
     </message>
     <message>
         <source>Prune mode is incompatible with -txindex.</source>
@@ -4715,8 +4143,16 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Đang xén tỉa các khối lưu trữ...</translation>
     </message>
     <message>
-        <source>Rescan the block chain for missing wallet transactions on startup</source>
-        <translation>Quét lại block chain để tìm ra những giao dịch mà ví còn thiếu khi khởi động</translation>
+        <source>Specified -walletdir "%s" does not exist</source>
+        <translation>Thư mục được chỉ ra -walletdir "%s" không tồn tại</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" is a relative path</source>
+        <translation>Thư mục được xác định bởi -walletdir "%s" là một đường dẫn tương đối</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" is not a directory</source>
+        <translation>Thư mục được xác định bởi -walletdir "%s" không phải là một thư mục</translation>
     </message>
     <message>
         <source>Synchronizing blockchain...</source>
@@ -4725,6 +4161,10 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>The wallet will avoid paying less than the minimum relay fee.</source>
         <translation>Wallet sẽ hủy thanh toán nhỏ hơn phí relay.</translation>
+    </message>
+    <message>
+        <source>This is expected because you are running a pruned node.</source>
+        <translation>Điều này đã được mong đợi bởi vì bạn đang chạy ở chế độ xén bỏ.</translation>
     </message>
     <message>
         <source>This is the minimum transaction fee you pay on every transaction.</source>
@@ -4759,16 +4199,16 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Unable to bind to %s on this computer. %s is probably already running.</translation>
     </message>
     <message>
+        <source>Unable to generate initial keys</source>
+        <translation>Không thể sinh các khoá khởi tạo</translation>
+    </message>
+    <message>
         <source>Upgrading UTXO database</source>
         <translation>Upgrading UTXO database</translation>
     </message>
     <message>
-        <source>Use devnet chain with provided name</source>
-        <translation>Sử dụng mạng phát triển có tên được cung cấp</translation>
-    </message>
-    <message>
-        <source>Wallet debugging/testing options:</source>
-        <translation>Wallet debugging/testing options:</translation>
+        <source>Wallet %s resides outside wallet directory %s</source>
+        <translation>Ví %s nằm ngoài thư mục ví %s</translation>
     </message>
     <message>
         <source>Wallet needed to be rewritten: restart %s to complete</source>
@@ -4781,14 +4221,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Wasn't able to create wallet backup folder %s!</source>
         <translation>Không thể tạo được thư mục backup ví %s!</translation>
-    </message>
-    <message>
-        <source>Whether to operate in a blocks only mode (default: %u)</source>
-        <translation>Cho dù hoạt động trong chế độ chỉ có các khối (ngầm định: %u)</translation>
-    </message>
-    <message>
-        <source>You can not start a smartnode in lite mode.</source>
-        <translation>Bạn không thể khởi động một smartnode ở chế độ nhẹ.</translation>
     </message>
     <message>
         <source>You can not start a smartnode with wallet enabled.</source>
@@ -4807,20 +4239,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Bạn cần tái lập lại cơ sở dữ liệu sử dụng -reindex để thay đổi -txindex</translation>
     </message>
     <message>
-        <source>ZeroMQ notification options:</source>
-        <translation>Tuỳ chọn thông báo ZeroMQ:</translation>
-    </message>
-    <message>
         <source>no mixing available.</source>
         <translation>không có phiên trộn nào sẵn sàng.</translation>
     </message>
     <message>
         <source>see debug.log for details.</source>
         <translation>xem debug.log để biết thêm chi tiết.</translation>
-    </message>
-    <message>
-        <source>RPC server options:</source>
-        <translation>Tuỳ chọn cho RPC server</translation>
     </message>
     <message>
         <source>Raptoreum Core</source>
@@ -4839,44 +4263,16 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Distributed under the MIT software license, see the accompanying file %s or %s</translation>
     </message>
     <message>
-        <source>Enable use of PrivateSend for funds stored in this wallet (0-1, default: %u)</source>
-        <translation>Cho phép việc sử dụng PrivateSend cho các khoản tiền được lưu trong ví này (0-1, ngầm định: %u)</translation>
-    </message>
-    <message>
         <source>Error loading %s: You can't enable HD on an already existing non-HD wallet</source>
         <translation>Lỗi khi tải %s: Bạn không thể bật HD trên một ví không HD</translation>
-    </message>
-    <message>
-        <source>Error loading wallet %s. -wallet parameter must only specify a filename (not a path).</source>
-        <translation>Lỗi tài ví %s. tham số -wallet chỉ được dùng để xác định một tên file (không phải là một đường dẫn)</translation>
     </message>
     <message>
         <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
         <translation>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</translation>
     </message>
     <message>
-        <source>Exclude debugging information for a category. Can be used in conjunction with -debug=1 to output debug logs for all categories except one or more specified categories.</source>
-        <translation>Loại bỏ thông tin gỡ rối cho một danh mục. Có thể sử dụng cùng với -debug=1 để xuất nhật ký gỡ rối cho tất cả các danh mục trừ một hoặc các danh mục được xác định.</translation>
-    </message>
-    <message>
-        <source>Force relay of transactions from whitelisted peers even if they violate local relay policy (default: %d)</source>
-        <translation>Force relay of transactions from whitelisted peers even if they violate local relay policy (default: %d)</translation>
-    </message>
-    <message>
         <source>Incorrect or no devnet genesis block found. Wrong datadir for devnet specified?</source>
         <translation>Không chính xác hoặc không tìm thấy khối ban đầu của devnet. Thư mục dữ liệu devnet được cung cấp không chính xác?</translation>
-    </message>
-    <message>
-        <source>Maximum allowed median peer time offset adjustment. Local perspective of time may be influenced by peers forward or backward by this amount. (default: %u seconds)</source>
-        <translation>Maximum allowed median peer time offset adjustment. Local perspective of time may be influenced by peers forward or backward by this amount. (default: %u seconds)</translation>
-    </message>
-    <message>
-        <source>Maximum total fees (in %s) to use in a single wallet transaction or raw transaction; setting this too low may abort large transactions (default: %s)</source>
-        <translation>Maximum total fees (in %s) to use in a single wallet transaction or raw transaction; setting this too low may abort large transactions (default: %s)</translation>
-    </message>
-    <message>
-        <source>Override spork address. Only useful for regtest and devnet. Using this on mainnet or testnet will ban you.</source>
-        <translation>Ghi đè địa chỉ spork. Chỉ hữu ích với regtest và devnet. Sử dụng nó với mainnet và testnet sẽ cấm bạn.</translation>
     </message>
     <message>
         <source>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</source>
@@ -4885,18 +4281,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Please contribute if you find %s useful. Visit %s for further information about the software.</source>
         <translation>Please contribute if you find %s useful. Visit %s for further information about the software.</translation>
-    </message>
-    <message>
-        <source>Reduce storage requirements by enabling pruning (deleting) of old blocks. This allows the pruneblockchain RPC to be called to delete specific blocks, and enables automatic pruning of old blocks if a target size in MiB is provided. This mode is incompatible with -txindex and -rescan. Warning: Reverting this setting requires re-downloading the entire blockchain. (default: 0 = disable pruning blocks, 1 = allow manual pruning via RPC, &gt;%u = automatically prune block files to stay under the specified target size in MiB)</source>
-        <translation>Reduce storage requirements by enabling pruning (deleting) of old blocks. This allows the pruneblockchain RPC to be called to delete specific blocks, and enables automatic pruning of old blocks if a target size in MiB is provided. This mode is incompatible with -txindex and -rescan. Warning: Reverting this setting requires re-downloading the entire blockchain. (default: 0 = disable pruning blocks, 1 = allow manual pruning via RPC, &gt;%u = automatically prune block files to stay under the specified target size in MiB)</translation>
-    </message>
-    <message>
-        <source>Set lowest fee rate (in %s/kB) for transactions to be included in block creation. (default: %s)</source>
-        <translation>Set lowest fee rate (in %s/kB) for transactions to be included in block creation. (default: %s)</translation>
-    </message>
-    <message>
-        <source>The fee rate (in %s/kB) that indicates your tolerance for discarding change by adding it to the fee (default: %s). Note: An output is discarded if it is dust at this rate, but we will always discard up to the dust relay fee and a discard fee above that is limited by the fee estimate for the longest target</source>
-        <translation>Mức phí (tính theo %s/kB) là thể hiện mức độ chịu đựng của bạn đối với việc loại bỏ khoản tiền lẻ trả lại bằng cách thêm nó vào phí (ngầm định: %s). Lưu ý: Một đầu ra bị loại bỏ nếu đó là bụi ở mức phí này, nhưng chúng tôi sẽ luôn loại bỏ phí chuyển tiếp bụi và phí loại bỏ ở trên mà bị giới hạn bởi ước tính phí cho mục tiêu dài nhất</translation>
     </message>
     <message>
         <source>This is the transaction fee you may discard if change is smaller than dust at this level</source>
@@ -4911,48 +4295,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit %s and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</translation>
     </message>
     <message>
-        <source>Unable to locate enough PrivateSend non-denominated funds for this transaction.</source>
-        <translation>Không thể tìm đủ lượng ngân sách chưa phân mệnh giá Private Send cho giao dịch  này.</translation>
-    </message>
-    <message>
         <source>Unable to replay blocks. You will need to rebuild the database using -reindex-chainstate.</source>
         <translation>Không thể phát lại các khối. Bạn sẽ cần xây dựng lại cơ sở dữ liệu bằng cách sử dụng -reindex-chainstate.</translation>
     </message>
     <message>
-        <source>Use N separate smartnodes for each denominated input to mix funds (%u-%u, default: %u)</source>
-        <translation>Sử dụng N smartnode riêng biệt cho mỗi mệnh giá đầu vào để trộn ngân quỹ (%u-%u, ngầm định: %u)</translation>
-    </message>
-    <message>
-        <source>Use hierarchical deterministic key generation (HD) after BIP39/BIP44. Only has effect during wallet creation/first start</source>
-        <translation>Sử dụng cơ chế sinh khoá theo xác định phân cấp (HD) sau BIP39/BIP44. Chỉ có tác dụng trong quá trình tạo ví/lần khởi động lần đầu tiên</translation>
-    </message>
-    <message>
-        <source>User defined mnemonic passphrase for HD wallet (BIP39). Only has effect during wallet creation/first start (default: empty string)</source>
-        <translation>Sử dụng mã gợi nhớ xác định trước cho ví HD (BIP39). Chỉ có tác dụng trong quá trình tạo ví/khởi động lần đầu (ngầm định: không có gì)</translation>
-    </message>
-    <message>
-        <source>Username and hashed password for JSON-RPC connections. The field &lt;userpw&gt; comes in the format: &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;. A canonical python script is included in share/rpcuser. The client then connects normally using the rpcuser=&lt;USERNAME&gt;/rpcpassword=&lt;PASSWORD&gt; pair of arguments. This option can be specified multiple times</source>
-        <translation>Username and hashed password for JSON-RPC connections. The field &lt;userpw&gt; comes in the format: &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;. A canonical python script is included in share/rpcuser. The client then connects normally using the rpcuser=&lt;USERNAME&gt;/rpcpassword=&lt;PASSWORD&gt; pair of arguments. This option can be specified multiple times</translation>
-    </message>
-    <message>
-        <source>Wallet will not create transactions that violate mempool chain limits (default: %u)</source>
-        <translation>Wallet will not create transactions that violate mempool chain limits (default: %u)</translation>
-    </message>
-    <message>
         <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
         <translation>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</translation>
-    </message>
-    <message>
-        <source>Whether to save the mempool on shutdown and load on restart (default: %u)</source>
-        <translation>Có nên lưu mempool khi tắt máy và tải lại khi khởi động lại (ngầm định: %u)</translation>
-    </message>
-    <message>
-        <source>Whitelist peers connecting from the given IP address (e.g. 1.2.3.4) or CIDR notated network (e.g. 1.2.3.0/24). Can be specified multiple times.</source>
-        <translation>Whitelist peers connecting from the given IP address (e.g. 1.2.3.4) or CIDR notated network (e.g. 1.2.3.0/24). Can be specified multiple times.</translation>
-    </message>
-    <message>
-        <source>You are starting in lite mode, most Raptoreum-specific functionality is disabled.</source>
-        <translation>Bạn đang khởi động ở chế độ nhẹ, hầu hết các tính năng đặc trưng của Raptoreum bị tắt.</translation>
     </message>
     <message>
         <source>%d of last 100 blocks have unexpected version</source>
@@ -4971,10 +4319,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>%s is set very high!</translation>
     </message>
     <message>
-        <source>(press q to shutdown and continue later)</source>
-        <translation>(bấm q để tắt và tiếp tục sau)</translation>
-    </message>
-    <message>
         <source>-devnet can only be specified once</source>
         <translation>-devnet chỉ có thể chỉ ra một lần duy nhất</translation>
     </message>
@@ -4987,18 +4331,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>-rpcport phải được chỉ rõ khi -devnet và -server được sử dụng</translation>
     </message>
     <message>
-        <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
-        <translation>Chấp nhận các kết nối từ ngoài (ngầm định: 1 nếu không -proxy hoặc -connect)</translation>
-    </message>
-    <message>
-        <source>Allow RFC1918 addresses to be relayed and connected to (default: %u)</source>
-        <translation>Cho phép địa chỉ RFC1918 để chuyển tiếp và kết nối đến (ngầm định: %u)</translation>
-    </message>
-    <message>
-        <source>Attempt to recover private keys from a corrupt wallet on startup</source>
-        <translation>Attempt to recover private keys from a corrupt wallet on startup</translation>
-    </message>
-    <message>
         <source>Cannot resolve -%s address: '%s'</source>
         <translation>Cannot resolve -%s address: '%s'</translation>
     </message>
@@ -5009,10 +4341,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Copyright (C)</source>
         <translation>Bản quyền (C)</translation>
-    </message>
-    <message>
-        <source>Create up to N inputs of each denominated amount (%u-%u, default: %u)</source>
-        <translation>Tạo tối đa N đầu vào của mỗi số tiền có mệnh giá (%u-%u, ngầm định: %u)</translation>
     </message>
     <message>
         <source>Error loading %s</source>
@@ -5031,16 +4359,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Lỗi tải %s: Bạn không thể tắt HD trên một ví đã có HD</translation>
     </message>
     <message>
-        <source>Error loading wallet %s. -wallet filename must be a regular file.</source>
-        <translation>Lỗi tải ví %s. -wallet tên file phải là một file bình thường.</translation>
-    </message>
-    <message>
         <source>Error loading wallet %s. Duplicate -wallet filename specified.</source>
         <translation>Lỗi tải ví %s. Tham số -wallet tên file chỉ định bị trùng</translation>
-    </message>
-    <message>
-        <source>Error loading wallet %s. Invalid characters in -wallet filename.</source>
-        <translation>Lỗi tải ví %s. Có ký tự không hợp lệ trong tham số -wallet tên file.</translation>
     </message>
     <message>
         <source>Error upgrading chainstate database</source>
@@ -5083,20 +4403,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Loading P2P addresses...</translation>
     </message>
     <message>
-        <source>Print this help message and exit</source>
-        <translation>Print this help message and exit</translation>
-    </message>
-    <message>
         <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
         <translation>Giảm -maxconnections từ %d đến %d, bởi vì những giới hạn của hệ thống.</translation>
-    </message>
-    <message>
-        <source>Relay and mine data carrier transactions (default: %u)</source>
-        <translation>Chuyển tiếp và đào các giao dịch mang dữ liệu (ngầm định: %u)</translation>
-    </message>
-    <message>
-        <source>Relay non-P2SH multisig (default: %u)</source>
-        <translation>Chuyển tiếp các khoá đa chữ ký không phải P2SH (ngầm định: %u)</translation>
     </message>
     <message>
         <source>Replaying blocks...</source>
@@ -5107,14 +4415,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Đang quét lại...</translation>
     </message>
     <message>
-        <source>Run in the background as a daemon and accept commands</source>
-        <translation>Chạy trên chế độ nền như là một tiến trình ngầm và chấp nhận các lệnh</translation>
-    </message>
-    <message>
-        <source>Send trace/debug info to console instead of debug.log file</source>
-        <translation>Gửi thông tin về trace/debug ra màn hình thay vì vào file debug.log.</translation>
-    </message>
-    <message>
         <source>Session not complete!</source>
         <translation>Phiên làm việc chưa hoàn thành.</translation>
     </message>
@@ -5123,48 +4423,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Hết thời gian cho phiên làm việc.</translation>
     </message>
     <message>
-        <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
-        <translation>Thiết lập kích thước bộ đệm cơ sở dữ liệu theo megabytes (%d đến %d, ngầm định: %d)</translation>
-    </message>
-    <message>
-        <source>Set maximum block size in bytes (default: %d)</source>
-        <translation>Thiết lập kích thước khối tối đa theo bytes (ngầm định: %d)</translation>
-    </message>
-    <message>
-        <source>Show all debugging options (usage: --help -help-debug)</source>
-        <translation>Hiển thị tất cả các tuỳ chọn gỡ rối (cách sử dụng: --help -help-debug)</translation>
-    </message>
-    <message>
-        <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
-        <translation>Rút gọn tệp debug.log khi phần mềm khởi động (ngầm định: 1 khi không có -debug)</translation>
-    </message>
-    <message>
         <source>Signing transaction failed</source>
         <translation>Thất bại khi ký giao dịch</translation>
     </message>
     <message>
-        <source>Specify data directory</source>
-        <translation>Hãy chọn thư mục</translation>
-    </message>
-    <message>
-        <source>Specify wallet file (within data directory)</source>
-        <translation>Xác định tệp ví (trong thư mục dữ liệu)</translation>
-    </message>
-    <message>
-        <source>Specify your own public address</source>
-        <translation>Hãy xác định địa chỉ công khai của bạn</translation>
-    </message>
-    <message>
-        <source>Start PrivateSend automatically (0-1, default: %u)</source>
-        <translation>Khởi động PrivateSend một cách tự động (0-1, ngầm định: %u)</translation>
-    </message>
-    <message>
         <source>Starting network threads...</source>
         <translation>Starting network threads...</translation>
-    </message>
-    <message>
-        <source>Synchronization pending...</source>
-        <translation>Đang chuẩn bị đồng bộ...</translation>
     </message>
     <message>
         <source>Synchronizing governance objects...</source>
@@ -5189,10 +4453,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Transaction created successfully.</source>
         <translation>Giao dịch được tạo thành công.</translation>
-    </message>
-    <message>
-        <source>Transaction fee and change calculation failed</source>
-        <translation>Tính phí giao dịch và tiền hoàn lại không thành công</translation>
     </message>
     <message>
         <source>Transaction fees are too high.</source>
@@ -5227,10 +4487,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Danh mục ghi nhật ký không được hỗ trợ %s=%s.</translation>
     </message>
     <message>
-        <source>Username for JSON-RPC connections</source>
-        <translation>Username cho kết nối JSON-RPC</translation>
-    </message>
-    <message>
         <source>Verifying blocks...</source>
         <translation>Đang kiểm tra các khối...</translation>
     </message>
@@ -5239,24 +4495,20 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Còn lại số lượg rất ít các khoá: %d</translation>
     </message>
     <message>
-        <source>Wallet %s resides outside data directory %s</source>
-        <translation>Ví %s nằm ở bên ngoài thư mục dữ liệu %s</translation>
-    </message>
-    <message>
         <source>Wallet is locked.</source>
         <translation>Ví đã bị khoá.</translation>
     </message>
     <message>
-        <source>Wallet options:</source>
-        <translation>Tuỳ chọn ví:</translation>
-    </message>
-    <message>
-        <source>Wallet window title</source>
-        <translation>Tiêu đề cửa sổ ví</translation>
-    </message>
-    <message>
         <source>Warning</source>
         <translation>Cảnh báo</translation>
+    </message>
+    <message>
+        <source>You are starting with governance validation disabled.</source>
+        <translation>Bạn khởi động với tính năng xác thực quản trị bị tắt.</translation>
+    </message>
+    <message>
+        <source>You can not disable governance validation on a smartnode.</source>
+        <translation>Bạn không thể tắt chế độ xác thực quản trị trên một smartnode.</translation>
     </message>
     <message>
         <source>Your entries added successfully.</source>

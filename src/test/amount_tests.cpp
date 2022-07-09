@@ -2,9 +2,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "amount.h"
-#include "policy/feerate.h"
-#include "test/test_raptoreum.h"
+#include <amount.h>
+#include <policy/feerate.h>
+#include <test/test_raptoreum.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(ToStringTest)
 {
     CFeeRate feeRate;
     feeRate = CFeeRate(1);
-    BOOST_CHECK_EQUAL(feeRate.ToString(), "0.00000001 RAPTOREUM/kB");
+    BOOST_CHECK_EQUAL(feeRate.ToString(), "0.00000001 RTM/kB");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -78,6 +78,7 @@ public:
     virtual Status Read(size_t n, Slice* result, char* scratch);
     virtual Status Skip(uint64_t n);
     BOOL isEnable();
+    virtual std::string GetName() const { return _filename; }
 private:
     BOOL _Init();
     void _CleanUp();
@@ -94,6 +95,7 @@ public:
     virtual ~Win32RandomAccessFile();
     virtual Status Read(uint64_t offset, size_t n, Slice* result,char* scratch) const;
     BOOL isEnable();
+    virtual std::string GetName() const { return _filename; }
 private:
     BOOL _Init(LPCWSTR path);
     void _CleanUp();
@@ -114,6 +116,7 @@ public:
     virtual Status Flush();
     virtual Status Sync();
     BOOL isEnable();
+    virtual std::string GetName() const { return filename_; }
 private:
     std::string filename_;
     ::HANDLE _hFile;
@@ -200,22 +203,14 @@ public:
 
 void ToWidePath(const std::string& value, std::wstring& target) {
 	wchar_t buffer[MAX_PATH];
-	MultiByteToWideChar(CP_ACP, 0, value.c_str(), -1, buffer, MAX_PATH);
+	MultiByteToWideChar(CP_UTF8, 0, value.c_str(), -1, buffer, MAX_PATH);
 	target = buffer;
 }
 
 void ToNarrowPath(const std::wstring& value, std::string& target) {
 	char buffer[MAX_PATH];
-	WideCharToMultiByte(CP_ACP, 0, value.c_str(), -1, buffer, MAX_PATH, NULL, NULL);
+	WideCharToMultiByte(CP_UTF8, 0, value.c_str(), -1, buffer, MAX_PATH, NULL, NULL);
 	target = buffer;
-}
-
-std::string GetCurrentDir()
-{
-    CHAR path[MAX_PATH];
-    ::GetModuleFileNameA(::GetModuleHandleA(NULL),path,MAX_PATH);
-    *strrchr(path,'\\') = 0;
-    return std::string(path);
 }
 
 std::wstring GetCurrentDirW()
@@ -224,6 +219,13 @@ std::wstring GetCurrentDirW()
     ::GetModuleFileNameW(::GetModuleHandleW(NULL),path,MAX_PATH);
     *wcsrchr(path,L'\\') = 0;
     return std::wstring(path);
+}
+
+std::string GetCurrentDir()
+{
+    std::string path;
+    ToNarrowPath(GetCurrentDirW(), path);
+    return path;
 }
 
 std::string& ModifyPath(std::string& path)
@@ -761,14 +763,16 @@ uint64_t Win32Env::NowMicros()
 static Status CreateDirInner( const std::string& dirname )
 {
     Status sRet;
-    DWORD attr = ::GetFileAttributes(dirname.c_str());
+    std::wstring dirnameW;
+    ToWidePath(dirname, dirnameW);
+    DWORD attr = ::GetFileAttributesW(dirnameW.c_str());
     if (attr == INVALID_FILE_ATTRIBUTES) { // doesn't exist:
       std::size_t slash = dirname.find_last_of("\\");
       if (slash != std::string::npos){
 	sRet = CreateDirInner(dirname.substr(0, slash));
 	if (!sRet.ok()) return sRet;
       }
-      BOOL result = ::CreateDirectory(dirname.c_str(), NULL);
+      BOOL result = ::CreateDirectoryW(dirnameW.c_str(), NULL);
       if (result == FALSE) {
 	sRet = Status::IOError(dirname, "Could not create directory.");
 	return sRet;

@@ -8,11 +8,12 @@ bin_PROGRAMS += bench/bench_raptoreum
 BENCH_SRCDIR = bench
 BENCH_BINARY = bench/bench_raptoreum$(EXEEXT)
 
-RAW_TEST_FILES = \
+RAW_BENCH_FILES = \
   bench/data/block813851.raw
-GENERATED_TEST_FILES = $(RAW_TEST_FILES:.raw=.raw.h)
+GENERATED_BENCH_FILES = $(RAW_BENCH_FILES:.raw=.raw.h)
 
 bench_bench_raptoreum_SOURCES = \
+  $(RAW_BENCH_FILES) \
   bench/bench_raptoreum.cpp \
   bench/bench.cpp \
   bench/bench.h \
@@ -21,28 +22,29 @@ bench_bench_raptoreum_SOURCES = \
   bench/checkblock.cpp \
   bench/checkqueue.cpp \
   bench/ecdsa.cpp \
-  bench/Examples.cpp \
+  bench/examples.cpp \
   bench/rollingbloom.cpp \
   bench/chacha20.cpp \
   bench/chacha_poly_aead.cpp \
   bench/crypto_hash.cpp \
   bench/ccoins_caching.cpp \
+  bench/gcs_filter.cpp \
   bench/merkle_root.cpp \
   bench/mempool_eviction.cpp \
+  bench/util_time.cpp \
   bench/base58.cpp \
   bench/lockedpool.cpp \
   bench/poly1305.cpp \
-  bench/perf.cpp \
-  bench/perf.h \
   bench/prevector.cpp \
   bench/string_cast.cpp
 
-nodist_bench_bench_raptoreum_SOURCES = $(GENERATED_TEST_FILES)
+nodist_bench_bench_raptoreum_SOURCES = $(GENERATED_BENCH_FILES)
 
 bench_bench_raptoreum_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(EVENT_CLFAGS) $(EVENT_PTHREADS_CFLAGS) -I$(builddir)/bench/
 bench_bench_raptoreum_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 bench_bench_raptoreum_LDADD = \
   $(LIBBITCOIN_SERVER) \
+  $(LIBBITCOIN_WALLET) \
   $(LIBBITCOIN_COMMON) \
   $(LIBBITCOIN_UTIL) \
   $(LIBBITCOIN_CONSENSUS) \
@@ -59,13 +61,12 @@ endif
 
 if ENABLE_WALLET
 bench_bench_raptoreum_SOURCES += bench/coin_selection.cpp
-bench_bench_raptoreum_LDADD += $(LIBBITCOIN_WALLET) $(LIBBITCOIN_CRYPTO)
 endif
 
 bench_bench_raptoreum_LDADD += $(BACKTRACE_LIB) $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(BLS_LIBS)
-bench_bench_raptoreum_LDFLAGS = $(LDFLAGS_WRAP_EXCEPTIONS) $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+bench_bench_raptoreum_LDFLAGS = $(LDFLAGS_WRAP_EXCEPTIONS) $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
 
-CLEAN_BITCOIN_BENCH = bench/*.gcda bench/*.gcno $(GENERATED_TEST_FILES)
+CLEAN_BITCOIN_BENCH = bench/*.gcda bench/*.gcno $(GENERATED_BENCH_FILES)
 
 CLEANFILES += $(CLEAN_BITCOIN_BENCH)
 

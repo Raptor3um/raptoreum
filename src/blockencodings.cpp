@@ -2,16 +2,16 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "blockencodings.h"
-#include "consensus/consensus.h"
-#include "consensus/validation.h"
-#include "chainparams.h"
-#include "hash.h"
-#include "random.h"
-#include "streams.h"
-#include "txmempool.h"
-#include "validation.h"
-#include "util.h"
+#include <blockencodings.h>
+#include <consensus/consensus.h>
+#include <consensus/validation.h>
+#include <chainparams.h>
+#include <hash.h>
+#include <random.h>
+#include <streams.h>
+#include <txmempool.h>
+#include <validation.h>
+#include <util.h>
 
 #include <unordered_map>
 
@@ -50,7 +50,7 @@ uint64_t CBlockHeaderAndShortTxIDs::GetShortID(const uint256& txhash) const {
 ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& cmpctblock, const std::vector<std::pair<uint256, CTransactionRef>>& extra_txn) {
     if (cmpctblock.header.IsNull() || (cmpctblock.shorttxids.empty() && cmpctblock.prefilledtxn.empty()))
         return READ_STATUS_INVALID;
-    if (cmpctblock.shorttxids.size() + cmpctblock.prefilledtxn.size() > MaxBlockSize(true) / MIN_TRANSACTION_SIZE)
+    if (cmpctblock.shorttxids.size() + cmpctblock.prefilledtxn.size() > MaxBlockSize() / MIN_TRANSACTION_SIZE)
         return READ_STATUS_INVALID;
 
     assert(header.IsNull() && txn_available.empty());

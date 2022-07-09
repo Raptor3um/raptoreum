@@ -2,13 +2,12 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "scheduler.h"
+#include <scheduler.h>
 
-#include "random.h"
-#include "reverselock.h"
+#include <random.h>
+#include <reverselock.h>
 
 #include <assert.h>
-#include <boost/bind.hpp>
 #include <utility>
 
 CScheduler::CScheduler() : nThreadsServicingQueue(0), stopRequested(false), stopWhenEmpty(false)
@@ -120,12 +119,12 @@ void CScheduler::scheduleFromNow(CScheduler::Function f, int64_t deltaMilliSecon
 static void Repeat(CScheduler* s, CScheduler::Function f, int64_t deltaMilliSeconds)
 {
     f();
-    s->scheduleFromNow(boost::bind(&Repeat, s, f, deltaMilliSeconds), deltaMilliSeconds);
+    s->scheduleFromNow(std::bind(&Repeat, s, f, deltaMilliSeconds), deltaMilliSeconds);
 }
 
 void CScheduler::scheduleEvery(CScheduler::Function f, int64_t deltaMilliSeconds)
 {
-    scheduleFromNow(boost::bind(&Repeat, this, f, deltaMilliSeconds), deltaMilliSeconds);
+    scheduleFromNow(std::bind(&Repeat, this, f, deltaMilliSeconds), deltaMilliSeconds);
 }
 
 size_t CScheduler::getQueueInfo(boost::chrono::system_clock::time_point &first,
@@ -174,7 +173,7 @@ void SingleThreadedSchedulerClient::ProcessQueue() {
     // to ensure both happen safely even if callback() throws.
     struct RAIICallbacksRunning {
         SingleThreadedSchedulerClient* instance;
-        RAIICallbacksRunning(SingleThreadedSchedulerClient* _instance) : instance(_instance) {}
+        explicit RAIICallbacksRunning(SingleThreadedSchedulerClient* _instance) : instance(_instance) {}
         ~RAIICallbacksRunning() {
             {
                 LOCK(instance->m_cs_callbacks_pending);
@@ -205,4 +204,9 @@ void SingleThreadedSchedulerClient::EmptyQueue() {
         LOCK(m_cs_callbacks_pending);
         should_continue = !m_callbacks_pending.empty();
     }
+}
+
+size_t SingleThreadedSchedulerClient::CallbacksPending() {
+    LOCK(m_cs_callbacks_pending);
+    return m_callbacks_pending.size();
 }

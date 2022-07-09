@@ -4,18 +4,18 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "sendfuturesentry.h"
-#include "ui_sendfuturesentry.h"
+#include <qt/sendfuturesentry.h>
+#include <qt/forms/ui_sendfuturesentry.h>
 
-#include "addressbookpage.h"
-#include "addresstablemodel.h"
-#include "bitcoinunits.h"
-#include "guiutil.h"
-#include "optionsmodel.h"
-#include "platformstyle.h"
-#include "walletmodel.h"
+#include <qt/addressbookpage.h>
+#include <qt/addresstablemodel.h>
+#include <qt/bitcoinunits.h>
+#include <qt/guiutil.h>
+#include <qt/optionsmodel.h>
+#include <qt/walletmodel.h>
+#include <key_io.h>
 
-#include "future/fee.h" // future fee
+#include <future/fee.h> // future fee
 
 #include <QApplication>
 #include <QClipboard>
@@ -24,34 +24,32 @@
 #include <QStandardItemModel>
 #include <QTableView>
 
-SendFuturesEntry::SendFuturesEntry(const PlatformStyle *_platformStyle, QWidget *parent) :
+SendFuturesEntry::SendFuturesEntry(QWidget* parent) :
     QStackedWidget(parent),
     ui(new Ui::SendFuturesEntry),
-    model(0),
-    platformStyle(_platformStyle)
+    model(0)
 {
     ui->setupUi(this);
 
+    GUIUtil::disableMacFocusRect(this);
+
     setCurrentWidget(ui->SendFutures);
 
-    if (platformStyle->getUseExtraSpacing())
-        ui->payToLayout->setSpacing(4);
 #if QT_VERSION >= 0x040700
     ui->addAsLabel->setPlaceholderText(tr("Enter a label for this address to add it to your address book"));
 #endif
 
-    // These icons are needed on Mac also!
-    ui->addressBookButton->setIcon(QIcon(":/icons/address-book"));
-    ui->pasteButton->setIcon(QIcon(":/icons/editpaste"));
-    ui->deleteButton->setIcon(QIcon(":/icons/remove"));
-    ui->deleteButton_is->setIcon(QIcon(":/icons/remove"));
-    ui->deleteButton_s->setIcon(QIcon(":/icons/remove"));
-      
+    setButtonIcons();
+
     // normal raptoreum address field
-    GUIUtil::setupAddressWidget(ui->payTo, this);
-    // just a label for displaying raptoreum address(es)
-    ui->payTo_is->setFont(GUIUtil::fixedPitchFont());
-    ui->payFrom->setFont(GUIUtil::fixedPitchFont());
+    GUIUtil::setupAddressWidget(ui->payTo, this, true);
+
+    GUIUtil::setFont({ui->payToLabel,
+                     ui->labellLabel,
+                     ui->amountLabel,
+                     ui->messageLabel}, GUIUtil::FontWeight::Normal, 15);
+
+    GUIUtil::updateFonts();
 
     //hide unused UI elements for futures
     ui->deleteButton->hide();
@@ -75,7 +73,7 @@ SendFuturesEntry::SendFuturesEntry(const PlatformStyle *_platformStyle, QWidget 
     //Connect signals for future tx pay from field
     connect(ui->payFrom, SIGNAL(currentTextChanged(const QString &)), this, SIGNAL(payFromChanged(const QString &)));
     //Connect signals for FTX maturity fields
-    connect (ui->ftxLockTime, SIGNAL (dateTimeChanged (QDateTime)), this, SLOT (updateLockTimeField (QDateTime)));
+    connect(ui->ftxLockTime, SIGNAL(dateTimeChanged (QDateTime)), this, SLOT(updateLockTimeField (QDateTime)));
 }
 
 SendFuturesEntry::~SendFuturesEntry()
@@ -93,7 +91,7 @@ void SendFuturesEntry::on_addressBookButton_clicked()
 {
     if(!model)
         return;
-    AddressBookPage dlg(platformStyle, AddressBookPage::ForSelection, AddressBookPage::SendingTab, this);
+    AddressBookPage dlg(AddressBookPage::ForSelection, AddressBookPage::SendingTab, this);
     dlg.setModel(model->getAddressTableModel());
     if(dlg.exec())
     {
@@ -132,10 +130,10 @@ void SendFuturesEntry::clear()
     // clear and reset FTX UI elements
     ui->ftxMaturity->setValue(100);
     QDateTime defaultDate = QDateTime::currentDateTime();
-	defaultDate = defaultDate.addDays(1);
-	//FTX Specific form fields
-	//Setup maturity locktime datetime field
-	ui->ftxLockTime->setDateTime( defaultDate );
+    defaultDate = defaultDate.addDays(1);
+    //FTX Specific form fields
+    //Setup maturity locktime datetime field
+    ui->ftxLockTime->setDateTime( defaultDate );
     // clear UI elements for unauthenticated payment request
     ui->payTo_is->clear();
     ui->memoTextLabel_is->clear();
@@ -154,7 +152,7 @@ void SendFuturesEntry::deleteClicked()
     Q_EMIT removeEntry(this);
 }
 
-bool SendFuturesEntry::validate()
+bool SendFuturesEntry::validate(interfaces::Node& node)
 {
     if (!model)
         return false;
@@ -190,7 +188,7 @@ bool SendFuturesEntry::validate()
     }
 
     // Reject dust outputs:
-    if (retval && GUIUtil::isDust(ui->payTo->text(), ui->payAmount->value())) {
+    if (retval && GUIUtil::isDust(node, ui->payTo->text(), ui->payAmount->value())) {
         ui->payAmount->setValid(false);
         retval = false;
     }
@@ -209,12 +207,12 @@ SendFuturesRecipient SendFuturesEntry::getValue()
     recipient.label = ui->addAsLabel->text();
     recipient.amount = ui->payAmount->value();
     recipient.message = ui->messageTextLabel->text();
-    recipient.fSubtractFeeFromAmount = (ui->checkboxSubtractFeeFromAmount->checkState() == Qt::Checked);
+    //recipient.fSubtractFeeFromAmount = (ui->checkboxSubtractFeeFromAmount->checkState() == Qt::Checked);
 
     //Future TX
     recipient.payFrom = ui->payFrom->currentText();
     recipient.maturity = ui->ftxMaturity->value();
-    recipient.locktime = ui->ftxLockTimeField->text().toInt();  
+    recipient.locktime = ui->ftxLockTimeField->text().toInt();
 
     return recipient;
 }
@@ -263,12 +261,12 @@ void SendFuturesEntry::setValue(const SendFuturesRecipient &value)
         ui->messageTextLabel->setVisible(!recipient.message.isEmpty());
         ui->messageLabel->setVisible(!recipient.message.isEmpty());
 
-        ui->addAsLabel->clear();
-        ui->payTo->setText(recipient.address); // this may set a label from addressbook
-        if (!recipient.label.isEmpty()) // if a label had been set from the addressbook, don't overwrite with an empty label
-            ui->addAsLabel->setText(recipient.label);
+        ui->payTo->setText(recipient.address);
+        ui->addAsLabel->setText(recipient.label);
         ui->payAmount->setValue(recipient.amount);
     }
+
+    updateLabel(recipient.address);
 }
 
 void SendFuturesEntry::setAddress(const QString &address)
@@ -297,6 +295,24 @@ void SendFuturesEntry::updateDisplayUnit()
         ui->payAmount_s->setDisplayUnit(model->getOptionsModel()->getDisplayUnit());
         setupPayFrom();
     }
+}
+
+void SendFuturesEntry::changeEvent(QEvent* e)
+{
+  QStackedWidget::changeEvent(e);
+  if(e->type() == QEvent::StyleChange)
+  {
+    setButtonIcons();
+  }
+}
+
+void SendFuturesEntry::setButtonIcons()
+{
+  GUIUtil::setIcon(ui->addressBookButton, "address-book");
+  GUIUtil::setIcon(ui->pasteButton, "editpaste");
+  GUIUtil::setIcon(ui->deleteButton, "remove", GUIUtil::ThemedColor::RED);
+  GUIUtil::setIcon(ui->deleteButton_is, "remove", GUIUtil::ThemedColor::RED);
+  GUIUtil::setIcon(ui->deleteButton_s, "remove", GUIUtil::ThemedColor::RED);
 }
 
 bool SendFuturesEntry::updateLabel(const QString &address)
@@ -358,16 +374,20 @@ void SendFuturesEntry::setupPayFrom()
     #define SORT_ROLE Qt::UserRole + 1
 
     for (auto& balance : balances) {
+        const CTxDestination dest = balance.first;
+        QString walletAddr = QString::fromStdString(EncodeDestination(dest));
+        //QString walletBalance = BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), balance.second);
+        QString walletLabel = model->getAddressTableModel()->labelForAddress(walletAddr);
         if (balance.second >= nMinAmount) {
             QList<QStandardItem *> items;
 
             QStandardItem *walletAddress = new QStandardItem();
-            walletAddress->setText(GUIUtil::HtmlEscape(CBitcoinAddress(balance.first).ToString()));
-            walletAddress->setData(GUIUtil::HtmlEscape(CBitcoinAddress(balance.first).ToString()), SORT_ROLE);
+            walletAddress->setText(GUIUtil::HtmlEscape(walletAddr));
+            walletAddress->setData(GUIUtil::HtmlEscape(walletAddr), SORT_ROLE);
 
             QStandardItem *walletAddressLabel = new QStandardItem();
-            walletAddressLabel->setText(model->getAddressTableModel()->labelForAddress(balance.first));
-            walletAddressLabel->setData(model->getAddressTableModel()->labelForAddress(balance.first), SORT_ROLE);
+            walletAddressLabel->setText(walletLabel);
+            walletAddressLabel->setData(walletLabel, SORT_ROLE);
 
             QStandardItem *balanceAmount = new QStandardItem();
             balanceAmount->setText(BitcoinUnits::format(model->getOptionsModel()->getDisplayUnit(), balance.second, false, BitcoinUnits::separatorAlways));
@@ -391,7 +411,6 @@ void SendFuturesEntry::setupPayFrom()
     tableView->horizontalHeader()->setStretchLastSection(true);
     tableView->horizontalHeader()->setSortIndicator(-1, Qt::AscendingOrder);
     tableView->setSortingEnabled(true);
-    tableView->setFont(GUIUtil::fixedPitchFont());
     tableView->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     tableView->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
