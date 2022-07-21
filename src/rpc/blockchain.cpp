@@ -195,8 +195,7 @@ UniValue getblockcount(const JSONRPCRequest& request)
             + HelpExampleRpc("getblockcount", "")
         );
 
-    LOCK(cs_main);
-    return chainActive.Height();
+    return chainActive.AtomicHeight();
 }
 
 UniValue getbestblockhash(const JSONRPCRequest& request)
