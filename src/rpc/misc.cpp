@@ -18,9 +18,12 @@
 #include <rpc/blockchain.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
+#include <scheduler.h>
 #include <script/descriptor.h>
 #include <timedata.h>
 #include <txmempool.h>
+#include <util/check.h>
+#include <util/ref.h>
 #include <util/system.h>
 #include <util/strencodings.h>
 #include <validation.h>
@@ -30,6 +33,7 @@
 #include <spork.h>
 
 #include <stdint.h>
+#include <tuple>
 #ifdef HAVE_MALLOC_INFO
 #include <malloc.h>
 #endif
@@ -64,7 +68,8 @@ static UniValue mnsync(const JSONRPCRequest& request)
 
     if(strMode == "next")
     {
-        smartnodeSync.SwitchToNextAsset(*g_rpc_node->connman);
+        NodeContext& node = EnsureNodeContext(request.context);
+        smartnodeSync.SwitchToNextAsset(*node.connman);
         return "sync updated to " + smartnodeSync.GetAssetName();
     }
 
@@ -128,14 +133,15 @@ static UniValue spork(const JSONRPCRequest& request)
         if(nSporkID == SPORK_INVALID)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid spork name");
 
-        if (!g_rpc_node->connman)
+        NodeContext& node = EnsureNodeContext(request.context);
+        if (!node.connman)
             throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
 
         // SPORK VALUE
         int64_t nValue = request.params[1].get_int64();
 
         //broadcast new spork
-        if(sporkManager.UpdateSpork(nSporkID, nValue, *g_rpc_node->connman)){
+        if(sporkManager.UpdateSpork(nSporkID, nValue, *node.connman)){
             return "success";
         } else {
             RPCHelpMan{"spork",
@@ -275,9 +281,10 @@ static UniValue getdescriptorinfo(const JSONRPCRequest& request)
     RPCTypeCheck(request.params, {UniValue::VSTR});
 
     FlatSigningProvider provider;
-    auto desc = Parse(request.params[0].get_str(), provider);
+    std::string error;
+    auto desc = Parse(request.params[0].get_str(), provider, error);
     if (!desc) {
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Invalid descriptor"));
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, error);
     }
 
     UniValue result(UniValue::VOBJ);
@@ -309,11 +316,11 @@ static UniValue deriveaddresses(const JSONRPCRequest& request)
             {
                 {RPCResult::Type::STR, "address", "the derived addresses"},
             }
-        }
+        },
         RPCExamples{
             "\nFirst three receive addresses\n"
             + HelpExampleCli("deriveaddresses", "\"pkh([d34db33f/84h/0h/0h]xpub6DJ2dNUysrn5Vt36jH2KLBT2i1auw1tTSSomg8PhqNiUtx8QX2SvC9nrHu81fT41fvDUnhMjEzQgXnQjKEu3oaqMSzhSrHMxyyoEAmUHQbY/0/*)#cjjspncu\" \"[0,2]\"")
-        },
+        }
     }.Check(request);
 
     RPCTypeCheck(request.params, {UniValue::VSTR, UniValue::VNUM, UniValue::VNUM});
@@ -470,10 +477,10 @@ static UniValue setmocktime(const JSONRPCRequest& request)
     RPCHelpMan{"setmocktime",
         "\nSet the local time to given timestamp (-regtest only)\n",
         {
-            {"timestamp", RPCArg::Type::NUM, RPCArg::Optional::NO, "Unix seconds-since-epoch timestamp\n"
+            {"timestamp", RPCArg::Type::NUM, RPCArg::Optional::NO, UNIX_EPOCH_TIME + "\n"
                 "Pass 0 to go back to using the system time."},
         },
-        RPCResults{RPCResult::Type::NONE, "", ""},
+        RPCResult{RPCResult::Type::NONE, "", ""},
         RPCExamples{""},
     }.Check(request);
 
@@ -521,10 +528,10 @@ static UniValue mnauth(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "publicKey invalid");
     }
 
-    bool fSuccess = g_rpc_node->connman->ForNode(nodeId, CConnman::AllNodes, [&](CNode* pNode){
-        LOCK(pNode->cs_mnauth);
-        pNode->verifiedProRegTxHash = proTxHash;
-        pNode->verifiedPubKeyHash = publicKey.GetHash();
+    NodeContext& node = EnsureNodeContext(request.context);
+    bool fSuccess = node.connman->ForNode(nodeId, CConnman::AllNodes, [&](CNode* pNode){
+        pNode->SetVerifiedProRegTxHash(proTxHash);
+        pNode->SetVerifiedPubKeyHash(publicKey.GetHash());
         return true;
     });
 
@@ -682,6 +689,7 @@ UniValue getaddressutxos(const JSONRPCRequest& request)
                     {"address", RPCArg::Type::STR, /* default */ "", "The base58check encoded address"},
                 },
             },
+        },
         RPCResult{
             RPCResult::Type::ARR, "", "",
             {
@@ -862,11 +870,7 @@ static UniValue getaddressbalance(const JSONRPCRequest& request)
         }
     }
 
-    int nHeight;
-    {
-        LOCK(cs_main);
-        nHeight = ::ChainActive().Height();
-    }
+    int nHeight = WITH_LOCK(cs_main, return ::ChainActive().Height());
 
     CAmount balance = 0;
     CAmount balance_spendable = 0;
@@ -1022,6 +1026,37 @@ static UniValue getspentinfo(const JSONRPCRequest& request)
     return obj;
 }
 
+static UniValue mockscheduler(const JSONRPCRequest& request)
+{
+    RPCHelpMan{"mockscheduler",
+        "\nBump the scheduler into the future (-regtest only)\n",
+        {
+            {"delta_time", RPCArg::Type::NUM, RPCArg::Optional::NO, "Number of seconds to forward the scheduler into the future." },
+        },
+        RPCResults{},
+        RPCExamples{""},
+    }.Check(request);
+
+    if (!Params().IsMockableChain()) {
+        throw std::runtime_error("mockscheduler is for regression testing (-regtest mode) only");
+    }
+
+    // check params are valid values
+    RPCTypeCheck(request.params, {UniValue::VNUM});
+    int64_t delta_seconds = request.params[0].get_int64();
+    if ((delta_seconds <= 0) || (delta_seconds > 3600)) {
+        throw std::runtime_error("delta_time must be between 1 and 3600 seconds (1 hr)");
+    }
+
+    // protect against null pointer dereference
+    CHECK_NONFATAL(request.context.Has<NodeContext>());
+    NodeContext& node = request.context.Get<NodeContext>();
+    CHECK_NONFATAL(node.scheduler);
+    node.scheduler->MockForward(std::chrono::seconds(delta_seconds));
+
+    return NullUniValue;
+}
+
 static UniValue RPCLockedMemoryInfo()
 {
     LockedPool::Stats stats = LockedPoolManager::Instance().stats();
@@ -1153,7 +1188,7 @@ UniValue logging(const JSONRPCRequest& request)
             RPCResult::Type::OBJ_DYN, "", "where keys are the logging categories, and values indicates its status",
             {
                 {RPCResult::Type::BOOL, "category", "if being debug logged or not. false:inactive, true:active"},
-            },
+            }
         },
         RPCExamples{
             HelpExampleCli("logging", "\"[\\\"all\\\"]\" \"[\\\"http\\\"]\"")
@@ -1198,10 +1233,11 @@ UniValue echo(const JSONRPCRequest& request)
 {
     RPCHelpMan{"echo|echojson ...",
         "\nSimply echo back the input arguments. This command is for testing.\n"
+        "\nIt will return an internal bug report when exactly 100 arguments are passed.\n"
         "\nThe difference between echo and echojson is that echojson has argument conversion enabled in the client-side table in "
         "raptoreum-cli and the GUI. There is no server-side difference.",
         {},
-        RPCResults{},
+        RPCResult{RPCResult::Type::NONE, "", "Returns whatever was passed in"},
         RPCExamples{""},
     }.Check(request);
 
@@ -1234,6 +1270,7 @@ static const CRPCCommand commands[] =
 
     /* Not shown in help */
     { "hidden",             "setmocktime",            &setmocktime,            {"timestamp"}},
+    { "hidden",             "mockscheduler",          &mockscheduler,          {"delta_time"}},
     { "hidden",             "echo",                   &echo,                   {"arg0","arg1","arg2","arg3","arg4","arg5","arg6","arg7","arg8","arg9"}},
     { "hidden",             "echojson",               &echo,                   {"arg0","arg1","arg2","arg3","arg4","arg5","arg6","arg7","arg8","arg9"}},
     { "hidden",             "mnauth",                 &mnauth,                 {"nodeId", "proTxHash", "publicKey"}},

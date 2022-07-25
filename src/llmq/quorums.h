@@ -21,6 +21,7 @@
 
 class CNode;
 
+class CConnman;
 namespace llmq
 {
 
@@ -99,18 +100,9 @@ public:
     void SetError(Errors nErrorIn) { nError = nErrorIn; }
     const Errors GetError() const { return nError; }
 
-    bool IsExpired() const
-    {
-        return (GetTime() - nTime) >= EXPIRATION_TIMEOUT;
-    }
-    bool IsProcessed() const
-    {
-        return fProcessed;
-    }
-    void SetProcessed()
-    {
-        fProcessed = true;
-    }
+    bool IsExpired() const { return (GetTime() - nTime) >= EXPIRATION_TIMEOUT; }
+    bool IsProcessed() const { return fProcessed; }
+    void SetProcessed() { fProcessed = true; }
 
     bool operator==(const CQuorumDataRequest& other)
     {
@@ -149,30 +141,32 @@ public:
     uint256 minedBlockHash;
     std::vector<CDeterministicMNCPtr> members;
 
-    // These are only valid when we either participated in the DKG or fully watched it
-    BLSVerificationVectorPtr quorumVvec;
-    CBLSSecretKey skShare;
-
 private:
     // Recovery of public key shares is very slow, so we start a background thread that pre-populates a cache so that
     // the public key shares are ready when needed later
     mutable CBLSWorkerCache blsCache;
     mutable std::atomic<bool> fQuorumDataRecoveryThreadRunning{false};
 
+    mutable RecursiveMutex cs;
+    // These are only valid when we either participated in the DKG or fully watched it.
+    BLSVerificationVectorPtr quorumVvec GUARDED_BY(cs);
+    CBLSSecretKey skShare GUARDED_BY(cs);
+
 public:
     CQuorum(const Consensus::LLMQParams& _params, CBLSWorker& _blsWorker);
-    ~CQuorum();
+    ~CQuorum() = default;
     void Init(const CFinalCommitment& _qc, const CBlockIndex* _pindexQuorum, const uint256& _minedBlockHash, const std::vector<CDeterministicMNCPtr>& _members);
 
     bool SetVerificationVector(const BLSVerificationVector& quorumVecIn);
     bool SetSecretKeyShare(const CBLSSecretKey& secretKeyShare);
 
+    bool HasVerificationVector() const;
     bool IsMember(const uint256& proTxHash) const;
     bool IsValidMember(const uint256& proTxHash) const;
     int GetMemberIndex(const uint256& proTxHash) const;
 
     CBLSPublicKey GetPubKeyShare(size_t memberIdx) const;
-    const CBLSSecretKey& GetSkShare() const;
+    CBLSSecretKey GetSkShare() const;
 
 private:
     void WriteContributions(CEvoDB& evoDb);
@@ -189,6 +183,7 @@ class CQuorumManager
 {
 private:
     CEvoDB& evoDb;
+    CConnman& connman;
     CBLSWorker& blsWorker;
     CDKGSessionManager& dkgManager;
 
@@ -200,8 +195,8 @@ private:
     mutable CThreadInterrupt quorumThreadInterrupt;
 
 public:
-    CQuorumManager(CEvoDB& _evoDb, CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager);
-    ~CQuorumManager();
+    CQuorumManager(CEvoDB& _evoDb, CConnman& _connman, CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager);
+    ~CQuorumManager() { Stop(); };
 
     void Start();
     void Stop();

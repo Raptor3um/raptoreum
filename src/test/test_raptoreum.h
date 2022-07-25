@@ -29,23 +29,35 @@ std::ostream& operator<<(typename std::enable_if<std::is_enum<T>::value, std::os
   return stream << static_cast<typename std::underlying_type<T>::type>(e);
 }
 
-extern FastRandomContext insecure_rand_ctx;
+extern FastRandomContext g_insecure_rand_ctx;
 
 /**
  * Flag to make GetRand in random.h return the same number
  */
 extern bool g_mock_deterministic_tests;
 
-static inline void SeedInsecureRand(bool deterministic = false)
+enum class SeedRand {
+    ZEROS, //!< Seed with a compile time constant of zeros
+    SEED,  //!< Call the Seed() helper
+};
+
+/** Seed the given random ctx or use the seed passed in via an environment var */
+void Seed(FastRandomContext& ctx);
+
+static inline void SeedInsecureRand(SeedRand seed = SeedRand::SEED)
 {
-    insecure_rand_ctx = FastRandomContext(deterministic);
+    if (seed == SeedRand::ZEROS) {
+        g_insecure_rand_ctx = FastRandomContext(/* deterministic */ true);
+    } else {
+        Seed(g_insecure_rand_ctx);
+    }
 }
 
-static inline uint32_t InsecureRand32() { return insecure_rand_ctx.rand32(); }
-static inline uint256 InsecureRand256() { return insecure_rand_ctx.rand256(); }
-static inline uint64_t InsecureRandBits(int bits) { return insecure_rand_ctx.randbits(bits); }
-static inline uint64_t InsecureRandRange(uint64_t range) { return insecure_rand_ctx.randrange(range); }
-static inline bool InsecureRandBool() { return insecure_rand_ctx.randbool(); }
+static inline uint32_t InsecureRand32() { return g_insecure_rand_ctx.rand32(); }
+static inline uint256 InsecureRand256() { return g_insecure_rand_ctx.rand256(); }
+static inline uint64_t InsecureRandBits(int bits) { return g_insecure_rand_ctx.randbits(bits); }
+static inline uint64_t InsecureRandRange(uint64_t range) { return g_insecure_rand_ctx.randrange(range); }
+static inline bool InsecureRandBool() { return g_insecure_rand_ctx.randbool(); }
 
 static constexpr CAmount CENT{1000000};
 
@@ -71,17 +83,20 @@ private:
 struct TestingSetup : public BasicTestingSetup {
     NodeContext m_node;
     boost::thread_group threadGroup;
-    CScheduler scheduler;
 
     explicit TestingSetup(const std::string& chainName = CBaseChainParams::MAIN);
     ~TestingSetup();
+};
+
+struct RegTestingSetup : public TestingSetup {
+    RegTestingSetup() : TestingSetup{CBaseChainParams::REGTEST} {}
 };
 
 class CBlock;
 struct CMutableTransaction;
 class CScript;
 
-struct TestChainSetup : public TestingSetup
+struct TestChainSetup : public RegTestingSetup
 {
     TestChainSetup(int blockCount);
     ~TestChainSetup();

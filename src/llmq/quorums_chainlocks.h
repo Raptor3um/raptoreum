@@ -17,6 +17,7 @@
 
 #include <boost/thread.hpp>
 
+class CConnman;
 class CBlockIndex;
 class CScheduler;
 
@@ -51,6 +52,7 @@ class CChainLocksHandler : public CRecoveredSigsListener
     static const int64_t WAIT_FOR_ISLOCK_TIMEOUT = 10 * 60;
 
 private:
+    CConnman& connman;
     std::unique_ptr<CScheduler> scheduler;
     std::unique_ptr<std::thread> scheduler_thread;
     mutable Mutex cs;
@@ -79,7 +81,7 @@ private:
     int64_t lastCleanupTime GUARDED_BY(cs) {0};
 
 public:
-    explicit CChainLocksHandler();
+    explicit CChainLocksHandler(CConnman& _connman);
     ~CChainLocksHandler();
 
     void Start();

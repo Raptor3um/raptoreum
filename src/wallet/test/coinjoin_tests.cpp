@@ -7,6 +7,7 @@
 #include <amount.h>
 #include <coinjoin/coinjoin-util.h>
 #include <coinjoin/coinjoin.h>
+#include <node/context.h>
 #include <validation.h>
 #include <wallet/wallet.h>
 
@@ -42,14 +43,14 @@ public:
         wallet->LoadWallet(firstRun);
         AddWallet(wallet);
         {
-            LOCK(wallet->cs_wallet);
+            LOCK2(wallet->cs_wallet, cs_main);
             wallet->AddKeyPubKey(coinbaseKey, coinbaseKey.GetPubKey());
+            wallet->SetLastBlockProcessed(::ChainActive().Height(), ::ChainActive().Tip()->GetBlockHash());
+            WalletRescanReserver reserver(wallet.get());
+            reserver.reserve();
+            CWallet::ScanResult result = wallet->ScanForWalletTransactions(::ChainActive().Genesis()->GetBlockHash(), {} /* stop_block */, reserver, true /* fUpdate */);
+            BOOST_CHECK_EQUAL(result.status, CWallet::ScanResult::SUCCESS);
         }
-        WalletRescanReserver reserver(wallet.get());
-        reserver.reserve();
-
-        CWallet::ScanResult result = wallet->ScanForWalletTransactions(::ChainActive().Genesis()->GetBlockHash(), {} /* stop_block */, reserver, true /* fUpdate */);
-        BOOST_CHECK_EQUAL(result.status, CWallet::ScanResult::SUCCESS);
     }
 
     ~CTransactionBuilderTestSetup()
@@ -70,9 +71,10 @@ public:
             blocktx = CMutableTransaction(*it->second.tx);
         }
         CreateAndProcessBlock({blocktx}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
-        auto locked_chain = wallet->chain().lock();
-        LOCK(wallet->cs_wallet);
-        it->second.SetConf(CWalletTx::Status::CONFIRMED, ::ChainActive().Tip()->GetBlockHash(), 1);
+        LOCK2(wallet->cs_wallet, cs_main);
+        wallet->SetLastBlockProcessed(::ChainActive().Height(), ::ChainActive().Tip()->GetBlockHash());
+        CWalletTx::Confirmation confirm(CWalletTx::Status::CONFIRMED, ::ChainActive().Height(), ::ChainActive().Tip()->GetBlockHash(), 1);
+        it->second.m_confirm = confirm;
         return it->second;
     }
     CompactTallyItem GetTallyItem(const std::vector<CAmount>& vecAmounts)
@@ -87,12 +89,13 @@ public:
         CPubKey pubKey;
         BOOST_CHECK(destKey.GetReservedKey(pubKey, false));
         tallyItem.txdest = pubKey.GetID();
-        for (CAmount nAmount : vecAmounts) {
+        for (CAmount nAmount : vecAmounts)
+        {
+            BOOST_CHECK(wallet->CreateTransaction({{GetScriptForDestination(tallyItem.txdest), nAmount, false}}, tx, nFeeRet, nChangePosRet, strError, coinControl));
             {
-                auto locked_chain = chain->lock();
-                BOOST_CHECK(wallet->CreateTransaction(*locked_chain, {{GetScriptForDestination(tallyItem.txdest), nAmount, false}}, tx, nFeeRet, nChangePosRet, strError, coinControl));
+                LOCK2(wallet->cs_wallet, cs_main);
+                wallet->CommitTransaction(tx, {}, {});
             }
-            wallet->CommitTransaction(tx, {}, {});
             AddTxToChain(tx->GetHash());
             for (size_t n = 0; n < tx->vout.size(); ++n) {
                 if (nChangePosRet != -1 && n == nChangePosRet) {

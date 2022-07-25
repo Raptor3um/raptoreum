@@ -8,8 +8,7 @@
 #include <primitives/block.h>
 #include <flat-database.h>
 #include <hash.h>
-#include <sync.h>
-#include <util/system.h>
+#include <util/strencodings.h>
 
 
 CPowCache* CPowCache::instance = nullptr;
@@ -18,16 +17,24 @@ CPowCache& CPowCache::Instance()
 {
     if (CPowCache::instance == nullptr)
     {
-        int  powCacheSize     = gArgs.GetArg("-powcachesize", DEFAULT_POW_CACHE_SIZE);
-        powCacheValidate = gArgs.GetBoolArg("-powcachevalidate", false); // > 0 ? true : false;
-        powCacheSize = powCacheSize == 0 ? DEFAULT_POW_CACHE_SIZE : powCacheSize;
+        uint64_t powCacheSize;
+        if (gArgs.IsArgSet("-powcachesize")) {
+            const std::string powCacheSizeStr = gArgs.GetArg("-powcachesize", "");
+            uint64_t powCacheSizeNew;
+            powCacheSize = ParseUInt64(powCacheSizeStr, &powCacheSizeNew); //(uint64_t)(gArgs.GetArg("-powcachesize", "") << 20);
+        } else {
+            powCacheSize = (DEFAULT_POW_CACHE_SIZE << 20); // 52428800 bytes == 50MB
+        }
+        //int64_t powCacheDefSize = (gArgs.GetArg("-powcachesize", "DEFAULT_POW_CACHE_SIZE") << 20); // 52428800 bytes == 50MB
+        bool powCacheValidate = gArgs.GetBoolArg("-powcachevalidate", DEFAULT_VALIDATE_POW_CACHE);
+        //int powCacheSize = powCacheSize == 0 ? DEFAULT_POW_CACHE_SIZE : powCacheSize;
 
         CPowCache::instance = new CPowCache(powCacheSize, powCacheValidate);
     }
     return *instance;
 }
 
-CPowCache::CPowCache(int maxSize, bool validate)
+CPowCache::CPowCache(uint64_t maxSize, bool validate)
     : unordered_lru_cache<uint256, uint256, std::hash<uint256>>(maxSize)
     , nVersion(CURRENT_VERSION)
     , bValidate(validate)

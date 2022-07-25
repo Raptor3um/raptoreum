@@ -24,7 +24,6 @@
 
 void CDSNotificationInterface::InitializeCurrentBlockTip()
 {
-    LOCK(cs_main);
     SynchronousUpdatedBlockTip(::ChainActive().Tip(), nullptr, ::ChainstateActive().IsInitialBlockDownload());
     UpdatedBlockTip(::ChainActive().Tip(), nullptr, ::ChainstateActive().IsInitialBlockDownload());
 }
@@ -111,9 +110,9 @@ void CDSNotificationInterface::BlockDisconnected(const std::shared_ptr<const CBl
     CCoinJoin::BlockDisconnected(pblock, pindexDisconnected);
 }
 
-void CDSNotificationInterface::NotifySmartnodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff)
+void CDSNotificationInterface::NotifySmartnodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff, CConnman& connman)
 {
-    CMNAuth::NotifySmartnodeListChanged(undo, oldMNList, diff);
+    CMNAuth::NotifySmartnodeListChanged(undo, oldMNList, diff, connman);
     governance.UpdateCachesAndClean();
 }
 

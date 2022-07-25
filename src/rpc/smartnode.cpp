@@ -92,8 +92,9 @@ static UniValue smartnode_connect(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Incorrect smartnode address %s", strAddress));
 
     // TODO: Pass CConnman instance somehow and don't use global variable.
-    g_rpc_node->connman->OpenSmartnodeConnection(CAddress(addr, NODE_NETWORK));
-    if (!g_rpc_node->connman->IsConnected(CAddress(addr, NODE_NETWORK), CConnman::AllNodes))
+    NodeContext& node = EnsureNodeContext(request.context);
+    node.connman->OpenSmartnodeConnection(CAddress(addr, NODE_NETWORK));
+    if (!node.connman->IsConnected(CAddress(addr, NODE_NETWORK), CConnman::AllNodes))
         throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Couldn't connect to smartnode %s", strAddress));
 
     return "successfully connected";
@@ -211,9 +212,8 @@ static UniValue smartnode_outputs(const JSONRPCRequest& request)
     CCoinControl coin_control;
     coin_control.nCoinType = CoinType::ONLY_SMARTNODE_COLLATERAL;
     {
-      auto locked_chain = pwallet->chain().lock();
-      LOCK(pwallet->cs_wallet);
-      pwallet->AvailableCoins(*locked_chain, vPossibleCoins, true, &coin_control);
+      LOCK2(cs_main, pwallet->cs_wallet);
+      pwallet->AvailableCoins(vPossibleCoins, true, &coin_control);
     }
     UniValue obj(UniValue::VOBJ);
     for (const auto& out : vPossibleCoins) {
@@ -245,11 +245,15 @@ static UniValue smartnode_status(const JSONRPCRequest& request)
 
     UniValue mnObj(UniValue::VOBJ);
 
-    // keep compatibility with legacy status for now (might get deprecated/removed later)
-    mnObj.pushKV("outpoint", activeSmartnodeInfo.outpoint.ToStringShort());
-    mnObj.pushKV("service", activeSmartnodeInfo.service.ToString());
+    CDeterministicMNCPtr dmn;
+    {
+        LOCK(activeSmartnodeInfoCs);
 
-    auto dmn = deterministicMNManager->GetListAtChainTip().GetMN(activeSmartnodeInfo.proTxHash);
+        // Keep compatibility with legacy status for now.
+        mnObj.pushKV("outpoint", activeSmartnodeInfo.outpoint.ToStringShort());
+        mnObj.pushKV("service", activeSmartnodeInfo.service.ToString());
+        dmn = deterministicMNManager->GetListAtChainTip().GetMN(activeSmartnodeInfo.proTxHash);
+    }
     if (dmn) {
         mnObj.pushKV("proTxHash", dmn->proTxHash.ToString());
         mnObj.pushKV("collateralHash", dmn->collateralOutpoint.hash.ToString());

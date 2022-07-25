@@ -17,12 +17,6 @@
 namespace llmq
 {
 
-CDKGPendingMessages::CDKGPendingMessages(size_t _maxMessagesPerNode, int _invType) :
-    maxMessagesPerNode(_maxMessagesPerNode),
-    invType(_invType)
-{
-}
-
 void CDKGPendingMessages::PushPendingMessage(NodeId from, CDataStream& vRecv)
 {
     // this will also consume the data, even if we bail out early
@@ -83,23 +77,6 @@ void CDKGPendingMessages::Clear()
 
 //////
 
-CDKGSessionHandler::CDKGSessionHandler(const Consensus::LLMQParams& _params, CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager) :
-    params(_params),
-    blsWorker(_blsWorker),
-    dkgManager(_dkgManager),
-    curSession(std::make_shared<CDKGSession>(_params, _blsWorker, _dkgManager)),
-    pendingContributions((size_t)_params.size * 2, MSG_QUORUM_CONTRIB), // we allow size*2 messages as we need to make sure we see bad behavior (double messages)
-    pendingComplaints((size_t)_params.size * 2, MSG_QUORUM_COMPLAINT),
-    pendingJustifications((size_t)_params.size * 2, MSG_QUORUM_JUSTIFICATION),
-    pendingPrematureCommitments((size_t)_params.size * 2, MSG_QUORUM_PREMATURE_COMMITMENT)
-{
-    if (params.type == Consensus::LLMQ_NONE) {
-        throw std::runtime_error("Can't initialize CDKGSessionHandler with LLMQ_NONE type.");
-    }
-}
-
-CDKGSessionHandler::~CDKGSessionHandler() = default;
-
 void CDKGSessionHandler::UpdatedBlockTip(const CBlockIndex* pindexNew)
 {
     LOCK(cs);
@@ -156,7 +133,7 @@ void CDKGSessionHandler::StopThread()
 
 bool CDKGSessionHandler::InitNewQuorum(const CBlockIndex* pindexQuorum)
 {
-    curSession = std::make_shared<CDKGSession>(params, blsWorker, dkgManager);
+    curSession = std::make_shared<CDKGSession>(params, blsWorker, dkgManager, connman);
 
     if (!deterministicMNManager->IsDIP3Enforced(pindexQuorum->nHeight)) {
         return false;
@@ -164,7 +141,7 @@ bool CDKGSessionHandler::InitNewQuorum(const CBlockIndex* pindexQuorum)
 
     auto mns = CLLMQUtils::GetAllQuorumMembers(params.type, pindexQuorum);
 
-    if (!curSession->Init(pindexQuorum, mns, activeSmartnodeInfo.proTxHash)) {
+    if (!curSession->Init(pindexQuorum, mns, WITH_LOCK(activeSmartnodeInfoCs, return activeSmartnodeInfo.proTxHash))) {
         LogPrintf("CDKGSessionManager::%s -- quorum initialiation failed for %s\n", __func__, curSession->params.name);
         return false;
     }
@@ -504,11 +481,7 @@ void CDKGSessionHandler::HandleDKGRound()
         curQuorumHeight = quorumHeight;
     }
 
-    const CBlockIndex* pindexQuorum;
-    {
-        LOCK(cs_main);
-        pindexQuorum = LookupBlockIndex(curQuorumHash);
-    }
+    const CBlockIndex* pindexQuorum = WITH_LOCK(cs_main, return LookupBlockIndex(curQuorumHash));
 
     if (!InitNewQuorum(pindexQuorum)) {
         // should actually never happen
@@ -522,9 +495,9 @@ void CDKGSessionHandler::HandleDKGRound()
         return changed;
     });
 
-    CLLMQUtils::EnsureQuorumConnections(params.type, pindexQuorum, curSession->myProTxHash);
+    CLLMQUtils::EnsureQuorumConnections(params.type, pindexQuorum, connman, curSession->myProTxHash);
     if (curSession->AreWeMember()) {
-        CLLMQUtils::AddQuorumProbeConnections(params.type, pindexQuorum, curSession->myProTxHash);
+        CLLMQUtils::AddQuorumProbeConnections(params.type, pindexQuorum, connman, curSession->myProTxHash);
     }
 
     WaitForNextPhase(QuorumPhase_Initialized, QuorumPhase_Contribute, curQuorumHash, []{return false;});

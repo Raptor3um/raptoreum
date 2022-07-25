@@ -33,7 +33,7 @@ std::string CChainLockSig::ToString() const
     return strprintf("CChainLockSig(nHeight=%d, blockHash=%s)", nHeight, blockHash.ToString());
 }
 
-CChainLocksHandler::CChainLocksHandler() : scheduler(std::make_unique<CScheduler>())
+CChainLocksHandler::CChainLocksHandler(CConnman& _connman) : scheduler(std::make_unique<CScheduler>()), connman(_connman)
 {
     CScheduler::Function serviceLoop = std::bind(&CScheduler::serviceQueue, scheduler.get());
     scheduler_thread = std::make_unique<std::thread>(std::bind(&TraceThread<CScheduler::Function>, "cl-schdlr", serviceLoop));
@@ -134,11 +134,7 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, const llmq::CCha
         return;
     }
 
-    CBlockIndex* pindex;
-    {
-        LOCK(cs_main);
-        pindex = LookupBlockIndex(clsig.blockHash);
-    }
+    CBlockIndex* pindex = WITH_LOCK(cs_main, return LookupBlockIndex(clsig.blockHash));
 
     {
         LOCK(cs);
@@ -164,7 +160,7 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, const llmq::CCha
 
     // Note: do not hold cs while calling RelayInv
     AssertLockNotHeld(cs);
-    g_connman->RelayInv(clsigInv, LLMQS_PROTO_VERSION);
+    connman.RelayInv(clsigInv, LLMQS_PROTO_VERSION);
 
     if (pindex == nullptr) {
         // we don't know the block/header for this CLSIG yet, so bail out for now

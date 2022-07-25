@@ -8,11 +8,13 @@
 
 #include <arith_uint256.h>
 #include <bls/bls.h>
+#include <consensus/params.h>
 #include <dbwrapper.h>
 #include <evo/evodb.h>
 #include <evo/providertx.h>
 #include <evo/simplifiedmns.h>
 #include <saltedhasher.h>
+#include <scheduler.h>
 #include <sync.h>
 
 #if defined(MAC_OSX)
@@ -27,6 +29,8 @@
 #if defined(MAC_OSX)
 #pragma clang diagnostic pop
 #endif
+
+class CConnman;
 class CBlock;
 class CBlockIndex;
 class CValidationState;
@@ -224,7 +228,7 @@ public:
     uint256 proTxHash;
     COutPoint collateralOutpoint;
     uint16_t nOperatorReward;
-    CDeterministicMNStateCPtr pdmnState;
+    std::shared_ptr<const CDeterministicMNState> pdmnState;
 
 public:
     template <typename Stream, typename Operation>
@@ -500,8 +504,8 @@ public:
     CDeterministicMNList ApplyDiff(const CBlockIndex* pindex, const CDeterministicMNListDiff& diff) const;
 
     void AddMN(const CDeterministicMNCPtr& dmn, bool fBumpTotalCount = true);
-    void UpdateMN(const CDeterministicMNCPtr& oldDmn, const CDeterministicMNStateCPtr& pdmnState);
-    void UpdateMN(const uint256& proTxHash, const CDeterministicMNStateCPtr& pdmnState);
+    void UpdateMN(const CDeterministicMNCPtr& oldDmn, const std::shared_ptr<const CDeterministicMNState>& pdmnState);
+    void UpdateMN(const uint256& proTxHash, const std::shared_ptr<const CDeterministicMNState>& pdmnState);
     void UpdateMN(const CDeterministicMNCPtr& oldDmn, const CDeterministicMNStateDiff& stateDiff);
     void RemoveMN(const uint256& proTxHash);
 
@@ -644,7 +648,7 @@ public:
     uint256 blockHash;
     int nHeight{-1};
     std::map<uint256, CDeterministicMNCPtr> addedMNs;
-    std::map<uint256, CDeterministicMNStateCPtr> updatedMNs;
+    std::map<uint256, std::shared_ptr<const CDeterministicMNState>> updatedMNs;
     std::set<uint256> removedMns;
 
 public:
@@ -680,14 +684,23 @@ public:
     RecursiveMutex cs;
 
 private:
+    Mutex cs_cleanup;
+    // We have performed CleanupCache() on this height.
+    int did_cleanup GUARDED_BY(cs_cleanup) {0};
+
+    // Main thread has indicated we should perform cleanup up to this height
+    std::atomic<int> to_cleanup {0};
+
     CEvoDB& evoDb;
+    CConnman& connman;
 
     std::unordered_map<uint256, CDeterministicMNList, StaticSaltedHasher> mnListsCache;
     std::unordered_map<uint256, CDeterministicMNListDiff, StaticSaltedHasher> mnListDiffsCache;
     const CBlockIndex* tipIndex{nullptr};
 
 public:
-    explicit CDeterministicMNManager(CEvoDB& _evoDb);
+    explicit CDeterministicMNManager(CEvoDB& _evoDb, CConnman& _connman) : evoDb(_evoDb), connman(_connman) {}
+    ~CDeterministicMNManager() = default;
 
     bool ProcessBlock(const CBlock& block, const CBlockIndex* pindex, CValidationState& state, const CCoinsViewCache& view, bool fJustCheck);
     bool UndoBlock(const CBlock& block, const CBlockIndex* pindex);
@@ -711,6 +724,8 @@ public:
     // TODO these can all be removed in a future version
     void UpgradeDiff(CDBBatch& batch, const CBlockIndex* pindexNext, const CDeterministicMNList& curMNList, CDeterministicMNList& newMNList);
     bool UpgradeDBIfNeeded();
+
+    void DoMaintenance();
 
 private:
     void CleanupCache(int nHeight);

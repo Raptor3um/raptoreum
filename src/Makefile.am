@@ -289,6 +289,7 @@ BITCOIN_CORE_H = \
   undo.h \
   unordered_lru_cache.h \
   util/bytevectorhash.h \
+  util/check.h \
   util/error.h \
   util/fees.h \
   util/spanparsing.h \
@@ -296,9 +297,11 @@ BITCOIN_CORE_H = \
   util/asmap.h \
   util/macros.h \
   util/moneystr.h \
+  util/ref.h \
   util/time.h \
   util/string.h \
   util/threadnames.h \
+  util/vector.h \
   util/memory.h \
   util/error.h \
   util/fees.h \
@@ -308,6 +311,7 @@ BITCOIN_CORE_H = \
   versionbitsinfo.h \
   walletinitinterface.h \
   wallet/coincontrol.h \
+  wallet/context.h \
   wallet/crypter.h \
   wallet/db.h \
   wallet/fees.h \
@@ -464,6 +468,7 @@ libraptoreum_wallet_a_SOURCES = \
   coinjoin/coinjoin-util.cpp \
   interfaces/wallet.cpp \
   wallet/coincontrol.cpp \
+  wallet/context.cpp \
   wallet/crypter.cpp \
   wallet/db.cpp \
   wallet/fees.cpp \

@@ -182,13 +182,6 @@ void CSigSharesNodeState::RemoveSession(const uint256& signHash)
 
 //////////////////////
 
-CSigSharesManager::CSigSharesManager()
-{
-    workInterrupt.reset();
-}
-
-CSigSharesManager::~CSigSharesManager() = default;
-
 void CSigSharesManager::StartWorkerThread()
 {
     // can't start new thread if we have one running already
@@ -229,7 +222,7 @@ void CSigSharesManager::InterruptWorkerThread()
 void CSigSharesManager::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv)
 {
     // non-smartnodes are not interested in sigshares
-    if (!fSmartnodeMode || activeSmartnodeInfo.proTxHash.IsNull()) {
+    if (!fSmartnodeMode || WITH_LOCK(activeSmartnodeInfoCs, return activeSmartnodeInfo.proTxHash.IsNull())) {
         return;
     }
 
@@ -374,7 +367,7 @@ bool CSigSharesManager::ProcessMessageSigSharesInv(CNode* pfrom, const CSigShare
     LogPrint(BCLog::LLMQ_SIGS, "CSigSharesManager::%s -- signHash=%s, inv={%s}, node=%d\n", __func__,
             sessionInfo.signHash.ToString(), inv.ToString(), pfrom->GetId());
 
-    if (sessionInfo.quorum->quorumVvec == nullptr) {
+    if (!sessionInfo.quorum->HasVerificationVector()) {
         // TODO we should allow to ask other nodes for the quorum vvec if we missed it in the DKG
         LogPrint(BCLog::LLMQ_SIGS, "CSigSharesManager::%s -- we don't have the quorum vvec for %s, not requesting sig shares. node=%d\n", __func__,
                   sessionInfo.quorumHash.ToString(), pfrom->GetId());
@@ -487,11 +480,11 @@ void CSigSharesManager::ProcessMessageSigShare(NodeId fromId, const CSigShare& s
         // quorum is too old
         return;
     }
-    if (!quorum->IsMember(activeSmartnodeInfo.proTxHash)) {
+    if (!quorum->IsMember(WITH_LOCK(activeSmartnodeInfoCs, return activeSmartnodeInfo.proTxHash))) {
         // we're not a member so we can't verify it (we actually shouldn't have received it)
         return;
     }
-    if (quorum->quorumVvec == nullptr) {
+    if (!quorum->HasVerificationVector()) {
         // TODO we should allow to ask other nodes for the quorum vvec if we missed it in the DKG
         LogPrint(BCLog::LLMQ_SIGS, "CSigSharesManager::%s -- we don't have the quorum vvec for %s, no verification possible. node=%d\n", __func__,
                  quorum->qc.quorumHash.ToString(), fromId);
@@ -536,11 +529,11 @@ bool CSigSharesManager::PreVerifyBatchedSigShares(const CSigSharesNodeState::Ses
         // quorum is too old
         return false;
     }
-    if (!session.quorum->IsMember(activeSmartnodeInfo.proTxHash)) {
+    if (!session.quorum->IsMember(WITH_LOCK(activeSmartnodeInfoCs, return activeSmartnodeInfo.proTxHash))) {
         // we're not a member so we can't verify it (we actually shouldn't have received it)
         return false;
     }
-    if (session.quorum->quorumVvec == nullptr) {
+    if (!session.quorum->HasVerificationVector()) {
         // TODO we should allow to ask other nodes for the quorum vvec if we missed it in the DKG
         LogPrint(BCLog::LLMQ_SIGS, "CSigSharesManager::%s -- we don't have the quorum vvec for %s, no verification possible.\n", __func__,
                   session.quorumHash.ToString());
@@ -732,7 +725,7 @@ void CSigSharesManager::ProcessSigShare(const CSigShare& sigShare, const CConnma
     // prepare node set for direct-push in case this is our sig share
     std::set<NodeId> quorumNodes;
     if (!CLLMQUtils::IsAllMembersConnectedEnabled(llmqType)) {
-        if (sigShare.quorumMember == quorum->GetMemberIndex(activeSmartnodeInfo.proTxHash)) {
+        if (sigShare.quorumMember == quorum->GetMemberIndex(WITH_LOCK(activeSmartnodeInfoCs, return activeSmartnodeInfo.proTxHash))) {
             quorumNodes = connman.GetSmartnodeQuorumNodes((Consensus::LLMQType) sigShare.llmqType, sigShare.quorumHash);
         }
     }
@@ -1022,10 +1015,11 @@ void CSigSharesManager::CollectSigSharesToSendConcentrated(std::unordered_map<No
 
     std::unordered_map<uint256, CNode*> proTxToNode;
     for (const auto& pnode : vNodes) {
-        if (pnode->verifiedProRegTxHash.IsNull()) {
+        auto verifiedProRegTxHash = pnode->GetVerifiedProRegTxHash();
+        if (verifiedProRegTxHash.IsNull()) {
             continue;
         }
-        proTxToNode.emplace(pnode->verifiedProRegTxHash, pnode);
+        proTxToNode.emplace(verifiedProRegTxHash, pnode);
     }
 
     auto curTime = GetTime<std::chrono::milliseconds>().count();
@@ -1078,7 +1072,7 @@ void CSigSharesManager::CollectSigSharesToAnnounce(std::unordered_map<NodeId, st
         auto quorumKey = std::make_pair((Consensus::LLMQType)sigShare->llmqType, sigShare->quorumHash);
         auto it = quorumNodesMap.find(quorumKey);
         if (it == quorumNodesMap.end()) {
-            auto nodeIds = g_connman->GetSmartnodeQuorumNodes(quorumKey.first, quorumKey.second);
+            auto nodeIds = connman.GetSmartnodeQuorumNodes(quorumKey.first, quorumKey.second);
             it = quorumNodesMap.emplace(std::piecewise_construct, std::forward_as_tuple(quorumKey), std::forward_as_tuple(nodeIds.begin(), nodeIds.end())).first;
         }
 
@@ -1140,7 +1134,7 @@ bool CSigSharesManager::SendMessages()
         return session->sendSessionId;
     };
 
-    std::vector<CNode*> vNodesCopy = g_connman->CopyNodeVector(CConnman::FullyConnectedOnly);
+    std::vector<CNode*> vNodesCopy = connman.CopyNodeVector(CConnman::FullyConnectedOnly);
 
     {
         LOCK(cs);
@@ -1180,13 +1174,13 @@ bool CSigSharesManager::SendMessages()
                          CLLMQUtils::BuildSignHash(sigSesAnn).ToString(), sigSesAnn.sessionId, pnode->GetId());
                 msgs.emplace_back(sigSesAnn);
                 if (msgs.size() == MAX_MSGS_CNT_QSIGSESANN) {
-                    g_connman->PushMessage(pnode, msgMaker.Make(NetMsgType::QSIGSESANN, msgs));
+                    connman.PushMessage(pnode, msgMaker.Make(NetMsgType::QSIGSESANN, msgs));
                     msgs.clear();
                     didSend = true;
                 }
             }
             if (!msgs.empty()) {
-                g_connman->PushMessage(pnode, msgMaker.Make(NetMsgType::QSIGSESANN, msgs));
+                connman.PushMessage(pnode, msgMaker.Make(NetMsgType::QSIGSESANN, msgs));
                 didSend = true;
             }
         }
@@ -1200,13 +1194,13 @@ bool CSigSharesManager::SendMessages()
                          p.first.ToString(), p.second.ToString(), pnode->GetId());
                 msgs.emplace_back(std::move(p.second));
                 if (msgs.size() == MAX_MSGS_CNT_QGETSIGSHARES) {
-                    g_connman->PushMessage(pnode, msgMaker.Make(NetMsgType::QGETSIGSHARES, msgs));
+                    connman.PushMessage(pnode, msgMaker.Make(NetMsgType::QGETSIGSHARES, msgs));
                     msgs.clear();
                     didSend = true;
                 }
             }
             if (!msgs.empty()) {
-                g_connman->PushMessage(pnode, msgMaker.Make(NetMsgType::QGETSIGSHARES, msgs));
+                connman.PushMessage(pnode, msgMaker.Make(NetMsgType::QGETSIGSHARES, msgs));
                 didSend = true;
             }
         }
@@ -1220,7 +1214,7 @@ bool CSigSharesManager::SendMessages()
                 LogPrint(BCLog::LLMQ_SIGS, "CSigSharesManager::SendMessages -- QBSIGSHARES signHash=%s, inv={%s}, node=%d\n",
                          p.first.ToString(), p.second.ToInvString(), pnode->GetId());
                 if (totalSigsCount + p.second.sigShares.size() > MAX_MSGS_TOTAL_BATCHED_SIGS) {
-                    g_connman->PushMessage(pnode, msgMaker.Make(NetMsgType::QBSIGSHARES, msgs));
+                    connman.PushMessage(pnode, msgMaker.Make(NetMsgType::QBSIGSHARES, msgs));
                     msgs.clear();
                     totalSigsCount = 0;
                     didSend = true;
@@ -1230,7 +1224,7 @@ bool CSigSharesManager::SendMessages()
 
             }
             if (!msgs.empty()) {
-                g_connman->PushMessage(pnode, msgMaker.Make(NetMsgType::QBSIGSHARES, std::move(msgs)));
+                connman.PushMessage(pnode, msgMaker.Make(NetMsgType::QBSIGSHARES, std::move(msgs)));
                 didSend = true;
             }
         }
@@ -1244,13 +1238,13 @@ bool CSigSharesManager::SendMessages()
                          p.first.ToString(), p.second.ToString(), pnode->GetId());
                 msgs.emplace_back(std::move(p.second));
                 if (msgs.size() == MAX_MSGS_CNT_QSIGSHARESINV) {
-                    g_connman->PushMessage(pnode, msgMaker.Make(NetMsgType::QSIGSHARESINV, msgs));
+                    connman.PushMessage(pnode, msgMaker.Make(NetMsgType::QSIGSHARESINV, msgs));
                     msgs.clear();
                     didSend = true;
                 }
             }
             if (!msgs.empty()) {
-                g_connman->PushMessage(pnode, msgMaker.Make(NetMsgType::QSIGSHARESINV, msgs));
+                connman.PushMessage(pnode, msgMaker.Make(NetMsgType::QSIGSHARESINV, msgs));
                 didSend = true;
             }
         }
@@ -1263,20 +1257,20 @@ bool CSigSharesManager::SendMessages()
                          sigShare.GetSignHash().ToString(), pnode->GetId());
                 msgs.emplace_back(std::move(sigShare));
                 if (msgs.size() == MAX_MSGS_SIG_SHARES) {
-                    g_connman->PushMessage(pnode, msgMaker.Make(NetMsgType::QSIGSHARE, msgs));
+                    connman.PushMessage(pnode, msgMaker.Make(NetMsgType::QSIGSHARE, msgs));
                     msgs.clear();
                     didSend = true;
                 }
             }
             if (!msgs.empty()) {
-                g_connman->PushMessage(pnode, msgMaker.Make(NetMsgType::QSIGSHARE, msgs));
+                connman.PushMessage(pnode, msgMaker.Make(NetMsgType::QSIGSHARE, msgs));
                 didSend = true;
             }
         }
     }
 
     // looped through all nodes, release them
-    g_connman->ReleaseNodeVector(vNodesCopy);
+    connman.ReleaseNodeVector(vNodesCopy);
 
     return didSend;
 }
@@ -1414,7 +1408,7 @@ void CSigSharesManager::Cleanup()
             nodeStatesToDelete.emplace(p.first);
         }
     }
-    g_connman->ForEachNode([&](CNode* pnode) {
+    connman.ForEachNode([&](CNode* pnode) {
         nodeStatesToDelete.erase(pnode->GetId());
     });
 
@@ -1501,7 +1495,7 @@ void CSigSharesManager::WorkThreadMain()
     int64_t lastSendTime = 0;
 
     while (!workInterrupt) {
-        if (!quorumSigningManager || !g_connman) {
+        if (!quorumSigningManager) {
             if (!workInterrupt.sleep_for(std::chrono::milliseconds(100))) {
                 return;
             }
@@ -1512,7 +1506,7 @@ void CSigSharesManager::WorkThreadMain()
 
         RemoveBannedNodeStates();
         fMoreWork |= quorumSigningManager->ProcessPendingRecoveredSigs();
-        fMoreWork |= ProcessPendingSigShares(*g_connman);
+        fMoreWork |= ProcessPendingSigShares(connman);
         SignPendingSigShares();
 
         if (GetTimeMillis() - lastSendTime > 100) {
@@ -1550,7 +1544,7 @@ void CSigSharesManager::SignPendingSigShares()
 
         if (sigShare.sigShare.Get().IsValid()) {
 
-            ProcessSigShare(sigShare, *g_connman, pQuorum);
+            ProcessSigShare(sigShare, connman, pQuorum);
 
             if (CLLMQUtils::IsAllMembersConnectedEnabled(pQuorum->params.type)) {
                 LOCK(cs);
@@ -1567,8 +1561,9 @@ void CSigSharesManager::SignPendingSigShares()
 CSigShare CSigSharesManager::CreateSigShare(const CQuorumCPtr& quorum, const uint256& id, const uint256& msgHash)
 {
     cxxtimer::Timer t(true);
+    auto activeSmartNodeProTxHash = WITH_LOCK(activeSmartnodeInfoCs, return activeSmartnodeInfo.proTxHash);
 
-    if (!quorum->IsValidMember(activeSmartnodeInfo.proTxHash)) {
+    if (!quorum->IsValidMember(activeSmartNodeProTxHash)) {
         return {};
     }
 
@@ -1578,7 +1573,7 @@ CSigShare CSigSharesManager::CreateSigShare(const CQuorumCPtr& quorum, const uin
         return {};
     }
 
-    int memberIdx = quorum->GetMemberIndex(activeSmartnodeInfo.proTxHash);
+    int memberIdx = quorum->GetMemberIndex(activeSmartNodeProTxHash);
     if (memberIdx == -1) {
         // this should really not happen (IsValidMember gave true)
         return {};

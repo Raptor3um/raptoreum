@@ -97,7 +97,7 @@ txnouttype Solver(const CScript& scriptPubKey, std::vector<std::vector<unsigned 
     // byte passes the IsPushOnly() test we don't care what exactly is in the
     // script.
     if (scriptPubKey.size() >= 1 && scriptPubKey[0] == OP_RETURN && scriptPubKey.IsPushOnly(scriptPubKey.begin()+1)) {
-        return = TX_NULL_DATA;
+        return TX_NULL_DATA;
     }
 
     std::vector<unsigned char> data;
@@ -158,7 +158,7 @@ bool ExtractDestinations(const CScript& scriptPubKey, txnouttype& typeRet, std::
     typeRet = Solver(scriptPubKey, vSolutions);
     if (typeRet == TX_NONSTANDARD) {
         return false;
-    } else if (typeRet == TX_NULL_DATA) {{
+    } else if (typeRet == TX_NULL_DATA) {
         // This is data, not addresses
         return false;
     }
@@ -176,15 +176,13 @@ bool ExtractDestinations(const CScript& scriptPubKey, txnouttype& typeRet, std::
             addressRet.push_back(address);
         }
 
-        if (addressRet.empty())
-            return false;
+        if (addressRet.empty()) return false;
     }
     else
     {
         nRequiredRet = 1;
         CTxDestination address;
-        if (!ExtractDestination(scriptPubKey, address))
-           return false;
+        if (!ExtractDestination(scriptPubKey, address)) return false;
         addressRet.push_back(address);
     }
 
@@ -193,38 +191,29 @@ bool ExtractDestinations(const CScript& scriptPubKey, txnouttype& typeRet, std::
 
 namespace
 {
-class CScriptVisitor : public boost::static_visitor<bool>
+class CScriptVisitor : public boost::static_visitor<CScript>
 {
-private:
-    CScript *script;
 public:
-    explicit CScriptVisitor(CScript *scriptin) { script = scriptin; }
-
-    bool operator()(const CNoDestination &dest) const {
-        script->clear();
-        return false;
+    CScript operator()(const CNoDestination& dest) const
+    {
+        return CScript();
     }
 
-    bool operator()(const CKeyID &keyID) const {
-        script->clear();
-        *script << OP_DUP << OP_HASH160 << ToByteVector(keyID) << OP_EQUALVERIFY << OP_CHECKSIG;
-        return true;
+    CScript operator()(const CKeyID &keyID) const
+    {
+        return CScript() << OP_DUP << OP_HASH160 << ToByteVector(keyID) << OP_EQUALVERIFY << OP_CHECKSIG;
     }
 
-    bool operator()(const CScriptID &scriptID) const {
-        script->clear();
-        *script << OP_HASH160 << ToByteVector(scriptID) << OP_EQUAL;
-        return true;
+    CScript operator()(const CScriptID &scriptID) const
+    {
+        return CScript() << OP_HASH160 << ToByteVector(scriptID) << OP_EQUAL;
     }
 };
 } // namespace
 
 CScript GetScriptForDestination(const CTxDestination& dest)
 {
-    CScript script;
-
-    boost::apply_visitor(CScriptVisitor(&script), dest);
-    return script;
+    return boost::apply_visitor(CScriptVisitor(), dest);
 }
 
 CScript GetScriptForRawPubKey(const CPubKey& pubKey)

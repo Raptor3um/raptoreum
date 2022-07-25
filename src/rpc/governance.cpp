@@ -4,7 +4,6 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <smartnode/activesmartnode.h>
-#include <consensus/validation.h>
 #include <core_io.h>
 #include <governance/governance.h>
 #include <governance/governance-vote.h>
@@ -132,7 +131,7 @@ static void gobject_prepare_help(const JSONRPCRequest& request)
 {
     RPCHelpMan{"gobject prepare",
         "Prepare governance object by signing and creating tx\n"
-        + HelpRequiringPassphrase() + "\n",
+        + HELP_REQUIRING_PASSPHRASE,
         {
             {"parent-hash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "hash of the parent object, \"0\" is root"},
             {"revision", RPCArg::Type::NUM, RPCArg::Optional::NO, "object revision in the system"},
@@ -197,8 +196,7 @@ static UniValue gobject_prepare(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Trigger objects need not be prepared (however only smartnodes can create them)");
     }
 
-    auto locked_chain = wallet->chain().lock();
-    LOCK2(mempool.cs, pwallet->cs_wallet);
+    LOCK(pwallet->cs_wallet);
 
     if (g_txindex) {
         g_txindex->BlockUntilSyncedToCurrentChain();
@@ -224,7 +222,8 @@ static UniValue gobject_prepare(const JSONRPCRequest& request)
     }
 
     CTransactionRef tx;
-    if (!pwallet->GetBudgetSystemCollateralTX(*locked_chain, tx, govobj.GetHash(), govobj.GetMinCollateralFee(), outpoint)) {
+
+    if (!pwallet->GetBudgetSystemCollateralTX(tx, govobj.GetHash(), govobj.GetMinCollateralFee(), outpoint)) {
         std::string err = "Error making collateral transaction for governance object. Please check your wallet balance and make sure your wallet is unlocked.";
         if (!request.params[5].isNull() && !request.params[6].isNull()) {
             err += "Please verify your specified output is valid and is enough for the combined proposal fee and transaction fee.";
@@ -237,7 +236,10 @@ static UniValue gobject_prepare(const JSONRPCRequest& request)
     }
 
     // -- send the tx to the network
-    pwallet->CommitTransaction(tx, {}, {});
+    {
+        LOCK(cs_main);
+        pwallet->CommitTransaction(tx, {}, {});
+    }
 
     LogPrint(BCLog::GOBJECT, "gobject_prepare -- GetDataAsPlainString = %s, hash = %s, txid = %s\n",
                 govobj.GetDataAsPlainString(), govobj.GetHash().ToString(), tx->GetHash().ToString());
@@ -249,7 +251,7 @@ static void gobject_list_prepared_help(const JSONRPCRequest& request)
 {
     RPCHelpMan{"gobject list-prepared",
         "Returns a list of governance objects prepared by this wallet with \"gobject prepare\" sorted by their creation time.\n"
-        + HelpRequiringPassphrase() + "\n",
+        + HELP_REQUIRING_PASSPHRASE,
         {
             {"count", RPCArg::Type::NUM, /* default */ "10", "Maximum number of objects to return."},
         },
@@ -318,11 +320,11 @@ static UniValue gobject_submit(const JSONRPCRequest& request)
     }
 
     auto mnList = deterministicMNManager->GetListAtChainTip();
-    bool fMnFound = mnList.HasValidMNByCollateral(activeSmartnodeInfo.outpoint);
+    bool fMnFound = WITH_LOCK(activeSmartnodeInfoCs, return mnList.HasValidMNByCollateral(activeSmartnodeInfo.outpoint));
 
     LogPrint(BCLog::GOBJECT, "gobject_submit -- pubKeyOperator = %s, outpoint = %s, params.size() = %lld, fMnFound = %d\n",
-            (activeSmartnodeInfo.blsPubKeyOperator ? activeSmartnodeInfo.blsPubKeyOperator->ToString() : "N/A"),
-            activeSmartnodeInfo.outpoint.ToStringShort(), request.params.size(), fMnFound);
+            (WITH_LOCK(activeSmartnodeInfoCs, return activeSmartnodeInfo.blsPubKeyOperator ? activeSmartnodeInfo.blsPubKeyOperator->ToString() : "N/A")),
+            WITH_LOCK(activeSmartnodeInfoCs, return activeSmartnodeInfo.outpoint.ToStringShort()), request.params.size(), fMnFound);
 
     // ASSEMBLE NEW GOVERNANCE OBJECT FROM USER PARAMETERS
 
@@ -359,6 +361,7 @@ static UniValue gobject_submit(const JSONRPCRequest& request)
     // Attempt to sign triggers if we are a MN
     if (govobj.GetObjectType() == GOVERNANCE_OBJECT_TRIGGER) {
         if (fMnFound) {
+            LOCK(activeSmartnodeInfoCs);
             govobj.SetSmartnodeOutpoint(activeSmartnodeInfo.outpoint);
             govobj.Sign(*activeSmartnodeInfo.blsKeyOperator);
         } else {
@@ -395,11 +398,12 @@ static UniValue gobject_submit(const JSONRPCRequest& request)
 
     LogPrintf("gobject(submit) -- Adding locally created governance object - %s\n", strHash);
 
+    const NodeContext& node = EnsureNodeContext(request.context);
     if (fMissingConfirmations) {
         governance.AddPostponedObject(govobj);
-        govobj.Relay(*g_rpc_node->connman);
+        govobj.Relay(*node.connman);
     } else {
-        governance.AddGovernanceObject(govobj, *g_rpc_node->connman);
+        governance.AddGovernanceObject(govobj, *node.connman);
     }
 
     return govobj.GetHash().ToString();
@@ -459,7 +463,7 @@ static UniValue gobject_vote_conf(const JSONRPCRequest& request)
     UniValue statusObj(UniValue::VOBJ);
     UniValue returnObj(UniValue::VOBJ);
 
-    auto dmn = deterministicMNManager->GetListAtChainTip().GetValidMNByCollateral(activeSmartnodeInfo.outpoint);
+    auto dmn = WITH_LOCK(activeSmartnodeInfoCs, return deterministicMNManager->GetListAtChainTip().GetValidMNByCollateral(activeSmartnodeInfo.outpoint));
 
     if (!dmn) {
         nFailed++;
@@ -477,8 +481,12 @@ static UniValue gobject_vote_conf(const JSONRPCRequest& request)
     if (govObjType == GOVERNANCE_OBJECT_PROPOSAL && eVoteSignal == VOTE_SIGNAL_FUNDING) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Can't use vote-conf for proposals");
     }
-    if (activeSmartnodeInfo.blsKeyOperator) {
-        signSuccess = vote.Sign(*activeSmartnodeInfo.blsKeyOperator);
+
+    {
+        LOCK(activeSmartnodeInfoCs);
+        if (activeSmartnodeInfo.blsKeyOperator) {
+            signSuccess = vote.Sign(*activeSmartnodeInfo.blsKeyOperator);
+        }
     }
 
     if (!signSuccess) {
@@ -492,7 +500,8 @@ static UniValue gobject_vote_conf(const JSONRPCRequest& request)
     }
 
     CGovernanceException exception;
-    if (governance.ProcessVoteAndRelay(vote, exception, *g_rpc_node->connman)) {
+    const NodeContext& node = EnsureNodeContext(request.context);
+    if (governance.ProcessVoteAndRelay(vote, exception, *node.connman)) {
         nSuccessful++;
         statusObj.pushKV("result", "success");
     } else {
@@ -509,10 +518,11 @@ static UniValue gobject_vote_conf(const JSONRPCRequest& request)
     return returnObj;
 }
 
-UniValue VoteWithSmartnodes(const std::map<uint256, CKey>& keys,
+UniValue VoteWithSmartnodes(const JSONRPCRequest& request, const std::map<uint256, CKey>& keys,
                              const uint256& hash, vote_signal_enum_t eVoteSignal,
                              vote_outcome_enum_t eVoteOutcome)
 {
+    const NodeContext& node = EnsureNodeContext(request.context);
     {
         LOCK(governance.cs);
         CGovernanceObject *pGovObj = governance.FindGovernanceObject(hash);
@@ -553,7 +563,7 @@ UniValue VoteWithSmartnodes(const std::map<uint256, CKey>& keys,
         }
 
         CGovernanceException exception;
-        if (governance.ProcessVoteAndRelay(vote, exception, *g_rpc_node->connman)) {
+        if (governance.ProcessVoteAndRelay(vote, exception, *node.connman)) {
             nSuccessful++;
             statusObj.pushKV("result", "success");
         } else {
@@ -577,7 +587,7 @@ void gobject_vote_many_help(const JSONRPCRequest& request)
 {
     RPCHelpMan{"gobject vote-many",
         "Vote on a governance object by all smartnodes for which the voting key is present in the local wallet\n"
-        + HelpRequiringPassphrase() + "\n",
+        + HELP_REQUIRING_PASSPHRASE,
         {
             {"governance-hash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "hash of the governance object"},
             {"vote", RPCArg::Type::STR, RPCArg::Optional::NO, "vote, possible values: [funding|valid|delete|endorsed]"},
@@ -624,14 +634,14 @@ static UniValue gobject_vote_many(const JSONRPCRequest& request)
         }
     });
 
-    return VoteWithSmartnodes(votingKeys, hash, eVoteSignal, eVoteOutcome);
+    return VoteWithSmartnodes(request, votingKeys, hash, eVoteSignal, eVoteOutcome);
 }
 
 void gobject_vote_alias_help(const JSONRPCRequest& request)
 {
     RPCHelpMan{"gobject vote-alias",
         "Vote on a governance object by smartnode's voting key (if present in local wallet)\n"
-        + HelpRequiringPassphrase() + "\n",
+        + HELP_REQUIRING_PASSPHRASE,
         {
             {"governance-hash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "hash of the governance object"},
             {"vote", RPCArg::Type::STR, RPCArg::Optional::NO, "vote, possible values: [funding|valid|delete|endorsed]"},
@@ -683,7 +693,7 @@ static UniValue gobject_vote_alias(const JSONRPCRequest& request)
     std::map<uint256, CKey> votingKeys;
     votingKeys.emplace(proTxHash, votingKey);
 
-    return VoteWithSmartnodes(votingKeys, hash, eVoteSignal, eVoteOutcome);
+    return VoteWithSmartnodes(request, votingKeys, hash, eVoteSignal, eVoteOutcome);
 }
 #endif
 
@@ -837,9 +847,8 @@ static UniValue gobject_get(const JSONRPCRequest& request)
         g_txindex->BlockUntilSyncedToCurrentChain();
     }
 
-    LOCK2(cs_main, governance.cs);
-
     // FIND THE GOVERNANCE OBJECT THE USER IS LOOKING FOR
+    LOCK2(cs_main, governance.cs);
     CGovernanceObject* pGovObj = governance.FindGovernanceObject(hash);
 
     if (pGovObj == nullptr) {
@@ -1114,7 +1123,8 @@ UniValue voteraw(const JSONRPCRequest& request)
     }
 
     CGovernanceException exception;
-    if (governance.ProcessVoteAndRelay(vote, exception, *g_rpc_node->connman)) {
+    const NodeContext& node = EnsureNodeContext(request.context);
+    if (governance.ProcessVoteAndRelay(vote, exception, *node.connman)) {
         return "Voted successfully";
     } else {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Error voting : " + exception.GetMessage());
@@ -1142,7 +1152,7 @@ static UniValue getgovernanceinfo(const JSONRPCRequest& request)
     }.Check(request);
 
     int nLastSuperblock = 0, nNextSuperblock = 0;
-    int nBlockHeight = ::ChainActive().Height();
+    int nBlockHeight = WITH_LOCK(cs_main, return ::ChainActive().Height());
 
     CSuperblock::GetNearestSuperblocksHeights(nBlockHeight, nLastSuperblock, nNextSuperblock);
 

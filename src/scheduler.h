@@ -53,6 +53,13 @@ public:
      */
     void scheduleEvery(Function f, int64_t deltaMilliSeconds);
 
+    /**
+     * Mock the scheduler to fast forward in time.
+     * Iterates through items on taskQueue and reschedules them
+     * to be delta_seconds sooner.
+     */
+    void MockForward(std::chrono::seconds delta_seconds);
+
     // Services the queue 'forever'. Should be run in a thread,
     // and interrupted using boost::interrupt_threaf
     void serviceQueue();

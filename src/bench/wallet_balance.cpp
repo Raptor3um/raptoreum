@@ -7,6 +7,7 @@
 #include <key_io.h>
 #include <node/context.h>
 #include <test/util.h>
+#include <test/test_raptoreum.h>
 #include <validationinterface.h>
 #include <wallet/wallet.h>
 
@@ -14,6 +15,7 @@
 
 static void WalletBalance(benchmark::Bench& bench, const bool set_dirty, const bool add_watchonly, const bool add_mine, const uint32_t epoch_iters)
 {
+    RegTestingSetup test_setup;
     const auto& ADDRESS_WATCHONLY = ADDRESS_B58T_UNSPENDABLE;
 
     NodeContext node;
@@ -29,8 +31,8 @@ static void WalletBalance(benchmark::Bench& bench, const bool set_dirty, const b
     if (add_watchonly) importaddress(wallet, ADDRESS_WATCHONLY);
 
     for (int i = 0; i < 100; ++i) {
-        generatetoaddress(address_mine.value_or(ADDRESS_WATCHONLY));
-        generatetoaddress(ADDRESS_WATCHONLY);
+        generatetoaddress(test_setup.m_node, address_mine.value_or(ADDRESS_WATCHONLY));
+        generatetoaddress(test_setup.m_node, ADDRESS_WATCHONLY);
     }
     SyncWithValidationInterfaceQueue();
 

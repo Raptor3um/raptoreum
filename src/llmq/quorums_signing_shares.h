@@ -368,12 +368,17 @@ private:
     // must be protected by cs
     FastRandomContext rnd;
 
+    CConnman& connman;
     int64_t lastCleanupTime{0};
     std::atomic<uint32_t> recoveredSigsCounter{0};
 
 public:
-    CSigSharesManager();
-    ~CSigSharesManager();
+    explicit CSigSharesManager(CConnman& _connman) : connman(_connman)
+    {
+        workInterrupt.reset();
+    };
+    CSigSharesManager() = delete;
+    ~CSigSharesManager() override = default;
 
     void StartWorkerThread();
     void StopWorkerThread();

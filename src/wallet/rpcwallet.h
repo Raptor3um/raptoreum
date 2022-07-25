@@ -5,27 +5,26 @@
 #ifndef BITCOIN_WALLET_RPCWALLET_H
 #define BITCOIN_WALLET_RPCWALLET_H
 
+#include <span.h>
+
 #include <memory>
 #include <string>
 #include <vector>
 
-class CRPCTable;
+class CRPCCommand;
 class CWallet;
 class JSONRPCRequest;
 class UniValue;
+class CTransaction;
+class WalletContext;
 
-namespace interfaces {
-class Chain;
-class Handler;
-}
+static const std::string HELP_REQUIRING_PASSPHRASE{"\nRequires wallet passphrase to be set with walletpassphrase call if wallet is encrypted.\n"};
 
-//! Pointer to chain interface that needs to be declared as a global to be
-//! accessible loadwallet and createwallet methods. Due to limitations of the
-//! RPC framework, there's currently no direct way to pass in state to RPC
-//! methods without globals.
-extern interfaces::Chain* g_rpc_chain;
+namespace util {
+class Ref;
+} // namespace util
 
-void RegisterWalletRPCCommands(interfaces::Chain& chain, std::vector<std::unique_ptr<interfaces::Handler>>& handlers);
+Span<const CRPCCommand> GetWalletRPCCommands();
 
 /**
  * Figures out what wallet, if any, to use for a JSONRPCRequest.
@@ -35,9 +34,8 @@ void RegisterWalletRPCCommands(interfaces::Chain& chain, std::vector<std::unique
  */
 std::shared_ptr<CWallet> GetWalletForJSONRPCRequest(const JSONRPCRequest& request);
 
-std::string HelpRequiringPassphrase();
 void EnsureWalletIsUnlocked(CWallet *);
-bool EnsureWalletIsAvailable(CWallet *, bool avoidException);
+WalletContext& EnsureWalletContext(const util::Ref& context);
 
 UniValue getaddressinfo(const JSONRPCRequest& request);
 UniValue signrawtransactionwithwallet(const JSONRPCRequest& request);

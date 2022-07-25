@@ -40,122 +40,6 @@
 namespace interfaces {
 namespace {
 
-class LockImpl : public Chain::Lock, public UniqueLock<RecursiveMutex>
-{
-    Optional<int> getHeight() override
-    {
-        LockAnnotation lock(::cs_main);
-        int height = ::ChainActive().Height();
-        if (height >= 0) {
-            return height;
-        }
-        return nullopt;
-    }
-    Optional<int> getBlockHeight(const uint256& hash) override
-    {
-        LockAnnotation lock(::cs_main);
-        CBlockIndex* block = LookupBlockIndex(hash);
-        if (block && ::ChainActive().Contains(block)) {
-            return block->nHeight;
-        }
-        return nullopt;
-    }
-    int getBlockDepth(const uint256& hash) override
-    {
-        const Optional<int> tip_height = getHeight();
-        const Optional<int> height = getBlockHeight(hash);
-        return tip_height && height ? *tip_height - *height + 1 : 0;
-    }
-    uint256 getBlockHash(int height) override
-    {
-        LockAnnotation lock(::cs_main);
-        CBlockIndex* block = ::ChainActive()[height];
-        assert(block != nullptr);
-        return block->GetBlockHash();
-    }
-    int64_t getBlockTime(int height) override
-    {
-        LockAnnotation lock(::cs_main);
-        CBlockIndex* block = ::ChainActive()[height];
-        assert(block != nullptr);
-        return block->GetBlockTime();
-    }
-    int64_t getBlockMedianTimePast(int height) override
-    {
-        LockAnnotation lock(::cs_main);
-        CBlockIndex* block = ::ChainActive()[height];
-        assert(block != nullptr);
-        return block->GetMedianTimePast();
-    }
-    bool haveBlockOnDisk(int height) override
-    {
-        LockAnnotation lock(::cs_main);
-        CBlockIndex* block = ::ChainActive()[height];
-        return block && ((block->nStatus & BLOCK_HAVE_DATA) != 0) && block->nTx > 0;
-    }
-    Optional<int> findFirstBlockWithTimeAndHeight(int64_t time, int height, uint256* hash) override
-    {
-        LockAnnotation lock(::cs_main);
-        CBlockIndex* block = ::ChainActive().FindEarliestAtLeast(time, height);
-        if (block) {
-            if (hash) *hash = block->GetBlockHash();
-            return block->nHeight;
-        }
-        return nullopt;
-    }
-    Optional<int> findPruned(int start_height, Optional<int> stop_height) override
-    {
-        LockAnnotation lock(::cs_main);
-        if (::fPruneMode) {
-            CBlockIndex* block = stop_height ? ::ChainActive()[*stop_height] : ::ChainActive().Tip();
-            while (block && block->nHeight >= start_height) {
-                if ((block->nStatus & BLOCK_HAVE_DATA) == 0) {
-                    return block->nHeight;
-                }
-                block = block->pprev;
-            }
-        }
-        return nullopt;
-    }
-    Optional<int> findFork(const uint256& hash, Optional<int>* height) override
-    {
-        LockAnnotation lock(::cs_main);
-        const CBlockIndex* block = LookupBlockIndex(hash);
-        const CBlockIndex* fork = block ? ::ChainActive().FindFork(block) : nullptr;
-        if (height) {
-            if (block) {
-                *height = block->nHeight;
-            } else {
-                height->reset();
-            }
-        }
-        if (fork) {
-            return fork->nHeight;
-        }
-        return nullopt;
-    }
-    CBlockLocator getTipLocator() override
-    {
-        LockAnnotation lock(::cs_main);
-        return ::ChainActive().GetLocator();
-    }
-    Optional<int> findLocatorFork(const CBlockLocator& locator) override
-    {
-        LockAnnotation lock(::cs_main);
-        if (CBlockIndex* fork = FindForkInGlobalIndex(::ChainActive(), locator)) {
-            return fork->nHeight;
-        }
-        return nullopt;
-    }
-    bool checkFinalTx(const CTransaction& tx) override
-    {
-        LockAnnotation lock(::cs_main);
-        return CheckFinalTx(tx);
-    }
-
-    using UniqueLock::UniqueLock;
-};
-
 class NotificationsProxy : public CValidationInterface
 {
 public:
@@ -173,11 +57,11 @@ public:
         const CBlockIndex* index,
         const std::vector<CTransactionRef>& tx_conflicted) override
     {
-        m_notifications->BlockConnected(*block, tx_conflicted);
+        m_notifications->BlockConnected(*block, tx_conflicted, index->nHeight);
     }
-    void BlockDisconnected(const std::shared_ptr<const CBlock>& block, const CBlockIndex* pindexDisconnected) override
+    void BlockDisconnected(const std::shared_ptr<const CBlock>& block, const CBlockIndex* index) override
     {
-        m_notifications->BlockDisconnected(*block);
+        m_notifications->BlockDisconnected(*block, index->nHeight);
     }
     void UpdatedBlockTip(const CBlockIndex* index, const CBlockIndex* fork_index, bool is_ibd) override
     {
@@ -257,13 +141,109 @@ class ChainImpl : public Chain
 {
 public:
     explicit ChainImpl(NodeContext& node) : m_node(node) {}
-    std::unique_ptr<Chain::Lock> lock(bool try_lock) override
+    Optional<int> getHeight() override
     {
-        auto result = MakeUnique<LockImpl>(::cs_main, "cs_main", __FILE__, __LINE__, try_lock);
-        if (try_lock && result && !*result) return {};
-        // std::move necessary on some compilers due to conversion from
-        // LockImpl to Lock pointer
-        return std::move(result);
+        LOCK(cs_main);
+        int height = ::ChainActive().Height();
+        if (height >= 0) {
+            return height;
+        }
+        return nullopt;
+    }
+    Optional<int> getBlockHeight(const uint256& hash) override
+    {
+        LOCK(cs_main);
+        CBlockIndex* block = LookupBlockIndex(hash);
+        if (block && ::ChainActive().Contains(block)) {
+            return block->nHeight;
+        }
+        return nullopt;
+    }
+    uint256 getBlockHash(int height) override
+    {
+        LOCK(cs_main);
+        CBlockIndex* block = ::ChainActive()[height];
+        assert(block != nullptr);
+        return block->GetBlockHash();
+    }
+    int64_t getBlockTime(int height) override
+    {
+        LOCK(cs_main);
+        CBlockIndex* block = ::ChainActive()[height];
+        assert(block != nullptr);
+        return block->GetBlockTime();
+    }
+    int64_t getBlockMedianTimePast(int height) override
+    {
+        LOCK(cs_main);
+        CBlockIndex* block = ::ChainActive()[height];
+        assert(block != nullptr);
+        return block->GetMedianTimePast();
+    }
+    bool haveBlockOnDisk(int height) override
+    {
+        LOCK(cs_main);
+        CBlockIndex* block = ::ChainActive()[height];
+        return block && ((block->nStatus & BLOCK_HAVE_DATA) != 0) && block->nTx > 0;
+    }
+    Optional<int> findFirstBlockWithTimeAndHeight(int64_t time, int height, uint256* hash) override
+    {
+        LOCK(cs_main);
+        CBlockIndex* block = ::ChainActive().FindEarliestAtLeast(time, height);
+        if (block) {
+            if (hash) *hash = block->GetBlockHash();
+            return block->nHeight;
+        }
+        return nullopt;
+    }
+    Optional<int> findPruned(int start_height, Optional<int> stop_height) override
+    {
+        LOCK(cs_main);
+        if (::fPruneMode) {
+            CBlockIndex* block = stop_height ? ::ChainActive()[*stop_height] : ::ChainActive().Tip();
+            while (block && block->nHeight >= start_height) {
+                if ((block->nStatus & BLOCK_HAVE_DATA) == 0) {
+                    return block->nHeight;
+                }
+                block = block->pprev;
+            }
+        }
+        return nullopt;
+    }
+    Optional<int> findFork(const uint256& hash, Optional<int>* height) override
+    {
+        LOCK(cs_main);
+        const CBlockIndex* block = LookupBlockIndex(hash);
+        const CBlockIndex* fork = block ? ::ChainActive().FindFork(block) : nullptr;
+        if (height) {
+            if (block) {
+                *height = block->nHeight;
+            } else {
+                height->reset();
+            }
+        }
+        if (fork) {
+            return fork->nHeight;
+        }
+        return nullopt;
+    }
+    CBlockLocator getTipLocator() override
+    {
+        LOCK(cs_main);
+        return ::ChainActive().GetLocator();
+    }
+    Optional<int> findLocatorFork(const CBlockLocator& locator) override
+    {
+        LOCK(cs_main);
+        if (CBlockIndex* fork = FindForkInGlobalIndex(::ChainActive(), locator)) {
+            return fork->nHeight;
+        }
+        return nullopt;
+    }
+    bool checkFinalTx(const CTransaction& tx) override
+    {
+        LOCK(cs_main);
+        return CheckFinalTx(tx);
     }
     bool findBlock(const uint256& hash, CBlock* block, int64_t* time, int64_t* time_max) override
     {
@@ -286,7 +266,7 @@ public:
         }
         return true;
     }
-    void findCoins(std::map<COutPoint, Coin>& coins) override { return FindCoins(coins); }
+    void findCoins(std::map<COutPoint, Coin>& coins) override { return FindCoins(m_node, coins); }
     double guessVerificationProgress(const uint256& block_hash) override
     {
         LOCK(cs_main);
@@ -356,23 +336,11 @@ public:
     {
         return MakeUnique<NotificationsHandlerImpl>(std::move(notifications));
     }
-    void waitForNotificationsIfNewBlocksConnected(const uint256& old_tip) override
+    void waitForNotificationsIfTipChanged(const uint256& old_tip) override
     {
         if (!old_tip.IsNull()) {
             LOCK(::cs_main);
             if (old_tip == ::ChainActive().Tip()->GetBlockHash()) return;
-            CBlockIndex* block = LookupBlockIndex(old_tip);
-            if (block && block->GetAncestor(::ChainActive().Height()) == ::ChainActive().Tip()) return;
-        }
-        SyncWithValidationInterfaceQueue();
-    }
-    void waitForNotificationsIfNewBlocksConnected(const uint256& old_tip) override
-    {
-        if (!old_tip.IsNull()) {
-            LOCK(::cs_main);
-            if (old_tip == ::chainActive.Tip()->GetBlockHash()) return;
-            CBlockIndex* block = LookupBlockIndex(old_tip);
-            if (block && block->GetAncestor(::chainActive.Height()) == ::chainActive.Tip()) return;
         }
         SyncWithValidationInterfaceQueue();
     }

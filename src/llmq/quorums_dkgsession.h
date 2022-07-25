@@ -18,6 +18,7 @@
 #include <llmq/quorums_utils.h>
 
 class UniValue;
+class CConnman;
 
 namespace llmq
 {
@@ -26,13 +27,6 @@ class CFinalCommitment;
 class CDKGSession;
 class CDKGSessionManager;
 class CDKGPendingMessages;
-
-class CDKGLogger : public CBatchedLogger
-{
-public:
-    CDKGLogger(const CDKGSession& _quorumDkg, const std::string& _func);
-    CDKGLogger(const std::string& _llmqTypeName, const uint256& _quorumHash, int _height, bool _areWeMember, const std::string& _func);
-};
 
 class CDKGContribution
 {
@@ -98,7 +92,7 @@ public:
 
 public:
     CDKGComplaint() = default;
-    explicit CDKGComplaint(const Consensus::LLMQParams& params);
+    explicit CDKGComplaint(const Consensus::LLMQParams& params) : badMembers((size_t)params.size), complainForMembers((size_t)params.size) {};
 
     SERIALIZE_METHODS(CDKGComplaint, obj)
     {
@@ -156,7 +150,7 @@ public:
 
 public:
     CDKGPrematureCommitment() = default;
-    explicit CDKGPrematureCommitment(const Consensus::LLMQParams& params);
+    explicit CDKGPrematureCommitment(const Consensus::LLMQParams& params) : validMembers((size_t)params.size) {};
 
     int CountValidMembers() const
     {
@@ -243,6 +237,7 @@ private:
 
     uint256 myProTxHash;
     CBLSId myId;
+    CConnman& connman;
     size_t myIdx{(size_t)-1};
 
     // all indexed by msg hash
@@ -262,8 +257,8 @@ private:
     std::set<uint256> validCommitments;
 
 public:
-    CDKGSession(const Consensus::LLMQParams& _params, CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager) :
-        params(_params), blsWorker(_blsWorker), cache(_blsWorker), dkgManager(_dkgManager) {}
+    CDKGSession(const Consensus::LLMQParams& _params, CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager, CConnman& _connman) :
+        params(_params), blsWorker(_blsWorker), cache(_blsWorker), dkgManager(_dkgManager), connman(_connman) {}
 
     bool Init(const CBlockIndex* pindexQuorum, const std::vector<CDeterministicMNCPtr>& mns, const uint256& _myProTxHash);
 
@@ -321,6 +316,15 @@ public:
 
 private:
     bool ShouldSimulateError(const std::string& type);
+};
+
+class CDKGLogger : public CBatchedLogger
+{
+public:
+    CDKGLogger(const CDKGSession& _quorumDkg, const std::string& _func) :
+            CDKGLogger(_quorumDkg.params.name, _quorumDkg.pindexQuorum->GetBlockHash(), _quorumDkg.pindexQuorum->nHeight, _quorumDkg.AreWeMember(), _func) {};
+    CDKGLogger(const std::string& _llmqTypeName, const uint256& _quorumHash, int _height, bool _areWeMember, const std::string& _func) :
+            CBatchedLogger(BCLog::LLMQ_DKG, strprintf("QuorumDKG(type=%s, height=%d, member=%d, func=%s)", _llmqTypeName, _height, _areWeMember, _func)) {};
 };
 
 void SetSimulatedDKGErrorRate(const std::string& type, double rate);

@@ -38,15 +38,34 @@ std::ostream& operator<<(std::ostream& os, const uint256& num)
   return os;
 }
 
-uint256 insecure_rand_seed = GetRandHash();
-FastRandomContext insecure_rand_ctx(insecure_rand_seed);
+FastRandomContext g_insecure_rand_ctx;
+static FastRandomContext g_insecure_rand_ctx_temp_path;
+
+static uint256 GetUintFromEnv(const std::string& env_name)
+{
+    const char* num = std::getenv(env_name.c_str());
+    if (!num) return {};
+    return uint256S(num);
+}
+
+void Seed(FastRandomContext& ctx)
+{
+    // Should be enough to get the seed once for the process
+    static uint256 seed{};
+    static const std::string RANDOM_CTX_SEED{"RANDOM_CTX_SEED"};
+    if (seed.IsNull()) seed = GetUintFromEnv(RANDOM_CTX_SEED);
+    if (seed.IsNull()) seed = GetRandHash();
+    LogPrintf("%s: Setting random seed for current tests to %s=%s\n", __func__, RANDOM_CTX_SEED, seed.GetHex());
+    ctx = FastRandomContext(seed);
+}
 
 extern bool fPrintToConsole;
 extern void noui_connect();
 
 BasicTestingSetup::BasicTestingSetup(const std::string& chainName)
-  : m_path_root(fs::temp_directory_path() / "test_raptoreum" / strprintf("%lu_%i", (unsigned long)GetTime(), (int)(InsecureRandRange(1 << 30))))
+  : m_path_root{fs::temp_directory_path() / "test_raptoreum" PACKAGE_NAME / std::to_string(g_insecure_rand_ctx_temp_path.rand32())}
 {
+        SeedInsecureRand();
         SHA256AutoDetect();
         ECC_Start();
         RandomInit();
@@ -59,12 +78,14 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName)
         fCheckBlockIndex = true;
         SelectParams(chainName);
         evoDb.reset(new CEvoDB(1 << 20, true, true));
-        deterministicMNManager.reset(new CDeterministicMNManager(*evoDb));
+        connman = MakeUnique<CConnman>(0x1337, 0x1337);
+        deterministicMNManager.reset(new CDeterministicMNManager(*evoDb, *connman));
         noui_connect();
 }
 
 BasicTestingSetup::~BasicTestingSetup()
 {
+        connman.reset();
         deterministicMNManager.reset();
         evoDb.reset();
 
@@ -86,15 +107,17 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
     const CChainParams& chainparams = Params();
     // Ideally we'd move all the RPC tests to the functional testing framework
     // instead of unit tests, but for now we need these here.
-    g_rpc_node = &m_node;
     RegisterAllCoreRPCCommands(tableRPC);
     ClearDatadirCache();
 
+    m_node.scheduler = MakeUnique<CScheduler>();
+
     // We have to run a scheduler thread to prevent ActivateBestChain
     // from blocking due to queue overrun.
-    threadGroup.create_thread(std::bind(&CScheduler::serviceQueue, &scheduler));
-    GetMainSignals().RegisterBackgroundSignalScheduler(scheduler);
-    mempool.setSanityCheck(1.0);
+    threadGroup.create_thread([&]{ m_node.scheduler->serviceQueue(); });
+    GetMainSignals().RegisterBackgroundSignalScheduler(*m_node.scheduler);
+    m_node.mempool = &::mempool;
+    m_node.mempool->setSanityCheck(1.0);
     m_node.banman = MakeUnique<BanMan>(GetDataDir() / "banlist.dat", nullptr, DEFAULT_MISBEHAVING_BANTIME);
     m_node.connman = MakeUnique<CConnman>(0x1337, 0x1337); // Deterministic randomness for tests.
     pblocktree.reset(new CBlockTreeDB(1 << 20, true));
@@ -104,7 +127,7 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
     assert(!::ChainstateActive().CanFlushToDisk());
     g_txindex = MakeUnique<TxIndex>(1 << 20, true);
     g_txindex->Start();
-    llmq::InitLLMQSystem(*evoDb, true);
+    llmq::InitLLMQSystem(*evoDb, *m_node.connman, true);
     ::ChainstateActive().InitCoinsCache();
     assert(::ChainstateActive().CanFlushToDisk());
     if (!LoadGenesisBlock(chainparams)) {
@@ -123,7 +146,7 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
 
 TestingSetup::~TestingSetup()
 {
-    scheduler.stop();
+    m_node.scheduler->stop();
     deterministicMNManager.reset();
     llmq::InterruptLLMQSystem();
     llmq::StopLLMQSystem();
@@ -135,16 +158,17 @@ TestingSetup::~TestingSetup()
     StopScriptCheckWorkerThreads();
     GetMainSignals().FlushBackgroundCallbacks();
     GetMainSignals().UnregisterBackgroundSignalScheduler();
-    g_rpc_node = nullptr;
     m_node.connman.reset();
     m_node.banman.reset();
+    m_node.mempool = nullptr;
+    m_node.scheduler.reset();
     UnloadBlockIndex();
     g_chainstate.reset();
     llmq::DestroyLLMQSystem();
     pblocktree.reset();
 }
 
-TestChainSetup::TestChainSetup(int blockCount) : TestingSetup(CBaseChainParams::REGTEST)
+TestChainSetup::TestChainSetup(int blockCount)
 {
     // Generate a 100-block chain:
     coinbaseKey.MakeNewKey(true);
@@ -190,7 +214,7 @@ CBlock TestChainSetup::CreateAndProcessBlock(const std::vector<CMutableTransacti
 CBlock TestChainSetup::CreateBlock(const std::vector<CMutableTransaction>& txns, const CScript& scriptPubKey)
 {
     const CChainParams& chainparams = Params();
-    std::unique_ptr<CBlockTemplate> pblocktemplate = BlockAssembler(chainparams).CreateNewBlock(scriptPubKey);
+    std::unique_ptr<CBlockTemplate> pblocktemplate = BlockAssembler(*m_node.mempool, chainparams).CreateNewBlock(scriptPubKey);
     CBlock& block = pblocktemplate->block;
 
     std::vector<CTransactionRef> llmqCommitments;

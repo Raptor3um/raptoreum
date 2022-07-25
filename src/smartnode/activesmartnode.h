@@ -19,6 +19,7 @@ struct CActiveSmartnodeInfo;
 class CActiveSmartnodeManager;
 
 extern CActiveSmartnodeInfo activeSmartnodeInfo;
+extern RecursiveMutex activeSmartnodeInfoCs;
 extern CActiveSmartnodeManager* activeSmartnodeManager;
 
 struct CActiveSmartnodeInfo {
@@ -49,8 +50,12 @@ public:
 private:
     smartnode_state_t state{SMARTNODE_WAITING_FOR_PROTX};
     std::string strError;
+    CConnman& connman;
 
 public:
+    explicit CActiveSmartnodeManager(CConnman& _connman) : connman(_connman) {};
+    ~CActiveSmartnodeManager() = default;
+
     void UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlockIndex* pindexFork, bool fInitialDownload) override;
 
     void Init(const CBlockIndex* pindex);

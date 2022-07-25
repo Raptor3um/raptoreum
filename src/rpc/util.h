@@ -11,6 +11,7 @@
 #include <script/standard.h>
 #include <univalue.h>
 #include <util/strencodings.h>
+#include <util/check.h>
 #include <rpc/protocol.h>
 #include <rpc/request.h>
 
@@ -19,7 +20,10 @@
 
 #include <boost/variant.hpp>
 
+extern const std::string UNIX_EPOCH_TIME;
+
 class CKeyStore;
+class FillableSigningProvider;
 class CPubKey;
 class CScript;
 struct Sections;
@@ -84,7 +88,7 @@ unsigned int ParseConfirmTarget(const UniValue& value, unsigned int max_target);
 UniValue GetServicesNames(ServiceFlags services);
 
 //! Parse a JSON range specified as int64, or [int64, int64]
-std::pair<int64_t, int64_t> ParseRange(const UniValue& value);
+std::pair<int64_t, int64_t> ParseDescriptorRange(const UniValue& value);
 
 /**
  * Serializing JSON objects depends on the outer type. Only arrays and
@@ -116,7 +120,6 @@ struct RPCArg {
          * Optinal arg that is a named argument and has a default value of
          * `null`. When possible, the default value should be specified.
          */
-        YES,
         OMITTED_NAMED_ARG,
         /**
          * Optional argument with default value omitted because they are
@@ -127,7 +130,7 @@ struct RPCArg {
         OMITTED,
     };
     using Fallback = boost::variant<Optional, /* default value for optional args */ std::string>;
-    const std::string m_name; //!< The name of the arg (can be empty for inner args)
+    const std::string m_names; //!< The name of the arg (can be empty for inner args)
     const Type m_type;
     const bool m_hidden;
     const std::vector<RPCArg> m_inner; //!< Only used for arrays or dicts
@@ -144,7 +147,7 @@ struct RPCArg {
         const std::string oneline_description = "",
         const std::vector<std::string> type_str = {},
         const bool hidden = false)
-        : m_name{std::move(name)},
+        : m_names{std::move(name)},
           m_type{std::move(type)},
           m_hidden{hidden},
           m_fallback{std::move(fallback)},
@@ -152,7 +155,7 @@ struct RPCArg {
           m_oneline_description{std::move(oneline_description)},
           m_type_str{std::move(type_str)}
     {
-        assert(type != Type::ARR && type != Type::OBJ);
+        CHECK_NONFATAL(type != Type::ARR && type != Type::OBJ);
     }
 
     RPCArg(
@@ -163,7 +166,7 @@ struct RPCArg {
         const std::vector<RPCArg> inner,
         const std::string oneline_description = "",
         const std::vector<std::string> type_str = {})
-        : m_name{std::move(name)},
+        : m_names{std::move(name)},
           m_type{std::move(type)},
           m_hidden{false},
           m_inner{std::move(inner)},
@@ -172,10 +175,16 @@ struct RPCArg {
           m_oneline_description{std::move(oneline_description)},
           m_type_str{std::move(type_str)}
     {
-        assert(type == Type::ARR || type == Type::OBJ);
+        CHECK_NONFATAL(type == Type::ARR || type == Type::OBJ);
     }
 
     bool IsOptional() const;
+
+    /** Return the first of all aliases */
+    std::string GetFirstName() const;
+
+    /** Return the name, throws when there are aliases */
+    std::string GetName() const;
 
     /**
      * Return the type string of the argument.
@@ -231,9 +240,9 @@ struct RPCResult {
           m_description{std::move(description)},
           m_cond{std::move(cond)}
     {
-        assert(!m_cond.empty());
+        CHECK_NONFATAL(!m_cond.empty());
         const bool inner_needed{type == Type::ARR || type == Type::ARR_FIXED || type == Type::OBJ || type == Type::OBJ_DYN};
-        assert(inner_needed != inner.empty());
+        CHECK_NONFATAL(inner_needed != inner.empty());
     }
 
     RPCResult(
@@ -258,7 +267,7 @@ struct RPCResult {
           m_cond{}
     {
         const bool inner_needed{type == Type::ARR || type == Type::ARR_FIXED || type == Type::OBJ || type == Type::OBJ_DYN};
-        assert(inner_needed != inner.empty());
+        CHECK_NONFATAL(inner_needed != inner.empty());
     }
 
     RPCResult(

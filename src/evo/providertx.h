@@ -257,13 +257,13 @@ public:
 bool CheckFutureTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CValidationState &state);
 
 bool CheckProRegTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CValidationState &state,
-                   const CCoinsViewCache &view);
+                   const CCoinsViewCache &view, bool check_sigs);
 
-bool CheckProUpServTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CValidationState &state);
+bool CheckProUpServTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CValidationState &state, bool check_sigs);
 
 bool CheckProUpRegTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CValidationState &state,
-                     const CCoinsViewCache &view);
+                     const CCoinsViewCache &view, bool check_sigs);
 
-bool CheckProUpRevTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CValidationState &state);
+bool CheckProUpRevTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CValidationState &state, bool check_sigs);
 
 #endif // BITCOIN_EVO_PROVIDERTX_H

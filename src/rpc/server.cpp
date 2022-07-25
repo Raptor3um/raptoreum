@@ -8,13 +8,11 @@
 #include <rpc/server.h>
 
 #include <chainparams.h>
-#include <random.h>
 #include <rpc/util.h>
 #include <shutdown.h>
 #include <sync.h>
-#include <ui_interface.h>
-#include <util/system.h>
 #include <util/strencodings.h>
+#include <util/system.h>
 
 #include <boost/signals2/signal.hpp>
 #include <boost/algorithm/string/classification.hpp>
@@ -25,7 +23,7 @@
 #include <unordered_map>
 
 static RecursiveMutex cs_rpcWarmup;
-static bool fRPCRunning = false;
+static std::atomic<bool> g_rpc_running{false};
 static bool fRPCInWarmup GUARDED_BY(cs_rpcWarmup) = true;
 static std::string rpcWarmupStatus GUARDED_BY(cs_rpcWarmup) = "RPC server started";
 /* Timer-creating functions */
@@ -147,7 +145,7 @@ void CRPCTable::InitPlatformRestrictions()
         {"getblockhash", {}},
         {"getblockcount", {}},
         {"getbestchainlock", {}},
-        {"quorum", {"sign", Params().GetConsensus().llmqTypePlatform}},
+        {"quorum", {"sign", static_cast<uint8_t>(Params().GetConsensus().llmqTypePlatform)}},
         {"quorum", {"verify"}},
         {"verifyislock", {}},
     };
@@ -175,7 +173,7 @@ static RPCHelpMan help()
 
     return tableRPC.help(strCommand, strSubCommand, jsonRequest);
 },
-    },
+    };
 }
 
 
@@ -188,8 +186,12 @@ static RPCHelpMan stop()
     // to the client (intended for testing)
         "\nStop Raptoreum Core server.",
         {
-            {"wait", RPCArg::Type::NUM, RPCArg::Optional::OMMITED_NAMED_ARG, "how long to wait in ms", "", {}, /* hidden */ true},
-        }
+            {"wait", RPCArg::Type::NUM, RPCArg::Optional::OMITTED_NAMED_ARG, "how long to wait in ms", "", {}, /* hidden */ true},
+        },
+        RPCResult{RPCResult::Type::STR, "", "A string with the content '" + RESULT + "'"},
+        RPCExamples{""},
+        [&](const RPCHelpMan& self, const JSONRPCRequest& jsonRequest) -> UniValue
+ {
     // Event loop will exit after current HTTP requests have been handled, so
     // this reply will get back to the client.
     StartShutdown();
@@ -203,7 +205,7 @@ static RPCHelpMan stop()
 
 static RPCHelpMan uptime()
 {
-    RPCHelpMan{"uptime",
+    return RPCHelpMan{"uptime",
         "\nReturns the total uptime of the server.\n",
         {},
         RPCResult{
@@ -214,7 +216,7 @@ static RPCHelpMan uptime()
             + HelpExampleRpc("uptime", "")
         },
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
-
+{
     return GetTime() - GetStartupTime();
 }
     };
@@ -267,9 +269,9 @@ static const CRPCCommand vRPCCommands[] =
   //  --------------------- ------------------------  -----------------------  ----------
     /* Overall control/query calls */
     { "control",            "getrpcinfo",             &getrpcinfo,             {} },
-    { "control",            "help",                   &help,                   {"command","subcommand"}  },
-    { "control",            "stop",                   &stop,                   {"wait"}  },
-    { "control",            "uptime",                 &uptime,                 {}  },
+    { "control",            "help",                   &help,                   {"command","subcommand"} },
+    { "control",            "stop",                   &stop,                   {"wait"} },
+    { "control",            "uptime",                 &uptime,                 {} },
 };
 
 CRPCTable::CRPCTable()
@@ -309,7 +311,7 @@ bool CRPCTable::removeCommand(const std::string& name, const CRPCCommand* pcmd)
 void StartRPC()
 {
     LogPrint(BCLog::RPC, "Starting RPC\n");
-    fRPCRunning = true;
+    g_rpc_running = true;
     g_rpcSignals.Started();
 }
 
@@ -317,7 +319,7 @@ void InterruptRPC()
 {
     LogPrint(BCLog::RPC, "Interrupting RPC\n");
     // Interrupt e.g. running longpolls
-    fRPCRunning = false;
+    g_rpc_running = false;
 }
 
 void StopRPC()
@@ -330,7 +332,7 @@ void StopRPC()
 
 bool IsRPCRunning()
 {
-    return fRPCRunning;
+    return g_rpc_running;
 }
 
 void SetRPCWarmupStatus(const std::string& newStatus)

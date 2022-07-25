@@ -29,7 +29,7 @@ static UniValue coinjoin(const JSONRPCRequest& request)
         {
             {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "The command to execute"},
         },
-        RPCResult{},
+        RPCResults{},
         RPCExamples{""},
     }.Check(request);
 
@@ -64,7 +64,8 @@ static UniValue coinjoin(const JSONRPCRequest& request)
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Mixing has been started already.");
         }
 
-        bool result = it->second->DoAutomaticDenominating(*g_rpc_node->connman);
+        NodeContext& node = EnsureNodeContext(request.context);
+        bool result = it->second->DoAutomaticDenominating(*node.connman);
         return "Mixing " + (result ? "started successfully" : ("start failed: " + it->second->GetStatuses() + ", will retry"));
     }
 
@@ -88,10 +89,9 @@ UniValue getpoolinfo(const JSONRPCRequest& request)
             RPCHelpMan{"getpoolinfo",
                 "DEPRECATED. Please use getcoinjoininfo instead.\n",
             {},
-            RPCResult{},
-            RPCExamples{""},
-            .ToString()
-    );
+            RPCResults{},
+            RPCExamples{""}}
+            .ToString());
 }
 
 UniValue getcoinjoininfo(const JSONRPCRequest& request)

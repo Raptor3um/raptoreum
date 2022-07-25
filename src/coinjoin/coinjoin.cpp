@@ -52,7 +52,7 @@ bool CCoinJoinQueue::Sign()
 
 
     uint256 hash = GetSignatureHash();
-    CBLSSignature sig = activeSmartnodeInfo.blsKeyOperator->Sign(hash);
+    CBLSSignature sig = WITH_LOCK(activeSmartnodeInfoCs, return activeSmartnodeInfo.blsKeyOperator->Sign(hash));
     if (!sig.IsValid()) {
         return false;
     }
@@ -98,7 +98,7 @@ bool CCoinJoinBroadcastTx::Sign()
 
     uint256 hash = GetSignatureHash();
 
-    CBLSSignature sig = activeSmartnodeInfo.blsKeyOperator->Sign(hash);
+    CBLSSignature sig = WITH_LOCK(activeSmartnodeInfoCs, return activeSmartnodeInfo.blsKeyOperator->Sign(hash));
     if (!sig.IsValid()) {
         return false;
     }
@@ -266,7 +266,7 @@ bool CCoinJoinBaseSession::IsValidInOuts(const std::vector<CTxIn>& vin, const st
         nFees -= txout.nValue;
     }
 
-    CCoinsViewMemPool viewMemPool(&::ChainstateActive().CoinsTip(), mempool);
+    CCoinsViewMemPool viewMemPool(WITH_LOCK(cs_main, return &::ChainstateActive().CoinsTip()), mempool);
 
     for (const auto& txin : vin) {
         LogPrint(BCLog::COINJOIN, "CCoinJoinBaseSession::%s -- txin=%s\n", __func__, txin.ToString());

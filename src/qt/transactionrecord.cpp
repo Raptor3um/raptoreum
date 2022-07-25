@@ -36,7 +36,7 @@ int TransactionRecord::getTransactionBlockHeight(const CWalletTx &wtx)
 {
     // Find the block the tx is in
     CBlockIndex* pindex = nullptr;
-    BlockMap::iterator mi = ::BlockIndex().find(wtx.hashBlock);
+    BlockMap::iterator mi = ::BlockIndex().find(wtx.m_confirm.hashBlock);
     if (mi != ::BlockIndex().end())
         pindex = (*mi).second;
 

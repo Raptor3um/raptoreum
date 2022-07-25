@@ -112,7 +112,7 @@ void WalletModelFuturesTransaction::reassignAmounts()
 #endif
         {
             CFutureTx ftx;
-            for (const auto& txout : wtx->get().vout) {
+            for (const auto& txout : wtx.get()->vout) {
                 CScript scriptPubKey = GetScriptForDestination(DecodeDestination(rcp.address.toStdString()));
                 if (txout.scriptPubKey == scriptPubKey) {
                     rcp.amount = txout.nValue;

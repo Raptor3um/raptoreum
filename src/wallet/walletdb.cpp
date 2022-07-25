@@ -195,7 +195,6 @@ public:
         nKeys = nCKeys = nWatchKeys = nHDPubKeys = nKeyMeta = m_unknown_records = 0;
         fIsEncrypted = false;
         fAnyUnordered = false;
-        nFileVersion = 0;
     }
 };
 
@@ -509,7 +508,7 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
     bool fNoncriticalErrors = false;
     DBErrors result = DBErrors::LOAD_OK;
 
-    LOCK2(cs_main, pwallet->cs_wallet);
+    LOCK(pwallet->cs_wallet);
     try {
         int nMinVersion = 0;
         if (m_batch.Read((std::string)"minversion", nMinVersion))

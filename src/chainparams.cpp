@@ -428,7 +428,7 @@ static Consensus::LLMQParams llmq100_67 = {
 class CMainParams : public CChainParams {
 public:
     CMainParams() {
-        strNetworkID = "main";
+        strNetworkID = CBaseChainParams::MAIN;
         consensus.nSubsidyHalvingInterval = 210240; // Note: actual number of blocks per calendar year with DGW v3 is ~200700 (for example 449750 - 249050)
         consensus.nSmartnodePaymentsStartBlock = 5761; //
         consensus.nSmartnodePaymentsIncreaseBlock = 158000; // actual historical value
@@ -596,7 +596,7 @@ public:
 class CTestNetParams : public CChainParams {
 public:
     CTestNetParams() {
-        strNetworkID = "test";
+        strNetworkID = CBaseChainParams::TESTNET;
         consensus.nSubsidyHalvingInterval = 210240;
         consensus.nSmartnodePaymentsStartBlock = 1000; // not true, but it's ok as long as it's less then nSmartnodePaymentsIncreaseBlock
         consensus.nSmartnodePaymentsIncreaseBlock = 4030;
@@ -751,7 +751,7 @@ public:
 class CDevNetParams : public CChainParams {
 public:
     explicit CDevNetParams(const ArgsManager& args) {
-        strNetworkID = "devnet";
+        strNetworkID = CBaseChainParams::DEVNET;
         consensus.nSubsidyHalvingInterval = 210240;
         consensus.nSmartnodePaymentsStartBlock = 4010; // not true, but it's ok as long as it's less then nSmartnodePaymentsIncreaseBlock
         consensus.nSmartnodePaymentsIncreaseBlock = 4030;
@@ -918,7 +918,7 @@ public:
 class CRegTestParams : public CChainParams {
 public:
     explicit CRegTestParams(const ArgsManager& args) {
-        strNetworkID = "regtest";
+        strNetworkID = CBaseChainParams::REGTEST;
         consensus.nSubsidyHalvingInterval = 150;
         consensus.nSmartnodePaymentsStartBlock = 240;
         consensus.nSmartnodePaymentsIncreaseBlock = 350;
@@ -1250,40 +1250,38 @@ bool IsLLMQsMiningPhase(int nHeight) {
 }
 
 void CChainParams::UpdateLLMQParams(size_t totalMnCount, int height, bool lowLLMQParams) {
-	bool isNotLLMQsMiningPhase;
-    if(lastCheckHeight < height &&
-    		(lastCheckMnCount != totalMnCount || lastCheckedLowLLMQParams != lowLLMQParams) &&
-			(isNotLLMQsMiningPhase = !IsLLMQsMiningPhase(height))) {
-	    LogPrintf("---UpdateLLMQParams %d-%d-%ld-%ld-%d\n", lastCheckHeight, height, lastCheckMnCount, totalMnCount, isNotLLMQsMiningPhase);
-		lastCheckMnCount = totalMnCount;
-		lastCheckedLowLLMQParams = lowLLMQParams;
-		lastCheckHeight = height;
-        bool isTestNet = strcmp(Params().NetworkIDString().c_str(),"testnet") == 0;
-		if(totalMnCount < 5) {
-			consensus.llmqs[Consensus::LLMQ_50_60] = llmq3_60;
-			if(isTestNet) {
-				consensus.llmqs[Consensus::LLMQ_400_60] = llmq5_60;
-				consensus.llmqs[Consensus::LLMQ_400_85] = llmq5_85;
-			} else {
-				consensus.llmqs[Consensus::LLMQ_400_60] = llmq20_60;
-				consensus.llmqs[Consensus::LLMQ_400_85] = llmq20_85;
-			}
-		} else if((totalMnCount < 80 && isTestNet) ||  (totalMnCount < 100 && !isTestNet)) {
-			consensus.llmqs[Consensus::LLMQ_50_60] = llmq10_60;
-			consensus.llmqs[Consensus::LLMQ_400_60] = llmq20_60;
-			consensus.llmqs[Consensus::LLMQ_400_85] = llmq20_85;
-		}  else if(totalMnCount < 600) {
-			consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
-			consensus.llmqs[Consensus::LLMQ_400_60] = llmq40_60;
-			consensus.llmqs[Consensus::LLMQ_400_85] = llmq40_85;
-		} else {
-			consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
-			consensus.llmqs[Consensus::LLMQ_400_60] = llmq400_60;
-			consensus.llmqs[Consensus::LLMQ_400_85] = llmq400_85;
-		}
-		if(lowLLMQParams) {
-			consensus.llmqs[Consensus::LLMQ_50_60] = llmq200_2;
-		}
-	}
-
+    bool isNotLLMQsMiningPhase;
+    if(lastCheckHeight < height && (lastCheckMnCount != totalMnCount || lastCheckedLowLLMQParams != lowLLMQParams) && (isNotLLMQsMiningPhase = !IsLLMQsMiningPhase(height))) {
+        LogPrintf("---UpdateLLMQParams %d-%d-%ld-%ld-%d\n", lastCheckHeight, height, lastCheckMnCount, totalMnCount, isNotLLMQsMiningPhase);
+        lastCheckMnCount = totalMnCount;
+        lastCheckedLowLLMQParams = lowLLMQParams;
+        lastCheckHeight = height;
+        bool isTestNet = strNetworkID == CBaseChainParams::TESTNET;
+        //bool isTestNet = strcmp(Params().NetworkIDString().c_str(),"testnet") == 0;
+        if(totalMnCount < 5) {
+            consensus.llmqs[Consensus::LLMQ_50_60] = llmq3_60;
+            if(isTestNet) {
+                consensus.llmqs[Consensus::LLMQ_400_60] = llmq5_60;
+                consensus.llmqs[Consensus::LLMQ_400_85] = llmq5_85;
+            } else {
+                consensus.llmqs[Consensus::LLMQ_400_60] = llmq20_60;
+                consensus.llmqs[Consensus::LLMQ_400_85] = llmq20_85;
+            }
+        } else if((totalMnCount < 80 && isTestNet) ||  (totalMnCount < 100 && !isTestNet)) {
+            consensus.llmqs[Consensus::LLMQ_50_60] = llmq10_60;
+            consensus.llmqs[Consensus::LLMQ_400_60] = llmq20_60;
+            consensus.llmqs[Consensus::LLMQ_400_85] = llmq20_85;
+        } else if(totalMnCount < 600) {
+            consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
+            consensus.llmqs[Consensus::LLMQ_400_60] = llmq40_60;
+            consensus.llmqs[Consensus::LLMQ_400_85] = llmq40_85;
+        } else {
+            consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
+            consensus.llmqs[Consensus::LLMQ_400_60] = llmq400_60;
+            consensus.llmqs[Consensus::LLMQ_400_85] = llmq400_85;
+        }
+        if(lowLLMQParams) {
+            consensus.llmqs[Consensus::LLMQ_50_60] = llmq200_2;
+        }
+    }
 }

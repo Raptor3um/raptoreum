@@ -48,7 +48,7 @@ private:
     std::set<uint256> seenMessages;
 
 public:
-    explicit CDKGPendingMessages(size_t _maxMessagesPerNode, int _invType);
+    explicit CDKGPendingMessages(size_t _maxMessagesPerNode, int _invType) : invType(_invType), maxMessagesPerNode(_maxMessagesPerNode) {};
 
     void PushPendingMessage(NodeId from, CDataStream& vRecv);
     std::list<BinaryMessage> PopPendingMessages(size_t maxCount);
@@ -104,6 +104,7 @@ private:
     std::atomic<bool> stopRequested{false};
 
     const Consensus::LLMQParams& params;
+    CConnman& connman;
     CBLSWorker& blsWorker;
     CDKGSessionManager& dkgManager;
 
@@ -120,8 +121,22 @@ private:
     CDKGPendingMessages pendingPrematureCommitments;
 
 public:
-    CDKGSessionHandler(const Consensus::LLMQParams& _params, CBLSWorker& blsWorker, CDKGSessionManager& _dkgManager);
-    ~CDKGSessionHandler();
+    CDKGSessionHandler(const Consensus::LLMQParams& _params, CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager, CConnman& _connman) :
+            params(_params),
+            blsWorker(_blsWorker),
+            dkgManager(_dkgManager),
+            connman(_connman),
+            curSession(std::make_unique<CDKGSession>(_params, _blsWorker, _dkgManager, _connman)),
+            pendingContributions((size_t)_params.size * 2, MSG_QUORUM_CONTRIB), // we allow size*2 messages as we need to make sure we see bad behavior (double messages)
+            pendingComplaints((size_t)_params.size * 2, MSG_QUORUM_COMPLAINT),
+            pendingJustifications((size_t)_params.size * 2, MSG_QUORUM_JUSTIFICATION),
+            pendingPrematureCommitments((size_t)_params.size * 2, MSG_QUORUM_PREMATURE_COMMITMENT)
+    {
+        if (params.type == Consensus::LLMQType::LLMQ_NONE) {
+            throw std::runtime_error("Can't initialize CDKGSessionHandler with LLMQ_NONE type.");
+        }
+    }
+    ~CDKGSessionHandler() = default;
 
     void UpdatedBlockTip(const CBlockIndex *pindexNew);
     void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv);

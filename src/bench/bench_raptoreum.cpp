@@ -18,7 +18,7 @@
 
 #include <bls/bls.h>
 
-const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
+// const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 
 static const int64_t DEFAULT_BENCH_EVALUATIONS = 5;
 static const char* DEFAULT_BENCH_FILTER = ".*";

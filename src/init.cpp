@@ -61,6 +61,10 @@
 #include <validationinterface.h>
 
 #include <smartnode/activesmartnode.h>
+#ifdef ENABLE_WALLET
+#include <coinjoin/coinjoin-client.h>
+#include <coinjoin/coinjoin-client-options.h>
+#endif // ENABLE_WALLET
 #include <coinjoin/coinjoin-server.h>
 #include <dsnotificationinterface.h>
 #include <flat-database.h>
@@ -183,7 +187,6 @@ static fs::path GetPidFile()
 static std::unique_ptr<ECCVerifyHandle> globalVerifyHandle;
 
 static boost::thread_group threadGroup;
-static CScheduler scheduler;
 
 void Interrupt(NodeContext& node)
 {
@@ -238,7 +241,7 @@ void PrepareShutdown(NodeContext& node)
 
     // After everything has been shut down, but before things get flushed, stop the
     // CScheduler/checkqueue, threadGroup/scheduler and load block thread.
-    scheduler.stop();
+    if (node.scheduler) node.scheduler->stop();
     threadGroup.interrupt_all();
     threadGroup.join_all();
     StopScriptCheckWorkerThreads();
@@ -270,8 +273,8 @@ void PrepareShutdown(NodeContext& node)
     node.banman.reset();
     g_txindex.reset();
 
-    if (g_is_mempool_loaded && gArgs.GetArg("-persistmempool", DEFAULT_PERSIST_MEMPOOL)) {
-        DumpMempool();
+    if (::mempool.IsLoaded() && gArgs.GetArg("-persistmempool", DEFAULT_PERSIST_MEMPOOL)) {
+        DumpMempool(::mempool);
     }
 
     if (fFeeEstimatesInitialized)
@@ -335,9 +338,12 @@ void PrepareShutdown(NodeContext& node)
         UnregisterValidationInterface(activeSmartnodeManager);
     }
 
-    // make sure to clean up BLS keys before global destructors are called (they have allocated from the secure memory pool)
-    activeSmartnodeInfo.blsKeyOperator.reset();
-    activeSmartnodeInfo.blsPubKeyOperator.reset();
+    {
+        LOCK(activeSmartnodeInfoCs);
+        // make sure to clean up BLS keys before global destructors are called (they have allocated from the secure memory pool)
+        activeSmartnodeInfo.blsKeyOperator.reset();
+        activeSmartnodeInfo.blsPubKeyOperator.reset();
+    }
 
 #ifndef WIN32
     try {
@@ -372,6 +378,8 @@ void Shutdown(NodeContext& node)
     // Shutdown part 2: delete wallet instance
     globalVerifyHandle.reset();
     ECC_Stop();
+    if (node.mempool) node.mempool = nullptr;
+    node.scheduler.reset();
     LogPrintf("%s: done\n", __func__);
 }
 
@@ -466,6 +474,8 @@ void SetupServerArgs()
     gArgs.AddArg("-datadir=<dir>", "Specify data directory", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-dbbatchsize", strprintf("Maximum database write batch size in bytes (default: %u)", nDefaultDbBatchSize), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-dbcache=<n>", strprintf("Set database cache size in megabytes (%d to %d, default: %d)", nMinDbCache, nMaxDbCache, nDefaultDbCache), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-powcachesize=<n>", strprintf("Set ProofOfWork cache size in megabytes (default: %d)", DEFAULT_POW_CACHE_SIZE), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-powcachevalidate", strprintf("Whether to validate ProofOfWork cache (default: %u)", DEFAULT_VALIDATE_POW_CACHE), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-debuglogfile=<file>", strprintf("Specify location of debug log file. Relative paths will be prefixed by a net-specific datadir location. (0 to disable; default: %s)", DEFAULT_DEBUGLOGFILE), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-includeconf=<file>", "Specify additional configuration file, relative to the -datadir path (only useable from configuration file, not command line)", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-loadblock=<file>", "Imports blocks from external blk000??.dat file on startup", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
@@ -634,7 +644,7 @@ void SetupServerArgs()
     gArgs.AddArg("-logsourcelocations", strprintf("Prepend debug output with name of the originating source location (source file, line number and function name) (default: %u)", DEFAULT_LOGSOURCELOCATIONS), ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
     gArgs.AddArg("-maxsigcachesize=<n>", strprintf("Limit sum of signature cache and script execution cache sizes to <n> MiB (default: %u)",DEFAULT_MAX_SIG_CACHE_SIZE), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
     gArgs.AddArg("-maxtipage=<n>", strprintf("Maximum tip age in seconds to consider node in initial block download (default: %u)", DEFAULT_MAX_TIP_AGE), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
-    gArgs.AddArg("-mocktime=<n>", "Replace actual time with <n> seconds since epoch (default: 0)", ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
+    gArgs.AddArg("-mocktime=<n>", "Replace actual time with " + UNIX_EPOCH_TIME + "(default: 0)", ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
     gArgs.AddArg("-minsporkkeys=<n>", "Overrides minimum spork signers to change spork value. Only useful for regtest and devnet. Using this on mainnet or testnet will ban you.", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
     gArgs.AddArg("-printpriority", strprintf("Log transaction fee per kB when mining blocks (default: %u)", DEFAULT_PRINTPRIORITY), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
     gArgs.AddArg("-printtoconsole", "Send trace/debug info to console (default: 1 when no -daemon. To disable logging to file, set -nodebuglogfile)", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
@@ -897,20 +907,15 @@ static void ThreadImport(std::vector<fs::path> vImportFiles)
 
     if (fSmartnodeMode) {
         assert(activeSmartnodeManager);
-        const CBlockIndex* pindexTip;
-        {
-            LOCK(cs_main);
-            pindexTip = ::ChainActive().Tip();
-        }
-        activeSmartnodeManager->Init(pindexTip);
+        activeSmartnodeManager->Init(::ChainActive().Tip());
     }
 
     g_wallet_init_interface.AutoLockSmartnodeCollaterals();
 
     if (gArgs.GetArg("-persistmempool", DEFAULT_PERSIST_MEMPOOL)) {
-        LoadMempool();
+        LoadMempool(::mempool);
     }
-    g_is_mempool_loaded = !ShutdownRequested();
+    ::mempool.SetIsLoaded(!ShutdownRequested());
 }
 
 void PeriodicStats()
@@ -930,12 +935,7 @@ void PeriodicStats()
     }
 
     // short version of GetNetworkHashPS(120, -1);
-    CBlockIndex *tip;
-    {
-        LOCK(cs_main);
-        tip = ::ChainActive().Tip();
-        assert(tip);
-    }
+    CBlockIndex *tip = ::ChainActive().Tip();
     CBlockIndex *pindex = tip;
     int64_t minTime = pindex->GetBlockTime();
     int64_t maxTime = minTime;
@@ -993,16 +993,16 @@ static bool InitSanityCheck()
     return true;
 }
 
-static bool AppInitServers()
+static bool AppInitServers(const util::Ref& context)
 {
     RPCServer::OnStarted(&OnRPCStarted);
     RPCServer::OnStopped(&OnRPCStopped);
     if (!InitHTTPServer())
         return false;
     StartRPC();
-    if (!StartHTTPRPC())
+    if (!StartHTTPRPC(context))
         return false;
-    if (gArgs.GetBoolArg("-rest", DEFAULT_REST_ENABLE) && !StartREST())
+    if (gArgs.GetBoolArg("-rest", DEFAULT_REST_ENABLE) && !StartREST(context))
         return false;
     StartHTTPServer();
     return true;
@@ -1509,7 +1509,7 @@ bool AppInitLockDataDirectory()
     return true;
 }
 
-bool AppInitMain(NodeContext& node)
+bool AppInitMain(const util::Ref& context, NodeContext& node)
 {
     const CChainParams& chainparams = Params();
     // ********************************************************* Step 4a: application initialization
@@ -1601,14 +1601,17 @@ bool AppInitMain(NodeContext& node)
         }
     }
 
+    assert(!node.scheduler);
+    node.scheduler = MakeUnique<CScheduler>();
+
     // Start the lightweight task scheduler thread
-    CScheduler::Function serviceLoop = std::bind(&CScheduler::serviceQueue, &scheduler);
+    CScheduler::Function serviceLoop = [&node]{ node.scheduler->serviceQueue(); };
     threadGroup.create_thread(std::bind(&TraceThread<CScheduler::Function>, "scheduler", serviceLoop));
 
     // Gather some entropy once per minute.
-    scheduler.scheduleEvery([] { RandAddPeriodic(); }, 60000);
+    node.scheduler->scheduleEvery([] { RandAddPeriodic(); }, 60000);
 
-    GetMainSignals().RegisterBackgroundSignalScheduler(scheduler);
+    GetMainSignals().RegisterBackgroundSignalScheduler(*node.scheduler);
     GetMainSignals().RegisterWithMempoolSignals(mempool);
 
     tableRPC.InitPlatformRestrictions();
@@ -1626,7 +1629,6 @@ bool AppInitMain(NodeContext& node)
     for (const auto& client : node.chain_clients) {
         client->registerRpcs();
     }
-    g_rpc_node = &node;
 #if ENABLE_ZMQ
     RegisterZMQRPCCommands(tableRPC);
 #endif
@@ -1639,7 +1641,7 @@ bool AppInitMain(NodeContext& node)
     if (gArgs.GetBoolArg("-server", false))
     {
         uiInterface.InitMessage_connect(SetRPCWarmupStatus);
-        if (!AppInitServers())
+        if (!AppInitServers(context))
             return InitError(_("Unable to start HTTP server. See debug log for details."));
     }
 
@@ -1663,7 +1665,7 @@ bool AppInitMain(NodeContext& node)
     assert(!node.connman);
     node.connman = std::make_unique<CConnman>(GetRand(std::numeric_limits<uint64_t>::max()), GetRand(std::numeric_limits<uint64_t>::max()));
 
-    node.peer_logic.reset(new PeerLogicValidation(node.connman.get(), node.banman.get(), scheduler, gArgs.GetBoolArg("-enablebip61", DEFAULT_ENABLE_BIP61)));
+    node.peer_logic.reset(new PeerLogicValidation(node.connman.get(), node.banman.get(), *node.scheduler, gArgs.GetBoolArg("-enablebip61", DEFAULT_ENABLE_BIP61)));
     RegisterValidationInterface(node.peer_logic.get());
 
     // sanitize comments per BIP-0014, format user agent and check total size
@@ -1856,9 +1858,9 @@ bool AppInitMain(NodeContext& node)
                 evoDb.reset();
                 evoDb.reset(new CEvoDB(nEvoDbCache, false, fReset || fReindexChainState));
                 deterministicMNManager.reset();
-                deterministicMNManager.reset(new CDeterministicMNManager(*evoDb));
+                deterministicMNManager.reset(new CDeterministicMNManager(*evoDb, *node.connman));
 
-                llmq::InitLLMQSystem(*evoDb, false, fReset || fReindexChainState);
+                llmq::InitLLMQSystem(*evoDb, *node.connman, false, fReset || fReindexChainState);
 
                 if (fReset) {
                     pblocktree->WriteReindexing(true);
@@ -2054,6 +2056,11 @@ bool AppInitMain(NodeContext& node)
         return false;
     }
 
+    // Now that the chain state is loaded, make mempool generally available in the node context. For example the
+    // connection manager, wallet, or RPC threads, which are all started after this, may use it from the node context.
+    assert(!node.mempool);
+    node.mempool = &::mempool;
+
     fs::path est_path = GetDataDir() / FEE_ESTIMATES_FILENAME;
     CAutoFile est_filein(fsbridge::fopen(est_path, "rb"), SER_DISK, CLIENT_VERSION);
     // Allowed to fail as this file IS missing on first startup.
@@ -2125,23 +2132,29 @@ bool AppInitMain(NodeContext& node)
             return InitError(_("Invalid smartnodeblsprivkey. Please see documentation."));
         }
         fSmartnodeMode = true;
-        activeSmartnodeInfo.blsKeyOperator = std::make_unique<CBLSSecretKey>(keyOperator);
-        activeSmartnodeInfo.blsPubKeyOperator = std::make_unique<CBLSPublicKey>(activeSmartnodeInfo.blsKeyOperator->GetPublicKey());
+        {
+            LOCK(activeSmartnodeInfoCs);
+            activeSmartnodeInfo.blsKeyOperator = std::make_unique<CBLSSecretKey>(keyOperator);
+            activeSmartnodeInfo.blsPubKeyOperator = std::make_unique<CBLSPublicKey>(activeSmartnodeInfo.blsKeyOperator->GetPublicKey());
+        }
         LogPrintf("SMARTNODE:\n");
         LogPrintf("  blsPubKeyOperator: %s\n", keyOperator.GetPublicKey().ToString());
     }
 
     if(fSmartnodeMode) {
         // Create and register activeSmartnodeManager, will init later in ThreadImport
-        activeSmartnodeManager = new CActiveSmartnodeManager();
+        activeSmartnodeManager = new CActiveSmartnodeManager(*node.connman);
         RegisterValidationInterface(activeSmartnodeManager);
     }
 
-    if (activeSmartnodeInfo.blsKeyOperator == nullptr) {
-        activeSmartnodeInfo.blsKeyOperator = std::make_unique<CBLSSecretKey>();
-    }
-    if (activeSmartnodeInfo.blsPubKeyOperator == nullptr) {
-        activeSmartnodeInfo.blsPubKeyOperator = std::make_unique<CBLSPublicKey>();
+    {
+        LOCK(activeSmartnodeInfoCs);
+        if (activeSmartnodeInfo.blsKeyOperator == nullptr) {
+            activeSmartnodeInfo.blsKeyOperator = std::make_unique<CBLSSecretKey>();
+        }
+        if (activeSmartnodeInfo.blsPubKeyOperator == nullptr) {
+            activeSmartnodeInfo.blsPubKeyOperator = std::make_unique<CBLSPublicKey>();
+        }
     }
 
     // ********************************************************* Step 10b: setup CoinJoin
@@ -2153,14 +2166,7 @@ bool AppInitMain(NodeContext& node)
 
     // LOAD SERIALIZED DAT FILES INTO DATA CACHES FOR INTERNAL USE
 
-    bool fLoadCacheFiles = !(fReindex || fReindexChainState);
-    {
-        LOCK(cs_main);
-        // was blocks/chainstate deleted?
-        if (::ChainActive().Tip() == nullptr) {
-            fLoadCacheFiles = false;
-        }
-    }
+    bool fLoadCacheFiles = !(fReindex || fReindexChainState) && (::ChainActive().Tip() != nullptr);
     fs::path pathDB = GetDataDir();
     std::string strDBName;
 
@@ -2209,16 +2215,21 @@ bool AppInitMain(NodeContext& node)
 
     // ********************************************************* Step 10c: schedule Raptoreum-specific tasks
 
-    scheduler.scheduleEvery(std::bind(&CNetFulfilledRequestManager::DoMaintenance, std::ref(netfulfilledman)), 60000); // value in milliseconds
-    scheduler.scheduleEvery(std::bind(&CSmartnodeSync::DoMaintenance, std::ref(smartnodeSync), std::ref(*node.connman)), 1000); // value in milliseconds
-    scheduler.scheduleEvery(std::bind(&CSmartnodeUtils::DoMaintenance, std::ref(*node.connman)), 1000);
+    node.scheduler->scheduleEvery(std::bind(&CNetFulfilledRequestManager::DoMaintenance, std::ref(netfulfilledman)), 60000); // value in milliseconds
+    node.scheduler->scheduleEvery(std::bind(&CSmartnodeSync::DoMaintenance, std::ref(smartnodeSync), std::ref(*node.connman)), 1000); // value in milliseconds
+    node.scheduler->scheduleEvery(std::bind(&CSmartnodeUtils::DoMaintenance, std::ref(*node.connman)), 1000);
+    node.scheduler->scheduleEvery(std::bind(&CDeterministicMNManager::DoMaintenance, std::ref(*deterministicMNManager)), 10000);
 
     if (!fDisableGovernance) {
-        scheduler.scheduleEvery(std::bind(&CGovernanceManager::DoMaintenance, std::ref(governance), std::ref(*node.connman)), 300000); // value in milliseconds
+        node.scheduler->scheduleEvery(std::bind(&CGovernanceManager::DoMaintenance, std::ref(governance), std::ref(*node.connman)), 300000); // value in milliseconds
     }
 
     if (fSmartnodeMode) {
-        scheduler.scheduleEvery(std::bind(&CCoinJoinServer::DoMaintenance, std::ref(coinJoinServer), std::ref(*node.connman)), 1000);
+        node.scheduler->scheduleEvery(std::bind(&CCoinJoinServer::DoMaintenance, std::ref(coinJoinServer), std::ref(*node.connman)), 1000);
+#ifdef ENABLE_WALLET
+    } else if(CCoinJoinClientOptions::IsEnabled()) {
+        node.scheduler->scheduleEvery(std::bind(&DoCoinJoinMaintenance, std::ref(*node.connman)), 1000);
+#endif // ENABLE_WALLET
     }
 
     // Periodic flush of POW Cache if cache has grown enough
@@ -2226,7 +2237,7 @@ bool AppInitMain(NodeContext& node)
 
     if (gArgs.GetBoolArg("-statsenabled", DEFAULT_STATSD_ENABLE)) {
         int nStatsPeriod = std::min(std::max((int)gArgs.GetArg("-statsperiod", DEFAULT_STATSD_PERIOD), MIN_STATSD_PERIOD), MAX_STATSD_PERIOD);
-        scheduler.scheduleEvery(PeriodicStats, nStatsPeriod * 1000);
+        node.scheduler->scheduleEvery(PeriodicStats, nStatsPeriod * 1000);
     }
 
     llmq::StartLLMQSystem();
@@ -2290,7 +2301,7 @@ bool AppInitMain(NodeContext& node)
         LogPrintf("block tree size = %u\n", ::BlockIndex().size());
         chain_active_height = ::ChainActive().Height();
     }
-    LogPrintf("::ChainActive().Height() = %d\n",   chain_active_height);
+    LogPrintf("::ChainActive().Height() = %d\n", chain_active_height);
     if (gArgs.GetBoolArg("-listenonion", DEFAULT_LISTEN_ONION))
         StartTorControl();
 
@@ -2372,7 +2383,7 @@ bool AppInitMain(NodeContext& node)
         return InitError(strprintf(_("Invalid -socketevents ('%s') specified. Only these modes are supported: %s"), strSocketEventsMode, GetSupportedSocketEventsStr()));
     }
 
-    if (!node.connman->Start(scheduler, connOptions)) {
+    if (!node.connman->Start(*node.scheduler, connOptions)) {
         return false;
     }
 
@@ -2382,11 +2393,11 @@ bool AppInitMain(NodeContext& node)
     uiInterface.InitMessage(_("Done loading"));
 
     for (const auto& client : node.chain_clients) {
-        client->start(scheduler);
+        client->start(*node.scheduler);
     }
 
     BanMan* banman = node.banman.get();
-    scheduler.scheduleEvery([banman]{
+    node.scheduler->scheduleEvery([banman]{
         banman->DumpBanlist();
     }, DUMP_BANS_INTERVAL * 1000);
 

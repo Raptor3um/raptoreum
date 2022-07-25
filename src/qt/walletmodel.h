@@ -84,7 +84,7 @@ public:
 
     bool fSubtractFeeFromAmount; // memory only
 
-    bool isFutureOutput = false;
+    bool isFutureOutput;
     int maturity;
     int64_t locktime;
 
@@ -93,6 +93,7 @@ public:
 
     SERIALIZE_METHODS(SendCoinsRecipient, obj)
     {
+        bool isFutureOutput{false};
         std::string address_str, label_str, message_str, auth_merchant_str, sPaymentRequest;
         PaymentRequestPlus paymentRequest;
 

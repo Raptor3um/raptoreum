@@ -7,6 +7,7 @@
 
 #include <test/test_raptoreum.h>
 
+#include <net.h>
 #include <interfaces/chain.h>
 #include <interfaces/wallet.h>
 #include <node/context.h>

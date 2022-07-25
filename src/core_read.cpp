@@ -107,6 +107,20 @@ bool DecodeHexTx(CMutableTransaction& tx, const std::string& strHexTx)
     return true;
 }
 
+bool DecodeHexBlockHeader(CBlockHeader& header, const std::string& hex_header)
+{
+    if (!IsHex(hex_header)) return false;
+
+    const std::vector<unsigned char> header_data{ParseHex(hex_header)};
+    CDataStream ser_header(header_data, SER_NETWORK, PROTOCOL_VERSION);
+    try {
+        ser_header >> header;
+    } catch (const std::exception&) {
+        return false;
+    }
+    return true;
+}
+
 bool DecodeHexBlk(CBlock& block, const std::string& strHexBlk)
 {
     if (!IsHex(strHexBlk))
@@ -124,14 +138,13 @@ bool DecodeHexBlk(CBlock& block, const std::string& strHexBlk)
     return true;
 }
 
-uint256 ParseHashStr(const std::string& strHex, const std::string& strName)
+bool ParseHashStr(const std::string& strHex, uint256& result)
 {
-    if (!IsHex(strHex)) // Note: IsHex("") is false
-        throw std::runtime_error(strName + " must be hexadecimal string (not '" + strHex + "')");
+    if ((strHex.size() != 64) || !IsHex(strHex))
+        return false;
 
-    uint256 result;
     result.SetHex(strHex);
-    return result;
+    return true;
 }
 
 std::vector<unsigned char> ParseHexUV(const UniValue& v, const std::string& strName)

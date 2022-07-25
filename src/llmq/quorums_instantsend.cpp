@@ -50,20 +50,16 @@ uint256 CInstantSendLock::GetRequestId() const
 
 ////////////////
 
-CInstantSendDb::CInstantSendDb(CDBWrapper& _db) : db(_db)
-{
-}
-
 void CInstantSendDb::Upgrade()
 {
     int v{0};
-    if (!db.Read(DB_VERSION, v) || v < CInstantSendDb::CURRENT_VERSION) {
-        CDBBatch batch(db);
+    if (!db->Read(DB_VERSION, v) || v < CInstantSendDb::CURRENT_VERSION) {
+        CDBBatch batch(*db);
         CInstantSendLock islock;
         CTransactionRef tx;
         uint256 hashBlock;
 
-        auto it = std::unique_ptr<CDBIterator>(db.NewIterator());
+        auto it = std::unique_ptr<CDBIterator>(db->NewIterator());
         auto firstKey = std::make_tuple(DB_ISLOCK_BY_HASH, uint256());
         it->Seek(firstKey);
         decltype(firstKey) curKey;
@@ -85,19 +81,19 @@ void CInstantSendDb::Upgrade()
             it->Next();
         }
         batch.Write(DB_VERSION, CInstantSendDb::CURRENT_VERSION);
-        db.WriteBatch(batch);
+        db->WriteBatch(batch);
     }
 }
 
 void CInstantSendDb::WriteNewInstantSendLock(const uint256& hash, const CInstantSendLock& islock)
 {
-    CDBBatch batch(db);
+    CDBBatch batch(*db);
     batch.Write(std::make_tuple(std::string(DB_ISLOCK_BY_HASH), hash), islock);
     batch.Write(std::make_tuple(std::string(DB_HASH_BY_TXID), islock.txid), hash);
     for (auto& in : islock.inputs) {
         batch.Write(std::make_tuple(std::string(DB_HASH_BY_OUTPOINT), in), hash);
     }
-    db.WriteBatch(batch);
+    db->WriteBatch(batch);
 
     auto p = std::make_shared<CInstantSendLock>(islock);
     islockCache.insert(hash, p);
@@ -138,9 +134,9 @@ static std::tuple<std::string, uint32_t, uint256> BuildInversedISLockKey(const s
 
 void CInstantSendDb::WriteInstantSendLockMined(const uint256& hash, int nHeight)
 {
-    CDBBatch batch(db);
+    CDBBatch batch(*db);
     WriteInstantSendLockMined(batch, hash, nHeight);
-    db.WriteBatch(batch);
+    db->WriteBatch(batch);
 }
 
 void CInstantSendDb::WriteInstantSendLockMined(CDBBatch& batch, const uint256& hash, int nHeight)
@@ -165,13 +161,13 @@ std::unordered_map<uint256, CInstantSendLockPtr> CInstantSendDb::RemoveConfirmed
         return {};
     }
 
-    auto it = std::unique_ptr<CDBIterator>(db.NewIterator());
+    auto it = std::unique_ptr<CDBIterator>(db->NewIterator());
 
     auto firstKey = BuildInversedISLockKey(DB_MINED_BY_HEIGHT_AND_HASH, nUntilHeight, uint256());
 
     it->Seek(firstKey);
 
-    CDBBatch batch(db);
+    CDBBatch batch(*db);
     std::unordered_map<uint256, CInstantSendLockPtr> ret;
     while (it->Valid()) {
         decltype(firstKey) curKey;
@@ -198,7 +194,7 @@ std::unordered_map<uint256, CInstantSendLockPtr> CInstantSendDb::RemoveConfirmed
         it->Next();
     }
 
-    db.WriteBatch(batch);
+    db->WriteBatch(batch);
 
     return ret;
 }
@@ -209,13 +205,13 @@ void CInstantSendDb::RemoveArchivedInstantSendLocks(int nUntilHeight)
         return;
     }
 
-    auto it = std::unique_ptr<CDBIterator>(db.NewIterator());
+    auto it = std::unique_ptr<CDBIterator>(db->NewIterator());
 
     auto firstKey = BuildInversedISLockKey(DB_ARCHIVED_BY_HEIGHT_AND_HASH, nUntilHeight, uint256());
 
     it->Seek(firstKey);
 
-    CDBBatch batch(db);
+    CDBBatch batch(*db);
     while (it->Valid()) {
         decltype(firstKey) curKey;
         if (!it->GetKey(curKey) || std::get<0>(curKey) != DB_ARCHIVED_BY_HEIGHT_AND_HASH) {
@@ -233,12 +229,12 @@ void CInstantSendDb::RemoveArchivedInstantSendLocks(int nUntilHeight)
         it->Next();
     }
 
-    db.WriteBatch(batch);
+    db->WriteBatch(batch);
 }
 
 void CInstantSendDb::WriteBlockInstantSendLocks(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexConnected)
 {
-    CDBBatch batch(db);
+    CDBBatch batch(*db);
     for (const auto& tx : pblock->vtx) {
         if (tx->IsCoinBase() || tx->vin.empty()) {
             // coinbase and TXs with no inputs can't be locked
@@ -250,12 +246,12 @@ void CInstantSendDb::WriteBlockInstantSendLocks(const std::shared_ptr<const CBlo
             WriteInstantSendLockMined(batch, islockHash, pindexConnected->nHeight);
         }
     }
-    db.WriteBatch(batch);
+    db->WriteBatch(batch);
 }
 
 void CInstantSendDb::RemoveBlockInstantSendLocks(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexDisconnected)
 {
-    CDBBatch batch(db);
+    CDBBatch batch(*db);
     for (const auto& tx : pblock->vtx) {
         if (tx->IsCoinBase() || tx->vin.empty()) {
             // coinbase and TXs with no inputs can't be locked
@@ -266,17 +262,17 @@ void CInstantSendDb::RemoveBlockInstantSendLocks(const std::shared_ptr<const CBl
             RemoveInstantSendLockMined(batch, islockHash, pindexDisconnected->nHeight);
         }
     }
-    db.WriteBatch(batch);
+    db->WriteBatch(batch);
 }
 
 bool CInstantSendDb::KnownInstantSendLock(const uint256& islockHash) const
 {
-    return GetInstantSendLockByHash(islockHash) != nullptr || db.Exists(std::make_tuple(std::string(DB_ARCHIVED_BY_HASH), islockHash));
+    return GetInstantSendLockByHash(islockHash) != nullptr || db->Exists(std::make_tuple(std::string(DB_ARCHIVED_BY_HASH), islockHash));
 }
 
 size_t CInstantSendDb::GetInstantSendLockCount() const
 {
-    auto it = std::unique_ptr<CDBIterator>(db.NewIterator());
+    auto it = std::unique_ptr<CDBIterator>(db->NewIterator());
     auto firstKey = std::make_tuple(std::string(DB_ISLOCK_BY_HASH), uint256());
 
     it->Seek(firstKey);
@@ -308,7 +304,7 @@ CInstantSendLockPtr CInstantSendDb::GetInstantSendLockByHash(const uint256& hash
     }
 
     ret = std::make_shared<CInstantSendLock>();
-    bool exists = db.Read(std::make_tuple(std::string(DB_ISLOCK_BY_HASH), hash), *ret);
+    bool exists = db->Read(std::make_tuple(std::string(DB_ISLOCK_BY_HASH), hash), *ret);
     if (!exists) {
         ret = nullptr;
     }
@@ -320,7 +316,7 @@ uint256 CInstantSendDb::GetInstantSendLockHashByTxid(const uint256& txid) const
 {
     uint256 islockHash;
     if (!txidCache.get(txid, islockHash)) {
-        db.Read(std::make_tuple(std::string(DB_HASH_BY_TXID), txid), islockHash);
+        db->Read(std::make_tuple(std::string(DB_HASH_BY_TXID), txid), islockHash);
         txidCache.insert(txid, islockHash);
     }
     return islockHash;
@@ -335,7 +331,7 @@ CInstantSendLockPtr CInstantSendDb::GetInstantSendLockByInput(const COutPoint& o
 {
     uint256 islockHash;
     if (!outpointCache.get(outpoint, islockHash)) {
-        db.Read(std::make_tuple(std::string(DB_HASH_BY_OUTPOINT), outpoint), islockHash);
+        db->Read(std::make_tuple(std::string(DB_HASH_BY_OUTPOINT), outpoint), islockHash);
         outpointCache.insert(outpoint, islockHash);
     }
     return GetInstantSendLockByHash(islockHash);
@@ -343,7 +339,7 @@ CInstantSendLockPtr CInstantSendDb::GetInstantSendLockByInput(const COutPoint& o
 
 std::vector<uint256> CInstantSendDb::GetInstantSendLocksByParent(const uint256& parent) const
 {
-    auto it = std::unique_ptr<CDBIterator>(db.NewIterator());
+    auto it = std::unique_ptr<CDBIterator>(db->NewIterator());
     auto firstKey = std::make_tuple(std::string(DB_HASH_BY_OUTPOINT), COutPoint(parent, 0));
     it->Seek(firstKey);
 
@@ -378,7 +374,7 @@ std::vector<uint256> CInstantSendDb::RemoveChainedInstantSendLocks(const uint256
     std::unordered_set<uint256, StaticSaltedHasher> added;
     stack.emplace_back(txid);
 
-    CDBBatch batch(db);
+    CDBBatch batch(*db);
     while (!stack.empty()) {
         auto children = GetInstantSendLocksByParent(stack.back());
         stack.pop_back();
@@ -403,20 +399,12 @@ std::vector<uint256> CInstantSendDb::RemoveChainedInstantSendLocks(const uint256
     WriteInstantSendLockArchived(batch, islockHash, nHeight);
     result.emplace_back(islockHash);
 
-    db.WriteBatch(batch);
+    db->WriteBatch(batch);
 
     return result;
 }
 
 ////////////////
-
-CInstantSendManager::CInstantSendManager(CDBWrapper& _llmqDb) :
-    db(_llmqDb)
-{
-    workInterrupt.reset();
-}
-
-CInstantSendManager::~CInstantSendManager() = default;
 
 void CInstantSendManager::Start()
 {
@@ -443,11 +431,6 @@ void CInstantSendManager::Stop()
     }
 }
 
-void CInstantSendManager::InterruptWorkerThread()
-{
-    workInterrupt();
-}
-
 void CInstantSendManager::ProcessTx(const CTransaction& tx, bool fRetroactive, const Consensus::Params& params)
 {
     if (!fSmartnodeMode || !IsInstantSendEnabled() || !smartnodeSync.IsBlockchainSynced()) {
@@ -468,7 +451,7 @@ void CInstantSendManager::ProcessTx(const CTransaction& tx, bool fRetroactive, c
     }
     if (!islockHash.IsNull()) {
         CInv inv(MSG_ISLOCK, islockHash);
-        g_connman->RelayInvFiltered(inv, tx, LLMQS_PROTO_VERSION);
+        connman.RelayInvFiltered(inv, tx, LLMQS_PROTO_VERSION);
     }
 
     if (!CheckCanLock(tx, true, params)) {
@@ -537,10 +520,7 @@ bool CInstantSendManager::TrySignInputLocks(const CTransaction& tx, bool fRetroa
     for (size_t i = 0; i < tx.vin.size(); i++) {
         auto& in = tx.vin[i];
         auto& id = ids[i];
-        {
-            LOCK(cs);
-            inputRequestIds.emplace(id);
-        }
+        WITH_LOCK(cs, inputRequestIds.emplace(id));
         LogPrint(BCLog::INSTANTSEND, "CInstantSendManager::%s -- txid=%s: trying to vote on input %s with id %s. fRetroactive=%d\n", __func__,
                  tx.GetHash().ToString(), in.prevout.ToStringShort(), id.ToString(), fRetroactive);
         if (quorumSigningManager->AsyncSignIfMember(llmqType, id, tx.GetHash(), {}, fRetroactive)) {
@@ -980,10 +960,7 @@ void CInstantSendManager::ProcessInstantSendLock(NodeId from, const uint256& has
     const CBlockIndex* pindexMined{nullptr};
     // we ignore failure here as we must be able to propagate the lock even if we don't have the TX locally
     if (GetTransaction(islock->txid, tx, Params().GetConsensus(), hashBlock) && !hashBlock.IsNull()) {
-        {
-            LOCK(cs_main);
-            pindexMined = LookupBlockIndex(hashBlock);
-        }
+        pindexMined = WITH_LOCK(cs_main, return LookupBlockIndex(hashBlock));
 
         // Let's see if the TX that was locked by this islock is already mined in a ChainLocked block. If yes,
         // we can simply ignore the islock, as the ChainLock implies locking of all TXs in that chain
@@ -1024,11 +1001,11 @@ void CInstantSendManager::ProcessInstantSendLock(NodeId from, const uint256& has
 
     CInv inv(MSG_ISLOCK, hash);
     if (tx != nullptr) {
-        g_connman->RelayInvFiltered(inv, *tx, LLMQS_PROTO_VERSION);
+        connman.RelayInvFiltered(inv, *tx, LLMQS_PROTO_VERSION);
     } else {
         // we don't have the TX yet, so we only filter based on txid. Later when that TX arrives, we will re-announce
         // with the TX taken into account.
-        g_connman->RelayInvFiltered(inv, islock->txid, LLMQS_PROTO_VERSION);
+        connman.RelayInvFiltered(inv, islock->txid, LLMQS_PROTO_VERSION);
     }
 
     ResolveBlockConflicts(hash, *islock);
@@ -1318,7 +1295,7 @@ void CInstantSendManager::RemoveMempoolConflictsForLock(const uint256& hash, con
                 RemoveConflictedTx(*p.second);
             }
         }
-        AskNodesForLockedTx(islock.txid);
+        AskNodesForLockedTx(islock.txid, connman);
     }
 }
 
@@ -1410,11 +1387,7 @@ void CInstantSendManager::RemoveConflictingLock(const uint256& islockHash, const
 {
     LogPrintf("CInstantSendManager::%s -- txid=%s, islock=%s: Removing ISLOCK and its chained children\n", __func__,
               islock.txid.ToString(), islockHash.ToString());
-    int tipHeight;
-    {
-        LOCK(cs_main);
-        tipHeight = ::ChainActive().Height();
-    }
+    int tipHeight = WITH_LOCK(cs_main, return ::ChainActive().Height());
 
     LOCK(cs);
     auto removedIslocks = db.RemoveChainedInstantSendLocks(islockHash, islock.txid, tipHeight);
@@ -1424,10 +1397,10 @@ void CInstantSendManager::RemoveConflictingLock(const uint256& islockHash, const
     }
 }
 
-void CInstantSendManager::AskNodesForLockedTx(const uint256& txid)
+void CInstantSendManager::AskNodesForLockedTx(const uint256& txid, const CConnman& connman)
 {
     std::vector<CNode*> nodesToAskFor;
-    g_connman->ForEachNode([&](CNode* pnode) {
+    connman.ForEachNode([&](CNode* pnode) {
         LOCK(pnode->cs_filter);
         if (pnode->filterInventoryKnown.contains(txid)) {
             pnode->AddRef();
@@ -1568,11 +1541,6 @@ bool CInstantSendManager::IsLocked(const uint256& txHash) const
 
     LOCK(cs);
     return db.KnownInstantSendLock(db.GetInstantSendLockHashByTxid(txHash));
-}
-
-bool CInstantSendManager::IsConflicted(const CTransaction& tx) const
-{
-    return GetConflictingLock(tx) != nullptr;
 }
 
 CInstantSendLockPtr CInstantSendManager::GetConflictingLock(const CTransaction& tx) const

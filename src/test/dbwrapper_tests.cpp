@@ -268,7 +268,7 @@ struct StringContentsSerializer {
             try {
                 s >> c;
                 str.push_back(c);
-            } catch (const srd::ios_base::failure&) {
+            } catch (const std::ios_base::failure&) {
                 break;
             }
         }

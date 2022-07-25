@@ -4,6 +4,7 @@
 
 #include <bench/bench.h>
 #include <policy/policy.h>
+#include <test/test_raptoreum.h>
 #include <txmempool.h>
 
 static void AddTx(const CMutableTransaction& tx, const CAmount& nFee, const CAmount& specialTxFee, CTxMemPool& pool) EXCLUSIVE_LOCKS_REQUIRED(pool.cs)
@@ -21,6 +22,8 @@ static void AddTx(const CMutableTransaction& tx, const CAmount& nFee, const CAmo
 // unique transactions for a more meaningful performance measurement.
 static void MempoolEviction(benchmark::Bench& bench)
 {
+    RegTestingSetup test_setup;
+
     CMutableTransaction tx1 = CMutableTransaction();
     tx1.vin.resize(1);
     tx1.vin[0].scriptSig = CScript() << OP_1;

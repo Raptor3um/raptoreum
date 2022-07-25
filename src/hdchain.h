@@ -43,7 +43,7 @@ private:
 
 public:
 
-    CHDChain() { SetNull(); }
+    CHDChain() = default;
     CHDChain(const CHDChain& other) :
         nVersion(other.nVersion),
         id(other.id),
@@ -98,7 +98,7 @@ public:
     bool SetSeed(const SecureVector& vchSeedIn, bool fUpdateID);
     SecureVector GetSeed() const;
 
-    uint256 GetID() const { return id; }
+    uint256 GetID() const { LOCK(cs); return id; }
 
     uint256 GetSeedHash();
     void DeriveChildExtKey(uint32_t nAccountIndex, bool fInternal, uint32_t nChildIndex, CExtKey& extKeyRet);

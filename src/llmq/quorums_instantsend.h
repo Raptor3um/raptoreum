@@ -40,9 +40,9 @@ using CInstantSendLockPtr = std::shared_ptr<CInstantSendLock>;
 class CInstantSendDb
 {
 private:
-    static const int CURRENT_VERSION = 1;
+    static const int CURRENT_VERSION{1};
 
-    CDBWrapper& db;
+    std::unique_ptr<CDBWrapper> db{nullptr};
 
     mutable unordered_lru_cache<uint256, CInstantSendLockPtr, StaticSaltedHasher, 10000> islockCache;
     mutable unordered_lru_cache<uint256, uint256, StaticSaltedHasher, 10000> txidCache;
@@ -52,7 +52,9 @@ private:
     void RemoveInstantSendLockMined(CDBBatch& batch, const uint256& hash, int nHeight);
 
 public:
-    explicit CInstantSendDb(CDBWrapper& _db);
+    explicit CInstantSendDb(bool unitTests, bool fWipe) :
+        db(std::make_unique<CDBWrapper>(unitTests ? "" : (GetDataDir() / "llmq/isdb"), 32 << 20, unitTests, fWipe))
+    {}
 
     void Upgrade();
 
@@ -82,6 +84,7 @@ class CInstantSendManager : public CRecoveredSigsListener
 private:
     mutable RecursiveMutex cs;
     CInstantSendDb db;
+    CConnman& connman;
 
     std::atomic<bool> fUpgradedDB{false};
 
@@ -119,19 +122,19 @@ private:
     std::unordered_set<uint256, StaticSaltedHasher> pendingRetryTxs;
 
 public:
-    explicit CInstantSendManager(CDBWrapper& _llmqDb);
-    ~CInstantSendManager();
+    explicit CInstantSendManager(CConnman& _connman, bool unitTests, bool fWipe) : db(unitTests, fWipe), connman(_connman) { workInterrupt.reset(); }
+    ~CInstantSendManager() = default;
 
     void Start();
     void Stop();
-    void InterruptWorkerThread();
+    void InterruptWorkerThread() { workInterrupt(); };
 
 public:
     void ProcessTx(const CTransaction& tx, bool fRetroactive, const Consensus::Params& params);
     bool CheckCanLock(const CTransaction& tx, bool printDebug, const Consensus::Params& params) const;
     bool CheckCanLock(const COutPoint& outpoint, bool printDebug, const uint256& txHash, CAmount* retValue, const Consensus::Params& params) const;
     bool IsLocked(const uint256& txHash) const;
-    bool IsConflicted(const CTransaction& tx) const;
+    bool IsConflicted(const CTransaction& tx) const { return GetConflictingLock(tx) != nullptr; };
     CInstantSendLockPtr GetConflictingLock(const CTransaction& tx) const;
 
     void HandleNewRecoveredSig(const CRecoveredSig& recoveredSig) override;
@@ -166,7 +169,7 @@ public:
     void RemoveMempoolConflictsForLock(const uint256& hash, const CInstantSendLock& islock);
     void ResolveBlockConflicts(const uint256& islockHash, const CInstantSendLock& islock);
     void RemoveConflictingLock(const uint256& islockHash, const CInstantSendLock& islock);
-    static void AskNodesForLockedTx(const uint256& txid);
+    static void AskNodesForLockedTx(const uint256& txid, const CConnman& connman);
     void ProcessPendingRetryLockTxs();
 
     bool AlreadyHave(const CInv& inv) const;

@@ -51,6 +51,7 @@
 #include <stdint.h>
 #include <univalue.h>
 
+constexpr static CAmount DEFAULT_MAX_RAW_TX_FEE{COIN / 10};
 
 void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry)
 {
@@ -179,7 +180,7 @@ static UniValue getrawtransaction(const JSONRPCRequest& request)
                      {RPCResult::Type::STR_HEX, "blockhash", "the block hash"},
                      {RPCResult::Type::NUM, "height", "The block height"},
                      {RPCResult::Type::NUM, "confirmations", "The confirmations"},
-                     {RPCResult::Type::NUM_TIME, "blocktime", "The block time expressed in seconds since epoch (Jan 1 1970 GMT)"},
+                     {RPCResult::Type::NUM_TIME, "blocktime", "The block time expressed in " + UNIX_EPOCH_TIME},
                      {RPCResult::Type::NUM, "time", "Same as \"blocktime\""},
                      {RPCResult::Type::BOOL, "instantlock", "Current transaction lock state"},
                      {RPCResult::Type::BOOL, "instantlock_internal", "Current internal transaction lock state"},
@@ -620,7 +621,7 @@ static UniValue combinerawtransaction(const JSONRPCRequest& request)
         {
             {"txs", RPCArg::Type::ARR, RPCArg::Optional::NO, "A json array of hex strings of partially signed transactions",
                 {
-                    {"hexstring", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "A transaction hash"},
+                    {"hexstring", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "A hex-encoded raw transaction"},
                 },
             },
         },
@@ -653,6 +654,7 @@ static UniValue combinerawtransaction(const JSONRPCRequest& request)
     CCoinsView viewDummy;
     CCoinsViewCache view(&viewDummy);
     {
+        const CTxMemPool& mempool = EnsureMemPool(request.context);
         LOCK(cs_main);
         LOCK(mempool.cs);
         CCoinsViewCache &viewChain = ::ChainstateActive().CoinsTip();
@@ -776,12 +778,13 @@ static UniValue signrawtransactionwithkey(const JSONRPCRequest& request)
     for (const CTxIn& txin : mtx.vin) {
         coins[txin.prevout]; // Create empty map entry keyed by prevout.
     }
-    FindCoins(coins);
+    NodeContext& node = EnsureNodeContext(request.context);
+    FindCoins(node, coins);
 
     return SignTransaction(mtx, request.params[2], &keystore, coins, true, request.params[3]);
 }
 
-static UniValue sendrawtransaction(const JSONRPCRequest& request)
+UniValue sendrawtransaction(const JSONRPCRequest& request)
 {
     RPCHelpMan{"sendrawtransaction",
         "\nSubmits raw transaction (serialized, hex-encoded) to local node and network.\n"
@@ -821,7 +824,7 @@ static UniValue sendrawtransaction(const JSONRPCRequest& request)
     if (!DecodeHexTx(mtx, request.params[0].get_str()))
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
     CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
-    CAmount max_raw_tx_fee = ::maxTxFee;
+    CAmount max_raw_tx_fee = DEFAULT_MAX_RAW_TX_FEE;
 
     // TODO: temporary migration code for old clients. To be removed at future release (v0.18).
     if (request.params[1].isBool()) {
@@ -837,7 +840,8 @@ static UniValue sendrawtransaction(const JSONRPCRequest& request)
     if (!request.params[3].isNull()) bypass_limits = request.params[3].get_bool();
     std::string err_string;
     AssertLockNotHeld(cs_main);
-    const TransactionError err = BroadcastTransaction(*g_rpc_node, tx, err_string, max_raw_tx_fee, /* relay */ true, /* wait_callback */ true, bypass_limits);
+    NodeContext& node = EnsureNodeContext(request.context);
+    const TransactionError err = BroadcastTransaction(node, tx, err_string, max_raw_tx_fee, /* relay */ true, /* wait_callback */ true, bypass_limits);
     if (TransactionError::OK != err) {
         throw JSONRPCTransactionError(err, err_string);
     }

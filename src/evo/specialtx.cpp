@@ -16,7 +16,7 @@
 #include <llmq/quorums_commitment.h>
 #include <llmq/quorums_blockprocessor.h>
 
-bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, const CCoinsViewCache& view)
+bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, const CCoinsViewCache& view, bool check_sigs)
 {
     if (tx.nVersion != 3 || tx.nType == TRANSACTION_NORMAL)
         return true;
@@ -28,13 +28,13 @@ bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVali
     try {
         switch (tx.nType) {
         case TRANSACTION_PROVIDER_REGISTER:
-            return CheckProRegTx(tx, pindexPrev, state, view);
+            return CheckProRegTx(tx, pindexPrev, state, view, check_sigs);
         case TRANSACTION_PROVIDER_UPDATE_SERVICE:
-            return CheckProUpServTx(tx, pindexPrev, state);
+            return CheckProUpServTx(tx, pindexPrev, state, check_sigs);
         case TRANSACTION_PROVIDER_UPDATE_REGISTRAR:
-            return CheckProUpRegTx(tx, pindexPrev, state, view);
+            return CheckProUpRegTx(tx, pindexPrev, state, view, check_sigs);
         case TRANSACTION_PROVIDER_UPDATE_REVOKE:
-            return CheckProUpRevTx(tx, pindexPrev, state);
+            return CheckProUpRevTx(tx, pindexPrev, state, check_sigs);
         case TRANSACTION_COINBASE:
             return CheckCbTx(tx, pindexPrev, state);
         case TRANSACTION_QUORUM_COMMITMENT:
@@ -105,13 +105,12 @@ bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, CV
 
         int64_t nTime1 = GetTimeMicros();
 
-        for (int i = 0; i < (int)block.vtx.size(); i++) {
-            const CTransaction& tx = *block.vtx[i];
-            if (!CheckSpecialTx(tx, pindex->pprev, state, view)) {
+        for (const auto& ptr_tx : block.vtx) {
+            if (!CheckSpecialTx(*ptr_tx, pindex->pprev, state, view, fCheckCbTxMerleRoots)) {
                 // pass the state returned by the function above
                 return false;
             }
-            if (!ProcessSpecialTx(tx, pindex, state)) {
+            if (!ProcessSpecialTx(*ptr_tx, pindex, state)) {
                 // pass the state returned by the function above
                 return false;
             }
@@ -120,7 +119,7 @@ bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, CV
         int64_t nTime2 = GetTimeMicros(); nTimeLoop += nTime2 - nTime1;
         LogPrint(BCLog::BENCHMARK, "        - Loop: %.2fms [%.2fs]\n", 0.001 * (nTime2 - nTime1), nTimeLoop * 0.000001);
 
-        if (!llmq::quorumBlockProcessor->ProcessBlock(block, pindex, state, fJustCheck)) {
+        if (!llmq::quorumBlockProcessor->ProcessBlock(block, pindex, state, fJustCheck, fCheckCbTxMerleRoots)) {
             // pass the state returned by the function above
             return false;
         }

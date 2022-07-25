@@ -318,7 +318,7 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &tran
         }
 
         auto& newTx = transaction.getWtx();
-        !wallet().commitTransaction(newTx, (std::move(mapValue), std::move(vOrderForm))
+        wallet().commitTransaction(newTx, std::move(mapValue), std::move(vOrderForm));
 
         CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
         ssTx << *newTx;
@@ -358,16 +358,6 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &tran
     return SendCoinsReturn(OK);
 }
 
-CAmount WalletModel::getBalance(const CCoinControl& coinControl) const
-{
-    if (coinControl.HasSelected())
-    {
-        return wallet().getAvailableBalance(coinControl);
-    }
-
-    return wallet().getBalance();
-}
-
 WalletModel::SendFuturesReturn WalletModel::prepareFuturesTransaction(WalletModelFuturesTransaction &transaction, const CCoinControl& coinControl)
 {
     CAmount total = 0;
@@ -381,7 +371,7 @@ WalletModel::SendFuturesReturn WalletModel::prepareFuturesTransaction(WalletMode
     }
 
     // This should never really happen, yet another safety check, just in case.
-    if(wallet().isLocked()) {
+    if(m_wallet->isLocked(false)) {
         return TransactionCreationFailed;
     }
 
@@ -442,7 +432,7 @@ WalletModel::SendFuturesReturn WalletModel::prepareFuturesTransaction(WalletMode
         return DuplicateAddress;
     }
 
-    CAmount nBalance = getBalance(coinControl);
+    CAmount nBalance = m_wallet->getAvailableBalance(coinControl);
 
     if(total > nBalance)
     {
@@ -477,7 +467,7 @@ WalletModel::SendFuturesReturn WalletModel::prepareFuturesTransaction(WalletMode
     // reject absurdly high fee. (This can never happen because the
     // wallet caps the fee at maxTxFee. This merely serves as a
     // belt-and-suspenders check)
-    if (nFeeRequired > m_node.getMaxTxFee())
+    if (nFeeRequired > m_wallet->getDefaultMaxTxFee())
         return AbsurdFee;
 
     return SendFuturesReturn(OK);
@@ -512,12 +502,10 @@ WalletModel::SendFuturesReturn WalletModel::sendFutures(WalletModelFuturesTransa
         }
         mapValue_t mapValue;
         auto& newTx = transaction.getWtx();
-        std::string rejectReason;
-        if (!newTx->commit(std::move(mapValue), std::move(vOrderForm), rejectReason))
-            return SendFuturesReturn(TransactionCommitFailed, QString::fromStdString(rejectReason));
+        wallet().commitTransaction(newTx, std::move(mapValue), std::move(vOrderForm));
 
         CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
-        ssTx << newTx->get();
+        ssTx << *newTx;
         transaction_array.append(ssTx.data(), ssTx.size());
     }
 

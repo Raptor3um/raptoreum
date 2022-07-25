@@ -20,6 +20,7 @@
 #include <noui.h>
 #include <shutdown.h>
 #include <ui_interface.h>
+#include <util/ref.h>
 #include <util/system.h>
 #include <util/strencodings.h>
 #include <util/threadnames.h>
@@ -81,6 +82,7 @@ static bool AppInit(int argc, char* argv[])
         return true;
     }
 
+    util::Ref context{node};
     try
     {
         if (!CheckDataDirOption()) {
@@ -150,7 +152,7 @@ static bool AppInit(int argc, char* argv[])
             // If locking the data directory failed, exit immediately
             return false;
         }
-        fRet = AppInitMain(node);
+        fRet = AppInitMain(context, node);
     } catch (...) {
         PrintExceptionContinue(std::current_exception(), "AppInit()");
     }
