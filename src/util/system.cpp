@@ -609,7 +609,7 @@ std::string ArgsManager::GetHelpMessage() const
                 usage += HelpMessageGroup("Indexing options:");
                 break;
             case OptionsCategory::SMARTNODE:
-                usage += HelpMessageGroup("Masternode options:");
+                usage += HelpMessageGroup("Smartnode options:");
                 break;
             case OptionsCategory::STATSD:
                 usage += HelpMessageGroup("Statsd options:");

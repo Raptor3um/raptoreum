@@ -57,6 +57,7 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
     "governance/governance -> masternode/masternode-sync -> governance/governance"
     "governance/governance -> net_processing -> governance/governance"
     "governance/governance-object -> governance/governance-validators -> governance/governance-object"
+    "hdchain -> wallet/walletdb -> hdchain"
     "llmq/quorums -> llmq/quorums_utils -> llmq/quorums"
     "llmq/quorums_blockprocessor -> net_processing -> llmq/quorums_blockprocessor"
     "llmq/quorums_chainlocks -> llmq/quorums_instantsend -> llmq/quorums_chainlocks"

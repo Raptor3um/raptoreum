@@ -13,6 +13,7 @@
 #include <scheduler.h>
 #include <spork.h>
 #include <txmempool.h>
+#include <util/validation.h>
 #include <ui_interface.h>
 #include <validation.h>
 

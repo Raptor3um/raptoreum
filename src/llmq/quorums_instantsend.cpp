@@ -16,6 +16,7 @@
 #include <net_processing.h>
 #include <spork.h>
 #include <validation.h>
+#include <util/validation.h>
 
 #include <cxxtimer.hpp>
 

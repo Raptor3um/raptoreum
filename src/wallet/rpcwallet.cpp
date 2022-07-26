@@ -6,7 +6,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <amount.h>
-#include <chain.h>
+#include <chainparams.h>
 #include <core_io.h>
 #include <httpserver.h>
 #include <interfaces/chain.h>
@@ -14,25 +14,28 @@
 #include <policy/feerate.h>
 #include <policy/fees.h>
 #include <rpc/blockchain.h>
-#include <rpc/mining.h>
 #include <rpc/rawtransaction_util.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
 #include <script/descriptor.h>
-#include <timedata.h>
-#include <txmempool.h>
-#include <util/system.h>
+#include <util/bip32.h>
 #include <util/fees.h>
 #include <util/moneystr.h>
 #include <util/ref.h>
+#include <util/string.h>
+#include <util/system.h>
+#include <util/url.h>
+#include <util/validation.h>
 #include <util/vector.h>
 #include <validation.h>
 #include <wallet/coincontrol.h>
 #include <wallet/context.h>
+#include <wallet/load.h>
 #include <wallet/rpcwallet.h>
 #include <wallet/wallet.h>
 #include <wallet/walletdb.h>
 #include <wallet/walletutil.h>
+#include <key_io.h>
 
 #include <coinjoin/coinjoin-client.h>
 #include <coinjoin/coinjoin-client-options.h>
@@ -3013,88 +3016,24 @@ static UniValue listunspent(const JSONRPCRequest& request)
     return results;
 }
 
-static UniValue fundrawtransaction(const JSONRPCRequest& request)
+void FundTransaction(CWallet* const pwallet, CMutableTransaction& tx, CAmount& fee_out, int& change_position, UniValue options)
 {
-    RPCHelpMan{"fundrawtransaction",
-                "\nAdd inputs to a transaction until it has enough in value to meet its out value.\n"
-                "This will not modify existing inputs, and will add at most one change output to the outputs.\n"
-                "No existing outputs will be modified unless \"subtractFeeFromOutputs\" is specified.\n"
-                "Note that inputs which were signed may need to be resigned after completion since in/outputs have been added.\n"
-                "The inputs added will not be signed, use signrawtransactionwithkey\n"
-                " or signrawtransactionwithwallet for that.\n"
-                "Note that all existing inputs must have their previous output transaction be in the wallet.\n"
-                "Note that all inputs selected must be of standard form and P2SH scripts must be\n"
-                "in the wallet using importaddress or addmultisigaddress (to calculate fees).\n"
-                "You can see whether this is the case by checking the \"solvable\" field in the listunspent output.\n"
-                "Only pay-to-pubkey, multisig, and P2SH versions thereof are currently supported for watch-only\n",
-                {
-                    {"hexstring", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The hex string of the raw transaction"},
-                    {"options", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED_NAMED_ARG, "for backward compatibility: passing in a true instead of an object will result in {\"includeWatching\":true}",
-                        {
-                            {"changeAddress", RPCArg::Type::STR, /* default */ "pool address", "The Raptoreum address to receive the change"},
-                            {"changePosition", RPCArg::Type::NUM, /* default */ "random", "The index of the change output"},
-                            {"includeWatching", RPCArg::Type::BOOL, /* default */ "false", "Also select inputs which are watch only"},
-                            {"lockUnspents", RPCArg::Type::BOOL, /* default */ "false", "Lock selected unspent outputs"},
-                            {"feeRate", RPCArg::Type::AMOUNT, /* default */ "not set: makes wallet determine the fee", "Set a specific fee rate in " + CURRENCY_UNIT + "/kB"},
-                            {"subtractFeeFromOutputs", RPCArg::Type::ARR, /* default */ "empty array", "A json array of integers.\n"
-                            "                              The fee will be equally deducted from the amount of each specified output.\n"
-                            "                              Those recipients will receive less RTM than you enter in their corresponding amount field.\n"
-                            "                              If no outputs are specified here, the sender pays the fee.",
-                                {
-                                    {"vout_index", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "The zero-based output index, before a change output is added."},
-                                },
-                            },
-                            {"conf_target", RPCArg::Type::NUM, /* default */ "fallback to wallet's default", "Confirmation target (in blocks)"},
-                            {"estimate_mode", RPCArg::Type::STR, /* default */ "UNSET", "The fee estimate mode, must be one of:\n"
-                            "         \"UNSET\"\n"
-                            "         \"ECONOMICAL\"\n"
-                            "         \"CONSERVATIVE\""},
-                        },
-                        "options"},
-                },
-                RPCResult{
-                    RPCResult::Type::OBJ, "", "",
-                    {
-                        {RPCResult::Type::STR_HEX, "hex", "The resulting raw transaction (hex-encoded string)"},
-                        {RPCResult::Type::STR_AMOUNT, "fee", "Fee in " + CURRENCY_UNIT + " the resulting transaction pays"},
-                        {RPCResult::Type::NUM, "changepos", "The position of the added change output, or -1"},
-                    }
-                                },
-                                RPCExamples{
-                            "\nCreate a transaction with no inputs\n"
-                            + HelpExampleCli("createrawtransaction", "\"[]\" \"{\\\"myaddress\\\":0.01}\"") +
-                            "\nAdd sufficient unsigned inputs to meet the output value\n"
-                            + HelpExampleCli("fundrawtransaction", "\"rawtransactionhex\"") +
-                            "\nSign the transaction\n"
-                            + HelpExampleCli("signrawtransaction", "\"fundedtransactionhex\"") +
-                            "\nSend the transaction\n"
-                            + HelpExampleCli("sendrawtransaction", "\"signedtransactionhex\"")
-                                },
-    }.Check(request);
-
-    RPCTypeCheck(request.params, {UniValue::VSTR, UniValueType(), UniValue::VBOOL});
-
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    if (!wallet) return NullUniValue;
-    CWallet* const pwallet = wallet.get();
-
+    // Make sure the results are valid at least up to the most recent block
+    // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
 
     CCoinControl coinControl;
-    int changePosition = -1;
+    change_position = -1;
     bool lockUnspents = false;
     UniValue subtractFeeFromOutputs;
     std::set<int> setSubtractFeeFromOutputs;
 
-    if (!request.params[1].isNull()) {
-        if (request.params[1].type() == UniValue::VBOOL) {
+    if (!options.isNull()) {
+        if (options.type() == UniValue::VBOOL) {
             // backward compatibility bool only fallback
-            coinControl.fAllowWatchOnly = request.params[1].get_bool();
+            coinControl.fAllowWatchOnly = options.get_bool();
         } else {
-            RPCTypeCheck(request.params, {UniValue::VSTR, UniValue::VOBJ});
-
-            UniValue options = request.params[1];
-
+            RPCTypeCheckArgument(options, UniValue::VOBJ);
             RPCTypeCheckObj(options,
                 {
                     {"changeAddress", UniValueType(UniValue::VSTR)},
@@ -3119,7 +3058,7 @@ static UniValue fundrawtransaction(const JSONRPCRequest& request)
             }
 
             if (options.exists("changePosition"))
-                changePosition = options["changePosition"].get_int();
+                change_position = options["changePosition"].get_int();
 
             if (options.exists("includeWatching"))
                 coinControl.fAllowWatchOnly = options["includeWatching"].get_bool();
@@ -3152,15 +3091,10 @@ static UniValue fundrawtransaction(const JSONRPCRequest& request)
         }
     }
 
-    // parse hex string from parameter
-    CMutableTransaction tx;
-    if (!DecodeHexTx(tx, request.params[0].get_str()))
-        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
-
     if (tx.vout.size() == 0)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "TX must have at least one output");
 
-    if (changePosition != -1 && (changePosition < 0 || (unsigned int)changePosition > tx.vout.size()))
+    if (change_position != -1 && (change_position < 0 || (unsigned int)change_position > tx.vout.size()))
         throw JSONRPCError(RPC_INVALID_PARAMETER, "changePosition out of bounds");
 
     for (unsigned int idx = 0; idx < subtractFeeFromOutputs.size(); idx++) {
@@ -3174,17 +3108,92 @@ static UniValue fundrawtransaction(const JSONRPCRequest& request)
         setSubtractFeeFromOutputs.insert(pos);
     }
 
-    CAmount nFeeOut;
     std::string strFailReason;
 
-    if (!pwallet->FundTransaction(tx, nFeeOut, changePosition, strFailReason, lockUnspents, setSubtractFeeFromOutputs, coinControl)) {
+    if (!pwallet->FundTransaction(tx, fee_out, change_position, strFailReason, lockUnspents, setSubtractFeeFromOutputs, coinControl)) {
         throw JSONRPCError(RPC_WALLET_ERROR, strFailReason);
     }
+}
+
+static UniValue fundrawtransaction(const JSONRPCRequest& request)
+{
+    RPCHelpMan{"fundrawtransaction",
+        "\nAdd inputs to a transaction until it has enough in value to meet its out value.\n"
+        "This will not modify existing inputs, and will add at most one change output to the outputs.\n"
+        "No existing outputs will be modified unless \"subtractFeeFromOutputs\" is specified.\n"
+        "Note that inputs which were signed may need to be resigned after completion since in/outputs have been added.\n"
+        "The inputs added will not be signed, use signrawtransactionwithkey\n"
+        " or signrawtransactionwithwallet for that.\n"
+        "Note that all existing inputs must have their previous output transaction be in the wallet.\n"
+        "Note that all inputs selected must be of standard form and P2SH scripts must be\n"
+        "in the wallet using importaddress or addmultisigaddress (to calculate fees).\n"
+        "You can see whether this is the case by checking the \"solvable\" field in the listunspent output.\n"
+        "Only pay-to-pubkey, multisig, and P2SH versions thereof are currently supported for watch-only\n",
+        {
+            {"hexstring", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The hex string of the raw transaction"},
+            {"options", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED_NAMED_ARG, "for backward compatibility: passing in a true instead of an object will result in {\"includeWatching\":true}",
+                {
+                    {"changeAddress", RPCArg::Type::STR, /* default */ "pool address", "The Raptoreum address to receive the change"},
+                    {"changePosition", RPCArg::Type::NUM, /* default */ "random", "The index of the change output"},
+                    {"includeWatching", RPCArg::Type::BOOL, /* default */ "false", "Also select inputs which are watch only"},
+                    {"lockUnspents", RPCArg::Type::BOOL, /* default */ "false", "Lock selected unspent outputs"},
+                    {"feeRate", RPCArg::Type::AMOUNT, /* default */ "not set: makes wallet determine the fee", "Set a specific fee rate in " + CURRENCY_UNIT + "/kB"},
+                    {"subtractFeeFromOutputs", RPCArg::Type::ARR, /* default */ "empty array", "A json array of integers.\n"
+                    "                              The fee will be equally deducted from the amount of each specified output.\n"
+                    "                              Those recipients will receive less RTM than you enter in their corresponding amount field.\n"
+                    "                              If no outputs are specified here, the sender pays the fee.",
+                        {
+                            {"vout_index", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "The zero-based output index, before a change output is added."},
+                        },
+                    },
+                    {"conf_target", RPCArg::Type::NUM, /* default */ "fallback to wallet's default", "Confirmation target (in blocks)"},
+                    {"estimate_mode", RPCArg::Type::STR, /* default */ "UNSET", "The fee estimate mode, must be one of:\n"
+                    "         \"UNSET\"\n"
+                    "         \"ECONOMICAL\"\n"
+                    "         \"CONSERVATIVE\""},
+                },
+                "options"},
+        },
+        RPCResult{
+            RPCResult::Type::OBJ, "", "",
+            {
+                {RPCResult::Type::STR_HEX, "hex", "The resulting raw transaction (hex-encoded string)"},
+                {RPCResult::Type::STR_AMOUNT, "fee", "Fee in " + CURRENCY_UNIT + " the resulting transaction pays"},
+                {RPCResult::Type::NUM, "changepos", "The position of the added change output, or -1"},
+            }
+        },
+        RPCExamples{
+            "\nCreate a transaction with no inputs\n"
+            + HelpExampleCli("createrawtransaction", "\"[]\" \"{\\\"myaddress\\\":0.01}\"") +
+            "\nAdd sufficient unsigned inputs to meet the output value\n"
+            + HelpExampleCli("fundrawtransaction", "\"rawtransactionhex\"") +
+            "\nSign the transaction\n"
+            + HelpExampleCli("signrawtransaction", "\"fundedtransactionhex\"") +
+            "\nSend the transaction\n"
+            + HelpExampleCli("sendrawtransaction", "\"signedtransactionhex\"")
+        },
+    }.Check(request);
+
+    RPCTypeCheck(request.params, {UniValue::VSTR, UniValueType(), UniValue::VBOOL});
+
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    if (!wallet) return NullUniValue;
+    CWallet* const pwallet = wallet.get();
+
+    // parse hex string from parameter
+    CMutableTransaction tx;
+    if (!DecodeHexTx(tx, request.params[0].get_str())) {
+        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
+    }
+
+    CAmount fee;
+    int change_position;
+    FundTransaction(pwallet, tx, fee, change_position, request.params[1]);
 
     UniValue result(UniValue::VOBJ);
     result.pushKV("hex", EncodeHexTx(CTransaction(tx)));
-    result.pushKV("changepos", changePosition);
-    result.pushKV("fee", ValueFromAmount(nFeeOut));
+    result.pushKV("fee", ValueFromAmount(fee));
+    result.pushKV("changepos", change_position);
 
     return result;
 }
@@ -3521,8 +3530,11 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
         ret.pushKV("timestamp", meta->nCreateTime);
         CHDChain hdChainCurrent;
         if (key_id && pwallet->mapHdPubKeys.count(*key_id) && pwallet->GetHDChain(hdChainCurrent)) {
-            ret.pushKV("hdkeypath", pwallet->mapHdPubKeys[*key_id].GetKeyPath());
             ret.pushKV("hdchainid", hdChainCurrent.GetID().GetHex());
+        }
+        if (meta->has_key_origin) {
+            ret.pushKV("hdkeypath", WriteHDKeypath(meta->key_origin.path));
+            ret.pushKV("hdmasterfingerprint", HexStr(meta->key_origin.fingerprint));
         }
     }
 
@@ -3656,6 +3668,19 @@ UniValue rescanblockchain(const JSONRPCRequest& request);
 
 UniValue dumphdinfo(const JSONRPCRequest& request);
 UniValue importelectrumwallet(const JSONRPCRequest& request);
+
+void AddKeypathToMap(const CWallet* pwallet, const CKeyID& keyID, std::map<CPubKey, KeyOriginInfo>& hd_keypaths)
+{
+    CPubKey vchPubKey;
+    if (!pwallet->GetPubKey(keyID, vchPubKey)) {
+        return;
+    }
+    KeyOriginInfo info;
+    if (!pwallet->GetKeyOrigin(keyID, info)) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "Internal keypath is broken");
+    }
+    hd_keypaths.emplace(vchPubKey, std::move(info));
+}
 
 static const CRPCCommand commands[] =
 { //  category              name                        actor (function)           argNames

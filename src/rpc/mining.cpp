@@ -12,7 +12,6 @@
 #include <consensus/params.h>
 #include <consensus/validation.h>
 #include <core_io.h>
-#include <validation.h>
 #include <key_io.h>
 #include <miner.h>
 #include <net.h>
@@ -30,6 +29,8 @@
 #include <util/system.h>
 #include <util/fees.h>
 #include <util/strencodings.h>
+#include <util/validation.h>
+#include <validation.h>
 #include <validationinterface.h>
 #include <versionbitsinfo.h>
 #include <warnings.h>

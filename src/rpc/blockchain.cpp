@@ -32,6 +32,7 @@
 #include <util/ref.h>
 #include <util/system.h>
 #include <util/strencodings.h>
+#include <util/validation.h>
 #include <validation.h>
 #include <validationinterface.h>
 #include <versionbitsinfo.h>

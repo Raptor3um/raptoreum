@@ -11,11 +11,6 @@
 #include <unordered_lru_cache.h>
 #include <util/system.h>
 
-// Default size of ProofOfWork cache in megabytes.
-static const uint64_t DEFAULT_POW_CACHE_SIZE = 50;
-// Default for -powcachevalidate.
-static const bool DEFAULT_VALIDATE_POW_CACHE = false;
-
 class CPowCache : public unordered_lru_cache<uint256, uint256, std::hash<uint256>>
 {
 private:

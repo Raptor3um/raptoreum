@@ -26,6 +26,7 @@
 #include <timedata.h>
 #include <util/system.h>
 #include <util/moneystr.h>
+#include <util/validation.h>
 #include <smartnode/smartnode-payments.h>
 #include <smartnode/smartnode-sync.h>
 #include <validationinterface.h>

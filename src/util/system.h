@@ -59,6 +59,11 @@ extern const std::string gCoinJoinName;
 // Application startup time (used for uptime calculation)
 int64_t GetStartupTime();
 
+// Default size of ProofOfWork cache in megabytes.
+static const int DEFAULT_POW_CACHE_SIZE = 50;
+// Default for -powcachevalidate.
+static const bool DEFAULT_VALIDATE_POW_CACHE = false;
+
 extern const char * const BITCOIN_CONF_FILENAME;
 
 /** Translate a message to the native user language. */

@@ -288,6 +288,7 @@ BITCOIN_CORE_H = \
   ui_interface.h \
   undo.h \
   unordered_lru_cache.h \
+  util/bip32.h \
   util/bytevectorhash.h \
   util/check.h \
   util/error.h \
@@ -303,8 +304,8 @@ BITCOIN_CORE_H = \
   util/threadnames.h \
   util/vector.h \
   util/memory.h \
-  util/error.h \
-  util/fees.h \
+  util/url.h \
+  util/validation.h \
   validation.h \
   validationinterface.h \
   versionbits.h \
@@ -717,6 +718,7 @@ libraptoreum_util_a_SOURCES = \
   support/cleanse.cpp \
   sync.cpp \
   threadinterrupt.cpp \
+  util/bip32.cpp \
   util/system.cpp \
   util/asmap.cpp \
   util/moneystr.cpp \
@@ -727,6 +729,8 @@ libraptoreum_util_a_SOURCES = \
   util/threadnames.cpp \
   util/error.cpp \
   util/fees.cpp \
+  util/url.cpp \
+  util/validation.cpp \
   $(BITCOIN_CORE_H)
 
 # cli: shared between raptoreumd and raptoreum-qt

@@ -15,6 +15,7 @@
 #include <script/script.h>
 #include <script/standard.h>
 #include <sync.h>
+#include <util/bip32.h>
 #include <util/system.h>
 #include <util/time.h>
 #include <validation.h>
@@ -968,7 +969,7 @@ UniValue dumpwallet(const JSONRPCRequest& request)
         file << "# HD seed: " << HexStr(vchSeed) << "\n\n";
 
         CExtKey masterKey;
-        masterKey.SetMaster(&vchSeed[0], vchSeed.size());
+        masterKey.SetSeed(&vchSeed[0], vchSeed.size());
 
         file << "# extended private masterkey: " << EncodeExtKey(masterKey) << "\n";
 
@@ -1004,7 +1005,7 @@ UniValue dumpwallet(const JSONRPCRequest& request)
             } else {
                 file << "change=1";
             }
-            file << strprintf(" # addr=%s%s\n", strAddr, (pwallet->mapHdPubKeys.count(keyid) ? " hdkeypath="+pwallet->mapHdPubKeys[keyid].GetKeyPath() : ""));
+            file << strprintf(" # addr=%s%s\n", strAddr, (pwallet->mapKeyMetadata[keyid].has_key_origin ? " hdkeypath="+WriteHDKeypath(pwallet->mapKeyMetadata[keyid].key_origin.path) : ""));
         }
     }
     file << "\n";
@@ -1042,6 +1043,7 @@ struct ImportData
     // Output data
     std::set<CScript> import_scripts;
     std::map<CKeyID, bool> used_keys; //!< Import these private keys if available (the value indicates whether if the key is required for solvability)
+    std::map<CKeyID, std::pair<CPubKey, KeyOriginInfo>> key_origins;
 };
 
 enum class ScriptContext
@@ -1269,7 +1271,7 @@ static UniValue ProcessImportDescriptor(ImportData& import_data, std::map<CKeyID
     }
 
     std::copy(out_keys.pubkeys.begin(), out_keys.pubkeys.end(), std::inserter(pubkey_map, pubkey_map.end()));
-
+    import_data.key_origins.insert(out_keys.origins.begin(), out_keys.origins.end());
     for (size_t i = 0; i < priv_keys.size(); ++i) {
         const auto& str = priv_keys[i].get_str();
         CKey key = DecodeSecret(str);
@@ -1294,6 +1296,9 @@ static UniValue ProcessImportDescriptor(ImportData& import_data, std::map<CKeyID
     bool spendable = std::all_of(pubkey_map.begin(), pubkey_map.end(),
         [&](const std::pair<CKeyID, CPubKey>& used_key) {
             return privkey_map.count(used_key.first) > 0;
+        }) && std::all_of(import_data.key_origins.begin(), import_data.key_origins.end(),
+        [&](const std::pair<CKeyID, std::pair<CPubKey, KeyOriginInfo>>& entry) {
+            return privkey_map.count(entry.first) > 0;
         });
     if (!watch_only && !spendable) {
         warnings.push_back("Some private keys are missing, outputs will be considered watchonly. If this is intentional, specify the watchonly flag.");
@@ -1348,43 +1353,17 @@ static UniValue ProcessImport(CWallet * const pwallet, const UniValue& data, con
 
         // All good. Time to import
         pwallet->MarkDirty();
-        for (const auto& entry : import_data.import_scripts) {
-            if (!pwallet->HaveCScript(CScriptID(entry)) && !pwallet->AddCScript(entry)) {
-                throw JSONRPCError(RPC_WALLET_ERROR, "Error adding script to wallet");
-            }
+        if (!pwallet->ImportScripts(import_data.import_scripts)) {
+            throw JSONRPCError(RPC_WALLET_ERROR, "Error adding script to wallet");
         }
-        for (const auto& entry : privkey_map) {
-            const CKey& key = entry.second;
-            CPubKey pubkey = key.GetPubKey();
-            const CKeyID& id = entry.first;
-            assert(key.VerifyPubKey(pubkey));
-            pwallet->mapKeyMetadata[id].nCreateTime = timestamp;
-            // If the private key is not present in the wallet, insert it.
-            if (!pwallet->HaveKey(id) && !pwallet->AddKeyPubKey(key, pubkey)) {
-                throw JSONRPCError(RPC_WALLET_ERROR, "Error adding key to wallet");
-            }
-            pwallet->UpdateTimeFirstKey(timestamp);
+        if (!pwallet->ImportPrivKeys(privkey_map, timestamp)) {
+            throw JSONRPCError(RPC_WALLET_ERROR, "Error adding key to wallet");
         }
-        for (const auto& entry : pubkey_map) {
-            const CPubKey& pubkey = entry.second;
-            const CKeyID& id = entry.first;
-            CPubKey temp;
-            if (!pwallet->GetPubKey(id, temp) && !pwallet->AddWatchOnly(GetScriptForRawPubKey(pubkey), timestamp)) {
-                throw JSONRPCError(RPC_WALLET_ERROR, "Error adding address to wallet");
-            }
+        if (!pwallet->ImportPubKeys(pubkey_map, timestamp, import_data.key_origins)) {
+            throw JSONRPCError(RPC_WALLET_ERROR, "Error adding address to wallet");
         }
-
-        for (const CScript& script : script_pub_keys) {
-            if (!have_solving_data || !::IsMine(*pwallet, script)) { // Always call AddWatchOnly for non-solvable watch-only, so that watch timestamp gets updated
-                if (!pwallet->AddWatchOnly(script, timestamp)) {
-                    throw JSONRPCError(RPC_WALLET_ERROR, "Error adding address to wallet");
-                }
-            }
-            CTxDestination dest;
-            ExtractDestination(script, dest);
-            if (!internal && IsValidDestination(dest)) {
-                pwallet->SetAddressBook(dest, label, "receive");
-            }
+        if (!pwallet->ImportScriptPubKeys(label, script_pub_keys, have_solving_data, internal, timestamp)) {
+            throw JSONRPCError(RPC_WALLET_ERROR, "Error adding address to wallet");
         }
 
         result.pushKV("success", UniValue(true));

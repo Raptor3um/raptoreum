@@ -41,15 +41,26 @@ static bool GetCScript(const SigningProvider& provider, const SignatureData& sig
   return false;
 }
 
-static bool GetPubKey(const SigningProvider& provider, const SignatureData& sigdata, const CKeyID& address, CPubKey& pubkey)
+static bool GetPubKey(const SigningProvider& provider, SignatureData& sigdata, const CKeyID& address, CPubKey& pubkey)
 {
-  if (provider.GetPubKey(address, pubkey)) {
-    return true;
-  }
   // Look for pubkey over all partial sigs
   const auto it = sigdata.signatures.find(address);
   if (it != sigdata.signatures.end()) {
     pubkey = it->second.first;
+    return true;
+  }
+  // Look for pubkey in pubkey list
+  const auto& pk_it = sigdata.misc_pubkeys.find(address);
+  if (pk_it != sigdata.misc_pubkeys.end()) {
+    pubkey = pk_it->second.first;
+    return true;
+  }
+  // Quesry the underlying provider.
+  if (provider.GetPubKey(address, pubkey)) {
+    KeyOriginInfo info;
+    if (provider.GetKeyOrigin(address, info)) {
+      sigdata.misc_pubkeys.emplace(address, std::make_pair(pubkey, std::move(info)));
+    }
     return true;
   }
   return false;
@@ -62,9 +73,9 @@ static bool CreateSig(const BaseSignatureCreator& creator, SignatureData& sigdat
     sig_out = it->second.second;
     return true;
   }
+  CPubKey pubkey;
+  GetPubKey(provider, sigdata, keyid, pubkey);
   if (creator.CreateSig(provider, sig_out, keyid, scriptcode, sigversion)) {
-    CPubKey pubkey;
-    GetPubKey(provider, sigdata, keyid, pubkey);
     auto i = sigdata.signatures.emplace(keyid, SigPair(pubkey, sig_out));
     assert(i.second);
     return true;
@@ -396,4 +407,26 @@ FlatSigningProvider Merge(const FlatSigningProvider& a, const FlatSigningProvide
     ret.origins = a.origins;
     ret.origins.insert(b.origins.begin(), b.origins.end());
     return ret;
+}
+
+bool HidingSigningProvider::GetCScript(const CScriptID& scriptid, CScript& script) const
+{
+    return m_provider->GetCScript(scriptid, script);
+}
+
+bool HidingSigningProvider::GetPubKey(const CKeyID& keyid, CPubKey& pubkey) const
+{
+    return m_provider->GetPubKey(keyid, pubkey);
+}
+
+bool HidingSigningProvider::GetKey(const CKeyID& keyid, CKey& key) const
+{
+    if (m_hide_secret) return false;
+    return m_provider->GetKey(keyid, key);
+}
+
+bool HidingSigningProvider::GetKeyOrigin(const CKeyID& keyid, KeyOriginInfo& info) const
+{
+    if (m_hide_origin) return false;
+    return m_provider->GetKeyOrigin(keyid, info);
 }

@@ -20,6 +20,7 @@
 #include <script/sigcache.h>
 #include <streams.h>
 #include <ui_interface.h>
+#include <util/validation.h>
 #include <validation.h>
 
 #include <coinjoin/coinjoin.h>

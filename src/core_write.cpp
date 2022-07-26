@@ -80,6 +80,13 @@ const std::map<unsigned char, std::string> mapSigHashTypes = {
     {static_cast<unsigned char>(SIGHASH_SINGLE|SIGHASH_ANYONECANPAY), std::string("SINGLE|ANYONECANPAY")},
 };
 
+std::string SighashToStr(unsigned char sighash_type)
+{
+    const auto& it = mapSigHashTypes.find(sighash_type);
+    if (it == mapSigHashTypes.end()) return "";
+    return it->second;
+}
+
 /**
  * Create the assembly string representation of a CScript object.
  * @param[in] script    CScript object to convert into the asm string representation.
@@ -137,6 +144,21 @@ std::string EncodeHexTx(const CTransaction& tx)
     CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
     ssTx << tx;
     return HexStr(ssTx);
+}
+
+void ScriptToUniv(const CScript& script, UniValue& out, bool include_address)
+{
+    out.pushKV("asm", ScriptToAsmStr(script));
+    out.pushKV("hex", HexStr(script));
+
+    std::vector<std::vector<unsigned char>> solns;
+    txnouttype type = Solver(script, solns);
+    out.pushKV("type", GetTxnOutputType(type));
+
+    CTxDestination address;
+    if (include_address && ExtractDestination(script, address)) {
+        out.pushKV("address", EncodeDestination(address));
+    }
 }
 
 void ScriptPubKeyToUniv(const CScript& scriptPubKey, UniValue& out, bool fIncludeHex)

@@ -21,6 +21,7 @@
 #include <chain.h>
 #include <coins.h>
 #include <util/moneystr.h>
+#include <version.h>
 
 CChain& ChainActive();
 
@@ -55,7 +56,7 @@ static const char *validateFutureCoin(const Coin& coin, int nSpendHeight) {
 			CFutureTx futureTx;
 			if(GetTxPayload(coin.vExtraPayload, futureTx)) {
 				bool isBlockMature = futureTx.maturity > 0 && nSpendHeight - coin.nHeight >= futureTx.maturity;
-				bool isTimeMature = futureTx.lockTime > 0 && adjustCurrentTime - confirmedTime  >= futureTx.lockTime;
+				bool isTimeMature = futureTx.lockTime > 0 && adjustCurrentTime - confirmedTime >= futureTx.lockTime;
 				bool canSpend = isBlockMature || isTimeMature;
 				if(!canSpend) {
 					return "bad-txns-premature-spend-of-future";

@@ -7,6 +7,8 @@
 #include <key.h>
 #include <sync.h>
 
+class CKeyMetadata;
+
 /* hd account data model */
 class CHDAccount
 {
@@ -101,7 +103,7 @@ public:
     uint256 GetID() const { LOCK(cs); return id; }
 
     uint256 GetSeedHash();
-    void DeriveChildExtKey(uint32_t nAccountIndex, bool fInternal, uint32_t nChildIndex, CExtKey& extKeyRet);
+    void DeriveChildExtKey(uint32_t nAccountIndex, bool fInternal, uint32_t nChildIndex, CExtKey& extKeyRet, CKeyMetadata& metadata);
 
     void AddAccount();
     bool GetAccount(uint32_t nAccountIndex, CHDAccount& hdAccountRet);

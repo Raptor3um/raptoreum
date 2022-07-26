@@ -12,6 +12,7 @@
 #include <key_io.h>
 #include <fs.h>
 #include <governance/governance-object.h>
+#include <hdchain.h>
 #include <protocol.h>
 #include <serialize.h>
 #include <sync.h>
@@ -89,14 +90,14 @@ bool WalletBatch::EraseTx(uint256 hash)
     return EraseIC(std::make_pair(DBKeys::TX, hash));
 }
 
-bool WalletBatch::WriteKeyMeta(const CPubKey& vchPubKey, const CKeyMetadata& keyMeta)
+bool WalletBatch::WriteKeyMetadata(const CKeyMetadata& keyMeta, const CPubKey& vchPubKey, const bool overwrite)
 {
-    return WriteIC(std::make_pair(DBKeys::KEYMETA, vchPubKey), keyMeta, true);
+    return WriteIC(std::make_pair(DBKeys::KEYMETA, vchPubKey), keyMeta, overwrite);
 }
 
 bool WalletBatch::WriteKey(const CPubKey& vchPubKey, const CPrivKey& vchPrivKey, const CKeyMetadata& keyMeta)
 {
-    if (!WriteIC(std::make_pair(DBKeys::KEYMETA, vchPubKey), keyMeta, false)) {
+    if (!WriteKeyMetadata(keyMeta, vchPubKey, false)) {
         return false;
     }
 
@@ -111,7 +112,7 @@ bool WalletBatch::WriteKey(const CPubKey& vchPubKey, const CPrivKey& vchPrivKey,
 
 bool WalletBatch::WriteCryptedKey(const CPubKey& vchPubKey, const std::vector<unsigned char>& vchCryptedSecret, const CKeyMetadata &keyMeta)
 {
-    if (!WriteIC(std::make_pair(DBKeys::KEYMETA, vchPubKey), keyMeta)) {
+    if (!WriteKeyMetadata(keyMeta, vchPubKey, true)) {
         return false;
     }
 
@@ -609,6 +610,14 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
 
     if (wss.fAnyUnordered)
         result = pwallet->ReorderTransactions();
+
+    // Upgrade all of the wallet keymetadata to have the hd master key id
+    // This operation is not atomic, but if it fails, updated entries are still backwards compatible with older software
+    try {
+        pwallet->UpgradeKeyMetadata();
+    } catch (...) {
+        result = DBErrors::CORRUPT;
+    }
 
     return result;
 }

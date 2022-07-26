@@ -32,8 +32,10 @@
 #include <script/standard.h>
 #include <txmempool.h>
 #include <uint256.h>
+#include <util/bip32.h>
 #include <util/moneystr.h>
 #include <util/strencodings.h>
+#include <util/validation.h>
 #include <validation.h>
 #include <validationinterface.h>
 
@@ -115,7 +117,6 @@ static UniValue getrawtransaction(const JSONRPCRequest& request)
 {
     RPCHelpMan{"getrawtransaction",
         "\nReturn the raw transaction data.\n"
-
         "\nBy default this function only works for mempool transactions. When called with a blockhash\n"
         "argument, getrawtransaction will return the transaction if the specified block is available and\n"
         "the transaction is found in that block. When called without a blockhash argument, getrawtransaction\n"
