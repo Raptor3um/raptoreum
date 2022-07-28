@@ -3016,7 +3016,7 @@ void CWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const
         if (nDepth == 0 && !pcoin->InMempool())
             continue;
 
-        bool safeTx = pcoin->IsTrusted();
+        bool safeTx = pcoin->IsTrusted(); // This doesn't account for future Tx outputs - we check that below.
 
         if (fOnlySafe && !safeTx) {
             continue;
@@ -3065,9 +3065,9 @@ void CWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const
 
             bool fSpendableIn = ((mine & ISMINE_SPENDABLE) != ISMINE_NO) || (coinControl && coinControl->fAllowWatchOnly && (mine & ISMINE_WATCH_SOLVABLE) != ISMINE_NO);
             bool fSolvableIn = (mine & (ISMINE_SPENDABLE | ISMINE_WATCH_SOLVABLE)) != ISMINE_NO;
-            bool isCoinSpenable = pcoin->isFutureSpendable(i);
+            bool isCoinSpendable = pcoin->isFutureSpendable(i);
 
-            vCoins.push_back(COutput(pcoin, i, nDepth, fSpendableIn, fSolvableIn, safeTx, pcoin->tx->nType == TRANSACTION_FUTURE, isCoinSpenable));
+            vCoins.push_back(COutput(pcoin, i, nDepth, fSpendableIn, fSolvableIn, safeTx && isCoinSpendable, pcoin->tx->nType == TRANSACTION_FUTURE, isCoinSpendable));
             // Checks the sum amount of all UTXO's.
             if (nMinimumSumAmount != MAX_MONEY) {
                 nTotal += pcoin->tx->vout[i].nValue;
