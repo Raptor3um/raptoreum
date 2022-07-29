@@ -106,11 +106,8 @@ public Q_SLOTS:
     void setFontSize(int newSize);
 
     /** Wallet repair options */
-    void walletSalvage();
     void walletRescan1();
     void walletRescan2();
-    void walletZaptxes1();
-    void walletZaptxes2();
     void walletUpgrade();
     void walletReindex();
 

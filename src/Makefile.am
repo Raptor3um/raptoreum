@@ -311,6 +311,7 @@ BITCOIN_CORE_H = \
   versionbits.h \
   versionbitsinfo.h \
   walletinitinterface.h \
+  wallet/bdb.h \
   wallet/coincontrol.h \
   wallet/context.h \
   wallet/crypter.h \
@@ -468,6 +469,7 @@ libraptoreum_wallet_a_SOURCES = \
   coinjoin/coinjoin-client-options.cpp \
   coinjoin/coinjoin-util.cpp \
   interfaces/wallet.cpp \
+  wallet/bdb.cpp \
   wallet/coincontrol.cpp \
   wallet/context.cpp \
   wallet/crypter.cpp \

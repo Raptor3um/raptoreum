@@ -85,25 +85,6 @@ bool RemoveWallet(const std::shared_ptr<CWallet>& wallet)
     return true;
 }
 
-bool HasWallets()
-{
-    LOCK(cs_wallets);
-    return !vpwallets.empty();
-}
-
-CWallet *GetFirstWallet() {
-#ifdef ENABLE_WALLET
-    while(vpwallets.size() == 0){
-        UninterruptibleSleep(std::chrono::milliseconds{50});
-
-    }
-    if (vpwallets.size() == 0)
-        return(NULL);
-    return(vpwallets[0].get());
-#endif
-    return(NULL);
-}
-
 std::vector<std::shared_ptr<CWallet>> GetWallets()
 {
     LOCK(cs_wallets);
@@ -905,9 +886,14 @@ std::set<uint256> CWallet::GetConflicts(const uint256& txid) const
     return result;
 }
 
-void CWallet::Flush(bool shutdown)
+void CWallet::Flush()
 {
-    database->Flush(shutdown);
+    database->Flush();
+}
+
+void CWallet::Close()
+{
+    database->Close();
 }
 
 void CWallet::SyncMetaData(std::pair<TxSpends::iterator, TxSpends::iterator> range)
@@ -4373,30 +4359,6 @@ DBErrors CWallet::ZapSelectTx(std::vector<uint256>& vHashIn, std::vector<uint256
     return DBErrors::LOAD_OK;
 }
 
-DBErrors CWallet::ZapWalletTx(std::vector<CWalletTx>& vWtx)
-{
-    DBErrors nZapWalletTxRet = WalletBatch(*database,"cr+").ZapWalletTx(vWtx);
-    if (nZapWalletTxRet == DBErrors::NEED_REWRITE)
-    {
-        if (database->Rewrite("\x04pool"))
-        {
-            LOCK(cs_wallet);
-            setInternalKeyPool.clear();
-            setExternalKeyPool.clear();
-            nKeysLeftSinceAutoBackup = 0;
-            m_pool_key_to_index.clear();
-            // Note: can't top-up keypool here, because wallet is locked.
-            // User will be prompted to unlock wallet the next operation
-            // that requires a new key.
-        }
-    }
-
-    if (nZapWalletTxRet != DBErrors::LOAD_OK)
-        return nZapWalletTxRet;
-
-    return DBErrors::LOAD_OK;
-}
-
 bool CWallet::SetAddressBookWithDB(WalletBatch& batch, const CTxDestination& address, const std::string& strName, const std::string& strPurpose)
 {
     bool fUpdated = false;
@@ -5190,41 +5152,25 @@ bool CWallet::Verify(interfaces::Chain& chain, const WalletLocation& location, s
     }
 
     // Keep same database environment instance across Verify/Recover calls below.
-    std::unique_ptr<CWallet> tempWallet = MakeUnique<CWallet>(&chain, location, WalletDatabase::Create(wallet_path));
+    std::unique_ptr<WalletDatabase> database = CreateWalletDatabase(wallet_path);
 
     try {
-        if (!WalletBatch::VerifyEnvironment(wallet_path, error_string)) {
-            return false;
-        }
+        return database->Verify(error_string);
     } catch (const fs::filesystem_error& e) {
         error_string = strprintf("Error loading wallet %s. %s", location.GetName(), fsbridge::get_filesystem_error_message(e));
         return false;
     }
 
+    // Let tempWallet hold the pointer to the corresponding wallet database.
+    std::unique_ptr<CWallet> tempWallet = MakeUnique<CWallet>(&chain, location, std::move(database));
     if (!tempWallet->AutoBackupWallet(wallet_path, warning_string, error_string) && !error_string.empty()) {
         return false;
     }
-
-    return WalletBatch::VerifyDatabaseFile(wallet_path, error_string);
 }
 
 std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain, const WalletLocation& location, uint64_t wallet_creation_flags)
 {
-    const std::string walletFile = location.GetName();
-
-    // needed to restore wallet transaction meta data after -zapwallettxes
-    std::vector<CWalletTx> vWtx;
-
-    if (gArgs.GetBoolArg("-zapwallettxes", false)) {
-        chain.initMessage(_("Zapping all transactions from wallet..."));
-
-        std::unique_ptr<CWallet> tempWallet = MakeUnique<CWallet>(&chain, location, WalletDatabase::Create(location.GetPath()));
-        DBErrors nZapWalletRet = tempWallet->ZapWalletTx(vWtx);
-        if (nZapWalletRet != DBErrors::LOAD_OK) {
-            chain.initError(strprintf(_("Error loading %s: Wallet corrupted"), walletFile));
-            return nullptr;
-        }
-    }
+    const std::string walletFile = WalletDataFilePath(location.GetPath()).string();
 
     chain.initMessage(_("Loading wallet..."));
 
@@ -5232,7 +5178,7 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
     bool fFirstRun = true;
     // TODO: Can't use std::make_shared because we need a custom deleter but
     // should be possible to use std::allocate_shared.
-    std::shared_ptr<CWallet> walletInstance(new CWallet(&chain, location, WalletDatabase::Create(location.GetPath())), ReleaseWallet);
+    std::shared_ptr<CWallet> walletInstance(new CWallet(&chain, location, CreateWalletDatabase(location.GetPath())), ReleaseWallet);
     AddWallet(walletInstance);
     auto error = [&](const std::string& strError) {
         RemoveWallet(walletInstance);
@@ -5536,30 +5482,6 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
         walletInstance->WalletLogPrintf("Rescan completed in %15dms\n", GetTimeMillis() - nStart);
         walletInstance->ChainStateFlushed(chain.getTipLocator());
         walletInstance->database->IncrementUpdateCounter();
-
-        // Restore wallet transaction metadata after -zapwallettxes=1
-        if (gArgs.GetBoolArg("-zapwallettxes", false) && gArgs.GetArg("-zapwallettxes", "1") != "2")
-        {
-            WalletBatch batch(*walletInstance->database);
-
-            for (const CWalletTx& wtxOld : vWtx)
-            {
-                uint256 hash = wtxOld.GetHash();
-                std::map<uint256, CWalletTx>::iterator mi = walletInstance->mapWallet.find(hash);
-                if (mi != walletInstance->mapWallet.end())
-                {
-                    const CWalletTx* copyFrom = &wtxOld;
-                    CWalletTx* copyTo = &mi->second;
-                    copyTo->mapValue = copyFrom->mapValue;
-                    copyTo->vOrderForm = copyFrom->vOrderForm;
-                    copyTo->nTimeReceived = copyFrom->nTimeReceived;
-                    copyTo->nTimeSmart = copyFrom->nTimeSmart;
-                    copyTo->fFromMe = copyFrom->fFromMe;
-                    copyTo->nOrderPos = copyFrom->nOrderPos;
-                    batch.WriteTx(*copyTo);
-                }
-            }
-        }
     }
 
     {

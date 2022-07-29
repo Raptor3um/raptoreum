@@ -78,6 +78,7 @@ public:
     bool isReleaseVersion() const;
     QString formatClientStartupTime() const;
     QString dataDir() const;
+    QString blocksDir() const;
 
     // caches for the best header
     mutable std::atomic<int> cachedBestHeaderHeight;

@@ -17,7 +17,7 @@ namespace WalletTool {
 static void WalletToolReleaseWallet(CWallet* wallet)
 {
     wallet->WalletLogPrintf("Releasing wallet\n");
-    wallet->Flush();
+    wallet->Close();
     delete wallet;
 }
 
@@ -28,7 +28,7 @@ static std::shared_ptr<CWallet> CreateWallet(const std::string& name, const fs::
         return nullptr;
     }
     // dummy chain interface
-    std::shared_ptr<CWallet> wallet_instance(new CWallet(nullptr /* chain */, WalletLocation(name), WalletDatabase::Create(path)), WalletToolReleaseWallet);
+    std::shared_ptr<CWallet> wallet_instance(new CWallet(nullptr /* chain */, WalletLocation(name), CreateWalletDatabase(path)), WalletToolReleaseWallet);
     bool first_run = true;
     DBErrors load_wallet_ret = wallet_instance->LoadWallet(first_run);
     if (load_wallet_ret != DBErrors::LOAD_OK) {
@@ -55,7 +55,7 @@ static std::shared_ptr<CWallet> LoadWallet(const std::string& name, const fs::pa
     }
 
     // dummy chain interface
-    std::shared_ptr<CWallet> wallet_instance(new CWallet(nullptr /* chain */, WalletLocation(name), WalletDatabase::Create(path)), WalletToolReleaseWallet);
+    std::shared_ptr<CWallet> wallet_instance(new CWallet(nullptr /* chain */, WalletLocation(name), CreateWalletDatabase(path)), WalletToolReleaseWallet);
     DBErrors load_wallet_ret;
     try {
         bool first_run;
@@ -107,12 +107,12 @@ static void WalletShowInfo(CWallet* wallet_instance)
 static bool SalvageWallet(const fs::path& path)
 {
     // Create a Database handle to allow for the db to be initialized before recovery
-    std::unique_ptr<WalletDatabase> database = WalletDatabase::Create(path);
+    std::unique_ptr<WalletDatabase> database = CreateWalletDatabase(path);
 
     // Initialize the environment before recovery
     std::string error_string;
     try {
-        WalletBatch::VerifyEnvironment(path, error_string);
+        database->Verify(error_string);
     } catch (const fs::filesystem_error& e) {
         error_string = strprintf("Error loading wallet. %s", fsbridge::get_filesystem_error_message(e));
     }
@@ -133,16 +133,11 @@ bool ExecuteWalletToolFunc(const std::string& command, const std::string& name)
         std::shared_ptr<CWallet> wallet_instance = CreateWallet(name, path);
         if (wallet_instance) {
             WalletShowInfo(wallet_instance.get());
-            wallet_instance->Flush();
+            wallet_instance->Close();
         }
     } else if (command == "info" || command == "salvage") {
         if (!fs::exists(path)) {
             tfm::format(std::cerr, "Error: no wallet file at %s\n", name);
-            return false;
-        }
-        std::string error;
-        if (!WalletBatch::VerifyEnvironment(path, error)) {
-            tfm::format(std::cerr, "Error loading %s. Is wallet being used by other process?\n", name);
             return false;
         }
 
@@ -150,7 +145,7 @@ bool ExecuteWalletToolFunc(const std::string& command, const std::string& name)
             std::shared_ptr<CWallet> wallet_instance = LoadWallet(name, path);
             if (!wallet_instance) return false;
             WalletShowInfo(wallet_instance.get());
-            wallet_instance->Flush(true);
+            wallet_instance->Close();
         } else if (command == "salvage") {
             return SalvageWallet(path);
         }

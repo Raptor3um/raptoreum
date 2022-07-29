@@ -38,7 +38,7 @@ public:
         CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
         NodeContext node;
         chain = interfaces::MakeChain(node);
-        wallet = MakeUnique<CWallet>(chain.get(), WalletLocation(), WalletDatabase::CreateDummy());
+        wallet = MakeUnique<CWallet>(chain.get(), WalletLocation(), CreateMockWalletDatabase());
         bool firstRun;
         wallet->LoadWallet(firstRun);
         AddWallet(wallet);

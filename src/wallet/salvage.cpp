@@ -21,6 +21,11 @@ bool RecoverDatabaseFile(const fs::path& file_path)
     std::string filename;
     std::shared_ptr<BerkeleyEnvironment> env = GetWalletEnv(file_path, filename);
 
+    if (!env->Open(true /* retry */)) {
+        tfm::format(std::cerr, "Error initializing wallet database environment %s!", env->Directory());
+        return false;
+    }
+
     // Recovery procedure:
     // move wallet file to walletfilename.timestamp.bak
     // Call Salvage with fAggressive=true to
@@ -119,7 +124,7 @@ bool RecoverDatabaseFile(const fs::path& file_path)
     NodeContext node;
     auto chain = interfaces::MakeChain(node);
     DbTxn* ptxn = env->TxnBegin();
-    CWallet dummyWallet(chain.get(), WalletLocation(), WalletDatabase::CreateDummy());
+    CWallet dummyWallet(chain.get(), WalletLocation(), CreateDummyWalletDatabase());
     for (KeyValPair& row : salvagedData)
     {
         /* Filter for only private key type KV pairs to be added to the salvaged wallet */

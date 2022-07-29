@@ -11,6 +11,8 @@
 #include <qt/networkstyle.h>
 #include <qt/rpcconsole.h>
 #include <shutdown.h>
+#include <test/test_raptoreum.h>
+#include <univalue.h>
 #include <validation.h>
 
 #if defined(HAVE_CONFIG_H)
@@ -32,8 +34,6 @@
 #include <QtTest/QtTestGui>
 
 #include <new>
-#include <string>
-#include <univalue.h>
 
 namespace {
 //! Call getblockchaininfo RPC and check first field of JSON output.
@@ -68,6 +68,11 @@ void AppTests::appTests()
     }
 #endif
 
+    fs::create_directories([] {
+        BasicTestingSetup test{CBaseChainParams::REGTEST}; // Create temp data directory to backup GUI settings
+        return GetDataDir() / "blocks";
+    }());
+
     m_app.parameterSetup();
     GUIUtil::loadFonts();
     m_app.createOptionsModel(true /* reset settings */);
@@ -84,6 +89,7 @@ void AppTests::appTests()
     m_app.exec();
 
     // Reset global state to avoid interfering with later tests.
+    LogInstance().DisconnectTestLogger();
     AbortShutdown();
     UnloadBlockIndex();
 }

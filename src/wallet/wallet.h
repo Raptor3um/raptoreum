@@ -54,8 +54,6 @@ void UnloadWallet(std::shared_ptr<CWallet>&& wallet);
 
 bool AddWallet(const std::shared_ptr<CWallet>& wallet);
 bool RemoveWallet(const std::shared_ptr<CWallet>& wallet);
-bool HasWallets();
-CWallet *GetFirstWallet();
 std::vector<std::shared_ptr<CWallet>> GetWallets();
 std::shared_ptr<CWallet> GetWallet(const std::string& name);
 std::shared_ptr<CWallet> LoadWallet(interfaces::Chain& chain, const WalletLocation& location, std::string& error, std::string& warning);
@@ -1224,7 +1222,6 @@ public:
 
     DBErrors LoadWallet(bool& fFirstRunRet);
     void AutoLockSmartnodeCollaterals();
-    DBErrors ZapWalletTx(std::vector<CWalletTx>& vWtx);
     DBErrors ZapSelectTx(std::vector<uint256>& vHashIn, std::vector<uint256>& vHashOut) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     bool SetAddressBook(const CTxDestination& address, const std::string& strName, const std::string& purpose);
@@ -1252,7 +1249,10 @@ public:
     std::set<uint256> GetConflicts(const uint256& txid) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     //! Flush wallet (bitdb flush)
-    void Flush(bool shutdown=false);
+    void Flush();
+
+    //! Close wallet database
+    void Close();
 
     /** Wallet is about to be unloaded */
     boost::signals2::signal<void ()> NotifyUnload;

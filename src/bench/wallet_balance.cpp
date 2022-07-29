@@ -20,7 +20,7 @@ static void WalletBalance(benchmark::Bench& bench, const bool set_dirty, const b
 
     NodeContext node;
     std::unique_ptr<interfaces::Chain> chain = interfaces::MakeChain(node);
-    CWallet wallet{chain.get(), WalletLocation(), WalletDatabase::CreateMock()};
+    CWallet wallet{chain.get(), WalletLocation(), CreateMockWalletDatabase()};
     {
         bool first_run;
         if (wallet.LoadWallet(first_run) != DBErrors::LOAD_OK) assert(false);
@@ -47,7 +47,7 @@ static void WalletBalance(benchmark::Bench& bench, const bool set_dirty, const b
 }
 
 static void WalletBalanceDirty(benchmark::Bench& bench) { WalletBalance(bench, /* set_dirty */ true, /* add_watchonly */ true, /* add_mine */ true, 2500); }
-static void WalletBalanceClean(benchmark::Bench& bench) {WalletBalance(bench, /* set_dirty */ false, /* add_watchonly */ true, /* add_mine */ true, 8000); }
+static void WalletBalanceClean(benchmark::Bench& bench) { WalletBalance(bench, /* set_dirty */ false, /* add_watchonly */ true, /* add_mine */ true, 8000); }
 static void WalletBalanceMine(benchmark::Bench& bench) { WalletBalance(bench, /* set_dirty */ false, /* add_watchonly */ false, /* add_mine */ true, 16000); }
 static void WalletBalanceWatch(benchmark::Bench& bench) { WalletBalance(bench, /* set_dirty */ false, /* add_watchonly */ true, /* add_mine */ false, 8000); }
 
