@@ -406,27 +406,35 @@ void SendCoinsDialog::send(QList<SendCoinsRecipient> recipients)
         questionString.append("</span>");
     }
 
-    CAmount txFee = currentTransaction.getTransactionFee();
-    txFee += hasFuture ? getFutureFeesCoin() : 0;
-    if(txFee > 0)
+    CAmount netTxFee = currentTransaction.getTransactionFee();
+    if (netTxFee > 0)
     {
         // append fee string if a fee is required
         questionString.append("<hr /><span style='" + GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_ERROR) + "'>");
-        questionString.append(BitcoinUnits::formatHtmlWithUnit(model->getOptionsModel()->getDisplayUnit(), txFee));
+        questionString.append(BitcoinUnits::formatHtmlWithUnit(model->getOptionsModel()->getDisplayUnit(), netTxFee));
         questionString.append("</span> ");
-        questionString.append(tr("are added as transaction fee"));
+        questionString.append(tr("are added as a network fee"));
 
         if (m_coin_control->IsUsingCoinJoin()) {
             questionString.append(" " + tr("(%1 transactions have higher fees usually due to no change output being allowed)").arg("CoinJoin"));
         }
     }
 
-    // Show some additioinal information
+    if (hasFuture)
+    {
+        CAmount specialTxFees = getFutureFeesCoin();
+        questionString.append("<br /><span style='" + GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_ERROR) + "'>");
+        questionString.append(BitcoinUnits::formatHtmlWithUnit(model->getOptionsModel()->getDisplayUnit(), specialTxFees));
+        questionString.append("</span> ");
+        questionString.append(tr("are added as a special transaction fee"));
+    }
+
+    // Show some additional information
     questionString.append("<hr />");
     // append transaction size
     questionString.append(tr("Transaction size: %1").arg(QString::number((double)currentTransaction.getTransactionSize() / 1000)) + " kB");
     questionString.append("<br />");
-    CFeeRate feeRate(txFee, currentTransaction.getTransactionSize());
+    CFeeRate feeRate(netTxFee, currentTransaction.getTransactionSize());
     questionString.append(tr("Fee rate: %1").arg(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), feeRate.GetFeePerK())) + "/kB");
 
     if (m_coin_control->IsUsingCoinJoin()) {
@@ -446,7 +454,10 @@ void SendCoinsDialog::send(QList<SendCoinsRecipient> recipients)
 
     // add total amount in all subdivision units
     questionString.append("<hr />");
-    CAmount totalAmount = currentTransaction.getTotalTransactionAmount() + txFee;
+    CAmount totalAmount = currentTransaction.getTotalTransactionAmount() + netTxFee;
+    if (hasFuture)
+       totalAmount += getFutureFeesCoin();
+
     QStringList alternativeUnits;
     for (BitcoinUnits::Unit u : BitcoinUnits::availableUnits())
     {

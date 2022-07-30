@@ -453,7 +453,7 @@ void SendFuturesDialog::send(QList<SendFuturesRecipient> recipients)
         questionString.append("<span style='" + GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_ERROR) + "'><b>No maturity is set. Transaction will mature as normal.</b></span>");
     }
 
-    // Show some additioinal information
+    // Show some additional information
     questionString.append("<hr />");
     // append transaction size
     questionString.append(tr("Transaction size: %1").arg(QString::number((double)currentTransaction.getTransactionSize() / 1000)) + " kB");

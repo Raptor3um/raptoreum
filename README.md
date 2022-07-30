@@ -4,7 +4,7 @@ Raptoreum Core staging tree 0.17
 |CI|master|develop|
 |-|-|-|
 
-The name Raptoreum is derived from the Victoria term for a bird of prey and ium/eum place for a pertaining to in this case birds of prey. The name comes from the team’s extensive experience in the security field with top level skills covering all aspects of it. This is a unique strength in the crypto community and will leverage well into a successful project.
+The name Raptoreum is derived from the Victorian term for a bird of prey and ium/eum place for a pertaining to in this case birds of prey. The name comes from the team’s extensive experience in the security field with top level skills covering all aspects of it. This is a unique strength in the crypto community and will leverage well into a successful project.
 
 Introduction
 Raptoreum began as the fairly simple idea, introducing smart contracts which would allow on chain, trustless transfers (goodbye centralized marketplaces) on the Ravencoin codebase, however with the automation of assets and RTM (Raptoreum).

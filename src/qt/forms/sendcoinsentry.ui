@@ -166,10 +166,10 @@
       <item>
        <widget class="QCheckBox" name="checkboxSubtractFeeFromAmount">
         <property name="toolTip">
-         <string>The fee will be deducted from the amount being sent. The recipient will receive a lower amount of Raptoreum than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</string>
+         <string>The network fee will be deducted from the amount being sent. The recipient will receive a lower amount of Raptoreum than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</string>
         </property>
         <property name="text">
-         <string>S&amp;ubtract fee from amount</string>
+         <string>S&amp;ubtract network fee from amount</string>
         </property>
        </widget>
       </item>
@@ -179,7 +179,7 @@
          <string>Enable/Disable future transaction</string>
         </property>
         <property name="text">
-         <string>future</string>
+         <string>Future</string>
         </property>
        </widget>
       </item>
