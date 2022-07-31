@@ -204,10 +204,10 @@ SendCoinsRecipient SendCoinsEntry::getValue()
     // Normal payment
     recipient.address = ui->payTo->text();
     recipient.label = ui->addAsLabel->text();
-    CAmount tmp = ui->payAmount->value();
+    CAmount amount = ui->payAmount->value();
     if (ui->checkboxSubtractFeeFromAmount->isChecked() && ui->futureCb->isChecked())
-    tmp -= getFutureFees() * COIN;
-    recipient.amount = tmp;
+    amount -= getFutureFees() * COIN;
+    recipient.amount = amount;
     recipient.message = ui->messageTextLabel->text();
     recipient.fSubtractFeeFromAmount = (ui->checkboxSubtractFeeFromAmount->checkState() == Qt::Checked);
     //std::cout << " ui->futureCb->isChecked() " << ui->futureCb->isChecked() << "\n";
