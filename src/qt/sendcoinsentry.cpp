@@ -206,7 +206,7 @@ SendCoinsRecipient SendCoinsEntry::getValue()
     recipient.label = ui->addAsLabel->text();
     CAmount amount = ui->payAmount->value();
     if (ui->checkboxSubtractFeeFromAmount->isChecked() && ui->futureCb->isChecked())
-    amount -= getFutureFees() * COIN;
+       amount -= getFutureFeesCoin();
     recipient.amount = amount;
     recipient.message = ui->messageTextLabel->text();
     recipient.fSubtractFeeFromAmount = (ui->checkboxSubtractFeeFromAmount->checkState() == Qt::Checked);
