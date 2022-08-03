@@ -366,7 +366,7 @@ void SendCoinsDialog::send(QList<SendCoinsRecipient> recipients)
                 } else {
                     recipientElement.append("This transaction will likely mature based on time.");
                 }
-            } else if(recipients[0].maturity <= 0 && recipients[0].locktime <= 0){
+            else if(recipients[0].maturity < 0 && recipients[0].locktime < 0){
                 recipientElement.append("<span style='" + GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_ERROR) + "'><b>No maturity is set. Transaction will mature as normal.</b></span>");
             }
         }
