@@ -2059,8 +2059,8 @@ bool CWalletTx::isFutureSpendable(unsigned int outputIndex) const
         // confirmedTime = currentTime if it is not confirmed so that time maturity math does not need special case
         if(confirmedTime < 0) confirmedTime = adjustCurrentTime;
         if(futureTx.lockOutputIndex == outputIndex) {
-            bool isBlockMature = futureTx.maturity > 0 && maturity >= futureTx.maturity;
-            bool isTimeMature = futureTx.lockTime > 0 && adjustCurrentTime - confirmedTime >= futureTx.lockTime;
+            bool isBlockMature = futureTx.maturity >= 0 && maturity >= futureTx.maturity;
+            bool isTimeMature = futureTx.lockTime >= 0 && adjustCurrentTime - confirmedTime >= futureTx.lockTime;
             isCoinSpendable = isBlockMature || isTimeMature;
         }
         else {

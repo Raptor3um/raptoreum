@@ -84,7 +84,7 @@ QString TransactionDesc::FutureTxDescToHTML(const interfaces::WalletTx& wtx, con
         strHTML += "<b>Future Amount:</b> " + BitcoinUnits::formatHtmlWithUnit(unit, ftxValue) + "<br>";
         if (status.is_in_main_chain)
         {
-        	if(ftx.maturity > 0) {
+        	if(ftx.maturity >= 0) {
 				strHTML += tr("<b>Maturity Block:</b> %1").arg(maturityBlock);
 				if(maturityBlock >= currentHeight)
 				{
@@ -101,7 +101,7 @@ QString TransactionDesc::FutureTxDescToHTML(const interfaces::WalletTx& wtx, con
         	}
         }
 	    
-        if(ftx.lockTime > 0){
+        if(ftx.lockTime >= 0){
             strHTML += "<b>Maturity Time:</b> " + GUIUtil::dateTimeStr(maturityTime) + "<br>";
             strHTML += tr("<b>Locked Time:</b><em> %1 seconds</em><br>").arg(ftx.lockTime);
         }else{
