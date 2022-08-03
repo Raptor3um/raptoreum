@@ -81,24 +81,29 @@ void TransactionRecord::getFutureTxStatus(const interfaces::WalletTx& wtx, const
         int64_t maturityTime = wtxStatus.time_received + ftx.lockTime;
         int currentHeight = chainActive.Height();
         //transaction depth in chain against maturity OR relative seconds of transaction against lockTime
-        if (currentHeight >= maturityBlock || GetAdjustedTime() >= maturityTime) {
+        if(status.depth == 0)
+        {
+            status.status = TransactionStatus::Unconfirmed;
+        }
+        else
+        if ((currentHeight >= maturityBlock && ftx.maturity >= 0) || (GetAdjustedTime() >= maturityTime && ftx.lockTime >= 0)) {
             status.status = TransactionStatus::Confirmed;
         } else {
             status.countsForBalance = false;
-           //display transaction is mature in x blocks or transaction is mature in days hh:mm:ss
-            if(maturityBlock >= chainActive.Height())
+            //display transaction is mature in x blocks or transaction is mature in days hh:mm:ss
+            int64_t blockTimeleft = (maturityBlock - chainActive.Height()) * 2 * 60;
+            int64_t Timeleft = maturityTime - GetAdjustedTime();
+            if((blockTimeleft < Timeleft && ftx.maturity >= 0) || ftx.lockTime < 0)
             {
                 status.status = TransactionStatus::OpenUntilBlock;
-                status.open_for = maturityBlock;
+                status.open_for = maturityBlock - chainActive.Height();
             }
-            if(maturityTime >= GetAdjustedTime())
+            else
             {
                 status.status = TransactionStatus::OpenUntilDate;
-                status.open_for = maturityTime;
+                status.open_for = maturityTime; 
             }
-
         }
-
     }
     else
     {

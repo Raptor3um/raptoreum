@@ -54,9 +54,9 @@ static const char *validateFutureCoin(const Coin& coin, int nSpendHeight) {
 			uint32_t confirmedTime = confirmedBlockIndex->GetBlockTime();
 			CFutureTx futureTx;
 			if(GetTxPayload(coin.vExtraPayload, futureTx)) {
-				bool isBlockMature = futureTx.maturity > 0 && nSpendHeight - coin.nHeight >= futureTx.maturity;
-				bool isTimeMature = futureTx.lockTime > 0 && adjustCurrentTime - confirmedTime  >= futureTx.lockTime;
-				bool canSpend = isBlockMature || isTimeMature;
+                bool isBlockMature = futureTx.maturity >= 0 && nSpendHeight - coin.nHeight >= futureTx.maturity;
+                bool isTimeMature = futureTx.lockTime >= 0 && adjustCurrentTime - confirmedTime  >= futureTx.lockTime;
+                bool canSpend = isBlockMature || isTimeMature;
 				if(!canSpend) {
 					return "bad-txns-premature-spend-of-future";
 				}

@@ -352,21 +352,21 @@ void SendCoinsDialog::send(QList<SendCoinsRecipient> recipients)
         //std::cout << rcp.amount << " is future output " << rcp.isFutureOutput << "\n";
         if(rcp.isFutureOutput) {
             hasFuture = true;
-            if(recipients[0].maturity > 0) {
+            if(recipients[0].maturity >= 0) {
                 recipientElement.append(tr("<br>Confirmations in: <b>%1 blocks</b><br />").arg(recipients[0].maturity));
             }
-            if(recipients[0].locktime > 0) {
+            if(recipients[0].locktime >= 0) {
                 recipientElement.append(tr("Time in: <b>%1 seconds from first confirmed</b><br />")
                                                 .arg(recipients[0].locktime));
             }
-            if(recipients[0].maturity > 0 && recipients[0].locktime > 0) {
+            if(recipients[0].maturity >= 0 && recipients[0].locktime >= 0) {
                 int calcBlock = (recipients[0].maturity * 2 * 60);
                 if(calcBlock < recipients[0].locktime) {
                     recipientElement.append("This transaction will likely mature based on confirmations.");
                 } else {
                     recipientElement.append("This transaction will likely mature based on time.");
                 }
-            } else if(recipients[0].maturity <= 0 && recipients[0].locktime <= 0){
+            } else if(recipients[0].maturity < 0 && recipients[0].locktime < 0){
                 recipientElement.append("<span style='" + GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_ERROR) + "'><b>No maturity is set. Transaction will mature as normal.</b></span>");
             }
         }
