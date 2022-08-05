@@ -174,7 +174,7 @@ jobs:
   build-macos:
     name: macos build
     needs: checking-build-version
-    runs-on: macos-10.15
+    runs-on: macos-11
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -196,7 +196,7 @@ jobs:
       - name: configure
         run: |
           ./autogen.sh
-          ./configure --prefix=`pwd`/depends/x86_64-apple-darwin19.6.0
+          ./configure --prefix=`pwd`/depends/x86_64-apple-darwin20.6.0
       - name: build binary
         run: |
           make -j8
