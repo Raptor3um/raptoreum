@@ -589,7 +589,7 @@ void CTxMemPool::addFutureIndex(const CTxMemPoolEntry &entry, const CCoinsViewCa
 
             CFutureIndexValue value = CFutureIndexValue(txOut.nValue, addressType, addressHash, entry.GetHeight(), toHeight, toTime);//  txhash, j, -1, prevout.nValue, addressType, addressHash);
             mapFuture.insert(std::make_pair(key, value));
-            mapFutureInserted.insert(make_pair(tx.GetHash(), key));
+            mapFutureInserted.insert(std::make_pair(tx.GetHash(), key));
         }
     }
 }

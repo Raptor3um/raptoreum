@@ -12,22 +12,10 @@
 #include <serialize.h>
 #include <uint256.h>
 
-struct CSpentIndexKey {
-    uint256 txid;
-    unsigned int outputIndex;
-
-    SERIALIZE_METHODS(CSpentIndexKey, obj)
+struct CSpentIndexKey : IndexKey {
+    CSpentIndexKey(uint256 t, unsigned int i) :
+        IndexKey(t, i)
     {
-        READWRITE(obj.txid, obj.outputIndex);
-    }
-
-    CSpentIndexKey(uint256 t, unsigned int i) {
-        txid = t;
-        outputIndex = i;
-    }
-
-    CSpentIndexKey() {
-        SetNull();
     }
 
     CSpentIndexKey() :

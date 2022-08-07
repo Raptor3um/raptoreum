@@ -8,8 +8,10 @@
 #include <primitives/block.h>
 #include <flat-database.h>
 #include <hash.h>
-#include <util/strencodings.h>
+#include <sync.h>
+#include <util/system.h>
 
+RecursiveMutex cs_pow;
 
 CPowCache* CPowCache::instance = nullptr;
 
@@ -17,26 +19,31 @@ CPowCache& CPowCache::Instance()
 {
     if (CPowCache::instance == nullptr)
     {
-        uint64_t powCacheSize;
-        if (gArgs.IsArgSet("-powcachesize")) {
-            const std::string powCacheSizeStr = gArgs.GetArg("-powcachesize", "");
-            uint64_t powCacheSizeNew;
-            powCacheSize = ParseUInt64(powCacheSizeStr, &powCacheSizeNew); //(uint64_t)(gArgs.GetArg("-powcachesize", "") << 20);
-        } else {
-            powCacheSize = (DEFAULT_POW_CACHE_SIZE << 20); // 52428800 bytes == 50MB
-        }
-        //int64_t powCacheDefSize = (gArgs.GetArg("-powcachesize", "DEFAULT_POW_CACHE_SIZE") << 20); // 52428800 bytes == 50MB
-        bool powCacheValidate = gArgs.GetBoolArg("-powcachevalidate", DEFAULT_VALIDATE_POW_CACHE);
-        //int powCacheSize = powCacheSize == 0 ? DEFAULT_POW_CACHE_SIZE : powCacheSize;
+        int  powCacheSize     = gArgs.GetArg("-powcachesize", DEFAULT_POW_CACHE_SIZE);
+        bool powCacheValidate = gArgs.GetArg("-powcachevalidate", 0) > 0 ? true : false;
+        powCacheSize = powCacheSize == 0 ? DEFAULT_POW_CACHE_SIZE : powCacheSize;
 
         CPowCache::instance = new CPowCache(powCacheSize, powCacheValidate);
     }
     return *instance;
 }
 
+void CPowCache::DoMaintenance()
+{
+    LOCK(cs_pow);
+    // If cache has grown enough, save it:
+    if (cacheMap.size() - nLoadedSize > 100)
+    {
+        CFlatDB<CPowCache> flatDb("powcache.dat", "powCache");
+        flatDb.Dump(*this);
+    }
+}
+
+
 CPowCache::CPowCache(uint64_t maxSize, bool validate)
     : unordered_lru_cache<uint256, uint256, std::hash<uint256>>(maxSize)
     , nVersion(CURRENT_VERSION)
+    , nLoadedSize(0)
     , bValidate(validate)
 {
     if (bValidate) LogPrintf("PowCache: Validation and auto correction enabled\n");

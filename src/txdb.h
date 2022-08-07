@@ -13,7 +13,6 @@
 #include <indices/spent_index.h>
 #include <indices/future_index.h>
 #include <primitives/block.h>
-#include <spentindex.h>
 #include <sync.h>
 
 #include <memory>

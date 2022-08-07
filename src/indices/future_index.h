@@ -10,30 +10,6 @@
 #include <script/script.h>
 #include <serialize.h>
 
-struct IndexKey {
-	uint256 txid;
-	unsigned int outputIndex;
-
-	SERIALIZE_METHODS(IndexKey, obj)
-	{
-		READWRITE(obj.txid, obj.outputIndex);
-	}
-
-	IndexKey(uint256 hash, unsigned int index) {
-		txid = hash;
-		outputIndex = index;
-	}
-
-	IndexKey() {
-		SetNull();
-	}
-
-	void SetNull() {
-		txid.SetNull();
-		outputIndex = 0;
-	}
-};
-
 struct CFutureIndexKey : IndexKey {
     CFutureIndexKey(uint256 hash, unsigned int index) :
         IndexKey(hash, index)

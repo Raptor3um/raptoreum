@@ -258,7 +258,7 @@ bool CBlockTreeDB::UpdateFutureIndex(const std::vector<std::pair<CFutureIndexKey
             LogPrintf("   Remove TxHash: %s, vOutIdx: %d\n", it->first.txid.ToString(), it->first.outputIndex);
             batch.Erase(std::make_pair(DB_FUTUREINDEX, it->first));
         } else {
-            string address = EncodeDestination(CKeyID(it->second.addressHash));
+            std::string address = EncodeDestination(CKeyID(it->second.addressHash));
             LogPrintf("   Add TxHash: %s, vOutIdx: %d", it->first.txid.ToString(), it->first.outputIndex);
             LogPrintf(" (%s, %d, %d, %d, %d, %ld)\n", 
             address, it->second.addressType, it->second.confirmedHeight, it->second.lockedToHeight, it->second.lockedToTime, it->second.satoshis);

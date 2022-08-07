@@ -11,6 +11,8 @@
 #include <unordered_lru_cache.h>
 #include <util/system.h>
 
+extern RecursiveMutex cs_pow;
+
 class CPowCache : public unordered_lru_cache<uint256, uint256, std::hash<uint256>>
 {
 private:
@@ -18,6 +20,7 @@ private:
     static const int CURRENT_VERSION = 1;
 
     int nVersion;
+    int nLoadedSize;
     bool bValidate;
     RecursiveMutex cs;
 
@@ -30,6 +33,7 @@ public:
     void Clear();
     void CheckAndRemove();
     bool IsValidate() const { return bValidate; }
+    void DoMaintenance();
 
     std::string ToString() const;
 
@@ -55,6 +59,7 @@ public:
                 insert(headerHash, powHash);
             }
             nVersion = CURRENT_VERSION;
+            nLoadedSize = cacheMap.size();
         }
         else
         {
@@ -65,6 +70,7 @@ public:
                 READWRITE(headerHash);
                 READWRITE(powHash);
             };
+            nLoadedSize = cacheMap.size();
         }
     }
 
