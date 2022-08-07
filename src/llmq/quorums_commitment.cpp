@@ -7,9 +7,16 @@
 
 #include <chainparams.h>
 #include <logging.h>
+#include <spork.h>
 #include <validation.h>
 
 #include <evo/specialtx.h>
+
+bool IsBlsSigCheckEnabled(int64_t blockTime)
+{
+    int64_t activeTime = sporkManager.GetSporkValue(SPORK_17_QUORUM_DKG_ENABLED);
+    return blockTime >= activeTime;
+}
 
 namespace llmq
 {
@@ -80,7 +87,7 @@ bool CFinalCommitment::Verify(const CBlockIndex* pQuorumIndex, bool checkSigs) c
     }
 
     // sigs are only checked when the block is processed
-    if (checkSigs) {
+    if (checkSigs && IsBlsSigCheckEnabled(pQuorumIndex->GetBlockTime())) {
         uint256 commitmentHash = CLLMQUtils::BuildCommitmentHash(params.type, quorumHash, validMembers, quorumPublicKey, quorumVvecHash);
 
         std::vector<CBLSPublicKey> memberPubKeys;

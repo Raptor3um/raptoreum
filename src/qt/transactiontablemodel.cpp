@@ -524,8 +524,9 @@ QVariant TransactionTableModel::txStatusDecoration(const TransactionRecord *wtx)
     switch(wtx->status.status)
     {
     case TransactionStatus::OpenUntilBlock:
+        return GUIUtil::getIcon("transaction_locked", GUIUtil::ThemedColor::TX_STATUS_OPENUNTILDATE);
     case TransactionStatus::OpenUntilDate:
-        return GUIUtil::getThemedQColor(GUIUtil::ThemedColor::TX_STATUS_OPENUNTILDATE);
+        return GUIUtil::getIcon("transaction_locked", GUIUtil::ThemedColor::TX_STATUS_OPENUNTILDATE);
     case TransactionStatus::Unconfirmed:
         return GUIUtil::getIcon("transaction_0");
     case TransactionStatus::Abandoned:

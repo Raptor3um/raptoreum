@@ -2152,8 +2152,8 @@ bool CWalletTx::isFutureSpendable(unsigned int outputIndex) const
         // confirmedTime = currentTime if it is not confirmed so that time maturity math does not need special case
         if(confirmedTime < 0) confirmedTime = adjustCurrentTime;
         if(futureTx.lockOutputIndex == outputIndex) {
-            bool isBlockMature = futureTx.maturity > 0 && maturity >= futureTx.maturity;
-            bool isTimeMature = futureTx.lockTime > 0 && adjustCurrentTime - confirmedTime >= futureTx.lockTime;
+            bool isBlockMature = futureTx.maturity >= 0 && maturity >= futureTx.maturity;
+            bool isTimeMature = futureTx.lockTime >= 0 && adjustCurrentTime - confirmedTime >= futureTx.lockTime;
             isCoinSpendable = isBlockMature || isTimeMature;
         }
         else {
@@ -3131,7 +3131,7 @@ void CWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const
         if (nDepth == 0 && !pcoin->InMempool())
             continue;
 
-        bool safeTx = pcoin->IsTrusted();
+        bool safeTx = pcoin->IsTrusted(); // This doesn't account for future Tx outputs - we check that below.
 
         if (fOnlySafe && !safeTx) {
             continue;
@@ -3180,9 +3180,9 @@ void CWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const
 
             bool fSpendableIn = ((mine & ISMINE_SPENDABLE) != ISMINE_NO) || (coinControl && coinControl->fAllowWatchOnly && (mine & ISMINE_WATCH_SOLVABLE) != ISMINE_NO);
             bool fSolvableIn = (mine & (ISMINE_SPENDABLE | ISMINE_WATCH_SOLVABLE)) != ISMINE_NO;
-            bool isCoinSpenable = pcoin->isFutureSpendable(i);
+            bool isCoinSpendable = pcoin->isFutureSpendable(i);
 
-            vCoins.push_back(COutput(pcoin, i, nDepth, fSpendableIn, fSolvableIn, safeTx, pcoin->tx->nType == TRANSACTION_FUTURE, isCoinSpenable));
+            vCoins.push_back(COutput(pcoin, i, nDepth, fSpendableIn, fSolvableIn, safeTx && isCoinSpendable, pcoin->tx->nType == TRANSACTION_FUTURE, isCoinSpendable));
             // Checks the sum amount of all UTXO's.
             if (nMinimumSumAmount != MAX_MONEY) {
                 nTotal += pcoin->tx->vout[i].nValue;

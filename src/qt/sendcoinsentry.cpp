@@ -212,7 +212,10 @@ SendCoinsRecipient SendCoinsEntry::getValue()
     // Normal payment
     recipient.address = ui->payTo->text();
     recipient.label = ui->addAsLabel->text();
-    recipient.amount = ui->payAmount->value();
+    CAmount amount = ui->payAmount->value();
+    if (ui->checkboxSubtractFeeFromAmount->isChecked() && ui->futureCb->isChecked())
+       amount -= getFutureFeesCoin();
+    recipient.amount = amount;
     recipient.message = ui->messageTextLabel->text();
     recipient.fSubtractFeeFromAmount = (ui->checkboxSubtractFeeFromAmount->checkState() == Qt::Checked);
     //std::cout << " ui->futureCb->isChecked() " << ui->futureCb->isChecked() << "\n";
@@ -220,6 +223,10 @@ SendCoinsRecipient SendCoinsEntry::getValue()
         recipient.isFutureOutput = true;
         recipient.maturity = ui->maturity->text().isEmpty() ? -1 : std::stoi(ui->maturity->text().toStdString());
         recipient.locktime = ui->locktime->text().isEmpty() ? -1 : std::stol(ui->locktime->text().toStdString());
+    } else {
+        recipient.isFutureOutput = false;
+        recipient.maturity = -1;
+        recipient.locktime = -1;
     }
     return recipient;
 }

@@ -103,9 +103,13 @@ QString TransactionDesc::FutureTxDescToHTML(const interfaces::WalletTx& wtx, con
         		strHTML += tr("<b>Maturity Block:</b> Never<br>");
         	}
         }
-
-        strHTML += "<b>Maturity Time:</b> " + (ftx.lockTime >=0 ? GUIUtil::dateTimeStr(maturityTime) : "Never") + "<br>";
-        strHTML += tr("<b>Locked Time:</b><em> %1 seconds</em><br>").arg(ftx.lockTime);
+	    
+        if(ftx.lockTime >= 0){
+            strHTML += "<b>Maturity Time:</b> " + GUIUtil::dateTimeStr(maturityTime) + "<br>";
+            strHTML += tr("<b>Locked Time:</b><em> %1 seconds</em><br>").arg(ftx.lockTime);
+        }else{
+            strHTML += "<b>Maturity Time:</b> Never <br>";
+        }
         strHTML += tr("<b>Locked Output Index:</b> %1<br>").arg(ftx.lockOutputIndex);
 
     }
