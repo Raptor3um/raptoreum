@@ -87,11 +87,11 @@ void TransactionRecord::getFutureTxStatus(const interfaces::WalletTx& wtx, const
            //display transaction is mature in x blocks or transaction is mature in days hh:mm:ss
             if (maturityBlock >= ::ChainActive().Height()) {
                 status.status = TransactionStatus::OpenUntilBlock;
-                status.open_for = maturityBlock - chainActive.Height();
+                status.open_for = maturityBlock - ::ChainActive().Height();
             }
             if (maturityTime >= GetAdjustedTime()) {
                 status.status = TransactionStatus::OpenUntilDate;
-                status.open_for = maturityTime; 
+                status.open_for = maturityTime;
             }
         }
     } else {
