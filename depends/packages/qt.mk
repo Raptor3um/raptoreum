@@ -7,8 +7,10 @@ $(package)_sha256_hash=26394ec9375d52c1592bd7b689b1619c6b8dbe9b6f91fdd5c35558978
 $(package)_dependencies=openssl
 $(package)_linux_dependencies=freetype fontconfig libxcb libxkbcommon libxcb_util libxcb_util_render libxcb_util_keysyms libxcb_util_image libxcb_util_wm
 $(package)_qt_libs=corelib network widgets gui plugins testlib
-ifneq ($(build_os),darwin)
+ifneq ($(host_os),darwin)
+ifneq ($(host_os),mingw32)
 $(package)_qt_libs += dbus
+endif
 endif
 $(package)_linguist_tools = lrelease lupdate lconvert
 $(package)_patches = qt.pro
