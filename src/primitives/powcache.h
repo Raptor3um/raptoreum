@@ -21,6 +21,7 @@ class CPowCache : public unordered_lru_cache<uint256, uint256, std::hash<uint256
 
         int  nVersion;
         int  nLoadedSize;
+        int nMaxLoadSize;
         bool bValidate;
         CCriticalSection cs;
 
@@ -28,7 +29,7 @@ class CPowCache : public unordered_lru_cache<uint256, uint256, std::hash<uint256
         static CPowCache& Instance();
 
 
-        CPowCache(int maxSize = DEFAULT_POW_CACHE_SIZE, bool validate = false);
+        CPowCache(int maxSize = DEFAULT_POW_CACHE_SIZE, bool validate = false, int maxLoadSize = DEFAULT_MAX_LOAD_SIZE);
         virtual ~CPowCache();
 
         void Clear();

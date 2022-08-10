@@ -437,8 +437,29 @@ static Consensus::LLMQParams llmq_test_v17 = {
 };
 
 // Used for Platform
-static Consensus::LLMQParams llmq100_67 = {
-        .type = Consensus::LLMQ_100_67,
+static Consensus::LLMQParams llmq100_67_mainnet = {
+        .type = Consensus::LLMQ_100_67_mainnet,
+        .name = "llmq_100_67",
+        .size = 100,
+        .minSize = 80,
+        .threshold = 67,
+
+        .dkgInterval = 30, // one DKG per hour
+        .dkgPhaseBlocks = 2,
+        .dkgMiningWindowStart = 10, // dkgPhaseBlocks * 5 = after finalization
+        .dkgMiningWindowEnd = 18,
+        .dkgBadVotesThreshold = 80,
+
+        .signingActiveQuorumCount = 24, // a full day worth of LLMQs
+
+        .keepOldConnections = 25,
+        .recoveryMembers = 50,
+};
+
+
+// Used for Platform
+static Consensus::LLMQParams llmq100_67_testnet = {
+        .type = Consensus::LLMQ_100_67_testnet,
         .name = "llmq_100_67",
         .size = 100,
         .minSize = 80,
@@ -506,7 +527,7 @@ public:
         consensus.nRuleChangeActivationThreshold = 1916; // 95% of 2016
         consensus.nMinerConfirmationWindow = 2016; // nPowTargetTimespan / nPowTargetSpacing
         consensus.smartnodePaymentFixedBlock = 6800;
-        consensus.nFutureForkBlock = 9999999;
+        consensus.nFutureForkBlock = 396000;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 1199145601; // January 1, 2008
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 1230767999; // December 31, 2008
@@ -591,11 +612,10 @@ public:
         consensus.llmqs[Consensus::LLMQ_50_60] = llmq3_60;
         consensus.llmqs[Consensus::LLMQ_400_60] = llmq20_60;
         consensus.llmqs[Consensus::LLMQ_400_85] = llmq20_85;
-        consensus.llmqs[Consensus::LLMQ_100_67] = llmq100_67;
+        consensus.llmqs[Consensus::LLMQ_100_67_mainnet] = llmq100_67_mainnet;
         consensus.llmqTypeChainLocks = Consensus::LLMQ_400_60;
         consensus.llmqTypeInstantSend = Consensus::LLMQ_50_60;
-        consensus.llmqTypePlatform = Consensus::LLMQ_100_67;
-
+        consensus.llmqTypePlatform = Consensus::LLMQ_100_67_mainnet;
         fDefaultConsistencyChecks = false;
         fRequireStandard = true;
         fRequireRoutableExternalIP = true;
@@ -733,10 +753,10 @@ public:
         consensus.llmqs[Consensus::LLMQ_50_60] = llmq3_60;
         consensus.llmqs[Consensus::LLMQ_400_60] = llmq20_60;
         consensus.llmqs[Consensus::LLMQ_400_85] = llmq20_85;
-        consensus.llmqs[Consensus::LLMQ_100_67] = llmq100_67;
+        consensus.llmqs[Consensus::LLMQ_100_67_testnet] = llmq100_67_testnet;
         consensus.llmqTypeChainLocks = Consensus::LLMQ_400_60;
         consensus.llmqTypeInstantSend = Consensus::LLMQ_50_60;
-        consensus.llmqTypePlatform = Consensus::LLMQ_100_67;
+        consensus.llmqTypePlatform = Consensus::LLMQ_100_67_testnet;
 
         consensus.nCollaterals = SmartnodeCollaterals(
           {  {30000, 20000 * COIN}, {60000, 40000 * COIN}, {INT_MAX, 60000 * COIN}  },
@@ -883,10 +903,10 @@ public:
         consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
         consensus.llmqs[Consensus::LLMQ_400_60] = llmq400_60;
         consensus.llmqs[Consensus::LLMQ_400_85] = llmq400_85;
-        consensus.llmqs[Consensus::LLMQ_100_67] = llmq100_67;
+        consensus.llmqs[Consensus::LLMQ_100_67_testnet] = llmq100_67_testnet;
         consensus.llmqTypeChainLocks = Consensus::LLMQ_50_60;
         consensus.llmqTypeInstantSend = Consensus::LLMQ_50_60;
-        consensus.llmqTypePlatform = Consensus::LLMQ_100_67;
+        consensus.llmqTypePlatform = Consensus::LLMQ_100_67_testnet;
 
         fDefaultConsistencyChecks = false;
         fRequireStandard = false;
@@ -1137,8 +1157,8 @@ void CChainParams::UpdateLLMQParams(size_t totalMnCount, int height, bool lowLLM
     if(lastCheckHeight < height &&
     		(lastCheckMnCount != totalMnCount || lastCheckedLowLLMQParams != lowLLMQParams) &&
 			(isNotLLMQsMiningPhase = !IsLLMQsMiningPhase(height))) {
-	    LogPrintf("---UpdateLLMQParams %d-%d-%ld-%ld-%d\n", lastCheckHeight, height, lastCheckMnCount, totalMnCount, isNotLLMQsMiningPhase);
-		lastCheckMnCount = totalMnCount;
+        LogPrintf("---UpdateLLMQParams %d-%d-%ld-%ld-%d\n", lastCheckHeight, height, lastCheckMnCount, totalMnCount, isNotLLMQsMiningPhase);
+        lastCheckMnCount = totalMnCount;
 		lastCheckedLowLLMQParams = lowLLMQParams;
 		lastCheckHeight = height;
         bool isTestNet = strcmp(Params().NetworkIDString().c_str(),"testnet") == 0;

@@ -74,7 +74,6 @@ WalletView::WalletView(QWidget* parent) :
 
     receiveCoinsPage = new ReceiveCoinsDialog();
     sendCoinsPage = new SendCoinsDialog();
-    sendFuturesPage = new SendFuturesDialog();
     coinJoinCoinsPage = new SendCoinsDialog(true);
 
     usedSendingAddressesPage = new AddressBookPage(AddressBookPage::ForEditing, AddressBookPage::SendingTab, this);

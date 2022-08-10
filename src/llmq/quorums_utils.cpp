@@ -73,7 +73,11 @@ static bool EvalSpork(Consensus::LLMQType llmqType, int64_t spork_value)
     if (spork_value == 0) {
         return true;
     }
-    if (spork_value == 1 && llmqType != Consensus::LLMQ_100_67 && llmqType != Consensus::LLMQ_400_60 && llmqType != Consensus::LLMQ_400_85) {
+    if (spork_value == 1 &&
+            llmqType != Consensus::LLMQ_100_67_mainnet &&
+            llmqType != Consensus::LLMQ_100_67_testnet &&
+            llmqType != Consensus::LLMQ_400_60 &&
+            llmqType != Consensus::LLMQ_400_85) {
         return true;
     }
     return false;
@@ -307,7 +311,8 @@ bool CLLMQUtils::IsQuorumTypeEnabled(Consensus::LLMQType llmqType, const CBlockI
         case Consensus::LLMQ_400_60:
         case Consensus::LLMQ_400_85:
             break;
-        case Consensus::LLMQ_100_67:
+        case Consensus::LLMQ_100_67_mainnet:
+        case Consensus::LLMQ_100_67_testnet:
         case Consensus::LLMQ_TEST_V17:
             if(!f_v17_Active) {
                 return false;

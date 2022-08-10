@@ -59,7 +59,8 @@ extern int nWalletBackups;
 // Application startup time (used for uptime calculation)
 int64_t GetStartupTime();
 
-static const int DEFAULT_POW_CACHE_SIZE = 150000;
+static const int DEFAULT_POW_CACHE_SIZE = 1000000;
+static const int DEFAULT_MAX_LOAD_SIZE = 720;
 
 /** Signals for translation. */
 class CTranslationInterface

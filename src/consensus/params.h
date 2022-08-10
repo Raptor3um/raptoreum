@@ -50,7 +50,8 @@ enum LLMQType : uint8_t
     LLMQ_50_60 = 1, // 50 members, 30 (60%) threshold, one per hour
     LLMQ_400_60 = 2, // 400 members, 240 (60%) threshold, one every 12 hours
     LLMQ_400_85 = 3, // 400 members, 340 (85%) threshold, one every 24 hours
-    LLMQ_100_67 = 4, // 100 members, 67 (67%) threshold, one per hour
+    LLMQ_100_67_mainnet = 4, // 100 members, 67 (67%) threshold, one per hour
+    LLMQ_100_67_testnet = 5, // 100 members, 67 (67%) threshold, one per 24 blocks
 	// these are LLMQ set when network still young
 //	LLMQ_10_60 = 4, // 10 members, 6 (60%) threshold, one per hour
 //	LLMQ_40_60 = 5, // 40 members, 24 (60%) threshold, one every 12 hours
