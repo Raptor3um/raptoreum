@@ -53,7 +53,7 @@ jobs:
       - name: create release candidate version
         if: ${{ github.event_name != 'pull_request' && contains(github.ref, 'release/')}}
         run: |
-          echo "BUILD_VERSION=${{ steps.candidate-version.outputs.value }}" > version.txt
+          echo "BUILD_VERSION=${{ steps.release-candidate-version.outputs.value }}" > version.txt
       - name: create snapshot version
         if: ${{ github.event_name == 'pull_request' || endsWith(github.ref, 'develop') || contains(github.ref, 'ft/')}}
         run: |
