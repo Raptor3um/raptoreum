@@ -64,10 +64,10 @@ jobs:
           name: version
           path: version.txt
 
-  build-ubuntu22:
-    name: Ubuntu22 build
+  build-ubuntu18:
+    name: Ubuntu18 build
     needs: checking-build-version
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-18.04
     steps:
       - name: Checkout
         uses: actions/checkout@v2
