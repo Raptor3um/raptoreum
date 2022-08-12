@@ -13,7 +13,6 @@
 #include <qt/overviewpage.h>
 #include <qt/receivecoinsdialog.h>
 #include <qt/sendcoinsdialog.h>
-#include <qt/sendfuturesdialog.h>
 #include <qt/signverifymessagedialog.h>
 #include <qt/transactionrecord.h>
 #include <qt/transactiontablemodel.h>
@@ -84,7 +83,6 @@ WalletView::WalletView(QWidget* parent) :
     addWidget(transactionsPage);
     addWidget(receiveCoinsPage);
     addWidget(sendCoinsPage);
-    addWidget(sendFuturesPage);
     addWidget(coinJoinCoinsPage);
 
     QSettings settings;
@@ -113,12 +111,6 @@ WalletView::WalletView(QWidget* parent) :
     // Pass through messages from SendCoinsDialog
     connect(sendCoinsPage, SIGNAL(message(QString,QString,unsigned int)), this, SIGNAL(message(QString,QString,unsigned int)));
     connect(coinJoinCoinsPage, SIGNAL(message(QString, QString, unsigned int)), this, SIGNAL(message(QString, QString, unsigned int)));
-
-    // Pass through messages from sendFuturesPage
-    connect(sendFuturesPage, SIGNAL(message(QString,QString,unsigned int)), this, SIGNAL(message(QString,QString,unsigned int)));
-
-    // Pass through messages from sendFuturesPage
-    connect(sendFuturesPage, SIGNAL(message(QString,QString,unsigned int)), this, SIGNAL(message(QString,QString,unsigned int)));
 
     // Pass through messages from transactionView
     connect(transactionView, SIGNAL(message(QString,QString,unsigned int)), this, SIGNAL(message(QString,QString,unsigned int)));
@@ -181,7 +173,6 @@ void WalletView::setWalletModel(WalletModel *_walletModel)
     }
     receiveCoinsPage->setModel(_walletModel);
     sendCoinsPage->setModel(_walletModel);
-    sendFuturesPage->setModel(_walletModel);
     coinJoinCoinsPage->setModel(_walletModel);
     usedReceivingAddressesPage->setModel(_walletModel ? _walletModel->getAddressTableModel() : nullptr);
     usedSendingAddressesPage->setModel(_walletModel ? _walletModel->getAddressTableModel() : nullptr);
@@ -277,14 +268,6 @@ void WalletView::gotoCoinJoinCoinsPage(QString addr)
 
     if (!addr.isEmpty())
         coinJoinCoinsPage->setAddress(addr);
-}
-
-void WalletView::gotoSendFuturesPage(QString addr)
-{
-    setCurrentWidget(sendFuturesPage);
-
-    if (!addr.isEmpty())
-        sendFuturesPage->setAddress(addr);
 }
 
 void WalletView::gotoSignMessageTab(QString addr)
