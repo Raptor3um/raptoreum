@@ -438,7 +438,7 @@ static Consensus::LLMQParams llmq_test_v17 = {
 
 // Used for Platform
 static Consensus::LLMQParams llmq100_67_mainnet = {
-        .type = Consensus::LLMQ_100_67_mainnet,
+        .type = Consensus::LLMQ_100_67,
         .name = "llmq_100_67",
         .size = 100,
         .minSize = 80,
@@ -459,7 +459,7 @@ static Consensus::LLMQParams llmq100_67_mainnet = {
 
 // Used for Platform
 static Consensus::LLMQParams llmq100_67_testnet = {
-        .type = Consensus::LLMQ_100_67_testnet,
+        .type = Consensus::LLMQ_100_67,
         .name = "llmq_100_67",
         .size = 100,
         .minSize = 80,
@@ -527,13 +527,13 @@ public:
         consensus.nRuleChangeActivationThreshold = 1916; // 95% of 2016
         consensus.nMinerConfirmationWindow = 2016; // nPowTargetTimespan / nPowTargetSpacing
         consensus.smartnodePaymentFixedBlock = 6800;
-        consensus.nFutureForkBlock = 396000;
+        consensus.nFutureForkBlock = 410000;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 1199145601; // January 1, 2008
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 1230767999; // December 31, 2008
 
         consensus.vDeployments[Consensus::DEPLOYMENT_V17].bit = 0;
-        consensus.vDeployments[Consensus::DEPLOYMENT_V17].nStartTime = 9999999999; // 1643670001; // Feb 01, 2022 00:00:01hrs
+        consensus.vDeployments[Consensus::DEPLOYMENT_V17].nStartTime = 1664323200; // 1643670001; // Sep 28, 2022 00:00:00hrs
         consensus.vDeployments[Consensus::DEPLOYMENT_V17].nTimeout = 9999999999; // 1675206001; // Feb 01, 2023 00:00:01hrs
         consensus.vDeployments[Consensus::DEPLOYMENT_V17].nWindowSize = 4032;
         consensus.vDeployments[Consensus::DEPLOYMENT_V17].nThresholdStart = 3226; // 80% of 4032
@@ -612,10 +612,10 @@ public:
         consensus.llmqs[Consensus::LLMQ_50_60] = llmq3_60;
         consensus.llmqs[Consensus::LLMQ_400_60] = llmq20_60;
         consensus.llmqs[Consensus::LLMQ_400_85] = llmq20_85;
-        consensus.llmqs[Consensus::LLMQ_100_67_mainnet] = llmq100_67_mainnet;
+        consensus.llmqs[Consensus::LLMQ_100_67] = llmq100_67_mainnet;
         consensus.llmqTypeChainLocks = Consensus::LLMQ_400_60;
         consensus.llmqTypeInstantSend = Consensus::LLMQ_50_60;
-        consensus.llmqTypePlatform = Consensus::LLMQ_100_67_mainnet;
+        consensus.llmqTypePlatform = Consensus::LLMQ_100_67;
         fDefaultConsistencyChecks = false;
         fRequireStandard = true;
         fRequireRoutableExternalIP = true;
@@ -753,10 +753,10 @@ public:
         consensus.llmqs[Consensus::LLMQ_50_60] = llmq3_60;
         consensus.llmqs[Consensus::LLMQ_400_60] = llmq20_60;
         consensus.llmqs[Consensus::LLMQ_400_85] = llmq20_85;
-        consensus.llmqs[Consensus::LLMQ_100_67_testnet] = llmq100_67_testnet;
+        consensus.llmqs[Consensus::LLMQ_100_67] = llmq100_67_testnet;
         consensus.llmqTypeChainLocks = Consensus::LLMQ_400_60;
         consensus.llmqTypeInstantSend = Consensus::LLMQ_50_60;
-        consensus.llmqTypePlatform = Consensus::LLMQ_100_67_testnet;
+        consensus.llmqTypePlatform = Consensus::LLMQ_100_67;
 
         consensus.nCollaterals = SmartnodeCollaterals(
           {  {30000, 20000 * COIN}, {60000, 40000 * COIN}, {INT_MAX, 60000 * COIN}  },
@@ -903,10 +903,10 @@ public:
         consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
         consensus.llmqs[Consensus::LLMQ_400_60] = llmq400_60;
         consensus.llmqs[Consensus::LLMQ_400_85] = llmq400_85;
-        consensus.llmqs[Consensus::LLMQ_100_67_testnet] = llmq100_67_testnet;
+        consensus.llmqs[Consensus::LLMQ_100_67] = llmq100_67_testnet;
         consensus.llmqTypeChainLocks = Consensus::LLMQ_50_60;
         consensus.llmqTypeInstantSend = Consensus::LLMQ_50_60;
-        consensus.llmqTypePlatform = Consensus::LLMQ_100_67_testnet;
+        consensus.llmqTypePlatform = Consensus::LLMQ_100_67;
 
         fDefaultConsistencyChecks = false;
         fRequireStandard = false;

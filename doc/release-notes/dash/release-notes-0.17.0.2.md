@@ -76,7 +76,7 @@ provided in [DIP-0021](https://github.com/dashpay/dips/blob/master/dip-0021.md).
 Platform support
 ----------------
 Support for Dash Platform has been expanded through the addition of a new
-quorum type `LLMQ_100_67_mainnet` and `LLMQ_100_67_testnet`, several RPCs, and a way to limit Platform RPC access
+quorum type `LLMQ_100_67` and `LLMQ_100_67_testnet`, several RPCs, and a way to limit Platform RPC access
 to a subset of allowed RPCs, specifically:
 - `getbestblockhash`
 - `getbestchainlock`
