@@ -6,6 +6,7 @@ on:
       - master
       - develop
       - 'ft/*'
+      - 'release/*'
   pull_request:
     branches:
       - develop
@@ -17,7 +18,7 @@ env:
 jobs:
   checking-build-version:
     name: Checking Build Versioning
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     steps:
       - name: Trigger by
         run: |
@@ -31,6 +32,13 @@ jobs:
         with:
           path: build.properties
           property: 'release-version'
+      - name: Read build.properties key for release candidate
+        if: ${{ github.event_name != 'pull_request' && contains(github.ref, 'release/')}}
+        id: release-candidate-version
+        uses: christian-draeger/read-properties@1.0.1
+        with:
+          path: build.properties
+          property: 'candidate-version'
       - name: Read build.properties key for develop
         if: ${{ github.event_name == 'pull_request' || endsWith(github.ref, 'develop') || contains(github.ref, 'ft/')}}
         id: snapshot-version
@@ -38,10 +46,14 @@ jobs:
         with:
           path: build.properties
           property: 'snapshot-version'
-      - name: create version
+      - name: create release version
         if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/master'}}
         run: |
           echo "BUILD_VERSION=${{ steps.release-version.outputs.value }}" > version.txt
+      - name: create release candidate version
+        if: ${{ github.event_name != 'pull_request' && contains(github.ref, 'release/')}}
+        run: |
+          echo "BUILD_VERSION=${{ steps.release-candidate-version.outputs.value }}" > version.txt
       - name: create snapshot version
         if: ${{ github.event_name == 'pull_request' || endsWith(github.ref, 'develop') || contains(github.ref, 'ft/')}}
         run: |
