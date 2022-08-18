@@ -447,8 +447,18 @@ void TransactionRecord::updateStatus(const interfaces::WalletTx& wtx, const inte
 
 bool TransactionRecord::statusUpdateNeeded(int numBlocks, int chainLockHeight) const
 {
-    return status.cur_num_blocks != numBlocks || status.needsUpdate
-        || (!status.lockedByChainLocks && status.cachedChainLockHeight != chainLockHeight);
+    bool numBlocksChanged = status.cur_num_blocks != numBlocks;
+
+    // Block height changes do not matter for final states:
+    bool completed =
+        status.status == TransactionStatus::Confirmed ||
+        status.status == TransactionStatus::Abandoned ||
+        status.status == TransactionStatus::NotAccepted;
+
+    return
+        status.needsUpdate ||
+        (numBlocksChanged && !completed) ||
+        (!status.lockedByChainLocks && status.cachedChainLockHeight != chainLockHeight);
 }
 
 void TransactionRecord::updateLabel(interfaces::Wallet& wallet)
