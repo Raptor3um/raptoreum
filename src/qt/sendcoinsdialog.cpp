@@ -24,6 +24,7 @@
 #include <wallet/fees.h>
 #include <wallet/wallet.h>
 #include <future/fee.h>
+#include <validation.h>
 
 #include <QFontMetrics>
 #include <QScrollBar>
@@ -237,7 +238,7 @@ void SendCoinsDialog::OnDisplay() {
     for (int i = 0; i < ui->entries->count(); ++i) {
         SendCoinsEntry *entry = qobject_cast<SendCoinsEntry*>(ui->entries->itemAt(i)->widget());
         if(entry) {
-            entry->SetFutureVisible(sporkManager.IsSporkActive(SPORK_22_SPECIAL_TX_FEE) && i == 0);
+            entry->SetFutureVisible(sporkManager.IsSporkActive(SPORK_22_SPECIAL_TX_FEE) && Params().IsFutureActive(chainActive.Tip()) && i == 0);
         }
     }
 }
@@ -518,7 +519,8 @@ SendCoinsEntry *SendCoinsDialog::addEntry()
 {
 
     SendCoinsEntry* entry = new SendCoinsEntry(this, sporkManager.IsSporkActive(SPORK_22_SPECIAL_TX_FEE)
-                                                                            && ui->entries->count() != 0);
+                                                            && Params().IsFutureActive(chainActive.Tip())
+                                                            && ui->entries->count() != 0);
     entry->setModel(model);
     ui->entries->addWidget(entry);
     connect(entry, SIGNAL(removeEntry(SendCoinsEntry*)), this, SLOT(removeEntry(SendCoinsEntry*)));
