@@ -43,7 +43,7 @@ SendCoinsEntry::SendCoinsEntry(QWidget* parent, bool hideFuture) :
 
     GUIUtil::updateFonts();
     this->futureToggleChanged();
-    ui->futureCb->setVisible(!hideFuture);
+    ui->futureCb->setVisible(hideFuture);
     ui->maturity->setValidator(new QIntValidator(-1, INT_MAX, this));
     ui->locktime->setValidator(new QIntValidator(-1, INT_MAX, this));
     // Connect signals
