@@ -693,6 +693,9 @@ void SendCoinsDialog::processSendCoinsReturn(const WalletModel::SendCoinsReturn 
         msgParams.first = tr("Payment request expired.");
         msgParams.second = CClientUIInterface::MSG_ERROR;
         break;
+    case WalletModel::AmountExceedsmaxmoney:
+        msgParams.first = tr("The amount to pay exceeds the limit of 21 million per transaction.");
+        break;    
     // included to prevent a compiler warning.
     case WalletModel::OK:
     default:

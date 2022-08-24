@@ -21,6 +21,7 @@
 #include <wallet/coincontrol.h>
 #include <wallet/wallet.h>
 #include <spork.h>
+#include <validation.h>
 
 #include <stdint.h>
 
@@ -260,7 +261,19 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
     if (fSubtractFeeFromAmount && newTx)
         transaction.reassignAmounts();
 
-    if(!newTx)
+    if(newTx){
+        if(!Params().IsFutureActive(chainActive.Tip())){
+            CAmount subtotal = total;
+            if (nChangePosRet >= 0)
+                subtotal += newTx->get().vout.at(nChangePosRet).nValue;
+            if(!fSubtractFeeFromAmount)
+                subtotal += nFeeRequired;
+            if (subtotal > OLD_MAX_MONEY){
+                return AmountExceedsmaxmoney;
+            }
+        }
+    }
+    else
     {
         if(!fSubtractFeeFromAmount && (total + nFeeRequired) > nBalance)
         {
