@@ -520,7 +520,7 @@ SendCoinsEntry *SendCoinsDialog::addEntry()
 
     SendCoinsEntry* entry = new SendCoinsEntry(this, sporkManager.IsSporkActive(SPORK_22_SPECIAL_TX_FEE)
                                                             && Params().IsFutureActive(chainActive.Tip())
-                                                            && ui->entries->count() != 0);
+                                                            && ui->entries->count() == 0);
     entry->setModel(model);
     ui->entries->addWidget(entry);
     connect(entry, SIGNAL(removeEntry(SendCoinsEntry*)), this, SLOT(removeEntry(SendCoinsEntry*)));
