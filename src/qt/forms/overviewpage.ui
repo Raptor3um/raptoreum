@@ -469,7 +469,7 @@
             <item row="3" column="1">
              <widget class="QLabel" name="labelAmountRounds">
               <property name="text">
-               <string>0 RAPTOREUM / 0 Rounds</string>
+               <string notr="true">0 RAPTOREUM / 0 Rounds</string>
               </property>
              </widget>
             </item>
