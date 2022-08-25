@@ -204,7 +204,8 @@ public:
         TransactionCreationFailed, // Error returned when wallet is still locked
         TransactionCommitFailed,
         AbsurdFee,
-        PaymentRequestExpired
+        PaymentRequestExpired,
+        AmountExceedsmaxmoney
     };
 
     enum EncryptionStatus

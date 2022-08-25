@@ -768,7 +768,8 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
 
         CAmount nFees = 0;
         CAmount specialTxFees = 0;
-        if (!Consensus::CheckTxInputs(tx, state, view, GetSpendHeight(view), nFees, specialTxFees, true)) {
+        bool isV17active = Params().IsFutureActive(chainActive.Tip());
+        if (!Consensus::CheckTxInputs(tx, state, view, GetSpendHeight(view), nFees, specialTxFees, isV17active, true)) {
             return error("%s: Consensus::CheckTxInputs: %s, %s", __func__, tx.GetHash().ToString(), FormatStateMessage(state));
         }
 
@@ -2234,6 +2235,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
     int64_t nTime2_1 = GetTimeMicros(); nTimeProcessSpecial += nTime2_1 - nTime2;
     LogPrint(BCLog::BENCHMARK, "      - ProcessSpecialTxsInBlock: %.2fms [%.2fs (%.2fms/blk)]\n", MILLI * (nTime2_1 - nTime2), nTimeProcessSpecial * MICRO, nTimeProcessSpecial * MILLI / nBlocksTotal);
 
+    bool isV17active = Params().IsFutureActive(chainActive.Tip());
     for (unsigned int i = 0; i < block.vtx.size(); i++)
     {
         const CTransaction &tx = *(block.vtx[i]);
@@ -2246,17 +2248,17 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
             CAmount txfee = 0;
             CAmount specialTxFee = 0;
             bool isSyncing = IsInitialBlockDownload();
-            if (!Consensus::CheckTxInputs(tx, state, view, pindex->nHeight, txfee, specialTxFee, !isSyncing)) {
+            if (!Consensus::CheckTxInputs(tx, state, view, pindex->nHeight, txfee, specialTxFee, isV17active, !isSyncing)) {
                 return error("%s: Consensus::CheckTxInputs: %s, %s", __func__, tx.GetHash().ToString(), FormatStateMessage(state));
             }
             nFees += txfee;
             specialTxFees += specialTxFee;
-            if (!MoneyRange(nFees)) {
+            if (!MoneyRange(nFees, isV17active)) {
                 return state.DoS(100, error("%s: accumulated fee in the block out of range.", __func__),
                                  REJECT_INVALID, "bad-txns-accumulated-fee-outofrange");
             }
 
-            if (!MoneyRange(specialTxFees)) {
+            if (!MoneyRange(specialTxFees, isV17active)) {
                 return state.DoS(100, error("%s: accumulated specialTxFees in the block out of range.", __func__),
                     REJECT_INVALID, "bad-txns-accumulated-specialTxFees-outofrange");
             }
