@@ -72,7 +72,6 @@ TransactionView::TransactionView(QWidget* parent) :
     dateWidget->addItem(tr("Last month"), LastMonth);
     dateWidget->addItem(tr("This year"), ThisYear);
     dateWidget->addItem(tr("Range..."), Range);
-    dateWidget->setCurrentIndex(settings.value("transactionDate").toInt());
     hlayout->addWidget(dateWidget);
 
     typeWidget = new QComboBox(this);
@@ -95,8 +94,7 @@ TransactionView::TransactionView(QWidget* parent) :
     typeWidget->addItem(tr("To yourself"), TransactionFilterProxy::TYPE(TransactionRecord::SendToSelf));
     typeWidget->addItem(tr("Mined"), TransactionFilterProxy::TYPE(TransactionRecord::Generated));
     typeWidget->addItem(tr("Other"), TransactionFilterProxy::TYPE(TransactionRecord::Other));
-    typeWidget->setCurrentIndex(settings.value("transactionType").toInt());
-
+    
     hlayout->addWidget(typeWidget);
 
     search_widget = new QLineEdit(this);
@@ -267,6 +265,9 @@ void TransactionView::setModel(WalletModel *_model)
         chooseDate(settings.value("transactionDate").toInt());
 
         updateCoinJoinVisibility();
+
+        dateWidget->setCurrentIndex(settings.value("transactionDate").toInt());
+        typeWidget->setCurrentIndex(settings.value("transactionType").toInt());
     }
 }
 

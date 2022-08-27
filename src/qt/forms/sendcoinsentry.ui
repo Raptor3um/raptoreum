@@ -247,7 +247,7 @@
       <item>
        <widget class="QLineEdit" name="locktime">
         <property name="toolTip">
-         <string>Time in seconds for this output to be locked if happen before maturity</string>
+         <string>Time in seconds for this output to be spendable if happen before maturity</string>
         </property>
         <property name="text">
          <string notr="true">100</string>

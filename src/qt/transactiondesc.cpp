@@ -70,7 +70,7 @@ QString TransactionDesc::FutureTxDescToHTML(const interfaces::WalletTx& wtx, con
 
     QString strHTML;
 
-    strHTML += "<hr><b>Future Transaction:</b><br><br>";
+    strHTML += "<hr><b>"+tr("Future Transaction")+":</b><br><br>";
 
     if (GetTxPayload(wtx.tx->vExtraPayload, ftx)) {
 
@@ -81,38 +81,38 @@ QString TransactionDesc::FutureTxDescToHTML(const interfaces::WalletTx& wtx, con
         int maturityBlock = (txBlock + ftx.maturity);
         int64_t maturityTime = (nTime + ftx.lockTime);
 
-        strHTML += "<b>Future Amount:</b> " + BitcoinUnits::formatHtmlWithUnit(unit, ftxValue) + "<br>";
+        strHTML += "<b>" + tr("Future Amount:") + "</b> " + BitcoinUnits::formatHtmlWithUnit(unit, ftxValue) + "<br>";
         if (status.is_in_main_chain)
         {
         	if(ftx.maturity >= 0) {
-				strHTML += tr("<b>Maturity Block:</b> %1").arg(maturityBlock);
+				strHTML += "<b>"+  tr("Maturity Block:") + "</b> " + QString::number(maturityBlock);
 				if(maturityBlock >= currentHeight)
 				{
 					int remainingBlocks = (maturityBlock - currentHeight);
-					 strHTML += tr(" (<em>%1 Blocks left</em>)<br>").arg(remainingBlocks);
+					 strHTML += " (<em>" + tr("%1 Blocks left").arg(remainingBlocks) + "</em>)<br>";
 				}
 				else
 				{
 					int remainingBlocks = (currentHeight - maturityBlock);
-					strHTML += tr(" (<em>%1 Blocks ago</em>)<br>").arg(remainingBlocks);
+					strHTML += " (<em>" + tr("%1 Blocks ago").arg(remainingBlocks) + "</em>)<br>";
 				}
         	} else {
-        		strHTML += tr("<b>Maturity Block:</b> Never<br>");
+        		strHTML += "<b>" + tr("Maturity Block:") + "</b> "+ tr("Never")+"<br>";
         	}
         }
 	    
         if(ftx.lockTime >= 0){
-            strHTML += "<b>Maturity Time:</b> " + GUIUtil::dateTimeStr(maturityTime) + "<br>";
-            strHTML += tr("<b>Locked Time:</b><em> %1 seconds</em><br>").arg(ftx.lockTime);
+            strHTML += "<b>" + tr("Maturity Time:") + "</b> " + GUIUtil::dateTimeStr(maturityTime) + "<br>";
+            strHTML += "<b>" + tr("Locked Time:") + "</b><em>"+ ftx.lockTime +" " + tr("seconds") + "</em><br>";
         }else{
-            strHTML += "<b>Maturity Time:</b> Never <br>";
+            strHTML += "<b>" + tr("Maturity Time:") + "</b> " + tr("Never") + "<br>";
         }
-        strHTML += tr("<b>Locked Output Index:</b> %1<br>").arg(ftx.lockOutputIndex);
+        strHTML += "<b>" + tr("Locked Output Index:") + "</b> "+ftx.lockOutputIndex+"<br>";
         
     }
     else
     {
-        strHTML += "<em>Waiting for sync...</em><br>";
+        strHTML += "<em>" + tr("Waiting for sync...") + "</em><br>";
     }
 
     strHTML += "<hr><br>";
