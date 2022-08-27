@@ -103,7 +103,7 @@ QString TransactionDesc::FutureTxDescToHTML(const interfaces::WalletTx& wtx, con
 	    
         if(ftx.lockTime >= 0){
             strHTML += "<b>" + tr("Maturity Time:") + "</b> " + GUIUtil::dateTimeStr(maturityTime) + "<br>";
-            strHTML += "<b>" + tr("Locked Time:") + "</b><em>"+ QString::number(ftx.lockTime) +" " + tr("seconds") + "</em><br>";
+            strHTML += "<b>" + tr("Locked Time:") + "</b><em> " + QString::number(ftx.lockTime) + " " + tr("seconds") + "</em><br>";
         }else{
             strHTML += "<b>" + tr("Maturity Time:") + "</b> " + tr("Never") + "<br>";
         }
