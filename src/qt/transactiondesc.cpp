@@ -107,7 +107,7 @@ QString TransactionDesc::FutureTxDescToHTML(const interfaces::WalletTx& wtx, con
         }else{
             strHTML += "<b>" + tr("Maturity Time:") + "</b> " + tr("Never") + "<br>";
         }
-        strHTML += "<b>" + tr("Locked Output Index:") + "</b> "+QString::number(ftx.lockOutputIndex)+"<br>";
+        strHTML += "<b>" + tr("Locked Output Index:") + "</b> " + QString::number(ftx.lockOutputIndex) + "<br>";
         
     }
     else
