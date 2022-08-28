@@ -249,7 +249,7 @@
     </message>
     <message>
       <source>Your wallet is now encrypted. Remember that encrypting your wallet cannot fully protect your funds from being stolen by malware infecting your computer.</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. Previous backups of the unencrypted wallet file contain the same HD seed and still have full access to all your funds just like the new, encrypted wallet.</source>
@@ -554,7 +554,7 @@
     </message>
     <message>
       <source>default wallet</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>%1 client</source>
@@ -598,9 +598,12 @@
       <source>Tabs toolbar</source>
       <translation>Tab-werkbalk</translation>
     </message>
-    <message>
+    <message numerus="yes">
       <source>%n active connection(s) to Raptoreum network</source>
-      <translation></translation>
+      <translation>
+        <numerusform>%n actieve verbinding met het Raptoreum netwerk</numerusform>
+        <numerusform>%n actieve verbindingen met het Raptoreum netwerk</numerusform>
+      </translation>
     </message>
     <message>
       <source>Network activity disabled</source>
@@ -630,9 +633,12 @@
       <source>Connecting to peers...</source>
       <translation>Verbinden met peers...</translation>
     </message>
-    <message>
+    <message numerus="yes">
       <source>Processed %n block(s) of transaction history.</source>
-      <translation></translation>
+      <translation>
+        <numerusform>%n blok van transactiehistorie verwerkt.</numerusform>
+        <numerusform>%n blocks van transactiehistorie verwerkt.</numerusform>
+      </translation>
     </message>
     <message>
       <source>%1 behind</source>
@@ -1610,9 +1616,12 @@ Om te mixen moeten andere gebruikers exact dezelfde denominaties inbrengen.</tra
       <source>%1 Balance</source>
       <translation>%1 Saldo</translation>
     </message>
-    <message>
+    <message numerus="yes">
       <source>%n Rounds</source>
-      <translation></translation>
+      <translation>
+        <numerusform>%n Ronde</numerusform>
+        <numerusform>%n Rondes</numerusform>
+      </translation>
     </message>
     <message>
       <source>Found enough compatible inputs to mix %1</source>
@@ -1638,9 +1647,12 @@ Om te mixen moeten andere gebruikers exact dezelfde denominaties inbrengen.</tra
       <source>Mixed</source>
       <translation>Gemixt</translation>
     </message>
-    <message>
+    <message numerus="yes">
       <source>Denominated inputs have %5 of %n rounds on average</source>
-      <translation></translation>
+      <translation>
+        <numerusform>Gedenomineerde invoeren hebben gemiddeld %5 van %n ronde</numerusform>
+        <numerusform>Gedenomineerde inputs hebben gemiddeld %5 van %n rondes</numerusform>
+      </translation>
     </message>
     <message>
       <source>keys left: %1</source>
@@ -1923,29 +1935,47 @@ Om te mixen moeten andere gebruikers exact dezelfde denominaties inbrengen.</tra
       <source>%1 ms</source>
       <translation>%1 ms</translation>
     </message>
-    <message>
+    <message numerus="yes">
       <source>%n second(s)</source>
-      <translation></translation>
+      <translation>
+        <numerusform>%n seconde</numerusform>
+        <numerusform>%n seconden</numerusform>
+      </translation>
     </message>
-    <message>
+    <message numerus="yes">
       <source>%n minute(s)</source>
-      <translation></translation>
+      <translation>
+        <numerusform>%n minuut</numerusform>
+        <numerusform>%n minuten</numerusform>
+      </translation>
     </message>
-    <message>
+    <message numerus="yes">
       <source>%n hour(s)</source>
-      <translation></translation>
+      <translation>
+        <numerusform>%n uur</numerusform>
+        <numerusform>%n uren</numerusform>
+      </translation>
     </message>
-    <message>
+    <message numerus="yes">
       <source>%n day(s)</source>
-      <translation></translation>
+      <translation>
+        <numerusform>%n dag</numerusform>
+        <numerusform>%n dagen</numerusform>
+      </translation>
     </message>
-    <message>
+    <message numerus="yes">
       <source>%n week(s)</source>
-      <translation></translation>
+      <translation>
+        <numerusform>%n week</numerusform>
+        <numerusform>%n weken</numerusform>
+      </translation>
     </message>
-    <message>
+    <message numerus="yes">
       <source>%n year(s)</source>
-      <translation></translation>
+      <translation>
+        <numerusform>%n jaar</numerusform>
+        <numerusform>%n jaren</numerusform>
+      </translation>
     </message>
     <message>
       <source>%1 and %2</source>
@@ -2396,7 +2426,7 @@ Om te mixen moeten andere gebruikers exact dezelfde denominaties inbrengen.</tra
     </message>
     <message>
       <source>default wallet</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Welcome to the %1 RPC console.</source>
@@ -2580,7 +2610,7 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Raptoreum n
     </message>
     <message>
       <source>Copy Address</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
   </context>
   <context>
@@ -2885,11 +2915,11 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Raptoreum n
     </message>
     <message>
       <source>&lt;br&gt;Confirmations in: &lt;b&gt;%1 blocks&lt;/b&gt;&lt;br /&gt;</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Time in: &lt;b&gt;%1 seconds from first confirmed&lt;/b&gt;&lt;br /&gt;</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>%1 funds only</source>
@@ -2911,9 +2941,12 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Raptoreum n
       <source>Fee rate: %1</source>
       <translation>Transactievergoeding: %1</translation>
     </message>
-    <message>
+    <message numerus="yes">
       <source>This transaction will consume %n input(s)</source>
-      <translation></translation>
+      <translation>
+        <numerusform>Deze transactie verbruikt %n inputs</numerusform>
+        <numerusform>Deze transactie verbruikt %n inputs</numerusform>
+      </translation>
     </message>
     <message>
       <source>Warning: Using %1 with %2 or more inputs can harm your privacy and is not recommended</source>
@@ -2961,15 +2994,18 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Raptoreum n
     </message>
     <message>
       <source>The amount to pay exceeds the limit of 21 million per transaction.</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Pay only the required fee of %1</source>
       <translation>Betaal alleen de verplichte transactie vergoeding van %1</translation>
     </message>
-    <message>
+    <message numerus="yes">
       <source>Estimated to begin confirmation within %n block(s).</source>
-      <translation></translation>
+      <translation>
+        <numerusform>Schatting is dat bevestiging begint binnen %n blok.</numerusform>
+        <numerusform>Schatting is dat bevestiging begint binnen %n blocks.</numerusform>
+      </translation>
     </message>
     <message>
       <source>Warning: Invalid Raptoreum address</source>
@@ -3028,7 +3064,7 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Raptoreum n
     </message>
     <message>
       <source>Enable/Disable future transaction</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>&amp;Label:</source>
@@ -3064,23 +3100,23 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Raptoreum n
     </message>
     <message>
       <source>Future</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Maturity:</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Number of block confirmations for this output to be spendable if happen before timelock</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Lock time:</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Time in seconds for this output to be spendable if happen before maturity</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Fee:</source>
@@ -3344,7 +3380,7 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Raptoreum n
     </message>
     <message>
       <source>Collateral Amount</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Owner Address</source>
@@ -3368,7 +3404,7 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Raptoreum n
     </message>
     <message>
       <source>Invalid</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>ENABLED</source>
@@ -3439,9 +3475,12 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Raptoreum n
   </context>
   <context>
     <name>TransactionDesc</name>
-    <message>
+    <message numerus="yes">
       <source>Open for %n more block(s)</source>
-      <translation></translation>
+      <translation>
+        <numerusform>Open voor nog %n blok</numerusform>
+        <numerusform>Open voor nog %n blocks</numerusform>
+      </translation>
     </message>
     <message>
       <source>Open until %1</source>
@@ -3485,15 +3524,15 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Raptoreum n
     </message>
     <message>
       <source>Future Transaction</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Future Amount:</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Maturity Block:</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>%1 Blocks left</source>
@@ -3505,27 +3544,27 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Raptoreum n
     </message>
     <message>
       <source>Maturity Time:</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Locked Time:</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>seconds</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Never</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Locked Output Index:</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Waiting for sync...</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Status</source>
@@ -3571,9 +3610,12 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Raptoreum n
       <source>Credit</source>
       <translation>Credit</translation>
     </message>
-    <message>
+    <message numerus="yes">
       <source>matures in %n more block(s)</source>
-      <translation></translation>
+      <translation>
+        <numerusform>komt beschikbaar na %n nieuw blok</numerusform>
+        <numerusform>komt beschikbaar na %n nieuwe blocks</numerusform>
+      </translation>
     </message>
     <message>
       <source>not accepted</source>
@@ -3677,9 +3719,12 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Raptoreum n
       <source>Address / Label</source>
       <translation>Adres / Label</translation>
     </message>
-    <message>
+    <message numerus="yes">
       <source>Open for %n more block(s)</source>
-      <translation></translation>
+      <translation>
+        <numerusform>Open voor nog %n blok</numerusform>
+        <numerusform>Open voor nog %n blocks</numerusform>
+      </translation>
     </message>
     <message>
       <source>Open until %1</source>
@@ -3747,11 +3792,11 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Raptoreum n
     </message>
     <message>
       <source>Future Send</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Future Receive</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>%1 Mixing</source>
@@ -3854,15 +3899,15 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Raptoreum n
     </message>
     <message>
       <source>Future</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Future Send</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Future Received</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>%1 Send</source>

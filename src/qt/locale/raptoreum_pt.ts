@@ -599,9 +599,12 @@
         <source>Tabs toolbar</source>
         <translation>Barra de ferramentas</translation>
     </message>
-    <message>
+    <message numerus="yes">
         <source>%n active connection(s) to Raptoreum network</source>
-        <translation></translation>
+        <translation>
+            <numerusform>%n conexões ativas com a rede Raptoreum</numerusform>
+            <numerusform>%n conexões ativas com a rede Raptoreum</numerusform>
+        </translation>
     </message>
     <message>
         <source>Network activity disabled</source>
@@ -631,9 +634,12 @@
         <source>Connecting to peers...</source>
         <translation>Conectando...</translation>
     </message>
-    <message>
+    <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
-        <translation></translation>
+        <translation>
+            <numerusform>Processados %n blocos do histórico de transações.</numerusform>
+            <numerusform>Processados %n blocos do histórico de transações.</numerusform>
+        </translation>
     </message>
     <message>
         <source>%1 behind</source>
@@ -1610,9 +1616,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <source>%1 Balance</source>
         <translation>%1 Saldo</translation>
     </message>
-    <message>
+    <message numerus="yes">
         <source>%n Rounds</source>
-        <translation></translation>
+        <translation>
+            <numerusform>%n Rodadas</numerusform>
+            <numerusform>%n Rodadas</numerusform>
+        </translation>
     </message>
     <message>
         <source>Found enough compatible inputs to mix %1</source>
@@ -1638,9 +1647,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <source>Mixed</source>
         <translation>Misturado</translation>
     </message>
-    <message>
+    <message numerus="yes">
         <source>Denominated inputs have %5 of %n rounds on average</source>
-        <translation></translation>
+        <translation>
+            <numerusform>Os insumos denominados têm %5 de %n rodadas em média</numerusform>
+            <numerusform>Os insumos denominados têm %5 de %n rodadas em média</numerusform>
+        </translation>
     </message>
     <message>
         <source>keys left: %1</source>
@@ -1923,29 +1935,47 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <source>%1 ms</source>
         <translation>%1 ms</translation>
     </message>
-    <message>
+    <message numerus="yes">
         <source>%n second(s)</source>
-        <translation></translation>
+        <translation>
+            <numerusform>%n segundos</numerusform>
+            <numerusform>%n segundos</numerusform>
+        </translation>
     </message>
-    <message>
+    <message numerus="yes">
         <source>%n minute(s)</source>
-        <translation></translation>
+        <translation>
+            <numerusform>%n minutos</numerusform>
+            <numerusform>%n minutos</numerusform>
+        </translation>
     </message>
-    <message>
+    <message numerus="yes">
         <source>%n hour(s)</source>
-        <translation></translation>
+        <translation>
+            <numerusform>%n horas</numerusform>
+            <numerusform>%n horas</numerusform>
+        </translation>
     </message>
-    <message>
+    <message numerus="yes">
         <source>%n day(s)</source>
-        <translation></translation>
+        <translation>
+            <numerusform>%n dias</numerusform>
+            <numerusform>%n dias</numerusform>
+        </translation>
     </message>
-    <message>
+    <message numerus="yes">
         <source>%n week(s)</source>
-        <translation></translation>
+        <translation>
+            <numerusform>%n semanas</numerusform>
+            <numerusform>%n semanas</numerusform>
+        </translation>
     </message>
-    <message>
+    <message numerus="yes">
         <source>%n year(s)</source>
-        <translation></translation>
+        <translation>
+            <numerusform>%n anos</numerusform>
+            <numerusform>%n anos</numerusform>
+        </translation>
     </message>
     <message>
         <source>%1 and %2</source>
@@ -2910,9 +2940,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <source>Fee rate: %1</source>
         <translation>Cotação da taxa: %1</translation>
     </message>
-    <message>
+    <message numerus="yes">
         <source>This transaction will consume %n input(s)</source>
-        <translation></translation>
+        <translation>
+            <numerusform>Essa transação vai consumir %n input</numerusform>
+            <numerusform>Essa transação vai consumir %n inputs</numerusform>
+        </translation>
     </message>
     <message>
         <source>Warning: Using %1 with %2 or more inputs can harm your privacy and is not recommended</source>
@@ -2966,9 +2999,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <source>Pay only the required fee of %1</source>
         <translation>Pagar somente a taxa requerida de %1</translation>
     </message>
-    <message>
+    <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
-        <translation></translation>
+        <translation>
+            <numerusform>Estimativa para iniciar a confirmação em %n blocos.</numerusform>
+            <numerusform>Estimativa para iniciar a confirmação em %n blocos.</numerusform>
+        </translation>
     </message>
     <message>
         <source>Warning: Invalid Raptoreum address</source>
@@ -3083,7 +3119,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <source>Fee:</source>
-        <translation>Taxa:</translation>
+        <translation></translation>
     </message>
     <message>
         <source>This is an unauthenticated payment request.</source>
@@ -3343,7 +3379,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <source>Collateral Amount</source>
-        <translation>Valor da garantia</translation>
+        <translation>Valor do Colateral</translation>
     </message>
     <message>
         <source>Owner Address</source>
@@ -3438,9 +3474,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
 </context>
 <context>
     <name>TransactionDesc</name>
-    <message>
+    <message numerus="yes">
         <source>Open for %n more block(s)</source>
-        <translation></translation>
+        <translation>
+            <numerusform>Aberto para %n mais blocos</numerusform>
+            <numerusform>Aberto para %n mais blocos</numerusform>
+        </translation>
     </message>
     <message>
         <source>Open until %1</source>
@@ -3484,7 +3523,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <source>Future Transaction</source>
-        <translation>Transação futura</translation>
+        <translation>Transação futuro</translation>
     </message>
     <message>
         <source>Future Amount:</source>
@@ -3570,9 +3609,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <source>Credit</source>
         <translation>Crédito</translation>
     </message>
-    <message>
+    <message numerus="yes">
         <source>matures in %n more block(s)</source>
-        <translation></translation>
+        <translation>
+            <numerusform>Maduro em %n blocos</numerusform>
+            <numerusform>Maduro em %n blocos</numerusform>
+        </translation>
     </message>
     <message>
         <source>not accepted</source>
@@ -3676,9 +3718,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <source>Address / Label</source>
         <translation>Endereço / Etiqueta</translation>
     </message>
-    <message>
+    <message numerus="yes">
         <source>Open for %n more block(s)</source>
-        <translation></translation>
+        <translation>
+            <numerusform>Aberto para %n mais blocos</numerusform>
+            <numerusform>Aberto para %n mais blocos</numerusform>
+        </translation>
     </message>
     <message>
         <source>Open until %1</source>
@@ -3746,7 +3791,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <source>Future Send</source>
-        <translation>Envio futuro</translation>
+        <translation>Futuro enviado</translation>
     </message>
     <message>
         <source>Future Receive</source>

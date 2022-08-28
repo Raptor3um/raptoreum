@@ -4,7 +4,7 @@
     <name>AddressBookPage</name>
     <message>
       <source>Enter address or label to search</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Right-click to edit address or label</source>
@@ -249,7 +249,7 @@
     </message>
     <message>
       <source>Your wallet is now encrypted. Remember that encrypting your wallet cannot fully protect your funds from being stolen by malware infecting your computer.</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. Previous backups of the unencrypted wallet file contain the same HD seed and still have full access to all your funds just like the new, encrypted wallet.</source>
@@ -398,7 +398,7 @@
     </message>
     <message>
       <source>Send %1 funds to a Raptoreum address</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Modify configuration options for %1</source>
@@ -554,7 +554,7 @@
     </message>
     <message>
       <source>default wallet</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>%1 client</source>
@@ -563,7 +563,7 @@
     <message>
       <source>Wallet: %1
 </source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Wallet is &lt;b&gt;unencrypted&lt;/b&gt;</source>
@@ -575,11 +575,11 @@
     </message>
     <message>
       <source>%1 &amp;information</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Show the %1 basic information</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>&amp;Settings</source>
@@ -597,9 +597,11 @@
       <source>Tabs toolbar</source>
       <translation>Bảng Thanh công cụ</translation>
     </message>
-    <message>
+    <message numerus="yes">
       <source>%n active connection(s) to Raptoreum network</source>
-      <translation></translation>
+      <translation>
+        <numerusform>%n kết nối hiện thời tới mạng lưới của Raptoreum</numerusform>
+      </translation>
     </message>
     <message>
       <source>Network activity disabled</source>
@@ -629,9 +631,11 @@
       <source>Connecting to peers...</source>
       <translation>Đang kết nối với các máy ngang hàng...</translation>
     </message>
-    <message>
+    <message numerus="yes">
       <source>Processed %n block(s) of transaction history.</source>
-      <translation></translation>
+      <translation>
+        <numerusform>Đã xử lý được %n block(s) của lịch sử giao dịch.</numerusform>
+      </translation>
     </message>
     <message>
       <source>%1 behind</source>
@@ -916,11 +920,11 @@
     </message>
     <message>
       <source>Hide %1 coins</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Show all %1 coins</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Show spendable coins only</source>
@@ -1037,11 +1041,11 @@
     </message>
     <message>
       <source>%1 information</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>&lt;h3&gt;%1 Basics&lt;/h3&gt; %1 gives you true financial privacy by obscuring the origins of your funds. All the Raptoreum in your wallet is comprised of different "inputs" which you can think of as separate, discrete coins.&lt;br&gt; %1 uses an innovative process to mix your inputs with the inputs of two or more other people, without having your coins ever leave your wallet. You retain control of your money at all times.&lt;hr&gt; &lt;b&gt;The %1 process works like this:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;%1 begins by breaking your transaction inputs down into standard denominations. These denominations are 0.001 RTM, 0.01 RTM, 0.1 RTM, 1 RTM and 10 RTM -- sort of like the paper money you use every day.&lt;/li&gt; &lt;li&gt;Your wallet then sends requests to specially configured software nodes on the network, called "smartnodes." These smartnodes are informed then that you are interested in mixing a certain denomination. No identifiable information is sent to the smartnodes, so they never know "who" you are.&lt;/li&gt; &lt;li&gt;When two or more other people send similar messages, indicating that they wish to mix the same denomination, a mixing session begins. The smartnode mixes up the inputs and instructs all three users' wallets to pay the now-transformed input back to themselves. Your wallet pays that denomination directly to itself, but in a different address (called a change address).&lt;/li&gt; &lt;li&gt;In order to fully obscure your funds, your wallet must repeat this process a number of times with each denomination. Each time the process is completed, it's called a "round." Each round of %1 makes it exponentially more difficult to determine where your funds originated.&lt;/li&gt; &lt;li&gt;This mixing process happens in the background without any intervention on your part. When you wish to make a transaction, your funds will already be mixed. No additional waiting is required.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;IMPORTANT:&lt;/b&gt; Your wallet only contains 1000 of these "change addresses." Every time a mixing event happens, up to 9 of your addresses are used up. This means those 1000 addresses last for about 100 mixing events. When 900 of them are used, your wallet must create more addresses. It can only do this, however, if you have automatic backups enabled.&lt;br&gt; Consequently, users who have backups disabled will also have %1 disabled. &lt;hr&gt;For more information, see the &lt;a style="%2" href="%3"&gt;%1 documentation&lt;/a&gt;.</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
   </context>
   <context>
@@ -1233,51 +1237,51 @@
     </message>
     <message>
       <source>Show mixing interface on Overview screen and reveal an additional screen which allows to spend fully mixed coins only.&lt;br/&gt;A new tab with more settings will also appear in this dialog, please make sure to check them before mixing your coins.</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Show additional information and buttons on overview screen.</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Enable advanced interface</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Show system popups for mixing transactions&lt;br/&gt;just like for all other transaction types.</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Show popups for mixing transactions</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Show warning dialog when the wallet has very low number of keys left.</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Warn if the wallet is running out of keys</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Whether to use experimental mode with multiple mixing sessions per block.&lt;br/&gt;Note: You must use this feature carefully.&lt;br/&gt;Make sure you always have recent wallet (auto)backup in a safe place!</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Enable &amp;multi-session</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Mixing rounds</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>This amount acts as a threshold to turn off mixing once it's reached.</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Target balance</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Automatically open the Raptoreum Core client port on the router. This only works when your router supports UPnP and it is enabled.</source>
@@ -1459,7 +1463,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
       <source>Enable %1 features</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>default</source>
@@ -1606,11 +1610,13 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
       <source>%1 Balance</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
-    <message>
+    <message numerus="yes">
       <source>%n Rounds</source>
-      <translation></translation>
+      <translation>
+        <numerusform>%n Vòng</numerusform>
+      </translation>
     </message>
     <message>
       <source>Found enough compatible inputs to mix %1</source>
@@ -1636,9 +1642,11 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
       <source>Mixed</source>
       <translation>Đã trộn</translation>
     </message>
-    <message>
+    <message numerus="yes">
       <source>Denominated inputs have %5 of %n rounds on average</source>
-      <translation></translation>
+      <translation>
+        <numerusform>Các mệnh giá đầu vào có %5 của trung bình %n vòng</numerusform>
+      </translation>
     </message>
     <message>
       <source>keys left: %1</source>
@@ -1646,23 +1654,23 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
       <source>Start %1</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>If you don't want to see internal %1 fees/transactions select "Most Common" as Type on the "Transactions" tab.</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>%1 requires at least %2 to use.</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Wallet is locked and user declined to unlock. Disabling %1.</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Stop %1</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Disabled</source>
@@ -1721,7 +1729,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
       <source>'raptoreum://' is not a valid URI. Use 'raptoreum:' instead.</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Payment request fetch URL is invalid: %1</source>
@@ -1831,43 +1839,43 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <name>QObject</name>
     <message>
       <source>Choose data directory on startup (default: %u)</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Set the font family. Possible values: %1. (default: %2)</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Set a scale factor which gets applied to the base font size. Possible range %1 (smallest fonts) to %2 (largest fonts). (default: %3)</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Set the font weight for bold texts. Possible range %1 to %2 (default: %3)</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Set the font weight for normal texts. Possible range %1 to %2 (default: %3)</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Set language, for example "de_DE" (default: system locale)</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Start minimized</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Reset all settings changed in the GUI</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Set SSL root certificates for payment request (default: -system-)</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Show splash screen on startup (default: %u)</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>%1 didn't yet exit safely...</source>
@@ -1921,29 +1929,41 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
       <source>%1 ms</source>
       <translation>%1 ms</translation>
     </message>
-    <message>
+    <message numerus="yes">
       <source>%n second(s)</source>
-      <translation></translation>
+      <translation>
+        <numerusform>%n giây</numerusform>
+      </translation>
     </message>
-    <message>
+    <message numerus="yes">
       <source>%n minute(s)</source>
-      <translation></translation>
+      <translation>
+        <numerusform>%n phút</numerusform>
+      </translation>
     </message>
-    <message>
+    <message numerus="yes">
       <source>%n hour(s)</source>
-      <translation></translation>
+      <translation>
+        <numerusform>%n giờ</numerusform>
+      </translation>
     </message>
-    <message>
+    <message numerus="yes">
       <source>%n day(s)</source>
-      <translation></translation>
+      <translation>
+        <numerusform>%n ngày</numerusform>
+      </translation>
     </message>
-    <message>
+    <message numerus="yes">
       <source>%n week(s)</source>
-      <translation></translation>
+      <translation>
+        <numerusform>%n tuần</numerusform>
+      </translation>
     </message>
-    <message>
+    <message numerus="yes">
       <source>%n year(s)</source>
-      <translation></translation>
+      <translation>
+        <numerusform>%n năm</numerusform>
+      </translation>
     </message>
     <message>
       <source>%1 and %2</source>
@@ -2174,7 +2194,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
       <source>Wallet:</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Banned peers</source>
@@ -2210,19 +2230,19 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
       <source>Rescan blockchain files 1</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Rescan blockchain files 2</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>-rescan=1: Rescan the block chain for missing wallet transactions starting from wallet creation time.</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>-rescan=2: Rescan the block chain for missing wallet transactions starting from genesis block.</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Wallet Path</source>
@@ -2250,7 +2270,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
       <source>(none)</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Decrease font size</source>
@@ -2266,7 +2286,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
       <source>Node Type</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>PoSe Score</source>
@@ -2394,7 +2414,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
       <source>default wallet</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Welcome to the %1 RPC console.</source>
@@ -2434,11 +2454,11 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
       <source>Executing command without any wallet</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Executing command using "%1" wallet</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>(node id: %1)</source>
@@ -2470,15 +2490,15 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
       <source>Regular</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Smartnode</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Verified Smartnode</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Unknown</source>
@@ -2577,7 +2597,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
       <source>Copy Address</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
   </context>
   <context>
@@ -2846,7 +2866,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
       <source>from wallet %1</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>using</source>
@@ -2874,23 +2894,23 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
       <source>S&amp;end mixed funds</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Confirm the %1 send action</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>&lt;br&gt;Confirmations in: &lt;b&gt;%1 blocks&lt;/b&gt;&lt;br /&gt;</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Time in: &lt;b&gt;%1 seconds from first confirmed&lt;/b&gt;&lt;br /&gt;</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>%1 funds only</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>any available funds</source>
@@ -2898,7 +2918,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
       <source>(%1 transactions have higher fees usually due to no change output being allowed)</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Transaction size: %1</source>
@@ -2908,13 +2928,15 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
       <source>Fee rate: %1</source>
       <translation>Mức phí: %1</translation>
     </message>
-    <message>
+    <message numerus="yes">
       <source>This transaction will consume %n input(s)</source>
-      <translation></translation>
+      <translation>
+        <numerusform>Giao dịch này sẽ dùng đến %n đầu vào</numerusform>
+      </translation>
     </message>
     <message>
       <source>Warning: Using %1 with %2 or more inputs can harm your privacy and is not recommended</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Confirm send coins</source>
@@ -2958,15 +2980,17 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
       <source>The amount to pay exceeds the limit of 21 million per transaction.</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Pay only the required fee of %1</source>
       <translation>Chỉ thanh toán mức phí yêu cầu của %1</translation>
     </message>
-    <message>
+    <message numerus="yes">
       <source>Estimated to begin confirmation within %n block(s).</source>
-      <translation></translation>
+      <translation>
+        <numerusform>Ước lượng để bắt đầu xác thực trong vòng %n khối.</numerusform>
+      </translation>
     </message>
     <message>
       <source>Warning: Invalid Raptoreum address</source>
@@ -3025,7 +3049,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
       <source>Enable/Disable future transaction</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>&amp;Label:</source>
@@ -3061,23 +3085,23 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
       <source>Future</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Maturity:</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Number of block confirmations for this output to be spendable if happen before timelock</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Lock time:</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Time in seconds for this output to be spendable if happen before maturity</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Fee:</source>
@@ -3341,7 +3365,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
       <source>Collateral Amount</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Owner Address</source>
@@ -3365,7 +3389,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
       <source>Invalid</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>ENABLED</source>
@@ -3423,7 +3447,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
       <source>Total</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Received</source>
@@ -3436,9 +3460,11 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
   </context>
   <context>
     <name>TransactionDesc</name>
-    <message>
+    <message numerus="yes">
       <source>Open for %n more block(s)</source>
-      <translation></translation>
+      <translation>
+        <numerusform>Mở cho %n khối nữa</numerusform>
+      </translation>
     </message>
     <message>
       <source>Open until %1</source>
@@ -3482,15 +3508,15 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
       <source>Future Transaction</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Future Amount:</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Maturity Block:</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>%1 Blocks left</source>
@@ -3502,27 +3528,27 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
       <source>Maturity Time:</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Locked Time:</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>seconds</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Never</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Locked Output Index:</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Waiting for sync...</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Status</source>
@@ -3568,9 +3594,11 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
       <source>Credit</source>
       <translation>Có</translation>
     </message>
-    <message>
+    <message numerus="yes">
       <source>matures in %n more block(s)</source>
-      <translation></translation>
+      <translation>
+        <numerusform>mãn hạn trong %n khối nữa</numerusform>
+      </translation>
     </message>
     <message>
       <source>not accepted</source>
@@ -3674,9 +3702,11 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
       <source>Address / Label</source>
       <translation>Địa chỉ / Nhãn</translation>
     </message>
-    <message>
+    <message numerus="yes">
       <source>Open for %n more block(s)</source>
-      <translation></translation>
+      <translation>
+        <numerusform>Mở cho %n khối nữa</numerusform>
+      </translation>
     </message>
     <message>
       <source>Open until %1</source>
@@ -3728,7 +3758,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
       <source>Received via %1</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Sent to</source>
@@ -3744,31 +3774,31 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
       <source>Future Send</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Future Receive</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>%1 Mixing</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>%1 Collateral Payment</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>%1 Make Collateral Inputs</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>%1 Create Denominations</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>%1 Send</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>watch-only</source>
@@ -3851,35 +3881,35 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
       <source>Future</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Future Send</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Future Received</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>%1 Send</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>%1 Make Collateral Inputs</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>%1 Create Denominations</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>%1 Mixing</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>%1 Collateral Payment</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>To yourself</source>
@@ -4067,7 +4097,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
       <source>Cancel</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
   </context>
   <context>

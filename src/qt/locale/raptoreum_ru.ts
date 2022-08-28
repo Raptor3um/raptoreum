@@ -598,9 +598,14 @@
       <source>Tabs toolbar</source>
       <translation>Панель вкладок</translation>
     </message>
-    <message>
+    <message numerus="yes">
       <source>%n active connection(s) to Raptoreum network</source>
-      <translation></translation>
+      <translation>
+        <numerusform>%n активное соединение с сетью Raptoreum</numerusform>
+        <numerusform>%n активных соединения с сетью Raptoreum</numerusform>
+        <numerusform>%n активных соединений с сетью Raptoreum</numerusform>
+        <numerusform>%n активных соединений с сетью Raptoreum</numerusform>
+      </translation>
     </message>
     <message>
       <source>Network activity disabled</source>
@@ -630,9 +635,14 @@
       <source>Connecting to peers...</source>
       <translation>Подключение к пирам...</translation>
     </message>
-    <message>
+    <message numerus="yes">
       <source>Processed %n block(s) of transaction history.</source>
-      <translation></translation>
+      <translation>
+        <numerusform>Обработан 1 блок из истории транзакций.</numerusform>
+        <numerusform>Обработано %n блока из истории транзакций.</numerusform>
+        <numerusform>Обработано %n блоков из истории транзакций.</numerusform>
+        <numerusform>Обработано %n блоков из истории транзакций.</numerusform>
+      </translation>
     </message>
     <message>
       <source>%1 behind</source>
@@ -1609,9 +1619,14 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
       <source>%1 Balance</source>
       <translation>Баланс %1</translation>
     </message>
-    <message>
+    <message numerus="yes">
       <source>%n Rounds</source>
-      <translation></translation>
+      <translation>
+        <numerusform>%n раунд</numerusform>
+        <numerusform>%n  раунда</numerusform>
+        <numerusform>%n раундов</numerusform>
+        <numerusform>%n раундов</numerusform>
+      </translation>
     </message>
     <message>
       <source>Found enough compatible inputs to mix %1</source>
@@ -1637,9 +1652,14 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
       <source>Mixed</source>
       <translation>Перемешано</translation>
     </message>
-    <message>
+    <message numerus="yes">
       <source>Denominated inputs have %5 of %n rounds on average</source>
-      <translation></translation>
+      <translation>
+        <numerusform>Номиналы прошли в среднем %5 из %n раундов</numerusform>
+        <numerusform>Номиналы прошли в среднем %5 из %n раундов</numerusform>
+        <numerusform>Номиналы прошли в среднем %5 из %n раундов</numerusform>
+        <numerusform>Номиналы прошли в среднем %5 из %n раундов</numerusform>
+      </translation>
     </message>
     <message>
       <source>keys left: %1</source>
@@ -1922,29 +1942,59 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
       <source>%1 ms</source>
       <translation>%1 мс</translation>
     </message>
-    <message>
+    <message numerus="yes">
       <source>%n second(s)</source>
-      <translation></translation>
+      <translation>
+        <numerusform>%n секунда</numerusform>
+        <numerusform>%n секунды</numerusform>
+        <numerusform>%n секунд</numerusform>
+        <numerusform>%n секунд</numerusform>
+      </translation>
     </message>
-    <message>
+    <message numerus="yes">
       <source>%n minute(s)</source>
-      <translation></translation>
+      <translation>
+        <numerusform>%n минута</numerusform>
+        <numerusform>%n минуты</numerusform>
+        <numerusform>%n минут</numerusform>
+        <numerusform>%n минут</numerusform>
+      </translation>
     </message>
-    <message>
+    <message numerus="yes">
       <source>%n hour(s)</source>
-      <translation></translation>
+      <translation>
+        <numerusform>%n час</numerusform>
+        <numerusform>%n часа</numerusform>
+        <numerusform>%n часов</numerusform>
+        <numerusform>%n часов</numerusform>
+      </translation>
     </message>
-    <message>
+    <message numerus="yes">
       <source>%n day(s)</source>
-      <translation></translation>
+      <translation>
+        <numerusform>%n день</numerusform>
+        <numerusform>%n дня</numerusform>
+        <numerusform>%n дней</numerusform>
+        <numerusform>%n дней</numerusform>
+      </translation>
     </message>
-    <message>
+    <message numerus="yes">
       <source>%n week(s)</source>
-      <translation></translation>
+      <translation>
+        <numerusform>%n неделя</numerusform>
+        <numerusform>%n недели</numerusform>
+        <numerusform>%n недель</numerusform>
+        <numerusform>%n недель</numerusform>
+      </translation>
     </message>
-    <message>
+    <message numerus="yes">
       <source>%n year(s)</source>
-      <translation></translation>
+      <translation>
+        <numerusform>%n год</numerusform>
+        <numerusform>%n года</numerusform>
+        <numerusform>%n лет</numerusform>
+        <numerusform>%n лет</numerusform>
+      </translation>
     </message>
     <message>
       <source>%1 and %2</source>
@@ -2578,7 +2628,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
       <source>Copy Address</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
   </context>
   <context>
@@ -2883,11 +2933,11 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
       <source>&lt;br&gt;Confirmations in: &lt;b&gt;%1 blocks&lt;/b&gt;&lt;br /&gt;</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Time in: &lt;b&gt;%1 seconds from first confirmed&lt;/b&gt;&lt;br /&gt;</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>%1 funds only</source>
@@ -2909,9 +2959,14 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
       <source>Fee rate: %1</source>
       <translation>Уровень комиссии: %1</translation>
     </message>
-    <message>
+    <message numerus="yes">
       <source>This transaction will consume %n input(s)</source>
-      <translation></translation>
+      <translation>
+        <numerusform>Эта транзакция израсходует %n вход</numerusform>
+        <numerusform>Эта транзакция израсходует %n входов</numerusform>
+        <numerusform>Эта транзакция израсходует %n входов</numerusform>
+        <numerusform>Эта транзакция израсходует %n входов</numerusform>
+      </translation>
     </message>
     <message>
       <source>Warning: Using %1 with %2 or more inputs can harm your privacy and is not recommended</source>
@@ -2959,15 +3014,20 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
       <source>The amount to pay exceeds the limit of 21 million per transaction.</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Pay only the required fee of %1</source>
       <translation>Заплатить только требуемую комиссию %1</translation>
     </message>
-    <message>
+    <message numerus="yes">
       <source>Estimated to begin confirmation within %n block(s).</source>
-      <translation></translation>
+      <translation>
+        <numerusform>Будет подтверждено приблизительно в течение %n блока.</numerusform>
+        <numerusform>Будет подтверждено приблизительно в течение %n блоков.</numerusform>
+        <numerusform>Будет подтверждено приблизительно в течение %n блоков.</numerusform>
+        <numerusform>Будет подтверждено приблизительно в течение %n блоков.</numerusform>
+      </translation>
     </message>
     <message>
       <source>Warning: Invalid Raptoreum address</source>
@@ -3026,7 +3086,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
       <source>Enable/Disable future transaction</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>&amp;Label:</source>
@@ -3062,23 +3122,23 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
       <source>Future</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Maturity:</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Number of block confirmations for this output to be spendable if happen before timelock</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Lock time:</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Time in seconds for this output to be spendable if happen before maturity</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Fee:</source>
@@ -3342,7 +3402,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
       <source>Collateral Amount</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Owner Address</source>
@@ -3366,7 +3426,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
       <source>Invalid</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>ENABLED</source>
@@ -3437,9 +3497,14 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
   </context>
   <context>
     <name>TransactionDesc</name>
-    <message>
+    <message numerus="yes">
       <source>Open for %n more block(s)</source>
-      <translation></translation>
+      <translation>
+        <numerusform>Будет открыто ещё %n блок</numerusform>
+        <numerusform>Будет открыто ещё %n блока</numerusform>
+        <numerusform>Будет открыто ещё %n блоков</numerusform>
+        <numerusform>Будет открыто ещё %n блоков</numerusform>
+      </translation>
     </message>
     <message>
       <source>Open until %1</source>
@@ -3483,15 +3548,15 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
       <source>Future Transaction</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Future Amount:</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Maturity Block:</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>%1 Blocks left</source>
@@ -3503,27 +3568,27 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
       <source>Maturity Time:</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Locked Time:</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>seconds</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Never</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Locked Output Index:</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Waiting for sync...</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Status</source>
@@ -3569,9 +3634,14 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
       <source>Credit</source>
       <translation>Кредит</translation>
     </message>
-    <message>
+    <message numerus="yes">
       <source>matures in %n more block(s)</source>
-      <translation></translation>
+      <translation>
+        <numerusform>будет доступно через %n блок</numerusform>
+        <numerusform>будет доступно через %n блока</numerusform>
+        <numerusform>будет доступно через %n блоков</numerusform>
+        <numerusform>будет доступно через %n блоков</numerusform>
+      </translation>
     </message>
     <message>
       <source>not accepted</source>
@@ -3675,9 +3745,14 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
       <source>Address / Label</source>
       <translation>Адрес / Метка</translation>
     </message>
-    <message>
+    <message numerus="yes">
       <source>Open for %n more block(s)</source>
-      <translation></translation>
+      <translation>
+        <numerusform>Будет открыто ещё %n блок</numerusform>
+        <numerusform>Будет открыто ещё %n блока</numerusform>
+        <numerusform>Будет открыто ещё %n блоков</numerusform>
+        <numerusform>Будет открыто ещё %n блоков</numerusform>
+      </translation>
     </message>
     <message>
       <source>Open until %1</source>
@@ -3745,11 +3820,11 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
       <source>Future Send</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Future Receive</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>%1 Mixing</source>
@@ -3852,15 +3927,15 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
       <source>Future</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Future Send</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>Future Received</source>
-      <translation></translation>
+      <translation type="unfinished"></translation>
     </message>
     <message>
       <source>%1 Send</source>
