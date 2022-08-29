@@ -2112,6 +2112,11 @@ bool AppInitMain()
 
         // Always load the powcache if available:
         uiInterface.InitMessage(_("Loading POW cache..."));
+        fs::path powCacheFile = pathDB / strDBName;
+        if (!fs::exists(powCacheFile)) {
+          uiInterface.InitMessage("Loading POW cache for the first time. This could take a minute...");
+        }
+
         CFlatDB<CPowCache> flatdb7(strDBName, "powCache");
         if(!flatdb7.Load(CPowCache::Instance())) {
             return InitError(_("Failed to load POW cache from") + "\n" + (pathDB / strDBName).string());
