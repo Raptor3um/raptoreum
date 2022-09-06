@@ -3210,6 +3210,7 @@ bool CChainState::ActivateBestChain(CValidationState &state, const CChainParams&
             // Always notify the UI if a new block tip was connected
             if (pindexFork != pindexNewTip) {
                 uiInterface.NotifyBlockTip(fInitialDownload, pindexNewTip);
+                uiInterface.BlockNotifyTip(fInitialDownload, pindexNewTip);
             }
         }
         // When we reach this point, we switched to a new tip (stored in pindexNewTip).
@@ -3347,6 +3348,7 @@ bool CChainState::InvalidateBlock(CValidationState& state, const CChainParams& c
     // Only notify about a new block tip if the active chain was modified.
     if (pindex_was_in_chain) {
         uiInterface.NotifyBlockTip(IsInitialBlockDownload(), pindex->pprev);
+        uiInterface.BlockNotifyTip(IsInitialBlockDownload(), pindex->pprev);
     }
     return true;
 }
@@ -3420,6 +3422,7 @@ bool CChainState::MarkConflictingBlock(CValidationState& state, const CChainPara
     // Only notify about a new block tip if the active chain was modified.
     if (pindex_was_in_chain) {
         uiInterface.NotifyBlockTip(IsInitialBlockDownload(), pindex->pprev);
+        uiInterface.BlockNotifyTip(IsInitialBlockDownload(), pindex->pprev);
     }
     return true;
 }
