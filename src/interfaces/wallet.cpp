@@ -564,6 +564,11 @@ public:
     {
         return MakeHandler(m_wallet.NotifyWatchonlyChanged.connect(fn));
     }
+    std::unique_ptr<Handler> handleBlockNotifyTip(BlockNotifyTipFn fn) override
+    {
+        return MakeHandler(::uiInterface.BlockNotifyTip.connect([fn](bool initial_download, const CBlockIndex* block) {
+            fn(initial_download, block->nHeight);}));
+    }
 
     std::shared_ptr<CWallet> m_shared_wallet;
     CWallet& m_wallet;

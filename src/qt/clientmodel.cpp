@@ -31,6 +31,8 @@
 
 static int64_t nLastHeaderTipUpdateNotification = 0;
 static int64_t nLastBlockTipUpdateNotification = 0;
+static int64_t nLastSmartnodeList = 0;
+static bool ninitialSync = true;
 
 ClientModel::ClientModel(interfaces::Node& node, OptionsModel *_optionsModel, QObject *parent) :
     QObject(parent),
@@ -244,6 +246,7 @@ static void BlockTipChanged(ClientModel *clientmodel, bool initialSync, int heig
     // lock free async UI updates in case we have a new block tip
     // during initial sync, only update the UI if the last update
     // was > 250ms (MODEL_UPDATE_DELAY) ago
+    ninitialSync = initialSync;
     int64_t now = 0;
     if (initialSync)
         now = GetTimeMillis();
@@ -270,7 +273,14 @@ static void BlockTipChanged(ClientModel *clientmodel, bool initialSync, int heig
 
 static void NotifySmartnodeListChanged(ClientModel *clientmodel, const CDeterministicMNList& newList)
 {
-    clientmodel->setSmartnodeList(newList);
+    int64_t now = 0;
+    if (ninitialSync)
+        now = GetTimeMillis();
+
+    if (!ninitialSync || now - nLastSmartnodeList > MODEL_UPDATE_DELAY_SYNC) {
+        clientmodel->setSmartnodeList(newList);
+        nLastSmartnodeList = now;
+    }
 }
 
 static void NotifyAdditionalDataSyncProgressChanged(ClientModel *clientmodel, double nSyncProgress)

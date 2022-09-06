@@ -29,6 +29,8 @@
 #include <QSet>
 #include <QTimer>
 
+static int64_t nLastUpdateNotification = 0;
+static bool ninitialSync = false;
 
 WalletModel::WalletModel(std::unique_ptr<interfaces::Wallet> wallet, interfaces::Node& node, OptionsModel *_optionsModel, QObject *parent) :
     QObject(parent), m_wallet(std::move(wallet)), m_node(node), optionsModel(_optionsModel), addressTableModel(0),
@@ -74,23 +76,31 @@ void WalletModel::pollBalanceChanged()
     // avoids the GUI from getting stuck on periodical polls if the core is
     // holding the locks for a longer time - for example, during a wallet
     // rescan.
-    interfaces::WalletBalances new_balances;
-    int numBlocks = -1;
-    if (!m_wallet->tryGetBalances(new_balances, numBlocks)) {
-        return;
-    }
+    int64_t now = 0;
+    if (ninitialSync)
+        now = GetTimeMillis();
 
-    if(fForceCheckBalanceChanged || numBlocks != cachedNumBlocks || node().coinJoinOptions().getRounds() != cachedCoinJoinRounds)
-    {
-        fForceCheckBalanceChanged = false;
+    // if we are in-sync, update the UI regardless of last update time
+    if (!ninitialSync || now - nLastUpdateNotification > MODEL_UPDATE_DELAY_SYNC) {    
+        interfaces::WalletBalances new_balances;
+        int numBlocks = -1;
+        if (!m_wallet->tryGetBalances(new_balances, numBlocks)) {
+            return;
+        }
+        nLastUpdateNotification = now;
 
-        // Balance and number of transactions might have changed
-        cachedNumBlocks = numBlocks;
-        cachedCoinJoinRounds = node().coinJoinOptions().getRounds();
+        if(fForceCheckBalanceChanged || numBlocks != cachedNumBlocks || node().coinJoinOptions().getRounds() != cachedCoinJoinRounds)
+        {
+            fForceCheckBalanceChanged = false;
 
-        checkBalanceChanged(new_balances);
-        if(transactionTableModel)
-            transactionTableModel->updateConfirmations();
+            // Balance and number of transactions might have changed
+            cachedNumBlocks = numBlocks;
+            cachedCoinJoinRounds = node().coinJoinOptions().getRounds();
+
+            checkBalanceChanged(new_balances);
+            if(transactionTableModel)
+                transactionTableModel->updateConfirmations();
+        }
     }
 }
 
@@ -523,6 +533,11 @@ static void NotifyWatchonlyChanged(WalletModel *walletmodel, bool fHaveWatchonly
                               Q_ARG(bool, fHaveWatchonly));
 }
 
+static void BlockTipChanged(WalletModel *walletmodel, bool initialSync )
+{
+    ninitialSync =initialSync;
+}
+
 void WalletModel::subscribeToCoreSignals()
 {
     // Connect signals to wallet
@@ -534,6 +549,7 @@ void WalletModel::subscribeToCoreSignals()
     m_handler_chainlock_received = m_wallet->handleChainLockReceived(boost::bind(NotifyChainLockReceived, this, _1));
     m_handler_show_progress = m_wallet->handleShowProgress(boost::bind(ShowProgress, this, _1, _2));
     m_handler_watch_only_changed = m_wallet->handleWatchOnlyChanged(boost::bind(NotifyWatchonlyChanged, this, _1));
+    m_handler_block_notify_tip =  m_wallet->handleBlockNotifyTip(boost::bind(BlockTipChanged, this, _1));
 }
 
 void WalletModel::unsubscribeFromCoreSignals()
@@ -547,6 +563,7 @@ void WalletModel::unsubscribeFromCoreSignals()
     m_handler_chainlock_received->disconnect();
     m_handler_show_progress->disconnect();
     m_handler_watch_only_changed->disconnect();
+    m_handler_block_notify_tip->disconnect();
 }
 
 // WalletModel::UnlockContext implementation

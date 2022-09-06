@@ -309,6 +309,7 @@ private:
     std::unique_ptr<interfaces::Handler> m_handler_chainlock_received;
     std::unique_ptr<interfaces::Handler> m_handler_show_progress;
     std::unique_ptr<interfaces::Handler> m_handler_watch_only_changed;
+    std::unique_ptr<interfaces::Handler> m_handler_block_notify_tip;
     interfaces::Node& m_node;
 
     bool fHaveWatchOnly;

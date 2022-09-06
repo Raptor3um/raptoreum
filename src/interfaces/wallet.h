@@ -287,6 +287,10 @@ public:
     //! Register handler for watchonly changed messages.
     using WatchOnlyChangedFn = std::function<void(bool have_watch_only)>;
     virtual std::unique_ptr<Handler> handleWatchOnlyChanged(WatchOnlyChangedFn fn) = 0;
+
+    //! Register handler for block tip messages.
+    using BlockNotifyTipFn = std::function<void(bool initial_download, int height)>;
+    virtual std::unique_ptr<Handler> handleBlockNotifyTip(BlockNotifyTipFn fn) = 0;
 };
 
 //! Tracking object returned by CreateTransaction and passed to CommitTransaction.
