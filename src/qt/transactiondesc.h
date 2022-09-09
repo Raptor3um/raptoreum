@@ -6,6 +6,8 @@
 #ifndef BITCOIN_QT_TRANSACTIONDESC_H
 #define BITCOIN_QT_TRANSACTIONDESC_H
 
+#include <memory>
+
 #include <QObject>
 #include <QString>
 
@@ -32,8 +34,8 @@ public:
 private:
     TransactionDesc() {}
 
-    static QString FormatTxStatus(const interfaces::WalletTx& wtx, const interfaces::WalletTxStatus& status, bool inMempool, int numBlocks, int64_t adjustedTime);
-    static QString FutureTxDescToHTML(const interfaces::WalletTx& wtx, const interfaces::WalletTxStatus& status, CFutureTx& ftx, int unit);
+    static QString FormatTxStatus(std::shared_ptr<const interfaces::WalletTx> wtx, const interfaces::WalletTxStatus& status, bool inMempool, int numBlocks, int64_t adjustedTime);
+    static QString FutureTxDescToHTML(std::shared_ptr<const interfaces::WalletTx> wtx, const interfaces::WalletTxStatus& status, CFutureTx& ftx, int unit);
 
 };
 
