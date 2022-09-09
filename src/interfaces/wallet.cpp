@@ -332,7 +332,6 @@ public:
     }
     std::vector<shared_ptr<WalletTx>> getWalletTxs() override
     {
-        LogPrintf("%s:%d: getWalletTxs Starting\n", __FILE__, __LINE__);
         LOCK2(::cs_main, m_wallet.cs_wallet);
         std::vector<shared_ptr<WalletTx>> result;
         result.reserve(m_wallet.mapWallet.size());
@@ -344,7 +343,6 @@ public:
             }
             result.emplace_back(tx);
         }
-        LogPrintf("%s:%d: getWalletTxs Complete: Total WalletTxs: %ld\n", __FILE__, __LINE__, result.size());
         return result;
     }
     bool tryGetTxStatus(const uint256& txid,
