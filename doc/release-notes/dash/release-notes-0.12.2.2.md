@@ -173,7 +173,7 @@ See detailed [change log](https://github.com/raptoreum/raptoreum/compare/v0.12.2
 ### Network/Sync:
 - [`5d58dd90c`](https://github.com/raptoreum/raptoreum/commit/5d58dd90c) Make sure to clear setAskFor in Raptoreum submodules (#1730)
 - [`328009749`](https://github.com/raptoreum/raptoreum/commit/328009749) fine-tune sync conditions in getblocktemplate (#1739)
-- [`362becbcc`](https://github.com/raptoreum/raptoreum/commit/362becbcc) Bump MIN_PEER_PROTO_VERSION to 70208 (#1772)
+- [`362becbcc`](https://github.com/raptoreum/raptoreum/commit/362becbcc) Bump OLD_MIN_PEER_PROTO_VERSION to 70208 (#1772)
 - [`930afd7df`](https://github.com/raptoreum/raptoreum/commit/930afd7df) Fix mnp and mnv invs (#1775)
 - [`63e306148`](https://github.com/raptoreum/raptoreum/commit/63e306148) Improve sync (#1779)
 - [`a79c97248`](https://github.com/raptoreum/raptoreum/commit/a79c97248) Fix ProcessVerifyBroadcast (#1780)

@@ -146,7 +146,7 @@ Protocol and network code:
 - Remove CENT-output free transaction rule when relaying
 - Lower maximum size for free transaction creation
 - Send multiple inv messages if mempool.size > MAX_INV_SZ
-- Split MIN_PROTO_VERSION into INIT_PROTO_VERSION and MIN_PEER_PROTO_VERSION
+- Split MIN_PROTO_VERSION into INIT_PROTO_VERSION and OLD_MIN_PEER_PROTO_VERSION
 - Do not treat fFromMe transaction differently when broadcasting
 - Process received messages one at a time without sleeping between messages
 - Improve logging of failed connections

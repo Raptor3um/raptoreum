@@ -2177,13 +2177,13 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             pfrom->fDisconnect = true;
             return false;
         }
-
-        if (nVersion < MIN_PEER_PROTO_VERSION) {
+        int minPeerProtoVersion = Params().IsFutureActive(chainActive.Tip()) ? MIN_PEER_PROTO_VERSION : OLD_MIN_PEER_PROTO_VERSION;
+        if (nVersion < minPeerProtoVersion) {
             // disconnect from peers older than this proto version
             LogPrint(BCLog::NET, "peer=%d using obsolete version %i; disconnecting\n", pfrom->GetId(), nVersion);
             if (enable_bip61) {
                 connman->PushMessage(pfrom, CNetMsgMaker(INIT_PROTO_VERSION).Make(NetMsgType::REJECT, strCommand, REJECT_OBSOLETE,
-                                   strprintf("Version must be %d or greater", MIN_PEER_PROTO_VERSION)));
+                                   strprintf("Version must be %d or greater", minPeerProtoVersion)));
             }
             pfrom->fDisconnect = true;
             return false;
