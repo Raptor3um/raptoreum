@@ -527,7 +527,7 @@ public:
         consensus.nRuleChangeActivationThreshold = 1916; // 95% of 2016
         consensus.nMinerConfirmationWindow = 2016; // nPowTargetTimespan / nPowTargetSpacing
         consensus.smartnodePaymentFixedBlock = 6800;
-        consensus.nFutureForkBlock = 410000;
+        consensus.nFutureForkBlock = 420420;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 1199145601; // January 1, 2008
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 1230767999; // December 31, 2008
@@ -638,14 +638,17 @@ public:
         checkpointData = {
           {  {5145, uint256S("0x64c9cc82f05f4326e49fd4b21a48494b02b12a707de67a47c7e8e1102b0f1d9b")},
              {35000, uint256S("0xb4fb191f3ef4141557aef8aafa700d312e5499cbde4a3079faa78cf58c0c414f")},
-             {61900, uint256S("0xc146fc6244fe4d71559f4fef16a386f1fceda6e5efa3da3ca1ebe9806cc8f25c")} }
+             {61900, uint256S("0xc146fc6244fe4d71559f4fef16a386f1fceda6e5efa3da3ca1ebe9806cc8f25c")},
+             {394273, uint256S("0dc274a28864a01a9539e60afdbc38fcdb0f000fbc52553cd31651c97557dc04")}
+
+          }
         };
 
         chainTxData = ChainTxData{
-          1621916553,   // * UNIX timestamp of last known number of transactions (Block 0)
-              170026,   // * total number of transactions between genesis and that timestamp
+            1662608883,   // * UNIX timestamp of last known number of transactions (Block 0)
+            2091922,   // * total number of transactions between genesis and that timestamp
                         //   (the tx=... number in the SetBestChain debug.log lines)
-                 0.1    // * estimated number of transactions per second after that timestamp
+            0.06    // * estimated number of transactions per second after that timestamp
         };
     }
 };

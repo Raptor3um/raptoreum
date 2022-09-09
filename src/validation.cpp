@@ -2098,7 +2098,6 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
                   CCoinsViewCache& view, const CChainParams& chainparams, bool fJustCheck)
 {
     boost::posix_time::ptime start = boost::posix_time::microsec_clock::local_time();
-
     AssertLockHeld(cs_main);
     assert(pindex);
     assert(*pindex->phashBlock == block.GetHash());
