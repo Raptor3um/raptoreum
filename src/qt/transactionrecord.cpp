@@ -18,7 +18,6 @@
 #include <utilmoneystr.h>
 
 #include <stdint.h>
-#include <QDebug>
 
 
 /* Return positive answer if transaction should be shown in list.
