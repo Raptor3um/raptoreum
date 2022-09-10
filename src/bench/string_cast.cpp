@@ -1,11 +1,11 @@
-// Copyright (c) 2018 The Dash Core developers
-// Copyright (c) 2020 The Raptoreum developers
+// Copyright (c) 2018-2020 The Dash Core developers
+// Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "bench.h"
-#include "tinyformat.h"
-#include "utilstrencodings.h"
+#include <bench/bench.h>
+#include <tinyformat.h>
+#include <utilstrencodings.h>
 
 #include <boost/lexical_cast.hpp>
 #include <string>
@@ -106,14 +106,14 @@ static void strings_2_strptintf(benchmark::State& state)
     }
 }
 
-BENCHMARK(int_atoi);
-BENCHMARK(int_lexical_cast);
-BENCHMARK(strings_1_itostr);
-BENCHMARK(strings_1_lexical_cast);
-BENCHMARK(strings_1_numberToString);
-BENCHMARK(strings_1_to_string);
-BENCHMARK(strings_2_multi_itostr);
-BENCHMARK(strings_2_multi_lexical_cast);
-BENCHMARK(strings_2_multi_numberToString);
-BENCHMARK(strings_2_multi_to_string);
-BENCHMARK(strings_2_strptintf);
+BENCHMARK(int_atoi, 700 * 1000 * 1000);
+BENCHMARK(int_lexical_cast, 40 * 1000 * 1000);
+BENCHMARK(strings_1_itostr, 3 * 1000 * 1000);
+BENCHMARK(strings_1_lexical_cast, 20 * 1000 * 1000);
+BENCHMARK(strings_1_numberToString, 3 * 1000 * 1000);
+BENCHMARK(strings_1_to_string, 8 * 1000 * 1000);
+BENCHMARK(strings_2_multi_itostr, 500 * 1000);
+BENCHMARK(strings_2_multi_lexical_cast, 2500 * 1000);
+BENCHMARK(strings_2_multi_numberToString, 600 * 1000);
+BENCHMARK(strings_2_multi_to_string, 1500 * 1000);
+BENCHMARK(strings_2_strptintf, 700 * 1000);

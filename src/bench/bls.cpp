@@ -1,12 +1,12 @@
 // Copyright (c) 2018-2019 The Dash Core developers
-// Copyright (c) 2020 The Raptoreum developers
+// Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "bench.h"
-#include "random.h"
-#include "bls/bls_worker.h"
-#include "utiltime.h"
+#include <bench/bench.h>
+#include <random.h>
+#include <bls/bls_worker.h>
+#include <utiltime.h>
 
 #include <iostream>
 
@@ -36,7 +36,7 @@ static void BuildTestVectors(size_t count, size_t invalidCount,
     for (size_t i = 0; i < invalidCount; i++) {
         invalid[i] = true;
     }
-    std::random_shuffle(invalid.begin(), invalid.end());
+    Shuffle(invalid.begin(), invalid.end(), FastRandomContext());
 
     for (size_t i = 0; i < count; i++) {
         secKeys[i].MakeNewKey();
@@ -52,7 +52,7 @@ static void BuildTestVectors(size_t count, size_t invalidCount,
     }
 }
 
-static void BLSPubKeyAggregate_Normal(benchmark::State& state)
+static void BLS_PubKeyAggregate_Normal(benchmark::State& state)
 {
     CBLSSecretKey secKey1, secKey2;
     secKey1.MakeNewKey();
@@ -62,31 +62,41 @@ static void BLSPubKeyAggregate_Normal(benchmark::State& state)
 
     // Benchmark.
     while (state.KeepRunning()) {
-        CBLSPublicKey k(pubKey1);
-        k.AggregateInsecure(pubKey2);
+        pubKey1.AggregateInsecure(pubKey2);
     }
 }
 
-static void BLSSecKeyAggregate_Normal(benchmark::State& state)
+static void BLS_SecKeyAggregate_Normal(benchmark::State& state)
 {
     CBLSSecretKey secKey1, secKey2;
     secKey1.MakeNewKey();
     secKey2.MakeNewKey();
-    CBLSPublicKey pubKey1 = secKey1.GetPublicKey();
-    CBLSPublicKey pubKey2 = secKey2.GetPublicKey();
 
     // Benchmark.
     while (state.KeepRunning()) {
-        CBLSSecretKey k(secKey1);
-        k.AggregateInsecure(secKey2);
+        secKey1.AggregateInsecure(secKey2);
     }
 }
 
-static void BLSSign_Normal(benchmark::State& state)
+static void BLS_SignatureAggregate_Normal(benchmark::State& state)
+{
+    uint256 hash = GetRandHash();
+    CBLSSecretKey secKey1, secKey2;
+    secKey1.MakeNewKey();
+    secKey2.MakeNewKey();
+    CBLSSignature sig1 = secKey1.Sign(hash);
+    CBLSSignature sig2 = secKey2.Sign(hash);
+
+    // Benchmark.
+    while (state.KeepRunning()) {
+        sig1.AggregateInsecure(sig2);
+    }
+}
+
+static void BLS_Sign_Normal(benchmark::State& state)
 {
     CBLSSecretKey secKey;
     secKey.MakeNewKey();
-    CBLSPublicKey pubKey = secKey.GetPublicKey();
 
     // Benchmark.
     while (state.KeepRunning()) {
@@ -95,7 +105,7 @@ static void BLSSign_Normal(benchmark::State& state)
     }
 }
 
-static void BLSVerify_Normal(benchmark::State& state)
+static void BLS_Verify_Normal(benchmark::State& state)
 {
     BLSPublicKeyVector pubKeys;
     BLSSecretKeyVector secKeys;
@@ -120,7 +130,7 @@ static void BLSVerify_Normal(benchmark::State& state)
 }
 
 
-static void BLSVerify_LargeBlock(size_t txCount, benchmark::State& state)
+static void BLS_Verify_LargeBlock(size_t txCount, benchmark::State& state)
 {
     BLSPublicKeyVector pubKeys;
     BLSSecretKeyVector secKeys;
@@ -137,17 +147,17 @@ static void BLSVerify_LargeBlock(size_t txCount, benchmark::State& state)
     }
 }
 
-static void BLSVerify_LargeBlock1000(benchmark::State& state)
+static void BLS_Verify_LargeBlock100(benchmark::State& state)
 {
-    BLSVerify_LargeBlock(1000, state);
+    BLS_Verify_LargeBlock(100, state);
 }
 
-static void BLSVerify_LargeBlock10000(benchmark::State& state)
+static void BLS_Verify_LargeBlock1000(benchmark::State& state)
 {
-    BLSVerify_LargeBlock(10000, state);
+    BLS_Verify_LargeBlock(1000, state);
 }
 
-static void BLSVerify_LargeBlockSelfAggregated(size_t txCount, benchmark::State& state)
+static void BLS_Verify_LargeBlockSelfAggregated(size_t txCount, benchmark::State& state)
 {
     BLSPublicKeyVector pubKeys;
     BLSSecretKeyVector secKeys;
@@ -163,17 +173,17 @@ static void BLSVerify_LargeBlockSelfAggregated(size_t txCount, benchmark::State&
     }
 }
 
-static void BLSVerify_LargeBlockSelfAggregated1000(benchmark::State& state)
+static void BLS_Verify_LargeBlockSelfAggregated100(benchmark::State& state)
 {
-    BLSVerify_LargeBlockSelfAggregated(1000, state);
+    BLS_Verify_LargeBlockSelfAggregated(100, state);
 }
 
-static void BLSVerify_LargeBlockSelfAggregated10000(benchmark::State& state)
+static void BLS_Verify_LargeBlockSelfAggregated1000(benchmark::State& state)
 {
-    BLSVerify_LargeBlockSelfAggregated(10000, state);
+    BLS_Verify_LargeBlockSelfAggregated(1000, state);
 }
 
-static void BLSVerify_LargeAggregatedBlock(size_t txCount, benchmark::State& state)
+static void BLS_Verify_LargeAggregatedBlock(size_t txCount, benchmark::State& state)
 {
     BLSPublicKeyVector pubKeys;
     BLSSecretKeyVector secKeys;
@@ -190,17 +200,17 @@ static void BLSVerify_LargeAggregatedBlock(size_t txCount, benchmark::State& sta
     }
 }
 
-static void BLSVerify_LargeAggregatedBlock1000(benchmark::State& state)
+static void BLS_Verify_LargeAggregatedBlock100(benchmark::State& state)
 {
-    BLSVerify_LargeAggregatedBlock(1000, state);
+    BLS_Verify_LargeAggregatedBlock(100, state);
 }
 
-static void BLSVerify_LargeAggregatedBlock10000(benchmark::State& state)
+static void BLS_Verify_LargeAggregatedBlock1000(benchmark::State& state)
 {
-    BLSVerify_LargeAggregatedBlock(10000, state);
+    BLS_Verify_LargeAggregatedBlock(1000, state);
 }
 
-static void BLSVerify_LargeAggregatedBlock1000PreVerified(benchmark::State& state)
+static void BLS_Verify_LargeAggregatedBlock1000PreVerified(benchmark::State& state)
 {
     BLSPublicKeyVector pubKeys;
     BLSSecretKeyVector secKeys;
@@ -246,7 +256,7 @@ static void BLSVerify_LargeAggregatedBlock1000PreVerified(benchmark::State& stat
     }
 }
 
-static void BLSVerify_Batched(benchmark::State& state)
+static void BLS_Verify_Batched(benchmark::State& state)
 {
     BLSPublicKeyVector pubKeys;
     BLSSecretKeyVector secKeys;
@@ -302,7 +312,7 @@ static void BLSVerify_Batched(benchmark::State& state)
     }
 }
 
-static void BLSVerify_BatchedParallel(benchmark::State& state)
+static void BLS_Verify_BatchedParallel(benchmark::State& state)
 {
     BLSPublicKeyVector pubKeys;
     BLSSecretKeyVector secKeys;
@@ -349,15 +359,17 @@ static void BLSVerify_BatchedParallel(benchmark::State& state)
     }
 }
 
-BENCHMARK(BLSPubKeyAggregate_Normal)
-BENCHMARK(BLSSecKeyAggregate_Normal)
-BENCHMARK(BLSSign_Normal)
-BENCHMARK(BLSVerify_Normal)
-BENCHMARK(BLSVerify_LargeBlock1000)
-BENCHMARK(BLSVerify_LargeBlockSelfAggregated1000)
-BENCHMARK(BLSVerify_LargeBlockSelfAggregated10000)
-BENCHMARK(BLSVerify_LargeAggregatedBlock1000)
-BENCHMARK(BLSVerify_LargeAggregatedBlock10000)
-BENCHMARK(BLSVerify_LargeAggregatedBlock1000PreVerified)
-BENCHMARK(BLSVerify_Batched)
-BENCHMARK(BLSVerify_BatchedParallel)
+BENCHMARK(BLS_PubKeyAggregate_Normal, 700 * 1000)
+BENCHMARK(BLS_SecKeyAggregate_Normal, 1300 * 1000)
+BENCHMARK(BLS_SignatureAggregate_Normal, 300 * 1000)
+BENCHMARK(BLS_Sign_Normal, 600)
+BENCHMARK(BLS_Verify_Normal, 350)
+BENCHMARK(BLS_Verify_LargeBlock100, 3)
+BENCHMARK(BLS_Verify_LargeBlock1000, 1)
+BENCHMARK(BLS_Verify_LargeBlockSelfAggregated100, 7)
+BENCHMARK(BLS_Verify_LargeBlockSelfAggregated1000, 1)
+BENCHMARK(BLS_Verify_LargeAggregatedBlock100, 7)
+BENCHMARK(BLS_Verify_LargeAggregatedBlock1000, 1)
+BENCHMARK(BLS_Verify_LargeAggregatedBlock1000PreVerified, 7)
+BENCHMARK(BLS_Verify_Batched, 500)
+BENCHMARK(BLS_Verify_BatchedParallel, 1000)

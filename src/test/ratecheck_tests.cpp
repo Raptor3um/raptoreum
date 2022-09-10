@@ -1,9 +1,9 @@
-// Copyright (c) 2014-2019 The Dash Core developers
-// Copyright (c) 2020 The Raptoreum developers
+// Copyright (c) 2014-2020 The Dash Core developers
+// Copyright (c) 2020-2022 The Raptoreum developers
 
-#include "governance/governance.h"
+#include <governance/governance.h>
 
-#include "test/test_raptoreum.h"
+#include <test/test_raptoreum.h>
 
 #include <boost/test/unit_test.hpp>
 

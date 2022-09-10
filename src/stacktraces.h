@@ -1,10 +1,10 @@
-// Copyright (c) 2014-2019 The Dash Core developers
-// Copyright (c) 2020 The Raptoreum developers
+// Copyright (c) 2014-2021 The Dash Core developers
+// Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef RAPTOREUM_STACKTRACES_H
-#define RAPTOREUM_STACKTRACES_H
+#ifndef BITCOIN_STACKTRACES_H
+#define BITCOIN_STACKTRACES_H
 
 #include <string>
 #include <sstream>
@@ -12,7 +12,7 @@
 
 #include <cxxabi.h>
 
-#include "tinyformat.h"
+#include <tinyformat.h>
 
 std::string DemangleSymbol(const std::string& name);
 
@@ -40,4 +40,4 @@ inline std::string GetExceptionWhat(const T& e)
 void RegisterPrettyTerminateHander();
 void RegisterPrettySignalHandlers();
 
-#endif//RAPTOREUM_STACKTRACES_H
+#endif//BITCOIN_STACKTRACES_H

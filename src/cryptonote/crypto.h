@@ -8,13 +8,13 @@
 #include <mutex>
 #include <vector>
 
-#include "generic-ops.h"
-#include "slow-hash.h"
+#include <cryptonote/generic-ops.h>
+#include <cryptonote/slow-hash.h>
 
 namespace crypto {
 
   extern "C" {
-#include "random.h"
+#include <random.h>
   }
 
   extern std::mutex random_lock;

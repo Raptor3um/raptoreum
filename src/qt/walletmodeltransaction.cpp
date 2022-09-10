@@ -2,41 +2,33 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "walletmodeltransaction.h"
+#include <qt/walletmodeltransaction.h>
 
-#include "wallet/wallet.h"
+#include <interfaces/node.h>
+#include <key_io.h>
 
 WalletModelTransaction::WalletModelTransaction(const QList<SendCoinsRecipient> &_recipients) :
     recipients(_recipients),
-    walletTransaction(0),
-    keyChange(0),
     fee(0)
 {
-    walletTransaction = new CWalletTx();
 }
 
-WalletModelTransaction::~WalletModelTransaction()
-{
-    delete keyChange;
-    delete walletTransaction;
-}
-
-QList<SendCoinsRecipient> WalletModelTransaction::getRecipients()
+QList<SendCoinsRecipient> WalletModelTransaction::getRecipients() const
 {
     return recipients;
 }
 
-CWalletTx *WalletModelTransaction::getTransaction()
+std::unique_ptr<interfaces::PendingWalletTx>& WalletModelTransaction::getWtx()
 {
-    return walletTransaction;
+    return wtx;
 }
 
 unsigned int WalletModelTransaction::getTransactionSize()
 {
-    return (!walletTransaction ? 0 : (::GetSerializeSize(walletTransaction->tx, SER_NETWORK, PROTOCOL_VERSION)));
+    return wtx != nullptr ? ::GetSerializeSize(wtx->get(), SER_NETWORK, PROTOCOL_VERSION) : 0;
 }
 
-CAmount WalletModelTransaction::getTransactionFee()
+CAmount WalletModelTransaction::getTransactionFee() const
 {
     return fee;
 }
@@ -63,7 +55,7 @@ void WalletModelTransaction::reassignAmounts()
                 if (out.amount() <= 0) continue;
                 const unsigned char* scriptStr = (const unsigned char*)out.script().data();
                 CScript scriptPubKey(scriptStr, scriptStr+out.script().size());
-                for (const auto& txout : walletTransaction->tx->vout) {
+                for (const auto& txout : wtx->get().vout) {
                     if (txout.scriptPubKey == scriptPubKey) {
                         subtotal += txout.nValue;
                         break;
@@ -74,8 +66,8 @@ void WalletModelTransaction::reassignAmounts()
         }
         else // normal recipient (no payment request)
         {
-            for (const auto& txout : walletTransaction->tx->vout) {
-                CScript scriptPubKey = GetScriptForDestination(CBitcoinAddress(rcp.address.toStdString()).Get());
+            for (const auto& txout : wtx->get().vout) {
+                CScript scriptPubKey = GetScriptForDestination(DecodeDestination(rcp.address.toStdString()));
                 if (txout.scriptPubKey == scriptPubKey) {
                     rcp.amount = txout.nValue;
                     break;
@@ -85,7 +77,7 @@ void WalletModelTransaction::reassignAmounts()
     }
 }
 
-CAmount WalletModelTransaction::getTotalTransactionAmount()
+CAmount WalletModelTransaction::getTotalTransactionAmount() const
 {
     CAmount totalTransactionAmount = 0;
     for (const SendCoinsRecipient &rcp : recipients)
@@ -93,14 +85,4 @@ CAmount WalletModelTransaction::getTotalTransactionAmount()
         totalTransactionAmount += rcp.amount;
     }
     return totalTransactionAmount;
-}
-
-void WalletModelTransaction::newPossibleKeyChange(CWallet *wallet)
-{
-    keyChange = new CReserveKey(wallet);
-}
-
-CReserveKey *WalletModelTransaction::getPossibleKeyChange()
-{
-    return keyChange;
 }

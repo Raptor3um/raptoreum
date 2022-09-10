@@ -2,12 +2,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "random.h"
-#include "scheduler.h"
+#include <random.h>
+#include <scheduler.h>
 
-#include "test/test_raptoreum.h"
+#include <test/test_raptoreum.h>
 
-#include <boost/bind.hpp>
 #include <boost/thread.hpp>
 #include <boost/test/unit_test.hpp>
 
@@ -21,7 +20,7 @@ static void microTask(CScheduler& s, boost::mutex& mutex, int& counter, int delt
     }
     boost::chrono::system_clock::time_point noTime = boost::chrono::system_clock::time_point::min();
     if (rescheduleTime != noTime) {
-        CScheduler::Function f = boost::bind(&microTask, boost::ref(s), boost::ref(mutex), boost::ref(counter), -delta + 1, noTime);
+        CScheduler::Function f = std::bind(&microTask, boost::ref(s), boost::ref(mutex), boost::ref(counter), -delta + 1, noTime);
         s.schedule(f, rescheduleTime);
     }
 }
@@ -56,8 +55,8 @@ BOOST_AUTO_TEST_CASE(manythreads)
     int counter[10] = { 0 };
     FastRandomContext rng(42);
     auto zeroToNine = [](FastRandomContext& rc) -> int { return rc.randrange(10); }; // [0, 9]
-    auto randomMsec = [](FastRandomContext& rc) -> int { return -11 + rc.randrange(1012); }; // [-11, 1000]
-    auto randomDelta = [](FastRandomContext& rc) -> int { return -1000 + rc.randrange(2001); }; // [-1000, 1000]
+    auto randomMsec = [](FastRandomContext& rc) -> int { return -11 + (int)rc.randrange(1012); }; // [-11, 1000]
+    auto randomDelta = [](FastRandomContext& rc) -> int { return -1000 + (int)rc.randrange(2001); }; // [-1000, 1000]
 
     boost::chrono::system_clock::time_point start = boost::chrono::system_clock::now();
     boost::chrono::system_clock::time_point now = start;
@@ -65,11 +64,11 @@ BOOST_AUTO_TEST_CASE(manythreads)
     size_t nTasks = microTasks.getQueueInfo(first, last);
     BOOST_CHECK(nTasks == 0);
 
-    for (int i = 0; i < 100; i++) {
+    for (int i = 0; i < 100; ++i) {
         boost::chrono::system_clock::time_point t = now + boost::chrono::microseconds(randomMsec(rng));
         boost::chrono::system_clock::time_point tReschedule = now + boost::chrono::microseconds(500 + randomMsec(rng));
         int whichCounter = zeroToNine(rng);
-        CScheduler::Function f = boost::bind(&microTask, boost::ref(microTasks),
+        CScheduler::Function f = std::bind(&microTask, boost::ref(microTasks),
                                              boost::ref(counterMutex[whichCounter]), boost::ref(counter[whichCounter]),
                                              randomDelta(rng), tReschedule);
         microTasks.schedule(f, t);
@@ -82,19 +81,19 @@ BOOST_AUTO_TEST_CASE(manythreads)
     // As soon as these are created they will start running and servicing the queue
     boost::thread_group microThreads;
     for (int i = 0; i < 5; i++)
-        microThreads.create_thread(boost::bind(&CScheduler::serviceQueue, &microTasks));
+        microThreads.create_thread(std::bind(&CScheduler::serviceQueue, &microTasks));
 
     MicroSleep(600);
     now = boost::chrono::system_clock::now();
 
     // More threads and more tasks:
     for (int i = 0; i < 5; i++)
-        microThreads.create_thread(boost::bind(&CScheduler::serviceQueue, &microTasks));
+        microThreads.create_thread(std::bind(&CScheduler::serviceQueue, &microTasks));
     for (int i = 0; i < 100; i++) {
         boost::chrono::system_clock::time_point t = now + boost::chrono::microseconds(randomMsec(rng));
         boost::chrono::system_clock::time_point tReschedule = now + boost::chrono::microseconds(500 + randomMsec(rng));
         int whichCounter = zeroToNine(rng);
-        CScheduler::Function f = boost::bind(&microTask, boost::ref(microTasks),
+        CScheduler::Function f = std::bind(&microTask, boost::ref(microTasks),
                                              boost::ref(counterMutex[whichCounter]), boost::ref(counter[whichCounter]),
                                              randomDelta(rng), tReschedule);
         microTasks.schedule(f, t);
@@ -110,6 +109,48 @@ BOOST_AUTO_TEST_CASE(manythreads)
         counterSum += counter[i];
     }
     BOOST_CHECK_EQUAL(counterSum, 200);
+}
+
+BOOST_AUTO_TEST_CASE(singlethreadedscheduler_ordered)
+{
+    CScheduler scheduler;
+
+    // each queue should be well ordered with respect to itself but not other queues
+    SingleThreadedSchedulerClient queue1(&scheduler);
+    SingleThreadedSchedulerClient queue2(&scheduler);
+
+    // create more threads than queues
+    // if the queues only permit execution of one task at once then
+    // the extra threads should effectively be doing nothing
+    // if they don't we'll get out of order behaviour
+    boost::thread_group threads;
+    for (int i = 0; i < 5; ++i) {
+        threads.create_thread(std::bind(&CScheduler::serviceQueue, &scheduler));
+    }
+
+    // these are not atomic, if SinglethreadedSchedulerClient prevents
+    // parallel execution at the queue level no synchronization should be required here
+    int counter1 = 0;
+    int counter2 = 0;
+
+    // just simply count up on each queue - if execution is properly ordered then
+    // the callbacks should run in exactly the order in which they were enqueued
+    for (int i = 0; i < 100; ++i) {
+        queue1.AddToProcessQueue([i, &counter1]() {
+            BOOST_CHECK_EQUAL(i, counter1++);
+        });
+
+        queue2.AddToProcessQueue([i, &counter2]() {
+            BOOST_CHECK_EQUAL(i, counter2++);
+        });
+    }
+
+    // finish up
+    scheduler.stop(true);
+    threads.join_all();
+
+    BOOST_CHECK_EQUAL(counter1, 100);
+    BOOST_CHECK_EQUAL(counter2, 100);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

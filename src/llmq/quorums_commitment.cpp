@@ -1,15 +1,21 @@
 // Copyright (c) 2018-2019 The Dash Core developers
-// Copyright (c) 2020 The Raptoreum developers
+// Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "quorums_commitment.h"
-#include "quorums_utils.h"
+#include <llmq/quorums_commitment.h>
 
-#include "chainparams.h"
-#include "validation.h"
+#include <chainparams.h>
+#include <spork.h>
+#include <validation.h>
 
-#include "evo/specialtx.h"
+#include <evo/specialtx.h>
+
+bool IsBlsSigCheckEnabled(int64_t blockTime)
+{
+    int64_t activeTime = sporkManager.GetSporkValue(SPORK_17_QUORUM_DKG_ENABLED);
+    return blockTime >= activeTime;
+}
 
 namespace llmq
 {
@@ -26,7 +32,7 @@ CFinalCommitment::CFinalCommitment(const Consensus::LLMQParams& params, const ui
     LogPrintStr(strprintf("CFinalCommitment::%s -- %s", __func__, tinyformat::format(__VA_ARGS__))); \
 } while(0)
 
-bool CFinalCommitment::Verify(const std::vector<CDeterministicMNCPtr>& members, bool checkSigs) const
+bool CFinalCommitment::Verify(const CBlockIndex* pQuorumIndex, bool checkSigs) const
 {
     if (nVersion == 0 || nVersion > CURRENT_VERSION) {
         return false;
@@ -67,6 +73,7 @@ bool CFinalCommitment::Verify(const std::vector<CDeterministicMNCPtr>& members, 
         return false;
     }
 
+    auto members = CLLMQUtils::GetAllQuorumMembers(llmqType, pQuorumIndex);
     for (size_t i = members.size(); i < params.size; i++) {
         if (validMembers[i]) {
             LogPrintfFinalCommitment("invalid validMembers bitset. bit %d should not be set\n", i);
@@ -79,7 +86,7 @@ bool CFinalCommitment::Verify(const std::vector<CDeterministicMNCPtr>& members, 
     }
 
     // sigs are only checked when the block is processed
-    if (checkSigs) {
+    if (checkSigs && IsBlsSigCheckEnabled(pQuorumIndex->GetBlockTime())) {
         uint256 commitmentHash = CLLMQUtils::BuildCommitmentHash(params.type, quorumHash, validMembers, quorumPublicKey, quorumVvecHash);
 
         std::vector<CBLSPublicKey> memberPubKeys;
@@ -122,7 +129,7 @@ bool CFinalCommitment::VerifyNull() const
 bool CFinalCommitment::VerifySizes(const Consensus::LLMQParams& params) const
 {
     if (signers.size() != params.size) {
-        LogPrintfFinalCommitment("invalid signers.size=%d, params.size=%d\n", signers.size(), params.size);
+        LogPrintfFinalCommitment("invalid signers.size=%d, params.size=%d params_name=%s\n", signers.size(), params.size,params.name);
         return false;
     }
     if (validMembers.size() != params.size) {
@@ -147,11 +154,11 @@ bool CheckLLMQCommitment(const CTransaction& tx, const CBlockIndex* pindexPrev, 
         return state.DoS(100, false, REJECT_INVALID, "bad-qc-height");
     }
 
-    if (!mapBlockIndex.count(qcTx.commitment.quorumHash)) {
+    const CBlockIndex* pindexQuorum = LookupBlockIndex(qcTx.commitment.quorumHash);
+    if (!pindexQuorum) {
         return state.DoS(100, false, REJECT_INVALID, "bad-qc-quorum-hash");
     }
 
-    const CBlockIndex* pindexQuorum = mapBlockIndex[qcTx.commitment.quorumHash];
 
     if (pindexQuorum != pindexPrev->GetAncestor(pindexQuorum->nHeight)) {
         // not part of active chain
@@ -162,7 +169,6 @@ bool CheckLLMQCommitment(const CTransaction& tx, const CBlockIndex* pindexPrev, 
     	std::cout << "qcTx.commitment.llmqType " << qcTx.commitment.llmqType << endl;
         return state.DoS(100, false, REJECT_INVALID, "bad-qc-type");
     }
-    const auto& params = Params().GetConsensus().llmqs.at((Consensus::LLMQType)qcTx.commitment.llmqType);
 
     if (qcTx.commitment.IsNull()) {
         if (!qcTx.commitment.VerifyNull()) {
@@ -171,8 +177,7 @@ bool CheckLLMQCommitment(const CTransaction& tx, const CBlockIndex* pindexPrev, 
         return true;
     }
 
-    auto members = CLLMQUtils::GetAllQuorumMembers(params.type, pindexQuorum);
-    if (!qcTx.commitment.Verify(members, false)) {
+    if (!qcTx.commitment.Verify(pindexQuorum, false)) {
         return state.DoS(100, false, REJECT_INVALID, "bad-qc-invalid");
     }
 

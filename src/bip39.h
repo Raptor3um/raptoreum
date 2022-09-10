@@ -21,10 +21,10 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef RAPTOREUM_BIP39_H
-#define RAPTOREUM_BIP39_H
+#ifndef BITCOIN_BIP39_H
+#define BITCOIN_BIP39_H
 
-#include "support/allocators/secure.h"
+#include <support/allocators/secure.h>
 
 class CMnemonic
 {
@@ -36,4 +36,4 @@ public:
     static void ToSeed(SecureString mnemonic, SecureString passphrase, SecureVector& seedRet);
 };
 
-#endif
+#endif // BITCOIN_BIP39_H

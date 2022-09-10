@@ -1,13 +1,13 @@
 // Copyright (c) 2014-2019 The Dash Core developers
-// Copyright (c) 2020 The Raptoreum developers
+// Copyright (c) 2020-2022 The Raptoreum developers
 
-#include "governance/governance-validators.h"
-#include "utilstrencodings.h"
+#include <governance/governance-validators.h>
+#include <utilstrencodings.h>
 
-#include "data/proposals_valid.json.h"
-#include "data/proposals_invalid.json.h"
+#include <test/data/proposals_valid.json.h>
+#include <test/data/proposals_invalid.json.h>
 
-#include "test/test_raptoreum.h"
+#include <test/test_raptoreum.h>
 
 #include <iostream>
 #include <fstream>
@@ -29,7 +29,7 @@ std::string CreateEncodedProposalObject(const UniValue& objJSON)
 
     UniValue outerArray(UniValue::VARR);
     outerArray.push_back(innerArray);
-    
+
     std::string strData = outerArray.write();
     std::string strHex = HexStr(strData);
     return strHex;

@@ -1,12 +1,13 @@
 // Copyright (c) 2011-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2019 The Dash Core developers
-// Copyright (c) 2020 The Raptoreum developers
+// Copyright (c) 2014-2020 The Dash Core developers
+// Copyright (c) 2020-2021 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "bitcoinunits.h"
-#include "chainparams.h"
-#include "primitives/transaction.h"
+#include <qt/bitcoinunits.h>
+#include <chainparams.h>
+#include <primitives/transaction.h>
+#include <validation.h>
 
 #include <QSettings>
 #include <QStringList>
@@ -61,7 +62,7 @@ QString BitcoinUnits::name(int unit)
             case RTM: return QString("tRTM");
             case mRTM: return QString("mtRTM");
             case uRTM: return QString::fromUtf8("μtRTM");
-            case ruffs: return QString("tduffs");
+            case ruffs: return QString("truffs");
             default: return QString("???");
         }
     }
@@ -247,7 +248,11 @@ int BitcoinUnits::rowCount(const QModelIndex &parent) const
 
 QVariant BitcoinUnits::data(const QModelIndex &index, int role) const
 {
-    int row = index.row();
+    return data(index.row(), role);
+}
+
+QVariant BitcoinUnits::data(const int &row, int role) const
+{
     if(row >= 0 && row < unitlist.size())
     {
         Unit unit = unitlist.at(row);
@@ -267,5 +272,9 @@ QVariant BitcoinUnits::data(const QModelIndex &index, int role) const
 
 CAmount BitcoinUnits::maxMoney()
 {
-    return MAX_MONEY;
+    if(Params().IsFutureActive(chainActive.Tip())){
+        return MAX_MONEY;    
+    }else{
+        return OLD_MAX_MONEY;  
+    }
 }

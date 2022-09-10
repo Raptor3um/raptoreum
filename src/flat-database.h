@@ -1,19 +1,19 @@
 // Copyright (c) 2014-2020 The Dash Core developers
-// Copyright (c) 2020 The Raptoreum developers
+// Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef FLAT_DATABASE_H
-#define FLAT_DATABASE_H
+#ifndef BITCOIN_FLAT_DATABASE_H
+#define BITCOIN_FLAT_DATABASE_H
 
-#include "chainparams.h"
-#include "clientversion.h"
-#include "fs.h"
-#include "hash.h"
-#include "streams.h"
-#include "util.h"
+#include <chainparams.h>
+#include <clientversion.h>
+#include <fs.h>
+#include <hash.h>
+#include <streams.h>
+#include <util.h>
 
-/** 
+/**
 *   Generic Dumping and Loading
 *   ---------------------------
 */
@@ -46,7 +46,7 @@ private:
         // serialize, checksum data up to that point, then append checksum
         CDataStream ssObj(SER_DISK, CLIENT_VERSION);
         ssObj << strMagicMessage; // specific magic message for this type of object
-        ssObj << FLATDATA(Params().MessageStart()); // network specific magic number
+        ssObj << Params().MessageStart(); // network specific magic number
         ssObj << objToSave;
         uint256 hash = Hash(ssObj.begin(), ssObj.end());
         ssObj << hash;
@@ -98,7 +98,7 @@ private:
 
         // read data and checksum from file
         try {
-            filein.read((char *)&vchData[0], dataSize);
+            filein.read((char *)vchData.data(), dataSize);
             filein >> hashIn;
         }
         catch (std::exception &e) {
@@ -133,7 +133,7 @@ private:
 
 
             // de-serialize file header (network specific magic number) and ..
-            ssObj >> FLATDATA(pchMsgTmp);
+            ssObj >> pchMsgTmp;
 
             // ... verify the network matches ours
             if (memcmp(pchMsgTmp, Params().MessageStart(), sizeof(pchMsgTmp)))
@@ -226,4 +226,4 @@ public:
 };
 
 
-#endif
+#endif // BITCOIN_FLAT_DATABASE_H

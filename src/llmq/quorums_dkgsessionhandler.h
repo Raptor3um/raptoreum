@@ -1,16 +1,16 @@
-// Copyright (c) 2018-2020 The Dash Core developers
-// Copyright (c) 2020 The Raptoreum developers
+// Copyright (c) 2018-2021 The Dash Core developers
+// Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef RAPTOREUM_QUORUMS_DKGSESSIONHANDLER_H
-#define RAPTOREUM_QUORUMS_DKGSESSIONHANDLER_H
+#ifndef BITCOIN_LLMQ_QUORUMS_DKGSESSIONHANDLER_H
+#define BITCOIN_LLMQ_QUORUMS_DKGSESSIONHANDLER_H
 
-#include "llmq/quorums_dkgsession.h"
+#include <llmq/quorums_dkgsession.h>
 
-#include "validation.h"
+#include <validation.h>
 
-#include "ctpl.h"
+#include <ctpl.h>
 
 namespace llmq
 {
@@ -41,13 +41,14 @@ public:
 
 private:
     mutable CCriticalSection cs;
+    int invType;
     size_t maxMessagesPerNode;
     std::list<BinaryMessage> pendingMessages;
     std::map<NodeId, size_t> messagesPerNode;
     std::set<uint256> seenMessages;
 
 public:
-    CDKGPendingMessages(size_t _maxMessagesPerNode);
+    explicit CDKGPendingMessages(size_t _maxMessagesPerNode, int _invType);
 
     void PushPendingMessage(NodeId from, CDataStream& vRecv);
     std::list<BinaryMessage> PopPendingMessages(size_t maxCount);
@@ -103,7 +104,6 @@ private:
     std::atomic<bool> stopRequested{false};
 
     const Consensus::LLMQParams& params;
-    ctpl::thread_pool& messageHandlerPool;
     CBLSWorker& blsWorker;
     CDKGSessionManager& dkgManager;
 
@@ -120,11 +120,14 @@ private:
     CDKGPendingMessages pendingPrematureCommitments;
 
 public:
-    CDKGSessionHandler(const Consensus::LLMQParams& _params, ctpl::thread_pool& _messageHandlerPool, CBLSWorker& blsWorker, CDKGSessionManager& _dkgManager);
+    CDKGSessionHandler(const Consensus::LLMQParams& _params, CBLSWorker& blsWorker, CDKGSessionManager& _dkgManager);
     ~CDKGSessionHandler();
 
     void UpdatedBlockTip(const CBlockIndex *pindexNew);
-    void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman);
+    void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv);
+
+    void StartThread();
+    void StopThread();
 
 private:
     bool InitNewQuorum(const CBlockIndex* pindexQuorum);
@@ -143,4 +146,4 @@ private:
 
 } // namespace llmq
 
-#endif //RAPTOREUM_QUORUMS_DKGSESSIONHANDLER_H
+#endif // BITCOIN_LLMQ_QUORUMS_DKGSESSIONHANDLER_H

@@ -3,16 +3,16 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "sync.h"
-#include "clientversion.h"
-#include "util.h"
-#include "warnings.h"
-#include "hash.h"
+#include <sync.h>
+#include <clientversion.h>
+#include <util.h>
+#include <warnings.h>
+#include <hash.h>
 
 CCriticalSection cs_warnings;
-std::string strMiscWarning;
-bool fLargeWorkForkFound = false;
-bool fLargeWorkInvalidChainFound = false;
+std::string strMiscWarning GUARDED_BY(cs_warnings);
+bool fLargeWorkForkFound GUARDED_BY(cs_warnings) = false;
+bool fLargeWorkInvalidChainFound GUARDED_BY(cs_warnings) = false;
 
 void SetMiscWarning(const std::string& strWarning)
 {
@@ -41,7 +41,6 @@ void SetfLargeWorkInvalidChainFound(bool flag)
 std::string GetWarnings(const std::string& strFor)
 {
     std::string strStatusBar;
-    std::string strRPC;
     std::string strGUI;
     const std::string uiAlertSeperator = "<hr />";
 
@@ -52,9 +51,6 @@ std::string GetWarnings(const std::string& strFor)
         strGUI = _("This is a pre-release test build - use at your own risk - do not use for mining or merchant applications");
     }
 
-    if (gArgs.GetBoolArg("-testsafemode", DEFAULT_TESTSAFEMODE))
-        strStatusBar = strRPC = strGUI = "testsafemode enabled";
-
     // Misc warnings like out of disk space and clock is wrong
     if (strMiscWarning != "")
     {
@@ -64,12 +60,12 @@ std::string GetWarnings(const std::string& strFor)
 
     if (fLargeWorkForkFound)
     {
-        strStatusBar = strRPC = "Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.";
+        strStatusBar = "Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.";
         strGUI += (strGUI.empty() ? "" : uiAlertSeperator) + _("Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.");
     }
     else if (fLargeWorkInvalidChainFound)
     {
-        strStatusBar = strRPC = "Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.";
+        strStatusBar = "Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.";
         strGUI += (strGUI.empty() ? "" : uiAlertSeperator) + _("Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.");
     }
 
@@ -77,8 +73,6 @@ std::string GetWarnings(const std::string& strFor)
         return strGUI;
     else if (strFor == "statusbar")
         return strStatusBar;
-    else if (strFor == "rpc")
-        return strRPC;
     assert(!"GetWarnings(): invalid parameter");
     return "error";
 }

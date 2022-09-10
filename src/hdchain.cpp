@@ -1,14 +1,14 @@
 // Copyright (c) 2014-2020 The Dash Core developers
-// Copyright (c) 2020 The Raptoreum developers
+// Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 
-#include "base58.h"
-#include "bip39.h"
-#include "chainparams.h"
-#include "hdchain.h"
-#include "tinyformat.h"
-#include "util.h"
-#include "utilstrencodings.h"
+#include <bip39.h>
+#include <chainparams.h>
+#include <hdchain.h>
+#include <key_io.h>
+#include <tinyformat.h>
+#include <util.h>
+#include <utilstrencodings.h>
 
 bool CHDChain::SetNull()
 {
@@ -54,18 +54,14 @@ void CHDChain::Debug(const std::string& strName) const
             std::cout << "seed: " << HexStr(vchSeed).c_str() << std::endl;
 
             CExtKey extkey;
-            extkey.SetMaster(&vchSeed[0], vchSeed.size());
+            extkey.SetMaster(vchSeed.data(), vchSeed.size());
 
-            CBitcoinExtKey b58extkey;
-            b58extkey.SetKey(extkey);
-            std::cout << "extended private masterkey: " << b58extkey.ToString().c_str() << std::endl;
+            std::cout << "extended private masterkey: " << EncodeExtKey(extkey).c_str() << std::endl;
 
             CExtPubKey extpubkey;
             extpubkey = extkey.Neuter();
 
-            CBitcoinExtPubKey b58extpubkey;
-            b58extpubkey.SetKey(extpubkey);
-            std::cout << "extended public masterkey: " << b58extpubkey.ToString().c_str() << std::endl;
+            std::cout << "extended public masterkey: " << EncodeExtPubKey(extpubkey).c_str() << std::endl;
         }
     );
 }
@@ -83,6 +79,10 @@ bool CHDChain::SetMnemonic(const SecureString& ssMnemonic, const SecureString& s
         // can't (re)set mnemonic if seed was already set
         if (!IsNull())
             return false;
+
+        if (ssMnemonicPassphrase.size() > 256) {
+            throw std::runtime_error(std::string(__func__) + ": Mnemonic passphrase is too long, must be at most 256 characters");
+        }
 
         // empty mnemonic i.e. "generate a new one"
         if (ssMnemonic.empty()) {
@@ -159,7 +159,7 @@ void CHDChain::DeriveChildExtKey(uint32_t nAccountIndex, bool fInternal, uint32_
     CExtKey changeKey;              //key at m/purpose'/coin_type'/account'/change
     CExtKey childKey;               //key at m/purpose'/coin_type'/account'/change/address_index
 
-    masterKey.SetMaster(&vchSeed[0], vchSeed.size());
+    masterKey.SetMaster(vchSeed.data(), vchSeed.size());
 
     // Use hardened derivation for purpose, coin_type and account
     // (keys >= 0x80000000 are hardened after bip32)

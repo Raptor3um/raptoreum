@@ -5,7 +5,7 @@
 #ifndef BITCOIN_QT_TRANSACTIONFILTERPROXY_H
 #define BITCOIN_QT_TRANSACTIONFILTERPROXY_H
 
-#include "amount.h"
+#include <amount.h>
 
 #include <QDateTime>
 #include <QSortFilterProxyModel>
@@ -25,7 +25,7 @@ public:
     /** Type filter bit field (all types) */
     static const quint32 ALL_TYPES = 0xFFFFFFFF;
     /** Type filter bit field (all types but Darksend-SPAM) */
-    static const quint32 COMMON_TYPES = 4223;
+    static const quint32 COMMON_TYPES = 0x607F;
 
     static quint32 TYPE(int type) { return 1<<type; }
 
@@ -36,22 +36,14 @@ public:
         WatchOnlyFilter_No
     };
 
-    enum InstantSendFilter
-    {
-        InstantSendFilter_All,
-        InstantSendFilter_Yes,
-        InstantSendFilter_No
-    };
-
     void setDateRange(const QDateTime &from, const QDateTime &to);
-    void setAddressPrefix(const QString &addrPrefix);
+    void setSearchString(const QString &);
     /**
       @note Type filter takes a bit field created with TYPE() or ALL_TYPES
      */
     void setTypeFilter(quint32 modes);
     void setMinAmount(const CAmount& minimum);
     void setWatchOnlyFilter(WatchOnlyFilter filter);
-    void setInstantSendFilter(InstantSendFilter filter);
 
     /** Set maximum number of rows returned, -1 if unlimited. */
     void setLimit(int limit);
@@ -67,10 +59,9 @@ protected:
 private:
     qint64 dateFrom;
     qint64 dateTo;
-    QString addrPrefix;
+    QString m_search_string;
     quint32 typeFilter;
     WatchOnlyFilter watchOnlyFilter;
-    InstantSendFilter instantsendFilter;
     CAmount minAmount;
     int limitRows;
     bool showInactive;

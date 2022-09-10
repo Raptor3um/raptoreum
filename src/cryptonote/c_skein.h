@@ -27,8 +27,8 @@
 **                                1: return SKEIN_FAIL to flag errors
 **
 ***************************************************************************/
-#include "skein_port.h"                      /* get platform-specific definitions */
-#include "slow-hash.h"
+#include <cryptonote/skein_port.h>                      /* get platform-specific definitions */
+#include <cryptonote/slow-hash.h>
 
 typedef enum
 {

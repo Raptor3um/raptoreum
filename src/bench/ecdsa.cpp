@@ -1,11 +1,11 @@
 // Copyright (c) 2018 The Dash Core developers
-// Copyright (c) 2020 The Raptoreum developers
+// Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "bench.h"
+#include <bench/bench.h>
 
-#include "key.h"
+#include <key.h>
 
 static void ECDSASign(benchmark::State& state)
 {
@@ -73,6 +73,6 @@ static void ECDSAVerify_LargeBlock(benchmark::State& state)
     }
 }
 
-BENCHMARK(ECDSASign)
-BENCHMARK(ECDSAVerify)
-BENCHMARK(ECDSAVerify_LargeBlock)
+BENCHMARK(ECDSASign, 22 * 1000)
+BENCHMARK(ECDSAVerify, 15 * 1000)
+BENCHMARK(ECDSAVerify_LargeBlock, 15)

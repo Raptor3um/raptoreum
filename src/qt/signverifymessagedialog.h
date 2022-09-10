@@ -7,8 +7,11 @@
 
 #include <QDialog>
 
-class PlatformStyle;
 class WalletModel;
+
+QT_BEGIN_NAMESPACE
+class QButtonGroup;
+QT_END_NAMESPACE
 
 namespace Ui {
     class SignVerifyMessageDialog;
@@ -19,7 +22,7 @@ class SignVerifyMessageDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit SignVerifyMessageDialog(const PlatformStyle *platformStyle, QWidget *parent);
+    explicit SignVerifyMessageDialog(QWidget* parent);
     ~SignVerifyMessageDialog();
 
     void setModel(WalletModel *model);
@@ -35,9 +38,13 @@ protected:
 private:
     Ui::SignVerifyMessageDialog *ui;
     WalletModel *model;
-    const PlatformStyle *platformStyle;
+    QButtonGroup* pageButtons;
+
+    void showEvent(QShowEvent* event) override;
 
 private Q_SLOTS:
+    /** custom tab buttons clicked */
+    void showPage(int index);
     /* sign message */
     void on_addressBookButton_SM_clicked();
     void on_pasteButton_SM_clicked();

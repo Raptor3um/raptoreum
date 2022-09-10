@@ -6,12 +6,12 @@
 #include <boost/archive/binary_iarchive.hpp>
 #include <fstream>
 
-#include "include_base_utils.h"
-#include "account.h"
-#include "warnings.h"
-#include "crypto/crypto.h"
-#include "cryptonote_core/cryptonote_basic_impl.h"
-#include "cryptonote_core/cryptonote_format_utils.h"
+#include <cryptonote/cn_values/include_base_utils.h>
+#include <cryptonote/cn_values/account.h>
+#include <cryptonote/warnings.h>
+#include <crypto/crypto.h>
+#include <cryptonote/cn_values/cryptonote_basic_impl.h>
+#include <cryptonote/cn_values/cryptonote_format_utils.h>
 using namespace std;
 
 DISABLE_VS_WARNINGS(4244 4345)

@@ -2,15 +2,15 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_MERKLE
-#define BITCOIN_MERKLE
+#ifndef BITCOIN_CONSENSUS_MERKLE_H
+#define BITCOIN_CONSENSUS_MERKLE_H
 
 #include <stdint.h>
 #include <vector>
 
-#include "primitives/transaction.h"
-#include "primitives/block.h"
-#include "uint256.h"
+#include <primitives/transaction.h>
+#include <primitives/block.h>
+#include <uint256.h>
 
 uint256 ComputeMerkleRoot(std::vector<uint256> hashes, bool* mutated = nullptr);
 
@@ -20,4 +20,4 @@ uint256 ComputeMerkleRoot(std::vector<uint256> hashes, bool* mutated = nullptr);
  */
 uint256 BlockMerkleRoot(const CBlock& block, bool* mutated = nullptr);
 
-#endif
+#endif // BITCOIN_CONSENSUS_MERKLE_H

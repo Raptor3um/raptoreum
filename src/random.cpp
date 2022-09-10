@@ -3,23 +3,23 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "random.h"
+#include <random.h>
 
-#include "crypto/sha512.h"
-#include "support/cleanse.h"
+#include <crypto/sha512.h>
+#include <support/cleanse.h>
 #ifdef WIN32
-#include "compat.h" // for Windows API
+#include <compat.h> // for Windows API
 #include <wincrypt.h>
 #endif
-#include "util.h"             // for LogPrint()
-#include "utilstrencodings.h" // for GetTime()
+#include <logging.h>  // for LogPrint()
+#include <utiltime.h> // for GetTime()
 
 #include <stdlib.h>
-#include <limits>
 #include <chrono>
 #include <thread>
 
 #ifndef WIN32
+#include <fcntl.h>
 #include <sys/time.h>
 #endif
 
@@ -34,6 +34,7 @@
 #include <sys/random.h>
 #endif
 #ifdef HAVE_SYSCTL_ARND
+#include <utilstrencodings.h> // for ARRAYLEN
 #include <sys/sysctl.h>
 #endif
 
@@ -46,10 +47,10 @@
 #include <openssl/err.h>
 #include <openssl/rand.h>
 
-static void RandFailure()
+[[noreturn]] static void RandFailure()
 {
     LogPrintf("Failed to read randomness, aborting\n");
-    abort();
+    std::abort();
 }
 
 static inline int64_t GetPerformanceCounter()
@@ -349,10 +350,17 @@ void GetStrongRandBytes(unsigned char* out, int num)
     memory_cleanse(buf, 64);
 }
 
+bool g_mock_deterministic_tests{false};
+
 uint64_t GetRand(uint64_t nMax)
 {
     if (nMax == 0)
         return 0;
+
+    // This will later conflict with bitcoin#14955. Simply take the bitcoin version as resolution and pass g_mock_deterministic_tests into FastRandomContext
+    if (g_mock_deterministic_tests) {
+        return FastRandomContext(true).randrange(nMax);
+    }
 
     // The range of the random source must be a multiple of the modulus
     // to give every possible output value an equal possibility
@@ -362,6 +370,11 @@ uint64_t GetRand(uint64_t nMax)
         GetRandBytes((unsigned char*)&nRand, sizeof(nRand));
     } while (nRand >= nRange);
     return (nRand % nMax);
+}
+
+std::chrono::microseconds GetRandMicros(std::chrono::microseconds duration_max) noexcept
+{
+    return std::chrono::microseconds{GetRand(duration_max.count())};
 }
 
 int GetRandInt(int nMax)

@@ -1,22 +1,21 @@
 // Copyright (c) 2014-2020 The Dash Core developers
-// Copyright (c) 2020 The Raptoreum developers
+// Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "base58.h"
-#include "hash.h"
-#include "validation.h" // For strMessageMagic
-#include "messagesigner.h"
-#include "tinyformat.h"
-#include "utilstrencodings.h"
+#include <key_io.h>
+#include <hash.h>
+#include <validation.h> // For strMessageMagic
+#include <messagesigner.h>
+#include <tinyformat.h>
+#include <utilstrencodings.h>
 
 bool CMessageSigner::GetKeysFromSecret(const std::string& strSecret, CKey& keyRet, CPubKey& pubkeyRet)
 {
-    CBitcoinSecret vchSecret;
-
-    if(!vchSecret.SetString(strSecret)) return false;
-
-    keyRet = vchSecret.GetKey();
+    keyRet = DecodeSecret(strSecret);
+    if (!keyRet.IsValid()) {
+        return false;
+    }
     pubkeyRet = keyRet.GetPubKey();
 
     return true;
@@ -66,7 +65,7 @@ bool CHashSigner::VerifyHash(const uint256& hash, const CKeyID& keyID, const std
     if(pubkeyFromSig.GetID() != keyID) {
         strErrorRet = strprintf("Keys don't match: pubkey=%s, pubkeyFromSig=%s, hash=%s, vchSig=%s",
                     keyID.ToString(), pubkeyFromSig.GetID().ToString(), hash.ToString(),
-                    EncodeBase64(&vchSig[0], vchSig.size()));
+                    EncodeBase64(vchSig.data(), vchSig.size()));
         return false;
     }
 

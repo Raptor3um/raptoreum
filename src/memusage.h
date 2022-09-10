@@ -5,11 +5,12 @@
 #ifndef BITCOIN_MEMUSAGE_H
 #define BITCOIN_MEMUSAGE_H
 
-#include "indirectmap.h"
+#include <indirectmap.h>
 
 #include <stdlib.h>
 
 #include <map>
+#include <memory>
 #include <set>
 #include <vector>
 #include <unordered_map>

@@ -3,48 +3,48 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "primitives/block.h"
-
-#include "hash.h"
-#include "streams.h"
-#include "tinyformat.h"
-#include "utilstrencodings.h"
-#include "crypto/common.h"
-#include "unordered_lru_cache.h"
-
-//commented out for now as window build error here
-//#include "util.h"
-//unordered_lru_cache<uint256, uint256, std::hash<uint256>, 1> powHashCache;
-//void initializePowCacheIfNeeded() {
-//	if(powHashCache.getMaxSize() == 1) {
-//		int powCacheSize = gArgs.GetArg("-powhashcache", DEFAULT_POW_CACHE_SIZE);
-//		powCacheSize = powCacheSize == 0 ? DEFAULT_POW_CACHE_SIZE : powCacheSize;
-//		powHashCache.setMaxSize(powCacheSize);
-//
-//	}
-//}
-unordered_lru_cache<uint256, uint256, std::hash<uint256>, 200000> powHashCache;
+#include <hash.h>
+#include <primitives/block.h>
+#include <primitives/powcache.h>
+#include <sync.h>
+#include <uint256.h>
+#include <util.h>
+#include <utilstrencodings.h>
 
 uint256 CBlockHeader::GetHash() const
 {
-	return SerializeHash(*this);
+    return SerializeHash(*this);
 }
 
-uint256 CBlockHeader::GetPOWHash() const
+uint256 CBlockHeader::ComputeHash() const
 {
-
-//	initializePowCacheIfNeeded();
-	uint256 headerHash = GetHash();
-	uint256 powHash;
-	if(powHashCache.get(headerHash, powHash)) {
-		//do nothing
-	} else {
-		powHash = HashGR(BEGIN(nVersion), END(nNonce), hashPrevBlock);
-		powHashCache.insert(headerHash, powHash);
-	}
-	return powHash;
+    return HashGR(BEGIN(nVersion), END(nNonce), hashPrevBlock);
 }
 
+uint256 CBlockHeader::GetPOWHash(bool readCache) const
+{
+    LOCK(cs_pow);
+    CPowCache& cache(CPowCache::Instance());
+
+    uint256 headerHash = GetHash();
+    uint256 powHash;
+    bool found = false;
+
+    if (readCache) {
+        found = cache.get(headerHash, powHash);
+    }
+
+    if (!found || cache.IsValidate()) {
+        uint256 powHash2 = ComputeHash();
+        if (found && powHash2 != powHash) {
+           LogPrintf("PowCache failure: headerHash: %s, from cache: %s, computed: %s, correcting\n", headerHash.ToString(), powHash.ToString(), powHash2.ToString());
+        }
+        powHash = powHash2;
+        cache.erase(headerHash); // If it exists, replace it
+        cache.insert(headerHash, powHash2);
+    }
+    return powHash;
+}
 
 std::string CBlock::ToString() const
 {

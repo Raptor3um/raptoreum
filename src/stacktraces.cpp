@@ -1,33 +1,33 @@
-// Copyright (c) 2014-2019 The Dash Core developers
-// Copyright (c) 2020 The Raptoreum developers
+// Copyright (c) 2014-2021 The Dash Core developers
+// Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "stacktraces.h"
-#include "fs.h"
-#include "tinyformat.h"
-#include "random.h"
-#include "streams.h"
-#include "util.h"
-#include "utilstrencodings.h"
+#if defined(HAVE_CONFIG_H)
+#include <config/raptoreum-config.h>
+#endif // HAVE_CONFIG_H
 
-#include "raptoreum-config.h"
+#include <stacktraces.h>
+#include <fs.h>
+#include <logging.h>
+#include <random.h>
+#include <streams.h>
+#include <utilstrencodings.h>
 
 #include <mutex>
 #include <map>
-#include <string>
 #include <vector>
 #include <memory>
 #include <thread>
 #include <atomic>
 
-#include <cxxabi.h>
-
 #if WIN32
 #include <windows.h>
 #include <dbghelp.h>
 #else
+#ifdef ENABLE_STACKTRACES
 #include <execinfo.h>
+#endif
 #include <unistd.h>
 #include <signal.h>
 #endif
@@ -46,7 +46,10 @@
 #include <mach/mach_vm.h>
 #endif
 
+#ifdef ENABLE_STACKTRACES
 #include <backtrace.h>
+#endif
+
 #include <string.h>
 
 std::string DemangleSymbol(const std::string& name)
@@ -118,6 +121,7 @@ static std::string GetExeFileName()
 static std::string g_exeFileName = GetExeFileName();
 static std::string g_exeFileBaseName = fs::path(g_exeFileName).filename().string();
 
+#ifdef ENABLE_STACKTRACES
 static void my_backtrace_error_callback (void *data, const char *msg,
                                   int errnum)
 {
@@ -136,6 +140,7 @@ static backtrace_state* GetLibBacktraceState()
     static backtrace_state* st = backtrace_create_state(exeFileNamePtr, 1, my_backtrace_error_callback, nullptr);
     return st;
 }
+#endif // ENABLE_STACKTRACES
 
 #if WIN32
 static uint64_t GetBaseAddress()
@@ -161,6 +166,7 @@ static uint64_t ConvertAddress(uint64_t addr)
 
 static __attribute__((noinline)) std::vector<uint64_t> GetStackFrames(size_t skip, size_t max_frames, const CONTEXT* pContext = nullptr)
 {
+#ifdef ENABLE_STACKTRACES
     // We can't use libbacktrace for stack unwinding on Windows as it returns invalid addresses (like 0x1 or 0xffffffff)
     static BOOL symInitialized = SymInitialize(GetCurrentProcess(), nullptr, TRUE);
 
@@ -230,6 +236,9 @@ static __attribute__((noinline)) std::vector<uint64_t> GetStackFrames(size_t ski
     }
 
     return ret;
+#else
+    return {};
+#endif // ENABLE_STACKTRACES
 }
 #else
 
@@ -263,6 +272,7 @@ static int dl_iterate_callback(struct dl_phdr_info* info, size_t s, void* data)
     if (info->dlpi_name == nullptr || info->dlpi_name[0] == '\0') {
         *p = info->dlpi_addr;
     }
+    return 0;
 }
 
 static uint64_t GetBaseAddress()
@@ -275,6 +285,7 @@ static uint64_t GetBaseAddress()
 
 static __attribute__((noinline)) std::vector<uint64_t> GetStackFrames(size_t skip, size_t max_frames)
 {
+#ifdef ENABLE_STACKTRACES
     // FYI, this is not using libbacktrace, but "backtrace()" from <execinfo.h>
     std::vector<void*> buf(max_frames);
     int count = backtrace(buf.data(), (int)buf.size());
@@ -289,6 +300,9 @@ static __attribute__((noinline)) std::vector<uint64_t> GetStackFrames(size_t ski
         ret.emplace_back((uint64_t) buf[i]);
     }
     return ret;
+#else
+    return {};
+#endif // ENABLE_STACKTRACES
 }
 #endif
 
@@ -310,6 +324,7 @@ struct stackframe_info {
     }
 };
 
+#ifdef ENABLE_STACKTRACES
 static int my_backtrace_full_callback (void *data, uintptr_t pc, const char *filename, int lineno, const char *function)
 {
     auto sis = (std::vector<stackframe_info>*)data;
@@ -350,6 +365,12 @@ static std::vector<stackframe_info> GetStackFrameInfos(const std::vector<uint64_
 
     return infos;
 }
+#else
+static std::vector<stackframe_info> GetStackFrameInfos(const std::vector<uint64_t>& stackframes)
+{
+    return {};
+}
+#endif // ENABLE_STACKTRACES
 
 struct crash_info_header
 {
@@ -524,7 +545,7 @@ static std::string GetCrashInfoStr(const crash_info& ci, size_t spaces)
 static void PrintCrashInfo(const crash_info& ci)
 {
     auto str = GetCrashInfoStr(ci);
-    LogPrintf("%s", str);
+    LogPrintf("%s", str); /* Continued */
     fprintf(stderr, "%s", str.c_str());
     fflush(stderr);
 }
@@ -690,30 +711,32 @@ crash_info GetCrashInfoFromException(const std::exception_ptr& e)
     std::string type;
     std::string what;
 
+    auto getExceptionType = [&]() -> std::string {
+        auto type = abi::__cxa_current_exception_type();
+        if (type && (strlen(type->name()) > 0)) {
+            return DemangleSymbol(type->name());
+        }
+        return "<unknown>";
+    };
+
     try {
         // rethrow and catch the exception as there is no other way to reliably cast to the real type (not possible with RTTI)
         std::rethrow_exception(e);
     } catch (const std::exception& e) {
-        type = abi::__cxa_current_exception_type()->name();
+        type = getExceptionType();
         what = GetExceptionWhat(e);
     } catch (const std::string& e) {
-        type = abi::__cxa_current_exception_type()->name();
+        type = getExceptionType();
         what = GetExceptionWhat(e);
     } catch (const char* e) {
-        type = abi::__cxa_current_exception_type()->name();
+        type = getExceptionType();
         what = GetExceptionWhat(e);
     } catch (int e) {
-        type = abi::__cxa_current_exception_type()->name();
+        type = getExceptionType();
         what = GetExceptionWhat(e);
     } catch (...) {
-        type = abi::__cxa_current_exception_type()->name();
+        type = getExceptionType();
         what = "<unknown>";
-    }
-
-    if (type.empty()) {
-        type = "<unknown>";
-    } else {
-        type = DemangleSymbol(type);
     }
 
     ci.crashDescription += strprintf("type=%s, what=\"%s\"", type, what);

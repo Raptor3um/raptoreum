@@ -8,10 +8,12 @@
 #include <QDialog>
 #include <QValidator>
 
+class AppearanceWidget;
 class OptionsModel;
 class QValidatedLineEdit;
 
 QT_BEGIN_NAMESPACE
+class QButtonGroup;
 class QDataWidgetMapper;
 QT_END_NAMESPACE
 
@@ -44,12 +46,14 @@ public:
     void setMapper();
 
 private Q_SLOTS:
+    /** custom tab buttons clicked */
+    void showPage(int index);
     /* set OK button state (enabled / disabled) */
     void setOkButtonState(bool fState);
     void on_resetButton_clicked();
     void on_okButton_clicked();
     void on_cancelButton_clicked();
-    
+
     void on_hideTrayIcon_stateChanged(int fState);
 
     void showRestartWarning(bool fPersistent = false);
@@ -58,13 +62,24 @@ private Q_SLOTS:
     /* query the networks, for which the default proxy is used */
     void updateDefaultProxyNets();
 
+    void updateCoinJoinVisibility();
+
+    void updateWidth();
+
 Q_SIGNALS:
+    void appearanceChanged();
     void proxyIpChecks(QValidatedLineEdit *pUiProxyIp, int nProxyPort);
 
 private:
     Ui::OptionsDialog *ui;
     OptionsModel *model;
     QDataWidgetMapper *mapper;
+    QButtonGroup* pageButtons;
+    QString previousTheme;
+    AppearanceWidget* appearance;
+    bool fCoinJoinEnabledPrev{false};
+
+    void showEvent(QShowEvent* event) override;
 };
 
 #endif // BITCOIN_QT_OPTIONSDIALOG_H

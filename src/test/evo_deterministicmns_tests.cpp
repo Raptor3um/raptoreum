@@ -1,24 +1,25 @@
 // Copyright (c) 2018-2019 The Dash Core developers
-// Copyright (c) 2020 The Raptoreum developers
+// Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "test/test_raptoreum.h"
+#include <test/test_raptoreum.h>
 
-#include "script/interpreter.h"
-#include "script/standard.h"
-#include "script/sign.h"
-#include "validation.h"
-#include "base58.h"
-#include "netbase.h"
-#include "messagesigner.h"
-#include "policy/policy.h"
-#include "keystore.h"
-#include "spork.h"
+#include <script/interpreter.h>
+#include <script/standard.h>
+#include <script/sign.h>
+#include <validation.h>
+#include <base58.h>
+#include <netbase.h>
+#include <messagesigner.h>
+#include <policy/policy.h>
+#include <keystore.h>
+#include <spork.h>
+#include <txmempool.h>
 
-#include "evo/specialtx.h"
-#include "evo/providertx.h"
-#include "evo/deterministicmns.h"
+#include <evo/specialtx.h>
+#include <evo/providertx.h>
+#include <evo/deterministicmns.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -96,10 +97,8 @@ static CMutableTransaction CreateProRegTx(SimpleUTXOMap& utxos, int port, const 
     ownerKeyRet.MakeNewKey(true);
     operatorKeyRet.MakeNewKey();
 
-    CAmount change;
     CAmount collateralAmount = Params().GetConsensus().nCollaterals.getCollateral(chainActive.Height() < 0 ? 1 : chainActive.Height());
-    auto inputs = SelectUTXOs(utxos, collateralAmount, change);
-
+    
     CProRegTx proTx;
     proTx.collateralOutpoint.n = 0;
     proTx.addr = LookupNumeric("1.1.1.1", port);
@@ -128,9 +127,6 @@ static CMutableTransaction CreateFutureTransaction(SimpleUTXOMap& utxos, const C
 
 static CMutableTransaction CreateProUpServTx(SimpleUTXOMap& utxos, const uint256& proTxHash, const CBLSSecretKey& operatorKey, int port, const CScript& scriptOperatorPayout, const CKey& coinbaseKey)
 {
-    CAmount change;
-    auto inputs = SelectUTXOs(utxos, 1 * COIN, change);
-
     CProUpServTx proTx;
     proTx.proTxHash = proTxHash;
     proTx.addr = LookupNumeric("1.1.1.1", port);
@@ -150,9 +146,6 @@ static CMutableTransaction CreateProUpServTx(SimpleUTXOMap& utxos, const uint256
 
 static CMutableTransaction CreateProUpRegTx(SimpleUTXOMap& utxos, const uint256& proTxHash, const CKey& mnKey, const CBLSPublicKey& pubKeyOperator, const CKeyID& keyIDVoting, const CScript& scriptPayout, const CKey& coinbaseKey)
 {
-    CAmount change;
-    auto inputs = SelectUTXOs(utxos, 1 * COIN, change);
-
     CProUpRegTx proTx;
     proTx.proTxHash = proTxHash;
     proTx.pubKeyOperator = pubKeyOperator;
@@ -173,9 +166,6 @@ static CMutableTransaction CreateProUpRegTx(SimpleUTXOMap& utxos, const uint256&
 
 static CMutableTransaction CreateProUpRevTx(SimpleUTXOMap& utxos, const uint256& proTxHash, const CBLSSecretKey& operatorKey, const CKey& coinbaseKey)
 {
-    CAmount change;
-    auto inputs = SelectUTXOs(utxos, 1 * COIN, change);
-
     CProUpRevTx proTx;
     proTx.proTxHash = proTxHash;
 
@@ -255,8 +245,8 @@ BOOST_FIXTURE_TEST_CASE(dip3_activation, TestChainDIP3BeforeActivationSetup)
     auto utxos = BuildSimpleUtxoMap(coinbaseTxns);
     CKey ownerKey;
     CBLSSecretKey operatorKey;
-    CBitcoinAddress payoutAddress("yRq1Ky1AfFmf597rnotj7QRxsDUKePVWNF");
-    auto tx = CreateProRegTx(utxos, 1, GetScriptForDestination(payoutAddress.Get()), coinbaseKey, ownerKey, operatorKey);
+    CTxDestination payoutDest = DecodeDestination("yRq1Ky1AfFmf597rnotj7QRxsDUKePVWNF");
+    auto tx = CreateProRegTx(utxos, 1, GetScriptForDestination(payoutDest), coinbaseKey, ownerKey, operatorKey);
     std::vector<CMutableTransaction> txns = {tx};
 
     int nHeight = chainActive.Height();
@@ -285,11 +275,8 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
 {
     CKey sporkKey;
     sporkKey.MakeNewKey(false);
-    CBitcoinSecret sporkSecret(sporkKey);
-    CBitcoinAddress sporkAddress;
-    sporkAddress.Set(sporkKey.GetPubKey().GetID());
-    sporkManager.SetSporkAddress(sporkAddress.ToString());
-    sporkManager.SetPrivKey(sporkSecret.ToString());
+    sporkManager.SetSporkAddress(EncodeDestination(sporkKey.GetPubKey().GetID()));
+    sporkManager.SetPrivKey(EncodeSecret(sporkKey));
 
     auto utxos = BuildSimpleUtxoMap(coinbaseTxns);
 
@@ -316,8 +303,8 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
         auto tx2 = MalleateProTxPayout<CProRegTx>(tx);
         CValidationState dummyState;
         // Technically, the payload is still valid...
-        BOOST_ASSERT(CheckProRegTx(tx, chainActive.Tip(), dummyState));
-        BOOST_ASSERT(CheckProRegTx(tx2, chainActive.Tip(), dummyState));
+        BOOST_ASSERT(CheckProRegTx(tx, chainActive.Tip(), dummyState, *pcoinsTip.get()));
+        BOOST_ASSERT(CheckProRegTx(tx2, chainActive.Tip(), dummyState, *pcoinsTip.get()));
         // But the signature should not verify anymore
         BOOST_ASSERT(CheckTransactionSignature(tx));
         BOOST_ASSERT(!CheckTransactionSignature(tx2));
@@ -394,7 +381,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
     nHeight++;
 
     dmn = deterministicMNManager->GetListAtChainTip().GetMN(dmnHashes[0]);
-    BOOST_ASSERT(dmn != nullptr && dmn->pdmnState->nPoSeBanHeight == nHeight);
+    BOOST_ASSERT(dmn != nullptr && dmn->pdmnState->GetBannedHeight() == nHeight);
 
     // test that the revoked MN does not get paid anymore
     for (size_t i = 0; i < 20; i++) {
@@ -420,8 +407,8 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
     // check malleability protection again, but this time by also relying on the signature inside the ProUpRegTx
     auto tx2 = MalleateProTxPayout<CProUpRegTx>(tx);
     CValidationState dummyState;
-    BOOST_ASSERT(CheckProUpRegTx(tx, chainActive.Tip(), dummyState));
-    BOOST_ASSERT(!CheckProUpRegTx(tx2, chainActive.Tip(), dummyState));
+    BOOST_ASSERT(CheckProUpRegTx(tx, chainActive.Tip(), dummyState, *pcoinsTip.get()));
+    BOOST_ASSERT(!CheckProUpRegTx(tx2, chainActive.Tip(), dummyState, *pcoinsTip.get()));
     BOOST_ASSERT(CheckTransactionSignature(tx));
     BOOST_ASSERT(!CheckTransactionSignature(tx2));
     // now process the block
@@ -438,7 +425,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
 
     dmn = deterministicMNManager->GetListAtChainTip().GetMN(dmnHashes[0]);
     BOOST_ASSERT(dmn != nullptr && dmn->pdmnState->addr.GetPort() == 100);
-    BOOST_ASSERT(dmn != nullptr && dmn->pdmnState->nPoSeBanHeight == -1);
+    BOOST_ASSERT(dmn != nullptr && !dmn->pdmnState->IsBanned());
 
     // test that the revived MN gets payments again
     bool foundRevived = false;
@@ -462,4 +449,214 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
 
     //const_cast<Consensus::Params&>(Params().GetConsensus()).DIP0003EnforcementHeight = DIP0003EnforcementHeightBackup;
 }
+
+BOOST_FIXTURE_TEST_CASE(dip3_test_mempool_reorg, TestChainDIP3Setup)
+{
+    int nHeight = chainActive.Height();
+    auto utxos = BuildSimpleUtxoMap(coinbaseTxns);
+
+    CKey ownerKey;
+    CKey payoutKey;
+    CKey collateralKey;
+    CBLSSecretKey operatorKey;
+
+    ownerKey.MakeNewKey(true);
+    payoutKey.MakeNewKey(true);
+    collateralKey.MakeNewKey(true);
+    operatorKey.MakeNewKey();
+
+    auto scriptPayout = GetScriptForDestination(payoutKey.GetPubKey().GetID());
+    auto scriptCollateral = GetScriptForDestination(collateralKey.GetPubKey().GetID());
+
+    // Create a MN with an external collateral
+    CMutableTransaction tx_collateral;
+    FundTransaction(tx_collateral, utxos, scriptCollateral, 1000 * COIN, coinbaseKey);
+    SignTransaction(tx_collateral, coinbaseKey);
+
+    auto block = std::make_shared<CBlock>(CreateBlock({tx_collateral}, coinbaseKey));
+    BOOST_ASSERT(ProcessNewBlock(Params(), block, true, nullptr));
+    deterministicMNManager->UpdatedBlockTip(chainActive.Tip());
+    BOOST_ASSERT(chainActive.Height() == nHeight + 1);
+    BOOST_ASSERT(block->GetHash() == chainActive.Tip()->GetBlockHash());
+
+    CProRegTx payload;
+    payload.addr = LookupNumeric("1.1.1.1", 1);
+    payload.keyIDOwner = ownerKey.GetPubKey().GetID();
+    payload.pubKeyOperator = operatorKey.GetPublicKey();
+    payload.keyIDVoting = ownerKey.GetPubKey().GetID();
+    payload.scriptPayout = scriptPayout;
+
+    for (size_t i = 0; i < tx_collateral.vout.size(); ++i) {
+        if (tx_collateral.vout[i].nValue == 1000 * COIN) {
+            payload.collateralOutpoint = COutPoint(tx_collateral.GetHash(), i);
+            break;
+        }
+    }
+
+    CMutableTransaction tx_reg;
+    tx_reg.nVersion = 3;
+    tx_reg.nType = TRANSACTION_PROVIDER_REGISTER;
+    FundTransaction(tx_reg, utxos, scriptPayout, 1000 * COIN, coinbaseKey);
+    payload.inputsHash = CalcTxInputsHash(tx_reg);
+    CMessageSigner::SignMessage(payload.MakeSignString(), payload.vchSig, collateralKey);
+    SetTxPayload(tx_reg, payload);
+    SignTransaction(tx_reg, coinbaseKey);
+
+    CTxMemPool testPool;
+    TestMemPoolEntryHelper entry;
+    LOCK(testPool.cs);
+
+    // Create ProUpServ and test block reorg which double-spend ProRegTx
+    auto tx_up_serv = CreateProUpServTx(utxos, tx_reg.GetHash(), operatorKey, 2, CScript(), coinbaseKey);
+    testPool.addUnchecked(tx_up_serv.GetHash(), entry.FromTx(tx_up_serv));
+    // A disconnected block would insert ProRegTx back into mempool
+    testPool.addUnchecked(tx_reg.GetHash(), entry.FromTx(tx_reg));
+    BOOST_CHECK_EQUAL(testPool.size(), 2U);
+
+    // Create a tx that will double-spend ProRegTx
+    CMutableTransaction tx_reg_ds;
+    tx_reg_ds.vin = tx_reg.vin;
+    tx_reg_ds.vout.emplace_back(0, CScript() << OP_RETURN);
+    SignTransaction(tx_reg_ds, coinbaseKey);
+
+    // Check mempool as if a new block with tx_reg_ds was connected instead of the old one with tx_reg
+    std::vector<CTransactionRef> block_reorg;
+    block_reorg.emplace_back(std::make_shared<CTransaction>(tx_reg_ds));
+    testPool.removeForBlock(block_reorg, nHeight + 2);
+    BOOST_CHECK_EQUAL(testPool.size(), 0U);
+}
+
+BOOST_FIXTURE_TEST_CASE(dip3_test_mempool_dual_proregtx, TestChainDIP3Setup)
+{
+    int nHeight = chainActive.Height();
+    auto utxos = BuildSimpleUtxoMap(coinbaseTxns);
+
+    // Create a MN
+    CKey ownerKey1;
+    CBLSSecretKey operatorKey1;
+    auto tx_reg1 = CreateProRegTx(utxos, 1, GenerateRandomAddress(), coinbaseKey, ownerKey1, operatorKey1);
+
+    // Create a MN with an external collateral that references tx_reg1
+    CKey ownerKey;
+    CKey payoutKey;
+    CKey collateralKey;
+    CBLSSecretKey operatorKey;
+
+    ownerKey.MakeNewKey(true);
+    payoutKey.MakeNewKey(true);
+    collateralKey.MakeNewKey(true);
+    operatorKey.MakeNewKey();
+
+    auto scriptPayout = GetScriptForDestination(payoutKey.GetPubKey().GetID());
+    auto scriptCollateral = GetScriptForDestination(collateralKey.GetPubKey().GetID());
+
+    CProRegTx payload;
+    payload.addr = LookupNumeric("1.1.1.1", 2);
+    payload.keyIDOwner = ownerKey.GetPubKey().GetID();
+    payload.pubKeyOperator = operatorKey.GetPublicKey();
+    payload.keyIDVoting = ownerKey.GetPubKey().GetID();
+    payload.scriptPayout = scriptPayout;
+
+    for (size_t i = 0; i < tx_reg1.vout.size(); ++i) {
+        if (tx_reg1.vout[i].nValue == 1000 * COIN) {
+            payload.collateralOutpoint = COutPoint(tx_reg1.GetHash(), i);
+            break;
+        }
+    }
+
+    CMutableTransaction tx_reg2;
+    tx_reg2.nVersion = 3;
+    tx_reg2.nType = TRANSACTION_PROVIDER_REGISTER;
+    FundTransaction(tx_reg2, utxos, scriptPayout, 1000 * COIN, coinbaseKey);
+    payload.inputsHash = CalcTxInputsHash(tx_reg2);
+    CMessageSigner::SignMessage(payload.MakeSignString(), payload.vchSig, collateralKey);
+    SetTxPayload(tx_reg2, payload);
+    SignTransaction(tx_reg2, coinbaseKey);
+
+    CTxMemPool testPool;
+    TestMemPoolEntryHelper entry;
+    LOCK(testPool.cs);
+
+    testPool.addUnchecked(tx_reg1.GetHash(), entry.FromTx(tx_reg1));
+    BOOST_CHECK_EQUAL(testPool.size(), 1U);
+    BOOST_CHECK(testPool.existsProviderTxConflict(tx_reg2));
+}
+
+BOOST_FIXTURE_TEST_CASE(dip3_verify_db, TestChainDIP3Setup)
+{
+    int nHeight = chainActive.Height();
+    auto utxos = BuildSimpleUtxoMap(coinbaseTxns);
+
+    CKey ownerKey;
+    CKey payoutKey;
+    CKey collateralKey;
+    CBLSSecretKey operatorKey;
+
+    ownerKey.MakeNewKey(true);
+    payoutKey.MakeNewKey(true);
+    collateralKey.MakeNewKey(true);
+    operatorKey.MakeNewKey();
+
+    auto scriptPayout = GetScriptForDestination(payoutKey.GetPubKey().GetID());
+    auto scriptCollateral = GetScriptForDestination(collateralKey.GetPubKey().GetID());
+
+    // Create a MN with an external collateral
+    CMutableTransaction tx_collateral;
+    FundTransaction(tx_collateral, utxos, scriptCollateral, 1000 * COIN, coinbaseKey);
+    SignTransaction(tx_collateral, coinbaseKey);
+
+    auto block = std::make_shared<CBlock>(CreateBlock({tx_collateral}, coinbaseKey));
+    BOOST_ASSERT(ProcessNewBlock(Params(), block, true, nullptr));
+    deterministicMNManager->UpdatedBlockTip(chainActive.Tip());
+    BOOST_ASSERT(chainActive.Height() == nHeight + 1);
+    BOOST_ASSERT(block->GetHash() == chainActive.Tip()->GetBlockHash());
+
+    CProRegTx payload;
+    payload.addr = LookupNumeric("1.1.1.1", 1);
+    payload.keyIDOwner = ownerKey.GetPubKey().GetID();
+    payload.pubKeyOperator = operatorKey.GetPublicKey();
+    payload.keyIDVoting = ownerKey.GetPubKey().GetID();
+    payload.scriptPayout = scriptPayout;
+
+    for (size_t i = 0; i < tx_collateral.vout.size(); ++i) {
+        if (tx_collateral.vout[i].nValue == 1000 * COIN) {
+            payload.collateralOutpoint = COutPoint(tx_collateral.GetHash(), i);
+            break;
+        }
+    }
+
+    CMutableTransaction tx_reg;
+    tx_reg.nVersion = 3;
+    tx_reg.nType = TRANSACTION_PROVIDER_REGISTER;
+    FundTransaction(tx_reg, utxos, scriptPayout, 1000 * COIN, coinbaseKey);
+    payload.inputsHash = CalcTxInputsHash(tx_reg);
+    CMessageSigner::SignMessage(payload.MakeSignString(), payload.vchSig, collateralKey);
+    SetTxPayload(tx_reg, payload);
+    SignTransaction(tx_reg, coinbaseKey);
+
+    auto tx_reg_hash = tx_reg.GetHash();
+
+    block = std::make_shared<CBlock>(CreateBlock({tx_reg}, coinbaseKey));
+    BOOST_ASSERT(ProcessNewBlock(Params(), block, true, nullptr));
+    deterministicMNManager->UpdatedBlockTip(chainActive.Tip());
+    BOOST_ASSERT(chainActive.Height() == nHeight + 2);
+    BOOST_ASSERT(block->GetHash() == chainActive.Tip()->GetBlockHash());
+    BOOST_ASSERT(deterministicMNManager->GetListAtChainTip().HasMN(tx_reg_hash));
+
+    // Now spend the collateral while updating the same MN
+    SimpleUTXOMap collateral_utxos;
+    collateral_utxos.emplace(payload.collateralOutpoint, std::make_pair(1, 1000));
+    auto proUpRevTx = CreateProUpRevTx(collateral_utxos, tx_reg_hash, operatorKey, collateralKey);
+
+    block = std::make_shared<CBlock>(CreateBlock({proUpRevTx}, coinbaseKey));
+    BOOST_ASSERT(ProcessNewBlock(Params(), block, true, nullptr));
+    deterministicMNManager->UpdatedBlockTip(chainActive.Tip());
+    BOOST_ASSERT(chainActive.Height() == nHeight + 3);
+    BOOST_ASSERT(block->GetHash() == chainActive.Tip()->GetBlockHash());
+    BOOST_ASSERT(!deterministicMNManager->GetListAtChainTip().HasMN(tx_reg_hash));
+
+    // Verify db consistency
+    BOOST_ASSERT(CVerifyDB().VerifyDB(Params(), pcoinsTip.get(), 4, 2));
+}
+
 BOOST_AUTO_TEST_SUITE_END()

@@ -1,24 +1,22 @@
 // Copyright (c) 2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2019 The Dash Core developers
-// Copyright (c) 2020 The Raptoreum developers
+// Copyright (c) 2014-2021 The Dash Core developers
+// Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "rpc/server.h"
+#include <rpc/server.h>
 
-#include "base58.h"
-#include "fs.h"
-#include "init.h"
-#include "random.h"
-#include "sync.h"
-#include "ui_interface.h"
-#include "util.h"
-#include "utilstrencodings.h"
+#include <fs.h>
+#include <init.h>
+#include <key_io.h>
+#include <random.h>
+#include <sync.h>
+#include <ui_interface.h>
+#include <util.h>
+#include <utilstrencodings.h>
+#include <validation.h>
 
-#include <univalue.h>
-
-#include <boost/bind.hpp>
 #include <boost/signals2/signal.hpp>
 #include <boost/algorithm/string/case_conv.hpp> // for to_upper()
 #include <boost/algorithm/string/classification.hpp>
@@ -28,14 +26,17 @@
 #include <memory> // for unique_ptr
 #include <unordered_map>
 
-static bool fRPCRunning = false;
-static bool fRPCInWarmup = true;
-static std::string rpcWarmupStatus("RPC server started");
 static CCriticalSection cs_rpcWarmup;
+static bool fRPCRunning = false;
+static bool fRPCInWarmup GUARDED_BY(cs_rpcWarmup) = true;
+static std::string rpcWarmupStatus GUARDED_BY(cs_rpcWarmup) = "RPC server started";
 /* Timer-creating functions */
 static RPCTimerInterface* timerInterface = nullptr;
 /* Map of name to timer. */
 static std::map<std::string, std::unique_ptr<RPCTimerBase> > deadlineTimers;
+
+// Any commands submitted by this user will have their commands filtered based on the mapPlatformRestrictions
+static const std::string defaultPlatformUser = "platform-user";
 
 static struct CRPCSignals
 {
@@ -54,18 +55,12 @@ void RPCServer::OnStopped(std::function<void ()> slot)
     g_rpcSignals.Stopped.connect(slot);
 }
 
-void RPCServer::OnPreCommand(std::function<void (const CRPCCommand&)> slot)
-{
-    g_rpcSignals.PreCommand.connect(boost::bind(slot, _1));
-}
-
 void RPCTypeCheck(const UniValue& params,
-                  const std::list<UniValue::VType>& typesExpected,
+                  const std::list<UniValueType>& typesExpected,
                   bool fAllowNull)
 {
     unsigned int i = 0;
-    for (UniValue::VType t : typesExpected)
-    {
+    for (const UniValueType& t : typesExpected) {
         if (params.size() <= i)
             break;
 
@@ -77,10 +72,10 @@ void RPCTypeCheck(const UniValue& params,
     }
 }
 
-void RPCTypeCheckArgument(const UniValue& value, UniValue::VType typeExpected)
+void RPCTypeCheckArgument(const UniValue& value, const UniValueType& typeExpected)
 {
-    if (value.type() != typeExpected) {
-        throw JSONRPCError(RPC_TYPE_ERROR, strprintf("Expected type %s, got %s", uvTypeName(typeExpected), uvTypeName(value.type())));
+    if (!typeExpected.typeAny && value.type() != typeExpected.type) {
+        throw JSONRPCError(RPC_TYPE_ERROR, strprintf("Expected type %s, got %s", uvTypeName(typeExpected.type), uvTypeName(value.type())));
     }
 }
 
@@ -121,7 +116,7 @@ CAmount AmountFromValue(const UniValue& value)
     CAmount amount;
     if (!ParseFixedPoint(value.getValStr(), 8, &amount))
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount");
-    if (!MoneyRange(amount))
+    if (!MoneyRange(amount, Params().IsFutureActive(chainActive.Tip())))
         throw JSONRPCError(RPC_TYPE_ERROR, "Amount out of range");
     return amount;
 }
@@ -215,8 +210,8 @@ std::string CRPCTable::help(const std::string& strCommand, const std::string& st
     std::set<rpcfn_type> setDone;
     std::vector<std::pair<std::string, const CRPCCommand*> > vCommands;
 
-    for (std::map<std::string, const CRPCCommand*>::const_iterator mi = mapCommands.begin(); mi != mapCommands.end(); ++mi)
-        vCommands.push_back(make_pair(mi->second->category + mi->first, mi->second));
+    for (const auto& entry : mapCommands)
+        vCommands.push_back(make_pair(entry.second->category + entry.first, entry.second));
     sort(vCommands.begin(), vCommands.end());
 
     JSONRPCRequest jreq(helpreq);
@@ -268,15 +263,28 @@ std::string CRPCTable::help(const std::string& strCommand, const std::string& st
     return strRet;
 }
 
+void CRPCTable::InitPlatformRestrictions()
+{
+    mapPlatformRestrictions = {
+        {"getbestblockhash", {}},
+        {"getblockhash", {}},
+        {"getblockcount", {}},
+        {"getbestchainlock", {}},
+        {"quorum", {"sign", Params().GetConsensus().llmqTypePlatform}},
+        {"quorum", {"verify"}},
+        {"verifyislock", {}},
+    };
+}
+
 UniValue help(const JSONRPCRequest& jsonRequest)
 {
     if (jsonRequest.fHelp || jsonRequest.params.size() > 2)
         throw std::runtime_error(
-            "help ( \"command\" ) (\"subCommand\")\n"
+            "help ( \"command\" \"subcommand\" )\n"
             "\nList all commands, or get help for a specified command.\n"
             "\nArguments:\n"
             "1. \"command\"     (string, optional) The command to get help on\n"
-            "2. \"subCommand\"  (string, optional) The subcommand to get help on. Please not that not all subcommands support this at the moment\n"
+            "2. \"subcommand\"  (string, optional) The subcommand to get help on. Please note that not all subcommands support this at the moment\n"
             "\nResult:\n"
             "\"text\"     (string) The help text\n"
         );
@@ -330,12 +338,12 @@ UniValue uptime(const JSONRPCRequest& jsonRequest)
  * Call Table
  */
 static const CRPCCommand vRPCCommands[] =
-{ //  category              name                      actor (function)         okSafe argNames
-  //  --------------------- ------------------------  -----------------------  ------ ----------
+{ //  category              name                      actor (function)         argNames
+  //  --------------------- ------------------------  -----------------------  ----------
     /* Overall control/query calls */
-    { "control",            "help",                   &help,                   true,  {"command"}  },
-    { "control",            "stop",                   &stop,                   true,  {"wait"}  },
-    { "control",            "uptime",                 &uptime,                 true,  {}  },
+    { "control",            "help",                   &help,                   {"command","subcommand"}  },
+    { "control",            "stop",                   &stop,                   {"wait"}  },
+    { "control",            "uptime",                 &uptime,                 {}  },
 };
 
 CRPCTable::CRPCTable()
@@ -439,7 +447,11 @@ void JSONRPCRequest::parse(const UniValue& valRequest)
         throw JSONRPCError(RPC_INVALID_REQUEST, "Method must be a string");
     strMethod = valMethod.get_str();
     if (strMethod != "getblocktemplate") {
-        LogPrint(BCLog::RPC, "ThreadRPCServer method=%s\n", SanitizeString(strMethod));
+        if (fLogIPs)
+            LogPrint(BCLog::RPC, "ThreadRPCServer method=%s user=%s peeraddr=%s\n", SanitizeString(strMethod),
+                this->authUser, this->peerAddr);
+        else
+            LogPrint(BCLog::RPC, "ThreadRPCServer method=%s user=%s\n", SanitizeString(strMethod), this->authUser);
     }
 
     // Parse params
@@ -450,6 +462,13 @@ void JSONRPCRequest::parse(const UniValue& valRequest)
         params = UniValue(UniValue::VARR);
     else
         throw JSONRPCError(RPC_INVALID_REQUEST, "Params must be an array or object");
+}
+
+bool IsDeprecatedRPCEnabled(const std::string& method)
+{
+    const std::vector<std::string> enabled_methods = gArgs.GetArgs("-deprecatedrpc");
+
+    return find(enabled_methods.begin(), enabled_methods.end(), method) != enabled_methods.end();
 }
 
 static UniValue JSONRPCExecOne(JSONRPCRequest jreq, const UniValue& req)
@@ -548,6 +567,55 @@ UniValue CRPCTable::execute(const JSONRPCRequest &request) const
     if (!pcmd)
         throw JSONRPCError(RPC_METHOD_NOT_FOUND, "Method not found");
 
+    // Before executing the RPC Command, filter commands from platform rpc user
+    if (fSmartnodeMode && request.authUser == gArgs.GetArg("-platform-user", defaultPlatformUser)) {
+
+        auto it = mapPlatformRestrictions.equal_range(request.strMethod);
+
+        // If the requested method is not available in mapPlatformRestrictions
+        if (it.first == it.second) {
+            throw JSONRPCError(RPC_PLATFORM_RESTRICTION, strprintf("Method \"%s\" prohibited", request.strMethod));
+        }
+
+        bool fValidRequest{false};
+        // Try if any of the mapPlatformRestrictions entries matches the current request
+        for (auto itRequest = it.first; itRequest != it.second; ++itRequest) {
+
+            auto& vecParams = itRequest->second;
+            size_t nRestrictedParamsCount = vecParams.size();
+
+            if (nRestrictedParamsCount > 0) {
+                if (request.params.empty()) {
+                    throw JSONRPCError(RPC_PLATFORM_RESTRICTION, strprintf("Method \"%s\" has parameter restrictions.", request.strMethod));
+                }
+
+                if (request.params.size() < nRestrictedParamsCount) {
+                    continue;
+                }
+
+                bool fMatch{true};
+                for (size_t i = 0; i < nRestrictedParamsCount; ++i) {
+                    if (request.params[i].type() != itRequest->second[i].type() || request.params[i].getValStr() != itRequest->second[i].getValStr()) {
+                        LogPrint(BCLog::RPC, "CRPCTable::%s: Method \"%s\" requires parameter %d to be %s with type %d\n", __func__, request.strMethod, i, itRequest->second[i].getValStr(), itRequest->second[i].type());
+                        fMatch = false;
+                    }
+                }
+
+                if (fMatch) {
+                    fValidRequest = true;
+                    break;
+                }
+            } else {
+                fValidRequest = true;
+                break;
+            }
+        }
+
+        if (!fValidRequest) {
+            throw JSONRPCError(RPC_PLATFORM_RESTRICTION, "Request doesn't comply with the parameter restrictions.");
+        }
+    }
+
     g_rpcSignals.PreCommand(*pcmd);
 
     try
@@ -568,11 +636,7 @@ UniValue CRPCTable::execute(const JSONRPCRequest &request) const
 std::vector<std::string> CRPCTable::listCommands() const
 {
     std::vector<std::string> commandList;
-    typedef std::map<std::string, const CRPCCommand*> commandMap;
-
-    std::transform( mapCommands.begin(), mapCommands.end(),
-                   std::back_inserter(commandList),
-                   boost::bind(&commandMap::value_type::first,_1) );
+    for(const auto& i : mapCommands) commandList.emplace_back(i.first);
     return commandList;
 }
 

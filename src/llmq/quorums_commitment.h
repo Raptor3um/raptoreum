@@ -1,18 +1,20 @@
-// Copyright (c) 2018-2019 The Dash Core developers
-// Copyright (c) 2020 The Raptoreum developers
+// Copyright (c) 2018-2021 The Dash Core developers
+// Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef RAPTOREUM_QUORUMS_COMMITMENT_H
-#define RAPTOREUM_QUORUMS_COMMITMENT_H
+#ifndef BITCOIN_LLMQ_QUORUMS_COMMITMENT_H
+#define BITCOIN_LLMQ_QUORUMS_COMMITMENT_H
 
-#include "consensus/params.h"
+#include <llmq/quorums_utils.h>
 
-#include "evo/deterministicmns.h"
+#include <consensus/params.h>
 
-#include "bls/bls.h"
+#include <evo/deterministicmns.h>
 
-#include "univalue.h"
+#include <bls/bls.h>
+
+#include <univalue.h>
 
 namespace llmq
 {
@@ -39,7 +41,7 @@ public:
     CBLSSignature membersSig; // aggregated member sig of blockHash+validMembers+pubKeyHash+vvecHash
 
 public:
-    CFinalCommitment() {}
+    CFinalCommitment() = default;
     CFinalCommitment(const Consensus::LLMQParams& params, const uint256& _quorumHash);
 
     int CountSigners() const
@@ -51,7 +53,7 @@ public:
         return (int)std::count(validMembers.begin(), validMembers.end(), true);
     }
 
-    bool Verify(const std::vector<CDeterministicMNCPtr>& members, bool checkSigs) const;
+    bool Verify(const CBlockIndex* pQuorumIndex, bool checkSigs) const;
     bool VerifyNull() const;
     bool VerifySizes(const Consensus::LLMQParams& params) const;
 
@@ -91,12 +93,17 @@ public:
     void ToJson(UniValue& obj) const
     {
         obj.setObject();
-        obj.push_back(Pair("version", (int)nVersion));
-        obj.push_back(Pair("llmqType", (int)llmqType));
-        obj.push_back(Pair("quorumHash", quorumHash.ToString()));
-        obj.push_back(Pair("signersCount", CountSigners()));
-        obj.push_back(Pair("validMembersCount", CountValidMembers()));
-        obj.push_back(Pair("quorumPublicKey", quorumPublicKey.ToString()));
+        obj.pushKV("version", (int)nVersion);
+        obj.pushKV("llmqType", (int)llmqType);
+        obj.pushKV("quorumHash", quorumHash.ToString());
+        obj.pushKV("signersCount", CountSigners());
+        obj.pushKV("signers", CLLMQUtils::ToHexStr(signers));
+        obj.pushKV("validMembersCount", CountValidMembers());
+        obj.pushKV("validMembers", CLLMQUtils::ToHexStr(validMembers));
+        obj.pushKV("quorumPublicKey", quorumPublicKey.ToString());
+        obj.pushKV("quorumVvecHash", quorumVvecHash.ToString());
+        obj.pushKV("quorumSig", quorumSig.ToString());
+        obj.pushKV("membersSig", membersSig.ToString());
     }
 };
 
@@ -124,12 +131,12 @@ public:
     void ToJson(UniValue& obj) const
     {
         obj.setObject();
-        obj.push_back(Pair("version", (int)nVersion));
-        obj.push_back(Pair("height", (int)nHeight));
+        obj.pushKV("version", (int)nVersion);
+        obj.pushKV("height", (int)nHeight);
 
         UniValue qcObj;
         commitment.ToJson(qcObj);
-        obj.push_back(Pair("commitment", qcObj));
+        obj.pushKV("commitment", qcObj);
     }
 };
 
@@ -137,4 +144,4 @@ bool CheckLLMQCommitment(const CTransaction& tx, const CBlockIndex* pindexPrev, 
 
 } // namespace llmq
 
-#endif //RAPTOREUM_QUORUMS_COMMITMENT_H
+#endif // BITCOIN_LLMQ_QUORUMS_COMMITMENT_H

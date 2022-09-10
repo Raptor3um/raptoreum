@@ -1,23 +1,20 @@
 // Copyright (c) 2014-2020 The Dash Core developers
-// Copyright (c) 2020 The Raptoreum developers
+// Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "governance-object.h"
-#include "core_io.h"
-#include "governance-classes.h"
-#include "governance-validators.h"
-#include "governance-vote.h"
-#include "governance.h"
-#include "smartnode/smartnode-meta.h"
-#include "smartnode/smartnode-sync.h"
-#include "messagesigner.h"
-#include "spork.h"
-#include "util.h"
-#include "validation.h"
+#include <governance/governance-object.h>
+#include <core_io.h>
+#include <governance/governance-validators.h>
+#include <governance/governance.h>
+#include <smartnode/smartnode-meta.h>
+#include <smartnode/smartnode-sync.h>
+#include <messagesigner.h>
+#include <spork.h>
+#include <validation.h>
+#include <validationinterface.h>
 
 #include <string>
-#include <univalue.h>
 
 CGovernanceObject::CGovernanceObject() :
     cs(),
@@ -125,7 +122,7 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
         return false;
     }
 
-    vote_m_it it = mapCurrentMNVotes.emplace(vote_m_t::value_type(vote.GetSmartnodeOutpoint(), vote_rec_t())).first;
+    auto it = mapCurrentMNVotes.emplace(vote_m_t::value_type(vote.GetSmartnodeOutpoint(), vote_rec_t())).first;
     vote_rec_t& voteRecordRef = it->second;
     vote_signal_enum_t eSignal = vote.GetSignal();
     if (eSignal == VOTE_SIGNAL_NONE) {
@@ -142,7 +139,7 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
         exception = CGovernanceException(ostr.str(), GOVERNANCE_EXCEPTION_PERMANENT_ERROR, 20);
         return false;
     }
-    vote_instance_m_it it2 = voteRecordRef.mapInstances.emplace(vote_instance_m_t::value_type(int(eSignal), vote_instance_t())).first;
+    auto it2 = voteRecordRef.mapInstances.emplace(vote_instance_m_t::value_type(int(eSignal), vote_instance_t())).first;
     vote_instance_t& voteInstanceRef = it2->second;
 
     // Reject obsolete votes
@@ -153,7 +150,7 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
         exception = CGovernanceException(ostr.str(), GOVERNANCE_EXCEPTION_NONE);
         return false;
     } else if (vote.GetTimestamp() == voteInstanceRef.nCreationTime) {
-        // Someone is doing smth fishy, there can be no two votes from the same smartnode
+        // Someone is doing something fishy, there can be no two votes from the same masternode
         // with the same timestamp for the same object and signal and yet different hash/outcome.
         std::ostringstream ostr;
         ostr << "CGovernanceObject::ProcessVote -- Invalid vote, same timestamp for the different outcome";
@@ -214,6 +211,8 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
     voteInstanceRef = vote_instance_t(vote.GetOutcome(), nVoteTimeUpdate, vote.GetTimestamp());
     fileVotes.AddVote(vote);
     fDirtyCache = true;
+    // SEND NOTIFICATION TO SCRIPT/ZMQ
+    GetMainSignals().NotifyGovernanceVote(std::make_shared<const CGovernanceVote>(vote));
     return true;
 }
 
@@ -223,7 +222,7 @@ void CGovernanceObject::ClearSmartnodeVotes()
 
     auto mnList = deterministicMNManager->GetListAtChainTip();
 
-    vote_m_it it = mapCurrentMNVotes.begin();
+    auto it = mapCurrentMNVotes.begin();
     while (it != mapCurrentMNVotes.end()) {
         if (!mnList.HasMNByCollateral(it->first)) {
             fileVotes.RemoveVotesFromSmartnode(it->first);
@@ -269,7 +268,7 @@ std::set<uint256> CGovernanceObject::RemoveInvalidVotes(const COutPoint& mnOutpo
         for (auto& h : removedVotes) {
             removedStr += strprintf("  %s\n", h.ToString());
         }
-        LogPrintf("CGovernanceObject::%s -- Removed %d invalid votes for %s from MN %s:\n%s", __func__, removedVotes.size(), nParentHash.ToString(), mnOutpoint.ToString(), removedStr);
+        LogPrintf("CGovernanceObject::%s -- Removed %d invalid votes for %s from MN %s:\n%s", __func__, removedVotes.size(), nParentHash.ToString(), mnOutpoint.ToString(), removedStr); /* Continued */
         fDirtyCache = true;
     }
 
@@ -307,18 +306,16 @@ void CGovernanceObject::SetSmartnodeOutpoint(const COutPoint& outpoint)
 bool CGovernanceObject::Sign(const CBLSSecretKey& key)
 {
     CBLSSignature sig = key.Sign(GetSignatureHash());
-    if (!key.IsValid()) {
+    if (!sig.IsValid()) {
         return false;
     }
-    sig.GetBuf(vchSig);
+    vchSig = sig.ToByteVector();
     return true;
 }
 
 bool CGovernanceObject::CheckSignature(const CBLSPublicKey& pubKey) const
 {
-    CBLSSignature sig;
-    sig.SetBuf(vchSig);
-    if (!sig.VerifyInsecure(pubKey, GetSignatureHash())) {
+    if (!CBLSSignature(vchSig).VerifyInsecure(pubKey, GetSignatureHash())) {
         LogPrintf("CGovernanceObject::CheckSignature -- VerifyInsecure() failed\n");
         return false;
     }
@@ -420,12 +417,33 @@ std::string CGovernanceObject::GetDataAsPlainString() const
     return std::string(vchData.begin(), vchData.end());
 }
 
+UniValue CGovernanceObject::ToJson() const
+{
+    UniValue obj(UniValue::VOBJ);
+    obj.pushKV("objectHash", GetHash().ToString());
+    obj.pushKV("parentHash", nHashParent.ToString());
+    obj.pushKV("collateralHash", GetCollateralHash().ToString());
+    obj.pushKV("createdAt", GetCreationTime());
+    obj.pushKV("revision", nRevision);
+    UniValue data;
+    if (!data.read(GetDataAsPlainString())) {
+        data.clear();
+        data.setObject();
+        data.pushKV("plain", GetDataAsPlainString());
+        data.pushKV("hex", GetDataAsHexString());
+    } else {
+        data.pushKV("hex", GetDataAsHexString());
+    }
+    obj.pushKV("data", data);
+    return obj;
+}
+
 void CGovernanceObject::UpdateLocalValidity()
 {
     LOCK(cs_main);
     // THIS DOES NOT CHECK COLLATERAL, THIS IS CHECKED UPON ORIGINAL ARRIVAL
     fCachedLocalValidity = IsValidLocally(strLocalValidityError, false);
-};
+}
 
 
 bool CGovernanceObject::IsValidLocally(std::string& strError, bool fCheckCollateral) const
@@ -566,12 +584,9 @@ bool CGovernanceObject::IsCollateralValid(std::string& strError, bool& fMissingC
     AssertLockHeld(cs_main);
     int nConfirmationsIn = 0;
     if (nBlockHash != uint256()) {
-        BlockMap::iterator mi = mapBlockIndex.find(nBlockHash);
-        if (mi != mapBlockIndex.end() && (*mi).second) {
-            CBlockIndex* pindex = (*mi).second;
-            if (chainActive.Contains(pindex)) {
-                nConfirmationsIn += chainActive.Height() - pindex->nHeight + 1;
-            }
+        CBlockIndex* pindex = LookupBlockIndex(nBlockHash);
+        if (pindex && chainActive.Contains(pindex)) {
+            nConfirmationsIn += chainActive.Height() - pindex->nHeight + 1;
         }
     }
 
@@ -599,7 +614,7 @@ int CGovernanceObject::CountMatchingVotes(vote_signal_enum_t eVoteSignalIn, vote
     int nCount = 0;
     for (const auto& votepair : mapCurrentMNVotes) {
         const vote_rec_t& recVote = votepair.second;
-        vote_instance_m_cit it2 = recVote.mapInstances.find(eVoteSignalIn);
+        auto it2 = recVote.mapInstances.find(eVoteSignalIn);
         if (it2 != recVote.mapInstances.end() && it2->second.eOutcome == eVoteOutcomeIn) {
             ++nCount;
         }
@@ -640,7 +655,7 @@ bool CGovernanceObject::GetCurrentMNVotes(const COutPoint& mnCollateralOutpoint,
 {
     LOCK(cs);
 
-    vote_m_cit it = mapCurrentMNVotes.find(mnCollateralOutpoint);
+    auto it = mapCurrentMNVotes.find(mnCollateralOutpoint);
     if (it == mapCurrentMNVotes.end()) {
         return false;
     }
@@ -667,7 +682,7 @@ void CGovernanceObject::UpdateSentinelVariables()
     int nMnCount = (int)deterministicMNManager->GetListAtChainTip().GetValidMNsCount();
     if (nMnCount == 0) return;
 
-    // CALCULATE THE MINUMUM VOTE COUNT REQUIRED FOR FULL SIGNAL
+    // CALCULATE THE MINIMUM VOTE COUNT REQUIRED FOR FULL SIGNAL
 
     int nAbsVoteReq = std::max(Params().GetConsensus().nGovernanceMinQuorum, nMnCount / 10);
     int nAbsDeleteReq = std::max(Params().GetConsensus().nGovernanceMinQuorum, (2 * nMnCount) / 3);
@@ -679,7 +694,7 @@ void CGovernanceObject::UpdateSentinelVariables()
     fCachedEndorsed = false;
     fDirtyCache = false;
 
-    // SET SENTINEL FLAGS TO TRUE IF MIMIMUM SUPPORT LEVELS ARE REACHED
+    // SET SENTINEL FLAGS TO TRUE IF MINIMUM SUPPORT LEVELS ARE REACHED
     // ARE ANY OF THESE FLAGS CURRENTLY ACTIVATED?
 
     if (GetAbsoluteYesCount(VOTE_SIGNAL_FUNDING) >= nAbsVoteReq) fCachedFunding = true;

@@ -6,13 +6,13 @@
 #ifndef BITCOIN_COINS_H
 #define BITCOIN_COINS_H
 
-#include "primitives/transaction.h"
-#include "compressor.h"
-#include "core_memusage.h"
-#include "hash.h"
-#include "memusage.h"
-#include "serialize.h"
-#include "uint256.h"
+#include <primitives/transaction.h>
+#include <compressor.h>
+#include <core_memusage.h>
+#include <hash.h>
+#include <memusage.h>
+#include <serialize.h>
+#include <uint256.h>
 
 #include <assert.h>
 #include <stdint.h>
@@ -38,14 +38,25 @@ public:
     //! at which height this containing transaction was included in the active block chain
     uint32_t nHeight : 31;
 
+    uint16_t nType=0;
+
+    std::vector<uint8_t> vExtraPayload;
+
     //! construct a Coin from a CTxOut and height/coinbase information.
-    Coin(CTxOut&& outIn, int nHeightIn, bool fCoinBaseIn) : out(std::move(outIn)), fCoinBase(fCoinBaseIn), nHeight(nHeightIn) {}
-    Coin(const CTxOut& outIn, int nHeightIn, bool fCoinBaseIn) : out(outIn), fCoinBase(fCoinBaseIn),nHeight(nHeightIn) {}
+//    Coin(CTxOut&& outIn, int nHeightIn, bool fCoinBaseIn, std::vector<uint8_t> && vExtraPayloadIn) : out(std::move(outIn)), fCoinBase(fCoinBaseIn), nHeight(nHeightIn),vExtraPayload(std::move(vExtraPayloadIn)) {}
+//    Coin(const CTxOut& outIn, int nHeightIn, bool fCoinBaseIn, const std::vector<uint8_t> & vExtraPayloadIn) : out(outIn), fCoinBase(fCoinBaseIn),nHeight(nHeightIn), vExtraPayload(vExtraPayloadIn) {}
+    Coin(CTxOut&& outIn, int nHeightIn, bool fCoinBaseIn, uint16_t type, std::vector<uint8_t> extraPayload) :
+    	out(std::move(outIn)), fCoinBase(fCoinBaseIn), nHeight(nHeightIn), nType(type), vExtraPayload(extraPayload){}
+    Coin(const CTxOut& outIn, int nHeightIn, bool fCoinBaseIn, uint16_t type, std::vector<uint8_t> extraPayload) :
+      out(outIn), fCoinBase(fCoinBaseIn),nHeight(nHeightIn), nType(type), vExtraPayload(extraPayload) {}
 
     void Clear() {
         out.SetNull();
         fCoinBase = false;
         nHeight = 0;
+        nType = 0;
+        vExtraPayload.clear();
+        vExtraPayload.resize(0);
     }
 
     //! empty constructor
@@ -61,6 +72,8 @@ public:
         uint32_t code = nHeight * 2 + fCoinBase;
         ::Serialize(s, VARINT(code));
         ::Serialize(s, CTxOutCompressor(REF(out)));
+        ::Serialize(s, VARINT(nType));
+        ::Serialize(s, vExtraPayload);
     }
 
     template<typename Stream>
@@ -69,7 +82,9 @@ public:
         ::Unserialize(s, VARINT(code));
         nHeight = code >> 1;
         fCoinBase = code & 1;
-        ::Unserialize(s, REF(CTxOutCompressor(out)));
+        ::Unserialize(s, CTxOutCompressor(out));
+        ::Unserialize(s, VARINT(nType));
+        ::Unserialize(s, vExtraPayload);
     }
 
     bool IsSpent() const {
@@ -203,7 +218,7 @@ class CCoinsViewCache : public CCoinsViewBacked
 protected:
     /**
      * Make mutable so that we can "fill the cache" even from Get-methods
-     * declared as "const".  
+     * declared as "const".
      */
     mutable uint256 hashBlock;
     mutable CCoinsMap cacheCoins;
@@ -213,6 +228,11 @@ protected:
 
 public:
     CCoinsViewCache(CCoinsView *baseIn);
+
+    /**
+     * By deleting the copy constructor, we prevent accidentally using it when one intends to create a cache on top of a base cache.
+     */
+    CCoinsViewCache(const CCoinsViewCache &) = delete;
 
     // Standard CCoinsView methods
     bool GetCoin(const COutPoint &outpoint, Coin &coin) const override;
@@ -290,11 +310,6 @@ public:
 
 private:
     CCoinsMap::iterator FetchCoin(const COutPoint &outpoint) const;
-
-    /**
-     * By making the copy constructor private, we prevent accidentally using it when one intends to create a cache on top of a base cache.
-     */
-    CCoinsViewCache(const CCoinsViewCache &);
 };
 
 //! Utility function to add all of a transaction's outputs to a cache.

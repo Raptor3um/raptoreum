@@ -10,15 +10,15 @@
 #include <string.h>
 #include <stdio.h>
 #include <unistd.h>
-#include "slow-hash.h"
-#include "oaes_lib.h"
-#include "c_keccak.h"
-#include "c_groestl.h"
-#include "c_blake256.h"
-#include "c_jh.h"
-#include "c_skein.h"
-#include "int-util.h"
-#include "variant2_int_sqrt.h"
+#include <cryptonote/slow-hash.h>
+#include <cryptonote/oaes_lib.h>
+#include <cryptonote/c_keccak.h>
+#include <cryptonote/c_groestl.h>
+#include <cryptonote/c_blake256.h>
+#include <cryptonote/c_jh.h>
+#include <cryptonote/c_skein.h>
+#include <cryptonote/int-util.h>
+#include <cryptonote/variant2_int_sqrt.h>
 
 #if defined(_MSC_VER)
 #include <malloc.h>
@@ -196,7 +196,7 @@ void cn_slow_hash(const char* input, char* output, int len, int variant, uint32_
   union cn_slow_hash_state state;
   uint8_t text[INIT_SIZE_BYTE];
   uint8_t a[AES_BLOCK_SIZE];
-  uint8_t b[AES_BLOCK_SIZE];
+  uint8_t b[AES_BLOCK_SIZE * 2];
   uint8_t c[AES_BLOCK_SIZE];
   uint8_t aes_key[AES_KEY_SIZE];
   oaes_ctx* aes_ctx;
@@ -295,7 +295,7 @@ void cn_slow_hash(const char* input, char* output, int len, int variant, uint32_
 }
 
 void cn_fast_hash(const char* input, char* output, uint32_t len) {
-  union hash_state state;
-  hash_process(&state, (const uint8_t*) input, len);
-  memcpy(output, &state, HASH_SIZE);
+    union hash_state state;
+    hash_process(&state, (const uint8_t*) input, len);
+    memcpy(output, &state, HASH_SIZE);
 }

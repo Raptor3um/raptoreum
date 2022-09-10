@@ -2,18 +2,18 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "bloom.h"
+#include <bloom.h>
 
-#include "primitives/transaction.h"
-#include "evo/specialtx.h"
-#include "evo/providertx.h"
-#include "evo/cbtx.h"
-#include "llmq/quorums_commitment.h"
-#include "hash.h"
-#include "script/script.h"
-#include "script/standard.h"
-#include "random.h"
-#include "streams.h"
+#include <primitives/transaction.h>
+#include <evo/specialtx.h>
+#include <evo/providertx.h>
+#include <evo/cbtx.h>
+#include <llmq/quorums_commitment.h>
+#include <hash.h>
+#include <script/script.h>
+#include <script/standard.h>
+#include <random.h>
+#include <streams.h>
 
 #include <math.h>
 #include <stdlib.h>
@@ -222,11 +222,12 @@ bool CBloomFilter::CheckSpecialTransactionMatchesAndUpdate(const CTransaction &t
     }
     case(TRANSACTION_COINBASE):
     case(TRANSACTION_QUORUM_COMMITMENT):
+    case(TRANSACTION_FUTURE):
         // No aditional checks for this transaction types
         return false;
     }
 
-    LogPrintf("Unknown special transaction type in Bloom filter check.");
+    LogPrintf("Unknown special transaction type in Bloom filter check.\n");
     return false;
 }
 
@@ -251,7 +252,7 @@ bool CBloomFilter::IsRelevantAndUpdate(const CTransaction& tx)
         const CTxOut& txout = tx.vout[i];
         // Match if the filter contains any arbitrary script data element in any scriptPubKey in tx
         // If this matches, also add the specific output that was matched.
-        // This means clients don't have to update the filter themselves when a new relevant tx 
+        // This means clients don't have to update the filter themselves when a new relevant tx
         // is discovered in order to find spending transactions, which avoids round-tripping and race conditions.
         if(CheckScript(txout.scriptPubKey)) {
             fFound = true;
@@ -261,8 +262,7 @@ bool CBloomFilter::IsRelevantAndUpdate(const CTransaction& tx)
             {
                 txnouttype type;
                 std::vector<std::vector<unsigned char> > vSolutions;
-                if (Solver(txout.scriptPubKey, type, vSolutions) &&
-                        (type == TX_PUBKEY || type == TX_MULTISIG))
+                if(Solver(txout.scriptPubKey, type, vSolutions) && (type == TX_PUBKEY || type == TX_MULTISIG))
                     insert(COutPoint(hash, i));
             }
         }
