@@ -132,7 +132,7 @@ public:
     /** Decompose CWallet transaction to model transaction records.
      */
     static bool showTransaction();
-    static QList<TransactionRecord> decomposeTransaction(interfaces::Wallet& wallet, const interfaces::WalletTx& wtx);
+    static QList<TransactionRecord> decomposeTransaction(interfaces::Wallet& wallet, const std::shared_ptr<const interfaces::WalletTx> wtx);
 
     /** @name Immutable transaction attributes
       @{*/
@@ -166,7 +166,7 @@ public:
 
     /** Update status from core wallet tx.
      */
-    void updateStatus(const interfaces::WalletTx& wtx, const interfaces::WalletTxStatus& wtxStatus, int numBlocks, int64_t adjustedTime, int chainLockHeight);
+    void updateStatus(const std::shared_ptr<const interfaces::WalletTx> wtx, const interfaces::WalletTxStatus& wtxStatus, int numBlocks, int64_t adjustedTime, int chainLockHeight);
 
     /** Return whether a status update is needed.
      */
@@ -189,7 +189,7 @@ public:
     bool isFutureTxMatured(const CWalletTx &wtx, CFutureTx &ftx);
 
     /** Return the Future TX Status based on maturity */
-    void getFutureTxStatus(const interfaces::WalletTx& wtx, const interfaces::WalletTxStatus& wtxStatus, CFutureTx &ftx);
+    void getFutureTxStatus(const std::shared_ptr<const interfaces::WalletTx> wtx, const interfaces::WalletTxStatus& wtxStatus, CFutureTx &ftx);
 
 };
 

@@ -132,8 +132,8 @@ public:
             if(showTransaction)
             {
                 // Find transaction in wallet
-                interfaces::WalletTx wtx = wallet.getWalletTx(hash);
-                if(!wtx.tx)
+                std::shared_ptr<const interfaces::WalletTx> wtx = wallet.getWalletTx(hash);
+                if(!wtx->tx)
                 {
                     qWarning() << "TransactionTablePriv::updateWallet: Warning: Got CT_NEW, but transaction is not in wallet";
                     break;
@@ -211,7 +211,7 @@ public:
             interfaces::WalletTxStatus wtxStatus;
             int64_t adjustedTime;
             if (rec->statusUpdateNeeded(numBlocks, parent->getChainLockHeight()) && wallet.tryGetTxStatus(rec->hash, wtxStatus, adjustedTime)) {
-                interfaces::WalletTx wtx = wallet.getWalletTx(rec->hash);
+                std::shared_ptr<const interfaces::WalletTx> wtx = wallet.getWalletTx(rec->hash);
                 rec->updateStatus(wtx, wtxStatus, numBlocks, adjustedTime, parent->getChainLockHeight());
             }
             return rec;

@@ -71,12 +71,10 @@ bool TransactionRecord::isFutureTxMatured(const CWalletTx &wtx, CFutureTx &ftx)
     }
 }
 
-void TransactionRecord::getFutureTxStatus(const interfaces::WalletTx& wtx, const interfaces::WalletTxStatus& wtxStatus, CFutureTx &ftx)
+void TransactionRecord::getFutureTxStatus(const std::shared_ptr<const interfaces::WalletTx> wtx, const interfaces::WalletTxStatus& wtxStatus, CFutureTx &ftx)
 {
-
-    if (GetTxPayload(wtx.tx->vExtraPayload, ftx))
+    if (GetTxPayload(wtx->tx->vExtraPayload, ftx))
     {
-
         int maturityBlock = wtxStatus.block_height + ftx.maturity;
         int64_t maturityTime = wtxStatus.time_received + ftx.lockTime;
         int currentHeight = chainActive.Height();
@@ -110,37 +108,36 @@ void TransactionRecord::getFutureTxStatus(const interfaces::WalletTx& wtx, const
         //not in main chain - new transaction
         status.status = TransactionStatus::NotAccepted;
     }
-
 }
 
 /*
  * Decompose CWallet transaction to model transaction records.
  */
-QList<TransactionRecord> TransactionRecord::decomposeTransaction(interfaces::Wallet& wallet, const interfaces::WalletTx& wtx)
+QList<TransactionRecord> TransactionRecord::decomposeTransaction(interfaces::Wallet& wallet, const std::shared_ptr<const interfaces::WalletTx> wtx)
 {
     QList<TransactionRecord> parts;
     isminefilter creditMineTypes = 0;
     isminefilter debitMineTypes = 0;
 
-    int64_t nTime = wtx.time; // TODO: Should this be GetConfirmationTime?
-    CAmount nCredit = wtx.credit;
-    CAmount nDebit = wtx.debit;
+    int64_t nTime = wtx->time; // TODO: Should this be GetConfirmationTime?
+    CAmount nCredit = wtx->credit;
+    CAmount nDebit = wtx->debit;
     CAmount nNet = nCredit - nDebit;
-    CAmount nTxFee = nDebit - wtx.tx->GetValueOut();
-    uint256 hash = wtx.tx->GetHash();
-    bool isFuture = wtx.tx->nType == TRANSACTION_FUTURE;
+    CAmount nTxFee = nDebit - wtx->tx->GetValueOut();
+    uint256 hash = wtx->tx->GetHash();
+    bool isFuture = wtx->tx->nType == TRANSACTION_FUTURE;
 
-    for (isminetype mine : wtx.txout_is_mine)
+    for (isminetype mine : wtx->txout_is_mine)
     {
         creditMineTypes |= mine;
     }
 
-    for (isminetype mine : wtx.txin_is_mine)
+    for (isminetype mine : wtx->txin_is_mine)
     {
         debitMineTypes |= mine;
     }
 
-    std::map<std::string, std::string> mapValue = wtx.value_map;
+    std::map<std::string, std::string> mapValue = wtx->value_map;
 
     // Combinations of transactions:
     // NB: This treats all watched addresses like a single, other wallet
@@ -169,13 +166,13 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(interfaces::Wal
     // J: other    -> watched Send from other address to watched
 
     // LogPrintf("TransactionRecord::%s TxId: %s debitMineTypes: %02X, creditMineTypes: %02X, debit: %s, credit: %s, ValueOut: %s, TxFee: %s, nType: %d\n",
-    //         __func__, hash.ToString(), debitMineTypes, creditMineTypes, FormatMoney(nDebit), FormatMoney(nCredit), FormatMoney(wtx.tx->GetValueOut()), FormatMoney(nTxFee), wtx.tx->nType);
+    //         __func__, hash.ToString(), debitMineTypes, creditMineTypes, FormatMoney(nDebit), FormatMoney(nCredit), FormatMoney(wtx->tx->GetValueOut()), FormatMoney(nTxFee), wtx->tx->nType);
 
-    for (unsigned int vOutIdx = 0; vOutIdx < wtx.tx->vout.size(); ++vOutIdx)
+    for (unsigned int vOutIdx = 0; vOutIdx < wtx->tx->vout.size(); ++vOutIdx)
     {
-        const CTxOut& txout = wtx.tx->vout[vOutIdx];
+        const CTxOut& txout = wtx->tx->vout[vOutIdx];
 
-        isminetype mine = wtx.txout_is_mine[vOutIdx];
+        isminetype mine = wtx->txout_is_mine[vOutIdx];
 
         TransactionRecord sub(hash, nTime);
         CTxDestination address;
@@ -192,26 +189,26 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(interfaces::Wal
         bool inputInvolvesWatchAddress = false;
         bool outputInvolvesWatchAddress = false;
         isminetype fAllFromMe = ISMINE_SPENDABLE;
-        for (isminetype mine : wtx.txin_is_mine)
+        for (isminetype mine : wtx->txin_is_mine)
         {
             if (mine & ISMINE_WATCH_ONLY) inputInvolvesWatchAddress = true;
             if (fAllFromMe > mine) fAllFromMe = mine;
         }
 
         isminetype fAllToMe = ISMINE_SPENDABLE;
-        for (isminetype mine : wtx.txout_is_mine)
+        for (isminetype mine : wtx->txout_is_mine)
         {
             if (mine & ISMINE_WATCH_ONLY) outputInvolvesWatchAddress = true;
             if (fAllToMe > mine) fAllToMe = mine;
         }
 
         // LogPrintf("TransactionRecord::%s TxId: %s vOutIdx: %d, CoinBase: %d, AllFromMe: %d, AllToMe: %d, inputWatch: %d, outputWatch: %d\n",
-        //         __func__, hash.ToString(), vOutIdx, wtx.is_coinbase, fAllFromMe, fAllToMe, inputInvolvesWatchAddress, outputInvolvesWatchAddress);
+        //         __func__, hash.ToString(), vOutIdx, wtx->is_coinbase, fAllFromMe, fAllToMe, inputInvolvesWatchAddress, outputInvolvesWatchAddress);
 
         // A/B Generated:
         // A: coinbase -> self    Generated
         // B: coinbase -> watched Generated (watched)
-        if (wtx.is_coinbase && mine)
+        if (wtx->is_coinbase && mine)
         {
             sub.type = TransactionRecord::Generated;
             sub.involvesWatchAddress = mine & ISMINE_WATCH_ONLY;
@@ -224,12 +221,12 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(interfaces::Wal
         // D: watched -> watched  Send to self (watched)
         if (fAllFromMe && fAllToMe && (debitMineTypes == creditMineTypes))
         {
-            CAmount nChange = wtx.change;
+            CAmount nChange = wtx->change;
             sub.debit = -(nDebit - nChange);
             sub.credit = nCredit - nChange;
             sub.involvesWatchAddress = inputInvolvesWatchAddress;
 
-            if (wtx.is_denominate)
+            if (wtx->is_denominate)
             {
                 sub.type = TransactionRecord::CoinJoinCreateDenominations;
                 sub.debit = -nDebit;
@@ -241,7 +238,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(interfaces::Wal
             if (mapValue["DS"] == "1")
             {
                 sub.type = TransactionRecord::CoinJoinSend;
-                CAmount nChange = wtx.change;
+                CAmount nChange = wtx->change;
                 parts.append(sub);
                 break; // Only report first of the batch
             } 
@@ -250,7 +247,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(interfaces::Wal
             sub.type = TransactionRecord::SendToSelf;
 
             sub.idx = parts.size();
-            if (wtx.tx->vin.size() == 1 && wtx.tx->vout.size() == 1
+            if (wtx->tx->vin.size() == 1 && wtx->tx->vout.size() == 1
                 && CCoinJoin::IsCollateralAmount(nDebit)
                 && CCoinJoin::IsCollateralAmount(nCredit)
                 && CCoinJoin::IsCollateralAmount(-nNet))
@@ -259,7 +256,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(interfaces::Wal
             } 
             else 
             {
-                for (const auto& txout : wtx.tx->vout)
+                for (const auto& txout : wtx->tx->vout)
                 {
                     if (txout.nValue == CCoinJoin::GetMaxCollateralAmount()) {
                         sub.type = TransactionRecord::CoinJoinMakeCollaterals;
@@ -363,7 +360,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(interfaces::Wal
     }
     return parts;}
 
-void TransactionRecord::updateStatus(const interfaces::WalletTx& wtx, const interfaces::WalletTxStatus& wtxStatus, int numBlocks, int64_t adjustedTime, int chainLockHeight)
+void TransactionRecord::updateStatus(const std::shared_ptr<const interfaces::WalletTx> wtx, const interfaces::WalletTxStatus& wtxStatus, int numBlocks, int64_t adjustedTime, int chainLockHeight)
 {
     // Determine transaction status
 
