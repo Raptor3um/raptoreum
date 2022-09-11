@@ -533,7 +533,7 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 1230767999; // December 31, 2008
 
         consensus.vDeployments[Consensus::DEPLOYMENT_V17].bit = 0;
-        consensus.vDeployments[Consensus::DEPLOYMENT_V17].nStartTime = 1664323200; // 1643670001; // Sep 28, 2022 00:00:00hrs
+        consensus.vDeployments[Consensus::DEPLOYMENT_V17].nStartTime = 1665644400; // 1665644400; // 0ct 13, 2022 00:00:00hrs
         consensus.vDeployments[Consensus::DEPLOYMENT_V17].nTimeout = 9999999999; // 1675206001; // Feb 01, 2023 00:00:01hrs
         consensus.vDeployments[Consensus::DEPLOYMENT_V17].nWindowSize = 4032;
         consensus.vDeployments[Consensus::DEPLOYMENT_V17].nThresholdStart = 3226; // 80% of 4032
