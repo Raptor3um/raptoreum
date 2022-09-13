@@ -7,8 +7,6 @@
 #include <test/test_raptoreum.h>
 
 #include <boost/test/unit_test.hpp>
-#include <boost/thread/lock_types.hpp>
-#include <boost/thread/shared_mutex.hpp>
 
 #include <deque>
 #include <mutex>
@@ -73,11 +71,11 @@ double test_cache(size_t megabytes, double load)
      */
     std::vector<uint256> hashes_insert_copy = hashes;
     /** Do the insert */
-    for (uint256& h : hashes_insert_copy)
+    for (const uint256& h : hashes_insert_copy)
         set.insert(h);
     /** Count the hits */
     uint32_t count = 0;
-    for (uint256& h : hashes)
+    for (const uint256& h : hashes)
         count += set.contains(h, false);
     double hit_rate = ((double)count) / ((double)n_insert);
     return hit_rate;
@@ -314,7 +312,7 @@ void test_cache_generations()
                 reads.push_back(inserts[i]);
             for (uint32_t i = n_insert - (n_insert / 4); i < n_insert; ++i)
                 reads.push_back(inserts[i]);
-            for (auto h : inserts)
+            for (const auto& h : inserts)
                 c.insert(h);
         }
     };

@@ -3,13 +3,18 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <evo/simplifiedmns.h>
+
 #include <evo/cbtx.h>
 #include <core_io.h>
 #include <evo/deterministicmns.h>
 #include <llmq/quorums_blockprocessor.h>
 #include <llmq/quorums_commitment.h>
-#include <evo/simplifiedmns.h>
 #include <evo/specialtx.h>
+
+#include <pubkey.h>
+#include <serialize.h>
+#include <version.h>
 
 #include <base58.h>
 #include <chainparams.h>
@@ -99,13 +104,13 @@ bool CSimplifiedMNListDiff::BuildQuorumsDiff(const CBlockIndex* baseBlockIndex, 
 
     std::set<std::pair<Consensus::LLMQType, uint256>> baseQuorumHashes;
     std::set<std::pair<Consensus::LLMQType, uint256>> quorumHashes;
-    for (auto& p : baseQuorums) {
-        for (auto& p2 : p.second) {
+    for (const auto& p : baseQuorums) {
+        for (const auto& p2 : p.second) {
             baseQuorumHashes.emplace(p.first, p2->GetBlockHash());
         }
     }
-    for (auto& p : quorums) {
-        for (auto& p2 : p.second) {
+    for (const auto& p : quorums) {
+        for (const auto& p2 : p.second) {
             quorumHashes.emplace(p.first, p2->GetBlockHash());
         }
     }
@@ -117,12 +122,12 @@ bool CSimplifiedMNListDiff::BuildQuorumsDiff(const CBlockIndex* baseBlockIndex, 
     }
     for (auto& p : quorumHashes) {
         if (!baseQuorumHashes.count(p)) {
-            llmq::CFinalCommitment qc;
             uint256 minedBlockHash;
-            if (!llmq::quorumBlockProcessor->GetMinedCommitment(p.first, p.second, qc, minedBlockHash)) {
+            llmq::CFinalCommitmentPtr qc = llmq::quorumBlockProcessor->GetMinedCommitment(p.first, p.second, minedBlockHash);
+            if (qc == nullptr) {
                 return false;
             }
-            newQuorums.emplace_back(qc);
+            newQuorums.emplace_back(*qc);
         }
     }
     return true;

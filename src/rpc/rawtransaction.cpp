@@ -6,6 +6,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chain.h>
+#include <chainparams.h>
 #include <coins.h>
 #include <consensus/validation.h>
 #include <core_io.h>
@@ -198,6 +199,8 @@ static UniValue getrawtransaction(const JSONRPCRequest& request)
         },
     }.Check(request);
 
+    const NodeContext& node = EnsureNodeContext(request.context);
+
     bool in_active_chain = true;
     uint256 hash = ParseHashV(request.params[0], "parameter 1");
     CBlockIndex* blockindex = nullptr;
@@ -229,9 +232,9 @@ static UniValue getrawtransaction(const JSONRPCRequest& request)
         f_txindex_ready = g_txindex->BlockUntilSyncedToCurrentChain();
     }
 
-    CTransactionRef tx;
     uint256 hash_block;
-    if (!GetTransaction(hash, tx, Params().GetConsensus(), hash_block, blockindex)) {
+    const CTransactionRef tx = GetTransaction(blockindex, node.mempool, hash, Params().GetConsensus(), hash_block);
+    if (!tx) {
         std::string errmsg;
         if (blockindex) {
             if (!(blockindex->nStatus & BLOCK_HAVE_DATA)) {
@@ -289,11 +292,13 @@ static UniValue gettxoutproof(const JSONRPCRequest& request)
     UniValue txids = request.params[0].get_array();
     for (unsigned int idx = 0; idx < txids.size(); idx++) {
         const UniValue& txid = txids[idx];
-        if (txid.get_str().length() != 64 || !IsHex(txid.get_str()))
+        if (txid.get_str().length() != 64 || !IsHex(txid.get_str())) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("Invalid txid ")+txid.get_str());
+        }
         uint256 hash(uint256S(txid.get_str()));
-        if (setTxids.count(hash))
+        if (setTxids.count(hash)) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("Invalid parameter, duplicated txid: ")+txid.get_str());
+        }
        setTxids.insert(hash);
        oneTxid = hash;
     }
@@ -328,11 +333,11 @@ static UniValue gettxoutproof(const JSONRPCRequest& request)
 
     LOCK(cs_main);
 
-    if (pblockindex == nullptr)
-    {
-        CTransactionRef tx;
-        if (!GetTransaction(oneTxid, tx, Params().GetConsensus(), hashBlock) || hashBlock.IsNull())
+    if (pblockindex == nullptr) {
+        const CTransactionRef tx = GetTransaction(/* block_index */ nullptr, /* mempool */ nullptr, oneTxid, Params().GetConsensus(), hashBlock);
+        if (!tx || hashBlock.IsNull()) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not yet in block");
+        }
         pblockindex = LookupBlockIndex(hashBlock);
         if (!pblockindex) {
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Transaction index corrupt");
@@ -340,15 +345,19 @@ static UniValue gettxoutproof(const JSONRPCRequest& request)
     }
 
     CBlock block;
-    if(!ReadBlockFromDisk(block, pblockindex, Params().GetConsensus()))
+    if (!ReadBlockFromDisk(block, pblockindex, Params().GetConsensus())) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Can't read block from disk");
+    }
 
     unsigned int ntxFound = 0;
-    for (const auto& tx : block.vtx)
-        if (setTxids.count(tx->GetHash()))
+    for (const auto& tx : block.vtx) {
+        if (setTxids.count(tx->GetHash())) {
             ntxFound++;
-    if (ntxFound != setTxids.size())
+        }
+    }
+    if (ntxFound != setTxids.size()) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Not all transactions found in specified or retrieved block");
+    }
 
     CDataStream ssMB(SER_NETWORK, PROTOCOL_VERSION);
     CMerkleBlock mb(block, setTxids);
@@ -439,11 +448,15 @@ static UniValue createrawtransaction(const JSONRPCRequest& request)
                         {
                             {"address", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "A key-value pair. The key (string) is the Raptoreum address, value is a json string,\n"
                                     "numberic pair for future_maturity, future_locktime, and future_amount. There can only one address contain future information.\n"
-                                    "A future transaction is mature when there is enough confiration (future_maturity) or time (future_locktime)\n",
+                                    "A future transaction is mature when there is enough confirmation (future_maturity) or time (future_locktime)\n",
                                 {
-                                    {"future_maturity", RPCArg::Type::NUM, RPCArg::Optional::NO, "Number of confirmation for this future to mature."},
-                                    {"future_locktime", RPCArg::Type::NUM, RPCArg::Optional::NO, "Total time in seconds from its first confirmation for this future to mature."},
-                                    {"future_amount", RPCArg::Type::NUM, RPCArg::Optional::NO, "Raptoreum amount to be locked."},
+                                    {"", RPCArg::Type::ARR, RPCArg::Optional::OMITTED, "",
+                                        {
+                                            {"future_maturity", RPCArg::Type::NUM, RPCArg::Optional::NO, "Number of confirmation for this future to mature."},
+                                            {"future_locktime", RPCArg::Type::NUM, RPCArg::Optional::NO, "Total time in seconds from its first confirmation for this future to mature."},
+                                            {"future_amount", RPCArg::Type::NUM, RPCArg::Optional::NO, "Raptoreum amount to be locked."},
+                                        },
+                                    },
                                 },
                             },
                         },

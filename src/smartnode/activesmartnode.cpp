@@ -4,12 +4,17 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <smartnode/activesmartnode.h>
+
 #include <evo/deterministicmns.h>
-#include <smartnode/smartnode-sync.h>
+
+#include <chainparams.h>
+#include <net.h>
 #include <netbase.h>
 #include <protocol.h>
 #include <validation.h>
 #include <warnings.h>
+
+#include <bls/bls.h>
 
 // Keep track of the active Smartnode
 RecursiveMutex activeSmartnodeInfoCs;

@@ -12,6 +12,7 @@
 #include <crypto/sha512.h>
 #include <crypto/hmac_sha256.h>
 #include <crypto/hmac_sha512.h>
+#include <crypto/pkcs5_pbkdf2_hmac_sha512.h>
 #include <random.h>
 #include <util/strencodings.h>
 #include <test/test_raptoreum.h>
@@ -19,8 +20,6 @@
 #include <vector>
 
 #include <boost/test/unit_test.hpp>
-#include <openssl/aes.h>
-#include <openssl/evp.h>
 
 BOOST_FIXTURE_TEST_SUITE(cn_tests, BasicTestingSetup)
 
@@ -29,7 +28,7 @@ static void TestCnHash(int hashSelection, const std::string& input, const std::s
 {
     uint512 inUint  = uint512S(input.c_str());
     //uint512 outUint = uint512S(desired.c_str());
-    
+
     uint512 result;
     cnHash(&inUint, &result, 64, hashSelection);
 

@@ -1,6 +1,8 @@
 #include <qt/smartnodelist.h>
 #include <qt/forms/ui_smartnodelist.h>
 
+#include <chainparams.h>
+#include <evo/deterministicmns.h>
 #include <qt/clientmodel.h>
 #include <clientversion.h>
 #include <coins.h>
@@ -17,13 +19,7 @@
 
 int GetOffsetFromUtc()
 {
-#if QT_VERSION < 0x050200
-    const QDateTime dateTime1 = QDateTime::currentDateTime();
-    const QDateTime dateTime2 = QDateTime(dateTime1.date(), dateTime1.time(), Qt::UTC);
-    return dateTime1.secsTo(dateTime2);
-#else
     return QDateTime::currentDateTime().offsetFromUtc();
-#endif
 }
 
 template <typename T>
@@ -44,13 +40,7 @@ public:
 
 SmartnodeList::SmartnodeList(QWidget* parent) :
     QWidget(parent),
-    ui(new Ui::SmartnodeList),
-    clientModel(0),
-    walletModel(0),
-    fFilterUpdatedDIP3(true),
-    nTimeFilterUpdatedDIP3(0),
-    nTimeUpdatedDIP3(0),
-    mnListChanged(true)
+    ui(new Ui::SmartnodeList)
 {
     ui->setupUi(this);
 

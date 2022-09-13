@@ -28,8 +28,8 @@
 
 namespace miner_tests {
 struct MinerTestingSetup : public TestingSetup {
-    void TestPackageSelection(const CChainParams& chainparams, const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst) EXCLUSIVE_LOCKS_REQUIRED(::cs_main, m_node.mempool->cs);
-    bool TestSequenceLocks(const CTransaction& tx, int flags) EXCLUSIVE_LOCKS_REQUIRED(::cs_main, m_node.mempool->cs)
+    void TestPackageSelection(const CChainParams& chainparams, const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst) EXCLUSIVE_LOCKS_REQUIRED(cs_main, ::mempool.cs);
+    bool TestSequenceLocks(const CTransaction& tx, int flags) EXCLUSIVE_LOCKS_REQUIRED(cs_main, ::mempool.cs)
     {
         return CheckSequenceLocks(*m_node.mempool, tx, flags);
     }
@@ -161,7 +161,7 @@ void MinerTestingSetup::TestPackageSelection(const CChainParams& chainparams, co
     // Test that packages above the min relay fee do get included, even if one
     // of the transactions is below the min relay fee
     // Remove the low fee transaction and replace with a higher fee transaction
-    m_node.mempool->removeRecursive(CTransaction(tx));
+    m_node.mempool->removeRecursive(CTransaction(tx), MemPoolRemovalReason::MANUAL);
     tx.vout[0].nValue -= 2; // Now we should be just over the min relay fee
     hashLowFeeTx = tx.GetHash();
     m_node.mempool->addUnchecked(entry.Fee(feeToUse+2).FromTx(tx));
@@ -255,7 +255,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
             }
         }
         std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(*pblock);
-        BOOST_CHECK(ProcessNewBlock(chainparams, shared_pblock, true, nullptr));
+        BOOST_CHECK(EnsureChainman(m_node).ProcessNewBlock(chainparams, shared_pblock, true, nullptr));
         pblock->hashPrevBlock = pblock->GetHash();
     };
 

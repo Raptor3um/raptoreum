@@ -8,15 +8,19 @@
 #include <rpc/server.h>
 
 #include <chainparams.h>
+#include <fs.h>
+#include <key_io.h>
+#include <random.h>
 #include <rpc/util.h>
 #include <shutdown.h>
 #include <sync.h>
+#include <ui_interface.h>
 #include <util/strencodings.h>
 #include <util/system.h>
 
-#include <boost/signals2/signal.hpp>
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
+#include <boost/signals2/signal.hpp>
 
 #include <algorithm>
 #include <memory> // for unique_ptr
@@ -145,7 +149,7 @@ void CRPCTable::InitPlatformRestrictions()
         {"getblockhash", {}},
         {"getblockcount", {}},
         {"getbestchainlock", {}},
-        {"quorum", {"sign", static_cast<uint8_t>(Params().GetConsensus().llmqTypePlatform)}},
+        {"quorum", {"sign", Params().GetConsensus().llmqTypePlatform}},
         {"quorum", {"verify"}},
         {"verifyislock", {}},
     };
@@ -333,6 +337,11 @@ void StopRPC()
 bool IsRPCRunning()
 {
     return g_rpc_running;
+}
+
+void RpcInterruptionPoint()
+{
+    if (!IsRPCRunning()) throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, "Shutting down");
 }
 
 void SetRPCWarmupStatus(const std::string& newStatus)

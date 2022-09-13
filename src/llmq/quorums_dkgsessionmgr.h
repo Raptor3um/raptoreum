@@ -7,12 +7,12 @@
 #define BITCOIN_LLMQ_QUORUMS_DKGSESSIONMGR_H
 
 #include <llmq/quorums_dkgsessionhandler.h>
-
-#include <validation.h>
-
-#include <ctpl_stl.h>
+#include <llmq/quorums_dkgsession.h>
+#include <bls/bls.h>
+#include <bls/bls_worker.h>
 
 class UniValue;
+class CBlockIndex;
 
 namespace llmq
 {
@@ -28,7 +28,7 @@ private:
 
     std::map<Consensus::LLMQType, CDKGSessionHandler> dkgSessionHandlers;
 
-    RecursiveMutex contributionsCacheCs;
+    mutable RecursiveMutex contributionsCacheCs;
     struct ContributionsCacheKey {
         Consensus::LLMQType llmqType;
         uint256 quorumHash;
@@ -45,7 +45,7 @@ private:
         BLSVerificationVectorPtr vvec;
         CBLSSecretKey skContribution;
     };
-    std::map<ContributionsCacheKey, ContributionsCacheEntry> contributionsCache;
+    mutable std::map<ContributionsCacheKey, ContributionsCacheEntry> contributionsCache GUARDED_BY(contributionsCacheCs);
 
 public:
     CDKGSessionManager(CConnman& _connman, CBLSWorker& _blsWorker, bool unitTests, bool fWipe);
@@ -64,17 +64,17 @@ public:
     bool GetPrematureCommitment(const uint256& hash, CDKGPrematureCommitment& ret) const;
 
     // Contributions are written while in the DKG
-    void WriteVerifiedVvecContribution(Consensus::LLMQType llmqType, const CBlockIndex* pindexQuorum, const uint256& proTxHash, const BLSVerificationVectorPtr& vvec);
-    void WriteVerifiedSkContribution(Consensus::LLMQType llmqType, const CBlockIndex* pindexQuorum, const uint256& proTxHash, const CBLSSecretKey& skContribution);
-    bool GetVerifiedContributions(Consensus::LLMQType llmqType, const CBlockIndex* pindexQuorum, const std::vector<bool>& validMembers, std::vector<uint16_t>& memberIndexesRet, std::vector<BLSVerificationVectorPtr>& vvecsRet, BLSSecretKeyVector& skContributionsRet);
+    void WriteVerifiedVvecContribution(Consensus::LLMQType llmqType, const CBlockIndex* pQuorumBaseBlockIndex, const uint256& proTxHash, const BLSVerificationVectorPtr& vvec);
+    void WriteVerifiedSkContribution(Consensus::LLMQType llmqType, const CBlockIndex* pQuorumBaseBlockIndex, const uint256& proTxHash, const CBLSSecretKey& skContribution);
+    bool GetVerifiedContributions(Consensus::LLMQType llmqType, const CBlockIndex* pQuorumBaseBlockIndex, const std::vector<bool>& validMembers, std::vector<uint16_t>& memberIndexesRet, std::vector<BLSVerificationVectorPtr>& vvecsRet, BLSSecretKeyVector& skContributionsRet) const;
     /// Write encrypted (unverified) DKG contributions for the member with the given proTxHash to the llmqDb
-    void WriteEncryptedContributions(Consensus::LLMQType llmqType, const CBlockIndex* pindexQuorum, const uint256& proTxHash, const CBLSIESMultiRecipientObjects<CBLSSecretKey>& contributions);
+    void WriteEncryptedContributions(Consensus::LLMQType llmqType, const CBlockIndex* pQuorumBaseBlockIndex, const uint256& proTxHash, const CBLSIESMultiRecipientObjects<CBLSSecretKey>& contributions);
     /// Read encrypted (unverified) DKG contributions for the member with the given proTxHash from the llmqDb
-    bool GetEncryptedContributions(Consensus::LLMQType llmqType, const CBlockIndex* pindexQuorum, const std::vector<bool>& validMembers, const uint256& proTxHash, std::vector<CBLSIESEncryptedObject<CBLSSecretKey>>& vecRet);
+    bool GetEncryptedContributions(Consensus::LLMQType llmqType, const CBlockIndex* pQuorumBaseBlockIndex, const std::vector<bool>& validMembers, const uint256& proTxHash, std::vector<CBLSIESEncryptedObject<CBLSSecretKey>>& vecRet) const;
 
 private:
     void MigrateDKG();
-    void CleanupCache();
+    void CleanupCache() const;
 };
 
 bool IsQuorumDKGEnabled();

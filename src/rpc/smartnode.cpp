@@ -3,31 +3,20 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <smartnode/activesmartnode.h>
-#include <base58.h>
-#include <clientversion.h>
-#include <init.h>
+#include <chainparams.h>
+#include <evo/deterministicmns.h>
+#include <governance/governance-classes.h>
 #include <index/txindex.h>
-#include <node/context.h>
 #include <net.h>
 #include <netbase.h>
+#include <node/context.h>
 #include <rpc/blockchain.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
-#include <rpc/server.h>
-#include <validation.h>
-#include <util/system.h>
-#include <util/moneystr.h>
-#include <txmempool.h>
-
-#include <evo/specialtx.h>
-#include <evo/deterministicmns.h>
-
-#include <governance/governance-classes.h>
-
+#include <smartnode/activesmartnode.h>
 #include <smartnode/smartnode-payments.h>
-#include <smartnode/smartnode-sync.h>
-
+#include <univalue.h>
+#include <validation.h>
 #include <wallet/coincontrol.h>
 #include <wallet/rpcwallet.h>
 #ifdef ENABLE_WALLET
@@ -36,7 +25,6 @@
 
 #include <fstream>
 #include <iomanip>
-#include <univalue.h>
 
 static UniValue smartnodelist(const JSONRPCRequest& request);
 
@@ -422,7 +410,7 @@ UniValue smartnode_payments(const JSONRPCRequest& request)
     // A temporary vector which is used to sort results properly (there is no "reverse" in/for UniValue)
     std::vector<UniValue> vecPayments;
 
-    while (vecPayments.size() < std::abs(nCount) != 0 && pindex != nullptr) {
+    while (vecPayments.size() < uint64_t(std::abs(nCount)) && pindex != nullptr) {
 
         CBlock block;
         if (!ReadBlockFromDisk(block, pindex, Params().GetConsensus())) {
@@ -432,15 +420,15 @@ UniValue smartnode_payments(const JSONRPCRequest& request)
         // Note: we have to actually calculate block reward from scratch instead of simply querying coinbase vout
         // because miners might collect less coins than they potentially could and this would break our calculations.
         CAmount nBlockFees{0};
+        NodeContext& node = EnsureNodeContext(request.context);
         for (const auto& tx : block.vtx) {
             if (tx->IsCoinBase()) {
                 continue;
             }
             CAmount nValueIn{0};
-            for (const auto txin : tx->vin) {
-                CTransactionRef txPrev;
+            for (const auto& txin : tx->vin) {
                 uint256 blockHashTmp;
-                GetTransaction(txin.prevout.hash, txPrev, Params().GetConsensus(), blockHashTmp);
+                CTransactionRef txPrev = GetTransaction(/* block_index */ nullptr, node.mempool, txin.prevout.hash, Params().GetConsensus(), blockHashTmp);
                 nValueIn += txPrev->vout[txin.prevout.n].nValue;
             }
             nBlockFees += nValueIn - tx->GetValueOut();

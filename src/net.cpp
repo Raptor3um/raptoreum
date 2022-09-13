@@ -36,6 +36,10 @@
 #include <fcntl.h>
 #endif
 
+#if HAVE_DECL_GETIFADDRS && HAVE_DECL_FREEIFADDRS
+#include <ifaddrs.h>
+#endif
+
 #ifdef USE_POLL
 #include <poll.h>
 #endif
@@ -375,7 +379,7 @@ CNode* CConnman::FindNode(const CService& addr, bool fExcludeDisconnecting)
 bool CConnman::CheckIncomingNonce(uint64_t nonce)
 {
     LOCK(cs_vNodes);
-    for (CNode* pnode : vNodes) {
+    for (const CNode* pnode : vNodes) {
         if (!pnode->fSuccessfullyConnected && !pnode->fInbound && pnode->GetLocalNonce() == nonce)
             return false;
     }
@@ -1903,7 +1907,7 @@ void CConnman::ThreadDNSAddressSeed()
 
         LOCK(cs_vNodes);
         int nRelevant = 0;
-        for (auto pnode : vNodes) {
+        for (const CNode* pnode : vNodes) {
             nRelevant += pnode->fSuccessfullyConnected && !pnode->fFeeler && !pnode->fOneShot && !pnode->m_manual_connection && !pnode->fInbound && !pnode->m_smartnode_probe_connection;
         }
         if (nRelevant >= 2) {
@@ -2015,7 +2019,7 @@ int CConnman::GetExtraOutboundCount()
     int nOutbound = 0;
     {
         LOCK(cs_vNodes);
-        for (CNode* pnode : vNodes) {
+        for (const CNode* pnode : vNodes) {
             // don't count outbound smartnodes
             if (pnode->m_smartnode_connection) {
                 continue;
@@ -2090,7 +2094,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
         std::set<std::vector<unsigned char> > setConnected;
         if (!Params().AllowMultipleAddressesFromGroup()) {
             LOCK(cs_vNodes);
-            for (CNode* pnode : vNodes) {
+            for (const CNode* pnode : vNodes) {
                 if (!pnode->fInbound && !pnode->m_smartnode_connection && !pnode->m_manual_connection) {
                     // Netgroups for inbound and addnode peers are not excluded because our goal here
                     // is to not use multiple of our limited outbound slots on a single netgroup
@@ -3045,13 +3049,14 @@ void CConnman::Stop()
         }
 
     // clean up some globals (to help leak detection)
-    for (CNode *pnode : vNodes) {
+    std::vector<CNode*> nodes;
+    WITH_LOCK(cs_vNodes, nodes.swap(vNodes));
+    for (CNode *pnode : nodes) {
         DeleteNode(pnode);
     }
     for (CNode *pnode : vNodesDisconnected) {
         DeleteNode(pnode);
     }
-    vNodes.clear();
     mapSocketToNode.clear();
     mapReceivableNodes.clear();
     {

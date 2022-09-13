@@ -9,6 +9,7 @@
 #include <key.h>
 #include <stacktraces.h>
 #include <validation.h>
+#include <util/strencodings.h>
 #include <util/system.h>
 #include <random.h>
 
@@ -20,12 +21,10 @@
 
 // const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 
-static const int64_t DEFAULT_BENCH_EVALUATIONS = 5;
 static const char* DEFAULT_BENCH_FILTER = ".*";
 
 void InitBLSTests();
 void CleanupBLSTests();
-void CleanupBLSDkgTests();
 
 static fs::path SetDataDir()
 {
@@ -103,7 +102,6 @@ int main(int argc, char** argv)
     fs::remove_all(bench_datadir);
 
     // need to be called before global destructors kick in (PoolAllocator is needed due to many BLSSecretKeys)
-    CleanupBLSDkgTests();
     CleanupBLSTests();
 
     ECC_Stop();

@@ -1,11 +1,11 @@
 package=backtrace
-$(package)_version=1.0
-$(package)_download_path=https://github.com/malbit/libbacktrace/archive/refs/tags
-$(package)_file_name=v$($(package)_version).tar.gz
-$(package)_sha256_hash=90088afce2a94aeb77fae6b1da001cc4649a86d6d99c35fba09681b7dd2d59d2
+$(package)_version=rust-snapshot-2018-05-22
+$(package)_download_path=https://github.com/rust-lang-nursery/libbacktrace/archive
+$(package)_file_name=$($(package)_version).tar.gz
+$(package)_sha256_hash=8da6daa0a582c9bbd1f2933501168b4c43664700f604f43e922e85b99e5049bc
 
 define $(package)_set_vars
-$(package)_config_opts=--disable-shared --enable-host-shared --prefix=$(host_prefix) --host=$(host)
+$(package)_config_opts=--disable-shared --enable-host-shared --prefix=$(host_prefix)
 endef
 
 define $(package)_config_cmds
@@ -19,4 +19,8 @@ endef
 
 define $(package)_stage_cmds
   $(MAKE) DESTDIR=$($(package)_staging_dir) install
+endef
+
+define $(package)_postprocess_cmds
+  rm lib/*.la
 endef

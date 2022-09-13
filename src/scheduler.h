@@ -99,9 +99,9 @@ class SingleThreadedSchedulerClient {
 private:
     CScheduler *m_pscheduler;
 
-    Mutex m_callbacks_mutex;
-    std::list<std::function<void ()>> m_callbacks_pending GUARDED_BY(m_callbacks_mutex);
-    bool m_are_callbacks_running GUARDED_BY(m_callbacks_mutex) = false;
+    RecursiveMutex m_cs_callbacks_pending;
+    std::list<std::function<void ()>> m_callbacks_pending GUARDED_BY(m_cs_callbacks_pending);
+    bool m_are_callbacks_running GUARDED_BY(m_cs_callbacks_pending) = false;
 
     void MaybeScheduleProcessQueue();
     void ProcessQueue();

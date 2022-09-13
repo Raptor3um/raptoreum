@@ -42,7 +42,6 @@ public:
 
     std::set<uint16_t> complaintsFromMembers;
 
-public:
     CDKGDebugMemberStatus() : statusBitset(0) {}
 };
 
@@ -70,7 +69,6 @@ public:
 
     std::vector<CDKGDebugMemberStatus> members;
 
-public:
     CDKGDebugSessionStatus() : statusBitset(0) {}
 
     UniValue ToJson(int detailLevel) const;
@@ -83,23 +81,22 @@ public:
 
     std::map<Consensus::LLMQType, CDKGDebugSessionStatus> sessions;
 
-public:
     UniValue ToJson(int detailLevel) const;
 };
 
 class CDKGDebugManager
 {
 private:
-    RecursiveMutex cs;
-    CDKGDebugStatus localStatus;
+    mutable RecursiveMutex cs;
+    CDKGDebugStatus localStatus GUARDED_BY(cs);
 
 public:
     CDKGDebugManager();
 
-    void GetLocalDebugStatus(CDKGDebugStatus& ret);
+    void GetLocalDebugStatus(CDKGDebugStatus& ret) const;
 
     void ResetLocalSessionStatus(Consensus::LLMQType llmqType);
-    void InitLocalSessionStatus(Consensus::LLMQType llmqType, const uint256& quorumHash, int quorumHeight);
+    void InitLocalSessionStatus(const Consensus::LLMQParams& llmqParams, const uint256& quorumHash, int quorumHeight);
 
     void UpdateLocalSessionStatus(Consensus::LLMQType llmqType, std::function<bool(CDKGDebugSessionStatus& status)>&& func);
     void UpdateLocalMemberStatus(Consensus::LLMQType llmqType, size_t memberIdx, std::function<bool(CDKGDebugMemberStatus& status)>&& func);

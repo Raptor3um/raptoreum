@@ -164,12 +164,6 @@ bool SendFuturesEntry::validate(interfaces::Node& node)
     // Check input validity
     bool retval = true;
 
-#ifdef ENABLE_BIP70
-    // Skip checks for payment request
-    if (recipient.paymentRequest.IsInitialized())
-        return retval;
-#endif
-
     if (!model->validateAddress(ui->payFrom->currentText()))
     {
         retval = false;
@@ -204,12 +198,6 @@ bool SendFuturesEntry::validate(interfaces::Node& node)
 
 SendFuturesRecipient SendFuturesEntry::getValue()
 {
-#ifdef ENABLE_BIP70
-    // Payment request
-    if (recipient.paymentRequest.IsInitialized())
-        return recipient;
-#endif
-
     // Normal payment
     recipient.address = ui->payTo->text();
     recipient.label = ui->addAsLabel->text();
@@ -242,29 +230,6 @@ QWidget *SendFuturesEntry::setupTabChain(QWidget *prev)
 void SendFuturesEntry::setValue(const SendFuturesRecipient &value)
 {
     recipient = value;
-
-#ifdef ENABLE_BIP70
-    if (recipient.paymentRequest.IsInitialized()) // payment request
-    {
-        if (recipient.authenticatedMerchant.isEmpty()) // unauthenticated
-        {
-            ui->payTo_is->setText(recipient.address);
-            ui->memoTextLabel_is->setText(recipient.message);
-            ui->payAmount_is->setValue(recipient.amount);
-            ui->payAmount_is->setReadOnly(true);
-            setCurrentWidget(ui->SendCoins_UnauthenticatedPaymentRequest);
-        }
-        else // authenticated
-        {
-            ui->payTo_s->setText(recipient.authenticatedMerchant);
-            ui->memoTextLabel_s->setText(recipient.message);
-            ui->payAmount_s->setValue(recipient.amount);
-            ui->payAmount_s->setReadOnly(true);
-            setCurrentWidget(ui->SendCoins_AuthenticatedPaymentRequest);
-        }
-    }
-    else // normal payment
-#endif
     {
         // message
         ui->messageTextLabel->setText(recipient.message);

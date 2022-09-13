@@ -11,12 +11,12 @@
 #include <rpc/util.h>
 #include <uint256.h>
 
+#include <functional>
 #include <map>
 #include <stdint.h>
 #include <string>
-#include <functional>
 
-#include <univalue.h>
+#include <univalue/include/univalue.h>
 
 class CRPCCommand;
 
@@ -28,6 +28,9 @@ namespace RPCServer
 
 /** Query whether RPC is running */
 bool IsRPCRunning();
+
+/** Throw JSONRPCError if RPC is not running */
+void RpcInterruptionPoint();
 
 /**
  * Set the RPC warmup status.  When this is done, all RPC calls will error out

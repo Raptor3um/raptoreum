@@ -6,6 +6,7 @@ reset-files.bash
 *.tar.gz
 
 *.exe
+*.pdb
 src/raptoreum
 src/raptoreumd
 src/raptoreum-cli
@@ -136,6 +137,8 @@ qa/pull-tester/tests-config.sh
 raptoreum-cli
 raptoreumd
 raptoreum-qt
+raptoreum-wallet
+raptoreum-tx
 make
 
 /docker/bin

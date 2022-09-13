@@ -5,6 +5,7 @@
 
 #include <init.h>
 #include <interfaces/chain.h>
+#include <interfaces/wallet.h>
 #include <net.h>
 #include <node/context.h>
 #include <util/error.h>
@@ -128,8 +129,6 @@ bool WalletInit::ParameterInteraction() const
 
     if (gArgs.GetBoolArg("-sysperms", false))
         return InitError("-sysperms is not allowed in combination with enabled wallet functionality");
-    if (gArgs.GetArg("-prune", 0) && gArgs.GetBoolArg("-rescan", false))
-        return InitError(_("Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again."));
 
     if (gArgs.IsArgSet("-walletbackupsdir")) {
         if (!fs::is_directory(gArgs.GetArg("-walletbackupsdir", ""))) {
@@ -158,13 +157,15 @@ void WalletInit::Construct(NodeContext& node) const
         return;
     }
     gArgs.SoftSetArg("-wallet", "");
-    node.chain_clients.emplace_back(interfaces::MakeWalletClient(*node.chain, gArgs.GetArgs("-wallet")));
+    auto wallet_client = interfaces::MakeWalletClient(*node.chain, gArgs.GetArgs("-wallet"));
+    node.wallet_client = wallet_client.get();
+    node.chain_clients.emplace_back(std::move(wallet_client));
 }
 
 void WalletInit::AutoLockSmartnodeCollaterals() const
 {
     // we can't do this before DIP3 is fully initialized
-    for (const auto pwallet : GetWallets()) {
+    for (const auto& pwallet : GetWallets()) {
         pwallet->AutoLockSmartnodeCollaterals();
     }
 }

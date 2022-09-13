@@ -73,6 +73,7 @@ void AppTests::appTests()
         return GetDataDir() / "blocks";
     }());
 
+    qRegisterMetaType<interfaces::BlockAndHeaderTipInfo>("interfaces::BlockAndHeaderTipInfo");
     m_app.parameterSetup();
     GUIUtil::loadFonts();
     m_app.createOptionsModel(true /* reset settings */);
@@ -91,7 +92,8 @@ void AppTests::appTests()
     // Reset global state to avoid interfering with later tests.
     LogInstance().DisconnectTestLogger();
     AbortShutdown();
-    UnloadBlockIndex();
+    UnloadBlockIndex(nullptr);
+    WITH_LOCK(::cs_main, g_chainman.Reset());
 }
 
 //! Entry point for BitcoinGUI tests.

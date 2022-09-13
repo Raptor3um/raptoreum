@@ -39,42 +39,6 @@
       </array>
     </dict>
   </array>
-  <key>UTExportedTypeDeclarations</key>
-  <array>
-    <dict>
-      <key>UTTypeIdentifier</key>
-      <string>com.raptoreum.paymentrequest</string>
-      <key>UTTypeDescription</key>
-      <string>Raptoreum payment request</string>
-      <key>UTTypeConformsTo</key>
-      <array>
-        <string>public.data</string>
-      </array>
-      <key>UTTypeTagSpecification</key>
-      <dict>
-        <key>public.mime-type</key>
-        <string>application/x-raptoreum-payment-request</string>
-        <key>public.filename-extension</key>
-        <array>
-          <string>raptoreumpaymentrequest</string>
-        </array>
-      </dict>
-    </dict>
-  </array>
-
-  <key>CFBundleDocumentTypes</key>
-  <array>
-    <dict>
-      <key>CFBundleTypeRole</key>
-      <string>Editor</string>
-      <key>LSItemContentTypes</key>
-      <array>
-        <string>com.raptoreum.paymentrequest</string>
-      </array>
-      <key>LSHandlerRank</key>
-      <string>Owner</string>
-    </dict>
-  </array>
 
   <key>NSPrincipalClass</key>
     <string>NSApplication</string>

@@ -49,18 +49,23 @@
 #include <QFont>
 #include <QFontDatabase>
 #include <QFontMetrics>
+#include <QGuiApplication>
 #include <QKeyEvent>
 #include <QLineEdit>
-#include <QLocale>
+#include <QList>
 #include <QMouseEvent>
 #include <QPointer>
 #include <QProgressDialog>
+#include <QScreen>
 #include <QSettings>
+#include <QSize>
+#include <QString>
 #include <QTextDocument> // for Qt::mightBeRichText
 #include <QThread>
 #include <QTimer>
 #include <QUrlQuery>
 #include <QVBoxLayout>
+#include <QtGlobal>
 
 #if defined(Q_OS_MAC)
 
@@ -409,7 +414,6 @@ bool isDust(interfaces::Node& node, const QString& address, const CAmount& amoun
 QString HtmlEscape(const QString& str, bool fMultiLine)
 {
     QString escaped = str.toHtmlEscaped();
-    escaped = escaped.replace(" ", "&nbsp;");
     if(fMultiLine)
     {
         escaped = escaped.replace("\n", "<br>\n");
@@ -850,7 +854,7 @@ fs::path static GetAutostartFilePath()
     std::string chain = gArgs.GetChainName();
     if (chain == CBaseChainParams::MAIN)
         return GetAutostartDir() / "raptoreumcore.desktop";
-    return GetAutostartDir() / strprintf("raptoreumcore-%s.lnk", chain);
+    return GetAutostartDir() / strprintf("raptoreumcore-%s.desktop", chain);
 }
 
 bool GetStartOnSystemStartup()
@@ -946,7 +950,7 @@ const QString getDefaultTheme()
     return defaultTheme;
 }
 
-const bool isValidTheme(const QString& strTheme)
+bool isValidTheme(const QString& strTheme)
 {
     return strTheme == defaultTheme || strTheme == darkThemePrefix || strTheme == traditionalTheme;
 }
@@ -1593,14 +1597,14 @@ std::vector<QFont::Weight> getSupportedWeights()
 QFont::Weight supportedWeightFromIndex(int nIndex)
 {
     auto vecWeights = getSupportedWeights();
-    assert(vecWeights.size() > nIndex);
+    assert(vecWeights.size() > uint64_t(nIndex));
     return vecWeights[nIndex];
 }
 
 int supportedWeightToIndex(QFont::Weight weight)
 {
     auto vecWeights = getSupportedWeights();
-    for (int index = 0; index < vecWeights.size(); ++index) {
+    for (uint64_t index = 0; index < vecWeights.size(); ++index) {
         if (weight == vecWeights[index]) {
             return index;
         }
@@ -1730,7 +1734,7 @@ QString formatServicesStr(quint64 mask)
     }
 
     if (strList.size())
-        return strList.join(" & ");
+        return strList.join(", ");
     else
         return QObject::tr("None");
 }
@@ -1830,7 +1834,7 @@ void PolishProgressDialog(QProgressDialog* dialog)
 {
 #ifdef Q_OS_MAC
     // Workaround for macOS-only QT bug. see: QTBUG-65750, QTBUG-70357.
-    const int margin = dialog->fontMetrics().width("X");
+    const int margin = TextWidth(dialog->fontMetrics(), ("X"));
     dialog->resize(dialog->width() + 2 * margin, dialog->height());
     dialog->show();
 #else
@@ -1859,6 +1863,25 @@ QImage GetImage(const QLabel* label)
     return QImage();
   }
   return label->pixmap(Qt::ReturnByValue).toImage();
+}
+
+void LogQtInfo()
+{
+#ifdef QT_STATIC
+    const std::string qt_link{"static"};
+#else
+    const std::string qt_link{"dynamic"};
+#endif
+#ifdef QT_STATICPLUGIN
+    const std::string plugin_link{"static"};
+#else
+    const std::string plugin_link{"dynamic"};
+#endif
+    LogPrintf("Qt %s (%s), plugin=%s (%s)\n", qVersion(), qt_link, QGuiApplication::platformName().toStdString(), plugin_link);
+    LogPrintf("System: %s, %s\n", QSysInfo::prettyProductName().toStdString(), QSysInfo::buildAbi().toStdString());
+    for (const QScreen* s : QGuiApplication::screens()) {
+        LogPrintf("Screen: %s %dx%d, pixel ratio=%.1f\n", s->name().toStdString(), s->size().width(), s->size().height(), s->devicePixelRatio());
+    }
 }
 
 } // namespace GUIUtil

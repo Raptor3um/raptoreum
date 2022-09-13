@@ -2,14 +2,17 @@
 // Copyright (c) 2020-2022 The Raptoreum developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-#ifndef SMARTNODE_SYNC_H
-#define SMARTNODE_SYNC_H
+#ifndef BITCOIN_SMARTNODE_SMARTNODE_SYNC_H
+#define BITCOIN_SMARTNODE_SMARTNODE_SYNC_H
 
 #include <atomic>
-#include <chain.h>
-#include <net.h>
+#include <string>
 
 class CSmartnodeSync;
+class CBlockIndex;
+class CConnman;
+class CNode;
+class CDataStream;
 
 static const int SMARTNODE_SYNC_BLOCKCHAIN      = 1;
 static const int SMARTNODE_SYNC_GOVERNANCE      = 4;
@@ -19,7 +22,7 @@ static const int SMARTNODE_SYNC_FINISHED        = 999;
 
 static const int SMARTNODE_SYNC_TICK_SECONDS    = 6;
 static const int SMARTNODE_SYNC_TIMEOUT_SECONDS = 30; // our blocks are 2.5 minutes so 30 seconds should be fine
-static const int SMARTNODE_SYNC_RESET_SECONDS = 600; // Reset fReachedBestHeader in CSmartnodeSync::Reset if UpdateBlockTip hasn't been called for this seconds
+static const int SMARTNODE_SYNC_RESET_SECONDS   = 600; // Reset fReachedBestHeader in CSmartnodeSync::Reset if UpdateBlockTip hasn't been called for this seconds
 
 extern CSmartnodeSync smartnodeSync;
 
@@ -48,7 +51,6 @@ private:
 public:
     CSmartnodeSync();
 
-
     static void SendGovernanceSyncRequest(CNode* pnode, CConnman& connman);
 
     bool IsBlockchainSynced() const { return nCurrentAsset > SMARTNODE_SYNC_BLOCKCHAIN; }
@@ -74,4 +76,4 @@ public:
     void DoMaintenance(CConnman &connman);
 };
 
-#endif
+#endif // BITCOIN_SMARTNODE_SMARTNODE_SYNC_H

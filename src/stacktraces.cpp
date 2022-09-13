@@ -14,6 +14,7 @@
 #include <threadsafety.h>
 #include <util/strencodings.h>
 
+#include <mutex>
 #include <map>
 #include <vector>
 #include <memory>
@@ -110,7 +111,7 @@ static std::string GetExeFileName()
         if (len < 0) {
             return "";
         }
-        if (len < buf.size()) {
+        if (len < int64_t(buf.size())) {
             return std::string(buf.begin(), buf.begin() + len);
         }
         buf.resize(buf.size() * 2);
@@ -121,8 +122,7 @@ static std::string g_exeFileName = GetExeFileName();
 static std::string g_exeFileBaseName = fs::path(g_exeFileName).filename().string();
 
 #ifdef ENABLE_STACKTRACES
-static void my_backtrace_error_callback (void *data, const char *msg,
-                                  int errnum)
+static void my_backtrace_error_callback (void *data, const char *msg, int errnum)
 {
 }
 
@@ -703,18 +703,18 @@ crash_info GetCrashInfoFromException(const std::exception_ptr& e)
     try {
         // rethrow and catch the exception as there is no other way to reliably cast to the real type (not possible with RTTI)
         std::rethrow_exception(e);
-    } catch (const std::exception& e) {
+    } catch (const std::exception& e2) {
         type = getExceptionType();
-        what = GetExceptionWhat(e);
-    } catch (const std::string& e) {
+        what = GetExceptionWhat(e2);
+    } catch (const std::string& e2) {
         type = getExceptionType();
-        what = GetExceptionWhat(e);
-    } catch (const char* e) {
+        what = GetExceptionWhat(e2);
+    } catch (const char* e2) {
         type = getExceptionType();
-        what = GetExceptionWhat(e);
-    } catch (int e) {
+        what = GetExceptionWhat(e2);
+    } catch (int e2) {
         type = getExceptionType();
-        what = GetExceptionWhat(e);
+        what = GetExceptionWhat(e2);
     } catch (...) {
         type = getExceptionType();
         what = "<unknown>";
@@ -741,7 +741,6 @@ static void terminate_handler()
     auto exc = std::current_exception();
 
     crash_info ci;
-    ci.crashDescription = "std::terminate() called, aborting";
 
     if (exc) {
         auto ci2 = GetCrashInfoFromException(exc);
@@ -751,9 +750,8 @@ static void terminate_handler()
     } else {
         ci.crashDescription = "std::terminate() called due unknown reason";
         ci.stackframes = GetStackFrames(0, 16);
+        ci.stackframeInfos = GetStackFrameInfos(ci.stackframes);
     }
-
-    ci.stackframeInfos = GetStackFrameInfos(ci.stackframes);
 
     PrintCrashInfo(ci);
 

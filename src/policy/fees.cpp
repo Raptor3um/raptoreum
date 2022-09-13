@@ -501,9 +501,9 @@ CBlockPolicyEstimator::CBlockPolicyEstimator()
     bucketMap[INF_FEERATE] = bucketIndex;
     assert(bucketMap.size() == buckets.size());
 
-    feeStats = std::unique_ptr<TxConfirmStats>(new TxConfirmStats(buckets, bucketMap, MED_BLOCK_PERIODS, MED_DECAY, MED_SCALE));
-    shortStats = std::unique_ptr<TxConfirmStats>(new TxConfirmStats(buckets, bucketMap, SHORT_BLOCK_PERIODS, SHORT_DECAY, SHORT_SCALE));
-    longStats = std::unique_ptr<TxConfirmStats>(new TxConfirmStats(buckets, bucketMap, LONG_BLOCK_PERIODS, LONG_DECAY, LONG_SCALE));
+    feeStats = std::make_unique<TxConfirmStats>(buckets, bucketMap, MED_BLOCK_PERIODS, MED_DECAY, MED_SCALE);
+    shortStats = std::make_unique<TxConfirmStats>(buckets, bucketMap, SHORT_BLOCK_PERIODS, SHORT_DECAY, SHORT_SCALE);
+    longStats = std::make_unique<TxConfirmStats>(buckets, bucketMap, LONG_BLOCK_PERIODS, LONG_DECAY, LONG_SCALE);
 }
 
 CBlockPolicyEstimator::~CBlockPolicyEstimator()
@@ -890,7 +890,7 @@ bool CBlockPolicyEstimator::Read(CAutoFile& filein)
     try {
         LOCK(m_cs_fee_estimator);
         int nVersionRequired, nVersionThatWrote;
-        unsigned int nFileBestSeenHeight, nFileHistoricalFirst, nFileHistoricalBest;
+        unsigned int nFileBestSeenHeight;
         filein >> nVersionRequired >> nVersionThatWrote;
         if (nVersionRequired > CLIENT_VERSION)
             return error("CBlockPolicyEstimator::Read(): up-version (%d) fee estimate file", nVersionRequired);
@@ -913,9 +913,9 @@ bool CBlockPolicyEstimator::Read(CAutoFile& filein)
             if (numBuckets <= 1 || numBuckets > 1000)
                 throw std::runtime_error("Corrupt estimates file. Must have between 2 and 1000 feerate buckets");
 
-            std::unique_ptr<TxConfirmStats> fileFeeStats(new TxConfirmStats(buckets, bucketMap, MED_BLOCK_PERIODS, MED_DECAY, MED_SCALE));
-            std::unique_ptr<TxConfirmStats> fileShortStats(new TxConfirmStats(buckets, bucketMap, SHORT_BLOCK_PERIODS, SHORT_DECAY, SHORT_SCALE));
-            std::unique_ptr<TxConfirmStats> fileLongStats(new TxConfirmStats(buckets, bucketMap, LONG_BLOCK_PERIODS, LONG_DECAY, LONG_SCALE));
+            auto fileFeeStats{std::make_unique<TxConfirmStats>(buckets, bucketMap, MED_BLOCK_PERIODS, MED_DECAY, MED_SCALE)};
+            auto fileShortStats{std::make_unique<TxConfirmStats>(buckets, bucketMap, SHORT_BLOCK_PERIODS, SHORT_DECAY, SHORT_SCALE)};
+            auto fileLongStats{std::make_unique<TxConfirmStats>(buckets, bucketMap, LONG_BLOCK_PERIODS, LONG_DECAY, LONG_SCALE)};
             fileFeeStats->Read(filein, nVersionThatWrote, numBuckets);
             fileShortStats->Read(filein, nVersionThatWrote, numBuckets);
             fileLongStats->Read(filein, nVersionThatWrote, numBuckets);

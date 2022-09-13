@@ -6,14 +6,17 @@
 #ifndef BITCOIN_LLMQ_QUORUMS_DKGSESSIONHANDLER_H
 #define BITCOIN_LLMQ_QUORUMS_DKGSESSIONHANDLER_H
 
-#include <llmq/quorums_dkgsession.h>
-
-#include <validation.h>
-
 #include <ctpl_stl.h>
+#include <net.h>
+
+class CBLSWorker;
+class CBlockIndex;
 
 namespace llmq
 {
+
+class CDKGSession;
+class CDKGSessionManager;
 
 enum QuorumPhase {
     QuorumPhase_None = -1,
@@ -41,11 +44,11 @@ public:
 
 private:
     mutable RecursiveMutex cs;
-    int invType;
-    size_t maxMessagesPerNode;
-    std::list<BinaryMessage> pendingMessages;
-    std::map<NodeId, size_t> messagesPerNode;
-    std::set<uint256> seenMessages;
+    const int invType;
+    size_t maxMessagesPerNode GUARDED_BY(cs);
+    std::list<BinaryMessage> pendingMessages GUARDED_BY(cs);
+    std::map<NodeId, size_t> messagesPerNode GUARDED_BY(cs);
+    std::set<uint256> seenMessages GUARDED_BY(cs);
 
 public:
     explicit CDKGPendingMessages(size_t _maxMessagesPerNode, int _invType) : invType(_invType), maxMessagesPerNode(_maxMessagesPerNode) {};
@@ -84,7 +87,7 @@ public:
             ret.emplace_back(std::make_pair(bm.first, std::move(msg)));
         }
 
-        return std::move(ret);
+        return ret;
     }
 };
 
@@ -99,7 +102,6 @@ class CDKGSessionHandler
 private:
     friend class CDKGSessionManager;
 
-private:
     mutable RecursiveMutex cs;
     std::atomic<bool> stopRequested{false};
 
@@ -108,17 +110,18 @@ private:
     CBLSWorker& blsWorker;
     CDKGSessionManager& dkgManager;
 
-    QuorumPhase phase{QuorumPhase_Idle};
-    int currentHeight{-1};
-    int quorumHeight{-1};
-    uint256 quorumHash;
-    std::shared_ptr<CDKGSession> curSession;
+    QuorumPhase phase GUARDED_BY(cs) {QuorumPhase_Idle};
+    int currentHeight GUARDED_BY(cs) {-1};
+    int quorumHeight GUARDED_BY(cs) {-1};
+    uint256 quorumHash GUARDED_BY(cs);
+
+    std::unique_ptr<CDKGSession> curSession;
     std::thread phaseHandlerThread;
 
-    CDKGPendingMessages pendingContributions;
-    CDKGPendingMessages pendingComplaints;
-    CDKGPendingMessages pendingJustifications;
-    CDKGPendingMessages pendingPrematureCommitments;
+    CDKGPendingMessages pendingContributions GUARDED_BY(cs);
+    CDKGPendingMessages pendingComplaints GUARDED_BY(cs);
+    CDKGPendingMessages pendingJustifications GUARDED_BY(cs);
+    CDKGPendingMessages pendingPrematureCommitments GUARDED_BY(cs);
 
 public:
     CDKGSessionHandler(const Consensus::LLMQParams& _params, CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager, CConnman& _connman) :
@@ -145,15 +148,15 @@ public:
     void StopThread();
 
 private:
-    bool InitNewQuorum(const CBlockIndex* pindexQuorum);
+    bool InitNewQuorum(const CBlockIndex* pQuorumBaseBlockIndex);
 
     std::pair<QuorumPhase, uint256> GetPhaseAndQuorumHash() const;
 
     using StartPhaseFunc = std::function<void()>;
     using WhileWaitFunc = std::function<bool()>;
-    void WaitForNextPhase(QuorumPhase curPhase, QuorumPhase nextPhase, const uint256& expectedQuorumHash, const WhileWaitFunc& runWhileWaiting);
-    void WaitForNewQuorum(const uint256& oldQuorumHash);
-    void SleepBeforePhase(QuorumPhase curPhase, const uint256& expectedQuorumHash, double randomSleepFactor, const WhileWaitFunc& runWhileWaiting);
+    void WaitForNextPhase(QuorumPhase curPhase, QuorumPhase nextPhase, const uint256& expectedQuorumHash, const WhileWaitFunc& runWhileWaiting) const;
+    void WaitForNewQuorum(const uint256& oldQuorumHash) const;
+    void SleepBeforePhase(QuorumPhase curPhase, const uint256& expectedQuorumHash, double randomSleepFactor, const WhileWaitFunc& runWhileWaiting) const;
     void HandlePhase(QuorumPhase curPhase, QuorumPhase nextPhase, const uint256& expectedQuorumHash, double randomSleepFactor, const StartPhaseFunc& startPhaseFunc, const WhileWaitFunc& runWhileWaiting);
     void HandleDKGRound();
     void PhaseHandlerThread();

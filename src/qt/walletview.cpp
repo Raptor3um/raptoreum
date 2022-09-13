@@ -151,11 +151,20 @@ void WalletView::setClientModel(ClientModel *_clientModel)
 {
     this->clientModel = _clientModel;
 
-    overviewPage->setClientModel(_clientModel);
-    sendCoinsPage->setClientModel(_clientModel);
-    coinJoinCoinsPage->setClientModel(_clientModel);
+    if (overviewPage != nullptr) {
+        overviewPage->setClientModel(_clientModel);
+    }
+    if (sendCoinsPage != nullptr) {
+        sendCoinsPage->setClientModel(_clientModel);
+    }
+    if (sendFuturesPage != nullptr) {
+        sendFuturesPage->setClientModel(_clientModel);
+    }
+    if (coinJoinCoinsPage != nullptr) {
+        coinJoinCoinsPage->setClientModel(_clientModel);
+    }
     QSettings settings;
-    if (settings.value("fShowSmartnodesTab").toBool()) {
+    if (settings.value("fShowSmartnodesTab").toBool() && smartnodeListPage != nullptr) {
         smartnodeListPage->setClientModel(_clientModel);
     }
 }

@@ -19,15 +19,14 @@
 #include <util/system.h>
 #include <util/strencodings.h>
 #include <validationinterface.h>
-#include <script/ismine.h>
 #include <wallet/coincontrol.h>
 #include <wallet/crypter.h>
 #include <wallet/coinselection.h>
+#include <wallet/ismine.h>
 #include <wallet/walletdb.h>
 #include <wallet/walletutil.h>
 #include <wallet/rpcwallet.h>
 
-#include <coinjoin/coinjoin.h>
 #include <governance/governance-object.h>
 #include <evo/providertx.h>
 
@@ -124,12 +123,9 @@ enum WalletFeature
 struct CompactTallyItem
 {
     CTxDestination txdest;
-    CAmount nAmount;
+    CAmount nAmount{0};
     std::vector<CInputCoin> vecInputCoins;
-    CompactTallyItem()
-    {
-        nAmount = 0;
-    }
+    CompactTallyItem() = default;
 };
 
 struct FuturePartialPayload
@@ -954,7 +950,7 @@ public:
     bool SelectTxDSInsByDenomination(int nDenom, CAmount nValueMax, std::vector<CTxDSIn>& vecTxDSInRet);
     bool SelectDenominatedAmounts(CAmount nValueMax, std::set<CAmount>& setAmountsRet) const;
 
-    bool SelectCoinsGroupedByAddresses(std::vector<CompactTallyItem>& vecTallyRet, bool fSkipDenominated = true, bool fAnonymizable = true, bool fSkipUnconfirmed = true, int nMaxOupointsPerAddress = -1) const;
+    std::vector<CompactTallyItem> SelectCoinsGroupedByAddresses(bool fSkipDenominated = true, bool fAnonymizable = true, bool fSkipUnconfirmed = true, int nMaxOupointsPerAddress = -1) const;
 
     /// Get collateral RTM output and keys which can be used for the Smartnode
     bool GetSmartnodeOutpointAndKeys(COutPoint& outpointRet, CPubKey& pubKeyRet, CKey& keyRet, const std::string& strTxHash = "", const std::string& strOutputIndex = "");

@@ -31,10 +31,10 @@ enum class MemPoolRemovalReason;
 
 namespace llmq {
 class CChainLockSig;
-class CInstantSendLock;
+struct CInstantSendLock;
 } // namespace llmq
 
-typedef std::shared_ptr<const CTransaction> CTransactionRef;
+using CTransactionRef = std::shared_ptr<const CTransaction>;
 
 namespace interfaces {
 
@@ -155,6 +155,11 @@ public:
     //! Calculate mempool ancestor and descendant counts for the given transaction.
     virtual void getTransactionAncestry(const uint256& txid, size_t& ancestors, size_t& descendants) = 0;
 
+    //! Get the node's package limits.
+    //! Currently only returns the ancestor and descendant count limits, but could be enhanced to
+    //! return more policy settings.
+    virtual void getPackageLimits(unsigned int& limit_ancestor_count, unsigned int& limit_descendant_count) = 0;
+
     //! Check chain limits.
     virtual bool checkChainLimits(CTransactionRef tx) = 0;
 
@@ -273,20 +278,13 @@ public:
 
     //! Shut down client.
     virtual void stop() = 0;
+
+    //! Set mock time.
+    virtual void setMockTime(int64_t time) = 0;
 };
 
 //! Return implementation of Chain interface.
 std::unique_ptr<Chain> MakeChain(NodeContext& node);
-
-//! Return implementation of ChainClient interface for a wallet client. This
-//! function will be undefined in builds where ENABLE_WALLET is false.
-//!
-//! Currently, wallets are the only chain clients. But in the future, other
-//! types of chain clients could be added, such as tools for monitoring,
-//! analysis, or fee estimation. These clients need to expose their own
-//! MakeXXXClient functions returning their implementations of the ChainClient
-//! interface.
-std::unique_ptr<ChainClient> MakeWalletClient(Chain& chain, std::vector<std::string> wallet_filenames);
 
 } // namespace interfaces
 

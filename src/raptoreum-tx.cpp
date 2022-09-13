@@ -6,6 +6,7 @@
 #include <config/raptoreum-config.h>
 #endif
 
+#include <chainparams.h>
 #include <clientversion.h>
 #include <coins.h>
 #include <consensus/consensus.h>

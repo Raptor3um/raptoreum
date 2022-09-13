@@ -19,6 +19,7 @@
 #include <qt/optionsmodel.h>
 #include <qt/sendfuturesentry.h>
 
+#include <chainparams.h>
 #include <key_io.h>
 #include <wallet/coincontrol.h>
 #include <validation.h> // mempool and minRelayTxFee
@@ -357,9 +358,6 @@ void SendFuturesDialog::send(QList<SendFuturesRecipient> recipients)
 
         QString recipientElement;
 
-#ifdef ENABLE_BIP70
-        if (!rcp.paymentRequest.IsInitialized()) // normal payment
-#endif
         {
             if(rcp.label.length() > 0) // label with address
             {
@@ -371,16 +369,6 @@ void SendFuturesDialog::send(QList<SendFuturesRecipient> recipients)
                 recipientElement = tr("%1 to %2").arg(amount, address);
             }
         }
-#ifdef ENABLE_BIP70
-        else if(!rcp.authenticatedMerchant.isEmpty()) // authenticated payment request
-        {
-            recipientElement = tr("%1 to %2").arg(amount, GUIUtil::HtmlEscape(rcp.authenticatedMerchant));
-        }
-        else // unauthenticated payment request
-        {
-            recipientElement = tr("%1 to %2").arg(amount, address);
-        }
-#endif
 
         formatted.append(recipientElement);
     }
@@ -488,7 +476,7 @@ void SendFuturesDialog::send(QList<SendFuturesRecipient> recipients)
     questionString.append("<hr />");
     CAmount totalAmount = currentTransaction.getTotalTransactionAmount() + txFee;
     QStringList alternativeUnits;
-    for (BitcoinUnits::Unit u : BitcoinUnits::availableUnits())
+    for (const BitcoinUnits::Unit u : BitcoinUnits::availableUnits())
     {
         if(u != model->getOptionsModel()->getDisplayUnit())
             alternativeUnits.append(BitcoinUnits::formatHtmlWithUnit(u, totalAmount));

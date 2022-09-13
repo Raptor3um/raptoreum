@@ -5,6 +5,7 @@
 
 #include <evo/mnauth.h>
 
+#include <chainparams.h>
 #include <evo/deterministicmns.h>
 #include <llmq/quorums_utils.h>
 #include <smartnode/activesmartnode.h>
@@ -13,7 +14,6 @@
 #include <net.h>
 #include <net_processing.h>
 #include <netmessagemaker.h>
-#include <validation.h>
 
 #include <unordered_set>
 

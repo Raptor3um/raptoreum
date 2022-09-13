@@ -7,6 +7,7 @@
 
 #include <addrman.h>
 #include <banman.h>
+#include <arith_uint256.h>
 #include <blockencodings.h>
 #include <chainparams.h>
 #include <consensus/validation.h>
@@ -30,6 +31,7 @@
 #include <util/moneystr.h>
 #include <util/strencodings.h>
 #include <util/validation.h>
+#include <validation.h>
 
 #include <memory>
 
@@ -46,6 +48,7 @@
 #include <evo/deterministicmns.h>
 #include <evo/mnauth.h>
 #include <evo/simplifiedmns.h>
+#include <llmq/quorums.h>
 #include <llmq/quorums_blockprocessor.h>
 #include <llmq/quorums_commitment.h>
 #include <llmq/quorums_chainlocks.h>
@@ -476,7 +479,7 @@ bool MarkBlockAsReceived(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main) 
 
 // returns false, still setting pit, if the block was already in flight from the same peer
 // pit will only be valid as long as the same cs_main lock is being held
-bool MarkBlockAsInFlight(NodeId nodeid, const uint256& hash, const CBlockIndex *pindex = nullptr, std::list<QueuedBlock>::iterator **pit = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs_main) {
+bool MarkBlockAsInFlight(CTxMemPool& mempool, NodeId nodeid, const uint256& hash, const CBlockIndex *pindex = nullptr, std::list<QueuedBlock>::iterator **pit = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs_main) {
     CNodeState *state = State(nodeid);
     assert(state != nullptr);
 
@@ -549,7 +552,7 @@ void UpdateBlockAvailability(NodeId nodeid, const uint256 &hash) EXCLUSIVE_LOCKS
  * lNodesAnnouncingHeaderAndIDs, and keeping that list under a certain size by
  * removing the first element if necessary.
  */
-void MaybeSetPeerAsAnnouncingHeaderAndIDs(NodeId nodeid, CConnman* connman)
+void MaybeSetPeerAsAnnouncingHeaderAndIDs(NodeId nodeid, CConnman* connman) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     AssertLockHeld(cs_main);
     CNodeState* nodestate = State(nodeid);
@@ -748,6 +751,7 @@ std::chrono::microseconds GetObjectInterval(int invType)
         case MSG_CLSIG:
             return std::chrono::seconds{5};
         case MSG_ISLOCK:
+        case MSG_ISDLOCK:
             return std::chrono::seconds{10};
         default:
             return GETDATA_TX_INTERVAL;
@@ -1045,7 +1049,7 @@ unsigned int LimitOrphanTxSize(unsigned int nMaxOrphansSize)
     return nEvicted;
 }
 
-void static ProcessOrphanTx(CConnman* connman, std::set<uint256>& orphan_work_set) EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_cs_orphans);
+void static ProcessOrphanTx(CConnman* connman, CTxMemPool& mempool, std::set<uint256>& orphan_work_set) EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_cs_orphans);
 
 /**
  * Mark a misbehaving peer to be banned depending upon the value of `-banscore`.
@@ -1099,7 +1103,7 @@ bool IsBanned(NodeId pnode)
 // active chain if they are no more than a month older (both in time, and in
 // best equivalent proof of work) than the best header chain we know about and
 // we fully-validated them at some point.
-static bool BlockRequestAllowed(const CBlockIndex* pindex, const Consensus::Params& consensusParams)
+static bool BlockRequestAllowed(const CBlockIndex* pindex, const Consensus::Params& consensusParams) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     AssertLockHeld(cs_main);
     if (::ChainActive().Contains(pindex)) return true;
@@ -1108,8 +1112,8 @@ static bool BlockRequestAllowed(const CBlockIndex* pindex, const Consensus::Para
         (GetBlockProofEquivalentTime(*pindexBestHeader, *pindex, *pindexBestHeader, consensusParams) < STALE_RELAY_AGE_LIMIT);
 }
 
-PeerLogicValidation::PeerLogicValidation(CConnman* connmanIn, BanMan* banman, CScheduler &scheduler, bool enable_bip61)
-    : connman(connmanIn), m_banman(banman), m_stale_tip_check_time(0), m_enable_bip61(enable_bip61) {
+PeerLogicValidation::PeerLogicValidation(CConnman* connmanIn, BanMan* banman, CScheduler &scheduler, ChainstateManager& chainman, CTxMemPool& pool, bool enable_bip61)
+    : connman(connmanIn), m_banman(banman), m_chainman(chainman), m_mempool(pool), m_stale_tip_check_time(0), m_enable_bip61(enable_bip61) {
     // Initialize global variables that cannot be constructed at startup.
     recentRejects.reset(new CRollingBloomFilter(120000, 0.000001));
 
@@ -1159,7 +1163,7 @@ void PeerLogicValidation::BlockConnected(const std::shared_ptr<const CBlock>& pb
     // Erase orphan transactions included or precluded by this block
     if (vOrphanErase.size()) {
         int nErased = 0;
-        for (uint256 &orphanHash : vOrphanErase) {
+        for (const uint256& orphanHash : vOrphanErase) {
             nErased += EraseOrphanTx(orphanHash);
         }
         LogPrint(BCLog::MEMPOOL, "Erased %d orphan tx included or conflicted by block\n", nErased);
@@ -1167,7 +1171,7 @@ void PeerLogicValidation::BlockConnected(const std::shared_ptr<const CBlock>& pb
 
     while (!orphanWorkSet.empty()) {
         LogPrint(BCLog::MEMPOOL, "Trying to process %d orphans\n", orphanWorkSet.size());
-        ProcessOrphanTx(connman, orphanWorkSet);
+        ProcessOrphanTx(connman, m_mempool, orphanWorkSet);
     }
 
     g_last_tip_update = GetTime();
@@ -1303,7 +1307,7 @@ void PeerLogicValidation::BlockChecked(const CBlock& block, const CValidationSta
 //
 
 
-bool static AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+bool static AlreadyHave(const CInv& inv, const CTxMemPool& mempool) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     switch (inv.type)
     {
@@ -1340,7 +1344,8 @@ bool static AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
             // smartnode would not be able to exploit this to spam the network with specially
             // crafted invalid DSTX-es and potentially cause high load cheaply, because
             // corresponding checks in ProcessMessage won't let it to send DSTX-es too often.
-            bool fIgnoreRecentRejects = llmq::quorumInstantSendManager->IsLocked(inv.hash) || inv.type == MSG_DSTX;
+            bool fIgnoreRecentRejects = inv.type == MSG_DSTX || llmq::quorumInstantSendManager->IsWaitingForTx(inv.hash)
+                                                             || llmq::quorumInstantSendManager->IsLocked(inv.hash);
 
             return (!fIgnoreRecentRejects && recentRejects->contains(inv.hash)) ||
                    (inv.type == MSG_DSTX && static_cast<bool>(CCoinJoin::GetDSTX(inv.hash))) ||
@@ -1374,7 +1379,7 @@ bool static AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
         return ! governance.ConfirmInventoryRequest(inv);
 
     case MSG_QUORUM_FINAL_COMMITMENT:
-        return llmq::quorumBlockProcessor->HasMinableCommitment(inv.hash);
+        return llmq::quorumBlockProcessor->HasMineableCommitment(inv.hash);
     case MSG_QUORUM_CONTRIB:
     case MSG_QUORUM_COMPLAINT:
     case MSG_QUORUM_JUSTIFICATION:
@@ -1385,6 +1390,7 @@ bool static AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
     case MSG_CLSIG:
         return llmq::chainLocksHandler->AlreadyHave(inv);
     case MSG_ISLOCK:
+    case MSG_ISDLOCK:
         return llmq::quorumInstantSendManager->AlreadyHave(inv);
     }
 
@@ -1403,14 +1409,15 @@ void RelayTransaction(const uint256& txid, const CConnman& connman)
 
 static void RelayAddress(const CAddress& addr, bool fReachable, CConnman* connman)
 {
-    unsigned int nRelayNodes = fReachable ? 2 : 1; // limited relaying of addresses outside our network(s)
-
     // Relay to a limited number of other nodes
     // Use deterministic randomness to send to the same nodes for 24 hours
     // at a time so the addrKnowns of the chosen nodes prevent repeats
     uint64_t hashAddr = addr.GetHash();
     const CSipHasher hasher = connman->GetDeterministicRandomizer(RANDOMIZER_ID_ADDRESS_RELAY).Write(hashAddr << 32).Write((GetTime() + hashAddr) / (24 * 60 * 60));
     FastRandomContext insecure_rand;
+
+    // Relay reachable addresses to 2 peers. Unreachable addresses are relayed randomly to 1 or 2 peers.
+    unsigned int nRelayNodes = (fReachable || (hasher.Finalize() & 1)) ? 2 : 1;
 
     std::array<std::pair<uint64_t, CNode*>,2> best{{{0, nullptr}, {0, nullptr}}};
     assert(nRelayNodes <= best.size());
@@ -1582,7 +1589,7 @@ void static ProcessGetBlockData(CNode* pfrom, const CChainParams& chainparams, c
     }
 }
 
-void static ProcessGetData(CNode* pfrom, const CChainParams& chainparams, CConnman* connman, const std::atomic<bool>& interruptMsgProc)
+void static ProcessGetData(CNode* pfrom, const CChainParams& chainparams, CConnman* connman, const CTxMemPool& mempool, const std::atomic<bool>& interruptMsgProc) LOCKS_EXCLUDED(cs_main)
 {
     AssertLockNotHeld(cs_main);
 
@@ -1647,16 +1654,14 @@ void static ProcessGetData(CNode* pfrom, const CChainParams& chainparams, CConnm
                 LogPrint(BCLog::NET, "ProcessGetData -- MSG_GOVERNANCE_OBJECT: inv = %s\n", inv.ToString());
                 CDataStream ss(SER_NETWORK, pfrom->GetSendVersion());
                 bool topush = false;
-                {
-                    if(governance.HaveObjectForHash(inv.hash)) {
-                        ss.reserve(1000);
-                        if(governance.SerializeObjectForHash(inv.hash, ss)) {
-                            topush = true;
-                        }
+                if(governance.HaveObjectForHash(inv.hash)) {
+                    ss.reserve(1000);
+                    if(governance.SerializeObjectForHash(inv.hash, ss)) {
+                        topush = true;
                     }
                 }
                 LogPrint(BCLog::NET, "ProcessGetData -- MSG_GOVERNANCE_OBJECT: topush = %d, inv = %s\n", topush, inv.ToString());
-                if(topush) {
+                if (topush) {
                     connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::MNGOVERNANCEOBJECT, ss));
                     push = true;
                 }
@@ -1665,15 +1670,13 @@ void static ProcessGetData(CNode* pfrom, const CChainParams& chainparams, CConnm
             if (!push && inv.type == MSG_GOVERNANCE_OBJECT_VOTE) {
                 CDataStream ss(SER_NETWORK, pfrom->GetSendVersion());
                 bool topush = false;
-                {
-                    if(governance.HaveVoteForHash(inv.hash)) {
-                        ss.reserve(1000);
-                        if(governance.SerializeVoteForHash(inv.hash, ss)) {
-                            topush = true;
-                        }
+                if(governance.HaveVoteForHash(inv.hash)) {
+                    ss.reserve(1000);
+                    if(governance.SerializeVoteForHash(inv.hash, ss)) {
+                        topush = true;
                     }
                 }
-                if(topush) {
+                if (topush) {
                     LogPrint(BCLog::NET, "ProcessGetData -- pushing: inv = %s\n", inv.ToString());
                     connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::MNGOVERNANCEOBJECTVOTE, ss));
                     push = true;
@@ -1682,7 +1685,7 @@ void static ProcessGetData(CNode* pfrom, const CChainParams& chainparams, CConnm
 
             if (!push && (inv.type == MSG_QUORUM_FINAL_COMMITMENT)) {
                 llmq::CFinalCommitment o;
-                if (llmq::quorumBlockProcessor->GetMinableCommitmentByHash(inv.hash, o)) {
+                if (llmq::quorumBlockProcessor->GetMineableCommitmentByHash(inv.hash, o)) {
                     connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::QFCOMMITMENT, o));
                     push = true;
                 }
@@ -1732,10 +1735,11 @@ void static ProcessGetData(CNode* pfrom, const CChainParams& chainparams, CConnm
                 }
             }
 
-            if (!push && (inv.type == MSG_ISLOCK)) {
+            if (!push && (inv.type == MSG_ISLOCK || inv.type == MSG_ISDLOCK)) {
                 llmq::CInstantSendLock o;
                 if (llmq::quorumInstantSendManager->GetInstantSendLockByHash(inv.hash, o)) {
-                    connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::ISLOCK, o));
+                    const auto msg_type = inv.type == MSG_ISLOCK ? NetMsgType::ISLOCK : NetMsgType::ISDLOCK;
+                    connman->PushMessage(pfrom, msgMaker.Make(msg_type, o));
                     push = true;
                 }
             }
@@ -1789,7 +1793,7 @@ inline void static SendBlockTransactions(const CBlock& block, const BlockTransac
     connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::BLOCKTXN, resp));
 }
 
-bool static ProcessHeadersMessage(CNode *pfrom, CConnman *connman, const std::vector<CBlockHeader>& headers, const CChainParams& chainparams, bool punish_duplicate_invalid)
+bool static ProcessHeadersMessage(CNode *pfrom, CConnman *connman, ChainstateManager& chainman, CTxMemPool& mempool, const std::vector<CBlockHeader>& headers, const CChainParams& chainparams, bool punish_duplicate_invalid)
 {
     const CNetMsgMaker msgMaker(pfrom->GetSendVersion());
     size_t nCount = headers.size();
@@ -1850,7 +1854,7 @@ bool static ProcessHeadersMessage(CNode *pfrom, CConnman *connman, const std::ve
 
     CValidationState state;
     CBlockHeader first_invalid_header;
-    if (!ProcessNewBlockHeaders(headers, state, chainparams, &pindexLast, &first_invalid_header)) {
+    if (!chainman.ProcessNewBlockHeaders(headers, state, chainparams, &pindexLast, &first_invalid_header)) {
         int nDoS;
         if (state.IsInvalid(nDoS)) {
             LOCK(cs_main);
@@ -1956,7 +1960,7 @@ bool static ProcessHeadersMessage(CNode *pfrom, CConnman *connman, const std::ve
                         break;
                     }
                     vGetData.push_back(CInv(MSG_BLOCK, pindex->GetBlockHash()));
-                    MarkBlockAsInFlight(pfrom->GetId(), pindex->GetBlockHash(), pindex);
+                    MarkBlockAsInFlight(mempool, pfrom->GetId(), pindex->GetBlockHash(), pindex);
                     LogPrint(BCLog::NET, "Requesting block %s from  peer=%d\n",
                             pindex->GetBlockHash().ToString(), pfrom->GetId());
                 }
@@ -2008,7 +2012,7 @@ bool static ProcessHeadersMessage(CNode *pfrom, CConnman *connman, const std::ve
     return true;
 }
 
-void static ProcessOrphanTx(CConnman* connman, std::set<uint256>& orphan_work_set) EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_cs_orphans)
+void static ProcessOrphanTx(CConnman* connman, CTxMemPool& mempool, std::set<uint256>& orphan_work_set) EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_cs_orphans)
 {
     AssertLockHeld(cs_main);
     AssertLockHeld(g_cs_orphans);
@@ -2086,7 +2090,7 @@ std::string RejectCodeToString(const unsigned char code)
     return "";
 }
 
-bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, int64_t nTimeReceived, const CChainParams& chainparams, CConnman* connman, BanMan* banman, const std::atomic<bool>& interruptMsgProc, bool enable_bip61)
+bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, int64_t nTimeReceived, const CChainParams& chainparams, ChainstateManager& chainman, CTxMemPool& mempool, CConnman* connman, BanMan* banman, const std::atomic<bool>& interruptMsgProc, bool enable_bip61)
 {
     LogPrint(BCLog::NET, "received: %s (%u bytes) peer=%d\n", SanitizeString(strCommand), vRecv.size(), pfrom->GetId());
     statsClient.inc("message.received." + SanitizeString(strCommand), 1.0f);
@@ -2534,7 +2538,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             if (interruptMsgProc)
                 return true;
 
-            bool fAlreadyHave = AlreadyHave(inv);
+            bool fAlreadyHave = AlreadyHave(inv, mempool);
             LogPrint(BCLog::NET, "got inv: %s  %s peer=%d\n", inv.ToString(), fAlreadyHave ? "have" : "new", pfrom->GetId());
             statsClient.inc(strprintf("message.received.inv_%s", inv.GetCommand()), 1.0f);
 
@@ -2579,7 +2583,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                              pfrom->GetId());
                 } else if (!fAlreadyHave) {
                     bool allowWhileInIBD = allowWhileInIBDObjs.count(inv.type);
-                    if (allowWhileInIBD || (!fImporting && !fReindex && !::ChainstateActive().IsInitialBlockDownload())) {
+                    if (allowWhileInIBD || !chainman.ActiveChainstate().IsInitialBlockDownload()) {
                         RequestObject(State(pfrom->GetId()), inv, current_time);
                     }
                 }
@@ -2605,7 +2609,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         }
 
         pfrom->vRecvGetData.insert(pfrom->vRecvGetData.end(), vInv.begin(), vInv.end());
-        ProcessGetData(pfrom, chainparams, connman, interruptMsgProc);
+        ProcessGetData(pfrom, chainparams, connman, mempool, interruptMsgProc);
         return true;
     }
 
@@ -2882,7 +2886,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         bool fMissingInputs = false;
         CValidationState state;
 
-        if (!AlreadyHave(inv) && AcceptToMemoryPool(mempool, state, ptx, &fMissingInputs /* pfMissingInputs */,
+        if (!AlreadyHave(inv, mempool) && AcceptToMemoryPool(mempool, state, ptx, &fMissingInputs /* pfMissingInputs */,
                 false /* bypass_limits */, 0 /* nAbsurdFee */)) {
             // Process custom txes, this changes AlreadyHave to "true"
             if (nInvType == MSG_DSTX) {
@@ -2911,7 +2915,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                      mempool.size(), mempool.DynamicMemoryUsage() / 1000);
 
             // Recursively process any orphan transactions that depended on this one
-            ProcessOrphanTx(connman, pfrom->orphan_work_set);
+            ProcessOrphanTx(connman, mempool, pfrom->orphan_work_set);
         }
         else if (fMissingInputs)
         {
@@ -2928,11 +2932,11 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                 for (const CTxIn& txin : tx.vin) {
                     CInv _inv(MSG_TX, txin.prevout.hash);
                     pfrom->AddInventoryKnown(_inv);
-                    if (!AlreadyHave(_inv)) RequestObject(State(pfrom->GetId()), _inv, current_time);
+                    if (!AlreadyHave(_inv, mempool)) RequestObject(State(pfrom->GetId()), _inv, current_time);
                     // We don't know if the previous tx was a regular or a mixing one, try both
                     CInv _inv2(MSG_DSTX, txin.prevout.hash);
                     pfrom->AddInventoryKnown(_inv2);
-                    if (!AlreadyHave(_inv2)) RequestObject(State(pfrom->GetId()), _inv2, current_time);
+                    if (!AlreadyHave(_inv2, mempool)) RequestObject(State(pfrom->GetId()), _inv2, current_time);
                 }
                 AddOrphanTx(ptx, pfrom->GetId());
 
@@ -3019,7 +3023,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
 
         const CBlockIndex *pindex = nullptr;
         CValidationState state;
-        if (!ProcessNewBlockHeaders({cmpctblock.header}, state, chainparams, &pindex)) {
+        if (!chainman.ProcessNewBlockHeaders({cmpctblock.header}, state, chainparams, &pindex)) {
             int nDoS;
             if (state.IsInvalid(nDoS)) {
                 if (nDoS > 0) {
@@ -3090,7 +3094,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             if ((!fAlreadyInFlight && nodestate->nBlocksInFlight < MAX_BLOCKS_IN_TRANSIT_PER_PEER) ||
                  (fAlreadyInFlight && blockInFlightIt->second.first == pfrom->GetId())) {
                 std::list<QueuedBlock>::iterator *queuedBlockIt = nullptr;
-                if (!MarkBlockAsInFlight(pfrom->GetId(), pindex->GetBlockHash(), pindex, &queuedBlockIt)) {
+                if (!MarkBlockAsInFlight(mempool, pfrom->GetId(), pindex->GetBlockHash(), pindex, &queuedBlockIt)) {
                     if (!(*queuedBlockIt)->partialBlock)
                         (*queuedBlockIt)->partialBlock.reset(new PartiallyDownloadedBlock(&mempool));
                     else {
@@ -3163,7 +3167,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         } // cs_main
 
         if (fProcessBLOCKTXN)
-            return ProcessMessage(pfrom, NetMsgType::BLOCKTXN, blockTxnMsg, nTimeReceived, chainparams, connman, banman, interruptMsgProc, enable_bip61);
+            return ProcessMessage(pfrom, NetMsgType::BLOCKTXN, blockTxnMsg, nTimeReceived, chainparams, chainman, mempool, connman, banman, interruptMsgProc, enable_bip61);
 
         if (fRevertToHeaderProcessing) {
             // Headers received from HB compact block peers are permitted to be
@@ -3171,7 +3175,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             // the peer if the header turns out to be for an invalid block.
             // Note that if a peer tries to build on an invalid chain, that
             // will be detected and the peer will be banned.
-            return ProcessHeadersMessage(pfrom, connman, {cmpctblock.header}, chainparams, /*punish_duplicate_invalid=*/false);
+            return ProcessHeadersMessage(pfrom, connman, chainman, mempool, {cmpctblock.header}, chainparams, /*punish_duplicate_invalid=*/false);
         }
 
         if (fBlockReconstructed) {
@@ -3191,7 +3195,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             // we have a chain with at least nMinimumChainWork), and we ignore
             // compact blocks with less work than our tip, it is safe to treat
             // reconstructed compact blocks as having been requested.
-            ProcessNewBlock(chainparams, pblock, /*fForceProcessing=*/true, &fNewBlock);
+            chainman.ProcessNewBlock(chainparams, pblock, /*fForceProcessing=*/true, &fNewBlock);
             if (fNewBlock) {
                 pfrom->nLastBlockTime = GetTime();
             } else {
@@ -3221,8 +3225,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             LOCK(cs_main);
 
             std::map<uint256, std::pair<NodeId, std::list<QueuedBlock>::iterator> >::iterator it = mapBlocksInFlight.find(resp.blockhash);
-            if (it == mapBlocksInFlight.end() || !it->second.second->partialBlock ||
-                    it->second.first != pfrom->GetId()) {
+            if (it == mapBlocksInFlight.end() || !it->second.second->partialBlock || it->second.first != pfrom->GetId()) {
                 LogPrint(BCLog::NET, "Peer %d sent us block transactions for block we weren't expecting\n", pfrom->GetId());
                 return true;
             }
@@ -3274,7 +3277,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             // disk-space attacks), but this should be safe due to the
             // protections in the compact block handler -- see related comment
             // in compact block optimistic reconstruction handling.
-            ProcessNewBlock(chainparams, pblock, /*fForceProcessing=*/true, &fNewBlock);
+            chainman.ProcessNewBlock(chainparams, pblock, /*fForceProcessing=*/true, &fNewBlock);
             if (fNewBlock) {
                 pfrom->nLastBlockTime = GetTime();
             } else {
@@ -3307,7 +3310,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         // disconnect the peer if it is using one of our outbound connection
         // slots.
         bool should_punish = !pfrom->fInbound && !pfrom->m_manual_connection;
-        return ProcessHeadersMessage(pfrom, connman, headers, chainparams, should_punish);
+        return ProcessHeadersMessage(pfrom, connman, chainman, mempool, headers, chainparams, should_punish);
     }
 
     if (strCommand == NetMsgType::BLOCK && !fImporting && !fReindex) // Ignore blocks received while importing
@@ -3329,7 +3332,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             mapBlockSource.emplace(hash, std::make_pair(pfrom->GetId(), true));
         }
         bool fNewBlock = false;
-        ProcessNewBlock(chainparams, pblock, forceProcessing, &fNewBlock);
+        chainman.ProcessNewBlock(chainparams, pblock, forceProcessing, &fNewBlock);
         if (fNewBlock) {
             pfrom->nLastBlockTime = GetTime();
         } else {
@@ -3570,7 +3573,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
 
     bool found = false;
     const std::vector<std::string> &allMessages = getAllNetMessageTypes();
-    for (const std::string msg : allMessages) {
+    for (const std::string& msg : allMessages) {
         if(msg == strCommand) {
             found = true;
             break;
@@ -3655,11 +3658,11 @@ bool PeerLogicValidation::ProcessMessages(CNode* pfrom, std::atomic<bool>& inter
     bool fMoreWork = false;
 
     if (!pfrom->vRecvGetData.empty())
-        ProcessGetData(pfrom, chainparams, connman, interruptMsgProc);
+        ProcessGetData(pfrom, chainparams, connman, m_mempool, interruptMsgProc);
 
     if (!pfrom->orphan_work_set.empty()) {
         LOCK2(cs_main, g_cs_orphans);
-        ProcessOrphanTx(connman, pfrom->orphan_work_set);
+        ProcessOrphanTx(connman, m_mempool, pfrom->orphan_work_set);
     }
 
     if (pfrom->fDisconnect)
@@ -3722,7 +3725,7 @@ bool PeerLogicValidation::ProcessMessages(CNode* pfrom, std::atomic<bool>& inter
     bool fRet = false;
     try
     {
-        fRet = ProcessMessage(pfrom, strCommand, vRecv, msg.nTime, chainparams, connman, m_banman, interruptMsgProc, m_enable_bip61);
+        fRet = ProcessMessage(pfrom, strCommand, vRecv, msg.nTime, chainparams, m_chainman, m_mempool, connman, m_banman, interruptMsgProc, m_enable_bip61);
         if (interruptMsgProc)
             return false;
         if (!pfrom->vRecvGetData.empty())
@@ -4173,12 +4176,12 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
         //
         std::vector<CInv> vInv;
         {
+            LOCK2(mempool.cs, pto->cs_inventory);
+
             size_t reserve = std::min<size_t>(pto->setInventoryTxToSend.size(), INVENTORY_BROADCAST_MAX_PER_1MB_BLOCK * MaxBlockSize() / 1000000);
             reserve = std::max<size_t>(reserve, pto->vInventoryBlockToSend.size());
             reserve = std::min<size_t>(reserve, MAX_INV_SZ);
             vInv.reserve(reserve);
-
-            LOCK2(mempool.cs, pto->cs_inventory);
 
             // Add blocks
             for (const uint256& hash : pto->vInventoryBlockToSend) {
@@ -4225,7 +4228,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
 
             // Respond to BIP35 mempool requests
             if (fSendTrickle && pto->fSendMempool) {
-                auto vtxinfo = mempool.infoAll();
+                auto vtxinfo = m_mempool.infoAll();
                 pto->fSendMempool = false;
 
                 LOCK(pto->cs_filter);
@@ -4239,9 +4242,11 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                     int nInvType = CCoinJoin::GetDSTX(hash) ? MSG_DSTX : MSG_TX;
                     queueAndMaybePushInv(CInv(nInvType, hash));
 
-                    uint256 islockHash;
-                    if (!llmq::quorumInstantSendManager->GetInstantSendLockHashByTxid(hash, islockHash)) continue;
-                    queueAndMaybePushInv(CInv(MSG_ISLOCK, islockHash));
+                    const auto islock = llmq::quorumInstantSendManager->GetInstantSendLockByTxid(hash);
+                    if (islock == nullptr) continue;
+                    if (pto->nVersion < LLMQS_PROTO_VERSION) continue;
+                    if (pto->nVersion < ISDLOCK_PROTO_VERSION && islock->IsDeterministic()) continue;
+                    queueAndMaybePushInv(CInv(islock->IsDeterministic() ? MSG_ISDLOCK : MSG_ISLOCK, ::SerializeHash(*islock)));
                 }
 
                 // Send an inv for the best ChainLock we have
@@ -4394,7 +4399,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
             FindNextBlocksToDownload(pto->GetId(), MAX_BLOCKS_IN_TRANSIT_PER_PEER - state.nBlocksInFlight, vToDownload, staller, consensusParams);
             for (const CBlockIndex *pindex : vToDownload) {
                 vGetData.push_back(CInv(MSG_BLOCK, pindex->GetBlockHash()));
-                MarkBlockAsInFlight(pto->GetId(), pindex->GetBlockHash(), pindex);
+                MarkBlockAsInFlight(m_mempool, pto->GetId(), pindex->GetBlockHash(), pindex);
                 LogPrint(BCLog::NET, "Requesting block %s (%d) peer=%d\n", pindex->GetBlockHash().ToString(),
                     pindex->nHeight, pto->GetId());
             }
@@ -4443,7 +4448,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                 state.m_object_download.m_object_in_flight.erase(inv);
                 continue;
             }
-            if (!AlreadyHave(inv)) {
+            if (!AlreadyHave(inv, m_mempool)) {
                 // If this object was last requested more than GetObjectInterval ago,
                 // then request.
                 const auto last_request_time = GetObjectRequestTime(inv.hash);
@@ -4493,4 +4498,5 @@ public:
         mapOrphanTransactionsByPrev.clear();
         nMapOrphanTransactionsSize = 0;
     }
-} instance_of_cnetprocessingcleanup;
+};
+static CNetProcessingCleanup instance_of_cnetprocessingcleanup;

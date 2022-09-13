@@ -19,6 +19,7 @@
 #include <qt/optionsmodel.h>
 #include <qt/sendcoinsentry.h>
 
+#include <chainparams.h>
 #include <interfaces/node.h>
 #include <key_io.h>
 #include <wallet/coincontrol.h>
@@ -29,6 +30,7 @@
 #include <wallet/fees.h>
 #include <wallet/wallet.h>
 #include <future/fee.h>
+#include <spork.h>
 
 #include <QFontMetrics>
 #include <QScrollBar>
@@ -334,9 +336,6 @@ void SendCoinsDialog::send(QList<SendCoinsRecipient> recipients)
 
         QString recipientElement;
 
-#ifdef ENABLE_BIP70
-        if (!rcp.paymentRequest.IsInitialized()) // normal payment
-#endif
         {
             if(rcp.label.length() > 0) // label with address
             {
@@ -348,17 +347,6 @@ void SendCoinsDialog::send(QList<SendCoinsRecipient> recipients)
                 recipientElement = tr("%1 to %2").arg(amount, address);
             }
         }
-#ifdef ENABLE_BIP70
-        else if(!rcp.authenticatedMerchant.isEmpty()) // authenticated payment request
-        {
-            recipientElement = tr("%1 to %2").arg(amount, GUIUtil::HtmlEscape(rcp.authenticatedMerchant));
-        }
-        else // unauthenticated payment request
-        {
-            recipientElement = tr("%1 to %2").arg(amount, address);
-        }
-#endif
-
         //std::cout << rcp.amount << " is future output " << rcp.isFutureOutput << "\n";
         if(rcp.isFutureOutput) {
             hasFuture = true;
@@ -366,8 +354,7 @@ void SendCoinsDialog::send(QList<SendCoinsRecipient> recipients)
                 recipientElement.append(tr("<br>Confirmations in: <b>%1 blocks</b><br />").arg(recipients[0].maturity));
             }
             if(recipients[0].locktime >= 0) {
-                recipientElement.append(tr("Time in: <b>%1 seconds from first confirmed</b><br />")
-                                                .arg(recipients[0].locktime));
+                recipientElement.append(tr("Time in: <b>%1 seconds from first confirmed</b><br />").arg(recipients[0].locktime));
             }
             if(recipients[0].maturity >= 0 && recipients[0].locktime >= 0) {
                 int calcBlock = (recipients[0].maturity * 2 * 60);
@@ -459,7 +446,7 @@ void SendCoinsDialog::send(QList<SendCoinsRecipient> recipients)
     questionString.append("<hr />");
     CAmount totalAmount = currentTransaction.getTotalTransactionAmount() + txFee;
     QStringList alternativeUnits;
-    for (BitcoinUnits::Unit u : BitcoinUnits::availableUnits())
+    for (const BitcoinUnits::Unit u : BitcoinUnits::availableUnits())
     {
         if(u != model->getOptionsModel()->getDisplayUnit())
             alternativeUnits.append(BitcoinUnits::formatHtmlWithUnit(u, totalAmount));

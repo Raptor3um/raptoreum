@@ -32,7 +32,7 @@
 
 std::string static EncodeDumpString(const std::string &str) {
     std::stringstream ret;
-    for (unsigned char c : str) {
+    for (const unsigned char c : str) {
         if (c <= 32 || c >= 128 || c == '%') {
             ret << '%' << HexStr(Span<const unsigned char>(&c, 1));
         } else {
@@ -757,7 +757,7 @@ UniValue importelectrumwallet(const JSONRPCRequest& request)
     file.close();
     pwallet->ShowProgress("", 100); // hide progress dialog in GUI
 
-    const uint32_t tip_height = pwallet->chain().getHeight().value_or(-1);
+    const int32_t tip_height = pwallet->chain().getHeight().value_or(std::numeric_limits<int32_t>::max());
 
     // Whether to perform rescan after import
     int nStartHeight = 0;

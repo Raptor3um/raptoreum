@@ -1393,34 +1393,37 @@ public:
     }
 };
 
+/** Compute the (single) SHA256 of the concatenation of all prevouts of a tx. */
 template <class T>
-uint256 GetPrevoutHash(const T& txTo)
+uint256 GetPrevoutSHA256(const T& txTo)
 {
     CHashWriter ss(SER_GETHASH, 0);
     for (const auto& txin : txTo.vin) {
         ss << txin.prevout;
     }
-    return ss.GetHash();
+    return ss.GetSHA256();
 }
 
+/** Compute the (single) SHA256 of the concatenation of all nSequences of a tx. */
 template <class T>
-uint256 GetSequenceHash(const T& txTo)
+uint256 GetSequenceSHA256(const T& txTo)
 {
     CHashWriter ss(SER_GETHASH, 0);
     for (const auto& txin : txTo.vin) {
         ss << txin.nSequence;
     }
-    return ss.GetHash();
+    return ss.GetSHA256();
 }
 
+/** Compute the (single) SHA256 of the concatenation of all txouts of a tx. */
 template <class T>
-uint256 GetOutputsHash(const T& txTo)
+uint256 GetOutputsSHA256(const T& txTo)
 {
     CHashWriter ss(SER_GETHASH, 0);
     for (const auto& txout : txTo.vout) {
         ss << txout;
     }
-    return ss.GetHash();
+    return ss.GetSHA256();
 }
 
 } // namespace
@@ -1428,9 +1431,9 @@ uint256 GetOutputsHash(const T& txTo)
 template <class T>
 PrecomputedTransactionData::PrecomputedTransactionData(const T& txTo)
 {
-    hashPrevouts = GetPrevoutHash(txTo);
-    hashSequence = GetSequenceHash(txTo);
-    hashOutputs = GetOutputsHash(txTo);
+    hashPrevouts = SHA256Uint256(GetPrevoutSHA256(txTo));
+    hashSequence = SHA256Uint256(GetSequenceSHA256(txTo));
+    hashOutputs = SHA256Uint256(GetOutputsSHA256(txTo));
 }
 
 // explicit instantiation

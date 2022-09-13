@@ -4,9 +4,6 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-print-%:
-	@echo '$*' = '$($*)'
-
 DIST_SUBDIRS = secp256k1
 
 AM_LDFLAGS = $(LIBTOOL_LDFLAGS) $(HARDENED_LDFLAGS) $(GPROF_LDFLAGS) $(SANITIZER_LDFLAGS) $(LTO_LDFLAGS) $(CORE_LDFLAGS)
@@ -35,15 +32,7 @@ BACKTRACE_LIB = -lbacktrace
 endif
 endif #ENABLE_STACKTRACES
 
-lib_LTLIBRARIES =
-noinst_LTLIBRARIES =
-
-bin_PROGRAMS =
-noinst_PROGRAMS =
-TESTS =
-BENCHMARKS =
-
-BITCOIN_INCLUDES=-I$(builddir) -I$(srcdir)/secp256k1/include -I$(srcdir)/$(UNIVALUE_INCLUDE_DIR_INT) $(BDB_CPPFLAGS) $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS) $(CRYPTO_CFLAGS) $(SSL_CFLAGS)
+BITCOIN_INCLUDES=-I$(builddir) -I$(srcdir)/secp256k1/include -I$(srcdir)/$(UNIVALUE_INCLUDE_DIR_INT) $(BDB_CPPFLAGS) $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS)
 
 BLS_LIBS=-lbls-dash -lrelic_s
 
@@ -60,7 +49,7 @@ if ENABLE_ZMQ
 LIBBITCOIN_ZMQ=libraptoreum_zmq.a
 endif
 if BUILD_BITCOIN_LIBS
-LIBRAPTOREUMCONSENSUS=libraptoreumconsensus.la
+LIBBITCOINCONSENSUS=libraptoreumconsensus.la
 endif
 if ENABLE_WALLET
 LIBBITCOIN_WALLET=libraptoreum_wallet.a
@@ -99,6 +88,14 @@ EXTRA_LIBRARIES += \
   $(LIBBITCOIN_WALLET) \
   $(LIBBITCOIN_WALLET_TOOL) \
   $(LIBBITCOIN_ZMQ)
+
+lib_LTLIBRARIES = $(LIBBITCOINCONSENSUS)
+noinst_LTLIBRARIES =
+
+bin_PROGRAMS =
+noinst_PROGRAMS =
+TESTS =
+BENCHMARKS =
 
 if BUILD_BITCOIND
   bin_PROGRAMS += raptoreumd
@@ -215,6 +212,7 @@ BITCOIN_CORE_H = \
   llmq/quorums_signing.h \
   llmq/quorums_signing_shares.h \
   llmq/quorums_utils.h \
+  llmq/quorums_parameters.h \
   logging.h \
   logging_timer.h \
   smartnode/activesmartnode.h \
@@ -238,6 +236,7 @@ BITCOIN_CORE_H = \
   node/coinstats.h \
   node/context.h \
   node/transaction.h \
+  node/utxo_snapshot.h \
   noui.h \
   optional.h \
   policy/feerate.h \
@@ -262,7 +261,6 @@ BITCOIN_CORE_H = \
   saltedhasher.h \
   scheduler.h \
   script/descriptor.h \
-  script/ismine.h \
   script/sigcache.h \
   script/sign.h \
   script/standard.h \
@@ -297,13 +295,14 @@ BITCOIN_CORE_H = \
   util/system.h \
   util/asmap.h \
   util/macros.h \
+  util/memory.h \
   util/moneystr.h \
+  util/ranges.h \
   util/ref.h \
   util/time.h \
   util/string.h \
   util/threadnames.h \
   util/vector.h \
-  util/memory.h \
   util/url.h \
   util/validation.h \
   validation.h \
@@ -317,6 +316,7 @@ BITCOIN_CORE_H = \
   wallet/crypter.h \
   wallet/db.h \
   wallet/fees.h \
+  wallet/ismine.h \
   wallet/load.h \
   wallet/rpcwallet.h \
   wallet/salvage.h \
@@ -475,6 +475,7 @@ libraptoreum_wallet_a_SOURCES = \
   wallet/crypter.cpp \
   wallet/db.cpp \
   wallet/fees.cpp \
+  wallet/ismine.cpp \
   wallet/load.cpp \
   wallet/rpcdump.cpp \
   wallet/rpcwallet.cpp \
@@ -508,6 +509,8 @@ crypto_libraptoreum_crypto_a_SOURCES = \
   crypto/hmac_sha512.h \
   crypto/poly1305.h \
   crypto/poly1305.cpp \
+  crypto/pkcs5_pbkdf2_hmac_sha512.cpp \
+  crypto/pkcs5_pbkdf2_hmac_sha512.h \
   crypto/ripemd160.cpp \
   crypto/aes_helper.c \
   crypto/blake.c \
@@ -618,6 +621,7 @@ libraptoreum_consensus_a_SOURCES = \
   bls/bls.cpp \
   bls/bls.h \
   amount.h \
+  founder_payment.cpp \
   founder_payment.h \
   hash_selection.h \
   hash_selection.cpp \
@@ -686,7 +690,6 @@ libraptoreum_common_a_SOURCES = \
   saltedhasher.cpp \
   scheduler.cpp \
   script/descriptor.cpp \
-  script/ismine.cpp \
   script/sign.cpp \
   script/standard.cpp \
   versionbits.cpp \
@@ -771,7 +774,7 @@ raptoreumd_LDADD = \
   $(LIBMEMENV) \
   $(LIBSECP256K1)
 
-raptoreumd_LDADD += $(BACKTRACE_LIB) $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(BLS_LIBS) $(GMP_LIBS)
+raptoreumd_LDADD += $(BACKTRACE_LIB) $(BOOST_LIBS) $(BDB_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(BLS_LIBS) $(GMP_LIBS)
 
 # raptoreum-cli binary #
 raptoreum_cli_SOURCES = raptoreum-cli.cpp
@@ -789,8 +792,7 @@ raptoreum_cli_LDADD = \
   $(LIBBITCOIN_UTIL) \
   $(LIBBITCOIN_CRYPTO)
 
-raptoreum_cli_LDADD += $(BACKTRACE_LIB) $(BOOST_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS) $(BLS_LIBS) $(GMP_LIBS)
-#
+raptoreum_cli_LDADD += $(BACKTRACE_LIB) $(BOOST_LIBS) $(EVENT_LIBS) $(BLS_LIBS) $(GMP_LIBS)
 
 # raptoreum-tx binary #
 raptoreum_tx_SOURCES = raptoreum-tx.cpp
@@ -810,8 +812,7 @@ raptoreum_tx_LDADD = \
   $(LIBBITCOIN_CRYPTO) \
   $(LIBSECP256K1)
 
-raptoreum_tx_LDADD += $(BACKTRACE_LIB) $(BOOST_LIBS) $(CRYPTO_LIBS) $(BLS_LIBS) $(GMP_LIBS)
-#
+raptoreum_tx_LDADD += $(BACKTRACE_LIB) $(BOOST_LIBS) $(BLS_LIBS) $(GMP_LIBS)
 
 # raptoreum-wallet binary #
 raptoreum_wallet_SOURCES = raptoreum-wallet.cpp
@@ -840,13 +841,11 @@ raptoreum_wallet_LDADD = \
   $(LIBSECP256K1) \
   $(LIBUNIVALUE)
 
-raptoreum_wallet_LDADD += $(BACKTRACE_LIB) $(BOOST_LIBS) $(BDB_LIBS) $(CRYPTO_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(MINIUPNPC_LIBS) $(ZMQ_LIBS) $(BLS_LIBS) $(GMP_LIBS)
+raptoreum_wallet_LDADD += $(BACKTRACE_LIB) $(BOOST_LIBS) $(BDB_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(MINIUPNPC_LIBS) $(ZMQ_LIBS) $(BLS_LIBS) $(GMP_LIBS)
 #
 
 # raptoreumconsensus library #
 if BUILD_BITCOIN_LIBS
-lib_LTLIBRARIES += $(LIBRAPTOREUMCONSENSUS)
-
 include_HEADERS = script/raptoreumconsensus.h
 libraptoreumconsensus_la_SOURCES = support/cleanse.cpp $(crypto_libraptoreum_crypto_a_SOURCES) $(libraptoreum_consensus_a_SOURCES)
 
@@ -911,12 +910,6 @@ check-security: $(bin_PROGRAMS)
 if HARDEN
 	@echo "Checking binary security..."
 	$(AM_V_at) $(PYTHON) $(top_srcdir)/contrib/devtools/security-check.py $(bin_PROGRAMS)
-endif
-
-if ENABLE_BIP70
-%.pb.cc %.pb.h: %.proto
-	@test -f $(PROTOC)
-	$(AM_V_GEN) $(PROTOC) --cpp_out=$(@D) --proto_path=$(<D) $<
 endif
 
 include Makefile.crc32c.include

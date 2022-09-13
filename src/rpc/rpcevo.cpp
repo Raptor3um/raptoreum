@@ -4,12 +4,20 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <base58.h>
+#include <bls/bls.h>
+#include <chainparams.h>
 #include <consensus/validation.h>
 #include <core_io.h>
+#include <evo/providertx.h>
+#include <evo/deterministicmns.h>
+#include <evo/simplifiedmns.h>
+#include <evo/specialtx.h>
 #include <index/txindex.h>
 #include <messagesigner.h>
-#include <rpc/util.h>
+#include <netbase.h>
 #include <rpc/server.h>
+#include <rpc/util.h>
+#include <smartnode/smartnode-meta.h>
 #include <txmempool.h>
 #include <util/moneystr.h>
 #include <util/validation.h>
@@ -17,18 +25,10 @@
 
 #ifdef ENABLE_WALLET
 #include <wallet/coincontrol.h>
-#include <wallet/wallet.h>
 #include <wallet/rpcwallet.h>
+#include <wallet/wallet.h>
 #endif//ENABLE_WALLET
 
-#include <netbase.h>
-
-#include <evo/specialtx.h>
-#include <evo/providertx.h>
-#include <evo/deterministicmns.h>
-#include <evo/simplifiedmns.h>
-
-#include <bls/bls.h>
 #include <limits.h>
 #include <iostream>
 #include <fstream>
@@ -41,8 +41,6 @@
 #else
 #include <unistd.h>
 #endif
-
-#include <smartnode/smartnode-meta.h>
 
 #ifdef ENABLE_WALLET
 extern UniValue signrawtransaction(const JSONRPCRequest& request);
@@ -59,9 +57,9 @@ std::string get_current_dir()
   std::string current_dir(buff);
 //  current_dir += '/';
 #ifdef WIN32
-	std::replace(current_dir.begin(), current_dir.end(), '\\', '/');
+  std::replace(current_dir.begin(), current_dir.end(), '\\', '/');
 #endif
-	return current_dir;
+  return current_dir;
 }
 
 static const std::string LOWER_CASE = "abcdefghijklmnopqrstuvwxyz";
@@ -88,18 +86,18 @@ static std::string generateRandomString(int length, bool specialChar)
     {
       case 1:
         str.push_back(LOWER_CASE[randomChar(gen)]);
-    		break;
-    	case 2:
-    		str.push_back(LOWER_CASE[randomChar(gen)] - 32);
-    		break;
-    	case 3:
-    		str.push_back(NUMBER[randomNum(gen)]);
-    		break;
-    	case 4:
-    		str.push_back(SPECIAL[randomSpecial(gen)]);
-    		break;
-    	default:
-    		continue;
+        break;
+      case 2:
+        str.push_back(LOWER_CASE[randomChar(gen)] - 32);
+    	break;
+      case 3:
+        str.push_back(NUMBER[randomNum(gen)]);
+        break;
+      case 4:
+        str.push_back(SPECIAL[randomSpecial(gen)]);
+    	break;
+      default:
+        continue;
     }
   }
   return str;
@@ -1299,9 +1297,9 @@ UniValue BuildDMNListEntry(CWallet* pwallet, const CDeterministicMNCPtr& dmn, bo
     bool hasVotingKey = CheckWalletOwnsKey(pwallet, dmn->pdmnState->keyIDVoting);
 
     bool ownsCollateral = false;
-    CTransactionRef collateralTx;
     uint256 tmpHashBlock;
-    if (GetTransaction(dmn->collateralOutpoint.hash, collateralTx, Params().GetConsensus(), tmpHashBlock)) {
+    CTransactionRef collateralTx = GetTransaction(/* block_index */ nullptr, /* mempool */ nullptr, dmn->collateralOutpoint.hash, Params().GetConsensus(), tmpHashBlock);
+    if (collateralTx) {
         ownsCollateral = CheckWalletOwnsScript(pwallet, collateralTx->vout[dmn->collateralOutpoint.n].scriptPubKey);
     }
 

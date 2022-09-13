@@ -6,11 +6,14 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chain.h>
+#include <chainparams.h>
 #include <clientversion.h>
 #include <consensus/consensus.h>
 #include <core_io.h>
 #include <evo/mnauth.h>
 #include <httpserver.h>
+#include <init.h>
+#include <interfaces/chain.h>
 #include <key_io.h>
 #include <net.h>
 #include <netbase.h>
@@ -89,17 +92,17 @@ static UniValue spork(const JSONRPCRequest& request)
 {
     if (request.params.size() == 1) {
         // basic mode, show info
-        std:: string strCommand = request.params[0].get_str();
+        std::string strCommand = request.params[0].get_str();
         if (strCommand == "show") {
             UniValue ret(UniValue::VOBJ);
             for (const auto& sporkDef : sporkDefs) {
-                ret.pushKV(sporkDef.name, sporkManager.GetSporkValue(sporkDef.sporkId));
+                ret.pushKV(std::string(sporkDef.name), sporkManager.GetSporkValue(sporkDef.sporkId));
             }
             return ret;
         } else if(strCommand == "active"){
             UniValue ret(UniValue::VOBJ);
             for (const auto& sporkDef : sporkDefs) {
-                ret.pushKV(sporkDef.name, sporkManager.IsSporkActive(sporkDef.sporkId));
+                ret.pushKV(std::string(sporkDef.name), sporkManager.IsSporkActive(sporkDef.sporkId));
             }
             return ret;
         }
@@ -130,7 +133,7 @@ static UniValue spork(const JSONRPCRequest& request)
         }}.Check(request);
     } else {
         // advanced mode, update spork values
-        SporkId nSporkID = sporkManager.GetSporkIDByName(request.params[0].get_str());
+        SporkId nSporkID = CSporkManager::GetSporkIDByName(request.params[0].get_str());
         if(nSporkID == SPORK_INVALID)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid spork name");
 
@@ -496,7 +499,13 @@ static UniValue setmocktime(const JSONRPCRequest& request)
     LOCK(cs_main);
 
     RPCTypeCheck(request.params, {UniValue::VNUM});
-    SetMockTime(request.params[0].get_int64());
+    int64_t time = request.params[0].get_int64();
+    SetMockTime(time);
+    if (request.context.Has<NodeContext>()) {
+        for (const auto& chain_client : request.context.Get<NodeContext>().chain_clients) {
+            chain_client->setMockTime(time);
+        }
+    }
 
     return NullUniValue;
 }
@@ -1197,7 +1206,7 @@ UniValue logging(const JSONRPCRequest& request)
         },
     }.Check(request);
 
-    uint32_t original_log_categories = LogInstance().GetCategoryMask();;
+    uint32_t original_log_categories = LogInstance().GetCategoryMask();
     if (request.params[0].isArray()) {
         EnableOrDisableLogCategories(request.params[0], true);
     }

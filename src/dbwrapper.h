@@ -707,7 +707,7 @@ public:
         Clear();
     }
 
-    bool IsClean() {
+    bool IsClean() const {
         return writes.empty() && deletes.empty();
     }
 

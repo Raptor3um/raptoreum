@@ -14,9 +14,6 @@
 
 #include <qt/bitcoingui.h>
 #include <qt/guiutil.h>
-#ifdef ENABLE_BIP70
-#include <qt/paymentrequestplus.h>
-#endif
 
 #include <clientversion.h>
 #include <init.h>

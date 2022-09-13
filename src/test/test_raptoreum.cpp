@@ -75,7 +75,6 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName)
         SetupNetworking();
         InitSignatureCache();
         InitScriptExecutionCache();
-        CCoinJoin::InitStandardDenominations();
         fCheckBlockIndex = true;
         SelectParams(chainName);
         evoDb.reset(new CEvoDB(1 << 20, true, true));
@@ -121,15 +120,18 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
     m_node.mempool->setSanityCheck(1.0);
     m_node.banman = MakeUnique<BanMan>(GetDataDir() / "banlist.dat", nullptr, DEFAULT_MISBEHAVING_BANTIME);
     m_node.connman = MakeUnique<CConnman>(0x1337, 0x1337); // Deterministic randomness for tests.
+    m_node.peer_logic = MakeUnique<PeerLogicValidation>(m_node.connman.get(), m_node.banman.get(), *m_node.scheduler, *m_node.chainman, *m_node.mempool, false);
     pblocktree.reset(new CBlockTreeDB(1 << 20, true));
-    g_chainstate = MakeUnique<CChainState>();
+
+    m_node.chainman = &::g_chainman;
+    m_node.chainman->InitializeChainstate();
     ::ChainstateActive().InitCoinsDB(
         /* cache_size_bytes */ 1 << 23, /* in_memory */ true, /* should_wipe */ false);
     assert(!::ChainstateActive().CanFlushToDisk());
     g_txindex = MakeUnique<TxIndex>(1 << 20, true);
     g_txindex->Start();
-    llmq::InitLLMQSystem(*evoDb, *m_node.connman, true);
-    ::ChainstateActive().InitCoinsCache();
+    llmq::InitLLMQSystem(*evoDb, *m_node.mempool, *m_node.connman, true);
+    ::ChainstateActive().InitCoinsCache(1 << 23);
     assert(::ChainstateActive().CanFlushToDisk());
     if (!LoadGenesisBlock(chainparams)) {
         throw std::runtime_error("LoadGenesisBlock failed.");
@@ -161,11 +163,11 @@ TestingSetup::~TestingSetup()
     GetMainSignals().UnregisterBackgroundSignalScheduler();
     m_node.connman.reset();
     m_node.banman.reset();
+    UnloadBlockIndex(m_node.mempool);
     m_node.mempool = nullptr;
     m_node.scheduler.reset();
-    UnloadBlockIndex();
-    g_chainstate.reset();
     llmq::DestroyLLMQSystem();
+    m_node.chainman = nullptr;
     pblocktree.reset();
 }
 
@@ -200,7 +202,7 @@ TestChainSetup::CreateAndProcessBlock(const std::vector<CMutableTransaction>& tx
     auto block = CreateBlock(txns, scriptPubKey);
 
     std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(block);
-    ProcessNewBlock(chainparams, shared_pblock, true, nullptr);
+    EnsureChainman(m_node).ProcessNewBlock(chainparams, shared_pblock, true, nullptr);
 
     CBlock result = block;
     return result;

@@ -18,8 +18,6 @@
 #include <timedata.h>
 #include <util/system.h>
 
-#include <evo/deterministicmns.h>
-
 #include <univalue.h>
 
 class CGovernanceManager;
@@ -30,6 +28,9 @@ class CGovernanceVote;
 extern CGovernanceManager governance;
 
 static const int RATE_BUFFER_SIZE = 5;
+
+class CDeterministicMNList;
+using CDeterministicMNListPtr = std::shared_ptr<CDeterministicMNList>;
 
 class CRateCheckBuffer
 {
@@ -198,7 +199,7 @@ private:
     bool fRateChecksEnabled;
 
     // used to check for changed voting keys
-    CDeterministicMNList lastMNListForVotingKeys;
+    CDeterministicMNListPtr lastMNListForVotingKeys;
 
     class ScopedLockBool
     {
@@ -274,9 +275,13 @@ public:
     void Serialize(Stream& s) const
     {
         LOCK(cs);
-        s << SERIALIZATION_VERSION_STRING << mapErasedGovernanceObjects
-          << cmapInvalidVotes << cmmapOrphanVotes << mapObjects
-          << mapLastSmartnodeObject << lastMNListForVotingKeys;
+        s << SERIALIZATION_VERSION_STRING
+          << mapErasedGovernanceObjects
+          << cmapInvalidVotes
+          << cmmapOrphanVotes
+          << mapObjects
+          << mapLastSmartnodeObject
+          << *lastMNListForVotingKeys;
     }
 
     template<typename Stream>
@@ -290,9 +295,12 @@ public:
         s >> strVersion;
         if (strVersion != SERIALIZATION_VERSION_STRING) return;
 
-        s >> mapErasedGovernanceObjects >> cmapInvalidVotes
-          >> cmmapOrphanVotes >> mapObjects
-          >> mapLastSmartnodeObject >> lastMNListForVotingKeys;
+        s >> mapErasedGovernanceObjects
+          >> cmapInvalidVotes
+          >> cmmapOrphanVotes
+          >> mapObjects
+          >> mapLastSmartnodeObject
+          >> *lastMNListForVotingKeys;
     }
 
     void UpdatedBlockTip(const CBlockIndex* pindex, CConnman& connman);

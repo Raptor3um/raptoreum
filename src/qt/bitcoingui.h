@@ -44,6 +44,7 @@ class ModalOverlay;
 namespace interfaces {
 class Handler;
 class Node;
+struct BlockAndHeaderTipInfo;
 }
 
 QT_BEGIN_NAMESPACE
@@ -79,7 +80,7 @@ public:
     /** Set the client model.
         The client model represents the part of the core that communicates with the P2P network, and is wallet-agnostic.
     */
-    void setClientModel(ClientModel *clientModel);
+    void setClientModel(ClientModel *clientModel = nullptr, interfaces::BlockAndHeaderTipInfo* tip_info = nullptr);
 #ifdef ENABLE_WALLET
     void setWalletController(WalletController* wallet_controller);
 #endif
@@ -124,6 +125,7 @@ private:
     QLabel* labelWalletEncryptionIcon = nullptr;
     QLabel* labelWalletHDStatusIcon = nullptr;
     GUIUtil::ClickableLabel* labelConnectionsIcon = nullptr;
+    GUIUtil::ClickableLabel* labelProxyIcon = nullptr;
     GUIUtil::ClickableLabel* labelBlocksIcon = nullptr;
     QLabel* progressBarLabel = nullptr;
     GUIUtil::ClickableProgressBar* progressBar = nullptr;
@@ -303,6 +305,7 @@ public Q_SLOTS:
 
 private:
     void updateWindowTitle();
+    void updateProxyIcon();
 public Q_SLOTS:
 #ifdef ENABLE_WALLET
     /** Switch to overview (home) page */

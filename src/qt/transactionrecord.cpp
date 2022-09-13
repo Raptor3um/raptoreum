@@ -7,6 +7,7 @@
 #include <qt/transactionrecord.h>
 
 #include <chain.h>
+#include <coinjoin/coinjoin.h>
 #include <consensus/consensus.h>
 #include <interfaces/wallet.h>
 #include <interfaces/node.h>
@@ -15,6 +16,8 @@
 #include <wallet/wallet.h>
 #include <evo/providertx.h>
 #include <evo/specialtx.h>
+
+#include <wallet/ismine.h>
 
 #include <util/moneystr.h>
 
@@ -117,12 +120,12 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(interfaces::Wal
     uint256 hash = wtx.tx->GetHash();
     bool isFuture = wtx.tx->nType == TRANSACTION_FUTURE;
 
-    for (isminetype mine : wtx.txout_is_mine)
+    for (const isminetype mine : wtx.txout_is_mine)
     {
         creditMineTypes |= mine;
     }
 
-    for (isminetype mine : wtx.txin_is_mine)
+    for (const isminetype mine : wtx.txin_is_mine)
     {
         debitMineTypes |= mine;
     }
@@ -180,14 +183,14 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(interfaces::Wal
         bool inputInvolvesWatchAddress = false;
         bool outputInvolvesWatchAddress = false;
         isminetype fAllFromMe = ISMINE_SPENDABLE;
-        for (isminetype mine : wtx.txin_is_mine)
+        for (const isminetype mine : wtx.txin_is_mine)
         {
             if (mine & ISMINE_WATCH_ONLY) inputInvolvesWatchAddress = true;
             if (fAllFromMe > mine) fAllFromMe = mine;
         }
 
         isminetype fAllToMe = ISMINE_SPENDABLE;
-        for (isminetype mine : wtx.txout_is_mine)
+        for (const isminetype mine : wtx.txout_is_mine)
         {
             if (mine & ISMINE_WATCH_ONLY) outputInvolvesWatchAddress = true;
             if (fAllToMe > mine) fAllToMe = mine;

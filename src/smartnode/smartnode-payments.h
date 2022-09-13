@@ -3,18 +3,20 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef SMARTNODE_PAYMENTS_H
-#define SMARTNODE_PAYMENTS_H
+#ifndef BITCOIN_SMARTNODE_SMARTNODE_PAYMENTS_H
+#define BITCOIN_SMARTNODE_SMARTNODE_PAYMENTS_H
 
-#include <util/system.h>
-#include <core_io.h>
-#include <key.h>
-#include <net_processing.h>
-#include <util/strencodings.h>
+#include <amount.h>
 
-#include <evo/deterministicmns.h>
+#include <string>
+#include <vector>
+#include <map>
 
 class CSmartnodePayments;
+class CBlock;
+class CTransaction;
+struct CMutableTransaction;
+class CTxOut;
 
 /// TODO: all 4 functions do not belong here really, they should be refactored/moved somewhere (main.cpp ?)
 bool IsBlockValueValid(const CBlock& block, int nBlockHeight, CAmount blockReward, std::string& strErrorRet);
@@ -38,4 +40,4 @@ public:
     static bool GetSmartnodeTxOuts(int nBlockHeight, CAmount blockReward, std::vector<CTxOut>& voutSmartnodePaymentsRet, CAmount specialTxFee);
 };
 
-#endif
+#endif // BITCOIN_SMARTNODE_SMARTNODE_PAYMENTS_H

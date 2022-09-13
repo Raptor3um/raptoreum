@@ -8,7 +8,7 @@
 
 #include <string>
 
-#include <univalue.h>
+#include <univalue/include/univalue.h>
 
 namespace util {
 class Ref;

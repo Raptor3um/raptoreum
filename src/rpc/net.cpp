@@ -206,7 +206,7 @@ UniValue getpeerinfo(const JSONRPCRequest& request)
             obj.pushKV("synced_headers", statestats.nSyncHeight);
             obj.pushKV("synced_blocks", statestats.nCommonHeight);
             UniValue heights(UniValue::VARR);
-            for (int height : statestats.vHeightInFlight) {
+            for (const int height : statestats.vHeightInFlight) {
                 heights.push_back(height);
             }
             obj.pushKV("inflight", heights);
@@ -662,9 +662,17 @@ UniValue setban(const JSONRPCRequest& request)
 UniValue listbanned(const JSONRPCRequest& request)
 {
     RPCHelpMan{"listbanned",
-        "\nList all banned IPs/Subnets.\n",
+        "\nList all manually banned IPs/Subnets.\n",
         {},
-        RPCResult{RPCResult::Type::ARR, "", ""},
+        RPCResult{RPCResult::Type::ARR, "", "",
+            {
+                {RPCResult::Type::OBJ, "", "",
+                    {
+                        {RPCResult::Type::STR, "address", ""},
+                        {RPCResult::Type::NUM_TIME, "banned_until", ""},
+                        {RPCResult::Type::NUM_TIME, "ban_created", ""},
+                    }},
+            }},
         RPCExamples{
             HelpExampleCli("listbanned", "")
             + HelpExampleRpc("listbanned", "")
@@ -687,7 +695,6 @@ UniValue listbanned(const JSONRPCRequest& request)
         rec.pushKV("address", entry.first.ToString());
         rec.pushKV("banned_until", banEntry.nBanUntil);
         rec.pushKV("ban_created", banEntry.nCreateTime);
-        rec.pushKV("ban_reason", banEntry.banReasonToString());
 
         bannedAddresses.push_back(rec);
     }

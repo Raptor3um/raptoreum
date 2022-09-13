@@ -23,7 +23,6 @@
 #include <rpc/client.h>
 #include <util/strencodings.h>
 #include <util/system.h>
-#include <openssl/crypto.h>
 
 #include <univalue.h>
 
@@ -583,7 +582,7 @@ bool RPCConsole::eventFilter(QObject* obj, QEvent *event)
     return QWidget::eventFilter(obj, event);
 }
 
-void RPCConsole::setClientModel(ClientModel *model)
+void RPCConsole::setClientModel(ClientModel *model, int bestblock_height, int64_t bestblock_date, uint256 bestblock_hash, double verification_progress)
 {
     clientModel = model;
     ui->trafficGraph->setClientModel(model);
@@ -592,8 +591,7 @@ void RPCConsole::setClientModel(ClientModel *model)
         setNumConnections(model->getNumConnections());
         connect(model, &ClientModel::numConnectionsChanged, this, &RPCConsole::setNumConnections);
 
-        interfaces::Node& node = clientModel->node();
-        setNumBlocks(node.getNumBlocks(), QDateTime::fromTime_t(node.getLastBlockTime()), QString::fromStdString(node.getLastBlockHash()), node.getVerificationProgress(), false);
+        setNumBlocks(bestblock_height, QDateTime::fromTime_t(bestblock_date), QString::fromStdString(bestblock_hash.ToString()), verification_progress, false);
         connect(model, &ClientModel::numBlocksChanged, this, &RPCConsole::setNumBlocks);
 
         connect(model, &ClientModel::chainLockChanged, this, &RPCConsole::setChainLock);

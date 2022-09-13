@@ -13,13 +13,8 @@
 #include <util/strencodings.h>
 #include <logging.h>
 
-#include <mutex>
-
 #define BEGIN(a) ((char*)&(a))
 #define END(a) ((char*)&((&(a))[1]))
-
-static RecursiveMutex cs_powHash;
-static uint256 powHash GUARDED_BY(cs_powHash);
 
 uint256 CBlockHeader::GetHash() const
 {
@@ -39,8 +34,6 @@ uint256 CBlockHeader::GetPOWHash(bool readCache) const
     uint256 headerHash = GetHash();
     uint256 powHash;
     bool found = false;
-
-    LOCK(cs_powHash);
 
     if (readCache) {
         found = cache.get(headerHash, powHash);

@@ -18,10 +18,10 @@
 #include <interfaces/handler.h>
 #include <interfaces/node.h>
 #include <net.h>
+#include <netbase.h>
 #include <util/system.h>
 
 #include <stdint.h>
-#include <functional>
 
 #include <QDebug>
 #include <QThread>
@@ -332,4 +332,14 @@ void ClientModel::unsubscribeFromCoreSignals()
     m_handler_notify_header_tip->disconnect();
     m_handler_notify_smartnodelist_changed->disconnect();
     m_handler_notify_additional_data_sync_progess_changed->disconnect();
+}
+
+bool ClientModel::getProxyInfo(std::string& ip_port) const
+{
+    proxyType ipv4, ipv6;
+    if (m_node.getProxy((Network) 1, ipv4) && m_node.getProxy((Network) 2, ipv6)) {
+      ip_port = ipv4.proxy.ToStringIPPort();
+      return true;
+    }
+    return false;
 }

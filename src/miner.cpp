@@ -27,8 +27,6 @@
 #include <util/system.h>
 #include <util/moneystr.h>
 #include <util/validation.h>
-#include <smartnode/smartnode-payments.h>
-#include <smartnode/smartnode-sync.h>
 #include <validationinterface.h>
 #include <wallet/wallet.h>
 
@@ -36,9 +34,11 @@
 #include <evo/cbtx.h>
 #include <evo/simplifiedmns.h>
 #include <evo/deterministicmns.h>
-
 #include <llmq/quorums_blockprocessor.h>
 #include <llmq/quorums_chainlocks.h>
+#include <llmq/quorums_utils.h>
+#include <smartnode/smartnode-payments.h>
+#include <smartnode/smartnode-sync.h>
 
 #include <boost/thread.hpp>
 #include <algorithm>
@@ -164,9 +164,9 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
                        : pblock->GetBlockTime();
 
     if (fDIP0003Active_context) {
-        for (const Consensus::LLMQType& type : llmq::CLLMQUtils::GetEnabledQuorumTypes(pindexPrev)) {
+        for (const Consensus::LLMQParams& params : llmq::CLLMQUtils::GetEnabledQuorumParams(pindexPrev)) {
             CTransactionRef qcTx;
-            if (llmq::quorumBlockProcessor->GetMinableCommitmentTx(type, nHeight, qcTx)) {
+            if (llmq::quorumBlockProcessor->GetMineableCommitmentTx(params, nHeight, qcTx)) {
                 pblock->vtx.emplace_back(qcTx);
                 pblocktemplate->vTxFees.emplace_back(0);
                 pblocktemplate->vSpecialTxFees.emplace_back(0);

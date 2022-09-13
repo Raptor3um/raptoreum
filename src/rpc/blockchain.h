@@ -5,9 +5,18 @@
 #ifndef BITCOIN_RPC_BLOCKCHAIN_H
 #define BITCOIN_RPC_BLOCKCHAIN_H
 
+#include <amount.h>
+#include <sync.h>
+
+#include <stdint.h>
+#include <vector>
+
+extern RecursiveMutex cs_main;
+
 class CBlock;
 class CBlockIndex;
 class CTxMemPool;
+class ChainstateManager;
 class UniValue;
 struct NodeContext;
 namespace util {
@@ -27,7 +36,7 @@ double GetDifficulty(const CBlockIndex* blockindex);
 void RPCNotifyBlockChange(bool ibd, const CBlockIndex *);
 
 /** Block description to JSON */
-UniValue blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool txDetails = false, bool powHash = false);
+UniValue blockToJSON(const CBlock& block, const CBlockIndex* tip, const CBlockIndex* blockindex, bool txDetails = false, bool powHash = false) LOCKS_EXCLUDED(cs_main);
 
 /** Mempool information to JSON */
 UniValue MempoolInfoToJSON(const CTxMemPool& pool);
@@ -36,9 +45,10 @@ UniValue MempoolInfoToJSON(const CTxMemPool& pool);
 UniValue MempoolToJSON(const CTxMemPool& pool, bool verbose = false);
 
 /** Block header to JSON */
-UniValue blockheaderToJSON(const CBlockIndex* blockindex);
+UniValue blockheaderToJSON(const CBlockIndex* tip, const CBlockIndex* blockindex) LOCKS_EXCLUDED(cs_main);
 
 NodeContext& EnsureNodeContext(const util::Ref& context);
 CTxMemPool& EnsureMemPool(const util::Ref& context);
+ChainstateManager& EnsureChainman(const util::Ref& context);
 
 #endif

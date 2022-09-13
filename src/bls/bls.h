@@ -10,6 +10,7 @@
 #include <serialize.h>
 #include <uint256.h>
 #include <util/strencodings.h>
+#include <util/ranges.h>
 
 // bls-dash uses relic, which may define DEBUG and ERROR, which leads to many warnings in some build setups
 #undef ERROR
@@ -29,10 +30,10 @@
 static const bool fLegacyDefault{true};
 
 // reversed BLS12-381
-#define BLS_CURVE_ID_SIZE 32
-#define BLS_CURVE_SECKEY_SIZE 32
-#define BLS_CURVE_PUBKEY_SIZE 48
-#define BLS_CURVE_SIG_SIZE 96
+constexpr int BLS_CURVE_ID_SIZE{32};
+constexpr int BLS_CURVE_SECKEY_SIZE{32};
+constexpr int BLS_CURVE_PUBKEY_SIZE{48};
+constexpr int BLS_CURVE_SIG_SIZE{96};
 
 class CBLSSignature;
 class CBLSPublicKey;
@@ -50,8 +51,6 @@ protected:
     ImplType impl;
     bool fValid{false};
     mutable uint256 cachedHash;
-
-    inline constexpr size_t GetSerSize() const { return SerSize; }
 
 public:
     static const size_t SerSize = _SerSize;
@@ -108,7 +107,7 @@ public:
             return;
         }
 
-        if (std::all_of(vecBytes.begin(), vecBytes.end(), [](uint8_t c) { return c == 0; })) {
+        if (ranges::all_of(vecBytes, [](uint8_t c) { return c == 0; })) {
             Reset();
         } else {
             try {
@@ -152,7 +151,6 @@ public:
         return IsValid();
     }
 
-public:
     inline void Serialize(CSizeComputer& s) const
     {
         s.seek(SerSize);
@@ -206,7 +204,7 @@ struct CBLSIdImplicit : public uint256
         memcpy(instance.begin(), buffer, sizeof(CBLSIdImplicit));
         return instance;
     }
-    std::vector<uint8_t> Serialize(const bool fLegacy = false) const
+    [[nodiscard]] std::vector<uint8_t> Serialize(const bool fLegacy = false) const
     {
         return {begin(), end()};
     }
@@ -244,8 +242,8 @@ public:
 #endif
     bool SecretKeyShare(const std::vector<CBLSSecretKey>& msk, const CBLSId& id);
 
-    CBLSPublicKey GetPublicKey() const;
-    CBLSSignature Sign(const uint256& hash) const;
+    [[nodiscard]] CBLSPublicKey GetPublicKey() const;
+    [[nodiscard]] CBLSSignature Sign(const uint256& hash) const;
 };
 
 class CBLSPublicKey : public CBLSWrapper<bls::G1Element, BLS_CURVE_PUBKEY_SIZE, CBLSPublicKey>
@@ -288,10 +286,10 @@ public:
 
     void SubInsecure(const CBLSSignature& o);
 
-    bool VerifyInsecure(const CBLSPublicKey& pubKey, const uint256& hash) const;
-    bool VerifyInsecureAggregated(const std::vector<CBLSPublicKey>& pubKeys, const std::vector<uint256>& hashes) const;
+    [[nodiscard]] bool VerifyInsecure(const CBLSPublicKey& pubKey, const uint256& hash) const;
+    [[nodiscard]] bool VerifyInsecureAggregated(const std::vector<CBLSPublicKey>& pubKeys, const std::vector<uint256>& hashes) const;
 
-    bool VerifySecureAggregated(const std::vector<CBLSPublicKey>& pks, const uint256& hash) const;
+    [[nodiscard]] bool VerifySecureAggregated(const std::vector<CBLSPublicKey>& pks, const uint256& hash) const;
 
     bool Recover(const std::vector<CBLSSignature>& sigs, const std::vector<CBLSId>& ids);
 };
@@ -319,7 +317,7 @@ public:
         bufValid = true;
     }
 
-    CBLSLazyWrapper(const CBLSLazyWrapper& r)
+    explicit CBLSLazyWrapper(const CBLSLazyWrapper& r)
     {
         *this = r;
     }
@@ -435,7 +433,6 @@ public:
 };
 using CBLSLazySignature = CBLSLazyWrapper<CBLSSignature>;
 using CBLSLazyPublicKey = CBLSLazyWrapper<CBLSPublicKey>;
-using CBLSLazySecretKey = CBLSLazyWrapper<CBLSSecretKey>;
 #endif
 
 using BLSIdVector = std::vector<CBLSId>;
@@ -444,11 +441,7 @@ using BLSPublicKeyVector = std::vector<CBLSPublicKey>;
 using BLSSecretKeyVector = std::vector<CBLSSecretKey>;
 using BLSSignatureVector = std::vector<CBLSSignature>;
 
-using BLSIdVectorPtr = std::shared_ptr<BLSIdVector>;
 using BLSVerificationVectorPtr = std::shared_ptr<BLSVerificationVector>;
-using BLSPublicKeyVectorPtr = std::shared_ptr<BLSPublicKeyVector>;
-using BLSSecretKeyVectorPtr = std::shared_ptr<BLSSecretKeyVector>;
-using BLSSignatureVectorPtr = std::shared_ptr<BLSSignatureVector>;
 
 bool BLSInit();
 

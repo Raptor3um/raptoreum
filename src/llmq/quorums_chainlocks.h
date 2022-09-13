@@ -6,20 +6,22 @@
 #ifndef BITCOIN_LLMQ_QUORUMS_CHAINLOCKS_H
 #define BITCOIN_LLMQ_QUORUMS_CHAINLOCKS_H
 
-#include <llmq/quorums.h>
+#include <bls/bls.h>
 #include <llmq/quorums_signing.h>
-
 #include <net.h>
-#include <chainparams.h>
+#include <primitives/block.h>
+#include <primitives/transaction.h>
+#include <saltedhasher.h>
+#include <streams.h>
+#include <sync.h>
 
 #include <atomic>
 #include <unordered_set>
 
-#include <boost/thread.hpp>
-
 class CConnman;
 class CBlockIndex;
 class CScheduler;
+class CTxMemPool;
 
 namespace llmq
 {
@@ -28,19 +30,27 @@ extern const std::string CLSIG_REQUESTID_PREFIX;
 
 class CChainLockSig
 {
-public:
+private:
     int32_t nHeight{-1};
     uint256 blockHash;
     CBLSSignature sig;
 
 public:
+    CChainLockSig(int32_t nHeight, const uint256& blockHash, const CBLSSignature& sig)
+        : nHeight(nHeight), blockHash(blockHash), sig(sig)
+    {}
+    CChainLockSig() = default;
+
+    [[nodiscard]] int32_t getHeight() const;
+    [[nodiscard]] const uint256& getBlockHash() const;
+    [[nodiscard]] const CBLSSignature& getSig() const;
+    [[nodiscard]] bool IsNull() const;
+    [[nodiscard]] std::string ToString() const;
+
     SERIALIZE_METHODS(CChainLockSig, obj)
     {
         READWRITE(obj.nHeight, obj.blockHash, obj.sig);
     }
-
-    bool IsNull() const;
-    std::string ToString() const;
 };
 
 class CChainLocksHandler : public CRecoveredSigsListener
@@ -53,12 +63,13 @@ class CChainLocksHandler : public CRecoveredSigsListener
 
 private:
     CConnman& connman;
+    CTxMemPool& mempool;
     std::unique_ptr<CScheduler> scheduler;
     std::unique_ptr<std::thread> scheduler_thread;
-    mutable Mutex cs;
-    bool tryLockChainTipScheduled{false};
-    bool isEnabled{false};
-    bool isEnforced{false};
+    mutable RecursiveMutex cs;
+    bool tryLockChainTipScheduled GUARDED_BY(cs) {false};
+    bool isEnabled GUARDED_BY(cs) {false};
+    bool isEnforced GUARDED_BY(cs) {false};
 
     uint256 bestChainLockHash GUARDED_BY(cs);
     CChainLockSig bestChainLock GUARDED_BY(cs);
@@ -81,20 +92,20 @@ private:
     int64_t lastCleanupTime GUARDED_BY(cs) {0};
 
 public:
-    explicit CChainLocksHandler(CConnman& _connman);
+    explicit CChainLocksHandler(CTxMemPool& _mempool, CConnman& _connman);
     ~CChainLocksHandler();
 
     void Start();
     void Stop();
 
-    bool AlreadyHave(const CInv& inv);
-    bool GetChainLockByHash(const uint256& hash, CChainLockSig& ret);
-    CChainLockSig GetBestChainLock();
+    bool AlreadyHave(const CInv& inv) const;
+    bool GetChainLockByHash(const uint256& hash, CChainLockSig& ret) const;
+    CChainLockSig GetBestChainLock() const;
 
     void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv);
     void ProcessNewChainLock(NodeId from, const CChainLockSig& clsig, const uint256& hash);
     void AcceptedBlockHeader(const CBlockIndex* pindexNew);
-    void UpdatedBlockTip(const CBlockIndex* pindexNew);
+    void UpdatedBlockTip();
     void TransactionAddedToMempool(const CTransactionRef& tx, int64_t nAcceptTime);
     void BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex, const std::vector<CTransactionRef>& vtxConflicted);
     void BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexDisconnected);
@@ -103,15 +114,15 @@ public:
     void EnforceBestChainLock();
     void HandleNewRecoveredSig(const CRecoveredSig& recoveredSig) override;
 
-    bool HasChainLock(int nHeight, const uint256& blockHash);
-    bool HasConflictingChainLock(int nHeight, const uint256& blockHash);
+    bool HasChainLock(int nHeight, const uint256& blockHash) const;
+    bool HasConflictingChainLock(int nHeight, const uint256& blockHash) const;
 
-    bool IsTxSafeForMining(const uint256& txid);
+    bool IsTxSafeForMining(const uint256& txid) const;
 
 private:
     // these require locks to be held already
-    bool InternalHasChainLock(int nHeight, const uint256& blockHash);
-    bool InternalHasConflictingChainLock(int nHeight, const uint256& blockHash);
+    bool InternalHasChainLock(int nHeight, const uint256& blockHash) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+    bool InternalHasConflictingChainLock(int nHeight, const uint256& blockHash) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     BlockTxs::mapped_type GetBlockTxs(const uint256& blockHash);
 

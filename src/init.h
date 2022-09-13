@@ -11,6 +11,9 @@
 #include <util/system.h>
 
 struct NodeContext;
+namespace interfaces {
+struct BlockAndHeaderTipInfo;
+} // namespace interfaces
 namespace boost {
 class thread_group;
 } // namespace boost
@@ -50,11 +53,15 @@ bool AppInitSanityChecks();
  */
 bool AppInitLockDataDirectory();
 /**
+ * Initialize node and wallet interface pointers. Has no prerequisites or side effects besides allocating memory.
+ */
+bool AppInitInterfaces(NodeContext& node);
+/**
  * Raptoreum Core main initialization.
  * @note This should only be done after daemonization. Call Shutdown() if this function fails.
  * @pre Parameters should be parsed and config file should be read, AppInitLockDataDirectory should have been called.
  */
-bool AppInitMain(const util::Ref& context, NodeContext& node);
+bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info = nullptr);
 void PrepareShutdown(NodeContext& node);
 
 /**

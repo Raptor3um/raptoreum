@@ -21,16 +21,11 @@
 
 #if defined(ENABLE_WALLET)
 #include <qt/test/wallettests.h>
-#if defined(ENABLE_BIP70)
-#include <qt/test/paymentservertests.h>
-#endif
 #endif
 
 #include <QApplication>
 #include <QObject>
 #include <QTest>
-
-#include <openssl/ssl.h>
 
 #if defined(QT_STATICPLUGIN)
 #include <QtPlugin>
@@ -102,12 +97,6 @@ int main(int argc, char *argv[])
     if (QTest::qExec(&test4) != 0) {
         fInvalid = true;
     }
-#if defined(ENABLE_BIP70)
-    PaymentServerTests test5;
-    if (QTest::qExec(&test5) != 0) {
-        fInvalid = true;
-    }
-#endif
 #endif
     TrafficGraphDataTests test6;
     if (QTest::qExec(&test6) != 0) {

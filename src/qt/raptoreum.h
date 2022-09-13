@@ -13,6 +13,8 @@
 #include <memory>
 #include <vector>
 
+#include <interfaces/node.h>
+
 class BitcoinGUI;
 class ClientModel;
 class NetworkStyle;
@@ -20,11 +22,6 @@ class OptionsModel;
 class PaymentServer;
 class WalletController;
 class WalletModel;
-
-namespace interfaces {
-class Handler;
-class Node;
-} // namespace interfaces
 
 /** Class encapsulating Bitcoin Core startup and shutdown.
  * Allows running startup and shutdown in a different thread from the UI thread.
@@ -41,7 +38,7 @@ public Q_SLOTS:
     void restart(QStringList args);
 
 Q_SIGNALS:
-    void initializeResult(bool success);
+    void initializeResult(bool success, interfaces::BlockAndHeaderTipInfo tip_info);
     void shutdownResult();
     void runawayException(const QString &message);
 
@@ -87,7 +84,7 @@ public:
     WId getMainWinId() const;
 
 public Q_SLOTS:
-    void initializeResult(bool success);
+    void initializeResult(bool success, interfaces::BlockAndHeaderTipInfo tip_info);
     void shutdownResult();
     /// Handle runaway exceptions. Shows a message box with the problem and quits the program.
     void handleRunawayException(const QString &message);
@@ -96,7 +93,6 @@ Q_SIGNALS:
     void requestedInitialize();
     void requestedRestart(QStringList args);
     void requestedShutdown();
-    void stopThread();
     void splashFinished();
     void windowShown(BitcoinGUI* window);
 

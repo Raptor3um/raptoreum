@@ -6,47 +6,94 @@
 #ifndef BITCOIN_LLMQ_QUORUMS_SIGNING_H
 #define BITCOIN_LLMQ_QUORUMS_SIGNING_H
 
-#include <llmq/quorums.h>
-
-#include <chainparams.h>
-#include <saltedhasher.h>
-#include <univalue.h>
+#include <bls/bls.h>
 #include <unordered_lru_cache.h>
+
+#include <consensus/params.h>
+#include <dbwrapper.h>
+#include <random.h>
+#include <saltedhasher.h>
+#include <sync.h>
+#include <univalue.h>
+
+#include <evo/evodb.h>
 
 #include <unordered_map>
 
 using NodeId = int64_t;
 class CConnman;
+class CInv;
+class CNode;
 
 namespace llmq
 {
+
+class CQuorum;
+using CQuorumCPtr = std::shared_ptr<const CQuorum>;
+
 // Keep recovered signatures for a week. This is a "-maxrecsigsage" option default.
 static const int64_t DEFAULT_MAX_RECOVERED_SIGS_AGE = 60 * 60 * 24 * 7;
 
 
-class CRecoveredSig
+class CSigBase
 {
-public:
-    Consensus::LLMQType llmqType;
+protected:
+    Consensus::LLMQType llmqType{Consensus::LLMQType::LLMQ_NONE};
     uint256 quorumHash;
     uint256 id;
     uint256 msgHash;
-    CBLSLazySignature sig;
 
-    // only in-memory
-    uint256 hash;
+    CSigBase(Consensus::LLMQType llmqType, const uint256& quorumHash, const uint256& id, const uint256& msgHash)
+            : llmqType(llmqType), quorumHash(quorumHash), id(id), msgHash(msgHash) {};
+    CSigBase() = default;
 
 public:
-
-    SERIALIZE_METHODS(CRecoveredSig, obj)
-    {
-        READWRITE(obj.llmqType, obj.quorumHash, obj.id, obj.msgHash, obj.sig);
-        SER_READ(obj, obj.UpdateHash());
+    [[nodiscard]] constexpr auto getLlmqType() const {
+        return llmqType;
     }
+
+    [[nodiscard]] constexpr auto getQuorumHash() const -> const uint256& {
+        return quorumHash;
+    }
+
+    [[nodiscard]] constexpr auto getId() const -> const uint256& {
+        return id;
+    }
+
+    [[nodiscard]] constexpr auto getMsgHash() const -> const uint256& {
+        return msgHash;
+    }
+
+    [[nodiscard]] uint256 buildSignHash() const;
+};
+
+class CRecoveredSig : virtual public CSigBase
+{
+public:
+    const CBLSLazySignature sig;
+
+    CRecoveredSig() = default;
+
+    CRecoveredSig(Consensus::LLMQType _llmqType, const uint256& _quorumHash, const uint256& _id, const uint256& _msgHash, const CBLSLazySignature& _sig) :
+                  CSigBase(_llmqType, _quorumHash, _id, _msgHash), sig(_sig) {UpdateHash();};
+    CRecoveredSig(Consensus::LLMQType _llmqType, const uint256& _quorumHash, const uint256& _id, const uint256& _msgHash, const CBLSSignature& _sig) :
+                  CSigBase(_llmqType, _quorumHash, _id, _msgHash) {const_cast<CBLSLazySignature&>(sig).Set(_sig); UpdateHash();};
+
+private:
+    // only in-memory
+    uint256 hash;
 
     void UpdateHash()
     {
         hash = ::SerializeHash(*this);
+    }
+
+public:
+    SERIALIZE_METHODS(CRecoveredSig, obj)
+    {
+        READWRITE(const_cast<Consensus::LLMQType&>(obj.llmqType), const_cast<uint256&>(obj.quorumHash), const_cast<uint256&>(obj.id),
+                  const_cast<uint256&>(obj.msgHash), const_cast<CBLSLazySignature&>(obj.sig));
+        SER_READ(obj, obj.UpdateHash());
     }
 
     const uint256& GetHash() const
@@ -63,10 +110,10 @@ class CRecoveredSigsDb
 private:
     std::unique_ptr<CDBWrapper> db{nullptr};
 
-    RecursiveMutex cs;
-    unordered_lru_cache<std::pair<Consensus::LLMQType, uint256>, bool, StaticSaltedHasher, 30000> hasSigForIdCache;
-    unordered_lru_cache<uint256, bool, StaticSaltedHasher, 30000> hasSigForSessionCache;
-    unordered_lru_cache<uint256, bool, StaticSaltedHasher, 30000> hasSigForHashCache;
+    mutable RecursiveMutex cs;
+    mutable unordered_lru_cache<std::pair<Consensus::LLMQType, uint256>, bool, StaticSaltedHasher, 30000> hasSigForIdCache GUARDED_BY(cs);
+    mutable unordered_lru_cache<uint256, bool, StaticSaltedHasher, 30000> hasSigForSessionCache GUARDED_BY(cs);
+    mutable unordered_lru_cache<uint256, bool, StaticSaltedHasher, 30000> hasSigForHashCache GUARDED_BY(cs);
 
 public:
     explicit CRecoveredSigsDb(bool fMemory, bool fWipe) :
@@ -75,12 +122,12 @@ public:
         MigrateRecoveredSigs();
     }
 
-    bool HasRecoveredSig(Consensus::LLMQType llmqType, const uint256& id, const uint256& msgHash);
-    bool HasRecoveredSigForId(Consensus::LLMQType llmqType, const uint256& id);
-    bool HasRecoveredSigForSession(const uint256& signHash);
-    bool HasRecoveredSigForHash(const uint256& hash);
-    bool GetRecoveredSigByHash(const uint256& hash, CRecoveredSig& ret);
-    bool GetRecoveredSigById(Consensus::LLMQType llmqType, const uint256& id, CRecoveredSig& ret);
+    bool HasRecoveredSig(Consensus::LLMQType llmqType, const uint256& id, const uint256& msgHash) const;
+    bool HasRecoveredSigForId(Consensus::LLMQType llmqType, const uint256& id) const;
+    bool HasRecoveredSigForSession(const uint256& signHash) const;
+    bool HasRecoveredSigForHash(const uint256& hash) const;
+    bool GetRecoveredSigByHash(const uint256& hash, CRecoveredSig& ret) const;
+    bool GetRecoveredSigById(Consensus::LLMQType llmqType, const uint256& id, CRecoveredSig& ret) const;
     void WriteRecoveredSig(const CRecoveredSig& recSig);
     void RemoveRecoveredSig(Consensus::LLMQType llmqType, const uint256& id);
     void TruncateRecoveredSig(Consensus::LLMQType llmqType, const uint256& id);
@@ -88,8 +135,8 @@ public:
     void CleanupOldRecoveredSigs(int64_t maxAge);
 
     // votes are removed when the recovered sig is written to the db
-    bool HasVotedOnId(Consensus::LLMQType llmqType, const uint256& id);
-    bool GetVoteForId(Consensus::LLMQType llmqType, const uint256& id, uint256& msgHashRet);
+    bool HasVotedOnId(Consensus::LLMQType llmqType, const uint256& id) const;
+    bool GetVoteForId(Consensus::LLMQType llmqType, const uint256& id, uint256& msgHashRet) const;
     void WriteVoteForId(Consensus::LLMQType llmqType, const uint256& id, const uint256& msgHash);
 
     void CleanupOldVotes(int64_t maxAge);
@@ -97,8 +144,8 @@ public:
 private:
     void MigrateRecoveredSigs();
 
-    bool ReadRecoveredSig(Consensus::LLMQType llmqType, const uint256& id, CRecoveredSig& ret);
-    void RemoveRecoveredSig(CDBBatch& batch, Consensus::LLMQType llmqType, const uint256& id, bool deleteHashKey, bool deleteTimeKey);
+    bool ReadRecoveredSig(Consensus::LLMQType llmqType, const uint256& id, CRecoveredSig& ret) const;
+    void RemoveRecoveredSig(CDBBatch& batch, Consensus::LLMQType llmqType, const uint256& id, bool deleteHashKey, bool deleteTimeKey) EXCLUSIVE_LOCKS_REQUIRED(cs);
 };
 
 class CRecoveredSigsListener
@@ -119,27 +166,27 @@ class CSigningManager
     static const int SIGN_HEIGHT_OFFSET = 8;
 
 private:
-    RecursiveMutex cs;
+    mutable RecursiveMutex cs;
 
     CConnman& connman;
     CRecoveredSigsDb db;
 
     // Incoming and not verified yet
-    std::unordered_map<NodeId, std::list<std::shared_ptr<const CRecoveredSig>>> pendingRecoveredSigs;
-    std::unordered_map<uint256, std::shared_ptr<const CRecoveredSig>, StaticSaltedHasher> pendingReconstructedRecoveredSigs;
+    std::unordered_map<NodeId, std::list<std::shared_ptr<const CRecoveredSig>>> pendingRecoveredSigs GUARDED_BY(cs);
+    std::unordered_map<uint256, std::shared_ptr<const CRecoveredSig>, StaticSaltedHasher> pendingReconstructedRecoveredSigs GUARDED_BY(cs);
 
     // must be protected by cs
-    FastRandomContext rnd;
+    FastRandomContext rnd GUARDED_BY(cs);
 
     int64_t lastCleanupTime{0};
 
-    std::vector<CRecoveredSigsListener*> recoveredSigsListeners;
+    std::vector<CRecoveredSigsListener*> recoveredSigsListeners GUARDED_BY(cs);
 
 public:
     CSigningManager(CConnman& _connman, bool fMemory, bool fWipe);
 
-    bool AlreadyHave(const CInv& inv);
-    bool GetRecoveredSigForGetData(const uint256& hash, CRecoveredSig& ret);
+    bool AlreadyHave(const CInv& inv) const;
+    bool GetRecoveredSigForGetData(const uint256& hash, CRecoveredSig& ret) const;
 
     void ProcessMessage(CNode* pnode, const std::string& strCommand, CDataStream& vRecv);
 
@@ -171,14 +218,14 @@ public:
     void UnregisterRecoveredSigsListener(CRecoveredSigsListener* l);
 
     bool AsyncSignIfMember(Consensus::LLMQType llmqType, const uint256& id, const uint256& msgHash, const uint256& quorumHash = uint256(), bool allowReSign = false);
-    bool HasRecoveredSig(Consensus::LLMQType llmqType, const uint256& id, const uint256& msgHash);
-    bool HasRecoveredSigForId(Consensus::LLMQType llmqType, const uint256& id);
-    bool HasRecoveredSigForSession(const uint256& signHash);
-    bool GetRecoveredSigForId(Consensus::LLMQType llmqType, const uint256& id, CRecoveredSig& retRecSig);
-    bool IsConflicting(Consensus::LLMQType llmqType, const uint256& id, const uint256& msgHash);
+    bool HasRecoveredSig(Consensus::LLMQType llmqType, const uint256& id, const uint256& msgHash) const;
+    bool HasRecoveredSigForId(Consensus::LLMQType llmqType, const uint256& id) const;
+    bool HasRecoveredSigForSession(const uint256& signHash) const;
+    bool GetRecoveredSigForId(Consensus::LLMQType llmqType, const uint256& id, CRecoveredSig& retRecSig) const;
+    bool IsConflicting(Consensus::LLMQType llmqType, const uint256& id, const uint256& msgHash) const;
 
-    bool HasVotedOnId(Consensus::LLMQType llmqType, const uint256& id);
-    bool GetVoteForId(Consensus::LLMQType llmqType, const uint256& id, uint256& msgHashRet);
+    bool HasVotedOnId(Consensus::LLMQType llmqType, const uint256& id) const;
+    bool GetVoteForId(Consensus::LLMQType llmqType, const uint256& id, uint256& msgHashRet) const;
 
     static std::vector<CQuorumCPtr> GetActiveQuorumSet(Consensus::LLMQType llmqType, int signHeight);
     static CQuorumCPtr SelectQuorumForSigning(Consensus::LLMQType llmqType, const uint256& selectionHash, int signHeight = -1 /*chain tip*/, int signOffset = SIGN_HEIGHT_OFFSET);

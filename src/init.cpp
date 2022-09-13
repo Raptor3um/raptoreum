@@ -71,7 +71,6 @@
 #include <flat-database.h>
 #include <governance/governance.h>
 #include <smartnode/smartnode-meta.h>
-#include <smartnode/smartnode-payments.h>
 #include <smartnode/smartnode-sync.h>
 #include <smartnode/smartnode-utils.h>
 #include <messagesigner.h>
@@ -81,6 +80,7 @@
 #include <walletinitinterface.h>
 
 #include <evo/deterministicmns.h>
+#include <llmq/quorums.h>
 #include <llmq/quorums_init.h>
 #include <llmq/quorums_blockprocessor.h>
 #include <llmq/quorums_signing.h>
@@ -134,15 +134,14 @@ static CDSNotificationInterface* pdsNotificationInterface = nullptr;
 #define MIN_CORE_FILEDESCRIPTORS 150
 #endif
 
-static const char* FEE_ESTIMATES_FILENAME="fee_estimates.dat";
+static const char* FEE_ESTIMATES_FILENAME = "fee_estimates.dat";
 
+static const char* DEFAULT_ASMAP_FILENAME = "ip_asn.map";
 /**
  * The PID file facilities.
  */
 #ifndef WIN32
 static const char* RAPTOREUM_PID_FILENAME = "raptoreumd.pid";
-
-static const char* DEFAULT_ASMAP_FILENAME = "ip_asn.map";
 
 static fs::path GetPidFile()
 {
@@ -291,13 +290,12 @@ void PrepareShutdown(NodeContext& node)
     }
 
     // FlushStateToDisk generates a ChainStateFlushed callback, which we should avoid missing
-    //
-    // g_chainstate is referenced here directly (instead of ::ChainstateActive()) because it
-    // may not have been initialized yet.
-    {
+    if (node.chainman) {
         LOCK(cs_main);
-        if (g_chainstate && g_chainstate->CanFlushToDisk()) {
-            g_chainstate->ForceFlushStateToDisk();
+        for (CChainState* chainstate : node.chainman->GetAll()) {
+            if (chainstate->CanFlushToDisk()) {
+                chainstate->ForceFlushStateToDisk();
+            }
         }
     }
 
@@ -307,11 +305,13 @@ void PrepareShutdown(NodeContext& node)
     // up with our current chain to avoid any strange pruning edge cases and make
     // next startup faster by avoiding rescan.
 
-    {
+    if (node.chainman) {
         LOCK(cs_main);
-        if (g_chainstate && g_chainstate->CanFlushToDisk()) {
-            g_chainstate->ForceFlushStateToDisk();
-            g_chainstate->ResetCoinsViews();
+        for (CChainState* chainstate : node.chainman->GetAll()) {
+            if (chainstate->CanFlushToDisk()) {
+                chainstate->ForceFlushStateToDisk();
+                chainstate->ResetCoinsViews();
+            }
         }
         pblocktree.reset();
         llmq::DestroyLLMQSystem();
@@ -379,7 +379,8 @@ void Shutdown(NodeContext& node)
     // Shutdown part 2: delete wallet instance
     globalVerifyHandle.reset();
     ECC_Stop();
-    if (node.mempool) node.mempool = nullptr;
+    node.mempool = nullptr;
+    node.chainman = nullptr;
     node.scheduler.reset();
     LogPrintf("%s: done\n", __func__);
 }
@@ -460,8 +461,7 @@ void SetupServerArgs()
     // Hidden Options
     std::vector<std::string> hidden_args = {"-h", "-help", "-dbcrashratio", "-forcecompactdb", "-printcrashinfo",
                                             // GUI Args. These will be overwritten by SetupUIArgs for the GUI
-                                            "-choosedatadir", "-lang=<lang>", "-min", "-resetguisettings", "-splash",
-                                            "-allowselfsignedrootcertificates", "-rootcertificates=<file>", "-uiplatform"};
+                                            "-choosedatadir", "-lang=<lang>", "-min", "-resetguisettings", "-splash", "-uiplatform"};
 
     // Set all of the args and their help
     // When adding new options to the categories, please keep and ensure alphabetical ordering.
@@ -477,6 +477,7 @@ void SetupServerArgs()
     gArgs.AddArg("-dbcache=<n>", strprintf("Set database cache size in megabytes (%d to %d, default: %d)", nMinDbCache, nMaxDbCache, nDefaultDbCache), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-powcachesize=<n>", strprintf("Set ProofOfWork cache size in megabytes (default: %d)", DEFAULT_POW_CACHE_SIZE), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-powcachevalidate", strprintf("Whether to validate ProofOfWork cache (default: %u)", DEFAULT_VALIDATE_POW_CACHE), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-powmaxloadsize", strprintf("Set ProofOfWork maximum elements to load (default: %d)", DEFAULT_MAX_LOAD_SIZE), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-debuglogfile=<file>", strprintf("Specify location of debug log file. Relative paths will be prefixed by a net-specific datadir location. (0 to disable; default: %s)", DEFAULT_DEBUGLOGFILE), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-includeconf=<file>", "Specify additional configuration file, relative to the -datadir path (only useable from configuration file, not command line)", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-loadblock=<file>", "Imports blocks from external blk000??.dat file on startup", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
@@ -811,7 +812,7 @@ static void CleanupBlockRevFiles()
     }
 }
 
-static void ThreadImport(std::vector<fs::path> vImportFiles)
+static void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImportFiles)
 {
     const CChainParams& chainparams = Params();
     util::ThreadRename("loadblk");
@@ -873,11 +874,17 @@ static void ThreadImport(std::vector<fs::path> vImportFiles)
     }
 
     // scan for better chains in the block chain database, that are not yet connected in the active best chain
-    CValidationState state;
-    if (!ActivateBestChain(state, chainparams)) {
-        LogPrintf("Failed to connect best block (%s)\n", FormatStateMessage(state));
-        StartShutdown();
-        return;
+
+    // We van not hold cs_main during ActivateBestChain even thought we are accessomg
+    // the chainman unique_ptr since ABC requires us not to be holding cs_main
+    // so retrieve the relevant pointers before the ABC call.
+    for (CChainState* chainstate : WITH_LOCK(::cs_main, return chainman.GetAll())) {
+        CValidationState state;
+        if (!chainstate->ActivateBestChain(state, chainparams, nullptr)) {
+            LogPrintf("Failed to connect best block (%s)\n", FormatStateMessage(state));
+            StartShutdown();
+            return;
+        }
     }
 
     if (gArgs.GetBoolArg("-stopafterblockimport", DEFAULT_STOPAFTERBLOCKIMPORT)) {
@@ -924,7 +931,7 @@ void PeriodicStats()
     assert(gArgs.GetBoolArg("-statsenabled", DEFAULT_STATSD_ENABLE));
     CCoinsStats stats;
     ::ChainstateActive().ForceFlushStateToDisk();
-    if (GetUTXOStats(&::ChainstateActive().CoinsDB(), stats)) {
+    if (WITH_LOCK(cs_main, return GetUTXOStats(&::ChainstateActive().CoinsDB(), stats, CoinStatsHashType::NONE))) {
         statsClient.gauge("utxoset.tx", stats.nTransactions, 1.0f);
         statsClient.gauge("utxoset.txOutputs", stats.nTransactionOutputs, 1.0f);
         statsClient.gauge("utxoset.dbSizeBytes", stats.nDiskSize, 1.0f);
@@ -957,7 +964,7 @@ void PeriodicStats()
     // No need for cs_main, we never use null tip here
     statsClient.gaugeDouble("network.difficulty", (double)GetDifficulty(tip));
 
-    statsClient.gauge("transactions.txCacheSize", ::ChainstateActive().CoinsTip().GetCacheSize(), 1.0f);
+    statsClient.gauge("transactions.txCacheSize", WITH_LOCK(cs_main, return ::ChainstateActive().CoinsTip().GetCacheSize()), 1.0f);
     statsClient.gauge("transactions.totalTransactions", tip->nChainTx, 1.0f);
 
     statsClient.gauge("transactions.mempool.totalTransactions", mempool.size(), 1.0f);
@@ -994,13 +1001,14 @@ static bool InitSanityCheck()
     return true;
 }
 
-static bool AppInitServers(const util::Ref& context)
+static bool AppInitServers(const util::Ref& context, NodeContext& node)
 {
     RPCServer::OnStarted(&OnRPCStarted);
     RPCServer::OnStopped(&OnRPCStopped);
     if (!InitHTTPServer())
         return false;
     StartRPC();
+    node.rpc_interruption_point = RpcInterruptionPoint;
     if (!StartHTTPRPC(context))
         return false;
     if (gArgs.GetBoolArg("-rest", DEFAULT_REST_ENABLE) && !StartREST(context))
@@ -1510,7 +1518,18 @@ bool AppInitLockDataDirectory()
     return true;
 }
 
-bool AppInitMain(const util::Ref& context, NodeContext& node)
+bool AppInitInterfaces(NodeContext& node)
+{
+    node.chain = interfaces::MakeChain(node);
+    // Create client interfaces for wallets that are supposed to be loaded
+    // according to -wallet and -disablewallet options. This only constructs
+    // the interfaces. It doesn't load wallet data. Wallets are actually
+    // get loaded when load() and start() interface methods are called below.
+    g_wallet_init_interface.Construct(node);
+    return true;
+}
+
+bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 {
     const CChainParams& chainparams = Params();
     // ********************************************************* Step 4a: application initialization
@@ -1617,12 +1636,6 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
 
     tableRPC.InitPlatformRestrictions();
 
-    // Create client interfaces for wallets that are supposed to be loaded
-    // according to -wallet and -disablewallet options. This only constructs
-    // the interfaces, it doesn't load wallet data. Wallets actually get loaded
-    // when load() and start() interface methods are called below.
-    g_wallet_init_interface.Construct(node);
-
     /* Register RPC commands regardless of -server setting so they will be
      * available in the GUI RPC console even if external calls are disabled.
      */
@@ -1642,7 +1655,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
     if (gArgs.GetBoolArg("-server", false))
     {
         uiInterface.InitMessage_connect(SetRPCWarmupStatus);
-        if (!AppInitServers(context))
+        if (!AppInitServers(context, node))
             return InitError(_("Unable to start HTTP server. See debug log for details."));
     }
 
@@ -1666,7 +1679,15 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
     assert(!node.connman);
     node.connman = std::make_unique<CConnman>(GetRand(std::numeric_limits<uint64_t>::max()), GetRand(std::numeric_limits<uint64_t>::max()));
 
-    node.peer_logic.reset(new PeerLogicValidation(node.connman.get(), node.banman.get(), *node.scheduler, gArgs.GetBoolArg("-enablebip61", DEFAULT_ENABLE_BIP61)));
+    // Make mempool generally available in the node context. For example the connection manager, wallet or RPC threads,
+    // which are all started after this, may use it from the node context.
+    assert(!node.mempool);
+    node.mempool = &::mempool;
+    assert(!node.chainman);
+    node.chainman = &g_chainman;
+    ChainstateManager& chainman = EnsureChainman(node);
+
+    node.peer_logic.reset(new PeerLogicValidation(node.connman.get(), node.banman.get(), *node.scheduler, *node.chainman, *node.mempool, gArgs.GetBoolArg("-enablebip61", DEFAULT_ENABLE_BIP61)));
     RegisterValidationInterface(node.peer_logic.get());
 
     // sanitize comments per BIP-0014, format user agent and check total size
@@ -1821,7 +1842,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
     int64_t nCoinDBCache = std::min(nTotalCache / 2, (nTotalCache / 4) + (1 << 23)); // use 25%-50% of the remainder for disk cache
     nCoinDBCache = std::min(nCoinDBCache, nMaxCoinsDBCache << 20); // cap total coins db cache
     nTotalCache -= nCoinDBCache;
-    nCoinCacheUsage = nTotalCache; // the rest goes to in-memory cache
+    int64_t nCoinCacheUsage = nTotalCache; // the rest goes to in-memory cache
     int64_t nMempoolSizeMax = gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000;
     int64_t nEvoDbCache = 1024 * 1024 * 16; // TODO
     LogPrintf("Cache configuration:\n");
@@ -1833,22 +1854,27 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
     LogPrintf("* Using %.1fMiB for in-memory UTXO set (plus up to %.1fMiB of unused mempool space)\n", nCoinCacheUsage * (1.0 / 1024 / 1024), nMempoolSizeMax * (1.0 / 1024 / 1024));
 
     bool fLoaded = false;
-    int64_t nStart = GetTimeMillis();
 
     while (!fLoaded && !ShutdownRequested()) {
         bool fReset = fReindex;
+        auto is_coinsview_empty = [&](CChainState* chainstate) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
+            return fReset || fReindexChainState || chainstate->CoinsTip().GetBestBlock().IsNull();
+        };
         std::string strLoadError;
 
         uiInterface.InitMessage(_("Loading block index..."));
 
-        LOCK(cs_main);
-
         do {
+            bool failed_verification = false;
             const int64_t load_block_index_start_time = GetTimeMillis();
+
             try {
-                // This statement makes ::ChainstateActive() usable.
-                g_chainstate = MakeUnique<CChainState>();
-                UnloadBlockIndex();
+                LOCK(cs_main);
+                chainman.InitializeChainstate();
+                chainman.m_total_coinstip_cache = nCoinCacheUsage;
+                chainman.m_total_coinsdb_cache = nCoinDBCache;
+
+                UnloadBlockIndex(node.mempool);
 
                 // new CBlockTreeDB tries to delete the existing file, which
                 // fails if it's still open from the previous loop. Close it first:
@@ -1861,7 +1887,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
                 deterministicMNManager.reset();
                 deterministicMNManager.reset(new CDeterministicMNManager(*evoDb, *node.connman));
 
-                llmq::InitLLMQSystem(*evoDb, *node.connman, false, fReset || fReindexChainState);
+                llmq::InitLLMQSystem(*evoDb, *node.mempool, *node.connman, false, fReset || fReindexChainState);
 
                 if (fReset) {
                     pblocktree->WriteReindexing(true);
@@ -1876,7 +1902,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
                 // block file from disk.
                 // Note that it also sets fReindex based on the disk flag!
                 // From here on out fReindex and fReset mean something different!
-                if (!LoadBlockIndex(chainparams)) {
+                if (!chainman.LoadBlockIndex(chainparams)) {
                     strLoadError = _("Error loading block database");
                     break;
                 }
@@ -1939,55 +1965,58 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
                 // At this point we're either in reindex or we've loaded a useful
                 // block tree into BlockIndex()!
 
-                ::ChainstateActive().InitCoinsDB(
-                    /* cache_size_bytes */ nCoinDBCache,
-                    /* in_memory */ false,
-                    /* should_wipe */ fReset || fReindexChainState);
+                bool failed_chainstate_init = false;
+                for (CChainState* chainstate : chainman.GetAll()) {
+                    LogPrintf("Initializing chainstate %s\n", chainstate->ToString());
+                    chainstate->InitCoinsDB(/* cache_size_bytes */ nCoinDBCache,
+                                            /* in_memory */ false,
+                                            /* should_wpe */ fReset || fReindexChainState);
 
-                ::ChainstateActive().CoinsErrorCatcher().AddReadErrCallback([]() {
-                    uiInterface.ThreadSafeMessageBox(
-                        _("Error reading from database, shutting down."),
+                    chainstate->CoinsErrorCatcher().AddReadErrCallback([]() {
+                        uiInterface.ThreadSafeMessageBox(_("Error reading from database, shutting down."),
                         "", CClientUIInterface::MSG_ERROR);
-                });
+                    });
 
-                // If necessary, upgrade from older database format.
-                // This is a no-op if we cleared the coinsviewdb with -reindex or -reindex-chainstate
-                if (!::ChainstateActive().CoinsDB().Upgrade()) {
-                    strLoadError = _("Error upgrading chainstate database");
-                    break;
-                }
+                    // If necessary, upgrade from older database format.
+                    // This is a no-op if we cleared the coinsviewdb with -reindex or -reindex-chainstate
+                    if (!chainstate->CoinsDB().Upgrade()) {
+                        strLoadError = _("Error upgrading chainstate database");
+                        failed_chainstate_init = true;
+                        break;
+                    }
 
-                // ReplayBlocks is a no-op if we cleared the coinsviewdb with -reindex or -reindex-chainstate
-                if (!::ChainstateActive().ReplayBlocks(chainparams)) {
-                    strLoadError = _("Unable to replay blocks. You will need to rebuild the database using -reindex-chainstate.");
-                    break;
-                }
+                    // Replay blocks is a no-op if we cleared the coinsviewDB with -reindex or -reindex-chainstate
+                    if (!chainstate->ReplayBlocks(chainparams)) {
+                        strLoadError = _("Unable to rerply blocks. You will need tpo rebuild the database using -reindex-chainstate.");
+                        failed_chainstate_init = true;
+                        break;
+                    }
 
-                // The on-disk coinsdb is now in a good state, create the cache
-                ::ChainstateActive().InitCoinsCache();
-                assert(::ChainstateActive().CanFlushToDisk());
+                    // The on-disc coinsdb is now in a good state, create cache
+                    chainstate->InitCoinsCache(nCoinCacheUsage);
+                    assert(chainstate->CanFlushToDisk());
 
-                // flush evodb
-                if (!evoDb->CommitRootTransaction()) {
-                    strLoadError = _("Failed to commit EvoDB");
-                    break;
-                }
-
-                bool is_coinsview_empty = fReset || fReindexChainState ||
-                    ::ChainstateActive().CoinsTip().GetBestBlock().IsNull();
-                if (!is_coinsview_empty) {
-                    // LoadChainTip initializes the chain based on CoinsTip()'s best block
-                    if (!::ChainstateActive().LoadChainTip(chainparams)) {
+                    // flush evodb
+                    if (&::ChainstateActive() == chainstate && !evoDb->CommitRootTransaction()) {
+                        strLoadError = _("Failed to commit EvoDB");
+                        failed_chainstate_init = true;
                         strLoadError = _("Error initializing block database");
                         break;
                     }
-                    assert(::ChainActive().Tip() != NULL);
+
+                    if (!is_coinsview_empty(chainstate)) {
+                        // LoadChainTip initializes the chain based on CoinsTip()'s best block
+                        if (!chainstate->LoadChainTip(chainparams)) {
+                            strLoadError = _("Error initializing block database");
+                            failed_chainstate_init = true;
+                            break; // out of the per-chainstate loop
+                        }
+                        assert(chainstate->m_chain.Tip() != nullptr);
+                    }
                 }
 
-                if (is_coinsview_empty && !evoDb->IsEmpty()) {
-                    // EvoDB processed some blocks earlier but we have no blocks anymore, something is wrong
-                    strLoadError = _("Error initializing block database");
-                    break;
+                if (failed_chainstate_init) {
+                    break; // out of the chainstate activation do-while
                 }
 
                 if (!deterministicMNManager->UpgradeDBIfNeeded() || !llmq::quorumBlockProcessor->UpgradeDB()) {
@@ -1995,38 +2024,57 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
                     break;
                 }
 
-                if (!is_coinsview_empty) {
-                    uiInterface.InitMessage(_("Verifying blocks..."));
-                    if (fHavePruned && gArgs.GetArg("-checkblocks", DEFAULT_CHECKBLOCKS) > MIN_BLOCKS_TO_KEEP) {
-                        LogPrintf("Prune: pruned datadir may not have more than %d blocks; only checking available blocks\n",
-                            MIN_BLOCKS_TO_KEEP);
+                for (CChainState* chainstate : chainman.GetAll()) {
+                    if (!is_coinsview_empty(chainstate)) {
+                        uiInterface.InitMessage(_("Verifying blocks..."));
+                        if (fHavePruned && gArgs.GetArg("-checkblocks", DEFAULT_CHECKBLOCKS) > MIN_BLOCKS_TO_KEEP) {
+                            LogPrintf("Prune: pruned datadir may not have more than %d blocks. Only checking available blocks\n", MIN_BLOCKS_TO_KEEP);
+                        }
+
+                        CBlockIndex* tip = chainstate->m_chain.Tip();
+                        RPCNotifyBlockChange(true, tip);
+                        if (tip && tip->nTime > GetAdjustedTime() + 7200) {
+                            strLoadError = _("The block database contains a block which appears to be from the future. "
+                                             "This may only be due to your computer's date and time being set incorrectly. "
+                                             "Only rebuild the block database if you are sure that your computer's date and time are correct.");
+                            failed_verification = true;
+                            break;
+                        }
+
+                        // Only verify the DB of the active chainstate. This is fixed in later
+                        // work when we allow VerifyDB to be parameterized by chainstate.
+                        if (&::ChainstateActive() == chainstate && !CVerifyDB().VerifyDB(chainparams, &chainstate->CoinsDB(),
+                                                     gArgs.GetArg("-checklevel", DEFAULT_CHECKLEVEL),
+                                                     gArgs.GetArg("-checkblocks", DEFAULT_CHECKBLOCKS)))
+                        {
+                            strLoadError = _("Corrupted block database detected");
+                            failed_verification = true;
+                            break;
+                        }
+                    } else {
+                        if (&::ChainstateActive() == chainstate && !evoDb->IsEmpty()) {
+                            // EvoDB processed some blocks earlier but we have no blocks anymore, something is not right
+                            strLoadError = _("Error initializing block database");
+                            failed_verification = true;
+                            break;
+                        }
                     }
 
-                    CBlockIndex* tip = ::ChainActive().Tip();
-                    RPCNotifyBlockChange(true, tip);
-                    if (tip && tip->nTime > GetAdjustedTime() + 7200) {
-                        strLoadError = _("The block database contains a block which appears to be from the future. "
-                                "This may be due to your computer's date and time being set incorrectly. "
-                                "Only rebuild the block database if you are sure that your computer's date and time are correct");
-                        break;
+                    if (gArgs.GetArg("-checklevel", DEFAULT_CHECKLEVEL) >= 3) {
+                        ResetBlockFailureFlags(nullptr);
                     }
-
-                    if (!CVerifyDB().VerifyDB(chainparams, &::ChainstateActive().CoinsDB(), gArgs.GetArg("-checklevel", DEFAULT_CHECKLEVEL),
-                                  gArgs.GetArg("-checkblocks", DEFAULT_CHECKBLOCKS))) {
-                        strLoadError = _("Corrupted block database detected");
-                        break;
-                    }
-
-                    ResetBlockFailureFlags(nullptr);
                 }
             } catch (const std::exception& e) {
                 LogPrintf("%s\n", e.what());
                 strLoadError = _("Error opening block database");
+                failed_verification = true;
                 break;
             }
 
-            fLoaded = true;
-            LogPrintf(" block index %15dms\n", GetTimeMillis() - load_block_index_start_time);
+            if (!failed_verification) {
+                fLoaded = true;
+                LogPrintf(" block index %15dms\n", GetTimeMillis() - load_block_index_start_time);
+            }
         } while(false);
 
         if (!fLoaded && !ShutdownRequested()) {
@@ -2057,11 +2105,6 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
         return false;
     }
 
-    // Now that the chain state is loaded, make mempool generally available in the node context. For example the
-    // connection manager, wallet, or RPC threads, which are all started after this, may use it from the node context.
-    assert(!node.mempool);
-    node.mempool = &::mempool;
-
     fs::path est_path = GetDataDir() / FEE_ESTIMATES_FILENAME;
     CAutoFile est_filein(fsbridge::fopen(est_path, "rb"), SER_DISK, CLIENT_VERSION);
     // Allowed to fail as this file IS missing on first startup.
@@ -2075,6 +2118,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
         fs::path pathDB = GetDataDir();
         std::string strDBName = "powcache.dat";
 
+        LOCK(cs_pow);
         // Always load the powcache if available:
         uiInterface.InitMessage(_("Loading POW cache..."));
         CFlatDB<CPowCache> flatdb7(strDBName, "powCache");
@@ -2111,8 +2155,11 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
         LogPrintf("Unsetting NODE_NETWORK on prune mode\n");
         nLocalServices = ServiceFlags(nLocalServices & ~NODE_NETWORK);
         if (!fReindex) {
-            uiInterface.InitMessage(_("Pruning blockstore..."));
-            ::ChainstateActive().PruneAndFlush();
+            LOCK(cs_main);
+            for (CChainState* chainstate : chainman.GetAll()) {
+                uiInterface.InitMessage(_("Pruning blockstore..."));
+                chainstate->PruneAndFlush();
+            }
         }
     }
 
@@ -2161,7 +2208,6 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
     // ********************************************************* Step 10b: setup CoinJoin
 
     g_wallet_init_interface.InitCoinJoinSettings();
-    CCoinJoin::InitStandardDenominations();
 
     // ********************************************************* Step 10b: Load cache data
 
@@ -2271,7 +2317,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
         vImportFiles.push_back(strFile);
     }
 
-    threadGroup.create_thread(std::bind(&ThreadImport, vImportFiles));
+    threadGroup.create_thread([=, &chainman] { ThreadImport(chainman, vImportFiles); });
 
     // Wait for genesis block to be processed
     {
@@ -2301,6 +2347,16 @@ bool AppInitMain(const util::Ref& context, NodeContext& node)
         LOCK(cs_main);
         LogPrintf("block tree size = %u\n", ::BlockIndex().size());
         chain_active_height = ::ChainActive().Height();
+        if (tip_info) {
+            tip_info->block_height = chain_active_height;
+            tip_info->block_time = ::ChainActive().Tip() ? ::ChainActive().Tip()->GetBlockTime() : Params().GenesisBlock().GetBlockTime();
+            tip_info->block_hash = ::ChainActive().Tip() ? ::ChainActive().Tip()->GetBlockHash() : Params().GenesisBlock().GetHash();
+            tip_info->verification_progress = GuessVerificationProgress(Params().TxData(), ::ChainActive().Tip());
+        }
+        if (tip_info && ::pindexBestHeader) {
+            tip_info->header_height = ::pindexBestHeader->nHeight;
+            tip_info->header_time = ::pindexBestHeader->GetBlockTime();
+        }
     }
     LogPrintf("::ChainActive().Height() = %d\n", chain_active_height);
     if (gArgs.GetBoolArg("-listenonion", DEFAULT_LISTEN_ONION))

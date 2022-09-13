@@ -11,7 +11,6 @@
 #include <chainparams.h>
 #include <consensus/consensus.h>
 #include <consensus/validation.h>
-#include <crypto/common.h>
 #include <fs.h>
 #include <interfaces/chain.h>
 #include <interfaces/wallet.h>
@@ -43,6 +42,7 @@
 #include <coinjoin/coinjoin-client.h>
 #include <coinjoin/coinjoin-client-options.h>
 #include <governance/governance.h>
+#include <evo/deterministicmns.h>
 
 #include <evo/providertx.h>
 
@@ -187,11 +187,6 @@ std::shared_ptr<CWallet> LoadWallet(interfaces::Chain& chain, const WalletLocati
     auto wallet = LoadWalletInternal(chain, location, error, warning);
     WITH_LOCK(g_loading_wallet_mutex, g_loading_wallet_set.erase(result.first));
     return wallet;
-}
-
-std::shared_ptr<CWallet> LoadWallet(interfaces::Chain& chain, const std::string& name, std::string& error, std::string& warning)
-{
-    return LoadWallet(chain, WalletLocation(name), error, warning);
 }
 
 WalletCreationStatus CreateWallet(interfaces::Chain& chain, const SecureString& passphrase, uint64_t wallet_creation_flags, const std::string& name, std::string& error, std::string& warning, std::shared_ptr<CWallet>& result)
@@ -2274,7 +2269,7 @@ int64_t CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *wall
     // Look up the inputs.  We should have already checked that this transaction
     // IsAllFromMe(ISMINE_SPENDABLE), so every input should already be in our
     // wallet, with a valid index into the vout array, and the ability to sign.
-    for (auto& input : tx.vin) {
+    for (const CTxIn& input : tx.vin) {
         const auto mi = wallet->mapWallet.find(input.prevout.hash);
         if (mi == wallet->mapWallet.end()) {
             return -1;
@@ -2538,7 +2533,7 @@ void CWallet::ReacceptWalletTransactions()
     }
 
     // Try to add wallet transactions to memory pool
-    for (std::pair<const int64_t, CWalletTx*>& item : mapSorted) {
+    for (const std::pair<const int64_t, CWalletTx*>& item : mapSorted) {
         CWalletTx& wtx = *(item.second);
         std::string unused_err_string;
         wtx.SubmitMemoryPoolAndRelay(unused_err_string, false);
@@ -2987,8 +2982,8 @@ CAmount CWallet::GetAnonymizableBalance(bool fSkipDenominated, bool fSkipUnconfi
 {
     if (!CCoinJoinClientOptions::IsEnabled()) return 0;
 
-    std::vector<CompactTallyItem> vecTally;
-    if(!SelectCoinsGroupedByAddresses(vecTally, fSkipDenominated, true, fSkipUnconfirmed)) return 0;
+    std::vector<CompactTallyItem> vecTally = SelectCoinsGroupedByAddresses(fSkipDenominated, true, fSkipUnconfirmed);
+    if (vecTally.empty()) return 0;
 
     CAmount nTotal = 0;
 
@@ -3209,26 +3204,23 @@ std::map<CTxDestination, std::vector<COutput>> CWallet::ListCoins() const
 
     AvailableCoins(availableCoins);
 
-    for (auto& coin : availableCoins) {
+    for (const COutput& coin : availableCoins) {
         CTxDestination address;
-        if (coin.fSpendable &&
-            ExtractDestination(FindNonChangeParentOutput(*coin.tx->tx, coin.i).scriptPubKey, address)) {
+        if (coin.fSpendable && ExtractDestination(FindNonChangeParentOutput(*coin.tx->tx, coin.i).scriptPubKey, address)) {
             result[address].emplace_back(std::move(coin));
         }
     }
 
     std::vector<COutPoint> lockedCoins;
     ListLockedCoins(lockedCoins);
-    for (const auto& output : lockedCoins) {
+    for (const COutPoint& output : lockedCoins) {
         auto it = mapWallet.find(output.hash);
         if (it != mapWallet.end()) {
             int depth = it->second.GetDepthInMainChain();
-            if (depth >= 0 && output.n < it->second.tx->vout.size() &&
-                IsMine(it->second.tx->vout[output.n]) == ISMINE_SPENDABLE) {
+            if (depth >= 0 && output.n < it->second.tx->vout.size() && IsMine(it->second.tx->vout[output.n]) == ISMINE_SPENDABLE) {
                 CTxDestination address;
                 if (ExtractDestination(FindNonChangeParentOutput(*it->second.tx, output.n).scriptPubKey, address)) {
-                    result[address].emplace_back(
-                        &it->second, output.n, depth, true /* spendable */, true /* solvable */, false /* safe */, it->second.tx->nType == TRANSACTION_FUTURE, it->second.isFutureSpendable(output.n));
+                    result[address].emplace_back(&it->second, output.n, depth, true /* spendable */, true /* solvable */, false /* safe */, it->second.tx->nType == TRANSACTION_FUTURE, it->second.isFutureSpendable(output.n));
                 }
             }
         }
@@ -3409,8 +3401,11 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
     // automatically have their associated (same address) coins included
     std::vector<OutputGroup> groups = GroupOutputs(vCoins, !coin_control.m_avoid_partial_spends);
 
-    size_t max_ancestors = (size_t)std::max<int64_t>(1, gArgs.GetArg("-limitancestorcount", DEFAULT_ANCESTOR_LIMIT));
-    size_t max_descendants = (size_t)std::max<int64_t>(1, gArgs.GetArg("-limitdescendantcount", DEFAULT_DESCENDANT_LIMIT));
+    unsigned int limit_ancestor_count;
+    unsigned int limit_descendant_count;
+    chain().getPackageLimits(limit_ancestor_count, limit_descendant_count);
+    size_t max_ancestors = (size_t)std::max<int64_t>(1, limit_ancestor_count);
+    size_t max_descendants = (size_t)std::max<int64_t>(1, limit_descendant_count);
     bool fRejectLongChains = gArgs.GetBoolArg("-walletrejectlongchains", DEFAULT_WALLET_REJECT_LONG_CHAINS);
 
     bool res = nTargetValue <= nValueFromPresetInputs ||
@@ -3591,7 +3586,7 @@ static uint32_t GetLocktimeForNewTransaction(interfaces::Chain& chain)
     return locktime;
 }
 
-bool CWallet::SelectCoinsGroupedByAddresses(std::vector<CompactTallyItem>& vecTallyRet, bool fSkipDenominated, bool fAnonymizable, bool fSkipUnconfirmed, int nMaxOupointsPerAddress) const
+std::vector<CompactTallyItem> CWallet::SelectCoinsGroupedByAddresses(bool fSkipDenominated, bool fAnonymizable, bool fSkipUnconfirmed, int nMaxOupointsPerAddress) const
 {
     LOCK(cs_wallet);
 
@@ -3601,14 +3596,12 @@ bool CWallet::SelectCoinsGroupedByAddresses(std::vector<CompactTallyItem>& vecTa
     // This should only be used if nMaxOupointsPerAddress was NOT specified.
     if(nMaxOupointsPerAddress == -1 && fAnonymizable && fSkipUnconfirmed) {
         if(fSkipDenominated && fAnonymizableTallyCachedNonDenom) {
-            vecTallyRet = vecAnonymizableTallyCachedNonDenom;
-            LogPrint(BCLog::SELECTCOINS, "SelectCoinsGroupedByAddresses - using cache for non-denom inputs %d\n", vecTallyRet.size());
-            return vecTallyRet.size() > 0;
+            LogPrint(BCLog::SELECTCOINS, "SelectCoinsGroupedByAddresses - using cache for non-denom inputs %d\n", vecAnonymizableTallyCachedNonDenom.size());
+            return vecAnonymizableTallyCachedNonDenom;
         }
         if(!fSkipDenominated && fAnonymizableTallyCached) {
-            vecTallyRet = vecAnonymizableTallyCached;
-            LogPrint(BCLog::SELECTCOINS, "SelectCoinsGroupedByAddresses - using cache for all inputs %d\n", vecTallyRet.size());
-            return vecTallyRet.size() > 0;
+            LogPrint(BCLog::SELECTCOINS, "SelectCoinsGroupedByAddresses - using cache for all inputs %d\n", vecAnonymizableTallyCached.size());
+            return vecAnonymizableTallyCached;
         }
     }
 
@@ -3639,7 +3632,7 @@ bool CWallet::SelectCoinsGroupedByAddresses(std::vector<CompactTallyItem>& vecTa
             if(!(mine & filter)) continue;
 
             auto itTallyItem = mapTally.find(txdest);
-            if (nMaxOupointsPerAddress != -1 && itTallyItem != mapTally.end() && itTallyItem->second.vecInputCoins.size() >= nMaxOupointsPerAddress) continue;
+            if (nMaxOupointsPerAddress != -1 && itTallyItem != mapTally.end() && int64_t(itTallyItem->second.vecInputCoins.size()) >= nMaxOupointsPerAddress) continue;
 
             if(IsSpent(outpoint.hash, i) || IsLockedCoin(outpoint.hash, i)) continue;
 
@@ -3667,7 +3660,7 @@ bool CWallet::SelectCoinsGroupedByAddresses(std::vector<CompactTallyItem>& vecTa
 
     // construct resulting vector
     // NOTE: vecTallyRet is "sorted" by txdest (i.e. address), just like mapTally
-    vecTallyRet.clear();
+    std::vector<CompactTallyItem> vecTallyRet;
     for (const auto& item : mapTally) {
         if(fAnonymizable && item.second.nAmount < nSmallestDenom) continue;
         vecTallyRet.push_back(item.second);
@@ -3693,7 +3686,7 @@ bool CWallet::SelectCoinsGroupedByAddresses(std::vector<CompactTallyItem>& vecTa
         LogPrint(BCLog::SELECTCOINS, "%s", strMessage); /* Continued */
     }
 
-    return vecTallyRet.size() > 0;
+    return vecTallyRet;
 }
 
 bool CWallet::SelectDenominatedAmounts(CAmount nValueMax, std::set<CAmount>& setAmountsRet) const
@@ -4415,11 +4408,11 @@ bool CWallet::NewKeyPool()
     {
         LOCK(cs_wallet);
         WalletBatch batch(*database);
-        for (int64_t nIndex : setInternalKeyPool) {
+        for (const int64_t nIndex : setInternalKeyPool) {
             batch.ErasePool(nIndex);
         }
         setInternalKeyPool.clear();
-        for (int64_t nIndex : setExternalKeyPool) {
+        for (const int64_t nIndex : setExternalKeyPool) {
             batch.ErasePool(nIndex);
         }
         setExternalKeyPool.clear();
@@ -4720,7 +4713,7 @@ std::set< std::set<CTxDestination> > CWallet::GetAddressGroupings()
         {
             bool any_mine = false;
             // group all input addresses with each other
-            for (CTxIn txin : pcoin->tx->vin)
+            for (const CTxIn& txin : pcoin->tx->vin)
             {
                 CTxDestination address;
                 if(!IsMine(txin)) /* If this input isn't mine, ignore it */
@@ -4734,7 +4727,7 @@ std::set< std::set<CTxDestination> > CWallet::GetAddressGroupings()
             // group change with input addresses
             if (any_mine)
             {
-               for (CTxOut txout : pcoin->tx->vout)
+               for (const CTxOut& txout : pcoin->tx->vout)
                    if (IsChange(txout))
                    {
                        CTxDestination txoutAddr;
@@ -4770,7 +4763,7 @@ std::set< std::set<CTxDestination> > CWallet::GetAddressGroupings()
         // make a set of all the groups hit by this new group
         std::set< std::set<CTxDestination>* > hits;
         std::map< CTxDestination, std::set<CTxDestination>* >::iterator it;
-        for (CTxDestination address : _grouping)
+        for (const CTxDestination& address : _grouping)
             if ((it = setmap.find(address)) != setmap.end())
                 hits.insert((*it).second);
 
@@ -4785,12 +4778,12 @@ std::set< std::set<CTxDestination> > CWallet::GetAddressGroupings()
         uniqueGroupings.insert(merged);
 
         // update setmap
-        for (CTxDestination element : *merged)
+        for (const CTxDestination& element : *merged)
             setmap[element] = merged;
     }
 
     std::set< std::set<CTxDestination> > ret;
-    for (std::set<CTxDestination>* uniqueGrouping : uniqueGroupings)
+    for (const std::set<CTxDestination>* uniqueGrouping : uniqueGroupings)
     {
         ret.insert(*uniqueGrouping);
         delete uniqueGrouping;

@@ -8,6 +8,7 @@
 
 #include <chainparamsbase.h>
 #include <consensus/params.h>
+#include <llmq/quorums_parameters.h>
 #include <primitives/block.h>
 #include <protocol.h>
 #include <chain.h>
@@ -102,9 +103,7 @@ public:
     void UpdateLLMQInstantSend(Consensus::LLMQType llmqType);
     void UpdateLLMQParams(size_t totalMnCount, int height, bool lowLLMQParams = false);
     int PoolMinParticipants() const { return nPoolMinParticipants; }
-    int PoolNewMinParticipants() const { return nPoolNewMinParticipants; }
     int PoolMaxParticipants() const { return nPoolMaxParticipants; }
-    int PoolNewMaxParticipants() const { return nPoolNewMaxParticipants; }
     int FulfilledRequestExpireTime() const { return nFulfilledRequestExpireTime; }
     bool IsFutureActive(CBlockIndex *index) const {
         int height = index == nullptr ? 0 : index->nHeight;
@@ -113,6 +112,7 @@ public:
     const std::vector<std::string>& SporkAddresses() const { return vSporkAddresses; }
     int MinSporkKeys() const { return nMinSporkKeys; }
     bool BIP9CheckSmartnodesUpgraded() const { return fBIP9CheckSmartnodesUpgraded; }
+
 protected:
     CChainParams() {}
 
@@ -148,7 +148,6 @@ protected:
     std::vector<std::string> vSporkAddresses;
     int nMinSporkKeys;
     bool fBIP9CheckSmartnodesUpgraded;
-
 };
 
 /**

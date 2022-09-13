@@ -533,8 +533,8 @@ private:
     // Network usage totals
     RecursiveMutex cs_totalBytesRecv;
     RecursiveMutex cs_totalBytesSent;
-    uint64_t nTotalBytesRecv GUARDED_BY(cs_totalBytesRecv);
-    uint64_t nTotalBytesSent GUARDED_BY(cs_totalBytesSent);
+    uint64_t nTotalBytesRecv GUARDED_BY(cs_totalBytesRecv) {0};
+    uint64_t nTotalBytesSent GUARDED_BY(cs_totalBytesSent) {0};
 
     // outbound limit & stats
     uint64_t nMaxOutboundTotalBytesSentInCycle GUARDED_BY(cs_totalBytesSent);
@@ -549,28 +549,28 @@ private:
     // whitelisted (as well as those connecting to whitelisted binds).
     std::vector<CSubNet> vWhitelistedRange;
 
-    unsigned int nSendBufferMaxSize;
-    unsigned int nReceiveFloodSize;
+    unsigned int nSendBufferMaxSize{0};
+    unsigned int nReceiveFloodSize{0};
 
     std::vector<ListenSocket> vhListenSocket;
-    std::atomic<bool> fNetworkActive;
-    bool fAddressesInitialized;
+    std::atomic<bool> fNetworkActive{true};
+    bool fAddressesInitialized{false};
     CAddrMan addrman;
     std::deque<std::string> vOneShots GUARDED_BY(cs_vOneShots);
     RecursiveMutex cs_vOneShots;
     std::vector<std::string> vAddedNodes GUARDED_BY(cs_vAddedNodes);
     RecursiveMutex cs_vAddedNodes;
     std::vector<uint256> vPendingSmartnodes;
-    std::map<std::pair<Consensus::LLMQType, uint256>, std::set<uint256>> smartnodeQuorumNodes; // protected by cs_vPendingSmartnodes
-    std::map<std::pair<Consensus::LLMQType, uint256>, std::set<uint256>> smartnodeQuorumRelayMembers; // protected by cs_vPendingSmartnodes
-    std::set<uint256> smartnodePendingProbes;
     mutable RecursiveMutex cs_vPendingSmartnodes;
-    std::vector<CNode*> vNodes;
+    std::map<std::pair<Consensus::LLMQType, uint256>, std::set<uint256>> smartnodeQuorumNodes GUARDED_BY(cs_vPendingSmartnodes);
+    std::map<std::pair<Consensus::LLMQType, uint256>, std::set<uint256>> smartnodeQuorumRelayMembers GUARDED_BY(cs_vPendingSmartnodes);
+    std::set<uint256> smartnodePendingProbes GUARDED_BY(cs_vPendingSmartnodes);
+    std::vector<CNode*> vNodes GUARDED_BY(cs_vNodes);
     std::list<CNode*> vNodesDisconnected;
     std::unordered_map<SOCKET, CNode*> mapSocketToNode;
     mutable RecursiveMutex cs_vNodes;
-    std::atomic<NodeId> nLastNodeId;
-    unsigned int nPrevNodeCount;
+    std::atomic<NodeId> nLastNodeId{0};
+    unsigned int nPrevNodeCount{0};
 
     /**
      * Services this instance offers.
@@ -606,7 +606,7 @@ private:
 
     std::condition_variable condMsgProc;
     Mutex mutexMsgProc;
-    std::atomic<bool> flagInterruptMsgProc;
+    std::atomic<bool> flagInterruptMsgProc{false};
 
     CThreadInterrupt interruptNet;
 
@@ -888,7 +888,7 @@ public:
     // If 'true', we identified it as an intra-quorum relay connection
     std::atomic<bool> m_smartnode_iqr_connection{false};
     CSemaphoreGrant grantOutbound;
-    RecursiveMutex cs_filter;
+    mutable RecursiveMutex cs_filter;
     std::unique_ptr<CBloomFilter> pfilter PT_GUARDED_BY(cs_filter){nullptr};
     std::atomic<int> nRefCount;
 

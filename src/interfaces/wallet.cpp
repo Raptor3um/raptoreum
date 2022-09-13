@@ -5,23 +5,22 @@
 #include <interfaces/wallet.h>
 
 #include <amount.h>
-#include <chain.h>
+//#include <chain.h>
 #include <coinjoin/coinjoin-client.h>
-#include <init.h>
+//#include <init.h>
 #include <interfaces/chain.h>
 #include <interfaces/handler.h>
-#include <net.h>
+//#include <net.h>
 #include <policy/fees.h>
-#include <policy/policy.h>
+//#include <policy/policy.h>
 #include <primitives/transaction.h>
 #include <rpc/server.h>
 #include <scheduler.h>
-#include <script/ismine.h>
 #include <script/standard.h>
 #include <support/allocators/secure.h>
 #include <sync.h>
-#include <timedata.h>
-#include <txmempool.h> // for mempool.cs
+//#include <timedata.h>
+//#include <txmempool.h> // for mempool.cs
 #include <ui_interface.h>
 #include <uint256.h>
 #include <util/system.h>
@@ -29,10 +28,11 @@
 #include <validation.h>
 #include <wallet/context.h>
 #include <wallet/fees.h>
+#include <wallet/ismine.h>
 #include <wallet/rpcwallet.h>
 #include <wallet/load.h>
 #include <wallet/wallet.h>
-#include <wallet/walletutil.h>
+//#include <wallet/walletutil.h>
 
 #include <memory>
 #include <string>
@@ -61,9 +61,7 @@ static WalletTx MakeWalletTx(CWallet& wallet, const CWalletTx& wtx)
     for (const auto& txout : wtx.tx->vout) {
         result.txout_is_mine.emplace_back(wallet.IsMine(txout));
         result.txout_address.emplace_back();
-        result.txout_address_is_mine.emplace_back(ExtractDestination(txout.scriptPubKey, result.txout_address.back()) ?
-                                                      IsMine(wallet, result.txout_address.back()) :
-                                                      ISMINE_NO);
+        result.txout_address_is_mine.emplace_back(ExtractDestination(txout.scriptPubKey, result.txout_address.back()) ? IsMine(wallet, result.txout_address.back()) : ISMINE_NO);
         if (!fOutputDenomFound && result.txout_address_is_mine.back() && CCoinJoin::IsDenominatedAmount(txout.nValue)) {
             fOutputDenomFound = true;
         }
@@ -76,9 +74,9 @@ static WalletTx MakeWalletTx(CWallet& wallet, const CWalletTx& wtx)
     result.is_coinbase = wtx.IsCoinBase();
     // The determination of is_denominate is based on simplified checks here because in this part of the code
     // we only want to know about mixing transactions belonging to this specific wallet.
-    result.is_denominate = wtx.tx->vin.size() == wtx.tx->vout.size() && // Number of inputs is same as number of outputs
-                           (result.credit - result.debit) == 0 && // Transaction pays no tx fee
-                           fInputDenomFound && fOutputDenomFound; // At least 1 input and 1 output are denominated belonging to the provided wallet
+    result.is_denominate = (wtx.tx->vin.size() == wtx.tx->vout.size()) // Number of inputs is same as number of outputs
+                           && ((result.credit - result.debit) == 0)    // Transaction pays no tx fee
+                           && fInputDenomFound && fOutputDenomFound;   // At least 1 input and 1 output are denominated belonging to the provided wallet
     return result;
 }
 
@@ -158,8 +156,6 @@ public:
 class WalletImpl : public Wallet
 {
 public:
-    CoinJoinImpl m_coinjoin;
-
     WalletImpl(const std::shared_ptr<CWallet>& wallet) : m_wallet(wallet), m_coinjoin(wallet) {}
 
     void markDirty() override
@@ -258,7 +254,7 @@ public:
         LOCK(m_wallet->cs_wallet);
         return m_wallet->ListProTxCoins(outputs);
     }
-    CTransactionRef  createTransaction(const std::vector<CRecipient>& recipients,
+    CTransactionRef createTransaction(const std::vector<CRecipient>& recipients,
         const CCoinControl& coin_control,
         bool sign,
         int& change_pos,
@@ -512,12 +508,12 @@ public:
     std::unique_ptr<Handler> handleInstantLockReceived(InstantLockReceivedFn fn) override
     {
         return MakeHandler(m_wallet->NotifyISLockReceived.connect(
-            [fn, this]() { fn(); }));
+            [fn]() { fn(); }));
     }
     std::unique_ptr<Handler> handleChainLockReceived(ChainLockReceivedFn fn) override
     {
         return MakeHandler(m_wallet->NotifyChainLockReceived.connect(
-            [fn, this](int chainLockHeight) { fn(chainLockHeight); }));
+            [fn](int chainLockHeight) { fn(chainLockHeight); }));
     }
     std::unique_ptr<Handler> handleWatchOnlyChanged(WatchOnlyChangedFn fn) override
     {
@@ -530,9 +526,10 @@ public:
     CWallet* wallet() override { return m_wallet.get(); }
 
     std::shared_ptr<CWallet> m_wallet;
+    CoinJoinImpl m_coinjoin;
 };
 
-class WalletClientImpl : public ChainClient
+class WalletClientImpl : public WalletClient
 {
 public:
     WalletClientImpl(Chain& chain, std::vector<std::string> wallet_filenames)
@@ -540,6 +537,9 @@ public:
     {
         m_context.chain = &chain;
     }
+    ~WalletClientImpl() override { UnloadWallets(); }
+
+    //! ChainClient methods
     void registerRpcs() override
     {
         for (const CRPCCommand& command : GetWalletRPCCommands()) {
@@ -554,7 +554,43 @@ public:
     void start(CScheduler& scheduler) override { return StartWallets(scheduler); }
     void flush() override { return FlushWallets(); }
     void stop() override { return StopWallets(); }
-    ~WalletClientImpl() override { UnloadWallets(); }
+    void setMockTime(int64_t time) override { return SetMockTime(time); }
+
+    //! WalletClient methods
+    std::unique_ptr<Wallet> createWallet(const std::string& name, const SecureString& passphrase, uint64_t wallet_creation_flags, WalletCreationStatus& status, std::string& error, std::string& warning) override
+    {
+        std::shared_ptr<CWallet> wallet;
+        status = CreateWallet(*m_context.chain, passphrase, wallet_creation_flags, name, error, warning, wallet);
+        return MakeWallet(std::move(wallet));
+    }
+    std::unique_ptr<Wallet> loadWallet(const std::string& name, std::string& error, std::string& warning) override
+    {
+        return MakeWallet(LoadWallet(*m_context.chain, WalletLocation(name), error, warning));
+    }
+    std::string getWalletDir() override
+    {
+        return GetWalletDir().string();
+    }
+    std::vector<std::string> listWalletDir() override
+    {
+        std::vector<std::string> paths;
+        for (auto& path : ListWalletDir()) {
+            paths.push_back(path.string());
+        }
+        return paths;
+    }
+    std::vector<std::unique_ptr<Wallet>> getWallets() override
+    {
+        std::vector<std::unique_ptr<Wallet>> wallets;
+        for (const auto& wallet : GetWallets()) {
+            wallets.emplace_back(MakeWallet(wallet));
+        }
+        return wallets;
+    }
+    std::unique_ptr<Handler> handleLoadWallet(LoadWalletFn fn) override
+    {
+        return HandleLoadWallet(std::move(fn));
+    }
 
     WalletContext m_context;
     std::vector<std::string> m_wallet_filenames;
@@ -566,7 +602,7 @@ public:
 
 std::unique_ptr<Wallet> MakeWallet(const std::shared_ptr<CWallet>& wallet) { return wallet ? MakeUnique<WalletImpl>(wallet) : nullptr; }
 
-std::unique_ptr<ChainClient> MakeWalletClient(Chain& chain, std::vector<std::string> wallet_filenames)
+std::unique_ptr<WalletClient> MakeWalletClient(Chain& chain, std::vector<std::string> wallet_filenames)
 {
   return MakeUnique<WalletClientImpl>(chain, std::move(wallet_filenames));
 }

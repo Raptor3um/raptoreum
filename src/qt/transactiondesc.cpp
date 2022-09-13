@@ -21,6 +21,7 @@
 #include <validation.h>
 #include <script/script.h>
 #include <util/system.h>
+#include <wallet/ismine.h>
 
 #include "evo/providertx.h"
 #include "evo/specialtx.h"
@@ -103,7 +104,6 @@ QString TransactionDesc::FutureTxDescToHTML(const interfaces::WalletTx& wtx, con
         		strHTML += tr("<b>Maturity Block:</b> Never<br>");
         	}
         }
-	    
         if(ftx.lockTime >= 0){
             strHTML += "<b>Maturity Time:</b> " + GUIUtil::dateTimeStr(maturityTime) + "<br>";
             strHTML += tr("<b>Locked Time:</b><em> %1 seconds</em><br>").arg(ftx.lockTime);
@@ -236,13 +236,13 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
     else
     {
         isminetype fAllFromMe = ISMINE_SPENDABLE;
-        for (isminetype mine : wtx.txin_is_mine)
+        for (const isminetype mine : wtx.txin_is_mine)
         {
             if(fAllFromMe > mine) fAllFromMe = mine;
         }
 
         isminetype fAllToMe = ISMINE_SPENDABLE;
-        for (isminetype mine : wtx.txout_is_mine)
+        for (const isminetype mine : wtx.txout_is_mine)
         {
             if(fAllToMe > mine) fAllToMe = mine;
         }
@@ -335,26 +335,10 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
     strHTML += "<b>" + tr("Transaction total size") + ":</b> " + QString::number(wtx.tx->GetTotalSize()) + " bytes<br>";
 
     // Message from normal raptoreum:URI (raptoreum:XyZ...?message=example)
-    for (const std::pair<std::string, std::string>& r : orderForm)
+    for (const std::pair<std::string, std::string>& r : orderForm) {
         if (r.first == "Message")
             strHTML += "<br><b>" + tr("Message") + ":</b><br>" + GUIUtil::HtmlEscape(r.second, true) + "<br>";
-
-#ifdef ENABLE_BIP70
-    //
-    // PaymentRequest info:
-    //
-    for (const std::pair<std::string, std::string>& r : orderForm)
-    {
-        if (r.first == "PaymentRequest")
-        {
-            PaymentRequestPlus req;
-            req.parse(QByteArray::fromRawData(r.second.data(), r.second.size()));
-            QString merchant;
-            if (req.getMerchant(PaymentServer::getCertStore(), merchant))
-                strHTML += "<b>" + tr("Merchant") + ":</b> " + GUIUtil::HtmlEscape(merchant) + "<br>";
-        }
     }
-#endif
 
     if (wtx.is_coinbase)
     {

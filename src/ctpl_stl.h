@@ -74,7 +74,7 @@ namespace ctpl {
     public:
 
         thread_pool() { this->init(); }
-        thread_pool(int nThreads) { this->init(); this->resize(nThreads); }
+        explicit thread_pool(int nThreads) { this->init(); this->resize(nThreads); }
 
         // the destructor waits for all the functions in the queue to be finished
         ~thread_pool() {
@@ -130,7 +130,7 @@ namespace ctpl {
         std::function<void(int)> pop() {
             std::function<void(int id)> * _f = nullptr;
             this->q.pop(_f);
-            std::unique_ptr<std::function<void(int id)>> func(_f);  // at return, delete the function even if an exception occurred
+            [[maybe_unused]] std::unique_ptr<std::function<void(int id)>> func(_f);  // at return, delete the function even if an exception occurred
             std::function<void(int)> f;
             if (_f)
                 f = *_f;

@@ -5,11 +5,12 @@
 #ifndef BITCOIN_RPC_UTIL_H
 #define BITCOIN_RPC_UTIL_H
 
+#include <node/coinstats.h>
 #include <node/transaction.h>
 #include <pubkey.h>
 #include <protocol.h>
 #include <script/standard.h>
-#include <univalue.h>
+#include <univalue/include/univalue.h>
 #include <util/strencodings.h>
 #include <util/check.h>
 #include <rpc/protocol.h>
@@ -70,6 +71,8 @@ extern int32_t ParseInt32V(const UniValue& v, const std::string &strName);
 extern int64_t ParseInt64V(const UniValue& v, const std::string &strName);
 extern double ParseDoubleV(const UniValue& v, const std::string &strName);
 extern bool ParseBoolV(const UniValue& v, const std::string &strName);
+
+CoinStatsHashType ParseHashType(const UniValue& param, const CoinStatsHashType default_type);
 
 extern CAmount AmountFromValue(const UniValue& value);
 extern std::string HelpExampleCli(const std::string& methodname, const std::string& args);

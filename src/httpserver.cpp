@@ -269,7 +269,7 @@ static void http_request_cb(struct evhttp_request* req, void* arg)
 
     // Dispatch to worker thread
     if (i != iend) {
-        std::unique_ptr<HTTPWorkItem> item(new HTTPWorkItem(std::move(hreq), path, i->handler));
+        auto item{std::make_unique<HTTPWorkItem>(std::move(hreq), path, i->handler)};
         assert(g_work_queue);
         if (g_work_queue->Enqueue(item.get())) {
             item.release(); /* if true, queue took ownership */

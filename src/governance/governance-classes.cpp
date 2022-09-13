@@ -4,8 +4,9 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <governance/governance-classes.h>
+
+#include <chainparams.h>
 #include <core_io.h>
-#include <init.h>
 #include <util/strencodings.h>
 #include <validation.h>
 

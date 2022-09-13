@@ -131,7 +131,7 @@ static UniValue getnetworkhashps(const JSONRPCRequest& request)
 }
 
 #if ENABLE_MINER
-UniValue generateBlocks(const CTxMemPool& mempool, std::shared_ptr<CReserveScript> coinbaseScript, int nGenerate, uint64_t nMaxTries, bool keepScript)
+UniValue generateBlocks(ChainstateManager& chainman, const CTxMemPool& mempool, std::shared_ptr<CReserveScript> coinbaseScript, int nGenerate, uint64_t nMaxTries, bool keepScript)
 {
     int nHeightEnd = 0;
     int nHeight = 0;
@@ -164,7 +164,7 @@ UniValue generateBlocks(const CTxMemPool& mempool, std::shared_ptr<CReserveScrip
             continue;
         }
         std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(*pblock);
-        if (!ProcessNewBlock(Params(), shared_pblock, true, nullptr))
+        if (!chainman.ProcessNewBlock(Params(), shared_pblock, true, nullptr))
             throw JSONRPCError(RPC_INTERNAL_ERROR, "ProcessNewBlock, block not accepted");
         ++nHeight;
         blockHashes.push_back(pblock->GetHash().GetHex());
@@ -252,13 +252,14 @@ static UniValue generatetodescriptor(const JSONRPCRequest& request)
     }
 
     const CTxMemPool& mempool = EnsureMemPool(request.context);
+    ChainstateManager& chainman = EnsureChainman(request.context);
 
     assert(coinbase_script.size() == 1);
 
     std::shared_ptr<CReserveScript> coinbaseScript = std::make_shared<CReserveScript>();
     coinbaseScript->reserveScript = coinbase_script.at(0);
 
-    return generateBlocks(mempool, coinbaseScript, num_blocks, max_tries, false);
+    return generateBlocks(chainman, mempool, coinbaseScript, num_blocks, max_tries, false);
 }
 
 static UniValue generatetoaddress(const JSONRPCRequest& request)
@@ -294,11 +295,12 @@ static UniValue generatetoaddress(const JSONRPCRequest& request)
     }
 
     const CTxMemPool& mempool = EnsureMemPool(request.context);
+    ChainstateManager& chainman = EnsureChainman(request.context);
 
     std::shared_ptr<CReserveScript> coinbaseScript = std::make_shared<CReserveScript>();
     coinbaseScript->reserveScript = GetScriptForDestination(destination);
 
-    return generateBlocks(mempool, coinbaseScript, nGenerate, nMaxTries, false);
+    return generateBlocks(chainman, mempool, coinbaseScript, nGenerate, nMaxTries, false);
 }
 #else
 static UniValue generatetoaddress(const JSONRPCRequest& request)
@@ -922,7 +924,7 @@ static UniValue submitblock(const JSONRPCRequest& request)
     bool new_block;
     submitblock_StateCatcher sc(block.GetHash());
     RegisterValidationInterface(&sc);
-    bool accepted = ProcessNewBlock(Params(), blockptr, /* fForceProcessing */ true, /* fNewBlock */ &new_block);
+    bool accepted = EnsureChainman(request.context).ProcessNewBlock(Params(), blockptr, /* fForceProcessing */ true, /* fNewBlock */ &new_block);
     UnregisterValidationInterface(&sc);
     if (!new_block) {
         if (!accepted) {
@@ -964,7 +966,7 @@ static UniValue submitheader(const JSONRPCRequest& request)
     }
 
     CValidationState state;
-    ProcessNewBlockHeaders({h}, state, Params(), /* ppindex */ nullptr, /* first_invalid */ nullptr);
+    EnsureChainman(request.context).ProcessNewBlockHeaders({h}, state, Params(), /* ppindex */ nullptr, /* first_invalid */ nullptr);
     if (state.IsValid()) return NullUniValue;
     if (state.IsError()) {
         throw JSONRPCError(RPC_VERIFY_ERROR, FormatStateMessage(state));
@@ -1105,7 +1107,7 @@ static UniValue estimaterawfee(const JSONRPCRequest& request)
 
     UniValue result(UniValue::VOBJ);
 
-    for (FeeEstimateHorizon horizon : {FeeEstimateHorizon::SHORT_HALFLIFE, FeeEstimateHorizon::MED_HALFLIFE, FeeEstimateHorizon::LONG_HALFLIFE}) {
+    for (const FeeEstimateHorizon horizon : {FeeEstimateHorizon::SHORT_HALFLIFE, FeeEstimateHorizon::MED_HALFLIFE, FeeEstimateHorizon::LONG_HALFLIFE}) {
         CFeeRate feeRate;
         EstimationResult buckets;
 

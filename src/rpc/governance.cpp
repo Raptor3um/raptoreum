@@ -3,26 +3,26 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+
+#include <chainparams.h>
 #include <smartnode/activesmartnode.h>
 #include <core_io.h>
 #include <governance/governance.h>
 #include <governance/governance-vote.h>
 #include <governance/governance-classes.h>
 #include <governance/governance-validators.h>
-#include <init.h>
+#include <evo/deterministicmns.h>
 #include <index/txindex.h>
 #include <txmempool.h>
 #include <validation.h>
 #include <smartnode/smartnode-sync.h>
 #include <messagesigner.h>
-#include <node/context.h>
 #include <net.h>
+#include <node/context.h>
 #include <rpc/blockchain.h>
-#include <rpc/server.h>
 #include <rpc/util.h>
 #include <rpc/server.h>
 #include <util/system.h>
-#include <util/moneystr.h>
 #include <wallet/rpcwallet.h>
 #ifdef ENABLE_WALLET
 #include <wallet/wallet.h>
@@ -382,7 +382,7 @@ static UniValue gobject_submit(const JSONRPCRequest& request)
             g_txindex->BlockUntilSyncedToCurrentChain();
         }
 
-        LOCK(cs_main);
+        LOCK2(cs_main, ::mempool.cs);
         if (!govobj.IsValidLocally(strError, fMissingConfirmations, true) && !fMissingConfirmations) {
             LogPrintf("gobject(submit) -- Object submission rejected because object is not valid - hash = %s, strError = %s\n", strHash, strError);
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Governance object is not valid - " + strHash + " - " + strError);

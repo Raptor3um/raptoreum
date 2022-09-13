@@ -3,17 +3,15 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef ACTIVESMARTNODE_H
-#define ACTIVESMARTNODE_H
+#ifndef BITCOIN_SMARTNODE_ACTIVESMARTNODE_H
+#define BITCOIN_SMARTNODE_ACTIVESMARTNODE_H
 
-#include <chainparams.h>
-#include <key.h>
-#include <net.h>
+#include <netaddress.h>
 #include <primitives/transaction.h>
 #include <validationinterface.h>
 
-#include <evo/deterministicmns.h>
-#include <evo/providertx.h>
+class CBLSPublicKey;
+class CBLSSecretKey;
 
 struct CActiveSmartnodeInfo;
 class CActiveSmartnodeManager;
@@ -69,4 +67,4 @@ private:
     bool GetLocalAddress(CService& addrRet);
 };
 
-#endif
+#endif // BITCOIN_SMARTNODE_ACTIVESMARTNODE_H

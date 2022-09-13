@@ -10,10 +10,9 @@
 #include <merkleblock.h>
 #include <netaddress.h>
 #include <pubkey.h>
-#include <serialize.h>
-#include <version.h>
 
 class UniValue;
+class CBlockIndex;
 class CDeterministicMNList;
 class CDeterministicMN;
 
@@ -32,7 +31,6 @@ public:
     CKeyID keyIDVoting;
     bool isValid;
 
-public:
     CSimplifiedMNListEntry() = default;
     explicit CSimplifiedMNListEntry(const CDeterministicMN& dmn);
 
@@ -51,14 +49,12 @@ public:
         return !(rhs == *this);
     }
 
-public:
     SERIALIZE_METHODS(CSimplifiedMNListEntry, obj)
     {
         READWRITE(obj.proRegTxHash, obj.confirmedHash, obj.service,
                   obj.pubKeyOperator, obj.keyIDVoting, obj.isValid);
     }
 
-public:
     uint256 CalcHash() const;
 
     std::string ToString() const;
@@ -70,7 +66,6 @@ class CSimplifiedMNList
 public:
     std::vector<std::unique_ptr<CSimplifiedMNListEntry>> mnList;
 
-public:
     CSimplifiedMNList() = default;
     explicit CSimplifiedMNList(const std::vector<CSimplifiedMNListEntry>& smlEntries);
     explicit CSimplifiedMNList(const CDeterministicMNList& dmnList);
@@ -86,7 +81,6 @@ public:
     uint256 baseBlockHash;
     uint256 blockHash;
 
-public:
     SERIALIZE_METHODS(CGetSimplifiedMNListDiff, obj)
     {
         READWRITE(obj.baseBlockHash, obj.blockHash);
@@ -107,18 +101,15 @@ public:
     std::vector<std::pair<uint8_t, uint256>> deletedQuorums; // p<LLMQType, quorumHash>
     std::vector<llmq::CFinalCommitment> newQuorums;
 
-public:
     SERIALIZE_METHODS(CSimplifiedMNListDiff, obj)
     {
-        READWRITE(obj.baseBlockHash, obj.blockHash, obj.cbTxMerkleTree,
-                  obj.cbTx, obj.deletedMNs, obj.mnList);
+        READWRITE(obj.baseBlockHash, obj.blockHash, obj.cbTxMerkleTree, obj.cbTx, obj.deletedMNs, obj.mnList);
 
         if (s.GetVersion() >= LLMQS_PROTO_VERSION) {
             READWRITE(obj.deletedQuorums, obj.newQuorums);
         }
     }
 
-public:
     CSimplifiedMNListDiff();
     ~CSimplifiedMNListDiff();
 

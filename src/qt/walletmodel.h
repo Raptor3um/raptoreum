@@ -14,9 +14,6 @@
 #include <serialize.h>
 #include <script/standard.h>
 
-#ifdef ENABLE_BIP70
-#include <qt/paymentrequestplus.h>
-#endif
 #include <qt/walletmodeltransaction.h>
 #include <qt/walletmodelfuturestransaction.h>
 
@@ -72,14 +69,7 @@ public:
     CAmount amount;
     // If from a payment request, this is used for storing the memo
     QString message;
-
-#ifdef ENABLE_BIP70
-    // If from a payment request, paymentRequest.IsInitialized() will be true
-    PaymentRequestPlus paymentRequest;
-#else
     std::string sPaymentRequest;
-#endif
-    // Empty if no authentication or invalid signature/cert/etc.
     QString authenticatedMerchant;
 
     bool fSubtractFeeFromAmount; // memory only
@@ -94,27 +84,19 @@ public:
     SERIALIZE_METHODS(SendCoinsRecipient, obj)
     {
         bool isFutureOutput{false};
-        std::string address_str, label_str, message_str, auth_merchant_str, sPaymentRequest;
-        PaymentRequestPlus paymentRequest;
+        std::string address_str, label_str, message_str, auth_merchant_str;
 
         SER_WRITE(obj, address_str = obj.address.toStdString());
         SER_WRITE(obj, label_str = obj.label.toStdString());
         SER_WRITE(obj, message_str = obj.message.toStdString());
         SER_WRITE(obj, auth_merchant_str = obj.authenticatedMerchant.toStdString());
-        SER_WRITE(obj, paymentRequest = obj.paymentRequest);
-        if (paymentRequest.IsInitialized()) {
-            paymentRequest.SerializeToString(&sPaymentRequest);
-        }
 
-        READWRITE(obj.nVersion, address_str, label_str, obj.amount, message_str, sPaymentRequest, auth_merchant_str);
+        READWRITE(obj.nVersion, address_str, label_str, obj.amount, message_str, obj.sPaymentRequest, auth_merchant_str);
 
         SER_READ(obj, obj.address = QString::fromStdString(address_str));
         SER_READ(obj, obj.label = QString::fromStdString(label_str));
         SER_READ(obj, obj.message = QString::fromStdString(message_str));
         SER_READ(obj, obj.authenticatedMerchant = QString::fromStdString(auth_merchant_str));
-        if (!sPaymentRequest.empty()) {
-            SER_READ(obj, obj.paymentRequest.parse(QByteArray::fromRawData(sPaymentRequest.data(), sPaymentRequest.size())));
-        }
 
         if (isFutureOutput) {
             READWRITE(obj.isFutureOutput, obj.maturity, obj.locktime);
@@ -146,6 +128,8 @@ public:
     CAmount amount;
     // If from a payment request, this is used for storing the memo
     QString message;
+    std::string sPaymentRequest;
+    QString authenticatedMerchant;
 
     //Futures strings
     QString payFrom;
@@ -154,41 +138,24 @@ public:
     int maturity;
     int64_t locktime;
 
-#ifdef ENABLE_BIP70
-    // If from a payment request, paymentRequest.IsInitialized() will be true
-    PaymentRequestPlus paymentRequest;
-#else
-    std::string sPaymentRequest;
-#endif
-    // Empty if no authentication or invalid signature/cert/etc.
-    QString authenticatedMerchant;
-
     static const int CURRENT_VERSION = 1;
     int nVersion;
 
     SERIALIZE_METHODS(SendFuturesRecipient, obj)
     {
-        std::string address_str, label_str, message_str, auth_merchant_str, sPaymentRequest;
-        PaymentRequestPlus paymentRequest;
+        std::string address_str, label_str, message_str, auth_merchant_str;
 
         SER_WRITE(obj, address_str = obj.address.toStdString());
         SER_WRITE(obj, label_str = obj.label.toStdString());
         SER_WRITE(obj, message_str = obj.message.toStdString());
         SER_WRITE(obj, auth_merchant_str = obj.authenticatedMerchant.toStdString());
-        SER_WRITE(obj, paymentRequest = obj.paymentRequest);
-        if (paymentRequest.IsInitialized()) {
-            paymentRequest.SerializeToString(&sPaymentRequest);
-        }
 
-        READWRITE(obj.nVersion, address_str, label_str, obj.amount, message_str, obj.maturity, obj.locktime, sPaymentRequest, auth_merchant_str);
+        READWRITE(obj.nVersion, address_str, label_str, obj.amount, message_str, obj.sPaymentRequest, auth_merchant_str, obj.maturity, obj.locktime);
 
         SER_READ(obj, obj.address = QString::fromStdString(address_str));
         SER_READ(obj, obj.label = QString::fromStdString(label_str));
         SER_READ(obj, obj.message = QString::fromStdString(message_str));
         SER_READ(obj, obj.authenticatedMerchant = QString::fromStdString(auth_merchant_str));
-        if (!sPaymentRequest.empty()) {
-            SER_READ(obj, obj.paymentRequest.parse(QByteArray::fromRawData(sPaymentRequest.data(), sPaymentRequest.size())));
-        }
     }
 };
 

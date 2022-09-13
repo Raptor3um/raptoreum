@@ -217,13 +217,6 @@ AC_ARG_ENABLE([zmq],
   [use_zmq=$enableval],
   [use_zmq=yes])
 
-AC_ARG_ENABLE([bip70],
-  [AS_HELP_STRING([--disable-bip70], [disable BIP70 (payment protocol) support at the GUI (enabled by default)])],
-  [enable_bip70=$enableval],
-  [enable_bip70=auto])
-
-AC_ARG_WITH([protoc-bindir], [AS_HELP_STRING([--with-protoc-bindir=BIN_DIR], [specify protoc bin path])], [protoc_bin_path=$withval], [])
-
 AC_ARG_ENABLE([man], [AS_HELP_STRING([--disable-man], [do not install man pages (default is to install)])], [enable_man=$enableval], [enable_man=yes])
 AM_CONDITIONAL([ENABLE_MAN], [test "$enable_man" != "no"])
 
@@ -235,9 +228,15 @@ AC_ARG_ENABLE([debug],
 
 dnl Enable exception stacktrace
 AC_ARG_ENABLE([stacktraces],
-  [AS_HELP_STRING([--enable-stacktraces], [gather and print exception stack traces (default is no)])],
+  [AS_HELP_STRING([--enable-stacktraces], [gather and print exception stack traces (default is yes)])],
   [enable_stacktraces=$enableval],
-  [enable_stacktraces=no])
+  [enable_stacktraces=yes])
+
+dnl Enable crash hooks
+AC_ARG_ENABLE([crash-hooks],
+  [AS_HELP_STRING([--enable-crash-hooks], [hook into exception/signal/assert handling to gather stack traces (default is no)])],
+  [enable_crashhooks=$enableval],
+  [enable_crashhooks=no])
 
 dnl Enable in-wallet miner
 AC_ARG_ENABLE([miner],
@@ -332,11 +331,9 @@ else
   fi
 fi
 
-AS_CASE([$host], [*mingw*], [
-  if test "$enable_stacktraces" != "no"; then
-    AC_CHECK_HEADERS([execinfo.h], [], [enable_stacktraces=no])
-  fi
-])
+if test "$enable_stacktraces" != "no"; then
+  AC_CHECK_HEADERS([execinfo.h], [], [enable_stacktraces=no])
+fi
 
 AM_CONDITIONAL([ENABLE_STACKTRACES], [test "$enable_stacktraces" = "yes"])
 if test "$enable_stacktraces" = "yes"; then
@@ -700,13 +697,6 @@ case $host in
           export PKG_CONFIG_PATH="$($BREW --prefix qt@5 2>/dev/null)/lib/pkgconfig:$PKG_CONFIG_PATH"
         fi
 
-        openssl_prefix=$($BREW --prefix openssl 2>/dev/null)
-        if test "$openssl_prefix" != ""; then
-          export PKG_CONFIG_PATH="$openssl_prefix/lib/pkgconfig:$PKG_CONFIG_PATH"
-          PKG_CHECK_MODULES([SSL], [libssl], [], [AC_MSG_ERROR([libssl not found.])])
-          PKG_CHECK_MODULES([CRYPTO], [libcrypto], [], [AC_MSG_ERROR([libcrypto not found.])])
-        fi
-
         case $host in
           *aarch64*)
             dnl The preffered Homebrew prefix for Apple Silicon is /opt/homebrew.
@@ -866,12 +856,6 @@ fi
 
 dnl All windows code is PIC, forcing it on just adds useless compile warnings
 AS_CASE([$host_os], [*mingw*], [], [AX_CHECK_COMPILE_FLAG([-fPIC], [PIC_FLAGS="-fPIC"])])
-
-dnl Check for OpenSSL.
-AC_CHECK_HEADER([openssl/crypto.h])
-AC_CHECK_LIB([crypto], [main], [CRYPTO_LIBS="$CRYPTO_LIBS -lcrypto"], [AC_MSG_ERROR([crypto library missing])])
-AC_CHECK_HEADER([openssl/ssl.h])
-AC_CHECK_LIB([ssl], [main], [SSL_LIBS="$SSL_LIBS -lssl"], [AC_MSG_ERROR([ssl library missing])])
 
 dnl All versions of gcc that we commonly use for building are subject to bug
 dnl https://gcc.gnu.org/bugzilla/show_bug.cgi?id=90384. To work around that,
@@ -1442,11 +1426,6 @@ if test "$use_libevent" = "yes"; then
   CXXFLAGS="$TEMP_CXXFLAGS"
 fi
 
-if test "$enable_bip70" != "no"; then
-  BITCOIN_QT_CHECK([PKG_CHECK_MODULES([PROTOBUF], [protobuf], [have_protobuf=yes], [have_protobuf=no])])
-  BITCOIN_QT_CHECK([AC_CHECK_LIB([protobuf], [main], [PROTOBUF_LIBS=-lprotobuf], [have_protobuf=no])])
-fi
-
 dnl QR Code encoding library check
 if test "$use_qr" != "no"; then
   BITCOIN_QT_CHECK([PKG_CHECK_MODULES([QR], [libqrencode], [have_qrencode=yes], [have_qrencode=no])])
@@ -1471,23 +1450,12 @@ if test "$use_zmq" = "yes"; then
   AS_CASE([$host], [*mingw*], [ZMQ_CFLAGS="$ZMQ_CFLAGS -DZMQ_STATIC"])
 fi
 
-save_CXXFLAGS="${CXXFLAGS}"
-CXXFLAGS="${CXXFLAGS} ${CRYPTO_CFLAGS} ${SSL_CFLAGS}"
-AC_CHECK_DECLS([EVP_MD_CTX_new],,,[AC_INCLUDES_DEFAULT
-#include <openssl/x509_vfy.h>
-])
-CXXFLAGS="${save_CXXFLAGS}"
-
 dnl Check for gmp
 AC_CHECK_HEADER([gmp.h])
 AC_CHECK_LIB([gmp], [__gmpz_init], [GMP_LIBS=-lgmp], [AC_MSG_ERROR([libgmp missing])])
 
 dnl check for immer header
 AC_CHECK_HEADER([immer/map.hpp],, [AC_MSG_ERROR([immer map header not found])])
-
-if test "$have_protobuf" != "no" && test "$enable_bip70" != "no"; then
-  BITCOIN_QT_PATH_PROGS([PROTOC], [protoc], $protoc_bin_path)
-fi
 
 AC_MSG_CHECKING([whether to build raptoreumd])
 AM_CONDITIONAL([BUILD_BITCOIND], [test $build_bitcoind = "yes"])
@@ -1634,19 +1602,6 @@ if test "$bitcoin_enable_qt" != "no"; then
   else
     AC_MSG_RESULT([no])
   fi
-
-  AC_MSG_CHECKING([whether to build BIP70 Support])
-  if test "$have_protobuf" = "no"; then
-    if test "$enable_bip70" = "yes"; then
-      AC_MSG_ERROR([protobuf missing])
-    fi
-    enable_bip70=no
-    AC_MSG_RESULT([no])
-  elif test "$have_protobuf" != "no" && test "$enable_bip70" != "no"; then
-    AC_DEFINE([ENABLE_BIP70], [1], [Define if BIP70 support should be compiled in])
-    enable_bip70=yes
-    AC_MSG_RESULT([yes])
-  fi
 fi
 
 AM_CONDITIONAL([ENABLE_ZMQ], [test "$use_zmq" = "yes"])
@@ -1692,7 +1647,6 @@ AM_CONDITIONAL([USE_BDB], [test "$use_bdb" = "yes"])
 AM_CONDITIONAL([ENABLE_TESTS], [test "$BUILD_TEST" = "yes"])
 AM_CONDITIONAL([ENABLE_QT], [test "$bitcoin_enable_qt" = "yes"])
 AM_CONDITIONAL([ENABLE_QT_TESTS], [test "$BUILD_TEST_QT" = "yes"])
-AM_CONDITIONAL([ENABLE_BIP70], [test "$enable_bip70" = "yes"])
 AM_CONDITIONAL([ENABLE_BENCH], [test "$use_bench" = "yes"])
 AM_CONDITIONAL([USE_QRCODE], [test "$use_qr" = "yes"])
 AM_CONDITIONAL([USE_LCOV], [test "$use_lcov" = "yes"])
@@ -1774,8 +1728,6 @@ AC_SUBST(MINIUPNPC_CPPFLAGS)
 AC_SUBST(MINIUPNPC_LIBS)
 AC_SUBST(NATPMP_CPPFLAGS)
 AC_SUBST(NATPMP_LIBS)
-AC_SUBST(CRYPTO_LIBS)
-AC_SUBST(SSL_LIBS)
 AC_SUBST(GMP_LIBS)
 AC_SUBST(DSYMUTIL_FLAT)
 AC_SUBST(HAVE_GMTIME_R)
@@ -1786,7 +1738,6 @@ AC_SUBST(HAVE_BUILTIN_PREFETCH)
 AC_SUBST(HAVE_MM_PREFETCH)
 AC_SUBST(HAVE_STRONG_GETAUXVAL)
 AC_SUBST(HAVE_EVHTTP_CONNECTION_GET_PEER_CONST_CHAR)
-AC_SUBST(PROTOBUF_LIBS)
 AC_SUBST(ANDROID_ARCH)
 AC_CONFIG_FILES([Makefile src/Makefile doc/man/Makefile share/setup.nsi share/qt/Info.plist test/config.ini])
 AC_CONFIG_FILES([contrib/devtools/split-debug.sh],[chmod +x contrib/devtools/split-debug.sh])
@@ -1834,7 +1785,6 @@ if test "$enable_wallet" != "no"; then
 fi
 echo "  with gui / qt       = $bitcoin_enable_qt"
 if test $bitcoin_enable_qt != "no"; then
-    echo "    with_bip70        = $enable_bip70"
     echo "    with qr           = $use_qr"
 fi
 echo "  with zmq            = $use_zmq"
@@ -1846,6 +1796,7 @@ echo "  use asm             = $use_asm"
 echo "  sanitizers          = $use_sanitizers"
 echo "  debug enabled       = $enable_debug"
 echo "  stacktraces enabled = $enable_stacktraces"
+echo "  crash hooks enabled = $enable_crashhooks"
 echo "  miner enabled       = $enable_miner"
 echo "  gprof enabled       = $enable_gprof"
 echo "  werror              = $enable_werror"

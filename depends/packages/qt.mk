@@ -4,13 +4,10 @@ $(package)_download_path=https://download.qt.io/official_releases/qt/5.15/$($(pa
 $(package)_suffix=everywhere-opensource-src-$($(package)_version).tar.xz
 $(package)_file_name=qtbase-$($(package)_suffix)
 $(package)_sha256_hash=26394ec9375d52c1592bd7b689b1619c6b8dbe9b6f91fdd5c355589787f3a0b6
-$(package)_dependencies=openssl
-$(package)_linux_dependencies=freetype fontconfig libxcb libxkbcommon libxcb_util libxcb_util_render libxcb_util_keysyms libxcb_util_image libxcb_util_wm
+$(package)_linux_dependencies=dbus freetype fontconfig libxcb libxkbcommon libxcb_util libxcb_util_render libxcb_util_keysyms libxcb_util_image libxcb_util_wm
 $(package)_qt_libs=corelib network widgets gui plugins testlib
-ifneq ($(host_os),darwin)
-ifneq ($(host_os),mingw32)
+ifeq ($(host_os),linux)
 $(package)_qt_libs += dbus
-endif
 endif
 $(package)_linguist_tools = lrelease lupdate lconvert
 $(package)_patches = qt.pro
@@ -61,8 +58,7 @@ $(package)_config_opts += -no-linuxfb
 $(package)_config_opts += -no-libjpeg
 $(package)_config_opts += -no-libudev
 $(package)_config_opts += -no-mtdev
-$(package)_config_opts += -openssl-linked
-$(package)_config_opts += -feature-dtls
+$(package)_config_opts += -no-openssl
 $(package)_config_opts += -no-openvg
 $(package)_config_opts += -no-reduce-relocations
 $(package)_config_opts += -no-schannel
@@ -93,7 +89,7 @@ $(package)_config_opts += -qt-harfbuzz
 $(package)_config_opts += -qt-zlib
 $(package)_config_opts += -static
 $(package)_config_opts += -v
-$(package)_config_opts += -feature-bearermanagement
+$(package)_config_opts += -no-feature-bearermanagement
 $(package)_config_opts += -no-feature-colordialog
 $(package)_config_opts += -no-feature-commandlineparser
 $(package)_config_opts += -no-feature-concurrent
@@ -105,14 +101,12 @@ $(package)_config_opts += -no-feature-image_heuristic_mask
 $(package)_config_opts += -no-feature-keysequenceedit
 $(package)_config_opts += -no-feature-lcdnumber
 $(package)_config_opts += -no-feature-networkdiskcache
-$(package)_config_opts += -feature-networkproxy
 $(package)_config_opts += -no-feature-pdf
 $(package)_config_opts += -no-feature-printer
 $(package)_config_opts += -no-feature-printdialog
 $(package)_config_opts += -no-feature-printpreviewdialog
 $(package)_config_opts += -no-feature-printpreviewwidget
 $(package)_config_opts += -no-feature-sessionmanager
-$(package)_config_opts += -feature-socks5
 $(package)_config_opts += -no-feature-sql
 $(package)_config_opts += -no-feature-sqlmodel
 $(package)_config_opts += -no-feature-statemachine
@@ -121,7 +115,7 @@ $(package)_config_opts += -no-feature-textbrowser
 $(package)_config_opts += -no-feature-textmarkdownwriter
 $(package)_config_opts += -no-feature-textodfwriter
 $(package)_config_opts += -no-feature-topleveldomain
-$(package)_config_opts += -feature-udpsocket
+$(package)_config_opts += -no-feature-udpsocket
 $(package)_config_opts += -no-feature-undocommand
 $(package)_config_opts += -no-feature-undogroup
 $(package)_config_opts += -no-feature-undostack
@@ -177,11 +171,6 @@ $(package)_config_opts_mingw32 += "QMAKE_CFLAGS = '$($(package)_cflags) $($(pack
 $(package)_config_opts_mingw32 += "QMAKE_CXX = '$($(package)_cxx)'"
 $(package)_config_opts_mingw32 += "QMAKE_CXXFLAGS = '$($(package)_cflags) $($(package)_cppflags)'"
 $(package)_config_opts_mingw32 += "QMAKE_LFLAGS = '$($(package)_ldflags)'"
-$(package)_config_opts_mingw32 += -I /usr/$(host)/include
-$(package)_config_opts_mingw32 += -L /usr/$(host)/lib
-$(package)_config_opts_mingw32 += OPENSSL_LIBS="-luser32 -lws2_32 -ladvapi32 -lgdi32 -lcrypt32 -lsecur32 -lbcrypt"
-$(package)_config_opts_mingw32 += OPENSSL_LIBS_RELEASE="-lssl -lcrypto"
-$(package)_config_opts_mingw32 += OPENSSL_LIBS_DEBUG="-lssl -lcrypto"
 $(package)_config_opts_mingw32 += -device-option CROSS_COMPILE="$(host)-"
 $(package)_config_opts_mingw32 += -pch
 $(package)_config_opts_mingw32 += -static-runtime

@@ -41,7 +41,7 @@ enum NumConnections {
 };
 
 class CDeterministicMNList;
-typedef std::shared_ptr<CDeterministicMNList> CDeterministicMNListPtr;
+using CDeterministicMNListPtr = std::shared_ptr<CDeterministicMNList>;
 
 /** Model for Raptoreum network client. */
 class ClientModel : public QObject
@@ -79,6 +79,8 @@ public:
     QString formatClientStartupTime() const;
     QString dataDir() const;
     QString blocksDir() const;
+
+    bool getProxyInfo(std::string& ip_port) const;
 
     // caches for the best header
     mutable std::atomic<int> cachedBestHeaderHeight;

@@ -331,7 +331,7 @@ UniValue sendtoaddress(const JSONRPCRequest& request)
         {
             {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The Raptoreum address to send to."},
             {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "The amount in " + CURRENCY_UNIT + " to send. eg 0.1"},
-            {"future", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "Future transaction is mature when it has enough confirmations or locktime in seconds has past from its first confirm.",
+            {"future", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED_NAMED_ARG, "Future transaction is mature when it has enough confirmations or locktime in seconds has past from its first confirm.",
                 {
                     {"future_maturity", RPCArg::Type::NUM, /* default */ "", "Number of confirmations required for this future to mature."},
                     {"future_locktime", RPCArg::Type::NUM, /* default */ "", "Total time in seconds from its first confirmation for this future to mature."},
@@ -419,7 +419,7 @@ UniValue sendtoaddress(const JSONRPCRequest& request)
         coin_control.UseCoinJoin(request.params[nextParamsIndex].get_bool());
     }
 
-    if (!request.params[7].isNull()) {
+    if (!request.params[8].isNull()) {
         coin_control.m_confirm_target = ParseConfirmTarget(request.params[7], pwallet->chain().estimateMaxBlocks());
     }
     nextParamsIndex++;
@@ -2270,7 +2270,7 @@ UniValue listlockunspent(const JSONRPCRequest& request)
 
     UniValue ret(UniValue::VARR);
 
-    for (COutPoint &outpt : vOutpts) {
+    for (const COutPoint& outpt : vOutpts) {
         UniValue o(UniValue::VOBJ);
 
         o.pushKV("txid", outpt.hash.GetHex());
@@ -3584,7 +3584,7 @@ UniValue getaddressesbylabel(const JSONRPCRequest& request)
     // Find all addresses that have the given label
     UniValue ret(UniValue::VOBJ);
     std::set<std::string> addresses;
-    for (const std::pair<CTxDestination, CAddressBookData>& item : pwallet->mapAddressBook) {
+    for (const std::pair<CTxDestination, CAddressBookData> item : pwallet->mapAddressBook) {
         if (item.second.name == label) {
           std::string address = EncodeDestination(item.first);
           // CWallet::mapAddressBook is not expected to contain duplicate address string,
@@ -3640,7 +3640,7 @@ UniValue listlabels(const JSONRPCRequest& request)
 
     // Add to a set to sort by label name, then insert into Univalue array
     std::set<std::string> label_set;
-    for (const std::pair<CTxDestination, CAddressBookData>& entry : pwallet->mapAddressBook) {
+    for (const std::pair<CTxDestination, CAddressBookData> entry : pwallet->mapAddressBook) {
         if (purpose.empty() || entry.second.purpose == purpose) {
             label_set.insert(entry.second.name);
         }
@@ -3729,7 +3729,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "removeprunedfunds",                &removeprunedfunds,                {"txid"} },
     { "wallet",             "rescanblockchain",                 &rescanblockchain,                 {"start_height","stop_height"} },
     { "wallet",             "sendmany",                         &sendmany,                         {"dummy","amounts","minconf","addlocked","comment","subtractfeefrom","use_is","use_cj","conf_target","estimate_mode"} },
-    { "wallet",             "sendtoaddress",                    &sendtoaddress,                    {"address","amount","comment","comment_to","subtractfeefromamount","use_is","use_cj","conf_target","estimate_mode"} },
+    { "wallet",             "sendtoaddress",                    &sendtoaddress,                    {"address","amount","future","comment","comment_to","subtractfeefromamount","use_is","use_cj","conf_target","estimate_mode"} },
     { "wallet",             "setcoinjoinrounds",                &setcoinjoinrounds,                {"rounds"} },
     { "wallet",             "setcoinjoinamount",                &setcoinjoinamount,                {"amount"} },
     { "wallet",             "setlabel",                         &setlabel,                         {"address","label"} },

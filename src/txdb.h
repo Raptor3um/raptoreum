@@ -9,11 +9,9 @@
 #include <coins.h>
 #include <dbwrapper.h>
 #include <chain.h>
-#include <limitedmap.h>
 #include <indices/spent_index.h>
 #include <indices/future_index.h>
 #include <primitives/block.h>
-#include <sync.h>
 
 #include <memory>
 #include <string>
@@ -24,8 +22,6 @@ class CBlockIndex;
 class CCoinsViewDBCursor;
 class uint256;
 
-//! No need to periodic flush if at least this much space still available.
-static constexpr int MAX_BLOCK_COINSDB_USAGE = 10;
 //! -dbcache default (MiB)
 static const int64_t nDefaultDbCache = 300;
 //! -dbbatchsize default (bytes)
@@ -43,11 +39,16 @@ static const int64_t nMaxTxIndexCache = 1024;
 //! Max memory allocated to coin DB specific cache (MiB)
 static const int64_t nMaxCoinsDBCache = 8;
 
+// Actually declared in validation.cpp; can't include because of circular dependency.
+extern RecursiveMutex cs_main;
+
 /** CCoinsView backed by the coin database (chainstate/) */
 class CCoinsViewDB final : public CCoinsView
 {
 protected:
-    CDBWrapper db;
+    std::unique_ptr<CDBWrapper> m_db;
+    fs::path m_ldb_path;
+    bool m_is_memory;
 public:
     /**
      * @param[in] ldb_path    Location in the filesystem where leveldb data will be stored.
@@ -65,6 +66,9 @@ public:
     //! Attempt to update from an older database format. Returns whether an error occurred.
     bool Upgrade();
     size_t EstimateSize() const override;
+
+    //! Dynamically alter the underlying leveldb cache size.
+    void ResizeCache(size_t new_cache_size) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 };
 
 /** Specialization of CCoinsViewCursor to iterate over a CCoinsViewDB */
@@ -81,8 +85,7 @@ public:
     void Next() override;
 
 private:
-    CCoinsViewDBCursor(CDBIterator* pcursorIn, const uint256 &hashBlockIn):
-        CCoinsViewCursor(hashBlockIn), pcursor(pcursorIn) {}
+    CCoinsViewDBCursor(CDBIterator* pcursorIn, const uint256 &hashBlockIn) : CCoinsViewCursor(hashBlockIn), pcursor(pcursorIn) {}
     std::unique_ptr<CDBIterator> pcursor;
     std::pair<char, COutPoint> keyTmp;
 
@@ -92,10 +95,6 @@ private:
 /** Access to the block database (blocks/index/) */
 class CBlockTreeDB : public CDBWrapper
 {
-private:
-    RecursiveMutex cs;
-    unordered_limitedmap<uint256, bool> mapHasTxIndexCache;
-
 public:
     explicit CBlockTreeDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
 

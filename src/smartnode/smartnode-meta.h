@@ -3,20 +3,19 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_SMARTNODE_MASTERNODE_META_H
-#define BITCOIN_SMARTNODE_MASTERNODE_META_H
+#ifndef BITCOIN_SMARTNODE_SMARTNODE_META_H
+#define BITCOIN_SMARTNODE_SMARTNODE_META_H
 
 #include <serialize.h>
 
-#include <evo/deterministicmns.h>
-
 #include <univalue.h>
 
-#include <memory>
+#include <uint256.h>
+#include <sync.h>
 
 class CConnman;
 
-static const int SMARTNODE_MAX_MIXING_TXES             = 5;
+static const int SMARTNODE_MAX_MIXING_TXES = 5;
 
 // Holds extra (non-deterministic) information about smartnodes
 // This is mostly local information, e.g. about mixing and governance
