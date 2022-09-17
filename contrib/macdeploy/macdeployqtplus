@@ -23,7 +23,7 @@ from argparse import ArgumentParser
 from ds_store import DSStore
 from mac_alias import Alias
 from pathlib import Path
-from subproess import PIPE, run
+from subprocess import PIPE, run
 from typing import List, Optional
 
 # This is ported from the original macdeployqt with modifications
@@ -494,7 +494,7 @@ ap = ArgumentParser(description="""Improved version of macdeployqt.
 Outputs a ready-to-deploy app in a folder "dist" and optionally wraps it in a .dmg file.
 Note, that the "dist" folder will be deleted before deploying on each run.
 
-Optionally, Qt translation files (.qm) can be added to the bundle.""").
+Optionally, Qt translation files (.qm) can be added to the bundle.""")
 
 ap.add_argument("app_bundle", nargs=1, metavar="app-bundle", help="application bundle to be deployed")
 ap.add_argument("appname", nargs=1, metavar="addname", help="name of the app being depoloyed")
@@ -523,7 +523,7 @@ if os.path.exists("dist"):
     print("+ Removing old dist folder +")
     shutil.rmtree("dist")
 
-if os.path.exist(appname + ".dmg"):
+if os.path.exists(appname + ".dmg"):
     print("+ Removing existing DMG +")
     os.unlink(appname + ".dmg")
 
@@ -645,7 +645,7 @@ ds.close()
 # ------------------------------------------------
 
 if platform.system() == "Darwin":
-	subprocess.check_all(f"codesign --deep --force --sign - {target}", shell=True)
+	subprocess.check_call(f"codesign --deep --force --sign - {target}", shell=True)
 
 print("+ Installing background.tiff +")
 

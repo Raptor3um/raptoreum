@@ -9,7 +9,7 @@
     <string>x86_64</string>
   </array>
   <key>CFBundleIconFile</key>
-  <string>raptoreum.ico</string>
+  <string>raptoreum.icns</string>
   <key>CFBundlePackageType</key>
   <string>APPL</string>
   <key>CFBundleShortVersionString</key>
