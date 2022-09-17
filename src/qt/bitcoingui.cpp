@@ -357,10 +357,6 @@ void BitcoinGUI::createActions()
     coinJoinCoinsMenuAction->setStatusTip(tr("Send %1 funds to a Raptoreum address").arg(strCoinJoinName));
     coinJoinCoinsMenuAction->setToolTip(coinJoinCoinsMenuAction->statusTip());
 
-    sendFuturesMenuAction = new QAction(tr("&Send Futures"), this);
-    sendFuturesMenuAction->setStatusTip(tr("Send locked coins to a Raptoreum address"));
-    sendFuturesMenuAction->setToolTip(sendFuturesMenuAction->statusTip());
-
     receiveCoinsMenuAction = new QAction(tr("&Receive"), this);
     receiveCoinsMenuAction->setStatusTip(tr("Request payments (generates QR codes and raptoreum: URIs)"));
     receiveCoinsMenuAction->setToolTip(receiveCoinsMenuAction->statusTip());
@@ -369,11 +365,9 @@ void BitcoinGUI::createActions()
     // These showNormalIfMinimized are needed because Send Coins and Receive Coins
     // can be triggered from the tray menu, and need to show the GUI to be useful.
     connect(sendCoinsMenuAction, &QAction::triggered, this, static_cast<void (BitcoinGUI::*)()>(&BitcoinGUI::showNormalIfMinimized));
-    connect(sendFuturesMenuAction, &QAction::triggered, this, static_cast<void (BitcoinGUI::*)()>(&BitcoinGUI::showNormalIfMinimized));
     connect(coinJoinCoinsMenuAction, &QAction::triggered, this, static_cast<void (BitcoinGUI::*)()>(&BitcoinGUI::showNormalIfMinimized));
     connect(receiveCoinsMenuAction, &QAction::triggered, this, static_cast<void (BitcoinGUI::*)()>(&BitcoinGUI::showNormalIfMinimized));
     connect(sendCoinsMenuAction, &QAction::triggered, [this]{ gotoSendCoinsPage(); });
-    connect(sendFuturesMenuAction, &QAction::triggered, [this]{ gotoSendFuturesPage(); });
     connect(coinJoinCoinsMenuAction, &QAction::triggered, [this]{ gotoCoinJoinCoinsPage(); });
     connect(receiveCoinsMenuAction, &QAction::triggered, this, &BitcoinGUI::gotoReceiveCoinsPage);
 #endif
@@ -668,11 +662,6 @@ void BitcoinGUI::createToolBars()
         sendCoinsButton->setStatusTip(sendCoinsMenuAction->statusTip());
         tabGroup->addButton(sendCoinsButton);
 
-        sendFuturesButton = new QToolButton(this);
-        sendFuturesButton->setText(sendFuturesMenuAction->text());
-        sendFuturesButton->setStatusTip(sendFuturesMenuAction->statusTip());
-        tabGroup->addButton(sendFuturesButton);
-
         receiveCoinsButton = new QToolButton(this);
         receiveCoinsButton->setText(receiveCoinsMenuAction->text());
         receiveCoinsButton->setStatusTip(receiveCoinsMenuAction->statusTip());
@@ -700,7 +689,6 @@ void BitcoinGUI::createToolBars()
 
         connect(overviewButton, &QToolButton::clicked, this, &BitcoinGUI::gotoOverviewPage);
         connect(sendCoinsButton, &QToolButton::clicked, [this]{ gotoSendCoinsPage(); });
-        connect(sendFuturesButton, &QToolButton::clicked, [this]{ gotoSendFuturesPage(); });
         connect(coinJoinCoinsButton, &QToolButton::clicked, [this]{ gotoCoinJoinCoinsPage(); });
         connect(receiveCoinsButton, &QToolButton::clicked, this, &BitcoinGUI::gotoReceiveCoinsPage);
         connect(historyButton, &QToolButton::clicked, this, &BitcoinGUI::gotoHistoryPage);
@@ -942,7 +930,6 @@ void BitcoinGUI::setWalletActionsEnabled(bool enabled)
     if (walletFrame != nullptr) {
         overviewButton->setEnabled(enabled);
         sendCoinsButton->setEnabled(enabled);
-        sendFuturesButton->setEnabled(enabled);
         coinJoinCoinsButton->setEnabled(enabled && clientModel->coinJoinOptions().isEnabled());
         receiveCoinsButton->setEnabled(enabled);
         historyButton->setEnabled(enabled);
@@ -991,7 +978,6 @@ void BitcoinGUI::createIconMenu(QMenu *pmenu)
 #endif
     if (enableWallet) {
         pmenu->addAction(sendCoinsMenuAction);
-        pmenu->addAction(sendFuturesMenuAction);
         pmenu->addAction(coinJoinCoinsMenuAction);
         pmenu->addAction(receiveCoinsMenuAction);
         pmenu->addSeparator();
@@ -1147,12 +1133,6 @@ void BitcoinGUI::gotoSendCoinsPage(QString addr)
 {
     sendCoinsButton->setChecked(true);
     if (walletFrame) walletFrame->gotoSendCoinsPage(addr);
-}
-
-void BitcoinGUI::gotoSendFuturesPage(QString addr)
-{
-    sendFuturesButton->setChecked(true);
-    if (walletFrame) walletFrame->gotoSendFuturesPage(addr);
 }
 
 void BitcoinGUI::gotoCoinJoinCoinsPage(QString addr)

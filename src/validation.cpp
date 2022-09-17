@@ -640,7 +640,8 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
 
         CAmount nFees = 0;
         CAmount specialTxFees = 0;
-        if (!Consensus::CheckTxInputs(tx, state, view, GetSpendHeight(view), nFees, specialTxFees, true)) {
+        bool isV17active = Params().IsFutureActive(::ChainActive().Tip());
+        if (!Consensus::CheckTxInputs(tx, state, view, GetSpendHeight(view), nFees, specialTxFees, isV17active, true)) {
             return error("%s: Consensus::CheckTxInputs: %s, %s", __func__, tx.GetHash().ToString(), FormatStateMessage(state));
         }
 
@@ -1027,27 +1028,27 @@ CAmount GetBlockSubsidy(int nPrevBits, int nPrevHeight, const Consensus::Params&
         tempHeight = nPrevHeight - 553532;
         multiplier = tempHeight / owlings;
         nSubsidy -= (multiplier * 10 + 10);
-    } else if ((nPrevHeight > 2105657) && (nPrevHeight < 5273695)) {
-        tempHeight = nPrevHeight - 2105658;
+    } else if ((nPrevHeight >= 2105657) && (nPrevHeight < 5273695)) {
+        tempHeight = nPrevHeight - 2105657;
         multiplier = tempHeight / owlings;
         nSubsidy -= (multiplier * 20 + 750);
-    } else if ((nPrevHeight > 5273695) && (nPrevHeight < 7378633)) {
-        tempHeight = nPrevHeight - 5273696;
+    } else if ((nPrevHeight >= 5273695) && (nPrevHeight < 7378633)) {
+        tempHeight = nPrevHeight - 5273695;
         multiplier = tempHeight / owlings;
         nSubsidy -= (multiplier * 10 + 3720);
-    } else if ((nPrevHeight > 7378633) && (nPrevHeight < 8399209)) {
-        tempHeight = nPrevHeight - 7378634;
+    } else if ((nPrevHeight >= 7378633) && (nPrevHeight < 8399209)) {
+        tempHeight = nPrevHeight - 7378633;
         multiplier = tempHeight / owlings;
         nSubsidy -= (multiplier * 5 + 4705);
-    } else if ((nPrevHeight > 8399209) && (nPrevHeight < 14735285)) {
+    } else if ((nPrevHeight >= 8399209) && (nPrevHeight < 14735285)) {
         nSubsidy = 55;
-    } else if ((nPrevHeight > 14735285) && (nPrevHeight < 15798385)) {
-        tempHeight = nPrevHeight - 14735286;
+    } else if ((nPrevHeight >= 14735285) && (nPrevHeight < 15798385)) {
+        tempHeight = nPrevHeight - 14735285;
         multiplier = tempHeight / owlings;
         nSubsidy -= (multiplier + 4946);
-    } else if ((nPrevHeight > 15798385) && (nPrevHeight < 25844304)) {
+    } else if ((nPrevHeight >= 15798385) && (nPrevHeight < 25844304)) {
         nSubsidy = 5;
-    } else if (nPrevHeight > 125844304) {
+    } else if (nPrevHeight >= 25844304) {
         nSubsidy = 0.001;
     }
     return nSubsidy * COIN;
@@ -2094,6 +2095,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
     int64_t nTime2_1 = GetTimeMicros(); nTimeProcessSpecial += nTime2_1 - nTime2;
     LogPrint(BCLog::BENCHMARK, "      - ProcessSpecialTxsInBlock: %.2fms [%.2fs (%.2fms/blk)]\n", MILLI * (nTime2_1 - nTime2), nTimeProcessSpecial * MICRO, nTimeProcessSpecial * MILLI / nBlocksTotal);
 
+    bool isV17active = Params().IsFutureActive(::ChainActive().Tip());
     for (unsigned int i = 0; i < block.vtx.size(); i++)
     {
         const CTransaction &tx = *(block.vtx[i]);
@@ -2106,17 +2108,17 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
             CAmount txfee = 0;
             CAmount specialTxFee = 0;
             bool isSyncing = IsInitialBlockDownload();
-            if (!Consensus::CheckTxInputs(tx, state, view, pindex->nHeight, txfee, specialTxFee, !isSyncing)) {
+            if (!Consensus::CheckTxInputs(tx, state, view, pindex->nHeight, txfee, specialTxFee, isV17active, !isSyncing)) {
                 return error("%s: Consensus::CheckTxInputs: %s, %s", __func__, tx.GetHash().ToString(), FormatStateMessage(state));
             }
             nFees += txfee;
             specialTxFees += specialTxFee;
-            if (!MoneyRange(nFees)) {
+            if (!MoneyRange(nFees, isV17active)) {
                 return state.DoS(100, error("%s: accumulated fee in the block out of range.", __func__),
                                  REJECT_INVALID, "bad-txns-accumulated-fee-outofrange");
             }
 
-            if (!MoneyRange(specialTxFees)) {
+            if (!MoneyRange(specialTxFees, isV17active)) {
                 return state.DoS(100, error("%s: accumulated specialTxFees in the block out of range.", __func__),
                     REJECT_INVALID, "bad-txns-accumulated-specialTxFees-outofrange");
             }

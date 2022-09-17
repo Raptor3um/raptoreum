@@ -33,7 +33,6 @@ class Notificator;
 class OptionsModel;
 class RPCConsole;
 class SendCoinsRecipient;
-class SendFuturesRecipient;
 class UnitDisplayStatusBarControl;
 class WalletController;
 class WalletFrame;
@@ -135,7 +134,6 @@ private:
     QToolBar* appToolBar = nullptr;
     QToolButton* overviewButton = nullptr;
     QToolButton* sendCoinsButton = nullptr;
-    QToolButton* sendFuturesButton = nullptr;
     QToolButton* coinJoinCoinsButton = nullptr;
     QToolButton* receiveCoinsButton = nullptr;
     QToolButton* historyButton = nullptr;
@@ -143,7 +141,6 @@ private:
     QAction* appToolBarLogoAction = nullptr;
     QAction* quitAction = nullptr;
     QAction* sendCoinsMenuAction = nullptr;
-    QAction* sendFuturesMenuAction = nullptr;
     QAction* coinJoinCoinsMenuAction = nullptr;
     QAction* usedSendingAddressesAction = nullptr;
     QAction* usedReceivingAddressesAction = nullptr;
@@ -318,8 +315,6 @@ public Q_SLOTS:
     void gotoReceiveCoinsPage();
     /** Switch to send coins page */
     void gotoSendCoinsPage(QString addr = "");
-    /** Switch to send Futures page */
-    void gotoSendFuturesPage(QString addr = "");
     /** Switch to CoinJoin coins page */
     void gotoCoinJoinCoinsPage(QString addr = "");
 

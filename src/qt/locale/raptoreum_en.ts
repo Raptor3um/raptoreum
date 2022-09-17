@@ -69,7 +69,7 @@
         <translation>C&amp;lose</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="+77"/>
+        <location filename="../addressbookpage.cpp" line="+78"/>
         <source>Choose the address to send coins to</source>
         <translation>Choose the address to send coins to</translation>
     </message>
@@ -152,7 +152,7 @@
 <context>
     <name>AddressTableModel</name>
     <message>
-        <location filename="../addresstablemodel.cpp" line="+164"/>
+        <location filename="../addresstablemodel.cpp" line="+165"/>
         <source>Label</source>
         <translation>Label</translation>
     </message>
@@ -245,7 +245,7 @@
         <translation>Show password</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="+54"/>
+        <location filename="../askpassphrasedialog.cpp" line="+55"/>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
         <translation>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</translation>
     </message>
@@ -400,17 +400,17 @@
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <location filename="../raptoreum.cpp" line="+540"/>
+        <location filename="../raptoreum.cpp" line="+541"/>
         <source>A fatal error occurred. Raptoreum Core can no longer continue safely and will quit.</source>
         <translation>A fatal error occurred. Raptoreum Core can no longer continue safely and will quit.</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="+1401"/>
+        <location filename="../bitcoingui.cpp" line="+1406"/>
         <source>Raptoreum Core</source>
         <translation>Raptoreum Core</translation>
     </message>
     <message>
-        <location line="-1260"/>
+        <location line="-1264"/>
         <source>Wallet</source>
         <translation>Wallet</translation>
     </message>
@@ -420,7 +420,7 @@
         <translation>Node</translation>
     </message>
     <message>
-        <location line="+457"/>
+        <location line="+461"/>
         <source>&amp;Overview</source>
         <translation>&amp;Overview</translation>
     </message>
@@ -430,7 +430,7 @@
         <translation>Show general overview of wallet</translation>
     </message>
     <message>
-        <location line="-215"/>
+        <location line="-217"/>
         <source>&amp;Send</source>
         <translation>&amp;Send</translation>
     </message>
@@ -450,7 +450,7 @@
         <translation>Request payments (generates QR codes and raptoreum: URIs)</translation>
     </message>
     <message>
-        <location line="+220"/>
+        <location line="+222"/>
         <source>&amp;Transactions</source>
         <translation>&amp;Transactions</translation>
     </message>
@@ -470,7 +470,7 @@
         <translation>Browse smartnodes</translation>
     </message>
     <message>
-        <location line="-221"/>
+        <location line="-223"/>
         <source>E&amp;xit</source>
         <translation>E&amp;xit</translation>
     </message>
@@ -570,7 +570,7 @@
         <translation>&amp;Lock Wallet</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Sign &amp;message...</source>
         <translation>Sign &amp;message...</translation>
     </message>
@@ -610,7 +610,7 @@
         <translation>Open debugging console</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>&amp;Network Monitor</source>
         <translation>&amp;Network Monitor</translation>
     </message>
@@ -1050,7 +1050,7 @@
         <translation>Confirmed</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="+66"/>
+        <location filename="../coincontroldialog.cpp" line="+67"/>
         <source>Copy address</source>
         <translation>Copy address</translation>
     </message>
@@ -1220,7 +1220,7 @@
         <translation>The address associated with this address list entry. This can only be modified for sending addresses.</translation>
     </message>
     <message>
-        <location filename="../editaddressdialog.cpp" line="+31"/>
+        <location filename="../editaddressdialog.cpp" line="+32"/>
         <source>New sending address</source>
         <translation>New sending address</translation>
     </message>
@@ -1258,7 +1258,7 @@
 <context>
     <name>FreespaceChecker</name>
     <message>
-        <location filename="../intro.cpp" line="+78"/>
+        <location filename="../intro.cpp" line="+79"/>
         <source>A new data directory will be created.</source>
         <translation>A new data directory will be created.</translation>
     </message>
@@ -1286,7 +1286,7 @@
 <context>
     <name>HelpMessageDialog</name>
     <message>
-        <location filename="../utilitydialog.cpp" line="+44"/>
+        <location filename="../utilitydialog.cpp" line="+45"/>
         <source>version</source>
         <translation>version</translation>
     </message>
@@ -1401,167 +1401,6 @@
     </message>
 </context>
 <context>
-    <name>SmartnodeList</name>
-    <message>
-        <location filename="../forms/smartnodelist.ui" line="+14"/>
-        <source>Form</source>
-        <translation>Form</translation>
-    </message>
-    <message>
-        <location line="+120"/>
-        <source>Status</source>
-        <translation>Status</translation>
-    </message>
-    <message>
-        <location line="-33"/>
-        <source>0</source>
-        <translation>0</translation>
-    </message>
-    <message>
-        <location line="-44"/>
-        <source>Filter List:</source>
-        <translation>Filter List:</translation>
-    </message>
-    <message>
-        <location line="+7"/>
-        <source>Filter smartnode list</source>
-        <translation>Filter smartnode list</translation>
-    </message>
-    <message>
-        <location line="+30"/>
-        <source>Node Count:</source>
-        <translation>Node Count:</translation>
-    </message>
-    <message>
-        <location line="-23"/>
-        <source>Show only smartnodes this wallet has keys for.</source>
-        <translation>Show only smartnodes this wallet has keys for.</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>My smartnodes only</source>
-        <translation>My smartnodes only</translation>
-    </message>
-    <message>
-        <location line="+55"/>
-        <source>Service</source>
-        <translation>Service</translation>
-    </message>
-    <message>
-        <location line="+10"/>
-        <source>PoSe Score</source>
-        <translation>PoSe Score</translation>
-    </message>
-    <message>
-        <location line="+5"/>
-        <source>Registered</source>
-        <translation>Registered</translation>
-    </message>
-    <message>
-        <location line="+5"/>
-        <source>Last Paid</source>
-        <translation>Last Paid</translation>
-    </message>
-    <message>
-        <location line="+5"/>
-        <source>Next Payment</source>
-        <translation>Next Payment</translation>
-    </message>
-    <message>
-        <location line="+5"/>
-        <source>Payout Address</source>
-        <translation>Payout Address</translation>
-    </message>
-    <message>
-        <location line="+5"/>
-        <source>Operator Reward</source>
-        <translation>Operator Reward</translation>
-    </message>
-    <message>
-        <location line="+5"/>
-        <source>Collateral Address</source>
-        <translation>Collateral Address</translation>
-    </message>
-    <message>
-        <location line="+5"/>
-        <source>Owner Address</source>
-        <translation>Owner Address</translation>
-    </message>
-    <message>
-        <location line="+5"/>
-        <source>Voting Address</source>
-        <translation>Voting Address</translation>
-    </message>
-    <message>
-        <location filename="../smartnodelist.cpp" line="+95"/>
-        <source>Copy ProTx Hash</source>
-        <translation>Copy ProTx Hash</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Copy Collateral Outpoint</source>
-        <translation>Copy Collateral Outpoint</translation>
-    </message>
-    <message>
-        <location line="+101"/>
-        <source>Updating...</source>
-        <translation>Updating...</translation>
-    </message>
-    <message>
-        <location line="+37"/>
-        <source>ENABLED</source>
-        <translation>ENABLED</translation>
-    </message>
-    <message>
-        <location line="+0"/>
-        <source>POSE_BANNED</source>
-        <translation>POSE_BANNED</translation>
-    </message>
-    <message>
-        <location line="+0"/>
-        <location line="+14"/>
-        <location line="+23"/>
-        <source>UNKNOWN</source>
-        <translation>UNKNOWN</translation>
-    </message>
-    <message>
-        <location line="-10"/>
-        <source>to %1</source>
-        <translation>to %1</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>to UNKNOWN</source>
-        <translation>to UNKNOWN</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>but not claimed</source>
-        <translation>but not claimed</translation>
-    </message>
-    <message>
-        <location line="-12"/>
-        <source>NONE</source>
-        <translation>NONE</translation>
-    </message>
-    <message>
-        <location line="-161"/>
-        <source>Filter by any property (e.g. address or protx hash)</source>
-        <translation>Filter by any property (e.g. address or protx hash)</translation>
-    </message>
-    <message>
-        <location line="+63"/>
-        <location line="+170"/>
-        <source>Please wait...</source>
-        <translation>Please wait...</translation>
-    </message>
-    <message>
-        <location line="+48"/>
-        <source>Additional information for DIP3 Smartnode %1</source>
-        <translation>Additional information for DIP3 Smartnode %1</translation>
-    </message>
-</context>
-<context>
     <name>ModalOverlay</name>
     <message>
         <location filename="../forms/modaloverlay.ui" line="+14"/>
@@ -1650,7 +1489,7 @@
         <translation>Select payment request file</translation>
     </message>
     <message>
-        <location filename="../openuridialog.cpp" line="+48"/>
+        <location filename="../openuridialog.cpp" line="+49"/>
         <source>Select payment request file to open</source>
         <translation>Select payment request file to open</translation>
     </message>
@@ -1668,7 +1507,7 @@
         <translation>&amp;Main</translation>
     </message>
     <message>
-        <location line="+180"/>
+        <location line="+117"/>
         <source>Size of &amp;database cache</source>
         <translation>Size of &amp;database cache</translation>
     </message>
@@ -1688,7 +1527,7 @@
         <translation>(0 = auto, &lt;0 = leave that many cores free)</translation>
     </message>
     <message>
-        <location line="-226"/>
+        <location line="-163"/>
         <source>W&amp;allet</source>
         <translation>W&amp;allet</translation>
     </message>
@@ -1698,27 +1537,7 @@
         <translation>&amp;Appearance</translation>
     </message>
     <message>
-        <location line="+80"/>
-        <source>Disables some advanced features but all blocks will still be fully validated. Reverting this setting requires re-downloading the entire blockchain. Actual disk usage may be somewhat higher.</source>
-        <translation>Disables some advanced features but all blocks will still be fully validated. Reverting this setting requires re-downloading the entire blockchain. Actual disk usage may be somewhat higher.</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Prune &amp;block storage to</source>
-        <translation>Prune &amp;block storage to</translation>
-    </message>
-    <message>
-        <location line="+10"/>
-        <source>GB</source>
-        <translation>GB</translation>
-    </message>
-    <message>
-        <location line="+25"/>
-        <source>Reverting this setting requires re-downloading the entire blockchain.</source>
-        <translation>Reverting this setting requires re-downloading the entire blockchain.</translation>
-    </message>
-    <message>
-        <location line="+119"/>
+        <location line="+174"/>
         <source>Show additional tab listing all your smartnodes in first sub-tab&lt;br/&gt;and all smartnodes on the network in second sub-tab.</source>
         <translation>Show additional tab listing all your smartnodes in first sub-tab&lt;br/&gt;and all smartnodes on the network in second sub-tab.</translation>
     </message>
@@ -1830,7 +1649,7 @@
         <translation>Use separate SOCKS&amp;5 proxy to reach peers via Tor hidden services:</translation>
     </message>
     <message>
-        <location line="-544"/>
+        <location line="-494"/>
         <source>Hide the icon from the system tray.</source>
         <translation>Hide the icon from the system tray.</translation>
     </message>
@@ -1845,7 +1664,7 @@
         <translation>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</translation>
     </message>
     <message>
-        <location line="+729"/>
+        <location line="+679"/>
         <location line="+13"/>
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items.&lt;br/&gt;%s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
         <translation>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items.&lt;br/&gt;%s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</translation>
@@ -1861,7 +1680,7 @@
         <translation>Whether to show coin control features or not.</translation>
     </message>
     <message>
-        <location line="-202"/>
+        <location line="-139"/>
         <source>Automatically start %1 after logging in to the system.</source>
         <translation>Automatically start %1 after logging in to the system.</translation>
     </message>
@@ -1871,7 +1690,7 @@
         <translation>&amp;Start %1 on system login</translation>
     </message>
     <message>
-        <location line="+202"/>
+        <location line="+139"/>
         <source>Enable coin &amp;control features</source>
         <translation>Enable coin &amp;control features</translation>
     </message>
@@ -1886,12 +1705,12 @@
         <translation>This setting determines the amount of individual smartnodes that an input will be mixed through.&lt;br/&gt;More rounds of mixing gives a higher degree of privacy, but also costs more in fees.</translation>
     </message>
     <message>
-        <location line="-348"/>
+        <location line="-285"/>
         <source>&amp;Network</source>
         <translation>&amp;Network</translation>
     </message>
     <message>
-        <location line="+435"/>
+        <location line="+372"/>
         <source>Map port using &amp;UPnP</source>
         <translation>Map port using &amp;UPnP</translation>
     </message>
@@ -1945,7 +1764,7 @@
         <translation>Connect to the Raptoreum network through a separate SOCKS5 proxy for Tor hidden services.</translation>
     </message>
     <message>
-        <location line="-531"/>
+        <location line="-481"/>
         <source>Show only a tray icon after minimizing the window.</source>
         <translation>Show only a tray icon after minimizing the window.</translation>
     </message>
@@ -1960,12 +1779,12 @@
         <translation>M&amp;inimize on close</translation>
     </message>
     <message>
-        <location line="-81"/>
+        <location line="-68"/>
         <source>&amp;Display</source>
         <translation>&amp;Display</translation>
     </message>
     <message>
-        <location line="+709"/>
+        <location line="+646"/>
         <source>User Interface &amp;language:</source>
         <translation>User Interface &amp;language:</translation>
     </message>
@@ -2022,7 +1841,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>&amp;Cancel</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="+71"/>
+        <location filename="../optionsdialog.cpp" line="+62"/>
         <source>Enable %1 features</source>
         <translation>Enable %1 features</translation>
     </message>
@@ -2032,23 +1851,23 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>default</translation>
     </message>
     <message>
-        <location line="+213"/>
+        <location line="+208"/>
         <source>Confirm options reset</source>
         <translation>Confirm options reset</translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+56"/>
+        <location line="+51"/>
         <source>Client restart required to activate changes.</source>
         <translation>Client restart required to activate changes.</translation>
     </message>
     <message>
-        <location line="-56"/>
+        <location line="-51"/>
         <source>Client will be shut down. Do you want to proceed?</source>
         <translation>Client will be shut down. Do you want to proceed?</translation>
     </message>
     <message>
-        <location line="+60"/>
+        <location line="+55"/>
         <source>This change would require a client restart.</source>
         <translation>This change would require a client restart.</translation>
     </message>
@@ -2168,12 +1987,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Amount and Rounds:</translation>
     </message>
     <message>
-        <location line="+7"/>
-        <source>0 RTM / 0 Rounds</source>
-        <translation>0 RTM / 0 Rounds</translation>
-    </message>
-    <message>
-        <location line="+7"/>
+        <location line="+14"/>
         <source>Submitted Denom:</source>
         <translation>Submitted Denom:</translation>
     </message>
@@ -2198,7 +2012,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>The denominations you submitted to the Smartnode.&lt;br&gt;To mix, other users must submit the exact same denominations.</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="+151"/>
+        <location filename="../overviewpage.cpp" line="+152"/>
         <location line="+1"/>
         <location line="+1"/>
         <source>out of sync</source>
@@ -2358,7 +2172,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
 <context>
     <name>PaymentServer</name>
     <message>
-        <location filename="../paymentserver.cpp" line="+318"/>
+        <location filename="../paymentserver.cpp" line="+320"/>
         <location line="+215"/>
         <location line="+42"/>
         <location line="+108"/>
@@ -2578,17 +2392,17 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>%1 didn&apos;t yet exit safely...</translation>
     </message>
     <message>
-        <location filename="../bitcoinunits.cpp" line="+233"/>
+        <location filename="../bitcoinunits.cpp" line="+235"/>
         <source>Amount</source>
         <translation>Amount</translation>
     </message>
     <message>
-        <location filename="../guiutil.cpp" line="+284"/>
+        <location filename="../guiutil.cpp" line="+263"/>
         <source>Enter a Raptoreum address (e.g. %1)</source>
         <translation>Enter a Raptoreum address (e.g. %1)</translation>
     </message>
     <message>
-        <location line="+29"/>
+        <location line="+13"/>
         <source>Appearance Setup</source>
         <translation>Appearance Setup</translation>
     </message>
@@ -2603,7 +2417,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>This can also be adjusted later in the &quot;Appearance&quot; tab of the preferences.</translation>
     </message>
     <message>
-        <location line="+1462"/>
+        <location line="+1513"/>
         <source>%1 d</source>
         <translation>%1 d</translation>
     </message>
@@ -2736,12 +2550,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Error: %1</translation>
     </message>
     <message>
-        <location line="+46"/>
+        <location line="+44"/>
         <source>Error: Failed to load application fonts.</source>
         <translation>Error: Failed to load application fonts.</translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+13"/>
         <source>Error: Specified font-family invalid. Valid values: %1.</source>
         <translation>Error: Specified font-family invalid. Valid values: %1.</translation>
     </message>
@@ -2897,7 +2711,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <location line="+26"/>
         <location line="+23"/>
         <location line="+23"/>
-        <location filename="../rpcconsole.cpp" line="+1258"/>
+        <location filename="../rpcconsole.cpp" line="+1257"/>
         <source>N/A</source>
         <translation>N/A</translation>
     </message>
@@ -3514,6 +3328,11 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <source>Copy amount</source>
         <translation>Copy amount</translation>
     </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy Address</source>
+        <translation>Copy Address</translation>
+    </message>
 </context>
 <context>
     <name>ReceiveRequestDialog</name>
@@ -3630,7 +3449,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <name>SendCoinsDialog</name>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="+14"/>
-        <location filename="../sendcoinsdialog.cpp" line="+682"/>
+        <location filename="../sendcoinsdialog.cpp" line="+704"/>
         <source>Send Coins</source>
         <translation>Send Coins</translation>
     </message>
@@ -3772,7 +3591,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <location line="+119"/>
-        <location filename="../sendcoinsdialog.cpp" line="-518"/>
+        <location filename="../sendcoinsdialog.cpp" line="-554"/>
         <source>Confirm the send action</source>
         <translation>Confirm the send action</translation>
     </message>
@@ -3808,7 +3627,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Balance:</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="-47"/>
+        <location filename="../sendcoinsdialog.cpp" line="-48"/>
         <source>Copy quantity</source>
         <translation>Copy quantity</translation>
     </message>
@@ -3843,23 +3662,23 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Copy change</translation>
     </message>
     <message>
-        <location line="+86"/>
+        <location line="+87"/>
         <source>%1 (%2 blocks)</source>
         <translation>%1 (%2 blocks)</translation>
     </message>
     <message>
-        <location line="+120"/>
+        <location line="+130"/>
         <source>from wallet %1</source>
         <translation>from wallet %1</translation>
     </message>
     <message>
-        <location line="+53"/>
+        <location line="+74"/>
         <location line="+2"/>
         <source>using</source>
         <translation>using</translation>
     </message>
     <message>
-        <location line="-42"/>
+        <location line="-63"/>
         <location line="+5"/>
         <location line="+5"/>
         <location line="+4"/>
@@ -3867,7 +3686,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>%1 to %2</translation>
     </message>
     <message>
-        <location line="+19"/>
+        <location line="+40"/>
         <source>Are you sure you want to send?</source>
         <translation>Are you sure you want to send?</translation>
     </message>
@@ -3887,7 +3706,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>&lt;b&gt;(%1 of %2 entries displayed)&lt;/b&gt;</translation>
     </message>
     <message>
-        <location line="-229"/>
+        <location line="-260"/>
         <source>S&amp;end mixed funds</source>
         <translation>S&amp;end mixed funds</translation>
     </message>
@@ -3897,7 +3716,17 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Confirm the %1 send action</translation>
     </message>
     <message>
-        <location line="+220"/>
+        <location line="+210"/>
+        <source>&lt;br&gt;Confirmations in: &lt;b&gt;%1 blocks&lt;/b&gt;&lt;br /&gt;</source>
+        <translation>&lt;br&gt;Confirmations in: &lt;b&gt;%1 blocks&lt;/b&gt;&lt;br /&gt;</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Time in: &lt;b&gt;%1 seconds from first confirmed&lt;/b&gt;&lt;br /&gt;</source>
+        <translation>Time in: &lt;b&gt;%1 seconds from first confirmed&lt;/b&gt;&lt;br /&gt;</translation>
+    </message>
+    <message>
+        <location line="+38"/>
         <source>%1 funds only</source>
         <translation>%1 funds only</translation>
     </message>
@@ -3940,7 +3769,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Confirm send coins</translation>
     </message>
     <message>
-        <location line="+200"/>
+        <location line="+202"/>
         <source>The recipient address is not valid. Please recheck.</source>
         <translation>The recipient address is not valid. Please recheck.</translation>
     </message>
@@ -3985,7 +3814,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Payment request expired.</translation>
     </message>
     <message>
-        <location line="+85"/>
+        <location line="+4"/>
+        <source>The amount to pay exceeds the limit of 21 million per transaction.</source>
+        <translation>The amount to pay exceeds the limit of 21 million per transaction.</translation>
+    </message>
+    <message>
+        <location line="+84"/>
         <source>Pay only the required fee of %1</source>
         <translation>Pay only the required fee of %1</translation>
     </message>
@@ -4031,12 +3865,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>This is a normal payment.</translation>
     </message>
     <message>
-        <location line="+21"/>
+        <location line="+123"/>
         <source>Pay &amp;To:</source>
         <translation>Pay &amp;To:</translation>
     </message>
     <message>
-        <location line="+18"/>
+        <location line="-63"/>
         <source>The Raptoreum address to send the payment to</source>
         <translation>The Raptoreum address to send the payment to</translation>
     </message>
@@ -4062,30 +3896,35 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <location line="+7"/>
-        <location line="+551"/>
-        <location line="+529"/>
+        <location line="+191"/>
+        <location line="+94"/>
         <source>Remove this entry</source>
         <translation>Remove this entry</translation>
     </message>
     <message>
-        <location line="-1062"/>
+        <location line="-232"/>
+        <source>Enable/Disable future transaction</source>
+        <translation>Enable/Disable future transaction</translation>
+    </message>
+    <message>
+        <location line="+19"/>
         <source>&amp;Label:</source>
         <translation>&amp;Label:</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="-156"/>
         <source>Enter a label for this address to add it to the list of used addresses</source>
         <translation>Enter a label for this address to add it to the list of used addresses</translation>
     </message>
     <message>
-        <location line="+7"/>
-        <location line="+542"/>
-        <location line="+529"/>
+        <location line="+176"/>
+        <location line="+128"/>
+        <location line="+94"/>
         <source>A&amp;mount:</source>
         <translation>A&amp;mount:</translation>
     </message>
     <message>
-        <location line="-1053"/>
+        <location line="-271"/>
         <source>The fee will be deducted from the amount being sent. The recipient will receive a lower amount of Raptoreum than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
         <translation>The fee will be deducted from the amount being sent. The recipient will receive a lower amount of Raptoreum than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</translation>
     </message>
@@ -4095,44 +3934,74 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>S&amp;ubtract fee from amount</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+17"/>
         <source>Use available balance</source>
         <translation>Use available balance</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="-140"/>
         <source>Message:</source>
         <translation>Message:</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+17"/>
         <source>A message that was attached to the raptoreum: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Raptoreum network.</source>
         <translation>A message that was attached to the raptoreum: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Raptoreum network.</translation>
     </message>
     <message>
-        <location line="+433"/>
+        <location line="+116"/>
+        <source>Future</source>
+        <translation>Future</translation>
+    </message>
+    <message>
+        <location line="+29"/>
+        <source>Maturity:</source>
+        <translation>Maturity:</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>Number of block confirmations for this output to be spendable if happen before timelock</source>
+        <translation>Number of block confirmations for this output to be spendable if happen before timelock</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Lock time:</source>
+        <translation>Lock time:</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Time in seconds for this output to be spendable if happen before maturity</source>
+        <translation>Time in seconds for this output to be spendable if happen before maturity</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Fee:</source>
+        <translation>Fee:</translation>
+    </message>
+    <message>
+        <location line="+24"/>
         <source>This is an unauthenticated payment request.</source>
         <translation>This is an unauthenticated payment request.</translation>
     </message>
     <message>
-        <location line="+525"/>
+        <location line="+90"/>
         <source>This is an authenticated payment request.</source>
         <translation>This is an authenticated payment request.</translation>
     </message>
     <message>
-        <location line="-510"/>
-        <location line="+525"/>
+        <location line="-75"/>
+        <location line="+90"/>
         <source>Pay To:</source>
         <translation>Pay To:</translation>
     </message>
     <message>
-        <location line="-495"/>
-        <location line="+529"/>
+        <location line="-60"/>
+        <location line="+94"/>
         <source>Memo:</source>
         <translation>Memo:</translation>
     </message>
     <message>
-        <location filename="../sendcoinsentry.cpp" line="+28"/>
+        <location filename="../sendcoinsentry.cpp" line="+30"/>
         <source>Enter a label for this address to add it to your address book</source>
         <translation>Enter a label for this address to add it to your address book</translation>
     </message>
@@ -4270,7 +4139,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Reset all verify message fields</translation>
     </message>
     <message>
-        <location filename="../signverifymessagedialog.cpp" line="+37"/>
+        <location filename="../signverifymessagedialog.cpp" line="+38"/>
         <source>Enter a message to be signed</source>
         <translation>Enter a message to be signed</translation>
     </message>
@@ -4357,9 +4226,180 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
 </context>
 <context>
+    <name>SmartnodeList</name>
+    <message>
+        <location filename="../forms/smartnodelist.ui" line="+14"/>
+        <source>Form</source>
+        <translation>Form</translation>
+    </message>
+    <message>
+        <location line="+120"/>
+        <source>Status</source>
+        <translation>Status</translation>
+    </message>
+    <message>
+        <location line="-33"/>
+        <source>0</source>
+        <translation>0</translation>
+    </message>
+    <message>
+        <location line="-44"/>
+        <source>Filter List:</source>
+        <translation>Filter List:</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Filter smartnode list</source>
+        <translation>Filter smartnode list</translation>
+    </message>
+    <message>
+        <location line="+30"/>
+        <source>Node Count:</source>
+        <translation>Node Count:</translation>
+    </message>
+    <message>
+        <location line="-23"/>
+        <source>Show only smartnodes this wallet has keys for.</source>
+        <translation>Show only smartnodes this wallet has keys for.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>My smartnodes only</source>
+        <translation>My smartnodes only</translation>
+    </message>
+    <message>
+        <location line="+55"/>
+        <source>Service</source>
+        <translation>Service</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>PoSe Score</source>
+        <translation>PoSe Score</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Registered</source>
+        <translation>Registered</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Last Paid</source>
+        <translation>Last Paid</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Next Payment</source>
+        <translation>Next Payment</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Payout Address</source>
+        <translation>Payout Address</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Operator Reward</source>
+        <translation>Operator Reward</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Collateral Address</source>
+        <translation>Collateral Address</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Collateral Amount</source>
+        <translation>Collateral Amount</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Owner Address</source>
+        <translation>Owner Address</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Voting Address</source>
+        <translation>Voting Address</translation>
+    </message>
+    <message>
+        <location filename="../smartnodelist.cpp" line="+97"/>
+        <source>Copy ProTx Hash</source>
+        <translation>Copy ProTx Hash</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy Collateral Outpoint</source>
+        <translation>Copy Collateral Outpoint</translation>
+    </message>
+    <message>
+        <location line="+101"/>
+        <source>Updating...</source>
+        <translation>Updating...</translation>
+    </message>
+    <message>
+        <location line="+41"/>
+        <source>Invalid</source>
+        <translation>Invalid</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>ENABLED</source>
+        <translation>ENABLED</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>POSE_BANNED</source>
+        <translation>POSE_BANNED</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <location line="+14"/>
+        <location line="+23"/>
+        <source>UNKNOWN</source>
+        <translation>UNKNOWN</translation>
+    </message>
+    <message>
+        <location line="-10"/>
+        <source>to %1</source>
+        <translation>to %1</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>to UNKNOWN</source>
+        <translation>to UNKNOWN</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>but not claimed</source>
+        <translation>but not claimed</translation>
+    </message>
+    <message>
+        <location line="-12"/>
+        <source>NONE</source>
+        <translation>NONE</translation>
+    </message>
+    <message>
+        <location line="-167"/>
+        <source>Filter by any property (e.g. address or protx hash)</source>
+        <translation>Filter by any property (e.g. address or protx hash)</translation>
+    </message>
+    <message>
+        <location line="+63"/>
+        <location line="+178"/>
+        <source>Please wait...</source>
+        <translation>Please wait...</translation>
+    </message>
+    <message>
+        <location line="+48"/>
+        <source>Additional information for DIP3 Smartnode %1</source>
+        <translation>Additional information for DIP3 Smartnode %1</translation>
+    </message>
+</context>
+<context>
     <name>SplashScreen</name>
     <message>
-        <location filename="../networkstyle.cpp" line="+25"/>
+        <location filename="../networkstyle.cpp" line="+26"/>
         <source>[testnet]</source>
         <translation>[testnet]</translation>
     </message>
@@ -4367,7 +4407,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
 <context>
     <name>TrafficGraphWidget</name>
     <message>
-        <location filename="../trafficgraphwidget.cpp" line="+102"/>
+        <location filename="../trafficgraphwidget.cpp" line="+100"/>
         <source>KB/s</source>
         <translation>KB/s</translation>
     </message>
@@ -4390,7 +4430,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
 <context>
     <name>TransactionDesc</name>
     <message numerus="yes">
-        <location filename="../transactiondesc.cpp" line="+29"/>
+        <location filename="../transactiondesc.cpp" line="+33"/>
         <source>Open for %n more block(s)</source>
         <translation>
             <numerusform>Open for %n more block</numerusform>
@@ -4448,7 +4488,65 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>verified via InstantSend</translation>
     </message>
     <message>
-        <location line="+26"/>
+        <location line="+15"/>
+        <source>Future Transaction</source>
+        <translation>Future Transaction</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Future Amount:</source>
+        <translation>Future Amount:</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <location line="+12"/>
+        <source>Maturity Block:</source>
+        <translation>Maturity Block:</translation>
+    </message>
+    <message>
+        <location line="-8"/>
+        <source>%1 Blocks left</source>
+        <translation>%1 Blocks left</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>%1 Blocks ago</source>
+        <translation>%1 Blocks ago</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <location line="+3"/>
+        <source>Maturity Time:</source>
+        <translation>Maturity Time:</translation>
+    </message>
+    <message>
+        <location line="-2"/>
+        <source>Locked Time:</source>
+        <translation>Locked Time:</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>seconds</source>
+        <translation>seconds</translation>
+    </message>
+    <message>
+        <location line="-6"/>
+        <location line="+8"/>
+        <source>Never</source>
+        <translation>Never</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Locked Output Index:</source>
+        <translation>Locked Output Index:</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Waiting for sync...</source>
+        <translation>Waiting for sync...</translation>
+    </message>
+    <message>
+        <location line="+27"/>
         <source>Status</source>
         <translation>Status</translation>
     </message>
@@ -4458,7 +4556,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Date</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+15"/>
         <source>Source</source>
         <translation>Source</translation>
     </message>
@@ -4507,12 +4605,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <location line="+12"/>
         <location line="+53"/>
         <location line="+30"/>
-        <location line="+57"/>
+        <location line="+59"/>
         <source>Credit</source>
         <translation>Credit</translation>
     </message>
     <message numerus="yes">
-        <location line="-150"/>
+        <location line="-152"/>
         <source>matures in %n more block(s)</source>
         <translation>
             <numerusform>matures in %n more block</numerusform>
@@ -4527,12 +4625,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+59"/>
         <location line="+26"/>
-        <location line="+60"/>
+        <location line="+62"/>
         <source>Debit</source>
         <translation>Debit</translation>
     </message>
     <message>
-        <location line="-76"/>
+        <location line="-78"/>
         <source>Total debit</source>
         <translation>Total debit</translation>
     </message>
@@ -4588,7 +4686,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to &quot;not accepted&quot; and it won&apos;t be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+10"/>
         <source>Debug information</source>
         <translation>Debug information</translation>
     </message>
@@ -4636,7 +4734,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
 <context>
     <name>TransactionTableModel</name>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="+236"/>
+        <location filename="../transactiontablemodel.cpp" line="+245"/>
         <source>Date</source>
         <translation>Date</translation>
     </message>
@@ -4739,7 +4837,17 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Mined</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
+        <source>Future Send</source>
+        <translation>Future Send</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Future Receive</source>
+        <translation>Future Receive</translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>%1 Mixing</source>
         <translation>%1 Mixing</translation>
     </message>
@@ -4769,12 +4877,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>watch-only</translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+19"/>
         <source>(n/a)</source>
         <translation>(n/a)</translation>
     </message>
     <message>
-        <location line="+231"/>
+        <location line="+236"/>
         <source>(no label)</source>
         <translation>(no label)</translation>
     </message>
@@ -4864,6 +4972,21 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <location line="+2"/>
+        <source>Future</source>
+        <translation>Future</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Future Send</source>
+        <translation>Future Send</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Future Received</source>
+        <translation>Future Received</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>%1 Send</source>
         <translation>%1 Send</translation>
     </message>
@@ -4963,7 +5086,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Show address QR code</translation>
     </message>
     <message>
-        <location line="+222"/>
+        <location line="+224"/>
         <source>Export Transaction History</source>
         <translation>Export Transaction History</translation>
     </message>
@@ -5062,7 +5185,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
 <context>
     <name>WalletModel</name>
     <message>
-        <location filename="../walletmodel.cpp" line="+256"/>
+        <location filename="../walletmodel.cpp" line="+282"/>
         <source>Send Coins</source>
         <translation>Send Coins</translation>
     </message>
@@ -5123,762 +5246,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
 <context>
     <name>raptoreum-core</name>
     <message>
-        <location filename="../raptoreumstrings.cpp" line="+39"/>
-        <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
-        <translation>Error: Listening for incoming connections failed (listen returned error %s)</translation>
-    </message>
-    <message>
-        <location line="+41"/>
-        <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
-        <translation>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</translation>
-    </message>
-    <message>
-        <location line="+33"/>
-        <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
-        <translation>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</translation>
-    </message>
-    <message>
-        <location line="+10"/>
-        <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
-        <translation>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</translation>
-    </message>
-    <message>
-        <location line="+21"/>
-        <source>Already have that input.</source>
-        <translation>Already have that input.</translation>
-    </message>
-    <message>
-        <location line="+5"/>
-        <source>Cannot downgrade wallet</source>
-        <translation>Cannot downgrade wallet</translation>
-    </message>
-    <message>
-        <location line="+4"/>
-        <source>Collateral not valid.</source>
-        <translation>Collateral not valid.</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>Corrupted block database detected</source>
-        <translation>Corrupted block database detected</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Do you want to rebuild the block database now?</source>
-        <translation>Do you want to rebuild the block database now?</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Done loading</source>
-        <translation>Done loading</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>Entries are full.</source>
-        <translation>Entries are full.</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>Error initializing block database</source>
-        <translation>Error initializing block database</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Error initializing wallet database environment %s!</source>
-        <translation>Error initializing wallet database environment %s!</translation>
-    </message>
-    <message>
-        <location line="+5"/>
-        <source>Error loading block database</source>
-        <translation>Error loading block database</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>Error opening block database</source>
-        <translation>Error opening block database</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Error reading from database, shutting down.</source>
-        <translation>Error reading from database, shutting down.</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Error</source>
-        <translation>Error</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>Error: Disk space is low!</source>
-        <translation>Error: Disk space is low!</translation>
-    </message>
-    <message>
-        <location line="+12"/>
-        <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
-        <translation>Failed to listen on any port. Use -listen=0 if you want this.</translation>
-    </message>
-    <message>
-        <location line="-164"/>
-        <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
-        <translation>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</translation>
-    </message>
-    <message>
-        <location line="+5"/>
-        <source>Cannot provide specific connections and have addrman find outgoing connections at the same.</source>
-        <translation>Cannot provide specific connections and have addrman find outgoing connections at the same.</translation>
-    </message>
-    <message>
-        <location line="+17"/>
-        <source>Found unconfirmed denominated outputs, will wait till they confirm to continue.</source>
-        <translation>Found unconfirmed denominated outputs, will wait till they confirm to continue.</translation>
-    </message>
-    <message>
-        <location line="+6"/>
-        <source>Invalid -socketevents (&apos;%s&apos;) specified. Only these modes are supported: %s</source>
-        <translation>Invalid -socketevents (&apos;%s&apos;) specified. Only these modes are supported: %s</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: &apos;%s&apos; (must be at least the minrelay fee of %s to prevent stuck transactions)</source>
-        <translation>Invalid amount for -maxtxfee=&lt;amount&gt;: &apos;%s&apos; (must be at least the minrelay fee of %s to prevent stuck transactions)</translation>
-    </message>
-    <message>
-        <location line="+42"/>
-        <source>Transaction index can&apos;t be disabled with governance validation enabled. Either start with -disablegovernance command line switch or enable transaction index.</source>
-        <translation>Transaction index can&apos;t be disabled with governance validation enabled. Either start with -disablegovernance command line switch or enable transaction index.</translation>
-    </message>
-    <message>
-        <location line="+53"/>
-        <source>Can&apos;t mix: no compatible inputs found!</source>
-        <translation>Can&apos;t mix: no compatible inputs found!</translation>
-    </message>
-    <message>
-        <location line="+12"/>
-        <source>Entry exceeds maximum size.</source>
-        <translation>Entry exceeds maximum size.</translation>
-    </message>
-    <message>
-        <location line="+28"/>
-        <source>Failed to load fulfilled requests cache from</source>
-        <translation>Failed to load fulfilled requests cache from</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Failed to load governance cache from</source>
-        <translation>Failed to load governance cache from</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Failed to load smartnode cache from</source>
-        <translation>Failed to load smartnode cache from</translation>
-    </message>
-    <message>
-        <location line="+4"/>
-        <source>Found enough users, signing ( waiting %s )</source>
-        <translation>Found enough users, signing ( waiting %s )</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Found enough users, signing ...</source>
-        <translation>Found enough users, signing ...</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Importing...</source>
-        <translation>Importing...</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Incompatible mode.</source>
-        <translation>Incompatible mode.</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Incompatible version.</source>
-        <translation>Incompatible version.</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
-        <translation>Incorrect or no genesis block found. Wrong datadir for network?</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Information</source>
-        <translation>Information</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>Input is not valid.</source>
-        <translation>Input is not valid.</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>Insufficient funds.</source>
-        <translation>Insufficient funds.</translation>
-    </message>
-    <message>
-        <location line="+4"/>
-        <source>Invalid amount for -discardfee=&lt;amount&gt;: &apos;%s&apos;</source>
-        <translation>Invalid amount for -discardfee=&lt;amount&gt;: &apos;%s&apos;</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos; (must be at least %s)</source>
-        <translation>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos; (must be at least %s)</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>Invalid minimum number of spork signers specified with -minsporkkeys</source>
-        <translation>Invalid minimum number of spork signers specified with -minsporkkeys</translation>
-    </message>
-    <message>
-        <location line="+6"/>
-        <source>Keypool ran out, please call keypoolrefill first</source>
-        <translation>Keypool ran out, please call keypoolrefill first</translation>
-    </message>
-    <message>
-        <location line="+4"/>
-        <source>Loading banlist...</source>
-        <translation>Loading banlist...</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>Loading fulfilled requests cache...</source>
-        <translation>Loading fulfilled requests cache...</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>Loading smartnode cache...</source>
-        <translation>Loading smartnode cache...</translation>
-    </message>
-    <message>
-        <location line="+4"/>
-        <source>Lock is already in place.</source>
-        <translation>Lock is already in place.</translation>
-    </message>
-    <message>
-        <location line="+4"/>
-        <source>Mixing in progress...</source>
-        <translation>Mixing in progress...</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Need to specify a port with -whitebind: &apos;%s&apos;</source>
-        <translation>Need to specify a port with -whitebind: &apos;%s&apos;</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>No Smartnodes detected.</source>
-        <translation>No Smartnodes detected.</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>No compatible Smartnode found.</source>
-        <translation>No compatible Smartnode found.</translation>
-    </message>
-    <message>
-        <location line="+5"/>
-        <source>Not enough funds to mix.</source>
-        <translation>Not enough funds to mix.</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Not in the Smartnode list.</source>
-        <translation>Not in the Smartnode list.</translation>
-    </message>
-    <message>
-        <location line="+16"/>
-        <source>Submitted to smartnode, waiting in queue %s</source>
-        <translation>Submitted to smartnode, waiting in queue %s</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Synchronization finished</source>
-        <translation>Synchronization finished</translation>
-    </message>
-    <message>
-        <location line="+26"/>
-        <source>Unable to start HTTP server. See debug log for details.</source>
-        <translation>Unable to start HTTP server. See debug log for details.</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>Unknown response.</source>
-        <translation>Unknown response.</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>Unsupported argument -benchmark ignored, use -debug=bench.</source>
-        <translation>Unsupported argument -benchmark ignored, use -debug=bench.</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Unsupported argument -debugnet ignored, use -debug=net.</source>
-        <translation>Unsupported argument -debugnet ignored, use -debug=net.</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Unsupported argument -tor found, use -onion.</source>
-        <translation>Unsupported argument -tor found, use -onion.</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>User Agent comment (%s) contains unsafe characters.</source>
-        <translation>User Agent comment (%s) contains unsafe characters.</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>Verifying wallet(s)...</source>
-        <translation>Verifying wallet(s)...</translation>
-    </message>
-    <message>
-        <location line="+11"/>
-        <source>Will retry...</source>
-        <translation>Will retry...</translation>
-    </message>
-    <message>
-        <location line="-163"/>
-        <source>Can&apos;t find random Smartnode.</source>
-        <translation>Can&apos;t find random Smartnode.</translation>
-    </message>
-    <message>
-        <location line="-14"/>
-        <source>%s can&apos;t be lower than %s</source>
-        <translation>%s can&apos;t be lower than %s</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>%s is idle.</source>
-        <translation>%s is idle.</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>%s request incomplete: %s</source>
-        <translation>%s request incomplete: %s</translation>
-    </message>
-    <message>
-        <location line="+9"/>
-        <source>Can&apos;t mix while sync in progress.</source>
-        <translation>Can&apos;t mix while sync in progress.</translation>
-    </message>
-    <message>
-        <location line="+67"/>
-        <source>Invalid netmask specified in -whitelist: &apos;%s&apos;</source>
-        <translation>Invalid netmask specified in -whitelist: &apos;%s&apos;</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Invalid script detected.</source>
-        <translation>Invalid script detected.</translation>
-    </message>
-    <message>
-        <location line="-201"/>
-        <source>%s file contains all private keys from this wallet. Do not share it with anyone!</source>
-        <translation>%s file contains all private keys from this wallet. Do not share it with anyone!</translation>
-    </message>
-    <message>
-        <location line="+6"/>
-        <source>-smartnode option is deprecated and ignored, specifying -smartnodeblsprivkey is enough to start this node as a smartnode.</source>
-        <translation>-smartnode option is deprecated and ignored, specifying -smartnodeblsprivkey is enough to start this node as a smartnode.</translation>
-    </message>
-    <message>
-        <location line="+21"/>
-        <source>Failed to create backup, file already exists! This could happen if you restarted wallet in less than 60 seconds. You can continue if you are ok with this.</source>
-        <translation>Failed to create backup, file already exists! This could happen if you restarted wallet in less than 60 seconds. You can continue if you are ok with this.</translation>
-    </message>
-    <message>
-        <location line="+15"/>
-        <source>Make sure to encrypt your wallet and delete all non-encrypted backups after you have verified that the wallet works!</source>
-        <translation>Make sure to encrypt your wallet and delete all non-encrypted backups after you have verified that the wallet works!</translation>
-    </message>
-    <message>
-        <location line="+9"/>
-        <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
-        <translation>Prune configured below the minimum of %d MiB.  Please use a higher number.</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)</source>
-        <translation>Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</source>
-        <translation>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>The block database contains a block which appears to be from the future. This may be due to your computer&apos;s date and time being set incorrectly. Only rebuild the block database if you are sure that your computer&apos;s date and time are correct</source>
-        <translation>The block database contains a block which appears to be from the future. This may be due to your computer&apos;s date and time being set incorrectly. Only rebuild the block database if you are sure that your computer&apos;s date and time are correct</translation>
-    </message>
-    <message>
-        <location line="+5"/>
-        <source>The transaction amount is too small to send after the fee has been deducted</source>
-        <translation>The transaction amount is too small to send after the fee has been deducted</translation>
-    </message>
-    <message>
-        <location line="+14"/>
-        <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
-        <translation>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</translation>
-    </message>
-    <message>
-        <location line="+10"/>
-        <source>Unsupported argument -socks found. Setting SOCKS version isn&apos;t possible anymore, only SOCKS5 proxies are supported.</source>
-        <translation>Unsupported argument -socks found. Setting SOCKS version isn&apos;t possible anymore, only SOCKS5 proxies are supported.</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Unsupported argument -whitelistalwaysrelay ignored, use -whitelistrelay and/or -whitelistforcerelay.</source>
-        <translation>Unsupported argument -whitelistalwaysrelay ignored, use -whitelistrelay and/or -whitelistforcerelay.</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>WARNING! Failed to replenish keypool, please unlock your wallet to do so.</source>
-        <translation>WARNING! Failed to replenish keypool, please unlock your wallet to do so.</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>Wallet is locked, can&apos;t replenish keypool! Automatic backups and mixing are disabled, please unlock your wallet to replenish keypool.</source>
-        <translation>Wallet is locked, can&apos;t replenish keypool! Automatic backups and mixing are disabled, please unlock your wallet to replenish keypool.</translation>
-    </message>
-    <message>
-        <location line="+6"/>
-        <source>Warning: Unknown block versions being mined! It&apos;s possible unknown rules are in effect</source>
-        <translation>Warning: Unknown block versions being mined! It&apos;s possible unknown rules are in effect</translation>
-    </message>
-    <message>
-        <location line="+10"/>
-        <source>You need to rebuild the database using -reindex to change -timestampindex</source>
-        <translation>You need to rebuild the database using -reindex to change -timestampindex</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
-        <translation>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</translation>
-    </message>
-    <message>
-        <location line="+6"/>
-        <source>%s failed</source>
-        <translation>%s failed</translation>
-    </message>
-    <message>
-        <location line="+6"/>
-        <source>-litemode is deprecated.</source>
-        <translation>-litemode is deprecated.</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>-maxmempool must be at least %d MB</source>
-        <translation>-maxmempool must be at least %d MB</translation>
-    </message>
-    <message>
-        <location line="+4"/>
-        <source>Automatic backups disabled</source>
-        <translation>Automatic backups disabled</translation>
-    </message>
-    <message>
-        <location line="+13"/>
-        <source>ERROR! Failed to create automatic backup</source>
-        <translation>ERROR! Failed to create automatic backup</translation>
-    </message>
-    <message>
-        <location line="+14"/>
-        <source>Error upgrading evo database</source>
-        <translation>Error upgrading evo database</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>Error: A fatal internal error occurred, see debug.log for details</source>
-        <translation>Error: A fatal internal error occurred, see debug.log for details</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>Error: failed to add socket to epollfd (epoll_ctl returned error %s)</source>
-        <translation>Error: failed to add socket to epollfd (epoll_ctl returned error %s)</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>Exceeded max tries.</source>
-        <translation>Exceeded max tries.</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Failed to clear fulfilled requests cache at</source>
-        <translation>Failed to clear fulfilled requests cache at</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Failed to clear governance cache at</source>
-        <translation>Failed to clear governance cache at</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Failed to clear smartnode cache at</source>
-        <translation>Failed to clear smartnode cache at</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Failed to commit EvoDB</source>
-        <translation>Failed to commit EvoDB</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Failed to create backup %s!</source>
-        <translation>Failed to create backup %s!</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Failed to create backup, error: %s</source>
-        <translation>Failed to create backup, error: %s</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Failed to delete backup, error: %s</source>
-        <translation>Failed to delete backup, error: %s</translation>
-    </message>
-    <message>
-        <location line="+6"/>
-        <source>Failed to load sporks cache from</source>
-        <translation>Failed to load sporks cache from</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Failed to rescan the wallet during initialization</source>
-        <translation>Failed to rescan the wallet during initialization</translation>
-    </message>
-    <message>
-        <location line="+18"/>
-        <source>Invalid amount for -fallbackfee=&lt;amount&gt;: &apos;%s&apos;</source>
-        <translation>Invalid amount for -fallbackfee=&lt;amount&gt;: &apos;%s&apos;</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>Invalid smartnodeblsprivkey. Please see documentation.</source>
-        <translation>Invalid smartnodeblsprivkey. Please see documentation.</translation>
-    </message>
-    <message>
-        <location line="+5"/>
-        <source>It has been replaced by -disablegovernance.</source>
-        <translation>It has been replaced by -disablegovernance.</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Its replacement -disablegovernance has been forced instead.</source>
-        <translation>Its replacement -disablegovernance has been forced instead.</translation>
-    </message>
-    <message>
-        <location line="+6"/>
-        <source>Loading block index...</source>
-        <translation>Loading block index...</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>Loading governance cache...</source>
-        <translation>Loading governance cache...</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>Loading sporks cache...</source>
-        <translation>Loading sporks cache...</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Loading wallet... (%3.2f %%)</source>
-        <translation>Loading wallet... (%3.2f %%)</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Loading wallet...</source>
-        <translation>Loading wallet...</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>Smartnode queue is full.</source>
-        <translation>Smartnode queue is full.</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Smartnode:</source>
-        <translation>Smartnode:</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Missing input transaction information.</source>
-        <translation>Missing input transaction information.</translation>
-    </message>
-    <message>
-        <location line="+5"/>
-        <source>No errors detected.</source>
-        <translation>No errors detected.</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>No matching denominations found for mixing.</source>
-        <translation>No matching denominations found for mixing.</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Not compatible with existing transactions.</source>
-        <translation>Not compatible with existing transactions.</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Not enough file descriptors available.</source>
-        <translation>Not enough file descriptors available.</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Prune cannot be configured with a negative value.</source>
-        <translation>Prune cannot be configured with a negative value.</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Prune mode is incompatible with -disablegovernance=false.</source>
-        <translation>Prune mode is incompatible with -disablegovernance=false.</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Prune mode is incompatible with -txindex.</source>
-        <translation>Prune mode is incompatible with -txindex.</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Pruning blockstore...</source>
-        <translation>Pruning blockstore...</translation>
-    </message>
-    <message>
-        <location line="+7"/>
-        <source>Specified -walletdir &quot;%s&quot; does not exist</source>
-        <translation>Specified -walletdir &quot;%s&quot; does not exist</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Specified -walletdir &quot;%s&quot; is a relative path</source>
-        <translation>Specified -walletdir &quot;%s&quot; is a relative path</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Specified -walletdir &quot;%s&quot; is not a directory</source>
-        <translation>Specified -walletdir &quot;%s&quot; is not a directory</translation>
-    </message>
-    <message>
-        <location line="+5"/>
-        <source>Synchronizing blockchain...</source>
-        <translation>Synchronizing blockchain...</translation>
-    </message>
-    <message>
-        <location line="+4"/>
-        <source>The wallet will avoid paying less than the minimum relay fee.</source>
-        <translation>The wallet will avoid paying less than the minimum relay fee.</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>This is expected because you are running a pruned node.</source>
-        <translation>This is expected because you are running a pruned node.</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>This is the minimum transaction fee you pay on every transaction.</source>
-        <translation>This is the minimum transaction fee you pay on every transaction.</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>This is the transaction fee you will pay if you send a transaction.</source>
-        <translation>This is the transaction fee you will pay if you send a transaction.</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>Transaction amounts must not be negative</source>
-        <translation>Transaction amounts must not be negative</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Transaction has too long of a mempool chain</source>
-        <translation>Transaction has too long of a mempool chain</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Transaction must have at least one recipient</source>
-        <translation>Transaction must have at least one recipient</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Transaction too large</source>
-        <translation>Transaction too large</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Trying to connect...</source>
-        <translation>Trying to connect...</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>Unable to bind to %s on this computer. %s is probably already running.</source>
-        <translation>Unable to bind to %s on this computer. %s is probably already running.</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Unable to generate initial keys</source>
-        <translation>Unable to generate initial keys</translation>
-    </message>
-    <message>
-        <location line="+12"/>
-        <source>Upgrading UTXO database</source>
-        <translation>Upgrading UTXO database</translation>
-    </message>
-    <message>
-        <location line="+5"/>
-        <source>Wallet %s resides outside wallet directory %s</source>
-        <translation>Wallet %s resides outside wallet directory %s</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>Wallet needed to be rewritten: restart %s to complete</source>
-        <translation>Wallet needed to be rewritten: restart %s to complete</translation>
-    </message>
-    <message>
-        <location line="+5"/>
-        <source>Warning: unknown new rules activated (versionbit %i)</source>
-        <translation>Warning: unknown new rules activated (versionbit %i)</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Wasn&apos;t able to create wallet backup folder %s!</source>
-        <translation>Wasn&apos;t able to create wallet backup folder %s!</translation>
-    </message>
-    <message>
-        <location line="+4"/>
-        <source>You can not start a smartnode with wallet enabled.</source>
-        <translation>You can not start a smartnode with wallet enabled.</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>You need to rebuild the database using -reindex to change -addressindex</source>
-        <translation>You need to rebuild the database using -reindex to change -addressindex</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>You need to rebuild the database using -reindex to change -spentindex</source>
-        <translation>You need to rebuild the database using -reindex to change -spentindex</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>You need to rebuild the database using -reindex to change -txindex</source>
-        <translation>You need to rebuild the database using -reindex to change -txindex</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>no mixing available.</source>
-        <translation>no mixing available.</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>see debug.log for details.</source>
-        <translation>see debug.log for details.</translation>
-    </message>
-    <message>
-        <location line="-307"/>
+        <location filename="../raptoreumstrings.cpp" line="+12"/>
         <source>Raptoreum Core</source>
         <translation>Raptoreum Core</translation>
     </message>
@@ -5886,396 +5254,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <location line="+1"/>
         <source>The %s developers</source>
         <translation>The %s developers</translation>
-    </message>
-    <message>
-        <location line="+4"/>
-        <source>%s uses exact denominated amounts to send funds, you might simply need to mix some more coins.</source>
-        <translation>%s uses exact denominated amounts to send funds, you might simply need to mix some more coins.</translation>
-    </message>
-    <message>
-        <location line="+9"/>
-        <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
-        <translation>Cannot obtain a lock on data directory %s. %s is probably already running.</translation>
-    </message>
-    <message>
-        <location line="+5"/>
-        <source>Distributed under the MIT software license, see the accompanying file %s or %s</source>
-        <translation>Distributed under the MIT software license, see the accompanying file %s or %s</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Error loading %s: You can&apos;t enable HD on an already existing non-HD wallet</source>
-        <translation>Error loading %s: You can&apos;t enable HD on an already existing non-HD wallet</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
-        <translation>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</translation>
-    </message>
-    <message>
-        <location line="+12"/>
-        <source>Incorrect or no devnet genesis block found. Wrong datadir for devnet specified?</source>
-        <translation>Incorrect or no devnet genesis block found. Wrong datadir for devnet specified?</translation>
-    </message>
-    <message>
-        <location line="+11"/>
-        <source>Please check that your computer&apos;s date and time are correct! If your clock is wrong, %s will not work properly.</source>
-        <translation>Please check that your computer&apos;s date and time are correct! If your clock is wrong, %s will not work properly.</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Please contribute if you find %s useful. Visit %s for further information about the software.</source>
-        <translation>Please contribute if you find %s useful. Visit %s for further information about the software.</translation>
-    </message>
-    <message>
-        <location line="+21"/>
-        <source>This is the transaction fee you may discard if change is smaller than dust at this level</source>
-        <translation>This is the transaction fee you may discard if change is smaller than dust at this level</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>This is the transaction fee you may pay when fee estimates are not available.</source>
-        <translation>This is the transaction fee you may pay when fee estimates are not available.</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit %s and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</source>
-        <translation>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit %s and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</translation>
-    </message>
-    <message>
-        <location line="+11"/>
-        <source>Unable to replay blocks. You will need to rebuild the database using -reindex-chainstate.</source>
-        <translation>Unable to replay blocks. You will need to rebuild the database using -reindex-chainstate.</translation>
-    </message>
-    <message>
-        <location line="+20"/>
-        <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
-        <translation>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</translation>
-    </message>
-    <message>
-        <location line="+12"/>
-        <source>%d of last 100 blocks have unexpected version</source>
-        <translation>%d of last 100 blocks have unexpected version</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>%s corrupt, salvage failed</source>
-        <translation>%s corrupt, salvage failed</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>%s is not a valid backup folder!</source>
-        <translation>%s is not a valid backup folder!</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>%s is set very high!</source>
-        <translation>%s is set very high!</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>-devnet can only be specified once</source>
-        <translation>-devnet can only be specified once</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>-port must be specified when -devnet and -listen are specified</source>
-        <translation>-port must be specified when -devnet and -listen are specified</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>-rpcport must be specified when -devnet and -server are specified</source>
-        <translation>-rpcport must be specified when -devnet and -server are specified</translation>
-    </message>
-    <message>
-        <location line="+7"/>
-        <source>Cannot resolve -%s address: &apos;%s&apos;</source>
-        <translation>Cannot resolve -%s address: &apos;%s&apos;</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Cannot write to data directory &apos;%s&apos;; check permissions.</source>
-        <translation>Cannot write to data directory &apos;%s&apos;; check permissions.</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Change index out of range</source>
-        <translation>Change index out of range</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>Copyright (C)</source>
-        <translation>Copyright (C)</translation>
-    </message>
-    <message>
-        <location line="+9"/>
-        <source>Error loading %s</source>
-        <translation>Error loading %s</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Error loading %s: Wallet corrupted</source>
-        <translation>Error loading %s: Wallet corrupted</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Error loading %s: Wallet requires newer version of %s</source>
-        <translation>Error loading %s: Wallet requires newer version of %s</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Error loading %s: You can&apos;t disable HD on an already existing HD wallet</source>
-        <translation>Error loading %s: You can&apos;t disable HD on an already existing HD wallet</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>Error loading wallet %s. Duplicate -wallet filename specified.</source>
-        <translation>Error loading wallet %s. Duplicate -wallet filename specified.</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Error upgrading chainstate database</source>
-        <translation>Error upgrading chainstate database</translation>
-    </message>
-    <message>
-        <location line="+6"/>
-        <source>Error: failed to add socket to kqueuefd (kevent returned error %s)</source>
-        <translation>Error: failed to add socket to kqueuefd (kevent returned error %s)</translation>
-    </message>
-    <message>
-        <location line="+9"/>
-        <source>Failed to find mixing queue to join</source>
-        <translation>Failed to find mixing queue to join</translation>
-    </message>
-    <message>
-        <location line="+7"/>
-        <source>Failed to start a new mixing queue</source>
-        <translation>Failed to start a new mixing queue</translation>
-    </message>
-    <message>
-        <location line="+6"/>
-        <source>Incorrect -rescan mode, falling back to default value</source>
-        <translation>Incorrect -rescan mode, falling back to default value</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Initialization sanity check failed. %s is shutting down.</source>
-        <translation>Initialization sanity check failed. %s is shutting down.</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>Inputs vs outputs size mismatch.</source>
-        <translation>Inputs vs outputs size mismatch.</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>Invalid -onion address or hostname: &apos;%s&apos;</source>
-        <translation>Invalid -onion address or hostname: &apos;%s&apos;</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Invalid -proxy address or hostname: &apos;%s&apos;</source>
-        <translation>Invalid -proxy address or hostname: &apos;%s&apos;</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Invalid amount for -%s=&lt;amount&gt;: &apos;%s&apos;</source>
-        <translation>Invalid amount for -%s=&lt;amount&gt;: &apos;%s&apos;</translation>
-    </message>
-    <message>
-        <location line="+8"/>
-        <source>Invalid spork address specified with -sporkaddr</source>
-        <translation>Invalid spork address specified with -sporkaddr</translation>
-    </message>
-    <message>
-        <location line="+6"/>
-        <source>Loading P2P addresses...</source>
-        <translation>Loading P2P addresses...</translation>
-    </message>
-    <message>
-        <location line="+27"/>
-        <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
-        <translation>Reducing -maxconnections from %d to %d, because of system limitations.</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Replaying blocks...</source>
-        <translation>Replaying blocks...</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Rescanning...</source>
-        <translation>Rescanning...</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Session not complete!</source>
-        <translation>Session not complete!</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Session timed out.</source>
-        <translation>Session timed out.</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Signing transaction failed</source>
-        <translation>Signing transaction failed</translation>
-    </message>
-    <message>
-        <location line="+4"/>
-        <source>Specified blocks directory &quot;%s&quot; does not exist.</source>
-        <translation>Specified blocks directory &quot;%s&quot; does not exist.</translation>
-    </message>
-    <message>
-        <location line="-38"/>
-        <source>Last queue was created too recently.</source>
-        <translation>Last queue was created too recently.</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Last successful action was too recent.</source>
-        <translation>Last successful action was too recent.</translation>
-    </message>
-    <message>
-        <location line="+38"/>
-        <source>Starting network threads...</source>
-        <translation>Starting network threads...</translation>
-    </message>
-    <message>
-        <location line="+4"/>
-        <source>Synchronizing governance objects...</source>
-        <translation>Synchronizing governance objects...</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>The source code is available from %s.</source>
-        <translation>The source code is available from %s.</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>The transaction amount is too small to pay the fee</source>
-        <translation>The transaction amount is too small to pay the fee</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>This is experimental software.</source>
-        <translation>This is experimental software.</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Transaction amount too small</source>
-        <translation>Transaction amount too small</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>Transaction created successfully.</source>
-        <translation>Transaction created successfully.</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Transaction fees are too high.</source>
-        <translation>Transaction fees are too high.</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Transaction not valid.</source>
-        <translation>Transaction not valid.</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Transaction too large for fee policy</source>
-        <translation>Transaction too large for fee policy</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Unable to bind to %s on this computer (bind returned error %s)</source>
-        <translation>Unable to bind to %s on this computer (bind returned error %s)</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Unable to locate enough mixed funds for this transaction.</source>
-        <translation>Unable to locate enough mixed funds for this transaction.</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Unable to locate enough non-denominated funds for this transaction.</source>
-        <translation>Unable to locate enough non-denominated funds for this transaction.</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Unable to sign spork message, wrong key?</source>
-        <translation>Unable to sign spork message, wrong key?</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
-        <translation>Unknown network specified in -onlynet: &apos;%s&apos;</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>Unknown state: id = %u</source>
-        <translation>Unknown state: id = %u</translation>
-    </message>
-    <message>
-        <location line="+4"/>
-        <source>Unsupported logging category %s=%s.</source>
-        <translation>Unsupported logging category %s=%s.</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Verifying blocks...</source>
-        <translation>Verifying blocks...</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>Very low number of keys left: %d</source>
-        <translation>Very low number of keys left: %d</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>Wallet is locked.</source>
-        <translation>Wallet is locked.</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>Warning</source>
-        <translation>Warning</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Warning: %s is deprecated, please use %s instead</source>
-        <translation>Warning: %s is deprecated, please use %s instead</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Warning: can&apos;t use %s and %s together, will prefer %s</source>
-        <translation>Warning: can&apos;t use %s and %s together, will prefer %s</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Warning: incorrect parameter %s, path must exist! Using default path.</source>
-        <translation>Warning: incorrect parameter %s, path must exist! Using default path.</translation>
-    </message>
-    <message>
-        <location line="+4"/>
-        <source>You are starting with governance validation disabled.</source>
-        <translation>You are starting with governance validation disabled.</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>You can not disable governance validation on a smartnode.</source>
-        <translation>You can not disable governance validation on a smartnode.</translation>
-    </message>
-    <message>
-        <location line="+5"/>
-        <source>Your entries added successfully.</source>
-        <translation>Your entries added successfully.</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Zapping all transactions from wallet...</source>
-        <translation>Zapping all transactions from wallet...</translation>
     </message>
 </context>
 </TS>

@@ -1,4 +1,6 @@
-<TS language="pt" version="2.1">
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE TS>
+<TS version="2.1" language="pt">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -247,6 +249,10 @@
         <translation>Carteira criptografada</translation>
     </message>
     <message>
+        <source>Your wallet is now encrypted. Remember that encrypting your wallet cannot fully protect your funds from being stolen by malware infecting your computer.</source>
+        <translation>Sua carteira agora está criptografada. Lembre-se de que criptografar sua carteira não pode proteger totalmente seus fundos de serem roubados por malware que infecta seu computador.</translation>
+    </message>
+    <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. Previous backups of the unencrypted wallet file contain the same HD seed and still have full access to all your funds just like the new, encrypted wallet.</source>
         <translation>IMPORTANTE: Todos os backups anteriores feitos do seu arquivo de carteira devem ser substituídos pelo arquivo de carteira criptografado recém-gerado. Os backups anteriores do arquivo de carteira não criptografada contêm a mesma semente HD e ainda têm acesso total a todos os seus fundos, assim como a nova carteira criptografada.</translation>
     </message>
@@ -344,8 +350,8 @@
         <translation>&amp;Receber</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and Raptoreum: URIs)</source>
-        <translation>Solicitações de pagamentos (gera códigos QR e Raptoreum: URIs)</translation>
+        <source>Request payments (generates QR codes and raptoreum: URIs)</source>
+        <translation>Solicitar pagamentos (gera códigos QR e raptoreum: URIs)</translation>
     </message>
     <message>
         <source>&amp;Transactions</source>
@@ -548,6 +554,10 @@
         <translation>Mostrar a mensagem de ajuda do %1 para obter uma lista com possíveis opções de linha de comando Raptoreum</translation>
     </message>
     <message>
+        <source>default wallet</source>
+        <translation>carteira padrão</translation>
+    </message>
+    <message>
         <source>%1 client</source>
         <translation>%1 cliente</translation>
     </message>
@@ -591,7 +601,10 @@
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Raptoreum network</source>
-        <translation><numerusform>%n conexões ativas com a rede Raptoreum</numerusform><numerusform>%n conexões ativas com a rede Raptoreum</numerusform></translation>
+        <translation>
+            <numerusform>%n conexões ativas com a rede Raptoreum</numerusform>
+            <numerusform>%n conexões ativas com a rede Raptoreum</numerusform>
+        </translation>
     </message>
     <message>
         <source>Network activity disabled</source>
@@ -623,7 +636,10 @@
     </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
-        <translation><numerusform>Processados %n blocos do histórico de transações.</numerusform><numerusform>Processados %n blocos do histórico de transações.</numerusform></translation>
+        <translation>
+            <numerusform>Processados %n blocos do histórico de transações.</numerusform>
+            <numerusform>Processados %n blocos do histórico de transações.</numerusform>
+        </translation>
     </message>
     <message>
         <source>%1 behind</source>
@@ -871,8 +887,8 @@
         <translation>Copiar troco</translation>
     </message>
     <message>
-        <source>Please switch to "List mode" to use this function.</source>
-        <translation>Por favor alterne para "Modo lista" para usar essa função.</translation>
+        <source>Please switch to &quot;List mode&quot; to use this function.</source>
+        <translation>Por favor alterne para &quot;Modo lista&quot; para usar essa função.</translation>
     </message>
     <message>
         <source>(%1 locked)</source>
@@ -970,12 +986,12 @@
         <translation>Editar endereço de envio</translation>
     </message>
     <message>
-        <source>The entered address "%1" is not a valid Raptoreum address.</source>
-        <translation>O endereço digitado "%1" não é um endereço válido.</translation>
+        <source>The entered address &quot;%1&quot; is not a valid Raptoreum address.</source>
+        <translation>O endereço digitado &quot;%1&quot; não é um endereço válido.</translation>
     </message>
     <message>
-        <source>The entered address "%1" is already in the address book.</source>
-        <translation>O endereço digitado "%1" já se encontra no catálogo de endereços.</translation>
+        <source>The entered address &quot;%1&quot; is already in the address book.</source>
+        <translation>O endereço digitado &quot;%1&quot; já se encontra no catálogo de endereços.</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
@@ -1032,8 +1048,8 @@
         <translation>%1 Informação</translation>
     </message>
     <message>
-        <source>&lt;h3&gt;%1 Basics&lt;/h3&gt; %1 gives you true financial privacy by obscuring the origins of your funds. All the Raptoreum in your wallet is comprised of different "inputs" which you can think of as separate, discrete coins.&lt;br&gt; %1 uses an innovative process to mix your inputs with the inputs of two or more other people, without having your coins ever leave your wallet. You retain control of your money at all times.&lt;hr&gt; &lt;b&gt;The %1 process works like this:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;%1 begins by breaking your transaction inputs down into standard denominations. These denominations are 0.001 RTM, 0.01 RTM, 0.1 RTM, 1 RTM and 10 RTM -- sort of like the paper money you use every day.&lt;/li&gt; &lt;li&gt;Your wallet then sends requests to specially configured software nodes on the network, called "smartnodes." These smartnodes are informed then that you are interested in mixing a certain denomination. No identifiable information is sent to the smartnodes, so they never know "who" you are.&lt;/li&gt; &lt;li&gt;When two or more other people send similar messages, indicating that they wish to mix the same denomination, a mixing session begins. The smartnode mixes up the inputs and instructs all three users' wallets to pay the now-transformed input back to themselves. Your wallet pays that denomination directly to itself, but in a different address (called a change address).&lt;/li&gt; &lt;li&gt;In order to fully obscure your funds, your wallet must repeat this process a number of times with each denomination. Each time the process is completed, it's called a "round." Each round of %1 makes it exponentially more difficult to determine where your funds originated.&lt;/li&gt; &lt;li&gt;This mixing process happens in the background without any intervention on your part. When you wish to make a transaction, your funds will already be mixed. No additional waiting is required.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;IMPORTANT:&lt;/b&gt; Your wallet only contains 1000 of these "change addresses." Every time a mixing event happens, up to 9 of your addresses are used up. This means those 1000 addresses last for about 100 mixing events. When 900 of them are used, your wallet must create more addresses. It can only do this, however, if you have automatic backups enabled.&lt;br&gt; Consequently, users who have backups disabled will also have %1 disabled. &lt;hr&gt;For more information, see the &lt;a style="%2" href="%3"&gt;%1 documentation&lt;/a&gt;.</source>
-        <translation>&lt;h3&gt;O básico sobre %1&lt;/h3&gt;O %1 te dá verdadeira privacidade financeira ao obscurecer a origem dos seus fundos. Todos os raptoreums na sua carteira é composto de "inputs" diferentes que você pode pensar como sendo moedas separadas, discretas. &lt;br&gt;O %1 usa um processo inovador para misturas os inputs de duas pessoas diferentes, sem que suas moedas saiam de suas carteiras. Você mantém o controle de seu dinheiro o tempo todo.&lt;hr&gt;&lt;b&gt;O processo do %1 funciona assim: &lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;O %1 começa quebrando os inputs de suuas transações em denominações padrão. Essas denominações são 0.001 RTM, 0.01 RTM, 0.1 RTM, 1 RTM e 10 RTM -- algo como o dinheiro de papel que você usa todo dia.&lt;/li&gt;&lt;li&gt;Sua carteira então envia uma requisição para um software especialmente configurado na rede, chamados de "smartnodes." Esses smartnodes são informados que você está interessado em misturar uma denominação específica. Nenhuma informação identificável é enviada aos smartnodes, então eles nunca sabem "quem" você é.&lt;/li&gt;&lt;li&gt;Quando duas pessoas enviam mensagens similares, uma sessão de mistura tem início. O smartnode mistura os inputs e instrui os três usuários da carteira para pagar o input agora transformado de volta a si mesmos. Sua carteira paga a denominação diretamente a si mesmo, mas em um endereço diferente (chamado de endereço mudado).&lt;/li&gt;&lt;li&gt;A fim de obscurecer plenamente seus fundos, sua carteira repete esse processo várias vezes com cada denominação. Cada vez que o processo é completado, se chama um "round". Cada round de %1 torna exponencialmente mais difícil determinar onde os fundos se originaram.&lt;/li&gt;&lt;li&gt;Esse processo de mistura acontece no background sem nenhuma intervenção da sua parte. Quando você deseja fazer uma transação, seus fundos jã estarão misturados. Nenhuma espera adicional é requerida.&lt;/li&gt;&lt;/ol&gt;&lt;hr&gt;&lt;b&gt;IMPORTANTE:&lt;/b&gt; Sua carteira só contém 1000 desses "mudar endereços." Cada vez que um evento de mistura acontece, 9 de seus endereços são usados. Isso indica que esses 1000 endereços duram por cerca de 100 eventos de mistura. Quando 900 desses endereços são usados, sua carteira deve criar mais endereços. Contudo, ela só é capaz de fazer isso se você tem o backup automático habilitado.&lt;br&gt;Consequentemente, usuários que têm seus backups desabilitados também terão o %1 desabilitado. &lt;hr&gt;Para mais informações, consulte a &lt;a style="%2" href="%3"&gt;documentação do %1&lt;/a&gt;.</translation>
+        <source>&lt;h3&gt;%1 Basics&lt;/h3&gt; %1 gives you true financial privacy by obscuring the origins of your funds. All the Raptoreum in your wallet is comprised of different &quot;inputs&quot; which you can think of as separate, discrete coins.&lt;br&gt; %1 uses an innovative process to mix your inputs with the inputs of two or more other people, without having your coins ever leave your wallet. You retain control of your money at all times.&lt;hr&gt; &lt;b&gt;The %1 process works like this:&lt;/b&gt;&lt;ol type=&quot;1&quot;&gt; &lt;li&gt;%1 begins by breaking your transaction inputs down into standard denominations. These denominations are 0.001 RTM, 0.01 RTM, 0.1 RTM, 1 RTM and 10 RTM -- sort of like the paper money you use every day.&lt;/li&gt; &lt;li&gt;Your wallet then sends requests to specially configured software nodes on the network, called &quot;smartnodes.&quot; These smartnodes are informed then that you are interested in mixing a certain denomination. No identifiable information is sent to the smartnodes, so they never know &quot;who&quot; you are.&lt;/li&gt; &lt;li&gt;When two or more other people send similar messages, indicating that they wish to mix the same denomination, a mixing session begins. The smartnode mixes up the inputs and instructs all three users&apos; wallets to pay the now-transformed input back to themselves. Your wallet pays that denomination directly to itself, but in a different address (called a change address).&lt;/li&gt; &lt;li&gt;In order to fully obscure your funds, your wallet must repeat this process a number of times with each denomination. Each time the process is completed, it&apos;s called a &quot;round.&quot; Each round of %1 makes it exponentially more difficult to determine where your funds originated.&lt;/li&gt; &lt;li&gt;This mixing process happens in the background without any intervention on your part. When you wish to make a transaction, your funds will already be mixed. No additional waiting is required.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;IMPORTANT:&lt;/b&gt; Your wallet only contains 1000 of these &quot;change addresses.&quot; Every time a mixing event happens, up to 9 of your addresses are used up. This means those 1000 addresses last for about 100 mixing events. When 900 of them are used, your wallet must create more addresses. It can only do this, however, if you have automatic backups enabled.&lt;br&gt; Consequently, users who have backups disabled will also have %1 disabled. &lt;hr&gt;For more information, see the &lt;a style=&quot;%2&quot; href=&quot;%3&quot;&gt;%1 documentation&lt;/a&gt;.</source>
+        <translation>&lt;h3&gt;O básico sobre %1&lt;/h3&gt;O %1 te dá verdadeira privacidade financeira ao obscurecer a origem dos seus fundos. Todos os raptoreums na sua carteira é composto de &quot;inputs&quot; diferentes que você pode pensar como sendo moedas separadas, discretas. &lt;br&gt;O %1 usa um processo inovador para misturas os inputs de duas pessoas diferentes, sem que suas moedas saiam de suas carteiras. Você mantém o controle de seu dinheiro o tempo todo.&lt;hr&gt;&lt;b&gt;O processo do %1 funciona assim: &lt;/b&gt;&lt;ol type=&quot;1&quot;&gt; &lt;li&gt;O %1 começa quebrando os inputs de suuas transações em denominações padrão. Essas denominações são 0.001 RTM, 0.01 RTM, 0.1 RTM, 1 RTM e 10 RTM -- algo como o dinheiro de papel que você usa todo dia.&lt;/li&gt;&lt;li&gt;Sua carteira então envia uma requisição para um software especialmente configurado na rede, chamados de &quot;smartnodes.&quot; Esses smartnodes são informados que você está interessado em misturar uma denominação específica. Nenhuma informação identificável é enviada aos smartnodes, então eles nunca sabem &quot;quem&quot; você é.&lt;/li&gt;&lt;li&gt;Quando duas pessoas enviam mensagens similares, uma sessão de mistura tem início. O smartnode mistura os inputs e instrui os três usuários da carteira para pagar o input agora transformado de volta a si mesmos. Sua carteira paga a denominação diretamente a si mesmo, mas em um endereço diferente (chamado de endereço mudado).&lt;/li&gt;&lt;li&gt;A fim de obscurecer plenamente seus fundos, sua carteira repete esse processo várias vezes com cada denominação. Cada vez que o processo é completado, se chama um &quot;round&quot;. Cada round de %1 torna exponencialmente mais difícil determinar onde os fundos se originaram.&lt;/li&gt;&lt;li&gt;Esse processo de mistura acontece no background sem nenhuma intervenção da sua parte. Quando você deseja fazer uma transação, seus fundos jã estarão misturados. Nenhuma espera adicional é requerida.&lt;/li&gt;&lt;/ol&gt;&lt;hr&gt;&lt;b&gt;IMPORTANTE:&lt;/b&gt; Sua carteira só contém 1000 desses &quot;mudar endereços.&quot; Cada vez que um evento de mistura acontece, 9 de seus endereços são usados. Isso indica que esses 1000 endereços duram por cerca de 100 eventos de mistura. Quando 900 desses endereços são usados, sua carteira deve criar mais endereços. Contudo, ela só é capaz de fazer isso se você tem o backup automático habilitado.&lt;br&gt;Consequentemente, usuários que têm seus backups desabilitados também terão o %1 desabilitado. &lt;hr&gt;Para mais informações, consulte a &lt;a style=&quot;%2&quot; href=&quot;%3&quot;&gt;documentação do %1&lt;/a&gt;.</translation>
     </message>
 </context>
 <context>
@@ -1087,8 +1103,8 @@
         <translation>A carteira também será guardada nesta pasta.</translation>
     </message>
     <message>
-        <source>Error: Specified data directory "%1" cannot be created.</source>
-        <translation>Erro: Diretório de dados "%1" não pode ser criado.</translation>
+        <source>Error: Specified data directory &quot;%1&quot; cannot be created.</source>
+        <translation>Erro: Diretório de dados &quot;%1&quot; não pode ser criado.</translation>
     </message>
     <message>
         <source>Error</source>
@@ -1104,140 +1120,13 @@
     </message>
 </context>
 <context>
-    <name>SmartnodeList</name>
-    <message>
-        <source>Form</source>
-        <translation>Formulário</translation>
-    </message>
-    <message>
-        <source>Status</source>
-        <translation>Status</translation>
-    </message>
-    <message>
-        <source>0</source>
-        <translation>0</translation>
-    </message>
-    <message>
-        <source>Filter List:</source>
-        <translation>Filtrar Lista:</translation>
-    </message>
-    <message>
-        <source>Filter smartnode list</source>
-        <translation>Filtrar lista de smartnodes</translation>
-    </message>
-    <message>
-        <source>Node Count:</source>
-        <translation>Contagem de Smartnodes</translation>
-    </message>
-    <message>
-        <source>Show only smartnodes this wallet has keys for.</source>
-        <translation>Mostrar apenas os smartnodes para os quais esta carteira possui chaves.</translation>
-    </message>
-    <message>
-        <source>My smartnodes only</source>
-        <translation>Meus smartnodes apenas</translation>
-    </message>
-    <message>
-        <source>Service</source>
-        <translation>Serviço</translation>
-    </message>
-    <message>
-        <source>PoSe Score</source>
-        <translation>Contagem PoSe</translation>
-    </message>
-    <message>
-        <source>Registered</source>
-        <translation>Registrado</translation>
-    </message>
-    <message>
-        <source>Last Paid</source>
-        <translation>Último pagamento</translation>
-    </message>
-    <message>
-        <source>Next Payment</source>
-        <translation>Próximo pagamento</translation>
-    </message>
-    <message>
-        <source>Payout Address</source>
-        <translation>Endereço de Pagamento</translation>
-    </message>
-    <message>
-        <source>Operator Reward</source>
-        <translation>Recompensa do Operador</translation>
-    </message>
-    <message>
-        <source>Collateral Address</source>
-        <translation>Endereço de Colateral</translation>
-    </message>
-    <message>
-        <source>Owner Address</source>
-        <translation>Endereço de Proprietário</translation>
-    </message>
-    <message>
-        <source>Voting Address</source>
-        <translation>Endereço de Votação</translation>
-    </message>
-    <message>
-        <source>Copy ProTx Hash</source>
-        <translation>Copiar ProTx Hash</translation>
-    </message>
-    <message>
-        <source>Copy Collateral Outpoint</source>
-        <translation>Copiar Outpoint Collateral</translation>
-    </message>
-    <message>
-        <source>Updating...</source>
-        <translation>Atualizando...</translation>
-    </message>
-    <message>
-        <source>ENABLED</source>
-        <translation>HABILITADO </translation>
-    </message>
-    <message>
-        <source>POSE_BANNED</source>
-        <translation>POSE_BANNED</translation>
-    </message>
-    <message>
-        <source>UNKNOWN</source>
-        <translation>DESCONHECIDO</translation>
-    </message>
-    <message>
-        <source>to %1</source>
-        <translation>para %1</translation>
-    </message>
-    <message>
-        <source>to UNKNOWN</source>
-        <translation>para DESCONHECIDO</translation>
-    </message>
-    <message>
-        <source>but not claimed</source>
-        <translation>mas não reivindicado</translation>
-    </message>
-    <message>
-        <source>NONE</source>
-        <translation>NENHUM</translation>
-    </message>
-    <message>
-        <source>Filter by any property (e.g. address or protx hash)</source>
-        <translation>Filtrar por qualquer propriedade (por exemplo, endereço ou hash protx)</translation>
-    </message>
-    <message>
-        <source>Please wait...</source>
-        <translation>Por favor, aguarde...</translation>
-    </message>
-    <message>
-        <source>Additional information for DIP3 Smartnode %1</source>
-        <translation>Informações adicionais para DIP3 Smartnode %1</translation>
-    </message>
-</context>
-<context>
     <name>ModalOverlay</name>
     <message>
         <source>Form</source>
         <translation>Forma</translation>
     </message>
     <message>
-        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the Raptoreum network, as detailed below.</source>
+        <source>Recent transactions may not yet be visible, and therefore your wallet&apos;s balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the Raptoreum network, as detailed below.</source>
         <translation>Transações recentes podem não estar visíveis ainda, portanto o seu saldo pode estar incorreto. Esta informação será corrigida assim que sua carteira for sincronizada com a rede, como detalhado abaixo.</translation>
     </message>
     <message>
@@ -1391,7 +1280,7 @@
         <translation>Rodadas de Anonimização</translation>
     </message>
     <message>
-        <source>This amount acts as a threshold to turn off mixing once it's reached.</source>
+        <source>This amount acts as a threshold to turn off mixing once it&apos;s reached.</source>
         <translation>Este valor atua como um limite para desativar a anonimização assim que for atingido.</translation>
     </message>
     <message>
@@ -1692,10 +1581,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Quantia e Rodadas:</translation>
     </message>
     <message>
-        <source>0 RTM / 0 Rounds</source>
-        <translation>0 RTM / 0 Rodadas</translation>
-    </message>
-    <message>
         <source>Submitted Denom:</source>
         <translation>Denom Submetido:</translation>
     </message>
@@ -1733,15 +1618,18 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message numerus="yes">
         <source>%n Rounds</source>
-        <translation><numerusform>%n Rodadas</numerusform><numerusform>%n Rodadas</numerusform></translation>
+        <translation>
+            <numerusform>%n Rodadas</numerusform>
+            <numerusform>%n Rodadas</numerusform>
+        </translation>
     </message>
     <message>
         <source>Found enough compatible inputs to mix %1</source>
         <translation>Encontradas entradas suficientes para misturar %1</translation>
     </message>
     <message>
-        <source>Not enough compatible inputs to mix &lt;span style='%1'&gt;%2&lt;/span&gt;,&lt;br&gt;will mix &lt;span style='%1'&gt;%3&lt;/span&gt; instead</source>
-        <translation>Não há entradas compatíveis suficientes para misturar &lt;span style='%1'&gt;%2&lt;/span&gt;,&lt;br&gt;vamos misturar &lt;span style='%1'&gt;%3&lt;/span&gt; como alternativa</translation>
+        <source>Not enough compatible inputs to mix &lt;span style=&apos;%1&apos;&gt;%2&lt;/span&gt;,&lt;br&gt;will mix &lt;span style=&apos;%1&apos;&gt;%3&lt;/span&gt; instead</source>
+        <translation>Não há entradas compatíveis suficientes para misturar &lt;span style=&apos;%1&apos;&gt;%2&lt;/span&gt;,&lt;br&gt;vamos misturar &lt;span style=&apos;%1&apos;&gt;%3&lt;/span&gt; como alternativa</translation>
     </message>
     <message>
         <source>Overall progress</source>
@@ -1761,7 +1649,10 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message numerus="yes">
         <source>Denominated inputs have %5 of %n rounds on average</source>
-        <translation><numerusform>Os insumos denominados têm %5 de %n rodadas em média</numerusform><numerusform>Os insumos denominados têm %5 de %n rodadas em média</numerusform></translation>
+        <translation>
+            <numerusform>Os insumos denominados têm %5 de %n rodadas em média</numerusform>
+            <numerusform>Os insumos denominados têm %5 de %n rodadas em média</numerusform>
+        </translation>
     </message>
     <message>
         <source>keys left: %1</source>
@@ -1772,8 +1663,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Iniciar %1</translation>
     </message>
     <message>
-        <source>If you don't want to see internal %1 fees/transactions select "Most Common" as Type on the "Transactions" tab.</source>
-        <translation>Se não deseja visualizar as taxas/transações internas %1 seleccione "Mais Comuns" como Tipo no separador "Transações"</translation>
+        <source>If you don&apos;t want to see internal %1 fees/transactions select &quot;Most Common&quot; as Type on the &quot;Transactions&quot; tab.</source>
+        <translation>Se não deseja visualizar as taxas/transações internas %1 seleccione &quot;Mais Comuns&quot; como Tipo no separador &quot;Transações&quot;</translation>
     </message>
     <message>
         <source>%1 requires at least %2 to use.</source>
@@ -1796,8 +1687,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Número muito baixo de chaves deixadas desde o último backup automático!</translation>
     </message>
     <message>
-        <source>We are about to create a new automatic backup for you, however &lt;span style='%1'&gt; you should always make sure you have backups saved in some safe place&lt;/span&gt;!</source>
-        <translation>Estamos prestes a criar um novo backup automático para você, no entanto&lt;span style='%1'&gt;, você deve sempre garantir que você tenha backups salvos em algum lugar seguro&lt;/span&gt;!</translation>
+        <source>We are about to create a new automatic backup for you, however &lt;span style=&apos;%1&apos;&gt; you should always make sure you have backups saved in some safe place&lt;/span&gt;!</source>
+        <translation>Estamos prestes a criar um novo backup automático para você, no entanto&lt;span style=&apos;%1&apos;&gt;, você deve sempre garantir que você tenha backups salvos em algum lugar seguro&lt;/span&gt;!</translation>
     </message>
     <message>
         <source>Note: You can turn this message off in options.</source>
@@ -1843,8 +1734,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Manipulação de URI</translation>
     </message>
     <message>
-        <source>'raptoreum://' is not a valid URI. Use 'raptoreum:' instead.</source>
-        <translation>'raptoreum://' não é uma URL válida. Use 'raptoreum:' como alternativa.</translation>
+        <source>&apos;raptoreum://&apos; is not a valid URI. Use &apos;raptoreum:&apos; instead.</source>
+        <translation>&apos;raptoreum://&apos; não é uma URL válida. Use &apos;raptoreum:&apos; como alternativa.</translation>
     </message>
     <message>
         <source>Payment request fetch URL is invalid: %1</source>
@@ -1871,7 +1762,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Pedido de pagamento rejeitado</translation>
     </message>
     <message>
-        <source>Payment request network doesn't match client network.</source>
+        <source>Payment request network doesn&apos;t match client network.</source>
         <translation>Rede do pedido de pagamento não corresponde rede do cliente.</translation>
     </message>
     <message>
@@ -1973,8 +1864,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Defina o peso da fonte para textos normais. Intervalo possível %1 a %2 (padrão: %3)</translation>
     </message>
     <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Definir idioma, por exemplo "pt_PT" (padrão: idioma do sistema)</translation>
+        <source>Set language, for example &quot;de_DE&quot; (default: system locale)</source>
+        <translation>Definir idioma, por exemplo &quot;pt_PT&quot; (padrão: idioma do sistema)</translation>
     </message>
     <message>
         <source>Start minimized</source>
@@ -1993,7 +1884,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Exibir tela de abertura na inicialização (padrão: %u)</translation>
     </message>
     <message>
-        <source>%1 didn't yet exit safely...</source>
+        <source>%1 didn&apos;t yet exit safely...</source>
         <translation>%1 ainda não terminou com segurança...</translation>
     </message>
     <message>
@@ -2013,8 +1904,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Por favor, escolha a sua configuração preferida para a aparência de %1</translation>
     </message>
     <message>
-        <source>This can also be adjusted later in the "Appearance" tab of the preferences.</source>
-        <translation>Isso também pode ser ajustado posteriormente na aba "Aparência" nas preferências.</translation>
+        <source>This can also be adjusted later in the &quot;Appearance&quot; tab of the preferences.</source>
+        <translation>Isso também pode ser ajustado posteriormente na aba &quot;Aparência&quot; nas preferências.</translation>
     </message>
     <message>
         <source>%1 d</source>
@@ -2046,27 +1937,45 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message numerus="yes">
         <source>%n second(s)</source>
-        <translation><numerusform>%n segundos</numerusform><numerusform>%n segundos</numerusform></translation>
+        <translation>
+            <numerusform>%n segundos</numerusform>
+            <numerusform>%n segundos</numerusform>
+        </translation>
     </message>
     <message numerus="yes">
         <source>%n minute(s)</source>
-        <translation><numerusform>%n minutos</numerusform><numerusform>%n minutos</numerusform></translation>
+        <translation>
+            <numerusform>%n minutos</numerusform>
+            <numerusform>%n minutos</numerusform>
+        </translation>
     </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
-        <translation><numerusform>%n horas</numerusform><numerusform>%n horas</numerusform></translation>
+        <translation>
+            <numerusform>%n horas</numerusform>
+            <numerusform>%n horas</numerusform>
+        </translation>
     </message>
     <message numerus="yes">
         <source>%n day(s)</source>
-        <translation><numerusform>%n dias</numerusform><numerusform>%n dias</numerusform></translation>
+        <translation>
+            <numerusform>%n dias</numerusform>
+            <numerusform>%n dias</numerusform>
+        </translation>
     </message>
     <message numerus="yes">
         <source>%n week(s)</source>
-        <translation><numerusform>%n semanas</numerusform><numerusform>%n semanas</numerusform></translation>
+        <translation>
+            <numerusform>%n semanas</numerusform>
+            <numerusform>%n semanas</numerusform>
+        </translation>
     </message>
     <message numerus="yes">
         <source>%n year(s)</source>
-        <translation><numerusform>%n anos</numerusform><numerusform>%n anos</numerusform></translation>
+        <translation>
+            <numerusform>%n anos</numerusform>
+            <numerusform>%n anos</numerusform>
+        </translation>
     </message>
     <message>
         <source>%1 and %2</source>
@@ -2096,8 +2005,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
 <context>
     <name>QObject::QObject</name>
     <message>
-        <source>Error: Specified data directory "%1" does not exist.</source>
-        <translation>Erro: Diretório de dados especificado "%1" não existe.</translation>
+        <source>Error: Specified data directory &quot;%1&quot; does not exist.</source>
+        <translation>Erro: Diretório de dados especificado &quot;%1&quot; não existe.</translation>
     </message>
     <message>
         <source>Error: Cannot parse configuration file: %1. Only use key=value syntax.</source>
@@ -2481,7 +2390,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <source>Rebuild index</source>
-        <translation> Reconstrução de Índice</translation>
+        <translation>Reconstrução de Índice</translation>
     </message>
     <message>
         <source>-reindex: Rebuild block chain index from current blk000??.dat files.</source>
@@ -2514,6 +2423,10 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>&amp;Unban</source>
         <translation>&amp;Desbanir</translation>
+    </message>
+    <message>
+        <source>default wallet</source>
+        <translation>carteira padrão</translation>
     </message>
     <message>
         <source>Welcome to the %1 RPC console.</source>
@@ -2556,8 +2469,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Execução de comando sem nenhuma carteira</translation>
     </message>
     <message>
-        <source>Executing command using "%1" wallet</source>
-        <translation>Execução de comando usando a carteira "%1"</translation>
+        <source>Executing command using &quot;%1&quot; wallet</source>
+        <translation>Execução de comando usando a carteira &quot;%1&quot;</translation>
     </message>
     <message>
         <source>(node id: %1)</source>
@@ -2693,6 +2606,10 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Copy amount</source>
         <translation>Copiar quantia</translation>
+    </message>
+    <message>
+        <source>Copy Address</source>
+        <translation>Copiar endereço</translation>
     </message>
 </context>
 <context>
@@ -2860,8 +2777,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Tempo alvo de confirmação:</translation>
     </message>
     <message>
-        <source>If the custom fee is set to 1000 ruffs and the transaction is only 250 bytes, then "per kilobyte" only pays 250 ruffs in fee,&lt;br /&gt;while "at least" pays 1000 ruffs. For transactions bigger than a kilobyte both pay by kilobyte.</source>
-        <translation>Se a taxa por defeito está definida em 1000 ruffs e a transação é apenas 250 bytes, então "per kilobyte" paga apenas 250 ruffs de taxa,&lt;br /&gt;enquanto "no mínimo" paga 1000 ruffs. Para transações maiores que um kilobyte, ambas pagam por kilobyte.</translation>
+        <source>If the custom fee is set to 1000 ruffs and the transaction is only 250 bytes, then &quot;per kilobyte&quot; only pays 250 ruffs in fee,&lt;br /&gt;while &quot;at least&quot; pays 1000 ruffs. For transactions bigger than a kilobyte both pay by kilobyte.</source>
+        <translation>Se a taxa por defeito está definida em 1000 ruffs e a transação é apenas 250 bytes, então &quot;per kilobyte&quot; paga apenas 250 ruffs de taxa,&lt;br /&gt;enquanto &quot;no mínimo&quot; paga 1000 ruffs. Para transações maiores que um kilobyte, ambas pagam por kilobyte.</translation>
     </message>
     <message>
         <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks.&lt;br /&gt;But be aware that this can end up in a never confirming transaction once there is more demand for raptoreum transactions than the network can process.</source>
@@ -2996,6 +2913,14 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Confirmar o envio %1</translation>
     </message>
     <message>
+        <source>&lt;br&gt;Confirmations in: &lt;b&gt;%1 blocks&lt;/b&gt;&lt;br /&gt;</source>
+        <translation>&lt;br&gt;Confirmação em: &lt;b&gt;%1 blocos&lt;/b&gt;&lt;br /&gt;</translation>
+    </message>
+    <message>
+        <source>Time in: &lt;b&gt;%1 seconds from first confirmed&lt;/b&gt;&lt;br /&gt;</source>
+        <translation>Tempo em: &lt;b&gt;%1 segundos desde a primeira confirmação&lt;/b&gt;&lt;br /&gt;</translation>
+    </message>
+    <message>
         <source>%1 funds only</source>
         <translation>Apenas saldo %1</translation>
     </message>
@@ -3017,7 +2942,10 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message numerus="yes">
         <source>This transaction will consume %n input(s)</source>
-        <translation><numerusform>Essa transação vai consumir %n input</numerusform><numerusform>Essa transação vai consumir %n inputs</numerusform></translation>
+        <translation>
+            <numerusform>Essa transação vai consumir %n input</numerusform>
+            <numerusform>Essa transação vai consumir %n inputs</numerusform>
+        </translation>
     </message>
     <message>
         <source>Warning: Using %1 with %2 or more inputs can harm your privacy and is not recommended</source>
@@ -3064,12 +2992,19 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Pedido de pagamento expirado</translation>
     </message>
     <message>
+        <source>The amount to pay exceeds the limit of 21 million per transaction.</source>
+        <translation>O valor a pagar ultrapassa o limite de 21 milhões por transação.</translation>
+    </message>
+    <message>
         <source>Pay only the required fee of %1</source>
         <translation>Pagar somente a taxa requerida de %1</translation>
     </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
-        <translation><numerusform>Estimativa para iniciar a confirmação em %n blocos.</numerusform><numerusform>Estimativa para iniciar a confirmação em %n blocos.</numerusform></translation>
+        <translation>
+            <numerusform>Estimativa para iniciar a confirmação em %n blocos.</numerusform>
+            <numerusform>Estimativa para iniciar a confirmação em %n blocos.</numerusform>
+        </translation>
     </message>
     <message>
         <source>Warning: Invalid Raptoreum address</source>
@@ -3127,6 +3062,10 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Remover esta entrada</translation>
     </message>
     <message>
+        <source>Enable/Disable future transaction</source>
+        <translation>Habilitar/Desabilitar transação futura</translation>
+    </message>
+    <message>
         <source>&amp;Label:</source>
         <translation>&amp;Rótulo:</translation>
     </message>
@@ -3157,6 +3096,30 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>A message that was attached to the raptoreum: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Raptoreum network.</source>
         <translation>A mensagem que foi anexada ao Raptoreum: URI na qual será gravada na transação para sua referência. Nota: Essa mensagem não será gravada publicamente na rede Raptoreum.</translation>
+    </message>
+    <message>
+        <source>Future</source>
+        <translation>Futuro</translation>
+    </message>
+    <message>
+        <source>Maturity:</source>
+        <translation>Maturidade:</translation>
+    </message>
+    <message>
+        <source>Number of block confirmations for this output to be spendable if happen before timelock</source>
+        <translation>Número de confirmações de bloco para que esta saída possa ser gasta se acontecer antes do bloqueio de tempo</translation>
+    </message>
+    <message>
+        <source>Lock time:</source>
+        <translation>Tempo de bloqueio:</translation>
+    </message>
+    <message>
+        <source>Time in seconds for this output to be spendable if happen before maturity</source>
+        <translation>Tempo em segundos para que essa saída possa ser gasta se ocorrer antes do vencimento</translation>
+    </message>
+    <message>
+        <source>Fee:</source>
+        <translation></translation>
     </message>
     <message>
         <source>This is an unauthenticated payment request.</source>
@@ -3264,7 +3227,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>&amp;Verificar Mensagem</translation>
     </message>
     <message>
-        <source>Enter the receiver's address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack. Note that this only proves the signing party receives with the address, it cannot prove sendership of any transaction!</source>
+        <source>Enter the receiver&apos;s address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack. Note that this only proves the signing party receives with the address, it cannot prove sendership of any transaction!</source>
         <translation>Coloque o endereço do autor, a mensagem (certifique-se de copiar toda a mensagem, incluindo quebras de linha, espaços, tabulações, etc.) e a assinatura embaixo para verificar a mensagem. Cuidado para não ler mais da assinatura do que está assinado na mensagem, para evitar ser enganado pelo ataque man-in-the-middle. Note que isso somente prova a propriedade de um endereço, e não o remetende de qualquer transação.</translation>
     </message>
     <message>
@@ -3288,8 +3251,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Insira uma mensagem para ser assinada</translation>
     </message>
     <message>
-        <source>Click "Sign Message" to generate signature</source>
-        <translation>Clique em "Assinar mensagem" para gerar a assinatura</translation>
+        <source>Click &quot;Sign Message&quot; to generate signature</source>
+        <translation>Clique em &quot;Assinar mensagem&quot; para gerar a assinatura</translation>
     </message>
     <message>
         <source>Enter a message to be verified</source>
@@ -3349,6 +3312,141 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
 </context>
 <context>
+    <name>SmartnodeList</name>
+    <message>
+        <source>Form</source>
+        <translation>Formulário</translation>
+    </message>
+    <message>
+        <source>Status</source>
+        <translation>Status</translation>
+    </message>
+    <message>
+        <source>0</source>
+        <translation>0</translation>
+    </message>
+    <message>
+        <source>Filter List:</source>
+        <translation>Filtrar Lista:</translation>
+    </message>
+    <message>
+        <source>Filter smartnode list</source>
+        <translation>Filtrar lista de smartnodes</translation>
+    </message>
+    <message>
+        <source>Node Count:</source>
+        <translation>Contagem de Smartnodes</translation>
+    </message>
+    <message>
+        <source>Show only smartnodes this wallet has keys for.</source>
+        <translation>Mostrar apenas os smartnodes para os quais esta carteira possui chaves.</translation>
+    </message>
+    <message>
+        <source>My smartnodes only</source>
+        <translation>Meus smartnodes apenas</translation>
+    </message>
+    <message>
+        <source>Service</source>
+        <translation>Serviço</translation>
+    </message>
+    <message>
+        <source>PoSe Score</source>
+        <translation>Contagem PoSe</translation>
+    </message>
+    <message>
+        <source>Registered</source>
+        <translation>Registrado</translation>
+    </message>
+    <message>
+        <source>Last Paid</source>
+        <translation>Último pagamento</translation>
+    </message>
+    <message>
+        <source>Next Payment</source>
+        <translation>Próximo pagamento</translation>
+    </message>
+    <message>
+        <source>Payout Address</source>
+        <translation>Endereço de Pagamento</translation>
+    </message>
+    <message>
+        <source>Operator Reward</source>
+        <translation>Recompensa do Operador</translation>
+    </message>
+    <message>
+        <source>Collateral Address</source>
+        <translation>Endereço de Colateral</translation>
+    </message>
+    <message>
+        <source>Collateral Amount</source>
+        <translation>Valor do Colateral</translation>
+    </message>
+    <message>
+        <source>Owner Address</source>
+        <translation>Endereço de Proprietário</translation>
+    </message>
+    <message>
+        <source>Voting Address</source>
+        <translation>Endereço de Votação</translation>
+    </message>
+    <message>
+        <source>Copy ProTx Hash</source>
+        <translation>Copiar ProTx Hash</translation>
+    </message>
+    <message>
+        <source>Copy Collateral Outpoint</source>
+        <translation>Copiar Outpoint Collateral</translation>
+    </message>
+    <message>
+        <source>Updating...</source>
+        <translation>Atualizando...</translation>
+    </message>
+    <message>
+        <source>Invalid</source>
+        <translation>inválido</translation>
+    </message>
+    <message>
+        <source>ENABLED</source>
+        <translation>HABILITADO </translation>
+    </message>
+    <message>
+        <source>POSE_BANNED</source>
+        <translation>POSE_BANNED</translation>
+    </message>
+    <message>
+        <source>UNKNOWN</source>
+        <translation>DESCONHECIDO</translation>
+    </message>
+    <message>
+        <source>to %1</source>
+        <translation>para %1</translation>
+    </message>
+    <message>
+        <source>to UNKNOWN</source>
+        <translation>para DESCONHECIDO</translation>
+    </message>
+    <message>
+        <source>but not claimed</source>
+        <translation>mas não reivindicado</translation>
+    </message>
+    <message>
+        <source>NONE</source>
+        <translation>NENHUM</translation>
+    </message>
+    <message>
+        <source>Filter by any property (e.g. address or protx hash)</source>
+        <translation>Filtrar por qualquer propriedade (por exemplo, endereço ou hash protx)</translation>
+    </message>
+    <message>
+        <source>Please wait...</source>
+        <translation>Por favor, aguarde...</translation>
+    </message>
+    <message>
+        <source>Additional information for DIP3 Smartnode %1</source>
+        <translation>Informações adicionais para DIP3 Smartnode %1</translation>
+    </message>
+</context>
+<context>
     <name>SplashScreen</name>
     <message>
         <source>[testnet]</source>
@@ -3378,7 +3476,10 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <name>TransactionDesc</name>
     <message numerus="yes">
         <source>Open for %n more block(s)</source>
-        <translation><numerusform>Aberto para %n mais blocos</numerusform><numerusform>Aberto para %n mais blocos</numerusform></translation>
+        <translation>
+            <numerusform>Aberto para %n mais blocos</numerusform>
+            <numerusform>Aberto para %n mais blocos</numerusform>
+        </translation>
     </message>
     <message>
         <source>Open until %1</source>
@@ -3419,6 +3520,50 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>verified via InstantSend</source>
         <translation>verificado via EnvioInstantâneo</translation>
+    </message>
+    <message>
+        <source>Future Transaction</source>
+        <translation>Transação futuro</translation>
+    </message>
+    <message>
+        <source>Future Amount:</source>
+        <translation>Montante Futuro:</translation>
+    </message>
+    <message>
+        <source>Maturity Block:</source>
+        <translation>Bloco de maturidade:</translation>
+    </message>
+    <message>
+        <source>%1 Blocks left</source>
+        <translation>%1 Blocos restantes</translation>
+    </message>
+    <message>
+        <source>%1 Blocks ago</source>
+        <translation>%1 Blocos atrás</translation>
+    </message>
+    <message>
+        <source>Maturity Time:</source>
+        <translation>Tempo de maturidade:</translation>
+    </message>
+    <message>
+        <source>Locked Time:</source>
+        <translation>Tempo bloqueado:</translation>
+    </message>
+    <message>
+        <source>seconds</source>
+        <translation>segundos</translation>
+    </message>
+    <message>
+        <source>Never</source>
+        <translation>Nunca</translation>
+    </message>
+    <message>
+        <source>Locked Output Index:</source>
+        <translation>Índice de Saída Bloqueado:</translation>
+    </message>
+    <message>
+        <source>Waiting for sync...</source>
+        <translation>Aguardando sincronização...</translation>
     </message>
     <message>
         <source>Status</source>
@@ -3466,7 +3611,10 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message numerus="yes">
         <source>matures in %n more block(s)</source>
-        <translation><numerusform>Maduro em %n blocos</numerusform><numerusform>Maduro em %n blocos</numerusform></translation>
+        <translation>
+            <numerusform>Maduro em %n blocos</numerusform>
+            <numerusform>Maduro em %n blocos</numerusform>
+        </translation>
     </message>
     <message>
         <source>not accepted</source>
@@ -3517,8 +3665,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Mercador</translation>
     </message>
     <message>
-        <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to "not accepted" and it won't be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
-        <translation>Moedas recém minerados precisam aguardar %1 blocos antes de serem gastos. Quando o bloco foi gerado, ele foi disseminado pela rede para ser adicionado à blockchain. Se ele falhar em ser inserido na cadeia, seu estado será modificado para "não aceito" e ele não poderá ser gasto. Isso pode acontecer eventualmente quando blocos são gerados quase que simultaneamente.</translation>
+        <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to &quot;not accepted&quot; and it won&apos;t be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
+        <translation>Moedas recém minerados precisam aguardar %1 blocos antes de serem gastos. Quando o bloco foi gerado, ele foi disseminado pela rede para ser adicionado à blockchain. Se ele falhar em ser inserido na cadeia, seu estado será modificado para &quot;não aceito&quot; e ele não poderá ser gasto. Isso pode acontecer eventualmente quando blocos são gerados quase que simultaneamente.</translation>
     </message>
     <message>
         <source>Debug information</source>
@@ -3572,7 +3720,10 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message numerus="yes">
         <source>Open for %n more block(s)</source>
-        <translation><numerusform>Aberto para %n mais blocos</numerusform><numerusform>Aberto para %n mais blocos</numerusform></translation>
+        <translation>
+            <numerusform>Aberto para %n mais blocos</numerusform>
+            <numerusform>Aberto para %n mais blocos</numerusform>
+        </translation>
     </message>
     <message>
         <source>Open until %1</source>
@@ -3637,6 +3788,14 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Mined</source>
         <translation>Minerado</translation>
+    </message>
+    <message>
+        <source>Future Send</source>
+        <translation>Futuro enviado</translation>
+    </message>
+    <message>
+        <source>Future Receive</source>
+        <translation>Futuro recebimento</translation>
     </message>
     <message>
         <source>%1 Mixing</source>
@@ -3736,6 +3895,18 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Sent to</source>
         <translation>Enviado para</translation>
+    </message>
+    <message>
+        <source>Future</source>
+        <translation>Futuro</translation>
+    </message>
+    <message>
+        <source>Future Send</source>
+        <translation>Futuro enviado</translation>
+    </message>
+    <message>
+        <source>Future Received</source>
+        <translation>Futuro recebimento</translation>
     </message>
     <message>
         <source>%1 Send</source>
@@ -3949,924 +4120,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
 <context>
     <name>raptoreum-core</name>
     <message>
-        <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
-        <translation>Erro: Aceitar conexões de entrada falhou (retornou erro %s)</translation>
-    </message>
-    <message>
-        <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
-        <translation>Este é um build de teste pré-lançamento - use por sua conta e risco - não use para mineração ou comércio.</translation>
-    </message>
-    <message>
-        <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
-        <translation>Atenção: A rede não parecem concordar plenamente! Alguns mineiros parecem estar enfrentando problemas.</translation>
-    </message>
-    <message>
-        <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
-        <translation>Atenção: Nós não parecemos concordar plenamente com nossos nós! Você pode precisar atualizar ou outros nós podem precisar atualizar.</translation>
-    </message>
-    <message>
-        <source>Already have that input.</source>
-        <translation>Já tem essa entrada.</translation>
-    </message>
-    <message>
-        <source>Cannot downgrade wallet</source>
-        <translation>Não é possível fazer downgrade da carteira</translation>
-    </message>
-    <message>
-        <source>Collateral not valid.</source>
-        <translation>Colateral inválido.</translation>
-    </message>
-    <message>
-        <source>Corrupted block database detected</source>
-        <translation>Detectada database de bloco corrompida</translation>
-    </message>
-    <message>
-        <source>Do you want to rebuild the block database now?</source>
-        <translation>Você quer reconstruir o banco de dados de blocos agora?</translation>
-    </message>
-    <message>
-        <source>Done loading</source>
-        <translation>Carregamento completo</translation>
-    </message>
-    <message>
-        <source>Entries are full.</source>
-        <translation>Entradas estão cheias.</translation>
-    </message>
-    <message>
-        <source>Error initializing block database</source>
-        <translation>Erro ao inicializar a database do bloco</translation>
-    </message>
-    <message>
-        <source>Error initializing wallet database environment %s!</source>
-        <translation>Erro ao inicializar ambiente de banco de dados de carteira %s!</translation>
-    </message>
-    <message>
-        <source>Error loading block database</source>
-        <translation>Erro ao carregar banco de dados de blocos</translation>
-    </message>
-    <message>
-        <source>Error opening block database</source>
-        <translation>Erro ao abrir banco de dados de blocos</translation>
-    </message>
-    <message>
-        <source>Error reading from database, shutting down.</source>
-        <translation>Erro ao ler o banco de dados. Finalizando.</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>Erro</translation>
-    </message>
-    <message>
-        <source>Error: Disk space is low!</source>
-        <translation>Erro: Pouco espaço em disco!</translation>
-    </message>
-    <message>
-        <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
-        <translation>Falha ao escutar em qualquer porta. Use -listen=0 se você quiser isso.</translation>
-    </message>
-    <message>
-        <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
-        <translation>-maxtxfee é muito alto! Essa quantia poderia ser paga em uma única transação.</translation>
-    </message>
-    <message>
-        <source>Cannot provide specific connections and have addrman find outgoing connections at the same.</source>
-        <translation>Não é possível fornecer conexões específicas e fazer com que o addrman encontre conexões de saída ao mesmo tempo.</translation>
-    </message>
-    <message>
-        <source>Found unconfirmed denominated outputs, will wait till they confirm to continue.</source>
-        <translation>Encontrado saídas não confirmadas, esperará até que confirme para continuar.</translation>
-    </message>
-    <message>
-        <source>Invalid -socketevents ('%s') specified. Only these modes are supported: %s</source>
-        <translation>-socketevents ('%s') inválido. Apenas esses modos são suportados: %s</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)</source>
-        <translation>Valor inválido para -maxtxfee=&lt;valor&gt;: '%s' (precisa ser pelo menos a taxa mínima de %s para prevenir que a transação nunca seja confirmada)</translation>
-    </message>
-    <message>
-        <source>Transaction index can't be disabled with governance validation enabled. Either start with -disablegovernance command line switch or enable transaction index.</source>
-        <translation>O índice de transação não pode ser desabilitado com a validação de governança habilitada. Comece com o comando -disablegovernance ou ative o índice de transação.</translation>
-    </message>
-    <message>
-        <source>Can't mix: no compatible inputs found!</source>
-        <translation>Não é possível misturar: não foram encontradas entradas compatíveis!</translation>
-    </message>
-    <message>
-        <source>Entry exceeds maximum size.</source>
-        <translation>Entrada excede o tamanho máximo.</translation>
-    </message>
-    <message>
-        <source>Failed to load fulfilled requests cache from</source>
-        <translation>Falha ao carregar o cache de solicitações preenchidas de</translation>
-    </message>
-    <message>
-        <source>Failed to load governance cache from</source>
-        <translation>Falha ao carregar o cache de governança de</translation>
-    </message>
-    <message>
-        <source>Failed to load smartnode cache from</source>
-        <translation>Falha ao carregar o cache smartnode de</translation>
-    </message>
-    <message>
-        <source>Found enough users, signing ( waiting %s )</source>
-        <translation>Encontrou usuários suficientes, assinando ( esperando %s )</translation>
-    </message>
-    <message>
-        <source>Found enough users, signing ...</source>
-        <translation>Encontrou usuários suficientes, assinando ...</translation>
-    </message>
-    <message>
-        <source>Importing...</source>
-        <translation>Importando...</translation>
-    </message>
-    <message>
-        <source>Incompatible mode.</source>
-        <translation>Modo incompatível.</translation>
-    </message>
-    <message>
-        <source>Incompatible version.</source>
-        <translation>Versão incompatível. </translation>
-    </message>
-    <message>
-        <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
-        <translation>Bloco gênese incorreto ou não encontrado. Datadir errado para a rede?</translation>
-    </message>
-    <message>
-        <source>Information</source>
-        <translation>Informação</translation>
-    </message>
-    <message>
-        <source>Input is not valid.</source>
-        <translation>A entrada não é válida.</translation>
-    </message>
-    <message>
-        <source>Insufficient funds.</source>
-        <translation>Saldo insuficiente. </translation>
-    </message>
-    <message>
-        <source>Invalid amount for -discardfee=&lt;amount&gt;: '%s'</source>
-        <translation>Quantidade inválida para -discardfee=&lt;amount&gt;: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s' (must be at least %s)</source>
-        <translation>Valor inválido para -paytxfee=&lt;amount&gt;: '%s' (precisa ser no mínimo %s)</translation>
-    </message>
-    <message>
-        <source>Invalid minimum number of spork signers specified with -minsporkkeys</source>
-        <translation>Número mínimo inválido de assinantes do spork especificados com -minsporkkeys</translation>
-    </message>
-    <message>
-        <source>Keypool ran out, please call keypoolrefill first</source>
-        <translation>Erro na Keypool, favor executar keypoolrefill primeiro</translation>
-    </message>
-    <message>
-        <source>Loading banlist...</source>
-        <translation>Carregando lista de banidos...</translation>
-    </message>
-    <message>
-        <source>Loading fulfilled requests cache...</source>
-        <translation>Carregando o cache de solicitações atendidas ...</translation>
-    </message>
-    <message>
-        <source>Loading smartnode cache...</source>
-        <translation>Carregando o cache do smartnode ...</translation>
-    </message>
-    <message>
-        <source>Lock is already in place.</source>
-        <translation>Bloqueio já está no lugar.</translation>
-    </message>
-    <message>
-        <source>Mixing in progress...</source>
-        <translation>Mixing em progresso...</translation>
-    </message>
-    <message>
-        <source>Need to specify a port with -whitebind: '%s'</source>
-        <translation>Necessário informar uma porta com -whitebind: '%s'</translation>
-    </message>
-    <message>
-        <source>No Smartnodes detected.</source>
-        <translation>Nenhum Smartnode detectado.</translation>
-    </message>
-    <message>
-        <source>No compatible Smartnode found.</source>
-        <translation>Nenhum Smartnode compatível encontrado.</translation>
-    </message>
-    <message>
-        <source>Not enough funds to mix.</source>
-        <translation>Fundos insuficientes para misturar.</translation>
-    </message>
-    <message>
-        <source>Not in the Smartnode list.</source>
-        <translation>Não está na lista de Smartnode.</translation>
-    </message>
-    <message>
-        <source>Submitted to smartnode, waiting in queue %s</source>
-        <translation>Enviado para o smartnode, esperando na fila %s</translation>
-    </message>
-    <message>
-        <source>Synchronization finished</source>
-        <translation>Sincronização finalizada</translation>
-    </message>
-    <message>
-        <source>Unable to start HTTP server. See debug log for details.</source>
-        <translation>Não foi possível iniciar o servidor HTTP. Veja o log de debug para detalhes.</translation>
-    </message>
-    <message>
-        <source>Unknown response.</source>
-        <translation>Resposta desconhecida.</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -benchmark ignored, use -debug=bench.</source>
-        <translation>Argument -benchmark não suportado e ignorado, use -debug=bench.</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -debugnet ignored, use -debug=net.</source>
-        <translation>Argument -debugnet não suportado e ignorado, use -debug=net.</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -tor found, use -onion.</source>
-        <translation>O argumento -tor não é suportado, use -onion.</translation>
-    </message>
-    <message>
-        <source>User Agent comment (%s) contains unsafe characters.</source>
-        <translation>Comentário User Agent (%s) contém caracteres inseguros.</translation>
-    </message>
-    <message>
-        <source>Verifying wallet(s)...</source>
-        <translation>Verificando carteira(s)...</translation>
-    </message>
-    <message>
-        <source>Will retry...</source>
-        <translation>Será feita nova tentativa...</translation>
-    </message>
-    <message>
-        <source>Can't find random Smartnode.</source>
-        <translation>Não é possível encontrar o Smartnode aleatório.</translation>
-    </message>
-    <message>
-        <source>%s can't be lower than %s</source>
-        <translation>%s não podem ser inferiores a %s</translation>
-    </message>
-    <message>
-        <source>%s is idle.</source>
-        <translation>%s está inactivo.</translation>
-    </message>
-    <message>
-        <source>%s request incomplete: %s</source>
-        <translation>%s solicitação incompleta: %s</translation>
-    </message>
-    <message>
-        <source>Can't mix while sync in progress.</source>
-        <translation>Não é possível misturar enquanto a sincronização está em progresso.</translation>
-    </message>
-    <message>
-        <source>Invalid netmask specified in -whitelist: '%s'</source>
-        <translation>Máscara de rede inválida detectada em -whitelist: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid script detected.</source>
-        <translation>Detectado script inválido.</translation>
-    </message>
-    <message>
-        <source>%s file contains all private keys from this wallet. Do not share it with anyone!</source>
-        <translation>%s arquivo contém todas as chaves privadas desta carteira. Não compartilhe com ninguém!</translation>
-    </message>
-    <message>
-        <source>-smartnode option is deprecated and ignored, specifying -smartnodeblsprivkey is enough to start this node as a smartnode.</source>
-        <translation>a opção -smartnode está deprecada e ignorada, especificar -smartnodeblsprivkey é suficiente para iniciar um nó como smartnode.</translation>
-    </message>
-    <message>
-        <source>Failed to create backup, file already exists! This could happen if you restarted wallet in less than 60 seconds. You can continue if you are ok with this.</source>
-        <translation>Falha em criar o backup, o arquivo já existe! Isso pode ter acontecido se você resetou sua carteira em menos de 60 segundos. Você pode continuar se está ok com isso.</translation>
-    </message>
-    <message>
-        <source>Make sure to encrypt your wallet and delete all non-encrypted backups after you have verified that the wallet works!</source>
-        <translation>Certifique-se de criptografar sua carteira e excluir todos os backups não criptografados depois de verificar se a carteira funciona!</translation>
-    </message>
-    <message>
-        <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
-        <translation>Prune configurado abaixo do mínimo de %d MiB. Por favor use um número mais alto.</translation>
-    </message>
-    <message>
-        <source>Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)</source>
-        <translation>Prune: A ultima sincronização da carteira foi além do dado comprimido. Você precisa reindexar (fazer o download de toda a blockchain novamente)</translation>
-    </message>
-    <message>
-        <source>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</source>
-        <translation>Rescans não são possíveis no modo prune. Você precisa usar -reindex, que irá fazer o download de toda a blockchain novamente.</translation>
-    </message>
-    <message>
-        <source>The block database contains a block which appears to be from the future. This may be due to your computer's date and time being set incorrectly. Only rebuild the block database if you are sure that your computer's date and time are correct</source>
-        <translation>O banco de dados de blocos contém um bloco que parece ser do futuro. Isso pode ser devido à data e hora do seu computador estarem configuradas incorretamente. Apenas reconstrua o banco de dados de blocos se você estiver certo de que a data e hora de seu computador estão corretas.</translation>
-    </message>
-    <message>
-        <source>The transaction amount is too small to send after the fee has been deducted</source>
-        <translation>O valor da transação é muito pequeno para ser enviado depois que a taxa foi deduzida</translation>
-    </message>
-    <message>
-        <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
-        <translation>O tamanho total da string de versão da rede (%i) excede o tamanho máximo (%i). Reduza o numero ou tamanho de uacomments.</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -socks found. Setting SOCKS version isn't possible anymore, only SOCKS5 proxies are supported.</source>
-        <translation>Argumento inválido -socks encontrado. Definir a versão do SOCKS não é mais possível, somente proxys SOCK5 são suportados.</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -whitelistalwaysrelay ignored, use -whitelistrelay and/or -whitelistforcerelay.</source>
-        <translation>Argumento não suportado -whitelistalwaysrelay foi ignorado, utilize -whitelistrelay e/ou -whitelistforcerelay.</translation>
-    </message>
-    <message>
-        <source>WARNING! Failed to replenish keypool, please unlock your wallet to do so.</source>
-        <translation>ATENÇÃO! Falha ao repor o keypool, desbloqueie sua carteira para fazer isso.</translation>
-    </message>
-    <message>
-        <source>Wallet is locked, can't replenish keypool! Automatic backups and mixing are disabled, please unlock your wallet to replenish keypool.</source>
-        <translation>Carteira travada, impossível reabastecer o keypool. Backups e misturas automáticas estão desabilitadas, por favor, destrave sua carteira para reabastecer o keypool. </translation>
-    </message>
-    <message>
-        <source>Warning: Unknown block versions being mined! It's possible unknown rules are in effect</source>
-        <translation>Alerta: Versões de blocos desconhecidas mineradas! É possível que regras desconhecidas estejam ativas</translation>
-    </message>
-    <message>
-        <source>You need to rebuild the database using -reindex to change -timestampindex</source>
-        <translation>Você precisa reconstruir o banco de dados usando -reindex para alterar -timestampindex</translation>
-    </message>
-    <message>
-        <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
-        <translation>Você precisa reconstruir o banco de dados usando -reindex para sair do modo prune. Isso irá rebaixar todo o blockchain.</translation>
-    </message>
-    <message>
-        <source>-litemode is deprecated.</source>
-        <translation>-litemode não é mais suportado.</translation>
-    </message>
-    <message>
-        <source>-maxmempool must be at least %d MB</source>
-        <translation>-maxmempool deve ser pelo menos %d MB</translation>
-    </message>
-    <message>
-        <source>Automatic backups disabled</source>
-        <translation>Backup automáticos desabilitados.</translation>
-    </message>
-    <message>
-        <source>ERROR! Failed to create automatic backup</source>
-        <translation>ERRO! Falha ao criar o backup automático</translation>
-    </message>
-    <message>
-        <source>Error upgrading evo database</source>
-        <translation>Erro de upgrade na base de dados evo</translation>
-    </message>
-    <message>
-        <source>Error: A fatal internal error occurred, see debug.log for details</source>
-        <translation>Erro: Um erro interno fatal ocorreu, veja debug.log para detalhes</translation>
-    </message>
-    <message>
-        <source>Error: failed to add socket to epollfd (epoll_ctl returned error %s)</source>
-        <translation>Erro: falha ao adicionar socket ao epollfd (epoll_ctl retornou erro %s)</translation>
-    </message>
-    <message>
-        <source>Exceeded max tries.</source>
-        <translation>Tentativas máximas excedidas.</translation>
-    </message>
-    <message>
-        <source>Failed to clear fulfilled requests cache at</source>
-        <translation>Falha ao limpar cache de requisições completas em</translation>
-    </message>
-    <message>
-        <source>Failed to clear governance cache at</source>
-        <translation>Falha ao limpar o cache de governança em</translation>
-    </message>
-    <message>
-        <source>Failed to clear smartnode cache at</source>
-        <translation>Falha ao limpar cache de smartnode em</translation>
-    </message>
-    <message>
-        <source>Failed to commit EvoDB</source>
-        <translation>Falha ao enviar dados para EvoDB</translation>
-    </message>
-    <message>
-        <source>Failed to create backup %s!</source>
-        <translation>Falhou ao criar backup %s!</translation>
-    </message>
-    <message>
-        <source>Failed to create backup, error: %s</source>
-        <translation>Falha ao criar backup, erro: %s</translation>
-    </message>
-    <message>
-        <source>Failed to delete backup, error: %s</source>
-        <translation>Falha ao apagar backup, erro: %s</translation>
-    </message>
-    <message>
-        <source>Failed to load sporks cache from</source>
-        <translation>Falha ao carregar o cache de sporks de</translation>
-    </message>
-    <message>
-        <source>Failed to rescan the wallet during initialization</source>
-        <translation>Falha ao verificar novamente a carteira durante a inicialização</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -fallbackfee=&lt;amount&gt;: '%s'</source>
-        <translation>Valor inválido para -fallbackfee=&lt;amount&gt;: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid smartnodeblsprivkey. Please see documentation.</source>
-        <translation>Smartnodeblsprivkey invalido. Por favor, veja a documentação.</translation>
-    </message>
-    <message>
-        <source>It has been replaced by -disablegovernance.</source>
-        <translation>Foi substituído por -disablegovernance.</translation>
-    </message>
-    <message>
-        <source>Its replacement -disablegovernance has been forced instead.</source>
-        <translation>Sua substituição -disablegovernance foi forçada em seu lugar.</translation>
-    </message>
-    <message>
-        <source>Loading block index...</source>
-        <translation>Carregando índice de blocos...</translation>
-    </message>
-    <message>
-        <source>Loading governance cache...</source>
-        <translation>Sincronizando cache de governança ....</translation>
-    </message>
-    <message>
-        <source>Loading sporks cache...</source>
-        <translation>Carregando o cache de sporks ...</translation>
-    </message>
-    <message>
-        <source>Loading wallet... (%3.2f %%)</source>
-        <translation>Carregando carteira... (%3.2f %%)</translation>
-    </message>
-    <message>
-        <source>Loading wallet...</source>
-        <translation>Carregando carteira...</translation>
-    </message>
-    <message>
-        <source>Smartnode queue is full.</source>
-        <translation>A fila do smartnode está cheia.</translation>
-    </message>
-    <message>
-        <source>Smartnode:</source>
-        <translation>Smartnode:</translation>
-    </message>
-    <message>
-        <source>Missing input transaction information.</source>
-        <translation>Falta informação da transação de entrada.</translation>
-    </message>
-    <message>
-        <source>No errors detected.</source>
-        <translation>Nenhum erro detectado.</translation>
-    </message>
-    <message>
-        <source>No matching denominations found for mixing.</source>
-        <translation>Nenhuma denominação correspondente encontrada para misturar.</translation>
-    </message>
-    <message>
-        <source>Not compatible with existing transactions.</source>
-        <translation>Não é compatível com as transações existentes.</translation>
-    </message>
-    <message>
-        <source>Not enough file descriptors available.</source>
-        <translation>Não há descritores de arquivos disponíveis.</translation>
-    </message>
-    <message>
-        <source>Prune cannot be configured with a negative value.</source>
-        <translation>O modo prune não pode ser configurado com um valor negativo.</translation>
-    </message>
-    <message>
-        <source>Prune mode is incompatible with -disablegovernance=false.</source>
-        <translation>O modo prune é incompatível com -disablegovernance=false.</translation>
-    </message>
-    <message>
-        <source>Prune mode is incompatible with -txindex.</source>
-        <translation>O modo prune é incompatível com -txindex.</translation>
-    </message>
-    <message>
-        <source>Pruning blockstore...</source>
-        <translation>Prunando os blocos existentes...</translation>
-    </message>
-    <message>
-        <source>Specified -walletdir "%s" does not exist</source>
-        <translation>O diretório especificado -walletdir "%s" não existe</translation>
-    </message>
-    <message>
-        <source>Specified -walletdir "%s" is a relative path</source>
-        <translation>O diretório especificado -walletdir "%s" é um caminho relativo</translation>
-    </message>
-    <message>
-        <source>Specified -walletdir "%s" is not a directory</source>
-        <translation>O diretório especificado -walletdir "%s" não é um diretório</translation>
-    </message>
-    <message>
-        <source>Synchronizing blockchain...</source>
-        <translation>Sincronizando o blockchain...</translation>
-    </message>
-    <message>
-        <source>The wallet will avoid paying less than the minimum relay fee.</source>
-        <translation>A carteira irá evitar pagar menos que a taxa mínima de retransmissão.</translation>
-    </message>
-    <message>
-        <source>This is expected because you are running a pruned node.</source>
-        <translation>Isso é esperado porque você está executando um nó comprimido.</translation>
-    </message>
-    <message>
-        <source>This is the minimum transaction fee you pay on every transaction.</source>
-        <translation>Esta é a taxa mínima que você paga em todas as transação.</translation>
-    </message>
-    <message>
-        <source>This is the transaction fee you will pay if you send a transaction.</source>
-        <translation>Esta é a taxa que você irá pagar se enviar uma transação.</translation>
-    </message>
-    <message>
-        <source>Transaction amounts must not be negative</source>
-        <translation>As quantidades nas transações não podem ser negativas.</translation>
-    </message>
-    <message>
-        <source>Transaction has too long of a mempool chain</source>
-        <translation>A transação demorou muito na memória</translation>
-    </message>
-    <message>
-        <source>Transaction must have at least one recipient</source>
-        <translation>A transação deve ter ao menos um destinatário</translation>
-    </message>
-    <message>
-        <source>Transaction too large</source>
-        <translation>Transação muito grande</translation>
-    </message>
-    <message>
-        <source>Trying to connect...</source>
-        <translation>Tentando se conectar...</translation>
-    </message>
-    <message>
-        <source>Unable to bind to %s on this computer. %s is probably already running.</source>
-        <translation>Impossível vincular a %s neste computador. O %s provavelmente já está rodando.</translation>
-    </message>
-    <message>
-        <source>Unable to generate initial keys</source>
-        <translation>Incapaz de gerar chaves iniciais</translation>
-    </message>
-    <message>
-        <source>Upgrading UTXO database</source>
-        <translation>Atualizando banco de dados UTXO</translation>
-    </message>
-    <message>
-        <source>Wallet %s resides outside wallet directory %s</source>
-        <translation>A carteira %s encontra-se fora do diretório da carteira %s</translation>
-    </message>
-    <message>
-        <source>Wallet needed to be rewritten: restart %s to complete</source>
-        <translation>A Carteira precisa ser reescrita: reinicie o %s para completar</translation>
-    </message>
-    <message>
-        <source>Warning: unknown new rules activated (versionbit %i)</source>
-        <translation>Alerta: regras novas desconhecidas ativadas (versionbit %i)</translation>
-    </message>
-    <message>
-        <source>Wasn't able to create wallet backup folder %s!</source>
-        <translation>Não foi possível criar a pasta para backup da carteira %s!</translation>
-    </message>
-    <message>
-        <source>You can not start a smartnode with wallet enabled.</source>
-        <translation>Você não pode iniciar um smartnode com a carteira habilitada.</translation>
-    </message>
-    <message>
-        <source>You need to rebuild the database using -reindex to change -addressindex</source>
-        <translation>Você precisa reconstruir o banco de dados usando -reindex para alterar -addressindex</translation>
-    </message>
-    <message>
-        <source>You need to rebuild the database using -reindex to change -spentindex</source>
-        <translation>Você precisa reconstruir o banco de dados usando -reindex para alterar -spentindex</translation>
-    </message>
-    <message>
-        <source>You need to rebuild the database using -reindex to change -txindex</source>
-        <translation>Você precisa reconstruir o banco de dados usando -reindex para alterar -txindex</translation>
-    </message>
-    <message>
-        <source>no mixing available.</source>
-        <translation>mixing não disponível.</translation>
-    </message>
-    <message>
-        <source>see debug.log for details.</source>
-        <translation>Consulte debug.log para obter detalhes.</translation>
-    </message>
-    <message>
         <source>Raptoreum Core</source>
         <translation>Raptoreum Core</translation>
     </message>
     <message>
         <source>The %s developers</source>
         <translation>Desenvolvedores do %s</translation>
-    </message>
-    <message>
-        <source>%s uses exact denominated amounts to send funds, you might simply need to mix some more coins.</source>
-        <translation>%s usa denominações exatas para enviar fundos; talvez seja necessário misturar mais algumas moedas.</translation>
-    </message>
-    <message>
-        <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
-        <translation>Não foi possível obter exclusividade de escrita no endereço %s. O %s provavelmente já está sendo executado.</translation>
-    </message>
-    <message>
-        <source>Distributed under the MIT software license, see the accompanying file %s or %s</source>
-        <translation>Distribuído sob a licença de software MIT, veja o arquivo %s ou %s</translation>
-    </message>
-    <message>
-        <source>Error loading %s: You can't enable HD on an already existing non-HD wallet</source>
-        <translation>Erro ao carregar %s: você não pode ativar o HD em uma carteira não HD já existente</translation>
-    </message>
-    <message>
-        <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
-        <translation>Erro ao ler arquivo %s! Todas as chaves privadas foram lidas corretamente, mas os dados de transação ou o livro de endereços podem estar faltando ou incorretos.</translation>
-    </message>
-    <message>
-        <source>Incorrect or no devnet genesis block found. Wrong datadir for devnet specified?</source>
-        <translation>Bloco gênese incorreto ou não encontrado. Datadir errado para a devnet rede?</translation>
-    </message>
-    <message>
-        <source>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</source>
-        <translation>Por favor verifique se a data e o horário de seu computador estão corretos. Se o relógio de seu computador estiver incorreto, %s não funcionará corretamente.</translation>
-    </message>
-    <message>
-        <source>Please contribute if you find %s useful. Visit %s for further information about the software.</source>
-        <translation>Por favor contribua se você entender que %s é útil. Visite %s para mais informações sobre o software.</translation>
-    </message>
-    <message>
-        <source>This is the transaction fee you may discard if change is smaller than dust at this level</source>
-        <translation>Essa é a taxa de transação que você pode descartar se a alteração for menor que o mínimo neste nível</translation>
-    </message>
-    <message>
-        <source>This is the transaction fee you may pay when fee estimates are not available.</source>
-        <translation>Esta é a taxa que você deve pagar quando a taxa estimada não está disponível.</translation>
-    </message>
-    <message>
-        <source>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit %s and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</source>
-        <translation>Esse produto inclui um software desenvolvido pelo OpenSSL Project para uso na OpenSSL Toolkit %s e software criptográfico escrito por Eric Young e software UPnP escrito por Thomas Bernard. </translation>
-    </message>
-    <message>
-        <source>Unable to replay blocks. You will need to rebuild the database using -reindex-chainstate.</source>
-        <translation>Não foi possível reproduzir os blocos. Você precisará reconstruir o banco de dados usando -reindex-chainstate.</translation>
-    </message>
-    <message>
-        <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
-        <translation>Atenção: Arquivo da carteira corrompido, dados recuperados! Original %s salvo como %s em %s; se seu saldo ou transações estiverem incorretos, você deve restaurar o backup.</translation>
-    </message>
-    <message>
-        <source>%d of last 100 blocks have unexpected version</source>
-        <translation>%d dos últimos 100 blocos têm versão inesperada</translation>
-    </message>
-    <message>
-        <source>%s corrupt, salvage failed</source>
-        <translation>%s corrompido, recuperação falhou</translation>
-    </message>
-    <message>
-        <source>%s is not a valid backup folder!</source>
-        <translation>%s não é uma pasta de backup válida!</translation>
-    </message>
-    <message>
-        <source>%s is set very high!</source>
-        <translation>%s está muito alto!</translation>
-    </message>
-    <message>
-        <source>-devnet can only be specified once</source>
-        <translation>-devnet só pode ser especificado uma vez</translation>
-    </message>
-    <message>
-        <source>-port must be specified when -devnet and -listen are specified</source>
-        <translation>-rpcport deve ser especificado quando -devnet e -server são especificados</translation>
-    </message>
-    <message>
-        <source>-rpcport must be specified when -devnet and -server are specified</source>
-        <translation>-rpcport deve ser especificado quando -devnet e -server são especificados</translation>
-    </message>
-    <message>
-        <source>Cannot resolve -%s address: '%s'</source>
-        <translation>Não foi possível encontrar o endereço de -%s: '%s'</translation>
-    </message>
-    <message>
-        <source>Cannot write to data directory '%s'; check permissions.</source>
-        <translation>Não é possível escrever no diretório de dados '%s'; verifique as permissões.</translation>
-    </message>
-    <message>
-        <source>Change index out of range</source>
-        <translation>Índice de mudança fora do intervalo</translation>
-    </message>
-    <message>
-        <source>Copyright (C)</source>
-        <translation>Copyright</translation>
-    </message>
-    <message>
-        <source>Error loading %s</source>
-        <translation>Erro ao carregar %s</translation>
-    </message>
-    <message>
-        <source>Error loading %s: Wallet corrupted</source>
-        <translation>Erro ao carregar %s Carteira corrompida</translation>
-    </message>
-    <message>
-        <source>Error loading %s: Wallet requires newer version of %s</source>
-        <translation>Erro ao carregar %s A carteira requer a versão mais nova do %s</translation>
-    </message>
-    <message>
-        <source>Error loading %s: You can't disable HD on an already existing HD wallet</source>
-        <translation>Erro ao carregar %s: você não pode desativar o HD em uma carteira HD já existente</translation>
-    </message>
-    <message>
-        <source>Error loading wallet %s. Duplicate -wallet filename specified.</source>
-        <translation>Erro ao carregar a carteira %s. Nome do arquivo de -carteira especificado duplicado.</translation>
-    </message>
-    <message>
-        <source>Error upgrading chainstate database</source>
-        <translation>Erro ao atualizar banco de dados do chainstate</translation>
-    </message>
-    <message>
-        <source>Error: failed to add socket to kqueuefd (kevent returned error %s)</source>
-        <translation>Erro: falha ao adicionar socket ao kqueuefd (kevent retornou erro %s)</translation>
-    </message>
-    <message>
-        <source>Failed to find mixing queue to join</source>
-        <translation>Não foi possível encontrar a fila de mistura para participar</translation>
-    </message>
-    <message>
-        <source>Failed to start a new mixing queue</source>
-        <translation>Falha ao iniciar uma nova fila de mistura</translation>
-    </message>
-    <message>
-        <source>Incorrect -rescan mode, falling back to default value</source>
-        <translation>Modo -rescan incorreto, retornando ao valor padrão</translation>
-    </message>
-    <message>
-        <source>Initialization sanity check failed. %s is shutting down.</source>
-        <translation>O teste de integridade de inicialização falhou. O %s está sendo desligado.</translation>
-    </message>
-    <message>
-        <source>Inputs vs outputs size mismatch.</source>
-        <translation>Incompatibilidade de tamanho de entradas x saídas.</translation>
-    </message>
-    <message>
-        <source>Invalid -onion address or hostname: '%s'</source>
-        <translation>Endereço -onion ou hostname inválido: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid -proxy address or hostname: '%s'</source>
-        <translation>Endereço -proxy ou nome do servidor inválido: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -%s=&lt;amount&gt;: '%s'</source>
-        <translation>Quantidade inválida para -%s=&lt;amount&gt;: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid spork address specified with -sporkaddr</source>
-        <translation>Endereço de spork inválido especificado com -sporkaddr</translation>
-    </message>
-    <message>
-        <source>Loading P2P addresses...</source>
-        <translation>A carregar endereços de P2P...</translation>
-    </message>
-    <message>
-        <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
-        <translation>Reduzindo -maxconnections de %d para %d, devido à limitações do sistema.</translation>
-    </message>
-    <message>
-        <source>Replaying blocks...</source>
-        <translation>Reproduzindo blocos...</translation>
-    </message>
-    <message>
-        <source>Rescanning...</source>
-        <translation>Escaneando...</translation>
-    </message>
-    <message>
-        <source>Session not complete!</source>
-        <translation>Sessão não completa!</translation>
-    </message>
-    <message>
-        <source>Session timed out.</source>
-        <translation>A sessão expirou.</translation>
-    </message>
-    <message>
-        <source>Signing transaction failed</source>
-        <translation>A transação assinada falhou</translation>
-    </message>
-    <message>
-        <source>Specified blocks directory "%s" does not exist.</source>
-        <translation>O diretório de blocos especificado "%s" não existe</translation>
-    </message>
-    <message>
-        <source>Last queue was created too recently.</source>
-        <translation>A última fila foi criada muito recentemente.</translation>
-    </message>
-    <message>
-        <source>Last successful action was too recent.</source>
-        <translation>A última acção é muito recente.</translation>
-    </message>
-    <message>
-        <source>Starting network threads...</source>
-        <translation>Iniciando threads de rede...</translation>
-    </message>
-    <message>
-        <source>Synchronizing governance objects...</source>
-        <translation>Sincronizando objetos de governança ....</translation>
-    </message>
-    <message>
-        <source>The source code is available from %s.</source>
-        <translation>O código fonte está disponível pelo %s.</translation>
-    </message>
-    <message>
-        <source>The transaction amount is too small to pay the fee</source>
-        <translation>O valor da transação é muito pequeno para pagar a taxa</translation>
-    </message>
-    <message>
-        <source>This is experimental software.</source>
-        <translation>Este é um software experimental.</translation>
-    </message>
-    <message>
-        <source>Transaction amount too small</source>
-        <translation>Quantia da transação muito pequena</translation>
-    </message>
-    <message>
-        <source>Transaction created successfully.</source>
-        <translation>Transação criada com sucesso.</translation>
-    </message>
-    <message>
-        <source>Transaction fees are too high.</source>
-        <translation>Taxa de transação muito alta.</translation>
-    </message>
-    <message>
-        <source>Transaction not valid.</source>
-        <translation>Transação inválida.</translation>
-    </message>
-    <message>
-        <source>Transaction too large for fee policy</source>
-        <translation>Transação muito grande para a política de tarifas</translation>
-    </message>
-    <message>
-        <source>Unable to bind to %s on this computer (bind returned error %s)</source>
-        <translation>Impossível abrir %s neste computador (bind retornou o erro %s)</translation>
-    </message>
-    <message>
-        <source>Unable to locate enough mixed funds for this transaction.</source>
-        <translation>Incapaz de localizar fundos anonimizados suficientes para esta transação.</translation>
-    </message>
-    <message>
-        <source>Unable to locate enough non-denominated funds for this transaction.</source>
-        <translation>Não foi possível localizar fundos não denominados suficientes para esta transacção.</translation>
-    </message>
-    <message>
-        <source>Unable to sign spork message, wrong key?</source>
-        <translation>Impossível assinar mensagem spork, chave incorreta?</translation>
-    </message>
-    <message>
-        <source>Unknown network specified in -onlynet: '%s'</source>
-        <translation>Rede desconhecida fornecida em -onlynet: '%s'</translation>
-    </message>
-    <message>
-        <source>Unknown state: id = %u</source>
-        <translation>Estado desconhecido: id = %u</translation>
-    </message>
-    <message>
-        <source>Unsupported logging category %s=%s.</source>
-        <translation>Categoria de log não suportada %s=%s.</translation>
-    </message>
-    <message>
-        <source>Verifying blocks...</source>
-        <translation>Verificando blocos...</translation>
-    </message>
-    <message>
-        <source>Very low number of keys left: %d</source>
-        <translation>Número muito baixo de chaves restantes: %d</translation>
-    </message>
-    <message>
-        <source>Wallet is locked.</source>
-        <translation>Carteira está bloqueada.</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation>Atenção</translation>
-    </message>
-    <message>
-        <source>Warning: %s is deprecated, please use %s instead</source>
-        <translation>Aviso: %s está obsoleto, use %s em seu lugar</translation>
-    </message>
-    <message>
-        <source>Warning: can't use %s and %s together, will prefer %s</source>
-        <translation>Aviso: não é possível usar %s e %s juntos, prefira %s</translation>
-    </message>
-    <message>
-        <source>Warning: incorrect parameter %s, path must exist! Using default path.</source>
-        <translation>Aviso: parâmetro %s incorreto, o caminho deve existir! Usando o caminho padrão.</translation>
-    </message>
-    <message>
-        <source>You are starting with governance validation disabled.</source>
-        <translation>Você está iniciando com a validação de governança desativada.</translation>
-    </message>
-    <message>
-        <source>You can not disable governance validation on a smartnode.</source>
-        <translation>Você não pode desabilitar a validação de governança em um smartnode.</translation>
-    </message>
-    <message>
-        <source>Your entries added successfully.</source>
-        <translation>Suas entradas foram adicionadas com êxito.</translation>
-    </message>
-    <message>
-        <source>Zapping all transactions from wallet...</source>
-        <translation>Fazendo o Zapping de todas as transações da wallet...</translation>
     </message>
 </context>
 </TS>

@@ -235,7 +235,6 @@ void PrepareShutdown(NodeContext& node)
     // using the other before destroying them.
     if (node.peer_logic) UnregisterValidationInterface(node.peer_logic.get());
     if (node.connman) node.connman->Stop();
-    if (g_txindex) g_txindex->Stop();
 
     StopTorControl();
 
@@ -271,7 +270,6 @@ void PrepareShutdown(NodeContext& node)
     node.peer_logic.reset();
     node.connman.reset();
     node.banman.reset();
-    g_txindex.reset();
 
     if (::mempool.IsLoaded() && gArgs.GetArg("-persistmempool", DEFAULT_PERSIST_MEMPOOL)) {
         DumpMempool(::mempool);
@@ -297,6 +295,13 @@ void PrepareShutdown(NodeContext& node)
                 chainstate->ForceFlushStateToDisk();
             }
         }
+    }
+
+    GetMainSignals().FlushBackgroundCallbacks();
+
+    if (g_txindex) {
+        g_txindex->Stop();
+        g_txindex.reset();
     }
 
     // Any future callbacks will be dropped. This should absolutely be safe - if
@@ -1474,7 +1479,7 @@ bool AppInitParameterInteraction()
 
 static bool LockDataDirectory(bool probeOnly)
 {
-    // Make sure only a single Dash Core process is using the data directory.
+    // Make sure only a single Raptoreum Core process is using the data directory.
     fs::path datadir = GetDataDir();
     if (!DirIsWritable(datadir)) {
         return InitError(strprintf(_("Cannot write to data directory '%s'; check permissions."), datadir.string()));
@@ -1569,9 +1574,9 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
     // Warn about relative -datadir path.
     if (gArgs.IsArgSet("-datadir") && !fs::path(gArgs.GetArg("-datadir", "")).is_absolute()) {
         LogPrintf("Warning: relative datadir option '%s' specified, which will be interpreted relative to the " /* Continued */
-                  "current working directory '%s'. This is fragile, because if Dash Core is started in the future "
+                  "current working directory '%s'. This is fragile, because if Raptoreum Core is started in the future "
                   "from a different location, it will be unable to locate the current data files. There could "
-                  "also be data loss if Dash Core is started while in a temporary directory.\n",
+                  "also be data loss if Raptoreum Core is started while in a temporary directory.\n",
             gArgs.GetArg("-datadir", ""), fs::current_path().string());
     }
 
@@ -2121,6 +2126,11 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
         LOCK(cs_pow);
         // Always load the powcache if available:
         uiInterface.InitMessage(_("Loading POW cache..."));
+        fs::path powCacheFile = pathDB / strDBName;
+        if (!fs::exists(powCacheFile)) {
+          uiInterface.InitMessage("Loading POW cache for the first time. This could take a minute...");
+        }
+
         CFlatDB<CPowCache> flatdb7(strDBName, "powCache");
         if(!flatdb7.Load(CPowCache::Instance())) {
             return InitError(_("Failed to load POW cache from") + "\n" + (pathDB / strDBName).string());

@@ -31,6 +31,7 @@
 #include <wallet/wallet.h>
 #include <future/fee.h>
 #include <spork.h>
+#include <validation.h>
 
 #include <QFontMetrics>
 #include <QScrollBar>
@@ -244,7 +245,7 @@ void SendCoinsDialog::OnDisplay() {
     for (int i = 0; i < ui->entries->count(); ++i) {
         SendCoinsEntry *entry = qobject_cast<SendCoinsEntry*>(ui->entries->itemAt(i)->widget());
         if(entry) {
-            entry->SetFutureVisible(sporkManager.IsSporkActive(SPORK_22_SPECIAL_TX_FEE) && i == 0);
+            entry->SetFutureVisible(sporkManager.IsSporkActive(SPORK_22_SPECIAL_TX_FEE) && Params().IsFutureActive(::ChainActive().Tip()) && i == 0);
         }
     }
 }
@@ -515,7 +516,9 @@ void SendCoinsDialog::accept()
 SendCoinsEntry *SendCoinsDialog::addEntry()
 {
 
-    SendCoinsEntry* entry = new SendCoinsEntry(this, sporkManager.IsSporkActive(SPORK_22_SPECIAL_TX_FEE) && ui->entries->count() != 0);
+    SendCoinsEntry* entry = new SendCoinsEntry(this, sporkManager.IsSporkActive(SPORK_22_SPECIAL_TX_FEE)
+                                                            && Params().IsFutureActive(::ChainActive().Tip())
+                                                            && ui->entries->count() == 0);
     entry->setModel(model);
     ui->entries->addWidget(entry);
     connect(entry, &SendCoinsEntry::removeEntry, this, &SendCoinsDialog::removeEntry);
@@ -678,6 +681,9 @@ void SendCoinsDialog::processSendCoinsReturn(const WalletModel::SendCoinsReturn 
         msgParams.first = tr("Payment request expired.");
         msgParams.second = CClientUIInterface::MSG_ERROR;
         break;
+    case WalletModel::AmountExceedsmaxmoney:
+        msgParams.first = tr("The amount to pay exceeds the limit of 21 million per transaction.");
+        break;    
     // included to prevent a compiler warning.
     case WalletModel::OK:
     default:

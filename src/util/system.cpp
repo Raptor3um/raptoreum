@@ -758,7 +758,6 @@ const fs::path &GetBlocksDir()
 {
 
     LOCK(csPathCached);
-
     fs::path &path = g_blocks_path_cache_net_specific;
 
     // This can be called during exceptions by LogPrintf(), so we cache the

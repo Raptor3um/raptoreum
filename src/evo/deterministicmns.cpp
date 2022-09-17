@@ -287,7 +287,9 @@ std::vector<CDeterministicMNCPtr> CDeterministicMNList::GetProjectedMNPayees(int
         return CompareByLastPaid(a, b);
     });
 
-    result.resize(nCount);
+    if (result.size() > nCount) {
+        result.resize(nCount);
+    }
 
     return result;
 }

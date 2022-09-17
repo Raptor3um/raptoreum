@@ -11,6 +11,8 @@
 #include <primitives/transaction.h>
 #include <consensus/validation.h>
 
+CChain& ChainActive();
+
 bool CheckTransaction(const CTransaction& tx, CValidationState& state, int nHeight, CAmount blockReward)
 {
     bool allowEmptyTxInOut = false;
@@ -30,14 +32,20 @@ bool CheckTransaction(const CTransaction& tx, CValidationState& state, int nHeig
         return state.DoS(100, false, REJECT_INVALID, "bad-txns-payload-oversize");
 
     // Check for negative or overflow output values
+    bool isV17active = Params().IsFutureActive(::ChainActive().Tip());
     CAmount nValueOut = 0;
     for (const auto& txout : tx.vout) {
         if (txout.nValue < 0)
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-vout-negative");
-        if (txout.nValue > MAX_MONEY)
-            return state.DoS(100, false, REJECT_INVALID, "bad-txns-vout-toolarge");
+        if(isV17active){
+            if (txout.nValue > MAX_MONEY)
+                return state.DoS(100, false, REJECT_INVALID, "bad-txns-vout-toolarge");
+        } else {
+            if (txout.nValue > OLD_MAX_MONEY)
+                return state.DoS(100, false, REJECT_INVALID, "bad-txns-vout-toolarge");
+        }
         nValueOut += txout.nValue;
-        if (!MoneyRange(nValueOut))
+        if (!MoneyRange(nValueOut, isV17active))
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-txouttotal-toolarge");
     }
 

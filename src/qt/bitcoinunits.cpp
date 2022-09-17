@@ -7,6 +7,7 @@
 #include <qt/bitcoinunits.h>
 #include <chainparams.h>
 #include <primitives/transaction.h>
+#include <validation.h>
 
 #include <QSettings>
 #include <QStringList>
@@ -271,5 +272,9 @@ QVariant BitcoinUnits::data(const int &row, int role) const
 
 CAmount BitcoinUnits::maxMoney()
 {
-    return MAX_MONEY;
+    if(Params().IsFutureActive(::ChainActive().Tip())){
+        return MAX_MONEY;
+    }else{
+        return OLD_MAX_MONEY;
+    }
 }

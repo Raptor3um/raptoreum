@@ -2085,6 +2085,7 @@ static UniValue getblockstats(const JSONRPCRequest& request)
     std::vector<CAmount> fee_array;
     std::vector<CAmount> feerate_array;
     std::vector<int64_t> txsize_array;
+    bool isV17active = Params().IsFutureActive(::ChainActive().Tip());
 
     for (size_t i = 0; i < block.vtx.size(); ++i) {
         const auto& tx = block.vtx.at(i);
@@ -2128,7 +2129,7 @@ static UniValue getblockstats(const JSONRPCRequest& request)
             }
 
             CAmount txfee = tx_total_in - tx_total_out;
-            assert(MoneyRange(txfee));
+            assert(MoneyRange(txfee, isV17active));
             if (do_medianfee) {
                 fee_array.push_back(txfee);
             }

@@ -101,7 +101,6 @@ void TransactionRecord::getFutureTxStatus(const interfaces::WalletTx& wtx, const
         //not in main chain - new transaction
         status.status = TransactionStatus::NotAccepted;
     }
-
 }
 
 /*
@@ -173,7 +172,6 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(interfaces::Wal
         sub.idx = vOutIdx;
         sub.credit = txout.nValue;
         sub.strAddress = validDestination ? EncodeDestination(address) : mapValue["from"];
-        //TODO: sub.address.SetString(sub.strAddress);
         sub.txDest = address;
         sub.updateLabel(wallet);
 
@@ -320,7 +318,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(interfaces::Wal
             continue;
         }
 
-        // I/J: xxx SendToAddress, SendToOther, watched: ReceiveWithAddress, RecvFromOther + FutureSend, FutureReceive
+        // I/J: SendToAddress, SendToOther, watched: RecvWithAddress, RecvFromOther + FutureSend, FutureReceive
         // This handles watched addresses going to unmonitored addresses
         // I: watched  -> other   Send from watched address to other
         // J: other    -> watched Send from other address to watched
@@ -339,10 +337,10 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(interfaces::Wal
             }
 
             // If received by Watch, add a receive transaction on the watched side:
-            if (outputInvolvesWatchAddress)
+            if (outputInvolvesWatchAddress && mine)
             {
                 sub.involvesWatchAddress = true;
-                sub.type = isFuture ? TransactionRecord::FutureReceive : TransactionRecord::RecvFromOther;
+                sub.type = isFuture ? TransactionRecord::FutureReceive : TransactionRecord::RecvWithAddress;
                 sub.debit = 0;
                 sub.credit = txout.nValue;
                 parts.append(sub);
@@ -350,7 +348,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(interfaces::Wal
             continue;
         }
 
-        LogPrintf("TransactionRecord::%s TxId: %s, vOutIdx: %d, Unhandled\n", __func__, hash.ToString(), vOutIdx);
+        // LogPrintf("TransactionRecord::%s TxId: %s, vOutIdx: %d, Unhandled\n", __func__, hash.ToString(), vOutIdx);
     }
     return parts;
 }
@@ -418,8 +416,18 @@ void TransactionRecord::updateStatus(const interfaces::WalletTx& wtx, const inte
 
 bool TransactionRecord::statusUpdateNeeded(int numBlocks, int chainLockHeight) const
 {
-    return status.cur_num_blocks != numBlocks || status.needsUpdate
-        || (!status.lockedByChainLocks && status.cachedChainLockHeight != chainLockHeight);
+    bool numBlocksChanged = status.cur_num_blocks != numBlocks;
+
+    // Block height changes do not matter for final states:
+    bool completed =
+        status.status == TransactionStatus::Confirmed ||
+        status.status == TransactionStatus::Abandoned ||
+        status.status == TransactionStatus::NotAccepted;
+
+    return
+        status.needsUpdate ||
+        (numBlocksChanged && !completed) ||
+        (!status.lockedByChainLocks && status.cachedChainLockHeight != chainLockHeight);
 }
 
 void TransactionRecord::updateLabel(interfaces::Wallet& wallet)

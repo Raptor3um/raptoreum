@@ -17,6 +17,7 @@
 #include <qt/recentrequeststablemodel.h>
 #include <qt/transactiontablemodel.h>
 
+#include <chainparams.h>
 #include <interfaces/handler.h>
 #include <interfaces/node.h>
 #include <key_io.h>
@@ -25,6 +26,7 @@
 #include <wallet/coincontrol.h>
 #include <wallet/wallet.h>
 #include <spork.h>
+#include <validation.h>
 
 #include <stdint.h>
 #include <functional>
@@ -241,7 +243,19 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
     if (fSubtractFeeFromAmount && newTx)
         transaction.reassignAmounts();
 
-    if(!newTx)
+    if(newTx){
+        if(!Params().IsFutureActive(::ChainActive().Tip())){
+            CAmount subtotal = total;
+            if (nChangePosRet >= 0)
+                subtotal += newTx.get()->vout.at(nChangePosRet).nValue;
+            if(!fSubtractFeeFromAmount)
+                subtotal += nFeeRequired;
+            if (subtotal > OLD_MAX_MONEY){
+                return AmountExceedsmaxmoney;
+            }
+        }
+    }
+    else
     {
         if(!fSubtractFeeFromAmount && (total + nFeeRequired) > nBalance)
         {
@@ -312,146 +326,6 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &tran
     checkBalanceChanged(m_wallet->getBalances()); // update balance immediately, otherwise there could be a short noticeable delay until pollBalanceChanged hits
 
     return SendCoinsReturn(OK);
-}
-
-WalletModel::SendFuturesReturn WalletModel::prepareFuturesTransaction(WalletModelFuturesTransaction &transaction, const CCoinControl& coinControl)
-{
-    CAmount total = 0;
-    bool fSubtractFeeFromAmount = false;
-    QList<SendFuturesRecipient> recipients = transaction.getRecipients();
-    std::vector<CRecipient> vecSend;
-
-    if(recipients.empty())
-    {
-        return OK;
-    }
-
-    // This should never really happen, yet another safety check, just in case.
-    if(m_wallet->isLocked(false)) {
-        return TransactionCreationFailed;
-    }
-
-    QSet<QString> setAddress; // Used to detect duplicates
-    int nAddresses = 0;
-    FuturePartialPayload fpp;
-
-    // Pre-check input data for validity
-    for (const SendFuturesRecipient &rcp : recipients)
-    {
-        {   // User-entered raptoreum address / amount:
-            if(!validateAddress(rcp.address))
-            {
-                return InvalidAddress;
-            }
-            if(rcp.amount <= 0)
-            {
-                return InvalidAmount;
-            }
-            setAddress.insert(rcp.address);
-            ++nAddresses;
-
-            CScript scriptPubKey = GetScriptForDestination(DecodeDestination(rcp.address.toStdString()));
-            fpp.maturity = rcp.maturity;
-            fpp.locktime = rcp.locktime; //- GetAdjustedTime();
-            CRecipient recipient = {scriptPubKey, rcp.amount};
-            vecSend.push_back(recipient);
-
-            total += rcp.amount;
-        }
-    }
-    if(setAddress.size() != nAddresses)
-    {
-        return DuplicateAddress;
-    }
-
-    CAmount nBalance = m_wallet->getAvailableBalance(coinControl);
-
-    if(total > nBalance)
-    {
-        return AmountExceedsBalance;
-    }
-
-    CAmount nFeeRequired = 0;
-    CAmount nValueOut = 0;
-    size_t nVinSize = 0;
-    bool fCreated;
-    std::string strFailReason;
-    int nChangePosRet = -1;
-
-    auto& newTx = transaction.getWtx();
-    newTx = m_wallet->createTransaction(vecSend, coinControl, true /* sign */, nChangePosRet, nFeeRequired, strFailReason, 0, &fpp);
-    transaction.setTransactionFee(nFeeRequired);
-    if (newTx) {
-        transaction.reassignAmounts();
-    }
-
-    if(!newTx)
-    {
-        if((total + nFeeRequired) > nBalance)
-        {
-            return SendFuturesReturn(AmountWithFeeExceedsBalance);
-        }
-        Q_EMIT message(tr("Send Futures"), QString::fromStdString(strFailReason),
-                     CClientUIInterface::MSG_ERROR);
-        return TransactionCreationFailed;
-    }
-
-    // reject absurdly high fee. (This can never happen because the
-    // wallet caps the fee at maxTxFee. This merely serves as a
-    // belt-and-suspenders check)
-    if (nFeeRequired > m_wallet->getDefaultMaxTxFee())
-        return AbsurdFee;
-
-    return SendFuturesReturn(OK);
-}
-
-WalletModel::SendFuturesReturn WalletModel::sendFutures(WalletModelFuturesTransaction &transaction)
-{
-    QByteArray transaction_array; /* store serialized transaction */
-    {
-        std::vector<std::pair<std::string, std::string>> vOrderForm;
-        for (const SendFuturesRecipient &rcp : transaction.getRecipients())
-        {
-            if (!rcp.message.isEmpty()) // Message from normal raptoreum:URI (raptoreum:XyZ...?message=example)
-            {
-                vOrderForm.emplace_back("Message", rcp.message.toStdString());
-            }
-        }
-        mapValue_t mapValue;
-        auto& newTx = transaction.getWtx();
-        wallet().commitTransaction(newTx, std::move(mapValue), std::move(vOrderForm));
-
-        CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
-        ssTx << *newTx;
-        transaction_array.append(ssTx.data(), ssTx.size());
-    }
-
-    // Add addresses / update labels that we've sent to the address book,
-    // and emit coinsSent signal for each recipient
-    for (const SendFuturesRecipient &rcp : transaction.getRecipients())
-    {
-        {
-            std::string strAddress = rcp.address.toStdString();
-            CTxDestination dest = DecodeDestination(strAddress);
-            std::string strLabel = rcp.label.toStdString();
-            {
-                // Check if we have a new address or an updated label
-                std::string name;
-                if (!m_wallet->getAddress(dest, &name))
-                {
-                    m_wallet->setAddressBook(dest, strLabel, "send");
-                }
-                else if (name != strLabel)
-                {
-                    m_wallet->setAddressBook(dest, strLabel, ""); // "" means don't change purpose
-                }
-            }
-        }
-        Q_EMIT futuresSent(this, rcp, transaction_array);
-    }
-    checkBalanceChanged(m_wallet->getBalances()); // update balance immediately, otherwise there could be a short noticeable delay until pollBalanceChanged hits
-
-    return SendFuturesReturn(OK);
 }
 
 OptionsModel *WalletModel::getOptionsModel()

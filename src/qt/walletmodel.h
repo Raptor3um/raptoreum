@@ -178,7 +178,8 @@ public:
         DuplicateAddress,
         TransactionCreationFailed, // Error returned when wallet is still locked
         AbsurdFee,
-        PaymentRequestExpired
+        PaymentRequestExpired,
+        AmountExceedsmaxmoney
     };
 
     enum EncryptionStatus
@@ -219,24 +220,6 @@ public:
 
     // Send coins to a list of recipients
     SendCoinsReturn sendCoins(WalletModelTransaction &transaction, bool fIsCoinJoin);
-
-    // Return status record for SendFutures, contains error id + information
-    struct SendFuturesReturn
-    {
-        SendFuturesReturn(StatusCode _status = OK, QString _reasonCommitFailed = "")
-            : status(_status),
-              reasonCommitFailed(_reasonCommitFailed)
-        {
-        }
-        StatusCode status;
-        QString reasonCommitFailed;
-    };
-
-    // prepare futures transaction for getting txfee before sending coins
-    SendFuturesReturn prepareFuturesTransaction(WalletModelFuturesTransaction &transaction, const CCoinControl& coinControl);
-
-    // Send futures to a list of recipients
-    SendFuturesReturn sendFutures(WalletModelFuturesTransaction &transaction);
 
     // Wallet encryption
     bool setWalletEncrypted(bool encrypted, const SecureString &passphrase);
@@ -348,9 +331,6 @@ Q_SIGNALS:
 
     // Coins sent: from wallet, to recipient, in (serialized) transaction:
     void coinsSent(WalletModel* wallet, SendCoinsRecipient recipient, QByteArray transaction);
-
-    //Futures sent: from wallet, to recipient, in (serialized) transaction:
-    void futuresSent(WalletModel* wallet, SendFuturesRecipient recipient, QByteArray transaction);
 
     /* //Futures sent: from wallet, to recipient, in (serialized) transaction:
     void futuresSent(CWallet* wallet, SendFuturesRecipient recipient, QByteArray transaction); */
