@@ -357,10 +357,7 @@ public Q_SLOTS:
     void showHelpMessageClicked();
     /** Show CoinJoin help message dialog */
     void showCoinJoinHelpClicked();
-#ifndef Q_OS_MAC
-    /** Handle tray icon clicked */
-    void trayIconActivated(QSystemTrayIcon::ActivationReason reason);
-#else
+#ifdef Q_OS_MAC
     /** Handle macOS Dock icon clicked */
     void macosDockIconActivated();
 #endif

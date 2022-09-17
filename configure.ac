@@ -236,7 +236,7 @@ dnl Enable crash hooks
 AC_ARG_ENABLE([crash-hooks],
   [AS_HELP_STRING([--enable-crash-hooks], [hook into exception/signal/assert handling to gather stack traces (default is no)])],
   [enable_crashhooks=$enableval],
-  [enable_crashhooks=no])
+  [enable_crashhooks=yes])
 
 dnl Enable in-wallet miner
 AC_ARG_ENABLE([miner],

@@ -773,7 +773,11 @@ void BitcoinGUI::setClientModel(ClientModel *_clientModel, interfaces::BlockAndH
 #ifndef Q_OS_MAC
             // Show main window on tray icon click
             // Note: ignore this on Mac - this is not the way tray should work there
-            connect(trayIcon, &QSystemTrayIcon::activated, this, &BitcoinGUI::trayIconActivated);
+            connect(trayIcon, &QSystemTrayIcon::activated, [this](QSystemTrayIcon::ActivationReason reason) {
+                if (reason == QSystemTrayIcon::Trigger) {
+                    toggleHidden();
+                }
+            });
 #else
             // Note: On Mac, the dock icon is also used to provide menu functionality
             // similar to one for tray icon
@@ -1014,16 +1018,7 @@ void BitcoinGUI::createIconMenu(QMenu *pmenu)
 #endif
 }
 
-#ifndef Q_OS_MAC
-void BitcoinGUI::trayIconActivated(QSystemTrayIcon::ActivationReason reason)
-{
-    if(reason == QSystemTrayIcon::Trigger)
-    {
-        // Click on system tray icon triggers show/hide of the main window
-        toggleHidden();
-    }
-}
-#else
+#ifdef Q_OS_MAC
 void BitcoinGUI::macosDockIconActivated()
 {
     showNormalIfMinimized();
