@@ -183,8 +183,8 @@ jobs:
         with:
           name: ${{ env.COIN_NAME }}-ubuntu20-${{ env.BUILD_VERSION }}
           path: ${{ env.COMPRESS_DIR }}
-  build-macos:
-    name: macos build
+  build-macx86:
+    name: macos x86_64 build
     needs: checking-build-version
     runs-on: macos-11
     steps:
@@ -245,10 +245,10 @@ jobs:
         run: |
           make deploy
           mkdir -p macos-dmg
-          mv Raptoreum-Qt.dmg macos-dmg/
+          mv Raptoreum-Core.dmg macos-dmg/
           cd macos-dmg
-          echo "sha256: `shasum Raptoreum-Qt.dmg`" >> checksums.txt
-          echo "openssl-sha256: `openssl sha256 Raptoreum-Qt.dmg`" >> checksums.txt
+          echo "sha256: `shasum Raptoreum-Core.dmg`" >> checksums.txt
+          echo "openssl-sha256: `openssl sha256 Raptoreum-Core.dmg`" >> checksums.txt
           cd ..
       - name: Upload dmg file
         uses: actions/upload-artifact@v3
