@@ -225,15 +225,15 @@ AC_ARG_ENABLE([debug],
 
 dnl Enable exception stacktrace
 AC_ARG_ENABLE([stacktraces],
-  [AS_HELP_STRING([--enable-stacktraces], [gather and print exception stack traces (default is yes)])],
+  [AS_HELP_STRING([--enable-stacktraces], [gather and print exception stack traces (default is no)])],
   [enable_stacktraces=$enableval],
-  [enable_stacktraces=yes])
+  [enable_stacktraces=no])
 
 dnl Enable crash hooks
 AC_ARG_ENABLE([crash-hooks],
   [AS_HELP_STRING([--enable-crash-hooks], [hook into exception/signal/assert handling to gather stack traces (default is no)])],
   [enable_crashhooks=$enableval],
-  [enable_crashhooks=yes])
+  [enable_crashhooks=no])
 
 dnl Enable in-wallet miner
 AC_ARG_ENABLE([miner],
@@ -626,6 +626,7 @@ AC_ARG_WITH([daemon],
 
 case $host in
   *mingw*)
+    TARGET_OS=windows
     AC_CHECK_LIB([mingwthrd], [main], [], [AC_MSG_ERROR([libmingwthrd missing])])
     AC_CHECK_LIB([kernel32],  [main], [], [AC_MSG_ERROR([libkernel32 missing])])
     AC_CHECK_LIB([user32],    [main], [], [AC_MSG_ERROR([libuser32 missing])])
@@ -674,7 +675,9 @@ case $host in
     AX_CHECK_LINK_FLAG([-Wl,--major-subsystem-version -Wl,6 -Wl,--minor-subsystem-version -Wl,1], [CORE_LDFLAGS="$CORE_LDFLAGS -Wl,--major-subsystem-version -Wl,6 -Wl,--minor-subsystem-version -Wl,1"], [], [$LDFLAG_WERROR])
   ;;
   *darwin*)
+    TARGET_OS=darwin
     if test $cross_compiling != "yes"; then
+      BUILD_OS=darwin
       AC_CHECK_PROG([BREW], [brew], [brew])
       if test "$BREW" = "brew"; then
         dnl These Homebrew packages may be keg-only, meaning that they won't be found
@@ -723,7 +726,10 @@ case $host in
       fi
     else
       case $build_os in
-        *linux*)
+        *darwin*)
+          BUILD_OS=darwin
+          ;;
+        *)
           AC_PATH_TOOL([DSYMUTIL], [dsymutil], [dsymutil])
           AC_PATH_TOOL([INSTALL_NAME_TOOL], [install_name_tool], [install_name_tool])
           AC_PATH_TOOL([OTOOL], [otool], [otool])
@@ -741,16 +747,26 @@ case $host in
     AX_CHECK_LINK_FLAG([-Wl,-headerpad_max_install_names], [CORE_LDFLAGS="$CORE_LDFLAGS -Wl,-headerpad_max_install_names"], [], [$LDFLAG_WERROR])
     CORE_CPPFLAGS="$CORE_CPPFLAGS -DMAC_OSX -DOBJC_OLD_DISPATCH_PROTOTYPES=0"
     OBJCXXFLAGS="$CXXFLAGS"
-  ;;
+    ;;
   *android*)
+    TARGET_OS=android
     dnl make sure android stays above linux for hosts like *linux-android*
     case $host in
-      *x86_64*) ANDROID_ARCH=x86_64 ;;
-      *aarch64*) ANDROID_ARCH=arm64-v8a ;;
-      *armv7a*) ANDROID_ARCH=armeabi-v7a ;;
+      *x86_64*)
+        ANDROID_ARCH=x86_64
+        ;;
+      *aarch64*)
+        ANDROID_ARCH=arm64-v8a
+        ;;
+      *armv7a*)
+        ANDROID_ARCH=armeabi-v7a
+        ;;
       *) AC_MSG_ERROR("Could not determine Android arch or it is unsupported") ;;
     esac
     ;;
+  *linux*)
+    TARGET_OS=linux
+  ;;
 esac
 
 if test "$use_extended_functional_tests" != "no"; then
@@ -851,8 +867,10 @@ if test "$enable_gprof" = "yes"; then
         [AC_MSG_ERROR([gprof profiling requested but not available])], [$GPROF_LDFLAGS])
 fi
 
-dnl All windows code is PIC, forcing it on just adds useless compile warnings
-AS_CASE([$host_os], [*mingw*], [], [AX_CHECK_COMPILE_FLAG([-fPIC], [PIC_FLAGS="-fPIC"])])
+if test "$TARGET_OS" != "windows"; then
+  dnl All windows code is PIC, forcing it on just adds useless compile warnings
+  AX_CHECK_COMPILE_FLAG([-fPIC], [PIC_FLAGS="-fPIC"])
+fi
 
 dnl All versions of gcc that we commonly use for building are subject to bug
 dnl https://gcc.gnu.org/bugzilla/show_bug.cgi?id=90384. To work around that,
@@ -868,11 +886,15 @@ if test "$use_hardening" != "no"; then
   dnl use CHECK_LINK_FLAG & --fatal-warnings to ensure we won't use the flag in this case.
   AX_CHECK_LINK_FLAG([-fcf-protection=full], [HARDENED_CXXFLAGS="$HARDENED_CXXFLAGS -fcf-protection=full"], [], [$LDFLAGS_WERROR])
 
-  dnl stack-clash-protector doesn't currently work, and likely should just be skipped for Windows.
-  dnl See https://gcc.gnu.org/bugzilla/show_bug.cgi?id=90458 for more details.
-  AS_CASE([$host], [*mingw*], [], [
-    AX_CHECK_COMPILE_FLAG([-fstack-clash-protection], [HARDENED_CXXFLAGS="$HARDENED_CXXFLAGS -fstack-clash-protection"], [], [$CXXFLAG_WERROR])
-  ])
+  case $host in
+    *mingw*)
+      dnl stack-clash-protector doesn't currently work, and likely should just be skipped for Windows.
+      dnl See https://gcc.gnu.org/bugzilla/show_bug.cgi?id=90458 for more details.
+    ;;
+    *)
+      AX_CHECK_COMPILE_FLAG([-fstack-clash-protection], [HARDENED_CXXFLAGS="$HARDENED_CXXFLAGS -fstack-clash-protection"], [], [$CXXFLAG_WERROR])
+    ;;
+  esac
 
   dnl When enable_debug is yes, all optimizations are disabled.
   dnl However, FORTIFY_SOURCE requires that there is some level of ioptimization,
@@ -898,17 +920,21 @@ if test "$use_hardening" != "no"; then
 
   AX_CHECK_LINK_FLAG([-fPIE -pie], [PIE_FLAGS="-fPIE"; HARDENED_LDFLAGS="$HARDENED_LDFLAGS -pie"], [], [$CXXFLAG_WERROR])
 
-  AS_CASE([$host], [*mingw*], [AC_CHECK_LIB([ssp], [main], [], [AC_MSG_ERROR([libssp missing])])])
+  case $host in
+    *mingw*)
+      AC_CHECK_LIB([ssp], [main], [], [AC_MSG_ERROR([libssp missing])])
+    ;;
+  esac
 fi
 
 dnl These flags are specific do ld64, and may cause issues with other linkers.
 dnl For example: GNU ld will interpret -dead_strip as a -de and then try and use
 dnl "ad_strip" as the symbol for the entry point.
-AS_CASE([$host], [*darwin*], [
+if test "$TARGET_OS" = "darwin"; then
   AX_CHECK_LINK_FLAG([-Wl,-dead_strip],        [CORE_LDFLAGS="$CORE_LDFLAGS -Wl,-dead_strip"],           [], [$LDFLAG_WERROR])
   AX_CHECK_LINK_FLAG([-Wl,-dead_strip_dylibs], [CORE_LDFLAGS="$CORE_LDFLAGS -Wl,-dead_strip_dylibs"],    [], [$LDFLAG_WERROR])
   AX_CHECK_LINK_FLAG([-Wl,-bind_at_load],      [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,-bind_at_load"], [], [$LDFLAG_WERROR])
-])
+fi
 
 AC_CHECK_HEADERS([endian.h sys/endian.h byteswap.h stdio.h stdlib.h unistd.h strings.h sys/types.h sys/stat.h sys/select.h sys/prctl.h sys/sysctl.h vm/vm_param.h sys/vmmeter.h sys/resources.h])
 
@@ -1115,11 +1141,11 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <stdint.h>
  [ AC_MSG_RESULT([no])]
 )
 
-AS_CASE([$host], [*mingw*], [
+if test "$TARGET_OS" != "windows"; then
   if test "$enable_stacktraces" != "no"; then
     AC_SEARCH_LIBS([backtrace], [execinfo], [], [AC_MSG_ERROR([Unable to find backtrace()])])
   fi
-])
+fi
 
 AC_MSG_CHECKING([for fdatasync])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <unistd.h>]],
@@ -1218,6 +1244,7 @@ if test "$enable_fuzz" = "yes"; then
   build_bitcoin_utils=no
   build_bitcoin_cli=no
   build_bitcoin_tx=no
+  build_bitcoin_wallet=no
   build_bitcoind=no
   build_bitcoin_libs=no
   bitcoin_enable_qt=no
@@ -1394,9 +1421,9 @@ fi
 dnl libevent check
 if test "$build_bitcoin_cli$build_bitcoind$bitcoin_enable_qt$use_tests$use_bench" != "nonononono"; then
   PKG_CHECK_MODULES([EVENT], [libevent >= 2.1.8], [use_libevent=yes], [AC_MSG_ERROR([libevent version 2.1.8 or greater not found.])])
-  AS_CASE([$host_os], [*mingw*], [], [
+  if test "$TARGET_OS" != "windows"; then
     PKG_CHECK_MODULES([EVENT_PTHREADS], [libevent_pthreads >= 2.1.8], [], [AC_MSG_ERROR([libevent_pthreads version 2.1.8 or greater not found.])])
-  ])
+  fi
 
   if test "$suppress_external_warnings" != "no"; then
     EVENT_CFLAGS=SUPPRESS_WARNINGS($EVENT_CFLAGS)
@@ -1444,7 +1471,11 @@ fi
 
 if test "$use_zmq" = "yes"; then
   dnl Assume libzmq was build for static linking
-  AS_CASE([$host], [*mingw*], [ZMQ_CFLAGS="$ZMQ_CFLAGS -DZMQ_STATIC"])
+  case $host in
+    *mingw*)
+      ZMQ_CFLAGS="$ZMQ_CFLAGS -DZMQ_STATIC"
+    ;;
+  esac
 fi
 
 dnl Check for gmp
@@ -1531,7 +1562,9 @@ else
     fi
     AC_MSG_RESULT([$use_upnp_default])
     AC_DEFINE_UNQUOTED([USE_UPNP], [$upnp_setting], [UPnP support not compiled if undefined, otherwise value (0 or 1) determines default state])
-    AS_CASE([$host_os], [*mingw*], [MINIUPNPC_CPPFLAGS="$MINIUPNPC_CPPFLAGS -DSTATICLIB -DMINIUPNP_STATICLIB"])
+    if test "$TARGET_OS" = "windows"; then
+      MINIUPNPC_CPPFLAGS="$MINIUPNPC_CPPFLAGS -DSTATICLIB -DMINIUPNP_STATICLIB"
+    fi
   else
     AC_MSG_RESULT([no])
   fi
@@ -1557,7 +1590,9 @@ else
     fi
     AC_MSG_RESULT([$use_natpmp_default])
     AC_DEFINE_UNQUOTED([USE_NATPMP], [$natpmp_setting], [NAT-PMP support not compiled if undefined, otherwise value (0 or 1) determine default state])
-    AS_CASE([$host_os], [*mingw*], [NATPMP_CPPFLAGS="$NATPMP_CPPFLAGS -DSTATICLIB -DNATPMP_STATICLIB"])
+    if test "$TARGET_OS" = "windows"; then
+      NATPMP_CPPFLAGS="$NATPMP_CPPFLAGS -DSTATICLIB -DNATPMP_STATICLIB"
+    fi
   else
     AC_MSG_RESULT([no])
   fi
@@ -1635,10 +1670,10 @@ if test "$build_bitcoin_wallet$build_bitcoin_cli$build_bitcoin_tx$build_bitcoin_
   AC_MSG_ERROR([No targets! Please specify at least one of: --with-utils --with-libs --with-daemon --with-gui --enable-bench or --enable-tests])
 fi
 
-AM_CONDITIONAL([TARGET_DARWIN], [AS_CASE([$host_os], [*darwin*], [true], [false])])
-AM_CONDITIONAL([BUILD_DARWIN], [AS_CASE([$build_os], [*darwin*], [true], [false])])
-AM_CONDITIONAL([TARGET_LINUX], [AS_CASE([$host_os], [*linux*], [true], [false])])
-AM_CONDITIONAL([TARGET_WINDOWS], [AS_CASE([$host_os], [*mingw*], [true], [false])])
+AM_CONDITIONAL([TARGET_DARWIN], [test "$TARGET_OS" = "darwin"])
+AM_CONDITIONAL([BUILD_DARWIN], [test "$BUILD_OS" = "darwin"])
+AM_CONDITIONAL([TARGET_LINUX], [test "$TARGET_OS" = "linux"])
+AM_CONDITIONAL([TARGET_WINDOWS], [test "$TARGET_OS" = "windows"])
 AM_CONDITIONAL([ENABLE_WALLET], [test "$enable_wallet" = "yes"])
 AM_CONDITIONAL([USE_BDB], [test "$use_bdb" = "yes"])
 AM_CONDITIONAL([ENABLE_TESTS], [test "$BUILD_TEST" = "yes"])

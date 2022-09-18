@@ -1,4 +1,4 @@
-packages:=boost libevent zeromq gmp bls-dash backtrace cmake immer
+packages:=boost libevent gmp bls-dash backtrace cmake immer zeromq
 
 qrencode_linux_packages = qrencode
 qrencode_android_packages = qrencode

@@ -7,6 +7,7 @@
 #include <evo/deterministicmns.h>
 #include <llmq/quorums_blockprocessor.h>
 #include <llmq/quorums_commitment.h>
+#include <llmq/quorums_utils.h>
 #include <evo/simplifiedmns.h>
 #include <evo/specialtx.h>
 #include <consensus/validation.h>
@@ -136,7 +137,7 @@ bool CalcCbTxMerkleRootMNList(const CBlock& block, const CBlockIndex* pindexPrev
         static uint256 merkleRootCached;
         static bool mutatedCached{false};
 
-        if (sml.mnList == smlCached.mnList) {
+        if (sml == smlCached) {
             merkleRootRet = merkleRootCached;
             if (mutatedCached) {
                 return state.DoS(100, false, REJECT_INVALID, "mutated-cached-calc-cb-mnmerkleroot");

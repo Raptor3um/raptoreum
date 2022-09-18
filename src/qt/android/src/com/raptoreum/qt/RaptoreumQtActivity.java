@@ -13,10 +13,11 @@ public class RaptoreumQtActivity extends QtActivity
 	@Override
 	public void onCreate(Bundle savedInstanceState)
 	{
-		final File raptoreumDir = new File(getFilesDir().getAbsolutePath() + "/.raptoreum");
+		final File raptoreumDir = new File(getFilesDir().getAbsolutePath() + "/.raptoreumcore");
 		if (!raptoreumDir.exists()) {
 			raptoreumDir.mkdir();
 		}
+
 
 		super.onCreate(savedInstanceState);
 	}

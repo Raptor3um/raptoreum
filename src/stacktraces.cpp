@@ -14,7 +14,6 @@
 #include <threadsafety.h>
 #include <util/strencodings.h>
 
-#include <mutex>
 #include <map>
 #include <vector>
 #include <memory>
