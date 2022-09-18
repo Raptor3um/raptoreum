@@ -704,8 +704,9 @@ void CQuorumManager::ProcessMessage(CNode* pFrom, const std::string& strCommand,
 
             BLSSecretKeyVector vecSecretKeys;
             vecSecretKeys.resize(vecEncrypted.size());
+            int minSmartnodeProtoVersion =  Params().IsFutureActive(chainActive.Tip()) ? MIN_SMARTNODE_PROTO_VERSION : OLD_MIN_SMARTNODE_PROTO_VERSION;
             for (size_t i = 0; i < vecEncrypted.size(); ++i) {
-                if (!vecEncrypted[i].Decrypt(memberIdx, *activeSmartnodeInfo.blsKeyOperator, vecSecretKeys[i], PROTOCOL_VERSION)) {
+                if (!vecEncrypted[i].Decrypt(memberIdx, *activeSmartnodeInfo.blsKeyOperator, vecSecretKeys[i], minSmartnodeProtoVersion)) {
                     errorHandler("Failed to decrypt");
                     return;
                 }

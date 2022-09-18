@@ -2382,7 +2382,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             pfrom->fSendDSQueue = true;
         }
 
-        if (llmq::CLLMQUtils::IsWatchQuorumsEnabled() && !pfrom->m_smartnode_connection) {
+        if (llmq::CLLMQUtils::IsWatchQuorumsEnabled() && pfrom->m_smartnode_connection) {
             connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::QWATCH));
         }
 
