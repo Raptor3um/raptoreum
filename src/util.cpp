@@ -838,7 +838,6 @@ std::string ArgsManager::GetChainName() const
         std::cout<< CBaseChainParams::TESTNET << "\n";
         return CBaseChainParams::TESTNET;
     }
-    std::cout<< CBaseChainParams::MAIN << "\n";
     return CBaseChainParams::MAIN;
 }
 
