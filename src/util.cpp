@@ -579,7 +579,7 @@ std::string ArgsManager::GetHelpMessage()
             else if (last_cat == OptionsCategory::INDEXING)
                 usage += HelpMessageGroup("Indexing options:");
             else if (last_cat == OptionsCategory::SMARTNODE)
-                usage += HelpMessageGroup("Masternode options:");
+                usage += HelpMessageGroup("Smartnode options:");
             else if (last_cat == OptionsCategory::STATSD)
                 usage += HelpMessageGroup("Statsd options:");
             else if (last_cat == OptionsCategory::ZMQ)

@@ -1019,8 +1019,8 @@ int CGovernanceManager::RequestGovernanceObjectVotes(const std::vector<CNode*>& 
         }
         bool fAsked = false;
         for (const auto& pnode : vNodesCopy) {
-            // Don't try to sync any data from outbound non-relay "masternode" connections.
-            // Inbound connection this early is most likely a "masternode" connection
+            // Don't try to sync any data from outbound non-relay "smartnode" connections.
+            // Inbound connection this early is most likely a "smartnode" connection
             // initiated from another node, so skip it too.
             if (!pnode->CanRelay() || (fSmartnodeMode && pnode->fInbound)) continue;
             // only use up to date peers

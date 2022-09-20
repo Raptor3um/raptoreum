@@ -473,7 +473,6 @@ void SetupServerArgs()
     gArgs.AddArg("-dbbatchsize", strprintf("Maximum database write batch size in bytes (default: %u)", nDefaultDbBatchSize), true, OptionsCategory::OPTIONS);
     gArgs.AddArg("-dbcache=<n>", strprintf("Set database cache size in megabytes (%d to %d, default: %d)", nMinDbCache, nMaxDbCache, nDefaultDbCache), false, OptionsCategory::OPTIONS);
     gArgs.AddArg("-debuglogfile=<file>", strprintf("Specify location of debug log file. Relative paths will be prefixed by a net-specific datadir location. (0 to disable; default: %s)", DEFAULT_DEBUGLOGFILE), false, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-futureindex", strprintf("Maintain a full future index, used to query future transactions (default: %u)", DEFAULT_FUTUREINDEX), false, OptionsCategory::INDEXING);
     gArgs.AddArg("-loadblock=<file>", "Imports blocks from external blk000??.dat file on startup", false, OptionsCategory::OPTIONS);
     gArgs.AddArg("-maxmempool=<n>", strprintf("Keep the transaction memory pool below <n> megabytes (default: %u)", DEFAULT_MAX_MEMPOOL_SIZE), false, OptionsCategory::OPTIONS);
     gArgs.AddArg("-maxorphantxsize=<n>", strprintf("Maximum total size of all orphan transactions in megabytes (default: %u)", DEFAULT_MAX_ORPHAN_TRANSACTIONS_SIZE), false, OptionsCategory::OPTIONS);
@@ -494,6 +493,9 @@ void SetupServerArgs()
     gArgs.AddArg("-sysperms", "Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)", false, OptionsCategory::OPTIONS);
 #endif
     gArgs.AddArg("-version", "Print version and exit", false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-powcachesize", strprintf("Set max pow cache size (number of pwo hashes) that keeping in memory (default: %d)", DEFAULT_POW_CACHE_SIZE), false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-powmaxloadsize", strprintf("Set max pow cache load size (number of pwo hashes) that to be written to powcache.dat (default: %d)", DEFAULT_MAX_LOAD_SIZE), false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-powcachevalidate", "Set to whether validate pow hashes that it get from the cache (default: %true). Use this option will slow down wallet synchronization.", false, OptionsCategory::OPTIONS);
 
     gArgs.AddArg("-addressindex", strprintf("Maintain a full address index, used to query for the balance, txids and unspent outputs for addresses (default: %u)", DEFAULT_ADDRESSINDEX), false, OptionsCategory::INDEXING);
     gArgs.AddArg("-reindex", "Rebuild chain state and block index from the blk*.dat files on disk", false, OptionsCategory::INDEXING);
@@ -501,6 +503,7 @@ void SetupServerArgs()
     gArgs.AddArg("-spentindex", strprintf("Maintain a full spent index, used to query the spending txid and input index for an outpoint (default: %u)", DEFAULT_SPENTINDEX), false, OptionsCategory::INDEXING);
     gArgs.AddArg("-timestampindex", strprintf("Maintain a timestamp index for block hashes, used to query blocks hashes by a range of timestamps (default: %u)", DEFAULT_TIMESTAMPINDEX), false, OptionsCategory::INDEXING);
     gArgs.AddArg("-txindex", strprintf("Maintain a full transaction index, used by the getrawtransaction rpc call (default: %u)", DEFAULT_TXINDEX), false, OptionsCategory::INDEXING);
+    gArgs.AddArg("-futureindex", strprintf("Maintain a full future index, used to query future transactions (default: %u)", DEFAULT_FUTUREINDEX), false, OptionsCategory::INDEXING);
 
     gArgs.AddArg("-addnode=<ip>", "Add a node to connect to and attempt to keep the connection open (see the `addnode` RPC command help for more info). This option can be specified multiple times to add multiple nodes.", false, OptionsCategory::CONNECTION);
     gArgs.AddArg("-allowprivatenet", strprintf("Allow RFC1918 addresses to be relayed and connected to (default: %u)", DEFAULT_ALLOWPRIVATENET), false, OptionsCategory::CONNECTION);
@@ -2156,7 +2159,7 @@ bool AppInitMain()
         return false;
     }
 
-    // ********************************************************* Step 10a: Prepare Masternode related stuff
+    // ********************************************************* Step 10a: Prepare Smartnode related stuff
     fSmartnodeMode = false;
     std::string strSmartNodeBLSPrivKey = gArgs.GetArg("-smartnodeblsprivkey", "");
     if (!strSmartNodeBLSPrivKey.empty()) {
