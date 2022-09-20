@@ -119,7 +119,7 @@ jobs:
           echo "------------------------------------" >> checksums.txt
           sha256sum * >> checksums.txt
           cat checksums.txt
-          tar -cvzf ../${COIN_NAME}-ubuntu18-${BUILD_VERSION}.tar.gz ${BUILD_DIR}/*          
+          tar -cvzf ../${COIN_NAME}-ubuntu18-${BUILD_VERSION}.tar.gz *          
           cd ../${BUILD_DIR}_debug
           echo "sha256:" >> checksums.txt
           echo "------------------------------------" >> checksums.txt
@@ -129,7 +129,7 @@ jobs:
           echo "------------------------------------" >> checksums.txt
           sha256sum * >> checksums.txt
           cat checksums.txt
-          tar -cvzf ../${COIN_NAME}-ubuntu18-debug-${BUILD_VERSION}.tar.gz ${BUILD_DIR}_debug/*
+          tar -cvzf ../${COIN_NAME}-ubuntu18-debug-${BUILD_VERSION}.tar.gz *
           cd ..
           mv *.tar.gz ${COMPRESS_DIR}/
           cd ${COMPRESS_DIR}
