@@ -109,6 +109,7 @@ jobs:
           mv src/{raptoreum-cli,raptoreum-tx,raptoreumd,qt/raptoreum-qt} ${BUILD_DIR}_debug/
       - name: generate checksum and compress
         run: |
+          mkdir -p ${COMPRESS_DIR}
           cd $BUILD_DIR
           echo "sha256:" >> checksums.txt
           echo "------------------------------------" >> checksums.txt
@@ -118,7 +119,8 @@ jobs:
           echo "------------------------------------" >> checksums.txt
           sha256sum * >> checksums.txt
           cat checksums.txt
-          cd ${BUILD_DIR}_debug
+          tar -cvzf ../${COIN_NAME}-ubuntu18-${BUILD_VERSION}.tar.gz ${BUILD_DIR}/*          
+          cd ../${BUILD_DIR}_debug
           echo "sha256:" >> checksums.txt
           echo "------------------------------------" >> checksums.txt
           shasum * >> checksums.txt
@@ -129,7 +131,6 @@ jobs:
           cat checksums.txt
           tar -cvzf ../${COIN_NAME}-ubuntu18-debug-${BUILD_VERSION}.tar.gz ${BUILD_DIR}_debug/*
           cd ..
-          mkdir -p ${COMPRESS_DIR}
           mv *.tar.gz ${COMPRESS_DIR}/
           cd ${COMPRESS_DIR}
           echo "sha256: `shasum ${COIN_NAME}-ubuntu18-${BUILD_VERSION}.tar.gz`" >> checksums.txt
