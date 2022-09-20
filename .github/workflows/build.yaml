@@ -102,6 +102,9 @@ jobs:
         run: |
           make clean
           make distclean
+          ./autogen.sh
+          ./configure --prefix=`pwd`/depends/x86_64-pc-linux-gnu --disable-tests --enable-debug
+          make -j$(nproc)
           mkdir -p ${BUILD_DIR}_debug
           mv src/{raptoreum-cli,raptoreum-tx,raptoreumd,qt/raptoreum-qt} ${BUILD_DIR}_debug/
       - name: generate checksum and compress
