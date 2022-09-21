@@ -447,7 +447,6 @@ jobs:
           make -j$(nproc)
           mkdir -p $BUILD_DIR
           mv src/{raptoreum-cli,raptoreum-tx,raptoreumd,qt/raptoreum-qt} $BUILD_DIR/
-          strip $BUILD_DIR/*
       - name: build debug binary
         run: |
           make clean
