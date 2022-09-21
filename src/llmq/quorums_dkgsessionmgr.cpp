@@ -79,11 +79,13 @@ void CDKGSessionManager::ProcessMessage(CNode* pfrom, const std::string& strComm
 
     if (strCommand == NetMsgType::QWATCH) {
         pfrom->qwatch = true;
+        LogPrint(BCLog::LLMQ_DKG, "CDKGSessionManager::%s --  dkg watch message received \n", __func__);
         return;
     }
 
     if (vRecv.empty()) {
         LOCK(cs_main);
+        LogPrint(BCLog::LLMQ_DKG, "CDKGSessionManager::%s -- empty data stream received\n", __func__);
         Misbehaving(pfrom->GetId(), 100);
         return;
     }
@@ -92,6 +94,7 @@ void CDKGSessionManager::ProcessMessage(CNode* pfrom, const std::string& strComm
     Consensus::LLMQType llmqType = (Consensus::LLMQType)*vRecv.begin();
     if (!dkgSessionHandlers.count(llmqType)) {
         LOCK(cs_main);
+        LogPrint(BCLog::LLMQ_DKG, "CDKGSessionManager::%s -- invalid llmqType received %d\n", __func__, llmqType);
         Misbehaving(pfrom->GetId(), 100);
         return;
     }
@@ -231,6 +234,7 @@ bool CDKGSessionManager::GetVerifiedContributions(Consensus::LLMQType llmqType, 
                 BLSVerificationVectorPtr vvecPtr = std::make_shared<BLSVerificationVector>();
                 CBLSSecretKey skContribution;
                 if (!llmqDb.Read(std::make_tuple(DB_VVEC, llmqType, pindexQuorum->GetBlockHash(), proTxHash), *vvecPtr)) {
+                    LogPrint(BCLog::LLMQ, "CDKGSessionManager::%s -- llmqDb.Read unable to read DB_VEC for block %s, protxHash %s\n", __func__, pindexQuorum->GetBlockHash().ToString(), proTxHash.GetHex());
                     return false;
                 }
                 llmqDb.Read(std::make_tuple(DB_SKCONTRIB, llmqType, pindexQuorum->GetBlockHash(), proTxHash), skContribution);

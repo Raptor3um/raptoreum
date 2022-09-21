@@ -18,7 +18,7 @@ CPowCache& CPowCache::Instance()
     if (CPowCache::instance == nullptr)
     {
         int  powCacheSize     = gArgs.GetArg("-powcachesize", DEFAULT_POW_CACHE_SIZE);
-        bool powCacheValidate = gArgs.GetArg("-powcachevalidate", 0) > 0 ? true : false;
+        bool powCacheValidate = gArgs.GetArg("-powcachevalidate", 0) > 0;
         int  maxLoadSize     = gArgs.GetArg("-powmaxloadsize", DEFAULT_MAX_LOAD_SIZE);
 
         powCacheSize = powCacheSize == 0 ? DEFAULT_POW_CACHE_SIZE : powCacheSize;

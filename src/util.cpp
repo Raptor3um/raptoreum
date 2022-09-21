@@ -579,7 +579,7 @@ std::string ArgsManager::GetHelpMessage()
             else if (last_cat == OptionsCategory::INDEXING)
                 usage += HelpMessageGroup("Indexing options:");
             else if (last_cat == OptionsCategory::SMARTNODE)
-                usage += HelpMessageGroup("Masternode options:");
+                usage += HelpMessageGroup("Smartnode options:");
             else if (last_cat == OptionsCategory::STATSD)
                 usage += HelpMessageGroup("Statsd options:");
             else if (last_cat == OptionsCategory::ZMQ)
@@ -838,7 +838,6 @@ std::string ArgsManager::GetChainName() const
         std::cout<< CBaseChainParams::TESTNET << "\n";
         return CBaseChainParams::TESTNET;
     }
-    std::cout<< CBaseChainParams::MAIN << "\n";
     return CBaseChainParams::MAIN;
 }
 

@@ -125,7 +125,7 @@ static constexpr unsigned int AVG_LOCAL_ADDRESS_BROADCAST_INTERVAL = 24 * 60 * 6
 static const unsigned int AVG_ADDRESS_BROADCAST_INTERVAL = 30;
 /** Average delay between trickled inventory transmissions in seconds.
  *  Blocks and whitelisted receivers bypass this, regular outbound peers get half this delay,
- *  Masternode outbound peers get quarter this delay. */
+ *  Smartnode outbound peers get quarter this delay. */
 static const unsigned int INVENTORY_BROADCAST_INTERVAL = 5;
 /** Maximum number of inventory items to send per transmission.
  *  Limits the impact of low-fee transaction floods.
@@ -2382,7 +2382,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             pfrom->fSendDSQueue = true;
         }
 
-        if (llmq::CLLMQUtils::IsWatchQuorumsEnabled() && !pfrom->m_smartnode_connection) {
+        if (llmq::CLLMQUtils::IsWatchQuorumsEnabled() && pfrom->m_smartnode_connection) {
             connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::QWATCH));
         }
 
@@ -3821,7 +3821,7 @@ void PeerLogicValidation::EvictExtraOutboundPeers(int64_t time_in_seconds)
         connman->ForEachNode([&](CNode* pnode) {
             AssertLockHeld(cs_main);
 
-            // Don't disconnect masternodes just because they were slow in block announcement
+            // Don't disconnect smartnodes just because they were slow in block announcement
             if (pnode->m_smartnode_connection) return;
             // Ignore non-outbound peers, or nodes marked for disconnect already
             if (!IsOutboundDisconnectionCandidate(pnode) || pnode->fDisconnect) return;
