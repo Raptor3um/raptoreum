@@ -493,8 +493,8 @@ void SetupServerArgs()
     gArgs.AddArg("-sysperms", "Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)", false, OptionsCategory::OPTIONS);
 #endif
     gArgs.AddArg("-version", "Print version and exit", false, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-powcachesize", strprintf("Set max pow cache size (number of pwo hashes) that keeping in memory (default: %d)", DEFAULT_POW_CACHE_SIZE), false, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-powmaxloadsize", strprintf("Set max pow cache load size (number of pwo hashes) that to be written to powcache.dat (default: %d)", DEFAULT_MAX_LOAD_SIZE), false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-powcachesize", strprintf("Set max pow cache size (number of pow hashes) that keeping in memory (default: %d)", DEFAULT_POW_CACHE_SIZE), false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-powmaxloadsize", strprintf("Set max pow cache load size (number of pow hashes) that to be written to powcache.dat (default: %d)", DEFAULT_MAX_LOAD_SIZE), false, OptionsCategory::OPTIONS);
     gArgs.AddArg("-powcachevalidate", "Enable validation of pow hashes from the cache (default: %true). Use of this option will significantly slow down wallet synchronization.", false, OptionsCategory::OPTIONS);
 
     gArgs.AddArg("-addressindex", strprintf("Maintain a full address index, used to query for the balance, txids and unspent outputs for addresses (default: %u)", DEFAULT_ADDRESSINDEX), false, OptionsCategory::INDEXING);
