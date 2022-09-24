@@ -251,6 +251,100 @@ jobs:
         with:
           name: ${{ env.COIN_NAME }}-ubuntu20-${{ env.BUILD_VERSION }}
           path: ${{ env.COMPRESS_DIR }}
+  build-ubuntu22:
+    name: Ubuntu22 build
+    needs: checking-build-version
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Getting Version
+        uses: actions/download-artifact@v1
+        with:
+          name: version
+      - name: Extract version
+        run: |
+          cat version/version.txt >> $GITHUB_ENV
+      - name: Install Required Packages
+        run: |
+          sudo apt-get update -y
+          sudo apt-get upgrade -y
+          sudo apt-get install curl build-essential libtool autotools-dev automake pkg-config python3 bsdmainutils cmake
+      - name: build depends
+        run: |
+          echo "building with $(nproc) threads"
+          gcc --version
+          make -C depends -j$(nproc)
+      - name: configure
+        run: |
+          ./autogen.sh
+          ./configure --prefix=`pwd`/depends/x86_64-pc-linux-gnu
+      - name: build binary
+        run: |
+          make -j$(nproc)
+          mkdir -p $BUILD_DIR
+          mkdir -p ${BUILD_DIR}_not_strip
+          cp src/{raptoreum-cli,raptoreum-tx,raptoreumd,qt/raptoreum-qt} $BUILD_DIR/
+          mv src/{raptoreum-cli,raptoreum-tx,raptoreumd,qt/raptoreum-qt} ${BUILD_DIR}_not_strip/
+          strip $BUILD_DIR/*
+      - name: build debug binary
+        run: |
+          make clean
+          make distclean
+          ./autogen.sh
+          ./configure --prefix=`pwd`/depends/x86_64-pc-linux-gnu --disable-tests --enable-debug
+          make -j$(nproc)
+          mkdir -p ${BUILD_DIR}_debug
+          mv src/{raptoreum-cli,raptoreum-tx,raptoreumd,qt/raptoreum-qt} ${BUILD_DIR}_debug/
+      - name: generate checksum and compress
+        run: |
+          mkdir -p ${COMPRESS_DIR}
+          cd $BUILD_DIR
+          echo "sha256:" >> checksums.txt
+          echo "------------------------------------" >> checksums.txt
+          shasum * >> checksums.txt
+          echo "------------------------------------" >> checksums.txt
+          echo "openssl-sha256:" >> checksums.txt
+          echo "------------------------------------" >> checksums.txt
+          sha256sum * >> checksums.txt
+          cat checksums.txt
+          tar -cvzf ../${COIN_NAME}-ubuntu20-${BUILD_VERSION}.tar.gz *          
+          cd ../${BUILD_DIR}_debug
+          echo "sha256:" >> checksums.txt
+          echo "------------------------------------" >> checksums.txt
+          shasum * >> checksums.txt
+          echo "------------------------------------" >> checksums.txt
+          echo "openssl-sha256:" >> checksums.txt
+          echo "------------------------------------" >> checksums.txt
+          sha256sum * >> checksums.txt
+          cat checksums.txt
+          tar -cvzf ../${COIN_NAME}-ubuntu20-debug-${BUILD_VERSION}.tar.gz *
+          cd ../${BUILD_DIR}_not_strip
+          echo "sha256:" >> checksums.txt
+          echo "------------------------------------" >> checksums.txt
+          shasum * >> checksums.txt
+          echo "------------------------------------" >> checksums.txt
+          echo "openssl-sha256:" >> checksums.txt
+          echo "------------------------------------" >> checksums.txt
+          sha256sum * >> checksums.txt
+          cat checksums.txt
+          tar -cvzf ../${COIN_NAME}-ubuntu20-not_strip-${BUILD_VERSION}.tar.gz *
+          cd ..
+          mv *.tar.gz ${COMPRESS_DIR}/
+          cd ${COMPRESS_DIR}
+          echo "sha256: `shasum ${COIN_NAME}-ubuntu22-${BUILD_VERSION}.tar.gz`" >> checksums.txt
+          echo "openssl-sha256: `sha256sum ${COIN_NAME}-ubuntu20-${BUILD_VERSION}.tar.gz`" >> checksums.txt
+          echo "sha256: `shasum ${COIN_NAME}-ubuntu22-debug-${BUILD_VERSION}.tar.gz`" >> checksums.txt
+          echo "openssl-sha256: `sha256sum ${COIN_NAME}-ubuntu20-debug-${BUILD_VERSION}.tar.gz`" >> checksums.txt
+          echo "sha256: `shasum ${COIN_NAME}-ubuntu22-not_strip-${BUILD_VERSION}.tar.gz`" >> checksums.txt
+          echo "openssl-sha256: `sha256sum ${COIN_NAME}-ubuntu20-not_strip-${BUILD_VERSION}.tar.gz`" >> checksums.txt
+          cd ..
+          cat ${COMPRESS_DIR}/checksums.txt
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ env.COIN_NAME }}-ubuntu20-${{ env.BUILD_VERSION }}
+          path: ${{ env.COMPRESS_DIR }}
   build-macos:
     name: macos build
     needs: checking-build-version
