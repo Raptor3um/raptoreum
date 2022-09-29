@@ -6,6 +6,7 @@ $(package)_file_name=$(package)-$($(package)_download_file)
 $(package)_build_subdir=build
 $(package)_sha256_hash=276c8573104e5f18bb5b9fd3ffd49585dda5ba5f6de2de74759dda8ca5a9deac
 $(package)_dependencies=gmp cmake
+$(package)_patches=bls-dash_gcc11.patch bls-dash_dynamic_libs.patch
 
 $(package)_relic_version=3a23142be0a5510a3aa93cd6c76fc59d3fc732a5
 $(package)_relic_download_path=https://github.com/relic-toolkit/relic/archive
@@ -53,6 +54,8 @@ define $(package)_set_vars
 endef
 
 define $(package)_preprocess_cmds
+  patch -p1 -i $($(package)_patch_dir)/bls-dash_gcc11.patch && \
+  patch -p1 -i $($(package)_patch_dir)/bls-dash_dynamic_libs.patch && \
   sed -i.old "s|GIT_REPOSITORY https://github.com/relic-toolkit/relic.git|URL \"../../relic-toolkit-$($(package)_relic_version).tar.gz\"|" src/CMakeLists.txt && \
   sed -i.old "s|GIT_TAG        .*RELIC_GIT_TAG.*|URL_HASH SHA256=$($(package)_relic_sha256_hash)|" src/CMakeLists.txt
 endef

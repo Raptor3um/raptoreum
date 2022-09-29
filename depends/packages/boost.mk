@@ -3,6 +3,7 @@ $(package)_version=1_70_0
 $(package)_download_path=https://boostorg.jfrog.io/artifactory/main/release/1.70.0/source/
 $(package)_file_name=$(package)_$($(package)_version).tar.bz2
 $(package)_sha256_hash=430ae8354789de4fd19ee52f3b1f739e1fba576f0aded0897c3c2bc00fb38778
+$(package)_patches=boost_gcc11.patch
 
 define $(package)_set_vars
 $(package)_config_opts_release=variant=release
@@ -24,6 +25,7 @@ $(package)_cxxflags_linux=-fPIC
 endef
 
 define $(package)_preprocess_cmds
+  patch -p1 -i $($(package)_patch_dir)/boost_gcc11.patch && \
   echo "using $(boost_toolset_$(host_os)) : : $($(package)_cxx) : <cxxflags>\"$($(package)_cxxflags) $($(package)_cppflags)\" <linkflags>\"$($(package)_ldflags)\" <archiver>\"$(boost_archiver_$(host_os))\" <striper>\"$(host_STRIP)\"  <ranlib>\"$(host_RANLIB)\" <rc>\"$(host_WINDRES)\" : ;" > user-config.jam
 endef
 
