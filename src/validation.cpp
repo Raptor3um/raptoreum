@@ -4880,7 +4880,7 @@ bool CChainState::LoadGenesisBlock(const CChainParams& chainparams)
         if (!AddGenesisBlock(chainparams, chainparams.GenesisBlock(), state))
             return false;
 
-        if (chainparams.NetworkIDString() == CBaseChainParams::DEVNET) {
+        /*if (chainparams.NetworkIDString() == CBaseChainParams::DEVNET) {
             // We can't continue if devnet genesis block is invalid
             std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(
                     chainparams.DevNetGenesisBlock());
@@ -4889,7 +4889,7 @@ bool CChainState::LoadGenesisBlock(const CChainParams& chainparams)
             assert(fCheckBlock);
             if (!AcceptBlock(shared_pblock, state, chainparams, nullptr, true, nullptr, nullptr))
                 return false;
-        }
+        }*/
     } catch (const std::runtime_error &e) {
         return error("%s: failed to initialize block database: %s", __func__, e.what());
     }
