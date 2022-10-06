@@ -174,7 +174,8 @@ static void VerifyGenesisPOW(const CBlock& genesis)
         {
             if (genesis.nNonce != block.nNonce)
             {
-                LogPrintf("VerifyGenesisPOW:  provided nNonce (%d) invalid, first valid one found: %d\n", genesis.nNonce, block.nNonce);
+                std::cerr << "VerifyGenesisPOW:  provided nNonce (" << genesis.nNonce << ") invalid" << std::endl;
+                std::cerr << "   nonce: " << block.nNonce << ", hash: 0x" << hash.ToString() << std::endl;
                 assert(genesis.nNonce == block.nNonce);
             }
             else
@@ -1013,7 +1014,7 @@ public:
         nDefaultPort = 19899;
         nPruneAfterHeight = 1000;
 
-        genesis = CreateGenesisBlock(1614369600, 2, 0x207fffff, 4, 5000 * COIN);
+        genesis = CreateGenesisBlock(1614369600, 0, 0x207fffff, 4, 5000 * COIN);
         VerifyGenesisPOW(genesis);
         consensus.hashGenesisBlock = genesis.GetHash();
         assert(consensus.hashGenesisBlock == uint256S("0x485491468e03c8ac23dd38f70fc1cda9f98cbd0bf58945e2da6c94c2a2d8b044"));
