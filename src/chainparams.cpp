@@ -159,34 +159,36 @@ static CBlock FindDevNetGenesisBlock(const CBlock &prevBlock, const CAmount& rew
     assert(false);
 }
 
-static void FindMainNetGenesisBlock(uint32_t nTime, uint32_t nBits, const char* network)
+/// Verify the POW hash is valid for the genesis block
+/// If starting Nonce is not valid, search for one
+static void VerifyGenesisPOW(const CBlock& genesis)
 {
-    CBlock block = CreateGenesisBlock(nTime, 0, nBits, 4, 5000 * COIN);
-
     arith_uint256 bnTarget;
-    bnTarget.SetCompact(block.nBits);
+    bnTarget.SetCompact(genesis.nBits);
 
-    for (uint32_t nNonce = 0; nNonce < UINT32_MAX; nNonce++) {
-        block.nNonce = nNonce;
-
+    CBlock block(genesis);
+    do
+    {
         uint256 hash = block.GetPOWHash();
-        if (nNonce % 48 == 0) {
-        	printf("\nrnonce=%d, pow is %s\n", nNonce, hash.GetHex().c_str());
+        if (UintToArith256(hash) <= bnTarget)
+        {
+            if (genesis.nNonce != block.nNonce)
+            {
+                std::cerr << "VerifyGenesisPOW:  provided nNonce (" << genesis.nNonce << ") invalid" << std::endl;
+                std::cerr << "   nonce: " << block.nNonce << ", hash: 0x" << hash.ToString() << std::endl;
+                assert(genesis.nNonce == block.nNonce);
+            }
+            else
+            {
+                return;
+            }
         }
-        if (UintToArith256(hash) <= bnTarget) {
-        	printf("\n%s net\n", network);
-        	printf("\ngenesis is %s\n", block.ToString().c_str());
-        	printf("\npow is %s\n", hash.GetHex().c_str());
-        	printf("\ngenesisNonce is %d\n", nNonce);
-        	std::cout << "Genesis Merkle " << block.hashMerkleRoot.GetHex() << std::endl;
-        	return;
-        }
-
+        ++block.nNonce;
     }
+    while (block.nNonce != 0);
 
-    // This is very unlikely to happen as we start the devnet with a very low difficulty. In many cases even the first
-    // iteration of the above loop will give a result already
-    error("%sNetGenesisBlock: could not find %s genesis block",network, network);
+    // We should never get here
+    error("VerifyGenesisPOW: could not find valid Nonce for genesis block");
     assert(false);
 }
 
@@ -557,8 +559,8 @@ public:
         pchMessageStart[3] = 0x2e;//.
         nDefaultPort = 10226;
         nPruneAfterHeight = 100000;
-        //FindMainNetGenesisBlock(1614369600, 0x20001fff, "main");
         genesis = CreateGenesisBlock(1614369600, 1130, 0x20001fff, 4, 5000 * COIN);
+        VerifyGenesisPOW(genesis);
         consensus.hashGenesisBlock = genesis.GetHash();
         assert(consensus.hashGenesisBlock == uint256S("0xb79e5df07278b9567ada8fc655ffbfa9d3f586dc38da3dd93053686f41caeea0"));
         assert(genesis.hashMerkleRoot == uint256S("0x87a48bc22468acdd72ee540aab7c086a5bbcddc12b51c6ac925717a74c269453"));
@@ -719,8 +721,9 @@ public:
         pchMessageStart[3] = 0x6d; //m
         nDefaultPort = 10228;
         nPruneAfterHeight = 1000;
-       // FindMainNetGenesisBlock(1645942755,  0x20001fff, "test");
         genesis = CreateGenesisBlock(1645942755, 387, 0x20001fff, 4, 5000 * COIN);
+        VerifyGenesisPOW(genesis);
+
         consensus.hashGenesisBlock = genesis.GetHash();
         assert(consensus.hashGenesisBlock == uint256S("0x99f1aeb781d780f51aee4247b23eb91d561f6fb8c9e761a9f1ebc72212b4ebf0"));
         assert(genesis.hashMerkleRoot == uint256S("0x87a48bc22468acdd72ee540aab7c086a5bbcddc12b51c6ac925717a74c269453"));
@@ -871,9 +874,10 @@ public:
         nDefaultPort = 19799;
         nPruneAfterHeight = 1000;
 
-        //FindMainNetGenesisBlock(1645942755,  0x20001fff, "devnet");
         genesis = CreateGenesisBlock(1645942755, 387, 0x20001fff, 4, 5000 * COIN);
+        VerifyGenesisPOW(genesis);
         consensus.hashGenesisBlock = genesis.GetHash();
+//      std::cout << "hash: " << consensus.hashGenesisBlock.ToString() << std::endl;
         assert(consensus.hashGenesisBlock == uint256S("0x99f1aeb781d780f51aee4247b23eb91d561f6fb8c9e761a9f1ebc72212b4ebf0"));
         assert(genesis.hashMerkleRoot == uint256S("0xe87a48bc22468acdd72ee540aab7c086a5bbcddc12b51c6ac925717a74c269453"));
 
@@ -972,10 +976,12 @@ public:
         consensus.BIP66Enabled = true; // BIP66 activated on regtest (Used in rpc activation tests)
         consensus.DIP0001Enabled = true;
         consensus.DIP0003Enabled = true;
+        consensus.DIP0008Enabled = true;
        // consensus.DIP0003EnforcementHeight = 500;
         consensus.powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 1
         consensus.nPowTargetTimespan = 24 * 60 * 60; // Raptoreum: 1 day
         consensus.nPowTargetSpacing = 2 * 60; // Raptoreum: 2 minutes
+        consensus.nMinimumDifficultyBlocks = 2000;
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = true;
         consensus.nPowDGWHeight = 60;
@@ -1008,9 +1014,10 @@ public:
         nDefaultPort = 19899;
         nPruneAfterHeight = 1000;
 
-        genesis = CreateGenesisBlock(1614369600, 1130, 0x20001fff, 4, 5000 * COIN);
+        genesis = CreateGenesisBlock(1614369600, 2, 0x207fffff, 4, 5000 * COIN);
+        VerifyGenesisPOW(genesis);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0xb79e5df07278b9567ada8fc655ffbfa9d3f586dc38da3dd93053686f41caeea0"));
+        assert(consensus.hashGenesisBlock == uint256S("0x485491468e03c8ac23dd38f70fc1cda9f98cbd0bf58945e2da6c94c2a2d8b044"));
         assert(genesis.hashMerkleRoot == uint256S("0x87a48bc22468acdd72ee540aab7c086a5bbcddc12b51c6ac925717a74c269453"));
         consensus.nFutureRewardShare = Consensus::FutureRewardShare(0.8,0.2,0.0);
 

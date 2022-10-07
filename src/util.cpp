@@ -823,21 +823,16 @@ void ArgsManager::ReadConfigFile(const std::string& confPath)
 std::string ArgsManager::GetChainName() const
 {
     bool fRegTest = ArgsManagerHelper::GetNetBoolArg(*this, "-regtest", true);
-    bool fDevNet = ArgsManagerHelper::GetNetBoolArg(*this, "-devnet", false);
+    bool fDevNet  = ArgsManagerHelper::GetNetBoolArg(*this, "-devnet", false);
     bool fTestNet = ArgsManagerHelper::GetNetBoolArg(*this, "-testnet", true);
 
     int nameParamsCount = (fRegTest ? 1 : 0) + (fDevNet ? 1 : 0) + (fTestNet ? 1 : 0);
     if (nameParamsCount > 1)
         throw std::runtime_error("Only one of -regtest, -testnet or -devnet can be used.");
 
-    if (fDevNet)
-        return CBaseChainParams::DEVNET;
-    if (fRegTest)
-        return CBaseChainParams::REGTEST;
-    if (fTestNet) {
-        std::cout<< CBaseChainParams::TESTNET << "\n";
-        return CBaseChainParams::TESTNET;
-    }
+    if (fDevNet)  return CBaseChainParams::DEVNET;
+    if (fRegTest) return CBaseChainParams::REGTEST;
+    if (fTestNet) return CBaseChainParams::TESTNET;
     return CBaseChainParams::MAIN;
 }
 
