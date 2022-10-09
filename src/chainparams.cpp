@@ -113,10 +113,10 @@ void CChainParams::UpdateVersionBitsParameters(Consensus::DeploymentPos d, int64
 //    consensus.DIP0003EnforcementHeight = nEnforcementHeight;
 //}
 
-void CChainParams::UpdateBIP66Parameters(bool nactive)
+void CChainParams::UpdateBIP66Parameters(bool active)
 {
     if (strcmp(Params().NetworkIDString().c_str(),"regtest") == 0){
-        consensus.BIP66Enabled = nactive;
+        consensus.BIP66Enabled = active;
     }
 }
 
@@ -1126,9 +1126,9 @@ void UpdateVersionBitsParameters(Consensus::DeploymentPos d, int64_t nStartTime,
 //    globalChainParams->UpdateDIP3Parameters(nActivationHeight, nEnforcementHeight);
 //}
 
-void UpdateBIP66Parameters(bool nactive)
+void UpdateBIP66Parameters(bool active)
 {
-    globalChainParams->UpdateBIP66Parameters(nactive);
+    globalChainParams->UpdateBIP66Parameters(active);
 }
 
 void UpdateBudgetParameters(int nSmartnodePaymentsStartBlock, int nBudgetPaymentsStartBlock, int nSuperblockStartBlock)
