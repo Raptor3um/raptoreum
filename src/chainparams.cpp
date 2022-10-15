@@ -1014,6 +1014,10 @@ public:
         // By default assume that the signatures in ancestors of this block are valid.
         consensus.defaultAssumeValid = uint256S("0x00");
 
+        consensus.nCollaterals = SmartnodeCollaterals(
+          {   {INT_MAX, 10 * COIN}  },
+          {  {240, 0}, {INT_MAX, 20} });
+
         pchMessageStart[0] = 0xfc;
         pchMessageStart[1] = 0xc1;
         pchMessageStart[2] = 0xb7;
@@ -1051,7 +1055,7 @@ public:
         // regtest usually has no smartnodes in most tests, so don't check for upgraged MNs
         fBIP9CheckSmartnodesUpgraded = false;
         std::vector<FounderRewardStructure> rewardStructures = {  {INT_MAX, 5}  };// 5% founder/dev fee forever
-        consensus.nFounderPayment = FounderPayment(rewardStructures, 200, "yaackz5YDLnFuuX6gGzEs9EMRQGfqmNYjc");
+        consensus.nFounderPayment = FounderPayment(rewardStructures, 500, "yaackz5YDLnFuuX6gGzEs9EMRQGfqmNYjc");
 
         checkpointData = {
             {
