@@ -22,6 +22,13 @@
 namespace llmq
 {
 
+CDKGPendingMessages::CDKGPendingMessages(size_t _maxMessagesPerNode, int _invType) :
+    maxMessagesPerNode(_maxMessagesPerNode),
+    invType(_invType)
+{
+    LogPrint(BCLog::LLMQ_DKG, "CDKGPendingMessages::%s --  maxMessagesPerNode %d for type %d\n", __func__, maxMessagesPerNode, invType);
+}
+
 void CDKGPendingMessages::PushPendingMessage(NodeId from, CDataStream& vRecv)
 {
     // this will also consume the data, even if we bail out early
@@ -40,7 +47,7 @@ void CDKGPendingMessages::PushPendingMessage(NodeId from, CDataStream& vRecv)
 
     if (messagesPerNode[from] >= maxMessagesPerNode) {
         // TODO ban?
-        LogPrint(BCLog::LLMQ_DKG, "CDKGPendingMessages::%s -- too many messages, peer=%d\n", __func__, from);
+        LogPrint(BCLog::LLMQ_DKG, "CDKGPendingMessages::%s -- too many messages %d, peer=%d\n", __func__, messagesPerNode[from], from);
         return;
     }
     messagesPerNode[from]++;
@@ -82,6 +89,23 @@ void CDKGPendingMessages::Clear()
 
 //////
 
+CDKGSessionHandler::CDKGSessionHandler(const Consensus::LLMQParams& _params, CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager) :
+    params(_params),
+    blsWorker(_blsWorker),
+    dkgManager(_dkgManager),
+    curSession(std::make_shared<CDKGSession>(_params, _blsWorker, _dkgManager)),
+    pendingContributions(800, MSG_QUORUM_CONTRIB), // we allow size*2 messages as we need to make sure we see bad behavior (double messages)
+    pendingComplaints(800, MSG_QUORUM_COMPLAINT),
+    pendingJustifications(800, MSG_QUORUM_JUSTIFICATION),
+    pendingPrematureCommitments(800, MSG_QUORUM_PREMATURE_COMMITMENT)
+{
+    if (params.type == Consensus::LLMQ_NONE) {
+        throw std::runtime_error("Can't initialize CDKGSessionHandler with LLMQ_NONE type.");
+    }
+}
+
+CDKGSessionHandler::~CDKGSessionHandler() = default;
+
 void CDKGSessionHandler::UpdatedBlockTip(const CBlockIndex* pindexNew)
 {
     LOCK(cs);
@@ -107,6 +131,7 @@ void CDKGSessionHandler::UpdatedBlockTip(const CBlockIndex* pindexNew)
 void CDKGSessionHandler::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv)
 {
     // We don't handle messages in the calling thread as deserialization/processing of these would block everything
+    LogPrint(BCLog::LLMQ_DKG, "CDKGSessionHandler::%s --  Processing %s message from node %d \n", __func__, strCommand, pfrom->GetId());
     if (strCommand == NetMsgType::QCONTRIB) {
         pendingContributions.PushPendingMessage(pfrom->GetId(), vRecv);
     } else if (strCommand == NetMsgType::QCOMPLAINT) {
@@ -429,6 +454,7 @@ bool ProcessPendingMessageBatch(CDKGSession& session, CDKGPendingMessages& pendi
         preverifiedMessages.emplace_back(p);
     }
     if (preverifiedMessages.empty()) {
+        LogPrint(BCLog::LLMQ_DKG, "%s -- empty preverifiedMessages \n", __func__);
         return true;
     }
 

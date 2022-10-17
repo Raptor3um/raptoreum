@@ -5,8 +5,8 @@ on:
     branches:
       - master
       - develop
-      - 'ft/*'
-      - 'release/*'
+      - "ft/*"
+      - "release/*"
   pull_request:
     branches:
       - develop
@@ -31,21 +31,21 @@ jobs:
         uses: christian-draeger/read-properties@1.0.1
         with:
           path: build.properties
-          property: 'release-version'
+          property: "release-version"
       - name: Read build.properties key for release candidate
         if: ${{ github.event_name != 'pull_request' && contains(github.ref, 'release/')}}
         id: release-candidate-version
         uses: christian-draeger/read-properties@1.0.1
         with:
           path: build.properties
-          property: 'candidate-version'
+          property: "candidate-version"
       - name: Read build.properties key for develop
         if: ${{ github.event_name == 'pull_request' || endsWith(github.ref, 'develop') || contains(github.ref, 'ft/')}}
         id: snapshot-version
         uses: christian-draeger/read-properties@1.0.1
         with:
           path: build.properties
-          property: 'snapshot-version'
+          property: "snapshot-version"
       - name: create release version
         if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/master'}}
         run: |
@@ -64,66 +64,6 @@ jobs:
           name: version
           path: version.txt
 
-  build-ubuntu18:
-    name: Ubuntu18 build
-    needs: checking-build-version
-    runs-on: ubuntu-18.04
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Getting Version
-        uses: actions/download-artifact@v1
-        with:
-          name: version
-      - name: Extract version
-        run: |
-          cat version/version.txt >> $GITHUB_ENV
-      - name: Install Required Packages
-        run: |
-          echo "building $BUILD_VERSION version"
-          sudo apt-get update -y
-          sudo apt-get upgrade -y
-          sudo apt-get install curl build-essential libtool autotools-dev automake pkg-config python3 bsdmainutils bison
-      - name: build depends
-        run: |
-          echo "building with $(nproc) threads"
-          make -C depends HOST=x86_64-pc-linux-gnu -j$(nproc)
-      - name: configure
-        run: |
-          ./autogen.sh
-          CONFIG_SITE=$PWD/depends/x86_64-pc-linux-gnu/share/config.site ./configure
-      - name: build binary
-        run: |
-          make -j$(nproc)
-          mkdir -p $BUILD_DIR
-          mv src/{raptoreum-cli,raptoreum-tx,raptoreumd,qt/raptoreum-qt} $BUILD_DIR/
-          strip $BUILD_DIR/*
-      - name: generate checksum and compress
-        run: |
-          echo "buildng $BUILD_VERSION version"
-          cd $BUILD_DIR
-          echo "sha256:" >> checksums.txt
-          echo "------------------------------------" >> checksums.txt
-          shasum * >> checksums.txt
-          echo "------------------------------------" >> checksums.txt
-          echo "openssl-sha256:" >> checksums.txt
-          echo "------------------------------------" >> checksums.txt
-          sha256sum * >> checksums.txt
-          cat checksums.txt
-          cd ..
-          tar -cvzf ${COIN_NAME}-ubuntu18-${BUILD_VERSION}.tar.gz $BUILD_DIR/*
-          mkdir -p ${COMPRESS_DIR}
-          mv ${COIN_NAME}-ubuntu18-${BUILD_VERSION}.tar.gz ${COMPRESS_DIR}/
-          cd ${COMPRESS_DIR}
-          echo "sha256: `shasum ${COIN_NAME}-ubuntu18-${BUILD_VERSION}.tar.gz`" >> checksums.txt
-          echo "openssl-sha256: `sha256sum ${COIN_NAME}-ubuntu18-${BUILD_VERSION}.tar.gz`" >> checksums.txt
-          cd ..
-          cat ${COMPRESS_DIR}/checksums.txt
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: ${{ env.COIN_NAME }}-ubuntu18-${{ env.BUILD_VERSION }}
-          path: ${{ env.COMPRESS_DIR }}
   build-ubuntu20:
     name: Ubuntu20 build
     needs: checking-build-version
@@ -155,11 +95,22 @@ jobs:
         run: |
           make -j$(nproc)
           mkdir -p $BUILD_DIR
-          mv src/{raptoreum-cli,raptoreum-tx,raptoreumd,qt/raptoreum-qt} $BUILD_DIR/
+          mkdir -p ${BUILD_DIR}_not_strip
+          cp src/{raptoreum-cli,raptoreum-tx,raptoreumd,qt/raptoreum-qt} $BUILD_DIR/
+          mv src/{raptoreum-cli,raptoreum-tx,raptoreumd,qt/raptoreum-qt} ${BUILD_DIR}_not_strip/
           strip $BUILD_DIR/*
+      - name: build debug binary
+        run: |
+          make clean
+          make distclean
+          ./autogen.sh
+          ./configure --prefix=`pwd`/depends/x86_64-pc-linux-gnu --disable-tests --enable-debug
+          make -j$(nproc)
+          mkdir -p ${BUILD_DIR}_debug
+          mv src/{raptoreum-cli,raptoreum-tx,raptoreumd,qt/raptoreum-qt} ${BUILD_DIR}_debug/
       - name: generate checksum and compress
         run: |
-          echo "buildng $BUILD_VERSION version"
+          mkdir -p ${COMPRESS_DIR}
           cd $BUILD_DIR
           echo "sha256:" >> checksums.txt
           echo "------------------------------------" >> checksums.txt
@@ -169,15 +120,132 @@ jobs:
           echo "------------------------------------" >> checksums.txt
           sha256sum * >> checksums.txt
           cat checksums.txt
+          tar -cvzf ../${COIN_NAME}-ubuntu20-${BUILD_VERSION}.tar.gz *          
+          cd ../${BUILD_DIR}_debug
+          echo "sha256:" >> checksums.txt
+          echo "------------------------------------" >> checksums.txt
+          shasum * >> checksums.txt
+          echo "------------------------------------" >> checksums.txt
+          echo "openssl-sha256:" >> checksums.txt
+          echo "------------------------------------" >> checksums.txt
+          sha256sum * >> checksums.txt
+          cat checksums.txt
+          tar -cvzf ../${COIN_NAME}-ubuntu20-debug-${BUILD_VERSION}.tar.gz *
+          cd ../${BUILD_DIR}_not_strip
+          echo "sha256:" >> checksums.txt
+          echo "------------------------------------" >> checksums.txt
+          shasum * >> checksums.txt
+          echo "------------------------------------" >> checksums.txt
+          echo "openssl-sha256:" >> checksums.txt
+          echo "------------------------------------" >> checksums.txt
+          sha256sum * >> checksums.txt
+          cat checksums.txt
+          tar -cvzf ../${COIN_NAME}-ubuntu20-not_strip-${BUILD_VERSION}.tar.gz *
           cd ..
-          tar -cvzf ${COIN_NAME}-ubuntu20-${BUILD_VERSION}.tar.gz $BUILD_DIR/*
-          mkdir -p ${COMPRESS_DIR}
-          mv ${COIN_NAME}-ubuntu20-${BUILD_VERSION}.tar.gz ${COMPRESS_DIR}/
+          mv *.tar.gz ${COMPRESS_DIR}/
           cd ${COMPRESS_DIR}
           echo "sha256: `shasum ${COIN_NAME}-ubuntu20-${BUILD_VERSION}.tar.gz`" >> checksums.txt
           echo "openssl-sha256: `sha256sum ${COIN_NAME}-ubuntu20-${BUILD_VERSION}.tar.gz`" >> checksums.txt
-          cat checksums.txt
+          echo "sha256: `shasum ${COIN_NAME}-ubuntu20-debug-${BUILD_VERSION}.tar.gz`" >> checksums.txt
+          echo "openssl-sha256: `sha256sum ${COIN_NAME}-ubuntu20-debug-${BUILD_VERSION}.tar.gz`" >> checksums.txt
+          echo "sha256: `shasum ${COIN_NAME}-ubuntu20-not_strip-${BUILD_VERSION}.tar.gz`" >> checksums.txt
+          echo "openssl-sha256: `sha256sum ${COIN_NAME}-ubuntu20-not_strip-${BUILD_VERSION}.tar.gz`" >> checksums.txt
           cd ..
+          cat ${COMPRESS_DIR}/checksums.txt
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ env.COIN_NAME }}-ubuntu20-${{ env.BUILD_VERSION }}
+          path: ${{ env.COMPRESS_DIR }}
+  build-ubuntu22:
+    name: Ubuntu22 build
+    needs: checking-build-version
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Getting Version
+        uses: actions/download-artifact@v1
+        with:
+          name: version
+      - name: Extract version
+        run: |
+          cat version/version.txt >> $GITHUB_ENV
+      - name: Install Required Packages
+        run: |
+          sudo apt-get update -y
+          sudo apt-get upgrade -y
+          sudo apt-get install curl build-essential libtool autotools-dev automake pkg-config python3 bsdmainutils bison
+      - name: build depends
+        run: |
+          echo "building with $(nproc) threads"
+          gcc --version
+          make -C depends -j$(nproc)
+      - name: configure
+        run: |
+          ./autogen.sh
+          CONFIG_SITE=$PWD/depends/x86_64-pc-linux-gnu/share/config.site ./configure
+      - name: build binary
+        run: |
+          make -j$(nproc)
+          mkdir -p $BUILD_DIR
+          mkdir -p ${BUILD_DIR}_not_strip
+          cp src/{raptoreum-cli,raptoreum-tx,raptoreumd,qt/raptoreum-qt} $BUILD_DIR/
+          mv src/{raptoreum-cli,raptoreum-tx,raptoreumd,qt/raptoreum-qt} ${BUILD_DIR}_not_strip/
+          strip $BUILD_DIR/*
+      - name: build debug binary
+        run: |
+          make clean
+          make distclean
+          ./autogen.sh
+          ./configure --prefix=`pwd`/depends/x86_64-pc-linux-gnu --disable-tests --enable-debug
+          make -j$(nproc)
+          mkdir -p ${BUILD_DIR}_debug
+          mv src/{raptoreum-cli,raptoreum-tx,raptoreumd,qt/raptoreum-qt} ${BUILD_DIR}_debug/
+      - name: generate checksum and compress
+        run: |
+          mkdir -p ${COMPRESS_DIR}
+          cd $BUILD_DIR
+          echo "sha256:" >> checksums.txt
+          echo "------------------------------------" >> checksums.txt
+          shasum * >> checksums.txt
+          echo "------------------------------------" >> checksums.txt
+          echo "openssl-sha256:" >> checksums.txt
+          echo "------------------------------------" >> checksums.txt
+          sha256sum * >> checksums.txt
+          cat checksums.txt
+          tar -cvzf ../${COIN_NAME}-ubuntu20-${BUILD_VERSION}.tar.gz *          
+          cd ../${BUILD_DIR}_debug
+          echo "sha256:" >> checksums.txt
+          echo "------------------------------------" >> checksums.txt
+          shasum * >> checksums.txt
+          echo "------------------------------------" >> checksums.txt
+          echo "openssl-sha256:" >> checksums.txt
+          echo "------------------------------------" >> checksums.txt
+          sha256sum * >> checksums.txt
+          cat checksums.txt
+          tar -cvzf ../${COIN_NAME}-ubuntu20-debug-${BUILD_VERSION}.tar.gz *
+          cd ../${BUILD_DIR}_not_strip
+          echo "sha256:" >> checksums.txt
+          echo "------------------------------------" >> checksums.txt
+          shasum * >> checksums.txt
+          echo "------------------------------------" >> checksums.txt
+          echo "openssl-sha256:" >> checksums.txt
+          echo "------------------------------------" >> checksums.txt
+          sha256sum * >> checksums.txt
+          cat checksums.txt
+          tar -cvzf ../${COIN_NAME}-ubuntu20-not_strip-${BUILD_VERSION}.tar.gz *
+          cd ..
+          mv *.tar.gz ${COMPRESS_DIR}/
+          cd ${COMPRESS_DIR}
+          echo "sha256: `shasum ${COIN_NAME}-ubuntu22-${BUILD_VERSION}.tar.gz`" >> checksums.txt
+          echo "openssl-sha256: `sha256sum ${COIN_NAME}-ubuntu20-${BUILD_VERSION}.tar.gz`" >> checksums.txt
+          echo "sha256: `shasum ${COIN_NAME}-ubuntu22-debug-${BUILD_VERSION}.tar.gz`" >> checksums.txt
+          echo "openssl-sha256: `sha256sum ${COIN_NAME}-ubuntu20-debug-${BUILD_VERSION}.tar.gz`" >> checksums.txt
+          echo "sha256: `shasum ${COIN_NAME}-ubuntu22-not_strip-${BUILD_VERSION}.tar.gz`" >> checksums.txt
+          echo "openssl-sha256: `sha256sum ${COIN_NAME}-ubuntu20-not_strip-${BUILD_VERSION}.tar.gz`" >> checksums.txt
+          cd ..
+          cat ${COMPRESS_DIR}/checksums.txt
       - name: Upload Artifact
         uses: actions/upload-artifact@v3
         with:
@@ -213,7 +281,9 @@ jobs:
         run: |
           make -j8
           mkdir -p $BUILD_DIR
-          mv src/{raptoreum-cli,raptoreum-tx,raptoreumd,qt/raptoreum-qt} $BUILD_DIR/
+          mkdir -p ${BUILD_DIR}_not_strip
+          cp src/{raptoreum-cli,raptoreum-tx,raptoreumd,qt/raptoreum-qt} $BUILD_DIR/
+          mv src/{raptoreum-cli,raptoreum-tx,raptoreumd,qt/raptoreum-qt} ${BUILD_DIR}_not_strip/
           strip $BUILD_DIR/*
       - name: generate checksum and compress
         run: |
@@ -227,13 +297,25 @@ jobs:
           echo "------------------------------------" >> checksums.txt
           openssl sha256 * >> checksums.txt
           cat checksums.txt
+          tar -cvzf ../${COIN_NAME}-macos-${BUILD_VERSION}.tar.gz *
+          cd ../${BUILD_DIR}_not_strip
+          echo "sha256:" >> checksums.txt
+          echo "------------------------------------" >> checksums.txt
+          shasum * >> checksums.txt
+          echo "------------------------------------" >> checksums.txt
+          echo "openssl-sha256:" >> checksums.txt
+          echo "------------------------------------" >> checksums.txt
+          openssl sha256 * >> checksums.txt
+          cat checksums.txt
+          tar -cvzf ../${COIN_NAME}-macos-not_strip-${BUILD_VERSION}.tar.gz *
           cd ..
-          tar -cvzf ${COIN_NAME}-macos-${BUILD_VERSION}.tar.gz $BUILD_DIR/*
           mkdir -p ${COMPRESS_DIR}
-          mv ${COIN_NAME}-macos-${BUILD_VERSION}.tar.gz ${COMPRESS_DIR}/
+          mv *.tar.gz ${COMPRESS_DIR}/
           cd ${COMPRESS_DIR}
           echo "sha256: `shasum ${COIN_NAME}-macos-${BUILD_VERSION}.tar.gz`" >> checksums.txt
           echo "openssl-sha256: `openssl sha256 ${COIN_NAME}-macos-${BUILD_VERSION}.tar.gz`" >> checksums.txt
+          echo "sha256: `shasum ${COIN_NAME}-macos-not_strip-${BUILD_VERSION}.tar.gz`" >> checksums.txt
+          echo "openssl-sha256: `openssl sha256 ${COIN_NAME}-macos-not_strip-${BUILD_VERSION}.tar.gz`" >> checksums.txt
           cat checksums.txt
           cd ..
       - name: Upload Binary Artifact
@@ -287,9 +369,18 @@ jobs:
           make -j$(nproc)
           mkdir -p $BUILD_DIR
           mv src/{raptoreum-cli,raptoreum-tx,raptoreumd,qt/raptoreum-qt} $BUILD_DIR/
+      - name: build debug binary
+        run: |
+          make clean
+          make distclean
+          ./autogen.sh
+          ./configure --prefix=`pwd`/depends/arm-linux-gnueabihf --disable-tests --enable-debug
+          make -j$(nproc)
+          mkdir -p ${BUILD_DIR}_debug
+          mv src/{raptoreum-cli,raptoreum-tx,raptoreumd,qt/raptoreum-qt} ${BUILD_DIR}_debug/
       - name: generate checksum and compress binary
         run: |
-          echo "buildng $BUILD_VERSION version"
+          mkdir -p ${COMPRESS_DIR}
           cd $BUILD_DIR
           echo "sha256:" >> checksums.txt
           echo "------------------------------------" >> checksums.txt
@@ -299,15 +390,26 @@ jobs:
           echo "------------------------------------" >> checksums.txt
           sha256sum * >> checksums.txt
           cat checksums.txt
+          tar -cvzf ../${COIN_NAME}-arm32-${BUILD_VERSION}.tar.gz *          
+          cd ../${BUILD_DIR}_debug
+          echo "sha256:" >> checksums.txt
+          echo "------------------------------------" >> checksums.txt
+          shasum * >> checksums.txt
+          echo "------------------------------------" >> checksums.txt
+          echo "openssl-sha256:" >> checksums.txt
+          echo "------------------------------------" >> checksums.txt
+          sha256sum * >> checksums.txt
+          cat checksums.txt
+          tar -cvzf ../${COIN_NAME}-arm32-debug-${BUILD_VERSION}.tar.gz *
           cd ..
-          tar -cvzf ${COIN_NAME}-arm32-${BUILD_VERSION}.tar.gz $BUILD_DIR/*
-          mkdir -p ${COMPRESS_DIR}
-          mv ${COIN_NAME}-arm32-${BUILD_VERSION}.tar.gz ${COMPRESS_DIR}/
+          mv *.tar.gz ${COMPRESS_DIR}/
           cd ${COMPRESS_DIR}
           echo "sha256: `shasum ${COIN_NAME}-arm32-${BUILD_VERSION}.tar.gz`" >> checksums.txt
           echo "openssl-sha256: `sha256sum ${COIN_NAME}-arm32-${BUILD_VERSION}.tar.gz`" >> checksums.txt
-          cat checksums.txt
+          echo "sha256: `shasum ${COIN_NAME}-arm32-debug-${BUILD_VERSION}.tar.gz`" >> checksums.txt
+          echo "openssl-sha256: `sha256sum ${COIN_NAME}-arm32-debug-${BUILD_VERSION}.tar.gz`" >> checksums.txt
           cd ..
+          cat ${COMPRESS_DIR}/checksums.txt
       - name: Upload Binary Artifacts
         uses: actions/upload-artifact@v3
         with:
@@ -345,9 +447,18 @@ jobs:
           make -j$(nproc)
           mkdir -p $BUILD_DIR
           mv src/{raptoreum-cli,raptoreum-tx,raptoreumd,qt/raptoreum-qt} $BUILD_DIR/
+      - name: build debug binary
+        run: |
+          make clean
+          make distclean
+          ./autogen.sh
+          ./configure --prefix=`pwd`/depends/aarch64-linux-gnu --disable-tests --enable-debug
+          make -j$(nproc)
+          mkdir -p ${BUILD_DIR}_debug
+          mv src/{raptoreum-cli,raptoreum-tx,raptoreumd,qt/raptoreum-qt} ${BUILD_DIR}_debug/
       - name: generate checksum and compress binary
         run: |
-          echo "buildng $BUILD_VERSION version"
+          mkdir -p ${COMPRESS_DIR}
           cd $BUILD_DIR
           echo "sha256:" >> checksums.txt
           echo "------------------------------------" >> checksums.txt
@@ -357,15 +468,26 @@ jobs:
           echo "------------------------------------" >> checksums.txt
           sha256sum * >> checksums.txt
           cat checksums.txt
+          tar -cvzf ../${COIN_NAME}-arm64-${BUILD_VERSION}.tar.gz *          
+          cd ../${BUILD_DIR}_debug
+          echo "sha256:" >> checksums.txt
+          echo "------------------------------------" >> checksums.txt
+          shasum * >> checksums.txt
+          echo "------------------------------------" >> checksums.txt
+          echo "openssl-sha256:" >> checksums.txt
+          echo "------------------------------------" >> checksums.txt
+          sha256sum * >> checksums.txt
+          cat checksums.txt
+          tar -cvzf ../${COIN_NAME}-arm64-debug-${BUILD_VERSION}.tar.gz *
           cd ..
-          tar -cvzf ${COIN_NAME}-arm64-${BUILD_VERSION}.tar.gz $BUILD_DIR/*
-          mkdir -p ${COMPRESS_DIR}
-          mv ${COIN_NAME}-arm64-${BUILD_VERSION}.tar.gz ${COMPRESS_DIR}/
+          mv *.tar.gz ${COMPRESS_DIR}/
           cd ${COMPRESS_DIR}
           echo "sha256: `shasum ${COIN_NAME}-arm64-${BUILD_VERSION}.tar.gz`" >> checksums.txt
           echo "openssl-sha256: `sha256sum ${COIN_NAME}-arm64-${BUILD_VERSION}.tar.gz`" >> checksums.txt
-          cat checksums.txt
+          echo "sha256: `shasum ${COIN_NAME}-arm64-debug-${BUILD_VERSION}.tar.gz`" >> checksums.txt
+          echo "openssl-sha256: `sha256sum ${COIN_NAME}-arm64-debug-${BUILD_VERSION}.tar.gz`" >> checksums.txt
           cd ..
+          cat ${COMPRESS_DIR}/checksums.txt
       - name: Upload Binary Artifacts
         uses: actions/upload-artifact@v3
         with:
@@ -400,12 +522,14 @@ jobs:
       - name: configure
         run: |
           ./autogen.sh
-          CONFIG_SITE=$PWD/depends/x86_64-w64-mingw32/share/config.site ./configure 
+          CONFIG_SITE=$PWD/depends/x86_64-w64-mingw32/share/config.site ./configure
       - name: build binary
         run: |
           make -j$(nproc)
           mkdir -p $BUILD_DIR
-          mv src/{raptoreum-cli.exe,raptoreum-tx.exe,raptoreumd.exe,qt/raptoreum-qt.exe} $BUILD_DIR/
+          mkdir -p ${BUILD_DIR}_not_strip
+          cp src/{raptoreum-cli.exe,raptoreum-tx.exe,raptoreumd.exe,qt/raptoreum-qt.exe} $BUILD_DIR/
+          mv src/{raptoreum-cli.exe,raptoreum-tx.exe,raptoreumd.exe,qt/raptoreum-qt.exe} ${BUILD_DIR}_not_strip/
           strip $BUILD_DIR/*
       - name: generate checksum and compress binary
         run: |
@@ -419,13 +543,25 @@ jobs:
           echo "------------------------------------" >> checksums.txt
           sha256sum * >> checksums.txt
           cat checksums.txt
+          zip -r ../${COIN_NAME}-win-${BUILD_VERSION}.zip .
+          cd ../${BUILD_DIR}_not_strip
+          echo "sha256:" >> checksums.txt
+          echo "------------------------------------" >> checksums.txt
+          shasum * >> checksums.txt
+          echo "------------------------------------" >> checksums.txt
+          echo "openssl-sha256:" >> checksums.txt
+          echo "------------------------------------" >> checksums.txt
+          sha256sum * >> checksums.txt
+          cat checksums.txt
+          zip -r ../${COIN_NAME}-win-not_strip-${BUILD_VERSION}.zip .
           cd ..
-          zip -r ${COIN_NAME}-win-${BUILD_VERSION}.zip $BUILD_DIR/
           mkdir -p ${COMPRESS_DIR}
-          mv ${COIN_NAME}-win-${BUILD_VERSION}.zip ${COMPRESS_DIR}/
+          mv *.zip ${COMPRESS_DIR}/
           cd ${COMPRESS_DIR}
           echo "sha256: `shasum ${COIN_NAME}-win-${BUILD_VERSION}.zip`" >> checksums.txt
           echo "openssl-sha256: `sha256sum ${COIN_NAME}-win-${BUILD_VERSION}.zip`" >> checksums.txt
+          echo "sha256: `shasum ${COIN_NAME}-win-not_strip-${BUILD_VERSION}.zip`" >> checksums.txt
+          echo "openssl-sha256: `sha256sum ${COIN_NAME}-win-not_strip-${BUILD_VERSION}.zip`" >> checksums.txt
           cat checksums.txt
           cd ..
       - name: Upload Binary Artifacts
@@ -447,4 +583,3 @@ jobs:
         with:
           name: ${{ env.COIN_NAME }}-win-installation-${{ env.BUILD_VERSION }}
           path: win64-installation
-

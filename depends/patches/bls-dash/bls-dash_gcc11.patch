@@ -1,0 +1,10 @@
+--- a/src/threshold.cpp
++++ b/src/threshold.cpp
+@@ -5,6 +5,7 @@
+ #include "threshold.hpp"
+ 
+ #include "schemes.hpp"
++#include <memory>
+ 
+ static std::unique_ptr<bls::CoreMPL> pThresholdScheme(new bls::LegacySchemeMPL);
+ 

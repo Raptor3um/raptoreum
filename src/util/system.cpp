@@ -996,22 +996,16 @@ std::string ArgsManager::GetChainName() const
 {
     LOCK(cs_args);
     bool fRegTest = ArgsManagerHelper::GetNetBoolArg(*this, "-regtest", true);
-    bool fDevNet = ArgsManagerHelper::GetNetBoolArg(*this, "-devnet", false);
+    bool fDevNet  = ArgsManagerHelper::GetNetBoolArg(*this, "-devnet", false);
     bool fTestNet = ArgsManagerHelper::GetNetBoolArg(*this, "-testnet", true);
 
     int nameParamsCount = (fRegTest ? 1 : 0) + (fDevNet ? 1 : 0) + (fTestNet ? 1 : 0);
     if (nameParamsCount > 1)
         throw std::runtime_error("Only one of -regtest, -testnet or -devnet can be used.");
 
-    if (fDevNet)
-        return CBaseChainParams::DEVNET;
-    if (fRegTest)
-        return CBaseChainParams::REGTEST;
-    if (fTestNet) {
-        std::cout << CBaseChainParams::TESTNET << std::endl;
-        return CBaseChainParams::TESTNET;
-    }
-    std::cout << CBaseChainParams::MAIN << std::endl;
+    if (fDevNet)  return CBaseChainParams::DEVNET;
+    if (fRegTest) return CBaseChainParams::REGTEST;
+    if (fTestNet) return CBaseChainParams::TESTNET;
     return CBaseChainParams::MAIN;
 }
 
@@ -1286,9 +1280,8 @@ int GetNumCores()
 
 std::string CopyrightHolders(const std::string& strPrefix, unsigned int nStartYear, unsigned int nEndYear)
 {
-    //std::string strCopyrightHolders = strPrefix + strprintf(" %u ", nEndYear) + strprintf(_(COPYRIGHT_HOLDERS), _(COPYRIGHT_HOLDERS_SUBSTITUTION));
-    const auto copyright_info = strprintf(_(COPYRIGHT_HOLDERS), COPYRIGHT_HOLDERS_SUBSTITUTION);
-    std::string strCopyrightHolders = strPrefix + strprintf(" %u-%u ", nStartYear, nEndYear) + copyright_info;
+		const auto copyright_info = strprintf(_(COPYRIGHT_HOLDERS), COPYRIGHT_HOLDERS_SUBSTITUTION);
+    std::string strCopyrightHolders = strPrefix + strprintf(" %u-%u ", 2021, nEndYear) + copyright_info;
 
     // Check for untranslated substitution to make sure Raptoreum Core copyright is not removed by accident
     if (copyright_info.find("Raptoreum") == std::string::npos) {

@@ -14,6 +14,7 @@
 #include <net.h>
 #include <net_processing.h>
 #include <netmessagemaker.h>
+#include <validation.h>
 
 #include <unordered_set>
 
@@ -39,7 +40,8 @@ void CMNAuth::PushMNAUTH(CNode* pnode, CConnman& connman)
     if (Params().NetworkIDString() != CBaseChainParams::MAIN && gArgs.IsArgSet("-pushversion")) {
         nOurNodeVersion = gArgs.GetArg("-pushversion", PROTOCOL_VERSION);
     }
-    if (pnode->nVersion < MNAUTH_NODE_VER_VERSION || nOurNodeVersion < MNAUTH_NODE_VER_VERSION) {
+		bool isV17active = Params().IsFutureActive(::ChainActive().Tip());
+    if (pnode->nVersion < MNAUTH_NODE_VER_VERSION || nOurNodeVersion < MNAUTH_NODE_VER_VERSION || !isV17active) {
         signHash = ::SerializeHash(std::make_tuple(*activeSmartnodeInfo.blsPubKeyOperator, receivedMNAuthChallenge, pnode->fInbound));
     } else {
         signHash = ::SerializeHash(std::make_tuple(*activeSmartnodeInfo.blsPubKeyOperator, receivedMNAuthChallenge, pnode->fInbound, nOurNodeVersion));
@@ -109,7 +111,8 @@ void CMNAuth::ProcessMessage(CNode* pnode, const std::string& strCommand, CDataS
             nOurNodeVersion = gArgs.GetArg("-pushversion", PROTOCOL_VERSION);
         }
         // See comment in PushMNAUTH (fInbound is negated here as we are on the other side of the connection)
-        if (pnode->nVersion < MNAUTH_NODE_VER_VERSION || nOurNodeVersion < MNAUTH_NODE_VER_VERSION) {
+				bool isV17active = Params().IsFutureActive(::ChainActive().Tip());
+        if (pnode->nVersion < MNAUTH_NODE_VER_VERSION || nOurNodeVersion < MNAUTH_NODE_VER_VERSION || !isV17active) {
             signHash = ::SerializeHash(std::make_tuple(dmn->pdmnState->pubKeyOperator, pnode->GetSentMNAuthChallenge(), !pnode->fInbound));
         } else {
             signHash = ::SerializeHash(std::make_tuple(dmn->pdmnState->pubKeyOperator, pnode->GetSentMNAuthChallenge(), !pnode->fInbound, pnode->nVersion.load()));

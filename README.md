@@ -1,4 +1,4 @@
-Raptoreum Core staging tree 0.17
+Raptoreum Core Latest v1.3.17.01
 ===========================
 
 |CI|master|develop|
