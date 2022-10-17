@@ -249,7 +249,7 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ env.COIN_NAME }}-ubuntu20-${{ env.BUILD_VERSION }}
+          name: ${{ env.COIN_NAME }}-ubuntu22-${{ env.BUILD_VERSION }}
           path: ${{ env.COMPRESS_DIR }}
   build-macos:
     name: macos build
