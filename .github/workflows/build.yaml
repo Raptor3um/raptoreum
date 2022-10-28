@@ -172,12 +172,14 @@ jobs:
           name: ${{ env.COIN_NAME }}-ubuntu20-test-${{ needs.get-version.outputs.version }}
 
       - name: Run Unit Tests
+        id: Tests
         run: |
            chmod +x test_raptoreum
            ./test_raptoreum --log_format=JUNIT > unit_test_results.xml
 
       - name: Upload Test Artifacts
         uses: actions/upload-artifact@v3
+        if: always()
         with:
           name: ${{ env.COIN_NAME }}-ubuntu20-test-${{ needs.get-version.outputs.version }}
           path: unit_test_results.xml
@@ -187,7 +189,7 @@ jobs:
         if: always()
         with:
           check_name: "Ubuntu 20"
-          detailed_summary: false
+          detailed_summary: ${{ steps.Tests.conclusion == 'failure'}}
           include_passed: false
           report_paths: 'unit_test_results.xml'
 
@@ -305,12 +307,14 @@ jobs:
           name: ${{ env.COIN_NAME }}-ubuntu22-test-${{ needs.get-version.outputs.version }}
 
       - name: Run Unit Tests
+        id: Tests
         run: |
           chmod +x test_raptoreum
           ./test_raptoreum --log_format=JUNIT > unit_test_results.xml
 
       - name: Upload Test Artifacts
         uses: actions/upload-artifact@v3
+        if: always()
         with:
           name: ${{ env.COIN_NAME }}-ubuntu22-test-${{ needs.get-version.outputs.version }}
           path: unit_test_results.xml
@@ -320,7 +324,7 @@ jobs:
         if: always()
         with:
           check_name: "Ubuntu 22"
-          detailed_summary: false
+          detailed_summary: ${{ steps.Tests.conclusion == 'failure'}}
           include_passed: false
           report_paths: 'unit_test_results.xml'
 
@@ -430,12 +434,14 @@ jobs:
           name: ${{ env.COIN_NAME }}-macos-test-${{ needs.get-version.outputs.version }}
 
       - name: Run Unit Tests
+        id: Tests
         run: |
           chmod +x test_raptoreum
           ./test_raptoreum --log_format=JUNIT > unit_test_results.xml
 
       - name: Upload Test Artifacts
         uses: actions/upload-artifact@v3
+        if: always()
         with:
           name: ${{ env.COIN_NAME }}-macos-test-${{ needs.get-version.outputs.version }}
           path: unit_test_results.xml
@@ -445,7 +451,7 @@ jobs:
         if: always()
         with:
           check_name: "macOS 11"
-          detailed_summary: false
+          detailed_summary: ${{ steps.Tests.conclusion == 'failure'}}
           include_passed: false
           report_paths: 'unit_test_results.xml'
 
@@ -547,33 +553,23 @@ jobs:
   #       with:
   #         name: ${{ env.COIN_NAME }}-arm32-test-${{ needs.get-version.outputs.version }}
 
-  #     - name: Check Artifacts
-  #       uses: pguyot/arm-runner-action@v2
-  #       with:
-  #         base_image: raspios_lite:latest
-  #         cpu: cortex-a7
-  #         cpu_info: cpuinfo/raspberrypi_3b
-  #         commands: |
-  #            pwd
-  #            ls -lR
-
-  #     - name: Run Unit Tests
-  #       uses: pguyot/arm-runner-action@v2
+  #    - name: Run Unit Tests
+  #      id: Tests
+  #      uses: nandofw/arm-runner-action@v2.5.2
   #       with:
   #         base_image: raspios_lite:latest
   #         cpu: cortex-a7
   #         cpu_info: cpuinfo/raspberrypi_3b
   #         copy_artifact_dest: ${{ github.workspace }}
-  #         copy_artifact_path: unit_test_results.xml          
+  #         copy_artifact_path: unit_test_results.xml
+  #         copy_artifacts_on_fail: yes
   #         commands: |
-  #           pwd
-  #           ls -lR
   #           chmod +x test_raptoreum
   #           ./test_raptoreum --log_format=JUNIT > unit_test_results.xml
-  #           ls -lR
-
+  
   #     - name: Upload Test Artifacts
   #       uses: actions/upload-artifact@v3
+  #       if: always()
   #       with:
   #         name: ${{ env.COIN_NAME }}-arm32-test-${{ needs.get-version.outputs.version }}
   #         path: unit_test_results.xml
@@ -583,7 +579,7 @@ jobs:
   #       if: always()
   #       with:
   #         check_name: "ARM 32-bit"
-  #         detailed_summary: false
+  #         detailed_summary: ${{ steps.Tests.conclusion == 'failure'}}
   #         include_passed: false
   #         report_paths: 'unit_test_results.xml'
 
@@ -686,19 +682,21 @@ jobs:
           name: ${{ env.COIN_NAME }}-arm64-test-${{ needs.get-version.outputs.version }}
 
       - name: Run Unit Tests
-        uses: pguyot/arm-runner-action@v2
+        id: Tests
+        uses: nandofw/arm-runner-action@v2.5.2
         with:
           base_image: raspios_lite_arm64:latest
           cpu: cortex-a7
           copy_artifact_dest: ${{ github.workspace }}
-          copy_artifact_path: unit_test_results.xml          
-          cpu_info: cpuinfo/raspberrypi_4b
+          copy_artifact_path: unit_test_results.xml
+          copy_artifacts_on_fail: yes
           commands: |
              chmod +x test_raptoreum
              ./test_raptoreum --log_format=JUNIT > unit_test_results.xml
 
       - name: Upload Test Artifacts
         uses: actions/upload-artifact@v3
+        if: always()
         with:
           name: ${{ env.COIN_NAME }}-arm64-test-${{ needs.get-version.outputs.version }}
           path: unit_test_results.xml
@@ -708,7 +706,7 @@ jobs:
         if: always()
         with:
           check_name: "ARM 64-bit"
-          detailed_summary: false
+          detailed_summary: ${{ steps.Tests.conclusion == 'failure'}}
           include_passed: false
           report_paths: 'unit_test_results.xml'
 
@@ -827,6 +825,7 @@ jobs:
           dir
 
       - name: Run Unit Tests B
+        id: Tests
         run: |
           pwd
           dir
@@ -834,6 +833,7 @@ jobs:
 
       - name: Upload Test Artifacts
         uses: actions/upload-artifact@v3
+        if: always()
         with:
           name: ${{ env.COIN_NAME }}-win-test-${{ needs.get-version.outputs.version }}
           path: unit_test_results.xml
@@ -843,6 +843,6 @@ jobs:
         if: always()
         with:
           check_name: "Win64"
-          detailed_summary: false
+          detailed_summary: ${{ steps.Tests.conclusion == 'failure'}}
           include_passed: false
           report_paths: 'unit_test_results.xml'
