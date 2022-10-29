@@ -139,6 +139,7 @@ make
 
 # CLion
 .idea
+.vscode
 cmake-build-debug
 
 depends/built
