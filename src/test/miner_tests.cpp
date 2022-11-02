@@ -224,13 +224,13 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     std::vector<CTransactionRef> txFirst;
 
     auto createAndProcessEmptyBlock = [&]() {
-        int height = chainActive.Height();
+        int height = ::ChainActive().Height();
         BOOST_CHECK(pemptyblocktemplate = AssemblerForTest(chainparams).CreateNewBlock(scriptPubKey));
         CBlock *pblock = &pemptyblocktemplate->block; // pointer for convenience
         {
             LOCK(cs_main);
             pblock->nVersion = 2;
-            pblock->nTime = chainActive.Tip()->GetMedianTimePast() + 1;
+            pblock->nTime = ::ChainActive().Tip()->GetMedianTimePast() + 1;
             CMutableTransaction txCoinbase(*pblock->vtx[0]);
 
             if (!chainparams.GetConsensus().DIP0003Enabled) {
@@ -256,7 +256,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
                 pblock->nNonce++;
             }
             if (pblock->nNonce != blockinfo[height].nonce)
-                std::cout << std::endl << "height: " << height << " {0, 0x" << std::hex << fixed << setw(8) << setfill('0') << pblock->nNonce << std::dec << "}" << std::endl;
+                std::cout << std::endl << "height: " << height << " {0, 0x" << std::hex << std::fixed << std::setw(8) << std::setfill('0') << pblock->nNonce << std::dec << "}" << std::endl;
         }
         std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(*pblock);
         BOOST_CHECK(EnsureChainman(m_node).ProcessNewBlock(chainparams, shared_pblock, true, nullptr));

@@ -29,6 +29,8 @@ static size_t lastCheckMnCount = 0;
 static int lastCheckHeight = 0;
 static bool lastCheckedLowLLMQParams = false;
 
+static std::unique_ptr<CChainParams> globalChainParams;
+
 static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesisOutputScript, uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
 {
     CMutableTransaction txNew;
@@ -784,10 +786,10 @@ public:
         // long living quorum params
 				consensus.llmqs[Consensus::LLMQ_5_60] = Consensus::llmq3_60;
 				consensus.llmqs[Consensus::LLMQ_TEST_V17] = Consensus::llmq_test_v17;
-        consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
-        consensus.llmqs[Consensus::LLMQ_400_60] = llmq400_60;
-        consensus.llmqs[Consensus::LLMQ_400_85] = llmq400_85;
-        consensus.llmqs[Consensus::LLMQ_100_67] = llmq100_67_testnet;
+        consensus.llmqs[Consensus::LLMQ_50_60] = Consensus::llmq50_60;
+        consensus.llmqs[Consensus::LLMQ_400_60] = Consensus::llmq400_60;
+        consensus.llmqs[Consensus::LLMQ_400_85] = Consensus::llmq400_85;
+        // consensus.llmqs[Consensus::LLMQ_100_67] = Consensus::llmq100_67_testnet;
         consensus.llmqTypeChainLocks = Consensus::LLMQ_50_60;
         consensus.llmqTypeInstantSend = Consensus::LLMQ_50_60;
         consensus.llmqTypePlatform = Consensus::LLMQ_100_67;
@@ -908,11 +910,6 @@ void CDevNetParams::UpdateDevnetSubsidyAndDiffParametersFromArgs(const ArgsManag
     UpdateDevnetSubsidyAndDiffParameters(nMinimumDifficultyBlocks, nHighSubsidyBlocks, nHighSubsidyFactor);
 }
 
-void UpdateBIP66Parameters(bool active)
-{
-    globalChainParams->UpdateBIP66Parameters(active);
-}
-
 void CDevNetParams::UpdateDevnetLLMQChainLocksFromArgs(const ArgsManager& args)
 // void UpdateBudgetParameters(int nSmartnodePaymentsStartBlock, int nBudgetPaymentsStartBlock, int nSuperblockStartBlock)
 {
@@ -950,8 +947,6 @@ void CDevNetParams::UpdateDevnetLLMQInstantSendFromArgs(const ArgsManager& args)
     UpdateDevnetLLMQInstantSend(llmqType);
 }
 
-static std::unique_ptr<CChainParams> globalChainParams;
-
 const CChainParams &Params() {
     assert(globalChainParams);
     return *globalChainParams;
@@ -975,6 +970,12 @@ void SelectParams(const std::string& network)
 {
     SelectBaseParams(network);
     globalChainParams = CreateChainParams(network);
+}
+
+void UpdateBIP66Parameters(bool active)
+{
+		if(!globalChainParams) return
+    globalChainParams->UpdateBIP66Parameters(active);
 }
 
 void UpdateLLMQParams(size_t totalMnCount, int height, bool lowLLMQParams) {

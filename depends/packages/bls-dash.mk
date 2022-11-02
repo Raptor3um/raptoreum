@@ -7,7 +7,7 @@ $(package)_build_subdir=build
 $(package)_sha256_hash=94e49f3eaa29bc1f354cd569c00f4f4314d1c8ab4758527c248b67da9686135a
 $(package)_dependencies=gmp cmake
 $(package)_darwin_triplet=x86_64-apple-darwin19
-$(package)_patches=bls-dash_gcc11.patch bls-dash_dynamic_libs.patch
+# $(package)_patches=bls-dash_gcc11.patch bls-dash_dynamic_libs.patch
 
 $(package)_relic_version=aecdcae7956f542fbee2392c1f0feb0a8ac41dc5
 $(package)_relic_download_path=https://github.com/relic-toolkit/relic/archive
@@ -57,8 +57,6 @@ define $(package)_set_vars
 endef
 
 define $(package)_preprocess_cmds
-  patch -p1 -i $($(package)_patch_dir)/bls-dash_gcc11.patch && \
-  patch -p1 -i $($(package)_patch_dir)/bls-dash_dynamic_libs.patch && \
   sed -i.old "s|GIT_REPOSITORY https://github.com/Chia-Network/relic.git|URL \"../../relic-$($(package)_relic_version).tar.gz\"|" CMakeLists.txt && \
   sed -i.old "s|RELIC_GIT_TAG \".*\"|RELIC_GIT_TAG \"\"|" CMakeLists.txt
 endef

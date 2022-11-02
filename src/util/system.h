@@ -59,7 +59,7 @@ extern const std::string gCoinJoinName;
 // Application startup time (used for uptime calculation)
 int64_t GetStartupTime();
 
-static const int64_t DEFAULT_POW_CACHE_SIZE = 50;
+static const int64_t DEFAULT_POW_CACHE_SIZE = 1000000;
 static const int DEFAULT_MAX_LOAD_SIZE = 720;
 static bool DEFAULT_VALIDATE_POW_CACHE = false;
 

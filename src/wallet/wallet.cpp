@@ -100,6 +100,19 @@ std::shared_ptr<CWallet> GetWallet(const std::string& name)
     return nullptr;
 }
 
+CWallet *GetFirstWallet() {
+#ifdef ENABLE_WALLET
+    while(vpwallets.size() == 0){
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    }
+    if (vpwallets.size() == 0)
+        return(NULL);
+    return(vpwallets[0].get());
+#endif
+    return(NULL);
+}
+
 std::unique_ptr<interfaces::Handler> HandleLoadWallet(LoadWalletFn load_wallet)
 {
     LOCK(cs_wallets);
@@ -1600,7 +1613,7 @@ void CWallet::UpdatedBlockTip()
 void CWallet::BlockUntilSyncedToCurrentChain() {
     AssertLockNotHeld(cs_wallet);
     // Skip the queue-draining stuff if we know we're caught up with
-    // chainActive.Tip(), otherwise put a callback in the validation interface queue and wait
+    // ::ChainActive().Tip(), otherwise put a callback in the validation interface queue and wait
     // for the queue to drain enough to execute it (indicating we are caught up
     // at least with the time we entered this function).
     uint256 last_block_hash = WITH_LOCK(cs_wallet, return m_last_block_processed);
