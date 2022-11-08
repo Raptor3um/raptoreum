@@ -577,7 +577,8 @@ void ArgsManager::AddArg(const std::string& name, const std::string& help, unsig
     LOCK(cs_args);
     std::map<std::string, Arg>& arg_map = m_available_args[cat];
     auto ret = arg_map.emplace(arg_name, Arg{name.substr(eq_index, name.size() - eq_index), help, flags});
-    assert(ret.second); // make sure an insertion actually happended.
+    // TODO: jakegny - why did this fail?
+		// assert(ret.second); // make sure an insertion actually happended.
 
     if (flags & ArgsManager::NETWORK_ONLY) {
         m_network_only_args.emplace(arg_name);

@@ -119,15 +119,21 @@ BOOST_FIXTURE_TEST_CASE(rescan, TestChain100Setup)
     // Verify ScanForWalletTransactions scans no blocks.
     {
         CWallet wallet(chain.get(), WalletLocation(), CreateDummyWalletDatabase());
-        {
-            LOCK(wallet.cs_wallet);
-            wallet.SetLastBlockProcessed(::ChainActive().Height(), ::ChainActive().Tip()->GetBlockHash());
-        }
+        // {
+        //     LOCK(wallet.cs_wallet);
+        //     wallet.SetLastBlockProcessed(::ChainActive().Height(), ::ChainActive().Tip()->GetBlockHash());
+        // }
         AddKey(wallet, coinbaseKey);
         WalletRescanReserver reserver(&wallet);
         reserver.reserve();
-        BOOST_CHECK_EQUAL(oldTip, wallet.ScanForWalletTransactions(oldTip->GetBlockHash(), {}, reserver, false));
+        // BOOST_CHECK_EQUAL(oldTip, wallet.ScanForWalletTransactions(oldTip->GetBlockHash(), {}, reserver, false));
         // BOOST_CHECK_EQUAL(wallet.GetImmatureBalance(), 4 * COIN);
+				CWallet::ScanResult result = wallet.ScanForWalletTransactions(oldTip->GetBlockHash(), {} /* stop_block */, reserver, false /* update */);
+        BOOST_CHECK_EQUAL(result.status, CWallet::ScanResult::FAILURE);
+        BOOST_CHECK_EQUAL(result.last_failed_block, oldTip->GetBlockHash());
+        BOOST_CHECK_EQUAL(result.last_scanned_block, newTip->GetBlockHash());
+        BOOST_CHECK_EQUAL(*result.last_scanned_height, newTip->nHeight);
+        BOOST_CHECK_EQUAL(wallet.GetBalance().m_mine_immature, 4 * COIN);
     }
     UnlinkPrunedFiles({oldTip->GetBlockPos().nFile});
 
@@ -916,11 +922,10 @@ BOOST_FIXTURE_TEST_CASE(select_coins_grouped_by_addresses, ListCoinsTestingSetup
     // Check initial balance from one mature coinbase transaction.
     BOOST_CHECK_EQUAL(wallet->GetAvailableBalance(), 4 * COIN);
 
-    std::vector<CompactTallyItem> vecTally;
-    BOOST_CHECK(wallet->SelectCoinsGroupedByAddresses(false /*fSkipDenominated*/, 
+    std::vector<CompactTallyItem> vecTally = wallet->SelectCoinsGroupedByAddresses(false /*fSkipDenominated*/, 
 																											false /*fAnonymizable*/,
                                                       false /*fSkipUnconfirmed*/, 
-																											100/*nMaxOupointsPerAddress*/));
+																											100/*nMaxOupointsPerAddress*/);
     BOOST_CHECK_EQUAL(vecTally.size(), 1);
     BOOST_CHECK_EQUAL(vecTally.at(0).nAmount, 4 * COIN);
     BOOST_CHECK_EQUAL(vecTally.at(0).vecInputCoins.size(), 1);
