@@ -5,6 +5,7 @@ on:
       - master
       - develop
       - 'ft/*'
+      - 'bug/*'
       - 'release/*'
   pull_request:
     branches:
@@ -38,7 +39,7 @@ jobs:
         id: selected-version
         shell: bash
         run: |
-          if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]] || [[ "$GITHUB_REF" == *develop ]] || [[ "$GITHUB_REF" == *ft/* ]]; then
+          if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]] || [[ "$GITHUB_REF" == *develop ]] || [[ "$GITHUB_REF" == *ft/* ]] || [[ "$GITHUB_REF" == *bug/* ]]; then
               version=${{ steps.versions.outputs.snapshot-version }}
           elif [[ "$GITHUB_EVENT_NAME" != "pull_request" ]] && [[ "$GITHUB_REF" == *"release/"* ]]; then
               version=${{ steps.versions.outputs.candidate-version }}
