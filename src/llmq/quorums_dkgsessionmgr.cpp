@@ -235,7 +235,7 @@ bool CDKGSessionManager::GetVerifiedContributions(Consensus::LLMQType llmqType, 
                 CBLSSecretKey skContribution;
                 if (!llmqDb.Read(std::make_tuple(DB_VVEC, llmqType, pindexQuorum->GetBlockHash(), proTxHash), *vvecPtr)) {
                     LogPrint(BCLog::LLMQ, "CDKGSessionManager::%s -- llmqDb.Read unable to read DB_VEC for block %s, protxHash %s\n", __func__, pindexQuorum->GetBlockHash().ToString(), proTxHash.GetHex());
-                    return false;
+                    //return false; uncommented this out to match what we have in 1.2.15.x
                 }
                 llmqDb.Read(std::make_tuple(DB_SKCONTRIB, llmqType, pindexQuorum->GetBlockHash(), proTxHash), skContribution);
 

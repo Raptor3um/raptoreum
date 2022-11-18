@@ -182,7 +182,8 @@ static void VerifyGenesisPOW(const CBlock& genesis)
             if (genesis.nNonce != block.nNonce)
             {
                 std::cerr << "VerifyGenesisPOW:  provided nNonce (" << genesis.nNonce << ") invalid" << std::endl;
-                std::cerr << "   nonce: " << block.nNonce << ", hash: 0x" << hash.ToString() << std::endl;
+                std::cerr << "   nonce: " << block.nNonce << ", pow hash: 0x" << hash.ToString()
+                          << ", block hash: 0x" << block.GetHash().ToString() << std::endl;
                 assert(genesis.nNonce == block.nNonce);
             }
             else
@@ -572,16 +573,7 @@ public:
         assert(consensus.hashGenesisBlock == uint256S("0xb79e5df07278b9567ada8fc655ffbfa9d3f586dc38da3dd93053686f41caeea0"));
         assert(genesis.hashMerkleRoot == uint256S("0x87a48bc22468acdd72ee540aab7c086a5bbcddc12b51c6ac925717a74c269453"));
 
-        vSeeds.emplace_back("seed00.raptoreum.com");
-        vSeeds.emplace_back("seed01.raptoreum.com");
-        vSeeds.emplace_back("seed02.raptoreum.com");
-        vSeeds.emplace_back("seed03.raptoreum.com");
-        vSeeds.emplace_back("seed04.raptoreum.com");
-        vSeeds.emplace_back("seed05.raptoreum.com");
-        vSeeds.emplace_back("seed06.raptoreum.com");
-        vSeeds.emplace_back("ger1.raptoreum.com");
-        vSeeds.emplace_back("ny1.raptoreum.com");
-
+        vSeeds.emplace_back("lbdn.raptoreum.com");
 
         // Raptoreum addresses start with 'r'
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,60);
@@ -726,13 +718,13 @@ public:
         pchMessageStart[1] = 0x72; //r
         pchMessageStart[2] = 0x74; //t
         pchMessageStart[3] = 0x6d; //m
-        nDefaultPort = 10228;
+        nDefaultPort = 10229;
         nPruneAfterHeight = 1000;
-        genesis = CreateGenesisBlock(1645942755, 387, 0x20001fff, 4, 5000 * COIN);
+        genesis = CreateGenesisBlock(1668574674, 352, 0x20001fff, 4, 5000 * COIN);
         VerifyGenesisPOW(genesis);
 
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x99f1aeb781d780f51aee4247b23eb91d561f6fb8c9e761a9f1ebc72212b4ebf0"));
+        assert(consensus.hashGenesisBlock == uint256S("0x16b418c4e84599ba61836085c5b780c199f90c207f7de189cbb56803e87529eb"));
         assert(genesis.hashMerkleRoot == uint256S("0x87a48bc22468acdd72ee540aab7c086a5bbcddc12b51c6ac925717a74c269453"));
 
         vFixedSeeds.clear();
@@ -740,11 +732,8 @@ public:
 
         vSeeds.clear();
         // nodes with support for servicebits filtering should be at the top
-        vSeeds.emplace_back("47.151.7.226");
-        //vSeeds.emplace_back("62.171.153.224", true);
-        //vSeeds.emplace_back("98.38.235.195", true);
-        //vSeeds.emplace_back("ger1.raptoreum.com", true);
-        //vSeeds.emplace_back("ny1.raptoreum.com", true);
+        vSeeds.emplace_back("47.155.87.132");
+        vSeeds.emplace_back("lbdn.raptoreum.com");
 
         // Testnet Raptoreum addresses start with 'r'
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,123);
@@ -772,7 +761,7 @@ public:
         consensus.llmqTypePlatform = Consensus::LLMQ_100_67;
 
         consensus.nCollaterals = SmartnodeCollaterals(
-          {  {30000, 20000 * COIN}, {60000, 40000 * COIN}, {INT_MAX, 60000 * COIN}  },
+          {  {INT_MAX, 60000 * COIN}  },
           {  {INT_MAX, 20}  });
 
         consensus.nFutureRewardShare = Consensus::FutureRewardShare(0.8,0.2,0.0);
@@ -787,7 +776,7 @@ public:
         fAllowMultipleAddressesFromGroup = false;
         fAllowMultiplePorts = true;
         nLLMQConnectionRetryTimeout = 60;
-        miningRequiresPeers = true;
+        miningRequiresPeers = false;
 
         nPoolMinParticipants = 3;
         nPoolNewMinParticipants = 2;
@@ -1185,7 +1174,7 @@ void CChainParams::UpdateLLMQParams(size_t totalMnCount, int height, bool lowLLM
         lastCheckMnCount = totalMnCount;
 		lastCheckedLowLLMQParams = lowLLMQParams;
 		lastCheckHeight = height;
-        bool isTestNet = strcmp(Params().NetworkIDString().c_str(),"testnet") == 0;
+        bool isTestNet = strcmp(Params().NetworkIDString().c_str(),"test") == 0;
 		if(totalMnCount < 5) {
 			consensus.llmqs[Consensus::LLMQ_50_60] = llmq3_60;
 			if(isTestNet) {
@@ -1199,7 +1188,7 @@ void CChainParams::UpdateLLMQParams(size_t totalMnCount, int height, bool lowLLM
 			consensus.llmqs[Consensus::LLMQ_50_60] = llmq10_60;
 			consensus.llmqs[Consensus::LLMQ_400_60] = llmq20_60;
 			consensus.llmqs[Consensus::LLMQ_400_85] = llmq20_85;
-		}  else if(totalMnCount < 600) {
+		}  else if((totalMnCount < 4000 && isTestNet) || (totalMnCount < 600 && !isTestNet)) {
 			consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
 			consensus.llmqs[Consensus::LLMQ_400_60] = llmq40_60;
 			consensus.llmqs[Consensus::LLMQ_400_85] = llmq40_85;
