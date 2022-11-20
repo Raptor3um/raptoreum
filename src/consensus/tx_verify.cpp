@@ -44,6 +44,9 @@ static bool checkSpecialTxFee(const CTransaction &tx, CAmount& nFeeTotal, CAmoun
             case TRANSACTION_NEW_ASSET:{
                 CNewAssetTx asset;
                 if(GetTxPayload(tx.vExtraPayload, asset)) {
+                    if(!Params().IsAssetsActive(chainActive.Tip())) {
+                        return false;
+                    }
                     bool assetsEnabled = sporkManager.IsSporkActive(SPORK_22_SPECIAL_TX_FEE);
                     if(assetsEnabled && fFeeVerify && asset.fee != getAssetsFees()){
                         return false;
