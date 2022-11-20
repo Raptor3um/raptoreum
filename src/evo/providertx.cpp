@@ -117,16 +117,16 @@ bool CheckNewAssetTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVal
         return state.DoS(100, false, REJECT_INVALID, "bad-assets-type");
     }
 
-    CNewAssetTx ftx;
-    if (!GetTxPayload(tx, ftx)) {
+    CNewAssetTx assettx;
+    if (!GetTxPayload(tx, assettx)) {
         return state.DoS(100, false, REJECT_INVALID, "bad-assets-payload");
     }
 
-    if (ftx.nVersion == 0 || ftx.nVersion > CNewAssetTx::CURRENT_VERSION) {
+    if (assettx.nVersion == 0 || assettx.nVersion > CNewAssetTx::CURRENT_VERSION) {
         return state.DoS(100, false, REJECT_INVALID, "bad-assets-version");
     }
     
-    if (!CheckInputsHash(tx, ftx, state)) {
+    if (!CheckInputsHash(tx, assettx, state)) {
         return false;
     }
 
