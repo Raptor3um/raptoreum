@@ -107,6 +107,32 @@ bool CheckFutureTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
     return true;
 }
 
+bool CheckNewAssetTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state)
+{
+
+    if(!Params().IsAssetsActive(chainActive.Tip())) {
+        return state.DoS(100, false, REJECT_INVALID, "assets-not-enabled");
+    }
+    if (tx.nType != TRANSACTION_NEW_ASSET) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-assets-type");
+    }
+
+    CNewAssetTx ftx;
+    if (!GetTxPayload(tx, ftx)) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-assets-payload");
+    }
+
+    if (ftx.nVersion == 0 || ftx.nVersion > CNewAssetTx::CURRENT_VERSION) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-assets-version");
+    }
+    
+    if (!CheckInputsHash(tx, ftx, state)) {
+        return false;
+    }
+
+    return true;
+}
+
 bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, const CCoinsViewCache& view)
 {
     if (tx.nType != TRANSACTION_PROVIDER_REGISTER) {
