@@ -151,13 +151,11 @@ BOOST_AUTO_TEST_SUITE(assets_creation_tests)
 BOOST_FIXTURE_TEST_CASE(assets_creation, TestChainDIP3BeforeActivationSetup)
 {
     auto utxos = BuildSimpleUtxoMap(coinbaseTxns);
-//CreateNewAssetTx(SimpleUTXOMap& utxos, std::string name, bool updatable, bool is_unique, CAmount amount)
-//{
+
     auto tx = CreateNewAssetTx(utxos, coinbaseKey,"Test Asset", true, false, 1000);
     std::vector<CMutableTransaction> txns = {tx};
 
     int nHeight = chainActive.Height();
-    std::cout <<  nHeight << endl;
 
     // Mining a block with a asset create transaction
     auto block = std::make_shared<CBlock>(CreateBlock(txns, coinbaseKey));
