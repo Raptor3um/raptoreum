@@ -27,21 +27,33 @@ extern CChain& chainActive;
 static bool checkSpecialTxFee(const CTransaction &tx, CAmount& nFeeTotal, CAmount& specialTxFee, bool fFeeVerify = false) {
 	if(tx.nVersion >= 3) {
 		switch(tx.nType){
-		case TRANSACTION_FUTURE:
-			CFutureTx ftx;
-			if(GetTxPayload(tx.vExtraPayload, ftx)) {
-                if(!Params().IsFutureActive(chainActive.Tip())) {
-                    return false;
+            case TRANSACTION_FUTURE:{
+                CFutureTx ftx;
+                if(GetTxPayload(tx.vExtraPayload, ftx)) {
+                    if(!Params().IsFutureActive(chainActive.Tip())) {
+                        return false;
+                    }
+                    bool futureEnabled = sporkManager.IsSporkActive(SPORK_22_SPECIAL_TX_FEE);
+                    if(futureEnabled && fFeeVerify && ftx.fee != getFutureFees()) {
+                        return false;
+                    }
+                    specialTxFee = ftx.fee * COIN;
+                    nFeeTotal -= specialTxFee;
                 }
-                bool futureEnabled = sporkManager.IsSporkActive(SPORK_22_SPECIAL_TX_FEE);
-                if(futureEnabled && fFeeVerify && ftx.fee != getFutureFees()) {
-                    return false;
+            }
+            case TRANSACTION_NEW_ASSET:{
+                CNewAssetTx asset;
+                if(GetTxPayload(tx.vExtraPayload, asset)) {
+                    bool assetsEnabled = sporkManager.IsSporkActive(SPORK_22_SPECIAL_TX_FEE);
+                    if(assetsEnabled && fFeeVerify && asset.fee != getAssetsFees()){
+                        return false;
+                    }
+                    specialTxFee = asset.fee  * COIN;
+                    nFeeTotal -= specialTxFee;
                 }
-                specialTxFee = ftx.fee * COIN;
-                nFeeTotal -= specialTxFee;
-			}
-			break;
-		}
+            }
+            break;
+        }
 	}
     return true;
 }
