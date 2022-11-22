@@ -298,8 +298,8 @@ public:
     uint16_t nVersion{CURRENT_VERSION};// message version
     std::string Name;
     bool updatable = true;//if true this asset meta can be modify using assetTx update process. 
-    bool isunique = false;//true if this is asset is unique it has an identity per token (NFT flag)
-    uint8_t Decimalpoint = 0;
+    bool isUnique = false;//true if this is asset is unique it has an identity per token (NFT flag)
+    uint8_t decimalPoint = 0;
     std::string referenceHash; //hash of the underlying physical or digital assets, IPFS hash can be used here.
     uint16_t fee; // fee was paid for this asset creation in addition to miner fee. it is a whole non-decimal point value.
     //  distribution
@@ -324,8 +324,8 @@ public:
         READWRITE(nVersion);
         READWRITE(Name);
         READWRITE(updatable);
-        READWRITE(isunique);
-        READWRITE(Decimalpoint);
+        READWRITE(isUnique);
+        READWRITE(decimalPoint);
         READWRITE(referenceHash);
         READWRITE(fee);
         READWRITE(type);
@@ -348,15 +348,19 @@ public:
         obj.setObject();
         obj.pushKV("version", nVersion);
         obj.pushKV("Name", Name);
-        obj.pushKV("Isunique", isunique); 
+        obj.pushKV("Isunique", isUnique); 
         obj.pushKV("Updatable", updatable);  
-        obj.pushKV("Decimalpoint", (int) Decimalpoint);
+        obj.pushKV("Decimalpoint", (int) decimalPoint);
         obj.pushKV("ReferenceHash", referenceHash);
         obj.pushKV("fee", fee);
         obj.pushKV("Type", type);
         obj.pushKV("TargetAddress", EncodeDestination(targetAddress));
         obj.pushKV("ownerAddress", EncodeDestination(ownerAddress));
-        obj.pushKV("collateralAddress", EncodeDestination(collateralAddress));
+        if( collateralAddress.IsNull()){
+            obj.pushKV("collateralAddress", "N/A");
+        }else{
+            obj.pushKV("collateralAddress", EncodeDestination(collateralAddress));
+        }
         obj.pushKV("IssueFrequency", issueFrequency);
         obj.pushKV("Amount", Amount);
         obj.pushKV("exChainType", exChainType);
