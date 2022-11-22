@@ -91,7 +91,7 @@ static void SignTransaction(CMutableTransaction& tx, const CKey& coinbaseKey)
     }
 }
 
-static CMutableTransaction CreateNewAssetTx(SimpleUTXOMap& utxos, const CKey& coinbaseKey, std::string name, bool updatable, bool is_unique, CAmount amount)
+static CMutableTransaction CreateNewAssetTx(SimpleUTXOMap& utxos, const CKey& coinbaseKey, std::string name, bool updatable, bool is_unique, uint8_t type, uint8_t decimalPoint, CAmount amount)
 {
     CKey Key;
     Key.MakeNewKey(false);
@@ -100,14 +100,14 @@ static CMutableTransaction CreateNewAssetTx(SimpleUTXOMap& utxos, const CKey& co
 
     newasset.Name = name;
     newasset.updatable = updatable;
-    newasset.isunique = is_unique;
-    newasset.Decimalpoint = 8;
+    newasset.isUnique = is_unique;
+    newasset.decimalPoint = decimalPoint;
     newasset.referenceHash = "";
-    newasset.type = 0;
+    newasset.type = type;
     newasset.fee = 100; //spork is off any value is valid
     newasset.targetAddress = ownerKey;
     newasset.ownerAddress = ownerKey;
-    newasset.Amount = amount;
+    newasset.Amount = amount * COIN;
     //newasset.collateralAddress = CKey();
 
     CMutableTransaction tx;
@@ -129,30 +129,13 @@ static CScript GenerateRandomAddress()
     return GetScriptForDestination(key.GetPubKey().GetID());
 }
 
-
-static bool CheckTransactionSignature(const CMutableTransaction& tx)
-{
-    for (unsigned int i = 0; i < tx.vin.size(); i++) {
-        const auto& txin = tx.vin[i];
-        CTransactionRef txFrom;
-        uint256 hashBlock;
-        BOOST_ASSERT(GetTransaction(txin.prevout.hash, txFrom, Params().GetConsensus(), hashBlock));
-
-        CAmount amount = txFrom->vout[txin.prevout.n].nValue;
-        if (!VerifyScript(txin.scriptSig, txFrom->vout[txin.prevout.n].scriptPubKey, STANDARD_SCRIPT_VERIFY_FLAGS, MutableTransactionSignatureChecker(&tx, i, amount))) {
-            return false;
-        }
-    }
-    return true;
-}
-
 BOOST_AUTO_TEST_SUITE(assets_creation_tests)
 
 BOOST_FIXTURE_TEST_CASE(assets_creation, TestChainDIP3BeforeActivationSetup)
 {
     auto utxos = BuildSimpleUtxoMap(coinbaseTxns);
 
-    auto tx = CreateNewAssetTx(utxos, coinbaseKey,"Test Asset", true, false, 1000);
+    auto tx = CreateNewAssetTx(utxos, coinbaseKey,"Test Asset", true, false, 0, 8, 1000);
     std::vector<CMutableTransaction> txns = {tx};
 
     int nHeight = chainActive.Height();
@@ -163,6 +146,30 @@ BOOST_FIXTURE_TEST_CASE(assets_creation, TestChainDIP3BeforeActivationSetup)
 
     BOOST_ASSERT(chainActive.Height() == nHeight + 1);
     BOOST_ASSERT(block->GetHash() == chainActive.Tip()->GetBlockHash());
+
+    //invalid asset name
+    tx = CreateNewAssetTx(utxos, coinbaseKey,"*Test_Asset*", true, false, 0, 8, 1000);
+    txns = {tx};
+    block = std::make_shared<CBlock>(CreateBlock(txns, coinbaseKey));
+    //block should be rejected
+    ProcessNewBlock(Params(), block, true, nullptr);
+    BOOST_ASSERT(chainActive.Height() == nHeight + 1);
+
+    //invalid distribution type
+    tx = CreateNewAssetTx(utxos, coinbaseKey,"Test Asset", true, false, 5, 8, 1000);
+    txns = {tx};
+    block = std::make_shared<CBlock>(CreateBlock(txns, coinbaseKey));
+    //block should be rejected
+    ProcessNewBlock(Params(), block, true, nullptr);
+    BOOST_ASSERT(chainActive.Height() == nHeight + 1);
+
+   //invalid decimalPoint
+    tx = CreateNewAssetTx(utxos, coinbaseKey,"Test Asset", true, false, 0, 9, 1000);
+    txns = {tx};
+    block = std::make_shared<CBlock>(CreateBlock(txns, coinbaseKey));
+    //block should be rejected
+    ProcessNewBlock(Params(), block, true, nullptr);
+    BOOST_ASSERT(chainActive.Height() == nHeight + 1);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

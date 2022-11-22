@@ -107,12 +107,24 @@ bool CheckFutureTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
     return true;
 }
 
+#include <regex>
+static const std::regex name_characters("^[a-zA-Z0-9 ]{3,}$");
+static const std::regex rtm_names("^RTM$|^RAPTOREUM$|^wRTM$|^WRTM$|^RTMcoin$|^RTMCOIN$");
+
+//temporary function need to be moved to a beter location
+static bool IsAssetNameValid(std::string name){ 
+    if (name.length() < 3 || name.length() > 128) return false;
+    return std::regex_match(name, name_characters) && !std::regex_match(name, rtm_names);
+
+}
+
 bool CheckNewAssetTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state)
 {
 
     if(!Params().IsAssetsActive(chainActive.Tip())) {
         return state.DoS(100, false, REJECT_INVALID, "assets-not-enabled");
     }
+
     if (tx.nType != TRANSACTION_NEW_ASSET) {
         return state.DoS(100, false, REJECT_INVALID, "bad-assets-type");
     }
@@ -125,12 +137,46 @@ bool CheckNewAssetTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVal
     if (assettx.nVersion == 0 || assettx.nVersion > CNewAssetTx::CURRENT_VERSION) {
         return state.DoS(100, false, REJECT_INVALID, "bad-assets-version");
     }
+
+    //validate asset name
+    if(!IsAssetNameValid(assettx.Name)){
+        return state.DoS(100, false, REJECT_INVALID, "bad-assets-name");
+    }
+
+    //Check if a asset already exist with give name
+    /* if(CheckIfAssetExists(assettx.Name)){
+        return state.DoS(100, false, REJECT_INVALID, "bad-assets-dup-name");
+    }*/
+
+    if(assettx.decimalPoint < 0 || assettx.decimalPoint > 8){
+        return state.DoS(100, false, REJECT_INVALID, "bad-assets-decimalPoint"); 
+    }
+
+    if(assettx.ownerAddress.IsNull()){
+        return state.DoS(100, false, REJECT_INVALID, "bad-assets-ownerAddress"); 
+    }
+
+    if(assettx.targetAddress.IsNull()){
+        return state.DoS(100, false, REJECT_INVALID, "bad-assets-targetAddress"); 
+    }
+    
+    if(assettx.type < 0 && assettx.type > 3){
+        return state.DoS(100, false, REJECT_INVALID, "bad-assets-distibution-type");
+    }
+    
+    if(assettx.collateralAddress.IsNull() && assettx.type != 0){ //
+        return state.DoS(100, false, REJECT_INVALID, "bad-assets-collateralAddress"); 
+    }
+
+    if(assettx.Amount % int64_t(pow(10, (8 - assettx.decimalPoint))) != 0){
+        return state.DoS(100, false, REJECT_INVALID, "bad-assets-amount");
+    }
     
     if (!CheckInputsHash(tx, assettx, state)) {
         return false;
     }
 
-    return true;
+     return true;
 }
 
 bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, const CCoinsViewCache& view)
