@@ -172,4 +172,9 @@ void SelectParams(const std::string& chain);
 
 void UpdateLLMQParams(size_t totalMnCount, int height, bool lowLLMQParams = false);
 
+/**
+ * Allows modifying the BIP66 regtest parameters.
+ */
+void UpdateBIP66Parameters(bool active);
+
 #endif // BITCOIN_CHAINPARAMS_H

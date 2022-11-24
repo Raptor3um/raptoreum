@@ -972,6 +972,13 @@ void SelectParams(const std::string& network)
     globalChainParams = CreateChainParams(network);
 }
 
+void CChainParams::UpdateBIP66Parameters(bool active)
+{
+    if (strcmp(Params().NetworkIDString().c_str(),"regtest") == 0){
+        consensus.BIP66Enabled = active;
+    }
+}
+
 void UpdateBIP66Parameters(bool active)
 {
 		if(!globalChainParams) return
