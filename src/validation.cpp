@@ -48,6 +48,7 @@
 
 #include <llmq/quorums_instantsend.h>
 #include <llmq/quorums_chainlocks.h>
+#include <llmq/quorums_utils.h>
 
 #include <statsd_client.h>
 
@@ -2740,6 +2741,14 @@ void static UpdateTip(const CBlockIndex *pindexNew, const CChainParams& chainPar
             DoWarning(strWarning);
         }
     }
+
+    // create quorum member list at the quorum init block to avoid sync issues
+    for(const auto& p : Params().GetConsensus().llmqs) {
+        if(pindexNew->nHeight % p.second.dkgInterval == 0){
+            auto members = llmq::CLLMQUtils::GetAllQuorumMembers(p.first, pindexNew);
+        }
+    }
+    
     std::string strMessage = strprintf("%s: new best=%s height=%d version=0x%08x log2_work=%.8f tx=%lu date='%s' progress=%f cache=%.1fMiB(%utxo)", __func__,
       pindexNew->GetBlockHash().ToString(), pindexNew->nHeight, pindexNew->nVersion,
       log(pindexNew->nChainWork.getdouble())/log(2.0), (unsigned long)pindexNew->nChainTx,
