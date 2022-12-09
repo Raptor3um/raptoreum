@@ -1335,7 +1335,7 @@ void CDKGSession::RelayInvToParticipants(const CInv& inv) const
         auto verifiedProRegTxHash = pnode->GetVerifiedProRegTxHash();
         if (pnode->qwatch) {
             relay = true;
-        } else if (!verifiedProRegTxHash.IsNull() && relayMembers.count(verifiedProRegTxHash)) {
+        } else if (!verifiedProRegTxHash.IsNull() && membersMap.count(verifiedProRegTxHash)) {
             relay = true;
         }
         if (relay) {
