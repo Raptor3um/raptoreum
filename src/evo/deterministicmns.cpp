@@ -797,7 +797,11 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
             auto dmnState = std::make_shared<CDeterministicMNState>(proTx);
             dmnState->nRegisteredHeight = nHeight;
             //set the collateral amount
-            dmnState->ncollateralamount = coin.out.nValue;
+            if (proTx.collateralOutpoint.hash.IsNull()) {
+               dmnState->ncollateralamount = tx.vout[proTx.collateralOutpoint.n].nValue;
+            } else{
+                dmnState->ncollateralamount = coin.out.nValue;   
+            }
             if (proTx.addr == CService()) {
                 // start in banned pdmnState as we need to wait for a ProUpServTx
                 dmnState->BanIfNotBanned(nHeight);
