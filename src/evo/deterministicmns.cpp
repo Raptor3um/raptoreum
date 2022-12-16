@@ -129,7 +129,7 @@ bool CDeterministicMNList::IsMNPoSeBanned(const uint256& proTxHash) const
 bool CDeterministicMNList::IsMNValid(const CDeterministicMNCPtr& dmn, int height)
 {
     SmartnodeCollaterals collaterals = Params().GetConsensus().nCollaterals;
-    return !IsMNPoSeBanned(dmn) && collaterals.isPayableCollateral(height, dmn->pdmnState->ncollateralamount);
+    return !IsMNPoSeBanned(dmn) && collaterals.isPayableCollateral(height, dmn->pdmnState->nCollateralAmount);
 }
 
 bool CDeterministicMNList::IsMNValid(const CDeterministicMNCPtr& dmn)
@@ -301,7 +301,7 @@ std::vector<std::pair<arith_uint256, CDeterministicMNCPtr>> CDeterministicMNList
 {
     std::vector<std::pair<arith_uint256, CDeterministicMNCPtr>> scores;
     scores.reserve(GetAllMNsCount());
-    ForEachMN(true, [&](const CDeterministicMNCPtr& dmn) {
+    ForEachMN(true, nHeight,[&](const CDeterministicMNCPtr& dmn) {
         if (dmn->pdmnState->confirmedHash.IsNull()) {
             // we only take confirmed MNs into account to avoid hash grinding on the ProRegTxHash to sneak MNs into a
             // future quorums
@@ -798,9 +798,9 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
             dmnState->nRegisteredHeight = nHeight;
             //set the collateral amount
             if (proTx.collateralOutpoint.hash.IsNull()) {
-               dmnState->ncollateralamount = tx.vout[proTx.collateralOutpoint.n].nValue;
+               dmnState->nCollateralAmount = tx.vout[proTx.collateralOutpoint.n].nValue;
             } else{
-                dmnState->ncollateralamount = coin.out.nValue;   
+                dmnState->nCollateralAmount = coin.out.nValue;   
             }
             if (proTx.addr == CService()) {
                 // start in banned pdmnState as we need to wait for a ProUpServTx
