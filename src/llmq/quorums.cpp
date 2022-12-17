@@ -704,14 +704,14 @@ void CQuorumManager::ProcessMessage(CNode* pFrom, const std::string& strCommand,
         // Check if request has ENCRYPTED_CONTRIBUTIONS data
         if (request.GetDataMask() & CQuorumDataRequest::ENCRYPTED_CONTRIBUTIONS) {
 
-/*
+
             if (WITH_LOCK(pQuorum->cs, return pQuorum->quorumVvec->size() != pQuorum->params.threshold)) {
                 errorHandler("No valid quorum verification vector available", 0); // Don't bump score because we asked for it
                 return;
             }
 
-*/
-            BLSVerificationVectorPtr quorumVvecCopy;
+
+/*            BLSVerificationVectorPtr quorumVvecCopy;
             int thresholdCopy;
             {
                 LOCK(pQuorum->cs);
@@ -734,8 +734,7 @@ void CQuorumManager::ProcessMessage(CNode* pFrom, const std::string& strCommand,
                 errorHandler("Quorum not fully qualified", 0); // Don't bump score because we asked for it
                 return;
             }
-
-
+*/
             int memberIdx = pQuorum->GetMemberIndex(request.GetProTxHash());
             if (memberIdx == -1) {
                 errorHandler("Not a member of the quorum", 0); // Don't bump score because we asked for it
