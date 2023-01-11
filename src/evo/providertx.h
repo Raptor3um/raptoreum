@@ -398,7 +398,6 @@ public:
     uint256 externalTxid;
     uint16_t externalConfirmations = 0;
     uint256 inputsHash; // replay protection
-    std::vector<unsigned char> vchSig;
 
 public:
     ADD_SERIALIZE_METHODS;
@@ -421,9 +420,6 @@ public:
         READWRITE(externalTxid);
         READWRITE(externalConfirmations);
         READWRITE(inputsHash);
-        if (!(s.GetType() & SER_GETHASH)) {
-            READWRITE(vchSig);
-        }
     }
 
     std::string ToString() const;
