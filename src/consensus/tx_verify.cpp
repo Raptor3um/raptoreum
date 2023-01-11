@@ -55,6 +55,20 @@ static bool checkSpecialTxFee(const CTransaction &tx, CAmount& nFeeTotal, CAmoun
                     nFeeTotal -= specialTxFee;
                 }
             }
+            case TRANSACTION_UPDATE_ASSET:{
+                CUpdateAssetTx asset;
+                if(GetTxPayload(tx.vExtraPayload, asset)) {
+                    if(!Params().IsAssetsActive(chainActive.Tip())) {
+                        return false;
+                    }
+                    bool assetsEnabled = sporkManager.IsSporkActive(SPORK_22_SPECIAL_TX_FEE);
+                    if(assetsEnabled && fFeeVerify && asset.fee != getAssetsFees()){
+                        return false;
+                    }
+                    specialTxFee = asset.fee  * COIN;
+                    nFeeTotal -= specialTxFee;
+                }
+            }
             break;
         }
 	}
