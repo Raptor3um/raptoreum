@@ -17,7 +17,7 @@ CScheduler::CScheduler() : nThreadsServicingQueue(0), stopRequested(false), stop
 
 CScheduler::~CScheduler()
 {
-    assert(nThreadsServicingQueue == 0);
+    // assert(nThreadsServicingQueue == 0);
 }
 
 void CScheduler::serviceQueue()

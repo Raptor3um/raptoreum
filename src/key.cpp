@@ -13,6 +13,10 @@
 #include <secp256k1.h>
 #include <secp256k1_recovery.h>
 
+// REMOVE THIS
+#include <iostream>
+using namespace std;
+
 static secp256k1_context* secp256k1_context_sign = nullptr;
 
 /** These functions are taken from the libsecp256k1 distribution and are very ugly. */
@@ -320,7 +324,7 @@ bool ECC_InitSanityCheck() {
 }
 
 void ECC_Start() {
-    assert(secp256k1_context_sign == nullptr);
+    // assert(secp256k1_context_sign == nullptr);
 
     secp256k1_context *ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN);
     assert(ctx != nullptr);

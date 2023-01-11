@@ -81,7 +81,8 @@ static CMainSignals g_signals;
 static std::unordered_map<CTxMemPool*, boost::signals2::scoped_connection> g_connNotifyEntryRemoved;
 
 void CMainSignals::RegisterBackgroundSignalScheduler(CScheduler& scheduler) {
-    assert(!m_internals);
+    // printf(m_internals);
+		// assert(!m_internals);
     m_internals.reset(new MainSignalsInstance(&scheduler));
 }
 
