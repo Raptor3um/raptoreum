@@ -175,8 +175,69 @@ bool CheckNewAssetTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVal
     if (!CheckInputsHash(tx, assettx, state)) {
         return false;
     }
+    
+    return true;
+}
 
-     return true;
+bool CheckUpdateAssetTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state)
+{
+
+    if(!Params().IsAssetsActive(chainActive.Tip())) {
+        return state.DoS(100, false, REJECT_INVALID, "assets-not-enabled");
+    }
+
+    if (tx.nType != TRANSACTION_UPDATE_ASSET) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-assets-type");
+    }
+
+    CUpdateAssetTx assettx;
+    if (!GetTxPayload(tx, assettx)) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-assets-update-payload");
+    }
+
+    if (assettx.nVersion == 0 || assettx.nVersion > CUpdateAssetTx::CURRENT_VERSION) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-assets-version");
+    }
+
+    //Check if the provide asset id is valid
+    /*AssetMetaData asset;
+    if(GetAssetMetaData(assettx.AssetId, asset)){
+        return state.DoS(100, false, REJECT_INVALID, "bad-assets-invalid-id");
+    }
+
+    //Check if fees is paid by the owner address
+    CCoinsViewCache inputs(pcoinsTip.get());
+    for (unsigned int i = 0; i < tx.vin.size(); i++) {
+        const Coin& coin = inputs.AccessCoin(tx.vin[i].prevout);
+        assert(!coin.IsSpent());
+        CTxDestination dest;
+        ExtractDestination(coin.out.scriptPubKey, dest);
+        if(EncodeDestination(dest) != EncodeDestination(asset.ownerAddress)){
+            return state.DoS(100, false, REJECT_INVALID, "bad-assets-invalid-input");    
+        }
+    }*/
+
+    if(assettx.ownerAddress.IsNull()){
+        return state.DoS(100, false, REJECT_INVALID, "bad-assets-ownerAddress"); 
+    }
+
+    if(assettx.targetAddress.IsNull()){
+        return state.DoS(100, false, REJECT_INVALID, "bad-assets-targetAddress"); 
+    }
+    
+    if(assettx.type < 0 && assettx.type > 3){
+        return state.DoS(100, false, REJECT_INVALID, "bad-assets-distibution-type");
+    }
+    
+    if(assettx.collateralAddress.IsNull() && assettx.type != 0){ //
+        return state.DoS(100, false, REJECT_INVALID, "bad-assets-collateralAddress"); 
+    }
+    
+    if (!CheckInputsHash(tx, assettx, state)) {
+        return false;
+    }
+
+    return true;
 }
 
 bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, const CCoinsViewCache& view)

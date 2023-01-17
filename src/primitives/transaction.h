@@ -21,7 +21,8 @@ enum {
     TRANSACTION_COINBASE = 5,
     TRANSACTION_QUORUM_COMMITMENT = 6,
     TRANSACTION_FUTURE = 7,
-    TRANSACTION_NEW_ASSET = 8
+    TRANSACTION_NEW_ASSET = 8,
+    TRANSACTION_UPDATE_ASSET = 9
 };
 
 /** An outpoint - a combination of a transaction hash and an index n into its vout */
