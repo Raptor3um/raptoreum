@@ -111,8 +111,9 @@ public:
     static void InitQuorumsCache(CacheType& cache)
     {
         for (auto& llmq : Params().GetConsensus().llmqs) {
+            int cacheSize =  llmq.first == 1 ? 25 : llmq.second.signingActiveQuorumCount + 1;
             cache.emplace(std::piecewise_construct, std::forward_as_tuple(llmq.first),
-                                                    std::forward_as_tuple(llmq.second.signingActiveQuorumCount + 1));
+                                                    std::forward_as_tuple(cacheSize));
         }
     }
 };
