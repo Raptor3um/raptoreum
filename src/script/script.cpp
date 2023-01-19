@@ -6,6 +6,7 @@
 #include <script/script.h>
 #include <tinyformat.h>
 #include <utilstrencodings.h>
+#include <assets/assets.h>
 
 const char* GetOpName(opcodetype opcode)
 {
@@ -143,11 +144,42 @@ const char* GetOpName(opcodetype opcode)
     case OP_CHECKDATASIG           : return "OP_CHECKDATASIG";
     case OP_CHECKDATASIGVERIFY     : return "OP_CHECKDATASIGVERIFY";
 
+    case OP_ASSET_ID               : return "OP_ASSET_ID";
+
     case OP_INVALIDOPCODE          : return "OP_INVALIDOPCODE";
 
     default:
         return "OP_UNKNOWN";
     }
+}
+
+bool CScript::IsAssetScript() const
+{
+    int index;
+    return IsAssetScript(index);
+}
+
+bool CScript::IsAssetScript(int& nIndex) const
+{
+    if (this->size() > 31) {  
+        if ((*this)[25] == OP_ASSET_ID) { // OP_RTM_ASSET is always in the 25 index of the script if it exists
+            nIndex = -1;
+            if ((*this)[27] == RTM_R) { // Check to see if RTM starts at 27 ( this->size() < 105)
+                if ((*this)[28] == RTM_T)
+                    if ((*this)[29] == RTM_M)
+                        nIndex = 30;
+            } else {
+                if ((*this)[28] == RTM_R) // Check to see if RTM starts at 28 ( this->size() >= 105)
+                    if ((*this)[29] == RTM_T)
+                        if ((*this)[30] == RTM_M)
+                            nIndex = 31;
+            }
+            if (nIndex > 0){
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 unsigned int CScript::GetSigOpCount(bool fAccurate) const

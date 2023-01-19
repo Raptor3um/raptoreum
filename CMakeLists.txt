@@ -48,6 +48,8 @@ add_definitions(
 file(GLOB SOURCE_FILES
         src/*.cpp
         src/*.h
+        src/assets/*.cpp
+        src/assets/*h
         src/bench/*.cpp
         src/bench/*.h
         src/bls/*.cpp

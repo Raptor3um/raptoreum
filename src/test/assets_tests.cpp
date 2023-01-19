@@ -19,6 +19,8 @@
 
 #include <evo/specialtx.h>
 #include <evo/providertx.h>
+#include <assets/assets.h>
+#include <core_io.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -147,6 +149,14 @@ BOOST_FIXTURE_TEST_CASE(assets_creation, TestChainDIP3BeforeActivationSetup)
     BOOST_ASSERT(chainActive.Height() == nHeight + 1);
     BOOST_ASSERT(block->GetHash() == chainActive.Tip()->GetBlockHash());
 
+    //build an asset transaction and extract the asset id from the script
+    CScript scriptPubKey = GetScriptForDestination(coinbaseKey.GetPubKey().GetID());
+    BuildAssetTransaction(scriptPubKey, tx.GetHash().ToString());
+    BOOST_ASSERT(scriptPubKey.IsAssetScript());
+    std::string assetid;
+    GetAssetId(scriptPubKey,assetid);
+    BOOST_ASSERT(assetid == tx.GetHash().ToString());
+    
     //invalid asset name
     tx = CreateNewAssetTx(utxos, coinbaseKey,"*Test_Asset*", true, false, 0, 8, 1000);
     txns = {tx};

@@ -15,6 +15,7 @@
 #include <script/standard.h>
 #include <validation.h>
 #include <spork.h>
+#include <assets/assets.h>
 
 template <typename ProTx>
 static bool CheckService(const uint256& proTxHash, const ProTx& proTx, CValidationState& state)
@@ -105,17 +106,6 @@ bool CheckFutureTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
     }
 
     return true;
-}
-
-#include <regex>
-static const std::regex name_characters("^[a-zA-Z0-9 ]{3,}$");
-static const std::regex rtm_names("^RTM$|^RAPTOREUM$|^wRTM$|^WRTM$|^RTMcoin$|^RTMCOIN$");
-
-//temporary function need to be moved to a beter location
-static bool IsAssetNameValid(std::string name){ 
-    if (name.length() < 3 || name.length() > 128) return false;
-    return std::regex_match(name, name_characters) && !std::regex_match(name, rtm_names);
-
 }
 
 bool CheckNewAssetTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state)

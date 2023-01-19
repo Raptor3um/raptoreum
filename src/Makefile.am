@@ -118,6 +118,7 @@ BITCOIN_CORE_H = \
   addrdb.h \
   addressindex.h \
   addrman.h \
+  assets/assets.h \
   attributes.h \
   base58.h \
   batchedlogger.h \
@@ -302,6 +303,7 @@ libraptoreum_server_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libraptoreum_server_a_SOURCES = \
   addrdb.cpp \
   addrman.cpp \
+  assets/assets.cpp \
   batchedlogger.cpp \
   bloom.cpp \
   blockencodings.cpp \
