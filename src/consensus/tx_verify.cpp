@@ -16,6 +16,7 @@
 #include <evo/specialtx.h>
 #include <evo/providertx.h>
 #include <timedata.h>
+#include <assets/assets.h>
 
 // TODO remove the following dependencies
 #include <chain.h>

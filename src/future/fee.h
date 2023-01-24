@@ -11,9 +11,6 @@
 CAmount getFutureFeesCoin();
 uint16_t getFutureFees();
 
-CAmount getAssetsFeesCoin();
-uint16_t getAssetsFees();
-
 //void maybeSetPayload(Coin& coin, const COutPoint& outpoint, const int16_t& nType, const std::vector<uint8_t>& vExtraPayload);
 
 #endif //RAPTOREUM_FEE_H
