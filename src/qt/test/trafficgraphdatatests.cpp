@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <sstream>
 #include <QTime>
+#include <QRandomGenerator>
 
 void TrafficGraphDataTests::simpleCurrentSampleQueueTests()
 {
@@ -138,8 +139,8 @@ void testRangeSwitch(TrafficGraphData::GraphRange baseRange, TrafficGraphData::G
     TrafficGraphData trafficGraphDataBase(baseRange);
     TrafficGraphData trafficGraphData(toRange);
     for (int i = 1; i <= size; i++){
-        int in = qrand() % 1000;
-        int out = qrand() % 1000;
+        int in = QRandomGenerator::global()->bounded(1000);
+        int out = QRandomGenerator::global()->bounded(1000);
         trafficGraphData.update(TrafficSample(in, out));
         trafficGraphDataBase.update(TrafficSample(in, out));
     }
