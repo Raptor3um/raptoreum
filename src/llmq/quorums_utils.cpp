@@ -406,12 +406,14 @@ std::map<Consensus::LLMQType, QvvecSyncMode> CLLMQUtils::GetEnabledQuorumVvecSyn
     return mapQuorumVvecSyncEntries;
 }
 
-// TODO: what conflicts will this create?
 template <typename CacheType>
 void CLLMQUtils::InitQuorumsCache(CacheType& cache)
 {
     for (const auto& llmq : Params().GetConsensus().llmqs) {
-        cache.emplace(std::piecewise_construct, std::forward_as_tuple(llmq.first), std::forward_as_tuple(llmq.second.signingActiveQuorumCount + 1));
+				int cacheSize =  llmq.first == 1 ? 25 : llmq.second.signingActiveQuorumCount + 1;
+        cache.emplace(std::piecewise_construct, 
+											std::forward_as_tuple(llmq.first), 
+											std::forward_as_tuple(cacheSize));
     }
 }
 template void CLLMQUtils::InitQuorumsCache<std::map<Consensus::LLMQType, unordered_lru_cache<uint256, bool, StaticSaltedHasher>>>(std::map<Consensus::LLMQType, unordered_lru_cache<uint256, bool, StaticSaltedHasher>>& cache);
