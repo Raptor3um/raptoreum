@@ -406,6 +406,7 @@ std::map<Consensus::LLMQType, QvvecSyncMode> CLLMQUtils::GetEnabledQuorumVvecSyn
     return mapQuorumVvecSyncEntries;
 }
 
+// TODO: what conflicts will this create?
 template <typename CacheType>
 void CLLMQUtils::InitQuorumsCache(CacheType& cache)
 {
