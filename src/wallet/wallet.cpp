@@ -100,19 +100,6 @@ std::shared_ptr<CWallet> GetWallet(const std::string& name)
     return nullptr;
 }
 
-CWallet *GetFirstWallet() {
-#ifdef ENABLE_WALLET
-    while(vpwallets.size() == 0){
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-
-    }
-    if (vpwallets.size() == 0)
-        return(NULL);
-    return(vpwallets[0].get());
-#endif
-    return(NULL);
-}
-
 std::unique_ptr<interfaces::Handler> HandleLoadWallet(LoadWalletFn load_wallet)
 {
     LOCK(cs_wallets);
@@ -4881,17 +4868,6 @@ void CWallet::MarkReserveKeysAsUsed(int64_t keypool_id)
         WalletLogPrintf("keypool index %d removed\n", index);
         it = setKeyPool->erase(it);
     }
-}
-
-void CWallet::GetScriptForMining(std::shared_ptr<CReserveScript> &script)
-{
-    std::shared_ptr<CReserveKey> rKey = std::make_shared<CReserveKey>(this);
-    CPubKey pubkey;
-    if (!rKey->GetReservedKey(pubkey, false))
-        return;
-
-    script = rKey;
-    script->reserveScript = CScript() << ToByteVector(pubkey) << OP_CHECKSIG;
 }
 
 void CWallet::LockCoin(const COutPoint& output)

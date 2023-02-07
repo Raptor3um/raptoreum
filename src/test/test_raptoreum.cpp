@@ -66,6 +66,7 @@ extern void noui_connect();
 BasicTestingSetup::BasicTestingSetup(const std::string& chainName)
   : m_path_root{fs::temp_directory_path() / "test_raptoreum" PACKAGE_NAME / std::to_string(g_insecure_rand_ctx_temp_path.rand32())}
 {
+        SelectParams(chainName);
         SeedInsecureRand();
         SHA256AutoDetect();
         ECC_Start();
@@ -76,7 +77,6 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName)
         InitSignatureCache();
         InitScriptExecutionCache();
         fCheckBlockIndex = true;
-        SelectParams(chainName);
         evoDb.reset(new CEvoDB(1 << 20, true, true));
         connman = MakeUnique<CConnman>(0x1337, 0x1337);
         deterministicMNManager.reset(new CDeterministicMNManager(*evoDb, *connman));
@@ -142,9 +142,10 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
             throw std::runtime_error(strprintf("ActivateBestChain failed. (%s)", FormatStateMessage(state)));
         }
     }
-    int script_threads = 3;
-    for (int i=0; i < script_threads-1; i++)
-        StartScriptCheckWorkerThreads(script_threads);
+    // Start script-checking threads. Set g_parallel_script_checks to true so they are used.
+    constexpr int script_check_threads = 2;
+    StartScriptCheckWorkerThreads(script_check_threads);
+    g_parallel_script_checks = true;
 }
 
 TestingSetup::~TestingSetup()
