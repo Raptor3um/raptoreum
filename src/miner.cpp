@@ -551,7 +551,7 @@ static bool ProcessBlockFound(const CBlock* pblock, const CChainParams& chainpar
     return true;
 }
 
-void static RaptoreumMiner(const CChainParams& chainparams, NodeContext& node)
+void static RaptoreumMiner(const CChainParams& chainparams, CTxDestination& destination ,NodeContext& node)
 {
     LogPrintf("RaptoreumMiner -- started\n");
     SetThreadPriority(THREAD_PRIORITY_LOWEST);
@@ -559,29 +559,10 @@ void static RaptoreumMiner(const CChainParams& chainparams, NodeContext& node)
 
     unsigned int nExtraNonce = 0;
 
-
-    CWallet * pWallet = NULL;
-
-    #ifdef ENABLE_WALLET
-        pWallet = GetFirstWallet();
-
-  			// TODO: either add this function back in, or update this for more appropriate wallet functionality 
-        // if (!EnsureWalletIsAvailable(pWallet, false)) {
-        //     LogPrintf("RaptoreumMiner -- Wallet not available\n");
-        // }
-    #endif
-
-    if (pWallet == NULL)
-    {
-        LogPrintf("pWallet is NULL\n");
-        return;
-    }
-
-
-    std::shared_ptr<CReserveScript> coinbaseScript;
-    pWallet->GetScriptForMining(coinbaseScript);
-
-    //GetMainSignals().ScriptForMining(coinbaseScript);
+    //std::shared_ptr<CReserveScript> coinbaseScript;
+    //coinbaseScript->reserveScript = GetScriptForDestination(destination);
+    std::shared_ptr<CReserveScript> coinbaseScript = std::make_shared<CReserveScript>();
+    coinbaseScript->reserveScript = GetScriptForDestination(destination);
 
     if (!coinbaseScript)
         LogPrintf("coinbaseScript is NULL\n");
@@ -712,7 +693,7 @@ void static RaptoreumMiner(const CChainParams& chainparams, NodeContext& node)
 }
 
 // TODO: add reference node, get the conn man from there
-int GenerateRaptoreums(bool fGenerate, int nThreads, const CChainParams& chainparams, NodeContext& node)
+int GenerateRaptoreums(bool fGenerate, int nThreads, const CChainParams& chainparams, CTxDestination destination, NodeContext& node)
 {
     static boost::thread_group* minerThreads = NULL;
 
@@ -739,7 +720,7 @@ int GenerateRaptoreums(bool fGenerate, int nThreads, const CChainParams& chainpa
     nHashesPerSec = 0;
 
     for (int i = 0; i < nThreads; i++){
-        minerThreads->create_thread(boost::bind(&RaptoreumMiner, boost::cref(chainparams), boost::ref(node)));
+        minerThreads->create_thread(boost::bind(&RaptoreumMiner, boost::cref(chainparams), boost::ref(destination) ,boost::ref(node)));
     }
     return(numCores);
 }

@@ -345,8 +345,29 @@ static constexpr LLMQParams llmq_test_v17 = {
 };
 
 // Used for Platform
-static constexpr LLMQParams llmq100_67 = {
-        .type = LLMQ_100_67,
+static Consensus::LLMQParams llmq100_67_mainnet = {
+        .type = Consensus::LLMQ_100_67,
+        .name = "llmq_100_67",
+        .size = 100,
+        .minSize = 80,
+        .threshold = 67,
+
+        .dkgInterval = 30, // one DKG per hour
+        .dkgPhaseBlocks = 2,
+        .dkgMiningWindowStart = 10, // dkgPhaseBlocks * 5 = after finalization
+        .dkgMiningWindowEnd = 18,
+        .dkgBadVotesThreshold = 80,
+
+        .signingActiveQuorumCount = 24, // a full day worth of LLMQs
+
+        .keepOldConnections = 25,
+        .recoveryMembers = 50,
+};
+
+
+// Used for Platform
+static Consensus::LLMQParams llmq100_67_testnet = {
+        .type = Consensus::LLMQ_100_67,
         .name = "llmq_100_67",
         .size = 100,
         .minSize = 80,

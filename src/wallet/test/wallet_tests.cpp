@@ -106,7 +106,7 @@ BOOST_FIXTURE_TEST_CASE(rescan, TestChain100Setup)
         BOOST_CHECK_EQUAL(result.last_failed_block, oldTip->GetBlockHash());
         BOOST_CHECK_EQUAL(result.last_scanned_block, newTip->GetBlockHash());
         BOOST_CHECK_EQUAL(*result.last_scanned_height, newTip->nHeight);
-        BOOST_CHECK_EQUAL(wallet.GetBalance().m_mine_immature, 500 * COIN);
+        BOOST_CHECK_EQUAL(wallet.GetBalance().m_mine_immature, 4 * COIN);
     }
 
     // Prune the remaining block file.
@@ -119,21 +119,19 @@ BOOST_FIXTURE_TEST_CASE(rescan, TestChain100Setup)
     // Verify ScanForWalletTransactions scans no blocks.
     {
         CWallet wallet(chain.get(), WalletLocation(), CreateDummyWalletDatabase());
-        // {
-        //     LOCK(wallet.cs_wallet);
-        //     wallet.SetLastBlockProcessed(::ChainActive().Height(), ::ChainActive().Tip()->GetBlockHash());
-        // }
+        {
+            LOCK(wallet.cs_wallet);
+            wallet.SetLastBlockProcessed(::ChainActive().Height(), ::ChainActive().Tip()->GetBlockHash());
+        }
         AddKey(wallet, coinbaseKey);
         WalletRescanReserver reserver(&wallet);
         reserver.reserve();
-        // BOOST_CHECK_EQUAL(oldTip, wallet.ScanForWalletTransactions(oldTip->GetBlockHash(), {}, reserver, false));
-        // BOOST_CHECK_EQUAL(wallet.GetImmatureBalance(), 4 * COIN);
-				CWallet::ScanResult result = wallet.ScanForWalletTransactions(oldTip->GetBlockHash(), {} /* stop_block */, reserver, false /* update */);
+        CWallet::ScanResult result = wallet.ScanForWalletTransactions(oldTip->GetBlockHash(), {} /* stop_block */, reserver, false /* update */);
         BOOST_CHECK_EQUAL(result.status, CWallet::ScanResult::FAILURE);
-        BOOST_CHECK_EQUAL(result.last_failed_block, oldTip->GetBlockHash());
-        BOOST_CHECK_EQUAL(result.last_scanned_block, newTip->GetBlockHash());
-        BOOST_CHECK_EQUAL(*result.last_scanned_height, newTip->nHeight);
-        BOOST_CHECK_EQUAL(wallet.GetBalance().m_mine_immature, 4 * COIN);
+        BOOST_CHECK_EQUAL(result.last_failed_block, newTip->GetBlockHash());
+        BOOST_CHECK(result.last_scanned_block.IsNull());
+        BOOST_CHECK(!result.last_scanned_height);
+        BOOST_CHECK_EQUAL(wallet.GetBalance().m_mine_immature, 0);
     }
     UnlinkPrunedFiles({oldTip->GetBlockPos().nFile});
 

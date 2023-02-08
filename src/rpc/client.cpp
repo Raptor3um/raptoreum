@@ -32,6 +32,8 @@ static const CRPCConvertParam vRPCConvertParams[] =
 #if ENABLE_MINER
     { "generatetoaddress", 0, "nblocks" },
     { "generatetoaddress", 2, "maxtries" },
+    { "setgeneratetoaddress", 0, "generate" },
+    { "setgeneratetoaddress", 2, "genproclimit" },
     { "generatetodescriptor", 0, "num_blocks" },
     { "generatetodescriptor", 2, "maxtries" },
     { "generateblock", 1, "transactions" },

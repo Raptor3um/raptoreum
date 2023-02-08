@@ -289,7 +289,7 @@ public:
         consensus.llmqs[Consensus::LLMQ_50_60] = Consensus::llmq3_60;
         consensus.llmqs[Consensus::LLMQ_400_60] = Consensus::llmq20_60;
         consensus.llmqs[Consensus::LLMQ_400_85] = Consensus::llmq20_85;
-        consensus.llmqs[Consensus::LLMQ_100_67] = Consensus::llmq100_67;
+        consensus.llmqs[Consensus::LLMQ_100_67] = Consensus::llmq100_67_mainnet;
         consensus.llmqTypeChainLocks = Consensus::LLMQ_400_60;
         consensus.llmqTypeInstantSend = Consensus::LLMQ_50_60;
         consensus.llmqTypePlatform = Consensus::LLMQ_100_67;
@@ -436,7 +436,7 @@ public:
         consensus.llmqs[Consensus::LLMQ_50_60] = Consensus::llmq3_60;
         consensus.llmqs[Consensus::LLMQ_400_60] = Consensus::llmq20_60;
         consensus.llmqs[Consensus::LLMQ_400_85] = Consensus::llmq20_85;
-        consensus.llmqs[Consensus::LLMQ_100_67] = Consensus::llmq100_67;
+        consensus.llmqs[Consensus::LLMQ_100_67] = Consensus::llmq100_67_testnet;
         consensus.llmqTypeChainLocks = Consensus::LLMQ_400_60;
         consensus.llmqTypeInstantSend = Consensus::LLMQ_50_60;
         consensus.llmqTypePlatform = Consensus::LLMQ_100_67;
@@ -588,7 +588,7 @@ public:
         consensus.llmqs[Consensus::LLMQ_50_60] = Consensus::llmq50_60;
         consensus.llmqs[Consensus::LLMQ_400_60] = Consensus::llmq400_60;
         consensus.llmqs[Consensus::LLMQ_400_85] = Consensus::llmq400_85;
-        consensus.llmqs[Consensus::LLMQ_100_67] = Consensus::llmq100_67;
+        consensus.llmqs[Consensus::LLMQ_100_67] = Consensus::llmq100_67_testnet;
         consensus.llmqTypeChainLocks = Consensus::LLMQ_50_60;
         consensus.llmqTypeInstantSend = Consensus::LLMQ_50_60;
         consensus.llmqTypePlatform = Consensus::LLMQ_100_67;
@@ -784,12 +784,10 @@ public:
         nExtCoinType = 1;
 
         // long living quorum params
-				consensus.llmqs[Consensus::LLMQ_5_60] = Consensus::llmq3_60;
-				consensus.llmqs[Consensus::LLMQ_TEST_V17] = Consensus::llmq_test_v17;
-        consensus.llmqs[Consensus::LLMQ_50_60] = Consensus::llmq50_60;
+		consensus.llmqs[Consensus::LLMQ_50_60] = Consensus::llmq50_60;
         consensus.llmqs[Consensus::LLMQ_400_60] = Consensus::llmq400_60;
         consensus.llmqs[Consensus::LLMQ_400_85] = Consensus::llmq400_85;
-        // consensus.llmqs[Consensus::LLMQ_100_67] = Consensus::llmq100_67_testnet;
+        consensus.llmqs[Consensus::LLMQ_100_67] = Consensus::llmq100_67_testnet;
         consensus.llmqTypeChainLocks = Consensus::LLMQ_50_60;
         consensus.llmqTypeInstantSend = Consensus::LLMQ_50_60;
         consensus.llmqTypePlatform = Consensus::LLMQ_100_67;
