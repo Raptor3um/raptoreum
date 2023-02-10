@@ -160,7 +160,7 @@ TestingSetup::~TestingSetup()
 {
     //LogInstance().DisconnectTestLogger();
     m_node.scheduler->stop();
-    deterministicMNManager.reset();
+    //deterministicMNManager.reset();
     llmq::InterruptLLMQSystem();
     llmq::StopLLMQSystem();
     g_txindex->Interrupt();
