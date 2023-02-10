@@ -29,7 +29,6 @@
 #include <util/moneystr.h>
 #include <util/validation.h>
 #include <validationinterface.h>
-#include <wallet/wallet.h>
 
 #include <evo/specialtx.h>
 #include <evo/cbtx.h>

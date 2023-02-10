@@ -66,6 +66,7 @@ static constexpr CAmount CENT{1000000};
  */
 struct BasicTestingSetup {
     ECCVerifyHandle globalVerifyHandle;
+    NodeContext m_node;
 
     explicit BasicTestingSetup(const std::string& chainName = CBaseChainParams::MAIN);
     ~BasicTestingSetup();
@@ -81,7 +82,7 @@ private:
  * Included are data directory, coins database, script check threads setup.
  */
 struct TestingSetup : public BasicTestingSetup {
-    NodeContext m_node;
+    //NodeContext m_node;
     boost::thread_group threadGroup;
 
     explicit TestingSetup(const std::string& chainName = CBaseChainParams::MAIN);

@@ -161,3 +161,4 @@ dist/
 
 osx_volname
 dist/
+src/test/runtest.sh
