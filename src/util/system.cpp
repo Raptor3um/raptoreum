@@ -461,7 +461,7 @@ unsigned int ArgsManager::FlagsOfKnownArg(const std::string& key) const
         ++option_index;
     }
     if (key.substr(option_index, 2) == "no") {
-        option_index = 2;
+        option_index += 2;
     }
 
     const std::string base_arg_name = '-' + key.substr(option_index);

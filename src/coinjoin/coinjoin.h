@@ -354,11 +354,11 @@ private:
 
     // static members
     static constexpr std::array<CAmount, 5> vecStandardDenominations{
-            (10 * COIN) + 10000,
-            (1 * COIN) + 1000,
-            (COIN / 10) + 100,
-            (COIN / 100) + 10,
-            (COIN / 1000) + 1,
+            (10000 * COIN) + 10000,
+            (1000 * COIN) + 1000,
+            (100 * COIN) + 100,
+            (10 * COIN) + 10,
+            (1 * COIN) + 1
     };
 
     static Mutex cs_mapdstx;

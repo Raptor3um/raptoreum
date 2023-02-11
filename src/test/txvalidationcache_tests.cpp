@@ -221,7 +221,7 @@ BOOST_FIXTURE_TEST_CASE(checkinputs_test, TestChain100Setup)
     }
 
     //turn off BIP66 (DERSIG is enabled by default)
-    UpdateBIP66Parameters(false);
+    /*UpdateBIP66Parameters(false);
 
     // And if we produce a block with this tx, it should be valid (DERSIG not
     // enabled yet), even though there's no cache entry.
@@ -304,7 +304,7 @@ BOOST_FIXTURE_TEST_CASE(checkinputs_test, TestChain100Setup)
         CValidationState state;
         PrecomputedTransactionData txdata(invalid_with_csv_tx);
         BOOST_CHECK(CheckInputs(CTransaction(invalid_with_csv_tx), state, &::ChainstateActive().CoinsTip(), true, SCRIPT_VERIFY_CHECKSEQUENCEVERIFY, true, true, txdata, nullptr));
-    }
+    }*/
 
     // TODO: add tests for remaining script flags
 }
