@@ -443,31 +443,22 @@ static UniValue createrawtransaction(const JSONRPCRequest& request)
                         {
                             {"address", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "A key-value pair. The key (string) is the Raptoreum address, the value (float or string) is the amount in " + CURRENCY_UNIT},
                         },
-                        },
-                    {"", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "",
+                    },
+                    
+                    {"", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "", 
                         {
-                            {"address", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "A key-value pair. The key (string) is the Raptoreum address, value is a json string,\n"
-                                    "numberic pair for future_maturity, future_locktime, and future_amount. There can only one address contain future information.\n"
-                                    "A future transaction is mature when there is enough confirmation (future_maturity) or time (future_locktime)\n",
-                                {
-                                    {"", RPCArg::Type::ARR, RPCArg::Optional::OMITTED, "",
-                                        {
-                                            {"future_maturity", RPCArg::Type::NUM, RPCArg::Optional::NO, "Number of confirmation for this future to mature."},
-                                            {"future_locktime", RPCArg::Type::NUM, RPCArg::Optional::NO, "Total time in seconds from its first confirmation for this future to mature."},
-                                            {"future_amount", RPCArg::Type::NUM, RPCArg::Optional::NO, "Raptoreum amount to be locked."},
-                                        },
-                                    },
-                                },
-                            },
+                                {"future_maturity", RPCArg::Type::NUM, RPCArg::Optional::NO, "Number of confirmation for this future to mature."},
+                                {"future_locktime", RPCArg::Type::NUM, RPCArg::Optional::NO, "Total time in seconds from its first confirmation for this future to mature."},
+                                {"future_amount", RPCArg::Type::NUM, RPCArg::Optional::NO, "Raptoreum amount to be locked."},
                         },
-                        },
+                    },
                     {"", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "",
                         {
                             {"data", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "A key-value pair. The key must be \"data\", the value is hex-encoded data"},
                         },
-                        },
+                    },
                 },
-                },
+            },
             {"locktime", RPCArg::Type::NUM, /* default */ "0", "Raw locktime. Non-0 value also locktime-activates inputs"},
         },
         RPCResult{
@@ -484,7 +475,6 @@ static UniValue createrawtransaction(const JSONRPCRequest& request)
     RPCTypeCheck(request.params, {
         UniValue::VARR,
         UniValueType(),
-        UniValue::VBOOL,
         UniValue::VNUM,
         }, true
     );
