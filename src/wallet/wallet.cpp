@@ -3841,7 +3841,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
         {
             CAmount nAmountAvailable{0};
             std::vector<COutput> vAvailableCoins;
-            AvailableCoins(vAvailableCoins, true, &coin_control, 1, MAX_MONEY, 0, coin_control.m_min_depth);
+            AvailableCoins(vAvailableCoins, true, &coin_control, 1, MAX_MONEY, MAX_MONEY, 0, coin_control.m_min_depth);
             CoinSelectionParams coin_selection_params; // Parameters for coin selection, init with dummy
             coin_selection_params.use_bnb = false; // never use BnB
 
@@ -5042,8 +5042,8 @@ unsigned int CWallet::ComputeTimeSmart(const CWalletTx& wtx, bool rescanningOldB
                     if (nSmartTime > latestNow) {
                         latestNow = nSmartTime;
                     }
+                    break;
                 }
-                nTimeSmart = std::max(latestEntry, std::min(blocktime, latestNow));
             }
 
             nTimeSmart = std::max(latestEntry, std::min(blocktime, latestNow));

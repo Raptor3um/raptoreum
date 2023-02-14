@@ -22,6 +22,8 @@
 #include <ui_interface.h>
 #include <util/validation.h>
 #include <validation.h>
+#include <walletinitinterface.h>
+#include <interfaces/chain.h>
 
 #include <coinjoin/coinjoin.h>
 #include <evo/specialtx.h>
@@ -76,6 +78,8 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName)
         SetupNetworking();
         InitSignatureCache();
         InitScriptExecutionCache();
+        m_node.chain = interfaces::MakeChain(m_node);
+        g_wallet_init_interface.Construct(m_node);
         fCheckBlockIndex = true;
         evoDb.reset(new CEvoDB(1 << 20, true, true));
         connman = MakeUnique<CConnman>(0x1337, 0x1337);
@@ -104,6 +108,9 @@ fs::path BasicTestingSetup::SetDataDir(const std::string& name)
 TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(chainName)
 {
     SetDataDir("tempdir");
+    //LogInstance().m_print_to_file = false;
+    //LogInstance().m_print_to_console = true;
+    //LogInstance().StartLogging();
     const CChainParams& chainparams = Params();
     // Ideally we'd move all the RPC tests to the functional testing framework
     // instead of unit tests, but for now we need these here.
@@ -114,7 +121,8 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
 
     // We have to run a scheduler thread to prevent ActivateBestChain
     // from blocking due to queue overrun.
-    threadGroup.create_thread([&]{ m_node.scheduler->serviceQueue(); });
+    //threadGroup.create_thread([&]{ m_node.scheduler->serviceQueue(); });
+    threadGroup.create_thread([&] { TraceThread("scheduler", [&] { m_node.scheduler->serviceQueue(); }); });
     GetMainSignals().RegisterBackgroundSignalScheduler(*m_node.scheduler);
     m_node.mempool = &::mempool;
     m_node.mempool->setSanityCheck(1.0);
@@ -150,8 +158,9 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
 
 TestingSetup::~TestingSetup()
 {
+    //LogInstance().DisconnectTestLogger();
     m_node.scheduler->stop();
-    deterministicMNManager.reset();
+    //deterministicMNManager.reset();
     llmq::InterruptLLMQSystem();
     llmq::StopLLMQSystem();
     g_txindex->Interrupt();
@@ -168,6 +177,7 @@ TestingSetup::~TestingSetup()
     m_node.mempool = nullptr;
     m_node.scheduler.reset();
     llmq::DestroyLLMQSystem();
+    m_node.chainman->Reset();
     m_node.chainman = nullptr;
     pblocktree.reset();
 }

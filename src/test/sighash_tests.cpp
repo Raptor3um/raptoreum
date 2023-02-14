@@ -115,7 +115,7 @@ void static RandomTransaction(CMutableTransaction &tx, bool fSingle) {
     }
 }
 
-BOOST_FIXTURE_TEST_SUITE(sighash_tests, BasicTestingSetup)
+BOOST_FIXTURE_TEST_SUITE(sighash_tests, TestingSetup)
 
 BOOST_AUTO_TEST_CASE(sighash_test)
 {

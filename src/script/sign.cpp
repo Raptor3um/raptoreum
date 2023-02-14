@@ -207,6 +207,7 @@ bool SignatureExtractorChecker::CheckSig(const std::vector<unsigned char>& scrip
   if (checker.CheckSig(scriptSig, vchPubKey, scriptCode, sigversion)) {
     CPubKey pubkey(vchPubKey);
     sigdata.signatures.emplace(pubkey.GetID(), SigPair(pubkey, scriptSig));
+    return true;
   }
   return false;
 }
