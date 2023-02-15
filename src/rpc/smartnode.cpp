@@ -671,6 +671,7 @@ UniValue smartnodelist(const JSONRPCRequest& request)
             objMN.pushKV("votingaddress", EncodeDestination(dmn->pdmnState->keyIDVoting));
             objMN.pushKV("collateraladdress", collateralAddressStr);
             objMN.pushKV("pubkeyoperator", dmn->pdmnState->pubKeyOperator.Get().ToString());
+            objMN.pushKV("posepenalty", dmn->pdmnState->nPoSePenalty);
             obj.pushKV(strOutpoint, objMN);
         } else if (strMode == "lastpaidblock") {
             if (strFilter !="" && strOutpoint.find(strFilter) == std::string::npos) return;
