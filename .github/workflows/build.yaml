@@ -73,7 +73,10 @@ jobs:
           sudo apt-get update -y
           sudo apt-get upgrade -y
           sudo apt-get install curl build-essential libtool autotools-dev automake pkg-config python3 bsdmainutils cmake -y
-
+          sudo apt-get purge grub\*
+          sudo apt-get install grub-efi -y
+          sudo apt-get autoremove -y
+          sudo update-grub
       - name: Build Depends
         run: |
           echo "building with $(nproc) threads"
@@ -674,7 +677,7 @@ jobs:
   test-arm-64:
     name: ARM 64-bit Tests
     needs: [ get-version, build-arm-64 ]
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Download Artifacts

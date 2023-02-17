@@ -574,6 +574,7 @@ public:
         assert(genesis.hashMerkleRoot == uint256S("0x87a48bc22468acdd72ee540aab7c086a5bbcddc12b51c6ac925717a74c269453"));
 
         vSeeds.emplace_back("lbdn.raptoreum.com");
+        vSeeds.emplace_back("51.89.21.112");
 
         // Raptoreum addresses start with 'r'
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,60);
