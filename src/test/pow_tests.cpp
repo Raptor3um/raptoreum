@@ -13,171 +13,115 @@
 
 BOOST_FIXTURE_TEST_SUITE(pow_tests, BasicTestingSetup)
 
+// Helper to create CBlockIndex for testing:
+CBlockIndex MakeIdx(int nHeight, uint32_t nTime, uint32_t nBits, CBlockIndex* pPrev)
+{
+    CBlockIndex ret;
+    ret.nHeight = nHeight;
+    ret.nTime = nTime;
+    ret.nBits = nBits;
+    ret.pprev = pPrev;
+    return ret;
+}
+
 /* Test calculation of next difficulty target with DGW */
 BOOST_AUTO_TEST_CASE(get_next_work)
 {
     const auto chainParams = CreateChainParams(CBaseChainParams::MAIN);
 
-    // build the chain of 24 blocks
-    CBlockIndex blockIndexLast;
-    blockIndexLast.nHeight = 123456;
-    blockIndexLast.nTime = 1408732489;
-    blockIndexLast.nBits = 0x1b1418d4;
-    CBlockIndex blockIndexPrev1 = CBlockIndex();
-    blockIndexPrev1.nTime = 1408732257;  // Block #123455
-    blockIndexPrev1.nBits = 0x1b13b83f;
-    blockIndexLast.pprev = &blockIndexPrev1;
-    CBlockIndex blockIndexPrev2 = CBlockIndex();
-    blockIndexPrev2.nTime = 1408732229;  // Block #123454
-    blockIndexPrev2.nBits = 0x1b10460b;
-    blockIndexPrev1.pprev = &blockIndexPrev2;
-    CBlockIndex blockIndexPrev3 = CBlockIndex();
-    blockIndexPrev3.nTime = 1408731256;  // Block #123453
-    blockIndexPrev3.nBits = 0x1b113ff1;
-    blockIndexPrev2.pprev = &blockIndexPrev3;
-    CBlockIndex blockIndexPrev4 = CBlockIndex();
-    blockIndexPrev4.nTime = 1408731242;  // Block #123452
-    blockIndexPrev4.nBits = 0x1b0fed89;
-    blockIndexPrev3.pprev = &blockIndexPrev4;
-    CBlockIndex blockIndexPrev5 = CBlockIndex();
-    blockIndexPrev5.nTime = 1408730914;  // Block #123451
-    blockIndexPrev5.nBits = 0x1b10b864;
-    blockIndexPrev4.pprev = &blockIndexPrev5;
-    CBlockIndex blockIndexPrev6 = CBlockIndex();
-    blockIndexPrev6.nTime = 1408730862;  // Block #123450
-    blockIndexPrev6.nBits = 0x1b0dd168;
-    blockIndexPrev5.pprev = &blockIndexPrev6;
-    CBlockIndex blockIndexPrev7 = CBlockIndex();
-    blockIndexPrev7.nTime = 1408730179;  // Block #123449
-    blockIndexPrev7.nBits = 0x1b0c03d6;
-    blockIndexPrev6.pprev = &blockIndexPrev7;
-    CBlockIndex blockIndexPrev8 = CBlockIndex();
-    blockIndexPrev8.nTime = 1408729678;  // Block #123448
-    blockIndexPrev8.nBits = 0x1b0c9ab8;
-    blockIndexPrev7.pprev = &blockIndexPrev8;
-    CBlockIndex blockIndexPrev9 = CBlockIndex();
-    blockIndexPrev9.nTime = 1408729647;  // Block #123447
-    blockIndexPrev9.nBits = 0x1b0dfaff;
-    blockIndexPrev8.pprev = &blockIndexPrev9;
-    CBlockIndex blockIndexPrev10 = CBlockIndex();
-    blockIndexPrev10.nTime = 1408729587;  // Block #123446
-    blockIndexPrev10.nBits = 0x1b10e878;
-    blockIndexPrev9.pprev = &blockIndexPrev10;
-    CBlockIndex blockIndexPrev11 = CBlockIndex();
-    blockIndexPrev11.nTime = 1408729576;  // Block #123445
-    blockIndexPrev11.nBits = 0x1b1063d0;
-    blockIndexPrev10.pprev = &blockIndexPrev11;
-    CBlockIndex blockIndexPrev12 = CBlockIndex();
-    blockIndexPrev12.nTime = 1408729474;  // Block #123444
-    blockIndexPrev12.nBits = 0x1b104297;
-    blockIndexPrev11.pprev = &blockIndexPrev12;
-    CBlockIndex blockIndexPrev13 = CBlockIndex();
-    blockIndexPrev13.nTime = 1408729305;  // Block #123443
-    blockIndexPrev13.nBits = 0x1b107556;
-    blockIndexPrev12.pprev = &blockIndexPrev13;
-    CBlockIndex blockIndexPrev14 = CBlockIndex();
-    blockIndexPrev14.nTime = 1408729179;  // Block #123442
-    blockIndexPrev14.nBits = 0x1b110764;
-    blockIndexPrev13.pprev = &blockIndexPrev14;
-    CBlockIndex blockIndexPrev15 = CBlockIndex();
-    blockIndexPrev15.nTime = 1408729116;  // Block #123441
-    blockIndexPrev15.nBits = 0x1b1141bf;
-    blockIndexPrev14.pprev = &blockIndexPrev15;
-    CBlockIndex blockIndexPrev16 = CBlockIndex();
-    blockIndexPrev16.nTime = 1408728950;  // Block #123440
-    blockIndexPrev16.nBits = 0x1b1123f9;
-    blockIndexPrev15.pprev = &blockIndexPrev16;
-    CBlockIndex blockIndexPrev17 = CBlockIndex();
-    blockIndexPrev17.nTime = 1408728756;  // Block #123439
-    blockIndexPrev17.nBits = 0x1b118d9c;
-    blockIndexPrev16.pprev = &blockIndexPrev17;
-    CBlockIndex blockIndexPrev18 = CBlockIndex();
-    blockIndexPrev18.nTime = 1408728744;  // Block #123438
-    blockIndexPrev18.nBits = 0x1b11abac;
-    blockIndexPrev17.pprev = &blockIndexPrev18;
-    CBlockIndex blockIndexPrev19 = CBlockIndex();
-    blockIndexPrev19.nTime = 1408728608;  // Block #123437
-    blockIndexPrev19.nBits = 0x1b11951e;
-    blockIndexPrev18.pprev = &blockIndexPrev19;
-    CBlockIndex blockIndexPrev20 = CBlockIndex();
-    blockIndexPrev20.nTime = 1408728495;  // Block #123436
-    blockIndexPrev20.nBits = 0x1b121cf3;
-    blockIndexPrev19.pprev = &blockIndexPrev20;
-    CBlockIndex blockIndexPrev21 = CBlockIndex();
-    blockIndexPrev21.nTime = 1408728479;  // Block #123435
-    blockIndexPrev21.nBits = 0x1b11a33c;
-    blockIndexPrev20.pprev = &blockIndexPrev21;
-    CBlockIndex blockIndexPrev22 = CBlockIndex();
-    blockIndexPrev22.nTime = 1408728332;  // Block #123434
-    blockIndexPrev22.nBits = 0x1b10e09e;
-    blockIndexPrev21.pprev = &blockIndexPrev22;
-    CBlockIndex blockIndexPrev23 = CBlockIndex();
-    blockIndexPrev23.nTime = 1408728124;  // Block #123433
-    blockIndexPrev23.nBits = 0x1b104be1;
-    blockIndexPrev22.pprev = &blockIndexPrev23;
+    // build the chain of 61 blocks
+    // data from: getblockheaders 92c4c355e78a14e1d457b47cba349aabdef2755dfb1a2208ddd1b179d1a45606 61
+    CBlockIndex blockIndex123456 = MakeIdx(123456, 1629456114, 0x1d086bf0, nullptr);
+    CBlockIndex blockIndex123457 = MakeIdx(123457, 1629456145, 0x1d086414, &blockIndex123456);
+    CBlockIndex blockIndex123458 = MakeIdx(123458, 1629456146, 0x1d085246, &blockIndex123457);
+    CBlockIndex blockIndex123459 = MakeIdx(123459, 1629456327, 0x1d07fdea, &blockIndex123458);
+    CBlockIndex blockIndex123460 = MakeIdx(123460, 1629456563, 0x1d082894, &blockIndex123459);
+    CBlockIndex blockIndex123461 = MakeIdx(123461, 1629456668, 0x1d086f52, &blockIndex123460);
+    CBlockIndex blockIndex123462 = MakeIdx(123462, 1629456694, 0x1d083168, &blockIndex123461);
+    CBlockIndex blockIndex123463 = MakeIdx(123463, 1629456708, 0x1d081952, &blockIndex123462);
+    CBlockIndex blockIndex123464 = MakeIdx(123464, 1629456728, 0x1d07fe7c, &blockIndex123463);
+    CBlockIndex blockIndex123465 = MakeIdx(123465, 1629456956, 0x1d07e634, &blockIndex123464);
+    CBlockIndex blockIndex123466 = MakeIdx(123466, 1629457466, 0x1d080fd7, &blockIndex123465);
+    CBlockIndex blockIndex123467 = MakeIdx(123467, 1629457493, 0x1d089514, &blockIndex123466);
+    CBlockIndex blockIndex123468 = MakeIdx(123468, 1629457670, 0x1d08960c, &blockIndex123467);
+    CBlockIndex blockIndex123469 = MakeIdx(123469, 1629457683, 0x1d08b0bb, &blockIndex123468);
+    CBlockIndex blockIndex123470 = MakeIdx(123470, 1629457724, 0x1d08af09, &blockIndex123469);
+    CBlockIndex blockIndex123471 = MakeIdx(123471, 1629457864, 0x1d08a0c6, &blockIndex123470);
+    CBlockIndex blockIndex123472 = MakeIdx(123472, 1629457903, 0x1d08c8f3, &blockIndex123471);
+    CBlockIndex blockIndex123473 = MakeIdx(123473, 1629457917, 0x1d08d816, &blockIndex123472);
+    CBlockIndex blockIndex123474 = MakeIdx(123474, 1629457991, 0x1d08cb16, &blockIndex123473);
+    CBlockIndex blockIndex123475 = MakeIdx(123475, 1629458017, 0x1d08ac16, &blockIndex123474);
+    CBlockIndex blockIndex123476 = MakeIdx(123476, 1629458499, 0x1d08b2bd, &blockIndex123475);
+    CBlockIndex blockIndex123477 = MakeIdx(123477, 1629458549, 0x1d091be0, &blockIndex123476);
+    CBlockIndex blockIndex123478 = MakeIdx(123478, 1629458731, 0x1d0895ee, &blockIndex123477);
+    CBlockIndex blockIndex123479 = MakeIdx(123479, 1629458805, 0x1d08a3d1, &blockIndex123478);
+    CBlockIndex blockIndex123480 = MakeIdx(123480, 1629458838, 0x1d08ab5b, &blockIndex123479);
+    CBlockIndex blockIndex123481 = MakeIdx(123481, 1629458890, 0x1d084161, &blockIndex123480);
+    CBlockIndex blockIndex123482 = MakeIdx(123482, 1629458902, 0x1d0839c3, &blockIndex123481);
+    CBlockIndex blockIndex123483 = MakeIdx(123483, 1629459016, 0x1d083a21, &blockIndex123482);
+    CBlockIndex blockIndex123484 = MakeIdx(123484, 1629459044, 0x1d0777a6, &blockIndex123483);
+    CBlockIndex blockIndex123485 = MakeIdx(123485, 1629459047, 0x1d07126a, &blockIndex123484);
+    CBlockIndex blockIndex123486 = MakeIdx(123486, 1629459190, 0x1d070480, &blockIndex123485);
+    CBlockIndex blockIndex123487 = MakeIdx(123487, 1629459277, 0x1d072099, &blockIndex123486);
+    CBlockIndex blockIndex123488 = MakeIdx(123488, 1629459509, 0x1d07269c, &blockIndex123487);
+    CBlockIndex blockIndex123489 = MakeIdx(123489, 1629459634, 0x1d07548b, &blockIndex123488);
+    CBlockIndex blockIndex123490 = MakeIdx(123490, 1629459640, 0x1d076964, &blockIndex123489);
+    CBlockIndex blockIndex123491 = MakeIdx(123491, 1629459760, 0x1d075174, &blockIndex123490);
+    CBlockIndex blockIndex123492 = MakeIdx(123492, 1629459814, 0x1d075618, &blockIndex123491);
+    CBlockIndex blockIndex123493 = MakeIdx(123493, 1629459877, 0x1d075fd4, &blockIndex123492);
+    CBlockIndex blockIndex123494 = MakeIdx(123494, 1629459927, 0x1d075628, &blockIndex123493);
+    CBlockIndex blockIndex123495 = MakeIdx(123495, 1629459970, 0x1d07368d, &blockIndex123494);
+    CBlockIndex blockIndex123496 = MakeIdx(123496, 1629460193, 0x1d07292e, &blockIndex123495);
+    CBlockIndex blockIndex123497 = MakeIdx(123497, 1629460289, 0x1d074ab4, &blockIndex123496);
+    CBlockIndex blockIndex123498 = MakeIdx(123498, 1629460334, 0x1d07338b, &blockIndex123497);
+    CBlockIndex blockIndex123499 = MakeIdx(123499, 1629460516, 0x1d073167, &blockIndex123498);
+    CBlockIndex blockIndex123500 = MakeIdx(123500, 1629460587, 0x1d06d1cf, &blockIndex123499);
+    CBlockIndex blockIndex123501 = MakeIdx(123501, 1629460614, 0x1d06d691, &blockIndex123500);
+    CBlockIndex blockIndex123502 = MakeIdx(123502, 1629460961, 0x1d06c567, &blockIndex123501);
+    CBlockIndex blockIndex123503 = MakeIdx(123503, 1629460970, 0x1d06e925, &blockIndex123502);
+    CBlockIndex blockIndex123504 = MakeIdx(123504, 1629460993, 0x1d06b456, &blockIndex123503);
+    CBlockIndex blockIndex123505 = MakeIdx(123505, 1629461225, 0x1d06996d, &blockIndex123504);
+    CBlockIndex blockIndex123506 = MakeIdx(123506, 1629461395, 0x1d06c755, &blockIndex123505);
+    CBlockIndex blockIndex123507 = MakeIdx(123507, 1629461439, 0x1d06e69f, &blockIndex123506);
+    CBlockIndex blockIndex123508 = MakeIdx(123508, 1629461446, 0x1d06cbec, &blockIndex123507);
+    CBlockIndex blockIndex123509 = MakeIdx(123509, 1629461774, 0x1d06b62a, &blockIndex123508);
+    CBlockIndex blockIndex123510 = MakeIdx(123510, 1629462021, 0x1d06d22a, &blockIndex123509);
+    CBlockIndex blockIndex123511 = MakeIdx(123511, 1629462028, 0x1d06e343, &blockIndex123510);
+    CBlockIndex blockIndex123512 = MakeIdx(123512, 1629462051, 0x1d068af3, &blockIndex123511);
+    CBlockIndex blockIndex123513 = MakeIdx(123513, 1629462097, 0x1d06841f, &blockIndex123512);
+    CBlockIndex blockIndex123514 = MakeIdx(123514, 1629462147, 0x1d0686de, &blockIndex123513);
+    CBlockIndex blockIndex123515 = MakeIdx(123515, 1629462319, 0x1d0674e2, &blockIndex123514);
+    CBlockIndex blockIndex123516 = MakeIdx(123516, 1629462519, 0x1d0697e0, &blockIndex123515);
 
+    // blockHeader is not used for DGW calculations, it depends on the last block in the chain provided.  We provide but ignore:
     CBlockHeader blockHeader;
-    blockHeader.nTime = 1408732505; // Block #123457
-    BOOST_CHECK_EQUAL(GetNextWorkRequired(&blockIndexLast, &blockHeader, chainParams->GetConsensus()), 0x1b1441de); // Block #123457 has 0x1b1441de
+
+    // typical timing, mainnet:
+    BOOST_CHECK_EQUAL(GetNextWorkRequired(&blockIndex123515, &blockHeader, chainParams->GetConsensus()), 0x1d0697e0); // Block #123516 is 0x1d0697e0
 
     // test special rules for slow blocks on devnet/testnet
     gArgs.SoftSetBoolArg("-devnet", true);
     const auto chainParamsDev = CreateChainParams(CBaseChainParams::DEVNET);
+    int spacing = chainParams->GetConsensus().nPowTargetSpacing;
+    int dgwWidth = chainParams->GetConsensus().DGWBlocksAvg;
 
     // make sure normal rules apply
-    blockHeader.nTime = 1408732505; // Block #123457
-    BOOST_CHECK_EQUAL(GetNextWorkRequired(&blockIndexLast, &blockHeader, chainParamsDev->GetConsensus()), 0x1b1441de); // Block #123457 has 0x1b1441de
+    BOOST_CHECK_EQUAL(GetNextWorkRequired(&blockIndex123515, &blockHeader, chainParamsDev->GetConsensus()), 0x1d0697e0); // Block #123516 is 0x1d0697e0
 
     // 10x higher target
-    blockHeader.nTime = 1408733090; // Block #123457 (10m+1sec)
-    BOOST_CHECK_EQUAL(GetNextWorkRequired(&blockIndexLast, &blockHeader, chainParamsDev->GetConsensus()), 0x1c00c8f8); // Block #123457 has 0x1c00c8f8
-    blockHeader.nTime = 1408733689; // Block #123457 (20m)
-    BOOST_CHECK_EQUAL(GetNextWorkRequired(&blockIndexLast, &blockHeader, chainParamsDev->GetConsensus()), 0x1c00c8f8); // Block #123457 has 0x1c00c8f8
-    // lowest diff possible
-    blockHeader.nTime = 1408739690; // Block #123457 (2h+1sec)
-    BOOST_CHECK_EQUAL(GetNextWorkRequired(&blockIndexLast, &blockHeader, chainParamsDev->GetConsensus()), 0x207fffff); // Block #123457 has 0x207fffff
-    blockHeader.nTime = 1408743289; // Block #123457 (3h)
-    BOOST_CHECK_EQUAL(GetNextWorkRequired(&blockIndexLast, &blockHeader, chainParamsDev->GetConsensus()), 0x207fffff); // Block #123457 has 0x207fffff
+    blockIndex123516.nTime = blockIndex123515.nTime + spacing * 10 + 1;
+    BOOST_CHECK_EQUAL(GetNextWorkRequired(&blockIndex123516, &blockHeader, chainParamsDev->GetConsensus()), 0x1d07cedd); // Block #123517 would be
+
+    blockIndex123516.nTime = blockIndex123515.nTime + spacing * 20;
+    BOOST_CHECK_EQUAL(GetNextWorkRequired(&blockIndex123516, &blockHeader, chainParamsDev->GetConsensus()), 0x1d0913d5); // Block #123517 would be
+
+    // max diff change possible (at least 3x normal time in last N blocks)
+    blockIndex123516.nTime = blockIndex123515.nTime + spacing * dgwWidth * 3;
+    BOOST_CHECK_EQUAL(GetNextWorkRequired(&blockIndex123516, &blockHeader, chainParamsDev->GetConsensus()), 0x1d16de4e); // Block #123517 would be
+
+    blockIndex123516.nTime = blockIndex123515.nTime + spacing * dgwWidth * 4;
+    BOOST_CHECK_EQUAL(GetNextWorkRequired(&blockIndex123516, &blockHeader, chainParamsDev->GetConsensus()), 0x1d16de4e); // Block #123517 would be
 }
-
-/* Test the constraint on the upper bound for next work */
-// BOOST_AUTO_TEST_CASE(get_next_work_pow_limit)
-// {
-//     const auto chainParams = CreateChainParams(CBaseChainParams::MAIN);
-
-//     int64_t nLastRetargetTime = 1231006505; // Block #0
-//     CBlockIndex pindexLast;
-//     pindexLast.nHeight = 2015;
-//     pindexLast.nTime = 1233061996;  // Block #2015
-//     pindexLast.nBits = 0x1d00ffff;
-//     BOOST_CHECK_EQUAL(CalculateNextWorkRequired(&pindexLast, nLastRetargetTime, chainParams->GetConsensus()), 0x1d00ffff);
-// }
-
-/* Test the constraint on the lower bound for actual time taken */
-// BOOST_AUTO_TEST_CASE(get_next_work_lower_limit_actual)
-// {
-//     const auto chainParams = CreateChainParams(CBaseChainParams::MAIN);
-
-//     int64_t nLastRetargetTime = 1279008237; // Block #66528
-//     CBlockIndex pindexLast;
-//     pindexLast.nHeight = 68543;
-//     pindexLast.nTime = 1279297671;  // Block #68543
-//     pindexLast.nBits = 0x1c05a3f4;
-//     BOOST_CHECK_EQUAL(CalculateNextWorkRequired(&pindexLast, nLastRetargetTime, chainParams->GetConsensus()), 0x1c0168fd);
-// }
-
-/* Test the constraint on the upper bound for actual time taken */
-// BOOST_AUTO_TEST_CASE(get_next_work_upper_limit_actual)
-// {
-//     const auto chainParams = CreateChainParams(CBaseChainParams::MAIN);
-
-//     int64_t nLastRetargetTime = 1263163443; // NOTE: Not an actual block time
-//     CBlockIndex pindexLast;
-//     pindexLast.nHeight = 46367;
-//     pindexLast.nTime = 1269211443;  // Block #46367
-//     pindexLast.nBits = 0x1c387f6f;
-//     BOOST_CHECK_EQUAL(CalculateNextWorkRequired(&pindexLast, nLastRetargetTime, chainParams->GetConsensus()), 0x1d00e1fd);
-// }
 
 BOOST_AUTO_TEST_CASE(GetBlockProofEquivalentTime_test)
 {

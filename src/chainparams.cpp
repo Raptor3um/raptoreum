@@ -113,6 +113,13 @@ void CChainParams::UpdateVersionBitsParameters(Consensus::DeploymentPos d, int64
 //    consensus.DIP0003EnforcementHeight = nEnforcementHeight;
 //}
 
+void CChainParams::UpdateBIP66Parameters(bool active)
+{
+    if (strcmp(Params().NetworkIDString().c_str(),"regtest") == 0){
+        consensus.BIP66Enabled = active;
+    }
+}
+
 void CChainParams::UpdateBudgetParameters(int nSmartnodePaymentsStartBlock, int nBudgetPaymentsStartBlock, int nSuperblockStartBlock)
 {
     consensus.nSmartnodePaymentsStartBlock = nSmartnodePaymentsStartBlock;
@@ -159,34 +166,37 @@ static CBlock FindDevNetGenesisBlock(const CBlock &prevBlock, const CAmount& rew
     assert(false);
 }
 
-static void FindMainNetGenesisBlock(uint32_t nTime, uint32_t nBits, const char* network)
+/// Verify the POW hash is valid for the genesis block
+/// If starting Nonce is not valid, search for one
+static void VerifyGenesisPOW(const CBlock& genesis)
 {
-    CBlock block = CreateGenesisBlock(nTime, 0, nBits, 4, 5000 * COIN);
-
     arith_uint256 bnTarget;
-    bnTarget.SetCompact(block.nBits);
+    bnTarget.SetCompact(genesis.nBits);
 
-    for (uint32_t nNonce = 0; nNonce < UINT32_MAX; nNonce++) {
-        block.nNonce = nNonce;
-
+    CBlock block(genesis);
+    do
+    {
         uint256 hash = block.GetPOWHash();
-        if (nNonce % 48 == 0) {
-        	printf("\nrnonce=%d, pow is %s\n", nNonce, hash.GetHex().c_str());
+        if (UintToArith256(hash) <= bnTarget)
+        {
+            if (genesis.nNonce != block.nNonce)
+            {
+                std::cerr << "VerifyGenesisPOW:  provided nNonce (" << genesis.nNonce << ") invalid" << std::endl;
+                std::cerr << "   nonce: " << block.nNonce << ", pow hash: 0x" << hash.ToString()
+                          << ", block hash: 0x" << block.GetHash().ToString() << std::endl;
+                assert(genesis.nNonce == block.nNonce);
+            }
+            else
+            {
+                return;
+            }
         }
-        if (UintToArith256(hash) <= bnTarget) {
-        	printf("\n%s net\n", network);
-        	printf("\ngenesis is %s\n", block.ToString().c_str());
-        	printf("\npow is %s\n", hash.GetHex().c_str());
-        	printf("\ngenesisNonce is %d\n", nNonce);
-        	std::cout << "Genesis Merkle " << block.hashMerkleRoot.GetHex() << std::endl;
-        	return;
-        }
-
+        ++block.nNonce;
     }
+    while (block.nNonce != 0);
 
-    // This is very unlikely to happen as we start the devnet with a very low difficulty. In many cases even the first
-    // iteration of the above loop will give a result already
-    error("%sNetGenesisBlock: could not find %s genesis block",network, network);
+    // We should never get here
+    error("VerifyGenesisPOW: could not find valid Nonce for genesis block");
     assert(false);
 }
 
@@ -541,10 +551,10 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_V17].nFalloffCoeff = 5; // this corresponds to 10 periods
 
         // The best chain should have at least this much work.
-        consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000000000000000c2a6d13d4138"); // 0
+        consensus.nMinimumChainWork = uint256S("000000000000000000000000000000000000000000000000000eead474ccbc59"); // block 421457 chainwork
 
         // By default assume that the signatures in ancestors of this block are valid.
-        consensus.defaultAssumeValid = uint256S("0x40e5b20023ae263fa2e62d8c6c7111aab7d2743851045a226525c6e32492c227"); // 0
+        consensus.defaultAssumeValid = uint256S("ox6fb0b649723f51b67484019409fef94d077f17c8d88645e08c000b2e4fd3e28a"); // block hash for 421457
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.
@@ -557,22 +567,14 @@ public:
         pchMessageStart[3] = 0x2e;//.
         nDefaultPort = 10226;
         nPruneAfterHeight = 100000;
-        //FindMainNetGenesisBlock(1614369600, 0x20001fff, "main");
         genesis = CreateGenesisBlock(1614369600, 1130, 0x20001fff, 4, 5000 * COIN);
+        VerifyGenesisPOW(genesis);
         consensus.hashGenesisBlock = genesis.GetHash();
         assert(consensus.hashGenesisBlock == uint256S("0xb79e5df07278b9567ada8fc655ffbfa9d3f586dc38da3dd93053686f41caeea0"));
         assert(genesis.hashMerkleRoot == uint256S("0x87a48bc22468acdd72ee540aab7c086a5bbcddc12b51c6ac925717a74c269453"));
 
-        vSeeds.emplace_back("seed00.raptoreum.com");
-        vSeeds.emplace_back("seed01.raptoreum.com");
-        vSeeds.emplace_back("seed02.raptoreum.com");
-        vSeeds.emplace_back("seed03.raptoreum.com");
-        vSeeds.emplace_back("seed04.raptoreum.com");
-        vSeeds.emplace_back("seed05.raptoreum.com");
-        vSeeds.emplace_back("seed06.raptoreum.com");
-        vSeeds.emplace_back("ger1.raptoreum.com");
-        vSeeds.emplace_back("ny1.raptoreum.com");
-
+        vSeeds.emplace_back("lbdn.raptoreum.com");
+        vSeeds.emplace_back("51.89.21.112");
 
         // Raptoreum addresses start with 'r'
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,60);
@@ -717,12 +719,13 @@ public:
         pchMessageStart[1] = 0x72; //r
         pchMessageStart[2] = 0x74; //t
         pchMessageStart[3] = 0x6d; //m
-        nDefaultPort = 10228;
+        nDefaultPort = 10229;
         nPruneAfterHeight = 1000;
-       // FindMainNetGenesisBlock(1645942755,  0x20001fff, "test");
-        genesis = CreateGenesisBlock(1645942755, 387, 0x20001fff, 4, 5000 * COIN);
+        genesis = CreateGenesisBlock(1668574674, 352, 0x20001fff, 4, 5000 * COIN);
+        VerifyGenesisPOW(genesis);
+
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x99f1aeb781d780f51aee4247b23eb91d561f6fb8c9e761a9f1ebc72212b4ebf0"));
+        assert(consensus.hashGenesisBlock == uint256S("0x16b418c4e84599ba61836085c5b780c199f90c207f7de189cbb56803e87529eb"));
         assert(genesis.hashMerkleRoot == uint256S("0x87a48bc22468acdd72ee540aab7c086a5bbcddc12b51c6ac925717a74c269453"));
 
         vFixedSeeds.clear();
@@ -730,11 +733,8 @@ public:
 
         vSeeds.clear();
         // nodes with support for servicebits filtering should be at the top
-        vSeeds.emplace_back("47.151.7.226");
-        //vSeeds.emplace_back("62.171.153.224", true);
-        //vSeeds.emplace_back("98.38.235.195", true);
-        //vSeeds.emplace_back("ger1.raptoreum.com", true);
-        //vSeeds.emplace_back("ny1.raptoreum.com", true);
+        vSeeds.emplace_back("47.155.87.132");
+        vSeeds.emplace_back("lbdn.raptoreum.com");
 
         // Testnet Raptoreum addresses start with 'r'
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,123);
@@ -762,7 +762,7 @@ public:
         consensus.llmqTypePlatform = Consensus::LLMQ_100_67;
 
         consensus.nCollaterals = SmartnodeCollaterals(
-          {  {30000, 20000 * COIN}, {60000, 40000 * COIN}, {INT_MAX, 60000 * COIN}  },
+          {  {INT_MAX, 60000 * COIN}  },
           {  {INT_MAX, 20}  });
 
         consensus.nFutureRewardShare = Consensus::FutureRewardShare(0.8,0.2,0.0);
@@ -777,7 +777,7 @@ public:
         fAllowMultipleAddressesFromGroup = false;
         fAllowMultiplePorts = true;
         nLLMQConnectionRetryTimeout = 60;
-        miningRequiresPeers = true;
+        miningRequiresPeers = false;
 
         nPoolMinParticipants = 3;
         nPoolNewMinParticipants = 2;
@@ -838,7 +838,7 @@ public:
        // consensus.DIP0003EnforcementHeight = 2; // DIP0003 activated immediately on devnet
         consensus.powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 1
         consensus.nPowTargetTimespan = 24 * 60 * 60; // Raptoreum: 1 day
-        consensus.nPowTargetSpacing = 2.5 * 60; // Raptoreum: 2.5 minutes
+        consensus.nPowTargetSpacing = 2 * 60; // Raptoreum: 2 minutes
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = false;
         consensus.nPowDGWHeight = 60;
@@ -871,18 +871,18 @@ public:
         nDefaultPort = 19799;
         nPruneAfterHeight = 1000;
 
-        genesis = CreateGenesisBlock(1417713337, 1096447, 0x207fffff, 1, 50 * COIN);
+        genesis = CreateGenesisBlock(1645942755, 387, 0x20001fff, 4, 5000 * COIN);
+        VerifyGenesisPOW(genesis);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x000008ca1832a4baf228eb1553c03d3a2c8e02399550dd6ea8d65cec3ef23d2e"));
-        assert(genesis.hashMerkleRoot == uint256S("0xe0028eb9648db56b1ac77cf090b99048a8007e2bb64b68f092c03c7f56a662c7"));
+//      std::cout << "hash: " << consensus.hashGenesisBlock.ToString() << std::endl;
+        assert(consensus.hashGenesisBlock == uint256S("0x99f1aeb781d780f51aee4247b23eb91d561f6fb8c9e761a9f1ebc72212b4ebf0"));
+        assert(genesis.hashMerkleRoot == uint256S("0xe87a48bc22468acdd72ee540aab7c086a5bbcddc12b51c6ac925717a74c269453"));
 
-        devnetGenesis = FindDevNetGenesisBlock(genesis, 50 * COIN);
-        consensus.hashDevnetGenesisBlock = devnetGenesis.GetHash();
         consensus.nFutureRewardShare = Consensus::FutureRewardShare(0.8,0.2,0.0);
 
-        std::vector<FounderRewardStructure> rewardStructures = {  {INT_MAX, 5} };// 5% founder/dev fee forever
+        std::vector<FounderRewardStructure> rewardStructures = {  {INT_MAX, 5}  };// 5% founder/dev fee forever
+        consensus.nFounderPayment = FounderPayment(rewardStructures, 200, "yaackz5YDLnFuuX6gGzEs9EMRQGfqmNYjc");
 
-        consensus.nFounderPayment = FounderPayment(rewardStructures, 200);
 
         vFixedSeeds.clear();
         vSeeds.clear();
@@ -917,6 +917,7 @@ public:
         fMineBlocksOnDemand = false;
         fAllowMultipleAddressesFromGroup = true;
         fAllowMultiplePorts = true;
+        miningRequiresPeers = false;
         nLLMQConnectionRetryTimeout = 60;
 
         nPoolMinParticipants = 3;
@@ -925,22 +926,20 @@ public:
         nPoolNewMaxParticipants = 20;
         nFulfilledRequestExpireTime = 5*60; // fulfilled requests expire in 5 minutes
 
-        vSporkAddresses = {"yjPtiKh2uwk3bDutTEA2q9mCtXyiZRWn55"};
+        // privKey: cVpnZj4dZvRXmBf7Jze1GjpLQb25iKP92GDXUsKdUJTXhXRo2RFA
+        vSporkAddresses = {"yaackz5YDLnFuuX6gGzEs9EMRQGfqmNYjc"};
         nMinSporkKeys = 1;
         // devnets are started with no blocks and no MN, so we can't check for upgraded MN (as there are none)
         fBIP9CheckSmartnodesUpgraded = false;
 
         checkpointData = (CCheckpointData) {
             {
-                { 0, uint256S("0x000008ca1832a4baf228eb1553c03d3a2c8e02399550dd6ea8d65cec3ef23d2e")},
-                { 1, devnetGenesis.GetHash() },
+                { 0, uint256S("0x99f1aeb781d780f51aee4247b23eb91d561f6fb8c9e761a9f1ebc72212b4ebf0")},
             }
         };
 
         chainTxData = ChainTxData{
-            devnetGenesis.GetBlockTime(), // * UNIX timestamp of devnet genesis block
-            2,                            // * we only have 2 coinbase transactions when a devnet is started up
-            0.01                          // * estimated number of transactions per second
+            
         };
     }
 };
@@ -951,7 +950,7 @@ public:
 class CRegTestParams : public CChainParams {
 public:
     CRegTestParams() {
-        strNetworkID = "regtest";
+         strNetworkID = "regtest";
         consensus.nSubsidyHalvingInterval = 150;
         consensus.nSmartnodePaymentsStartBlock = 240;
         consensus.nSmartnodePaymentsIncreaseBlock = 350;
@@ -974,10 +973,12 @@ public:
         consensus.BIP66Enabled = true; // BIP66 activated on regtest (Used in rpc activation tests)
         consensus.DIP0001Enabled = true;
         consensus.DIP0003Enabled = true;
+        consensus.DIP0008Enabled = true;
        // consensus.DIP0003EnforcementHeight = 500;
         consensus.powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 1
         consensus.nPowTargetTimespan = 24 * 60 * 60; // Raptoreum: 1 day
-        consensus.nPowTargetSpacing = 2.5 * 60; // Raptoreum: 2.5 minutes
+        consensus.nPowTargetSpacing = 2 * 60; // Raptoreum: 2 minutes
+        consensus.nMinimumDifficultyBlocks = 2000;
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = true;
         consensus.nPowDGWHeight = 60;
@@ -1003,6 +1004,10 @@ public:
         // By default assume that the signatures in ancestors of this block are valid.
         consensus.defaultAssumeValid = uint256S("0x00");
 
+        consensus.nCollaterals = SmartnodeCollaterals(
+          {   {INT_MAX, 10 * COIN}  },
+          {  {240, 0}, {INT_MAX, 20} });
+
         pchMessageStart[0] = 0xfc;
         pchMessageStart[1] = 0xc1;
         pchMessageStart[2] = 0xb7;
@@ -1010,9 +1015,10 @@ public:
         nDefaultPort = 19899;
         nPruneAfterHeight = 1000;
 
-        genesis = CreateGenesisBlock(1614369600, 1130, 0x20001fff, 4, 5000 * COIN);
+        genesis = CreateGenesisBlock(1614369600, 2, 0x207fffff, 4, 5000 * COIN);
+        VerifyGenesisPOW(genesis);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0xb79e5df07278b9567ada8fc655ffbfa9d3f586dc38da3dd93053686f41caeea0"));
+        assert(consensus.hashGenesisBlock == uint256S("0x485491468e03c8ac23dd38f70fc1cda9f98cbd0bf58945e2da6c94c2a2d8b044"));
         assert(genesis.hashMerkleRoot == uint256S("0x87a48bc22468acdd72ee540aab7c086a5bbcddc12b51c6ac925717a74c269453"));
         consensus.nFutureRewardShare = Consensus::FutureRewardShare(0.8,0.2,0.0);
 
@@ -1033,18 +1039,17 @@ public:
         nPoolMaxParticipants = 5;
         nPoolNewMaxParticipants = 20;
 
-        // privKey: cP4EKFyJsHT39LDqgdcB43Y3YXjNyjb5Fuas1GQSeAtjnZWmZEQK
-        vSporkAddresses = {"RWGvGpd3yJdnfh9ziyHNDEoHMJBvnZ23zK"};
+        // privKey: cVpnZj4dZvRXmBf7Jze1GjpLQb25iKP92GDXUsKdUJTXhXRo2RFA
+        vSporkAddresses = {"yaackz5YDLnFuuX6gGzEs9EMRQGfqmNYjc"};
         nMinSporkKeys = 1;
         // regtest usually has no smartnodes in most tests, so don't check for upgraged MNs
         fBIP9CheckSmartnodesUpgraded = false;
-        std::vector<FounderRewardStructure> rewardStructures = {  {INT_MAX, 5} };// 5% founder/dev fee forever
-
-        consensus.nFounderPayment = FounderPayment(rewardStructures, 200);
+        std::vector<FounderRewardStructure> rewardStructures = {  {INT_MAX, 5}  };// 5% founder/dev fee forever
+        consensus.nFounderPayment = FounderPayment(rewardStructures, 500, "yaackz5YDLnFuuX6gGzEs9EMRQGfqmNYjc");
 
         checkpointData = {
             {
-                {0, uint256S("0x000008ca1832a4baf228eb1553c03d3a2c8e02399550dd6ea8d65cec3ef23d2e")},
+                {0, uint256S("b79e5df07278b9567ada8fc655ffbfa9d3f586dc38da3dd93053686f41caeea0")},
             }
         };
 
@@ -1069,12 +1074,13 @@ public:
         nExtCoinType = 1;
 
         // long living quorum params
-        consensus.llmqs[Consensus::LLMQ_5_60] = llmq3_60;
         consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
-        consensus.llmqs[Consensus::LLMQ_TEST_V17] = llmq_test_v17;
-        consensus.llmqTypeChainLocks = Consensus::LLMQ_5_60;
-        consensus.llmqTypeInstantSend = Consensus::LLMQ_5_60;
-        consensus.llmqTypePlatform = Consensus::LLMQ_5_60;
+        consensus.llmqs[Consensus::LLMQ_400_60] = llmq400_60;
+        consensus.llmqs[Consensus::LLMQ_400_85] = llmq400_85;
+        consensus.llmqs[Consensus::LLMQ_100_67] = llmq100_67_testnet;
+        consensus.llmqTypeChainLocks = Consensus::LLMQ_50_60;
+        consensus.llmqTypeInstantSend = Consensus::LLMQ_50_60;
+        consensus.llmqTypePlatform = Consensus::LLMQ_100_67;
     }
 };
 
@@ -1113,6 +1119,11 @@ void UpdateVersionBitsParameters(Consensus::DeploymentPos d, int64_t nStartTime,
 //{
 //    globalChainParams->UpdateDIP3Parameters(nActivationHeight, nEnforcementHeight);
 //}
+
+void UpdateBIP66Parameters(bool active)
+{
+    globalChainParams->UpdateBIP66Parameters(active);
+}
 
 void UpdateBudgetParameters(int nSmartnodePaymentsStartBlock, int nBudgetPaymentsStartBlock, int nSuperblockStartBlock)
 {
@@ -1164,7 +1175,7 @@ void CChainParams::UpdateLLMQParams(size_t totalMnCount, int height, bool lowLLM
         lastCheckMnCount = totalMnCount;
 		lastCheckedLowLLMQParams = lowLLMQParams;
 		lastCheckHeight = height;
-        bool isTestNet = strcmp(Params().NetworkIDString().c_str(),"testnet") == 0;
+        bool isTestNet = strcmp(Params().NetworkIDString().c_str(),"test") == 0;
 		if(totalMnCount < 5) {
 			consensus.llmqs[Consensus::LLMQ_50_60] = llmq3_60;
 			if(isTestNet) {
@@ -1178,7 +1189,7 @@ void CChainParams::UpdateLLMQParams(size_t totalMnCount, int height, bool lowLLM
 			consensus.llmqs[Consensus::LLMQ_50_60] = llmq10_60;
 			consensus.llmqs[Consensus::LLMQ_400_60] = llmq20_60;
 			consensus.llmqs[Consensus::LLMQ_400_85] = llmq20_85;
-		}  else if(totalMnCount < 600) {
+		}  else if((totalMnCount < 4000 && isTestNet) || (totalMnCount < 600 && !isTestNet)) {
 			consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
 			consensus.llmqs[Consensus::LLMQ_400_60] = llmq40_60;
 			consensus.llmqs[Consensus::LLMQ_400_85] = llmq40_85;

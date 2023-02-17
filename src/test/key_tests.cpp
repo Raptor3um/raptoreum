@@ -16,14 +16,14 @@
 
 #include <boost/test/unit_test.hpp>
 
-static const std::string strSecret1 = "7qh6LYnLN2w2ntz2wwUhRUEgkQ2j8XB16FGw77ZRDZmC29bn7cD";
-static const std::string strSecret2 = "7rve4MxeWFQHGbSYH6J2yaaZd3MBUqoDEwN6ZAZ6ZHmhTT4r3hW";
-static const std::string strSecret1C = "XBuxZHH6TqXUuaSjbVTFR1DQSYecxCB9QA1Koyx5tTc3ddhqEnhm";
-static const std::string strSecret2C = "XHMkZqWcY6Zkoq1j42NBijD8z5N5FtNy2Wx7WyAfXX2HZgxry8cr";
-static const std::string addr1 = "Xywgfc872nn5CKtpATCoAjZCc4v96pJczy";
-static const std::string addr2 = "XpmouUj9KKJ99ZuU331ZS1KqsboeFnLGgK";
-static const std::string addr1C = "XxV9h4Xmv6Pup8tVAQmH97K6grzvDwMG9F";
-static const std::string addr2C = "Xn7ZrYdExuk79Dm7CJCw7sfUWi2qWJSbRy";
+static const std::string strSecret1 = "5J8zMRBt9YU3tyvJC9D3G1TfPXQ81snpu8UHttrC4VUGqgDwWDB";
+static const std::string strSecret2 = "5KKMP3aVta8Wt8NcDprQFA1PoiUySCrN1mzFsccg5XeMUnUsMTV";
+static const std::string strSecret1C = "KxeG97m2khtPnSEEtBE8yF2gSRB3xsBGR5yTa3r7pQfNua2DhKHk";
+static const std::string strSecret2C = "L3qzxJNrWdEAtfYNTcD3bUkjfC6U6FJskRZieQCTUzFsPcGNm92W";
+static const std::string addr1 = "RCvA29Ui948z61vhxAuCcJaBZSELTuP1gQ";
+static const std::string addr2 = "RTYXreDKjH1k9EyBZEDz48zUrHxh933BTW";
+static const std::string addr1C = "RVMg8JuaKgRGUFvoAgBiK5Mp8YAgqJ5cyr";
+static const std::string addr2C = "RCcTmMBeN9qGNbQJid1LSfEQu1SCW7FRj5";
 
 static const std::string strAddressBad = "Xta1praZQjyELweyMByXyiREw1ZRsjXzVP";
 
@@ -130,26 +130,26 @@ BOOST_AUTO_TEST_CASE(key_test1)
     }
 
     // test deterministic signing
-
+    
     std::vector<unsigned char> detsig, detsigc;
     std::string strMsg = "Very deterministic message";
     uint256 hashMsg = Hash(strMsg.begin(), strMsg.end());
     BOOST_CHECK(key1.Sign(hashMsg, detsig));
     BOOST_CHECK(key1C.Sign(hashMsg, detsigc));
     BOOST_CHECK(detsig == detsigc);
-    BOOST_CHECK(detsig == ParseHex("304402205dbbddda71772d95ce91cd2d14b592cfbc1dd0aabd6a394b6c2d377bbe59d31d022014ddda21494a4e221f0824f0b8b924c43fa43c0ad57dccdaa11f81a6bd4582f6"));
+    BOOST_CHECK(detsig == ParseHex("30450221009842b16af3d7ece7bbd28551faea69386f77969539b26052880658d2f13a58e102202c7a8c17c70301cd56fbc2b5473266f500c758069abac398246d808889e9cff7"));
     BOOST_CHECK(key2.Sign(hashMsg, detsig));
     BOOST_CHECK(key2C.Sign(hashMsg, detsigc));
     BOOST_CHECK(detsig == detsigc);
-    BOOST_CHECK(detsig == ParseHex("3044022052d8a32079c11e79db95af63bb9600c5b04f21a9ca33dc129c2bfa8ac9dc1cd5022061d8ae5e0f6c1a16bde3719c64c2fd70e404b6428ab9a69566962e8771b5944d"));
+    BOOST_CHECK(detsig == ParseHex("30440220227dadff585108210635ed0341c494bef756b1050d30cd0460f5c0949d2f46f3022073b3b5bd1a76d8673ca94a8a897bad379cbfc1076365635307ec7de1c7828d11"));
     BOOST_CHECK(key1.SignCompact(hashMsg, detsig));
     BOOST_CHECK(key1C.SignCompact(hashMsg, detsigc));
-    BOOST_CHECK(detsig == ParseHex("1c5dbbddda71772d95ce91cd2d14b592cfbc1dd0aabd6a394b6c2d377bbe59d31d14ddda21494a4e221f0824f0b8b924c43fa43c0ad57dccdaa11f81a6bd4582f6"));
-    BOOST_CHECK(detsigc == ParseHex("205dbbddda71772d95ce91cd2d14b592cfbc1dd0aabd6a394b6c2d377bbe59d31d14ddda21494a4e221f0824f0b8b924c43fa43c0ad57dccdaa11f81a6bd4582f6"));
+    BOOST_CHECK(detsig == ParseHex("1b9842b16af3d7ece7bbd28551faea69386f77969539b26052880658d2f13a58e12c7a8c17c70301cd56fbc2b5473266f500c758069abac398246d808889e9cff7"));
+    BOOST_CHECK(detsigc == ParseHex("1f9842b16af3d7ece7bbd28551faea69386f77969539b26052880658d2f13a58e12c7a8c17c70301cd56fbc2b5473266f500c758069abac398246d808889e9cff7"));
     BOOST_CHECK(key2.SignCompact(hashMsg, detsig));
     BOOST_CHECK(key2C.SignCompact(hashMsg, detsigc));
-    BOOST_CHECK(detsig == ParseHex("1c52d8a32079c11e79db95af63bb9600c5b04f21a9ca33dc129c2bfa8ac9dc1cd561d8ae5e0f6c1a16bde3719c64c2fd70e404b6428ab9a69566962e8771b5944d"));
-    BOOST_CHECK(detsigc == ParseHex("2052d8a32079c11e79db95af63bb9600c5b04f21a9ca33dc129c2bfa8ac9dc1cd561d8ae5e0f6c1a16bde3719c64c2fd70e404b6428ab9a69566962e8771b5944d"));
+    BOOST_CHECK(detsig == ParseHex("1c227dadff585108210635ed0341c494bef756b1050d30cd0460f5c0949d2f46f373b3b5bd1a76d8673ca94a8a897bad379cbfc1076365635307ec7de1c7828d11"));
+    BOOST_CHECK(detsigc == ParseHex("20227dadff585108210635ed0341c494bef756b1050d30cd0460f5c0949d2f46f373b3b5bd1a76d8673ca94a8a897bad379cbfc1076365635307ec7de1c7828d11"));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

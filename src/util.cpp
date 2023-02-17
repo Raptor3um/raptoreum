@@ -823,21 +823,16 @@ void ArgsManager::ReadConfigFile(const std::string& confPath)
 std::string ArgsManager::GetChainName() const
 {
     bool fRegTest = ArgsManagerHelper::GetNetBoolArg(*this, "-regtest", true);
-    bool fDevNet = ArgsManagerHelper::GetNetBoolArg(*this, "-devnet", false);
+    bool fDevNet  = ArgsManagerHelper::GetNetBoolArg(*this, "-devnet", false);
     bool fTestNet = ArgsManagerHelper::GetNetBoolArg(*this, "-testnet", true);
 
     int nameParamsCount = (fRegTest ? 1 : 0) + (fDevNet ? 1 : 0) + (fTestNet ? 1 : 0);
     if (nameParamsCount > 1)
         throw std::runtime_error("Only one of -regtest, -testnet or -devnet can be used.");
 
-    if (fDevNet)
-        return CBaseChainParams::DEVNET;
-    if (fRegTest)
-        return CBaseChainParams::REGTEST;
-    if (fTestNet) {
-        std::cout<< CBaseChainParams::TESTNET << "\n";
-        return CBaseChainParams::TESTNET;
-    }
+    if (fDevNet)  return CBaseChainParams::DEVNET;
+    if (fRegTest) return CBaseChainParams::REGTEST;
+    if (fTestNet) return CBaseChainParams::TESTNET;
     return CBaseChainParams::MAIN;
 }
 
@@ -1146,9 +1141,9 @@ int GetNumCores()
 
 std::string CopyrightHolders(const std::string& strPrefix, unsigned int nStartYear, unsigned int nEndYear)
 {
-    std::string strCopyrightHolders = strPrefix + strprintf(" %u ", nEndYear) + strprintf(_(COPYRIGHT_HOLDERS), _(COPYRIGHT_HOLDERS_SUBSTITUTION));
+    std::string strCopyrightHolders = strPrefix + strprintf(" %u-%u ", 2021, nEndYear) + strprintf(_(COPYRIGHT_HOLDERS), _(COPYRIGHT_HOLDERS_SUBSTITUTION));
 
-    // Check for untranslated substitution to make sure Dash Core copyright is not removed by accident
+    // Check for untranslated substitution to make sure Raptoreum Core copyright is not removed by accident
     if (strprintf(COPYRIGHT_HOLDERS, COPYRIGHT_HOLDERS_SUBSTITUTION).find("Raptoreum Core") == std::string::npos) {
         strCopyrightHolders += "\n" + strPrefix + strprintf(" %u-%u ", 2021, nEndYear) + "The Raptoreum Core developers";
     }
@@ -1159,7 +1154,6 @@ std::string CopyrightHolders(const std::string& strPrefix, unsigned int nStartYe
     }
     // Check for untranslated substitution to make sure Bitcoin Core copyright is not removed by accident
     if (strprintf(COPYRIGHT_HOLDERS, COPYRIGHT_HOLDERS_SUBSTITUTION).find("Bitcoin Core") == std::string::npos) {
-        strCopyrightHolders += "\n" + strPrefix + strprintf(" %u-%u ", 2014, nEndYear) + "The Dash Core developers";
         strCopyrightHolders += "\n" + strPrefix + strprintf(" %u-%u ", 2009, nEndYear) + "The Bitcoin Core developers";
     }
     return strCopyrightHolders;

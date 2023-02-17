@@ -2739,6 +2739,7 @@ void static UpdateTip(const CBlockIndex *pindexNew, const CChainParams& chainPar
             DoWarning(strWarning);
         }
     }
+
     std::string strMessage = strprintf("%s: new best=%s height=%d version=0x%08x log2_work=%.8f tx=%lu date='%s' progress=%f cache=%.1fMiB(%utxo)", __func__,
       pindexNew->GetBlockHash().ToString(), pindexNew->nHeight, pindexNew->nVersion,
       log(pindexNew->nChainWork.getdouble())/log(2.0), (unsigned long)pindexNew->nChainTx,
@@ -4880,7 +4881,7 @@ bool CChainState::LoadGenesisBlock(const CChainParams& chainparams)
         if (!AddGenesisBlock(chainparams, chainparams.GenesisBlock(), state))
             return false;
 
-        if (chainparams.NetworkIDString() == CBaseChainParams::DEVNET) {
+        /*if (chainparams.NetworkIDString() == CBaseChainParams::DEVNET) {
             // We can't continue if devnet genesis block is invalid
             std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(
                     chainparams.DevNetGenesisBlock());
@@ -4889,7 +4890,7 @@ bool CChainState::LoadGenesisBlock(const CChainParams& chainparams)
             assert(fCheckBlock);
             if (!AcceptBlock(shared_pblock, state, chainparams, nullptr, true, nullptr, nullptr))
                 return false;
-        }
+        }*/
     } catch (const std::runtime_error &e) {
         return error("%s: failed to initialize block database: %s", __func__, e.what());
     }
