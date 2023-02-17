@@ -71,8 +71,6 @@ jobs:
       - name: Install Required Packages
         run: |
           sudo apt-get update -y
-          sudo update-grub
-          sudo apt-get upgrade -y
           sudo apt-get install curl build-essential libtool autotools-dev automake pkg-config python3 bsdmainutils cmake -y
       - name: Build Depends
         run: |
@@ -587,7 +585,7 @@ jobs:
   build-arm-64:
     name: ARM 64-bit Build
     needs: get-version
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-20.04
 
     steps:
       - name: Checkout
@@ -596,7 +594,6 @@ jobs:
       - name: Install Required Packages
         run: |
           sudo apt-get update -y
-          sudo apt-get upgrade -y
           sudo apt-get install curl build-essential libtool g++-aarch64-linux-gnu autotools-dev automake pkg-config python3 bsdmainutils cmake -y
 
       - name: Build Depends
@@ -674,7 +671,7 @@ jobs:
   test-arm-64:
     name: ARM 64-bit Tests
     needs: [ get-version, build-arm-64 ]
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-20.04
 
     steps:
       - name: Download Artifacts
