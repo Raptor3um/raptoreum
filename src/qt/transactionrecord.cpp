@@ -443,9 +443,10 @@ void TransactionRecord::updateStatus(const std::shared_ptr<const interfaces::Wal
 
 bool TransactionRecord::statusUpdateNeeded(int numBlocks, int chainLockHeight) const
 {
+    static bool minRefresh = gArgs.GetBoolArg("-minrefresh", false);
     bool numBlocksChanged = status.cur_num_blocks != numBlocks;
 
-    // Block height changes do not matter for final states:
+    // Block height changes do not matter for final states, except to update confirmations:
     bool completed =
         status.status == TransactionStatus::Confirmed ||
         status.status == TransactionStatus::Abandoned ||
@@ -453,7 +454,8 @@ bool TransactionRecord::statusUpdateNeeded(int numBlocks, int chainLockHeight) c
 
     return
         status.needsUpdate ||
-        (numBlocksChanged && !completed) ||
+        (!minRefresh && numBlocksChanged) ||
+        (!completed) ||
         (!status.lockedByChainLocks && status.cachedChainLockHeight != chainLockHeight);
 }
 

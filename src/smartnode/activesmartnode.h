@@ -19,6 +19,7 @@ struct CActiveSmartnodeInfo;
 class CActiveSmartnodeManager;
 
 extern CActiveSmartnodeInfo activeSmartnodeInfo;
+extern CCriticalSection activeSmartnodeInfoCs;
 extern CActiveSmartnodeManager* activeSmartnodeManager;
 
 struct CActiveSmartnodeInfo {

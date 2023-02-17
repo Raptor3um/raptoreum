@@ -1,4 +1,4 @@
-Raptoreum Core Latest v1.3.17.01
+Raptoreum Core Latest v1.3.17.02
 ===========================
 
 |CI|master|develop|

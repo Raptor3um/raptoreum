@@ -232,7 +232,7 @@ void CSigSharesManager::InterruptWorkerThread()
 void CSigSharesManager::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv)
 {
     // non-smartnodes are not interested in sigshares
-    if (!fSmartnodeMode || activeSmartnodeInfo.proTxHash.IsNull()) {
+    if (!fSmartnodeMode || WITH_LOCK(activeSmartnodeInfoCs, return activeSmartnodeInfo.proTxHash.IsNull())) {
         return;
     }
 
@@ -377,7 +377,7 @@ bool CSigSharesManager::ProcessMessageSigSharesInv(CNode* pfrom, const CSigShare
     LogPrint(BCLog::LLMQ_SIGS, "CSigSharesManager::%s -- signHash=%s, inv={%s}, node=%d\n", __func__,
             sessionInfo.signHash.ToString(), inv.ToString(), pfrom->GetId());
 
-    if (sessionInfo.quorum->quorumVvec == nullptr) {
+    if (!sessionInfo.quorum->HasVerificationVector()) {
         // TODO we should allow to ask other nodes for the quorum vvec if we missed it in the DKG
         LogPrint(BCLog::LLMQ_SIGS, "CSigSharesManager::%s -- we don't have the quorum vvec for %s, not requesting sig shares. node=%d\n", __func__,
                   sessionInfo.quorumHash.ToString(), pfrom->GetId());
@@ -490,11 +490,11 @@ void CSigSharesManager::ProcessMessageSigShare(NodeId fromId, const CSigShare& s
         // quorum is too old
         return;
     }
-    if (!quorum->IsMember(activeSmartnodeInfo.proTxHash)) {
+    if (!quorum->IsMember(WITH_LOCK(activeSmartnodeInfoCs, return activeSmartnodeInfo.proTxHash))) {
         // we're not a member so we can't verify it (we actually shouldn't have received it)
         return;
     }
-    if (quorum->quorumVvec == nullptr) {
+    if (!quorum->HasVerificationVector()) {
         // TODO we should allow to ask other nodes for the quorum vvec if we missed it in the DKG
         LogPrint(BCLog::LLMQ_SIGS, "CSigSharesManager::%s -- we don't have the quorum vvec for %s, no verification possible. node=%d\n", __func__,
                  quorum->qc.quorumHash.ToString(), fromId);
@@ -539,11 +539,11 @@ bool CSigSharesManager::PreVerifyBatchedSigShares(const CSigSharesNodeState::Ses
         // quorum is too old
         return false;
     }
-    if (!session.quorum->IsMember(activeSmartnodeInfo.proTxHash)) {
+    if (!session.quorum->IsMember(WITH_LOCK(activeSmartnodeInfoCs, return activeSmartnodeInfo.proTxHash))) {
         // we're not a member so we can't verify it (we actually shouldn't have received it)
         return false;
     }
-    if (session.quorum->quorumVvec == nullptr) {
+    if (!session.quorum->HasVerificationVector()) {
         // TODO we should allow to ask other nodes for the quorum vvec if we missed it in the DKG
         LogPrint(BCLog::LLMQ_SIGS, "CSigSharesManager::%s -- we don't have the quorum vvec for %s, no verification possible.\n", __func__,
                   session.quorumHash.ToString());
@@ -613,24 +613,20 @@ void CSigSharesManager::CollectPendingSigSharesToVerify(
         }
     }
 
-    {
-        LOCK(cs_main);
+    // For the convenience of the caller, also build a map of quorumHash -> quorum
 
-        // For the convenience of the caller, also build a map of quorumHash -> quorum
+    for (auto& p : retSigShares) {
+        for (auto& sigShare : p.second) {
+            auto llmqType = (Consensus::LLMQType) sigShare.llmqType;
 
-        for (auto& p : retSigShares) {
-            for (auto& sigShare : p.second) {
-                auto llmqType = (Consensus::LLMQType) sigShare.llmqType;
-
-                auto k = std::make_pair(llmqType, sigShare.quorumHash);
-                if (retQuorums.count(k)) {
-                    continue;
-                }
-
-                CQuorumCPtr quorum = quorumManager->GetQuorum(llmqType, sigShare.quorumHash);
-                assert(quorum != nullptr);
-                retQuorums.emplace(k, quorum);
+            auto k = std::make_pair(llmqType, sigShare.quorumHash);
+            if (retQuorums.count(k)) {
+                continue;
             }
+
+            CQuorumCPtr quorum = quorumManager->GetQuorum(llmqType, sigShare.quorumHash);
+            assert(quorum != nullptr);
+            retQuorums.emplace(k, quorum);
         }
     }
 }
@@ -734,10 +730,8 @@ void CSigSharesManager::ProcessSigShare(const CSigShare& sigShare, const CConnma
 
     // prepare node set for direct-push in case this is our sig share
     std::set<NodeId> quorumNodes;
-    if (!CLLMQUtils::IsAllMembersConnectedEnabled(llmqType)) {
-        if (sigShare.quorumMember == quorum->GetMemberIndex(activeSmartnodeInfo.proTxHash)) {
-            quorumNodes = connman.GetSmartnodeQuorumNodes((Consensus::LLMQType) sigShare.llmqType, sigShare.quorumHash);
-        }
+    if (!CLLMQUtils::IsAllMembersConnectedEnabled(llmqType) && sigShare.quorumMember == quorum->GetMemberIndex(WITH_LOCK(activeSmartnodeInfoCs, return activeSmartnodeInfo.proTxHash))) {
+        quorumNodes = connman.GetSmartnodeQuorumNodes(sigShare.llmqType, sigShare.quorumHash);
     }
 
     if (quorumSigningManager->HasRecoveredSigForId(llmqType, sigShare.id)) {
@@ -1025,10 +1019,11 @@ void CSigSharesManager::CollectSigSharesToSendConcentrated(std::unordered_map<No
 
     std::unordered_map<uint256, CNode*> proTxToNode;
     for (const auto& pnode : vNodes) {
-        if (pnode->verifiedProRegTxHash.IsNull()) {
+        auto verifiedProRegTxHash = pnode->GetVerifiedProRegTxHash();
+        if (verifiedProRegTxHash.IsNull()) {
             continue;
         }
-        proTxToNode.emplace(pnode->verifiedProRegTxHash, pnode);
+        proTxToNode.emplace(verifiedProRegTxHash, pnode);
     }
 
     auto curTime = GetTime<std::chrono::milliseconds>().count();
@@ -1570,8 +1565,9 @@ void CSigSharesManager::SignPendingSigShares()
 CSigShare CSigSharesManager::CreateSigShare(const CQuorumCPtr& quorum, const uint256& id, const uint256& msgHash)
 {
     cxxtimer::Timer t(true);
+    auto activeSmartNodeProTxHash = WITH_LOCK(activeSmartnodeInfoCs, return activeSmartnodeInfo.proTxHash);
 
-    if (!quorum->IsValidMember(activeSmartnodeInfo.proTxHash)) {
+    if (!quorum->IsValidMember(activeSmartNodeProTxHash)) {
         return {};
     }
 
