@@ -71,7 +71,7 @@ jobs:
       - name: Install Required Packages
         run: |
           sudo apt-get update -y
-          sudo apt-get purge grub\*
+          sudo apt-get purge grub\* -y
           sudo apt-get install grub-efi -y
           sudo apt-get autoremove -y
           sudo update-grub
