@@ -455,10 +455,43 @@ public:
     }
 };
 
+class CMintAssetTx {
+public:
+    static const uint16_t CURRENT_VERSION = 1;
+
+    uint16_t nVersion{CURRENT_VERSION};// message version
+    std::string AssetId;
+    uint16_t fee;
+    uint256 inputsHash; // replay protection
+
+public:
+    ADD_SERIALIZE_METHODS;
+
+    template<typename Stream, typename Operation>
+    inline void SerializationOp(Stream &s, Operation ser_action) {
+        READWRITE(nVersion);
+        READWRITE(AssetId);
+        READWRITE(fee);
+        READWRITE(inputsHash);
+    }
+
+    std::string ToString() const;
+
+    void ToJson(UniValue &obj) const {
+        obj.clear();
+        obj.setObject();
+        obj.pushKV("version", nVersion);
+        obj.pushKV("Asset Id", AssetId); 
+        obj.pushKV("Fee", fee);
+        obj.pushKV("inputsHash", inputsHash.ToString());
+    }
+};
+
 bool CheckFutureTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CValidationState &state);
 
 bool CheckNewAssetTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CValidationState &state);
 bool CheckUpdateAssetTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CValidationState &state);
+bool CheckMintAssetTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CValidationState &state);
 
 bool CheckProRegTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CValidationState &state,
                    const CCoinsViewCache &view);

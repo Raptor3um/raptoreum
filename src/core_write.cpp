@@ -335,6 +335,13 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
         	ctx.ToJson(obj);
 			entry.push_back(Pair("UpdateAssetTx", obj));
         }
+    } else if(tx.nType == TRANSACTION_MINT_ASSET) {
+    	CMintAssetTx ctx;
+        if (GetTxPayload(tx, ctx)) {
+        	UniValue obj;
+        	ctx.ToJson(obj);
+			entry.push_back(Pair("MintAssetTx", obj));
+        }
     }
 
     if (!hashBlock.IsNull())

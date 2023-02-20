@@ -44,7 +44,9 @@ bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVali
         case TRANSACTION_NEW_ASSET:
           	return CheckNewAssetTx(tx, pindexPrev, state);
         case TRANSACTION_UPDATE_ASSET:
-          	return CheckUpdateAssetTx(tx, pindexPrev, state);        
+          	return CheckUpdateAssetTx(tx, pindexPrev, state);
+        case TRANSACTION_MINT_ASSET:
+          	return CheckMintAssetTx(tx, pindexPrev, state);         
         }
     } catch (const std::exception& e) {
         LogPrintf("%s -- failed: %s\n", __func__, e.what());
@@ -76,6 +78,8 @@ bool ProcessSpecialTx(const CTransaction& tx, const CBlockIndex* pindex, CValida
     	return true;
     case TRANSACTION_UPDATE_ASSET:
     	return true;
+    case TRANSACTION_MINT_ASSET:
+    	return true;
     }
     return state.DoS(100, false, REJECT_INVALID, "bad-tx-type-proc");
 }
@@ -101,6 +105,8 @@ bool UndoSpecialTx(const CTransaction& tx, const CBlockIndex* pindex)
     case TRANSACTION_NEW_ASSET:
     	return true;
     case TRANSACTION_UPDATE_ASSET:
+    	return true;
+    case TRANSACTION_MINT_ASSET:
     	return true;
     }
     return false;
