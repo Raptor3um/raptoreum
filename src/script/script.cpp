@@ -7,6 +7,7 @@
 #include <tinyformat.h>
 #include <utilstrencodings.h>
 #include <assets/assets.h>
+#include <assets/assetstype.h>
 
 const char* GetOpName(opcodetype opcode)
 {
@@ -330,6 +331,15 @@ bool GetScriptOp(CScriptBase::const_iterator& pc, CScriptBase::const_iterator en
         }
         if (end - pc < 0 || (unsigned int)(end - pc) < nSize)
             return false;
+        if (pvchRet)
+            CScriptBase::assign_to(pc, pc + nSize, *pvchRet);
+        pc += nSize;
+    }
+
+    // If we see an op asset id, we consider all data after it has data, and not op codes
+    // Move the pc to the end of the script
+    if (opcode == OP_ASSET_ID) {
+        unsigned int nSize = end - pc;
         if (pvchRet)
             CScriptBase::assign_to(pc, pc + nSize, *pvchRet);
         pc += nSize;

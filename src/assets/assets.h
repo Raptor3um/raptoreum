@@ -9,51 +9,16 @@
 #include <coins.h>
 #include <key_io.h>
 
-#define RTM_R 0x72  //R
-#define RTM_T 0x74  //T
-#define RTM_M 0x6d  //M
-
 CAmount getAssetsFeesCoin();
 uint16_t getAssetsFees();
 bool IsAssetNameValid(std::string name);
 bool GetAssetId(const CScript& script, std::string& assetId);
 
-class CAssetTransfer
-{
-public:
-    std::string AssetId;
-    CAmount nAmount;
-
-    CAssetTransfer()
-    {
-        SetNull();
-    }
-
-    void SetNull()
-    {
-        nAmount = 0;
-        AssetId = "";
-    }
-
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
-    {
-        READWRITE(AssetId);
-        READWRITE(nAmount);
-    }
-
-    CAssetTransfer(const std::string& AssetId, const CAmount& nAmount);
-    void BuildAssetTransaction(CScript& script) const;
-};
-
-bool GetTransferAsset(const CScript& script, CAssetTransfer& assetTransfer);
-
 
 //temporary memory cache class
 class CNewAssetTx;
 class CUpdateAssetTx;
+struct CAssetOutputEntry;
 
 class CAssetMetaData {
 public:
@@ -102,6 +67,7 @@ void AddAssets(const CTransaction& tx, int nHeight, bool check = false);
 
 bool CheckIfAssetExists(std::string name);
 bool GetAssetMetaData(std::string asetId, CAssetMetaData& asset);
+bool GetAssetData(const CScript& script, CAssetOutputEntry& data);
 
 
 #endif //RAPTOREUM_ASSETS_H

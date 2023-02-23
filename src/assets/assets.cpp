@@ -3,6 +3,8 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <assets/assets.h>
+#include <assets/assetstype.h>
+#include <wallet/wallet.h>
 #include <spork.h>
 #include <evo/specialtx.h>
 #include <evo/providertx.h>
@@ -31,25 +33,6 @@ uint16_t getAssetsFees() {
     return specialTxValue >> 8 & 0xff;
 }
 
-bool GetTransferAsset(const CScript& script, CAssetTransfer& assetTransfer){
-    int nIndex;
-    if (!script.IsAssetScript(nIndex)){
-        return false;
-    }
-
-    std::vector<unsigned char> vchAssetId;
-    vchAssetId.insert(vchAssetId.end(), script.begin() + nIndex, script.end());
-    CDataStream DSAsset(vchAssetId, SER_NETWORK, PROTOCOL_VERSION);
-    try {
-        DSAsset >> assetTransfer;
-    } catch(std::exception& e) {
-        error("Failed to get the transfer asset: %s", e.what());
-        return false;
-    }
-
-    return true;
-}
-
 bool GetAssetId(const CScript& script, std::string& assetId){
     CAssetTransfer assetTransfer;
     if(GetTransferAsset(script,assetTransfer)){
@@ -59,27 +42,9 @@ bool GetAssetId(const CScript& script, std::string& assetId){
     return false;
 }
 
-void CAssetTransfer::BuildAssetTransaction(CScript& script) const{
-    CDataStream AssetTransfer(SER_NETWORK, PROTOCOL_VERSION);
-    AssetTransfer << *this;
-    std::vector<unsigned char> vchMessage;
-    vchMessage.push_back(RTM_R); // r
-    vchMessage.push_back(RTM_T); // t
-    vchMessage.push_back(RTM_M); // m
-    vchMessage.insert(vchMessage.end(), AssetTransfer.begin(), AssetTransfer.end());
-    script << OP_ASSET_ID << ToByteVector(vchMessage) << OP_DROP;
-}
-
-CAssetTransfer::CAssetTransfer(const std::string& AssetId, const CAmount& nAmount)
-{
-    SetNull();
-    this->AssetId = AssetId;
-    this->nAmount = nAmount;
-}
-
-
 //temporary memory cache
 static std::map<std::string, CAssetMetaData> mapAsset;
+static std::map<std::string, std::string> mapAssetid;
 
 void InsertAsset(CNewAssetTx newasset, std::string assetid,int nheigth){
     CAssetMetaData assetdata;
@@ -99,7 +64,8 @@ void InsertAsset(CNewAssetTx newasset, std::string assetid,int nheigth){
     assetdata.ownerAddress = newasset.ownerAddress;
     assetdata.collateralAddress = newasset.collateralAddress;
 
-    mapAsset.insert(std::make_pair(assetid, assetdata));    
+    mapAsset.insert(std::make_pair(assetid, assetdata));
+    mapAssetid.insert(std::make_pair(assetdata.Name, assetid));    
 }
 
 bool UpdateAsset(CUpdateAssetTx upasset){
@@ -166,9 +132,33 @@ bool CheckIfAssetExists(std::string name){
 }
 
 bool GetAssetMetaData(std::string asetId, CAssetMetaData& asset){
-    auto it = mapAsset.find(asetId);
+    std::string id = asetId;
+    auto itid = mapAssetid.find(asetId);//try to get assetid by asset name
+    if( itid != mapAssetid.end() ) {
+        id = itid->second;
+    }
+    auto it = mapAsset.find(id);
     if( it != mapAsset.end() ) {
         asset = it->second;
+        return true;
+    }
+    return false;
+}
+
+bool GetAssetData(const CScript& script, CAssetOutputEntry& data)
+{
+    // Placeholder strings that will get set if you successfully get the transfer or asset from the script
+    std::string address = "";
+    std::string assetName = "";
+
+    if (!script.IsAssetScript()) {
+        return false;
+    }
+    CAssetTransfer transfer;
+    if (GetTransferAsset(script, transfer)) {
+        data.nAmount = transfer.nAmount;
+        ExtractDestination(script, data.destination);
+        data.assetId = transfer.AssetId;
         return true;
     }
     return false;

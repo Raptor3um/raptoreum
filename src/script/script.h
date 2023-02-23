@@ -188,7 +188,7 @@ enum opcodetype
     OP_CHECKDATASIGVERIFY = 0xbb,
 
     //asset
-    OP_ASSET_ID = 0xe0,
+    OP_ASSET_ID = 0xbc,
 
     // template matching params
     OP_SMALLINTEGER = 0xfa,
@@ -200,7 +200,7 @@ enum opcodetype
 };
 
 // Maximum value that an opcode can be
-static const unsigned int MAX_OPCODE = OP_CHECKDATASIGVERIFY;
+static const unsigned int MAX_OPCODE = OP_ASSET_ID;
 
 const char* GetOpName(opcodetype opcode);
 

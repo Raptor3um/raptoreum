@@ -842,6 +842,7 @@ public:
         consensus.nPowTargetTimespan = 24 * 60 * 60; // Raptoreum: 1 day
         consensus.nPowTargetSpacing = 2 * 60; // Raptoreum: 2 minutes
         consensus.fPowAllowMinDifficultyBlocks = true;
+        consensus.nMinimumDifficultyBlocks=500000;
         consensus.fPowNoRetargeting = false;
         consensus.nPowDGWHeight = 60;
         consensus.DGWBlocksAvg = 60;

@@ -16,6 +16,7 @@
 #include <validation.h>
 #include <spork.h>
 #include <assets/assets.h>
+#include <assets/assetstype.h>
 
 template <typename ProTx>
 static bool CheckService(const uint256& proTxHash, const ProTx& proTx, CValidationState& state)

@@ -31,6 +31,7 @@ class CCoinControl
 {
 public:
     CTxDestination destChange;
+    CTxDestination assetDestChange;
     //! If false, allows unselected inputs, but requires all selected inputs be used if fAllowOtherInputs is true (default)
     bool fAllowOtherInputs;
     //! If false, only include as many inputs as necessary to fulfill a coin selection request. Only usable together with fAllowOtherInputs
