@@ -134,9 +134,9 @@ bool CheckNewAssetTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVal
     }
 
     //Check if a asset already exist with give name
-    /* if(CheckIfAssetExists(assettx.Name)){
+     if(CheckIfAssetExists(assettx.Name)){
         return state.DoS(100, false, REJECT_INVALID, "bad-assets-dup-name");
-    }*/
+    }
 
     if(assettx.decimalPoint < 0 || assettx.decimalPoint > 8){
         return state.DoS(100, false, REJECT_INVALID, "bad-assets-decimalPoint"); 
@@ -190,8 +190,8 @@ bool CheckUpdateAssetTx(const CTransaction& tx, const CBlockIndex* pindexPrev, C
     }
 
     //Check if the provide asset id is valid
-    /*AssetMetaData asset;
-    if(GetAssetMetaData(assettx.AssetId, asset)){
+    CAssetMetaData asset;
+    if(!GetAssetMetaData(assettx.AssetId, asset)){
         return state.DoS(100, false, REJECT_INVALID, "bad-assets-invalid-id");
     }
 
@@ -205,7 +205,7 @@ bool CheckUpdateAssetTx(const CTransaction& tx, const CBlockIndex* pindexPrev, C
         if(EncodeDestination(dest) != EncodeDestination(asset.ownerAddress)){
             return state.DoS(100, false, REJECT_INVALID, "bad-assets-invalid-input");    
         }
-    }*/
+    }
 
     if(assettx.ownerAddress.IsNull()){
         return state.DoS(100, false, REJECT_INVALID, "bad-assets-ownerAddress"); 
@@ -223,6 +223,73 @@ bool CheckUpdateAssetTx(const CTransaction& tx, const CBlockIndex* pindexPrev, C
         return state.DoS(100, false, REJECT_INVALID, "bad-assets-collateralAddress"); 
     }
     
+    if (!CheckInputsHash(tx, assettx, state)) {
+        return false;
+    }
+
+    return true;
+}
+
+bool CheckMintAssetTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state)
+{
+
+    if(!Params().IsAssetsActive(chainActive.Tip())) {
+        return state.DoS(100, false, REJECT_INVALID, "assets-not-enabled");
+    }
+
+    if (tx.nType != TRANSACTION_MINT_ASSET) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-mint-assets-type");
+    }
+
+    CMintAssetTx assettx;
+    if (!GetTxPayload(tx, assettx)) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-mint-assets-payload");
+    }
+
+    if (assettx.nVersion == 0 || assettx.nVersion > CMintAssetTx::CURRENT_VERSION) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-mint-assets-version");
+    }
+
+    //Check if the provide asset id is valid
+    CAssetMetaData asset;
+    if(!GetAssetMetaData(assettx.AssetId, asset)){
+        return state.DoS(100, false, REJECT_INVALID, "bad-assets-invalid-asset-id");
+    }
+
+    if (asset.type == 0){ // manual mint
+        //Check if fees is paid by the owner address
+        CCoinsViewCache inputs(pcoinsTip.get());
+        for (auto in : tx.vin) {
+            const Coin& coin = inputs.AccessCoin(in.prevout);
+            assert(!coin.IsSpent());
+            CTxDestination dest;
+            ExtractDestination(coin.out.scriptPubKey, dest);
+            if(EncodeDestination(dest) != EncodeDestination(asset.ownerAddress)){
+                return state.DoS(100, false, REJECT_INVALID, "bad-assets-invalid-input");    
+            }
+        }
+
+        CAmount amount = 0;
+        for (auto out : tx.vout){
+            if (out.scriptPubKey.IsAssetScript()){
+                CAssetTransfer assetTransfer;
+                if(!GetTransferAsset(out.scriptPubKey, assetTransfer)){
+                    return state.DoS(100, false, REJECT_INVALID, "bad-mint-assets-transfer");
+                }
+                if(assetTransfer.AssetId != assettx.AssetId){ //check asset id
+                    return state.DoS(100, false, REJECT_INVALID, "bad-mint-assets-transfer"); 
+                }
+                amount += assetTransfer.nAmount;                
+            }
+        }
+        if (asset.Amount != amount){
+            return state.DoS(100, false, REJECT_INVALID, "bad-mint-assets-amount");
+        }
+    } else {
+        return state.DoS(100, false, REJECT_INVALID, "bad-mint-type-not-enabled");
+    }
+
+
     if (!CheckInputsHash(tx, assettx, state)) {
         return false;
     }
