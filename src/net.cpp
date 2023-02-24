@@ -56,6 +56,10 @@
 #include <miniupnpc/upnperrors.h>
 #endif
 
+#ifdef ENABLE_WALLET
+#include <wallet/wallet.h>
+#endif
+
 #include <unordered_map>
 
 #include <math.h>
@@ -2829,7 +2833,9 @@ void CConnman::OpenSmartnodeConnection(const CAddress &addrConnect, bool probe) 
 void CConnman::ThreadMessageHandler()
 {
     int64_t nLastSendMessagesTimeSmartnodes = 0;
-
+#ifdef ENABLE_WALLET
+    bool syncComplete = false;
+#endif
     while (!flagInterruptMsgProc)
     {
         std::vector<CNode*> vNodesCopy = CopyNodeVector();
@@ -2841,6 +2847,16 @@ void CConnman::ThreadMessageHandler()
             fSkipSendMessagesForSmartnodes = false;
             nLastSendMessagesTimeSmartnodes = GetTimeMillis();
         }
+
+#ifdef ENABLE_WALLET
+        if (!syncComplete && smartnodeSync.IsSynced()) {
+            // Re-lock after blockchain sync, to capture all new collateral Txes:xxx
+            for (const auto pwallet : GetWallets()) {
+                pwallet->AutoLockSmartnodeCollaterals();
+            }
+            syncComplete = true;
+        }
+#endif
 
         for (CNode* pnode : vNodesCopy)
         {
