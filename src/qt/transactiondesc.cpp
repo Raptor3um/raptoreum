@@ -327,6 +327,7 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
     if (wtx->value_map.count("comment") && !wtx->value_map["comment"].empty())
         strHTML += "<br><b>" + tr("Comment") + ":</b><br>" + GUIUtil::HtmlEscape(wtx->value_map["comment"], true) + "<br>";
 
+    strHTML += "<b>" + tr("Height") + ":</b> " + QString::number(status.block_height) + "<br>"; 
     strHTML += "<b>" + tr("Transaction ID") + ":</b> " + rec->getTxHash() + "<br>";
     strHTML += "<b>" + tr("Output index") + ":</b> " + QString::number(rec->getOutputIndex()) + "<br>";
     strHTML += "<b>" + tr("Transaction total size") + ":</b> " + QString::number(wtx->tx->GetTotalSize()) + " bytes<br>";

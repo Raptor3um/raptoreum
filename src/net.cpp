@@ -56,6 +56,10 @@
 #include <miniupnpc/upnperrors.h>
 #endif
 
+#ifdef ENABLE_WALLET
+#include <wallet/wallet.h>
+#endif
+
 #include <unordered_map>
 
 #include <math.h>
@@ -1106,7 +1110,7 @@ bool CConnman::AttemptToEvictConnection()
                 }
                 // if MNAUTH was valid, the node is always protected (and at the same time not accounted when
                 // checking incoming connection limits)
-                if (!node->verifiedProRegTxHash.IsNull()) {
+                if (!node->GetVerifiedProRegTxHash().IsNull()) {
                     isProtected = true;
                 }
                 if (isProtected) {
@@ -1196,7 +1200,7 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
         for (const CNode* pnode : vNodes) {
             if (pnode->fInbound) {
                 nInbound++;
-                if (!pnode->verifiedProRegTxHash.IsNull()) {
+                if (!pnode->GetVerifiedProRegTxHash().IsNull()) {
                     nVerifiedInboundSmartnodes++;
                 }
             }
@@ -2417,8 +2421,9 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
         {
             LOCK(cs_vNodes);
             for (CNode* pnode : vNodes) {
-                if (!pnode->verifiedProRegTxHash.IsNull()) {
-                    setConnectedSmartnodes.emplace(pnode->verifiedProRegTxHash);
+                auto verifiedProRegTxHash = pnode->GetVerifiedProRegTxHash();
+                if (!verifiedProRegTxHash.IsNull()) {
+                    setConnectedSmartnodes.emplace(verifiedProRegTxHash);
                 }
             }
         }
@@ -2635,9 +2640,10 @@ void CConnman::ThreadOpenSmartnodeConnections()
         std::set<CService> connectedNodes;
         std::map<uint256, bool> connectedProRegTxHashes;
         ForEachNode([&](const CNode* pnode) {
+            auto verifiedProRegTxHash = pnode->GetVerifiedProRegTxHash();
             connectedNodes.emplace(pnode->addr);
-            if (!pnode->verifiedProRegTxHash.IsNull()) {
-                connectedProRegTxHashes.emplace(pnode->verifiedProRegTxHash, pnode->fInbound);
+            if (!verifiedProRegTxHash.IsNull()) {
+                connectedProRegTxHashes.emplace(verifiedProRegTxHash, pnode->fInbound);
             }
         });
         auto mnList = deterministicMNManager->GetListAtChainTip();
@@ -2827,7 +2833,9 @@ void CConnman::OpenSmartnodeConnection(const CAddress &addrConnect, bool probe) 
 void CConnman::ThreadMessageHandler()
 {
     int64_t nLastSendMessagesTimeSmartnodes = 0;
-
+#ifdef ENABLE_WALLET
+    bool syncComplete = false;
+#endif
     while (!flagInterruptMsgProc)
     {
         std::vector<CNode*> vNodesCopy = CopyNodeVector();
@@ -2839,6 +2847,16 @@ void CConnman::ThreadMessageHandler()
             fSkipSendMessagesForSmartnodes = false;
             nLastSendMessagesTimeSmartnodes = GetTimeMillis();
         }
+
+#ifdef ENABLE_WALLET
+        if (!syncComplete && smartnodeSync.IsSynced()) {
+            // Re-lock after blockchain sync, to capture all new collateral Txes:xxx
+            for (const auto pwallet : GetWallets()) {
+                pwallet->AutoLockSmartnodeCollaterals();
+            }
+            syncComplete = true;
+        }
+#endif
 
         for (CNode* pnode : vNodesCopy)
         {
@@ -3514,7 +3532,8 @@ void CConnman::SetSmartnodeQuorumRelayMembers(Consensus::LLMQType llmqType, cons
 
     // Update existing connections
     ForEachNode([&](CNode* pnode) {
-        if (!pnode->verifiedProRegTxHash.IsNull() && !pnode->m_smartnode_iqr_connection && IsSmartnodeQuorumRelayMember(pnode->verifiedProRegTxHash)) {
+        auto verifiedProRegTxHash = pnode->GetVerifiedProRegTxHash();
+        if (!verifiedProRegTxHash.IsNull() && !pnode->m_smartnode_iqr_connection && IsSmartnodeQuorumRelayMember(verifiedProRegTxHash)) {
             // Tell our peer that we're interested in plain LLMQ recovered signatures.
             // Otherwise the peer would only announce/send messages resulting from QRECSIG,
             // e.g. InstantSend locks or ChainLocks. SPV and regular full nodes should not send
@@ -3559,7 +3578,8 @@ std::set<NodeId> CConnman::GetSmartnodeQuorumNodes(Consensus::LLMQType llmqType,
         if (pnode->fDisconnect) {
             continue;
         }
-        if (!pnode->qwatch && (pnode->verifiedProRegTxHash.IsNull() || !proRegTxHashes.count(pnode->verifiedProRegTxHash))) {
+        auto verifiedProRegTxHash = pnode->GetVerifiedProRegTxHash();
+        if (!pnode->qwatch && (verifiedProRegTxHash.IsNull() || !proRegTxHashes.count(verifiedProRegTxHash))) {
             continue;
         }
         nodes.emplace(pnode->GetId());
@@ -3579,7 +3599,7 @@ bool CConnman::IsSmartnodeQuorumNode(const CNode* pnode)
     // Let's see if this is an outgoing connection to an address that is known to be a smartnode
     // We however only need to know this if the node did not authenticate itself as a MN yet
     uint256 assumedProTxHash;
-    if (pnode->verifiedProRegTxHash.IsNull() && !pnode->fInbound) {
+    if (pnode->GetVerifiedProRegTxHash().IsNull() && !pnode->fInbound) {
         auto mnList = deterministicMNManager->GetListAtChainTip();
         auto dmn = mnList.GetMNByService(pnode->addr);
         if (dmn == nullptr) {
@@ -3591,8 +3611,8 @@ bool CConnman::IsSmartnodeQuorumNode(const CNode* pnode)
 
     LOCK(cs_vPendingSmartnodes);
     for (const auto& p : smartnodeQuorumNodes) {
-        if (!pnode->verifiedProRegTxHash.IsNull()) {
-            if (p.second.count(pnode->verifiedProRegTxHash)) {
+        if (!pnode->GetVerifiedProRegTxHash().IsNull()) {
+            if (p.second.count(pnode->GetVerifiedProRegTxHash())) {
                 return true;
             }
         } else if (!assumedProTxHash.IsNull()) {

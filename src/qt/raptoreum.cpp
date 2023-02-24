@@ -569,6 +569,7 @@ static void SetupUIArgs()
     gArgs.AddArg("-uiplatform", strprintf("Select platform to customize UI for (one of windows, macosx, other; default: %s)", BitcoinGUI::DEFAULT_UIPLATFORM), true, OptionsCategory::GUI);
     gArgs.AddArg("-debug-ui", "Updates the UI's stylesheets in realtime with changes made to the css files in -custom-css-dir and forces some widgets to show up which are usually only visible under certain circumstances. (default: 0)", true, OptionsCategory::GUI);
     gArgs.AddArg("-windowtitle=<name>", _("Sets a window title which is appended to \"Raptoreum Core - \""), false, OptionsCategory::GUI);
+    gArgs.AddArg("-minrefresh", "Minimize UI refreshes.  Fully confirmed transactions will not update with each new block (default: false)", false, OptionsCategory::GUI);
 }
 
 #ifndef BITCOIN_QT_TEST
