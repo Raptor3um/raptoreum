@@ -95,9 +95,7 @@ static void SignTransaction(CMutableTransaction& tx, const CKey& coinbaseKey)
 
 static CMutableTransaction CreateNewAssetTx(SimpleUTXOMap& utxos, const CKey& coinbaseKey, std::string name, bool updatable, bool is_unique, uint8_t type, uint8_t decimalPoint, CAmount amount)
 {
-    CKey Key;
-    Key.MakeNewKey(false);
-    CKeyID ownerKey = Key.GetPubKey().GetID();
+    CKeyID ownerKey = coinbaseKey.GetPubKey().GetID();
     CNewAssetTx newasset;
 
     newasset.Name = name;
@@ -106,7 +104,7 @@ static CMutableTransaction CreateNewAssetTx(SimpleUTXOMap& utxos, const CKey& co
     newasset.decimalPoint = decimalPoint;
     newasset.referenceHash = "";
     newasset.type = type;
-    newasset.fee = 100; //spork is off any value is valid
+    newasset.fee = getAssetsFees();
     newasset.targetAddress = ownerKey;
     newasset.ownerAddress = ownerKey;
     newasset.Amount = amount * COIN;
@@ -118,6 +116,65 @@ static CMutableTransaction CreateNewAssetTx(SimpleUTXOMap& utxos, const CKey& co
     FundTransaction(tx, utxos, GetScriptForDestination(coinbaseKey.GetPubKey().GetID()), newasset.fee * COIN + 1 * COIN, coinbaseKey);
     newasset.inputsHash = CalcTxInputsHash(tx);
     SetTxPayload(tx, newasset);
+    SignTransaction(tx, coinbaseKey);
+
+    return tx;
+}
+
+static CMutableTransaction CreateUpdateAssetTx(SimpleUTXOMap& utxos, const CKey& coinbaseKey, const CKey& newowner, std::string assetId, bool updatable, uint8_t type, CAmount amount)
+{
+    CKeyID ownerKey = newowner.GetPubKey().GetID();
+    CUpdateAssetTx upasset;
+
+    CAssetMetaData asset;
+    GetAssetMetaData(assetId, asset);
+    
+    upasset.AssetId = assetId;
+    upasset.updatable = updatable;
+    upasset.referenceHash = "";
+    upasset.fee = getAssetsFees();
+    upasset.type = type;
+    upasset.targetAddress = asset.targetAddress;
+    upasset.issueFrequency = asset.issueFrequency;
+    upasset.Amount = amount * COIN;
+    upasset.ownerAddress = ownerKey;
+    upasset.collateralAddress = asset.collateralAddress;
+    
+    CMutableTransaction tx;
+    tx.nVersion = 3;
+    tx.nType = TRANSACTION_UPDATE_ASSET;
+    FundTransaction(tx, utxos, GetScriptForDestination(coinbaseKey.GetPubKey().GetID()), upasset.fee * COIN + 1 * COIN, coinbaseKey);
+    upasset.inputsHash = CalcTxInputsHash(tx);
+    SetTxPayload(tx, upasset);
+    SignTransaction(tx, coinbaseKey);
+
+    return tx;
+}
+
+static CMutableTransaction CreateMintAssetTx(SimpleUTXOMap& utxos, const CKey& coinbaseKey, std::string assetId)
+{
+    CKeyID ownerKey = coinbaseKey.GetPubKey().GetID();
+    CMintAssetTx mint;
+
+    CAssetMetaData asset;
+    GetAssetMetaData(assetId, asset);
+    
+    mint.AssetId = assetId;
+    mint.fee = getAssetsFees();
+    
+    CMutableTransaction tx;
+    tx.nVersion = 3;
+    tx.nType = TRANSACTION_MINT_ASSET;
+
+    CScript scriptPubKey = GetScriptForDestination(asset.targetAddress);
+    CAssetTransfer assetTransfer(assetId, asset.Amount);
+    assetTransfer.BuildAssetTransaction(scriptPubKey);
+    CTxOut out(0 , scriptPubKey);
+    tx.vout.push_back(out);
+
+    FundTransaction(tx, utxos, GetScriptForDestination(coinbaseKey.GetPubKey().GetID()), mint.fee * COIN + 1 * COIN, coinbaseKey);
+    mint.inputsHash = CalcTxInputsHash(tx);
+    SetTxPayload(tx, mint);
     SignTransaction(tx, coinbaseKey);
 
     return tx;
@@ -135,6 +192,12 @@ BOOST_AUTO_TEST_SUITE(assets_creation_tests)
 
 BOOST_FIXTURE_TEST_CASE(assets_creation, TestChainDIP3BeforeActivationSetup)
 {
+    CKey sporkKey;
+    sporkKey.MakeNewKey(false);
+    sporkManager.SetSporkAddress(EncodeDestination(sporkKey.GetPubKey().GetID()));
+    sporkManager.SetPrivKey(EncodeSecret(sporkKey));
+    sporkManager.UpdateSpork(SPORK_22_SPECIAL_TX_FEE, 2560, *g_connman);
+
     auto utxos = BuildSimpleUtxoMap(coinbaseTxns);
 
     auto tx = CreateNewAssetTx(utxos, coinbaseKey,"Test Asset", true, false, 0, 8, 1000);
@@ -148,14 +211,6 @@ BOOST_FIXTURE_TEST_CASE(assets_creation, TestChainDIP3BeforeActivationSetup)
 
     BOOST_ASSERT(chainActive.Height() == nHeight + 1);
     BOOST_ASSERT(block->GetHash() == chainActive.Tip()->GetBlockHash());
-
-    //build an asset transaction and extract the asset id from the script
-    CScript scriptPubKey = GetScriptForDestination(coinbaseKey.GetPubKey().GetID());
-    BuildAssetTransaction(scriptPubKey, tx.GetHash().ToString());
-    BOOST_ASSERT(scriptPubKey.IsAssetScript());
-    std::string assetid;
-    GetAssetId(scriptPubKey,assetid);
-    BOOST_ASSERT(assetid == tx.GetHash().ToString());
     
     //invalid asset name
     tx = CreateNewAssetTx(utxos, coinbaseKey,"*Test_Asset*", true, false, 0, 8, 1000);
@@ -182,4 +237,99 @@ BOOST_FIXTURE_TEST_CASE(assets_creation, TestChainDIP3BeforeActivationSetup)
     BOOST_ASSERT(chainActive.Height() == nHeight + 1);
 }
 
+BOOST_FIXTURE_TEST_CASE(assets_update, TestChainDIP3BeforeActivationSetup)
+{
+    CKey sporkKey;
+    sporkKey.MakeNewKey(false);
+    sporkManager.SetSporkAddress(EncodeDestination(sporkKey.GetPubKey().GetID()));
+    sporkManager.SetPrivKey(EncodeSecret(sporkKey));
+    sporkManager.UpdateSpork(SPORK_22_SPECIAL_TX_FEE, 2560, *g_connman);
+
+    auto utxos = BuildSimpleUtxoMap(coinbaseTxns);
+
+    auto tx = CreateNewAssetTx(utxos, coinbaseKey,"Test Asset", true, false, 0, 8, 1000);
+    std::vector<CMutableTransaction> txns = {tx};
+
+    int nHeight = chainActive.Height();
+
+    // Mining a block with a asset create transaction
+    {
+        auto block = std::make_shared<CBlock>(CreateBlock(txns, coinbaseKey));
+        ProcessNewBlock(Params(), block, true, nullptr);
+
+        BOOST_ASSERT(chainActive.Height() == nHeight + 1);
+        BOOST_ASSERT(block->GetHash() == chainActive.Tip()->GetBlockHash());
+    }
+
+    CAssetMetaData asset;
+    BOOST_ASSERT(GetAssetMetaData(tx.GetHash().ToString(), asset));
+
+    //change asset owner
+    CKey key;
+    key.MakeNewKey(false);
+    std::string assetid = tx.GetHash().ToString();
+    tx = CreateUpdateAssetTx(utxos, coinbaseKey, key, assetid, true, 0, 1000);
+    {
+        auto block = std::make_shared<CBlock>(CreateBlock({tx}, coinbaseKey));
+        ProcessNewBlock(Params(), block, true, nullptr);
+
+        BOOST_ASSERT(chainActive.Height() == nHeight + 2);
+        BOOST_ASSERT(block->GetHash() == chainActive.Tip()->GetBlockHash());
+    }
+
+    BOOST_ASSERT(GetAssetMetaData(assetid, asset));
+    BOOST_ASSERT(asset.ownerAddress == key.GetPubKey().GetID());
+
+    //any atemp to update with the coinbaseKey should fail
+    tx = CreateUpdateAssetTx(utxos, coinbaseKey, coinbaseKey, assetid, true, 0, 10000);
+    {
+        auto block = std::make_shared<CBlock>(CreateBlock({tx}, coinbaseKey));
+        ProcessNewBlock(Params(), block, true, nullptr);
+
+        BOOST_ASSERT(chainActive.Height() == nHeight + 2);
+        BOOST_ASSERT(block->GetHash() != chainActive.Tip()->GetBlockHash());
+    }
+}
+
+BOOST_FIXTURE_TEST_CASE(assets_mint, TestChainDIP3BeforeActivationSetup)
+{
+    CKey sporkKey;
+    sporkKey.MakeNewKey(false);
+    sporkManager.SetSporkAddress(EncodeDestination(sporkKey.GetPubKey().GetID()));
+    sporkManager.SetPrivKey(EncodeSecret(sporkKey));
+    sporkManager.UpdateSpork(SPORK_22_SPECIAL_TX_FEE, 2560, *g_connman);
+
+    auto utxos = BuildSimpleUtxoMap(coinbaseTxns);
+
+    auto tx = CreateNewAssetTx(utxos, coinbaseKey,"Test Asset", true, false, 0, 8, 1000);
+    std::vector<CMutableTransaction> txns = {tx};
+
+    int nHeight = chainActive.Height();
+
+    // Mining a block with a asset create transaction
+    {
+        auto block = std::make_shared<CBlock>(CreateBlock(txns, coinbaseKey));
+        ProcessNewBlock(Params(), block, true, nullptr);
+
+        BOOST_ASSERT(chainActive.Height() == nHeight + 1);
+        BOOST_ASSERT(block->GetHash() == chainActive.Tip()->GetBlockHash());
+    }
+    
+    std::string assetid = tx.GetHash().ToString();
+    tx = CreateMintAssetTx(utxos, coinbaseKey, assetid);
+
+    {
+        auto block = std::make_shared<CBlock>(CreateBlock({tx}, coinbaseKey));
+        ProcessNewBlock(Params(), block, true, nullptr);
+
+        BOOST_ASSERT(chainActive.Height() == nHeight + 2);
+        BOOST_ASSERT(block->GetHash() == chainActive.Tip()->GetBlockHash());
+    }
+
+    CAssetMetaData asset;
+    BOOST_ASSERT(GetAssetMetaData(assetid, asset));
+    
+    BOOST_ASSERT(asset.circulatingSuply == 1000 * COIN);
+
+}
 BOOST_AUTO_TEST_SUITE_END()

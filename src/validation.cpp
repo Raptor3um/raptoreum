@@ -45,6 +45,7 @@
 
 #include <evo/specialtx.h>
 #include <evo/deterministicmns.h>
+#include <assets/assets.h>
 
 #include <llmq/quorums_instantsend.h>
 #include <llmq/quorums_chainlocks.h>
@@ -515,7 +516,8 @@ bool ContextualCheckTransaction(const CTransaction& tx, CValidationState &state,
                 tx.nType != TRANSACTION_QUORUM_COMMITMENT &&
                 tx.nType != TRANSACTION_FUTURE &&
                 tx.nType != TRANSACTION_NEW_ASSET &&
-                tx.nType != TRANSACTION_UPDATE_ASSET) {
+                tx.nType != TRANSACTION_UPDATE_ASSET &&
+                tx.nType != TRANSACTION_MINT_ASSET) {
                 return state.DoS(100, false, REJECT_INVALID, "bad-txns-type");
             }
             if (tx.IsCoinBase() && tx.nType != TRANSACTION_COINBASE)
@@ -1420,7 +1422,9 @@ void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, CTxUndo &txund
             assert(is_spent);
         }
     }
+
     // add outputs
+    AddAssets(tx, nHeight);
     AddCoins(inputs, tx, nHeight);
 }
 
@@ -4697,6 +4701,7 @@ bool CChainState::RollforwardBlock(const CBlockIndex* pindex, CCoinsViewCache& i
             }
         }
         // Pass check = true as every addition may be an overwrite.
+        AddAssets(*tx, pindex->nHeight);
         AddCoins(inputs, *tx, pindex->nHeight, true);
     }
 

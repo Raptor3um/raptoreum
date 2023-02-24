@@ -41,6 +41,7 @@ static bool checkSpecialTxFee(const CTransaction &tx, CAmount& nFeeTotal, CAmoun
                     specialTxFee = ftx.fee * COIN;
                     nFeeTotal -= specialTxFee;
                 }
+                break;
             }
             case TRANSACTION_NEW_ASSET:{
                 CNewAssetTx asset;
@@ -55,6 +56,7 @@ static bool checkSpecialTxFee(const CTransaction &tx, CAmount& nFeeTotal, CAmoun
                     specialTxFee = asset.fee  * COIN;
                     nFeeTotal -= specialTxFee;
                 }
+                break;
             }
             case TRANSACTION_UPDATE_ASSET:{
                 CUpdateAssetTx asset;
@@ -69,6 +71,22 @@ static bool checkSpecialTxFee(const CTransaction &tx, CAmount& nFeeTotal, CAmoun
                     specialTxFee = asset.fee  * COIN;
                     nFeeTotal -= specialTxFee;
                 }
+                break;
+            }
+            case TRANSACTION_MINT_ASSET:{
+                CMintAssetTx asset;
+                if(GetTxPayload(tx.vExtraPayload, asset)) {
+                    if(!Params().IsAssetsActive(chainActive.Tip())) {
+                        return false;
+                    }
+                    bool assetsEnabled = sporkManager.IsSporkActive(SPORK_22_SPECIAL_TX_FEE);
+                    if(assetsEnabled && fFeeVerify && asset.fee != getAssetsFees()){
+                        return false;
+                    }
+                    specialTxFee = asset.fee  * COIN;
+                    nFeeTotal -= specialTxFee;
+                }
+                break;
             }
             break;
         }
