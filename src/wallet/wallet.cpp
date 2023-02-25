@@ -3110,8 +3110,11 @@ void CWallet::AvailableCoins(std::vector<COutput> &vCoins, std::map<std::string,
             if (!isAssetScript && (pcoin->tx->vout[i].nValue < nMinimumAmount || pcoin->tx->vout[i].nValue > nMaximumAmount))
                 continue;
 
-            if (coinControl && coinControl->HasSelected() && !coinControl->fAllowOtherInputs && !coinControl->IsSelected(COutPoint(wtxid, i)))
+            if (coinControl&& !isAssetScript && coinControl->HasSelected() && !coinControl->fAllowOtherInputs && !coinControl->IsSelected(COutPoint(wtxid, i)))
                 continue;
+            
+            if (coinControl && isAssetScript && coinControl->HasAssetSelected() && !coinControl->fAllowOtherInputs && !coinControl->IsAssetSelected(COutPoint(wtxid, i)))
+                    continue;
 
             if (IsLockedCoin(wtxid, i) && nCoinType != CoinType::ONLY_SMARTNODE_COLLATERAL)
                 continue;
@@ -3959,7 +3962,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
         return false;
 
     CAmount nValue = 0;
-    bool fTransferAsset = false;
+    bool fHasAsset = false;
     std::map<std::string, CAmount> mapAssetValue;
     int nChangePosRequest = nChangePosInOut;
     unsigned int nSubtractFeeFromAmount = 0;
@@ -3969,7 +3972,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
             CAssetTransfer assetTransfer;
             std::string address;
             if (GetTransferAsset(recipient.scriptPubKey, assetTransfer)) {
-                fTransferAsset = true;
+                fHasAsset = true;
                 if (!mapAssetValue.count(assetTransfer.AssetId))
                     mapAssetValue[assetTransfer.AssetId] = 0;
 
@@ -3998,6 +4001,8 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
         return false;
     }
 
+    bool fTransferAsset = fHasAsset && !mint;
+    
     CMutableTransaction txNew;
     CFutureTx ftx;
     CNewAssetTx atx;

@@ -23,6 +23,7 @@
 #include <evo/deterministicmns.h>
 #include <evo/cbtx.h>
 #include <llmq/quorums_init.h>
+#include <assets/assets.h>
 
 #include <memory>
 
@@ -66,6 +67,7 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName)
         fPrintToDebugLog = false; // don't want to write to debug.log file
         fCheckBlockIndex = true;
         SelectParams(chainName);
+        passetsCache.reset(new CAssetsCache());
         evoDb.reset(new CEvoDB(1 << 20, true, true));
         deterministicMNManager.reset(new CDeterministicMNManager(*evoDb));
         noui_connect();
@@ -75,6 +77,7 @@ BasicTestingSetup::~BasicTestingSetup()
 {
         deterministicMNManager.reset();
         evoDb.reset();
+        passetsCache.reset();
 
         fs::remove_all(m_path_root);
         ECC_Stop();

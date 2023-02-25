@@ -128,7 +128,7 @@ static CMutableTransaction CreateUpdateAssetTx(SimpleUTXOMap& utxos, const CKey&
     CUpdateAssetTx upasset;
 
     CAssetMetaData asset;
-    GetAssetMetaData(assetId, asset);
+    passetsCache->GetAssetMetaData(assetId, asset);
     
     upasset.AssetId = assetId;
     upasset.updatable = updatable;
@@ -158,7 +158,7 @@ static CMutableTransaction CreateMintAssetTx(SimpleUTXOMap& utxos, const CKey& c
     CMintAssetTx mint;
 
     CAssetMetaData asset;
-    GetAssetMetaData(assetId, asset);
+    passetsCache->GetAssetMetaData(assetId, asset);
     
     mint.AssetId = assetId;
     mint.fee = getAssetsFees();
@@ -263,7 +263,7 @@ BOOST_FIXTURE_TEST_CASE(assets_update, TestChainDIP3BeforeActivationSetup)
     }
 
     CAssetMetaData asset;
-    BOOST_ASSERT(GetAssetMetaData(tx.GetHash().ToString(), asset));
+    BOOST_ASSERT(passetsCache->GetAssetMetaData(tx.GetHash().ToString(), asset));
 
     //change asset owner
     CKey key;
@@ -278,7 +278,7 @@ BOOST_FIXTURE_TEST_CASE(assets_update, TestChainDIP3BeforeActivationSetup)
         BOOST_ASSERT(block->GetHash() == chainActive.Tip()->GetBlockHash());
     }
 
-    BOOST_ASSERT(GetAssetMetaData(assetid, asset));
+    BOOST_ASSERT(passetsCache->GetAssetMetaData(assetid, asset));
     BOOST_ASSERT(asset.ownerAddress == key.GetPubKey().GetID());
 
     //any atemp to update with the coinbaseKey should fail
@@ -328,9 +328,9 @@ BOOST_FIXTURE_TEST_CASE(assets_mint, TestChainDIP3BeforeActivationSetup)
     }
 
     CAssetMetaData asset;
-    BOOST_ASSERT(GetAssetMetaData(assetid, asset));
+    BOOST_ASSERT(passetsCache->GetAssetMetaData(assetid, asset));
     
-    BOOST_ASSERT(asset.circulatingSuply == 1000 * COIN);
+    BOOST_ASSERT(asset.circulatingSupply == 1000 * COIN);
 
     //transfer asset
     CMutableTransaction tx2;

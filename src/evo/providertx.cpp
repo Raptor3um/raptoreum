@@ -135,7 +135,7 @@ bool CheckNewAssetTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVal
     }
 
     //Check if a asset already exist with give name
-     if(CheckIfAssetExists(assettx.Name)){
+     if(passetsCache->CheckIfAssetExists(assettx.Name)){
         return state.DoS(100, false, REJECT_INVALID, "bad-assets-dup-name");
     }
 
@@ -192,7 +192,7 @@ bool CheckUpdateAssetTx(const CTransaction& tx, const CBlockIndex* pindexPrev, C
 
     //Check if the provide asset id is valid
     CAssetMetaData asset;
-    if(!GetAssetMetaData(assettx.AssetId, asset)){
+    if(!passetsCache->GetAssetMetaData(assettx.AssetId, asset)){
         return state.DoS(100, false, REJECT_INVALID, "bad-assets-invalid-id");
     }
 
@@ -253,7 +253,7 @@ bool CheckMintAssetTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVa
 
     //Check if the provide asset id is valid
     CAssetMetaData asset;
-    if(!GetAssetMetaData(assettx.AssetId, asset)){
+    if(!passetsCache->GetAssetMetaData(assettx.AssetId, asset)){
         return state.DoS(100, false, REJECT_INVALID, "bad-assets-invalid-asset-id");
     }
 

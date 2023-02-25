@@ -50,6 +50,8 @@ public:
     FeeEstimateMode m_fee_mode;
     //! Controls which types of coins are allowed to be used (default: ALL_COINS)
     CoinType nCoinType;
+    //! Asset id of the asset that is selected, used when sending assets with coincontrol
+    std::string strAssetSelected;
 
     CCoinControl()
     {
@@ -68,6 +70,8 @@ public:
         fOverrideFeeRate = false;
         m_confirm_target.reset();
         m_fee_mode = FeeEstimateMode::UNSET;
+        strAssetSelected = "";
+        setAssetsSelected.clear();
         if (fResetCoinType) {
             nCoinType = CoinType::ALL_COINS;
         }
@@ -78,9 +82,19 @@ public:
         return (setSelected.size() > 0);
     }
 
+    bool HasAssetSelected() const
+    {
+        return (setAssetsSelected.size() > 0);
+    }
+
     bool IsSelected(const COutPoint& output) const
     {
         return (setSelected.count(output) > 0);
+    }
+
+    bool IsAssetSelected(const COutPoint& output) const
+    {
+        return (setAssetsSelected.count(output) > 0);
     }
 
     void Select(const COutPoint& output)
@@ -88,14 +102,28 @@ public:
         setSelected.insert(output);
     }
 
+    void SelectAsset(const COutPoint& output)
+    {
+        setAssetsSelected.insert(output);
+    }
+
     void UnSelect(const COutPoint& output)
     {
         setSelected.erase(output);
     }
 
+    void UnSelectAsset(const COutPoint& output)
+    {
+        setAssetsSelected.erase(output);
+        if (!setSelected.size())
+            strAssetSelected = "";
+    }
+
     void UnSelectAll()
     {
         setSelected.clear();
+        strAssetSelected = "";
+        setAssetsSelected.clear();
     }
 
     void ListSelected(std::vector<COutPoint>& vOutpoints) const
@@ -103,6 +131,10 @@ public:
         vOutpoints.assign(setSelected.begin(), setSelected.end());
     }
 
+    void ListSelectedAssets(std::vector<COutPoint>& vOutpoints) const
+    {
+        vOutpoints.assign(setAssetsSelected.begin(), setAssetsSelected.end());
+    }
     // Raptoreum-specific helpers
 
     void UseCoinJoin(bool fUseCoinJoin)
@@ -117,6 +149,7 @@ public:
 
 private:
     std::set<COutPoint> setSelected;
+    std::set<COutPoint> setAssetsSelected;
 };
 
 #endif // BITCOIN_WALLET_COINCONTROL_H

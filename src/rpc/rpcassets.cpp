@@ -31,6 +31,18 @@ static CKeyID ParsePubKeyIDFromAddress(const std::string& strAddress, const std:
     return *keyID;
 }
 
+static std::string GetDistributionType(int t)
+{
+    switch (t)
+    {
+    case 0: return "manual";
+    case 1: return "coinbase";
+    case 2: return "address";
+    case 3: return "schedule";
+    }
+    return "invalid";
+}
+
 UniValue createasset(const JSONRPCRequest& request)
 {
 
@@ -77,11 +89,11 @@ UniValue createasset(const JSONRPCRequest& request)
     if (pwallet->GetBroadcastTransactions() && !g_connman) {
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
     }
-    std::cout << "get asset data " << endl;
+    
     UniValue asset = request.params[0].get_obj();
-    std::cout << "Found txid " << endl;
+    
     const UniValue& name = find_value(asset, "name");
-    std::cout << name.getValStr() << endl;
+    
     std::string assetname = name.getValStr();
     
     //check if asset name is valid
@@ -90,7 +102,7 @@ UniValue createasset(const JSONRPCRequest& request)
     }
     // check if asset already exist
     CAssetMetaData tmpasset;
-    if(GetAssetMetaData(assetname, tmpasset)){
+    if(passetsCache->GetAssetMetaData(assetname, tmpasset)){
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Asset already exist");
     }
     CNewAssetTx assettx;
@@ -138,7 +150,6 @@ UniValue createasset(const JSONRPCRequest& request)
 
     const UniValue& targetAddress = find_value(asset, "targetAddress");
     if(!targetAddress.isNull()){
-        std::cout << targetAddress.get_str() << std::endl;
         assettx.targetAddress = ParsePubKeyIDFromAddress(targetAddress.get_str(), "targetAddress");;    
     }else{
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: missing targetAddress");   
@@ -160,8 +171,6 @@ UniValue createasset(const JSONRPCRequest& request)
     }else{
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: missing ownerAddress");   
     }
-
-    std::cout << "Create asset tx" << endl;
 
     if (request.params[1].isNull()) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Raptoreum address: ") + request.params[1].get_str());
@@ -198,10 +207,10 @@ UniValue createasset(const JSONRPCRequest& request)
     result.pushKV("Updatable", assettx.updatable);  
     result.pushKV("Decimalpoint", (int) assettx.decimalPoint);
     result.pushKV("ReferenceHash", assettx.referenceHash);
-    result.pushKV("fee", assettx.fee);
-    result.pushKV("Type", assettx.type);
-    result.pushKV("TargetAddress", EncodeDestination(assettx.targetAddress));
     result.pushKV("ownerAddress", EncodeDestination(assettx.ownerAddress));
+    result.pushKV("fee", assettx.fee);
+    result.pushKV("Type", GetDistributionType(assettx.type));
+    result.pushKV("TargetAddress", EncodeDestination(assettx.targetAddress)); 
     //result.pushKV("collateralAddress", EncodeDestination(assettx.collateralAddress));
     result.pushKV("IssueFrequency", assettx.issueFrequency);
     result.pushKV("Amount", assettx.Amount / COIN);
@@ -211,14 +220,12 @@ UniValue createasset(const JSONRPCRequest& request)
 
 UniValue mintasset(const JSONRPCRequest& request)
 {
-    if (request.fHelp || !Params().IsAssetsActive(chainActive.Tip()) || request.params.size() < 1 || request.params.size() > 3)
+    if (request.fHelp || !Params().IsAssetsActive(chainActive.Tip()) || request.params.size() < 1 || request.params.size() > 1)
         throw std::runtime_error(
-            "mintasset txid address amount\n"
+            "mintasset txid\n"
             "Mint assset\n"
             "\nArguments:\n"
             "1. \"txid\"               (string, required) asset txid reference\n"
-            "2. \"address\"            (string, only if type is manual) address to where asset will be issued\n"
-            "3. \"amount\"             (string, only if type is manual) Amount of issue asset\n"
             "\nResult:\n"
             "\"txid\"                  (string) The transaction id for the new issued asset\n"
 
@@ -249,7 +256,7 @@ UniValue mintasset(const JSONRPCRequest& request)
     
     // get asset metadadta
     CAssetMetaData tmpasset;
-    if(!GetAssetMetaData(assetid, tmpasset)){
+    if(!passetsCache->GetAssetMetaData(assetid, tmpasset)){
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Asset asset metadata not found");
     }
     CMintAssetTx mintasset;
@@ -357,7 +364,7 @@ UniValue sendasset(const JSONRPCRequest& request)
 
     // get asset metadadta
     CAssetMetaData tmpasset;
-    if(!GetAssetMetaData(request.params[0].get_str(), tmpasset)){ //check if the asset exist
+    if(!passetsCache->GetAssetMetaData(request.params[0].get_str(), tmpasset)){ //check if the asset exist
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Asset not found");
     }
     std::string assetId = tmpasset.assetId;
@@ -434,12 +441,109 @@ UniValue sendasset(const JSONRPCRequest& request)
 }
 
 
+UniValue assetdetails(const JSONRPCRequest& request)
+{
+    if (request.fHelp || !Params().IsAssetsActive(chainActive.Tip()) || request.params.size() < 1 || request.params.size() > 1)
+        throw std::runtime_error(
+            "assetdetails 'asset_id or asset_name'\n"
+            "asset details\n"
+            "\nArguments:\n"
+            "1. \"asset_id\"                (string, required) asset name or txid reference\n"
+            "\nResult:\n"
+            "\"asset\"                      (string) The asset details\n"
+
+            "\nExamples:\n"
+            + HelpExampleCli("assetdetails", "773cf7e057127048711d16839e4612ffb0f1599aef663d96e60f5190eb7de9a9")
+        );
+  
+    std::string name = request.params[0].get_str();
+    std::string assetid = name;
+
+    // try to get asset id in case asset name was used
+    passetsCache->GetAssetId(name, assetid);
+    
+    // get asset metadadta
+    CAssetMetaData tmpasset;
+    if(!passetsCache->GetAssetMetaData(assetid, tmpasset)){
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Asset asset metadata not found");
+    }
+
+    UniValue result(UniValue::VOBJ);
+    result.pushKV("Asset_id", tmpasset.assetId);
+    result.pushKV("Asset_name", tmpasset.Name);
+    result.pushKV("owner", EncodeDestination(tmpasset.ownerAddress));
+    result.pushKV("Circulating_supply", tmpasset.circulatingSupply / COIN);
+    result.pushKV("Isunique", tmpasset.isunique); 
+    result.pushKV("Updatable", tmpasset.updatable);  
+    result.pushKV("Decimalpoint", (int) tmpasset.Decimalpoint);
+    result.pushKV("ReferenceHash", tmpasset.referenceHash);
+    result.pushKV("Distribution", GetDistributionType(tmpasset.type));
+    result.pushKV("TargetAddress", EncodeDestination(tmpasset.targetAddress)); 
+    //result.pushKV("collateralAddress", EncodeDestination(tmpasset.collateralAddress));
+    result.pushKV("IssueFrequency", tmpasset.issueFrequency);
+    result.pushKV("Amount", tmpasset.Amount / COIN);
+
+    return result;
+}
+
+UniValue listassetsbalance(const JSONRPCRequest& request)
+{
+    if (request.fHelp || !Params().IsAssetsActive(chainActive.Tip()) || request.params.size() > 0)
+        throw std::runtime_error(
+            "listassetsbalance\n"
+            "\nResult:\n"
+            "\"asset\"                      (string) list assets balance\n"
+
+            "\nExamples:\n"
+            + HelpExampleCli("assetbalance", "")
+        );
+  
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    CWallet* const pwallet = wallet.get();
+
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
+ 
+    LOCK2(cs_main, pwallet->cs_wallet);
+
+    std::map<std::string, std::vector<COutput> > mapAssetCoins;
+    pwallet->AvailableAssets(mapAssetCoins);
+
+    std::map<std::string, CAmount > mapAssetbalance;
+    for (auto asset  : mapAssetCoins){
+        CAmount balance = 0;
+        for (auto output : asset.second){
+            CInputCoin coin(output.tx->tx, output.i);
+
+            if (!coin.txout.scriptPubKey.IsAssetScript()) {
+                continue;
+            }
+
+            CAssetTransfer transferTemp;
+            if (!GetTransferAsset(coin.txout.scriptPubKey, transferTemp))
+                continue;
+            balance += transferTemp.nAmount;
+        }
+        mapAssetbalance.insert(std::make_pair(asset.first, balance));
+    }
+    
+    UniValue result(UniValue::VOBJ);
+    for (auto asset : mapAssetbalance){
+    result.pushKV(asset.first, asset.second / COIN);
+    }
+    
+    return result;
+}
+
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)
   //  --------------------- ------------------------  -----------------------
     { "assets",                "createasset",         &createasset,                   {"asset"}  },
-    { "assets",                "mintasset",           &mintasset,                     {"asset"}  },
-    { "assets",                "sendasset",           &sendasset,                     {"asset", "amount", "address", "change_address", "asset_change_address"}  },
+    { "assets",                "mintasset",           &mintasset,                     {"assetId"}  },
+    { "assets",                "sendasset",           &sendasset,                     {"assetId", "amount", "address", "change_address", "asset_change_address"}  },
+    { "assets",                "assetdetails",        &assetdetails,                  {"assetId"}  },
+    { "assets",                "listassetsbalance",   &listassetsbalance,             {}  },
 };
 
 void RegisterAssetsRPCCommands(CRPCTable &tableRPC)

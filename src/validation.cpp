@@ -46,6 +46,7 @@
 #include <evo/specialtx.h>
 #include <evo/deterministicmns.h>
 #include <assets/assets.h>
+#include <assets/assetsdb.h>
 
 #include <llmq/quorums_instantsend.h>
 #include <llmq/quorums_chainlocks.h>
@@ -305,6 +306,9 @@ CBlockIndex* FindForkInGlobalIndex(const CChain& chain, const CBlockLocator& loc
 std::unique_ptr<CCoinsViewDB> pcoinsdbview;
 std::unique_ptr<CCoinsViewCache> pcoinsTip;
 std::unique_ptr<CBlockTreeDB> pblocktree;
+
+std::unique_ptr<CAssetsDB> passetsdb;
+std::unique_ptr<CAssetsCache> passetsCache;
 
 enum class FlushStateMode {
     NONE,
@@ -2651,6 +2655,10 @@ bool static FlushStateToDisk(const CChainParams& chainparams, CValidationState &
                 return AbortNode(state, "Failed to write to coin database");
             if (!evoDb->CommitRootTransaction()) {
                 return AbortNode(state, "Failed to commit EvoDB");
+            }
+            if (Params().IsAssetsActive(chainActive.Tip())){
+                if (passetsCache && !passetsCache->DumpCacheToDatabase())
+                        return AbortNode(state, "Failed to write to asset database");               
             }
             nLastFlush = nNow;
         }
@@ -5412,3 +5420,4 @@ public:
         mapBlockIndex.clear();
     }
 } instance_of_cmaincleanup;
+

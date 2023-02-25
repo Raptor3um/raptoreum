@@ -45,4 +45,5 @@ public:
 
 bool GetTransferAsset(const CScript& script, CAssetTransfer& assetTransfer);
 
+
 #endif //RAPTOREUM_ASSETS_FEES_H

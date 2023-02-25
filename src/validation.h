@@ -46,6 +46,8 @@ class CBlockPolicyEstimator;
 class CTxMemPool;
 class CValidationState;
 class PrecomputedTransactionData;
+class CAssetsDB;
+class CAssetsCache;
 struct ChainTxData;
 
 struct LockPoints;
@@ -483,6 +485,12 @@ extern std::unique_ptr<CCoinsViewCache> pcoinsTip;
 
 /** Global variable that points to the active block tree (protected by cs_main) */
 extern std::unique_ptr<CBlockTreeDB> pblocktree;
+
+/** Global variable that point to the active assets database (protected by cs_main) */
+extern std::unique_ptr<CAssetsDB> passetsdb;
+
+/** Global variable that point to the active assets cache (protected by cs_main) */
+extern std::unique_ptr<CAssetsCache> passetsCache;
 
 /**
  * Return the spend height, which is one more than the inputs.GetBestBlock().

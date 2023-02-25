@@ -119,6 +119,7 @@ BITCOIN_CORE_H = \
   addressindex.h \
   addrman.h \
   assets/assets.h \
+  assets/assetsdb.h \
   assets/assetstype.h \
   attributes.h \
   base58.h \
@@ -305,6 +306,7 @@ libraptoreum_server_a_SOURCES = \
   addrdb.cpp \
   addrman.cpp \
   assets/assets.cpp \
+  assets/assetsdb.cpp \
   batchedlogger.cpp \
   bloom.cpp \
   blockencodings.cpp \
