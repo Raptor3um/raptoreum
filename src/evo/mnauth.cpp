@@ -20,6 +20,7 @@
 
 void CMNAuth::PushMNAUTH(CNode* pnode, CConnman& connman)
 {
+    // if (!fSmartnodeMode || activeSmartnodeInfo.proTxHash.IsNull()) {
     LOCK(activeSmartnodeInfoCs);
     if (!fSmartnodeMode || activeSmartnodeInfo.proTxHash.IsNull()) {
         return;
@@ -30,12 +31,12 @@ void CMNAuth::PushMNAUTH(CNode* pnode, CConnman& connman)
     if (receivedMNAuthChallenge.IsNull()) {
         return;
     }
-    // We include fInbound in signHash to forbid interchanging of challenges by a man in the middle (MITM).
-    // This way we protect ourselves against MITM in this form:
-    //    node1 <- Eve -> node2
+    // We include fInbound in signHash to forbid interchanging of challenges by a man in the middle (MITM). This way
+    // we protect ourselves against MITM in this form:
+    //   node1 <- Eve -> node2
     // It does not protect against:
-    //    node1 -> Eve -> node2
-    // This is ok as we only use MNAUTH as a DoS protection and not for sensitive stuff.
+    //   node1 -> Eve -> node2
+    // This is ok as we only use MNAUTH as a DoS protection and not for sensitive stuff
     int nOurNodeVersion{PROTOCOL_VERSION};
     if (Params().NetworkIDString() != CBaseChainParams::MAIN && gArgs.IsArgSet("-pushversion")) {
         nOurNodeVersion = gArgs.GetArg("-pushversion", PROTOCOL_VERSION);
@@ -223,7 +224,7 @@ void CMNAuth::NotifySmartnodeListChanged(bool undo, const CDeterministicMNList& 
         }
 
         if (doRemove) {
-            LogPrint(BCLog::NET_NETCONN, "CMNAuth::NotifySmartnodeListChanged -- Disconnecting MN %s due to key changed/removed, peer=%d\n",
+            LogPrint(BCLog::NET_NETCONN, "CMNAuth::NotifySmartnodeListChanged -- Disconnecting SN %s due to key changed/removed, peer=%d\n",
                      verifiedProRegTxHash.ToString(), pnode->GetId());
             pnode->fDisconnect = true;
         }

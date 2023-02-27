@@ -750,6 +750,8 @@ UniValue getaddressutxos(const JSONRPCRequest& request)
         output.pushKV("script", HexStr(it->second.script));
         output.pushKV("satoshis", it->second.satoshis);
         output.pushKV("height", it->second.blockHeight);
+        output.pushKV("spendableHeight", it->second.fSpendableHeight);
+        output.pushKV("spendableTime", it->second.fSpendableTime);
         result.push_back(output);
     }
 

@@ -71,12 +71,27 @@ void CCoinJoinServer::ProcessDSACCEPT(CNode* pfrom, const std::string& strComman
 
     LogPrint(BCLog::COINJOIN, "DSACCEPT -- nDenom %d (%s)  txCollateral %s", dsa.nDenom, CCoinJoin::DenominationToString(dsa.nDenom), dsa.txCollateral.ToString()); /* Continued */
 
-    auto mnList = deterministicMNManager->GetListAtChainTip();
-    auto dmn = WITH_LOCK(activeSmartnodeInfoCs, return mnList.GetValidMNByCollateral(activeSmartnodeInfo.outpoint));
-    if (!dmn) {
-        PushStatus(pfrom, STATUS_REJECTED, ERR_MN_LIST, connman);
-        return;
-    }
+		auto mnList = deterministicMNManager->GetListAtChainTip();
+		auto dmn = WITH_LOCK(activeSmartnodeInfoCs, return mnList.GetValidMNByCollateral(activeSmartnodeInfo.outpoint));
+		if (!dmn) {
+				PushStatus(pfrom, STATUS_REJECTED, ERR_MN_LIST, connman);
+				return;
+		}
+
+		if (vecSessionCollaterals.empty()) {
+				{
+						TRY_LOCK(cs_vecqueue, lockRecv);
+						if (!lockRecv) return;
+
+						for (const auto& q : vecCoinJoinQueue) {
+								if (WITH_LOCK(activeSmartnodeInfoCs, return q.smartnodeOutpoint == activeSmartnodeInfo.outpoint)) {
+										// refuse to create another queue this often
+										LogPrint(BCLog::COINJOIN, "DSACCEPT -- last dsq is still in queue, refuse to mix\n");
+										PushStatus(pfrom, STATUS_REJECTED, ERR_RECENT, connman);
+										return;
+								}
+						}
+				}
 
     if (vecSessionCollaterals.empty())
     {

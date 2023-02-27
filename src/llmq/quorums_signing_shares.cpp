@@ -587,10 +587,7 @@ void CSigSharesManager::CollectPendingSigSharesToVerify(
         }
     }
 
-    {
-        LOCK(cs_main);
-
-        // For the convenience of the caller, also build a map of quorumHash -> quorum
+    // For the convenience of the caller, also build a map of quorumHash -> quorum
 
         for (const auto& [_, vecSigShares] : retSigShares) {
             for (const auto& sigShare : vecSigShares) {
@@ -604,7 +601,7 @@ void CSigSharesManager::CollectPendingSigSharesToVerify(
                 CQuorumCPtr quorum = quorumManager->GetQuorum(llmqType, sigShare.getQuorumHash());
                 assert(quorum != nullptr);
                 retQuorums.try_emplace(k, quorum);
-            }
+
         }
     }
 }

@@ -371,7 +371,7 @@ bool CQuorumManager::RequestQuorumData(CNode* pFrom, Consensus::LLMQType llmqTyp
         LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- Version must be %d or greater.\n", __func__, LLMQ_DATA_MESSAGES_VERSION);
         return false;
     }
-    if (pFrom == nullptr || pFrom->GetVerifiedProRegTxHash().IsNull() && !pFrom->qwatch) {
+    if (pFrom == nullptr || (pFrom->GetVerifiedProRegTxHash().IsNull() && !pFrom->qwatch)) {
         LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- pFrom is neither a verified smartnode nor a qwatch connection\n", __func__);
         return false;
     }
@@ -612,8 +612,10 @@ void CQuorumManager::ProcessMessage(CNode* pFrom, const std::string& strCommand,
     }
 
     if (strCommand == NetMsgType::QDATA) {
-        if ((!fSmartnodeMode && !CLLMQUtils::IsWatchQuorumsEnabled()) || pFrom == nullptr || (pFrom->GetVerifiedProRegTxHash().IsNull() && !pFrom->qwatch)) {
-            errorHandler("Not a verified smartnode or a qwatch connection");
+
+        auto verifiedProRegTxHash = pFrom->GetVerifiedProRegTxHash();
+        if ((!fSmartnodeMode && !CLLMQUtils::IsWatchQuorumsEnabled()) || pFrom == nullptr || (verifiedProRegTxHash.IsNull() && !pFrom->qwatch)) {
+            errorHandler("Not a verified masternode or a qwatch connection");
             return;
         }
 
@@ -622,7 +624,7 @@ void CQuorumManager::ProcessMessage(CNode* pFrom, const std::string& strCommand,
 
         {
             LOCK2(cs_main, cs_data_requests);
-            auto it = mapQuorumDataRequests.find(std::make_pair(pFrom->GetVerifiedProRegTxHash(), true));
+            auto it = mapQuorumDataRequests.find(std::make_pair(verifiedProRegTxHash, true));
             if (it == mapQuorumDataRequests.end()) {
                 errorHandler("Not requested");
                 return;
@@ -669,11 +671,37 @@ void CQuorumManager::ProcessMessage(CNode* pFrom, const std::string& strCommand,
         // Check if request has ENCRYPTED_CONTRIBUTIONS data
         if (request.GetDataMask() & CQuorumDataRequest::ENCRYPTED_CONTRIBUTIONS) {
 
-            if (WITH_LOCK(pQuorum->cs, return pQuorum->quorumVvec->size() != size_t(pQuorum->params.threshold))) {
+
+            if (WITH_LOCK(pQuorum->cs, return pQuorum->quorumVvec->size() != pQuorum->params.threshold)) {
                 errorHandler("No valid quorum verification vector available", 0); // Don't bump score because we asked for it
                 return;
             }
 
+
+/*            BLSVerificationVectorPtr quorumVvecCopy;
+            int thresholdCopy;
+            {
+                LOCK(pQuorum->cs);
+                // work on copy (keep this simple)
+                quorumVvecCopy = pQuorum->quorumVvec;
+                // If the quorum vector ptr isn't here we know the issue is with pQuorum
+                thresholdCopy = pQuorum->params.threshold;
+                // Never say never :)
+            }
+
+            // This is 100% thread-safe so we can rule out threading issues
+            if (quorumVvecCopy) {
+                if (quorumVvecCopy->size() != thresholdCopy) {
+                    errorHandler("No valid quorum verification vector available", 0); // Don't bump score because we asked for it
+                    return;
+                }
+            }
+
+            if (pQuorum->qc.validMembers.size() != pQuorum->params.size) {
+                errorHandler("Quorum not fully qualified", 0); // Don't bump score because we asked for it
+                return;
+            }
+*/
             int memberIdx = pQuorum->GetMemberIndex(request.GetProTxHash());
             if (memberIdx == -1) {
                 errorHandler("Not a member of the quorum", 0); // Don't bump score because we asked for it

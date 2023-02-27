@@ -237,7 +237,7 @@ static UniValue smartnode_status(const JSONRPCRequest& request)
     {
         LOCK(activeSmartnodeInfoCs);
 
-        // Keep compatibility with legacy status for now.
+        // keep compatibility with legacy status for now (might get deprecated/removed later)
         mnObj.pushKV("outpoint", activeSmartnodeInfo.outpoint.ToStringShort());
         mnObj.pushKV("service", activeSmartnodeInfo.service.ToString());
         dmn = deterministicMNManager->GetListAtChainTip().GetMN(activeSmartnodeInfo.proTxHash);

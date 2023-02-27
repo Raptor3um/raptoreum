@@ -134,7 +134,8 @@ static void VerifyGenesisPOW(const CBlock& genesis)
             if (genesis.nNonce != block.nNonce)
             {
                 std::cerr << "VerifyGenesisPOW:  provided nNonce (" << genesis.nNonce << ") invalid" << std::endl;
-                std::cerr << "   nonce: " << block.nNonce << ", hash: 0x" << hash.ToString() << std::endl;
+                std::cerr << "   nonce: " << block.nNonce << ", pow hash: 0x" << hash.ToString()
+                          << ", block hash: 0x" << block.GetHash().ToString() << std::endl;
                 assert(genesis.nNonce == block.nNonce);
             }
             else
@@ -215,10 +216,10 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_V17].nFalloffCoeff = 5; // this corresponds to 10 periods
 
         // The best chain should have at least this much work.
-        consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000000000000000c2a6d13d4138"); // 0
+        consensus.nMinimumChainWork = uint256S("000000000000000000000000000000000000000000000000000eead474ccbc59"); // block 421457 chainwork
 
         // By default assume that the signatures in ancestors of this block are valid.
-        consensus.defaultAssumeValid = uint256S("0x40e5b20023ae263fa2e62d8c6c7111aab7d2743851045a226525c6e32492c227"); // 0
+        consensus.defaultAssumeValid = uint256S("ox6fb0b649723f51b67484019409fef94d077f17c8d88645e08c000b2e4fd3e28a"); // block hash for 421457
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.
@@ -240,16 +241,8 @@ public:
         assert(consensus.hashGenesisBlock == uint256S("0xb79e5df07278b9567ada8fc655ffbfa9d3f586dc38da3dd93053686f41caeea0"));
         assert(genesis.hashMerkleRoot == uint256S("0x87a48bc22468acdd72ee540aab7c086a5bbcddc12b51c6ac925717a74c269453"));
 
-        vSeeds.emplace_back("seed00.raptoreum.com");
-        vSeeds.emplace_back("seed01.raptoreum.com");
-        vSeeds.emplace_back("seed02.raptoreum.com");
-        vSeeds.emplace_back("seed03.raptoreum.com");
-        vSeeds.emplace_back("seed04.raptoreum.com");
-        vSeeds.emplace_back("seed05.raptoreum.com");
-        vSeeds.emplace_back("seed06.raptoreum.com");
-        vSeeds.emplace_back("ger1.raptoreum.com");
-        vSeeds.emplace_back("ny1.raptoreum.com");
-
+        vSeeds.emplace_back("lbdn.raptoreum.com");
+        vSeeds.emplace_back("51.89.21.112");
 
         // Raptoreum addresses start with 'r'
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,60);
@@ -393,16 +386,13 @@ public:
         pchMessageStart[1] = 0x72; //r
         pchMessageStart[2] = 0x74; //t
         pchMessageStart[3] = 0x6d; //m
-        nDefaultPort = 10228;
+        nDefaultPort = 10229;
         nPruneAfterHeight = 1000;
-        m_assumed_blockchain_size = 2;
-        m_assumed_chain_state_size = 1;
-        // FindMainNetGenesisBlock(1645942755,  0x20001fff, "test");
-        genesis = CreateGenesisBlock(1645942755, 387, 0x20001fff, 4, 5000 * COIN);
+        genesis = CreateGenesisBlock(1668574674, 352, 0x20001fff, 4, 5000 * COIN);
         VerifyGenesisPOW(genesis);
 
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x99f1aeb781d780f51aee4247b23eb91d561f6fb8c9e761a9f1ebc72212b4ebf0"));
+        assert(consensus.hashGenesisBlock == uint256S("0x16b418c4e84599ba61836085c5b780c199f90c207f7de189cbb56803e87529eb"));
         assert(genesis.hashMerkleRoot == uint256S("0x87a48bc22468acdd72ee540aab7c086a5bbcddc12b51c6ac925717a74c269453"));
 
         vFixedSeeds.clear();
@@ -410,11 +400,8 @@ public:
 
         vSeeds.clear();
         // nodes with support for servicebits filtering should be at the top
-        vSeeds.emplace_back("47.151.7.226");
-        //vSeeds.emplace_back("62.171.153.224", true);
-        //vSeeds.emplace_back("98.38.235.195", true);
-        //vSeeds.emplace_back("ger1.raptoreum.com", true);
-        //vSeeds.emplace_back("ny1.raptoreum.com", true);
+        vSeeds.emplace_back("47.155.87.132");
+        vSeeds.emplace_back("lbdn.raptoreum.com");
 
         // Testnet Raptoreum addresses start with 'r'
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,123);
@@ -442,7 +429,7 @@ public:
         consensus.llmqTypePlatform = Consensus::LLMQ_100_67;
 
         consensus.nCollaterals = SmartnodeCollaterals(
-          {  {30000, 20000 * COIN}, {60000, 40000 * COIN}, {INT_MAX, 60000 * COIN}  },
+          {  {INT_MAX, 60000 * COIN}  },
           {  {INT_MAX, 20}  });
 
         consensus.nFutureRewardShare = Consensus::FutureRewardShare(0.8,0.2,0.0);
@@ -457,8 +444,9 @@ public:
         fAllowMultipleAddressesFromGroup = false;
         fAllowMultiplePorts = true;
         nLLMQConnectionRetryTimeout = 60;
-        miningRequiresPeers = true;
+        // miningRequiresPeers = true;
         m_is_mockable_chain = false;
+        miningRequiresPeers = false;
 
         nPoolMinParticipants = 2;
         nPoolMaxParticipants = 20;
@@ -996,40 +984,34 @@ void CChainParams::UpdateLLMQParams(size_t totalMnCount, int height, bool lowLLM
     if(lastCheckHeight < height && (lastCheckMnCount != totalMnCount || lastCheckedLowLLMQParams != lowLLMQParams) && (isNotLLMQsMiningPhase = !IsLLMQsMiningPhase(height))) {
         LogPrintf("---UpdateLLMQParams %d-%d-%ld-%ld-%d\n", lastCheckHeight, height, lastCheckMnCount, totalMnCount, isNotLLMQsMiningPhase);
         lastCheckMnCount = totalMnCount;
-        lastCheckedLowLLMQParams = lowLLMQParams;
-        lastCheckHeight = height;
-        bool isTestNet = strNetworkID == CBaseChainParams::TESTNET;
-        if(totalMnCount < 5) {
-            consensus.llmqs[Consensus::LLMQ_50_60] = Consensus::llmq3_60;
-            // llmqs below are set due to previous boolean function was
-            // wrong and was used 'boolean' to compare 'integer' function
-            // and llmqs were oposite to what should be.
-            // we can leave as it is currently or reload the whole
-            // testnet chain from scratch.
-            consensus.llmqs[Consensus::LLMQ_400_60] = Consensus::llmq20_60;
-            consensus.llmqs[Consensus::LLMQ_400_85] = Consensus::llmq20_85;
-            //if(isTestNet) {
-            //    consensus.llmqs[Consensus::LLMQ_400_60] = Consensus::llmq5_60;
-            //    consensus.llmqs[Consensus::LLMQ_400_85] = Consensus::llmq5_85;
-            //} else {
-            //    consensus.llmqs[Consensus::LLMQ_400_60] = Consensus::llmq5_60;
-            //    consensus.llmqs[Consensus::LLMQ_400_85] = Consensus::llmq5_85;
-            //}
-        } else if((totalMnCount < 80 && isTestNet) ||  (totalMnCount < 100 && !isTestNet)) {
-            consensus.llmqs[Consensus::LLMQ_50_60] = Consensus::llmq10_60;
-            consensus.llmqs[Consensus::LLMQ_400_60] = Consensus::llmq20_60;
-            consensus.llmqs[Consensus::LLMQ_400_85] = Consensus::llmq20_85;
-        } else if(totalMnCount < 600) {
-            consensus.llmqs[Consensus::LLMQ_50_60] = Consensus::llmq50_60;
-            consensus.llmqs[Consensus::LLMQ_400_60] = Consensus::llmq40_60;
-            consensus.llmqs[Consensus::LLMQ_400_85] = Consensus::llmq40_85;
-        } else {
-            consensus.llmqs[Consensus::LLMQ_50_60] = Consensus::llmq50_60;
-            consensus.llmqs[Consensus::LLMQ_400_60] = Consensus::llmq400_60;
-            consensus.llmqs[Consensus::LLMQ_400_85] = Consensus::llmq400_85;
-        }
-        if(lowLLMQParams) {
-            consensus.llmqs[Consensus::LLMQ_50_60] = Consensus::llmq200_2;
-        }
-    }
+		lastCheckedLowLLMQParams = lowLLMQParams;
+		lastCheckHeight = height;
+        bool isTestNet = strcmp(Params().NetworkIDString().c_str(),"test") == 0;
+		if(totalMnCount < 5) {
+			consensus.llmqs[Consensus::LLMQ_50_60] = Consensus::llmq3_60;
+			if(isTestNet) {
+				consensus.llmqs[Consensus::LLMQ_400_60] = Consensus::llmq5_60;
+				consensus.llmqs[Consensus::LLMQ_400_85] = Consensus::llmq5_85;
+			} else {
+				consensus.llmqs[Consensus::LLMQ_400_60] = Consensus::llmq20_60;
+				consensus.llmqs[Consensus::LLMQ_400_85] = Consensus::llmq20_85;
+			}
+		} else if((totalMnCount < 80 && isTestNet) ||  (totalMnCount < 100 && !isTestNet)) {
+			consensus.llmqs[Consensus::LLMQ_50_60] = Consensus::llmq10_60;
+			consensus.llmqs[Consensus::LLMQ_400_60] = Consensus::llmq20_60;
+			consensus.llmqs[Consensus::LLMQ_400_85] = Consensus::llmq20_85;
+		}  else if((totalMnCount < 4000 && isTestNet) || (totalMnCount < 600 && !isTestNet)) {
+			consensus.llmqs[Consensus::LLMQ_50_60] = Consensus::llmq50_60;
+			consensus.llmqs[Consensus::LLMQ_400_60] = Consensus::llmq40_60;
+			consensus.llmqs[Consensus::LLMQ_400_85] = Consensus::llmq40_85;
+		} else {
+			consensus.llmqs[Consensus::LLMQ_50_60] = Consensus::llmq50_60;
+			consensus.llmqs[Consensus::LLMQ_400_60] = Consensus::llmq400_60;
+			consensus.llmqs[Consensus::LLMQ_400_85] = Consensus::llmq400_85;
+		}
+		if(lowLLMQParams) {
+			consensus.llmqs[Consensus::LLMQ_50_60] = Consensus::llmq200_2;
+		}
+	}
+
 }

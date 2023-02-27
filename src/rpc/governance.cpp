@@ -361,6 +361,8 @@ static UniValue gobject_submit(const JSONRPCRequest& request)
     // Attempt to sign triggers if we are a MN
     if (govobj.GetObjectType() == GOVERNANCE_OBJECT_TRIGGER) {
         if (fMnFound) {
+            // govobj.SetSmartnodeOutpoint(activeSmartnodeInfo.outpoint);
+            // govobj.Sign(*activeSmartnodeInfo.blsKeyOperator);
             LOCK(activeSmartnodeInfoCs);
             govobj.SetSmartnodeOutpoint(activeSmartnodeInfo.outpoint);
             govobj.Sign(*activeSmartnodeInfo.blsKeyOperator);
@@ -481,7 +483,10 @@ static UniValue gobject_vote_conf(const JSONRPCRequest& request)
     if (govObjType == GOVERNANCE_OBJECT_PROPOSAL && eVoteSignal == VOTE_SIGNAL_FUNDING) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Can't use vote-conf for proposals");
     }
+<<<<<<< HEAD
 
+=======
+>>>>>>> cca50d9d129c359e61c71c5ca24e722e87f50bbc
     {
         LOCK(activeSmartnodeInfoCs);
         if (activeSmartnodeInfo.blsKeyOperator) {
