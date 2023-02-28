@@ -109,7 +109,7 @@ bool CheckFutureTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
     return true;
 }
 
-bool CheckNewAssetTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state)
+bool CheckNewAssetTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, CAssetsCache* assetsCache)
 {
 
     if(!Params().IsAssetsActive(chainActive.Tip())) {
@@ -135,8 +135,11 @@ bool CheckNewAssetTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVal
     }
 
     //Check if a asset already exist with give name
-     if(passetsCache->CheckIfAssetExists(assettx.Name)){
-        return state.DoS(100, false, REJECT_INVALID, "bad-assets-dup-name");
+    std::string assetid = assettx.Name;
+    if (assetsCache->GetAssetId(assettx.Name, assetid)){
+        if(assetsCache->CheckIfAssetExists(assetid)){
+            return state.DoS(100, false, REJECT_INVALID, "bad-assets-dup-name");
+        }
     }
 
     if(assettx.decimalPoint < 0 || assettx.decimalPoint > 8){
@@ -170,7 +173,7 @@ bool CheckNewAssetTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVal
     return true;
 }
 
-bool CheckUpdateAssetTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state)
+bool CheckUpdateAssetTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, const CCoinsViewCache& view, CAssetsCache* assetsCache)
 {
 
     if(!Params().IsAssetsActive(chainActive.Tip())) {
@@ -192,14 +195,13 @@ bool CheckUpdateAssetTx(const CTransaction& tx, const CBlockIndex* pindexPrev, C
 
     //Check if the provide asset id is valid
     CAssetMetaData asset;
-    if(!passetsCache->GetAssetMetaData(assettx.AssetId, asset)){
+    if(!assetsCache->GetAssetMetaData(assettx.AssetId, asset)){
         return state.DoS(100, false, REJECT_INVALID, "bad-assets-invalid-id");
     }
 
     //Check if fees is paid by the owner address
-    CCoinsViewCache inputs(pcoinsTip.get());
     for (unsigned int i = 0; i < tx.vin.size(); i++) {
-        const Coin& coin = inputs.AccessCoin(tx.vin[i].prevout);
+        const Coin& coin = view.AccessCoin(tx.vin[i].prevout);
         assert(!coin.IsSpent());
         CTxDestination dest;
         ExtractDestination(coin.out.scriptPubKey, dest);
@@ -231,7 +233,7 @@ bool CheckUpdateAssetTx(const CTransaction& tx, const CBlockIndex* pindexPrev, C
     return true;
 }
 
-bool CheckMintAssetTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state)
+bool CheckMintAssetTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, const CCoinsViewCache& view, CAssetsCache* assetsCache)
 {
 
     if(!Params().IsAssetsActive(chainActive.Tip())) {
@@ -253,19 +255,19 @@ bool CheckMintAssetTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVa
 
     //Check if the provide asset id is valid
     CAssetMetaData asset;
-    if(!passetsCache->GetAssetMetaData(assettx.AssetId, asset)){
+    if(!assetsCache->GetAssetMetaData(assettx.AssetId, asset)){
         return state.DoS(100, false, REJECT_INVALID, "bad-assets-invalid-asset-id");
     }
 
     if (asset.type == 0){ // manual mint
         //Check if fees is paid by the owner address
-        CCoinsViewCache inputs(pcoinsTip.get());
         for (auto in : tx.vin) {
-            const Coin& coin = inputs.AccessCoin(in.prevout);
+            const Coin& coin = view.AccessCoin(in.prevout);
             assert(!coin.IsSpent());
             CTxDestination dest;
             ExtractDestination(coin.out.scriptPubKey, dest);
             if(EncodeDestination(dest) != EncodeDestination(asset.ownerAddress)){
+                std::cout << asset.Name << ": " << EncodeDestination(dest) << " != " << EncodeDestination(asset.ownerAddress) << std::endl;
                 return state.DoS(100, false, REJECT_INVALID, "bad-assets-invalid-input");    
             }
         }

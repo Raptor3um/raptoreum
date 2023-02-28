@@ -12,7 +12,9 @@
 
 class CNewAssetTx;
 class CUpdateAssetTx;
+class CMintAssetTx;
 struct CAssetOutputEntry;
+struct CBlockAssetUndo;
 
 #define MAX_CACHE_ASSETS_SIZE 2500
 
@@ -103,7 +105,7 @@ public:
 
     bool operator<(const CDatabasedAssetData& rhs) const
     {
-        return blockHeight < blockHeight;
+        return asset.assetId < asset.assetId;
     }
 
     ADD_SERIALIZE_METHODS;
@@ -155,7 +157,7 @@ public:
         ClearDirtyCache();
     }
 
-    CAssetsCache(const CAssetsCache& cache) : CAssets(cache)
+    CAssetsCache(CAssetsCache& cache) : CAssets(cache)
     {
         this->NewAssetsToRemove = cache.NewAssetsToRemove;
         this->NewAssetsToAdd = cache.NewAssetsToAdd;
@@ -164,20 +166,25 @@ public:
     bool InsertAsset(CNewAssetTx newasset, std::string assetid, int nheigth);
     bool UpdateAsset(CUpdateAssetTx upasset);
     bool UpdateAsset(std::string assetid, CAmount amount);
+    //undo asset
+    bool RemoveAsset(std::string assetid);
+    bool UndoUpdateAsset(const CUpdateAssetTx upasset, const std::vector<std::pair<std::string, CBlockAssetUndo> >& vUndoData);
+    bool UndoMintAsset(const CMintAssetTx assettx, const std::vector<std::pair<std::string, CBlockAssetUndo> >& vUndoData);
 
-    bool CheckIfAssetExists(std::string name);
-    bool GetAssetMetaData(std::string asetId, CAssetMetaData& asset);
+    bool CheckIfAssetExists(std::string asestId);
+    bool GetAssetMetaData(std::string assetId, CAssetMetaData& asset);
     bool GetAssetId(std::string name, std::string& assetId);
 
     bool Flush();
     bool DumpCacheToDatabase();
+    
     void ClearDirtyCache() {
         NewAssetsToAdd.clear();
         NewAssetsToRemove.clear();
     }
 };
 
-void AddAssets(const CTransaction& tx, int nHeight, bool check = false);
+void AddAssets(const CTransaction& tx, int nHeight, CAssetsCache* assetCache = nullptr, std::pair<std::string, CBlockAssetUndo>* undoAssetData = nullptr);
 bool GetAssetData(const CScript& script, CAssetOutputEntry& data);
 
 

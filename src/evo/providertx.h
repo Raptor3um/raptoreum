@@ -18,6 +18,7 @@
 class CBlockIndex;
 
 class CCoinsViewCache;
+class CAssetsCache;
 
 class CProRegTx {
 public:
@@ -489,9 +490,9 @@ public:
 
 bool CheckFutureTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CValidationState &state);
 
-bool CheckNewAssetTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CValidationState &state);
-bool CheckUpdateAssetTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CValidationState &state);
-bool CheckMintAssetTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CValidationState &state);
+bool CheckNewAssetTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CValidationState &state, CAssetsCache* assetsCache);
+bool CheckUpdateAssetTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CValidationState &state, const CCoinsViewCache& view, CAssetsCache* assetsCache);
+bool CheckMintAssetTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CValidationState &state, const CCoinsViewCache& view, CAssetsCache* assetsCache);
 
 bool CheckProRegTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CValidationState &state,
                    const CCoinsViewCache &view);

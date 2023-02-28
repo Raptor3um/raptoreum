@@ -380,7 +380,7 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
             if(!GetTransferAsset(coin.out.scriptPubKey, assetTransfer)){
                 return state.DoS(100, false, REJECT_INVALID, "bad-assets-input");
             }
-            if(nAssetVin.count(assetTransfer.AssetId) == 0)
+            if(nAssetVin.count(assetTransfer.AssetId))
                 nAssetVin[assetTransfer.AssetId] += assetTransfer.nAmount;
             else
                 nAssetVin.insert(std::make_pair(assetTransfer.AssetId, assetTransfer.nAmount));
@@ -420,7 +420,7 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
         }
     }
 
-    if(tx.nType == TRANSACTION_NORMAL){
+    if(tx.nType != TRANSACTION_MINT_ASSET){
         for (const auto& outValue : nAssetVout) {
             if(!nAssetVin.count(outValue.first) || nAssetVin.at(outValue.first) != outValue.second)
                 return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputs-outputs-mismatch");

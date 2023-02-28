@@ -26,7 +26,6 @@ struct CBlockAssetUndo
     CAmount circulatingSupply;
     bool updatable;
     std::string referenceHash;
-    uint16_t fee;
     //  distribution
     uint8_t type;
     CKeyID targetAddress;
@@ -45,7 +44,7 @@ struct CBlockAssetUndo
         if(!onlysuply){
             READWRITE(updatable);
             READWRITE(referenceHash);
-            READWRITE(fee);
+            READWRITE(type);
             READWRITE(targetAddress);
             READWRITE(issueFrequency);
             READWRITE(Amount);

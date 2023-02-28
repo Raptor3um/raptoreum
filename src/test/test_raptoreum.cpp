@@ -24,6 +24,7 @@
 #include <evo/cbtx.h>
 #include <llmq/quorums_init.h>
 #include <assets/assets.h>
+#include <assets/assetsdb.h>
 
 #include <memory>
 
@@ -111,6 +112,7 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
         pcoinsdbview.reset(new CCoinsViewDB(1 << 23, true));
         llmq::InitLLMQSystem(*evoDb, true);
         pcoinsTip.reset(new CCoinsViewCache(pcoinsdbview.get()));
+        passetsdb.reset(new CAssetsDB(1 << 23, false, true));
         if (!LoadGenesisBlock(chainparams)) {
             throw std::runtime_error("LoadGenesisBlock failed.");
         }
@@ -141,6 +143,7 @@ TestingSetup::~TestingSetup()
         llmq::DestroyLLMQSystem();
         pcoinsdbview.reset();
         pblocktree.reset();
+        passetsdb.reset();
 }
 
 TestChainSetup::TestChainSetup(int blockCount) : TestingSetup(CBaseChainParams::REGTEST)
