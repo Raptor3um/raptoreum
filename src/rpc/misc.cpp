@@ -612,7 +612,8 @@ UniValue getaddressutxos(const JSONRPCRequest& request)
             "    [\n"
             "      \"address\"  (string) The base58check encoded address\n"
             "      ,...\n"
-            "    ]\n"
+            "    ],\n"
+            "  \"excludeUnspendable\" (boolean) Whether to exclude unspendable future transaction\n"
             "}\n"
             "\nResult:\n"
             "[\n"
@@ -635,6 +636,17 @@ UniValue getaddressutxos(const JSONRPCRequest& request)
     if (!getAddressesFromParams(request.params, addresses)) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
     }
+    bool excludeUnspendable = false;
+    if (request.params[0].isObject()) {
+        UniValue excludeUnspendableValue = find_value(request.params[0].get_obj(), "excludeUnspendable");
+        if (!excludeUnspendableValue.isNull()) {
+            if(excludeUnspendableValue.isStr()) {
+                excludeUnspendable = excludeUnspendableValue.get_str().compare("true") == 0;
+            } else if(excludeUnspendableValue.isBool()) {
+                excludeUnspendable = excludeUnspendableValue.get_bool();
+            }
+        }
+    }
 
     std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> > unspentOutputs;
 
@@ -654,7 +666,14 @@ UniValue getaddressutxos(const JSONRPCRequest& request)
         if (!getAddressFromIndex(it->first.type, it->first.hashBytes, address)) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Unknown address type");
         }
-
+        if(excludeUnspendable) {
+            int currentHeight = chainActive.AtomicHeight();
+            bool isFSpendable = (it->second.fSpendableHeight >= 0 && it->second.fSpendableHeight <= currentHeight) ||
+                                (it->second.fSpendableTime >= 0 && it->second.fSpendableTime <= GetAdjustedTime());
+            if(!isFSpendable) {
+                continue;
+            }
+        }
         output.pushKV("address", address);
         output.pushKV("txid", it->first.txhash.GetHex());
         output.pushKV("outputIndex", (int)it->first.index);
