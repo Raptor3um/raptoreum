@@ -8,7 +8,7 @@ Raptoreum Core version 0.12.0 is now available from:
 
 Please report bugs using the issue tracker at github:
 
-  https://github.com/raptoreum/raptoreum/issues
+  https://github.com/raptor3um/raptoreum/issues
 
 
 How to Upgrade

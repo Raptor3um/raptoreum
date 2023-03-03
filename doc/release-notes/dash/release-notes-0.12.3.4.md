@@ -9,7 +9,7 @@ This is an optional release and only contains changes for testnet. It is not req
 
 Please report bugs using the issue tracker at github:
 
-  <https://github.com/raptoreum/raptoreum/issues>
+  <https://github.com/raptor3um/raptoreum/issues>
 
 
 Upgrading and downgrading
@@ -54,7 +54,7 @@ When deployed on testnet, it is required to start with a fresh data directory or
 0.12.3.4 Change log
 ===================
 
-See detailed [set of changes](https://github.com/raptoreum/raptoreum/compare/v0.12.3.3...raptoreum:v0.12.3.4).
+See detailed [set of changes](https://github.com/raptor3um/raptoreum/compare/v0.12.3.3...raptoreum:v0.12.3.4).
 
 Python Support
 --------------
@@ -91,17 +91,17 @@ Raptoreum Core tree 0.12.1.x was a fork of Bitcoin Core tree 0.12.
 
 These release are considered obsolete. Old release notes can be found here:
 
-- [v0.12.3.3](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.3.3.md) released Sep/19/2018
-- [v0.12.3.2](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.3.2.md) released Jul/09/2018
-- [v0.12.3.1](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.3.1.md) released Jul/03/2018
-- [v0.12.2.3](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.2.3.md) released Jan/12/2018
-- [v0.12.2.2](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.2.2.md) released Dec/17/2017
-- [v0.12.2](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.2.md) released Nov/08/2017
-- [v0.12.1](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.1.md) released Feb/06/2017
-- [v0.12.0](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.0.md) released Aug/15/2015
-- [v0.11.2](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.11.2.md) released Mar/04/2015
-- [v0.11.1](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.11.1.md) released Feb/10/2015
-- [v0.11.0](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.11.0.md) released Jan/15/2015
-- [v0.10.x](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.10.0.md) released Sep/25/2014
-- [v0.9.x](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.9.0.md) released Mar/13/2014
+- [v0.12.3.3](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.3.3.md) released Sep/19/2018
+- [v0.12.3.2](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.3.2.md) released Jul/09/2018
+- [v0.12.3.1](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.3.1.md) released Jul/03/2018
+- [v0.12.2.3](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.2.3.md) released Jan/12/2018
+- [v0.12.2.2](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.2.2.md) released Dec/17/2017
+- [v0.12.2](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.2.md) released Nov/08/2017
+- [v0.12.1](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.1.md) released Feb/06/2017
+- [v0.12.0](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.0.md) released Aug/15/2015
+- [v0.11.2](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.11.2.md) released Mar/04/2015
+- [v0.11.1](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.11.1.md) released Feb/10/2015
+- [v0.11.0](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.11.0.md) released Jan/15/2015
+- [v0.10.x](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.10.0.md) released Sep/25/2014
+- [v0.9.x](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.9.0.md) released Mar/13/2014
 

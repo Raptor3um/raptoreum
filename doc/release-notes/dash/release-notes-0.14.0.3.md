@@ -9,7 +9,7 @@ This is a new minor version release, bringing various bugfixes and improvements.
 
 Please report bugs using the issue tracker at github:
 
-  <https://github.com/raptoreum/raptoreum/issues>
+  <https://github.com/raptor3um/raptoreum/issues>
 
 
 Upgrading and downgrading
@@ -88,26 +88,26 @@ The "getmempoolinfo" RPC also has a new field now which shows the same informati
 0.14.0.3 Change log
 ===================
 
-See detailed [set of changes](https://github.com/raptoreum/raptoreum/compare/v0.14.0.2...raptoreum:v0.14.0.3).
+See detailed [set of changes](https://github.com/raptor3um/raptoreum/compare/v0.14.0.2...raptoreum:v0.14.0.3).
 
-- [`f2443709b`](https://github.com/raptoreum/raptoreum/commit/f2443709b) Update release-notes.md for 0.14.0.3 (#3054)
-- [`17ba23871`](https://github.com/raptoreum/raptoreum/commit/17ba23871) Re-verify invalid IS sigs when the active quorum set rotated (#3052)
-- [`8c49d9b54`](https://github.com/raptoreum/raptoreum/commit/8c49d9b54) Remove recovered sigs from the LLMQ db when corresponding IS locks get confirmed (#3048)
-- [`2e0cf8a30`](https://github.com/raptoreum/raptoreum/commit/2e0cf8a30) Add "instantsendlocks" to getmempoolinfo RPC (#3047)
-- [`a8fb8252e`](https://github.com/raptoreum/raptoreum/commit/a8fb8252e) Use fEnablePrivateSend instead of fPrivateSendRunning
-- [`a198a04e0`](https://github.com/raptoreum/raptoreum/commit/a198a04e0) Show number of InstantSend locks in Debug Console (#2919)
-- [`013169d63`](https://github.com/raptoreum/raptoreum/commit/013169d63) Optimize on-disk deterministic smartnode storage to reduce size of evodb (#3017)
-- [`9ac7a998b`](https://github.com/raptoreum/raptoreum/commit/9ac7a998b) Add "isValidMember" and "memberIndex" to "quorum memberof" and allow to specify quorum scan count (#3009)
-- [`99824a879`](https://github.com/raptoreum/raptoreum/commit/99824a879) Implement "quorum memberof" (#3004)
-- [`7ea319fd2`](https://github.com/raptoreum/raptoreum/commit/7ea319fd2) Bail out properly on Evo DB consistency check failures in ConnectBlock/DisconnectBlock (#3044)
-- [`b1ffedb2d`](https://github.com/raptoreum/raptoreum/commit/b1ffedb2d) Do not count 0-fee txes for fee estimation (#3037)
-- [`974055a9b`](https://github.com/raptoreum/raptoreum/commit/974055a9b) Fix broken link in PrivateSend info dialog (#3031)
-- [`781b16579`](https://github.com/raptoreum/raptoreum/commit/781b16579) Merge pull request #3028 from PastaPastaPasta/backport-12588
-- [`5af6ce91d`](https://github.com/raptoreum/raptoreum/commit/5af6ce91d) Add Raptoreum Core Group codesign certificate (#3027)
-- [`873ab896c`](https://github.com/raptoreum/raptoreum/commit/873ab896c) Fix osslsigncode compile issue in gitian-build (#3026)
-- [`ea8569e97`](https://github.com/raptoreum/raptoreum/commit/ea8569e97) Backport #12783: macOS: disable AppNap during sync (and mixing) (#3024)
-- [`4286dde49`](https://github.com/raptoreum/raptoreum/commit/4286dde49) Remove support for InstantSend locked gobject collaterals (#3019)
-- [`788d42dbc`](https://github.com/raptoreum/raptoreum/commit/788d42dbc) Bump version to 0.14.0.3 and copy release notes (#3053)
+- [`f2443709b`](https://github.com/raptor3um/raptoreum/commit/f2443709b) Update release-notes.md for 0.14.0.3 (#3054)
+- [`17ba23871`](https://github.com/raptor3um/raptoreum/commit/17ba23871) Re-verify invalid IS sigs when the active quorum set rotated (#3052)
+- [`8c49d9b54`](https://github.com/raptor3um/raptoreum/commit/8c49d9b54) Remove recovered sigs from the LLMQ db when corresponding IS locks get confirmed (#3048)
+- [`2e0cf8a30`](https://github.com/raptor3um/raptoreum/commit/2e0cf8a30) Add "instantsendlocks" to getmempoolinfo RPC (#3047)
+- [`a8fb8252e`](https://github.com/raptor3um/raptoreum/commit/a8fb8252e) Use fEnablePrivateSend instead of fPrivateSendRunning
+- [`a198a04e0`](https://github.com/raptor3um/raptoreum/commit/a198a04e0) Show number of InstantSend locks in Debug Console (#2919)
+- [`013169d63`](https://github.com/raptor3um/raptoreum/commit/013169d63) Optimize on-disk deterministic smartnode storage to reduce size of evodb (#3017)
+- [`9ac7a998b`](https://github.com/raptor3um/raptoreum/commit/9ac7a998b) Add "isValidMember" and "memberIndex" to "quorum memberof" and allow to specify quorum scan count (#3009)
+- [`99824a879`](https://github.com/raptor3um/raptoreum/commit/99824a879) Implement "quorum memberof" (#3004)
+- [`7ea319fd2`](https://github.com/raptor3um/raptoreum/commit/7ea319fd2) Bail out properly on Evo DB consistency check failures in ConnectBlock/DisconnectBlock (#3044)
+- [`b1ffedb2d`](https://github.com/raptor3um/raptoreum/commit/b1ffedb2d) Do not count 0-fee txes for fee estimation (#3037)
+- [`974055a9b`](https://github.com/raptor3um/raptoreum/commit/974055a9b) Fix broken link in PrivateSend info dialog (#3031)
+- [`781b16579`](https://github.com/raptor3um/raptoreum/commit/781b16579) Merge pull request #3028 from PastaPastaPasta/backport-12588
+- [`5af6ce91d`](https://github.com/raptor3um/raptoreum/commit/5af6ce91d) Add Raptoreum Core Group codesign certificate (#3027)
+- [`873ab896c`](https://github.com/raptor3um/raptoreum/commit/873ab896c) Fix osslsigncode compile issue in gitian-build (#3026)
+- [`ea8569e97`](https://github.com/raptor3um/raptoreum/commit/ea8569e97) Backport #12783: macOS: disable AppNap during sync (and mixing) (#3024)
+- [`4286dde49`](https://github.com/raptor3um/raptoreum/commit/4286dde49) Remove support for InstantSend locked gobject collaterals (#3019)
+- [`788d42dbc`](https://github.com/raptor3um/raptoreum/commit/788d42dbc) Bump version to 0.14.0.3 and copy release notes (#3053)
 
 Credits
 =======
@@ -145,25 +145,25 @@ Raptoreum Core tree 0.12.1.x was a fork of Bitcoin Core tree 0.12.
 
 These release are considered obsolete. Old release notes can be found here:
 
-- [v0.14.0.2](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.14.0.2.md) released July/4/2019
-- [v0.14.0.1](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.14.0.1.md) released May/31/2019
-- [v0.14.0](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.14.0.md) released May/22/2019
-- [v0.13.3](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.13.3.md) released Apr/04/2019
-- [v0.13.2](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.13.2.md) released Mar/15/2019
-- [v0.13.1](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.13.1.md) released Feb/9/2019
-- [v0.13.0](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.13.0.md) released Jan/14/2019
-- [v0.12.3.4](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.3.4.md) released Dec/14/2018
-- [v0.12.3.3](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.3.3.md) released Sep/19/2018
-- [v0.12.3.2](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.3.2.md) released Jul/09/2018
-- [v0.12.3.1](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.3.1.md) released Jul/03/2018
-- [v0.12.2.3](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.2.3.md) released Jan/12/2018
-- [v0.12.2.2](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.2.2.md) released Dec/17/2017
-- [v0.12.2](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.2.md) released Nov/08/2017
-- [v0.12.1](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.1.md) released Feb/06/2017
-- [v0.12.0](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.0.md) released Aug/15/2015
-- [v0.11.2](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.11.2.md) released Mar/04/2015
-- [v0.11.1](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.11.1.md) released Feb/10/2015
-- [v0.11.0](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.11.0.md) released Jan/15/2015
-- [v0.10.x](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.10.0.md) released Sep/25/2014
-- [v0.9.x](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.9.0.md) released Mar/13/2014
+- [v0.14.0.2](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.14.0.2.md) released July/4/2019
+- [v0.14.0.1](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.14.0.1.md) released May/31/2019
+- [v0.14.0](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.14.0.md) released May/22/2019
+- [v0.13.3](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.13.3.md) released Apr/04/2019
+- [v0.13.2](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.13.2.md) released Mar/15/2019
+- [v0.13.1](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.13.1.md) released Feb/9/2019
+- [v0.13.0](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.13.0.md) released Jan/14/2019
+- [v0.12.3.4](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.3.4.md) released Dec/14/2018
+- [v0.12.3.3](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.3.3.md) released Sep/19/2018
+- [v0.12.3.2](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.3.2.md) released Jul/09/2018
+- [v0.12.3.1](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.3.1.md) released Jul/03/2018
+- [v0.12.2.3](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.2.3.md) released Jan/12/2018
+- [v0.12.2.2](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.2.2.md) released Dec/17/2017
+- [v0.12.2](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.2.md) released Nov/08/2017
+- [v0.12.1](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.1.md) released Feb/06/2017
+- [v0.12.0](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.0.md) released Aug/15/2015
+- [v0.11.2](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.11.2.md) released Mar/04/2015
+- [v0.11.1](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.11.1.md) released Feb/10/2015
+- [v0.11.0](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.11.0.md) released Jan/15/2015
+- [v0.10.x](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.10.0.md) released Sep/25/2014
+- [v0.9.x](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.9.0.md) released Mar/13/2014
 
