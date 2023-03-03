@@ -31,7 +31,7 @@ packages:
 - "libxkbcommon0"
 - "ccache"
 remotes:
-- "url": "https://github.com/raptoreum/raptoreum.git"
+- "url": "https://github.com/raptor3um/raptoreum.git"
   "dir": "raptoreum"
 files: []
 script: |
