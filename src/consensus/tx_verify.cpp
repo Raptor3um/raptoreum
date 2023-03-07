@@ -348,6 +348,32 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, int nHeig
     return true;
 }
 
+inline bool checkOutput(const CTxOut& out, CValidationState& state, CAmount& nValueIn, std::map<std::string, CAmount>& nAssetVin, bool isV17active)
+{
+    // Check for negative or overflow values
+    nValueIn += out.nValue;
+    if (!MoneyRange(out.nValue, isV17active) || !MoneyRange(nValueIn, isV17active)) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-txns-values-outofrange");
+    }
+
+    if(out.scriptPubKey.IsAssetScript()){
+        CAssetTransfer assetTransfer;
+        if(!GetTransferAsset(out.scriptPubKey, assetTransfer)){
+            return state.DoS(100, false, REJECT_INVALID, "bad-assets-input");
+        }
+        if(nAssetVin.count(assetTransfer.AssetId))
+            nAssetVin[assetTransfer.AssetId] += assetTransfer.nAmount;
+        else
+            nAssetVin.insert(std::make_pair(assetTransfer.AssetId, assetTransfer.nAmount));
+        
+        if (!MoneyRange(assetTransfer.nAmount) || !MoneyRange(nAssetVin.at(assetTransfer.AssetId))) {
+            return state.DoS(100, false, REJECT_INVALID, "bad-asset-values-outofrange");
+        }
+    }
+
+    return true;
+}
+
 bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight, CAmount& txfee, CAmount& specialTxFee, bool isV17active, bool fFeeVerify)
 {
     // are the actual inputs available?
@@ -369,26 +395,9 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
                 REJECT_INVALID, "bad-txns-premature-spend-of-coinbase",
                 strprintf("tried to spend coinbase at depth %d", nSpendHeight - coin.nHeight));
         }
-        // Check for negative or overflow input values
-        nValueIn += coin.out.nValue;
-        if (!MoneyRange(coin.out.nValue, isV17active) || !MoneyRange(nValueIn, isV17active)) {
-            return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputvalues-outofrange");
-        }
-
-        if(coin.out.scriptPubKey.IsAssetScript()){
-            CAssetTransfer assetTransfer;
-            if(!GetTransferAsset(coin.out.scriptPubKey, assetTransfer)){
-                return state.DoS(100, false, REJECT_INVALID, "bad-assets-input");
-            }
-            if(nAssetVin.count(assetTransfer.AssetId))
-                nAssetVin[assetTransfer.AssetId] += assetTransfer.nAmount;
-            else
-                nAssetVin.insert(std::make_pair(assetTransfer.AssetId, assetTransfer.nAmount));
-            
-            if (!MoneyRange(assetTransfer.nAmount, isV17active) || !MoneyRange(nAssetVin.at(assetTransfer.AssetId), isV17active)) {
-                return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputvalues-outofrange");
-            }
-        }
+                
+        if (!checkOutput(coin.out, state, nValueIn, nAssetVin, isV17active))
+            return false;
 
         const char* futureValidationError = validateFutureCoin(coin, nSpendHeight);
 		if(futureValidationError) {
@@ -400,34 +409,17 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
     CAmount value_out = 0;
     std::map<std::string, CAmount> nAssetVout;
     for (auto out : tx.vout){
-        value_out += out.nValue;
-        if (!MoneyRange(out.nValue, isV17active) || !MoneyRange(value_out, isV17active)) {
-            return state.DoS(100, false, REJECT_INVALID, "bad-txns-outputvalues-outofrange");
-        }
-        if(out.scriptPubKey.IsAssetScript()){
-            CAssetTransfer assetTransfer;
-            if(!GetTransferAsset(out.scriptPubKey, assetTransfer))
-                return state.DoS(100, false, REJECT_INVALID, "bad-assets-output");
-
-            if(nAssetVout.count(assetTransfer.AssetId))
-                nAssetVout[assetTransfer.AssetId] += assetTransfer.nAmount;
-            else
-                nAssetVout.insert(std::make_pair(assetTransfer.AssetId, assetTransfer.nAmount));
-          
-            if (!MoneyRange(assetTransfer.nAmount, isV17active) || !MoneyRange(nAssetVout.at(assetTransfer.AssetId), isV17active)) {
-                return state.DoS(100, false, REJECT_INVALID, "bad-txns-outputvalues-outofrange");
-            }
-        }
+        if (!checkOutput(out, state, value_out, nAssetVout, isV17active))
+            return false;
     }
 
     if(tx.nType != TRANSACTION_MINT_ASSET){
         for (const auto& outValue : nAssetVout) {
             if(!nAssetVin.count(outValue.first) || nAssetVin.at(outValue.first) != outValue.second)
-                return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputs-outputs-mismatch");
+                return state.DoS(100, false, REJECT_INVALID, "bad-asset-inputs-outputs-mismatch");
         }
     }
 
-    //const CAmount value_out = tx.GetValueOut();
     if (nValueIn < value_out) {
         return state.DoS(100, false, REJECT_INVALID, "bad-txns-in-belowout", false,
             strprintf("value in (%s) < value out (%s)", FormatMoney(nValueIn), FormatMoney(value_out)));

@@ -105,7 +105,7 @@ public:
 
     bool operator<(const CDatabasedAssetData& rhs) const
     {
-        return asset.assetId < asset.assetId;
+        return asset.assetId < rhs.asset.assetId;
     }
 
     ADD_SERIALIZE_METHODS;

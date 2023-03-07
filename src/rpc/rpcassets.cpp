@@ -46,7 +46,7 @@ static std::string GetDistributionType(int t)
 UniValue createasset(const JSONRPCRequest& request)
 {
 
-    if (request.fHelp || !Params().IsAssetsActive(chainActive.Tip()) || request.params.size() < 1 || request.params.size() > 2)
+    if (request.fHelp || !Params().IsAssetsActive(chainActive.Tip()) || request.params.size() < 1 || request.params.size() > 1)
         throw std::runtime_error(
             "createasset asset_metadata\n"
             "Create a new asset\n"
@@ -101,10 +101,14 @@ UniValue createasset(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Invalid asset name");
     }
     // check if asset already exist
-    CAssetMetaData tmpasset;
-    if(passetsCache->GetAssetMetaData(assetname, tmpasset)){
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Asset already exist");
+    std::string assetid;
+    if (passetsCache->GetAssetId(assetname, assetid)){
+        CAssetMetaData tmpasset;
+        if(passetsCache->GetAssetMetaData(assetid, tmpasset)){
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Asset already exist");
+        }
     }
+
     CNewAssetTx assettx;
     assettx.Name = assetname;
     const UniValue& updatable = find_value(asset, "updatable");
@@ -114,16 +118,51 @@ UniValue createasset(const JSONRPCRequest& request)
         assettx.updatable = true;
     }
 
-    const UniValue& is_unique = find_value(asset, "isunique");
-    if(!is_unique.isNull()){
-        assettx.isUnique = is_unique.get_bool();    
-    }else{
-        assettx.isUnique = false;
+    const UniValue& referenceHash = find_value(asset, "referenceHash");
+    if(!referenceHash.isNull()){
+        assettx.referenceHash = referenceHash.get_str();    
     }
 
-    if (assettx.isUnique){
-        assettx.decimalPoint = 0; //alway 0
+    const UniValue& targetAddress = find_value(asset, "targetAddress");
+    if(!targetAddress.isNull()){
+        assettx.targetAddress = ParsePubKeyIDFromAddress(targetAddress.get_str(), "targetAddress");;    
+    }else{
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: missing targetAddress");   
+    }
+
+    const UniValue& ownerAddress = find_value(asset, "ownerAddress");
+    if(!ownerAddress.isNull()){
+        assettx.ownerAddress = ParsePubKeyIDFromAddress(ownerAddress.get_str(), "ownerAddress");    
+    }else{
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: missing ownerAddress");   
+    }
+
+    const UniValue& is_unique = find_value(asset, "isunique");
+    if(!is_unique.isNull() && is_unique.get_bool()){
+        assettx.isUnique = true;
+        assettx.decimalPoint = 0; //alway 0  
+        assettx.type = 0; 
+        assettx.Amount = 1 * COIN;; //alway 1 
     } else {
+        assettx.isUnique = false;
+
+        const UniValue& type = find_value(asset, "type");
+        if(!type.isNull()){
+            assettx.type = type.get_int();    
+        }else{
+            assettx.type = 0;   
+        }
+
+        const UniValue& amount = find_value(asset, "amount");
+        if(!amount.isNull()){
+            CAmount a = amount.get_int64();
+            if ( a <= 0)
+                throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount");
+            assettx.Amount = a * COIN;    
+        }else{
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: missing amount");   
+        }
+
         const UniValue& decimalpoint = find_value(asset, "decimalpoint");
         if(decimalpoint.isNull()){
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: decimalpoint not found");    
@@ -136,50 +175,6 @@ UniValue createasset(const JSONRPCRequest& request)
         }
     }
 
-    const UniValue& referenceHash = find_value(asset, "referenceHash");
-    if(!referenceHash.isNull()){
-        assettx.referenceHash = referenceHash.get_str();    
-    }
-
-    const UniValue& type = find_value(asset, "type");
-    if(!type.isNull()){
-        assettx.type = type.get_int();    
-    }else{
-        assettx.type = 0;   
-    }
-
-    const UniValue& targetAddress = find_value(asset, "targetAddress");
-    if(!targetAddress.isNull()){
-        assettx.targetAddress = ParsePubKeyIDFromAddress(targetAddress.get_str(), "targetAddress");;    
-    }else{
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: missing targetAddress");   
-    }
-
-    const UniValue& amount = find_value(asset, "amount");
-    if(!amount.isNull()){
-        CAmount a = amount.get_int64();
-        if ( a <= 0)
-            throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount");
-        assettx.Amount = a * COIN;    
-    }else{
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: missing amount");   
-    }
-
-    const UniValue& ownerAddress = find_value(asset, "ownerAddress");
-    if(!ownerAddress.isNull()){
-        assettx.ownerAddress = ParsePubKeyIDFromAddress(ownerAddress.get_str(), "ownerAddress");    
-    }else{
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: missing ownerAddress");   
-    }
-
-    if (request.params[1].isNull()) {
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Raptoreum address: ") + request.params[1].get_str());
-    }
-
-    CTxDestination fundDest = DecodeDestination(request.params[1].get_str());
-    if (!IsValidDestination(fundDest))
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Raptoreum address: ") + request.params[1].get_str());
-    
     CTransactionRef newTx;
     CReserveKey reservekey(pwallet);
     CAmount nFee;
