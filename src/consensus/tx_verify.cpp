@@ -357,6 +357,9 @@ inline bool checkOutput(const CTxOut& out, CValidationState& state, CAmount& nVa
     }
 
     if(out.scriptPubKey.IsAssetScript()){
+        if (out.nValue != 0)
+            return state.DoS(100, false, REJECT_INVALID, "bad-asset-value-outofrange");
+        
         CAssetTransfer assetTransfer;
         if(!GetTransferAsset(out.scriptPubKey, assetTransfer)){
             return state.DoS(100, false, REJECT_INVALID, "bad-assets-input");
