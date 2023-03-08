@@ -195,6 +195,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "rescanblockchain", 0, "start_height"},
     { "rescanblockchain", 1, "stop_height"},
     { "stop", 0, "wait" },
+    { "createasset", 0, "asset"},
 };
 
 class CRPCConvertTable

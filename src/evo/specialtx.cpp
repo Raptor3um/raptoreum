@@ -16,7 +16,7 @@
 #include <llmq/quorums_commitment.h>
 #include <llmq/quorums_blockprocessor.h>
 
-bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, const CCoinsViewCache& view)
+bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, const CCoinsViewCache& view, CAssetsCache* assetsCache)
 {
     if (tx.nVersion != 3 || tx.nType == TRANSACTION_NORMAL)
         return true;
@@ -42,11 +42,11 @@ bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVali
         case TRANSACTION_FUTURE:
           	return CheckFutureTx(tx, pindexPrev, state);
         case TRANSACTION_NEW_ASSET:
-          	return CheckNewAssetTx(tx, pindexPrev, state);
+          	return CheckNewAssetTx(tx, pindexPrev, state, assetsCache);
         case TRANSACTION_UPDATE_ASSET:
-          	return CheckUpdateAssetTx(tx, pindexPrev, state);
+          	return CheckUpdateAssetTx(tx, pindexPrev, state, view, assetsCache);
         case TRANSACTION_MINT_ASSET:
-          	return CheckMintAssetTx(tx, pindexPrev, state);         
+          	return CheckMintAssetTx(tx, pindexPrev, state, view, assetsCache);         
         }
     } catch (const std::exception& e) {
         LogPrintf("%s -- failed: %s\n", __func__, e.what());
@@ -112,7 +112,7 @@ bool UndoSpecialTx(const CTransaction& tx, const CBlockIndex* pindex)
     return false;
 }
 
-bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, CValidationState& state, const CCoinsViewCache& view, bool fJustCheck, bool fCheckCbTxMerleRoots)
+bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, CValidationState& state, const CCoinsViewCache& view, CAssetsCache* assetsCache, bool fJustCheck, bool fCheckCbTxMerleRoots)
 {
     try {
         static int64_t nTimeLoop = 0;
@@ -124,7 +124,7 @@ bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, CV
 
         for (int i = 0; i < (int)block.vtx.size(); i++) {
             const CTransaction& tx = *block.vtx[i];
-            if (!CheckSpecialTx(tx, pindex->pprev, state, view)) {
+            if (!CheckSpecialTx(tx, pindex->pprev, state, view, assetsCache)) {
                 // pass the state returned by the function above
                 return false;
             }

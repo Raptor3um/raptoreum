@@ -61,6 +61,8 @@
 #include <spork.h>
 #include <warnings.h>
 #include <walletinitinterface.h>
+#include <assets/assets.h>
+#include <assets/assetsdb.h>
 
 #include <evo/deterministicmns.h>
 #include <llmq/quorums_init.h>
@@ -328,6 +330,8 @@ void PrepareShutdown()
         pcoinscatcher.reset();
         pcoinsdbview.reset();
         pblocktree.reset();
+        passetsdb.reset();
+        passetsCache.reset();
         llmq::DestroyLLMQSystem();
         deterministicMNManager.reset();
         evoDb.reset();
@@ -1903,6 +1907,17 @@ bool AppInitMain()
                 // fails if it's still open from the previous loop. Close it first:
                 pblocktree.reset();
                 pblocktree.reset(new CBlockTreeDB(nBlockTreeDBCache, false, fReset));
+
+                passetsdb.reset();
+                passetsdb.reset(new CAssetsDB(nBlockTreeDBCache, false, fReset));
+                passetsCache.reset();
+                passetsCache.reset(new CAssetsCache());
+
+                if (!passetsdb->LoadAssets()) {
+                    strLoadError = _("Failed to load Assets Database");
+                    break;
+                }
+
                 llmq::DestroyLLMQSystem();
                 // Same logic as above with pblocktree
                 evoDb.reset();

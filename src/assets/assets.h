@@ -8,58 +8,25 @@
 #include <amount.h>
 #include <coins.h>
 #include <key_io.h>
+#include <pubkey.h>
 
-#define RTM_R 0x72  //R
-#define RTM_T 0x74  //T
-#define RTM_M 0x6d  //M
+class CNewAssetTx;
+class CUpdateAssetTx;
+class CMintAssetTx;
+struct CAssetOutputEntry;
+struct CBlockAssetUndo;
+
+#define MAX_CACHE_ASSETS_SIZE 2500
 
 CAmount getAssetsFeesCoin();
 uint16_t getAssetsFees();
 bool IsAssetNameValid(std::string name);
 bool GetAssetId(const CScript& script, std::string& assetId);
 
-class CAssetTransfer
-{
-public:
-    std::string AssetId;
-    CAmount nAmount;
-
-    CAssetTransfer()
-    {
-        SetNull();
-    }
-
-    void SetNull()
-    {
-        nAmount = 0;
-        AssetId = "";
-    }
-
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
-    {
-        READWRITE(AssetId);
-        READWRITE(nAmount);
-    }
-
-    CAssetTransfer(const std::string& AssetId, const CAmount& nAmount);
-    void BuildAssetTransaction(CScript& script) const;
-};
-
-bool GetTransferAsset(const CScript& script, CAssetTransfer& assetTransfer);
-
-
-//temporary memory cache class
-class CNewAssetTx;
-class CUpdateAssetTx;
-
 class CAssetMetaData {
 public:
     std::string assetId; //Transaction hash of asset creation
-    uint32_t blockHeight; //block height of asset creation transaction
-    CAmount circulatingSuply; //update every mint transaction.
+    CAmount circulatingSupply; //update every mint transaction.
     std::string Name;
     bool updatable = false;//if true this asset meta can be modify using assetTx update process. 
     bool isunique = false;//true if this is asset is unique it has an identity per token (NFT flag)
@@ -74,11 +41,19 @@ public:
     CKeyID ownerAddress;
     CKeyID collateralAddress;  
 
-public:
+    CAssetMetaData()
+    {
+        SetNull();
+    }
+
+    CAssetMetaData(const std::string txid, const CNewAssetTx assetTx);
+
     ADD_SERIALIZE_METHODS;
 
     template<typename Stream, typename Operation>
     inline void SerializationOp(Stream &s, Operation ser_action) {
+        READWRITE(assetId);
+        READWRITE(circulatingSupply);
         READWRITE(Name);
         READWRITE(updatable);
         READWRITE(isunique);
@@ -92,16 +67,125 @@ public:
         READWRITE(ownerAddress);
         READWRITE(collateralAddress);
     }
+
+    void SetNull(){
+        assetId = "";
+        circulatingSupply= CAmount(-1);
+        Name = "";
+        updatable = false; 
+        isunique = false;
+        Decimalpoint  = uint8_t(-1);
+        referenceHash = "";
+        fee = uint8_t(-1);
+        type = uint8_t(-1);
+        targetAddress = CKeyID();
+        issueFrequency;
+        Amount = 0;
+        ownerAddress = CKeyID();
+        collateralAddress = CKeyID();
+    }
 };
 
-//temporary memory cache
-void InsertAsset(CNewAssetTx newasset, std::string assetid,int nheigth);
-bool UpdateAsset(CUpdateAssetTx upasset);
-bool UpdateAsset(std::string assetid, CAmount amount);
-void AddAssets(const CTransaction& tx, int nHeight, bool check = false);
+class CDatabasedAssetData
+{
+public:
+    CAssetMetaData asset;
+    int blockHeight;
+    uint256 blockHash;
 
-bool CheckIfAssetExists(std::string name);
-bool GetAssetMetaData(std::string asetId, CAssetMetaData& asset);
+    CDatabasedAssetData(const CAssetMetaData& asset, const int& nHeight, const uint256& blockHash);
+    CDatabasedAssetData();
+
+    void SetNull()
+    {
+        asset.SetNull();
+        blockHeight = -1;
+        blockHash = uint256();
+    }
+
+    bool operator<(const CDatabasedAssetData& rhs) const
+    {
+        return asset.assetId < rhs.asset.assetId;
+    }
+
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action)
+    {
+        READWRITE(asset);
+        READWRITE(blockHeight);
+        READWRITE(blockHash);
+    }
+};
+
+class CAssets {
+public:
+    std::map<std::string, CDatabasedAssetData> mapAsset;
+    std::map<std::string, std::string> mapAssetid;
+
+    CAssets(const CAssets& assets) {
+        this->mapAsset = assets.mapAsset;
+        this->mapAssetid = assets.mapAssetid;
+    }
+
+    CAssets& operator=(const CAssets& other) {
+        mapAsset = other.mapAsset;
+        mapAssetid = other.mapAssetid;
+        return *this;
+    }
+
+    CAssets() {
+        SetNull();
+    }
+
+    void SetNull() {
+        mapAsset.clear();
+        mapAssetid.clear();
+    }
+};
+
+class CAssetsCache : public CAssets
+{
+public:
+    std::set<CDatabasedAssetData> NewAssetsToRemove;
+    std::set<CDatabasedAssetData> NewAssetsToAdd;
+
+    CAssetsCache() : CAssets()
+    {
+        SetNull();
+        ClearDirtyCache();
+    }
+
+    CAssetsCache(CAssetsCache& cache) : CAssets(cache)
+    {
+        this->NewAssetsToRemove = cache.NewAssetsToRemove;
+        this->NewAssetsToAdd = cache.NewAssetsToAdd;
+    }
+
+    bool InsertAsset(CNewAssetTx newasset, std::string assetid, int nheigth);
+    bool UpdateAsset(CUpdateAssetTx upasset);
+    bool UpdateAsset(std::string assetid, CAmount amount);
+    //undo asset
+    bool RemoveAsset(std::string assetid);
+    bool UndoUpdateAsset(const CUpdateAssetTx upasset, const std::vector<std::pair<std::string, CBlockAssetUndo> >& vUndoData);
+    bool UndoMintAsset(const CMintAssetTx assettx, const std::vector<std::pair<std::string, CBlockAssetUndo> >& vUndoData);
+
+    bool CheckIfAssetExists(std::string asestId);
+    bool GetAssetMetaData(std::string assetId, CAssetMetaData& asset);
+    bool GetAssetId(std::string name, std::string& assetId);
+
+    bool Flush();
+    bool DumpCacheToDatabase();
+    
+    void ClearDirtyCache() {
+        NewAssetsToAdd.clear();
+        NewAssetsToRemove.clear();
+    }
+};
+
+void AddAssets(const CTransaction& tx, int nHeight, CAssetsCache* assetCache = nullptr, std::pair<std::string, CBlockAssetUndo>* undoAssetData = nullptr);
+bool GetAssetData(const CScript& script, CAssetOutputEntry& data);
 
 
 #endif //RAPTOREUM_ASSETS_H

@@ -23,6 +23,8 @@
 #include <evo/deterministicmns.h>
 #include <evo/cbtx.h>
 #include <llmq/quorums_init.h>
+#include <assets/assets.h>
+#include <assets/assetsdb.h>
 
 #include <memory>
 
@@ -66,6 +68,7 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName)
         fPrintToDebugLog = false; // don't want to write to debug.log file
         fCheckBlockIndex = true;
         SelectParams(chainName);
+        passetsCache.reset(new CAssetsCache());
         evoDb.reset(new CEvoDB(1 << 20, true, true));
         deterministicMNManager.reset(new CDeterministicMNManager(*evoDb));
         noui_connect();
@@ -75,6 +78,7 @@ BasicTestingSetup::~BasicTestingSetup()
 {
         deterministicMNManager.reset();
         evoDb.reset();
+        passetsCache.reset();
 
         fs::remove_all(m_path_root);
         ECC_Stop();
@@ -108,6 +112,7 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
         pcoinsdbview.reset(new CCoinsViewDB(1 << 23, true));
         llmq::InitLLMQSystem(*evoDb, true);
         pcoinsTip.reset(new CCoinsViewCache(pcoinsdbview.get()));
+        passetsdb.reset(new CAssetsDB(1 << 23, false, true));
         if (!LoadGenesisBlock(chainparams)) {
             throw std::runtime_error("LoadGenesisBlock failed.");
         }
@@ -138,6 +143,7 @@ TestingSetup::~TestingSetup()
         llmq::DestroyLLMQSystem();
         pcoinsdbview.reset();
         pblocktree.reset();
+        passetsdb.reset();
 }
 
 TestChainSetup::TestChainSetup(int blockCount) : TestingSetup(CBaseChainParams::REGTEST)

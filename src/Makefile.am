@@ -119,6 +119,8 @@ BITCOIN_CORE_H = \
   addressindex.h \
   addrman.h \
   assets/assets.h \
+  assets/assetsdb.h \
+  assets/assetstype.h \
   attributes.h \
   base58.h \
   batchedlogger.h \
@@ -304,6 +306,7 @@ libraptoreum_server_a_SOURCES = \
   addrdb.cpp \
   addrman.cpp \
   assets/assets.cpp \
+  assets/assetsdb.cpp \
   batchedlogger.cpp \
   bloom.cpp \
   blockencodings.cpp \
@@ -369,6 +372,7 @@ libraptoreum_server_a_SOURCES = \
   rpc/misc.cpp \
   rpc/net.cpp \
   rpc/rawtransaction.cpp \
+  rpc/rpcassets.cpp \
   rpc/rpcevo.cpp \
   rpc/rpcquorums.cpp \
   rpc/server.cpp \
@@ -578,6 +582,7 @@ libraptoreum_consensus_a_SOURCES = \
 libraptoreum_common_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libraptoreum_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libraptoreum_common_a_SOURCES = \
+  assets/assetstype.cpp \
   base58.cpp \
   bech32.cpp \
   founder_payment.cpp \

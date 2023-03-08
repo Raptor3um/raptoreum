@@ -46,6 +46,10 @@ class CBlockPolicyEstimator;
 class CTxMemPool;
 class CValidationState;
 class PrecomputedTransactionData;
+class CTxUndo;
+struct CBlockAssetUndo;
+class CAssetsDB;
+class CAssetsCache;
 struct ChainTxData;
 
 struct LockPoints;
@@ -349,6 +353,7 @@ int VersionBitsTipStateSinceHeight(const Consensus::Params& params, Consensus::D
 
 /** Apply the effects of this transaction on the UTXO set represented by view */
 void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, int nHeight);
+void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, CTxUndo& txundo, int nHeight, CAssetsCache* assetCache = nullptr, std::pair<std::string, CBlockAssetUndo>* undoAssetData = nullptr);
 
 /** Transaction validation functions */
 
@@ -483,6 +488,12 @@ extern std::unique_ptr<CCoinsViewCache> pcoinsTip;
 
 /** Global variable that points to the active block tree (protected by cs_main) */
 extern std::unique_ptr<CBlockTreeDB> pblocktree;
+
+/** Global variable that point to the active assets database (protected by cs_main) */
+extern std::unique_ptr<CAssetsDB> passetsdb;
+
+/** Global variable that point to the active assets cache (protected by cs_main) */
+extern std::unique_ptr<CAssetsCache> passetsCache;
 
 /**
  * Return the spend height, which is one more than the inputs.GetBestBlock().

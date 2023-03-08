@@ -25,6 +25,7 @@
 #include <evo/providertx.h>
 #include <evo/deterministicmns.h>
 #include <evo/simplifiedmns.h>
+#include <assets/assets.h>
 
 #include <bls/bls.h>
 #include <limits.h>
@@ -443,7 +444,8 @@ static std::string SignAndSendSpecialTx(const CMutableTransaction& tx, bool fSub
     LOCK(cs_main);
 
     CValidationState state;
-    if (!CheckSpecialTx(tx, chainActive.Tip(), state, *pcoinsTip.get())) {
+    CAssetsCache assetsCache = *passetsCache.get();
+    if (!CheckSpecialTx(tx, chainActive.Tip(), state, *pcoinsTip.get(), &assetsCache)) {
         throw std::runtime_error(FormatStateMessage(state));
     }
     } // cs_main

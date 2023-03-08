@@ -20,6 +20,7 @@
 #include <netbase.h>
 #include <evo/specialtx.h>
 #include <evo/providertx.h>
+#include <assets/assets.h>
 
 #include <iostream>
 #include <unistd.h>
@@ -149,7 +150,8 @@ static std::string SignAndSendSpecialTx(const CMutableTransaction& tx)
 
     CValidationState state;
 //    CCoinsViewCache view;
-    if (!CheckSpecialTx(tx, chainActive.Tip(), state, *pcoinsTip.get())) {
+    CAssetsCache assetsCache = *passetsCache.get();
+    if (!CheckSpecialTx(tx, chainActive.Tip(), state, *pcoinsTip.get(), &assetsCache)) {
         throw std::runtime_error(FormatStateMessage(state));
     }
 

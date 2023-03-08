@@ -24,6 +24,8 @@
 #include <evo/providertx.h>
 #include <evo/specialtx.h>
 #include <llmq/quorums_commitment.h>
+#include <assets/assets.h>
+#include <assets/assetstype.h>
 
 UniValue ValueFromAmount(const CAmount& amount)
 {
@@ -161,6 +163,19 @@ void ScriptPubKeyToUniv(const CScript& scriptPubKey, UniValue& out, bool fInclud
 
     out.pushKV("reqSigs", nRequired);
     out.pushKV("type", GetTxnOutputType(type));
+
+    if (type == TX_TRANSFER_ASSET) {
+        UniValue assetInfo(UniValue::VOBJ);
+        std::string _assetAddress;
+
+        CAssetTransfer data;
+        if (GetTransferAsset(scriptPubKey, data)) {
+            assetInfo.pushKV("asset_id", data.AssetId);
+            assetInfo.pushKV("amount", ValueFromAmount(data.nAmount));
+        }
+
+        out.pushKV("asset", assetInfo);
+    }
 
     UniValue a(UniValue::VARR);
     for (const CTxDestination& addr : addresses) {

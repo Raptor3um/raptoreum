@@ -1765,14 +1765,17 @@ static void MaybePushAddress(UniValue & entry, const CTxDestination &dest)
  * @param  ret        The UniValue into which the result is stored.
  * @param  filter     The "is mine" filter bool.
  */
-void ListTransactions(CWallet * const pwallet, const CWalletTx& wtx, const std::string& strAccount, int nMinDepth, bool fLong, UniValue& ret, const isminefilter& filter)
+void ListTransactions(CWallet * const pwallet, const CWalletTx& wtx, const std::string& strAccount, int nMinDepth, bool fLong, UniValue& ret, UniValue& retAssets, const isminefilter& filter)
 {
     CAmount nFee;
     std::string strSentAccount;
     std::list<COutputEntry> listReceived;
     std::list<COutputEntry> listSent;
 
-    wtx.GetAmounts(listReceived, listSent, nFee, strSentAccount, filter);
+    std::list<CAssetOutputEntry> listAssetsReceived;
+    std::list<CAssetOutputEntry> listAssetsSent;
+
+    wtx.GetAmounts(listReceived, listSent, nFee, strSentAccount, filter, listAssetsReceived, listAssetsSent);
 
     bool fAllAccounts = (strAccount == std::string("*"));
     bool involvesWatchonly = wtx.IsFromMe(ISMINE_WATCH_ONLY);
@@ -1849,6 +1852,56 @@ void ListTransactions(CWallet * const pwallet, const CWalletTx& wtx, const std::
             }
         }
     }
+    if (Params().IsAssetsActive(chainActive.Tip())) {
+        if (listAssetsReceived.size() > 0 && wtx.GetDepthInMainChain() >= nMinDepth) {
+            for (const CAssetOutputEntry &data : listAssetsReceived){
+                UniValue entry(UniValue::VOBJ);
+
+                if (involvesWatchonly || (::IsMine(*pwallet, data.destination) & ISMINE_WATCH_ONLY)) {
+                    entry.push_back(Pair("involvesWatchonly", true));
+                }
+                
+                entry.push_back(Pair("address", EncodeDestination(data.destination)));
+                entry.push_back(Pair("category", "receive"));
+                entry.push_back(Pair("asset_id", data.assetId));
+                entry.push_back(Pair("amount", ValueFromAmount(data.nAmount))); 
+                entry.push_back(Pair("vout", data.vout));
+                
+                if (fLong)
+                    WalletTxToJSON(wtx, entry);
+                entry.push_back(Pair("abandoned", wtx.isAbandoned()));
+                retAssets.push_back(entry);
+            }
+        }
+
+        if ((!listAssetsSent.empty() || nFee != 0) && (fAllAccounts || strAccount == strSentAccount)) {
+            for (const CAssetOutputEntry &data : listAssetsSent) {
+                UniValue entry(UniValue::VOBJ);
+
+                if (involvesWatchonly || (::IsMine(*pwallet, data.destination) & ISMINE_WATCH_ONLY)) {
+                    entry.push_back(Pair("involvesWatchonly", true));
+                }
+                entry.push_back(Pair("address", EncodeDestination(data.destination)));
+                entry.push_back(Pair("category", "send"));
+                entry.push_back(Pair("asset_id", data.assetId));
+                entry.push_back(Pair("amount", ValueFromAmount(-data.nAmount)));
+                     
+                entry.push_back(Pair("vout", data.vout));
+                
+                if (fLong)
+                    WalletTxToJSON(wtx, entry);
+                entry.push_back(Pair("abandoned", wtx.isAbandoned()));
+                retAssets.push_back(entry);
+            }
+        }
+    }
+}
+
+void ListTransactions(CWallet* const pwallet, const CWalletTx& wtx, const std::string& strAccount, int nMinDepth, bool fLong, UniValue& ret, const isminefilter& filter)
+{
+    UniValue assetDetails(UniValue::VARR);
+
+    ListTransactions(pwallet, wtx, strAccount, nMinDepth, fLong, ret, assetDetails, filter);
 }
 
 void AcentryToJSON(const CAccountingEntry& acentry, const std::string& strAccount, UniValue& ret)
@@ -2400,8 +2453,10 @@ UniValue gettransaction(const JSONRPCRequest& request)
     WalletTxToJSON(wtx, entry);
 
     UniValue details(UniValue::VARR);
-    ListTransactions(pwallet, wtx, "*", 0, false, details, filter);
+    UniValue assetDetails(UniValue::VARR);
+    ListTransactions(pwallet, wtx, "*", 0, false, details, assetDetails, filter);
     entry.pushKV("details", details);
+    entry.push_back(Pair("asset_details", assetDetails));
 
     std::string strHex = EncodeHexTx(*wtx.tx);
     entry.pushKV("hex", strHex);
