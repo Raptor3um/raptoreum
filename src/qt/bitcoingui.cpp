@@ -94,8 +94,10 @@ BitcoinGUI::BitcoinGUI(interfaces::Node& node, const NetworkStyle* networkStyle,
     smartnodeButton(0),
     quitAction(0),
     sendCoinsButton(0),
+    sendAssetsButton(0),
     coinJoinCoinsButton(0),
     sendCoinsMenuAction(0),
+    sendAssetsMenuAction(0),
     coinJoinCoinsMenuAction(0),
     usedSendingAddressesAction(0),
     usedReceivingAddressesAction(0),
@@ -398,10 +400,15 @@ void BitcoinGUI::createActions()
     receiveCoinsMenuAction->setStatusTip(tr("Request payments (generates QR codes and raptoreum: URIs)"));
     receiveCoinsMenuAction->setToolTip(receiveCoinsMenuAction->statusTip());
 
+    sendAssetsMenuAction = new QAction(tr("&Send Asset"), this);
+    sendAssetsMenuAction->setStatusTip(tr("Send assets to a Raptoreum address"));
+    sendAssetsMenuAction->setToolTip(sendAssetsMenuAction->statusTip());
+
     // These showNormalIfMinimized are needed because Send Coins and Receive Coins
     // can be triggered from the tray menu, and need to show the GUI to be useful.
     connect(sendCoinsMenuAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
     connect(sendCoinsMenuAction, SIGNAL(triggered()), this, SLOT(gotoSendCoinsPage()));
+    connect(sendAssetsMenuAction, SIGNAL(triggered()), this, SLOT(gotoSendAssetsPage()));
     connect(coinJoinCoinsMenuAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
     connect(coinJoinCoinsMenuAction, SIGNAL(triggered()), this, SLOT(gotoCoinJoinCoinsPage()));
     connect(receiveCoinsMenuAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
@@ -635,8 +642,15 @@ void BitcoinGUI::createToolBars()
             connect(smartnodeButton, SIGNAL(clicked()), this, SLOT(gotoSmartnodePage()));
         }
 
+        sendAssetsButton = new QToolButton(this);
+        sendAssetsButton->setText(sendAssetsMenuAction->text());
+        sendAssetsButton->setStatusTip(sendAssetsMenuAction->statusTip());
+        tabGroup->addButton(sendAssetsButton);
+
         connect(overviewButton, SIGNAL(clicked()), this, SLOT(gotoOverviewPage()));
         connect(sendCoinsButton, SIGNAL(clicked()), this, SLOT(gotoSendCoinsPage()));
+        connect(sendAssetsButton, SIGNAL(clicked()), this, SLOT(gotoSendAssetsPage()));
+        connect(sendAssetsButton, SIGNAL(clicked()), this, SLOT(gotoSendAssetsPage()));
         connect(coinJoinCoinsButton, SIGNAL(clicked()), this, SLOT(gotoCoinJoinCoinsPage()));
         connect(receiveCoinsButton, SIGNAL(clicked()), this, SLOT(gotoReceiveCoinsPage()));
         connect(historyButton, SIGNAL(clicked()), this, SLOT(gotoHistoryPage()));
@@ -854,6 +868,7 @@ void BitcoinGUI::setWalletActionsEnabled(bool enabled)
         coinJoinCoinsButton->setEnabled(enabled && clientModel->coinJoinOptions().isEnabled());
         receiveCoinsButton->setEnabled(enabled);
         historyButton->setEnabled(enabled);
+        sendAssetsButton->setEnabled(enabled);
         if (smartnodeButton != nullptr) {
             QSettings settings;
             smartnodeButton->setEnabled(enabled && settings.value("fShowSmartnodesTab").toBool());
@@ -867,6 +882,7 @@ void BitcoinGUI::setWalletActionsEnabled(bool enabled)
 #else
     coinJoinCoinsMenuAction->setEnabled(enabled);
 #endif // ENABLE_WALLET
+    sendAssetsMenuAction->setEnabled(enabled);
     receiveCoinsMenuAction->setEnabled(enabled);
 
     encryptWalletAction->setEnabled(enabled);
@@ -896,6 +912,7 @@ void BitcoinGUI::createIconMenu(QMenu *pmenu)
     pmenu->addSeparator();
     pmenu->addAction(sendCoinsMenuAction);
     pmenu->addAction(coinJoinCoinsMenuAction);
+    pmenu->addAction(sendAssetsMenuAction);
     pmenu->addAction(receiveCoinsMenuAction);
     pmenu->addSeparator();
     pmenu->addAction(signMessageAction);
@@ -1063,6 +1080,12 @@ void BitcoinGUI::gotoSendCoinsPage(QString addr)
 {
     sendCoinsButton->setChecked(true);
     if (walletFrame) walletFrame->gotoSendCoinsPage(addr);
+}
+
+void BitcoinGUI::gotoSendAssetsPage(QString addr)
+{
+    sendAssetsButton->setChecked(true);
+    if (walletFrame) walletFrame->gotoSendAssetsPage(addr);
 }
 
 void BitcoinGUI::gotoCoinJoinCoinsPage(QString addr)

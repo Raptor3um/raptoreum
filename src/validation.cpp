@@ -846,10 +846,14 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
         // DoS scoring a node for non-critical errors, e.g. duplicate keys because a TX is received that was already
         // mined
         // NOTE: we use UTXO here and do NOT allow mempool txes as smartnode collaterals
-        if (!CheckSpecialTx(tx, chainActive.Tip(), state, *pcoinsTip.get(), &assetsCache))
+        if (!CheckSpecialTx(tx, chainActive.Tip(), state, view, &assetsCache))
             return false;
         if (pool.existsProviderTxConflict(tx)) {
             return state.DoS(0, false, REJECT_DUPLICATE, "protx-dup");
+        }
+        //check for asset conflicts on mempool
+        if (pool.existsAssetTxConflict(tx)) {
+            return state.DoS(0, false, REJECT_DUPLICATE, "asset-dup");
         }
 
         // If we aren't going to actually accept it but just were verifying it, we are fine already

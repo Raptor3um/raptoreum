@@ -24,6 +24,7 @@ struct CBlockAssetUndo
 {
     bool onlysuply;
     CAmount circulatingSupply;
+    uint16_t mintCount;
     bool updatable;
     std::string referenceHash;
     //  distribution
@@ -41,6 +42,7 @@ struct CBlockAssetUndo
     inline void SerializationOp(Stream& s, Operation ser_action) {
         READWRITE(onlysuply);
         READWRITE(circulatingSupply);
+        READWRITE(mintCount);
         if(!onlysuply){
             READWRITE(updatable);
             READWRITE(referenceHash);

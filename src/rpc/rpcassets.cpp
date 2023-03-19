@@ -58,18 +58,19 @@ UniValue createasset(const JSONRPCRequest& request)
             "   \"is_unique:\"          (bool, optional, default=false) if true this is asset is unique it has an identity per token (NFT flag)\n"
             "   \"decimalpoint:\"       (numeric) [0 to 8] has to be 0 if is_unique is true.\n"
             "   \"referenceHash:\"      (string) hash of the underlying physical or digital assets, IPFS hash can be used here.\n"
+            "   \"maxMintCount\"        (numeric, required) number of times this asset can be mint\n"
             "   \"type:\"               (numeric) ditribution type manual=0, coinbase=1, address=2, schedule=3\n"
             "   \"targetAddress:\"      (string) address to be issued to when asset issue transaction is created.\n"
             "   \"issueFrequency:\"     (numeric) mint specific amount of token every x blocks\n"
-            "   \"amount:\"             (numeric) amount to distribute each time if type is not manual.\n"
+            "   \"amount:\"             (numeric, (max 500 for unique) amount to distribute each time if type is not manual.\n"
             "   \"ownerAddress:\"       (string) address that this asset is owned by. Only key holder of this address will be able to mint new tokens\n"
             "}\n"
             "\nResult:\n"
             "\"txid\"                   (string) The transaction id for the new asset\n"
 
             "\nExamples:\n"
-            + HelpExampleCli("createasset", "'{\"name\":\"test asset\", \"updatable\":true, \"isunique\":false,\n"
-                "\"decimalpoint\":2, \"referenceHash\":\"\", \"type\":0, \"targetAddress\":\"yQPzaDmnF3FtRsoWijUN7aZDcEdyNAcmVk\",\n"
+            + HelpExampleCli("createasset", "'{\"name\":\"test asset\", \"updatable\":true, \"isunique\":false, \"maxMintCount\":10, \n"
+                "\"decimalpoint\":2, \"referenceHash\":\"\", \"type\":0, \"targetAddress\":\"yQPzaDmnF3FtRsoWijUN7aZDcEdyNAcmVk\", \n"
                 "\"issueFrequency\":0, \"amount\":10000,\"ownerAddress\":\"yRyiTCKfqMG2dQ9oUvs932TjN1R1MNUTWM\"}'")
         );
 
@@ -108,6 +109,11 @@ UniValue createasset(const JSONRPCRequest& request)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Asset already exist");
         }
     }
+    
+    //check on mempool if asset already exist
+    if (mempool.CheckForNewAssetConflict(assetname)){
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Asset already exist on mempool");
+    }
 
     CNewAssetTx assettx;
     assettx.Name = assetname;
@@ -140,9 +146,9 @@ UniValue createasset(const JSONRPCRequest& request)
     const UniValue& is_unique = find_value(asset, "isunique");
     if(!is_unique.isNull() && is_unique.get_bool()){
         assettx.isUnique = true;
+        assettx.updatable = false;
         assettx.decimalPoint = 0; //alway 0  
         assettx.type = 0; 
-        assettx.Amount = 1 * COIN;; //alway 1 
     } else {
         assettx.isUnique = false;
 
@@ -151,16 +157,6 @@ UniValue createasset(const JSONRPCRequest& request)
             assettx.type = type.get_int();    
         }else{
             assettx.type = 0;   
-        }
-
-        const UniValue& amount = find_value(asset, "amount");
-        if(!amount.isNull()){
-            CAmount a = amount.get_int64();
-            if ( a <= 0)
-                throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount");
-            assettx.Amount = a * COIN;    
-        }else{
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: missing amount");   
         }
 
         const UniValue& decimalpoint = find_value(asset, "decimalpoint");
@@ -173,6 +169,26 @@ UniValue createasset(const JSONRPCRequest& request)
         }else{
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: decimalpoint out off range. Valid value 0 to 8.");
         }
+    }
+
+    const UniValue& amount = find_value(asset, "amount");
+    if(!amount.isNull()){
+        CAmount a = amount.get_int64();
+        if ( a <= 0 || a > MAX_MONEY || (assettx.isUnique && a > 500 * COIN))
+            throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount");
+        assettx.Amount = a * COIN;    
+    }else{
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: missing amount");   
+    }
+
+    const UniValue& maxMintCount = find_value(asset, "maxMintCount");
+    if(!maxMintCount.isNull()){
+        uint16_t a = maxMintCount.get_int64();
+        if ( a <= 0 || a > MAX_UNIQUE_ID)
+            throw JSONRPCError(RPC_TYPE_ERROR, "Invalid maxMintCount");
+        assettx.maxMintCount = a;    
+    }else{
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: missing maxMintCount");   
     }
 
     CTransactionRef newTx;
@@ -202,13 +218,16 @@ UniValue createasset(const JSONRPCRequest& request)
     result.pushKV("Updatable", assettx.updatable);  
     result.pushKV("Decimalpoint", (int) assettx.decimalPoint);
     result.pushKV("ReferenceHash", assettx.referenceHash);
+    result.pushKV("MaxMintCount", assettx.maxMintCount);
     result.pushKV("ownerAddress", EncodeDestination(assettx.ownerAddress));
     result.pushKV("fee", assettx.fee);
-    result.pushKV("Type", GetDistributionType(assettx.type));
-    result.pushKV("TargetAddress", EncodeDestination(assettx.targetAddress)); 
-    //result.pushKV("collateralAddress", EncodeDestination(assettx.collateralAddress));
-    result.pushKV("IssueFrequency", assettx.issueFrequency);
-    result.pushKV("Amount", assettx.Amount / COIN);
+    UniValue dist(UniValue::VOBJ);
+    dist.pushKV("Type", GetDistributionType(assettx.type));
+    dist.pushKV("TargetAddress", EncodeDestination(assettx.targetAddress)); 
+    //dist.pushKV("collateralAddress", EncodeDestination(assettx.collateralAddress));
+    dist.pushKV("IssueFrequency", assettx.issueFrequency);
+    dist.pushKV("Amount", assettx.Amount / COIN);
+    result.pushKV("Distribution", dist);
     
     return result;
 }
@@ -254,6 +273,16 @@ UniValue mintasset(const JSONRPCRequest& request)
     if(!passetsCache->GetAssetMetaData(assetid, tmpasset)){
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Asset asset metadata not found");
     }
+
+    if (tmpasset.mintCount >= tmpasset.maxMintCount){
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: max mint count reached");
+    }
+
+    //check on mempool if have a mint tx for this asset
+    if (mempool.CheckForMintAssetConflict(tmpasset.assetId)){
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Already exist on mempool");
+    }
+    
     CMintAssetTx mintasset;
     mintasset.AssetId = tmpasset.assetId;
     mintasset.fee = getAssetsFees();
@@ -289,15 +318,29 @@ UniValue mintasset(const JSONRPCRequest& request)
     std::string strFailReason;
     std::vector<CRecipient> vecSend;
    
-    // Get the script for the target address
-    CScript scriptPubKey = GetScriptForDestination(DecodeDestination(EncodeDestination(tmpasset.targetAddress)));
+    if (tmpasset.isunique){
+        uint32_t endid = (tmpasset.circulatingSupply + tmpasset.Amount) / COIN;
+        //build unique outputs using current suply as start unique id
+        for ( int id = tmpasset.circulatingSupply / COIN; id < endid; ++id){
+            // Get the script for the target address
+            CScript scriptPubKey = GetScriptForDestination(DecodeDestination(EncodeDestination(tmpasset.targetAddress)));
+            // Update the scriptPubKey with the transfer asset information
+            CAssetTransfer assetTransfer(tmpasset.assetId, 1 * COIN , id);
+            assetTransfer.BuildAssetTransaction(scriptPubKey);
 
-    // Update the scriptPubKey with the transfer asset information
-    CAssetTransfer assetTransfer(tmpasset.assetId, tmpasset.Amount);
-    assetTransfer.BuildAssetTransaction(scriptPubKey);
+            CRecipient recipient = {scriptPubKey, 0, false};
+            vecSend.push_back(recipient);
+        }
+    } else {
+        // Get the script for the target address
+        CScript scriptPubKey = GetScriptForDestination(DecodeDestination(EncodeDestination(tmpasset.targetAddress)));
+        // Update the scriptPubKey with the transfer asset information
+        CAssetTransfer assetTransfer(tmpasset.assetId, tmpasset.Amount);
+        assetTransfer.BuildAssetTransaction(scriptPubKey);
 
-    CRecipient recipient = {scriptPubKey, 0, false};
-    vecSend.push_back(recipient);   
+        CRecipient recipient = {scriptPubKey, 0, false};
+        vecSend.push_back(recipient);   
+    }
 
     int Payloadsize;        
     if (!pwallet->CreateTransaction(vecSend, wtx, reservekey, nFee, nChangePos, strFailReason, coinControl, true, Payloadsize, nullptr, nullptr, &mintasset)) {
@@ -308,6 +351,10 @@ UniValue mintasset(const JSONRPCRequest& request)
     if (!pwallet->CommitTransaction(wtx, {}, {}, {}, reservekey, g_connman.get(), state)) {
         strFailReason = strprintf("Error: The transaction was rejected! Reason given: %s", FormatStateMessage(state));
         throw JSONRPCError(RPC_WALLET_ERROR, strFailReason);
+    }
+    
+    if (state.IsInvalid()) {
+        throw JSONRPCError(RPC_TRANSACTION_REJECTED, FormatStateMessage(state));
     }
 
     UniValue result(UniValue::VOBJ);
@@ -324,10 +371,10 @@ UniValue sendasset(const JSONRPCRequest& request)
                 "\nTransfers a quantity of an owned asset to a given address"
 
                 "\nArguments:\n"
-                "1. \"asset_id\"                (string, required) name of asset\n"
-                "2. \"qty\"                     (numeric, required) number of assets you want to send to the address\n"
+                "1. \"asset_id\"                (string, required) asset hash id or asset name\n"
+                "2. \"qty/uniqueid\"            (numeric, required) number of assets you want to send to the address / unique asset identifier\n"
                 "3. \"to_address\"              (string, required) address to send the asset to\n"
-                "4. \"change_address\"          (string, optional, default = \"\") the transactions RVN change will be sent to this address\n"
+                "4. \"change_address\"          (string, optional, default = \"\") the transactions RTM change will be sent to this address\n"
                 "5. \"asset_change_address\"    (string, optional, default = \"\") the transactions Asset change will be sent to this address\n"
 
                 "\nResult:\n"
@@ -364,9 +411,34 @@ UniValue sendasset(const JSONRPCRequest& request)
     }
     std::string assetId = tmpasset.assetId;
 
-    CAmount nAmount = AmountFromValue(request.params[1]);
-    if (nAmount <= 0){
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: invalid amount");
+    std::string to_address = request.params[2].get_str();
+    CTxDestination to_dest = DecodeDestination(to_address);
+    if (!IsValidDestination(to_dest)) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Raptoreum address: ") + to_address);
+    }
+
+    CAmount nAmount = 0;
+    uint32_t unique_identifier = MAX_UNIQUE_ID;
+
+    if (tmpasset.isunique){
+        nAmount = 1 * COIN;
+        UniValue value = request.params[1];
+        if (!value.isNum() && !value.isStr())
+            throw std::runtime_error("Amount is not a number or string");
+        CAmount amount;
+        if (!ParseFixedPoint(value.getValStr(), 0, &amount))
+            throw std::runtime_error("Error: invalid unique identifier");
+        uint32_t unique_identifier = amount & MAX_UNIQUE_ID;
+        if (unique_identifier < 0 || unique_identifier >= tmpasset.circulatingSupply / COIN)
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: invalid unique identifier");
+    } else {
+        nAmount = AmountFromValue(request.params[1]);
+        if (nAmount <= 0){
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: invalid amount");
+        }
+        if (!validateAmount(nAmount, tmpasset.Decimalpoint)){
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: invalid amount");
+        }
     }
 
     std::map<std::string, std::vector<COutput> > mapAssetCoins;
@@ -375,11 +447,6 @@ UniValue sendasset(const JSONRPCRequest& request)
     if (!mapAssetCoins.count(assetId))
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Wallet doesn't have asset: %s", assetId));
 
-    std::string to_address = request.params[2].get_str();
-    CTxDestination to_dest = DecodeDestination(to_address);
-    if (!IsValidDestination(to_dest)) {
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Raptoreum address: ") + to_address);
-    }
 
     std::string change_address = "";
     if (request.params.size() > 3) {
@@ -414,8 +481,13 @@ UniValue sendasset(const JSONRPCRequest& request)
     CScript scriptPubKey = GetScriptForDestination(to_dest);
 
     // Update the scriptPubKey with the transfer asset information
-    CAssetTransfer assetTransfer(assetId, nAmount);
-    assetTransfer.BuildAssetTransaction(scriptPubKey);
+    if (tmpasset.isunique){
+        CAssetTransfer assetTransfer(assetId, nAmount, unique_identifier);
+        assetTransfer.BuildAssetTransaction(scriptPubKey);
+    }else{
+        CAssetTransfer assetTransfer(assetId, nAmount);
+        assetTransfer.BuildAssetTransaction(scriptPubKey);
+    }
 
     CRecipient recipient = {scriptPubKey, 0, false};
     vecSend.push_back(recipient);   
@@ -466,17 +538,21 @@ UniValue assetdetails(const JSONRPCRequest& request)
     UniValue result(UniValue::VOBJ);
     result.pushKV("Asset_id", tmpasset.assetId);
     result.pushKV("Asset_name", tmpasset.Name);
-    result.pushKV("owner", EncodeDestination(tmpasset.ownerAddress));
     result.pushKV("Circulating_supply", tmpasset.circulatingSupply / COIN);
+    result.pushKV("MintCount", tmpasset.mintCount);
+    result.pushKV("maxMintCount", tmpasset.maxMintCount);
+    result.pushKV("owner", EncodeDestination(tmpasset.ownerAddress)); 
     result.pushKV("Isunique", tmpasset.isunique); 
     result.pushKV("Updatable", tmpasset.updatable);  
     result.pushKV("Decimalpoint", (int) tmpasset.Decimalpoint);
     result.pushKV("ReferenceHash", tmpasset.referenceHash);
-    result.pushKV("Distribution", GetDistributionType(tmpasset.type));
-    result.pushKV("TargetAddress", EncodeDestination(tmpasset.targetAddress)); 
-    //result.pushKV("collateralAddress", EncodeDestination(tmpasset.collateralAddress));
-    result.pushKV("IssueFrequency", tmpasset.issueFrequency);
-    result.pushKV("Amount", tmpasset.Amount / COIN);
+    UniValue dist(UniValue::VOBJ);
+    dist.pushKV("Type", GetDistributionType(tmpasset.type));
+    dist.pushKV("TargetAddress", EncodeDestination(tmpasset.targetAddress)); 
+    //tmp.pushKV("collateralAddress", EncodeDestination(tmpasset.collateralAddress));
+    dist.pushKV("IssueFrequency", tmpasset.issueFrequency);
+    dist.pushKV("Amount", tmpasset.Amount / COIN);
+    result.pushKV("Distribution", dist);
 
     return result;
 }
@@ -525,7 +601,16 @@ UniValue listassetsbalance(const JSONRPCRequest& request)
     
     UniValue result(UniValue::VOBJ);
     for (auto asset : mapAssetbalance){
-    result.pushKV(asset.first, asset.second / COIN);
+        // get asset metadadta
+        std::string assetName = "db error";
+        CAssetMetaData tmpasset;
+        if(passetsCache->GetAssetMetaData(asset.first, tmpasset)){ //check if the asset exist
+            assetName = tmpasset.Name;
+        }
+        UniValue tmp(UniValue::VOBJ);
+        tmp.pushKV("Asset_Id", asset.first);
+        tmp.pushKV("Balance", asset.second / COIN);
+        result.pushKV(assetName, tmp);
     }
     
     return result;

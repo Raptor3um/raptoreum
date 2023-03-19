@@ -72,6 +72,8 @@ public Q_SLOTS:
     void gotoReceiveCoinsPage();
     /** Switch to send coins page */
     void gotoSendCoinsPage(QString addr = "");
+    /** Switch to send coins page */
+    void gotoSendAssetsPage(QString addr = "");
     /** Switch to CoinJoin coins page */
     void gotoCoinJoinCoinsPage(QString addr = "");
 

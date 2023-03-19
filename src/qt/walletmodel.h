@@ -56,9 +56,12 @@ public:
     // Info: As we don't need to process addresses in here when using
     // payment requests, we can abuse it for displaying an address list.
     // Todo: This is a hack, should be replaced with a cleaner solution!
+    QString assetId;
+    int uniqueId;
     QString address;
     QString label;
     CAmount amount;
+    CAmount assetAmount;
     // If from a payment request, this is used for storing the memo
     QString message;
 
@@ -247,6 +250,24 @@ public:
     // Send coins to a list of recipients
     SendCoinsReturn sendCoins(WalletModelTransaction &transaction, bool fIsCoinJoin);
 
+    // Return status record for SendAssets, contains error id + information
+    struct SendAssetsReturn
+    {
+        SendAssetsReturn(StatusCode _status = OK, QString _reasonCommitFailed = "")
+            : status(_status),
+              reasonCommitFailed(_reasonCommitFailed)
+        {
+        }
+        StatusCode status;
+        QString reasonCommitFailed;
+    };
+
+    // prepare transaction for getting txfee before sending coins
+    SendAssetsReturn prepareAssetTransaction(WalletModelTransaction &transaction, const CCoinControl& coinControl);
+
+    // Send coins to a list of recipients
+    SendAssetsReturn sendAssets(WalletModelTransaction &transaction, bool fIsCoinJoin);
+
     // Wallet encryption
     bool setWalletEncrypted(bool encrypted, const SecureString &passphrase);
 
@@ -366,6 +387,7 @@ Q_SIGNALS:
     // Watch-only address added
     void notifyWatchonlyChanged(bool fHaveWatchonly);
 
+    void assetListChanged();
     // Signal that wallet is about to be removed
     void unload();
 

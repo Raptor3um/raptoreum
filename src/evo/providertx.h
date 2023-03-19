@@ -300,6 +300,7 @@ public:
     std::string Name;
     bool updatable = true;//if true this asset meta can be modify using assetTx update process. 
     bool isUnique = false;//true if this is asset is unique it has an identity per token (NFT flag)
+    uint16_t  maxMintCount = 0;
     uint8_t decimalPoint = 0;
     std::string referenceHash; //hash of the underlying physical or digital assets, IPFS hash can be used here.
     uint16_t fee; // fee was paid for this asset creation in addition to miner fee. it is a whole non-decimal point value.
@@ -326,6 +327,7 @@ public:
         READWRITE(Name);
         READWRITE(updatable);
         READWRITE(isUnique);
+        READWRITE(maxMintCount);
         READWRITE(decimalPoint);
         READWRITE(referenceHash);
         READWRITE(fee);
@@ -349,7 +351,8 @@ public:
         obj.setObject();
         obj.pushKV("version", nVersion);
         obj.pushKV("Name", Name);
-        obj.pushKV("Isunique", isUnique); 
+        obj.pushKV("Isunique", isUnique);
+        obj.pushKV("MaxMintCount", maxMintCount); 
         obj.pushKV("Updatable", updatable);  
         obj.pushKV("Decimalpoint", (int) decimalPoint);
         obj.pushKV("ReferenceHash", referenceHash);

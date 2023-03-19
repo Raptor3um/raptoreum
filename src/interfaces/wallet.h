@@ -244,6 +244,22 @@ public:
     using CoinsList = std::map<CTxDestination, std::vector<std::tuple<COutPoint, WalletTxOut>>>;
     virtual CoinsList listCoins() = 0;
 
+    //! Return AvailableAssets + LockedAssets grouped by wallet address.
+    //! (put change in one group with wallet address)
+    virtual CoinsList listAssets() = 0;
+
+    //! Return list of avaylable assets
+    using AssetList = std::vector<std::string>;
+    virtual AssetList listMyAssets(const CCoinControl* coinControl = nullptr) = 0;
+
+    //! Return list of avaylable assets
+    using UniqueIdList = std::vector<uint16_t>;
+    virtual UniqueIdList listAssetUniqueId(std::string assetId, const CCoinControl* coinControl = nullptr) = 0;
+
+    //!Return asset balance
+    using AssetBalance = std::map<std::string, CAmount>;
+    virtual AssetBalance getAssetsBalance(const CCoinControl* coinControl = nullptr, bool fSpendable = false) = 0;
+
     //! Return wallet transaction output information.
     virtual std::vector<WalletTxOut> getCoins(const std::vector<COutPoint>& outputs) = 0;
 

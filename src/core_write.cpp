@@ -170,7 +170,10 @@ void ScriptPubKeyToUniv(const CScript& scriptPubKey, UniValue& out, bool fInclud
 
         CAssetTransfer data;
         if (GetTransferAsset(scriptPubKey, data)) {
-            assetInfo.pushKV("asset_id", data.AssetId);
+            std:string assetId = data.AssetId;
+            if (data.isUnique)
+                assetId +="["+to_string(data.uniqueId)+"]";
+            assetInfo.pushKV("asset_id", assetId);
             assetInfo.pushKV("amount", ValueFromAmount(data.nAmount));
         }
 

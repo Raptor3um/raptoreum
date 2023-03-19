@@ -50,11 +50,13 @@ CAssetMetaData::CAssetMetaData(const std::string txid, const CNewAssetTx assetTx
 {
     this->assetId = txid;
     this->circulatingSupply = 0;
+    this->mintCount = 0;
     this->Name = assetTx.Name;
     this->updatable = assetTx.updatable;
     this->isunique = assetTx.isUnique;
     this->Decimalpoint = assetTx.decimalPoint;
     this->referenceHash = assetTx.referenceHash;
+    this->maxMintCount = assetTx.maxMintCount;
     this->fee = assetTx.fee;
     this->type = assetTx.type;
     this->targetAddress = assetTx.targetAddress;
@@ -131,6 +133,7 @@ bool CAssetsCache::UpdateAsset(std::string assetid, CAmount amount)
     
         NewAssetsToRemove.insert(mapAsset[assetid]);
         mapAsset[assetid].asset.circulatingSupply += amount;
+        mapAsset[assetid].asset.mintCount += 1;
         NewAssetsToAdd.insert(mapAsset[assetid]);
         return true;
     }
@@ -200,6 +203,7 @@ bool CAssetsCache::UndoMintAsset(const CMintAssetTx assettx, const std::vector<s
         for (auto item : vUndoData){
             if (item.first == assettx.AssetId){
                 assetdata.circulatingSupply = item.second.circulatingSupply;
+                assetdata.mintCount = item.second.mintCount;
             }
         }
         
@@ -357,6 +361,7 @@ void AddAssets(const CTransaction& tx, int nHeight, CAssetsCache* assetCache, st
                 assetCache->UpdateAsset(assettx);
                 undoAssetData->first = assettx.AssetId; // Asset Name
                 undoAssetData->second = CBlockAssetUndo {false, asset.circulatingSupply,
+                                                                asset.mintCount,
                                                                 asset.updatable,
                                                                 asset.referenceHash,
                                                                 asset.type,
@@ -383,6 +388,7 @@ void AddAssets(const CTransaction& tx, int nHeight, CAssetsCache* assetCache, st
                 assetCache->UpdateAsset(assettx.AssetId, amount); //update circulating suply
                 undoAssetData->first = assettx.AssetId; // Asset Name
                 undoAssetData->second = CBlockAssetUndo {true,  asset.circulatingSupply,
+                                                                asset.mintCount,
                                                                 asset.updatable,
                                                                 asset.referenceHash,
                                                                 asset.type,
@@ -409,4 +415,22 @@ bool GetAssetData(const CScript& script, CAssetOutputEntry& data)
         return true;
     }
     return false;
+}
+
+bool validateAmount(const CAmount nAmount, const uint16_t decimalPoint)
+{
+    if(nAmount % int64_t(pow(10, (8 - decimalPoint))) != 0){
+        return false;
+    }
+    return true;
+}
+
+bool validateAmount(const std::string& assetId, const CAmount nAmount)
+{
+    CAssetMetaData asset;
+    if(!passetsCache->GetAssetMetaData(assetId, asset))
+        return false; //this should never happen
+    
+    return validateAmount(nAmount, asset.Decimalpoint);
+    
 }

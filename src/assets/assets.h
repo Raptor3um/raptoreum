@@ -22,15 +22,19 @@ CAmount getAssetsFeesCoin();
 uint16_t getAssetsFees();
 bool IsAssetNameValid(std::string name);
 bool GetAssetId(const CScript& script, std::string& assetId);
+bool validateAmount(const CAmount nAmount, const uint16_t decimalPoint);
+bool validateAmount(const std::string& assetId, const CAmount nAmount);
 
 class CAssetMetaData {
 public:
     std::string assetId; //Transaction hash of asset creation
     CAmount circulatingSupply; //update every mint transaction.
+    uint16_t mintCount;
     std::string Name;
     bool updatable = false;//if true this asset meta can be modify using assetTx update process. 
     bool isunique = false;//true if this is asset is unique it has an identity per token (NFT flag)
     uint8_t Decimalpoint = 0;
+    uint16_t maxMintCount; 
     std::string referenceHash; //hash of the underlying physical or digital assets, IPFS hash can be used here.
     uint16_t fee; // fee was paid for this asset creation in addition to miner fee. it is a whole non-decimal point value.
     //  distribution
@@ -54,9 +58,11 @@ public:
     inline void SerializationOp(Stream &s, Operation ser_action) {
         READWRITE(assetId);
         READWRITE(circulatingSupply);
+        READWRITE(mintCount);
         READWRITE(Name);
         READWRITE(updatable);
         READWRITE(isunique);
+        READWRITE(maxMintCount);
         READWRITE(Decimalpoint);
         READWRITE(referenceHash);
         READWRITE(fee);
@@ -71,11 +77,13 @@ public:
     void SetNull(){
         assetId = "";
         circulatingSupply= CAmount(-1);
+        mintCount = uint16_t(-1);
         Name = "";
         updatable = false; 
         isunique = false;
         Decimalpoint  = uint8_t(-1);
         referenceHash = "";
+        maxMintCount = uint16_t(-1);
         fee = uint8_t(-1);
         type = uint8_t(-1);
         targetAddress = CKeyID();

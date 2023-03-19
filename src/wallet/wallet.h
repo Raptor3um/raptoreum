@@ -767,7 +767,7 @@ private:
      * all asset coins from coinControl are selected; Never select unconfirmed coins
      * if they are not ours
      */
-    bool SelectAssets(const std::map<std::string, std::vector<COutput> >& mapAvailableAssets, const std::map<std::string, CAmount>& mapAssetTargetValue, std::set<CInputCoin>& setCoinsRet, std::map<std::string, CAmount>& nValueRet) const;
+    bool SelectAssets(const std::map<std::string, std::vector<COutput> >& mapAvailableAssets, const std::map<std::string, CAmount>& mapAssetTargetValue, const std::map<std::string, std::vector<uint16_t>> mapAssetUniqueId, std::set<CInputCoin>& setCoinsRet, std::map<std::string, CAmount>& nValueRet) const;
 
     WalletBatch *encrypted_batch = nullptr;
 
@@ -940,12 +940,22 @@ public:
      */
     void AvailableCoins(std::vector<COutput>& vCoins, bool fOnlySafe=true, const CCoinControl *coinControl = nullptr, const CAmount& nMinimumAmount = 1, const CAmount& nMaximumAmount = MAX_MONEY, const CAmount& nMinimumSumAmount = MAX_MONEY, const uint64_t nMaximumCount = 0, const int nMinDepth = 0, const int nMaxDepth = 9999999) const;
     void AvailableCoins(std::vector<COutput>& vCoins, std::map<std::string, std::vector<COutput>>& mapAssetCoins, bool fGetRTM = true, bool fOnlyAssets = false, bool fOnlySafe=true, const CCoinControl *coinControl = nullptr, const CAmount& nMinimumAmount = 1, const CAmount& nMaximumAmount = MAX_MONEY, const CAmount& nMinimumSumAmount = MAX_MONEY, const uint64_t nMaximumCount = 0, const int nMinDepth = 0, const int nMaxDepth = 9999999) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
-    void AvailableAssets(std::map<std::string, std::vector<COutput> >& mapAssetCoins, bool fOnlySafe=true, const CCoinControl *coinControl = nullptr, const CAmount& nMinimumAmount = 1, const CAmount& nMaximumAmount = MAX_MONEY, const CAmount& nMinimumSumAmount = MAX_MONEY, const uint64_t nMaximumCount = 0, const int nMinDepth = 0, const int nMaxDepth = 9999999) const;
+    void AvailableAssets(std::map<std::string, std::vector<COutput>>& mapAssetCoins, bool fOnlySafe=true, const CCoinControl *coinControl = nullptr, const CAmount& nMinimumAmount = 1, const CAmount& nMaximumAmount = MAX_MONEY, const CAmount& nMinimumSumAmount = MAX_MONEY, const uint64_t nMaximumCount = 0, const int nMinDepth = 0, const int nMaxDepth = 9999999) const;
 
     /**
      * Return list of available coins and locked coins grouped by non-change output address.
      */
     std::map<CTxDestination, std::vector<COutput>> ListCoins() const;
+
+    /**
+     * Return list of available assets and locked assets grouped by non-change output address.
+     */
+    std::map<CTxDestination, std::vector<COutput>> ListAssets() const;
+
+    /**
+     * Return list of assets balances.
+     */
+    std::map<std::string, CAmount> getAssetsBalance(const CCoinControl* coinControl = nullptr, bool fSpendable = false) const;
 
     /**
      * Find non-change parent output.

@@ -2245,7 +2245,6 @@ void CWalletTx::GetAmounts(std::list<COutputEntry>& listReceived,
             }
         }
     }
-
 }
 
 /**
@@ -3110,11 +3109,11 @@ void CWallet::AvailableCoins(std::vector<COutput> &vCoins, std::map<std::string,
             if (!isAssetScript && (pcoin->tx->vout[i].nValue < nMinimumAmount || pcoin->tx->vout[i].nValue > nMaximumAmount))
                 continue;
 
-            if (coinControl&& !isAssetScript && coinControl->HasSelected() && !coinControl->fAllowOtherInputs && !coinControl->IsSelected(COutPoint(wtxid, i)))
+            if (coinControl && !isAssetScript && coinControl->HasSelected() && !coinControl->fAllowOtherInputs && !coinControl->IsSelected(COutPoint(wtxid, i)))
                 continue;
             
             if (coinControl && isAssetScript && coinControl->HasAssetSelected() && !coinControl->fAllowOtherInputs && !coinControl->IsAssetSelected(COutPoint(wtxid, i)))
-                    continue;
+                continue;
 
             if (IsLockedCoin(wtxid, i) && nCoinType != CoinType::ONLY_SMARTNODE_COLLATERAL)
                 continue;
@@ -3153,7 +3152,7 @@ void CWallet::AvailableCoins(std::vector<COutput> &vCoins, std::map<std::string,
 
                 // Add the COutput to the map of available Asset Coins
                 mapAssetCoins.at(assetTransfer.AssetId).push_back(
-                        COutput(pcoin, i, nDepth, fSpendableIn, fSolvableIn, safeTx));
+                        COutput(pcoin, i, nDepth, fSpendableIn, fSolvableIn, safeTx && isCoinSpendable, pcoin->tx->nType == TRANSACTION_FUTURE, isCoinSpendable));
 
                 // Initialize the map of current asset totals
                 if (!mapAssetTotals.count(assetTransfer.AssetId))
@@ -3244,6 +3243,85 @@ std::map<CTxDestination, std::vector<COutput>> CWallet::ListCoins() const
         }
     }
 
+    return result;
+}
+
+std::map<CTxDestination, std::vector<COutput>> CWallet::ListAssets() const
+{
+    // TODO: Add AssertLockHeld(cs_wallet) here.
+    //
+    // Because the return value from this function contains pointers to
+    // CWalletTx objects, callers to this function really should acquire the
+    // cs_wallet lock before calling it. However, the current caller doesn't
+    // acquire this lock yet. There was an attempt to add the missing lock in
+    // https://github.com/bitcoin/bitcoin/pull/10340, but that change has been
+    // postponed until after https://github.com/bitcoin/bitcoin/pull/10244 to
+    // avoid adding some extra complexity to the Qt code.
+
+    std::map<CTxDestination, std::vector<COutput>> result;
+
+    std::map<std::string, std::vector<COutput>> mapAssets;
+    AvailableAssets(mapAssets);
+
+    LOCK2(cs_main, cs_wallet);
+    for (auto asset : mapAssets) {
+        for (auto &coin : asset.second) {
+            CTxDestination address;
+            if (coin.fSpendable &&
+                ExtractDestination(FindNonChangeParentOutput(*coin.tx->tx, coin.i).scriptPubKey, address)) {
+                result[address].emplace_back(std::move(coin));
+            }
+        }
+    }
+
+    std::vector<COutPoint> lockedCoins;
+    ListLockedCoins(lockedCoins);
+    for (const auto& output : lockedCoins) {
+        auto it = mapWallet.find(output.hash);
+        if (it != mapWallet.end()) {
+            if (!it->second.tx->vout[output.n].scriptPubKey.IsAssetScript()) // If not an asset script skip it
+                continue;
+            int depth = it->second.GetDepthInMainChain();
+            if (depth >= 0 && output.n < it->second.tx->vout.size() &&
+                IsMine(it->second.tx->vout[output.n]) == ISMINE_SPENDABLE) {
+                CTxDestination address;
+                if (ExtractDestination(FindNonChangeParentOutput(*it->second.tx, output.n).scriptPubKey, address)) {
+                    result[address].emplace_back(
+                        &it->second, output.n, depth, true /* spendable */, true /* solvable */, false /* safe */);
+                }
+            }
+        }
+    }
+
+    return result;
+}
+
+std::map<std::string, CAmount> CWallet::getAssetsBalance(const CCoinControl* coinControl, bool fSpendable) const
+{
+    std::map<std::string, std::vector<COutput>> mapAssets;
+    AvailableAssets(mapAssets, true, coinControl);
+
+    std::map<std::string, CAmount> result;
+    for (auto asset  : mapAssets){
+        CAmount balance = 0;
+        for (auto output : asset.second){
+
+            if (fSpendable && !OutputEligibleForSpending(output, CoinEligibilityFilter(1, 1, 0)))
+                continue;
+
+            CInputCoin coin(output.tx->tx, output.i);
+
+            if (!coin.txout.scriptPubKey.IsAssetScript()) {
+                continue;
+            }
+
+            CAssetTransfer transferTemp;
+            if (!GetTransferAsset(coin.txout.scriptPubKey, transferTemp))
+                continue;
+            balance += transferTemp.nAmount;
+        }
+        result.insert(std::make_pair(asset.first, balance));
+    }
     return result;
 }
 
@@ -3612,7 +3690,7 @@ bool CWallet::SelectAssetsMinConf(const CAmount& nTargetValue, const CoinEligibi
     return true;
 }
 
-bool CWallet::SelectAssets(const std::map<std::string, std::vector<COutput> >& mapAvailableAssets, const std::map<std::string, CAmount>& mapAssetTargetValue, std::set<CInputCoin>& setCoinsRet, std::map<std::string, CAmount>& mapValueRet) const
+bool CWallet::SelectAssets(const std::map<std::string, std::vector<COutput> >& mapAvailableAssets, const std::map<std::string, CAmount>& mapAssetTargetValue, std::map<std::string, std::vector<uint16_t>> mapAssetUniqueId, std::set<CInputCoin>& setCoinsRet, std::map<std::string, CAmount>& mapValueRet) const
 {
     size_t nMaxChainLength = std::min(gArgs.GetArg("-limitancestorcount", DEFAULT_ANCESTOR_LIMIT), gArgs.GetArg("-limitdescendantcount", DEFAULT_DESCENDANT_LIMIT));
     bool fRejectLongChains = gArgs.GetBoolArg("-walletrejectlongchains", DEFAULT_WALLET_REJECT_LONG_CHAINS);
@@ -3640,24 +3718,47 @@ bool CWallet::SelectAssets(const std::map<std::string, std::vector<COutput> >& m
         if (!mapValueRet.count(strAssetName))
             mapValueRet.insert(std::make_pair(strAssetName, 0));
 
-        // assign our temporary variable
-        nTempAmountRet = mapValueRet.at(strAssetName);
-        nTempTargetValue = mapAssetTargetValue.at(strAssetName);
+        
+        if (mapAssetUniqueId.count(strAssetName)){
+            //unique asset selection
+            std::vector<uint16_t> uniqueIds = mapAssetUniqueId.at(strAssetName);
+            for (auto entry : assetVector.second){
+                
+                if (!OutputEligibleForSpending(entry, CoinEligibilityFilter(1, 1, 0)))
+                    continue;
+                
+                CInputCoin coin(entry.tx->tx, entry.i);
+                CAssetTransfer assetTransfer;
+                if(GetTransferAsset(coin.txout.scriptPubKey, assetTransfer)){
+                    if (std::find(uniqueIds.begin(), uniqueIds.end(), assetTransfer.uniqueId) != uniqueIds.end()){
+                        setCoinsRet.insert(coin);
+                        mapValueRet.at(strAssetName) += assetTransfer.nAmount;
+                    } 
+                }
+            }
+            if (mapValueRet.at(strAssetName) != mapAssetTargetValue.at(strAssetName))
+                return false; //no funds
+        } else {      
+            //regular asset selection
+            // assign our temporary variable
+            nTempAmountRet = mapValueRet.at(strAssetName);
+            nTempTargetValue = mapAssetTargetValue.at(strAssetName);
 
-        bool res = nTempTargetValue <= nValueFromPresetInputs ||
-                   SelectAssetsMinConf(nTempTargetValue - nValueFromPresetInputs, CoinEligibilityFilter(1, 6, 0), strAssetName, vAssets, tempCoinsRet, nTempAmountRet) ||
-                   SelectAssetsMinConf(nTempTargetValue - nValueFromPresetInputs, CoinEligibilityFilter(1, 1, 0), strAssetName, vAssets, tempCoinsRet, nTempAmountRet) ||
-                   (bSpendZeroConfChange && SelectAssetsMinConf(nTempTargetValue - nValueFromPresetInputs, CoinEligibilityFilter(0, 1, 2), strAssetName, vAssets, tempCoinsRet, nTempAmountRet)) ||
-                   (bSpendZeroConfChange && SelectAssetsMinConf(nTempTargetValue - nValueFromPresetInputs, CoinEligibilityFilter(0, 1, std::min((size_t)4, nMaxChainLength/3)), strAssetName, vAssets, tempCoinsRet, nTempAmountRet)) ||
-                   (bSpendZeroConfChange && SelectAssetsMinConf(nTempTargetValue - nValueFromPresetInputs, CoinEligibilityFilter(0, 1, nMaxChainLength/2), strAssetName, vAssets, tempCoinsRet, nTempAmountRet)) ||
-                   (bSpendZeroConfChange && SelectAssetsMinConf(nTempTargetValue - nValueFromPresetInputs, CoinEligibilityFilter(0, 1, nMaxChainLength), strAssetName, vAssets, tempCoinsRet, nTempAmountRet)) ||
-                   (bSpendZeroConfChange && !fRejectLongChains && SelectAssetsMinConf(nTempTargetValue - nValueFromPresetInputs, CoinEligibilityFilter(0, 1, std::numeric_limits<uint64_t>::max()), strAssetName, vAssets, tempCoinsRet, nTempAmountRet));
+            bool res = nTempTargetValue <= nValueFromPresetInputs ||
+                    SelectAssetsMinConf(nTempTargetValue - nValueFromPresetInputs, CoinEligibilityFilter(1, 6, 0), strAssetName, vAssets, tempCoinsRet, nTempAmountRet) ||
+                    SelectAssetsMinConf(nTempTargetValue - nValueFromPresetInputs, CoinEligibilityFilter(1, 1, 0), strAssetName, vAssets, tempCoinsRet, nTempAmountRet) ||
+                    (bSpendZeroConfChange && SelectAssetsMinConf(nTempTargetValue - nValueFromPresetInputs, CoinEligibilityFilter(0, 1, 2), strAssetName, vAssets, tempCoinsRet, nTempAmountRet)) ||
+                    (bSpendZeroConfChange && SelectAssetsMinConf(nTempTargetValue - nValueFromPresetInputs, CoinEligibilityFilter(0, 1, std::min((size_t)4, nMaxChainLength/3)), strAssetName, vAssets, tempCoinsRet, nTempAmountRet)) ||
+                    (bSpendZeroConfChange && SelectAssetsMinConf(nTempTargetValue - nValueFromPresetInputs, CoinEligibilityFilter(0, 1, nMaxChainLength/2), strAssetName, vAssets, tempCoinsRet, nTempAmountRet)) ||
+                    (bSpendZeroConfChange && SelectAssetsMinConf(nTempTargetValue - nValueFromPresetInputs, CoinEligibilityFilter(0, 1, nMaxChainLength), strAssetName, vAssets, tempCoinsRet, nTempAmountRet)) ||
+                    (bSpendZeroConfChange && !fRejectLongChains && SelectAssetsMinConf(nTempTargetValue - nValueFromPresetInputs, CoinEligibilityFilter(0, 1, std::numeric_limits<uint64_t>::max()), strAssetName, vAssets, tempCoinsRet, nTempAmountRet));
 
-        if (res) {
-            setCoinsRet.insert(tempCoinsRet.begin(), tempCoinsRet.end());
-            mapValueRet.at(strAssetName) = nTempAmountRet + nValueFromPresetInputs;
-        } else {
-            return false;
+            if (res) {
+                setCoinsRet.insert(tempCoinsRet.begin(), tempCoinsRet.end());
+                mapValueRet.at(strAssetName) = nTempAmountRet + nValueFromPresetInputs;
+            } else {
+                return false;
+            }
         }
     }
 
@@ -3706,7 +3807,7 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nC
     // Copy output sizes from new transaction; they may have had the fee
     // subtracted from them.
     for (unsigned int idx = 0; idx < tx.vout.size(); idx++) {
-        tx.vout[idx].nValue = tx_new->vout[idx].nValue;
+        tx.vout[idx] = tx_new->vout[idx];
     }
 
     // Add new txins while keeping original txin scriptSig/order.
@@ -3964,6 +4065,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
     CAmount nValue = 0;
     bool fHasAsset = false;
     std::map<std::string, CAmount> mapAssetValue;
+    std::map<std::string, std::vector<uint16_t>> mapAssetUniqueId;
     int nChangePosRequest = nChangePosInOut;
     unsigned int nSubtractFeeFromAmount = 0;
     for (const auto& recipient : vecSend)
@@ -3975,9 +4077,22 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
                 fHasAsset = true;
                 if (!mapAssetValue.count(assetTransfer.AssetId))
                     mapAssetValue[assetTransfer.AssetId] = 0;
-
+                
+                if (assetTransfer.isUnique){
+                    if (!mapAssetUniqueId.count(assetTransfer.AssetId)){
+                        std::vector<uint16_t> tmpvec;
+                        mapAssetUniqueId.insert(std::make_pair(assetTransfer.AssetId, tmpvec));
+                    }
+                    mapAssetUniqueId.at(assetTransfer.AssetId).push_back(assetTransfer.uniqueId);
+                }
+                
                 if (assetTransfer.nAmount <= 0) {
                     strFailReason = _("Asset Transfer amounts must be greater than 0");
+                    return false;
+                }
+                
+                if (assetTransfer.isUnique && assetTransfer.nAmount != 1 * COIN) {
+                    strFailReason = _("Unique Asset Transfer amount must be 1");
                     return false;
                 }
 
@@ -4214,7 +4329,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
                     if (Params().IsAssetsActive(chainActive.Tip())) {
                         std::set<CInputCoin> setAssetsTmp;
                         mapAssetsIn.clear();
-                        if (!SelectAssets(mapAssetCoins, mapAssetValue, setAssetsTmp, mapAssetsIn)) {
+                        if (!SelectAssets(mapAssetCoins, mapAssetValue, mapAssetUniqueId, setAssetsTmp, mapAssetsIn)) {
                             strFailReason = _("Insufficient asset funds");
                             return false;
                         }
@@ -4304,7 +4419,8 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
                     for (auto assetChange : mapAssetChange) {
                         if (assetChange.second > 0) {
                             CScript scriptAssetChange = assetScriptChange;
-                            CAssetTransfer assetTransfer(assetChange.first, assetChange.second);
+                            //unique assets should never have change is this safe?
+                            CAssetTransfer assetTransfer(assetChange.first, assetChange.second); 
 
                             assetTransfer.BuildAssetTransaction(scriptAssetChange);
                             CTxOut newAssetTxOut(0, scriptAssetChange);
