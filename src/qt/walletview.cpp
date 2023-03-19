@@ -273,6 +273,13 @@ void WalletView::gotoSendCoinsPage(QString addr)
 
 void WalletView::gotoSendAssetsPage(QString addr)
 {
+    static bool fFirstVisit = true;
+
+    if (fFirstVisit){
+        fFirstVisit = false;
+        sendAssetsPage->updateAssetList();
+    }
+    
     setCurrentWidget(sendAssetsPage);
     sendAssetsPage->OnDisplay();
     if (!addr.isEmpty()) {
