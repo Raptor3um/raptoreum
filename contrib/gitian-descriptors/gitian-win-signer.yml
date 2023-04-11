@@ -11,7 +11,7 @@ packages:
 - "libtool"
 - "pkg-config"
 remotes:
-- "url": "https://github.com/raptoreum/raptoreum-detached-sigs.git"
+- "url": "https://github.com/raptor3um/raptoreum-detached-sigs.git"
   "dir": "signature"
 files:
 - "osslsigncode-2.0.tar.gz"

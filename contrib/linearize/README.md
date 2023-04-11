@@ -4,7 +4,7 @@ run using Python 3 but are compatible with Python 2.
 
 ## Step 0: Install raptoreum_hash
 
-https://github.com/raptoreum/raptoreum_hash
+https://github.com/raptor3um/raptoreum_hash
 
 ## Step 1: Download hash list
 
