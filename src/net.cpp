@@ -828,6 +828,11 @@ void CNode::copyStats(CNodeStats &stats)
         X(verifiedPubKeyHash);
     }
     X(m_smartnode_connection);
+
+    X(addrTokenTimestamp);
+    X(addrTokenBucket);
+    X(nAddrRateLimited);
+    X(nAddrProcessed);
 }
 #undef X
 
