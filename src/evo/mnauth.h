@@ -40,19 +40,14 @@ public:
     uint256 proRegTxHash;
     CBLSSignature sig;
 
-public:
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CMNAuth, obj)
     {
-        READWRITE(proRegTxHash);
-        READWRITE(sig);
+        READWRITE(obj.proRegTxHash, obj.sig);
     }
 
     static void PushMNAUTH(CNode* pnode, CConnman& connman);
     static void ProcessMessage(CNode* pnode, const std::string& strCommand, CDataStream& vRecv, CConnman& connman);
-    static void NotifySmartnodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff);
+    static void NotifySmartnodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff, CConnman& connman);
 };
 
 

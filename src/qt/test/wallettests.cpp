@@ -1,9 +1,10 @@
 #include <qt/test/wallettests.h>
 
 #include <coinjoin/coinjoin-client.h>
+#include <init.h>
+#include <interfaces/chain.h>
 #include <interfaces/node.h>
 #include <qt/bitcoinamountfield.h>
-#include <qt/callback.h>
 #include <qt/clientmodel.h>
 #include <qt/optionsmodel.h>
 #include <qt/qvalidatedlineedit.h>
@@ -39,7 +40,7 @@ namespace
 //! Press "Ok" button in message box dialog.
 void ConfirmMessage(QString* text = nullptr)
 {
-    QTimer::singleShot(0, makeCallback([text](Callback* callback) {
+    QTimer::singleShot(0, [text]() {
         for (QWidget* widget : QApplication::topLevelWidgets()) {
             if (widget->inherits("QMessageBox")) {
                 QMessageBox* messageBox = qobject_cast<QMessageBox*>(widget);
@@ -47,14 +48,13 @@ void ConfirmMessage(QString* text = nullptr)
                 messageBox->defaultButton()->click();
             }
         }
-        delete callback;
-    }), SLOT(call()));
+    });
 }
 
 //! Press "Yes" or "Cancel" buttons in modal send confirmation dialog.
 void ConfirmSend(QString* text = nullptr, bool cancel = false)
 {
-    QTimer::singleShot(0, makeCallback([text, cancel](Callback* callback) {
+    QTimer::singleShot(0, [text, cancel]() {
         for (QWidget* widget : QApplication::topLevelWidgets()) {
             if (widget->inherits("SendConfirmationDialog")) {
                 SendConfirmationDialog* dialog = qobject_cast<SendConfirmationDialog*>(widget);
@@ -64,8 +64,7 @@ void ConfirmSend(QString* text = nullptr, bool cancel = false)
                 button->click();
             }
         }
-        delete callback;
-    }), SLOT(call()));
+    });
 }
 
 //! Send coins to address and return txid.
@@ -80,7 +79,8 @@ uint256 SendCoins(CWallet& wallet, SendCoinsDialog& sendCoinsDialog, const CTxDe
         if (status == CT_NEW) txid = hash;
     }));
     ConfirmSend();
-    QMetaObject::invokeMethod(&sendCoinsDialog, "on_sendButton_clicked");
+    bool invoked = QMetaObject::invokeMethod(&sendCoinsDialog, "on_sendButton_clicked");
+    assert(invoked);
     return txid;
 }
 
@@ -108,17 +108,19 @@ QModelIndex FindTx(const QAbstractItemModel& model, const uint256& txid)
 //
 // This also requires overriding the default minimal Qt platform:
 //
-//     src/qt/test/test_raptoreum-qt -platform xcb      # Linux
-//     src/qt/test/test_raptoreum-qt -platform windows  # Windows
-//     src/qt/test/test_raptoreum-qt -platform cocoa    # macOS
-void TestGUI()
+//     QT_QPA_PLATFORM=xcb     src/qt/test/test_raptoreum-qt  # Linux
+//     QT_QPA_PLATFORM=windows src/qt/test/test_raptoreum-qt  # Windows
+//     QT_QPA_PLATFORM=cocoa   src/qt/test/test_raptoreum-qt  # macOS
+void TestGUI(interfaces::Node& node)
 {
     // Set up wallet and chain with 105 blocks (5 mature blocks for spending).
     TestChain100Setup test;
     for (int i = 0; i < 5; ++i) {
         test.CreateAndProcessBlock({}, GetScriptForRawPubKey(test.coinbaseKey.GetPubKey()));
     }
-    std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>(WalletLocation(), WalletDatabase::CreateMock());
+    node.context()->connman = std::move(test.m_node.connman);
+    node.context()->mempool = std::move(test.m_node.mempool);
+    std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>(node.context()->chain.get(), WalletLocation(), CreateMockWalletDatabase());
     AddWallet(wallet);
     bool firstRun;
     wallet->LoadWallet(firstRun);
@@ -126,22 +128,24 @@ void TestGUI()
         LOCK(wallet->cs_wallet);
         wallet->SetAddressBook(test.coinbaseKey.GetPubKey().GetID(), "", "receive");
         wallet->AddKeyPubKey(test.coinbaseKey, test.coinbaseKey.GetPubKey());
+        wallet->SetLastBlockProcessed(105, ::ChainActive().Tip()->GetBlockHash());
     }
     {
-        LOCK(cs_main);
         WalletRescanReserver reserver(wallet.get());
         reserver.reserve();
-        wallet->ScanForWalletTransactions(chainActive.Genesis(), nullptr, reserver, true);
+        CWallet::ScanResult result = wallet->ScanForWalletTransactions(wallet->chain().getBlockHash(0), {} /* stop_block */, reserver, true /* fUpdate */);
+        QCOMPARE(result.status, CWallet::ScanResult::SUCCESS);
+        QCOMPARE(result.last_scanned_block, ::ChainActive().Tip()->GetBlockHash());
+        QVERIFY(result.last_failed_block.IsNull());
     }
     wallet->SetBroadcastTransactions(true);
 
     // Create widgets for sending coins and listing transactions.
     SendCoinsDialog sendCoinsDialog;
     TransactionView transactionView;
-    auto node = interfaces::MakeNode();
-    OptionsModel optionsModel(*node);
-    ClientModel clientModel(*node, &optionsModel);
-    WalletModel walletModel(std::move(node->getWallets()[0]), *node, &optionsModel);;
+    OptionsModel optionsModel(node);
+    ClientModel clientModel(node, &optionsModel);
+    WalletModel walletModel(interfaces::MakeWallet(wallet), node, &optionsModel);;
     sendCoinsDialog.setModel(&walletModel);
     transactionView.setModel(&walletModel);
 
@@ -223,5 +227,11 @@ void TestGUI()
 
 void WalletTests::walletTests()
 {
-    TestGUI();
+#ifdef Q_OS_MAC
+  if (QApplication::platformName() == "minimal") {
+    QWARN("Skipping WalletTests on mac build with 'minimal' platform set due to Qt bugs. To run AppTests, invoke with 'test_raptoreum-qt -platform cocoa' on mac or use a linux or windows build.");
+    return;
+  }
+#endif
+    TestGUI(m_node);
 }

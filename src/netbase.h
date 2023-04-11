@@ -38,7 +38,7 @@ public:
     bool randomize_credentials;
 };
 
-enum Network ParseNetwork(std::string net);
+enum Network ParseNetwork(const std::string& net);
 std::string GetNetworkName(enum Network net);
 bool SetProxy(enum Network net, const proxyType &addrProxy);
 bool GetProxy(enum Network net, proxyType &proxyInfoOut);
@@ -63,10 +63,6 @@ bool CloseSocket(SOCKET& hSocket);
 bool SetSocketNonBlocking(const SOCKET& hSocket, bool fNonBlocking);
 /** Set the TCP_NODELAY flag on a socket */
 bool SetSocketNoDelay(const SOCKET& hSocket);
-/**
- * Convert milliseconds to a struct timeval for e.g. select.
- */
-struct timeval MillisToTimeval(int64_t nTimeout);
 void InterruptSocks5(bool interrupt);
 
 #endif // BITCOIN_NETBASE_H

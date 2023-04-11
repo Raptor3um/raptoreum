@@ -30,7 +30,7 @@ class UacommentTest(BitcoinTestFramework):
         self.nodes[0].assert_start_raises_init_error(["-uacomment=" + 'a' * 256], expected)
 
         self.log.info("test -uacomment unsafe characters")
-        for unsafe_char in ['/', ':', '(', ')']:
+        for unsafe_char in ['/', ':', '(', ')', '₿', '🏃']:
             expected = "Error: User Agent comment \(" + re.escape(unsafe_char) + "\) contains unsafe characters."
             self.nodes[0].assert_start_raises_init_error(["-uacomment=" + unsafe_char], expected)
 

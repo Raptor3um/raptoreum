@@ -6,14 +6,16 @@
 #ifndef RAPTOREUM_QUORUMS_INIT_H
 #define RAPTOREUM_QUORUMS_INIT_H
 
+class CConnman;
 class CDBWrapper;
 class CEvoDB;
+class CTxMemPool;
 
 namespace llmq
 {
 
 // Init/destroy LLMQ globals
-void InitLLMQSystem(CEvoDB& evoDb, bool unitTests, bool fWipe = false);
+void InitLLMQSystem(CEvoDB& evoDb, CTxMemPool& mempool, CConnman& connman, bool unitTests, bool fWipe = false);
 void DestroyLLMQSystem();
 
 // Manage scheduled tasks, threads, listeners etc.

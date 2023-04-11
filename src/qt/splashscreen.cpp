@@ -10,26 +10,28 @@
 
 #include <qt/splashscreen.h>
 
-#include <qt/guiutil.h>
-#include <qt/networkstyle.h>
-
 #include <chainparams.h>
 #include <clientversion.h>
-#include <init.h>
 #include <interfaces/handler.h>
 #include <interfaces/node.h>
 #include <interfaces/wallet.h>
-#include <util.h>
+#include <qt/guiutil.h>
+#include <qt/networkstyle.h>
+#include <qt/walletmodel.h>
 #include <ui_interface.h>
-#include <version.h>
+#include <util/system.h>
+
+#include <functional>
 
 #include <QApplication>
 #include <QCloseEvent>
-#include <QDesktopWidget>
 #include <QPainter>
+#include <QScreen>
+
+namespace pl = std::placeholders;
 
 SplashScreen::SplashScreen(interfaces::Node& node, Qt::WindowFlags f, const NetworkStyle *networkStyle) :
-    QWidget(0, f), curAlignment(0), m_node(node)
+    QWidget(nullptr, f), curAlignment(0), m_node(node)
 {
 
     // transparent background
@@ -53,7 +55,7 @@ SplashScreen::SplashScreen(interfaces::Node& node, Qt::WindowFlags f, const Netw
     float scale = qApp->devicePixelRatio();
 
     // define text to place
-    QString titleText    = tr(PACKAGE_NAME);
+    QString titleText    = PACKAGE_NAME;
     QString versionText  = QString::fromStdString(FormatFullVersion()).remove(0, 1);
     QString titleAddText = networkStyle->getTitleAddText();
 
@@ -92,7 +94,7 @@ SplashScreen::SplashScreen(interfaces::Node& node, Qt::WindowFlags f, const Netw
     fontBold.setPointSize(50 * fontFactor);
     pixPaint.setFont(fontBold);
     QFontMetrics fm = pixPaint.fontMetrics();
-    int titleTextWidth = fm.width(titleText);
+    int titleTextWidth = GUIUtil::TextWidth(fm, titleText);
     if (titleTextWidth > width * 0.8) {
         fontFactor = 0.75;
     }
@@ -100,7 +102,7 @@ SplashScreen::SplashScreen(interfaces::Node& node, Qt::WindowFlags f, const Netw
     fontNormal.setPointSize(16 * fontFactor);
     pixPaint.setFont(fontNormal);
     fm = pixPaint.fontMetrics();
-    int versionTextWidth  = fm.width(versionText);
+    int versionTextWidth  = GUIUtil::TextWidth(fm, versionText);
     pixPaint.drawText((width / 2) - (versionTextWidth / 2), titleVersionVSpace, versionText);
 
     // draw additional text if special network
@@ -108,7 +110,7 @@ SplashScreen::SplashScreen(interfaces::Node& node, Qt::WindowFlags f, const Netw
         fontBold.setPointSize(24 * fontFactor);
         pixPaint.setFont(fontBold);
         fm = pixPaint.fontMetrics();
-        int titleAddTextWidth = fm.width(titleAddText);
+        int titleAddTextWidth = GUIUtil::TextWidth(fm, titleAddText);
         // Draw the badge backround with the network-specific color
         QRect badgeRect = QRect(0, 0, titleAddTextWidth + 10, fm.height() + 10);
         QColor badgeColor = networkStyle->getBadgeColor();
@@ -124,7 +126,7 @@ SplashScreen::SplashScreen(interfaces::Node& node, Qt::WindowFlags f, const Netw
     QRect r(QPoint(), QSize(width, height));
     resize(r.size());
     setFixedSize(r.size());
-    move(QApplication::desktop()->screenGeometry().center() - r.center());
+    move(QGuiApplication::primaryScreen()->geometry().center() - r.center());
 
     subscribeToCoreSignals();
     installEventFilter(this);
@@ -145,10 +147,8 @@ bool SplashScreen::eventFilter(QObject * obj, QEvent * ev) {
     return QObject::eventFilter(obj, ev);
 }
 
-void SplashScreen::slotFinish(QWidget *mainWin)
+void SplashScreen::finish()
 {
-    Q_UNUSED(mainWin);
-
     /* If the window is minimized, hide() will be ignored. */
     /* Make sure we de-minimize the splashscreen window before hiding */
     if (isMinimized())
@@ -159,12 +159,13 @@ void SplashScreen::slotFinish(QWidget *mainWin)
 
 static void InitMessage(SplashScreen *splash, const std::string &message)
 {
-    QMetaObject::invokeMethod(splash, "showMessage",
+    bool invoked = QMetaObject::invokeMethod(splash, "showMessage",
         Qt::QueuedConnection,
         Q_ARG(QString, QString::fromStdString(message)),
         Q_ARG(int, Qt::AlignBottom | Qt::AlignHCenter),
         Q_ARG(QColor, Qt::white));
 //      Q_ARG(QColor, GUIUtil::getThemedQColor(GUIUtil::ThemedColor::DEFAULT)));
+    assert(invoked);
 }
 
 static void ShowProgress(SplashScreen *splash, const std::string &title, int nProgress, bool resume_possible)
@@ -174,21 +175,22 @@ static void ShowProgress(SplashScreen *splash, const std::string &title, int nPr
                                 : _("press q to shutdown")) +
             strprintf("\n%d", nProgress) + "%");
 }
-#ifdef ENABLE_WALLET
-void SplashScreen::ConnectWallet(std::unique_ptr<interfaces::Wallet> wallet)
-{
-    m_connected_wallet_handlers.emplace_back(wallet->handleShowProgress(boost::bind(ShowProgress, this, _1, _2, false)));
-    m_connected_wallets.emplace_back(std::move(wallet));
-}
-#endif
 
 void SplashScreen::subscribeToCoreSignals()
 {
     // Connect signals to client
-    m_handler_init_message = m_node.handleInitMessage(boost::bind(InitMessage, this, _1));
-    m_handler_show_progress = m_node.handleShowProgress(boost::bind(ShowProgress, this, _1, _2, _3));
+    m_handler_init_message = m_node.handleInitMessage(std::bind(InitMessage, this, pl::_1));
+    m_handler_show_progress = m_node.handleShowProgress(std::bind(ShowProgress, this, pl::_1, pl::_2, pl::_3));
+}
+
+void SplashScreen::handleLoadWallet()
+{
 #ifdef ENABLE_WALLET
-    m_handler_load_wallet = m_node.handleLoadWallet([this](std::unique_ptr<interfaces::Wallet> wallet) { ConnectWallet(std::move(wallet)); });
+    if (!WalletModel::isWalletEnabled()) return;
+    m_handler_load_wallet = m_node.walletClient().handleLoadWallet([this](std::unique_ptr<interfaces::Wallet> wallet) {
+        m_connected_wallet_handlers.emplace_back(wallet->handleShowProgress(std::bind(ShowProgress, this, pl::_1, pl::_2, false)));
+        m_connected_wallets.emplace_back(std::move(wallet));
+    });
 #endif
 }
 
@@ -198,9 +200,11 @@ void SplashScreen::unsubscribeFromCoreSignals()
     m_handler_init_message->disconnect();
     m_handler_show_progress->disconnect();
 #ifdef ENABLE_WALLET
-    m_handler_load_wallet->disconnect();
+    if (m_handler_load_wallet != nullptr) {
+        m_handler_load_wallet->disconnect();
+    }
 #endif // ENABLE_WALLET
-    for (auto& handler : m_connected_wallet_handlers) {
+    for (const auto& handler : m_connected_wallet_handlers) {
         handler->disconnect();
     }
     m_connected_wallet_handlers.clear();

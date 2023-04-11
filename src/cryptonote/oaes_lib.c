@@ -56,6 +56,7 @@ static const char _NR[] = {
 #else
 #define GETPID() getpid()
 #endif
+
 #include <cryptonote/oaes_config.h>
 #include <cryptonote/oaes_lib.h>
 
@@ -471,11 +472,14 @@ OAES_RET oaes_sprintf(
 static void oaes_get_seed( char buf[RANDSIZ + 1] )
 {
   struct timeval tv;
+  time_t tv_sec;
   struct tm *gmTimer;
   char * _test = NULL;
 
   gettimeofday(&tv, NULL);
-  gmTimer = gmtime( &tv.tv_sec );
+  tv_sec = tv.tv_sec;
+
+  gmTimer = gmtime( &tv_sec );
   _test = (char *) calloc( sizeof( char ), tv.tv_usec/1000 );
   sprintf( buf, "%04d%02d%02d%02d%02d%02d%03d%p%d", gmTimer->tm_year + 1900, gmTimer->tm_mon + 1, gmTimer->tm_mday, gmTimer->tm_hour, gmTimer->tm_min, gmTimer->tm_sec, tv.tv_usec/1000, _test + tv.tv_usec/1000, GETPID() );
   if( _test )
@@ -485,12 +489,14 @@ static void oaes_get_seed( char buf[RANDSIZ + 1] )
 static uint32_t oaes_get_seed(void)
 {
   struct timeval tv;
+  time_t tv_sec;
   struct tm *gmTimer;
   char * _test = NULL;
   uint32_t _ret = 0;
 
   gettimeofday(&tv, NULL);
-  uint64_t tv_sec = tv.tv_sec;
+  tv_sec = tv.tv_sec;
+
   gmTimer = gmtime( &tv_sec );
   _test = (char *) calloc( sizeof( char ), tv.tv_usec/1000 );
   _ret = gmTimer->tm_year + 1900 + gmTimer->tm_mon + 1 + gmTimer->tm_mday + gmTimer->tm_hour + gmTimer->tm_min + gmTimer->tm_sec + tv.tv_usec/1000 + (uintptr_t)( _test + tv.tv_usec/1000 ) + GETPID();

@@ -7,11 +7,10 @@
 #ifndef BITCOIN_QT_GUICONSTANTS_H
 #define BITCOIN_QT_GUICONSTANTS_H
 
+#include <cstdint>
+
 /* Milliseconds between model updates */
 static const int MODEL_UPDATE_DELAY = 250;
-
-/* Milliseconds between model updates while sync */
-static const int MODEL_UPDATE_DELAY_SYNC = 10000;
 
 /* AskPassphraseDialog -- Maximum passphrase length */
 static const int MAX_PASSPHRASE_SIZE = 1024;

@@ -7,10 +7,11 @@
 
 #include <chainparams.h>
 #include <consensus/merkle.h>
-
+#include <llmq/quorums_parameters.h>
 #include <tinyformat.h>
-#include <util.h>
-#include <utilstrencodings.h>
+#include <util/system.h>
+#include <util/strencodings.h>
+#include <versionbitsinfo.h>
 
 #include <arith_uint256.h>
 
@@ -19,11 +20,16 @@
 #include <string>
 #include <memory>
 
+#include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/split.hpp>
+
 #include <chainparamsseeds.h>
 
 static size_t lastCheckMnCount = 0;
 static int lastCheckHeight = 0;
 static bool lastCheckedLowLLMQParams = false;
+
+static std::unique_ptr<CChainParams> globalChainParams;
 
 static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesisOutputScript, uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
 {
@@ -88,60 +94,6 @@ static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits
     return CreateGenesisBlock(pszTimestamp, genesisOutputScript, nTime, nNonce, nBits, nVersion, genesisReward);
 }
 
-
-void CChainParams::UpdateVersionBitsParameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout, int64_t nWindowSize, int64_t nThresholdStart, int64_t nThresholdMin, int64_t nFalloffCoeff)
-{
-    consensus.vDeployments[d].nStartTime = nStartTime;
-    consensus.vDeployments[d].nTimeout = nTimeout;
-    if (nWindowSize != -1) {
-            consensus.vDeployments[d].nWindowSize = nWindowSize;
-    }
-    if (nThresholdStart != -1) {
-        consensus.vDeployments[d].nThresholdStart = nThresholdStart;
-    }
-    if (nThresholdMin != -1) {
-        consensus.vDeployments[d].nThresholdMin = nThresholdMin;
-    }
-    if (nFalloffCoeff != -1) {
-        consensus.vDeployments[d].nFalloffCoeff = nFalloffCoeff;
-    }
-}
-
-//void CChainParams::UpdateDIP3Parameters(int nActivationHeight, int nEnforcementHeight)
-//{
-//    consensus.DIP0003Height = nActivationHeight;
-//    consensus.DIP0003EnforcementHeight = nEnforcementHeight;
-//}
-
-void CChainParams::UpdateBIP66Parameters(bool active)
-{
-    if (strcmp(Params().NetworkIDString().c_str(),"regtest") == 0){
-        consensus.BIP66Enabled = active;
-    }
-}
-
-void CChainParams::UpdateBudgetParameters(int nSmartnodePaymentsStartBlock, int nBudgetPaymentsStartBlock, int nSuperblockStartBlock)
-{
-    consensus.nSmartnodePaymentsStartBlock = nSmartnodePaymentsStartBlock;
-    consensus.nBudgetPaymentsStartBlock = nBudgetPaymentsStartBlock;
-    consensus.nSuperblockStartBlock = nSuperblockStartBlock;
-}
-
-void CChainParams::UpdateSubsidyAndDiffParams(int nMinimumDifficultyBlocks, int nHighSubsidyBlocks, int nHighSubsidyFactor)
-{
-    consensus.nMinimumDifficultyBlocks = nMinimumDifficultyBlocks;
-    consensus.nHighSubsidyBlocks = nHighSubsidyBlocks;
-    consensus.nHighSubsidyFactor = nHighSubsidyFactor;
-}
-
-void CChainParams::UpdateLLMQChainLocks(Consensus::LLMQType llmqType) {
-    consensus.llmqTypeChainLocks = llmqType;
-}
-
-void CChainParams::UpdateLLMQInstantSend(Consensus::LLMQType llmqType) {
-    consensus.llmqTypeInstantSend = llmqType;
-}
-
 static CBlock FindDevNetGenesisBlock(const CBlock &prevBlock, const CAmount& reward)
 {
     std::string devNetName = gArgs.GetDevNetName();
@@ -200,293 +152,6 @@ static void VerifyGenesisPOW(const CBlock& genesis)
     assert(false);
 }
 
-static Consensus::LLMQParams llmq200_2 = {
-        .type = Consensus::LLMQ_50_60,
-        .name = "llmq_3_200",
-        .size = 200,
-        .minSize = 2,
-        .threshold = 2,
-
-        .dkgInterval = 30, // one DKG per hour
-        .dkgPhaseBlocks = 2,
-        .dkgMiningWindowStart = 10, // dkgPhaseBlocks * 5 = after finalization
-        .dkgMiningWindowEnd = 18,
-        .dkgBadVotesThreshold = 8,
-
-        .signingActiveQuorumCount = 2, // just a few ones to allow easier testing
-
-        .keepOldConnections = 3,
-        .recoveryMembers = 3,
-};
-
-static Consensus::LLMQParams llmq3_60 = {
-        .type = Consensus::LLMQ_50_60,
-        .name = "llmq_3_60",
-        .size = 3,
-        .minSize = 2,
-        .threshold = 2,
-
-        .dkgInterval = 30, // one DKG per hour
-        .dkgPhaseBlocks = 2,
-        .dkgMiningWindowStart = 10, // dkgPhaseBlocks * 5 = after finalization
-        .dkgMiningWindowEnd = 18,
-        .dkgBadVotesThreshold = 2,
-
-        .signingActiveQuorumCount = 2, // just a few ones to allow easier testing
-
-        .keepOldConnections = 3,
-};
-
-static Consensus::LLMQParams llmq5_60 = {
-        .type = Consensus::LLMQ_400_60,
-        .name = "llmq_20_60",
-        .size = 5,
-        .minSize = 4,
-        .threshold = 3,
-
-        .dkgInterval = 30 * 12, // one DKG every 12 hours
-        .dkgPhaseBlocks = 4,
-        .dkgMiningWindowStart = 20, // dkgPhaseBlocks * 5 = after finalization
-        .dkgMiningWindowEnd = 28,
-        .dkgBadVotesThreshold = 30,
-
-        .signingActiveQuorumCount = 4, // two days worth of LLMQs
-
-        .keepOldConnections = 5,
-        .recoveryMembers = 5,
-};
-
-static Consensus::LLMQParams llmq5_85 = {
-        .type = Consensus::LLMQ_400_85,
-        .name = "llmq_20_85",
-        .size = 5,
-        .minSize = 4,
-        .threshold = 3,
-
-        .dkgInterval = 30 * 24, // one DKG every 24 hours
-        .dkgPhaseBlocks = 4,
-        .dkgMiningWindowStart = 20, // dkgPhaseBlocks * 5 = after finalization
-        .dkgMiningWindowEnd = 48, // give it a larger mining window to make sure it is mined
-        .dkgBadVotesThreshold = 30,
-
-        .signingActiveQuorumCount = 4, // four days worth of LLMQs
-
-        .keepOldConnections = 5,
-        .recoveryMembers = 5,
-};
-
-static Consensus::LLMQParams llmq20_60 = {
-        .type = Consensus::LLMQ_400_60,
-        .name = "llmq_20_60",
-        .size = 20,
-        .minSize = 15,
-        .threshold = 12,
-
-        .dkgInterval = 30 * 12, // one DKG every 12 hours
-        .dkgPhaseBlocks = 4,
-        .dkgMiningWindowStart = 20, // dkgPhaseBlocks * 5 = after finalization
-        .dkgMiningWindowEnd = 28,
-        .dkgBadVotesThreshold = 30,
-
-        .signingActiveQuorumCount = 4, // two days worth of LLMQs
-
-        .keepOldConnections = 5,
-};
-
-static Consensus::LLMQParams llmq20_85 = {
-        .type = Consensus::LLMQ_400_85,
-        .name = "llmq_20_85",
-        .size = 20,
-        .minSize = 18,
-        .threshold = 17,
-
-        .dkgInterval = 30 * 24, // one DKG every 24 hours
-        .dkgPhaseBlocks = 4,
-        .dkgMiningWindowStart = 20, // dkgPhaseBlocks * 5 = after finalization
-        .dkgMiningWindowEnd = 48, // give it a larger mining window to make sure it is mined
-        .dkgBadVotesThreshold = 30,
-
-        .signingActiveQuorumCount = 4, // four days worth of LLMQs
-
-        .keepOldConnections = 5,
-};
-
-static Consensus::LLMQParams llmq10_60 = {
-        .type = Consensus::LLMQ_50_60,
-        .name = "llmq_10_60",
-        .size = 10,
-        .minSize = 8,
-        .threshold = 7,
-
-        .dkgInterval = 30, // one DKG per hour
-        .dkgPhaseBlocks = 2,
-        .dkgMiningWindowStart = 10, // dkgPhaseBlocks * 5 = after finalization
-        .dkgMiningWindowEnd = 18,
-        .dkgBadVotesThreshold = 8,
-
-        .signingActiveQuorumCount = 6, // just a few ones to allow easier testing
-
-        .keepOldConnections = 7,
-        .recoveryMembers = 7,
-};
-
-static Consensus::LLMQParams llmq40_60 = {
-        .type = Consensus::LLMQ_400_60,
-        .name = "llmq_40_60",
-        .size = 40,
-        .minSize = 30,
-        .threshold = 24,
-
-        .dkgInterval = 30 * 12, // one DKG every 12 hours
-        .dkgPhaseBlocks = 4,
-        .dkgMiningWindowStart = 20, // dkgPhaseBlocks * 5 = after finalization
-        .dkgMiningWindowEnd = 28,
-        .dkgBadVotesThreshold = 30,
-
-        .signingActiveQuorumCount = 4, // two days worth of LLMQs
-
-        .keepOldConnections = 5,
-        .recoveryMembers = 5,
-};
-
-static Consensus::LLMQParams llmq40_85 = {
-        .type = Consensus::LLMQ_400_85,
-        .name = "llmq_40_85",
-        .size = 40,
-        .minSize = 35,
-        .threshold = 34,
-
-        .dkgInterval = 30 * 24, // one DKG every 24 hours
-        .dkgPhaseBlocks = 4,
-        .dkgMiningWindowStart = 20, // dkgPhaseBlocks * 5 = after finalization
-        .dkgMiningWindowEnd = 48, // give it a larger mining window to make sure it is mined
-        .dkgBadVotesThreshold = 30,
-
-        .signingActiveQuorumCount = 4, // four days worth of LLMQs
-
-        .keepOldConnections = 5,
-        .recoveryMembers = 5,
-};
-
-static Consensus::LLMQParams llmq50_60 = {
-        .type = Consensus::LLMQ_50_60,
-        .name = "llmq_50_60",
-        .size = 50,
-        .minSize = 40,
-        .threshold = 30,
-
-        .dkgInterval = 30, // one DKG per hour
-        .dkgPhaseBlocks = 2,
-        .dkgMiningWindowStart = 10, // dkgPhaseBlocks * 5 = after finalization
-        .dkgMiningWindowEnd = 18,
-        .dkgBadVotesThreshold = 40,
-
-        .signingActiveQuorumCount = 24, // a full day worth of LLMQs
-
-        .keepOldConnections = 25,
-        .recoveryMembers = 25,
-};
-
-static Consensus::LLMQParams llmq400_60 = {
-        .type = Consensus::LLMQ_400_60,
-        .name = "llmq_400_60",
-        .size = 400,
-        .minSize = 300,
-        .threshold = 240,
-
-        .dkgInterval = 30 * 12, // one DKG every 12 hours
-        .dkgPhaseBlocks = 4,
-        .dkgMiningWindowStart = 20, // dkgPhaseBlocks * 5 = after finalization
-        .dkgMiningWindowEnd = 28,
-        .dkgBadVotesThreshold = 300,
-
-        .signingActiveQuorumCount = 4, // two days worth of LLMQs
-
-        .keepOldConnections = 5,
-        .recoveryMembers = 100,
-};
-
-// Used for deployment and min-proto-version signalling, so it needs a higher threshold
-static Consensus::LLMQParams llmq400_85 = {
-        .type = Consensus::LLMQ_400_85,
-        .name = "llmq_400_85",
-        .size = 400,
-        .minSize = 350,
-        .threshold = 340,
-
-        .dkgInterval = 30 * 24, // one DKG every 24 hours
-        .dkgPhaseBlocks = 4,
-        .dkgMiningWindowStart = 20, // dkgPhaseBlocks * 5 = after finalization
-        .dkgMiningWindowEnd = 48, // give it a larger mining window to make sure it is mined
-        .dkgBadVotesThreshold = 300,
-
-        .signingActiveQuorumCount = 4, // four days worth of LLMQs
-
-        .keepOldConnections = 5,
-        .recoveryMembers = 100,
-};
-
-// this one is for testing only
-static Consensus::LLMQParams llmq_test_v17 = {
-        .type = Consensus::LLMQ_TEST_V17,
-        .name = "llmq_test_v17",
-        .size = 3,
-        .minSize = 2,
-        .threshold = 2,
-
-        .dkgInterval = 24, // one DKG per hour
-        .dkgPhaseBlocks = 2,
-        .dkgMiningWindowStart = 10, // dkgPhaseBlocks * 5 = after finalization
-        .dkgMiningWindowEnd = 18,
-        .dkgBadVotesThreshold = 2,
-
-        .signingActiveQuorumCount = 2, // just a few ones to allow easier testing
-
-        .keepOldConnections = 3,
-        .recoveryMembers = 3,
-};
-
-// Used for Platform
-static Consensus::LLMQParams llmq100_67_mainnet = {
-        .type = Consensus::LLMQ_100_67,
-        .name = "llmq_100_67",
-        .size = 100,
-        .minSize = 80,
-        .threshold = 67,
-
-        .dkgInterval = 30, // one DKG per hour
-        .dkgPhaseBlocks = 2,
-        .dkgMiningWindowStart = 10, // dkgPhaseBlocks * 5 = after finalization
-        .dkgMiningWindowEnd = 18,
-        .dkgBadVotesThreshold = 80,
-
-        .signingActiveQuorumCount = 24, // a full day worth of LLMQs
-
-        .keepOldConnections = 25,
-        .recoveryMembers = 50,
-};
-
-
-// Used for Platform
-static Consensus::LLMQParams llmq100_67_testnet = {
-        .type = Consensus::LLMQ_100_67,
-        .name = "llmq_100_67",
-        .size = 100,
-        .minSize = 80,
-        .threshold = 67,
-
-        .dkgInterval = 24, // one DKG per hour
-        .dkgPhaseBlocks = 2,
-        .dkgMiningWindowStart = 10, // dkgPhaseBlocks * 5 = after finalization
-        .dkgMiningWindowEnd = 18,
-        .dkgBadVotesThreshold = 80,
-
-        .signingActiveQuorumCount = 24, // a full day worth of LLMQs
-
-        .keepOldConnections = 25,
-        .recoveryMembers = 50,
-};
-
 /**
  * Main network
  */
@@ -502,7 +167,7 @@ static Consensus::LLMQParams llmq100_67_testnet = {
 class CMainParams : public CChainParams {
 public:
     CMainParams() {
-        strNetworkID = "main";
+        strNetworkID = CBaseChainParams::MAIN;
         consensus.nSubsidyHalvingInterval = 210240; // Note: actual number of blocks per calendar year with DGW v3 is ~200700 (for example 449750 - 249050)
         consensus.nSmartnodePaymentsStartBlock = 5761; //
         consensus.nSmartnodePaymentsIncreaseBlock = 158000; // actual historical value
@@ -567,6 +232,9 @@ public:
         pchMessageStart[3] = 0x2e;//.
         nDefaultPort = 10226;
         nPruneAfterHeight = 100000;
+        m_assumed_blockchain_size = 7;
+        m_assumed_chain_state_size = 2;
+        //FindMainNetGenesisBlock(1614369600, 0x20001fff, "main");
         genesis = CreateGenesisBlock(1614369600, 1130, 0x20001fff, 4, 5000 * COIN);
         VerifyGenesisPOW(genesis);
         consensus.hashGenesisBlock = genesis.GetHash();
@@ -611,10 +279,10 @@ public:
         vFixedSeeds = std::vector<SeedSpec6>(pnSeed6_main, pnSeed6_main + ARRAYLEN(pnSeed6_main));
 
         // long living quorum params
-        consensus.llmqs[Consensus::LLMQ_50_60] = llmq3_60;
-        consensus.llmqs[Consensus::LLMQ_400_60] = llmq20_60;
-        consensus.llmqs[Consensus::LLMQ_400_85] = llmq20_85;
-        consensus.llmqs[Consensus::LLMQ_100_67] = llmq100_67_mainnet;
+        consensus.llmqs[Consensus::LLMQ_50_60] = Consensus::llmq3_60;
+        consensus.llmqs[Consensus::LLMQ_400_60] = Consensus::llmq20_60;
+        consensus.llmqs[Consensus::LLMQ_400_85] = Consensus::llmq20_85;
+        consensus.llmqs[Consensus::LLMQ_100_67] = Consensus::llmq100_67_mainnet;
         consensus.llmqTypeChainLocks = Consensus::LLMQ_400_60;
         consensus.llmqTypeInstantSend = Consensus::LLMQ_50_60;
         consensus.llmqTypePlatform = Consensus::LLMQ_100_67;
@@ -626,11 +294,10 @@ public:
         fAllowMultiplePorts = false;
         miningRequiresPeers = true;
         nLLMQConnectionRetryTimeout = 60;
+        m_is_mockable_chain = false;
 
         nPoolMinParticipants = 3;
-        nPoolNewMinParticipants = 3;
-        nPoolMaxParticipants = 5;
-        nPoolNewMaxParticipants = 20;
+        nPoolMaxParticipants = 20;
         nFulfilledRequestExpireTime = 60*60; // fulfilled requests expire in 1 hour
 
         vSporkAddresses = {"RWGvGpd3yJdnfh9ziyHNDEoHMJBvnZ23zK"};
@@ -661,7 +328,7 @@ public:
 class CTestNetParams : public CChainParams {
 public:
     CTestNetParams() {
-        strNetworkID = "test";
+        strNetworkID = CBaseChainParams::TESTNET;
         consensus.nSubsidyHalvingInterval = 210240;
         consensus.nSmartnodePaymentsStartBlock = 1000; // not true, but it's ok as long as it's less then nSmartnodePaymentsIncreaseBlock
         consensus.nSmartnodePaymentsIncreaseBlock = 4030;
@@ -753,10 +420,10 @@ public:
 
 
         // long living quorum params
-        consensus.llmqs[Consensus::LLMQ_50_60] = llmq3_60;
-        consensus.llmqs[Consensus::LLMQ_400_60] = llmq20_60;
-        consensus.llmqs[Consensus::LLMQ_400_85] = llmq20_85;
-        consensus.llmqs[Consensus::LLMQ_100_67] = llmq100_67_testnet;
+        consensus.llmqs[Consensus::LLMQ_50_60] = Consensus::llmq3_60;
+        consensus.llmqs[Consensus::LLMQ_400_60] = Consensus::llmq20_60;
+        consensus.llmqs[Consensus::LLMQ_400_85] = Consensus::llmq20_85;
+        consensus.llmqs[Consensus::LLMQ_100_67] = Consensus::llmq100_67_testnet;
         consensus.llmqTypeChainLocks = Consensus::LLMQ_400_60;
         consensus.llmqTypeInstantSend = Consensus::LLMQ_50_60;
         consensus.llmqTypePlatform = Consensus::LLMQ_100_67;
@@ -777,12 +444,12 @@ public:
         fAllowMultipleAddressesFromGroup = false;
         fAllowMultiplePorts = true;
         nLLMQConnectionRetryTimeout = 60;
+        // miningRequiresPeers = true;
+        m_is_mockable_chain = false;
         miningRequiresPeers = false;
 
-        nPoolMinParticipants = 3;
-        nPoolNewMinParticipants = 2;
-        nPoolMaxParticipants = 5;
-        nPoolNewMaxParticipants = 20;
+        nPoolMinParticipants = 2;
+        nPoolMaxParticipants = 20;
         nFulfilledRequestExpireTime = 5*60; // fulfilled requests expire in 5 minutes
 
         vSporkAddresses = {"rsqc2caFRG6myRdzKipP4PpVW9LnFaG7CH"};
@@ -810,8 +477,8 @@ public:
  */
 class CDevNetParams : public CChainParams {
 public:
-    CDevNetParams() {
-        strNetworkID = "devnet";
+    explicit CDevNetParams(const ArgsManager& args) {
+        strNetworkID = CBaseChainParams::DEVNET;
         consensus.nSubsidyHalvingInterval = 210240;
         consensus.nSmartnodePaymentsStartBlock = 4010; // not true, but it's ok as long as it's less then nSmartnodePaymentsIncreaseBlock
         consensus.nSmartnodePaymentsIncreaseBlock = 4030;
@@ -835,7 +502,7 @@ public:
         consensus.DIP0001Enabled = true; // DIP0001 activated immediately on devnet
         consensus.DIP0003Enabled = true; // DIP0003 activated immediately on devnet
         consensus.DIP0008Enabled = true;// DIP0008 activated immediately on devnet
-       // consensus.DIP0003EnforcementHeight = 2; // DIP0003 activated immediately on devnet
+        // consensus.DIP0003EnforcementHeight = 2; // DIP0003 activated immediately on devnet
         consensus.powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 1
         consensus.nPowTargetTimespan = 24 * 60 * 60; // Raptoreum: 1 day
         consensus.nPowTargetSpacing = 2 * 60; // Raptoreum: 2 minutes
@@ -870,7 +537,10 @@ public:
         pchMessageStart[3] = 0xce;
         nDefaultPort = 19799;
         nPruneAfterHeight = 1000;
+        m_assumed_blockchain_size = 0;
+        m_assumed_chain_state_size = 0;
 
+        UpdateDevnetSubsidyAndDiffParametersFromArgs(args);
         genesis = CreateGenesisBlock(1645942755, 387, 0x20001fff, 4, 5000 * COIN);
         VerifyGenesisPOW(genesis);
         consensus.hashGenesisBlock = genesis.GetHash();
@@ -903,13 +573,16 @@ public:
         nExtCoinType = 1;
 
         // long living quorum params
-        consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
-        consensus.llmqs[Consensus::LLMQ_400_60] = llmq400_60;
-        consensus.llmqs[Consensus::LLMQ_400_85] = llmq400_85;
-        consensus.llmqs[Consensus::LLMQ_100_67] = llmq100_67_testnet;
+        consensus.llmqs[Consensus::LLMQ_50_60] = Consensus::llmq50_60;
+        consensus.llmqs[Consensus::LLMQ_400_60] = Consensus::llmq400_60;
+        consensus.llmqs[Consensus::LLMQ_400_85] = Consensus::llmq400_85;
+        consensus.llmqs[Consensus::LLMQ_100_67] = Consensus::llmq100_67_testnet;
         consensus.llmqTypeChainLocks = Consensus::LLMQ_50_60;
         consensus.llmqTypeInstantSend = Consensus::LLMQ_50_60;
         consensus.llmqTypePlatform = Consensus::LLMQ_100_67;
+
+        UpdateDevnetLLMQChainLocksFromArgs(args);
+        UpdateDevnetLLMQInstantSendFromArgs(args);
 
         fDefaultConsistencyChecks = false;
         fRequireStandard = false;
@@ -919,11 +592,10 @@ public:
         fAllowMultiplePorts = true;
         miningRequiresPeers = false;
         nLLMQConnectionRetryTimeout = 60;
+        m_is_mockable_chain = false;
 
-        nPoolMinParticipants = 3;
-        nPoolNewMinParticipants = 2;
-        nPoolMaxParticipants = 5;
-        nPoolNewMaxParticipants = 20;
+        nPoolMinParticipants = 2;
+        nPoolMaxParticipants = 20;
         nFulfilledRequestExpireTime = 5*60; // fulfilled requests expire in 5 minutes
 
         // privKey: cVpnZj4dZvRXmBf7Jze1GjpLQb25iKP92GDXUsKdUJTXhXRo2RFA
@@ -942,6 +614,26 @@ public:
             
         };
     }
+
+    void UpdateDevnetSubsidyAndDiffParameters(int nMinimumDifficultyBlocks, int nHighSubsidyBlocks, int nHighSubsidyFactor)
+    {
+        consensus.nMinimumDifficultyBlocks = nMinimumDifficultyBlocks;
+        consensus.nHighSubsidyBlocks = nHighSubsidyBlocks;
+        consensus.nHighSubsidyFactor = nHighSubsidyFactor;
+    }
+    void UpdateDevnetSubsidyAndDiffParametersFromArgs(const ArgsManager& args);
+
+    void UpdateDevnetLLMQChainLocks(Consensus::LLMQType llmqType)
+    {
+        consensus.llmqTypeChainLocks = llmqType;
+    }
+    void UpdateDevnetLLMQChainLocksFromArgs(const ArgsManager& args);
+
+    void UpdateDevnetLLMQInstantSend(Consensus::LLMQType llmqType)
+    {
+        consensus.llmqTypeInstantSend = llmqType;
+    }
+    void UpdateDevnetLLMQInstantSendFromArgs(const ArgsManager& args);
 };
 
 /**
@@ -949,8 +641,8 @@ public:
  */
 class CRegTestParams : public CChainParams {
 public:
-    CRegTestParams() {
-         strNetworkID = "regtest";
+    explicit CRegTestParams(const ArgsManager& args) {
+        strNetworkID = CBaseChainParams::REGTEST;
         consensus.nSubsidyHalvingInterval = 150;
         consensus.nSmartnodePaymentsStartBlock = 240;
         consensus.nSmartnodePaymentsIncreaseBlock = 350;
@@ -1014,6 +706,11 @@ public:
         pchMessageStart[3] = 0xdc;
         nDefaultPort = 19899;
         nPruneAfterHeight = 1000;
+        m_assumed_blockchain_size = 0;
+        m_assumed_chain_state_size = 0;
+
+        UpdateVersionBitsParametersFromArgs(args);
+        UpdateBudgetParametersFromArgs(args);
 
         genesis = CreateGenesisBlock(1614369600, 2, 0x207fffff, 4, 5000 * COIN);
         VerifyGenesisPOW(genesis);
@@ -1032,6 +729,7 @@ public:
         fAllowMultipleAddressesFromGroup = true;
         fAllowMultiplePorts = true;
         nLLMQConnectionRetryTimeout = 1; // must be lower then the LLMQ signing session timeout so that tests have control over failing behavior
+        m_is_mockable_chain = true;
 
         nFulfilledRequestExpireTime = 5*60; // fulfilled requests expire in 5 minutes
         nPoolMinParticipants = 2;
@@ -1074,17 +772,166 @@ public:
         nExtCoinType = 1;
 
         // long living quorum params
-        consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
-        consensus.llmqs[Consensus::LLMQ_400_60] = llmq400_60;
-        consensus.llmqs[Consensus::LLMQ_400_85] = llmq400_85;
-        consensus.llmqs[Consensus::LLMQ_100_67] = llmq100_67_testnet;
+		consensus.llmqs[Consensus::LLMQ_50_60] = Consensus::llmq50_60;
+        consensus.llmqs[Consensus::LLMQ_400_60] = Consensus::llmq400_60;
+        consensus.llmqs[Consensus::LLMQ_400_85] = Consensus::llmq400_85;
+        consensus.llmqs[Consensus::LLMQ_100_67] = Consensus::llmq100_67_testnet;
         consensus.llmqTypeChainLocks = Consensus::LLMQ_50_60;
         consensus.llmqTypeInstantSend = Consensus::LLMQ_50_60;
         consensus.llmqTypePlatform = Consensus::LLMQ_100_67;
     }
+
+    void UpdateVersionBitsParameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout, int64_t nWindowSize, int64_t nThresholdStart, int64_t nThresholdMin, int64_t nFalloffCoeff)
+    {
+        consensus.vDeployments[d].nStartTime = nStartTime;
+        consensus.vDeployments[d].nTimeout = nTimeout;
+        if (nWindowSize != -1) {
+            consensus.vDeployments[d].nWindowSize = nWindowSize;
+        }
+        if (nThresholdStart != -1) {
+            consensus.vDeployments[d].nThresholdStart = nThresholdStart;
+        }
+        if (nThresholdMin != -1) {
+            consensus.vDeployments[d].nThresholdMin = nThresholdMin;
+        }
+        if (nFalloffCoeff != -1) {
+            consensus.vDeployments[d].nFalloffCoeff = nFalloffCoeff;
+        }
+    }
+    void UpdateVersionBitsParametersFromArgs(const ArgsManager& args);
+
+    void UpdateBudgetParameters(int nSmartnodePaymentsStartBlock, int nBudgetPaymentsStartBlock, int nSuperblockStartBlock)
+    {
+        consensus.nSmartnodePaymentsStartBlock = nSmartnodePaymentsStartBlock;
+        consensus.nBudgetPaymentsStartBlock = nBudgetPaymentsStartBlock;
+        consensus.nSuperblockStartBlock = nSuperblockStartBlock;
+    }
+    void UpdateBudgetParametersFromArgs(const ArgsManager& args);
 };
 
-static std::unique_ptr<CChainParams> globalChainParams;
+void CRegTestParams::UpdateVersionBitsParametersFromArgs(const ArgsManager& args)
+{
+    if (!args.IsArgSet("-vbparams")) return;
+
+    for (const std::string& strDeployment : args.GetArgs("-vbparams")) {
+        std::vector<std::string> vDeploymentParams;
+        boost::split(vDeploymentParams, strDeployment, boost::is_any_of(":"));
+        if (vDeploymentParams.size() != 3 && vDeploymentParams.size() != 5 && vDeploymentParams.size() != 7) {
+            throw std::runtime_error("Version bits parameters malformed, expecting "
+                    "<deployment>:<start>:<end> or "
+                    "<deployment>:<start>:<end>:<window>:<threshold> or "
+                    "<deployment>:<start>:<end>:<window>:<thresholdstart>:<thresholdmin>:<falloffcoeff>");
+        }
+        int64_t nStartTime, nTimeout, nWindowSize = -1, nThresholdStart = -1, nThresholdMin = -1, nFalloffCoeff = -1;
+        if (!ParseInt64(vDeploymentParams[1], &nStartTime)) {
+            throw std::runtime_error(strprintf("Invalid nStartTime (%s)", vDeploymentParams[1]));
+        }
+        if (!ParseInt64(vDeploymentParams[2], &nTimeout)) {
+            throw std::runtime_error(strprintf("Invalid nTimeout (%s)", vDeploymentParams[2]));
+        }
+        if (vDeploymentParams.size() >= 5) {
+            if (!ParseInt64(vDeploymentParams[3], &nWindowSize)) {
+                throw std::runtime_error(strprintf("Invalid nWindowSize (%s)", vDeploymentParams[3]));
+            }
+            if (!ParseInt64(vDeploymentParams[4], &nThresholdStart)) {
+                throw std::runtime_error(strprintf("Invalid nThresholdStart (%s)", vDeploymentParams[4]));
+            }
+        }
+        if (vDeploymentParams.size() == 7) {
+            if (!ParseInt64(vDeploymentParams[5], &nThresholdMin)) {
+                throw std::runtime_error(strprintf("Invalid nThresholdMin (%s)", vDeploymentParams[5]));
+            }
+            if (!ParseInt64(vDeploymentParams[6], &nFalloffCoeff)) {
+                throw std::runtime_error(strprintf("Invalid nFalloffCoeff (%s)", vDeploymentParams[6]));
+            }
+        }
+        bool found = false;
+        for (int j = 0; j < (int)Consensus::MAX_VERSION_BITS_DEPLOYMENTS; ++j) {
+            if (vDeploymentParams[0] == VersionBitsDeploymentInfo[j].name) {
+                UpdateVersionBitsParameters(Consensus::DeploymentPos(j), nStartTime, nTimeout, nWindowSize, nThresholdStart, nThresholdMin, nFalloffCoeff);
+                found = true;
+                LogPrintf("Setting version bits activation parameters for %s to start=%ld, timeout=%ld, window=%ld, thresholdstart=%ld, thresholdmin=%ld, falloffcoeff=%ld\n",
+                          vDeploymentParams[0], nStartTime, nTimeout, nWindowSize, nThresholdStart, nThresholdMin, nFalloffCoeff);
+                break;
+            }
+        }
+        if (!found) {
+            throw std::runtime_error(strprintf("Invalid deployment (%s)", vDeploymentParams[0]));
+        }
+    }
+}
+
+void CRegTestParams::UpdateBudgetParametersFromArgs(const ArgsManager& args)
+{
+    if (!args.IsArgSet("-budgetparams")) return;
+
+    std::string strParams = args.GetArg("-budgetparams", "");
+    std::vector<std::string> vParams;
+    boost::split(vParams, strParams, boost::is_any_of(":"));
+    if (vParams.size() != 3) {
+        throw std::runtime_error("Budget parameters malformed, expecting <masternode>:<budget>:<superblock>");
+    }
+    int nSmartnodePaymentsStartBlock, nBudgetPaymentsStartBlock, nSuperblockStartBlock;
+    if (!ParseInt32(vParams[0], &nSmartnodePaymentsStartBlock)) {
+        throw std::runtime_error(strprintf("Invalid smartnode start height (%s)", vParams[0]));
+    }
+    if (!ParseInt32(vParams[1], &nBudgetPaymentsStartBlock)) {
+        throw std::runtime_error(strprintf("Invalid budget start block (%s)", vParams[1]));
+    }
+    if (!ParseInt32(vParams[2], &nSuperblockStartBlock)) {
+        throw std::runtime_error(strprintf("Invalid superblock start height (%s)", vParams[2]));
+    }
+    LogPrintf("Setting budget parameters to smartnode=%ld, budget=%ld, superblock=%ld\n", nSmartnodePaymentsStartBlock, nBudgetPaymentsStartBlock, nSuperblockStartBlock);
+    UpdateBudgetParameters(nSmartnodePaymentsStartBlock, nBudgetPaymentsStartBlock, nSuperblockStartBlock);
+}
+
+void CDevNetParams::UpdateDevnetSubsidyAndDiffParametersFromArgs(const ArgsManager& args)
+{
+    if (!args.IsArgSet("-minimumdifficultyblocks") && !args.IsArgSet("-highsubsidyblocks") && !args.IsArgSet("-highsubsidyfactor")) return;
+
+    int nMinimumDifficultyBlocks = gArgs.GetArg("-minimumdifficultyblocks", consensus.nMinimumDifficultyBlocks);
+    int nHighSubsidyBlocks = gArgs.GetArg("-highsubsidyblocks", consensus.nHighSubsidyBlocks);
+    int nHighSubsidyFactor = gArgs.GetArg("-highsubsidyfactor", consensus.nHighSubsidyFactor);
+    LogPrintf("Setting minimumdifficultyblocks=%ld, highsubsidyblocks=%ld, highsubsidyfactor=%ld\n", nMinimumDifficultyBlocks, nHighSubsidyBlocks, nHighSubsidyFactor);
+    UpdateDevnetSubsidyAndDiffParameters(nMinimumDifficultyBlocks, nHighSubsidyBlocks, nHighSubsidyFactor);
+}
+
+void CDevNetParams::UpdateDevnetLLMQChainLocksFromArgs(const ArgsManager& args)
+// void UpdateBudgetParameters(int nSmartnodePaymentsStartBlock, int nBudgetPaymentsStartBlock, int nSuperblockStartBlock)
+{
+    if (!args.IsArgSet("-llmqchainlocks")) return;
+
+    std::string strLLMQType = gArgs.GetArg("-llmqchainlocks", std::string(consensus.llmqs.at(consensus.llmqTypeChainLocks).name));
+    Consensus::LLMQType llmqType = Consensus::LLMQ_NONE;
+    for (const auto& p : consensus.llmqs) {
+        if (p.second.name == strLLMQType) {
+            llmqType = p.first;
+        }
+    }
+    if (llmqType == Consensus::LLMQ_NONE) {
+        throw std::runtime_error("Invalid LLMQ type specified for -llmqchainlocks.");
+    }
+    LogPrintf("Setting llmqchainlocks to size=%ld\n", llmqType);
+    UpdateDevnetLLMQChainLocks(llmqType);
+}
+
+void CDevNetParams::UpdateDevnetLLMQInstantSendFromArgs(const ArgsManager& args)
+{
+    if (!args.IsArgSet("-llmqinstantsend")) return;
+
+    std::string strLLMQType = gArgs.GetArg("-llmqinstantsend", std::string(consensus.llmqs.at(consensus.llmqTypeInstantSend).name));
+    Consensus::LLMQType llmqType = Consensus::LLMQ_NONE;
+    for (const auto& p : consensus.llmqs) {
+        if (p.second.name == strLLMQType) {
+            llmqType = p.first;
+        }
+    }
+    if (llmqType == Consensus::LLMQ_NONE) {
+        throw std::runtime_error("Invalid LLMQ type specified for -llmqinstantsend.");
+    }
+    LogPrintf("Setting llmqinstantsend to size=%ld\n", llmqType);
+    UpdateDevnetLLMQInstantSend(llmqType);
+}
 
 const CChainParams &Params() {
     assert(globalChainParams);
@@ -1094,13 +941,14 @@ const CChainParams &Params() {
 std::unique_ptr<CChainParams> CreateChainParams(const std::string& chain)
 {
     if (chain == CBaseChainParams::MAIN)
-        return std::unique_ptr<CChainParams>(new CMainParams());
+        return std::make_unique<CMainParams>();
     else if (chain == CBaseChainParams::TESTNET)
-        return std::unique_ptr<CChainParams>(new CTestNetParams());
+        return std::make_unique<CTestNetParams>();
     else if (chain == CBaseChainParams::DEVNET) {
-        return std::unique_ptr<CChainParams>(new CDevNetParams());
+        return std::make_unique<CDevNetParams>(gArgs);
     } else if (chain == CBaseChainParams::REGTEST)
-        return std::unique_ptr<CChainParams>(new CRegTestParams());
+        return std::make_unique<CRegTestParams>(gArgs);
+
     throw std::runtime_error(strprintf("%s: Unknown chain %s.", __func__, chain));
 }
 
@@ -1110,45 +958,10 @@ void SelectParams(const std::string& network)
     globalChainParams = CreateChainParams(network);
 }
 
-void UpdateVersionBitsParameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout, int64_t nWindowSize, int64_t nThresholdStart, int64_t nThresholdMin, int64_t nFalloffCoeff)
-{
-    globalChainParams->UpdateVersionBitsParameters(d, nStartTime, nTimeout, nWindowSize, nThresholdStart, nThresholdMin, nFalloffCoeff);
-}
-
-//void UpdateDIP3Parameters(int nActivationHeight, int nEnforcementHeight)
-//{
-//    globalChainParams->UpdateDIP3Parameters(nActivationHeight, nEnforcementHeight);
-//}
-
-void UpdateBIP66Parameters(bool active)
-{
-    globalChainParams->UpdateBIP66Parameters(active);
-}
-
-void UpdateBudgetParameters(int nSmartnodePaymentsStartBlock, int nBudgetPaymentsStartBlock, int nSuperblockStartBlock)
-{
-    globalChainParams->UpdateBudgetParameters(nSmartnodePaymentsStartBlock, nBudgetPaymentsStartBlock, nSuperblockStartBlock);
-}
-
-void UpdateDevnetSubsidyAndDiffParams(int nMinimumDifficultyBlocks, int nHighSubsidyBlocks, int nHighSubsidyFactor)
-{
-    globalChainParams->UpdateSubsidyAndDiffParams(nMinimumDifficultyBlocks, nHighSubsidyBlocks, nHighSubsidyFactor);
-}
-
-void UpdateDevnetLLMQChainLocks(Consensus::LLMQType llmqType)
-{
-    globalChainParams->UpdateLLMQChainLocks(llmqType);
-}
-
-void UpdateDevnetLLMQInstantSend(Consensus::LLMQType llmqType)
-{
-    globalChainParams->UpdateLLMQInstantSend(llmqType);
-}
-
 void UpdateLLMQParams(size_t totalMnCount, int height, bool lowLLMQParams) {
 	globalChainParams->UpdateLLMQParams(totalMnCount, height, lowLLMQParams);
 }
-bool IsMiningPhase(Consensus::LLMQParams params, int nHeight)
+bool IsMiningPhase(const Consensus::LLMQParams& params, int nHeight)
 {
     int phaseIndex = nHeight % params.dkgInterval;
     if (phaseIndex >= params.dkgMiningWindowStart && phaseIndex <= params.dkgMiningWindowEnd) {
@@ -1158,48 +971,46 @@ bool IsMiningPhase(Consensus::LLMQParams params, int nHeight)
 }
 
 bool IsLLMQsMiningPhase(int nHeight) {
-	for(auto& it : globalChainParams->GetConsensus().llmqs) {
-		if(IsMiningPhase(it.second, nHeight)) {
-			return true;
-		}
-	}
-	return false;
+    for (auto& it : globalChainParams->GetConsensus().llmqs) {
+        if (IsMiningPhase(it.second, nHeight)) {
+            return true;
+        }
+    }
+    return false;
 }
 
 void CChainParams::UpdateLLMQParams(size_t totalMnCount, int height, bool lowLLMQParams) {
-	bool isNotLLMQsMiningPhase;
-    if(lastCheckHeight < height &&
-    		(lastCheckMnCount != totalMnCount || lastCheckedLowLLMQParams != lowLLMQParams) &&
-			(isNotLLMQsMiningPhase = !IsLLMQsMiningPhase(height))) {
+    bool isNotLLMQsMiningPhase;
+    if(lastCheckHeight < height && (lastCheckMnCount != totalMnCount || lastCheckedLowLLMQParams != lowLLMQParams) && (isNotLLMQsMiningPhase = !IsLLMQsMiningPhase(height))) {
         LogPrintf("---UpdateLLMQParams %d-%d-%ld-%ld-%d\n", lastCheckHeight, height, lastCheckMnCount, totalMnCount, isNotLLMQsMiningPhase);
         lastCheckMnCount = totalMnCount;
 		lastCheckedLowLLMQParams = lowLLMQParams;
 		lastCheckHeight = height;
         bool isTestNet = strcmp(Params().NetworkIDString().c_str(),"test") == 0;
 		if(totalMnCount < 5) {
-			consensus.llmqs[Consensus::LLMQ_50_60] = llmq3_60;
+			consensus.llmqs[Consensus::LLMQ_50_60] = Consensus::llmq3_60;
 			if(isTestNet) {
-				consensus.llmqs[Consensus::LLMQ_400_60] = llmq5_60;
-				consensus.llmqs[Consensus::LLMQ_400_85] = llmq5_85;
+				consensus.llmqs[Consensus::LLMQ_400_60] = Consensus::llmq5_60;
+				consensus.llmqs[Consensus::LLMQ_400_85] = Consensus::llmq5_85;
 			} else {
-				consensus.llmqs[Consensus::LLMQ_400_60] = llmq20_60;
-				consensus.llmqs[Consensus::LLMQ_400_85] = llmq20_85;
+				consensus.llmqs[Consensus::LLMQ_400_60] = Consensus::llmq20_60;
+				consensus.llmqs[Consensus::LLMQ_400_85] = Consensus::llmq20_85;
 			}
 		} else if((totalMnCount < 80 && isTestNet) ||  (totalMnCount < 100 && !isTestNet)) {
-			consensus.llmqs[Consensus::LLMQ_50_60] = llmq10_60;
-			consensus.llmqs[Consensus::LLMQ_400_60] = llmq20_60;
-			consensus.llmqs[Consensus::LLMQ_400_85] = llmq20_85;
+			consensus.llmqs[Consensus::LLMQ_50_60] = Consensus::llmq10_60;
+			consensus.llmqs[Consensus::LLMQ_400_60] = Consensus::llmq20_60;
+			consensus.llmqs[Consensus::LLMQ_400_85] = Consensus::llmq20_85;
 		}  else if((totalMnCount < 4000 && isTestNet) || (totalMnCount < 600 && !isTestNet)) {
-			consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
-			consensus.llmqs[Consensus::LLMQ_400_60] = llmq40_60;
-			consensus.llmqs[Consensus::LLMQ_400_85] = llmq40_85;
+			consensus.llmqs[Consensus::LLMQ_50_60] = Consensus::llmq50_60;
+			consensus.llmqs[Consensus::LLMQ_400_60] = Consensus::llmq40_60;
+			consensus.llmqs[Consensus::LLMQ_400_85] = Consensus::llmq40_85;
 		} else {
-			consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
-			consensus.llmqs[Consensus::LLMQ_400_60] = llmq400_60;
-			consensus.llmqs[Consensus::LLMQ_400_85] = llmq400_85;
+			consensus.llmqs[Consensus::LLMQ_50_60] = Consensus::llmq50_60;
+			consensus.llmqs[Consensus::LLMQ_400_60] = Consensus::llmq400_60;
+			consensus.llmqs[Consensus::LLMQ_400_85] = Consensus::llmq400_85;
 		}
 		if(lowLLMQParams) {
-			consensus.llmqs[Consensus::LLMQ_50_60] = llmq200_2;
+			consensus.llmqs[Consensus::LLMQ_50_60] = Consensus::llmq200_2;
 		}
 	}
 

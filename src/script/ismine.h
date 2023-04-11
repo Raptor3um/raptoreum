@@ -28,7 +28,13 @@ enum isminetype
 /** used for bitflags of isminetype */
 typedef uint8_t isminefilter;
 
-isminetype IsMine(const CKeyStore& keystore, const CScript& scriptPubKey);
-isminetype IsMine(const CKeyStore& keystore, const CTxDestination& dest);
+/* isInvalid becomes true when the script is found invalid by consensus  or policy. This will terminate the recursion
+ * and return ISMINE_NO immediately as an invalid script should never be considered as "mine". This is needed as
+ * different SIGVERSION may have different network rules.
+ */
+isminetype IsMine(const CKeyStore& keystore, const CScript& scriptPubKey, bool& isInvalid, SigVersion = SigVersion::BASE);
+isminetype IsMine(const CKeyStore& keystore, const CScript& scriptPubKey, SigVersion = SigVersion::BASE);
+isminetype IsMine(const CKeyStore& keystore, const CTxDestination& dest, bool& isInvalid, SigVersion = SigVersion::BASE);
+isminetype IsMine(const CKeyStore& keystore, const CTxDestination& dest, SigVersion = SigVersion::BASE);
 
 #endif // BITCOIN_SCRIPT_ISMINE_H

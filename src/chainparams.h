@@ -8,6 +8,7 @@
 
 #include <chainparamsbase.h>
 #include <consensus/params.h>
+#include <llmq/quorums_parameters.h>
 #include <primitives/block.h>
 #include <protocol.h>
 #include <chain.h>
@@ -70,7 +71,13 @@ public:
     bool RequireStandard() const { return fRequireStandard; }
     /** Require addresses specified with "-externalip" parameter to be routable */
     bool RequireRoutableExternalIP() const { return fRequireRoutableExternalIP; }
+    /** If this chain allows time to be mocked */
+    bool IsMockableChain() const { return m_is_mockable_chain; }
     uint64_t PruneAfterHeight() const { return nPruneAfterHeight; }
+    /** Minimum free space (in GB) needed for data directory */
+    uint64_t AssumedBlockchainSize() const { return m_assumed_blockchain_size; }
+    /** Minimum free space (in GB) needed for data directory when pruned; Does not include prune targets */
+    uint64_t AssumedChainStateSize() const { return m_assumed_chain_state_size; }
     /** Make miner stop after a block is found. In RPC, don't return until nGenProcLimit blocks are generated */
     bool MineBlocksOnDemand() const { return fMineBlocksOnDemand; }
     /** Allow multiple addresses to be selected from the same network group (e.g. 192.168.x.x) */
@@ -89,18 +96,14 @@ public:
     const std::vector<SeedSpec6>& FixedSeeds() const { return vFixedSeeds; }
     const CCheckpointData& Checkpoints() const { return checkpointData; }
     const ChainTxData& TxData() const { return chainTxData; }
-    void UpdateVersionBitsParameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout, int64_t nWindowSize, int64_t nThresholdStart, int64_t nThresholdMin, int64_t nFalloffCoeff);
     void UpdateDIP3Parameters(int nActivationHeight, int nEnforcementHeight);
-    void UpdateBIP66Parameters(bool active);
     void UpdateBudgetParameters(int nSmartnodePaymentsStartBlock, int nBudgetPaymentsStartBlock, int nSuperblockStartBlock);
     void UpdateSubsidyAndDiffParams(int nMinimumDifficultyBlocks, int nHighSubsidyBlocks, int nHighSubsidyFactor);
     void UpdateLLMQChainLocks(Consensus::LLMQType llmqType);
     void UpdateLLMQInstantSend(Consensus::LLMQType llmqType);
     void UpdateLLMQParams(size_t totalMnCount, int height, bool lowLLMQParams = false);
     int PoolMinParticipants() const { return nPoolMinParticipants; }
-    int PoolNewMinParticipants() const { return nPoolNewMinParticipants; }
     int PoolMaxParticipants() const { return nPoolMaxParticipants; }
-    int PoolNewMaxParticipants() const { return nPoolNewMaxParticipants; }
     int FulfilledRequestExpireTime() const { return nFulfilledRequestExpireTime; }
     bool IsFutureActive(CBlockIndex *index) const {
         int height = index == nullptr ? 0 : index->nHeight;
@@ -109,6 +112,7 @@ public:
     const std::vector<std::string>& SporkAddresses() const { return vSporkAddresses; }
     int MinSporkKeys() const { return nMinSporkKeys; }
     bool BIP9CheckSmartnodesUpgraded() const { return fBIP9CheckSmartnodesUpgraded; }
+
 protected:
     CChainParams() {}
 
@@ -116,6 +120,8 @@ protected:
     CMessageHeader::MessageStartChars pchMessageStart;
     int nDefaultPort;
     uint64_t nPruneAfterHeight;
+    uint64_t m_assumed_blockchain_size;
+    uint64_t m_assumed_chain_state_size;
     std::vector<std::string> vSeeds;
     std::vector<unsigned char> base58Prefixes[MAX_BASE58_TYPES];
     int nExtCoinType;
@@ -129,6 +135,7 @@ protected:
     bool fMineBlocksOnDemand;
     bool fAllowMultipleAddressesFromGroup;
     bool fAllowMultiplePorts;
+    bool m_is_mockable_chain;
     bool miningRequiresPeers;
     int nLLMQConnectionRetryTimeout;
     CCheckpointData checkpointData;
@@ -141,7 +148,6 @@ protected:
     std::vector<std::string> vSporkAddresses;
     int nMinSporkKeys;
     bool fBIP9CheckSmartnodesUpgraded;
-
 };
 
 /**
@@ -162,37 +168,6 @@ const CChainParams &Params();
  * @throws std::runtime_error when the chain is not supported.
  */
 void SelectParams(const std::string& chain);
-
-/**
- * Allows modifying the Version Bits regtest parameters.
- */
-void UpdateVersionBitsParameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout, int64_t nWindowSize, int64_t nThresholdStart, int64_t nThresholdMin, int64_t nFalloffCoeff);
-
-/**
- * Allows modifying the DIP3 activation and enforcement height
- */
-void UpdateDIP3Parameters(int nActivationHeight, int nEnforcementHeight);
-
-/**
- * Allows modifying the BIP66 regtest parameters.
- */
-void UpdateBIP66Parameters(bool active);
-
-/**
- * Allows modifying the budget regtest parameters.
- */
-void UpdateBudgetParameters(int nSmartnodePaymentsStartBlock, int nBudgetPaymentsStartBlock, int nSuperblockStartBlock);
-
-/**
- * Allows modifying the subsidy and difficulty devnet parameters.
- */
-void UpdateDevnetSubsidyAndDiffParams(int nMinimumDifficultyBlocks, int nHighSubsidyBlocks, int nHighSubsidyFactor);
-
-/**
- * Allows modifying the LLMQ type for ChainLocks.
- */
-void UpdateDevnetLLMQChainLocks(Consensus::LLMQType llmqType);
-void UpdateDevnetLLMQInstantSend(Consensus::LLMQType llmqType);
 
 void UpdateLLMQParams(size_t totalMnCount, int height, bool lowLLMQParams = false);
 

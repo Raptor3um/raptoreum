@@ -6,7 +6,7 @@
 
 #include <base58.h>
 #include <test/test_raptoreum.h>
-#include <utilstrencodings.h>
+#include <util/strencodings.h>
 
 #include <univalue.h>
 

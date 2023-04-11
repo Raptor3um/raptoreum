@@ -9,9 +9,10 @@
 
 #include <validation.h>
 #include <coins.h>
+#include <policy/settings.h>
 #include <tinyformat.h>
-#include <util.h>
-#include <utilstrencodings.h>
+#include <util/system.h>
+#include <util/strencodings.h>
 
 
 CAmount GetDustThreshold(const CTxOut& txout, const CFeeRate& dustRelayFeeIn)
@@ -40,11 +41,11 @@ bool IsDust(const CTxOut& txout, const CFeeRate& dustRelayFeeIn)
 bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType)
 {
     std::vector<std::vector<unsigned char> > vSolutions;
-    if(!Solver(scriptPubKey, whichType, vSolutions))
-        return false;
+    whichType = Solver(scriptPubKey, vSolutions);
 
-    if(whichType == TX_MULTISIG)
-    {
+    if(whichType == TX_NONSTANDARD) {
+        return false;
+    } else if (whichType == TX_MULTISIG) {
         unsigned char m = vSolutions.front()[0];
         unsigned char n = vSolutions.back()[0];
         // Support up to x-of-3 multisig txns as standard
@@ -52,13 +53,14 @@ bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType)
             return false;
         if (m < 1 || m > n)
             return false;
-    } else if (whichType == TX_NULL_DATA && (!fAcceptDatacarrier || scriptPubKey.size() > nMaxDatacarrierBytes))
+    } else if (whichType == TX_NULL_DATA && (!fAcceptDatacarrier || scriptPubKey.size() > nMaxDatacarrierBytes)) {
         return false;
+    }
 
-    return whichType != TX_NONSTANDARD;
+    return true;
 }
 
-bool IsStandardTx(const CTransaction& tx, std::string& reason)
+bool IsStandardTx(const CTransaction& tx, bool permit_bare_multisig, const CFeeRate& dust_relay_fee, std::string& reason)
 {
     if (tx.nVersion > CTransaction::MAX_STANDARD_VERSION || tx.nVersion < 1) {
         reason = "version";
@@ -104,10 +106,10 @@ bool IsStandardTx(const CTransaction& tx, std::string& reason)
 
         if (whichType == TX_NULL_DATA)
             nDataOut++;
-        else if ((whichType == TX_MULTISIG) && (!fIsBareMultisigStd)) {
+        else if ((whichType == TX_MULTISIG) && (!permit_bare_multisig)) {
             reason = "bare-multisig";
             return false;
-        } else if (IsDust(txout, ::dustRelayFee)) {
+        } else if (IsDust(txout, dust_relay_fee)) {
             reason = "dust";
             return false;
         }
@@ -148,13 +150,10 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
         const CTxOut& prev = mapInputs.AccessCoin(tx.vin[i].prevout).out;
 
         std::vector<std::vector<unsigned char> > vSolutions;
-        txnouttype whichType;
-        const CScript& prevScript = prev.scriptPubKey;
-        if(!Solver(prevScript, whichType, vSolutions))
+        txnouttype whichType = Solver(prev.scriptPubKey, vSolutions);
+        if (whichType == TX_NONSTANDARD) {
             return false;
-
-        if(whichType == TX_SCRIPTHASH)
-        {
+        } else if(whichType == TX_SCRIPTHASH) {
             std::vector<std::vector<unsigned char> > stack;
             // convert the scriptSig into a stack, so we can inspect the redeemScript
             if (!EvalScript(stack, tx.vin[i].scriptSig, SCRIPT_VERIFY_NONE, BaseSignatureChecker(), SigVersion::BASE))
@@ -171,5 +170,12 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
     return true;
 }
 
-CFeeRate incrementalRelayFee = CFeeRate(DEFAULT_INCREMENTAL_RELAY_FEE);
-CFeeRate dustRelayFee = CFeeRate(DUST_RELAY_TX_FEE);
+int64_t GetVirtualTransactionSize(int64_t nSize, int64_t nSigOp, unsigned int bytes_per_sigop)
+{
+    return std::max(nSize, nSigOp * bytes_per_sigop);
+}
+
+int64_t GetVirtualTransactionSize(const CTransaction& tx, int64_t nSigOp, unsigned int bytes_per_sigop)
+{
+    return GetVirtualTransactionSize(tx.GetTotalSize(), nSigOp, bytes_per_sigop);
+}

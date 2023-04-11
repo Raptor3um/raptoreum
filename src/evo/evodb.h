@@ -33,12 +33,12 @@ public:
 class CEvoDB
 {
 public:
-    CCriticalSection cs;
+    Mutex cs;
 private:
     CDBWrapper db;
 
-    typedef CDBTransaction<CDBWrapper, CDBBatch> RootTransaction;
-    typedef CDBTransaction<RootTransaction, RootTransaction> CurTransaction;
+    using RootTransaction = CDBTransaction<CDBWrapper, CDBBatch>;
+    using CurTransaction = CDBTransaction<RootTransaction, RootTransaction>;
 
     CDBBatch rootBatch;
     RootTransaction rootDBTransaction;
@@ -47,41 +47,41 @@ private:
 public:
     explicit CEvoDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
 
-    std::unique_ptr<CEvoDBScopedCommitter> BeginTransaction()
+    std::unique_ptr<CEvoDBScopedCommitter> BeginTransaction() LOCKS_EXCLUDED(cs)
     {
         LOCK(cs);
         return std::make_unique<CEvoDBScopedCommitter>(*this);
     }
 
-    CurTransaction& GetCurTransaction()
+    CurTransaction& GetCurTransaction() EXCLUSIVE_LOCKS_REQUIRED(cs)
     {
         AssertLockHeld(cs); // lock must be held from outside as long as the DB transaction is used
         return curDBTransaction;
     }
 
     template <typename K, typename V>
-    bool Read(const K& key, V& value)
+    bool Read(const K& key, V& value) LOCKS_EXCLUDED(cs)
     {
         LOCK(cs);
         return curDBTransaction.Read(key, value);
     }
 
     template <typename K, typename V>
-    void Write(const K& key, const V& value)
+    void Write(const K& key, const V& value) LOCKS_EXCLUDED(cs)
     {
         LOCK(cs);
         curDBTransaction.Write(key, value);
     }
 
     template <typename K>
-    bool Exists(const K& key)
+    bool Exists(const K& key) LOCKS_EXCLUDED(cs)
     {
         LOCK(cs);
         return curDBTransaction.Exists(key);
     }
 
     template <typename K>
-    void Erase(const K& key)
+    void Erase(const K& key) LOCKS_EXCLUDED(cs)
     {
         LOCK(cs);
         curDBTransaction.Erase(key);
@@ -92,12 +92,12 @@ public:
         return db;
     }
 
-    size_t GetMemoryUsage()
+    [[nodiscard]] size_t GetMemoryUsage() const
     {
-        return rootDBTransaction.GetMemoryUsage();
+        return rootDBTransaction.GetMemoryUsage() * 20;
     }
 
-    bool CommitRootTransaction();
+    bool CommitRootTransaction() LOCKS_EXCLUDED(cs);
 
     bool IsEmpty() { return db.IsEmpty(); }
 
@@ -107,8 +107,8 @@ public:
 private:
     // only CEvoDBScopedCommitter is allowed to invoke these
     friend class CEvoDBScopedCommitter;
-    void CommitCurTransaction();
-    void RollbackCurTransaction();
+    void CommitCurTransaction() LOCKS_EXCLUDED(cs);
+    void RollbackCurTransaction() LOCKS_EXCLUDED(cs);
 };
 
 extern std::unique_ptr<CEvoDB> evoDb;

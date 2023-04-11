@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 # Copyright (c) 2012-2016 The Bitcoin Core developers
+# Copyright (c)     -2022 The Raptoreum developers
 # Distributed under the MIT software license, see the accompanying
-# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+# file COPYING or https://opensource.org/licenses/mit-license.php.
 '''
 Extract _("...") strings for translation and convert to Qt stringdefs so that
 they can be picked up by Qt linguist.
@@ -76,10 +77,7 @@ f.write("""
 #endif
 """)
 f.write('static const char UNUSED *raptoreum_strings[] = {\n')
-f.write('QT_TRANSLATE_NOOP("raptoreum-core", "%s"),\n' % (os.getenv('PACKAGE_NAME'),))
 f.write('QT_TRANSLATE_NOOP("raptoreum-core", "%s"),\n' % (os.getenv('COPYRIGHT_HOLDERS'),))
-if os.getenv('COPYRIGHT_HOLDERS_SUBSTITUTION') != os.getenv('PACKAGE_NAME'):
-    f.write('QT_TRANSLATE_NOOP("raptoreum-core", "%s"),\n' % (os.getenv('COPYRIGHT_HOLDERS_SUBSTITUTION'),))
 messages.sort(key=operator.itemgetter(0))
 for (msgid, msgstr) in messages:
     if msgid != EMPTY:

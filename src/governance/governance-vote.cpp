@@ -4,10 +4,14 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <governance/governance-vote.h>
+
+#include <bls/bls.h>
+#include <chainparams.h>
+#include <key.h>
 #include <governance/governance-object.h>
 #include <smartnode/smartnode-sync.h>
 #include <messagesigner.h>
-#include <util.h>
+#include <util/system.h>
 
 #include <evo/deterministicmns.h>
 

@@ -26,6 +26,7 @@ from .messages import (
     FromHex,
     hash256,
     msg_islock,
+    msg_isdlock,
     ser_compact_size,
     ser_string,
 )
@@ -145,6 +146,7 @@ class BitcoinTestFramework():
 
         config = configparser.ConfigParser()
         config.read_file(open(self.options.configfile))
+        self.config = config
         self.options.bitcoind = os.getenv("BITCOIND", default=config["environment"]["BUILDDIR"] + '/src/raptoreumd' + config["environment"]["EXEEXT"])
         self.options.bitcoincli = os.getenv("BITCOINCLI", default=config["environment"]["BUILDDIR"] + '/src/raptoreum-cli' + config["environment"]["EXEEXT"])
 
@@ -489,7 +491,7 @@ class BitcoinTestFramework():
 
             for i in range(MAX_NODES):
                 for entry in os.listdir(cache_path(i)):
-                    if entry not in ['wallets', 'chainstate', 'blocks', 'evodb', 'llmq', 'backups']:
+                    if entry not in ['wallets', 'chainstate', 'blocks', 'indexes', 'evodb', 'llmq', 'backups']:
                         os.remove(cache_path(i, entry))
 
         for i in range(self.num_nodes):
@@ -799,7 +801,7 @@ class RaptoreumTestFramework(BitcoinTestFramework):
         if wait_until(check_tx, timeout=timeout, sleep=0.5, do_assert=expected) and not expected:
             raise AssertionError("waiting unexpectedly succeeded")
 
-    def create_islock(self, hextx):
+    def create_islock(self, hextx, deterministic=False):
         tx = FromHex(CTransaction(), hextx)
         tx.rehash()
 
@@ -818,7 +820,14 @@ class RaptoreumTestFramework(BitcoinTestFramework):
                 quorum_member = mn
 
         rec_sig = self.get_recovered_sig(request_id, message_hash, node=quorum_member.node)
-        islock = msg_islock(inputs, tx.sha256, hex_str_to_bytes(rec_sig['sig']))
+
+        if deterministic:
+            block_count = quorum_member.node.getblockcount()
+            cycle_hash = int(quorum_member.node.getblockhash(block_count - (block_count % 24)), 16)
+            islock = msg_isdlock(1, inputs, tx.sha256, cycle_hash, hex_str_to_bytes(rec_sig['sig']))
+        else:
+            islock = msg_islock(inputs, tx.sha256, hex_str_to_bytes(rec_sig['sig']))
+
         return islock
 
     def wait_for_instantlock(self, txid, node, expected=True, timeout=15):

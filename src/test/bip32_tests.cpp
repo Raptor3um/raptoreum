@@ -7,8 +7,7 @@
 #include <key.h>
 #include <key_io.h>
 #include <uint256.h>
-#include <util.h>
-#include <utilstrencodings.h>
+#include <util/strencodings.h>
 #include <test/test_raptoreum.h>
 
 #include <string>
@@ -91,7 +90,7 @@ void RunTest(const TestVector &test) {
     std::vector<unsigned char> seed = ParseHex(test.strHexMaster);
     CExtKey key;
     CExtPubKey pubkey;
-    key.SetMaster(seed.data(), seed.size());
+    key.SetSeed(seed.data(), seed.size());
     pubkey = key.Neuter();
     for (const TestDerivation &derive : test.vDerive) {
         unsigned char data[74];

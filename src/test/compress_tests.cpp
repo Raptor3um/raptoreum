@@ -3,7 +3,6 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <compressor.h>
-#include <util.h>
 #include <test/test_raptoreum.h>
 
 #include <stdint.h>
@@ -25,16 +24,16 @@
 BOOST_FIXTURE_TEST_SUITE(compress_tests, BasicTestingSetup)
 
 bool static TestEncode(uint64_t in) {
-    return in == CTxOutCompressor::DecompressAmount(CTxOutCompressor::CompressAmount(in));
+    return in == DecompressAmount(CompressAmount(in));
 }
 
 bool static TestDecode(uint64_t in) {
-    return in == CTxOutCompressor::CompressAmount(CTxOutCompressor::DecompressAmount(in));
+    return in == CompressAmount(DecompressAmount(in));
 }
 
 bool static TestPair(uint64_t dec, uint64_t enc) {
-    return CTxOutCompressor::CompressAmount(dec) == enc &&
-           CTxOutCompressor::DecompressAmount(enc) == dec;
+    return CompressAmount(dec) == enc &&
+           DecompressAmount(enc) == dec;
 }
 
 BOOST_AUTO_TEST_CASE(compress_amounts)

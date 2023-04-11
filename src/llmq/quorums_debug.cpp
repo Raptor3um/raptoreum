@@ -20,19 +20,15 @@ UniValue CDKGDebugSessionStatus::ToJson(int detailLevel) const
 {
     UniValue ret(UniValue::VOBJ);
 
-    if (!Params().GetConsensus().llmqs.count((Consensus::LLMQType)llmqType) || quorumHash.IsNull()) {
+    if (!Params().GetConsensus().llmqs.count(llmqType) || quorumHash.IsNull()) {
         return ret;
     }
 
     std::vector<CDeterministicMNCPtr> dmnMembers;
     if (detailLevel == 2) {
-        const CBlockIndex* pindex = nullptr;
-        {
-            LOCK(cs_main);
-            pindex = LookupBlockIndex(quorumHash);
-        }
+        const CBlockIndex* pindex = WITH_LOCK(cs_main, return LookupBlockIndex(quorumHash));
         if (pindex != nullptr) {
-            dmnMembers = CLLMQUtils::GetAllQuorumMembers((Consensus::LLMQType) llmqType, pindex);
+            dmnMembers = CLLMQUtils::GetAllQuorumMembers(GetLLMQParams(llmqType), pindex);
         }
     }
 
@@ -76,7 +72,7 @@ UniValue CDKGDebugSessionStatus::ToJson(int detailLevel) const
             }
         }
     };
-    auto push = [&](ArrOrCount& v, const std::string& name) {
+    auto push = [&](const ArrOrCount& v, const std::string& name) {
         if (detailLevel == 0) {
             ret.pushKV(name, v.count);
         } else {
@@ -118,15 +114,14 @@ UniValue CDKGDebugStatus::ToJson(int detailLevel) const
     UniValue ret(UniValue::VOBJ);
 
     ret.pushKV("time", nTime);
-    ret.pushKV("timeStr", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", nTime));
+    ret.pushKV("timeStr", FormatISO8601DateTime(nTime));
 
     UniValue sessionsJson(UniValue::VOBJ);
     for (const auto& p : sessions) {
-        if (!Params().GetConsensus().llmqs.count((Consensus::LLMQType)p.first)) {
+        if (!Params().GetConsensus().llmqs.count(p.first)) {
             continue;
         }
-        const auto& params = Params().GetConsensus().llmqs.at((Consensus::LLMQType)p.first);
-        sessionsJson.pushKV(params.name, p.second.ToJson(detailLevel));
+        sessionsJson.pushKV(std::string(GetLLMQParams(p.first).name), p.second.ToJson(detailLevel));
     }
 
     ret.pushKV("session", sessionsJson);
@@ -134,7 +129,7 @@ UniValue CDKGDebugStatus::ToJson(int detailLevel) const
     return ret;
 }
 
-void CDKGDebugManager::GetLocalDebugStatus(llmq::CDKGDebugStatus& ret)
+void CDKGDebugManager::GetLocalDebugStatus(llmq::CDKGDebugStatus& ret) const
 {
     LOCK(cs);
     ret = localStatus;
@@ -153,24 +148,23 @@ void CDKGDebugManager::ResetLocalSessionStatus(Consensus::LLMQType llmqType)
     localStatus.nTime = GetAdjustedTime();
 }
 
-void CDKGDebugManager::InitLocalSessionStatus(Consensus::LLMQType llmqType, const uint256& quorumHash, int quorumHeight)
+void CDKGDebugManager::InitLocalSessionStatus(const Consensus::LLMQParams& llmqParams, const uint256& quorumHash, int quorumHeight)
 {
     LOCK(cs);
 
-    auto it = localStatus.sessions.find(llmqType);
+    auto it = localStatus.sessions.find(llmqParams.type);
     if (it == localStatus.sessions.end()) {
-        it = localStatus.sessions.emplace(llmqType, CDKGDebugSessionStatus()).first;
+        it = localStatus.sessions.emplace(llmqParams.type, CDKGDebugSessionStatus()).first;
     }
 
-    auto& params = Params().GetConsensus().llmqs.at(llmqType);
     auto& session = it->second;
-    session.llmqType = llmqType;
+    session.llmqType = llmqParams.type;
     session.quorumHash = quorumHash;
     session.quorumHeight = (uint32_t)quorumHeight;
     session.phase = 0;
     session.statusBitset = 0;
     session.members.clear();
-    session.members.resize((size_t)params.size);
+    session.members.resize((size_t)llmqParams.size);
 }
 
 void CDKGDebugManager::UpdateLocalSessionStatus(Consensus::LLMQType llmqType, std::function<bool(CDKGDebugSessionStatus& status)>&& func)

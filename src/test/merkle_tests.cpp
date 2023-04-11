@@ -13,9 +13,9 @@ static uint256 ComputeMerkleRootFromBranch(const uint256& leaf, const std::vecto
     uint256 hash = leaf;
     for (std::vector<uint256>::const_iterator it = vMerkleBranch.begin(); it != vMerkleBranch.end(); ++it) {
         if (nIndex & 1) {
-            hash = Hash(BEGIN(*it), END(*it), BEGIN(hash), END(hash));
+            hash = Hash(it->begin(), it->end(), hash.begin(), hash.end());
         } else {
-            hash = Hash(BEGIN(hash), END(hash), BEGIN(*it), END(*it));
+            hash = Hash(hash.begin(), hash.end(), it->begin(), it->end());
         }
         nIndex >>= 1;
     }
@@ -60,7 +60,7 @@ static void MerkleComputation(const std::vector<uint256>& leaves, uint256* proot
                 }
             }
             mutated |= (inner[level] == h);
-            CHash256().Write(inner[level].begin(), 32).Write(h.begin(), 32).Finalize(h.begin());
+            CHash256().Write(inner[level]).Write(h).Finalize(h);
         }
         // Store the resulting hash at inner position level.
         inner[level] = h;
@@ -86,7 +86,7 @@ static void MerkleComputation(const std::vector<uint256>& leaves, uint256* proot
         if (pbranch && matchh) {
             pbranch->push_back(h);
         }
-        CHash256().Write(h.begin(), 32).Write(h.begin(), 32).Finalize(h.begin());
+        CHash256().Write(h).Write(h).Finalize(h);
         // Increment count to the value it would have if two entries at this
         // level had existed.
         count += (((uint32_t)1) << level);
@@ -101,7 +101,7 @@ static void MerkleComputation(const std::vector<uint256>& leaves, uint256* proot
                     matchh = true;
                 }
             }
-            CHash256().Write(inner[level].begin(), 32).Write(h.begin(), 32).Finalize(h.begin());
+            CHash256().Write(inner[level]).Write(h).Finalize(h);
             level++;
         }
     }

@@ -100,7 +100,7 @@ extern "C" {
     cn_slow_hash(input, output, len, 1, CN_TURTLE_PAGE_SIZE, CN_TURTLE_ITERATIONS, CN_TURTLE_LITE_AES_ROUNDS);
   }
 
-} // extern
-} // namespace
+}
+}
 
 #endif

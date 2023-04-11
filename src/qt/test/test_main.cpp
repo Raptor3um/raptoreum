@@ -9,22 +9,23 @@
 #endif
 
 #include <chainparams.h>
+#include <interfaces/node.h>
+#include <qt/raptoreum.h>
+#include <qt/test/apptests.h>
 #include <qt/test/rpcnestedtests.h>
-#include <util.h>
+#include <util/system.h>
 #include <qt/test/uritests.h>
 #include <qt/test/compattests.h>
 #include <qt/test/trafficgraphdatatests.h>
+#include <test/test_raptoreum.h>
 
-#ifdef ENABLE_WALLET
-#include <qt/test/paymentservertests.h>
+#if defined(ENABLE_WALLET)
 #include <qt/test/wallettests.h>
 #endif
 
 #include <QApplication>
 #include <QObject>
 #include <QTest>
-
-#include <openssl/ssl.h>
 
 #if defined(QT_STATICPLUGIN)
 #include <QtPlugin>
@@ -37,6 +38,8 @@ Q_IMPORT_PLUGIN(QXcbIntegrationPlugin);
 Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin);
 #elif defined(QT_QPA_PLATFORM_COCOA)
 Q_IMPORT_PLUGIN(QCocoaIntegrationPlugin);
+#elif defined(QT_QPA_PLATFORM_ANDROID)
+Q_IMPORT_PLUGIN(QAndroidPlatformIntegrationPlugin)
 #endif
 #endif
 
@@ -45,14 +48,17 @@ extern void noui_connect();
 // This is all you need to run all the tests
 int main(int argc, char *argv[])
 {
-    SetupEnvironment();
-    SetupNetworking();
-    SelectParams(CBaseChainParams::MAIN);
-    noui_connect();
-    ClearDatadirCache();
-    fs::path pathTemp = fs::temp_directory_path() / strprintf("test_raptoreum-qt_%lu_%i", (unsigned long)GetTime(), (int)GetRand(100000));
-    fs::create_directories(pathTemp);
-    gArgs.ForceSetArg("-datadir", pathTemp.string());
+    // Initialize persistent globals with the testing setup state for sanity.
+    // E.g. -datadir in gArgs is set to a temp directory dummy value (instead
+    // of defaulting to the default datadir), or globalChainParams is set to
+    // regtest params.
+    //
+    // All tests must use their own testing setup (if needed).
+    {
+        BasicTestingSetup dummy{CBaseChainParams::REGTEST};
+    }
+
+    std::unique_ptr<interfaces::Node> node = interfaces::MakeNode();
 
     bool fInvalid = false;
 
@@ -67,38 +73,35 @@ int main(int argc, char *argv[])
 
     // Don't remove this, it's needed to access
     // QApplication:: and QCoreApplication:: in the tests
-    QApplication app(argc, argv);
-    app.setApplicationName("Raptoreum-Qt-test");
+    BitcoinApplication app(*node);
+    app.setApplicationName("RTM-Qt-test");
 
-    SSL_library_init();
-
+    AppTests app_tests(app);
+    if (QTest::qExec(&app_tests) != 0) {
+        fInvalid = true;
+    }
     URITests test1;
     if (QTest::qExec(&test1) != 0) {
         fInvalid = true;
     }
-#ifdef ENABLE_WALLET
-    PaymentServerTests test2;
+    RPCNestedTests test2(*node);
     if (QTest::qExec(&test2) != 0) {
         fInvalid = true;
     }
-#endif
-    RPCNestedTests test3;
+    CompatTests test3;
     if (QTest::qExec(&test3) != 0) {
         fInvalid = true;
     }
-    CompatTests test4;
+#if defined(ENABLE_WALLET)
+    WalletTests test4(*node);
     if (QTest::qExec(&test4) != 0) {
         fInvalid = true;
     }
-#ifdef ENABLE_WALLET
-    WalletTests test5;
-    if (QTest::qExec(&test5) != 0) {
+#endif
+    TrafficGraphDataTests test6;
+    if (QTest::qExec(&test6) != 0) {
         fInvalid = true;
     }
-#endif
 
-    TrafficGraphDataTests test6;
-    if (QTest::qExec(&test6) != 0)
-        fInvalid = true;
     return fInvalid;
 }

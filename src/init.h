@@ -8,25 +8,22 @@
 
 #include <memory>
 #include <string>
-#include <util.h>
+#include <util/system.h>
 
-class CScheduler;
-class CWallet;
-
-class WalletInitInterface;
-extern const WalletInitInterface& g_wallet_init_interface;
-
-namespace boost
-{
+struct NodeContext;
+namespace interfaces {
+struct BlockAndHeaderTipInfo;
+} // namespace interfaces
+namespace boost {
 class thread_group;
 } // namespace boost
+namespace util {
+class Ref;
+}
 
-void StartShutdown();
-void StartRestart();
-bool ShutdownRequested();
 /** Interrupt threads */
-void Interrupt();
-void Shutdown();
+void Interrupt(NodeContext& node);
+void Shutdown(NodeContext& node);
 //!Initialize the logging infrastructure
 void InitLogging();
 //!Parameter interaction: change current parameters depending on various rules
@@ -56,12 +53,16 @@ bool AppInitSanityChecks();
  */
 bool AppInitLockDataDirectory();
 /**
+ * Initialize node and wallet interface pointers. Has no prerequisites or side effects besides allocating memory.
+ */
+bool AppInitInterfaces(NodeContext& node);
+/**
  * Raptoreum Core main initialization.
  * @note This should only be done after daemonization. Call Shutdown() if this function fails.
  * @pre Parameters should be parsed and config file should be read, AppInitLockDataDirectory should have been called.
  */
-bool AppInitMain();
-void PrepareShutdown();
+bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info = nullptr);
+void PrepareShutdown(NodeContext& node);
 
 /**
  * Setup the arguments for gArgs

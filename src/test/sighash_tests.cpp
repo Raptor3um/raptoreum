@@ -2,7 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <consensus/tx_verify.h>
+#include <consensus/tx_check.h>
 #include <consensus/validation.h>
 #include <test/data/sighash.json.h>
 #include <hash.h>
@@ -11,8 +11,8 @@
 #include <serialize.h>
 #include <streams.h>
 #include <test/test_raptoreum.h>
-#include <util.h>
-#include <utilstrencodings.h>
+#include <util/system.h>
+#include <util/strencodings.h>
 #include <version.h>
 
 #include <iostream>
@@ -89,7 +89,7 @@ void static RandomScript(CScript &script) {
     script = CScript();
     int ops = (InsecureRandRange(10));
     for (int i=0; i<ops; i++)
-        script << oplist[InsecureRandRange(sizeof(oplist)/sizeof(oplist[0]))];
+        script << oplist[InsecureRandRange(std::size(oplist))];
 }
 
 void static RandomTransaction(CMutableTransaction &tx, bool fSingle) {
@@ -115,12 +115,10 @@ void static RandomTransaction(CMutableTransaction &tx, bool fSingle) {
     }
 }
 
-BOOST_FIXTURE_TEST_SUITE(sighash_tests, BasicTestingSetup)
+BOOST_FIXTURE_TEST_SUITE(sighash_tests, TestingSetup)
 
 BOOST_AUTO_TEST_CASE(sighash_test)
 {
-    SeedInsecureRand(false);
-
     #if defined(PRINT_SIGHASH_JSON)
     std::cout << "[\n";
     std::cout << "\t[\"raw_transaction, script, input_index, hashType, signature_hash (result)\"],\n";
@@ -137,14 +135,14 @@ BOOST_AUTO_TEST_CASE(sighash_test)
         int nIn = InsecureRandRange(txTo.vin.size());
 
         uint256 sh, sho;
-        sho = SignatureHashOld(scriptCode, txTo, nIn, nHashType);
+        sho = SignatureHashOld(scriptCode, CTransaction(txTo), nIn, nHashType);
         sh = SignatureHash(scriptCode, txTo, nIn, nHashType, 0, SigVersion::BASE);
         #if defined(PRINT_SIGHASH_JSON)
         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
         ss << txTo;
 
         std::cout << "\t[\"" ;
-        std::cout << HexStr(ss.begin(), ss.end()) << "\", \"";
+        std::cout << HexStr(ss) << "\", \"";
         std::cout << HexStr(scriptCode) << "\", ";
         std::cout << nIn << ", ";
         std::cout << nHashType << ", \"";

@@ -4,9 +4,9 @@ on:
     branches:
       - master
       - develop
-      - 'ft/*'
-      - 'bug/*'
-      - 'release/*'
+      - "ft/*"
+      - "bug/*"
+      - "release/*"
   pull_request:
     branches:
       - develop
@@ -33,7 +33,7 @@ jobs:
         uses: christian-draeger/read-properties@1.1.1
         with:
           path: build.properties
-          properties: 'release-version candidate-version snapshot-version'
+          properties: "release-version candidate-version snapshot-version"
 
       - name: Choose version
         id: selected-version
@@ -161,7 +161,7 @@ jobs:
 
   test-ubuntu20:
     name: Ubuntu 20 Tests
-    needs: [ get-version, build-ubuntu20 ]
+    needs: [get-version, build-ubuntu20]
     runs-on: ubuntu-20.04
 
     steps:
@@ -173,8 +173,8 @@ jobs:
       - name: Run Unit Tests
         id: Tests
         run: |
-           chmod +x test_raptoreum
-           ./test_raptoreum --log_format=JUNIT > unit_test_results.xml
+          chmod +x test_raptoreum
+          ./test_raptoreum --log_format=JUNIT > unit_test_results.xml
 
       - name: Upload Test Artifacts
         uses: actions/upload-artifact@v3
@@ -190,7 +190,7 @@ jobs:
           check_name: "Ubuntu 20"
           detailed_summary: ${{ steps.Tests.conclusion == 'failure'}}
           include_passed: false
-          report_paths: 'unit_test_results.xml'
+          report_paths: "unit_test_results.xml"
 
   build-ubuntu22:
     name: Ubuntu 22 Build
@@ -216,6 +216,8 @@ jobs:
         run: |
           ./autogen.sh
           ./configure --prefix=`pwd`/depends/x86_64-pc-linux-gnu
+        # TODO: @Jami - this line was from malbit, I think we may not need it but could you help confirm?
+        # CONFIG_SITE=$PWD/depends/x86_64-pc-linux-gnu/share/config.site ./configure
 
       - name: Build Binaries
         run: |
@@ -295,7 +297,7 @@ jobs:
 
   test-ubuntu22:
     name: Ubuntu 22 Tests
-    needs: [ get-version, build-ubuntu22 ]
+    needs: [get-version, build-ubuntu22]
     runs-on: ubuntu-22.04
 
     steps:
@@ -324,7 +326,7 @@ jobs:
           check_name: "Ubuntu 22"
           detailed_summary: ${{ steps.Tests.conclusion == 'failure'}}
           include_passed: false
-          report_paths: 'unit_test_results.xml'
+          report_paths: "unit_test_results.xml"
 
   build-macos:
     name: macOS 11 Build
@@ -408,10 +410,10 @@ jobs:
         run: |
           make deploy
           mkdir -p macos-dmg
-          mv Raptoreum-Qt.dmg macos-dmg/
+          mv Raptoreum-Core.dmg macos-dmg/
           cd macos-dmg
-          echo "sha256: `shasum Raptoreum-Qt.dmg`" >> checksums.txt
-          echo "openssl-sha256: `openssl sha256 Raptoreum-Qt.dmg`" >> checksums.txt
+          echo "sha256: `shasum Raptoreum-Core.dmg`" >> checksums.txt
+          echo "openssl-sha256: `openssl sha256 Raptoreum-Core.dmg`" >> checksums.txt
           cd ..
 
       - name: Upload dmg file
@@ -422,7 +424,7 @@ jobs:
 
   test-macos:
     name: macOS Tests
-    needs: [ get-version, build-macos ]
+    needs: [get-version, build-macos]
     runs-on: macos-11
 
     steps:
@@ -451,7 +453,7 @@ jobs:
           check_name: "macOS 11"
           detailed_summary: ${{ steps.Tests.conclusion == 'failure'}}
           include_passed: false
-          report_paths: 'unit_test_results.xml'
+          report_paths: "unit_test_results.xml"
 
   # build-arm-32:
   #   name: ARM 32-bit Build
@@ -507,7 +509,7 @@ jobs:
   #         echo "------------------------------------" >> checksums.txt
   #         sha256sum * >> checksums.txt
   #         cat checksums.txt
-  #         tar -cvzf ../${COIN_NAME}-arm32-${{ needs.get-version.outputs.version }}.tar.gz *          
+  #         tar -cvzf ../${COIN_NAME}-arm32-${{ needs.get-version.outputs.version }}.tar.gz *
   #         cd ../${BUILD_DIR}_debug
   #         echo "sha256:" >> checksums.txt
   #         echo "------------------------------------" >> checksums.txt
@@ -564,7 +566,7 @@ jobs:
   #         commands: |
   #           chmod +x test_raptoreum
   #           ./test_raptoreum --log_format=JUNIT > unit_test_results.xml
-  
+
   #     - name: Upload Test Artifacts
   #       uses: actions/upload-artifact@v3
   #       if: always()
@@ -660,7 +662,7 @@ jobs:
         with:
           name: ${{ env.COIN_NAME }}-arm64-${{ needs.get-version.outputs.version }}
           path: ${{ env.COMPRESS_DIR }}
-  
+
       - name: Upload Test Artifacts
         uses: actions/upload-artifact@v3
         with:
@@ -669,7 +671,7 @@ jobs:
 
   test-arm-64:
     name: ARM 64-bit Tests
-    needs: [ get-version, build-arm-64 ]
+    needs: [get-version, build-arm-64]
     runs-on: ubuntu-20.04
 
     steps:
@@ -688,8 +690,8 @@ jobs:
           copy_artifact_path: unit_test_results.xml
           copy_artifacts_on_fail: yes
           commands: |
-             chmod +x test_raptoreum
-             ./test_raptoreum --log_format=JUNIT > unit_test_results.xml
+            chmod +x test_raptoreum
+            ./test_raptoreum --log_format=JUNIT > unit_test_results.xml
 
       - name: Upload Test Artifacts
         uses: actions/upload-artifact@v3
@@ -705,7 +707,7 @@ jobs:
           check_name: "ARM 64-bit"
           detailed_summary: ${{ steps.Tests.conclusion == 'failure'}}
           include_passed: false
-          report_paths: 'unit_test_results.xml'
+          report_paths: "unit_test_results.xml"
 
   build-win64:
     name: Win64 Build
@@ -733,6 +735,7 @@ jobs:
         run: |
           ./autogen.sh
           ./configure --prefix=`pwd`/depends/x86_64-w64-mingw32
+        #  CONFIG_SITE=$PWD/depends/x86_64-w64-mingw32/share/config.site ./configure
 
       - name: Build Binaries
         run: |
@@ -806,7 +809,7 @@ jobs:
 
   test-win64:
     name: Win64 Tests
-    needs: [ get-version, build-win64 ]
+    needs: [get-version, build-win64]
     runs-on: windows-latest
 
     steps:
@@ -841,4 +844,4 @@ jobs:
           check_name: "Win64"
           detailed_summary: ${{ steps.Tests.conclusion == 'failure'}}
           include_passed: false
-          report_paths: 'unit_test_results.xml'
+          report_paths: "unit_test_results.xml"

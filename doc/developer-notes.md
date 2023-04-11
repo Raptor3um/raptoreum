@@ -7,8 +7,8 @@ Developer Notes
 - [Developer Notes](#developer-notes)
     - [Coding Style (General)](#coding-style-general)
     - [Coding Style (C++)](#coding-style-c)
-    - [Doxygen comments](#doxygen-comments)
     - [Coding Style (Python)](#coding-style-python)
+    - [Coding Style (Doxygen-compatible comments)](#coding-style-doxygen-compatible-comments)
     - [Development tips and tricks](#development-tips-and-tricks)
         - [Compiling for debugging](#compiling-for-debugging)
         - [Compiling for gprof profiling](#compiling-for-gprof-profiling)
@@ -119,10 +119,17 @@ public:
 } // namespace foo
 ```
 
-Doxygen comments
------------------
+Coding Style (Python)
+---------------------
 
-To facilitate the generation of documentation, use doxygen-compatible comment blocks for functions, methods and fields.
+Refer to [/test/functional/README.md#style-guidelines](/test/functional/README.md#style-guidelines).
+
+Coding Style (Doxygen-compatible comments)
+------------------------------------------
+
+The Raptoreum uses [Doxygen](https://www.doxygen.nl/) to generate its official documentation.
+
+Use Doxygen-compatible comment blocks for functions, methods and fields.
 
 For example, to describe a function use:
 ```c++
@@ -452,6 +459,10 @@ General C++
   `unique_ptr` for allocations in a function.
 
   - *Rationale*: This avoids memory and resource leaks, and ensures exception safety
+- Use `MakeUnique()` to construct objects owned by `unique_ptr`s
+
+  - *Rationale*: `MakeUnique` is concise and ensures exceoption safety in complex exopressions.
+    `MakeUnique` is a temporary project local implementation of `std::make_unique` (C++14).
 
 C++ data structures
 --------------------
@@ -728,8 +739,12 @@ Current subtrees include:
   - **Note**: Follow the instructions in [Upgrading LevelDB](#upgrading-leveldb) when
     merging upstream changes to the leveldb subtree.
 
-- src/libsecp256k1
-  - Upstream at https://github.com/bitcoin-core/secp256k1/ ; actively maintaned by Core contributors.
+- src/crc32c
+  - Used by leveldb for hardware acceleration of CRC32C checksums for data integrity.
+  - Upstream at https://github.com/google/crc32c ; Maintained by Google.
+
+- src/secp256k1
+  - Upstream at https://github.com/bitcoin-core/secp256k1/ ; actively maintained by Core contributors.
 
 - src/crypto/ctaes
   - Upstream at https://github.com/bitcoin-core/ctaes ; actively maintained by Core contributors.

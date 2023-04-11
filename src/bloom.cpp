@@ -18,6 +18,8 @@
 #include <math.h>
 #include <stdlib.h>
 
+#include <algorithm>
+
 
 #define LN2SQUARED 0.4804530139182014246671025263266649717305529515945455
 #define LN2 0.6931471805599453094172321214581765680755001343602552
@@ -39,17 +41,6 @@ CBloomFilter::CBloomFilter(const unsigned int nElements, const double nFPRate, c
     nHashFuncs(std::min((unsigned int)(vData.size() * 8 / nElements * LN2), MAX_HASH_FUNCS)),
     nTweak(nTweakIn),
     nFlags(nFlagsIn)
-{
-}
-
-// Private constructor used by CRollingBloomFilter
-CBloomFilter::CBloomFilter(const unsigned int nElements, const double nFPRate, const unsigned int nTweakIn) :
-    vData((unsigned int)(-1  / LN2SQUARED * nElements * log(nFPRate)) / 8),
-    isFull(false),
-    isEmpty(true),
-    nHashFuncs((unsigned int)(vData.size() * 8 / nElements * LN2)),
-    nTweak(nTweakIn),
-    nFlags(BLOOM_UPDATE_NONE)
 {
 }
 
@@ -260,10 +251,11 @@ bool CBloomFilter::IsRelevantAndUpdate(const CTransaction& tx)
                 insert(COutPoint(hash, i));
             else if ((nFlags & BLOOM_UPDATE_MASK) == BLOOM_UPDATE_P2PUBKEY_ONLY)
             {
-                txnouttype type;
                 std::vector<std::vector<unsigned char> > vSolutions;
-                if(Solver(txout.scriptPubKey, type, vSolutions) && (type == TX_PUBKEY || type == TX_MULTISIG))
+                txnouttype type = Solver(txout.scriptPubKey, vSolutions);
+                if (type == TX_PUBKEY || type == TX_MULTISIG) {
                     insert(COutPoint(hash, i));
+                }
             }
         }
     }
@@ -400,7 +392,5 @@ void CRollingBloomFilter::reset()
     nTweak = GetRand(std::numeric_limits<unsigned int>::max());
     nEntriesThisGeneration = 0;
     nGeneration = 1;
-    for (std::vector<uint64_t>::iterator it = data.begin(); it != data.end(); it++) {
-        *it = 0;
-    }
+    std::fill(data.begin(), data.end(), 0);
 }

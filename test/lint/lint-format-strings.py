@@ -16,6 +16,7 @@ FALSE_POSITIVES = [
     ("src/batchedlogger.h", "strprintf(fmt, args...)"),
     ("src/dbwrapper.cpp", "vsnprintf(p, limit - p, format, backup_ap)"),
     ("src/index/base.cpp", "FatalError(const char* fmt, const Args&... args)"),
+    ("src/index/txindex.cpp", "FatalError(const char* fmt, const Args&... args)"),
     ("src/netbase.cpp", "LogConnectFailure(bool manual_connection, const char* fmt, const Args&... args)"),
     ("src/qt/networkstyle.cpp", "strprintf(appName, gArgs.GetDevNetName())"),
     ("src/qt/networkstyle.cpp", "strprintf(titleAddText, gArgs.GetDevNetName())"),
@@ -23,8 +24,7 @@ FALSE_POSITIVES = [
     ("src/stacktraces.cpp", "strprintf(fmtStr, i, si.pc, lstr, fstr)"),
     ("src/statsd_client.cpp", "snprintf(d->errmsg, sizeof(d->errmsg), \"could not create socket, err=%m\")"),
     ("src/statsd_client.cpp", "snprintf(d->errmsg, sizeof(d->errmsg), \"sendto server fail, host=%s:%d, err=%m\", d->host.c_str(), d->port)"),
-    ("src/util.cpp", "strprintf(_(COPYRIGHT_HOLDERS), _(COPYRIGHT_HOLDERS_SUBSTITUTION))"),
-    ("src/util.cpp", "strprintf(COPYRIGHT_HOLDERS, COPYRIGHT_HOLDERS_SUBSTITUTION)"),
+    ("src/util/system.cpp", "strprintf(_(COPYRIGHT_HOLDERS), _(COPYRIGHT_HOLDERS_SUBSTITUTION))"),
     ("src/wallet/wallet.h",  "WalletLogPrintf(std::string fmt, Params... parameters)"),
     ("src/wallet/wallet.h", "LogPrintf((\"%s \" + fmt).c_str(), GetDisplayName(), parameters...)"),
 ]

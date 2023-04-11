@@ -55,10 +55,6 @@ private:
 
     unsigned int Hash(unsigned int nHashNum, const std::vector<unsigned char>& vDataToHash) const;
 
-    // Private constructor for CRollingBloomFilter, no restrictions on size
-    CBloomFilter(const unsigned int nElements, const double nFPRate, const unsigned int nTweak);
-    friend class CRollingBloomFilter;
-
     // Check matches for arbitrary script data elements
     bool CheckScript(const CScript& script) const;
     // Check additional matches for special transactions
@@ -76,15 +72,7 @@ public:
     CBloomFilter(const unsigned int nElements, const double nFPRate, const unsigned int nTweak, unsigned char nFlagsIn);
     CBloomFilter() : isFull(true), isEmpty(false), nHashFuncs(0), nTweak(0), nFlags(0) {}
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
-        READWRITE(vData);
-        READWRITE(nHashFuncs);
-        READWRITE(nTweak);
-        READWRITE(nFlags);
-    }
+    SERIALIZE_METHODS(CBloomFilter, obj) { READWRITE(obj.vData, obj.nHashFuncs, obj.nTweak, obj.nFlags); }
 
     void insert(const std::vector<unsigned char>& vKey);
     void insert(const COutPoint& outpoint);

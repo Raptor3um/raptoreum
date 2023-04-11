@@ -6,7 +6,6 @@
 #ifndef BITCOIN_WARNINGS_H
 #define BITCOIN_WARNINGS_H
 
-#include <stdlib.h>
 #include <string>
 
 void SetMiscWarning(const std::string& strWarning);
@@ -19,6 +18,6 @@ void SetfLargeWorkInvalidChainFound(bool flag);
  * - "gui": get all warnings, translated (where possible) for GUI, separated by <hr />
  * @returns the warning string selected by strFor
  */
-std::string GetWarnings(const std::string& strFor);
+std::string GetWarnings(bool verbose);
 
 #endif //  BITCOIN_WARNINGS_H

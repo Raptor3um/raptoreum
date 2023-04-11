@@ -5,23 +5,25 @@
 
 #include <coinjoin/coinjoin.h>
 
-#include <core_io.h>
+#include <bls/bls.h>
+#include <chain.h>
+#include <chainparams.h>
 #include <consensus/validation.h>
-#include <messagesigner.h>
-#include <netmessagemaker.h>
-#include <script/sign.h>
-#include <txmempool.h>
-#include <util.h>
-#include <utilmoneystr.h>
-#include <validation.h>
-
+#include <core_io.h>
+#include <llmq/quorums_chainlocks.h>
+#include <llmq/quorums_instantsend.h>
 #include <smartnode/activesmartnode.h>
 #include <smartnode/smartnode-sync.h>
-
-#include <llmq/quorums_instantsend.h>
-#include <llmq/quorums_chainlocks.h>
+#include <messagesigner.h>
+#include <netmessagemaker.h>
+#include <txmempool.h>
+#include <util/moneystr.h>
+#include <util/system.h>
+#include <validation.h>
 
 #include <string>
+
+constexpr static CAmount DEFAULT_MAX_RAW_TX_FEE{COIN / 10};
 
 bool CCoinJoinEntry::AddScriptSig(const CTxIn& txin)
 {
@@ -80,9 +82,9 @@ bool CCoinJoinQueue::Relay(CConnman& connman)
     return true;
 }
 
-bool CCoinJoinQueue::IsTimeOutOfBounds() const
+bool CCoinJoinQueue::IsTimeOutOfBounds(int64_t current_time) const
 {
-    return GetAdjustedTime() - nTime > COINJOIN_QUEUE_TIMEOUT || nTime - GetAdjustedTime() > COINJOIN_QUEUE_TIMEOUT;
+    return current_time - nTime > COINJOIN_QUEUE_TIMEOUT || nTime - current_time > COINJOIN_QUEUE_TIMEOUT;
 }
 
 uint256 CCoinJoinBroadcastTx::GetSignatureHash() const
@@ -123,33 +125,27 @@ bool CCoinJoinBroadcastTx::IsExpired(const CBlockIndex* pindex) const
     return llmq::chainLocksHandler->HasChainLock(pindex->nHeight, *pindex->phashBlock);
 }
 
-bool CCoinJoinBroadcastTx::IsValidStructure()
+bool CCoinJoinBroadcastTx::IsValidStructure() const
 {
     // some trivial checks only
     if (tx->vin.size() != tx->vout.size()) {
         return false;
     }
-    if (tx->vin.size() < CCoinJoin::GetMinPoolParticipants()) {
+    if (tx->vin.size() < size_t(CCoinJoin::GetMinPoolParticipants())) {
         return false;
     }
     if (tx->vin.size() > CCoinJoin::GetMaxPoolParticipants() * COINJOIN_ENTRY_MAX_SIZE) {
         return false;
     }
-    for (const auto& out : tx->vout) {
-        if (!CCoinJoin::IsDenominatedAmount(out.nValue)) {
-            return false;
-        }
-        if (!out.scriptPubKey.IsPayToPublicKeyHash()) {
-            return false;
-        }
-    }
-    return true;
+    return ranges::all_of(tx->vout, [](const auto& txOut){
+        return CCoinJoin::IsDenominatedAmount(txOut.nValue) && txOut.scriptPubKey.IsPayToPublicKeyHash();
+    });
 }
 
 void CCoinJoinBaseSession::SetNull()
 {
     // Both sides
-    LOCK(cs_coinjoin);
+    AssertLockHeld(cs_coinjoin);
     nState = POOL_STATE_IDLE;
     nSessionID = 0;
     nSessionDenom = 0;
@@ -173,8 +169,8 @@ void CCoinJoinBaseManager::CheckQueue()
     // check mixing queue objects for timeouts
     auto it = vecCoinJoinQueue.begin();
     while (it != vecCoinJoinQueue.end()) {
-        if ((*it).IsTimeOutOfBounds()) {
-            LogPrint(BCLog::COINJOIN, "CCoinJoinBaseManager::%s -- Removing a queue (%s)\n", __func__, (*it).ToString());
+        if (it->IsTimeOutOfBounds()) {
+            LogPrint(BCLog::COINJOIN, "CCoinJoinBaseManager::%s -- Removing a queue (%s)\n", __func__, it->ToString());
             it = vecCoinJoinQueue.erase(it);
         } else {
             ++it;
@@ -233,7 +229,7 @@ bool CCoinJoinBaseSession::IsValidInOuts(const std::vector<CTxIn>& vin, const st
         int nDenom = CCoinJoin::AmountToDenomination(txout.nValue);
         if (nDenom != nSessionDenom) {
             LogPrint(BCLog::COINJOIN, "CCoinJoinBaseSession::IsValidInOuts -- ERROR: incompatible denom %d (%s) != nSessionDenom %d (%s)\n",
-                    nDenom, CCoinJoin::DenominationToString(nDenom), nSessionDenom, CCoinJoin::DenominationToString(nSessionDenom));
+                     nDenom, CCoinJoin::DenominationToString(nDenom), nSessionDenom, CCoinJoin::DenominationToString(nSessionDenom));
             nMessageIDRet = ERR_DENOM;
             if (fConsumeCollateralRet) *fConsumeCollateralRet = true;
             return false;
@@ -264,7 +260,7 @@ bool CCoinJoinBaseSession::IsValidInOuts(const std::vector<CTxIn>& vin, const st
         nFees -= txout.nValue;
     }
 
-    CCoinsViewMemPool viewMemPool(pcoinsTip.get(), mempool);
+    CCoinsViewMemPool viewMemPool(WITH_LOCK(cs_main, return &::ChainstateActive().CoinsTip()), mempool);
 
     for (const auto& txin : vin) {
         LogPrint(BCLog::COINJOIN, "CCoinJoinBaseSession::%s -- txin=%s\n", __func__, txin.ToString());
@@ -303,31 +299,8 @@ bool CCoinJoinBaseSession::IsValidInOuts(const std::vector<CTxIn>& vin, const st
 }
 
 // Definitions for static data members
-std::vector<CAmount> CCoinJoin::vecStandardDenominations;
-std::map<uint256, CCoinJoinBroadcastTx> CCoinJoin::mapDSTX;
-CCriticalSection CCoinJoin::cs_mapdstx;
-
-void CCoinJoin::InitStandardDenominations()
-{
-    vecStandardDenominations.clear();
-    /* Denominations
-
-        A note about convertibility. Within mixing pools, each denomination
-        is convertible to another.
-
-        For example:
-        100RTM+1000 == (10RTM+100)*10
-        10RM+10000 == (1RTM+1000)*10
-    */
-    /* Disabled
-    vecStandardDenominations.push_back( (100      * COIN)+100000 );
-    */
-    vecStandardDenominations.push_back((10000 * COIN) + 10000);
-    vecStandardDenominations.push_back((1000 * COIN) + 1000);
-    vecStandardDenominations.push_back((100 * COIN) + 100);
-    vecStandardDenominations.push_back((10 * COIN) + 10);
-    vecStandardDenominations.push_back((1 * COIN) + 1);
-}
+Mutex CCoinJoin::cs_mapdstx;
+std::map<uint256, CCoinJoinBroadcastTx> CCoinJoin::mapDSTX GUARDED_BY(CCoinJoin::cs_mapdstx);
 
 // check to make sure the collateral provided by the client is valid
 bool CCoinJoin::IsCollateralValid(const CTransaction& txCollateral)
@@ -375,7 +348,7 @@ bool CCoinJoin::IsCollateralValid(const CTransaction& txCollateral)
     {
         LOCK(cs_main);
         CValidationState validationState;
-        if (!AcceptToMemoryPool(mempool, validationState, MakeTransactionRef(txCollateral), nullptr /* pfMissingInputs */, false /* bypass_limits */, maxTxFee /* nAbsurdFee */, true /* fDryRun */)) {
+        if (!AcceptToMemoryPool(mempool, validationState, MakeTransactionRef(txCollateral), /*pfMissingInputs=*/nullptr, /*bypass_limits=*/false, /*nAbsurdFee=*/DEFAULT_MAX_RAW_TX_FEE, /*fDryRun=*/true)) {
             LogPrint(BCLog::COINJOIN, "CCoinJoin::IsCollateralValid -- didn't pass AcceptToMemoryPool()\n");
             return false;
         }
@@ -384,66 +357,6 @@ bool CCoinJoin::IsCollateralValid(const CTransaction& txCollateral)
     return true;
 }
 
-bool CCoinJoin::IsCollateralAmount(CAmount nInputAmount)
-{
-    // collateral input can be anything between 1x and "max" (including both)
-    return (nInputAmount >= GetCollateralAmount() && nInputAmount <= GetMaxCollateralAmount());
-}
-
-/*
-    Return a bitshifted integer representing a denomination in vecStandardDenominations
-    or 0 if none was found
-*/
-int CCoinJoin::AmountToDenomination(CAmount nInputAmount)
-{
-    for (size_t i = 0; i < vecStandardDenominations.size(); ++i) {
-        if (nInputAmount == vecStandardDenominations[i]) {
-            return 1 << i;
-        }
-    }
-    return 0;
-}
-
-/*
-    Returns:
-    - one of standard denominations from vecStandardDenominations based on the provided bitshifted integer
-    - 0 for non-initialized sessions (nDenom = 0)
-    - a value below 0 if an error occured while converting from one to another
-*/
-CAmount CCoinJoin::DenominationToAmount(int nDenom)
-{
-    if (nDenom == 0) {
-        // not initialized
-        return 0;
-    }
-
-    size_t nMaxDenoms = vecStandardDenominations.size();
-
-    if (nDenom >= (1 << nMaxDenoms) || nDenom < 0) {
-        // out of bounds
-        return -1;
-    }
-
-    if ((nDenom & (nDenom - 1)) != 0) {
-        // non-denom
-        return -2;
-    }
-
-    CAmount nDenomAmount{-3};
-
-    for (size_t i = 0; i < nMaxDenoms; ++i) {
-        if (nDenom & (1 << i)) {
-            nDenomAmount = vecStandardDenominations[i];
-            break;
-        }
-    }
-
-    return nDenomAmount;
-}
-
-/*
-    Same as DenominationToAmount but returns a string representation
-*/
 std::string CCoinJoin::DenominationToString(int nDenom)
 {
     CAmount nDenomAmount = DenominationToAmount(nDenom);
@@ -456,18 +369,8 @@ std::string CCoinJoin::DenominationToString(int nDenom)
         default: return ValueFromAmount(nDenomAmount).getValStr();
     }
 
-    // shouldn't happen
+    // should not happen
     return "to-string-error";
-}
-
-bool CCoinJoin::IsDenominatedAmount(CAmount nInputAmount)
-{
-    return AmountToDenomination(nInputAmount) > 0;
-}
-
-bool CCoinJoin::IsValidDenomination(int nDenom)
-{
-    return DenominationToAmount(nDenom) > 0;
 }
 
 std::string CCoinJoin::GetMessageByID(PoolMessage nMessageID)
@@ -524,12 +427,14 @@ std::string CCoinJoin::GetMessageByID(PoolMessage nMessageID)
 
 void CCoinJoin::AddDSTX(const CCoinJoinBroadcastTx& dstx)
 {
+    AssertLockNotHeld(cs_mapdstx);
     LOCK(cs_mapdstx);
     mapDSTX.insert(std::make_pair(dstx.tx->GetHash(), dstx));
 }
 
 CCoinJoinBroadcastTx CCoinJoin::GetDSTX(const uint256& hash)
 {
+    AssertLockNotHeld(cs_mapdstx);
     LOCK(cs_mapdstx);
     auto it = mapDSTX.find(hash);
     return (it == mapDSTX.end()) ? CCoinJoinBroadcastTx() : it->second;
@@ -537,6 +442,7 @@ CCoinJoinBroadcastTx CCoinJoin::GetDSTX(const uint256& hash)
 
 void CCoinJoin::CheckDSTXes(const CBlockIndex* pindex)
 {
+    AssertLockNotHeld(cs_mapdstx);
     LOCK(cs_mapdstx);
     auto it = mapDSTX.begin();
     while (it != mapDSTX.end()) {
@@ -578,12 +484,14 @@ void CCoinJoin::UpdateDSTXConfirmedHeight(const CTransactionRef& tx, int nHeight
 
 void CCoinJoin::TransactionAddedToMempool(const CTransactionRef& tx)
 {
+    AssertLockNotHeld(cs_mapdstx);
     LOCK(cs_mapdstx);
     UpdateDSTXConfirmedHeight(tx, -1);
 }
 
 void CCoinJoin::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex, const std::vector<CTransactionRef>& vtxConflicted)
 {
+    AssertLockNotHeld(cs_mapdstx);
     LOCK(cs_mapdstx);
     for (const auto& tx : vtxConflicted) {
         UpdateDSTXConfirmedHeight(tx, -1);
@@ -594,10 +502,14 @@ void CCoinJoin::BlockConnected(const std::shared_ptr<const CBlock>& pblock, cons
     }
 }
 
-void CCoinJoin::BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexDisconnected)
+void CCoinJoin::BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex*)
 {
+    AssertLockNotHeld(cs_mapdstx);
     LOCK(cs_mapdstx);
     for (const auto& tx : pblock->vtx) {
         UpdateDSTXConfirmedHeight(tx, -1);
     }
 }
+
+int CCoinJoin::GetMinPoolParticipants() { return Params().PoolMinParticipants(); }
+int CCoinJoin::GetMaxPoolParticipants() { return Params().PoolMaxParticipants(); }

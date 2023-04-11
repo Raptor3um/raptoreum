@@ -6,14 +6,13 @@
 
 #include <chainparams.h>
 #include <httpserver.h>
-#include <key_io.h>
 #include <rpc/protocol.h>
 #include <rpc/server.h>
 #include <random.h>
-#include <sync.h>
-#include <util.h>
-#include <utilstrencodings.h>
+#include <util/system.h>
+#include <util/strencodings.h>
 #include <ui_interface.h>
+#include <walletinitinterface.h>
 #include <crypto/hmac_sha256.h>
 #include <stdio.h>
 
@@ -30,7 +29,7 @@ static const char* WWW_AUTH_HEADER_DATA = "Basic realm=\"jsonrpc\"";
 class HTTPRPCTimer : public RPCTimerBase
 {
 public:
-    HTTPRPCTimer(struct event_base* eventBase, std::function<void(void)>& func, int64_t millis) :
+    HTTPRPCTimer(struct event_base* eventBase, std::function<void()>& func, int64_t millis) :
         ev(eventBase, false, func)
     {
         struct timeval tv;
@@ -52,7 +51,7 @@ public:
     {
         return "HTTP";
     }
-    RPCTimerBase* NewTimer(std::function<void(void)>& func, int64_t millis) override
+    RPCTimerBase* NewTimer(std::function<void()>& func, int64_t millis) override
     {
         return new HTTPRPCTimer(base, func, millis);
     }
@@ -147,7 +146,7 @@ static bool RPCAuthorized(const std::string& strAuth, std::string& strAuthUserna
     return multiUserAuthorized(strUserPass);
 }
 
-static bool HTTPReq_JSONRPC(HTTPRequest* req, const std::string &)
+static bool HTTPReq_JSONRPC(const util::Ref& context, HTTPRequest* req)
 {
     // JSONRPC handles only POST
     if (req->GetRequestMethod() != HTTPRequest::POST) {
@@ -162,7 +161,7 @@ static bool HTTPReq_JSONRPC(HTTPRequest* req, const std::string &)
         return false;
     }
 
-    JSONRPCRequest jreq;
+    JSONRPCRequest jreq(context);
     jreq.peerAddr = req->GetPeer().ToString();
     if (!RPCAuthorized(authHeader.second, jreq.authUser)) {
         LogPrintf("ThreadRPCServer incorrect password attempt from %s\n", jreq.peerAddr);
@@ -170,7 +169,7 @@ static bool HTTPReq_JSONRPC(HTTPRequest* req, const std::string &)
         /* Deter brute-forcing
            If this results in a DoS the user really
            shouldn't have their RPC port exposed. */
-        MilliSleep(250);
+        UninterruptibleSleep(std::chrono::milliseconds{250});
 
         req->WriteHeader("WWW-Authenticate", WWW_AUTH_HEADER_DATA);
         req->WriteReply(HTTP_UNAUTHORIZED);
@@ -236,17 +235,17 @@ static bool InitRPCAuthentication()
     return true;
 }
 
-bool StartHTTPRPC()
+bool StartHTTPRPC(const util::Ref& context)
 {
     LogPrint(BCLog::RPC, "Starting HTTP RPC server\n");
     if (!InitRPCAuthentication())
         return false;
 
-    RegisterHTTPHandler("/", true, HTTPReq_JSONRPC);
-#ifdef ENABLE_WALLET
-    // ifdef can be removed once we switch to better endpoint support and API versioning
-    RegisterHTTPHandler("/wallet/", false, HTTPReq_JSONRPC);
-#endif
+    auto handle_rpc = [&context](HTTPRequest* req, const std::string&) { return HTTPReq_JSONRPC(context, req); };
+    RegisterHTTPHandler("/", true, handle_rpc);
+    if (g_wallet_init_interface.HasWalletSupport()) {
+        RegisterHTTPHandler("/wallet/", false, handle_rpc);
+    }
     assert(EventBase());
     httpRPCTimerInterface = MakeUnique<HTTPRPCTimerInterface>(EventBase());
     RPCSetTimerInterface(httpRPCTimerInterface.get());
@@ -262,9 +261,9 @@ void StopHTTPRPC()
 {
     LogPrint(BCLog::RPC, "Stopping HTTP RPC server\n");
     UnregisterHTTPHandler("/", true);
-#ifdef ENABLE_WALLET
-    UnregisterHTTPHandler("/wallet/", false);
-#endif
+    if (g_wallet_init_interface.HasWalletSupport()) {
+        UnregisterHTTPHandler("/wallet/", false);
+    }
     if (httpRPCTimerInterface) {
         RPCUnsetTimerInterface(httpRPCTimerInterface.get());
         httpRPCTimerInterface.reset();

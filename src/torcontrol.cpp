@@ -4,10 +4,11 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <torcontrol.h>
-#include <utilstrencodings.h>
+#include <util/strencodings.h>
 #include <netbase.h>
 #include <net.h>
-#include <util.h>
+#include <util/system.h>
+#include <util/time.h>
 #include <crypto/hmac_sha256.h>
 
 #include <vector>
@@ -92,7 +93,7 @@ public:
     /**
      * Disconnect from Tor control port.
      */
-    bool Disconnect();
+    void Disconnect();
 
     /** Send a command, register a handler for the reply.
      * A trailing CRLF is automatically added.
@@ -224,12 +225,11 @@ bool TorControlConnection::Connect(const std::string &target, const ConnectionCB
     return true;
 }
 
-bool TorControlConnection::Disconnect()
+void TorControlConnection::Disconnect()
 {
     if (b_conn)
         bufferevent_free(b_conn);
     b_conn = nullptr;
-    return true;
 }
 
 bool TorControlConnection::Command(const std::string &cmd, const ReplyHandlerCB& reply_handler)
@@ -762,7 +762,9 @@ void InterruptTorControl()
 {
     if (gBase) {
         LogPrintf("tor: Thread interrupt\n");
-        event_base_loopbreak(gBase);
+        event_base_once(gBase, -1, EV_TIMEOUT, [](evutil_socket_t, short, void*) {
+            event_base_loopbreak(gBase);
+        }, nullptr, nullptr);
     }
 }
 

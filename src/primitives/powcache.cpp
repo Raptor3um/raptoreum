@@ -7,9 +7,9 @@
 #include <flat-database.h>
 #include <hash.h>
 #include <sync.h>
-#include <util.h>
+#include <util/system.h>
 
-CCriticalSection cs_pow;
+RecursiveMutex cs_pow;
 
 CPowCache* CPowCache::instance = nullptr;
 
@@ -39,11 +39,12 @@ void CPowCache::DoMaintenance()
     }
 }
 
-CPowCache::CPowCache(int maxSize, bool validate, int maxLoadSize) : unordered_lru_cache<uint256, uint256, std::hash<uint256>>(maxSize),
-   nVersion(CURRENT_VERSION),
-   nLoadedSize(0),
-   bValidate(validate),
-   nMaxLoadSize(maxLoadSize)
+CPowCache::CPowCache(int maxSize, bool validate, int maxLoadSize)
+    : unordered_lru_cache<uint256, uint256, std::hash<uint256>>(maxSize)
+    , nVersion(CURRENT_VERSION)
+    , nLoadedSize(0)
+    , bValidate(validate)
+    , nMaxLoadSize(maxLoadSize)
 {
     if (bValidate) LogPrintf("PowCache: Validation and auto correction enabled\n");
 }

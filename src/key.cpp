@@ -13,6 +13,10 @@
 #include <secp256k1.h>
 #include <secp256k1_recovery.h>
 
+// REMOVE THIS
+#include <iostream>
+using namespace std;
+
 static secp256k1_context* secp256k1_context_sign = nullptr;
 
 /** These functions are taken from the libsecp256k1 distribution and are very ugly. */
@@ -84,13 +88,13 @@ static int ec_privkey_import_der(const secp256k1_context* ctx, unsigned char *ou
  * <http://www.secg.org/sec1-v2.pdf>. The optional parameters and publicKey fields are
  * included.
  *
- * privkey must point to an output buffer of length at least CKey::PRIVATE_KEY_SIZE bytes.
+ * privkey must point to an output buffer of length at least CKey::SIZE bytes.
  * privkeylen must initially be set to the size of the privkey buffer. Upon return it
  * will be set to the number of bytes used in the buffer.
  * key32 must point to a 32-byte raw private key.
  */
-static int ec_privkey_export_der(const secp256k1_context *ctx, unsigned char *privkey, size_t *privkeylen, const unsigned char *key32, int compressed) {
-    assert(*privkeylen >= CKey::PRIVATE_KEY_SIZE);
+static int ec_privkey_export_der(const secp256k1_context *ctx, unsigned char *privkey, size_t *privkeylen, const unsigned char *key32, bool compressed) {
+    assert(*privkeylen >= CKey::SIZE);
     secp256k1_pubkey pubkey;
     size_t pubkeylen = 0;
     if (!secp256k1_ec_pubkey_create(ctx, &pubkey, key32)) {
@@ -116,11 +120,11 @@ static int ec_privkey_export_der(const secp256k1_context *ctx, unsigned char *pr
         memcpy(ptr, begin, sizeof(begin)); ptr += sizeof(begin);
         memcpy(ptr, key32, 32); ptr += 32;
         memcpy(ptr, middle, sizeof(middle)); ptr += sizeof(middle);
-        pubkeylen = CPubKey::COMPRESSED_PUBLIC_KEY_SIZE;
+        pubkeylen = CPubKey::COMPRESSED_SIZE;
         secp256k1_ec_pubkey_serialize(ctx, ptr, &pubkeylen, &pubkey, SECP256K1_EC_COMPRESSED);
         ptr += pubkeylen;
         *privkeylen = ptr - privkey;
-        assert(*privkeylen == CKey::COMPRESSED_PRIVATE_KEY_SIZE);
+        assert(*privkeylen == CKey::COMPRESSED_SIZE);
     } else {
         static const unsigned char begin[] = {
             0x30,0x82,0x01,0x13,0x02,0x01,0x01,0x04,0x20
@@ -142,11 +146,11 @@ static int ec_privkey_export_der(const secp256k1_context *ctx, unsigned char *pr
         memcpy(ptr, begin, sizeof(begin)); ptr += sizeof(begin);
         memcpy(ptr, key32, 32); ptr += 32;
         memcpy(ptr, middle, sizeof(middle)); ptr += sizeof(middle);
-        pubkeylen = CPubKey::PUBLIC_KEY_SIZE;
+        pubkeylen = CPubKey::SIZE;
         secp256k1_ec_pubkey_serialize(ctx, ptr, &pubkeylen, &pubkey, SECP256K1_EC_UNCOMPRESSED);
         ptr += pubkeylen;
         *privkeylen = ptr - privkey;
-        assert(*privkeylen == CKey::PRIVATE_KEY_SIZE);
+        assert(*privkeylen == CKey::SIZE);
     }
     return 1;
 }
@@ -168,9 +172,9 @@ CPrivKey CKey::GetPrivKey() const {
     CPrivKey privkey;
     int ret;
     size_t privkeylen;
-    privkey.resize(PRIVATE_KEY_SIZE);
-    privkeylen = PRIVATE_KEY_SIZE;
-    ret = ec_privkey_export_der(secp256k1_context_sign, privkey.data(), &privkeylen, begin(), fCompressed ? SECP256K1_EC_COMPRESSED : SECP256K1_EC_UNCOMPRESSED);
+    privkey.resize(SIZE);
+    privkeylen = SIZE;
+    ret = ec_privkey_export_der(secp256k1_context_sign, privkey.data(), &privkeylen, begin(), fCompressed);
     assert(ret);
     privkey.resize(privkeylen);
     return privkey;
@@ -179,7 +183,7 @@ CPrivKey CKey::GetPrivKey() const {
 CPubKey CKey::GetPubKey() const {
     assert(fValid);
     secp256k1_pubkey pubkey;
-    size_t clen = CPubKey::PUBLIC_KEY_SIZE;
+    size_t clen = CPubKey::SIZE;
     CPubKey result;
     int ret = secp256k1_ec_pubkey_create(secp256k1_context_sign, &pubkey, begin());
     assert(ret);
@@ -212,7 +216,7 @@ bool CKey::VerifyPubKey(const CPubKey& pubkey) const {
     std::string str = "Bitcoin key verification\n";
     GetRandBytes(rnd, sizeof(rnd));
     uint256 hash;
-    CHash256().Write((unsigned char*)str.data(), str.size()).Write(rnd, sizeof(rnd)).Finalize(hash.begin());
+    CHash256().Write(MakeUCharSpan(str)).Write(rnd).Finalize(hash);
     std::vector<unsigned char> vchSig;
     Sign(hash, vchSig);
     return pubkey.Verify(hash, vchSig);
@@ -251,7 +255,7 @@ bool CKey::Derive(CKey& keyChild, ChainCode &ccChild, unsigned int nChild, const
     std::vector<unsigned char, secure_allocator<unsigned char>> vout(64);
     if ((nChild >> 31) == 0) {
         CPubKey pubkey = GetPubKey();
-        assert(pubkey.size() == CPubKey::COMPRESSED_PUBLIC_KEY_SIZE);
+        assert(pubkey.size() == CPubKey::COMPRESSED_SIZE);
         BIP32Hash(cc, nChild, *pubkey.begin(), pubkey.begin()+1, vout.data());
     } else {
         assert(size() == 32);
@@ -273,7 +277,7 @@ bool CExtKey::Derive(CExtKey &out, unsigned int _nChild) const {
     return key.Derive(out.key, out.chaincode, _nChild, chaincode);
 }
 
-void CExtKey::SetMaster(const unsigned char *seed, unsigned int nSeedLen) {
+void CExtKey::SetSeed(const unsigned char *seed, unsigned int nSeedLen) {
     static const unsigned char hashkey[] = {'B','i','t','c','o','i','n',' ','s','e','e','d'};
     std::vector<unsigned char, secure_allocator<unsigned char>> vout(64);
     CHMAC_SHA512(hashkey, sizeof(hashkey)).Write(seed, nSeedLen).Finalize(vout.data());
@@ -297,8 +301,7 @@ CExtPubKey CExtKey::Neuter() const {
 void CExtKey::Encode(unsigned char code[BIP32_EXTKEY_SIZE]) const {
     code[0] = nDepth;
     memcpy(code+1, vchFingerprint, 4);
-    code[5] = (nChild >> 24) & 0xFF; code[6] = (nChild >> 16) & 0xFF;
-    code[7] = (nChild >>  8) & 0xFF; code[8] = (nChild >>  0) & 0xFF;
+    WriteBE32(code+5, nChild);
     memcpy(code+9, chaincode.begin(), 32);
     code[41] = 0;
     assert(key.size() == 32);
@@ -308,7 +311,7 @@ void CExtKey::Encode(unsigned char code[BIP32_EXTKEY_SIZE]) const {
 void CExtKey::Decode(const unsigned char code[BIP32_EXTKEY_SIZE]) {
     nDepth = code[0];
     memcpy(vchFingerprint, code+1, 4);
-    nChild = (code[5] << 24) | (code[6] << 16) | (code[7] << 8) | code[8];
+    nChild = ReadBE32(code+5);
     memcpy(chaincode.begin(), code+9, 32);
     key.Set(code+42, code+BIP32_EXTKEY_SIZE, true);
 }
