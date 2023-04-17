@@ -17,8 +17,7 @@
 #include <bls/bls.h>
 
 // Keep track of the active Smartnode
-// RecursiveMutex activeSmartnodeInfoCs;
-CCriticalSection activeSmartnodeInfoCs;
+RecursiveMutex activeSmartnodeInfoCs;
 CActiveSmartnodeInfo activeSmartnodeInfo GUARDED_BY(activeSmartnodeInfoCs);
 CActiveSmartnodeManager* activeSmartnodeManager;
 
