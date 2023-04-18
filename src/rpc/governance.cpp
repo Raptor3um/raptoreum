@@ -483,10 +483,7 @@ static UniValue gobject_vote_conf(const JSONRPCRequest& request)
     if (govObjType == GOVERNANCE_OBJECT_PROPOSAL && eVoteSignal == VOTE_SIGNAL_FUNDING) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Can't use vote-conf for proposals");
     }
-<<<<<<< HEAD
 
-=======
->>>>>>> cca50d9d129c359e61c71c5ca24e722e87f50bbc
     {
         LOCK(activeSmartnodeInfoCs);
         if (activeSmartnodeInfo.blsKeyOperator) {
