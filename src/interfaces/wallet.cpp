@@ -442,7 +442,7 @@ public:
         return balances;
     }
 
-    bool tryGetBalances(WalletBalances& balances, int& num_blocks) override
+    bool tryGetBalances(WalletBalances& balances) override
     {
         TRY_LOCK(cs_main, locked_chain);
         if (!locked_chain) return false;
@@ -451,7 +451,6 @@ public:
             return false;
         }
         balances = getBalances();
-        num_blocks = ::chainActive.Height();
         return true;
     }
     CAmount getBalance() override
