@@ -10,6 +10,8 @@ on:
   pull_request:
     branches:
       - develop
+  workflow_dispatch:
+
 env:
   COIN_NAME: raptoreum
   BUILD_DIR: raptoreum-build
@@ -114,7 +116,7 @@ jobs:
           echo "------------------------------------" >> checksums.txt
           sha256sum * >> checksums.txt
           cat checksums.txt
-          tar -cvzf ../${COIN_NAME}-ubuntu20-${{ needs.get-version.outputs.version }}.tar.gz *          
+          tar -cvzf ../${COIN_NAME}-ubuntu20-${{ needs.get-version.outputs.version }}.tar.gz *
           cd ../${BUILD_DIR}_debug
           echo "sha256:" >> checksums.txt
           echo "------------------------------------" >> checksums.txt
@@ -248,7 +250,7 @@ jobs:
           echo "------------------------------------" >> checksums.txt
           sha256sum * >> checksums.txt
           cat checksums.txt
-          tar -cvzf ../${COIN_NAME}-ubuntu22-${{ needs.get-version.outputs.version }}.tar.gz *          
+          tar -cvzf ../${COIN_NAME}-ubuntu22-${{ needs.get-version.outputs.version }}.tar.gz *
           cd ../${BUILD_DIR}_debug
           echo "sha256:" >> checksums.txt
           echo "------------------------------------" >> checksums.txt
@@ -507,7 +509,7 @@ jobs:
   #         echo "------------------------------------" >> checksums.txt
   #         sha256sum * >> checksums.txt
   #         cat checksums.txt
-  #         tar -cvzf ../${COIN_NAME}-arm32-${{ needs.get-version.outputs.version }}.tar.gz *          
+  #         tar -cvzf ../${COIN_NAME}-arm32-${{ needs.get-version.outputs.version }}.tar.gz *
   #         cd ../${BUILD_DIR}_debug
   #         echo "sha256:" >> checksums.txt
   #         echo "------------------------------------" >> checksums.txt
@@ -564,7 +566,7 @@ jobs:
   #         commands: |
   #           chmod +x test_raptoreum
   #           ./test_raptoreum --log_format=JUNIT > unit_test_results.xml
-  
+
   #     - name: Upload Test Artifacts
   #       uses: actions/upload-artifact@v3
   #       if: always()
@@ -634,7 +636,7 @@ jobs:
           echo "------------------------------------" >> checksums.txt
           sha256sum * >> checksums.txt
           cat checksums.txt
-          tar -cvzf ../${COIN_NAME}-arm64-${{ needs.get-version.outputs.version }}.tar.gz *          
+          tar -cvzf ../${COIN_NAME}-arm64-${{ needs.get-version.outputs.version }}.tar.gz *
           cd ../${BUILD_DIR}_debug
           echo "sha256:" >> checksums.txt
           echo "------------------------------------" >> checksums.txt
@@ -660,7 +662,7 @@ jobs:
         with:
           name: ${{ env.COIN_NAME }}-arm64-${{ needs.get-version.outputs.version }}
           path: ${{ env.COMPRESS_DIR }}
-  
+
       - name: Upload Test Artifacts
         uses: actions/upload-artifact@v3
         with:
