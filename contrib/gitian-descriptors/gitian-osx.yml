@@ -30,7 +30,7 @@ packages:
 - "fonts-tuffy"
 - "ccache"
 remotes:
-- "url": "https://github.com/raptoreum/raptoreum.git"
+- "url": "https://github.com/raptor3um/raptoreum.git"
   "dir": "raptoreum"
 files:
 - "MacOSX10.11.sdk.tar.gz"

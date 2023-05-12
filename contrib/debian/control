@@ -27,8 +27,8 @@ Build-Depends: debhelper,
  libzmq3-dev
 Standards-Version: 3.9.2
 Homepage: https://www.raptoreum.org/
-Vcs-Git: git://github.com/raptoreum/raptoreum.git
-Vcs-Browser: https://github.com/raptoreum/raptoreum
+Vcs-Git: git://github.com/raptor3um/raptoreum.git
+Vcs-Browser: https://github.com/raptor3um/raptoreum
 
 Package: raptoreumd
 Architecture: any

@@ -2300,6 +2300,10 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             // Get recent addresses
             if (pfrom->fOneShot || pfrom->nVersion >= CADDR_TIME_VERSION || connman->GetAddressCount() < 1000)
             {
+                // When requesting a getaddr, accept an additional MAX_ADDR_TO_SEND addresses in response
+                // (bypassing the MAX_ADDR_PROCESSING_TOKEN_BUCKET limit).
+                pfrom->addrTokenBucket += MAX_ADDR_TO_SEND;
+
                 connman->PushMessage(pfrom, CNetMsgMaker(nSendVersion).Make(NetMsgType::GETADDR));
                 pfrom->fGetAddr = true;
             }
@@ -2426,10 +2430,37 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         std::vector<CAddress> vAddrOk;
         int64_t nNow = GetAdjustedTime();
         int64_t nSince = nNow - 10 * 60;
+
+        // Update/increment addr rate limiting bucket.
+        const auto current_time = GetTime<std::chrono::microseconds>();
+        if (pfrom->addrTokenBucket < MAX_ADDR_PROCESSING_TOKEN_BUCKET) {
+            // Don't increment bucket if it's already full
+            const auto time_diff = std::max(current_time - pfrom->addrTokenTimestamp, 0us);
+            const double increment = Ticks<SecondsDouble>(time_diff) * MAX_ADDR_RATE_PER_SECOND;
+            pfrom->addrTokenBucket = std::min<double>(pfrom->addrTokenBucket + increment, MAX_ADDR_PROCESSING_TOKEN_BUCKET);
+        }
+        pfrom->addrTokenTimestamp = current_time;
+
+        const bool rate_limited = !pfrom->fWhitelisted;
+        uint64_t num_proc = 0;
+        uint64_t num_rate_limit = 0;
+        Shuffle(vAddr.begin(), vAddr.end(), FastRandomContext());
+
         for (CAddress& addr : vAddr)
         {
             if (interruptMsgProc)
                 return true;
+
+            // Apply rate limiting.
+            if (pfrom->addrTokenBucket < 1.0) {
+               if (rate_limited) {
+                  ++num_rate_limit;
+                  // LogPrint(BCLog::NET, "AddrRateLimit: Peer: %s, RATE LIMITED\n", pfrom->GetAddrName());
+                  continue;
+               }
+            } else {
+                pfrom->addrTokenBucket -= 1.0;
+            }
 
             // We only bother storing full nodes, though this may include
             // things which we would not make an outbound connection to, in
@@ -2440,6 +2471,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             if (addr.nTime <= 100000000 || addr.nTime > nNow + 10 * 60)
                 addr.nTime = nNow - 5 * 24 * 60 * 60;
             pfrom->AddAddressKnown(addr);
+            ++num_proc;
             bool fReachable = IsReachable(addr);
             if (addr.nTime > nSince && !pfrom->fGetAddr && vAddr.size() <= 10 && addr.IsRoutable())
             {
@@ -2449,6 +2481,11 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             if (fReachable)
                 vAddrOk.push_back(addr);
         }
+        pfrom->nAddrProcessed += num_proc;
+        pfrom->nAddrRateLimited += num_rate_limit;
+        LogPrint(BCLog::NET, "Received addr: %u addresses (%u processed, %u rate-limited) from peer=%d\n",
+                 vAddr.size(), num_proc, num_rate_limit, pfrom->GetId());
+
         connman->AddNewAddresses(vAddrOk, pfrom->addr, 2 * 60 * 60);
         if (vAddr.size() < 1000)
             pfrom->fGetAddr = false;

@@ -7,7 +7,7 @@ architectures:
 packages:
 - "faketime"
 remotes:
-- "url": "https://github.com/raptoreum/raptoreum-detached-sigs.git"
+- "url": "https://github.com/raptor3um/raptoreum-detached-sigs.git"
   "dir": "signature"
 files:
 - "raptoreumcore-osx-unsigned.tar.gz"
