@@ -3463,7 +3463,7 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nC
     // Copy output sizes from new transaction; they may have had the fee
     // subtracted from them.
     for (unsigned int idx = 0; idx < tx.vout.size(); idx++) {
-        tx.vout[idx].nValue = tx_new->vout[idx].nValue;
+        tx.vout[idx] = tx_new->vout[idx];
     }
 
     // Add new txins while keeping original txin scriptSig/order.

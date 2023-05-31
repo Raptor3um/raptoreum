@@ -57,7 +57,7 @@ static const int PING_INTERVAL = 2 * 60;
 static const int TIMEOUT_INTERVAL = 20 * 60;
 /** Minimum time between warnings printed to log. */
 static const int WARNING_INTERVAL = 10 * 60;
-/** Run the feeler connection loop once every 2 minutes. **/
+/** Run the feeler connection loop once every 2 minutes or 120 seconds. */
 static const int FEELER_INTERVAL = 120;
 /** The maximum number of entries in an 'inv' protocol message */
 static const unsigned int MAX_INV_SZ = 50000;
@@ -65,6 +65,13 @@ static const unsigned int MAX_INV_SZ = 50000;
 static const unsigned int MAX_LOCATOR_SZ = 101;
 /** The maximum number of new addresses to accumulate before announcing. */
 static const unsigned int MAX_ADDR_TO_SEND = 1000;
+/** The maximum rate of address records we're willing to process on average. Can be bypassed using
+ *  the NetPermissionFlags::Addr permission. */
+static constexpr double MAX_ADDR_RATE_PER_SECOND = 0.1;
+/** The soft limit of the address processing token bucket (the regular MAX_ADDR_RATE_PER_SECOND
+ *  based increments won't go above this, but the MAX_ADDR_TO_SEND increment following GETADDR
+ *  is exempt from this limit). */
+static constexpr size_t MAX_ADDR_PROCESSING_TOKEN_BUCKET = MAX_ADDR_TO_SEND;
 /** Maximum length of incoming protocol messages (no message over 3 MiB is currently acceptable). */
 static const unsigned int MAX_PROTOCOL_MESSAGE_LENGTH = 3 * 1024 * 1024;
 /** Maximum length of strSubVer in `version` message */
@@ -766,6 +773,12 @@ public:
     // In case this is a verified MN, this value is the hashed operator pubkey of the MN
     uint256 verifiedPubKeyHash;
     bool m_smartnode_connection;
+
+    // Copied from CNode for addr rate limiting
+    std::chrono::microseconds addrTokenTimestamp;
+    double addrTokenBucket;
+    uint64_t nAddrRateLimited;
+    uint64_t nAddrProcessed;
 };
 
 
@@ -853,6 +866,16 @@ public:
     const CAddress addr;
     // Bind address of our side of the connection
     const CAddress addrBind;
+
+    /** Number of addresses that can be processed from this peer. Start at 1 to permit self-announcement. */
+    double                    addrTokenBucket{1.0};
+    /** When m_addr_token_bucket was last updated */
+    std::chrono::microseconds addrTokenTimestamp{GetTime<std::chrono::microseconds>()};
+    /** Total number of addresses that were dropped due to rate limiting. */
+    std::atomic<uint64_t>     nAddrRateLimited{0};
+    /** Total number of addresses that were processed (excludes rate-limited ones). */
+    std::atomic<uint64_t>     nAddrProcessed{0};
+
     std::atomic<int> nNumWarningsSkipped;
     std::atomic<int> nVersion;
     /**

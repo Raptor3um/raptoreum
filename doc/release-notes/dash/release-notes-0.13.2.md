@@ -9,7 +9,7 @@ This is a new minor version release, bringing various bugfixes and other improve
 
 Please report bugs using the issue tracker at github:
 
-  <https://github.com/raptoreum/raptoreum/issues>
+  <https://github.com/raptor3um/raptoreum/issues>
 
 
 Upgrading and downgrading
@@ -96,27 +96,27 @@ There are few bug fixes in this release:
  0.13.2.0 Change log
 ===================
 
-See detailed [set of changes](https://github.com/raptoreum/raptoreum/compare/v0.13.1.0...raptoreum:v0.13.2.0).
+See detailed [set of changes](https://github.com/raptor3um/raptoreum/compare/v0.13.1.0...raptoreum:v0.13.2.0).
 
 ### Backports
 
-- [`548a48918`](https://github.com/raptoreum/raptoreum/commit/548a48918) Move IS block filtering into ConnectBlock (#2766)
-- [`6374dce99`](https://github.com/raptoreum/raptoreum/commit/6374dce99) Fix error message for invalid voting addresses (#2747)
-- [`25222b378`](https://github.com/raptoreum/raptoreum/commit/25222b378) Make -smartnodeblsprivkey mandatory when -smartnode is given (#2745)
-- [`0364e033a`](https://github.com/raptoreum/raptoreum/commit/0364e033a) Implement 2-stage commit for CEvoDB to avoid inconsistencies after crashes (#2744)
-- [`a11e2f9eb`](https://github.com/raptoreum/raptoreum/commit/a11e2f9eb) Add collateraladdress into smartnode/protx list rpc output (#2740)
-- [`43612a272`](https://github.com/raptoreum/raptoreum/commit/43612a272) Only include selected TX types into CMerkleBlock (#2737)
-- [`f868fbc78`](https://github.com/raptoreum/raptoreum/commit/f868fbc78) Stop g_connman first before deleting it (#2734)
-- [`9e233f391`](https://github.com/raptoreum/raptoreum/commit/9e233f391) Fix incorrect usage of begin() when genesis block is requested in "protx diff" (#2699)
-- [`e75f971b9`](https://github.com/raptoreum/raptoreum/commit/e75f971b9) Do not process blocks in CDeterministicMNManager before dip3 activation (#2698)
-- [`1cc47ebcd`](https://github.com/raptoreum/raptoreum/commit/1cc47ebcd) Backport #14701: build: Add CLIENT_VERSION_BUILD to CFBundleGetInfoString (#2687)
+- [`548a48918`](https://github.com/raptor3um/raptoreum/commit/548a48918) Move IS block filtering into ConnectBlock (#2766)
+- [`6374dce99`](https://github.com/raptor3um/raptoreum/commit/6374dce99) Fix error message for invalid voting addresses (#2747)
+- [`25222b378`](https://github.com/raptor3um/raptoreum/commit/25222b378) Make -smartnodeblsprivkey mandatory when -smartnode is given (#2745)
+- [`0364e033a`](https://github.com/raptor3um/raptoreum/commit/0364e033a) Implement 2-stage commit for CEvoDB to avoid inconsistencies after crashes (#2744)
+- [`a11e2f9eb`](https://github.com/raptor3um/raptoreum/commit/a11e2f9eb) Add collateraladdress into smartnode/protx list rpc output (#2740)
+- [`43612a272`](https://github.com/raptor3um/raptoreum/commit/43612a272) Only include selected TX types into CMerkleBlock (#2737)
+- [`f868fbc78`](https://github.com/raptor3um/raptoreum/commit/f868fbc78) Stop g_connman first before deleting it (#2734)
+- [`9e233f391`](https://github.com/raptor3um/raptoreum/commit/9e233f391) Fix incorrect usage of begin() when genesis block is requested in "protx diff" (#2699)
+- [`e75f971b9`](https://github.com/raptor3um/raptoreum/commit/e75f971b9) Do not process blocks in CDeterministicMNManager before dip3 activation (#2698)
+- [`1cc47ebcd`](https://github.com/raptor3um/raptoreum/commit/1cc47ebcd) Backport #14701: build: Add CLIENT_VERSION_BUILD to CFBundleGetInfoString (#2687)
 
 ### Other
 
-- [`2516a6e19`](https://github.com/raptoreum/raptoreum/commit/2516a6e19) Bump version to 0.13.2
-- [`9dd16cdbe`](https://github.com/raptoreum/raptoreum/commit/9dd16cdbe) Bump minChainWork and AssumeValid to block #1033120 (#2750)
-- [`18f087b27`](https://github.com/raptoreum/raptoreum/commit/18f087b27) Fix some typos in doc/guide-startmany.md (#2711)
-- [`709ab6d3e`](https://github.com/raptoreum/raptoreum/commit/709ab6d3e) Minimal fix for litemode vs bad-protx-key-not-same issue (#2694)
+- [`2516a6e19`](https://github.com/raptor3um/raptoreum/commit/2516a6e19) Bump version to 0.13.2
+- [`9dd16cdbe`](https://github.com/raptor3um/raptoreum/commit/9dd16cdbe) Bump minChainWork and AssumeValid to block #1033120 (#2750)
+- [`18f087b27`](https://github.com/raptor3um/raptoreum/commit/18f087b27) Fix some typos in doc/guide-startmany.md (#2711)
+- [`709ab6d3e`](https://github.com/raptor3um/raptoreum/commit/709ab6d3e) Minimal fix for litemode vs bad-protx-key-not-same issue (#2694)
 
 Credits
 =======
@@ -153,20 +153,20 @@ Raptoreum Core tree 0.12.1.x was a fork of Bitcoin Core tree 0.12.
 
 These release are considered obsolete. Old release notes can be found here:
 
-- [v0.13.1](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.13.1.md) released Feb/9/2019
-- [v0.13.0](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.13.0.md) released Jan/14/2019
-- [v0.12.3.4](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.3.4.md) released Dec/14/2018
-- [v0.12.3.3](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.3.3.md) released Sep/19/2018
-- [v0.12.3.2](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.3.2.md) released Jul/09/2018
-- [v0.12.3.1](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.3.1.md) released Jul/03/2018
-- [v0.12.2.3](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.2.3.md) released Jan/12/2018
-- [v0.12.2.2](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.2.2.md) released Dec/17/2017
-- [v0.12.2](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.2.md) released Nov/08/2017
-- [v0.12.1](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.1.md) released Feb/06/2017
-- [v0.12.0](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.0.md) released Aug/15/2015
-- [v0.11.2](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.11.2.md) released Mar/04/2015
-- [v0.11.1](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.11.1.md) released Feb/10/2015
-- [v0.11.0](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.11.0.md) released Jan/15/2015
-- [v0.10.x](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.10.0.md) released Sep/25/2014
-- [v0.9.x](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.9.0.md) released Mar/13/2014
+- [v0.13.1](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.13.1.md) released Feb/9/2019
+- [v0.13.0](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.13.0.md) released Jan/14/2019
+- [v0.12.3.4](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.3.4.md) released Dec/14/2018
+- [v0.12.3.3](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.3.3.md) released Sep/19/2018
+- [v0.12.3.2](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.3.2.md) released Jul/09/2018
+- [v0.12.3.1](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.3.1.md) released Jul/03/2018
+- [v0.12.2.3](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.2.3.md) released Jan/12/2018
+- [v0.12.2.2](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.2.2.md) released Dec/17/2017
+- [v0.12.2](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.2.md) released Nov/08/2017
+- [v0.12.1](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.1.md) released Feb/06/2017
+- [v0.12.0](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.0.md) released Aug/15/2015
+- [v0.11.2](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.11.2.md) released Mar/04/2015
+- [v0.11.1](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.11.1.md) released Feb/10/2015
+- [v0.11.0](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.11.0.md) released Jan/15/2015
+- [v0.10.x](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.10.0.md) released Sep/25/2014
+- [v0.9.x](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.9.0.md) released Mar/13/2014
 

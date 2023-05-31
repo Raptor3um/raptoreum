@@ -12,6 +12,9 @@
 /* Milliseconds between model updates */
 static const int MODEL_UPDATE_DELAY = 250;
 
+/* Milliseconds between model updates while sync */
+static const int MODEL_UPDATE_DELAY_SYNC = 10000;
+
 /* AskPassphraseDialog -- Maximum passphrase length */
 static const int MAX_PASSPHRASE_SIZE = 1024;
 

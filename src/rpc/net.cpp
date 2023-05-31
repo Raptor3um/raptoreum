@@ -212,6 +212,8 @@ UniValue getpeerinfo(const JSONRPCRequest& request)
             obj.pushKV("inflight", heights);
         }
         obj.pushKV("whitelisted", stats.fWhitelisted);
+        obj.pushKV("addr_processed", stats.nAddrProcessed);
+        obj.pushKV("addr_rate_limited", stats.nAddrRateLimited);
 
         UniValue sendPerMsgCmd(UniValue::VOBJ);
         for (const mapMsgCmdSize::value_type &i : stats.mapSendBytesPerMsgCmd) {

@@ -35,6 +35,9 @@
 #include <QSet>
 #include <QTimer>
 
+static int64_t nLastUpdateNotification = 0;
+static bool ninitialSync = false;
+
 namespace pl = std::placeholders;
 
 WalletModel::WalletModel(std::unique_ptr<interfaces::Wallet> wallet, interfaces::Node& node, OptionsModel *_optionsModel, QObject *parent) :
@@ -80,6 +83,7 @@ void WalletModel::updateStatus()
 
 void WalletModel::pollBalanceChanged()
 {
+
     // Try to get balances and return early if locks can't be acquired. This
     // avoids the GUI from getting stuck on periodical polls if the core is
     // holding the locks for a longer time - for example, during a wallet
@@ -89,18 +93,27 @@ void WalletModel::pollBalanceChanged()
     if (!m_wallet->tryGetBalances(new_balances, numBlocks)) {
         return;
     }
+    int64_t now = 0;
+    if (ninitialSync)
+        now = GetTimeMillis();
 
-    if(fForceCheckBalanceChanged || numBlocks != cachedNumBlocks || node().coinJoinOptions().getRounds() != cachedCoinJoinRounds)
-    {
-        fForceCheckBalanceChanged = false;
+    // if we are in-sync, update the UI regardless of last update time
+    if (!ninitialSync || now - nLastUpdateNotification > MODEL_UPDATE_DELAY_SYNC) {
 
-        // Balance and number of transactions might have changed
-        cachedNumBlocks = numBlocks;
-        cachedCoinJoinRounds = node().coinJoinOptions().getRounds();
+        nLastUpdateNotification = now;
 
-        checkBalanceChanged(new_balances);
-        if(transactionTableModel)
-            transactionTableModel->updateConfirmations();
+        if(fForceCheckBalanceChanged || numBlocks != cachedNumBlocks || node().coinJoinOptions().getRounds() != cachedCoinJoinRounds) {
+
+            fForceCheckBalanceChanged = false;
+
+            // Balance and number of transactions might have changed
+            cachedNumBlocks = numBlocks;
+            cachedCoinJoinRounds = node().coinJoinOptions().getRounds();
+
+            checkBalanceChanged(new_balances);
+            if (transactionTableModel)
+                transactionTableModel->updateConfirmations();
+        }
     }
 }
 

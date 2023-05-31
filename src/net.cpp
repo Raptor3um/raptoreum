@@ -651,6 +651,11 @@ void CNode::copyStats(CNodeStats &stats, const std::vector<bool> &m_asmap)
         X(verifiedPubKeyHash);
     }
     X(m_smartnode_connection);
+
+    X(addrTokenTimestamp);
+    X(addrTokenBucket);
+    X(nAddrRateLimited);
+    X(nAddrProcessed);
 }
 #undef X
 

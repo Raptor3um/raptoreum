@@ -26,9 +26,23 @@ void UninterruptibleSleep(const std::chrono::microseconds& n);
  * This helper is used to convert duration before passing them over an
  * interface that doesn't support std::chrono (e.g. RPC, debug log, or the GUI)
  */
+template <typename Dur1, typename Dur2>
+constexpr auto Ticks(Dur2 d)
+{
+    return std::chrono::duration_cast<Dur1>(d).count();
+}
+template <typename Duration, typename Timepoint>
+constexpr auto TicksSinceEpoch(Timepoint t)
+{
+    return Ticks<Duration>(t.time_since_epoch());
+}
 inline int64_t count_seconds(std::chrono::seconds t) { return t.count(); }
 inline int64_t count_milliseconds(std::chrono::milliseconds t) { return t.count(); }
 inline int64_t count_microseconds(std::chrono::microseconds t) { return t.count(); }
+
+using HoursDouble = std::chrono::duration<double, std::chrono::hours::period>;
+using SecondsDouble = std::chrono::duration<double, std::chrono::seconds::period>;
+using MillisecondsDouble = std::chrono::duration<double, std::chrono::milliseconds::period>;
 
 /**
  * DEPRECATED

@@ -9,7 +9,7 @@ This is a new minor version release, bringing various bugfixes.
 
 Please report bugs using the issue tracker at github:
 
-  <https://github.com/raptoreum/raptoreum/issues>
+  <https://github.com/raptor3um/raptoreum/issues>
 
 
 Upgrading and downgrading
@@ -62,20 +62,20 @@ updates. This should be fixed now.
 0.14.0.2 Change log
 ===================
 
-See detailed [set of changes](https://github.com/raptoreum/raptoreum/compare/v0.14.0.1...raptoreum:v0.14.0.2).
+See detailed [set of changes](https://github.com/raptor3um/raptoreum/compare/v0.14.0.1...raptoreum:v0.14.0.2).
 
-- [`d2ff63e8d`](https://github.com/raptoreum/raptoreum/commit/d2ff63e8d) Use std::unique_ptr for mnList in CSimplifiedMNList (#3014)
-- [`321bbf5af`](https://github.com/raptoreum/raptoreum/commit/321bbf5af) Fix excessive memory use when flushing chainstate and EvoDB (#3008)
-- [`0410259dd`](https://github.com/raptoreum/raptoreum/commit/0410259dd) Fix 2 common Travis failures which happen when Travis has network issues (#3003)
-- [`8d763c144`](https://github.com/raptoreum/raptoreum/commit/8d763c144) Only load signingActiveQuorumCount + 1 quorums into cache (#3002)
-- [`2dc1b06ec`](https://github.com/raptoreum/raptoreum/commit/2dc1b06ec) Remove skipped denom from the list on tx commit (#2997)
-- [`dff2c851d`](https://github.com/raptoreum/raptoreum/commit/dff2c851d) Update manpages for 0.14.0.2 (#2999)
-- [`46c4f5844`](https://github.com/raptoreum/raptoreum/commit/46c4f5844) Use Travis stages instead of custom timeouts (#2948)
-- [`49c37b82a`](https://github.com/raptoreum/raptoreum/commit/49c37b82a) Back off for 1m when connecting to quorum smartnodes (#2975)
-- [`c1f756fd9`](https://github.com/raptoreum/raptoreum/commit/c1f756fd9) Multiple speed optimizations for deterministic MN list handling (#2972)
-- [`11699f540`](https://github.com/raptoreum/raptoreum/commit/11699f540) Process/keep messages/connections from PoSe-banned MNs (#2967)
-- [`c5415e746`](https://github.com/raptoreum/raptoreum/commit/c5415e746) Fix UI smartnode list (#2966)
-- [`fb6f0e04d`](https://github.com/raptoreum/raptoreum/commit/fb6f0e04d) Bump version to 0.14.0.2 and copy release notes (#2991)
+- [`d2ff63e8d`](https://github.com/raptor3um/raptoreum/commit/d2ff63e8d) Use std::unique_ptr for mnList in CSimplifiedMNList (#3014)
+- [`321bbf5af`](https://github.com/raptor3um/raptoreum/commit/321bbf5af) Fix excessive memory use when flushing chainstate and EvoDB (#3008)
+- [`0410259dd`](https://github.com/raptor3um/raptoreum/commit/0410259dd) Fix 2 common Travis failures which happen when Travis has network issues (#3003)
+- [`8d763c144`](https://github.com/raptor3um/raptoreum/commit/8d763c144) Only load signingActiveQuorumCount + 1 quorums into cache (#3002)
+- [`2dc1b06ec`](https://github.com/raptor3um/raptoreum/commit/2dc1b06ec) Remove skipped denom from the list on tx commit (#2997)
+- [`dff2c851d`](https://github.com/raptor3um/raptoreum/commit/dff2c851d) Update manpages for 0.14.0.2 (#2999)
+- [`46c4f5844`](https://github.com/raptor3um/raptoreum/commit/46c4f5844) Use Travis stages instead of custom timeouts (#2948)
+- [`49c37b82a`](https://github.com/raptor3um/raptoreum/commit/49c37b82a) Back off for 1m when connecting to quorum smartnodes (#2975)
+- [`c1f756fd9`](https://github.com/raptor3um/raptoreum/commit/c1f756fd9) Multiple speed optimizations for deterministic MN list handling (#2972)
+- [`11699f540`](https://github.com/raptor3um/raptoreum/commit/11699f540) Process/keep messages/connections from PoSe-banned MNs (#2967)
+- [`c5415e746`](https://github.com/raptor3um/raptoreum/commit/c5415e746) Fix UI smartnode list (#2966)
+- [`fb6f0e04d`](https://github.com/raptor3um/raptoreum/commit/fb6f0e04d) Bump version to 0.14.0.2 and copy release notes (#2991)
 
 Credits
 =======
@@ -110,24 +110,24 @@ Raptoreum Core tree 0.12.1.x was a fork of Bitcoin Core tree 0.12.
 
 These release are considered obsolete. Old release notes can be found here:
 
-- [v0.14.0.1](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.14.0.1.md) released May/31/2019
-- [v0.14.0](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.14.0.md) released May/22/2019
-- [v0.13.3](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.13.3.md) released Apr/04/2019
-- [v0.13.2](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.13.2.md) released Mar/15/2019
-- [v0.13.1](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.13.1.md) released Feb/9/2019
-- [v0.13.0](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.13.0.md) released Jan/14/2019
-- [v0.12.3.4](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.3.4.md) released Dec/14/2018
-- [v0.12.3.3](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.3.3.md) released Sep/19/2018
-- [v0.12.3.2](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.3.2.md) released Jul/09/2018
-- [v0.12.3.1](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.3.1.md) released Jul/03/2018
-- [v0.12.2.3](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.2.3.md) released Jan/12/2018
-- [v0.12.2.2](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.2.2.md) released Dec/17/2017
-- [v0.12.2](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.2.md) released Nov/08/2017
-- [v0.12.1](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.1.md) released Feb/06/2017
-- [v0.12.0](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.0.md) released Aug/15/2015
-- [v0.11.2](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.11.2.md) released Mar/04/2015
-- [v0.11.1](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.11.1.md) released Feb/10/2015
-- [v0.11.0](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.11.0.md) released Jan/15/2015
-- [v0.10.x](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.10.0.md) released Sep/25/2014
-- [v0.9.x](https://github.com/raptoreum/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.9.0.md) released Mar/13/2014
+- [v0.14.0.1](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.14.0.1.md) released May/31/2019
+- [v0.14.0](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.14.0.md) released May/22/2019
+- [v0.13.3](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.13.3.md) released Apr/04/2019
+- [v0.13.2](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.13.2.md) released Mar/15/2019
+- [v0.13.1](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.13.1.md) released Feb/9/2019
+- [v0.13.0](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.13.0.md) released Jan/14/2019
+- [v0.12.3.4](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.3.4.md) released Dec/14/2018
+- [v0.12.3.3](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.3.3.md) released Sep/19/2018
+- [v0.12.3.2](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.3.2.md) released Jul/09/2018
+- [v0.12.3.1](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.3.1.md) released Jul/03/2018
+- [v0.12.2.3](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.2.3.md) released Jan/12/2018
+- [v0.12.2.2](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.2.2.md) released Dec/17/2017
+- [v0.12.2](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.2.md) released Nov/08/2017
+- [v0.12.1](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.1.md) released Feb/06/2017
+- [v0.12.0](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.12.0.md) released Aug/15/2015
+- [v0.11.2](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.11.2.md) released Mar/04/2015
+- [v0.11.1](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.11.1.md) released Feb/10/2015
+- [v0.11.0](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.11.0.md) released Jan/15/2015
+- [v0.10.x](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.10.0.md) released Sep/25/2014
+- [v0.9.x](https://github.com/raptor3um/raptoreum/blob/master/doc/release-notes/raptoreum/release-notes-0.9.0.md) released Mar/13/2014
 
