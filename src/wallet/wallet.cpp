@@ -3140,34 +3140,34 @@ void CWallet::AvailableCoins(std::vector<COutput>& vCoins, std::map<std::string,
                 ExtractDestination(pcoin->tx->vout[i].scriptPubKey, destination);
                 address = EncodeDestination(destination);
                 // If we already have the maximum amount or size for this asset, skip it
-                if (setAssetMaxFound.count(assetTransfer.AssetId))
+                if (setAssetMaxFound.count(assetTransfer.assetId))
                     continue;
 
                 // Initialize the map vector is it doesn't exist yet
-                if (!mapAssetCoins.count(assetTransfer.AssetId)) {
+                if (!mapAssetCoins.count(assetTransfer.assetId)) {
                     std::vector<COutput> vOutput;
-                    mapAssetCoins.insert(std::make_pair(assetTransfer.AssetId, vOutput));
+                    mapAssetCoins.insert(std::make_pair(assetTransfer.assetId, vOutput));
                 }
 
                 // Add the COutput to the map of available Asset Coins
-                mapAssetCoins.at(assetTransfer.AssetId).push_back(COutput(pcoin, i, nDepth, fSpendableIn, fSolvableIn, safeTx && isCoinSpendable, pcoin->tx->nType == TRANSACTION_FUTURE, isCoinSpendable));
+                mapAssetCoins.at(assetTransfer.assetId).push_back(COutput(pcoin, i, nDepth, fSpendableIn, fSolvableIn, safeTx && isCoinSpendable, pcoin->tx->nType == TRANSACTION_FUTURE, isCoinSpendable));
 
                 // Initialize the map of current asset totals
-                if (!mapAssetTotals.count(assetTransfer.AssetId))
-                    mapAssetTotals[assetTransfer.AssetId] = 0;
+                if (!mapAssetTotals.count(assetTransfer.assetId))
+                    mapAssetTotals[assetTransfer.assetId] = 0;
 
                 // Update the map of totals depending the which type of asset tx we are looking at
-                mapAssetTotals[assetTransfer.AssetId] += assetTransfer.nAmount;
+                mapAssetTotals[assetTransfer.assetId] += assetTransfer.nAmount;
 
                 // Checks the sum amount of all UTXO's, and adds to the set of assets that we found the max for
                 if (nMinimumSumAmount != MAX_MONEY) {
-                    if (mapAssetTotals[assetTransfer.AssetId] >= nMinimumSumAmount)
-                        setAssetMaxFound.insert(assetTransfer.AssetId);
+                    if (mapAssetTotals[assetTransfer.assetId] >= nMinimumSumAmount)
+                        setAssetMaxFound.insert(assetTransfer.assetId);
                 }
 
                 // Checks the maximum number of UTXO's, and addes to set of of asset that we found the max for
-                if (nMaximumCount > 0 && mapAssetCoins[assetTransfer.AssetId].size() >= nMaximumCount) {
-                    setAssetMaxFound.insert(assetTransfer.AssetId);
+                if (nMaximumCount > 0 && mapAssetCoins[assetTransfer.assetId].size() >= nMaximumCount) {
+                    setAssetMaxFound.insert(assetTransfer.assetId);
                 }
             }
 
@@ -4032,9 +4032,9 @@ bool CWallet::GetBudgetSystemCollateralTX(CTransactionRef& tx, uint256 hash, CAm
     return true;
 }
 
-bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransactionRef& tx, CReserveKey& reservekey, CAmount& nFeeRet, int& nChangePosInOut, std::string& strFailReason, const CCoinControl& coin_control, bool sign, int nExtraPayloadSize, FuturePartialPayload* fpp, CNewAssetTx* newasset, CMintAssetTx* mint)
+bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransactionRef& tx, CReserveKey& reservekey, CAmount& nFeeRet, int& nChangePosInOut, std::string& strFailReason, const CCoinControl& coin_control, bool sign, int nExtraPayloadSize, FuturePartialPayload* fpp, CNewAssetTx* newAsset, CMintAssetTx* mint)
 {
-    if (!Params().IsAssetsActive(chainActive.Tip()) && (newasset || mint))
+    if (!Params().IsAssetsActive(chainActive.Tip()) && (newAsset || mint))
         return false;
 
     CAmount nValue = 0;
@@ -4049,15 +4049,15 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
             std::string address;
             if (GetTransferAsset(recipient.scriptPubKey, assetTransfer)) {
                 fHasAsset = true;
-                if (!mapAssetValue.count(assetTransfer.AssetId))
-                    mapAssetValue[assetTransfer.AssetId] = 0;
+                if (!mapAssetValue.count(assetTransfer.assetId))
+                    mapAssetValue[assetTransfer.assetId] = 0;
 
                 if (assetTransfer.isUnique) {
-                    if (!mapAssetUniqueId.count(assetTransfer.AssetId)) {
+                    if (!mapAssetUniqueId.count(assetTransfer.assetId)) {
                         std::vector<uint16_t> tmpvec;
-                        mapAssetUniqueId.insert(std::make_pair(assetTransfer.AssetId, tmpvec));
+                        mapAssetUniqueId.insert(std::make_pair(assetTransfer.assetId, tmpvec));
                     }
-                    mapAssetUniqueId.at(assetTransfer.AssetId).push_back(assetTransfer.uniqueId);
+                    mapAssetUniqueId.at(assetTransfer.assetId).push_back(assetTransfer.uniqueId);
                 }
 
                 if (assetTransfer.nAmount <= 0) {
@@ -4070,7 +4070,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
                     return false;
                 }
 
-                mapAssetValue[assetTransfer.AssetId] += assetTransfer.nAmount;
+                mapAssetValue[assetTransfer.assetId] += assetTransfer.nAmount;
             }
         }
 
@@ -4083,7 +4083,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
         if (recipient.fSubtractFeeFromAmount)
             nSubtractFeeFromAmount++;
     }
-    if (vecSend.empty() && !newasset) {
+    if (vecSend.empty() && !newAsset) {
         strFailReason = _("Transaction must have at least one recipient");
         return false;
     }
@@ -4105,10 +4105,10 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
         ftx.updatableByDestination = false;
         ftx.fee = getFutureFees();
         specialFees = getFutureFeesCoin();
-    } else if (newasset) {
+    } else if (newAsset) {
         txNew.nVersion = 3;
         txNew.nType = TRANSACTION_NEW_ASSET;
-        atx = *newasset;
+        atx = *newAsset;
         atx.nVersion = CNewAssetTx::CURRENT_VERSION;
         specialFees = getAssetsFeesCoin();
     } else if (mint) {
@@ -4260,7 +4260,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
                     }
                     txNew.vout.push_back(txout);
                 }
-                if (newasset) {
+                if (newAsset) {
                     CDataStream ds(SER_NETWORK, PROTOCOL_VERSION);
                     ds << atx;
                     txNew.vExtraPayload.assign(ds.begin(), ds.end());
@@ -4519,7 +4519,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
             }
             UpdateSpecialTxInputsHash(txNew, ftx);
             SetTxPayload(txNew, ftx);
-        } else if (newasset) {
+        } else if (newAsset) {
             UpdateSpecialTxInputsHash(txNew, atx);
             SetTxPayload(txNew, atx);
         } else if (mint) {

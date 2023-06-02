@@ -84,7 +84,7 @@ SendAssetsEntry::SendAssetsEntry(QWidget* parent, bool hideFuture) :
 
     proxyId = new QSortFilterProxyModel;
     proxyId->setSourceModel(stringModelId);
-    
+
     ui->uniqueIdList->setModel(proxyId);
     ui->uniqueIdList->setEditable(false);
 }
@@ -137,7 +137,7 @@ void SendAssetsEntry::setModel(WalletModel *_model)
 
 void SendAssetsEntry::setCoinControl(CCoinControl* coin_control)
 {
-  this->m_coin_control = coin_control;  
+  this->m_coin_control = coin_control;
 }
 
 void SendAssetsEntry::clear()
@@ -276,7 +276,7 @@ QWidget *SendAssetsEntry::setupTabChain(QWidget *prev)
 void SendAssetsEntry::setValue(const SendCoinsRecipient &value)
 {
     recipient = value;
-    
+
     // normal payment
     ui->payTo->setText(recipient.address);
     ui->addAsLabel->setText(recipient.label);
@@ -358,11 +358,11 @@ void SendAssetsEntry::SetFutureVisible(bool visible) {
 void SendAssetsEntry::onAssetSelected(QString name)
 {
     static QString prevname = "";
-    
+
     //return if name is empty
-    if (name == "") 
+    if (name == "")
         return;
-    
+
     std::map<std::string, CAmount> assetsbalance = model->wallet().getAssetsBalance();
     CAmount bal = 0;
     std::string assetId;
@@ -373,13 +373,13 @@ void SendAssetsEntry::onAssetSelected(QString name)
 
     //update balance
     ui->AssetBalance->setText(BitcoinUnits::formatWithCustomName(name, bal));
-   
+
     CAssetMetaData assetdata;
     if(!passetsCache->GetAssetMetaData(assetId, assetdata))
         return;
-    
-    if (assetdata.isunique){
-        
+
+    if (assetdata.isUnique){
+
         uniqueAssetSelected = true;
         ui->payAmount->setAssetsUnit(0);
         ui->payAmount->setValue(1);
@@ -389,7 +389,7 @@ void SendAssetsEntry::onAssetSelected(QString name)
         ui->amountLabel->setText("U&niqueId:");
 
         //make a copy of current selected uniqueId to restore after
-        //updating the list of uniquetId
+        //updating the list of uniqueId
         int index = ui->uniqueIdList->currentIndex();
         QString uniqueId = ui->uniqueIdList->currentText();
 
@@ -402,24 +402,24 @@ void SendAssetsEntry::onAssetSelected(QString name)
 
         stringModelId->setStringList(list);
 
-        //retore selected assetid
+        //restore selected assetId
         if (index >= 0 && name == prevname){
             index = ui->uniqueIdList->findText(uniqueId);
             ui->uniqueIdList->setCurrentIndex(index);
         } else {
             ui->uniqueIdList->setCurrentIndex(0);
-            ui->uniqueIdList->activated(0); 
+            ui->uniqueIdList->activated(0);
         }
     }else{
-        
+
         uniqueAssetSelected = false;
         ui->amountLabel->setText("A&mount:");
         ui->payAmount->setVisible(true);
         ui->useAvailableBalanceButton->setEnabled(true);
         ui->uniqueIdList->setVisible(false);
-    
+
         if (name != prevname){
-            ui->payAmount->setAssetsUnit(assetdata.Decimalpoint);
+            ui->payAmount->setAssetsUnit(assetdata.decimalPoint);
             ui->payAmount->setValue(0);
         }
     }
@@ -438,16 +438,16 @@ void SendAssetsEntry::updateAssetList()
 
     QStringList list;
     for (auto assetId : assets) {
-        CAssetMetaData assetdata;
-        if(passetsCache->GetAssetMetaData(assetId, assetdata)){
-            list << QString::fromStdString(assetdata.Name);
+        CAssetMetaData assetData;
+        if(passetsCache->GetAssetMetaData(assetId, assetData)){
+            list << QString::fromStdString(assetData.name);
         }
     }
 
     //update the list
     stringModel->setStringList(list);
-    
-    //retore selected asset
+
+    //restore selected asset
     if (index >= 0){
         index = ui->assetList->findText(name);
         ui->assetList->setCurrentIndex(index);

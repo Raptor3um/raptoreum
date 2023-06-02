@@ -297,10 +297,10 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, int nHeig
             if (!GetTransferAsset(txout.scriptPubKey, assetTransfer))
                 return state.DoS(100, false, REJECT_INVALID, "bad-txns-assets-output");
 
-            if (nAssetVout.count(assetTransfer.AssetId))
-                nAssetVout[assetTransfer.AssetId] += assetTransfer.nAmount;
+            if (nAssetVout.count(assetTransfer.assetId))
+                nAssetVout[assetTransfer.assetId] += assetTransfer.nAmount;
             else
-                nAssetVout.insert(std::make_pair(assetTransfer.AssetId, assetTransfer.nAmount));
+                nAssetVout.insert(std::make_pair(assetTransfer.assetId, assetTransfer.nAmount));
 
             if (assetTransfer.nAmount < 0)
                 return state.DoS(100, false, REJECT_INVALID, "bad-txns-vout-negative");
@@ -308,7 +308,7 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, int nHeig
             if (assetTransfer.nAmount > MAX_MONEY)
                 return state.DoS(100, false, REJECT_INVALID, "bad-txns-vout-toolarge");
 
-            if (!MoneyRange(nAssetVout.at(assetTransfer.AssetId), isV17active)) {
+            if (!MoneyRange(nAssetVout.at(assetTransfer.assetId), isV17active)) {
                 return state.DoS(100, false, REJECT_INVALID, "bad-txns-outputvalues-outofrange");
             }
         }
@@ -362,11 +362,11 @@ inline bool checkOutput(const CTxOut& out, CValidationState& state, CAmount& nVa
             return state.DoS(100, false, REJECT_INVALID, "bad-asset-transfer");
         }
 
-        if (!validateAmount(assetTransfer.AssetId, assetTransfer.nAmount)) {
+        if (!validateAmount(assetTransfer.assetId, assetTransfer.nAmount)) {
             return state.DoS(100, false, REJECT_INVALID, "bad-assets-transfer-amount");
         }
 
-        std::pair<std::string, uint16_t> asset(assetTransfer.AssetId, assetTransfer.uniqueId);
+        std::pair<std::string, uint16_t> asset(assetTransfer.assetId, assetTransfer.uniqueId);
         if (nAssetVin.count(asset))
             nAssetVin[asset] += assetTransfer.nAmount;
         else

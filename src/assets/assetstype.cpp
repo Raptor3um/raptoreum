@@ -38,19 +38,19 @@ void CAssetTransfer::BuildAssetTransaction(CScript& script) const
     script << OP_ASSET_ID << ToByteVector(vchMessage) << OP_DROP;
 }
 
-CAssetTransfer::CAssetTransfer(const std::string& AssetId, const CAmount& nAmount, const uint32_t& uniqueId)
+CAssetTransfer::CAssetTransfer(const std::string& assetId, const CAmount& nAmount, const uint32_t& uniqueId)
 {
     SetNull();
-    this->AssetId = AssetId;
+    this->assetId = assetId;
     this->isUnique = true;
     this->uniqueId = uniqueId;
     this->nAmount = nAmount;
 }
 
-CAssetTransfer::CAssetTransfer(const std::string& AssetId, const CAmount& nAmount)
+CAssetTransfer::CAssetTransfer(const std::string& assetId, const CAmount& nAmount)
 {
     SetNull();
-    this->AssetId = AssetId;
+    this->assetId = assetId;
     this->isUnique = false;
     this->uniqueId = MAX_UNIQUE_ID;
     this->nAmount = nAmount;

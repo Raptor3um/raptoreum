@@ -31,10 +31,10 @@ public:
     std::string assetId;       //Transaction hash of asset creation
     CAmount circulatingSupply; //update every mint transaction.
     uint16_t mintCount;
-    std::string Name;
+    std::string name;
     bool updatable = false; //if true this asset meta can be modify using assetTx update process.
-    bool isunique = false;  //true if this is asset is unique it has an identity per token (NFT flag)
-    uint8_t Decimalpoint = 0;
+    bool isUnique = false;  //true if this is asset is unique it has an identity per token (NFT flag)
+    uint8_t decimalPoint = 0;
     uint16_t maxMintCount;
     std::string referenceHash; //hash of the underlying physical or digital assets, IPFS hash can be used here.
     uint16_t fee;              // fee was paid for this asset creation in addition to miner fee. it is a whole non-decimal point value.
@@ -42,7 +42,7 @@ public:
     uint8_t type; //manual, coinbase, address, schedule
     CKeyID targetAddress;
     uint8_t issueFrequency;
-    CAmount Amount;
+    CAmount amount;
     CKeyID ownerAddress;
     CKeyID collateralAddress;
 
@@ -61,17 +61,17 @@ public:
         READWRITE(assetId);
         READWRITE(circulatingSupply);
         READWRITE(mintCount);
-        READWRITE(Name);
+        READWRITE(name);
         READWRITE(updatable);
-        READWRITE(isunique);
+        READWRITE(isUnique);
         READWRITE(maxMintCount);
-        READWRITE(Decimalpoint);
+        READWRITE(decimalPoint);
         READWRITE(referenceHash);
         READWRITE(fee);
         READWRITE(type);
         READWRITE(targetAddress);
         READWRITE(issueFrequency);
-        READWRITE(Amount);
+        READWRITE(amount);
         READWRITE(ownerAddress);
         READWRITE(collateralAddress);
     }
@@ -81,31 +81,31 @@ public:
         assetId = "";
         circulatingSupply = CAmount(-1);
         mintCount = uint16_t(-1);
-        Name = "";
+        name = "";
         updatable = false;
-        isunique = false;
-        Decimalpoint = uint8_t(-1);
+        isUnique = false;
+        decimalPoint = uint8_t(-1);
         referenceHash = "";
         maxMintCount = uint16_t(-1);
         fee = uint8_t(-1);
         type = uint8_t(-1);
         targetAddress = CKeyID();
         issueFrequency;
-        Amount = 0;
+        amount = 0;
         ownerAddress = CKeyID();
         collateralAddress = CKeyID();
     }
 };
 
-class CDatabasedAssetData
+class CDatabaseAssetData
 {
 public:
     CAssetMetaData asset;
     int blockHeight;
     uint256 blockHash;
 
-    CDatabasedAssetData(const CAssetMetaData& asset, const int& nHeight, const uint256& blockHash);
-    CDatabasedAssetData();
+    CDatabaseAssetData(const CAssetMetaData& asset, const int& nHeight, const uint256& blockHash);
+    CDatabaseAssetData();
 
     void SetNull()
     {
@@ -114,7 +114,7 @@ public:
         blockHash = uint256();
     }
 
-    bool operator<(const CDatabasedAssetData& rhs) const
+    bool operator<(const CDatabaseAssetData& rhs) const
     {
         return asset.assetId < rhs.asset.assetId;
     }
@@ -133,19 +133,19 @@ public:
 class CAssets
 {
 public:
-    std::map<std::string, CDatabasedAssetData> mapAsset;
-    std::map<std::string, std::string> mapAssetid;
+    std::map<std::string, CDatabaseAssetData> mapAsset;
+    std::map<std::string, std::string> mapAssetId;
 
     CAssets(const CAssets& assets)
     {
         this->mapAsset = assets.mapAsset;
-        this->mapAssetid = assets.mapAssetid;
+        this->mapAssetId = assets.mapAssetId;
     }
 
     CAssets& operator=(const CAssets& other)
     {
         mapAsset = other.mapAsset;
-        mapAssetid = other.mapAssetid;
+        mapAssetId = other.mapAssetId;
         return *this;
     }
 
@@ -157,15 +157,15 @@ public:
     void SetNull()
     {
         mapAsset.clear();
-        mapAssetid.clear();
+        mapAssetId.clear();
     }
 };
 
 class CAssetsCache : public CAssets
 {
 public:
-    std::set<CDatabasedAssetData> NewAssetsToRemove;
-    std::set<CDatabasedAssetData> NewAssetsToAdd;
+    std::set<CDatabaseAssetData> NewAssetsToRemove;
+    std::set<CDatabaseAssetData> NewAssetsToAdd;
 
     CAssetsCache() :
         CAssets()
@@ -181,15 +181,15 @@ public:
         this->NewAssetsToAdd = cache.NewAssetsToAdd;
     }
 
-    bool InsertAsset(CNewAssetTx newasset, std::string assetid, int nheigth);
-    bool UpdateAsset(CUpdateAssetTx upasset);
-    bool UpdateAsset(std::string assetid, CAmount amount);
+    bool InsertAsset(CNewAssetTx newAsset, std::string assetId, int nHeight);
+    bool UpdateAsset(CUpdateAssetTx upAsset);
+    bool UpdateAsset(std::string assetId, CAmount amount);
     //undo asset
-    bool RemoveAsset(std::string assetid);
-    bool UndoUpdateAsset(const CUpdateAssetTx upasset, const std::vector<std::pair<std::string, CBlockAssetUndo>>& vUndoData);
-    bool UndoMintAsset(const CMintAssetTx assettx, const std::vector<std::pair<std::string, CBlockAssetUndo>>& vUndoData);
+    bool RemoveAsset(std::string assetId);
+    bool UndoUpdateAsset(const CUpdateAssetTx upAsset, const std::vector<std::pair<std::string, CBlockAssetUndo>>& vUndoData);
+    bool UndoMintAsset(const CMintAssetTx assetTx, const std::vector<std::pair<std::string, CBlockAssetUndo>>& vUndoData);
 
-    bool CheckIfAssetExists(std::string asestId);
+    bool CheckIfAssetExists(std::string assetId);
     bool GetAssetMetaData(std::string assetId, CAssetMetaData& asset);
     bool GetAssetId(std::string name, std::string& assetId);
 

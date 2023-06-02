@@ -40,7 +40,7 @@ bool GetAssetId(const CScript& script, std::string& assetId)
 {
     CAssetTransfer assetTransfer;
     if (GetTransferAsset(script, assetTransfer)) {
-        assetId = assetTransfer.AssetId;
+        assetId = assetTransfer.assetId;
         return true;
     }
     return false;
@@ -48,168 +48,168 @@ bool GetAssetId(const CScript& script, std::string& assetId)
 
 CAssetMetaData::CAssetMetaData(const std::string txid, const CNewAssetTx assetTx)
 {
-    this->assetId = txid;
-    this->circulatingSupply = 0;
-    this->mintCount = 0;
-    this->Name = assetTx.Name;
-    this->updatable = assetTx.updatable;
-    this->isunique = assetTx.isUnique;
-    this->Decimalpoint = assetTx.decimalPoint;
-    this->referenceHash = assetTx.referenceHash;
-    this->maxMintCount = assetTx.maxMintCount;
-    this->fee = assetTx.fee;
-    this->type = assetTx.type;
-    this->targetAddress = assetTx.targetAddress;
-    this->issueFrequency = assetTx.issueFrequency;
-    this->Amount = assetTx.Amount;
-    this->ownerAddress = assetTx.ownerAddress;
-    this->collateralAddress = assetTx.collateralAddress;
+    assetId = txid;
+    circulatingSupply = 0;
+    mintCount = 0;
+    name = assetTx.name;
+    updatable = assetTx.updatable;
+    isUnique = assetTx.isUnique;
+    decimalPoint = assetTx.decimalPoint;
+    referenceHash = assetTx.referenceHash;
+    maxMintCount = assetTx.maxMintCount;
+    fee = assetTx.fee;
+    type = assetTx.type;
+    targetAddress = assetTx.targetAddress;
+    issueFrequency = assetTx.issueFrequency;
+    amount = assetTx.amount;
+    ownerAddress = assetTx.ownerAddress;
+    collateralAddress = assetTx.collateralAddress;
 }
 
-CDatabasedAssetData::CDatabasedAssetData(const CAssetMetaData& asset, const int& nHeight, const uint256& blockHash)
+CDatabaseAssetData::CDatabaseAssetData(const CAssetMetaData& asset, const int& nHeight, const uint256& blockHash)
 {
-    this->SetNull();
+    SetNull();
     this->asset = asset;
     this->blockHeight = nHeight;
     this->blockHash = blockHash;
 }
 
-CDatabasedAssetData::CDatabasedAssetData()
+CDatabaseAssetData::CDatabaseAssetData()
 {
-    this->SetNull();
+    SetNull();
 }
 
-bool CAssetsCache::InsertAsset(CNewAssetTx newasset, std::string assetid, int nheigth)
+bool CAssetsCache::InsertAsset(CNewAssetTx newAsset, std::string assetId, int nHeight)
 {
-    if (CheckIfAssetExists(assetid))
-        return error("%s: Tried adding new asset, but it already existed in the map of assets: %s", __func__, assetid);
-    CAssetMetaData test(assetid, newasset);
-    CDatabasedAssetData newAsset(test, nheigth, uint256());
+    if (CheckIfAssetExists(assetId))
+        return error("%s: Tried adding new asset, but it already existed in the map of assets: %s", __func__, assetId);
+    CAssetMetaData test(assetId, newAsset);
+    CDatabaseAssetData newAssetData(test, nHeight, uint256());
 
-    if (NewAssetsToRemove.count(newAsset))
-        NewAssetsToRemove.erase(newAsset);
+    if (NewAssetsToRemove.count(newAssetData))
+        NewAssetsToRemove.erase(newAssetData);
 
-    NewAssetsToAdd.insert(newAsset);
+    NewAssetsToAdd.insert(newAssetData);
 
-    mapAsset.insert(std::make_pair(assetid, newAsset));
-    mapAssetid.insert(std::make_pair(newAsset.asset.Name, assetid));
+    mapAsset.insert(std::make_pair(assetId, newAssetData));
+    mapAssetId.insert(std::make_pair(newAssetData.asset.name, assetId));
 
     return true;
 }
 
-bool CAssetsCache::UpdateAsset(CUpdateAssetTx upasset)
+bool CAssetsCache::UpdateAsset(CUpdateAssetTx upAsset)
 {
-    CAssetMetaData assetdata;
-    if (!GetAssetMetaData(upasset.AssetId, assetdata)) {
+    CAssetMetaData assetData;
+    if (!GetAssetMetaData(upAsset.assetId, assetData)) {
         return false;
     }
 
-    if (NewAssetsToAdd.count(mapAsset[upasset.AssetId]))
-        NewAssetsToAdd.erase(mapAsset[upasset.AssetId]);
+    if (NewAssetsToAdd.count(mapAsset[upAsset.assetId]))
+        NewAssetsToAdd.erase(mapAsset[upAsset.assetId]);
 
-    NewAssetsToRemove.insert(mapAsset[upasset.AssetId]);
+    NewAssetsToRemove.insert(mapAsset[upAsset.assetId]);
 
-    assetdata.updatable = upasset.updatable;
-    assetdata.referenceHash = upasset.referenceHash;
-    assetdata.type = upasset.type;
-    assetdata.targetAddress = upasset.targetAddress;
-    assetdata.issueFrequency = upasset.issueFrequency;
-    assetdata.Amount = upasset.Amount;
-    assetdata.ownerAddress = upasset.ownerAddress;
-    assetdata.collateralAddress = upasset.collateralAddress;
+    assetData.updatable = upAsset.updatable;
+    assetData.referenceHash = upAsset.referenceHash;
+    assetData.type = upAsset.type;
+    assetData.targetAddress = upAsset.targetAddress;
+    assetData.issueFrequency = upAsset.issueFrequency;
+    assetData.amount = upAsset.amount;
+    assetData.ownerAddress = upAsset.ownerAddress;
+    assetData.collateralAddress = upAsset.collateralAddress;
     //update cache
-    mapAsset[upasset.AssetId].asset = assetdata;
+    mapAsset[upAsset.assetId].asset = assetData;
     //update db
-    NewAssetsToAdd.insert(mapAsset[upasset.AssetId]);
+    NewAssetsToAdd.insert(mapAsset[upAsset.assetId]);
     return true;
 }
 
-bool CAssetsCache::UpdateAsset(std::string assetid, CAmount amount)
+bool CAssetsCache::UpdateAsset(std::string assetId, CAmount amount)
 {
-    if (mapAsset.count(assetid) > 0) {
-        if (NewAssetsToAdd.count(mapAsset[assetid]))
-            NewAssetsToAdd.erase(mapAsset[assetid]);
+    if (mapAsset.count(assetId) > 0) {
+        if (NewAssetsToAdd.count(mapAsset[assetId]))
+            NewAssetsToAdd.erase(mapAsset[assetId]);
 
-        NewAssetsToRemove.insert(mapAsset[assetid]);
-        mapAsset[assetid].asset.circulatingSupply += amount;
-        mapAsset[assetid].asset.mintCount += 1;
-        NewAssetsToAdd.insert(mapAsset[assetid]);
+        NewAssetsToRemove.insert(mapAsset[assetId]);
+        mapAsset[assetId].asset.circulatingSupply += amount;
+        mapAsset[assetId].asset.mintCount += 1;
+        NewAssetsToAdd.insert(mapAsset[assetId]);
         return true;
     }
     return false;
 }
 
-bool CAssetsCache::RemoveAsset(std::string asetId)
+bool CAssetsCache::RemoveAsset(std::string assetId)
 {
-    if (mapAsset.count(asetId) > 0) {
-        if (NewAssetsToAdd.count(mapAsset[asetId]))
-            NewAssetsToAdd.erase(mapAsset[asetId]);
+    if (mapAsset.count(assetId) > 0) {
+        if (NewAssetsToAdd.count(mapAsset[assetId]))
+            NewAssetsToAdd.erase(mapAsset[assetId]);
 
-        NewAssetsToRemove.insert(mapAsset[asetId]);
+        NewAssetsToRemove.insert(mapAsset[assetId]);
         return true;
     }
     return false;
 }
 
-bool CAssetsCache::UndoUpdateAsset(const CUpdateAssetTx upasset, const std::vector<std::pair<std::string, CBlockAssetUndo>>& vUndoData)
+bool CAssetsCache::UndoUpdateAsset(const CUpdateAssetTx upAsset, const std::vector<std::pair<std::string, CBlockAssetUndo>>& vUndoData)
 {
-    if (mapAsset.count(upasset.AssetId) > 0) {
-        CAssetMetaData assetdata;
-        if (!GetAssetMetaData(upasset.AssetId, assetdata)) {
+    if (mapAsset.count(upAsset.assetId) > 0) {
+        CAssetMetaData assetData;
+        if (!GetAssetMetaData(upAsset.assetId, assetData)) {
             return false;
         }
 
-        if (NewAssetsToAdd.count(mapAsset[upasset.AssetId]))
-            NewAssetsToAdd.erase(mapAsset[upasset.AssetId]);
+        if (NewAssetsToAdd.count(mapAsset[upAsset.assetId]))
+            NewAssetsToAdd.erase(mapAsset[upAsset.assetId]);
 
-        NewAssetsToRemove.insert(mapAsset[upasset.AssetId]);
+        NewAssetsToRemove.insert(mapAsset[upAsset.assetId]);
 
         for (auto item : vUndoData) {
-            if (item.first == upasset.AssetId) {
-                assetdata.updatable = item.second.updatable;
-                assetdata.referenceHash = item.second.referenceHash;
-                assetdata.type = item.second.type;
-                assetdata.targetAddress = item.second.targetAddress;
-                assetdata.issueFrequency = item.second.issueFrequency;
-                assetdata.Amount = item.second.Amount;
-                assetdata.ownerAddress = item.second.ownerAddress;
-                assetdata.collateralAddress = item.second.collateralAddress;
+            if (item.first == upAsset.assetId) {
+                assetData.updatable = item.second.updatable;
+                assetData.referenceHash = item.second.referenceHash;
+                assetData.type = item.second.type;
+                assetData.targetAddress = item.second.targetAddress;
+                assetData.issueFrequency = item.second.issueFrequency;
+                assetData.amount = item.second.amount;
+                assetData.ownerAddress = item.second.ownerAddress;
+                assetData.collateralAddress = item.second.collateralAddress;
             }
         }
 
         //update cache
-        mapAsset[upasset.AssetId].asset = assetdata;
+        mapAsset[upAsset.assetId].asset = assetData;
         //update db
-        NewAssetsToAdd.insert(mapAsset[upasset.AssetId]);
+        NewAssetsToAdd.insert(mapAsset[upAsset.assetId]);
         return true;
     }
     return false;
 }
 
-bool CAssetsCache::UndoMintAsset(const CMintAssetTx assettx, const std::vector<std::pair<std::string, CBlockAssetUndo>>& vUndoData)
+bool CAssetsCache::UndoMintAsset(const CMintAssetTx assetTx, const std::vector<std::pair<std::string, CBlockAssetUndo>>& vUndoData)
 {
-    if (mapAsset.count(assettx.AssetId) > 0) {
-        CAssetMetaData assetdata;
-        if (!GetAssetMetaData(assettx.AssetId, assetdata)) {
+    if (mapAsset.count(assetTx.assetId) > 0) {
+        CAssetMetaData assetData;
+        if (!GetAssetMetaData(assetTx.assetId, assetData)) {
             return false;
         }
 
-        if (NewAssetsToAdd.count(mapAsset[assettx.AssetId]))
-            NewAssetsToAdd.erase(mapAsset[assettx.AssetId]);
+        if (NewAssetsToAdd.count(mapAsset[assetTx.assetId]))
+            NewAssetsToAdd.erase(mapAsset[assetTx.assetId]);
 
-        NewAssetsToRemove.insert(mapAsset[assettx.AssetId]);
+        NewAssetsToRemove.insert(mapAsset[assetTx.assetId]);
 
         for (auto item : vUndoData) {
-            if (item.first == assettx.AssetId) {
-                assetdata.circulatingSupply = item.second.circulatingSupply;
-                assetdata.mintCount = item.second.mintCount;
+            if (item.first == assetTx.assetId) {
+                assetData.circulatingSupply = item.second.circulatingSupply;
+                assetData.mintCount = item.second.mintCount;
             }
         }
 
         //update cache
-        mapAsset[assettx.AssetId].asset = assetdata;
+        mapAsset[assetTx.assetId].asset = assetData;
         //update db
-        NewAssetsToAdd.insert(mapAsset[assettx.AssetId]);
+        NewAssetsToAdd.insert(mapAsset[assetTx.assetId]);
         return true;
     }
     return false;
@@ -220,7 +220,7 @@ bool CAssetsCache::CheckIfAssetExists(std::string assetId)
     //check if the asset is removed
     CAssetMetaData tempAsset;
     tempAsset.assetId = assetId;
-    CDatabasedAssetData cachedAsset(tempAsset, 0, uint256());
+    CDatabaseAssetData cachedAsset(tempAsset, 0, uint256());
     if (NewAssetsToRemove.count(cachedAsset)) {
         return false;
     }
@@ -234,7 +234,7 @@ bool CAssetsCache::CheckIfAssetExists(std::string assetId)
     uint256 blockHash;
     CAssetMetaData asset;
     if (passetsdb->ReadAssetData(assetId, asset, nHeight, blockHash)) {
-        CDatabasedAssetData newAsset(asset, nHeight, blockHash);
+        CDatabaseAssetData newAsset(asset, nHeight, blockHash);
         mapAsset.insert(std::make_pair(assetId, newAsset));
         return true;
     }
@@ -243,15 +243,15 @@ bool CAssetsCache::CheckIfAssetExists(std::string assetId)
 
 bool CAssetsCache::GetAssetId(std::string name, std::string& assetId)
 {
-    //try to get assetid by asset name
-    auto it = mapAssetid.find(name);
-    if (it != mapAssetid.end()) {
+    //try to get assetId by asset name
+    auto it = mapAssetId.find(name);
+    if (it != mapAssetId.end()) {
         assetId = it->second;
         return true;
     }
     //try to get asset id from the db
     if (passetsdb->ReadAssetId(name, assetId)) {
-        mapAssetid.insert(std::make_pair(name, assetId));
+        mapAssetId.insert(std::make_pair(name, assetId));
         return true;
     }
     return false;
@@ -275,7 +275,7 @@ bool CAssetsCache::GetAssetMetaData(std::string assetId, CAssetMetaData& asset)
     int nHeight;
     uint256 blockHash;
     if (passetsdb->ReadAssetData(assetId, asset, nHeight, blockHash)) {
-        CDatabasedAssetData newAsset(asset, nHeight, blockHash);
+        CDatabaseAssetData newAsset(asset, nHeight, blockHash);
         mapAsset.insert(std::make_pair(assetId, newAsset));
         return true;
     }
@@ -290,7 +290,7 @@ bool CAssetsCache::DumpCacheToDatabase()
             if (!passetsdb->EraseAssetData(newAsset.asset.assetId)) {
                 return error("%s : %s", __func__, "_Failed Erasing Asset Data from database");
             }
-            if (!passetsdb->EraseAssetId(newAsset.asset.Name)) {
+            if (!passetsdb->EraseAssetId(newAsset.asset.name)) {
                 return error("%s : %s", __func__, "_Failed Erasing Asset Data from database");
             }
         }
@@ -299,7 +299,7 @@ bool CAssetsCache::DumpCacheToDatabase()
             if (!passetsdb->WriteAssetData(newAsset.asset, newAsset.blockHeight, newAsset.blockHash)) {
                 return error("%s : %s", __func__, "_Failed Writing New Asset Data to database");
             }
-            if (!passetsdb->WriteAssetId(newAsset.asset.Name, newAsset.asset.assetId)) {
+            if (!passetsdb->WriteAssetId(newAsset.asset.name, newAsset.asset.assetId)) {
                 return error("%s : %s", __func__, "_Failed Writing New Asset Data to database");
             }
         }
@@ -331,8 +331,8 @@ bool CAssetsCache::Flush()
         for (auto& item : mapAsset)
             passetsCache->mapAsset[item.first] = item.second;
 
-        for (auto& item : mapAssetid)
-            passetsCache->mapAssetid[item.first] = item.second;
+        for (auto& item : mapAssetId)
+            passetsCache->mapAssetId[item.first] = item.second;
 
         return true;
 
@@ -345,18 +345,18 @@ void AddAssets(const CTransaction& tx, int nHeight, CAssetsCache* assetCache, st
 {
     if (Params().IsAssetsActive(chainActive.Tip()) && assetCache) {
         if (tx.nType == TRANSACTION_NEW_ASSET) {
-            CNewAssetTx assettx;
-            if (GetTxPayload(tx, assettx)) {
-                assetCache->InsertAsset(assettx, tx.GetHash().ToString(), nHeight);
+            CNewAssetTx assetTx;
+            if (GetTxPayload(tx, assetTx)) {
+                assetCache->InsertAsset(assetTx, tx.GetHash().ToString(), nHeight);
             }
         } else if (tx.nType == TRANSACTION_UPDATE_ASSET) {
-            CUpdateAssetTx assettx;
-            if (GetTxPayload(tx, assettx)) {
+            CUpdateAssetTx assetTx;
+            if (GetTxPayload(tx, assetTx)) {
                 CAssetMetaData asset;
-                if (!assetCache->GetAssetMetaData(assettx.AssetId, asset))
+                if (!assetCache->GetAssetMetaData(assetTx.assetId, asset))
                     return;
-                assetCache->UpdateAsset(assettx);
-                undoAssetData->first = assettx.AssetId; // Asset Name
+                assetCache->UpdateAsset(assetTx);
+                undoAssetData->first = assetTx.assetId; // Asset Name
                 undoAssetData->second = CBlockAssetUndo{false, asset.circulatingSupply,
                     asset.mintCount,
                     asset.updatable,
@@ -364,13 +364,13 @@ void AddAssets(const CTransaction& tx, int nHeight, CAssetsCache* assetCache, st
                     asset.type,
                     asset.targetAddress,
                     asset.issueFrequency,
-                    asset.Amount,
+                    asset.amount,
                     asset.ownerAddress,
                     asset.collateralAddress};
             }
         } else if (tx.nType == TRANSACTION_MINT_ASSET) {
-            CMintAssetTx assettx;
-            if (GetTxPayload(tx, assettx)) {
+            CMintAssetTx assetTx;
+            if (GetTxPayload(tx, assetTx)) {
                 CAmount amount = 0;
                 for (auto out : tx.vout) {
                     if (out.scriptPubKey.IsAssetScript()) {
@@ -380,10 +380,10 @@ void AddAssets(const CTransaction& tx, int nHeight, CAssetsCache* assetCache, st
                     }
                 }
                 CAssetMetaData asset;
-                if (!assetCache->GetAssetMetaData(assettx.AssetId, asset))
+                if (!assetCache->GetAssetMetaData(assetTx.assetId, asset))
                     return;
-                assetCache->UpdateAsset(assettx.AssetId, amount); //update circulating suply
-                undoAssetData->first = assettx.AssetId;           // Asset Name
+                assetCache->UpdateAsset(assetTx.assetId, amount); // Update circulating supply
+                undoAssetData->first = assetTx.assetId;           // Asset Name
                 undoAssetData->second = CBlockAssetUndo{true, asset.circulatingSupply,
                     asset.mintCount,
                     asset.updatable,
@@ -391,7 +391,7 @@ void AddAssets(const CTransaction& tx, int nHeight, CAssetsCache* assetCache, st
                     asset.type,
                     asset.targetAddress,
                     asset.issueFrequency,
-                    asset.Amount,
+                    asset.amount,
                     asset.ownerAddress,
                     asset.collateralAddress};
             }
@@ -408,7 +408,7 @@ bool GetAssetData(const CScript& script, CAssetOutputEntry& data)
     if (GetTransferAsset(script, transfer)) {
         data.nAmount = transfer.nAmount;
         ExtractDestination(script, data.destination);
-        data.assetId = transfer.AssetId;
+        data.assetId = transfer.assetId;
         return true;
     }
     return false;
@@ -428,5 +428,5 @@ bool validateAmount(const std::string& assetId, const CAmount nAmount)
     if (!passetsCache->GetAssetMetaData(assetId, asset))
         return false; //this should never happen
 
-    return validateAmount(nAmount, asset.Decimalpoint);
+    return validateAmount(nAmount, asset.decimalPoint);
 }

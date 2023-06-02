@@ -17,7 +17,7 @@
 class CAssetTransfer
 {
 public:
-    std::string AssetId;
+    std::string assetId;
     bool isUnique = false;
     uint32_t uniqueId = MAX_UNIQUE_ID; //default it to MAX_UNIQUE_ID
     CAmount nAmount;
@@ -29,7 +29,7 @@ public:
 
     void SetNull()
     {
-        AssetId = "";
+        assetId = "";
         isUnique = false;
         uniqueId = MAX_UNIQUE_ID;
         nAmount = 0;
@@ -40,15 +40,15 @@ public:
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action)
     {
-        READWRITE(AssetId);
+        READWRITE(assetId);
         READWRITE(isUnique);
         if (isUnique)
             READWRITE(uniqueId);
         READWRITE(nAmount);
     }
 
-    CAssetTransfer(const std::string& AssetId, const CAmount& nAmount, const uint32_t& uniqueId);
-    CAssetTransfer(const std::string& AssetId, const CAmount& nAmount);
+    CAssetTransfer(const std::string& assetId, const CAmount& nAmount, const uint32_t& uniqueId);
+    CAssetTransfer(const std::string& assetId, const CAmount& nAmount);
     void BuildAssetTransaction(CScript& script) const;
 };
 
