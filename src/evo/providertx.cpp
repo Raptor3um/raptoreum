@@ -114,15 +114,15 @@ inline bool checkNewUniqueAsset(CNewAssetTx& assettx, CValidationState& state)
     if (!assettx.isUnique)
         return true;
 
-    if (assettx.decimalPoint > 0 ){ // alway 0
-        return state.DoS(100, false, REJECT_INVALID, "bad-assets-decimalPoint"); 
+    if (assettx.decimalPoint > 0) { // alway 0
+        return state.DoS(100, false, REJECT_INVALID, "bad-assets-decimalPoint");
     }
-    
-    if (assettx.type > 0 ){ // manual mint only?
+
+    if (assettx.type > 0) { // manual mint only?
         return state.DoS(100, false, REJECT_INVALID, "bad-unique-assets-distibution-type");
     }
 
-    if (assettx.updatable){ // manual mint only?
+    if (assettx.updatable) { // manual mint only?
         return state.DoS(100, false, REJECT_INVALID, "bad-unique-assets-distibution-type");
     }
 
@@ -131,8 +131,7 @@ inline bool checkNewUniqueAsset(CNewAssetTx& assettx, CValidationState& state)
 
 bool CheckNewAssetTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, CAssetsCache* assetsCache)
 {
-
-    if(!Params().IsAssetsActive(chainActive.Tip())) {
+    if (!Params().IsAssetsActive(chainActive.Tip())) {
         return state.DoS(100, false, REJECT_INVALID, "assets-not-enabled");
     }
 
@@ -150,14 +149,14 @@ bool CheckNewAssetTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVal
     }
 
     //validate asset name
-    if(!IsAssetNameValid(assettx.Name)){
+    if (!IsAssetNameValid(assettx.Name)) {
         return state.DoS(100, false, REJECT_INVALID, "bad-assets-name");
     }
 
     //Check if a asset already exist with give name
     std::string assetid = assettx.Name;
-    if (assetsCache->GetAssetId(assettx.Name, assetid)){
-        if(assetsCache->CheckIfAssetExists(assetid)){
+    if (assetsCache->GetAssetId(assettx.Name, assetid)) {
+        if (assetsCache->CheckIfAssetExists(assetid)) {
             return state.DoS(100, false, REJECT_INVALID, "bad-assets-dup-name");
         }
     }
@@ -166,35 +165,35 @@ bool CheckNewAssetTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVal
     if (!checkNewUniqueAsset(assettx, state))
         return false;
 
-    if(assettx.decimalPoint < 0 || assettx.decimalPoint > 8){
-        return state.DoS(100, false, REJECT_INVALID, "bad-assets-decimalPoint"); 
+    if (assettx.decimalPoint < 0 || assettx.decimalPoint > 8) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-assets-decimalPoint");
     }
 
-    if(assettx.ownerAddress.IsNull()){
-        return state.DoS(100, false, REJECT_INVALID, "bad-assets-ownerAddress"); 
+    if (assettx.ownerAddress.IsNull()) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-assets-ownerAddress");
     }
 
-    if(assettx.targetAddress.IsNull()){
-        return state.DoS(100, false, REJECT_INVALID, "bad-assets-targetAddress"); 
+    if (assettx.targetAddress.IsNull()) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-assets-targetAddress");
     }
-    
-    if(assettx.type < 0 && assettx.type > 3){
+
+    if (assettx.type < 0 && assettx.type > 3) {
         return state.DoS(100, false, REJECT_INVALID, "bad-assets-distibution-type");
     }
-    
-    if(assettx.collateralAddress.IsNull() && assettx.type != 0){ //
-        return state.DoS(100, false, REJECT_INVALID, "bad-assets-collateralAddress"); 
+
+    if (assettx.collateralAddress.IsNull() && assettx.type != 0) { //
+        return state.DoS(100, false, REJECT_INVALID, "bad-assets-collateralAddress");
     }
 
-    
-    if(!validateAmount(assettx.Amount, assettx.decimalPoint)){
+
+    if (!validateAmount(assettx.Amount, assettx.decimalPoint)) {
         return state.DoS(100, false, REJECT_INVALID, "bad-assets-amount");
     }
 
     if (!CheckInputsHash(tx, assettx, state)) {
         return false;
     }
-    
+
     return true;
 }
 
@@ -205,8 +204,8 @@ inline bool checkAssetFeesPayment(const CTransaction& tx, CValidationState& stat
         assert(!coin.IsSpent());
         CTxDestination dest;
         ExtractDestination(coin.out.scriptPubKey, dest);
-        if(EncodeDestination(dest) != EncodeDestination(asset.ownerAddress)){
-           return state.DoS(100, false, REJECT_INVALID, "bad-assets-invalid-input");    
+        if (EncodeDestination(dest) != EncodeDestination(asset.ownerAddress)) {
+            return state.DoS(100, false, REJECT_INVALID, "bad-assets-invalid-input");
         }
     }
 
@@ -215,8 +214,7 @@ inline bool checkAssetFeesPayment(const CTransaction& tx, CValidationState& stat
 
 bool CheckUpdateAssetTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, const CCoinsViewCache& view, CAssetsCache* assetsCache)
 {
-
-    if(!Params().IsAssetsActive(chainActive.Tip())) {
+    if (!Params().IsAssetsActive(chainActive.Tip())) {
         return state.DoS(100, false, REJECT_INVALID, "assets-not-enabled");
     }
 
@@ -235,30 +233,30 @@ bool CheckUpdateAssetTx(const CTransaction& tx, const CBlockIndex* pindexPrev, C
 
     //Check if the provide asset id is valid
     CAssetMetaData asset;
-    if(!assetsCache->GetAssetMetaData(assettx.AssetId, asset)){
+    if (!assetsCache->GetAssetMetaData(assettx.AssetId, asset)) {
         return state.DoS(100, false, REJECT_INVALID, "bad-assets-invalid-id");
     }
 
     //Check if fees is paid by the owner address
-    if(!checkAssetFeesPayment(tx, state, view, asset))
+    if (!checkAssetFeesPayment(tx, state, view, asset))
         return false;
 
-    if(assettx.ownerAddress.IsNull()){
-        return state.DoS(100, false, REJECT_INVALID, "bad-assets-ownerAddress"); 
+    if (assettx.ownerAddress.IsNull()) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-assets-ownerAddress");
     }
 
-    if(assettx.targetAddress.IsNull()){
-        return state.DoS(100, false, REJECT_INVALID, "bad-assets-targetAddress"); 
+    if (assettx.targetAddress.IsNull()) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-assets-targetAddress");
     }
-    
-    if(assettx.type < 0 && assettx.type > 3){
+
+    if (assettx.type < 0 && assettx.type > 3) {
         return state.DoS(100, false, REJECT_INVALID, "bad-assets-distibution-type");
     }
-    
-    if(assettx.collateralAddress.IsNull() && assettx.type != 0){ //
-        return state.DoS(100, false, REJECT_INVALID, "bad-assets-collateralAddress"); 
+
+    if (assettx.collateralAddress.IsNull() && assettx.type != 0) { //
+        return state.DoS(100, false, REJECT_INVALID, "bad-assets-collateralAddress");
     }
-    
+
     if (!CheckInputsHash(tx, assettx, state)) {
         return false;
     }
@@ -271,33 +269,33 @@ inline bool checkAssetMintAmount(const CTransaction& tx, CValidationState& state
     CAmount nAmount = 0;
     std::set<uint16_t> setUniqueId;
     uint16_t minUniqueId = asset.circulatingSupply / COIN;
-    for (auto out : tx.vout){
-        if (out.scriptPubKey.IsAssetScript()){
+    for (auto out : tx.vout) {
+        if (out.scriptPubKey.IsAssetScript()) {
             CAssetTransfer assetTransfer;
-            if(!GetTransferAsset(out.scriptPubKey, assetTransfer)){
+            if (!GetTransferAsset(out.scriptPubKey, assetTransfer)) {
                 return state.DoS(100, false, REJECT_INVALID, "bad-mint-assets-transfer");
             }
-            if(assetTransfer.AssetId != asset.assetId){ //check asset id
-                return state.DoS(100, false, REJECT_INVALID, "bad-mint-assets-transfer"); 
+            if (assetTransfer.AssetId != asset.assetId) { //check asset id
+                return state.DoS(100, false, REJECT_INVALID, "bad-mint-assets-transfer");
             }
-            if (asset.isunique){
+            if (asset.isunique) {
                 //check validate uniqueId and amount
-                if (assetTransfer.uniqueId < minUniqueId || setUniqueId.count(assetTransfer.uniqueId)){
-                    return state.DoS(100, false, REJECT_INVALID, "bad-mint-dup-uniqueid"); 
+                if (assetTransfer.uniqueId < minUniqueId || setUniqueId.count(assetTransfer.uniqueId)) {
+                    return state.DoS(100, false, REJECT_INVALID, "bad-mint-dup-uniqueid");
                 }
                 setUniqueId.insert(assetTransfer.uniqueId);
-                if (assetTransfer.nAmount != 1 * COIN){
-                    return state.DoS(100, false, REJECT_INVALID, "bad-mint-unique-amount"); 
+                if (assetTransfer.nAmount != 1 * COIN) {
+                    return state.DoS(100, false, REJECT_INVALID, "bad-mint-unique-amount");
                 }
             }
-            if (!validateAmount(assetTransfer.nAmount, asset.Decimalpoint)){
+            if (!validateAmount(assetTransfer.nAmount, asset.Decimalpoint)) {
                 return state.DoS(100, false, REJECT_INVALID, "bad-mint-assets-amount");
             }
-            nAmount += assetTransfer.nAmount;                
+            nAmount += assetTransfer.nAmount;
         }
     }
 
-    if (asset.Amount != nAmount){
+    if (asset.Amount != nAmount) {
         return state.DoS(100, false, REJECT_INVALID, "bad-mint-assets-amount");
     }
 
@@ -306,8 +304,7 @@ inline bool checkAssetMintAmount(const CTransaction& tx, CValidationState& state
 
 bool CheckMintAssetTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, const CCoinsViewCache& view, CAssetsCache* assetsCache)
 {
-
-    if(!Params().IsAssetsActive(chainActive.Tip())) {
+    if (!Params().IsAssetsActive(chainActive.Tip())) {
         return state.DoS(100, false, REJECT_INVALID, "assets-not-enabled");
     }
 
@@ -326,19 +323,19 @@ bool CheckMintAssetTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVa
 
     //Check if the provide asset id is valid
     CAssetMetaData asset;
-    if(!assetsCache->GetAssetMetaData(assettx.AssetId, asset)){
+    if (!assetsCache->GetAssetMetaData(assettx.AssetId, asset)) {
         return state.DoS(100, false, REJECT_INVALID, "bad-assets-invalid-asset-id");
     }
 
-    if (asset.type == 0 || asset.isunique){ // manual mint or unique
+    if (asset.type == 0 || asset.isunique) { // manual mint or unique
         //Check if fees is paid by the owner address
-        if(!checkAssetFeesPayment( tx, state, view, asset))
+        if (!checkAssetFeesPayment(tx, state, view, asset))
             return false;
 
-        if(!checkAssetMintAmount( tx, state, asset))
+        if (!checkAssetMintAmount(tx, state, asset))
             return false;
 
-        if(asset.mintCount >= asset.maxMintCount){
+        if (asset.mintCount >= asset.maxMintCount) {
             return state.DoS(100, false, REJECT_INVALID, "bad-max-mint-count");
         }
 

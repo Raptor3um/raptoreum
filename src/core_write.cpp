@@ -106,8 +106,8 @@ std::string ScriptToAsmStr(const CScript& script, const bool fAttemptSighashDeco
             // Once we hit an OP_ASSET_ID, all the next data should be considered as hex
             str += GetOpName(opcode);
             str += " ";
-            str += HexStr(vch); 
-        } 
+            str += HexStr(vch);
+        }
         else
         if (0 <= opcode && opcode <= OP_PUSHDATA4) {
             if (vch.size() <= static_cast<std::vector<unsigned char>::size_type>(4)) {
@@ -172,7 +172,7 @@ void ScriptPubKeyToUniv(const CScript& scriptPubKey, UniValue& out, bool fInclud
         if (GetTransferAsset(scriptPubKey, data)) {
             std:string assetId = data.AssetId;
             if (data.isUnique)
-                assetId +="["+to_string(data.uniqueId)+"]";
+                assetId += "[" + to_string(data.uniqueId) + "]";
             assetInfo.pushKV("asset_id", assetId);
             assetInfo.pushKV("amount", ValueFromAmount(data.nAmount));
         }

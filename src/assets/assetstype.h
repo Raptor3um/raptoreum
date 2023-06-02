@@ -9,9 +9,9 @@
 #include <coins.h>
 #include <key_io.h>
 
-#define RTM_R 0x72  //R
-#define RTM_T 0x74  //T
-#define RTM_M 0x6d  //M
+#define RTM_R 0x72 //R
+#define RTM_T 0x74 //T
+#define RTM_M 0x6d //M
 #define MAX_UNIQUE_ID 0xffffffff
 
 class CAssetTransfer
@@ -19,9 +19,9 @@ class CAssetTransfer
 public:
     std::string AssetId;
     bool isUnique = false;
-    uint32_t uniqueId = MAX_UNIQUE_ID;//default it to MAX_UNIQUE_ID
+    uint32_t uniqueId = MAX_UNIQUE_ID; //default it to MAX_UNIQUE_ID
     CAmount nAmount;
-    
+
     CAssetTransfer()
     {
         SetNull();
@@ -30,7 +30,7 @@ public:
     void SetNull()
     {
         AssetId = "";
-        isUnique= false;
+        isUnique = false;
         uniqueId = MAX_UNIQUE_ID;
         nAmount = 0;
     }
@@ -44,7 +44,7 @@ public:
         READWRITE(isUnique);
         if (isUnique)
             READWRITE(uniqueId);
-        READWRITE(nAmount);      
+        READWRITE(nAmount);
     }
 
     CAssetTransfer(const std::string& AssetId, const CAmount& nAmount, const uint32_t& uniqueId);

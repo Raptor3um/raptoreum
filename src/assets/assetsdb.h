@@ -9,19 +9,18 @@
 #include "fs.h"
 #include "serialize.h"
 
-#include <string>
-#include <map>
-#include <dbwrapper.h>
 #include <amount.h>
+#include <dbwrapper.h>
+#include <map>
 #include <pubkey.h>
+#include <string>
 
 class CAssetMetaData;
 class uint256;
 class COutPoint;
 class CDatabasedAssetData;
 
-struct CBlockAssetUndo
-{
+struct CBlockAssetUndo {
     bool onlysuply;
     CAmount circulatingSupply;
     uint16_t mintCount;
@@ -39,11 +38,12 @@ struct CBlockAssetUndo
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
+    inline void SerializationOp(Stream& s, Operation ser_action)
+    {
         READWRITE(onlysuply);
         READWRITE(circulatingSupply);
         READWRITE(mintCount);
-        if(!onlysuply){
+        if (!onlysuply) {
             READWRITE(updatable);
             READWRITE(referenceHash);
             READWRITE(type);
@@ -68,17 +68,17 @@ public:
     // Write to database
     bool WriteAssetData(const CAssetMetaData& asset, const int nHeight, const uint256& blockHash);
     bool WriteAssetId(const std::string assetName, const std::string Txid);
-    bool WriteBlockUndoAssetData(const uint256& blockhash, const std::vector<std::pair<std::string, CBlockAssetUndo> >& assetUndoData);
+    bool WriteBlockUndoAssetData(const uint256& blockhash, const std::vector<std::pair<std::string, CBlockAssetUndo>>& assetUndoData);
 
     // Read from database
     bool ReadAssetData(const std::string& txid, CAssetMetaData& asset, int& nHeight, uint256& blockHash);
     bool ReadAssetId(const std::string& assetName, std::string& Txid);
-    bool ReadBlockUndoAssetData(const uint256& blockhash, std::vector<std::pair<std::string, CBlockAssetUndo> >& assetUndoData);
+    bool ReadBlockUndoAssetData(const uint256& blockhash, std::vector<std::pair<std::string, CBlockAssetUndo>>& assetUndoData);
 
     // Erase from database
     bool EraseAssetData(const std::string& assetName);
     bool EraseAssetId(const std::string& assetName);
-    
+
     // Helper functions
     bool LoadAssets();
 };
