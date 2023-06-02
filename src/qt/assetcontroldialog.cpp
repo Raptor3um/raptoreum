@@ -448,7 +448,7 @@ void AssetControlDialog::viewItemChanged(QTreeWidgetItem* item, int column)
         else {
             m_coin_control.SelectAsset(outpt);
         }
-        
+
         // selection changed -> update labels
         if (ui->treeWidget->isEnabled()) // do not update on every click for (un)select all
             AssetControlDialog::updateLabels(m_coin_control, model, this);
@@ -525,11 +525,11 @@ void AssetControlDialog::updateLabels(CCoinControl& m_coin_control, WalletModel 
 
         // Amount
         nAmount += out.txout.nValue;
-        
+
         CAssetTransfer assetTransfer;
         if(GetTransferAsset(out.txout.scriptPubKey, assetTransfer)){
             nAssetAmount += assetTransfer.nAmount;
-            AssetId = assetTransfer.AssetId;
+            AssetId = assetTransfer.assetId;
         }
 
         // Bytes
@@ -594,16 +594,16 @@ void AssetControlDialog::updateLabels(CCoinControl& m_coin_control, WalletModel 
     dialog->findChild<QLabel *>("labelAssetControlChange")       ->setEnabled(nPayAmount > 0);
 
     // stats
-    l1->setText(QString::number(nQuantity)); 
+    l1->setText(QString::number(nQuantity));
     // Quantity
-    CAssetMetaData assetdata;
-    if(passetsCache->GetAssetMetaData(AssetId, assetdata))
-    l2->setText(BitcoinUnits::formatWithCustomName(QString::fromStdString(assetdata.Name), nAssetAmount));        // Amount
+    CAssetMetaData assetData;
+    if(passetsCache->GetAssetMetaData(AssetId, assetData))
+    l2->setText(BitcoinUnits::formatWithCustomName(QString::fromStdString(assetData.name), nAssetAmount));        // Amount
     l3->setText(BitcoinUnits::formatWithUnit(nDisplayUnit, nPayFee));        // Fee
     l4->setText(BitcoinUnits::formatWithUnit(nDisplayUnit, nAfterFee));      // After Fee
     l5->setText(((nBytes > 0) ? ASYMP_UTF8 : "") + QString::number(nBytes));        // Bytes
-    l7->setText(fDust ? tr("yes") : tr("no")); 
-    l8->setText(BitcoinUnits::formatWithCustomName(QString::fromStdString(assetdata.Name), nChange));        // Amount
+    l7->setText(fDust ? tr("yes") : tr("no"));
+    l8->setText(BitcoinUnits::formatWithCustomName(QString::fromStdString(assetData.name), nChange));        // Amount
     if (nPayFee > 0)
     {
         l3->setText(ASYMP_UTF8 + l3->text());
@@ -674,7 +674,7 @@ void AssetControlDialog::updateView()
     std::map<CTxDestination, std::vector<std::tuple<COutPoint, interfaces::WalletTxOut>>> mapassets;
 
     mapassets = model->wallet().listAssets();
-     
+
     for (const auto& Assets : mapassets) {
         CAssetControlWidgetItem *itemWalletAddress = new CAssetControlWidgetItem();
         itemWalletAddress->setCheckState(COLUMN_CHECKBOX, Qt::Unchecked);
@@ -683,7 +683,7 @@ void AssetControlDialog::updateView()
         QString assetname = "";
         if (sWalletLabel.isEmpty())
             sWalletLabel = tr("(no label)");
-        
+
         bool hastree = false;
 
         CAmount nSum = 0;
@@ -698,11 +698,11 @@ void AssetControlDialog::updateView()
             std::string uniqueId = "";
             if(GetTransferAsset(out.txout.scriptPubKey, assetTransfer)){
                 nAmount = assetTransfer.nAmount;
-                CAssetMetaData assetdata;
-                if(passetsCache->GetAssetMetaData(assetTransfer.AssetId, assetdata)){
-                    if (assetdata.isunique)
+                CAssetMetaData assetData;
+                if(passetsCache->GetAssetMetaData(assetTransfer.assetId, assetData)){
+                    if (assetData.isUnique)
                         uniqueId += " ["+to_string(assetTransfer.uniqueId)+"]";
-                    assetname = QString::fromStdString(assetdata.Name);
+                    assetname = QString::fromStdString(assetData.name);
                 }
             }
 
@@ -736,7 +736,7 @@ void AssetControlDialog::updateView()
                 m_coin_control.UnSelectAsset(output);
                 continue;
             }*/
-            
+
             nSum += nAmount;
             nChildren++;
 
@@ -821,7 +821,7 @@ void AssetControlDialog::updateView()
             itemWalletAddress->setData(COLUMN_AMOUNT, Qt::UserRole, QVariant((qlonglong)nSum));
         }
     }
-       
+
     // expand all partially selected and hide the empty
     if (treeMode)
     {
@@ -852,9 +852,9 @@ void AssetControlDialog::updateAssetList()
     QStringList list;
     //list << BitcoinUnits::name(model->getOptionsModel()->getDisplayUnit());
     for (auto assetId : assets) {
-        CAssetMetaData assetdata;
-        if(passetsCache->GetAssetMetaData(assetId, assetdata)){
-            list << QString::fromStdString(assetdata.Name);
+        CAssetMetaData assetData;
+        if(passetsCache->GetAssetMetaData(assetId, assetData)){
+            list << QString::fromStdString(assetData.name);
         }
     }
 

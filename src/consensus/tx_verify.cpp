@@ -28,15 +28,15 @@ extern CChain& chainActive;
 
 static bool checkSpecialTxFee(const CTransaction &tx, CAmount& nFeeTotal, CAmount& specialTxFee, bool fFeeVerify = false) {
 	if(tx.nVersion >= 3) {
-		switch(tx.nType){
-            case TRANSACTION_FUTURE:{
+            switch (tx.nType) {
+            case TRANSACTION_FUTURE: {
                 CFutureTx ftx;
-                if(GetTxPayload(tx.vExtraPayload, ftx)) {
-                    if(!Params().IsFutureActive(chainActive.Tip())) {
+                if (GetTxPayload(tx.vExtraPayload, ftx)) {
+                    if (!Params().IsFutureActive(chainActive.Tip())) {
                         return false;
                     }
                     bool futureEnabled = sporkManager.IsSporkActive(SPORK_22_SPECIAL_TX_FEE);
-                    if(futureEnabled && fFeeVerify && ftx.fee != getFutureFees()) {
+                    if (futureEnabled && fFeeVerify && ftx.fee != getFutureFees()) {
                         return false;
                     }
                     specialTxFee = ftx.fee * COIN;
@@ -44,79 +44,79 @@ static bool checkSpecialTxFee(const CTransaction &tx, CAmount& nFeeTotal, CAmoun
                 }
                 break;
             }
-            case TRANSACTION_NEW_ASSET:{
+            case TRANSACTION_NEW_ASSET: {
                 CNewAssetTx asset;
-                if(GetTxPayload(tx.vExtraPayload, asset)) {
-                    if(!Params().IsAssetsActive(chainActive.Tip())) {
+                if (GetTxPayload(tx.vExtraPayload, asset)) {
+                    if (!Params().IsAssetsActive(chainActive.Tip())) {
                         return false;
                     }
                     bool assetsEnabled = sporkManager.IsSporkActive(SPORK_22_SPECIAL_TX_FEE);
-                    if(assetsEnabled && fFeeVerify && asset.fee != getAssetsFees()){
+                    if (assetsEnabled && fFeeVerify && asset.fee != getAssetsFees()) {
                         return false;
                     }
-                    specialTxFee = asset.fee  * COIN;
+                    specialTxFee = asset.fee * COIN;
                     nFeeTotal -= specialTxFee;
                 }
                 break;
             }
-            case TRANSACTION_UPDATE_ASSET:{
+            case TRANSACTION_UPDATE_ASSET: {
                 CUpdateAssetTx asset;
-                if(GetTxPayload(tx.vExtraPayload, asset)) {
-                    if(!Params().IsAssetsActive(chainActive.Tip())) {
+                if (GetTxPayload(tx.vExtraPayload, asset)) {
+                    if (!Params().IsAssetsActive(chainActive.Tip())) {
                         return false;
                     }
                     bool assetsEnabled = sporkManager.IsSporkActive(SPORK_22_SPECIAL_TX_FEE);
-                    if(assetsEnabled && fFeeVerify && asset.fee != getAssetsFees()){
+                    if (assetsEnabled && fFeeVerify && asset.fee != getAssetsFees()) {
                         return false;
                     }
-                    specialTxFee = asset.fee  * COIN;
+                    specialTxFee = asset.fee * COIN;
                     nFeeTotal -= specialTxFee;
                 }
                 break;
             }
-            case TRANSACTION_MINT_ASSET:{
+            case TRANSACTION_MINT_ASSET: {
                 CMintAssetTx asset;
-                if(GetTxPayload(tx.vExtraPayload, asset)) {
-                    if(!Params().IsAssetsActive(chainActive.Tip())) {
+                if (GetTxPayload(tx.vExtraPayload, asset)) {
+                    if (!Params().IsAssetsActive(chainActive.Tip())) {
                         return false;
                     }
                     bool assetsEnabled = sporkManager.IsSporkActive(SPORK_22_SPECIAL_TX_FEE);
-                    if(assetsEnabled && fFeeVerify && asset.fee != getAssetsFees()){
+                    if (assetsEnabled && fFeeVerify && asset.fee != getAssetsFees()) {
                         return false;
                     }
-                    specialTxFee = asset.fee  * COIN;
+                    specialTxFee = asset.fee * COIN;
                     nFeeTotal -= specialTxFee;
                 }
                 break;
+            } break;
             }
-            break;
         }
-	}
     return true;
 }
 
-static const char *validateFutureCoin(const Coin& coin, int nSpendHeight) {
-	if(coin.nType == TRANSACTION_FUTURE) {
-		CBlockIndex* confirmedBlockIndex = chainActive[coin.nHeight];
-		if(confirmedBlockIndex) {
-			int64_t adjustCurrentTime = GetAdjustedTime();
-			uint32_t confirmedTime = confirmedBlockIndex->GetBlockTime();
-			CFutureTx futureTx;
-			if(GetTxPayload(coin.vExtraPayload, futureTx)) {
+static const char* validateFutureCoin(const Coin& coin, int nSpendHeight)
+{
+    if (coin.nType == TRANSACTION_FUTURE) {
+        CBlockIndex* confirmedBlockIndex = chainActive[coin.nHeight];
+        if (confirmedBlockIndex) {
+            int64_t adjustCurrentTime = GetAdjustedTime();
+            uint32_t confirmedTime = confirmedBlockIndex->GetBlockTime();
+            CFutureTx futureTx;
+            if (GetTxPayload(coin.vExtraPayload, futureTx)) {
                 bool isBlockMature = futureTx.maturity >= 0 && nSpendHeight - coin.nHeight >= futureTx.maturity;
-                bool isTimeMature = futureTx.lockTime >= 0 && adjustCurrentTime - confirmedTime  >= futureTx.lockTime;
+                bool isTimeMature = futureTx.lockTime >= 0 && adjustCurrentTime - confirmedTime >= futureTx.lockTime;
                 bool canSpend = isBlockMature || isTimeMature;
-				if(!canSpend) {
-					return "bad-txns-premature-spend-of-future";
-				}
-				return nullptr;
-			}
-			return "bad-txns-unable-to-parse-future";
-		}
-		// should not get here
-		return "bad-txns-unable-to-block-index-for-future";
-	}
-	return nullptr;
+                if (!canSpend) {
+                    return "bad-txns-premature-spend-of-future";
+                }
+                return nullptr;
+            }
+            return "bad-txns-unable-to-parse-future";
+        }
+        // should not get here
+        return "bad-txns-unable-to-block-index-for-future";
+    }
+    return nullptr;
 }
 
 
@@ -292,23 +292,23 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, int nHeig
         if (!MoneyRange(nValueOut, isV17active))
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-txouttotal-toolarge");
 
-        if(txout.scriptPubKey.IsAssetScript()){
+        if (txout.scriptPubKey.IsAssetScript()) {
             CAssetTransfer assetTransfer;
-            if(!GetTransferAsset(txout.scriptPubKey, assetTransfer))
+            if (!GetTransferAsset(txout.scriptPubKey, assetTransfer))
                 return state.DoS(100, false, REJECT_INVALID, "bad-txns-assets-output");
 
-            if(nAssetVout.count(assetTransfer.AssetId))
-                nAssetVout[assetTransfer.AssetId] += assetTransfer.nAmount;
+            if (nAssetVout.count(assetTransfer.assetId))
+                nAssetVout[assetTransfer.assetId] += assetTransfer.nAmount;
             else
-                nAssetVout.insert(std::make_pair(assetTransfer.AssetId, assetTransfer.nAmount));
-            
+                nAssetVout.insert(std::make_pair(assetTransfer.assetId, assetTransfer.nAmount));
+
             if (assetTransfer.nAmount < 0)
-            return state.DoS(100, false, REJECT_INVALID, "bad-txns-vout-negative");
-            
+                return state.DoS(100, false, REJECT_INVALID, "bad-txns-vout-negative");
+
             if (assetTransfer.nAmount > MAX_MONEY)
                 return state.DoS(100, false, REJECT_INVALID, "bad-txns-vout-toolarge");
-            
-            if (!MoneyRange(nAssetVout.at(assetTransfer.AssetId), isV17active)) {
+
+            if (!MoneyRange(nAssetVout.at(assetTransfer.assetId), isV17active)) {
                 return state.DoS(100, false, REJECT_INVALID, "bad-txns-outputvalues-outofrange");
             }
         }
@@ -322,8 +322,7 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, int nHeig
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputs-duplicate");
     }
 
-    if (tx.IsCoinBase())
-    {
+    if (tx.IsCoinBase()) {
         size_t minCbSize = 2;
         if (tx.nType == TRANSACTION_COINBASE) {
             // With the introduction of CbTx, coinbase scripts are not required anymore to hold a valid block height
@@ -331,15 +330,13 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, int nHeig
         }
         if (tx.vin[0].scriptSig.size() < minCbSize || tx.vin[0].scriptSig.size() > 100)
             return state.DoS(100, false, REJECT_INVALID, "bad-cb-length");
-		FounderPayment founderPayment = Params().GetConsensus().nFounderPayment;
-		CAmount founderReward = founderPayment.getFounderPaymentAmount(nHeight, blockReward);
-		int founderStartHeight = founderPayment.getStartBlock();
-		if(nHeight > founderStartHeight && founderReward && !founderPayment.IsBlockPayeeValid(tx,nHeight,blockReward)) {
-			return state.DoS(100, false, REJECT_INVALID, "bad-cb-founder-payment-not-found");
-		}
-    }
-    else
-    {
+        FounderPayment founderPayment = Params().GetConsensus().nFounderPayment;
+        CAmount founderReward = founderPayment.getFounderPaymentAmount(nHeight, blockReward);
+        int founderStartHeight = founderPayment.getStartBlock();
+        if (nHeight > founderStartHeight && founderReward && !founderPayment.IsBlockPayeeValid(tx, nHeight, blockReward)) {
+            return state.DoS(100, false, REJECT_INVALID, "bad-cb-founder-payment-not-found");
+        }
+    } else {
         for (const auto& txin : tx.vin)
             if (txin.prevout.IsNull())
                 return state.DoS(10, false, REJECT_INVALID, "bad-txns-prevout-null");
@@ -356,29 +353,29 @@ inline bool checkOutput(const CTxOut& out, CValidationState& state, CAmount& nVa
         return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputvalues-outofrange");
     }
 
-    if(out.scriptPubKey.IsAssetScript()){
+    if (out.scriptPubKey.IsAssetScript()) {
         if (out.nValue != 0)
             return state.DoS(100, false, REJECT_INVALID, "bad-asset-value-outofrange");
 
         CAssetTransfer assetTransfer;
-        if(!GetTransferAsset(out.scriptPubKey, assetTransfer)){
+        if (!GetTransferAsset(out.scriptPubKey, assetTransfer)) {
             return state.DoS(100, false, REJECT_INVALID, "bad-asset-transfer");
         }
 
-        if (!validateAmount(assetTransfer.AssetId, assetTransfer.nAmount)){
+        if (!validateAmount(assetTransfer.assetId, assetTransfer.nAmount)) {
             return state.DoS(100, false, REJECT_INVALID, "bad-assets-transfer-amount");
         }
 
-        std::pair<std::string, uint16_t> asset(assetTransfer.AssetId, assetTransfer.uniqueId);
-        if(nAssetVin.count(asset))
+        std::pair<std::string, uint16_t> asset(assetTransfer.assetId, assetTransfer.uniqueId);
+        if (nAssetVin.count(asset))
             nAssetVin[asset] += assetTransfer.nAmount;
         else
             nAssetVin.insert(std::make_pair(asset, assetTransfer.nAmount));
-        
+
         //check unique asset amount, should be alway 1 COIN
         if (assetTransfer.isUnique && nAssetVin[asset] != 1 * COIN)
             return state.DoS(100, false, REJECT_INVALID, "bad-asset-inputvalues-outofrange");
-        
+
         if (!MoneyRange(assetTransfer.nAmount) || !MoneyRange(nAssetVin.at(asset))) {
             return state.DoS(100, false, REJECT_INVALID, "bad-asset-inputvalues-outofrange");
         }
@@ -408,32 +405,31 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
                 REJECT_INVALID, "bad-txns-premature-spend-of-coinbase",
                 strprintf("tried to spend coinbase at depth %d", nSpendHeight - coin.nHeight));
         }
-                
+
         if (!checkOutput(coin.out, state, nValueIn, nAssetVin, isV17active))
             return false;
 
         const char* futureValidationError = validateFutureCoin(coin, nSpendHeight);
-		if(futureValidationError) {
-			return state.DoS(100, false, REJECT_INVALID, futureValidationError);
-
-		}
+        if (futureValidationError) {
+            return state.DoS(100, false, REJECT_INVALID, futureValidationError);
+        }
     }
 
     CAmount value_out = 0;
     std::map<std::pair<std::string, uint16_t>, CAmount> nAssetVout;
-    for (auto out : tx.vout){
+    for (auto out : tx.vout) {
         if (!checkOutput(out, state, value_out, nAssetVout, isV17active))
             return false;
     }
 
-    if(tx.nType != TRANSACTION_MINT_ASSET){
+    if (tx.nType != TRANSACTION_MINT_ASSET) {
         for (const auto& outValue : nAssetVout) {
-            if(!nAssetVin.count(outValue.first) || nAssetVin.at(outValue.first) != outValue.second)
+            if (!nAssetVin.count(outValue.first) || nAssetVin.at(outValue.first) != outValue.second)
                 return state.DoS(100, false, REJECT_INVALID, "bad-asset-inputs-outputs-mismatch");
         }
         //Check for missing outputs
         for (const auto& outValue : nAssetVin) {
-            if(!nAssetVout.count(outValue.first) || nAssetVout.at(outValue.first) != outValue.second)
+            if (!nAssetVout.count(outValue.first) || nAssetVout.at(outValue.first) != outValue.second)
                 return state.DoS(100, false, REJECT_INVALID, "bad-asset-inputs-outputs-mismatch");
         }
     }
@@ -450,14 +446,13 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
     }
     txfee = txfee_aux;
 
-	if(!checkSpecialTxFee(tx, txfee, specialTxFee, fFeeVerify)) {
+    if (!checkSpecialTxFee(tx, txfee, specialTxFee, fFeeVerify)) {
         return state.DoS(100, false, REJECT_INVALID, "bad-txns-wrong-future-fee-or-not-enable");
-
     }
 
-	if(txfee < 0) {
-		return state.DoS(100, false, REJECT_INVALID, "bad-txns-fee-too-low", false,
-		            strprintf("fee (%s), special tx fee (%s)", FormatMoney(txfee), FormatMoney(specialTxFee)));
-	}
+    if (txfee < 0) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-txns-fee-too-low", false,
+            strprintf("fee (%s), special tx fee (%s)", FormatMoney(txfee), FormatMoney(specialTxFee)));
+    }
     return true;
 }

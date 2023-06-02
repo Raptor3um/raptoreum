@@ -124,11 +124,11 @@ SendAssetsDialog::SendAssetsDialog(QWidget* parent) :
     ui->customFee->setValue(settings.value("nTransactionFee").toLongLong());
     ui->checkBoxMinimumFee->setChecked(settings.value("fPayOnlyMinFee").toBool());
     minimizeFeeSection(settings.value("fFeeSectionMinimized").toBool());
-    
+
     ui->sendButton->setText(tr("S&end"));
     ui->sendButton->setToolTip(tr("Confirm the send action"));
 
-    m_coin_control->UseCoinJoin(false);       
+    m_coin_control->UseCoinJoin(false);
 }
 
 void SendAssetsDialog::setClientModel(ClientModel *_clientModel)
@@ -166,7 +166,7 @@ void SendAssetsDialog::setModel(WalletModel *_model)
         // Asset Control
         connect(_model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(AssetControlUpdateLabels()));
         connect(_model->getOptionsModel(), SIGNAL(coinControlFeaturesChanged(bool)), this, SLOT(AssetControlFeatureChanged(bool)));
-        connect(_model, SIGNAL(assetListChanged()), this, SLOT(updateAssetList())); 
+        connect(_model, SIGNAL(assetListChanged()), this, SLOT(updateAssetList()));
         ui->frameAssetControl->setVisible(_model->getOptionsModel()->getCoinControlFeatures());
         AssetControlUpdateLabels();
 
@@ -301,12 +301,12 @@ void SendAssetsDialog::send(QList<SendCoinsRecipient> recipients)
     for (const SendCoinsRecipient &rcp : currentTransaction.getRecipients())
     {
         // generate bold amount string with wallet name in case of multiwallet
-        CAssetMetaData assetdata;
+        CAssetMetaData assetData;
         int decimalPoint = 0;
         std::string assetId;
         passetsCache->GetAssetId(rcp.assetId.toStdString(), assetId);
-        if (passetsCache->GetAssetMetaData(assetId , assetdata))
-            decimalPoint = assetdata.Decimalpoint;
+        if (passetsCache->GetAssetMetaData(assetId , assetData))
+            decimalPoint = assetData.decimalPoint;
         if (!mapAmounts.count(assetId))
             mapAmounts[rcp.assetId.toStdString()] = std::make_pair(rcp.assetAmount, decimalPoint);
         else
@@ -315,8 +315,8 @@ void SendAssetsDialog::send(QList<SendCoinsRecipient> recipients)
         std::string uniqueId = "";
         if (rcp.uniqueId < MAX_UNIQUE_ID)
             uniqueId += " ["+to_string(rcp.uniqueId)+"]";
-        QString amount = "<b>" + BitcoinUnits::formatHtmlWithCustomName(QString::fromStdString(assetdata.Name), QString::fromStdString(uniqueId), decimalPoint, rcp.assetAmount);
-        
+        QString amount = "<b>" + BitcoinUnits::formatHtmlWithCustomName(QString::fromStdString(assetData.name), QString::fromStdString(uniqueId), decimalPoint, rcp.assetAmount);
+
         if (model->isMultiwallet()) {
             amount.append(" <u>"+tr("from wallet %1").arg(GUIUtil::HtmlEscape(model->getWalletName()))+"</u> ");
         }
@@ -498,7 +498,7 @@ SendAssetsEntry *SendAssetsDialog::addEntry()
     connect(entry, SIGNAL(removeEntry(SendAssetsEntry*)), this, SLOT(removeEntry(SendAssetsEntry*)));
     connect(entry, SIGNAL(useAvailableAssetsBalance(SendAssetsEntry*)), this, SLOT(useAvailableAssetsBalance(SendAssetsEntry*)));
     connect(entry, SIGNAL(payAmountChanged()), this, SLOT(AssetControlUpdateLabels()));
-    
+
     // Focus the field, so that entry can start immediately
     entry->clear();
     entry->setFocus();
@@ -662,7 +662,7 @@ void SendAssetsDialog::processSendAssetsReturn(const WalletModel::SendAssetsRetu
         break;
     case WalletModel::AmountExceedsmaxmoney:
         msgParams.first = tr("The amount to pay exceeds the limit of 21 million per transaction.");
-        break;    
+        break;
     // included to prevent a compiler warning.
     case WalletModel::OK:
     default:
