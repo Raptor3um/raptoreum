@@ -462,17 +462,17 @@ bool CTxMemPool::addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry,
         CNewAssetTx assetTx;
         bool ok = GetTxPayload(tx, assetTx);
         assert(ok);
-        mapAssetsToHash.emplace(assetTx.Name, tx.GetHash());
+        mapAssetsToHash.emplace(assetTx.name, tx.GetHash());
     } else if (tx.nType == TRANSACTION_UPDATE_ASSET) {
         CUpdateAssetTx assetTx;
         bool ok = GetTxPayload(tx, assetTx);
         assert(ok);
-        mapAssetsIdToHash.emplace(assetTx.AssetId, tx.GetHash());
+        mapAssetsIdToHash.emplace(assetTx.assetId, tx.GetHash());
     } else if (tx.nType == TRANSACTION_MINT_ASSET) {
         CMintAssetTx assetTx;
         bool ok = GetTxPayload(tx, assetTx);
         assert(ok);
-        mapAssetsIdToHash.emplace(assetTx.AssetId, tx.GetHash());
+        mapAssetsIdToHash.emplace(assetTx.assetId, tx.GetHash());
     }
 
     return true;
@@ -766,19 +766,19 @@ void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
         if (!GetTxPayload(it->GetTx(), assetTx)) {
             assert(false);
         }
-        mapAssetsToHash.erase(assetTx.Name);
+        mapAssetsToHash.erase(assetTx.name);
     } else if (it->GetTx().nType == TRANSACTION_UPDATE_ASSET) {
         CUpdateAssetTx assetTx;
         if (!GetTxPayload(it->GetTx(), assetTx)) {
             assert(false);
         }
-        mapAssetsIdToHash.erase(assetTx.AssetId);
+        mapAssetsIdToHash.erase(assetTx.assetId);
     } else if (it->GetTx().nType == TRANSACTION_MINT_ASSET) {
         CMintAssetTx assetTx;
         if (!GetTxPayload(it->GetTx(), assetTx)) {
             assert(false);
         }
-        mapAssetsIdToHash.erase(assetTx.AssetId);
+        mapAssetsIdToHash.erase(assetTx.assetId);
     }
 
     totalTxSize -= it->GetTxSize();
@@ -1442,7 +1442,7 @@ bool CTxMemPool::existsAssetTxConflict(const CTransaction &tx) const {
             LogPrint(BCLog::MEMPOOL, "%s: ERROR: Invalid transaction payload, tx: %s", __func__, tx.ToString()); /* Continued */
             return true; // i.e. can't decode payload == conflict
         }
-        auto it = mapAssetsToHash.find(assetTx.Name);
+        auto it = mapAssetsToHash.find(assetTx.name);
         return it != mapAssetsToHash.end() && it->second != tx.GetHash();
     } else if (tx.nType == TRANSACTION_UPDATE_ASSET) {
         CUpdateAssetTx assetTx;
@@ -1450,7 +1450,7 @@ bool CTxMemPool::existsAssetTxConflict(const CTransaction &tx) const {
             LogPrint(BCLog::MEMPOOL, "%s: ERROR: Invalid transaction payload, tx: %s", __func__, tx.ToString()); /* Continued */
             return true; // i.e. can't decode payload == conflict
         }
-        auto it = mapAssetsIdToHash.find(assetTx.AssetId);
+        auto it = mapAssetsIdToHash.find(assetTx.assetId);
         return it != mapAssetsIdToHash.end() && it->second != tx.GetHash();
     } else if (tx.nType == TRANSACTION_MINT_ASSET) {
         CMintAssetTx assetTx;
@@ -1458,7 +1458,7 @@ bool CTxMemPool::existsAssetTxConflict(const CTransaction &tx) const {
             LogPrint(BCLog::MEMPOOL, "%s: ERROR: Invalid transaction payload, tx: %s", __func__, tx.ToString()); /* Continued */
             return true; // i.e. can't decode payload == conflict
         }
-        auto it = mapAssetsIdToHash.find(assetTx.AssetId);
+        auto it = mapAssetsIdToHash.find(assetTx.assetId);
         return it != mapAssetsIdToHash.end() && it->second != tx.GetHash();
     }
 
