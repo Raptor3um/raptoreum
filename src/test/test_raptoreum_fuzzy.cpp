@@ -241,7 +241,7 @@ int test_one_input(std::vector<uint8_t> buffer) {
         case CTXOUTCOMPRESSOR_DESERIALIZE:
         {
             CTxOut to;
-            CTxOutCompressor toc(to);
+            auto toc = Using<TxOutCompression>(to);
             try
             {
                 ds >> toc;
@@ -277,7 +277,7 @@ int test_one_input(std::vector<uint8_t> buffer) {
 
 static std::unique_ptr<ECCVerifyHandle> globalVerifyHandle;
 void initialize() {
-    globalVerifyHandle = std::unique_ptr<ECCVerifyHandle>(new ECCVerifyHandle());
+    globalVerifyHandle = MakeUnique<ECCVerifyHandle>();
 }
 
 // This function is used by libFuzzer

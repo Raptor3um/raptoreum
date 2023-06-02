@@ -10,6 +10,7 @@
 
 #include <arith_uint256.h>
 #include <consensus/params.h>
+#include <flatfile.h>
 #include <primitives/block.h>
 #include <tinyformat.h>
 #include <uint256.h>
@@ -20,7 +21,7 @@
  * Maximum amount of time that a block timestamp is allowed to exceed the
  * current network-adjusted time before the block will be accepted.
  */
-static const int64_t MAX_FUTURE_BLOCK_TIME = 15 * 60;
+static constexpr int64_t MAX_FUTURE_BLOCK_TIME = 15 * 60;
 
 /**
  * Timestamp window used as a grace period by code that compares external
@@ -28,7 +29,13 @@ static const int64_t MAX_FUTURE_BLOCK_TIME = 15 * 60;
  * to block timestamps. This should be set at least as high as
  * MAX_FUTURE_BLOCK_TIME.
  */
-static const int64_t TIMESTAMP_WINDOW = MAX_FUTURE_BLOCK_TIME;
+static constexpr int64_t TIMESTAMP_WINDOW = MAX_FUTURE_BLOCK_TIME;
+
+/**
+ * Maximum gap between node time and block time
+ * used for the "Catching up..." mode in GUI.
+ */
+static constexpr int64_t MAX_BLOCK_TIME_GAP = 3 * 60;
 
 class CBlockFileInfo
 {
@@ -41,17 +48,15 @@ public:
     uint64_t nTimeFirst;       //!< earliest time of block in file
     uint64_t nTimeLast;        //!< latest time of block in file
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
-        READWRITE(VARINT(nBlocks));
-        READWRITE(VARINT(nSize));
-        READWRITE(VARINT(nUndoSize));
-        READWRITE(VARINT(nHeightFirst));
-        READWRITE(VARINT(nHeightLast));
-        READWRITE(VARINT(nTimeFirst));
-        READWRITE(VARINT(nTimeLast));
+    SERIALIZE_METHODS(CBlockFileInfo, obj)
+    {
+        READWRITE(VARINT(obj.nBlocks));
+        READWRITE(VARINT(obj.nSize));
+        READWRITE(VARINT(obj.nUndoSize));
+        READWRITE(VARINT(obj.nHeightFirst));
+        READWRITE(VARINT(obj.nHeightLast));
+        READWRITE(VARINT(obj.nTimeFirst));
+        READWRITE(VARINT(obj.nTimeLast));
     }
 
      void SetNull() {
@@ -82,46 +87,6 @@ public:
          if (nTimeIn > nTimeLast)
              nTimeLast = nTimeIn;
      }
-};
-
-struct CDiskBlockPos
-{
-    int nFile;
-    unsigned int nPos;
-
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
-        READWRITE(VARINT(nFile, VarIntMode::NONNEGATIVE_SIGNED));
-        READWRITE(VARINT(nPos));
-    }
-
-    CDiskBlockPos() {
-        SetNull();
-    }
-
-    CDiskBlockPos(int nFileIn, unsigned int nPosIn) {
-        nFile = nFileIn;
-        nPos = nPosIn;
-    }
-
-    friend bool operator==(const CDiskBlockPos &a, const CDiskBlockPos &b) {
-        return (a.nFile == b.nFile && a.nPos == b.nPos);
-    }
-
-    friend bool operator!=(const CDiskBlockPos &a, const CDiskBlockPos &b) {
-        return !(a == b);
-    }
-
-    void SetNull() { nFile = -1; nPos = 0; }
-    bool IsNull() const { return (nFile == -1); }
-
-    std::string ToString() const
-    {
-        return strprintf("CBlockDiskPos(nFile=%i, nPos=%i)", nFile, nPos);
-    }
-
 };
 
 enum BlockStatus: uint32_t {
@@ -260,8 +225,8 @@ public:
         nNonce         = block.nNonce;
     }
 
-    CDiskBlockPos GetBlockPos() const {
-        CDiskBlockPos ret;
+    FlatFilePos GetBlockPos() const {
+        FlatFilePos ret;
         if (nStatus & BLOCK_HAVE_DATA) {
             ret.nFile = nFile;
             ret.nPos  = nDataPos;
@@ -269,8 +234,8 @@ public:
         return ret;
     }
 
-    CDiskBlockPos GetUndoPos() const {
-        CDiskBlockPos ret;
+    FlatFilePos GetUndoPos() const {
+        FlatFilePos ret;
         if (nStatus & BLOCK_HAVE_UNDO) {
             ret.nFile = nFile;
             ret.nPos  = nUndoPos;
@@ -295,6 +260,15 @@ public:
     {
         return phashBlock == nullptr ? uint256() : *phashBlock;
     }
+
+    /**
+     * Check whether this block's and all previous blocks' transactions have been
+     * downloaded and stored to disk at some point.
+     *
+     * Does not imply the transactions are consensus-valid (ConnectTip might fail)
+     * Does not imply the transactions are still stored on disk. (IsBlockPruned might return true)
+     */
+    bool HaveTxsDownloaded() const { return nChainTx != 0; }
 
     int64_t GetBlockTime() const
     {
@@ -385,33 +359,27 @@ public:
         hashPrev = (pprev ? pprev->GetBlockHash() : uint256());
     }
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
+    SERIALIZE_METHODS(CDiskBlockIndex, obj)
+    {
         int _nVersion = s.GetVersion();
-        if (!(s.GetType() & SER_GETHASH))
-            READWRITE(VARINT(_nVersion, VarIntMode::NONNEGATIVE_SIGNED));
+        if (!(s.GetType() & SER_GETHASH)) READWRITE(VARINT(_nVersion, VarIntMode::NONNEGATIVE_SIGNED));
 
-        READWRITE(VARINT(nHeight, VarIntMode::NONNEGATIVE_SIGNED));
-        READWRITE(VARINT(nStatus));
-        READWRITE(VARINT(nTx));
-        if (nStatus & (BLOCK_HAVE_DATA | BLOCK_HAVE_UNDO))
-            READWRITE(VARINT(nFile, VarIntMode::NONNEGATIVE_SIGNED));
-        if (nStatus & BLOCK_HAVE_DATA)
-            READWRITE(VARINT(nDataPos));
-        if (nStatus & BLOCK_HAVE_UNDO)
-            READWRITE(VARINT(nUndoPos));
+        READWRITE(VARINT(obj.nHeight, VarIntMode::NONNEGATIVE_SIGNED));
+        READWRITE(VARINT(obj.nStatus));
+        READWRITE(VARINT(obj.nTx));
+        if (obj.nStatus & (BLOCK_HAVE_DATA | BLOCK_HAVE_UNDO)) READWRITE(VARINT(obj.nFile, VarIntMode::NONNEGATIVE_SIGNED));
+        if (obj.nStatus & BLOCK_HAVE_DATA) READWRITE(VARINT(obj.nDataPos));
+        if (obj.nStatus & BLOCK_HAVE_UNDO) READWRITE(VARINT(obj.nUndoPos));
 
         // block hash
-        READWRITE(hash);
+        READWRITE(obj.hash);
         // block header
-        READWRITE(this->nVersion);
-        READWRITE(hashPrev);
-        READWRITE(hashMerkleRoot);
-        READWRITE(nTime);
-        READWRITE(nBits);
-        READWRITE(nNonce);
+        READWRITE(obj.nVersion);
+        READWRITE(obj.hashPrev);
+        READWRITE(obj.hashMerkleRoot);
+        READWRITE(obj.nTime);
+        READWRITE(obj.nBits);
+        READWRITE(obj.nNonce);
     }
 
     uint256 GetBlockHash() const
@@ -502,8 +470,11 @@ public:
     /** Find the last common block between this chain and a block index entry. */
     const CBlockIndex *FindFork(const CBlockIndex *pindex) const;
 
-    /** Find the earliest block with timestamp equal or greater than the given. */
-    CBlockIndex* FindEarliestAtLeast(int64_t nTime) const;
+    /**
+     * Find the earliest block with timestamp equal or greater than the given
+     * time and height equal or greater than the given height.
+     */
+    CBlockIndex* FindEarliestAtLeast(int64_t nTime, int height) const;
 };
 
 #endif // BITCOIN_CHAIN_H

@@ -30,6 +30,10 @@ static const unsigned int MAX_STANDARD_TX_SIGOPS = 4000;
 static const unsigned int DEFAULT_MAX_MEMPOOL_SIZE = 300;
 /** Default for -incrementalrelayfee, which sets the minimum feerate increase for mempool limiting or BIP 125 replacement **/
 static const unsigned int DEFAULT_INCREMENTAL_RELAY_FEE = 1000;
+/** Default for -bytespersigop */
+static const unsigned int DEFAULT_BYTES_PER_SIGOP = 20;
+/** Default for -permitbaremultisig */
+static const bool DEFAULT_PERMIT_BAREMULTISIG = true;
 /** Min feerate for defining dust. Historically this has been based on the
  * minRelayTxFee, however changing the dust limit changes which transactions are
  * standard and should be done with care and ideally rarely. It makes sense to
@@ -41,25 +45,18 @@ static const unsigned int DUST_RELAY_TX_FEE = 3000;
  * with. However scripts violating these flags may still be present in valid
  * blocks and we must accept those blocks.
  */
-static const unsigned int STANDARD_SCRIPT_VERIFY_FLAGS = MANDATORY_SCRIPT_VERIFY_FLAGS |
-                                                         SCRIPT_VERIFY_DERSIG |
-                                                         SCRIPT_VERIFY_STRICTENC |
-                                                         SCRIPT_VERIFY_MINIMALDATA |
-                                                         SCRIPT_VERIFY_NULLDUMMY |
-                                                         SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS |
-                                                         SCRIPT_VERIFY_CLEANSTACK |
-                                                         SCRIPT_VERIFY_NULLFAIL |
-                                                         SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY |
-                                                         SCRIPT_VERIFY_CHECKSEQUENCEVERIFY |
-                                                         SCRIPT_VERIFY_LOW_S |
-                                                         SCRIPT_ENABLE_DIP0020_OPCODES;
+static constexpr unsigned int STANDARD_SCRIPT_VERIFY_FLAGS = MANDATORY_SCRIPT_VERIFY_FLAGS | SCRIPT_VERIFY_DERSIG |
+                                                             SCRIPT_VERIFY_STRICTENC | SCRIPT_VERIFY_MINIMALDATA |
+                                                             SCRIPT_VERIFY_NULLDUMMY | SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS |
+                                                             SCRIPT_VERIFY_CLEANSTACK | SCRIPT_VERIFY_NULLFAIL |
+                                                             SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY | SCRIPT_VERIFY_CHECKSEQUENCEVERIFY |
+                                                             SCRIPT_VERIFY_LOW_S | SCRIPT_ENABLE_DIP0020_OPCODES;
 
 /** For convenience, standard but not mandatory verify flags. */
-static const unsigned int STANDARD_NOT_MANDATORY_VERIFY_FLAGS = STANDARD_SCRIPT_VERIFY_FLAGS & ~MANDATORY_SCRIPT_VERIFY_FLAGS;
+static constexpr unsigned int STANDARD_NOT_MANDATORY_VERIFY_FLAGS = STANDARD_SCRIPT_VERIFY_FLAGS & ~MANDATORY_SCRIPT_VERIFY_FLAGS;
 
 /** Used as the flags parameter to sequence and nLocktime checks in non-consensus code. */
-static const unsigned int STANDARD_LOCKTIME_VERIFY_FLAGS = LOCKTIME_VERIFY_SEQUENCE |
-                                                           LOCKTIME_MEDIAN_TIME_PAST;
+static constexpr unsigned int STANDARD_LOCKTIME_VERIFY_FLAGS = LOCKTIME_VERIFY_SEQUENCE | LOCKTIME_MEDIAN_TIME_PAST;
 
 CAmount GetDustThreshold(const CTxOut& txout, const CFeeRate& dustRelayFee);
 
@@ -70,7 +67,7 @@ bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType);
      * Check for standard transaction types
      * @return True if all outputs (scriptPubKeys) use only standard transaction forms
      */
-bool IsStandardTx(const CTransaction& tx, std::string& reason);
+bool IsStandardTx(const CTransaction& tx, bool permit_bare_multisig, const CFeeRate& dust_relay_fee, std::string& reason);
     /**
      * Check for standard transaction types
      * @param[in] mapInputs    Map of previous transactions that have outputs we're spending
@@ -78,6 +75,13 @@ bool IsStandardTx(const CTransaction& tx, std::string& reason);
      */
 bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs);
 
-extern CFeeRate incrementalRelayFee;
-extern CFeeRate dustRelayFee;
+/** Compute the virtual transaction size (taking sigops into account). */
+int64_t GetVirtualTransactionSize(int64_t nSize, int64_t nSigOp, unsigned int bytes_per_sigop);
+int64_t GetVirtualTransactionSize(const CTransaction& tx, int64_t nSigOp, unsigned int bytes_per_sigop);
+
+static inline int64_t GetVirtualTransactionSize(const CTransaction& tx)
+{
+    return GetVirtualTransactionSize(tx, 0, 0);
+}
+
 #endif // BITCOIN_POLICY_POLICY_H

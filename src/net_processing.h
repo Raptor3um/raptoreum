@@ -6,13 +6,15 @@
 #ifndef BITCOIN_NET_PROCESSING_H
 #define BITCOIN_NET_PROCESSING_H
 
-#include <net.h>
-#include <validation.h>
-#include <validationinterface.h>
 #include <consensus/params.h>
+#include <net.h>
 #include <sync.h>
+#include <validationinterface.h>
 
-extern CCriticalSection cs_main;
+class CTxMemPool;
+class ChainstateManager;
+
+extern RecursiveMutex cs_main;
 
 /** Default for -maxorphantxsize, maximum size in megabytes the orphan map can grow before entries are removed */
 static const unsigned int DEFAULT_MAX_ORPHAN_TRANSACTIONS_SIZE = 10; // this allows around 100 TXs of max size (and many more of normal size)
@@ -24,9 +26,13 @@ static constexpr bool DEFAULT_ENABLE_BIP61 = true;
 class PeerLogicValidation final : public CValidationInterface, public NetEventsInterface {
 private:
     CConnman* const connman;
+    BanMan* const m_banman;
+    ChainstateManager& m_chainman;
+    CTxMemPool& m_mempool;
 
+    bool SendRejectsAndCheckIfBanned(CNode* pnode, bool enable_bip61) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 public:
-    explicit PeerLogicValidation(CConnman* connmanIn, CScheduler &scheduler, bool enable_bip61);
+    PeerLogicValidation(CConnman* connmanIn, BanMan* banman, CScheduler &scheduler, ChainstateManager& chainman, CTxMemPool& pool, bool enable_bip61);
 
     /**
      * Overridden from CValidationInterface.
@@ -65,7 +71,7 @@ public:
     bool SendMessages(CNode* pto) override EXCLUSIVE_LOCKS_REQUIRED(pto->cs_sendProcessing);
 
     /** Consider evicting an outbound peer based on the amount of time they've been behind our tip */
-    void ConsiderEviction(CNode *pto, int64_t time_in_seconds);
+    void ConsiderEviction(CNode *pto, int64_t time_in_seconds) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     /** Evict extra outbound peers. If we think our tip may be stale, connect to an extra outbound */
     void CheckForStaleTipAndEvictPeers(const Consensus::Params &consensusParams);
     /** If we have extra outbound peers, try to disconnect the one with the oldest block announcement */
@@ -87,15 +93,18 @@ struct CNodeStateStats {
 
 /** Get statistics from node state */
 bool GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats);
-bool IsBanned(NodeId nodeid);
+bool IsBanned(NodeId nodeid) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 // Upstream moved this into net_processing.cpp (13417), however since we use Misbehaving in a number of raptoreum specific
 // files such as mnauth.cpp and governance.cpp it makes sense to keep it in the header
 /** Increase a node's misbehavior score. */
 void Misbehaving(NodeId nodeid, int howmuch, const std::string& message="") EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
-void EraseObjectRequest(NodeId nodeId, const CInv& inv);
-void RequestObject(NodeId nodeId, const CInv& inv, std::chrono::microseconds current_time, bool fForce=false);
-size_t GetRequestedObjectCount(NodeId nodeId);
+void EraseObjectRequest(NodeId nodeId, const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+void RequestObject(NodeId nodeId, const CInv& inv, std::chrono::microseconds current_time, bool fForce=false) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+size_t GetRequestedObjectCount(NodeId nodeId) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+/** Relay transaction to every node */
+void RelayTransaction(const uint256&, const CConnman& connman);
 
 #endif // BITCOIN_NET_PROCESSING_H

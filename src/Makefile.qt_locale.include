@@ -1,0 +1,22 @@
+QT_TS = \
+  qt/locale/raptoreum_ar.ts \
+  qt/locale/raptoreum_bg.ts \
+  qt/locale/raptoreum_de.ts \
+  qt/locale/raptoreum_en.ts \
+  qt/locale/raptoreum_es.ts \
+  qt/locale/raptoreum_fi.ts \
+  qt/locale/raptoreum_fr.ts \
+  qt/locale/raptoreum_it.ts \
+  qt/locale/raptoreum_ja.ts \
+  qt/locale/raptoreum_ko.ts \
+  qt/locale/raptoreum_nl.ts \
+  qt/locale/raptoreum_pl.ts \
+  qt/locale/raptoreum_pt.ts \
+  qt/locale/raptoreum_ro.ts \
+  qt/locale/raptoreum_ru.ts \
+  qt/locale/raptoreum_sk.ts \
+  qt/locale/raptoreum_th.ts \
+  qt/locale/raptoreum_tr.ts \
+  qt/locale/raptoreum_vi.ts \
+  qt/locale/raptoreum_zh_CN.ts \
+  qt/locale/raptoreum_zh_TW.ts

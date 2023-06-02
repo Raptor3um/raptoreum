@@ -5,6 +5,22 @@
 #ifndef BITCOIN_NOUI_H
 #define BITCOIN_NOUI_H
 
-extern void noui_connect();
+#include <string>
+
+/** Non-GUI handler, which logs and prints messages. */
+bool noui_ThreadSafeMessageBox(const std::string& message, const std::string& caption, unsigned int style);
+/** Non-GUI handler, which logs and prints messages. */
+bool noui_ThreadSafeQuestion(const std::string& /* ignored interactive message */, const std::string& message, const std::string& caption, unsigned int style);
+/** Non-GUI handler, which only logs a message. */
+void noui_InitMessage(const std::string& message);
+
+/** Connect all raptoreumd signal handlers */
+void noui_connect();
+
+/** Suppress all raptoreumd signal handlers. Used to suppress output during test runs that produce expected error. */
+void noui_suppress();
+
+/** Reconnects the regular Non-GUI handlers after having used noui_suppress. */
+void noui_reconnect();
 
 #endif // BITCOIN_NOUI_H

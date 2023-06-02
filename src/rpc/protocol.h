@@ -6,15 +6,6 @@
 #ifndef BITCOIN_RPC_PROTOCOL_H
 #define BITCOIN_RPC_PROTOCOL_H
 
-#include <fs.h>
-
-#include <list>
-#include <map>
-#include <stdint.h>
-#include <string>
-
-#include <univalue.h>
-
 //! HTTP status codes
 enum HTTPStatusCode
 {
@@ -48,7 +39,7 @@ enum RPCErrorCode
     RPC_MISC_ERROR                  = -1,  //!< std::exception thrown in command handling
     RPC_TYPE_ERROR                  = -3,  //!< Unexpected type was passed as parameter
     RPC_INVALID_ADDRESS_OR_KEY      = -5,  //!< Invalid address or key
-	RPC_INVALID_COLLATERAL_AMOUNT   = -50,  //!< Invalid collateral amount
+    RPC_INVALID_COLLATERAL_AMOUNT   = -50, //!< Invalid collateral amount
     RPC_OUT_OF_MEMORY               = -7,  //!< Ran out of memory during operation
     RPC_INVALID_PARAMETER           = -8,  //!< Invalid, missing or duplicate parameter
     RPC_DATABASE_ERROR              = -20, //!< Database error
@@ -61,9 +52,9 @@ enum RPCErrorCode
     RPC_PLATFORM_RESTRICTION        = -33, //!< This RPC command cannot be run by platform-user
 
     //! Aliases for backward compatibility
-    RPC_TRANSACTION_ERROR           = RPC_VERIFY_ERROR,
-    RPC_TRANSACTION_REJECTED        = RPC_VERIFY_REJECTED,
-    RPC_TRANSACTION_ALREADY_IN_CHAIN= RPC_VERIFY_ALREADY_IN_CHAIN,
+    RPC_TRANSACTION_ERROR            = RPC_VERIFY_ERROR,
+    RPC_TRANSACTION_REJECTED         = RPC_VERIFY_REJECTED,
+    RPC_TRANSACTION_ALREADY_IN_CHAIN = RPC_VERIFY_ALREADY_IN_CHAIN,
 
     //! P2P client errors
     RPC_CLIENT_NOT_CONNECTED        = -9,  //!< Raptoreum is not connected
@@ -73,6 +64,9 @@ enum RPCErrorCode
     RPC_CLIENT_NODE_NOT_CONNECTED   = -29, //!< Node to disconnect not found in connected nodes
     RPC_CLIENT_INVALID_IP_OR_SUBNET = -30, //!< Invalid IP/Subnet
     RPC_CLIENT_P2P_DISABLED         = -31, //!< No valid connection manager instance found
+
+    //! Chain errors
+    RPC_CLIENT_MEMPOOL_DISABLED     = -33, //!< No mempool instance found
 
     //! Wallet errors
     RPC_WALLET_ERROR                = -4,  //!< Unspecified problem with wallet (key not found etc.)
@@ -88,24 +82,10 @@ enum RPCErrorCode
     RPC_WALLET_NOT_SPECIFIED        = -19, //!< No wallet specified (error when there are multiple wallets loaded)
 
 
-     //! Backwards compatible aliases
-     RPC_WALLET_INVALID_ACCOUNT_NAME = RPC_WALLET_INVALID_LABEL_NAME,
+    //! Backwards compatible aliases
+    RPC_WALLET_INVALID_ACCOUNT_NAME = RPC_WALLET_INVALID_LABEL_NAME,
     //! Unused reserved codes, kept around for backwards compatibility. Do not reuse.
     RPC_FORBIDDEN_BY_SAFE_MODE      = -2,  //!< Server is in safe mode, and command is not allowed in safe mode
 };
-
-UniValue JSONRPCRequestObj(const std::string& strMethod, const UniValue& params, const UniValue& id);
-UniValue JSONRPCReplyObj(const UniValue& result, const UniValue& error, const UniValue& id);
-std::string JSONRPCReply(const UniValue& result, const UniValue& error, const UniValue& id);
-UniValue JSONRPCError(int code, const std::string& message);
-
-/** Generate a new RPC authentication cookie and write it to disk */
-bool GenerateAuthCookie(std::string *cookie_out);
-/** Read the RPC authentication cookie from disk */
-bool GetAuthCookie(std::string *cookie_out);
-/** Delete RPC authentication cookie from disk */
-void DeleteAuthCookie();
-/** Parse JSON-RPC batch reply into a vector */
-std::vector<UniValue> JSONRPCProcessBatchReply(const UniValue &in, size_t num);
 
 #endif // BITCOIN_RPC_PROTOCOL_H

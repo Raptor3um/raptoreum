@@ -10,10 +10,9 @@
 #include <merkleblock.h>
 #include <netaddress.h>
 #include <pubkey.h>
-#include <serialize.h>
-#include <version.h>
 
 class UniValue;
+class CBlockIndex;
 class CDeterministicMNList;
 class CDeterministicMN;
 
@@ -32,7 +31,6 @@ public:
     CKeyID keyIDVoting;
     bool isValid;
 
-public:
     CSimplifiedMNListEntry() = default;
     explicit CSimplifiedMNListEntry(const CDeterministicMN& dmn);
 
@@ -51,21 +49,12 @@ public:
         return !(rhs == *this);
     }
 
-public:
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CSimplifiedMNListEntry, obj)
     {
-        READWRITE(proRegTxHash);
-        READWRITE(confirmedHash);
-        READWRITE(service);
-        READWRITE(pubKeyOperator);
-        READWRITE(keyIDVoting);
-        READWRITE(isValid);
+        READWRITE(obj.proRegTxHash, obj.confirmedHash, obj.service,
+                  obj.pubKeyOperator, obj.keyIDVoting, obj.isValid);
     }
 
-public:
     uint256 CalcHash() const;
 
     std::string ToString() const;
@@ -77,12 +66,12 @@ class CSimplifiedMNList
 public:
     std::vector<std::unique_ptr<CSimplifiedMNListEntry>> mnList;
 
-public:
     CSimplifiedMNList() = default;
     explicit CSimplifiedMNList(const std::vector<CSimplifiedMNListEntry>& smlEntries);
     explicit CSimplifiedMNList(const CDeterministicMNList& dmnList);
 
     uint256 CalcMerkleRoot(bool* pmutated = nullptr) const;
+    bool operator==(const CSimplifiedMNList& rhs) const;
 };
 
 /// P2P messages
@@ -93,14 +82,9 @@ public:
     uint256 baseBlockHash;
     uint256 blockHash;
 
-public:
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CGetSimplifiedMNListDiff, obj)
     {
-        READWRITE(baseBlockHash);
-        READWRITE(blockHash);
+        READWRITE(obj.baseBlockHash, obj.blockHash);
     }
 };
 
@@ -118,26 +102,15 @@ public:
     std::vector<std::pair<uint8_t, uint256>> deletedQuorums; // p<LLMQType, quorumHash>
     std::vector<llmq::CFinalCommitment> newQuorums;
 
-public:
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CSimplifiedMNListDiff, obj)
     {
-        READWRITE(baseBlockHash);
-        READWRITE(blockHash);
-        READWRITE(cbTxMerkleTree);
-        READWRITE(cbTx);
-        READWRITE(deletedMNs);
-        READWRITE(mnList);
+        READWRITE(obj.baseBlockHash, obj.blockHash, obj.cbTxMerkleTree, obj.cbTx, obj.deletedMNs, obj.mnList);
 
         if (s.GetVersion() >= LLMQS_PROTO_VERSION) {
-            READWRITE(deletedQuorums);
-            READWRITE(newQuorums);
+            READWRITE(obj.deletedQuorums, obj.newQuorums);
         }
     }
 
-public:
     CSimplifiedMNListDiff();
     ~CSimplifiedMNListDiff();
 

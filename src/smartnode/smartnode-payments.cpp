@@ -3,12 +3,22 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <smartnode/activesmartnode.h>
-#include <governance/governance-classes.h>
 #include <smartnode/smartnode-payments.h>
+
+#include <amount.h>
+#include <chain.h>
+#include <chainparams.h>
+#include <evo/deterministicmns.h>
+#include <governance/governance.h>
+#include <governance/governance-classes.h>
+#include <key_io.h>
+#include <logging.h>
+#include <primitives/block.h>
+#include <script/standard.h>
 #include <smartnode/smartnode-sync.h>
-#include <netfulfilledman.h>
-#include <netmessagemaker.h>
+#include <tinyformat.h>
+#include <util/ranges.h>
+#include <util/system.h>
 #include <validation.h>
 
 #include <string>
@@ -269,7 +279,7 @@ bool CSmartnodePayments::GetBlockTxOuts(int nBlockHeight, CAmount blockReward, s
     const CBlockIndex* pindex;
     {
         LOCK(cs_main);
-        pindex = chainActive[nBlockHeight - 1];
+        pindex = ::ChainActive()[nBlockHeight - 1];
     }
 
     auto dmnPayee = deterministicMNManager->GetListForBlock(pindex).GetMNPayee();
@@ -309,13 +319,7 @@ bool CSmartnodePayments::IsTransactionValid(const CTransaction& txNew, int nBloc
     }
 
     for (const auto& txout : voutSmartnodePayments) {
-        bool found = false;
-        for (const auto& txout2 : txNew.vout) {
-            if (txout == txout2) {
-                found = true;
-                break;
-            }
-        }
+        bool found = ranges::any_of(txNew.vout, [&txout](const auto& txout2) { return txout == txout2; });
         if (!found) {
             CTxDestination dest;
             if (!ExtractDestination(txout.scriptPubKey, dest))

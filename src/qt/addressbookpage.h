@@ -37,14 +37,14 @@ public:
         ForEditing  /**< Open address book for editing */
     };
 
-    explicit AddressBookPage(Mode mode, Tabs tab, QWidget* parent);
+    explicit AddressBookPage(Mode mode, Tabs tab, QWidget* parent = nullptr);
     ~AddressBookPage();
 
     void setModel(AddressTableModel *model);
     const QString &getReturnValue() const { return returnValue; }
 
 public Q_SLOTS:
-    void done(int retval);
+    void done(int retval) override;
 
 private:
     Ui::AddressBookPage *ui;

@@ -4,11 +4,12 @@ Release Process
 * Update translations, see [translation_process.md](https://github.com/raptor3um/raptoreum/blob/master/doc/translation_process.md#synchronising-translations).
 
 * Update manpages, see [gen-manpages.sh](https://github.com/raptor3um/raptoreum/blob/master/contrib/devtools/README.md#gen-manpagessh).
+* Update release candidate version in `configure.am` (`CLIENT_VERSION_RC`)
 
 Before every minor and major release:
 
 * Update [bips.md](bips.md) to account for changes since the last release.
-* Update version in `configure.ac` (don't forget to set `CLIENT_VERSION_IS_RELEASE` to `true`)
+* Update version in `configure.ac` (don't forget to set `CLIENT_VERSION_IS_RELEASE` to `true`) (don't forget to set `CLIENT_VERSION_RC` to `0`)
 * Write release notes (see below)
 * Update `src/chainparams.cpp` nMinimumChainWork with information from the getblockchaininfo rpc.
 * Update `src/chainparams.cpp` defaultAssumeValid with information from the getblockhash rpc.
@@ -20,7 +21,7 @@ Before every minor and major release:
 Before every major release:
 
 * Update hardcoded [seeds](/contrib/seeds/README.md). TODO: Give example PR for Raptoreum
-* Update [`BLOCK_CHAIN_SIZE`](/src/qt/intro.cpp) to the current size plus some overhead.
+* Update [`src/chainparams.cpp`](/src/chainparams.cpp) m_assumed_blockchain_size and m_assumed_chain_state_size with the current size plus some overhead.
 * Update `src/chainparams.cpp` chainTxData with statistics about the transaction count and rate. Use the output of the RPC `getchaintxstats`, see
   [this pull request](https://github.com/bitcoin/bitcoin/pull/12270) for an example. Reviewers can verify the results by running `getchaintxstats <window_block_count> <window_last_block_hash>` with the `window_block_count` and `window_last_block_hash` from your output.
 * Update version of `contrib/gitian-descriptors/*.yml`: usually one'd want to do this on master after branching off the release - but be sure to at least do it before a new major release

@@ -53,4 +53,12 @@ enum {
   HASH_DATA_AREA = 136
 };
 
+void cn_slow_hash(const char* input, char* output, uint32_t len, int variant, uint32_t page_size, uint32_t iterations, size_t aes_rounds);
+void cn_fast_hash(const char* input, char* output, uint32_t len);
+
+static void do_blake_hash(const void* input, size_t len, char* output);
+void do_groestl_hash(const void* input, size_t len, char* output);
+static void do_jh_hash(const void* input, size_t len, char* output);
+static void do_skein_hash(const void* input, size_t len, char* output);
+
 void tree_hash(const char (*hashes)[HASH_SIZE], size_t count, char *root_hash);

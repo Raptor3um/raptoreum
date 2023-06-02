@@ -22,27 +22,27 @@ template<typename K, typename V, typename Size = uint32_t>
 class CacheMultiMap
 {
 public:
-    typedef Size size_type;
+    using size_type = Size;
 
-    typedef CacheItem<K,V> item_t;
+    using item_t = CacheItem<K,V>;
 
-    typedef std::list<item_t> list_t;
+    using list_t = std::list<item_t>;
 
-    typedef typename list_t::iterator list_it;
+    using list_it = typename list_t::iterator;
 
-    typedef typename list_t::const_iterator list_cit;
+    using list_cit = typename list_t::const_iterator;
 
-    typedef std::map<V,list_it> it_map_t;
+    using it_map_t = std::map<V,list_it>;
 
-    typedef typename it_map_t::iterator it_map_it;
+    using it_map_it = typename it_map_t::iterator;
 
-    typedef typename it_map_t::const_iterator it_map_cit;
+    using it_map_cit = typename it_map_t::const_iterator;
 
-    typedef std::map<K, it_map_t> map_t;
+    using map_t = std::map<K, it_map_t>;
 
-    typedef typename map_t::iterator map_it;
+    using map_it = typename map_t::iterator;
 
-    typedef typename map_t::const_iterator map_cit;
+    using map_cit = typename map_t::const_iterator;
 
 private:
     size_type nMaxSize;
@@ -193,16 +193,10 @@ public:
         return *this;
     }
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CacheMultiMap, obj)
     {
-        READWRITE(nMaxSize);
-        READWRITE(listItems);
-        if(ser_action.ForRead()) {
-            RebuildIndex();
-        }
+        READWRITE(obj.nMaxSize, obj.listItems);
+        SER_READ(obj, obj.RebuildIndex());
     }
 
 private:

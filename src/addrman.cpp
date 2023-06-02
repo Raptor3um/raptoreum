@@ -6,22 +6,29 @@
 #include <addrman.h>
 
 #include <hash.h>
-#include <serialize.h>
+#include <logging.h>
 #include <streams.h>
+#include <serialize.h>
 
-int CAddrInfo::GetTriedBucket(const uint256& nKey) const
+int CAddrInfo::GetTriedBucket(const uint256& nKey, const std::vector<bool> &asmap) const
 {
     uint64_t hash1 = (CHashWriter(SER_GETHASH, 0) << nKey << GetKey()).GetHash().GetCheapHash();
-    uint64_t hash2 = (CHashWriter(SER_GETHASH, 0) << nKey << GetGroup() << (hash1 % ADDRMAN_TRIED_BUCKETS_PER_GROUP)).GetHash().GetCheapHash();
-    return hash2 % ADDRMAN_TRIED_BUCKET_COUNT;
+    uint64_t hash2 = (CHashWriter(SER_GETHASH, 0) << nKey << GetGroup(asmap) << (hash1 % ADDRMAN_TRIED_BUCKETS_PER_GROUP)).GetHash().GetCheapHash();
+    int tried_bucket = hash2 % ADDRMAN_TRIED_BUCKET_COUNT;
+    uint32_t mapped_as = GetMappedAS(asmap);
+    LogPrint(BCLog::NET, "IP %s mapped to AS%i belongs to tried bucket %i\n", ToStringIP(), mapped_as, tried_bucket);
+    return tried_bucket;
 }
 
-int CAddrInfo::GetNewBucket(const uint256& nKey, const CNetAddr& src) const
+int CAddrInfo::GetNewBucket(const uint256& nKey, const CNetAddr& src, const std::vector<bool> &asmap) const
 {
-    std::vector<unsigned char> vchSourceGroupKey = src.GetGroup();
-    uint64_t hash1 = (CHashWriter(SER_GETHASH, 0) << nKey << GetGroup() << vchSourceGroupKey).GetHash().GetCheapHash();
+    std::vector<unsigned char> vchSourceGroupKey = src.GetGroup(asmap);
+    uint64_t hash1 = (CHashWriter(SER_GETHASH, 0) << nKey << GetGroup(asmap) << vchSourceGroupKey).GetHash().GetCheapHash();
     uint64_t hash2 = (CHashWriter(SER_GETHASH, 0) << nKey << vchSourceGroupKey << (hash1 % ADDRMAN_NEW_BUCKETS_PER_SOURCE_GROUP)).GetHash().GetCheapHash();
-    return hash2 % ADDRMAN_NEW_BUCKET_COUNT;
+    int new_bucket = hash2 % ADDRMAN_NEW_BUCKET_COUNT;
+    uint32_t mapped_as = GetMappedAS(asmap);
+    LogPrint(BCLog::NET, "IP %s mapped to AS%i belongs to new bucket %i\n", ToStringIP(), mapped_as, new_bucket);
+    return new_bucket;
 }
 
 int CAddrInfo::GetBucketPosition(const uint256 &nKey, bool fNew, int nBucket) const
@@ -169,7 +176,7 @@ void CAddrMan::MakeTried(CAddrInfo& info, int nId)
     assert(info.nRefCount == 0);
 
     // which tried bucket to move the entry to
-    int nKBucket = info.GetTriedBucket(nKey);
+    int nKBucket = info.GetTriedBucket(nKey, m_asmap);
     int nKBucketPos = info.GetBucketPosition(nKey, false, nKBucket);
 
     // first make space to add it (the existing tried entry there is moved to new, deleting whatever is there).
@@ -185,7 +192,7 @@ void CAddrMan::MakeTried(CAddrInfo& info, int nId)
         nTried--;
 
         // find which new bucket it belongs to
-        int nUBucket = infoOld.GetNewBucket(nKey);
+        int nUBucket = infoOld.GetNewBucket(nKey, m_asmap);
         int nUBucketPos = infoOld.GetBucketPosition(nKey, true, nUBucket);
         ClearNew(nUBucket, nUBucketPos);
         assert(vvNew[nUBucket][nUBucketPos] == -1);
@@ -232,7 +239,7 @@ void CAddrMan::Good_(const CService& addr, bool test_before_evict, int64_t nTime
         return;
 
     // find a bucket it is in now
-    int nRnd = RandomInt(ADDRMAN_NEW_BUCKET_COUNT);
+    int nRnd = insecure_rand.randrange(ADDRMAN_NEW_BUCKET_COUNT);
     int nUBucket = -1;
     for (unsigned int n = 0; n < ADDRMAN_NEW_BUCKET_COUNT; n++) {
         int nB = (n + nRnd) % ADDRMAN_NEW_BUCKET_COUNT;
@@ -249,7 +256,7 @@ void CAddrMan::Good_(const CService& addr, bool test_before_evict, int64_t nTime
         return;
 
     // which tried bucket to move the entry to
-    int tried_bucket = info.GetTriedBucket(nKey);
+    int tried_bucket = info.GetTriedBucket(nKey, m_asmap);
     int tried_bucket_pos = info.GetBucketPosition(nKey, false, tried_bucket);
 
     // Will moving this address into tried evict another entry?
@@ -306,7 +313,7 @@ bool CAddrMan::Add_(const CAddress& addr, const CNetAddr& source, int64_t nTimeP
         int nFactor = 1;
         for (int n = 0; n < pinfo->nRefCount; n++)
             nFactor *= 2;
-        if (nFactor > 1 && (RandomInt(nFactor) != 0))
+        if (nFactor > 1 && (insecure_rand.randrange(nFactor) != 0))
             return false;
     } else {
         pinfo = Create(addr, source, &nId);
@@ -315,7 +322,7 @@ bool CAddrMan::Add_(const CAddress& addr, const CNetAddr& source, int64_t nTimeP
         fNew = true;
     }
 
-    int nUBucket = pinfo->GetNewBucket(nKey, source);
+    int nUBucket = pinfo->GetNewBucket(nKey, source, m_asmap);
     int nUBucketPos = pinfo->GetBucketPosition(nKey, true, nUBucket);
     if (vvNew[nUBucket][nUBucketPos] != nId) {
         bool fInsert = vvNew[nUBucket][nUBucketPos] == -1;
@@ -371,12 +378,12 @@ CAddrInfo CAddrMan::Select_(bool newOnly)
 
     // Use a 50% chance for choosing between tried and new table entries.
     if (!newOnly &&
-       (nTried > 0 && (nNew == 0 || RandomInt(2) == 0))) {
+       (nTried > 0 && (nNew == 0 || insecure_rand.randbool() == 0))) {
         // use a tried node
         double fChanceFactor = 1.0;
         while (1) {
-            int nKBucket = RandomInt(ADDRMAN_TRIED_BUCKET_COUNT);
-            int nKBucketPos = RandomInt(ADDRMAN_BUCKET_SIZE);
+            int nKBucket = insecure_rand.randrange(ADDRMAN_TRIED_BUCKET_COUNT);
+            int nKBucketPos = insecure_rand.randrange(ADDRMAN_BUCKET_SIZE);
             while (vvTried[nKBucket][nKBucketPos] == -1) {
                 nKBucket = (nKBucket + insecure_rand.randbits(ADDRMAN_TRIED_BUCKET_COUNT_LOG2)) % ADDRMAN_TRIED_BUCKET_COUNT;
                 nKBucketPos = (nKBucketPos + insecure_rand.randbits(ADDRMAN_BUCKET_SIZE_LOG2)) % ADDRMAN_BUCKET_SIZE;
@@ -384,7 +391,7 @@ CAddrInfo CAddrMan::Select_(bool newOnly)
             int nId = vvTried[nKBucket][nKBucketPos];
             assert(mapInfo.count(nId) == 1);
             CAddrInfo& info = mapInfo[nId];
-            if (RandomInt(1 << 30) < fChanceFactor * info.GetChance() * (1 << 30))
+            if (insecure_rand.randbits(30) < fChanceFactor * info.GetChance() * (1 << 30))
                 return info;
             fChanceFactor *= 1.2;
         }
@@ -392,8 +399,8 @@ CAddrInfo CAddrMan::Select_(bool newOnly)
         // use a new node
         double fChanceFactor = 1.0;
         while (1) {
-            int nUBucket = RandomInt(ADDRMAN_NEW_BUCKET_COUNT);
-            int nUBucketPos = RandomInt(ADDRMAN_BUCKET_SIZE);
+            int nUBucket = insecure_rand.randrange(ADDRMAN_NEW_BUCKET_COUNT);
+            int nUBucketPos = insecure_rand.randrange(ADDRMAN_BUCKET_SIZE);
             while (vvNew[nUBucket][nUBucketPos] == -1) {
                 nUBucket = (nUBucket + insecure_rand.randbits(ADDRMAN_NEW_BUCKET_COUNT_LOG2)) % ADDRMAN_NEW_BUCKET_COUNT;
                 nUBucketPos = (nUBucketPos + insecure_rand.randbits(ADDRMAN_BUCKET_SIZE_LOG2)) % ADDRMAN_BUCKET_SIZE;
@@ -401,7 +408,7 @@ CAddrInfo CAddrMan::Select_(bool newOnly)
             int nId = vvNew[nUBucket][nUBucketPos];
             assert(mapInfo.count(nId) == 1);
             CAddrInfo& info = mapInfo[nId];
-            if (RandomInt(1 << 30) < fChanceFactor * info.GetChance() * (1 << 30))
+            if (insecure_rand.randbits(30) < fChanceFactor * info.GetChance() * (1 << 30))
                 return info;
             fChanceFactor *= 1.2;
         }
@@ -453,7 +460,7 @@ int CAddrMan::Check_()
              if (vvTried[n][i] != -1) {
                  if (!setTried.count(vvTried[n][i]))
                      return -11;
-                 if (mapInfo[vvTried[n][i]].GetTriedBucket(nKey) != n)
+                 if (mapInfo[vvTried[n][i]].GetTriedBucket(nKey, m_asmap) != n)
                      return -17;
                  if (mapInfo[vvTried[n][i]].GetBucketPosition(nKey, false, n) != i)
                      return -18;
@@ -497,7 +504,7 @@ void CAddrMan::GetAddr_(std::vector<CAddress>& vAddr)
         if (vAddr.size() >= nNodes)
             break;
 
-        int nRndPos = RandomInt(vRandom.size() - n) + n;
+        int nRndPos = insecure_rand.randrange(vRandom.size() - n) + n;
         SwapRandom(n, nRndPos);
         assert(mapInfo.count(vRandom[n]) == 1);
 
@@ -562,10 +569,6 @@ CAddrInfo CAddrMan::GetAddressInfo_(const CService& addr)
     return *pinfo;
 }
 
-int CAddrMan::RandomInt(int nMax){
-    return GetRandInt(nMax);
-}
-
 void CAddrMan::ResolveCollisions_()
 {
     for (std::set<int>::iterator it = m_tried_collisions.begin(); it != m_tried_collisions.end();) {
@@ -580,7 +583,7 @@ void CAddrMan::ResolveCollisions_()
             CAddrInfo& info_new = mapInfo[id_new];
 
             // Which tried bucket to move the entry to.
-            int tried_bucket = info_new.GetTriedBucket(nKey);
+            int tried_bucket = info_new.GetTriedBucket(nKey, m_asmap);
             int tried_bucket_pos = info_new.GetBucketPosition(nKey, false, tried_bucket);
             if (!info_new.IsValid()) { // id_new may no longer map to a valid address
                 erase_collision = true;
@@ -625,7 +628,7 @@ CAddrInfo CAddrMan::SelectTriedCollision_()
     std::set<int>::iterator it = m_tried_collisions.begin();
 
     // Selects a random element from m_tried_collisions
-    std::advance(it, GetRandInt(m_tried_collisions.size()));
+    std::advance(it, insecure_rand.randrange(m_tried_collisions.size()));
     int id_new = *it;
 
     // If id_new not found in mapInfo remove it from m_tried_collisions
@@ -637,10 +640,33 @@ CAddrInfo CAddrMan::SelectTriedCollision_()
     CAddrInfo& newInfo = mapInfo[id_new];
 
     // which tried bucket to move the entry to
-    int tried_bucket = newInfo.GetTriedBucket(nKey);
+    int tried_bucket = newInfo.GetTriedBucket(nKey, m_asmap);
     int tried_bucket_pos = newInfo.GetBucketPosition(nKey, false, tried_bucket);
 
     int id_old = vvTried[tried_bucket][tried_bucket_pos];
 
     return mapInfo[id_old];
+}
+
+std::vector<bool> CAddrMan::DecodeAsmap(fs::path path)
+{
+    std::vector<bool> bits;
+    FILE *filestr = fsbridge::fopen(path, "rb");
+    CAutoFile file(filestr, SER_DISK, CLIENT_VERSION);
+    if (file.IsNull()) {
+        LogPrintf("Failed to open asmap file from disk\n");
+        return bits;
+    }
+    fseek(filestr, 0, SEEK_END);
+    int length = ftell(filestr);
+    LogPrintf("Opened asmap file %s (%d bytes) from disk\n", path, length);
+    fseek(filestr, 0, SEEK_SET);
+    char cur_byte;
+    for (int i = 0; i < length; ++i) {
+        file >> cur_byte;
+        for (int bit = 0; bit < 8; ++bit) {
+            bits.push_back((cur_byte >> bit) & 1);
+        }
+    }
+    return bits;
 }

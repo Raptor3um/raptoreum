@@ -4,9 +4,10 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <governance/governance-classes.h>
+
+#include <chainparams.h>
 #include <core_io.h>
-#include <init.h>
-#include <utilstrencodings.h>
+#include <util/strencodings.h>
 #include <validation.h>
 
 #include <boost/algorithm/string.hpp>
@@ -81,7 +82,7 @@ CAmount ParsePaymentAmount(const std::string& strAmount)
         ostr << "ParsePaymentAmount: ParseFixedPoint failed for string: " << strAmount;
         throw std::runtime_error(ostr.str());
     }
-    if (!MoneyRange(nAmount, Params().IsFutureActive(chainActive.Tip()))) {
+    if (!MoneyRange(nAmount, Params().IsFutureActive(::ChainActive().Tip()))) {
         nAmount = 0;
         std::ostringstream ostr;
         ostr << "ParsePaymentAmount: Invalid amount string, value outside of valid money range";

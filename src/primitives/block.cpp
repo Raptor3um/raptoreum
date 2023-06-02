@@ -8,8 +8,13 @@
 #include <primitives/powcache.h>
 #include <sync.h>
 #include <uint256.h>
-#include <util.h>
-#include <utilstrencodings.h>
+#include <util/system.h>
+#include <util/time.h>
+#include <util/strencodings.h>
+#include <logging.h>
+
+#define BEGIN(a) ((char*)&(a))
+#define END(a) ((char*)&((&(a))[1]))
 
 uint256 CBlockHeader::GetHash() const
 {

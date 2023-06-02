@@ -16,9 +16,9 @@
 #include <primitives/transaction.h>
 #include <script/standard.h>
 #include <limits.h>
-using namespace std;
+//using namespace std;
 
-static const string DEFAULT_FOUNDER_ADDRESS = "RTtyQU6DoSuNWetT4WUem5qXP5jNYGpwat";
+static const std::string DEFAULT_FOUNDER_ADDRESS = "RTtyQU6DoSuNWetT4WUem5qXP5jNYGpwat";
 struct FounderRewardStructure {
 	int blockHeight;
 	int rewardPercentage;
@@ -26,7 +26,7 @@ struct FounderRewardStructure {
 
 class FounderPayment {
 public:
-	FounderPayment(vector<FounderRewardStructure> rewardStructures = {}, int startBlock = 0, const string &address = DEFAULT_FOUNDER_ADDRESS) {
+	FounderPayment(std::vector<FounderRewardStructure> rewardStructures = {}, int startBlock = 0, const std::string &address = DEFAULT_FOUNDER_ADDRESS) {
 		this->founderAddress = address;
 		this->startBlock = startBlock;
 		this->rewardStructures = rewardStructures;
@@ -37,9 +37,9 @@ public:
 	bool IsBlockPayeeValid(const CTransaction& txNew, const int height, const CAmount blockReward);
 	int getStartBlock() {return this->startBlock;}
 private:
-	string founderAddress;
+	std::string founderAddress;
 	int startBlock;
-	vector<FounderRewardStructure> rewardStructures;
+	std::vector<FounderRewardStructure> rewardStructures;
 };
 
 

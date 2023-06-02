@@ -5,12 +5,10 @@
 
 #include <validationinterface.h>
 
-#include <init.h>
 #include <primitives/block.h>
 #include <scheduler.h>
-#include <sync.h>
 #include <txmempool.h>
-#include <util.h>
+#include <util/system.h>
 #include <validation.h>
 
 #include <governance/governance-vote.h>
@@ -18,8 +16,6 @@
 #include <llmq/quorums_chainlocks.h>
 #include <llmq/quorums_instantsend.h>
 
-#include <list>
-#include <atomic>
 #include <future>
 
 #include <boost/signals2/signal.hpp>
@@ -27,23 +23,22 @@
 namespace pl = std::placeholders;
 
 struct ValidationInterfaceConnections {
-    boost::signals2::scoped_connection BlockChecked;
-    boost::signals2::scoped_connection Broadcast;
-    boost::signals2::scoped_connection SetBestChain;
-    boost::signals2::scoped_connection NotifyTransactionLock;
-    boost::signals2::scoped_connection NotifyChainLock;
+    boost::signals2::scoped_connection UpdatedBlockTip;
+    boost::signals2::scoped_connection SynchronousUpdatedBlockTip;
     boost::signals2::scoped_connection TransactionAddedToMempool;
     boost::signals2::scoped_connection BlockConnected;
     boost::signals2::scoped_connection BlockDisconnected;
     boost::signals2::scoped_connection TransactionRemovedFromMempool;
-    boost::signals2::scoped_connection UpdatedBlockTip;
-    boost::signals2::scoped_connection SynchronousUpdatedBlockTip;
+    boost::signals2::scoped_connection ChainStateFlushed;
+    boost::signals2::scoped_connection BlockChecked;
     boost::signals2::scoped_connection NewPoWValidBlock;
     boost::signals2::scoped_connection BlockFound;
-    boost::signals2::scoped_connection NotifyHeaderTip;
     boost::signals2::scoped_connection AcceptedBlockHeader;
-    boost::signals2::scoped_connection NotifyGovernanceObject;
+    boost::signals2::scoped_connection NotifyHeaderTip;
+    boost::signals2::scoped_connection NotifyTransactionLock;
+    boost::signals2::scoped_connection NotifyChainLock;
     boost::signals2::scoped_connection NotifyGovernanceVote;
+    boost::signals2::scoped_connection NotifyGovernanceObject;
     boost::signals2::scoped_connection NotifyInstantSendDoubleSpendAttempt;
     boost::signals2::scoped_connection NotifySmartnodeListChanged;
     boost::signals2::scoped_connection NotifyRecoveredSig;
@@ -54,10 +49,9 @@ struct MainSignalsInstance {
     boost::signals2::signal<void (const CBlockIndex *, const CBlockIndex *, bool fInitialDownload)> SynchronousUpdatedBlockTip;
     boost::signals2::signal<void (const CTransactionRef &, int64_t)> TransactionAddedToMempool;
     boost::signals2::signal<void (const std::shared_ptr<const CBlock> &, const CBlockIndex *pindex, const std::vector<CTransactionRef>&)> BlockConnected;
-    boost::signals2::signal<void (const std::shared_ptr<const CBlock> &, const CBlockIndex* pindexDisconnected)> BlockDisconnected;
+    boost::signals2::signal<void (const std::shared_ptr<const CBlock>&, const CBlockIndex* pindex)> BlockDisconnected;
     boost::signals2::signal<void (const CTransactionRef &, MemPoolRemovalReason)> TransactionRemovedFromMempool;
-    boost::signals2::signal<void (const CBlockLocator &)> SetBestChain;
-    boost::signals2::signal<void (int64_t nBestBlockTime, CConnman* connman)> Broadcast;
+    boost::signals2::signal<void (const CBlockLocator &)> ChainStateFlushed;
     boost::signals2::signal<void (const CBlock&, const CValidationState&)> BlockChecked;
     boost::signals2::signal<void (const CBlockIndex *, const std::shared_ptr<const CBlock>&)> NewPoWValidBlock;
     boost::signals2::signal<void (const uint256 &)> BlockFound;
@@ -68,7 +62,7 @@ struct MainSignalsInstance {
     boost::signals2::signal<void (const std::shared_ptr<const CGovernanceVote>& vote)>NotifyGovernanceVote;
     boost::signals2::signal<void (const std::shared_ptr<const CGovernanceObject>& object)>NotifyGovernanceObject;
     boost::signals2::signal<void (const CTransactionRef& currentTx, const CTransactionRef& previousTx)>NotifyInstantSendDoubleSpendAttempt;
-    boost::signals2::signal<void (bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff)>NotifySmartnodeListChanged;
+    boost::signals2::signal<void (bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff, CConnman& connman)>NotifySmartnodeListChanged;
     boost::signals2::signal<void (const std::shared_ptr<const llmq::CRecoveredSig>& sig)>NotifyRecoveredSig;
     // We are not allowed to assume the scheduler only runs in one thread,
     // but must ensure all callbacks happen in-order, so we end up creating
@@ -87,7 +81,8 @@ static CMainSignals g_signals;
 static std::unordered_map<CTxMemPool*, boost::signals2::scoped_connection> g_connNotifyEntryRemoved;
 
 void CMainSignals::RegisterBackgroundSignalScheduler(CScheduler& scheduler) {
-    assert(!m_internals);
+    // printf(m_internals);
+		// assert(!m_internals);
     m_internals.reset(new MainSignalsInstance(&scheduler));
 }
 
@@ -119,13 +114,14 @@ CMainSignals& GetMainSignals()
     return g_signals;
 }
 
-void RegisterValidationInterface(CValidationInterface* pwalletIn) {
-    ValidationInterfaceConnections& conns = g_signals.m_internals->m_connMainSignals[pwalletIn];
+void RegisterSharedValidationInterface(std::shared_ptr<CValidationInterface> pwalletIn) {
+    ValidationInterfaceConnections& conns = g_signals.m_internals->m_connMainSignals[pwalletIn.get()];
     conns.AcceptedBlockHeader = g_signals.m_internals->AcceptedBlockHeader.connect(std::bind(&CValidationInterface::AcceptedBlockHeader, pwalletIn, pl::_1));
     conns.NotifyHeaderTip = g_signals.m_internals->NotifyHeaderTip.connect(std::bind(&CValidationInterface::NotifyHeaderTip, pwalletIn, pl::_1, pl::_2));
     conns.UpdatedBlockTip = g_signals.m_internals->UpdatedBlockTip.connect(std::bind(&CValidationInterface::UpdatedBlockTip, pwalletIn, pl::_1, pl::_2, pl::_3));
     conns.SynchronousUpdatedBlockTip = g_signals.m_internals->SynchronousUpdatedBlockTip.connect(std::bind(&CValidationInterface::SynchronousUpdatedBlockTip, pwalletIn, pl::_1, pl::_2, pl::_3));
     conns.TransactionAddedToMempool = g_signals.m_internals->TransactionAddedToMempool.connect(std::bind(&CValidationInterface::TransactionAddedToMempool, pwalletIn, pl::_1, pl::_2));
+    conns.ChainStateFlushed = g_signals.m_internals->ChainStateFlushed.connect(std::bind(&CValidationInterface::ChainStateFlushed, pwalletIn, pl::_1));
     conns.BlockConnected = g_signals.m_internals->BlockConnected.connect(std::bind(&CValidationInterface::BlockConnected, pwalletIn, pl::_1, pl::_2, pl::_3));
     conns.BlockFound = g_signals.m_internals->BlockFound.connect(std::bind(&CValidationInterface::BlockFound, pwalletIn, pl::_1));
     conns.UpdatedBlockTip = g_signals.m_internals->UpdatedBlockTip.connect(std::bind(&CValidationInterface::UpdatedBlockTip, pwalletIn, pl::_1, pl::_2, pl::_3));
@@ -133,14 +129,23 @@ void RegisterValidationInterface(CValidationInterface* pwalletIn) {
     conns.NotifyTransactionLock = g_signals.m_internals->NotifyTransactionLock.connect(std::bind(&CValidationInterface::NotifyTransactionLock, pwalletIn, pl::_1, pl::_2));
     conns.NotifyChainLock = g_signals.m_internals->NotifyChainLock.connect(std::bind(&CValidationInterface::NotifyChainLock, pwalletIn, pl::_1, pl::_2));
     conns.TransactionRemovedFromMempool = g_signals.m_internals->TransactionRemovedFromMempool.connect(std::bind(&CValidationInterface::TransactionRemovedFromMempool, pwalletIn, pl::_1, pl::_2));
-    conns.Broadcast = g_signals.m_internals->Broadcast.connect(std::bind(&CValidationInterface::ResendWalletTransactions, pwalletIn, pl::_1, pl::_2));
     conns.BlockChecked = g_signals.m_internals->BlockChecked.connect(std::bind(&CValidationInterface::BlockChecked, pwalletIn, pl::_1, pl::_2));
     conns.NewPoWValidBlock = g_signals.m_internals->NewPoWValidBlock.connect(std::bind(&CValidationInterface::NewPoWValidBlock, pwalletIn, pl::_1, pl::_2));
     conns.NotifyGovernanceObject = g_signals.m_internals->NotifyGovernanceObject.connect(std::bind(&CValidationInterface::NotifyGovernanceObject, pwalletIn, pl::_1));
     conns.NotifyGovernanceVote = g_signals.m_internals->NotifyGovernanceVote.connect(std::bind(&CValidationInterface::NotifyGovernanceVote, pwalletIn, pl::_1));
     conns.NotifyInstantSendDoubleSpendAttempt = g_signals.m_internals->NotifyInstantSendDoubleSpendAttempt.connect(std::bind(&CValidationInterface::NotifyInstantSendDoubleSpendAttempt, pwalletIn, pl::_1, pl::_2));
     conns.NotifyRecoveredSig = g_signals.m_internals->NotifyRecoveredSig.connect(std::bind(&CValidationInterface::NotifyRecoveredSig, pwalletIn, pl::_1));
-    conns.NotifySmartnodeListChanged = g_signals.m_internals->NotifySmartnodeListChanged.connect(std::bind(&CValidationInterface::NotifySmartnodeListChanged, pwalletIn, pl::_1, pl::_2, pl::_3));
+    conns.NotifySmartnodeListChanged = g_signals.m_internals->NotifySmartnodeListChanged.connect(std::bind(&CValidationInterface::NotifySmartnodeListChanged, pwalletIn, pl::_1, pl::_2, pl::_3, pl::_4));
+}
+
+void RegisterValidationInterface(CValidationInterface* callbacks)
+{
+    RegisterSharedValidationInterface({callbacks, [](CValidationInterface*){}});
+}
+
+void UnregisterSharedValidationInterface(std::shared_ptr<CValidationInterface> callbacks)
+{
+    UnregisterValidationInterface(callbacks.get());
 }
 
 void UnregisterValidationInterface(CValidationInterface* pwalletIn) {
@@ -202,20 +207,16 @@ void CMainSignals::BlockConnected(const std::shared_ptr<const CBlock> &pblock, c
     });
 }
 
-void CMainSignals::BlockDisconnected(const std::shared_ptr<const CBlock> &pblock, const CBlockIndex* pindexDisconnected) {
-    m_internals->m_schedulerClient.AddToProcessQueue([pblock, pindexDisconnected, this] {
-        m_internals->BlockDisconnected(pblock, pindexDisconnected);
+void CMainSignals::BlockDisconnected(const std::shared_ptr<const CBlock> &pblock, const CBlockIndex* pindex) {
+    m_internals->m_schedulerClient.AddToProcessQueue([pblock, pindex, this] {
+        m_internals->BlockDisconnected(pblock, pindex);
     });
 }
 
-void CMainSignals::SetBestChain(const CBlockLocator &locator) {
+void CMainSignals::ChainStateFlushed(const CBlockLocator &locator) {
     m_internals->m_schedulerClient.AddToProcessQueue([locator, this] {
-        m_internals->SetBestChain(locator);
+        m_internals->ChainStateFlushed(locator);
     });
-}
-
-void CMainSignals::Broadcast(int64_t nBestBlockTime, CConnman* connman) {
-    m_internals->Broadcast(nBestBlockTime, connman);
 }
 
 void CMainSignals::BlockChecked(const CBlock& block, const CValidationState& state) {
@@ -274,6 +275,6 @@ void CMainSignals::NotifyRecoveredSig(const std::shared_ptr<const llmq::CRecover
     });
 }
 
-void CMainSignals::NotifySmartnodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff) {
-    m_internals->NotifySmartnodeListChanged(undo, oldMNList, diff);
+void CMainSignals::NotifySmartnodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff, CConnman& connman) {
+    m_internals->NotifySmartnodeListChanged(undo, oldMNList, diff, connman);
 }

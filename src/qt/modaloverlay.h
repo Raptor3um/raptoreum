@@ -21,7 +21,7 @@ class ModalOverlay : public QWidget
     Q_OBJECT
 
 public:
-    explicit ModalOverlay(QWidget *parent);
+    explicit ModalOverlay(bool enable_wallet, QWidget *parent);
     ~ModalOverlay();
 
 public Q_SLOTS:
@@ -36,8 +36,8 @@ public Q_SLOTS:
     bool isLayerVisible() const { return layerIsVisible; }
 
 protected:
-    bool eventFilter(QObject * obj, QEvent * ev);
-    bool event(QEvent* ev);
+    bool eventFilter(QObject * obj, QEvent * ev) override;
+    bool event(QEvent* ev) override;
 
 private:
     Ui::ModalOverlay *ui;
@@ -47,6 +47,7 @@ private:
     bool layerIsVisible;
     bool userClosed;
     bool foreverHidden;
+    void UpdateHeaderSyncLabel();
 };
 
 #endif // BITCOIN_QT_MODALOVERLAY_H

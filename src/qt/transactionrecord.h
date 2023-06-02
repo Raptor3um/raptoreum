@@ -107,24 +107,24 @@ public:
     /** Number of confirmation recommended for accepting a transaction */
     static const int RecommendedNumConfirmations = 6;
 
-    TransactionRecord():
-            hash(), time(0), type(Other), strAddress(""), debit(0), credit(0), idx(0)
+    TransactionRecord()
+        : hash(), time(0), type(Other),
+          strAddress(""), debit(0), credit(0), idx(0)
     {
         txDest = DecodeDestination(strAddress);
     }
 
-    TransactionRecord(uint256 _hash, qint64 _time):
-            hash(_hash), time(_time), type(Other), strAddress(""), debit(0),
-            credit(0), idx(0)
+    TransactionRecord(uint256 _hash, qint64 _time)
+        : hash(_hash), time(_time), type(Other),
+          strAddress(""), debit(0), credit(0), idx(0)
     {
         txDest = DecodeDestination(strAddress);
     }
 
-    TransactionRecord(uint256 _hash, qint64 _time,
-                Type _type, const std::string &_strAddress,
-                const CAmount& _debit, const CAmount& _credit):
-            hash(_hash), time(_time), type(_type), strAddress(_strAddress), debit(_debit), credit(_credit),
-            idx(0)
+    TransactionRecord(uint256 _hash, qint64 _time, Type _type, const std::string &_strAddress, const CAmount& _debit, const CAmount& _credit)
+        : hash(_hash), time(_time), type(_type),
+          strAddress(_strAddress), debit(_debit),
+          credit(_credit), idx(0)
     {
         txDest = DecodeDestination(strAddress);
     }
@@ -132,7 +132,7 @@ public:
     /** Decompose CWallet transaction to model transaction records.
      */
     static bool showTransaction();
-    static QList<TransactionRecord> decomposeTransaction(interfaces::Wallet& wallet, const std::shared_ptr<const interfaces::WalletTx> wtx);
+    static QList<TransactionRecord> decomposeTransaction(interfaces::Wallet& wallet, const interfaces::WalletTx& wtx);
 
     /** @name Immutable transaction attributes
       @{*/
@@ -166,7 +166,7 @@ public:
 
     /** Update status from core wallet tx.
      */
-    void updateStatus(const std::shared_ptr<const interfaces::WalletTx> wtx, const interfaces::WalletTxStatus& wtxStatus, int numBlocks, int64_t adjustedTime, int chainLockHeight);
+    void updateStatus(const interfaces::WalletTx& wtx, const interfaces::WalletTxStatus& wtxStatus, int numBlocks, int64_t adjustedTime, int chainLockHeight, int64_t block_time);
 
     /** Return whether a status update is needed.
      */
@@ -189,7 +189,7 @@ public:
     bool isFutureTxMatured(const CWalletTx &wtx, CFutureTx &ftx);
 
     /** Return the Future TX Status based on maturity */
-    void getFutureTxStatus(const std::shared_ptr<const interfaces::WalletTx> wtx, const interfaces::WalletTxStatus& wtxStatus, CFutureTx &ftx);
+    void getFutureTxStatus(const interfaces::WalletTx& wtx, const interfaces::WalletTxStatus& wtxStatus, CFutureTx &ftx);
 
 };
 

@@ -24,9 +24,8 @@
 
 void CDSNotificationInterface::InitializeCurrentBlockTip()
 {
-    LOCK(cs_main);
-    SynchronousUpdatedBlockTip(chainActive.Tip(), nullptr, IsInitialBlockDownload());
-    UpdatedBlockTip(chainActive.Tip(), nullptr, IsInitialBlockDownload());
+    SynchronousUpdatedBlockTip(::ChainActive().Tip(), nullptr, ::ChainstateActive().IsInitialBlockDownload());
+    UpdatedBlockTip(::ChainActive().Tip(), nullptr, ::ChainstateActive().IsInitialBlockDownload());
 }
 
 void CDSNotificationInterface::AcceptedBlockHeader(const CBlockIndex *pindexNew)
@@ -69,7 +68,7 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
 #endif // ENABLE_WALLET
 
     llmq::quorumInstantSendManager->UpdatedBlockTip(pindexNew);
-    llmq::chainLocksHandler->UpdatedBlockTip(pindexNew);
+    llmq::chainLocksHandler->UpdatedBlockTip();
 
     llmq::quorumManager->UpdatedBlockTip(pindexNew, fInitialDownload);
     llmq::quorumDKGSessionManager->UpdatedBlockTip(pindexNew, fInitialDownload);
@@ -111,9 +110,9 @@ void CDSNotificationInterface::BlockDisconnected(const std::shared_ptr<const CBl
     CCoinJoin::BlockDisconnected(pblock, pindexDisconnected);
 }
 
-void CDSNotificationInterface::NotifySmartnodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff)
+void CDSNotificationInterface::NotifySmartnodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff, CConnman& connman)
 {
-    CMNAuth::NotifySmartnodeListChanged(undo, oldMNList, diff);
+    CMNAuth::NotifySmartnodeListChanged(undo, oldMNList, diff, connman);
     governance.UpdateCachesAndClean();
 }
 

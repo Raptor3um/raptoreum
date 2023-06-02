@@ -22,10 +22,7 @@ public:
     QString getURI();
 
 protected Q_SLOTS:
-    void accept();
-
-private Q_SLOTS:
-    void on_selectFileButton_clicked();
+    void accept() override;
 
 private:
     Ui::OpenURIDialog *ui;

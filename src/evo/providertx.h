@@ -7,7 +7,6 @@
 #define BITCOIN_EVO_PROVIDERTX_H
 
 #include <bls/bls.h>
-#include <consensus/validation.h>
 #include <primitives/transaction.h>
 
 #include <key_io.h>
@@ -16,14 +15,13 @@
 #include <univalue.h>
 
 class CBlockIndex;
-
 class CCoinsViewCache;
+class CValidationState;
 
 class CProRegTx {
 public:
     static const uint16_t CURRENT_VERSION = 1;
 
-public:
     uint16_t nVersion{CURRENT_VERSION};                    // message version
     uint16_t nType{0};                                     // only 0 supported for now
     uint16_t nMode{0};                                     // only 0 supported for now
@@ -37,24 +35,13 @@ public:
     uint256 inputsHash; // replay protection
     std::vector<unsigned char> vchSig;
 
-public:
-    ADD_SERIALIZE_METHODS;
-
-    template<typename Stream, typename Operation>
-    inline void SerializationOp(Stream &s, Operation ser_action) {
-        READWRITE(nVersion);
-        READWRITE(nType);
-        READWRITE(nMode);
-        READWRITE(collateralOutpoint);
-        READWRITE(addr);
-        READWRITE(keyIDOwner);
-        READWRITE(pubKeyOperator);
-        READWRITE(keyIDVoting);
-        READWRITE(nOperatorReward);
-        READWRITE(scriptPayout);
-        READWRITE(inputsHash);
+    SERIALIZE_METHODS(CProRegTx, obj)
+    {
+        READWRITE(obj.nVersion, obj.nType, obj.nMode, obj.collateralOutpoint,
+                  obj.addr, obj.keyIDOwner, obj.pubKeyOperator, obj.keyIDVoting,
+                  obj.nOperatorReward, obj.scriptPayout, obj.inputsHash);
         if (!(s.GetType() & SER_GETHASH)) {
-            READWRITE(vchSig);
+            READWRITE(obj.vchSig);
         }
     }
 
@@ -89,7 +76,6 @@ class CProUpServTx {
 public:
     static const uint16_t CURRENT_VERSION = 1;
 
-public:
     uint16_t nVersion{CURRENT_VERSION}; // message version
     uint256 proTxHash;
     CService addr;
@@ -97,22 +83,14 @@ public:
     uint256 inputsHash; // replay protection
     CBLSSignature sig;
 
-public:
-    ADD_SERIALIZE_METHODS;
-
-    template<typename Stream, typename Operation>
-    inline void SerializationOp(Stream &s, Operation ser_action) {
-        READWRITE(nVersion);
-        READWRITE(proTxHash);
-        READWRITE(addr);
-        READWRITE(scriptOperatorPayout);
-        READWRITE(inputsHash);
+    SERIALIZE_METHODS(CProUpServTx, obj)
+    {
+        READWRITE(obj.nVersion, obj.proTxHash, obj.addr, obj.scriptOperatorPayout, obj.inputsHash);
         if (!(s.GetType() & SER_GETHASH)) {
-            READWRITE(sig);
+            READWRITE(obj.sig);
         }
     }
 
-public:
     std::string ToString() const;
 
     void ToJson(UniValue &obj) const {
@@ -133,7 +111,6 @@ class CProUpRegTx {
 public:
     static const uint16_t CURRENT_VERSION = 1;
 
-public:
     uint16_t nVersion{CURRENT_VERSION}; // message version
     uint256 proTxHash;
     uint16_t nMode{0}; // only 0 supported for now
@@ -143,24 +120,15 @@ public:
     uint256 inputsHash; // replay protection
     std::vector<unsigned char> vchSig;
 
-public:
-    ADD_SERIALIZE_METHODS;
-
-    template<typename Stream, typename Operation>
-    inline void SerializationOp(Stream &s, Operation ser_action) {
-        READWRITE(nVersion);
-        READWRITE(proTxHash);
-        READWRITE(nMode);
-        READWRITE(pubKeyOperator);
-        READWRITE(keyIDVoting);
-        READWRITE(scriptPayout);
-        READWRITE(inputsHash);
+    SERIALIZE_METHODS(CProUpRegTx, obj)
+    {
+        READWRITE(obj.nVersion, obj.proTxHash, obj.nMode, obj.pubKeyOperator,
+                  obj.keyIDVoting, obj.scriptPayout, obj.inputsHash);
         if (!(s.GetType() & SER_GETHASH)) {
-            READWRITE(vchSig);
+            READWRITE(obj.vchSig);
         }
     }
 
-public:
     std::string ToString() const;
 
     void ToJson(UniValue &obj) const {
@@ -191,28 +159,20 @@ public:
         REASON_LAST = REASON_CHANGE_OF_KEYS
     };
 
-public:
     uint16_t nVersion{CURRENT_VERSION}; // message version
     uint256 proTxHash;
     uint16_t nReason{REASON_NOT_SPECIFIED};
     uint256 inputsHash; // replay protection
     CBLSSignature sig;
 
-public:
-    ADD_SERIALIZE_METHODS;
-
-    template<typename Stream, typename Operation>
-    inline void SerializationOp(Stream &s, Operation ser_action) {
-        READWRITE(nVersion);
-        READWRITE(proTxHash);
-        READWRITE(nReason);
-        READWRITE(inputsHash);
+    SERIALIZE_METHODS(CProUpRevTx, obj)
+    {
+        READWRITE(obj.nVersion, obj.proTxHash, obj.nReason, obj.inputsHash);
         if (!(s.GetType() & SER_GETHASH)) {
-            READWRITE(sig);
+            READWRITE(obj.sig);
         }
     }
 
-public:
     std::string ToString() const;
 
     void ToJson(UniValue &obj) const {
@@ -249,22 +209,11 @@ public:
     uint16_t externalConfirmations = 0;
     uint256 inputsHash; // replay protection
 
-public:
-    ADD_SERIALIZE_METHODS;
-
-    template<typename Stream, typename Operation>
-    inline void SerializationOp(Stream &s, Operation ser_action) {
-        READWRITE(nVersion);
-        READWRITE(maturity);
-        READWRITE(lockTime);
-        READWRITE(lockOutputIndex);
-        READWRITE(fee);
-        READWRITE(updatableByDestination);
-        READWRITE(exChainType);
-        READWRITE(externalPayoutScript);
-        READWRITE(externalTxid);
-        READWRITE(externalConfirmations);
-        READWRITE(inputsHash);
+    SERIALIZE_METHODS(CFutureTx, obj)
+    {
+        READWRITE(obj.nVersion, obj.maturity, obj.lockTime, obj.lockOutputIndex, obj.fee,
+                  obj.updatableByDestination, obj.exChainType, obj.externalPayoutScript,
+                  obj.externalTxid, obj.externalConfirmations, obj.inputsHash);
     }
 
     std::string ToString() const;
@@ -295,13 +244,13 @@ public:
 bool CheckFutureTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CValidationState &state);
 
 bool CheckProRegTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CValidationState &state,
-                   const CCoinsViewCache &view);
+                   const CCoinsViewCache &view, bool check_sigs);
 
-bool CheckProUpServTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CValidationState &state);
+bool CheckProUpServTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CValidationState &state, bool check_sigs);
 
 bool CheckProUpRegTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CValidationState &state,
-                     const CCoinsViewCache &view);
+                     const CCoinsViewCache &view, bool check_sigs);
 
-bool CheckProUpRevTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CValidationState &state);
+bool CheckProUpRevTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CValidationState &state, bool check_sigs);
 
 #endif // BITCOIN_EVO_PROVIDERTX_H

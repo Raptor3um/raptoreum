@@ -5,6 +5,7 @@
 #include <zmq/zmqrpc.h>
 
 #include <rpc/server.h>
+#include <rpc/util.h>
 #include <zmq/zmqabstractnotifier.h>
 #include <zmq/zmqnotificationinterface.h>
 
@@ -14,23 +15,25 @@ namespace {
 
 UniValue getzmqnotifications(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() != 0) {
-        throw std::runtime_error(
-            "getzmqnotifications\n"
-            "\nReturns information about the active ZeroMQ notifications.\n"
-            "\nResult:\n"
-            "[\n"
-            "  {                        (json object)\n"
-            "    \"type\": \"pubhashtx\",   (string) Type of notification\n"
-            "    \"address\": \"...\"       (string) Address of the publisher\n"
-            "  },\n"
-            "  ...\n"
-            "]\n"
-            "\nExamples:\n"
-            + HelpExampleCli("getzmqnotifications", "")
-            + HelpExampleRpc("getzmqnotifications", "")
-        );
-    }
+    RPCHelpMan{"getzmqnotifications",
+        "\nReturns information about the active ZeroMQ notifications.\n",
+        {},
+        RPCResult{
+            RPCResult::Type::ARR, "", "",
+            {
+                {RPCResult::Type::OBJ, "", "",
+                {
+                    {RPCResult::Type::STR, "type", "Type of notification"},
+                    {RPCResult::Type::STR, "address", "Address of the publisher"},
+                    {RPCResult::Type::NUM, "hwm", "Outbound message high water mark"},
+                }},
+            }
+        },
+        RPCExamples{
+            HelpExampleCli("getzmqnotifications", "")
+    + HelpExampleRpc("getzmqnotifications", "")
+        },
+    }.Check(request);
 
     UniValue result(UniValue::VARR);
     if (g_zmq_notification_interface != nullptr) {

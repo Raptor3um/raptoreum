@@ -36,6 +36,7 @@ class QButtonGroup;
 class QDateTime;
 class QFont;
 class QLineEdit;
+class QProgressDialog;
 class QUrl;
 class QWidget;
 QT_END_NAMESPACE
@@ -145,6 +146,8 @@ namespace GUIUtil
 
     void setClipboard(const QString& str);
 
+    QString getDefaultDataDirectory();
+
     /** Get save filename, mimics QFileDialog::getSaveFileName, except that it appends a default suffix
         when no suffix is provided by the user.
 
@@ -155,9 +158,7 @@ namespace GUIUtil
       @param[out] selectedSuffixOut  Pointer to return the suffix (file type) that was selected (or 0).
                   Can be useful when choosing the save file format based on suffix.
      */
-    QString getSaveFileName(QWidget *parent, const QString &caption, const QString &dir,
-        const QString &filter,
-        QString *selectedSuffixOut);
+    QString getSaveFileName(QWidget *parent, const QString &caption, const QString &dir, const QString &filter, QString *selectedSuffixOut);
 
     /** Get open filename, convenience wrapper for QFileDialog::getOpenFileName.
 
@@ -168,9 +169,7 @@ namespace GUIUtil
       @param[out] selectedSuffixOut  Pointer to return the suffix (file type) that was selected (or 0).
                   Can be useful when choosing the save file format based on suffix.
      */
-    QString getOpenFileName(QWidget *parent, const QString &caption, const QString &dir,
-        const QString &filter,
-        QString *selectedSuffixOut);
+    QString getOpenFileName(QWidget *parent, const QString &caption, const QString &dir, const QString &filter, QString *selectedSuffixOut);
 
     /** Get connection type to call object slot in GUI thread with invokeMethod. The call will be blocking.
 
@@ -203,13 +202,28 @@ namespace GUIUtil
         Q_OBJECT
 
     public:
-        explicit ToolTipToRichTextFilter(int size_threshold, QObject *parent = 0);
+        explicit ToolTipToRichTextFilter(int size_threshold, QObject *parent = nullptr);
 
     protected:
-        bool eventFilter(QObject *obj, QEvent *evt);
+        bool eventFilter(QObject *obj, QEvent *evt) override;
 
     private:
         int size_threshold;
+    };
+
+    /**
+     * Qt event filter lthat intercepts QEvent::FocusOut events for QLabel objects,
+     * and resets their 'textInteractionFlags' property to get rid of the visible cursor.
+     *
+     * This is a temporary fix of QTBUG-59514.
+     */
+    class LabelOutOfFocusEventFilter : public QObject
+    {
+        Q_OBJECT
+
+    public:
+        explicit LabelOutOfFocusEventFilter(QObject* parent);
+        bool eventFilter(QObject* watched, QEvent* event) override;
     };
 
     /**
@@ -271,7 +285,7 @@ namespace GUIUtil
     const QString getDefaultTheme();
 
     /** Check if the given theme name is valid or not */
-    const bool isValidTheme(const QString& strTheme);
+    bool isValidTheme(const QString& strTheme);
 
     /** Sets the stylesheet of the whole app and updates it if the
     related css files has been changed and -debug-ui mode is active. */
@@ -392,8 +406,8 @@ namespace GUIUtil
     /* Format CNodeStats.nServices bitmask into a user-readable string */
     QString formatServicesStr(quint64 mask);
 
-    /* Format a CNodeCombinedStats.dPingTime into a user-readable string or display N/A, if 0*/
-    QString formatPingTime(double dPingTime);
+    /* Format a CNodeStats.m_ping_usec into a user-readable string or display N/A, if 0*/
+    QString formatPingTime(int64_t ping_usec);
 
     /* Format a CNodeCombinedStats.nTimeOffset into a user-readable string. */
     QString formatTimeOffset(int64_t nTimeOffset);
@@ -414,7 +428,7 @@ namespace GUIUtil
          */
         void clicked(const QPoint& point);
     protected:
-        void mouseReleaseEvent(QMouseEvent *event);
+        void mouseReleaseEvent(QMouseEvent *event) override;
     };
 
     class ClickableProgressBar : public QProgressBar
@@ -427,7 +441,7 @@ namespace GUIUtil
          */
         void clicked(const QPoint& point);
     protected:
-        void mouseReleaseEvent(QMouseEvent *event);
+        void mouseReleaseEvent(QMouseEvent *event) override;
     };
 
     typedef ClickableProgressBar ProgressBar;
@@ -442,8 +456,51 @@ namespace GUIUtil
         void keyEscapePressed();
 
     private:
-        bool eventFilter(QObject *object, QEvent *event);
+        bool eventFilter(QObject *object, QEvent *event) override;
     };
+
+    // Fix known bugs in QProgressDialog class.
+    void PolishProgressDialog(QProgressDialog* dialog);
+
+    /**
+     * Returns the start-moment of the day in local time.
+     *
+     * QDateTime::QDateTime(const QDate& date) is deprecated since Qt 5.15.
+     * QDate::startOfDay() was introduced in Qt 5.14.
+     */
+    QDateTime StartOfDay(const QDate& date);
+
+    /**
+     * Returns the distance in pixels appropriate for drawing a subsequent character after text.
+     *
+     * in Qt 5.12 and before the QFontMetrics::width() is used and it is deprecated since Qt 5.13.
+     * in Qt 5.11 the QFontMetrics::horizontalAdvance() was introduces.
+     */
+    int TextWidth(const QFontMetrics& fm, const QString& text);
+
+    /**
+     * Returns true if pixmap has been set.
+     *
+     * QPixmap* QLabel::pixmap() is deprecated since Qt 5.15.
+     */
+    bool HasPixmap(const QLabel* label);
+    QImage GetImage(const QLabel* label);
+
+    /**
+     * Queue a function to run in an object's event loop. This can be
+     * replaced by a call to the QMetaObject::invokeMethod functor overload after Qt 5.10, but
+     * for now use a QObject::connect for compatibility with older Qt versions, based on
+     * https://stackoverflow.com/questions/21646467/how-to-execute-a-functor-or-a-lambda-in-a-given-thread-in-qt-gcd-style
+     */
+    template <typename Fn>
+    void ObjectInvoke(QObject* object, Fn&& function, Qt::ConnectionType connection = Qt::QueuedConnection)
+    {
+        QObject source;
+        QObject::connect(&source, &QObject::destroyed, object, std::forward<Fn>(function), connection);
+    }
+
+    void LogQtInfo();
+
 } // namespace GUIUtil
 
 #endif // BITCOIN_QT_GUIUTIL_H

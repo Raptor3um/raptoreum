@@ -9,11 +9,10 @@
 #include <qt/guiutil.h>
 
 #include <interfaces/node.h>
-#include <sync.h>
-#include <utiltime.h>
 
 #include <QDebug>
 #include <QList>
+#include <QLocale>
 
 bool BannedNodeLessThan::operator()(const CCombinedBan& left, const CCombinedBan& right) const
 {
@@ -76,7 +75,7 @@ public:
         if (idx >= 0 && idx < cachedBanlist.size())
             return &cachedBanlist[idx];
 
-        return 0;
+        return nullptr;
     }
 };
 
@@ -126,7 +125,7 @@ QVariant BanTableModel::data(const QModelIndex &index, int role) const
         case Bantime:
             QDateTime date = QDateTime::fromMSecsSinceEpoch(0);
             date = date.addSecs(rec->banEntry.nBanUntil);
-            return date.toString(Qt::SystemLocaleLongDate);
+            return QLocale::system().toString(date, QLocale::LongFormat);
         }
     }
 
@@ -147,8 +146,7 @@ QVariant BanTableModel::headerData(int section, Qt::Orientation orientation, int
 
 Qt::ItemFlags BanTableModel::flags(const QModelIndex &index) const
 {
-    if(!index.isValid())
-        return 0;
+    if (!index.isValid()) return Qt::NoItemFlags;
 
     Qt::ItemFlags retval = Qt::ItemIsSelectable | Qt::ItemIsEnabled;
     return retval;

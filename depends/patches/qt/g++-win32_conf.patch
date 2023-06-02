@@ -1,0 +1,22 @@
+diff --git a/qtbase/mkspecs/common/g++-win32.conf b/qtbase/mkspecs/common/g++-win32.conf
+index c3a1f3a..f6e9211 100644
+--- a/qtbase/mkspecs/common/g++-win32.conf
++++ b/qtbase/mkspecs/common/g++-win32.conf
+@@ -31,7 +31,7 @@ QMAKE_YACCFLAGS         = -d
+ 
+ QMAKE_CFLAGS_SSE2      += -mstackrealign
+ 
+-QMAKE_CXXFLAGS_EXCEPTIONS_ON = -fexceptions -mthreads
++QMAKE_CXXFLAGS_EXCEPTIONS_ON = -fexceptions -mthreads -pthread
+ 
+ QMAKE_INCDIR            =
+ 
+@@ -40,7 +40,7 @@ QMAKE_RUN_CC_IMP        = $(CC) -c $(CFLAGS) $(INCPATH) -o $@ $<
+ QMAKE_RUN_CXX           = $(CXX) -c $(CXXFLAGS) $(INCPATH) -o $obj $src
+ QMAKE_RUN_CXX_IMP       = $(CXX) -c $(CXXFLAGS) $(INCPATH) -o $@ $<
+ 
+-QMAKE_LFLAGS_EXCEPTIONS_ON = -mthreads
++QMAKE_LFLAGS_EXCEPTIONS_ON = -mthreads -pthread
+ QMAKE_LFLAGS_RELEASE    = -Wl,-s
+ QMAKE_LFLAGS_CONSOLE    = -Wl,-subsystem,console
+ QMAKE_LFLAGS_WINDOWS    = -Wl,-subsystem,windows

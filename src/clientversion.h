@@ -5,6 +5,8 @@
 #ifndef BITCOIN_CLIENTVERSION_H
 #define BITCOIN_CLIENTVERSION_H
 
+#include <util/macro.h>
+
 #if defined(HAVE_CONFIG_H)
 #include <config/raptoreum-config.h>
 #endif //HAVE_CONFIG_H

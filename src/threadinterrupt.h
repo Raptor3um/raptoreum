@@ -5,10 +5,11 @@
 #ifndef BITCOIN_THREADINTERRUPT_H
 #define BITCOIN_THREADINTERRUPT_H
 
+#include <sync.h>
+
 #include <atomic>
 #include <chrono>
 #include <condition_variable>
-#include <mutex>
 
 /*
     A helper class for interruptible sleeps. Calling operator() will interrupt
@@ -18,6 +19,7 @@
 class CThreadInterrupt
 {
 public:
+    CThreadInterrupt();
     explicit operator bool() const;
     void operator()();
     void reset();
@@ -27,7 +29,7 @@ public:
 
 private:
     std::condition_variable cond;
-    std::mutex mut;
+    Mutex mut;
     std::atomic<bool> flag;
 };
 

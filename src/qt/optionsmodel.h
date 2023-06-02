@@ -13,10 +13,6 @@ namespace interfaces {
 class Node;
 }
 
-QT_BEGIN_NAMESPACE
-class QNetworkProxy;
-QT_END_NAMESPACE
-
 extern const char *DEFAULT_GUI_PROXY_HOST;
 static constexpr unsigned short DEFAULT_GUI_PROXY_PORT = 9050;
 
@@ -31,13 +27,14 @@ class OptionsModel : public QAbstractListModel
     Q_OBJECT
 
 public:
-    explicit OptionsModel(interfaces::Node& node, QObject *parent = 0, bool resetSettings = false);
+    explicit OptionsModel(interfaces::Node& node, QObject *parent = nullptr, bool resetSettings = false);
 
     enum OptionID {
         StartAtStartup,         // bool
         HideTrayIcon,           // bool
         MinimizeToTray,         // bool
         MapPortUPnP,            // bool
+        MapPortNatpmp,          // bool
         MinimizeOnClose,        // bool
         ProxyUse,               // bool
         ProxyIP,                // QString
@@ -73,9 +70,9 @@ public:
     void Init(bool resetSettings = false);
     void Reset();
 
-    int rowCount(const QModelIndex & parent = QModelIndex()) const;
-    QVariant data(const QModelIndex & index, int role = Qt::DisplayRole) const;
-    bool setData(const QModelIndex & index, const QVariant & value, int role = Qt::EditRole);
+    int rowCount(const QModelIndex & parent = QModelIndex()) const override;
+    QVariant data(const QModelIndex & index, int role = Qt::DisplayRole) const override;
+    bool setData(const QModelIndex & index, const QVariant & value, int role = Qt::EditRole) override;
     /** Updates current unit in memory, settings and emits displayUnitChanged(newUnit) signal */
     void setDisplayUnit(const QVariant &value);
 
@@ -85,7 +82,6 @@ public:
     bool getMinimizeOnClose() const { return fMinimizeOnClose; }
     int getDisplayUnit() const { return nDisplayUnit; }
     QString getThirdPartyTxUrls() const { return strThirdPartyTxUrls; }
-    bool getProxySettings(QNetworkProxy& proxy) const;
     bool getCoinControlFeatures() const { return fCoinControlFeatures; }
     bool getShowAdvancedCJUI() { return fShowAdvancedCJUI; }
     const QString& getOverriddenByCommandLine() { return strOverriddenByCommandLine; }

@@ -133,6 +133,7 @@ class LLMQChainLocksTest(RaptoreumTestFramework):
         assert(self.nodes[0].getbestblockhash() == good_tip)
 
         self.log.info("Isolate a node and let it create some transactions which won't get IS locked")
+        force_finish_mnsync(self.nodes[0])
         isolate_node(self.nodes[0])
         txs = []
         for i in range(3):

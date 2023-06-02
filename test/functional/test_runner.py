@@ -41,7 +41,23 @@ except UnicodeDecodeError:
     CROSS = "x "
     CIRCLE = "o "
 
-if os.name == 'posix':
+if os.name != 'nt' or sys.getwindowsversion() >= (10, 0, 14393):
+    if os.name == 'nt':
+        import ctypes
+        kernel32 = ctypes.windll.kernel32
+        ENABLE_VIRTUAL_TERMINAL_PROCESSING = 4
+        STD_OUTPUT_HANDLE = -11
+        STD_ERROR_HANDLE = -12
+        # Enable ascii color control to stdout
+        stdout = kernel32.GetStdHandle(STD_OUTPUT_HANDLE)
+        stdout_mode = ctypes.c_int32()
+        kernel32.GetConsoleMode(stdout, ctypes.byref(stdout_mode))
+        kernel32.SetConsoleMode(stdout, stdout_mode.value | ENABLE_VIRTUAL_TERMINAL_PROCESSING)
+        # Enable ascii color control to stderr
+        stderr = kernel32.GetStdHandle(STD_ERROR_HANDLE)
+        stderr_mode = ctypes.c_int32()
+        kernel32.GetConsoleMode(stderr, ctypes.byref(stderr_mode))
+        kernel32.SetConsoleMode(stderr, stderr_mode.value | ENABLE_VIRTUAL_TERMINAL_PROCESSING)
     # primitive formatting on supported
     # terminal via ANSI escape sequences:
     BOLD = ('\033[0m', '\033[1m')
@@ -52,11 +68,8 @@ if os.name == 'posix':
 TEST_EXIT_PASSED = 0
 TEST_EXIT_SKIPPED = 77
 
-# 30 minutes represented in seconds
-TRAVIS_TIMEOUT_DURATION = 30 * 60
-
-BASE_SCRIPTS= [
-    # Scripts that are run by the travis build process.
+BASE_SCRIPTS = [
+    # Scripts that are run by default.
     # Longest test should go first, to favor running tests in parallel
     'feature_dip3_deterministicmns.py', # NOTE: needs dash_hash to pass
     'feature_block_reward_reallocation.py',
@@ -87,7 +100,6 @@ BASE_SCRIPTS= [
     'feature_dip4_coinbasemerkleroots.py', # NOTE: needs dash_hash to pass
     # vv Tests less than 60s vv
     'p2p_sendheaders.py', # NOTE: needs dash_hash to pass
-    'wallet_zapwallettxes.py',
     'wallet_importmulti.py',
     'mempool_limit.py',
     'rpc_txoutproof.py',
@@ -103,6 +115,7 @@ BASE_SCRIPTS= [
     'interface_bitcoin_cli.py',
     'mempool_resurrect.py',
     'wallet_txn_doublespend.py --mineblock',
+    'tool_wallet.py',
     'wallet_txn_clone.py',
     'rpc_getchaintips.py',
     'interface_rest.py',
@@ -110,10 +123,16 @@ BASE_SCRIPTS= [
     'mempool_reorg.py',
     'mempool_persist.py',
     'wallet_multiwallet.py',
+    'wallet_disableprivatekeys.py',
+    'wallet_disableprivatekeys.py --usecli',
+    'wallet_createwallet.py',
+    'wallet_createwallet.py --usecli',
+    'wallet_reorgsrestore.py',
     'interface_http.py',
     'rpc_users.py',
     'feature_proxy.py',
     'rpc_signrawtransaction.py',
+    'wallet_groups.py',
     'p2p_disconnect_ban.py',
     'feature_addressindex.py',
     'feature_timestampindex.py',
@@ -122,6 +141,7 @@ BASE_SCRIPTS= [
     'rpc_blockchain.py',
     'rpc_deprecated.py',
     'wallet_disable.py',
+    'p2p_addr_relay.py',
     'rpc_net.py',
     'wallet_keypool.py',
     'wallet_keypool_hd.py',
@@ -156,6 +176,7 @@ BASE_SCRIPTS= [
     'rpc_uptime.py',
     'wallet_resendwallettransactions.py',
     'feature_minchainwork.py',
+    'feature_filelock.py',
     'p2p_unrequested_blocks.py', # NOTE: needs dash_hash to pass
     'feature_shutdown.py',
     'rpc_coinjoin.py',
@@ -168,6 +189,11 @@ BASE_SCRIPTS= [
     'feature_dip0020_activation.py',
     'feature_uacomment.py',
     'p2p_unrequested_blocks.py',
+    'feature_includeconf.py',
+    'feature_asmap.py',
+    'rpc_deriveaddresses.py',
+    'rpc_deriveaddresses.py --usecli',
+    'rpc_scantxoutset.py',
     'feature_logging.py',
     'p2p_node_network_limited.py',
     'feature_blocksdir.py',
@@ -178,7 +204,7 @@ BASE_SCRIPTS= [
 ]
 
 EXTENDED_SCRIPTS = [
-    # These tests are not run by the travis build process.
+    # These tests are not run by default.
     # Longest test should go first, to favor running tests in parallel
     'feature_pruning.py', # NOTE: Prune mode is incompatible with -txindex, should work with governance validation disabled though.
     # vv Tests less than 20m vv
@@ -220,7 +246,7 @@ def main():
                                      epilog='''
     Help text and arguments for individual test script:''',
                                      formatter_class=argparse.RawTextHelpFormatter)
-    parser.add_argument('--combinedlogslen', '-c', type=int, default=0, help='print a combined log (of length n lines) from all test nodes and test framework to the console on failure.')
+    parser.add_argument('--combinedlogslen', '-c', type=int, default=0, metavar='n', help='On failure, print a log (of length n lines) to the console, combined from the test framework and all test nodes.')
     parser.add_argument('--coverage', action='store_true', help='generate a basic coverage report for the RPC interface')
     parser.add_argument('--ci', action='store_true', help='Run checks and code that are usually only enabled in a continuous integration environment')
     parser.add_argument('--exclude', '-x', help='specify a comma-separated-list of scripts to exclude.')
@@ -493,7 +519,8 @@ class TestHandler:
             for job in self.jobs:
                 (name, start_time, proc, testdir, log_out, log_err) = job
                 if int(time.time() - start_time) > self.timeout_duration:
-                    # In travis, timeout individual tests (to stop tests hanging and not providing useful output).
+                    # Timeout individual tests if timeout is specified (to stop
+                    # tests hanging and not providing useful output).
                     proc.send_signal(signal.SIGINT)
                 if proc.poll() is not None:
                     log_out.seek(0), log_err.seek(0)
@@ -558,7 +585,7 @@ class TestResult():
 def check_script_prefixes():
     """Check that test scripts start with one of the allowed name prefixes."""
 
-    good_prefixes_re = re.compile("(example|feature|interface|mempool|mining|p2p|rpc|wallet)_")
+    good_prefixes_re = re.compile("(example|feature|interface|mempool|mining|p2p|rpc|wallet|tool)_")
     bad_script_names = [script for script in ALL_SCRIPTS if good_prefixes_re.match(script) is None]
 
     if bad_script_names:
@@ -578,7 +605,7 @@ def check_script_list(*, src_dir, fail_on_warn):
     if len(missed_tests) != 0:
         print("%sWARNING!%s The following scripts are not being run: %s. Check the test lists in test_runner.py." % (BOLD[1], BOLD[0], str(missed_tests)))
         if fail_on_warn:
-            # On travis this warning is an error to prevent merging incomplete commits into master
+            # On CI this warning is an error to prevent merging incomplete commits into master
             sys.exit(1)
 
 class RPCCoverage():

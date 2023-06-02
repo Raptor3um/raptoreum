@@ -6,11 +6,8 @@
 
 #include <crypto/aes.h>
 #include <crypto/sha512.h>
-#include <script/script.h>
-#include <script/standard.h>
-#include <util.h>
+#include <util/system.h>
 
-#include <string>
 #include <vector>
 
 int CCrypter::BytesToKeySHA512AES(const std::vector<unsigned char>& chSalt, const SecureString& strKeyData, int count, unsigned char *key,unsigned char *iv) const
@@ -26,7 +23,7 @@ int CCrypter::BytesToKeySHA512AES(const std::vector<unsigned char>& chSalt, cons
     unsigned char buf[CSHA512::OUTPUT_SIZE];
     CSHA512 di;
 
-    di.Write((const unsigned char*)strKeyData.c_str(), strKeyData.size());
+    di.Write((const unsigned char*)strKeyData.data(), strKeyData.size());
     di.Write(chSalt.data(), chSalt.size());
     di.Finalize(buf);
 
@@ -242,14 +239,14 @@ bool CCryptoKeyStore::Lock(bool fAllowMixing)
     return true;
 }
 
-bool CCryptoKeyStore::Unlock(const CKeyingMaterial& vMasterKeyIn, bool fForMixingOnly)
+bool CCryptoKeyStore::Unlock(const CKeyingMaterial& vMasterKeyIn, bool fForMixingOnly, bool accept_no_keys)
 {
     {
         LOCK(cs_KeyStore);
         if (!SetCrypted())
             return false;
 
-        bool keyPass = false;
+        bool keyPass = mapCryptedKeys.empty(); // Always pass when there are no encrypted keys
         bool keyFail = false;
         CryptedKeyMap::const_iterator mi = mapCryptedKeys.begin();
         for (; mi != mapCryptedKeys.end(); ++mi)
@@ -271,7 +268,7 @@ bool CCryptoKeyStore::Unlock(const CKeyingMaterial& vMasterKeyIn, bool fForMixin
             LogPrintf("The wallet is probably corrupted: Some keys decrypt but not all.\n");
             assert(false);
         }
-        if (keyFail || (!keyPass && cryptedHDChain.IsNull()))
+        if (keyFail || (!keyPass && cryptedHDChain.IsNull() && !accept_no_keys))
             return false;
 
         vMasterKey = vMasterKeyIn;
@@ -393,7 +390,7 @@ bool CCryptoKeyStore::EncryptKeys(CKeyingMaterial& vMasterKeyIn)
         return false;
 
     fUseCrypto = true;
-    for (KeyMap::value_type& mKey : mapKeys)
+    for (const KeyMap::value_type& mKey : mapKeys)
     {
         const CKey &key = mKey.second;
         CPubKey vchPubKey = key.GetPubKey();

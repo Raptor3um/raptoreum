@@ -6,7 +6,7 @@
 
 #include <netbase.h>
 #include <test/test_raptoreum.h>
-#include <utilstrencodings.h>
+#include <util/strencodings.h>
 
 #include <string>
 
@@ -184,6 +184,7 @@ BOOST_AUTO_TEST_CASE(subnet_test)
     BOOST_CHECK(!ResolveSubNet("1.2.3.0/-1").IsValid());
     BOOST_CHECK(ResolveSubNet("1.2.3.0/32").IsValid());
     BOOST_CHECK(!ResolveSubNet("1.2.3.0/33").IsValid());
+    BOOST_CHECK(!ResolveSubNet("1.2.3.0/300").IsValid());
     BOOST_CHECK(ResolveSubNet("1:2:3:4:5:6:7:8/0").IsValid());
     BOOST_CHECK(ResolveSubNet("1:2:3:4:5:6:7:8/33").IsValid());
     BOOST_CHECK(!ResolveSubNet("1:2:3:4:5:6:7:8/-1").IsValid());
@@ -215,6 +216,11 @@ BOOST_AUTO_TEST_CASE(subnet_test)
     BOOST_CHECK(CSubNet(ResolveIP("1:2:3:4:5:6:7:8")).Match(ResolveIP("1:2:3:4:5:6:7:8")));
     BOOST_CHECK(!CSubNet(ResolveIP("1:2:3:4:5:6:7:8")).Match(ResolveIP("1:2:3:4:5:6:7:9")));
     BOOST_CHECK(CSubNet(ResolveIP("1:2:3:4:5:6:7:8")).ToString() == "1:2:3:4:5:6:7:8/128");
+    // IPv4 address with IPv6 netmask or the other way around.
+    BOOST_CHECK(!CSubNet(ResolveIP("1.1.1.1"), ResolveIP("ffff::")).IsValid());
+    BOOST_CHECK(!CSubNet(ResolveIP("::1"), ResolveIP("255.0.0.0")).IsValid());
+    // Can't subnet TOR (or any other non-IPv4 and non-IPv6 network).
+    BOOST_CHECK(!CSubNet(ResolveIP("5wyqrzbvrdsumnok.onion"), ResolveIP("255.0.0.0")).IsValid());
 
     subnet = ResolveSubNet("1.2.3.4/255.255.255.255");
     BOOST_CHECK_EQUAL(subnet.ToString(), "1.2.3.4/32");
@@ -289,32 +295,34 @@ BOOST_AUTO_TEST_CASE(subnet_test)
     BOOST_CHECK_EQUAL(subnet.ToString(), "1::/16");
     subnet = ResolveSubNet("1:2:3:4:5:6:7:8/0000:0000:0000:0000:0000:0000:0000:0000");
     BOOST_CHECK_EQUAL(subnet.ToString(), "::/0");
+    // Invalid netmasks (with 1-bits after 0-bits)
     subnet = ResolveSubNet("1.2.3.4/255.255.232.0");
-    BOOST_CHECK_EQUAL(subnet.ToString(), "1.2.0.0/255.255.232.0");
+    BOOST_CHECK(!subnet.IsValid());
+    subnet = ResolveSubNet("1.2.3.4/255.0.255.255");
+    BOOST_CHECK(!subnet.IsValid());
     subnet = ResolveSubNet("1:2:3:4:5:6:7:8/ffff:ffff:ffff:fffe:ffff:ffff:ffff:ff0f");
-    BOOST_CHECK_EQUAL(subnet.ToString(), "1:2:3:4:5:6:7:8/ffff:ffff:ffff:fffe:ffff:ffff:ffff:ff0f");
-
+    BOOST_CHECK(!subnet.IsValid());
 }
 
 BOOST_AUTO_TEST_CASE(netbase_getgroup)
 {
-
-    BOOST_CHECK(ResolveIP("127.0.0.1").GetGroup() == std::vector<unsigned char>({0})); // Local -> !Routable()
-    BOOST_CHECK(ResolveIP("257.0.0.1").GetGroup() == std::vector<unsigned char>({0})); // !Valid -> !Routable()
-    BOOST_CHECK(ResolveIP("10.0.0.1").GetGroup() == std::vector<unsigned char>({0})); // RFC1918 -> !Routable()
-    BOOST_CHECK(ResolveIP("169.254.1.1").GetGroup() == std::vector<unsigned char>({0})); // RFC3927 -> !Routable()
-    BOOST_CHECK(ResolveIP("1.2.3.4").GetGroup() == std::vector<unsigned char>({(unsigned char)NET_IPV4, 1, 2})); // IPv4
-    BOOST_CHECK(ResolveIP("::FFFF:0:102:304").GetGroup() == std::vector<unsigned char>({(unsigned char)NET_IPV4, 1, 2})); // RFC6145
-    BOOST_CHECK(ResolveIP("64:FF9B::102:304").GetGroup() == std::vector<unsigned char>({(unsigned char)NET_IPV4, 1, 2})); // RFC6052
-    BOOST_CHECK(ResolveIP("2002:102:304:9999:9999:9999:9999:9999").GetGroup() == std::vector<unsigned char>({(unsigned char)NET_IPV4, 1, 2})); // RFC3964
-    BOOST_CHECK(ResolveIP("2001:0:9999:9999:9999:9999:FEFD:FCFB").GetGroup() == std::vector<unsigned char>({(unsigned char)NET_IPV4, 1, 2})); // RFC4380
-    BOOST_CHECK(ResolveIP("FD87:D87E:EB43:edb1:8e4:3588:e546:35ca").GetGroup() == std::vector<unsigned char>({(unsigned char)NET_ONION, 239})); // Tor
-    BOOST_CHECK(ResolveIP("2001:470:abcd:9999:9999:9999:9999:9999").GetGroup() == std::vector<unsigned char>({(unsigned char)NET_IPV6, 32, 1, 4, 112, 175})); //he.net
-    BOOST_CHECK(ResolveIP("2001:2001:9999:9999:9999:9999:9999:9999").GetGroup() == std::vector<unsigned char>({(unsigned char)NET_IPV6, 32, 1, 32, 1})); //IPv6
+    std::vector<bool> asmap; // use /16
+    BOOST_CHECK(ResolveIP("127.0.0.1").GetGroup(asmap) == std::vector<unsigned char>({0})); // Local -> !Routable()
+    BOOST_CHECK(ResolveIP("257.0.0.1").GetGroup(asmap) == std::vector<unsigned char>({0})); // !Valid -> !Routable()
+    BOOST_CHECK(ResolveIP("10.0.0.1").GetGroup(asmap) == std::vector<unsigned char>({0})); // RFC1918 -> !Routable()
+    BOOST_CHECK(ResolveIP("169.254.1.1").GetGroup(asmap) == std::vector<unsigned char>({0})); // RFC3927 -> !Routable()
+    BOOST_CHECK(ResolveIP("1.2.3.4").GetGroup(asmap) == std::vector<unsigned char>({(unsigned char)NET_IPV4, 1, 2})); // IPv4
+    BOOST_CHECK(ResolveIP("::FFFF:0:102:304").GetGroup(asmap) == std::vector<unsigned char>({(unsigned char)NET_IPV4, 1, 2})); // RFC6145
+    BOOST_CHECK(ResolveIP("64:FF9B::102:304").GetGroup(asmap) == std::vector<unsigned char>({(unsigned char)NET_IPV4, 1, 2})); // RFC6052
+    BOOST_CHECK(ResolveIP("2002:102:304:9999:9999:9999:9999:9999").GetGroup(asmap) == std::vector<unsigned char>({(unsigned char)NET_IPV4, 1, 2})); // RFC3964
+    BOOST_CHECK(ResolveIP("2001:0:9999:9999:9999:9999:FEFD:FCFB").GetGroup(asmap) == std::vector<unsigned char>({(unsigned char)NET_IPV4, 1, 2})); // RFC4380
+    BOOST_CHECK(ResolveIP("FD87:D87E:EB43:edb1:8e4:3588:e546:35ca").GetGroup(asmap) == std::vector<unsigned char>({(unsigned char)NET_ONION, 239})); // Tor
+    BOOST_CHECK(ResolveIP("2001:470:abcd:9999:9999:9999:9999:9999").GetGroup(asmap) == std::vector<unsigned char>({(unsigned char)NET_IPV6, 32, 1, 4, 112, 175})); //he.net
+    BOOST_CHECK(ResolveIP("2001:2001:9999:9999:9999:9999:9999:9999").GetGroup(asmap) == std::vector<unsigned char>({(unsigned char)NET_IPV6, 32, 1, 32, 1})); //IPv6
 
     // baz.net sha256 hash: 12929400eb4607c4ac075f087167e75286b179c693eb059a01774b864e8fe505
     std::vector<unsigned char> internal_group = {NET_INTERNAL, 0x12, 0x92, 0x94, 0x00, 0xeb, 0x46, 0x07, 0xc4, 0xac, 0x07};
-    BOOST_CHECK(CreateInternal("baz.net").GetGroup() == internal_group);
+    BOOST_CHECK(CreateInternal("baz.net").GetGroup(asmap) == internal_group);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

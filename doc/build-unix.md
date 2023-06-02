@@ -69,11 +69,11 @@ Hardening enables the following features:
 
     To test that you have built PIE executable, install scanelf, part of paxutils, and use:
 
-    	scanelf -e ./raptoreumd
+    scanelf -e ./raptoreumd
 
     The output should contain:
 
-     TYPE
+    TYPE
     ET_DYN
 
 * Non-executable Stack
@@ -87,8 +87,8 @@ Hardening enables the following features:
     `scanelf -e ./raptoreumd`
 
     the output should contain:
-	STK/REL/PTL
-	RW- R-- RW-
+    STK/REL/PTL
+    RW- R-- RW-
 
     The STK RW- means that the stack is readable and writeable but not executable.
 

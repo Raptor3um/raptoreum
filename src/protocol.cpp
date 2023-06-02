@@ -5,8 +5,8 @@
 
 #include <protocol.h>
 
-#include <util.h>
-#include <utilstrencodings.h>
+#include <util/strencodings.h>
+#include <util/system.h>
 
 #ifndef WIN32
 # include <arpa/inet.h>
@@ -76,6 +76,7 @@ const char* QGETDATA = "qgetdata";
 const char* QDATA = "qdata";
 const char *CLSIG="clsig";
 const char *ISLOCK="islock";
+const char *ISDLOCK="isdlock";
 const char *MNAUTH="mnauth";
 }; // namespace NetMsgType
 
@@ -145,6 +146,7 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::QDATA,
     NetMsgType::CLSIG,
     NetMsgType::ISLOCK,
+    NetMsgType::ISDLOCK,
     NetMsgType::MNAUTH,
 };
 const static std::vector<std::string> allNetMessageTypesVec(allNetMessageTypes, allNetMessageTypes+ARRAYLEN(allNetMessageTypes));
@@ -160,8 +162,13 @@ CMessageHeader::CMessageHeader(const MessageStartChars& pchMessageStartIn)
 CMessageHeader::CMessageHeader(const MessageStartChars& pchMessageStartIn, const char* pszCommand, unsigned int nMessageSizeIn)
 {
     memcpy(pchMessageStart, pchMessageStartIn, MESSAGE_START_SIZE);
-    memset(pchCommand, 0, sizeof(pchCommand));
-    strncpy(pchCommand, pszCommand, COMMAND_SIZE);
+
+    // Copy the command name, zero-padding to COMMAND_SIZE bytes
+    size_t i = 0;
+    for (; i < COMMAND_SIZE && pszCommand[i] != 0; ++i) pchCommand[i] = pszCommand[i];
+    assert(pszCommand[i] == 0); // Assert that the command name passed in is not longer than COMMAND_SIZE
+    for (; i < COMMAND_SIZE; ++i) pchCommand[i] = 0;
+
     nMessageSize = nMessageSizeIn;
     memset(pchChecksum, 0, CHECKSUM_SIZE);
 }
@@ -270,8 +277,8 @@ const char* CInv::GetCommandInternal() const
         case MSG_QUORUM_RECOVERED_SIG:          return NetMsgType::QSIGREC;
         case MSG_CLSIG:                         return NetMsgType::CLSIG;
         case MSG_ISLOCK:                        return NetMsgType::ISLOCK;
-        default:
-            return nullptr;
+        case MSG_ISDLOCK:                       return NetMsgType::ISDLOCK;
+        default:                                return nullptr;
     }
 }
 
@@ -297,4 +304,43 @@ std::string CInv::ToString() const
 const std::vector<std::string> &getAllNetMessageTypes()
 {
     return allNetMessageTypesVec;
+}
+
+/**
+ * Convert a service flag (NODE_*) to a human readable srting.
+ * It supports unknown service flags which will be returned as "UNKNOWN[...]".
+ * @param[in] bit the service flag is calculated as (1 << bit)
+ */
+static std::string serviceFlagToStr(size_t bit)
+{
+    const uint64_t service_flag = 1ULL << bit;
+    switch ((ServiceFlags)service_flag) {
+        case NODE_NONE: abort(); // impossible situation
+        case NODE_NETWORK:         return "NETWORK";
+        case NODE_GETUTXO:         return "GETUTXO";
+        case NODE_BLOOM:           return "BLOOM";
+        case NODE_XTHIN:           return "XTHIN";
+        case NODE_NETWORK_LIMITED: return "NETWORK_LIMITED";
+        // Not using default, so we get wqrned when a case is missing
+    }
+
+    std::ostringstream stream;
+    stream.imbue(std::locale::classic());
+    stream << "UNKNOWN[";
+    stream << "2^" << bit;
+    stream << "]";
+    return stream.str();
+}
+
+std::vector<std::string> serviceFlagsToStr(uint64_t flags)
+{
+    std::vector<std::string> str_flags;
+
+    for (size_t i = 0; i < sizeof(flags) * 8; ++i) {
+        if (flags & (1ULL << i)) {
+            str_flags.emplace_back(serviceFlagToStr(i));
+        }
+    }
+
+    return str_flags;
 }

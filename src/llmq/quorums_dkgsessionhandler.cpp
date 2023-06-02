@@ -3,26 +3,31 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <llmq/quorums.h>
 #include <llmq/quorums_dkgsessionhandler.h>
+
+#include <llmq/quorums_commitment.h>
+#include <llmq/quorums_dkgsession.h>
 #include <llmq/quorums_blockprocessor.h>
 #include <llmq/quorums_debug.h>
 #include <llmq/quorums_utils.h>
+
+#include <evo/deterministicmns.h>
 
 #include <smartnode/activesmartnode.h>
 #include <chainparams.h>
 #include <net_processing.h>
 #include <spork.h>
+#include <validation.h>
 
 namespace llmq
 {
 
-CDKGPendingMessages::CDKGPendingMessages(size_t _maxMessagesPerNode, int _invType) :
-    maxMessagesPerNode(_maxMessagesPerNode),
-    invType(_invType)
-{
-    LogPrint(BCLog::LLMQ_DKG, "CDKGPendingMessages::%s --  maxMessagesPerNode %d for type %d\n", __func__, maxMessagesPerNode, invType);
-}
+// CDKGPendingMessages::CDKGPendingMessages(size_t _maxMessagesPerNode, int _invType) :
+//     maxMessagesPerNode(_maxMessagesPerNode),
+//     invType(_invType)
+// {
+//     LogPrint(BCLog::LLMQ_DKG, "CDKGPendingMessages::%s --  maxMessagesPerNode %d for type %d\n", __func__, maxMessagesPerNode, invType);
+// }
 
 void CDKGPendingMessages::PushPendingMessage(NodeId from, CDataStream& vRecv)
 {
@@ -65,7 +70,7 @@ std::list<CDKGPendingMessages::BinaryMessage> CDKGPendingMessages::PopPendingMes
         pendingMessages.pop_front();
     }
 
-    return std::move(ret);
+    return ret;
 }
 
 bool CDKGPendingMessages::HasSeen(const uint256& hash) const
@@ -84,33 +89,33 @@ void CDKGPendingMessages::Clear()
 
 //////
 
-CDKGSessionHandler::CDKGSessionHandler(const Consensus::LLMQParams& _params, CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager) :
-    params(_params),
-    blsWorker(_blsWorker),
-    dkgManager(_dkgManager),
-    curSession(std::make_shared<CDKGSession>(_params, _blsWorker, _dkgManager)),
-    pendingContributions(800, MSG_QUORUM_CONTRIB), // we allow size*2 messages as we need to make sure we see bad behavior (double messages)
-    pendingComplaints(800, MSG_QUORUM_COMPLAINT),
-    pendingJustifications(800, MSG_QUORUM_JUSTIFICATION),
-    pendingPrematureCommitments(800, MSG_QUORUM_PREMATURE_COMMITMENT)
-{
-    if (params.type == Consensus::LLMQ_NONE) {
-        throw std::runtime_error("Can't initialize CDKGSessionHandler with LLMQ_NONE type.");
-    }
-}
+// CDKGSessionHandler::CDKGSessionHandler(const Consensus::LLMQParams& _params, CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager) :
+//     params(_params),
+//     blsWorker(_blsWorker),
+//     dkgManager(_dkgManager),
+//     curSession(std::make_shared<CDKGSession>(_params, _blsWorker, _dkgManager)),
+//     pendingContributions(800, MSG_QUORUM_CONTRIB), // we allow size*2 messages as we need to make sure we see bad behavior (double messages)
+//     pendingComplaints(800, MSG_QUORUM_COMPLAINT),
+//     pendingJustifications(800, MSG_QUORUM_JUSTIFICATION),
+//     pendingPrematureCommitments(800, MSG_QUORUM_PREMATURE_COMMITMENT)
+// {
+//     if (params.type == Consensus::LLMQ_NONE) {
+//         throw std::runtime_error("Can't initialize CDKGSessionHandler with LLMQ_NONE type.");
+//     }
+// }
 
-CDKGSessionHandler::~CDKGSessionHandler() = default;
+// CDKGSessionHandler::~CDKGSessionHandler() = default;
 
 void CDKGSessionHandler::UpdatedBlockTip(const CBlockIndex* pindexNew)
 {
     LOCK(cs);
 
     int quorumStageInt = pindexNew->nHeight % params.dkgInterval;
-    const CBlockIndex* pindexQuorum = pindexNew->GetAncestor(pindexNew->nHeight - quorumStageInt);
+    const CBlockIndex* pQuorumBaseBlockIndex = pindexNew->GetAncestor(pindexNew->nHeight - quorumStageInt);
 
     currentHeight = pindexNew->nHeight;
-    quorumHeight = pindexQuorum->nHeight;
-    quorumHash = pindexQuorum->GetBlockHash();
+    quorumHeight = pQuorumBaseBlockIndex->nHeight;
+    quorumHash = pQuorumBaseBlockIndex->GetBlockHash();
 
     bool fNewPhase = (quorumStageInt % params.dkgPhaseBlocks) == 0;
     int phaseInt = quorumStageInt / params.dkgPhaseBlocks + 1;
@@ -156,17 +161,17 @@ void CDKGSessionHandler::StopThread()
     }
 }
 
-bool CDKGSessionHandler::InitNewQuorum(const CBlockIndex* pindexQuorum)
+bool CDKGSessionHandler::InitNewQuorum(const CBlockIndex* pQuorumBaseBlockIndex)
 {
-    curSession = std::make_shared<CDKGSession>(params, blsWorker, dkgManager);
+    curSession = std::make_unique<CDKGSession>(params, blsWorker, dkgManager, connman);
 
-    if (!deterministicMNManager->IsDIP3Enforced(pindexQuorum->nHeight)) {
+    if (!deterministicMNManager->IsDIP3Enforced(pQuorumBaseBlockIndex->nHeight)) {
         return false;
     }
 
-    auto mns = CLLMQUtils::GetAllQuorumMembers(params.type, pindexQuorum);
+    auto mns = CLLMQUtils::GetAllQuorumMembers(params, pQuorumBaseBlockIndex);
 
-    if (!curSession->Init(pindexQuorum, mns, WITH_LOCK(activeSmartnodeInfoCs, return activeSmartnodeInfo.proTxHash))) {
+    if (!curSession->Init(pQuorumBaseBlockIndex, mns, WITH_LOCK(activeSmartnodeInfoCs, return activeSmartnodeInfo.proTxHash))) {
         LogPrintf("CDKGSessionManager::%s -- quorum initialization failed for %s\n", __func__, curSession->params.name);
         return false;
     }
@@ -180,13 +185,9 @@ std::pair<QuorumPhase, uint256> CDKGSessionHandler::GetPhaseAndQuorumHash() cons
     return std::make_pair(phase, quorumHash);
 }
 
-class AbortPhaseException : public std::exception {
-};
+class AbortPhaseException : public std::exception { };
 
-void CDKGSessionHandler::WaitForNextPhase(QuorumPhase curPhase,
-                                          QuorumPhase nextPhase,
-                                          const uint256& expectedQuorumHash,
-                                          const WhileWaitFunc& runWhileWaiting)
+void CDKGSessionHandler::WaitForNextPhase(QuorumPhase curPhase, QuorumPhase nextPhase, const uint256& expectedQuorumHash, const WhileWaitFunc& runWhileWaiting) const
 {
     LogPrint(BCLog::LLMQ_DKG, "CDKGSessionManager::%s -- %s - starting, curPhase=%d, nextPhase=%d\n", __func__, params.name, curPhase, nextPhase);
 
@@ -208,7 +209,7 @@ void CDKGSessionHandler::WaitForNextPhase(QuorumPhase curPhase,
             throw AbortPhaseException();
         }
         if (!runWhileWaiting()) {
-            MilliSleep(100);
+            UninterruptibleSleep(std::chrono::milliseconds{100});
         }
     }
 
@@ -225,7 +226,7 @@ void CDKGSessionHandler::WaitForNextPhase(QuorumPhase curPhase,
     }
 }
 
-void CDKGSessionHandler::WaitForNewQuorum(const uint256& oldQuorumHash)
+void CDKGSessionHandler::WaitForNewQuorum(const uint256& oldQuorumHash) const
 {
     LogPrint(BCLog::LLMQ_DKG, "CDKGSessionManager::%s -- %s - starting\n", __func__, params.name);
 
@@ -238,17 +239,14 @@ void CDKGSessionHandler::WaitForNewQuorum(const uint256& oldQuorumHash)
         if (p.second != oldQuorumHash) {
             break;
         }
-        MilliSleep(100);
+        UninterruptibleSleep(std::chrono::milliseconds{100});
     }
 
     LogPrint(BCLog::LLMQ_DKG, "CDKGSessionManager::%s -- %s - done\n", __func__, params.name);
 }
 
 // Sleep some time to not fully overload the whole network
-void CDKGSessionHandler::SleepBeforePhase(QuorumPhase curPhase,
-                                          const uint256& expectedQuorumHash,
-                                          double randomSleepFactor,
-                                          const WhileWaitFunc& runWhileWaiting)
+void CDKGSessionHandler::SleepBeforePhase(QuorumPhase curPhase, const uint256& expectedQuorumHash, double randomSleepFactor, const WhileWaitFunc& runWhileWaiting) const
 {
     if (!curSession->AreWeMember()) {
         // Non-members do not participate and do not create any network load, no need to sleep.
@@ -271,14 +269,11 @@ void CDKGSessionHandler::SleepBeforePhase(QuorumPhase curPhase,
     // Don't expect perfect block times and thus reduce the phase time to be on the secure side (caller chooses factor)
     double adjustedPhaseSleepTimePerMember = phaseSleepTimePerMember * randomSleepFactor;
 
-    int64_t sleepTime = (int64_t)(adjustedPhaseSleepTimePerMember * curSession->GetMyMemberIndex());
+    int64_t sleepTime = (int64_t)(adjustedPhaseSleepTimePerMember * curSession->GetMyMemberIndex().value_or(0));
     int64_t endTime = GetTimeMillis() + sleepTime;
     int heightTmp{-1};
     int heightStart{-1};
-    {
-        LOCK(cs);
-        heightTmp = heightStart = currentHeight;
-    }
+    heightTmp = heightStart = WITH_LOCK(cs, return currentHeight);
 
     LogPrint(BCLog::LLMQ_DKG, "CDKGSessionManager::%s -- %s - starting sleep for %d ms, curPhase=%d\n", __func__, params.name, sleepTime, curPhase);
 
@@ -305,7 +300,7 @@ void CDKGSessionHandler::SleepBeforePhase(QuorumPhase curPhase,
             }
         }
         if (!runWhileWaiting()) {
-            MilliSleep(100);
+            UninterruptibleSleep(std::chrono::milliseconds{100});
         }
     }
 
@@ -507,13 +502,9 @@ void CDKGSessionHandler::HandleDKGRound()
         curQuorumHeight = quorumHeight;
     }
 
-    const CBlockIndex* pindexQuorum;
-    {
-        LOCK(cs_main);
-        pindexQuorum = LookupBlockIndex(curQuorumHash);
-    }
+    const CBlockIndex* pQuorumBaseBlockIndex = WITH_LOCK(cs_main, return LookupBlockIndex(curQuorumHash));
 
-    if (!InitNewQuorum(pindexQuorum)) {
+    if (!InitNewQuorum(pQuorumBaseBlockIndex)) {
         // should actually never happen
         WaitForNewQuorum(curQuorumHash);
         throw AbortPhaseException();
@@ -525,9 +516,9 @@ void CDKGSessionHandler::HandleDKGRound()
         return changed;
     });
 
-    CLLMQUtils::EnsureQuorumConnections(params.type, pindexQuorum, curSession->myProTxHash);
+    CLLMQUtils::EnsureQuorumConnections(params, pQuorumBaseBlockIndex, connman, curSession->myProTxHash);
     if (curSession->AreWeMember()) {
-        CLLMQUtils::AddQuorumProbeConnections(params.type, pindexQuorum, curSession->myProTxHash);
+        CLLMQUtils::AddQuorumProbeConnections(params, pQuorumBaseBlockIndex, connman, curSession->myProTxHash);
     }
 
     WaitForNextPhase(QuorumPhase_Initialized, QuorumPhase_Contribute, curQuorumHash, []{return false;});
@@ -570,7 +561,7 @@ void CDKGSessionHandler::HandleDKGRound()
 
     auto finalCommitments = curSession->FinalizeCommitments();
     for (const auto& fqc : finalCommitments) {
-        quorumBlockProcessor->AddMinableCommitment(fqc);
+        quorumBlockProcessor->AddMineableCommitment(fqc);
     }
 }
 

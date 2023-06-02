@@ -30,8 +30,10 @@
 #include <crypto/sph_fugue.h>
 #include <crypto/sph_shabal.h>
 #include <crypto/sph_whirlpool.h>
+
 extern "C" {
 #include <crypto/sph_sha2.h>
+#include <cryptonote/hash-ops.h>
 }
 
 extern std::vector<std::vector<int>> GR_GROUP;

@@ -33,12 +33,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <compat.h>
 #include <netbase.h>
 #include <random.h>
-#include <util.h>
+#include <util/system.h>
 
-#include <math.h>
-#include <time.h>
-#include <stdlib.h>
-#include <stdio.h>
+#include <cmath>
+#include <cstdio>
 
 statsd::StatsdClient statsClient;
 
@@ -76,9 +74,8 @@ struct _StatsdClientData {
     char    errmsg[1024];
 };
 
-StatsdClient::StatsdClient(const std::string& host, int port, const std::string& ns)
+StatsdClient::StatsdClient(const std::string& host, int port, const std::string& ns) : d(std::make_unique<_StatsdClientData>())
 {
-    d = new _StatsdClientData;
     d->sock = INVALID_SOCKET;
     config(host, port, ns);
 }
@@ -87,8 +84,6 @@ StatsdClient::~StatsdClient()
 {
     // close socket
     CloseSocket(d->sock);
-    delete d;
-    d = NULL;
 }
 
 void StatsdClient::config(const std::string& host, int port, const std::string& ns)
@@ -190,12 +185,12 @@ int StatsdClient::send(std::string key, size_t value, const std::string& type, f
     if ( fequal( sample_rate, 1.0 ) )
     {
         snprintf(buf, sizeof(buf), "%s%s:%zd|%s",
-                d->ns.c_str(), key.c_str(), value, type.c_str());
+                d->ns.c_str(), key.c_str(), (ssize_t) value, type.c_str());
     }
     else
     {
         snprintf(buf, sizeof(buf), "%s%s:%zd|%s|@%.2f",
-                d->ns.c_str(), key.c_str(), value, type.c_str(), sample_rate);
+                d->ns.c_str(), key.c_str(), (ssize_t) value, type.c_str(), sample_rate);
     }
 
     return send(buf);

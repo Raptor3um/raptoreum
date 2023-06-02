@@ -6,7 +6,7 @@
 #include <script/standard.h>
 #include <uint256.h>
 #include <undo.h>
-#include <utilstrencodings.h>
+#include <util/strencodings.h>
 #include <test/test_raptoreum.h>
 #include <validation.h>
 #include <consensus/validation.h>
@@ -312,7 +312,7 @@ BOOST_AUTO_TEST_CASE(updatecoins_simulation_test)
                 if (InsecureRandRange(10) == 0 && coinbase_coins.size()) {
                     auto utxod = FindRandomFrom(coinbase_coins);
                     // Reuse the exact same coinbase
-                    tx = std::get<0>(utxod->second);
+                    tx = CMutableTransaction{std::get<0>(utxod->second)};
                     // shouldn't be available for reconnection if it's been duplicated
                     disconnected_coins.erase(utxod->first);
 
@@ -331,7 +331,7 @@ BOOST_AUTO_TEST_CASE(updatecoins_simulation_test)
                 // 1/20 times reconnect a previously disconnected tx
                 if (randiter % 20 == 2 && disconnected_coins.size()) {
                     auto utxod = FindRandomFrom(disconnected_coins);
-                    tx = std::get<0>(utxod->second);
+                    tx = CMutableTransaction{std::get<0>(utxod->second)};
                     prevout = tx.vin[0].prevout;
                     if (!CTransaction(tx).IsCoinBase() && !utxoset.count(prevout)) {
                         disconnected_coins.erase(utxod->first);
@@ -376,7 +376,7 @@ BOOST_AUTO_TEST_CASE(updatecoins_simulation_test)
 
             // Call UpdateCoins on the top cache
             CTxUndo undo;
-            UpdateCoins(tx, *(stack.back()), undo, height);
+            UpdateCoins(CTransaction(tx), *(stack.back()), undo, height);
 
             // Update the utxo set for future spends
             utxoset.insert(outpoint);
@@ -515,7 +515,7 @@ BOOST_AUTO_TEST_CASE(ccoins_serialization)
     CDataStream tmp(SER_DISK, CLIENT_VERSION);
     uint64_t x = 3000000000ULL;
     tmp << VARINT(x);
-    BOOST_CHECK_EQUAL(HexStr(tmp.begin(), tmp.end()), "8a95c0bb00");
+    BOOST_CHECK_EQUAL(HexStr(tmp), "8a95c0bb00");
     CDataStream ss5(ParseHex("00008a95c0bb00"), SER_DISK, CLIENT_VERSION);
     try {
         Coin cc5;
@@ -736,7 +736,7 @@ void CheckAddCoinBase(CAmount base_value, CAmount cache_value, CAmount modify_va
 template <typename... Args>
 void CheckAddCoin(Args&&... args)
 {
-    for (CAmount base_value : {ABSENT, PRUNED, VALUE1})
+    for (const CAmount base_value : {ABSENT, PRUNED, VALUE1})
         CheckAddCoinBase(base_value, std::forward<Args>(args)...);
 }
 
@@ -848,10 +848,10 @@ BOOST_AUTO_TEST_CASE(ccoins_write)
     // they would be too repetitive (the parent cache is never updated in these
     // cases). The loop below covers these cases and makes sure the parent cache
     // is always left unchanged.
-    for (CAmount parent_value : {ABSENT, PRUNED, VALUE1})
-        for (CAmount child_value : {ABSENT, PRUNED, VALUE2})
-            for (char parent_flags : parent_value == ABSENT ? ABSENT_FLAGS : FLAGS)
-                for (char child_flags : child_value == ABSENT ? ABSENT_FLAGS : CLEAN_FLAGS)
+    for (const CAmount parent_value : {ABSENT, PRUNED, VALUE1})
+        for (const CAmount child_value : {ABSENT, PRUNED, VALUE2})
+            for (const char parent_flags : parent_value == ABSENT ? ABSENT_FLAGS : FLAGS)
+                for (const char child_flags : child_value == ABSENT ? ABSENT_FLAGS : CLEAN_FLAGS)
                     CheckWriteCoins(parent_value, child_value, parent_value, parent_flags, child_flags, parent_flags);
 }
 

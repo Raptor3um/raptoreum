@@ -59,6 +59,7 @@ MESSAGEMAP = {
     b"getsporks": None,
     b"govsync": None,
     b"islock": msg_islock,
+    b"isdlock": msg_isdlock,
     b"mnlistdiff": msg_mnlistdiff,
     b"notfound": None,
     b"qfcommit": None,
@@ -376,6 +377,7 @@ class P2PInterface(P2PConnection):
     def on_mnlistdiff(self, message): pass
     def on_clsig(self, message): pass
     def on_islock(self, message): pass
+    def on_isdlock(self, message): pass
 
     def on_qgetdata(self, message): pass
     def on_qdata(self, message): pass

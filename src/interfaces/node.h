@@ -9,6 +9,8 @@
 #include <amount.h>     // For CAmount
 #include <net.h>        // For CConnman::NumConnections
 #include <netaddress.h> // For Network
+#include <support/allocators/secure.h> // For SecureString
+#include <uint256.h>
 
 #include <functional>
 #include <memory>
@@ -18,6 +20,7 @@
 #include <tuple>
 #include <vector>
 
+class BanMan;
 class CCoinControl;
 class CDeterministicMNList;
 class CFeeRate;
@@ -26,13 +29,14 @@ class Coin;
 class RPCTimerInterface;
 class UniValue;
 class proxyType;
-enum class FeeReason;
+enum class SynchronizationState;
 struct CNodeStateStats;
+enum class WalletCreationStatus;
+struct NodeContext;
 
 namespace interfaces {
-
 class Handler;
-class Wallet;
+class WalletClient;
 
 //! Interface for the src/evo part of a raptoreum node (raptoreumd process).
 class EVO
@@ -84,9 +88,20 @@ public:
     virtual CAmount getMaxCollateralAmount() = 0;
     virtual CAmount getSmallestDenomination() = 0;
     virtual bool isDenominated(CAmount nAmount) = 0;
-    virtual std::vector<CAmount> getStandardDenominations() = 0;
+    virtual std::array<CAmount, 5> getStandardDenominations() = 0;
 };
 }
+
+//! Block and header tip information
+struct BlockAndHeaderTipInfo
+{
+    int block_height;
+    int64_t block_time;
+    uint256 block_hash;
+    int header_height;
+    int64_t header_time;
+    double verification_progress;
+};
 
 //! Top-level interface for a raptoreum node (raptoreumd process).
 class Node
@@ -94,8 +109,11 @@ class Node
 public:
     virtual ~Node() {}
 
+    //! Send init error
+    virtual void initError(const std::string& message) = 0;
+
     //! Set command line arguments.
-    virtual void parseParameters(int argc, const char* const argv[]) = 0;
+    virtual bool parseParameters(int argc, const char* const argv[], std::string& error) = 0;
 
     //! Set a command line argument if it doesn't already have a value
     virtual bool softSetArg(const std::string& arg, const std::string& value) = 0;
@@ -104,10 +122,16 @@ public:
     virtual bool softSetBoolArg(const std::string& arg, bool value) = 0;
 
     //! Load settings from configuration file.
-    virtual void readConfigFile(const std::string& conf_path) = 0;
+    virtual bool readConfigFiles(std::string& error) = 0;
 
     //! Choose network parameters.
     virtual void selectParams(const std::string& network) = 0;
+
+    //! Get the (assumed) blockchain size.
+    virtual uint64_t getAssumedBlockchainSize() = 0;
+
+    //! Get the (assumed) chain state size.
+    virtual uint64_t getAssumedChainStateSize() = 0;
 
     //! Get network name.
     virtual std::string getNetwork() = 0;
@@ -119,7 +143,7 @@ public:
     virtual void initParameterInteraction() = 0;
 
     //! Get warnings.
-    virtual std::string getWarnings(const std::string& type) = 0;
+    virtual std::string getWarnings() = 0;
 
     // Get log flags.
     virtual uint64_t getLogCategories() = 0;
@@ -128,10 +152,13 @@ public:
     virtual bool baseInitialize() = 0;
 
     //! Start node.
-    virtual bool appInitMain() = 0;
+    virtual bool appInitMain(interfaces::BlockAndHeaderTipInfo* tip_info = nullptr) = 0;
 
     //! Stop node.
     virtual void appShutdown() = 0;
+
+    //! Prepare Shutdown.
+    virtual void appPrepareShutdown() = 0;
 
     //! Start shutdown.
     virtual void startShutdown() = 0;
@@ -143,7 +170,7 @@ public:
     virtual void setupServerArgs() = 0;
 
     //! Map port.
-    virtual void mapPort(bool use_upnp) = 0;
+    virtual void mapPort(bool use_upnp, bool use_natpmp) = 0;
 
     //! Get proxy.
     virtual bool getProxy(Network net, proxyType& proxy_info) = 0;
@@ -164,7 +191,10 @@ public:
     //! Unban node.
     virtual bool unban(const CSubNet& ip) = 0;
 
-    //! Disconnect node.
+    //! Disconnect node by address.
+    virtual bool disconnect(const CNetAddr& net_addr) = 0;
+
+    //! Disconnect node by id.
     virtual bool disconnect(NodeId id) = 0;
 
     //! Get total bytes recv.
@@ -209,21 +239,6 @@ public:
     //! Get network active.
     virtual bool getNetworkActive() = 0;
 
-    //! Get tx confirm target.
-    virtual unsigned int getTxConfirmTarget() = 0;
-
-    //! Get required fee.
-    virtual CAmount getRequiredFee(unsigned int tx_bytes) = 0;
-
-    //! Get minimum fee.
-    virtual CAmount getMinimumFee(unsigned int tx_bytes,
-        const CCoinControl& coin_control,
-        int* returned_target,
-        FeeReason* reason) = 0;
-
-    //! Get max tx fee.
-    virtual CAmount getMaxTxFee() = 0;
-
     //! Estimate smart fee.
     virtual CFeeRate estimateSmartFee(int num_blocks, bool conservative, int* returned_target = nullptr) = 0;
 
@@ -245,8 +260,8 @@ public:
     //! Get unspent outputs associated with a transaction.
     virtual bool getUnspentOutput(const COutPoint& output, Coin& coin) = 0;
 
-    //! Return interfaces for accessing wallets (if any).
-    virtual std::vector<std::unique_ptr<Wallet>> getWallets() = 0;
+    //! Get wallet client.
+    virtual WalletClient& walletClient() = 0;
 
     //! Return interface for accessing evo related handler.
     virtual EVO& evo() = 0;
@@ -258,33 +273,23 @@ public:
     virtual Smartnode::Sync& smartnodeSync() = 0;
 
     //! Return interface for accessing masternode related handler.
-#ifdef ENABLE_WALLET
     virtual CoinJoin::Options& coinJoinOptions() = 0;
-#endif
 
     //! Register handler for init messages.
     using InitMessageFn = std::function<void(const std::string& message)>;
     virtual std::unique_ptr<Handler> handleInitMessage(InitMessageFn fn) = 0;
 
     //! Register handler for message box messages.
-    using MessageBoxFn =
-        std::function<bool(const std::string& message, const std::string& caption, unsigned int style)>;
+    using MessageBoxFn = std::function<bool(const std::string& message, const std::string& caption, unsigned int style)>;
     virtual std::unique_ptr<Handler> handleMessageBox(MessageBoxFn fn) = 0;
 
     //! Register handler for question messages.
-    using QuestionFn = std::function<bool(const std::string& message,
-        const std::string& non_interactive_message,
-        const std::string& caption,
-        unsigned int style)>;
+    using QuestionFn = std::function<bool(const std::string& message, const std::string& non_interactive_message, const std::string& caption, unsigned int style)>;
     virtual std::unique_ptr<Handler> handleQuestion(QuestionFn fn) = 0;
 
     //! Register handler for progress messages.
     using ShowProgressFn = std::function<void(const std::string& title, int progress, bool resume_possible)>;
     virtual std::unique_ptr<Handler> handleShowProgress(ShowProgressFn fn) = 0;
-
-    //! Register handler for load wallet messages.
-    using LoadWalletFn = std::function<void(std::unique_ptr<Wallet> wallet)>;
-    virtual std::unique_ptr<Handler> handleLoadWallet(LoadWalletFn fn) = 0;
 
     //! Register handler for number of connections changed messages.
     using NotifyNumConnectionsChangedFn = std::function<void(int new_num_connections)>;
@@ -303,28 +308,32 @@ public:
     virtual std::unique_ptr<Handler> handleBannedListChanged(BannedListChangedFn fn) = 0;
 
     //! Register handler for block tip messages.
-    using NotifyBlockTipFn =
-        std::function<void(bool initial_download, int height, int64_t block_time, const std::string& block_hash, double verification_progress)>;
+    using NotifyBlockTipFn = std::function<void(bool initial_download, int height, int64_t block_time, const std::string& block_hash, double verification_progress)>;
     virtual std::unique_ptr<Handler> handleNotifyBlockTip(NotifyBlockTipFn fn) = 0;
 
+    //! Register handler for chainlock messages.
+    using NotifyChainLockFn = std::function<void(const std::string& bestChainLockedHash, int32_t bestChainLockedHeight)>;
+    virtual std::unique_ptr<Handler> handleNotifyChainLock(NotifyChainLockFn fn) = 0;
+
     //! Register handler for header tip messages.
-    using NotifyHeaderTipFn =
-        std::function<void(bool initial_download, int height, int64_t block_time, const std::string& block_hash, double verification_progress)>;
+    using NotifyHeaderTipFn = std::function<void(bool initial_download, int height, int64_t block_time, const std::string& block_hash, double verification_progress)>;
     virtual std::unique_ptr<Handler> handleNotifyHeaderTip(NotifyHeaderTipFn fn) = 0;
 
     //! Register handler for masternode list update messages.
-    using NotifySmartnodeListChangedFn =
-        std::function<void(const CDeterministicMNList& newList)>;
+    using NotifySmartnodeListChangedFn = std::function<void(const CDeterministicMNList& newList)>;
     virtual std::unique_ptr<Handler> handleNotifySmartnodeListChanged(NotifySmartnodeListChangedFn fn) = 0;
 
     //! Register handler for additional data sync progress update messages.
-    using NotifyAdditionalDataSyncProgressChangedFn =
-        std::function<void(double nSyncProgress)>;
+    using NotifyAdditionalDataSyncProgressChangedFn = std::function<void(double nSyncProgress)>;
     virtual std::unique_ptr<Handler> handleNotifyAdditionalDataSyncProgressChanged(NotifyAdditionalDataSyncProgressChangedFn fn) = 0;
+
+    //! Return pointer to internal chain interface, useful for testing.
+    virtual NodeContext* context() { return nullptr; }
+    virtual void setContext(NodeContext* context) { }
 };
 
 //! Return implementation of Node interface.
-std::unique_ptr<Node> MakeNode();
+std::unique_ptr<Node> MakeNode(NodeContext* context = nullptr);
 
 } // namespace interfaces
 

@@ -4,11 +4,14 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <governance/governance-object.h>
+
+#include <chainparams.h>
 #include <core_io.h>
-#include <governance/governance-validators.h>
 #include <governance/governance.h>
+#include <governance/governance-validators.h>
 #include <smartnode/smartnode-meta.h>
 #include <smartnode/smartnode-sync.h>
+#include <evo/deterministicmns.h>
 #include <messagesigner.h>
 #include <spork.h>
 #include <validation.h>
@@ -263,14 +266,12 @@ std::set<uint256> CGovernanceObject::RemoveInvalidVotes(const COutPoint& mnOutpo
         mapCurrentMNVotes.erase(it);
     }
 
-    if (!removedVotes.empty()) {
-        std::string removedStr;
-        for (auto& h : removedVotes) {
-            removedStr += strprintf("  %s\n", h.ToString());
-        }
-        LogPrintf("CGovernanceObject::%s -- Removed %d invalid votes for %s from MN %s:\n%s", __func__, removedVotes.size(), nParentHash.ToString(), mnOutpoint.ToString(), removedStr); /* Continued */
-        fDirtyCache = true;
+    std::string removedStr;
+    for (auto& h : removedVotes) {
+        removedStr += strprintf("  %s\n", h.ToString());
     }
+    LogPrintf("CGovernanceObject::%s -- Removed %d invalid votes for %s from MN %s:\n%s", __func__, removedVotes.size(), nParentHash.ToString(), mnOutpoint.ToString(), removedStr); /* Continued */
+    fDirtyCache = true;
 
     return removedVotes;
 }
@@ -440,7 +441,7 @@ UniValue CGovernanceObject::ToJson() const
 
 void CGovernanceObject::UpdateLocalValidity()
 {
-    LOCK(cs_main);
+    AssertLockHeld(cs_main);
     // THIS DOES NOT CHECK COLLATERAL, THIS IS CHECKED UPON ORIGINAL ARRIVAL
     fCachedLocalValidity = IsValidLocally(strLocalValidityError, false);
 }
@@ -523,17 +524,18 @@ CAmount CGovernanceObject::GetMinCollateralFee() const
 
 bool CGovernanceObject::IsCollateralValid(std::string& strError, bool& fMissingConfirmations) const
 {
+    AssertLockHeld(cs_main);
+    AssertLockHeld(::mempool.cs);
+
     strError = "";
     fMissingConfirmations = false;
     CAmount nMinFee = GetMinCollateralFee();
     uint256 nExpectedHash = GetHash();
 
-    CTransactionRef txCollateral;
-    uint256 nBlockHash;
-
     // RETRIEVE TRANSACTION IN QUESTION
-
-    if (!GetTransaction(nCollateralHash, txCollateral, Params().GetConsensus(), nBlockHash, true)) {
+    uint256 nBlockHash;
+    CTransactionRef txCollateral = GetTransaction(/* block_index */ nullptr, /* mempool */ nullptr, nCollateralHash, Params().GetConsensus(), nBlockHash);
+    if (!txCollateral) {
         strError = strprintf("Can't find collateral tx %s", nCollateralHash.ToString());
         LogPrintf("CGovernanceObject::IsCollateralValid -- %s\n", strError);
         return false;
@@ -585,8 +587,8 @@ bool CGovernanceObject::IsCollateralValid(std::string& strError, bool& fMissingC
     int nConfirmationsIn = 0;
     if (nBlockHash != uint256()) {
         CBlockIndex* pindex = LookupBlockIndex(nBlockHash);
-        if (pindex && chainActive.Contains(pindex)) {
-            nConfirmationsIn += chainActive.Height() - pindex->nHeight + 1;
+        if (pindex && ::ChainActive().Contains(pindex)) {
+            nConfirmationsIn += ::ChainActive().Height() - pindex->nHeight + 1;
         }
     }
 

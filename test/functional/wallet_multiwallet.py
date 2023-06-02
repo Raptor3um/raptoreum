@@ -6,16 +6,35 @@
 
 Verify that a raptoreumd node can load multiple wallet files
 """
+from threading import Thread
 import os
 import re
 import shutil
+import time
 
+from test_framework.authproxy import JSONRPCException
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
+    get_rpc_proxy,
 )
 
+FEATURE_LATEST = 120200
+
+got_loading_error = False
+def test_load_unload(node, name):
+    global got_loading_error
+    for i in range(10):
+        if got_loading_error:
+            return
+        try:
+            node.loadwallet(name)
+            node.unloadwallet(name)
+        except JSONRPCException as e:
+            if e.error['code'] == -4 and 'Wallet already being loading' in e.error['message']:
+                got_loading_error = True
+                return
 
 class MultiWalletTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -30,6 +49,13 @@ class MultiWalletTest(BitcoinTestFramework):
         wallet_dir = lambda *p: data_dir('wallets', *p)
         wallet = lambda name: node.get_wallet_rpc(name)
 
+        def wallet_file(name):
+            if os.path.isdir(wallet_dir(name)):
+                return wallet_dir(name, "wallet.dat")
+            return wallet_dir(name)
+
+        assert_equal(self.nodes[0].listwalletdir(), { 'wallets': [{ 'name': '' }] })
+
         # check wallet.dat is created
         self.stop_nodes()
         assert_equal(os.path.isfile(wallet_dir('wallet.dat')), True)
@@ -43,6 +69,12 @@ class MultiWalletTest(BitcoinTestFramework):
         # directory paths) can be loaded
         os.rename(wallet_dir("wallet.dat"), wallet_dir("w8"))
 
+        # create another dummy wallet for use in testing backup later
+        self.start_node(0, [])
+        self.stop_nodes()
+        empty_wallet = os.path.join(self.options.tmpdir, 'empty.dat')
+        os.rename(wallet_dir("wallet.dat", empty_wallet)
+
         # restart node with a mix of wallet names:
         #   w1, w2, w3 - to verify new wallets created when non-existing paths specified
         #   w          - to verify wallet name matching works when one wallet path is prefix of another
@@ -54,15 +86,14 @@ class MultiWalletTest(BitcoinTestFramework):
         wallet_names = ['w1', 'w2', 'w3', 'w', 'sub/w5', os.path.join(self.options.tmpdir, 'extern/w6'), 'w7_symlink', 'w8', '']
         extra_args = ['-wallet={}'.format(n) for n in wallet_names]
         self.start_node(0, extra_args)
+        assert_equal(sorted(map(lambda w: w['name'], self.nodes[0].listwalletdir()['wallets'])), ['', os.path.join('sub', 'w5'), 'w', 'w1', 'w2', 'w3', 'w7', 'w7_symlink', 'w8'])
+
         assert_equal(set(node.listwallets()), set(wallet_names))
 
         # check that all requested wallets were created
         self.stop_node(0)
         for wallet_name in wallet_names:
-            if os.path.isdir(wallet_dir(wallet_name)):
-                assert_equal(os.path.isfile(wallet_dir(wallet_name, "wallet.dat")), True)
-            else:
-                assert_equal(os.path.isfile(wallet_dir(wallet_name)), True)
+            assert_equal(os.path.isfile(wallet_dir(wallet_name)), True)
 
         # should not initialize if wallet path can't be created
         exp_stderr = "boost::filesystem::create_directory: (The system cannot find the path specified|Not a directory):"
@@ -91,15 +122,6 @@ class MultiWalletTest(BitcoinTestFramework):
         open(not_a_dir, 'a', encoding="utf8").close()
         self.nodes[0].assert_start_raises_init_error(['-walletdir=' + not_a_dir], 'Error: Specified -walletdir "' + re.escape(not_a_dir) + '" is not a directory')
 
-        self.log.info("Do not allow -zapwallettxes with multiwallet")
-        self.nodes[0].assert_start_raises_init_error(['-zapwallettxes', '-wallet=w1', '-wallet=w2'], "Error: -zapwallettxes is only allowed with a single wallet file")
-        self.nodes[0].assert_start_raises_init_error(['-zapwallettxes=1', '-wallet=w1', '-wallet=w2'], "Error: -zapwallettxes is only allowed with a single wallet file")
-        self.nodes[0].assert_start_raises_init_error(['-zapwallettxes=2', '-wallet=w1', '-wallet=w2'], "Error: -zapwallettxes is only allowed with a single wallet file")
-
-        self.log.info("Do not allow -salvagewallet with multiwallet")
-        self.nodes[0].assert_start_raises_init_error(['-salvagewallet', '-wallet=w1', '-wallet=w2'], "Error: -salvagewallet is only allowed with a single wallet file")
-        self.nodes[0].assert_start_raises_init_error(['-salvagewallet=1', '-wallet=w1', '-wallet=w2'], "Error: -salvagewallet is only allowed with a single wallet file")
-
         self.log.info("Do not allow -upgradewallet with multiwallet")
         self.nodes[0].assert_start_raises_init_error(['-upgradewallet', '-wallet=w1', '-wallet=w2'], "Error: -upgradewallet is only allowed with a single wallet file")
         self.nodes[0].assert_start_raises_init_error(['-upgradewallet=1', '-wallet=w1', '-wallet=w2'], "Error: -upgradewallet is only allowed with a single wallet file")
@@ -110,7 +132,7 @@ class MultiWalletTest(BitcoinTestFramework):
         self.start_node(0, ['-wallet=w4', '-wallet=w5'])
         assert_equal(set(node.listwallets()), {"w4", "w5"})
         w5 = wallet("w5")
-        w5.generate(1)
+        node.generatetoaddress(nblocks=1, address=w5.getnewaddress())
 
         # now if wallets/ exists again, but the rootdir is specified as the walletdir, w4 and w5 should still be loaded
         os.rename(wallet_dir2, wallet_dir())
@@ -128,11 +150,13 @@ class MultiWalletTest(BitcoinTestFramework):
 
         self.restart_node(0, extra_args)
 
+        assert_equal(sorted(map(lambda w: w['name'], self.nodes[0].listwalletdir()['wallets'])), ['', os.path.join('sub', 'w5'), 'w', 'w1', 'w2', 'w3', 'w7', 'w7_symlink', 'w8', 'w8_copy'])
+
         wallets = [wallet(w) for w in wallet_names]
         wallet_bad = wallet("bad")
 
         # check wallet names and balances
-        wallets[0].generate(1)
+        node.generatetoaddress(nblocks=1, address=wallets[0].getnewaddress())
         for wallet_name, wallet in zip(wallet_names, wallets):
             info = wallet.getwalletinfo()
             assert_equal(info['immature_balance'], 500 if wallet is wallets[0] else 0)
@@ -145,7 +169,7 @@ class MultiWalletTest(BitcoinTestFramework):
         assert_raises_rpc_error(-19, "Wallet file not specified", node.getwalletinfo)
 
         w1, w2, w3, w4, *_ = wallets
-        w1.generate(101)
+        node.generatetoaddress(nblocks=101, address=w1.getnewaddress())
         assert_equal(w1.getbalance(), 1000)
         assert_equal(w2.getbalance(), 0)
         assert_equal(w3.getbalance(), 0)
@@ -154,7 +178,7 @@ class MultiWalletTest(BitcoinTestFramework):
         w1.sendtoaddress(w2.getnewaddress(), 1)
         w1.sendtoaddress(w3.getnewaddress(), 2)
         w1.sendtoaddress(w4.getnewaddress(), 3)
-        w1.generate(1)
+        node.generatetoaddress(nblocks=1, address=w1.getnewaddress())
         assert_equal(w2.getbalance(), 1)
         assert_equal(w3.getbalance(), 2)
         assert_equal(w4.getbalance(), 3)
@@ -163,6 +187,12 @@ class MultiWalletTest(BitcoinTestFramework):
         assert_equal(batch[0]["result"]["chain"], self.chain)
         assert_equal(batch[1]["result"]["walletname"], "w1")
 
+        self.log.info('Check for per-wallet settxfee call')
+        assert_equal(w1.getwalletinfo()['paytxfee'], 0)
+        assert_equal(w2.getwalletinfo()['paytxfee'], 0)
+        w2.settxfee(4.0)
+        assert_equal(w1.getwalletinfo()['paytxfee'], 0)
+        assert_equal(w2.getwalletinfo()['paytxfee'], 4.0)
 
         self.log.info("Test dynamic wallet loading")
 
@@ -186,6 +216,18 @@ class MultiWalletTest(BitcoinTestFramework):
         w2 = node.get_wallet_rpc(wallet_names[1])
         w2.getwalletinfo()
 
+        self.log.info("Concurrent wallet loading")
+        threads = []
+        for _ in range(3)
+            n = node.cli if self.option.usecli else get_rpc_proxy(node.url, 1, timeout=600, coveragedir=node.coverage_dir)
+            t = Thread(target=test_load_unload, args=(n, wallet_names[2], ))
+            t.start()
+            threads.append(t)
+        for t in threads:
+            t.join()
+        global got_loading_error
+        assert_equal(got_loading_error, True)
+
         self.log.info("Load remaining wallets")
         for wallet_name in wallet_names[2:]:
             loadwallet_name = self.nodes[0].loadwallet(wallet_name)
@@ -203,10 +245,10 @@ class MultiWalletTest(BitcoinTestFramework):
         assert_raises_rpc_error(-4, "Wallet file verification failed: Error loading wallet wallet.dat. Duplicate -wallet filename specified.", self.nodes[0].loadwallet, 'wallet.dat')
 
         # Fail to load if one wallet is a copy of another
-        assert_raises_rpc_error(-1, "BerkeleyBatch: Can't open database w8_copy (duplicates fileid", self.nodes[0].loadwallet, 'w8_copy')
+        assert_raises_rpc_error(-1, "BerkeleyDatabase: Can't open database w8_copy (duplicates fileid", self.nodes[0].loadwallet, 'w8_copy')
 
         # Fail to load if one wallet is a copy of another, test this twice to make sure that we don't re-introduce #14304
-        assert_raises_rpc_error(-1, "BerkeleyBatch: Can't open database w8_copy (duplicates fileid", self.nodes[0].loadwallet, 'w8_copy')
+        assert_raises_rpc_error(-1, "BerkeleyDatabase: Can't open database w8_copy (duplicates fileid", self.nodes[0].loadwallet, 'w8_copy')
 
 
         # Fail to load if wallet file is a symlink
@@ -252,7 +294,11 @@ class MultiWalletTest(BitcoinTestFramework):
         assert 'w1' not in self.nodes[0].listwallets()
 
         # Successfully unload the wallet referenced by the request endpoint
+        # Also ensure unload works during walletpassphrase timeout
+        w2.encryptwallet('test')
+        w2.walletpassphrase('test', 1)
         w2.unloadwallet()
+        time.sleep(1.1)
         assert 'w2' not in self.nodes[0].listwallets()
 
         # Successfully unload all wallets
@@ -265,6 +311,36 @@ class MultiWalletTest(BitcoinTestFramework):
         self.nodes[0].loadwallet('w1')
         assert_equal(self.nodes[0].listwallets(), ['w1'])
         assert_equal(w1.getwalletinfo()['walletname'], 'w1')
+
+        assert_equal(sorted(map(lambda w: w['name'], self.nodes[0].listwalletdir()['wallets'])), ['', os.path.join('sub', 'w5'), 'w', 'w1', 'w2', 'w3', 'w7', 'w7_symlink', 'w8', 'w8_copy', 'w9'])
+
+        # Test backing up and restoring wallets
+        self.log.info("Test wallet backup")
+        self.restart_node(0, ['-nowallet'])
+        for wallet_name is wallet_names:
+            self.nodes[0].loadwallet(wallet_name)
+        for wallet_name in wallet_names:
+            rpc = self.nodes[0].get_wallet_rpc(wallet_name)
+            addr = rpc.getnewaddress()
+            backup = os.path.join(self.options.tmpdir, 'backup.dat')
+            rpc.backupwallet(backup)
+            self.nodes[0].unloadwallet(wallet_name)
+            shutil.copyfile(empty_wallet, wallet_file(wallet_name))
+            self.nodes[0].loadwallet(wallet_name)
+            assert_equal(rpc.getaddressinfo(addr)['ismine'], False)
+            self.nodes[0].unloadwallet(wallet_name)
+            shutil.copyfile(backup, wallet_file(wallet_name))
+            self.nodes[0].loadwallet(wallet_name)
+            assert_equal(rpc.getaddressinfo(addr)['ismine'], True)
+
+        # Test .walletlock file is closed
+        self.start_node(1)
+        wallet = os.path.join(self.options.tmpdir, 'my_wallet')
+        self.nodes[0].createwallet(wallet)
+        assert_raises_rpc_error(-4, "Error initializing wallet database environment", self.nodes[1].loadwallet, wallet)
+        self.nodes[0].unloadwallet(wallet)
+        self.nodes[1].loadwallet(wallet)
+
 
 if __name__ == '__main__':
     MultiWalletTest().main()
