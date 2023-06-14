@@ -458,6 +458,21 @@ bool CTxMemPool::addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry,
         if (dmn->pdmnState->pubKeyOperator.Get() != CBLSPublicKey()) {
             newit->isKeyChangeProTx = true;
         }
+    } else if (tx.nType == TRANSACTION_NEW_ASSET) {
+        CNewAssetTx assetTx;
+        bool ok = GetTxPayload(tx, assetTx);
+        assert(ok);
+        mapAssetsToHash.emplace(assetTx.name, tx.GetHash());
+    } else if (tx.nType == TRANSACTION_UPDATE_ASSET) {
+        CUpdateAssetTx assetTx;
+        bool ok = GetTxPayload(tx, assetTx);
+        assert(ok);
+        mapAssetsIdToHash.emplace(assetTx.assetId, tx.GetHash());
+    } else if (tx.nType == TRANSACTION_MINT_ASSET) {
+        CMintAssetTx assetTx;
+        bool ok = GetTxPayload(tx, assetTx);
+        assert(ok);
+        mapAssetsIdToHash.emplace(assetTx.assetId, tx.GetHash());
     }
 
     return true;
@@ -746,6 +761,24 @@ void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
             assert(false);
         }
         eraseProTxRef(proTx.proTxHash, it->GetTx().GetHash());
+    } else if (it->GetTx().nType == TRANSACTION_NEW_ASSET) {
+        CNewAssetTx assetTx;
+        if (!GetTxPayload(it->GetTx(), assetTx)) {
+            assert(false);
+        }
+        mapAssetsToHash.erase(assetTx.name);
+    } else if (it->GetTx().nType == TRANSACTION_UPDATE_ASSET) {
+        CUpdateAssetTx assetTx;
+        if (!GetTxPayload(it->GetTx(), assetTx)) {
+            assert(false);
+        }
+        mapAssetsIdToHash.erase(assetTx.assetId);
+    } else if (it->GetTx().nType == TRANSACTION_MINT_ASSET) {
+        CMintAssetTx assetTx;
+        if (!GetTxPayload(it->GetTx(), assetTx)) {
+            assert(false);
+        }
+        mapAssetsIdToHash.erase(assetTx.assetId);
     }
 
     totalTxSize -= it->GetTxSize();
@@ -1398,6 +1431,48 @@ bool CTxMemPool::existsProviderTxConflict(const CTransaction &tx) const {
         }
     }
     return false;
+}
+
+bool CTxMemPool::existsAssetTxConflict(const CTransaction &tx) const {
+    LOCK(cs);
+
+    if (tx.nType == TRANSACTION_NEW_ASSET) {
+        CNewAssetTx assetTx;
+        if (!GetTxPayload(tx, assetTx)) {
+            LogPrint(BCLog::MEMPOOL, "%s: ERROR: Invalid transaction payload, tx: %s", __func__, tx.ToString()); /* Continued */
+            return true; // i.e. can't decode payload == conflict
+        }
+        auto it = mapAssetsToHash.find(assetTx.name);
+        return it != mapAssetsToHash.end() && it->second != tx.GetHash();
+    } else if (tx.nType == TRANSACTION_UPDATE_ASSET) {
+        CUpdateAssetTx assetTx;
+        if (!GetTxPayload(tx, assetTx)) {
+            LogPrint(BCLog::MEMPOOL, "%s: ERROR: Invalid transaction payload, tx: %s", __func__, tx.ToString()); /* Continued */
+            return true; // i.e. can't decode payload == conflict
+        }
+        auto it = mapAssetsIdToHash.find(assetTx.assetId);
+        return it != mapAssetsIdToHash.end() && it->second != tx.GetHash();
+    } else if (tx.nType == TRANSACTION_MINT_ASSET) {
+        CMintAssetTx assetTx;
+        if (!GetTxPayload(tx, assetTx)) {
+            LogPrint(BCLog::MEMPOOL, "%s: ERROR: Invalid transaction payload, tx: %s", __func__, tx.ToString()); /* Continued */
+            return true; // i.e. can't decode payload == conflict
+        }
+        auto it = mapAssetsIdToHash.find(assetTx.assetId);
+        return it != mapAssetsIdToHash.end() && it->second != tx.GetHash();
+    }
+
+    return false;
+}
+
+bool CTxMemPool::CheckForNewAssetConflict(const std::string assetName) const{
+    auto it = mapAssetsToHash.find(assetName);
+        return it != mapAssetsToHash.end();
+}
+
+bool CTxMemPool::CheckForMintAssetConflict(const std::string assetId) const{
+    auto it = mapAssetsIdToHash.find(assetId);
+        return it != mapAssetsIdToHash.end();
 }
 
 void CTxMemPool::PrioritiseTransaction(const uint256& hash, const CAmount& nFeeDelta)

@@ -9,14 +9,17 @@
 #include <coins.h>
 #include <key_io.h>
 
-#define RTM_R 0x72  //R
-#define RTM_T 0x74  //T
-#define RTM_M 0x6d  //M
+#define RTM_R 0x72 //R
+#define RTM_T 0x74 //T
+#define RTM_M 0x6d //M
+#define MAX_UNIQUE_ID 0xffffffff
 
 class CAssetTransfer
 {
 public:
-    std::string AssetId;
+    std::string assetId;
+    bool isUnique = false;
+    uint32_t uniqueId = MAX_UNIQUE_ID; //default it to MAX_UNIQUE_ID
     CAmount nAmount;
 
     CAssetTransfer()
@@ -26,8 +29,10 @@ public:
 
     void SetNull()
     {
+        assetId = "";
+        isUnique = false;
+        uniqueId = MAX_UNIQUE_ID;
         nAmount = 0;
-        AssetId = "";
     }
 
     ADD_SERIALIZE_METHODS;
@@ -35,11 +40,15 @@ public:
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action)
     {
-        READWRITE(AssetId);
+        READWRITE(assetId);
+        READWRITE(isUnique);
+        if (isUnique)
+            READWRITE(uniqueId);
         READWRITE(nAmount);
     }
 
-    CAssetTransfer(const std::string& AssetId, const CAmount& nAmount);
+    CAssetTransfer(const std::string& assetId, const CAmount& nAmount, const uint32_t& uniqueId);
+    CAssetTransfer(const std::string& assetId, const CAmount& nAmount);
     void BuildAssetTransaction(CScript& script) const;
 };
 

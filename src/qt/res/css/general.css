@@ -1180,6 +1180,97 @@ QDialog#CoinControlDialog .CoinControlTreeWidget#treeWidget::seperator {
 }
 
 /******************************************************
+AssetControlDialog
+******************************************************/
+
+QDialog#AssetControlDialog .QLabel#labelAssetControlQuantityText { /* Asset Control Quantity Label */
+    min-height: 30px;
+    padding-left: 15px;
+}
+QDialog#AssetControlDialog .QLabel#labelAssetControlQuantity { /* Asset Control Quantity */
+    min-height: 30px;
+}
+QDialog#AssetControlDialog .QLabel#labelAssetControlBytesText { /* Asset Control Bytes Label */
+    padding-left: 15px;
+}
+QDialog#AssetControlDialog .QLabel#labelAssetControlBytes { /* Asset Control Bytes */
+}
+QDialog#AssetControlDialog .QLabel#labelAssetControlAmountText { /* Asset Control Amount Label */
+    min-height: 30px;
+    padding-left: 15px;
+}
+QDialog#AssetControlDialog .QLabel#labelAssetControlAmount { /* Asset Control Amount */
+    min-height: 30px;
+}
+QDialog#AssetControlDialog .QLabel#labelAssetControlPriorityText { /* Asset Control Priority Label */
+    padding-left: 15px;
+}
+QDialog#AssetControlDialog .QLabel#labelAssetControlPriority { /* Asset Control Priority */
+}
+QDialog#AssetControlDialog .QLabel#labelAssetControlFeeText { /* Asset Control Fee Label */
+    min-height: 30px;
+    padding-left: 15px;
+}
+QDialog#AssetControlDialog .QLabel#labelAssetControlFee { /* Asset Control Fee */
+    min-height: 30px;
+}
+QDialog#AssetControlDialog .QLabel#labelAssetControlLowOutputText { /* Asset Control Low Output Label */
+    padding-left: 15px;
+}
+QDialog#AssetControlDialog .QLabel#labelAssetControlLowOutput { /* Asset Control Low Output */
+}
+QDialog#AssetControlDialog .QLabel#labelAssetControlAfterFeeText { /* Asset Control After Fee Label */
+    min-height: 30px;
+    padding-left: 15px;
+}
+QDialog#AssetControlDialog .QLabel#labelAssetControlAfterFee { /* Asset Control After Fee */
+    min-height: 30px;
+}
+QDialog#AssetControlDialog .QLabel#labelAssetControlChangeText { /* Asset Control Change Label */
+    padding-left: 15px;
+}
+QDialog#AssetControlDialog .QLabel#labelAssetControlChange { /* Asset Control Change */
+
+}
+
+QDialog#AssetControlDialog .QFrame#frame .QPushButton#pushButtonSelectAll { /* (un)select all button */
+}
+QDialog#AssetControlDialog .QFrame#frame .QPushButton#pushButtonToggleLock { /* Toggle lock state button */
+}
+
+QDialog#AssetControlDialog .QDialogButtonBox#buttonBox QPushButton { /* Asset Control 'OK' button */
+}
+
+QDialog#AssetControlDialog QHeaderView::section:first { /* Bug Fix: the number 1 displays in this table for some reason... */
+    color: #00000000;
+}
+
+QDialog#AssetControlDialog .AssetControlTreeWidget#treeWidget::item {
+    /*border-bottom: 1px solid red;*/
+    min-height: 25px;
+}
+QDialog#AssetControlDialog .AssetControlTreeWidget#treeWidget::item:hover {
+    background-color: #00000000;
+}
+QDialog#AssetControlDialog .AssetControlTreeWidget#treeWidget::item:selected { /* Asset Control Item (selected) */
+}
+QDialog#AssetControlDialog .AssetControlTreeWidget#treeWidget::item:checked { /* Asset Control Item (checked) */
+}
+
+QDialog#AssetControlDialog .AssetControlTreeWidget#treeWidget::branch:selected { /* Asset Control Branch Icon */
+    background-repeat: no-repeat;
+    background-position: center;
+}
+QDialog#AssetControlDialog .AssetControlTreeWidget#treeWidget::branch:checked { /* Asset Control Branch Icon */
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+QDialog#AssetControlDialog .AssetControlTreeWidget#treeWidget::seperator {
+
+}
+
+/******************************************************
 EditAddressDialog
 ******************************************************/
 
@@ -1741,6 +1832,100 @@ QStackedWidget#SendCoinsEntry .QToolButton#deleteButton_is {
 }
 
 QStackedWidget#SendCoinsEntry .QLineEdit#addAsLabel { /* Pay To Input Field */
+}
+
+/******************************************************
+SendAssetsDialog
+******************************************************/
+
+QDialog#SendAssetsDialog .QFrame#frameAssetControl,
+QDialog#SendAssetsDialog #scrollArea  { /* Asset Control Section */
+    border-bottom: 1px solid red;
+}
+
+QDialog#SendAssetsDialog .QFrame#frameAssetControl .QPushButton#pushButtonAssetControl { /* Asset Control Inputs Button */
+}
+
+QDialog#SendAssetsDialog .QFrame#frameAssetControl .QLabel#labelAssetControlFeatures { /* Asset Control Header */
+}
+
+QDialog#SendAssetsDialog .QFrame#frameAssetControl .QWidget#widgetAssetControl { /* Asset Control Inputs */
+}
+
+QDialog#SendAssetsDialog .QFrame#frameAssetControl .QWidget#widgetAssetControl > .QLabel { /* Asset Control Inputs Labels */
+    padding: 2px;
+}
+
+QDialog#SendAssetsDialog .QFrame#frameAssetControl .QValidatedLineEdit#lineEditAssetControlChange { /* Custom Change Address */
+}
+
+QDialog#SendAssetsDialog .QFrame#frameAssetControl .QLabel#labelAssetControlChangeLabel { /* Custom Change Address Validation Label */
+    margin-right: 112px;
+}
+
+QDialog#SendAssetsDialog .QFrame#frameAssetControl .QLabel#labelAssetControlInsuffFunds { /* Insufficient Funds Label */
+    color: #a84832;
+}
+
+QDialog#SendAssetsDialog .QScrollArea#scrollArea .QWidget#scrollAreaWidgetContents { /* Send To Widget */
+    background-color: #00000000;
+}
+
+QDialog#SendAssetsDialog QLabel#labelBalanceText,
+QDialog#SendAssetsDialog QLabel#labelBalance {
+    qproperty-alignment: 'AlignLeading | AlignLeft';
+    min-height: 20px;
+    max-height: 20px;
+}
+
+QDialog#SendAssetsDialog QLabel#labelBalance {
+    margin-right: 10px;
+}
+
+QDialog#SendAssetsDialog QPushButton#sendButton {
+    margin-left:10px;
+}
+
+#checkboxSubtractFeeFromAmount {
+    padding-left: 10px;
+}
+
+/******************************************************
+SendAssetsEntry
+******************************************************/
+
+QStackedWidget#SendAssetsEntry .QFrame#SendAssets > .QLabel { /* Send Asset Entry Labels */
+    background-color: #00000000;
+    min-width: 50px;
+    min-height: 25px;
+    margin-right: 5px;
+    padding-right: 5px;
+}
+
+QStackedWidget#SendAssetsEntry .QFrame#SendAssets .QLabel#amountLabel {
+}
+
+QStackedWidget#SendAssetsEntry .QValidatedLineEdit#payTo { /* Pay To Input Field */
+}
+
+QStackedWidget#SendAssetsEntry .QToolButton { /* General Settings for Pay To Icons */
+    background-color: #00000000;
+    margin-left: 5px;
+    margin-right: 5px;
+    border: 0;
+}
+
+QStackedWidget#SendAssetsEntry .QToolButton#addressBookButton { /* Address Book Button */
+    margin-left: 10px;
+}
+
+QStackedWidget#SendAssetsEntry .QToolButton#addressBookButton,
+QStackedWidget#SendAssetsEntry .QToolButton#pasteButton,
+QStackedWidget#SendAssetsEntry .QToolButton#deleteButton,
+QStackedWidget#SendAssetsEntry .QToolButton#deleteButton_is {
+}
+
+QStackedWidget#SendAssetsEntry .QLineEdit#addAsLabel { /* Pay To Input Field */
 }
 
 /******************************************************

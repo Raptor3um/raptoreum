@@ -22,6 +22,8 @@
 #include <wallet/wallet.h>
 #include <spork.h>
 #include <validation.h>
+#include <assets/assets.h>
+#include <assets/assetstype.h>
 
 #include <stdint.h>
 
@@ -234,7 +236,6 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
             }
             setAddress.insert(rcp.address);
             ++nAddresses;
-
             CScript scriptPubKey = GetScriptForDestination(DecodeDestination(rcp.address.toStdString()));
             CRecipient recipient = {scriptPubKey, rcp.amount, rcp.fSubtractFeeFromAmount};
             if(rcp.isFutureOutput) {
@@ -370,6 +371,227 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &tran
     checkBalanceChanged(m_wallet->getBalances()); // update balance immediately, otherwise there could be a short noticeable delay until pollBalanceChanged hits
 
     return SendCoinsReturn(OK);
+}
+
+
+WalletModel::SendAssetsReturn WalletModel::prepareAssetTransaction(WalletModelTransaction &transaction, const CCoinControl& coinControl)
+{
+    CAmount total = 0;
+    bool fSubtractFeeFromAmount = false;
+    QList<SendCoinsRecipient> recipients = transaction.getRecipients();
+    std::vector<CRecipient> vecSend;
+    std::map<std::string, CAmount> assetamount;
+
+    if(recipients.empty())
+    {
+        return OK;
+    }
+
+    // This should never really happen, yet another safety check, just in case.
+    if (m_wallet->isLocked(false)) {
+        return TransactionCreationFailed;
+    }
+
+    QSet<QString> setAddress; // Used to detect duplicates
+    int nAddresses = 0;
+    FuturePartialPayload fpp;
+    bool hasFuture = false;
+    // Pre-check input data for validity
+    for (const SendCoinsRecipient &rcp : recipients)
+    {
+        if (rcp.fSubtractFeeFromAmount)
+            fSubtractFeeFromAmount = true;
+
+        if (rcp.paymentRequest.IsInitialized())
+        {   // PaymentRequest...
+            CAmount subtotal = 0;
+            const payments::PaymentDetails& details = rcp.paymentRequest.getDetails();
+            for (int i = 0; i < details.outputs_size(); i++)
+            {
+                const payments::Output& out = details.outputs(i);
+                if (out.amount() <= 0) continue;
+                subtotal += out.amount();
+                const unsigned char* scriptStr = (const unsigned char*)out.script().data();
+                CScript scriptPubKey(scriptStr, scriptStr+out.script().size());
+                CAmount nAmount = out.amount();
+                CRecipient recipient = {scriptPubKey, nAmount, rcp.fSubtractFeeFromAmount};
+                vecSend.push_back(recipient);
+            }
+            if (subtotal <= 0)
+            {
+                return InvalidAmount;
+            }
+            total += subtotal;
+        }
+        else
+        {   // User-entered raptoreum address / amount:
+            if(!validateAddress(rcp.address))
+            {
+                return InvalidAddress;
+            }
+            if(rcp.amount <= 0 && rcp.assetAmount <= 0)
+            {
+                return InvalidAmount;
+            }
+            setAddress.insert(rcp.address);
+            ++nAddresses;
+            CRecipient recipient;
+            CScript scriptPubKey = GetScriptForDestination(DecodeDestination(rcp.address.toStdString()));
+            if (rcp.assetAmount > 0 && rcp.amount ==0){
+                std::string assetId;
+                if(!passetsCache->GetAssetId(rcp.assetId.toStdString(), assetId))
+                    return InvalidAmount;
+                if(rcp.uniqueId != MAX_UNIQUE_ID){
+                    //unique asset transaction
+                    CAssetTransfer assetTransfer(assetId, rcp.assetAmount, rcp.uniqueId);
+                    assetTransfer.BuildAssetTransaction(scriptPubKey);
+                    recipient = {scriptPubKey, 0, false};
+                } else {
+                    //regular asset transaction
+                    CAssetTransfer assetTransfer(assetId, rcp.assetAmount);
+                    assetTransfer.BuildAssetTransaction(scriptPubKey);
+                    recipient = {scriptPubKey, 0, false};
+                }                
+            } else {
+                recipient = {scriptPubKey, rcp.amount, rcp.fSubtractFeeFromAmount};
+                total += rcp.amount;
+            }
+            if(rcp.isFutureOutput) {
+                hasFuture = true;
+                fpp.futureRecScript = scriptPubKey;
+                fpp.maturity = rcp.maturity;
+                fpp.locktime = rcp.locktime;
+            }
+            vecSend.push_back(recipient);
+        }
+    }
+    if(setAddress.size() != nAddresses)
+    {
+        return DuplicateAddress;
+    }
+
+    CAmount nBalance = m_wallet->getAvailableBalance(coinControl);
+
+    if(total > nBalance)
+    {
+        return AmountExceedsBalance;
+    }
+    std::map<std::string, CAmount> assetsbalance = m_wallet->getAssetsBalance(&coinControl);
+
+    for (auto asset : assetamount){
+        if (asset.second > assetsbalance[asset.first])
+            return AmountExceedsBalance;
+    }
+
+    CAmount nFeeRequired = 0;
+    std::string strFailReason;
+    int nChangePosRet = -1;
+
+    auto& newTx = transaction.getWtx();
+    newTx = m_wallet->createTransaction(vecSend, coinControl, true /* sign */, nChangePosRet, nFeeRequired, strFailReason, 0, hasFuture ? &fpp : nullptr);
+    transaction.setTransactionFee(nFeeRequired);
+    if (fSubtractFeeFromAmount && newTx)
+        transaction.reassignAmounts();
+
+    if(newTx){
+        if(!Params().IsFutureActive(chainActive.Tip())){
+            CAmount subtotal = total;
+            if (nChangePosRet >= 0)
+                subtotal += newTx->get().vout.at(nChangePosRet).nValue;
+            if(!fSubtractFeeFromAmount)
+                subtotal += nFeeRequired;
+            if (subtotal > OLD_MAX_MONEY){
+                return AmountExceedsmaxmoney;
+            }
+        }
+    }
+    else
+    {
+        if(!fSubtractFeeFromAmount && (total + nFeeRequired) > nBalance)
+        {
+            return SendAssetsReturn(AmountWithFeeExceedsBalance);
+        }
+        Q_EMIT message(tr("Send Coins"), QString::fromStdString(strFailReason),
+                     CClientUIInterface::MSG_ERROR);
+        return TransactionCreationFailed;
+    }
+
+    // reject absurdly high fee. (This can never happen because the
+    // wallet caps the fee at maxTxFee. This merely serves as a
+    // belt-and-suspenders check)
+    if (nFeeRequired > m_node.getMaxTxFee())
+        return AbsurdFee;
+
+    return SendAssetsReturn(OK);
+}
+
+WalletModel::SendAssetsReturn WalletModel::sendAssets(WalletModelTransaction &transaction, bool fIsCoinJoin)
+{
+    QByteArray transaction_array; /* store serialized transaction */
+    {
+        std::vector<std::pair<std::string, std::string>> vOrderForm;
+        for (const SendCoinsRecipient &rcp : transaction.getRecipients())
+        {
+            if (rcp.paymentRequest.IsInitialized())
+            {
+                // Make sure any payment requests involved are still valid.
+                if (PaymentServer::verifyExpired(rcp.paymentRequest.getDetails())) {
+                    return PaymentRequestExpired;
+                }
+
+                // Store PaymentRequests in wtx.vOrderForm in wallet.
+                std::string value;
+                rcp.paymentRequest.SerializeToString(&value);
+                vOrderForm.emplace_back("PaymentRequest", std::move(value));
+            }
+            else if (!rcp.message.isEmpty()) // Message from normal raptoreum:URI (raptoreum:XyZ...?message=example)
+                vOrderForm.emplace_back("Message", rcp.message.toStdString());
+        }
+
+        mapValue_t mapValue;
+        if (fIsCoinJoin) {
+            mapValue["DS"] = "1";
+        }
+
+        auto& newTx = transaction.getWtx();
+        std::string rejectReason;
+        if (!newTx->commit(std::move(mapValue), std::move(vOrderForm), {} /* fromAccount */, rejectReason))
+            return SendAssetsReturn(TransactionCommitFailed, QString::fromStdString(rejectReason));
+
+        CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
+        ssTx << newTx->get();
+        transaction_array.append(ssTx.data(), ssTx.size());
+    }
+
+    // Add addresses / update labels that we've sent to the address book,
+    // and emit coinsSent signal for each recipient
+    for (const SendCoinsRecipient &rcp : transaction.getRecipients())
+    {
+        // Don't touch the address book when we have a payment request
+        if (!rcp.paymentRequest.IsInitialized())
+        {
+            std::string strAddress = rcp.address.toStdString();
+            CTxDestination dest = DecodeDestination(strAddress);
+            std::string strLabel = rcp.label.toStdString();
+            {
+                // Check if we have a new address or an updated label
+                std::string name;
+                if (!m_wallet->getAddress(dest, &name))
+                {
+                    m_wallet->setAddressBook(dest, strLabel, "send");
+                }
+                else if (name != strLabel)
+                {
+                    m_wallet->setAddressBook(dest, strLabel, ""); // "" means don't change purpose
+                }
+            }
+        }
+        Q_EMIT coinsSent(this, rcp, transaction_array);
+    }
+
+    checkBalanceChanged(m_wallet->getBalances()); // update balance immediately, otherwise there could be a short noticeable delay until pollBalanceChanged hits
+
+    return SendAssetsReturn(OK);
 }
 
 CAmount WalletModel::getBalance(const CCoinControl& coinControl) const

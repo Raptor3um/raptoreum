@@ -846,10 +846,14 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
         // DoS scoring a node for non-critical errors, e.g. duplicate keys because a TX is received that was already
         // mined
         // NOTE: we use UTXO here and do NOT allow mempool txes as smartnode collaterals
-        if (!CheckSpecialTx(tx, chainActive.Tip(), state, *pcoinsTip.get(), &assetsCache))
+        if (!CheckSpecialTx(tx, chainActive.Tip(), state, view, &assetsCache))
             return false;
         if (pool.existsProviderTxConflict(tx)) {
             return state.DoS(0, false, REJECT_DUPLICATE, "protx-dup");
+        }
+        //check for asset conflicts on mempool
+        if (pool.existsAssetTxConflict(tx)) {
+            return state.DoS(0, false, REJECT_DUPLICATE, "asset-dup");
         }
 
         // If we aren't going to actually accept it but just were verifying it, we are fine already
@@ -1785,8 +1789,8 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
 
         if(Params().IsAssetsActive(chainActive.Tip()) && assetsCache) {
             if (tx.nType == TRANSACTION_NEW_ASSET){
-                CNewAssetTx assettx;
-                if (GetTxPayload(tx, assettx)) {
+                CNewAssetTx assetTx;
+                if (GetTxPayload(tx, assetTx)) {
                     if (assetsCache->CheckIfAssetExists(tx.GetHash().ToString())){
                         if (!assetsCache->RemoveAsset(tx.GetHash().ToString())){
                             error("DisconnectBlock(): failed to remove asset: %s", tx.GetHash().ToString());
@@ -1795,21 +1799,21 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
                     }
                 }
             } else if (tx.nType == TRANSACTION_UPDATE_ASSET){
-                CUpdateAssetTx assettx;
-                if (GetTxPayload(tx, assettx)) {
-                    if (assetsCache->CheckIfAssetExists(assettx.AssetId)){
-                        if (!assetsCache->UndoUpdateAsset(assettx, vUndoData)){
-                            error("DisconnectBlock(): failed to und update asset: %s", assettx.AssetId);
+                CUpdateAssetTx assetTx;
+                if (GetTxPayload(tx, assetTx)) {
+                    if (assetsCache->CheckIfAssetExists(assetTx.assetId)){
+                        if (!assetsCache->UndoUpdateAsset(assetTx, vUndoData)){
+                            error("DisconnectBlock(): failed to und update asset: %s", assetTx.assetId);
                             return DISCONNECT_FAILED;
                         }
-                    }      
+                    }
                 }
             } else if (tx.nType == TRANSACTION_MINT_ASSET){
-                CMintAssetTx assettx;
-                if (GetTxPayload(tx, assettx)) {
-                    if (assetsCache->CheckIfAssetExists(assettx.AssetId)){
-                        if (!assetsCache->UndoMintAsset(assettx, vUndoData)){
-                            error("DisconnectBlock(): failed to rundo mint asset: %s", assettx.AssetId);
+                CMintAssetTx assetTx;
+                if (GetTxPayload(tx, assetTx)) {
+                    if (assetsCache->CheckIfAssetExists(assetTx.assetId)){
+                        if (!assetsCache->UndoMintAsset(assetTx, vUndoData)){
+                            error("DisconnectBlock(): failed to rundo mint asset: %s", assetTx.assetId);
                             return DISCONNECT_FAILED;
                         }
                     }
@@ -2461,7 +2465,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
         std::pair<std::string, CBlockAssetUndo>* undoAssetData = &undoPair;
 
         UpdateCoins(tx, view, i == 0 ? undoDummy : blockundo.vtxundo.back(), pindex->nHeight, assetsCache, undoAssetData);
-        
+
         if (!undoAssetData->first.empty()) {
             vUndoAssetMetaData.emplace_back(*undoAssetData);
         }
@@ -2716,7 +2720,7 @@ bool static FlushStateToDisk(const CChainParams& chainparams, CValidationState &
             }
             if (Params().IsAssetsActive(chainActive.Tip())){
                 if (passetsCache && !passetsCache->DumpCacheToDatabase())
-                        return AbortNode(state, "Failed to write to asset database");               
+                        return AbortNode(state, "Failed to write to asset database");
             }
             nLastFlush = nNow;
         }
@@ -3386,7 +3390,7 @@ bool CChainState::InvalidateBlock(CValidationState& state, const CChainParams& c
         if (pindexOldTip == pindexBestHeader) {
             pindexBestInvalid = pindexBestHeader;
             pindexBestHeader = pindexBestHeader->pprev;
-            atomicHeaderHeight = pindexBestHeader ? pindexBestHeader->nHeight : -1;            
+            atomicHeaderHeight = pindexBestHeader ? pindexBestHeader->nHeight : -1;
         }
     }
 
@@ -5489,4 +5493,3 @@ public:
         mapBlockIndex.clear();
     }
 } instance_of_cmaincleanup;
-

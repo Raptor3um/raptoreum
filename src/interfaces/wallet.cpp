@@ -22,6 +22,7 @@
 #include <uint256.h>
 #include <validation.h>
 #include <wallet/wallet.h>
+#include <assets/assetstype.h>
 
 #include <memory>
 
@@ -518,6 +519,55 @@ public:
             }
         }
         return result;
+    }
+    CoinsList listAssets() override
+    {
+        LOCK2(::cs_main, m_wallet.cs_wallet);
+        CoinsList result;
+        for (const auto& entry : m_wallet.ListAssets()) {
+            auto& group = result[entry.first];
+            for (const auto& coin : entry.second) {
+                group.emplace_back(
+                    COutPoint(coin.tx->GetHash(), coin.i), MakeWalletTxOut(m_wallet, *coin.tx, coin.i, coin.nDepth));
+            }
+        }
+        return result;
+    }
+    AssetList listMyAssets(const CCoinControl* coinControl) override
+    {
+        LOCK2(::cs_main, m_wallet.cs_wallet);
+        AssetList result;
+        std::map<std::string, std::vector<COutput>> assets;
+        m_wallet.AvailableAssets(assets, false, coinControl);
+        for (const auto& entry : assets) {
+                result.emplace_back(entry.first);
+        }
+        return result;
+    }
+    UniqueIdList listAssetUniqueId(std::string assetId, const CCoinControl* coinControl = nullptr)
+    {
+      LOCK2(::cs_main, m_wallet.cs_wallet);
+        UniqueIdList result;
+        std::map<std::string, std::vector<COutput>> assets;
+        m_wallet.AvailableAssets(assets, false, coinControl);
+        for (const auto& entry : assets.at(assetId)) {
+            //filter out future tx
+            if (!m_wallet.OutputEligibleForSpending(entry, CoinEligibilityFilter(1, 1, 0)))
+                continue;
+            
+            CInputCoin coin(entry.tx->tx, entry.i);
+            CAssetTransfer assetTransfer;
+            if(GetTransferAsset(coin.txout.scriptPubKey, assetTransfer)){
+                if (assetTransfer.isUnique)
+                    result.emplace_back(assetTransfer.uniqueId);
+            }           
+        }
+        return result;  
+    }
+    AssetBalance getAssetsBalance(const CCoinControl* coinControl, bool fSpendable) override
+    {
+        LOCK2(::cs_main, m_wallet.cs_wallet);
+        return m_wallet.getAssetsBalance(coinControl, fSpendable);
     }
     std::vector<WalletTxOut> getCoins(const std::vector<COutPoint>& outputs) override
     {

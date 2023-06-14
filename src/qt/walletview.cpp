@@ -13,6 +13,7 @@
 #include <qt/overviewpage.h>
 #include <qt/receivecoinsdialog.h>
 #include <qt/sendcoinsdialog.h>
+#include <qt/sendassetsdialog.h>
 #include <qt/signverifymessagedialog.h>
 #include <qt/transactionrecord.h>
 #include <qt/transactiontablemodel.h>
@@ -73,6 +74,7 @@ WalletView::WalletView(QWidget* parent) :
 
     receiveCoinsPage = new ReceiveCoinsDialog();
     sendCoinsPage = new SendCoinsDialog();
+    sendAssetsPage = new SendAssetsDialog();
     coinJoinCoinsPage = new SendCoinsDialog(true);
 
     usedSendingAddressesPage = new AddressBookPage(AddressBookPage::ForEditing, AddressBookPage::SendingTab, this);
@@ -83,7 +85,8 @@ WalletView::WalletView(QWidget* parent) :
     addWidget(receiveCoinsPage);
     addWidget(sendCoinsPage);
     addWidget(coinJoinCoinsPage);
-
+    addWidget(sendAssetsPage);
+    
     QSettings settings;
     if (settings.value("fShowSmartnodesTab").toBool()) {
         smartnodeListPage = new SmartnodeList();
@@ -96,6 +99,7 @@ WalletView::WalletView(QWidget* parent) :
 
     // Highlight transaction after send
     connect(sendCoinsPage, SIGNAL(coinsSent(uint256)), transactionView, SLOT(focusTransaction(uint256)));
+    connect(sendAssetsPage, SIGNAL(coinsSent(uint256)), transactionView, SLOT(focusTransaction(uint256)));
     connect(coinJoinCoinsPage, SIGNAL(coinsSent(uint256)), transactionView, SLOT(focusTransaction(uint256)));
 
     // Double-clicking on a transaction on the transaction history page shows details
@@ -109,6 +113,7 @@ WalletView::WalletView(QWidget* parent) :
 
     // Pass through messages from SendCoinsDialog
     connect(sendCoinsPage, SIGNAL(message(QString,QString,unsigned int)), this, SIGNAL(message(QString,QString,unsigned int)));
+    connect(sendAssetsPage, SIGNAL(message(QString,QString,unsigned int)), this, SIGNAL(message(QString,QString,unsigned int)));
     connect(coinJoinCoinsPage, SIGNAL(message(QString, QString, unsigned int)), this, SIGNAL(message(QString, QString, unsigned int)));
 
     // Pass through messages from transactionView
@@ -130,6 +135,7 @@ void WalletView::setBitcoinGUI(BitcoinGUI *gui)
 
         // Navigate to transaction history page after send
         connect(sendCoinsPage, SIGNAL(coinsSent(uint256)), gui, SLOT(gotoHistoryPage()));
+        connect(sendAssetsPage, SIGNAL(coinsSent(uint256)), gui, SLOT(gotoHistoryPage()));
         connect(coinJoinCoinsPage, SIGNAL(coinsSent(uint256)), gui, SLOT(gotoHistoryPage()));
 
         // Receive and report messages
@@ -152,6 +158,7 @@ void WalletView::setClientModel(ClientModel *_clientModel)
 
     overviewPage->setClientModel(_clientModel);
     sendCoinsPage->setClientModel(_clientModel);
+    sendAssetsPage->setClientModel(_clientModel);
     coinJoinCoinsPage->setClientModel(_clientModel);
     QSettings settings;
     if (settings.value("fShowSmartnodesTab").toBool()) {
@@ -172,6 +179,7 @@ void WalletView::setWalletModel(WalletModel *_walletModel)
     }
     receiveCoinsPage->setModel(_walletModel);
     sendCoinsPage->setModel(_walletModel);
+    sendAssetsPage->setModel(_walletModel);
     coinJoinCoinsPage->setModel(_walletModel);
     usedReceivingAddressesPage->setModel(_walletModel ? _walletModel->getAddressTableModel() : nullptr);
     usedSendingAddressesPage->setModel(_walletModel ? _walletModel->getAddressTableModel() : nullptr);
@@ -227,6 +235,8 @@ void WalletView::processNewTransaction(const QModelIndex& parent, int start, int
     QString label = ttm->data(index, TransactionTableModel::LabelRole).toString();
 
     Q_EMIT incomingTransaction(date, walletModel->getOptionsModel()->getDisplayUnit(), amount, type, address, label, walletModel->getWalletName());
+    
+    sendAssetsPage->updateAssetList();
 }
 
 void WalletView::gotoOverviewPage()
@@ -258,6 +268,22 @@ void WalletView::gotoSendCoinsPage(QString addr)
     sendCoinsPage->OnDisplay();
     if (!addr.isEmpty()) {
         sendCoinsPage->setAddress(addr);
+    }
+}
+
+void WalletView::gotoSendAssetsPage(QString addr)
+{
+    static bool fFirstVisit = true;
+
+    if (fFirstVisit){
+        fFirstVisit = false;
+        sendAssetsPage->updateAssetList();
+    }
+    
+    setCurrentWidget(sendAssetsPage);
+    sendAssetsPage->OnDisplay();
+    if (!addr.isEmpty()) {
+        sendAssetsPage->setAddress(addr);
     }
 }
 
