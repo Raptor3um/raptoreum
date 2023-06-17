@@ -35,17 +35,15 @@ public:
         nAmount = 0;
     }
 
-    ADD_SERIALIZE_METHODS;
+    SERIALIZE_METHODS(CAssetTransfer, obj) {
+        if(obj.isUnique) {
+            READWRITE(obj.assetId, obj.isUnique, obj.uniqueId, obj.nAmount);
+        } else {
+            READWRITE(obj.assetId, obj.isUnique, obj.nAmount);
 
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
-    {
-        READWRITE(assetId);
-        READWRITE(isUnique);
-        if (isUnique)
-            READWRITE(uniqueId);
-        READWRITE(nAmount);
+        }
     }
+
 
     CAssetTransfer(const std::string& assetId, const CAmount& nAmount, const uint32_t& uniqueId);
     CAssetTransfer(const std::string& assetId, const CAmount& nAmount);

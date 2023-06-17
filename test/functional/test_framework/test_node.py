@@ -75,7 +75,17 @@ class TestNode():
         # Note that common args are set in the config file (see initialize_datadir)
         self.extra_args = extra_args
         self.extra_args_from_options = extra_args_from_options
-        self.args = [self.binary, "-datadir=" + self.datadir, "-logtimemicros", "-debug", "-debugexclude=libevent", "-debugexclude=leveldb", "-mocktime=" + str(mocktime), "-uacomment=testnode%d" % i]
+        self.args = [
+            self.binary,
+            "-datadir=" + self.datadir,
+            "-logtimemicros",
+            "-debug",
+            "-debugexclude=libevent",
+            "-debugexclude=leveldb",
+            "-mocktime=" + str(mocktime),
+            "-uacomment=testnode%d" % i,
+            "-noprinttoconsole"
+        ]
 
         self.cli = TestNodeCLI(bitcoin_cli, self.datadir)
         self.use_cli = use_cli
@@ -165,6 +175,25 @@ class TestNode():
                     raise
             time.sleep(1.0 / poll_per_s)
         self._raise_assertion_error("Unable to connect to raptoreumd")
+
+    def generate(self, nblocks, maxtries=1000000):
+        self.log.debug("TestNode.generate() dispatches `generate` call to `generatetoaddress`")
+        # Try to import the node's deterministic private key. This is a no-op if the private key
+        # has already been imported.
+        try:
+            self.rpc.importprivkey(privkey=self.get_deterministic_priv_key().key, label='coinbase', rescan=False)
+        except JSONRPCException as e:
+            # This may fail if:
+            # - wallet is disabled ('Method not found')
+            # - there are multiple wallets to import to ('Wallet file not specified')
+            # - wallet is locked ('Error: Please enter the wallet passphrase with walletpassphrase first')
+            # Just ignore those errors. We can make this tidier by importing the privkey during TestFramework.setup_nodes
+            # TODO: tidy up deterministic privkey import.
+            assert str(e).startswith('Method not found') or \
+                str(e).startswith('Wallet file not specified') or \
+                str(e).startswith('Error: Please enter the wallet passphrase with walletpassphrase first')
+
+        return self.generatetoaddress(nblocks=nblocks, address=self.get_deterministic_priv_key().address, maxtries=maxtries)
 
     def get_wallet_rpc(self, wallet_name):
         if self.use_cli:
@@ -315,6 +344,14 @@ class TestNodeCLIAttr:
     def get_request(self, *args, **kwargs):
         return lambda: self(*args, **kwargs)
 
+    def arg_to_cli(arg):
+        if isinstance(arg, bool):
+            return str(arg).lower()
+        elif isinstance(arg, dict) or isinstance(arg, list):
+            return json.dumps(arg)
+        else:
+            return str(arg)
+
 class TestNodeCLI():
     """Interface to raptoreum-cli for an individual node"""
 
@@ -346,9 +383,8 @@ class TestNodeCLI():
 
     def send_cli(self, command=None, *args, **kwargs):
         """Run raptoreum-cli command. Deserializes returned string as python object."""
-
-        pos_args = [str(arg) for arg in args]
-        named_args = [str(key) + "=" + str(value) for (key, value) in kwargs.items()]
+        pos_args = [arg_to_cli(arg) for arg in args]
+        named_args = [str(key) + "=" + arg_to_cli(value) for (key, value) in kwargs.items()]
         assert not (pos_args and named_args), "Cannot use positional arguments and named arguments in the same raptoreum-cli call"
         p_args = [self.binary, "-datadir=" + self.datadir] + self.options
         if named_args:

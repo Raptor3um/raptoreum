@@ -14,13 +14,9 @@ struct IndexKey {
     uint256 txid;
     unsigned int outputIndex;
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(IndexKey, obj)
     {
-        READWRITE(txid);
-        READWRITE(outputIndex);
+        READWRITE(obj.txid, obj.outputIndex);
     }
 
     IndexKey(uint256 hash, unsigned int index) :

@@ -2,6 +2,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#if defined(HAVE_CONFIG_H)
+#include <config/raptoreum-config.h>
+#endif
+
 #include <qt/walletmodelfuturestransaction.h>
 #include <rpc/specialtx_utilities.h>
 #include <timedata.h>
@@ -17,7 +21,7 @@ WalletModelFuturesTransaction::WalletModelFuturesTransaction(const QList<SendFut
    // walletTransaction = new CWalletTx();
 }
 
-std::unique_ptr<interfaces::PendingWalletTx>& WalletModelFuturesTransaction::getWtx()
+CTransactionRef& WalletModelFuturesTransaction::getWtx()
 {
     return wtx;
 }
@@ -30,7 +34,7 @@ QList<SendFuturesRecipient> WalletModelFuturesTransaction::getRecipients() const
 
 unsigned int WalletModelFuturesTransaction::getTransactionSize() const
 {
-    return wtx != nullptr ? ::GetSerializeSize(wtx->get(), SER_NETWORK, PROTOCOL_VERSION) : 0;
+    return wtx != nullptr ? ::GetSerializeSize(*wtx, SER_NETWORK, PROTOCOL_VERSION) : 0;
 }
 
 CAmount WalletModelFuturesTransaction::getTransactionFee() const
@@ -47,30 +51,6 @@ void WalletModelFuturesTransaction::assignFuturePayload() {
 	for (QList<SendFuturesRecipient>::iterator it = recipients.begin(); it != recipients.end(); ++it)
 	{
 		SendFuturesRecipient& rcp = (*it);
-		// normal recipient (no payment request)
-		if (!rcp.paymentRequest.IsInitialized())
-		{
-			CFutureTx ftx;
-			ftx.nVersion = CFutureTx::CURRENT_VERSION;
-			ftx.lockOutputIndex = 0;
-			ftx.updatableByDestination = false;
-            const payments::PaymentDetails& details = rcp.paymentRequest.getDetails();
-            for (int j = 0; j < details.outputs_size(); j++) {
-                const payments::Output& out = details.outputs(j);
-                if (out.amount() <= 0) continue;
-                const unsigned char* scriptStr = (const unsigned char*)out.script().data();
-                CScript scriptPubKey(scriptStr, scriptStr+out.script().size());
-                for (const auto& txout : wtx->get().vout) {
-                    if (txout.scriptPubKey == scriptPubKey) {
-                        rcp.amount = txout.nValue;
-                        ftx.lockTime = rcp.locktime - GetAdjustedTime();
-                        ftx.maturity = rcp.maturity;
-                        break;
-                    }
-				}
-				ftx.lockOutputIndex++;
-			}
-		}
 	}
 }
 
@@ -81,30 +61,9 @@ void WalletModelFuturesTransaction::reassignAmounts()
     for (QList<SendFuturesRecipient>::iterator it = recipients.begin(); it != recipients.end(); ++it)
     {
         SendFuturesRecipient& rcp = (*it);
-
-        if (rcp.paymentRequest.IsInitialized())
-        {
-            CAmount subtotal = 0;
-            const payments::PaymentDetails& details = rcp.paymentRequest.getDetails();
-            for (int j = 0; j < details.outputs_size(); j++)
-            {
-                const payments::Output& out = details.outputs(j);
-                if (out.amount() <= 0) continue;
-                const unsigned char* scriptStr = (const unsigned char*)out.script().data();
-                CScript scriptPubKey(scriptStr, scriptStr+out.script().size());
-                for (const auto& txout : wtx->get().vout) {
-                    if (txout.scriptPubKey == scriptPubKey) {
-                        subtotal += txout.nValue;
-                        break;
-                    }
-                }
-            }
-            rcp.amount = subtotal;
-        }
-        else // normal recipient (no payment request)
         {
             CFutureTx ftx;
-            for (const auto& txout : wtx->get().vout) {
+            for (const auto& txout : wtx.get()->vout) {
                 CScript scriptPubKey = GetScriptForDestination(DecodeDestination(rcp.address.toStdString()));
                 if (txout.scriptPubKey == scriptPubKey) {
                     rcp.amount = txout.nValue;

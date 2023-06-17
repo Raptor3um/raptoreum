@@ -4,12 +4,16 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <smartnode/smartnode-utils.h>
+#include <evo/deterministicmns.h>
 
 #ifdef ENABLE_WALLET
 #include <coinjoin/coinjoin-client.h>
 #endif
 #include <init.h>
 #include <smartnode/smartnode-sync.h>
+#include <net.h>
+#include <shutdown.h>
+#include <util/ranges.h>
 #include <validation.h>
 
 struct CompareScoreMN
@@ -37,7 +41,7 @@ void CSmartnodeUtils::ProcessSmartnodeConnections(CConnman& connman)
             nonSmartnodeCount++;
         }
     });
-    if (nonSmartnodeCount < connman.GetMaxOutboundNodeCount()) {
+    if (nonSmartnodeCount < int(connman.GetMaxOutboundNodeCount())) {
         return;
     }
 
@@ -52,13 +56,7 @@ void CSmartnodeUtils::ProcessSmartnodeConnections(CConnman& connman)
         if (pnode->m_smartnode_probe_connection && GetSystemTimeInSeconds() - pnode->nTimeConnected < 5) return;
 
 #ifdef ENABLE_WALLET
-        bool fFound = false;
-        for (const auto& dmn : vecDmns) {
-            if (pnode->addr == dmn->pdmnState->addr) {
-                fFound = true;
-                break;
-            }
-        }
+        bool fFound = ranges::any_of(vecDmns, [&pnode](const auto& dmn) { return pnode->addr == dmn->pdmnState->addr; });
         if (fFound) return; // do NOT disconnect mixing smartnodes
 #endif // ENABLE_WALLET
         if (fLogIPs) {

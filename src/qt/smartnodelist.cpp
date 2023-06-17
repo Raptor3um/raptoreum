@@ -1,6 +1,8 @@
 #include <qt/smartnodelist.h>
 #include <qt/forms/ui_smartnodelist.h>
 
+#include <chainparams.h>
+#include <evo/deterministicmns.h>
 #include <qt/clientmodel.h>
 #include <clientversion.h>
 #include <coins.h>
@@ -17,13 +19,7 @@
 
 int GetOffsetFromUtc()
 {
-#if QT_VERSION < 0x050200
-    const QDateTime dateTime1 = QDateTime::currentDateTime();
-    const QDateTime dateTime2 = QDateTime(dateTime1.date(), dateTime1.time(), Qt::UTC);
-    return dateTime1.secsTo(dateTime2);
-#else
     return QDateTime::currentDateTime().offsetFromUtc();
-#endif
 }
 
 template <typename T>
@@ -36,7 +32,7 @@ public:
         QTableWidgetItem(text, type),
         itemData(data) {}
 
-    bool operator<(const QTableWidgetItem& other) const
+    bool operator<(const QTableWidgetItem& other) const override
     {
         return itemData < ((CSmartnodeListWidgetItem*)&other)->itemData;
     }
@@ -44,13 +40,7 @@ public:
 
 SmartnodeList::SmartnodeList(QWidget* parent) :
     QWidget(parent),
-    ui(new Ui::SmartnodeList),
-    clientModel(0),
-    walletModel(0),
-    fFilterUpdatedDIP3(true),
-    nTimeFilterUpdatedDIP3(0),
-    nTimeUpdatedDIP3(0),
-    mnListChanged(true)
+    ui(new Ui::SmartnodeList)
 {
     ui->setupUi(this);
 
@@ -92,20 +82,20 @@ SmartnodeList::SmartnodeList(QWidget* parent) :
 
     ui->tableWidgetSmartnodesDIP3->setContextMenuPolicy(Qt::CustomContextMenu);
 
-    ui->filterLineEditDIP3->setPlaceholderText(tr("Filter by any property (e.g. address or protx hash)"));
+    ui->checkBoxMySmartnodesOnly->setEnabled(false);
 
     QAction* copyProTxHashAction = new QAction(tr("Copy ProTx Hash"), this);
     QAction* copyCollateralOutpointAction = new QAction(tr("Copy Collateral Outpoint"), this);
     contextMenuDIP3 = new QMenu(this);
     contextMenuDIP3->addAction(copyProTxHashAction);
     contextMenuDIP3->addAction(copyCollateralOutpointAction);
-    connect(ui->tableWidgetSmartnodesDIP3, SIGNAL(customContextMenuRequested(const QPoint&)), this, SLOT(showContextMenuDIP3(const QPoint&)));
-    connect(ui->tableWidgetSmartnodesDIP3, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(extraInfoDIP3_clicked()));
-    connect(copyProTxHashAction, SIGNAL(triggered()), this, SLOT(copyProTxHash_clicked()));
-    connect(copyCollateralOutpointAction, SIGNAL(triggered()), this, SLOT(copyCollateralOutpoint_clicked()));
+    connect(ui->tableWidgetSmartnodesDIP3, &QTableWidget::customContextMenuRequested, this, &SmartnodeList::showContextMenuDIP3);
+    connect(ui->tableWidgetSmartnodesDIP3, &QTableWidget::doubleClicked, this, &SmartnodeList::extraInfoDIP3_clicked);
+    connect(copyProTxHashAction, &QAction::triggered, this, &SmartnodeList::copyProTxHash_clicked);
+    connect(copyCollateralOutpointAction, &QAction::triggered, this, &SmartnodeList::copyCollateralOutpoint_clicked);
 
     timer = new QTimer(this);
-    connect(timer, SIGNAL(timeout()), this, SLOT(updateDIP3ListScheduled()));
+    connect(timer, &QTimer::timeout, this, &SmartnodeList::updateDIP3ListScheduled);
     timer->start(1000);
 
     GUIUtil::updateFonts();
@@ -121,13 +111,14 @@ void SmartnodeList::setClientModel(ClientModel* model)
     this->clientModel = model;
     if (model) {
         // try to update list when smartnode count changes
-        connect(clientModel, SIGNAL(smartnodeListChanged()), this, SLOT(handleSmartnodeListChanged()));
+        connect(clientModel, &ClientModel::smartnodeListChanged, this, &SmartnodeList::handleSmartnodeListChanged);
     }
 }
 
 void SmartnodeList::setWalletModel(WalletModel* model)
 {
     this->walletModel = model;
+    ui->checkBoxMySmartnodesOnly->setEnabled(model != nullptr);
 }
 
 void SmartnodeList::showContextMenuDIP3(const QPoint& point)
@@ -236,7 +227,7 @@ void SmartnodeList::updateDIP3List()
         //should this be call directly or use pcoinsTip->GetCoin(outpoint, coin) without locking cs_main
         bool isValidUtxo = GetUTXOCoin(dmn->collateralOutpoint, coin);
         SmartnodeCollaterals collaterals = Params().GetConsensus().nCollaterals;
-        int nHeight = chainActive.Tip() == nullptr ? 0 : chainActive.Tip()->nHeight;
+        int nHeight = ::ChainActive().Tip() == nullptr ? 0 : ::ChainActive().Tip()->nHeight;
         QTableWidgetItem* collateralAmountItem = new QTableWidgetItem(!isValidUtxo ? tr("Invalid") : QString::number(coin.out.nValue / COIN));
         QTableWidgetItem* addressItem = new CSmartnodeListWidgetItem<QByteArray>(QString::fromStdString(dmn->pdmnState->addr.ToString()), addr_ba);
         QTableWidgetItem* statusItem = new QTableWidgetItem(mnList.IsMNValid(dmn) ? tr("ENABLED") : (mnList.IsMNPoSeBanned(dmn) ? tr("POSE_BANNED") : tr("UNKNOWN")));

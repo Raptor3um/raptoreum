@@ -14,7 +14,7 @@
 #include <qt/rpcconsole.h>
 #include <test/test_raptoreum.h>
 #include <univalue.h>
-#include <util.h>
+#include <util/system.h>
 
 #include <llmq/quorums_init.h>
 
@@ -43,12 +43,12 @@ void RPCNestedTests::rpcNestedTests()
 
     TestingSetup test;
 
-    SetRPCWarmupFinished();
+    if (RPCIsInWarmup(nullptr)) SetRPCWarmupFinished();
 
     std::string result;
     std::string result2;
     std::string filtered;
-    auto node = interfaces::MakeNode();
+    interfaces::Node* node = &m_node;
     RPCConsole::RPCExecuteCommandLine(*node, result, "getblockchaininfo()[chain]", &filtered); //simple result filtering with path
     QVERIFY(result=="main");
     QVERIFY(filtered == "getblockchaininfo()[chain]");

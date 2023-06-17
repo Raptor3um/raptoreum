@@ -7,7 +7,7 @@
 #include <amount.h>
 #include <coinjoin/coinjoin-util.h>
 #include <coinjoin/coinjoin.h>
-#include <consensus/validation.h>
+#include <node/context.h>
 #include <validation.h>
 #include <wallet/wallet.h>
 
@@ -18,6 +18,7 @@ BOOST_FIXTURE_TEST_SUITE(coinjoin_tests, BasicTestingSetup)
 BOOST_AUTO_TEST_CASE(coinjoin_collateral_tests)
 {
     // Good collateral values
+
     BOOST_CHECK(CCoinJoin::IsCollateralAmount(0.10000000 * COIN));
     BOOST_CHECK(CCoinJoin::IsCollateralAmount(0.12345678 * COIN));
     BOOST_CHECK(CCoinJoin::IsCollateralAmount(0.32123212 * COIN));
@@ -36,17 +37,21 @@ public:
     CTransactionBuilderTestSetup()
     {
         CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
-        wallet = MakeUnique<CWallet>(WalletLocation(), WalletDatabase::CreateMock());
+        NodeContext node;
+        chain = interfaces::MakeChain(node);
+        wallet = MakeUnique<CWallet>(chain.get(), WalletLocation(), CreateMockWalletDatabase());
         bool firstRun;
         wallet->LoadWallet(firstRun);
         AddWallet(wallet);
         {
-            LOCK(wallet->cs_wallet);
+            LOCK2(wallet->cs_wallet, cs_main);
             wallet->AddKeyPubKey(coinbaseKey, coinbaseKey.GetPubKey());
+            wallet->SetLastBlockProcessed(::ChainActive().Height(), ::ChainActive().Tip()->GetBlockHash());
+            WalletRescanReserver reserver(wallet.get());
+            reserver.reserve();
+            CWallet::ScanResult result = wallet->ScanForWalletTransactions(::ChainActive().Genesis()->GetBlockHash(), {} /* stop_block */, reserver, true /* fUpdate */);
+            BOOST_CHECK_EQUAL(result.status, CWallet::ScanResult::SUCCESS);
         }
-        WalletRescanReserver reserver(wallet.get());
-        reserver.reserve();
-        wallet->ScanForWalletTransactions(chainActive.Genesis(), nullptr, reserver);
     }
 
     ~CTransactionBuilderTestSetup()
@@ -54,6 +59,7 @@ public:
         RemoveWallet(wallet);
     }
 
+    std::shared_ptr<interfaces::Chain> chain;
     std::shared_ptr<CWallet> wallet;
 
     CWalletTx& AddTxToChain(uint256 nTxHash)
@@ -66,8 +72,10 @@ public:
             blocktx = CMutableTransaction(*it->second.tx);
         }
         CreateAndProcessBlock({blocktx}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
-        LOCK2(cs_main, wallet->cs_wallet);
-        it->second.SetMerkleBranch(chainActive.Tip(), 1);
+        LOCK2(wallet->cs_wallet, cs_main);
+        wallet->SetLastBlockProcessed(::ChainActive().Height(), ::ChainActive().Tip()->GetBlockHash());
+        CWalletTx::Confirmation confirm(CWalletTx::Status::CONFIRMED, ::ChainActive().Height(), ::ChainActive().Tip()->GetBlockHash(), 1);
+        it->second.m_confirm = confirm;
         return it->second;
     }
     CompactTallyItem GetTallyItem(const std::vector<CAmount>& vecAmounts)
@@ -75,7 +83,6 @@ public:
         CompactTallyItem tallyItem;
         CTransactionRef tx;
         CReserveKey destKey(wallet.get());
-        CReserveKey reserveKey(wallet.get());
         CAmount nFeeRet;
         int nChangePosRet = -1;
         std::string strError;
@@ -83,14 +90,16 @@ public:
         CPubKey pubKey;
         BOOST_CHECK(destKey.GetReservedKey(pubKey, false));
         tallyItem.txdest = pubKey.GetID();
-
-        for (CAmount nAmount : vecAmounts) {
-            BOOST_CHECK(wallet->CreateTransaction({{GetScriptForDestination(tallyItem.txdest), nAmount, false}}, tx, reserveKey, nFeeRet, nChangePosRet, strError, coinControl));
-            CValidationState state;
-            BOOST_CHECK(wallet->CommitTransaction(tx, {}, {}, {}, reserveKey, nullptr, state));
+        for (CAmount nAmount : vecAmounts)
+        {
+            BOOST_CHECK(wallet->CreateTransaction({{GetScriptForDestination(tallyItem.txdest), nAmount, false}}, tx, nFeeRet, nChangePosRet, strError, coinControl));
+            {
+                LOCK2(wallet->cs_wallet, cs_main);
+                wallet->CommitTransaction(tx, {}, {});
+            }
             AddTxToChain(tx->GetHash());
             for (size_t n = 0; n < tx->vout.size(); ++n) {
-                if (nChangePosRet != -1 && n == nChangePosRet) {
+                if (nChangePosRet != -1 && int(n) == nChangePosRet) {
                     // Skip the change output to only return the requested coins
                     continue;
                 }

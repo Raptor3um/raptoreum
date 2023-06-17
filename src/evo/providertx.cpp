@@ -3,13 +3,13 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <evo/deterministicmns.h>
 #include <evo/providertx.h>
-#include <evo/specialtx.h>
 
 #include <chainparams.h>
-#include <clientversion.h>
 #include <coins.h>
+#include <consensus/validation.h>
+#include <evo/deterministicmns.h>
+#include <evo/specialtx.h>
 #include <hash.h>
 #include <messagesigner.h>
 #include <script/standard.h>
@@ -19,7 +19,7 @@
 #include <assets/assetstype.h>
 
 template <typename ProTx>
-static bool CheckService(const uint256& proTxHash, const ProTx& proTx, CValidationState& state)
+static bool CheckService(const ProTx& proTx, CValidationState& state)
 {
     if (!proTx.addr.IsValid()) {
         return state.DoS(10, false, REJECT_INVALID, "bad-protx-ipaddr");
@@ -87,7 +87,7 @@ static bool CheckInputsHash(const CTransaction& tx, const ProTx& proTx, CValidat
 bool CheckFutureTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state)
 {
 
-    if(!Params().IsFutureActive(chainActive.Tip())) {
+    if(!Params().IsFutureActive(::ChainActive().Tip())) {
         return state.DoS(100, false, REJECT_INVALID, "future-not-enabled");
     }
     if (tx.nType != TRANSACTION_FUTURE) {
@@ -351,7 +351,7 @@ bool CheckMintAssetTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVa
     return true;
 }
 
-bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, const CCoinsViewCache& view)
+bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, const CCoinsViewCache& view, bool check_sigs)
 {
     if (tx.nType != TRANSACTION_PROVIDER_REGISTER) {
         return state.DoS(100, false, REJECT_INVALID, "bad-protx-type");
@@ -391,7 +391,7 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
 
     // It's allowed to set addr to 0, which will put the MN into PoSe-banned state and require a ProUpServTx to be issues later
     // If any of both is set, it must be valid however
-    if (ptx.addr != CService() && !CheckService(tx.GetHash(), ptx, state)) {
+    if (ptx.addr != CService() && !CheckService(ptx, state)) {
         // pass the state returned by the function above
         return false;
     }
@@ -404,7 +404,7 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
     const CKeyID *keyForPayloadSig = nullptr;
     COutPoint collateralOutpoint;
     Coin coin;
-	SmartnodeCollaterals collaterals = Params().GetConsensus().nCollaterals;
+    SmartnodeCollaterals collaterals = Params().GetConsensus().nCollaterals;
     if (!ptx.collateralOutpoint.hash.IsNull()) {
         if (!view.GetCoin(ptx.collateralOutpoint, coin) || coin.IsSpent() || !collaterals.isValidCollateral(coin.out.nValue)) {
             return state.DoS(10, false, REJECT_INVALID, "bad-protx-collateral");
@@ -469,7 +469,7 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
 
     if (keyForPayloadSig) {
         // collateral is not part of this ProRegTx, so we must verify ownership of the collateral
-        if (!CheckStringSig(ptx, *keyForPayloadSig, state)) {
+        if (check_sigs && !CheckStringSig(ptx, *keyForPayloadSig, state)) {
             // pass the state returned by the function above
             return false;
         }
@@ -483,7 +483,7 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
     return true;
 }
 
-bool CheckProUpServTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state)
+bool CheckProUpServTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, bool check_sigs)
 {
     if (tx.nType != TRANSACTION_PROVIDER_UPDATE_SERVICE) {
         return state.DoS(100, false, REJECT_INVALID, "bad-protx-type");
@@ -498,7 +498,7 @@ bool CheckProUpServTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVa
         return state.DoS(100, false, REJECT_INVALID, "bad-protx-version");
     }
 
-    if (!CheckService(ptx.proTxHash, ptx, state)) {
+    if (!CheckService(ptx, state)) {
         // pass the state returned by the function above
         return false;
     }
@@ -517,7 +517,7 @@ bool CheckProUpServTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVa
 
         if (ptx.scriptOperatorPayout != CScript()) {
             if (mn->nOperatorReward == 0) {
-                // don't allow to set operator reward payee in case no operatorReward was set
+                // don't allow setting operator reward payee in case no operatorReward was set
                 return state.DoS(10, false, REJECT_INVALID, "bad-protx-operator-payee");
             }
             if (!ptx.scriptOperatorPayout.IsPayToPublicKeyHash() && !ptx.scriptOperatorPayout.IsPayToScriptHash()) {
@@ -530,7 +530,7 @@ bool CheckProUpServTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVa
             // pass the state returned by the function above
             return false;
         }
-        if (!CheckHashSig(ptx, mn->pdmnState->pubKeyOperator.Get(), state)) {
+        if (check_sigs && !CheckHashSig(ptx, mn->pdmnState->pubKeyOperator.Get(), state)) {
             // pass the state returned by the function above
             return false;
         }
@@ -539,7 +539,7 @@ bool CheckProUpServTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVa
     return true;
 }
 
-bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, const CCoinsViewCache& view)
+bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, const CCoinsViewCache& view, bool check_sigs)
 {
     if (tx.nType != TRANSACTION_PROVIDER_UPDATE_REGISTRAR) {
         return state.DoS(100, false, REJECT_INVALID, "bad-protx-type");
@@ -614,7 +614,7 @@ bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVal
             // pass the state returned by the function above
             return false;
         }
-        if (!CheckHashSig(ptx, dmn->pdmnState->keyIDOwner, state)) {
+        if (check_sigs && !CheckHashSig(ptx, dmn->pdmnState->keyIDOwner, state)) {
             // pass the state returned by the function above
             return false;
         }
@@ -623,7 +623,7 @@ bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVal
     return true;
 }
 
-bool CheckProUpRevTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state)
+bool CheckProUpRevTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, bool check_sigs)
 {
     if (tx.nType != TRANSACTION_PROVIDER_UPDATE_REVOKE) {
         return state.DoS(100, false, REJECT_INVALID, "bad-protx-type");
@@ -654,7 +654,7 @@ bool CheckProUpRevTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVal
             // pass the state returned by the function above
             return false;
         }
-        if (!CheckHashSig(ptx, dmn->pdmnState->pubKeyOperator.Get(), state)) {
+        if (check_sigs && !CheckHashSig(ptx, dmn->pdmnState->pubKeyOperator.Get(), state)) {
             // pass the state returned by the function above
             return false;
         }
@@ -674,7 +674,7 @@ std::string CProRegTx::MakeSignString() const
     if (ExtractDestination(scriptPayout, destPayout)) {
         strPayout = EncodeDestination(destPayout);
     } else {
-        strPayout = HexStr(scriptPayout.begin(), scriptPayout.end());
+        strPayout = HexStr(scriptPayout);
     }
 
     s += strPayout + "|";

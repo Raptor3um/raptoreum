@@ -7,14 +7,10 @@
 #define BITCOIN_LLMQ_QUORUMS_COMMITMENT_H
 
 #include <llmq/quorums_utils.h>
-
-#include <consensus/params.h>
-
-#include <evo/deterministicmns.h>
-
 #include <bls/bls.h>
-
 #include <univalue.h>
+
+class CValidationState;
 
 namespace llmq
 {
@@ -27,7 +23,6 @@ class CFinalCommitment
 public:
     static const uint16_t CURRENT_VERSION = 1;
 
-public:
     uint16_t nVersion{CURRENT_VERSION};
     Consensus::LLMQType llmqType{Consensus::LLMQ_NONE};
     uint256 quorumHash;
@@ -40,41 +35,27 @@ public:
     CBLSSignature quorumSig; // recovered threshold sig of blockHash+validMembers+pubKeyHash+vvecHash
     CBLSSignature membersSig; // aggregated member sig of blockHash+validMembers+pubKeyHash+vvecHash
 
-public:
     CFinalCommitment() = default;
     CFinalCommitment(const Consensus::LLMQParams& params, const uint256& _quorumHash);
 
     int CountSigners() const
     {
-        return (int)std::count(signers.begin(), signers.end(), true);
+        return int(std::count(signers.begin(), signers.end(), true));
     }
     int CountValidMembers() const
     {
-        return (int)std::count(validMembers.begin(), validMembers.end(), true);
+        return int(std::count(validMembers.begin(), validMembers.end(), true));
     }
 
-    bool Verify(const CBlockIndex* pQuorumIndex, bool checkSigs) const;
+    bool Verify(const CBlockIndex* pQuorumBaseBlockIndex, bool checkSigs) const;
     bool VerifyNull() const;
     bool VerifySizes(const Consensus::LLMQParams& params) const;
 
-public:
-    ADD_SERIALIZE_METHODS
-
-    template<typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CFinalCommitment, obj)
     {
-        READWRITE(nVersion);
-        READWRITE(llmqType);
-        READWRITE(quorumHash);
-        READWRITE(DYNBITSET(signers));
-        READWRITE(DYNBITSET(validMembers));
-        READWRITE(quorumPublicKey);
-        READWRITE(quorumVvecHash);
-        READWRITE(quorumSig);
-        READWRITE(membersSig);
+        READWRITE(obj.nVersion, obj.llmqType, obj.quorumHash, DYNBITSET(obj.signers), DYNBITSET(obj.validMembers), obj.quorumPublicKey, obj.quorumVvecHash, obj.quorumSig, obj.membersSig);
     }
 
-public:
     bool IsNull() const
     {
         if (std::count(signers.begin(), signers.end(), true) ||
@@ -93,8 +74,8 @@ public:
     void ToJson(UniValue& obj) const
     {
         obj.setObject();
-        obj.pushKV("version", (int)nVersion);
-        obj.pushKV("llmqType", (int)llmqType);
+        obj.pushKV("version", int(nVersion));
+        obj.pushKV("llmqType", int(llmqType));
         obj.pushKV("quorumHash", quorumHash.ToString());
         obj.pushKV("signersCount", CountSigners());
         obj.pushKV("signers", CLLMQUtils::ToHexStr(signers));
@@ -107,32 +88,27 @@ public:
     }
 };
 
+using CFinalCommitmentPtr = std::unique_ptr<CFinalCommitment>;
+
 class CFinalCommitmentTxPayload
 {
 public:
     static const uint16_t CURRENT_VERSION = 1;
 
-public:
     uint16_t nVersion{CURRENT_VERSION};
     uint32_t nHeight{(uint32_t)-1};
     CFinalCommitment commitment;
 
-public:
-    ADD_SERIALIZE_METHODS
-
-    template<typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CFinalCommitmentTxPayload, obj)
     {
-        READWRITE(nVersion);
-        READWRITE(nHeight);
-        READWRITE(commitment);
+        READWRITE(obj.nVersion, obj.nHeight, obj.commitment);
     }
 
     void ToJson(UniValue& obj) const
     {
         obj.setObject();
-        obj.pushKV("version", (int)nVersion);
-        obj.pushKV("height", (int)nHeight);
+        obj.pushKV("version", int(nVersion));
+        obj.pushKV("height", int(nHeight));
 
         UniValue qcObj;
         commitment.ToJson(qcObj);

@@ -11,7 +11,7 @@
 #include <fs.h>
 #include <hash.h>
 #include <streams.h>
-#include <util.h>
+#include <util/system.h>
 
 /**
 *   Generic Dumping and Loading

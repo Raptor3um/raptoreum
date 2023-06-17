@@ -31,7 +31,7 @@ Development Process
 -------------------
 
 The `master` branch is meant to be stable. Development is done in separate branches.
-[Tags](https://github.com/raptoreum/raptoreum/tags) are created to indicate new official,
+[Tags](https://github.com/raptor3um/raptoreum/tags) are created to indicate new official,
 stable release versions of Raptoreum Core.
 
 The contribution workflow is described in [CONTRIBUTING.md](CONTRIBUTING.md).

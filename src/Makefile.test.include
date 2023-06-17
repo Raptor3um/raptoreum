@@ -6,7 +6,7 @@
 
 TESTS += test/test_raptoreum
 bin_PROGRAMS += test/test_raptoreum
-noinst_PROGRAMS += test/test_raptoreum_fuzzy
+#noinst_PROGRAMS += test/test_raptoreum_fuzzy
 TEST_SRCDIR = test
 TEST_BINARY=test/test_raptoreum$(EXEEXT)
 
@@ -23,7 +23,8 @@ JSON_TEST_FILES = \
   test/data/tx_invalid.json \
   test/data/tx_valid.json
 
-RAW_TEST_FILES =
+RAW_TEST_FILES = \
+  test/data/asmap.raw
 
 GENERATED_TEST_FILES = $(JSON_TEST_FILES:.json=.json.h) $(RAW_TEST_FILES:.raw=.raw.h)
 
@@ -58,8 +59,11 @@ BITCOIN_TESTS =\
   test/cuckoocache_tests.cpp \
   test/denialofservice_tests.cpp \
   test/dip0020opcodes_tests.cpp \
+  test/descriptor_tests.cpp \
   test/evo_deterministicmns_tests.cpp \
   test/evo_simplifiedmns_tests.cpp \
+  test/flatfile_tests.cpp \
+  test/fs_tests.cpp \
   test/getarg_tests.cpp \
   test/governance_validators_tests.cpp \
   test/hash_tests.cpp \
@@ -82,6 +86,7 @@ BITCOIN_TESTS =\
   test/prevector_tests.cpp \
   test/raii_event_tests.cpp \
   test/random_tests.cpp \
+  test/ref_tests.cpp \
   test/ratecheck_tests.cpp \
   test/reverselock_tests.cpp \
   test/rpc_tests.cpp \
@@ -102,9 +107,11 @@ BITCOIN_TESTS =\
   test/test_raptoreum.cpp \
   test/test_raptoreum.h \
   test/test_raptoreum_main.cpp \
+  test/util_threadnames_tests.cpp \
   test/timedata_tests.cpp \
   test/torcontrol_tests.cpp \
   test/transaction_tests.cpp \
+  test/txindex_tests.cpp \
   test/txvalidation_tests.cpp \
   test/txvalidationcache_tests.cpp \
   test/versionbits_tests.cpp \
@@ -115,8 +122,7 @@ if ENABLE_WALLET
 BITCOIN_TESTS += \
   wallet/test/coinjoin_tests.cpp \
   wallet/test/wallet_test_fixture.cpp \
-  wallet/test/wallet_test_fixture.h \
-  wallet/test/accounting_tests.cpp \
+  wallet/test/db_tests.cpp \
   wallet/test/wallet_tests.cpp \
   wallet/test/wallet_crypto_tests.cpp \
   wallet/test/coinselector_tests.cpp
@@ -128,12 +134,13 @@ test_test_raptoreum_LDADD =
 if ENABLE_WALLET
 test_test_raptoreum_LDADD += $(LIBBITCOIN_WALLET)
 endif
-test_test_raptoreum_LDADD += $(LIBBITCOIN_SERVER) $(LIBBITCOIN_CLI) $(LIBBITCOIN_COMMON) $(LIBBITCOIN_UTIL) $(LIBBITCOIN_CONSENSUS) $(LIBBITCOIN_CRYPTO) $(LIBUNIVALUE) \
-  $(LIBLEVELDB) $(LIBLEVELDB_SSE42) $(LIBMEMENV) $(BACKTRACE_LIB) $(BOOST_LIBS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) $(LIBSECP256K1) $(EVENT_LIBS) $(EVENT_PTHREADS_LIBS)
+test_test_raptoreum_LDADD += $(LIBBITCOIN_SERVER) $(LIBBITCOIN_CLI) $(LIBBITCOIN_COMMON) $(LIBBITCOIN_UTIL) $(LIBBITCOIN_CONSENSUS) \
+                             $(LIBBITCOIN_CRYPTO) $(LIBUNIVALUE) $(LIBLEVELDB) $(LIBMEMENV) $(BACKTRACE_LIB) $(BOOST_LIBS) \
+                             $(LIBSECP256K1) $(EVENT_LIBS) $(EVENT_PTHREADS_LIBS)
 test_test_raptoreum_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 
-test_test_raptoreum_LDADD += $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(BLS_LIBS)
-test_test_raptoreum_LDFLAGS = $(LDFLAGS_WRAP_EXCEPTIONS) $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS) $(PTHREAD_FLAGS) -static
+test_test_raptoreum_LDADD += $(BDB_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(BLS_LIBS) $(GMP_LIBS)
+test_test_raptoreum_LDFLAGS = $(LDFLAGS_WRAP_EXCEPTIONS) $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS) -static
 
 if ENABLE_ZMQ
 test_test_raptoreum_LDADD += $(ZMQ_LIBS)
@@ -141,12 +148,12 @@ endif
 #
 
 # test_raptoreum_fuzzy binary #
-test_test_raptoreum_fuzzy_SOURCES = test/test_raptoreum_fuzzy.cpp
-test_test_raptoreum_fuzzy_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
-test_test_raptoreum_fuzzy_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-test_test_raptoreum_fuzzy_LDFLAGS = $(LDFLAGS_WRAP_EXCEPTIONS) $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
+#test_test_raptoreum_fuzzy_SOURCES = test/test_raptoreum_fuzzy.cpp
+#test_test_raptoreum_fuzzy_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+#test_test_raptoreum_fuzzy_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+#test_test_raptoreum_fuzzy_LDFLAGS = $(LDFLAGS_WRAP_EXCEPTIONS) $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
 
-test_test_raptoreum_fuzzy_LDADD = \
+#test_test_raptoreum_fuzzy_LDADD = \
   $(LIBUNIVALUE) \
   $(LIBBITCOIN_SERVER) \
   $(LIBBITCOIN_COMMON) \
@@ -158,7 +165,7 @@ test_test_raptoreum_fuzzy_LDADD = \
   $(LIBBITCOIN_CRYPTO_SHANI) \
   $(LIBSECP256K1)
 
-test_test_raptoreum_fuzzy_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS) $(BACKTRACE_LIB)
+#test_test_raptoreum_fuzzy_LDADD += $(BOOST_LIBS) $(BACKTRACE_LIB)
 #
 
 nodist_test_test_raptoreum_SOURCES = $(GENERATED_TEST_FILES)
@@ -183,9 +190,40 @@ check-local:
 	@echo "Running test/util/rpcauth-test.py..."
 	$(PYTHON) $(top_builddir)/test/util/rpcauth-test.py
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C secp256k1 check
-if EMBEDDED_UNIVALUE
-	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C univalue check
-endif
+
+UNIVALUE_TESTS = univalue/test/object univalue/test/unitester univalue/test/no_nul
+noinst_PROGRAMS += $(UNIVALUE_TESTS)
+TESTS += $(UNIVALUE_TESTS)
+
+univalue_test_unitester_SOURCES = $(UNIVALUE_TEST_UNITESTER_INT)
+univalue_test_unitester_LDADD = $(LIBUNIVALUE)
+univalue_test_unitester_CPPFLAGS = -I$(srcdir)/$(UNIVALUE_INCLUDE_DIR_INT) -DJSON_TEST_SRC=\"$(srcdir)/$(UNIVALUE_TEST_DATA_DIR_INT)\"
+univalue_test_unitester_LDFLAGS = -static $(LIBTOOL_APP_LDFLAGS)
+
+univalue_test_no_nul_SOURCES = $(UNIVALUE_TEST_NO_NUL_INT)
+univalue_test_no_nul_LDADD = $(LIBUNIVALUE)
+univalue_test_no_nul_CPPFLAGS = -I$(srcdir)/$(UNIVALUE_INCLUDE_DIR_INT)
+univalue_test_no_nul_LDFLAGS = -static $(LIBTOOL_APP_LDFLAGS)
+
+univalue_test_object_SOURCES = $(UNIVALUE_TEST_OBJECT_INT)
+univalue_test_object_LDADD = $(LIBUNIVALUE)
+univalue_test_object_CPPFLAGS = -I$(srcdir)/$(UNIVALUE_INCLUDE_DIR_INT)
+univalue_test_object_LDFLAGS = -static $(LIBTOOL_APP_LDFLAGS)
+
+%.cpp.test: %.cpp
+	@echo Running tests: $$(\
+		cat $< | \
+		grep -E "(BOOST_FIXTURE_TEST_SUITE\\(|BOOST_AUTO_TEST_SUITE\\()" | \
+	  cut -d '(' -f 2 | cut -d ',' -f 1 | cut -d ')' -f 1\
+	) from $<
+	$(AM_V_at)export TEST_LOGFILE=$(abs_builddir)/$$(\
+	  echo $< | grep -E -o "(wallet/test/.*\.cpp|test/.*\.cpp)" | $(SED) -e s/\.cpp/.log/ \
+	) && \
+	$(TEST_BINARY) --catch_system_errors=no -l test_suite -t "$$(\
+	  cat $< | \
+	  grep -E "(BOOST_FIXTURE_TEST_SUITE\\(|BOOST_AUTO_TEST_SUITE\\()" | \
+	  cut -d '(' -f 2 | cut -d ',' -f 1 | cut -d ')' -f 1\
+	)" -- DEBUG_LOG_OUT > "$$TEST_LOGFILE" 2>&1 || (cat "$$TEST_LOGFILE" && false)
 
 test/data/%.json.h: test/data/%.json
 	@$(MKDIR_P) $(@D)

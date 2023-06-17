@@ -5,7 +5,7 @@
 
 #include <script/script.h>
 #include <tinyformat.h>
-#include <utilstrencodings.h>
+#include <util/strencodings.h>
 #include <assets/assets.h>
 #include <assets/assetstype.h>
 
@@ -162,7 +162,7 @@ bool CScript::IsAssetScript() const
 
 bool CScript::IsAssetScript(int& nIndex) const
 {
-    if (this->size() > 31) {  
+    if (this->size() > 31) {
         if ((*this)[25] == OP_ASSET_ID) { // OP_RTM_ASSET is always in the 25 index of the script if it exists
             nIndex = -1;
             if ((*this)[27] == RTM_R) { // Check to see if RTM starts at 27 ( this->size() < 105)

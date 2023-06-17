@@ -25,9 +25,9 @@
 class CGovernanceObjectVoteFile
 {
 public: // Types
-    typedef std::list<CGovernanceVote> vote_l_t;
+    using vote_l_t = std::list<CGovernanceVote>;
 
-    typedef std::map<uint256, vote_l_t::iterator> vote_m_t;
+    using vote_m_t = std::map<uint256, vote_l_t::iterator>;
 
 private:
     int nMemoryVotes;
@@ -66,16 +66,10 @@ public:
     void RemoveVotesFromSmartnode(const COutPoint& outpointSmartnode);
     std::set<uint256> RemoveInvalidVotes(const COutPoint& outpointSmartnode, bool fProposal);
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CGovernanceObjectVoteFile, obj)
     {
-        READWRITE(nMemoryVotes);
-        READWRITE(listVotes);
-        if (ser_action.ForRead()) {
-            RebuildIndex();
-        }
+        READWRITE(obj.nMemoryVotes, obj.listVotes);
+        SER_READ(obj, obj.RebuildIndex());
     }
 
 private:

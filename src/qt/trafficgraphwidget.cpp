@@ -8,6 +8,7 @@
 #include <qt/guiutil.h>
 
 #include <QPainter>
+#include <QPainterPath>
 #include <QColor>
 #include <QTimer>
 
@@ -16,18 +17,18 @@
 #define XMARGIN                 10
 #define YMARGIN                 10
 
-#define DEFAULT_SAMPLE_HEIGHT    1.1f
+#define DEFAULT_SAMPLE_HEIGHT   1.1f
 
 TrafficGraphWidget::TrafficGraphWidget(QWidget *parent) :
     QWidget(parent),
-    timer(0),
+    timer(nullptr),
     fMax(DEFAULT_SAMPLE_HEIGHT),
     nMins(0),
-    clientModel(0),
+    clientModel(nullptr),
     trafficGraphData(TrafficGraphData::Range_30m)
 {
     timer = new QTimer(this);
-    connect(timer, SIGNAL(timeout()), SLOT(updateRates()));
+    connect(timer, &QTimer::timeout, this, &TrafficGraphWidget::updateRates);
     timer->setInterval(TrafficGraphData::SMALLEST_SAMPLE_PERIOD);
     timer->start();
 }
@@ -44,7 +45,6 @@ int TrafficGraphWidget::getGraphRangeMins() const
 {
     return nMins;
 }
-
 
 void TrafficGraphWidget::paintPath(QPainterPath &path, const TrafficGraphData::SampleQueue &queue, SampleChooser chooser)
 {

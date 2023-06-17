@@ -315,9 +315,9 @@ QVariant BitcoinUnits::data(const int &row, int role) const
 
 CAmount BitcoinUnits::maxMoney()
 {
-    if(Params().IsFutureActive(chainActive.Tip())){
-        return MAX_MONEY;    
+    if(Params().IsFutureActive(::ChainActive().Tip())){
+        return MAX_MONEY;
     }else{
-        return OLD_MAX_MONEY;  
+        return OLD_MAX_MONEY;
     }
 }

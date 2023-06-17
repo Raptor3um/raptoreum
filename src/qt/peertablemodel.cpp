@@ -9,8 +9,6 @@
 #include <qt/guiutil.h>
 
 #include <interfaces/node.h>
-#include <validation.h> // for cs_main
-#include <sync.h>
 
 #include <QDebug>
 #include <QList>
@@ -33,7 +31,7 @@ bool NodeLessThan::operator()(const CNodeCombinedStats &left, const CNodeCombine
     case PeerTableModel::Subversion:
         return pLeft->cleanSubVer.compare(pRight->cleanSubVer) < 0;
     case PeerTableModel::Ping:
-        return pLeft->dMinPing < pRight->dMinPing;
+        return pLeft->m_min_ping_usec < pRight->m_min_ping_usec;
     case PeerTableModel::Sent:
         return pLeft->nSendBytes < pRight->nSendBytes;
     case PeerTableModel::Received:
@@ -66,7 +64,7 @@ public:
             node.getNodesStats(nodes_stats);
             cachedNodeStats.reserve(nodes_stats.size());
 
-            for (auto& node_stats : nodes_stats)
+            for (const auto& node_stats : nodes_stats)
             {
                 CNodeCombinedStats stats;
                 stats.nodeStats = std::get<0>(node_stats);
@@ -97,7 +95,7 @@ public:
         if (idx >= 0 && idx < cachedNodeStats.size())
             return &cachedNodeStats[idx];
 
-        return 0;
+        return nullptr;
     }
 };
 
@@ -105,7 +103,7 @@ PeerTableModel::PeerTableModel(interfaces::Node& node, ClientModel *parent) :
     QAbstractTableModel(parent),
     m_node(node),
     clientModel(parent),
-    timer(0)
+    timer(nullptr)
 {
     columns << tr("NodeId") << tr("Node/Service") << tr("Ping") << tr("Sent") << tr("Received") << tr("User Agent");
     priv.reset(new PeerTablePriv());
@@ -114,7 +112,7 @@ PeerTableModel::PeerTableModel(interfaces::Node& node, ClientModel *parent) :
 
     // set up timer for auto refresh
     timer = new QTimer(this);
-    connect(timer, SIGNAL(timeout()), SLOT(refresh()));
+    connect(timer, &QTimer::timeout, this, &PeerTableModel::refresh);
     timer->setInterval(MODEL_UPDATE_DELAY);
 
     // load initial data
@@ -166,7 +164,7 @@ QVariant PeerTableModel::data(const QModelIndex &index, int role) const
         case Subversion:
             return QString::fromStdString(rec->nodeStats.cleanSubVer);
         case Ping:
-            return GUIUtil::formatPingTime(rec->nodeStats.dMinPing);
+            return GUIUtil::formatPingTime(rec->nodeStats.m_min_ping_usec);
         case Sent:
             return GUIUtil::formatBytes(rec->nodeStats.nSendBytes);
         case Received:
@@ -200,8 +198,7 @@ QVariant PeerTableModel::headerData(int section, Qt::Orientation orientation, in
 
 Qt::ItemFlags PeerTableModel::flags(const QModelIndex &index) const
 {
-    if(!index.isValid())
-        return 0;
+    if (!index.isValid()) return Qt::NoItemFlags;
 
     Qt::ItemFlags retval = Qt::ItemIsSelectable | Qt::ItemIsEnabled;
     return retval;

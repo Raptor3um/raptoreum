@@ -51,7 +51,7 @@ public:
         currentUnit(BitcoinUnits::RTM),
         assetUnit(-1) {}
 
-    State validate(QString &input, int &pos) const
+    State validate(QString &input, int &pos) const override
     {
         if(input.isEmpty())
             return QValidator::Intermediate;
@@ -88,7 +88,7 @@ public:
         setAlignment(Qt::AlignLeft);
         amountValidator = new AmountValidator(this);
         setValidator(amountValidator);
-        connect(this, SIGNAL(textEdited(QString)), this, SIGNAL(valueChanged()));
+        connect(this, &QLineEdit::textEdited, this, &AmountLineEdit::valueChanged);
     }
 
     void fixup(const QString &input)
@@ -101,7 +101,7 @@ public:
         }
     }
 
-    CAmount value(bool *valid_out=0) const
+    CAmount value(bool *valid_out= nullptr) const
     {
         return parse(text(), currentUnit, assetUnit, valid_out);
     }
@@ -130,25 +130,25 @@ public:
     {
         if (unit > MAX_ASSET_UNITS)
             unit = MAX_ASSET_UNITS;
-        
+
         assetUnit = unit;
         amountValidator->updateAssetUnit(unit);
 
         bool valid = false;
         CAmount val = value(&valid);
-        
+
         if(valid)
             setValue(val);
         else
             clear();
     }
 
-    QSize minimumSizeHint() const
+    QSize minimumSizeHint() const override
     {
         ensurePolished();
         const QFontMetrics fm(fontMetrics());
         int h = 0;
-        int w = fm.width(BitcoinUnits::format(BitcoinUnits::RTM, BitcoinUnits::maxMoney(), false, BitcoinUnits::separatorAlways));
+        int w = GUIUtil::TextWidth(fm, BitcoinUnits::format(BitcoinUnits::RTM, BitcoinUnits::maxMoney(), false, BitcoinUnits::separatorAlways));
         w += 2; // cursor blinking space
         w += GUIUtil::raptoreumThemeActive() ? 24 : 0; // counteract padding from css
         return QSize(w, h);
@@ -159,7 +159,7 @@ private:
     int assetUnit;
 
 protected:
-    bool event(QEvent *event)
+    bool event(QEvent *event) override
     {
         if (event->type() == QEvent::KeyPress || event->type() == QEvent::KeyRelease)
         {
@@ -190,7 +190,7 @@ Q_SIGNALS:
 
 BitcoinAmountField::BitcoinAmountField(QWidget *parent) :
     QWidget(parent),
-    amount(0),
+    amount(nullptr),
     assetUnit(-1)
 {
     amount = new AmountLineEdit(this);
@@ -211,7 +211,7 @@ BitcoinAmountField::BitcoinAmountField(QWidget *parent) :
     setFocusProxy(amount);
 
     // If one if the widgets changes, the combined content changes as well
-    connect(amount, SIGNAL(valueChanged()), this, SIGNAL(valueChanged()));
+    connect(amount, &AmountLineEdit::valueChanged, this, &BitcoinAmountField::valueChanged);
 }
 
 void BitcoinAmountField::clear()

@@ -4,32 +4,43 @@
 
 #include <rpc/server.h>
 #include <rpc/client.h>
+#include <rpc/util.h>
 
 #include <core_io.h>
+#include <interfaces/chain.h>
 #include <key_io.h>
 #include <netbase.h>
 
 #include <test/test_raptoreum.h>
+#include <node/context.h>
+#include <util/ref.h>
+#include <util/time.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include <univalue.h>
 
-UniValue CallRPC(std::string args)
+class RPCTestingSetup : public TestingSetup
+{
+public:
+    UniValue CallRPC(std::string args);
+};
+
+UniValue RPCTestingSetup::CallRPC(std::string args)
 {
     std::vector<std::string> vArgs;
     boost::split(vArgs, args, boost::is_any_of(" \t"));
     std::string strMethod = vArgs[0];
     vArgs.erase(vArgs.begin());
-    JSONRPCRequest request;
+    util::Ref context{m_node};
+    JSONRPCRequest request(context);
     request.strMethod = strMethod;
     request.params = RPCConvertValues(strMethod, vArgs);
     request.fHelp = false;
-    BOOST_CHECK(tableRPC[strMethod]);
-    rpcfn_type method = tableRPC[strMethod]->actor;
+    if (RPCIsInWarmup(nullptr)) SetRPCWarmupFinished();
     try {
-        UniValue result = (*method)(request);
+        UniValue result = tableRPC.execute(request);
         return result;
     }
     catch (const UniValue& objError) {
@@ -38,7 +49,7 @@ UniValue CallRPC(std::string args)
 }
 
 
-BOOST_FIXTURE_TEST_SUITE(rpc_tests, TestingSetup)
+BOOST_FIXTURE_TEST_SUITE(rpc_tests, RPCTestingSetup)
 
 BOOST_AUTO_TEST_CASE(rpc_rawparams)
 {

@@ -15,6 +15,7 @@ class SendCoinsRecipient;
 class WalletModel;
 class WalletView;
 class SendFuturesRecipient;
+class SmartnodeList;
 
 QT_BEGIN_NAMESPACE
 class QStackedWidget;
@@ -32,14 +33,14 @@ class WalletFrame : public QFrame
     Q_OBJECT
 
 public:
-    explicit WalletFrame(BitcoinGUI* _gui = 0);
+    explicit WalletFrame(BitcoinGUI* _gui = nullptr);
     ~WalletFrame();
 
     void setClientModel(ClientModel *clientModel);
 
     bool addWallet(WalletModel *walletModel);
-    bool setCurrentWallet(const QString& name);
-    bool removeWallet(const QString &name);
+    void setCurrentWallet(WalletModel* wallet_model);
+    void removeWallet(WalletModel* wallet_model);
     void removeAllWallets();
 
     bool handlePaymentRequest(const SendCoinsRecipient& recipient);
@@ -54,12 +55,14 @@ private:
     QStackedWidget *walletStack;
     BitcoinGUI *gui;
     ClientModel *clientModel;
-    QMap<QString, WalletView*> mapWalletViews;
+    QMap<WalletModel*, WalletView*> mapWalletViews;
+    SmartnodeList* smartnodeListPage;
 
     bool bOutOfSync;
 
 public:
-    WalletView *currentWalletView();
+    WalletView* currentWalletView() const;
+    WalletModel* currentWalletModel() const;
 
 public Q_SLOTS:
     /** Switch to overview (home) page */

@@ -3,13 +3,18 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <evo/simplifiedmns.h>
+
 #include <evo/cbtx.h>
 #include <core_io.h>
 #include <evo/deterministicmns.h>
 #include <llmq/quorums_blockprocessor.h>
 #include <llmq/quorums_commitment.h>
-#include <evo/simplifiedmns.h>
 #include <evo/specialtx.h>
+
+#include <pubkey.h>
+#include <serialize.h>
+#include <version.h>
 
 #include <base58.h>
 #include <chainparams.h>
@@ -88,6 +93,16 @@ uint256 CSimplifiedMNList::CalcMerkleRoot(bool* pmutated) const
     return ComputeMerkleRoot(leaves, pmutated);
 }
 
+bool CSimplifiedMNList::operator==(const CSimplifiedMNList& rhs) const
+{
+    return mnList.size() == rhs.mnList.size() && std::equal(mnList.begin(), mnList.end(), rhs.mnList.begin(),
+        [](const std::unique_ptr<CSimplifiedMNListEntry>& left, const std::unique_ptr<CSimplifiedMNListEntry>& right)
+        {
+            return *left == *right;
+        }
+    );
+}
+
 CSimplifiedMNListDiff::CSimplifiedMNListDiff() = default;
 
 CSimplifiedMNListDiff::~CSimplifiedMNListDiff() = default;
@@ -99,13 +114,13 @@ bool CSimplifiedMNListDiff::BuildQuorumsDiff(const CBlockIndex* baseBlockIndex, 
 
     std::set<std::pair<Consensus::LLMQType, uint256>> baseQuorumHashes;
     std::set<std::pair<Consensus::LLMQType, uint256>> quorumHashes;
-    for (auto& p : baseQuorums) {
-        for (auto& p2 : p.second) {
+    for (const auto& p : baseQuorums) {
+        for (const auto& p2 : p.second) {
             baseQuorumHashes.emplace(p.first, p2->GetBlockHash());
         }
     }
-    for (auto& p : quorums) {
-        for (auto& p2 : p.second) {
+    for (const auto& p : quorums) {
+        for (const auto& p2 : p.second) {
             quorumHashes.emplace(p.first, p2->GetBlockHash());
         }
     }
@@ -117,12 +132,12 @@ bool CSimplifiedMNListDiff::BuildQuorumsDiff(const CBlockIndex* baseBlockIndex, 
     }
     for (auto& p : quorumHashes) {
         if (!baseQuorumHashes.count(p)) {
-            llmq::CFinalCommitment qc;
             uint256 minedBlockHash;
-            if (!llmq::quorumBlockProcessor->GetMinedCommitment(p.first, p.second, qc, minedBlockHash)) {
+            llmq::CFinalCommitmentPtr qc = llmq::quorumBlockProcessor->GetMinedCommitment(p.first, p.second, minedBlockHash);
+            if (qc == nullptr) {
                 return false;
             }
-            newQuorums.emplace_back(qc);
+            newQuorums.emplace_back(*qc);
         }
     }
     return true;
@@ -137,7 +152,7 @@ void CSimplifiedMNListDiff::ToJson(UniValue& obj) const
 
     CDataStream ssCbTxMerkleTree(SER_NETWORK, PROTOCOL_VERSION);
     ssCbTxMerkleTree << cbTxMerkleTree;
-    obj.pushKV("cbTxMerkleTree", HexStr(ssCbTxMerkleTree.begin(), ssCbTxMerkleTree.end()));
+    obj.pushKV("cbTxMerkleTree", HexStr(ssCbTxMerkleTree));
 
     obj.pushKV("cbTx", EncodeHexTx(*cbTx));
 
@@ -186,7 +201,7 @@ bool BuildSimplifiedMNListDiff(const uint256& baseBlockHash, const uint256& bloc
     AssertLockHeld(cs_main);
     mnListDiffRet = CSimplifiedMNListDiff();
 
-    const CBlockIndex* baseBlockIndex = chainActive.Genesis();
+    const CBlockIndex* baseBlockIndex = ::ChainActive().Genesis();
     if (!baseBlockHash.IsNull()) {
         baseBlockIndex = LookupBlockIndex(baseBlockHash);
         if (!baseBlockIndex) {
@@ -201,7 +216,7 @@ bool BuildSimplifiedMNListDiff(const uint256& baseBlockHash, const uint256& bloc
         return false;
     }
 
-    if (!chainActive.Contains(baseBlockIndex) || !chainActive.Contains(blockIndex)) {
+    if (!::ChainActive().Contains(baseBlockIndex) || !::ChainActive().Contains(blockIndex)) {
         errorRet = strprintf("block %s and %s are not in the same chain", baseBlockHash.ToString(), blockHash.ToString());
         return false;
     }

@@ -39,7 +39,7 @@ if [ "$BUILD_TARGET" = "arm-linux" ]; then
   export CHECK_DOC=1
   # -Wno-psabi is to disable ABI warnings: "note: parameter passing for argument of type ... changed in GCC 7.1"
   # This could be removed once the ABI change warning does not show up by default
-  export BITCOIN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports CXXFLAGS=-Wno-psabi"
+  export BITCOIN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports --enable-suppress-external-warnings --enable-werror CXXFLAGS=-Wno-psabi"
 elif [ "$BUILD_TARGET" = "win32" ]; then
   export HOST=i686-w64-mingw32
   export DPKG_ADD_ARCH="i386"
@@ -63,6 +63,14 @@ elif [ "$BUILD_TARGET" = "linux64" ]; then
   export HOST=x86_64-unknown-linux-gnu
   export DEP_OPTS="NO_UPNP=1 DEBUG=1"
   export BITCOIN_CONFIG="--enable-zmq --enable-glibc-back-compat --enable-reduce-exports --enable-crash-hooks"
+  export CPPFLAGS="-DDEBUG_LOCKORDER -DENABLE_RAPTOREUM_DEBUG"
+  export PYZMQ=true
+  export RUN_UNITTESTS=true
+  export RUN_INTEGRATIONTESTS=true
+elif [ "$BUILD_TARGET" = "linux64_cxx17" ]; then
+  export HOST=x86_64-unknown-linux-gnu
+  export DEP_OPTS="NO_UPNP=1 DEBUG=1"
+  export BITCOIN_CONFIG="--enable-zmq --enable-glibc-back-compat --enable-reduce-exports --enable-crash-hooks --enable-c++17 --enable-suppress-external-warnings --enable-werror --with-sanitizers=undefined"
   export CPPFLAGS="-DDEBUG_LOCKORDER -DENABLE_RAPTOREUM_DEBUG"
   export PYZMQ=true
   export RUN_UNITTESTS=true

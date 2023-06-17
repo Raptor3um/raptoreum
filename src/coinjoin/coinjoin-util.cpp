@@ -3,7 +3,6 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <coinjoin/coinjoin-util.h>
-#include <consensus/validation.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
 #include <script/sign.h>
@@ -11,14 +10,15 @@
 #include <wallet/fees.h>
 #include <wallet/wallet.h>
 
+#include <numeric>
+
 inline unsigned int GetSizeOfCompactSizeDiff(uint64_t nSizePrev, uint64_t nSizeNew)
 {
     assert(nSizePrev <= nSizeNew);
     return ::GetSizeOfCompactSize(nSizeNew) - ::GetSizeOfCompactSize(nSizePrev);
 }
 
-CKeyHolder::CKeyHolder(CWallet* pwallet) :
-    reserveKey(pwallet)
+CKeyHolder::CKeyHolder(CWallet* pwallet) : reserveKey(pwallet)
 {
     reserveKey.GetReservedKey(pubKey, false);
 }
@@ -41,7 +41,7 @@ CScript CKeyHolder::GetScriptForDestination() const
 
 CScript CKeyHolderStorage::AddKey(CWallet* pwallet)
 {
-    auto keyHolderPtr = std::unique_ptr<CKeyHolder>(new CKeyHolder(pwallet));
+    auto keyHolderPtr = std::make_unique<CKeyHolder>(pwallet);
     auto script = keyHolderPtr->GetScriptForDestination();
 
     LOCK(cs_storage);
@@ -60,7 +60,7 @@ void CKeyHolderStorage::KeepAll()
     }
 
     if (!tmp.empty()) {
-        for (auto& key : tmp) {
+        for (const auto& key : tmp) {
             key->KeepKey();
         }
         LogPrintf("CKeyHolderStorage::%s -- %lld keys kept\n", __func__, tmp.size());
@@ -77,7 +77,7 @@ void CKeyHolderStorage::ReturnAll()
     }
 
     if (!tmp.empty()) {
-        for (auto& key : tmp) {
+        for (const auto& key : tmp) {
             key->ReturnKey();
         }
         LogPrintf("CKeyHolderStorage::%s -- %lld keys returned\n", __func__, tmp.size());
@@ -97,7 +97,6 @@ CTransactionBuilderOutput::CTransactionBuilderOutput(CTransactionBuilder* pTxBui
 
 bool CTransactionBuilderOutput::UpdateAmount(const CAmount nNewAmount)
 {
-    LOCK(pTxBuilder->cs_outputs);
     if (nNewAmount <= 0 || nNewAmount - nAmount > pTxBuilder->GetAmountLeft()) {
         return false;
     }
@@ -111,9 +110,9 @@ CTransactionBuilder::CTransactionBuilder(std::shared_ptr<CWallet> pwalletIn, con
     tallyItem(tallyItemIn)
 {
     // Generate a feerate which will be used to consider if the remainder is dust and will go into fees or not
-    coinControl.m_discard_feerate = ::GetDiscardRate(::feeEstimator);
+    coinControl.m_discard_feerate = ::GetDiscardRate(*pwallet.get());
     // Generate a feerate which will be used by calculations of this class and also by CWallet::CreateTransaction
-    coinControl.m_feerate = std::max(::feeEstimator.estimateSmartFee((int)::nTxConfirmTarget, nullptr, true), payTxFee);
+    coinControl.m_feerate = std::max(::feeEstimator.estimateSmartFee((int)pwallet->m_confirm_target, nullptr, true), pwallet->m_pay_tx_fee);
     // Change always goes back to origin
     coinControl.destChange = tallyItemIn.txdest;
     // Only allow tallyItems inputs for tx creation
@@ -139,14 +138,14 @@ CTransactionBuilder::CTransactionBuilder(std::shared_ptr<CWallet> pwalletIn, con
         for (const auto& coin : tallyItem.vecInputCoins) {
             const CScript& scriptPubKey = coin.txout.scriptPubKey;
             SignatureData sigdata;
-            bool res = ProduceSignature(DummySignatureCreator(pwallet.get()), scriptPubKey, sigdata);
+            bool res = ProduceSignature(*pwallet, DUMMY_SIGNATURE_CREATOR, scriptPubKey, sigdata);
             assert(res);
-            UpdateTransaction(dummyTx, nIn, sigdata);
+            UpdateInput(dummyTx.vin[nIn], sigdata);
             nIn++;
         }
     }
     // Calculate required bytes for the dummy tx with tallyItem's inputs only
-    nBytesBase = ::GetSerializeSize(dummyTx, SER_NETWORK, PROTOCOL_VERSION);
+    nBytesBase = ::GetSerializeSize(CTransaction(dummyTx), SER_NETWORK, PROTOCOL_VERSION);
     // Calculate the output size
     nBytesOutput = ::GetSerializeSize(CTxOut(0, dummyScript), SER_NETWORK, PROTOCOL_VERSION);
     // Just to make sure..
@@ -207,8 +206,8 @@ bool CTransactionBuilder::CouldAddOutputs(const std::vector<CAmount>& vecOutputA
 
 CTransactionBuilderOutput* CTransactionBuilder::AddOutput(CAmount nAmountOutput)
 {
-    LOCK(cs_outputs);
     if (CouldAddOutput(nAmountOutput)) {
+        LOCK(cs_outputs);
         vecOutputs.push_back(std::make_unique<CTransactionBuilderOutput>(this, pwallet, nAmountOutput));
         return vecOutputs.back().get();
     }
@@ -217,6 +216,7 @@ CTransactionBuilderOutput* CTransactionBuilder::AddOutput(CAmount nAmountOutput)
 
 unsigned int CTransactionBuilder::GetBytesTotal() const
 {
+    LOCK(cs_outputs);
     // Adding other outputs can change the serialized size of the vout size hence + GetSizeOfCompactSizeDiff()
     return nBytesBase + vecOutputs.size() * nBytesOutput + ::GetSizeOfCompactSizeDiff(0, vecOutputs.size());
 }
@@ -228,29 +228,28 @@ CAmount CTransactionBuilder::GetAmountLeft(const CAmount nAmountInitial, const C
 
 CAmount CTransactionBuilder::GetAmountUsed() const
 {
-    CAmount nAmountUsed{0};
-    for (const auto& out : vecOutputs) {
-        nAmountUsed += out->GetAmount();
-    }
-    return nAmountUsed;
+    LOCK(cs_outputs);
+    return std::accumulate(vecOutputs.begin(), vecOutputs.end(), CAmount{0}, [](const CAmount& a, const auto& b){
+        return a + b->GetAmount();
+    });
 }
 
 CAmount CTransactionBuilder::GetFee(unsigned int nBytes) const
 {
     CAmount nFeeCalc = coinControl.m_feerate->GetFee(nBytes);
-    CAmount nRequiredFee = GetRequiredFee(nBytes);
+    CAmount nRequiredFee = GetRequiredFee(*pwallet.get(), nBytes);
     if (nRequiredFee > nFeeCalc) {
         nFeeCalc = nRequiredFee;
     }
-    if (nFeeCalc > ::maxTxFee) {
-        nFeeCalc = ::maxTxFee;
+    if (nFeeCalc > pwallet->m_default_max_tx_fee) {
+        nFeeCalc = pwallet->m_default_max_tx_fee;
     }
     return nFeeCalc;
 }
 
 int CTransactionBuilder::GetSizeOfCompactSizeDiff(size_t nAdd) const
 {
-    size_t nSize = vecOutputs.size();
+    size_t nSize = WITH_LOCK(cs_outputs, return vecOutputs.size());
     unsigned int ret = ::GetSizeOfCompactSizeDiff(nSize, nSize + nAdd);
     assert(ret <= INT_MAX);
     return (int)ret;
@@ -277,8 +276,11 @@ bool CTransactionBuilder::Commit(std::string& strResult)
     }
 
     CTransactionRef tx;
-    if (!pwallet->CreateTransaction(vecSend, tx, dummyReserveKey, nFeeRet, nChangePosRet, strResult, coinControl)) {
-        return false;
+    {
+        LOCK2(pwallet->cs_wallet, cs_main);
+        if (!pwallet->CreateTransaction(vecSend, tx, nFeeRet, nChangePosRet, strResult, coinControl)) {
+            return false;
+        }
     }
 
     CAmount nAmountLeft = GetAmountLeft();
@@ -312,10 +314,9 @@ bool CTransactionBuilder::Commit(std::string& strResult)
         return false;
     }
 
-    CValidationState state;
-    if (!pwallet->CommitTransaction(tx, {}, {}, {}, dummyReserveKey, g_connman.get(), state)) {
-        strResult = state.GetRejectReason();
-        return false;
+    {
+        LOCK2(pwallet->cs_wallet, cs_main);
+        pwallet->CommitTransaction(tx, {}, {});
     }
 
     fKeepKeys = true;

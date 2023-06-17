@@ -3,20 +3,19 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <evo/specialtx.h>
+
 #include <chainparams.h>
 #include <consensus/validation.h>
 #include <hash.h>
 #include <primitives/block.h>
 #include <validation.h>
-
 #include <evo/cbtx.h>
 #include <evo/deterministicmns.h>
-#include <evo/specialtx.h>
-
 #include <llmq/quorums_commitment.h>
 #include <llmq/quorums_blockprocessor.h>
 
-bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, const CCoinsViewCache& view, CAssetsCache* assetsCache)
+bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, const CCoinsViewCache& view, CAssetsCache* assetsCache, bool check_sigs)
 {
     if (tx.nVersion != 3 || tx.nType == TRANSACTION_NORMAL)
         return true;
@@ -28,13 +27,13 @@ bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVali
     try {
         switch (tx.nType) {
         case TRANSACTION_PROVIDER_REGISTER:
-            return CheckProRegTx(tx, pindexPrev, state, view);
+            return CheckProRegTx(tx, pindexPrev, state, view, check_sigs);
         case TRANSACTION_PROVIDER_UPDATE_SERVICE:
-            return CheckProUpServTx(tx, pindexPrev, state);
+            return CheckProUpServTx(tx, pindexPrev, state, check_sigs);
         case TRANSACTION_PROVIDER_UPDATE_REGISTRAR:
-            return CheckProUpRegTx(tx, pindexPrev, state, view);
+            return CheckProUpRegTx(tx, pindexPrev, state, view, check_sigs);
         case TRANSACTION_PROVIDER_UPDATE_REVOKE:
-            return CheckProUpRevTx(tx, pindexPrev, state);
+            return CheckProUpRevTx(tx, pindexPrev, state, check_sigs);
         case TRANSACTION_COINBASE:
             return CheckCbTx(tx, pindexPrev, state);
         case TRANSACTION_QUORUM_COMMITMENT:
@@ -46,7 +45,7 @@ bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVali
         case TRANSACTION_UPDATE_ASSET:
           	return CheckUpdateAssetTx(tx, pindexPrev, state, view, assetsCache);
         case TRANSACTION_MINT_ASSET:
-          	return CheckMintAssetTx(tx, pindexPrev, state, view, assetsCache);         
+          	return CheckMintAssetTx(tx, pindexPrev, state, view, assetsCache);
         }
     } catch (const std::exception& e) {
         LogPrintf("%s -- failed: %s\n", __func__, e.what());
@@ -114,6 +113,8 @@ bool UndoSpecialTx(const CTransaction& tx, const CBlockIndex* pindex)
 
 bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, CValidationState& state, const CCoinsViewCache& view, CAssetsCache* assetsCache, bool fJustCheck, bool fCheckCbTxMerleRoots)
 {
+    AssertLockHeld(cs_main);
+
     try {
         static int64_t nTimeLoop = 0;
         static int64_t nTimeQuorum = 0;
@@ -122,13 +123,12 @@ bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, CV
 
         int64_t nTime1 = GetTimeMicros();
 
-        for (int i = 0; i < (int)block.vtx.size(); i++) {
-            const CTransaction& tx = *block.vtx[i];
-            if (!CheckSpecialTx(tx, pindex->pprev, state, view, assetsCache)) {
+        for (const auto& ptr_tx : block.vtx) {
+            if (!CheckSpecialTx(*ptr_tx, pindex->pprev, state, view, assetsCache, fCheckCbTxMerleRoots)) {
                 // pass the state returned by the function above
                 return false;
             }
-            if (!ProcessSpecialTx(tx, pindex, state)) {
+            if (!ProcessSpecialTx(*ptr_tx, pindex, state)) {
                 // pass the state returned by the function above
                 return false;
             }
@@ -137,7 +137,7 @@ bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, CV
         int64_t nTime2 = GetTimeMicros(); nTimeLoop += nTime2 - nTime1;
         LogPrint(BCLog::BENCHMARK, "        - Loop: %.2fms [%.2fs]\n", 0.001 * (nTime2 - nTime1), nTimeLoop * 0.000001);
 
-        if (!llmq::quorumBlockProcessor->ProcessBlock(block, pindex, state, fJustCheck)) {
+        if (!llmq::quorumBlockProcessor->ProcessBlock(block, pindex, state, fJustCheck, fCheckCbTxMerleRoots)) {
             // pass the state returned by the function above
             return false;
         }
@@ -170,6 +170,8 @@ bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, CV
 
 bool UndoSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex)
 {
+    AssertLockHeld(cs_main);
+
     try {
         for (int i = (int)block.vtx.size() - 1; i >= 0; --i) {
             const CTransaction& tx = *block.vtx[i];

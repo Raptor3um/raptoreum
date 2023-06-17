@@ -7,7 +7,6 @@
 #ifndef BITCOIN_QT_CLIENTMODEL_H
 #define BITCOIN_QT_CLIENTMODEL_H
 
-#include <evo/deterministicmns.h>
 #include <interfaces/node.h>
 #include <sync.h>
 
@@ -41,20 +40,21 @@ enum NumConnections {
     CONNECTIONS_ALL  = (CONNECTIONS_IN | CONNECTIONS_OUT),
 };
 
+class CDeterministicMNList;
+using CDeterministicMNListPtr = std::shared_ptr<CDeterministicMNList>;
+
 /** Model for Raptoreum network client. */
 class ClientModel : public QObject
 {
     Q_OBJECT
 
 public:
-    explicit ClientModel(interfaces::Node& node, OptionsModel *optionsModel, QObject *parent = 0);
+    explicit ClientModel(interfaces::Node& node, OptionsModel *optionsModel, QObject *parent = nullptr);
     ~ClientModel();
 
     interfaces::Node& node() const { return m_node; }
     interfaces::Smartnode::Sync& smartnodeSync() const { return m_node.smartnodeSync(); }
-#ifdef ENABLE_WALLET
     interfaces::CoinJoin::Options& coinJoinOptions() const { return m_node.coinJoinOptions(); }
-#endif
     OptionsModel *getOptionsModel();
     PeerTableModel *getPeerTableModel();
     BanTableModel *getBanTableModel();
@@ -78,6 +78,9 @@ public:
     bool isReleaseVersion() const;
     QString formatClientStartupTime() const;
     QString dataDir() const;
+    QString blocksDir() const;
+
+    bool getProxyInfo(std::string& ip_port) const;
 
     // caches for the best header
     mutable std::atomic<int> cachedBestHeaderHeight;
@@ -91,6 +94,7 @@ private:
     std::unique_ptr<interfaces::Handler> m_handler_notify_alert_changed;
     std::unique_ptr<interfaces::Handler> m_handler_banned_list_changed;
     std::unique_ptr<interfaces::Handler> m_handler_notify_block_tip;
+    std::unique_ptr<interfaces::Handler> m_handler_notify_chainlock;
     std::unique_ptr<interfaces::Handler> m_handler_notify_header_tip;
     std::unique_ptr<interfaces::Handler> m_handler_notify_smartnodelist_changed;
     std::unique_ptr<interfaces::Handler> m_handler_notify_additional_data_sync_progess_changed;
@@ -98,13 +102,14 @@ private:
     PeerTableModel *peerTableModel;
     BanTableModel *banTableModel;
 
-    QTimer *pollTimer;
+    //! A thread tp interact with m_node asynchronously
+    QThread* const m_thread;
 
     // The cache for mn list is not technically needed because CDeterministicMNManager
     // caches it internally for recent blocks but it's not enough to get consistent
     // representation of the list in UI during initial sync/reindex, so we cache it here too.
-    mutable CCriticalSection cs_mnlinst; // protects mnListCached
-    CDeterministicMNList mnListCached;
+    mutable RecursiveMutex cs_mnlinst; // protects mnListCached
+    CDeterministicMNListPtr mnListCached;
 
     void subscribeToCoreSignals();
     void unsubscribeFromCoreSignals();
@@ -112,6 +117,7 @@ private:
 Q_SIGNALS:
     void numConnectionsChanged(int count);
     void smartnodeListChanged() const;
+    void chainLockChanged(const QString& bestChainLockHash, int bestChainLockHeight);
     void numBlocksChanged(int count, const QDateTime& blockDate, const QString& blockHash, double nVerificationProgress, bool header);
     void additionalDataSyncProgressChanged(double nSyncProgress);
     void mempoolSizeChanged(long count, size_t mempoolSizeInBytes);
@@ -126,7 +132,6 @@ Q_SIGNALS:
     void showProgress(const QString &title, int nProgress);
 
 public Q_SLOTS:
-    void updateTimer();
     void updateNumConnections(int numConnections);
     void updateNetworkActive(bool networkActive);
     void updateAlert();

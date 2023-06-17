@@ -2,7 +2,7 @@
 // Copyright (c) 2020-2022 The Raptoreum developers
 
 #include <governance/governance-validators.h>
-#include <utilstrencodings.h>
+#include <util/strencodings.h>
 
 #include <test/data/proposals_valid.json.h>
 #include <test/data/proposals_invalid.json.h>

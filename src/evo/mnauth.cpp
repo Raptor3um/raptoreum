@@ -5,6 +5,7 @@
 
 #include <evo/mnauth.h>
 
+#include <chainparams.h>
 #include <evo/deterministicmns.h>
 #include <llmq/quorums_utils.h>
 #include <smartnode/activesmartnode.h>
@@ -40,7 +41,7 @@ void CMNAuth::PushMNAUTH(CNode* pnode, CConnman& connman)
     if (Params().NetworkIDString() != CBaseChainParams::MAIN && gArgs.IsArgSet("-pushversion")) {
         nOurNodeVersion = gArgs.GetArg("-pushversion", PROTOCOL_VERSION);
     }
-    bool isV17active = Params().IsFutureActive(chainActive.Tip());
+		bool isV17active = Params().IsFutureActive(::ChainActive().Tip());
     if (pnode->nVersion < MNAUTH_NODE_VER_VERSION || nOurNodeVersion < MNAUTH_NODE_VER_VERSION || !isV17active) {
         signHash = ::SerializeHash(std::make_tuple(*activeSmartnodeInfo.blsPubKeyOperator, receivedMNAuthChallenge, pnode->fInbound));
     } else {
@@ -110,8 +111,8 @@ void CMNAuth::ProcessMessage(CNode* pnode, const std::string& strCommand, CDataS
         if (Params().NetworkIDString() != CBaseChainParams::MAIN && gArgs.IsArgSet("-pushversion")) {
             nOurNodeVersion = gArgs.GetArg("-pushversion", PROTOCOL_VERSION);
         }
-        // See comment in PushMNAUTH (fInbound is negated here as we're on the other side of the connection)
-        bool isV17active = Params().IsFutureActive(chainActive.Tip());
+        // See comment in PushMNAUTH (fInbound is negated here as we are on the other side of the connection)
+				bool isV17active = Params().IsFutureActive(::ChainActive().Tip());
         if (pnode->nVersion < MNAUTH_NODE_VER_VERSION || nOurNodeVersion < MNAUTH_NODE_VER_VERSION || !isV17active) {
             signHash = ::SerializeHash(std::make_tuple(dmn->pdmnState->pubKeyOperator, pnode->GetSentMNAuthChallenge(), !pnode->fInbound));
         } else {
@@ -194,14 +195,14 @@ void CMNAuth::ProcessMessage(CNode* pnode, const std::string& strCommand, CDataS
     }
 }
 
-void CMNAuth::NotifySmartnodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff)
+void CMNAuth::NotifySmartnodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff, CConnman& connman)
 {
     // we're only interested in updated/removed MNs. Added MNs are of no interest for us
     if (diff.updatedMNs.empty() && diff.removedMns.empty()) {
         return;
     }
 
-    g_connman->ForEachNode([&](CNode* pnode) {
+    connman.ForEachNode([&](CNode* pnode) {
         auto verifiedProRegTxHash = pnode->GetVerifiedProRegTxHash();
         if (verifiedProRegTxHash.IsNull()) {
             return;

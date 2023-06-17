@@ -7,8 +7,10 @@
 #include <evo/deterministicmns.h>
 #include <llmq/quorums_blockprocessor.h>
 #include <llmq/quorums_commitment.h>
+#include <llmq/quorums_utils.h>
 #include <evo/simplifiedmns.h>
 #include <evo/specialtx.h>
+#include <consensus/validation.h>
 
 #include <chain.h>
 #include <chainparams.h>
@@ -28,7 +30,7 @@ bool CheckCbTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidatio
 
     CCbTx cbTx;
     if (!GetTxPayload(tx, cbTx)) {
-    	std::cout << "fail to check GetTxPayload " << tx.ToString() << endl;
+    	std::cout << "fail to check GetTxPayload " << tx.ToString() << std::endl;
         return state.DoS(100, false, REJECT_INVALID, "bad-cbtx-payload");
     }
 
@@ -81,7 +83,7 @@ bool CheckCbTxMerkleRoots(const CBlock& block, const CBlockIndex* pindex, CValid
             return false;
         }
         if (calculatedMerkleRoot != cbTx.merkleRootMNList) {
-        	std::cout << "calculatedMerkleRoot !=  cbTx.merkleRootMNList " << calculatedMerkleRoot.GetHex() << "!=" <<  cbTx.merkleRootMNList.GetHex() << endl;
+        	std::cout << "calculatedMerkleRoot !=  cbTx.merkleRootMNList " << calculatedMerkleRoot.GetHex() << "!=" <<  cbTx.merkleRootMNList.GetHex() << std::endl;
             return state.DoS(100, false, REJECT_INVALID, "bad-cbtx-mnmerkleroot");
         }
 
@@ -135,7 +137,7 @@ bool CalcCbTxMerkleRootMNList(const CBlock& block, const CBlockIndex* pindexPrev
         static uint256 merkleRootCached;
         static bool mutatedCached{false};
 
-        if (sml.mnList == smlCached.mnList) {
+        if (sml == smlCached) {
             merkleRootRet = merkleRootCached;
             if (mutatedCached) {
                 return state.DoS(100, false, REJECT_INVALID, "mutated-cached-calc-cb-mnmerkleroot");
@@ -192,11 +194,10 @@ bool CalcCbTxMerkleRootQuorums(const CBlock& block, const CBlockIndex* pindexPre
             auto& v = qcHashes[p.first];
             v.reserve(p.second.size());
             for (const auto& p2 : p.second) {
-                llmq::CFinalCommitment qc;
                 uint256 minedBlockHash;
-                bool found = llmq::quorumBlockProcessor->GetMinedCommitment(p.first, p2->GetBlockHash(), qc, minedBlockHash);
-                if (!found) return state.DoS(100, false, REJECT_INVALID, "commitment-not-found");
-                v.emplace_back(::SerializeHash(qc));
+                llmq::CFinalCommitmentPtr qc = llmq::quorumBlockProcessor->GetMinedCommitment(p.first, p2->GetBlockHash(), minedBlockHash);
+                if (qc == nullptr) return state.DoS(100, false, REJECT_INVALID, "commitment-not-found");
+                v.emplace_back(::SerializeHash(*qc));
                 hashCount++;
             }
         }
@@ -221,9 +222,9 @@ bool CalcCbTxMerkleRootQuorums(const CBlock& block, const CBlockIndex* pindexPre
                 continue;
             }
             auto qcHash = ::SerializeHash(qc.commitment);
-            const auto& params = Params().GetConsensus().llmqs.at((Consensus::LLMQType)qc.commitment.llmqType);
-            auto& v = qcHashes[params.type];
-            if (v.size() == params.signingActiveQuorumCount) {
+            const auto& llmq_params = llmq::GetLLMQParams(qc.commitment.llmqType);
+            auto& v = qcHashes[llmq_params.type];
+            if (v.size() == size_t(llmq_params.signingActiveQuorumCount)) {
                 // we pop the last entry, which is actually the oldest quorum as GetMinedAndActiveCommitmentsUntilBlock
                 // returned quorums in reversed order. This pop and later push can only work ONCE, but we rely on the
                 // fact that a block can only contain a single commitment for one LLMQ type
@@ -231,7 +232,7 @@ bool CalcCbTxMerkleRootQuorums(const CBlock& block, const CBlockIndex* pindexPre
             }
             v.emplace_back(qcHash);
             hashCount++;
-            if (v.size() > params.signingActiveQuorumCount) {
+            if (v.size() > uint64_t(llmq_params.signingActiveQuorumCount)) {
                 return state.DoS(100, false, REJECT_INVALID, "excess-quorums-calc-cbtx-quorummerkleroot");
             }
         }

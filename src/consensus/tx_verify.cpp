@@ -22,9 +22,10 @@
 // TODO remove the following dependencies
 #include <chain.h>
 #include <coins.h>
-#include <utilmoneystr.h>
+#include <util/moneystr.h>
+#include <version.h>
 
-extern CChain& chainActive;
+CChain& ChainActive();
 
 static bool checkSpecialTxFee(const CTransaction &tx, CAmount& nFeeTotal, CAmount& specialTxFee, bool fFeeVerify = false) {
 	if(tx.nVersion >= 3) {
@@ -32,7 +33,7 @@ static bool checkSpecialTxFee(const CTransaction &tx, CAmount& nFeeTotal, CAmoun
             case TRANSACTION_FUTURE: {
                 CFutureTx ftx;
                 if (GetTxPayload(tx.vExtraPayload, ftx)) {
-                    if (!Params().IsFutureActive(chainActive.Tip())) {
+                    if (!Params().IsFutureActive(::ChainActive().Tip())) {
                         return false;
                     }
                     bool futureEnabled = sporkManager.IsSporkActive(SPORK_22_SPECIAL_TX_FEE);
@@ -97,7 +98,7 @@ static bool checkSpecialTxFee(const CTransaction &tx, CAmount& nFeeTotal, CAmoun
 static const char* validateFutureCoin(const Coin& coin, int nSpendHeight)
 {
     if (coin.nType == TRANSACTION_FUTURE) {
-        CBlockIndex* confirmedBlockIndex = chainActive[coin.nHeight];
+        CBlockIndex* confirmedBlockIndex = ::ChainActive()[coin.nHeight];
         if (confirmedBlockIndex) {
             int64_t adjustCurrentTime = GetAdjustedTime();
             uint32_t confirmedTime = confirmedBlockIndex->GetBlockTime();
@@ -254,96 +255,7 @@ unsigned int GetTransactionSigOpCount(const CTransaction& tx, const CCoinsViewCa
 
     return nSigOps;
 }
-
-bool CheckTransaction(const CTransaction& tx, CValidationState &state, int nHeight, CAmount blockReward)
-{
-    bool allowEmptyTxInOut = false;
-    if (tx.nType == TRANSACTION_QUORUM_COMMITMENT) {
-        allowEmptyTxInOut = true;
-    }
-
-    // Basic checks that don't depend on any context
-    if (!allowEmptyTxInOut && tx.vin.empty())
-        return state.DoS(10, false, REJECT_INVALID, "bad-txns-vin-empty");
-    if (!allowEmptyTxInOut && tx.vout.empty())
-        return state.DoS(10, false, REJECT_INVALID, "bad-txns-vout-empty");
-    // Size limits
-    if (::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION) > MAX_LEGACY_BLOCK_SIZE)
-        return state.DoS(100, false, REJECT_INVALID, "bad-txns-oversize");
-    if (tx.vExtraPayload.size() > MAX_TX_EXTRA_PAYLOAD)
-        return state.DoS(100, false, REJECT_INVALID, "bad-txns-payload-oversize");
-
-    // Check for negative or overflow output values
-    bool isV17active = Params().IsFutureActive(chainActive.Tip());
-    CAmount nValueOut = 0;
-    std::map<std::string, CAmount> nAssetVout;
-    for (const auto& txout : tx.vout)
-    {
-        if (txout.nValue < 0)
-            return state.DoS(100, false, REJECT_INVALID, "bad-txns-vout-negative");
-        if(isV17active){
-            if (txout.nValue > MAX_MONEY)
-                return state.DoS(100, false, REJECT_INVALID, "bad-txns-vout-toolarge");
-        }else{
-            if (txout.nValue > OLD_MAX_MONEY)
-                return state.DoS(100, false, REJECT_INVALID, "bad-txns-vout-toolarge");
-        }
-        nValueOut += txout.nValue;
-        if (!MoneyRange(nValueOut, isV17active))
-            return state.DoS(100, false, REJECT_INVALID, "bad-txns-txouttotal-toolarge");
-
-        if (txout.scriptPubKey.IsAssetScript()) {
-            CAssetTransfer assetTransfer;
-            if (!GetTransferAsset(txout.scriptPubKey, assetTransfer))
-                return state.DoS(100, false, REJECT_INVALID, "bad-txns-assets-output");
-
-            if (nAssetVout.count(assetTransfer.assetId))
-                nAssetVout[assetTransfer.assetId] += assetTransfer.nAmount;
-            else
-                nAssetVout.insert(std::make_pair(assetTransfer.assetId, assetTransfer.nAmount));
-
-            if (assetTransfer.nAmount < 0)
-                return state.DoS(100, false, REJECT_INVALID, "bad-txns-vout-negative");
-
-            if (assetTransfer.nAmount > MAX_MONEY)
-                return state.DoS(100, false, REJECT_INVALID, "bad-txns-vout-toolarge");
-
-            if (!MoneyRange(nAssetVout.at(assetTransfer.assetId), isV17active)) {
-                return state.DoS(100, false, REJECT_INVALID, "bad-txns-outputvalues-outofrange");
-            }
-        }
-    }
-
-    // Check for duplicate inputs
-    std::set<COutPoint> vInOutPoints;
-    for (const auto& txin : tx.vin)
-    {
-        if (!vInOutPoints.insert(txin.prevout).second)
-            return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputs-duplicate");
-    }
-
-    if (tx.IsCoinBase()) {
-        size_t minCbSize = 2;
-        if (tx.nType == TRANSACTION_COINBASE) {
-            // With the introduction of CbTx, coinbase scripts are not required anymore to hold a valid block height
-            minCbSize = 1;
-        }
-        if (tx.vin[0].scriptSig.size() < minCbSize || tx.vin[0].scriptSig.size() > 100)
-            return state.DoS(100, false, REJECT_INVALID, "bad-cb-length");
-        FounderPayment founderPayment = Params().GetConsensus().nFounderPayment;
-        CAmount founderReward = founderPayment.getFounderPaymentAmount(nHeight, blockReward);
-        int founderStartHeight = founderPayment.getStartBlock();
-        if (nHeight > founderStartHeight && founderReward && !founderPayment.IsBlockPayeeValid(tx, nHeight, blockReward)) {
-            return state.DoS(100, false, REJECT_INVALID, "bad-cb-founder-payment-not-found");
-        }
-    } else {
-        for (const auto& txin : tx.vin)
-            if (txin.prevout.IsNull())
-                return state.DoS(10, false, REJECT_INVALID, "bad-txns-prevout-null");
-    }
-
-    return true;
-}
+//check to see where these now
 
 inline bool checkOutput(const CTxOut& out, CValidationState& state, CAmount& nValueIn, std::map<std::pair<std::string, uint16_t>, CAmount>& nAssetVin, bool isV17active)
 {
