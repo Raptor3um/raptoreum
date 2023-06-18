@@ -1333,17 +1333,16 @@ static void MaybePushAddress(UniValue & entry, const CTxDestination &dest)
  * @param  filter_ismine The "is mine" filter bool.
  * @param  filter_labe;  Optional label string to filter incoming transactions
  */
-void ListTransactions(CWallet * const pwallet, const CWalletTx& wtx, const std::string& strAccount, int nMinDepth, bool fLong, UniValue& ret, UniValue& retAssets, const isminefilter& filter) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)
+void ListTransactions(CWallet * const pwallet, const CWalletTx& wtx, int nMinDepth, bool fLong, UniValue& ret, UniValue& retAssets, const isminefilter& filter, const std::string* filter_label) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)
 {
     CAmount nFee;
-    std::string strSentAccount;
     std::list<COutputEntry> listReceived;
     std::list<COutputEntry> listSent;
 
     std::list<CAssetOutputEntry> listAssetsReceived;
     std::list<CAssetOutputEntry> listAssetsSent;
 
-    wtx.GetAmounts(listReceived, listSent, nFee, strSentAccount, filter, listAssetsReceived, listAssetsSent);
+    wtx.GetAmounts(listReceived, listSent, nFee, filter, listAssetsReceived, listAssetsSent);
 
     bool involvesWatchonly = wtx.IsFromMe(ISMINE_WATCH_ONLY);
 
@@ -1409,7 +1408,7 @@ void ListTransactions(CWallet * const pwallet, const CWalletTx& wtx, const std::
             ret.push_back(entry);
         }
     }
-    if (Params().IsAssetsActive(chainActive.Tip())) {
+    if (Params().IsAssetsActive(::ChainActive().Tip())) {
         if (listAssetsReceived.size() > 0 && wtx.GetDepthInMainChain() >= nMinDepth) {
             for (const CAssetOutputEntry &data : listAssetsReceived){
                 UniValue entry(UniValue::VOBJ);
@@ -1425,13 +1424,13 @@ void ListTransactions(CWallet * const pwallet, const CWalletTx& wtx, const std::
                 entry.push_back(Pair("vout", data.vout));
 
                 if (fLong)
-                    WalletTxToJSON(wtx, entry);
+                    WalletTxToJSON(pwallet->chain(), wtx, entry);
                 entry.push_back(Pair("abandoned", wtx.isAbandoned()));
                 retAssets.push_back(entry);
             }
         }
 
-        if ((!listAssetsSent.empty() || nFee != 0) && (fAllAccounts || strAccount == strSentAccount)) {
+        if ((!listAssetsSent.empty() || nFee != 0) /*&& (filter_label && label == *filter_label)*/) {
             for (const CAssetOutputEntry &data : listAssetsSent) {
                 UniValue entry(UniValue::VOBJ);
 
@@ -1446,7 +1445,7 @@ void ListTransactions(CWallet * const pwallet, const CWalletTx& wtx, const std::
                 entry.push_back(Pair("vout", data.vout));
 
                 if (fLong)
-                    WalletTxToJSON(wtx, entry);
+                    WalletTxToJSON(pwallet->chain(), wtx, entry);
                 entry.push_back(Pair("abandoned", wtx.isAbandoned()));
                 retAssets.push_back(entry);
             }
@@ -1454,11 +1453,11 @@ void ListTransactions(CWallet * const pwallet, const CWalletTx& wtx, const std::
     }
 }
 
-void ListTransactions(CWallet* const pwallet, const CWalletTx& wtx, const std::string& strAccount, int nMinDepth, bool fLong, UniValue& ret, const isminefilter& filter)
+void ListTransactions(CWallet* const pwallet, const CWalletTx& wtx, int nMinDepth, bool fLong, UniValue& ret, const isminefilter& filter, const std::string* filter_label)
 {
     UniValue assetDetails(UniValue::VARR);
 
-    ListTransactions(pwallet, wtx, strAccount, nMinDepth, fLong, ret, assetDetails, filter);
+    ListTransactions(pwallet, wtx, nMinDepth, fLong, ret, assetDetails, filter, filter_label);
 }
 
 static const std::vector<RPCResult> TransactionDescriptionString()

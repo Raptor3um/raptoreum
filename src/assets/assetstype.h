@@ -36,12 +36,11 @@ public:
     }
 
     SERIALIZE_METHODS(CAssetTransfer, obj) {
+        READWRITE(obj.assetId, obj.isUnique);
         if(obj.isUnique) {
-            READWRITE(obj.assetId, obj.isUnique, obj.uniqueId, obj.nAmount);
-        } else {
-            READWRITE(obj.assetId, obj.isUnique, obj.nAmount);
-
+            READWRITE(obj.uniqueId);
         }
+        READWRITE(obj.nAmount);
     }
 
 

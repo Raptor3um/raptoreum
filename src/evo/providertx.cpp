@@ -131,7 +131,7 @@ inline bool checkNewUniqueAsset(CNewAssetTx& assetTx, CValidationState& state)
 
 bool CheckNewAssetTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, CAssetsCache* assetsCache)
 {
-    if (!Params().IsAssetsActive(chainActive.Tip())) {
+    if (!Params().IsAssetsActive(::ChainActive().Tip())) {
         return state.DoS(100, false, REJECT_INVALID, "assets-not-enabled");
     }
 
@@ -214,7 +214,7 @@ inline bool checkAssetFeesPayment(const CTransaction& tx, CValidationState& stat
 
 bool CheckUpdateAssetTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, const CCoinsViewCache& view, CAssetsCache* assetsCache)
 {
-    if (!Params().IsAssetsActive(chainActive.Tip())) {
+    if (!Params().IsAssetsActive(::ChainActive().Tip())) {
         return state.DoS(100, false, REJECT_INVALID, "assets-not-enabled");
     }
 
@@ -304,7 +304,7 @@ inline bool checkAssetMintAmount(const CTransaction& tx, CValidationState& state
 
 bool CheckMintAssetTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, const CCoinsViewCache& view, CAssetsCache* assetsCache)
 {
-    if (!Params().IsAssetsActive(chainActive.Tip())) {
+    if (!Params().IsAssetsActive(::ChainActive().Tip())) {
         return state.DoS(100, false, REJECT_INVALID, "assets-not-enabled");
     }
 

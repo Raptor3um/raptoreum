@@ -464,7 +464,7 @@ static std::string SignAndSendSpecialTx(const JSONRPCRequest& request, const CMu
 
         CValidationState state;
         CAssetsCache assetsCache = *passetsCache.get();
-        if (!CheckSpecialTx(CTransaction(tx), ::ChainActive().Tip(), state, ::ChainstateActive().CoinsTip(), true)) {
+        if (!CheckSpecialTx(CTransaction(tx), ::ChainActive().Tip(), state, ::ChainstateActive().CoinsTip(), &assetsCache, true)) {
             throw std::runtime_error(FormatStateMessage(state));
         }
     } // cs_main

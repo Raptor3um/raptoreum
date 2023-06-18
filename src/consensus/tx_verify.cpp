@@ -48,7 +48,7 @@ static bool checkSpecialTxFee(const CTransaction &tx, CAmount& nFeeTotal, CAmoun
             case TRANSACTION_NEW_ASSET: {
                 CNewAssetTx asset;
                 if (GetTxPayload(tx.vExtraPayload, asset)) {
-                    if (!Params().IsAssetsActive(chainActive.Tip())) {
+                    if (!Params().IsAssetsActive(::ChainActive().Tip())) {
                         return false;
                     }
                     bool assetsEnabled = sporkManager.IsSporkActive(SPORK_22_SPECIAL_TX_FEE);
@@ -63,7 +63,7 @@ static bool checkSpecialTxFee(const CTransaction &tx, CAmount& nFeeTotal, CAmoun
             case TRANSACTION_UPDATE_ASSET: {
                 CUpdateAssetTx asset;
                 if (GetTxPayload(tx.vExtraPayload, asset)) {
-                    if (!Params().IsAssetsActive(chainActive.Tip())) {
+                    if (!Params().IsAssetsActive(::ChainActive().Tip())) {
                         return false;
                     }
                     bool assetsEnabled = sporkManager.IsSporkActive(SPORK_22_SPECIAL_TX_FEE);
@@ -78,7 +78,7 @@ static bool checkSpecialTxFee(const CTransaction &tx, CAmount& nFeeTotal, CAmoun
             case TRANSACTION_MINT_ASSET: {
                 CMintAssetTx asset;
                 if (GetTxPayload(tx.vExtraPayload, asset)) {
-                    if (!Params().IsAssetsActive(chainActive.Tip())) {
+                    if (!Params().IsAssetsActive(::ChainActive().Tip())) {
                         return false;
                     }
                     bool assetsEnabled = sporkManager.IsSporkActive(SPORK_22_SPECIAL_TX_FEE);

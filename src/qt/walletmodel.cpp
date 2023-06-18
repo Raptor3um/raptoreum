@@ -371,28 +371,6 @@ WalletModel::SendAssetsReturn WalletModel::prepareAssetTransaction(WalletModelTr
         if (rcp.fSubtractFeeFromAmount)
             fSubtractFeeFromAmount = true;
 
-        if (rcp.paymentRequest.IsInitialized())
-        {   // PaymentRequest...
-            CAmount subtotal = 0;
-            const payments::PaymentDetails& details = rcp.paymentRequest.getDetails();
-            for (int i = 0; i < details.outputs_size(); i++)
-            {
-                const payments::Output& out = details.outputs(i);
-                if (out.amount() <= 0) continue;
-                subtotal += out.amount();
-                const unsigned char* scriptStr = (const unsigned char*)out.script().data();
-                CScript scriptPubKey(scriptStr, scriptStr+out.script().size());
-                CAmount nAmount = out.amount();
-                CRecipient recipient = {scriptPubKey, nAmount, rcp.fSubtractFeeFromAmount};
-                vecSend.push_back(recipient);
-            }
-            if (subtotal <= 0)
-            {
-                return InvalidAmount;
-            }
-            total += subtotal;
-        }
-        else
         {   // User-entered raptoreum address / amount:
             if(!validateAddress(rcp.address))
             {
@@ -463,10 +441,10 @@ WalletModel::SendAssetsReturn WalletModel::prepareAssetTransaction(WalletModelTr
         transaction.reassignAmounts();
 
     if(newTx){
-        if(!Params().IsFutureActive(chainActive.Tip())){
+        if(!Params().IsFutureActive(::ChainActive().Tip())){
             CAmount subtotal = total;
             if (nChangePosRet >= 0)
-                subtotal += newTx->get().vout.at(nChangePosRet).nValue;
+                subtotal += newTx.get()->vout.at(nChangePosRet).nValue;
             if(!fSubtractFeeFromAmount)
                 subtotal += nFeeRequired;
             if (subtotal > OLD_MAX_MONEY){
@@ -488,7 +466,7 @@ WalletModel::SendAssetsReturn WalletModel::prepareAssetTransaction(WalletModelTr
     // reject absurdly high fee. (This can never happen because the
     // wallet caps the fee at maxTxFee. This merely serves as a
     // belt-and-suspenders check)
-    if (nFeeRequired > m_node.getMaxTxFee())
+    if (nFeeRequired > m_wallet->getDefaultMaxTxFee())
         return AbsurdFee;
 
     return SendAssetsReturn(OK);
@@ -501,19 +479,7 @@ WalletModel::SendAssetsReturn WalletModel::sendAssets(WalletModelTransaction &tr
         std::vector<std::pair<std::string, std::string>> vOrderForm;
         for (const SendCoinsRecipient &rcp : transaction.getRecipients())
         {
-            if (rcp.paymentRequest.IsInitialized())
-            {
-                // Make sure any payment requests involved are still valid.
-                if (PaymentServer::verifyExpired(rcp.paymentRequest.getDetails())) {
-                    return PaymentRequestExpired;
-                }
-
-                // Store PaymentRequests in wtx.vOrderForm in wallet.
-                std::string value;
-                rcp.paymentRequest.SerializeToString(&value);
-                vOrderForm.emplace_back("PaymentRequest", std::move(value));
-            }
-            else if (!rcp.message.isEmpty()) // Message from normal raptoreum:URI (raptoreum:XyZ...?message=example)
+            if (!rcp.message.isEmpty()) // Message from normal raptoreum:URI (raptoreum:XyZ...?message=example)
                 vOrderForm.emplace_back("Message", rcp.message.toStdString());
         }
 
@@ -524,11 +490,10 @@ WalletModel::SendAssetsReturn WalletModel::sendAssets(WalletModelTransaction &tr
 
         auto& newTx = transaction.getWtx();
         std::string rejectReason;
-        if (!newTx->commit(std::move(mapValue), std::move(vOrderForm), {} /* fromAccount */, rejectReason))
-            return SendAssetsReturn(TransactionCommitFailed, QString::fromStdString(rejectReason));
+        wallet().commitTransaction(newTx, std::move(mapValue), std::move(vOrderForm));
 
         CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
-        ssTx << newTx->get();
+        ssTx << *newTx;
         transaction_array.append(ssTx.data(), ssTx.size());
     }
 
@@ -536,8 +501,6 @@ WalletModel::SendAssetsReturn WalletModel::sendAssets(WalletModelTransaction &tr
     // and emit coinsSent signal for each recipient
     for (const SendCoinsRecipient &rcp : transaction.getRecipients())
     {
-        // Don't touch the address book when we have a payment request
-        if (!rcp.paymentRequest.IsInitialized())
         {
             std::string strAddress = rcp.address.toStdString();
             CTxDestination dest = DecodeDestination(strAddress);

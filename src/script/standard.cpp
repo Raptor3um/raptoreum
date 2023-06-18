@@ -93,10 +93,9 @@ txnouttype Solver(const CScript& scriptPubKey, std::vector<std::vector<unsigned 
     }
 
     if (scriptPubKey.IsAssetScript()) {
-        typeRet = TX_TRANSFER_ASSET;
         std::vector<unsigned char> hashBytes(scriptPubKey.begin()+3, scriptPubKey.begin()+23);
         vSolutionsRet.push_back(hashBytes);
-        return true;
+        return TX_TRANSFER_ASSET;
     }
 
     // Provably prunable, data-carrying output

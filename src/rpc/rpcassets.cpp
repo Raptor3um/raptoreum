@@ -8,6 +8,8 @@
 #include "chain.h"
 #include "validation.h"
 #include <txmempool.h>
+#include <chainparams.h>
+
 
 #ifdef ENABLE_WALLET
 #include <wallet/coincontrol.h>
@@ -46,7 +48,7 @@ static std::string GetDistributionType(int t)
 UniValue createasset(const JSONRPCRequest& request)
 {
 
-    if (request.fHelp || !Params().IsAssetsActive(chainActive.Tip()) || request.params.size() < 1 || request.params.size() > 1)
+    if (request.fHelp || !Params().IsAssetsActive(::ChainActive().Tip()) || request.params.size() < 1 || request.params.size() > 1)
         throw std::runtime_error(
             "createasset asset_metadata\n"
             "Create a new asset\n"
@@ -75,11 +77,9 @@ UniValue createasset(const JSONRPCRequest& request)
         );
 
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    if (!wallet) return NullUniValue;
     CWallet* const pwallet = wallet.get();
 
-    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
-        return NullUniValue;
-    }
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
@@ -87,7 +87,7 @@ UniValue createasset(const JSONRPCRequest& request)
     LOCK2(cs_main, mempool.cs);
     LOCK(pwallet->cs_wallet);
 
-    if (pwallet->GetBroadcastTransactions() && !g_connman) {
+    if (pwallet->GetBroadcastTransactions() && !pwallet->chain().p2pEnabled()) {
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
     }
 
@@ -192,7 +192,6 @@ UniValue createasset(const JSONRPCRequest& request)
     }
 
     CTransactionRef newTx;
-    CReserveKey reservekey(pwallet);
     CAmount nFee;
     int nChangePos = -1;
     std::string strFailReason;
@@ -201,15 +200,11 @@ UniValue createasset(const JSONRPCRequest& request)
     assetTx.fee = getAssetsFees();
     int Payloadsize;
 
-    if (!pwallet->CreateTransaction(vecSend, newTx, reservekey, nFee, nChangePos, strFailReason, coinControl, true, Payloadsize,nullptr, &assetTx)) {
+    if (!pwallet->CreateTransaction(vecSend, newTx, nFee, nChangePos, strFailReason, coinControl, true, Payloadsize,nullptr, &assetTx)) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, strFailReason);
     }
 
-    CValidationState state;
-    if (!pwallet->CommitTransaction(newTx, {}, {}, {}, reservekey, g_connman.get(), state)) {
-        strFailReason = strprintf("Error: The transaction was rejected! Reason given: %s", FormatStateMessage(state));
-        throw JSONRPCError(RPC_WALLET_ERROR, strFailReason);
-    }
+    pwallet->CommitTransaction(newTx, {}, {});
 
     UniValue result(UniValue::VOBJ);
     result.pushKV("txid", newTx->GetHash().GetHex());
@@ -234,7 +229,7 @@ UniValue createasset(const JSONRPCRequest& request)
 
 UniValue mintAsset(const JSONRPCRequest& request)
 {
-    if (request.fHelp || !Params().IsAssetsActive(chainActive.Tip()) || request.params.size() < 1 || request.params.size() > 1)
+    if (request.fHelp || !Params().IsAssetsActive(::ChainActive().Tip()) || request.params.size() < 1 || request.params.size() > 1)
         throw std::runtime_error(
             "mintAsset txid\n"
             "Mint assset\n"
@@ -250,11 +245,9 @@ UniValue mintAsset(const JSONRPCRequest& request)
         );
 
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    if (!wallet) return NullUniValue;
     CWallet* const pwallet = wallet.get();
 
-    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
-        return NullUniValue;
-    }
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
@@ -262,7 +255,7 @@ UniValue mintAsset(const JSONRPCRequest& request)
     LOCK2(cs_main, mempool.cs);
     LOCK(pwallet->cs_wallet);
 
-    if (pwallet->GetBroadcastTransactions() && !g_connman) {
+    if (pwallet->GetBroadcastTransactions() && !pwallet->chain().p2pEnabled()) {
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
     }
 
@@ -312,7 +305,6 @@ UniValue mintAsset(const JSONRPCRequest& request)
 
 
     CTransactionRef wtx;
-    CReserveKey reservekey(pwallet);
     CAmount nFee;
     int nChangePos = -1;
     std::string strFailReason;
@@ -343,19 +335,11 @@ UniValue mintAsset(const JSONRPCRequest& request)
     }
 
     int Payloadsize;
-    if (!pwallet->CreateTransaction(vecSend, wtx, reservekey, nFee, nChangePos, strFailReason, coinControl, true, Payloadsize, nullptr, nullptr, &mintAsset)) {
+    if (!pwallet->CreateTransaction(vecSend, wtx, nFee, nChangePos, strFailReason, coinControl, true, Payloadsize, nullptr, nullptr, &mintAsset)) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, strFailReason);
     }
 
-    CValidationState state;
-    if (!pwallet->CommitTransaction(wtx, {}, {}, {}, reservekey, g_connman.get(), state)) {
-        strFailReason = strprintf("Error: The transaction was rejected! Reason given: %s", FormatStateMessage(state));
-        throw JSONRPCError(RPC_WALLET_ERROR, strFailReason);
-    }
-
-    if (state.IsInvalid()) {
-        throw JSONRPCError(RPC_TRANSACTION_REJECTED, FormatStateMessage(state));
-    }
+    pwallet->CommitTransaction(wtx, {}, {});
 
     UniValue result(UniValue::VOBJ);
     result.pushKV("txid", wtx->GetHash().GetHex());
@@ -365,7 +349,7 @@ UniValue mintAsset(const JSONRPCRequest& request)
 
 UniValue sendasset(const JSONRPCRequest& request)
 {
-    if (request.fHelp || !Params().IsAssetsActive(chainActive.Tip()) || request.params.size() < 3 || request.params.size() > 7)
+    if (request.fHelp || !Params().IsAssetsActive(::ChainActive().Tip()) || request.params.size() < 3 || request.params.size() > 7)
         throw std::runtime_error(
                 "sendasset \"asst_id\" qty \"to_address\" \"change_address\" \"asset_change_address\"\n"
                 "\nTransfers a quantity of an owned asset to a given address"
@@ -389,17 +373,14 @@ UniValue sendasset(const JSONRPCRequest& request)
         );
 
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    if (!wallet) return NullUniValue;
     CWallet* const pwallet = wallet.get();
-
-    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
-        return NullUniValue;
-    }
 
     LOCK2(cs_main, pwallet->cs_wallet);
 
     EnsureWalletIsUnlocked(pwallet);
 
-    CAmount curBalance = pwallet->GetBalance();
+    CAmount curBalance = pwallet->GetBalance().m_mine_trusted;
     if (curBalance == 0) {
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Error: This wallet doesn't contain any RTM, transfering an asset requires a network fee");
     }
@@ -471,7 +452,6 @@ UniValue sendasset(const JSONRPCRequest& request)
     coinControl.assetDestChange = asset_change_dest;
 
     CTransactionRef wtx;
-    CReserveKey reservekey(pwallet);
     CAmount nFee;
     int nChangePos = -1;
     std::string strFailReason;
@@ -492,15 +472,11 @@ UniValue sendasset(const JSONRPCRequest& request)
     CRecipient recipient = {scriptPubKey, 0, false};
     vecSend.push_back(recipient);
 
-    if (!pwallet->CreateTransaction(vecSend, wtx, reservekey, nFee, nChangePos, strFailReason, coinControl, true)) {
+    if (!pwallet->CreateTransaction(vecSend, wtx, nFee, nChangePos, strFailReason, coinControl, true)) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, strFailReason);
     }
 
-    CValidationState state;
-    if (!pwallet->CommitTransaction(wtx, {}, {}, {}, reservekey, g_connman.get(), state)) {
-        strFailReason = strprintf("Error: The transaction was rejected! Reason given: %s", FormatStateMessage(state));
-        throw JSONRPCError(RPC_WALLET_ERROR, strFailReason);
-    }
+    pwallet->CommitTransaction(wtx, {}, {});
 
     UniValue result(UniValue::VOBJ);
     result.pushKV("txid", wtx->GetHash().GetHex());
@@ -510,7 +486,7 @@ UniValue sendasset(const JSONRPCRequest& request)
 
 UniValue assetdetails(const JSONRPCRequest& request)
 {
-    if (request.fHelp || !Params().IsAssetsActive(chainActive.Tip()) || request.params.size() < 1 || request.params.size() > 1)
+    if (request.fHelp || !Params().IsAssetsActive(::ChainActive().Tip()) || request.params.size() < 1 || request.params.size() > 1)
         throw std::runtime_error(
             "assetdetails 'asset_id or asset_name'\n"
             "asset details\n"
@@ -559,7 +535,7 @@ UniValue assetdetails(const JSONRPCRequest& request)
 
 UniValue listassetsbalance(const JSONRPCRequest& request)
 {
-    if (request.fHelp || !Params().IsAssetsActive(chainActive.Tip()) || request.params.size() > 0)
+    if (request.fHelp || !Params().IsAssetsActive(::ChainActive().Tip()) || request.params.size() > 0)
         throw std::runtime_error(
             "listassetsbalance\n"
             "\nResult:\n"
@@ -570,11 +546,8 @@ UniValue listassetsbalance(const JSONRPCRequest& request)
         );
 
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    if (!wallet) return NullUniValue;
     CWallet* const pwallet = wallet.get();
-
-    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
-        return NullUniValue;
-    }
 
     LOCK2(cs_main, pwallet->cs_wallet);
 
@@ -583,6 +556,7 @@ UniValue listassetsbalance(const JSONRPCRequest& request)
 
     std::map<std::string, CAmount > mapAssetbalance;
     for (auto asset  : mapAssetCoins){
+        std::cout << asset.first << std::endl;
         CAmount balance = 0;
         for (auto output : asset.second){
             CInputCoin coin(output.tx->tx, output.i);

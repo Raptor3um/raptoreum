@@ -196,7 +196,7 @@ void ScriptPubKeyToUniv(const CScript& scriptPubKey, UniValue& out, bool fInclud
         if (GetTransferAsset(scriptPubKey, data)) {
             std::string assetId = data.assetId;
             if (data.isUnique)
-                assetId += "[" + to_string(data.uniqueId) + "]";
+                assetId += "[" + std::to_string(data.uniqueId) + "]";
             assetInfo.pushKV("asset_id", assetId);
             assetInfo.pushKV("amount", ValueFromAmount(data.nAmount));
         }

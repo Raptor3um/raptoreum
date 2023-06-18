@@ -15,6 +15,7 @@
 #include <qt/optionsmodel.h>
 #include <qt/sendassetsentry.h>
 
+#include <chainparams.h>
 #include <interfaces/node.h>
 #include <key_io.h>
 #include <wallet/coincontrol.h>
@@ -24,6 +25,7 @@
 #include <wallet/fees.h>
 #include <wallet/wallet.h>
 #include <future/fee.h>
+#include <spork.h>
 #include <validation.h>
 #include <assets/assets.h>
 #include <assets/assetstype.h>
@@ -114,7 +116,7 @@ SendAssetsDialog::SendAssetsDialog(QWidget* parent) :
     if (!settings.contains("nSmartFeeSliderPosition"))
         settings.setValue("nSmartFeeSliderPosition", 0);
     if (!settings.contains("nTransactionFee"))
-        settings.setValue("nTransactionFee", (qint64)DEFAULT_TRANSACTION_FEE);
+        settings.setValue("nTransactionFee", (qint64)DEFAULT_PAY_TX_FEE);
     if (!settings.contains("fPayOnlyMinFee"))
         settings.setValue("fPayOnlyMinFee", false);
 
@@ -197,7 +199,7 @@ void SendAssetsDialog::setModel(WalletModel *_model)
             settings.remove("nSmartFeeSliderPosition");
         }
         if (settings.value("nConfTarget").toInt() == 0)
-            ui->confTargetSelector->setCurrentIndex(getIndexForConfTarget(model->node().getTxConfirmTarget()));
+            ui->confTargetSelector->setCurrentIndex(getIndexForConfTarget(model->wallet().getConfirmTarget()));
         else
             ui->confTargetSelector->setCurrentIndex(getIndexForConfTarget(settings.value("nConfTarget").toInt()));
     }
@@ -219,7 +221,7 @@ void SendAssetsDialog::OnDisplay() {
     for (int i = 0; i < ui->entries->count(); ++i) {
         SendAssetsEntry *entry = qobject_cast<SendAssetsEntry*>(ui->entries->itemAt(i)->widget());
         if(entry) {
-            entry->SetFutureVisible(sporkManager.IsSporkActive(SPORK_22_SPECIAL_TX_FEE) && Params().IsFutureActive(chainActive.Tip()) && i == 0);
+            entry->SetFutureVisible(sporkManager.IsSporkActive(SPORK_22_SPECIAL_TX_FEE) && Params().IsFutureActive(::ChainActive().Tip()) && i == 0);
         }
     }
 }
@@ -314,7 +316,7 @@ void SendAssetsDialog::send(QList<SendCoinsRecipient> recipients)
 
         std::string uniqueId = "";
         if (rcp.uniqueId < MAX_UNIQUE_ID)
-            uniqueId += " ["+to_string(rcp.uniqueId)+"]";
+            uniqueId += " ["+std::to_string(rcp.uniqueId)+"]";
         QString amount = "<b>" + BitcoinUnits::formatHtmlWithCustomName(QString::fromStdString(assetData.name), QString::fromStdString(uniqueId), decimalPoint, rcp.assetAmount);
 
         if (model->isMultiwallet()) {
@@ -327,7 +329,6 @@ void SendAssetsDialog::send(QList<SendCoinsRecipient> recipients)
 
         QString recipientElement;
 
-        if (!rcp.paymentRequest.IsInitialized()) // normal payment
         {
             if(rcp.label.length() > 0) // label with address
             {
@@ -338,14 +339,6 @@ void SendAssetsDialog::send(QList<SendCoinsRecipient> recipients)
             {
                 recipientElement = tr("%1 to %2").arg(amount, address);
             }
-        }
-        else if(!rcp.authenticatedMerchant.isEmpty()) // authenticated payment request
-        {
-            recipientElement = tr("%1 to %2").arg(amount, GUIUtil::HtmlEscape(rcp.authenticatedMerchant));
-        }
-        else // unauthenticated payment request
-        {
-            recipientElement = tr("%1 to %2").arg(amount, address);
         }
         //std::cout << rcp.amount << " is future output " << rcp.isFutureOutput << "\n";
         if(rcp.isFutureOutput) {
@@ -453,7 +446,7 @@ void SendAssetsDialog::send(QList<SendCoinsRecipient> recipients)
         accept();
         m_coin_control->UnSelectAll();
         AssetControlUpdateLabels();
-        Q_EMIT coinsSent(currentTransaction.getWtx()->get().GetHash());
+        Q_EMIT coinsSent(currentTransaction.getWtx()->GetHash());
     }
     fNewRecipientAllowed = true;
 }
@@ -490,7 +483,7 @@ SendAssetsEntry *SendAssetsDialog::addEntry()
 {
 
     SendAssetsEntry* entry = new SendAssetsEntry(this, sporkManager.IsSporkActive(SPORK_22_SPECIAL_TX_FEE)
-                                                            && Params().IsFutureActive(chainActive.Tip())
+                                                            && Params().IsFutureActive(::ChainActive().Tip())
                                                             && ui->entries->count() == 0);
     entry->setModel(model);
     entry->setCoinControl(&*m_coin_control);
@@ -625,9 +618,6 @@ void SendAssetsDialog::processSendAssetsReturn(const WalletModel::SendAssetsRetu
     // Default to a warning message, override if error message is needed
     msgParams.second = CClientUIInterface::MSG_WARNING;
 
-    // This comment is specific to SendAssetsDialog usage of WalletModel::SendAssetsReturn.
-    // WalletModel::TransactionCommitFailed is used only in WalletModel::sendAssets()
-    // all others are used only in WalletModel::prepareTransaction()
     switch(sendAssetsReturn.status)
     {
     case WalletModel::InvalidAddress:
@@ -649,12 +639,8 @@ void SendAssetsDialog::processSendAssetsReturn(const WalletModel::SendAssetsRetu
         msgParams.first = tr("Transaction creation failed!");
         msgParams.second = CClientUIInterface::MSG_ERROR;
         break;
-    case WalletModel::TransactionCommitFailed:
-        msgParams.first = tr("The transaction was rejected with the following reason: %1").arg(sendAssetsReturn.reasonCommitFailed);
-        msgParams.second = CClientUIInterface::MSG_ERROR;
-        break;
     case WalletModel::AbsurdFee:
-        msgParams.first = tr("A fee higher than %1 is considered an absurdly high fee.").arg(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), model->node().getMaxTxFee()));
+        msgParams.first = tr("A fee higher than %1 is considered an absurdly high fee.").arg(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(),  model->wallet().getDefaultMaxTxFee()));
         break;
     case WalletModel::PaymentRequestExpired:
         msgParams.first = tr("Payment request expired.");
@@ -722,7 +708,7 @@ void SendAssetsDialog::useAvailableAssetsBalance(SendAssetsEntry* entry)
 
 void SendAssetsDialog::setMinimumFee()
 {
-    ui->customFee->setValue(model->node().getRequiredFee(1000));
+    ui->customFee->setValue(model->wallet().getRequiredFee(1000));
 }
 
 void SendAssetsDialog::updateFeeSectionControls()
@@ -754,7 +740,7 @@ void SendAssetsDialog::updateMinFeeLabel()
 {
     if (model && model->getOptionsModel())
         ui->checkBoxMinimumFee->setText(tr("Pay only the required fee of %1").arg(
-            BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), model->node().getRequiredFee(1000)) + "/kB")
+            BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), model->wallet().getRequiredFee(1000)) + "/kB")
         );
 }
 
@@ -778,7 +764,7 @@ void SendAssetsDialog::updateSmartFeeLabel()
     m_coin_control->m_feerate.reset(); // Explicitly use only fee estimation rate for smart fee labels
     int returned_target;
     FeeReason reason;
-    CFeeRate feeRate = CFeeRate(model->node().getMinimumFee(1000, *m_coin_control, &returned_target, &reason));
+    CFeeRate feeRate = CFeeRate(model->wallet().getMinimumFee(1000, *m_coin_control, &returned_target, &reason));
 
     ui->labelSmartFee->setText(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), feeRate.GetFeePerK()) + "/kB");
 

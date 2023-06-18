@@ -9,6 +9,7 @@
 #include <script/standard.h>
 #include <script/sign.h>
 #include <validation.h>
+#include <chainparams.h>
 #include <base58.h>
 #include <netbase.h>
 #include <messagesigner.h>
@@ -25,16 +26,16 @@
 
 #include <boost/test/unit_test.hpp>
 
-typedef std::map<COutPoint, std::pair<int, CAmount>> SimpleUTXOMap;
+using SimpleUTXOMap = std::map<COutPoint, std::pair<int, CAmount>>;
 
-static SimpleUTXOMap BuildSimpleUtxoMap(const std::vector<CTransaction>& txs)
+static SimpleUTXOMap BuildSimpleUtxoMap(const std::vector<CTransactionRef>& txs)
 {
     SimpleUTXOMap utxos;
     for (size_t i = 0; i < txs.size(); i++) {
         auto& tx = txs[i];
-        for (size_t j = 0; j < tx.vout.size(); j++) {
-            if(tx.vout[j].nValue > 0)
-            utxos.emplace(COutPoint(tx.GetHash(), j), std::make_pair((int)i + 1, tx.vout[j].nValue));
+        for (size_t j = 0; j < tx->vout.size(); j++) {
+						if(tx->vout[j].nValue > 0)
+            utxos.emplace(COutPoint(tx->GetHash(), j), std::make_pair((int)i + 1, tx->vout[j].nValue));
         }
     }
     return utxos;
@@ -49,7 +50,7 @@ static std::vector<COutPoint> SelectUTXOs(SimpleUTXOMap& utoxs, CAmount amount, 
     while (!utoxs.empty()) {
         bool found = false;
         for (auto it = utoxs.begin(); it != utoxs.end(); ++it) {
-            if (chainActive.Height() - it->second.first < 101) {
+            if (::ChainActive().Height() - it->second.first < 101) {
                 continue;
             }
 
@@ -81,20 +82,20 @@ static void FundTransaction(CMutableTransaction& tx, SimpleUTXOMap& utoxs, const
     }
 }
 
-static void SignTransaction(CMutableTransaction& tx, const CKey& coinbaseKey)
+static void SignTransaction(const CTxMemPool& mempool, CMutableTransaction& tx, const CKey& coinbaseKey)
 {
     CBasicKeyStore tempKeystore;
     tempKeystore.AddKeyPubKey(coinbaseKey, coinbaseKey.GetPubKey());
 
     for (size_t i = 0; i < tx.vin.size(); i++) {
-        CTransactionRef txFrom;
         uint256 hashBlock;
-        BOOST_ASSERT(GetTransaction(tx.vin[i].prevout.hash, txFrom, Params().GetConsensus(), hashBlock));
+        CTransactionRef txFrom = GetTransaction(/* block_index */ nullptr, &mempool, tx.vin[i].prevout.hash, Params().GetConsensus(), hashBlock);
+        BOOST_ASSERT(txFrom);
         BOOST_ASSERT(SignSignature(tempKeystore, *txFrom, tx, i, SIGHASH_ALL));
     }
 }
 
-static CMutableTransaction CreateNewAssetTx(SimpleUTXOMap& utxos, const CKey& coinbaseKey, std::string name, bool updatable, bool is_unique, uint8_t type, uint8_t decimalPoint, CAmount amount)
+static CMutableTransaction CreateNewAssetTx(const CTxMemPool& mempool, SimpleUTXOMap& utxos, const CKey& coinbaseKey, std::string name, bool updatable, bool is_unique, uint8_t type, uint8_t decimalPoint, CAmount amount)
 {
     CKeyID ownerKey = coinbaseKey.GetPubKey().GetID();
     CNewAssetTx newAsset;
@@ -118,12 +119,12 @@ static CMutableTransaction CreateNewAssetTx(SimpleUTXOMap& utxos, const CKey& co
     FundTransaction(tx, utxos, GetScriptForDestination(coinbaseKey.GetPubKey().GetID()), newAsset.fee * COIN + 1 * COIN, coinbaseKey);
     newAsset.inputsHash = CalcTxInputsHash(tx);
     SetTxPayload(tx, newAsset);
-    SignTransaction(tx, coinbaseKey);
+    SignTransaction(mempool, tx, coinbaseKey);
 
     return tx;
 }
 
-static CMutableTransaction CreateUpdateAssetTx(SimpleUTXOMap& utxos, const CKey& coinbaseKey, const CKey& newowner, std::string assetId, bool updatable, uint8_t type, CAmount amount)
+static CMutableTransaction CreateUpdateAssetTx(const CTxMemPool& mempool, SimpleUTXOMap& utxos, const CKey& coinbaseKey, const CKey& newowner, std::string assetId, bool updatable, uint8_t type, CAmount amount)
 {
     CKeyID ownerKey = newowner.GetPubKey().GetID();
     CUpdateAssetTx upAsset;
@@ -148,18 +149,18 @@ static CMutableTransaction CreateUpdateAssetTx(SimpleUTXOMap& utxos, const CKey&
     FundTransaction(tx, utxos, GetScriptForDestination(coinbaseKey.GetPubKey().GetID()), upAsset.fee * COIN + 1 * COIN, coinbaseKey);
     upAsset.inputsHash = CalcTxInputsHash(tx);
     SetTxPayload(tx, upAsset);
-    SignTransaction(tx, coinbaseKey);
+    SignTransaction(mempool, tx, coinbaseKey);
 
     return tx;
 }
 
-static CMutableTransaction CreateMintAssetTx(SimpleUTXOMap& utxos, const CKey& coinbaseKey, std::string assetId)
+static CMutableTransaction CreateMintAssetTx(const CTxMemPool& mempool, SimpleUTXOMap& utxos, const CKey& coinbaseKey, std::string assetId)
 {
     CKeyID ownerKey = coinbaseKey.GetPubKey().GetID();
     CMintAssetTx mint;
 
     CAssetMetaData asset;
-    passetsCache->GetAssetMetaData(assetId, asset);
+    BOOST_ASSERT(passetsCache->GetAssetMetaData(assetId, asset));
 
     mint.assetId = assetId;
     mint.fee = getAssetsFees();
@@ -189,7 +190,7 @@ static CMutableTransaction CreateMintAssetTx(SimpleUTXOMap& utxos, const CKey& c
     FundTransaction(tx, utxos, GetScriptForDestination(coinbaseKey.GetPubKey().GetID()), mint.fee * COIN + 1 * COIN, coinbaseKey);
     mint.inputsHash = CalcTxInputsHash(tx);
     SetTxPayload(tx, mint);
-    SignTransaction(tx, coinbaseKey);
+    SignTransaction(mempool, tx, coinbaseKey);
 
     return tx;
 }
@@ -210,45 +211,45 @@ BOOST_FIXTURE_TEST_CASE(assets_creation, TestChainDIP3BeforeActivationSetup)
     sporkKey.MakeNewKey(false);
     sporkManager.SetSporkAddress(EncodeDestination(sporkKey.GetPubKey().GetID()));
     sporkManager.SetPrivKey(EncodeSecret(sporkKey));
-    sporkManager.UpdateSpork(SPORK_22_SPECIAL_TX_FEE, 2560, *g_connman);
+    sporkManager.UpdateSpork(SPORK_22_SPECIAL_TX_FEE, 2560, *m_node.connman);
 
-    auto utxos = BuildSimpleUtxoMap(coinbaseTxns);
+    auto utxos = BuildSimpleUtxoMap(m_coinbase_txns);
 
-    auto tx = CreateNewAssetTx(utxos, coinbaseKey,"Test Asset", true, false, 0, 8, 1000);
+    auto tx = CreateNewAssetTx(*m_node.mempool, utxos, coinbaseKey,"Test Asset", true, false, 0, 8, 1000);
     std::vector<CMutableTransaction> txns = {tx};
 
-    int nHeight = chainActive.Height();
+    int nHeight = ::ChainActive().Height();
 
     // Mining a block with a asset create transaction
     auto block = std::make_shared<CBlock>(CreateBlock(txns, coinbaseKey));
-    ProcessNewBlock(Params(), block, true, nullptr);
+    EnsureChainman(m_node).ProcessNewBlock(Params(), block, true, nullptr);
 
-    BOOST_ASSERT(chainActive.Height() == nHeight + 1);
-    BOOST_ASSERT(block->GetHash() == chainActive.Tip()->GetBlockHash());
+    BOOST_ASSERT(::ChainActive().Height() == nHeight + 1);
+    BOOST_ASSERT(block->GetHash() == ::ChainActive().Tip()->GetBlockHash());
 
     //invalid asset name
-    tx = CreateNewAssetTx(utxos, coinbaseKey,"*Test_Asset*", true, false, 0, 8, 1000);
+    tx = CreateNewAssetTx(*m_node.mempool, utxos, coinbaseKey,"*Test_Asset*", true, false, 0, 8, 1000);
     txns = {tx};
     block = std::make_shared<CBlock>(CreateBlock(txns, coinbaseKey));
     //block should be rejected
-    ProcessNewBlock(Params(), block, true, nullptr);
-    BOOST_ASSERT(chainActive.Height() == nHeight + 1);
+    EnsureChainman(m_node).ProcessNewBlock(Params(), block, true, nullptr);
+    BOOST_ASSERT(::ChainActive().Height() == nHeight + 1);
 
     //invalid distribution type
-    tx = CreateNewAssetTx(utxos, coinbaseKey,"Test Asset", true, false, 5, 8, 1000);
+    tx = CreateNewAssetTx(*m_node.mempool, utxos, coinbaseKey,"Test Asset", true, false, 5, 8, 1000);
     txns = {tx};
     block = std::make_shared<CBlock>(CreateBlock(txns, coinbaseKey));
     //block should be rejected
-    ProcessNewBlock(Params(), block, true, nullptr);
-    BOOST_ASSERT(chainActive.Height() == nHeight + 1);
+    EnsureChainman(m_node).ProcessNewBlock(Params(), block, true, nullptr);
+    BOOST_ASSERT(::ChainActive().Height() == nHeight + 1);
 
    //invalid decimalPoint
-    tx = CreateNewAssetTx(utxos, coinbaseKey,"Test Asset", true, false, 0, 9, 1000);
+    tx = CreateNewAssetTx(*m_node.mempool, utxos, coinbaseKey,"Test Asset", true, false, 0, 9, 1000);
     txns = {tx};
     block = std::make_shared<CBlock>(CreateBlock(txns, coinbaseKey));
     //block should be rejected
-    ProcessNewBlock(Params(), block, true, nullptr);
-    BOOST_ASSERT(chainActive.Height() == nHeight + 1);
+    EnsureChainman(m_node).ProcessNewBlock(Params(), block, true, nullptr);
+    BOOST_ASSERT(::ChainActive().Height() == nHeight + 1);
 }
 
 BOOST_FIXTURE_TEST_CASE(assets_update, TestChainDIP3BeforeActivationSetup)
@@ -257,22 +258,22 @@ BOOST_FIXTURE_TEST_CASE(assets_update, TestChainDIP3BeforeActivationSetup)
     sporkKey.MakeNewKey(false);
     sporkManager.SetSporkAddress(EncodeDestination(sporkKey.GetPubKey().GetID()));
     sporkManager.SetPrivKey(EncodeSecret(sporkKey));
-    sporkManager.UpdateSpork(SPORK_22_SPECIAL_TX_FEE, 2560, *g_connman);
+    sporkManager.UpdateSpork(SPORK_22_SPECIAL_TX_FEE, 2560, *m_node.connman);
 
-    auto utxos = BuildSimpleUtxoMap(coinbaseTxns);
+    auto utxos = BuildSimpleUtxoMap(m_coinbase_txns);
 
-    auto tx = CreateNewAssetTx(utxos, coinbaseKey,"Test Asset", true, false, 0, 8, 1000);
+    auto tx = CreateNewAssetTx(*m_node.mempool, utxos, coinbaseKey,"Test Asset", true, false, 0, 8, 1000);
     std::vector<CMutableTransaction> txns = {tx};
 
-    int nHeight = chainActive.Height();
+    int nHeight = ::ChainActive().Height();
 
     // Mining a block with a asset create transaction
     {
         auto block = std::make_shared<CBlock>(CreateBlock(txns, coinbaseKey));
-        ProcessNewBlock(Params(), block, true, nullptr);
+        EnsureChainman(m_node).ProcessNewBlock(Params(), block, true, nullptr);
 
-        BOOST_ASSERT(chainActive.Height() == nHeight + 1);
-        BOOST_ASSERT(block->GetHash() == chainActive.Tip()->GetBlockHash());
+        BOOST_ASSERT(::ChainActive().Height() == nHeight + 1);
+        BOOST_ASSERT(block->GetHash() == ::ChainActive().Tip()->GetBlockHash());
     }
 
     CAssetMetaData asset;
@@ -282,26 +283,26 @@ BOOST_FIXTURE_TEST_CASE(assets_update, TestChainDIP3BeforeActivationSetup)
     CKey key;
     key.MakeNewKey(false);
     std::string assetId = tx.GetHash().ToString();
-    tx = CreateUpdateAssetTx(utxos, coinbaseKey, key, assetId, true, 0, 1000);
+    tx = CreateUpdateAssetTx(*m_node.mempool, utxos, coinbaseKey, key, assetId, true, 0, 1000);
     {
         auto block = std::make_shared<CBlock>(CreateBlock({tx}, coinbaseKey));
-        ProcessNewBlock(Params(), block, true, nullptr);
+        EnsureChainman(m_node).ProcessNewBlock(Params(), block, true, nullptr);
 
-        BOOST_ASSERT(chainActive.Height() == nHeight + 2);
-        BOOST_ASSERT(block->GetHash() == chainActive.Tip()->GetBlockHash());
+        BOOST_ASSERT(::ChainActive().Height() == nHeight + 2);
+        BOOST_ASSERT(block->GetHash() == ::ChainActive().Tip()->GetBlockHash());
     }
 
     BOOST_ASSERT(passetsCache->GetAssetMetaData(assetId, asset));
     BOOST_ASSERT(asset.ownerAddress == key.GetPubKey().GetID());
 
     //any atemp to update with the coinbaseKey should fail
-    tx = CreateUpdateAssetTx(utxos, coinbaseKey, coinbaseKey, assetId, true, 0, 10000);
+    tx = CreateUpdateAssetTx(*m_node.mempool, utxos, coinbaseKey, coinbaseKey, assetId, true, 0, 10000);
     {
         auto block = std::make_shared<CBlock>(CreateBlock({tx}, coinbaseKey));
-        ProcessNewBlock(Params(), block, true, nullptr);
+        EnsureChainman(m_node).ProcessNewBlock(Params(), block, true, nullptr);
 
-        BOOST_ASSERT(chainActive.Height() == nHeight + 2);
-        BOOST_ASSERT(block->GetHash() != chainActive.Tip()->GetBlockHash());
+        BOOST_ASSERT(::ChainActive().Height() == nHeight + 2);
+        BOOST_ASSERT(block->GetHash() != ::ChainActive().Tip()->GetBlockHash());
     }
 }
 
@@ -311,33 +312,33 @@ BOOST_FIXTURE_TEST_CASE(assets_mint, TestChainDIP3BeforeActivationSetup)
     sporkKey.MakeNewKey(false);
     sporkManager.SetSporkAddress(EncodeDestination(sporkKey.GetPubKey().GetID()));
     sporkManager.SetPrivKey(EncodeSecret(sporkKey));
-    sporkManager.UpdateSpork(SPORK_22_SPECIAL_TX_FEE, 2560, *g_connman);
+    sporkManager.UpdateSpork(SPORK_22_SPECIAL_TX_FEE, 2560, *m_node.connman);
 
-    auto utxos = BuildSimpleUtxoMap(coinbaseTxns);
+    auto utxos = BuildSimpleUtxoMap(m_coinbase_txns);
 
-    auto tx = CreateNewAssetTx(utxos, coinbaseKey,"Test Asset", true, false, 0, 8, 1000);
+    auto tx = CreateNewAssetTx(*m_node.mempool, utxos, coinbaseKey,"Test Asset", true, false, 0, 8, 1000);
     std::vector<CMutableTransaction> txns = {tx};
 
-    int nHeight = chainActive.Height();
+    int nHeight = ::ChainActive().Height();
 
     // Mining a block with a asset create transaction
     {
         auto block = std::make_shared<CBlock>(CreateBlock(txns, coinbaseKey));
-        ProcessNewBlock(Params(), block, true, nullptr);
+        EnsureChainman(m_node).ProcessNewBlock(Params(), block, true, nullptr);
 
-        BOOST_ASSERT(chainActive.Height() == nHeight + 1);
-        BOOST_ASSERT(block->GetHash() == chainActive.Tip()->GetBlockHash());
+        BOOST_ASSERT(::ChainActive().Height() == nHeight + 1);
+        BOOST_ASSERT(block->GetHash() == ::ChainActive().Tip()->GetBlockHash());
     }
 
     std::string assetId = tx.GetHash().ToString();
-    tx = CreateMintAssetTx(utxos, coinbaseKey, assetId);
+    tx = CreateMintAssetTx(*m_node.mempool, utxos, coinbaseKey, assetId);
 
     {
         auto block = std::make_shared<CBlock>(CreateBlock({tx}, coinbaseKey));
-        ProcessNewBlock(Params(), block, true, nullptr);
+        EnsureChainman(m_node).ProcessNewBlock(Params(), block, true, nullptr);
 
-        BOOST_ASSERT(chainActive.Height() == nHeight + 2);
-        BOOST_ASSERT(block->GetHash() == chainActive.Tip()->GetBlockHash());
+        BOOST_ASSERT(::ChainActive().Height() == nHeight + 2);
+        BOOST_ASSERT(block->GetHash() == ::ChainActive().Tip()->GetBlockHash());
     }
 
     CAssetMetaData asset;
@@ -365,14 +366,14 @@ BOOST_FIXTURE_TEST_CASE(assets_mint, TestChainDIP3BeforeActivationSetup)
     tx2.vin.push_back(CTxIn(COutPoint(tx.GetHash(), 0)));
 
     FundTransaction(tx2, utxos, GetScriptForDestination(coinbaseKey.GetPubKey().GetID()),1 * COIN, coinbaseKey);
-    SignTransaction(tx2, coinbaseKey);
+    SignTransaction(*m_node.mempool, tx2, coinbaseKey);
 
     {
         auto block = std::make_shared<CBlock>(CreateBlock({tx2}, coinbaseKey));
-        ProcessNewBlock(Params(), block, true, nullptr);
+        EnsureChainman(m_node).ProcessNewBlock(Params(), block, true, nullptr);
 
-        BOOST_ASSERT(chainActive.Height() == nHeight + 3);
-        BOOST_ASSERT(block->GetHash() == chainActive.Tip()->GetBlockHash());
+        BOOST_ASSERT(::ChainActive().Height() == nHeight + 3);
+        BOOST_ASSERT(block->GetHash() == ::ChainActive().Tip()->GetBlockHash());
     }
 
 }
@@ -383,35 +384,35 @@ BOOST_FIXTURE_TEST_CASE(assets_invalid_cases, TestChainDIP3BeforeActivationSetup
     sporkKey.MakeNewKey(false);
     sporkManager.SetSporkAddress(EncodeDestination(sporkKey.GetPubKey().GetID()));
     sporkManager.SetPrivKey(EncodeSecret(sporkKey));
-    sporkManager.UpdateSpork(SPORK_22_SPECIAL_TX_FEE, 2560, *g_connman);
+    sporkManager.UpdateSpork(SPORK_22_SPECIAL_TX_FEE, 2560, *m_node.connman);
 
-    auto utxos = BuildSimpleUtxoMap(coinbaseTxns);
+    auto utxos = BuildSimpleUtxoMap(m_coinbase_txns);
 
     //create a asset
-    auto tx = CreateNewAssetTx(utxos, coinbaseKey,"Test Asset", false, false, 0, 2, 100);
+    auto tx = CreateNewAssetTx(*m_node.mempool, utxos, coinbaseKey,"Test Asset", false, false, 0, 2, 100);
     std::vector<CMutableTransaction> txns = {tx};
 
-    int nHeight = chainActive.Height();
+    int nHeight = ::ChainActive().Height();
 
     // Mining a block with a asset create transaction
     {
         auto block = std::make_shared<CBlock>(CreateBlock(txns, coinbaseKey));
-        ProcessNewBlock(Params(), block, true, nullptr);
+        EnsureChainman(m_node).ProcessNewBlock(Params(), block, true, nullptr);
 
-        BOOST_ASSERT(chainActive.Height() == nHeight + 1);
-        BOOST_ASSERT(block->GetHash() == chainActive.Tip()->GetBlockHash());
+        BOOST_ASSERT(::ChainActive().Height() == nHeight + 1);
+        BOOST_ASSERT(block->GetHash() == ::ChainActive().Tip()->GetBlockHash());
     }
 
     std::string assetId = tx.GetHash().ToString();
 
-    tx = CreateMintAssetTx(utxos, coinbaseKey, assetId);
+    tx = CreateMintAssetTx(*m_node.mempool, utxos, coinbaseKey, assetId);
 
     {
         auto block = std::make_shared<CBlock>(CreateBlock({tx}, coinbaseKey));
-        ProcessNewBlock(Params(), block, true, nullptr);
+        EnsureChainman(m_node).ProcessNewBlock(Params(), block, true, nullptr);
 
-        BOOST_ASSERT(chainActive.Height() == nHeight + 2);
-        BOOST_ASSERT(block->GetHash() == chainActive.Tip()->GetBlockHash());
+        BOOST_ASSERT(::ChainActive().Height() == nHeight + 2);
+        BOOST_ASSERT(block->GetHash() == ::ChainActive().Tip()->GetBlockHash());
     }
 
     CAssetMetaData asset;
@@ -440,13 +441,13 @@ BOOST_FIXTURE_TEST_CASE(assets_invalid_cases, TestChainDIP3BeforeActivationSetup
         tx2.vin.push_back(CTxIn(COutPoint(tx.GetHash(), 0)));
 
         FundTransaction(tx2, utxos, GetScriptForDestination(coinbaseKey.GetPubKey().GetID()),1 * COIN, coinbaseKey);
-        SignTransaction(tx2, coinbaseKey);
+        SignTransaction(*m_node.mempool, tx2, coinbaseKey);
 
         auto block = std::make_shared<CBlock>(CreateBlock({tx2}, coinbaseKey));
-        ProcessNewBlock(Params(), block, true, nullptr);
+        EnsureChainman(m_node).ProcessNewBlock(Params(), block, true, nullptr);
 
-        BOOST_ASSERT(chainActive.Height() == nHeight + 2);
-        BOOST_ASSERT(block->GetHash() != chainActive.Tip()->GetBlockHash());
+        BOOST_ASSERT(::ChainActive().Height() == nHeight + 2);
+        BOOST_ASSERT(block->GetHash() != ::ChainActive().Tip()->GetBlockHash());
     }
 
     {
@@ -470,13 +471,13 @@ BOOST_FIXTURE_TEST_CASE(assets_invalid_cases, TestChainDIP3BeforeActivationSetup
         tx2.vin.push_back(CTxIn(COutPoint(tx.GetHash(), 0)));
 
         FundTransaction(tx2, utxos, GetScriptForDestination(coinbaseKey.GetPubKey().GetID()),1 * COIN, coinbaseKey);
-        SignTransaction(tx2, coinbaseKey);
+        SignTransaction(*m_node.mempool, tx2, coinbaseKey);
 
         auto block = std::make_shared<CBlock>(CreateBlock({tx2}, coinbaseKey));
-        ProcessNewBlock(Params(), block, true, nullptr);
+        EnsureChainman(m_node).ProcessNewBlock(Params(), block, true, nullptr);
 
-        BOOST_ASSERT(chainActive.Height() == nHeight + 2);
-        BOOST_ASSERT(block->GetHash() != chainActive.Tip()->GetBlockHash());
+        BOOST_ASSERT(::ChainActive().Height() == nHeight + 2);
+        BOOST_ASSERT(block->GetHash() != ::ChainActive().Tip()->GetBlockHash());
     }
 
     {
@@ -500,39 +501,39 @@ BOOST_FIXTURE_TEST_CASE(assets_invalid_cases, TestChainDIP3BeforeActivationSetup
         tx2.vin.push_back(CTxIn(COutPoint(tx.GetHash(), 0)));
 
         FundTransaction(tx2, utxos, GetScriptForDestination(coinbaseKey.GetPubKey().GetID()),1 * COIN, coinbaseKey);
-        SignTransaction(tx2, coinbaseKey);
+        SignTransaction(*m_node.mempool, tx2, coinbaseKey);
 
         auto block = std::make_shared<CBlock>(CreateBlock({tx2}, coinbaseKey));
-        ProcessNewBlock(Params(), block, true, nullptr);
+        EnsureChainman(m_node).ProcessNewBlock(Params(), block, true, nullptr);
 
-        BOOST_ASSERT(chainActive.Height() == nHeight + 2);
-        BOOST_ASSERT(block->GetHash() != chainActive.Tip()->GetBlockHash());
+        BOOST_ASSERT(::ChainActive().Height() == nHeight + 2);
+        BOOST_ASSERT(block->GetHash() != ::ChainActive().Tip()->GetBlockHash());
     }
 
     //create a unique asset
-    tx = CreateNewAssetTx(utxos, coinbaseKey,"Unique Asset", false, true, 0, 0, 10);
+    tx = CreateNewAssetTx(*m_node.mempool, utxos, coinbaseKey,"Unique Asset", false, true, 0, 0, 10);
     txns = {tx};
 
-    nHeight = chainActive.Height();
+    nHeight = ::ChainActive().Height();
 
     // Mining a block with a asset create transaction
     {
         auto block = std::make_shared<CBlock>(CreateBlock(txns, coinbaseKey));
-        ProcessNewBlock(Params(), block, true, nullptr);
+        EnsureChainman(m_node).ProcessNewBlock(Params(), block, true, nullptr);
 
-        BOOST_ASSERT(chainActive.Height() == nHeight + 1);
-        BOOST_ASSERT(block->GetHash() == chainActive.Tip()->GetBlockHash());
+        BOOST_ASSERT(::ChainActive().Height() == nHeight + 1);
+        BOOST_ASSERT(block->GetHash() == ::ChainActive().Tip()->GetBlockHash());
     }
 
     assetId = tx.GetHash().ToString();
-    tx = CreateMintAssetTx(utxos, coinbaseKey, assetId);
+    tx = CreateMintAssetTx(*m_node.mempool, utxos, coinbaseKey, assetId);
 
     {
         auto block = std::make_shared<CBlock>(CreateBlock({tx}, coinbaseKey));
-        ProcessNewBlock(Params(), block, true, nullptr);
+        EnsureChainman(m_node).ProcessNewBlock(Params(), block, true, nullptr);
 
-        BOOST_ASSERT(chainActive.Height() == nHeight + 2);
-        BOOST_ASSERT(block->GetHash() == chainActive.Tip()->GetBlockHash());
+        BOOST_ASSERT(::ChainActive().Height() == nHeight + 2);
+        BOOST_ASSERT(block->GetHash() == ::ChainActive().Tip()->GetBlockHash());
     }
 
     BOOST_ASSERT(passetsCache->GetAssetMetaData(assetId, asset));
@@ -554,13 +555,13 @@ BOOST_FIXTURE_TEST_CASE(assets_invalid_cases, TestChainDIP3BeforeActivationSetup
         tx2.vin.push_back(CTxIn(COutPoint(tx.GetHash(), 0)));
 
         FundTransaction(tx2, utxos, GetScriptForDestination(coinbaseKey.GetPubKey().GetID()),1 * COIN, coinbaseKey);
-        SignTransaction(tx2, coinbaseKey);
+        SignTransaction(*m_node.mempool, tx2, coinbaseKey);
 
         auto block = std::make_shared<CBlock>(CreateBlock({tx2}, coinbaseKey));
-        ProcessNewBlock(Params(), block, true, nullptr);
+        EnsureChainman(m_node).ProcessNewBlock(Params(), block, true, nullptr);
 
-        BOOST_ASSERT(chainActive.Height() == nHeight + 2);
-        BOOST_ASSERT(block->GetHash() != chainActive.Tip()->GetBlockHash());
+        BOOST_ASSERT(::ChainActive().Height() == nHeight + 2);
+        BOOST_ASSERT(block->GetHash() != ::ChainActive().Tip()->GetBlockHash());
     }
 
     {
@@ -579,13 +580,13 @@ BOOST_FIXTURE_TEST_CASE(assets_invalid_cases, TestChainDIP3BeforeActivationSetup
         tx2.vin.push_back(CTxIn(COutPoint(tx.GetHash(), 5)));//uniqueId=5
 
         FundTransaction(tx2, utxos, GetScriptForDestination(coinbaseKey.GetPubKey().GetID()),1 * COIN, coinbaseKey);
-        SignTransaction(tx2, coinbaseKey);
+        SignTransaction(*m_node.mempool, tx2, coinbaseKey);
 
         auto block = std::make_shared<CBlock>(CreateBlock({tx2}, coinbaseKey));
-        ProcessNewBlock(Params(), block, true, nullptr);
+        EnsureChainman(m_node).ProcessNewBlock(Params(), block, true, nullptr);
 
-        BOOST_ASSERT(chainActive.Height() == nHeight + 2);
-        BOOST_ASSERT(block->GetHash() != chainActive.Tip()->GetBlockHash());
+        BOOST_ASSERT(::ChainActive().Height() == nHeight + 2);
+        BOOST_ASSERT(block->GetHash() != ::ChainActive().Tip()->GetBlockHash());
     }
 
     {
@@ -610,13 +611,13 @@ BOOST_FIXTURE_TEST_CASE(assets_invalid_cases, TestChainDIP3BeforeActivationSetup
 
 
         FundTransaction(tx2, utxos, GetScriptForDestination(coinbaseKey.GetPubKey().GetID()),1 * COIN, coinbaseKey);
-        SignTransaction(tx2, coinbaseKey);
+        SignTransaction(*m_node.mempool, tx2, coinbaseKey);
 
         auto block = std::make_shared<CBlock>(CreateBlock({tx2}, coinbaseKey));
-        ProcessNewBlock(Params(), block, true, nullptr);
+        EnsureChainman(m_node).ProcessNewBlock(Params(), block, true, nullptr);
 
-        BOOST_ASSERT(chainActive.Height() == nHeight + 2);
-        BOOST_ASSERT(block->GetHash() != chainActive.Tip()->GetBlockHash());
+        BOOST_ASSERT(::ChainActive().Height() == nHeight + 2);
+        BOOST_ASSERT(block->GetHash() != ::ChainActive().Tip()->GetBlockHash());
     }
 
     {
@@ -634,14 +635,14 @@ BOOST_FIXTURE_TEST_CASE(assets_invalid_cases, TestChainDIP3BeforeActivationSetup
         tx2.vin.push_back(CTxIn(COutPoint(tx.GetHash(), 0)));
 
         FundTransaction(tx2, utxos, GetScriptForDestination(coinbaseKey.GetPubKey().GetID()),1 * COIN, coinbaseKey);
-        SignTransaction(tx2, coinbaseKey);
+        SignTransaction(*m_node.mempool, tx2, coinbaseKey);
 
 
         auto block = std::make_shared<CBlock>(CreateBlock({tx2}, coinbaseKey));
-        ProcessNewBlock(Params(), block, true, nullptr);
+        EnsureChainman(m_node).ProcessNewBlock(Params(), block, true, nullptr);
 
-        BOOST_ASSERT(chainActive.Height() == nHeight + 2);
-        BOOST_ASSERT(block->GetHash() != chainActive.Tip()->GetBlockHash());
+        BOOST_ASSERT(::ChainActive().Height() == nHeight + 2);
+        BOOST_ASSERT(block->GetHash() != ::ChainActive().Tip()->GetBlockHash());
     }
 }
 BOOST_AUTO_TEST_SUITE_END()

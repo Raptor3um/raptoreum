@@ -10,6 +10,7 @@
 
 #include <primitives/transaction.h>
 #include <consensus/validation.h>
+#include <assets/assetstype.h>
 
 CChain& ChainActive();
 
