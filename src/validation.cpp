@@ -1671,7 +1671,7 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
             }
         }
 
-        if(Params().IsAssetsActive(chainActive.Tip()) && assetsCache) {
+        if(Params().IsAssetsActive(::ChainActive().Tip()) && assetsCache) {
             if (tx.nType == TRANSACTION_NEW_ASSET){
                 CNewAssetTx assetTx;
                 if (GetTxPayload(tx, assetTx)) {
@@ -2595,7 +2595,7 @@ bool CChainState::FlushStateToDisk(const CChainParams& chainparams, CValidationS
             if (!evoDb->CommitRootTransaction()) {
                 return AbortNode(state, "Failed to commit EvoDB");
             }
-            if (Params().IsAssetsActive(chainActive.Tip())){
+            if (Params().IsAssetsActive(::ChainActive().Tip())){
                 if (passetsCache && !passetsCache->DumpCacheToDatabase())
                         return AbortNode(state, "Failed to write to asset database");
             }

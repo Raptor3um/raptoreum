@@ -2321,11 +2321,11 @@ void CWalletTx::GetAmounts(std::list<COutputEntry>& listReceived,
 
     std::list<CAssetOutputEntry> assetsReceived;
     std::list<CAssetOutputEntry> assetsSent;
-    GetAmounts(listReceived, listSent, nFee, strSentAccount, filter, assetsReceived, assetsSent);
+    GetAmounts(listReceived, listSent, nFee, filter, assetsReceived, assetsSent);
 }
 
 void CWalletTx::GetAmounts(std::list<COutputEntry>& listReceived,
-                           std::list<COutputEntry>& listSent, CAmount& nFee, std::string& strSentAccount, const isminefilter& filter, std::list<CAssetOutputEntry>& assetsReceived, std::list<CAssetOutputEntry>& assetsSent) const
+                           std::list<COutputEntry>& listSent, CAmount& nFee, const isminefilter& filter, std::list<CAssetOutputEntry>& assetsReceived, std::list<CAssetOutputEntry>& assetsSent) const
 {
     nFee = 0;
     listReceived.clear();
@@ -2379,7 +2379,7 @@ void CWalletTx::GetAmounts(std::list<COutputEntry>& listReceived,
                 listReceived.push_back(output);
         }
 
-        if (Params().IsAssetsActive(chainActive.Tip())) {
+        if (Params().IsAssetsActive(::ChainActive().Tip())) {
             if (txout.scriptPubKey.IsAssetScript()) {
                 CAssetOutputEntry assetoutput;
                 assetoutput.vout = i;
@@ -3167,7 +3167,7 @@ void CWallet::AvailableCoins(std::vector<COutput>& vCoins, std::map<std::string,
     std::map<uint256, COutPoint> mapOutPoints;
     std::set<std::string> setAssetMaxFound;
 
-    bool fGetAssets = Params().IsAssetsActive(chainActive.Tip()) && fOnlyAssets;
+    bool fGetAssets = Params().IsAssetsActive(::ChainActive().Tip()) && fOnlyAssets;
 
     for (auto pcoin : GetSpendableTXs()) {
         const uint256& wtxid = pcoin->GetHash();
@@ -3656,6 +3656,25 @@ static void ApproximateBestAssetSubset(const std::vector<std::pair<CInputCoin, C
     }
 }
 
+bool CWallet::OutputEligibleForSpending(const COutput& output, const CoinEligibilityFilter& eligibility_filter) const
+{
+    if (!output.fSpendable || (output.isFuture && !output.isFutureSpendable))
+        return false;
+
+    bool fLockedByIS = output.tx->IsLockedByInstantSend();
+
+    if ((output.nDepth < (output.tx->IsFromMe(ISMINE_ALL) ? eligibility_filter.conf_mine : eligibility_filter.conf_theirs)) && !fLockedByIS)
+        return false;
+
+    size_t ancestors, descendants;
+    mempool.GetTransactionAncestry(output.tx->GetHash(), ancestors, descendants);
+    if (ancestors > eligibility_filter.max_ancestors || descendants > eligibility_filter.max_descendants) {
+        return false;
+    }
+
+    return true;
+}
+
 bool CWallet::SelectAssetsMinConf(const CAmount& nTargetValue, const CoinEligibilityFilter& eligibility_filter, const std::string& strAssetName, std::vector<COutput> vCoins, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet) const
 {
     setCoinsRet.clear();
@@ -3810,11 +3829,11 @@ bool CWallet::SelectAssets(const std::map<std::string, std::vector<COutput>>& ma
             bool res = nTempTargetValue <= nValueFromPresetInputs ||
                        SelectAssetsMinConf(nTempTargetValue - nValueFromPresetInputs, CoinEligibilityFilter(1, 6, 0), strAssetName, vAssets, tempCoinsRet, nTempAmountRet) ||
                        SelectAssetsMinConf(nTempTargetValue - nValueFromPresetInputs, CoinEligibilityFilter(1, 1, 0), strAssetName, vAssets, tempCoinsRet, nTempAmountRet) ||
-                       (bSpendZeroConfChange && SelectAssetsMinConf(nTempTargetValue - nValueFromPresetInputs, CoinEligibilityFilter(0, 1, 2), strAssetName, vAssets, tempCoinsRet, nTempAmountRet)) ||
-                       (bSpendZeroConfChange && SelectAssetsMinConf(nTempTargetValue - nValueFromPresetInputs, CoinEligibilityFilter(0, 1, std::min((size_t)4, nMaxChainLength / 3)), strAssetName, vAssets, tempCoinsRet, nTempAmountRet)) ||
-                       (bSpendZeroConfChange && SelectAssetsMinConf(nTempTargetValue - nValueFromPresetInputs, CoinEligibilityFilter(0, 1, nMaxChainLength / 2), strAssetName, vAssets, tempCoinsRet, nTempAmountRet)) ||
-                       (bSpendZeroConfChange && SelectAssetsMinConf(nTempTargetValue - nValueFromPresetInputs, CoinEligibilityFilter(0, 1, nMaxChainLength), strAssetName, vAssets, tempCoinsRet, nTempAmountRet)) ||
-                       (bSpendZeroConfChange && !fRejectLongChains && SelectAssetsMinConf(nTempTargetValue - nValueFromPresetInputs, CoinEligibilityFilter(0, 1, std::numeric_limits<uint64_t>::max()), strAssetName, vAssets, tempCoinsRet, nTempAmountRet));
+                       (m_spend_zero_conf_change && SelectAssetsMinConf(nTempTargetValue - nValueFromPresetInputs, CoinEligibilityFilter(0, 1, 2), strAssetName, vAssets, tempCoinsRet, nTempAmountRet)) ||
+                       (m_spend_zero_conf_change && SelectAssetsMinConf(nTempTargetValue - nValueFromPresetInputs, CoinEligibilityFilter(0, 1, std::min((size_t)4, nMaxChainLength / 3)), strAssetName, vAssets, tempCoinsRet, nTempAmountRet)) ||
+                       (m_spend_zero_conf_change && SelectAssetsMinConf(nTempTargetValue - nValueFromPresetInputs, CoinEligibilityFilter(0, 1, nMaxChainLength / 2), strAssetName, vAssets, tempCoinsRet, nTempAmountRet)) ||
+                       (m_spend_zero_conf_change && SelectAssetsMinConf(nTempTargetValue - nValueFromPresetInputs, CoinEligibilityFilter(0, 1, nMaxChainLength), strAssetName, vAssets, tempCoinsRet, nTempAmountRet)) ||
+                       (m_spend_zero_conf_change && !fRejectLongChains && SelectAssetsMinConf(nTempTargetValue - nValueFromPresetInputs, CoinEligibilityFilter(0, 1, std::numeric_limits<uint64_t>::max()), strAssetName, vAssets, tempCoinsRet, nTempAmountRet));
 
             if (res) {
                 setCoinsRet.insert(tempCoinsRet.begin(), tempCoinsRet.end());
@@ -4172,7 +4191,7 @@ bool CWallet::GetBudgetSystemCollateralTX(CTransactionRef& tx, uint256 hash, CAm
 
 bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransactionRef& tx, CAmount& nFeeRet, int& nChangePosInOut, std::string& strFailReason, const CCoinControl& coin_control, bool sign, int nExtraPayloadSize, FuturePartialPayload* fpp, CNewAssetTx* newAsset, CMintAssetTx* mint)
 {
-    if (!Params().IsAssetsActive(chainActive.Tip()) && (newAsset || mint))
+    if (!Params().IsAssetsActive(::ChainActive().Tip()) && (newAsset || mint))
         return false;
 
     uint32_t const height = chain().getHeight().get_value_or(-1);
@@ -4426,7 +4445,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
                         return false;
                     }
                     vecCoins.assign(setCoinsTmp.begin(), setCoinsTmp.end());
-                    if (Params().IsAssetsActive(chainActive.Tip())) {
+                    if (Params().IsAssetsActive(::ChainActive().Tip())) {
                         std::set<CInputCoin> setAssetsTmp;
                         mapAssetsIn.clear();
                         if (!SelectAssets(mapAssetCoins, mapAssetValue, mapAssetUniqueId, setAssetsTmp, mapAssetsIn)) {
@@ -4506,7 +4525,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
                     }
                 };
 
-                if (Params().IsAssetsActive(chainActive.Tip())) {
+                if (Params().IsAssetsActive(::ChainActive().Tip())) {
                     // Add the change for the assets
                     std::map<std::string, CAmount> mapAssetChange;
                     for (auto asset : mapAssetValue) {

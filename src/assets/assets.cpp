@@ -343,7 +343,7 @@ bool CAssetsCache::Flush()
 
 void AddAssets(const CTransaction& tx, int nHeight, CAssetsCache* assetCache, std::pair<std::string, CBlockAssetUndo>* undoAssetData)
 {
-    if (Params().IsAssetsActive(chainActive.Tip()) && assetCache) {
+    if (Params().IsAssetsActive(::ChainActive().Tip()) && assetCache) {
         if (tx.nType == TRANSACTION_NEW_ASSET) {
             CNewAssetTx assetTx;
             if (GetTxPayload(tx, assetTx)) {

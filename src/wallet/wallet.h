@@ -561,7 +561,7 @@ public:
                     std::list<COutputEntry>& listSent, CAmount& nFee, const isminefilter& filter) const;
 
     void GetAmounts(std::list<COutputEntry>& listReceived,
-                    std::list<COutputEntry>& listSent, CAmount& nFee, std::string& strSentAccount, const isminefilter& filter, std::list<CAssetOutputEntry>& assetsReceived, std::list<CAssetOutputEntry>& assetsSent) const;
+                    std::list<COutputEntry>& listSent, CAmount& nFee, const isminefilter& filter, std::list<CAssetOutputEntry>& assetsReceived, std::list<CAssetOutputEntry>& assetsSent) const;
 
     bool IsFromMe(const isminefilter& filter) const
     {
@@ -1428,6 +1428,10 @@ public:
         m_last_block_processed_height = block_height;
         m_last_block_processed = block_hash;
     };
+
+    //used by assets need to be changed
+    /** Whether a given output is spendable by this wallet */
+    bool OutputEligibleForSpending(const COutput& output, const CoinEligibilityFilter& eligibility_filter) const;
 
     friend struct WalletTestingSetup;
 };

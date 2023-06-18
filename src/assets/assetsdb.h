@@ -35,23 +35,12 @@ struct CBlockAssetUndo {
     CKeyID collateralAddress;
 
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CBlockAssetUndo, obj)
     {
-        READWRITE(onlySupply);
-        READWRITE(circulatingSupply);
-        READWRITE(mintCount);
-        if (!onlySupply) {
-            READWRITE(updatable);
-            READWRITE(referenceHash);
-            READWRITE(type);
-            READWRITE(targetAddress);
-            READWRITE(issueFrequency);
-            READWRITE(amount);
-            READWRITE(ownerAddress);
-            READWRITE(collateralAddress);
+        READWRITE(obj.onlySupply, obj.circulatingSupply, obj.mintCount);
+        if (!obj.onlySupply) {
+             READWRITE(obj.updatable, obj.referenceHash, obj.type, obj.targetAddress, obj.issueFrequency,
+                       obj.amount, obj.ownerAddress, obj.collateralAddress);
         }
     }
 };

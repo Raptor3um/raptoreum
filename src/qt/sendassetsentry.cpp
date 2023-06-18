@@ -185,10 +185,6 @@ bool SendAssetsEntry::validate(interfaces::Node& node)
     // Check input validity
     bool retval = true;
 
-    // Skip checks for payment request
-    if (recipient.paymentRequest.IsInitialized())
-        return retval;
-
     if (!model->validateAddress(ui->payTo->text()))
     {
         ui->payTo->setValid(false);
@@ -235,10 +231,6 @@ bool SendAssetsEntry::validate(interfaces::Node& node)
 
 SendCoinsRecipient SendAssetsEntry::getValue()
 {
-    // Payment request
-    if (recipient.paymentRequest.IsInitialized())
-        return recipient;
-
     // Normal payment
     recipient.assetId = ui->assetList->currentText();
     recipient.address = ui->payTo->text();

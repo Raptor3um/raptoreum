@@ -53,27 +53,12 @@ public:
 
     CAssetMetaData(const std::string txid, const CNewAssetTx assetTx);
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CAssetMetaData, obj)
     {
-        READWRITE(assetId);
-        READWRITE(circulatingSupply);
-        READWRITE(mintCount);
-        READWRITE(name);
-        READWRITE(updatable);
-        READWRITE(isUnique);
-        READWRITE(maxMintCount);
-        READWRITE(decimalPoint);
-        READWRITE(referenceHash);
-        READWRITE(fee);
-        READWRITE(type);
-        READWRITE(targetAddress);
-        READWRITE(issueFrequency);
-        READWRITE(amount);
-        READWRITE(ownerAddress);
-        READWRITE(collateralAddress);
+        READWRITE(obj.assetId, obj.circulatingSupply, obj.mintCount, obj.name, obj.updatable,
+            obj.isUnique, obj.maxMintCount, obj.decimalPoint, obj.referenceHash, obj.fee,
+            obj.type, obj.targetAddress, obj.issueFrequency, obj.amount, obj.ownerAddress,
+            obj.collateralAddress);
     }
 
     void SetNull()
@@ -119,14 +104,9 @@ public:
         return asset.assetId < rhs.asset.assetId;
     }
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+     SERIALIZE_METHODS(CDatabaseAssetData, obj)
     {
-        READWRITE(asset);
-        READWRITE(blockHeight);
-        READWRITE(blockHash);
+        READWRITE(obj.asset, obj.blockHeight, obj.blockHash);
     }
 };
 

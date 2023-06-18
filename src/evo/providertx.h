@@ -269,31 +269,16 @@ public:
     uint256 inputsHash; // replay protection
 
 public:
-    ADD_SERIALIZE_METHODS;
 
-    template<typename Stream, typename Operation>
-    inline void SerializationOp(Stream &s, Operation ser_action) {
-        READWRITE(nVersion);
-        READWRITE(name);
-        READWRITE(updatable);
-        READWRITE(isUnique);
-        READWRITE(maxMintCount);
-        READWRITE(decimalPoint);
-        READWRITE(referenceHash);
-        READWRITE(fee);
-        READWRITE(type);
-        READWRITE(targetAddress);
-        READWRITE(issueFrequency);
-        READWRITE(amount);
-        READWRITE(ownerAddress);
-        READWRITE(collateralAddress);
-        READWRITE(exChainType);
-        READWRITE(externalPayoutScript);
-        READWRITE(externalTxid);
-        READWRITE(externalConfirmations);
-        READWRITE(inputsHash);
+    SERIALIZE_METHODS(CNewAssetTx, obj)
+    {
+        READWRITE(obj.nVersion, obj.name, obj.updatable, obj.isUnique, obj.maxMintCount,
+                  obj.decimalPoint, obj.referenceHash, obj.fee, obj.type, obj.targetAddress,
+                  obj.issueFrequency, obj.amount, obj.ownerAddress, obj.collateralAddress,
+                  obj.exChainType, obj.externalPayoutScript, obj.externalTxid, 
+                  obj.externalConfirmations, obj.inputsHash);
     }
-
+    
     std::string ToString() const;
 
     void ToJson(UniValue &obj) const {
@@ -355,27 +340,12 @@ public:
     uint256 inputsHash; // replay protection
 
 public:
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CUpdateAssetTx, obj)
     {
-        READWRITE(nVersion);
-        READWRITE(assetId);
-        READWRITE(updatable);
-        READWRITE(referenceHash);
-        READWRITE(fee);
-        READWRITE(type);
-        READWRITE(targetAddress);
-        READWRITE(issueFrequency);
-        READWRITE(amount);
-        READWRITE(ownerAddress);
-        READWRITE(collateralAddress);
-        READWRITE(exChainType);
-        READWRITE(externalPayoutScript);
-        READWRITE(externalTxid);
-        READWRITE(externalConfirmations);
-        READWRITE(inputsHash);
+        READWRITE(obj.nVersion, obj.assetId, obj.updatable, obj.referenceHash, obj.fee,
+                  obj.type, obj.targetAddress, obj.issueFrequency, obj.amount,
+                  obj.ownerAddress, obj.collateralAddress, obj.exChainType, obj.externalPayoutScript,
+                  obj.externalTxid, obj.externalConfirmations, obj.inputsHash);
     }
 
     std::string ToString() const;
@@ -423,17 +393,12 @@ public:
     uint256 inputsHash; // replay protection
 
 public:
-    ADD_SERIALIZE_METHODS;
 
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CMintAssetTx, obj)
     {
-        READWRITE(nVersion);
-        READWRITE(assetId);
-        READWRITE(fee);
-        READWRITE(inputsHash);
+        READWRITE(obj.nVersion, obj.assetId, obj.fee, obj.inputsHash);
     }
-
+    
     std::string ToString() const;
 
     void ToJson(UniValue& obj) const

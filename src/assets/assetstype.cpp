@@ -19,7 +19,7 @@ bool GetTransferAsset(const CScript& script, CAssetTransfer& assetTransfer)
     try {
         DSAsset >> assetTransfer;
     } catch (std::exception& e) {
-        error("Failed to get the transfer asset: %s", e.what());
+        //error("Failed to get the transfer asset: %s", e.what());
         return false;
     }
 

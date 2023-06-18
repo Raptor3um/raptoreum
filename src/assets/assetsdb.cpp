@@ -9,7 +9,7 @@
 #include <consensus/params.h>
 #include <script/ismine.h>
 #include <tinyformat.h>
-#include <util.h>
+//#include <util.h>
 
 #include <boost/thread.hpp>
 

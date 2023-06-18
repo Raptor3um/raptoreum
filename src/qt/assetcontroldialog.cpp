@@ -483,7 +483,7 @@ void AssetControlDialog::updateLabels(CCoinControl& m_coin_control, WalletModel 
 
         if (amount > 0)
         {
-            CTxOut txout(amount, static_cast<CScript>(std::vector<unsigned char>(24, 0)));
+            CTxOut txout(amount, CScript() << std::vector<unsigned char>(24, 0));
             txDummy.vout.push_back(txout);
             fDust |= IsDust(txout, model->node().getDustRelayFee());
         }
@@ -560,7 +560,7 @@ void AssetControlDialog::updateLabels(CCoinControl& m_coin_control, WalletModel 
                 nBytes -= 34;
 
         // Fee
-        nPayFee = model->node().getMinimumFee(nBytes, m_coin_control, nullptr /* returned_target */, nullptr /* reason */);
+        nPayFee = model->wallet().getMinimumFee(nBytes, m_coin_control, nullptr /* returned_target */, nullptr /* reason */);
 
         if (nPayAmount > 0)
         {
@@ -701,7 +701,7 @@ void AssetControlDialog::updateView()
                 CAssetMetaData assetData;
                 if(passetsCache->GetAssetMetaData(assetTransfer.assetId, assetData)){
                     if (assetData.isUnique)
-                        uniqueId += " ["+to_string(assetTransfer.uniqueId)+"]";
+                        uniqueId += " ["+std::to_string(assetTransfer.uniqueId)+"]";
                     assetname = QString::fromStdString(assetData.name);
                 }
             }
