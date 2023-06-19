@@ -472,7 +472,7 @@ public:
         }
         return result;
     }
-    UniqueIdList listAssetUniqueId(std::string assetId, const CCoinControl* coinControl = nullptr)
+    UniqueIdList listAssetUniqueId(std::string assetId, const CCoinControl* coinControl) override
     {
       LOCK2(::cs_main, m_wallet->cs_wallet);
         UniqueIdList result;
