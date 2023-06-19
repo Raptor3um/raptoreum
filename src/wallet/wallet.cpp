@@ -3687,7 +3687,7 @@ bool CWallet::SelectAssetsMinConf(const CAmount& nTargetValue, const CoinEligibi
     std::map<COutPoint, CAmount> mapValueAmount;
     CAmount nTotalLower = 0;
 
-    random_shuffle(vCoins.begin(), vCoins.end(), GetRandInt);
+    Shuffle(vCoins.begin(), vCoins.end(), FastRandomContext());
 #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
     for (const COutput& output : vCoins) {
         if (!OutputEligibleForSpending(output, eligibility_filter))

@@ -75,7 +75,7 @@ public:
         fee = uint8_t(-1);
         type = uint8_t(-1);
         targetAddress = CKeyID();
-        issueFrequency;
+        issueFrequency = uint8_t(-1);
         amount = 0;
         ownerAddress = CKeyID();
         collateralAddress = CKeyID();
