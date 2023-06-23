@@ -29,6 +29,10 @@
 #include <wallet/wallet.h>
 #endif//ENABLE_WALLET
 
+#include <netbase.h>
+#include <assets/assets.h>
+
+#include <bls/bls.h>
 #include <limits.h>
 #include <iostream>
 #include <fstream>
@@ -456,12 +460,13 @@ static void SignSpecialTxPayloadByHash(const CMutableTransaction& tx, SpecialTxP
 static std::string SignAndSendSpecialTx(const JSONRPCRequest& request, const CMutableTransaction& tx, bool fSubmit = true)
 {
     {
-    LOCK(cs_main);
+        LOCK(cs_main);
 
-    CValidationState state;
-    if (!CheckSpecialTx(CTransaction(tx), ::ChainActive().Tip(), state, ::ChainstateActive().CoinsTip(), true)) {
-        throw std::runtime_error(FormatStateMessage(state));
-    }
+        CValidationState state;
+        CAssetsCache assetsCache = *passetsCache.get();
+        if (!CheckSpecialTx(CTransaction(tx), ::ChainActive().Tip(), state, ::ChainstateActive().CoinsTip(), &assetsCache, true)) {
+            throw std::runtime_error(FormatStateMessage(state));
+        }
     } // cs_main
 
     CDataStream ds(SER_NETWORK, PROTOCOL_VERSION);

@@ -28,6 +28,7 @@ const char* GetTxnOutputType(txnouttype t)
     case TX_SCRIPTHASH: return "scripthash";
     case TX_MULTISIG: return "multisig";
     case TX_NULL_DATA: return "nulldata";
+    case TX_TRANSFER_ASSET: return "transferasset";
     }
     return nullptr;
 }
@@ -91,6 +92,12 @@ txnouttype Solver(const CScript& scriptPubKey, std::vector<std::vector<unsigned 
         return TX_SCRIPTHASH;
     }
 
+    if (scriptPubKey.IsAssetScript()) {
+        std::vector<unsigned char> hashBytes(scriptPubKey.begin()+3, scriptPubKey.begin()+23);
+        vSolutionsRet.push_back(hashBytes);
+        return TX_TRANSFER_ASSET;
+    }
+
     // Provably prunable, data-carrying output
     //
     // So long as script passes the IsUnspendable() test and all but the first
@@ -145,6 +152,11 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
     else if (whichType == TX_SCRIPTHASH)
     {
         addressRet = CScriptID(uint160(vSolutions[0]));
+        return true;
+    }
+    else if (whichType == TX_TRANSFER_ASSET) 
+    {
+        addressRet = CKeyID(uint160(vSolutions[0]));
         return true;
     }
     // Multisig txns have more than one address...

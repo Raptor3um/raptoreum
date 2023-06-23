@@ -17,7 +17,7 @@
 #include <boost/test/unit_test.hpp>
 
 int ApplyTxInUndo(Coin&& undo, CCoinsViewCache& view, const COutPoint& out);
-void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, CTxUndo &txundo, int nHeight);
+//void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, CTxUndo &txundo, int nHeight);
 
 namespace
 {
@@ -95,7 +95,7 @@ public:
 
 } // namespace
 
-BOOST_FIXTURE_TEST_SUITE(coins_tests, BasicTestingSetup)
+BOOST_FIXTURE_TEST_SUITE(coins_tests, TestingSetup)
 
 static const unsigned int NUM_SIMULATION_ITERATIONS = 40000;
 

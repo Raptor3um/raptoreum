@@ -10,10 +10,11 @@
 
 #include <primitives/transaction.h>
 #include <consensus/validation.h>
+#include <assets/assetstype.h>
 
 CChain& ChainActive();
 
-bool CheckTransaction(const CTransaction& tx, CValidationState& state, int nHeight, CAmount blockReward)
+bool CheckTransaction(const CTransaction& tx, CValidationState &state, int nHeight, CAmount blockReward)
 {
     bool allowEmptyTxInOut = false;
     if (tx.nType == TRANSACTION_QUORUM_COMMITMENT) {
@@ -34,24 +35,48 @@ bool CheckTransaction(const CTransaction& tx, CValidationState& state, int nHeig
     // Check for negative or overflow output values
     bool isV17active = Params().IsFutureActive(::ChainActive().Tip());
     CAmount nValueOut = 0;
-    for (const auto& txout : tx.vout) {
+    std::map<std::string, CAmount> nAssetVout;
+    for (const auto& txout : tx.vout)
+    {
         if (txout.nValue < 0)
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-vout-negative");
         if(isV17active){
             if (txout.nValue > MAX_MONEY)
                 return state.DoS(100, false, REJECT_INVALID, "bad-txns-vout-toolarge");
-        } else {
+        }else {
             if (txout.nValue > OLD_MAX_MONEY)
                 return state.DoS(100, false, REJECT_INVALID, "bad-txns-vout-toolarge");
         }
         nValueOut += txout.nValue;
         if (!MoneyRange(nValueOut, isV17active))
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-txouttotal-toolarge");
+
+        if (txout.scriptPubKey.IsAssetScript()) {
+            CAssetTransfer assetTransfer;
+            if (!GetTransferAsset(txout.scriptPubKey, assetTransfer))
+                return state.DoS(100, false, REJECT_INVALID, "bad-txns-assets-output");
+
+            if (nAssetVout.count(assetTransfer.assetId))
+                nAssetVout[assetTransfer.assetId] += assetTransfer.nAmount;
+            else
+                nAssetVout.insert(std::make_pair(assetTransfer.assetId, assetTransfer.nAmount));
+
+            if (assetTransfer.nAmount < 0)
+                return state.DoS(100, false, REJECT_INVALID, "bad-txns-vout-negative");
+
+            if (assetTransfer.nAmount > MAX_MONEY)
+                return state.DoS(100, false, REJECT_INVALID, "bad-txns-vout-toolarge");
+
+            if (!MoneyRange(nAssetVout.at(assetTransfer.assetId), isV17active)) {
+                return state.DoS(100, false, REJECT_INVALID, "bad-txns-outputvalues-outofrange");
+            }
+        }
     }
 
     // Check for duplicate inputs
     std::set<COutPoint> vInOutPoints;
-    for (const auto& txin : tx.vin) {
+    for (const auto& txin : tx.vin)
+    {
         if (!vInOutPoints.insert(txin.prevout).second)
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputs-duplicate");
     }
@@ -62,9 +87,8 @@ bool CheckTransaction(const CTransaction& tx, CValidationState& state, int nHeig
             // With the introduction of CbTx, coinbase scripts are not required anymore to hold a valid block height
             minCbSize = 1;
         }
-        if (tx.vin[0].scriptSig.size() < minCbSize || tx.vin[0].scriptSig.size() > 100) {
+        if (tx.vin[0].scriptSig.size() < minCbSize || tx.vin[0].scriptSig.size() > 100)
             return state.DoS(100, false, REJECT_INVALID, "bad-cb-length");
-        }
         FounderPayment founderPayment = Params().GetConsensus().nFounderPayment;
         CAmount founderReward = founderPayment.getFounderPaymentAmount(nHeight, blockReward);
         int founderStartHeight = founderPayment.getStartBlock();

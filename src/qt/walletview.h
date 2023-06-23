@@ -15,6 +15,7 @@ class ClientModel;
 class OverviewPage;
 class ReceiveCoinsDialog;
 class SendCoinsDialog;
+class SendAssetsDialog;
 class SendCoinsRecipient;
 class TransactionView;
 class WalletModel;
@@ -64,6 +65,7 @@ private:
     QWidget *transactionsPage;
     ReceiveCoinsDialog *receiveCoinsPage;
     SendCoinsDialog *sendCoinsPage;
+    SendAssetsDialog *sendAssetsPage;
     SendCoinsDialog* coinJoinCoinsPage;
     AddressBookPage *usedSendingAddressesPage;
     AddressBookPage *usedReceivingAddressesPage;
@@ -85,6 +87,8 @@ public Q_SLOTS:
     void gotoReceiveCoinsPage();
     /** Switch to send coins page */
     void gotoSendCoinsPage(QString addr = "");
+    /** Switch to send assets page */
+    void gotoSendAssetsPage(QString addr = "");
     /** Switch to CoinJoin coins page */
     void gotoCoinJoinCoinsPage(QString addr = "");
 

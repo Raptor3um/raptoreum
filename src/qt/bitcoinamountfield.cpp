@@ -12,16 +12,22 @@
 #include <QHBoxLayout>
 #include <QKeyEvent>
 #include <QLineEdit>
+#include <iostream>//remove later
 
 /**
  * Parse a string into a number of base monetary units and
  * return validity.
  * @note Must return 0 if !valid.
  */
-static CAmount parse(const QString &text, int nUnit, bool *valid_out= nullptr)
+static CAmount parse(const QString &text, int nUnit, int nAssetUnit, bool *valid_out=0)
 {
     CAmount val = 0;
-    bool valid = BitcoinUnits::parse(nUnit, text, &val);
+    bool valid = false;
+
+    if (nAssetUnit >= 0)
+        valid = BitcoinUnits::assetParse(nAssetUnit, text, &val);
+    else
+         valid = BitcoinUnits::parse(nUnit, text, &val);
     if(valid)
     {
         if(val < 0 || val > BitcoinUnits::maxMoney())
@@ -38,17 +44,19 @@ class AmountValidator : public QValidator
 {
     Q_OBJECT
     int currentUnit;
+    int assetUnit;
 public:
     explicit AmountValidator(QObject *parent) :
         QValidator(parent),
-        currentUnit(BitcoinUnits::RTM) {}
+        currentUnit(BitcoinUnits::RTM),
+        assetUnit(-1) {}
 
     State validate(QString &input, int &pos) const override
     {
         if(input.isEmpty())
             return QValidator::Intermediate;
         bool valid = false;
-        parse(input, currentUnit, &valid);
+        parse(input, currentUnit, assetUnit, &valid);
         /* Make sure we return Intermediate so that fixup() is called on defocus */
         return valid ? QValidator::Intermediate : QValidator::Invalid;
     }
@@ -56,6 +64,11 @@ public:
     void updateUnit(int nUnit)
     {
         currentUnit = nUnit;
+    }
+
+    void updateAssetUnit(int nUnit)
+    {
+        assetUnit = nUnit;
     }
 };
 
@@ -69,7 +82,8 @@ class AmountLineEdit: public QLineEdit
 public:
     explicit AmountLineEdit(QWidget *parent):
         QLineEdit(parent),
-        currentUnit(BitcoinUnits::RTM)
+        currentUnit(BitcoinUnits::RTM),
+        assetUnit(-1)
     {
         setAlignment(Qt::AlignLeft);
         amountValidator = new AmountValidator(this);
@@ -80,21 +94,21 @@ public:
     void fixup(const QString &input)
     {
         bool valid = false;
-        CAmount val = parse(input, currentUnit, &valid);
+        CAmount val = parse(input, currentUnit, assetUnit, &valid);
         if(valid)
         {
-            setText(BitcoinUnits::format(currentUnit, val, false, BitcoinUnits::separatorAlways));
+            setText(BitcoinUnits::format(currentUnit, val, false, BitcoinUnits::separatorAlways, assetUnit));
         }
     }
 
     CAmount value(bool *valid_out= nullptr) const
     {
-        return parse(text(), currentUnit, valid_out);
+        return parse(text(), currentUnit, assetUnit, valid_out);
     }
 
     void setValue(const CAmount& value)
     {
-        setText(BitcoinUnits::format(currentUnit, value, false, BitcoinUnits::separatorAlways));
+        setText(BitcoinUnits::format(currentUnit, value, false, BitcoinUnits::separatorAlways, assetUnit));
         Q_EMIT valueChanged();
     }
 
@@ -105,6 +119,23 @@ public:
 
         currentUnit = unit;
         amountValidator->updateUnit(unit);
+
+        if(valid)
+            setValue(val);
+        else
+            clear();
+    }
+
+    void setAssetUnit(int unit)
+    {
+        if (unit > MAX_ASSET_UNITS)
+            unit = MAX_ASSET_UNITS;
+
+        assetUnit = unit;
+        amountValidator->updateAssetUnit(unit);
+
+        bool valid = false;
+        CAmount val = value(&valid);
 
         if(valid)
             setValue(val);
@@ -125,6 +156,7 @@ public:
 
 private:
     int currentUnit;
+    int assetUnit;
 
 protected:
     bool event(QEvent *event) override
@@ -158,7 +190,8 @@ Q_SIGNALS:
 
 BitcoinAmountField::BitcoinAmountField(QWidget *parent) :
     QWidget(parent),
-    amount(nullptr)
+    amount(nullptr),
+    assetUnit(-1)
 {
     amount = new AmountLineEdit(this);
     amount->setLocale(QLocale::c());
@@ -225,7 +258,10 @@ QWidget *BitcoinAmountField::setupTabChain(QWidget *prev)
 
 CAmount BitcoinAmountField::value(bool *valid_out) const
 {
-    return amount->value(valid_out);
+    if (assetUnit >= 0)
+        return amount->value(valid_out) * BitcoinUnits::factorAsset(8 - assetUnit);
+    else
+        return amount->value(valid_out);
 }
 
 void BitcoinAmountField::setValue(const CAmount& value)
@@ -254,4 +290,10 @@ void BitcoinAmountField::unitChanged(int idx)
 void BitcoinAmountField::setDisplayUnit(int newUnit)
 {
     unitChanged(newUnit);
+}
+
+void BitcoinAmountField::setAssetsUnit(int unit)
+{
+    assetUnit = unit;
+    amount->setAssetUnit(assetUnit);
 }

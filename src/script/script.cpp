@@ -6,6 +6,8 @@
 #include <script/script.h>
 #include <tinyformat.h>
 #include <util/strencodings.h>
+#include <assets/assets.h>
+#include <assets/assetstype.h>
 
 const char* GetOpName(opcodetype opcode)
 {
@@ -143,11 +145,42 @@ const char* GetOpName(opcodetype opcode)
     case OP_CHECKDATASIG           : return "OP_CHECKDATASIG";
     case OP_CHECKDATASIGVERIFY     : return "OP_CHECKDATASIGVERIFY";
 
+    case OP_ASSET_ID               : return "OP_ASSET_ID";
+
     case OP_INVALIDOPCODE          : return "OP_INVALIDOPCODE";
 
     default:
         return "OP_UNKNOWN";
     }
+}
+
+bool CScript::IsAssetScript() const
+{
+    int index;
+    return IsAssetScript(index);
+}
+
+bool CScript::IsAssetScript(int& nIndex) const
+{
+    if (this->size() > 31) {
+        if ((*this)[25] == OP_ASSET_ID) { // OP_RTM_ASSET is always in the 25 index of the script if it exists
+            nIndex = -1;
+            if ((*this)[27] == RTM_R) { // Check to see if RTM starts at 27 ( this->size() < 105)
+                if ((*this)[28] == RTM_T)
+                    if ((*this)[29] == RTM_M)
+                        nIndex = 30;
+            } else {
+                if ((*this)[28] == RTM_R) // Check to see if RTM starts at 28 ( this->size() >= 105)
+                    if ((*this)[29] == RTM_T)
+                        if ((*this)[30] == RTM_M)
+                            nIndex = 31;
+            }
+            if (nIndex > 0){
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 unsigned int CScript::GetSigOpCount(bool fAccurate) const
@@ -298,6 +331,15 @@ bool GetScriptOp(CScriptBase::const_iterator& pc, CScriptBase::const_iterator en
         }
         if (end - pc < 0 || (unsigned int)(end - pc) < nSize)
             return false;
+        if (pvchRet)
+            CScriptBase::assign_to(pc, pc + nSize, *pvchRet);
+        pc += nSize;
+    }
+
+    // If we see an op asset id, we consider all data after it has data, and not op codes
+    // Move the pc to the end of the script
+    if (opcode == OP_ASSET_ID) {
+        unsigned int nSize = end - pc;
         if (pvchRet)
             CScriptBase::assign_to(pc, pc + nSize, *pvchRet);
         pc += nSize;

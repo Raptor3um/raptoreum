@@ -21,6 +21,7 @@
 #include <netbase.h>
 #include <evo/specialtx.h>
 #include <evo/providertx.h>
+#include <assets/assets.h>
 
 #include <iostream>
 #include <unistd.h>
@@ -150,7 +151,8 @@ static std::string SignAndSendSpecialTx(const JSONRPCRequest& request, const CMu
 
     CValidationState state;
     bool check_sigs;
-    if (!CheckSpecialTx(CTransaction(tx), ::ChainActive().Tip(), state, ::ChainstateActive().CoinsTip(), check_sigs)) {
+    CAssetsCache assetsCache = *passetsCache.get();
+    if (!CheckSpecialTx(CTransaction(tx), ::ChainActive().Tip(), state, ::ChainstateActive().CoinsTip(), &assetsCache, check_sigs)) {
         throw std::runtime_error(FormatStateMessage(state));
     }
 

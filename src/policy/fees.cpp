@@ -957,3 +957,22 @@ void CBlockPolicyEstimator::FlushUnconfirmed() {
     int64_t endclear = GetTimeMicros();
     LogPrint(BCLog::ESTIMATEFEE, "Recorded %u unconfirmed txs from mempool in %ld micros\n", num_entries, endclear - startclear);
 }
+
+int getConfTargetForIndex(int index) {
+    if (index+1 > static_cast<int>(confTargets.size())) {
+        return confTargets.back();
+    }
+    if (index < 0) {
+        return confTargets[0];
+    }
+    return confTargets[index];
+}
+
+int getIndexForConfTarget(int target) {
+    for (unsigned int i = 0; i < confTargets.size(); i++) {
+        if (confTargets[i] >= target) {
+            return i;
+        }
+    }
+    return confTargets.size() - 1;
+}

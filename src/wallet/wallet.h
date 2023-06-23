@@ -247,6 +247,14 @@ struct COutputEntry
     int vout;
 };
 
+struct CAssetOutputEntry
+{
+    std::string assetId;
+    CTxDestination destination;
+    CAmount nAmount;
+    int vout;
+};
+
 /** Legacy class used for deserializing vtxPrev for backwards compatibility.
  * vtxPrev was removed in commit 93a18a3650292afbb441a47d1fa1b94aeb0164e3,
  * but old wallet.dat files may still contain vtxPrev vectors of CMerkleTxs.
@@ -552,6 +560,9 @@ public:
     void GetAmounts(std::list<COutputEntry>& listReceived,
                     std::list<COutputEntry>& listSent, CAmount& nFee, const isminefilter& filter) const;
 
+    void GetAmounts(std::list<COutputEntry>& listReceived,
+                    std::list<COutputEntry>& listSent, CAmount& nFee, const isminefilter& filter, std::list<CAssetOutputEntry>& assetsReceived, std::list<CAssetOutputEntry>& assetsSent) const;
+
     bool IsFromMe(const isminefilter& filter) const
     {
         return (GetDebit(filter) > 0);
@@ -718,6 +729,13 @@ private:
      */
     bool SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet,
                     const CCoinControl& coin_control, const CoinSelectionParams& coin_selection_params, bool& bnb_used) const;
+
+    /**
+     * Select a set of asset coins such that nValueRet >= nTargetValue and at least
+     * all asset coins from coinControl are selected; Never select unconfirmed coins
+     * if they are not ours
+     */
+    bool SelectAssets(const std::map<std::string, std::vector<COutput> >& mapAvailableAssets, const std::map<std::string, CAmount>& mapAssetTargetValue, const std::map<std::string, std::vector<uint16_t>> mapAssetUniqueId, std::set<CInputCoin>& setCoinsRet, std::map<std::string, CAmount>& nValueRet) const;
 
     WalletBatch *encrypted_batch = nullptr;
 
@@ -926,12 +944,24 @@ public:
     /**
      * populate vCoins with vector of available COutputs.
      */
-    void AvailableCoins(std::vector<COutput>& vCoins, bool fOnlySafe=true, const CCoinControl *coinControl = nullptr, const CAmount& nMinimumAmount = 1, const CAmount& nMaximumAmount = MAX_MONEY, const CAmount& nMinimumSumAmount = MAX_MONEY, const uint64_t nMaximumCount = 0, const int nMinDepth = 0, const int nMaxDepth = 9999999) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    void AvailableCoins(std::vector<COutput>& vCoins, bool fOnlySafe = true, const CCoinControl* coinControl = nullptr, const CAmount& nMinimumAmount = 1, const CAmount& nMaximumAmount = MAX_MONEY, const CAmount& nMinimumSumAmount = MAX_MONEY, const uint64_t nMaximumCount = 0, const int nMinDepth = 0, const int nMaxDepth = 9999999) const;
+    void AvailableCoins(std::vector<COutput>& vCoins, std::map<std::string, std::vector<COutput>>& mapAssetCoins, bool fGetRTM = true, bool fOnlyAssets = false, bool fOnlySafe = true, const CCoinControl* coinControl = nullptr, const CAmount& nMinimumAmount = 1, const CAmount& nMaximumAmount = MAX_MONEY, const CAmount& nMinimumSumAmount = MAX_MONEY, const uint64_t nMaximumCount = 0, const int nMinDepth = 0, const int nMaxDepth = 9999999) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    void AvailableAssets(std::map<std::string, std::vector<COutput>>& mapAssetCoins, bool fOnlySafe = true, const CCoinControl* coinControl = nullptr, const CAmount& nMinimumAmount = 1, const CAmount& nMaximumAmount = MAX_MONEY, const CAmount& nMinimumSumAmount = MAX_MONEY, const uint64_t nMaximumCount = 0, const int nMinDepth = 0, const int nMaxDepth = 9999999) const;
 
     /**
      * Return list of available coins and locked coins grouped by non-change output address.
      */
     std::map<CTxDestination, std::vector<COutput>> ListCoins() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+
+    /**
+     * Return list of available assets and locked assets grouped by non-change output address.
+     */
+    std::map<CTxDestination, std::vector<COutput>> ListAssets() const;
+
+    /**
+     * Return list of assets balances.
+     */
+    std::map<std::string, CAmount> getAssetsBalance(const CCoinControl* coinControl = nullptr, bool fSpendable = false) const;
 
     /**
      * Find non-change parent output.
@@ -945,6 +975,7 @@ public:
      * assembled
      */
     bool SelectCoinsMinConf(const CAmount& nTargetValue, const CoinEligibilityFilter& eligibility_filter, std::vector<OutputGroup> groups, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, const CoinSelectionParams& coin_selection_params, bool& bnb_used, CoinType nCoinType = CoinType::ALL_COINS) const;
+    bool SelectAssetsMinConf(const CAmount& nTargetValue, const CoinEligibilityFilter& eligibility_filter, const std::string& strAssetName, std::vector<COutput> vCoins, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet) const;
 
     // Coin selection
     bool SelectTxDSInsByDenomination(int nDenom, CAmount nValueMax, std::vector<CTxDSIn>& vecTxDSInRet);
@@ -1132,7 +1163,7 @@ public:
      * selected by SelectCoins(); Also create the change output, when needed
      * @note passing nChangePosInOut as -1 will result in setting a random position
      */
-    bool CreateTransaction(const std::vector<CRecipient>& vecSend, CTransactionRef& tx, CAmount& nFeeRet, int& nChangePosInOut, std::string& strFailReason, const CCoinControl& coin_control, bool sign = true, int nExtraPayloadSize = 0, FuturePartialPayload* fpp = nullptr);
+    bool CreateTransaction(const std::vector<CRecipient>& vecSend, CTransactionRef& tx, CAmount& nFeeRet, int& nChangePosInOut, std::string& strFailReason, const CCoinControl& coin_control, bool sign = true, int nExtraPayloadSize = 0, FuturePartialPayload* fpp = nullptr, CNewAssetTx* newAsset = nullptr, CMintAssetTx* mint = nullptr);
 
     /**
      * Submit the transaction to the node's mempool and then relay to peers.
@@ -1397,6 +1428,10 @@ public:
         m_last_block_processed_height = block_height;
         m_last_block_processed = block_hash;
     };
+
+    //used by assets need to be changed
+    /** Whether a given output is spendable by this wallet */
+    bool OutputEligibleForSpending(const COutput& output, const CoinEligibilityFilter& eligibility_filter) const;
 
     friend struct WalletTestingSetup;
 };

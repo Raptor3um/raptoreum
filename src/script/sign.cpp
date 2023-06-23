@@ -104,6 +104,15 @@ static bool SignStep(const SigningProvider& provider, const BaseSignatureCreator
     case TX_NONSTANDARD:
     case TX_NULL_DATA:
       return false;
+    case TX_TRANSFER_ASSET: {
+      CKeyID keyID = CKeyID(uint160(vSolutions[0]));
+      if (!CreateSig(creator, sigdata, provider, sig, keyID, scriptPubKey, sigversion)) return false;
+      ret.push_back(std::move(sig));
+      CPubKey pubkey;
+      GetPubKey(provider, sigdata, keyID, pubkey);
+      ret.push_back(ToByteVector(pubkey));
+      return true;
+    }
     case TX_PUBKEY:
       if (!CreateSig(creator, sigdata, provider, sig, CPubKey(vSolutions[0]).GetID(), scriptPubKey, sigversion)) return false;
       ret.push_back(std::move(sig));

@@ -16,6 +16,8 @@
 #include <evo/specialtx.h>
 #include <evo/providertx.h>
 #include <timedata.h>
+#include <assets/assets.h>
+#include <assets/assetstype.h>
 
 // TODO remove the following dependencies
 #include <chain.h>
@@ -27,48 +29,95 @@ CChain& ChainActive();
 
 static bool checkSpecialTxFee(const CTransaction &tx, CAmount& nFeeTotal, CAmount& specialTxFee, bool fFeeVerify = false) {
 	if(tx.nVersion >= 3) {
-		switch(tx.nType){
-		case TRANSACTION_FUTURE:
-			CFutureTx ftx;
-			if(GetTxPayload(tx.vExtraPayload, ftx)) {
-                if(!Params().IsFutureActive(::ChainActive().Tip())) {
-                    return false;
+            switch (tx.nType) {
+            case TRANSACTION_FUTURE: {
+                CFutureTx ftx;
+                if (GetTxPayload(tx.vExtraPayload, ftx)) {
+                    if (!Params().IsFutureActive(::ChainActive().Tip())) {
+                        return false;
+                    }
+                    bool futureEnabled = sporkManager.IsSporkActive(SPORK_22_SPECIAL_TX_FEE);
+                    if (futureEnabled && fFeeVerify && ftx.fee != getFutureFees()) {
+                        return false;
+                    }
+                    specialTxFee = ftx.fee * COIN;
+                    nFeeTotal -= specialTxFee;
                 }
-                bool futureEnabled = sporkManager.IsSporkActive(SPORK_22_SPECIAL_TX_FEE);
-                if(futureEnabled && fFeeVerify && ftx.fee != getFutureFees()) {
-                    return false;
+                break;
+            }
+            case TRANSACTION_NEW_ASSET: {
+                CNewAssetTx asset;
+                if (GetTxPayload(tx.vExtraPayload, asset)) {
+                    if (!Params().IsAssetsActive(::ChainActive().Tip())) {
+                        return false;
+                    }
+                    bool assetsEnabled = sporkManager.IsSporkActive(SPORK_22_SPECIAL_TX_FEE);
+                    if (assetsEnabled && fFeeVerify && asset.fee != getAssetsFees()) {
+                        return false;
+                    }
+                    specialTxFee = asset.fee * COIN;
+                    nFeeTotal -= specialTxFee;
                 }
-                specialTxFee = ftx.fee * COIN;
-                nFeeTotal -= specialTxFee;
-			}
-			break;
-		}
-	}
+                break;
+            }
+            case TRANSACTION_UPDATE_ASSET: {
+                CUpdateAssetTx asset;
+                if (GetTxPayload(tx.vExtraPayload, asset)) {
+                    if (!Params().IsAssetsActive(::ChainActive().Tip())) {
+                        return false;
+                    }
+                    bool assetsEnabled = sporkManager.IsSporkActive(SPORK_22_SPECIAL_TX_FEE);
+                    if (assetsEnabled && fFeeVerify && asset.fee != getAssetsFees()) {
+                        return false;
+                    }
+                    specialTxFee = asset.fee * COIN;
+                    nFeeTotal -= specialTxFee;
+                }
+                break;
+            }
+            case TRANSACTION_MINT_ASSET: {
+                CMintAssetTx asset;
+                if (GetTxPayload(tx.vExtraPayload, asset)) {
+                    if (!Params().IsAssetsActive(::ChainActive().Tip())) {
+                        return false;
+                    }
+                    bool assetsEnabled = sporkManager.IsSporkActive(SPORK_22_SPECIAL_TX_FEE);
+                    if (assetsEnabled && fFeeVerify && asset.fee != getAssetsFees()) {
+                        return false;
+                    }
+                    specialTxFee = asset.fee * COIN;
+                    nFeeTotal -= specialTxFee;
+                }
+                break;
+            } break;
+            }
+        }
     return true;
 }
 
-static const char *validateFutureCoin(const Coin& coin, int nSpendHeight) {
-	if(coin.nType == TRANSACTION_FUTURE) {
-		CBlockIndex* confirmedBlockIndex = ::ChainActive()[coin.nHeight];
-		if(confirmedBlockIndex) {
-			int64_t adjustCurrentTime = GetAdjustedTime();
-			uint32_t confirmedTime = confirmedBlockIndex->GetBlockTime();
-			CFutureTx futureTx;
-			if(GetTxPayload(coin.vExtraPayload, futureTx)) {
+static const char* validateFutureCoin(const Coin& coin, int nSpendHeight)
+{
+    if (coin.nType == TRANSACTION_FUTURE) {
+        CBlockIndex* confirmedBlockIndex = ::ChainActive()[coin.nHeight];
+        if (confirmedBlockIndex) {
+            int64_t adjustCurrentTime = GetAdjustedTime();
+            uint32_t confirmedTime = confirmedBlockIndex->GetBlockTime();
+            CFutureTx futureTx;
+            if (GetTxPayload(coin.vExtraPayload, futureTx)) {
                 bool isBlockMature = futureTx.maturity >= 0 && nSpendHeight - coin.nHeight >= futureTx.maturity;
-                bool isTimeMature = futureTx.lockTime >= 0 && adjustCurrentTime - confirmedTime  >= futureTx.lockTime;
+                bool isTimeMature = futureTx.lockTime >= 0 && adjustCurrentTime - confirmedTime >= futureTx.lockTime;
                 bool canSpend = isBlockMature || isTimeMature;
-				if(!canSpend) {
-					return "bad-txns-premature-spend-of-future";
-				}
-				return nullptr;
-			}
-			return "bad-txns-unable-to-parse-future";
-		}
-		// should not get here
-		return "bad-txns-unable-to-block-index-for-future";
-	}
-	return nullptr;
+                if (!canSpend) {
+                    return "bad-txns-premature-spend-of-future";
+                }
+                return nullptr;
+            }
+            return "bad-txns-unable-to-parse-future";
+        }
+        // should not get here
+        return "bad-txns-unable-to-block-index-for-future";
+    }
+    return nullptr;
 }
 
 
@@ -206,6 +255,46 @@ unsigned int GetTransactionSigOpCount(const CTransaction& tx, const CCoinsViewCa
 
     return nSigOps;
 }
+//check to see where these now
+
+inline bool checkOutput(const CTxOut& out, CValidationState& state, CAmount& nValueIn, std::map<std::pair<std::string, uint16_t>, CAmount>& nAssetVin, bool isV17active)
+{
+    // Check for negative or overflow values
+    nValueIn += out.nValue;
+    if (!MoneyRange(out.nValue, isV17active) || !MoneyRange(nValueIn, isV17active)) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputvalues-outofrange");
+    }
+
+    if (out.scriptPubKey.IsAssetScript()) {
+        if (out.nValue != 0)
+            return state.DoS(100, false, REJECT_INVALID, "bad-asset-value-outofrange");
+
+        CAssetTransfer assetTransfer;
+        if (!GetTransferAsset(out.scriptPubKey, assetTransfer)) {
+            return state.DoS(100, false, REJECT_INVALID, "bad-asset-transfer");
+        }
+
+        if (!validateAmount(assetTransfer.assetId, assetTransfer.nAmount)) {
+            return state.DoS(100, false, REJECT_INVALID, "bad-assets-transfer-amount");
+        }
+
+        std::pair<std::string, uint16_t> asset(assetTransfer.assetId, assetTransfer.uniqueId);
+        if (nAssetVin.count(asset))
+            nAssetVin[asset] += assetTransfer.nAmount;
+        else
+            nAssetVin.insert(std::make_pair(asset, assetTransfer.nAmount));
+
+        //check unique asset amount, should be alway 1 COIN
+        if (assetTransfer.isUnique && nAssetVin[asset] != 1 * COIN)
+            return state.DoS(100, false, REJECT_INVALID, "bad-asset-inputvalues-outofrange");
+
+        if (!MoneyRange(assetTransfer.nAmount) || !MoneyRange(nAssetVin.at(asset))) {
+            return state.DoS(100, false, REJECT_INVALID, "bad-asset-inputvalues-outofrange");
+        }
+    }
+
+    return true;
+}
 
 bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight, CAmount& txfee, CAmount& specialTxFee, bool isV17active, bool fFeeVerify)
 {
@@ -216,6 +305,7 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
     }
 
     CAmount nValueIn = 0;
+    std::map<std::pair<std::string, uint16_t>, CAmount> nAssetVin;
     for (unsigned int i = 0; i < tx.vin.size(); ++i) {
         const COutPoint &prevout = tx.vin[i].prevout;
         const Coin& coin = inputs.AccessCoin(prevout);
@@ -227,20 +317,35 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
                 REJECT_INVALID, "bad-txns-premature-spend-of-coinbase",
                 strprintf("tried to spend coinbase at depth %d", nSpendHeight - coin.nHeight));
         }
-        // Check for negative or overflow input values
-        nValueIn += coin.out.nValue;
-        if (!MoneyRange(coin.out.nValue, isV17active) || !MoneyRange(nValueIn, isV17active)) {
-            return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputvalues-outofrange");
-        }
+
+        if (!checkOutput(coin.out, state, nValueIn, nAssetVin, isV17active))
+            return false;
 
         const char* futureValidationError = validateFutureCoin(coin, nSpendHeight);
-		if(futureValidationError) {
-			return state.DoS(100, false, REJECT_INVALID, futureValidationError);
-
-		}
+        if (futureValidationError) {
+            return state.DoS(100, false, REJECT_INVALID, futureValidationError);
+        }
     }
 
-    const CAmount value_out = tx.GetValueOut();
+    CAmount value_out = 0;
+    std::map<std::pair<std::string, uint16_t>, CAmount> nAssetVout;
+    for (auto out : tx.vout) {
+        if (!checkOutput(out, state, value_out, nAssetVout, isV17active))
+            return false;
+    }
+
+    if (tx.nType != TRANSACTION_MINT_ASSET) {
+        for (const auto& outValue : nAssetVout) {
+            if (!nAssetVin.count(outValue.first) || nAssetVin.at(outValue.first) != outValue.second)
+                return state.DoS(100, false, REJECT_INVALID, "bad-asset-inputs-outputs-mismatch");
+        }
+        //Check for missing outputs
+        for (const auto& outValue : nAssetVin) {
+            if (!nAssetVout.count(outValue.first) || nAssetVout.at(outValue.first) != outValue.second)
+                return state.DoS(100, false, REJECT_INVALID, "bad-asset-inputs-outputs-mismatch");
+        }
+    }
+
     if (nValueIn < value_out) {
         return state.DoS(100, false, REJECT_INVALID, "bad-txns-in-belowout", false,
             strprintf("value in (%s) < value out (%s)", FormatMoney(nValueIn), FormatMoney(value_out)));
@@ -253,14 +358,13 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
     }
     txfee = txfee_aux;
 
-	if(!checkSpecialTxFee(tx, txfee, specialTxFee, fFeeVerify)) {
+    if (!checkSpecialTxFee(tx, txfee, specialTxFee, fFeeVerify)) {
         return state.DoS(100, false, REJECT_INVALID, "bad-txns-wrong-future-fee-or-not-enable");
-
     }
 
-	if(txfee < 0) {
-		return state.DoS(100, false, REJECT_INVALID, "bad-txns-fee-too-low", false,
-		            strprintf("fee (%s), special tx fee (%s)", FormatMoney(txfee), FormatMoney(specialTxFee)));
-	}
+    if (txfee < 0) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-txns-fee-too-low", false,
+            strprintf("fee (%s), special tx fee (%s)", FormatMoney(txfee), FormatMoney(specialTxFee)));
+    }
     return true;
 }

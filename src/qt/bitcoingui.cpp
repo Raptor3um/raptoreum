@@ -83,8 +83,57 @@ const std::string BitcoinGUI::DEFAULT_UIPLATFORM =
 BitcoinGUI::BitcoinGUI(interfaces::Node& node, const NetworkStyle* networkStyle, QWidget* parent) :
     QMainWindow(parent),
     m_node(node),
+    m_network_style(networkStyle),
+    clientModel(0),
+    walletFrame(0),
+    unitDisplayControl(0),
+    labelWalletEncryptionIcon(0),
+    labelWalletHDStatusIcon(0),
+    labelConnectionsIcon(0),
+    labelBlocksIcon(0),
+    progressBarLabel(0),
+    progressBar(0),
+    progressDialog(0),
+    appMenuBar(0),
+    appToolBar(0),
+    appToolBarLogoAction(0),
+    overviewButton(0),
+    historyButton(0),
+    smartnodeButton(0),
+    quitAction(0),
+    sendCoinsButton(0),
+    sendAssetsButton(0),
+    coinJoinCoinsButton(0),
+    sendCoinsMenuAction(0),
+    sendAssetsMenuAction(0),
+    coinJoinCoinsMenuAction(0),
+    usedSendingAddressesAction(0),
+    usedReceivingAddressesAction(0),
+    signMessageAction(0),
+    verifyMessageAction(0),
+    aboutAction(0),
+    receiveCoinsButton(0),
+    receiveCoinsMenuAction(0),
+    optionsAction(0),
+    toggleHideAction(0),
+    encryptWalletAction(0),
+    backupWalletAction(0),
+    changePassphraseAction(0),
+    aboutQtAction(0),
+    openRPCConsoleAction(0),
+    openAction(0),
+    showHelpMessageAction(0),
+    showCoinJoinHelpAction(0),
+    trayIcon(0),
     trayIconMenu{new QMenu()},
-    m_network_style(networkStyle)
+    dockIconMenu(0),
+    notificator(0),
+    rpcConsole(0),
+    helpMessageDialog(0),
+    modalOverlay(0),
+    tabGroup(0),
+    timerConnecting(0),
+    timerSpinner(0)
 {
     GUIUtil::loadTheme(true);
 
@@ -361,10 +410,15 @@ void BitcoinGUI::createActions()
     receiveCoinsMenuAction->setStatusTip(tr("Request payments (generates QR codes and raptoreum: URIs)"));
     receiveCoinsMenuAction->setToolTip(receiveCoinsMenuAction->statusTip());
 
+    sendAssetsMenuAction = new QAction(tr("&Send Asset"), this);
+    sendAssetsMenuAction->setStatusTip(tr("Send assets to a Raptoreum address"));
+    sendAssetsMenuAction->setToolTip(sendAssetsMenuAction->statusTip());
+
 #ifdef ENABLE_WALLET
     // These showNormalIfMinimized are needed because Send Coins and Receive Coins
     // can be triggered from the tray menu, and need to show the GUI to be useful.
     connect(sendCoinsMenuAction, &QAction::triggered, this, static_cast<void (BitcoinGUI::*)()>(&BitcoinGUI::showNormalIfMinimized));
+    connect(sendAssetsMenuAction, &QAction::triggered, [this]{ gotoSendAssetsPage(); } );
     connect(coinJoinCoinsMenuAction, &QAction::triggered, this, static_cast<void (BitcoinGUI::*)()>(&BitcoinGUI::showNormalIfMinimized));
     connect(receiveCoinsMenuAction, &QAction::triggered, this, static_cast<void (BitcoinGUI::*)()>(&BitcoinGUI::showNormalIfMinimized));
     connect(sendCoinsMenuAction, &QAction::triggered, [this]{ gotoSendCoinsPage(); });
@@ -687,8 +741,14 @@ void BitcoinGUI::createToolBars()
             smartnodeButton->setEnabled(true);
         }
 
+        sendAssetsButton = new QToolButton(this);
+        sendAssetsButton->setText(sendAssetsMenuAction->text());
+        sendAssetsButton->setStatusTip(sendAssetsMenuAction->statusTip());
+        tabGroup->addButton(sendAssetsButton);
+
         connect(overviewButton, &QToolButton::clicked, this, &BitcoinGUI::gotoOverviewPage);
         connect(sendCoinsButton, &QToolButton::clicked, [this]{ gotoSendCoinsPage(); });
+        connect(sendAssetsButton, &QToolButton::clicked, [this]{ gotoSendAssetsPage(); });
         connect(coinJoinCoinsButton, &QToolButton::clicked, [this]{ gotoCoinJoinCoinsPage(); });
         connect(receiveCoinsButton, &QToolButton::clicked, this, &BitcoinGUI::gotoReceiveCoinsPage);
         connect(historyButton, &QToolButton::clicked, this, &BitcoinGUI::gotoHistoryPage);
@@ -933,6 +993,7 @@ void BitcoinGUI::setWalletActionsEnabled(bool enabled)
         coinJoinCoinsButton->setEnabled(enabled && clientModel->coinJoinOptions().isEnabled());
         receiveCoinsButton->setEnabled(enabled);
         historyButton->setEnabled(enabled);
+        sendAssetsButton->setEnabled(enabled);
     }
 #endif // ENABLE_WALLET
 
@@ -942,6 +1003,7 @@ void BitcoinGUI::setWalletActionsEnabled(bool enabled)
 #else
     coinJoinCoinsMenuAction->setEnabled(enabled);
 #endif // ENABLE_WALLET
+    sendAssetsMenuAction->setEnabled(enabled);
     receiveCoinsMenuAction->setEnabled(enabled);
 
     encryptWalletAction->setEnabled(enabled);
@@ -979,12 +1041,12 @@ void BitcoinGUI::createIconMenu(QMenu *pmenu)
     if (enableWallet) {
         pmenu->addAction(sendCoinsMenuAction);
         pmenu->addAction(coinJoinCoinsMenuAction);
-        pmenu->addAction(receiveCoinsMenuAction);
-        pmenu->addSeparator();
-        pmenu->addAction(signMessageAction);
-        pmenu->addAction(verifyMessageAction);
-        pmenu->addSeparator();
-    }
+        pmenu->addAction(sendAssetsMenuAction);
+    pmenu->addAction(receiveCoinsMenuAction);
+    pmenu->addSeparator();
+    pmenu->addAction(signMessageAction);
+    pmenu->addAction(verifyMessageAction);
+    pmenu->addSeparator();}
     pmenu->addAction(optionsAction);
     pmenu->addAction(openInfoAction);
     pmenu->addAction(openRPCConsoleAction);
@@ -1133,6 +1195,12 @@ void BitcoinGUI::gotoSendCoinsPage(QString addr)
 {
     sendCoinsButton->setChecked(true);
     if (walletFrame) walletFrame->gotoSendCoinsPage(addr);
+}
+
+void BitcoinGUI::gotoSendAssetsPage(QString addr)
+{
+    sendAssetsButton->setChecked(true);
+    if (walletFrame) walletFrame->gotoSendAssetsPage(addr);
 }
 
 void BitcoinGUI::gotoCoinJoinCoinsPage(QString addr)

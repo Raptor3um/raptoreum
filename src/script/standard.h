@@ -60,6 +60,7 @@ enum txnouttype
     TX_SCRIPTHASH,
     TX_MULTISIG,
     TX_NULL_DATA, //!< unspendable OP_RETURN script that carries data
+    TX_TRANSFER_ASSET,
 };
 
 class CNoDestination {

@@ -24,6 +24,8 @@
 #include <evo/providertx.h>
 #include <evo/specialtx.h>
 #include <llmq/quorums_commitment.h>
+#include <assets/assets.h>
+#include <assets/assetstype.h>
 
 UniValue ValueFromAmount(const CAmount& amount)
 {
@@ -108,6 +110,13 @@ std::string ScriptToAsmStr(const CScript& script, const bool fAttemptSighashDeco
             str += "[error]";
             return str;
         }
+        if (opcode == OP_ASSET_ID){
+            // Once we hit an OP_ASSET_ID, all the next data should be considered as hex
+            str += GetOpName(opcode);
+            str += " ";
+            str += HexStr(vch);
+        }
+        else
         if (0 <= opcode && opcode <= OP_PUSHDATA4) {
             if (vch.size() <= static_cast<std::vector<unsigned char>::size_type>(4)) {
                 str += strprintf("%d", CScriptNum(vch, false).getint());
@@ -178,6 +187,22 @@ void ScriptPubKeyToUniv(const CScript& scriptPubKey, UniValue& out, bool fInclud
 
     out.pushKV("reqSigs", nRequired);
     out.pushKV("type", GetTxnOutputType(type));
+
+    if (type == TX_TRANSFER_ASSET) {
+        UniValue assetInfo(UniValue::VOBJ);
+        std::string _assetAddress;
+
+        CAssetTransfer data;
+        if (GetTransferAsset(scriptPubKey, data)) {
+            std::string assetId = data.assetId;
+            if (data.isUnique)
+                assetId += "[" + std::to_string(data.uniqueId) + "]";
+            assetInfo.pushKV("asset_id", assetId);
+            assetInfo.pushKV("amount", ValueFromAmount(data.nAmount));
+        }
+
+        out.pushKV("asset", assetInfo);
+    }
 
     UniValue a(UniValue::VARR);
     for (const CTxDestination& addr : addresses) {
@@ -337,6 +362,27 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
         	UniValue obj;
         	ctx.ToJson(obj);
 			entry.push_back(Pair("futureTx", obj));
+        }
+    } else if(tx.nType == TRANSACTION_NEW_ASSET) {
+    	CNewAssetTx ctx;
+        if (GetTxPayload(tx, ctx)) {
+        	UniValue obj;
+        	ctx.ToJson(obj);
+			entry.push_back(Pair("newAssetTx", obj));
+        }
+    } else if(tx.nType == TRANSACTION_UPDATE_ASSET) {
+    	CNewAssetTx ctx;
+        if (GetTxPayload(tx, ctx)) {
+        	UniValue obj;
+        	ctx.ToJson(obj);
+			entry.push_back(Pair("UpdateAssetTx", obj));
+        }
+    } else if(tx.nType == TRANSACTION_MINT_ASSET) {
+    	CMintAssetTx ctx;
+        if (GetTxPayload(tx, ctx)) {
+        	UniValue obj;
+        	ctx.ToJson(obj);
+			entry.push_back(Pair("MintAssetTx", obj));
         }
     }
 

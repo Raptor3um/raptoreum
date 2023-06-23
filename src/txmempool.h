@@ -565,6 +565,9 @@ private:
     std::map<uint256, uint256> mapProTxBlsPubKeyHashes;
     std::map<COutPoint, uint256> mapProTxCollaterals;
 
+    std::map<std::string, uint256> mapAssetsToHash;
+    std::map<std::string, uint256> mapAssetsIdToHash;
+
     void UpdateParent(txiter entry, txiter parent, bool add);
     void UpdateChild(txiter entry, txiter child, bool add);
 
@@ -737,6 +740,9 @@ public:
     std::vector<TxMempoolInfo> infoAll() const;
 
     bool existsProviderTxConflict(const CTransaction &tx) const;
+    bool existsAssetTxConflict(const CTransaction &tx) const;
+    bool CheckForNewAssetConflict(const std::string assetName) const;
+    bool CheckForMintAssetConflict(const std::string assetId) const;
 
     size_t DynamicMemoryUsage() const;
 

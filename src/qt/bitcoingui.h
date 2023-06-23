@@ -134,13 +134,15 @@ private:
     QToolBar* appToolBar = nullptr;
     QToolButton* overviewButton = nullptr;
     QToolButton* sendCoinsButton = nullptr;
-    QToolButton* coinJoinCoinsButton = nullptr;
+    QToolButton* sendAssetsButton;
+    QToolButton *coinJoinCoinsButton = nullptr;
     QToolButton* receiveCoinsButton = nullptr;
     QToolButton* historyButton = nullptr;
     QToolButton* smartnodeButton = nullptr;
     QAction* appToolBarLogoAction = nullptr;
     QAction* quitAction = nullptr;
     QAction* sendCoinsMenuAction = nullptr;
+    QAction *sendAssetsMenuAction;
     QAction* coinJoinCoinsMenuAction = nullptr;
     QAction* usedSendingAddressesAction = nullptr;
     QAction* usedReceivingAddressesAction = nullptr;
@@ -315,6 +317,8 @@ public Q_SLOTS:
     void gotoReceiveCoinsPage();
     /** Switch to send coins page */
     void gotoSendCoinsPage(QString addr = "");
+    /** Switch to send assets page */
+    void gotoSendAssetsPage(QString addr = "");
     /** Switch to CoinJoin coins page */
     void gotoCoinJoinCoinsPage(QString addr = "");
 

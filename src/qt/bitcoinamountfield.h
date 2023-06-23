@@ -44,6 +44,9 @@ public:
     /** Change unit used to display amount. */
     void setDisplayUnit(int unit);
 
+    /** Change assets unit used to display amount. */
+    void setAssetsUnit(int unit);
+
     /** Make field empty and ready for new input. */
     void clear();
 
@@ -65,6 +68,7 @@ protected:
 private:
     AmountLineEdit *amount;
     BitcoinUnits *units;
+    int assetUnit;
 
     void unitChanged(int idx);
 };

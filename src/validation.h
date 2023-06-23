@@ -50,6 +50,10 @@ class CTxMemPool;
 class CValidationState;
 class ChainstateManager;
 struct PrecomputedTransactionData;
+class CTxUndo;
+struct CBlockAssetUndo;
+class CAssetsDB;
+class CAssetsCache;
 struct ChainTxData;
 
 struct DisconnectedBlockTransactions;
@@ -295,6 +299,7 @@ int VersionBitsTipStateSinceHeight(const Consensus::Params& params, Consensus::D
 
 /** Apply the effects of this transaction on the UTXO set represented by view */
 void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, int nHeight);
+void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, CTxUndo& txundo, int nHeight, CAssetsCache* assetCache = nullptr, std::pair<std::string, CBlockAssetUndo>* undoAssetData = nullptr);
 
 /** Transaction validation functions */
 
@@ -673,8 +678,8 @@ public:
     bool AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CValidationState& state, const CChainParams& chainparams, CBlockIndex** ppindex, bool fRequested, const FlatFilePos* dbp, bool* fNewBlock);
 
     // Block (dis)connection on a given view:
-    DisconnectResult DisconnectBlock(const CBlock& block, const CBlockIndex* pindex, CCoinsViewCache& view);
-    bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pindex, CCoinsViewCache& view, const CChainParams& chainparams, bool fJustCheck = false);
+    DisconnectResult DisconnectBlock(const CBlock& block, const CBlockIndex* pindex, CCoinsViewCache& view, CAssetsCache* assetsCache = nullptr);
+    bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pindex, CCoinsViewCache& view, const CChainParams& chainparams, CAssetsCache* assetsCache = nullptr, bool fJustCheck = false);
 
     // Apply the effects of a block disconnection on the UTXO set.
     bool DisconnectTip(CValidationState& state, const CChainParams& chainparams, DisconnectedBlockTransactions* disconnectpool) EXCLUSIVE_LOCKS_REQUIRED(cs_main, ::mempool.cs);
@@ -721,7 +726,7 @@ private:
     CBlockIndex* FindMostWorkChain();
     void ReceivedBlockTransactions(const CBlock& block, CValidationState& state, CBlockIndex* pindexNew, const FlatFilePos& pos);
 
-    bool RollforwardBlock(const CBlockIndex* pindex, CCoinsViewCache& inputs, const CChainParams& params);
+    bool RollforwardBlock(const CBlockIndex* pindex, CCoinsViewCache& inputs, const CChainParams& params, CAssetsCache* assetsCache);
 
     friend ChainstateManager;
 };
@@ -955,6 +960,12 @@ PrevBlockMap& PrevBlockIndex();
 
 /** Global variable that points to the active block tree (protected by cs_main) */
 extern std::unique_ptr<CBlockTreeDB> pblocktree;
+
+/** Global variable that point to the active assets database (protected by cs_main) */
+extern std::unique_ptr<CAssetsDB> passetsdb;
+
+/** Global variable that point to the active assets cache (protected by cs_main) */
+extern std::unique_ptr<CAssetsCache> passetsCache;
 
 /**
  * Return the spend height, which is one more than the inputs.GetBestBlock().

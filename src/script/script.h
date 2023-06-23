@@ -187,11 +187,14 @@ enum opcodetype
     OP_CHECKDATASIG = 0xba,
     OP_CHECKDATASIGVERIFY = 0xbb,
 
+    //asset
+    OP_ASSET_ID = 0xbc,
+
     OP_INVALIDOPCODE = 0xff,
 };
 
 // Maximum value that an opcode can be
-static const unsigned int MAX_OPCODE = OP_CHECKDATASIGVERIFY;
+static const unsigned int MAX_OPCODE = OP_ASSET_ID;
 
 const char* GetOpName(opcodetype opcode);
 
@@ -533,6 +536,10 @@ public:
 
     /** Used for obsolete pay-to-pubkey addresses indexing. */
     bool IsPayToPublicKey() const;
+
+    /**RTM assets*/
+    bool IsAssetScript() const;
+    bool IsAssetScript(int& nIndex) const;
 
     /** Called by IsStandardTx and P2SH/BIP62 VerifyScript (which makes it consensus-critical). */
     bool IsPushOnly(const_iterator pc) const;

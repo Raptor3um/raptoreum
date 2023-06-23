@@ -17,6 +17,7 @@
 class CBlockIndex;
 class CCoinsViewCache;
 class CValidationState;
+class CAssetsCache;
 
 class CProRegTx {
 public:
@@ -240,8 +241,182 @@ public:
     }
 };
 
+class CNewAssetTx
+{
+public:
+    static const uint16_t CURRENT_VERSION = 1;
 
-bool CheckFutureTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CValidationState &state);
+    uint16_t nVersion{CURRENT_VERSION}; // message version
+    std::string name;
+    bool updatable = true; // If true this asset metadata can be modified using assetTx update process.
+    bool isUnique = false; // If true this asset is unique it has an identity per token (NFT flag)
+    uint16_t maxMintCount = 0;
+    uint8_t decimalPoint = 0;
+    std::string referenceHash; // Hash of the underlying physical or digital assets, IPFS hash can be used here.
+    uint16_t fee;              // Fee was paid for this asset creation in addition to miner fee. it is a whole non-decimal point value.
+    //  distribution
+    uint8_t type; // manual, coinbase, address, schedule
+    CKeyID targetAddress;
+    uint8_t issueFrequency;
+    CAmount amount;
+    CKeyID ownerAddress;
+    CKeyID collateralAddress;
+
+    uint16_t exChainType = 0; // External chain type. each 15 bit unsigned number will be map to a external chain. i.e. 0 for btc
+    CScript externalPayoutScript;
+    uint256 externalTxid;
+    uint16_t externalConfirmations = 0;
+    uint256 inputsHash; // replay protection
+
+public:
+
+    SERIALIZE_METHODS(CNewAssetTx, obj)
+    {
+        READWRITE(obj.nVersion, obj.name, obj.updatable, obj.isUnique, obj.maxMintCount,
+                  obj.decimalPoint, obj.referenceHash, obj.fee, obj.type, obj.targetAddress,
+                  obj.issueFrequency, obj.amount, obj.ownerAddress, obj.collateralAddress,
+                  obj.exChainType, obj.externalPayoutScript, obj.externalTxid, 
+                  obj.externalConfirmations, obj.inputsHash);
+    }
+    
+    std::string ToString() const;
+
+    void ToJson(UniValue &obj) const {
+        obj.clear();
+        obj.setObject();
+        obj.pushKV("version", nVersion);
+        obj.pushKV("name", name);
+        obj.pushKV("isUnique", isUnique);
+        obj.pushKV("maxMintCount", maxMintCount);
+        obj.pushKV("updatable", updatable);
+        obj.pushKV("decimalPoint", (int) decimalPoint);
+        obj.pushKV("referenceHash", referenceHash);
+        obj.pushKV("fee", fee);
+        obj.pushKV("type", type);
+        obj.pushKV("targetAddress", EncodeDestination(targetAddress));
+        obj.pushKV("ownerAddress", EncodeDestination(ownerAddress));
+        if( collateralAddress.IsNull()){
+            obj.pushKV("collateralAddress", "N/A");
+        }else{
+            obj.pushKV("collateralAddress", EncodeDestination(collateralAddress));
+        }
+        obj.pushKV("issueFrequency", issueFrequency);
+        obj.pushKV("amount", amount);
+        obj.pushKV("exChainType", exChainType);
+        CTxDestination dest;
+        if (ExtractDestination(externalPayoutScript, dest)) {
+            obj.pushKV("externalPayoutAddress", EncodeDestination(dest));
+        } else {
+            obj.pushKV("externalPayoutAddress", "N/A");
+        }
+        obj.pushKV("externalTxid", externalTxid.ToString());
+        obj.pushKV("externalConfirmations", (int) externalConfirmations);
+        obj.pushKV("inputsHash", inputsHash.ToString());
+    }
+};
+
+class CUpdateAssetTx
+{
+public:
+    static const uint16_t CURRENT_VERSION = 1;
+
+    uint16_t nVersion{CURRENT_VERSION}; // message version
+    std::string assetId;
+    bool updatable = true;     // If true this asset meta can be modified using assetTx update process.
+    std::string referenceHash; // Hash of the underlying physical or digital assets, IPFS hash can be used here.
+    uint16_t fee;              // Fee was paid for this asset creation in addition to miner fee. It is a whole non-decimal point value.
+    //  distribution
+    uint8_t type; //manual, coinbase, address, schedule
+    CKeyID targetAddress;
+    uint8_t issueFrequency;
+    CAmount amount;
+    CKeyID ownerAddress;
+    CKeyID collateralAddress;
+
+    uint16_t exChainType = 0; // External chain type. Each 15 bit unsigned number will be map to a external chain. i.e. 0 for btc
+    CScript externalPayoutScript;
+    uint256 externalTxid;
+    uint16_t externalConfirmations = 0;
+    uint256 inputsHash; // replay protection
+
+public:
+    SERIALIZE_METHODS(CUpdateAssetTx, obj)
+    {
+        READWRITE(obj.nVersion, obj.assetId, obj.updatable, obj.referenceHash, obj.fee,
+                  obj.type, obj.targetAddress, obj.issueFrequency, obj.amount,
+                  obj.ownerAddress, obj.collateralAddress, obj.exChainType, obj.externalPayoutScript,
+                  obj.externalTxid, obj.externalConfirmations, obj.inputsHash);
+    }
+
+    std::string ToString() const;
+
+    void ToJson(UniValue& obj) const
+    {
+        obj.clear();
+        obj.setObject();
+        obj.pushKV("version", nVersion);
+        obj.pushKV("assetId", assetId);
+        obj.pushKV("updatable", updatable);
+        obj.pushKV("referenceHash", referenceHash);
+        obj.pushKV("fee", fee);
+        obj.pushKV("type", type);
+        obj.pushKV("targetAddress", EncodeDestination(targetAddress));
+        obj.pushKV("ownerAddress", EncodeDestination(ownerAddress));
+        if (collateralAddress.IsNull()) {
+            obj.pushKV("collateralAddress", "N/A");
+        } else {
+            obj.pushKV("collateralAddress", EncodeDestination(collateralAddress));
+        }
+        obj.pushKV("issueFrequency", issueFrequency);
+        obj.pushKV("amount", amount);
+        obj.pushKV("exChainType", exChainType);
+        CTxDestination dest;
+        if (ExtractDestination(externalPayoutScript, dest)) {
+            obj.pushKV("externalPayoutAddress", EncodeDestination(dest));
+        } else {
+            obj.pushKV("externalPayoutAddress", "N/A");
+        }
+        obj.pushKV("externalTxid", externalTxid.ToString());
+        obj.pushKV("externalConfirmations", (int)externalConfirmations);
+        obj.pushKV("inputsHash", inputsHash.ToString());
+    }
+};
+
+class CMintAssetTx
+{
+public:
+    static const uint16_t CURRENT_VERSION = 1;
+
+    uint16_t nVersion{CURRENT_VERSION}; // message version
+    std::string assetId;
+    uint16_t fee;
+    uint256 inputsHash; // replay protection
+
+public:
+
+    SERIALIZE_METHODS(CMintAssetTx, obj)
+    {
+        READWRITE(obj.nVersion, obj.assetId, obj.fee, obj.inputsHash);
+    }
+    
+    std::string ToString() const;
+
+    void ToJson(UniValue& obj) const
+    {
+        obj.clear();
+        obj.setObject();
+        obj.pushKV("version", nVersion);
+        obj.pushKV("assetId", assetId);
+        obj.pushKV("fee", fee);
+        obj.pushKV("inputsHash", inputsHash.ToString());
+    }
+};
+
+bool CheckFutureTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state);
+
+bool CheckNewAssetTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, CAssetsCache* assetsCache);
+bool CheckUpdateAssetTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, const CCoinsViewCache& view, CAssetsCache* assetsCache);
+bool CheckMintAssetTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, const CCoinsViewCache& view, CAssetsCache* assetsCache);
 
 bool CheckProRegTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CValidationState &state,
                    const CCoinsViewCache &view, bool check_sigs);

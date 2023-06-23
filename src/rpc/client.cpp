@@ -185,6 +185,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "createwallet", 1, "disable_private_keys"},
     { "createwallet", 2, "blank"},
     { "stop", 0, "wait" },
+    { "createasset", 0, "asset"},
 };
 
 class CRPCConvertTable

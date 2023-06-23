@@ -30,6 +30,8 @@
 #include <evo/deterministicmns.h>
 #include <evo/cbtx.h>
 #include <llmq/quorums_init.h>
+#include <assets/assets.h>
+#include <assets/assetsdb.h>
 
 #include <memory>
 
@@ -81,6 +83,7 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName)
         m_node.chain = interfaces::MakeChain(m_node);
         g_wallet_init_interface.Construct(m_node);
         fCheckBlockIndex = true;
+        passetsCache.reset(new CAssetsCache());
         evoDb.reset(new CEvoDB(1 << 20, true, true));
         connman = MakeUnique<CConnman>(0x1337, 0x1337);
         deterministicMNManager.reset(new CDeterministicMNManager(*evoDb, *connman));
@@ -92,6 +95,7 @@ BasicTestingSetup::~BasicTestingSetup()
         connman.reset();
         deterministicMNManager.reset();
         evoDb.reset();
+        passetsCache.reset();
 
         fs::remove_all(m_path_root);
         ECC_Stop();
@@ -141,13 +145,14 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
     llmq::InitLLMQSystem(*evoDb, *m_node.mempool, *m_node.connman, true);
     ::ChainstateActive().InitCoinsCache(1 << 23);
     assert(::ChainstateActive().CanFlushToDisk());
-    if (!LoadGenesisBlock(chainparams)) {
-        throw std::runtime_error("LoadGenesisBlock failed.");
-    }
-    {
-        CValidationState state;
-        if (!ActivateBestChain(state, chainparams)) {
-            throw std::runtime_error(strprintf("ActivateBestChain failed. (%s)", FormatStateMessage(state)));
+    passetsdb.reset(new CAssetsDB(1 << 23, false, true));
+        if (!LoadGenesisBlock(chainparams)) {
+            throw std::runtime_error("LoadGenesisBlock failed.");
+        }
+        {
+            CValidationState state;
+            if (!ActivateBestChain(state, chainparams)) {
+                throw std::runtime_error(strprintf("ActivateBestChain failed. (%s)", FormatStateMessage(state)));
         }
     }
     // Start script-checking threads. Set g_parallel_script_checks to true so they are used.
@@ -180,6 +185,7 @@ TestingSetup::~TestingSetup()
     m_node.chainman->Reset();
     m_node.chainman = nullptr;
     pblocktree.reset();
+        passetsdb.reset();
 }
 
 TestChainSetup::TestChainSetup(int blockCount)

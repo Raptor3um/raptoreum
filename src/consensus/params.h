@@ -126,6 +126,7 @@ struct Params {
     SmartnodeCollaterals nCollaterals;
     int smartnodePaymentFixedBlock;
     int nFutureForkBlock;
+    int nAssetsForkBlock;
 
 };
 } // namespace Consensus
