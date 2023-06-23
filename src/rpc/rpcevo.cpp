@@ -1190,15 +1190,15 @@ UniValue protx_quick_setup(const JSONRPCRequest& request)
 	//bls_generate
 	EnsureWalletIsUnlocked(pwallet);
 	JSONRPCRequest blsRequest(request);
-	blsRequest.params = UniValue(UniValue::VARR);
-	blsRequest.params.push_back(UniValue(UniValue::VSTR, "generate"));
+	blsRequest.strMethod = "blsgenerate";
+	blsRequest.params.setArray();
 	UniValue ownerAddress = generateNewAddress(pwallet);
 	UniValue votingAddress = generateNewAddress(pwallet);
 	UniValue payoutAddress = generateNewAddress(pwallet);
 	UniValue blsKeys = bls_generate(blsRequest);
 	JSONRPCRequest prepareRequest(request);
 	prepareRequest.params = UniValue(UniValue::VARR);
-	prepareRequest.params.push_back("register_prepare");
+	prepareRequest.strMethod = "protxregister_prepare";
 	prepareRequest.params.push_back(UniValue(UniValue::VSTR,request.params[0].get_str()));
 	prepareRequest.params.push_back(UniValue(UniValue::VSTR,request.params[1].get_str()));
 	prepareRequest.params.push_back(UniValue(UniValue::VSTR,request.params[2].get_str()));
@@ -1213,7 +1213,7 @@ UniValue protx_quick_setup(const JSONRPCRequest& request)
 	UniValue msg = signMessage(pwallet, prepareResult["collateralAddress"].get_str(), prepareResult["signMessage"].get_str());
 	JSONRPCRequest submitRequest(request);
 	submitRequest.params = UniValue(UniValue::VARR);
-	submitRequest.params.push_back("register_submit");
+	submitRequest.strMethod = "register_submit";
 	submitRequest.params.push_back(prepareResult["tx"]);
 	submitRequest.params.push_back(msg);
 	UniValue txid = protx_register_submit(submitRequest);
