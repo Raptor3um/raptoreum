@@ -39,176 +39,176 @@
 #include <boost/random.hpp>
 #include <ctime>
 #include <stdio.h>
+
 #ifdef WIN32
 #include <direct.h>
 #define getcwd _getcwd
 #else
+
 #include <unistd.h>
+
 #endif
 
 #ifdef ENABLE_WALLET
 extern UniValue signrawtransaction(const JSONRPCRequest& request);
 extern UniValue sendrawtransaction(const JSONRPCRequest& request);
 #else
+
 class CWallet;
+
 #endif//ENABLE_WALLET
 
-std::string get_current_dir()
-{
-  char buff[FILENAME_MAX];
-  char* r = getcwd(buff, FILENAME_MAX);
-  (void*)r;
-  std::string current_dir(buff);
+std::string get_current_dir() {
+    char buff[FILENAME_MAX];
+    char *r = getcwd(buff, FILENAME_MAX);
+    (void *) r;
+    std::string current_dir(buff);
 //  current_dir += '/';
 #ifdef WIN32
-  std::replace(current_dir.begin(), current_dir.end(), '\\', '/');
+    std::replace(current_dir.begin(), current_dir.end(), '\\', '/');
 #endif
-  return current_dir;
+    return current_dir;
 }
 
 static const std::string LOWER_CASE = "abcdefghijklmnopqrstuvwxyz";
 static const std::string SPECIAL = "~!@#$%^&*+<>[];:,.?|";
 static const std::string NUMBER = "0123456789";
 
-static std::string generateRandomString(int length, bool specialChar)
-{
-  std::time_t now = std::time(0);
-  boost::random::mt19937 gen{static_cast<std::uint32_t>(now)};
-  int charOptions = specialChar ? 4 : 3;
-  int specialLength = SPECIAL.length()-1;
-  boost::random::uniform_int_distribution<> randomOption{1, charOptions};
-  boost::random::uniform_int_distribution<> randomChar{0,25};
-  boost::random::uniform_int_distribution<> randomNum{0,9};
-  boost::random::uniform_int_distribution<> randomSpecial{0,specialLength};
-  std::string str;
-  str.reserve(length);
-  for(int i = 0; i < length; i++)
-  {
-    int option = randomOption(gen);
-    char ch;
-    switch(option)
-    {
-      case 1:
-        str.push_back(LOWER_CASE[randomChar(gen)]);
-        break;
-      case 2:
-        str.push_back(LOWER_CASE[randomChar(gen)] - 32);
-    	break;
-      case 3:
-        str.push_back(NUMBER[randomNum(gen)]);
-        break;
-      case 4:
-        str.push_back(SPECIAL[randomSpecial(gen)]);
-    	break;
-      default:
-        continue;
+static std::string generateRandomString(int length, bool specialChar) {
+    std::time_t now = std::time(0);
+    boost::random::mt19937 gen{static_cast<std::uint32_t>(now)};
+    int charOptions = specialChar ? 4 : 3;
+    int specialLength = SPECIAL.length() - 1;
+    boost::random::uniform_int_distribution<> randomOption{1, charOptions};
+    boost::random::uniform_int_distribution<> randomChar{0, 25};
+    boost::random::uniform_int_distribution<> randomNum{0, 9};
+    boost::random::uniform_int_distribution<> randomSpecial{0, specialLength};
+    std::string str;
+    str.reserve(length);
+    for (int i = 0; i < length; i++) {
+        int option = randomOption(gen);
+        char ch;
+        switch (option) {
+            case 1:
+                str.push_back(LOWER_CASE[randomChar(gen)]);
+                break;
+            case 2:
+                str.push_back(LOWER_CASE[randomChar(gen)] - 32);
+                break;
+            case 3:
+                str.push_back(NUMBER[randomNum(gen)]);
+                break;
+            case 4:
+                str.push_back(SPECIAL[randomSpecial(gen)]);
+                break;
+            default:
+                continue;
+        }
     }
-  }
-  return str;
+    return str;
 }
 
-static RPCArg GetRpcArg(const std::string& strParamName)
-{
-    static const std::map<std::string, RPCArg> mapParamHelp = {
-        {"collateralAddress",
-            {"collateralAddress", RPCArg::Type::STR, RPCArg::Optional::NO,
-                "The Raptoreum address to send the collateral to."}
-        },
-        {"collateralAmount",
-            {"collateralAmount", RPCArg::Type::NUM, RPCArg::Optional::NO,
-                "The collateral amount to be sent to collateral address."}
-        },
-        {"collateralHash",
-            {"collateralHash", RPCArg::Type::STR, RPCArg::Optional::NO,
-                "The collateral transaction hash."}
-        },
-        {"collateralIndex",
-            {"collateralIndex", RPCArg::Type::NUM, RPCArg::Optional::NO,
-                "The collateral transaction output index."}
-        },
-        {"feeSourceAddress",
-            {"feeSourceAddress", RPCArg::Type::STR, /* default */ "",
-                "If specified wallet will only use coins from this address to fund ProTx.\n"
-                "If not specified, payoutAddress is the one that is going to be used.\n"
-                "The private key belonging to this address must be known in your wallet."}
-        },
-        {"fundAddress",
-            {"fundAddress", RPCArg::Type::STR, /* default */ "",
-                "If specified wallet will only use coins from this address to fund ProTx.\n"
-                "If not specified, payoutAddress is the one that is going to be used.\n"
-                "The private key belonging to this address must be known in your wallet."}
-        },
-        {"ipAndPort",
-            {"ipAndPort", RPCArg::Type::STR, RPCArg::Optional::NO,
-                "IP and port in the form \"IP:PORT\".\n"
-                "Must be unique on the network. Can be set to 0, which will require a ProUpServTx afterwards."}
-        },
-        {"operatorKey",
-            {"operatorKey", RPCArg::Type::STR, RPCArg::Optional::NO,
-                "The operator BLS private key associated with the\n"
-                "registered operator public key."}
-        },
-        {"operatorPayoutAddress",
-            {"operatorPayoutAddress", RPCArg::Type::STR, /* default */ "",
-                "The address used for operator reward payments.\n"
-                "Only allowed when the ProRegTx had a non-zero operatorReward value.\n"
-                "If set to an empty string, the currently active payout address is reused."}
-        },
-        {"operatorPubKey_register",
-            {"operatorPubKey_register", RPCArg::Type::STR, RPCArg::Optional::NO,
-                "The operator BLS public key. The BLS private key does not have to be known.\n"
-                "It has to match the BLS private key which is later used when operating the masternode."}
-        },
-        {"operatorPubKey_update",
-            {"operatorPubKey_update", RPCArg::Type::STR, RPCArg::Optional::NO,
-                "The operator BLS public key. The BLS private key does not have to be known.\n"
-                "It has to match the BLS private key which is later used when operating the masternode.\n"
-                "If set to an empty string, the currently active operator BLS public key is reused."}
-        },
-        {"operatorReward",
-            {"operatorReward", RPCArg::Type::STR, RPCArg::Optional::NO,
-                "The fraction in %% to share with the operator. The value must be\n"
-                "between 0.00 and 100.00."}
-        },
-        {"ownerAddress",
-            {"ownerAddress", RPCArg::Type::STR, RPCArg::Optional::NO,
-                "The dash address to use for payee updates and proposal voting.\n"
-                "The corresponding private key does not have to be known by your wallet.\n"
-                "The address must be unused and must differ from the collateralAddress."}
-        },
-        {"payoutAddress_register",
-            {"payoutAddress_register", RPCArg::Type::STR, RPCArg::Optional::NO,
-                "The dash address to use for masternode reward payments."}
-        },
-        {"payoutAddress_update",
-            {"payoutAddress_update", RPCArg::Type::STR, RPCArg::Optional::NO,
-                "The dash address to use for masternode reward payments.\n"
-                "If set to an empty string, the currently active payout address is reused."}
-        },
-        {"proTxHash",
-            {"proTxHash", RPCArg::Type::STR, RPCArg::Optional::NO,
-                "The hash of the initial ProRegTx."}
-        },
-        {"reason",
-            {"reason", RPCArg::Type::NUM, /* default */ "",
-                "The reason for masternode service revocation."}
-        },
-        {"submit",
-            {"submit", RPCArg::Type::BOOL, /* default */ "true",
-                "If true, the resulting transaction is sent to the network."}
-        },
-        {"votingAddress_register",
-            {"votingAddress_register", RPCArg::Type::STR, RPCArg::Optional::NO,
-                "The voting key address. The private key does not have to be known by your wallet.\n"
-                "It has to match the private key which is later used when voting on proposals.\n"
-                "If set to an empty string, ownerAddress will be used."}
-        },
-        {"votingAddress_update",
-            {"votingAddress_update", RPCArg::Type::STR, RPCArg::Optional::NO,
-                "The voting key address. The private key does not have to be known by your wallet.\n"
-                "It has to match the private key which is later used when voting on proposals.\n"
-                "If set to an empty string, the currently active voting key address is reused."}
-        },
+static RPCArg GetRpcArg(const std::string &strParamName) {
+    static const std::map <std::string, RPCArg> mapParamHelp = {
+            {"collateralAddress",
+                    {"collateralAddress",       RPCArg::Type::STR,                RPCArg::Optional::NO,
+                            "The Raptoreum address to send the collateral to."}
+            },
+            {"collateralAmount",
+                    {"collateralAmount",        RPCArg::Type::NUM,                RPCArg::Optional::NO,
+                            "The collateral amount to be sent to collateral address."}
+            },
+            {"collateralHash",
+                    {"collateralHash",          RPCArg::Type::STR,                RPCArg::Optional::NO,
+                            "The collateral transaction hash."}
+            },
+            {"collateralIndex",
+                    {"collateralIndex",         RPCArg::Type::NUM,                RPCArg::Optional::NO,
+                            "The collateral transaction output index."}
+            },
+            {"feeSourceAddress",
+                    {"feeSourceAddress",        RPCArg::Type::STR, /* default */  "",
+                            "If specified wallet will only use coins from this address to fund ProTx.\n"
+                            "If not specified, payoutAddress is the one that is going to be used.\n"
+                            "The private key belonging to this address must be known in your wallet."}
+            },
+            {"fundAddress",
+                    {"fundAddress",             RPCArg::Type::STR, /* default */  "",
+                            "If specified wallet will only use coins from this address to fund ProTx.\n"
+                            "If not specified, payoutAddress is the one that is going to be used.\n"
+                            "The private key belonging to this address must be known in your wallet."}
+            },
+            {"ipAndPort",
+                    {"ipAndPort",               RPCArg::Type::STR,                RPCArg::Optional::NO,
+                            "IP and port in the form \"IP:PORT\".\n"
+                            "Must be unique on the network. Can be set to 0, which will require a ProUpServTx afterwards."}
+            },
+            {"operatorKey",
+                    {"operatorKey",             RPCArg::Type::STR,                RPCArg::Optional::NO,
+                            "The operator BLS private key associated with the\n"
+                            "registered operator public key."}
+            },
+            {"operatorPayoutAddress",
+                    {"operatorPayoutAddress",   RPCArg::Type::STR, /* default */  "",
+                            "The address used for operator reward payments.\n"
+                            "Only allowed when the ProRegTx had a non-zero operatorReward value.\n"
+                            "If set to an empty string, the currently active payout address is reused."}
+            },
+            {"operatorPubKey_register",
+                    {"operatorPubKey_register", RPCArg::Type::STR,                RPCArg::Optional::NO,
+                            "The operator BLS public key. The BLS private key does not have to be known.\n"
+                            "It has to match the BLS private key which is later used when operating the masternode."}
+            },
+            {"operatorPubKey_update",
+                    {"operatorPubKey_update",   RPCArg::Type::STR,                RPCArg::Optional::NO,
+                            "The operator BLS public key. The BLS private key does not have to be known.\n"
+                            "It has to match the BLS private key which is later used when operating the masternode.\n"
+                            "If set to an empty string, the currently active operator BLS public key is reused."}
+            },
+            {"operatorReward",
+                    {"operatorReward",          RPCArg::Type::STR,                RPCArg::Optional::NO,
+                            "The fraction in %% to share with the operator. The value must be\n"
+                            "between 0.00 and 100.00."}
+            },
+            {"ownerAddress",
+                    {"ownerAddress",            RPCArg::Type::STR,                RPCArg::Optional::NO,
+                            "The dash address to use for payee updates and proposal voting.\n"
+                            "The corresponding private key does not have to be known by your wallet.\n"
+                            "The address must be unused and must differ from the collateralAddress."}
+            },
+            {"payoutAddress_register",
+                    {"payoutAddress_register",  RPCArg::Type::STR,                RPCArg::Optional::NO,
+                            "The dash address to use for masternode reward payments."}
+            },
+            {"payoutAddress_update",
+                    {"payoutAddress_update",    RPCArg::Type::STR,                RPCArg::Optional::NO,
+                            "The dash address to use for masternode reward payments.\n"
+                            "If set to an empty string, the currently active payout address is reused."}
+            },
+            {"proTxHash",
+                    {"proTxHash",               RPCArg::Type::STR,                RPCArg::Optional::NO,
+                            "The hash of the initial ProRegTx."}
+            },
+            {"reason",
+                    {"reason",                  RPCArg::Type::NUM, /* default */  "",
+                            "The reason for masternode service revocation."}
+            },
+            {"submit",
+                    {"submit",                  RPCArg::Type::BOOL, /* default */ "true",
+                            "If true, the resulting transaction is sent to the network."}
+            },
+            {"votingAddress_register",
+                    {"votingAddress_register",  RPCArg::Type::STR,                RPCArg::Optional::NO,
+                            "The voting key address. The private key does not have to be known by your wallet.\n"
+                            "It has to match the private key which is later used when voting on proposals.\n"
+                            "If set to an empty string, ownerAddress will be used."}
+            },
+            {"votingAddress_update",
+                    {"votingAddress_update",    RPCArg::Type::STR,                RPCArg::Optional::NO,
+                            "The voting key address. The private key does not have to be known by your wallet.\n"
+                            "It has to match the private key which is later used when voting on proposals.\n"
+                            "If set to an empty string, the currently active voting key address is reused."}
+            },
     };
 
     auto it = mapParamHelp.find(strParamName);
@@ -218,27 +218,26 @@ static RPCArg GetRpcArg(const std::string& strParamName)
     return it->second;
 }
 
-static CKeyID ParsePubKeyIDFromAddress(const std::string& strAddress, const std::string& paramName)
-{
+static CKeyID ParsePubKeyIDFromAddress(const std::string &strAddress, const std::string &paramName) {
     CTxDestination dest = DecodeDestination(strAddress);
     const CKeyID *keyID = boost::get<CKeyID>(&dest);
     if (!keyID) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("%s must be a valid P2PKH address, not %s", paramName, strAddress));
+        throw JSONRPCError(RPC_INVALID_PARAMETER,
+                           strprintf("%s must be a valid P2PKH address, not %s", paramName, strAddress));
     }
     return *keyID;
 }
 
-static CBLSPublicKey ParseBLSPubKey(const std::string& hexKey, const std::string& paramName)
-{
+static CBLSPublicKey ParseBLSPubKey(const std::string &hexKey, const std::string &paramName) {
     CBLSPublicKey pubKey;
     if (!pubKey.SetHexStr(hexKey)) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("%s must be a valid BLS public key, not %s", paramName, hexKey));
+        throw JSONRPCError(RPC_INVALID_PARAMETER,
+                           strprintf("%s must be a valid BLS public key, not %s", paramName, hexKey));
     }
     return pubKey;
 }
 
-static CBLSSecretKey ParseBLSSecretKey(const std::string& hexKey, const std::string& paramName)
-{
+static CBLSSecretKey ParseBLSSecretKey(const std::string &hexKey, const std::string &paramName) {
     CBLSSecretKey secKey;
     if (!secKey.SetHexStr(hexKey)) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("%s must be a valid BLS secret key", paramName));
@@ -246,25 +245,23 @@ static CBLSSecretKey ParseBLSSecretKey(const std::string& hexKey, const std::str
     return secKey;
 }
 
-static void bls_generate_help(const JSONRPCRequest& request)
-{
+static void bls_generate_help(const JSONRPCRequest &request) {
     RPCHelpMan{"bls generate",
-        "\nReturns a BLS secret/public key pair.\n",
-        {},
-        RPCResult{
-            RPCResult::Type::OBJ, "", "",
-            {
-                {RPCResult::Type::STR_HEX, "secret", "BLS secret key"},
-                {RPCResult::Type::STR_HEX, "public", "BLS public key"},
-            }},
-        RPCExamples{
-            HelpExampleCli("bls generate", "")
-        },
+               "\nReturns a BLS secret/public key pair.\n",
+               {},
+               RPCResult{
+                       RPCResult::Type::OBJ, "", "",
+                       {
+                               {RPCResult::Type::STR_HEX, "secret", "BLS secret key"},
+                               {RPCResult::Type::STR_HEX, "public", "BLS public key"},
+                       }},
+               RPCExamples{
+                       HelpExampleCli("bls generate", "")
+               },
     }.Check(request);
 }
 
-static UniValue bls_generate(const JSONRPCRequest& request)
-{
+static UniValue bls_generate(const JSONRPCRequest &request) {
     bls_generate_help(request);
 
     CBLSSecretKey sk;
@@ -276,32 +273,32 @@ static UniValue bls_generate(const JSONRPCRequest& request)
     return ret;
 }
 
-static void bls_fromsecret_help(const JSONRPCRequest& request)
-{
+static void bls_fromsecret_help(const JSONRPCRequest &request) {
     RPCHelpMan{"bls fromsecret",
-        "\nParses a BLS secret key and returns the secret/public key pair.\n",
-        {
-            {"secret", RPCArg::Type::STR, RPCArg::Optional::NO, "The BLS secret key"},
-        },
-        RPCResult{
-            RPCResult::Type::OBJ, "", "",
-            {
-                {RPCResult::Type::STR_HEX, "secret", "BLS secret key"},
-                {RPCResult::Type::STR_HEX, "public", "BLS public key"},
-            }},
-        RPCExamples{
-            HelpExampleCli("bls fromsecret", "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f")
-        },
+               "\nParses a BLS secret key and returns the secret/public key pair.\n",
+               {
+                       {"secret", RPCArg::Type::STR, RPCArg::Optional::NO, "The BLS secret key"},
+               },
+               RPCResult{
+                       RPCResult::Type::OBJ, "", "",
+                       {
+                               {RPCResult::Type::STR_HEX, "secret", "BLS secret key"},
+                               {RPCResult::Type::STR_HEX, "public", "BLS public key"},
+                       }},
+               RPCExamples{
+                       HelpExampleCli("bls fromsecret",
+                                      "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f")
+               },
     }.Check(request);
 }
 
-static UniValue bls_fromsecret(const JSONRPCRequest& request)
-{
+static UniValue bls_fromsecret(const JSONRPCRequest &request) {
     bls_fromsecret_help(request);
 
     CBLSSecretKey sk;
     if (!sk.SetHexStr(request.params[0].get_str())) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Secret key must be a valid hex string of length %d", sk.SerSize*2));
+        throw JSONRPCError(RPC_INVALID_PARAMETER,
+                           strprintf("Secret key must be a valid hex string of length %d", sk.SerSize * 2));
     }
 
     UniValue ret(UniValue::VOBJ);
@@ -310,24 +307,22 @@ static UniValue bls_fromsecret(const JSONRPCRequest& request)
     return ret;
 }
 
-[[ noreturn ]] static void bls_help()
-{
+[[noreturn]] static void bls_help() {
     RPCHelpMan{"bls",
-        "Set of commands to execute BLS related actions.\n"
-        "To get help on individual commands, use \"help bls command\".\n"
-        "\nAvailable commands:\n"
-        "  generate          - Create a BLS secret/public key pair\n"
-        "  fromsecret        - Parse a BLS secret key and return the secret/public key pair\n",
-        {
-            {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "The command to execute"},
-        },
-        RPCResults{},
-        RPCExamples{""},
+               "Set of commands to execute BLS related actions.\n"
+               "To get help on individual commands, use \"help bls command\".\n"
+               "\nAvailable commands:\n"
+               "  generate          - Create a BLS secret/public key pair\n"
+               "  fromsecret        - Parse a BLS secret key and return the secret/public key pair\n",
+               {
+                       {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "The command to execute"},
+               },
+               RPCResults{},
+               RPCExamples{""},
     }.Throw();
 }
 
-static UniValue _bls(const JSONRPCRequest& request)
-{
+static UniValue _bls(const JSONRPCRequest &request) {
     const JSONRPCRequest new_request{request.strMethod == "bls" ? request.squashed() : request};
     const std::string command{new_request.strMethod};
 
@@ -601,15 +596,15 @@ void protx_register_submit_help(const JSONRPCRequest& request)
 }
 
 bool isValidCollateral(CAmount collateralAmount) {
-	SmartnodeCollaterals collaterals = Params().GetConsensus().nCollaterals;
-	if (!collaterals.isValidCollateral(collateralAmount)) {
-		throw JSONRPCError(RPC_INVALID_COLLATERAL_AMOUNT, strprintf("invalid collateral amount: amount=%d\n", collateralAmount/COIN));
-	}
-	int nHeight = ::ChainActive().Height();
-	if(!collaterals.isPayableCollateral(nHeight, collateralAmount)) {
-		throw JSONRPCError(RPC_INVALID_COLLATERAL_AMOUNT, strprintf("collateral amount is not a payable amount: amount=%d", collateralAmount/COIN));
-	}
-	return true;
+    SmartnodeCollaterals collaterals = Params().GetConsensus().nCollaterals;
+    if (!collaterals.isValidCollateral(collateralAmount)) {
+        throw JSONRPCError(RPC_INVALID_COLLATERAL_AMOUNT, strprintf("invalid collateral amount: amount=%d\n", collateralAmount/COIN));
+    }
+    int nHeight = ::ChainActive().Height();
+    if(!collaterals.isPayableCollateral(nHeight, collateralAmount)) {
+        throw JSONRPCError(RPC_INVALID_COLLATERAL_AMOUNT, strprintf("collateral amount is not a payable amount: amount=%d", collateralAmount/COIN));
+    }
+    return true;
 }
 
 // handles register, register_prepare and register_fund in one method.
@@ -1098,14 +1093,14 @@ void protx_quick_setup_help(const JSONRPCRequest& request)
             {
                 {RPCResult::Type::STR_HEX, "txid", "The transaction id for submitted protx register_submit."},
                 {RPCResult::Type::STR_HEX, "tx", "The raw transaction hex of this protx without signiature."},
-			          {RPCResult::Type::STR, "ownerAddress", "The generated owner address."},
-			          {RPCResult::Type::STR, "votingAddress", "The generated voting address."},
-			          {RPCResult::Type::STR, "payoutAddress", "The generated payout address."},
-			          {RPCResult::Type::STR, "collateralAddress", "The collateral address for this collateralHash."},
-			          {RPCResult::Type::STR, "collateralAmount", "The collateral Amount was used for this protx."},
-			          {RPCResult::Type::STR_HEX, "operationPubkey", "The public key from bls generate."},
-			          {RPCResult::Type::STR_HEX, "operationSecret", "The secret key from bls generate."},
-			          {RPCResult::Type::STR, "raptoreum.conf", "The content of raptoreum.conf to be used in vps node."},
+                      {RPCResult::Type::STR, "ownerAddress", "The generated owner address."},
+                      {RPCResult::Type::STR, "votingAddress", "The generated voting address."},
+                      {RPCResult::Type::STR, "payoutAddress", "The generated payout address."},
+                      {RPCResult::Type::STR, "collateralAddress", "The collateral address for this collateralHash."},
+                      {RPCResult::Type::STR, "collateralAmount", "The collateral Amount was used for this protx."},
+                      {RPCResult::Type::STR_HEX, "operationPubkey", "The public key from bls generate."},
+                      {RPCResult::Type::STR_HEX, "operationSecret", "The secret key from bls generate."},
+                      {RPCResult::Type::STR, "raptoreum.conf", "The content of raptoreum.conf to be used in vps node."},
             }
         },
         RPCExamples{
@@ -1115,149 +1110,149 @@ void protx_quick_setup_help(const JSONRPCRequest& request)
 }
 
 UniValue generateNewAddress(CWallet * const pwallet) {
-	if (!pwallet->IsLocked(true)) {
-		pwallet->TopUpKeyPool();
-	}
+    if (!pwallet->IsLocked(true)) {
+        pwallet->TopUpKeyPool();
+    }
 
-	// Generate a new key that is added to wallet
-	CPubKey newKey;
-	if (!pwallet->GetKeyFromPool(newKey, false)) {
-		throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
-	}
-	CKeyID keyID = newKey.GetID();
+    // Generate a new key that is added to wallet
+    CPubKey newKey;
+    if (!pwallet->GetKeyFromPool(newKey, false)) {
+        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
+    }
+    CKeyID keyID = newKey.GetID();
 
-	pwallet->SetAddressBook(keyID, "", "receive");
+    pwallet->SetAddressBook(keyID, "", "receive");
 
-	return EncodeDestination(keyID);
+    return EncodeDestination(keyID);
 }
 
 UniValue signMessage(CWallet * const pwallet, std::string strAddress, std::string strMessage) {
   EnsureWalletIsUnlocked(pwallet);
 
-	CTxDestination addr = DecodeDestination(strAddress);
-	if(!IsValidDestination(addr))
-		throw JSONRPCError(RPC_TYPE_ERROR, "Invalid address");
+    CTxDestination addr = DecodeDestination(strAddress);
+    if(!IsValidDestination(addr))
+        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid address");
 
-	const CKeyID *keyID = boost::get<CKeyID>(&addr);
-	if(!keyID)
-		throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to key");
+    const CKeyID *keyID = boost::get<CKeyID>(&addr);
+    if(!keyID)
+        throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to key");
 
-	CKey key;
-	if (!pwallet->GetKey(*keyID, key))
-		throw JSONRPCError(RPC_WALLET_ERROR, "Private key not available");
+    CKey key;
+    if (!pwallet->GetKey(*keyID, key))
+        throw JSONRPCError(RPC_WALLET_ERROR, "Private key not available");
 
-	CHashWriter ss(SER_GETHASH, 0);
-	ss << strMessageMagic;
-	ss << strMessage;
+    CHashWriter ss(SER_GETHASH, 0);
+    ss << strMessageMagic;
+    ss << strMessage;
 
-	std::vector<unsigned char> vchSig;
-	if (!key.SignCompact(ss.GetHash(), vchSig))
-		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Sign failed");
+    std::vector<unsigned char> vchSig;
+    if (!key.SignCompact(ss.GetHash(), vchSig))
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Sign failed");
 
-	return EncodeBase64(vchSig);
+    return EncodeBase64(vchSig);
 }
 
 UniValue createConfigFile(std::string blsPrivateKey, std::string ip, std::string address) {
 
-	std::string fileName = get_current_dir() + "/" + address + "_raptoreum.conf";
-	std::ofstream configFile(fileName);
-	std::string username = generateRandomString(10, false);
-	std::string password = generateRandomString(20, true);
-	configFile << "rpcuser=" << username << std::endl;
-	configFile << "rpcpassword=" << password << std::endl;
-	configFile << "rpcport=8484\n";
-	configFile << "rpcallowip=127.0.0.1\n";
-	configFile << "server=1\n";
-	configFile << "daemon=1\n";
-	configFile << "listen=1\n";
-	configFile << "smartnodeblsprivkey=" << blsPrivateKey << std::endl;
-	configFile << "externalip=" << ip << std::endl;
-	configFile.flush();
-	configFile.close();
-	return fileName;
+    std::string fileName = get_current_dir() + "/" + address + "_raptoreum.conf";
+    std::ofstream configFile(fileName);
+    std::string username = generateRandomString(10, false);
+    std::string password = generateRandomString(20, true);
+    configFile << "rpcuser=" << username << std::endl;
+    configFile << "rpcpassword=" << password << std::endl;
+    configFile << "rpcport=8484\n";
+    configFile << "rpcallowip=127.0.0.1\n";
+    configFile << "server=1\n";
+    configFile << "daemon=1\n";
+    configFile << "listen=1\n";
+    configFile << "smartnodeblsprivkey=" << blsPrivateKey << std::endl;
+    configFile << "externalip=" << ip << std::endl;
+    configFile.flush();
+    configFile.close();
+    return fileName;
 }
 
 UniValue protx_quick_setup(const JSONRPCRequest& request)
 {
   protx_quick_setup_help(request);
 
-	std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
   if (!wallet) return NullUniValue;
   CWallet* const pwallet = wallet.get();
 
 //register_fund "collateralAddress" "collateralAmount" "ipAndPort" "ownerAddress" "operatorPubKey" "votingAddress" operatorReward "payoutAddress" ( "fundAddress" )
 //register_prepare "collateralHash" collateralIndex "ipAndPort" "ownerAddress" "operatorPubKey" "votingAddress" operatorReward "payoutAddress" ( "feeSourceAddress" )
-	//bls_generate
-	EnsureWalletIsUnlocked(pwallet);
-	JSONRPCRequest blsRequest(request);
-	blsRequest.params = UniValue(UniValue::VARR);
-	blsRequest.params.push_back(UniValue(UniValue::VSTR, "generate"));
-	UniValue ownerAddress = generateNewAddress(pwallet);
-	UniValue votingAddress = generateNewAddress(pwallet);
-	UniValue payoutAddress = generateNewAddress(pwallet);
-	UniValue blsKeys = bls_generate(blsRequest);
-	JSONRPCRequest prepareRequest(request);
-	prepareRequest.params = UniValue(UniValue::VARR);
-	prepareRequest.params.push_back("register_prepare");
-	prepareRequest.params.push_back(UniValue(UniValue::VSTR,request.params[0].get_str()));
-	prepareRequest.params.push_back(UniValue(UniValue::VSTR,request.params[1].get_str()));
-	prepareRequest.params.push_back(UniValue(UniValue::VSTR,request.params[2].get_str()));
-	prepareRequest.params.push_back(UniValue(UniValue::VSTR,ownerAddress.get_str()));
-	prepareRequest.params.push_back(UniValue(UniValue::VSTR,blsKeys["public"].get_str()));
-	prepareRequest.params.push_back(UniValue(UniValue::VSTR,votingAddress.get_str()));
-	prepareRequest.params.push_back(UniValue(UniValue::VSTR, "0"));
-	prepareRequest.params.push_back(UniValue(UniValue::VSTR,payoutAddress.get_str()));
-	prepareRequest.params.push_back(UniValue(UniValue::VSTR,request.params[3].get_str()));
-	prepareRequest.URI = request.URI;
-	UniValue prepareResult = protx_register(prepareRequest);
-	UniValue msg = signMessage(pwallet, prepareResult["collateralAddress"].get_str(), prepareResult["signMessage"].get_str());
-	JSONRPCRequest submitRequest(request);
-	submitRequest.params = UniValue(UniValue::VARR);
-	submitRequest.params.push_back("register_submit");
-	submitRequest.params.push_back(prepareResult["tx"]);
-	submitRequest.params.push_back(msg);
-	UniValue txid = protx_register_submit(submitRequest);
-	UniValue result = UniValue(UniValue::VOBJ);
-	//signedMessage
-	result.pushKV("txid", txid.get_str());
-	result.pushKV("tx", prepareResult["tx"].get_str());
-	result.pushKV("ownerAddress", ownerAddress.get_str());
-	result.pushKV("votingAddress", votingAddress.get_str());
-	result.pushKV("payoutAddress", payoutAddress.get_str());
-	result.pushKV("collateralAddress", prepareResult["collateralAddress"].get_str());
-	result.pushKV("collateralAmount", prepareResult["collateralAmount"].get_int());
-	result.pushKV("signedMessage", msg.get_str());
-	result.pushKV("operatorPublic", blsKeys["public"].get_str());
-	result.pushKV("operatorSecret", blsKeys["secret"].get_str());
-	UniValue config = createConfigFile(blsKeys["secret"].get_str(), request.params[2].get_str(), prepareResult["collateralAddress"].get_str());
-	result.pushKV("raptoreum.conf",config.get_str());
+    //bls_generate
+    EnsureWalletIsUnlocked(pwallet);
+    JSONRPCRequest blsRequest(request);
+    blsRequest.params = UniValue(UniValue::VARR);
+    blsRequest.params.push_back(UniValue(UniValue::VSTR, "generate"));
+    UniValue ownerAddress = generateNewAddress(pwallet);
+    UniValue votingAddress = generateNewAddress(pwallet);
+    UniValue payoutAddress = generateNewAddress(pwallet);
+    UniValue blsKeys = bls_generate(blsRequest);
+    JSONRPCRequest prepareRequest(request);
+    prepareRequest.params = UniValue(UniValue::VARR);
+    prepareRequest.params.push_back("register_prepare");
+    prepareRequest.params.push_back(UniValue(UniValue::VSTR,request.params[0].get_str()));
+    prepareRequest.params.push_back(UniValue(UniValue::VSTR,request.params[1].get_str()));
+    prepareRequest.params.push_back(UniValue(UniValue::VSTR,request.params[2].get_str()));
+    prepareRequest.params.push_back(UniValue(UniValue::VSTR,ownerAddress.get_str()));
+    prepareRequest.params.push_back(UniValue(UniValue::VSTR,blsKeys["public"].get_str()));
+    prepareRequest.params.push_back(UniValue(UniValue::VSTR,votingAddress.get_str()));
+    prepareRequest.params.push_back(UniValue(UniValue::VSTR, "0"));
+    prepareRequest.params.push_back(UniValue(UniValue::VSTR,payoutAddress.get_str()));
+    prepareRequest.params.push_back(UniValue(UniValue::VSTR,request.params[3].get_str()));
+    prepareRequest.URI = request.URI;
+    UniValue prepareResult = protx_register(prepareRequest);
+    UniValue msg = signMessage(pwallet, prepareResult["collateralAddress"].get_str(), prepareResult["signMessage"].get_str());
+    JSONRPCRequest submitRequest(request);
+    submitRequest.params = UniValue(UniValue::VARR);
+    submitRequest.params.push_back("register_submit");
+    submitRequest.params.push_back(prepareResult["tx"]);
+    submitRequest.params.push_back(msg);
+    UniValue txid = protx_register_submit(submitRequest);
+    UniValue result = UniValue(UniValue::VOBJ);
+    //signedMessage
+    result.pushKV("txid", txid.get_str());
+    result.pushKV("tx", prepareResult["tx"].get_str());
+    result.pushKV("ownerAddress", ownerAddress.get_str());
+    result.pushKV("votingAddress", votingAddress.get_str());
+    result.pushKV("payoutAddress", payoutAddress.get_str());
+    result.pushKV("collateralAddress", prepareResult["collateralAddress"].get_str());
+    result.pushKV("collateralAmount", prepareResult["collateralAmount"].get_int());
+    result.pushKV("signedMessage", msg.get_str());
+    result.pushKV("operatorPublic", blsKeys["public"].get_str());
+    result.pushKV("operatorSecret", blsKeys["secret"].get_str());
+    UniValue config = createConfigFile(blsKeys["secret"].get_str(), request.params[2].get_str(), prepareResult["collateralAddress"].get_str());
+    result.pushKV("raptoreum.conf",config.get_str());
 
-	return result;
+    return result;
 }
 
 #endif//ENABLE_WALLET
 
 
-void protx_list_help(const JSONRPCRequest& request)
-{
+void protx_list_help(const JSONRPCRequest &request) {
     RPCHelpMan{"protx list",
-        "\nLists all ProTxs in your wallet or on-chain, depending on the given type.\n",
-        {
-            {"type", RPCArg::Type::STR, /* default */ "registered",
-                "\nAvailable Types:\n"
-                " registered - List all ProTx which are registered at the given chain height.\n"
-                               "This will also include ProTx which failed PoSe verification.\n"
-                " valid      - List only ProTx which are active/valid at the given chain height.\n"
+               "\nLists all ProTxs in your wallet or on-chain, depending on the given type.\n",
+               {
+                       {"type", RPCArg::Type::STR, /* default */ "registered",
+                        "\nAvailable Types:\n"
+                        " registered - List all ProTx which are registered at the given chain height.\n"
+                        "This will also include ProTx which failed PoSe verification.\n"
+                        " valid      - List only ProTx which are active/valid at the given chain height.\n"
 #ifdef ENABLE_WALLET
-                " wallet     - List only ProTx which are found in your wallet at the given chain height.\n"
-                               "This will also include ProTx which failed PoSe verification.\n"
+                               " wallet     - List only ProTx which are found in your wallet at the given chain height.\n"
+                                              "This will also include ProTx which failed PoSe verification.\n"
 #endif
-            },
-            {"detailed", RPCArg::Type::BOOL, /* default */ "false", "If not specified, only the hashes of the ProTx will be returned."},
-            {"height", RPCArg::Type::NUM, /* default */ "current chain-tip", ""},
-        },
-        RPCResults{},
-        RPCExamples{""},
+                       },
+                       {"detailed", RPCArg::Type::BOOL, /* default */ "false",
+                        "If not specified, only the hashes of the ProTx will be returned."},
+                       {"height", RPCArg::Type::NUM, /* default */ "current chain-tip", ""},
+               },
+               RPCResults{},
+               RPCExamples{""},
     }.Check(request);
 }
 
@@ -1284,8 +1279,7 @@ static bool CheckWalletOwnsScript(CWallet* pwallet, const CScript& script) {
 }
 #endif
 
-UniValue BuildDMNListEntry(CWallet* pwallet, const CDeterministicMNCPtr& dmn, bool detailed)
-{
+UniValue BuildDMNListEntry(CWallet *pwallet, const CDeterministicMNCPtr &dmn, bool detailed) {
     if (!detailed) {
         return dmn->proTxHash.ToString();
     }
@@ -1326,11 +1320,10 @@ UniValue BuildDMNListEntry(CWallet* pwallet, const CDeterministicMNCPtr& dmn, bo
     return o;
 }
 
-UniValue protx_list(const JSONRPCRequest& request)
-{
+UniValue protx_list(const JSONRPCRequest &request) {
     protx_list_help(request);
 
-    CWallet* pwallet;
+    CWallet *pwallet;
 #ifdef ENABLE_WALLET
     try {
         std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
@@ -1403,16 +1396,16 @@ UniValue protx_list(const JSONRPCRequest& request)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid height specified");
         }
 
-        std::cout << "protx_list: height" << height << ", ::ChainActive().Height(): " << ::ChainActive().Height() << ", fSpentIndex: " << fSpentIndex << std::endl;
+        std::cout << "protx_list: height" << height << ", ::ChainActive().Height(): " << ::ChainActive().Height()
+                  << ", fSpentIndex: " << fSpentIndex << std::endl;
 
-        if (height != ::ChainActive().Height() && !fSpentIndex)
-        {
+        if (height != ::ChainActive().Height() && !fSpentIndex) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "specifying height requires spentindex enabled");
         }
 
         CDeterministicMNList mnList = deterministicMNManager->GetListForBlock(::ChainActive()[height]);
         bool onlyValid = type == "valid";
-        mnList.ForEachMN(onlyValid, height, [&](const CDeterministicMNCPtr& dmn) {
+        mnList.ForEachMN(onlyValid, height, [&](const CDeterministicMNCPtr &dmn) {
             ret.push_back(BuildDMNListEntry(pwallet, dmn, detailed));
         });
     } else {
@@ -1422,30 +1415,29 @@ UniValue protx_list(const JSONRPCRequest& request)
     return ret;
 }
 
-void protx_info_help(const JSONRPCRequest& request)
-{
+void protx_info_help(const JSONRPCRequest &request) {
     RPCHelpMan{"protx info",
-        "\nReturns detailed information about a deterministic smartnode.\n",
-        {
-            GetRpcArg("proTxHash"),
-        },
-        RPCResult{
-            RPCResult::Type::OBJ, "", "Details about a specific deterministic smartnode",
-            {
-                {RPCResult::Type::ELISION, "", ""}
-            }
-        },
-        RPCExamples{
-            HelpExampleCli("protx", "info \"0123456701234567012345670123456701234567012345670123456701234567\"")
-        },
+               "\nReturns detailed information about a deterministic smartnode.\n",
+               {
+                       GetRpcArg("proTxHash"),
+               },
+               RPCResult{
+                       RPCResult::Type::OBJ, "", "Details about a specific deterministic smartnode",
+                       {
+                               {RPCResult::Type::ELISION, "", ""}
+                       }
+               },
+               RPCExamples{
+                       HelpExampleCli("protx",
+                                      "info \"0123456701234567012345670123456701234567012345670123456701234567\"")
+               },
     }.Check(request);
 }
 
-UniValue protx_info(const JSONRPCRequest& request)
-{
+UniValue protx_info(const JSONRPCRequest &request) {
     protx_info_help(request);
 
-    CWallet* pwallet;
+    CWallet *pwallet;
 #ifdef ENABLE_WALLET
     try {
         std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
@@ -1470,35 +1462,36 @@ UniValue protx_info(const JSONRPCRequest& request)
     return BuildDMNListEntry(pwallet, dmn, true);
 }
 
-void protx_diff_help(const JSONRPCRequest& request)
-{
+void protx_diff_help(const JSONRPCRequest &request) {
     RPCHelpMan{"protx diff",
-        "\nCalculates a diff between two deterministic smartnode lists. The result also contains proof data.\n",
-        {
-            {"baseBlock", RPCArg::Type::NUM, RPCArg::Optional::NO, "The starting block height."},
-            {"block", RPCArg::Type::NUM, RPCArg::Optional::NO, "The ending block height."},
-        },
-        RPCResults{},
-        RPCExamples{""},
+               "\nCalculates a diff between two deterministic smartnode lists. The result also contains proof data.\n",
+               {
+                       {"baseBlock", RPCArg::Type::NUM, RPCArg::Optional::NO, "The starting block height."},
+                       {"block", RPCArg::Type::NUM, RPCArg::Optional::NO, "The ending block height."},
+               },
+               RPCResults{},
+               RPCExamples{""},
     }.Check(request);
 }
 
-static uint256 ParseBlock(const UniValue& v, std::string strName) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
-{
-    AssertLockHeld(cs_main);
+static uint256 ParseBlock(const UniValue &v, std::string strName)
 
-    try {
-        return ParseHashV(v, strName);
-    } catch (...) {
-        int h = ParseInt32V(v, strName);
-        if (h < 1 || h > ::ChainActive().Height())
-            throw std::runtime_error(strprintf("%s must be a block hash or chain height and not %s", strName, v.getValStr()));
-        return *::ChainActive()[h]->phashBlock;
-    }
-}
+EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+        {
+                AssertLockHeld(cs_main);
 
-UniValue protx_diff(const JSONRPCRequest& request)
-{
+        try {
+            return ParseHashV(v, strName);
+        } catch (...) {
+            int h = ParseInt32V(v, strName);
+            if (h < 1 || h > ::ChainActive().Height())
+                throw std::runtime_error(
+                        strprintf("%s must be a block hash or chain height and not %s", strName, v.getValStr()));
+            return *::ChainActive()[h]->phashBlock;
+        }
+        }
+
+UniValue protx_diff(const JSONRPCRequest &request) {
     protx_diff_help(request);
 
     LOCK(cs_main);
@@ -1516,42 +1509,40 @@ UniValue protx_diff(const JSONRPCRequest& request)
     return ret;
 }
 
-[[ noreturn ]] void protx_help()
-{
+[[noreturn]] void protx_help() {
     RPCHelpMan{"protx",
-        "Set of commands to execute ProTx related actions.\n"
-        "To get help on individual commands, use \"help protx command\".\n"
-        "\nAvailable commands:\n"
-        "  register          - Create and send ProTx to network\n"
+               "Set of commands to execute ProTx related actions.\n"
+               "To get help on individual commands, use \"help protx command\".\n"
+               "\nAvailable commands:\n"
+               "  register          - Create and send ProTx to network\n"
+               "  register_fund     - Fund, create and send ProTx to network\n"
+               "  register_prepare  - Create an unsigned ProTx\n"
+               "  register_submit   - Sign and submit a ProTx\n"
+               "  quick_setup       - register_prepare, signmessage and register_submit in one command\n"
+               #ifdef ENABLE_WALLET
+               "  register          - Create and send ProTx to network\n"
         "  register_fund     - Fund, create and send ProTx to network\n"
         "  register_prepare  - Create an unsigned ProTx\n"
         "  register_submit   - Sign and submit a ProTx\n"
         "  quick_setup       - register_prepare, signmessage and register_submit in one command\n"
-#ifdef ENABLE_WALLET
-        "  register          - Create and send ProTx to network\n"
-        "  register_fund     - Fund, create and send ProTx to network\n"
-        "  register_prepare  - Create an unsigned ProTx\n"
-        "  register_submit   - Sign and submit a ProTx\n"
-        "  quick_setup       - register_prepare, signmessage and register_submit in one command\n"
-#endif
-        "  list              - List ProTxs\n"
-        "  info              - Return information about a ProTx\n"
-#ifdef ENABLE_WALLET
-        "  update_service    - Create and send ProUpServTx to network\n"
+               #endif
+               "  list              - List ProTxs\n"
+               "  info              - Return information about a ProTx\n"
+               #ifdef ENABLE_WALLET
+               "  update_service    - Create and send ProUpServTx to network\n"
         "  update_registrar  - Create and send ProUpRegTx to network\n"
         "  revoke            - Create and send ProUpRevTx to network\n"
-#endif
-        "  diff              - Calculate a diff and a proof between two smartnode lists\n",
-        {
-            {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "The command to execute"},
-        },
-        RPCResults{},
-        RPCExamples{""},
+               #endif
+               "  diff              - Calculate a diff and a proof between two smartnode lists\n",
+               {
+                       {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "The command to execute"},
+               },
+               RPCResults{},
+               RPCExamples{""},
     }.Throw();
 }
 
-UniValue protx(const JSONRPCRequest& request)
-{
+UniValue protx(const JSONRPCRequest &request) {
     const JSONRPCRequest new_request{request.strMethod == "protx" ? request.squashed() : request};
     const std::string command{new_request.strMethod};
 
@@ -1567,7 +1558,7 @@ UniValue protx(const JSONRPCRequest& request)
     } else if (command == "protxrevoke") {
         return protx_revoke(new_request);
     } else if(command == "protxquick_setup") {
-    	return protx_quick_setup(new_request);
+        return protx_quick_setup(new_request);
     }
 #endif
     else if (command == "protxlist") {
@@ -1582,14 +1573,13 @@ UniValue protx(const JSONRPCRequest& request)
 }
 
 static const CRPCCommand commands[] =
-{ //  category              name                      actor (function)
-  //  --------------------- ------------------------  -----------------------
-    { "evo",                "bls",                    &_bls,                   {}  },
-    { "evo",                "protx",                  &protx,                  {}  },
-};
+        { //  category              name                      actor (function)
+                //  --------------------- ------------------------  -----------------------
+                {"evo", "bls",   &_bls,  {}},
+                {"evo", "protx", &protx, {}},
+        };
 
-void RegisterEvoRPCCommands(CRPCTable &tableRPC)
-{
+void RegisterEvoRPCCommands(CRPCTable &tableRPC) {
     for (unsigned int vcidx = 0; vcidx < ARRAYLEN(commands); vcidx++) {
         tableRPC.appendCommand(commands[vcidx].name, &commands[vcidx]);
     }

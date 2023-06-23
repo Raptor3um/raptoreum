@@ -8,8 +8,7 @@
 #include <QKeyEvent>
 #include <QTreeWidget>
 
-class AssetControlTreeWidget : public QTreeWidget
-{
+class AssetControlTreeWidget : public QTreeWidget {
     Q_OBJECT
 
 public:

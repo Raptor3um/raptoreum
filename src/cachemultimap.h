@@ -19,12 +19,11 @@
  * Map like container that keeps the N most recently added items
  */
 template<typename K, typename V, typename Size = uint32_t>
-class CacheMultiMap
-{
+class CacheMultiMap {
 public:
     using size_type = Size;
 
-    using item_t = CacheItem<K,V>;
+    using item_t = CacheItem<K, V>;
 
     using list_t = std::list<item_t>;
 
@@ -32,7 +31,7 @@ public:
 
     using list_cit = typename list_t::const_iterator;
 
-    using it_map_t = std::map<V,list_it>;
+    using it_map_t = std::map<V, list_it>;
 
     using it_map_it = typename it_map_t::iterator;
 
@@ -53,27 +52,23 @@ private:
 
 public:
     explicit CacheMultiMap(size_type nMaxSizeIn = 0)
-        : nMaxSize(nMaxSizeIn),
-          listItems(),
-          mapIndex()
-    {}
+            : nMaxSize(nMaxSizeIn),
+              listItems(),
+              mapIndex() {}
 
-    explicit CacheMultiMap(const CacheMap<K,V>& other)
-        : nMaxSize(other.nMaxSize),
-          listItems(other.listItems),
-          mapIndex()
-    {
+    explicit CacheMultiMap(const CacheMap <K, V> &other)
+            : nMaxSize(other.nMaxSize),
+              listItems(other.listItems),
+              mapIndex() {
         RebuildIndex();
     }
 
-    void Clear()
-    {
+    void Clear() {
         mapIndex.clear();
         listItems.clear();
     }
 
-    void SetMaxSize(size_type nMaxSizeIn)
-    {
+    void SetMaxSize(size_type nMaxSizeIn) {
         nMaxSize = nMaxSizeIn;
     }
 
@@ -85,20 +80,19 @@ public:
         return listItems.size();
     }
 
-    bool Insert(const K& key, const V& value)
-    {
+    bool Insert(const K &key, const V &value) {
         map_it mit = mapIndex.find(key);
-        if(mit == mapIndex.end()) {
+        if (mit == mapIndex.end()) {
             mit = mapIndex.emplace(key, it_map_t()).first;
         }
-        it_map_t& mapIt = mit->second;
+        it_map_t &mapIt = mit->second;
 
-        if(mapIt.count(value) > 0) {
+        if (mapIt.count(value) > 0) {
             // Don't insert duplicates
             return false;
         }
 
-        if(listItems.size() == nMaxSize) {
+        if (listItems.size() == nMaxSize) {
             PruneLast();
         }
         listItems.push_front(item_t(key, value));
@@ -106,118 +100,111 @@ public:
         return true;
     }
 
-    bool HasKey(const K& key) const
-    {
+    bool HasKey(const K &key) const {
         return (mapIndex.find(key) != mapIndex.end());
     }
 
-    bool Get(const K& key, V& value) const
-    {
+    bool Get(const K &key, V &value) const {
         map_cit it = mapIndex.find(key);
-        if(it == mapIndex.end()) {
+        if (it == mapIndex.end()) {
             return false;
         }
-        const it_map_t& mapIt = it->second;
-        const item_t& item = *(mapIt.begin()->second);
+        const it_map_t &mapIt = it->second;
+        const item_t &item = *(mapIt.begin()->second);
         value = item.value;
         return true;
     }
 
-    bool GetAll(const K& key, std::vector<V>& vecValues)
-    {
+    bool GetAll(const K &key, std::vector <V> &vecValues) {
         map_cit mit = mapIndex.find(key);
-        if(mit == mapIndex.end()) {
+        if (mit == mapIndex.end()) {
             return false;
         }
-        const it_map_t& mapIt = mit->second;
+        const it_map_t &mapIt = mit->second;
 
-        for(it_map_cit it = mapIt.begin(); it != mapIt.end(); ++it) {
-            const item_t& item = *(it->second);
+        for (it_map_cit it = mapIt.begin(); it != mapIt.end(); ++it) {
+            const item_t &item = *(it->second);
             vecValues.push_back(item.value);
         }
         return true;
     }
 
-    void GetKeys(std::vector<K>& vecKeys)
-    {
-        for(map_cit it = mapIndex.begin(); it != mapIndex.end(); ++it) {
+    void GetKeys(std::vector <K> &vecKeys) {
+        for (map_cit it = mapIndex.begin(); it != mapIndex.end(); ++it) {
             vecKeys.push_back(it->first);
         }
     }
 
-    void Erase(const K& key)
-    {
+    void Erase(const K &key) {
         map_it mit = mapIndex.find(key);
-        if(mit == mapIndex.end()) {
+        if (mit == mapIndex.end()) {
             return;
         }
-        it_map_t& mapIt = mit->second;
+        it_map_t &mapIt = mit->second;
 
-        for(it_map_it it = mapIt.begin(); it != mapIt.end(); ++it) {
+        for (it_map_it it = mapIt.begin(); it != mapIt.end(); ++it) {
             listItems.erase(it->second);
         }
 
         mapIndex.erase(mit);
     }
 
-    void Erase(const K& key, const V& value)
-    {
+    void Erase(const K &key, const V &value) {
         map_it mit = mapIndex.find(key);
-        if(mit == mapIndex.end()) {
+        if (mit == mapIndex.end()) {
             return;
         }
-        it_map_t& mapIt = mit->second;
+        it_map_t &mapIt = mit->second;
 
         it_map_it it = mapIt.find(value);
-        if(it == mapIt.end()) {
+        if (it == mapIt.end()) {
             return;
         }
 
         listItems.erase(it->second);
         mapIt.erase(it);
 
-        if(mapIt.empty()) {
+        if (mapIt.empty()) {
             mapIndex.erase(mit);
         }
     }
 
-    const list_t& GetItemList() const {
+    const list_t &GetItemList() const {
         return listItems;
     }
 
-    CacheMap<K,V>& operator=(const CacheMap<K,V>& other)
-    {
+    CacheMap <K, V> &operator=(const CacheMap <K, V> &other) {
         nMaxSize = other.nMaxSize;
         listItems = other.listItems;
         RebuildIndex();
         return *this;
     }
 
-    SERIALIZE_METHODS(CacheMultiMap, obj)
+    SERIALIZE_METHODS(CacheMultiMap, obj
+    )
     {
         READWRITE(obj.nMaxSize, obj.listItems);
         SER_READ(obj, obj.RebuildIndex());
     }
 
 private:
-    void PruneLast()
-    {
-        if(listItems.empty()) {
+    void PruneLast() {
+        if (listItems.empty()) {
             return;
         }
 
         list_it lit = listItems.end();
         --lit;
-        item_t& item = *lit;
+        item_t &item = *lit;
 
         map_it mit = mapIndex.find(item.key);
 
-        if(mit != mapIndex.end()) {
-            it_map_t& mapIt = mit->second;
+        if (mit != mapIndex.end()) {
+            it_map_t &mapIt = mit->second;
 
             mapIt.erase(item.value);
 
-            if(mapIt.empty()) {
+            if (mapIt.empty()) {
                 mapIndex.erase(item.key);
             }
         }
@@ -225,16 +212,15 @@ private:
         listItems.pop_back();
     }
 
-    void RebuildIndex()
-    {
+    void RebuildIndex() {
         mapIndex.clear();
-        for(list_it lit = listItems.begin(); lit != listItems.end(); ++lit) {
-            item_t& item = *lit;
+        for (list_it lit = listItems.begin(); lit != listItems.end(); ++lit) {
+            item_t &item = *lit;
             map_it mit = mapIndex.find(item.key);
-            if(mit == mapIndex.end()) {
+            if (mit == mapIndex.end()) {
                 mit = mapIndex.emplace(item.key, it_map_t()).first;
             }
-            it_map_t& mapIt = mit->second;
+            it_map_t &mapIt = mit->second;
             mapIt.emplace(item.value, lit);
         }
     }

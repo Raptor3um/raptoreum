@@ -14,8 +14,7 @@
 #include <wallet/wallet.h>
 #include <wallet/walletdb.h>
 
-bool VerifyWallets(interfaces::Chain& chain, const std::vector<std::string>& wallet_files)
-{
+bool VerifyWallets(interfaces::Chain &chain, const std::vector <std::string> &wallet_files) {
     if (gArgs.IsArgSet("-walletdir")) {
         fs::path wallet_dir = gArgs.GetArg("-walletdir", "");
         boost::system::error_code error;
@@ -27,7 +26,7 @@ bool VerifyWallets(interfaces::Chain& chain, const std::vector<std::string>& wal
         } else if (!fs::is_directory(wallet_dir)) {
             chain.initError(strprintf(_("Specified -walletdir \"%s\" is not a directory"), wallet_dir.string()));
             return false;
-        // The canonical path transforms relative paths into absolute ones, so we check the non-canonical version
+            // The canonical path transforms relative paths into absolute ones, so we check the non-canonical version
         } else if (!wallet_dir.is_absolute()) {
             chain.initError(strprintf(_("Specified -walletdir \"%s\" is a relative path"), wallet_dir.string()));
             return false;
@@ -40,13 +39,14 @@ bool VerifyWallets(interfaces::Chain& chain, const std::vector<std::string>& wal
     chain.initMessage(_("Verifying wallet(s)..."));
 
     // Keep track of each wallet absolute path to detect duplicates.
-    std::set<fs::path> wallet_paths;
+    std::set <fs::path> wallet_paths;
 
-    for (const auto& wallet_file : wallet_files) {
+    for (const auto &wallet_file: wallet_files) {
         WalletLocation location(wallet_file);
 
         if (!wallet_paths.insert(location.GetPath()).second) {
-            chain.initError(strprintf(_("Error loading wallet %s. Duplicate -wallet filename specified."), wallet_file));
+            chain.initError(
+                    strprintf(_("Error loading wallet %s. Duplicate -wallet filename specified."), wallet_file));
             return false;
         }
 
@@ -61,10 +61,9 @@ bool VerifyWallets(interfaces::Chain& chain, const std::vector<std::string>& wal
     return true;
 }
 
-bool LoadWallets(interfaces::Chain& chain, const std::vector<std::string>& wallet_files)
-{
-    for (const std::string& walletFile : wallet_files) {
-        std::shared_ptr<CWallet> pwallet = CWallet::CreateWalletFromFile(chain, WalletLocation(walletFile));
+bool LoadWallets(interfaces::Chain &chain, const std::vector <std::string> &wallet_files) {
+    for (const std::string &walletFile: wallet_files) {
+        std::shared_ptr <CWallet> pwallet = CWallet::CreateWalletFromFile(chain, WalletLocation(walletFile));
         if (!pwallet) {
             return false;
         }
@@ -73,9 +72,8 @@ bool LoadWallets(interfaces::Chain& chain, const std::vector<std::string>& walle
     return true;
 }
 
-void StartWallets(CScheduler& scheduler)
-{
-    for (const std::shared_ptr<CWallet>& pwallet : GetWallets()) {
+void StartWallets(CScheduler &scheduler) {
+    for (const std::shared_ptr <CWallet> &pwallet: GetWallets()) {
         pwallet->postInitProcess();
     }
 
@@ -86,9 +84,8 @@ void StartWallets(CScheduler& scheduler)
     scheduler.scheduleEvery(MaybeResendWalletTxs, 1000);
 }
 
-void FlushWallets()
-{
-    for (const std::shared_ptr<CWallet>& pwallet : GetWallets()) {
+void FlushWallets() {
+    for (const std::shared_ptr <CWallet> &pwallet: GetWallets()) {
         if (CCoinJoinClientOptions::IsEnabled()) {
             // Stop CoinJoin, release keys
             auto it = coinJoinClientManagers.find(pwallet->GetName());
@@ -99,15 +96,13 @@ void FlushWallets()
     }
 }
 
-void StopWallets()
-{
-    for (const std::shared_ptr<CWallet>& pwallet : GetWallets()) {
+void StopWallets() {
+    for (const std::shared_ptr <CWallet> &pwallet: GetWallets()) {
         pwallet->Close();
     }
 }
 
-void UnloadWallets()
-{
+void UnloadWallets() {
     auto wallets = GetWallets();
     while (!wallets.empty()) {
         auto wallet = wallets.back();

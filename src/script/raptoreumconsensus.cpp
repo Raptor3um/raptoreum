@@ -13,73 +13,67 @@
 namespace {
 
 /** A class that deserializes a single CTransaction one time. */
-class TxInputStream
-{
-public:
-    TxInputStream(int nTypeIn, int nVersionIn, const unsigned char *txTo, size_t txToLen) :
-    m_type(nTypeIn),
-    m_version(nVersionIn),
-    m_data(txTo),
-    m_remaining(txToLen)
-    {}
+    class TxInputStream {
+    public:
+        TxInputStream(int nTypeIn, int nVersionIn, const unsigned char *txTo, size_t txToLen) :
+                m_type(nTypeIn),
+                m_version(nVersionIn),
+                m_data(txTo),
+                m_remaining(txToLen) {}
 
-    void read(char* pch, size_t nSize)
-    {
-        if (nSize > m_remaining)
-            throw std::ios_base::failure(std::string(__func__) + ": end of data");
+        void read(char *pch, size_t nSize) {
+            if (nSize > m_remaining)
+                throw std::ios_base::failure(std::string(__func__) + ": end of data");
 
-        if (pch == nullptr)
-            throw std::ios_base::failure(std::string(__func__) + ": bad destination buffer");
+            if (pch == nullptr)
+                throw std::ios_base::failure(std::string(__func__) + ": bad destination buffer");
 
-        if (m_data == nullptr)
-            throw std::ios_base::failure(std::string(__func__) + ": bad source buffer");
+            if (m_data == nullptr)
+                throw std::ios_base::failure(std::string(__func__) + ": bad source buffer");
 
-        memcpy(pch, m_data, nSize);
-        m_remaining -= nSize;
-        m_data += nSize;
+            memcpy(pch, m_data, nSize);
+            m_remaining -= nSize;
+            m_data += nSize;
+        }
+
+        template<typename T>
+        TxInputStream &operator>>(T &&obj) {
+            ::Unserialize(*this, obj);
+            return *this;
+        }
+
+        int GetVersion() const { return m_version; }
+
+        int GetType() const { return m_type; }
+
+    private:
+        const int m_type;
+        const int m_version;
+        const unsigned char *m_data;
+        size_t m_remaining;
+    };
+
+    inline int set_error(raptoreumconsensus_error *ret, raptoreumconsensus_error serror) {
+        if (ret)
+            *ret = serror;
+        return 0;
     }
 
-    template<typename T>
-    TxInputStream& operator>>(T&& obj)
-    {
-        ::Unserialize(*this, obj);
-        return *this;
-    }
+    struct ECCryptoClosure {
+        ECCVerifyHandle handle;
+    };
 
-    int GetVersion() const { return m_version; }
-    int GetType() const { return m_type; }
-private:
-    const int m_type;
-    const int m_version;
-    const unsigned char* m_data;
-    size_t m_remaining;
-};
-
-inline int set_error(raptoreumconsensus_error* ret, raptoreumconsensus_error serror)
-{
-    if (ret)
-        *ret = serror;
-    return 0;
-}
-
-struct ECCryptoClosure
-{
-    ECCVerifyHandle handle;
-};
-
-ECCryptoClosure instance_of_eccryptoclosure;
+    ECCryptoClosure instance_of_eccryptoclosure;
 } // namespace
 
 /** Check that all specified flags are part of the libconsensus interface. */
-static bool verify_flags(unsigned int flags)
-{
+static bool verify_flags(unsigned int flags) {
     return (flags & ~(raptoreumconsensus_SCRIPT_FLAGS_VERIFY_ALL)) == 0;
 }
 
 int raptoreumconsensus_verify_script(const unsigned char *scriptPubKey, unsigned int scriptPubKeyLen,
-                                    const unsigned char *txTo        , unsigned int txToLen,
-                                    unsigned int nIn, unsigned int flags, raptoreumconsensus_error* err)
-{
+                                     const unsigned char *txTo, unsigned int txToLen,
+                                     unsigned int nIn, unsigned int flags, raptoreumconsensus_error *err) {
     if (!verify_flags(flags)) {
         return raptoreumconsensus_ERR_INVALID_FLAGS;
     }
@@ -96,14 +90,14 @@ int raptoreumconsensus_verify_script(const unsigned char *scriptPubKey, unsigned
 
         PrecomputedTransactionData txdata(tx);
         CAmount am(0);
-        return VerifyScript(tx.vin[nIn].scriptSig, CScript(scriptPubKey, scriptPubKey + scriptPubKeyLen), flags, TransactionSignatureChecker(&tx, nIn, am, txdata), nullptr);
-    } catch (const std::exception&) {
+        return VerifyScript(tx.vin[nIn].scriptSig, CScript(scriptPubKey, scriptPubKey + scriptPubKeyLen), flags,
+                            TransactionSignatureChecker(&tx, nIn, am, txdata), nullptr);
+    } catch (const std::exception &) {
         return set_error(err, raptoreumconsensus_ERR_TX_DESERIALIZE); // Error deserializing
     }
 }
 
-unsigned int raptoreumconsensus_version()
-{
+unsigned int raptoreumconsensus_version() {
     // Just use the API version for now
     return RAPTOREUMCONSENSUS_API_VER;
 }

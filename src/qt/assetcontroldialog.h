@@ -21,7 +21,9 @@ class WalletModel;
 class CCoinControl;
 
 class QStringListModel;
+
 class QSortFilterProxyModel;
+
 class QCompleter;
 
 namespace Ui {
@@ -30,41 +32,42 @@ namespace Ui {
 
 #define ASYMP_UTF8 "\xE2\x89\x88"
 
-class CAssetControlWidgetItem : public QTreeWidgetItem
-{
+class CAssetControlWidgetItem : public QTreeWidgetItem {
 public:
     explicit CAssetControlWidgetItem(QTreeWidget *parent, int type = Type) : QTreeWidgetItem(parent, type) {}
+
     explicit CAssetControlWidgetItem(int type = Type) : QTreeWidgetItem(type) {}
+
     explicit CAssetControlWidgetItem(QTreeWidgetItem *parent, int type = Type) : QTreeWidgetItem(parent, type) {}
 
     bool operator<(const QTreeWidgetItem &other) const;
 };
 
 
-class AssetControlDialog : public QDialog
-{
+class AssetControlDialog : public QDialog {
     Q_OBJECT
 
 public:
-    explicit AssetControlDialog(CCoinControl& Asset_control, WalletModel* model, QWidget *parent = nullptr);
+    explicit AssetControlDialog(CCoinControl &Asset_control, WalletModel *model, QWidget *parent = nullptr);
+
     ~AssetControlDialog();
 
     // static because also called from sendAssetsdialog
-    static void updateLabels(CCoinControl& m_coin_control, WalletModel*, QDialog*);
+    static void updateLabels(CCoinControl &m_coin_control, WalletModel *, QDialog *);
 
     //update the list of assets
     void updateAssetList();
 
-    static QList<CAmount> payAmounts;
+    static QList <CAmount> payAmounts;
     static bool fSubtractFeeFromAmount;
 
-    QStringListModel* stringModel;
-    QSortFilterProxyModel* proxy;
-    QCompleter* completer;
+    QStringListModel *stringModel;
+    QSortFilterProxyModel *proxy;
+    QCompleter *completer;
 
 private:
     Ui::AssetControlDialog *ui;
-    CCoinControl& m_coin_control;
+    CCoinControl &m_coin_control;
     WalletModel *model;
     int sortColumn;
     Qt::SortOrder sortOrder;
@@ -78,10 +81,10 @@ private:
     bool fHideAdditional{true};
 
     void sortView(int, Qt::SortOrder);
+
     void updateView();
 
-    enum
-    {
+    enum {
         COLUMN_CHECKBOX = 0,
         COLUMN_NAME,
         COLUMN_AMOUNT,
@@ -91,37 +94,60 @@ private:
         COLUMN_CONFIRMATIONS,
     };
 
-    enum
-    {
+    enum {
         TxHashRole = Qt::UserRole,
         VOutRole
     };
 
     friend class CAssetControlWidgetItem;
 
-private Q_SLOTS:
-    void showMenu(const QPoint &);
+private
+    Q_SLOTS:
+            void showMenu(
+    const QPoint &);
+
     void copyAmount();
+
     void copyLabel();
+
     void copyAddress();
+
     void copyTransactionHash();
+
     void lockAsset();
+
     void unlockAsset();
+
     void clipboardQuantity();
+
     void clipboardAmount();
+
     void clipboardFee();
+
     void clipboardAfterFee();
+
     void clipboardBytes();
+
     void clipboardLowOutput();
+
     void clipboardChange();
+
     void radioTreeMode(bool);
+
     void radioListMode(bool);
-    void viewItemChanged(QTreeWidgetItem*, int);
+
+    void viewItemChanged(QTreeWidgetItem *, int);
+
     void headerSectionClicked(int);
-    void buttonBoxClicked(QAbstractButton*);
+
+    void buttonBoxClicked(QAbstractButton *);
+
     void buttonSelectAllClicked();
+
     void buttonToggleLockClicked();
+
     void updateLabelLocked();
+
     void onAssetSelected(QString name);
 
 };

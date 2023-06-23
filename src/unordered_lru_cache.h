@@ -12,10 +12,9 @@
 #include <vector>
 
 template<typename Key, typename Value, typename Hasher, size_t MaxSize = 0, size_t TruncateThreshold = 0>
-class unordered_lru_cache
-{
+class unordered_lru_cache {
 protected:
-    typedef std::unordered_map<Key, std::pair<Value, int64_t>, Hasher> MapType;
+    typedef std::unordered_map <Key, std::pair<Value, int64_t>, Hasher> MapType;
 
     MapType cacheMap;
     size_t maxSize;
@@ -24,9 +23,8 @@ protected:
 
 public:
     explicit unordered_lru_cache(size_t _maxSize = MaxSize, size_t _truncateThreshold = TruncateThreshold) :
-        maxSize(_maxSize),
-        truncateThreshold(_truncateThreshold == 0 ? _maxSize * 2 : _truncateThreshold)
-    {
+            maxSize(_maxSize),
+            truncateThreshold(_truncateThreshold == 0 ? _maxSize * 2 : _truncateThreshold) {
         // either specify maxSize through template arguments or the constructor and fail otherwise
         assert(_maxSize != 0);
     }
@@ -34,8 +32,7 @@ public:
     size_t max_size() const { return maxSize; }
 
     template<typename Value2>
-    void _emplace(const Key& key, Value2&& v)
-    {
+    void _emplace(const Key &key, Value2 &&v) {
         truncate_if_needed();
         auto it = cacheMap.find(key);
         if (it == cacheMap.end()) {
@@ -47,27 +44,24 @@ public:
     }
 
     void setMaxSize(size_t _maxSize, size_t _truncateThreshold = TruncateThreshold) {
-    	maxSize = _maxSize;
-    	truncateThreshold = _truncateThreshold == 0 ? _maxSize * 2 : _truncateThreshold;
+        maxSize = _maxSize;
+        truncateThreshold = _truncateThreshold == 0 ? _maxSize * 2 : _truncateThreshold;
         assert(_maxSize != 0);
     }
 
     size_t getMaxSize() const {
-    	return maxSize;
+        return maxSize;
     }
 
-    void emplace(const Key& key, Value&& v)
-    {
+    void emplace(const Key &key, Value &&v) {
         _emplace(key, v);
     }
 
-    void insert(const Key& key, const Value& v)
-    {
+    void insert(const Key &key, const Value &v) {
         _emplace(key, v);
     }
 
-    bool get(const Key& key, Value& value)
-    {
+    bool get(const Key &key, Value &value) {
         auto it = cacheMap.find(key);
         if (it != cacheMap.end()) {
             it->second.second = accessCounter++;
@@ -77,8 +71,7 @@ public:
         return false;
     }
 
-    bool exists(const Key& key)
-    {
+    bool exists(const Key &key) {
         auto it = cacheMap.find(key);
         if (it != cacheMap.end()) {
             it->second.second = accessCounter++;
@@ -87,36 +80,33 @@ public:
         return false;
     }
 
-    void erase(const Key& key)
-    {
+    void erase(const Key &key) {
         cacheMap.erase(key);
     }
 
-    void clear()
-    {
+    void clear() {
         cacheMap.clear();
     }
 
     int size() const {
-    	return cacheMap.size();
+        return cacheMap.size();
     }
 
 private:
-    void truncate_if_needed()
-    {
+    void truncate_if_needed() {
         typedef typename MapType::iterator Iterator;
 
         if (cacheMap.size() <= truncateThreshold) {
             return;
         }
 
-        std::vector<Iterator> vec;
+        std::vector <Iterator> vec;
         vec.reserve(cacheMap.size());
         for (auto it = cacheMap.begin(); it != cacheMap.end(); ++it) {
             vec.emplace_back(it);
         }
         // sort by last access time (descending order)
-        std::sort(vec.begin(), vec.end(), [](const Iterator& it1, const Iterator& it2) {
+        std::sort(vec.begin(), vec.end(), [](const Iterator &it1, const Iterator &it2) {
             return it1->second.second > it2->second.second;
         });
 

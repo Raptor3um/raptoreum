@@ -15,15 +15,15 @@ QT_END_NAMESPACE
 /** Export a Qt table model to a CSV file. This is useful for analyzing or post-processing the data in
     a spreadsheet.
  */
-class CSVModelWriter : public QObject
-{
+class CSVModelWriter : public QObject {
     Q_OBJECT
 
 public:
     explicit CSVModelWriter(const QString &filename, QObject *parent = nullptr);
 
     void setModel(const QAbstractItemModel *model);
-    void addColumn(const QString &title, int column, int role=Qt::EditRole);
+
+    void addColumn(const QString &title, int column, int role = Qt::EditRole);
 
     /** Perform export of the model to CSV.
         @returns true on success, false otherwise
@@ -34,13 +34,12 @@ private:
     QString filename;
     const QAbstractItemModel *model;
 
-    struct Column
-    {
+    struct Column {
         QString title;
         int column;
         int role;
     };
-    QList<Column> columns;
+    QList <Column> columns;
 };
 
 #endif // BITCOIN_QT_CSVMODELWRITER_H

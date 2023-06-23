@@ -14,95 +14,96 @@
 #include <set>
 
 class CDataStream;
+
 class CInv;
+
 class CScheduler;
 
-namespace llmq
-{
+namespace llmq {
 
-class CDKGDebugMemberStatus
-{
-public:
-    union {
-        struct
-        {
-            // is it locally considered as bad (and thus removed from the validMembers set)
-            bool bad : 1;
-            // did we complain about this member
-            bool weComplain : 1;
+    class CDKGDebugMemberStatus {
+    public:
+        union {
+            struct {
+                // is it locally considered as bad (and thus removed from the validMembers set)
+                bool bad: 1;
+                // did we complain about this member
+                bool weComplain: 1;
 
-            // received message for DKG phases
-            bool receivedContribution : 1;
-            bool receivedComplaint : 1;
-            bool receivedJustification : 1;
-            bool receivedPrematureCommitment : 1;
+                // received message for DKG phases
+                bool receivedContribution: 1;
+                bool receivedComplaint: 1;
+                bool receivedJustification: 1;
+                bool receivedPrematureCommitment: 1;
+            };
+            uint8_t statusBitset;
         };
-        uint8_t statusBitset;
+
+        std::set <uint16_t> complaintsFromMembers;
+
+        CDKGDebugMemberStatus() : statusBitset(0) {}
     };
 
-    std::set<uint16_t> complaintsFromMembers;
+    class CDKGDebugSessionStatus {
+    public:
+        Consensus::LLMQType llmqType{Consensus::LLMQ_NONE};
+        uint256 quorumHash;
+        uint32_t quorumHeight{0};
+        uint8_t phase{0};
 
-    CDKGDebugMemberStatus() : statusBitset(0) {}
-};
+        union {
+            struct {
+                // sent messages for DKG phases
+                bool sentContributions: 1;
+                bool sentComplaint: 1;
+                bool sentJustification: 1;
+                bool sentPrematureCommitment: 1;
 
-class CDKGDebugSessionStatus
-{
-public:
-    Consensus::LLMQType llmqType{Consensus::LLMQ_NONE};
-    uint256 quorumHash;
-    uint32_t quorumHeight{0};
-    uint8_t phase{0};
-
-    union {
-        struct
-        {
-            // sent messages for DKG phases
-            bool sentContributions : 1;
-            bool sentComplaint : 1;
-            bool sentJustification : 1;
-            bool sentPrematureCommitment : 1;
-
-            bool aborted : 1;
+                bool aborted: 1;
+            };
+            uint8_t statusBitset;
         };
-        uint8_t statusBitset;
+
+        std::vector <CDKGDebugMemberStatus> members;
+
+        CDKGDebugSessionStatus() : statusBitset(0) {}
+
+        UniValue ToJson(int detailLevel) const;
     };
 
-    std::vector<CDKGDebugMemberStatus> members;
+    class CDKGDebugStatus {
+    public:
+        int64_t nTime{0};
 
-    CDKGDebugSessionStatus() : statusBitset(0) {}
+        std::map <Consensus::LLMQType, CDKGDebugSessionStatus> sessions;
 
-    UniValue ToJson(int detailLevel) const;
-};
+        UniValue ToJson(int detailLevel) const;
+    };
 
-class CDKGDebugStatus
-{
-public:
-    int64_t nTime{0};
+    class CDKGDebugManager {
+    private:
+        mutable RecursiveMutex cs;
+        CDKGDebugStatus localStatus
+        GUARDED_BY(cs);
 
-    std::map<Consensus::LLMQType, CDKGDebugSessionStatus> sessions;
+    public:
+        CDKGDebugManager();
 
-    UniValue ToJson(int detailLevel) const;
-};
+        void GetLocalDebugStatus(CDKGDebugStatus &ret) const;
 
-class CDKGDebugManager
-{
-private:
-    mutable RecursiveMutex cs;
-    CDKGDebugStatus localStatus GUARDED_BY(cs);
+        void ResetLocalSessionStatus(Consensus::LLMQType llmqType);
 
-public:
-    CDKGDebugManager();
+        void
+        InitLocalSessionStatus(const Consensus::LLMQParams &llmqParams, const uint256 &quorumHash, int quorumHeight);
 
-    void GetLocalDebugStatus(CDKGDebugStatus& ret) const;
+        void UpdateLocalSessionStatus(Consensus::LLMQType llmqType,
+                                      std::function<bool(CDKGDebugSessionStatus &status)> &&func);
 
-    void ResetLocalSessionStatus(Consensus::LLMQType llmqType);
-    void InitLocalSessionStatus(const Consensus::LLMQParams& llmqParams, const uint256& quorumHash, int quorumHeight);
+        void UpdateLocalMemberStatus(Consensus::LLMQType llmqType, size_t memberIdx,
+                                     std::function<bool(CDKGDebugMemberStatus &status)> &&func);
+    };
 
-    void UpdateLocalSessionStatus(Consensus::LLMQType llmqType, std::function<bool(CDKGDebugSessionStatus& status)>&& func);
-    void UpdateLocalMemberStatus(Consensus::LLMQType llmqType, size_t memberIdx, std::function<bool(CDKGDebugMemberStatus& status)>&& func);
-};
-
-extern CDKGDebugManager* quorumDKGDebugManager;
+    extern CDKGDebugManager *quorumDKGDebugManager;
 
 } // namespace llmq
 

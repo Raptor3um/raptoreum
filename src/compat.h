@@ -26,6 +26,7 @@
 #include <ws2tcpip.h>
 #include <stdint.h>
 #else
+
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <sys/select.h>
@@ -39,11 +40,14 @@
 #include <limits.h>
 #include <netdb.h>
 #include <unistd.h>
+
 #endif
 
 #ifndef WIN32
 typedef unsigned int SOCKET;
+
 #include <errno.h>
+
 #define WSAGetLastError()   errno
 #define WSAEINVAL           EINVAL
 #define WSAEALREADY         EALREADY
@@ -93,7 +97,7 @@ typedef int32_t ssize_t;
 #endif
 
 #ifndef WIN32
-typedef void* sockopt_arg_type;
+typedef void *sockopt_arg_type;
 #else
 typedef char* sockopt_arg_type;
 #endif
@@ -113,7 +117,7 @@ typedef char* sockopt_arg_type;
 #define USE_KQUEUE
 #endif
 
-bool static inline IsSelectableSocket(const SOCKET& s) {
+bool static inline IsSelectableSocket(const SOCKET &s) {
 #if defined(USE_POLL) || defined(WIN32)
     return true;
 #else

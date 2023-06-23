@@ -40,109 +40,238 @@ public:
     typedef Size size_type;
     typedef Diff difference_type;
     typedef T value_type;
-    typedef value_type& reference;
-    typedef const value_type& const_reference;
-    typedef value_type* pointer;
-    typedef const value_type* const_pointer;
+    typedef value_type &reference;
+    typedef const value_type &const_reference;
+    typedef value_type *pointer;
+    typedef const value_type *const_pointer;
 
     class iterator {
-        T* ptr;
+        T *ptr;
     public:
         typedef Diff difference_type;
         typedef T value_type;
-        typedef T* pointer;
-        typedef T& reference;
+        typedef T *pointer;
+        typedef T &reference;
         typedef std::random_access_iterator_tag iterator_category;
-        iterator(T* ptr_) : ptr(ptr_) {}
-        T& operator*() const { return *ptr; }
-        T* operator->() const { return ptr; }
-        T& operator[](size_type pos) { return ptr[pos]; }
-        const T& operator[](size_type pos) const { return ptr[pos]; }
-        iterator& operator++() { ptr++; return *this; }
-        iterator& operator--() { ptr--; return *this; }
-        iterator operator++(int) { iterator copy(*this); ++(*this); return copy; }
-        iterator operator--(int) { iterator copy(*this); --(*this); return copy; }
+
+        iterator(T *ptr_) : ptr(ptr_) {}
+
+        T &operator*() const { return *ptr; }
+
+        T *operator->() const { return ptr; }
+
+        T &operator[](size_type pos) { return ptr[pos]; }
+
+        const T &operator[](size_type pos) const { return ptr[pos]; }
+
+        iterator &operator++() {
+            ptr++;
+            return *this;
+        }
+
+        iterator &operator--() {
+            ptr--;
+            return *this;
+        }
+
+        iterator operator++(int) {
+            iterator copy(*this);
+            ++(*this);
+            return copy;
+        }
+
+        iterator operator--(int) {
+            iterator copy(*this);
+            --(*this);
+            return copy;
+        }
+
         difference_type friend operator-(iterator a, iterator b) { return (&(*a) - &(*b)); }
+
         iterator operator+(size_type n) { return iterator(ptr + n); }
-        iterator& operator+=(size_type n) { ptr += n; return *this; }
+
+        iterator &operator+=(size_type n) {
+            ptr += n;
+            return *this;
+        }
+
         iterator operator-(size_type n) { return iterator(ptr - n); }
-        iterator& operator-=(size_type n) { ptr -= n; return *this; }
+
+        iterator &operator-=(size_type n) {
+            ptr -= n;
+            return *this;
+        }
+
         bool operator==(iterator x) const { return ptr == x.ptr; }
+
         bool operator!=(iterator x) const { return ptr != x.ptr; }
+
         bool operator>=(iterator x) const { return ptr >= x.ptr; }
+
         bool operator<=(iterator x) const { return ptr <= x.ptr; }
+
         bool operator>(iterator x) const { return ptr > x.ptr; }
+
         bool operator<(iterator x) const { return ptr < x.ptr; }
     };
 
     class reverse_iterator {
-        T* ptr;
+        T *ptr;
     public:
         typedef Diff difference_type;
         typedef T value_type;
-        typedef T* pointer;
-        typedef T& reference;
+        typedef T *pointer;
+        typedef T &reference;
         typedef std::bidirectional_iterator_tag iterator_category;
-        reverse_iterator(T* ptr_) : ptr(ptr_) {}
-        T& operator*() { return *ptr; }
-        const T& operator*() const { return *ptr; }
-        T* operator->() { return ptr; }
-        const T* operator->() const { return ptr; }
-        reverse_iterator& operator--() { ptr++; return *this; }
-        reverse_iterator& operator++() { ptr--; return *this; }
-        reverse_iterator operator++(int) { reverse_iterator copy(*this); ++(*this); return copy; }
-        reverse_iterator operator--(int) { reverse_iterator copy(*this); --(*this); return copy; }
+
+        reverse_iterator(T *ptr_) : ptr(ptr_) {}
+
+        T &operator*() { return *ptr; }
+
+        const T &operator*() const { return *ptr; }
+
+        T *operator->() { return ptr; }
+
+        const T *operator->() const { return ptr; }
+
+        reverse_iterator &operator--() {
+            ptr++;
+            return *this;
+        }
+
+        reverse_iterator &operator++() {
+            ptr--;
+            return *this;
+        }
+
+        reverse_iterator operator++(int) {
+            reverse_iterator copy(*this);
+            ++(*this);
+            return copy;
+        }
+
+        reverse_iterator operator--(int) {
+            reverse_iterator copy(*this);
+            --(*this);
+            return copy;
+        }
+
         bool operator==(reverse_iterator x) const { return ptr == x.ptr; }
+
         bool operator!=(reverse_iterator x) const { return ptr != x.ptr; }
     };
 
     class const_iterator {
-        const T* ptr;
+        const T *ptr;
     public:
         typedef Diff difference_type;
         typedef const T value_type;
-        typedef const T* pointer;
-        typedef const T& reference;
+        typedef const T *pointer;
+        typedef const T &reference;
         typedef std::random_access_iterator_tag iterator_category;
-        const_iterator(const T* ptr_) : ptr(ptr_) {}
+
+        const_iterator(const T *ptr_) : ptr(ptr_) {}
+
         const_iterator(iterator x) : ptr(&(*x)) {}
-        const T& operator*() const { return *ptr; }
-        const T* operator->() const { return ptr; }
-        const T& operator[](size_type pos) const { return ptr[pos]; }
-        const_iterator& operator++() { ptr++; return *this; }
-        const_iterator& operator--() { ptr--; return *this; }
-        const_iterator operator++(int) { const_iterator copy(*this); ++(*this); return copy; }
-        const_iterator operator--(int) { const_iterator copy(*this); --(*this); return copy; }
+
+        const T &operator*() const { return *ptr; }
+
+        const T *operator->() const { return ptr; }
+
+        const T &operator[](size_type pos) const { return ptr[pos]; }
+
+        const_iterator &operator++() {
+            ptr++;
+            return *this;
+        }
+
+        const_iterator &operator--() {
+            ptr--;
+            return *this;
+        }
+
+        const_iterator operator++(int) {
+            const_iterator copy(*this);
+            ++(*this);
+            return copy;
+        }
+
+        const_iterator operator--(int) {
+            const_iterator copy(*this);
+            --(*this);
+            return copy;
+        }
+
         difference_type friend operator-(const_iterator a, const_iterator b) { return (&(*a) - &(*b)); }
+
         const_iterator operator+(size_type n) { return const_iterator(ptr + n); }
-        const_iterator& operator+=(size_type n) { ptr += n; return *this; }
+
+        const_iterator &operator+=(size_type n) {
+            ptr += n;
+            return *this;
+        }
+
         const_iterator operator-(size_type n) { return const_iterator(ptr - n); }
-        const_iterator& operator-=(size_type n) { ptr -= n; return *this; }
+
+        const_iterator &operator-=(size_type n) {
+            ptr -= n;
+            return *this;
+        }
+
         bool operator==(const_iterator x) const { return ptr == x.ptr; }
+
         bool operator!=(const_iterator x) const { return ptr != x.ptr; }
+
         bool operator>=(const_iterator x) const { return ptr >= x.ptr; }
+
         bool operator<=(const_iterator x) const { return ptr <= x.ptr; }
+
         bool operator>(const_iterator x) const { return ptr > x.ptr; }
+
         bool operator<(const_iterator x) const { return ptr < x.ptr; }
     };
 
     class const_reverse_iterator {
-        const T* ptr;
+        const T *ptr;
     public:
         typedef Diff difference_type;
         typedef const T value_type;
-        typedef const T* pointer;
-        typedef const T& reference;
+        typedef const T *pointer;
+        typedef const T &reference;
         typedef std::bidirectional_iterator_tag iterator_category;
-        const_reverse_iterator(const T* ptr_) : ptr(ptr_) {}
+
+        const_reverse_iterator(const T *ptr_) : ptr(ptr_) {}
+
         const_reverse_iterator(reverse_iterator x) : ptr(&(*x)) {}
-        const T& operator*() const { return *ptr; }
-        const T* operator->() const { return ptr; }
-        const_reverse_iterator& operator--() { ptr++; return *this; }
-        const_reverse_iterator& operator++() { ptr--; return *this; }
-        const_reverse_iterator operator++(int) { const_reverse_iterator copy(*this); ++(*this); return copy; }
-        const_reverse_iterator operator--(int) { const_reverse_iterator copy(*this); --(*this); return copy; }
+
+        const T &operator*() const { return *ptr; }
+
+        const T *operator->() const { return ptr; }
+
+        const_reverse_iterator &operator--() {
+            ptr++;
+            return *this;
+        }
+
+        const_reverse_iterator &operator++() {
+            ptr--;
+            return *this;
+        }
+
+        const_reverse_iterator operator++(int) {
+            const_reverse_iterator copy(*this);
+            ++(*this);
+            return copy;
+        }
+
+        const_reverse_iterator operator--(int) {
+            const_reverse_iterator copy(*this);
+            --(*this);
+            return copy;
+        }
+
         bool operator==(const_reverse_iterator x) const { return ptr == x.ptr; }
+
         bool operator!=(const_reverse_iterator x) const { return ptr != x.ptr; }
     };
 
@@ -151,29 +280,49 @@ private:
     union direct_or_indirect {
         char direct[sizeof(T) * N];
         struct {
-            char* indirect;
+            char *indirect;
             size_type capacity;
         } indirect_contents;
     };
 #pragma pack(pop)
-    alignas(char*) direct_or_indirect _union = {};
+
+    alignas(char *)
+
+    direct_or_indirect _union = {};
     size_type _size = 0;
 
-    static_assert(alignof(char*) % alignof(size_type) == 0 && sizeof(char*) % alignof(size_type) == 0, "size_type cannot have more restrictive alignment requirement than pointer");
-    static_assert(alignof(char*) % alignof(T) == 0, "value_type T cannot have more restrictive alignment requirement than pointer");
+    static_assert (alignof(char *)
 
-    T* direct_ptr(difference_type pos) { return reinterpret_cast<T*>(_union.direct) + pos; }
-    const T* direct_ptr(difference_type pos) const { return reinterpret_cast<const T*>(_union.direct) + pos; }
-    T* indirect_ptr(difference_type pos) { return reinterpret_cast<T*>(_union.indirect_contents.indirect) + pos; }
-    const T* indirect_ptr(difference_type pos) const { return reinterpret_cast<const T*>(_union.indirect_contents.indirect) + pos; }
+    %
+    alignof(size_type)
+    == 0 && sizeof(char*) %
+    alignof(size_type)
+    == 0, "size_type cannot have more restrictive alignment requirement than pointer");
+
+    static_assert (alignof(char *)
+
+    %
+    alignof(T)
+    == 0, "value_type T cannot have more restrictive alignment requirement than pointer");
+
+    T *direct_ptr(difference_type pos) { return reinterpret_cast<T *>(_union.direct) + pos; }
+
+    const T *direct_ptr(difference_type pos) const { return reinterpret_cast<const T *>(_union.direct) + pos; }
+
+    T *indirect_ptr(difference_type pos) { return reinterpret_cast<T *>(_union.indirect_contents.indirect) + pos; }
+
+    const T *indirect_ptr(difference_type pos) const {
+        return reinterpret_cast<const T *>(_union.indirect_contents.indirect) + pos;
+    }
+
     bool is_direct() const { return _size <= N; }
 
     void change_capacity(size_type new_capacity) {
         if (new_capacity <= N) {
             if (!is_direct()) {
-                T* indirect = indirect_ptr(0);
-                T* src = indirect;
-                T* dst = direct_ptr(0);
+                T *indirect = indirect_ptr(0);
+                T *src = indirect;
+                T *dst = direct_ptr(0);
                 memcpy(dst, src, size() * sizeof(T));
                 free(indirect);
                 _size -= N + 1;
@@ -183,14 +332,17 @@ private:
                 /* FIXME: Because malloc/realloc here won't call new_handler if allocation fails, assert
                     success. These should instead use an allocator or new/delete so that handlers
                     are called as necessary, but performance would be slightly degraded by doing so. */
-                _union.indirect_contents.indirect = static_cast<char*>(realloc(_union.indirect_contents.indirect, ((size_t)sizeof(T)) * new_capacity));
+                _union.indirect_contents.indirect = static_cast<char *>(realloc(_union.indirect_contents.indirect,
+                                                                                ((size_t)
+                sizeof(T)) *new_capacity));
                 assert(_union.indirect_contents.indirect);
                 _union.indirect_contents.capacity = new_capacity;
             } else {
-                char* new_indirect = static_cast<char*>(malloc(((size_t)sizeof(T)) * new_capacity));
+                char *new_indirect = static_cast<char *>(malloc(((size_t)
+                sizeof(T)) *new_capacity));
                 assert(new_indirect);
-                T* src = direct_ptr(0);
-                T* dst = reinterpret_cast<T*>(new_indirect);
+                T *src = direct_ptr(0);
+                T *dst = reinterpret_cast<T *>(new_indirect);
                 memcpy(dst, src, size() * sizeof(T));
                 _union.indirect_contents.indirect = new_indirect;
                 _union.indirect_contents.capacity = new_capacity;
@@ -199,33 +351,34 @@ private:
         }
     }
 
-    T* item_ptr(difference_type pos) { return is_direct() ? direct_ptr(pos) : indirect_ptr(pos); }
-    const T* item_ptr(difference_type pos) const { return is_direct() ? direct_ptr(pos) : indirect_ptr(pos); }
+    T *item_ptr(difference_type pos) { return is_direct() ? direct_ptr(pos) : indirect_ptr(pos); }
 
-    void fill(T* dst, ptrdiff_t count, const T& value = T{}) {
-      std::fill_n(dst, count, value);
+    const T *item_ptr(difference_type pos) const { return is_direct() ? direct_ptr(pos) : indirect_ptr(pos); }
+
+    void fill(T *dst, ptrdiff_t count, const T &value = T{}) {
+        std::fill_n(dst, count, value);
     }
 
     template<typename InputIterator>
-    void fill(T* dst, InputIterator first, InputIterator last) {
+    void fill(T *dst, InputIterator first, InputIterator last) {
         while (first != last) {
-            new(static_cast<void*>(dst)) T(*first);
+            new(static_cast<void *>(dst)) T(*first);
             ++dst;
             ++first;
         }
     }
 
-    void fill(T* dst, const_iterator first, const_iterator last) {
+    void fill(T *dst, const_iterator first, const_iterator last) {
         ptrdiff_t count = last - first;
         fill(dst, &*first, count);
     }
 
-    void fill(T* dst, const T* src, ptrdiff_t count) {
+    void fill(T *dst, const T *src, ptrdiff_t count) {
         if (std::is_trivially_constructible<T>::value) {
             ::memmove(dst, src, count * sizeof(T));
         } else {
             for (ptrdiff_t i = 0; i < count; i++) {
-                new(static_cast<void*>(dst)) T(*src);
+                new(static_cast<void *>(dst)) T(*src);
                 ++dst;
                 ++src;
             }
@@ -233,7 +386,7 @@ private:
     }
 
 public:
-    void assign(size_type n, const T& val) {
+    void assign(size_type n, const T &val) {
         clear();
         if (capacity() < n) {
             change_capacity(n);
@@ -259,7 +412,7 @@ public:
         resize(n);
     }
 
-    explicit prevector(size_type n, const T& val) {
+    explicit prevector(size_type n, const T &val) {
         change_capacity(n);
         _size += n;
         fill(item_ptr(0), n, val);
@@ -273,18 +426,18 @@ public:
         fill(item_ptr(0), first, last);
     }
 
-    prevector(const prevector<N, T, Size, Diff>& other) {
+    prevector(const prevector<N, T, Size, Diff> &other) {
         size_type n = other.size();
         change_capacity(n);
         _size += n;
-        fill(item_ptr(0), other.begin(),  other.end());
+        fill(item_ptr(0), other.begin(), other.end());
     }
 
-    prevector(prevector<N, T, Size, Diff>&& other) {
+    prevector(prevector<N, T, Size, Diff> &&other) {
         swap(other);
     }
 
-    prevector& operator=(const prevector<N, T, Size, Diff>& other) {
+    prevector &operator=(const prevector<N, T, Size, Diff> &other) {
         if (&other == this) {
             return *this;
         }
@@ -292,7 +445,7 @@ public:
         return *this;
     }
 
-    prevector& operator=(prevector<N, T, Size, Diff>&& other) {
+    prevector &operator=(prevector<N, T, Size, Diff> &&other) {
         swap(other);
         return *this;
     }
@@ -306,13 +459,19 @@ public:
     }
 
     iterator begin() { return iterator(item_ptr(0)); }
+
     const_iterator begin() const { return const_iterator(item_ptr(0)); }
+
     iterator end() { return iterator(item_ptr(size())); }
+
     const_iterator end() const { return const_iterator(item_ptr(size())); }
 
     reverse_iterator rbegin() { return reverse_iterator(item_ptr(size() - 1)); }
+
     const_reverse_iterator rbegin() const { return const_reverse_iterator(item_ptr(size() - 1)); }
+
     reverse_iterator rend() { return reverse_iterator(item_ptr(-1)); }
+
     const_reverse_iterator rend() const { return const_reverse_iterator(item_ptr(-1)); }
 
     size_t capacity() const {
@@ -323,11 +482,11 @@ public:
         }
     }
 
-    T& operator[](size_type pos) {
+    T &operator[](size_type pos) {
         return *item_ptr(pos);
     }
 
-    const T& operator[](size_type pos) const {
+    const T &operator[](size_type pos) const {
         return *item_ptr(pos);
     }
 
@@ -362,26 +521,26 @@ public:
         resize(0);
     }
 
-    iterator insert(iterator pos, const T& value) {
+    iterator insert(iterator pos, const T &value) {
         size_type p = pos - begin();
         size_type new_size = size() + 1;
         if (capacity() < new_size) {
             change_capacity(new_size + (new_size >> 1));
         }
-        T* ptr = item_ptr(p);
+        T *ptr = item_ptr(p);
         memmove(ptr + 1, ptr, (size() - p) * sizeof(T));
         _size++;
-        new(static_cast<void*>(ptr)) T(value);
+        new(static_cast<void *>(ptr)) T(value);
         return iterator(ptr);
     }
 
-    void insert(iterator pos, size_type count, const T& value) {
+    void insert(iterator pos, size_type count, const T &value) {
         size_type p = pos - begin();
         size_type new_size = size() + count;
         if (capacity() < new_size) {
             change_capacity(new_size + (new_size >> 1));
         }
-        T* ptr = item_ptr(p);
+        T *ptr = item_ptr(p);
         memmove(ptr + count, ptr, (size() - p) * sizeof(T));
         _size += count;
         fill(item_ptr(p), count, value);
@@ -395,7 +554,7 @@ public:
         if (capacity() < new_size) {
             change_capacity(new_size + (new_size >> 1));
         }
-        T* ptr = item_ptr(p);
+        T *ptr = item_ptr(p);
         memmove(ptr + count, ptr, (size() - p) * sizeof(T));
         _size += count;
         fill(ptr, first, last);
@@ -428,7 +587,7 @@ public:
         // necessary to switch to the (more efficient) directly allocated
         // representation (with capacity N and size <= N).
         iterator p = first;
-        char* endp = (char*)&(*end());
+        char *endp = (char *) &(*end());
         if (!std::is_trivially_destructible<T>::value) {
             while (p != last) {
                 (*p).~T();
@@ -438,12 +597,12 @@ public:
         } else {
             _size -= last - p;
         }
-        memmove(&(*first), &(*last), endp - ((char*)(&(*last))));
+        memmove(&(*first), &(*last), endp - ((char *) (&(*last))));
         return first;
     }
 
     template<typename... Args>
-    void emplace_back(Args&&... args) {
+    void emplace_back(Args &&... args) {
         size_type new_size = size() + 1;
         if (capacity() < new_size) {
             change_capacity(new_size + (new_size >> 1));
@@ -452,7 +611,7 @@ public:
         _size++;
     }
 
-    void push_back(const T& value) {
+    void push_back(const T &value) {
         emplace_back(value);
     }
 
@@ -460,23 +619,23 @@ public:
         erase(end() - 1, end());
     }
 
-    T& front() {
+    T &front() {
         return *item_ptr(0);
     }
 
-    const T& front() const {
+    const T &front() const {
         return *item_ptr(0);
     }
 
-    T& back() {
+    T &back() {
         return *item_ptr(size() - 1);
     }
 
-    const T& back() const {
+    const T &back() const {
         return *item_ptr(size() - 1);
     }
 
-    void swap(prevector<N, T, Size, Diff>& other) {
+    void swap(prevector<N, T, Size, Diff> &other) {
         std::swap(_union, other._union);
         std::swap(_size, other._size);
     }
@@ -491,7 +650,7 @@ public:
         }
     }
 
-    bool operator==(const prevector<N, T, Size, Diff>& other) const {
+    bool operator==(const prevector<N, T, Size, Diff> &other) const {
         if (other.size() != size()) {
             return false;
         }
@@ -508,11 +667,11 @@ public:
         return true;
     }
 
-    bool operator!=(const prevector<N, T, Size, Diff>& other) const {
+    bool operator!=(const prevector<N, T, Size, Diff> &other) const {
         return !(*this == other);
     }
 
-    bool operator<(const prevector<N, T, Size, Diff>& other) const {
+    bool operator<(const prevector<N, T, Size, Diff> &other) const {
         if (size() < other.size()) {
             return true;
         }
@@ -543,16 +702,16 @@ public:
         }
     }
 
-    value_type* data() {
+    value_type *data() {
         return item_ptr(0);
     }
 
-    const value_type* data() const {
+    const value_type *data() const {
         return item_ptr(0);
     }
 
     template<typename V>
-    static void assign_to(const_iterator b, const_iterator e, V& v) {
+    static void assign_to(const_iterator b, const_iterator e, V &v) {
         // We know that internally the iterators are pointing to continues memory, so we can directly use the pointers here
         // This avoids internal use of std::copy and operator++ on the iterators and instead allows efficient memcpy/memmove
         if (std::is_trivially_constructible<T>::value) {
@@ -561,7 +720,7 @@ public:
                 v.resize(s);
             }
             if (!v.empty()) {
-              ::memmove(v.data(), &*b, s);
+                ::memmove(v.data(), &*b, s);
             }
         } else {
             v.assign(&*b, &*e);

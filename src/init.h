@@ -12,20 +12,23 @@
 
 struct NodeContext;
 namespace interfaces {
-struct BlockAndHeaderTipInfo;
+    struct BlockAndHeaderTipInfo;
 } // namespace interfaces
 namespace boost {
-class thread_group;
+    class thread_group;
 } // namespace boost
 namespace util {
-class Ref;
+    class Ref;
 }
 
 /** Interrupt threads */
-void Interrupt(NodeContext& node);
-void Shutdown(NodeContext& node);
+void Interrupt(NodeContext &node);
+
+void Shutdown(NodeContext &node);
+
 //!Initialize the logging infrastructure
 void InitLogging();
+
 //!Parameter interaction: change current parameters depending on various rules
 void InitParameterInteraction();
 
@@ -34,35 +37,41 @@ void InitParameterInteraction();
  *  @pre Parameters should be parsed and config file should be read.
  */
 bool AppInitBasicSetup();
+
 /**
  * Initialization: parameter interaction.
  * @note This can be done before daemonization. Do not call Shutdown() if this function fails.
  * @pre Parameters should be parsed and config file should be read, AppInitBasicSetup should have been called.
  */
 bool AppInitParameterInteraction();
+
 /**
  * Initialization sanity checks: ecc init, sanity checks, dir lock.
  * @note This can be done before daemonization. Do not call Shutdown() if this function fails.
  * @pre Parameters should be parsed and config file should be read, AppInitParameterInteraction should have been called.
  */
 bool AppInitSanityChecks();
+
 /**
  * Lock Raptoreum Core data directory.
  * @note This should only be done after daemonization. Do not call Shutdown() if this function fails.
  * @pre Parameters should be parsed and config file should be read, AppInitSanityChecks should have been called.
  */
 bool AppInitLockDataDirectory();
+
 /**
  * Initialize node and wallet interface pointers. Has no prerequisites or side effects besides allocating memory.
  */
-bool AppInitInterfaces(NodeContext& node);
+bool AppInitInterfaces(NodeContext &node);
+
 /**
  * Raptoreum Core main initialization.
  * @note This should only be done after daemonization. Call Shutdown() if this function fails.
  * @pre Parameters should be parsed and config file should be read, AppInitLockDataDirectory should have been called.
  */
-bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info = nullptr);
-void PrepareShutdown(NodeContext& node);
+bool AppInitMain(const util::Ref &context, NodeContext &node, interfaces::BlockAndHeaderTipInfo *tip_info = nullptr);
+
+void PrepareShutdown(NodeContext &node);
 
 /**
  * Setup the arguments for gArgs

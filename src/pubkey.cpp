@@ -8,10 +8,9 @@
 #include <secp256k1.h>
 #include <secp256k1_recovery.h>
 
-namespace
-{
+namespace {
 /* Global secp256k1_context object used for verification. */
-secp256k1_context* secp256k1_context_verify = nullptr;
+    secp256k1_context *secp256k1_context_verify = nullptr;
 } // namespace
 
 /** This function is taken from the libsecp256k1 distribution and implements
@@ -24,7 +23,9 @@ secp256k1_context* secp256k1_context_verify = nullptr;
  *  strict DER before being passed to this module, and we know it supports all
  *  violations present in the blockchain before that point.
  */
-static int ecdsa_signature_parse_der_lax(const secp256k1_context* ctx, secp256k1_ecdsa_signature* sig, const unsigned char *input, size_t inputlen) {
+static int
+ecdsa_signature_parse_der_lax(const secp256k1_context *ctx, secp256k1_ecdsa_signature *sig, const unsigned char *input,
+                              size_t inputlen) {
     size_t rpos, rlen, spos, slen;
     size_t pos = 0;
     size_t lenbyte;
@@ -166,7 +167,7 @@ static int ecdsa_signature_parse_der_lax(const secp256k1_context* ctx, secp256k1
     return 1;
 }
 
-bool CPubKey::Verify(const uint256 &hash, const std::vector<unsigned char>& vchSig) const {
+bool CPubKey::Verify(const uint256 &hash, const std::vector<unsigned char> &vchSig) const {
     if (!IsValid())
         return false;
     secp256k1_pubkey pubkey;
@@ -183,7 +184,7 @@ bool CPubKey::Verify(const uint256 &hash, const std::vector<unsigned char>& vchS
     return secp256k1_ecdsa_verify(secp256k1_context_verify, &sig, hash.begin(), &pubkey);
 }
 
-bool CPubKey::RecoverCompact(const uint256 &hash, const std::vector<unsigned char>& vchSig) {
+bool CPubKey::RecoverCompact(const uint256 &hash, const std::vector<unsigned char> &vchSig) {
     if (vchSig.size() != COMPACT_SIGNATURE_SIZE)
         return false;
     int recid = (vchSig[0] - 27) & 3;
@@ -198,7 +199,8 @@ bool CPubKey::RecoverCompact(const uint256 &hash, const std::vector<unsigned cha
     }
     unsigned char pub[SIZE];
     size_t publen = SIZE;
-    secp256k1_ec_pubkey_serialize(secp256k1_context_verify, pub, &publen, &pubkey, fComp ? SECP256K1_EC_COMPRESSED : SECP256K1_EC_UNCOMPRESSED);
+    secp256k1_ec_pubkey_serialize(secp256k1_context_verify, pub, &publen, &pubkey,
+                                  fComp ? SECP256K1_EC_COMPRESSED : SECP256K1_EC_UNCOMPRESSED);
     Set(pub, pub + publen);
     return true;
 }
@@ -224,13 +226,13 @@ bool CPubKey::Decompress() {
     return true;
 }
 
-bool CPubKey::Derive(CPubKey& pubkeyChild, ChainCode &ccChild, unsigned int nChild, const ChainCode& cc) const {
+bool CPubKey::Derive(CPubKey &pubkeyChild, ChainCode &ccChild, unsigned int nChild, const ChainCode &cc) const {
     assert(IsValid());
     assert((nChild >> 31) == 0);
     assert(size() == COMPRESSED_SIZE);
     unsigned char out[64];
-    BIP32Hash(cc, nChild, *begin(), begin()+1, out);
-    memcpy(ccChild.begin(), out+32, 32);
+    BIP32Hash(cc, nChild, *begin(), begin() + 1, out);
+    memcpy(ccChild.begin(), out + 32, 32);
     secp256k1_pubkey pubkey;
     if (!secp256k1_ec_pubkey_parse(secp256k1_context_verify, &pubkey, vch, size())) {
         return false;
@@ -247,19 +249,19 @@ bool CPubKey::Derive(CPubKey& pubkeyChild, ChainCode &ccChild, unsigned int nChi
 
 void CExtPubKey::Encode(unsigned char code[BIP32_EXTKEY_SIZE]) const {
     code[0] = nDepth;
-    memcpy(code+1, vchFingerprint, 4);
-    WriteBE32(code+5, nChild);
-    memcpy(code+9, chaincode.begin(), 32);
+    memcpy(code + 1, vchFingerprint, 4);
+    WriteBE32(code + 5, nChild);
+    memcpy(code + 9, chaincode.begin(), 32);
     assert(pubkey.size() == CPubKey::COMPRESSED_SIZE);
-    memcpy(code+41, pubkey.begin(), CPubKey::COMPRESSED_SIZE);
+    memcpy(code + 41, pubkey.begin(), CPubKey::COMPRESSED_SIZE);
 }
 
 void CExtPubKey::Decode(const unsigned char code[BIP32_EXTKEY_SIZE]) {
     nDepth = code[0];
-    memcpy(vchFingerprint, code+1, 4);
-    nChild = ReadBE32(code+5);
-    memcpy(chaincode.begin(), code+9, 32);
-    pubkey.Set(code+41, code+BIP32_EXTKEY_SIZE);
+    memcpy(vchFingerprint, code + 1, 4);
+    nChild = ReadBE32(code + 5);
+    memcpy(chaincode.begin(), code + 9, 32);
+    pubkey.Set(code + 41, code + BIP32_EXTKEY_SIZE);
 }
 
 bool CExtPubKey::Derive(CExtPubKey &out, unsigned int _nChild) const {
@@ -270,7 +272,7 @@ bool CExtPubKey::Derive(CExtPubKey &out, unsigned int _nChild) const {
     return pubkey.Derive(out.pubkey, out.chaincode, _nChild, chaincode);
 }
 
-/* static */ bool CPubKey::CheckLowS(const std::vector<unsigned char>& vchSig) {
+/* static */ bool CPubKey::CheckLowS(const std::vector<unsigned char> &vchSig) {
     secp256k1_ecdsa_signature sig;
     if (!ecdsa_signature_parse_der_lax(secp256k1_context_verify, &sig, vchSig.data(), vchSig.size())) {
         return false;
@@ -280,8 +282,7 @@ bool CExtPubKey::Derive(CExtPubKey &out, unsigned int _nChild) const {
 
 /* static */ int ECCVerifyHandle::refcount = 0;
 
-ECCVerifyHandle::ECCVerifyHandle()
-{
+ECCVerifyHandle::ECCVerifyHandle() {
     if (refcount == 0) {
         assert(secp256k1_context_verify == nullptr);
         secp256k1_context_verify = secp256k1_context_create(SECP256K1_CONTEXT_VERIFY);
@@ -290,8 +291,7 @@ ECCVerifyHandle::ECCVerifyHandle()
     refcount++;
 }
 
-ECCVerifyHandle::~ECCVerifyHandle()
-{
+ECCVerifyHandle::~ECCVerifyHandle() {
     refcount--;
     if (refcount == 0) {
         assert(secp256k1_context_verify != nullptr);

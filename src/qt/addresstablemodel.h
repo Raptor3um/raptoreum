@@ -11,21 +11,22 @@
 #include <QStringList>
 
 class AddressTablePriv;
+
 class WalletModel;
 
 namespace interfaces {
-class Wallet;
+    class Wallet;
 }
 
 /**
    Qt model of the address book in the core. This allows views to access and modify the address book.
  */
-class AddressTableModel : public QAbstractTableModel
-{
+class AddressTableModel : public QAbstractTableModel {
     Q_OBJECT
 
 public:
     explicit AddressTableModel(WalletModel *parent = nullptr);
+
     ~AddressTableModel();
 
     enum ColumnIndex {
@@ -53,12 +54,19 @@ public:
     /** @name Methods overridden from QAbstractTableModel
         @{*/
     int rowCount(const QModelIndex &parent) const override;
+
     int columnCount(const QModelIndex &parent) const override;
+
     QVariant data(const QModelIndex &index, int role) const override;
+
     bool setData(const QModelIndex &index, const QVariant &value, int role) override;
+
     QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
+
     QModelIndex index(int row, int column, const QModelIndex &parent) const override;
+
     bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
+
     Qt::ItemFlags flags(const QModelIndex &index) const override;
     /*@}*/
 
@@ -70,6 +78,7 @@ public:
     /* Look up label for address in address book, if not found return empty string.
      */
     QString labelForAddress(const QString &address) const;
+
     QString labelForDestination(const CTxDestination &dest) const;
 
     /* Look up row index of an address in the model.
@@ -80,7 +89,7 @@ public:
     EditStatus getEditStatus() const { return editStatus; }
 
 private:
-    WalletModel* const walletModel;
+    WalletModel *const walletModel;
     AddressTablePriv *priv = nullptr;
     QStringList columns;
     EditStatus editStatus = OK;
@@ -88,10 +97,17 @@ private:
     /** Notify listeners that data changed. */
     void emitDataChanged(int index);
 
-public Q_SLOTS:
-    /* Update address list from core.
-     */
-    void updateEntry(const QString &address, const QString &label, bool isMine, const QString &purpose, int status);
+public
+    Q_SLOTS:
+            /* Update address list from core.
+             */
+            void updateEntry(
+    const QString &address,
+    const QString &label,
+    bool isMine,
+    const QString &purpose,
+    int status
+    );
 
     friend class AddressTablePriv;
 };

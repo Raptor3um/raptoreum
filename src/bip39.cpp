@@ -30,8 +30,7 @@
 #include <crypto/sha256.h>
 #include <random.h>
 
-SecureString CMnemonic::Generate(int strength)
-{
+SecureString CMnemonic::Generate(int strength) {
     if (strength % 32 || strength < 128 || strength > 256) {
         return SecureString();
     }
@@ -42,8 +41,7 @@ SecureString CMnemonic::Generate(int strength)
 }
 
 // SecureString CMnemonic::FromData(const uint8_t *data, int len)
-SecureString CMnemonic::FromData(const SecureVector& data, int len)
-{
+SecureString CMnemonic::FromData(const SecureVector &data, int len) {
     if (len % 4 || len < 16 || len > 32) {
         return SecureString();
     }
@@ -76,8 +74,7 @@ SecureString CMnemonic::FromData(const SecureVector& data, int len)
     return mnemonic;
 }
 
-bool CMnemonic::Check(SecureString mnemonic)
-{
+bool CMnemonic::Check(SecureString mnemonic) {
     if (mnemonic.empty()) {
         return false;
     }
@@ -100,8 +97,7 @@ bool CMnemonic::Check(SecureString mnemonic)
 
     uint32_t nWordIndex, ki, nBitsCount{};
 
-    for (size_t i = 0; i < mnemonic.size(); ++i)
-    {
+    for (size_t i = 0; i < mnemonic.size(); ++i) {
         ssCurrentWord = "";
         while (i + ssCurrentWord.size() < mnemonic.size() && mnemonic[i + ssCurrentWord.size()] != ' ') {
             if (ssCurrentWord.size() >= 9) {
@@ -136,11 +132,9 @@ bool CMnemonic::Check(SecureString mnemonic)
     bool fResult = 0;
     if (nWordCount == 12) {
         fResult = (bits[0] & 0xF0) == (bits[32] & 0xF0); // compare first 4 bits
-    } else
-    if (nWordCount == 18) {
+    } else if (nWordCount == 18) {
         fResult = (bits[0] & 0xFC) == (bits[32] & 0xFC); // compare first 6 bits
-    } else
-    if (nWordCount == 24) {
+    } else if (nWordCount == 24) {
         fResult = bits[0] == bits[32]; // compare 8 bits
     }
 
@@ -148,10 +142,10 @@ bool CMnemonic::Check(SecureString mnemonic)
 }
 
 // passphrase must be at most 256 characters or code may crash
-void CMnemonic::ToSeed(SecureString mnemonic, SecureString passphrase, SecureVector& seedRet)
-{
+void CMnemonic::ToSeed(SecureString mnemonic, SecureString passphrase, SecureVector &seedRet) {
     SecureString ssSalt = SecureString("mnemonic") + passphrase;
     SecureVector vchSalt(ssSalt.begin(), ssSalt.end());
     seedRet.resize(64);
-    PKCS5_PBKDF2_HMAC_SHA512(mnemonic.c_str(), mnemonic.size(), vchSalt.data(), vchSalt.size(), 2048, 64, seedRet.data());
+    PKCS5_PBKDF2_HMAC_SHA512(mnemonic.c_str(), mnemonic.size(), vchSalt.data(), vchSalt.size(), 2048, 64,
+                             seedRet.data());
 }

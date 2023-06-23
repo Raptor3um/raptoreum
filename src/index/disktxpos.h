@@ -8,17 +8,18 @@
 #include <flatfile.h>
 #include <serialize.h>
 
-struct CDiskTxPos : public FlatFilePos
-{
+struct CDiskTxPos : public FlatFilePos {
     unsigned int nTxOffset; // after header
 
-    SERIALIZE_METHODS(CDiskTxPos, obj)
+    SERIALIZE_METHODS(CDiskTxPos, obj
+    )
     {
         READWRITEAS(FlatFilePos, obj);
         READWRITE(VARINT(obj.nTxOffset));
     }
 
-    CDiskTxPos(const FlatFilePos &blockIn, unsigned int nTxOffsetIn) : FlatFilePos(blockIn.nFile, blockIn.nPos), nTxOffset(nTxOffsetIn) {
+    CDiskTxPos(const FlatFilePos &blockIn, unsigned int nTxOffsetIn) : FlatFilePos(blockIn.nFile, blockIn.nPos),
+                                                                       nTxOffset(nTxOffsetIn) {
     }
 
     CDiskTxPos() {

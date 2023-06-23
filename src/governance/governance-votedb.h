@@ -22,8 +22,7 @@
  * Note: This is a stub implementation that doesn't limit the number of votes held
  * in memory and doesn't flush to disk.
  */
-class CGovernanceObjectVoteFile
-{
+class CGovernanceObjectVoteFile {
 public: // Types
     using vote_l_t = std::list<CGovernanceVote>;
 
@@ -39,34 +38,35 @@ private:
 public:
     CGovernanceObjectVoteFile();
 
-    CGovernanceObjectVoteFile(const CGovernanceObjectVoteFile& other);
+    CGovernanceObjectVoteFile(const CGovernanceObjectVoteFile &other);
 
     /**
      * Add a vote to the file
      */
-    void AddVote(const CGovernanceVote& vote);
+    void AddVote(const CGovernanceVote &vote);
 
     /**
      * Return true if the vote with this hash is currently cached in memory
      */
-    bool HasVote(const uint256& nHash) const;
+    bool HasVote(const uint256 &nHash) const;
 
     /**
      * Retrieve a vote cached in memory
      */
-    bool SerializeVoteToStream(const uint256& nHash, CDataStream& ss) const;
+    bool SerializeVoteToStream(const uint256 &nHash, CDataStream &ss) const;
 
-    int GetVoteCount() const
-    {
+    int GetVoteCount() const {
         return nMemoryVotes;
     }
 
-    std::vector<CGovernanceVote> GetVotes() const;
+    std::vector <CGovernanceVote> GetVotes() const;
 
-    void RemoveVotesFromSmartnode(const COutPoint& outpointSmartnode);
-    std::set<uint256> RemoveInvalidVotes(const COutPoint& outpointSmartnode, bool fProposal);
+    void RemoveVotesFromSmartnode(const COutPoint &outpointSmartnode);
 
-    SERIALIZE_METHODS(CGovernanceObjectVoteFile, obj)
+    std::set <uint256> RemoveInvalidVotes(const COutPoint &outpointSmartnode, bool fProposal);
+
+    SERIALIZE_METHODS(CGovernanceObjectVoteFile, obj
+    )
     {
         READWRITE(obj.nMemoryVotes, obj.listVotes);
         SER_READ(obj, obj.RebuildIndex());
@@ -74,7 +74,7 @@ public:
 
 private:
     // Drop older votes for the same gobject from the same smartnode
-    void RemoveOldVotes(const CGovernanceVote& vote);
+    void RemoveOldVotes(const CGovernanceVote &vote);
 
     void RebuildIndex();
 };

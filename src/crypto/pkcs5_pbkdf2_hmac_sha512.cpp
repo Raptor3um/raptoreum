@@ -8,11 +8,10 @@
 #include <cstring> // memcpy
 
 PKCS5_PBKDF2_HMAC_SHA512::PKCS5_PBKDF2_HMAC_SHA512(
-    const char* pass, size_t passlen,
-    const unsigned char* salt, int saltlen,
-    int iter,
-    size_t keylen, unsigned char* out)
-{
+        const char *pass, size_t passlen,
+        const unsigned char *salt, int saltlen,
+        int iter,
+        size_t keylen, unsigned char *out) {
     unsigned char digtmp[CHMAC_SHA512::OUTPUT_SIZE], *p, itmp[4];
     int cplen, j, k, tkeylen, mdlen{CHMAC_SHA512::OUTPUT_SIZE};
     unsigned long i = 1;
@@ -26,20 +25,20 @@ PKCS5_PBKDF2_HMAC_SHA512::PKCS5_PBKDF2_HMAC_SHA512(
         /* We are unlikely to ever use more than 256 blocks (5120 bits!)
         * but just in case...
         */
-        itmp[0] = (unsigned char)((i >> 24) & 0xff);
-        itmp[1] = (unsigned char)((i >> 16) & 0xff);
-        itmp[2] = (unsigned char)((i >> 8) & 0xff);
-        itmp[3] = (unsigned char)(i & 0xff);
+        itmp[0] = (unsigned char) ((i >> 24) & 0xff);
+        itmp[1] = (unsigned char) ((i >> 16) & 0xff);
+        itmp[2] = (unsigned char) ((i >> 8) & 0xff);
+        itmp[3] = (unsigned char) (i & 0xff);
         CHMAC_SHA512(upass, passlen).Write(salt, saltlen).Write(itmp, 4).Finalize(digtmp);
         memcpy(p, digtmp, cplen);
         for (j = 1; j < iter; ++j) {
             CHMAC_SHA512(upass, passlen).Write(digtmp, mdlen).Finalize(digtmp);
             for (k = 0; k < cplen; ++k) {
-              p[k] ^= digtmp[k];
+                p[k] ^= digtmp[k];
             }
         }
-        tkeylen-= cplen;
+        tkeylen -= cplen;
         ++i;
-        p+= cplen;
+        p += cplen;
     }
 }

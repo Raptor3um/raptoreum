@@ -12,17 +12,18 @@
 #include <pubkey.h>
 
 class UniValue;
+
 class CBlockIndex;
+
 class CDeterministicMNList;
+
 class CDeterministicMN;
 
-namespace llmq
-{
+namespace llmq {
     class CFinalCommitment;
 } // namespace llmq
 
-class CSimplifiedMNListEntry
-{
+class CSimplifiedMNListEntry {
 public:
     uint256 proRegTxHash;
     uint256 confirmedHash;
@@ -32,10 +33,10 @@ public:
     bool isValid;
 
     CSimplifiedMNListEntry() = default;
-    explicit CSimplifiedMNListEntry(const CDeterministicMN& dmn);
 
-    bool operator==(const CSimplifiedMNListEntry& rhs) const
-    {
+    explicit CSimplifiedMNListEntry(const CDeterministicMN &dmn);
+
+    bool operator==(const CSimplifiedMNListEntry &rhs) const {
         return proRegTxHash == rhs.proRegTxHash &&
                confirmedHash == rhs.confirmedHash &&
                service == rhs.service &&
@@ -44,12 +45,12 @@ public:
                isValid == rhs.isValid;
     }
 
-    bool operator!=(const CSimplifiedMNListEntry& rhs) const
-    {
+    bool operator!=(const CSimplifiedMNListEntry &rhs) const {
         return !(rhs == *this);
     }
 
-    SERIALIZE_METHODS(CSimplifiedMNListEntry, obj)
+    SERIALIZE_METHODS(CSimplifiedMNListEntry, obj
+    )
     {
         READWRITE(obj.proRegTxHash, obj.confirmedHash, obj.service,
                   obj.pubKeyOperator, obj.keyIDVoting, obj.isValid);
@@ -58,51 +59,54 @@ public:
     uint256 CalcHash() const;
 
     std::string ToString() const;
-    void ToJson(UniValue& obj) const;
+
+    void ToJson(UniValue &obj) const;
 };
 
-class CSimplifiedMNList
-{
+class CSimplifiedMNList {
 public:
-    std::vector<std::unique_ptr<CSimplifiedMNListEntry>> mnList;
+    std::vector <std::unique_ptr<CSimplifiedMNListEntry>> mnList;
 
     CSimplifiedMNList() = default;
-    explicit CSimplifiedMNList(const std::vector<CSimplifiedMNListEntry>& smlEntries);
-    explicit CSimplifiedMNList(const CDeterministicMNList& dmnList);
 
-    uint256 CalcMerkleRoot(bool* pmutated = nullptr) const;
-    bool operator==(const CSimplifiedMNList& rhs) const;
+    explicit CSimplifiedMNList(const std::vector <CSimplifiedMNListEntry> &smlEntries);
+
+    explicit CSimplifiedMNList(const CDeterministicMNList &dmnList);
+
+    uint256 CalcMerkleRoot(bool *pmutated = nullptr) const;
+
+    bool operator==(const CSimplifiedMNList &rhs) const;
 };
 
 /// P2P messages
 
-class CGetSimplifiedMNListDiff
-{
+class CGetSimplifiedMNListDiff {
 public:
     uint256 baseBlockHash;
     uint256 blockHash;
 
-    SERIALIZE_METHODS(CGetSimplifiedMNListDiff, obj)
+    SERIALIZE_METHODS(CGetSimplifiedMNListDiff, obj
+    )
     {
         READWRITE(obj.baseBlockHash, obj.blockHash);
     }
 };
 
-class CSimplifiedMNListDiff
-{
+class CSimplifiedMNListDiff {
 public:
     uint256 baseBlockHash;
     uint256 blockHash;
     CPartialMerkleTree cbTxMerkleTree;
     CTransactionRef cbTx;
-    std::vector<uint256> deletedMNs;
-    std::vector<CSimplifiedMNListEntry> mnList;
+    std::vector <uint256> deletedMNs;
+    std::vector <CSimplifiedMNListEntry> mnList;
 
     // starting with proto version LLMQS_PROTO_VERSION, we also transfer changes in active quorums
-    std::vector<std::pair<uint8_t, uint256>> deletedQuorums; // p<LLMQType, quorumHash>
-    std::vector<llmq::CFinalCommitment> newQuorums;
+    std::vector <std::pair<uint8_t, uint256>> deletedQuorums; // p<LLMQType, quorumHash>
+    std::vector <llmq::CFinalCommitment> newQuorums;
 
-    SERIALIZE_METHODS(CSimplifiedMNListDiff, obj)
+    SERIALIZE_METHODS(CSimplifiedMNListDiff, obj
+    )
     {
         READWRITE(obj.baseBlockHash, obj.blockHash, obj.cbTxMerkleTree, obj.cbTx, obj.deletedMNs, obj.mnList);
 
@@ -112,13 +116,16 @@ public:
     }
 
     CSimplifiedMNListDiff();
+
     ~CSimplifiedMNListDiff();
 
-    bool BuildQuorumsDiff(const CBlockIndex* baseBlockIndex, const CBlockIndex* blockIndex);
+    bool BuildQuorumsDiff(const CBlockIndex *baseBlockIndex, const CBlockIndex *blockIndex);
 
-    void ToJson(UniValue& obj) const;
+    void ToJson(UniValue &obj) const;
 };
 
-bool BuildSimplifiedMNListDiff(const uint256& baseBlockHash, const uint256& blockHash, CSimplifiedMNListDiff& mnListDiffRet, std::string& errorRet);
+bool
+BuildSimplifiedMNListDiff(const uint256 &baseBlockHash, const uint256 &blockHash, CSimplifiedMNListDiff &mnListDiffRet,
+                          std::string &errorRet);
 
 #endif // BITCOIN_EVO_SIMPLIFIEDMNS_H

@@ -19,8 +19,7 @@
  * in the block is a special one that creates a new coin owned by the creator
  * of the block.
  */
-class CBlockHeader
-{
+class CBlockHeader {
 public:
     // header
     int32_t nVersion;
@@ -31,15 +30,14 @@ public:
     uint32_t nBits;
     uint32_t nNonce;
 
-    CBlockHeader()
-    {
+    CBlockHeader() {
         SetNull();
     }
 
-    SERIALIZE_METHODS(CBlockHeader, obj) { READWRITE(obj.nVersion, obj.hashPrevBlock, obj.hashMerkleRoot, obj.nTime, obj.nBits, obj.nNonce); }
+    SERIALIZE_METHODS(CBlockHeader, obj
+    ) { READWRITE(obj.nVersion, obj.hashPrevBlock, obj.hashMerkleRoot, obj.nTime, obj.nBits, obj.nNonce); }
 
-    void SetNull()
-    {
+    void SetNull() {
         nVersion = 0;
         hashPrevBlock.SetNull();
         hashMerkleRoot.SetNull();
@@ -48,8 +46,7 @@ public:
         nNonce = 0;
     }
 
-    bool IsNull() const
-    {
+    bool IsNull() const {
         return (nBits == 0);
     }
 
@@ -62,57 +59,52 @@ public:
     /// Caching lookup/computation of POW hash using GhostRider algorithm
     uint256 GetPOWHash(bool readCache = true) const;
 
-    int64_t GetBlockTime() const
-    {
-        return (int64_t)nTime;
+    int64_t GetBlockTime() const {
+        return (int64_t) nTime;
     }
 };
 
 
-class CBlock : public CBlockHeader
-{
+class CBlock : public CBlockHeader {
 public:
     // network and disk
-    std::vector<CTransactionRef> vtx;
+    std::vector <CTransactionRef> vtx;
 
     mutable CTxOut txoutFounder; // founder payment
     // memory only
     mutable bool fChecked;
 
-    CBlock()
-    {
+    CBlock() {
         SetNull();
     }
 
-    CBlock(const CBlockHeader& header)
-    {
+    CBlock(const CBlockHeader &header) {
         SetNull();
-        *(static_cast<CBlockHeader*>(this)) = header;
+        *(static_cast<CBlockHeader *>(this)) = header;
     }
 
-    SERIALIZE_METHODS(CBlock, obj)
+    SERIALIZE_METHODS(CBlock, obj
+    )
     {
         READWRITEAS(CBlockHeader, obj);
         READWRITE(obj.vtx);
     }
 
-    void SetNull()
-    {
+    void SetNull() {
         CBlockHeader::SetNull();
         vtx.clear();
         fChecked = false;
         txoutFounder = CTxOut();
     }
 
-    CBlockHeader GetBlockHeader() const
-    {
+    CBlockHeader GetBlockHeader() const {
         CBlockHeader block;
-        block.nVersion       = nVersion;
-        block.hashPrevBlock  = hashPrevBlock;
+        block.nVersion = nVersion;
+        block.hashPrevBlock = hashPrevBlock;
         block.hashMerkleRoot = hashMerkleRoot;
-        block.nTime          = nTime;
-        block.nBits          = nBits;
-        block.nNonce         = nNonce;
+        block.nTime = nTime;
+        block.nBits = nBits;
+        block.nNonce = nNonce;
         return block;
     }
 
@@ -125,13 +117,14 @@ public:
  * The further back it is, the further before the fork it may be.
  */
 struct CBlockLocator {
-    std::vector<uint256> vHave;
+    std::vector <uint256> vHave;
 
     CBlockLocator() {}
 
-    explicit CBlockLocator(const std::vector<uint256>& vHaveIn) : vHave(vHaveIn) {}
+    explicit CBlockLocator(const std::vector <uint256> &vHaveIn) : vHave(vHaveIn) {}
 
-    SERIALIZE_METHODS(CBlockLocator, obj)
+    SERIALIZE_METHODS(CBlockLocator, obj
+    )
     {
         int nVersion = s.GetVersion();
         if (!(s.GetType() & SER_GETHASH))
@@ -139,13 +132,11 @@ struct CBlockLocator {
         READWRITE(obj.vHave);
     }
 
-    void SetNull()
-    {
+    void SetNull() {
         vHave.clear();
     }
 
-    bool IsNull() const
-    {
+    bool IsNull() const {
         return vHave.empty();
     }
 };

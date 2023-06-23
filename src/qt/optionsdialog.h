@@ -9,22 +9,25 @@
 #include <QValidator>
 
 class AppearanceWidget;
+
 class OptionsModel;
+
 class QValidatedLineEdit;
 
 QT_BEGIN_NAMESPACE
 class QButtonGroup;
+
 class QDataWidgetMapper;
+
 QT_END_NAMESPACE
 
 namespace Ui {
-class OptionsDialog;
+    class OptionsDialog;
 }
 
 /** Proxy address widget validator, checks for a valid proxy address.
  */
-class ProxyAddressValidator : public QValidator
-{
+class ProxyAddressValidator : public QValidator {
     Q_OBJECT
 
 public:
@@ -34,12 +37,12 @@ public:
 };
 
 /** Preferences dialog. */
-class OptionsDialog : public QDialog
-{
+class OptionsDialog : public QDialog {
     Q_OBJECT
 
 public:
     explicit OptionsDialog(QWidget *parent, bool enableWallet);
+
     ~OptionsDialog();
 
     enum Tab {
@@ -52,23 +55,34 @@ public:
     };
 
     void setModel(OptionsModel *model);
+
     void setMapper();
+
     void setCurrentTab(OptionsDialog::Tab tab);
 
-private Q_SLOTS:
-    /** custom tab buttons clicked */
-    void showPage(int index);
+private
+    Q_SLOTS:
+            /** custom tab buttons clicked */
+            void showPage(int
+    index);
+
     /* set OK button state (enabled / disabled) */
     void setOkButtonState(bool fState);
+
     void on_resetButton_clicked();
+
     void on_okButton_clicked();
+
     void on_cancelButton_clicked();
 
     void on_hideTrayIcon_stateChanged(int fState);
 
     void showRestartWarning(bool fPersistent = false);
+
     void clearStatusLabel();
+
     void updateProxyValidationState();
+
     /* query the networks, for which the default proxy is used */
     void updateDefaultProxyNets();
 
@@ -76,20 +90,21 @@ private Q_SLOTS:
 
     void updateWidth();
 
-Q_SIGNALS:
-    void appearanceChanged();
+    Q_SIGNALS:
+            void appearanceChanged();
+
     void proxyIpChecks(QValidatedLineEdit *pUiProxyIp, int nProxyPort);
 
 private:
     Ui::OptionsDialog *ui;
     OptionsModel *model;
     QDataWidgetMapper *mapper;
-    QButtonGroup* pageButtons;
+    QButtonGroup *pageButtons;
     QString previousTheme;
-    AppearanceWidget* appearance;
+    AppearanceWidget *appearance;
     bool fCoinJoinEnabledPrev{false};
 
-    void showEvent(QShowEvent* event) override;
+    void showEvent(QShowEvent *event) override;
 };
 
 #endif // BITCOIN_QT_OPTIONSDIALOG_H

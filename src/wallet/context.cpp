@@ -5,4 +5,5 @@
 #include <wallet/context.h>
 
 WalletContext::WalletContext() {}
+
 WalletContext::~WalletContext() {}

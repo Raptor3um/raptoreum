@@ -29,19 +29,16 @@
 #include <functional>
 #include <stdio.h>
 
-const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
+const std::function<std::string(const char *)> G_TRANSLATION_FUN = nullptr;
 
-static void WaitForShutdown(NodeContext& node)
-{
-    while (!ShutdownRequested())
-    {
+static void WaitForShutdown(NodeContext &node) {
+    while (!ShutdownRequested()) {
         UninterruptibleSleep(std::chrono::milliseconds{200});
     }
     Interrupt(node);
 }
 
-static bool AppInit(int argc, char* argv[])
-{
+static bool AppInit(int argc, char *argv[]) {
     NodeContext node;
 
     bool fRet = false;
@@ -65,15 +62,16 @@ static bool AppInit(int argc, char* argv[])
 
     // Process help and version before taking care about datadir
     if (HelpRequested(gArgs) || gArgs.IsArgSet("-version")) {
-        std::string strUsage = PACKAGE_NAME " Daemon version " + FormatFullVersion() + "\n";
+        std::string
+        strUsage = PACKAGE_NAME
+        " Daemon version " + FormatFullVersion() + "\n";
 
-        if (gArgs.IsArgSet("-version"))
-        {
+        if (gArgs.IsArgSet("-version")) {
             strUsage += FormatParagraph(LicenseInfo()) + "\n";
-        }
-        else
-        {
-            strUsage += "\nUsage: raptoreumd [options]           Start " PACKAGE_NAME " Daemon\n";
+        } else {
+            strUsage += "\nUsage: raptoreumd [options]           Start "
+            PACKAGE_NAME
+            " Daemon\n";
             strUsage += "\n" + gArgs.GetHelpMessage();
         }
 
@@ -82,10 +80,10 @@ static bool AppInit(int argc, char* argv[])
     }
 
     util::Ref context{node};
-    try
-    {
+    try {
         if (!CheckDataDirOption()) {
-            return InitError(strprintf("Error: Specified data directory \"%s\" does not exist.\n", gArgs.GetArg("-datadir", "")));
+            return InitError(strprintf("Error: Specified data directory \"%s\" does not exist.\n",
+                                       gArgs.GetArg("-datadir", "")));
         }
 
         if (!gArgs.ReadConfigFiles(error, true)) {
@@ -94,14 +92,16 @@ static bool AppInit(int argc, char* argv[])
         // Check for -testnet or -regtest parameter (Params() calls are only valid after this clause)
         try {
             SelectParams(gArgs.GetChainName());
-        } catch (const std::exception& e) {
-          return InitError(strprintf("%s\n", e.what()));
+        } catch (const std::exception &e) {
+            return InitError(strprintf("%s\n", e.what()));
         }
 
         // Error out when loose non-argument tokens are encountered on command line
         for (int i = 1; i < argc; i++) {
             if (!IsSwitchChar(argv[i][0])) {
-                return InitError(strprintf("Error: Command line contains unexpected token '%s', see raptoreumd -h for a list of options.\n", argv[i]));
+                return InitError(strprintf(
+                        "Error: Command line contains unexpected token '%s', see raptoreumd -h for a list of options.\n",
+                        argv[i]));
             }
         }
 
@@ -110,23 +110,19 @@ static bool AppInit(int argc, char* argv[])
         // Set this early so that parameter interactions go to console
         InitLogging();
         InitParameterInteraction();
-        if (!AppInitBasicSetup())
-        {
+        if (!AppInitBasicSetup()) {
             // InitError will have been called with detailed error, which ends up on console
             return false;
         }
-        if (!AppInitParameterInteraction())
-        {
+        if (!AppInitParameterInteraction()) {
             // InitError will have been called with detailed error, which ends up on console
             return false;
         }
-        if (!AppInitSanityChecks())
-        {
+        if (!AppInitSanityChecks()) {
             // InitError will have been called with detailed error, which ends up on console
             return false;
         }
-        if (gArgs.GetBoolArg("-daemon", false))
-        {
+        if (gArgs.GetBoolArg("-daemon", false)) {
 #if HAVE_DECL_DAEMON
 #if defined(MAC_OSX)
 #pragma GCC diagnostic push
@@ -146,8 +142,7 @@ static bool AppInit(int argc, char* argv[])
 #endif // HAVE_DECL_DAEMON
         }
         // Lock data directory after daemonization
-        if (!AppInitLockDataDirectory())
-        {
+        if (!AppInitLockDataDirectory()) {
             // If locking the data directory failed, exit immediately
             return false;
         }
@@ -165,8 +160,7 @@ static bool AppInit(int argc, char* argv[])
     return fRet;
 }
 
-int main(int argc, char* argv[])
-{
+int main(int argc, char *argv[]) {
     RegisterPrettyTerminateHander();
     RegisterPrettySignalHandlers();
 

@@ -9,8 +9,7 @@
 
 using namespace std;
 
-static string json_escape(const string& inS)
-{
+static string json_escape(const string &inS) {
     string outS;
     outS.reserve(inS.size() * 2);
 
@@ -28,8 +27,7 @@ static string json_escape(const string& inS)
 }
 
 string UniValue::write(unsigned int prettyIndent,
-                       unsigned int indentLevel) const
-{
+                       unsigned int indentLevel) const {
     string s;
     s.reserve(1024);
 
@@ -38,36 +36,34 @@ string UniValue::write(unsigned int prettyIndent,
         modIndent = 1;
 
     switch (typ) {
-    case VNULL:
-        s += "null";
-        break;
-    case VOBJ:
-        writeObject(prettyIndent, modIndent, s);
-        break;
-    case VARR:
-        writeArray(prettyIndent, modIndent, s);
-        break;
-    case VSTR:
-        s += "\"" + json_escape(val) + "\"";
-        break;
-    case VNUM:
-        s += val;
-        break;
-    case VBOOL:
-        s += (val == "1" ? "true" : "false");
-        break;
+        case VNULL:
+            s += "null";
+            break;
+        case VOBJ:
+            writeObject(prettyIndent, modIndent, s);
+            break;
+        case VARR:
+            writeArray(prettyIndent, modIndent, s);
+            break;
+        case VSTR:
+            s += "\"" + json_escape(val) + "\"";
+            break;
+        case VNUM:
+            s += val;
+            break;
+        case VBOOL:
+            s += (val == "1" ? "true" : "false");
+            break;
     }
 
     return s;
 }
 
-static void indentStr(unsigned int prettyIndent, unsigned int indentLevel, string& s)
-{
+static void indentStr(unsigned int prettyIndent, unsigned int indentLevel, string &s) {
     s.append(prettyIndent * indentLevel, ' ');
 }
 
-void UniValue::writeArray(unsigned int prettyIndent, unsigned int indentLevel, string& s) const
-{
+void UniValue::writeArray(unsigned int prettyIndent, unsigned int indentLevel, string &s) const {
     s += "[";
     if (prettyIndent)
         s += "\n";
@@ -88,8 +84,7 @@ void UniValue::writeArray(unsigned int prettyIndent, unsigned int indentLevel, s
     s += "]";
 }
 
-void UniValue::writeObject(unsigned int prettyIndent, unsigned int indentLevel, string& s) const
-{
+void UniValue::writeObject(unsigned int prettyIndent, unsigned int indentLevel, string &s) const {
     s += "{";
     if (prettyIndent)
         s += "\n";

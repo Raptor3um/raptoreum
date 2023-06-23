@@ -19,8 +19,7 @@ class CBlockIndex;
  * CValidationInterface and ensures blocks are indexed sequentially according
  * to their position in the active chain.
  */
-class BaseIndex : public CValidationInterface
-{
+class BaseIndex : public CValidationInterface {
 protected:
     /**
      * The database stores a block locator of the chain the database is synced to
@@ -29,17 +28,16 @@ protected:
      * and block index entries may not be flushed to disk until after this database
      * is updated.
     */
-    class DB : public CDBWrapper
-    {
+    class DB : public CDBWrapper {
     public:
-        DB(const fs::path& path, size_t n_cache_size,
+        DB(const fs::path &path, size_t n_cache_size,
            bool f_memory = false, bool f_wipe = false, bool f_obfuscate = false);
 
         /// Read block locator of the chain that the txindex is in sync with.
-        bool ReadBestBlock(CBlockLocator& locator) const;
+        bool ReadBestBlock(CBlockLocator &locator) const;
 
         /// Write block locator of the chain that the txindex is in sync with.
-        bool WriteBestBlock(const CBlockLocator& locator);
+        bool WriteBestBlock(const CBlockLocator &locator);
     };
 
 private:
@@ -49,7 +47,7 @@ private:
     std::atomic<bool> m_synced{false};
 
     /// The last block in the chain that the index is in sync with.
-    std::atomic<const CBlockIndex*> m_best_block_index{nullptr};
+    std::atomic<const CBlockIndex *> m_best_block_index{nullptr};
 
     std::thread m_thread_sync;
     CThreadInterrupt m_interrupt;
@@ -62,24 +60,24 @@ private:
     void ThreadSync();
 
     /// Write the current chain block locator to the DB.
-    bool WriteBestBlock(const CBlockIndex* block_index);
+    bool WriteBestBlock(const CBlockIndex *block_index);
 
 protected:
-    void BlockConnected(const std::shared_ptr<const CBlock>& block, const CBlockIndex* pindex,
-                        const std::vector<CTransactionRef>& txn_conflicted) override;
+    void BlockConnected(const std::shared_ptr<const CBlock> &block, const CBlockIndex *pindex,
+                        const std::vector <CTransactionRef> &txn_conflicted) override;
 
-    void ChainStateFlushed(const CBlockLocator& locator) override;
+    void ChainStateFlushed(const CBlockLocator &locator) override;
 
     /// Initialize internal state from the database and block index.
     virtual bool Init();
 
     /// Write update index entries for a newly connected block.
-    virtual bool WriteBlock(const CBlock& block, const CBlockIndex* pindex) { return true; }
+    virtual bool WriteBlock(const CBlock &block, const CBlockIndex *pindex) { return true; }
 
-    virtual DB& GetDB() const = 0;
+    virtual DB &GetDB() const = 0;
 
     /// Get the name of the index for display in logs.
-    virtual const char* GetName() const = 0;
+    virtual const char *GetName() const = 0;
 
 public:
     /// Destructor interrupts sync thread if running and blocks until it exits.

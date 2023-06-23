@@ -14,14 +14,13 @@
  * https://github.com/openssl/openssl/blob/83b4a24384e62ed8cf91f51bf9a303f98017e13e/crypto/kdf/pbkdf2.c#L200-L264
  **/
 
-class PKCS5_PBKDF2_HMAC_SHA512
-{
+class PKCS5_PBKDF2_HMAC_SHA512 {
 public:
     PKCS5_PBKDF2_HMAC_SHA512(
-    const char* pass, size_t passlen,
-    const unsigned char* salt, int saltlen,
-    int iter,
-    size_t keylen, unsigned char* out);
+            const char *pass, size_t passlen,
+            const unsigned char *salt, int saltlen,
+            int iter,
+            size_t keylen, unsigned char *out);
 };
 
 #endif // BITCOIN_CRYPTO_PKCS5_PBKDF2_HMAC_SHA512_H

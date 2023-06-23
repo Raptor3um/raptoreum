@@ -26,14 +26,15 @@
 
 #include <support/allocators/secure.h>
 
-class CMnemonic
-{
+class CMnemonic {
 public:
     static SecureString Generate(int strength);    // strength in bits
-    static SecureString FromData(const SecureVector& data, int len);
+    static SecureString FromData(const SecureVector &data, int len);
+
     static bool Check(SecureString mnemonic);
+
     // passphrase must be at most 256 characters or code may crash
-    static void ToSeed(SecureString mnemonic, SecureString passphrase, SecureVector& seedRet);
+    static void ToSeed(SecureString mnemonic, SecureString passphrase, SecureVector &seedRet);
 };
 
 #endif // BITCOIN_BIP39_H

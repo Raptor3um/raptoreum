@@ -40,31 +40,29 @@ const std::string CLIENT_NAME("Raptoreum Core");
 #endif
 #endif
 
-const std::string CLIENT_BUILD(BUILD_DESC BUILD_SUFFIX);
+const std::string CLIENT_BUILD(BUILD_DESC
+BUILD_SUFFIX);
 
-std::string FormatVersion(int nVersion)
-{
-    return strprintf("%d.%d.%d.%d", nVersion / 1000000, (nVersion / 10000) % 100, (nVersion / 100) % 100, nVersion % 100);
+std::string FormatVersion(int nVersion) {
+    return strprintf("%d.%d.%d.%d", nVersion / 1000000, (nVersion / 10000) % 100, (nVersion / 100) % 100,
+                     nVersion % 100);
 }
 
-std::string FormatFullVersion()
-{
+std::string FormatFullVersion() {
     return CLIENT_BUILD;
 }
 
 /**
  * Format the subversion field according to BIP 14 spec (https://github.com/bitcoin/bips/blob/master/bip-0014.mediawiki)
  */
-std::string FormatSubVersion(const std::string& name, int nClientVersion, const std::vector<std::string>& comments)
-{
+std::string FormatSubVersion(const std::string &name, int nClientVersion, const std::vector <std::string> &comments) {
     std::ostringstream ss;
     ss << "/";
     ss << name << ":" << FormatVersion(nClientVersion);
-    if (!comments.empty())
-    {
+    if (!comments.empty()) {
         std::vector<std::string>::const_iterator it(comments.begin());
         ss << "(" << *it;
-        for(++it; it != comments.end(); ++it)
+        for (++it; it != comments.end(); ++it)
             ss << "; " << *it;
         ss << ")";
     }

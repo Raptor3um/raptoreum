@@ -8,13 +8,12 @@
 #include <txmempool.h>
 #include <validation.h>
 
-void FindCoins(const NodeContext& node, std::map<COutPoint, Coin>& coins)
-{
+void FindCoins(const NodeContext &node, std::map <COutPoint, Coin> &coins) {
     assert(node.mempool);
     LOCK2(cs_main, node.mempool->cs);
-    CCoinsViewCache& chain_view = ::ChainstateActive().CoinsTip();
+    CCoinsViewCache &chain_view = ::ChainstateActive().CoinsTip();
     CCoinsViewMemPool mempool_view(&chain_view, *node.mempool);
-    for (auto& coin : coins) {
+    for (auto &coin: coins) {
         if (!mempool_view.GetCoin(coin.first, coin.second)) {
             // Either the coin is not in the CCoinsViewCache or is spent. Clear it.
             coin.second.Clear();

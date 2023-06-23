@@ -49,28 +49,36 @@ static const int COINJOIN_KEYS_THRESHOLD_STOP = 50;
 static const int COINJOIN_RANDOM_ROUNDS = 3;
 
 /* Application wide mixing options */
-class CCoinJoinClientOptions
-{
+class CCoinJoinClientOptions {
 public:
     static int GetSessions() { return CCoinJoinClientOptions::Get().nCoinJoinSessions; }
+
     static int GetRounds() { return CCoinJoinClientOptions::Get().nCoinJoinRounds; }
+
     static int GetRandomRounds() { return CCoinJoinClientOptions::Get().nCoinJoinRandomRounds; }
+
     static int GetAmount() { return CCoinJoinClientOptions::Get().nCoinJoinAmount; }
+
     static int GetDenomsGoal() { return CCoinJoinClientOptions::Get().nCoinJoinDenomsGoal; }
+
     static int GetDenomsHardCap() { return CCoinJoinClientOptions::Get().nCoinJoinDenomsHardCap; }
 
     static void SetEnabled(bool fEnabled);
+
     static void SetMultiSessionEnabled(bool fEnabled);
+
     static void SetRounds(int nRounds);
+
     static void SetAmount(CAmount amount);
 
     static bool IsEnabled() { return CCoinJoinClientOptions::Get().fEnableCoinJoin; }
+
     static bool IsMultiSessionEnabled() { return CCoinJoinClientOptions::Get().fCoinJoinMultiSession; }
 
-    static void GetJsonInfo(UniValue& obj);
+    static void GetJsonInfo(UniValue &obj);
 
 private:
-    static CCoinJoinClientOptions* _instance;
+    static CCoinJoinClientOptions *_instance;
     static std::once_flag onceFlag;
 
     std::atomic<int> nCoinJoinSessions{DEFAULT_COINJOIN_SESSIONS};
@@ -84,10 +92,12 @@ private:
 
     CCoinJoinClientOptions() = default;
 
-    CCoinJoinClientOptions(const CCoinJoinClientOptions& other) = delete;
-    CCoinJoinClientOptions& operator=(const CCoinJoinClientOptions&) = delete;
+    CCoinJoinClientOptions(const CCoinJoinClientOptions &other) = delete;
 
-    static CCoinJoinClientOptions& Get();
+    CCoinJoinClientOptions &operator=(const CCoinJoinClientOptions &) = delete;
+
+    static CCoinJoinClientOptions &Get();
+
     static void Init();
 };
 

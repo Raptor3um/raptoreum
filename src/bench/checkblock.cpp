@@ -15,11 +15,10 @@
 // a block off the wire, but before we can relay the block on to peers using
 // compact block relay.
 
-static void DeserializeBlockTest(benchmark::Bench& bench)
-{
-    CDataStream stream((const char*)raw_bench::block813851,
-            (const char*)&raw_bench::block813851[sizeof(raw_bench::block813851)],
-            SER_NETWORK, PROTOCOL_VERSION);
+static void DeserializeBlockTest(benchmark::Bench &bench) {
+    CDataStream stream((const char *) raw_bench::block813851,
+                       (const char *) &raw_bench::block813851[sizeof(raw_bench::block813851)],
+                       SER_NETWORK, PROTOCOL_VERSION);
     char a = '\0';
     stream.write(&a, 1); // Prevent compaction
 
@@ -30,11 +29,10 @@ static void DeserializeBlockTest(benchmark::Bench& bench)
     });
 }
 
-static void DeserializeAndCheckBlockTest(benchmark::Bench& bench)
-{
-    CDataStream stream((const char*)raw_bench::block813851,
-            (const char*)&raw_bench::block813851[sizeof(raw_bench::block813851)],
-            SER_NETWORK, PROTOCOL_VERSION);
+static void DeserializeAndCheckBlockTest(benchmark::Bench &bench) {
+    CDataStream stream((const char *) raw_bench::block813851,
+                       (const char *) &raw_bench::block813851[sizeof(raw_bench::block813851)],
+                       SER_NETWORK, PROTOCOL_VERSION);
     char a = '\0';
     stream.write(&a, 1); // Prevent compaction
 

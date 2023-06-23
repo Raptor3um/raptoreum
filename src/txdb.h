@@ -19,7 +19,9 @@
 #include <vector>
 
 class CBlockIndex;
+
 class CCoinsViewDBCursor;
+
 class uint256;
 
 //! -dbcache default (MiB)
@@ -27,7 +29,7 @@ static const int64_t nDefaultDbCache = 300;
 //! -dbbatchsize default (bytes)
 static const int64_t nDefaultDbBatchSize = 16 << 20;
 //! max. -dbcache (MiB)
-static const int64_t nMaxDbCache = sizeof(void*) > 4 ? 16384 : 1024;
+static const int64_t nMaxDbCache = sizeof(void *) > 4 ? 16384 : 1024;
 //! min. -dbcache (MiB)
 static const int64_t nMinDbCache = 4;
 //! Max memory allocated to block tree DB specific cache, if no -txindex (MiB)
@@ -43,10 +45,9 @@ static const int64_t nMaxCoinsDBCache = 8;
 extern RecursiveMutex cs_main;
 
 /** CCoinsView backed by the coin database (chainstate/) */
-class CCoinsViewDB final : public CCoinsView
-{
+class CCoinsViewDB final : public CCoinsView {
 protected:
-    std::unique_ptr<CDBWrapper> m_db;
+    std::unique_ptr <CDBWrapper> m_db;
     fs::path m_ldb_path;
     bool m_is_memory;
 public:
@@ -57,69 +58,100 @@ public:
 
 
     bool GetCoin(const COutPoint &outpoint, Coin &coin) const override;
+
     bool HaveCoin(const COutPoint &outpoint) const override;
+
     uint256 GetBestBlock() const override;
-    std::vector<uint256> GetHeadBlocks() const override;
+
+    std::vector <uint256> GetHeadBlocks() const override;
+
     bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock) override;
+
     CCoinsViewCursor *Cursor() const override;
 
     //! Attempt to update from an older database format. Returns whether an error occurred.
     bool Upgrade();
+
     size_t EstimateSize() const override;
 
     //! Dynamically alter the underlying leveldb cache size.
-    void ResizeCache(size_t new_cache_size) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    void ResizeCache(size_t new_cache_size)
+
+    EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 };
 
 /** Specialization of CCoinsViewCursor to iterate over a CCoinsViewDB */
-class CCoinsViewDBCursor: public CCoinsViewCursor
-{
+class CCoinsViewDBCursor : public CCoinsViewCursor {
 public:
     ~CCoinsViewDBCursor() {}
 
     bool GetKey(COutPoint &key) const override;
+
     bool GetValue(Coin &coin) const override;
+
     unsigned int GetValueSize() const override;
 
     bool Valid() const override;
+
     void Next() override;
 
 private:
-    CCoinsViewDBCursor(CDBIterator* pcursorIn, const uint256 &hashBlockIn) : CCoinsViewCursor(hashBlockIn), pcursor(pcursorIn) {}
-    std::unique_ptr<CDBIterator> pcursor;
+    CCoinsViewDBCursor(CDBIterator *pcursorIn, const uint256 &hashBlockIn) : CCoinsViewCursor(hashBlockIn),
+                                                                             pcursor(pcursorIn) {}
+
+    std::unique_ptr <CDBIterator> pcursor;
     std::pair<char, COutPoint> keyTmp;
 
     friend class CCoinsViewDB;
 };
 
 /** Access to the block database (blocks/index/) */
-class CBlockTreeDB : public CDBWrapper
-{
+class CBlockTreeDB : public CDBWrapper {
 public:
     explicit CBlockTreeDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
 
-    bool WriteBatchSync(const std::vector<std::pair<int, const CBlockFileInfo*> >& fileInfo, int nLastFile, const std::vector<const CBlockIndex*>& blockinfo);
+    bool WriteBatchSync(const std::vector <std::pair<int, const CBlockFileInfo *>> &fileInfo, int nLastFile,
+                        const std::vector<const CBlockIndex *> &blockinfo);
+
     bool ReadBlockFileInfo(int nFile, CBlockFileInfo &info);
+
     bool ReadLastBlockFile(int &nFile);
+
     bool WriteReindexing(bool fReindexing);
+
     void ReadReindexing(bool &fReindexing);
+
     bool ReadSpentIndex(CSpentIndexKey &key, CSpentIndexValue &value);
-    bool UpdateSpentIndex(const std::vector<std::pair<CSpentIndexKey, CSpentIndexValue> >&vect);
+
+    bool UpdateSpentIndex(const std::vector <std::pair<CSpentIndexKey, CSpentIndexValue>> &vect);
+
     bool ReadFutureIndex(CFutureIndexKey &key, CFutureIndexValue &value);
-    bool UpdateFutureIndex(const std::vector<std::pair<CFutureIndexKey, CFutureIndexValue> >&vect);
-    bool UpdateAddressUnspentIndex(const std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue > >&vect);
+
+    bool UpdateFutureIndex(const std::vector <std::pair<CFutureIndexKey, CFutureIndexValue>> &vect);
+
+    bool UpdateAddressUnspentIndex(const std::vector <std::pair<CAddressUnspentKey, CAddressUnspentValue>> &vect);
+
     bool ReadAddressUnspentIndex(uint160 addressHash, int type,
-                                 std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> > &vect);
-    bool WriteAddressIndex(const std::vector<std::pair<CAddressIndexKey, CAmount> > &vect);
-    bool EraseAddressIndex(const std::vector<std::pair<CAddressIndexKey, CAmount> > &vect);
+                                 std::vector <std::pair<CAddressUnspentKey, CAddressUnspentValue>> &vect);
+
+    bool WriteAddressIndex(const std::vector <std::pair<CAddressIndexKey, CAmount>> &vect);
+
+    bool EraseAddressIndex(const std::vector <std::pair<CAddressIndexKey, CAmount>> &vect);
+
     bool ReadAddressIndex(uint160 addressHash, int type,
-                          std::vector<std::pair<CAddressIndexKey, CAmount> > &addressIndex,
+                          std::vector <std::pair<CAddressIndexKey, CAmount>> &addressIndex,
                           int start = 0, int end = 0);
+
     bool WriteTimestampIndex(const CTimestampIndexKey &timestampIndex);
-    bool ReadTimestampIndex(const unsigned int &high, const unsigned int &low, std::vector<uint256> &vect);
+
+    bool ReadTimestampIndex(const unsigned int &high, const unsigned int &low, std::vector <uint256> &vect);
+
     bool WriteFlag(const std::string &name, bool fValue);
+
     bool ReadFlag(const std::string &name, bool &fValue);
-    bool LoadBlockIndexGuts(const Consensus::Params& consensusParams, std::function<CBlockIndex*(const uint256&)> insertBlockIndex);
+
+    bool LoadBlockIndexGuts(const Consensus::Params &consensusParams,
+                            std::function<CBlockIndex *(const uint256 &)> insertBlockIndex);
 };
 
 #endif // BITCOIN_TXDB_H

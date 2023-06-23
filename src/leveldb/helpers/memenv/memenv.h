@@ -9,13 +9,16 @@
 
 namespace leveldb {
 
-class Env;
+    class Env;
 
 // Returns a new environment that stores its data in memory and delegates
 // all non-file-storage tasks to base_env. The caller must delete the result
 // when it is no longer needed.
 // *base_env must remain live while the result is in use.
-LEVELDB_EXPORT Env* NewMemEnv(Env* base_env);
+    LEVELDB_EXPORT Env
+    *
+    NewMemEnv(Env
+    * base_env);
 
 }  // namespace leveldb
 

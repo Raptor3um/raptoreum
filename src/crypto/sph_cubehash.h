@@ -76,9 +76,9 @@ extern "C"{
  */
 typedef struct {
 #ifndef DOXYGEN_IGNORE
-	unsigned char buf[32];    /* first field, for alignment */
-	size_t ptr;
-	sph_u32 state[32];
+    unsigned char buf[32];    /* first field, for alignment */
+    size_t ptr;
+    sph_u32 state[32];
 #endif
 } sph_cubehash_context;
 
@@ -146,7 +146,7 @@ void sph_cubehash224_close(void *cc, void *dst);
  * @param dst   the destination buffer
  */
 void sph_cubehash224_addbits_and_close(
-	void *cc, unsigned ub, unsigned n, void *dst);
+        void *cc, unsigned ub, unsigned n, void *dst);
 
 /**
  * Initialize a CubeHash-256 context. This process performs no memory
@@ -192,7 +192,7 @@ void sph_cubehash256_close(void *cc, void *dst);
  * @param dst   the destination buffer
  */
 void sph_cubehash256_addbits_and_close(
-	void *cc, unsigned ub, unsigned n, void *dst);
+        void *cc, unsigned ub, unsigned n, void *dst);
 
 /**
  * Initialize a CubeHash-384 context. This process performs no memory
@@ -238,7 +238,7 @@ void sph_cubehash384_close(void *cc, void *dst);
  * @param dst   the destination buffer
  */
 void sph_cubehash384_addbits_and_close(
-	void *cc, unsigned ub, unsigned n, void *dst);
+        void *cc, unsigned ub, unsigned n, void *dst);
 
 /**
  * Initialize a CubeHash-512 context. This process performs no memory
@@ -284,7 +284,8 @@ void sph_cubehash512_close(void *cc, void *dst);
  * @param dst   the destination buffer
  */
 void sph_cubehash512_addbits_and_close(
-	void *cc, unsigned ub, unsigned n, void *dst);
+        void *cc, unsigned ub, unsigned n, void *dst);
+
 #ifdef __cplusplus
 }
 #endif

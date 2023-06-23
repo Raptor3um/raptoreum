@@ -11,19 +11,21 @@
 #include <validationinterface.h>
 
 class CBLSPublicKey;
+
 class CBLSSecretKey;
 
 struct CActiveSmartnodeInfo;
+
 class CActiveSmartnodeManager;
 
 extern CActiveSmartnodeInfo activeSmartnodeInfo;
 extern RecursiveMutex activeSmartnodeInfoCs;
-extern CActiveSmartnodeManager* activeSmartnodeManager;
+extern CActiveSmartnodeManager *activeSmartnodeManager;
 
 struct CActiveSmartnodeInfo {
     // Keys for the active Smartnode
-    std::unique_ptr<CBLSPublicKey> blsPubKeyOperator;
-    std::unique_ptr<CBLSSecretKey> blsKeyOperator;
+    std::unique_ptr <CBLSPublicKey> blsPubKeyOperator;
+    std::unique_ptr <CBLSSecretKey> blsKeyOperator;
 
     // Initialized while registering Smartnode
     uint256 proTxHash;
@@ -32,8 +34,7 @@ struct CActiveSmartnodeInfo {
 };
 
 
-class CActiveSmartnodeManager : public CValidationInterface
-{
+class CActiveSmartnodeManager : public CValidationInterface {
 public:
     enum smartnode_state_t {
         SMARTNODE_WAITING_FOR_PROTX,
@@ -48,23 +49,25 @@ public:
 private:
     smartnode_state_t state{SMARTNODE_WAITING_FOR_PROTX};
     std::string strError;
-    CConnman& connman;
+    CConnman &connman;
 
 public:
-    explicit CActiveSmartnodeManager(CConnman& _connman) : connman(_connman) {};
+    explicit CActiveSmartnodeManager(CConnman &_connman) : connman(_connman) {};
+
     ~CActiveSmartnodeManager() = default;
 
-    void UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlockIndex* pindexFork, bool fInitialDownload) override;
+    void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) override;
 
-    void Init(const CBlockIndex* pindex);
+    void Init(const CBlockIndex *pindex);
 
     std::string GetStateString() const;
+
     std::string GetStatus() const;
 
     static bool IsValidNetAddr(CService addrIn);
 
 private:
-    bool GetLocalAddress(CService& addrRet);
+    bool GetLocalAddress(CService &addrRet);
 };
 
 #endif // BITCOIN_SMARTNODE_ACTIVESMARTNODE_H

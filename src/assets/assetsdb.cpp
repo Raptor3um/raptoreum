@@ -20,23 +20,19 @@ static const char BLOCK_ASSET_UNDO_DATA = 'U';
 static size_t MAX_DATABASE_RESULTS = 50000;
 
 CAssetsDB::CAssetsDB(size_t nCacheSize, bool fMemory, bool fWipe) :
-    CDBWrapper(GetDataDir() / "assets", nCacheSize, fMemory, fWipe)
-{
+        CDBWrapper(GetDataDir() / "assets", nCacheSize, fMemory, fWipe) {
 }
 
-bool CAssetsDB::WriteAssetData(const CAssetMetaData& asset, const int nHeight, const uint256& blockHash)
-{
+bool CAssetsDB::WriteAssetData(const CAssetMetaData &asset, const int nHeight, const uint256 &blockHash) {
     CDatabaseAssetData data(asset, nHeight, blockHash);
     return Write(std::make_pair(ASSET_FLAG, asset.assetId), data);
 }
 
-bool CAssetsDB::WriteAssetId(const std::string assetName, const std::string Txid)
-{
+bool CAssetsDB::WriteAssetId(const std::string assetName, const std::string Txid) {
     return Write(std::make_pair(ASSET_NAME_TXID_FLAG, assetName), Txid);
 }
 
-bool CAssetsDB::ReadAssetData(const std::string& txid, CAssetMetaData& asset, int& nHeight, uint256& blockHash)
-{
+bool CAssetsDB::ReadAssetData(const std::string &txid, CAssetMetaData &asset, int &nHeight, uint256 &blockHash) {
     CDatabaseAssetData data;
     bool ret = Read(std::make_pair(ASSET_FLAG, txid), data);
 
@@ -49,28 +45,25 @@ bool CAssetsDB::ReadAssetData(const std::string& txid, CAssetMetaData& asset, in
     return ret;
 }
 
-bool CAssetsDB::ReadAssetId(const std::string& assetName, std::string& Txid)
-{
+bool CAssetsDB::ReadAssetId(const std::string &assetName, std::string &Txid) {
     return Read(std::make_pair(ASSET_NAME_TXID_FLAG, assetName), Txid);
 }
 
-bool CAssetsDB::EraseAssetData(const std::string& assetName)
-{
+bool CAssetsDB::EraseAssetData(const std::string &assetName) {
     return Erase(std::make_pair(ASSET_FLAG, assetName));
 }
 
-bool CAssetsDB::EraseAssetId(const std::string& assetName)
-{
+bool CAssetsDB::EraseAssetId(const std::string &assetName) {
     return Erase(std::make_pair(ASSET_NAME_TXID_FLAG, assetName));
 }
 
-bool CAssetsDB::WriteBlockUndoAssetData(const uint256& blockHash, const std::vector<std::pair<std::string, CBlockAssetUndo>>& assetUndoData)
-{
+bool CAssetsDB::WriteBlockUndoAssetData(const uint256 &blockHash,
+                                        const std::vector <std::pair<std::string, CBlockAssetUndo>> &assetUndoData) {
     return Write(std::make_pair(BLOCK_ASSET_UNDO_DATA, blockHash), assetUndoData);
 }
 
-bool CAssetsDB::ReadBlockUndoAssetData(const uint256& blockHash, std::vector<std::pair<std::string, CBlockAssetUndo>>& assetUndoData)
-{
+bool CAssetsDB::ReadBlockUndoAssetData(const uint256 &blockHash,
+                                       std::vector <std::pair<std::string, CBlockAssetUndo>> &assetUndoData) {
     // If it exists, return the read value.
     if (Exists(std::make_pair(BLOCK_ASSET_UNDO_DATA, blockHash)))
         return Read(std::make_pair(BLOCK_ASSET_UNDO_DATA, blockHash), assetUndoData);
@@ -79,9 +72,8 @@ bool CAssetsDB::ReadBlockUndoAssetData(const uint256& blockHash, std::vector<std
     return true;
 }
 
-bool CAssetsDB::LoadAssets()
-{
-    std::unique_ptr<CDBIterator> pcursor(NewIterator());
+bool CAssetsDB::LoadAssets() {
+    std::unique_ptr <CDBIterator> pcursor(NewIterator());
 
     pcursor->Seek(std::make_pair(ASSET_FLAG, std::string()));
 
@@ -107,7 +99,7 @@ bool CAssetsDB::LoadAssets()
         }
     }
 
-    std::unique_ptr<CDBIterator> pcursor2(NewIterator());
+    std::unique_ptr <CDBIterator> pcursor2(NewIterator());
     pcursor2->Seek(std::make_pair(ASSET_NAME_TXID_FLAG, std::string()));
 
     // Load mapAssetId
@@ -118,7 +110,7 @@ bool CAssetsDB::LoadAssets()
             std::string value;
             if (pcursor2->GetValue(value)) {
                 passetsCache->mapAssetId.insert(
-                    std::make_pair(key.second, value));
+                        std::make_pair(key.second, value));
                 if (passetsCache->mapAssetId.size() > MAX_CACHE_ASSETS_SIZE)
                     break;
                 pcursor2->Next();

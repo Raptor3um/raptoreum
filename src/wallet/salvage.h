@@ -9,6 +9,6 @@
 #include <fs.h>
 #include <streams.h>
 
-bool RecoverDatabaseFile(const fs::path& file_path);
+bool RecoverDatabaseFile(const fs::path &file_path);
 
 #endif // BITCOIN_WALLET_SALVAGE_H

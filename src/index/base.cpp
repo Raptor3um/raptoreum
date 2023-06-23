@@ -12,27 +12,26 @@
 
 constexpr char DB_BEST_BLOCK = 'B';
 
-constexpr int64_t SYNC_LOG_INTERVAL = 30; // seconds
-constexpr int64_t SYNC_LOCATOR_WRITE_INTERVAL = 30; // seconds
+constexpr int64_t
+SYNC_LOG_INTERVAL = 30; // seconds
+constexpr int64_t
+SYNC_LOCATOR_WRITE_INTERVAL = 30; // seconds
 
 template<typename... Args>
-static void FatalError(const char* fmt, const Args&... args)
-{
+static void FatalError(const char *fmt, const Args &... args) {
     std::string strMessage = tfm::format(fmt, args...);
     SetMiscWarning(strMessage);
     LogPrintf("*** %s\n", strMessage);
     uiInterface.ThreadSafeMessageBox(
-        "Error: A fatal internal error occurred, see debug.log for details",
-        "", CClientUIInterface::MSG_ERROR);
+            "Error: A fatal internal error occurred, see debug.log for details",
+            "", CClientUIInterface::MSG_ERROR);
     StartShutdown();
 }
 
-BaseIndex::DB::DB(const fs::path& path, size_t n_cache_size, bool f_memory, bool f_wipe, bool f_obfuscate) :
-    CDBWrapper(path, n_cache_size, f_memory, f_wipe, f_obfuscate)
-{}
+BaseIndex::DB::DB(const fs::path &path, size_t n_cache_size, bool f_memory, bool f_wipe, bool f_obfuscate) :
+        CDBWrapper(path, n_cache_size, f_memory, f_wipe, f_obfuscate) {}
 
-bool BaseIndex::DB::ReadBestBlock(CBlockLocator& locator) const
-{
+bool BaseIndex::DB::ReadBestBlock(CBlockLocator &locator) const {
     bool success = Read(DB_BEST_BLOCK, locator);
     if (!success) {
         locator.SetNull();
@@ -40,19 +39,16 @@ bool BaseIndex::DB::ReadBestBlock(CBlockLocator& locator) const
     return success;
 }
 
-bool BaseIndex::DB::WriteBestBlock(const CBlockLocator& locator)
-{
+bool BaseIndex::DB::WriteBestBlock(const CBlockLocator &locator) {
     return Write(DB_BEST_BLOCK, locator);
 }
 
-BaseIndex::~BaseIndex()
-{
+BaseIndex::~BaseIndex() {
     Interrupt();
     Stop();
 }
 
-bool BaseIndex::Init()
-{
+bool BaseIndex::Init() {
     CBlockLocator locator;
     if (!GetDB().ReadBestBlock(locator)) {
         locator.SetNull();
@@ -68,15 +64,14 @@ bool BaseIndex::Init()
     return true;
 }
 
-static const CBlockIndex* NextSyncBlock(const CBlockIndex* pindex_prev)
-{
+static const CBlockIndex *NextSyncBlock(const CBlockIndex *pindex_prev) {
     AssertLockHeld(cs_main);
 
     if (!pindex_prev) {
         return ::ChainActive().Genesis();
     }
 
-    const CBlockIndex* pindex = ::ChainActive().Next(pindex_prev);
+    const CBlockIndex *pindex = ::ChainActive().Next(pindex_prev);
     if (pindex) {
         return pindex;
     }
@@ -84,11 +79,10 @@ static const CBlockIndex* NextSyncBlock(const CBlockIndex* pindex_prev)
     return ::ChainActive().Next(::ChainActive().FindFork(pindex_prev));
 }
 
-void BaseIndex::ThreadSync()
-{
-    const CBlockIndex* pindex = m_best_block_index.load();
+void BaseIndex::ThreadSync() {
+    const CBlockIndex *pindex = m_best_block_index.load();
     if (!m_synced) {
-        auto& consensus_params = Params().GetConsensus();
+        auto &consensus_params = Params().GetConsensus();
 
         int64_t last_log_time = 0;
         int64_t last_locator_write_time = 0;
@@ -100,7 +94,7 @@ void BaseIndex::ThreadSync()
 
             {
                 LOCK(cs_main);
-                const CBlockIndex* pindex_next = NextSyncBlock(pindex);
+                const CBlockIndex *pindex_next = NextSyncBlock(pindex);
                 if (!pindex_next) {
                     WriteBestBlock(pindex);
                     m_best_block_index = pindex;
@@ -143,8 +137,7 @@ void BaseIndex::ThreadSync()
     }
 }
 
-bool BaseIndex::WriteBestBlock(const CBlockIndex* block_index)
-{
+bool BaseIndex::WriteBestBlock(const CBlockIndex *block_index) {
     LOCK(cs_main);
     if (!GetDB().WriteBestBlock(::ChainActive().GetLocator(block_index))) {
         return error("%s: Failed to write locator to disk", __func__);
@@ -152,14 +145,13 @@ bool BaseIndex::WriteBestBlock(const CBlockIndex* block_index)
     return true;
 }
 
-void BaseIndex::BlockConnected(const std::shared_ptr<const CBlock>& block, const CBlockIndex* pindex,
-                               const std::vector<CTransactionRef>& txn_conflicted)
-{
+void BaseIndex::BlockConnected(const std::shared_ptr<const CBlock> &block, const CBlockIndex *pindex,
+                               const std::vector <CTransactionRef> &txn_conflicted) {
     if (!m_synced) {
         return;
     }
 
-    const CBlockIndex* best_block_index = m_best_block_index.load();
+    const CBlockIndex *best_block_index = m_best_block_index.load();
     if (!best_block_index) {
         if (pindex->nHeight != 0) {
             FatalError("%s: First block connected is not the genesis block (height=%d)",
@@ -190,14 +182,13 @@ void BaseIndex::BlockConnected(const std::shared_ptr<const CBlock>& block, const
     }
 }
 
-void BaseIndex::ChainStateFlushed(const CBlockLocator& locator)
-{
+void BaseIndex::ChainStateFlushed(const CBlockLocator &locator) {
     if (!m_synced) {
         return;
     }
 
-    const uint256& locator_tip_hash = locator.vHave.front();
-    const CBlockIndex* locator_tip_index;
+    const uint256 &locator_tip_hash = locator.vHave.front();
+    const CBlockIndex *locator_tip_index;
     {
         LOCK(cs_main);
         locator_tip_index = LookupBlockIndex(locator_tip_hash);
@@ -214,7 +205,7 @@ void BaseIndex::ChainStateFlushed(const CBlockLocator& locator)
     // there is a reorg and the blocks on the stale branch are in the ValidationInterface queue
     // backlog even after the sync thread has caught up to the new chain tip. In this unlikely
     // event, log a warning and let the queue clear.
-    const CBlockIndex* best_block_index = m_best_block_index.load();
+    const CBlockIndex *best_block_index = m_best_block_index.load();
     if (best_block_index->GetAncestor(locator_tip_index->nHeight) != locator_tip_index) {
         LogPrintf("%s: WARNING: Locator contains block (hash=%s) not on known best " /* Continued */
                   "chain (tip=%s); not writing index locator\n",
@@ -228,8 +219,7 @@ void BaseIndex::ChainStateFlushed(const CBlockLocator& locator)
     }
 }
 
-bool BaseIndex::BlockUntilSyncedToCurrentChain()
-{
+bool BaseIndex::BlockUntilSyncedToCurrentChain() {
     AssertLockNotHeld(cs_main);
 
     if (!m_synced) {
@@ -240,8 +230,8 @@ bool BaseIndex::BlockUntilSyncedToCurrentChain()
         // Skip the queue-draining stuff if we know we're caught up with
         // ::ChainActive().Tip().
         LOCK(cs_main);
-        const CBlockIndex* chain_tip = ::ChainActive().Tip();
-        const CBlockIndex* best_block_index = m_best_block_index.load();
+        const CBlockIndex *chain_tip = ::ChainActive().Tip();
+        const CBlockIndex *best_block_index = m_best_block_index.load();
         if (best_block_index->GetAncestor(chain_tip->nHeight) == chain_tip) {
             return true;
         }
@@ -252,13 +242,11 @@ bool BaseIndex::BlockUntilSyncedToCurrentChain()
     return true;
 }
 
-void BaseIndex::Interrupt()
-{
+void BaseIndex::Interrupt() {
     m_interrupt();
 }
 
-void BaseIndex::Start()
-{
+void BaseIndex::Start() {
     // Need to register this ValidationInterface before running Init(), so that
     // callbacks are not missed if Init sets m_synced to true.
     RegisterValidationInterface(this);
@@ -267,12 +255,11 @@ void BaseIndex::Start()
         return;
     }
 
-    m_thread_sync = std::thread(&TraceThread<std::function<void()>>, GetName(),
+    m_thread_sync = std::thread(&TraceThread < std::function < void() >> , GetName(),
                                 std::bind(&BaseIndex::ThreadSync, this));
 }
 
-void BaseIndex::Stop()
-{
+void BaseIndex::Stop() {
     UnregisterValidationInterface(this);
 
     if (m_thread_sync.joinable()) {

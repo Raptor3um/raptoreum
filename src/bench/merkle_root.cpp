@@ -8,12 +8,11 @@
 #include <random.h>
 #include <consensus/merkle.h>
 
-static void MerkleRoot(benchmark::Bench& bench)
-{
+static void MerkleRoot(benchmark::Bench &bench) {
     FastRandomContext rng(true);
-    std::vector<uint256> leaves;
+    std::vector <uint256> leaves;
     leaves.resize(9001);
-    for (auto& item : leaves) {
+    for (auto &item: leaves) {
         item = rng.rand256();
     }
     bench.batch(leaves.size()).unit("leaf").run([&] {

@@ -30,8 +30,8 @@
 
 static const uint32_t LOCKTIME_MAX = 0xFFFFFFFFU;
 
-CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniValue& outputs_in, const UniValue& locktime)
-{
+CMutableTransaction
+ConstructTransaction(const UniValue &inputs_in, const UniValue &outputs_in, const UniValue &locktime) {
     if (inputs_in.isNull() || outputs_in.isNull())
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, arguments 1 and 2 must be non-null");
 
@@ -48,12 +48,12 @@ CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniVal
     }
 
     for (unsigned int idx = 0; idx < inputs.size(); idx++) {
-        const UniValue& input = inputs[idx];
-        const UniValue& o = input.get_obj();
+        const UniValue &input = inputs[idx];
+        const UniValue &o = input.get_obj();
 
         uint256 txid = ParseHashO(o, "txid");
 
-        const UniValue& vout_v = find_value(o, "vout");
+        const UniValue &vout_v = find_value(o, "vout");
         if (!vout_v.isNum())
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, missing vout key");
         int nOutput = vout_v.get_int();
@@ -63,13 +63,13 @@ CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniVal
         uint32_t nSequence = (rawTx.nLockTime ? CTxIn::SEQUENCE_FINAL - 1 : CTxIn::SEQUENCE_FINAL);
 
         // set the sequence number if passed in the parameters object
-        const UniValue& sequenceObj = find_value(o, "sequence");
+        const UniValue &sequenceObj = find_value(o, "sequence");
         if (sequenceObj.isNum()) {
             int64_t seqNr64 = sequenceObj.get_int64();
             if (seqNr64 < 0 || seqNr64 > CTxIn::SEQUENCE_FINAL)
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, sequence number is out of range");
             else
-                nSequence = (uint32_t)seqNr64;
+                nSequence = (uint32_t) seqNr64;
         }
 
         CTxIn in(COutPoint(txid, nOutput), CScript(), nSequence);
@@ -77,25 +77,27 @@ CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniVal
         rawTx.vin.push_back(in);
     }
 
-    std::set<CTxDestination> destinations;
+    std::set <CTxDestination> destinations;
     bool hasFuture = false;
     CFutureTx ftx;
     if (!outputs_is_obj) {
         // Translate array of key-value pairs into dict
         UniValue outputs_dict = UniValue(UniValue::VOBJ);
         for (size_t i = 0; i < outputs.size(); ++i) {
-            const UniValue& output = outputs[i];
+            const UniValue &output = outputs[i];
             if (!output.isObject()) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, key-value pair not an object as expected");
+                throw JSONRPCError(RPC_INVALID_PARAMETER,
+                                   "Invalid parameter, key-value pair not an object as expected");
             }
             if (output.size() != 1) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, key-value pair must contain exactly one key");
+                throw JSONRPCError(RPC_INVALID_PARAMETER,
+                                   "Invalid parameter, key-value pair must contain exactly one key");
             }
             outputs_dict.pushKVs(output);
         }
         outputs = std::move(outputs_dict);
     }
-    for (const std::string& name_ : outputs.getKeys()) {
+    for (const std::string &name_: outputs.getKeys()) {
         if (name_ == "data") {
             std::vector<unsigned char> data = ParseHexV(outputs[name_].getValStr(), "Data");
 
@@ -108,7 +110,8 @@ CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniVal
             }
 
             if (!destinations.insert(destination).second) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("Invalid parameter, duplicated address: ") + name_);
+                throw JSONRPCError(RPC_INVALID_PARAMETER,
+                                   std::string("Invalid parameter, duplicated address: ") + name_);
             }
 
             CScript scriptPubKey = GetScriptForDestination(destination);
@@ -118,13 +121,13 @@ CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniVal
                 if (hasFuture) {
                     throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("can only send future to one address"));
                 }
-                if(sendToValue["future_maturity"].isNull()) {
+                if (sendToValue["future_maturity"].isNull()) {
                     throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("no future_maturity is specified "));
                 }
-                if(sendToValue["future_locktime"].isNull()) {
+                if (sendToValue["future_locktime"].isNull()) {
                     throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("no future_locktime is specified "));
                 }
-                if(sendToValue["future_amount"].isNull()) {
+                if (sendToValue["future_amount"].isNull()) {
                     throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("no future_amount is specified "));
                 }
                 hasFuture = true;
@@ -144,7 +147,7 @@ CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniVal
             rawTx.vout.push_back(out);
         }
     }
-    if(hasFuture) {
+    if (hasFuture) {
         UpdateSpecialTxInputsHash(rawTx, ftx);
         SetTxPayload(rawTx, ftx);
     }
@@ -153,36 +156,36 @@ CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniVal
 }
 
 /** Pushes a JSON object for script verification or signing errors to vErrorsRet. */
-static void TxInErrorToJSON(const CTxIn& txin, UniValue& vErrorsRet, const std::string& strMessage)
-{
+static void TxInErrorToJSON(const CTxIn &txin, UniValue &vErrorsRet, const std::string &strMessage) {
     UniValue entry(UniValue::VOBJ);
     entry.pushKV("txid", txin.prevout.hash.ToString());
-    entry.pushKV("vout", (uint64_t)txin.prevout.n);
+    entry.pushKV("vout", (uint64_t) txin.prevout.n);
     entry.pushKV("scriptSig", HexStr(txin.scriptSig));
-    entry.pushKV("sequence", (uint64_t)txin.nSequence);
+    entry.pushKV("sequence", (uint64_t) txin.nSequence);
     entry.pushKV("error", strMessage);
     vErrorsRet.push_back(entry);
 }
 
-UniValue SignTransaction(CMutableTransaction& mtx, const UniValue& prevTxsUnival, CBasicKeyStore* keystore, std::map<COutPoint, Coin>& coins, bool is_temp_keystore, const UniValue& hashType)
-{
+UniValue SignTransaction(CMutableTransaction &mtx, const UniValue &prevTxsUnival, CBasicKeyStore *keystore,
+                         std::map <COutPoint, Coin> &coins, bool is_temp_keystore, const UniValue &hashType) {
     // Add previous txouts given in the RPC call:
     if (!prevTxsUnival.isNull()) {
         UniValue prevTxs = prevTxsUnival.get_array();
         for (unsigned int idx = 0; idx < prevTxs.size(); ++idx) {
-            const UniValue& p = prevTxs[idx];
+            const UniValue &p = prevTxs[idx];
             if (!p.isObject()) {
-                throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "expected object with {\"txid'\",\"vout\",\"scriptPubKey\"}");
+                throw JSONRPCError(RPC_DESERIALIZATION_ERROR,
+                                   "expected object with {\"txid'\",\"vout\",\"scriptPubKey\"}");
             }
 
             UniValue prevOut = p.get_obj();
 
             RPCTypeCheckObj(prevOut,
-                {
-                    {"txid", UniValueType(UniValue::VSTR)},
-                    {"vout", UniValueType(UniValue::VNUM)},
-                    {"scriptPubKey", UniValueType(UniValue::VSTR)},
-                });
+                            {
+                                    {"txid",         UniValueType(UniValue::VSTR)},
+                                    {"vout",         UniValueType(UniValue::VNUM)},
+                                    {"scriptPubKey", UniValueType(UniValue::VSTR)},
+                            });
 
             uint256 txid = ParseHashO(prevOut, "txid");
 
@@ -199,8 +202,8 @@ UniValue SignTransaction(CMutableTransaction& mtx, const UniValue& prevTxsUnival
                 auto coin = coins.find(out);
                 if (coin != coins.end() && !coin->second.IsSpent() && coin->second.out.scriptPubKey != scriptPubKey) {
                     std::string err("Previous output scriptPubKey mismatch:\n");
-                    err = err + ScriptToAsmStr(coin->second.out.scriptPubKey) + "\nvs:\n"+
-                        ScriptToAsmStr(scriptPubKey);
+                    err = err + ScriptToAsmStr(coin->second.out.scriptPubKey) + "\nvs:\n" +
+                          ScriptToAsmStr(scriptPubKey);
                     throw JSONRPCError(RPC_DESERIALIZATION_ERROR, err);
                 }
                 Coin newcoin;
@@ -216,9 +219,9 @@ UniValue SignTransaction(CMutableTransaction& mtx, const UniValue& prevTxsUnival
             // if redeemScript and private keys were given, add redeemScript to the keystore so it can be signed
             if (is_temp_keystore && scriptPubKey.IsPayToScriptHash()) {
                 RPCTypeCheckObj(prevOut,
-                {
-                    {"redeemScript", UniValueType(UniValue::VSTR)},
-                });
+                                {
+                                        {"redeemScript", UniValueType(UniValue::VSTR)},
+                                });
                 UniValue v = find_value(prevOut, "redeemScript");
                 if (!v.isNull()) {
                     std::vector<unsigned char> rsData(ParseHexV(v, "redeemScript"));
@@ -241,25 +244,27 @@ UniValue SignTransaction(CMutableTransaction& mtx, const UniValue& prevTxsUnival
     const CTransaction txConst(mtx);
     // Sign what we can:
     for (unsigned int i = 0; i < mtx.vin.size(); i++) {
-        CTxIn& txin = mtx.vin[i];
+        CTxIn &txin = mtx.vin[i];
         auto coin = coins.find(txin.prevout);
         if (coin == coins.end() || coin->second.IsSpent()) {
             TxInErrorToJSON(txin, vErrors, "Input not found or already spent");
             continue;
         }
-        const CScript& prevPubKey = coin->second.out.scriptPubKey;
-        const CAmount& amount = coin->second.out.nValue;
+        const CScript &prevPubKey = coin->second.out.scriptPubKey;
+        const CAmount &amount = coin->second.out.nValue;
 
         SignatureData sigdata = DataFromTransaction(mtx, i, coin->second.out);
         // Only sign SIGHASH_SINGLE if there's a corresponding output:
         if (!fHashSingle || (i < mtx.vout.size())) {
-            ProduceSignature(*keystore, MutableTransactionSignatureCreator(&mtx, i, amount, nHashType), prevPubKey, sigdata);
+            ProduceSignature(*keystore, MutableTransactionSignatureCreator(&mtx, i, amount, nHashType), prevPubKey,
+                             sigdata);
         }
 
         UpdateInput(txin, sigdata);
 
         ScriptError serror = SCRIPT_ERR_OK;
-        if (!VerifyScript(txin.scriptSig, prevPubKey, STANDARD_SCRIPT_VERIFY_FLAGS, TransactionSignatureChecker(&txConst, i, amount), &serror)) {
+        if (!VerifyScript(txin.scriptSig, prevPubKey, STANDARD_SCRIPT_VERIFY_FLAGS,
+                          TransactionSignatureChecker(&txConst, i, amount), &serror)) {
             if (serror == SCRIPT_ERR_INVALID_STACK_OPERATION) {
                 // Unable to sign input and verification failed (possible attempt to partially sign).
                 TxInErrorToJSON(txin, vErrors, "Unable to sign input, invalid stack size (possibly missing key)");

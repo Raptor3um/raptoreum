@@ -11,18 +11,20 @@ namespace Ui {
     class OpenURIDialog;
 }
 
-class OpenURIDialog : public QDialog
-{
+class OpenURIDialog : public QDialog {
     Q_OBJECT
 
 public:
     explicit OpenURIDialog(QWidget *parent);
+
     ~OpenURIDialog();
 
     QString getURI();
 
-protected Q_SLOTS:
-    void accept() override;
+protected
+    Q_SLOTS:
+            void accept()
+    override;
 
 private:
     Ui::OpenURIDialog *ui;

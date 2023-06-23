@@ -16,15 +16,20 @@
     any current sleep, and after that point operator bool() will return true
     until reset.
 */
-class CThreadInterrupt
-{
+class CThreadInterrupt {
 public:
     CThreadInterrupt();
+
     explicit operator bool() const;
+
     void operator()();
+
     void reset();
+
     bool sleep_for(std::chrono::milliseconds rel_time);
+
     bool sleep_for(std::chrono::seconds rel_time);
+
     bool sleep_for(std::chrono::minutes rel_time);
 
 private:

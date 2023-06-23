@@ -29,22 +29,26 @@ static size_t lastCheckMnCount = 0;
 static int lastCheckHeight = 0;
 static bool lastCheckedLowLLMQParams = false;
 
-static std::unique_ptr<CChainParams> globalChainParams;
+static std::unique_ptr <CChainParams> globalChainParams;
 
-static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesisOutputScript, uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
-{
+static CBlock
+CreateGenesisBlock(const char *pszTimestamp, const CScript &genesisOutputScript, uint32_t nTime, uint32_t nNonce,
+                   uint32_t nBits, int32_t nVersion, const CAmount &genesisReward) {
     CMutableTransaction txNew;
     txNew.nVersion = 1;
     txNew.vin.resize(1);
     txNew.vout.resize(1);
-    txNew.vin[0].scriptSig = CScript() << 486604799 << CScriptNum(4) << std::vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp));
+    txNew.vin[0].scriptSig = CScript() << 486604799 << CScriptNum(4)
+                                       << std::vector<unsigned char>((const unsigned char *) pszTimestamp,
+                                                                     (const unsigned char *) pszTimestamp +
+                                                                     strlen(pszTimestamp));
     txNew.vout[0].nValue = genesisReward;
     txNew.vout[0].scriptPubKey = genesisOutputScript;
 
     CBlock genesis;
-    genesis.nTime    = nTime;
-    genesis.nBits    = nBits;
-    genesis.nNonce   = nNonce;
+    genesis.nTime = nTime;
+    genesis.nBits = nBits;
+    genesis.nNonce = nNonce;
     genesis.nVersion = nVersion;
     genesis.vtx.push_back(MakeTransactionRef(std::move(txNew)));
     genesis.hashPrevBlock.SetNull();
@@ -52,8 +56,9 @@ static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesi
     return genesis;
 }
 
-static CBlock CreateDevNetGenesisBlock(const uint256 &prevBlockHash, const std::string& devNetName, uint32_t nTime, uint32_t nNonce, uint32_t nBits, const CAmount& genesisReward)
-{
+static CBlock
+CreateDevNetGenesisBlock(const uint256 &prevBlockHash, const std::string &devNetName, uint32_t nTime, uint32_t nNonce,
+                         uint32_t nBits, const CAmount &genesisReward) {
     assert(!devNetName.empty());
 
     CMutableTransaction txNew;
@@ -66,9 +71,9 @@ static CBlock CreateDevNetGenesisBlock(const uint256 &prevBlockHash, const std::
     txNew.vout[0].scriptPubKey = CScript() << OP_RETURN;
 
     CBlock genesis;
-    genesis.nTime    = nTime;
-    genesis.nBits    = nBits;
-    genesis.nNonce   = nNonce;
+    genesis.nTime = nTime;
+    genesis.nBits = nBits;
+    genesis.nNonce = nNonce;
     genesis.nVersion = 4;
     genesis.vtx.push_back(MakeTransactionRef(std::move(txNew)));
     genesis.hashPrevBlock = prevBlockHash;
@@ -87,19 +92,21 @@ static CBlock CreateDevNetGenesisBlock(const uint256 &prevBlockHash, const std::
  *     CTxOut(nValue=50.00000000, scriptPubKey=0xA9037BAC7050C479B121CF)
  *   vMerkleTree: e0028e
  */
-static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
-{
-    const char* pszTimestamp = "The Times 22/Jan/2018 Raptoreum is name of the game for new generation of firms";
-    const CScript genesisOutputScript = CScript() << ParseHex("040184710fa689ad5023690c80f3a49c8f13f8d45b8c857fbcbc8bc4a8e4d3eb4b10f4d4604fa08dce601aaf0f470216fe1b51850b4acf21b179c45070ac7b03a9") << OP_CHECKSIG;
+static CBlock
+CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount &genesisReward) {
+    const char *pszTimestamp = "The Times 22/Jan/2018 Raptoreum is name of the game for new generation of firms";
+    const CScript genesisOutputScript = CScript() << ParseHex(
+            "040184710fa689ad5023690c80f3a49c8f13f8d45b8c857fbcbc8bc4a8e4d3eb4b10f4d4604fa08dce601aaf0f470216fe1b51850b4acf21b179c45070ac7b03a9")
+                                                  << OP_CHECKSIG;
     return CreateGenesisBlock(pszTimestamp, genesisOutputScript, nTime, nNonce, nBits, nVersion, genesisReward);
 }
 
-static CBlock FindDevNetGenesisBlock(const CBlock &prevBlock, const CAmount& reward)
-{
+static CBlock FindDevNetGenesisBlock(const CBlock &prevBlock, const CAmount &reward) {
     std::string devNetName = gArgs.GetDevNetName();
     assert(!devNetName.empty());
 
-    CBlock block = CreateDevNetGenesisBlock(prevBlock.GetHash(), devNetName.c_str(), prevBlock.nTime + 1, 0, prevBlock.nBits, reward);
+    CBlock block = CreateDevNetGenesisBlock(prevBlock.GetHash(), devNetName.c_str(), prevBlock.nTime + 1, 0,
+                                            prevBlock.nBits, reward);
 
     arith_uint256 bnTarget;
     bnTarget.SetCompact(block.nBits);
@@ -120,32 +127,25 @@ static CBlock FindDevNetGenesisBlock(const CBlock &prevBlock, const CAmount& rew
 
 /// Verify the POW hash is valid for the genesis block
 /// If starting Nonce is not valid, search for one
-static void VerifyGenesisPOW(const CBlock& genesis)
-{
+static void VerifyGenesisPOW(const CBlock &genesis) {
     arith_uint256 bnTarget;
     bnTarget.SetCompact(genesis.nBits);
 
     CBlock block(genesis);
-    do
-    {
+    do {
         uint256 hash = block.GetPOWHash();
-        if (UintToArith256(hash) <= bnTarget)
-        {
-            if (genesis.nNonce != block.nNonce)
-            {
+        if (UintToArith256(hash) <= bnTarget) {
+            if (genesis.nNonce != block.nNonce) {
                 std::cerr << "VerifyGenesisPOW:  provided nNonce (" << genesis.nNonce << ") invalid" << std::endl;
                 std::cerr << "   nonce: " << block.nNonce << ", pow hash: 0x" << hash.ToString()
                           << ", block hash: 0x" << block.GetHash().ToString() << std::endl;
                 assert(genesis.nNonce == block.nNonce);
-            }
-            else
-            {
+            } else {
                 return;
             }
         }
         ++block.nNonce;
-    }
-    while (block.nNonce != 0);
+    } while (block.nNonce != 0);
 
     // We should never get here
     error("VerifyGenesisPOW: could not find valid Nonce for genesis block");
@@ -171,7 +171,7 @@ public:
         consensus.nSubsidyHalvingInterval = 210240; // Note: actual number of blocks per calendar year with DGW v3 is ~200700 (for example 449750 - 249050)
         consensus.nSmartnodePaymentsStartBlock = 5761; //
         consensus.nSmartnodePaymentsIncreaseBlock = 158000; // actual historical value
-        consensus.nSmartnodePaymentsIncreasePeriod = 576*30; // 17280 - actual historical value
+        consensus.nSmartnodePaymentsIncreasePeriod = 576 * 30; // 17280 - actual historical value
         consensus.nInstantSendConfirmationsRequired = 6;
         consensus.nInstantSendKeepLock = 24;
         consensus.nBudgetPaymentsStartBlock = INT_MAX; // actual historical value
@@ -192,7 +192,8 @@ public:
         consensus.DIP0003Enabled = true;
         consensus.DIP0008Enabled = true;
         // consensus.DIP0003EnforcementHeight = 1047200;
-        consensus.powLimit = uint256S("00ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 20
+        consensus.powLimit = uint256S(
+                "00ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 20
         consensus.nPowTargetTimespan = 24 * 60 * 60; // Raptoreum: 1 day
         consensus.nPowTargetSpacing = 2 * 60; // Raptoreum: 2 minutes
         consensus.fPowAllowMinDifficultyBlocks = false;
@@ -217,10 +218,12 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_V17].nFalloffCoeff = 5; // this corresponds to 10 periods
 
         // The best chain should have at least this much work.
-        consensus.nMinimumChainWork = uint256S("000000000000000000000000000000000000000000000000000eead474ccbc59"); // block 421457 chainwork
+        consensus.nMinimumChainWork = uint256S(
+                "000000000000000000000000000000000000000000000000000eead474ccbc59"); // block 421457 chainwork
 
         // By default assume that the signatures in ancestors of this block are valid.
-        consensus.defaultAssumeValid = uint256S("ox6fb0b649723f51b67484019409fef94d077f17c8d88645e08c000b2e4fd3e28a"); // block hash for 421457
+        consensus.defaultAssumeValid = uint256S(
+                "ox6fb0b649723f51b67484019409fef94d077f17c8d88645e08c000b2e4fd3e28a"); // block hash for 421457
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.
@@ -239,18 +242,20 @@ public:
         genesis = CreateGenesisBlock(1614369600, 1130, 0x20001fff, 4, 5000 * COIN);
         VerifyGenesisPOW(genesis);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0xb79e5df07278b9567ada8fc655ffbfa9d3f586dc38da3dd93053686f41caeea0"));
-        assert(genesis.hashMerkleRoot == uint256S("0x87a48bc22468acdd72ee540aab7c086a5bbcddc12b51c6ac925717a74c269453"));
+        assert(consensus.hashGenesisBlock ==
+               uint256S("0xb79e5df07278b9567ada8fc655ffbfa9d3f586dc38da3dd93053686f41caeea0"));
+        assert(genesis.hashMerkleRoot ==
+               uint256S("0x87a48bc22468acdd72ee540aab7c086a5bbcddc12b51c6ac925717a74c269453"));
 
         vSeeds.emplace_back("lbdn.raptoreum.com");
         vSeeds.emplace_back("51.89.21.112");
 
         // Raptoreum addresses start with 'r'
-        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,60);
+        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1, 60);
         // Raptoreum script addresses start with '7'
-        base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,16);
+        base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1, 16);
         // Raptoreum private keys start with '7' or 'X'
-        base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,128);
+        base58Prefixes[SECRET_KEY] = std::vector<unsigned char>(1, 128);
         // Raptoreum BIP32 pubkeys start with 'xpub' (Bitcoin defaults)
         base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x88, 0xB2, 0x1E};
         // Raptoreum BIP32 prvkeys start with 'xprv' (Bitcoin defaults)
@@ -262,20 +267,21 @@ public:
 //        	std::cout << "mainnet is disable" << endl;
 //        	exit(0);
 //        }
-        std::vector<FounderRewardStructure> rewardStructures = {  {INT_MAX, 5} };// 5% founder/dev fee forever
+        std::vector <FounderRewardStructure> rewardStructures = {{INT_MAX, 5}};// 5% founder/dev fee forever
         consensus.nFounderPayment = FounderPayment(rewardStructures, 250);
         consensus.nCollaterals = SmartnodeCollaterals(
-          { {88720, 600000 * COIN},
-            {132720, 800000 * COIN},
-            {176720, 1000000 * COIN},
-            {220720, 1250000 * COIN},
-            {264720, 1500000 * COIN},
-            {INT_MAX, 1800000 * COIN}
-          },
-          { {5761, 0}, {INT_MAX, 20} }
+                {{88720,   600000 * COIN},
+                 {132720,  800000 * COIN},
+                 {176720,  1000000 * COIN},
+                 {220720,  1250000 * COIN},
+                 {264720,  1500000 * COIN},
+                 {INT_MAX, 1800000 * COIN}
+                },
+                {{5761,    0},
+                 {INT_MAX, 20}}
         );
         //FutureRewardShare defaultShare(0.8,0.2,0.0);
-        consensus.nFutureRewardShare = Consensus::FutureRewardShare(0.8,0.2,0.0);
+        consensus.nFutureRewardShare = Consensus::FutureRewardShare(0.8, 0.2, 0.0);
 
         vFixedSeeds = std::vector<SeedSpec6>(pnSeed6_main, pnSeed6_main + ARRAYLEN(pnSeed6_main));
 
@@ -299,26 +305,26 @@ public:
 
         nPoolMinParticipants = 3;
         nPoolMaxParticipants = 20;
-        nFulfilledRequestExpireTime = 60*60; // fulfilled requests expire in 1 hour
+        nFulfilledRequestExpireTime = 60 * 60; // fulfilled requests expire in 1 hour
 
         vSporkAddresses = {"RWGvGpd3yJdnfh9ziyHNDEoHMJBvnZ23zK"};
         nMinSporkKeys = 1;
         fBIP9CheckSmartnodesUpgraded = true;
 
         checkpointData = {
-          {  {5145, uint256S("0x64c9cc82f05f4326e49fd4b21a48494b02b12a707de67a47c7e8e1102b0f1d9b")},
-             {35000, uint256S("0xb4fb191f3ef4141557aef8aafa700d312e5499cbde4a3079faa78cf58c0c414f")},
-             {61900, uint256S("0xc146fc6244fe4d71559f4fef16a386f1fceda6e5efa3da3ca1ebe9806cc8f25c")},
-             {394273, uint256S("0dc274a28864a01a9539e60afdbc38fcdb0f000fbc52553cd31651c97557dc04")}
+                {{5145, uint256S("0x64c9cc82f05f4326e49fd4b21a48494b02b12a707de67a47c7e8e1102b0f1d9b")},
+                 {35000, uint256S("0xb4fb191f3ef4141557aef8aafa700d312e5499cbde4a3079faa78cf58c0c414f")},
+                 {61900, uint256S("0xc146fc6244fe4d71559f4fef16a386f1fceda6e5efa3da3ca1ebe9806cc8f25c")},
+                 {394273, uint256S("0dc274a28864a01a9539e60afdbc38fcdb0f000fbc52553cd31651c97557dc04")}
 
-          }
+                }
         };
 
         chainTxData = ChainTxData{
-            1662608883,   // * UNIX timestamp of last known number of transactions (Block 0)
-            2091922,   // * total number of transactions between genesis and that timestamp
-                        //   (the tx=... number in the SetBestChain debug.log lines)
-            0.06    // * estimated number of transactions per second after that timestamp
+                1662608883,   // * UNIX timestamp of last known number of transactions (Block 0)
+                2091922,   // * total number of transactions between genesis and that timestamp
+                //   (the tx=... number in the SetBestChain debug.log lines)
+                0.06    // * estimated number of transactions per second after that timestamp
         };
     }
 };
@@ -354,7 +360,8 @@ public:
         consensus.BIP147Enabled = true;
         consensus.DIP0008Enabled = true;
         // consensus.DIP0003EnforcementHeight = 7300;
-        consensus.powLimit = uint256S("00ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 20
+        consensus.powLimit = uint256S(
+                "00ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 20
         consensus.nPowTargetTimespan = 24 * 60 * 60; // Raptoreum: 1 day
         consensus.nPowTargetSpacing = 60; // Raptoreum: 1 minutes
         consensus.fPowAllowMinDifficultyBlocks = true;
@@ -394,8 +401,10 @@ public:
         VerifyGenesisPOW(genesis);
 
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x16b418c4e84599ba61836085c5b780c199f90c207f7de189cbb56803e87529eb"));
-        assert(genesis.hashMerkleRoot == uint256S("0x87a48bc22468acdd72ee540aab7c086a5bbcddc12b51c6ac925717a74c269453"));
+        assert(consensus.hashGenesisBlock ==
+               uint256S("0x16b418c4e84599ba61836085c5b780c199f90c207f7de189cbb56803e87529eb"));
+        assert(genesis.hashMerkleRoot ==
+               uint256S("0x87a48bc22468acdd72ee540aab7c086a5bbcddc12b51c6ac925717a74c269453"));
 
         vFixedSeeds.clear();
         vFixedSeeds = std::vector<SeedSpec6>(pnSeed6_test, pnSeed6_test + ARRAYLEN(pnSeed6_test));
@@ -406,11 +415,11 @@ public:
         vSeeds.emplace_back("lbdn.raptoreum.com");
 
         // Testnet Raptoreum addresses start with 'r'
-        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,123);
+        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1, 123);
         // Testnet Raptoreum script addresses start with '8' or '9'
-        base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,19);
+        base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1, 19);
         // Testnet private keys start with '9' or 'c' (Bitcoin defaults)
-        base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,239);
+        base58Prefixes[SECRET_KEY] = std::vector<unsigned char>(1, 239);
         // Testnet Raptoreum BIP32 pubkeys start with 'tpub' (Bitcoin defaults)
         base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x35, 0x87, 0xCF};
         // Testnet Raptoreum BIP32 prvkeys start with 'tprv' (Bitcoin defaults)
@@ -431,12 +440,12 @@ public:
         consensus.llmqTypePlatform = Consensus::LLMQ_100_67;
 
         consensus.nCollaterals = SmartnodeCollaterals(
-          {  {INT_MAX, 60000 * COIN}  },
-          {  {INT_MAX, 20}  });
+                {{INT_MAX, 60000 * COIN}},
+                {{INT_MAX, 20}});
 
-        consensus.nFutureRewardShare = Consensus::FutureRewardShare(0.8,0.2,0.0);
+        consensus.nFutureRewardShare = Consensus::FutureRewardShare(0.8, 0.2, 0.0);
 
-        std::vector<FounderRewardStructure> rewardStructures = {  {INT_MAX, 5}  };// 5% founder/dev fee forever
+        std::vector <FounderRewardStructure> rewardStructures = {{INT_MAX, 5}};// 5% founder/dev fee forever
         consensus.nFounderPayment = FounderPayment(rewardStructures, 200, "rghjACzPtVAN2wydgDbn9Jq1agREu6rH1e");
 
         fDefaultConsistencyChecks = false;
@@ -452,23 +461,23 @@ public:
 
         nPoolMinParticipants = 2;
         nPoolMaxParticipants = 20;
-        nFulfilledRequestExpireTime = 5*60; // fulfilled requests expire in 5 minutes
+        nFulfilledRequestExpireTime = 5 * 60; // fulfilled requests expire in 5 minutes
 
         vSporkAddresses = {"rsqc2caFRG6myRdzKipP4PpVW9LnFaG7CH"};
         nMinSporkKeys = 1;
         fBIP9CheckSmartnodesUpgraded = true;
 
         checkpointData = {
-            {
+                {
 
-            }
+                }
         };
 
         chainTxData = ChainTxData{
-            1645942755, // * UNIX timestamp of last known number of transactions (Block 213054)
-            0,    // * total number of transactions between genesis and that timestamp
-                        //   (the tx=... number in the SetBestChain debug.log lines)
-            0.01        // * estimated number of transactions per second after that timestamp
+                1645942755, // * UNIX timestamp of last known number of transactions (Block 213054)
+                0,    // * total number of transactions between genesis and that timestamp
+                //   (the tx=... number in the SetBestChain debug.log lines)
+                0.01        // * estimated number of transactions per second after that timestamp
         };
 
     }
@@ -479,7 +488,7 @@ public:
  */
 class CDevNetParams : public CChainParams {
 public:
-    explicit CDevNetParams(const ArgsManager& args) {
+    explicit CDevNetParams(const ArgsManager &args) {
         strNetworkID = CBaseChainParams::DEVNET;
         consensus.nSubsidyHalvingInterval = 210240;
         consensus.nSmartnodePaymentsStartBlock = 4010; // not true, but it's ok as long as it's less then nSmartnodePaymentsIncreaseBlock
@@ -505,7 +514,8 @@ public:
         consensus.DIP0003Enabled = true; // DIP0003 activated immediately on devnet
         consensus.DIP0008Enabled = true;// DIP0008 activated immediately on devnet
         // consensus.DIP0003EnforcementHeight = 2; // DIP0003 activated immediately on devnet
-        consensus.powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 1
+        consensus.powLimit = uint256S(
+                "7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 1
         consensus.nPowTargetTimespan = 24 * 60 * 60; // Raptoreum: 1 day
         consensus.nPowTargetSpacing = 2 * 60; // Raptoreum: 2 minutes
         consensus.fPowAllowMinDifficultyBlocks = false;
@@ -548,12 +558,14 @@ public:
         VerifyGenesisPOW(genesis);
         consensus.hashGenesisBlock = genesis.GetHash();
 //      std::cout << "hash: " << consensus.hashGenesisBlock.ToString() << std::endl;
-        assert(consensus.hashGenesisBlock == uint256S("0x99f1aeb781d780f51aee4247b23eb91d561f6fb8c9e761a9f1ebc72212b4ebf0"));
-        assert(genesis.hashMerkleRoot == uint256S("0xe87a48bc22468acdd72ee540aab7c086a5bbcddc12b51c6ac925717a74c269453"));
+        assert(consensus.hashGenesisBlock ==
+               uint256S("0x99f1aeb781d780f51aee4247b23eb91d561f6fb8c9e761a9f1ebc72212b4ebf0"));
+        assert(genesis.hashMerkleRoot ==
+               uint256S("0xe87a48bc22468acdd72ee540aab7c086a5bbcddc12b51c6ac925717a74c269453"));
 
-        consensus.nFutureRewardShare = Consensus::FutureRewardShare(0.8,0.2,0.0);
+        consensus.nFutureRewardShare = Consensus::FutureRewardShare(0.8, 0.2, 0.0);
 
-        std::vector<FounderRewardStructure> rewardStructures = {  {INT_MAX, 5}  };// 5% founder/dev fee forever
+        std::vector <FounderRewardStructure> rewardStructures = {{INT_MAX, 5}};// 5% founder/dev fee forever
         consensus.nFounderPayment = FounderPayment(rewardStructures, 200, "yaackz5YDLnFuuX6gGzEs9EMRQGfqmNYjc");
 
 
@@ -562,11 +574,11 @@ public:
         //vSeeds.push_back(CDNSSeedData("raptoreumevo.org",  "devnet-seed.raptoreumevo.org"));
 
         // Testnet Raptoreum addresses start with 'y'
-        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,140);
+        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1, 140);
         // Testnet Raptoreum script addresses start with '8' or '9'
-        base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,19);
+        base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1, 19);
         // Testnet private keys start with '9' or 'c' (Bitcoin defaults)
-        base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,239);
+        base58Prefixes[SECRET_KEY] = std::vector<unsigned char>(1, 239);
         // Testnet Raptoreum BIP32 pubkeys start with 'tpub' (Bitcoin defaults)
         base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x35, 0x87, 0xCF};
         // Testnet Raptoreum BIP32 prvkeys start with 'tprv' (Bitcoin defaults)
@@ -599,7 +611,7 @@ public:
 
         nPoolMinParticipants = 2;
         nPoolMaxParticipants = 20;
-        nFulfilledRequestExpireTime = 5*60; // fulfilled requests expire in 5 minutes
+        nFulfilledRequestExpireTime = 5 * 60; // fulfilled requests expire in 5 minutes
 
         // privKey: cVpnZj4dZvRXmBf7Jze1GjpLQb25iKP92GDXUsKdUJTXhXRo2RFA
         vSporkAddresses = {"yaackz5YDLnFuuX6gGzEs9EMRQGfqmNYjc"};
@@ -608,35 +620,36 @@ public:
         fBIP9CheckSmartnodesUpgraded = false;
 
         checkpointData = (CCheckpointData) {
-            {
-                { 0, uint256S("0x99f1aeb781d780f51aee4247b23eb91d561f6fb8c9e761a9f1ebc72212b4ebf0")},
-            }
+                {
+                        {0, uint256S("0x99f1aeb781d780f51aee4247b23eb91d561f6fb8c9e761a9f1ebc72212b4ebf0")},
+                }
         };
 
         chainTxData = ChainTxData{
-            
+
         };
     }
 
-    void UpdateDevnetSubsidyAndDiffParameters(int nMinimumDifficultyBlocks, int nHighSubsidyBlocks, int nHighSubsidyFactor)
-    {
+    void
+    UpdateDevnetSubsidyAndDiffParameters(int nMinimumDifficultyBlocks, int nHighSubsidyBlocks, int nHighSubsidyFactor) {
         consensus.nMinimumDifficultyBlocks = nMinimumDifficultyBlocks;
         consensus.nHighSubsidyBlocks = nHighSubsidyBlocks;
         consensus.nHighSubsidyFactor = nHighSubsidyFactor;
     }
-    void UpdateDevnetSubsidyAndDiffParametersFromArgs(const ArgsManager& args);
 
-    void UpdateDevnetLLMQChainLocks(Consensus::LLMQType llmqType)
-    {
+    void UpdateDevnetSubsidyAndDiffParametersFromArgs(const ArgsManager &args);
+
+    void UpdateDevnetLLMQChainLocks(Consensus::LLMQType llmqType) {
         consensus.llmqTypeChainLocks = llmqType;
     }
-    void UpdateDevnetLLMQChainLocksFromArgs(const ArgsManager& args);
 
-    void UpdateDevnetLLMQInstantSend(Consensus::LLMQType llmqType)
-    {
+    void UpdateDevnetLLMQChainLocksFromArgs(const ArgsManager &args);
+
+    void UpdateDevnetLLMQInstantSend(Consensus::LLMQType llmqType) {
         consensus.llmqTypeInstantSend = llmqType;
     }
-    void UpdateDevnetLLMQInstantSendFromArgs(const ArgsManager& args);
+
+    void UpdateDevnetLLMQInstantSendFromArgs(const ArgsManager &args);
 };
 
 /**
@@ -644,7 +657,7 @@ public:
  */
 class CRegTestParams : public CChainParams {
 public:
-    explicit CRegTestParams(const ArgsManager& args) {
+    explicit CRegTestParams(const ArgsManager &args) {
         strNetworkID = CBaseChainParams::REGTEST;
         consensus.nSubsidyHalvingInterval = 150;
         consensus.nSmartnodePaymentsStartBlock = 240;
@@ -669,8 +682,9 @@ public:
         consensus.DIP0001Enabled = true;
         consensus.DIP0003Enabled = true;
         consensus.DIP0008Enabled = true;
-       // consensus.DIP0003EnforcementHeight = 500;
-        consensus.powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 1
+        // consensus.DIP0003EnforcementHeight = 500;
+        consensus.powLimit = uint256S(
+                "7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 1
         consensus.nPowTargetTimespan = 24 * 60 * 60; // Raptoreum: 1 day
         consensus.nPowTargetSpacing = 2 * 60; // Raptoreum: 2 minutes
         consensus.nMinimumDifficultyBlocks = 2000;
@@ -701,8 +715,9 @@ public:
         consensus.defaultAssumeValid = uint256S("0x00");
 
         consensus.nCollaterals = SmartnodeCollaterals(
-          {   {INT_MAX, 10 * COIN}  },
-          {  {240, 0}, {INT_MAX, 20} });
+                {{INT_MAX, 10 * COIN}},
+                {{240,     0},
+                 {INT_MAX, 20}});
 
         pchMessageStart[0] = 0xfc;
         pchMessageStart[1] = 0xc1;
@@ -719,9 +734,11 @@ public:
         genesis = CreateGenesisBlock(1614369600, 2, 0x207fffff, 4, 5000 * COIN);
         VerifyGenesisPOW(genesis);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x485491468e03c8ac23dd38f70fc1cda9f98cbd0bf58945e2da6c94c2a2d8b044"));
-        assert(genesis.hashMerkleRoot == uint256S("0x87a48bc22468acdd72ee540aab7c086a5bbcddc12b51c6ac925717a74c269453"));
-        consensus.nFutureRewardShare = Consensus::FutureRewardShare(0.8,0.2,0.0);
+        assert(consensus.hashGenesisBlock ==
+               uint256S("0x485491468e03c8ac23dd38f70fc1cda9f98cbd0bf58945e2da6c94c2a2d8b044"));
+        assert(genesis.hashMerkleRoot ==
+               uint256S("0x87a48bc22468acdd72ee540aab7c086a5bbcddc12b51c6ac925717a74c269453"));
+        consensus.nFutureRewardShare = Consensus::FutureRewardShare(0.8, 0.2, 0.0);
 
         vFixedSeeds.clear(); //!< Regtest mode doesn't have any fixed seeds.
         vSeeds.clear();      //!< Regtest mode doesn't have any DNS seeds.
@@ -735,7 +752,7 @@ public:
         nLLMQConnectionRetryTimeout = 1; // must be lower then the LLMQ signing session timeout so that tests have control over failing behavior
         m_is_mockable_chain = true;
 
-        nFulfilledRequestExpireTime = 5*60; // fulfilled requests expire in 5 minutes
+        nFulfilledRequestExpireTime = 5 * 60; // fulfilled requests expire in 5 minutes
         nPoolMinParticipants = 2;
         nPoolNewMinParticipants = 2;
         nPoolMaxParticipants = 5;
@@ -746,27 +763,27 @@ public:
         nMinSporkKeys = 1;
         // regtest usually has no smartnodes in most tests, so don't check for upgraged MNs
         fBIP9CheckSmartnodesUpgraded = false;
-        std::vector<FounderRewardStructure> rewardStructures = {  {INT_MAX, 5}  };// 5% founder/dev fee forever
+        std::vector <FounderRewardStructure> rewardStructures = {{INT_MAX, 5}};// 5% founder/dev fee forever
         consensus.nFounderPayment = FounderPayment(rewardStructures, 500, "yaackz5YDLnFuuX6gGzEs9EMRQGfqmNYjc");
 
         checkpointData = {
-            {
-                {0, uint256S("b79e5df07278b9567ada8fc655ffbfa9d3f586dc38da3dd93053686f41caeea0")},
-            }
+                {
+                        {0, uint256S("b79e5df07278b9567ada8fc655ffbfa9d3f586dc38da3dd93053686f41caeea0")},
+                }
         };
 
         chainTxData = ChainTxData{
-            0,
-            0,
-            0
+                0,
+                0,
+                0
         };
 
         // Regtest Raptoreum addresses start with 'y'
-        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,140);
+        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1, 140);
         // Regtest Raptoreum script addresses start with '8' or '9'
-        base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,19);
+        base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1, 19);
         // Regtest private keys start with '9' or 'c' (Bitcoin defaults)
-        base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,239);
+        base58Prefixes[SECRET_KEY] = std::vector<unsigned char>(1, 239);
         // Regtest Raptoreum BIP32 pubkeys start with 'tpub' (Bitcoin defaults)
         base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x35, 0x87, 0xCF};
         // Regtest Raptoreum BIP32 prvkeys start with 'tprv' (Bitcoin defaults)
@@ -776,7 +793,7 @@ public:
         nExtCoinType = 1;
 
         // long living quorum params
-		consensus.llmqs[Consensus::LLMQ_50_60] = Consensus::llmq50_60;
+        consensus.llmqs[Consensus::LLMQ_50_60] = Consensus::llmq50_60;
         consensus.llmqs[Consensus::LLMQ_400_60] = Consensus::llmq400_60;
         consensus.llmqs[Consensus::LLMQ_400_85] = Consensus::llmq400_85;
         consensus.llmqs[Consensus::LLMQ_100_67] = Consensus::llmq100_67_testnet;
@@ -785,8 +802,9 @@ public:
         consensus.llmqTypePlatform = Consensus::LLMQ_100_67;
     }
 
-    void UpdateVersionBitsParameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout, int64_t nWindowSize, int64_t nThresholdStart, int64_t nThresholdMin, int64_t nFalloffCoeff)
-    {
+    void
+    UpdateVersionBitsParameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout, int64_t nWindowSize,
+                                int64_t nThresholdStart, int64_t nThresholdMin, int64_t nFalloffCoeff) {
         consensus.vDeployments[d].nStartTime = nStartTime;
         consensus.vDeployments[d].nTimeout = nTimeout;
         if (nWindowSize != -1) {
@@ -802,29 +820,30 @@ public:
             consensus.vDeployments[d].nFalloffCoeff = nFalloffCoeff;
         }
     }
-    void UpdateVersionBitsParametersFromArgs(const ArgsManager& args);
 
-    void UpdateBudgetParameters(int nSmartnodePaymentsStartBlock, int nBudgetPaymentsStartBlock, int nSuperblockStartBlock)
-    {
+    void UpdateVersionBitsParametersFromArgs(const ArgsManager &args);
+
+    void
+    UpdateBudgetParameters(int nSmartnodePaymentsStartBlock, int nBudgetPaymentsStartBlock, int nSuperblockStartBlock) {
         consensus.nSmartnodePaymentsStartBlock = nSmartnodePaymentsStartBlock;
         consensus.nBudgetPaymentsStartBlock = nBudgetPaymentsStartBlock;
         consensus.nSuperblockStartBlock = nSuperblockStartBlock;
     }
-    void UpdateBudgetParametersFromArgs(const ArgsManager& args);
+
+    void UpdateBudgetParametersFromArgs(const ArgsManager &args);
 };
 
-void CRegTestParams::UpdateVersionBitsParametersFromArgs(const ArgsManager& args)
-{
+void CRegTestParams::UpdateVersionBitsParametersFromArgs(const ArgsManager &args) {
     if (!args.IsArgSet("-vbparams")) return;
 
-    for (const std::string& strDeployment : args.GetArgs("-vbparams")) {
-        std::vector<std::string> vDeploymentParams;
+    for (const std::string &strDeployment: args.GetArgs("-vbparams")) {
+        std::vector <std::string> vDeploymentParams;
         boost::split(vDeploymentParams, strDeployment, boost::is_any_of(":"));
         if (vDeploymentParams.size() != 3 && vDeploymentParams.size() != 5 && vDeploymentParams.size() != 7) {
             throw std::runtime_error("Version bits parameters malformed, expecting "
-                    "<deployment>:<start>:<end> or "
-                    "<deployment>:<start>:<end>:<window>:<threshold> or "
-                    "<deployment>:<start>:<end>:<window>:<thresholdstart>:<thresholdmin>:<falloffcoeff>");
+                                     "<deployment>:<start>:<end> or "
+                                     "<deployment>:<start>:<end>:<window>:<threshold> or "
+                                     "<deployment>:<start>:<end>:<window>:<thresholdstart>:<thresholdmin>:<falloffcoeff>");
         }
         int64_t nStartTime, nTimeout, nWindowSize = -1, nThresholdStart = -1, nThresholdMin = -1, nFalloffCoeff = -1;
         if (!ParseInt64(vDeploymentParams[1], &nStartTime)) {
@@ -850,12 +869,15 @@ void CRegTestParams::UpdateVersionBitsParametersFromArgs(const ArgsManager& args
             }
         }
         bool found = false;
-        for (int j = 0; j < (int)Consensus::MAX_VERSION_BITS_DEPLOYMENTS; ++j) {
+        for (int j = 0; j < (int) Consensus::MAX_VERSION_BITS_DEPLOYMENTS; ++j) {
             if (vDeploymentParams[0] == VersionBitsDeploymentInfo[j].name) {
-                UpdateVersionBitsParameters(Consensus::DeploymentPos(j), nStartTime, nTimeout, nWindowSize, nThresholdStart, nThresholdMin, nFalloffCoeff);
+                UpdateVersionBitsParameters(Consensus::DeploymentPos(j), nStartTime, nTimeout, nWindowSize,
+                                            nThresholdStart, nThresholdMin, nFalloffCoeff);
                 found = true;
-                LogPrintf("Setting version bits activation parameters for %s to start=%ld, timeout=%ld, window=%ld, thresholdstart=%ld, thresholdmin=%ld, falloffcoeff=%ld\n",
-                          vDeploymentParams[0], nStartTime, nTimeout, nWindowSize, nThresholdStart, nThresholdMin, nFalloffCoeff);
+                LogPrintf(
+                        "Setting version bits activation parameters for %s to start=%ld, timeout=%ld, window=%ld, thresholdstart=%ld, thresholdmin=%ld, falloffcoeff=%ld\n",
+                        vDeploymentParams[0], nStartTime, nTimeout, nWindowSize, nThresholdStart, nThresholdMin,
+                        nFalloffCoeff);
                 break;
             }
         }
@@ -865,12 +887,11 @@ void CRegTestParams::UpdateVersionBitsParametersFromArgs(const ArgsManager& args
     }
 }
 
-void CRegTestParams::UpdateBudgetParametersFromArgs(const ArgsManager& args)
-{
+void CRegTestParams::UpdateBudgetParametersFromArgs(const ArgsManager &args) {
     if (!args.IsArgSet("-budgetparams")) return;
 
     std::string strParams = args.GetArg("-budgetparams", "");
-    std::vector<std::string> vParams;
+    std::vector <std::string> vParams;
     boost::split(vParams, strParams, boost::is_any_of(":"));
     if (vParams.size() != 3) {
         throw std::runtime_error("Budget parameters malformed, expecting <masternode>:<budget>:<superblock>");
@@ -885,29 +906,33 @@ void CRegTestParams::UpdateBudgetParametersFromArgs(const ArgsManager& args)
     if (!ParseInt32(vParams[2], &nSuperblockStartBlock)) {
         throw std::runtime_error(strprintf("Invalid superblock start height (%s)", vParams[2]));
     }
-    LogPrintf("Setting budget parameters to smartnode=%ld, budget=%ld, superblock=%ld\n", nSmartnodePaymentsStartBlock, nBudgetPaymentsStartBlock, nSuperblockStartBlock);
+    LogPrintf("Setting budget parameters to smartnode=%ld, budget=%ld, superblock=%ld\n", nSmartnodePaymentsStartBlock,
+              nBudgetPaymentsStartBlock, nSuperblockStartBlock);
     UpdateBudgetParameters(nSmartnodePaymentsStartBlock, nBudgetPaymentsStartBlock, nSuperblockStartBlock);
 }
 
-void CDevNetParams::UpdateDevnetSubsidyAndDiffParametersFromArgs(const ArgsManager& args)
-{
-    if (!args.IsArgSet("-minimumdifficultyblocks") && !args.IsArgSet("-highsubsidyblocks") && !args.IsArgSet("-highsubsidyfactor")) return;
+void CDevNetParams::UpdateDevnetSubsidyAndDiffParametersFromArgs(const ArgsManager &args) {
+    if (!args.IsArgSet("-minimumdifficultyblocks") && !args.IsArgSet("-highsubsidyblocks") &&
+        !args.IsArgSet("-highsubsidyfactor"))
+        return;
 
     int nMinimumDifficultyBlocks = gArgs.GetArg("-minimumdifficultyblocks", consensus.nMinimumDifficultyBlocks);
     int nHighSubsidyBlocks = gArgs.GetArg("-highsubsidyblocks", consensus.nHighSubsidyBlocks);
     int nHighSubsidyFactor = gArgs.GetArg("-highsubsidyfactor", consensus.nHighSubsidyFactor);
-    LogPrintf("Setting minimumdifficultyblocks=%ld, highsubsidyblocks=%ld, highsubsidyfactor=%ld\n", nMinimumDifficultyBlocks, nHighSubsidyBlocks, nHighSubsidyFactor);
+    LogPrintf("Setting minimumdifficultyblocks=%ld, highsubsidyblocks=%ld, highsubsidyfactor=%ld\n",
+              nMinimumDifficultyBlocks, nHighSubsidyBlocks, nHighSubsidyFactor);
     UpdateDevnetSubsidyAndDiffParameters(nMinimumDifficultyBlocks, nHighSubsidyBlocks, nHighSubsidyFactor);
 }
 
-void CDevNetParams::UpdateDevnetLLMQChainLocksFromArgs(const ArgsManager& args)
+void CDevNetParams::UpdateDevnetLLMQChainLocksFromArgs(const ArgsManager &args)
 // void UpdateBudgetParameters(int nSmartnodePaymentsStartBlock, int nBudgetPaymentsStartBlock, int nSuperblockStartBlock)
 {
     if (!args.IsArgSet("-llmqchainlocks")) return;
 
-    std::string strLLMQType = gArgs.GetArg("-llmqchainlocks", std::string(consensus.llmqs.at(consensus.llmqTypeChainLocks).name));
+    std::string strLLMQType = gArgs.GetArg("-llmqchainlocks",
+                                           std::string(consensus.llmqs.at(consensus.llmqTypeChainLocks).name));
     Consensus::LLMQType llmqType = Consensus::LLMQ_NONE;
-    for (const auto& p : consensus.llmqs) {
+    for (const auto &p: consensus.llmqs) {
         if (p.second.name == strLLMQType) {
             llmqType = p.first;
         }
@@ -919,13 +944,13 @@ void CDevNetParams::UpdateDevnetLLMQChainLocksFromArgs(const ArgsManager& args)
     UpdateDevnetLLMQChainLocks(llmqType);
 }
 
-void CDevNetParams::UpdateDevnetLLMQInstantSendFromArgs(const ArgsManager& args)
-{
+void CDevNetParams::UpdateDevnetLLMQInstantSendFromArgs(const ArgsManager &args) {
     if (!args.IsArgSet("-llmqinstantsend")) return;
 
-    std::string strLLMQType = gArgs.GetArg("-llmqinstantsend", std::string(consensus.llmqs.at(consensus.llmqTypeInstantSend).name));
+    std::string strLLMQType = gArgs.GetArg("-llmqinstantsend",
+                                           std::string(consensus.llmqs.at(consensus.llmqTypeInstantSend).name));
     Consensus::LLMQType llmqType = Consensus::LLMQ_NONE;
-    for (const auto& p : consensus.llmqs) {
+    for (const auto &p: consensus.llmqs) {
         if (p.second.name == strLLMQType) {
             llmqType = p.first;
         }
@@ -942,8 +967,7 @@ const CChainParams &Params() {
     return *globalChainParams;
 }
 
-std::unique_ptr<CChainParams> CreateChainParams(const std::string& chain)
-{
+std::unique_ptr <CChainParams> CreateChainParams(const std::string &chain) {
     if (chain == CBaseChainParams::MAIN)
         return std::make_unique<CMainParams>();
     else if (chain == CBaseChainParams::TESTNET)
@@ -956,17 +980,16 @@ std::unique_ptr<CChainParams> CreateChainParams(const std::string& chain)
     throw std::runtime_error(strprintf("%s: Unknown chain %s.", __func__, chain));
 }
 
-void SelectParams(const std::string& network)
-{
+void SelectParams(const std::string &network) {
     SelectBaseParams(network);
     globalChainParams = CreateChainParams(network);
 }
 
 void UpdateLLMQParams(size_t totalMnCount, int height, bool lowLLMQParams) {
-	globalChainParams->UpdateLLMQParams(totalMnCount, height, lowLLMQParams);
+    globalChainParams->UpdateLLMQParams(totalMnCount, height, lowLLMQParams);
 }
-bool IsMiningPhase(const Consensus::LLMQParams& params, int nHeight)
-{
+
+bool IsMiningPhase(const Consensus::LLMQParams &params, int nHeight) {
     int phaseIndex = nHeight % params.dkgInterval;
     if (phaseIndex >= params.dkgMiningWindowStart && phaseIndex <= params.dkgMiningWindowEnd) {
         return true;
@@ -975,7 +998,7 @@ bool IsMiningPhase(const Consensus::LLMQParams& params, int nHeight)
 }
 
 bool IsLLMQsMiningPhase(int nHeight) {
-    for (auto& it : globalChainParams->GetConsensus().llmqs) {
+    for (auto &it: globalChainParams->GetConsensus().llmqs) {
         if (IsMiningPhase(it.second, nHeight)) {
             return true;
         }
@@ -985,37 +1008,39 @@ bool IsLLMQsMiningPhase(int nHeight) {
 
 void CChainParams::UpdateLLMQParams(size_t totalMnCount, int height, bool lowLLMQParams) {
     bool isNotLLMQsMiningPhase;
-    if(lastCheckHeight < height && (lastCheckMnCount != totalMnCount || lastCheckedLowLLMQParams != lowLLMQParams) && (isNotLLMQsMiningPhase = !IsLLMQsMiningPhase(height))) {
-        LogPrintf("---UpdateLLMQParams %d-%d-%ld-%ld-%d\n", lastCheckHeight, height, lastCheckMnCount, totalMnCount, isNotLLMQsMiningPhase);
+    if (lastCheckHeight < height && (lastCheckMnCount != totalMnCount || lastCheckedLowLLMQParams != lowLLMQParams) &&
+        (isNotLLMQsMiningPhase = !IsLLMQsMiningPhase(height))) {
+        LogPrintf("---UpdateLLMQParams %d-%d-%ld-%ld-%d\n", lastCheckHeight, height, lastCheckMnCount, totalMnCount,
+                  isNotLLMQsMiningPhase);
         lastCheckMnCount = totalMnCount;
-		lastCheckedLowLLMQParams = lowLLMQParams;
-		lastCheckHeight = height;
-        bool isTestNet = strcmp(Params().NetworkIDString().c_str(),"test") == 0;
-		if(totalMnCount < 5) {
-			consensus.llmqs[Consensus::LLMQ_50_60] = Consensus::llmq3_60;
-			if(isTestNet) {
-				consensus.llmqs[Consensus::LLMQ_400_60] = Consensus::llmq5_60;
-				consensus.llmqs[Consensus::LLMQ_400_85] = Consensus::llmq5_85;
-			} else {
-				consensus.llmqs[Consensus::LLMQ_400_60] = Consensus::llmq20_60;
-				consensus.llmqs[Consensus::LLMQ_400_85] = Consensus::llmq20_85;
-			}
-		} else if((totalMnCount < 80 && isTestNet) ||  (totalMnCount < 100 && !isTestNet)) {
-			consensus.llmqs[Consensus::LLMQ_50_60] = Consensus::llmq10_60;
-			consensus.llmqs[Consensus::LLMQ_400_60] = Consensus::llmq20_60;
-			consensus.llmqs[Consensus::LLMQ_400_85] = Consensus::llmq20_85;
-		}  else if((totalMnCount < 4000 && isTestNet) || (totalMnCount < 600 && !isTestNet)) {
-			consensus.llmqs[Consensus::LLMQ_50_60] = Consensus::llmq50_60;
-			consensus.llmqs[Consensus::LLMQ_400_60] = Consensus::llmq40_60;
-			consensus.llmqs[Consensus::LLMQ_400_85] = Consensus::llmq40_85;
-		} else {
-			consensus.llmqs[Consensus::LLMQ_50_60] = Consensus::llmq50_60;
-			consensus.llmqs[Consensus::LLMQ_400_60] = Consensus::llmq400_60;
-			consensus.llmqs[Consensus::LLMQ_400_85] = Consensus::llmq400_85;
-		}
-		if(lowLLMQParams) {
-			consensus.llmqs[Consensus::LLMQ_50_60] = Consensus::llmq200_2;
-		}
-	}
+        lastCheckedLowLLMQParams = lowLLMQParams;
+        lastCheckHeight = height;
+        bool isTestNet = strcmp(Params().NetworkIDString().c_str(), "test") == 0;
+        if (totalMnCount < 5) {
+            consensus.llmqs[Consensus::LLMQ_50_60] = Consensus::llmq3_60;
+            if (isTestNet) {
+                consensus.llmqs[Consensus::LLMQ_400_60] = Consensus::llmq5_60;
+                consensus.llmqs[Consensus::LLMQ_400_85] = Consensus::llmq5_85;
+            } else {
+                consensus.llmqs[Consensus::LLMQ_400_60] = Consensus::llmq20_60;
+                consensus.llmqs[Consensus::LLMQ_400_85] = Consensus::llmq20_85;
+            }
+        } else if ((totalMnCount < 80 && isTestNet) || (totalMnCount < 100 && !isTestNet)) {
+            consensus.llmqs[Consensus::LLMQ_50_60] = Consensus::llmq10_60;
+            consensus.llmqs[Consensus::LLMQ_400_60] = Consensus::llmq20_60;
+            consensus.llmqs[Consensus::LLMQ_400_85] = Consensus::llmq20_85;
+        } else if ((totalMnCount < 4000 && isTestNet) || (totalMnCount < 600 && !isTestNet)) {
+            consensus.llmqs[Consensus::LLMQ_50_60] = Consensus::llmq50_60;
+            consensus.llmqs[Consensus::LLMQ_400_60] = Consensus::llmq40_60;
+            consensus.llmqs[Consensus::LLMQ_400_85] = Consensus::llmq40_85;
+        } else {
+            consensus.llmqs[Consensus::LLMQ_50_60] = Consensus::llmq50_60;
+            consensus.llmqs[Consensus::LLMQ_400_60] = Consensus::llmq400_60;
+            consensus.llmqs[Consensus::LLMQ_400_85] = Consensus::llmq400_85;
+        }
+        if (lowLLMQParams) {
+            consensus.llmqs[Consensus::LLMQ_50_60] = Consensus::llmq200_2;
+        }
+    }
 
 }

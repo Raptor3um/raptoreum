@@ -30,18 +30,16 @@
 #include <QVBoxLayout>
 
 /** "Help message" or "About" dialog box */
-HelpMessageDialog::HelpMessageDialog(interfaces::Node& node, QWidget *parent, HelpMode helpMode) :
-    QDialog(parent),
-    ui(new Ui::HelpMessageDialog)
-{
+HelpMessageDialog::HelpMessageDialog(interfaces::Node &node, QWidget *parent, HelpMode helpMode) :
+        QDialog(parent),
+        ui(new Ui::HelpMessageDialog) {
     ui->setupUi(this);
 
     GUIUtil::updateFonts();
 
     QString version = QString{PACKAGE_NAME} + " " + tr("version") + " " + QString::fromStdString(FormatFullVersion());
 
-    if (helpMode == about)
-    {
+    if (helpMode == about) {
         setWindowTitle(tr("About %1").arg(PACKAGE_NAME));
 
         std::string licenseInfo = LicenseInfo();
@@ -51,7 +49,8 @@ HelpMessageDialog::HelpMessageDialog(interfaces::Node& node, QWidget *parent, He
         // Make URLs clickable
         QRegExp uri("<(.*)>", Qt::CaseSensitive, QRegExp::RegExp2);
         uri.setMinimal(true); // use non-greedy matching
-        licenseInfoHTML.replace(uri, QString("<a style=\"%1\"href=\"\\1\">\\1</a>").arg(GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_COMMAND)));
+        licenseInfoHTML.replace(uri, QString("<a style=\"%1\"href=\"\\1\">\\1</a>").arg(
+                GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_COMMAND)));
         // Replace newlines with HTML breaks
         licenseInfoHTML.replace("\n", "<br>");
 
@@ -77,7 +76,7 @@ HelpMessageDialog::HelpMessageDialog(interfaces::Node& node, QWidget *parent, He
         QTextTableFormat tf;
         tf.setBorderStyle(QTextFrameFormat::BorderStyle_None);
         tf.setCellPadding(2);
-        QVector<QTextLength> widths;
+        QVector <QTextLength> widths;
         widths << QTextLength(QTextLength::PercentageLength, 35);
         widths << QTextLength(QTextLength::PercentageLength, 65);
         tf.setColumnWidthConstraints(widths);
@@ -85,16 +84,15 @@ HelpMessageDialog::HelpMessageDialog(interfaces::Node& node, QWidget *parent, He
         QTextCharFormat bold;
         bold.setFontWeight(QFont::Bold);
 
-        for (const QString &line : coreOptions.split("\n")) {
-            if (line.startsWith("  -"))
-            {
+        for (const QString &line: coreOptions.split("\n")) {
+            if (line.startsWith("  -")) {
                 cursor.currentTable()->appendRows(1);
                 cursor.movePosition(QTextCursor::PreviousCell);
                 cursor.movePosition(QTextCursor::NextRow);
                 cursor.insertText(line.trimmed());
                 cursor.movePosition(QTextCursor::NextCell);
             } else if (line.startsWith("   ")) {
-                cursor.insertText(line.trimmed()+' ');
+                cursor.insertText(line.trimmed() + ' ');
             } else if (line.size() > 0) {
                 //Title of a group
                 if (cursor.currentTable())
@@ -139,29 +137,26 @@ This means those 1000 addresses last for about 100 mixing events. When 900 of th
 It can only do this, however, if you have automatic backups enabled.<br> \
 Consequently, users who have backups disabled will also have %1 disabled. <hr>\
 For more information, see the <a style=\"%2\" href=\"%3\">%1 documentation</a>."
-        )
-        .arg(strCoinJoinName)
-        .arg(GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_COMMAND))
-        .arg("https://docs.dash.org/en/stable/wallets/dashcore/coinjoin-instantsend.html")
+                                  )
+                                          .arg(strCoinJoinName)
+                                          .arg(GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_COMMAND))
+                                          .arg("https://docs.dash.org/en/stable/wallets/dashcore/coinjoin-instantsend.html")
         );
         ui->aboutMessage->setWordWrap(true);
         ui->helpMessage->setVisible(false);
     }
 }
 
-HelpMessageDialog::~HelpMessageDialog()
-{
+HelpMessageDialog::~HelpMessageDialog() {
     delete ui;
 }
 
-void HelpMessageDialog::printToConsole()
-{
+void HelpMessageDialog::printToConsole() {
     // On other operating systems, the expected action is to print the message to the console.
     tfm::format(std::cout, "%s\n", qPrintable(text));
 }
 
-void HelpMessageDialog::showOrPrint()
-{
+void HelpMessageDialog::showOrPrint() {
 #if defined(WIN32)
     // On Windows, show a message box, as there is no stderr/stdout in windowed applications
     exec();
@@ -171,28 +166,25 @@ void HelpMessageDialog::showOrPrint()
 #endif
 }
 
-void HelpMessageDialog::on_okButton_accepted()
-{
+void HelpMessageDialog::on_okButton_accepted() {
     close();
 }
 
 
 /** "Shutdown" window */
-ShutdownWindow::ShutdownWindow(interfaces::Node& node, QWidget *parent, Qt::WindowFlags f) : QWidget(parent, f)
-{
+ShutdownWindow::ShutdownWindow(interfaces::Node &node, QWidget *parent, Qt::WindowFlags f) : QWidget(parent, f) {
     setObjectName("ShutdownWindow");
 
     QVBoxLayout *layout = new QVBoxLayout();
     layout->addWidget(new QLabel(
-        tr("%1 is shutting down...").arg(PACKAGE_NAME) + "<br /><br />" +
-        tr("Do not shut down the computer until this window disappears.")));
+            tr("%1 is shutting down...").arg(PACKAGE_NAME) + "<br /><br />" +
+            tr("Do not shut down the computer until this window disappears.")));
     setLayout(layout);
 
     GUIUtil::updateFonts();
 }
 
-QWidget *ShutdownWindow::showShutdownWindow(interfaces::Node& node, BitcoinGUI *window)
-{
+QWidget *ShutdownWindow::showShutdownWindow(interfaces::Node &node, BitcoinGUI *window) {
     if (!window)
         return nullptr;
 
@@ -207,7 +199,6 @@ QWidget *ShutdownWindow::showShutdownWindow(interfaces::Node& node, BitcoinGUI *
     return shutdownWindow;
 }
 
-void ShutdownWindow::closeEvent(QCloseEvent *event)
-{
+void ShutdownWindow::closeEvent(QCloseEvent *event) {
     event->ignore();
 }

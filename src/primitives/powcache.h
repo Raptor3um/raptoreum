@@ -13,67 +13,71 @@
 
 extern RecursiveMutex cs_pow;
 
-class CPowCache : public unordered_lru_cache<uint256, uint256, std::hash<uint256>>
+class CPowCache : public unordered_lru_cache<uint256, uint256, std::hash < uint256>>
+
 {
 private:
-    static CPowCache* instance;
-    static const int CURRENT_VERSION = 1;
+static CPowCache *instance;
+static const int CURRENT_VERSION = 1;
 
-    int nVersion;
-    int nLoadedSize;
-    int nMaxLoadSize;
-    bool bValidate;
-    RecursiveMutex cs;
+int nVersion;
+int nLoadedSize;
+int nMaxLoadSize;
+bool bValidate;
+RecursiveMutex cs;
 
 public:
-    static CPowCache& Instance();
 
-    CPowCache(int maxSize = DEFAULT_POW_CACHE_SIZE, bool validate = DEFAULT_VALIDATE_POW_CACHE, int maxLoadSize = DEFAULT_MAX_LOAD_SIZE);
-    virtual ~CPowCache();
+static CPowCache &Instance();
 
-    void Clear();
-    void CheckAndRemove();
-    bool IsValidate() const { return bValidate; }
-    void DoMaintenance();
+CPowCache(int maxSize = DEFAULT_POW_CACHE_SIZE, bool validate = DEFAULT_VALIDATE_POW_CACHE,
+          int maxLoadSize = DEFAULT_MAX_LOAD_SIZE);
 
-    std::string ToString() const;
+virtual ~
 
-    ADD_POWCACHE_METHOD
+CPowCache();
 
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
-    {
-        LOCK(cs);
-        READWRITE(nVersion);
+void Clear();
 
-        uint64_t cacheSize = (uint64_t)cacheMap.size();
-        READWRITE(COMPACTSIZE(cacheSize));
+void CheckAndRemove();
 
-        if (ser_action.ForRead())
-        {
-            uint256 headerHash;
-            uint256 powHash;
-            for (int i = 0; i < cacheSize; ++i)
-            {
-                READWRITE(headerHash);
-                READWRITE(powHash);
-                insert(headerHash, powHash);
-            }
-            nVersion = CURRENT_VERSION;
-            nLoadedSize = cacheMap.size();
+bool IsValidate() const { return bValidate; }
+
+void DoMaintenance();
+
+std::string ToString() const;
+
+ADD_POWCACHE_METHOD
+
+template<typename Stream, typename Operation>
+inline void SerializationOp(Stream &s, Operation ser_action) {
+    LOCK(cs);
+    READWRITE(nVersion);
+
+    uint64_t cacheSize = (uint64_t) cacheMap.size();
+    READWRITE(COMPACTSIZE(cacheSize));
+
+    if (ser_action.ForRead()) {
+        uint256 headerHash;
+        uint256 powHash;
+        for (int i = 0; i < cacheSize; ++i) {
+            READWRITE(headerHash);
+            READWRITE(powHash);
+            insert(headerHash, powHash);
         }
-        else
-        {
-            for (auto it = cacheMap.begin(); it != cacheMap.end(); ++it)
-            {
-                uint256 headerHash = it->first;
-                uint256 powHash    = it->second.first;
-                READWRITE(headerHash);
-                READWRITE(powHash);
-            };
-            nLoadedSize = cacheMap.size();
-        }
+        nVersion = CURRENT_VERSION;
+        nLoadedSize = cacheMap.size();
+    } else {
+        for (auto it = cacheMap.begin(); it != cacheMap.end(); ++it) {
+            uint256 headerHash = it->first;
+            uint256 powHash = it->second.first;
+            READWRITE(headerHash);
+            READWRITE(powHash);
+        };
+        nLoadedSize = cacheMap.size();
     }
+}
+
 };
 
 #endif // BITCOIN_POWCACHE_H

@@ -13,29 +13,28 @@
 
 #include <boost/test/unit_test.hpp>
 
-BOOST_FIXTURE_TEST_SUITE(coinjoin_tests, BasicTestingSetup)
+BOOST_FIXTURE_TEST_SUITE(coinjoin_tests, BasicTestingSetup
+)
 
 BOOST_AUTO_TEST_CASE(coinjoin_collateral_tests)
-{
-    // Good collateral values
+        {
+                // Good collateral values
 
-    BOOST_CHECK(CCoinJoin::IsCollateralAmount(0.10000000 * COIN));
-    BOOST_CHECK(CCoinJoin::IsCollateralAmount(0.12345678 * COIN));
-    BOOST_CHECK(CCoinJoin::IsCollateralAmount(0.32123212 * COIN));
-    BOOST_CHECK(CCoinJoin::IsCollateralAmount(0.19000000 * COIN));
+                BOOST_CHECK(CCoinJoin::IsCollateralAmount(0.10000000 * COIN));
+        BOOST_CHECK(CCoinJoin::IsCollateralAmount(0.12345678 * COIN));
+        BOOST_CHECK(CCoinJoin::IsCollateralAmount(0.32123212 * COIN));
+        BOOST_CHECK(CCoinJoin::IsCollateralAmount(0.19000000 * COIN));
 
-    // Bad collateral values
-    BOOST_CHECK(!CCoinJoin::IsCollateralAmount(0.09999999 * COIN));
-    BOOST_CHECK(!CCoinJoin::IsCollateralAmount(0.40001000 * COIN));
-    BOOST_CHECK(!CCoinJoin::IsCollateralAmount(1.00000000 * COIN));
-    BOOST_CHECK(!CCoinJoin::IsCollateralAmount(1.00001000 * COIN));
-}
+        // Bad collateral values
+        BOOST_CHECK(!CCoinJoin::IsCollateralAmount(0.09999999 * COIN));
+        BOOST_CHECK(!CCoinJoin::IsCollateralAmount(0.40001000 * COIN));
+        BOOST_CHECK(!CCoinJoin::IsCollateralAmount(1.00000000 * COIN));
+        BOOST_CHECK(!CCoinJoin::IsCollateralAmount(1.00001000 * COIN));
+        }
 
-class CTransactionBuilderTestSetup : public TestChain100Setup
-{
+class CTransactionBuilderTestSetup : public TestChain100Setup {
 public:
-    CTransactionBuilderTestSetup()
-    {
+    CTransactionBuilderTestSetup() {
         CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
         NodeContext node;
         chain = interfaces::MakeChain(node);
@@ -49,21 +48,21 @@ public:
             wallet->SetLastBlockProcessed(::ChainActive().Height(), ::ChainActive().Tip()->GetBlockHash());
             WalletRescanReserver reserver(wallet.get());
             reserver.reserve();
-            CWallet::ScanResult result = wallet->ScanForWalletTransactions(::ChainActive().Genesis()->GetBlockHash(), {} /* stop_block */, reserver, true /* fUpdate */);
+            CWallet::ScanResult result = wallet->ScanForWalletTransactions(::ChainActive().Genesis()->GetBlockHash(),
+                                                                           {} /* stop_block */, reserver,
+                                                                           true /* fUpdate */);
             BOOST_CHECK_EQUAL(result.status, CWallet::ScanResult::SUCCESS);
         }
     }
 
-    ~CTransactionBuilderTestSetup()
-    {
+    ~CTransactionBuilderTestSetup() {
         RemoveWallet(wallet);
     }
 
-    std::shared_ptr<interfaces::Chain> chain;
-    std::shared_ptr<CWallet> wallet;
+    std::shared_ptr <interfaces::Chain> chain;
+    std::shared_ptr <CWallet> wallet;
 
-    CWalletTx& AddTxToChain(uint256 nTxHash)
-    {
+    CWalletTx &AddTxToChain(uint256 nTxHash) {
         auto it = wallet->mapWallet.find(nTxHash);
         assert(it != wallet->mapWallet.end());
         CMutableTransaction blocktx;
@@ -74,12 +73,13 @@ public:
         CreateAndProcessBlock({blocktx}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
         LOCK2(wallet->cs_wallet, cs_main);
         wallet->SetLastBlockProcessed(::ChainActive().Height(), ::ChainActive().Tip()->GetBlockHash());
-        CWalletTx::Confirmation confirm(CWalletTx::Status::CONFIRMED, ::ChainActive().Height(), ::ChainActive().Tip()->GetBlockHash(), 1);
+        CWalletTx::Confirmation confirm(CWalletTx::Status::CONFIRMED, ::ChainActive().Height(),
+                                        ::ChainActive().Tip()->GetBlockHash(), 1);
         it->second.m_confirm = confirm;
         return it->second;
     }
-    CompactTallyItem GetTallyItem(const std::vector<CAmount>& vecAmounts)
-    {
+
+    CompactTallyItem GetTallyItem(const std::vector <CAmount> &vecAmounts) {
         CompactTallyItem tallyItem;
         CTransactionRef tx;
         CReserveKey destKey(wallet.get());
@@ -90,9 +90,9 @@ public:
         CPubKey pubKey;
         BOOST_CHECK(destKey.GetReservedKey(pubKey, false));
         tallyItem.txdest = pubKey.GetID();
-        for (CAmount nAmount : vecAmounts)
-        {
-            BOOST_CHECK(wallet->CreateTransaction({{GetScriptForDestination(tallyItem.txdest), nAmount, false}}, tx, nFeeRet, nChangePosRet, strError, coinControl));
+        for (CAmount nAmount: vecAmounts) {
+            BOOST_CHECK(wallet->CreateTransaction({{GetScriptForDestination(tallyItem.txdest), nAmount, false}}, tx,
+                                                  nFeeRet, nChangePosRet, strError, coinControl));
             {
                 LOCK2(wallet->cs_wallet, cs_main);
                 wallet->CommitTransaction(tx, {}, {});
@@ -113,92 +113,219 @@ public:
     }
 };
 
-BOOST_FIXTURE_TEST_CASE(CTransactionBuilderTest, CTransactionBuilderTestSetup)
+BOOST_FIXTURE_TEST_CASE(CTransactionBuilderTest, CTransactionBuilderTestSetup
+)
 {
-    // NOTE: Mock wallet version is FEATURE_BASE which means that it uses uncompressed pubkeys
-    // (65 bytes instead of 33 bytes), so CTxIn size is 180 bytes, not 148 bytes as one might expect.
-    // Each output is 34 bytes, vin and vout compact sizes are 1 byte each.
-    // Therefore base size (i.e. for a tx with 1 input, 0 outputs) is expected to be
-    // 4(n32bitVersion) + 1(vin size) + 180(vin[0]) + 1(vout size) + 4(nLockTime) = 190 bytes.
+// NOTE: Mock wallet version is FEATURE_BASE which means that it uses uncompressed pubkeys
+// (65 bytes instead of 33 bytes), so CTxIn size is 180 bytes, not 148 bytes as one might expect.
+// Each output is 34 bytes, vin and vout compact sizes are 1 byte each.
+// Therefore base size (i.e. for a tx with 1 input, 0 outputs) is expected to be
+// 4(n32bitVersion) + 1(vin size) + 180(vin[0]) + 1(vout size) + 4(nLockTime) = 190 bytes.
 
-    minRelayTxFee = CFeeRate(DEFAULT_MIN_RELAY_TX_FEE);
-    // Tests with single outpoint tallyItem
-    {
-        CompactTallyItem tallyItem = GetTallyItem({5000});
-        CTransactionBuilder txBuilder(wallet, tallyItem);
+minRelayTxFee = CFeeRate(DEFAULT_MIN_RELAY_TX_FEE);
+// Tests with single outpoint tallyItem
+{
+CompactTallyItem tallyItem = GetTallyItem({5000});
+CTransactionBuilder txBuilder(wallet, tallyItem);
 
-        BOOST_CHECK_EQUAL(txBuilder.CountOutputs(), 0);
-        BOOST_CHECK_EQUAL(txBuilder.GetAmountInitial(), tallyItem.nAmount);
-        BOOST_CHECK_EQUAL(txBuilder.GetAmountLeft(), 4810);         // 5000 - 190
+BOOST_CHECK_EQUAL(txBuilder
+.
 
-        BOOST_CHECK(txBuilder.CouldAddOutput(4776));                // 4810 - 34
-        BOOST_CHECK(!txBuilder.CouldAddOutput(4777));
+CountOutputs(),
 
-        BOOST_CHECK(txBuilder.CouldAddOutput(0));
-        BOOST_CHECK(!txBuilder.CouldAddOutput(-1));
+0);
+BOOST_CHECK_EQUAL(txBuilder
+.
 
-        BOOST_CHECK(txBuilder.CouldAddOutputs({1000, 1000, 2708})); // (4810 - 34 * 3) split in 3 outputs
-        BOOST_CHECK(!txBuilder.CouldAddOutputs({1000, 1000, 2709}));
+GetAmountInitial(), tallyItem
 
-        BOOST_CHECK_EQUAL(txBuilder.AddOutput(5000), nullptr);
-        BOOST_CHECK_EQUAL(txBuilder.AddOutput(-1), nullptr);
+.nAmount);
+BOOST_CHECK_EQUAL(txBuilder
+.
 
-        CTransactionBuilderOutput* output = txBuilder.AddOutput();
-        BOOST_CHECK(output->UpdateAmount(txBuilder.GetAmountLeft()));
-        BOOST_CHECK(output->UpdateAmount(1));
-        BOOST_CHECK(output->UpdateAmount(output->GetAmount() + txBuilder.GetAmountLeft()));
-        BOOST_CHECK(!output->UpdateAmount(output->GetAmount() + 1));
-        BOOST_CHECK(!output->UpdateAmount(0));
-        BOOST_CHECK(!output->UpdateAmount(-1));
-        BOOST_CHECK_EQUAL(txBuilder.CountOutputs(), 1);
+GetAmountLeft(),
 
-        std::string strResult;
-        BOOST_CHECK(txBuilder.Commit(strResult));
-        CWalletTx& wtx = AddTxToChain(uint256S(strResult));
-        BOOST_CHECK_EQUAL(wtx.tx->vout.size(), txBuilder.CountOutputs()); // should have no change output
-        BOOST_CHECK_EQUAL(wtx.tx->vout[0].nValue, output->GetAmount());
-        BOOST_CHECK(wtx.tx->vout[0].scriptPubKey == output->GetScript());
-    }
-    // Tests with multiple outpoint tallyItem
-    {
-        CompactTallyItem tallyItem = GetTallyItem({10000, 20000, 30000, 40000, 50000});
-        CTransactionBuilder txBuilder(wallet, tallyItem);
-        std::vector<CTransactionBuilderOutput*> vecOutputs;
-        std::string strResult;
+4810);         // 5000 - 190
 
-        auto output = txBuilder.AddOutput(100);
-        BOOST_CHECK(output != nullptr);
-        BOOST_CHECK(!txBuilder.Commit(strResult));
+BOOST_CHECK(txBuilder
+.CouldAddOutput(4776));                // 4810 - 34
+BOOST_CHECK(!txBuilder.CouldAddOutput(4777));
 
-        if (output != nullptr) {
-            output->UpdateAmount(1000);
-            vecOutputs.push_back(output);
-        }
-        while (vecOutputs.size() < 100) {
-            output = txBuilder.AddOutput(1000 + vecOutputs.size());
-            if (output == nullptr) {
-                break;
-            }
-            vecOutputs.push_back(output);
-        }
-        BOOST_CHECK_EQUAL(vecOutputs.size(), 100);
-        BOOST_CHECK_EQUAL(txBuilder.CountOutputs(), vecOutputs.size());
-        BOOST_CHECK(txBuilder.Commit(strResult));
-        CWalletTx& wtx = AddTxToChain(uint256S(strResult));
-        BOOST_CHECK_EQUAL(wtx.tx->vout.size(), txBuilder.CountOutputs() + 1); // should have change output
-        for (const auto& out : wtx.tx->vout) {
-            auto it = std::find_if(vecOutputs.begin(), vecOutputs.end(), [&](CTransactionBuilderOutput* output) -> bool {
-                return output->GetAmount() == out.nValue && output->GetScript() == out.scriptPubKey;
-            });
-            if (it != vecOutputs.end()) {
-                vecOutputs.erase(it);
-            } else {
-                // change output
-                BOOST_CHECK_EQUAL(txBuilder.GetAmountLeft() - 34, out.nValue);
-            }
-        }
-        BOOST_CHECK(vecOutputs.size() == 0);
-    }
+BOOST_CHECK(txBuilder
+.CouldAddOutput(0));
+BOOST_CHECK(!txBuilder.CouldAddOutput(-1));
+
+BOOST_CHECK(txBuilder
+.CouldAddOutputs({
+1000, 1000, 2708})); // (4810 - 34 * 3) split in 3 outputs
+BOOST_CHECK(!txBuilder.CouldAddOutputs({
+1000, 1000, 2709}));
+
+BOOST_CHECK_EQUAL(txBuilder
+.AddOutput(5000), nullptr);
+BOOST_CHECK_EQUAL(txBuilder
+.AddOutput(-1), nullptr);
+
+CTransactionBuilderOutput *output = txBuilder.AddOutput();
+BOOST_CHECK(output
+->
+UpdateAmount(txBuilder
+.
+
+GetAmountLeft()
+
+));
+BOOST_CHECK(output
+->UpdateAmount(1));
+BOOST_CHECK(output
+->
+UpdateAmount(output
+->
+
+GetAmount()
+
++ txBuilder.
+
+GetAmountLeft()
+
+));
+BOOST_CHECK(!output->
+UpdateAmount(output
+->
+
+GetAmount()
+
++ 1));
+BOOST_CHECK(!output->UpdateAmount(0));
+BOOST_CHECK(!output->UpdateAmount(-1));
+BOOST_CHECK_EQUAL(txBuilder
+.
+
+CountOutputs(),
+
+1);
+
+std::string strResult;
+BOOST_CHECK(txBuilder
+.
+Commit(strResult)
+);
+CWalletTx &wtx = AddTxToChain(uint256S(strResult));
+BOOST_CHECK_EQUAL(wtx
+.tx->vout.
+
+size(), txBuilder
+
+.
+
+CountOutputs()
+
+); // should have no change output
+BOOST_CHECK_EQUAL(wtx
+.tx->vout[0].nValue, output->
+
+GetAmount()
+
+);
+BOOST_CHECK(wtx
+.tx->vout[0].scriptPubKey == output->
+
+GetScript()
+
+);
+}
+// Tests with multiple outpoint tallyItem
+{
+CompactTallyItem tallyItem = GetTallyItem({10000, 20000, 30000, 40000, 50000});
+CTransactionBuilder txBuilder(wallet, tallyItem);
+std::vector<CTransactionBuilderOutput *> vecOutputs;
+std::string strResult;
+
+auto output = txBuilder.AddOutput(100);
+BOOST_CHECK(output
+!= nullptr);
+BOOST_CHECK(!txBuilder.
+Commit(strResult)
+);
+
+if (output != nullptr) {
+output->UpdateAmount(1000);
+vecOutputs.
+push_back(output);
+}
+while (vecOutputs.
+
+size()
+
+< 100) {
+output = txBuilder.AddOutput(1000 + vecOutputs.size());
+if (output == nullptr) {
+break;
+}
+vecOutputs.
+push_back(output);
+}
+BOOST_CHECK_EQUAL(vecOutputs
+.
+
+size(),
+
+100);
+BOOST_CHECK_EQUAL(txBuilder
+.
+
+CountOutputs(), vecOutputs
+
+.
+
+size()
+
+);
+BOOST_CHECK(txBuilder
+.
+Commit(strResult)
+);
+CWalletTx &wtx = AddTxToChain(uint256S(strResult));
+BOOST_CHECK_EQUAL(wtx
+.tx->vout.
+
+size(), txBuilder
+
+.
+
+CountOutputs()
+
++ 1); // should have change output
+for (
+const auto &out
+: wtx.tx->vout) {
+auto it = std::find_if(vecOutputs.begin(), vecOutputs.end(), [&](CTransactionBuilderOutput *output) -> bool {
+    return output->GetAmount() == out.nValue && output->GetScript() == out.scriptPubKey;
+});
+if (it != vecOutputs.
+
+end()
+
+) {
+vecOutputs.
+erase(it);
+} else {
+// change output
+BOOST_CHECK_EQUAL(txBuilder
+.
+
+GetAmountLeft()
+
+- 34, out.nValue);
+}
+}
+BOOST_CHECK(vecOutputs
+.
+
+size()
+
+== 0);
+}
 }
 
 BOOST_AUTO_TEST_SUITE_END()

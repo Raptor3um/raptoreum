@@ -13,15 +13,24 @@
 #include <map>
 
 class CSmartnodePayments;
+
 class CBlock;
+
 class CTransaction;
+
 struct CMutableTransaction;
+
 class CTxOut;
 
 /// TODO: all 4 functions do not belong here really, they should be refactored/moved somewhere (main.cpp ?)
-bool IsBlockValueValid(const CBlock& block, int nBlockHeight, CAmount blockReward, std::string& strErrorRet);
-bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight, CAmount blockReward, CAmount specialTxFees);
-void FillBlockPayments(CMutableTransaction& txNew, int nBlockHeight, CAmount blockReward, std::vector<CTxOut>& voutSmartnodePaymentsRet, std::vector<CTxOut>& voutSuperblockPaymentsRet, CAmount specialTxFees = 0);
+bool IsBlockValueValid(const CBlock &block, int nBlockHeight, CAmount blockReward, std::string &strErrorRet);
+
+bool IsBlockPayeeValid(const CTransaction &txNew, int nBlockHeight, CAmount blockReward, CAmount specialTxFees);
+
+void FillBlockPayments(CMutableTransaction &txNew, int nBlockHeight, CAmount blockReward,
+                       std::vector <CTxOut> &voutSmartnodePaymentsRet, std::vector <CTxOut> &voutSuperblockPaymentsRet,
+                       CAmount specialTxFees = 0);
+
 std::map<int, std::string> GetRequiredPaymentsStrings(int nStartHeight, int nEndHeight);
 
 extern CSmartnodePayments mnpayments;
@@ -31,13 +40,17 @@ extern CSmartnodePayments mnpayments;
 // Keeps track of who should get paid for which blocks
 //
 
-class CSmartnodePayments
-{
+class CSmartnodePayments {
 public:
-    static bool GetBlockTxOuts(int nBlockHeight, CAmount blockReward, std::vector<CTxOut>& voutSmartnodePaymentsRet, CAmount specialTxFee);
-    static bool IsTransactionValid(const CTransaction& txNew, int nBlockHeight, CAmount blockReward, CAmount specialTxFee);
+    static bool GetBlockTxOuts(int nBlockHeight, CAmount blockReward, std::vector <CTxOut> &voutSmartnodePaymentsRet,
+                               CAmount specialTxFee);
 
-    static bool GetSmartnodeTxOuts(int nBlockHeight, CAmount blockReward, std::vector<CTxOut>& voutSmartnodePaymentsRet, CAmount specialTxFee);
+    static bool
+    IsTransactionValid(const CTransaction &txNew, int nBlockHeight, CAmount blockReward, CAmount specialTxFee);
+
+    static bool
+    GetSmartnodeTxOuts(int nBlockHeight, CAmount blockReward, std::vector <CTxOut> &voutSmartnodePaymentsRet,
+                       CAmount specialTxFee);
 };
 
 #endif // BITCOIN_SMARTNODE_SMARTNODE_PAYMENTS_H

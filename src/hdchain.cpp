@@ -9,12 +9,12 @@
 #include <tinyformat.h>
 #include <util/system.h>
 #include <util/strencodings.h>
+
 #ifdef ENABLE_WALLET
 #include <wallet/walletdb.h>
 #endif
 
-bool CHDChain::SetNull()
-{
+bool CHDChain::SetNull() {
     LOCK(cs);
     nVersion = CURRENT_VERSION;
     id = uint256();
@@ -26,58 +26,54 @@ bool CHDChain::SetNull()
     return IsNull();
 }
 
-bool CHDChain::IsNull() const
-{
+bool CHDChain::IsNull() const {
     LOCK(cs);
     return vchSeed.empty() || id == uint256();
 }
 
-void CHDChain::SetCrypted(bool fCryptedIn)
-{
+void CHDChain::SetCrypted(bool fCryptedIn) {
     LOCK(cs);
     fCrypted = fCryptedIn;
 }
 
-bool CHDChain::IsCrypted() const
-{
+bool CHDChain::IsCrypted() const {
     LOCK(cs);
     return fCrypted;
 }
 
-void CHDChain::Debug(const std::string& strName) const
-{
+void CHDChain::Debug(const std::string &strName) const {
     DBG(
-        LOCK(cs);
-        std::cout << __func__ << ": ---" << strName << "---" << std::endl;
-        if (fCrypted) {
-            std::cout << "mnemonic: ***CRYPTED***" << std::endl;
-            std::cout << "mnemonicpassphrase: ***CRYPTED***" << std::endl;
-            std::cout << "seed: ***CRYPTED***" << std::endl;
-        } else {
-            std::cout << "mnemonic: " << std::string(vchMnemonic.begin(), vchMnemonic.end()).c_str() << std::endl;
-            std::cout << "mnemonicpassphrase: " << std::string(vchMnemonicPassphrase.begin(), vchMnemonicPassphrase.end()).c_str() << std::endl;
-            std::cout << "seed: " << HexStr(vchSeed).c_str() << std::endl;
+            LOCK(cs);
+    std::cout << __func__ << ": ---" << strName << "---" << std::endl;
+    if (fCrypted) {
+        std::cout << "mnemonic: ***CRYPTED***" << std::endl;
+        std::cout << "mnemonicpassphrase: ***CRYPTED***" << std::endl;
+        std::cout << "seed: ***CRYPTED***" << std::endl;
+    } else {
+        std::cout << "mnemonic: " << std::string(vchMnemonic.begin(), vchMnemonic.end()).c_str() << std::endl;
+        std::cout << "mnemonicpassphrase: "
+                  << std::string(vchMnemonicPassphrase.begin(), vchMnemonicPassphrase.end()).c_str() << std::endl;
+        std::cout << "seed: " << HexStr(vchSeed).c_str() << std::endl;
 
-            CExtKey extkey;
-            extkey.SetSeed(vchSeed.data(), vchSeed.size());
+        CExtKey extkey;
+        extkey.SetSeed(vchSeed.data(), vchSeed.size());
 
-            std::cout << "extended private masterkey: " << EncodeExtKey(extkey).c_str() << std::endl;
+        std::cout << "extended private masterkey: " << EncodeExtKey(extkey).c_str() << std::endl;
 
-            CExtPubKey extpubkey;
-            extpubkey = extkey.Neuter();
+        CExtPubKey extpubkey;
+        extpubkey = extkey.Neuter();
 
-            std::cout << "extended public masterkey: " << EncodeExtPubKey(extpubkey).c_str() << std::endl;
-        }
+        std::cout << "extended public masterkey: " << EncodeExtPubKey(extpubkey).c_str() << std::endl;
+    }
     );
 }
 
-bool CHDChain::SetMnemonic(const SecureVector& vchMnemonic, const SecureVector& vchMnemonicPassphrase, bool fUpdateID)
-{
-    return SetMnemonic(SecureString(vchMnemonic.begin(), vchMnemonic.end()), SecureString(vchMnemonicPassphrase.begin(), vchMnemonicPassphrase.end()), fUpdateID);
+bool CHDChain::SetMnemonic(const SecureVector &vchMnemonic, const SecureVector &vchMnemonicPassphrase, bool fUpdateID) {
+    return SetMnemonic(SecureString(vchMnemonic.begin(), vchMnemonic.end()),
+                       SecureString(vchMnemonicPassphrase.begin(), vchMnemonicPassphrase.end()), fUpdateID);
 }
 
-bool CHDChain::SetMnemonic(const SecureString& ssMnemonic, const SecureString& ssMnemonicPassphrase, bool fUpdateID)
-{
+bool CHDChain::SetMnemonic(const SecureString &ssMnemonic, const SecureString &ssMnemonicPassphrase, bool fUpdateID) {
     LOCK(cs);
     SecureString ssMnemonicTmp = ssMnemonic;
 
@@ -87,7 +83,8 @@ bool CHDChain::SetMnemonic(const SecureString& ssMnemonic, const SecureString& s
             return false;
 
         if (ssMnemonicPassphrase.size() > 256) {
-            throw std::runtime_error(std::string(__func__) + ": Mnemonic passphrase is too long, must be at most 256 characters");
+            throw std::runtime_error(
+                    std::string(__func__) + ": Mnemonic passphrase is too long, must be at most 256 characters");
         }
 
         // empty mnemonic i.e. "generate a new one"
@@ -98,7 +95,8 @@ bool CHDChain::SetMnemonic(const SecureString& ssMnemonic, const SecureString& s
 
         // printf("mnemonic: %s\n", ssMnemonicTmp.c_str());
         if (!CMnemonic::Check(ssMnemonicTmp)) {
-            throw std::runtime_error(std::string(__func__) + ": invalid mnemonic: `" + std::string(ssMnemonicTmp.c_str()) + "`");
+            throw std::runtime_error(
+                    std::string(__func__) + ": invalid mnemonic: `" + std::string(ssMnemonicTmp.c_str()) + "`");
         }
 
         CMnemonic::ToSeed(ssMnemonicTmp, ssMnemonicPassphrase, vchSeed);
@@ -111,8 +109,7 @@ bool CHDChain::SetMnemonic(const SecureString& ssMnemonic, const SecureString& s
     return !IsNull();
 }
 
-bool CHDChain::GetMnemonic(SecureVector& vchMnemonicRet, SecureVector& vchMnemonicPassphraseRet) const
-{
+bool CHDChain::GetMnemonic(SecureVector &vchMnemonicRet, SecureVector &vchMnemonicPassphraseRet) const {
     LOCK(cs);
     // mnemonic was not set, fail
     if (vchMnemonic.empty())
@@ -123,8 +120,7 @@ bool CHDChain::GetMnemonic(SecureVector& vchMnemonicRet, SecureVector& vchMnemon
     return true;
 }
 
-bool CHDChain::GetMnemonic(SecureString& ssMnemonicRet, SecureString& ssMnemonicPassphraseRet) const
-{
+bool CHDChain::GetMnemonic(SecureString &ssMnemonicRet, SecureString &ssMnemonicPassphraseRet) const {
     LOCK(cs);
     // mnemonic was not set, fail
     if (vchMnemonic.empty())
@@ -136,8 +132,7 @@ bool CHDChain::GetMnemonic(SecureString& ssMnemonicRet, SecureString& ssMnemonic
     return true;
 }
 
-bool CHDChain::SetSeed(const SecureVector& vchSeedIn, bool fUpdateID)
-{
+bool CHDChain::SetSeed(const SecureVector &vchSeedIn, bool fUpdateID) {
     LOCK(cs);
     vchSeed = vchSeedIn;
 
@@ -148,20 +143,18 @@ bool CHDChain::SetSeed(const SecureVector& vchSeedIn, bool fUpdateID)
     return !IsNull();
 }
 
-SecureVector CHDChain::GetSeed() const
-{
+SecureVector CHDChain::GetSeed() const {
     LOCK(cs);
     return vchSeed;
 }
 
-uint256 CHDChain::GetSeedHash()
-{
+uint256 CHDChain::GetSeedHash() {
     LOCK(cs);
     return Hash(vchSeed.begin(), vchSeed.end());
 }
 
-void CHDChain::DeriveChildExtKey(uint32_t nAccountIndex, bool fInternal, uint32_t nChildIndex, CExtKey& extKeyRet, CKeyMetadata& metadata)
-{
+void CHDChain::DeriveChildExtKey(uint32_t nAccountIndex, bool fInternal, uint32_t nChildIndex, CExtKey &extKeyRet,
+                                 CKeyMetadata &metadata) {
     LOCK(cs);
     // Use BIP44 keypath scheme i.e. m / purpose' / coin_type' / account' / change / address_index
     CExtKey masterKey;              //hd master key
@@ -200,14 +193,12 @@ void CHDChain::DeriveChildExtKey(uint32_t nAccountIndex, bool fInternal, uint32_
 #endif
 }
 
-void CHDChain::AddAccount()
-{
+void CHDChain::AddAccount() {
     LOCK(cs);
     mapAccounts.insert(std::pair<uint32_t, CHDAccount>(mapAccounts.size(), CHDAccount()));
 }
 
-bool CHDChain::GetAccount(uint32_t nAccountIndex, CHDAccount& hdAccountRet)
-{
+bool CHDChain::GetAccount(uint32_t nAccountIndex, CHDAccount &hdAccountRet) {
     LOCK(cs);
     if (nAccountIndex > mapAccounts.size() - 1)
         return false;
@@ -215,8 +206,7 @@ bool CHDChain::GetAccount(uint32_t nAccountIndex, CHDAccount& hdAccountRet)
     return true;
 }
 
-bool CHDChain::SetAccount(uint32_t nAccountIndex, const CHDAccount& hdAccount)
-{
+bool CHDChain::SetAccount(uint32_t nAccountIndex, const CHDAccount &hdAccount) {
     LOCK(cs);
     // can only replace existing accounts
     if (nAccountIndex > mapAccounts.size() - 1)
@@ -225,13 +215,11 @@ bool CHDChain::SetAccount(uint32_t nAccountIndex, const CHDAccount& hdAccount)
     return true;
 }
 
-size_t CHDChain::CountAccounts()
-{
+size_t CHDChain::CountAccounts() {
     LOCK(cs);
     return mapAccounts.size();
 }
 
-std::string CHDPubKey::GetKeyPath() const
-{
+std::string CHDPubKey::GetKeyPath() const {
     return strprintf("m/44'/%d'/%d'/%d/%d", Params().ExtCoinType(), nAccountIndex, nChangeIndex, extPubKey.nChild);
 }

@@ -9,16 +9,16 @@
 
 /** macOS-specific Dock icon handler.
  */
-class MacDockIconHandler : public QObject
-{
+class MacDockIconHandler : public QObject {
     Q_OBJECT
 
 public:
     static MacDockIconHandler *instance();
+
     static void cleanup();
 
-Q_SIGNALS:
-    void dockIconClicked();
+    Q_SIGNALS:
+            void dockIconClicked();
 
 private:
     MacDockIconHandler();

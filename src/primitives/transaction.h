@@ -28,37 +28,40 @@ enum {
 };
 
 /** An outpoint - a combination of a transaction hash and an index n into its vout */
-class COutPoint
-{
+class COutPoint {
 public:
     uint256 hash;
     uint32_t n;
 
-    COutPoint(): n((uint32_t) -1) { }
-    COutPoint(const uint256& hashIn, uint32_t nIn): hash(hashIn), n(nIn) { }
+    COutPoint() : n((uint32_t) - 1) {}
 
-    SERIALIZE_METHODS(COutPoint, obj) { READWRITE(obj.hash, obj.n); }
+    COutPoint(const uint256 &hashIn, uint32_t nIn) : hash(hashIn), n(nIn) {}
 
-    void SetNull() { hash.SetNull(); n = (uint32_t) -1; }
-    bool IsNull() const { return (hash.IsNull() && n == (uint32_t) -1); }
+    SERIALIZE_METHODS(COutPoint, obj
+    ) { READWRITE(obj.hash, obj.n); }
 
-    friend bool operator<(const COutPoint& a, const COutPoint& b)
-    {
+    void SetNull() {
+        hash.SetNull();
+        n = (uint32_t) - 1;
+    }
+
+    bool IsNull() const { return (hash.IsNull() && n == (uint32_t) - 1); }
+
+    friend bool operator<(const COutPoint &a, const COutPoint &b) {
         int cmp = a.hash.Compare(b.hash);
         return cmp < 0 || (cmp == 0 && a.n < b.n);
     }
 
-    friend bool operator==(const COutPoint& a, const COutPoint& b)
-    {
+    friend bool operator==(const COutPoint &a, const COutPoint &b) {
         return (a.hash == b.hash && a.n == b.n);
     }
 
-    friend bool operator!=(const COutPoint& a, const COutPoint& b)
-    {
+    friend bool operator!=(const COutPoint &a, const COutPoint &b) {
         return !(a == b);
     }
 
     std::string ToString() const;
+
     std::string ToStringShort() const;
 };
 
@@ -66,8 +69,7 @@ public:
  * transaction's output that it claims and a signature that matches the
  * output's public key.
  */
-class CTxIn
-{
+class CTxIn {
 public:
     COutPoint prevout;
     CScript scriptSig;
@@ -100,31 +102,29 @@ public:
      * 9 bits. */
     static const int SEQUENCE_LOCKTIME_GRANULARITY = 9;
 
-    CTxIn()
-    {
+    CTxIn() {
         nSequence = SEQUENCE_FINAL;
     }
 
-    explicit CTxIn(COutPoint prevoutIn, CScript scriptSigIn=CScript(), uint32_t nSequenceIn=SEQUENCE_FINAL);
-    CTxIn(uint256 hashPrevTx, uint32_t nOut, CScript scriptSigIn=CScript(), uint32_t nSequenceIn=SEQUENCE_FINAL);
+    explicit CTxIn(COutPoint prevoutIn, CScript scriptSigIn = CScript(), uint32_t nSequenceIn = SEQUENCE_FINAL);
 
-    SERIALIZE_METHODS(CTxIn, obj) { READWRITE(obj.prevout, obj.scriptSig, obj.nSequence); }
+    CTxIn(uint256 hashPrevTx, uint32_t nOut, CScript scriptSigIn = CScript(), uint32_t nSequenceIn = SEQUENCE_FINAL);
 
-    friend bool operator==(const CTxIn& a, const CTxIn& b)
-    {
-        return (a.prevout   == b.prevout &&
+    SERIALIZE_METHODS(CTxIn, obj
+    ) { READWRITE(obj.prevout, obj.scriptSig, obj.nSequence); }
+
+    friend bool operator==(const CTxIn &a, const CTxIn &b) {
+        return (a.prevout == b.prevout &&
                 a.scriptSig == b.scriptSig &&
                 a.nSequence == b.nSequence);
     }
 
-    friend bool operator!=(const CTxIn& a, const CTxIn& b)
-    {
+    friend bool operator!=(const CTxIn &a, const CTxIn &b) {
         return !(a == b);
     }
 
-    friend bool operator<(const CTxIn& a, const CTxIn& b)
-    {
-        return a.prevout<b.prevout;
+    friend bool operator<(const CTxIn &a, const CTxIn &b) {
+        return a.prevout < b.prevout;
     }
 
     std::string ToString() const;
@@ -133,40 +133,35 @@ public:
 /** An output of a transaction.  It contains the public key that the next input
  * must be able to sign with to claim it.
  */
-class CTxOut
-{
+class CTxOut {
 public:
     CAmount nValue;
     CScript scriptPubKey;
 
-    CTxOut()
-    {
+    CTxOut() {
         SetNull();
     }
 
-    CTxOut(const CAmount& nValueIn, CScript scriptPubKeyIn);
+    CTxOut(const CAmount &nValueIn, CScript scriptPubKeyIn);
 
-    SERIALIZE_METHODS(CTxOut, obj) { READWRITE(obj.nValue, obj.scriptPubKey); }
+    SERIALIZE_METHODS(CTxOut, obj
+    ) { READWRITE(obj.nValue, obj.scriptPubKey); }
 
-    void SetNull()
-    {
+    void SetNull() {
         nValue = -1;
         scriptPubKey.clear();
     }
 
-    bool IsNull() const
-    {
+    bool IsNull() const {
         return (nValue == -1);
     }
 
-    friend bool operator==(const CTxOut& a, const CTxOut& b)
-    {
-        return (a.nValue       == b.nValue &&
+    friend bool operator==(const CTxOut &a, const CTxOut &b) {
+        return (a.nValue == b.nValue &&
                 a.scriptPubKey == b.scriptPubKey);
     }
 
-    friend bool operator!=(const CTxOut& a, const CTxOut& b)
-    {
+    friend bool operator!=(const CTxOut &a, const CTxOut &b) {
         return !(a == b);
     }
 
@@ -178,29 +173,28 @@ struct CMutableTransaction;
 /** The basic transaction that is broadcasted on the network and contained in
  * blocks.  A transaction can contain multiple inputs and outputs.
  */
-class CTransaction
-{
+class CTransaction {
 public:
     // Default transaction version.
-    static const int32_t CURRENT_VERSION=2;
+    static const int32_t CURRENT_VERSION = 2;
 
     // Changing the default transaction version requires a two step process: first
     // adapting relay policy by bumping MAX_STANDARD_VERSION, and then later date
     // bumping the default CURRENT_VERSION at which point both CURRENT_VERSION and
     // MAX_STANDARD_VERSION will be equal.
-    static const int32_t MAX_STANDARD_VERSION=3;
+    static const int32_t MAX_STANDARD_VERSION = 3;
 
     // The local variables are made const to prevent unintended modification
     // without updating the cached hash value. However, CTransaction is not
     // actually immutable; deserialization and assignment are implemented,
     // and bypass the constness. This is safe, as they update the entire
     // structure, including the hash.
-    const std::vector<CTxIn> vin;
-    const std::vector<CTxOut> vout;
+    const std::vector <CTxIn> vin;
+    const std::vector <CTxOut> vout;
     const int16_t nVersion;
     const uint16_t nType;
     const uint32_t nLockTime;
-    const std::vector<uint8_t> vExtraPayload; // only available for special transaction types
+    const std::vector <uint8_t> vExtraPayload; // only available for special transaction types
 
 private:
     /** Memory only. */
@@ -211,14 +205,16 @@ private:
 public:
     /** Construct a CTransaction that qualifies as IsNull() */
     CTransaction();
+
     CTransaction(int16_t version, uint16_t type);
 
     /** Convert a CMutableTransaction into a CTransaction. */
     CTransaction(const CMutableTransaction &tx);
+
     CTransaction(CMutableTransaction &&tx);
 
-    template <typename Stream>
-    inline void Serialize(Stream& s) const {
+    template<typename Stream>
+    inline void Serialize(Stream &s) const {
         int32_t n32bitVersion = this->nVersion | (this->nType << 16);
         s << n32bitVersion;
         s << vin;
@@ -230,14 +226,14 @@ public:
 
     /** This deserializing constructor is provided instead of an Unserialize method.
      *  Unserialize is not possible, since it would require overwriting const fields. */
-    template <typename Stream>
-    CTransaction(deserialize_type, Stream& s) : CTransaction(CMutableTransaction(deserialize, s)) {}
+    template<typename Stream>
+    CTransaction(deserialize_type, Stream &s) : CTransaction(CMutableTransaction(deserialize, s)) {}
 
     bool IsNull() const {
         return vin.empty() && vout.empty();
     }
 
-    const uint256& GetHash() const { return hash; }
+    const uint256 &GetHash() const { return hash; }
 
     // Return sum of txouts.
     CAmount GetValueOut() const;
@@ -251,18 +247,15 @@ public:
      */
     unsigned int GetTotalSize() const;
 
-    bool IsCoinBase() const
-    {
+    bool IsCoinBase() const {
         return (vin.size() == 1 && vin[0].prevout.IsNull());
     }
 
-    friend bool operator==(const CTransaction& a, const CTransaction& b)
-    {
+    friend bool operator==(const CTransaction &a, const CTransaction &b) {
         return a.hash == b.hash;
     }
 
-    friend bool operator!=(const CTransaction& a, const CTransaction& b)
-    {
+    friend bool operator!=(const CTransaction &a, const CTransaction &b) {
         return a.hash != b.hash;
     }
 
@@ -270,33 +263,34 @@ public:
 };
 
 /** A mutable version of CTransaction. */
-struct CMutableTransaction
-{
-    std::vector<CTxIn> vin;
-    std::vector<CTxOut> vout;
+struct CMutableTransaction {
+    std::vector <CTxIn> vin;
+    std::vector <CTxOut> vout;
     int16_t nVersion;
     uint16_t nType;
     uint32_t nLockTime;
-    std::vector<uint8_t> vExtraPayload; // only available for special transaction types
+    std::vector <uint8_t> vExtraPayload; // only available for special transaction types
 
     CMutableTransaction();
-    explicit CMutableTransaction(const CTransaction& tx);
 
-    SERIALIZE_METHODS(CMutableTransaction, obj)
+    explicit CMutableTransaction(const CTransaction &tx);
+
+    SERIALIZE_METHODS(CMutableTransaction, obj
+    )
     {
         int32_t n32bitVersion;
         SER_WRITE(obj, n32bitVersion = obj.nVersion | (obj.nType << 16));
         READWRITE(n32bitVersion);
-        SER_READ(obj, obj.nVersion = (int16_t) (n32bitVersion & 0xffff));
-        SER_READ(obj, obj.nType = (uint16_t) ((n32bitVersion >> 16) & 0xffff));
+        SER_READ(obj, obj.nVersion = (int16_t)(n32bitVersion & 0xffff));
+        SER_READ(obj, obj.nType = (uint16_t)((n32bitVersion >> 16) & 0xffff));
         READWRITE(obj.vin, obj.vout, obj.nLockTime);
         if (obj.nVersion == 3 && obj.nType != TRANSACTION_NORMAL) {
             READWRITE(obj.vExtraPayload);
         }
     }
 
-    template <typename Stream>
-    CMutableTransaction(deserialize_type, Stream& s) {
+    template<typename Stream>
+    CMutableTransaction(deserialize_type, Stream &s) {
         Unserialize(s);
     }
 
@@ -307,35 +301,36 @@ struct CMutableTransaction
 
     std::string ToString() const;
 
-    friend bool operator==(const CMutableTransaction& a, const CMutableTransaction& b)
-    {
+    friend bool operator==(const CMutableTransaction &a, const CMutableTransaction &b) {
         return a.GetHash() == b.GetHash();
     }
 
-    friend bool operator!=(const CMutableTransaction& a, const CMutableTransaction& b)
-    {
+    friend bool operator!=(const CMutableTransaction &a, const CMutableTransaction &b) {
         return !(a == b);
     }
 
 };
 
 typedef std::shared_ptr<const CTransaction> CTransactionRef;
+
 static inline CTransactionRef MakeTransactionRef() { return std::make_shared<const CTransaction>(); }
-template <typename Tx> static inline CTransactionRef MakeTransactionRef(Tx&& txIn) { return std::make_shared<const CTransaction>(std::forward<Tx>(txIn)); }
+
+template<typename Tx>
+static inline CTransactionRef MakeTransactionRef(Tx &&txIn) {
+    return std::make_shared<const CTransaction>(std::forward<Tx>(txIn));
+}
 
 /** Implementation of BIP69
  * https://github.com/bitcoin/bips/blob/master/bip-0069.mediawiki
  */
-struct CompareInputBIP69
-{
-    inline bool operator()(const CTxIn& a, const CTxIn& b) const
-    {
+struct CompareInputBIP69 {
+    inline bool operator()(const CTxIn &a, const CTxIn &b) const {
         if (a.prevout.hash == b.prevout.hash) return a.prevout.n < b.prevout.n;
 
         uint256 hasha = a.prevout.hash;
         uint256 hashb = b.prevout.hash;
 
-        typedef std::reverse_iterator<const unsigned char*> rev_it;
+        typedef std::reverse_iterator<const unsigned char *> rev_it;
         rev_it rita = rev_it(hasha.end());
         rev_it ritb = rev_it(hashb.end());
 
@@ -343,10 +338,8 @@ struct CompareInputBIP69
     }
 };
 
-struct CompareOutputBIP69
-{
-    inline bool operator()(const CTxOut& a, const CTxOut& b) const
-    {
+struct CompareOutputBIP69 {
+    inline bool operator()(const CTxOut &a, const CTxOut &b) const {
         return a.nValue < b.nValue || (a.nValue == b.nValue && a.scriptPubKey < b.scriptPubKey);
     }
 };

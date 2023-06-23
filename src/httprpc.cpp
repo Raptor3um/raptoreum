@@ -21,52 +21,49 @@
 #include <boost/algorithm/string.hpp> // boost::trim
 
 /** WWW-Authenticate to present with 401 Unauthorized response */
-static const char* WWW_AUTH_HEADER_DATA = "Basic realm=\"jsonrpc\"";
+static const char *WWW_AUTH_HEADER_DATA = "Basic realm=\"jsonrpc\"";
 
 /** Simple one-shot callback timer to be used by the RPC mechanism to e.g.
  * re-lock the wallet.
  */
-class HTTPRPCTimer : public RPCTimerBase
-{
+class HTTPRPCTimer : public RPCTimerBase {
 public:
-    HTTPRPCTimer(struct event_base* eventBase, std::function<void()>& func, int64_t millis) :
-        ev(eventBase, false, func)
-    {
+    HTTPRPCTimer(struct event_base *eventBase, std::function<void()> &func, int64_t millis) :
+            ev(eventBase, false, func) {
         struct timeval tv;
-        tv.tv_sec = millis/1000;
-        tv.tv_usec = (millis%1000)*1000;
+        tv.tv_sec = millis / 1000;
+        tv.tv_usec = (millis % 1000) * 1000;
         ev.trigger(&tv);
     }
+
 private:
     HTTPEvent ev;
 };
 
-class HTTPRPCTimerInterface : public RPCTimerInterface
-{
+class HTTPRPCTimerInterface : public RPCTimerInterface {
 public:
-    explicit HTTPRPCTimerInterface(struct event_base* _base) : base(_base)
-    {
+    explicit HTTPRPCTimerInterface(struct event_base *_base) : base(_base) {
     }
-    const char* Name() override
-    {
+
+    const char *Name() override {
         return "HTTP";
     }
-    RPCTimerBase* NewTimer(std::function<void()>& func, int64_t millis) override
-    {
+
+    RPCTimerBase *NewTimer(std::function<void()> &func, int64_t millis) override {
         return new HTTPRPCTimer(base, func, millis);
     }
+
 private:
-    struct event_base* base;
+    struct event_base *base;
 };
 
 
 /* Pre-base64-encoded authentication token */
 static std::string strRPCUserColonPass;
 /* Stored RPC timer interface (for unregistration) */
-static std::unique_ptr<HTTPRPCTimerInterface> httpRPCTimerInterface;
+static std::unique_ptr <HTTPRPCTimerInterface> httpRPCTimerInterface;
 
-static void JSONErrorReply(HTTPRequest* req, const UniValue& objError, const UniValue& id)
-{
+static void JSONErrorReply(HTTPRequest *req, const UniValue &objError, const UniValue &id) {
     // Send error reply from json-rpc error object
     int nStatus = HTTP_INTERNAL_SERVER_ERROR;
     int code = find_value(objError, "code").get_int();
@@ -87,17 +84,16 @@ static void JSONErrorReply(HTTPRequest* req, const UniValue& objError, const Uni
 
 //This function checks username and password against -rpcauth
 //entries from config file.
-static bool multiUserAuthorized(std::string strUserPass)
-{
+static bool multiUserAuthorized(std::string strUserPass) {
     if (strUserPass.find(':') == std::string::npos) {
         return false;
     }
     std::string strUser = strUserPass.substr(0, strUserPass.find(':'));
     std::string strPass = strUserPass.substr(strUserPass.find(':') + 1);
 
-    for (const std::string& strRPCAuth : gArgs.GetArgs("-rpcauth")) {
+    for (const std::string &strRPCAuth: gArgs.GetArgs("-rpcauth")) {
         //Search for multi-user login/pass "rpcauth" from config
-        std::vector<std::string> vFields;
+        std::vector <std::string> vFields;
         boost::split(vFields, strRPCAuth, boost::is_any_of(":$"));
         if (vFields.size() != 3) {
             //Incorrect formatting in config file
@@ -115,8 +111,9 @@ static bool multiUserAuthorized(std::string strUserPass)
         static const unsigned int KEY_SIZE = 32;
         unsigned char out[KEY_SIZE];
 
-        CHMAC_SHA256(reinterpret_cast<const unsigned char*>(strSalt.c_str()), strSalt.size()).Write(reinterpret_cast<const unsigned char*>(strPass.c_str()), strPass.size()).Finalize(out);
-        std::vector<unsigned char> hexvec(out, out+KEY_SIZE);
+        CHMAC_SHA256(reinterpret_cast<const unsigned char *>(strSalt.c_str()), strSalt.size()).Write(
+                reinterpret_cast<const unsigned char *>(strPass.c_str()), strPass.size()).Finalize(out);
+        std::vector<unsigned char> hexvec(out, out + KEY_SIZE);
         std::string strHashFromPass = HexStr(hexvec);
 
         if (TimingResistantEqual(strHashFromPass, strHash)) {
@@ -126,8 +123,7 @@ static bool multiUserAuthorized(std::string strUserPass)
     return false;
 }
 
-static bool RPCAuthorized(const std::string& strAuth, std::string& strAuthUsernameOut)
-{
+static bool RPCAuthorized(const std::string &strAuth, std::string &strAuthUsernameOut) {
     if (strRPCUserColonPass.empty()) // Belt-and-suspenders measure if InitRPCAuthentication was not called
         return false;
     if (strAuth.substr(0, 6) != "Basic ")
@@ -146,8 +142,7 @@ static bool RPCAuthorized(const std::string& strAuth, std::string& strAuthUserna
     return multiUserAuthorized(strUserPass);
 }
 
-static bool HTTPReq_JSONRPC(const util::Ref& context, HTTPRequest* req)
-{
+static bool HTTPReq_JSONRPC(const util::Ref &context, HTTPRequest *req) {
     // JSONRPC handles only POST
     if (req->GetRequestMethod() != HTTPRequest::POST) {
         req->WriteReply(HTTP_BAD_METHOD, "JSONRPC server handles only POST requests");
@@ -195,7 +190,7 @@ static bool HTTPReq_JSONRPC(const util::Ref& context, HTTPRequest* req)
             // Send reply
             strReply = JSONRPCReply(result, NullUniValue, jreq.id);
 
-        // array of requests
+            // array of requests
         } else if (valRequest.isArray())
             strReply = JSONRPCExecBatch(jreq, valRequest.get_array());
         else
@@ -203,45 +198,42 @@ static bool HTTPReq_JSONRPC(const util::Ref& context, HTTPRequest* req)
 
         req->WriteHeader("Content-Type", "application/json");
         req->WriteReply(HTTP_OK, strReply);
-    } catch (const UniValue& objError) {
+    } catch (const UniValue &objError) {
         JSONErrorReply(req, objError, jreq.id);
         return false;
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         JSONErrorReply(req, JSONRPCError(RPC_PARSE_ERROR, e.what()), jreq.id);
         return false;
     }
     return true;
 }
 
-static bool InitRPCAuthentication()
-{
-    if (gArgs.GetArg("-rpcpassword", "") == "")
-    {
+static bool InitRPCAuthentication() {
+    if (gArgs.GetArg("-rpcpassword", "") == "") {
         LogPrintf("No rpcpassword set - using random cookie authentication.\n");
         if (!GenerateAuthCookie(&strRPCUserColonPass)) {
             uiInterface.ThreadSafeMessageBox(
-                _("Error: A fatal internal error occurred, see debug.log for details"), // Same message as AbortNode
-                "", CClientUIInterface::MSG_ERROR);
+                    _("Error: A fatal internal error occurred, see debug.log for details"), // Same message as AbortNode
+                    "", CClientUIInterface::MSG_ERROR);
             return false;
         }
     } else {
-        LogPrintf("Config options rpcuser and rpcpassword will soon be deprecated. Locally-run instances may remove rpcuser to use cookie-based auth, or may be replaced with rpcauth. Please see share/rpcauth for rpcauth auth generation.\n");
+        LogPrintf(
+                "Config options rpcuser and rpcpassword will soon be deprecated. Locally-run instances may remove rpcuser to use cookie-based auth, or may be replaced with rpcauth. Please see share/rpcauth for rpcauth auth generation.\n");
         strRPCUserColonPass = gArgs.GetArg("-rpcuser", "") + ":" + gArgs.GetArg("-rpcpassword", "");
     }
-    if (gArgs.GetArg("-rpcauth","") != "")
-    {
+    if (gArgs.GetArg("-rpcauth", "") != "") {
         LogPrintf("Using rpcauth authentication.\n");
     }
     return true;
 }
 
-bool StartHTTPRPC(const util::Ref& context)
-{
+bool StartHTTPRPC(const util::Ref &context) {
     LogPrint(BCLog::RPC, "Starting HTTP RPC server\n");
     if (!InitRPCAuthentication())
         return false;
 
-    auto handle_rpc = [&context](HTTPRequest* req, const std::string&) { return HTTPReq_JSONRPC(context, req); };
+    auto handle_rpc = [&context](HTTPRequest *req, const std::string &) { return HTTPReq_JSONRPC(context, req); };
     RegisterHTTPHandler("/", true, handle_rpc);
     if (g_wallet_init_interface.HasWalletSupport()) {
         RegisterHTTPHandler("/wallet/", false, handle_rpc);
@@ -252,13 +244,11 @@ bool StartHTTPRPC(const util::Ref& context)
     return true;
 }
 
-void InterruptHTTPRPC()
-{
+void InterruptHTTPRPC() {
     LogPrint(BCLog::RPC, "Interrupting HTTP RPC server\n");
 }
 
-void StopHTTPRPC()
-{
+void StopHTTPRPC() {
     LogPrint(BCLog::RPC, "Stopping HTTP RPC server\n");
     UnregisterHTTPHandler("/", true);
     if (g_wallet_init_interface.HasWalletSupport()) {

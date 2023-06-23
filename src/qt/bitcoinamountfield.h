@@ -11,6 +11,7 @@
 #include <QWidget>
 
 class AmountLineEdit;
+
 class BitcoinUnits;
 
 QT_BEGIN_NAMESPACE
@@ -19,25 +20,28 @@ QT_END_NAMESPACE
 
 /** Widget for entering bitcoin amounts.
   */
-class BitcoinAmountField: public QWidget
-{
+class BitcoinAmountField : public QWidget {
     Q_OBJECT
 
     // ugly hack: for some unknown reason CAmount (instead of qint64) does not work here as expected
     // discussion: https://github.com/bitcoin/bitcoin/pull/5117
-    Q_PROPERTY(qint64 value READ value WRITE setValue NOTIFY valueChanged USER true)
+    Q_PROPERTY(qint64 value READ value WRITE setValue NOTIFY valueChanged USER
+
+    true)
 
 public:
     explicit BitcoinAmountField(QWidget *parent = nullptr);
 
-    CAmount value(bool *value=nullptr) const;
-    void setValue(const CAmount& value);
+    CAmount value(bool *value = nullptr) const;
+
+    void setValue(const CAmount &value);
 
     /** Make read-only **/
     void setReadOnly(bool fReadOnly);
 
     /** Mark current value as invalid in UI. */
     void setValid(bool valid);
+
     /** Perform input validation, mark field as invalid if entered value is not valid. */
     bool validate();
 
@@ -58,8 +62,8 @@ public:
     */
     QWidget *setupTabChain(QWidget *prev);
 
-Q_SIGNALS:
-    void valueChanged();
+    Q_SIGNALS:
+            void valueChanged();
 
 protected:
     /** Intercept focus-in event and ',' key presses */

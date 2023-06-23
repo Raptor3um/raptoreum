@@ -12,10 +12,9 @@
 #include <consensus/validation.h>
 #include <assets/assetstype.h>
 
-CChain& ChainActive();
+CChain &ChainActive();
 
-bool CheckTransaction(const CTransaction& tx, CValidationState &state, int nHeight, CAmount blockReward)
-{
+bool CheckTransaction(const CTransaction &tx, CValidationState &state, int nHeight, CAmount blockReward) {
     bool allowEmptyTxInOut = false;
     if (tx.nType == TRANSACTION_QUORUM_COMMITMENT) {
         allowEmptyTxInOut = true;
@@ -35,15 +34,14 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, int nHeig
     // Check for negative or overflow output values
     bool isV17active = Params().IsFutureActive(::ChainActive().Tip());
     CAmount nValueOut = 0;
-    std::map<std::string, CAmount> nAssetVout;
-    for (const auto& txout : tx.vout)
-    {
+    std::map <std::string, CAmount> nAssetVout;
+    for (const auto &txout: tx.vout) {
         if (txout.nValue < 0)
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-vout-negative");
-        if(isV17active){
+        if (isV17active) {
             if (txout.nValue > MAX_MONEY)
                 return state.DoS(100, false, REJECT_INVALID, "bad-txns-vout-toolarge");
-        }else {
+        } else {
             if (txout.nValue > OLD_MAX_MONEY)
                 return state.DoS(100, false, REJECT_INVALID, "bad-txns-vout-toolarge");
         }
@@ -74,9 +72,8 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, int nHeig
     }
 
     // Check for duplicate inputs
-    std::set<COutPoint> vInOutPoints;
-    for (const auto& txin : tx.vin)
-    {
+    std::set <COutPoint> vInOutPoints;
+    for (const auto &txin: tx.vin) {
         if (!vInOutPoints.insert(txin.prevout).second)
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputs-duplicate");
     }
@@ -92,11 +89,12 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, int nHeig
         FounderPayment founderPayment = Params().GetConsensus().nFounderPayment;
         CAmount founderReward = founderPayment.getFounderPaymentAmount(nHeight, blockReward);
         int founderStartHeight = founderPayment.getStartBlock();
-        if (nHeight > founderStartHeight && founderReward && !founderPayment.IsBlockPayeeValid(tx, nHeight, blockReward)) {
+        if (nHeight > founderStartHeight && founderReward &&
+            !founderPayment.IsBlockPayeeValid(tx, nHeight, blockReward)) {
             return state.DoS(100, false, REJECT_INVALID, "bad-cb-founder-payment-not-found");
         }
     } else {
-        for (const auto& txin : tx.vin)
+        for (const auto &txin: tx.vin)
             if (txin.prevout.IsNull())
                 return state.DoS(10, false, REJECT_INVALID, "bad-txns-prevout-null");
     }

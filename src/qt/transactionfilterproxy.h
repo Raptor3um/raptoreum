@@ -11,8 +11,7 @@
 #include <QSortFilterProxyModel>
 
 /** Filter the transaction list according to pre-specified rules. */
-class TransactionFilterProxy : public QSortFilterProxyModel
-{
+class TransactionFilterProxy : public QSortFilterProxyModel {
     Q_OBJECT
 
 public:
@@ -27,22 +26,25 @@ public:
     /** Type filter bit field (all types but Darksend-SPAM) */
     static const quint32 COMMON_TYPES = 0x607F;
 
-    static quint32 TYPE(int type) { return 1<<type; }
+    static quint32 TYPE(int type) { return 1 << type; }
 
-    enum WatchOnlyFilter
-    {
+    enum WatchOnlyFilter {
         WatchOnlyFilter_All,
         WatchOnlyFilter_Yes,
         WatchOnlyFilter_No
     };
 
     void setDateRange(const QDateTime &from, const QDateTime &to);
+
     void setSearchString(const QString &);
+
     /**
       @note Type filter takes a bit field created with TYPE() or ALL_TYPES
      */
     void setTypeFilter(quint32 modes);
-    void setMinAmount(const CAmount& minimum);
+
+    void setMinAmount(const CAmount &minimum);
+
     void setWatchOnlyFilter(WatchOnlyFilter filter);
 
     /** Set maximum number of rows returned, -1 if unlimited. */
@@ -54,7 +56,7 @@ public:
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
 
 protected:
-    bool filterAcceptsRow(int source_row, const QModelIndex & source_parent) const override;
+    bool filterAcceptsRow(int source_row, const QModelIndex &source_parent) const override;
 
 private:
     qint64 dateFrom;

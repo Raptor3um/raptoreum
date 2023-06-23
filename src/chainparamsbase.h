@@ -13,8 +13,7 @@
  * CBaseChainParams defines the base parameters (shared between raptoreum-cli and raptoreumd)
  * of a given instance of the Raptoreum system.
  */
-class CBaseChainParams
-{
+class CBaseChainParams {
 public:
     /** BIP70 chain name strings (main, test or regtest) */
     static const std::string MAIN;
@@ -22,11 +21,13 @@ public:
     static const std::string DEVNET;
     static const std::string REGTEST;
 
-    const std::string& DataDir() const { return strDataDir; }
+    const std::string &DataDir() const { return strDataDir; }
+
     int RPCPort() const { return nRPCPort; }
 
     CBaseChainParams() = delete;
-    CBaseChainParams(const std::string& data_dir, int rpc_port) : nRPCPort(rpc_port), strDataDir(data_dir) {}
+
+    CBaseChainParams(const std::string &data_dir, int rpc_port) : nRPCPort(rpc_port), strDataDir(data_dir) {}
 
 private:
     int nRPCPort;
@@ -38,7 +39,7 @@ private:
  * @returns a CBaseChainParams* of the chosen chain.
  * @throws a std::runtime_error if the chain is not supported.
  */
-std::unique_ptr<CBaseChainParams> CreateBaseChainParams(const std::string& chain);
+std::unique_ptr <CBaseChainParams> CreateBaseChainParams(const std::string &chain);
 
 /**
  *Set the arguments for chainparams
@@ -49,9 +50,9 @@ void SetupChainParamsBaseOptions();
  * Return the currently selected parameters. This won't change after app
  * startup, except for unit tests.
  */
-const CBaseChainParams& BaseParams();
+const CBaseChainParams &BaseParams();
 
 /** Sets the params returned by Params() to those for the given network. */
-void SelectBaseParams(const std::string& chain);
+void SelectBaseParams(const std::string &chain);
 
 #endif // BITCOIN_CHAINPARAMSBASE_H

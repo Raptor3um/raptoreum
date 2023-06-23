@@ -112,15 +112,20 @@
 // declarations ///////////////////////////////////////////////////////////////////////////////////
 
 namespace ankerl {
-namespace nanobench {
+    namespace nanobench {
 
-using Clock = std::conditional<std::chrono::high_resolution_clock::is_steady, std::chrono::high_resolution_clock,
-                               std::chrono::steady_clock>::type;
-class Bench;
-struct Config;
-class Result;
-class Rng;
-class BigO;
+        using Clock = std::conditional<std::chrono::high_resolution_clock::is_steady, std::chrono::high_resolution_clock,
+                std::chrono::steady_clock>::type;
+
+        class Bench;
+
+        struct Config;
+
+        class Result;
+
+        class Rng;
+
+        class BigO;
 
 /**
  * @brief Renders output from a mustache-like template and benchmark results.
@@ -268,7 +273,7 @@ class BigO;
  * @param bench Benchmark, containing all the results.
  * @param out Output for the generated output.
  */
-void render(char const* mustacheTemplate, Bench const& bench, std::ostream& out);
+        void render(char const *mustacheTemplate, Bench const &bench, std::ostream &out);
 
 /**
  * Same as render(char const* mustacheTemplate, Bench const& bench, std::ostream& out), but for when
@@ -278,10 +283,10 @@ void render(char const* mustacheTemplate, Bench const& bench, std::ostream& out)
  * @param results All the results to be used for rendering.
  * @param out Output for the generated output.
  */
-void render(char const* mustacheTemplate, std::vector<Result> const& results, std::ostream& out);
+        void render(char const *mustacheTemplate, std::vector <Result> const &results, std::ostream &out);
 
 // Contains mustache-like templates
-namespace templates {
+        namespace templates {
 
 /*!
   @brief CSV data for the benchmark results.
@@ -292,7 +297,9 @@ namespace templates {
   See the tutorial at :ref:`tutorial-template-csv` for an example.
   @endverbatim
  */
-char const* csv() noexcept;
+            char const *csv()
+
+            noexcept;
 
 /*!
   @brief HTML output that uses plotly to generate an interactive boxplot chart. See the tutorial for an example output.
@@ -304,7 +311,9 @@ char const* csv() noexcept;
 
   @see ankerl::nanobench::render()
  */
-char const* htmlBoxplot() noexcept;
+            char const *htmlBoxplot()
+
+            noexcept;
 
 /*!
   @brief Template to generate JSON data.
@@ -315,123 +324,187 @@ char const* htmlBoxplot() noexcept;
   See the tutorial at :ref:`tutorial-template-json` for an example.
   @endverbatim
  */
-char const* json() noexcept;
+            char const *json()
 
-} // namespace templates
+            noexcept;
 
-namespace detail {
+        } // namespace templates
 
-template <typename T>
-struct PerfCountSet;
+        namespace detail {
 
-class IterationLogic;
-class PerformanceCounters;
+            template<typename T>
+            struct PerfCountSet;
+
+            class IterationLogic;
+
+            class PerformanceCounters;
 
 #if ANKERL_NANOBENCH(PERF_COUNTERS)
-class LinuxPerformanceCounters;
+            class LinuxPerformanceCounters;
 #endif
 
-} // namespace detail
-} // namespace nanobench
+        } // namespace detail
+    } // namespace nanobench
 } // namespace ankerl
 
 // definitions ////////////////////////////////////////////////////////////////////////////////////
 
 namespace ankerl {
-namespace nanobench {
-namespace detail {
+    namespace nanobench {
+        namespace detail {
 
-template <typename T>
-struct PerfCountSet {
-    T pageFaults{};
-    T cpuCycles{};
-    T contextSwitches{};
-    T instructions{};
-    T branchInstructions{};
-    T branchMisses{};
-};
+            template<typename T>
+            struct PerfCountSet {
+                T pageFaults{};
+                T cpuCycles{};
+                T contextSwitches{};
+                T instructions{};
+                T branchInstructions{};
+                T branchMisses{};
+            };
 
-} // namespace detail
+        } // namespace detail
 
-ANKERL_NANOBENCH(IGNORE_PADDED_PUSH)
-struct Config {
-    // actual benchmark config
-    std::string mBenchmarkTitle = "benchmark";
-    std::string mBenchmarkName = "noname";
-    std::string mUnit = "op";
-    double mBatch = 1.0;
-    double mComplexityN = -1.0;
-    size_t mNumEpochs = 11;
-    size_t mClockResolutionMultiple = static_cast<size_t>(1000);
-    std::chrono::nanoseconds mMaxEpochTime = std::chrono::milliseconds(100);
-    std::chrono::nanoseconds mMinEpochTime{};
-    uint64_t mMinEpochIterations{1};
-    uint64_t mEpochIterations{0}; // If not 0, run *exactly* these number of iterations per epoch.
-    uint64_t mWarmup = 0;
-    std::ostream* mOut = nullptr;
-    bool mShowPerformanceCounters = true;
-    bool mIsRelative = false;
+        ANKERL_NANOBENCH(IGNORE_PADDED_PUSH)
 
-    Config();
-    ~Config();
-    Config& operator=(Config const&);
-    Config& operator=(Config&&);
-    Config(Config const&);
-    Config(Config&&) noexcept;
-};
-ANKERL_NANOBENCH(IGNORE_PADDED_POP)
+        struct Config {
+            // actual benchmark config
+            std::string mBenchmarkTitle = "benchmark";
+            std::string mBenchmarkName = "noname";
+            std::string mUnit = "op";
+            double mBatch = 1.0;
+            double mComplexityN = -1.0;
+            size_t mNumEpochs = 11;
+            size_t mClockResolutionMultiple = static_cast<size_t>(1000);
+            std::chrono::nanoseconds mMaxEpochTime = std::chrono::milliseconds(100);
+            std::chrono::nanoseconds mMinEpochTime{};
+            uint64_t mMinEpochIterations{1};
+            uint64_t mEpochIterations{0}; // If not 0, run *exactly* these number of iterations per epoch.
+            uint64_t mWarmup = 0;
+            std::ostream *mOut = nullptr;
+            bool mShowPerformanceCounters = true;
+            bool mIsRelative = false;
+
+            Config();
+
+            ~Config();
+
+            Config &operator=(Config const &);
+
+            Config &operator=(Config &&);
+
+            Config(Config const &);
+
+            Config(Config &&)
+
+            noexcept;
+        };
+
+        ANKERL_NANOBENCH(IGNORE_PADDED_POP)
 
 // Result returned after a benchmark has finished. Can be used as a baseline for relative().
-ANKERL_NANOBENCH(IGNORE_PADDED_PUSH)
-class Result {
-public:
-    enum class Measure : size_t {
-        elapsed,
-        iterations,
-        pagefaults,
-        cpucycles,
-        contextswitches,
-        instructions,
-        branchinstructions,
-        branchmisses,
-        _size
-    };
+        ANKERL_NANOBENCH(IGNORE_PADDED_PUSH)
 
-    explicit Result(Config const& benchmarkConfig);
+        class Result {
+        public:
+            enum class Measure : size_t {
+                elapsed,
+                iterations,
+                pagefaults,
+                cpucycles,
+                contextswitches,
+                instructions,
+                branchinstructions,
+                branchmisses,
+                _size
+            };
 
-    ~Result();
-    Result& operator=(Result const&);
-    Result& operator=(Result&&);
-    Result(Result const&);
-    Result(Result&&) noexcept;
+            explicit Result(Config const &benchmarkConfig);
 
-    // adds new measurement results
-    // all values are scaled by iters (except iters...)
-    void add(Clock::duration totalElapsed, uint64_t iters, detail::PerformanceCounters const& pc);
+            ~Result();
 
-    ANKERL_NANOBENCH(NODISCARD) Config const& config() const noexcept;
+            Result &operator=(Result const &);
 
-    ANKERL_NANOBENCH(NODISCARD) double median(Measure m) const;
-    ANKERL_NANOBENCH(NODISCARD) double medianAbsolutePercentError(Measure m) const;
-    ANKERL_NANOBENCH(NODISCARD) double average(Measure m) const;
-    ANKERL_NANOBENCH(NODISCARD) double sum(Measure m) const noexcept;
-    ANKERL_NANOBENCH(NODISCARD) double sumProduct(Measure m1, Measure m2) const noexcept;
-    ANKERL_NANOBENCH(NODISCARD) double minimum(Measure m) const noexcept;
-    ANKERL_NANOBENCH(NODISCARD) double maximum(Measure m) const noexcept;
+            Result &operator=(Result &&);
 
-    ANKERL_NANOBENCH(NODISCARD) bool has(Measure m) const noexcept;
-    ANKERL_NANOBENCH(NODISCARD) double get(size_t idx, Measure m) const;
-    ANKERL_NANOBENCH(NODISCARD) bool empty() const noexcept;
-    ANKERL_NANOBENCH(NODISCARD) size_t size() const noexcept;
+            Result(Result const &);
 
-    // Finds string, if not found, returns _size.
-    static Measure fromString(std::string const& str);
+            Result(Result &&)
 
-private:
-    Config mConfig{};
-    std::vector<std::vector<double>> mNameToMeasurements{};
-};
-ANKERL_NANOBENCH(IGNORE_PADDED_POP)
+            noexcept;
+
+            // adds new measurement results
+            // all values are scaled by iters (except iters...)
+            void add(Clock::duration totalElapsed, uint64_t iters, detail::PerformanceCounters const &pc);
+
+            ANKERL_NANOBENCH(NODISCARD)
+
+            Config const &config() const
+
+            noexcept;
+
+            ANKERL_NANOBENCH(NODISCARD)
+
+            double median(Measure m) const;
+
+            ANKERL_NANOBENCH(NODISCARD)
+
+            double medianAbsolutePercentError(Measure m) const;
+
+            ANKERL_NANOBENCH(NODISCARD)
+
+            double average(Measure m) const;
+
+            ANKERL_NANOBENCH(NODISCARD)
+
+            double sum(Measure m) const
+
+            noexcept;
+            ANKERL_NANOBENCH(NODISCARD)
+
+            double sumProduct(Measure m1, Measure m2) const
+
+            noexcept;
+            ANKERL_NANOBENCH(NODISCARD)
+
+            double minimum(Measure m) const
+
+            noexcept;
+            ANKERL_NANOBENCH(NODISCARD)
+
+            double maximum(Measure m) const
+
+            noexcept;
+
+            ANKERL_NANOBENCH(NODISCARD)
+
+            bool has(Measure m) const
+
+            noexcept;
+            ANKERL_NANOBENCH(NODISCARD)
+
+            double get(size_t idx, Measure m) const;
+
+            ANKERL_NANOBENCH(NODISCARD)
+
+            bool empty() const
+
+            noexcept;
+            ANKERL_NANOBENCH(NODISCARD)
+
+            size_t size() const
+
+            noexcept;
+
+            // Finds string, if not found, returns _size.
+            static Measure fromString(std::string const &str);
+
+        private:
+            Config mConfig{};
+            std::vector <std::vector<double>> mNameToMeasurements{};
+        };
+
+        ANKERL_NANOBENCH(IGNORE_PADDED_POP)
 
 /**
  * An extremely fast random generator. Currently, this implements *RomuDuoJr*, developed by Mark Overton. Source:
@@ -450,120 +523,154 @@ ANKERL_NANOBENCH(IGNORE_PADDED_POP)
  *
  * Rng also provides a few non-standard helpers, optimized for speed.
  */
-class Rng final {
-public:
-    /**
-     * @brief This RNG provides 64bit randomness.
-     */
-    using result_type = uint64_t;
+        class Rng final {
+        public:
+            /**
+             * @brief This RNG provides 64bit randomness.
+             */
+            using result_type = uint64_t;
 
-    static constexpr uint64_t(min)();
-    static constexpr uint64_t(max)();
+            static constexpr uint64_t(min)();
 
-    /**
-     * As a safety precausion, we don't allow copying. Copying a PRNG would mean you would have two random generators that produce the
-     * same sequence, which is generally not what one wants. Instead create a new rng with the default constructor Rng(), which is
-     * automatically seeded from `std::random_device`. If you really need a copy, use copy().
-     */
-    Rng(Rng const&) = delete;
+            static constexpr uint64_t(max)();
 
-    /**
-     * Same as Rng(Rng const&), we don't allow assignment. If you need a new Rng create one with the default constructor Rng().
-     */
-    Rng& operator=(Rng const&) = delete;
+            /**
+             * As a safety precausion, we don't allow copying. Copying a PRNG would mean you would have two random generators that produce the
+             * same sequence, which is generally not what one wants. Instead create a new rng with the default constructor Rng(), which is
+             * automatically seeded from `std::random_device`. If you really need a copy, use copy().
+             */
+            Rng(Rng const &) = delete;
 
-    // moving is ok
-    Rng(Rng&&) noexcept = default;
-    Rng& operator=(Rng&&) noexcept = default;
-    ~Rng() noexcept = default;
+            /**
+             * Same as Rng(Rng const&), we don't allow assignment. If you need a new Rng create one with the default constructor Rng().
+             */
+            Rng &operator=(Rng const &) = delete;
 
-    /**
-     * @brief Creates a new Random generator with random seed.
-     *
-     * Instead of a default seed (as the random generators from the STD), this properly seeds the random generator from
-     * `std::random_device`. It guarantees correct seeding. Note that seeding can be relatively slow, depending on the source of
-     * randomness used. So it is best to create a Rng once and use it for all your randomness purposes.
-     */
-    Rng();
+            // moving is ok
+            Rng(Rng &&)
 
-    /*!
-      Creates a new Rng that is seeded with a specific seed. Each Rng created from the same seed will produce the same randomness
-      sequence. This can be useful for deterministic behavior.
+            noexcept =
+            default;
 
-      @verbatim embed:rst
-      .. note::
+            Rng &operator=(Rng &&)
 
-         The random algorithm might change between nanobench releases. Whenever a faster and/or better random
-         generator becomes available, I will switch the implementation.
-      @endverbatim
+            noexcept =
+            default;
 
-      As per the Romu paper, this seeds the Rng with splitMix64 algorithm and performs 10 initial rounds for further mixing up of the
-      internal state.
+            ~Rng()
 
-      @param seed  The 64bit seed. All values are allowed, even 0.
-     */
-    explicit Rng(uint64_t seed) noexcept;
-    Rng(uint64_t x, uint64_t y) noexcept;
+            noexcept =
+            default;
 
-    /**
-     * Creates a copy of the Rng, thus the copy provides exactly the same random sequence as the original.
-     */
-    ANKERL_NANOBENCH(NODISCARD) Rng copy() const noexcept;
+            /**
+             * @brief Creates a new Random generator with random seed.
+             *
+             * Instead of a default seed (as the random generators from the STD), this properly seeds the random generator from
+             * `std::random_device`. It guarantees correct seeding. Note that seeding can be relatively slow, depending on the source of
+             * randomness used. So it is best to create a Rng once and use it for all your randomness purposes.
+             */
+            Rng();
 
-    /**
-     * @brief Produces a 64bit random value. This should be very fast, thus it is marked as inline. In my benchmark, this is ~46 times
-     * faster than `std::default_random_engine` for producing 64bit random values. It seems that the fastest std contender is
-     * `std::mt19937_64`. Still, this RNG is 2-3 times as fast.
-     *
-     * @return uint64_t The next 64 bit random value.
-     */
-    inline uint64_t operator()() noexcept;
+            /*!
+              Creates a new Rng that is seeded with a specific seed. Each Rng created from the same seed will produce the same randomness
+              sequence. This can be useful for deterministic behavior.
 
-    // This is slightly biased. See
+              @verbatim embed:rst
+              .. note::
 
-    /**
-     * Generates a random number between 0 and range (excluding range).
-     *
-     * The algorithm only produces 32bit numbers, and is slightly biased. The effect is quite small unless your range is close to the
-     * maximum value of an integer. It is possible to correct the bias with rejection sampling (see
-     * [here](https://lemire.me/blog/2016/06/30/fast-random-shuffling/), but this is most likely irrelevant in practices for the
-     * purposes of this Rng.
-     *
-     * See Daniel Lemire's blog post [A fast alternative to the modulo
-     * reduction](https://lemire.me/blog/2016/06/27/a-fast-alternative-to-the-modulo-reduction/)
-     *
-     * @param range Upper exclusive range. E.g a value of 3 will generate random numbers 0, 1, 2.
-     * @return uint32_t Generated random values in range [0, range(.
-     */
-    inline uint32_t bounded(uint32_t range) noexcept;
+                 The random algorithm might change between nanobench releases. Whenever a faster and/or better random
+                 generator becomes available, I will switch the implementation.
+              @endverbatim
 
-    // random double in range [0, 1(
-    // see http://prng.di.unimi.it/
+              As per the Romu paper, this seeds the Rng with splitMix64 algorithm and performs 10 initial rounds for further mixing up of the
+              internal state.
 
-    /**
-     * Provides a random uniform double value between 0 and 1. This uses the method described in [Generating uniform doubles in the
-     * unit interval](http://prng.di.unimi.it/), and is extremely fast.
-     *
-     * @return double Uniformly distributed double value in range [0,1(, excluding 1.
-     */
-    inline double uniform01() noexcept;
+              @param seed  The 64bit seed. All values are allowed, even 0.
+             */
+            explicit Rng(uint64_t seed)
 
-    /**
-     * Shuffles all entries in the given container. Although this has a slight bias due to the implementation of bounded(), this is
-     * preferable to `std::shuffle` because it is over 5 times faster. See Daniel Lemire's blog post [Fast random
-     * shuffling](https://lemire.me/blog/2016/06/30/fast-random-shuffling/).
-     *
-     * @param container The whole container will be shuffled.
-     */
-    template <typename Container>
-    void shuffle(Container& container) noexcept;
+            noexcept;
 
-private:
-    static constexpr uint64_t rotl(uint64_t x, unsigned k) noexcept;
+            Rng(uint64_t x, uint64_t y)
 
-    uint64_t mX;
-    uint64_t mY;
-};
+            noexcept;
+
+            /**
+             * Creates a copy of the Rng, thus the copy provides exactly the same random sequence as the original.
+             */
+            ANKERL_NANOBENCH(NODISCARD)
+
+            Rng copy() const
+
+            noexcept;
+
+            /**
+             * @brief Produces a 64bit random value. This should be very fast, thus it is marked as inline. In my benchmark, this is ~46 times
+             * faster than `std::default_random_engine` for producing 64bit random values. It seems that the fastest std contender is
+             * `std::mt19937_64`. Still, this RNG is 2-3 times as fast.
+             *
+             * @return uint64_t The next 64 bit random value.
+             */
+            inline uint64_t operator()()
+
+            noexcept;
+
+            // This is slightly biased. See
+
+            /**
+             * Generates a random number between 0 and range (excluding range).
+             *
+             * The algorithm only produces 32bit numbers, and is slightly biased. The effect is quite small unless your range is close to the
+             * maximum value of an integer. It is possible to correct the bias with rejection sampling (see
+             * [here](https://lemire.me/blog/2016/06/30/fast-random-shuffling/), but this is most likely irrelevant in practices for the
+             * purposes of this Rng.
+             *
+             * See Daniel Lemire's blog post [A fast alternative to the modulo
+             * reduction](https://lemire.me/blog/2016/06/27/a-fast-alternative-to-the-modulo-reduction/)
+             *
+             * @param range Upper exclusive range. E.g a value of 3 will generate random numbers 0, 1, 2.
+             * @return uint32_t Generated random values in range [0, range(.
+             */
+            inline uint32_t bounded(uint32_t range)
+
+            noexcept;
+
+            // random double in range [0, 1(
+            // see http://prng.di.unimi.it/
+
+            /**
+             * Provides a random uniform double value between 0 and 1. This uses the method described in [Generating uniform doubles in the
+             * unit interval](http://prng.di.unimi.it/), and is extremely fast.
+             *
+             * @return double Uniformly distributed double value in range [0,1(, excluding 1.
+             */
+            inline double uniform01()
+
+            noexcept;
+
+            /**
+             * Shuffles all entries in the given container. Although this has a slight bias due to the implementation of bounded(), this is
+             * preferable to `std::shuffle` because it is over 5 times faster. See Daniel Lemire's blog post [Fast random
+             * shuffling](https://lemire.me/blog/2016/06/30/fast-random-shuffling/).
+             *
+             * @param container The whole container will be shuffled.
+             */
+            template<typename Container>
+            void shuffle(Container &container)
+
+            noexcept;
+
+        private:
+            static constexpr uint64_t
+            rotl(uint64_t
+            x,
+            unsigned k
+            )
+            noexcept;
+
+            uint64_t mX;
+            uint64_t mY;
+        };
 
 /**
  * @brief Main entry point to nanobench's benchmarking facility.
@@ -579,352 +686,459 @@ private:
  * benchmark is executed with run(). Once run() has finished, it prints the result to `std::cout`. It would also store the results
  * in the Bench instance, but in this case the object is immediately destroyed so it's not available any more.
  */
-ANKERL_NANOBENCH(IGNORE_PADDED_PUSH)
-class Bench {
-public:
-    /**
-     * @brief Creates a new benchmark for configuration and running of benchmarks.
-     */
-    Bench();
+        ANKERL_NANOBENCH(IGNORE_PADDED_PUSH)
 
-    Bench(Bench&& other);
-    Bench& operator=(Bench&& other);
-    Bench(Bench const& other);
-    Bench& operator=(Bench const& other);
-    ~Bench() noexcept;
+        class Bench {
+        public:
+            /**
+             * @brief Creates a new benchmark for configuration and running of benchmarks.
+             */
+            Bench();
 
-    /*!
-      @brief Repeatedly calls `op()` based on the configuration, and performs measurements.
+            Bench(Bench &&other);
 
-      This call is marked with `noinline` to prevent the compiler to optimize beyond different benchmarks. This can have quite a big
-      effect on benchmark accuracy.
+            Bench &operator=(Bench &&other);
 
-      @verbatim embed:rst
-      .. note::
+            Bench(Bench const &other);
 
-        Each call to your lambda must have a side effect that the compiler can't possibly optimize it away. E.g. add a result to an
-        externally defined number (like `x` in the above example), and finally call `doNotOptimizeAway` on the variables the compiler
-        must not remove. You can also use :cpp:func:`ankerl::nanobench::doNotOptimizeAway` directly in the lambda, but be aware that
-        this has a small overhead.
+            Bench &operator=(Bench const &other);
 
-      @endverbatim
+            ~Bench()
 
-      @tparam Op The code to benchmark.
-     */
-    template <typename Op>
-    ANKERL_NANOBENCH(NOINLINE)
-    Bench& run(char const* benchmarkName, Op&& op);
+            noexcept;
 
-    template <typename Op>
-    ANKERL_NANOBENCH(NOINLINE)
-    Bench& run(std::string const& benchmarkName, Op&& op);
+            /*!
+              @brief Repeatedly calls `op()` based on the configuration, and performs measurements.
 
-    /**
-     * @brief Same as run(char const* benchmarkName, Op op), but instead uses the previously set name.
-     * @tparam Op The code to benchmark.
-     */
-    template <typename Op>
-    ANKERL_NANOBENCH(NOINLINE)
-    Bench& run(Op&& op);
+              This call is marked with `noinline` to prevent the compiler to optimize beyond different benchmarks. This can have quite a big
+              effect on benchmark accuracy.
 
-    /**
-     * @brief Title of the benchmark, will be shown in the table header. Changing the title will start a new markdown table.
-     *
-     * @param benchmarkTitle The title of the benchmark.
-     */
-    Bench& title(char const* benchmarkTitle);
-    Bench& title(std::string const& benchmarkTitle);
-    ANKERL_NANOBENCH(NODISCARD) std::string const& title() const noexcept;
+              @verbatim embed:rst
+              .. note::
 
-    /// Name of the benchmark, will be shown in the table row.
-    Bench& name(char const* benchmarkName);
-    Bench& name(std::string const& benchmarkName);
-    ANKERL_NANOBENCH(NODISCARD) std::string const& name() const noexcept;
+                Each call to your lambda must have a side effect that the compiler can't possibly optimize it away. E.g. add a result to an
+                externally defined number (like `x` in the above example), and finally call `doNotOptimizeAway` on the variables the compiler
+                must not remove. You can also use :cpp:func:`ankerl::nanobench::doNotOptimizeAway` directly in the lambda, but be aware that
+                this has a small overhead.
 
-    /**
-     * @brief Sets the batch size.
-     *
-     * E.g. number of processed byte, or some other metric for the size of the processed data in each iteration. If you benchmark
-     * hashing of a 1000 byte long string and want byte/sec as a result, you can specify 1000 as the batch size.
-     *
-     * @tparam T Any input type is internally cast to `double`.
-     * @param b batch size
-     */
-    template <typename T>
-    Bench& batch(T b) noexcept;
-    ANKERL_NANOBENCH(NODISCARD) double batch() const noexcept;
+              @endverbatim
 
-    /**
-     * @brief Sets the operation unit.
-     *
-     * Defaults to "op". Could be e.g. "byte" for string processing. This is used for the table header, e.g. to show `ns/byte`. Use
-     * singular (*byte*, not *bytes*). A change clears the currently collected results.
-     *
-     * @param unit The unit name.
-     */
-    Bench& unit(char const* unit);
-    Bench& unit(std::string const& unit);
-    ANKERL_NANOBENCH(NODISCARD) std::string const& unit() const noexcept;
+              @tparam Op The code to benchmark.
+             */
+            template<typename Op>
+            ANKERL_NANOBENCH(NOINLINE)
+            Bench &run(char const *benchmarkName, Op &&op);
 
-    /**
-     * @brief Set the output stream where the resulting markdown table will be printed to.
-     *
-     * The default is `&std::cout`. You can disable all output by setting `nullptr`.
-     *
-     * @param outstream Pointer to output stream, can be `nullptr`.
-     */
-    Bench& output(std::ostream* outstream) noexcept;
-    ANKERL_NANOBENCH(NODISCARD) std::ostream* output() const noexcept;
+            template<typename Op>
+            ANKERL_NANOBENCH(NOINLINE)
+            Bench &run(std::string const &benchmarkName, Op &&op);
 
-    /**
-     * Modern processors have a very accurate clock, being able to measure as low as 20 nanoseconds. This is the main trick nanobech to
-     * be so fast: we find out how accurate the clock is, then run the benchmark only so often that the clock's accuracy is good enough
-     * for accurate measurements.
-     *
-     * The default is to run one epoch for 1000 times the clock resolution. So for 20ns resolution and 11 epochs, this gives a total
-     * runtime of
-     *
-     * @f[
-     * 20ns * 1000 * 11 \approx 0.2ms
-     * @f]
-     *
-     * To be precise, nanobench adds a 0-20% random noise to each evaluation. This is to prevent any aliasing effects, and further
-     * improves accuracy.
-     *
-     * Total runtime will be higher though: Some initial time is needed to find out the target number of iterations for each epoch, and
-     * there is some overhead involved to start & stop timers and calculate resulting statistics and writing the output.
-     *
-     * @param multiple Target number of times of clock resolution. Usually 1000 is a good compromise between runtime and accuracy.
-     */
-    Bench& clockResolutionMultiple(size_t multiple) noexcept;
-    ANKERL_NANOBENCH(NODISCARD) size_t clockResolutionMultiple() const noexcept;
+            /**
+             * @brief Same as run(char const* benchmarkName, Op op), but instead uses the previously set name.
+             * @tparam Op The code to benchmark.
+             */
+            template<typename Op>
+            ANKERL_NANOBENCH(NOINLINE)
+            Bench &run(Op &&op);
 
-    /**
-     * @brief Controls number of epochs, the number of measurements to perform.
-     *
-     * The reported result will be the median of evaluation of each epoch. The higher you choose this, the more
-     * deterministic the result be and outliers will be more easily removed. Also the `err%` will be more accurate the higher this
-     * number is. Note that the `err%` will not necessarily decrease when number of epochs is increased. But it will be a more accurate
-     * representation of the benchmarked code's runtime stability.
-     *
-     * Choose the value wisely. In practice, 11 has been shown to be a reasonable choice between runtime performance and accuracy.
-     * This setting goes hand in hand with minEpocIterations() (or minEpochTime()). If you are more interested in *median* runtime, you
-     * might want to increase epochs(). If you are more interested in *mean* runtime, you might want to increase minEpochIterations()
-     * instead.
-     *
-     * @param numEpochs Number of epochs.
-     */
-    Bench& epochs(size_t numEpochs) noexcept;
-    ANKERL_NANOBENCH(NODISCARD) size_t epochs() const noexcept;
+            /**
+             * @brief Title of the benchmark, will be shown in the table header. Changing the title will start a new markdown table.
+             *
+             * @param benchmarkTitle The title of the benchmark.
+             */
+            Bench &title(char const *benchmarkTitle);
 
-    /**
-     * @brief Upper limit for the runtime of each epoch.
-     *
-     * As a safety precausion if the clock is not very accurate, we can set an upper limit for the maximum evaluation time per
-     * epoch. Default is 100ms. At least a single evaluation of the benchmark is performed.
-     *
-     * @see minEpochTime(), minEpochIterations()
-     *
-     * @param t Maximum target runtime for a single epoch.
-     */
-    Bench& maxEpochTime(std::chrono::nanoseconds t) noexcept;
-    ANKERL_NANOBENCH(NODISCARD) std::chrono::nanoseconds maxEpochTime() const noexcept;
+            Bench &title(std::string const &benchmarkTitle);
 
-    /**
-     * @brief Minimum time each epoch should take.
-     *
-     * Default is zero, so we are fully relying on clockResolutionMultiple(). In most cases this is exactly what you want. If you see
-     * that the evaluation is unreliable with a high `err%`, you can increase either minEpochTime() or minEpochIterations().
-     *
-     * @see maxEpochTime(), minEpochIterations()
-     *
-     * @param t Minimum time each epoch should take.
-     */
-    Bench& minEpochTime(std::chrono::nanoseconds t) noexcept;
-    ANKERL_NANOBENCH(NODISCARD) std::chrono::nanoseconds minEpochTime() const noexcept;
+            ANKERL_NANOBENCH(NODISCARD)
 
-    /**
-     * @brief Sets the minimum number of iterations each epoch should take.
-     *
-     * Default is 1, and we rely on clockResolutionMultiple(). If the `err%` is high and you want a more smooth result, you might want
-     * to increase the minimum number or iterations, or increase the minEpochTime().
-     *
-     * @see minEpochTime(), maxEpochTime(), minEpochIterations()
-     *
-     * @param numIters Minimum number of iterations per epoch.
-     */
-    Bench& minEpochIterations(uint64_t numIters) noexcept;
-    ANKERL_NANOBENCH(NODISCARD) uint64_t minEpochIterations() const noexcept;
+            std::string const &title() const
 
-    /**
-     * Sets exactly the number of iterations for each epoch. Ignores all other epoch limits. This forces nanobench to use exactly
-     * the given number of iterations for each epoch, not more and not less. Default is 0 (disabled).
-     *
-     * @param numIters Exact number of iterations to use. Set to 0 to disable.
-     */
-    Bench& epochIterations(uint64_t numIters) noexcept;
-    ANKERL_NANOBENCH(NODISCARD) uint64_t epochIterations() const noexcept;
+            noexcept;
 
-    /**
-     * @brief Sets a number of iterations that are initially performed without any measurements.
-     *
-     * Some benchmarks need a few evaluations to warm up caches / database / whatever access. Normally this should not be needed, since
-     * we show the median result so initial outliers will be filtered away automatically. If the warmup effect is large though, you
-     * might want to set it. Default is 0.
-     *
-     * @param numWarmupIters Number of warmup iterations.
-     */
-    Bench& warmup(uint64_t numWarmupIters) noexcept;
-    ANKERL_NANOBENCH(NODISCARD) uint64_t warmup() const noexcept;
+            /// Name of the benchmark, will be shown in the table row.
+            Bench &name(char const *benchmarkName);
 
-    /**
-     * @brief Marks the next run as the baseline.
-     *
-     * Call `relative(true)` to mark the run as the baseline. Successive runs will be compared to this run. It is calculated by
-     *
-     * @f[
-     * 100\% * \frac{baseline}{runtime}
-     * @f]
-     *
-     *  * 100% means it is exactly as fast as the baseline
-     *  * >100% means it is faster than the baseline. E.g. 200% means the current run is twice as fast as the baseline.
-     *  * <100% means it is slower than the baseline. E.g. 50% means it is twice as slow as the baseline.
-     *
-     * See the tutorial section "Comparing Results" for example usage.
-     *
-     * @param isRelativeEnabled True to enable processing
-     */
-    Bench& relative(bool isRelativeEnabled) noexcept;
-    ANKERL_NANOBENCH(NODISCARD) bool relative() const noexcept;
+            Bench &name(std::string const &benchmarkName);
 
-    /**
-     * @brief Enables/disables performance counters.
-     *
-     * On Linux nanobench has a powerful feature to use performance counters. This enables counting of retired instructions, count
-     * number of branches, missed branches, etc. On default this is enabled, but you can disable it if you don't need that feature.
-     *
-     * @param showPerformanceCounters True to enable, false to disable.
-     */
-    Bench& performanceCounters(bool showPerformanceCounters) noexcept;
-    ANKERL_NANOBENCH(NODISCARD) bool performanceCounters() const noexcept;
+            ANKERL_NANOBENCH(NODISCARD)
 
-    /**
-     * @brief Retrieves all benchmark results collected by the bench object so far.
-     *
-     * Each call to run() generates a Result that is stored within the Bench instance. This is mostly for advanced users who want to
-     * see all the nitty gritty detials.
-     *
-     * @return All results collected so far.
-     */
-    ANKERL_NANOBENCH(NODISCARD) std::vector<Result> const& results() const noexcept;
+            std::string const &name() const
 
-    /*!
-      @verbatim embed:rst
+            noexcept;
 
-      Convenience shortcut to :cpp:func:`ankerl::nanobench::doNotOptimizeAway`.
+            /**
+             * @brief Sets the batch size.
+             *
+             * E.g. number of processed byte, or some other metric for the size of the processed data in each iteration. If you benchmark
+             * hashing of a 1000 byte long string and want byte/sec as a result, you can specify 1000 as the batch size.
+             *
+             * @tparam T Any input type is internally cast to `double`.
+             * @param b batch size
+             */
+            template<typename T>
+            Bench &batch(T b)
 
-      @endverbatim
-     */
-    template <typename Arg>
-    Bench& doNotOptimizeAway(Arg&& arg);
+            noexcept;
+            ANKERL_NANOBENCH(NODISCARD)
 
-    /*!
-      @verbatim embed:rst
+            double batch() const
 
-      Sets N for asymptotic complexity calculation, so it becomes possible to calculate `Big O
-      <https://en.wikipedia.org/wiki/Big_O_notation>`_ from multiple benchmark evaluations.
+            noexcept;
 
-      Use :cpp:func:`ankerl::nanobench::Bench::complexityBigO` when the evaluation has finished. See the tutorial
-      :ref:`asymptotic-complexity` for details.
+            /**
+             * @brief Sets the operation unit.
+             *
+             * Defaults to "op". Could be e.g. "byte" for string processing. This is used for the table header, e.g. to show `ns/byte`. Use
+             * singular (*byte*, not *bytes*). A change clears the currently collected results.
+             *
+             * @param unit The unit name.
+             */
+            Bench &unit(char const *unit);
 
-      @endverbatim
+            Bench &unit(std::string const &unit);
 
-      @tparam T Any type is cast to `double`.
-      @param b Length of N for the next benchmark run, so it is possible to calculate `bigO`.
-     */
-    template <typename T>
-    Bench& complexityN(T b) noexcept;
-    ANKERL_NANOBENCH(NODISCARD) double complexityN() const noexcept;
+            ANKERL_NANOBENCH(NODISCARD)
 
-    /*!
-      Calculates [Big O](https://en.wikipedia.org/wiki/Big_O_notation>) of the results with all preconfigured complexity functions.
-      Currently these complexity functions are fitted into the benchmark results:
+            std::string const &unit() const
 
-       @f$ \mathcal{O}(1) @f$,
-       @f$ \mathcal{O}(n) @f$,
-       @f$ \mathcal{O}(\log{}n) @f$,
-       @f$ \mathcal{O}(n\log{}n) @f$,
-       @f$ \mathcal{O}(n^2) @f$,
-       @f$ \mathcal{O}(n^3) @f$.
+            noexcept;
 
-      If we e.g. evaluate the complexity of `std::sort`, this is the result of `std::cout << bench.complexityBigO()`:
+            /**
+             * @brief Set the output stream where the resulting markdown table will be printed to.
+             *
+             * The default is `&std::cout`. You can disable all output by setting `nullptr`.
+             *
+             * @param outstream Pointer to output stream, can be `nullptr`.
+             */
+            Bench &output(std::ostream *outstream)
 
-      ```
-      |   coefficient |   err% | complexity
-      |--------------:|-------:|------------
-      |   5.08935e-09 |   2.6% | O(n log n)
-      |   6.10608e-08 |   8.0% | O(n)
-      |   1.29307e-11 |  47.2% | O(n^2)
-      |   2.48677e-15 |  69.6% | O(n^3)
-      |   9.88133e-06 | 132.3% | O(log n)
-      |   5.98793e-05 | 162.5% | O(1)
-      ```
+            noexcept;
+            ANKERL_NANOBENCH(NODISCARD)
 
-      So in this case @f$ \mathcal{O}(n\log{}n) @f$ provides the best approximation.
+            std::ostream *output() const
 
-      @verbatim embed:rst
-      See the tutorial :ref:`asymptotic-complexity` for details.
-      @endverbatim
-      @return Evaluation results, which can be printed or otherwise inspected.
-     */
-    std::vector<BigO> complexityBigO() const;
+            noexcept;
 
-    /**
-     * @brief Calculates bigO for a custom function.
-     *
-     * E.g. to calculate the mean squared error for @f$ \mathcal{O}(\log{}\log{}n) @f$, which is not part of the default set of
-     * complexityBigO(), you can do this:
-     *
-     * ```
-     * auto logLogN = bench.complexityBigO("O(log log n)", [](double n) {
-     *     return std::log2(std::log2(n));
-     * });
-     * ```
-     *
-     * The resulting mean squared error can be printed with `std::cout << logLogN`. E.g. it prints something like this:
-     *
-     * ```text
-     * 2.46985e-05 * O(log log n), rms=1.48121
-     * ```
-     *
-     * @tparam Op Type of mapping operation.
-     * @param name Name for the function, e.g. "O(log log n)"
-     * @param op Op's operator() maps a `double` with the desired complexity function, e.g. `log2(log2(n))`.
-     * @return BigO Error calculation, which is streamable to std::cout.
-     */
-    template <typename Op>
-    BigO complexityBigO(char const* name, Op op) const;
+            /**
+             * Modern processors have a very accurate clock, being able to measure as low as 20 nanoseconds. This is the main trick nanobech to
+             * be so fast: we find out how accurate the clock is, then run the benchmark only so often that the clock's accuracy is good enough
+             * for accurate measurements.
+             *
+             * The default is to run one epoch for 1000 times the clock resolution. So for 20ns resolution and 11 epochs, this gives a total
+             * runtime of
+             *
+             * @f[
+             * 20ns * 1000 * 11 \approx 0.2ms
+             * @f]
+             *
+             * To be precise, nanobench adds a 0-20% random noise to each evaluation. This is to prevent any aliasing effects, and further
+             * improves accuracy.
+             *
+             * Total runtime will be higher though: Some initial time is needed to find out the target number of iterations for each epoch, and
+             * there is some overhead involved to start & stop timers and calculate resulting statistics and writing the output.
+             *
+             * @param multiple Target number of times of clock resolution. Usually 1000 is a good compromise between runtime and accuracy.
+             */
+            Bench &clockResolutionMultiple(size_t multiple)
 
-    template <typename Op>
-    BigO complexityBigO(std::string const& name, Op op) const;
+            noexcept;
+            ANKERL_NANOBENCH(NODISCARD)
 
-    /*!
-      @verbatim embed:rst
+            size_t clockResolutionMultiple() const
 
-      Convenience shortcut to :cpp:func:`ankerl::nanobench::render`.
+            noexcept;
 
-      @endverbatim
-     */
-    Bench& render(char const* templateContent, std::ostream& os);
+            /**
+             * @brief Controls number of epochs, the number of measurements to perform.
+             *
+             * The reported result will be the median of evaluation of each epoch. The higher you choose this, the more
+             * deterministic the result be and outliers will be more easily removed. Also the `err%` will be more accurate the higher this
+             * number is. Note that the `err%` will not necessarily decrease when number of epochs is increased. But it will be a more accurate
+             * representation of the benchmarked code's runtime stability.
+             *
+             * Choose the value wisely. In practice, 11 has been shown to be a reasonable choice between runtime performance and accuracy.
+             * This setting goes hand in hand with minEpocIterations() (or minEpochTime()). If you are more interested in *median* runtime, you
+             * might want to increase epochs(). If you are more interested in *mean* runtime, you might want to increase minEpochIterations()
+             * instead.
+             *
+             * @param numEpochs Number of epochs.
+             */
+            Bench &epochs(size_t numEpochs)
 
-    Bench& config(Config const& benchmarkConfig);
-    ANKERL_NANOBENCH(NODISCARD) Config const& config() const noexcept;
+            noexcept;
+            ANKERL_NANOBENCH(NODISCARD)
 
-private:
-    Config mConfig{};
-    std::vector<Result> mResults{};
-};
-ANKERL_NANOBENCH(IGNORE_PADDED_POP)
+            size_t epochs() const
+
+            noexcept;
+
+            /**
+             * @brief Upper limit for the runtime of each epoch.
+             *
+             * As a safety precausion if the clock is not very accurate, we can set an upper limit for the maximum evaluation time per
+             * epoch. Default is 100ms. At least a single evaluation of the benchmark is performed.
+             *
+             * @see minEpochTime(), minEpochIterations()
+             *
+             * @param t Maximum target runtime for a single epoch.
+             */
+            Bench &maxEpochTime(std::chrono::nanoseconds t)
+
+            noexcept;
+            ANKERL_NANOBENCH(NODISCARD)
+
+            std::chrono::nanoseconds maxEpochTime() const
+
+            noexcept;
+
+            /**
+             * @brief Minimum time each epoch should take.
+             *
+             * Default is zero, so we are fully relying on clockResolutionMultiple(). In most cases this is exactly what you want. If you see
+             * that the evaluation is unreliable with a high `err%`, you can increase either minEpochTime() or minEpochIterations().
+             *
+             * @see maxEpochTime(), minEpochIterations()
+             *
+             * @param t Minimum time each epoch should take.
+             */
+            Bench &minEpochTime(std::chrono::nanoseconds t)
+
+            noexcept;
+            ANKERL_NANOBENCH(NODISCARD)
+
+            std::chrono::nanoseconds minEpochTime() const
+
+            noexcept;
+
+            /**
+             * @brief Sets the minimum number of iterations each epoch should take.
+             *
+             * Default is 1, and we rely on clockResolutionMultiple(). If the `err%` is high and you want a more smooth result, you might want
+             * to increase the minimum number or iterations, or increase the minEpochTime().
+             *
+             * @see minEpochTime(), maxEpochTime(), minEpochIterations()
+             *
+             * @param numIters Minimum number of iterations per epoch.
+             */
+            Bench &minEpochIterations(uint64_t numIters)
+
+            noexcept;
+            ANKERL_NANOBENCH(NODISCARD)
+
+            uint64_t minEpochIterations() const
+
+            noexcept;
+
+            /**
+             * Sets exactly the number of iterations for each epoch. Ignores all other epoch limits. This forces nanobench to use exactly
+             * the given number of iterations for each epoch, not more and not less. Default is 0 (disabled).
+             *
+             * @param numIters Exact number of iterations to use. Set to 0 to disable.
+             */
+            Bench &epochIterations(uint64_t numIters)
+
+            noexcept;
+            ANKERL_NANOBENCH(NODISCARD)
+
+            uint64_t epochIterations() const
+
+            noexcept;
+
+            /**
+             * @brief Sets a number of iterations that are initially performed without any measurements.
+             *
+             * Some benchmarks need a few evaluations to warm up caches / database / whatever access. Normally this should not be needed, since
+             * we show the median result so initial outliers will be filtered away automatically. If the warmup effect is large though, you
+             * might want to set it. Default is 0.
+             *
+             * @param numWarmupIters Number of warmup iterations.
+             */
+            Bench &warmup(uint64_t numWarmupIters)
+
+            noexcept;
+            ANKERL_NANOBENCH(NODISCARD)
+
+            uint64_t warmup() const
+
+            noexcept;
+
+            /**
+             * @brief Marks the next run as the baseline.
+             *
+             * Call `relative(true)` to mark the run as the baseline. Successive runs will be compared to this run. It is calculated by
+             *
+             * @f[
+             * 100\% * \frac{baseline}{runtime}
+             * @f]
+             *
+             *  * 100% means it is exactly as fast as the baseline
+             *  * >100% means it is faster than the baseline. E.g. 200% means the current run is twice as fast as the baseline.
+             *  * <100% means it is slower than the baseline. E.g. 50% means it is twice as slow as the baseline.
+             *
+             * See the tutorial section "Comparing Results" for example usage.
+             *
+             * @param isRelativeEnabled True to enable processing
+             */
+            Bench &relative(bool isRelativeEnabled)
+
+            noexcept;
+            ANKERL_NANOBENCH(NODISCARD)
+
+            bool relative() const
+
+            noexcept;
+
+            /**
+             * @brief Enables/disables performance counters.
+             *
+             * On Linux nanobench has a powerful feature to use performance counters. This enables counting of retired instructions, count
+             * number of branches, missed branches, etc. On default this is enabled, but you can disable it if you don't need that feature.
+             *
+             * @param showPerformanceCounters True to enable, false to disable.
+             */
+            Bench &performanceCounters(bool showPerformanceCounters)
+
+            noexcept;
+            ANKERL_NANOBENCH(NODISCARD)
+
+            bool performanceCounters() const
+
+            noexcept;
+
+            /**
+             * @brief Retrieves all benchmark results collected by the bench object so far.
+             *
+             * Each call to run() generates a Result that is stored within the Bench instance. This is mostly for advanced users who want to
+             * see all the nitty gritty detials.
+             *
+             * @return All results collected so far.
+             */
+            ANKERL_NANOBENCH(NODISCARD)
+
+            std::vector <Result> const &results() const
+
+            noexcept;
+
+            /*!
+              @verbatim embed:rst
+
+              Convenience shortcut to :cpp:func:`ankerl::nanobench::doNotOptimizeAway`.
+
+              @endverbatim
+             */
+            template<typename Arg>
+            Bench &doNotOptimizeAway(Arg &&arg);
+
+            /*!
+              @verbatim embed:rst
+
+              Sets N for asymptotic complexity calculation, so it becomes possible to calculate `Big O
+              <https://en.wikipedia.org/wiki/Big_O_notation>`_ from multiple benchmark evaluations.
+
+              Use :cpp:func:`ankerl::nanobench::Bench::complexityBigO` when the evaluation has finished. See the tutorial
+              :ref:`asymptotic-complexity` for details.
+
+              @endverbatim
+
+              @tparam T Any type is cast to `double`.
+              @param b Length of N for the next benchmark run, so it is possible to calculate `bigO`.
+             */
+            template<typename T>
+            Bench &complexityN(T b)
+
+            noexcept;
+            ANKERL_NANOBENCH(NODISCARD)
+
+            double complexityN() const
+
+            noexcept;
+
+            /*!
+              Calculates [Big O](https://en.wikipedia.org/wiki/Big_O_notation>) of the results with all preconfigured complexity functions.
+              Currently these complexity functions are fitted into the benchmark results:
+
+               @f$ \mathcal{O}(1) @f$,
+               @f$ \mathcal{O}(n) @f$,
+               @f$ \mathcal{O}(\log{}n) @f$,
+               @f$ \mathcal{O}(n\log{}n) @f$,
+               @f$ \mathcal{O}(n^2) @f$,
+               @f$ \mathcal{O}(n^3) @f$.
+
+              If we e.g. evaluate the complexity of `std::sort`, this is the result of `std::cout << bench.complexityBigO()`:
+
+              ```
+              |   coefficient |   err% | complexity
+              |--------------:|-------:|------------
+              |   5.08935e-09 |   2.6% | O(n log n)
+              |   6.10608e-08 |   8.0% | O(n)
+              |   1.29307e-11 |  47.2% | O(n^2)
+              |   2.48677e-15 |  69.6% | O(n^3)
+              |   9.88133e-06 | 132.3% | O(log n)
+              |   5.98793e-05 | 162.5% | O(1)
+              ```
+
+              So in this case @f$ \mathcal{O}(n\log{}n) @f$ provides the best approximation.
+
+              @verbatim embed:rst
+              See the tutorial :ref:`asymptotic-complexity` for details.
+              @endverbatim
+              @return Evaluation results, which can be printed or otherwise inspected.
+             */
+            std::vector <BigO> complexityBigO() const;
+
+            /**
+             * @brief Calculates bigO for a custom function.
+             *
+             * E.g. to calculate the mean squared error for @f$ \mathcal{O}(\log{}\log{}n) @f$, which is not part of the default set of
+             * complexityBigO(), you can do this:
+             *
+             * ```
+             * auto logLogN = bench.complexityBigO("O(log log n)", [](double n) {
+             *     return std::log2(std::log2(n));
+             * });
+             * ```
+             *
+             * The resulting mean squared error can be printed with `std::cout << logLogN`. E.g. it prints something like this:
+             *
+             * ```text
+             * 2.46985e-05 * O(log log n), rms=1.48121
+             * ```
+             *
+             * @tparam Op Type of mapping operation.
+             * @param name Name for the function, e.g. "O(log log n)"
+             * @param op Op's operator() maps a `double` with the desired complexity function, e.g. `log2(log2(n))`.
+             * @return BigO Error calculation, which is streamable to std::cout.
+             */
+            template<typename Op>
+            BigO complexityBigO(char const *name, Op op) const;
+
+            template<typename Op>
+            BigO complexityBigO(std::string const &name, Op op) const;
+
+            /*!
+              @verbatim embed:rst
+
+              Convenience shortcut to :cpp:func:`ankerl::nanobench::render`.
+
+              @endverbatim
+             */
+            Bench &render(char const *templateContent, std::ostream &os);
+
+            Bench &config(Config const &benchmarkConfig);
+
+            ANKERL_NANOBENCH(NODISCARD)
+
+            Config const &config() const
+
+            noexcept;
+
+        private:
+            Config mConfig{};
+            std::vector <Result> mResults{};
+        };
+
+        ANKERL_NANOBENCH(IGNORE_PADDED_POP)
 
 /**
  * @brief Makes sure none of the given arguments are optimized away by the compiler.
@@ -932,187 +1146,259 @@ ANKERL_NANOBENCH(IGNORE_PADDED_POP)
  * @tparam Arg Type of the argument that shouldn't be optimized away.
  * @param arg The input that we mark as being used, even though we don't do anything with it.
  */
-template <typename Arg>
-void doNotOptimizeAway(Arg&& arg);
+        template<typename Arg>
+        void doNotOptimizeAway(Arg &&arg);
 
-namespace detail {
+        namespace detail {
 
 #if defined(_MSC_VER)
-void doNotOptimizeAwaySink(void const*);
+            void doNotOptimizeAwaySink(void const*);
 
-template <typename T>
-void doNotOptimizeAway(T const& val);
+            template <typename T>
+            void doNotOptimizeAway(T const& val);
 
 #else
 
 // see folly's Benchmark.h
-template <typename T>
-constexpr bool doNotOptimizeNeedsIndirect() {
-    using Decayed = typename std::decay<T>::type;
-    return !ANKERL_NANOBENCH_IS_TRIVIALLY_COPYABLE(Decayed) || sizeof(Decayed) > sizeof(long) || std::is_pointer<Decayed>::value;
-}
+            template<typename T>
+            constexpr bool doNotOptimizeNeedsIndirect() {
+                using Decayed = typename std::decay<T>::type;
+                return !ANKERL_NANOBENCH_IS_TRIVIALLY_COPYABLE(Decayed) || sizeof(Decayed) > sizeof(long) ||
+                       std::is_pointer<Decayed>::value;
+            }
 
-template <typename T>
-typename std::enable_if<!doNotOptimizeNeedsIndirect<T>()>::type doNotOptimizeAway(T const& val) {
-    // NOLINTNEXTLINE(hicpp-no-assembler)
-    asm volatile("" ::"r"(val));
-}
+            template<typename T>
+            typename std::enable_if<!doNotOptimizeNeedsIndirect<T>()>::type doNotOptimizeAway(T const &val) {
+                // NOLINTNEXTLINE(hicpp-no-assembler)
+                asm volatile(""::"r"(val));
+            }
 
-template <typename T>
-typename std::enable_if<doNotOptimizeNeedsIndirect<T>()>::type doNotOptimizeAway(T const& val) {
-    // NOLINTNEXTLINE(hicpp-no-assembler)
-    asm volatile("" ::"m"(val) : "memory");
-}
+            template<typename T>
+            typename std::enable_if<doNotOptimizeNeedsIndirect<T>()>::type doNotOptimizeAway(T const &val) {
+                // NOLINTNEXTLINE(hicpp-no-assembler)
+                asm volatile(""::"m"(val) : "memory");
+            }
+
 #endif
 
 // internally used, but visible because run() is templated.
 // Not movable/copy-able, so we simply use a pointer instead of unique_ptr. This saves us from
 // having to include <memory>, and the template instantiation overhead of unique_ptr which is unfortunately quite significant.
-ANKERL_NANOBENCH(IGNORE_EFFCPP_PUSH)
-class IterationLogic {
-public:
-    explicit IterationLogic(Bench const& config) noexcept;
-    ~IterationLogic();
+            ANKERL_NANOBENCH(IGNORE_EFFCPP_PUSH)
 
-    ANKERL_NANOBENCH(NODISCARD) uint64_t numIters() const noexcept;
-    void add(std::chrono::nanoseconds elapsed, PerformanceCounters const& pc) noexcept;
-    void moveResultTo(std::vector<Result>& results) noexcept;
+            class IterationLogic {
+            public:
+                explicit IterationLogic(Bench const &config)
 
-private:
-    struct Impl;
-    Impl* mPimpl;
-};
-ANKERL_NANOBENCH(IGNORE_EFFCPP_POP)
+                noexcept;
 
-ANKERL_NANOBENCH(IGNORE_PADDED_PUSH)
-class PerformanceCounters {
-public:
-    PerformanceCounters(PerformanceCounters const&) = delete;
-    PerformanceCounters& operator=(PerformanceCounters const&) = delete;
+                ~IterationLogic();
 
-    PerformanceCounters();
-    ~PerformanceCounters();
+                ANKERL_NANOBENCH(NODISCARD)
 
-    void beginMeasure();
-    void endMeasure();
-    void updateResults(uint64_t numIters);
+                uint64_t numIters() const
 
-    ANKERL_NANOBENCH(NODISCARD) PerfCountSet<uint64_t> const& val() const noexcept;
-    ANKERL_NANOBENCH(NODISCARD) PerfCountSet<bool> const& has() const noexcept;
+                noexcept;
 
-private:
+                void add(std::chrono::nanoseconds elapsed, PerformanceCounters const &pc)
+
+                noexcept;
+
+                void moveResultTo(std::vector <Result> &results)
+
+                noexcept;
+
+            private:
+                struct Impl;
+                Impl *mPimpl;
+            };
+
+            ANKERL_NANOBENCH(IGNORE_EFFCPP_POP)
+
+            ANKERL_NANOBENCH(IGNORE_PADDED_PUSH)
+
+            class PerformanceCounters {
+            public:
+                PerformanceCounters(PerformanceCounters const &) = delete;
+
+                PerformanceCounters &operator=(PerformanceCounters const &) = delete;
+
+                PerformanceCounters();
+
+                ~PerformanceCounters();
+
+                void beginMeasure();
+
+                void endMeasure();
+
+                void updateResults(uint64_t numIters);
+
+                ANKERL_NANOBENCH(NODISCARD)
+
+                PerfCountSet<uint64_t> const &val() const
+
+                noexcept;
+                ANKERL_NANOBENCH(NODISCARD)
+
+                PerfCountSet<bool> const &has() const
+
+                noexcept;
+
+            private:
 #if ANKERL_NANOBENCH(PERF_COUNTERS)
-    LinuxPerformanceCounters* mPc = nullptr;
+                LinuxPerformanceCounters* mPc = nullptr;
 #endif
-    PerfCountSet<uint64_t> mVal{};
-    PerfCountSet<bool> mHas{};
-};
-ANKERL_NANOBENCH(IGNORE_PADDED_POP)
+                PerfCountSet<uint64_t> mVal{};
+                PerfCountSet<bool> mHas{};
+            };
+
+            ANKERL_NANOBENCH(IGNORE_PADDED_POP)
 
 // Gets the singleton
-PerformanceCounters& performanceCounters();
+            PerformanceCounters &performanceCounters();
 
-} // namespace detail
+        } // namespace detail
 
-class BigO {
-public:
-    using RangeMeasure = std::vector<std::pair<double, double>>;
+        class BigO {
+        public:
+            using RangeMeasure = std::vector <std::pair<double, double>>;
 
-    template <typename Op>
-    static RangeMeasure mapRangeMeasure(RangeMeasure data, Op op) {
-        for (auto& rangeMeasure : data) {
-            rangeMeasure.first = op(rangeMeasure.first);
-        }
-        return data;
-    }
+            template<typename Op>
+            static RangeMeasure mapRangeMeasure(RangeMeasure data, Op op) {
+                for (auto &rangeMeasure: data) {
+                    rangeMeasure.first = op(rangeMeasure.first);
+                }
+                return data;
+            }
 
-    static RangeMeasure collectRangeMeasure(std::vector<Result> const& results);
+            static RangeMeasure collectRangeMeasure(std::vector <Result> const &results);
 
-    template <typename Op>
-    BigO(char const* bigOName, RangeMeasure const& rangeMeasure, Op rangeToN)
-        : BigO(bigOName, mapRangeMeasure(rangeMeasure, rangeToN)) {}
+            template<typename Op>
+            BigO(char const *bigOName, RangeMeasure const &rangeMeasure, Op rangeToN)
+                    : BigO(bigOName, mapRangeMeasure(rangeMeasure, rangeToN)) {}
 
-    template <typename Op>
-    BigO(std::string const& bigOName, RangeMeasure const& rangeMeasure, Op rangeToN)
-        : BigO(bigOName, mapRangeMeasure(rangeMeasure, rangeToN)) {}
+            template<typename Op>
+            BigO(std::string const &bigOName, RangeMeasure const &rangeMeasure, Op rangeToN)
+                    : BigO(bigOName, mapRangeMeasure(rangeMeasure, rangeToN)) {}
 
-    BigO(char const* bigOName, RangeMeasure const& scaledRangeMeasure);
-    BigO(std::string const& bigOName, RangeMeasure const& scaledRangeMeasure);
-    ANKERL_NANOBENCH(NODISCARD) std::string const& name() const noexcept;
-    ANKERL_NANOBENCH(NODISCARD) double constant() const noexcept;
-    ANKERL_NANOBENCH(NODISCARD) double normalizedRootMeanSquare() const noexcept;
-    ANKERL_NANOBENCH(NODISCARD) bool operator<(BigO const& other) const noexcept;
+            BigO(char const *bigOName, RangeMeasure const &scaledRangeMeasure);
 
-private:
-    std::string mName{};
-    double mConstant{};
-    double mNormalizedRootMeanSquare{};
-};
-std::ostream& operator<<(std::ostream& os, BigO const& bigO);
-std::ostream& operator<<(std::ostream& os, std::vector<ankerl::nanobench::BigO> const& bigOs);
+            BigO(std::string const &bigOName, RangeMeasure const &scaledRangeMeasure);
 
-} // namespace nanobench
+            ANKERL_NANOBENCH(NODISCARD)
+
+            std::string const &name() const
+
+            noexcept;
+            ANKERL_NANOBENCH(NODISCARD)
+
+            double constant() const
+
+            noexcept;
+            ANKERL_NANOBENCH(NODISCARD)
+
+            double normalizedRootMeanSquare() const
+
+            noexcept;
+            ANKERL_NANOBENCH(NODISCARD)
+
+            bool operator<(BigO const &other) const
+
+            noexcept;
+
+        private:
+            std::string mName{};
+            double mConstant{};
+            double mNormalizedRootMeanSquare{};
+        };
+
+        std::ostream &operator<<(std::ostream &os, BigO const &bigO);
+
+        std::ostream &operator<<(std::ostream &os, std::vector <ankerl::nanobench::BigO> const &bigOs);
+
+    } // namespace nanobench
 } // namespace ankerl
 
 // implementation /////////////////////////////////////////////////////////////////////////////////
 
 namespace ankerl {
-namespace nanobench {
+    namespace nanobench {
 
-constexpr uint64_t(Rng::min)() {
-    return 0;
-}
+        constexpr uint64_t(Rng::min)() {
+            return 0;
+        }
 
-constexpr uint64_t(Rng::max)() {
-    return (std::numeric_limits<uint64_t>::max)();
-}
+        constexpr uint64_t(Rng::max)() {
+            return (std::numeric_limits<uint64_t>::max)();
+        }
 
-ANKERL_NANOBENCH_NO_SANITIZE("integer")
-uint64_t Rng::operator()() noexcept {
-    auto x = mX;
+        ANKERL_NANOBENCH_NO_SANITIZE("integer")
 
-    mX = UINT64_C(15241094284759029579) * mY;
-    mY = rotl(mY - x, 27);
+        uint64_t Rng::operator()()
 
-    return x;
-}
+        noexcept {
+        auto x = mX;
 
-ANKERL_NANOBENCH_NO_SANITIZE("integer")
-uint32_t Rng::bounded(uint32_t range) noexcept {
+        mX = UINT64_C(15241094284759029579) * mY;
+        mY = rotl(mY - x, 27);
+
+        return
+        x;
+    }
+
+    ANKERL_NANOBENCH_NO_SANITIZE("integer")
+
+    uint32_t Rng::bounded(uint32_t range)
+
+    noexcept {
     uint64_t r32 = static_cast<uint32_t>(operator()());
     auto multiresult = r32 * range;
-    return static_cast<uint32_t>(multiresult >> 32U);
+    return static_cast
+    <uint32_t>(multiresult
+    >> 32U);
 }
 
-double Rng::uniform01() noexcept {
-    auto i = (UINT64_C(0x3ff) << 52U) | (operator()() >> 12U);
-    // can't use union in c++ here for type puning, it's undefined behavior.
-    // std::memcpy is optimized anyways.
-    double d;
-    std::memcpy(&d, &i, sizeof(double));
-    return d - 1.0;
+double Rng::uniform01()
+
+noexcept {
+auto i = (UINT64_C(0x3ff) << 52U) | (operator()() >> 12U);
+// can't use union in c++ here for type puning, it's undefined behavior.
+// std::memcpy is optimized anyways.
+double d;
+std::memcpy(&d, &i,
+sizeof(double));
+return d - 1.0;
 }
 
-template <typename Container>
-void Rng::shuffle(Container& container) noexcept {
-    auto size = static_cast<uint32_t>(container.size());
-    for (auto i = size; i > 1U; --i) {
-        using std::swap;
-        auto p = bounded(i); // number in [0, i)
-        swap(container[i - 1], container[p]);
-    }
+template<typename Container>
+void Rng::shuffle(Container &container)
+
+noexcept {
+auto size = static_cast<uint32_t>(container.size());
+for (
+auto i = size;
+i > 1U; --i) {
+using std::swap;
+auto p = bounded(i); // number in [0, i)
+swap(container[i - 1], container[p]
+);
+}
 }
 
-constexpr uint64_t Rng::rotl(uint64_t x, unsigned k) noexcept {
-    return (x << k) | (x >> (64U - k));
+constexpr uint64_t
+Rng::rotl(uint64_t
+x,
+unsigned k
+) noexcept {
+return (x << k) | (x >> (64U - k));
 }
 
-template <typename Op>
+template<typename Op>
 ANKERL_NANOBENCH_NO_SANITIZE("integer")
-Bench& Bench::run(Op&& op) {
+Bench &Bench::run(Op &&op) {
     // It is important that this method is kept short so the compiler can do better optimizations/ inlining of op()
     detail::IterationLogic iterationLogic(*this);
-    auto& pc = detail::performanceCounters();
+    auto &pc = detail::performanceCounters();
 
     while (auto n = iterationLogic.numIters()) {
         pc.beginMeasure();
@@ -1130,63 +1416,69 @@ Bench& Bench::run(Op&& op) {
 }
 
 // Performs all evaluations.
-template <typename Op>
-Bench& Bench::run(char const* benchmarkName, Op&& op) {
+template<typename Op>
+Bench &Bench::run(char const *benchmarkName, Op &&op) {
     name(benchmarkName);
     return run(std::forward<Op>(op));
 }
 
-template <typename Op>
-Bench& Bench::run(std::string const& benchmarkName, Op&& op) {
+template<typename Op>
+Bench &Bench::run(std::string const &benchmarkName, Op &&op) {
     name(benchmarkName);
     return run(std::forward<Op>(op));
 }
 
-template <typename Op>
-BigO Bench::complexityBigO(char const* benchmarkName, Op op) const {
+template<typename Op>
+BigO Bench::complexityBigO(char const *benchmarkName, Op op) const {
     return BigO(benchmarkName, BigO::collectRangeMeasure(mResults), op);
 }
 
-template <typename Op>
-BigO Bench::complexityBigO(std::string const& benchmarkName, Op op) const {
+template<typename Op>
+BigO Bench::complexityBigO(std::string const &benchmarkName, Op op) const {
     return BigO(benchmarkName, BigO::collectRangeMeasure(mResults), op);
 }
 
 // Set the batch size, e.g. number of processed bytes, or some other metric for the size of the processed data in each iteration.
 // Any argument is cast to double.
-template <typename T>
-Bench& Bench::batch(T b) noexcept {
-    mConfig.mBatch = static_cast<double>(b);
-    return *this;
+template<typename T>
+Bench &Bench::batch(T b)
+
+noexcept {
+mConfig.
+mBatch = static_cast<double>(b);
+return *this;
 }
 
 // Sets the computation complexity of the next run. Any argument is cast to double.
-template <typename T>
-Bench& Bench::complexityN(T n) noexcept {
-    mConfig.mComplexityN = static_cast<double>(n);
-    return *this;
+template<typename T>
+Bench &Bench::complexityN(T n)
+
+noexcept {
+mConfig.
+mComplexityN = static_cast<double>(n);
+return *this;
 }
 
 // Convenience: makes sure none of the given arguments are optimized away by the compiler.
-template <typename Arg>
-Bench& Bench::doNotOptimizeAway(Arg&& arg) {
+template<typename Arg>
+Bench &Bench::doNotOptimizeAway(Arg &&arg) {
     detail::doNotOptimizeAway(std::forward<Arg>(arg));
     return *this;
 }
 
 // Makes sure none of the given arguments are optimized away by the compiler.
-template <typename Arg>
-void doNotOptimizeAway(Arg&& arg) {
+template<typename Arg>
+void doNotOptimizeAway(Arg &&arg) {
     detail::doNotOptimizeAway(std::forward<Arg>(arg));
 }
 
 namespace detail {
 
 #if defined(_MSC_VER)
-template <typename T>
-void doNotOptimizeAway(T const& val) {
-    doNotOptimizeAwaySink(&val);
-}
+    template <typename T>
+    void doNotOptimizeAway(T const& val) {
+        doNotOptimizeAwaySink(&val);
+    }
 
 #endif
 

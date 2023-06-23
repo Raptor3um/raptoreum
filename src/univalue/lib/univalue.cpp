@@ -14,22 +14,19 @@ using namespace std;
 
 const UniValue NullUniValue;
 
-void UniValue::clear()
-{
+void UniValue::clear() {
     typ = VNULL;
     val.clear();
     keys.clear();
     values.clear();
 }
 
-bool UniValue::setNull()
-{
+bool UniValue::setNull() {
     clear();
     return true;
 }
 
-bool UniValue::setBool(bool val_)
-{
+bool UniValue::setBool(bool val_) {
     clear();
     typ = VBOOL;
     if (val_)
@@ -37,16 +34,14 @@ bool UniValue::setBool(bool val_)
     return true;
 }
 
-static bool validNumStr(const string& s)
-{
+static bool validNumStr(const string &s) {
     string tokenVal;
     unsigned int consumed;
     enum jtokentype tt = getJsonToken(tokenVal, consumed, s.data(), s.data() + s.size());
     return (tt == JTOK_NUMBER);
 }
 
-bool UniValue::setNumStr(const string& val_)
-{
+bool UniValue::setNumStr(const string &val_) {
     if (!validNumStr(val_))
         return false;
 
@@ -56,8 +51,7 @@ bool UniValue::setNumStr(const string& val_)
     return true;
 }
 
-bool UniValue::setInt(uint64_t val_)
-{
+bool UniValue::setInt(uint64_t val_) {
     ostringstream oss;
 
     oss << val_;
@@ -65,8 +59,7 @@ bool UniValue::setInt(uint64_t val_)
     return setNumStr(oss.str());
 }
 
-bool UniValue::setInt(int64_t val_)
-{
+bool UniValue::setInt(int64_t val_) {
     ostringstream oss;
 
     oss << val_;
@@ -74,8 +67,7 @@ bool UniValue::setInt(int64_t val_)
     return setNumStr(oss.str());
 }
 
-bool UniValue::setFloat(double val_)
-{
+bool UniValue::setFloat(double val_) {
     ostringstream oss;
 
     oss << std::setprecision(16) << val_;
@@ -85,30 +77,26 @@ bool UniValue::setFloat(double val_)
     return ret;
 }
 
-bool UniValue::setStr(const string& val_)
-{
+bool UniValue::setStr(const string &val_) {
     clear();
     typ = VSTR;
     val = val_;
     return true;
 }
 
-bool UniValue::setArray()
-{
+bool UniValue::setArray() {
     clear();
     typ = VARR;
     return true;
 }
 
-bool UniValue::setObject()
-{
+bool UniValue::setObject() {
     clear();
     typ = VOBJ;
     return true;
 }
 
-bool UniValue::push_back(const UniValue& val_)
-{
+bool UniValue::push_back(const UniValue &val_) {
     if (typ != VARR)
         return false;
 
@@ -116,8 +104,7 @@ bool UniValue::push_back(const UniValue& val_)
     return true;
 }
 
-bool UniValue::push_backV(const std::vector<UniValue>& vec)
-{
+bool UniValue::push_backV(const std::vector <UniValue> &vec) {
     if (typ != VARR)
         return false;
 
@@ -126,14 +113,12 @@ bool UniValue::push_backV(const std::vector<UniValue>& vec)
     return true;
 }
 
-void UniValue::__pushKV(const std::string& key, const UniValue& val_)
-{
+void UniValue::__pushKV(const std::string &key, const UniValue &val_) {
     keys.push_back(key);
     values.push_back(val_);
 }
 
-bool UniValue::pushKV(const std::string& key, const UniValue& val_)
-{
+bool UniValue::pushKV(const std::string &key, const UniValue &val_) {
     if (typ != VOBJ)
         return false;
 
@@ -145,8 +130,7 @@ bool UniValue::pushKV(const std::string& key, const UniValue& val_)
     return true;
 }
 
-bool UniValue::pushKVs(const UniValue& obj)
-{
+bool UniValue::pushKVs(const UniValue &obj) {
     if (typ != VOBJ || obj.typ != VOBJ)
         return false;
 
@@ -156,8 +140,7 @@ bool UniValue::pushKVs(const UniValue& obj)
     return true;
 }
 
-void UniValue::getObjMap(std::map<std::string,UniValue>& kv) const
-{
+void UniValue::getObjMap(std::map <std::string, UniValue> &kv) const {
     if (typ != VOBJ)
         return;
 
@@ -166,8 +149,7 @@ void UniValue::getObjMap(std::map<std::string,UniValue>& kv) const
         kv[keys[i]] = values[i];
 }
 
-bool UniValue::findKey(const std::string& key, size_t& retIdx) const
-{
+bool UniValue::findKey(const std::string &key, size_t &retIdx) const {
     for (size_t i = 0; i < keys.size(); i++) {
         if (keys[i] == key) {
             retIdx = i;
@@ -178,13 +160,12 @@ bool UniValue::findKey(const std::string& key, size_t& retIdx) const
     return false;
 }
 
-bool UniValue::checkObject(const std::map<std::string,UniValue::VType>& t) const
-{
+bool UniValue::checkObject(const std::map <std::string, UniValue::VType> &t) const {
     if (typ != VOBJ) {
         return false;
     }
 
-    for (const auto& object: t) {
+    for (const auto &object: t) {
         size_t idx = 0;
         if (!findKey(object.first, idx)) {
             return false;
@@ -198,8 +179,7 @@ bool UniValue::checkObject(const std::map<std::string,UniValue::VType>& t) const
     return true;
 }
 
-const UniValue& UniValue::operator[](const std::string& key) const
-{
+const UniValue &UniValue::operator[](const std::string &key) const {
     if (typ != VOBJ)
         return NullUniValue;
 
@@ -210,8 +190,7 @@ const UniValue& UniValue::operator[](const std::string& key) const
     return values.at(index);
 }
 
-const UniValue& UniValue::operator[](size_t index) const
-{
+const UniValue &UniValue::operator[](size_t index) const {
     if (typ != VOBJ && typ != VARR)
         return NullUniValue;
     if (index >= values.size())
@@ -220,23 +199,27 @@ const UniValue& UniValue::operator[](size_t index) const
     return values.at(index);
 }
 
-const char *uvTypeName(UniValue::VType t)
-{
+const char *uvTypeName(UniValue::VType t) {
     switch (t) {
-    case UniValue::VNULL: return "null";
-    case UniValue::VBOOL: return "bool";
-    case UniValue::VOBJ: return "object";
-    case UniValue::VARR: return "array";
-    case UniValue::VSTR: return "string";
-    case UniValue::VNUM: return "number";
+        case UniValue::VNULL:
+            return "null";
+        case UniValue::VBOOL:
+            return "bool";
+        case UniValue::VOBJ:
+            return "object";
+        case UniValue::VARR:
+            return "array";
+        case UniValue::VSTR:
+            return "string";
+        case UniValue::VNUM:
+            return "number";
     }
 
     // not reached
     return nullptr;
 }
 
-const UniValue& find_value(const UniValue& obj, const std::string& name)
-{
+const UniValue &find_value(const UniValue &obj, const std::string &name) {
     for (unsigned int i = 0; i < obj.keys.size(); i++)
         if (obj.keys[i] == name)
             return obj.values.at(i);

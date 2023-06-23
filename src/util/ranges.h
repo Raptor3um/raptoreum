@@ -24,17 +24,20 @@ inline auto FUN(X& ds, const Z& fn) {          \
 
 namespace ranges {
     MK_RANGE(all_of)
+
     MK_RANGE(any_of)
+
     MK_RANGE(count_if)
+
     MK_RANGE(find_if)
 
-    template <typename X, typename Z>
-    constexpr inline auto find_if_opt(const X& ds, const Z& fn) {
+    template<typename X, typename Z>
+    constexpr inline auto find_if_opt(const X &ds, const Z &fn) {
         const auto it = ranges::find_if(ds, fn);
         if (it != end(ds)) {
             return std::make_optional(*it);
         }
-        return std::optional<std::decay_t<decltype(*it)>>{};
+        return std::optional < std::decay_t < decltype(*it) >> {};
     }
 }
 

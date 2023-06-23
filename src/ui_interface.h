@@ -11,31 +11,29 @@
 #include <string>
 
 class CBlockIndex;
+
 class CDeterministicMNList;
 namespace boost {
-namespace signals2 {
-class connection;
-}
+    namespace signals2 {
+        class connection;
+    }
 } // namespace boost::signals2::connection
 
 /** General change type (added, updated, removed). */
-enum ChangeType
-{
+enum ChangeType {
     CT_NEW,
     CT_UPDATED,
     CT_DELETED
 };
 
 /** Signals for UI communication. */
-class CClientUIInterface
-{
+class CClientUIInterface {
 public:
     /** Flags for CClientUIInterface::ThreadSafeMessageBox */
-    enum MessageBoxFlags
-    {
-        ICON_INFORMATION    = 0,
-        ICON_WARNING        = (1U << 0),
-        ICON_ERROR          = (1U << 1),
+    enum MessageBoxFlags {
+        ICON_INFORMATION = 0,
+        ICON_WARNING = (1U << 0),
+        ICON_ERROR = (1U << 1),
         /**
          * Mask of all available icons in CClientUIInterface::MessageBoxFlags
          * This needs to be updated, when icons are changed there!
@@ -43,18 +41,18 @@ public:
         ICON_MASK = (ICON_INFORMATION | ICON_WARNING | ICON_ERROR),
 
         /** These values are taken from qmessagebox.h "enum StandardButton" to be directly usable */
-        BTN_OK      = 0x00000400U, // QMessageBox::Ok
-        BTN_YES     = 0x00004000U, // QMessageBox::Yes
-        BTN_NO      = 0x00010000U, // QMessageBox::No
-        BTN_ABORT   = 0x00040000U, // QMessageBox::Abort
-        BTN_RETRY   = 0x00080000U, // QMessageBox::Retry
-        BTN_IGNORE  = 0x00100000U, // QMessageBox::Ignore
-        BTN_CLOSE   = 0x00200000U, // QMessageBox::Close
-        BTN_CANCEL  = 0x00400000U, // QMessageBox::Cancel
+        BTN_OK = 0x00000400U, // QMessageBox::Ok
+        BTN_YES = 0x00004000U, // QMessageBox::Yes
+        BTN_NO = 0x00010000U, // QMessageBox::No
+        BTN_ABORT = 0x00040000U, // QMessageBox::Abort
+        BTN_RETRY = 0x00080000U, // QMessageBox::Retry
+        BTN_IGNORE = 0x00100000U, // QMessageBox::Ignore
+        BTN_CLOSE = 0x00200000U, // QMessageBox::Close
+        BTN_CANCEL = 0x00400000U, // QMessageBox::Cancel
         BTN_DISCARD = 0x00800000U, // QMessageBox::Discard
-        BTN_HELP    = 0x01000000U, // QMessageBox::Help
-        BTN_APPLY   = 0x02000000U, // QMessageBox::Apply
-        BTN_RESET   = 0x04000000U, // QMessageBox::Reset
+        BTN_HELP = 0x01000000U, // QMessageBox::Help
+        BTN_APPLY = 0x02000000U, // QMessageBox::Apply
+        BTN_RESET = 0x04000000U, // QMessageBox::Reset
         /**
          * Mask of all available buttons in CClientUIInterface::MessageBoxFlags
          * This needs to be updated, when buttons are changed there!
@@ -63,13 +61,13 @@ public:
                     BTN_CLOSE | BTN_CANCEL | BTN_DISCARD | BTN_HELP | BTN_APPLY | BTN_RESET),
 
         /** Force blocking, modal message box dialog (not just OS notification) */
-        MODAL               = 0x10000000U,
+        MODAL = 0x10000000U,
 
         /** Do not prepend error/warning prefix */
-        MSG_NOPREFIX        = 0x20000000U,
+        MSG_NOPREFIX = 0x20000000U,
 
         /** Do not print contents of message to debug log */
-        SECURE              = 0x40000000U,
+        SECURE = 0x40000000U,
 
         /** Predefined combinations for certain default usage cases */
         MSG_INFORMATION = ICON_INFORMATION,
@@ -78,18 +76,20 @@ public:
     };
 
 #define ADD_SIGNALS_DECL_WRAPPER(signal_name, rtype, args...)                              \
-	  rtype signal_name(args);                                                               \
-	  using signal_name##Sig = rtype(args);                                                  \
-	  boost::signals2::connection signal_name##_connect(std::function<signal_name##Sig> fn);
+      rtype signal_name(args);                                                               \
+      using signal_name##Sig = rtype(args);                                                  \
+      boost::signals2::connection signal_name##_connect(std::function<signal_name##Sig> fn);
 
     /** Show message box. */
-    ADD_SIGNALS_DECL_WRAPPER(ThreadSafeMessageBox, bool, const std::string& message, const std::string& caption, unsigned int style);
+    ADD_SIGNALS_DECL_WRAPPER(ThreadSafeMessageBox, bool, const std::string &message, const std::string &caption,
+                             unsigned int style);
 
     /** If possible, ask the user a question. If not, falls back to ThreadSafeMessageBox(noninteractive_message, caption, style) and returns false. */
-    ADD_SIGNALS_DECL_WRAPPER(ThreadSafeQuestion, bool, const std::string& message, const std::string& noninteractive_message, const std::string& caption, unsigned int style);
+    ADD_SIGNALS_DECL_WRAPPER(ThreadSafeQuestion, bool, const std::string &message,
+                             const std::string &noninteractive_message, const std::string &caption, unsigned int style);
 
     /** Progress message during initialization. */
-    ADD_SIGNALS_DECL_WRAPPER(InitMessage, void, const std::string& message);
+    ADD_SIGNALS_DECL_WRAPPER(InitMessage, void, const std::string &message);
 
     /** Number of network connections changed. */
     ADD_SIGNALS_DECL_WRAPPER(NotifyNumConnectionsChanged, void, int newNumConnections);
@@ -100,19 +100,19 @@ public:
     /**
      * Status bar alerts changed.
      */
-    ADD_SIGNALS_DECL_WRAPPER(NotifyAlertChanged, void, );
+    ADD_SIGNALS_DECL_WRAPPER(NotifyAlertChanged, void,);
 
     /**
      * Show progress e.g. for verifychain.
      * resume_possible indicates shutting down now will result in the current progress action resuming upon restart.
      */
-    ADD_SIGNALS_DECL_WRAPPER(ShowProgress, void, const std::string& title, int nProgress, bool resume_possible);
+    ADD_SIGNALS_DECL_WRAPPER(ShowProgress, void, const std::string &title, int nProgress, bool resume_possible);
 
     /** New block has been accepted */
     ADD_SIGNALS_DECL_WRAPPER(NotifyBlockTip, void, bool, const CBlockIndex*);
 
     /** New chainlock block has been accepted */
-    ADD_SIGNALS_DECL_WRAPPER(NotifyChainLock, void, const std::string& bestChainLockHash, int bestChainLockHeight);
+    ADD_SIGNALS_DECL_WRAPPER(NotifyChainLock, void, const std::string &bestChainLockHash, int bestChainLockHeight);
 
     /** Best header has changed */
     ADD_SIGNALS_DECL_WRAPPER(NotifyHeaderTip, void, bool, const CBlockIndex*);
@@ -128,10 +128,10 @@ public:
 };
 
 /** Show warning message **/
-void InitWarning(const std::string& str);
+void InitWarning(const std::string &str);
 
 /** Show error message **/
-bool InitError(const std::string& str);
+bool InitError(const std::string &str);
 
 extern CClientUIInterface uiInterface;
 

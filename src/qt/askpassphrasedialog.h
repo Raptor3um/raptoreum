@@ -17,8 +17,7 @@ namespace Ui {
 
 /** Multifunctional dialog to ask for passphrases. Used for encryption, unlocking, and changing the passphrase.
  */
-class AskPassphraseDialog : public QDialog
-{
+class AskPassphraseDialog : public QDialog {
     Q_OBJECT
 
 public:
@@ -30,7 +29,8 @@ public:
         Decrypt     /**< Ask passphrase and decrypt wallet */
     };
 
-    explicit AskPassphraseDialog(Mode mode, QWidget *parent, SecureString* passphrase_out = nullptr);
+    explicit AskPassphraseDialog(Mode mode, QWidget *parent, SecureString *passphrase_out = nullptr);
+
     ~AskPassphraseDialog();
 
     void accept() override;
@@ -42,15 +42,19 @@ private:
     Mode mode;
     WalletModel *model;
     bool fCapsLock;
-    SecureString* m_passphrase_out;
+    SecureString *m_passphrase_out;
 
-private Q_SLOTS:
-    void textChanged();
+private
+    Q_SLOTS:
+            void textChanged();
+
     void secureClearPassFields();
+
     void toggleShowPassword(bool);
 
 protected:
     bool event(QEvent *event) override;
+
     bool eventFilter(QObject *object, QEvent *event) override;
 };
 

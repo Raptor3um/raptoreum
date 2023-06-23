@@ -10,34 +10,30 @@
 #include <tinyformat.h>
 #include <util/system.h>
 
-FlatFileSeq::FlatFileSeq(fs::path dir, const char* prefix, size_t chunk_size) :
-    m_dir(std::move(dir)),
-    m_prefix(prefix),
-    m_chunk_size(chunk_size)
-{
+FlatFileSeq::FlatFileSeq(fs::path dir, const char *prefix, size_t chunk_size) :
+        m_dir(std::move(dir)),
+        m_prefix(prefix),
+        m_chunk_size(chunk_size) {
     if (chunk_size == 0) {
         throw std::invalid_argument("chunk_size must be positive");
     }
 }
 
-std::string FlatFilePos::ToString() const
-{
+std::string FlatFilePos::ToString() const {
     return strprintf("FlatFilePos(nFile=%i, nPos=%i)", nFile, nPos);
 }
 
-fs::path FlatFileSeq::FileName(const FlatFilePos& pos) const
-{
+fs::path FlatFileSeq::FileName(const FlatFilePos &pos) const {
     return m_dir / strprintf("%s%05u.dat", m_prefix, pos.nFile);
 }
 
-FILE* FlatFileSeq::Open(const FlatFilePos& pos, bool read_only)
-{
+FILE *FlatFileSeq::Open(const FlatFilePos &pos, bool read_only) {
     if (pos.IsNull()) {
         return nullptr;
     }
     fs::path path = FileName(pos);
     fs::create_directories(path.parent_path());
-    FILE* file = fsbridge::fopen(path, read_only ? "rb": "rb+");
+    FILE *file = fsbridge::fopen(path, read_only ? "rb" : "rb+");
     if (!file && !read_only)
         file = fsbridge::fopen(path, "wb+");
     if (!file) {
@@ -52,8 +48,7 @@ FILE* FlatFileSeq::Open(const FlatFilePos& pos, bool read_only)
     return file;
 }
 
-size_t FlatFileSeq::Allocate(const FlatFilePos& pos, size_t add_size, bool& out_of_space)
-{
+size_t FlatFileSeq::Allocate(const FlatFilePos &pos, size_t add_size, bool &out_of_space) {
     out_of_space = false;
 
     unsigned int n_old_chunks = (pos.nPos + m_chunk_size - 1) / m_chunk_size;
@@ -78,9 +73,8 @@ size_t FlatFileSeq::Allocate(const FlatFilePos& pos, size_t add_size, bool& out_
     return 0;
 }
 
-bool FlatFileSeq::Flush(const FlatFilePos& pos, bool finalize)
-{
-    FILE* file = Open(FlatFilePos(pos.nFile, 0)); // Avoid fseek to nPos
+bool FlatFileSeq::Flush(const FlatFilePos &pos, bool finalize) {
+    FILE *file = Open(FlatFilePos(pos.nFile, 0)); // Avoid fseek to nPos
     if (!file) {
         return error("%s: failed to open file %d", __func__, pos.nFile);
     }

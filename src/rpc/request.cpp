@@ -24,8 +24,7 @@
  * 1.2 spec: http://jsonrpc.org/historical/json-rpc-over-http.html
  */
 
-UniValue JSONRPCRequestObj(const std::string& strMethod, const UniValue& params, const UniValue& id)
-{
+UniValue JSONRPCRequestObj(const std::string &strMethod, const UniValue &params, const UniValue &id) {
     UniValue request(UniValue::VOBJ);
     request.pushKV("method", strMethod);
     request.pushKV("params", params);
@@ -33,8 +32,7 @@ UniValue JSONRPCRequestObj(const std::string& strMethod, const UniValue& params,
     return request;
 }
 
-UniValue JSONRPCReplyObj(const UniValue& result, const UniValue& error, const UniValue& id)
-{
+UniValue JSONRPCReplyObj(const UniValue &result, const UniValue &error, const UniValue &id) {
     UniValue reply(UniValue::VOBJ);
     if (!error.isNull())
         reply.pushKV("result", NullUniValue);
@@ -45,14 +43,12 @@ UniValue JSONRPCReplyObj(const UniValue& result, const UniValue& error, const Un
     return reply;
 }
 
-std::string JSONRPCReply(const UniValue& result, const UniValue& error, const UniValue& id)
-{
+std::string JSONRPCReply(const UniValue &result, const UniValue &error, const UniValue &id) {
     UniValue reply = JSONRPCReplyObj(result, error, id);
     return reply.write() + "\n";
 }
 
-UniValue JSONRPCError(int code, const std::string& message)
-{
+UniValue JSONRPCError(int code, const std::string &message) {
     UniValue error(UniValue::VOBJ);
     error.pushKV("code", code);
     error.pushKV("message", message);
@@ -67,8 +63,7 @@ static const std::string COOKIEAUTH_USER = "__cookie__";
 static const std::string COOKIEAUTH_FILE = ".cookie";
 
 /** Get name of RPC authentication cookie file */
-static fs::path GetAuthCookieFile(bool temp=false)
-{
+static fs::path GetAuthCookieFile(bool temp = false) {
     std::string arg = gArgs.GetArg("-rpccookiefile", COOKIEAUTH_FILE);
     if (temp) {
         arg += ".tmp";
@@ -76,8 +71,7 @@ static fs::path GetAuthCookieFile(bool temp=false)
     return AbsPathForConfigVal(fs::path(arg));
 }
 
-bool GenerateAuthCookie(std::string *cookie_out)
-{
+bool GenerateAuthCookie(std::string *cookie_out) {
     const size_t COOKIE_SIZE = 32;
     unsigned char rand_pwd[COOKIE_SIZE];
     GetRandBytes(rand_pwd, COOKIE_SIZE);
@@ -108,8 +102,7 @@ bool GenerateAuthCookie(std::string *cookie_out)
     return true;
 }
 
-bool GetAuthCookie(std::string *cookie_out)
-{
+bool GetAuthCookie(std::string *cookie_out) {
     fsbridge::ifstream file;
     std::string cookie;
     fs::path filepath = GetAuthCookieFile();
@@ -124,22 +117,21 @@ bool GetAuthCookie(std::string *cookie_out)
     return true;
 }
 
-void DeleteAuthCookie()
-{
+void DeleteAuthCookie() {
     try {
         fs::remove(GetAuthCookieFile());
-    } catch (const fs::filesystem_error& e) {
-        LogPrintf("%s: Unable to remove random auth cookie file: %s\n", __func__, fsbridge::get_filesystem_error_message(e));
+    } catch (const fs::filesystem_error &e) {
+        LogPrintf("%s: Unable to remove random auth cookie file: %s\n", __func__,
+                  fsbridge::get_filesystem_error_message(e));
     }
 }
 
-std::vector<UniValue> JSONRPCProcessBatchReply(const UniValue &in, size_t num)
-{
+std::vector <UniValue> JSONRPCProcessBatchReply(const UniValue &in, size_t num) {
     if (!in.isArray()) {
         throw std::runtime_error("Batch must be an array");
     }
-    std::vector<UniValue> batch(num);
-    for (size_t i=0; i<in.size(); ++i) {
+    std::vector <UniValue> batch(num);
+    for (size_t i = 0; i < in.size(); ++i) {
         const UniValue &rec = in[i];
         if (!rec.isObject()) {
             throw std::runtime_error("Batch member must be object");
@@ -153,12 +145,11 @@ std::vector<UniValue> JSONRPCProcessBatchReply(const UniValue &in, size_t num)
     return batch;
 }
 
-void JSONRPCRequest::parse(const UniValue& valRequest)
-{
+void JSONRPCRequest::parse(const UniValue &valRequest) {
     // Parse request
     if (!valRequest.isObject())
         throw JSONRPCError(RPC_INVALID_REQUEST, "Invalid Request object");
-    const UniValue& request = valRequest.get_obj();
+    const UniValue &request = valRequest.get_obj();
 
     // Parse id now so errors from here on will have the id
     id = find_value(request, "id");
@@ -173,7 +164,7 @@ void JSONRPCRequest::parse(const UniValue& valRequest)
     if (strMethod != "getblocktemplate") {
         if (fLogIPs)
             LogPrint(BCLog::RPC, "ThreadRPCServer method=%s user=%s peeraddr=%s\n", SanitizeString(strMethod),
-                this->authUser, this->peerAddr);
+                     this->authUser, this->peerAddr);
         else
             LogPrint(BCLog::RPC, "ThreadRPCServer method=%s user=%s\n", SanitizeString(strMethod), this->authUser);
     }
@@ -188,9 +179,8 @@ void JSONRPCRequest::parse(const UniValue& valRequest)
         throw JSONRPCError(RPC_INVALID_REQUEST, "Params must be an array or object");
 }
 
-const JSONRPCRequest JSONRPCRequest::squashed() const
-{
-   if (params.empty()) {
+const JSONRPCRequest JSONRPCRequest::squashed() const {
+    if (params.empty()) {
         return *this;
     }
     JSONRPCRequest new_request{*this};

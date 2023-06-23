@@ -30,13 +30,13 @@
 // delete s; // Must be done after thread is interrupted/joined.
 //
 
-class CScheduler
-{
+class CScheduler {
 public:
     CScheduler();
+
     ~CScheduler();
 
-    typedef std::function<void ()> Function;
+    typedef std::function<void()> Function;
 
     // Call func at/after time t
     void schedule(Function f, std::chrono::system_clock::time_point t);
@@ -65,7 +65,7 @@ public:
     void serviceQueue();
 
     /** Tell any threads running serviceQueue to stop as soon as the current task is done */
-    void stop(bool drain=false);
+    void stop(bool drain = false);
 
     // Returns number of tasks waiting to be serviced,
     // and first and last task times
@@ -78,11 +78,18 @@ public:
 private:
     mutable Mutex newTaskMutex;
     std::condition_variable newTaskScheduled;
-    std::multimap<std::chrono::system_clock::time_point, Function> taskQueue GUARDED_BY(newTaskMutex);
-    int nThreadsServicingQueue GUARDED_BY(newTaskMutex){0};
-    bool stopRequested GUARDED_BY(newTaskMutex){false};
-    bool stopWhenEmpty GUARDED_BY(newTaskMutex){false};
-    bool shouldStop() const EXCLUSIVE_LOCKS_REQUIRED(newTaskMutex) { return stopRequested || (stopWhenEmpty && taskQueue.empty()); }
+    std::multimap <std::chrono::system_clock::time_point, Function> taskQueue
+    GUARDED_BY(newTaskMutex);
+    int nThreadsServicingQueue
+    GUARDED_BY(newTaskMutex){0};
+    bool stopRequested
+    GUARDED_BY(newTaskMutex){false};
+    bool stopWhenEmpty
+    GUARDED_BY(newTaskMutex){false};
+
+    bool shouldStop() const
+
+    EXCLUSIVE_LOCKS_REQUIRED(newTaskMutex) {return stopRequested || (stopWhenEmpty && taskQueue.empty());}
 };
 
 /**
@@ -100,10 +107,13 @@ private:
     CScheduler *m_pscheduler;
 
     RecursiveMutex m_cs_callbacks_pending;
-    std::list<std::function<void ()>> m_callbacks_pending GUARDED_BY(m_cs_callbacks_pending);
-    bool m_are_callbacks_running GUARDED_BY(m_cs_callbacks_pending) = false;
+    std::list <std::function<void()>> m_callbacks_pending
+    GUARDED_BY(m_cs_callbacks_pending);
+    bool m_are_callbacks_running
+    GUARDED_BY(m_cs_callbacks_pending) = false;
 
     void MaybeScheduleProcessQueue();
+
     void ProcessQueue();
 
 public:
@@ -115,7 +125,7 @@ public:
      * Practially, this means that callbacks can behave as if they are executed
      * in order by a single thread.
      */
-    void AddToProcessQueue(std::function<void ()> func);
+    void AddToProcessQueue(std::function<void()> func);
 
     // Processes all remaining queue members on the calling thread, blocking until queue is empty
     // Must be called after the CScheduler has no remaining processing threads!

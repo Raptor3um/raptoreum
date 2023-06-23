@@ -30,9 +30,8 @@
 
 namespace pl = std::placeholders;
 
-SplashScreen::SplashScreen(interfaces::Node& node, Qt::WindowFlags f, const NetworkStyle *networkStyle) :
-    QWidget(nullptr, f), curAlignment(0), m_node(node)
-{
+SplashScreen::SplashScreen(interfaces::Node &node, Qt::WindowFlags f, const NetworkStyle *networkStyle) :
+        QWidget(nullptr, f), curAlignment(0), m_node(node) {
 
     // transparent background
     setAttribute(Qt::WA_TranslucentBackground);
@@ -51,16 +50,16 @@ SplashScreen::SplashScreen(interfaces::Node& node, Qt::WindowFlags f, const Netw
     int paddingTop = 5;
     int titleVersionVSpace = 20;
 
-    float fontFactor            = 1.0;
+    float fontFactor = 1.0;
     float scale = qApp->devicePixelRatio();
 
     // define text to place
-    QString titleText    = PACKAGE_NAME;
-    QString versionText  = QString::fromStdString(FormatFullVersion()).remove(0, 1);
+    QString titleText = PACKAGE_NAME;
+    QString versionText = QString::fromStdString(FormatFullVersion()).remove(0, 1);
     QString titleAddText = networkStyle->getTitleAddText();
 
     QFont fontNormal = GUIUtil::getFontNormal();
-    QFont fontBold   = GUIUtil::getFontBold();
+    QFont fontBold = GUIUtil::getFontBold();
 
     QPixmap pixmapLogo = networkStyle->getSplashImage();
     pixmapLogo.setDevicePixelRatio(scale);
@@ -86,7 +85,9 @@ SplashScreen::SplashScreen(interfaces::Node& node, Qt::WindowFlags f, const Netw
     QRect rect = QRect(1, 1, width - 2, height - 2);
     pixPaint.fillRect(rect, GUIUtil::getThemedQColor(GUIUtil::ThemedColor::BACKGROUND_WIDGET));
 
-    pixPaint.drawPixmap((width / 2) - (logoWidth / 2), (height / 2) - (logoHeight / 2) + 0, pixmapLogo.scaled(logoWidth * scale, logoHeight * scale, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    pixPaint.drawPixmap((width / 2) - (logoWidth / 2), (height / 2) - (logoHeight / 2) + 0,
+                        pixmapLogo.scaled(logoWidth * scale, logoHeight * scale, Qt::KeepAspectRatio,
+                                          Qt::SmoothTransformation));
     //pixPaint.setPen(GUIUtil::getThemedQColor(GUIUtil::ThemedColor::DEFAULT));
     pixPaint.setPen(Qt::white);
 
@@ -102,11 +103,11 @@ SplashScreen::SplashScreen(interfaces::Node& node, Qt::WindowFlags f, const Netw
     fontNormal.setPointSize(16 * fontFactor);
     pixPaint.setFont(fontNormal);
     fm = pixPaint.fontMetrics();
-    int versionTextWidth  = GUIUtil::TextWidth(fm, versionText);
+    int versionTextWidth = GUIUtil::TextWidth(fm, versionText);
     pixPaint.drawText((width / 2) - (versionTextWidth / 2), titleVersionVSpace, versionText);
 
     // draw additional text if special network
-    if(!titleAddText.isEmpty()) {
+    if (!titleAddText.isEmpty()) {
         fontBold.setPointSize(24 * fontFactor);
         pixPaint.setFont(fontBold);
         fm = pixPaint.fontMetrics();
@@ -132,23 +133,21 @@ SplashScreen::SplashScreen(interfaces::Node& node, Qt::WindowFlags f, const Netw
     installEventFilter(this);
 }
 
-SplashScreen::~SplashScreen()
-{
+SplashScreen::~SplashScreen() {
     unsubscribeFromCoreSignals();
 }
 
-bool SplashScreen::eventFilter(QObject * obj, QEvent * ev) {
+bool SplashScreen::eventFilter(QObject *obj, QEvent *ev) {
     if (ev->type() == QEvent::KeyPress) {
         QKeyEvent *keyEvent = static_cast<QKeyEvent *>(ev);
-        if(keyEvent->text()[0] == 'q') {
+        if (keyEvent->text()[0] == 'q') {
             m_node.startShutdown();
         }
     }
     return QObject::eventFilter(obj, ev);
 }
 
-void SplashScreen::finish()
-{
+void SplashScreen::finish() {
     /* If the window is minimized, hide() will be ignored. */
     /* Make sure we de-minimize the splashscreen window before hiding */
     if (isMinimized())
@@ -157,34 +156,30 @@ void SplashScreen::finish()
     deleteLater(); // No more need for this
 }
 
-static void InitMessage(SplashScreen *splash, const std::string &message)
-{
+static void InitMessage(SplashScreen *splash, const std::string &message) {
     bool invoked = QMetaObject::invokeMethod(splash, "showMessage",
-        Qt::QueuedConnection,
-        Q_ARG(QString, QString::fromStdString(message)),
-        Q_ARG(int, Qt::AlignBottom | Qt::AlignHCenter),
-        Q_ARG(QColor, Qt::white));
+                                             Qt::QueuedConnection,
+                                             Q_ARG(QString, QString::fromStdString(message)),
+                                             Q_ARG(int, Qt::AlignBottom | Qt::AlignHCenter),
+                                             Q_ARG(QColor, Qt::white));
 //      Q_ARG(QColor, GUIUtil::getThemedQColor(GUIUtil::ThemedColor::DEFAULT)));
     assert(invoked);
 }
 
-static void ShowProgress(SplashScreen *splash, const std::string &title, int nProgress, bool resume_possible)
-{
+static void ShowProgress(SplashScreen *splash, const std::string &title, int nProgress, bool resume_possible) {
     InitMessage(splash, title + std::string("\n") +
-            (resume_possible ? _("(press q to shutdown and continue later)")
-                                : _("press q to shutdown")) +
-            strprintf("\n%d", nProgress) + "%");
+                        (resume_possible ? _("(press q to shutdown and continue later)")
+                                         : _("press q to shutdown")) +
+                        strprintf("\n%d", nProgress) + "%");
 }
 
-void SplashScreen::subscribeToCoreSignals()
-{
+void SplashScreen::subscribeToCoreSignals() {
     // Connect signals to client
     m_handler_init_message = m_node.handleInitMessage(std::bind(InitMessage, this, pl::_1));
     m_handler_show_progress = m_node.handleShowProgress(std::bind(ShowProgress, this, pl::_1, pl::_2, pl::_3));
 }
 
-void SplashScreen::handleLoadWallet()
-{
+void SplashScreen::handleLoadWallet() {
 #ifdef ENABLE_WALLET
     if (!WalletModel::isWalletEnabled()) return;
     m_handler_load_wallet = m_node.walletClient().handleLoadWallet([this](std::unique_ptr<interfaces::Wallet> wallet) {
@@ -194,8 +189,7 @@ void SplashScreen::handleLoadWallet()
 #endif
 }
 
-void SplashScreen::unsubscribeFromCoreSignals()
-{
+void SplashScreen::unsubscribeFromCoreSignals() {
     // Disconnect signals from client
     m_handler_init_message->disconnect();
     m_handler_show_progress->disconnect();
@@ -204,23 +198,21 @@ void SplashScreen::unsubscribeFromCoreSignals()
         m_handler_load_wallet->disconnect();
     }
 #endif // ENABLE_WALLET
-    for (const auto& handler : m_connected_wallet_handlers) {
+    for (const auto &handler: m_connected_wallet_handlers) {
         handler->disconnect();
     }
     m_connected_wallet_handlers.clear();
     m_connected_wallets.clear();
 }
 
-void SplashScreen::showMessage(const QString &message, int alignment, const QColor &color)
-{
+void SplashScreen::showMessage(const QString &message, int alignment, const QColor &color) {
     curMessage = message;
     curAlignment = alignment;
     curColor = color;
     update();
 }
 
-void SplashScreen::paintEvent(QPaintEvent *event)
-{
+void SplashScreen::paintEvent(QPaintEvent *event) {
     QPainter painter(this);
     QFont messageFont = GUIUtil::getFontNormal();
     messageFont.setPointSize(14);
@@ -231,8 +223,7 @@ void SplashScreen::paintEvent(QPaintEvent *event)
     painter.drawText(r, curAlignment, curMessage);
 }
 
-void SplashScreen::closeEvent(QCloseEvent *event)
-{
+void SplashScreen::closeEvent(QCloseEvent *event) {
     m_node.startShutdown(); // allows an "emergency" shutdown during startup
     event->ignore();
 }

@@ -13,57 +13,48 @@
 #include <wallet/wallet.h>
 #include <key_io.h>
 
-WalletModelFuturesTransaction::WalletModelFuturesTransaction(const QList<SendFuturesRecipient> &_recipients) :
-    recipients(_recipients),
-    fee(0)
-{
+WalletModelFuturesTransaction::WalletModelFuturesTransaction(const QList <SendFuturesRecipient> &_recipients) :
+        recipients(_recipients),
+        fee(0) {
     //walletTransaction = new CFutureTx();
-   // walletTransaction = new CWalletTx();
+    // walletTransaction = new CWalletTx();
 }
 
-CTransactionRef& WalletModelFuturesTransaction::getWtx()
-{
+CTransactionRef &WalletModelFuturesTransaction::getWtx() {
     return wtx;
 }
 
 
-QList<SendFuturesRecipient> WalletModelFuturesTransaction::getRecipients() const
-{
+QList <SendFuturesRecipient> WalletModelFuturesTransaction::getRecipients() const {
     return recipients;
 }
 
-unsigned int WalletModelFuturesTransaction::getTransactionSize() const
-{
+unsigned int WalletModelFuturesTransaction::getTransactionSize() const {
     return wtx != nullptr ? ::GetSerializeSize(*wtx, SER_NETWORK, PROTOCOL_VERSION) : 0;
 }
 
-CAmount WalletModelFuturesTransaction::getTransactionFee() const
-{
+CAmount WalletModelFuturesTransaction::getTransactionFee() const {
     return fee;
 }
 
-void WalletModelFuturesTransaction::setTransactionFee(const CAmount& newFee)
-{
+void WalletModelFuturesTransaction::setTransactionFee(const CAmount &newFee) {
     fee = newFee;
 }
 
 void WalletModelFuturesTransaction::assignFuturePayload() {
-	for (QList<SendFuturesRecipient>::iterator it = recipients.begin(); it != recipients.end(); ++it)
-	{
-		SendFuturesRecipient& rcp = (*it);
-	}
+    for (QList<SendFuturesRecipient>::iterator it = recipients.begin(); it != recipients.end(); ++it) {
+        SendFuturesRecipient &rcp = (*it);
+    }
 }
 
-void WalletModelFuturesTransaction::reassignAmounts()
-{
+void WalletModelFuturesTransaction::reassignAmounts() {
     // For each recipient look for a matching CTxOut in walletTransaction and reassign amounts
 
-    for (QList<SendFuturesRecipient>::iterator it = recipients.begin(); it != recipients.end(); ++it)
-    {
-        SendFuturesRecipient& rcp = (*it);
+    for (QList<SendFuturesRecipient>::iterator it = recipients.begin(); it != recipients.end(); ++it) {
+        SendFuturesRecipient &rcp = (*it);
         {
             CFutureTx ftx;
-            for (const auto& txout : wtx.get()->vout) {
+            for (const auto &txout: wtx.get()->vout) {
                 CScript scriptPubKey = GetScriptForDestination(DecodeDestination(rcp.address.toStdString()));
                 if (txout.scriptPubKey == scriptPubKey) {
                     rcp.amount = txout.nValue;
@@ -74,11 +65,9 @@ void WalletModelFuturesTransaction::reassignAmounts()
     }
 }
 
-CAmount WalletModelFuturesTransaction::getTotalTransactionAmount() const
-{
+CAmount WalletModelFuturesTransaction::getTotalTransactionAmount() const {
     CAmount totalTransactionAmount = 0;
-    for (const SendFuturesRecipient &rcp : recipients)
-    {
+    for (const SendFuturesRecipient &rcp: recipients) {
         totalTransactionAmount += rcp.amount;
     }
     return totalTransactionAmount;

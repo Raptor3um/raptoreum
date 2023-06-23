@@ -20,21 +20,24 @@
 
 struct nontrivial_t {
     int x;
-    nontrivial_t() :x(-1) {}
-    SERIALIZE_METHODS(nontrivial_t, obj) { READWRITE(obj.x); }
+
+    nontrivial_t() : x(-1) {}
+
+    SERIALIZE_METHODS(nontrivial_t, obj
+    ) { READWRITE(obj.x); }
 };
+
 typedef prevector<28, unsigned char> prevec;
 
 static_assert(!std::is_trivially_default_constructible<nontrivial_t>::value,
-              "expected nontrivial_t to not be trivially constructible");
+"expected nontrivial_t to not be trivially constructible");
 
 typedef unsigned char trivial_t;
 static_assert(std::is_trivially_default_constructible<trivial_t>::value,
-              "expected trivial_t to be trivially constructible");
+"expected trivial_t to be trivially constructible");
 
-template <typename T>
-static void PrevectorDestructor(benchmark::Bench& bench)
-{
+template<typename T>
+static void PrevectorDestructor(benchmark::Bench &bench) {
     bench.batch(2).run([&] {
         prevector<28, T> t0;
         prevector<28, T> t1;
@@ -43,9 +46,8 @@ static void PrevectorDestructor(benchmark::Bench& bench)
     });
 }
 
-template <typename T>
-static void PrevectorClear(benchmark::Bench& bench)
-{
+template<typename T>
+static void PrevectorClear(benchmark::Bench &bench) {
     prevector<28, T> t0;
     prevector<28, T> t1;
     bench.batch(2).run([&] {
@@ -56,9 +58,8 @@ static void PrevectorClear(benchmark::Bench& bench)
     });
 }
 
-template <typename T>
-void PrevectorResize(benchmark::Bench& bench)
-{
+template<typename T>
+void PrevectorResize(benchmark::Bench &bench) {
     prevector<28, T> t0;
     prevector<28, T> t1;
     bench.batch(4).run([&] {
@@ -69,9 +70,8 @@ void PrevectorResize(benchmark::Bench& bench)
     });
 }
 
-template <typename T>
-static void PrevectorDeserialize(benchmark::Bench& bench)
-{
+template<typename T>
+static void PrevectorDeserialize(benchmark::Bench &bench) {
     CDataStream s0(SER_NETWORK, 0);
     prevector<28, T> t0;
     t0.resize(28);
@@ -104,6 +104,9 @@ static void PrevectorDeserialize(benchmark::Bench& bench)
     BENCHMARK(Prevector##name##Trivial);
 
 PREVECTOR_TEST(Clear)
+
 PREVECTOR_TEST(Destructor)
+
 PREVECTOR_TEST(Resize)
+
 PREVECTOR_TEST(Deserialize)

@@ -26,8 +26,7 @@ class QModelIndex;
 QT_END_NAMESPACE
 
 /** Dialog for requesting payment of bitcoins */
-class ReceiveCoinsDialog : public QDialog
-{
+class ReceiveCoinsDialog : public QDialog {
     Q_OBJECT
 
 public:
@@ -38,14 +37,18 @@ public:
         MINIMUM_COLUMN_WIDTH = 130
     };
 
-    explicit ReceiveCoinsDialog(QWidget* parent = nullptr);
+    explicit ReceiveCoinsDialog(QWidget *parent = nullptr);
+
     ~ReceiveCoinsDialog();
 
     void setModel(WalletModel *model);
 
-public Q_SLOTS:
-    void clear();
+public
+    Q_SLOTS:
+            void clear();
+
     void reject() override;
+
     void accept() override;
 
 protected:
@@ -58,21 +61,35 @@ private:
     QMenu *contextMenu;
 
     QModelIndex selectedRow();
+
     void copyColumnToClipboard(int column);
+
     virtual void resizeEvent(QResizeEvent *event) override;
 
-private Q_SLOTS:
-    void on_receiveButton_clicked();
+private
+    Q_SLOTS:
+            void on_receiveButton_clicked();
+
     void on_showRequestButton_clicked();
+
     void on_removeRequestButton_clicked();
+
     void on_recentRequestsView_doubleClicked(const QModelIndex &index);
+
     void recentRequestsView_selectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
+
     void updateDisplayUnit();
+
     void showMenu(const QPoint &point);
+
     void copyURI();
+
     void copyAddress();
+
     void copyLabel();
+
     void copyMessage();
+
     void copyAmount();
 };
 

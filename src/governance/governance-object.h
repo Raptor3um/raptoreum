@@ -20,8 +20,11 @@
 #include <univalue.h>
 
 class CGovernanceManager;
+
 class CGovernanceTriggerManager;
+
 class CGovernanceObject;
+
 class CGovernanceVote;
 
 extern RecursiveMutex cs_main;
@@ -48,8 +51,7 @@ static const int SEEN_OBJECT_UNKNOWN = 4;  // the default
 
 using vote_time_pair_t = std::pair<CGovernanceVote, int64_t>;
 
-inline bool operator<(const vote_time_pair_t& p1, const vote_time_pair_t& p2)
-{
+inline bool operator<(const vote_time_pair_t &p1, const vote_time_pair_t &p2) {
     return (p1.first < p2.first);
 }
 
@@ -58,14 +60,15 @@ struct vote_instance_t {
     int64_t nTime;
     int64_t nCreationTime;
 
-    explicit vote_instance_t(vote_outcome_enum_t eOutcomeIn = VOTE_OUTCOME_NONE, int64_t nTimeIn = 0, int64_t nCreationTimeIn = 0) :
-        eOutcome(eOutcomeIn),
-        nTime(nTimeIn),
-        nCreationTime(nCreationTimeIn)
-    {
+    explicit vote_instance_t(vote_outcome_enum_t eOutcomeIn = VOTE_OUTCOME_NONE, int64_t nTimeIn = 0,
+                             int64_t nCreationTimeIn = 0) :
+            eOutcome(eOutcomeIn),
+            nTime(nTimeIn),
+            nCreationTime(nCreationTimeIn) {
     }
 
-    SERIALIZE_METHODS(vote_instance_t, obj)
+    SERIALIZE_METHODS(vote_instance_t, obj
+    )
     {
         int nOutcome;
         SER_WRITE(obj, nOutcome = int(obj.eOutcome));
@@ -90,8 +93,7 @@ struct vote_rec_t {
 *
 */
 
-class CGovernanceObject
-{
+class CGovernanceObject {
 public: // Types
     using vote_m_t = std::map<COutPoint, vote_rec_t>;
 
@@ -160,100 +162,95 @@ private:
 public:
     CGovernanceObject();
 
-    CGovernanceObject(const uint256& nHashParentIn, int nRevisionIn, int64_t nTime, const uint256& nCollateralHashIn, const std::string& strDataHexIn);
+    CGovernanceObject(const uint256 &nHashParentIn, int nRevisionIn, int64_t nTime, const uint256 &nCollateralHashIn,
+                      const std::string &strDataHexIn);
 
-    CGovernanceObject(const CGovernanceObject& other);
+    CGovernanceObject(const CGovernanceObject &other);
 
     // Public Getter methods
 
-    int64_t GetCreationTime() const
-    {
+    int64_t GetCreationTime() const {
         return nTime;
     }
 
-    int64_t GetDeletionTime() const
-    {
+    int64_t GetDeletionTime() const {
         return nDeletionTime;
     }
 
-    int GetObjectType() const
-    {
+    int GetObjectType() const {
         return nObjectType;
     }
 
-    const uint256& GetCollateralHash() const
-    {
+    const uint256 &GetCollateralHash() const {
         return nCollateralHash;
     }
 
-    const COutPoint& GetSmartnodeOutpoint() const
-    {
+    const COutPoint &GetSmartnodeOutpoint() const {
         return smartnodeOutpoint;
     }
 
-    bool IsSetCachedFunding() const
-    {
+    bool IsSetCachedFunding() const {
         return fCachedFunding;
     }
 
-    bool IsSetCachedValid() const
-    {
+    bool IsSetCachedValid() const {
         return fCachedValid;
     }
 
-    bool IsSetCachedDelete() const
-    {
+    bool IsSetCachedDelete() const {
         return fCachedDelete;
     }
 
-    bool IsSetCachedEndorsed() const
-    {
+    bool IsSetCachedEndorsed() const {
         return fCachedEndorsed;
     }
 
-    bool IsSetDirtyCache() const
-    {
+    bool IsSetDirtyCache() const {
         return fDirtyCache;
     }
 
-    bool IsSetExpired() const
-    {
+    bool IsSetExpired() const {
         return fExpired;
     }
 
-    void SetExpired()
-    {
+    void SetExpired() {
         fExpired = true;
     }
 
-    const CGovernanceObjectVoteFile& GetVoteFile() const
-    {
+    const CGovernanceObjectVoteFile &GetVoteFile() const {
         return fileVotes;
     }
 
     // Signature related functions
 
-    void SetSmartnodeOutpoint(const COutPoint& outpoint);
-    bool Sign(const CBLSSecretKey& key);
-    bool CheckSignature(const CBLSPublicKey& pubKey) const;
+    void SetSmartnodeOutpoint(const COutPoint &outpoint);
+
+    bool Sign(const CBLSSecretKey &key);
+
+    bool CheckSignature(const CBLSPublicKey &pubKey) const;
 
     uint256 GetSignatureHash() const;
 
     // CORE OBJECT FUNCTIONS
 
-    bool IsValidLocally(std::string& strError, bool fCheckCollateral) const EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    bool IsValidLocally(std::string &strError, bool fCheckCollateral) const
 
-    bool IsValidLocally(std::string& strError, bool& fMissingConfirmations, bool fCheckCollateral) const EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+    bool IsValidLocally(std::string &strError, bool &fMissingConfirmations, bool fCheckCollateral) const
+
+    EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     /// Check the collateral transaction for the budget proposal/finalized budget
-    bool IsCollateralValid(std::string& strError, bool& fMissingConfirmations) const EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    bool IsCollateralValid(std::string &strError, bool &fMissingConfirmations) const
+
+    EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     void UpdateLocalValidity();
 
     void UpdateSentinelVariables();
 
-    void PrepareDeletion(int64_t nDeletionTime_)
-    {
+    void PrepareDeletion(int64_t nDeletionTime_) {
         fCachedDelete = true;
         if (nDeletionTime == 0) {
             nDeletionTime = nDeletionTime_;
@@ -264,7 +261,7 @@ public:
 
     UniValue GetJSONObject();
 
-    void Relay(CConnman& connman);
+    void Relay(CConnman &connman);
 
     uint256 GetHash() const;
 
@@ -273,21 +270,27 @@ public:
     int CountMatchingVotes(vote_signal_enum_t eVoteSignalIn, vote_outcome_enum_t eVoteOutcomeIn) const;
 
     int GetAbsoluteYesCount(vote_signal_enum_t eVoteSignalIn) const;
+
     int GetAbsoluteNoCount(vote_signal_enum_t eVoteSignalIn) const;
+
     int GetYesCount(vote_signal_enum_t eVoteSignalIn) const;
+
     int GetNoCount(vote_signal_enum_t eVoteSignalIn) const;
+
     int GetAbstainCount(vote_signal_enum_t eVoteSignalIn) const;
 
-    bool GetCurrentMNVotes(const COutPoint& mnCollateralOutpoint, vote_rec_t& voteRecord) const;
+    bool GetCurrentMNVotes(const COutPoint &mnCollateralOutpoint, vote_rec_t &voteRecord) const;
 
     // FUNCTIONS FOR DEALING WITH DATA STRING
 
     std::string GetDataAsHexString() const;
+
     std::string GetDataAsPlainString() const;
 
     // SERIALIZER
 
-    SERIALIZE_METHODS(CGovernanceObject, obj)
+    SERIALIZE_METHODS(CGovernanceObject, obj
+    )
     {
         READWRITE(obj.nHashParent, obj.nRevision, obj.nTime, obj.nCollateralHash,
                   obj.vchData, obj.nObjectType, obj.smartnodeOutpoint);
@@ -298,7 +301,8 @@ public:
             // Only include these for the disk file format
             LogPrint(BCLog::GOBJECT, "CGovernanceObject::SerializationOp Reading/writing votes from/to disk\n");
             READWRITE(obj.nDeletionTime, obj.fExpired, obj.mapCurrentMNVotes, obj.fileVotes);
-            LogPrint(BCLog::GOBJECT, "CGovernanceObject::SerializationOp hash = %s, vote count = %d\n", obj.GetHash().ToString(), obj.fileVotes.GetVoteCount());
+            LogPrint(BCLog::GOBJECT, "CGovernanceObject::SerializationOp hash = %s, vote count = %d\n",
+                     obj.GetHash().ToString(), obj.fileVotes.GetVoteCount());
         }
 
         // AFTER DESERIALIZATION OCCURS, CACHED VARIABLES MUST BE CALCULATED MANUALLY
@@ -308,12 +312,13 @@ public:
 
     // FUNCTIONS FOR DEALING WITH DATA STRING
     void LoadData();
-    void GetData(UniValue& objResult);
 
-    bool ProcessVote(CNode* pfrom,
-        const CGovernanceVote& vote,
-        CGovernanceException& exception,
-        CConnman& connman);
+    void GetData(UniValue &objResult);
+
+    bool ProcessVote(CNode *pfrom,
+                     const CGovernanceVote &vote,
+                     CGovernanceException &exception,
+                     CConnman &connman);
 
     /// Called when MN's which have voted on this object have been removed
     void ClearSmartnodeVotes();
@@ -322,7 +327,7 @@ public:
     // This is the case for DIP3 MNs that changed voting or operator keys and
     // also for MNs that were removed from the list completely.
     // Returns deleted vote hashes.
-    std::set<uint256> RemoveInvalidVotes(const COutPoint& mnOutpoint);
+    std::set <uint256> RemoveInvalidVotes(const COutPoint &mnOutpoint);
 };
 
 

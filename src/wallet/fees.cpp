@@ -13,13 +13,12 @@
 #include <wallet/wallet.h>
 
 
-CAmount GetRequiredFee(const CWallet& wallet, unsigned int nTxBytes)
-{
+CAmount GetRequiredFee(const CWallet &wallet, unsigned int nTxBytes) {
     return GetRequiredFeeRate(wallet).GetFee(nTxBytes);
 }
 
-CAmount GetMinimumFee(const CWallet& wallet, unsigned int nTxBytes, const CCoinControl& coin_control, FeeCalculation* feeCalc)
-{
+CAmount
+GetMinimumFee(const CWallet &wallet, unsigned int nTxBytes, const CCoinControl &coin_control, FeeCalculation *feeCalc) {
     CAmount fee_needed = GetMinimumFeeRate(wallet, coin_control, feeCalc).GetFee(nTxBytes);
     // Always obey the maximum
     const CAmount max_tx_fee = wallet.m_default_max_tx_fee;
@@ -30,13 +29,11 @@ CAmount GetMinimumFee(const CWallet& wallet, unsigned int nTxBytes, const CCoinC
     return fee_needed;
 }
 
-CFeeRate GetRequiredFeeRate(const CWallet& wallet)
-{
+CFeeRate GetRequiredFeeRate(const CWallet &wallet) {
     return std::max(wallet.m_min_fee, wallet.chain().relayMinFee());
 }
 
-CFeeRate GetMinimumFeeRate(const CWallet& wallet, const CCoinControl& coin_control, FeeCalculation* feeCalc)
-{
+CFeeRate GetMinimumFeeRate(const CWallet &wallet, const CCoinControl &coin_control, FeeCalculation *feeCalc) {
     /* User control of how to calculate fee uses the following parameter precedence:
        1. coin_control.m_feerate
        2. coin_control.m_confirm_target
@@ -50,12 +47,11 @@ CFeeRate GetMinimumFeeRate(const CWallet& wallet, const CCoinControl& coin_contr
         if (feeCalc) feeCalc->reason = FeeReason::PAYTXFEE;
         // Allow to override automatic min/max check over coin control instance
         if (coin_control.fOverrideFeeRate) return feerate_needed;
-    }
-    else if (!coin_control.m_confirm_target && wallet.m_pay_tx_fee != CFeeRate(0)) { // 3. TODO: remove magic value of 0 for wallet member m_pay_tx_fee
+    } else if (!coin_control.m_confirm_target &&
+               wallet.m_pay_tx_fee != CFeeRate(0)) { // 3. TODO: remove magic value of 0 for wallet member m_pay_tx_fee
         feerate_needed = wallet.m_pay_tx_fee;
         if (feeCalc) feeCalc->reason = FeeReason::PAYTXFEE;
-    }
-    else { // 2. or 4.
+    } else { // 2. or 4.
         // We will use smart fee estimation
         unsigned int target = coin_control.m_confirm_target ? *coin_control.m_confirm_target : wallet.m_confirm_target;
         // By default estimates are economical
@@ -87,12 +83,12 @@ CFeeRate GetMinimumFeeRate(const CWallet& wallet, const CCoinControl& coin_contr
     return feerate_needed;
 }
 
-CFeeRate GetDiscardRate(const CWallet& wallet)
-{
+CFeeRate GetDiscardRate(const CWallet &wallet) {
     unsigned int highest_target = wallet.chain().estimateMaxBlocks();
     CFeeRate discard_rate = wallet.chain().estimateSmartFee(highest_target, false /* conservative */);
     // Don't let discard_rate be greater than longest possible fee estimate if we get a valid fee estimate
-    discard_rate = (discard_rate == CFeeRate(0)) ? wallet.m_discard_rate : std::min(discard_rate, wallet.m_discard_rate);
+    discard_rate = (discard_rate == CFeeRate(0)) ? wallet.m_discard_rate : std::min(discard_rate,
+                                                                                    wallet.m_discard_rate);
     // Discard rate must be at least dustRelayFee
     discard_rate = std::max(discard_rate, wallet.chain().relayDustFee());
     return discard_rate;

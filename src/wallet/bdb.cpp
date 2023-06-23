@@ -11,7 +11,9 @@
 #include <stdint.h>
 
 #ifndef WIN32
+
 #include <sys/stat.h>
+
 #endif
 
 namespace {
@@ -25,34 +27,35 @@ namespace {
 //! (https://docs.oracle.com/cd/E17275_01/html/programmer_reference/program_copy.html),
 //! so bitcoin should never create different databases with the same fileid, but
 //! this error can be triggered if users manually copy database files.
-void CheckUniqueFileid(const BerkeleyEnvironment& env, const std::string& filename, Db& db, WalletDatabaseFileId& fileid)
-{
-    if (env.IsMock()) return;
+    void CheckUniqueFileid(const BerkeleyEnvironment &env, const std::string &filename, Db &db,
+                           WalletDatabaseFileId &fileid) {
+        if (env.IsMock()) return;
 
-    int ret = db.get_mpf()->get_fileid(fileid.value);
-    if (ret != 0) {
-        throw std::runtime_error(strprintf("BerkeleyDatabase: Can't open database %s (get_fileid failed with %d)", filename, ret));
-    }
+        int ret = db.get_mpf()->get_fileid(fileid.value);
+        if (ret != 0) {
+            throw std::runtime_error(
+                    strprintf("BerkeleyDatabase: Can't open database %s (get_fileid failed with %d)", filename, ret));
+        }
 
-    for (const auto& item : env.m_fileids) {
-        if (fileid == item.second && &fileid != &item.second) {
-            throw std::runtime_error(strprintf("BerkeleyDatabase: Can't open database %s (duplicates fileid %s from %s)", filename,
-            HexStr(item.second.value), item.first));
+        for (const auto &item: env.m_fileids) {
+            if (fileid == item.second && &fileid != &item.second) {
+                throw std::runtime_error(
+                        strprintf("BerkeleyDatabase: Can't open database %s (duplicates fileid %s from %s)", filename,
+                                  HexStr(item.second.value), item.first));
+            }
         }
     }
-}
 
-RecursiveMutex cs_db;
-std::map<std::string, std::weak_ptr<BerkeleyEnvironment>> g_dbenvs GUARDED_BY(cs_db); //!< Map from directory name to db environment.
+    RecursiveMutex cs_db;
+    std::map <std::string, std::weak_ptr<BerkeleyEnvironment>> g_dbenvs
+    GUARDED_BY(cs_db); //!< Map from directory name to db environment.
 } // namespace
 
-bool WalletDatabaseFileId::operator==(const WalletDatabaseFileId& rhs) const
-{
+bool WalletDatabaseFileId::operator==(const WalletDatabaseFileId &rhs) const {
     return memcmp(value, &rhs.value, sizeof(value)) == 0;
 }
 
-bool IsBDBWalletLoaded(const fs::path& wallet_path)
-{
+bool IsBDBWalletLoaded(const fs::path &wallet_path) {
     fs::path env_directory;
     std::string database_filename;
     SplitWalletPath(wallet_path, env_directory, database_filename);
@@ -70,8 +73,7 @@ bool IsBDBWalletLoaded(const fs::path& wallet_path)
  * erases the weak pointer from the g_dbenvs map.
  * @post A new BerkeleyEnvironment weak pointer is inserted into g_dbenvs if the directory path key was not already in the map.
  */
-std::shared_ptr<BerkeleyEnvironment> GetWalletEnv(const fs::path& wallet_path, std::string& database_filename)
-{
+std::shared_ptr <BerkeleyEnvironment> GetWalletEnv(const fs::path &wallet_path, std::string &database_filename) {
     fs::path env_directory;
     SplitWalletPath(wallet_path, env_directory, database_filename);
     LOCK(cs_db);
@@ -88,15 +90,14 @@ std::shared_ptr<BerkeleyEnvironment> GetWalletEnv(const fs::path& wallet_path, s
 // BerkeleyBatch
 //
 
-void BerkeleyEnvironment::Close()
-{
+void BerkeleyEnvironment::Close() {
     if (!fDbEnvInit)
         return;
 
     fDbEnvInit = false;
 
-    for (auto& db : m_databases) {
-        BerkeleyDatabase& database = db.second.get();
+    for (auto &db: m_databases) {
+        BerkeleyDatabase &database = db.second.get();
         assert(database.m_refcount <= 0);
         if (database.m_db) {
             database.m_db->close(0);
@@ -104,41 +105,37 @@ void BerkeleyEnvironment::Close()
         }
     }
 
-    FILE* error_file = nullptr;
+    FILE *error_file = nullptr;
     dbenv->get_errfile(&error_file);
 
     int ret = dbenv->close(0);
     if (ret != 0)
         LogPrintf("BerkeleyEnvironment::Close: Error %d closing database environment: %s\n", ret, DbEnv::strerror(ret));
     if (!fMockDb)
-        DbEnv((u_int32_t)0).remove(strPath.c_str(), 0);
+        DbEnv((u_int32_t) 0).remove(strPath.c_str(), 0);
 
     if (error_file) fclose(error_file);
 
     UnlockDirectory(strPath, ".walletlock");
 }
 
-void BerkeleyEnvironment::Reset()
-{
+void BerkeleyEnvironment::Reset() {
     dbenv.reset(new DbEnv(DB_CXX_NO_EXCEPTIONS));
     fDbEnvInit = false;
     fMockDb = false;
 }
 
-BerkeleyEnvironment::BerkeleyEnvironment(const fs::path& dir_path) : strPath(dir_path.string())
-{
+BerkeleyEnvironment::BerkeleyEnvironment(const fs::path &dir_path) : strPath(dir_path.string()) {
     Reset();
 }
 
-BerkeleyEnvironment::~BerkeleyEnvironment()
-{
+BerkeleyEnvironment::~BerkeleyEnvironment() {
     LOCK(cs_db);
     g_dbenvs.erase(strPath);
     Close();
 }
 
-bool BerkeleyEnvironment::Open(bool retry)
-{
+bool BerkeleyEnvironment::Open(bool retry) {
     if (fDbEnvInit) {
         return true;
     }
@@ -146,7 +143,8 @@ bool BerkeleyEnvironment::Open(bool retry)
     fs::path pathIn = strPath;
     TryCreateDirectories(pathIn);
     if (!LockDirectory(pathIn, ".walletlock")) {
-        LogPrintf("Cannot obtain a lock on wallet directory %s. Another instance of Raptoreum may be using it.\n", strPath);
+        LogPrintf("Cannot obtain a lock on wallet directory %s. Another instance of Raptoreum may be using it.\n",
+                  strPath);
         return false;
     }
 
@@ -170,20 +168,21 @@ bool BerkeleyEnvironment::Open(bool retry)
     dbenv->set_flags(DB_TXN_WRITE_NOSYNC, 1);
     dbenv->log_set_config(DB_LOG_AUTO_REMOVE, 1);
     int ret = dbenv->open(strPath.c_str(),
-                         DB_CREATE |
-                             DB_INIT_LOCK |
-                             DB_INIT_LOG |
-                             DB_INIT_MPOOL |
-                             DB_INIT_TXN |
-                             DB_THREAD |
-                             DB_RECOVER |
-                             nEnvFlags,
-                         S_IRUSR | S_IWUSR);
+                          DB_CREATE |
+                          DB_INIT_LOCK |
+                          DB_INIT_LOG |
+                          DB_INIT_MPOOL |
+                          DB_INIT_TXN |
+                          DB_THREAD |
+                          DB_RECOVER |
+                          nEnvFlags,
+                          S_IRUSR | S_IWUSR);
     if (ret != 0) {
         LogPrintf("BerkeleyEnvironment::Open: Error %d opening database environment: %s\n", ret, DbEnv::strerror(ret));
         int ret2 = dbenv->close(0);
         if (ret2 != 0) {
-            LogPrintf("BerkeleyEnvironment::Open: Error %d closing failed database environment: %s\n", ret2, DbEnv::strerror(ret2));
+            LogPrintf("BerkeleyEnvironment::Open: Error %d closing failed database environment: %s\n", ret2,
+                      DbEnv::strerror(ret2));
         }
         Reset();
         if (retry) {
@@ -192,7 +191,7 @@ bool BerkeleyEnvironment::Open(bool retry)
             try {
                 fs::rename(pathLogDir, pathDatabaseBak);
                 LogPrintf("Moved old %s to %s. Retrying.\n", pathLogDir.string(), pathDatabaseBak.string());
-            } catch (const fs::filesystem_error&) {
+            } catch (const fs::filesystem_error &) {
                 // failure is ok (well, not really, but it's not worse than what we started with)
             }
             // try opening it again one more time
@@ -211,8 +210,7 @@ bool BerkeleyEnvironment::Open(bool retry)
 }
 
 //! Construct an in-memory mock Berkeley environment for testing
-BerkeleyEnvironment::BerkeleyEnvironment()
-{
+BerkeleyEnvironment::BerkeleyEnvironment() {
     Reset();
 
     LogPrint(BCLog::WALLETDB, "BerkeleyEnvironment::MakeMock\n");
@@ -225,34 +223,32 @@ BerkeleyEnvironment::BerkeleyEnvironment()
     dbenv->set_flags(DB_AUTO_COMMIT, 1);
     dbenv->log_set_config(DB_LOG_IN_MEMORY, 1);
     int ret = dbenv->open(nullptr,
-                         DB_CREATE |
-                             DB_INIT_LOCK |
-                             DB_INIT_LOG |
-                             DB_INIT_MPOOL |
-                             DB_INIT_TXN |
-                             DB_THREAD |
-                             DB_PRIVATE,
-                         S_IRUSR | S_IWUSR);
+                          DB_CREATE |
+                          DB_INIT_LOCK |
+                          DB_INIT_LOG |
+                          DB_INIT_MPOOL |
+                          DB_INIT_TXN |
+                          DB_THREAD |
+                          DB_PRIVATE,
+                          S_IRUSR | S_IWUSR);
     if (ret > 0) {
-        throw std::runtime_error(strprintf("BerkeleyEnvironment::MakeMock: Error %d opening database environment.", ret));
+        throw std::runtime_error(
+                strprintf("BerkeleyEnvironment::MakeMock: Error %d opening database environment.", ret));
     }
 
     fDbEnvInit = true;
     fMockDb = true;
 }
 
-BerkeleyBatch::SafeDbt::SafeDbt()
-{
+BerkeleyBatch::SafeDbt::SafeDbt() {
     m_dbt.set_flags(DB_DBT_MALLOC);
 }
 
-BerkeleyBatch::SafeDbt::SafeDbt(void* data, size_t size)
-    : m_dbt(data, size)
-{
+BerkeleyBatch::SafeDbt::SafeDbt(void *data, size_t size)
+        : m_dbt(data, size) {
 }
 
-BerkeleyBatch::SafeDbt::~SafeDbt()
-{
+BerkeleyBatch::SafeDbt::~SafeDbt() {
     if (m_dbt.get_data() != nullptr) {
         // Clear memory, e.g. in case it was a private key
         memory_cleanse(m_dbt.get_data(), m_dbt.get_size());
@@ -265,23 +261,19 @@ BerkeleyBatch::SafeDbt::~SafeDbt()
     }
 }
 
-const void* BerkeleyBatch::SafeDbt::get_data() const
-{
+const void *BerkeleyBatch::SafeDbt::get_data() const {
     return m_dbt.get_data();
 }
 
-u_int32_t BerkeleyBatch::SafeDbt::get_size() const
-{
+u_int32_t BerkeleyBatch::SafeDbt::get_size() const {
     return m_dbt.get_size();
 }
 
-BerkeleyBatch::SafeDbt::operator Dbt*()
-{
+BerkeleyBatch::SafeDbt::operator Dbt *() {
     return &m_dbt;
 }
 
-bool BerkeleyDatabase::Verify(std::string& errorStr)
-{
+bool BerkeleyDatabase::Verify(std::string &errorStr) {
     fs::path walletDir = env->Directory();
     fs::path file_path = walletDir / strFile;
 
@@ -293,14 +285,15 @@ bool BerkeleyDatabase::Verify(std::string& errorStr)
         return false;
     }
 
-    if (fs::exists(file_path))
-    {
+    if (fs::exists(file_path)) {
         assert(m_refcount == 0);
 
         Db db(env->dbenv.get(), 0);
         int result = db.verify(strFile.c_str(), nullptr, nullptr, 0);
         if (result != 0) {
-            errorStr = strprintf(_("%s corrupt. Try using the wallet tool raptoreum-wallet to salvage or restoring a backup."), file_path);
+            errorStr = strprintf(
+                    _("%s corrupt. Try using the wallet tool raptoreum-wallet to salvage or restoring a backup."),
+                    file_path);
             return false;
         }
     }
@@ -308,16 +301,14 @@ bool BerkeleyDatabase::Verify(std::string& errorStr)
     return true;
 }
 
-void BerkeleyEnvironment::CheckpointLSN(const std::string& strFile)
-{
+void BerkeleyEnvironment::CheckpointLSN(const std::string &strFile) {
     dbenv->txn_checkpoint(0, 0, 0);
     if (fMockDb)
         return;
     dbenv->lsn_reset(strFile.c_str(), 0);
 }
 
-BerkeleyDatabase::~BerkeleyDatabase()
-{
+BerkeleyDatabase::~BerkeleyDatabase() {
     if (env) {
         LOCK(cs_db);
         env->CloseDb(strFile);
@@ -328,8 +319,12 @@ BerkeleyDatabase::~BerkeleyDatabase()
     }
 }
 
-BerkeleyBatch::BerkeleyBatch(BerkeleyDatabase& database, const char* pszMode, bool fFlushOnCloseIn) : pdb(nullptr), activeTxn(nullptr), m_cursor(nullptr), m_database(database)
-{
+BerkeleyBatch::BerkeleyBatch(BerkeleyDatabase &database, const char *pszMode, bool fFlushOnCloseIn) : pdb(nullptr),
+                                                                                                      activeTxn(
+                                                                                                              nullptr),
+                                                                                                      m_cursor(nullptr),
+                                                                                                      m_database(
+                                                                                                              database) {
     database.AddRef();
     database.Open(pszMode);
     fReadOnly = (!strchr(pszMode, '+') && !strchr(pszMode, 'w'));
@@ -346,8 +341,7 @@ BerkeleyBatch::BerkeleyBatch(BerkeleyDatabase& database, const char* pszMode, bo
     }
 }
 
-void BerkeleyDatabase::Open(const char* pszMode)
-{
+void BerkeleyDatabase::Open(const char *pszMode) {
     bool fCreate = strchr(pszMode, 'c') != nullptr;
     unsigned int nFlags = DB_THREAD;
     if (fCreate)
@@ -360,23 +354,25 @@ void BerkeleyDatabase::Open(const char* pszMode)
 
         if (m_db == nullptr) {
             int ret;
-            std::unique_ptr<Db> pdb_temp = MakeUnique<Db>(env->dbenv.get(), 0);
+            std::unique_ptr <Db> pdb_temp = MakeUnique<Db>(env->dbenv.get(), 0);
 
             bool fMockDb = env->IsMock();
             if (fMockDb) {
-                DbMpoolFile* mpf = pdb_temp->get_mpf();
+                DbMpoolFile *mpf = pdb_temp->get_mpf();
                 ret = mpf->set_flags(DB_MPOOL_NOFILE, 1);
                 if (ret != 0) {
-                    throw std::runtime_error(strprintf("BerkeleyDatabase: Failed to configure for no temp file backing for database %s", strFile));
+                    throw std::runtime_error(
+                            strprintf("BerkeleyDatabase: Failed to configure for no temp file backing for database %s",
+                                      strFile));
                 }
             }
 
             ret = pdb_temp->open(nullptr,                         // Txn pointer
-                            fMockDb ? nullptr : strFile.c_str(),  // Filename
-                            fMockDb ? strFile.c_str() : "main",   // Logical db name
-                            DB_BTREE,                             // Database type
-                            nFlags,                               // Flags
-                            0);
+                                 fMockDb ? nullptr : strFile.c_str(),  // Filename
+                                 fMockDb ? strFile.c_str() : "main",   // Logical db name
+                                 DB_BTREE,                             // Database type
+                                 nFlags,                               // Flags
+                                 0);
 
             if (ret != 0) {
                 throw std::runtime_error(strprintf("BerkeleyDatabase: Error %d, can't open database %s", ret, strFile));
@@ -394,8 +390,7 @@ void BerkeleyDatabase::Open(const char* pszMode)
     }
 }
 
-void BerkeleyBatch::Flush()
-{
+void BerkeleyBatch::Flush() {
     if (activeTxn)
         return;
 
@@ -405,23 +400,21 @@ void BerkeleyBatch::Flush()
         nMinutes = 1;
 
     if (env) { // env is nullptr for dummy databases (i.e. in tests). Don't actually flush if env is nullptr so we don't segfault
-        env->dbenv->txn_checkpoint(nMinutes ? gArgs.GetArg("-dblogsize", DEFAULT_WALLET_DBLOGSIZE) * 1024 : 0, nMinutes, 0);
+        env->dbenv->txn_checkpoint(nMinutes ? gArgs.GetArg("-dblogsize", DEFAULT_WALLET_DBLOGSIZE) * 1024 : 0, nMinutes,
+                                   0);
     }
 }
 
-void BerkeleyDatabase::IncrementUpdateCounter()
-{
+void BerkeleyDatabase::IncrementUpdateCounter() {
     ++nUpdateCounter;
 }
 
-BerkeleyBatch::~BerkeleyBatch()
-{
+BerkeleyBatch::~BerkeleyBatch() {
     Close();
     m_database.RemoveRef();
 }
 
-void BerkeleyBatch::Close()
-{
+void BerkeleyBatch::Close() {
     if (!pdb)
         return;
     if (activeTxn)
@@ -434,13 +427,12 @@ void BerkeleyBatch::Close()
         Flush();
 }
 
-void BerkeleyEnvironment::CloseDb(const std::string& strFile)
-{
+void BerkeleyEnvironment::CloseDb(const std::string &strFile) {
     {
         LOCK(cs_db);
         auto it = m_databases.find(strFile);
         assert(it != m_databases.end());
-        BerkeleyDatabase& database = it->second.get();
+        BerkeleyDatabase &database = it->second.get();
         if (database.m_db) {
             // Close the database handle
             database.m_db->close(0);
@@ -449,24 +441,23 @@ void BerkeleyEnvironment::CloseDb(const std::string& strFile)
     }
 }
 
-void BerkeleyEnvironment::ReloadDbEnv()
-{
+void BerkeleyEnvironment::ReloadDbEnv() {
     // Make sure that no Db's are in use
     AssertLockNotHeld(cs_db);
-    std::unique_lock<RecursiveMutex> lock(cs_db);
-    m_db_in_use.wait(lock, [this](){
-        for (auto& db : m_databases) {
+    std::unique_lock <RecursiveMutex> lock(cs_db);
+    m_db_in_use.wait(lock, [this]() {
+        for (auto &db: m_databases) {
             if (db.second.get().m_refcount > 0) return false;
         }
         return true;
     });
 
-    std::vector<std::string> filenames;
-    for (auto it : m_databases) {
+    std::vector <std::string> filenames;
+    for (auto it: m_databases) {
         filenames.push_back(it.first);
     }
     // Close the individual Db's
-    for (const std::string& filename : filenames) {
+    for (const std::string &filename: filenames) {
         CloseDb(filename);
     }
     // Reset the environment
@@ -475,8 +466,7 @@ void BerkeleyEnvironment::ReloadDbEnv()
     Open(true);
 }
 
-bool BerkeleyDatabase::Rewrite(const char* pszSkip)
-{
+bool BerkeleyDatabase::Rewrite(const char *pszSkip) {
     while (true) {
         {
             LOCK(cs_db);
@@ -491,7 +481,7 @@ bool BerkeleyDatabase::Rewrite(const char* pszSkip)
                 std::string strFileRes = strFile + ".rewrite";
                 { // surround usage of db with extra {}
                     BerkeleyBatch db(*this, "r");
-                    std::unique_ptr<Db> pdbCopy = MakeUnique<Db>(env->dbenv.get(), 0);
+                    std::unique_ptr <Db> pdbCopy = MakeUnique<Db>(env->dbenv.get(), 0);
 
                     int ret = pdbCopy->open(nullptr,               // Txn pointer
                                             strFileRes.c_str(), // Filename
@@ -559,21 +549,22 @@ bool BerkeleyDatabase::Rewrite(const char* pszSkip)
 }
 
 
-void BerkeleyEnvironment::Flush(bool fShutdown)
-{
+void BerkeleyEnvironment::Flush(bool fShutdown) {
     int64_t nStart = GetTimeMillis();
     // Flush log data to the actual data file on all files that are not in use
-    LogPrint(BCLog::WALLETDB, "BerkeleyEnvironment::Flush: [%s] Flush(%s)%s\n", strPath, fShutdown ? "true" : "false", fDbEnvInit ? "" : " database not started");
+    LogPrint(BCLog::WALLETDB, "BerkeleyEnvironment::Flush: [%s] Flush(%s)%s\n", strPath, fShutdown ? "true" : "false",
+             fDbEnvInit ? "" : " database not started");
     if (!fDbEnvInit)
         return;
     {
         LOCK(cs_db);
         bool no_dbs_accessed = true;
-        for (auto& db_it : m_databases) {
+        for (auto &db_it: m_databases) {
             std::string strFile = db_it.first;
             int nRefCount = db_it.second.get().m_refcount;
             if (nRefCount < 0) continue;
-            LogPrint(BCLog::WALLETDB, "BerkeleyEnvironment::Flush: Flushing %s (refcount = %d)...\n", strFile, nRefCount);
+            LogPrint(BCLog::WALLETDB, "BerkeleyEnvironment::Flush: Flushing %s (refcount = %d)...\n", strFile,
+                     nRefCount);
             if (nRefCount == 0) {
                 // Move log data to the dat file
                 CloseDb(strFile);
@@ -588,9 +579,10 @@ void BerkeleyEnvironment::Flush(bool fShutdown)
                 no_dbs_accessed = false;
             }
         }
-        LogPrint(BCLog::WALLETDB, "BerkeleyEnvironment::Flush: Flush(%s)%s took %15dms\n", fShutdown ? "true" : "false", fDbEnvInit ? "" : " database not started", GetTimeMillis() - nStart);
+        LogPrint(BCLog::WALLETDB, "BerkeleyEnvironment::Flush: Flush(%s)%s took %15dms\n", fShutdown ? "true" : "false",
+                 fDbEnvInit ? "" : " database not started", GetTimeMillis() - nStart);
         if (fShutdown) {
-            char** listp;
+            char **listp;
             if (no_dbs_accessed) {
                 dbenv->log_archive(&listp, DB_ARCH_REMOVE);
                 Close();
@@ -602,14 +594,13 @@ void BerkeleyEnvironment::Flush(bool fShutdown)
     }
 }
 
-bool BerkeleyDatabase::PeriodicFlush()
-{
+bool BerkeleyDatabase::PeriodicFlush() {
     // Don't flush if we can't acquire the lock.
     TRY_LOCK(cs_db, lockDb);
     if (!lockDb) return false;
 
     // Don't flush if any databases are in use
-    for (auto& it : env->m_databases) {
+    for (auto &it: env->m_databases) {
         if (it.second.get().m_refcount > 0) return false;
     }
 
@@ -629,14 +620,11 @@ bool BerkeleyDatabase::PeriodicFlush()
     return true;
 }
 
-bool BerkeleyDatabase::Backup(const std::string& strDest) const
-{
-    while (true)
-    {
+bool BerkeleyDatabase::Backup(const std::string &strDest) const {
+    while (true) {
         {
             LOCK(cs_db);
-            if (m_refcount <= 0)
-            {
+            if (m_refcount <= 0) {
                 // Flush log data to the dat file
                 env->CloseDb(strFile);
                 env->CheckpointLSN(strFile);
@@ -656,8 +644,9 @@ bool BerkeleyDatabase::Backup(const std::string& strDest) const
                     fs::copy_file(pathSrc, pathDest, fs::copy_option::overwrite_if_exists);
                     LogPrintf("copied %s to %s\n", strFile, pathDest.string());
                     return true;
-                } catch (const fs::filesystem_error& e) {
-                    LogPrintf("error copying %s to %s - %s\n", strFile, pathDest.string(), fsbridge::get_filesystem_error_message(e));
+                } catch (const fs::filesystem_error &e) {
+                    LogPrintf("error copying %s to %s - %s\n", strFile, pathDest.string(),
+                              fsbridge::get_filesystem_error_message(e));
                     return false;
                 }
             }
@@ -666,23 +655,19 @@ bool BerkeleyDatabase::Backup(const std::string& strDest) const
     }
 }
 
-void BerkeleyDatabase::Flush()
-{
+void BerkeleyDatabase::Flush() {
     env->Flush(false);
 }
 
-void BerkeleyDatabase::Close()
-{
+void BerkeleyDatabase::Close() {
     env->Flush(true);
 }
 
-void BerkeleyDatabase::ReloadDbEnv()
-{
+void BerkeleyDatabase::ReloadDbEnv() {
     env->ReloadDbEnv();
 }
 
-bool BerkeleyBatch::StartCursor()
-{
+bool BerkeleyBatch::StartCursor() {
     assert(!m_cursor);
     if (!pdb)
         return false;
@@ -690,8 +675,7 @@ bool BerkeleyBatch::StartCursor()
     return ret == 0;
 }
 
-bool BerkeleyBatch::ReadAtCursor(CDataStream& ssKey, CDataStream& ssValue, bool& complete)
-{
+bool BerkeleyBatch::ReadAtCursor(CDataStream &ssKey, CDataStream &ssValue, bool &complete) {
     complete = false;
     if (m_cursor == nullptr) return false;
     // Read at cursor
@@ -709,33 +693,30 @@ bool BerkeleyBatch::ReadAtCursor(CDataStream& ssKey, CDataStream& ssValue, bool&
     // Convert to streams
     ssKey.SetType(SER_DISK);
     ssKey.clear();
-    ssKey.write((char*)datKey.get_data(), datKey.get_size());
+    ssKey.write((char *) datKey.get_data(), datKey.get_size());
     ssValue.SetType(SER_DISK);
     ssValue.clear();
-    ssValue.write((char*)datValue.get_data(), datValue.get_size());
+    ssValue.write((char *) datValue.get_data(), datValue.get_size());
     return true;
 }
 
-void BerkeleyBatch::CloseCursor()
-{
+void BerkeleyBatch::CloseCursor() {
     if (!m_cursor) return;
     m_cursor->close();
     m_cursor = nullptr;
 }
 
-bool BerkeleyBatch::TxnBegin()
-{
+bool BerkeleyBatch::TxnBegin() {
     if (!pdb || activeTxn)
         return false;
-    DbTxn* ptxn = env->TxnBegin();
+    DbTxn *ptxn = env->TxnBegin();
     if (!ptxn)
         return false;
     activeTxn = ptxn;
     return true;
 }
 
-bool BerkeleyBatch::TxnCommit()
-{
+bool BerkeleyBatch::TxnCommit() {
     if (!pdb || !activeTxn)
         return false;
     int ret = activeTxn->commit(0);
@@ -743,8 +724,7 @@ bool BerkeleyBatch::TxnCommit()
     return (ret == 0);
 }
 
-bool BerkeleyBatch::TxnAbort()
-{
+bool BerkeleyBatch::TxnAbort() {
     if (!pdb || !activeTxn)
         return false;
     int ret = activeTxn->abort();
@@ -752,13 +732,11 @@ bool BerkeleyBatch::TxnAbort()
     return (ret == 0);
 }
 
-std::string BerkeleyDatabaseVersion()
-{
+std::string BerkeleyDatabaseVersion() {
     return DbEnv::version(nullptr, nullptr, nullptr);
 }
 
-bool BerkeleyBatch::ReadKey(CDataStream&& key, CDataStream& value)
-{
+bool BerkeleyBatch::ReadKey(CDataStream &&key, CDataStream &value) {
     if (!pdb) return false;
 
     SafeDbt datKey(key.data(), key.size());
@@ -766,14 +744,13 @@ bool BerkeleyBatch::ReadKey(CDataStream&& key, CDataStream& value)
     SafeDbt datValue;
     int ret = pdb->get(activeTxn, datKey, datValue, 0);
     if (ret == 0 && datValue.get_data() != nullptr) {
-        value.write((char*)datValue.get_data(), datValue.get_size());
+        value.write((char *) datValue.get_data(), datValue.get_size());
         return true;
     }
     return false;
 }
 
-bool BerkeleyBatch::WriteKey(CDataStream&& key, CDataStream&& value, bool overwrite)
-{
+bool BerkeleyBatch::WriteKey(CDataStream &&key, CDataStream &&value, bool overwrite) {
     if (!pdb) return false;
     if (fReadOnly) assert(!"Write called on database in read-only mode");
 
@@ -785,8 +762,7 @@ bool BerkeleyBatch::WriteKey(CDataStream&& key, CDataStream&& value, bool overwr
     return (ret == 0);
 }
 
-bool BerkeleyBatch::EraseKey(CDataStream&& key)
-{
+bool BerkeleyBatch::EraseKey(CDataStream &&key) {
     if (!pdb) return false;
     if (fReadOnly) assert(!"Erase called on database in read-only mode");
 
@@ -796,8 +772,7 @@ bool BerkeleyBatch::EraseKey(CDataStream&& key)
     return (ret == 0 || ret == DB_NOTFOUND);
 }
 
-bool BerkeleyBatch::HasKey(CDataStream&& key)
-{
+bool BerkeleyBatch::HasKey(CDataStream &&key) {
     if (!pdb) return false;
 
     SafeDbt datKey(key.data(), key.size());
@@ -806,8 +781,7 @@ bool BerkeleyBatch::HasKey(CDataStream&& key)
     return ret == 0;
 }
 
-void BerkeleyDatabase::AddRef()
-{
+void BerkeleyDatabase::AddRef() {
     LOCK(cs_db);
     if (m_refcount < 0) {
         m_refcount = 1;
@@ -816,14 +790,12 @@ void BerkeleyDatabase::AddRef()
     }
 }
 
-void BerkeleyDatabase::RemoveRef()
-{
+void BerkeleyDatabase::RemoveRef() {
     LOCK(cs_db);
     m_refcount--;
     if (env) env->m_db_in_use.notify_all();
 }
 
-std::unique_ptr<DatabaseBatch> BerkeleyDatabase::MakeBatch(const char* mode, bool flush_on_close)
-{
+std::unique_ptr <DatabaseBatch> BerkeleyDatabase::MakeBatch(const char *mode, bool flush_on_close) {
     return MakeUnique<BerkeleyBatch>(*this, mode, flush_on_close);
 }

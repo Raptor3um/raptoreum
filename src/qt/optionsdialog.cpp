@@ -32,12 +32,11 @@
 #include <QTimer>
 
 OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
-    QDialog(parent),
-    ui(new Ui::OptionsDialog),
-    model(nullptr),
-    mapper(nullptr),
-    pageButtons(nullptr)
-{
+        QDialog(parent),
+        ui(new Ui::OptionsDialog),
+        model(nullptr),
+        mapper(nullptr),
+        pageButtons(nullptr) {
     ui->setupUi(this);
 
     GUIUtil::setFont({ui->statusLabel}, GUIUtil::FontWeight::Bold, 16);
@@ -69,9 +68,9 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
 #ifndef USE_NATPMP
     ui->mapPortNatpmp->setEnabvled(false);
 #endif
-    connect(this, &QDialog::accepted, [this](){
-      QSettings settings;
-      model->node().mapPort(settings.value("fUseUPnP").toBool(), settings.value("fUseNatpmp").toBool());
+    connect(this, &QDialog::accepted, [this]() {
+        QSettings settings;
+        model->node().mapPort(settings.value("fUseUPnP").toBool(), settings.value("fUseNatpmp").toBool());
     });
 
     ui->proxyIp->setEnabled(false);
@@ -115,7 +114,7 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
 
     /* Number of displayed decimal digits selector */
     QString digits;
-    for(int index = 2; index <=8; index++){
+    for (int index = 2; index <= 8; index++) {
         digits.setNum(index);
         ui->digits->addItem(digits, digits);
     }
@@ -128,18 +127,16 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
 
     ui->lang->setToolTip(ui->lang->toolTip().arg(PACKAGE_NAME));
     ui->lang->addItem(QString("(") + tr("default") + QString(")"), QVariant(""));
-    for (const QString &langStr : translations.entryList())
-    {
+    for (const QString &langStr: translations.entryList()) {
         QLocale locale(langStr);
 
         /** check if the locale name consists of 2 parts (language_country) */
-        if(langStr.contains("_"))
-        {
+        if (langStr.contains("_")) {
             /** display language strings as "native language - native country (locale name)", e.g. "Deutsch - Deutschland (de)" */
-            ui->lang->addItem(locale.nativeLanguageName() + QString(" - ") + locale.nativeCountryName() + QString(" (") + langStr + QString(")"), QVariant(langStr));
-        }
-        else
-        {
+            ui->lang->addItem(
+                    locale.nativeLanguageName() + QString(" - ") + locale.nativeCountryName() + QString(" (") +
+                    langStr + QString(")"), QVariant(langStr));
+        } else {
             /** display language strings as "native language (locale name)", e.g. "Deutsch (de)" */
             ui->lang->addItem(locale.nativeLanguageName() + QString(" (") + langStr + QString(")"), QVariant(langStr));
         }
@@ -153,7 +150,7 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     mapper->setSubmitPolicy(QDataWidgetMapper::ManualSubmit);
     mapper->setOrientation(Qt::Vertical);
 
-    GUIUtil::ItemDelegate* delegate = new GUIUtil::ItemDelegate(mapper);
+    GUIUtil::ItemDelegate *delegate = new GUIUtil::ItemDelegate(mapper);
     connect(delegate, &GUIUtil::ItemDelegate::keyEscapePressed, this, &OptionsDialog::reject);
     mapper->setItemDelegate(delegate);
 
@@ -165,13 +162,13 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     connect(ui->proxyPort, &QLineEdit::textChanged, this, &OptionsDialog::updateProxyValidationState);
     connect(ui->proxyPortTor, &QLineEdit::textChanged, this, &OptionsDialog::updateProxyValidationState);
 
-    QVBoxLayout* appearanceLayout = new QVBoxLayout();
+    QVBoxLayout *appearanceLayout = new QVBoxLayout();
     appearanceLayout->setContentsMargins(0, 0, 0, 0);
     appearance = new AppearanceWidget(ui->widgetAppearance);
     appearanceLayout->addWidget(appearance);
     ui->widgetAppearance->setLayout(appearanceLayout);
 
-    connect(appearance, &AppearanceWidget::appearanceChanged, [=](){
+    connect(appearance, &AppearanceWidget::appearanceChanged, [=]() {
         updateWidth();
         Q_EMIT appearanceChanged();
     });
@@ -184,18 +181,15 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     }
 }
 
-OptionsDialog::~OptionsDialog()
-{
+OptionsDialog::~OptionsDialog() {
     delete pageButtons;
     delete ui;
 }
 
-void OptionsDialog::setModel(OptionsModel *_model)
-{
+void OptionsDialog::setModel(OptionsModel *_model) {
     this->model = _model;
 
-    if(_model)
-    {
+    if (_model) {
         /* check if client restart is needed and show persistent message */
         if (_model->isRestartRequired())
             showRestartWarning(true);
@@ -229,8 +223,10 @@ void OptionsDialog::setModel(OptionsModel *_model)
     /* warn when one of the following settings changes by user action (placed here so init via mapper doesn't trigger them) */
 
     /* Main */
-    connect(ui->databaseCache, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &OptionsDialog::showRestartWarning);
-    connect(ui->threadsScriptVerif, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &OptionsDialog::showRestartWarning);
+    connect(ui->databaseCache, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this,
+            &OptionsDialog::showRestartWarning);
+    connect(ui->threadsScriptVerif, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this,
+            &OptionsDialog::showRestartWarning);
     /* Wallet */
     connect(ui->showSmartnodesTab, &QCheckBox::clicked, this, &OptionsDialog::showRestartWarning);
     connect(ui->spendZeroConfChange, &QCheckBox::clicked, this, &OptionsDialog::showRestartWarning);
@@ -239,9 +235,11 @@ void OptionsDialog::setModel(OptionsModel *_model)
     connect(ui->connectSocks, &QCheckBox::clicked, this, &OptionsDialog::showRestartWarning);
     connect(ui->connectSocksTor, &QCheckBox::clicked, this, &OptionsDialog::showRestartWarning);
     /* Display */
-    connect(ui->digits, static_cast<void (QValueComboBox::*)()>(&QValueComboBox::valueChanged), [this]{  showRestartWarning(); });
-    connect(ui->lang, static_cast<void (QValueComboBox::*)()>(&QValueComboBox::valueChanged), [this]{ showRestartWarning(); });
-    connect(ui->thirdPartyTxUrls, &QLineEdit::textChanged, this, [this]{ showRestartWarning(); });
+    connect(ui->digits, static_cast<void (QValueComboBox::*)()>(&QValueComboBox::valueChanged),
+            [this] { showRestartWarning(); });
+    connect(ui->lang, static_cast<void (QValueComboBox::*)()>(&QValueComboBox::valueChanged),
+            [this] { showRestartWarning(); });
+    connect(ui->thirdPartyTxUrls, &QLineEdit::textChanged, this, [this] { showRestartWarning(); });
 
     connect(ui->coinJoinEnabled, &QCheckBox::clicked, [=](bool fChecked) {
 #ifdef ENABLE_WALLET
@@ -267,13 +265,11 @@ void OptionsDialog::setModel(OptionsModel *_model)
 #endif
 }
 
-void OptionsDialog::setCurrentTab(OptionsDialog::Tab tab)
-{
+void OptionsDialog::setCurrentTab(OptionsDialog::Tab tab) {
     showPage(int(tab));
 }
 
-void OptionsDialog::setMapper()
-{
+void OptionsDialog::setMapper() {
     /* Main */
     mapper->addMapping(ui->bitcoinAtStartup, OptionsModel::StartAtStartup);
 #ifndef Q_OS_MAC
@@ -322,11 +318,10 @@ void OptionsDialog::setMapper()
     */
 }
 
-void OptionsDialog::showPage(int index)
-{
-    std::vector<QWidget*> vecNormal;
-    QAbstractButton* btnActive = pageButtons->button(index);
-    for (QAbstractButton* button : pageButtons->buttons()) {
+void OptionsDialog::showPage(int index) {
+    std::vector < QWidget * > vecNormal;
+    QAbstractButton *btnActive = pageButtons->button(index);
+    for (QAbstractButton *button: pageButtons->buttons()) {
         if (button != btnActive) {
             vecNormal.push_back(button);
         }
@@ -340,21 +335,21 @@ void OptionsDialog::showPage(int index)
     btnActive->setChecked(true);
 }
 
-void OptionsDialog::setOkButtonState(bool fState)
-{
+void OptionsDialog::setOkButtonState(bool fState) {
     ui->okButton->setEnabled(fState);
 }
 
-void OptionsDialog::on_resetButton_clicked()
-{
-    if(model)
-    {
+void OptionsDialog::on_resetButton_clicked() {
+    if (model) {
         // confirmation dialog
         QMessageBox::StandardButton btnRetVal = QMessageBox::question(this, tr("Confirm options reset"),
-            tr("Client restart required to activate changes.") + "<br><br>" + tr("Client will be shut down. Do you want to proceed?"),
-            QMessageBox::Yes | QMessageBox::Cancel, QMessageBox::Cancel);
+                                                                      tr("Client restart required to activate changes.") +
+                                                                      "<br><br>" +
+                                                                      tr("Client will be shut down. Do you want to proceed?"),
+                                                                      QMessageBox::Yes | QMessageBox::Cancel,
+                                                                      QMessageBox::Cancel);
 
-        if(btnRetVal == QMessageBox::Cancel)
+        if (btnRetVal == QMessageBox::Cancel)
             return;
 
         /* reset all options and close GUI */
@@ -364,8 +359,7 @@ void OptionsDialog::on_resetButton_clicked()
     }
 }
 
-void OptionsDialog::on_okButton_clicked()
-{
+void OptionsDialog::on_okButton_clicked() {
     mapper->submit();
     appearance->accept();
 #ifdef ENABLE_WALLET
@@ -378,34 +372,25 @@ void OptionsDialog::on_okButton_clicked()
     updateDefaultProxyNets();
 }
 
-void OptionsDialog::on_cancelButton_clicked()
-{
+void OptionsDialog::on_cancelButton_clicked() {
     reject();
 }
 
-void OptionsDialog::on_hideTrayIcon_stateChanged(int fState)
-{
-    if(fState)
-    {
+void OptionsDialog::on_hideTrayIcon_stateChanged(int fState) {
+    if (fState) {
         ui->minimizeToTray->setChecked(false);
         ui->minimizeToTray->setEnabled(false);
-    }
-    else
-    {
+    } else {
         ui->minimizeToTray->setEnabled(true);
     }
 }
 
-void OptionsDialog::showRestartWarning(bool fPersistent)
-{
+void OptionsDialog::showRestartWarning(bool fPersistent) {
     ui->statusLabel->setStyleSheet(GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_ERROR));
 
-    if(fPersistent)
-    {
+    if (fPersistent) {
         ui->statusLabel->setText(tr("Client restart required to activate changes."));
-    }
-    else
-    {
+    } else {
         ui->statusLabel->setText(tr("This change would require a client restart."));
         // clear non-persistent status label after 10 seconds
         // Todo: should perhaps be a class attribute, if we extend the use of statusLabel
@@ -413,33 +398,28 @@ void OptionsDialog::showRestartWarning(bool fPersistent)
     }
 }
 
-void OptionsDialog::clearStatusLabel()
-{
+void OptionsDialog::clearStatusLabel() {
     ui->statusLabel->clear();
     if (model && model->isRestartRequired()) {
         showRestartWarning(true);
     }
 }
 
-void OptionsDialog::updateProxyValidationState()
-{
+void OptionsDialog::updateProxyValidationState() {
     QValidatedLineEdit *pUiProxyIp = ui->proxyIp;
     QValidatedLineEdit *otherProxyWidget = (pUiProxyIp == ui->proxyIpTor) ? ui->proxyIp : ui->proxyIpTor;
-    if (pUiProxyIp->isValid() && (!ui->proxyPort->isEnabled() || ui->proxyPort->text().toInt() > 0) && (!ui->proxyPortTor->isEnabled() || ui->proxyPortTor->text().toInt() > 0))
-    {
+    if (pUiProxyIp->isValid() && (!ui->proxyPort->isEnabled() || ui->proxyPort->text().toInt() > 0) &&
+        (!ui->proxyPortTor->isEnabled() || ui->proxyPortTor->text().toInt() > 0)) {
         setOkButtonState(otherProxyWidget->isValid()); //only enable ok button if both proxys are valid
         clearStatusLabel();
-    }
-    else
-    {
+    } else {
         setOkButtonState(false);
         ui->statusLabel->setStyleSheet(GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_ERROR));
         ui->statusLabel->setText(tr("The supplied proxy address is invalid."));
     }
 }
 
-void OptionsDialog::updateDefaultProxyNets()
-{
+void OptionsDialog::updateDefaultProxyNets() {
     proxyType proxy;
     std::string strProxy;
     QString strDefaultProxyGUI;
@@ -447,21 +427,23 @@ void OptionsDialog::updateDefaultProxyNets()
     model->node().getProxy(NET_IPV4, proxy);
     strProxy = proxy.proxy.ToStringIP() + ":" + proxy.proxy.ToStringPort();
     strDefaultProxyGUI = ui->proxyIp->text() + ":" + ui->proxyPort->text();
-    (strProxy == strDefaultProxyGUI.toStdString()) ? ui->proxyReachIPv4->setChecked(true) : ui->proxyReachIPv4->setChecked(false);
+    (strProxy == strDefaultProxyGUI.toStdString()) ? ui->proxyReachIPv4->setChecked(true)
+                                                   : ui->proxyReachIPv4->setChecked(false);
 
     model->node().getProxy(NET_IPV6, proxy);
     strProxy = proxy.proxy.ToStringIP() + ":" + proxy.proxy.ToStringPort();
     strDefaultProxyGUI = ui->proxyIp->text() + ":" + ui->proxyPort->text();
-    (strProxy == strDefaultProxyGUI.toStdString()) ? ui->proxyReachIPv6->setChecked(true) : ui->proxyReachIPv6->setChecked(false);
+    (strProxy == strDefaultProxyGUI.toStdString()) ? ui->proxyReachIPv6->setChecked(true)
+                                                   : ui->proxyReachIPv6->setChecked(false);
 
     model->node().getProxy(NET_ONION, proxy);
     strProxy = proxy.proxy.ToStringIP() + ":" + proxy.proxy.ToStringPort();
     strDefaultProxyGUI = ui->proxyIp->text() + ":" + ui->proxyPort->text();
-    (strProxy == strDefaultProxyGUI.toStdString()) ? ui->proxyReachTor->setChecked(true) : ui->proxyReachTor->setChecked(false);
+    (strProxy == strDefaultProxyGUI.toStdString()) ? ui->proxyReachTor->setChecked(true)
+                                                   : ui->proxyReachTor->setChecked(false);
 }
 
-void OptionsDialog::updateCoinJoinVisibility()
-{
+void OptionsDialog::updateCoinJoinVisibility() {
 #ifdef ENABLE_WALLET
     bool fEnabled = model->node().coinJoinOptions().isEnabled();
 #else
@@ -471,11 +453,10 @@ void OptionsDialog::updateCoinJoinVisibility()
     GUIUtil::updateButtonGroupShortcuts(pageButtons);
 }
 
-void OptionsDialog::updateWidth()
-{
+void OptionsDialog::updateWidth() {
     int nWidthWidestButton{0};
     int nButtonsVisible{0};
-    for (QAbstractButton* button : pageButtons->buttons()) {
+    for (QAbstractButton *button: pageButtons->buttons()) {
         if (!button->isVisible()) {
             continue;
         }
@@ -489,8 +470,7 @@ void OptionsDialog::updateWidth()
     resize(nWidth, height());
 }
 
-void OptionsDialog::showEvent(QShowEvent* event)
-{
+void OptionsDialog::showEvent(QShowEvent *event) {
     if (!event->spontaneous()) {
         updateWidth();
         GUIUtil::updateButtonGroupShortcuts(pageButtons);
@@ -499,12 +479,10 @@ void OptionsDialog::showEvent(QShowEvent* event)
 }
 
 ProxyAddressValidator::ProxyAddressValidator(QObject *parent) :
-QValidator(parent)
-{
+        QValidator(parent) {
 }
 
-QValidator::State ProxyAddressValidator::validate(QString &input, int &pos) const
-{
+QValidator::State ProxyAddressValidator::validate(QString &input, int &pos) const {
     Q_UNUSED(pos);
     // Validate the proxy
     CService serv(LookupNumeric(input.toStdString().c_str(), DEFAULT_GUI_PROXY_PORT));

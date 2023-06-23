@@ -24,24 +24,23 @@ enum governance_exception_type_enum_t {
     GOVERNANCE_EXCEPTION_INTERNAL_ERROR = 4
 };
 
-inline std::ostream& operator<<(std::ostream& os, governance_exception_type_enum_t eType)
-{
+inline std::ostream &operator<<(std::ostream &os, governance_exception_type_enum_t eType) {
     switch (eType) {
-    case GOVERNANCE_EXCEPTION_NONE:
-        os << "GOVERNANCE_EXCEPTION_NONE";
-        break;
-    case GOVERNANCE_EXCEPTION_WARNING:
-        os << "GOVERNANCE_EXCEPTION_WARNING";
-        break;
-    case GOVERNANCE_EXCEPTION_PERMANENT_ERROR:
-        os << "GOVERNANCE_EXCEPTION_PERMANENT_ERROR";
-        break;
-    case GOVERNANCE_EXCEPTION_TEMPORARY_ERROR:
-        os << "GOVERNANCE_EXCEPTION_TEMPORARY_ERROR";
-        break;
-    case GOVERNANCE_EXCEPTION_INTERNAL_ERROR:
-        os << "GOVERNANCE_EXCEPTION_INTERNAL_ERROR";
-        break;
+        case GOVERNANCE_EXCEPTION_NONE:
+            os << "GOVERNANCE_EXCEPTION_NONE";
+            break;
+        case GOVERNANCE_EXCEPTION_WARNING:
+            os << "GOVERNANCE_EXCEPTION_WARNING";
+            break;
+        case GOVERNANCE_EXCEPTION_PERMANENT_ERROR:
+            os << "GOVERNANCE_EXCEPTION_PERMANENT_ERROR";
+            break;
+        case GOVERNANCE_EXCEPTION_TEMPORARY_ERROR:
+            os << "GOVERNANCE_EXCEPTION_TEMPORARY_ERROR";
+            break;
+        case GOVERNANCE_EXCEPTION_INTERNAL_ERROR:
+            os << "GOVERNANCE_EXCEPTION_INTERNAL_ERROR";
+            break;
     }
     return os;
 }
@@ -53,8 +52,7 @@ inline std::ostream& operator<<(std::ostream& os, governance_exception_type_enum
  * (ie. will be caught by a std::exception handler) but may also be used as a
  * normal object.
  */
-class CGovernanceException : public std::exception
-{
+class CGovernanceException : public std::exception {
 private:
     std::string strMessage;
 
@@ -63,37 +61,38 @@ private:
     int nNodePenalty;
 
 public:
-    explicit CGovernanceException(const std::string& strMessageIn = "",
-        governance_exception_type_enum_t eTypeIn = GOVERNANCE_EXCEPTION_NONE,
-        int nNodePenaltyIn = 0) :
-        strMessage(),
-        eType(eTypeIn),
-        nNodePenalty(nNodePenaltyIn)
-    {
+    explicit CGovernanceException(const std::string &strMessageIn = "",
+                                  governance_exception_type_enum_t eTypeIn = GOVERNANCE_EXCEPTION_NONE,
+                                  int nNodePenaltyIn = 0) :
+            strMessage(),
+            eType(eTypeIn),
+            nNodePenalty(nNodePenaltyIn) {
         std::ostringstream ostr;
         ostr << eType << ":" << strMessageIn;
         strMessage = ostr.str();
     }
 
-    ~CGovernanceException() noexcept override = default;
+    ~CGovernanceException()
 
-    const char* what() const noexcept override
-    {
-        return strMessage.c_str();
-    }
+    noexcept override =
+    default;
 
-    const std::string& GetMessage() const
-    {
+    const char *what() const
+
+    noexcept override
+            {
+                    return strMessage.c_str();
+            }
+
+    const std::string &GetMessage() const {
         return strMessage;
     }
 
-    governance_exception_type_enum_t GetType() const
-    {
+    governance_exception_type_enum_t GetType() const {
         return eType;
     }
 
-    int GetNodePenalty() const
-    {
+    int GetNodePenalty() const {
         return nNodePenalty;
     }
 };

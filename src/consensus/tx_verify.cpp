@@ -25,11 +25,12 @@
 #include <util/moneystr.h>
 #include <version.h>
 
-CChain& ChainActive();
+CChain &ChainActive();
 
-static bool checkSpecialTxFee(const CTransaction &tx, CAmount& nFeeTotal, CAmount& specialTxFee, bool fFeeVerify = false) {
-	if(tx.nVersion >= 3) {
-            switch (tx.nType) {
+static bool
+checkSpecialTxFee(const CTransaction &tx, CAmount &nFeeTotal, CAmount &specialTxFee, bool fFeeVerify = false) {
+    if (tx.nVersion >= 3) {
+        switch (tx.nType) {
             case TRANSACTION_FUTURE: {
                 CFutureTx ftx;
                 if (GetTxPayload(tx.vExtraPayload, ftx)) {
@@ -89,16 +90,16 @@ static bool checkSpecialTxFee(const CTransaction &tx, CAmount& nFeeTotal, CAmoun
                     nFeeTotal -= specialTxFee;
                 }
                 break;
-            } break;
             }
+                break;
         }
+    }
     return true;
 }
 
-static const char* validateFutureCoin(const Coin& coin, int nSpendHeight)
-{
+static const char *validateFutureCoin(const Coin &coin, int nSpendHeight) {
     if (coin.nType == TRANSACTION_FUTURE) {
-        CBlockIndex* confirmedBlockIndex = ::ChainActive()[coin.nHeight];
+        CBlockIndex *confirmedBlockIndex = ::ChainActive()[coin.nHeight];
         if (confirmedBlockIndex) {
             int64_t adjustCurrentTime = GetAdjustedTime();
             uint32_t confirmedTime = confirmedBlockIndex->GetBlockTime();
@@ -121,21 +122,20 @@ static const char* validateFutureCoin(const Coin& coin, int nSpendHeight)
 }
 
 
-bool IsFinalTx(const CTransaction &tx, int nBlockHeight, int64_t nBlockTime)
-{
+bool IsFinalTx(const CTransaction &tx, int nBlockHeight, int64_t nBlockTime) {
     if (tx.nLockTime == 0)
         return true;
-    if ((int64_t)tx.nLockTime < ((int64_t)tx.nLockTime < LOCKTIME_THRESHOLD ? (int64_t)nBlockHeight : nBlockTime))
+    if ((int64_t) tx.nLockTime < ((int64_t) tx.nLockTime < LOCKTIME_THRESHOLD ? (int64_t) nBlockHeight : nBlockTime))
         return true;
-    for (const auto& txin : tx.vin) {
+    for (const auto &txin: tx.vin) {
         if (txin.nSequence != CTxIn::SEQUENCE_FINAL)
             return false;
     }
     return true;
 }
 
-std::pair<int, int64_t> CalculateSequenceLocks(const CTransaction &tx, int flags, std::vector<int>* prevHeights, const CBlockIndex& block)
-{
+std::pair<int, int64_t>
+CalculateSequenceLocks(const CTransaction &tx, int flags, std::vector<int> *prevHeights, const CBlockIndex &block) {
     assert(prevHeights->size() == tx.vin.size());
 
     // Will be set to the equivalent height- and time-based nLockTime
@@ -159,7 +159,7 @@ std::pair<int, int64_t> CalculateSequenceLocks(const CTransaction &tx, int flags
     }
 
     for (size_t txinIndex = 0; txinIndex < tx.vin.size(); txinIndex++) {
-        const CTxIn& txin = tx.vin[txinIndex];
+        const CTxIn &txin = tx.vin[txinIndex];
 
         // Sequence numbers with the most significant bit set are not
         // treated as relative lock-times, nor are they given any
@@ -173,7 +173,7 @@ std::pair<int, int64_t> CalculateSequenceLocks(const CTransaction &tx, int flags
         int nCoinHeight = (*prevHeights)[txinIndex];
 
         if (txin.nSequence & CTxIn::SEQUENCE_LOCKTIME_TYPE_FLAG) {
-            int64_t nCoinTime = block.GetAncestor(std::max(nCoinHeight-1, 0))->GetMedianTimePast();
+            int64_t nCoinTime = block.GetAncestor(std::max(nCoinHeight - 1, 0))->GetMedianTimePast();
             // NOTE: Subtract 1 to maintain nLockTime semantics
             // BIP 68 relative lock times have the semantics of calculating
             // the first block or time at which the transaction would be
@@ -187,17 +187,17 @@ std::pair<int, int64_t> CalculateSequenceLocks(const CTransaction &tx, int flags
             // smallest allowed timestamp of the block containing the
             // txout being spent, which is the median time past of the
             // block prior.
-            nMinTime = std::max(nMinTime, nCoinTime + (int64_t)((txin.nSequence & CTxIn::SEQUENCE_LOCKTIME_MASK) << CTxIn::SEQUENCE_LOCKTIME_GRANULARITY) - 1);
+            nMinTime = std::max(nMinTime, nCoinTime + (int64_t)(
+                    (txin.nSequence & CTxIn::SEQUENCE_LOCKTIME_MASK) << CTxIn::SEQUENCE_LOCKTIME_GRANULARITY) - 1);
         } else {
-            nMinHeight = std::max(nMinHeight, nCoinHeight + (int)(txin.nSequence & CTxIn::SEQUENCE_LOCKTIME_MASK) - 1);
+            nMinHeight = std::max(nMinHeight, nCoinHeight + (int) (txin.nSequence & CTxIn::SEQUENCE_LOCKTIME_MASK) - 1);
         }
     }
 
     return std::make_pair(nMinHeight, nMinTime);
 }
 
-bool EvaluateSequenceLocks(const CBlockIndex& block, std::pair<int, int64_t> lockPair)
-{
+bool EvaluateSequenceLocks(const CBlockIndex &block, std::pair<int, int64_t> lockPair) {
     assert(block.pprev);
     int64_t nBlockTime = block.pprev->GetMedianTimePast();
     if (lockPair.first >= block.nHeight || lockPair.second >= nBlockTime)
@@ -206,34 +206,28 @@ bool EvaluateSequenceLocks(const CBlockIndex& block, std::pair<int, int64_t> loc
     return true;
 }
 
-bool SequenceLocks(const CTransaction &tx, int flags, std::vector<int>* prevHeights, const CBlockIndex& block)
-{
+bool SequenceLocks(const CTransaction &tx, int flags, std::vector<int> *prevHeights, const CBlockIndex &block) {
     return EvaluateSequenceLocks(block, CalculateSequenceLocks(tx, flags, prevHeights, block));
 }
 
-unsigned int GetLegacySigOpCount(const CTransaction& tx)
-{
+unsigned int GetLegacySigOpCount(const CTransaction &tx) {
     unsigned int nSigOps = 0;
-    for (const auto& txin : tx.vin)
-    {
+    for (const auto &txin: tx.vin) {
         nSigOps += txin.scriptSig.GetSigOpCount(false);
     }
-    for (const auto& txout : tx.vout)
-    {
+    for (const auto &txout: tx.vout) {
         nSigOps += txout.scriptPubKey.GetSigOpCount(false);
     }
     return nSigOps;
 }
 
-unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CCoinsViewCache& inputs)
-{
+unsigned int GetP2SHSigOpCount(const CTransaction &tx, const CCoinsViewCache &inputs) {
     if (tx.IsCoinBase())
         return 0;
 
     unsigned int nSigOps = 0;
-    for (unsigned int i = 0; i < tx.vin.size(); i++)
-    {
-        const Coin& coin = inputs.AccessCoin(tx.vin[i].prevout);
+    for (unsigned int i = 0; i < tx.vin.size(); i++) {
+        const Coin &coin = inputs.AccessCoin(tx.vin[i].prevout);
         assert(!coin.IsSpent());
         const CTxOut &prevout = coin.out;
         if (prevout.scriptPubKey.IsPayToScriptHash())
@@ -242,8 +236,7 @@ unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CCoinsViewCache& in
     return nSigOps;
 }
 
-unsigned int GetTransactionSigOpCount(const CTransaction& tx, const CCoinsViewCache& inputs, int flags)
-{
+unsigned int GetTransactionSigOpCount(const CTransaction &tx, const CCoinsViewCache &inputs, int flags) {
     unsigned int nSigOps = GetLegacySigOpCount(tx);
 
     if (tx.IsCoinBase())
@@ -257,8 +250,8 @@ unsigned int GetTransactionSigOpCount(const CTransaction& tx, const CCoinsViewCa
 }
 //check to see where these now
 
-inline bool checkOutput(const CTxOut& out, CValidationState& state, CAmount& nValueIn, std::map<std::pair<std::string, uint16_t>, CAmount>& nAssetVin, bool isV17active)
-{
+inline bool checkOutput(const CTxOut &out, CValidationState &state, CAmount &nValueIn,
+                        std::map <std::pair<std::string, uint16_t>, CAmount> &nAssetVin, bool isV17active) {
     // Check for negative or overflow values
     nValueIn += out.nValue;
     if (!MoneyRange(out.nValue, isV17active) || !MoneyRange(nValueIn, isV17active)) {
@@ -278,7 +271,7 @@ inline bool checkOutput(const CTxOut& out, CValidationState& state, CAmount& nVa
             return state.DoS(100, false, REJECT_INVALID, "bad-assets-transfer-amount");
         }
 
-        std::pair<std::string, uint16_t> asset(assetTransfer.assetId, assetTransfer.uniqueId);
+        std::pair <std::string, uint16_t> asset(assetTransfer.assetId, assetTransfer.uniqueId);
         if (nAssetVin.count(asset))
             nAssetVin[asset] += assetTransfer.nAmount;
         else
@@ -296,8 +289,9 @@ inline bool checkOutput(const CTxOut& out, CValidationState& state, CAmount& nVa
     return true;
 }
 
-bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight, CAmount& txfee, CAmount& specialTxFee, bool isV17active, bool fFeeVerify)
-{
+bool Consensus::CheckTxInputs(const CTransaction &tx, CValidationState &state, const CCoinsViewCache &inputs,
+                              int nSpendHeight, CAmount &txfee, CAmount &specialTxFee, bool isV17active,
+                              bool fFeeVerify) {
     // are the actual inputs available?
     if (!inputs.HaveInputs(tx)) {
         return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputs-missingorspent", false,
@@ -305,42 +299,42 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
     }
 
     CAmount nValueIn = 0;
-    std::map<std::pair<std::string, uint16_t>, CAmount> nAssetVin;
+    std::map <std::pair<std::string, uint16_t>, CAmount> nAssetVin;
     for (unsigned int i = 0; i < tx.vin.size(); ++i) {
         const COutPoint &prevout = tx.vin[i].prevout;
-        const Coin& coin = inputs.AccessCoin(prevout);
+        const Coin &coin = inputs.AccessCoin(prevout);
         assert(!coin.IsSpent());
 
         // If prev is coinbase, check that it's matured
         if (coin.IsCoinBase() && nSpendHeight - coin.nHeight < COINBASE_MATURITY) {
             return state.Invalid(false,
-                REJECT_INVALID, "bad-txns-premature-spend-of-coinbase",
-                strprintf("tried to spend coinbase at depth %d", nSpendHeight - coin.nHeight));
+                                 REJECT_INVALID, "bad-txns-premature-spend-of-coinbase",
+                                 strprintf("tried to spend coinbase at depth %d", nSpendHeight - coin.nHeight));
         }
 
         if (!checkOutput(coin.out, state, nValueIn, nAssetVin, isV17active))
             return false;
 
-        const char* futureValidationError = validateFutureCoin(coin, nSpendHeight);
+        const char *futureValidationError = validateFutureCoin(coin, nSpendHeight);
         if (futureValidationError) {
             return state.DoS(100, false, REJECT_INVALID, futureValidationError);
         }
     }
 
     CAmount value_out = 0;
-    std::map<std::pair<std::string, uint16_t>, CAmount> nAssetVout;
-    for (auto out : tx.vout) {
+    std::map <std::pair<std::string, uint16_t>, CAmount> nAssetVout;
+    for (auto out: tx.vout) {
         if (!checkOutput(out, state, value_out, nAssetVout, isV17active))
             return false;
     }
 
     if (tx.nType != TRANSACTION_MINT_ASSET) {
-        for (const auto& outValue : nAssetVout) {
+        for (const auto &outValue: nAssetVout) {
             if (!nAssetVin.count(outValue.first) || nAssetVin.at(outValue.first) != outValue.second)
                 return state.DoS(100, false, REJECT_INVALID, "bad-asset-inputs-outputs-mismatch");
         }
         //Check for missing outputs
-        for (const auto& outValue : nAssetVin) {
+        for (const auto &outValue: nAssetVin) {
             if (!nAssetVout.count(outValue.first) || nAssetVout.at(outValue.first) != outValue.second)
                 return state.DoS(100, false, REJECT_INVALID, "bad-asset-inputs-outputs-mismatch");
         }
@@ -348,7 +342,7 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
 
     if (nValueIn < value_out) {
         return state.DoS(100, false, REJECT_INVALID, "bad-txns-in-belowout", false,
-            strprintf("value in (%s) < value out (%s)", FormatMoney(nValueIn), FormatMoney(value_out)));
+                         strprintf("value in (%s) < value out (%s)", FormatMoney(nValueIn), FormatMoney(value_out)));
     }
 
     // Tally transaction fees
@@ -364,7 +358,7 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
 
     if (txfee < 0) {
         return state.DoS(100, false, REJECT_INVALID, "bad-txns-fee-too-low", false,
-            strprintf("fee (%s), special tx fee (%s)", FormatMoney(txfee), FormatMoney(specialTxFee)));
+                         strprintf("fee (%s), special tx fee (%s)", FormatMoney(txfee), FormatMoney(specialTxFee)));
     }
     return true;
 }

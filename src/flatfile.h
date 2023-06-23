@@ -11,12 +11,12 @@
 #include <fs.h>
 #include <serialize.h>
 
-struct FlatFilePos
-{
+struct FlatFilePos {
     int nFile;
     unsigned int nPos;
 
-    SERIALIZE_METHODS(FlatFilePos, obj)
+    SERIALIZE_METHODS(FlatFilePos, obj
+    )
     {
         READWRITE(VARINT(obj.nFile, VarIntMode::NONNEGATIVE_SIGNED), VARINT(obj.nPos));
     }
@@ -24,9 +24,8 @@ struct FlatFilePos
     FlatFilePos() : nFile(-1), nPos(0) {}
 
     FlatFilePos(int nFileIn, unsigned int nPosIn) :
-        nFile(nFileIn),
-        nPos(nPosIn)
-    {}
+            nFile(nFileIn),
+            nPos(nPosIn) {}
 
     friend bool operator==(const FlatFilePos &a, const FlatFilePos &b) {
         return (a.nFile == b.nFile && a.nPos == b.nPos);
@@ -36,7 +35,11 @@ struct FlatFilePos
         return !(a == b);
     }
 
-    void SetNull() { nFile = -1; nPos = 0; }
+    void SetNull() {
+        nFile = -1;
+        nPos = 0;
+    }
+
     bool IsNull() const { return (nFile == -1); }
 
     std::string ToString() const;
@@ -46,11 +49,10 @@ struct FlatFilePos
  * FlatFileSeq represents a sequence of numbered files storing raw data. This class facilitates
  * access to and efficient management of these files.
  */
-class FlatFileSeq
-{
+class FlatFileSeq {
 private:
     const fs::path m_dir;
-    const char* const m_prefix;
+    const char *const m_prefix;
     const size_t m_chunk_size;
 
 public:
@@ -61,13 +63,13 @@ public:
      * @param prefix A short prefix given to all file names.
      * @param chunk_size Disk space is pre-allocated in multiples of this amount.
      */
-    FlatFileSeq(fs::path dir, const char* prefix, size_t chunk_size);
+    FlatFileSeq(fs::path dir, const char *prefix, size_t chunk_size);
 
     /** Get the name of the file at the given position. */
-    fs::path FileName(const FlatFilePos& pos) const;
+    fs::path FileName(const FlatFilePos &pos) const;
 
     /** Open a handle to the file at the given position. */
-    FILE* Open(const FlatFilePos& pos, bool read_only = false);
+    FILE *Open(const FlatFilePos &pos, bool read_only = false);
 
     /**
      * Allocate additional space in a file after the given starting position. The amount allocated
@@ -78,7 +80,7 @@ public:
      * @param[out] out_of_space Whether the allocation failed due to insufficient disk space.
      * @return The number of bytes successfully allocated.
      */
-    size_t Allocate(const FlatFilePos& pos, size_t add_size, bool& out_of_space);
+    size_t Allocate(const FlatFilePos &pos, size_t add_size, bool &out_of_space);
 
     /**
      * Commit a file to disk, and optionally truncate off extra pre-allocated bytes if final.
@@ -87,7 +89,7 @@ public:
      * @param[in] finalize True if no more data will be written to this file.
      * @return true on success, false on failure.
      */
-    bool Flush(const FlatFilePos& pos, bool finalize = false);
+    bool Flush(const FlatFilePos &pos, bool finalize = false);
 };
 
 #endif // BITCOIN_FLATFILE_H

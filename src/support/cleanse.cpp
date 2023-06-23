@@ -11,8 +11,7 @@
 #include <Windows.h> // For SecureZeroMemory.
 #endif
 
-void memory_cleanse(void *ptr, size_t len)
-{
+void memory_cleanse(void *ptr, size_t len) {
 #if defined(_MSC_VER)
     SecureZeroMemory(ptr, len);
 #else

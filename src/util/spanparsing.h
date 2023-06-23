@@ -17,7 +17,7 @@ namespace spanparsing {
  * If sp's initial part matches str, sp is updated to skip that part, and true is returned.
  * Otherwise sp is unmodified and false is returned.
  */
-bool Const(const std::string& str, Span<const char>& sp);
+    bool Const(const std::string &str, Span<const char> &sp);
 
 /** Parse a function call.
  *
@@ -25,7 +25,7 @@ bool Const(const std::string& str, Span<const char>& sp);
  * section between the braces, and true is returned. Otherwise sp is unmodified and false
  * is returned.
  */
-bool Func(const std::string& str, Span<const char>& sp);
+    bool Func(const std::string &str, Span<const char> &sp);
 
 /** Extract the expression that sp begins with.
  *
@@ -34,7 +34,7 @@ bool Func(const std::string& str, Span<const char>& sp);
  * for "foo(bar(1),2),3" the initial part "foo(bar(1),2)" will be returned. sp will be
  * updated to skip the initial part that is returned.
  */
-Span<const char> Expr(Span<const char>& sp);
+    Span<const char> Expr(Span<const char> &sp);
 
 /** Split a string on every instance of sep, returning a vector.
  *
@@ -43,7 +43,7 @@ Span<const char> Expr(Span<const char>& sp);
  * Note that this function does not care about braces, so splitting
  * "foo(bar(1),2),3) on ',' will return {"foo(bar(1)", "2)", "3)"}.
  */
-std::vector<Span<const char>> Split(const Span<const char>& sp, char sep);
+    std::vector <Span<const char>> Split(const Span<const char> &sp, char sep);
 
 } // namespace spanparsing
 

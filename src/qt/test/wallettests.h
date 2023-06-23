@@ -5,19 +5,20 @@
 #include <QTest>
 
 namespace interfaces {
-class Node;
+    class Node;
 } // namespace interfaces
 
-class WalletTests : public QObject
-{
- public:
-    WalletTests(interfaces::Node& node) : m_node(node) {}
-    interfaces::Node& m_node;
+class WalletTests : public QObject {
+public:
+    WalletTests(interfaces::Node &node) : m_node(node) {}
+
+    interfaces::Node &m_node;
 
     Q_OBJECT
 
-private Q_SLOTS:
-    void walletTests();
+private
+    Q_SLOTS:
+            void walletTests();
 };
 
 #endif // BITCOIN_QT_TEST_WALLETTESTS_H

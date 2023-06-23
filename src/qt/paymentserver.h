@@ -45,19 +45,22 @@ class OptionsModel;
 
 QT_BEGIN_NAMESPACE
 class QApplication;
+
 class QByteArray;
+
 class QLocalServer;
+
 class QUrl;
+
 QT_END_NAMESPACE
 
-class PaymentServer : public QObject
-{
+class PaymentServer : public QObject {
     Q_OBJECT
 
 public:
     // Parse URIs on command line
     // Returns false on error
-    static void ipcParseCommandLine(interfaces::Node& node, int argc, char *argv[]);
+    static void ipcParseCommandLine(interfaces::Node &node, int argc, char *argv[]);
 
     // Returns true if there were URIs on the command line
     // which were successfully sent to an already-running
@@ -67,28 +70,31 @@ public:
     static bool ipcSendCommandLine();
 
     // parent should be QApplication object
-    explicit PaymentServer(QObject* parent, bool startLocalServer = true);
+    explicit PaymentServer(QObject *parent, bool startLocalServer = true);
+
     ~PaymentServer();
 
     void setOptionsModel(OptionsModel *optionsModel);
 
-Q_SIGNALS:
-    // Fired when a valid payment request is received
-    void receivedPaymentRequest(SendCoinsRecipient);
+    Q_SIGNALS:
+            // Fired when a valid payment request is received
+            void receivedPaymentRequest(SendCoinsRecipient);
 
     // Fired when a message should be reported to the user
     void message(const QString &title, const QString &message, unsigned int style);
 
-public Q_SLOTS:
-    // Signal this when the main window's UI is ready
-    // to display payment requests to the user
-    void uiReady();
+public
+    Q_SLOTS:
+            // Signal this when the main window's UI is ready
+            // to display payment requests to the user
+            void uiReady();
 
     // Handle an incoming URI, URI with local file scheme or file
-    void handleURIOrFile(const QString& s);
+    void handleURIOrFile(const QString &s);
 
-private Q_SLOTS:
-    void handleURIConnection();
+private
+    Q_SLOTS:
+            void handleURIConnection();
 
 protected:
     // Constructor registers this on the parent QApplication to
@@ -97,7 +103,7 @@ protected:
 
 private:
     bool saveURIs; // true during startup
-    QLocalServer* uriServer;
+    QLocalServer *uriServer;
     OptionsModel *optionsModel;
 };
 

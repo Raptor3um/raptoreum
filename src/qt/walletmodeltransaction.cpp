@@ -11,45 +11,37 @@
 #include <interfaces/node.h>
 #include <key_io.h>
 
-WalletModelTransaction::WalletModelTransaction(const QList<SendCoinsRecipient> &_recipients) :
-    recipients(_recipients),
-    fee(0)
-{
+WalletModelTransaction::WalletModelTransaction(const QList <SendCoinsRecipient> &_recipients) :
+        recipients(_recipients),
+        fee(0) {
 }
 
-QList<SendCoinsRecipient> WalletModelTransaction::getRecipients() const
-{
+QList <SendCoinsRecipient> WalletModelTransaction::getRecipients() const {
     return recipients;
 }
 
-CTransactionRef& WalletModelTransaction::getWtx()
-{
+CTransactionRef &WalletModelTransaction::getWtx() {
     return wtx;
 }
 
-unsigned int WalletModelTransaction::getTransactionSize()
-{
+unsigned int WalletModelTransaction::getTransactionSize() {
     return wtx != nullptr ? ::GetSerializeSize(*wtx, SER_NETWORK, PROTOCOL_VERSION) : 0;
 }
 
-CAmount WalletModelTransaction::getTransactionFee() const
-{
+CAmount WalletModelTransaction::getTransactionFee() const {
     return fee;
 }
 
-void WalletModelTransaction::setTransactionFee(const CAmount& newFee)
-{
+void WalletModelTransaction::setTransactionFee(const CAmount &newFee) {
     fee = newFee;
 }
 
-void WalletModelTransaction::reassignAmounts()
-{
+void WalletModelTransaction::reassignAmounts() {
     // For each recipient look for a matching CTxOut in walletTransaction and reassign amounts
-    for (QList<SendCoinsRecipient>::iterator it = recipients.begin(); it != recipients.end(); ++it)
-    {
-        SendCoinsRecipient& rcp = (*it);
+    for (QList<SendCoinsRecipient>::iterator it = recipients.begin(); it != recipients.end(); ++it) {
+        SendCoinsRecipient &rcp = (*it);
         {
-            for (const auto& txout : wtx.get()->vout) {
+            for (const auto &txout: wtx.get()->vout) {
                 CScript scriptPubKey = GetScriptForDestination(DecodeDestination(rcp.address.toStdString()));
                 if (txout.scriptPubKey == scriptPubKey) {
                     rcp.amount = txout.nValue;
@@ -60,11 +52,9 @@ void WalletModelTransaction::reassignAmounts()
     }
 }
 
-CAmount WalletModelTransaction::getTotalTransactionAmount() const
-{
+CAmount WalletModelTransaction::getTotalTransactionAmount() const {
     CAmount totalTransactionAmount = 0;
-    for (const SendCoinsRecipient &rcp : recipients)
-    {
+    for (const SendCoinsRecipient &rcp: recipients) {
         totalTransactionAmount += rcp.amount;
     }
     return totalTransactionAmount;

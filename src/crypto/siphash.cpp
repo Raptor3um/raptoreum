@@ -15,8 +15,7 @@
     v2 = ROTL(v2, 32); \
 } while (0)
 
-CSipHasher::CSipHasher(uint64_t k0, uint64_t k1)
-{
+CSipHasher::CSipHasher(uint64_t k0, uint64_t k1) {
     v[0] = 0x736f6d6570736575ULL ^ k0;
     v[1] = 0x646f72616e646f6dULL ^ k1;
     v[2] = 0x6c7967656e657261ULL ^ k0;
@@ -25,8 +24,7 @@ CSipHasher::CSipHasher(uint64_t k0, uint64_t k1)
     tmp = 0;
 }
 
-CSipHasher& CSipHasher::Write(uint64_t data)
-{
+CSipHasher &CSipHasher::Write(uint64_t data) {
     uint64_t v0 = v[0], v1 = v[1], v2 = v[2], v3 = v[3];
 
     assert(count % 8 == 0);
@@ -45,8 +43,7 @@ CSipHasher& CSipHasher::Write(uint64_t data)
     return *this;
 }
 
-CSipHasher& CSipHasher::Write(const unsigned char* data, size_t size)
-{
+CSipHasher &CSipHasher::Write(const unsigned char *data, size_t size) {
     uint64_t v0 = v[0], v1 = v[1], v2 = v[2], v3 = v[3];
     uint64_t t = tmp;
     int c = count;
@@ -73,11 +70,10 @@ CSipHasher& CSipHasher::Write(const unsigned char* data, size_t size)
     return *this;
 }
 
-uint64_t CSipHasher::Finalize() const
-{
+uint64_t CSipHasher::Finalize() const {
     uint64_t v0 = v[0], v1 = v[1], v2 = v[2], v3 = v[3];
 
-    uint64_t t = tmp | (((uint64_t)count) << 56);
+    uint64_t t = tmp | (((uint64_t) count) << 56);
 
     v3 ^= t;
     SIPROUND;
@@ -91,8 +87,7 @@ uint64_t CSipHasher::Finalize() const
     return v0 ^ v1 ^ v2 ^ v3;
 }
 
-uint64_t SipHashUint256(uint64_t k0, uint64_t k1, const uint256& val)
-{
+uint64_t SipHashUint256(uint64_t k0, uint64_t k1, const uint256 &val) {
     /* Specialized implementation for efficiency */
     uint64_t d = val.GetUint64(0);
 
@@ -119,10 +114,10 @@ uint64_t SipHashUint256(uint64_t k0, uint64_t k1, const uint256& val)
     SIPROUND;
     SIPROUND;
     v0 ^= d;
-    v3 ^= ((uint64_t)4) << 59;
+    v3 ^= ((uint64_t) 4) << 59;
     SIPROUND;
     SIPROUND;
-    v0 ^= ((uint64_t)4) << 59;
+    v0 ^= ((uint64_t) 4) << 59;
     v2 ^= 0xFF;
     SIPROUND;
     SIPROUND;
@@ -131,8 +126,7 @@ uint64_t SipHashUint256(uint64_t k0, uint64_t k1, const uint256& val)
     return v0 ^ v1 ^ v2 ^ v3;
 }
 
-uint64_t SipHashUint256Extra(uint64_t k0, uint64_t k1, const uint256& val, uint32_t extra)
-{
+uint64_t SipHashUint256Extra(uint64_t k0, uint64_t k1, const uint256 &val, uint32_t extra) {
     /* Specialized implementation for efficiency */
     uint64_t d = val.GetUint64(0);
 
@@ -159,7 +153,7 @@ uint64_t SipHashUint256Extra(uint64_t k0, uint64_t k1, const uint256& val, uint3
     SIPROUND;
     SIPROUND;
     v0 ^= d;
-    d = (((uint64_t)36) << 56) | extra;
+    d = (((uint64_t) 36) << 56) | extra;
     v3 ^= d;
     SIPROUND;
     SIPROUND;

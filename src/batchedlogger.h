@@ -8,19 +8,18 @@
 
 #include "logging.h"
 
-class CBatchedLogger
-{
+class CBatchedLogger {
 private:
     bool accept;
     std::string header;
     std::string msg;
 public:
-    CBatchedLogger(BCLog::LogFlags _category, const std::string& _header);
+    CBatchedLogger(BCLog::LogFlags _category, const std::string &_header);
+
     virtual ~CBatchedLogger();
 
     template<typename... Args>
-    void Batch(const std::string& fmt, const Args&... args)
-    {
+    void Batch(const std::string &fmt, const Args &... args) {
         if (!accept) {
             return;
         }

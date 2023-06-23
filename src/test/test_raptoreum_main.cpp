@@ -13,49 +13,43 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/test/unit_test_monitor.hpp>
 
-std::unique_ptr<CConnman> g_connman;
-std::unique_ptr<BanMan> g_banman;
+std::unique_ptr <CConnman> g_connman;
+std::unique_ptr <BanMan> g_banman;
 
-[[noreturn]] void Shutdown(void* parg)
-{
-  std::exit(EXIT_SUCCESS);
+[[noreturn]] void Shutdown(void *parg) {
+    std::exit(EXIT_SUCCESS);
 }
 
-[[noreturn]] void StartShutdown()
-{
-  std::exit(EXIT_SUCCESS);
+[[noreturn]] void StartShutdown() {
+    std::exit(EXIT_SUCCESS);
 }
 
-bool ShutdownRequested()
-{
-  return false;
+bool ShutdownRequested() {
+    return false;
 }
 
 template<typename T>
-void translate_exception(const T &e)
-{
+void translate_exception(const T &e) {
     std::cerr << GetPrettyExceptionStr(std::current_exception()) << std::endl;
     throw;
 }
 
 template<typename T>
-void register_exception_translator()
-{
+void register_exception_translator() {
     boost::unit_test::unit_test_monitor.register_exception_translator<T>(&translate_exception<T>);
 }
 
 struct ExceptionInitializer {
-    ExceptionInitializer()
-    {
+    ExceptionInitializer() {
         RegisterPrettyTerminateHander();
         RegisterPrettySignalHandlers();
 
         register_exception_translator<std::exception>();
         register_exception_translator<std::string>();
-        register_exception_translator<const char*>();
+        register_exception_translator<const char *>();
     }
-    ~ExceptionInitializer()
-    {
+
+    ~ExceptionInitializer() {
     }
 };
 

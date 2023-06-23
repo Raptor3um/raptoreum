@@ -30,16 +30,15 @@
 #include <cryptonote/skein_port.h>                      /* get platform-specific definitions */
 #include <cryptonote/slow-hash.h>
 
-typedef enum
-{
-  SKEIN_SUCCESS         =      0,          /* return codes from Skein calls */
-  SKEIN_FAIL            =      1,
-  SKEIN_BAD_HASHLEN     =      2
+typedef enum {
+    SKEIN_SUCCESS = 0,          /* return codes from Skein calls */
+    SKEIN_FAIL = 1,
+    SKEIN_BAD_HASHLEN = 2
 }
-SkeinHashReturn;
+        SkeinHashReturn;
 
 /* "all-in-one" call */
-SkeinHashReturn c_skein_hash(int hashbitlen,   const BitSequence *data,
-        DataLength databitlen, BitSequence *hashval);
+SkeinHashReturn c_skein_hash(int hashbitlen, const BitSequence *data,
+                             DataLength databitlen, BitSequence *hashval);
 
 #endif  /* ifndef _SKEIN_H_ */

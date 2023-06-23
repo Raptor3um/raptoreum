@@ -14,7 +14,9 @@
 class SendFuturesRecipient;
 
 class CReserveKey;
+
 class CWallet;
+
 class CWalletTx;
 //class CFutureTx;
 namespace interfaces {
@@ -22,17 +24,21 @@ namespace interfaces {
 }
 
 /** Data model for a walletmodel future transaction. */
-class WalletModelFuturesTransaction
-{
+class WalletModelFuturesTransaction {
 public:
-    explicit WalletModelFuturesTransaction(const QList<SendFuturesRecipient> &recipients);
-    QList<SendFuturesRecipient> getRecipients() const;
+    explicit WalletModelFuturesTransaction(const QList <SendFuturesRecipient> &recipients);
+
+    QList <SendFuturesRecipient> getRecipients() const;
 
     //CFutureTx *getTransaction();
     CWalletTx *getTransaction() const;
+
     unsigned int getTransactionSize() const;
-    CTransactionRef& getWtx();
-    void setTransactionFee(const CAmount& newFee);
+
+    CTransactionRef &getWtx();
+
+    void setTransactionFee(const CAmount &newFee);
+
     CAmount getTransactionFee() const;
 
     CAmount getTotalTransactionAmount() const;
@@ -42,7 +48,7 @@ public:
     void assignFuturePayload();
 
 private:
-    QList<SendFuturesRecipient> recipients;
+    QList <SendFuturesRecipient> recipients;
     CTransactionRef wtx;
     CAmount fee;
 };

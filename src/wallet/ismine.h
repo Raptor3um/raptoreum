@@ -11,11 +11,11 @@
 #include <stdint.h>
 
 class CWallet;
+
 class CScript;
 
 /** IsMine() return codes */
-enum isminetype : unsigned int
-{
+enum isminetype : unsigned int {
     ISMINE_NO = 0,
     //! Indicates that we don't know how to create a scriptSig that would solve this if we were given the appropriate private keys
     ISMINE_WATCH_UNSOLVABLE = 1,
@@ -32,9 +32,12 @@ typedef uint8_t isminefilter;
  * and return ISMINE_NO immediately as an invalid script should never be considered as "mine". This is needed as
  * different SIGVERSION may have different network rules.
  */
-isminetype IsMine(const CWallet& wallet, const CScript& scriptPubKey, bool& isInvalid, SigVersion = SigVersion::BASE);
-isminetype IsMine(const CWallet& wallet, const CScript& scriptPubKey, SigVersion = SigVersion::BASE);
-isminetype IsMine(const CWallet& wallet, const CTxDestination& dest, bool& isInvalid, SigVersion = SigVersion::BASE);
-isminetype IsMine(const CWallet& wallet, const CTxDestination& dest, SigVersion = SigVersion::BASE);
+isminetype IsMine(const CWallet &wallet, const CScript &scriptPubKey, bool &isInvalid, SigVersion = SigVersion::BASE);
+
+isminetype IsMine(const CWallet &wallet, const CScript &scriptPubKey, SigVersion = SigVersion::BASE);
+
+isminetype IsMine(const CWallet &wallet, const CTxDestination &dest, bool &isInvalid, SigVersion = SigVersion::BASE);
+
+isminetype IsMine(const CWallet &wallet, const CTxDestination &dest, SigVersion = SigVersion::BASE);
 
 #endif // BITCOIN_WALLET_ISMINE_H

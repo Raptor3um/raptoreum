@@ -31,7 +31,8 @@ void print_number(double x) {
     printf("%.*f", c, x);
 }
 
-void run_benchmark(char *name, void (*benchmark)(void*), void (*setup)(void*), void (*teardown)(void*), void* data, int count, int iter) {
+void run_benchmark(char *name, void (*benchmark)(void *), void (*setup)(void *), void (*teardown)(void *), void *data,
+                   int count, int iter) {
     int i;
     double min = HUGE_VAL;
     double sum = 0.0;
@@ -64,8 +65,8 @@ void run_benchmark(char *name, void (*benchmark)(void*), void (*setup)(void*), v
     printf("us\n");
 }
 
-int have_flag(int argc, char** argv, char *flag) {
-    char** argm = argv + argc;
+int have_flag(int argc, char **argv, char *flag) {
+    char **argm = argv + argc;
     argv++;
     if (argv == argm) {
         return 1;

@@ -14,42 +14,42 @@
 #define RTM_M 0x6d //M
 #define MAX_UNIQUE_ID 0xffffffff
 
-class CAssetTransfer
-{
+class CAssetTransfer {
 public:
     std::string assetId;
     bool isUnique = false;
     uint32_t uniqueId = MAX_UNIQUE_ID; //default it to MAX_UNIQUE_ID
     CAmount nAmount;
 
-    CAssetTransfer()
-    {
+    CAssetTransfer() {
         SetNull();
     }
 
-    void SetNull()
-    {
+    void SetNull() {
         assetId = "";
         isUnique = false;
         uniqueId = MAX_UNIQUE_ID;
         nAmount = 0;
     }
 
-    SERIALIZE_METHODS(CAssetTransfer, obj) {
+    SERIALIZE_METHODS(CAssetTransfer, obj
+    ) {
         READWRITE(obj.assetId, obj.isUnique);
-        if(obj.isUnique) {
+        if (obj.isUnique) {
             READWRITE(obj.uniqueId);
         }
         READWRITE(obj.nAmount);
     }
 
 
-    CAssetTransfer(const std::string& assetId, const CAmount& nAmount, const uint32_t& uniqueId);
-    CAssetTransfer(const std::string& assetId, const CAmount& nAmount);
-    void BuildAssetTransaction(CScript& script) const;
+    CAssetTransfer(const std::string &assetId, const CAmount &nAmount, const uint32_t &uniqueId);
+
+    CAssetTransfer(const std::string &assetId, const CAmount &nAmount);
+
+    void BuildAssetTransaction(CScript &script) const;
 };
 
-bool GetTransferAsset(const CScript& script, CAssetTransfer& assetTransfer);
+bool GetTransferAsset(const CScript &script, CAssetTransfer &assetTransfer);
 
 
 #endif //RAPTOREUM_ASSETS_FEES_H

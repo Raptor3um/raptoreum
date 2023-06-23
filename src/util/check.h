@@ -13,8 +13,7 @@
 
 #include <stdexcept>
 
-class NonFatalCheckError : public std::runtime_error
-{
+class NonFatalCheckError : public std::runtime_error {
     using std::runtime_error::runtime_error;
 };
 
@@ -47,9 +46,8 @@ class NonFatalCheckError : public std::runtime_error
 #endif
 
 /** Helper for Assert() */
-template <typename T>
-T get_pure_r_value(T&& val)
-{
+template<typename T>
+T get_pure_r_value(T &&val) {
     return std::forward<T>(val);
 }
 

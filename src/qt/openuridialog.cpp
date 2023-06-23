@@ -13,29 +13,24 @@
 #include <QUrl>
 
 OpenURIDialog::OpenURIDialog(QWidget *parent) :
-    QDialog(parent),
-    ui(new Ui::OpenURIDialog)
-{
+        QDialog(parent),
+        ui(new Ui::OpenURIDialog) {
     ui->setupUi(this);
     GUIUtil::updateFonts();
     GUIUtil::disableMacFocusRect(this);
 }
 
-OpenURIDialog::~OpenURIDialog()
-{
+OpenURIDialog::~OpenURIDialog() {
     delete ui;
 }
 
-QString OpenURIDialog::getURI()
-{
+QString OpenURIDialog::getURI() {
     return ui->uriEdit->text();
 }
 
-void OpenURIDialog::accept()
-{
+void OpenURIDialog::accept() {
     SendCoinsRecipient rcp;
-    if(GUIUtil::parseBitcoinURI(getURI(), &rcp))
-    {
+    if (GUIUtil::parseBitcoinURI(getURI(), &rcp)) {
         /* Only accept value URIs */
         QDialog::accept();
     } else {

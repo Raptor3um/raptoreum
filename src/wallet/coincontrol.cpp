@@ -8,8 +8,7 @@
 
 #include <util/system.h>
 
-void CCoinControl::SetNull(bool fResetCoinType)
-{
+void CCoinControl::SetNull(bool fResetCoinType) {
     destChange = CNoDestination();
     fAllowOtherInputs = false;
     fAllowWatchOnly = false;
@@ -24,6 +23,6 @@ void CCoinControl::SetNull(bool fResetCoinType)
     strAssetSelected = "";
     setAssetsSelected.clear();
     if (fResetCoinType) {
-    nCoinType = CoinType::ALL_COINS;
+        nCoinType = CoinType::ALL_COINS;
     }
 }

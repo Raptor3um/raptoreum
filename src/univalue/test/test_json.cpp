@@ -10,11 +10,10 @@
 
 //using namespace std;
 
-int main (int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
     UniValue val;
     if (val.read(std::string(istreambuf_iterator<char>(cin),
-                        istreambuf_iterator<char>()))) {
+                             istreambuf_iterator<char>()))) {
         std::cout << val.write(1 /* prettyIndent */, 4 /* indentLevel */) << std::endl;
         return 0;
     } else {

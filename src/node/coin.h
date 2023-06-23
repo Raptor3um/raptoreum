@@ -8,7 +8,9 @@
 #include <map>
 
 class COutPoint;
+
 class Coin;
+
 struct NodeContext;
 
 /**
@@ -18,6 +20,6 @@ struct NodeContext;
  *
  * @param[in,out] coins map to fill
  */
-void FindCoins(const NodeContext& node, std::map<COutPoint, Coin>& coins);
+void FindCoins(const NodeContext &node, std::map <COutPoint, Coin> &coins);
 
 #endif // BITCOIN_NODE_COIN_H

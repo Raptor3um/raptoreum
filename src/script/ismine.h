@@ -11,11 +11,11 @@
 #include <stdint.h>
 
 class CKeyStore;
+
 class CScript;
 
 /** IsMine() return codes */
-enum isminetype
-{
+enum isminetype {
     ISMINE_NO = 0,
     //! Indicates that we don't know how to create a scriptSig that would solve this if we were given the appropriate private keys
     ISMINE_WATCH_UNSOLVABLE = 1,
@@ -32,9 +32,14 @@ typedef uint8_t isminefilter;
  * and return ISMINE_NO immediately as an invalid script should never be considered as "mine". This is needed as
  * different SIGVERSION may have different network rules.
  */
-isminetype IsMine(const CKeyStore& keystore, const CScript& scriptPubKey, bool& isInvalid, SigVersion = SigVersion::BASE);
-isminetype IsMine(const CKeyStore& keystore, const CScript& scriptPubKey, SigVersion = SigVersion::BASE);
-isminetype IsMine(const CKeyStore& keystore, const CTxDestination& dest, bool& isInvalid, SigVersion = SigVersion::BASE);
-isminetype IsMine(const CKeyStore& keystore, const CTxDestination& dest, SigVersion = SigVersion::BASE);
+isminetype
+IsMine(const CKeyStore &keystore, const CScript &scriptPubKey, bool &isInvalid, SigVersion = SigVersion::BASE);
+
+isminetype IsMine(const CKeyStore &keystore, const CScript &scriptPubKey, SigVersion = SigVersion::BASE);
+
+isminetype
+IsMine(const CKeyStore &keystore, const CTxDestination &dest, bool &isInvalid, SigVersion = SigVersion::BASE);
+
+isminetype IsMine(const CKeyStore &keystore, const CTxDestination &dest, SigVersion = SigVersion::BASE);
 
 #endif // BITCOIN_SCRIPT_ISMINE_H

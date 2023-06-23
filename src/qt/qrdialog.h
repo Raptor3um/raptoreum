@@ -22,38 +22,42 @@ QT_END_NAMESPACE
 /* Label widget for QR code. This image can be dragged, dropped, copied and saved
  * to disk.
  */
-class QRGeneralImageWidget : public QLabel
-{
+class QRGeneralImageWidget : public QLabel {
     Q_OBJECT
 
 public:
     explicit QRGeneralImageWidget(QWidget *parent = 0);
+
     QImage exportImage();
 
-public Q_SLOTS:
-    void saveImage();
+public
+    Q_SLOTS:
+            void saveImage();
+
     void copyImage();
 
 protected:
     virtual void mousePressEvent(QMouseEvent *event) override;
+
     virtual void contextMenuEvent(QContextMenuEvent *event) override;
 
 private:
     QMenu *contextMenu;
 };
 
-class QRDialog : public QDialog
-{
+class QRDialog : public QDialog {
     Q_OBJECT
 
 public:
     explicit QRDialog(QWidget *parent = 0);
+
     ~QRDialog();
 
     void setInfo(QString strWindowtitle, QString strQRCode, QString strTextInfo, QString strQRCodeTitle);
 
-private Q_SLOTS:
-    void update();
+private
+    Q_SLOTS:
+            void update();
 
 private:
     Ui::QRDialog *ui;

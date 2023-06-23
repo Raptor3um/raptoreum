@@ -21,8 +21,7 @@ class QDBusInterface;
 QT_END_NAMESPACE
 
 /** Cross-platform desktop notification client. */
-class Notificator: public QObject
-{
+class Notificator : public QObject {
     Q_OBJECT
 
 public:
@@ -30,27 +29,33 @@ public:
        @note Ownership of trayIcon is not transferred to this object.
     */
     Notificator(const QString &programName, QSystemTrayIcon *trayIcon, QWidget *parent);
+
     ~Notificator();
 
     // Message class
-    enum Class
-    {
+    enum Class {
         Information,    /**< Informational message */
         Warning,        /**< Notify user of potential problem */
         Critical        /**< An error occurred */
     };
 
-public Q_SLOTS:
-    /** Show notification message.
-       @param[in] cls    general message class
-       @param[in] title  title shown with message
-       @param[in] text   message content
-       @param[in] icon   optional icon to show with message
-       @param[in] millisTimeout notification timeout in milliseconds (defaults to 10 seconds)
-       @note Platform implementations are free to ignore any of the provided fields except for \a text.
-     */
-    void notify(Class cls, const QString &title, const QString &text,
-                const QIcon &icon = QIcon(), int millisTimeout = 10000);
+public
+    Q_SLOTS:
+            /** Show notification message.
+               @param[in] cls    general message class
+               @param[in] title  title shown with message
+               @param[in] text   message content
+               @param[in] icon   optional icon to show with message
+               @param[in] millisTimeout notification timeout in milliseconds (defaults to 10 seconds)
+               @note Platform implementations are free to ignore any of the provided fields except for \a text.
+             */
+            void notify(Class
+    cls,
+    const QString &title,
+    const QString &text,
+    const QIcon &icon = QIcon(),
+    int millisTimeout = 10000
+    );
 
 private:
     QWidget *parent;
@@ -68,7 +73,9 @@ private:
 
     void notifyDBus(Class cls, const QString &title, const QString &text, const QIcon &icon, int millisTimeout);
 #endif
+
     void notifySystray(Class cls, const QString &title, const QString &text, int millisTimeout);
+
 #ifdef Q_OS_MAC
     void notifyMacUserNotificationCenter(const QString &title, const QString &text);
 #endif
