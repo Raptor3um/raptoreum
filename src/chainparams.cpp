@@ -446,7 +446,7 @@ public:
         consensus.nFutureRewardShare = Consensus::FutureRewardShare(0.8, 0.2, 0.0);
 
         std::vector <FounderRewardStructure> rewardStructures = {{INT_MAX, 5}};// 5% founder/dev fee forever
-        consensus.nFounderPayment = FounderPayment(rewardStructures, 200, "rghjACzPtVAN2wydgDbn9Jq1agREu6rH1e");
+        consensus.nFounderPayment = FounderPayment(rewardStructures, 272200, "rghjACzPtVAN2wydgDbn9Jq1agREu6rH1e");
 
         fDefaultConsistencyChecks = false;
         fRequireStandard = false;
