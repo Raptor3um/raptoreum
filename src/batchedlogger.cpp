@@ -6,18 +6,15 @@
 #include <batchedlogger.h>
 #include <util/system.h>
 
-CBatchedLogger::CBatchedLogger(BCLog::LogFlags _category, const std::string& _header) :
-    accept(LogAcceptCategory(_category)), header(_header)
-{
+CBatchedLogger::CBatchedLogger(BCLog::LogFlags _category, const std::string &_header) :
+        accept(LogAcceptCategory(_category)), header(_header) {
 }
 
-CBatchedLogger::~CBatchedLogger()
-{
+CBatchedLogger::~CBatchedLogger() {
     Flush();
 }
 
-void CBatchedLogger::Flush()
-{
+void CBatchedLogger::Flush() {
     if (!accept || msg.empty()) {
         return;
     }

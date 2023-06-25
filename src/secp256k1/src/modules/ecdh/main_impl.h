@@ -10,10 +10,11 @@
 #include "include/secp256k1_ecdh.h"
 #include "ecmult_const_impl.h"
 
-static int ecdh_hash_function_sha256(unsigned char *output, const unsigned char *x, const unsigned char *y, void *data) {
+static int
+ecdh_hash_function_sha256(unsigned char *output, const unsigned char *x, const unsigned char *y, void *data) {
     unsigned char version = (y[31] & 0x01) | 0x02;
     secp256k1_sha256 sha;
-    (void)data;
+    (void) data;
 
     secp256k1_sha256_initialize(&sha);
     secp256k1_sha256_write(&sha, &version, 1);
@@ -26,7 +27,8 @@ static int ecdh_hash_function_sha256(unsigned char *output, const unsigned char 
 const secp256k1_ecdh_hash_function secp256k1_ecdh_hash_function_sha256 = ecdh_hash_function_sha256;
 const secp256k1_ecdh_hash_function secp256k1_ecdh_hash_function_default = ecdh_hash_function_sha256;
 
-int secp256k1_ecdh(const secp256k1_context* ctx, unsigned char *output, const secp256k1_pubkey *point, const unsigned char *scalar, secp256k1_ecdh_hash_function hashfp, void *data) {
+int secp256k1_ecdh(const secp256k1_context *ctx, unsigned char *output, const secp256k1_pubkey *point,
+                   const unsigned char *scalar, secp256k1_ecdh_hash_function hashfp, void *data) {
     int ret = 0;
     int overflow = 0;
     secp256k1_gej res;

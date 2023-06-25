@@ -13,7 +13,7 @@
 #include "ecmult_impl.h"
 
 /* This is like `ECMULT_TABLE_GET_GE` but is constant time */
-#define ECMULT_CONST_TABLE_GET_GE(r,pre,n,w) do { \
+#define ECMULT_CONST_TABLE_GET_GE(r, pre, n, w) do { \
     int m; \
     int abs_n = (n) * (((n) > 0) * 2 - 1); \
     int idx_n = abs_n / 2; \
@@ -146,7 +146,7 @@ static void secp256k1_ecmult_const(secp256k1_gej *r, const secp256k1_ge *a, cons
     } else
 #endif
     {
-        skew_1   = secp256k1_wnaf_const(wnaf_1, sc, WINDOW_A - 1, size);
+        skew_1 = secp256k1_wnaf_const(wnaf_1, sc, WINDOW_A - 1, size);
 #ifdef USE_ENDOMORPHISM
         skew_lam = 0;
 #endif

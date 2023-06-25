@@ -27,14 +27,20 @@
 #ifdef ENABLE_STACKTRACES
 #include <execinfo.h>
 #endif
+
 #include <unistd.h>
 #include <csignal>
+
 #endif
 
 #if !WIN32
+
 #include <dlfcn.h>
+
 #if !__APPLE__
+
 #include <link.h>
+
 #endif
 #endif
 
@@ -51,8 +57,7 @@
 
 #include <cstring>
 
-std::string DemangleSymbol(const std::string& name)
-{
+std::string DemangleSymbol(const std::string &name) {
 #if __GNUC__ || __clang__
     int status = -4; // some arbitrary value to eliminate the compiler warning
     char* str = abi::__cxa_demangle(name.c_str(), nullptr, nullptr, &status);
@@ -73,8 +78,7 @@ std::string DemangleSymbol(const std::string& name)
 // this is the case when the terminate handler or an assert already handled the exception
 static std::atomic<bool> skipAbortSignal(false);
 
-static ssize_t GetExeFileNameImpl(char* buf, size_t bufSize)
-{
+static ssize_t GetExeFileNameImpl(char *buf, size_t bufSize) {
 #if WIN32
     std::vector<TCHAR> tmp(bufSize);
     DWORD len = GetModuleFileName(nullptr, tmp.data(), bufSize);
@@ -102,8 +106,7 @@ static ssize_t GetExeFileNameImpl(char* buf, size_t bufSize)
 #endif
 }
 
-static std::string GetExeFileName()
-{
+static std::string GetExeFileName() {
     std::vector<char> buf(1024);
     while (true) {
         ssize_t len = GetExeFileNameImpl(buf.data(), buf.size());
@@ -264,25 +267,24 @@ static uint64_t GetBaseAddress()
     return vmoffset;
 }
 #else
-static int dl_iterate_callback(struct dl_phdr_info* info, size_t s, void* data)
-{
-    uint64_t* p = (uint64_t*)data;
+
+static int dl_iterate_callback(struct dl_phdr_info *info, size_t s, void *data) {
+    uint64_t *p = (uint64_t *) data;
     if (info->dlpi_name == nullptr || info->dlpi_name[0] == '\0') {
         *p = info->dlpi_addr;
     }
     return 0;
 }
 
-static uint64_t GetBaseAddress()
-{
+static uint64_t GetBaseAddress() {
     uint64_t basePtr = 0;
     dl_iterate_phdr(dl_iterate_callback, &basePtr);
     return basePtr;
 }
+
 #endif
 
-static __attribute__((noinline)) std::vector<uint64_t> GetStackFrames(size_t skip, size_t max_frames)
-{
+static __attribute__((noinline)) std::vector <uint64_t> GetStackFrames(size_t skip, size_t max_frames) {
 #ifdef ENABLE_STACKTRACES
     // FYI, this is not using libbacktrace, but "backtrace()" from <execinfo.h>
     std::vector<void*> buf(max_frames);
@@ -302,6 +304,7 @@ static __attribute__((noinline)) std::vector<uint64_t> GetStackFrames(size_t ski
     return {};
 #endif // ENABLE_STACKTRACES
 }
+
 #endif
 
 struct stackframe_info {
@@ -358,14 +361,14 @@ static std::vector<stackframe_info> GetStackFrameInfos(const std::vector<uint64_
     return infos;
 }
 #else
-static std::vector<stackframe_info> GetStackFrameInfos(const std::vector<uint64_t>& stackframes)
-{
+
+static std::vector <stackframe_info> GetStackFrameInfos(const std::vector <uint64_t> &stackframes) {
     return {};
 }
+
 #endif // ENABLE_STACKTRACES
 
-struct crash_info_header
-{
+struct crash_info_header {
     std::string magic;
     uint16_t version;
     std::string exeFileName;
@@ -376,30 +379,28 @@ struct crash_info_header
     }
 };
 
-struct crash_info
-{
+struct crash_info {
     std::string crashDescription;
-    std::vector<uint64_t> stackframes;
-    std::vector<stackframe_info> stackframeInfos;
+    std::vector <uint64_t> stackframes;
+    std::vector <stackframe_info> stackframeInfos;
 
-    SERIALIZE_METHODS(crash_info, obj)
+    SERIALIZE_METHODS(crash_info, obj
+    )
     {
         READWRITE(obj.crashDescription, obj.stackframes, obj.stackframeInfos);
     }
 
-    void ConvertAddresses(int64_t offset)
-    {
-        for (auto& sf : stackframes) {
+    void ConvertAddresses(int64_t offset) {
+        for (auto &sf: stackframes) {
             sf += offset;
         }
-        for (auto& sfi : stackframeInfos) {
+        for (auto &sfi: stackframeInfos) {
             sfi.pc += offset;
         }
     }
 };
 
-static std::string GetCrashInfoStrNoDebugInfo(crash_info ci)
-{
+static std::string GetCrashInfoStrNoDebugInfo(crash_info ci) {
     static uint64_t basePtr = GetBaseAddress();
 
     CDataStream ds(SER_DISK, 0);
@@ -410,7 +411,7 @@ static std::string GetCrashInfoStrNoDebugInfo(crash_info ci)
     hdr.exeFileName = g_exeFileBaseName;
     ds << hdr;
 
-    ci.ConvertAddresses(-(int64_t)basePtr);
+    ci.ConvertAddresses(-(int64_t) basePtr);
     ds << ci;
 
     auto ciStr = EncodeBase32(ds.str());
@@ -420,10 +421,9 @@ static std::string GetCrashInfoStrNoDebugInfo(crash_info ci)
     return s;
 }
 
-static std::string GetCrashInfoStr(const crash_info& ci, size_t spaces = 2);
+static std::string GetCrashInfoStr(const crash_info &ci, size_t spaces = 2);
 
-std::string GetCrashInfoStrFromSerializedStr(const std::string& ciStr)
-{
+std::string GetCrashInfoStrFromSerializedStr(const std::string &ciStr) {
     static uint64_t basePtr = GetBaseAddress();
 
     bool dataInvalid = false;
@@ -461,15 +461,14 @@ std::string GetCrashInfoStrFromSerializedStr(const std::string& ciStr)
     ci.ConvertAddresses(basePtr);
 
     if (ci.stackframeInfos.empty()) {
-        std::vector<uint64_t> stackframes(ci.stackframes.begin(), ci.stackframes.end());
+        std::vector <uint64_t> stackframes(ci.stackframes.begin(), ci.stackframes.end());
         ci.stackframeInfos = GetStackFrameInfos(stackframes);
     }
 
     return GetCrashInfoStr(ci);
 }
 
-static std::string GetCrashInfoStr(const crash_info& ci, size_t spaces)
-{
+static std::string GetCrashInfoStr(const crash_info &ci, size_t spaces) {
     if (ci.stackframeInfos.empty()) {
         return GetCrashInfoStrNoDebugInfo(ci);
     }
@@ -479,10 +478,10 @@ static std::string GetCrashInfoStr(const crash_info& ci, size_t spaces)
         sp += " ";
     }
 
-    std::vector<std::string> lstrs;
+    std::vector <std::string> lstrs;
     lstrs.reserve(ci.stackframeInfos.size());
 
-    for (const auto& si : ci.stackframeInfos) {
+    for (const auto &si: ci.stackframeInfos) {
         std::string lstr;
         if (!si.filename.empty()) {
             lstr += fs::path(si.filename).filename().string();
@@ -497,15 +496,17 @@ static std::string GetCrashInfoStr(const crash_info& ci, size_t spaces)
     }
 
     // get max "filename:line" length so we can better format it
-    size_t lstrlen = std::max_element(lstrs.begin(), lstrs.end(), [](const std::string& a, const std::string& b) { return a.size() < b.size(); })->size();
+    size_t lstrlen = std::max_element(lstrs.begin(), lstrs.end(), [](const std::string &a, const std::string &b) {
+        return a.size() < b.size();
+    })->size();
 
     std::string fmtStr = strprintf("%%2d#: (0x%%08X) %%-%ds - %%s\n", lstrlen);
 
     std::string s = ci.crashDescription + "\n";
     for (size_t i = 0; i < ci.stackframeInfos.size(); i++) {
-        auto& si = ci.stackframeInfos[i];
+        auto &si = ci.stackframeInfos[i];
 
-        auto& lstr = lstrs[i];
+        auto &lstr = lstrs[i];
 
         std::string fstr;
         if (!si.function.empty()) {
@@ -522,8 +523,7 @@ static std::string GetCrashInfoStr(const crash_info& ci, size_t spaces)
     return s;
 }
 
-static void PrintCrashInfo(const crash_info& ci)
-{
+static void PrintCrashInfo(const crash_info &ci) {
     auto str = GetCrashInfoStr(ci);
     LogPrintf("%s", str); /* Continued */
     tfm::format(std::cerr, "%s", str);
@@ -662,8 +662,7 @@ extern "C" void __attribute__((noinline)) WRAPPED_NAME(__assert_fail)(const char
 #endif
 #endif //ENABLE_CRASH_HOOKS
 
-static std::shared_ptr<std::vector<uint64_t>> GetExceptionStacktrace(const std::exception_ptr& e)
-{
+static std::shared_ptr <std::vector<uint64_t>> GetExceptionStacktrace(const std::exception_ptr &e) {
 #ifdef ENABLE_CRASH_HOOKS
     void* p = *(void**)&e;
 
@@ -678,8 +677,7 @@ static std::shared_ptr<std::vector<uint64_t>> GetExceptionStacktrace(const std::
 #endif
 }
 
-crash_info GetCrashInfoFromException(const std::exception_ptr& e)
-{
+crash_info GetCrashInfoFromException(const std::exception_ptr &e) {
     crash_info ci;
     ci.crashDescription = "Exception: ";
 
@@ -702,13 +700,13 @@ crash_info GetCrashInfoFromException(const std::exception_ptr& e)
     try {
         // rethrow and catch the exception as there is no other way to reliably cast to the real type (not possible with RTTI)
         std::rethrow_exception(e);
-    } catch (const std::exception& e2) {
+    } catch (const std::exception &e2) {
         type = getExceptionType();
         what = GetExceptionWhat(e2);
-    } catch (const std::string& e2) {
+    } catch (const std::string &e2) {
         type = getExceptionType();
         what = GetExceptionWhat(e2);
-    } catch (const char* e2) {
+    } catch (const char *e2) {
         type = getExceptionType();
         what = GetExceptionWhat(e2);
     } catch (int e2) {
@@ -730,13 +728,11 @@ crash_info GetCrashInfoFromException(const std::exception_ptr& e)
     return ci;
 }
 
-std::string GetPrettyExceptionStr(const std::exception_ptr& e)
-{
+std::string GetPrettyExceptionStr(const std::exception_ptr &e) {
     return GetCrashInfoStr(GetCrashInfoFromException(e));
 }
 
-static void terminate_handler()
-{
+static void terminate_handler() {
     auto exc = std::current_exception();
 
     crash_info ci;
@@ -758,19 +754,18 @@ static void terminate_handler()
     std::abort();
 }
 
-void RegisterPrettyTerminateHander()
-{
+void RegisterPrettyTerminateHander() {
     std::set_terminate(terminate_handler);
 }
 
 #if !WIN32
-static void HandlePosixSignal(int s)
-{
+
+static void HandlePosixSignal(int s) {
     if (s == SIGABRT && skipAbortSignal) {
         return;
     }
 
-    const char* name = strsignal(s);
+    const char *name = strsignal(s);
     if (!name) {
         name = "UNKNOWN";
     }
@@ -785,6 +780,7 @@ static void HandlePosixSignal(int s)
     skipAbortSignal = true;
     std::abort();
 }
+
 #else
 static void DoHandleWindowsException(EXCEPTION_POINTERS * ExceptionInfo)
 {
@@ -838,8 +834,7 @@ LONG WINAPI HandleWindowsException(EXCEPTION_POINTERS * ExceptionInfo)
 }
 #endif
 
-void RegisterPrettySignalHandlers()
-{
+void RegisterPrettySignalHandlers() {
 #if WIN32
     SetUnhandledExceptionFilter(HandleWindowsException);
 #else
@@ -861,7 +856,7 @@ void RegisterPrettySignalHandlers()
 #endif
     };
 
-    for (auto s : posix_signals) {
+    for (auto s: posix_signals) {
         struct sigaction sa_segv;
         sa_segv.sa_handler = HandlePosixSignal;
         sigemptyset(&sa_segv.sa_mask);

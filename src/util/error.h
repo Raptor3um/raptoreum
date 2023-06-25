@@ -15,21 +15,22 @@
  * translating errors passed across wallet/node/rpc/gui code boundaries.
  */
 
- #include <string>
+#include <string>
 
- enum class TransactionError {
-     OK, //!< No error
-     MISSING_INPUTS,
-     ALREADY_IN_CHAIN,
-     P2P_DISABLED,
-     MEMPOOL_REJECTED,
-     MEMPOOL_ERROR,
-     SIGHASH_MISMATCH,
- };
+enum class TransactionError {
+    OK, //!< No error
+    MISSING_INPUTS,
+    ALREADY_IN_CHAIN,
+    P2P_DISABLED,
+    MEMPOOL_REJECTED,
+    MEMPOOL_ERROR,
+    SIGHASH_MISMATCH,
+};
 
- std::string TransactionErrorString(const TransactionError error);
+std::string TransactionErrorString(const TransactionError error);
 
- std::string AmountHighWarn(const std::string& optname);
- std::string AmountErrMsg(const char* const optname, const std::string& strValue);
+std::string AmountHighWarn(const std::string &optname);
+
+std::string AmountErrMsg(const char *const optname, const std::string &strValue);
 
 #endif // BITCOIN_UTIL_ERROR_H

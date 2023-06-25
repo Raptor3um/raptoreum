@@ -13,9 +13,8 @@
 /** Interval between compact filter checkpoints. See BIP 157. */
 static constexpr int CFCHECKPT_INTERVAL = 1000;
 
-struct FilterHeaderHasher
-{
-    size_t operator()(const uint256& hash) const { return ReadLE64(hash.begin()); }
+struct FilterHeaderHasher {
+    size_t operator()(const uint256 &hash) const { return ReadLE64(hash.begin()); }
 };
 
 /**
@@ -25,35 +24,36 @@ struct FilterHeaderHasher
  *
  * This index is used to serve BIP 157 net requests.
  */
-class BlockFilterIndex final : public BaseIndex
-{
+class BlockFilterIndex final : public BaseIndex {
 private:
     BlockFilterType m_filter_type;
     std::string m_name;
-    std::unique_ptr<BaseIndex::DB> m_db;
+    std::unique_ptr <BaseIndex::DB> m_db;
 
     FlatFilePos m_next_filter_pos;
-    std::unique_ptr<FlatFileSeq> m_filter_fileseq;
+    std::unique_ptr <FlatFileSeq> m_filter_fileseq;
 
-    bool ReadFilterFromDisk(const FlatFilePos& pos, BlockFilter& filter) const;
-    size_t WriteFilterToDisk(FlatFilePos& pos, const BlockFilter& filter);
+    bool ReadFilterFromDisk(const FlatFilePos &pos, BlockFilter &filter) const;
+
+    size_t WriteFilterToDisk(FlatFilePos &pos, const BlockFilter &filter);
 
     Mutex m_cs_headers_cache;
     /** cache of block hash to filter header, to avoid disk access when responding to getcfcheckpt. */
-    std::unordered_map<uint256, uint256, FilterHeaderHasher> m_headers_cache GUARDED_BY(m_cs_headers_cache);
+    std::unordered_map <uint256, uint256, FilterHeaderHasher> m_headers_cache
+    GUARDED_BY(m_cs_headers_cache);
 
 protected:
     bool Init() override;
 
-    bool CommitInternal(CDBBatch& batch) override;
+    bool CommitInternal(CDBBatch &batch) override;
 
-    bool WriteBlock(const CBlock& block, const CBlockIndex* pindex) override;
+    bool WriteBlock(const CBlock &block, const CBlockIndex *pindex) override;
 
-    bool Rewind(const CBlockIndex* current_tip, const CBlockIndex* new_tip) override;
+    bool Rewind(const CBlockIndex *current_tip, const CBlockIndex *new_tip) override;
 
-    BaseIndex::DB& GetDB() const override { return *m_db; }
+    BaseIndex::DB &GetDB() const override { return *m_db; }
 
-    const char* GetName() const override { return m_name.c_str(); }
+    const char *GetName() const override { return m_name.c_str(); }
 
 public:
     /** Constructs the index, which becomes available to be queried. */
@@ -63,28 +63,28 @@ public:
     BlockFilterType GetFilterType() const { return m_filter_type; }
 
     /** Get a single filter by block. */
-    bool LookupFilter(const CBlockIndex* block_index, BlockFilter& filter_out) const;
+    bool LookupFilter(const CBlockIndex *block_index, BlockFilter &filter_out) const;
 
     /** Get a single filter header by block. */
-    bool LookupFilterHeader(const CBlockIndex* block_index, uint256& header_out);
+    bool LookupFilterHeader(const CBlockIndex *block_index, uint256 &header_out);
 
     /** Get a range of filters between two heights on a chain. */
-    bool LookupFilterRange(int start_height, const CBlockIndex* stop_index,
-                           std::vector<BlockFilter>& filters_out) const;
+    bool LookupFilterRange(int start_height, const CBlockIndex *stop_index,
+                           std::vector <BlockFilter> &filters_out) const;
 
     /** Get a range of filter hashes between two heights on a chain. */
-    bool LookupFilterHashRange(int start_height, const CBlockIndex* stop_index,
-                               std::vector<uint256>& hashes_out) const;
+    bool LookupFilterHashRange(int start_height, const CBlockIndex *stop_index,
+                               std::vector <uint256> &hashes_out) const;
 };
 
 /**
  * Get a block filter index by type. Returns nullptr if index has not been initialized or was
  * already destroyed.
  */
-BlockFilterIndex* GetBlockFilterIndex(BlockFilterType filter_type);
+BlockFilterIndex *GetBlockFilterIndex(BlockFilterType filter_type);
 
 /** Iterate over all running block filter indexes, invoking fn on each. */
-void ForEachBlockFilterIndex(std::function<void (BlockFilterIndex&)> fn);
+void ForEachBlockFilterIndex(std::function<void(BlockFilterIndex &)> fn);
 
 /**
  * Initialize a block filter index for the given type if one does not already exist. Returns true if

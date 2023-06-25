@@ -19,8 +19,7 @@ QT_END_NAMESPACE
 
 /** Dialog for editing an address and associated information.
  */
-class EditAddressDialog : public QDialog
-{
+class EditAddressDialog : public QDialog {
     Q_OBJECT
 
 public:
@@ -31,16 +30,21 @@ public:
     };
 
     explicit EditAddressDialog(Mode mode, QWidget *parent = nullptr);
+
     ~EditAddressDialog();
 
     void setModel(AddressTableModel *model);
+
     void loadRow(int row);
 
     QString getAddress() const;
+
     void setAddress(const QString &address);
 
-public Q_SLOTS:
-    void accept() override;
+public
+    Q_SLOTS:
+            void accept()
+    override;
 
 private:
     bool saveCurrentRow();

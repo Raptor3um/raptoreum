@@ -46,8 +46,7 @@ Q_IMPORT_PLUGIN(QAndroidPlatformIntegrationPlugin)
 extern void noui_connect();
 
 // This is all you need to run all the tests
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
     // Initialize persistent globals with the testing setup state for sanity.
     // E.g. -datadir in gArgs is set to a temp directory dummy value (instead
     // of defaulting to the default datadir), or globalChainParams is set to
@@ -58,18 +57,18 @@ int main(int argc, char *argv[])
         BasicTestingSetup dummy{CBaseChainParams::REGTEST};
     }
 
-    std::unique_ptr<interfaces::Node> node = interfaces::MakeNode();
+    std::unique_ptr <interfaces::Node> node = interfaces::MakeNode();
 
     bool fInvalid = false;
 
     // Prefer the "minimal" platform for the test instead of the normal default
     // platform ("xcb", "windows", or "cocoa") so tests can't unintentionally
     // interfere with any background GUIs and don't require extra resources.
-    #if defined(WIN32)
-        _putenv_s("QT_QPA_PLATFORM", "minimal");
-    #else
-        setenv("QT_QPA_PLATFORM", "minimal", 0);
-    #endif
+#if defined(WIN32)
+    _putenv_s("QT_QPA_PLATFORM", "minimal");
+#else
+    setenv("QT_QPA_PLATFORM", "minimal", 0);
+#endif
 
     // Don't remove this, it's needed to access
     // QApplication:: and QCoreApplication:: in the tests

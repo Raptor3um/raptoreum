@@ -12,111 +12,110 @@
 
 class CValidationState;
 
-namespace llmq
-{
+namespace llmq {
 
 // This message is an aggregation of all received premature commitments and only valid if
 // enough (>=threshold) premature commitments were aggregated
 // This is mined on-chain as part of TRANSACTION_QUORUM_COMMITMENT
-class CFinalCommitment
-{
-public:
-    static const uint16_t CURRENT_VERSION = 1;
+    class CFinalCommitment {
+    public:
+        static const uint16_t CURRENT_VERSION = 1;
 
-    uint16_t nVersion{CURRENT_VERSION};
-    Consensus::LLMQType llmqType{Consensus::LLMQ_NONE};
-    uint256 quorumHash;
-    std::vector<bool> signers;
-    std::vector<bool> validMembers;
+        uint16_t nVersion{CURRENT_VERSION};
+        Consensus::LLMQType llmqType{Consensus::LLMQ_NONE};
+        uint256 quorumHash;
+        std::vector<bool> signers;
+        std::vector<bool> validMembers;
 
-    CBLSPublicKey quorumPublicKey;
-    uint256 quorumVvecHash;
+        CBLSPublicKey quorumPublicKey;
+        uint256 quorumVvecHash;
 
-    CBLSSignature quorumSig; // recovered threshold sig of blockHash+validMembers+pubKeyHash+vvecHash
-    CBLSSignature membersSig; // aggregated member sig of blockHash+validMembers+pubKeyHash+vvecHash
+        CBLSSignature quorumSig; // recovered threshold sig of blockHash+validMembers+pubKeyHash+vvecHash
+        CBLSSignature membersSig; // aggregated member sig of blockHash+validMembers+pubKeyHash+vvecHash
 
-    CFinalCommitment() = default;
-    CFinalCommitment(const Consensus::LLMQParams& params, const uint256& _quorumHash);
+        CFinalCommitment() = default;
 
-    int CountSigners() const
-    {
-        return int(std::count(signers.begin(), signers.end(), true));
-    }
-    int CountValidMembers() const
-    {
-        return int(std::count(validMembers.begin(), validMembers.end(), true));
-    }
+        CFinalCommitment(const Consensus::LLMQParams &params, const uint256 &_quorumHash);
 
-    bool Verify(const CBlockIndex* pQuorumBaseBlockIndex, bool checkSigs) const;
-    bool VerifyNull() const;
-    bool VerifySizes(const Consensus::LLMQParams& params) const;
-
-    SERIALIZE_METHODS(CFinalCommitment, obj)
-    {
-        READWRITE(obj.nVersion, obj.llmqType, obj.quorumHash, DYNBITSET(obj.signers), DYNBITSET(obj.validMembers), obj.quorumPublicKey, obj.quorumVvecHash, obj.quorumSig, obj.membersSig);
-    }
-
-    bool IsNull() const
-    {
-        if (std::count(signers.begin(), signers.end(), true) ||
-            std::count(validMembers.begin(), validMembers.end(), true)) {
-            return false;
+        int CountSigners() const {
+            return int(std::count(signers.begin(), signers.end(), true));
         }
-        if (quorumPublicKey.IsValid() ||
-            !quorumVvecHash.IsNull() ||
-            membersSig.IsValid() ||
-            quorumSig.IsValid()) {
-            return false;
+
+        int CountValidMembers() const {
+            return int(std::count(validMembers.begin(), validMembers.end(), true));
         }
-        return true;
-    }
 
-    void ToJson(UniValue& obj) const
-    {
-        obj.setObject();
-        obj.pushKV("version", int(nVersion));
-        obj.pushKV("llmqType", int(llmqType));
-        obj.pushKV("quorumHash", quorumHash.ToString());
-        obj.pushKV("signersCount", CountSigners());
-        obj.pushKV("signers", CLLMQUtils::ToHexStr(signers));
-        obj.pushKV("validMembersCount", CountValidMembers());
-        obj.pushKV("validMembers", CLLMQUtils::ToHexStr(validMembers));
-        obj.pushKV("quorumPublicKey", quorumPublicKey.ToString());
-        obj.pushKV("quorumVvecHash", quorumVvecHash.ToString());
-        obj.pushKV("quorumSig", quorumSig.ToString());
-        obj.pushKV("membersSig", membersSig.ToString());
-    }
-};
+        bool Verify(const CBlockIndex *pQuorumBaseBlockIndex, bool checkSigs) const;
 
-using CFinalCommitmentPtr = std::unique_ptr<CFinalCommitment>;
+        bool VerifyNull() const;
 
-class CFinalCommitmentTxPayload
-{
-public:
-    static const uint16_t CURRENT_VERSION = 1;
+        bool VerifySizes(const Consensus::LLMQParams &params) const;
 
-    uint16_t nVersion{CURRENT_VERSION};
-    uint32_t nHeight{(uint32_t)-1};
-    CFinalCommitment commitment;
+        SERIALIZE_METHODS(CFinalCommitment, obj
+        )
+        {
+            READWRITE(obj.nVersion, obj.llmqType, obj.quorumHash, DYNBITSET(obj.signers), DYNBITSET(obj.validMembers),
+                      obj.quorumPublicKey, obj.quorumVvecHash, obj.quorumSig, obj.membersSig);
+        }
 
-    SERIALIZE_METHODS(CFinalCommitmentTxPayload, obj)
-    {
-        READWRITE(obj.nVersion, obj.nHeight, obj.commitment);
-    }
+        bool IsNull() const {
+            if (std::count(signers.begin(), signers.end(), true) ||
+                std::count(validMembers.begin(), validMembers.end(), true)) {
+                return false;
+            }
+            if (quorumPublicKey.IsValid() ||
+                !quorumVvecHash.IsNull() ||
+                membersSig.IsValid() ||
+                quorumSig.IsValid()) {
+                return false;
+            }
+            return true;
+        }
 
-    void ToJson(UniValue& obj) const
-    {
-        obj.setObject();
-        obj.pushKV("version", int(nVersion));
-        obj.pushKV("height", int(nHeight));
+        void ToJson(UniValue &obj) const {
+            obj.setObject();
+            obj.pushKV("version", int(nVersion));
+            obj.pushKV("llmqType", int(llmqType));
+            obj.pushKV("quorumHash", quorumHash.ToString());
+            obj.pushKV("signersCount", CountSigners());
+            obj.pushKV("signers", CLLMQUtils::ToHexStr(signers));
+            obj.pushKV("validMembersCount", CountValidMembers());
+            obj.pushKV("validMembers", CLLMQUtils::ToHexStr(validMembers));
+            obj.pushKV("quorumPublicKey", quorumPublicKey.ToString());
+            obj.pushKV("quorumVvecHash", quorumVvecHash.ToString());
+            obj.pushKV("quorumSig", quorumSig.ToString());
+            obj.pushKV("membersSig", membersSig.ToString());
+        }
+    };
 
-        UniValue qcObj;
-        commitment.ToJson(qcObj);
-        obj.pushKV("commitment", qcObj);
-    }
-};
+    using CFinalCommitmentPtr = std::unique_ptr<CFinalCommitment>;
 
-bool CheckLLMQCommitment(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state);
+    class CFinalCommitmentTxPayload {
+    public:
+        static const uint16_t CURRENT_VERSION = 1;
+
+        uint16_t nVersion{CURRENT_VERSION};
+        uint32_t nHeight{(uint32_t) - 1};
+        CFinalCommitment commitment;
+
+        SERIALIZE_METHODS(CFinalCommitmentTxPayload, obj
+        )
+        {
+            READWRITE(obj.nVersion, obj.nHeight, obj.commitment);
+        }
+
+        void ToJson(UniValue &obj) const {
+            obj.setObject();
+            obj.pushKV("version", int(nVersion));
+            obj.pushKV("height", int(nHeight));
+
+            UniValue qcObj;
+            commitment.ToJson(qcObj);
+            obj.pushKV("commitment", qcObj);
+        }
+    };
+
+    bool CheckLLMQCommitment(const CTransaction &tx, const CBlockIndex *pindexPrev, CValidationState &state);
 
 } // namespace llmq
 

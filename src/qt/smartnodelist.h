@@ -12,15 +12,16 @@
 #define SMARTNODELIST_UPDATE_SECONDS 3
 #define SMARTNODELIST_FILTER_COOLDOWN_SECONDS 3
 
-namespace Ui
-{
-class SmartnodeList;
+namespace Ui {
+    class SmartnodeList;
 }
 
 class CDeterministicMN;
+
 using CDeterministicMNCPtr = std::shared_ptr<const CDeterministicMN>;
 
 class ClientModel;
+
 class WalletModel;
 
 QT_BEGIN_NAMESPACE
@@ -28,12 +29,12 @@ class QModelIndex;
 QT_END_NAMESPACE
 
 /** Smartnode Manager page widget */
-class SmartnodeList : public QWidget
-{
+class SmartnodeList : public QWidget {
     Q_OBJECT
 
 public:
-    explicit SmartnodeList(QWidget* parent = 0);
+    explicit SmartnodeList(QWidget *parent = 0);
+
     ~SmartnodeList();
 
     enum {
@@ -52,19 +53,20 @@ public:
         COLUMN_PROTX_HASH,
     };
 
-    void setClientModel(ClientModel* clientModel);
-    void setWalletModel(WalletModel* walletModel);
+    void setClientModel(ClientModel *clientModel);
+
+    void setWalletModel(WalletModel *walletModel);
 
 private:
-    QMenu* contextMenuDIP3;
+    QMenu *contextMenuDIP3;
     int64_t nTimeFilterUpdatedDIP3{0};
     int64_t nTimeUpdatedDIP3{0};
     bool fFilterUpdatedDIP3{true};
 
-    QTimer* timer;
-    Ui::SmartnodeList* ui;
-    ClientModel* clientModel{nullptr};
-    WalletModel* walletModel{nullptr};
+    QTimer *timer;
+    Ui::SmartnodeList *ui;
+    ClientModel *clientModel{nullptr};
+    WalletModel *walletModel{nullptr};
 
     // Protects tableWidgetSmartnodesDIP3
     RecursiveMutex cs_dip3list;
@@ -77,19 +79,27 @@ private:
 
     void updateDIP3List();
 
-Q_SIGNALS:
-    void doubleClicked(const QModelIndex&);
+    Q_SIGNALS:
+            void doubleClicked(
+    const QModelIndex&);
 
-private Q_SLOTS:
-    void showContextMenuDIP3(const QPoint&);
-    void on_filterLineEditDIP3_textChanged(const QString& strFilterIn);
+private
+    Q_SLOTS:
+            void showContextMenuDIP3(
+    const QPoint&);
+
+    void on_filterLineEditDIP3_textChanged(const QString &strFilterIn);
+
     void on_checkBoxMySmartnodesOnly_stateChanged(int state);
 
     void extraInfoDIP3_clicked();
+
     void copyProTxHash_clicked();
+
     void copyCollateralOutpoint_clicked();
 
     void handleSmartnodeListChanged();
+
     void updateDIP3ListScheduled();
 };
 #endif // BITCOIN_QT_SMARTNODELIST_H

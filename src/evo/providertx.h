@@ -15,8 +15,11 @@
 #include <univalue.h>
 
 class CBlockIndex;
+
 class CCoinsViewCache;
+
 class CValidationState;
+
 class CAssetsCache;
 
 class CProRegTx {
@@ -26,7 +29,7 @@ public:
     uint16_t nVersion{CURRENT_VERSION};                    // message version
     uint16_t nType{0};                                     // only 0 supported for now
     uint16_t nMode{0};                                     // only 0 supported for now
-    COutPoint collateralOutpoint{uint256(), (uint32_t) -1}; // if hash is null, we refer to a ProRegTx output
+    COutPoint collateralOutpoint{uint256(), (uint32_t) - 1}; // if hash is null, we refer to a ProRegTx output
     CService addr;
     CKeyID keyIDOwner;
     CBLSPublicKey pubKeyOperator;
@@ -36,7 +39,8 @@ public:
     uint256 inputsHash; // replay protection
     std::vector<unsigned char> vchSig;
 
-    SERIALIZE_METHODS(CProRegTx, obj)
+    SERIALIZE_METHODS(CProRegTx, obj
+    )
     {
         READWRITE(obj.nVersion, obj.nType, obj.nMode, obj.collateralOutpoint,
                   obj.addr, obj.keyIDOwner, obj.pubKeyOperator, obj.keyIDVoting,
@@ -84,7 +88,8 @@ public:
     uint256 inputsHash; // replay protection
     CBLSSignature sig;
 
-    SERIALIZE_METHODS(CProUpServTx, obj)
+    SERIALIZE_METHODS(CProUpServTx, obj
+    )
     {
         READWRITE(obj.nVersion, obj.proTxHash, obj.addr, obj.scriptOperatorPayout, obj.inputsHash);
         if (!(s.GetType() & SER_GETHASH)) {
@@ -121,7 +126,8 @@ public:
     uint256 inputsHash; // replay protection
     std::vector<unsigned char> vchSig;
 
-    SERIALIZE_METHODS(CProUpRegTx, obj)
+    SERIALIZE_METHODS(CProUpRegTx, obj
+    )
     {
         READWRITE(obj.nVersion, obj.proTxHash, obj.nMode, obj.pubKeyOperator,
                   obj.keyIDVoting, obj.scriptPayout, obj.inputsHash);
@@ -166,7 +172,8 @@ public:
     uint256 inputsHash; // replay protection
     CBLSSignature sig;
 
-    SERIALIZE_METHODS(CProUpRevTx, obj)
+    SERIALIZE_METHODS(CProUpRevTx, obj
+    )
     {
         READWRITE(obj.nVersion, obj.proTxHash, obj.nReason, obj.inputsHash);
         if (!(s.GetType() & SER_GETHASH)) {
@@ -210,7 +217,8 @@ public:
     uint16_t externalConfirmations = 0;
     uint256 inputsHash; // replay protection
 
-    SERIALIZE_METHODS(CFutureTx, obj)
+    SERIALIZE_METHODS(CFutureTx, obj
+    )
     {
         READWRITE(obj.nVersion, obj.maturity, obj.lockTime, obj.lockOutputIndex, obj.fee,
                   obj.updatableByDestination, obj.exChainType, obj.externalPayoutScript,
@@ -241,8 +249,7 @@ public:
     }
 };
 
-class CNewAssetTx
-{
+class CNewAssetTx {
 public:
     static const uint16_t CURRENT_VERSION = 1;
 
@@ -270,15 +277,16 @@ public:
 
 public:
 
-    SERIALIZE_METHODS(CNewAssetTx, obj)
+    SERIALIZE_METHODS(CNewAssetTx, obj
+    )
     {
         READWRITE(obj.nVersion, obj.name, obj.updatable, obj.isUnique, obj.maxMintCount,
                   obj.decimalPoint, obj.referenceHash, obj.fee, obj.type, obj.targetAddress,
                   obj.issueFrequency, obj.amount, obj.ownerAddress, obj.collateralAddress,
-                  obj.exChainType, obj.externalPayoutScript, obj.externalTxid, 
+                  obj.exChainType, obj.externalPayoutScript, obj.externalTxid,
                   obj.externalConfirmations, obj.inputsHash);
     }
-    
+
     std::string ToString() const;
 
     void ToJson(UniValue &obj) const {
@@ -295,9 +303,9 @@ public:
         obj.pushKV("type", type);
         obj.pushKV("targetAddress", EncodeDestination(targetAddress));
         obj.pushKV("ownerAddress", EncodeDestination(ownerAddress));
-        if( collateralAddress.IsNull()){
+        if (collateralAddress.IsNull()) {
             obj.pushKV("collateralAddress", "N/A");
-        }else{
+        } else {
             obj.pushKV("collateralAddress", EncodeDestination(collateralAddress));
         }
         obj.pushKV("issueFrequency", issueFrequency);
@@ -315,8 +323,7 @@ public:
     }
 };
 
-class CUpdateAssetTx
-{
+class CUpdateAssetTx {
 public:
     static const uint16_t CURRENT_VERSION = 1;
 
@@ -340,7 +347,8 @@ public:
     uint256 inputsHash; // replay protection
 
 public:
-    SERIALIZE_METHODS(CUpdateAssetTx, obj)
+    SERIALIZE_METHODS(CUpdateAssetTx, obj
+    )
     {
         READWRITE(obj.nVersion, obj.assetId, obj.updatable, obj.referenceHash, obj.fee,
                   obj.type, obj.targetAddress, obj.issueFrequency, obj.amount,
@@ -350,8 +358,7 @@ public:
 
     std::string ToString() const;
 
-    void ToJson(UniValue& obj) const
-    {
+    void ToJson(UniValue &obj) const {
         obj.clear();
         obj.setObject();
         obj.pushKV("version", nVersion);
@@ -377,13 +384,12 @@ public:
             obj.pushKV("externalPayoutAddress", "N/A");
         }
         obj.pushKV("externalTxid", externalTxid.ToString());
-        obj.pushKV("externalConfirmations", (int)externalConfirmations);
+        obj.pushKV("externalConfirmations", (int) externalConfirmations);
         obj.pushKV("inputsHash", inputsHash.ToString());
     }
 };
 
-class CMintAssetTx
-{
+class CMintAssetTx {
 public:
     static const uint16_t CURRENT_VERSION = 1;
 
@@ -394,15 +400,15 @@ public:
 
 public:
 
-    SERIALIZE_METHODS(CMintAssetTx, obj)
+    SERIALIZE_METHODS(CMintAssetTx, obj
+    )
     {
         READWRITE(obj.nVersion, obj.assetId, obj.fee, obj.inputsHash);
     }
-    
+
     std::string ToString() const;
 
-    void ToJson(UniValue& obj) const
-    {
+    void ToJson(UniValue &obj) const {
         obj.clear();
         obj.setObject();
         obj.pushKV("version", nVersion);
@@ -412,11 +418,16 @@ public:
     }
 };
 
-bool CheckFutureTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state);
+bool CheckFutureTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CValidationState &state);
 
-bool CheckNewAssetTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, CAssetsCache* assetsCache);
-bool CheckUpdateAssetTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, const CCoinsViewCache& view, CAssetsCache* assetsCache);
-bool CheckMintAssetTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, const CCoinsViewCache& view, CAssetsCache* assetsCache);
+bool CheckNewAssetTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CValidationState &state,
+                     CAssetsCache *assetsCache);
+
+bool CheckUpdateAssetTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CValidationState &state,
+                        const CCoinsViewCache &view, CAssetsCache *assetsCache);
+
+bool CheckMintAssetTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CValidationState &state,
+                      const CCoinsViewCache &view, CAssetsCache *assetsCache);
 
 bool CheckProRegTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CValidationState &state,
                    const CCoinsViewCache &view, bool check_sigs);

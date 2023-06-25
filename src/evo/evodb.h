@@ -16,22 +16,22 @@ static const std::string EVODB_BEST_BLOCK = "b_b2";
 
 class CEvoDB;
 
-class CEvoDBScopedCommitter
-{
+class CEvoDBScopedCommitter {
 private:
-    CEvoDB& evoDB;
+    CEvoDB &evoDB;
     bool didCommitOrRollback{false};
 
 public:
-    explicit CEvoDBScopedCommitter(CEvoDB& _evoDB);
+    explicit CEvoDBScopedCommitter(CEvoDB &_evoDB);
+
     ~CEvoDBScopedCommitter();
 
     void Commit();
+
     void Rollback();
 };
 
-class CEvoDB
-{
+class CEvoDB {
 public:
     Mutex cs;
 private:
@@ -47,70 +47,89 @@ private:
 public:
     explicit CEvoDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
 
-    std::unique_ptr<CEvoDBScopedCommitter> BeginTransaction() LOCKS_EXCLUDED(cs)
-    {
-        LOCK(cs);
-        return std::make_unique<CEvoDBScopedCommitter>(*this);
-    }
+    std::unique_ptr <CEvoDBScopedCommitter> BeginTransaction()
 
-    CurTransaction& GetCurTransaction() EXCLUSIVE_LOCKS_REQUIRED(cs)
-    {
-        AssertLockHeld(cs); // lock must be held from outside as long as the DB transaction is used
-        return curDBTransaction;
-    }
+    LOCKS_EXCLUDED(cs)
+            {
+                    LOCK(cs);
+            return std::make_unique<CEvoDBScopedCommitter>(*this);
+            }
 
-    template <typename K, typename V>
-    bool Read(const K& key, V& value) LOCKS_EXCLUDED(cs)
-    {
-        LOCK(cs);
-        return curDBTransaction.Read(key, value);
-    }
+    CurTransaction &GetCurTransaction()
 
-    template <typename K, typename V>
-    void Write(const K& key, const V& value) LOCKS_EXCLUDED(cs)
-    {
-        LOCK(cs);
-        curDBTransaction.Write(key, value);
-    }
+    EXCLUSIVE_LOCKS_REQUIRED(cs)
+            {
+                    AssertLockHeld(cs); // lock must be held from outside as long as the DB transaction is used
+            return curDBTransaction;
+            }
 
-    template <typename K>
-    bool Exists(const K& key) LOCKS_EXCLUDED(cs)
-    {
-        LOCK(cs);
-        return curDBTransaction.Exists(key);
-    }
+    template<typename K, typename V>
+    bool Read(const K &key, V &value)
 
-    template <typename K>
-    void Erase(const K& key) LOCKS_EXCLUDED(cs)
-    {
-        LOCK(cs);
-        curDBTransaction.Erase(key);
-    }
+    LOCKS_EXCLUDED(cs)
+            {
+                    LOCK(cs);
+            return curDBTransaction.Read(key, value);
+            }
 
-    CDBWrapper& GetRawDB()
-    {
+    template<typename K, typename V>
+    void Write(const K &key, const V &value)
+
+    LOCKS_EXCLUDED(cs)
+            {
+                    LOCK(cs);
+            curDBTransaction.Write(key, value);
+            }
+
+    template<typename K>
+    bool Exists(const K &key)
+
+    LOCKS_EXCLUDED(cs)
+            {
+                    LOCK(cs);
+            return curDBTransaction.Exists(key);
+            }
+
+    template<typename K>
+    void Erase(const K &key)
+
+    LOCKS_EXCLUDED(cs)
+            {
+                    LOCK(cs);
+            curDBTransaction.Erase(key);
+            }
+
+    CDBWrapper &GetRawDB() {
         return db;
     }
 
-    [[nodiscard]] size_t GetMemoryUsage() const
-    {
+    [[nodiscard]] size_t GetMemoryUsage() const {
         return rootDBTransaction.GetMemoryUsage() * 20;
     }
 
-    bool CommitRootTransaction() LOCKS_EXCLUDED(cs);
+    bool CommitRootTransaction()
+
+    LOCKS_EXCLUDED(cs);
 
     bool IsEmpty() { return db.IsEmpty(); }
 
-    bool VerifyBestBlock(const uint256& hash);
-    void WriteBestBlock(const uint256& hash);
+    bool VerifyBestBlock(const uint256 &hash);
+
+    void WriteBestBlock(const uint256 &hash);
 
 private:
     // only CEvoDBScopedCommitter is allowed to invoke these
     friend class CEvoDBScopedCommitter;
-    void CommitCurTransaction() LOCKS_EXCLUDED(cs);
-    void RollbackCurTransaction() LOCKS_EXCLUDED(cs);
+
+    void CommitCurTransaction()
+
+    LOCKS_EXCLUDED(cs);
+
+    void RollbackCurTransaction()
+
+    LOCKS_EXCLUDED(cs);
 };
 
-extern std::unique_ptr<CEvoDB> evoDb;
+extern std::unique_ptr <CEvoDB> evoDb;
 
 #endif //RAPTOREUM_EVODB_H

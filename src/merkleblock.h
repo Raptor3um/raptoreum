@@ -14,8 +14,9 @@
 #include <vector>
 
 // Helper functions for serialization.
-std::vector<unsigned char> BitsToBytes(const std::vector<bool>& bits);
-std::vector<bool> BytesToBits(const std::vector<unsigned char>& bytes);
+std::vector<unsigned char> BitsToBytes(const std::vector<bool> &bits);
+
+std::vector<bool> BytesToBits(const std::vector<unsigned char> &bytes);
 
 /** Data structure that represents a partial merkle tree.
  *
@@ -51,8 +52,7 @@ std::vector<bool> BytesToBits(const std::vector<unsigned char>& bytes);
  *  - byte[]     flag bits, packed per 8 in a byte, least significant bit first (<= 2*N-1 bits)
  * The size constraints follow from this.
  */
-class CPartialMerkleTree
-{
+class CPartialMerkleTree {
 protected:
     /** the total number of transactions in the block */
     unsigned int nTransactions;
@@ -61,31 +61,34 @@ protected:
     std::vector<bool> vBits;
 
     /** txids and internal hashes */
-    std::vector<uint256> vHash;
+    std::vector <uint256> vHash;
 
     /** flag set when encountering invalid data */
     bool fBad;
 
     /** helper function to efficiently calculate the number of nodes at given height in the merkle tree */
     unsigned int CalcTreeWidth(int height) const {
-        return (nTransactions+(1 << height)-1) >> height;
+        return (nTransactions + (1 << height) - 1) >> height;
     }
 
     /** calculate the hash of a node in the merkle tree (at leaf level: the txid's themselves) */
-    uint256 CalcHash(int height, unsigned int pos, const std::vector<uint256> &vTxid);
+    uint256 CalcHash(int height, unsigned int pos, const std::vector <uint256> &vTxid);
 
     /** recursive function that traverses tree nodes, storing the data as bits and hashes */
-    void TraverseAndBuild(int height, unsigned int pos, const std::vector<uint256> &vTxid, const std::vector<bool> &vMatch);
+    void
+    TraverseAndBuild(int height, unsigned int pos, const std::vector <uint256> &vTxid, const std::vector<bool> &vMatch);
 
     /**
      * recursive function that traverses tree nodes, consuming the bits and hashes produced by TraverseAndBuild.
      * it returns the hash of the respective node and its respective index.
      */
-    uint256 TraverseAndExtract(int height, unsigned int pos, unsigned int &nBitsUsed, unsigned int &nHashUsed, std::vector<uint256> &vMatch, std::vector<unsigned int> &vnIndex);
+    uint256 TraverseAndExtract(int height, unsigned int pos, unsigned int &nBitsUsed, unsigned int &nHashUsed,
+                               std::vector <uint256> &vMatch, std::vector<unsigned int> &vnIndex);
 
 public:
 
-    SERIALIZE_METHODS(CPartialMerkleTree, obj)
+    SERIALIZE_METHODS(CPartialMerkleTree, obj
+    )
     {
         READWRITE(obj.nTransactions, obj.vHash);
         std::vector<unsigned char> bytes;
@@ -96,7 +99,7 @@ public:
     }
 
     /** Construct a partial merkle tree from a list of transaction ids, and a mask that selects a subset of them */
-    CPartialMerkleTree(const std::vector<uint256> &vTxid, const std::vector<bool> &vMatch);
+    CPartialMerkleTree(const std::vector <uint256> &vTxid, const std::vector<bool> &vMatch);
 
     CPartialMerkleTree();
 
@@ -105,7 +108,7 @@ public:
      * and their respective indices within the partial tree.
      * returns the merkle root, or 0 in case of failure
      */
-    uint256 ExtractMatches(std::vector<uint256> &vMatch, std::vector<unsigned int> &vnIndex);
+    uint256 ExtractMatches(std::vector <uint256> &vMatch, std::vector<unsigned int> &vnIndex);
 
     /** Get number of transactions the merkle proof is indicating for cross-reference with
      * local blockchain knowledge.
@@ -121,8 +124,7 @@ public:
  *
  * NOTE: The class assumes that the given CBlock has *at least* 1 transaction. If the CBlock has 0 txs, it will hit an assertion.
  */
-class CMerkleBlock
-{
+class CMerkleBlock {
 public:
     /** Public only for unit testing */
     CBlockHeader header;
@@ -134,25 +136,26 @@ public:
      * Used only when a bloom filter is specified to allow
      * testing the transactions which matched the bloom filter.
      */
-    std::vector<std::pair<unsigned int, uint256> > vMatchedTxn;
+    std::vector <std::pair<unsigned int, uint256>> vMatchedTxn;
 
     /**
      * Create from a CBlock, filtering transactions according to filter
      * Note that this will call IsRelevantAndUpdate on the filter for each transaction,
      * thus the filter will likely be modified.
      */
-    CMerkleBlock(const CBlock& block, CBloomFilter& filter) : CMerkleBlock(block, &filter, nullptr) { }
+    CMerkleBlock(const CBlock &block, CBloomFilter &filter) : CMerkleBlock(block, &filter, nullptr) {}
 
     // Create from a CBlock, matching the txids in the set
-    CMerkleBlock(const CBlock& block, const std::set<uint256>& txids) : CMerkleBlock(block, nullptr, &txids) { }
+    CMerkleBlock(const CBlock &block, const std::set <uint256> &txids) : CMerkleBlock(block, nullptr, &txids) {}
 
     CMerkleBlock() {}
 
-    SERIALIZE_METHODS(CMerkleBlock, obj) { READWRITE(obj.header, obj.txn); }
+    SERIALIZE_METHODS(CMerkleBlock, obj
+    ) { READWRITE(obj.header, obj.txn); }
 
 private:
     // Combined constructor to consolidate code
-    CMerkleBlock(const CBlock& block, CBloomFilter* filter, const std::set<uint256>* txids);
+    CMerkleBlock(const CBlock &block, CBloomFilter *filter, const std::set <uint256> *txids);
 };
 
 #endif // BITCOIN_MERKLEBLOCK_H

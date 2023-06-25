@@ -13,21 +13,22 @@
 
 #include <optional>
 
-static void WalletBalance(benchmark::Bench& bench, const bool set_dirty, const bool add_watchonly, const bool add_mine, const uint32_t epoch_iters)
-{
+static void WalletBalance(benchmark::Bench &bench, const bool set_dirty, const bool add_watchonly, const bool add_mine,
+                          const uint32_t epoch_iters) {
     RegTestingSetup test_setup;
-    const auto& ADDRESS_WATCHONLY = ADDRESS_B58T_UNSPENDABLE;
+    const auto &ADDRESS_WATCHONLY = ADDRESS_B58T_UNSPENDABLE;
 
     NodeContext node;
-    std::unique_ptr<interfaces::Chain> chain = interfaces::MakeChain(node);
+    std::unique_ptr <interfaces::Chain> chain = interfaces::MakeChain(node);
     CWallet wallet{chain.get(), WalletLocation(), CreateMockWalletDatabase()};
     {
         bool first_run;
         if (wallet.LoadWallet(first_run) != DBErrors::LOAD_OK) assert(false);
     }
-    auto handler = chain->handleNotifications({ &wallet, [](CWallet*) {} });
+    auto handler = chain->handleNotifications({&wallet, [](CWallet *) {}});
 
-    const std::optional<std::string> address_mine{add_mine ? std::optional<std::string>{getnewaddress(wallet)} : std::nullopt};
+    const std::optional <std::string> address_mine{
+            add_mine ? std::optional < std::string > {getnewaddress(wallet)} : std::nullopt};
     if (add_watchonly) importaddress(wallet, ADDRESS_WATCHONLY);
 
     for (int i = 0; i < 100; ++i) {
@@ -46,10 +47,21 @@ static void WalletBalance(benchmark::Bench& bench, const bool set_dirty, const b
     });
 }
 
-static void WalletBalanceDirty(benchmark::Bench& bench) { WalletBalance(bench, /* set_dirty */ true, /* add_watchonly */ true, /* add_mine */ true, 2500); }
-static void WalletBalanceClean(benchmark::Bench& bench) { WalletBalance(bench, /* set_dirty */ false, /* add_watchonly */ true, /* add_mine */ true, 8000); }
-static void WalletBalanceMine(benchmark::Bench& bench) { WalletBalance(bench, /* set_dirty */ false, /* add_watchonly */ false, /* add_mine */ true, 16000); }
-static void WalletBalanceWatch(benchmark::Bench& bench) { WalletBalance(bench, /* set_dirty */ false, /* add_watchonly */ true, /* add_mine */ false, 8000); }
+static void WalletBalanceDirty(benchmark::Bench &bench) {
+    WalletBalance(bench, /* set_dirty */ true, /* add_watchonly */true, /* add_mine */ true, 2500);
+}
+
+static void WalletBalanceClean(benchmark::Bench &bench) {
+    WalletBalance(bench, /* set_dirty */false, /* add_watchonly */ true, /* add_mine */true, 8000);
+}
+
+static void WalletBalanceMine(benchmark::Bench &bench) {
+    WalletBalance(bench, /* set_dirty */ false, /* add_watchonly */false, /* add_mine */ true, 16000);
+}
+
+static void WalletBalanceWatch(benchmark::Bench &bench) {
+    WalletBalance(bench, /* set_dirty */false, /* add_watchonly */ true, /* add_mine */false, 8000);
+}
 
 BENCHMARK(WalletBalanceDirty);
 BENCHMARK(WalletBalanceClean);

@@ -29,8 +29,7 @@ const unsigned int WALLET_CRYPTO_IV_SIZE = 16;
  */
 
 /** Master key for wallet encryption */
-class CMasterKey
-{
+class CMasterKey {
 public:
     std::vector<unsigned char> vchCryptedKey;
     std::vector<unsigned char> vchSalt;
@@ -42,13 +41,14 @@ public:
     //! such as the various parameters to scrypt
     std::vector<unsigned char> vchOtherDerivationParameters;
 
-    SERIALIZE_METHODS(CMasterKey, obj)
+    SERIALIZE_METHODS(CMasterKey, obj
+    )
     {
-        READWRITE(obj.vchCryptedKey, obj.vchSalt, obj.nDerivationMethod, obj.nDeriveIterations, obj.vchOtherDerivationParameters);
+        READWRITE(obj.vchCryptedKey, obj.vchSalt, obj.nDerivationMethod, obj.nDeriveIterations,
+                  obj.vchOtherDerivationParameters);
     }
 
-    CMasterKey()
-    {
+    CMasterKey() {
         // 25000 rounds is just under 0.1 seconds on a 1.86 GHz Pentium M
         // ie slightly lower than the lowest hardware we need bother supporting
         nDeriveIterations = 25000;
@@ -59,61 +59,65 @@ public:
 
 typedef std::vector<unsigned char, secure_allocator<unsigned char> > CKeyingMaterial;
 
-namespace wallet_crypto_tests
-{
+namespace wallet_crypto_tests {
     class TestCrypter;
 }
 
 /** Encryption/decryption context with key information */
-class CCrypter
-{
-friend class wallet_crypto_tests::TestCrypter; // for test access to chKey/chIV
+class CCrypter {
+    friend class wallet_crypto_tests::TestCrypter; // for test access to chKey/chIV
 private:
     std::vector<unsigned char, secure_allocator<unsigned char>> vchKey;
     std::vector<unsigned char, secure_allocator<unsigned char>> vchIV;
     bool fKeySet;
 
-    int BytesToKeySHA512AES(const std::vector<unsigned char>& chSalt, const SecureString& strKeyData, int count, unsigned char *key,unsigned char *iv) const;
+    int BytesToKeySHA512AES(const std::vector<unsigned char> &chSalt, const SecureString &strKeyData, int count,
+                            unsigned char *key, unsigned char *iv) const;
 
 public:
-    bool SetKeyFromPassphrase(const SecureString &strKeyData, const std::vector<unsigned char>& chSalt, const unsigned int nRounds, const unsigned int nDerivationMethod);
-    bool Encrypt(const CKeyingMaterial& vchPlaintext, std::vector<unsigned char> &vchCiphertext) const;
-    bool Decrypt(const std::vector<unsigned char>& vchCiphertext, CKeyingMaterial& vchPlaintext) const;
-    bool SetKey(const CKeyingMaterial& chNewKey, const std::vector<unsigned char>& chNewIV);
+    bool SetKeyFromPassphrase(const SecureString &strKeyData, const std::vector<unsigned char> &chSalt,
+                              const unsigned int nRounds, const unsigned int nDerivationMethod);
 
-    void CleanKey()
-    {
+    bool Encrypt(const CKeyingMaterial &vchPlaintext, std::vector<unsigned char> &vchCiphertext) const;
+
+    bool Decrypt(const std::vector<unsigned char> &vchCiphertext, CKeyingMaterial &vchPlaintext) const;
+
+    bool SetKey(const CKeyingMaterial &chNewKey, const std::vector<unsigned char> &chNewIV);
+
+    void CleanKey() {
         memory_cleanse(vchKey.data(), vchKey.size());
         memory_cleanse(vchIV.data(), vchIV.size());
         fKeySet = false;
     }
 
-    CCrypter()
-    {
+    CCrypter() {
         fKeySet = false;
         vchKey.resize(WALLET_CRYPTO_KEY_SIZE);
         vchIV.resize(WALLET_CRYPTO_IV_SIZE);
     }
 
-    ~CCrypter()
-    {
+    ~CCrypter() {
         CleanKey();
     }
 };
 
-bool EncryptAES256(const SecureString& sKey, const SecureString& sPlaintext, const std::string& sIV, std::string& sCiphertext);
-bool DecryptAES256(const SecureString& sKey, const std::string& sCiphertext, const std::string& sIV, SecureString& sPlaintext);
+bool EncryptAES256(const SecureString &sKey, const SecureString &sPlaintext, const std::string &sIV,
+                   std::string &sCiphertext);
+
+bool DecryptAES256(const SecureString &sKey, const std::string &sCiphertext, const std::string &sIV,
+                   SecureString &sPlaintext);
 
 
 /** Keystore which keeps the private keys encrypted.
  * It derives from the basic key store, which is used if no encryption is active.
  */
-class CCryptoKeyStore : public CBasicKeyStore
-{
+class CCryptoKeyStore : public CBasicKeyStore {
 private:
-    CHDChain cryptedHDChain GUARDED_BY(cs_KeyStore);
+    CHDChain cryptedHDChain
+    GUARDED_BY(cs_KeyStore);
 
-    CKeyingMaterial vMasterKey GUARDED_BY(cs_KeyStore);
+    CKeyingMaterial vMasterKey
+    GUARDED_BY(cs_KeyStore);
 
     //! if fUseCrypto is true, mapKeys must be empty
     //! if fUseCrypto is false, vMasterKey must be empty
@@ -126,44 +130,55 @@ private:
     bool fOnlyMixingAllowed;
 
 protected:
-    using CryptedKeyMap = std::map<CKeyID, std::pair<CPubKey, std::vector<unsigned char>>>;
+    using CryptedKeyMap = std::map <CKeyID, std::pair<CPubKey, std::vector < unsigned char>>>;
 
     bool SetCrypted();
 
     //! will encrypt previously unencrypted keys
-    bool EncryptKeys(CKeyingMaterial& vMasterKeyIn);
+    bool EncryptKeys(CKeyingMaterial &vMasterKeyIn);
 
-    bool EncryptHDChain(const CKeyingMaterial& vMasterKeyIn, const CHDChain& chain = CHDChain());
-    bool DecryptHDChain(CHDChain& hdChainRet) const;
-    bool SetHDChain(const CHDChain& chain);
-    bool SetCryptedHDChain(const CHDChain& chain);
+    bool EncryptHDChain(const CKeyingMaterial &vMasterKeyIn, const CHDChain &chain = CHDChain());
 
-    bool Unlock(const CKeyingMaterial& vMasterKeyIn, bool fForMixingOnly = false, bool accept_no_keys = false);
-    CryptedKeyMap mapCryptedKeys GUARDED_BY(cs_KeyStore);
+    bool DecryptHDChain(CHDChain &hdChainRet) const;
+
+    bool SetHDChain(const CHDChain &chain);
+
+    bool SetCryptedHDChain(const CHDChain &chain);
+
+    bool Unlock(const CKeyingMaterial &vMasterKeyIn, bool fForMixingOnly = false, bool accept_no_keys = false);
+
+    CryptedKeyMap mapCryptedKeys
+    GUARDED_BY(cs_KeyStore);
 
 public:
-    CCryptoKeyStore() : fUseCrypto(false), fDecryptionThoroughlyChecked(false), fOnlyMixingAllowed(false)
-    {
+    CCryptoKeyStore() : fUseCrypto(false), fDecryptionThoroughlyChecked(false), fOnlyMixingAllowed(false) {
     }
 
     bool IsCrypted() const { return fUseCrypto; }
+
     bool IsLocked(bool fForMixing = false) const;
+
     bool Lock(bool fForMixing = false);
 
     virtual bool AddCryptedKey(const CPubKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret);
-    bool AddKeyPubKey(const CKey& key, const CPubKey &pubkey) override;
-    bool HaveKey(const CKeyID &address) const override;
-    bool GetKey(const CKeyID &address, CKey& keyOut) const override;
-    bool GetPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const override;
-    std::set<CKeyID> GetKeys() const override;
 
-    virtual bool GetHDChain(CHDChain& hdChainRet) const override;
+    bool AddKeyPubKey(const CKey &key, const CPubKey &pubkey) override;
+
+    bool HaveKey(const CKeyID &address) const override;
+
+    bool GetKey(const CKeyID &address, CKey &keyOut) const override;
+
+    bool GetPubKey(const CKeyID &address, CPubKey &vchPubKeyOut) const override;
+
+    std::set <CKeyID> GetKeys() const override;
+
+    virtual bool GetHDChain(CHDChain &hdChainRet) const override;
 
     /**
      * Wallet status (encrypted, locked) changed.
      * Note: Called without locks held.
      */
-    boost::signals2::signal<void (CCryptoKeyStore* wallet)> NotifyStatusChanged;
+    boost::signals2::signal<void(CCryptoKeyStore *wallet)> NotifyStatusChanged;
 };
 
 #endif // BITCOIN_WALLET_CRYPTER_H

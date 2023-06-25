@@ -11,22 +11,29 @@
 #include <pubkey.h>
 
 class CNewAssetTx;
+
 class CUpdateAssetTx;
+
 class CMintAssetTx;
+
 struct CAssetOutputEntry;
 struct CBlockAssetUndo;
 
 #define MAX_CACHE_ASSETS_SIZE 2500
 
 CAmount getAssetsFeesCoin();
-uint16_t getAssetsFees();
-bool IsAssetNameValid(std::string name);
-bool GetAssetId(const CScript& script, std::string& assetId);
-bool validateAmount(const CAmount nAmount, const uint16_t decimalPoint);
-bool validateAmount(const std::string& assetId, const CAmount nAmount);
 
-class CAssetMetaData
-{
+uint16_t getAssetsFees();
+
+bool IsAssetNameValid(std::string name);
+
+bool GetAssetId(const CScript &script, std::string &assetId);
+
+bool validateAmount(const CAmount nAmount, const uint16_t decimalPoint);
+
+bool validateAmount(const std::string &assetId, const CAmount nAmount);
+
+class CAssetMetaData {
 public:
     std::string assetId;       //Transaction hash of asset creation
     CAmount circulatingSupply; //update every mint transaction.
@@ -46,23 +53,22 @@ public:
     CKeyID ownerAddress;
     CKeyID collateralAddress;
 
-    CAssetMetaData()
-    {
+    CAssetMetaData() {
         SetNull();
     }
 
     CAssetMetaData(const std::string txid, const CNewAssetTx assetTx);
 
-    SERIALIZE_METHODS(CAssetMetaData, obj)
+    SERIALIZE_METHODS(CAssetMetaData, obj
+    )
     {
         READWRITE(obj.assetId, obj.circulatingSupply, obj.mintCount, obj.name, obj.updatable,
-            obj.isUnique, obj.maxMintCount, obj.decimalPoint, obj.referenceHash, obj.fee,
-            obj.type, obj.targetAddress, obj.issueFrequency, obj.amount, obj.ownerAddress,
-            obj.collateralAddress);
+                  obj.isUnique, obj.maxMintCount, obj.decimalPoint, obj.referenceHash, obj.fee,
+                  obj.type, obj.targetAddress, obj.issueFrequency, obj.amount, obj.ownerAddress,
+                  obj.collateralAddress);
     }
 
-    void SetNull()
-    {
+    void SetNull() {
         assetId = "";
         circulatingSupply = CAmount(-1);
         mintCount = uint16_t(-1);
@@ -82,109 +88,111 @@ public:
     }
 };
 
-class CDatabaseAssetData
-{
+class CDatabaseAssetData {
 public:
     CAssetMetaData asset;
     int blockHeight;
     uint256 blockHash;
 
-    CDatabaseAssetData(const CAssetMetaData& asset, const int& nHeight, const uint256& blockHash);
+    CDatabaseAssetData(const CAssetMetaData &asset, const int &nHeight, const uint256 &blockHash);
+
     CDatabaseAssetData();
 
-    void SetNull()
-    {
+    void SetNull() {
         asset.SetNull();
         blockHeight = -1;
         blockHash = uint256();
     }
 
-    bool operator<(const CDatabaseAssetData& rhs) const
-    {
+    bool operator<(const CDatabaseAssetData &rhs) const {
         return asset.assetId < rhs.asset.assetId;
     }
 
-     SERIALIZE_METHODS(CDatabaseAssetData, obj)
+    SERIALIZE_METHODS(CDatabaseAssetData, obj
+    )
     {
         READWRITE(obj.asset, obj.blockHeight, obj.blockHash);
     }
 };
 
-class CAssets
-{
+class CAssets {
 public:
-    std::map<std::string, CDatabaseAssetData> mapAsset;
-    std::map<std::string, std::string> mapAssetId;
+    std::map <std::string, CDatabaseAssetData> mapAsset;
+    std::map <std::string, std::string> mapAssetId;
 
-    CAssets(const CAssets& assets)
-    {
+    CAssets(const CAssets &assets) {
         this->mapAsset = assets.mapAsset;
         this->mapAssetId = assets.mapAssetId;
     }
 
-    CAssets& operator=(const CAssets& other)
-    {
+    CAssets &operator=(const CAssets &other) {
         mapAsset = other.mapAsset;
         mapAssetId = other.mapAssetId;
         return *this;
     }
 
-    CAssets()
-    {
+    CAssets() {
         SetNull();
     }
 
-    void SetNull()
-    {
+    void SetNull() {
         mapAsset.clear();
         mapAssetId.clear();
     }
 };
 
-class CAssetsCache : public CAssets
-{
+class CAssetsCache : public CAssets {
 public:
-    std::set<CDatabaseAssetData> NewAssetsToRemove;
-    std::set<CDatabaseAssetData> NewAssetsToAdd;
+    std::set <CDatabaseAssetData> NewAssetsToRemove;
+    std::set <CDatabaseAssetData> NewAssetsToAdd;
 
     CAssetsCache() :
-        CAssets()
-    {
+            CAssets() {
         SetNull();
         ClearDirtyCache();
     }
 
-    CAssetsCache(CAssetsCache& cache) :
-        CAssets(cache)
-    {
+    CAssetsCache(CAssetsCache &cache) :
+            CAssets(cache) {
         this->NewAssetsToRemove = cache.NewAssetsToRemove;
         this->NewAssetsToAdd = cache.NewAssetsToAdd;
     }
 
     bool InsertAsset(CNewAssetTx newAsset, std::string assetId, int nHeight);
+
     bool UpdateAsset(CUpdateAssetTx upAsset);
+
     bool UpdateAsset(std::string assetId, CAmount amount);
+
     //undo asset
     bool RemoveAsset(std::string assetId);
-    bool UndoUpdateAsset(const CUpdateAssetTx upAsset, const std::vector<std::pair<std::string, CBlockAssetUndo>>& vUndoData);
-    bool UndoMintAsset(const CMintAssetTx assetTx, const std::vector<std::pair<std::string, CBlockAssetUndo>>& vUndoData);
+
+    bool UndoUpdateAsset(const CUpdateAssetTx upAsset,
+                         const std::vector <std::pair<std::string, CBlockAssetUndo>> &vUndoData);
+
+    bool
+    UndoMintAsset(const CMintAssetTx assetTx, const std::vector <std::pair<std::string, CBlockAssetUndo>> &vUndoData);
 
     bool CheckIfAssetExists(std::string assetId);
-    bool GetAssetMetaData(std::string assetId, CAssetMetaData& asset);
-    bool GetAssetId(std::string name, std::string& assetId);
+
+    bool GetAssetMetaData(std::string assetId, CAssetMetaData &asset);
+
+    bool GetAssetId(std::string name, std::string &assetId);
 
     bool Flush();
+
     bool DumpCacheToDatabase();
 
-    void ClearDirtyCache()
-    {
+    void ClearDirtyCache() {
         NewAssetsToAdd.clear();
         NewAssetsToRemove.clear();
     }
 };
 
-void AddAssets(const CTransaction& tx, int nHeight, CAssetsCache* assetCache = nullptr, std::pair<std::string, CBlockAssetUndo>* undoAssetData = nullptr);
-bool GetAssetData(const CScript& script, CAssetOutputEntry& data);
+void AddAssets(const CTransaction &tx, int nHeight, CAssetsCache *assetCache = nullptr,
+               std::pair <std::string, CBlockAssetUndo> *undoAssetData = nullptr);
+
+bool GetAssetData(const CScript &script, CAssetOutputEntry &data);
 
 
 #endif //RAPTOREUM_ASSETS_H

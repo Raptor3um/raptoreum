@@ -24,58 +24,55 @@ static bool test_failed = false;
 #define d_assert(expr) { if (!(expr)) { test_failed = true; fprintf(stderr, "%s failed\n", filename.c_str()); } }
 #define f_assert(expr) { if (!(expr)) { test_failed = true; fprintf(stderr, "%s failed\n", __func__); } }
 
-static std::string rtrim(std::string s)
-{
-    s.erase(s.find_last_not_of(" \n\r\t")+1);
+static std::string rtrim(std::string s) {
+    s.erase(s.find_last_not_of(" \n\r\t") + 1);
     return s;
 }
 
-static void runtest(string filename, const string& jdata)
-{
-        string prefix = filename.substr(0, 4);
+static void runtest(string filename, const string &jdata) {
+    string prefix = filename.substr(0, 4);
 
-        bool wantPass = (prefix == "pass") || (prefix == "roun");
-        bool wantFail = (prefix == "fail");
-        bool wantRoundTrip = (prefix == "roun");
-        assert(wantPass || wantFail);
+    bool wantPass = (prefix == "pass") || (prefix == "roun");
+    bool wantFail = (prefix == "fail");
+    bool wantRoundTrip = (prefix == "roun");
+    assert(wantPass || wantFail);
 
-        UniValue val;
-        bool testResult = val.read(jdata);
+    UniValue val;
+    bool testResult = val.read(jdata);
 
-        if (wantPass) {
-            d_assert(testResult == true);
-        } else {
-            d_assert(testResult == false);
-        }
+    if (wantPass) {
+        d_assert(testResult == true);
+    } else {
+        d_assert(testResult == false);
+    }
 
-        if (wantRoundTrip) {
-            std::string odata = val.write(0, 0);
-            assert(odata == rtrim(jdata));
-        }
+    if (wantRoundTrip) {
+        std::string odata = val.write(0, 0);
+        assert(odata == rtrim(jdata));
+    }
 }
 
-static void runtest_file(const char *filename_)
-{
-        string basename(filename_);
-        string filename = srcdir + "/" + basename;
-        FILE *f = fopen(filename.c_str(), "r");
-        assert(f != nullptr);
+static void runtest_file(const char *filename_) {
+    string basename(filename_);
+    string filename = srcdir + "/" + basename;
+    FILE *f = fopen(filename.c_str(), "r");
+    assert(f != nullptr);
 
-        string jdata;
+    string jdata;
 
-        char buf[4096];
-        while (!feof(f)) {
-                int bread = fread(buf, 1, sizeof(buf), f);
-                assert(!ferror(f));
-
-                string s(buf, bread);
-                jdata += s;
-        }
-
+    char buf[4096];
+    while (!feof(f)) {
+        int bread = fread(buf, 1, sizeof(buf), f);
         assert(!ferror(f));
-        fclose(f);
 
-        runtest(basename, jdata);
+        string s(buf, bread);
+        jdata += s;
+    }
+
+    assert(!ferror(f));
+    fclose(f);
+
+    runtest(basename, jdata);
 }
 
 static const char *filenames[] = {
@@ -135,8 +132,7 @@ static const char *filenames[] = {
 };
 
 // Test \u handling
-void unescape_unicode_test()
-{
+void unescape_unicode_test() {
     UniValue val;
     bool testResult;
     // Escaped ASCII (quote)
@@ -157,8 +153,7 @@ void unescape_unicode_test()
     f_assert(val[0].get_str() == "\xf0\x9d\x85\xa1");
 }
 
-int main (int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
     for (unsigned int fidx = 0; fidx < ARRAY_SIZE(filenames); fidx++) {
         runtest_file(filenames[fidx]);
     }

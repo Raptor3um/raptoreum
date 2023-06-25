@@ -19,20 +19,19 @@
  *  zero. This is compatible with older versions which expect to see
  *  the transaction version there.
  */
-struct TxInUndoFormatter
-{
+struct TxInUndoFormatter {
     template<typename Stream>
-    void Ser(Stream &s, const Coin& txout) {
-        ::Serialize(s, VARINT(txout.nHeight * uint32_t{2} + txout.fCoinBase ));
+    void Ser(Stream &s, const Coin &txout) {
+        ::Serialize(s, VARINT(txout.nHeight * uint32_t{2} + txout.fCoinBase));
         if (txout.nHeight > 0) {
             // Required to maintain compatibility with older undo format.
-            ::Serialize(s, (unsigned char)0);
+            ::Serialize(s, (unsigned char) 0);
         }
         ::Serialize(s, Using<TxOutCompression>(txout.out));
     }
 
     template<typename Stream>
-    void Unser(Stream &s, Coin& txout) {
+    void Unser(Stream &s, Coin &txout) {
         uint32_t nCode = 0;
         ::Unserialize(s, VARINT(nCode));
         txout.nHeight = nCode >> 1;
@@ -49,22 +48,22 @@ struct TxInUndoFormatter
 };
 
 /** Undo information for a CTransaction */
-class CTxUndo
-{
+class CTxUndo {
 public:
     // undo information for all txins
-    std::vector<Coin> vprevout;
+    std::vector <Coin> vprevout;
 
-    SERIALIZE_METHODS(CTxUndo, obj) { READWRITE(Using<VectorFormatter<TxInUndoFormatter>>(obj.vprevout)); }
+    SERIALIZE_METHODS(CTxUndo, obj
+    ) { READWRITE(Using < VectorFormatter < TxInUndoFormatter >> (obj.vprevout)); }
 };
 
 /** Undo information for a CBlock */
-class CBlockUndo
-{
+class CBlockUndo {
 public:
-    std::vector<CTxUndo> vtxundo; // for all but the coinbase
+    std::vector <CTxUndo> vtxundo; // for all but the coinbase
 
-    SERIALIZE_METHODS(CBlockUndo, obj) { READWRITE(obj.vtxundo); }
+    SERIALIZE_METHODS(CBlockUndo, obj
+    ) { READWRITE(obj.vtxundo); }
 
 };
 

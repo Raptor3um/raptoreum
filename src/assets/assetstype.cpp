@@ -6,8 +6,7 @@
 #include <streams.h>
 
 
-bool GetTransferAsset(const CScript& script, CAssetTransfer& assetTransfer)
-{
+bool GetTransferAsset(const CScript &script, CAssetTransfer &assetTransfer) {
     int nIndex;
     if (!script.IsAssetScript(nIndex)) {
         return false;
@@ -18,7 +17,7 @@ bool GetTransferAsset(const CScript& script, CAssetTransfer& assetTransfer)
     CDataStream DSAsset(vchAssetId, SER_NETWORK, PROTOCOL_VERSION);
     try {
         DSAsset >> assetTransfer;
-    } catch (std::exception& e) {
+    } catch (std::exception &e) {
         //error("Failed to get the transfer asset: %s", e.what());
         return false;
     }
@@ -26,8 +25,7 @@ bool GetTransferAsset(const CScript& script, CAssetTransfer& assetTransfer)
     return true;
 }
 
-void CAssetTransfer::BuildAssetTransaction(CScript& script) const
-{
+void CAssetTransfer::BuildAssetTransaction(CScript &script) const {
     CDataStream AssetTransfer(SER_NETWORK, PROTOCOL_VERSION);
     AssetTransfer << *this;
     std::vector<unsigned char> vchMessage;
@@ -38,8 +36,7 @@ void CAssetTransfer::BuildAssetTransaction(CScript& script) const
     script << OP_ASSET_ID << ToByteVector(vchMessage) << OP_DROP;
 }
 
-CAssetTransfer::CAssetTransfer(const std::string& assetId, const CAmount& nAmount, const uint32_t& uniqueId)
-{
+CAssetTransfer::CAssetTransfer(const std::string &assetId, const CAmount &nAmount, const uint32_t &uniqueId) {
     SetNull();
     this->assetId = assetId;
     this->isUnique = true;
@@ -47,8 +44,7 @@ CAssetTransfer::CAssetTransfer(const std::string& assetId, const CAmount& nAmoun
     this->nAmount = nAmount;
 }
 
-CAssetTransfer::CAssetTransfer(const std::string& assetId, const CAmount& nAmount)
-{
+CAssetTransfer::CAssetTransfer(const std::string &assetId, const CAmount &nAmount) {
     SetNull();
     this->assetId = assetId;
     this->isUnique = false;

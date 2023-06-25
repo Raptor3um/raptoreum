@@ -5,11 +5,13 @@
 
 #include <node/context.h>
 #include <validation.h>
+
 #ifdef ENABLE_WALLET
 #include <coinjoin/coinjoin-client.h>
 #include <coinjoin/coinjoin-client-options.h>
 #include <wallet/rpcwallet.h>
 #endif // ENABLE_WALLET
+
 #include <coinjoin/coinjoin-server.h>
 #include <rpc/blockchain.h>
 #include <rpc/server.h>
@@ -83,63 +85,78 @@ static UniValue coinjoin(const JSONRPCRequest& request)
 }
 #endif // ENABLE_WALLET
 
-UniValue getpoolinfo(const JSONRPCRequest& request)
-{
+UniValue getpoolinfo(const JSONRPCRequest &request) {
     throw std::runtime_error(
             RPCHelpMan{"getpoolinfo",
-                "DEPRECATED. Please use getcoinjoininfo instead.\n",
-            {},
-            RPCResults{},
-            RPCExamples{""}}
-            .ToString());
+                       "DEPRECATED. Please use getcoinjoininfo instead.\n",
+                       {},
+                       RPCResults{},
+                       RPCExamples{""}}
+                    .ToString());
 }
 
-UniValue getcoinjoininfo(const JSONRPCRequest& request)
-{
+UniValue getcoinjoininfo(const JSONRPCRequest &request) {
     RPCHelpMan{"getcoinjoininfo",
-        "Returns an object containing an information about CoinJoin settings and state.\n",
-        {},
-        {
-            RPCResult{"for regular nodes",
-                RPCResult::Type::OBJ, "", "",
-                {
-                    {RPCResult::Type::BOOL, "enabled", "Whether mixing functionality is enabled"},
-                    {RPCResult::Type::BOOL, "multisession", "Whether CoinJoin Multisession option is enabled"},
-                    {RPCResult::Type::NUM, "max_sessions", "How many parallel mixing sessions can there be at once"},
-                    {RPCResult::Type::NUM, "max_rounds", "How many rounds to mix"},
-                    {RPCResult::Type::NUM, "max_amount", "Target CoinJoin balance in " + CURRENCY_UNIT + ""},
-                    {RPCResult::Type::NUM, "denoms_goal", "How many inputs of each denominated amount to target"},
-                    {RPCResult::Type::NUM, "denoms_hardcap", "Maximum limit of how many inputs of each denominated amount to create"},
-                    {RPCResult::Type::NUM, "queue_size", "How many queues there are currently on the network"},
-                    {RPCResult::Type::BOOL, "running", "Whether mixing is currently running"},
-                    {RPCResult::Type::ARR, "sessions", "",
-                    {
-                        {RPCResult::Type::OBJ, "", "",
-                        {
-                            {RPCResult::Type::STR_HEX, "protxhash", "The ProTxHash of the smartnode"},
-                            {RPCResult::Type::STR_HEX, "outpoint", "The outpoint of the smartnode"},
-                            {RPCResult::Type::STR, "service", "The IP address and port of the smartnode"},
-                            {RPCResult::Type::NUM, "denomination", "The denomination of the mixing session in " + CURRENCY_UNIT + ""},
-                            {RPCResult::Type::STR_HEX, "state", "Current state of the mixing session"},
-                            {RPCResult::Type::NUM, "entries_count", "The number of entries in the mixing session"},
-                        }},
-                    }},
-                    {RPCResult::Type::NUM, "keys_left", "How many new keys are left since last automatic backup"},
-                    {RPCResult::Type::STR, "warnings", "Warnings if any"},
-                }},
-            RPCResult{"for smartnodes",
-                RPCResult::Type::OBJ, "", "",
-                {
-                    {RPCResult::Type::NUM, "queue_size", "How many queues there are currently on the network"},
-                    {RPCResult::Type::NUM, "denomination", "The denomination of the mixing session in " + CURRENCY_UNIT + ""},
-                    {RPCResult::Type::STR_HEX, "state", "Current state of the mixing session"},
-                    {RPCResult::Type::NUM, "entries_count", "The number of entries in the mixing session"},
-                }},
-        },
-        RPCExamples{
-            HelpExampleCli("getcoinjoininfo", "")
-            + HelpExampleRpc("getcoinjoininfo", "")
-        },
+               "Returns an object containing an information about CoinJoin settings and state.\n",
+               {},
+               {
+                       RPCResult{"for regular nodes",
+                                 RPCResult::Type::OBJ, "", "",
+                                 {
+                                         {RPCResult::Type::BOOL, "enabled", "Whether mixing functionality is enabled"},
+                                         {RPCResult::Type::BOOL, "multisession",
+                                          "Whether CoinJoin Multisession option is enabled"},
+                                         {RPCResult::Type::NUM, "max_sessions",
+                                          "How many parallel mixing sessions can there be at once"},
+                                         {RPCResult::Type::NUM, "max_rounds", "How many rounds to mix"},
+                                         {RPCResult::Type::NUM, "max_amount",
+                                          "Target CoinJoin balance in " + CURRENCY_UNIT + ""},
+                                         {RPCResult::Type::NUM, "denoms_goal",
+                                          "How many inputs of each denominated amount to target"},
+                                         {RPCResult::Type::NUM, "denoms_hardcap",
+                                          "Maximum limit of how many inputs of each denominated amount to create"},
+                                         {RPCResult::Type::NUM, "queue_size",
+                                          "How many queues there are currently on the network"},
+                                         {RPCResult::Type::BOOL, "running", "Whether mixing is currently running"},
+                                         {RPCResult::Type::ARR, "sessions", "",
+                                          {
+                                                  {RPCResult::Type::OBJ, "", "",
+                                                   {
+                                                           {RPCResult::Type::STR_HEX, "protxhash",
+                                                            "The ProTxHash of the smartnode"},
+                                                           {RPCResult::Type::STR_HEX, "outpoint",
+                                                            "The outpoint of the smartnode"},
+                                                           {RPCResult::Type::STR, "service",
+                                                            "The IP address and port of the smartnode"},
+                                                           {RPCResult::Type::NUM, "denomination",
+                                                            "The denomination of the mixing session in " +
+                                                            CURRENCY_UNIT + ""},
+                                                           {RPCResult::Type::STR_HEX, "state",
+                                                            "Current state of the mixing session"},
+                                                           {RPCResult::Type::NUM, "entries_count",
+                                                            "The number of entries in the mixing session"},
+                                                   }},
+                                          }},
+                                         {RPCResult::Type::NUM, "keys_left",
+                                          "How many new keys are left since last automatic backup"},
+                                         {RPCResult::Type::STR, "warnings", "Warnings if any"},
+                                 }},
+                       RPCResult{"for smartnodes",
+                                 RPCResult::Type::OBJ, "", "",
+                                 {
+                                         {RPCResult::Type::NUM, "queue_size",
+                                          "How many queues there are currently on the network"},
+                                         {RPCResult::Type::NUM, "denomination",
+                                          "The denomination of the mixing session in " + CURRENCY_UNIT + ""},
+                                         {RPCResult::Type::STR_HEX, "state", "Current state of the mixing session"},
+                                         {RPCResult::Type::NUM, "entries_count",
+                                          "The number of entries in the mixing session"},
+                                 }},
+               },
+               RPCExamples{
+                       HelpExampleCli("getcoinjoininfo", "")
+                       + HelpExampleRpc("getcoinjoininfo", "")
+               },
     }.Check(request);
 
     UniValue obj(UniValue::VOBJ);
@@ -173,17 +190,16 @@ UniValue getcoinjoininfo(const JSONRPCRequest& request)
 }
 
 static const CRPCCommand commands[] =
-    { //  category              name                      actor (function)         argNames
-        //  --------------------- ------------------------  ---------------------------------
-        { "raptoreum",               "getpoolinfo",            &getpoolinfo,            {} },
-        { "raptoreum",               "getcoinjoininfo",        &getcoinjoininfo,        {} },
+        { //  category              name                      actor (function)         argNames
+                //  --------------------- ------------------------  ---------------------------------
+                {"raptoreum", "getpoolinfo", &getpoolinfo, {}},
+                {"raptoreum", "getcoinjoininfo", &getcoinjoininfo, {}},
 #ifdef ENABLE_WALLET
-        { "raptoreum",               "coinjoin",               &coinjoin,               {} },
+                { "raptoreum",               "coinjoin",               &coinjoin,               {} },
 #endif // ENABLE_WALLET
-};
+        };
 
-void RegisterCoinJoinRPCCommands(CRPCTable &t)
-{
+void RegisterCoinJoinRPCCommands(CRPCTable &t) {
     for (unsigned int vcidx = 0; vcidx < ARRAYLEN(commands); vcidx++)
         t.appendCommand(commands[vcidx].name, &commands[vcidx]);
 }

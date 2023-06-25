@@ -12,9 +12,11 @@
 class NetworkStyle;
 
 namespace interfaces {
-class Handler;
-class Node;
-class Wallet;
+    class Handler;
+
+    class Node;
+
+    class Wallet;
 };
 
 /** Class for the splashscreen with information of the running client.
@@ -23,21 +25,23 @@ class Wallet;
  * can take a long time, and in that case a progress window that cannot be
  * moved around and minimized has turned out to be frustrating to the user.
  */
-class SplashScreen : public QWidget
-{
+class SplashScreen : public QWidget {
     Q_OBJECT
 
 public:
-    explicit SplashScreen(interfaces::Node& node, Qt::WindowFlags f, const NetworkStyle *networkStyle);
+    explicit SplashScreen(interfaces::Node &node, Qt::WindowFlags f, const NetworkStyle *networkStyle);
+
     ~SplashScreen();
 
 protected:
     void paintEvent(QPaintEvent *event) override;
+
     void closeEvent(QCloseEvent *event) override;
 
-public Q_SLOTS:
-    /** Hide the splash screen window and schedule the splash screen object for deletion */
-    void finish();
+public
+    Q_SLOTS:
+            /** Hide the splash screen window and schedule the splash screen object for deletion */
+            void finish();
 
     /** Show message and progress */
     void showMessage(const QString &message, int alignment, const QColor &color);
@@ -45,11 +49,12 @@ public Q_SLOTS:
     void handleLoadWallet();
 
 protected:
-    bool eventFilter(QObject * obj, QEvent * ev) override;
+    bool eventFilter(QObject *obj, QEvent *ev) override;
 
 private:
     /** Connect core signals to splash screen */
     void subscribeToCoreSignals();
+
     /** Disconnect core signals to splash screen */
     void unsubscribeFromCoreSignals();
 
@@ -58,12 +63,12 @@ private:
     QColor curColor;
     int curAlignment;
 
-    interfaces::Node& m_node;
-    std::unique_ptr<interfaces::Handler> m_handler_init_message;
-    std::unique_ptr<interfaces::Handler> m_handler_show_progress;
-    std::unique_ptr<interfaces::Handler> m_handler_load_wallet;
-    std::list<std::unique_ptr<interfaces::Wallet>> m_connected_wallets;
-    std::list<std::unique_ptr<interfaces::Handler>> m_connected_wallet_handlers;
+    interfaces::Node &m_node;
+    std::unique_ptr <interfaces::Handler> m_handler_init_message;
+    std::unique_ptr <interfaces::Handler> m_handler_show_progress;
+    std::unique_ptr <interfaces::Handler> m_handler_load_wallet;
+    std::list <std::unique_ptr<interfaces::Wallet>> m_connected_wallets;
+    std::list <std::unique_ptr<interfaces::Handler>> m_connected_wallet_handlers;
 };
 
 #endif // BITCOIN_QT_SPLASHSCREEN_H

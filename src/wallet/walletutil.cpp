@@ -6,8 +6,7 @@
 
 #include <util/system.h>
 
-fs::path GetWalletDir()
-{
+fs::path GetWalletDir() {
     fs::path path;
 
     if (gArgs.IsArgSet("-walletdir")) {
@@ -28,8 +27,7 @@ fs::path GetWalletDir()
     return path;
 }
 
-static bool IsBerkeleyBtree(const fs::path& path)
-{
+static bool IsBerkeleyBtree(const fs::path &path) {
     // A Berkeley DB Btree file has at least 4K.
     // This check also prevents opening locked files.
     boost::system::error_code ec;
@@ -40,7 +38,7 @@ static bool IsBerkeleyBtree(const fs::path& path)
 
     file.seekg(12, std::ios::beg); // Magic bytes start at offset 12
     uint32_t data = 0;
-    file.read((char*) &data, sizeof(data)); // Read 4 bytes of file to compare against magic
+    file.read((char *) &data, sizeof(data)); // Read 4 bytes of file to compare against magic
 
     // Berkeley DB Btree magic bytes from:
     // https://github.com/file/file/blob/5824af38469ec1ca9ac3ffd251e7afe9dc11e227/magic/Magdir/database#L74-L75
@@ -49,11 +47,10 @@ static bool IsBerkeleyBtree(const fs::path& path)
     return data == 0x00053162 || data == 0x62310500;
 }
 
-std::vector<fs::path> ListWalletDir()
-{
+std::vector <fs::path> ListWalletDir() {
     const fs::path wallet_dir = GetWalletDir();
     const size_t offset = wallet_dir.string().size() + 1;
-    std::vector<fs::path> paths;
+    std::vector <fs::path> paths;
 
     for (auto it = fs::recursive_directory_iterator(wallet_dir); it != fs::recursive_directory_iterator(); ++it) {
         // Get wallet path relative to walletdir by removing walletdir from the wallet path.
@@ -79,13 +76,10 @@ std::vector<fs::path> ListWalletDir()
     return paths;
 }
 
-WalletLocation::WalletLocation(const std::string& name)
-    : m_name(name)
-    , m_path(fs::absolute(name, GetWalletDir()))
-{
+WalletLocation::WalletLocation(const std::string &name)
+        : m_name(name), m_path(fs::absolute(name, GetWalletDir())) {
 }
 
-bool WalletLocation::Exists() const
-{
+bool WalletLocation::Exists() const {
     return fs::symlink_status(m_path).type() != fs::file_not_found;
 }

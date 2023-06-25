@@ -29,10 +29,10 @@ extern "C" {
 
 /* Extends "crc" with the CRC32C of "count" bytes in the buffer pointed by
    "data" */
-uint32_t crc32c_extend(uint32_t crc, const uint8_t* data, size_t count);
+uint32_t crc32c_extend(uint32_t crc, const uint8_t *data, size_t count);
 
 /* Computes the CRC32C of "count" bytes in the buffer pointed by "data". */
-uint32_t crc32c_value(const uint8_t* data, size_t count);
+uint32_t crc32c_value(const uint8_t *data, size_t count);
 
 #ifdef __cplusplus
 }  /* end extern "C" */

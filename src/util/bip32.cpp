@@ -9,8 +9,7 @@
 #include <util/strencodings.h>
 
 
-bool ParseHDKeypath(const std::string& keypath_str, std::vector<uint32_t>& keypath)
-{
+bool ParseHDKeypath(const std::string &keypath_str, std::vector <uint32_t> &keypath) {
     std::stringstream ss(keypath_str);
     std::string item;
     bool first = true;
@@ -35,7 +34,7 @@ bool ParseHDKeypath(const std::string& keypath_str, std::vector<uint32_t>& keypa
         }
 
         // Ensure this is only numbers
-        if (item.find_first_not_of( "0123456789" ) != std::string::npos) {
+        if (item.find_first_not_of("0123456789") != std::string::npos) {
             return false;
         }
         uint32_t number;
@@ -50,17 +49,15 @@ bool ParseHDKeypath(const std::string& keypath_str, std::vector<uint32_t>& keypa
     return true;
 }
 
-std::string FormatHDKeypath(const std::vector<uint32_t>& path)
-{
+std::string FormatHDKeypath(const std::vector <uint32_t> &path) {
     std::string ret;
-    for (auto i : path) {
+    for (auto i: path) {
         ret += strprintf("/%i", (i << 1) >> 1);
         if (i >> 31) ret += '\'';
     }
     return ret;
 }
 
-std::string WriteHDKeypath(const std::vector<uint32_t>& keypath)
-{
+std::string WriteHDKeypath(const std::vector <uint32_t> &keypath) {
     return "m" + FormatHDKeypath(keypath);
 }

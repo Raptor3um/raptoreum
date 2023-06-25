@@ -8,9 +8,13 @@
 #include <map>
 
 class CBasicKeyStore;
+
 class UniValue;
+
 struct CMutableTransaction;
+
 class Coin;
+
 class COutPoint;
 
 /**
@@ -24,9 +28,11 @@ class COutPoint;
  * @param  hashType      The signature hash type
  * @returns JSON object with details of signed transaction
  */
-UniValue SignTransaction(CMutableTransaction& mtx, const UniValue& prevTxs, CBasicKeyStore* keystore, std::map<COutPoint, Coin>& coins, bool tempKeystore, const UniValue& hashType);
+UniValue SignTransaction(CMutableTransaction &mtx, const UniValue &prevTxs, CBasicKeyStore *keystore,
+                         std::map <COutPoint, Coin> &coins, bool tempKeystore, const UniValue &hashType);
 
 /** Create a transaction from univalue parameters */
-CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniValue& outputs_in, const UniValue& locktime);
+CMutableTransaction
+ConstructTransaction(const UniValue &inputs_in, const UniValue &outputs_in, const UniValue &locktime);
 
 #endif // BITCOIN_RPC_RAWTRANSACTION_UTIL_H

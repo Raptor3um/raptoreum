@@ -11,21 +11,26 @@ class WalletInitInterface {
 public:
     /** Is the wallet component enabled */
     virtual bool HasWalletSupport() const = 0;
+
     /** Get wallet help string */
     virtual void AddWalletOptions() const = 0;
+
     /** Check wallet parameter interaction */
     virtual bool ParameterInteraction() const = 0;
+
     /** Add wallets that should be opened to list of chain clients. */
-    virtual void Construct(NodeContext& node) const = 0;
+    virtual void Construct(NodeContext &node) const = 0;
 
     // Raptoreum Specific WalletInitInterface
     virtual void AutoLockSmartnodeCollaterals() const = 0;
+
     virtual void InitCoinJoinSettings() const = 0;
+
     virtual bool InitAutoBackup() const = 0;
 
     virtual ~WalletInitInterface() {}
 };
 
-extern const WalletInitInterface& g_wallet_init_interface;
+extern const WalletInitInterface &g_wallet_init_interface;
 
 #endif // BITCOIN_WALLETINITINTERFACE_H

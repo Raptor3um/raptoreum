@@ -5,8 +5,7 @@
 #include <util/error.h>
 #include <util/system.h>
 
-std::string TransactionErrorString(const TransactionError err)
-{
+std::string TransactionErrorString(const TransactionError err) {
     switch (err) {
         case TransactionError::OK:
             return "No error";
@@ -22,17 +21,15 @@ std::string TransactionErrorString(const TransactionError err)
             return "AcceptToMemoryPool failed";
         case TransactionError::SIGHASH_MISMATCH:
             return "Specified sighash value does not match existing value";
-        // no default case, so the compiler can warn about missing cases
+            // no default case, so the compiler can warn about missing cases
     }
     assert(false);
 }
 
-std::string AmountHighWarn(const std::string& optname)
-{
+std::string AmountHighWarn(const std::string &optname) {
     return strprintf(_("%s is set very high!"), optname);
 }
 
-std::string AmountErrMsg(const char* const optname, const std::string& strValue)
-{
+std::string AmountErrMsg(const char *const optname, const std::string &strValue) {
     return strprintf(_("Invalid amount for -%s=<amount>: '%s'"), optname, strValue);
 }

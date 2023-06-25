@@ -37,25 +37,23 @@
 
 namespace {
 //! Call getblockchaininfo RPC and check first field of JSON output.
-void TestRpcCommand(RPCConsole* console)
-{
-    QEventLoop loop;
-    QTextEdit* messagesWidget = console->findChild<QTextEdit*>("messagesWidget");
-    QObject::connect(messagesWidget, &QTextEdit::textChanged, &loop, &QEventLoop::quit);
-    QLineEdit* lineEdit = console->findChild<QLineEdit*>("lineEdit");
-    QTest::keyClicks(lineEdit, "getblockchaininfo");
-    QTest::keyClick(lineEdit, Qt::Key_Return);
-    loop.exec();
-    QString output = messagesWidget->toPlainText();
-    UniValue value;
-    value.read(output.right(output.size() - output.indexOf("{")).toStdString());
-    QCOMPARE(value["chain"].get_str(), std::string("regtest"));
-}
+    void TestRpcCommand(RPCConsole *console) {
+        QEventLoop loop;
+        QTextEdit *messagesWidget = console->findChild<QTextEdit *>("messagesWidget");
+        QObject::connect(messagesWidget, &QTextEdit::textChanged, &loop, &QEventLoop::quit);
+        QLineEdit *lineEdit = console->findChild<QLineEdit *>("lineEdit");
+        QTest::keyClicks(lineEdit, "getblockchaininfo");
+        QTest::keyClick(lineEdit, Qt::Key_Return);
+        loop.exec();
+        QString output = messagesWidget->toPlainText();
+        UniValue value;
+        value.read(output.right(output.size() - output.indexOf("{")).toStdString());
+        QCOMPARE(value["chain"].get_str(), std::string("regtest"));
+    }
 } // namespace
 
 //! Entry point for BitcoinApplication tests.
-void AppTests::appTests()
-{
+void AppTests::appTests() {
 #ifdef Q_OS_MAC
     if (QApplication::platformName() == "minimal") {
         // Disable for mac on "minimal" platform to avoid crashes inside the Qt
@@ -78,7 +76,7 @@ void AppTests::appTests()
     GUIUtil::loadFonts();
     m_app.createOptionsModel(true /* reset settings */);
     QScopedPointer<const NetworkStyle> style(
-        NetworkStyle::instantiate(QString::fromStdString(Params().NetworkIDString())));
+            NetworkStyle::instantiate(QString::fromStdString(Params().NetworkIDString())));
     m_app.createWindow(style.data());
     connect(&m_app, &BitcoinApplication::windowShown, this, &AppTests::guiTests);
     expectCallback("guiTests");
@@ -97,26 +95,23 @@ void AppTests::appTests()
 }
 
 //! Entry point for BitcoinGUI tests.
-void AppTests::guiTests(BitcoinGUI* window)
-{
+void AppTests::guiTests(BitcoinGUI *window) {
     HandleCallback callback{"guiTests", *this};
     connect(window, &BitcoinGUI::consoleShown, this, &AppTests::consoleTests);
     expectCallback("consoleTests");
-    QAction* action = window->findChild<QAction*>("openRPCConsoleAction");
+    QAction *action = window->findChild<QAction *>("openRPCConsoleAction");
     action->activate(QAction::Trigger);
 }
 
 //! Entry point for RPCConsole tests.
-void AppTests::consoleTests(RPCConsole* console)
-{
+void AppTests::consoleTests(RPCConsole *console) {
     HandleCallback callback{"consoleTests", *this};
     TestRpcCommand(console);
 }
 
 //! Destructor to shut down after the last expected callback completes.
-AppTests::HandleCallback::~HandleCallback()
-{
-    auto& callbacks = m_app_tests.m_callbacks;
+AppTests::HandleCallback::~HandleCallback() {
+    auto &callbacks = m_app_tests.m_callbacks;
     auto it = callbacks.find(m_callback);
     assert(it != callbacks.end());
     callbacks.erase(it);

@@ -15,39 +15,35 @@ constexpr char DB_BEST_BLOCK = 'B';
 constexpr char DB_TXINDEX = 't';
 constexpr char DB_TXINDEX_BLOCK = 'T';
 
-std::unique_ptr<TxIndex> g_txindex;
+std::unique_ptr <TxIndex> g_txindex;
 
 /** Access to the txindex database (indexes/txindex/) */
-class TxIndex::DB : public BaseIndex::DB
-{
+class TxIndex::DB : public BaseIndex::DB {
 public:
     explicit DB(size_t n_cache_size, bool f_memory = false, bool f_wipe = false);
 
     /// Read the disk location of the transaction data with the given hash. Returns false if the
     /// transaction hash is not indexed.
-    bool ReadTxPos(const uint256& txid, CDiskTxPos& pos) const;
+    bool ReadTxPos(const uint256 &txid, CDiskTxPos &pos) const;
 
     /// Write a batch of transaction positions to the DB.
-    bool WriteTxs(const std::vector<std::pair<uint256, CDiskTxPos>>& v_pos);
+    bool WriteTxs(const std::vector <std::pair<uint256, CDiskTxPos>> &v_pos);
 
     /// Migrate txindex data from the block tree DB, where it may be for older nodes that have not
     /// been upgraded yet to the new database.
-    bool MigrateData(CBlockTreeDB& block_tree_db, const CBlockLocator& best_locator);
+    bool MigrateData(CBlockTreeDB &block_tree_db, const CBlockLocator &best_locator);
 };
 
 TxIndex::DB::DB(size_t n_cache_size, bool f_memory, bool f_wipe) :
-    BaseIndex::DB(GetDataDir() / "indexes" / "txindex", n_cache_size, f_memory, f_wipe)
-{}
+        BaseIndex::DB(GetDataDir() / "indexes" / "txindex", n_cache_size, f_memory, f_wipe) {}
 
-bool TxIndex::DB::ReadTxPos(const uint256 &txid, CDiskTxPos& pos) const
-{
+bool TxIndex::DB::ReadTxPos(const uint256 &txid, CDiskTxPos &pos) const {
     return Read(std::make_pair(DB_TXINDEX, txid), pos);
 }
 
-bool TxIndex::DB::WriteTxs(const std::vector<std::pair<uint256, CDiskTxPos>>& v_pos)
-{
+bool TxIndex::DB::WriteTxs(const std::vector <std::pair<uint256, CDiskTxPos>> &v_pos) {
     CDBBatch batch(*this);
-    for (const auto& tuple : v_pos) {
+    for (const auto &tuple: v_pos) {
         batch.Write(std::make_pair(DB_TXINDEX, tuple.first), tuple.second);
     }
     return WriteBatch(batch);
@@ -57,11 +53,10 @@ bool TxIndex::DB::WriteTxs(const std::vector<std::pair<uint256, CDiskTxPos>>& v_
  * Safely persist a transfer of data from the old txindex database to the new one, and compact the
  * range of keys updated. This is used internally by MigrateData.
  */
-static void WriteTxIndexMigrationBatches(CDBWrapper& newdb, CDBWrapper& olddb,
-                                         CDBBatch& batch_newdb, CDBBatch& batch_olddb,
-                                         const std::pair<unsigned char, uint256>& begin_key,
-                                         const std::pair<unsigned char, uint256>& end_key)
-{
+static void WriteTxIndexMigrationBatches(CDBWrapper &newdb, CDBWrapper &olddb,
+                                         CDBBatch &batch_newdb, CDBBatch &batch_olddb,
+                                         const std::pair<unsigned char, uint256> &begin_key,
+                                         const std::pair<unsigned char, uint256> &end_key) {
     // Sync new DB changes to disk before deleting from old DB.
     newdb.WriteBatch(batch_newdb, /*fSync=*/ true);
     olddb.WriteBatch(batch_olddb);
@@ -71,8 +66,7 @@ static void WriteTxIndexMigrationBatches(CDBWrapper& newdb, CDBWrapper& olddb,
     batch_olddb.Clear();
 }
 
-bool TxIndex::DB::MigrateData(CBlockTreeDB& block_tree_db, const CBlockLocator& best_locator)
-{
+bool TxIndex::DB::MigrateData(CBlockTreeDB &block_tree_db, const CBlockLocator &best_locator) {
     // The prior implementation of txindex was always in sync with block index
     // and presence was indicated with a boolean DB flag. If the flag is set,
     // this means the txindex from a previous version is valid and in sync with
@@ -117,7 +111,7 @@ bool TxIndex::DB::MigrateData(CBlockTreeDB& block_tree_db, const CBlockLocator& 
     std::pair<unsigned char, uint256> prev_key = begin_key;
 
     bool interrupted = false;
-    std::unique_ptr<CDBIterator> cursor(block_tree_db.NewIterator());
+    std::unique_ptr <CDBIterator> cursor(block_tree_db.NewIterator());
     for (cursor->Seek(begin_key); cursor->Valid(); cursor->Next()) {
         boost::this_thread::interruption_point();
         if (ShutdownRequested()) {
@@ -136,16 +130,16 @@ bool TxIndex::DB::MigrateData(CBlockTreeDB& block_tree_db, const CBlockLocator& 
         if (++count % 256 == 0) {
             // Since txids are uniformly random and traversed in increasing order, the high 16 bits
             // of the hash can be used to estimate the current progress.
-            const uint256& txid = key.second;
+            const uint256 &txid = key.second;
             uint32_t high_nibble =
-                (static_cast<uint32_t>(*(txid.begin() + 0)) << 8) +
-                (static_cast<uint32_t>(*(txid.begin() + 1)) << 0);
-            int percentage_done = (int)(high_nibble * 100.0 / 65536.0 + 0.5);
+                    (static_cast<uint32_t>(*(txid.begin() + 0)) << 8) +
+                    (static_cast<uint32_t>(*(txid.begin() + 1)) << 0);
+            int percentage_done = (int) (high_nibble * 100.0 / 65536.0 + 0.5);
 
             uiInterface.ShowProgress(_("Upgrading txindex database"), percentage_done, true);
-            if (report_done < percentage_done/10) {
+            if (report_done < percentage_done / 10) {
                 LogPrintf("Upgrading txindex database... [%d%%]\n", percentage_done);
-                report_done = percentage_done/10;
+                report_done = percentage_done / 10;
             }
         }
 
@@ -192,13 +186,11 @@ bool TxIndex::DB::MigrateData(CBlockTreeDB& block_tree_db, const CBlockLocator& 
 }
 
 TxIndex::TxIndex(size_t n_cache_size, bool f_memory, bool f_wipe)
-    : m_db(MakeUnique<TxIndex::DB>(n_cache_size, f_memory, f_wipe))
-{}
+        : m_db(MakeUnique<TxIndex::DB>(n_cache_size, f_memory, f_wipe)) {}
 
 TxIndex::~TxIndex() {}
 
-bool TxIndex::Init()
-{
+bool TxIndex::Init() {
     LOCK(cs_main);
 
     // Attempt to migrate txindex from the old database to the new one. Even if
@@ -211,25 +203,23 @@ bool TxIndex::Init()
     return BaseIndex::Init();
 }
 
-bool TxIndex::WriteBlock(const CBlock& block, const CBlockIndex* pindex)
-{
+bool TxIndex::WriteBlock(const CBlock &block, const CBlockIndex *pindex) {
     // Exclude genesis block transaction because outputs are not spendable.
     if (pindex->nHeight == 0) return true;
 
     CDiskTxPos pos(pindex->GetBlockPos(), GetSizeOfCompactSize(block.vtx.size()));
-    std::vector<std::pair<uint256, CDiskTxPos>> vPos;
+    std::vector <std::pair<uint256, CDiskTxPos>> vPos;
     vPos.reserve(block.vtx.size());
-    for (const auto& tx : block.vtx) {
+    for (const auto &tx: block.vtx) {
         vPos.emplace_back(tx->GetHash(), pos);
         pos.nTxOffset += ::GetSerializeSize(*tx, SER_DISK, CLIENT_VERSION);
     }
     return m_db->WriteTxs(vPos);
 }
 
-BaseIndex::DB& TxIndex::GetDB() const { return *m_db; }
+BaseIndex::DB &TxIndex::GetDB() const { return *m_db; }
 
-bool TxIndex::FindTx(const uint256& tx_hash, uint256& block_hash, CTransactionRef& tx) const
-{
+bool TxIndex::FindTx(const uint256 &tx_hash, uint256 &block_hash, CTransactionRef &tx) const {
     CDiskTxPos postx;
     if (!m_db->ReadTxPos(tx_hash, postx)) {
         return false;
@@ -246,7 +236,7 @@ bool TxIndex::FindTx(const uint256& tx_hash, uint256& block_hash, CTransactionRe
             return error("%s: fseek(...) failed", __func__);
         }
         file >> tx;
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         return error("%s: Deserialize or I/O error - %s", __func__, e.what());
     }
     if (tx->GetHash() != tx_hash) {
@@ -256,8 +246,7 @@ bool TxIndex::FindTx(const uint256& tx_hash, uint256& block_hash, CTransactionRe
     return true;
 }
 
-bool TxIndex::HasTx(const uint256& tx_hash) const
-{
+bool TxIndex::HasTx(const uint256 &tx_hash) const {
     CDiskTxPos postx;
     return m_db->ReadTxPos(tx_hash, postx);
 }

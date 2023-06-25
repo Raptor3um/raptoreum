@@ -19,119 +19,161 @@
 #include <unordered_set>
 
 class CConnman;
+
 class CBlockIndex;
+
 class CScheduler;
+
 class CTxMemPool;
 
-namespace llmq
-{
+namespace llmq {
 
-extern const std::string CLSIG_REQUESTID_PREFIX;
+    extern const std::string CLSIG_REQUESTID_PREFIX;
 
-class CChainLockSig
-{
-private:
-    int32_t nHeight{-1};
-    uint256 blockHash;
-    CBLSSignature sig;
+    class CChainLockSig {
+    private:
+        int32_t nHeight{-1};
+        uint256 blockHash;
+        CBLSSignature sig;
 
-public:
-    CChainLockSig(int32_t nHeight, const uint256& blockHash, const CBLSSignature& sig)
-        : nHeight(nHeight), blockHash(blockHash), sig(sig)
-    {}
-    CChainLockSig() = default;
+    public:
+        CChainLockSig(int32_t nHeight, const uint256 &blockHash, const CBLSSignature &sig)
+                : nHeight(nHeight), blockHash(blockHash), sig(sig) {}
 
-    [[nodiscard]] int32_t getHeight() const;
-    [[nodiscard]] const uint256& getBlockHash() const;
-    [[nodiscard]] const CBLSSignature& getSig() const;
-    [[nodiscard]] bool IsNull() const;
-    [[nodiscard]] std::string ToString() const;
+        CChainLockSig() = default;
 
-    SERIALIZE_METHODS(CChainLockSig, obj)
-    {
-        READWRITE(obj.nHeight, obj.blockHash, obj.sig);
-    }
-};
+        [[nodiscard]] int32_t getHeight() const;
 
-class CChainLocksHandler : public CRecoveredSigsListener
-{
-    static const int64_t CLEANUP_INTERVAL = 1000 * 30;
-    static const int64_t CLEANUP_SEEN_TIMEOUT = 24 * 60 * 60 * 1000;
+        [[nodiscard]] const uint256 &getBlockHash() const;
 
-    // how long to wait for islocks until we consider a block with non-islocked TXs to be safe to sign
-    static const int64_t WAIT_FOR_ISLOCK_TIMEOUT = 10 * 60;
+        [[nodiscard]] const CBLSSignature &getSig() const;
 
-private:
-    CConnman& connman;
-    CTxMemPool& mempool;
-    std::unique_ptr<CScheduler> scheduler;
-    std::unique_ptr<std::thread> scheduler_thread;
-    mutable RecursiveMutex cs;
-    bool tryLockChainTipScheduled GUARDED_BY(cs) {false};
-    bool isEnabled GUARDED_BY(cs) {false};
-    bool isEnforced GUARDED_BY(cs) {false};
+        [[nodiscard]] bool IsNull() const;
 
-    uint256 bestChainLockHash GUARDED_BY(cs);
-    CChainLockSig bestChainLock GUARDED_BY(cs);
+        [[nodiscard]] std::string ToString() const;
 
-    CChainLockSig bestChainLockWithKnownBlock GUARDED_BY(cs);
-    const CBlockIndex* bestChainLockBlockIndex GUARDED_BY(cs) {nullptr};
-    const CBlockIndex* lastNotifyChainLockBlockIndex GUARDED_BY(cs) {nullptr};
+        SERIALIZE_METHODS(CChainLockSig, obj
+        )
+        {
+            READWRITE(obj.nHeight, obj.blockHash, obj.sig);
+        }
+    };
 
-    int32_t lastSignedHeight GUARDED_BY(cs) {-1};
-    uint256 lastSignedRequestId GUARDED_BY(cs);
-    uint256 lastSignedMsgHash GUARDED_BY(cs);
+    class CChainLocksHandler : public CRecoveredSigsListener {
+        static const int64_t CLEANUP_INTERVAL = 1000 * 30;
+        static const int64_t CLEANUP_SEEN_TIMEOUT = 24 * 60 * 60 * 1000;
 
-    // We keep track of txids from recently received blocks so that we can check if all TXs got islocked
-    using BlockTxs = std::unordered_map<uint256, std::shared_ptr<std::unordered_set<uint256, StaticSaltedHasher>>>;
-    BlockTxs blockTxs GUARDED_BY(cs);
-    std::unordered_map<uint256, int64_t> txFirstSeenTime GUARDED_BY(cs);
+        // how long to wait for islocks until we consider a block with non-islocked TXs to be safe to sign
+        static const int64_t WAIT_FOR_ISLOCK_TIMEOUT = 10 * 60;
 
-    std::map<uint256, int64_t> seenChainLocks GUARDED_BY(cs);
+    private:
+        CConnman &connman;
+        CTxMemPool &mempool;
+        std::unique_ptr <CScheduler> scheduler;
+        std::unique_ptr <std::thread> scheduler_thread;
+        mutable RecursiveMutex cs;
+        bool tryLockChainTipScheduled
+        GUARDED_BY(cs) {false};
+        bool isEnabled
+        GUARDED_BY(cs) {false};
+        bool isEnforced
+        GUARDED_BY(cs) {false};
 
-    int64_t lastCleanupTime GUARDED_BY(cs) {0};
+        uint256 bestChainLockHash
+        GUARDED_BY(cs);
+        CChainLockSig bestChainLock
+        GUARDED_BY(cs);
 
-public:
-    explicit CChainLocksHandler(CTxMemPool& _mempool, CConnman& _connman);
-    ~CChainLocksHandler();
+        CChainLockSig bestChainLockWithKnownBlock
+        GUARDED_BY(cs);
+        const CBlockIndex *bestChainLockBlockIndex
+        GUARDED_BY(cs) {nullptr};
+        const CBlockIndex *lastNotifyChainLockBlockIndex
+        GUARDED_BY(cs) {nullptr};
 
-    void Start();
-    void Stop();
+        int32_t lastSignedHeight
+        GUARDED_BY(cs) {-1};
+        uint256 lastSignedRequestId
+        GUARDED_BY(cs);
+        uint256 lastSignedMsgHash
+        GUARDED_BY(cs);
 
-    bool AlreadyHave(const CInv& inv) const;
-    bool GetChainLockByHash(const uint256& hash, CChainLockSig& ret) const;
-    CChainLockSig GetBestChainLock() const;
+        // We keep track of txids from recently received blocks so that we can check if all TXs got islocked
+        using BlockTxs = std::unordered_map <uint256, std::shared_ptr<
+                std::unordered_set < uint256, StaticSaltedHasher>>>;
+        BlockTxs blockTxs
+        GUARDED_BY(cs);
+        std::unordered_map <uint256, int64_t> txFirstSeenTime
+        GUARDED_BY(cs);
 
-    void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv);
-    void ProcessNewChainLock(NodeId from, const CChainLockSig& clsig, const uint256& hash);
-    void AcceptedBlockHeader(const CBlockIndex* pindexNew);
-    void UpdatedBlockTip();
-    void TransactionAddedToMempool(const CTransactionRef& tx, int64_t nAcceptTime);
-    void BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex, const std::vector<CTransactionRef>& vtxConflicted);
-    void BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexDisconnected);
-    void CheckActiveState();
-    void TrySignChainTip();
-    void EnforceBestChainLock();
-    void HandleNewRecoveredSig(const CRecoveredSig& recoveredSig) override;
+        std::map <uint256, int64_t> seenChainLocks
+        GUARDED_BY(cs);
 
-    bool HasChainLock(int nHeight, const uint256& blockHash) const;
-    bool HasConflictingChainLock(int nHeight, const uint256& blockHash) const;
+        int64_t lastCleanupTime
+        GUARDED_BY(cs) {0};
 
-    bool IsTxSafeForMining(const uint256& txid) const;
+    public:
+        explicit CChainLocksHandler(CTxMemPool &_mempool, CConnman &_connman);
 
-private:
-    // these require locks to be held already
-    bool InternalHasChainLock(int nHeight, const uint256& blockHash) const EXCLUSIVE_LOCKS_REQUIRED(cs);
-    bool InternalHasConflictingChainLock(int nHeight, const uint256& blockHash) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+        ~CChainLocksHandler();
 
-    BlockTxs::mapped_type GetBlockTxs(const uint256& blockHash);
+        void Start();
 
-    void Cleanup();
-};
+        void Stop();
 
-extern CChainLocksHandler* chainLocksHandler;
+        bool AlreadyHave(const CInv &inv) const;
 
-bool AreChainLocksEnabled();
+        bool GetChainLockByHash(const uint256 &hash, CChainLockSig &ret) const;
+
+        CChainLockSig GetBestChainLock() const;
+
+        void ProcessMessage(CNode *pfrom, const std::string &strCommand, CDataStream &vRecv);
+
+        void ProcessNewChainLock(NodeId from, const CChainLockSig &clsig, const uint256 &hash);
+
+        void AcceptedBlockHeader(const CBlockIndex *pindexNew);
+
+        void UpdatedBlockTip();
+
+        void TransactionAddedToMempool(const CTransactionRef &tx, int64_t nAcceptTime);
+
+        void BlockConnected(const std::shared_ptr<const CBlock> &pblock, const CBlockIndex *pindex,
+                            const std::vector <CTransactionRef> &vtxConflicted);
+
+        void BlockDisconnected(const std::shared_ptr<const CBlock> &pblock, const CBlockIndex *pindexDisconnected);
+
+        void CheckActiveState();
+
+        void TrySignChainTip();
+
+        void EnforceBestChainLock();
+
+        void HandleNewRecoveredSig(const CRecoveredSig &recoveredSig) override;
+
+        bool HasChainLock(int nHeight, const uint256 &blockHash) const;
+
+        bool HasConflictingChainLock(int nHeight, const uint256 &blockHash) const;
+
+        bool IsTxSafeForMining(const uint256 &txid) const;
+
+    private:
+        // these require locks to be held already
+        bool InternalHasChainLock(int nHeight, const uint256 &blockHash) const
+
+        EXCLUSIVE_LOCKS_REQUIRED(cs);
+
+        bool InternalHasConflictingChainLock(int nHeight, const uint256 &blockHash) const
+
+        EXCLUSIVE_LOCKS_REQUIRED(cs);
+
+        BlockTxs::mapped_type GetBlockTxs(const uint256 &blockHash);
+
+        void Cleanup();
+    };
+
+    extern CChainLocksHandler *chainLocksHandler;
+
+    bool AreChainLocksEnabled();
 
 /*
 template<typename Callable> void TraceCL(const std::string name, Callable func)

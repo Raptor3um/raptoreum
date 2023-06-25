@@ -105,8 +105,7 @@ static void FundSpecialTx(CWallet* pwallet, CMutableTransaction& tx, const Speci
 #endif//ENABLE_WALLET
 
 template<typename SpecialTxPayload>
-static void UpdateSpecialTxInputsHash(const CMutableTransaction& tx, SpecialTxPayload& payload)
-{
+static void UpdateSpecialTxInputsHash(const CMutableTransaction &tx, SpecialTxPayload &payload) {
     payload.inputsHash = CalcTxInputsHash(CTransaction(tx));
 }
 

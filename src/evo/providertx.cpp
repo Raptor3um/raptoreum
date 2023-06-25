@@ -18,9 +18,8 @@
 #include <assets/assets.h>
 #include <assets/assetstype.h>
 
-template <typename ProTx>
-static bool CheckService(const ProTx& proTx, CValidationState& state)
-{
+template<typename ProTx>
+static bool CheckService(const ProTx &proTx, CValidationState &state) {
     if (!proTx.addr.IsValid()) {
         return state.DoS(10, false, REJECT_INVALID, "bad-protx-ipaddr");
     }
@@ -44,9 +43,8 @@ static bool CheckService(const ProTx& proTx, CValidationState& state)
     return true;
 }
 
-template <typename ProTx>
-static bool CheckHashSig(const ProTx& proTx, const CKeyID& keyID, CValidationState& state)
-{
+template<typename ProTx>
+static bool CheckHashSig(const ProTx &proTx, const CKeyID &keyID, CValidationState &state) {
     std::string strError;
     if (!CHashSigner::VerifyHash(::SerializeHash(proTx), keyID, proTx.vchSig, strError)) {
         return state.DoS(100, false, REJECT_INVALID, "bad-protx-sig", false, strError);
@@ -54,9 +52,8 @@ static bool CheckHashSig(const ProTx& proTx, const CKeyID& keyID, CValidationSta
     return true;
 }
 
-template <typename ProTx>
-static bool CheckStringSig(const ProTx& proTx, const CKeyID& keyID, CValidationState& state)
-{
+template<typename ProTx>
+static bool CheckStringSig(const ProTx &proTx, const CKeyID &keyID, CValidationState &state) {
     std::string strError;
     if (!CMessageSigner::VerifyMessage(keyID, proTx.vchSig, proTx.MakeSignString(), strError)) {
         return state.DoS(100, false, REJECT_INVALID, "bad-protx-sig", false, strError);
@@ -64,18 +61,16 @@ static bool CheckStringSig(const ProTx& proTx, const CKeyID& keyID, CValidationS
     return true;
 }
 
-template <typename ProTx>
-static bool CheckHashSig(const ProTx& proTx, const CBLSPublicKey& pubKey, CValidationState& state)
-{
+template<typename ProTx>
+static bool CheckHashSig(const ProTx &proTx, const CBLSPublicKey &pubKey, CValidationState &state) {
     if (!proTx.sig.VerifyInsecure(pubKey, ::SerializeHash(proTx))) {
         return state.DoS(100, false, REJECT_INVALID, "bad-protx-sig", false);
     }
     return true;
 }
 
-template <typename ProTx>
-static bool CheckInputsHash(const CTransaction& tx, const ProTx& proTx, CValidationState& state)
-{
+template<typename ProTx>
+static bool CheckInputsHash(const CTransaction &tx, const ProTx &proTx, CValidationState &state) {
     uint256 inputsHash = CalcTxInputsHash(tx);
     if (inputsHash != proTx.inputsHash) {
         return state.DoS(100, false, REJECT_INVALID, "bad-protx-inputs-hash");
@@ -84,10 +79,9 @@ static bool CheckInputsHash(const CTransaction& tx, const ProTx& proTx, CValidat
     return true;
 }
 
-bool CheckFutureTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state)
-{
+bool CheckFutureTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CValidationState &state) {
 
-    if(!Params().IsFutureActive(::ChainActive().Tip())) {
+    if (!Params().IsFutureActive(::ChainActive().Tip())) {
         return state.DoS(100, false, REJECT_INVALID, "future-not-enabled");
     }
     if (tx.nType != TRANSACTION_FUTURE) {
@@ -109,8 +103,7 @@ bool CheckFutureTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
     return true;
 }
 
-inline bool checkNewUniqueAsset(CNewAssetTx& assetTx, CValidationState& state)
-{
+inline bool checkNewUniqueAsset(CNewAssetTx &assetTx, CValidationState &state) {
     if (!assetTx.isUnique)
         return true;
 
@@ -129,8 +122,8 @@ inline bool checkNewUniqueAsset(CNewAssetTx& assetTx, CValidationState& state)
     return true;
 }
 
-bool CheckNewAssetTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, CAssetsCache* assetsCache)
-{
+bool CheckNewAssetTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CValidationState &state,
+                     CAssetsCache *assetsCache) {
     if (!Params().IsAssetsActive(::ChainActive().Tip())) {
         return state.DoS(100, false, REJECT_INVALID, "assets-not-enabled");
     }
@@ -197,10 +190,10 @@ bool CheckNewAssetTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVal
     return true;
 }
 
-inline bool checkAssetFeesPayment(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& view, CAssetMetaData asset)
-{
-    for (auto in : tx.vin) {
-        const Coin& coin = view.AccessCoin(in.prevout);
+inline bool checkAssetFeesPayment(const CTransaction &tx, CValidationState &state, const CCoinsViewCache &view,
+                                  CAssetMetaData asset) {
+    for (auto in: tx.vin) {
+        const Coin &coin = view.AccessCoin(in.prevout);
         assert(!coin.IsSpent());
         CTxDestination dest;
         ExtractDestination(coin.out.scriptPubKey, dest);
@@ -212,8 +205,8 @@ inline bool checkAssetFeesPayment(const CTransaction& tx, CValidationState& stat
     return true;
 }
 
-bool CheckUpdateAssetTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, const CCoinsViewCache& view, CAssetsCache* assetsCache)
-{
+bool CheckUpdateAssetTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CValidationState &state,
+                        const CCoinsViewCache &view, CAssetsCache *assetsCache) {
     if (!Params().IsAssetsActive(::ChainActive().Tip())) {
         return state.DoS(100, false, REJECT_INVALID, "assets-not-enabled");
     }
@@ -264,12 +257,11 @@ bool CheckUpdateAssetTx(const CTransaction& tx, const CBlockIndex* pindexPrev, C
     return true;
 }
 
-inline bool checkAssetMintAmount(const CTransaction& tx, CValidationState& state, const CAssetMetaData asset)
-{
+inline bool checkAssetMintAmount(const CTransaction &tx, CValidationState &state, const CAssetMetaData asset) {
     CAmount nAmount = 0;
-    std::set<uint16_t> setUniqueId;
+    std::set <uint16_t> setUniqueId;
     uint16_t minUniqueId = asset.circulatingSupply / COIN;
-    for (auto out : tx.vout) {
+    for (auto out: tx.vout) {
         if (out.scriptPubKey.IsAssetScript()) {
             CAssetTransfer assetTransfer;
             if (!GetTransferAsset(out.scriptPubKey, assetTransfer)) {
@@ -302,8 +294,8 @@ inline bool checkAssetMintAmount(const CTransaction& tx, CValidationState& state
     return true;
 }
 
-bool CheckMintAssetTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, const CCoinsViewCache& view, CAssetsCache* assetsCache)
-{
+bool CheckMintAssetTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CValidationState &state,
+                      const CCoinsViewCache &view, CAssetsCache *assetsCache) {
     if (!Params().IsAssetsActive(::ChainActive().Tip())) {
         return state.DoS(100, false, REJECT_INVALID, "assets-not-enabled");
     }
@@ -351,8 +343,8 @@ bool CheckMintAssetTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVa
     return true;
 }
 
-bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, const CCoinsViewCache& view, bool check_sigs)
-{
+bool CheckProRegTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CValidationState &state,
+                   const CCoinsViewCache &view, bool check_sigs) {
     if (tx.nType != TRANSACTION_PROVIDER_REGISTER) {
         return state.DoS(100, false, REJECT_INVALID, "bad-protx-type");
     }
@@ -406,7 +398,8 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
     Coin coin;
     SmartnodeCollaterals collaterals = Params().GetConsensus().nCollaterals;
     if (!ptx.collateralOutpoint.hash.IsNull()) {
-        if (!view.GetCoin(ptx.collateralOutpoint, coin) || coin.IsSpent() || !collaterals.isValidCollateral(coin.out.nValue)) {
+        if (!view.GetCoin(ptx.collateralOutpoint, coin) || coin.IsSpent() ||
+            !collaterals.isValidCollateral(coin.out.nValue)) {
             return state.DoS(10, false, REJECT_INVALID, "bad-protx-collateral");
         }
 
@@ -447,7 +440,8 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
         auto mnList = deterministicMNManager->GetListForBlock(pindexPrev);
 
         // only allow reusing of addresses when it's for the same collateral (which replaces the old MN)
-        if (mnList.HasUniqueProperty(ptx.addr) && mnList.GetUniquePropertyMN(ptx.addr)->collateralOutpoint != collateralOutpoint) {
+        if (mnList.HasUniqueProperty(ptx.addr) &&
+            mnList.GetUniquePropertyMN(ptx.addr)->collateralOutpoint != collateralOutpoint) {
             return state.DoS(10, false, REJECT_DUPLICATE, "bad-protx-dup-addr");
         }
 
@@ -483,8 +477,7 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
     return true;
 }
 
-bool CheckProUpServTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, bool check_sigs)
-{
+bool CheckProUpServTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CValidationState &state, bool check_sigs) {
     if (tx.nType != TRANSACTION_PROVIDER_UPDATE_SERVICE) {
         return state.DoS(100, false, REJECT_INVALID, "bad-protx-type");
     }
@@ -539,8 +532,8 @@ bool CheckProUpServTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVa
     return true;
 }
 
-bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, const CCoinsViewCache& view, bool check_sigs)
-{
+bool CheckProUpRegTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CValidationState &state,
+                     const CCoinsViewCache &view, bool check_sigs) {
     if (tx.nType != TRANSACTION_PROVIDER_UPDATE_REGISTRAR) {
         return state.DoS(100, false, REJECT_INVALID, "bad-protx-type");
     }
@@ -593,7 +586,8 @@ bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVal
         if (!ExtractDestination(coin.out.scriptPubKey, collateralTxDest)) {
             return state.DoS(100, false, REJECT_INVALID, "bad-protx-collateral-dest");
         }
-        if (collateralTxDest == CTxDestination(dmn->pdmnState->keyIDOwner) || collateralTxDest == CTxDestination(ptx.keyIDVoting)) {
+        if (collateralTxDest == CTxDestination(dmn->pdmnState->keyIDOwner) ||
+            collateralTxDest == CTxDestination(ptx.keyIDVoting)) {
             return state.DoS(10, false, REJECT_INVALID, "bad-protx-collateral-reuse");
         }
 
@@ -623,8 +617,7 @@ bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVal
     return true;
 }
 
-bool CheckProUpRevTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, bool check_sigs)
-{
+bool CheckProUpRevTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CValidationState &state, bool check_sigs) {
     if (tx.nType != TRANSACTION_PROVIDER_UPDATE_REVOKE) {
         return state.DoS(100, false, REJECT_INVALID, "bad-protx-type");
     }
@@ -663,8 +656,7 @@ bool CheckProUpRevTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVal
     return true;
 }
 
-std::string CProRegTx::MakeSignString() const
-{
+std::string CProRegTx::MakeSignString() const {
     std::string s;
 
     // We only include the important stuff in the string form...
@@ -688,20 +680,20 @@ std::string CProRegTx::MakeSignString() const
     return s;
 }
 
-std::string CProRegTx::ToString() const
-{
+std::string CProRegTx::ToString() const {
     CTxDestination dest;
     std::string payee = "unknown";
     if (ExtractDestination(scriptPayout, dest)) {
         payee = EncodeDestination(dest);
     }
 
-    return strprintf("CProRegTx(nVersion=%d, collateralOutpoint=%s, addr=%s, nOperatorReward=%f, ownerAddress=%s, pubKeyOperator=%s, votingAddress=%s, scriptPayout=%s)",
-        nVersion, collateralOutpoint.ToStringShort(), addr.ToString(), (double)nOperatorReward / 100, EncodeDestination(keyIDOwner), pubKeyOperator.ToString(), EncodeDestination(keyIDVoting), payee);
+    return strprintf(
+            "CProRegTx(nVersion=%d, collateralOutpoint=%s, addr=%s, nOperatorReward=%f, ownerAddress=%s, pubKeyOperator=%s, votingAddress=%s, scriptPayout=%s)",
+            nVersion, collateralOutpoint.ToStringShort(), addr.ToString(), (double) nOperatorReward / 100,
+            EncodeDestination(keyIDOwner), pubKeyOperator.ToString(), EncodeDestination(keyIDVoting), payee);
 }
 
-std::string CProUpServTx::ToString() const
-{
+std::string CProUpServTx::ToString() const {
     CTxDestination dest;
     std::string payee = "unknown";
     if (ExtractDestination(scriptOperatorPayout, dest)) {
@@ -709,11 +701,10 @@ std::string CProUpServTx::ToString() const
     }
 
     return strprintf("CProUpServTx(nVersion=%d, proTxHash=%s, addr=%s, operatorPayoutAddress=%s)",
-        nVersion, proTxHash.ToString(), addr.ToString(), payee);
+                     nVersion, proTxHash.ToString(), addr.ToString(), payee);
 }
 
-std::string CProUpRegTx::ToString() const
-{
+std::string CProUpRegTx::ToString() const {
     CTxDestination dest;
     std::string payee = "unknown";
     if (ExtractDestination(scriptPayout, dest)) {
@@ -721,11 +712,10 @@ std::string CProUpRegTx::ToString() const
     }
 
     return strprintf("CProUpRegTx(nVersion=%d, proTxHash=%s, pubKeyOperator=%s, votingAddress=%s, payoutAddress=%s)",
-        nVersion, proTxHash.ToString(), pubKeyOperator.ToString(), EncodeDestination(keyIDVoting), payee);
+                     nVersion, proTxHash.ToString(), pubKeyOperator.ToString(), EncodeDestination(keyIDVoting), payee);
 }
 
-std::string CProUpRevTx::ToString() const
-{
+std::string CProUpRevTx::ToString() const {
     return strprintf("CProUpRevTx(nVersion=%d, proTxHash=%s, nReason=%d)",
-        nVersion, proTxHash.ToString(), nReason);
+                     nVersion, proTxHash.ToString(), nReason);
 }

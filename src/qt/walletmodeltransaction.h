@@ -12,21 +12,22 @@
 class SendCoinsRecipient;
 
 namespace interfaces {
-class Node;
+    class Node;
 }
 
 /** Data model for a walletmodel transaction. */
-class WalletModelTransaction
-{
+class WalletModelTransaction {
 public:
-    explicit WalletModelTransaction(const QList<SendCoinsRecipient> &recipients);
+    explicit WalletModelTransaction(const QList <SendCoinsRecipient> &recipients);
 
-    QList<SendCoinsRecipient> getRecipients() const;
+    QList <SendCoinsRecipient> getRecipients() const;
 
-    CTransactionRef& getWtx();
+    CTransactionRef &getWtx();
+
     unsigned int getTransactionSize();
 
-    void setTransactionFee(const CAmount& newFee);
+    void setTransactionFee(const CAmount &newFee);
+
     CAmount getTransactionFee() const;
 
     CAmount getTotalTransactionAmount() const;
@@ -34,7 +35,7 @@ public:
     void reassignAmounts(); // needed for the subtract-fee-from-amount feature
 
 private:
-    QList<SendCoinsRecipient> recipients;
+    QList <SendCoinsRecipient> recipients;
     CTransactionRef wtx;
     CAmount fee;
 };

@@ -11,6 +11,7 @@
 #include <unordered_map>
 
 class SmartNodeCollaterals;
+
 struct Collateral {
     int height;
     CAmount amount;
@@ -23,17 +24,24 @@ struct RewardPercentage {
 
 class SmartnodeCollaterals {
 protected:
-    std::vector<Collateral> collaterals;
-    std::vector<RewardPercentage> rewardPercentages;
+    std::vector <Collateral> collaterals;
+    std::vector <RewardPercentage> rewardPercentages;
     std::unordered_map<CAmount, int> collateralsHeightMap;
 
 public:
-    SmartnodeCollaterals(std::vector<Collateral> collaterals = {}, std::vector<RewardPercentage> rewardPercentages = {});
+    SmartnodeCollaterals(std::vector <Collateral> collaterals = {},
+                         std::vector <RewardPercentage> rewardPercentages = {});
+
     CAmount getCollateral(int height) const;
+
     bool isValidCollateral(CAmount collateralAmount) const;
-    bool isPayableCollateral(int height,CAmount collateralAmount) const;
+
+    bool isPayableCollateral(int height, CAmount collateralAmount) const;
+
     int getRewardPercentage(int height) const;
+
     void printCollateral() const;
+
     virtual ~SmartnodeCollaterals();
 };
 

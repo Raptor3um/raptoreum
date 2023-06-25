@@ -10,10 +10,11 @@
 #include <vector>
 
 /** Parse an HD keypaths like "m/7/0'/2000". */
-[[nodiscard]] bool ParseHDKeypath(const std::string& keypath_str, std::vector<uint32_t>& keypath);
+[[nodiscard]] bool ParseHDKeypath(const std::string &keypath_str, std::vector <uint32_t> &keypath);
 
 /** Write HD keypaths as strings */
-std::string WriteHDKeypath(const std::vector<uint32_t>& keypath);
-std::string FormatHDKeypath(const std::vector<uint32_t>& path);
+std::string WriteHDKeypath(const std::vector <uint32_t> &keypath);
+
+std::string FormatHDKeypath(const std::vector <uint32_t> &path);
 
 #endif // BITCOIN_UTIL_BIP32_H

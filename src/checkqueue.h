@@ -12,7 +12,7 @@
 #include <algorithm>
 #include <vector>
 
-template <typename T>
+template<typename T>
 class CCheckQueueControl;
 
 /**
@@ -25,9 +25,8 @@ class CCheckQueueControl;
   * the master is done adding work, it temporarily joins the worker pool
   * as an N'th worker, until all jobs are done.
   */
-template <typename T>
-class CCheckQueue
-{
+template<typename T>
+class CCheckQueue {
 private:
     //! Mutex to protect the inner state
     Mutex m_mutex;
@@ -40,35 +39,40 @@ private:
 
     //! The queue of elements to be processed.
     //! As the order of booleans doesn't matter, it is used as a LIFO (stack)
-    std::vector<T> queue GUARDED_BY(m_mutex);
+    std::vector <T> queue
+    GUARDED_BY(m_mutex);
 
     //! The number of workers (including the master) that are idle.
-    int nIdle GUARDED_BY(m_mutex){0};
+    int nIdle
+    GUARDED_BY(m_mutex){0};
 
     //! The total number of workers (including the master).
-    int nTotal GUARDED_BY(m_mutex){0};
+    int nTotal
+    GUARDED_BY(m_mutex){0};
 
     //! The temporary evaluation result.
-    bool fAllOk GUARDED_BY(m_mutex){true};
+    bool fAllOk
+    GUARDED_BY(m_mutex){true};
 
     /**
      * Number of verifications that haven't completed yet.
      * This includes elements that are no longer queued, but still in the
      * worker's own batches.
      */
-    unsigned int nTodo GUARDED_BY(m_mutex){0};
+    unsigned int nTodo
+    GUARDED_BY(m_mutex){0};
 
     //! The maximum number of elements to be processed in one batch
     const unsigned int nBatchSize;
 
-    std::vector<std::thread> m_worker_threads;
-    bool m_request_stop GUARDED_BY(m_mutex){false};
+    std::vector <std::thread> m_worker_threads;
+    bool m_request_stop
+    GUARDED_BY(m_mutex){false};
 
     /** Internal function that does bulk of the verification work. */
-    bool Loop(bool fMaster)
-    {
-        std::condition_variable& cond = fMaster ? m_master_cv : m_worker_cv;
-        std::vector<T> vChecks;
+    bool Loop(bool fMaster) {
+        std::condition_variable &cond = fMaster ? m_master_cv : m_worker_cv;
+        std::vector <T> vChecks;
         vChecks.reserve(nBatchSize);
         unsigned int nNow = 0;
         bool fOk = true;
@@ -109,7 +113,7 @@ private:
                 //   all workers finish approximately simultaneously.
                 // * Try to account for idle jobs which will instantly start helping.
                 // * Don't do batches smaller than 1 (duh), or larger than nBatchSize.
-                nNow = std::max(1U, std::min(nBatchSize, (unsigned int)queue.size() / (nTotal + nIdle + 1)));
+                nNow = std::max(1U, std::min(nBatchSize, (unsigned int) queue.size() / (nTotal + nIdle + 1)));
                 vChecks.resize(nNow);
                 for (unsigned int i = 0; i < nNow; i++) {
                     // We want the lock on the m_mutex to be as short as possible, so swap jobs from the global
@@ -121,7 +125,7 @@ private:
                 fOk = fAllOk;
             }
             // execute work
-            for (T& check : vChecks)
+            for (T &check: vChecks)
                 if (fOk)
                     fOk = check();
             vChecks.clear();
@@ -134,13 +138,11 @@ public:
 
     //! Create a new check queue
     explicit CCheckQueue(unsigned int nBatchSizeIn)
-        : nBatchSize(nBatchSizeIn)
-    {
+            : nBatchSize(nBatchSizeIn) {
     }
 
     //! Create a pool of new worker threads
-    void StartWorkerThreads(const int threads_num)
-    {
+    void StartWorkerThreads(const int threads_num) {
         {
             LOCK(m_mutex);
             nIdle = 0;
@@ -157,21 +159,19 @@ public:
     }
 
     //! Wait until execution finishes, and return whether all evaluations were successful.
-    bool Wait()
-    {
+    bool Wait() {
         return Loop(true/* master thread */);
     }
 
     //! Add a batch of checks to the queue
-    void Add(std::vector<T>& vChecks)
-    {
+    void Add(std::vector <T> &vChecks) {
         if (vChecks.empty()) {
             return;
         }
 
         {
             LOCK(m_mutex);
-            for (T& check : vChecks) {
+            for (T &check: vChecks) {
                 queue.push_back(T());
                 check.swap(queue.back());
             }
@@ -186,19 +186,17 @@ public:
     }
 
     //! Stop all of the worker threads.
-    void StopWorkerThreads()
-    {
+    void StopWorkerThreads() {
         WITH_LOCK(m_mutex, m_request_stop = true);
         m_worker_cv.notify_all();
-        for (std::thread& t : m_worker_threads) {
+        for (std::thread &t: m_worker_threads) {
             t.join();
         }
         m_worker_threads.clear();
         WITH_LOCK(m_mutex, m_request_stop = false);
     }
 
-    ~CCheckQueue()
-    {
+    ~CCheckQueue() {
         assert(m_worker_threads.empty());
     }
 
@@ -208,27 +206,27 @@ public:
  * RAII-style controller object for a CCheckQueue that guarantees the passed
  * queue is finished before continuing.
  */
-template <typename T>
-class CCheckQueueControl
-{
+template<typename T>
+class CCheckQueueControl {
 private:
-    CCheckQueue<T> * const pqueue;
+    CCheckQueue<T> *const pqueue;
     bool fDone;
 
 public:
     CCheckQueueControl() = delete;
-    CCheckQueueControl(const CCheckQueueControl&) = delete;
-    CCheckQueueControl& operator=(const CCheckQueueControl&) = delete;
-    explicit CCheckQueueControl(CCheckQueue<T> * const pqueueIn) : pqueue(pqueueIn), fDone(false)
-    {
+
+    CCheckQueueControl(const CCheckQueueControl &) = delete;
+
+    CCheckQueueControl &operator=(const CCheckQueueControl &) = delete;
+
+    explicit CCheckQueueControl(CCheckQueue<T> *const pqueueIn) : pqueue(pqueueIn), fDone(false) {
         // passed queue is supposed to be unused, or nullptr
         if (pqueue != nullptr) {
             ENTER_CRITICAL_SECTION(pqueue->m_control_mutex);
         }
     }
 
-    bool Wait()
-    {
+    bool Wait() {
         if (pqueue == nullptr)
             return true;
         bool fRet = pqueue->Wait();
@@ -236,14 +234,12 @@ public:
         return fRet;
     }
 
-    void Add(std::vector<T>& vChecks)
-    {
+    void Add(std::vector <T> &vChecks) {
         if (pqueue != nullptr)
             pqueue->Add(vChecks);
     }
 
-    ~CCheckQueueControl()
-    {
+    ~CCheckQueueControl() {
         if (!fDone)
             Wait();
         if (pqueue != nullptr) {

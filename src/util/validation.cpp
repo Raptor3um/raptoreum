@@ -10,12 +10,11 @@
 #include <tinyformat.h>
 
 /** Convert CValidationState to a human-readable message for logging */
-std::string FormatStateMessage(const CValidationState &state)
-{
+std::string FormatStateMessage(const CValidationState &state) {
     return strprintf("%s%s (code %i)",
-        state.GetRejectReason(),
-        state.GetDebugMessage().empty() ? "" : ", "+state.GetDebugMessage(),
-        state.GetRejectCode());
+                     state.GetRejectReason(),
+                     state.GetDebugMessage().empty() ? "" : ", " + state.GetDebugMessage(),
+                     state.GetRejectCode());
 }
 
 const std::string strMessageMagic = "DarkCoin Signed Message:\n";

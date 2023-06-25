@@ -30,6 +30,8 @@ struct NodeContext;
  * @param[in]  wait_callback, wait until callbacks have been processed to avoid stale result due to a sequentially RPC.
  * return error
  */
-[[nodiscard]] TransactionError BroadcastTransaction(NodeContext& node, CTransactionRef tx, std::string& err_string, const CAmount& highfee, bool relay, bool wait_callback, bool bypass_limits = false);
+[[nodiscard]] TransactionError
+BroadcastTransaction(NodeContext &node, CTransactionRef tx, std::string &err_string, const CAmount &highfee, bool relay,
+                     bool wait_callback, bool bypass_limits = false);
 
 #endif // BITCOIN_NODE_TRANSACTION_H

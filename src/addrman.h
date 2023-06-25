@@ -26,8 +26,7 @@
 /**
  * Extended statistics about a CAddress
  */
-class CAddrInfo : public CAddress
-{
+class CAddrInfo : public CAddress {
 
 
 public:
@@ -60,14 +59,14 @@ private:
 
 public:
 
-    SERIALIZE_METHODS(CAddrInfo, obj)
+    SERIALIZE_METHODS(CAddrInfo, obj
+    )
     {
         READWRITEAS(CAddress, obj);
         READWRITE(obj.source, obj.nLastSuccess, obj.nAttempts);
     }
 
-    void Init()
-    {
+    void Init() {
         nLastSuccess = 0;
         nLastTry = 0;
         nLastCountAttempt = 0;
@@ -77,13 +76,11 @@ public:
         nRandomPos = -1;
     }
 
-    CAddrInfo(const CAddress &addrIn, const CNetAddr &addrSource) : CAddress(addrIn), source(addrSource)
-    {
+    CAddrInfo(const CAddress &addrIn, const CNetAddr &addrSource) : CAddress(addrIn), source(addrSource) {
         Init();
     }
 
-    CAddrInfo() : CAddress(), source()
-    {
+    CAddrInfo() : CAddress(), source() {
         Init();
     }
 
@@ -91,11 +88,10 @@ public:
     int GetTriedBucket(const uint256 &nKey, const std::vector<bool> &asmap) const;
 
     //! Calculate in which "new" bucket this entry belongs, given a certain source
-    int GetNewBucket(const uint256 &nKey, const CNetAddr& src, const std::vector<bool> &asmap) const;
+    int GetNewBucket(const uint256 &nKey, const CNetAddr &src, const std::vector<bool> &asmap) const;
 
     //! Calculate in which "new" bucket this entry belongs, using its default source
-    int GetNewBucket(const uint256 &nKey, const std::vector<bool> &asmap) const
-    {
+    int GetNewBucket(const uint256 &nKey, const std::vector<bool> &asmap) const {
         return GetNewBucket(nKey, source, asmap);
     }
 
@@ -186,8 +182,7 @@ public:
 /**
  * Stochastical (IP) address manager
  */
-class CAddrMan
-{
+class CAddrMan {
 private:
     friend class CAddrManTest;
 
@@ -236,17 +231,17 @@ protected:
     FastRandomContext insecure_rand;
 
     //! Find an entry.
-    CAddrInfo* Find(const CService& addr, int *pnId = nullptr);
+    CAddrInfo *Find(const CService &addr, int *pnId = nullptr);
 
     //! find an entry, creating it if necessary.
     //! nTime and nServices of the found node are updated, if necessary.
-    CAddrInfo* Create(const CAddress &addr, const CNetAddr &addrSource, int *pnId = nullptr);
+    CAddrInfo *Create(const CAddress &addr, const CNetAddr &addrSource, int *pnId = nullptr);
 
     //! Swap two elements in vRandom.
     void SwapRandom(unsigned int nRandomPos1, unsigned int nRandomPos2);
 
     //! Move an entry from the "new" table(s) to the "tried" table
-    void MakeTried(CAddrInfo& info, int nId);
+    void MakeTried(CAddrInfo &info, int nId);
 
     //! Delete an entry. It must not be in tried, and have refcount 0.
     void Delete(int nId);
@@ -258,7 +253,7 @@ protected:
     void Good_(const CService &addr, bool test_before_evict, int64_t time);
 
     //! Add an entry to the "new" table.
-    bool Add_(const CAddress &addr, const CNetAddr& source, int64_t nTimePenalty);
+    bool Add_(const CAddress &addr, const CNetAddr &source, int64_t nTimePenalty);
 
     //! Mark an entry as attempted to connect.
     void Attempt_(const CService &addr, bool fCountFailure, int64_t nTime);
@@ -278,7 +273,7 @@ protected:
 #endif
 
     //! Select several addresses at once.
-    void GetAddr_(std::vector<CAddress> &vAddr);
+    void GetAddr_(std::vector <CAddress> &vAddr);
 
     //! Mark an entry as currently-connected-to.
     void Connected_(const CService &addr, int64_t nTime);
@@ -287,7 +282,7 @@ protected:
     void SetServices_(const CService &addr, ServiceFlags nServices);
 
     //! Get address info for address
-    CAddrInfo GetAddressInfo_(const CService& addr);
+    CAddrInfo GetAddressInfo_(const CService &addr);
 
 public:
     // Compressed IP->ASN mapping, loaded from a file when a node starts.
@@ -340,13 +335,12 @@ public:
      * very little in common.
      */
     template<typename Stream>
-    void Serialize(Stream &s) const
-    {
+    void Serialize(Stream &s) const {
         LOCK(cs);
 
         unsigned char nVersion = 2;
         s << nVersion;
-        s << ((unsigned char)32);
+        s << ((unsigned char) 32);
         s << nKey;
         s << nNew;
         s << nTried;
@@ -355,7 +349,7 @@ public:
         s << nUBuckets;
         std::map<int, int> mapUnkIds;
         int nIds = 0;
-        for (const auto& entry : mapInfo) {
+        for (const auto &entry: mapInfo) {
             mapUnkIds[entry.first] = nIds;
             const CAddrInfo &info = entry.second;
             if (info.nRefCount) {
@@ -365,7 +359,7 @@ public:
             }
         }
         nIds = 0;
-        for (const auto& entry : mapInfo) {
+        for (const auto &entry: mapInfo) {
             const CAddrInfo &info = entry.second;
             if (info.fInTried) {
                 assert(nIds != nTried); // this means nTried was wrong, oh ow
@@ -397,8 +391,7 @@ public:
     }
 
     template<typename Stream>
-    void Unserialize(Stream& s)
-    {
+    void Unserialize(Stream &s) {
         LOCK(cs);
 
         Clear();
@@ -484,7 +477,8 @@ public:
             int bucket = entryToBucket[n];
             int nUBucketPos = info.GetBucketPosition(nKey, true, bucket);
             if (nVersion == 2 && nUBuckets == ADDRMAN_NEW_BUCKET_COUNT && vvNew[bucket][nUBucketPos] == -1 &&
-                info.nRefCount < ADDRMAN_NEW_BUCKETS_PER_ADDRESS && serialized_asmap_version == supplied_asmap_version) {
+                info.nRefCount < ADDRMAN_NEW_BUCKETS_PER_ADDRESS &&
+                serialized_asmap_version == supplied_asmap_version) {
                 // Bucketing has not changed, using existing bucket positions for the new table
                 vvNew[bucket][nUBucketPos] = n;
                 info.nRefCount++;
@@ -503,7 +497,7 @@ public:
 
         // Prune new entries with refcount 0 (as a result of collisions).
         int nLostUnk = 0;
-        for (std::map<int, CAddrInfo>::const_iterator it = mapInfo.begin(); it != mapInfo.end(); ) {
+        for (std::map<int, CAddrInfo>::const_iterator it = mapInfo.begin(); it != mapInfo.end();) {
             if (it->second.fInTried == false && it->second.nRefCount == 0) {
                 std::map<int, CAddrInfo>::const_iterator itCopy = it++;
                 Delete(itCopy->first);
@@ -519,8 +513,7 @@ public:
         Check();
     }
 
-    void Clear()
-    {
+    void Clear() {
         LOCK(cs);
         std::vector<int>().swap(vRandom);
         nKey = insecure_rand.rand256();
@@ -544,26 +537,22 @@ public:
     }
 
     CAddrMan(bool _discriminatePorts = false) :
-        discriminatePorts(_discriminatePorts)
-    {
+            discriminatePorts(_discriminatePorts) {
         Clear();
     }
 
-    ~CAddrMan()
-    {
+    ~CAddrMan() {
         nKey.SetNull();
     }
 
     //! Return the number of (unique) addresses in all tables.
-    size_t size() const
-    {
+    size_t size() const {
         LOCK(cs); // TODO: Cache this in an atomic to avoid this overhead
         return vRandom.size();
     }
 
     //! Consistency check
-    void Check()
-    {
+    void Check() {
 #ifdef DEBUG_ADDRMAN
         {
             LOCK(cs);
@@ -575,22 +564,21 @@ public:
     }
 
     //! Add a single address.
-    bool Add(const CAddress &addr, const CNetAddr& source, int64_t nTimePenalty = 0)
-    {
+    bool Add(const CAddress &addr, const CNetAddr &source, int64_t nTimePenalty = 0) {
         LOCK(cs);
         bool fRet = false;
         Check();
         fRet |= Add_(addr, source, nTimePenalty);
         Check();
         if (fRet) {
-            LogPrint(BCLog::ADDRMAN, "Added %s from %s: %i tried, %i new\n", addr.ToStringIPPort(), source.ToString(), nTried, nNew);
+            LogPrint(BCLog::ADDRMAN, "Added %s from %s: %i tried, %i new\n", addr.ToStringIPPort(), source.ToString(),
+                     nTried, nNew);
         }
         return fRet;
     }
 
     //! Add multiple addresses.
-    bool Add(const std::vector<CAddress> &vAddr, const CNetAddr& source, int64_t nTimePenalty = 0)
-    {
+    bool Add(const std::vector <CAddress> &vAddr, const CNetAddr &source, int64_t nTimePenalty = 0) {
         LOCK(cs);
         int nAdd = 0;
         Check();
@@ -598,14 +586,14 @@ public:
             nAdd += Add_(*it, source, nTimePenalty) ? 1 : 0;
         Check();
         if (nAdd) {
-            LogPrint(BCLog::ADDRMAN, "Added %i addresses from %s: %i tried, %i new\n", nAdd, source.ToString(), nTried, nNew);
+            LogPrint(BCLog::ADDRMAN, "Added %i addresses from %s: %i tried, %i new\n", nAdd, source.ToString(), nTried,
+                     nNew);
         }
         return nAdd > 0;
     }
 
     //! Mark an entry as accessible.
-    void Good(const CService &addr, bool test_before_evict = true, int64_t nTime = GetAdjustedTime())
-    {
+    void Good(const CService &addr, bool test_before_evict = true, int64_t nTime = GetAdjustedTime()) {
         LOCK(cs);
         Check();
         Good_(addr, test_before_evict, nTime);
@@ -613,8 +601,7 @@ public:
     }
 
     //! Mark an entry as connection attempted to.
-    void Attempt(const CService &addr, bool fCountFailure, int64_t nTime = GetAdjustedTime())
-    {
+    void Attempt(const CService &addr, bool fCountFailure, int64_t nTime = GetAdjustedTime()) {
         LOCK(cs);
         Check();
         Attempt_(addr, fCountFailure, nTime);
@@ -622,8 +609,7 @@ public:
     }
 
     //! See if any to-be-evicted tried table entries have been tested and if so resolve the collisions.
-    void ResolveCollisions()
-    {
+    void ResolveCollisions() {
         LOCK(cs);
         Check();
         ResolveCollisions_();
@@ -631,8 +617,7 @@ public:
     }
 
     //! Randomly select an address in tried that another address is attempting to evict.
-    CAddrInfo SelectTriedCollision()
-    {
+    CAddrInfo SelectTriedCollision() {
         CAddrInfo ret;
         {
             LOCK(cs);
@@ -646,8 +631,7 @@ public:
     /**
      * Choose an address to connect to.
      */
-    CAddrInfo Select(bool newOnly = false)
-    {
+    CAddrInfo Select(bool newOnly = false) {
         CAddrInfo addrRet;
         {
             LOCK(cs);
@@ -659,10 +643,9 @@ public:
     }
 
     //! Return a bunch of addresses, selected at random.
-    std::vector<CAddress> GetAddr()
-    {
+    std::vector <CAddress> GetAddr() {
         Check();
-        std::vector<CAddress> vAddr;
+        std::vector <CAddress> vAddr;
         {
             LOCK(cs);
             GetAddr_(vAddr);
@@ -672,24 +655,21 @@ public:
     }
 
     //! Mark an entry as currently-connected-to.
-    void Connected(const CService &addr, int64_t nTime = GetAdjustedTime())
-    {
+    void Connected(const CService &addr, int64_t nTime = GetAdjustedTime()) {
         LOCK(cs);
         Check();
         Connected_(addr, nTime);
         Check();
     }
 
-    void SetServices(const CService &addr, ServiceFlags nServices)
-    {
+    void SetServices(const CService &addr, ServiceFlags nServices) {
         LOCK(cs);
         Check();
         SetServices_(addr, nServices);
         Check();
     }
 
-    CAddrInfo GetAddressInfo(const CService& addr)
-    {
+    CAddrInfo GetAddressInfo(const CService &addr) {
         CAddrInfo addrRet;
         {
             LOCK(cs);

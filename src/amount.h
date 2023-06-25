@@ -24,10 +24,11 @@ static const CAmount COIN = 100000000;
  * */
 static const CAmount MAX_MONEY = 21000000000 * COIN;
 static const CAmount OLD_MAX_MONEY = 21000000 * COIN;
-inline bool MoneyRange(const CAmount& nValue, bool nV17active = true) {
-    if(nV17active){
+
+inline bool MoneyRange(const CAmount &nValue, bool nV17active = true) {
+    if (nV17active) {
         return (nValue >= 0 && nValue <= MAX_MONEY);
-    }else{
+    } else {
         return (nValue >= 0 && nValue <= OLD_MAX_MONEY);
     }
 }

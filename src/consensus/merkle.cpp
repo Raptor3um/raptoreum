@@ -43,7 +43,7 @@
 */
 
 
-uint256 ComputeMerkleRoot(std::vector<uint256> hashes, bool* mutated) {
+uint256 ComputeMerkleRoot(std::vector <uint256> hashes, bool *mutated) {
     bool mutation = false;
     while (hashes.size() > 1) {
         if (mutated) {
@@ -63,9 +63,8 @@ uint256 ComputeMerkleRoot(std::vector<uint256> hashes, bool* mutated) {
 }
 
 
-uint256 BlockMerkleRoot(const CBlock& block, bool* mutated)
-{
-    std::vector<uint256> leaves;
+uint256 BlockMerkleRoot(const CBlock &block, bool *mutated) {
+    std::vector <uint256> leaves;
     leaves.resize(block.vtx.size());
     for (size_t s = 0; s < block.vtx.size(); s++) {
         leaves[s] = block.vtx[s]->GetHash();

@@ -16,7 +16,8 @@
 
 #include <boost/test/unit_test.hpp>
 
-BOOST_FIXTURE_TEST_SUITE(util_threadnames_tests, BasicTestingSetup)
+BOOST_FIXTURE_TEST_SUITE(util_threadnames_tests, BasicTestingSetup
+)
 
 const std::string TEST_THREAD_NAME_BASE = "test_thread.";
 
@@ -25,15 +26,14 @@ const std::string TEST_THREAD_NAME_BASE = "test_thread.";
  *
  * @return the set of name each thread has after attempted renaming.
  */
-std::set<std::string> RenameEnMasse(int num_threads)
-{
-    std::vector<std::thread> threads;
-    std::set<std::string> names;
+std::set <std::string> RenameEnMasse(int num_threads) {
+    std::vector <std::thread> threads;
+    std::set <std::string> names;
     std::mutex lock;
 
     auto RenameThisThread = [&](int i) {
         util::ThreadRename(TEST_THREAD_NAME_BASE + std::to_string(i));
-        std::lock_guard<std::mutex> guard(lock);
+        std::lock_guard <std::mutex> guard(lock);
         names.insert(util::ThreadGetInternalName());
     };
 
@@ -41,7 +41,7 @@ std::set<std::string> RenameEnMasse(int num_threads)
         threads.push_back(std::thread(RenameThisThread, i));
     }
 
-    for (std::thread& thread : threads) thread.join();
+    for (std::thread &thread: threads) thread.join();
 
     return names;
 }
@@ -51,23 +51,23 @@ std::set<std::string> RenameEnMasse(int num_threads)
  * applied properly.
  */
 BOOST_AUTO_TEST_CASE(util_threadnames_test_rename_threaded)
-{
-    BOOST_CHECK_EQUAL(util::ThreadGetInternalName(), "");
+        {
+                BOOST_CHECK_EQUAL(util::ThreadGetInternalName(), "");
 
 #if !defined(HAVE_THREAD_LOCAL)
-    // This test doesn't apply to platforms where we don't have thread_local.
-    return;
+        // This test doesn't apply to platforms where we don't have thread_local.
+        return;
 #endif
 
-    std::set<std::string> names = RenameEnMasse(100);
+        std::set<std::string> names = RenameEnMasse(100);
 
-    BOOST_CHECK_EQUAL(names.size(), 100);
+        BOOST_CHECK_EQUAL(names.size(), 100);
 
-    // Names "test_thread.[n]" should exist for n = [0, 99]
-    for (int i = 0; i < 100; ++i) {
-        BOOST_CHECK(names.find(TEST_THREAD_NAME_BASE + std::to_string(i)) != names.end());
-    }
+        // Names "test_thread.[n]" should exist for n = [0, 99]
+        for (int i = 0; i < 100; ++i) {
+            BOOST_CHECK(names.find(TEST_THREAD_NAME_BASE + std::to_string(i)) != names.end());
+        }
 
-}
+        }
 
 BOOST_AUTO_TEST_SUITE_END()

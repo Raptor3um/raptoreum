@@ -10,14 +10,15 @@
 #include <windows.h>
 #include <io.h>
 #else
+
 #include <termios.h>
 #include <unistd.h>
 #include <poll.h>
+
 #endif
 
 // https://stackoverflow.com/questions/1413445/reading-a-password-from-stdcin
-void SetStdinEcho(bool enable)
-{
+void SetStdinEcho(bool enable) {
 #ifdef WIN32
     HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
     DWORD mode;
@@ -36,12 +37,11 @@ void SetStdinEcho(bool enable)
     } else {
         tty.c_lflag |= ECHO;
     }
-    (void)tcsetattr(STDIN_FILENO, TCSANOW, &tty);
+    (void) tcsetattr(STDIN_FILENO, TCSANOW, &tty);
 #endif
 }
 
-bool StdinTerminal()
-{
+bool StdinTerminal() {
 #ifdef WIN32
     return _isatty(_fileno(stdin));
 #else
@@ -49,8 +49,7 @@ bool StdinTerminal()
 #endif
 }
 
-bool StdinReady()
-{
+bool StdinReady() {
     if (!StdinTerminal()) {
         return true;
     }
@@ -65,4 +64,5 @@ bool StdinReady()
 }
 
 NoechoInst::NoechoInst() { SetStdinEcho(false); }
+
 NoechoInst::~NoechoInst() { SetStdinEcho(true); }

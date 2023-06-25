@@ -6,16 +6,14 @@
 
 #include <string>
 
-class JSONUTF8StringFilter
-{
+class JSONUTF8StringFilter {
 public:
-    explicit JSONUTF8StringFilter(std::string &s):
-        str(s), is_valid(true), codepoint(0), state(0), surpair(0)
-    {
+    explicit JSONUTF8StringFilter(std::string &s) :
+            str(s), is_valid(true), codepoint(0), state(0), surpair(0) {
     }
+
     // Write single 8-bit char (may be part of UTF-8 sequence)
-    void push_back(unsigned char ch)
-    {
+    void push_back(unsigned char ch) {
         if (state == 0) {
             if (ch < 0x80) // 7-bit ASCII, fast direct pass-through
                 str.push_back(ch);
@@ -41,9 +39,9 @@ public:
                 push_back_u(codepoint);
         }
     }
+
     // Write codepoint directly, possibly collating surrogate pairs
-    void push_back_u(unsigned int codepoint_)
-    {
+    void push_back_u(unsigned int codepoint_) {
         // Only accept full codepoints in open state
         if (state)
             is_valid = false;
@@ -55,7 +53,7 @@ public:
         } else if (codepoint_ >= 0xDC00 && codepoint_ < 0xE000) { // Second half of surrogate pair
             if (surpair) { // Open surrogate pair, expect second half
                 // Compute code point from UTF-16 surrogate pair
-                append_codepoint(0x10000 | ((surpair - 0xD800)<<10) | (codepoint_ - 0xDC00));
+                append_codepoint(0x10000 | ((surpair - 0xD800) << 10) | (codepoint_ - 0xDC00));
                 surpair = 0;
             } else // First half of surrogate pair not followed by second
                 is_valid = false;
@@ -66,14 +64,15 @@ public:
                 append_codepoint(codepoint_);
         }
     }
+
     // Check that we're in a state where the string can be ended
     // No open sequences, no open surrogate pairs, etc
-    bool finalize()
-    {
+    bool finalize() {
         if (state || surpair)
             is_valid = false;
         return is_valid;
     }
+
 private:
     std::string &str;
     bool is_valid;
@@ -91,22 +90,21 @@ private:
     //  Two subsequent \u.... may have to be replaced with one actual codepoint.
     unsigned int surpair; // First of UTF-16 surrogate pair
 
-    void append_codepoint(unsigned int codepoint_)
-    {
+    void append_codepoint(unsigned int codepoint_) {
         if (codepoint_ <= 0x7f)
-            str.push_back((char)codepoint_);
+            str.push_back((char) codepoint_);
         else if (codepoint_ <= 0x7FF) {
-            str.push_back((char)(0xC0 | (codepoint_ >> 6)));
-            str.push_back((char)(0x80 | (codepoint_ & 0x3F)));
+            str.push_back((char) (0xC0 | (codepoint_ >> 6)));
+            str.push_back((char) (0x80 | (codepoint_ & 0x3F)));
         } else if (codepoint_ <= 0xFFFF) {
-            str.push_back((char)(0xE0 | (codepoint_ >> 12)));
-            str.push_back((char)(0x80 | ((codepoint_ >> 6) & 0x3F)));
-            str.push_back((char)(0x80 | (codepoint_ & 0x3F)));
+            str.push_back((char) (0xE0 | (codepoint_ >> 12)));
+            str.push_back((char) (0x80 | ((codepoint_ >> 6) & 0x3F)));
+            str.push_back((char) (0x80 | (codepoint_ & 0x3F)));
         } else if (codepoint_ <= 0x1FFFFF) {
-            str.push_back((char)(0xF0 | (codepoint_ >> 18)));
-            str.push_back((char)(0x80 | ((codepoint_ >> 12) & 0x3F)));
-            str.push_back((char)(0x80 | ((codepoint_ >> 6) & 0x3F)));
-            str.push_back((char)(0x80 | (codepoint_ & 0x3F)));
+            str.push_back((char) (0xF0 | (codepoint_ >> 18)));
+            str.push_back((char) (0x80 | ((codepoint_ >> 12) & 0x3F)));
+            str.push_back((char) (0x80 | ((codepoint_ >> 6) & 0x3F)));
+            str.push_back((char) (0x80 | (codepoint_ & 0x3F)));
         }
     }
 };

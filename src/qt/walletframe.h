@@ -10,11 +10,17 @@
 #include <QMap>
 
 class BitcoinGUI;
+
 class ClientModel;
+
 class SendCoinsRecipient;
+
 class WalletModel;
+
 class WalletView;
+
 class SendFuturesRecipient;
+
 class SmartnodeList;
 
 QT_BEGIN_NAMESPACE
@@ -28,78 +34,96 @@ QT_END_NAMESPACE
  * modifications to BitcoinGUI, thus greatly simplifying merges while
  * reducing the risk of breaking top-level stuff.
  */
-class WalletFrame : public QFrame
-{
+class WalletFrame : public QFrame {
     Q_OBJECT
 
 public:
-    explicit WalletFrame(BitcoinGUI* _gui = nullptr);
+    explicit WalletFrame(BitcoinGUI *_gui = nullptr);
+
     ~WalletFrame();
 
     void setClientModel(ClientModel *clientModel);
 
     bool addWallet(WalletModel *walletModel);
-    void setCurrentWallet(WalletModel* wallet_model);
-    void removeWallet(WalletModel* wallet_model);
+
+    void setCurrentWallet(WalletModel *wallet_model);
+
+    void removeWallet(WalletModel *wallet_model);
+
     void removeAllWallets();
 
-    bool handlePaymentRequest(const SendCoinsRecipient& recipient);
+    bool handlePaymentRequest(const SendCoinsRecipient &recipient);
 
     void showOutOfSyncWarning(bool fShow);
 
-Q_SIGNALS:
-    /** Notify that the user has requested more information about the out-of-sync warning */
-    void requestedSyncWarningInfo();
+    Q_SIGNALS:
+            /** Notify that the user has requested more information about the out-of-sync warning */
+            void requestedSyncWarningInfo();
 
 private:
     QStackedWidget *walletStack;
     BitcoinGUI *gui;
     ClientModel *clientModel;
-    QMap<WalletModel*, WalletView*> mapWalletViews;
-    SmartnodeList* smartnodeListPage;
+    QMap<WalletModel *, WalletView *> mapWalletViews;
+    SmartnodeList *smartnodeListPage;
 
     bool bOutOfSync;
 
 public:
-    WalletView* currentWalletView() const;
-    WalletModel* currentWalletModel() const;
+    WalletView *currentWalletView() const;
 
-public Q_SLOTS:
-    /** Switch to overview (home) page */
-    void gotoOverviewPage();
+    WalletModel *currentWalletModel() const;
+
+public
+    Q_SLOTS:
+            /** Switch to overview (home) page */
+            void gotoOverviewPage();
+
     /** Switch to history (transactions) page */
     void gotoHistoryPage();
+
     /** Switch to smartnode page */
     void gotoSmartnodePage();
+
     /** Switch to receive coins page */
     void gotoReceiveCoinsPage();
+
     /** Switch to send coins page */
     void gotoSendCoinsPage(QString addr = "");
+
     /** Switch to send coins page */
     void gotoSendAssetsPage(QString addr = "");
+
     /** Switch to CoinJoin coins page */
     void gotoCoinJoinCoinsPage(QString addr = "");
 
     /** Show Sign/Verify Message dialog and switch to sign message tab */
     void gotoSignMessageTab(QString addr = "");
+
     /** Show Sign/Verify Message dialog and switch to verify message tab */
     void gotoVerifyMessageTab(QString addr = "");
 
     /** Encrypt the wallet */
     void encryptWallet();
+
     /** Backup the wallet */
     void backupWallet();
+
     /** Change encrypted wallet passphrase */
     void changePassphrase();
+
     /** Ask for passphrase to unlock wallet temporarily */
     void unlockWallet();
+
     /** Lock wallet */
     void lockWallet();
 
     /** Show used sending addresses */
     void usedSendingAddresses();
+
     /** Show used receiving addresses */
     void usedReceivingAddresses();
+
     /** Pass on signal over requested out-of-sync-warning information */
     void outOfSyncWarningClicked();
 };

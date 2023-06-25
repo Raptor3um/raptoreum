@@ -25,8 +25,8 @@
 
 CSmartnodePayments mnpayments;
 
-bool IsOldBudgetBlockValueValid(const CBlock& block, int nBlockHeight, CAmount blockReward, std::string& strErrorRet) {
-    const Consensus::Params& consensusParams = Params().GetConsensus();
+bool IsOldBudgetBlockValueValid(const CBlock &block, int nBlockHeight, CAmount blockReward, std::string &strErrorRet) {
+    const Consensus::Params &consensusParams = Params().GetConsensus();
     bool isBlockRewardValueMet = (block.vtx[0]->GetValueOut() <= blockReward);
 
     if (nBlockHeight < consensusParams.nBudgetPaymentsStartBlock) {
@@ -43,16 +43,19 @@ bool IsOldBudgetBlockValueValid(const CBlock& block, int nBlockHeight, CAmount b
     // all we know is predefined budget cycle and window
 
     int nOffset = nBlockHeight % consensusParams.nBudgetPaymentsCycleBlocks;
-    if(nBlockHeight >= consensusParams.nBudgetPaymentsStartBlock &&
-       nOffset < consensusParams.nBudgetPaymentsWindowBlocks) {
+    if (nBlockHeight >= consensusParams.nBudgetPaymentsStartBlock &&
+        nOffset < consensusParams.nBudgetPaymentsWindowBlocks) {
         // NOTE: old budget system is disabled since 12.1
-        if(smartnodeSync.IsSynced()) {
+        if (smartnodeSync.IsSynced()) {
             // no old budget blocks should be accepted here on mainnet,
             // testnet/devnet/regtest should produce regular blocks only
-            LogPrint(BCLog::GOBJECT, "%s -- WARNING: Client synced but old budget system is disabled, checking block value against block reward\n", __func__);
-            if(!isBlockRewardValueMet) {
-                strErrorRet = strprintf("coinbase pays too much at height %d (actual=%d vs limit=%d), exceeded block reward, old budgets are disabled",
-                                        nBlockHeight, block.vtx[0]->GetValueOut(), blockReward);
+            LogPrint(BCLog::GOBJECT,
+                     "%s -- WARNING: Client synced but old budget system is disabled, checking block value against block reward\n",
+                     __func__);
+            if (!isBlockRewardValueMet) {
+                strErrorRet = strprintf(
+                        "coinbase pays too much at height %d (actual=%d vs limit=%d), exceeded block reward, old budgets are disabled",
+                        nBlockHeight, block.vtx[0]->GetValueOut(), blockReward);
             }
             return isBlockRewardValueMet;
         }
@@ -60,9 +63,10 @@ bool IsOldBudgetBlockValueValid(const CBlock& block, int nBlockHeight, CAmount b
         LogPrint(BCLog::GOBJECT, "%s -- WARNING: Skipping old budget block value checks, accepting block\n", __func__);
         return true;
     }
-    if(!isBlockRewardValueMet) {
-        strErrorRet = strprintf("coinbase pays too much at height %d (actual=%d vs limit=%d), exceeded block reward, block is not in old budget cycle window",
-                                nBlockHeight, block.vtx[0]->GetValueOut(), blockReward);
+    if (!isBlockRewardValueMet) {
+        strErrorRet = strprintf(
+                "coinbase pays too much at height %d (actual=%d vs limit=%d), exceeded block reward, block is not in old budget cycle window",
+                nBlockHeight, block.vtx[0]->GetValueOut(), blockReward);
     }
     return isBlockRewardValueMet;
 }
@@ -78,18 +82,18 @@ bool IsOldBudgetBlockValueValid(const CBlock& block, int nBlockHeight, CAmount b
 *   - When non-superblocks are detected, the normal schedule should be maintained
 */
 
-bool IsBlockValueValid(const CBlock& block, int nBlockHeight, CAmount blockReward, std::string& strErrorRet)
-{
-    const Consensus::Params& consensusParams = Params().GetConsensus();
+bool IsBlockValueValid(const CBlock &block, int nBlockHeight, CAmount blockReward, std::string &strErrorRet) {
+    const Consensus::Params &consensusParams = Params().GetConsensus();
     bool isBlockRewardValueMet = (block.vtx[0]->GetValueOut() <= blockReward);
 
     strErrorRet = "";
 
     if (nBlockHeight < consensusParams.nBudgetPaymentsStartBlock) {
         // old budget system is not activated yet, just make sure we do not exceed the regular block reward
-        if(!isBlockRewardValueMet) {
-            strErrorRet = strprintf("coinbase pays too much at height %d (actual=%d vs limit=%d), exceeded block reward, old budgets are not activated yet",
-                                    nBlockHeight, block.vtx[0]->GetValueOut(), blockReward);
+        if (!isBlockRewardValueMet) {
+            strErrorRet = strprintf(
+                    "coinbase pays too much at height %d (actual=%d vs limit=%d), exceeded block reward, old budgets are not activated yet",
+                    nBlockHeight, block.vtx[0]->GetValueOut(), blockReward);
         }
         return isBlockRewardValueMet;
     } else if (nBlockHeight < consensusParams.nSuperblockStartBlock) {
@@ -97,30 +101,34 @@ bool IsBlockValueValid(const CBlock& block, int nBlockHeight, CAmount blockRewar
         return IsOldBudgetBlockValueValid(block, nBlockHeight, blockReward, strErrorRet);
     }
 
-    LogPrint(BCLog::MNPAYMENTS, "block.vtx[0]->GetValueOut() %lld <= blockReward %lld\n", block.vtx[0]->GetValueOut(), blockReward);
+    LogPrint(BCLog::MNPAYMENTS, "block.vtx[0]->GetValueOut() %lld <= blockReward %lld\n", block.vtx[0]->GetValueOut(),
+             blockReward);
 
-    CAmount nSuperblockMaxValue =  blockReward + CSuperblock::GetPaymentsLimit(nBlockHeight);
+    CAmount nSuperblockMaxValue = blockReward + CSuperblock::GetPaymentsLimit(nBlockHeight);
     bool isSuperblockMaxValueMet = (block.vtx[0]->GetValueOut() <= nSuperblockMaxValue);
 
-    LogPrint(BCLog::GOBJECT, "block.vtx[0]->GetValueOut() %lld <= nSuperblockMaxValue %lld\n", block.vtx[0]->GetValueOut(), nSuperblockMaxValue);
+    LogPrint(BCLog::GOBJECT, "block.vtx[0]->GetValueOut() %lld <= nSuperblockMaxValue %lld\n",
+             block.vtx[0]->GetValueOut(), nSuperblockMaxValue);
 
     if (!CSuperblock::IsValidBlockHeight(nBlockHeight)) {
         // can't possibly be a superblock, so lets just check for block reward limits
         if (!isBlockRewardValueMet) {
-            strErrorRet = strprintf("coinbase pays too much at height %d (actual=%d vs limit=%d), exceeded block reward, only regular blocks are allowed at this height",
-                                    nBlockHeight, block.vtx[0]->GetValueOut(), blockReward);
+            strErrorRet = strprintf(
+                    "coinbase pays too much at height %d (actual=%d vs limit=%d), exceeded block reward, only regular blocks are allowed at this height",
+                    nBlockHeight, block.vtx[0]->GetValueOut(), blockReward);
         }
         return isBlockRewardValueMet;
     }
 
     // bail out in case superblock limits were exceeded
     if (!isSuperblockMaxValueMet) {
-        strErrorRet = strprintf("coinbase pays too much at height %d (actual=%d vs limit=%d), exceeded superblock max value",
-                                nBlockHeight, block.vtx[0]->GetValueOut(), nSuperblockMaxValue);
+        strErrorRet = strprintf(
+                "coinbase pays too much at height %d (actual=%d vs limit=%d), exceeded superblock max value",
+                nBlockHeight, block.vtx[0]->GetValueOut(), nSuperblockMaxValue);
         return false;
     }
 
-    if(!smartnodeSync.IsSynced() || fDisableGovernance) {
+    if (!smartnodeSync.IsSynced() || fDisableGovernance) {
         LogPrint(BCLog::MNPAYMENTS, "%s -- WARNING: Not enough data, checked superblock max bounds only\n", __func__);
         // not enough data for full checks but at least we know that the superblock limits were honored.
         // We rely on the network to have followed the correct chain in this case
@@ -133,9 +141,10 @@ bool IsBlockValueValid(const CBlock& block, int nBlockHeight, CAmount blockRewar
         // should NOT allow superblocks at all, when superblocks are disabled
         // revert to block reward limits in this case
         LogPrint(BCLog::GOBJECT, "%s -- Superblocks are disabled, no superblocks allowed\n", __func__);
-        if(!isBlockRewardValueMet) {
-            strErrorRet = strprintf("coinbase pays too much at height %d (actual=%d vs limit=%d), exceeded block reward, superblocks are disabled",
-                                    nBlockHeight, block.vtx[0]->GetValueOut(), blockReward);
+        if (!isBlockRewardValueMet) {
+            strErrorRet = strprintf(
+                    "coinbase pays too much at height %d (actual=%d vs limit=%d), exceeded block reward, superblocks are disabled",
+                    nBlockHeight, block.vtx[0]->GetValueOut(), blockReward);
         }
         return isBlockRewardValueMet;
     }
@@ -143,9 +152,10 @@ bool IsBlockValueValid(const CBlock& block, int nBlockHeight, CAmount blockRewar
     if (!CSuperblockManager::IsSuperblockTriggered(nBlockHeight)) {
         // we are on a valid superblock height but a superblock was not triggered
         // revert to block reward limits in this case
-        if(!isBlockRewardValueMet) {
-            strErrorRet = strprintf("coinbase pays too much at height %d (actual=%d vs limit=%d), exceeded block reward, no triggered superblock detected",
-                                    nBlockHeight, block.vtx[0]->GetValueOut(), blockReward);
+        if (!isBlockRewardValueMet) {
+            strErrorRet = strprintf(
+                    "coinbase pays too much at height %d (actual=%d vs limit=%d), exceeded block reward, no triggered superblock detected",
+                    nBlockHeight, block.vtx[0]->GetValueOut(), blockReward);
         }
         return isBlockRewardValueMet;
     }
@@ -153,7 +163,8 @@ bool IsBlockValueValid(const CBlock& block, int nBlockHeight, CAmount blockRewar
     // this actually also checks for correct payees and not only amount
     if (!CSuperblockManager::IsValid(*block.vtx[0], nBlockHeight, blockReward)) {
         // triggered but invalid? that's weird
-        LogPrintf("%s -- ERROR: Invalid superblock detected at height %d: %s", __func__, nBlockHeight, block.vtx[0]->ToString()); /* Continued */
+        LogPrintf("%s -- ERROR: Invalid superblock detected at height %d: %s", __func__, nBlockHeight,
+                  block.vtx[0]->ToString()); /* Continued */
         // should NOT allow invalid superblocks, when superblocks are enabled
         strErrorRet = strprintf("invalid superblock detected at height %d", nBlockHeight);
         return false;
@@ -163,9 +174,8 @@ bool IsBlockValueValid(const CBlock& block, int nBlockHeight, CAmount blockRewar
     return true;
 }
 
-bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight, CAmount blockReward, CAmount specialTxFees)
-{
-    if(fDisableGovernance) {
+bool IsBlockPayeeValid(const CTransaction &txNew, int nBlockHeight, CAmount blockReward, CAmount specialTxFees) {
+    if (fDisableGovernance) {
         //there is no budget data to use to check anything, let's just accept the longest chain
         LogPrint(BCLog::MNPAYMENTS, "%s -- WARNING: Not enough data, skipping block payee checks\n", __func__);
         return true;
@@ -174,26 +184,30 @@ bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight, CAmount bloc
     // we are still using budgets, but we have no data about them anymore,
     // we can only check smartnode payments
 
-    const Consensus::Params& consensusParams = Params().GetConsensus();
+    const Consensus::Params &consensusParams = Params().GetConsensus();
 
-    if(nBlockHeight < consensusParams.smartnodePaymentFixedBlock && nBlockHeight < consensusParams.nSuperblockStartBlock) {
+    if (nBlockHeight < consensusParams.smartnodePaymentFixedBlock &&
+        nBlockHeight < consensusParams.nSuperblockStartBlock) {
         // NOTE: old budget system is disabled since 12.1 and we should never enter this branch
         // anymore when sync is finished (on mainnet). We have no old budget data but these blocks
         // have tons of confirmations and can be safely accepted without payee verification
-        LogPrint(BCLog::GOBJECT, "%s -- WARNING: Client synced but old budget system is disabled, accepting any payee\n", __func__);
+        LogPrint(BCLog::GOBJECT,
+                 "%s -- WARNING: Client synced but old budget system is disabled, accepting any payee\n", __func__);
         return true;
     }
 
     // superblocks started
     // SEE IF THIS IS A VALID SUPERBLOCK
 
-    if(AreSuperblocksEnabled()) {
-        if(CSuperblockManager::IsSuperblockTriggered(nBlockHeight)) {
-            if(CSuperblockManager::IsValid(txNew, nBlockHeight, blockReward)) {
-                LogPrint(BCLog::GOBJECT, "%s -- Valid superblock at height %d: %s", __func__, nBlockHeight, txNew.ToString()); /* Continued */
+    if (AreSuperblocksEnabled()) {
+        if (CSuperblockManager::IsSuperblockTriggered(nBlockHeight)) {
+            if (CSuperblockManager::IsValid(txNew, nBlockHeight, blockReward)) {
+                LogPrint(BCLog::GOBJECT, "%s -- Valid superblock at height %d: %s", __func__, nBlockHeight,
+                         txNew.ToString()); /* Continued */
                 // continue validation, should also pay MN
             } else {
-                LogPrintf("%s -- ERROR: Invalid superblock detected at height %d: %s", __func__, nBlockHeight, txNew.ToString()); /* Continued */
+                LogPrintf("%s -- ERROR: Invalid superblock detected at height %d: %s", __func__, nBlockHeight,
+                          txNew.ToString()); /* Continued */
                 // should NOT allow such superblocks, when superblocks are enabled
                 return false;
             }
@@ -206,20 +220,23 @@ bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight, CAmount bloc
     }
 
     // Check for correct smartnode payment
-    if(CSmartnodePayments::IsTransactionValid(txNew, nBlockHeight, blockReward, specialTxFees)) {
-        LogPrint(BCLog::MNPAYMENTS, "%s -- Valid smartnode payment at height %d: %s", __func__, nBlockHeight, txNew.ToString()); /* Continued */
+    if (CSmartnodePayments::IsTransactionValid(txNew, nBlockHeight, blockReward, specialTxFees)) {
+        LogPrint(BCLog::MNPAYMENTS, "%s -- Valid smartnode payment at height %d: %s", __func__, nBlockHeight,
+                 txNew.ToString()); /* Continued */
         return true;
     }
 
-    LogPrintf("%s -- ERROR: Invalid smartnode payment detected at height %d: %s", __func__, nBlockHeight, txNew.ToString()); /* Continued */
+    LogPrintf("%s -- ERROR: Invalid smartnode payment detected at height %d: %s", __func__, nBlockHeight,
+              txNew.ToString()); /* Continued */
     return false;
 }
 
-void FillBlockPayments(CMutableTransaction& txNew, int nBlockHeight, CAmount blockReward, std::vector<CTxOut>& voutSmartnodePaymentsRet, std::vector<CTxOut>& voutSuperblockPaymentsRet, CAmount specialTxFees)
-{
+void FillBlockPayments(CMutableTransaction &txNew, int nBlockHeight, CAmount blockReward,
+                       std::vector <CTxOut> &voutSmartnodePaymentsRet, std::vector <CTxOut> &voutSuperblockPaymentsRet,
+                       CAmount specialTxFees) {
     // only create superblocks if spork is enabled AND if superblock is actually triggered
     // (height should be validated inside)
-    if(AreSuperblocksEnabled() && CSuperblockManager::IsSuperblockTriggered(nBlockHeight)) {
+    if (AreSuperblocksEnabled() && CSuperblockManager::IsSuperblockTriggered(nBlockHeight)) {
         LogPrint(BCLog::GOBJECT, "%s -- triggered superblock creation at height %d\n", __func__, nBlockHeight);
         CSuperblockManager::GetSuperblockPayments(nBlockHeight, voutSuperblockPaymentsRet);
     }
@@ -232,7 +249,7 @@ void FillBlockPayments(CMutableTransaction& txNew, int nBlockHeight, CAmount blo
     txNew.vout.insert(txNew.vout.end(), voutSuperblockPaymentsRet.begin(), voutSuperblockPaymentsRet.end());
 
     std::string voutSmartnodeStr;
-    for (const auto& txout : voutSmartnodePaymentsRet) {
+    for (const auto &txout: voutSmartnodePaymentsRet) {
         // subtract MN payment from miner reward
         txNew.vout[0].nValue -= txout.nValue;
         if (!voutSmartnodeStr.empty())
@@ -240,8 +257,9 @@ void FillBlockPayments(CMutableTransaction& txNew, int nBlockHeight, CAmount blo
         voutSmartnodeStr += txout.ToString();
     }
 
-    LogPrint(BCLog::MNPAYMENTS, "%s -- nBlockHeight %d blockReward %lld voutSmartnodePaymentsRet \"%s\" txNew %s", __func__, /* Continued */
-                            nBlockHeight, blockReward, voutSmartnodeStr, txNew.ToString());
+    LogPrint(BCLog::MNPAYMENTS, "%s -- nBlockHeight %d blockReward %lld voutSmartnodePaymentsRet \"%s\" txNew %s",
+             __func__, /* Continued */
+             nBlockHeight, blockReward, voutSmartnodeStr, txNew.ToString());
 }
 
 /**
@@ -250,33 +268,34 @@ void FillBlockPayments(CMutableTransaction& txNew, int nBlockHeight, CAmount blo
 *   Get smartnode payment tx outputs
 */
 
-bool CSmartnodePayments::GetSmartnodeTxOuts(int nBlockHeight, CAmount blockReward, std::vector<CTxOut>& voutSmartnodePaymentsRet, CAmount specialTxFee)
-{
+bool CSmartnodePayments::GetSmartnodeTxOuts(int nBlockHeight, CAmount blockReward,
+                                            std::vector <CTxOut> &voutSmartnodePaymentsRet, CAmount specialTxFee) {
     // make sure it's not filled yet
     voutSmartnodePaymentsRet.clear();
 
-    if(!GetBlockTxOuts(nBlockHeight, blockReward, voutSmartnodePaymentsRet, specialTxFee)) {
+    if (!GetBlockTxOuts(nBlockHeight, blockReward, voutSmartnodePaymentsRet, specialTxFee)) {
         LogPrintf("CSmartnodePayments::%s -- no payee (deterministic smartnode list empty)\n", __func__);
         return false;
     }
 
-    for (const auto& txout : voutSmartnodePaymentsRet) {
+    for (const auto &txout: voutSmartnodePaymentsRet) {
         CTxDestination dest;
         ExtractDestination(txout.scriptPubKey, dest);
 
-        LogPrintf("CSmartnodePayments::%s -- Smartnode payment %lld to %s\n", __func__, txout.nValue, EncodeDestination(dest));
+        LogPrintf("CSmartnodePayments::%s -- Smartnode payment %lld to %s\n", __func__, txout.nValue,
+                  EncodeDestination(dest));
     }
 
     return true;
 }
 
-bool CSmartnodePayments::GetBlockTxOuts(int nBlockHeight, CAmount blockReward, std::vector<CTxOut>& voutSmartnodePaymentsRet, CAmount specialTxFee)
-{
+bool CSmartnodePayments::GetBlockTxOuts(int nBlockHeight, CAmount blockReward,
+                                        std::vector <CTxOut> &voutSmartnodePaymentsRet, CAmount specialTxFee) {
     voutSmartnodePaymentsRet.clear();
 
     CAmount smartnodeReward = GetSmartnodePayment(nBlockHeight, blockReward, specialTxFee);
 
-    const CBlockIndex* pindex;
+    const CBlockIndex *pindex;
     {
         LOCK(cs_main);
         pindex = ::ChainActive()[nBlockHeight - 1];
@@ -305,26 +324,28 @@ bool CSmartnodePayments::GetBlockTxOuts(int nBlockHeight, CAmount blockReward, s
     return true;
 }
 
-bool CSmartnodePayments::IsTransactionValid(const CTransaction& txNew, int nBlockHeight, CAmount blockReward, CAmount specialTxFee)
-{
+bool CSmartnodePayments::IsTransactionValid(const CTransaction &txNew, int nBlockHeight, CAmount blockReward,
+                                            CAmount specialTxFee) {
     if (!deterministicMNManager->IsDIP3Enforced(nBlockHeight)) {
         // can't verify historical blocks here
         return true;
     }
 
-    std::vector<CTxOut> voutSmartnodePayments;
+    std::vector <CTxOut> voutSmartnodePayments;
     if (!GetBlockTxOuts(nBlockHeight, blockReward, voutSmartnodePayments, specialTxFee)) {
-        LogPrintf("CSmartnodePayments::%s -- ERROR failed to get payees for block at height %s\n", __func__, nBlockHeight);
+        LogPrintf("CSmartnodePayments::%s -- ERROR failed to get payees for block at height %s\n", __func__,
+                  nBlockHeight);
         return true;
     }
 
-    for (const auto& txout : voutSmartnodePayments) {
-        bool found = ranges::any_of(txNew.vout, [&txout](const auto& txout2) { return txout == txout2; });
+    for (const auto &txout: voutSmartnodePayments) {
+        bool found = ranges::any_of(txNew.vout, [&txout](const auto &txout2) { return txout == txout2; });
         if (!found) {
             CTxDestination dest;
             if (!ExtractDestination(txout.scriptPubKey, dest))
                 assert(false);
-            LogPrintf("CSmartnodePayments::%s -- ERROR failed to find expected payee %s in block at height %s\n", __func__, EncodeDestination(dest), nBlockHeight);
+            LogPrintf("CSmartnodePayments::%s -- ERROR failed to find expected payee %s in block at height %s\n",
+                      __func__, EncodeDestination(dest), nBlockHeight);
             return false;
         }
     }

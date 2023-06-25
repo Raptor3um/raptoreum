@@ -9,19 +9,20 @@
 #include <QTest>
 
 namespace interfaces {
-class Node;
+    class Node;
 } // namespace interfaces
 
-class RPCNestedTests : public QObject
-{
+class RPCNestedTests : public QObject {
 public:
-    RPCNestedTests(interfaces::Node& node) : m_node(node) {}
-    interfaces::Node& m_node;
+    RPCNestedTests(interfaces::Node &node) : m_node(node) {}
+
+    interfaces::Node &m_node;
 
     Q_OBJECT
 
-    private Q_SLOTS:
-    void rpcNestedTests();
+private
+    Q_SLOTS:
+            void rpcNestedTests();
 };
 
 #endif // BITCOIN_QT_TEST_RPCNESTEDTESTS_H

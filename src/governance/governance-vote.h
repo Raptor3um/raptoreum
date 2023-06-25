@@ -11,24 +11,25 @@
 #include <bls/bls.h>
 
 class CGovernanceVote;
+
 class CConnman;
 
 // INTENTION OF SMARTNODES REGARDING ITEM
 enum vote_outcome_enum_t {
-    VOTE_OUTCOME_NONE      = 0,
-    VOTE_OUTCOME_YES       = 1,
-    VOTE_OUTCOME_NO        = 2,
-    VOTE_OUTCOME_ABSTAIN   = 3
+    VOTE_OUTCOME_NONE = 0,
+    VOTE_OUTCOME_YES = 1,
+    VOTE_OUTCOME_NO = 2,
+    VOTE_OUTCOME_ABSTAIN = 3
 };
 
 
 // SIGNAL VARIOUS THINGS TO HAPPEN:
 enum vote_signal_enum_t {
-    VOTE_SIGNAL_NONE       = 0,
-    VOTE_SIGNAL_FUNDING    = 1, //   -- fund this object for it's stated amount
-    VOTE_SIGNAL_VALID      = 2, //   -- this object checks out in sentinel engine
-    VOTE_SIGNAL_DELETE     = 3, //   -- this object should be deleted from memory entirely
-    VOTE_SIGNAL_ENDORSED   = 4, //   -- officially endorsed by the network somehow (delegation)
+    VOTE_SIGNAL_NONE = 0,
+    VOTE_SIGNAL_FUNDING = 1, //   -- fund this object for it's stated amount
+    VOTE_SIGNAL_VALID = 2, //   -- this object checks out in sentinel engine
+    VOTE_SIGNAL_DELETE = 3, //   -- this object should be deleted from memory entirely
+    VOTE_SIGNAL_ENDORSED = 4, //   -- officially endorsed by the network somehow (delegation)
 };
 
 static const int MAX_SUPPORTED_VOTE_SIGNAL = VOTE_SIGNAL_ENDORSED;
@@ -39,12 +40,14 @@ static const int MAX_SUPPORTED_VOTE_SIGNAL = VOTE_SIGNAL_ENDORSED;
 *   Static class for accessing governance data
 */
 
-class CGovernanceVoting
-{
+class CGovernanceVoting {
 public:
-    static vote_outcome_enum_t ConvertVoteOutcome(const std::string& strVoteOutcome);
-    static vote_signal_enum_t ConvertVoteSignal(const std::string& strVoteSignal);
+    static vote_outcome_enum_t ConvertVoteOutcome(const std::string &strVoteOutcome);
+
+    static vote_signal_enum_t ConvertVoteSignal(const std::string &strVoteSignal);
+
     static std::string ConvertOutcomeToString(vote_outcome_enum_t nOutcome);
+
     static std::string ConvertSignalToString(vote_signal_enum_t nSignal);
 };
 
@@ -52,11 +55,10 @@ public:
 // CGovernanceVote - Allow a smartnode to vote and broadcast throughout the network
 //
 
-class CGovernanceVote
-{
-    friend bool operator==(const CGovernanceVote& vote1, const CGovernanceVote& vote2);
+class CGovernanceVote {
+    friend bool operator==(const CGovernanceVote &vote1, const CGovernanceVote &vote2);
 
-    friend bool operator<(const CGovernanceVote& vote1, const CGovernanceVote& vote2);
+    friend bool operator<(const CGovernanceVote &vote1, const CGovernanceVote &vote2);
 
 private:
     bool fValid;     //if the vote is currently valid / counted
@@ -70,11 +72,14 @@ private:
 
     /** Memory only. */
     const uint256 hash;
+
     void UpdateHash() const;
 
 public:
     CGovernanceVote();
-    CGovernanceVote(const COutPoint& outpointSmartnodeIn, const uint256& nParentHashIn, vote_signal_enum_t eVoteSignalIn, vote_outcome_enum_t eVoteOutcomeIn);
+
+    CGovernanceVote(const COutPoint &outpointSmartnodeIn, const uint256 &nParentHashIn,
+                    vote_signal_enum_t eVoteSignalIn, vote_outcome_enum_t eVoteOutcomeIn);
 
     bool IsValid() const { return fValid; }
 
@@ -86,24 +91,28 @@ public:
 
     vote_outcome_enum_t GetOutcome() const { return vote_outcome_enum_t(nVoteOutcome); }
 
-    const uint256& GetParentHash() const { return nParentHash; }
+    const uint256 &GetParentHash() const { return nParentHash; }
 
-    void SetTime(int64_t nTimeIn)
-    {
+    void SetTime(int64_t nTimeIn) {
         nTime = nTimeIn;
         UpdateHash();
     }
 
-    void SetSignature(const std::vector<unsigned char>& vchSigIn) { vchSig = vchSigIn; }
+    void SetSignature(const std::vector<unsigned char> &vchSigIn) { vchSig = vchSigIn; }
 
-    bool Sign(const CKey& key, const CKeyID& keyID);
-    bool CheckSignature(const CKeyID& keyID) const;
-    bool Sign(const CBLSSecretKey& key);
-    bool CheckSignature(const CBLSPublicKey& pubKey) const;
+    bool Sign(const CKey &key, const CKeyID &keyID);
+
+    bool CheckSignature(const CKeyID &keyID) const;
+
+    bool Sign(const CBLSSecretKey &key);
+
+    bool CheckSignature(const CBLSPublicKey &pubKey) const;
+
     bool IsValid(bool useVotingKey) const;
-    void Relay(CConnman& connman) const;
 
-    const COutPoint& GetSmartnodeOutpoint() const { return smartnodeOutpoint; }
+    void Relay(CConnman &connman) const;
+
+    const COutPoint &GetSmartnodeOutpoint() const { return smartnodeOutpoint; }
 
     /**
     *   GetHash()
@@ -112,11 +121,13 @@ public:
     */
 
     uint256 GetHash() const;
+
     uint256 GetSignatureHash() const;
 
     std::string ToString() const;
 
-    SERIALIZE_METHODS(CGovernanceVote, obj)
+    SERIALIZE_METHODS(CGovernanceVote, obj
+    )
     {
         READWRITE(obj.smartnodeOutpoint, obj.nParentHash, obj.nVoteOutcome, obj.nVoteSignal, obj.nTime);
         if (!(s.GetType() & SER_GETHASH)) {

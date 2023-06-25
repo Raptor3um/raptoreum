@@ -16,28 +16,35 @@ class ClientModel;
 
 QT_BEGIN_NAMESPACE
 class QPaintEvent;
+
 class QTimer;
+
 QT_END_NAMESPACE
 
-class TrafficGraphWidget : public QWidget
-{
+class TrafficGraphWidget : public QWidget {
     Q_OBJECT
 
 public:
     explicit TrafficGraphWidget(QWidget *parent = nullptr);
+
     void setClientModel(ClientModel *model);
+
     int getGraphRangeMins() const;
 
 protected:
     void paintEvent(QPaintEvent *) override;
 
-public Q_SLOTS:
-    void updateRates();
+public
+    Q_SLOTS:
+            void updateRates();
+
     void setGraphRangeMins(int value);
+
     void clear();
 
 private:
-    typedef boost::function<float(const TrafficSample&)> SampleChooser;
+    typedef boost::function<float(const TrafficSample &)> SampleChooser;
+
     void paintPath(QPainterPath &path, const TrafficGraphData::SampleQueue &queue, SampleChooser chooser);
 
     QTimer *timer;

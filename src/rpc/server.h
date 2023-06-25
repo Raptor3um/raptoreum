@@ -20,10 +20,10 @@
 
 class CRPCCommand;
 
-namespace RPCServer
-{
-    void OnStarted(std::function<void ()> slot);
-    void OnStopped(std::function<void ()> slot);
+namespace RPCServer {
+    void OnStarted(std::function<void()> slot);
+
+    void OnStopped(std::function<void()> slot);
 }
 
 /** Query whether RPC is running */
@@ -36,7 +36,8 @@ void RpcInterruptionPoint();
  * Set the RPC warmup status.  When this is done, all RPC calls will error out
  * immediately with RPC_IN_WARMUP.
  */
-void SetRPCWarmupStatus(const std::string& newStatus);
+void SetRPCWarmupStatus(const std::string &newStatus);
+
 /* Mark warmup as done.  RPC calls will be processed from now on.  */
 void SetRPCWarmupFinished();
 
@@ -47,8 +48,7 @@ bool RPCIsInWarmup(std::string *outStatus);
  * This provides no methods at the moment, but makes sure that delete
  * cleans up the whole state.
  */
-class RPCTimerBase
-{
+class RPCTimerBase {
 public:
     virtual ~RPCTimerBase() {}
 };
@@ -56,25 +56,28 @@ public:
 /**
  * RPC timer "driver".
  */
-class RPCTimerInterface
-{
+class RPCTimerInterface {
 public:
     virtual ~RPCTimerInterface() {}
+
     /** Implementation name */
     virtual const char *Name() = 0;
+
     /** Factory function for timers.
      * RPC will call the function to create a timer that will call func in *millis* milliseconds.
      * @note As the RPC mechanism is backend-neutral, it can use different implementations of timers.
      * This is needed to cope with the case in which there is no HTTP server, but
      * only GUI RPC console, and to break the dependency of pcserver on httprpc.
      */
-    virtual RPCTimerBase* NewTimer(std::function<void()>& func, int64_t millis) = 0;
+    virtual RPCTimerBase *NewTimer(std::function<void()> &func, int64_t millis) = 0;
 };
 
 /** Set the factory function for timers */
 void RPCSetTimerInterface(RPCTimerInterface *iface);
+
 /** Set the factory function for timer, but only, if unset */
 void RPCSetTimerInterfaceIfUnset(RPCTimerInterface *iface);
+
 /** Unset factory function for timers */
 void RPCUnsetTimerInterface(RPCTimerInterface *iface);
 
@@ -82,65 +85,68 @@ void RPCUnsetTimerInterface(RPCTimerInterface *iface);
  * Run func nSeconds from now.
  * Overrides previous timer <name> (if any).
  */
-void RPCRunLater(const std::string& name, std::function<void()> func, int64_t nSeconds);
+void RPCRunLater(const std::string &name, std::function<void()> func, int64_t nSeconds);
 
-typedef UniValue(*rpcfn_type)(const JSONRPCRequest& jsonRequest);
+typedef UniValue(*rpcfn_type)(const JSONRPCRequest &jsonRequest);
+
 typedef RPCHelpMan (*RpcMethodFnType)();
 
-class CRPCCommand
-{
+class CRPCCommand {
 public:
     //! RPC method handler reading request and assigning result. Should return
     //! true if request is fully handled, false if it should be passed on to
     //! subsequent handlers.
-    using Actor = std::function<bool(const JSONRPCRequest& request, UniValue& result, bool last_handler)>;
+    using Actor = std::function<bool(const JSONRPCRequest &request, UniValue &result, bool last_handler)>;
 
     //! Constructor taking Actor callback supporting multiple handlers.
-    CRPCCommand(std::string category, std::string name, Actor actor, std::vector<std::string> args, intptr_t unique_id)
-        : category(std::move(category)), name(std::move(name)), actor(std::move(actor)), argNames(std::move(args)),
-          unique_id(unique_id)
-    {
+    CRPCCommand(std::string category, std::string name, Actor actor, std::vector <std::string> args, intptr_t unique_id)
+            : category(std::move(category)), name(std::move(name)), actor(std::move(actor)), argNames(std::move(args)),
+              unique_id(unique_id) {
     }
 
     //! Simplified constructor taking plain RpcMethodFnType function pointer.
-    CRPCCommand(std::string category, std::string name_in, RpcMethodFnType fn, std::vector<std::string> args_in)
-        : CRPCCommand(
-              category,
-              fn().m_name,
-              [fn](const JSONRPCRequest& request, UniValue& result, bool) { result = fn().HandleRequest(request); return true; },
-              fn().GetArgNames(),
-              intptr_t(fn))
-    {
+    CRPCCommand(std::string category, std::string name_in, RpcMethodFnType fn, std::vector <std::string> args_in)
+            : CRPCCommand(
+            category,
+            fn().m_name,
+            [fn](const JSONRPCRequest &request, UniValue &result, bool) {
+                result = fn().HandleRequest(request);
+                return true;
+            },
+            fn().GetArgNames(),
+            intptr_t(fn)) {
         assert(fn().m_name == name_in);
         assert(fn().GetArgNames() == args_in);
     }
 
     //! Simplified constructor taking plain rpcfn_type function pointer.
-    CRPCCommand(const char* category, const char* name, rpcfn_type fn, std::initializer_list<const char*> args)
-        : CRPCCommand(category, name,
-                      [fn](const JSONRPCRequest& request, UniValue& result, bool) { result = fn(request); return true; },
-                      {args.begin(), args.end()}, intptr_t(fn))
-    {
+    CRPCCommand(const char *category, const char *name, rpcfn_type fn, std::initializer_list<const char *> args)
+            : CRPCCommand(category, name,
+                          [fn](const JSONRPCRequest &request, UniValue &result, bool) {
+                              result = fn(request);
+                              return true;
+                          },
+                          {args.begin(), args.end()}, intptr_t(fn)) {
     }
 
     std::string category;
     std::string name;
     Actor actor;
-    std::vector<std::string> argNames;
+    std::vector <std::string> argNames;
     intptr_t unique_id;
 };
 
 /**
  * RPC command dispatcher.
  */
-class CRPCTable
-{
+class CRPCTable {
 private:
-    std::map<std::string, std::vector<const CRPCCommand*>> mapCommands;
-    std::multimap<std::string, std::vector<UniValue>> mapPlatformRestrictions;
+    std::map <std::string, std::vector<const CRPCCommand *>> mapCommands;
+    std::multimap <std::string, std::vector<UniValue>> mapPlatformRestrictions;
 public:
     CRPCTable();
-    std::string help(const std::string& name, const std::string& strSubCommand, const JSONRPCRequest& helpreq) const;
+
+    std::string help(const std::string &name, const std::string &strSubCommand, const JSONRPCRequest &helpreq) const;
 
     void InitPlatformRestrictions();
 
@@ -156,7 +162,7 @@ public:
     * Returns a list of registered commands
     * @returns List of registered commands.
     */
-    std::vector<std::string> listCommands() const;
+    std::vector <std::string> listCommands() const;
 
     /**
      * Appends a CRPCCommand to the dispatch table.
@@ -170,17 +176,21 @@ public:
      * between calls based on method name, and aliased commands can also
      * register different names, types, and numbers of parameters.
      */
-    bool appendCommand(const std::string& name, const CRPCCommand* pcmd);
-    bool removeCommand(const std::string& name, const CRPCCommand* pcmd);
+    bool appendCommand(const std::string &name, const CRPCCommand *pcmd);
+
+    bool removeCommand(const std::string &name, const CRPCCommand *pcmd);
 };
 
-bool IsDeprecatedRPCEnabled(const std::string& method);
+bool IsDeprecatedRPCEnabled(const std::string &method);
 
 extern CRPCTable tableRPC;
 
 void StartRPC();
+
 void InterruptRPC();
+
 void StopRPC();
-std::string JSONRPCExecBatch(const JSONRPCRequest& jreq, const UniValue& vReq);
+
+std::string JSONRPCExecBatch(const JSONRPCRequest &jreq, const UniValue &vReq);
 
 #endif // BITCOIN_RPC_SERVER_H

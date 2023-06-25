@@ -72,7 +72,9 @@ static void secp256k1_ge_set_all_gej_var(secp256k1_ge *r, const secp256k1_gej *a
  *  that mul(a[i].z, zr[i+1]) == a[i+1].z. zr[0] is ignored. The x and y
  *  coordinates of the result are stored in r, the common z coordinate is
  *  stored in globalz. */
-static void secp256k1_ge_globalz_set_table_gej(size_t len, secp256k1_ge *r, secp256k1_fe *globalz, const secp256k1_gej *a, const secp256k1_fe *zr);
+static void
+secp256k1_ge_globalz_set_table_gej(size_t len, secp256k1_ge *r, secp256k1_fe *globalz, const secp256k1_gej *a,
+                                   const secp256k1_fe *zr);
 
 /** Set a group element (affine) equal to the point at infinity. */
 static void secp256k1_ge_set_infinity(secp256k1_ge *r);
@@ -111,10 +113,12 @@ static void secp256k1_gej_add_ge(secp256k1_gej *r, const secp256k1_gej *a, const
 /** Set r equal to the sum of a and b (with b given in affine coordinates). This is more efficient
     than secp256k1_gej_add_var. It is identical to secp256k1_gej_add_ge but without constant-time
     guarantee, and b is allowed to be infinity. If rzr is non-NULL, r->z = a->z * *rzr (a cannot be infinity in that case). */
-static void secp256k1_gej_add_ge_var(secp256k1_gej *r, const secp256k1_gej *a, const secp256k1_ge *b, secp256k1_fe *rzr);
+static void
+secp256k1_gej_add_ge_var(secp256k1_gej *r, const secp256k1_gej *a, const secp256k1_ge *b, secp256k1_fe *rzr);
 
 /** Set r equal to the sum of a and b (with the inverse of b's Z coordinate passed as bzinv). */
-static void secp256k1_gej_add_zinv_var(secp256k1_gej *r, const secp256k1_gej *a, const secp256k1_ge *b, const secp256k1_fe *bzinv);
+static void
+secp256k1_gej_add_zinv_var(secp256k1_gej *r, const secp256k1_gej *a, const secp256k1_ge *b, const secp256k1_fe *bzinv);
 
 #ifdef USE_ENDOMORPHISM
 /** Set r to be equal to lambda times a, where lambda is chosen in a way such that this is very fast. */

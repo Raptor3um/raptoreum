@@ -16,10 +16,9 @@
 // paid to a TX_PUBKEY, the second 21 and 22 COIN outputs
 // paid to a TX_PUBKEYHASH.
 //
-static std::vector<CMutableTransaction>
-SetupDummyInputs(CBasicKeyStore& keystoreRet, CCoinsViewCache& coinsRet)
-{
-    std::vector<CMutableTransaction> dummyTransactions;
+static std::vector <CMutableTransaction>
+SetupDummyInputs(CBasicKeyStore &keystoreRet, CCoinsViewCache &coinsRet) {
+    std::vector <CMutableTransaction> dummyTransactions;
     dummyTransactions.resize(2);
 
     // Add some keys to the keystore:
@@ -53,15 +52,14 @@ SetupDummyInputs(CBasicKeyStore& keystoreRet, CCoinsViewCache& coinsRet)
 // characteristics than e.g. reindex timings. But that's not a requirement of
 // every benchmark."
 // (https://github.com/bitcoin/bitcoin/issues/7883#issuecomment-224807484)
-static void CCoinsCaching(benchmark::Bench& bench)
-{
+static void CCoinsCaching(benchmark::Bench &bench) {
     const ECCVerifyHandle verify_handle;
     ECC_Start();
 
     CBasicKeyStore keystore;
     CCoinsView coinsDummy;
     CCoinsViewCache coins(&coinsDummy);
-    std::vector<CMutableTransaction> dummyTransactions = SetupDummyInputs(keystore, coins);
+    std::vector <CMutableTransaction> dummyTransactions = SetupDummyInputs(keystore, coins);
 
     CMutableTransaction t1;
     t1.vin.resize(3);

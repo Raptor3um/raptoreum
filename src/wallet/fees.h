@@ -9,37 +9,41 @@
 #include <amount.h>
 
 class CCoinControl;
+
 class CFeeRate;
+
 class CWallet;
+
 struct FeeCalculation;
 
 /**
  * Return the minimum required absolute fee for the size
  * based on the required fee rate
  */
-CAmount GetRequiredFee(const CWallet& wallet, unsigned int nTxBytes);
+CAmount GetRequiredFee(const CWallet &wallet, unsigned int nTxBytes);
 
 /**
  * Estimate the minimum fee considering user set parameters
  * and the required fee
  */
-CAmount GetMinimumFee(const CWallet& wallet, unsigned int nTxBytes, const CCoinControl& coin_control, FeeCalculation* feeCalc);
+CAmount
+GetMinimumFee(const CWallet &wallet, unsigned int nTxBytes, const CCoinControl &coin_control, FeeCalculation *feeCalc);
 
 /**
  * Return the minimum required feerate taking into account the
  * minimum relay feerate and user set minimum transaction feerate
  */
-CFeeRate GetRequiredFeeRate(const CWallet& wallet);
+CFeeRate GetRequiredFeeRate(const CWallet &wallet);
 
 /**
  * Estimate the minimum fee rate considering user set parameters
  * and the required fee
  */
-CFeeRate GetMinimumFeeRate(const CWallet& wallet, const CCoinControl& coin_control, FeeCalculation* feeCalc);
+CFeeRate GetMinimumFeeRate(const CWallet &wallet, const CCoinControl &coin_control, FeeCalculation *feeCalc);
 
 /**
  * Return the maximum feerate for discarding change.
  */
-CFeeRate GetDiscardRate(const CWallet& wallet);
+CFeeRate GetDiscardRate(const CWallet &wallet);
 
 #endif // BITCOIN_WALLET_FEES_H

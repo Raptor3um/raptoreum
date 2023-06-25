@@ -12,21 +12,26 @@
 #include <QString>
 
 /* Coin network-specific GUI style information */
-class NetworkStyle
-{
+class NetworkStyle {
 public:
     /** Get style associated with provided BIP70 network id, or 0 if not known */
     static const NetworkStyle *instantiate(const QString &networkId);
 
     const QString &getAppName() const { return appName; }
+
     const QIcon &getAppIcon() const { return appIcon; }
+
     const QPixmap &getSplashImage() const { return splashImage; }
+
     const QIcon &getTrayAndWindowIcon() const { return trayAndWindowIcon; }
+
     const QString &getTitleAddText() const { return titleAddText; }
+
     const QColor &getBadgeColor() const { return badgeColor; }
 
 private:
-    NetworkStyle(const QString &appName, const int iconColorHueShift, const int iconColorSaturationReduction, const char *titleAddText);
+    NetworkStyle(const QString &appName, const int iconColorHueShift, const int iconColorSaturationReduction,
+                 const char *titleAddText);
 
     QString appName;
     QIcon appIcon;
@@ -35,8 +40,9 @@ private:
     QString titleAddText;
     QColor badgeColor;
 
-    void rotateColor(QColor& col, const int iconColorHueShift, const int iconColorSaturationReduction);
-    void rotateColors(QImage& img, const int iconColorHueShift, const int iconColorSaturationReduction);
+    void rotateColor(QColor &col, const int iconColorHueShift, const int iconColorSaturationReduction);
+
+    void rotateColors(QImage &img, const int iconColorHueShift, const int iconColorSaturationReduction);
 };
 
 #endif // BITCOIN_QT_NETWORKSTYLE_H

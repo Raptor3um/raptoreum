@@ -14,8 +14,7 @@
 
 #ifndef HAVE_TIMINGSAFE_BCMP
 
-int timingsafe_bcmp(const unsigned char* b1, const unsigned char* b2, size_t n)
-{
+int timingsafe_bcmp(const unsigned char *b1, const unsigned char *b2, size_t n) {
     const unsigned char *p1 = b1, *p2 = b2;
     int ret = 0;
 
@@ -26,8 +25,8 @@ int timingsafe_bcmp(const unsigned char* b1, const unsigned char* b2, size_t n)
 
 #endif // TIMINGSAFE_BCMP
 
-ChaCha20Poly1305AEAD::ChaCha20Poly1305AEAD(const unsigned char* K_1, size_t K_1_len, const unsigned char* K_2, size_t K_2_len)
-{
+ChaCha20Poly1305AEAD::ChaCha20Poly1305AEAD(const unsigned char *K_1, size_t K_1_len, const unsigned char *K_2,
+                                           size_t K_2_len) {
     assert(K_1_len == CHACHA20_POLY1305_AEAD_KEY_LEN);
     assert(K_2_len == CHACHA20_POLY1305_AEAD_KEY_LEN);
     m_chacha_main.SetKey(K_1, CHACHA20_POLY1305_AEAD_KEY_LEN);
@@ -38,14 +37,16 @@ ChaCha20Poly1305AEAD::ChaCha20Poly1305AEAD(const unsigned char* K_1, size_t K_1_
     m_cached_aad_seqnr = std::numeric_limits<uint64_t>::max();
 }
 
-bool ChaCha20Poly1305AEAD::Crypt(uint64_t seqnr_payload, uint64_t seqnr_aad, int aad_pos, unsigned char* dest, size_t dest_len /* length of the output buffer for sanity checks */, const unsigned char* src, size_t src_len, bool is_encrypt)
-{
+bool ChaCha20Poly1305AEAD::Crypt(uint64_t seqnr_payload, uint64_t seqnr_aad, int aad_pos, unsigned char *dest,
+                                 size_t dest_len /* length of the output buffer for sanity checks */,
+                                 const unsigned char *src, size_t src_len, bool is_encrypt) {
     // check buffer boundaries
     if (
         // if we encrypt, make sure the source contains at least the expected AAD and the destination has at least space for the source + MAC
-        (is_encrypt && (src_len < CHACHA20_POLY1305_AEAD_AAD_LEN || dest_len < src_len + POLY1305_TAGLEN)) ||
-        // if we decrypt, make sure the source contains at least the expected AAD+MAC and the destination has at least space for the source - MAC
-        (!is_encrypt && (src_len < CHACHA20_POLY1305_AEAD_AAD_LEN + POLY1305_TAGLEN || dest_len < src_len - POLY1305_TAGLEN))) {
+            (is_encrypt && (src_len < CHACHA20_POLY1305_AEAD_AAD_LEN || dest_len < src_len + POLY1305_TAGLEN)) ||
+            // if we decrypt, make sure the source contains at least the expected AAD+MAC and the destination has at least space for the source - MAC
+            (!is_encrypt &&
+             (src_len < CHACHA20_POLY1305_AEAD_AAD_LEN + POLY1305_TAGLEN || dest_len < src_len - POLY1305_TAGLEN))) {
         return false;
     }
 
@@ -61,7 +62,7 @@ bool ChaCha20Poly1305AEAD::Crypt(uint64_t seqnr_payload, uint64_t seqnr_aad, int
 
     // if decrypting, verify the tag prior to decryption
     if (!is_encrypt) {
-        const unsigned char* tag = src + src_len - POLY1305_TAGLEN;
+        const unsigned char *tag = src + src_len - POLY1305_TAGLEN;
         poly1305_auth(expected_tag, src, src_len - POLY1305_TAGLEN, poly_key);
 
         // constant time compare the calculated MAC with the provided MAC
@@ -89,7 +90,8 @@ bool ChaCha20Poly1305AEAD::Crypt(uint64_t seqnr_payload, uint64_t seqnr_aad, int
 
     // Set the playload ChaCha instance block counter to 1 and crypt the payload
     m_chacha_main.Seek(1);
-    m_chacha_main.Crypt(src + CHACHA20_POLY1305_AEAD_AAD_LEN, dest + CHACHA20_POLY1305_AEAD_AAD_LEN, src_len - CHACHA20_POLY1305_AEAD_AAD_LEN);
+    m_chacha_main.Crypt(src + CHACHA20_POLY1305_AEAD_AAD_LEN, dest + CHACHA20_POLY1305_AEAD_AAD_LEN,
+                        src_len - CHACHA20_POLY1305_AEAD_AAD_LEN);
 
     // If encrypting, calculate and append tag
     if (is_encrypt) {
@@ -102,8 +104,7 @@ bool ChaCha20Poly1305AEAD::Crypt(uint64_t seqnr_payload, uint64_t seqnr_aad, int
     return true;
 }
 
-bool ChaCha20Poly1305AEAD::GetLength(uint32_t* len24_out, uint64_t seqnr_aad, int aad_pos, const uint8_t* ciphertext)
-{
+bool ChaCha20Poly1305AEAD::GetLength(uint32_t *len24_out, uint64_t seqnr_aad, int aad_pos, const uint8_t *ciphertext) {
     // enforce valid aad position to avoid accessing outside of the 64byte keystream cache
     // (there is space for 21 times 3 bytes)
     assert(aad_pos >= 0 && aad_pos < CHACHA20_ROUND_OUTPUT - CHACHA20_POLY1305_AEAD_AAD_LEN);

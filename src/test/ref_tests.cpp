@@ -9,25 +9,25 @@
 BOOST_AUTO_TEST_SUITE(ref_tests)
 
 BOOST_AUTO_TEST_CASE(ref_test)
-{
-    util::Ref ref;
-    BOOST_CHECK(!ref.Has<int>());
-    BOOST_CHECK_THROW(ref.Get<int>(), NonFatalCheckError);
-    int value = 5;
-    ref.Set(value);
-    BOOST_CHECK(ref.Has<int>());
-    BOOST_CHECK_EQUAL(ref.Get<int>(), 5);
-    ++ref.Get<int>();
-    BOOST_CHECK_EQUAL(ref.Get<int>(), 6);
-    BOOST_CHECK_EQUAL(value, 6);
-    ++value;
-    BOOST_CHECK_EQUAL(value, 7);
-    BOOST_CHECK_EQUAL(ref.Get<int>(), 7);
-    BOOST_CHECK(!ref.Has<bool>());
-    BOOST_CHECK_THROW(ref.Get<bool>(), NonFatalCheckError);
-    ref.Clear();
-    BOOST_CHECK(!ref.Has<int>());
-    BOOST_CHECK_THROW(ref.Get<int>(), NonFatalCheckError);
-}
+        {
+                util::Ref ref;
+        BOOST_CHECK(!ref.Has<int>());
+        BOOST_CHECK_THROW(ref.Get<int>(), NonFatalCheckError);
+        int value = 5;
+        ref.Set(value);
+        BOOST_CHECK(ref.Has<int>());
+        BOOST_CHECK_EQUAL(ref.Get<int>(), 5);
+        ++ref.Get<int>();
+        BOOST_CHECK_EQUAL(ref.Get<int>(), 6);
+        BOOST_CHECK_EQUAL(value, 6);
+        ++value;
+        BOOST_CHECK_EQUAL(value, 7);
+        BOOST_CHECK_EQUAL(ref.Get<int>(), 7);
+        BOOST_CHECK(!ref.Has<bool>());
+        BOOST_CHECK_THROW(ref.Get<bool>(), NonFatalCheckError);
+        ref.Clear();
+        BOOST_CHECK(!ref.Has<int>());
+        BOOST_CHECK_THROW(ref.Get<int>(), NonFatalCheckError);
+        }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -17,12 +17,12 @@
 
 #include <univalue.h>
 
-extern UniValue read_json(const std::string& jsondata);
+extern UniValue read_json(const std::string &jsondata);
 
-BOOST_FIXTURE_TEST_SUITE(governance_validators_tests, BasicTestingSetup)
+BOOST_FIXTURE_TEST_SUITE(governance_validators_tests, BasicTestingSetup
+)
 
-std::string CreateEncodedProposalObject(const UniValue& objJSON)
-{
+std::string CreateEncodedProposalObject(const UniValue &objJSON) {
     UniValue innerArray(UniValue::VARR);
     innerArray.push_back(UniValue("proposal"));
     innerArray.push_back(objJSON);
@@ -36,53 +36,54 @@ std::string CreateEncodedProposalObject(const UniValue& objJSON)
 }
 
 BOOST_AUTO_TEST_CASE(valid_proposals_test)
-{
-    // all proposals are valid but expired
-    UniValue tests = read_json(std::string(json_tests::proposals_valid, json_tests::proposals_valid + sizeof(json_tests::proposals_valid)));
+        {
+                // all proposals are valid but expired
+                UniValue tests = read_json(std::string(json_tests::proposals_valid, json_tests::proposals_valid + sizeof(json_tests::proposals_valid)));
 
-    BOOST_CHECK_MESSAGE(tests.size(), "Empty `tests`");
-    for(size_t i = 0; i < tests.size(); ++i) {
-        const UniValue& objProposal = tests[i];
+        BOOST_CHECK_MESSAGE(tests.size(), "Empty `tests`");
+        for (size_t i = 0; i < tests.size(); ++i) {
+            const UniValue &objProposal = tests[i];
 
-        // legacy format
-        std::string strHexData1 = CreateEncodedProposalObject(objProposal);
-        CProposalValidator validator1(strHexData1, true);
-        BOOST_CHECK_MESSAGE(validator1.Validate(false), validator1.GetErrorMessages());
-        BOOST_CHECK_MESSAGE(!validator1.Validate(), validator1.GetErrorMessages());
+            // legacy format
+            std::string strHexData1 = CreateEncodedProposalObject(objProposal);
+            CProposalValidator validator1(strHexData1, true);
+            BOOST_CHECK_MESSAGE(validator1.Validate(false), validator1.GetErrorMessages());
+            BOOST_CHECK_MESSAGE(!validator1.Validate(), validator1.GetErrorMessages());
 
-        // legacy format w/validation flag off
-        CProposalValidator validator0(strHexData1, false);
-        BOOST_CHECK(!validator0.Validate());
-        BOOST_CHECK_EQUAL(validator0.GetErrorMessages(), "Legacy proposal serialization format not allowed;JSON parsing error;");
+            // legacy format w/validation flag off
+            CProposalValidator validator0(strHexData1, false);
+            BOOST_CHECK(!validator0.Validate());
+            BOOST_CHECK_EQUAL(validator0.GetErrorMessages(),
+                              "Legacy proposal serialization format not allowed;JSON parsing error;");
 
-        // new format
-        std::string strHexData2 = HexStr(objProposal.write());
-        CProposalValidator validator2(strHexData2, false);
-        BOOST_CHECK_MESSAGE(validator2.Validate(false), validator2.GetErrorMessages());
-        BOOST_CHECK_MESSAGE(!validator2.Validate(), validator2.GetErrorMessages());
-    }
-}
+            // new format
+            std::string strHexData2 = HexStr(objProposal.write());
+            CProposalValidator validator2(strHexData2, false);
+            BOOST_CHECK_MESSAGE(validator2.Validate(false), validator2.GetErrorMessages());
+            BOOST_CHECK_MESSAGE(!validator2.Validate(), validator2.GetErrorMessages());
+        }
+        }
 
 BOOST_AUTO_TEST_CASE(invalid_proposals_test)
-{
-    // all proposals are invalid regardless of being expired or not
-    // (i.e. we don't even check for expiration here)
-    UniValue tests = read_json(std::string(json_tests::proposals_invalid, json_tests::proposals_invalid + sizeof(json_tests::proposals_invalid)));
+        {
+                // all proposals are invalid regardless of being expired or not
+                // (i.e. we don't even check for expiration here)
+                UniValue tests = read_json(std::string(json_tests::proposals_invalid, json_tests::proposals_invalid + sizeof(json_tests::proposals_invalid)));
 
-    BOOST_CHECK_MESSAGE(tests.size(), "Empty `tests`");
-    for(size_t i = 0; i < tests.size(); ++i) {
-        const UniValue& objProposal = tests[i];
+        BOOST_CHECK_MESSAGE(tests.size(), "Empty `tests`");
+        for (size_t i = 0; i < tests.size(); ++i) {
+            const UniValue &objProposal = tests[i];
 
-        // legacy format
-        std::string strHexData1 = CreateEncodedProposalObject(objProposal);
-        CProposalValidator validator1(strHexData1, true);
-        BOOST_CHECK_MESSAGE(!validator1.Validate(false), validator1.GetErrorMessages());
+            // legacy format
+            std::string strHexData1 = CreateEncodedProposalObject(objProposal);
+            CProposalValidator validator1(strHexData1, true);
+            BOOST_CHECK_MESSAGE(!validator1.Validate(false), validator1.GetErrorMessages());
 
-        // new format
-        std::string strHexData2 = HexStr(objProposal.write());
-        CProposalValidator validator2(strHexData2, false);
-        BOOST_CHECK_MESSAGE(!validator2.Validate(false), validator2.GetErrorMessages());
-    }
-}
+            // new format
+            std::string strHexData2 = HexStr(objProposal.write());
+            CProposalValidator validator2(strHexData2, false);
+            BOOST_CHECK_MESSAGE(!validator2.Validate(false), validator2.GetErrorMessages());
+        }
+        }
 
 BOOST_AUTO_TEST_SUITE_END()

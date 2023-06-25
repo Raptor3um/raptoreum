@@ -16,37 +16,49 @@ namespace Ui {
 }
 
 /** Modal overlay to display information about the chain-sync state */
-class ModalOverlay : public QWidget
-{
+class ModalOverlay : public QWidget {
     Q_OBJECT
 
 public:
     explicit ModalOverlay(bool enable_wallet, QWidget *parent);
+
     ~ModalOverlay();
 
-public Q_SLOTS:
-    void tipUpdate(int count, const QDateTime& blockDate, double nVerificationProgress);
-    void setKnownBestHeight(int count, const QDateTime& blockDate);
+public
+    Q_SLOTS:
+            void tipUpdate(int
+    count,
+    const QDateTime &blockDate,
+    double nVerificationProgress
+    );
+
+    void setKnownBestHeight(int count, const QDateTime &blockDate);
 
     void toggleVisibility();
+
     // will show or hide the modal layer
     void showHide(bool hide = false, bool userRequested = false);
+
     void closeClicked();
+
     void hideForever();
+
     bool isLayerVisible() const { return layerIsVisible; }
 
 protected:
-    bool eventFilter(QObject * obj, QEvent * ev) override;
-    bool event(QEvent* ev) override;
+    bool eventFilter(QObject *obj, QEvent *ev) override;
+
+    bool event(QEvent *ev) override;
 
 private:
     Ui::ModalOverlay *ui;
     int bestHeaderHeight; //best known height (based on the headers)
     QDateTime bestHeaderDate;
-    QVector<QPair<qint64, double> > blockProcessTime;
+    QVector <QPair<qint64, double>> blockProcessTime;
     bool layerIsVisible;
     bool userClosed;
     bool foreverHidden;
+
     void UpdateHeaderSyncLabel();
 };
 

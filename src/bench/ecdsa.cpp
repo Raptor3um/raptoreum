@@ -7,15 +7,14 @@
 
 #include <key.h>
 
-static void ECDSASign(benchmark::Bench& bench)
-{
-    std::vector<CKey> keys;
-    std::vector<uint256> hashes;
+static void ECDSASign(benchmark::Bench &bench) {
+    std::vector <CKey> keys;
+    std::vector <uint256> hashes;
     for (size_t i = 0; i < 100; i++) {
         CKey k;
         k.MakeNewKey(false);
         keys.emplace_back(k);
-        hashes.emplace_back(::SerializeHash((int)i));
+        hashes.emplace_back(::SerializeHash((int) i));
     }
 
     // Benchmark.
@@ -27,16 +26,15 @@ static void ECDSASign(benchmark::Bench& bench)
     });
 }
 
-static void ECDSAVerify(benchmark::Bench& bench)
-{
-    std::vector<CPubKey> keys;
-    std::vector<uint256> hashes;
-    std::vector<std::vector<unsigned char>> sigs;
+static void ECDSAVerify(benchmark::Bench &bench) {
+    std::vector <CPubKey> keys;
+    std::vector <uint256> hashes;
+    std::vector <std::vector<unsigned char>> sigs;
     for (size_t i = 0; i < 100; i++) {
         CKey k;
         k.MakeNewKey(false);
         keys.emplace_back(k.GetPubKey());
-        hashes.emplace_back(::SerializeHash((int)i));
+        hashes.emplace_back(::SerializeHash((int) i));
         std::vector<unsigned char> sig;
         k.Sign(hashes[i], sig);
         sigs.emplace_back(sig);
@@ -50,16 +48,15 @@ static void ECDSAVerify(benchmark::Bench& bench)
     });
 }
 
-static void ECDSAVerify_LargeBlock(benchmark::Bench& bench)
-{
-    std::vector<CPubKey> keys;
-    std::vector<uint256> hashes;
-    std::vector<std::vector<unsigned char>> sigs;
+static void ECDSAVerify_LargeBlock(benchmark::Bench &bench) {
+    std::vector <CPubKey> keys;
+    std::vector <uint256> hashes;
+    std::vector <std::vector<unsigned char>> sigs;
     for (size_t i = 0; i < 1000; i++) {
         CKey k;
         k.MakeNewKey(false);
         keys.emplace_back(k.GetPubKey());
-        hashes.emplace_back(::SerializeHash((int)i));
+        hashes.emplace_back(::SerializeHash((int) i));
         std::vector<unsigned char> sig;
         k.Sign(hashes[i], sig);
         sigs.emplace_back(sig);

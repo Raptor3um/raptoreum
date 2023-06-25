@@ -16,64 +16,83 @@
 #include <interfaces/node.h>
 
 class BitcoinGUI;
+
 class ClientModel;
+
 class NetworkStyle;
+
 class OptionsModel;
+
 class PaymentServer;
+
 class WalletController;
+
 class WalletModel;
 
 /** Class encapsulating Bitcoin Core startup and shutdown.
  * Allows running startup and shutdown in a different thread from the UI thread.
  */
-class BitcoinCore: public QObject
-{
+class BitcoinCore : public QObject {
     Q_OBJECT
 public:
-    explicit BitcoinCore(interfaces::Node& node);
+    explicit BitcoinCore(interfaces::Node &node);
 
-public Q_SLOTS:
-    void initialize();
+public
+    Q_SLOTS:
+            void initialize();
+
     void shutdown();
+
     void restart(QStringList args);
 
-Q_SIGNALS:
-    void initializeResult(bool success, interfaces::BlockAndHeaderTipInfo tip_info);
+    Q_SIGNALS:
+            void initializeResult(bool
+    success,
+    interfaces::BlockAndHeaderTipInfo tip_info
+    );
+
     void shutdownResult();
+
     void runawayException(const QString &message);
 
 private:
     /// Pass fatal exception message to UI thread
     void handleRunawayException(const std::exception_ptr e);
 
-    interfaces::Node& m_node;
+    interfaces::Node &m_node;
 };
 
 /** Main Bitcoin application object */
-class BitcoinApplication: public QApplication
-{
+class BitcoinApplication : public QApplication {
     Q_OBJECT
 public:
-    explicit BitcoinApplication(interfaces::Node& node);
+    explicit BitcoinApplication(interfaces::Node &node);
+
     ~BitcoinApplication();
 
 #ifdef ENABLE_WALLET
     /// Create payment server
     void createPaymentServer();
 #endif
+
     /// parameter interaction/setup based on rules
     void parameterSetup();
+
     /// Create options model
     void createOptionsModel(bool resetSettings);
+
     /// Create main window
     void createWindow(const NetworkStyle *networkStyle);
+
     /// Create splash screen
     void createSplashScreen(const NetworkStyle *networkStyle);
+
     /// Basic initialization, before starting initialization/shutdown thread. Return true on success.
     bool baseInitialize();
 
     /// Request core initialization
     void requestInitialize();
+
     /// Request core shutdown
     void requestShutdown();
 
@@ -83,22 +102,32 @@ public:
     /// Get window identifier of QMainWindow (BitcoinGUI)
     WId getMainWinId() const;
 
-public Q_SLOTS:
-    void initializeResult(bool success, interfaces::BlockAndHeaderTipInfo tip_info);
+public
+    Q_SLOTS:
+            void initializeResult(bool
+    success,
+    interfaces::BlockAndHeaderTipInfo tip_info
+    );
+
     void shutdownResult();
+
     /// Handle runaway exceptions. Shows a message box with the problem and quits the program.
     void handleRunawayException(const QString &message);
 
-Q_SIGNALS:
-    void requestedInitialize();
+    Q_SIGNALS:
+            void requestedInitialize();
+
     void requestedRestart(QStringList args);
+
     void requestedShutdown();
+
     void splashFinished();
-    void windowShown(BitcoinGUI* window);
+
+    void windowShown(BitcoinGUI *window);
 
 private:
     QThread *coreThread;
-    interfaces::Node& m_node;
+    interfaces::Node &m_node;
     OptionsModel *optionsModel;
     ClientModel *clientModel;
     BitcoinGUI *window;
@@ -108,11 +137,11 @@ private:
     WalletController* m_wallet_controller{nullptr};
 #endif
     int returnValue;
-    std::unique_ptr<QWidget> shutdownWindow;
+    std::unique_ptr <QWidget> shutdownWindow;
 
     void startThread();
 };
 
-int GuiMain(int argc, char* argv[]);
+int GuiMain(int argc, char *argv[]);
 
 #endif // BITCOIN_QT_RAPTOREUM_H

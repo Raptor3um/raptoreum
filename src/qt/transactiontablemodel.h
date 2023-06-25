@@ -13,21 +13,23 @@
 #include <memory>
 
 namespace interfaces {
-class Handler;
+    class Handler;
 }
 
 class TransactionRecord;
+
 class TransactionTablePriv;
+
 class WalletModel;
 
 /** UI model for the transaction table of a wallet.
  */
-class TransactionTableModel : public QAbstractTableModel
-{
+class TransactionTableModel : public QAbstractTableModel {
     Q_OBJECT
 
 public:
     explicit TransactionTableModel(WalletModel *parent = nullptr);
+
     ~TransactionTableModel();
 
     enum ColumnIndex {
@@ -78,49 +80,79 @@ public:
     };
 
     int rowCount(const QModelIndex &parent) const override;
+
     int columnCount(const QModelIndex &parent) const override;
+
     QVariant data(const QModelIndex &index, int role) const override;
+
     QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
-    QModelIndex index(int row, int column, const QModelIndex & parent = QModelIndex()) const override;
+
+    QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const override;
+
     bool processingQueuedTransactions() const { return fProcessingQueuedTransactions; }
+
     void updateChainLockHeight(int chainLockHeight);
+
     int getChainLockHeight() const;
 
 private:
     WalletModel *walletModel;
-    std::unique_ptr<interfaces::Handler> m_handler_transaction_changed;
-    std::unique_ptr<interfaces::Handler> m_handler_address_book_changed;
-    std::unique_ptr<interfaces::Handler> m_handler_show_progress;
+    std::unique_ptr <interfaces::Handler> m_handler_transaction_changed;
+    std::unique_ptr <interfaces::Handler> m_handler_address_book_changed;
+    std::unique_ptr <interfaces::Handler> m_handler_show_progress;
     QStringList columns;
     TransactionTablePriv *priv;
     bool fProcessingQueuedTransactions;
     int cachedChainLockHeight;
 
     void subscribeToCoreSignals();
+
     void unsubscribeFromCoreSignals();
 
-    QString formatAddressLabel(const std::string &address, const QString& label, bool tooltip) const;
+    QString formatAddressLabel(const std::string &address, const QString &label, bool tooltip) const;
+
     QVariant addressColor(const TransactionRecord *wtx) const;
+
     QString formatTxStatus(const TransactionRecord *wtx) const;
+
     QString formatTxDate(const TransactionRecord *wtx) const;
+
     QString formatTxType(const TransactionRecord *wtx) const;
+
     QString formatTxToAddress(const TransactionRecord *wtx, bool tooltip) const;
-    QString formatTxAmount(const TransactionRecord *wtx, bool showUnconfirmed=true, BitcoinUnits::SeparatorStyle separators=BitcoinUnits::separatorStandard) const;
+
+    QString formatTxAmount(const TransactionRecord *wtx, bool showUnconfirmed = true,
+                           BitcoinUnits::SeparatorStyle separators = BitcoinUnits::separatorStandard) const;
+
     QVariant amountColor(const TransactionRecord *rec) const;
+
     QString formatTooltip(const TransactionRecord *rec) const;
+
     QVariant txStatusDecoration(const TransactionRecord *wtx) const;
+
     QVariant txWatchonlyDecoration(const TransactionRecord *wtx) const;
+
     QVariant txAddressDecoration(const TransactionRecord *wtx) const;
 
-public Q_SLOTS:
-    /* New transaction, or transaction changed status */
-    void updateTransaction(const QString &hash, int status, bool showTransaction);
+public
+    Q_SLOTS:
+            /* New transaction, or transaction changed status */
+            void updateTransaction(
+    const QString &hash,
+    int status,
+    bool showTransaction
+    );
+
     void updateAddressBook(const QString &address, const QString &label,
                            bool isMine, const QString &purpose, int status);
+
     void updateConfirmations();
+
     void updateDisplayUnit();
+
     /** Updates the column title to "Amount (DisplayUnit)" and emits headerDataChanged() signal for table headers to react. */
     void updateAmountColumnTitle();
+
     /* Needed to update fProcessingQueuedTransactions through a QueuedConnection */
     void setProcessingQueuedTransactions(bool value) { fProcessingQueuedTransactions = value; }
 

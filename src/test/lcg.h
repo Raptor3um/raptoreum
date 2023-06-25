@@ -19,7 +19,7 @@ class MMIXLinearCongruentialGenerator {
 
 public:
     MMIXLinearCongruentialGenerator(uint64_t initialstate = 0)
-        : state(initialstate) {}
+            : state(initialstate) {}
 
     // pseudorandom, except the first value returned is the seed provided
     // (thus starting with 0, by default)

@@ -11,6 +11,7 @@
 
 #ifndef SRC_FOUNDER_PAYMENT_H_
 #define SRC_FOUNDER_PAYMENT_H_
+
 #include <string>
 #include <amount.h>
 #include <primitives/transaction.h>
@@ -20,28 +21,34 @@
 
 static const std::string DEFAULT_FOUNDER_ADDRESS = "RTtyQU6DoSuNWetT4WUem5qXP5jNYGpwat";
 struct FounderRewardStructure {
-	int blockHeight;
-	int rewardPercentage;
+    int blockHeight;
+    int rewardPercentage;
 };
 
 class FounderPayment {
 public:
-	FounderPayment(std::vector<FounderRewardStructure> rewardStructures = {}, int startBlock = 0, const std::string &address = DEFAULT_FOUNDER_ADDRESS) {
-		this->founderAddress = address;
-		this->startBlock = startBlock;
-		this->rewardStructures = rewardStructures;
-	}
-	~FounderPayment(){};
-	CAmount getFounderPaymentAmount(int blockHeight, CAmount blockReward);
-	void FillFounderPayment(CMutableTransaction& txNew, int nBlockHeight, CAmount blockReward, CTxOut& txoutFounderRet);
-	bool IsBlockPayeeValid(const CTransaction& txNew, const int height, const CAmount blockReward);
-	int getStartBlock() {return this->startBlock;}
-private:
-	std::string founderAddress;
-	int startBlock;
-	std::vector<FounderRewardStructure> rewardStructures;
-};
+    FounderPayment(std::vector <FounderRewardStructure> rewardStructures = {}, int startBlock = 0,
+                   const std::string &address = DEFAULT_FOUNDER_ADDRESS) {
+        this->founderAddress = address;
+        this->startBlock = startBlock;
+        this->rewardStructures = rewardStructures;
+    }
 
+    ~FounderPayment() {};
+
+    CAmount getFounderPaymentAmount(int blockHeight, CAmount blockReward);
+
+    void FillFounderPayment(CMutableTransaction &txNew, int nBlockHeight, CAmount blockReward, CTxOut &txoutFounderRet);
+
+    bool IsBlockPayeeValid(const CTransaction &txNew, const int height, const CAmount blockReward);
+
+    int getStartBlock() { return this->startBlock; }
+
+private:
+    std::string founderAddress;
+    int startBlock;
+    std::vector <FounderRewardStructure> rewardStructures;
+};
 
 
 #endif /* SRC_FOUNDER_PAYMENT_H_ */

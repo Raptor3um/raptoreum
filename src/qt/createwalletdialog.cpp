@@ -11,16 +11,15 @@
 
 #include <QPushButton>
 
-CreateWalletDialog::CreateWalletDialog(QWidget* parent) :
-    QDialog(parent),
-    ui(new Ui::CreateWalletDialog)
-{
+CreateWalletDialog::CreateWalletDialog(QWidget *parent) :
+        QDialog(parent),
+        ui(new Ui::CreateWalletDialog) {
     ui->setupUi(this);
     ui->buttonBox->button(QDialogButtonBox::Ok)->setText(tr("Create"));
     ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(false);
     ui->wallet_name_line_edit->setFocus(Qt::ActiveWindowFocusReason);
 
-    connect(ui->wallet_name_line_edit, &QLineEdit::textEdited, [this](const QString& text) {
+    connect(ui->wallet_name_line_edit, &QLineEdit::textEdited, [this](const QString &text) {
         ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(!text.isEmpty());
     });
 
@@ -35,27 +34,22 @@ CreateWalletDialog::CreateWalletDialog(QWidget* parent) :
     });
 }
 
-CreateWalletDialog::~CreateWalletDialog()
-{
+CreateWalletDialog::~CreateWalletDialog() {
     delete ui;
 }
 
-QString CreateWalletDialog::walletName() const
-{
+QString CreateWalletDialog::walletName() const {
     return ui->wallet_name_line_edit->text();
 }
 
-bool CreateWalletDialog::isEncryptWalletChecked() const
-{
+bool CreateWalletDialog::isEncryptWalletChecked() const {
     return ui->encrypt_wallet_checkbox->isChecked();
 }
 
-bool CreateWalletDialog::isDisablePrivateKeysChecked() const
-{
+bool CreateWalletDialog::isDisablePrivateKeysChecked() const {
     return ui->disable_privkeys_checkbox->isChecked();
 }
 
-bool CreateWalletDialog::isMakeBlankWalletChecked() const
-{
+bool CreateWalletDialog::isMakeBlankWalletChecked() const {
     return ui->blank_wallet_checkbox->isChecked();
 }

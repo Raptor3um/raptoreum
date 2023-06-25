@@ -15,9 +15,10 @@
  */
 
 class CTransaction;
+
 class CValidationState;
 
 /** Context-independent validity checks */
-bool CheckTransaction(const CTransaction& tx, CValidationState& state, int nHeight, CAmount blockReward);
+bool CheckTransaction(const CTransaction &tx, CValidationState &state, int nHeight, CAmount blockReward);
 
 #endif // BITCOIN_CONSENSUS_TX_CHECK_H

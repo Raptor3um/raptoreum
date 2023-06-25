@@ -9,8 +9,7 @@
 
 /** Macintosh-specific notification handler (supports UserNotificationCenter).
  */
-class MacNotificationHandler : public QObject
-{
+class MacNotificationHandler : public QObject {
     Q_OBJECT
 
 public:
@@ -20,6 +19,7 @@ public:
 
     /** check if OS can handle UserNotifications */
     bool hasUserNotificationCenterSupport(void);
+
     static MacNotificationHandler *instance();
 };
 

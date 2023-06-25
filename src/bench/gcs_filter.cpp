@@ -5,8 +5,7 @@
 #include <bench/bench.h>
 #include <blockfilter.h>
 
-static void ConstructGCSFilter(benchmark::Bench& bench)
-{
+static void ConstructGCSFilter(benchmark::Bench &bench) {
     GCSFilter::ElementSet elements;
     for (int i = 0; i < 10000; ++i) {
         GCSFilter::Element element(32);
@@ -22,8 +21,7 @@ static void ConstructGCSFilter(benchmark::Bench& bench)
     });
 }
 
-static void MatchGCSFilter(benchmark::Bench& bench)
-{
+static void MatchGCSFilter(benchmark::Bench &bench) {
     GCSFilter::ElementSet elements;
     for (int i = 0; i < 10000; ++i) {
         GCSFilter::Element element(32);

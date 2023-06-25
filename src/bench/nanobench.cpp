@@ -3,4 +3,5 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #define ANKERL_NANOBENCH_IMPLEMENT
+
 #include <bench/nanobench.h>

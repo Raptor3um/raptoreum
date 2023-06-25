@@ -10,11 +10,17 @@
 #include <serialize.h>
 
 class CConnman;
+
 class CDataStream;
+
 class CDeterministicMN;
+
 class CDeterministicMNList;
+
 class CDeterministicMNListDiff;
+
 class CNode;
+
 class UniValue;
 
 /**
@@ -34,20 +40,24 @@ class UniValue;
  * proper encryption for these connections first.
  */
 
-class CMNAuth
-{
+class CMNAuth {
 public:
     uint256 proRegTxHash;
     CBLSSignature sig;
 
-    SERIALIZE_METHODS(CMNAuth, obj)
+    SERIALIZE_METHODS(CMNAuth, obj
+    )
     {
         READWRITE(obj.proRegTxHash, obj.sig);
     }
 
-    static void PushMNAUTH(CNode* pnode, CConnman& connman);
-    static void ProcessMessage(CNode* pnode, const std::string& strCommand, CDataStream& vRecv, CConnman& connman);
-    static void NotifySmartnodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff, CConnman& connman);
+    static void PushMNAUTH(CNode *pnode, CConnman &connman);
+
+    static void ProcessMessage(CNode *pnode, const std::string &strCommand, CDataStream &vRecv, CConnman &connman);
+
+    static void
+    NotifySmartnodeListChanged(bool undo, const CDeterministicMNList &oldMNList, const CDeterministicMNListDiff &diff,
+                               CConnman &connman);
 };
 
 

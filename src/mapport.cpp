@@ -325,16 +325,17 @@ void StopMapPort()
 }
 
 #else // #if defined(USE_NATPMP) || defined(USE_UPNP)
-void StartMapPort(bool use_upnp, bool use_natpmp)
-{
-  // Intentionally left blank.
+
+void StartMapPort(bool use_upnp, bool use_natpmp) {
+    // Intentionally left blank.
 }
-void InterruptMapPort()
-{
-  // Intentionally left blank.
+
+void InterruptMapPort() {
+    // Intentionally left blank.
 }
-void StopMapPort()
-{
-  // Intentionally left blank.
+
+void StopMapPort() {
+    // Intentionally left blank.
 }
+
 #endif // #if defined(USE_NATPMP) || defined(USE_UPNP)

@@ -8,10 +8,10 @@
 
 class CConnman;
 
-class CSmartnodeUtils
-{
+class CSmartnodeUtils {
 public:
-    static void ProcessSmartnodeConnections(CConnman& connman);
+    static void ProcessSmartnodeConnections(CConnman &connman);
+
     static void DoMaintenance(CConnman &connman);
 };
 

@@ -5,8 +5,7 @@
 #include <bench/bench.h>
 #include <bloom.h>
 
-static void RollingBloom(benchmark::Bench& bench)
-{
+static void RollingBloom(benchmark::Bench &bench) {
     CRollingBloomFilter filter(120000, 0.000001);
     std::vector<unsigned char> data(32);
     uint32_t count = 0;
@@ -26,12 +25,11 @@ static void RollingBloom(benchmark::Bench& bench)
     });
 }
 
-static void RollingBloomReset(benchmark::Bench& bench)
-{
-  CRollingBloomFilter filter(120000, 0.000001);
-  bench.run([&] {
-    filter.reset();
-  });
+static void RollingBloomReset(benchmark::Bench &bench) {
+    CRollingBloomFilter filter(120000, 0.000001);
+    bench.run([&] {
+        filter.reset();
+    });
 }
 
 BENCHMARK(RollingBloom);

@@ -27,18 +27,16 @@
 
 /* Return positive answer if transaction should be shown in list.
  */
-bool TransactionRecord::showTransaction()
-{
+bool TransactionRecord::showTransaction() {
     // There are currently no cases where we hide transactions, but
     // we may want to use this in the future for things like RBF.
     return true;
 }
 
 /* Return block height for transaction */
-int TransactionRecord::getTransactionBlockHeight(const CWalletTx &wtx)
-{
+int TransactionRecord::getTransactionBlockHeight(const CWalletTx &wtx) {
     // Find the block the tx is in
-    CBlockIndex* pindex = nullptr;
+    CBlockIndex *pindex = nullptr;
     BlockMap::iterator mi = ::BlockIndex().find(wtx.m_confirm.hashBlock);
     if (mi != ::BlockIndex().end())
         pindex = (*mi).second;
@@ -49,15 +47,13 @@ int TransactionRecord::getTransactionBlockHeight(const CWalletTx &wtx)
 }
 
 /* Return Maturity Block of Future TX */
-int TransactionRecord::getFutureTxMaturityBlock(const CWalletTx &wtx, CFutureTx &ftx)
-{
+int TransactionRecord::getFutureTxMaturityBlock(const CWalletTx &wtx, CFutureTx &ftx) {
     int maturityBlock = (getTransactionBlockHeight(wtx) + ftx.maturity); //tx block height + maturity
     return maturityBlock;
 }
 
 /* Return Maturity Time of Future TX */
-int TransactionRecord::getFutureTxMaturityTime(const CWalletTx &wtx, CFutureTx &ftx)
-{
+int TransactionRecord::getFutureTxMaturityTime(const CWalletTx &wtx, CFutureTx &ftx) {
     int64_t maturityTime = (wtx.nTimeReceived + ftx.lockTime); //tx time + locked seconds
     return maturityTime;
 }
@@ -65,29 +61,29 @@ int TransactionRecord::getFutureTxMaturityTime(const CWalletTx &wtx, CFutureTx &
 /* Return positive answer if future transaction has matured.
  */
 bool TransactionRecord::isFutureTxMatured(const CWalletTx &wtx, CFutureTx &ftx) {
-    if (::ChainActive().Height() >= getFutureTxMaturityBlock(wtx, ftx) || GetAdjustedTime() >= getFutureTxMaturityTime(wtx, ftx)) {
+    if (::ChainActive().Height() >= getFutureTxMaturityBlock(wtx, ftx) ||
+        GetAdjustedTime() >= getFutureTxMaturityTime(wtx, ftx)) {
         return true;
     } else {
         return false;
     }
 }
 
-void TransactionRecord::getFutureTxStatus(const interfaces::WalletTx& wtx, const interfaces::WalletTxStatus& wtxStatus, CFutureTx &ftx) {
+void TransactionRecord::getFutureTxStatus(const interfaces::WalletTx &wtx, const interfaces::WalletTxStatus &wtxStatus,
+                                          CFutureTx &ftx) {
     if (GetTxPayload(wtx.tx->vExtraPayload, ftx)) {
         int maturityBlock = wtxStatus.block_height + ftx.maturity;
         int64_t maturityTime = wtxStatus.time_received + ftx.lockTime;
         int currentHeight = ::ChainActive().Height();
         //transaction depth in chain against maturity OR relative seconds of transaction against lockTime
-        if(status.depth == 0)
-        {
+        if (status.depth == 0) {
             status.status = TransactionStatus::Unconfirmed;
-        }
-        else
-        if ((currentHeight >= maturityBlock && ftx.maturity >= 0) || (GetAdjustedTime() >= maturityTime && ftx.lockTime >= 0)) {
+        } else if ((currentHeight >= maturityBlock && ftx.maturity >= 0) ||
+                   (GetAdjustedTime() >= maturityTime && ftx.lockTime >= 0)) {
             status.status = TransactionStatus::Confirmed;
         } else {
             status.countsForBalance = false;
-           //display transaction is mature in x blocks or transaction is mature in days hh:mm:ss
+            //display transaction is mature in x blocks or transaction is mature in days hh:mm:ss
             if (maturityBlock >= ::ChainActive().Height()) {
                 status.status = TransactionStatus::OpenUntilBlock;
                 status.open_for = maturityBlock - ::ChainActive().Height();
@@ -106,8 +102,9 @@ void TransactionRecord::getFutureTxStatus(const interfaces::WalletTx& wtx, const
 /*
  * Decompose CWallet transaction to model transaction records.
  */
-QList<TransactionRecord> TransactionRecord::decomposeTransaction(interfaces::Wallet& wallet, const interfaces::WalletTx& wtx) {
-    QList<TransactionRecord> parts;
+QList <TransactionRecord>
+TransactionRecord::decomposeTransaction(interfaces::Wallet &wallet, const interfaces::WalletTx &wtx) {
+    QList <TransactionRecord> parts;
     isminefilter creditMineTypes = 0;
     isminefilter debitMineTypes = 0;
 
@@ -119,17 +116,15 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(interfaces::Wal
     uint256 hash = wtx.tx->GetHash();
     bool isFuture = wtx.tx->nType == TRANSACTION_FUTURE;
 
-    for (const isminetype mine : wtx.txout_is_mine)
-    {
+    for (const isminetype mine: wtx.txout_is_mine) {
         creditMineTypes |= mine;
     }
 
-    for (const isminetype mine : wtx.txin_is_mine)
-    {
+    for (const isminetype mine: wtx.txin_is_mine) {
         debitMineTypes |= mine;
     }
 
-    std::map<std::string, std::string> mapValue = wtx.value_map;
+    std::map <std::string, std::string> mapValue = wtx.value_map;
 
     // Combinations of transactions:
     // NB: This treats all watched addresses like a single, other wallet
@@ -160,9 +155,8 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(interfaces::Wal
     // LogPrintf("TransactionRecord::%s TxId: %s debitMineTypes: %02X, creditMineTypes: %02X, debit: %s, credit: %s, ValueOut: %s, TxFee: %s, nType: %d\n",
     //         __func__, hash.ToString(), debitMineTypes, creditMineTypes, FormatMoney(nDebit), FormatMoney(nCredit), FormatMoney(wtx.tx->GetValueOut()), FormatMoney(nTxFee), wtx.tx->nType);
 
-    for (unsigned int vOutIdx = 0; vOutIdx < wtx.tx->vout.size(); ++vOutIdx)
-    {
-        const CTxOut& txout = wtx.tx->vout[vOutIdx];
+    for (unsigned int vOutIdx = 0; vOutIdx < wtx.tx->vout.size(); ++vOutIdx) {
+        const CTxOut &txout = wtx.tx->vout[vOutIdx];
 
         isminetype mine = wtx.txout_is_mine[vOutIdx];
 
@@ -181,15 +175,13 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(interfaces::Wal
         bool inputInvolvesWatchAddress = false;
         bool outputInvolvesWatchAddress = false;
         isminetype fAllFromMe = ISMINE_SPENDABLE;
-        for (const isminetype mine : wtx.txin_is_mine)
-        {
+        for (const isminetype mine: wtx.txin_is_mine) {
             if (mine & ISMINE_WATCH_ONLY) inputInvolvesWatchAddress = true;
             if (fAllFromMe > mine) fAllFromMe = mine;
         }
 
         isminetype fAllToMe = ISMINE_SPENDABLE;
-        for (const isminetype mine : wtx.txout_is_mine)
-        {
+        for (const isminetype mine: wtx.txout_is_mine) {
             if (mine & ISMINE_WATCH_ONLY) outputInvolvesWatchAddress = true;
             if (fAllToMe > mine) fAllToMe = mine;
         }
@@ -200,8 +192,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(interfaces::Wal
         // A/B Generated:
         // A: coinbase -> self    Generated
         // B: coinbase -> watched Generated (watched)
-        if (wtx.is_coinbase && mine)
-        {
+        if (wtx.is_coinbase && mine) {
             sub.type = TransactionRecord::Generated;
             sub.involvesWatchAddress = mine & ISMINE_WATCH_ONLY;
             parts.append(sub);
@@ -211,15 +202,13 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(interfaces::Wal
         // C/D: SendToSelf, PrivateSend*
         // C: self    -> self     Send to self
         // D: watched -> watched  Send to self (watched)
-        if (fAllFromMe && fAllToMe && (debitMineTypes == creditMineTypes))
-        {
+        if (fAllFromMe && fAllToMe && (debitMineTypes == creditMineTypes)) {
             CAmount nChange = wtx.change;
             sub.debit = -(nDebit - nChange);
             sub.credit = nCredit - nChange;
             sub.involvesWatchAddress = inputInvolvesWatchAddress;
 
-            if (wtx.is_denominate)
-            {
+            if (wtx.is_denominate) {
                 sub.type = TransactionRecord::CoinJoinCreateDenominations;
                 sub.debit = -nDebit;
                 sub.credit = nCredit;
@@ -227,8 +216,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(interfaces::Wal
                 break; // Only report first of the batch
             }
 
-            if (mapValue["DS"] == "1")
-            {
+            if (mapValue["DS"] == "1") {
                 sub.type = TransactionRecord::CoinJoinSend;
                 CAmount nChange = wtx.change;
                 parts.append(sub);
@@ -242,14 +230,10 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(interfaces::Wal
             if (wtx.tx->vin.size() == 1 && wtx.tx->vout.size() == 1
                 && CCoinJoin::IsCollateralAmount(nDebit)
                 && CCoinJoin::IsCollateralAmount(nCredit)
-                && CCoinJoin::IsCollateralAmount(-nNet))
-            {
+                && CCoinJoin::IsCollateralAmount(-nNet)) {
                 sub.type = TransactionRecord::CoinJoinCollateralPayment;
-            }
-            else
-            {
-                for (const auto& txout : wtx.tx->vout)
-                {
+            } else {
+                for (const auto &txout: wtx.tx->vout) {
                     if (txout.nValue == CCoinJoin::GetMaxCollateralAmount()) {
                         sub.type = TransactionRecord::CoinJoinMakeCollaterals;
                         continue; // Keep looking, could be a part of PrivateSendCreateDenominations
@@ -267,10 +251,10 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(interfaces::Wal
         // These create one or two records (one normal, possibly one watched):
         // E: self     -> other   Send from wallet to external
         // F: self     -> watched Send from wallet to watched external (and watched receive)
-        if (debitMineTypes & ISMINE_SPENDABLE && !(mine & ISMINE_SPENDABLE))
-        {
+        if (debitMineTypes & ISMINE_SPENDABLE && !(mine & ISMINE_SPENDABLE)) {
             // Generate one or two records - sent from wallet, received by watched:
-            sub.type = isFuture ? TransactionRecord::FutureSend : (validDestination ? TransactionRecord::SendToAddress : TransactionRecord::SendToOther);
+            sub.type = isFuture ? TransactionRecord::FutureSend : (validDestination ? TransactionRecord::SendToAddress
+                                                                                    : TransactionRecord::SendToOther);
 
             // Sent from wallet:
             sub.involvesWatchAddress = false;
@@ -280,10 +264,11 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(interfaces::Wal
             parts.append(sub);
 
             // If received by Watch, add a receive transaction on the watched side:
-            if (mine & ISMINE_WATCH_ONLY)
-            {
+            if (mine & ISMINE_WATCH_ONLY) {
                 sub.involvesWatchAddress = true;
-                sub.type = isFuture ? TransactionRecord::FutureReceive : (validDestination ? TransactionRecord::RecvWithAddress : TransactionRecord::RecvFromOther);
+                sub.type = isFuture ? TransactionRecord::FutureReceive : (validDestination
+                                                                          ? TransactionRecord::RecvWithAddress
+                                                                          : TransactionRecord::RecvFromOther);
                 sub.debit = 0;
                 sub.credit = txout.nValue;
                 parts.append(sub);
@@ -295,21 +280,23 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(interfaces::Wal
         // These create one or two records (one normal, possibly one watched):
         // G: other    -> self    Send from watched to wallet no change
         // H: watched  -> self    Send from watched to wallet with change
-        if (!(debitMineTypes & ISMINE_SPENDABLE) && mine & ISMINE_SPENDABLE)
-        {
+        if (!(debitMineTypes & ISMINE_SPENDABLE) && mine & ISMINE_SPENDABLE) {
             // Generate one or two records - receive with wallet, sent by watched:
             sub.involvesWatchAddress = false;
-            sub.type = isFuture ? TransactionRecord::FutureReceive : (validDestination ? TransactionRecord::RecvWithAddress : TransactionRecord::RecvFromOther);
+            sub.type = isFuture ? TransactionRecord::FutureReceive : (validDestination
+                                                                      ? TransactionRecord::RecvWithAddress
+                                                                      : TransactionRecord::RecvFromOther);
 
             // Received with wallet:
             sub.credit = txout.nValue;
             parts.append(sub);
 
             // If sent by Watch, add a sent transaction on the watched side:
-            if (debitMineTypes & ISMINE_WATCH_ONLY)
-            {
+            if (debitMineTypes & ISMINE_WATCH_ONLY) {
                 sub.involvesWatchAddress = true;
-                sub.type = isFuture ? TransactionRecord::FutureSend : (validDestination ? TransactionRecord::SendToAddress : TransactionRecord::SendToOther);
+                sub.type = isFuture ? TransactionRecord::FutureSend : (validDestination
+                                                                       ? TransactionRecord::SendToAddress
+                                                                       : TransactionRecord::SendToOther);
                 sub.debit = -(txout.nValue + nTxFee);
                 nTxFee = 0; // Add fee to first output
                 sub.credit = 0;
@@ -322,13 +309,11 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(interfaces::Wal
         // This handles watched addresses going to unmonitored addresses
         // I: watched  -> other   Send from watched address to other
         // J: other    -> watched Send from other address to watched
-        if (!(debitMineTypes & ISMINE_SPENDABLE) && !(mine & ISMINE_SPENDABLE))
-        {
+        if (!(debitMineTypes & ISMINE_SPENDABLE) && !(mine & ISMINE_SPENDABLE)) {
             sub.involvesWatchAddress = true;
 
             // Sent by watched address:
-            if (inputInvolvesWatchAddress)
-            {
+            if (inputInvolvesWatchAddress) {
                 sub.type = isFuture ? TransactionRecord::FutureSend : TransactionRecord::SendToOther;
                 sub.debit = -(txout.nValue + nTxFee);
                 nTxFee = 0; // Add fee to first output
@@ -337,8 +322,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(interfaces::Wal
             }
 
             // If received by Watch, add a receive transaction on the watched side:
-            if (outputInvolvesWatchAddress && mine)
-            {
+            if (outputInvolvesWatchAddress && mine) {
                 sub.involvesWatchAddress = true;
                 sub.type = isFuture ? TransactionRecord::FutureReceive : TransactionRecord::RecvWithAddress;
                 sub.debit = 0;
@@ -353,16 +337,16 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(interfaces::Wal
     return parts;
 }
 
-void TransactionRecord::updateStatus(const interfaces::WalletTx& wtx, const interfaces::WalletTxStatus& wtxStatus, int numBlocks, int64_t adjustedTime, int chainLockHeight, int64_t block_time)
-{
+void TransactionRecord::updateStatus(const interfaces::WalletTx &wtx, const interfaces::WalletTxStatus &wtxStatus,
+                                     int numBlocks, int64_t adjustedTime, int chainLockHeight, int64_t block_time) {
     // Determine transaction status
 
     // Sort order, unrecorded transactions sort to the top
     status.sortKey = strprintf("%010d-%01d-%010u-%03d",
-        wtxStatus.block_height,
-        wtxStatus.is_coinbase ? 1 : 0,
-        wtxStatus.time_received,
-        idx);
+                               wtxStatus.block_height,
+                               wtxStatus.is_coinbase ? 1 : 0,
+                               wtxStatus.time_received,
+                               idx);
     status.countsForBalance = wtxStatus.is_trusted && !(wtxStatus.blocks_to_maturity > 0);
     status.depth = wtxStatus.depth_in_main_chain;
     status.cur_num_blocks = numBlocks;
@@ -370,7 +354,7 @@ void TransactionRecord::updateStatus(const interfaces::WalletTx& wtx, const inte
     status.lockedByChainLocks = wtxStatus.is_chainlocked;
     status.lockedByInstantSend = wtxStatus.is_islocked;
 
-    const bool up_to_date = ((int64_t)QDateTime::currentMSecsSinceEpoch() / 1000 - block_time < MAX_BLOCK_TIME_GAP);
+    const bool up_to_date = ((int64_t) QDateTime::currentMSecsSinceEpoch() / 1000 - block_time < MAX_BLOCK_TIME_GAP);
     if (up_to_date && !wtxStatus.is_final) {
         if (wtxStatus.lock_time < LOCKTIME_THRESHOLD) {
             status.status = TransactionStatus::OpenUntilBlock;
@@ -380,8 +364,8 @@ void TransactionRecord::updateStatus(const interfaces::WalletTx& wtx, const inte
             status.open_for = wtxStatus.lock_time;
         }
     }
-    // For generated transactions, determine maturity
-    else if(type == TransactionRecord::Generated) {
+        // For generated transactions, determine maturity
+    else if (type == TransactionRecord::Generated) {
         if (wtxStatus.blocks_to_maturity > 0) {
             status.status = TransactionStatus::Immature;
 
@@ -394,7 +378,7 @@ void TransactionRecord::updateStatus(const interfaces::WalletTx& wtx, const inte
             status.status = TransactionStatus::Confirmed;
         }
     }
-    // For Future transactions, determine maturity
+        // For Future transactions, determine maturity
     else if (type == TransactionRecord::FutureReceive) {
         CFutureTx ftx;
         getFutureTxStatus(wtx, wtxStatus, ftx);
@@ -414,26 +398,24 @@ void TransactionRecord::updateStatus(const interfaces::WalletTx& wtx, const inte
     status.needsUpdate = false;
 }
 
-bool TransactionRecord::statusUpdateNeeded(int numBlocks, int chainLockHeight) const
-{
+bool TransactionRecord::statusUpdateNeeded(int numBlocks, int chainLockHeight) const {
     static bool minRefresh = gArgs.GetBoolArg("-minrefresh", false);
     bool numBlocksChanged = status.cur_num_blocks != numBlocks;
 
     // Block height changes do not matter for final states, except to update confirmations:
     bool completed =
-        status.status == TransactionStatus::Confirmed ||
-        status.status == TransactionStatus::Abandoned ||
-        status.status == TransactionStatus::NotAccepted;
+            status.status == TransactionStatus::Confirmed ||
+            status.status == TransactionStatus::Abandoned ||
+            status.status == TransactionStatus::NotAccepted;
 
     return
-        status.needsUpdate ||
-        (!minRefresh && numBlocksChanged) ||
-        (!completed) ||
-        (!status.lockedByChainLocks && status.cachedChainLockHeight != chainLockHeight);
+            status.needsUpdate ||
+            (!minRefresh && numBlocksChanged) ||
+            (!completed) ||
+            (!status.lockedByChainLocks && status.cachedChainLockHeight != chainLockHeight);
 }
 
-void TransactionRecord::updateLabel(interfaces::Wallet& wallet)
-{
+void TransactionRecord::updateLabel(interfaces::Wallet &wallet) {
     if (IsValidDestination(txDest)) {
         std::string name;
         if (wallet.getAddress(txDest, &name)) {
@@ -444,12 +426,10 @@ void TransactionRecord::updateLabel(interfaces::Wallet& wallet)
     }
 }
 
-QString TransactionRecord::getTxHash() const
-{
+QString TransactionRecord::getTxHash() const {
     return QString::fromStdString(hash.ToString());
 }
 
-int TransactionRecord::getOutputIndex() const
-{
+int TransactionRecord::getOutputIndex() const {
     return idx;
 }

@@ -33,7 +33,7 @@ enum class ThresholdState {
 // A map that gives the state for blocks whose height is a multiple of Period().
 // The map is indexed by the block's parent, however, so all keys in the map
 // will either be nullptr or a block with (height + 1) % Period() == 0.
-typedef std::map<const CBlockIndex*, ThresholdState> ThresholdConditionCache;
+typedef std::map<const CBlockIndex *, ThresholdState> ThresholdConditionCache;
 
 /** Display status of an in-progress BIP9 softfork */
 struct BIP9Stats {
@@ -54,34 +54,50 @@ struct BIP9Stats {
  */
 class AbstractThresholdConditionChecker {
 protected:
-    virtual bool Condition(const CBlockIndex* pindex, const Consensus::Params& params) const =0;
-    virtual int64_t BeginTime(const Consensus::Params& params) const =0;
-    virtual int64_t EndTime(const Consensus::Params& params) const =0;
-    virtual int Period(const Consensus::Params& params) const =0;
-    virtual int Threshold(const Consensus::Params& params, int nAttempt) const =0;
+    virtual bool Condition(const CBlockIndex *pindex, const Consensus::Params &params) const = 0;
+
+    virtual int64_t BeginTime(const Consensus::Params &params) const = 0;
+
+    virtual int64_t EndTime(const Consensus::Params &params) const = 0;
+
+    virtual int Period(const Consensus::Params &params) const = 0;
+
+    virtual int Threshold(const Consensus::Params &params, int nAttempt) const = 0;
 
 public:
     /** Returns the numerical statistics of an in-progress BIP9 softfork in the current period */
-    BIP9Stats GetStateStatisticsFor(const CBlockIndex* pindex, const Consensus::Params& params, ThresholdConditionCache& cache) const;
+    BIP9Stats GetStateStatisticsFor(const CBlockIndex *pindex, const Consensus::Params &params,
+                                    ThresholdConditionCache &cache) const;
+
     /** Returns the state for pindex A based on parent pindexPrev B. Applies any state transition if conditions are present.
      *  Caches state from first block of period. */
-    ThresholdState GetStateFor(const CBlockIndex* pindexPrev, const Consensus::Params& params, ThresholdConditionCache& cache) const;
+    ThresholdState
+    GetStateFor(const CBlockIndex *pindexPrev, const Consensus::Params &params, ThresholdConditionCache &cache) const;
+
     /** Returns the height since when the ThresholdState has started for pindex A based on parent pindexPrev B, all blocks of a period share the same */
-    int GetStateSinceHeightFor(const CBlockIndex* pindexPrev, const Consensus::Params& params, ThresholdConditionCache& cache) const;
+    int GetStateSinceHeightFor(const CBlockIndex *pindexPrev, const Consensus::Params &params,
+                               ThresholdConditionCache &cache) const;
 };
 
 /** BIP 9 allows multiple softforks to be deployed in parallel. We cache per-period state for every one of them
  *  keyed by the bit position used to signal support. */
-struct VersionBitsCache
-{
+struct VersionBitsCache {
     ThresholdConditionCache caches[Consensus::MAX_VERSION_BITS_DEPLOYMENTS];
 
     void Clear();
 };
 
-ThresholdState VersionBitsState(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos, VersionBitsCache& cache);
-BIP9Stats VersionBitsStatistics(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos, VersionBitsCache& cache);
-int VersionBitsStateSinceHeight(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos, VersionBitsCache& cache);
-uint32_t VersionBitsMask(const Consensus::Params& params, Consensus::DeploymentPos pos);
+ThresholdState
+VersionBitsState(const CBlockIndex *pindexPrev, const Consensus::Params &params, Consensus::DeploymentPos pos,
+                 VersionBitsCache &cache);
+
+BIP9Stats
+VersionBitsStatistics(const CBlockIndex *pindexPrev, const Consensus::Params &params, Consensus::DeploymentPos pos,
+                      VersionBitsCache &cache);
+
+int VersionBitsStateSinceHeight(const CBlockIndex *pindexPrev, const Consensus::Params &params,
+                                Consensus::DeploymentPos pos, VersionBitsCache &cache);
+
+uint32_t VersionBitsMask(const Consensus::Params &params, Consensus::DeploymentPos pos);
 
 #endif // BITCOIN_VERSIONBITS_H

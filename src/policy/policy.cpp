@@ -15,8 +15,7 @@
 #include <util/strencodings.h>
 
 
-CAmount GetDustThreshold(const CTxOut& txout, const CFeeRate& dustRelayFeeIn)
-{
+CAmount GetDustThreshold(const CTxOut &txout, const CFeeRate &dustRelayFeeIn) {
     // "Dust" is defined in terms of dustRelayFee,
     // which has units ruffs-per-kilobyte.
     // If you'd pay more in fees than the value of the output
@@ -29,21 +28,19 @@ CAmount GetDustThreshold(const CTxOut& txout, const CFeeRate& dustRelayFeeIn)
     if (txout.scriptPubKey.IsUnspendable())
         return 0;
 
-    size_t nSize = GetSerializeSize(txout, SER_DISK, 0)+148u;
+    size_t nSize = GetSerializeSize(txout, SER_DISK, 0) + 148u;
     return dustRelayFeeIn.GetFee(nSize);
 }
 
-bool IsDust(const CTxOut& txout, const CFeeRate& dustRelayFeeIn)
-{
+bool IsDust(const CTxOut &txout, const CFeeRate &dustRelayFeeIn) {
     return (txout.nValue < GetDustThreshold(txout, dustRelayFeeIn));
 }
 
-bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType)
-{
-    std::vector<std::vector<unsigned char> > vSolutions;
+bool IsStandard(const CScript &scriptPubKey, txnouttype &whichType) {
+    std::vector <std::vector<unsigned char>> vSolutions;
     whichType = Solver(scriptPubKey, vSolutions);
 
-    if(whichType == TX_NONSTANDARD) {
+    if (whichType == TX_NONSTANDARD) {
         return false;
     } else if (whichType == TX_MULTISIG) {
         unsigned char m = vSolutions.front()[0];
@@ -60,8 +57,8 @@ bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType)
     return true;
 }
 
-bool IsStandardTx(const CTransaction& tx, bool permit_bare_multisig, const CFeeRate& dust_relay_fee, std::string& reason)
-{
+bool
+IsStandardTx(const CTransaction &tx, bool permit_bare_multisig, const CFeeRate &dust_relay_fee, std::string &reason) {
     if (tx.nVersion > CTransaction::MAX_STANDARD_VERSION || tx.nVersion < 1) {
         reason = "version";
         return false;
@@ -77,8 +74,7 @@ bool IsStandardTx(const CTransaction& tx, bool permit_bare_multisig, const CFeeR
         return false;
     }
 
-    for (const CTxIn& txin : tx.vin)
-    {
+    for (const CTxIn &txin: tx.vin) {
         // Biggest 'standard' txin is a 15-of-15 P2SH multisig with compressed
         // keys (remember the 520 byte limit on redeemScript size). That works
         // out to a (15*(33+1))+3=513 byte redeemScript, 513+1+15*(73+1)+3=1627
@@ -98,7 +94,7 @@ bool IsStandardTx(const CTransaction& tx, bool permit_bare_multisig, const CFeeR
 
     unsigned int nDataOut = 0;
     txnouttype whichType;
-    for (const CTxOut& txout : tx.vout) {
+    for (const CTxOut &txout: tx.vout) {
         if (!::IsStandard(txout.scriptPubKey, whichType)) {
             reason = "scriptpubkey";
             return false;
@@ -140,21 +136,19 @@ bool IsStandardTx(const CTransaction& tx, bool permit_bare_multisig, const CFeeR
  * expensive-to-check-upon-redemption script like:
  *   DUP CHECKSIG DROP ... repeated 100 times... OP_1
  */
-bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
-{
+bool AreInputsStandard(const CTransaction &tx, const CCoinsViewCache &mapInputs) {
     if (tx.IsCoinBase())
         return true; // Coinbases don't use vin normally
 
-    for (unsigned int i = 0; i < tx.vin.size(); i++)
-    {
-        const CTxOut& prev = mapInputs.AccessCoin(tx.vin[i].prevout).out;
+    for (unsigned int i = 0; i < tx.vin.size(); i++) {
+        const CTxOut &prev = mapInputs.AccessCoin(tx.vin[i].prevout).out;
 
-        std::vector<std::vector<unsigned char> > vSolutions;
+        std::vector <std::vector<unsigned char>> vSolutions;
         txnouttype whichType = Solver(prev.scriptPubKey, vSolutions);
         if (whichType == TX_NONSTANDARD) {
             return false;
-        } else if(whichType == TX_SCRIPTHASH) {
-            std::vector<std::vector<unsigned char> > stack;
+        } else if (whichType == TX_SCRIPTHASH) {
+            std::vector <std::vector<unsigned char>> stack;
             // convert the scriptSig into a stack, so we can inspect the redeemScript
             if (!EvalScript(stack, tx.vin[i].scriptSig, SCRIPT_VERIFY_NONE, BaseSignatureChecker(), SigVersion::BASE))
                 return false;
@@ -170,12 +164,10 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
     return true;
 }
 
-int64_t GetVirtualTransactionSize(int64_t nSize, int64_t nSigOp, unsigned int bytes_per_sigop)
-{
+int64_t GetVirtualTransactionSize(int64_t nSize, int64_t nSigOp, unsigned int bytes_per_sigop) {
     return std::max(nSize, nSigOp * bytes_per_sigop);
 }
 
-int64_t GetVirtualTransactionSize(const CTransaction& tx, int64_t nSigOp, unsigned int bytes_per_sigop)
-{
+int64_t GetVirtualTransactionSize(const CTransaction &tx, int64_t nSigOp, unsigned int bytes_per_sigop) {
     return GetVirtualTransactionSize(tx.GetTotalSize(), nSigOp, bytes_per_sigop);
 }

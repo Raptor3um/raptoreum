@@ -8,6 +8,7 @@
 
 #include <limits>
 
-SaltedHasherBase::SaltedHasherBase() : k0(GetRand(std::numeric_limits<uint64_t>::max())), k1(GetRand(std::numeric_limits<uint64_t>::max())) {}
+SaltedHasherBase::SaltedHasherBase() : k0(GetRand(std::numeric_limits<uint64_t>::max())),
+                                       k1(GetRand(std::numeric_limits<uint64_t>::max())) {}
 
 SaltedHasherBase StaticSaltedHasher::s;

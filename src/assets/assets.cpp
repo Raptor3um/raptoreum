@@ -16,19 +16,16 @@
 static const std::regex name_characters("^[a-zA-Z0-9 ]{3,}$");
 static const std::regex rtm_names("^RTM$|^RAPTOREUM$|^wRTM$|^WRTM$|^RTMcoin$|^RTMCOIN$");
 
-bool IsAssetNameValid(std::string name)
-{
+bool IsAssetNameValid(std::string name) {
     if (name.length() < 3 || name.length() > 128) return false;
     return std::regex_match(name, name_characters) && !std::regex_match(name, rtm_names);
 }
 
-CAmount getAssetsFeesCoin()
-{
+CAmount getAssetsFeesCoin() {
     return getAssetsFees() * COIN;
 }
 
-uint16_t getAssetsFees()
-{
+uint16_t getAssetsFees() {
     if (!sporkManager.IsSporkActive(SPORK_22_SPECIAL_TX_FEE)) {
         return 0;
     }
@@ -36,8 +33,7 @@ uint16_t getAssetsFees()
     return specialTxValue >> 8 & 0xff;
 }
 
-bool GetAssetId(const CScript& script, std::string& assetId)
-{
+bool GetAssetId(const CScript &script, std::string &assetId) {
     CAssetTransfer assetTransfer;
     if (GetTransferAsset(script, assetTransfer)) {
         assetId = assetTransfer.assetId;
@@ -46,8 +42,7 @@ bool GetAssetId(const CScript& script, std::string& assetId)
     return false;
 }
 
-CAssetMetaData::CAssetMetaData(const std::string txid, const CNewAssetTx assetTx)
-{
+CAssetMetaData::CAssetMetaData(const std::string txid, const CNewAssetTx assetTx) {
     assetId = txid;
     circulatingSupply = 0;
     mintCount = 0;
@@ -66,21 +61,18 @@ CAssetMetaData::CAssetMetaData(const std::string txid, const CNewAssetTx assetTx
     collateralAddress = assetTx.collateralAddress;
 }
 
-CDatabaseAssetData::CDatabaseAssetData(const CAssetMetaData& asset, const int& nHeight, const uint256& blockHash)
-{
+CDatabaseAssetData::CDatabaseAssetData(const CAssetMetaData &asset, const int &nHeight, const uint256 &blockHash) {
     SetNull();
     this->asset = asset;
     this->blockHeight = nHeight;
     this->blockHash = blockHash;
 }
 
-CDatabaseAssetData::CDatabaseAssetData()
-{
+CDatabaseAssetData::CDatabaseAssetData() {
     SetNull();
 }
 
-bool CAssetsCache::InsertAsset(CNewAssetTx newAsset, std::string assetId, int nHeight)
-{
+bool CAssetsCache::InsertAsset(CNewAssetTx newAsset, std::string assetId, int nHeight) {
     if (CheckIfAssetExists(assetId))
         return error("%s: Tried adding new asset, but it already existed in the map of assets: %s", __func__, assetId);
     CAssetMetaData test(assetId, newAsset);
@@ -97,8 +89,7 @@ bool CAssetsCache::InsertAsset(CNewAssetTx newAsset, std::string assetId, int nH
     return true;
 }
 
-bool CAssetsCache::UpdateAsset(CUpdateAssetTx upAsset)
-{
+bool CAssetsCache::UpdateAsset(CUpdateAssetTx upAsset) {
     CAssetMetaData assetData;
     if (!GetAssetMetaData(upAsset.assetId, assetData)) {
         return false;
@@ -124,8 +115,7 @@ bool CAssetsCache::UpdateAsset(CUpdateAssetTx upAsset)
     return true;
 }
 
-bool CAssetsCache::UpdateAsset(std::string assetId, CAmount amount)
-{
+bool CAssetsCache::UpdateAsset(std::string assetId, CAmount amount) {
     if (mapAsset.count(assetId) > 0) {
         if (NewAssetsToAdd.count(mapAsset[assetId]))
             NewAssetsToAdd.erase(mapAsset[assetId]);
@@ -139,8 +129,7 @@ bool CAssetsCache::UpdateAsset(std::string assetId, CAmount amount)
     return false;
 }
 
-bool CAssetsCache::RemoveAsset(std::string assetId)
-{
+bool CAssetsCache::RemoveAsset(std::string assetId) {
     if (mapAsset.count(assetId) > 0) {
         if (NewAssetsToAdd.count(mapAsset[assetId]))
             NewAssetsToAdd.erase(mapAsset[assetId]);
@@ -151,8 +140,8 @@ bool CAssetsCache::RemoveAsset(std::string assetId)
     return false;
 }
 
-bool CAssetsCache::UndoUpdateAsset(const CUpdateAssetTx upAsset, const std::vector<std::pair<std::string, CBlockAssetUndo>>& vUndoData)
-{
+bool CAssetsCache::UndoUpdateAsset(const CUpdateAssetTx upAsset,
+                                   const std::vector <std::pair<std::string, CBlockAssetUndo>> &vUndoData) {
     if (mapAsset.count(upAsset.assetId) > 0) {
         CAssetMetaData assetData;
         if (!GetAssetMetaData(upAsset.assetId, assetData)) {
@@ -164,7 +153,7 @@ bool CAssetsCache::UndoUpdateAsset(const CUpdateAssetTx upAsset, const std::vect
 
         NewAssetsToRemove.insert(mapAsset[upAsset.assetId]);
 
-        for (auto item : vUndoData) {
+        for (auto item: vUndoData) {
             if (item.first == upAsset.assetId) {
                 assetData.updatable = item.second.updatable;
                 assetData.referenceHash = item.second.referenceHash;
@@ -186,8 +175,8 @@ bool CAssetsCache::UndoUpdateAsset(const CUpdateAssetTx upAsset, const std::vect
     return false;
 }
 
-bool CAssetsCache::UndoMintAsset(const CMintAssetTx assetTx, const std::vector<std::pair<std::string, CBlockAssetUndo>>& vUndoData)
-{
+bool CAssetsCache::UndoMintAsset(const CMintAssetTx assetTx,
+                                 const std::vector <std::pair<std::string, CBlockAssetUndo>> &vUndoData) {
     if (mapAsset.count(assetTx.assetId) > 0) {
         CAssetMetaData assetData;
         if (!GetAssetMetaData(assetTx.assetId, assetData)) {
@@ -199,7 +188,7 @@ bool CAssetsCache::UndoMintAsset(const CMintAssetTx assetTx, const std::vector<s
 
         NewAssetsToRemove.insert(mapAsset[assetTx.assetId]);
 
-        for (auto item : vUndoData) {
+        for (auto item: vUndoData) {
             if (item.first == assetTx.assetId) {
                 assetData.circulatingSupply = item.second.circulatingSupply;
                 assetData.mintCount = item.second.mintCount;
@@ -215,8 +204,7 @@ bool CAssetsCache::UndoMintAsset(const CMintAssetTx assetTx, const std::vector<s
     return false;
 }
 
-bool CAssetsCache::CheckIfAssetExists(std::string assetId)
-{
+bool CAssetsCache::CheckIfAssetExists(std::string assetId) {
     //check if the asset is removed
     CAssetMetaData tempAsset;
     tempAsset.assetId = assetId;
@@ -241,8 +229,7 @@ bool CAssetsCache::CheckIfAssetExists(std::string assetId)
     return false;
 }
 
-bool CAssetsCache::GetAssetId(std::string name, std::string& assetId)
-{
+bool CAssetsCache::GetAssetId(std::string name, std::string &assetId) {
     //try to get assetId by asset name
     auto it = mapAssetId.find(name);
     if (it != mapAssetId.end()) {
@@ -257,8 +244,7 @@ bool CAssetsCache::GetAssetId(std::string name, std::string& assetId)
     return false;
 }
 
-bool CAssetsCache::GetAssetMetaData(std::string assetId, CAssetMetaData& asset)
-{
+bool CAssetsCache::GetAssetMetaData(std::string assetId, CAssetMetaData &asset) {
     auto it = mapAsset.find(assetId);
     if (it != mapAsset.end()) {
         asset = it->second.asset;
@@ -282,11 +268,10 @@ bool CAssetsCache::GetAssetMetaData(std::string assetId, CAssetMetaData& asset)
     return false;
 }
 
-bool CAssetsCache::DumpCacheToDatabase()
-{
+bool CAssetsCache::DumpCacheToDatabase() {
     try {
         //remove assets from db
-        for (auto newAsset : NewAssetsToRemove) {
+        for (auto newAsset: NewAssetsToRemove) {
             if (!passetsdb->EraseAssetData(newAsset.asset.assetId)) {
                 return error("%s : %s", __func__, "_Failed Erasing Asset Data from database");
             }
@@ -295,7 +280,7 @@ bool CAssetsCache::DumpCacheToDatabase()
             }
         }
         //add assets to db
-        for (auto newAsset : NewAssetsToAdd) {
+        for (auto newAsset: NewAssetsToAdd) {
             if (!passetsdb->WriteAssetData(newAsset.asset, newAsset.blockHeight, newAsset.blockHash)) {
                 return error("%s : %s", __func__, "_Failed Writing New Asset Data to database");
             }
@@ -305,44 +290,43 @@ bool CAssetsCache::DumpCacheToDatabase()
         }
         ClearDirtyCache();
         return true;
-    } catch (const std::runtime_error& e) {
+    } catch (const std::runtime_error &e) {
         return error("%s : %s ", __func__, std::string("System error while flushing assets: ") + e.what());
     }
 }
 
-bool CAssetsCache::Flush()
-{
+bool CAssetsCache::Flush() {
     if (!passetsCache)
         return error("%s: Couldn't find passetsCache pointer while trying to flush assets cache", __func__);
 
     try {
-        for (auto& item : NewAssetsToRemove) {
+        for (auto &item: NewAssetsToRemove) {
             if (passetsCache->NewAssetsToAdd.count(item))
                 passetsCache->NewAssetsToAdd.erase(item);
             passetsCache->NewAssetsToRemove.insert(item);
         }
 
-        for (auto& item : NewAssetsToAdd) {
+        for (auto &item: NewAssetsToAdd) {
             if (passetsCache->NewAssetsToRemove.count(item))
                 passetsCache->NewAssetsToRemove.erase(item);
             passetsCache->NewAssetsToAdd.insert(item);
         }
 
-        for (auto& item : mapAsset)
+        for (auto &item: mapAsset)
             passetsCache->mapAsset[item.first] = item.second;
 
-        for (auto& item : mapAssetId)
+        for (auto &item: mapAssetId)
             passetsCache->mapAssetId[item.first] = item.second;
 
         return true;
 
-    } catch (const std::runtime_error& e) {
+    } catch (const std::runtime_error &e) {
         return error("%s : %s ", __func__, std::string("System error while flushing assets: ") + e.what());
     }
 }
 
-void AddAssets(const CTransaction& tx, int nHeight, CAssetsCache* assetCache, std::pair<std::string, CBlockAssetUndo>* undoAssetData)
-{
+void AddAssets(const CTransaction &tx, int nHeight, CAssetsCache *assetCache,
+               std::pair <std::string, CBlockAssetUndo> *undoAssetData) {
     if (Params().IsAssetsActive(::ChainActive().Tip()) && assetCache) {
         if (tx.nType == TRANSACTION_NEW_ASSET) {
             CNewAssetTx assetTx;
@@ -358,21 +342,21 @@ void AddAssets(const CTransaction& tx, int nHeight, CAssetsCache* assetCache, st
                 assetCache->UpdateAsset(assetTx);
                 undoAssetData->first = assetTx.assetId; // Asset Name
                 undoAssetData->second = CBlockAssetUndo{false, asset.circulatingSupply,
-                    asset.mintCount,
-                    asset.updatable,
-                    asset.referenceHash,
-                    asset.type,
-                    asset.targetAddress,
-                    asset.issueFrequency,
-                    asset.amount,
-                    asset.ownerAddress,
-                    asset.collateralAddress};
+                                                        asset.mintCount,
+                                                        asset.updatable,
+                                                        asset.referenceHash,
+                                                        asset.type,
+                                                        asset.targetAddress,
+                                                        asset.issueFrequency,
+                                                        asset.amount,
+                                                        asset.ownerAddress,
+                                                        asset.collateralAddress};
             }
         } else if (tx.nType == TRANSACTION_MINT_ASSET) {
             CMintAssetTx assetTx;
             if (GetTxPayload(tx, assetTx)) {
                 CAmount amount = 0;
-                for (auto out : tx.vout) {
+                for (auto out: tx.vout) {
                     if (out.scriptPubKey.IsAssetScript()) {
                         CAssetTransfer assetTransfer;
                         if (GetTransferAsset(out.scriptPubKey, assetTransfer))
@@ -385,22 +369,21 @@ void AddAssets(const CTransaction& tx, int nHeight, CAssetsCache* assetCache, st
                 assetCache->UpdateAsset(assetTx.assetId, amount); // Update circulating supply
                 undoAssetData->first = assetTx.assetId;           // Asset Name
                 undoAssetData->second = CBlockAssetUndo{true, asset.circulatingSupply,
-                    asset.mintCount,
-                    asset.updatable,
-                    asset.referenceHash,
-                    asset.type,
-                    asset.targetAddress,
-                    asset.issueFrequency,
-                    asset.amount,
-                    asset.ownerAddress,
-                    asset.collateralAddress};
+                                                        asset.mintCount,
+                                                        asset.updatable,
+                                                        asset.referenceHash,
+                                                        asset.type,
+                                                        asset.targetAddress,
+                                                        asset.issueFrequency,
+                                                        asset.amount,
+                                                        asset.ownerAddress,
+                                                        asset.collateralAddress};
             }
         }
     }
 }
 
-bool GetAssetData(const CScript& script, CAssetOutputEntry& data)
-{
+bool GetAssetData(const CScript &script, CAssetOutputEntry &data) {
     if (!script.IsAssetScript()) {
         return false;
     }
@@ -414,16 +397,14 @@ bool GetAssetData(const CScript& script, CAssetOutputEntry& data)
     return false;
 }
 
-bool validateAmount(const CAmount nAmount, const uint16_t decimalPoint)
-{
+bool validateAmount(const CAmount nAmount, const uint16_t decimalPoint) {
     if (nAmount % int64_t(pow(10, (8 - decimalPoint))) != 0) {
         return false;
     }
     return true;
 }
 
-bool validateAmount(const std::string& assetId, const CAmount nAmount)
-{
+bool validateAmount(const std::string &assetId, const CAmount nAmount) {
     CAssetMetaData asset;
     if (!passetsCache->GetAssetMetaData(assetId, asset))
         return false; //this should never happen

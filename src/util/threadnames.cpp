@@ -24,8 +24,7 @@
 
 //! Set the thread's name at the process level. Does not affect
 //! the internal name.
-static void SetThreadName(const char* name)
-{
+static void SetThreadName(const char *name) {
 #if defined(PR_SET_NAME)
     // Only the first 15 characters are used (16 - NUL terminator)
     ::prctl(PR_SET_NAME, name, 0, 0, 0);
@@ -35,7 +34,7 @@ static void SetThreadName(const char* name)
     pthread_setname_np(name);
 #else
     // Prevent warnings for unused parameters...
-    (void)name;
+    (void) name;
 #endif
 }
 
@@ -53,17 +52,18 @@ static void SetInternalName(std::string name) { g_thread_name = std::move(name);
 #else
 
 static const std::string empty_string;
-const std::string& util::ThreadGetInternalName() { return empty_string; }
-static void SetInternalName(std::string name) { }
+
+const std::string &util::ThreadGetInternalName() { return empty_string; }
+
+static void SetInternalName(std::string name) {}
+
 #endif
 
-void util::ThreadRename(std::string&& name)
-{
+void util::ThreadRename(std::string &&name) {
     SetThreadName(("rtm-" + name).c_str());;
     SetInternalName(std::move(name));
 }
 
-void util::ThreadSetInternalName(std::string&& name)
-{
+void util::ThreadSetInternalName(std::string &&name) {
     SetInternalName(std::move(name));
 }

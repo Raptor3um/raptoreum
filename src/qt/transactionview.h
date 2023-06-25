@@ -13,35 +13,43 @@
 #include <QKeyEvent>
 
 class TransactionFilterProxy;
+
 class WalletModel;
 
 QT_BEGIN_NAMESPACE
 class QComboBox;
+
 class QDateTimeEdit;
+
 class QFrame;
+
 class QItemSelectionModel;
+
 class QLineEdit;
+
 class QMenu;
+
 class QModelIndex;
+
 class QSignalMapper;
+
 class QTableView;
+
 QT_END_NAMESPACE
 
 /** Widget showing the transaction list for a wallet, including a filter row.
     Using the filter row, the user can view or export a subset of the transactions.
   */
-class TransactionView : public QWidget
-{
+class TransactionView : public QWidget {
     Q_OBJECT
 
 public:
-    explicit TransactionView(QWidget* parent = nullptr);
+    explicit TransactionView(QWidget *parent = nullptr);
 
     void setModel(WalletModel *model);
 
     // Date ranges for filter
-    enum DateEnum
-    {
+    enum DateEnum {
         All,
         Today,
         ThisWeek,
@@ -79,34 +87,53 @@ private:
     QAction *abandonAction;
 
     QWidget *createDateRangeWidget();
+
     void updateCalendarWidgets();
 
     GUIUtil::TableViewLastColumnResizingFixer *columnResizingFixer;
 
-    virtual void resizeEvent(QResizeEvent* event) override;
-    void changeEvent(QEvent* e) override;
+    virtual void resizeEvent(QResizeEvent *event) override;
+
+    void changeEvent(QEvent *e) override;
 
     bool eventFilter(QObject *obj, QEvent *event) override;
 
-private Q_SLOTS:
-    void contextualMenu(const QPoint &);
+private
+    Q_SLOTS:
+            void contextualMenu(
+    const QPoint &);
+
     void dateRangeChanged();
+
     void showDetails();
+
     void showAddressQRCode();
+
     void copyAddress();
+
     void editLabel();
+
     void copyLabel();
+
     void copyAmount();
+
     void copyTxID();
+
     void copyTxHex();
+
     void copyTxPlainText();
+
     void openThirdPartyTxUrl(QString url);
+
     void updateWatchOnlyColumn(bool fHaveWatchOnly);
+
     void updateCoinJoinVisibility();
+
     void abandonTx();
 
-Q_SIGNALS:
-    void doubleClicked(const QModelIndex&);
+    Q_SIGNALS:
+            void doubleClicked(
+    const QModelIndex&);
 
     /**  Fired when a message should be reported to the user */
     void message(const QString &title, const QString &message, unsigned int style);
@@ -114,15 +141,25 @@ Q_SIGNALS:
     /** Send computed sum back to wallet-view */
     void trxAmount(QString amount);
 
-public Q_SLOTS:
-    void chooseDate(int idx);
+public
+    Q_SLOTS:
+            void chooseDate(int
+    idx);
+
     void chooseType(int idx);
+
     void chooseWatchonly(int idx);
+
     void changedAmount();
+
     void changedSearch();
+
     void exportClicked();
-    void focusTransaction(const QModelIndex&);
-    void focusTransaction(const uint256& txid);
+
+    void focusTransaction(const QModelIndex &);
+
+    void focusTransaction(const uint256 &txid);
+
     void computeSum();
 };
 

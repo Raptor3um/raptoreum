@@ -11,4 +11,5 @@
 #include <scheduler.h>
 
 NodeContext::NodeContext() {}
+
 NodeContext::~NodeContext() {}

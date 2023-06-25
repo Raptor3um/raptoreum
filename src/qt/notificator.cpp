@@ -13,6 +13,7 @@
 #include <QSystemTrayIcon>
 #include <QTemporaryFile>
 #include <QVariant>
+
 #ifdef USE_DBUS
 #include <stdint.h>
 #include <QtDBus>
@@ -28,17 +29,16 @@ const int FREEDESKTOP_NOTIFICATION_ICON_SIZE = 128;
 #endif
 
 Notificator::Notificator(const QString &_programName, QSystemTrayIcon *_trayIcon, QWidget *_parent) :
-    QObject(_parent),
-    parent(_parent),
-    programName(_programName),
-    mode(None),
-    trayIcon(_trayIcon)
+        QObject(_parent),
+        parent(_parent),
+        programName(_programName),
+        mode(None),
+        trayIcon(_trayIcon)
 #ifdef USE_DBUS
-    ,interface(nullptr)
+,interface(nullptr)
 #endif
 {
-    if(_trayIcon && _trayIcon->supportsMessages())
-    {
+    if (_trayIcon && _trayIcon->supportsMessages()) {
         mode = QSystemTray;
     }
 #ifdef USE_DBUS
@@ -57,8 +57,7 @@ Notificator::Notificator(const QString &_programName, QSystemTrayIcon *_trayIcon
 #endif
 }
 
-Notificator::~Notificator()
-{
+Notificator::~Notificator() {
 #ifdef USE_DBUS
     delete interface;
 #endif
@@ -204,14 +203,19 @@ void Notificator::notifyDBus(Class cls, const QString &title, const QString &tex
 }
 #endif
 
-void Notificator::notifySystray(Class cls, const QString &title, const QString &text, int millisTimeout)
-{
+void Notificator::notifySystray(Class cls, const QString &title, const QString &text, int millisTimeout) {
     QSystemTrayIcon::MessageIcon sicon = QSystemTrayIcon::NoIcon;
-    switch(cls) // Set icon based on class
+    switch (cls) // Set icon based on class
     {
-    case Information: sicon = QSystemTrayIcon::Information; break;
-    case Warning: sicon = QSystemTrayIcon::Warning; break;
-    case Critical: sicon = QSystemTrayIcon::Critical; break;
+        case Information:
+            sicon = QSystemTrayIcon::Information;
+            break;
+        case Warning:
+            sicon = QSystemTrayIcon::Warning;
+            break;
+        case Critical:
+            sicon = QSystemTrayIcon::Critical;
+            break;
     }
     trayIcon->showMessage(title, text, sicon, millisTimeout);
 }
@@ -224,29 +228,26 @@ void Notificator::notifyMacUserNotificationCenter(const QString &title, const QS
 }
 #endif
 
-void Notificator::notify(Class cls, const QString &title, const QString &text, const QIcon &icon, int millisTimeout)
-{
-    switch(mode)
-    {
+void Notificator::notify(Class cls, const QString &title, const QString &text, const QIcon &icon, int millisTimeout) {
+    switch (mode) {
 #ifdef USE_DBUS
-    case Freedesktop:
-        notifyDBus(cls, title, text, icon, millisTimeout);
-        break;
+        case Freedesktop:
+            notifyDBus(cls, title, text, icon, millisTimeout);
+            break;
 #endif
-    case QSystemTray:
-        notifySystray(cls, title, text, millisTimeout);
-        break;
+        case QSystemTray:
+            notifySystray(cls, title, text, millisTimeout);
+            break;
 #ifdef Q_OS_MAC
-    case UserNotificationCenter:
-        notifyMacUserNotificationCenter(title, text);
-        break;
+            case UserNotificationCenter:
+                notifyMacUserNotificationCenter(title, text);
+                break;
 #endif
-    default:
-        if(cls == Critical)
-        {
-            // Fall back to old fashioned pop-up dialog if critical and no other notification available
-            QMessageBox::critical(parent, title, text, QMessageBox::Ok, QMessageBox::Ok);
-        }
-        break;
+        default:
+            if (cls == Critical) {
+                // Fall back to old fashioned pop-up dialog if critical and no other notification available
+                QMessageBox::critical(parent, title, text, QMessageBox::Ok, QMessageBox::Ok);
+            }
+            break;
     }
 }

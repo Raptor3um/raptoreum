@@ -12,30 +12,30 @@
 
 #include <cxxabi.h>
 
-std::string DemangleSymbol(const std::string& name);
+std::string DemangleSymbol(const std::string &name);
 
-std::string GetPrettyExceptionStr(const std::exception_ptr& e);
-std::string GetCrashInfoStrFromSerializedStr(const std::string& ciStr);
+std::string GetPrettyExceptionStr(const std::exception_ptr &e);
+
+std::string GetCrashInfoStrFromSerializedStr(const std::string &ciStr);
 
 template<typename T>
-std::string GetExceptionWhat(const T& e);
+std::string GetExceptionWhat(const T &e);
 
 template<>
-inline std::string GetExceptionWhat(const std::exception& e)
-{
+inline std::string GetExceptionWhat(const std::exception &e) {
     return e.what();
 }
 
 // Default implementation
 template<typename T>
-inline std::string GetExceptionWhat(const T& e)
-{
+inline std::string GetExceptionWhat(const T &e) {
     std::ostringstream s;
     s << e;
     return s.str();
 }
 
 void RegisterPrettyTerminateHander();
+
 void RegisterPrettySignalHandlers();
 
 #endif//BITCOIN_STACKTRACES_H

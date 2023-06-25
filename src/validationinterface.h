@@ -13,39 +13,59 @@
 #include <memory>
 
 extern RecursiveMutex cs_main;
+
 class CBlock;
+
 class CBlockIndex;
+
 struct CBlockLocator;
+
 class CConnman;
+
 class CReserveScript;
+
 class CValidationInterface;
+
 class CValidationState;
+
 class CGovernanceVote;
+
 class CGovernanceObject;
+
 class CDeterministicMNList;
+
 class CDeterministicMNListDiff;
+
 class uint256;
+
 class CScheduler;
+
 class CTxMemPool;
+
 enum class MemPoolRemovalReason;
 
 namespace llmq {
     class CChainLockSig;
+
     struct CInstantSendLock;
+
     class CRecoveredSig;
 } // namespace llmq
 
 // These functions dispatch to one or all registered wallets
 
 /** Register a wallet to receive updates from core */
-void RegisterValidationInterface(CValidationInterface* pwalletIn);
+void RegisterValidationInterface(CValidationInterface *pwalletIn);
+
 /** Unregister a wallet from core */
-void UnregisterValidationInterface(CValidationInterface* pwalletIn);
+void UnregisterValidationInterface(CValidationInterface *pwalletIn);
+
 /** Unregister all wallets from core */
 void UnregisterAllValidationInterfaces();
 
-void RegisterSharedValidationInterface(std::shared_ptr<CValidationInterface> callbacks);
-void UnregisterSharedValidationInterface(std::shared_ptr<CValidationInterface> callbacks);
+void RegisterSharedValidationInterface(std::shared_ptr <CValidationInterface> callbacks);
+
+void UnregisterSharedValidationInterface(std::shared_ptr <CValidationInterface> callbacks);
 
 /**
  * Pushes a function to callback onto the notification queue, guaranteeing any
@@ -56,7 +76,8 @@ void UnregisterSharedValidationInterface(std::shared_ptr<CValidationInterface> c
  * wait for things like cs_main, so blocking until func is called with cs_main
  * will result in a deadlock (that DEBUG_LOCKORDER will miss).
  */
-void CallFunctionInValidationInterfaceQueue(std::function<void ()> func);
+void CallFunctionInValidationInterfaceQueue(std::function<void()> func);
+
 /**
  * This is a synonym for the following, which asserts certain locks are not
  * held:
@@ -66,7 +87,9 @@ void CallFunctionInValidationInterfaceQueue(std::function<void ()> func);
  *     });
  *     promise.get_future().wait();
  */
-void SyncWithValidationInterfaceQueue() LOCKS_EXCLUDED(cs_main);
+void SyncWithValidationInterfaceQueue()
+
+LOCKS_EXCLUDED(cs_main);
 
 /**
  * Implement this to subscribe to events generated in validation
@@ -86,28 +109,35 @@ void SyncWithValidationInterfaceQueue() LOCKS_EXCLUDED(cs_main);
 class CValidationInterface {
 protected:
     virtual void AcceptedBlockHeader(const CBlockIndex *pindexNew) {}
+
     virtual void NotifyHeaderTip(const CBlockIndex *pindexNew, bool fInitialDownload) {}
+
     /**
      * Protected destructor so that instances can only be deleted by derived classes.
      * If that restriction is no longer desired, this should be made public and virtual.
      */
     ~CValidationInterface() = default;
+
     /**
      * Notifies listeners of updated block chain tip
      *
      * Called on a background thread.
      */
     virtual void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) {}
+
     /**
      * Same as UpdatedBlockTip, but called from the caller's thread
      */
-    virtual void SynchronousUpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) {}
+    virtual void
+    SynchronousUpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) {}
+
     /**
      * Notifies listeners of a transaction having been added to mempool.
      *
      * Called on a background thread.
      */
     virtual void TransactionAddedToMempool(const CTransactionRef &ptxn, int64_t nAcceptTime) {}
+
     /**
      * Notifies listeners of a transaction leaving mempool.
      *
@@ -119,96 +149,144 @@ protected:
      * Called on a background thread.
      */
     virtual void TransactionRemovedFromMempool(const CTransactionRef &ptx, MemPoolRemovalReason reason) {}
+
     /**
      * Notifies listeners of a block being connected.
      * Provides a vector of transactions evicted from the mempool as a result.
      *
      * Called on a background thread.
      */
-    virtual void BlockConnected(const std::shared_ptr<const CBlock> &block, const CBlockIndex *pindex, const std::vector<CTransactionRef> &txnConflicted) {}
+    virtual void BlockConnected(const std::shared_ptr<const CBlock> &block, const CBlockIndex *pindex,
+                                const std::vector <CTransactionRef> &txnConflicted) {}
+
     /**
      * Notifies listeners of a block being disconnected
      *
      * Called on a background thread.
      */
     virtual void BlockDisconnected(const std::shared_ptr<const CBlock> &block, const CBlockIndex *pindex) {}
-    virtual void NotifyTransactionLock(const CTransactionRef &tx, const std::shared_ptr<const llmq::CInstantSendLock>& islock) {}
-    virtual void NotifyChainLock(const CBlockIndex* pindex, const std::shared_ptr<const llmq::CChainLockSig>& clsig) {}
-    virtual void NotifyGovernanceVote(const std::shared_ptr<const CGovernanceVote>& vote) {}
-    virtual void NotifyGovernanceObject(const std::shared_ptr<const CGovernanceObject>& object) {}
-    virtual void NotifyInstantSendDoubleSpendAttempt(const CTransactionRef& currentTx, const CTransactionRef& previousTx) {}
-    virtual void NotifyRecoveredSig(const std::shared_ptr<const llmq::CRecoveredSig>& sig) {}
-    virtual void NotifySmartnodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff, CConnman& connman) {}
+
+    virtual void
+    NotifyTransactionLock(const CTransactionRef &tx, const std::shared_ptr<const llmq::CInstantSendLock> &islock) {}
+
+    virtual void NotifyChainLock(const CBlockIndex *pindex, const std::shared_ptr<const llmq::CChainLockSig> &clsig) {}
+
+    virtual void NotifyGovernanceVote(const std::shared_ptr<const CGovernanceVote> &vote) {}
+
+    virtual void NotifyGovernanceObject(const std::shared_ptr<const CGovernanceObject> &object) {}
+
+    virtual void
+    NotifyInstantSendDoubleSpendAttempt(const CTransactionRef &currentTx, const CTransactionRef &previousTx) {}
+
+    virtual void NotifyRecoveredSig(const std::shared_ptr<const llmq::CRecoveredSig> &sig) {}
+
+    virtual void
+    NotifySmartnodeListChanged(bool undo, const CDeterministicMNList &oldMNList, const CDeterministicMNListDiff &diff,
+                               CConnman &connman) {}
+
     /**
      * Notifies listeners of the new active block chain on-disk.
      *
      * Called on a background thread.
      */
     virtual void ChainStateFlushed(const CBlockLocator &locator) {}
+
     /**
      * Notifies listeners of a block validation result.
      * If the provided CValidationState IsValid, the provided block
      * is guaranteed to be the current best block at the time the
      * callback was generated (not necessarily now)
      */
-    virtual void BlockChecked(const CBlock&, const CValidationState&) {}
+    virtual void BlockChecked(const CBlock &, const CValidationState &) {}
+
     /**
      * Notifies listeners that a block which builds directly on our current tip
      * has been received and connected to the headers tree, though not validated yet */
-    virtual void NewPoWValidBlock(const CBlockIndex *pindex, const std::shared_ptr<const CBlock>& block) {};
+    virtual void NewPoWValidBlock(const CBlockIndex *pindex, const std::shared_ptr<const CBlock> &block) {};
+
     virtual void BlockFound(const uint256 &hash) {};
-    friend void ::RegisterSharedValidationInterface(std::shared_ptr<CValidationInterface>);
-    friend void ::UnregisterValidationInterface(CValidationInterface*);
-    friend void ::UnregisterAllValidationInterfaces();
+
+    friend void::RegisterSharedValidationInterface(std::shared_ptr <CValidationInterface>);
+
+    friend void::UnregisterValidationInterface(CValidationInterface *);
+
+    friend void::UnregisterAllValidationInterfaces();
 };
 
 struct MainSignalsInstance;
+
 class CMainSignals {
 private:
-    std::unique_ptr<MainSignalsInstance> m_internals;
+    std::unique_ptr <MainSignalsInstance> m_internals;
 
-    friend void ::RegisterSharedValidationInterface(std::shared_ptr<CValidationInterface>);
-    friend void ::UnregisterValidationInterface(CValidationInterface*);
-    friend void ::UnregisterAllValidationInterfaces();
-    friend void ::CallFunctionInValidationInterfaceQueue(std::function<void ()> func);
+    friend void::RegisterSharedValidationInterface(std::shared_ptr <CValidationInterface>);
+
+    friend void::UnregisterValidationInterface(CValidationInterface *);
+
+    friend void::UnregisterAllValidationInterfaces();
+
+    friend void::CallFunctionInValidationInterfaceQueue(std::function<void()> func);
 
     void MempoolEntryRemoved(CTransactionRef tx, MemPoolRemovalReason reason);
 
 public:
     /** Register a CScheduler to give callbacks which should run in the background (may only be called once) */
-    void RegisterBackgroundSignalScheduler(CScheduler& scheduler);
+    void RegisterBackgroundSignalScheduler(CScheduler &scheduler);
+
     /** Unregister a CScheduler to give callbacks which should run in the background - these callbacks will now be dropped! */
     void UnregisterBackgroundSignalScheduler();
+
     /** Call any remaining callbacks on the calling thread */
     void FlushBackgroundCallbacks();
 
     size_t CallbacksPending();
 
     /** Register with mempool to call TransactionRemovedFromMempool callbacks */
-    void RegisterWithMempoolSignals(CTxMemPool& pool);
+    void RegisterWithMempoolSignals(CTxMemPool &pool);
+
     /** Unregister with mempool */
-    void UnregisterWithMempoolSignals(CTxMemPool& pool);
+    void UnregisterWithMempoolSignals(CTxMemPool &pool);
 
     void AcceptedBlockHeader(const CBlockIndex *pindexNew);
+
     void NotifyHeaderTip(const CBlockIndex *pindexNew, bool fInitialDownload);
+
     void UpdatedBlockTip(const CBlockIndex *, const CBlockIndex *, bool fInitialDownload);
+
     void SynchronousUpdatedBlockTip(const CBlockIndex *, const CBlockIndex *, bool fInitialDownload);
+
     void TransactionAddedToMempool(const CTransactionRef &, int64_t);
-    void BlockConnected(const std::shared_ptr<const CBlock> &, const CBlockIndex *pindex, const std::shared_ptr<const std::vector<CTransactionRef>> &);
-    void BlockDisconnected(const std::shared_ptr<const CBlock>&, const CBlockIndex* pindex);
-    void NotifyTransactionLock(const CTransactionRef &tx, const std::shared_ptr<const llmq::CInstantSendLock>& islock);
-    void NotifyChainLock(const CBlockIndex* pindex, const std::shared_ptr<const llmq::CChainLockSig>& clsig);
-    void NotifyGovernanceVote(const std::shared_ptr<const CGovernanceVote>& vote);
-    void NotifyGovernanceObject(const std::shared_ptr<const CGovernanceObject>& object);
+
+    void BlockConnected(const std::shared_ptr<const CBlock> &, const CBlockIndex *pindex,
+                        const std::shared_ptr<const std::vector <CTransactionRef>> &);
+
+    void BlockDisconnected(const std::shared_ptr<const CBlock> &, const CBlockIndex *pindex);
+
+    void NotifyTransactionLock(const CTransactionRef &tx, const std::shared_ptr<const llmq::CInstantSendLock> &islock);
+
+    void NotifyChainLock(const CBlockIndex *pindex, const std::shared_ptr<const llmq::CChainLockSig> &clsig);
+
+    void NotifyGovernanceVote(const std::shared_ptr<const CGovernanceVote> &vote);
+
+    void NotifyGovernanceObject(const std::shared_ptr<const CGovernanceObject> &object);
+
     void NotifyInstantSendDoubleSpendAttempt(const CTransactionRef &currentTx, const CTransactionRef &previousTx);
+
     void NotifyRecoveredSig(const std::shared_ptr<const llmq::CRecoveredSig> &sig);
-    void NotifySmartnodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff, CConnman& connman);
+
+    void
+    NotifySmartnodeListChanged(bool undo, const CDeterministicMNList &oldMNList, const CDeterministicMNListDiff &diff,
+                               CConnman &connman);
+
     void ChainStateFlushed(const CBlockLocator &);
-    void BlockChecked(const CBlock&, const CValidationState&);
-    void NewPoWValidBlock(const CBlockIndex *, const std::shared_ptr<const CBlock>&);
+
+    void BlockChecked(const CBlock &, const CValidationState &);
+
+    void NewPoWValidBlock(const CBlockIndex *, const std::shared_ptr<const CBlock> &);
+
     void BlockFound(const uint256 &);
 };
 
-CMainSignals& GetMainSignals();
+CMainSignals &GetMainSignals();
 
 #endif // BITCOIN_VALIDATIONINTERFACE_H

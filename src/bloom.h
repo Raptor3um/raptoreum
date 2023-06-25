@@ -10,9 +10,13 @@
 #include <vector>
 
 class COutPoint;
+
 class CScript;
+
 class CTransaction;
+
 class uint256;
+
 class uint160;
 
 //! 20,000 items with fp rate < 0.1% or 10,000 items and <0.0001%
@@ -23,8 +27,7 @@ static const unsigned int MAX_HASH_FUNCS = 50;
  * First two bits of nFlags control how much IsRelevantAndUpdate actually updates
  * The remaining bits are reserved
  */
-enum bloomflags
-{
+enum bloomflags {
     BLOOM_UPDATE_NONE = 0,
     BLOOM_UPDATE_ALL = 1,
     // Only adds outpoints to the filter if the output is a pay-to-pubkey/pay-to-multisig script
@@ -43,8 +46,7 @@ enum bloomflags
  * allowing clients to trade more bandwidth for more privacy by obfuscating which
  * keys are controlled by them.
  */
-class CBloomFilter
-{
+class CBloomFilter {
 private:
     std::vector<unsigned char> vData;
     bool isFull;
@@ -53,12 +55,14 @@ private:
     unsigned int nTweak;
     unsigned char nFlags;
 
-    unsigned int Hash(unsigned int nHashNum, const std::vector<unsigned char>& vDataToHash) const;
+    unsigned int Hash(unsigned int nHashNum, const std::vector<unsigned char> &vDataToHash) const;
 
     // Check matches for arbitrary script data elements
-    bool CheckScript(const CScript& script) const;
+    bool CheckScript(const CScript &script) const;
+
     // Check additional matches for special transactions
-    bool CheckSpecialTransactionMatchesAndUpdate(const CTransaction& tx);
+    bool CheckSpecialTransactionMatchesAndUpdate(const CTransaction &tx);
+
 public:
     /**
      * Creates a new bloom filter which will provide the given fp rate when filled with the given number of elements
@@ -70,20 +74,28 @@ public:
      * nFlags should be one of the BLOOM_UPDATE_* enums (not _MASK)
      */
     CBloomFilter(const unsigned int nElements, const double nFPRate, const unsigned int nTweak, unsigned char nFlagsIn);
+
     CBloomFilter() : isFull(true), isEmpty(false), nHashFuncs(0), nTweak(0), nFlags(0) {}
 
-    SERIALIZE_METHODS(CBloomFilter, obj) { READWRITE(obj.vData, obj.nHashFuncs, obj.nTweak, obj.nFlags); }
+    SERIALIZE_METHODS(CBloomFilter, obj
+    ) { READWRITE(obj.vData, obj.nHashFuncs, obj.nTweak, obj.nFlags); }
 
-    void insert(const std::vector<unsigned char>& vKey);
-    void insert(const COutPoint& outpoint);
-    void insert(const uint256& hash);
+    void insert(const std::vector<unsigned char> &vKey);
 
-    bool contains(const std::vector<unsigned char>& vKey) const;
-    bool contains(const COutPoint& outpoint) const;
-    bool contains(const uint256& hash) const;
-    bool contains(const uint160& hash) const;
+    void insert(const COutPoint &outpoint);
+
+    void insert(const uint256 &hash);
+
+    bool contains(const std::vector<unsigned char> &vKey) const;
+
+    bool contains(const COutPoint &outpoint) const;
+
+    bool contains(const uint256 &hash) const;
+
+    bool contains(const uint160 &hash) const;
 
     void clear();
+
     void reset(const unsigned int nNewTweak);
 
     //! True if the size is <= MAX_BLOOM_FILTER_SIZE and the number of hash functions is <= MAX_HASH_FUNCS
@@ -91,7 +103,7 @@ public:
     bool IsWithinSizeConstraints() const;
 
     //! Also adds any outputs which match the filter to the filter (to match their spending txes)
-    bool IsRelevantAndUpdate(const CTransaction& tx);
+    bool IsRelevantAndUpdate(const CTransaction &tx);
 
     //! Checks for empty and full filters to avoid wasting cpu
     void UpdateEmptyFull();
@@ -111,18 +123,20 @@ public:
  * It needs around 1.8 bytes per element per factor 0.1 of false positive rate.
  * (More accurately: 3/(log(256)*log(2)) * log(1/fpRate) * nElements bytes)
  */
-class CRollingBloomFilter
-{
+class CRollingBloomFilter {
 public:
     // A random bloom filter calls GetRand() at creation time.
     // Don't create global CRollingBloomFilter objects, as they may be
     // constructed before the randomizer is properly initialized.
     CRollingBloomFilter(const unsigned int nElements, const double nFPRate);
 
-    void insert(const std::vector<unsigned char>& vKey);
-    void insert(const uint256& hash);
-    bool contains(const std::vector<unsigned char>& vKey) const;
-    bool contains(const uint256& hash) const;
+    void insert(const std::vector<unsigned char> &vKey);
+
+    void insert(const uint256 &hash);
+
+    bool contains(const std::vector<unsigned char> &vKey) const;
+
+    bool contains(const uint256 &hash) const;
 
     void reset();
 
@@ -130,7 +144,7 @@ private:
     int nEntriesPerGeneration;
     int nEntriesThisGeneration;
     int nGeneration;
-    std::vector<uint64_t> data;
+    std::vector <uint64_t> data;
     unsigned int nTweak;
     int nHashFuncs;
 };

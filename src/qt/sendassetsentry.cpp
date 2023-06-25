@@ -25,11 +25,10 @@
 #include <QCompleter>
 #include <QLineEdit>
 
-SendAssetsEntry::SendAssetsEntry(QWidget* parent, bool hideFuture) :
-    QStackedWidget(parent),
-    ui(new Ui::SendAssetsEntry),
-    model(0)
-{
+SendAssetsEntry::SendAssetsEntry(QWidget *parent, bool hideFuture) :
+        QStackedWidget(parent),
+        ui(new Ui::SendAssetsEntry),
+        model(0) {
     ui->setupUi(this);
 
     GUIUtil::disableMacFocusRect(this);
@@ -44,11 +43,11 @@ SendAssetsEntry::SendAssetsEntry(QWidget* parent, bool hideFuture) :
     GUIUtil::setupAddressWidget(ui->payTo, this, true);
 
     GUIUtil::setFont({ui->payToLabel,
-                     ui->Assetlabel,
-                     ui->labellLabel,
-                     ui->amountLabel,
-                     ui->maturityLb,
-                     ui->locktimeLb}, GUIUtil::FontWeight::Normal, 15);
+                      ui->Assetlabel,
+                      ui->labellLabel,
+                      ui->amountLabel,
+                      ui->maturityLb,
+                      ui->locktimeLb}, GUIUtil::FontWeight::Normal, 15);
 
     GUIUtil::updateFonts();
     this->futureToggleChanged();
@@ -74,7 +73,7 @@ SendAssetsEntry::SendAssetsEntry(QWidget* parent, bool hideFuture) :
     ui->assetList->setEditable(true);
     ui->assetList->lineEdit()->setPlaceholderText("Select an asset");
 
-    completer = new QCompleter(proxy,this);
+    completer = new QCompleter(proxy, this);
     completer->setCompletionMode(QCompleter::PopupCompletion);
     completer->setCaseSensitivity(Qt::CaseInsensitive);
     ui->assetList->setCompleter(completer);
@@ -89,32 +88,27 @@ SendAssetsEntry::SendAssetsEntry(QWidget* parent, bool hideFuture) :
     ui->uniqueIdList->setEditable(false);
 }
 
-SendAssetsEntry::~SendAssetsEntry()
-{
+SendAssetsEntry::~SendAssetsEntry() {
     delete ui;
 }
 
-void SendAssetsEntry::on_pasteButton_clicked()
-{
+void SendAssetsEntry::on_pasteButton_clicked() {
     // Paste text from clipboard into recipient field
     ui->payTo->setText(QApplication::clipboard()->text());
 }
 
-void SendAssetsEntry::on_addressBookButton_clicked()
-{
-    if(!model)
+void SendAssetsEntry::on_addressBookButton_clicked() {
+    if (!model)
         return;
     AddressBookPage dlg(AddressBookPage::ForSelection, AddressBookPage::SendingTab, this);
     dlg.setModel(model->getAddressTableModel());
-    if(dlg.exec())
-    {
+    if (dlg.exec()) {
         ui->payTo->setText(dlg.getReturnValue());
         ui->payAmount->setFocus();
     }
 }
 
-void SendAssetsEntry::on_payTo_textChanged(const QString &address)
-{
+void SendAssetsEntry::on_payTo_textChanged(const QString &address) {
     SendCoinsRecipient rcp;
     if (GUIUtil::parseBitcoinURI(address, &rcp)) {
         ui->payTo->blockSignals(true);
@@ -125,8 +119,7 @@ void SendAssetsEntry::on_payTo_textChanged(const QString &address)
     }
 }
 
-void SendAssetsEntry::setModel(WalletModel *_model)
-{
+void SendAssetsEntry::setModel(WalletModel *_model) {
     this->model = _model;
 
     if (_model && _model->getOptionsModel())
@@ -135,13 +128,11 @@ void SendAssetsEntry::setModel(WalletModel *_model)
     clear();
 }
 
-void SendAssetsEntry::setCoinControl(CCoinControl* coin_control)
-{
-  this->m_coin_control = coin_control;
+void SendAssetsEntry::setCoinControl(CCoinControl *coin_control) {
+    this->m_coin_control = coin_control;
 }
 
-void SendAssetsEntry::clear()
-{
+void SendAssetsEntry::clear() {
     // clear UI elements for normal payment
     ui->payTo->clear();
     ui->addAsLabel->clear();
@@ -154,7 +145,7 @@ void SendAssetsEntry::clear()
 
 void SendAssetsEntry::futureToggleChanged() {
     bool isFuture = ui->futureCb->isChecked();
-    if(isFuture) {
+    if (isFuture) {
         char feeDisplay[18];
         sprintf(feeDisplay, "%d RTM", getFutureFees());
         ui->feeDisplay->setText(feeDisplay);
@@ -167,55 +158,47 @@ void SendAssetsEntry::futureToggleChanged() {
     ui->feeLb->setVisible(isFuture);
 }
 
-void SendAssetsEntry::deleteClicked()
-{
+void SendAssetsEntry::deleteClicked() {
     Q_EMIT removeEntry(this);
 }
 
-void SendAssetsEntry::useAvailableAssetsBalanceClicked()
-{
+void SendAssetsEntry::useAvailableAssetsBalanceClicked() {
     Q_EMIT useAvailableAssetsBalance(this);
 }
 
-bool SendAssetsEntry::validate(interfaces::Node& node)
-{
+bool SendAssetsEntry::validate(interfaces::Node &node) {
     if (!model)
         return false;
 
     // Check input validity
     bool retval = true;
 
-    if (!model->validateAddress(ui->payTo->text()))
-    {
+    if (!model->validateAddress(ui->payTo->text())) {
         ui->payTo->setValid(false);
         retval = false;
     }
 
-    if (ui->assetList->currentIndex() == -1 )
-    {
+    if (ui->assetList->currentIndex() == -1) {
         retval = false;
     }
 
-    if (uniqueAssetSelected && ui->assetList->currentIndex() == -1 )
-    {
+    if (uniqueAssetSelected && ui->assetList->currentIndex() == -1) {
         retval = false;
     }
 
-    if (!ui->payAmount->validate())
-    {
+    if (!ui->payAmount->validate()) {
         retval = false;
     }
 
     // Sending a zero amount is invalid
-    if (ui->payAmount->value(0) <= 0)
-    {
+    if (ui->payAmount->value(0) <= 0) {
         ui->payAmount->setValid(false);
         retval = false;
     }
 
     std::string assetId;
     passetsCache->GetAssetId(ui->assetList->currentText().toStdString(), assetId);
-    if (!validateAmount(assetId, ui->payAmount->value())){
+    if (!validateAmount(assetId, ui->payAmount->value())) {
         ui->payAmount->setValid(false);
         retval = false;
     }
@@ -229,8 +212,7 @@ bool SendAssetsEntry::validate(interfaces::Node& node)
     return retval;
 }
 
-SendCoinsRecipient SendAssetsEntry::getValue()
-{
+SendCoinsRecipient SendAssetsEntry::getValue() {
     // Normal payment
     recipient.assetId = ui->assetList->currentText();
     recipient.address = ui->payTo->text();
@@ -244,7 +226,7 @@ SendCoinsRecipient SendAssetsEntry::getValue()
     else
         recipient.uniqueId = MAX_UNIQUE_ID;
     //std::cout << " ui->futureCb->isChecked() " << ui->futureCb->isChecked() << "\n";
-    if(ui->futureCb->isChecked()) {
+    if (ui->futureCb->isChecked()) {
         recipient.isFutureOutput = true;
         recipient.maturity = ui->maturity->text().isEmpty() ? -1 : std::stoi(ui->maturity->text().toStdString());
         recipient.locktime = ui->locktime->text().isEmpty() ? -1 : std::stol(ui->locktime->text().toStdString());
@@ -256,8 +238,7 @@ SendCoinsRecipient SendAssetsEntry::getValue()
     return recipient;
 }
 
-QWidget *SendAssetsEntry::setupTabChain(QWidget *prev)
-{
+QWidget *SendAssetsEntry::setupTabChain(QWidget *prev) {
     QWidget::setTabOrder(prev, ui->payTo);
     QWidget::setTabOrder(ui->payTo, ui->addAsLabel);
     QWidget::setTabOrder(ui->addressBookButton, ui->pasteButton);
@@ -265,8 +246,7 @@ QWidget *SendAssetsEntry::setupTabChain(QWidget *prev)
     return ui->deleteButton;
 }
 
-void SendAssetsEntry::setValue(const SendCoinsRecipient &value)
-{
+void SendAssetsEntry::setValue(const SendCoinsRecipient &value) {
     recipient = value;
 
     // normal payment
@@ -277,38 +257,31 @@ void SendAssetsEntry::setValue(const SendCoinsRecipient &value)
     updateLabel(recipient.address);
 }
 
-void SendAssetsEntry::setAddress(const QString &address)
-{
+void SendAssetsEntry::setAddress(const QString &address) {
     ui->payTo->setText(address);
     ui->payAmount->setFocus();
 }
 
-void SendAssetsEntry::setAmount(const CAmount &amount)
-{
+void SendAssetsEntry::setAmount(const CAmount &amount) {
     ui->payAmount->setValue(amount);
 }
 
-bool SendAssetsEntry::isClear()
-{
+bool SendAssetsEntry::isClear() {
     return ui->payTo->text().isEmpty();
 }
 
-void SendAssetsEntry::setFocus()
-{
+void SendAssetsEntry::setFocus() {
     ui->payTo->setFocus();
 }
 
-void SendAssetsEntry::updateDisplayUnit()
-{
-    if(model && model->getOptionsModel())
-    {
+void SendAssetsEntry::updateDisplayUnit() {
+    if (model && model->getOptionsModel()) {
         // Update payAmount with the current unit
         ui->payAmount->setDisplayUnit(model->getOptionsModel()->getDisplayUnit());
     }
 }
 
-void SendAssetsEntry::changeEvent(QEvent* e)
-{
+void SendAssetsEntry::changeEvent(QEvent *e) {
     QStackedWidget::changeEvent(e);
     if (e->type() == QEvent::StyleChange) {
         // Adjust button icon colors on theme changes
@@ -316,22 +289,19 @@ void SendAssetsEntry::changeEvent(QEvent* e)
     }
 }
 
-void SendAssetsEntry::setButtonIcons()
-{
+void SendAssetsEntry::setButtonIcons() {
     GUIUtil::setIcon(ui->addressBookButton, "address-book");
     GUIUtil::setIcon(ui->pasteButton, "editpaste");
     GUIUtil::setIcon(ui->deleteButton, "remove", GUIUtil::ThemedColor::RED);
 }
 
-bool SendAssetsEntry::updateLabel(const QString &address)
-{
-    if(!model)
+bool SendAssetsEntry::updateLabel(const QString &address) {
+    if (!model)
         return false;
 
     // Fill in label from address book, if address has an associated label
     QString associatedLabel = model->getAddressTableModel()->labelForAddress(address);
-    if(!associatedLabel.isEmpty())
-    {
+    if (!associatedLabel.isEmpty()) {
         ui->addAsLabel->setText(associatedLabel);
         return true;
     }
@@ -340,37 +310,36 @@ bool SendAssetsEntry::updateLabel(const QString &address)
 }
 
 void SendAssetsEntry::SetFutureVisible(bool visible) {
-    if(!visible) {
+    if (!visible) {
         ui->futureCb->setChecked(false);
     }
     futureToggleChanged();
     ui->futureCb->setVisible(visible);
 }
 
-void SendAssetsEntry::onAssetSelected(QString name)
-{
+void SendAssetsEntry::onAssetSelected(QString name) {
     static QString prevname = "";
 
     //return if name is empty
     if (name == "")
         return;
 
-    std::map<std::string, CAmount> assetsbalance = model->wallet().getAssetsBalance();
+    std::map <std::string, CAmount> assetsbalance = model->wallet().getAssetsBalance();
     CAmount bal = 0;
     std::string assetId;
-    if (passetsCache->GetAssetId(name.toStdString(), assetId)){
-    if (assetsbalance.count(assetId))
-        bal = assetsbalance[assetId];
+    if (passetsCache->GetAssetId(name.toStdString(), assetId)) {
+        if (assetsbalance.count(assetId))
+            bal = assetsbalance[assetId];
     }
 
     //update balance
     ui->AssetBalance->setText(BitcoinUnits::formatWithCustomName(name, bal));
 
     CAssetMetaData assetdata;
-    if(!passetsCache->GetAssetMetaData(assetId, assetdata))
+    if (!passetsCache->GetAssetMetaData(assetId, assetdata))
         return;
 
-    if (assetdata.isUnique){
+    if (assetdata.isUnique) {
 
         uniqueAssetSelected = true;
         ui->payAmount->setAssetsUnit(0);
@@ -386,23 +355,23 @@ void SendAssetsEntry::onAssetSelected(QString name)
         QString uniqueId = ui->uniqueIdList->currentText();
 
         //update the unique list
-        std::vector<uint16_t> assetsIds = model->wallet().listAssetUniqueId(assetId, m_coin_control);
+        std::vector <uint16_t> assetsIds = model->wallet().listAssetUniqueId(assetId, m_coin_control);
         QStringList list;
-        for (auto uniqueid : assetsIds) {
+        for (auto uniqueid: assetsIds) {
             list << QString::number(uniqueid);
         }
 
         stringModelId->setStringList(list);
 
         //restore selected assetId
-        if (index >= 0 && name == prevname){
+        if (index >= 0 && name == prevname) {
             index = ui->uniqueIdList->findText(uniqueId);
             ui->uniqueIdList->setCurrentIndex(index);
         } else {
             ui->uniqueIdList->setCurrentIndex(0);
             ui->uniqueIdList->activated(0);
         }
-    }else{
+    } else {
 
         uniqueAssetSelected = false;
         ui->amountLabel->setText("A&mount:");
@@ -410,7 +379,7 @@ void SendAssetsEntry::onAssetSelected(QString name)
         ui->useAvailableBalanceButton->setEnabled(true);
         ui->uniqueIdList->setVisible(false);
 
-        if (name != prevname){
+        if (name != prevname) {
             ui->payAmount->setAssetsUnit(assetdata.decimalPoint);
             ui->payAmount->setValue(0);
         }
@@ -418,20 +387,19 @@ void SendAssetsEntry::onAssetSelected(QString name)
     prevname = name;
 }
 
-void SendAssetsEntry::updateAssetList()
-{
+void SendAssetsEntry::updateAssetList() {
     //make a copy of current selected asset to restore selection after
     //updating the list of available assets
     int index = ui->assetList->currentIndex();
     QString name = ui->assetList->currentText();
 
     // Get available assets list
-    std::vector<std::string> assets = model->wallet().listMyAssets(m_coin_control);
+    std::vector <std::string> assets = model->wallet().listMyAssets(m_coin_control);
 
     QStringList list;
-    for (auto assetId : assets) {
+    for (auto assetId: assets) {
         CAssetMetaData assetData;
-        if(passetsCache->GetAssetMetaData(assetId, assetData)){
+        if (passetsCache->GetAssetMetaData(assetId, assetData)) {
             list << QString::fromStdString(assetData.name);
         }
     }
@@ -440,7 +408,7 @@ void SendAssetsEntry::updateAssetList()
     stringModel->setStringList(list);
 
     //restore selected asset
-    if (index >= 0){
+    if (index >= 0) {
         index = ui->assetList->findText(name);
         ui->assetList->setCurrentIndex(index);
     } else {

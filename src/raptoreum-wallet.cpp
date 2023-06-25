@@ -16,17 +16,19 @@
 
 #include <stdio.h>
 
-const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
+const std::function<std::string(const char *)> G_TRANSLATION_FUN = nullptr;
 
-static void SetupWalletToolArgs()
-{
+static void SetupWalletToolArgs() {
     SetupChainParamsBaseOptions();
 
     gArgs.AddArg("-?", "This help message", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-datadir=<dir>", "Specify data directory", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-wallet=<wallet-name>", "Specify wallet name", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-debug=<category>", "Output debugging information (default: 0).", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
-    gArgs.AddArg("-printtoconsole", "Send trace/debug info to console (default: 1 when no -debug is true, 0 otherwise).", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
+    gArgs.AddArg("-debug=<category>", "Output debugging information (default: 0).", ArgsManager::ALLOW_ANY,
+                 OptionsCategory::DEBUG_TEST);
+    gArgs.AddArg("-printtoconsole",
+                 "Send trace/debug info to console (default: 1 when no -debug is true, 0 otherwise).",
+                 ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
 
     gArgs.AddArg("info", "Get wallet info", ArgsManager::ALLOW_ANY, OptionsCategory::COMMANDS);
     gArgs.AddArg("create", "Create new wallet file", ArgsManager::ALLOW_ANY, OptionsCategory::COMMANDS);
@@ -34,11 +36,11 @@ static void SetupWalletToolArgs()
     // Hidden
     gArgs.AddArg("-h", "", ArgsManager::ALLOW_ANY, OptionsCategory::HIDDEN);
     gArgs.AddArg("-help", "", ArgsManager::ALLOW_ANY, OptionsCategory::HIDDEN);
-    gArgs.AddArg("salvage", "Attempt to recover private keys from a corrupt wallet", ArgsManager::ALLOW_ANY, OptionsCategory::COMMANDS);
+    gArgs.AddArg("salvage", "Attempt to recover private keys from a corrupt wallet", ArgsManager::ALLOW_ANY,
+                 OptionsCategory::COMMANDS);
 }
 
-static bool WalletAppInit(int argc, char* argv[])
-{
+static bool WalletAppInit(int argc, char *argv[]) {
     SetupWalletToolArgs();
     std::string error_message;
     if (!gArgs.ParseParameters(argc, argv, error_message)) {
@@ -46,13 +48,14 @@ static bool WalletAppInit(int argc, char* argv[])
         return false;
     }
     if (argc < 2 || HelpRequested(gArgs)) {
-        std::string usage = strprintf("%s raptoreum-wallet version", PACKAGE_NAME) + " " + FormatFullVersion() + "\n\n" +
-                                      "raptoreum-wallet is an offline tool for creating and interacting with Raptoreum Core wallet files.\n" +
-                                      "By default raptoreum-wallet will act on wallets in the default mainnet wallet directory in the datadir.\n" +
-                                      "To change the target wallet, use the -datadir, -wallet and -testnet/-regtest arguments.\n\n" +
-                                      "Usage:\n" +
-                                     "  raptoreum-wallet [options] <command>\n\n" +
-                                     gArgs.GetHelpMessage();
+        std::string usage =
+                strprintf("%s raptoreum-wallet version", PACKAGE_NAME) + " " + FormatFullVersion() + "\n\n" +
+                "raptoreum-wallet is an offline tool for creating and interacting with Raptoreum Core wallet files.\n" +
+                "By default raptoreum-wallet will act on wallets in the default mainnet wallet directory in the datadir.\n" +
+                "To change the target wallet, use the -datadir, -wallet and -testnet/-regtest arguments.\n\n" +
+                "Usage:\n" +
+                "  raptoreum-wallet [options] <command>\n\n" +
+                gArgs.GetHelpMessage();
 
         tfm::format(std::cout, "%s", usage);
         return false;
@@ -62,7 +65,8 @@ static bool WalletAppInit(int argc, char* argv[])
     LogInstance().m_print_to_console = gArgs.GetBoolArg("-printtoconsole", gArgs.GetBoolArg("-debug", false));
 
     if (!CheckDataDirOption()) {
-        tfm::format(std::cerr, "Error: Specified data directory \"%s\" does not exist.\n", gArgs.GetArg("-datadir", ""));
+        tfm::format(std::cerr, "Error: Specified data directory \"%s\" does not exist.\n",
+                    gArgs.GetArg("-datadir", ""));
         return false;
     }
     // Check for -testnet or -regtest parameter (Params() calls are only valid after this clause)
@@ -71,8 +75,7 @@ static bool WalletAppInit(int argc, char* argv[])
     return true;
 }
 
-int main(int argc, char* argv[])
-{
+int main(int argc, char *argv[]) {
 #ifdef WIN32
     util::WinCmdLineArgs winArgs;
     std::tie(argc, argv) = winArgs.get();
@@ -86,11 +89,12 @@ int main(int argc, char* argv[])
         return EXIT_FAILURE;
     }
 
-    std::string method {};
-    for(int i = 1; i < argc; ++i) {
+    std::string method{};
+    for (int i = 1; i < argc; ++i) {
         if (!IsSwitchChar(argv[i][0])) {
             if (!method.empty()) {
-                tfm::format(std::cerr, "Error: two methods provided (%s and %s). Only one method should be provided.\n", method, argv[i]);
+                tfm::format(std::cerr, "Error: two methods provided (%s and %s). Only one method should be provided.\n",
+                            method, argv[i]);
                 return EXIT_FAILURE;
             }
             method = argv[i];

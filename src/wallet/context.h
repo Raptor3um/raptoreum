@@ -6,7 +6,7 @@
 #define BITCOIN_WALLET_CONTEXT_H
 
 namespace interfaces {
-class Chain;
+    class Chain;
 } // namespace interfaces
 
 //! WalletContext struct containing references to state shared between CWallet
@@ -20,12 +20,13 @@ class Chain;
 //! collection of state pointers that doesn't pull in dependencies or implement
 //! behavior.
 struct WalletContext {
-    interfaces::Chain* chain{nullptr};
+    interfaces::Chain *chain{nullptr};
 
     //! Declare default constructor and destructor that are not inline, so code
     //! instantiating the WalletContext struct doesn't need to #include class
     //! definitions for smart pointer and container members.
     WalletContext();
+
     ~WalletContext();
 };
 

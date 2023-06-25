@@ -18,8 +18,8 @@
 // Subject: CN=PaymentRequest Test CA
 // Not Valid After : Dec  8 16:37:24 2022 GMT
 //
-const char* caCert1_BASE64 =
-"\
+const char *caCert1_BASE64 =
+        "\
 MIIB0DCCATmgAwIBAgIJAI75TJGxEsCoMA0GCSqGSIb3DQEBCwUAMCExHzAdBgNV\
 BAMTFlBheW1lbnRSZXF1ZXN0IFRlc3QgQ0EwHhcNMTIxMjEwMTYzNzI0WhcNMjIx\
 MjA4MTYzNzI0WjAhMR8wHQYDVQQDExZQYXltZW50UmVxdWVzdCBUZXN0IENBMIGf\
@@ -37,8 +37,8 @@ p3waRjPD4bUX3nv+ojz5s4puw7Qq5QUZlhGsMzPvwDGCmZkL\
 // Subject: CN=PaymentRequest Test CA
 // Not Valid After : Jan  8 18:21:06 2025 GMT
 //
-const char* caCert2_BASE64 =
-"\
+const char *caCert2_BASE64 =
+        "\
 MIIC1TCCAb2gAwIBAgIJAPDal+Q412QWMA0GCSqGSIb3DQEBCwUAMCExHzAdBgNV\
 BAMMFlBheW1lbnRSZXF1ZXN0IFRlc3QgQ0EwHhcNMTUwMTExMTgyMTA2WhcNMjUw\
 MTA4MTgyMTA2WjAhMR8wHQYDVQQDDBZQYXltZW50UmVxdWVzdCBUZXN0IENBMIIB\
@@ -61,8 +61,8 @@ z2k/tMuALCDXGeZBRPTsGHu1y4cj84swAeoDK5QSQcI+Ub7GKc+zkoj02sdDLiMo\
 // This payment request validates directly against the
 // caCert1 certificate authority.
 //
-const char* paymentrequest1_cert1_BASE64 =
-"\
+const char *paymentrequest1_cert1_BASE64 =
+        "\
 Egt4NTA5K3NoYTI1NhrxAwruAzCCAeowggFToAMCAQICAQEwDQYJKoZIhvcNAQEL\
 BQAwITEfMB0GA1UEAxMWUGF5bWVudFJlcXVlc3QgVGVzdCBDQTAeFw0xMjEyMTAx\
 NjM3MjRaFw0yMjEyMDgxNjM3MjRaMEMxGTAXBgNVBAMMEHRlc3RtZXJjaGFudC5v\
@@ -83,8 +83,8 @@ SiWVbw0tX/68iSQEGGfh9n6ee/8Myb3ICdw=\
 //
 // Signed, but expired, merchant cert in the request
 //
-const char* paymentrequest2_cert1_BASE64 =
-"\
+const char *paymentrequest2_cert1_BASE64 =
+        "\
 Egt4NTA5K3NoYTI1NhrsAwrpAzCCAeUwggFOoAMCAQICAQMwDQYJKoZIhvcNAQEL\
 BQAwITEfMB0GA1UEAxMWUGF5bWVudFJlcXVlc3QgVGVzdCBDQTAeFw0xMzAyMjMy\
 MTI2NDNaFw0xMzAyMjQyMTI2NDNaMD4xHDAaBgNVBAMME2V4cGlyZWRtZXJjaGFu\
@@ -105,8 +105,8 @@ tejrSPOBNSJ3Mi/q5u2Yl4gJZY2b\
 //
 // 10-long certificate chain, all intermediates valid
 //
-const char* paymentrequest3_cert1_BASE64 =
-"\
+const char *paymentrequest3_cert1_BASE64 =
+        "\
 Egt4NTA5K3NoYTI1Nhq8JAr/AzCCAfswggFkoAMCAQICAQEwDQYJKoZIhvcNAQEL\
 BQAwPzEUMBIGA1UEAwwLdGVzdGNhOC5vcmcxJzAlBgNVBAoMHlBheW1lbnQgUmVx\
 dWVzdCBJbnRlcm1lZGlhdGUgODAeFw0xMzAyMjMyMjQyMzFaFw0yMzAyMjEyMjQy\
@@ -214,8 +214,8 @@ chhR/aHOuEMTxmc12K4rNlgYtHCsxLP9zd+6u0cva3TucZ6EzS8PKEib/+r12/52\
 //
 // Long certificate chain, with an expired certificate in the middle
 //
-const char* paymentrequest4_cert1_BASE64 =
-"\
+const char *paymentrequest4_cert1_BASE64 =
+        "\
 Egt4NTA5K3NoYTI1NhqeJAr/AzCCAfswggFkoAMCAQICAQEwDQYJKoZIhvcNAQEL\
 BQAwPzEUMBIGA1UEAwwLdGVzdGNhOC5vcmcxJzAlBgNVBAoMHlBheW1lbnQgUmVx\
 dWVzdCBJbnRlcm1lZGlhdGUgODAeFw0xMzAyMjMyMjQyMzFaFw0yMzAyMjEyMjQy\
@@ -322,8 +322,8 @@ FAyZblLik9A7ZvF+UsjeFQiHB5wzWQvbqk5wQ4yabHIXoYv/E0q+eQ==\
 //
 // Validly signed, but by a CA not in our root CA list
 //
-const char* paymentrequest5_cert1_BASE64 =
-"\
+const char *paymentrequest5_cert1_BASE64 =
+        "\
 Egt4NTA5K3NoYTI1NhrxAwruAzCCAeowggFToAMCAQICAQEwDQYJKoZIhvcNAQEL\
 BQAwITEfMB0GA1UEAxMWUGF5bWVudFJlcXVlc3QgVGVzdCBDQTAeFw0xMzA0MTkx\
 NzIwMDZaFw0yMzA0MTcxNzIwMDZaMEMxGTAXBgNVBAMMEHRlc3RtZXJjaGFudC5v\
@@ -344,8 +344,8 @@ XYh860/Q4wvc7lfiTe+dXBzPKAKhMy91yETY\
 //
 // Contains a testnet paytoaddress, so payment request network doesn't match client network
 //
-const char* paymentrequest1_cert2_BASE64 =
-"\
+const char *paymentrequest1_cert2_BASE64 =
+        "\
 Egt4NTA5K3NoYTI1NhrQBArNBDCCAkkwggExoAMCAQICAQEwDQYJKoZIhvcNAQEL\
 BQAwITEfMB0GA1UEAwwWUGF5bWVudFJlcXVlc3QgVGVzdCBDQTAeFw0xNTAxMTEx\
 ODIxMDhaFw0yNTAxMDgxODIxMDhaMCExHzAdBgNVBAMMFlBheW1lbnRSZXF1ZXN0\
@@ -368,8 +368,8 @@ AdJbL3JOJLs6Eyp5zrPbfI8faRttFAdONKDrJgIpuW1E3g==\
 //
 // Expired payment request (expires is set to 1 = 1970-01-01 00:00:01)
 //
-const char* paymentrequest2_cert2_BASE64 =
-"\
+const char *paymentrequest2_cert2_BASE64 =
+        "\
 Egt4NTA5K3NoYTI1NhrQBArNBDCCAkkwggExoAMCAQICAQEwDQYJKoZIhvcNAQEL\
 BQAwITEfMB0GA1UEAwwWUGF5bWVudFJlcXVlc3QgVGVzdCBDQTAeFw0xNTAxMTEx\
 ODIxMDhaFw0yNTAxMDgxODIxMDhaMCExHzAdBgNVBAMMFlBheW1lbnRSZXF1ZXN0\
@@ -392,8 +392,8 @@ Zs85lISGvOS0NZW/ENa6l+oQRnL87oqVZr/EDGiuqjz6T0ThQi0l\
 //
 // Unexpired payment request (expires is set to 0x7FFFFFFFFFFFFFFF = max. int64_t)
 //
-const char* paymentrequest3_cert2_BASE64 =
-"\
+const char *paymentrequest3_cert2_BASE64 =
+        "\
 Egt4NTA5K3NoYTI1NhrQBArNBDCCAkkwggExoAMCAQICAQEwDQYJKoZIhvcNAQEL\
 BQAwITEfMB0GA1UEAwwWUGF5bWVudFJlcXVlc3QgVGVzdCBDQTAeFw0xNTAxMTEx\
 ODIxMDhaFw0yNTAxMDgxODIxMDhaMCExHzAdBgNVBAMMFlBheW1lbnRSZXF1ZXN0\
@@ -416,8 +416,8 @@ Z3T+X0zcL8oe7bX01Yf+s2V+5JXQXarKnKBrZCGgv2ARjFNSZe7E7vGg5K4Q6Q8=\
 //
 // Unexpired payment request (expires is set to 0x8000000000000000 > max. int64_t, allowed uint64)
 //
-const char* paymentrequest4_cert2_BASE64 =
-"\
+const char *paymentrequest4_cert2_BASE64 =
+        "\
 Egt4NTA5K3NoYTI1NhrQBArNBDCCAkkwggExoAMCAQICAQEwDQYJKoZIhvcNAQEL\
 BQAwITEfMB0GA1UEAwwWUGF5bWVudFJlcXVlc3QgVGVzdCBDQTAeFw0xNTAxMTEx\
 ODIxMDhaFw0yNTAxMDgxODIxMDhaMCExHzAdBgNVBAMMFlBheW1lbnRSZXF1ZXN0\
@@ -440,8 +440,8 @@ d2hj739GDLz0b5KuJ2SG6VknMRQM976w/m2qlq0ccVGaaZ2zMIGfpzL3p6adwx/5\
 //
 // Payment request with amount overflow (amount is set to 21000001 BTC)
 //
-const char* paymentrequest5_cert2_BASE64 =
-"\
+const char *paymentrequest5_cert2_BASE64 =
+        "\
 Egt4NTA5K3NoYTI1NhrQBArNBDCCAkkwggExoAMCAQICAQEwDQYJKoZIhvcNAQEL\
 BQAwITEfMB0GA1UEAwwWUGF5bWVudFJlcXVlc3QgVGVzdCBDQTAeFw0xNTAxMTEx\
 ODIxMDhaFw0yNTAxMDgxODIxMDhaMCExHzAdBgNVBAMMFlBheW1lbnRSZXF1ZXN0\

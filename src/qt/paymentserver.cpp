@@ -46,8 +46,7 @@ const QString RAPTOREUM_IPC_PREFIX("raptoreum:");
 //  testnet / non-testnet
 //  data directory
 //
-static QString ipcServerName()
-{
+static QString ipcServerName() {
     QString name("RaptoreumQt");
 
     // Append a simple hash of the datadir
@@ -64,7 +63,7 @@ static QString ipcServerName()
 // the main GUI window is up and ready to ask the user
 // to send payment.
 
-static QList<QString> savedPaymentRequests;
+static QList <QString> savedPaymentRequests;
 
 //
 // Sending to the server is done synchronously, at startup.
@@ -75,10 +74,8 @@ static QList<QString> savedPaymentRequests;
 // Warning: ipcSendCommandLine() is called early in init,
 // so don't use "Q_EMIT message()", but "QMessageBox::"!
 //
-void PaymentServer::ipcParseCommandLine(interfaces::Node& node, int argc, char* argv[])
-{
-    for (int i = 1; i < argc; i++)
-    {
+void PaymentServer::ipcParseCommandLine(interfaces::Node &node, int argc, char *argv[]) {
+    for (int i = 1; i < argc; i++) {
         QString arg(argv[i]);
         if (arg.startsWith("-"))
             continue;
@@ -92,8 +89,7 @@ void PaymentServer::ipcParseCommandLine(interfaces::Node& node, int argc, char* 
             savedPaymentRequests.append(arg);
 
             SendCoinsRecipient r;
-            if (GUIUtil::parseBitcoinURI(arg, &r) && !r.address.isEmpty())
-            {
+            if (GUIUtil::parseBitcoinURI(arg, &r) && !r.address.isEmpty()) {
                 auto tempChainParams = CreateChainParams(CBaseChainParams::MAIN);
 
                 if (IsValidDestinationString(r.address.toStdString(), *tempChainParams)) {
@@ -115,15 +111,12 @@ void PaymentServer::ipcParseCommandLine(interfaces::Node& node, int argc, char* 
 // and the items in savedPaymentRequest will be handled
 // when uiReady() is called.
 //
-bool PaymentServer::ipcSendCommandLine()
-{
+bool PaymentServer::ipcSendCommandLine() {
     bool fResult = false;
-    for (const QString& r : savedPaymentRequests)
-    {
-        QLocalSocket* socket = new QLocalSocket();
+    for (const QString &r: savedPaymentRequests) {
+        QLocalSocket *socket = new QLocalSocket();
         socket->connectToServer(ipcServerName(), QIODevice::WriteOnly);
-        if (!socket->waitForConnected(RAPTOREUM_IPC_CONNECT_TIMEOUT))
-        {
+        if (!socket->waitForConnected(RAPTOREUM_IPC_CONNECT_TIMEOUT)) {
             delete socket;
             socket = nullptr;
             return false;
@@ -148,12 +141,11 @@ bool PaymentServer::ipcSendCommandLine()
     return fResult;
 }
 
-PaymentServer::PaymentServer(QObject* parent, bool startLocalServer) :
-    QObject(parent),
-    saveURIs(true),
-    uriServer(nullptr),
-    optionsModel(nullptr)
-{
+PaymentServer::PaymentServer(QObject *parent, bool startLocalServer) :
+        QObject(parent),
+        saveURIs(true),
+        uriServer(nullptr),
+        optionsModel(nullptr) {
     // Install global event filter to catch QFileOpenEvents
     // on Mac: sent when you click raptoreum: links
     // other OSes: helpful when dealing with payment request files
@@ -165,31 +157,28 @@ PaymentServer::PaymentServer(QObject* parent, bool startLocalServer) :
     // Clean up old socket leftover from a crash:
     QLocalServer::removeServer(name);
 
-    if (startLocalServer)
-    {
+    if (startLocalServer) {
         uriServer = new QLocalServer(this);
 
         if (!uriServer->listen(name)) {
             // constructor is called early in init, so don't use "Q_EMIT message()" here
-            QMessageBox::critical(nullptr, tr("Payment request error"), tr("Cannot start raptoreum: click-to-pay handler"));
-        }
-        else {
+            QMessageBox::critical(nullptr, tr("Payment request error"),
+                                  tr("Cannot start raptoreum: click-to-pay handler"));
+        } else {
             connect(uriServer, &QLocalServer::newConnection, this, &PaymentServer::handleURIConnection);
         }
     }
 }
 
-PaymentServer::~PaymentServer()
-{
+PaymentServer::~PaymentServer() {
 }
 
 //
 // OSX-specific way of handling raptoreum: URIs
 //
-bool PaymentServer::eventFilter(QObject *object, QEvent *event)
-{
+bool PaymentServer::eventFilter(QObject *object, QEvent *event) {
     if (event->type() == QEvent::FileOpen) {
-        QFileOpenEvent *fileEvent = static_cast<QFileOpenEvent*>(event);
+        QFileOpenEvent *fileEvent = static_cast<QFileOpenEvent *>(event);
         if (!fileEvent->file().isEmpty())
             handleURIOrFile(fileEvent->file());
         else if (!fileEvent->url().isEmpty())
@@ -201,55 +190,46 @@ bool PaymentServer::eventFilter(QObject *object, QEvent *event)
     return QObject::eventFilter(object, event);
 }
 
-void PaymentServer::uiReady()
-{
+void PaymentServer::uiReady() {
     saveURIs = false;
-    for (const QString& s : savedPaymentRequests)
-    {
+    for (const QString &s: savedPaymentRequests) {
         handleURIOrFile(s);
     }
     savedPaymentRequests.clear();
 }
 
-void PaymentServer::handleURIOrFile(const QString& s)
-{
-    if (saveURIs)
-    {
+void PaymentServer::handleURIOrFile(const QString &s) {
+    if (saveURIs) {
         savedPaymentRequests.append(s);
         return;
     }
 
-    if (s.startsWith("raptoreum://", Qt::CaseInsensitive))
-    {
+    if (s.startsWith("raptoreum://", Qt::CaseInsensitive)) {
         Q_EMIT message(tr("URI handling"), tr("'raptoreum://' is not a valid URI. Use 'raptoreum:' instead."),
-            CClientUIInterface::MSG_ERROR);
-    }
-    else if (s.startsWith(RAPTOREUM_IPC_PREFIX, Qt::CaseInsensitive)) // raptoreum: URI
+                       CClientUIInterface::MSG_ERROR);
+    } else if (s.startsWith(RAPTOREUM_IPC_PREFIX, Qt::CaseInsensitive)) // raptoreum: URI
     {
         QUrlQuery uri((QUrl(s)));
         // normal URI
         {
             SendCoinsRecipient recipient;
-            if (GUIUtil::parseBitcoinURI(s, &recipient))
-            {
+            if (GUIUtil::parseBitcoinURI(s, &recipient)) {
                 if (!IsValidDestinationString(recipient.address.toStdString())) {
                     if (uri.hasQueryItem("r")) {  // payment request
                         Q_EMIT message(tr("URI handling"),
-                            tr("Cannot process payment request as BIP70 is no longer supported.")+
-                            tr("Due to discontinued support, you should request the merchant to provide you with a BIP21 compatible URI or use a wallet that does continue to support BIP70."),
-                            CClientUIInterface::ICON_WARNING);
+                                       tr("Cannot process payment request as BIP70 is no longer supported.") +
+                                       tr("Due to discontinued support, you should request the merchant to provide you with a BIP21 compatible URI or use a wallet that does continue to support BIP70."),
+                                       CClientUIInterface::ICON_WARNING);
                     } else {
                         Q_EMIT message(tr("URI handling"), tr("Invalid payment address %1").arg(recipient.address),
-                            CClientUIInterface::MSG_ERROR);
+                                       CClientUIInterface::MSG_ERROR);
                     }
-                }
-                else
+                } else
                     Q_EMIT receivedPaymentRequest(recipient);
-            }
-            else
+            } else
                 Q_EMIT message(tr("URI handling"),
-                    tr("URI cannot be parsed! This can be caused by an invalid Raptoreum address or malformed URI parameters."),
-                    CClientUIInterface::ICON_WARNING);
+                               tr("URI cannot be parsed! This can be caused by an invalid Raptoreum address or malformed URI parameters."),
+                               CClientUIInterface::ICON_WARNING);
 
             return;
         }
@@ -258,24 +238,23 @@ void PaymentServer::handleURIOrFile(const QString& s)
     if (QFile::exists(s)) // payment request file
     {
         Q_EMIT message(tr("Payment request file handling"),
-            tr("Cannot process payment request as BIP70 is no longer supported.")+
-            tr("Due to discontinued support, you should request the merchant to provide you with a BIP21 compatible URI or use a wallet that does continue to support BIP70."),
-            CClientUIInterface::ICON_WARNING);
+                       tr("Cannot process payment request as BIP70 is no longer supported.") +
+                       tr("Due to discontinued support, you should request the merchant to provide you with a BIP21 compatible URI or use a wallet that does continue to support BIP70."),
+                       CClientUIInterface::ICON_WARNING);
     }
 }
 
-void PaymentServer::handleURIConnection()
-{
+void PaymentServer::handleURIConnection() {
     QLocalSocket *clientConnection = uriServer->nextPendingConnection();
 
-    while (clientConnection->bytesAvailable() < (int)sizeof(quint32))
+    while (clientConnection->bytesAvailable() < (int) sizeof(quint32))
         clientConnection->waitForReadyRead();
 
     connect(clientConnection, &QLocalSocket::disconnected, clientConnection, &QLocalSocket::deleteLater);
 
     QDataStream in(clientConnection);
     in.setVersion(QDataStream::Qt_4_0);
-    if (clientConnection->bytesAvailable() < (int)sizeof(quint16)) {
+    if (clientConnection->bytesAvailable() < (int) sizeof(quint16)) {
         return;
     }
     QString msg;
@@ -284,7 +263,6 @@ void PaymentServer::handleURIConnection()
     handleURIOrFile(msg);
 }
 
-void PaymentServer::setOptionsModel(OptionsModel *_optionsModel)
-{
+void PaymentServer::setOptionsModel(OptionsModel *_optionsModel) {
     this->optionsModel = _optionsModel;
 }

@@ -10,8 +10,7 @@
 
 volatile double sum = 0.0; // volatile, global so not optimized away
 
-static void Trig(benchmark::Bench& bench)
-{
+static void Trig(benchmark::Bench &bench) {
     double d = 0.01;
     bench.run([&] {
         sum += sin(d);

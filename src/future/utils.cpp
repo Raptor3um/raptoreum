@@ -7,14 +7,15 @@
 #include <evo/specialtx.h>
 #include <evo/providertx.h>
 
-void maybeSetPayload(Coin& coin, const COutPoint& outpoint, const uint16_t& nType, const std::vector<uint8_t>& vExtraPayload) {
-	if(nType == TRANSACTION_FUTURE) {
-		CFutureTx futureTx;
-		if(GetTxPayload(vExtraPayload, futureTx) && outpoint.n == futureTx.lockOutputIndex) {
-			coin.nType = nType;
-			coin.vExtraPayload = vExtraPayload;
-		}
-	}
+void maybeSetPayload(Coin &coin, const COutPoint &outpoint, const uint16_t &nType,
+                     const std::vector <uint8_t> &vExtraPayload) {
+    if (nType == TRANSACTION_FUTURE) {
+        CFutureTx futureTx;
+        if (GetTxPayload(vExtraPayload, futureTx) && outpoint.n == futureTx.lockOutputIndex) {
+            coin.nType = nType;
+            coin.vExtraPayload = vExtraPayload;
+        }
+    }
 }
 
 //bool checkFutureCoin(const Coin& coin, int nSpendHeight, uint32_t confirmedTime, int64_t adjustCurrentTime) {

@@ -8,12 +8,12 @@
 #include <QObject>
 #include <QTest>
 
-class URITests : public QObject
-{
+class URITests : public QObject {
     Q_OBJECT
 
-private Q_SLOTS:
-    void uriTests();
+private
+    Q_SLOTS:
+            void uriTests();
 };
 
 #endif // BITCOIN_QT_TEST_URITESTS_H

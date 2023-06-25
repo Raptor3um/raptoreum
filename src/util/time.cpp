@@ -17,12 +17,11 @@
 
 #include <tinyformat.h>
 
-void UninterruptibleSleep(const std::chrono::microseconds& n) { std::this_thread::sleep_for(n); }
+void UninterruptibleSleep(const std::chrono::microseconds &n) { std::this_thread::sleep_for(n); }
 
-static std::atomic<int64_t> nMockTime(0); //!< For unit testing
+static std::atomic <int64_t> nMockTime(0); //!< For unit testing
 
-int64_t GetTime()
-{
+int64_t GetTime() {
     int64_t mocktime = nMockTime.load(std::memory_order_relaxed);
     if (mocktime) return mocktime;
 
@@ -31,8 +30,7 @@ int64_t GetTime()
     return now;
 }
 
-bool ChronoSanityCheck()
-{
+bool ChronoSanityCheck() {
     // std::chrono::system_clock.time_since_epoch and time_t(0) are not guaranteed
     // to use the Unix epoch timestamp, prior to C++20, but in practice they almost
     // certainly will. Any differing behavior will be assumed to be an error, unless
@@ -63,56 +61,53 @@ bool ChronoSanityCheck()
         return false;
     }
 
-    if ((epoch.tm_sec != 0) || (epoch.tm_min != 0) || (epoch.tm_hour != 0) || (epoch.tm_mday != 1) || (epoch.tm_mon != 0) || (epoch.tm_year != 70)) {
+    if ((epoch.tm_sec != 0) || (epoch.tm_min != 0) || (epoch.tm_hour != 0) || (epoch.tm_mday != 1) ||
+        (epoch.tm_mon != 0) || (epoch.tm_year != 70)) {
         return false;
     }
     return true;
 }
 
-template <typename T>
-T GetTime()
-{
+template<typename T>
+T GetTime() {
     const std::chrono::seconds mocktime{nMockTime.load(std::memory_order_relaxed)};
 
     return std::chrono::duration_cast<T>(
-        mocktime.count() ?
+            mocktime.count() ?
             mocktime :
             std::chrono::microseconds{GetTimeMicros()});
 }
+
 template std::chrono::seconds GetTime();
+
 template std::chrono::milliseconds GetTime();
+
 template std::chrono::microseconds GetTime();
 
-template <typename T>
-static T GetSystemTime()
-{
+template<typename T>
+static T GetSystemTime() {
     const auto now = std::chrono::duration_cast<T>(std::chrono::system_clock::now().time_since_epoch());
     assert(now.count() > 0);
     return now;
 }
 
-void SetMockTime(int64_t nMockTimeIn)
-{
+void SetMockTime(int64_t nMockTimeIn) {
     nMockTime.store(nMockTimeIn, std::memory_order_relaxed);
 }
 
-int64_t GetMockTime()
-{
+int64_t GetMockTime() {
     return nMockTime.load(std::memory_order_relaxed);
 }
 
-int64_t GetTimeMillis()
-{
+int64_t GetTimeMillis() {
     return int64_t{GetSystemTime<std::chrono::milliseconds>().count()};
 }
 
-int64_t GetTimeMicros()
-{
+int64_t GetTimeMicros() {
     return int64_t{GetSystemTime<std::chrono::microseconds>().count()};
 }
 
-int64_t GetSystemTimeInSeconds()
-{
+int64_t GetSystemTimeInSeconds() {
     return int64_t{GetSystemTime<std::chrono::seconds>().count()};
 }
 
@@ -124,7 +119,8 @@ std::string FormatISO8601DateTime(int64_t nTime) {
 #else
     gmtime_s(&ts, &time_val);
 #endif
-    return strprintf("%04i-%02i-%02iT%02i:%02i:%02iZ", ts.tm_year + 1900, ts.tm_mon + 1, ts.tm_mday, ts.tm_hour, ts.tm_min, ts.tm_sec);
+    return strprintf("%04i-%02i-%02iT%02i:%02i:%02iZ", ts.tm_year + 1900, ts.tm_mon + 1, ts.tm_mday, ts.tm_hour,
+                     ts.tm_min, ts.tm_sec);
 }
 
 std::string FormatISO8601Date(int64_t nTime) {
@@ -149,28 +145,25 @@ std::string FormatISO8601Time(int64_t nTime) {
     return strprintf("%02i:%02i:%02iZ", ts.tm_hour, ts.tm_min, ts.tm_sec);
 }
 
-int64_t ParseISO8601DateTime(const std::string& str)
-{
-	static const boost::posix_time::ptime epoch = boost::posix_time::from_time_t(0);
-	static const std::locale loc(std::locale::classic(), new boost::posix_time::time_input_facet("%Y-%m-%dT%H:%M:%SZ"));
-	std::istringstream iss(str);
-	iss.imbue(loc);
-	boost::posix_time::ptime ptime(boost::date_time::not_a_date_time);
-	iss >> ptime;
-	if (ptime.is_not_a_date_time() || epoch > ptime)
-		return 0;
-	return (ptime - epoch).total_seconds();
+int64_t ParseISO8601DateTime(const std::string &str) {
+    static const boost::posix_time::ptime epoch = boost::posix_time::from_time_t(0);
+    static const std::locale loc(std::locale::classic(), new boost::posix_time::time_input_facet("%Y-%m-%dT%H:%M:%SZ"));
+    std::istringstream iss(str);
+    iss.imbue(loc);
+    boost::posix_time::ptime ptime(boost::date_time::not_a_date_time);
+    iss >> ptime;
+    if (ptime.is_not_a_date_time() || epoch > ptime)
+        return 0;
+    return (ptime - epoch).total_seconds();
 }
 
-struct timeval MillisToTimeval(int64_t nTimeout)
-{
+struct timeval MillisToTimeval(int64_t nTimeout) {
     struct timeval timeout;
     timeout.tv_sec = nTimeout / 1000;
     timeout.tv_usec = (nTimeout % 1000) * 1000;
     return timeout;
 }
 
-struct timeval MillisToTimeval(std::chrono::milliseconds ms)
-{
+struct timeval MillisToTimeval(std::chrono::milliseconds ms) {
     return MillisToTimeval(count_milliseconds(ms));
 }

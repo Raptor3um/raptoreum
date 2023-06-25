@@ -67,12 +67,29 @@
  *
  * Thread-safe.
  */
-void GetRandBytes(unsigned char* buf, int num) noexcept;
-uint64_t GetRand(uint64_t nMax) noexcept;
-std::chrono::microseconds GetRandMicros(std::chrono::microseconds duration_max) noexcept;
-std::chrono::milliseconds GetRandMillis(std::chrono::milliseconds duration_max) noexcept;
-int GetRandInt(int nMax) noexcept;
-uint256 GetRandHash() noexcept;
+void GetRandBytes(unsigned char *buf, int num)
+
+noexcept;
+
+uint64_t GetRand(uint64_t nMax)
+
+noexcept;
+
+std::chrono::microseconds GetRandMicros(std::chrono::microseconds duration_max)
+
+noexcept;
+
+std::chrono::milliseconds GetRandMillis(std::chrono::milliseconds duration_max)
+
+noexcept;
+
+int GetRandInt(int nMax)
+
+noexcept;
+
+uint256 GetRandHash()
+
+noexcept;
 
 bool GetRandBool(double rate);
 
@@ -83,14 +100,18 @@ bool GetRandBool(double rate);
  * This function will cause failure whenever the OS RNG fails.
  *
  */
-void GetStrongRandBytes(unsigned char* buf, int num) noexcept;
+void GetStrongRandBytes(unsigned char *buf, int num)
+
+noexcept;
 
 /**
  * Gather entropy from various expensive sources, and feed them to the PRNG state.
  *
  * Thread-safe
  */
-void RandAddPeriodic() noexcept;
+void RandAddPeriodic()
+
+noexcept;
 
 /**
  * Gathers entropy from the low bits of the time at which events occur.
@@ -98,7 +119,9 @@ void RandAddPeriodic() noexcept;
  *
  * Thread-safe.
  */
-void RandAddEvent(const uint32_t event_info) noexcept;
+void RandAddEvent(const uint32_t event_info)
+
+noexcept;
 
 /**
  * Fast randomness source. This is seeded once with secure random data, but
@@ -119,8 +142,7 @@ private:
 
     void RandomSeed();
 
-    void FillByteBuffer()
-    {
+    void FillByteBuffer() {
         if (requires_seed) {
             RandomSeed();
         }
@@ -128,28 +150,37 @@ private:
         bytebuf_size = sizeof(bytebuf);
     }
 
-    void FillBitBuffer()
-    {
+    void FillBitBuffer() {
         bitbuf = rand64();
         bitbuf_size = 64;
     }
 
 public:
-    explicit FastRandomContext(bool fDeterministic = false) noexcept;
+    explicit FastRandomContext(bool fDeterministic = false)
+
+    noexcept;
 
     /** Initialize with explicit seed (only for testing) */
-    explicit FastRandomContext(const uint256& seed) noexcept;
+    explicit FastRandomContext(const uint256 &seed)
+
+    noexcept;
 
     // Do not permit copying a FastRandContext (move it, or create a new one to get reseeded).
-    FastRandomContext(const FastRandomContext&) = delete;
-    FastRandomContext(FastRandomContext&&) = delete;
-    FastRandomContext& operator=(const FastRandomContext&) = delete;
+    FastRandomContext(const FastRandomContext &) = delete;
+
+    FastRandomContext(FastRandomContext &&) = delete;
+
+    FastRandomContext &operator=(const FastRandomContext &) = delete;
 
     /** Move a FastRandomContext. If the original one is used again, it will be reseeded. */
-    FastRandomContext& operator=(FastRandomContext&& from) noexcept;
+    FastRandomContext &operator=(FastRandomContext &&from)
+
+    noexcept;
 
     /** Generate a random 64-bit integer. */
-    uint64_t rand64() noexcept
+    uint64_t rand64()
+
+    noexcept
     {
         if (bytebuf_size < 8) FillByteBuffer();
         uint64_t ret = ReadLE64(bytebuf + 64 - bytebuf_size);
@@ -158,14 +189,16 @@ public:
     }
 
     /** Generate a random (bits)-bit integer. */
-    uint64_t randbits(int bits) noexcept {
+    uint64_t randbits(int bits)
+
+    noexcept {
         if (bits == 0) {
             return 0;
         } else if (bits > 32) {
             return rand64() >> (64 - bits);
         } else {
             if (bitbuf_size < bits) FillBitBuffer();
-            uint64_t ret = bitbuf & (~(uint64_t)0 >> (64 - bits));
+            uint64_t ret = bitbuf & (~(uint64_t) 0 >> (64 - bits));
             bitbuf >>= bits;
             bitbuf_size -= bits;
             return ret;
@@ -173,7 +206,9 @@ public:
     }
 
     /** Generate a random integer in the range [0..range). */
-    uint64_t randrange(uint64_t range) noexcept
+    uint64_t randrange(uint64_t range)
+
+    noexcept
     {
         --range;
         int bits = CountBits(range);
@@ -195,19 +230,33 @@ public:
     std::vector<unsigned char> randbytes(size_t len);
 
     /** Generate a random 32-bit integer. */
-    uint32_t rand32() noexcept { return randbits(32); }
+    uint32_t rand32()
+
+    noexcept { return randbits(32); }
 
     /** generate a random uint256. */
-    uint256 rand256() noexcept;
+    uint256 rand256()
+
+    noexcept;
 
     /** Generate a random boolean. */
-    bool randbool() noexcept { return randbits(1); }
+    bool randbool()
+
+    noexcept { return randbits(1); }
 
     // Compatibility with the C++11 UniformRandomBitGenerator concept
     typedef uint64_t result_type;
-    static constexpr uint64_t min() { return 0; }
-    static constexpr uint64_t max() { return std::numeric_limits<uint64_t>::max(); }
-    inline uint64_t operator()() noexcept { return rand64(); }
+    static constexpr uint64_t
+
+    min() { return 0; }
+
+    static constexpr uint64_t
+
+    max() { return std::numeric_limits<uint64_t>::max(); }
+
+    inline uint64_t operator()()
+
+    noexcept { return rand64(); }
 };
 
 /** More efficient than using std::shuffle on a FastRandomContext.
@@ -221,8 +270,7 @@ public:
  * https://stackoverflow.com/questions/22915325/avoiding-self-assignment-in-stdshuffle
  */
 template<typename I, typename R>
-void Shuffle(I first, I last, R&& rng)
-{
+void Shuffle(I first, I last, R &&rng) {
     while (first != last) {
         size_t j = rng.randrange(last - first);
         if (j) {

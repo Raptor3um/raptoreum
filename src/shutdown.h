@@ -8,11 +8,17 @@
 #define BITCOIN_SHUTDOWN_H
 
 bool InitShutdownState();
+
 void StartShutdown();
+
 void StartRestart();
+
 void AbortShutdown();
+
 bool ShutdownRequested();
+
 void WaitForShutdown();
+
 bool RestartRequested();
 
 #endif
