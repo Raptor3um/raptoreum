@@ -1,3 +1,7 @@
+// Copyright (c) 2014-2020 The Dash Core developers
+// Copyright (c) 2020-2023 The Raptoreum developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #include <qt/smartnodelist.h>
 #include <qt/forms/ui_smartnodelist.h>
 

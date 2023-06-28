@@ -1,3 +1,7 @@
+// Copyright (c) 2014-2020 The Dash Core developers
+// Copyright (c) 2020-2023 The Raptoreum developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #ifndef BITCOIN_QT_SMARTNODELIST_H
 #define BITCOIN_QT_SMARTNODELIST_H
 
