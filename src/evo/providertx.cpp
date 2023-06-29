@@ -178,6 +178,13 @@ bool CheckNewAssetTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CVal
         return state.DoS(100, false, REJECT_INVALID, "bad-assets-collateralAddress");
     }
 
+    if (assetTx.referenceHash.length() != 0){
+        if (assetTx.referenceHash.length() == 46){
+            if (assetTx.referenceHash.substr(0, 2) != "Qm")
+                return state.DoS(100, false, REJECT_INVALID, "bad-assets-referenceHash");
+        }
+        return state.DoS(100, false, REJECT_INVALID, "bad-assets-referenceHash");
+    }
 
     if (!validateAmount(assetTx.amount, assetTx.decimalPoint)) {
         return state.DoS(100, false, REJECT_INVALID, "bad-assets-amount");
