@@ -422,7 +422,7 @@ UniValue sendtoaddress(const JSONRPCRequest &request) {
     }
     nextParamsIndex++;
     if (request.params[nextParamsIndex].isStr() && !request.params[nextParamsIndex].get_str().empty()) {
-        mapValue["comment"] = request.params[nextParamsIndex].get_str();   
+        mapValue["comment"] = request.params[nextParamsIndex].get_str();
     }
     nextParamsIndex++;
     if (!request.params[nextParamsIndex].isNull() && !request.params[nextParamsIndex].get_str().empty()){

@@ -293,11 +293,11 @@ bool BitcoinUnits::parse(int unit, const QString &value, CAmount *val_out) {
 }
 
 bool BitcoinUnits::assetParse(int assetUnit, const QString &value, CAmount *val_out) {
-    if (!(assetUnit >= 0 && assetUnit <= 8) || value.isEmpty())
+    if (assetUnit < 0 || assetUnit > 8 || value.isEmpty())
         return false; // Refuse to parse invalid unit or empty string
     int num_decimals = assetUnit;
 
-    return parseAll(num_decimals, value, val_out, MAX_ASSET_UNITS - num_decimals);
+    return parseAll(num_decimals, value, val_out, 18 - (MAX_ASSET_UNITS - num_decimals));
 }
 
 QString BitcoinUnits::getAmountColumnTitle(int unit) {

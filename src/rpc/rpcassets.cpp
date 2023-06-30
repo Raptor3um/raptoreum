@@ -130,11 +130,13 @@ UniValue createasset(const JSONRPCRequest &request) {
     const UniValue &referenceHash = find_value(asset, "referenceHash");
     if (!referenceHash.isNull()) {
         std::string ref = referenceHash.get_str();
-        if (ref.length() != 46)
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Invalid referenceHash (must be 46 characters)");
-        if (ref.substr(0, 2) != "Qm")
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: invalid referenceHash (must start with Qm)");
-        assetTx.referenceHash = ref;
+        if (ref.length() != 0) {
+            if (ref.length() != 46)
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Invalid referenceHash (must be 46 characters)");
+            if (ref.substr(0, 2) != "Qm")
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: invalid referenceHash (must start with Qm)");
+            assetTx.referenceHash = ref;
+        }
     }
 
     const UniValue &targetAddress = find_value(asset, "targetAddress");
@@ -810,7 +812,7 @@ static const CRPCCommand commands[] =
                 {"assets", "sendasset",         &sendasset,         {"assetId", "amount", "address", "change_address", "asset_change_address"}},
                 {"assets", "assetdetails",      &assetdetails,      {"assetId"}},
                 {"assets", "listassetsbalance", &listassetsbalance, {}},
-                {"assets", "listunspentassets", &listunspentassets, {"minconf","maxconf","addresses","include_unsafe","query_options"}},
+                {"assets", "listunspentassets", &listunspentassets, {"minconf", "maxconf", "addresses", "include_unsafe", "query_options"}},
         };
 
 void RegisterAssetsRPCCommands(CRPCTable &tableRPC) {

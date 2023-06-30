@@ -121,22 +121,22 @@ ConstructTransaction(const UniValue &inputs_in, const UniValue &outputs_in, cons
             CAmount nAmount;
             bool hasasset = false;
             std::string assetId;
-            uint32_t uniqueId;
-            if(sendToValue.isObject()) {
-                if (!sendToValue["assetid"].isNull()){
+            uint32_t uniqueId = -1;
+            if (sendToValue.isObject()) {
+                if (!sendToValue["assetid"].isNull()) {
                     hasasset = true;
                     assetId = sendToValue["assetid"].get_str();
-                    if (!sendToValue["uniqueid"].isNull()){
+                    if (!sendToValue["uniqueid"].isNull()) {
                         uniqueId = (uint32_t)sendToValue["uniqueid"].get_int64();
                         nAmount = 1 * COIN;
                     } else {
-                        if(sendToValue["amount"].isNull()) {
+                        if (sendToValue["amount"].isNull()) {
                             throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("no asset amount is specified"));
                         }
                         nAmount = AmountFromValue(sendToValue["amount"]);
                     }
                 }
-                if (!sendToValue["future_maturity"].isNull() || !sendToValue["future_locktime"].isNull()){
+                if (!sendToValue["future_maturity"].isNull() || !sendToValue["future_locktime"].isNull()) {
                     if(hasFuture) {
                         throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("can only send future to one address"));
                     }
@@ -164,17 +164,20 @@ ConstructTransaction(const UniValue &inputs_in, const UniValue &outputs_in, cons
             } else {
                 nAmount = AmountFromValue(sendToValue);
             }
-            if (hasasset){
+            if (hasasset) {
                 // get asset metadadta
                 CAssetMetaData tmpasset;
-                if(!passetsCache->GetAssetMetaData(assetId, tmpasset)){ //check if the asset exist
+                if (!passetsCache->GetAssetMetaData(assetId, tmpasset)) { //check if the asset exist
                     throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Asset not found");
                 }
+                if (tmpasset.isUnique && uniqueId == -1) {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("no asset uniqueId is specified"));
+                }
                 // Update the scriptPubKey with the transfer asset information
-                if (tmpasset.isUnique){
+                if (tmpasset.isUnique) {
                     CAssetTransfer assetTransfer(assetId, nAmount, uniqueId);
                     assetTransfer.BuildAssetTransaction(scriptPubKey);
-                }else{
+                } else {
                     CAssetTransfer assetTransfer(assetId, nAmount);
                     assetTransfer.BuildAssetTransaction(scriptPubKey);
                 }
