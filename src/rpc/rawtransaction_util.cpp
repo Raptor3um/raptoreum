@@ -130,6 +130,9 @@ ConstructTransaction(const UniValue &inputs_in, const UniValue &outputs_in, cons
                         uniqueId = (uint32_t)sendToValue["uniqueid"].get_int64();
                         nAmount = 1 * COIN;
                     } else {
+                        if(sendToValue["amount"].isNull()) {
+                            throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("no asset amount is specified"));
+                        }
                         nAmount = AmountFromValue(sendToValue["amount"]);
                     }
                 }
@@ -138,13 +141,13 @@ ConstructTransaction(const UniValue &inputs_in, const UniValue &outputs_in, cons
                         throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("can only send future to one address"));
                     }
                     if(sendToValue["future_maturity"].isNull()) {
-                        throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("no future_maturity is specified "));
+                        throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("no future_maturity is specified"));
                     }
                     if(sendToValue["future_locktime"].isNull()) {
-                        throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("no future_locktime is specified "));
+                        throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("no future_locktime is specified"));
                     }
                     if(!hasasset && sendToValue["future_amount"].isNull()) {
-                        throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("no future_amount is specified "));
+                        throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("no future_amount is specified"));
                     }
                     hasFuture = true;
                     if (!hasasset)

@@ -484,6 +484,11 @@ static UniValue createrawtransaction(const JSONRPCRequest &request) {
                                           "The asset unique id."},
                                          {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO,
                                           "Amount to send."},
+                                         {"future_maturity", RPCArg::Type::NUM, RPCArg::Optional::OMITTED,
+                                          "Number of confirmation for this future to mature."},
+                                         {"future_locktime", RPCArg::Type::NUM, RPCArg::Optional::OMITTED,
+                                          "Total time in seconds from its first confirmation for this future to mature."},
+                                         
                                  },
                                 },
 
