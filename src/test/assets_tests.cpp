@@ -81,6 +81,7 @@ static void FundTransaction(CMutableTransaction &tx, SimpleUTXOMap &utoxs, const
 }
 
 static void SignTransaction(const CTxMemPool &mempool, CMutableTransaction &tx, const CKey &coinbaseKey) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(50)); //txindex extra time for windows
     CBasicKeyStore tempKeystore;
     tempKeystore.AddKeyPubKey(coinbaseKey, coinbaseKey.GetPubKey());
 

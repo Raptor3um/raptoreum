@@ -377,10 +377,10 @@ UniValue sendtoaddress(const JSONRPCRequest &request) {
                        + HelpExampleCli("sendtoaddress",
                                         "\"RwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwG\" 0.1 '{\"future_maturity\":100, \"future_locktime\":10000}'")
                        + HelpExampleCli("sendtoaddress",
-                                        "\"RwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwG\" 0.1 \"donation\" \"seans outpost\"")
+                                        "\"RwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwG\" 0.1 [] \"donation\" \"seans outpost\"")
                        + HelpExampleCli("sendtoaddress", "\"RwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwG\" 0.1 \"\" \"\" true")
                        + HelpExampleRpc("sendtoaddress",
-                                        "\"RwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwG\", 0.1, \"donation\", \"seans outpost\"")
+                                        "\"RwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwG\", [], 0.1, \"donation\", \"seans outpost\"")
                },
     }.Check(request);
 
@@ -417,16 +417,17 @@ UniValue sendtoaddress(const JSONRPCRequest &request) {
             hasFuture = true;
             fpp.maturity = request.params[nextParamsIndex]["future_maturity"].get_int();
             fpp.locktime = request.params[nextParamsIndex]["future_locktime"].get_int();
-            fpp.futureRecScript = GetScriptForDestination(dest);
-            nextParamsIndex++;
+            fpp.futureRecScript = GetScriptForDestination(dest);           
         }
     }
+    nextParamsIndex++;
     if (request.params[nextParamsIndex].isStr() && !request.params[nextParamsIndex].get_str().empty()) {
         mapValue["comment"] = request.params[nextParamsIndex].get_str();
     }
     nextParamsIndex++;
-    if (!request.params[nextParamsIndex].isNull() && !request.params[nextParamsIndex].get_str().empty())
+    if (!request.params[nextParamsIndex].isNull() && !request.params[nextParamsIndex].get_str().empty()){
         mapValue["to"] = request.params[nextParamsIndex].get_str();
+    }  
     nextParamsIndex++;
     bool fSubtractFeeFromAmount = false;
     if (!request.params[nextParamsIndex].isNull()) {
@@ -438,9 +439,9 @@ UniValue sendtoaddress(const JSONRPCRequest &request) {
     if (!request.params[nextParamsIndex].isNull()) {
         coin_control.UseCoinJoin(request.params[nextParamsIndex].get_bool());
     }
-
-    if (!request.params[8].isNull()) {
-        coin_control.m_confirm_target = ParseConfirmTarget(request.params[7], pwallet->chain().estimateMaxBlocks());
+    nextParamsIndex++;
+    if (!request.params[nextParamsIndex].isNull()) {
+        coin_control.m_confirm_target = ParseConfirmTarget(request.params[nextParamsIndex], pwallet->chain().estimateMaxBlocks());
     }
     nextParamsIndex++;
     if (!request.params[nextParamsIndex].isNull()) {

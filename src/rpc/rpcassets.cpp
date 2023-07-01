@@ -129,7 +129,14 @@ UniValue createasset(const JSONRPCRequest &request) {
 
     const UniValue &referenceHash = find_value(asset, "referenceHash");
     if (!referenceHash.isNull()) {
-        assetTx.referenceHash = referenceHash.get_str();
+        std::string ref = referenceHash.get_str();
+        if (ref.length() != 0) {
+            if (ref.length() != 46)
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Invalid referenceHash (must be 46 characters)");
+            if (ref.substr(0, 2) != "Qm")
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: invalid referenceHash (must start with Qm)");
+            assetTx.referenceHash = ref;
+        }
     }
 
     const UniValue &targetAddress = find_value(asset, "targetAddress");
@@ -359,7 +366,7 @@ UniValue sendasset(const JSONRPCRequest &request) {
     if (request.fHelp || !Params().IsAssetsActive(::ChainActive().Tip()) || request.params.size() < 3 ||
         request.params.size() > 7)
         throw std::runtime_error(
-                "sendasset \"asst_id\" qty \"to_address\" \"change_address\" \"asset_change_address\"\n"
+                "sendasset \"asset_id\" qty \"to_address\" \"change_address\" \"asset_change_address\"\n"
                 "\nTransfers a quantity of an owned asset to a given address"
 
                 "\nArguments:\n"
@@ -602,6 +609,201 @@ UniValue listassetsbalance(const JSONRPCRequest &request) {
     return result;
 }
 
+UniValue listunspentassets(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() > 5)
+        throw std::runtime_error(
+            "listunspentassets ( minconf maxconf  [\"addresses\",...] [include_unsafe] [query_options])\n"
+            "\nReturns array of unspent transaction outputs\n"
+            "with between minconf and maxconf (inclusive) confirmations.\n"
+            "Optionally filter to only include txouts paid to specified addresses.\n"
+            "\nArguments:\n"
+            "1. minconf          (numeric, optional, default=1) The minimum confirmations to filter\n"
+            "2. maxconf          (numeric, optional, default=9999999) The maximum confirmations to filter\n"
+            "3. \"addresses\"      (string) A json array of raptoreum addresses to filter\n"
+            "    [\n"
+            "      \"address\"     (string) raptoreum address\n"
+            "      ,...\n"
+            "    ]\n"
+            "4. include_unsafe (bool, optional, default=true) Include outputs that are not safe to spend\n"
+            "                  See description of \"safe\" attribute below.\n"
+            "5. query_options    (json, optional) JSON with query options\n"
+            "    {\n"
+            "      \"minimumAmount\"    (numeric or string, default=0) Minimum value of each UTXO in " + CURRENCY_UNIT + "\n"
+            "      \"maximumAmount\"    (numeric or string, default=unlimited) Maximum value of each UTXO in " + CURRENCY_UNIT + "\n"
+            "      \"maximumCount\"     (numeric or string, default=unlimited) Maximum number of UTXOs\n"
+            "      \"minimumSumAmount\" (numeric or string, default=unlimited) Minimum sum value of all UTXOs in " + CURRENCY_UNIT + "\n"
+            "      \"coinType\"         (numeric, default=0) Filter coinTypes as follows:\n"
+            "                         0=ALL_COINS, 1=ONLY_FULLY_MIXED, 2=ONLY_READY_TO_MIX, 3=ONLY_NONDENOMINATED,\n"
+            "                         4=ONLY_SMARTNODE_COLLATERAL, 5=ONLY_COINJOIN_COLLATERAL\n"
+            "    }\n"
+            "\nResult\n"
+            "[                   (array of json object)\n"
+            "  {\n"
+            "    \"txid\" : \"txid\",          (string) the transaction id \n"
+            "    \"vout\" : n,               (numeric) the vout value\n"
+            "    \"address\" : \"address\",    (string) the raptoreum address\n"
+            "    \"label\" : \"label\",        (string) The associated label, or \"\" for the default label\n"
+            "    \"account\" : \"account\",    (string) DEPRECATED. This field will be removed in V0.18. To see this deprecated field, start raptoreumd with -deprecatedrpc=accounts. The associated account, or \"\" for the default account\n"
+            "    \"scriptPubKey\" : \"key\",   (string) the script key\n"
+            "    \"amount\" : x.xxx,         (numeric) the transaction output amount in " + CURRENCY_UNIT + "\n"
+            "    \"confirmations\" : n,      (numeric) The number of confirmations\n"
+            "    \"redeemScript\" : n        (string) The redeemScript if scriptPubKey is P2SH\n"
+            "    \"spendable\" : xxx,        (bool) Whether we have the private keys to spend this output\n"
+            "    \"solvable\" : xxx,         (bool) Whether we know how to spend this output, ignoring the lack of keys\n"
+            "    \"safe\" : xxx              (bool) Whether this output is considered safe to spend. Unconfirmed transactions\n"
+            "                              from outside keys and unconfirmed replacement transactions are considered unsafe\n"
+            "                              and are not eligible for spending by fundrawtransaction and sendtoaddress.\n"
+            "    \"coinjoin_rounds\" : n     (numeric) The number of CoinJoin rounds\n"
+            "  }\n"
+            "  ,...\n"
+            "]\n"
+
+            "\nExamples:\n"
+            + HelpExampleCli("listunspentassets", "")
+            + HelpExampleCli("listunspentassets", "6 9999999 \"[\\\"XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg\\\",\\\"XuQQkwA4FYkq2XERzMY2CiAZhJTEDAbtcg\\\"]\"")
+            + HelpExampleRpc("listunspentassets", "6, 9999999 \"[\\\"XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg\\\",\\\"XuQQkwA4FYkq2XERzMY2CiAZhJTEDAbtcg\\\"]\"")
+            + HelpExampleCli("listunspentassets", "6 9999999 '[]' true '{ \"minimumAmount\": 0.005 }'")
+            + HelpExampleRpc("listunspentassets", "6, 9999999, [] , true, { \"minimumAmount\": 0.005 } ")
+        );
+
+    std::shared_ptr <CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    if (!wallet) return NullUniValue;
+    CWallet *const pwallet = wallet.get();
+
+    int nMinDepth = 1;
+    if (!request.params[0].isNull()) {
+        RPCTypeCheckArgument(request.params[0], UniValue::VNUM);
+        nMinDepth = request.params[0].get_int();
+    }
+
+    int nMaxDepth = 9999999;
+    if (!request.params[1].isNull()) {
+        RPCTypeCheckArgument(request.params[1], UniValue::VNUM);
+        nMaxDepth = request.params[1].get_int();
+    }
+
+    std::set<CTxDestination> destinations;
+    if (!request.params[2].isNull()) {
+        RPCTypeCheckArgument(request.params[2], UniValue::VARR);
+        UniValue inputs = request.params[2].get_array();
+        for (unsigned int idx = 0; idx < inputs.size(); idx++) {
+            const UniValue& input = inputs[idx];
+            CTxDestination dest = DecodeDestination(input.get_str());
+            if (!IsValidDestination(dest)) {
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Raptoreum address: ") + input.get_str());
+            }
+            if (!destinations.insert(dest).second) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("Invalid parameter, duplicated address: ") + input.get_str());
+            }
+        }
+    }
+
+    bool include_unsafe = true;
+    if (!request.params[3].isNull()) {
+        RPCTypeCheckArgument(request.params[3], UniValue::VBOOL);
+        include_unsafe = request.params[3].get_bool();
+    }
+
+    CAmount nMinimumAmount = 0;
+    CAmount nMaximumAmount = MAX_MONEY;
+    CAmount nMinimumSumAmount = MAX_MONEY;
+    uint64_t nMaximumCount = 0;
+    CCoinControl coinControl;
+    coinControl.nCoinType = CoinType::ALL_COINS;
+
+    if (!request.params[4].isNull()) {
+        const UniValue& options = request.params[4].get_obj();
+
+        // Note: Keep this vector up to date with the options processed below
+        const std::vector<std::string> vecOptions {
+            "minimumAmount",
+            "maximumAmount",
+            "minimumSumAmount",
+            "maximumCount"
+        };
+
+        for (const auto& key : options.getKeys()) {
+            if (std::find(vecOptions.begin(), vecOptions.end(), key) == vecOptions.end()) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("Invalid key used in query_options JSON object: ") + key);
+            }
+        }
+
+        if (options.exists("minimumAmount"))
+            nMinimumAmount = AmountFromValue(options["minimumAmount"]);
+
+        if (options.exists("maximumAmount"))
+            nMaximumAmount = AmountFromValue(options["maximumAmount"]);
+
+        if (options.exists("minimumSumAmount"))
+            nMinimumSumAmount = AmountFromValue(options["minimumSumAmount"]);
+
+        if (options.exists("maximumCount"))
+            nMaximumCount = options["maximumCount"].get_int64();
+
+    }
+
+    // Make sure the results are valid at least up to the most recent block
+    // the user could have gotten from another RPC command prior to now
+    pwallet->BlockUntilSyncedToCurrentChain();
+
+    UniValue results(UniValue::VARR);
+    std::map<std::string, std::vector<COutput> > mapAssetCoins;
+    LOCK2(cs_main, pwallet->cs_wallet);
+
+    pwallet->AvailableAssets(mapAssetCoins, !include_unsafe, &coinControl, nMinimumAmount, nMaximumAmount, nMinimumSumAmount, nMaximumCount, nMinDepth, nMaxDepth);
+    for (const auto asset : mapAssetCoins) {
+        for (auto output : asset.second){
+            CInputCoin coin(output.tx->tx, output.i);
+
+            CTxDestination address;
+            const CScript& scriptPubKey = coin.txout.scriptPubKey;
+            bool fValidAddress = ExtractDestination(scriptPubKey, address);
+
+            if (destinations.size() && (!fValidAddress || !destinations.count(address)))
+                continue;
+
+            if (!coin.txout.scriptPubKey.IsAssetScript()) {
+                continue;
+            }
+
+            CAssetTransfer transferTemp;
+            if (!GetTransferAsset(scriptPubKey, transferTemp))
+                continue;
+         
+            UniValue entry(UniValue::VOBJ);
+            entry.pushKV("txid", output.tx->GetHash().GetHex());
+            entry.pushKV("vout", output.i);
+
+            if (fValidAddress) {
+                entry.pushKV("address", EncodeDestination(address));
+
+                if (pwallet->mapAddressBook.count(address)) {
+                    entry.pushKV("label", pwallet->mapAddressBook[address].name);
+                    if (IsDeprecatedRPCEnabled("accounts")) {
+                        entry.pushKV("account", pwallet->mapAddressBook[address].name);
+                    }
+                }
+            }
+
+            entry.pushKV("assetId", transferTemp.assetId);
+            if (transferTemp.isUnique)
+            entry.pushKV("uniqueId", (int64_t)transferTemp.uniqueId);
+            entry.pushKV("amount", transferTemp.nAmount);
+            entry.pushKV("scriptPubKey", HexStr(scriptPubKey));
+            entry.pushKV("confirmations", output.nDepth);
+            entry.pushKV("spendable", output.fSpendable);
+            entry.pushKV("solvable", output.fSolvable);
+            entry.pushKV("future", output.isFuture);
+            entry.pushKV("futureSpendable", output.isFutureSpendable);
+            entry.pushKV("safe", output.fSafe);
+            results.push_back(entry);
+        }
+    }
+
+    return results;
+}
+
 static const CRPCCommand commands[] =
         { //  category              name                      actor (function)
                 //  --------------------- ------------------------  -----------------------
@@ -610,6 +812,7 @@ static const CRPCCommand commands[] =
                 {"assets", "sendasset",         &sendasset,         {"assetId", "amount", "address", "change_address", "asset_change_address"}},
                 {"assets", "assetdetails",      &assetdetails,      {"assetId"}},
                 {"assets", "listassetsbalance", &listassetsbalance, {}},
+                {"assets", "listunspentassets", &listunspentassets, {"minconf", "maxconf", "addresses", "include_unsafe", "query_options"}},
         };
 
 void RegisterAssetsRPCCommands(CRPCTable &tableRPC) {

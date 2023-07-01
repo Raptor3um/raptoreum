@@ -475,6 +475,23 @@ static UniValue createrawtransaction(const JSONRPCRequest &request) {
                                           "Raptoreum amount to be locked."},
                                  },
                                 },
+
+                                {"", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "",
+                                 {
+                                         {"assetid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO,
+                                          "The asset identifier."},
+                                         {"uniqueid", RPCArg::Type::NUM, RPCArg::Optional::OMITTED,
+                                          "The asset unique id."},
+                                         {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO,
+                                          "Amount to send."},
+                                         {"future_maturity", RPCArg::Type::NUM, RPCArg::Optional::OMITTED,
+                                          "Number of confirmation for this future to mature."},
+                                         {"future_locktime", RPCArg::Type::NUM, RPCArg::Optional::OMITTED,
+                                          "Total time in seconds from its first confirmation for this future to mature."},
+                                         
+                                 },
+                                },
+
                                 {"", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "",
                                  {
                                          {"data", RPCArg::Type::STR_HEX, RPCArg::Optional::NO,
