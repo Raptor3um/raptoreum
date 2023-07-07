@@ -994,7 +994,7 @@ std::string ArgsManager::GetChainName() const {
 std::string ArgsManager::GetDevNetName() const {
     assert(IsArgSet("-devnet"));
     std::string devNetName = GetArg("-devnet", "");
-    return "devnet" + (devNetName.empty() ? "" : "-" + devNetName);
+    return "devnet" + (devNetName.empty() ? "-asset" : "-" + devNetName);
 }
 
 bool RenameOver(fs::path src, fs::path dest) {
