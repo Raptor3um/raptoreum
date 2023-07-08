@@ -107,7 +107,7 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     pageButtons->addButton(ui->btnDisplay, pageButtons->buttons().size());
     pageButtons->addButton(ui->btnAppearance, pageButtons->buttons().size());
 
-    connect(pageButtons, QOverload<int>::of(&QButtonGroup::buttonClicked), this, &OptionsDialog::showPage);
+    connect(pageButtons, QOverload<int>::of(&QButtonGroup::idClicked), this, &OptionsDialog::showPage);
 
     showPage(0);
 
