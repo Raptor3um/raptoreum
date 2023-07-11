@@ -5,46 +5,48 @@
 
 #include <test/test_raptoreum.h>
 
-#include <script/interpreter.h>
-#include <script/standard.h>
-#include <script/sign.h>
-#include <validation.h>
-#include <chainparams.h>
 #include <base58.h>
-#include <netbase.h>
-#include <messagesigner.h>
-#include <policy/policy.h>
+#include <chainparams.h>
+#include <index/txindex.h>
 #include <keystore.h>
+#include <messagesigner.h>
+#include <netbase.h>
+#include <policy/policy.h>
+#include <script/interpreter.h>
+#include <script/sign.h>
+#include <script/standard.h>
 #include <spork.h>
 #include <txmempool.h>
-#include <index/txindex.h>
+#include <validation.h>
 
-#include <evo/specialtx.h>
-#include <evo/providertx.h>
 #include <assets/assets.h>
 #include <assets/assetstype.h>
 #include <core_io.h>
+#include <evo/providertx.h>
+#include <evo/specialtx.h>
 
 #include <boost/test/unit_test.hpp>
 
-using SimpleUTXOMap = std::map <COutPoint, std::pair<int, CAmount>>;
+using SimpleUTXOMap = std::map<COutPoint, std::pair<int, CAmount>>;
 
-static SimpleUTXOMap BuildSimpleUtxoMap(const std::vector <CTransactionRef> &txs) {
+static SimpleUTXOMap BuildSimpleUtxoMap(const std::vector<CTransactionRef>& txs)
+{
     SimpleUTXOMap utxos;
     for (size_t i = 0; i < txs.size(); i++) {
-        auto &tx = txs[i];
+        auto& tx = txs[i];
         for (size_t j = 0; j < tx->vout.size(); j++) {
             if (tx->vout[j].nValue > 0)
-                utxos.emplace(COutPoint(tx->GetHash(), j), std::make_pair((int) i + 1, tx->vout[j].nValue));
+                utxos.emplace(COutPoint(tx->GetHash(), j), std::make_pair((int)i + 1, tx->vout[j].nValue));
         }
     }
     return utxos;
 }
 
-static std::vector <COutPoint> SelectUTXOs(SimpleUTXOMap &utoxs, CAmount amount, CAmount &changeRet) {
+static std::vector<COutPoint> SelectUTXOs(SimpleUTXOMap& utoxs, CAmount amount, CAmount& changeRet)
+{
     changeRet = 0;
 
-    std::vector <COutPoint> selectedUtxos;
+    std::vector<COutPoint> selectedUtxos;
     CAmount selectedAmount = 0;
     while (!utoxs.empty()) {
         bool found = false;
@@ -69,8 +71,8 @@ static std::vector <COutPoint> SelectUTXOs(SimpleUTXOMap &utoxs, CAmount amount,
     return selectedUtxos;
 }
 
-static void FundTransaction(CMutableTransaction &tx, SimpleUTXOMap &utoxs, const CScript &scriptPayout, CAmount amount,
-                            const CKey &coinbaseKey) {
+static void FundTransaction(CMutableTransaction& tx, SimpleUTXOMap& utoxs, const CScript& scriptPayout, CAmount amount, const CKey& coinbaseKey)
+{
     CAmount change;
     auto inputs = SelectUTXOs(utoxs, amount, change);
     for (size_t i = 0; i < inputs.size(); i++) {
@@ -81,22 +83,23 @@ static void FundTransaction(CMutableTransaction &tx, SimpleUTXOMap &utoxs, const
     }
 }
 
-static void SignTransaction(const CTxMemPool &mempool, CMutableTransaction &tx, const CKey &coinbaseKey) {
+static void SignTransaction(const CTxMemPool& mempool, CMutableTransaction& tx, const CKey& coinbaseKey)
+{
     CBasicKeyStore tempKeystore;
     tempKeystore.AddKeyPubKey(coinbaseKey, coinbaseKey.GetPubKey());
 
     for (size_t i = 0; i < tx.vin.size(); i++) {
         uint256 hashBlock;
         CTransactionRef txFrom = GetTransaction(/* block_index */ nullptr, &mempool, tx.vin[i].prevout.hash,
-                                                                  Params().GetConsensus(), hashBlock);
+            Params().GetConsensus(), hashBlock);
         BOOST_ASSERT(txFrom);
         BOOST_ASSERT(SignSignature(tempKeystore, *txFrom, tx, i, SIGHASH_ALL));
     }
 }
 
 static CMutableTransaction
-CreateNewAssetTx(const CTxMemPool &mempool, SimpleUTXOMap &utxos, const CKey &coinbaseKey, std::string name,
-                 bool updatable, bool is_unique, uint8_t type, uint8_t decimalPoint, CAmount amount) {
+CreateNewAssetTx(const CTxMemPool& mempool, SimpleUTXOMap& utxos, const CKey& coinbaseKey, std::string name, bool updatable, bool is_unique, uint8_t type, uint8_t decimalPoint, CAmount amount)
+{
     CKeyID ownerKey = coinbaseKey.GetPubKey().GetID();
     CNewAssetTx newAsset;
 
@@ -117,7 +120,7 @@ CreateNewAssetTx(const CTxMemPool &mempool, SimpleUTXOMap &utxos, const CKey &co
     tx.nVersion = 3;
     tx.nType = TRANSACTION_NEW_ASSET;
     FundTransaction(tx, utxos, GetScriptForDestination(coinbaseKey.GetPubKey().GetID()), newAsset.fee * COIN + 1 * COIN,
-                    coinbaseKey);
+        coinbaseKey);
     newAsset.inputsHash = CalcTxInputsHash(tx);
     SetTxPayload(tx, newAsset);
     SignTransaction(mempool, tx, coinbaseKey);
@@ -126,8 +129,8 @@ CreateNewAssetTx(const CTxMemPool &mempool, SimpleUTXOMap &utxos, const CKey &co
 }
 
 static CMutableTransaction
-CreateUpdateAssetTx(const CTxMemPool &mempool, SimpleUTXOMap &utxos, const CKey &coinbaseKey, const CKey &newowner,
-                    std::string assetId, bool updatable, uint8_t type, CAmount amount) {
+CreateUpdateAssetTx(const CTxMemPool& mempool, SimpleUTXOMap& utxos, const CKey& coinbaseKey, const CKey& newowner, std::string assetId, bool updatable, uint8_t type, CAmount amount)
+{
     CKeyID ownerKey = newowner.GetPubKey().GetID();
     CUpdateAssetTx upAsset;
 
@@ -149,7 +152,7 @@ CreateUpdateAssetTx(const CTxMemPool &mempool, SimpleUTXOMap &utxos, const CKey 
     tx.nVersion = 3;
     tx.nType = TRANSACTION_UPDATE_ASSET;
     FundTransaction(tx, utxos, GetScriptForDestination(coinbaseKey.GetPubKey().GetID()), upAsset.fee * COIN + 1 * COIN,
-                    coinbaseKey);
+        coinbaseKey);
     upAsset.inputsHash = CalcTxInputsHash(tx);
     SetTxPayload(tx, upAsset);
     SignTransaction(mempool, tx, coinbaseKey);
@@ -158,7 +161,8 @@ CreateUpdateAssetTx(const CTxMemPool &mempool, SimpleUTXOMap &utxos, const CKey 
 }
 
 static CMutableTransaction
-CreateMintAssetTx(const CTxMemPool &mempool, SimpleUTXOMap &utxos, const CKey &coinbaseKey, std::string assetId) {
+CreateMintAssetTx(const CTxMemPool& mempool, SimpleUTXOMap& utxos, const CKey& coinbaseKey, std::string assetId)
+{
     CKeyID ownerKey = coinbaseKey.GetPubKey().GetID();
     CMintAssetTx mint;
 
@@ -191,7 +195,7 @@ CreateMintAssetTx(const CTxMemPool &mempool, SimpleUTXOMap &utxos, const CKey &c
     }
 
     FundTransaction(tx, utxos, GetScriptForDestination(coinbaseKey.GetPubKey().GetID()), mint.fee * COIN + 1 * COIN,
-                    coinbaseKey);
+        coinbaseKey);
     mint.inputsHash = CalcTxInputsHash(tx);
     SetTxPayload(tx, mint);
     SignTransaction(mempool, tx, coinbaseKey);
@@ -200,7 +204,8 @@ CreateMintAssetTx(const CTxMemPool &mempool, SimpleUTXOMap &utxos, const CKey &c
 }
 
 
-static CScript GenerateRandomAddress() {
+static CScript GenerateRandomAddress()
+{
     CKey key;
     key.MakeNewKey(false);
     return GetScriptForDestination(key.GetPubKey().GetID());
