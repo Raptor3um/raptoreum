@@ -1187,7 +1187,7 @@ namespace GUIUtil {
         auto supportedWeights = [](FontFamily family) -> std::vector <QFont::Weight> {
             auto getTestWidth = [&](QFont::Weight weight) -> int {
                 QFont font = getFont(family, weight, false, defaultFontSize);
-                return QFontMetrics(font).width(
+                return QFontMetrics(font).horizontalAdvance(
                         "Check the width of this text to see if the weight change has an impact!");
             };
             std::vector <QFont::Weight> vecWeights{QFont::Thin, QFont::ExtraLight, QFont::Light,

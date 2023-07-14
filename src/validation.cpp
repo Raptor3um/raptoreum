@@ -93,13 +93,11 @@ bool CBlockIndexWorkComparator::operator()(const CBlockIndex *pa, const CBlockIn
 ChainstateManager g_chainman;
 
 CChainState &ChainstateActive() {
-    LOCK(::cs_main);
     assert(g_chainman.m_active_chainstate);
     return *g_chainman.m_active_chainstate;
 }
 
 CChain &ChainActive() {
-    LOCK(::cs_main);
     return ::ChainstateActive().m_chain;
 }
 

@@ -2498,6 +2498,16 @@ void CWallet::ReacceptWalletTransactions() {
 bool CWalletTx::SubmitMemoryPoolAndRelay(std::string &err_string, bool relay) {
     // Can't relay if wallet is not broadcasting
     if (!pwallet->GetBroadcastTransactions()) return false;
+    // Don't relay abandoned transactions
+    if (isAbandoned()) return false;
+    // Don't try to submit coinbase transactions. These would fail anyway but would
+    // cause log spam.
+    if (IsCoinBase()) return false;
+    // Don't try to submit conflicted or confirmed transactions.
+    if (GetDepthInMainChain() != 0) return false;
+    // Don't try to submit transactions locked via InstantSend.
+    if (IsLockedByInstantSend()) return false;
+    
     // Submit transaction to mempool for relay
     pwallet->WalletLogPrintf("Submitting wtx %s to mempool for relay\n", GetHash().ToString());
     // We must set fInMempool here - while it will be re-set to true by the
