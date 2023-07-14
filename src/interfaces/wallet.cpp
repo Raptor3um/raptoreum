@@ -298,7 +298,7 @@ namespace interfaces {
                                           std::string &fail_reason,
                                           int nExtraPayloadSize = 0,
                                           FuturePartialPayload *fpp = nullptr) override {
-            LOCK2(mempool.cs, m_wallet->cs_wallet);
+            LOCK(m_wallet->cs_wallet);
             CReserveKey m_key(m_wallet.get());
             CTransactionRef tx;
             if (!m_wallet->CreateTransaction(recipients, tx, fee, change_pos, fail_reason, coin_control, sign,
@@ -309,7 +309,7 @@ namespace interfaces {
         }
 
         void commitTransaction(CTransactionRef tx, WalletValueMap value_map, WalletOrderForm order_form) override {
-            LOCK2(m_wallet->cs_wallet, cs_main);
+            LOCK(m_wallet->cs_wallet);
             CReserveKey m_key(m_wallet.get());
             m_wallet->CommitTransaction(std::move(tx), std::move(value_map), std::move(order_form));
         }

@@ -176,11 +176,11 @@ bool SendAssetsEntry::validate(interfaces::Node &node) {
         retval = false;
     }
 
-    if (ui->assetList->currentIndex() == -1) {
+    if (ui->assetList->currentIndex() <= 0) {
         retval = false;
     }
 
-    if (uniqueAssetSelected && ui->assetList->currentIndex() == -1) {
+    if (uniqueAssetSelected && ui->assetList->currentIndex() <= 0) {
         retval = false;
     }
 
@@ -315,12 +315,28 @@ void SendAssetsEntry::SetFutureVisible(bool visible) {
     ui->futureCb->setVisible(visible);
 }
 
+void SendAssetsEntry::ClearAssetOptions() {
+    ui->AssetBalance->setText(tr("Select an asset to see the balance"));
+    ui->payAmount->setVisible(true);
+    ui->payAmount->clear();
+    ui->payAmount->setAssetsUnit(MAX_ASSET_UNITS);
+    //hide unique list
+    ui->uniqueIdList->setVisible(false);
+    ui->assetList->setFocus();
+}
+
 void SendAssetsEntry::onAssetSelected(QString name) {
     static QString prevname = "";
 
-    //return if name is empty
-    if (name == "")
+    //when updating asset list it triggers onAssetSelected which needs to be ignored if assetName is not empty
+    if (name == "" || assetName.length() > 0)
         return;
+
+    if (ui->assetList->currentIndex() <= 0) {
+        ClearAssetOptions();
+        prevname.clear();
+        return;
+    }
 
     std::map <std::string, CAmount> assetsbalance = model->wallet().getAssetsBalance();
     CAmount bal = 0;
@@ -389,12 +405,13 @@ void SendAssetsEntry::updateAssetList() {
     //make a copy of current selected asset to restore selection after
     //updating the list of available assets
     int index = ui->assetList->currentIndex();
-    QString name = ui->assetList->currentText();
+    assetName = ui->assetList->currentText();
 
     // Get available assets list
     std::vector <std::string> assets = model->wallet().listMyAssets(m_coin_control);
 
     QStringList list;
+    list << "Select an asset";
     for (auto assetId: assets) {
         CAssetMetaData assetData;
         if (passetsCache->GetAssetMetaData(assetId, assetData)) {
@@ -406,16 +423,12 @@ void SendAssetsEntry::updateAssetList() {
     stringModel->setStringList(list);
 
     //restore selected asset
-    if (index >= 0) {
-        index = ui->assetList->findText(name);
+    if (index >= 1) {
+        index = ui->assetList->findText(assetName);
+        assetName.clear();
         ui->assetList->setCurrentIndex(index);
     } else {
-        ui->AssetBalance->setText(tr("Select an asset to see the balance"));
-        ui->assetList->lineEdit()->setPlaceholderText(tr("Select an asset to transfer"));
-        ui->payAmount->clear();
-        ui->payAmount->setAssetsUnit(MAX_ASSET_UNITS);
-        //hide unique list
-        ui->uniqueIdList->setVisible(false);
-        ui->assetList->setFocus();
-    }
+        ClearAssetOptions();
+        assetName.clear();
+    }   
 }
