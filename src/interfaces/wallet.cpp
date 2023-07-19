@@ -298,7 +298,7 @@ namespace interfaces {
                                           std::string &fail_reason,
                                           int nExtraPayloadSize = 0,
                                           FuturePartialPayload *fpp = nullptr) override {
-            LOCK2(mempool.cs, m_wallet->cs_wallet);
+            LOCK(m_wallet->cs_wallet);
             CReserveKey m_key(m_wallet.get());
             CTransactionRef tx;
             if (!m_wallet->CreateTransaction(recipients, tx, fee, change_pos, fail_reason, coin_control, sign,
@@ -309,7 +309,7 @@ namespace interfaces {
         }
 
         void commitTransaction(CTransactionRef tx, WalletValueMap value_map, WalletOrderForm order_form) override {
-            LOCK2(m_wallet->cs_wallet, cs_main);
+            LOCK(m_wallet->cs_wallet);
             CReserveKey m_key(m_wallet.get());
             m_wallet->CommitTransaction(std::move(tx), std::move(value_map), std::move(order_form));
         }
@@ -492,7 +492,7 @@ namespace interfaces {
         }
 
         CoinsList listAssets() override {
-            LOCK2(::cs_main, m_wallet->cs_wallet);
+            LOCK(m_wallet->cs_wallet);
             CoinsList result;
             for (const auto &entry: m_wallet->ListAssets()) {
                 auto &group = result[entry.first];
@@ -506,7 +506,7 @@ namespace interfaces {
         }
 
         AssetList listMyAssets(const CCoinControl *coinControl) override {
-            LOCK2(::cs_main, m_wallet->cs_wallet);
+            LOCK(m_wallet->cs_wallet);
             AssetList result;
             std::map <std::string, std::vector<COutput>> assets;
             m_wallet->AvailableAssets(assets, false, coinControl);
@@ -517,7 +517,7 @@ namespace interfaces {
         }
 
         UniqueIdList listAssetUniqueId(std::string assetId, const CCoinControl *coinControl) override {
-            LOCK2(::cs_main, m_wallet->cs_wallet);
+            LOCK(m_wallet->cs_wallet);
             UniqueIdList result;
             std::map <std::string, std::vector<COutput>> assets;
             m_wallet->AvailableAssets(assets, false, coinControl);
@@ -537,7 +537,7 @@ namespace interfaces {
         }
 
         AssetBalance getAssetsBalance(const CCoinControl *coinControl, bool fSpendable) override {
-            LOCK2(::cs_main, m_wallet->cs_wallet);
+            LOCK(m_wallet->cs_wallet);
             return m_wallet->getAssetsBalance(coinControl, fSpendable);
         }
 

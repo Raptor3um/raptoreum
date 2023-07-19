@@ -122,7 +122,7 @@ namespace {
 
     void testRangeSwitch(TrafficGraphData::GraphRange baseRange, TrafficGraphData::GraphRange toRange, int size) {
         QTime time = QTime::currentTime();
-        qsrand((uint) time.msec());
+        QRandomGenerator((uint) time.msec());
         TrafficGraphData trafficGraphDataBase(baseRange);
         TrafficGraphData trafficGraphData(toRange);
         for (int i = 1; i <= size; i++) {

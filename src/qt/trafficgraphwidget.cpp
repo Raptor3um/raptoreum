@@ -167,10 +167,10 @@ void TrafficGraphWidget::paintEvent(QPaintEvent *) {
     QFontMetrics fmTotal(fontTotal);
     QFontMetrics fmInOut(fontInOut);
     const int nSizeMark = fmInOut.height() + 2 * nPadding;
-    const int nWidthText = fmInOut.width(strReceived) + 2 * nPadding;
-    const int nWidthBytes = fmInOut.width("1000 GB") + 2 * nPadding;
-    const int nHeightTotals = fmTotal.height() + 2 * nPadding;
-    const int nHeightInOut = fmInOut.height() + 2 * nPadding;
+    const int nWidthText = fmInOut.horizontalAdvance(strReceived) + 2 * nPadding;
+    const int nWidthBytes = fmInOut.horizontalAdvance("1000 GB") + 2 * nPadding;
+    const int nHeightTotals = fmTotal.horizontalAdvance("") + 2 * nPadding;
+    const int nHeightInOut = fmInOut.horizontalAdvance("") + 2 * nPadding;
     const int nWidthStats = nSizeMark + nWidthText + nWidthBytes + 2 * nPadding;
     const int nHeightStats = nHeightTotals + 2 * nHeightInOut + 2 * nPadding;
     auto addPadding = [&](QRect &rect, int nPadding) {

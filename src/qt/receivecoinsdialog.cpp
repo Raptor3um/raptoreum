@@ -54,6 +54,7 @@ ReceiveCoinsDialog::ReceiveCoinsDialog(QWidget *parent) :
     // context menu signals
     connect(ui->recentRequestsView, &QWidget::customContextMenuRequested, this, &ReceiveCoinsDialog::showMenu);
     connect(copyURIAction, &QAction::triggered, this, &ReceiveCoinsDialog::copyURI);
+    connect(copyAddressAction, &QAction::triggered, this, &ReceiveCoinsDialog::copyAddress);
     connect(copyLabelAction, &QAction::triggered, this, &ReceiveCoinsDialog::copyLabel);
     connect(copyMessageAction, &QAction::triggered, this, &ReceiveCoinsDialog::copyMessage);
     connect(copyAmountAction, &QAction::triggered, this, &ReceiveCoinsDialog::copyAmount);
@@ -219,8 +220,7 @@ void ReceiveCoinsDialog::copyColumnToClipboard(int column) {
     if (!firstIndex.isValid()) {
         return;
     }
-    GUIUtil::setClipboard(model->getRecentRequestsTableModel()->data(firstIndex.child(firstIndex.row(), column),
-                                                                     Qt::EditRole).toString());
+    GUIUtil::setClipboard(model->getRecentRequestsTableModel()->index(firstIndex.row(), column).data(Qt::EditRole).toString());
 }
 
 // context menu

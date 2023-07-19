@@ -100,7 +100,8 @@ private:
     Ui::SendAssetsEntry *ui;
     WalletModel *model;
     CCoinControl *m_coin_control;
-    bool uniqueAssetSelected;
+    bool uniqueAssetSelected;  
+    QString assetName;
 
     QStringListModel *stringModel;
     QSortFilterProxyModel *proxy;
@@ -113,6 +114,8 @@ private:
     void setButtonIcons();
 
     bool updateLabel(const QString &address);
+
+    void ClearAssetOptions();
 };
 
 #endif // BITAsset_QT_SENDAssetSENTRY_H

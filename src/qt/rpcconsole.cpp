@@ -534,7 +534,7 @@ RPCConsole::RPCConsole(interfaces::Node &node, QWidget *parent, Qt::WindowFlags 
     pageButtons->addButton(ui->btnNetTraffic, pageButtons->buttons().size());
     pageButtons->addButton(ui->btnPeers, pageButtons->buttons().size());
     pageButtons->addButton(ui->btnRepair, pageButtons->buttons().size());
-    connect(pageButtons, QOverload<int>::of(&QButtonGroup::buttonClicked), this, &RPCConsole::showPage);
+    connect(pageButtons, QOverload<int>::of(&QButtonGroup::idClicked), this, &RPCConsole::showPage);
 
     showPage(int(TabTypes::INFO));
 

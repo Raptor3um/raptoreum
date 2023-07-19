@@ -185,6 +185,11 @@ static const CRPCConvertParam vRPCConvertParams[] =
                 {"createwallet", 2, "blank"},
                 {"stop", 0, "wait"},
                 {"createasset", 0, "asset"},
+                {"listunspentassets", 0, "minconf"},
+                {"listunspentassets", 1, "maxconf"},
+                {"listunspentassets", 2, "addresses"},
+                {"listunspentassets", 3, "include_unsafe"},
+                {"listunspentassets", 4, "query_options"},
         };
 
 class CRPCConvertTable {

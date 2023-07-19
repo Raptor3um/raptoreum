@@ -22,6 +22,8 @@
 #include <txmempool.h>
 #include <future/utils.h>
 #include <future/fee.h>
+#include <assets/assets.h>
+#include <assets/assetstype.h>
 
 #include <evo/specialtx.h>
 #include <evo/providertx.h>
@@ -117,34 +119,74 @@ ConstructTransaction(const UniValue &inputs_in, const UniValue &outputs_in, cons
             CScript scriptPubKey = GetScriptForDestination(destination);
             UniValue sendToValue = outputs[name_];
             CAmount nAmount;
+            bool hasasset = false;
+            std::string assetId;
+            uint32_t uniqueId = -1;
             if (sendToValue.isObject()) {
-                if (hasFuture) {
-                    throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("can only send future to one address"));
+                if (!sendToValue["assetid"].isNull()) {
+                    hasasset = true;
+                    assetId = sendToValue["assetid"].get_str();
+                    if (!sendToValue["uniqueid"].isNull()) {
+                        uniqueId = (uint32_t)sendToValue["uniqueid"].get_int64();
+                        nAmount = 1 * COIN;
+                    } else {
+                        if (sendToValue["amount"].isNull()) {
+                            throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("no asset amount is specified"));
+                        }
+                        nAmount = AmountFromValue(sendToValue["amount"]);
+                    }
                 }
-                if (sendToValue["future_maturity"].isNull()) {
-                    throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("no future_maturity is specified "));
+                if (!sendToValue["future_maturity"].isNull() || !sendToValue["future_locktime"].isNull()) {
+                    if(hasFuture) {
+                        throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("can only send future to one address"));
+                    }
+                    if(sendToValue["future_maturity"].isNull()) {
+                        throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("no future_maturity is specified"));
+                    }
+                    if(sendToValue["future_locktime"].isNull()) {
+                        throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("no future_locktime is specified"));
+                    }
+                    if(!hasasset && sendToValue["future_amount"].isNull()) {
+                        throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("no future_amount is specified"));
+                    }
+                    hasFuture = true;
+                    if (!hasasset)
+                        nAmount = AmountFromValue(sendToValue["future_amount"]);
+                    ftx.lockOutputIndex = rawTx.vout.size();
+                    ftx.nVersion = CFutureTx::CURRENT_VERSION;
+                    ftx.maturity = sendToValue["future_maturity"].get_int();
+                    ftx.lockTime = sendToValue["future_locktime"].get_int();
+                    ftx.fee = getFutureFees();
+                    ftx.updatableByDestination = false;
+                    rawTx.nType = TRANSACTION_FUTURE;
+                    rawTx.nVersion = 3;
                 }
-                if (sendToValue["future_locktime"].isNull()) {
-                    throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("no future_locktime is specified "));
-                }
-                if (sendToValue["future_amount"].isNull()) {
-                    throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("no future_amount is specified "));
-                }
-                hasFuture = true;
-                nAmount = AmountFromValue(sendToValue["future_amount"]);
-                ftx.lockOutputIndex = rawTx.vout.size();
-                ftx.nVersion = CFutureTx::CURRENT_VERSION;
-                ftx.maturity = sendToValue["future_maturity"].get_int();
-                ftx.lockTime = sendToValue["future_locktime"].get_int();
-                ftx.fee = getFutureFees();
-                ftx.updatableByDestination = false;
-                rawTx.nType = TRANSACTION_FUTURE;
-                rawTx.nVersion = 3;
             } else {
                 nAmount = AmountFromValue(sendToValue);
             }
-            CTxOut out(nAmount, scriptPubKey);
-            rawTx.vout.push_back(out);
+            if (hasasset) {
+                // get asset metadadta
+                CAssetMetaData tmpasset;
+                if (!passetsCache->GetAssetMetaData(assetId, tmpasset)) { //check if the asset exist
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Asset not found");
+                }
+                if (tmpasset.isUnique && uniqueId == -1) {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("no asset uniqueId is specified"));
+                }
+                // Update the scriptPubKey with the transfer asset information
+                if (tmpasset.isUnique) {
+                    CAssetTransfer assetTransfer(assetId, nAmount, uniqueId);
+                    assetTransfer.BuildAssetTransaction(scriptPubKey);
+                } else {
+                    CAssetTransfer assetTransfer(assetId, nAmount);
+                    assetTransfer.BuildAssetTransaction(scriptPubKey);
+                }
+                CTxOut out(0, scriptPubKey);
+                rawTx.vout.push_back(out);
+            } else {
+                CTxOut out(nAmount, scriptPubKey);
+                rawTx.vout.push_back(out);
+            }
         }
     }
     if (hasFuture) {
