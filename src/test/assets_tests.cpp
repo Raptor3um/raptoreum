@@ -83,7 +83,7 @@ static void FundTransaction(CMutableTransaction& tx, SimpleUTXOMap& utoxs, const
     }
 }
 
-static void SignTransaction(const CTxMemPool& mempool, CMutableTransaction& tx, const CKey& coinbaseKey)
+static bool SignTransaction(const CTxMemPool& mempool, CMutableTransaction& tx, const CKey& coinbaseKey)
 {
     CBasicKeyStore tempKeystore;
     tempKeystore.AddKeyPubKey(coinbaseKey, coinbaseKey.GetPubKey());
@@ -92,9 +92,15 @@ static void SignTransaction(const CTxMemPool& mempool, CMutableTransaction& tx, 
         uint256 hashBlock;
         CTransactionRef txFrom = GetTransaction(/* block_index */ nullptr, &mempool, tx.vin[i].prevout.hash,
             Params().GetConsensus(), hashBlock);
-        BOOST_ASSERT(txFrom);
-        BOOST_ASSERT(SignSignature(tempKeystore, *txFrom, tx, i, SIGHASH_ALL));
+        BOOST_CHECK_MESSAGE(txFrom, "SignTransaction: GetTransaction");
+        if (!txFrom)
+            return false;
+        bool ret = SignSignature(tempKeystore, *txFrom, tx, i, SIGHASH_ALL);
+        BOOST_CHECK_MESSAGE(ret, "SignTransaction: SignSignature");
+        if (!ret)
+           return false;
     }
+    return true;
 }
 
 static CMutableTransaction
@@ -123,7 +129,7 @@ CreateNewAssetTx(const CTxMemPool& mempool, SimpleUTXOMap& utxos, const CKey& co
         coinbaseKey);
     newAsset.inputsHash = CalcTxInputsHash(tx);
     SetTxPayload(tx, newAsset);
-    SignTransaction(mempool, tx, coinbaseKey);
+    BOOST_ASSERT(SignTransaction(mempool, tx, coinbaseKey));
 
     return tx;
 }
@@ -155,7 +161,7 @@ CreateUpdateAssetTx(const CTxMemPool& mempool, SimpleUTXOMap& utxos, const CKey&
         coinbaseKey);
     upAsset.inputsHash = CalcTxInputsHash(tx);
     SetTxPayload(tx, upAsset);
-    SignTransaction(mempool, tx, coinbaseKey);
+    BOOST_ASSERT(SignTransaction(mempool, tx, coinbaseKey));
 
     return tx;
 }
@@ -198,7 +204,7 @@ CreateMintAssetTx(const CTxMemPool& mempool, SimpleUTXOMap& utxos, const CKey& c
         coinbaseKey);
     mint.inputsHash = CalcTxInputsHash(tx);
     SetTxPayload(tx, mint);
-    SignTransaction(mempool, tx, coinbaseKey);
+    BOOST_ASSERT(SignTransaction(mempool, tx, coinbaseKey));
 
     return tx;
 }
@@ -381,7 +387,7 @@ BOOST_FIXTURE_TEST_CASE(assets_mint, TestChainDIP3BeforeActivationSetup)
     tx2.vin.push_back(CTxIn(COutPoint(tx.GetHash(), 0)));
 
     FundTransaction(tx2, utxos, GetScriptForDestination(coinbaseKey.GetPubKey().GetID()), 1 * COIN, coinbaseKey);
-    SignTransaction(*m_node.mempool, tx2, coinbaseKey);
+    BOOST_ASSERT(SignTransaction(*m_node.mempool, tx2, coinbaseKey));
 
     {
         auto block = std::make_shared<CBlock>(CreateBlock({tx2}, coinbaseKey));
@@ -431,8 +437,10 @@ BOOST_FIXTURE_TEST_CASE(assets_invalid_cases, TestChainDIP3BeforeActivationSetup
 
     CAssetMetaData asset;
     BOOST_ASSERT(passetsCache->GetAssetMetaData(assetId, asset));
-
     BOOST_ASSERT(asset.circulatingSupply == 100 * COIN);
+
+    // Allow TX index to catch up with the block index.
+    g_txindex->BlockUntilSyncedToCurrentChain();
 
     {
         //bad amount, decimalPoint = 2
@@ -455,7 +463,7 @@ BOOST_FIXTURE_TEST_CASE(assets_invalid_cases, TestChainDIP3BeforeActivationSetup
         tx2.vin.push_back(CTxIn(COutPoint(tx.GetHash(), 0)));
 
         FundTransaction(tx2, utxos, GetScriptForDestination(coinbaseKey.GetPubKey().GetID()), 1 * COIN, coinbaseKey);
-        SignTransaction(*m_node.mempool, tx2, coinbaseKey);
+        BOOST_ASSERT(SignTransaction(*m_node.mempool, tx2, coinbaseKey));
 
         auto block = std::make_shared<CBlock>(CreateBlock({tx2}, coinbaseKey));
         EnsureChainman(m_node).ProcessNewBlock(Params(), block, true, nullptr);
@@ -485,7 +493,7 @@ BOOST_FIXTURE_TEST_CASE(assets_invalid_cases, TestChainDIP3BeforeActivationSetup
         tx2.vin.push_back(CTxIn(COutPoint(tx.GetHash(), 0)));
 
         FundTransaction(tx2, utxos, GetScriptForDestination(coinbaseKey.GetPubKey().GetID()), 1 * COIN, coinbaseKey);
-        SignTransaction(*m_node.mempool, tx2, coinbaseKey);
+        BOOST_ASSERT(SignTransaction(*m_node.mempool, tx2, coinbaseKey));
 
         auto block = std::make_shared<CBlock>(CreateBlock({tx2}, coinbaseKey));
         EnsureChainman(m_node).ProcessNewBlock(Params(), block, true, nullptr);
@@ -515,7 +523,7 @@ BOOST_FIXTURE_TEST_CASE(assets_invalid_cases, TestChainDIP3BeforeActivationSetup
         tx2.vin.push_back(CTxIn(COutPoint(tx.GetHash(), 0)));
 
         FundTransaction(tx2, utxos, GetScriptForDestination(coinbaseKey.GetPubKey().GetID()), 1 * COIN, coinbaseKey);
-        SignTransaction(*m_node.mempool, tx2, coinbaseKey);
+        BOOST_ASSERT(SignTransaction(*m_node.mempool, tx2, coinbaseKey));
 
         auto block = std::make_shared<CBlock>(CreateBlock({tx2}, coinbaseKey));
         EnsureChainman(m_node).ProcessNewBlock(Params(), block, true, nullptr);
@@ -553,6 +561,8 @@ BOOST_FIXTURE_TEST_CASE(assets_invalid_cases, TestChainDIP3BeforeActivationSetup
     BOOST_ASSERT(passetsCache->GetAssetMetaData(assetId, asset));
 
     BOOST_ASSERT(asset.circulatingSupply == 10 * COIN);
+    // Allow TX index to catch up with the block index.
+    g_txindex->BlockUntilSyncedToCurrentChain();
 
     {
         //mismatch uniqueid
@@ -569,7 +579,7 @@ BOOST_FIXTURE_TEST_CASE(assets_invalid_cases, TestChainDIP3BeforeActivationSetup
         tx2.vin.push_back(CTxIn(COutPoint(tx.GetHash(), 0)));
 
         FundTransaction(tx2, utxos, GetScriptForDestination(coinbaseKey.GetPubKey().GetID()), 1 * COIN, coinbaseKey);
-        SignTransaction(*m_node.mempool, tx2, coinbaseKey);
+        BOOST_ASSERT(SignTransaction(*m_node.mempool, tx2, coinbaseKey));
 
         auto block = std::make_shared<CBlock>(CreateBlock({tx2}, coinbaseKey));
         EnsureChainman(m_node).ProcessNewBlock(Params(), block, true, nullptr);
@@ -594,7 +604,7 @@ BOOST_FIXTURE_TEST_CASE(assets_invalid_cases, TestChainDIP3BeforeActivationSetup
         tx2.vin.push_back(CTxIn(COutPoint(tx.GetHash(), 5))); //uniqueId=5
 
         FundTransaction(tx2, utxos, GetScriptForDestination(coinbaseKey.GetPubKey().GetID()), 1 * COIN, coinbaseKey);
-        SignTransaction(*m_node.mempool, tx2, coinbaseKey);
+        BOOST_ASSERT(SignTransaction(*m_node.mempool, tx2, coinbaseKey));
 
         auto block = std::make_shared<CBlock>(CreateBlock({tx2}, coinbaseKey));
         EnsureChainman(m_node).ProcessNewBlock(Params(), block, true, nullptr);
@@ -625,7 +635,7 @@ BOOST_FIXTURE_TEST_CASE(assets_invalid_cases, TestChainDIP3BeforeActivationSetup
 
 
         FundTransaction(tx2, utxos, GetScriptForDestination(coinbaseKey.GetPubKey().GetID()), 1 * COIN, coinbaseKey);
-        SignTransaction(*m_node.mempool, tx2, coinbaseKey);
+        BOOST_ASSERT(SignTransaction(*m_node.mempool, tx2, coinbaseKey));
 
         auto block = std::make_shared<CBlock>(CreateBlock({tx2}, coinbaseKey));
         EnsureChainman(m_node).ProcessNewBlock(Params(), block, true, nullptr);
@@ -649,7 +659,7 @@ BOOST_FIXTURE_TEST_CASE(assets_invalid_cases, TestChainDIP3BeforeActivationSetup
         tx2.vin.push_back(CTxIn(COutPoint(tx.GetHash(), 0)));
 
         FundTransaction(tx2, utxos, GetScriptForDestination(coinbaseKey.GetPubKey().GetID()), 1 * COIN, coinbaseKey);
-        SignTransaction(*m_node.mempool, tx2, coinbaseKey);
+        BOOST_ASSERT(SignTransaction(*m_node.mempool, tx2, coinbaseKey));
 
         auto block = std::make_shared<CBlock>(CreateBlock({tx2}, coinbaseKey));
         EnsureChainman(m_node).ProcessNewBlock(Params(), block, true, nullptr);
