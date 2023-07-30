@@ -63,6 +63,7 @@ std::shared_ptr <CWallet>
 LoadWallet(interfaces::Chain &chain, const WalletLocation &location, std::string &error, std::string &warning);
 
 std::unique_ptr <interfaces::Handler> HandleLoadWallet(LoadWalletFn load_wallet);
+CWallet *GetFirstWallet();
 
 enum class WalletCreationStatus {
     SUCCESS,
@@ -1525,6 +1526,8 @@ public:
     bool SetAddressBook(const CTxDestination &address, const std::string &strName, const std::string &purpose);
 
     bool DelAddressBook(const CTxDestination &address);
+
+    void GetScriptForMining(std::shared_ptr<CReserveScript> &script);
 
     unsigned int GetKeyPoolSize()
 
