@@ -238,11 +238,11 @@ UniValue createasset(const JSONRPCRequest &request) {
     return result;
 }
 
-UniValue mintAsset(const JSONRPCRequest &request) {
+UniValue mintasset(const JSONRPCRequest &request) {
     if (request.fHelp || !Params().IsAssetsActive(::ChainActive().Tip()) || request.params.size() < 1 ||
         request.params.size() > 1)
         throw std::runtime_error(
-                "mintAsset txid\n"
+                "mintasset txid\n"
                 "Mint assset\n"
                 "\nArguments:\n"
                 "1. \"txid\"               (string, required) asset txid reference\n"
@@ -250,8 +250,8 @@ UniValue mintAsset(const JSONRPCRequest &request) {
                 "\"txid\"                  (string) The transaction id for the new issued asset\n"
 
                 "\nExamples:\n"
-                + HelpExampleCli("mintAsset", "773cf7e057127048711d16839e4612ffb0f1599aef663d96e60f5190eb7de9a9")
-                + HelpExampleCli("mintAsset",
+                + HelpExampleCli("mintasset", "773cf7e057127048711d16839e4612ffb0f1599aef663d96e60f5190eb7de9a9")
+                + HelpExampleCli("mintasset",
                                  "773cf7e057127048711d16839e4612ffb0f1599aef663d96e60f5190eb7de9a9" "yZBvV16YFvPx11qP2XhCRDi7y2e1oSMpKH" "1000")
 
         );
@@ -302,7 +302,8 @@ UniValue mintAsset(const JSONRPCRequest &request) {
     coinControl.fRequireAllInputs = false;
 
     std::vector <COutput> vecOutputs;
-    pwallet->AvailableCoins(vecOutputs);
+    //select only confirmed inputs, nMinDepth >= 1
+    pwallet->AvailableCoins(vecOutputs, true, nullptr, 1, MAX_MONEY , MAX_MONEY, 0, 1);
 
     for (const auto &out: vecOutputs) {
         CTxDestination txDest;
@@ -808,7 +809,7 @@ static const CRPCCommand commands[] =
         { //  category              name                      actor (function)
                 //  --------------------- ------------------------  -----------------------
                 {"assets", "createasset",       &createasset,       {"asset"}},
-                {"assets", "mintAsset",         &mintAsset,         {"assetId"}},
+                {"assets", "mintasset",         &mintasset,         {"assetId"}},
                 {"assets", "sendasset",         &sendasset,         {"assetId", "amount", "address", "change_address", "asset_change_address"}},
                 {"assets", "assetdetails",      &assetdetails,      {"assetId"}},
                 {"assets", "listassetsbalance", &listassetsbalance, {}},

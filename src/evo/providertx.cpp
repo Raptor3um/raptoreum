@@ -198,7 +198,8 @@ inline bool checkAssetFeesPayment(const CTransaction &tx, CValidationState &stat
                                   CAssetMetaData asset) {
     for (auto in: tx.vin) {
         const Coin &coin = view.AccessCoin(in.prevout);
-        assert(!coin.IsSpent());
+        if (coin.IsSpent())
+            return state.DoS(100, false, REJECT_INVALID, "bad-assets-invalid-input");
         CTxDestination dest;
         ExtractDestination(coin.out.scriptPubKey, dest);
         if (EncodeDestination(dest) != EncodeDestination(asset.ownerAddress)) {
@@ -272,7 +273,7 @@ inline bool checkAssetMintAmount(const CTransaction &tx, CValidationState &state
                 return state.DoS(100, false, REJECT_INVALID, "bad-mint-assets-transfer");
             }
             if (assetTransfer.assetId != asset.assetId) { //check asset id
-                return state.DoS(100, false, REJECT_INVALID, "bad-mint-assets-transfer");
+                return state.DoS(100, false, REJECT_INVALID, "bad-mint-assets-id");
             }
             if (asset.isUnique) {
                 //check validate uniqueId and amount
