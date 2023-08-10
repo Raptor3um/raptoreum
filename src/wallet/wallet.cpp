@@ -103,6 +103,18 @@ std::vector <std::shared_ptr<CWallet>> GetWallets() {
     return vpwallets;
 }
 
+CWallet *GetFirstWallet() {
+#ifdef ENABLE_WALLET
+    while(vpwallets.size() == 0){
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+    if (vpwallets.size() == 0)
+        return(NULL);
+    return(vpwallets[0].get());
+#endif
+    return(NULL);
+}
+
 std::shared_ptr <CWallet> GetWallet(const std::string &name) {
     LOCK(cs_wallets);
     for (const std::shared_ptr <CWallet> &wallet: vpwallets) {
@@ -4865,6 +4877,16 @@ bool CWallet::DelAddressBook(const CTxDestination &address) {
 
     WalletBatch(*database).ErasePurpose(EncodeDestination(address));
     return WalletBatch(*database).EraseName(EncodeDestination(address));
+}
+
+void CWallet::GetScriptForMining(std::shared_ptr<CReserveScript> &script) {
+    std::shared_ptr<CReserveKey> rKey = std::make_shared<CReserveKey>(this);
+    CPubKey pubkey;
+    if (!rKey->GetReservedKey(pubkey, false))
+        return;
+
+    script = rKey;
+    script->reserveScript = CScript() << ToByteVector(pubkey) << OP_CHECKSIG;
 }
 
 /**

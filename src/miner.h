@@ -224,7 +224,6 @@ void IncrementExtraNonce(CBlock *pblock, const CBlockIndex *pindexPrev, unsigned
 
 int64_t UpdateTime(CBlockHeader *pblock, const Consensus::Params &consensusParams, const CBlockIndex *pindexPrev);
 
-int GenerateRaptoreums(bool fGenerate, int nThreads, const CChainParams &chainparams, CTxDestination destination,
-                       NodeContext &node);
+int GenerateRaptoreums(bool fGenerate, int nThreads, const CChainParams &chainparams, NodeContext &node);
 
 #endif // BITCOIN_MINER_H

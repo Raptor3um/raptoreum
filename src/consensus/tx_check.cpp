@@ -94,6 +94,12 @@ bool CheckTransaction(const CTransaction &tx, CValidationState &state, int nHeig
             !founderPayment.IsBlockPayeeValid(tx, nHeight, blockReward)) {
             return state.DoS(100, false, REJECT_INVALID, "bad-cb-founder-payment-not-found");
         }
+        //don't allow assets on coinbase. coinbase assets are not implemented
+        for (auto vout : tx.vout) {
+            if (vout.scriptPubKey.IsAssetScript()) {
+                return state.DoS(100, false, REJECT_INVALID, "bad-cb-contains-asset");
+            }
+        }
     } else {
         for (const auto &txin: tx.vin)
             if (txin.prevout.IsNull())
