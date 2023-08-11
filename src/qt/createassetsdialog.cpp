@@ -386,7 +386,7 @@ bool CreateAssetsDialog::validateInputs() {
     }
 
     std::string ipfshash = ui->ipfsText->text().toStdString();
-    if ( ipfshash.length() > 128)) {
+    if (ipfshash.length() > 128) {
         retval = false;
         ui->ipfsText->setValid(false);
     }
