@@ -134,11 +134,9 @@ UniValue createasset(const JSONRPCRequest &request) {
     const UniValue &referenceHash = find_value(asset, "referenceHash");
     if (!referenceHash.isNull()) {
         std::string ref = referenceHash.get_str();
-        if (ref.length() != 0) {
-            if (ref.length() != 46)
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Invalid referenceHash (must be 46 characters)");
-            if (ref.substr(0, 2) != "Qm")
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: invalid referenceHash (must start with Qm)");
+        if (ref.length() > 0) {
+            if (ref.length() > 128)
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Invalid referenceHash (max length 128)");
             assetTx.referenceHash = ref;
         }
     }

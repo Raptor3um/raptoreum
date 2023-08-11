@@ -386,17 +386,9 @@ bool CreateAssetsDialog::validateInputs() {
     }
 
     std::string ipfshash = ui->ipfsText->text().toStdString();
-    int hashlen = ipfshash.length();
-    //ipfs alway start with 'Qm' and length 46
-    if ((hashlen == 46 && ipfshash.substr(0, 2) != "Qm")) {
+    if ( ipfshash.length() > 128)) {
         retval = false;
         ui->ipfsText->setValid(false);
-    } else {
-        //hex encoded hash minimum length 40 (160 bits)
-        if (hashlen > 0 && hashlen != 46 && (!IsHex(ipfshash) || hashlen < 40 || hashlen > 64)) {
-            retval = false;
-            ui->ipfsText->setValid(false);
-        }
     }
 
     if (!model->validateAddress(ui->owneraddressText->text())) {

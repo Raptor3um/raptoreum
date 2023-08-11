@@ -182,15 +182,8 @@ bool CheckNewAssetTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CVal
         return state.DoS(100, false, REJECT_INVALID, "bad-assets-collateralAddress");
     }
 
-    int hashlen = assetTx.referenceHash.length();
-    //ipfs alway start with 'Qm' and length 46
-    if ((hashlen == 46 && assetTx.referenceHash.substr(0, 2) != "Qm")) {
+    if ((assetTx.referenceHash.length() > 128)) {
         return state.DoS(100, false, REJECT_INVALID, "bad-assets-referenceHash");
-    } else {
-        //hex encoded hash minimum length 40 (160 bits)
-        if (hashlen > 0 && hashlen != 46 && (!IsHex(assetTx.referenceHash) || hashlen < 40 || hashlen > 64)) {
-            return state.DoS(100, false, REJECT_INVALID, "bad-assets-referenceHash");
-        }
     }
 
     if (!validateAmount(assetTx.amount, assetTx.decimalPoint)) {
