@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2015 The BitAsset Core developers
+// Copyright (c) 2011-2015 The Bitcoin Core developers
 // Copyright (c) 2014-2021 The Dash Core developers
 // Copyright (c) 2020-2023 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
@@ -917,6 +917,15 @@ void SendAssetsDialog::updateAssetList() {
         if (entry) {
             entry->updateAssetList();
         }
+    }
+}
+
+void SendAssetsDialog::focusAsset(const std::string assetId) {
+    clear();
+    SendAssetsEntry *entry = qobject_cast<SendAssetsEntry *>(ui->entries->itemAt(0)->widget());
+    if (entry) {
+        entry->focusAsset(assetId);
+        entry->setFocus();
     }
 }
 

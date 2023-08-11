@@ -16,6 +16,8 @@ class CUpdateAssetTx;
 
 class CMintAssetTx;
 
+class UniValue;
+
 struct CAssetOutputEntry;
 struct CBlockAssetUndo;
 
@@ -86,6 +88,8 @@ public:
         ownerAddress = CKeyID();
         collateralAddress = CKeyID();
     }
+
+    void ToJson(UniValue &obj) const;
 };
 
 class CDatabaseAssetData {

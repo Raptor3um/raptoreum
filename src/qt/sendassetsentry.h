@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITAsset_QT_SENDAssetSENTRY_H
-#define BITAsset_QT_SENDAssetSENTRY_H
+#ifndef RAPTOREUM_QT_SENDAASSETSENTRY_H
+#define RAPTOREUM_QT_SENDAASSETSENTRY_H
 
 #include <qt/walletmodel.h>
 
@@ -22,7 +22,7 @@ namespace Ui {
 }
 
 /**
- * A single entry in the dialog for sending bitAssets.
+ * A single entry in the dialog for sending assets.
  * Stacked widget, with different UIs for payment requests
  * with a strong payee identity.
  */
@@ -50,6 +50,8 @@ public:
     void setAddress(const QString &address);
 
     void setAmount(const CAmount &amount);
+
+    void focusAsset(const std::string assetId);
 
     void SetFutureVisible(const bool visible);
 
@@ -118,4 +120,4 @@ private:
     void ClearAssetOptions();
 };
 
-#endif // BITAsset_QT_SENDAssetSENTRY_H
+#endif // RAPTOREUM_QT_SENDAASSETSENTRY_H

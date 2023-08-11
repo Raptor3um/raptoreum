@@ -98,7 +98,10 @@ public:
     }
 
     void setValue(const CAmount &value) {
-        setText(BitcoinUnits::format(currentUnit, value, false, BitcoinUnits::separatorAlways, assetUnit));
+        if (assetUnit >= 0)
+            setText(BitcoinUnits::format(currentUnit, value / BitcoinUnits::factorAsset(MAX_ASSET_UNITS -  assetUnit) , false, BitcoinUnits::separatorAlways, assetUnit));
+        else
+            setText(BitcoinUnits::format(currentUnit, value, false, BitcoinUnits::separatorAlways, assetUnit));
         Q_EMIT valueChanged();
     }
 

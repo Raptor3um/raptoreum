@@ -968,6 +968,9 @@ public:
     std::map <uint256, CWalletTx> mapWallet
     GUARDED_BY(cs_wallet);
 
+    std::map <uint256, std::pair<std::string, CKeyID>> mapAsset
+    GUARDED_BY(cs_wallet);
+
     typedef std::multimap<int64_t, CWalletTx *> TxItems;
     TxItems wtxOrdered;
 
@@ -1033,10 +1036,15 @@ public:
     std::map <CTxDestination, std::vector<COutput>> ListAssets() const;
 
     /**
-     * Return list of assets balances.
+     * Return list of assets confirmed balances.
      */
     std::map <std::string, CAmount>
     getAssetsBalance(const CCoinControl *coinControl = nullptr, bool fSpendable = false) const;
+
+    /**
+     * Return list of assets balances confirmed, pending.
+     */
+    std::map <std::string, std::pair<CAmount, CAmount>> getAssetsBalanceAll() const;
 
     /**
      * Find non-change parent output.

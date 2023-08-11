@@ -1,9 +1,9 @@
-// Copyright (c) 2011-2014 The BitAsset Core developers
+// Copyright (c) 2011-2014 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITAsset_QT_AssetCONTROLTREEWIDGET_H
-#define BITAsset_QT_AssetCONTROLTREEWIDGET_H
+#ifndef BITCOIN_QT_ASSETCONTROLTREEWIDGET_H
+#define BITCOIN_QT_ASSETCONTROLTREEWIDGET_H
 
 #include <QKeyEvent>
 #include <QTreeWidget>
@@ -18,4 +18,4 @@ protected:
     virtual void keyPressEvent(QKeyEvent *event) override;
 };
 
-#endif // BITAsset_QT_AssetCONTROLTREEWIDGET_H
+#endif // BITCOIN_QT_ASSETCONTROLTREEWIDGET_H

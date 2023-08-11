@@ -62,6 +62,7 @@ SmartnodeList::SmartnodeList(QWidget *parent) :
     int columnOwnerWidth = 130;
     int columnVotingWidth = 130;
 
+    ui->tableWidgetSmartnodesDIP3->verticalHeader()->hide();
     ui->tableWidgetSmartnodesDIP3->setColumnWidth(COLUMN_SERVICE, columnAddressWidth);
     ui->tableWidgetSmartnodesDIP3->setColumnWidth(COLUMN_STATUS, columnStatusWidth);
     ui->tableWidgetSmartnodesDIP3->setColumnWidth(COLUMN_POSE, columnPoSeScoreWidth);

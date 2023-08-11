@@ -107,6 +107,10 @@ inline bool checkNewUniqueAsset(CNewAssetTx &assetTx, CValidationState &state) {
     if (!assetTx.isUnique)
         return true;
 
+    if (assetTx.amount > 500 * COIN) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-assets-amount");
+    }
+
     if (assetTx.decimalPoint > 0) { // alway 0
         return state.DoS(100, false, REJECT_INVALID, "bad-assets-decimalPoint");
     }
@@ -115,7 +119,7 @@ inline bool checkNewUniqueAsset(CNewAssetTx &assetTx, CValidationState &state) {
         return state.DoS(100, false, REJECT_INVALID, "bad-unique-assets-distibution-type");
     }
 
-    if (assetTx.updatable) { // manual mint only?
+    if (assetTx.updatable) {
         return state.DoS(100, false, REJECT_INVALID, "bad-unique-assets-distibution-type");
     }
 
@@ -179,8 +183,14 @@ bool CheckNewAssetTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CVal
     }
 
     int hashlen = assetTx.referenceHash.length();
-    if ((hashlen != 0 && hashlen != 46) || (hashlen == 46 && assetTx.referenceHash.substr(0, 2) != "Qm")) {           
+    //ipfs alway start with 'Qm' and length 46
+    if ((hashlen == 46 && assetTx.referenceHash.substr(0, 2) != "Qm")) {
         return state.DoS(100, false, REJECT_INVALID, "bad-assets-referenceHash");
+    } else {
+        //hex encoded hash minimum length 40 (160 bits)
+        if (hashlen > 0 && hashlen != 46 && (!IsHex(assetTx.referenceHash) || hashlen < 40 || hashlen > 64)) {
+            return state.DoS(100, false, REJECT_INVALID, "bad-assets-referenceHash");
+        }
     }
 
     if (!validateAmount(assetTx.amount, assetTx.decimalPoint)) {

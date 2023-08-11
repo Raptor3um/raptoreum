@@ -1228,6 +1228,12 @@ bool CWallet::AddToWallet(const CWalletTx &wtxIn, bool fFlushOnClose, bool resca
         }
     }
 
+    if (wtxIn.tx->nType == TRANSACTION_NEW_ASSET && fInsertedNew){
+        CNewAssetTx assetTx;
+        if (GetTxPayload(wtxIn.tx->vExtraPayload, assetTx))
+                mapAsset.emplace(hash, std::make_pair(assetTx.name, assetTx.ownerAddress));
+    }
+
     //// debug print
     WalletLogPrintf("AddToWallet %s  %s%s\n", wtxIn.GetHash().ToString(), (fInsertedNew ? "new" : ""),
                     (fUpdated ? "update" : ""));
@@ -1295,6 +1301,11 @@ void CWallet::LoadToWallet(CWalletTx &wtxIn) {
                 MarkConflicted(prevtx.m_confirm.hashBlock, prevtx.m_confirm.block_height, wtx.GetHash());
             }
         }
+    }
+    if (wtx.tx->nType == TRANSACTION_NEW_ASSET){
+        CNewAssetTx assetTx;
+        if (GetTxPayload(wtx.tx->vExtraPayload, assetTx))
+                mapAsset.emplace(hash, std::make_pair(assetTx.name, assetTx.ownerAddress));
     }
 }
 
@@ -3329,6 +3340,36 @@ std::map <std::string, CAmount> CWallet::getAssetsBalance(const CCoinControl *co
             balance += transferTemp.nAmount;
         }
         result.insert(std::make_pair(asset.first, balance));
+    }
+    return result;
+}
+
+std::map <std::string, std::pair<CAmount, CAmount>> CWallet::getAssetsBalanceAll() const {
+    std::map <std::string, std::vector<COutput>> mapAssets;
+    AvailableAssets(mapAssets, false);
+
+    std::map <std::string, std::pair<CAmount, CAmount>> result;
+    for (auto asset: mapAssets) {
+        CAmount balance = 0;
+        CAmount pending = 0;
+        for (auto output: asset.second) {
+            CInputCoin coin(output.tx->tx, output.i);
+
+            if (!coin.txout.scriptPubKey.IsAssetScript()) {
+                continue;
+            }
+
+            CAssetTransfer transferTemp;
+            if (!GetTransferAsset(coin.txout.scriptPubKey, transferTemp))
+                continue;
+            
+            if (!output.fSpendable || (output.isFuture && !output.isFutureSpendable) || (output.nDepth <
+                (output.tx->IsFromMe(ISMINE_ALL) ? 0 : 1)))
+                pending += transferTemp.nAmount;
+            else
+                balance += transferTemp.nAmount;
+        }
+        result.insert(std::make_pair(asset.first, std::make_pair(balance, pending)));
     }
     return result;
 }

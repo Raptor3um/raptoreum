@@ -408,14 +408,19 @@ void BitcoinGUI::createActions() {
     sendAssetsMenuAction->setStatusTip(tr("Send assets to a Raptoreum address"));
     sendAssetsMenuAction->setToolTip(sendAssetsMenuAction->statusTip());
 
+    createAssetsMenuAction = new QAction(tr("&Create Asset"), this);
+    createAssetsMenuAction->setStatusTip(tr("Create a new asset"));
+    createAssetsMenuAction->setToolTip(createAssetsMenuAction->statusTip());
+
 #ifdef ENABLE_WALLET
     // These showNormalIfMinimized are needed because Send Coins and Receive Coins
     // can be triggered from the tray menu, and need to show the GUI to be useful.
     connect(sendCoinsMenuAction, &QAction::triggered, this, static_cast<void (BitcoinGUI::*)()>(&BitcoinGUI::showNormalIfMinimized));
-    connect(sendAssetsMenuAction, &QAction::triggered, [this]{ gotoSendAssetsPage(); } );
+    connect(sendAssetsMenuAction, &QAction::triggered, this, static_cast<void (BitcoinGUI::*)()>(&BitcoinGUI::showNormalIfMinimized));
     connect(coinJoinCoinsMenuAction, &QAction::triggered, this, static_cast<void (BitcoinGUI::*)()>(&BitcoinGUI::showNormalIfMinimized));
     connect(receiveCoinsMenuAction, &QAction::triggered, this, static_cast<void (BitcoinGUI::*)()>(&BitcoinGUI::showNormalIfMinimized));
     connect(sendCoinsMenuAction, &QAction::triggered, [this]{ gotoSendCoinsPage(); });
+    connect(sendAssetsMenuAction, &QAction::triggered, [this]{ gotoSendAssetsPage(); } );
     connect(coinJoinCoinsMenuAction, &QAction::triggered, [this]{ gotoCoinJoinCoinsPage(); });
     connect(receiveCoinsMenuAction, &QAction::triggered, this, &BitcoinGUI::gotoReceiveCoinsPage);
 #endif
@@ -694,7 +699,8 @@ void BitcoinGUI::createToolBars() {
         QToolBar *toolbar = new QToolBar(tr("Tabs toolbar"));
         appToolBar = toolbar;
         toolbar->setContextMenuPolicy(Qt::PreventContextMenu);
-        toolbar->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+        toolbar->setOrientation(Qt::Vertical);
+        toolbar->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
         toolbar->setToolButtonStyle(Qt::ToolButtonTextOnly);
         toolbar->setMovable(false); // remove unused icon in upper left corner
 
@@ -735,14 +741,26 @@ void BitcoinGUI::createToolBars() {
             smartnodeButton->setEnabled(true);
         }
 
+        myAssetsButton = new QToolButton(this);
+        myAssetsButton->setText("&Assets");
+        myAssetsButton->setStatusTip("Show general overview of assets");
+        tabGroup->addButton(myAssetsButton);
+
         sendAssetsButton = new QToolButton(this);
         sendAssetsButton->setText(sendAssetsMenuAction->text());
         sendAssetsButton->setStatusTip(sendAssetsMenuAction->statusTip());
         tabGroup->addButton(sendAssetsButton);
 
+        createAssetsButton = new QToolButton(this);
+        createAssetsButton->setText(createAssetsMenuAction->text());
+        createAssetsButton->setStatusTip(createAssetsMenuAction->statusTip());
+        tabGroup->addButton(createAssetsButton);
+
         connect(overviewButton, &QToolButton::clicked, this, &BitcoinGUI::gotoOverviewPage);
         connect(sendCoinsButton, &QToolButton::clicked, [this]{ gotoSendCoinsPage(); });
         connect(sendAssetsButton, &QToolButton::clicked, [this]{ gotoSendAssetsPage(); });
+        connect(createAssetsButton, &QToolButton::clicked, [this]{ gotoCreateAssetsPage(); });
+        connect(myAssetsButton, &QToolButton::clicked, [this]{ gotoMyAssetsPage(); });
         connect(coinJoinCoinsButton, &QToolButton::clicked, [this]{ gotoCoinJoinCoinsPage(); });
         connect(receiveCoinsButton, &QToolButton::clicked, this, &BitcoinGUI::gotoReceiveCoinsPage);
         connect(historyButton, &QToolButton::clicked, this, &BitcoinGUI::gotoHistoryPage);
@@ -779,16 +797,20 @@ void BitcoinGUI::createToolBars() {
         m_wallet_selector_action->setVisible(false);
 #endif
 
+        QWidget* spacer = new QWidget();
+        spacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+        toolbar->addWidget(spacer);
+
         QLabel *logoLabel = new QLabel();
         logoLabel->setObjectName("lblToolbarLogo");
         logoLabel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
 
         appToolBarLogoAction = toolbar->addWidget(logoLabel);
-
+                
         /** Create additional container for toolbar and walletFrame and make it the central widget.
             This is a workaround mostly for toolbar styling on Mac OS but should work fine for every other OSes too.
         */
-        QVBoxLayout *layout = new QVBoxLayout;
+        QHBoxLayout *layout = new QHBoxLayout;
         layout->addWidget(toolbar);
         layout->addWidget(walletFrame);
         layout->setSpacing(0);
@@ -1186,6 +1208,18 @@ void BitcoinGUI::gotoSendAssetsPage(QString addr)
     if (walletFrame) walletFrame->gotoSendAssetsPage(addr);
 }
 
+void BitcoinGUI::gotoCreateAssetsPage()
+{
+    createAssetsButton->setChecked(true);
+    if (walletFrame) walletFrame->gotoCreateAssetsPage();
+}
+
+void BitcoinGUI::gotoMyAssetsPage()
+{
+    myAssetsButton->setChecked(true);
+    if (walletFrame) walletFrame->gotoMyAssetsPage();
+}
+
 void BitcoinGUI::gotoCoinJoinCoinsPage(QString addr)
 {
     coinJoinCoinsButton->setChecked(true);
@@ -1355,24 +1389,25 @@ void BitcoinGUI::updateWidth() {
     if (walletFrame == nullptr) {
         return;
     }
-    if (windowState() & (Qt::WindowMaximized | Qt::WindowFullScreen)) {
-        return;
-    }
+    
     int nWidthWidestButton{0};
-    int nButtonsVisible{0};
     for (QAbstractButton *button: tabGroup->buttons()) {
         if (!button->isEnabled()) {
             continue;
         }
         QFontMetrics fm(button->font());
         nWidthWidestButton = std::max<int>(nWidthWidestButton, GUIUtil::TextWidth(fm, button->text()));
-        ++nButtonsVisible;
     }
-    // Add 30 per button as padding and use minimum 980 which is the minimum required to show all tab's contents
-    // Use nButtonsVisible + 1 <- for the raptoreum logo
-    int nWidth = std::max<int>(980, (nWidthWidestButton + 30) * (nButtonsVisible + 1));
-    setMinimumWidth(nWidth);
-    resize(nWidth, height());
+
+    appToolBar->setMaximumWidth(nWidthWidestButton + 50);
+    // 980 + buttonWidth + 50 as padding is the minimum required to show all tab's contents
+    setMinimumWidth(980 + nWidthWidestButton + 50);
+
+    if (windowState() & (Qt::WindowMaximized | Qt::WindowFullScreen)) {
+        return;
+    }
+    
+    resize(980 + nWidthWidestButton + 50, height());
 }
 
 void

@@ -23,6 +23,10 @@ class SendCoinsDialog;
 
 class SendAssetsDialog;
 
+class CreateAssetsDialog;
+
+class AssetsDialog;
+
 class SendCoinsRecipient;
 
 class TransactionView;
@@ -82,6 +86,8 @@ private:
     ReceiveCoinsDialog *receiveCoinsPage;
     SendCoinsDialog *sendCoinsPage;
     SendAssetsDialog *sendAssetsPage;
+    CreateAssetsDialog *createAssetsPage;
+    AssetsDialog *myAssetsPage;
     SendCoinsDialog *coinJoinCoinsPage;
     AddressBookPage *usedSendingAddressesPage;
     AddressBookPage *usedReceivingAddressesPage;
@@ -112,6 +118,12 @@ public
     /** Switch to send assets page */
     void gotoSendAssetsPage(QString addr = "");
 
+    /** Switch to create assets page */
+    void gotoCreateAssetsPage();
+    
+    /** Switch to my assets page */
+    void gotoMyAssetsPage();
+    
     /** Switch to CoinJoin coins page */
     void gotoCoinJoinCoinsPage(QString addr = "");
 

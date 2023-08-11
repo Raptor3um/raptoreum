@@ -876,8 +876,6 @@ QToolBar {
     padding: 0;
     margin: 0;
     spacing: 0;
-    min-height: 50px;
-    max-height: 50px;
 }
 
 QToolBar > QToolButton {
@@ -1926,6 +1924,65 @@ QStackedWidget#SendAssetsEntry .QToolButton#deleteButton_is {
 }
 
 QStackedWidget#SendAssetsEntry .QLineEdit#addAsLabel { /* Pay To Input Field */
+}
+
+/******************************************************
+CreateAssetsDialog
+******************************************************/
+
+QDialog#CreateAssetsDialog .QFrame#frameCoinControl,
+QDialog#CreateAssetsDialog #scrollArea  { /* Coin Control Section */
+    border-bottom: 1px solid red;
+}
+
+QDialog#CreateAssetsDialog .QFrame#frameCoinControl .QPushButton#pushButtonCoinControl { /* Coin Control Inputs Button */
+}
+
+QDialog#CreateAssetsDialog .QFrame#frameCoinControl .QLabel#labelCoinControlFeatures { /* Coin Control Header */
+}
+
+QDialog#CreateAssetsDialog .QFrame#frameCoinControl .QWidget#widgetCoinControl { /* Coin Control Inputs */
+}
+
+QDialog#CreateAssetsDialog .QFrame#frameCoinControl .QWidget#widgetCoinControl > .QLabel { /* Coin Control Inputs Labels */
+    padding: 2px;
+}
+
+QDialog#CreateAssetsDialog .QFrame#frameCoinControl .QValidatedLineEdit#lineEditCoinControlChange { /* Custom Change Address */
+}
+
+QDialog#CreateAssetsDialog .QFrame#frameCoinControl .QLabel#labelCoinControlChangeLabel { /* Custom Change Address Validation Label */
+    margin-right: 112px;
+}
+
+QDialog#CreateAssetsDialog .QFrame#frameCoinControl .QLabel#labelCoinControlInsuffFunds { /* Insufficient Funds Label */
+    color: #a84832;
+}
+
+QDialog#CreateAssetsDialog .QScrollArea#scrollArea .QWidget#scrollAreaWidgetContents { /* Send To Widget */
+    background-color: #00000000;
+}
+
+QDialog#CreateAssetsDialog QLabel#labelBalanceText,
+QDialog#CreateAssetsDialog QLabel#labelBalance {
+    qproperty-alignment: 'AlignLeading | AlignLeft';
+    min-height: 20px;
+    max-height: 20px;
+}
+
+QDialog#CreateAssetsDialog QLabel#labelBalance {
+    margin-right: 10px;
+}
+
+QDialog#CreateAssetsDialog QPushButton#createAssetButton {
+    margin-left: 10px;
+}
+
+/******************************************************
+AssetsDialog
+******************************************************/
+QDialog#AssetsDialog QListWidget#listWidget {
+    background-color: #00000000;
 }
 
 /******************************************************
