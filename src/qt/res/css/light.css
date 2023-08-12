@@ -881,6 +881,10 @@ QWidget#RPCConsole { /* RPC Console Dialog Box */
     background-color: #f2f2f4;
 }
 
+QWidget#RPCConsole #detailWidget{
+    background-color: #f2f2f4;
+}
+
 RPCConsole QTableView {
     color: #555;
 }

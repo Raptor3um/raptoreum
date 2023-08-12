@@ -79,6 +79,10 @@ UniValue createasset(const JSONRPCRequest &request) {
                                  "\"issueFrequency\":0, \"amount\":10000,\"ownerAddress\":\"yRyiTCKfqMG2dQ9oUvs932TjN1R1MNUTWM\"}'")
         );
 
+    if (getAssetsFees() == 0) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Under maintenance, try again later.");
+    }
+
     std::shared_ptr <CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
     CWallet *const pwallet = wallet.get();
@@ -130,11 +134,9 @@ UniValue createasset(const JSONRPCRequest &request) {
     const UniValue &referenceHash = find_value(asset, "referenceHash");
     if (!referenceHash.isNull()) {
         std::string ref = referenceHash.get_str();
-        if (ref.length() != 0) {
-            if (ref.length() != 46)
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Invalid referenceHash (must be 46 characters)");
-            if (ref.substr(0, 2) != "Qm")
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: invalid referenceHash (must start with Qm)");
+        if (ref.length() > 0) {
+            if (ref.length() > 128)
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Invalid referenceHash (max length 128)");
             assetTx.referenceHash = ref;
         }
     }
@@ -184,8 +186,8 @@ UniValue createasset(const JSONRPCRequest &request) {
     const UniValue &amount = find_value(asset, "amount");
     if (!amount.isNull()) {
         CAmount a = amount.get_int64();
-        if (a <= 0 || a > MAX_MONEY || (assetTx.isUnique && a > 500 * COIN))
-            throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount");
+        if (a <= 0 || a > MAX_MONEY || (assetTx.isUnique && a > 500))
+            throw JSONRPCError(RPC_TYPE_ERROR, strprintf("Invalid amount. Max amount %i", assetTx.isUnique ? 500 : MAX_MONEY));
         assetTx.amount = a * COIN;
     } else {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: missing amount");
@@ -255,6 +257,10 @@ UniValue mintasset(const JSONRPCRequest &request) {
                                  "773cf7e057127048711d16839e4612ffb0f1599aef663d96e60f5190eb7de9a9" "yZBvV16YFvPx11qP2XhCRDi7y2e1oSMpKH" "1000")
 
         );
+
+    if (getAssetsFees() == 0) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Under maintenance, try again later.");
+    }
 
     std::shared_ptr <CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
@@ -533,24 +539,7 @@ UniValue assetdetails(const JSONRPCRequest &request) {
     }
 
     UniValue result(UniValue::VOBJ);
-    result.pushKV("Asset_id", tmpAsset.assetId);
-    result.pushKV("Asset_name", tmpAsset.name);
-    result.pushKV("Circulating_supply", tmpAsset.circulatingSupply / COIN);
-    result.pushKV("MintCount", tmpAsset.mintCount);
-    result.pushKV("maxMintCount", tmpAsset.maxMintCount);
-    result.pushKV("owner", EncodeDestination(tmpAsset.ownerAddress));
-    result.pushKV("Isunique", tmpAsset.isUnique);
-    result.pushKV("Updatable", tmpAsset.updatable);
-    result.pushKV("Decimalpoint", (int) tmpAsset.decimalPoint);
-    result.pushKV("ReferenceHash", tmpAsset.referenceHash);
-    UniValue dist(UniValue::VOBJ);
-    dist.pushKV("Type", GetDistributionType(tmpAsset.type));
-    dist.pushKV("TargetAddress", EncodeDestination(tmpAsset.targetAddress));
-    //tmp.pushKV("collateralAddress", EncodeDestination(tmpAsset.collateralAddress));
-    dist.pushKV("IssueFrequency", tmpAsset.issueFrequency);
-    dist.pushKV("Amount", tmpAsset.amount / COIN);
-    result.pushKV("Distribution", dist);
-
+    tmpAsset.ToJson(result);
     return result;
 }
 

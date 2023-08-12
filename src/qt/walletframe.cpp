@@ -157,6 +157,18 @@ void WalletFrame::gotoSendAssetsPage(QString addr) {
         i.value()->gotoSendAssetsPage(addr);
 }
 
+void WalletFrame::gotoCreateAssetsPage() {
+    QMap<WalletModel *, WalletView *>::const_iterator i;
+    for (i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i)
+        i.value()->gotoCreateAssetsPage();
+}
+
+void WalletFrame::gotoMyAssetsPage() {
+    QMap<WalletModel *, WalletView *>::const_iterator i;
+    for (i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i)
+        i.value()->gotoMyAssetsPage();
+}
+
 void WalletFrame::gotoCoinJoinCoinsPage(QString addr) {
     QMap<WalletModel *, WalletView *>::const_iterator i;
     for (i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i)

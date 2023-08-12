@@ -897,6 +897,10 @@ QWidget#RPCConsole { /* RPC Console Dialog Box */
     background-color: #323233;
 }
 
+QWidget#RPCConsole #detailWidget{
+    background-color: #323233;
+}
+
 RPCConsole QTableView {
     color: #c7c7c7;
 }
@@ -929,6 +933,24 @@ SendCoinsEntry
 ******************************************************/
 
 /***** No dark.css specific coloring here yet *****/
+
+/******************************************************
+SendCoinsDialog
+******************************************************/
+
+QDialog#SendAssetssDialog .QFrame#frameCoinControl,
+QDialog#SendAssetsDialog #scrollArea {
+    border-color: #39393b;
+}
+
+/******************************************************
+SendCoinsDialog
+******************************************************/
+
+QDialog#CreateAssetsDialog .QFrame#frameCoinControl,
+QDialog#CreateAssetsDialog #scrollArea {
+    border-color: #39393b;
+}
 
 /******************************************************
 SignVerifyMessageDialog

@@ -1514,24 +1514,19 @@ UniValue protx_diff(const JSONRPCRequest &request) {
                "Set of commands to execute ProTx related actions.\n"
                "To get help on individual commands, use \"help protx command\".\n"
                "\nAvailable commands:\n"
+               #ifdef ENABLE_WALLET
                "  register          - Create and send ProTx to network\n"
                "  register_fund     - Fund, create and send ProTx to network\n"
                "  register_prepare  - Create an unsigned ProTx\n"
                "  register_submit   - Sign and submit a ProTx\n"
                "  quick_setup       - register_prepare, signmessage and register_submit in one command\n"
-               #ifdef ENABLE_WALLET
-               "  register          - Create and send ProTx to network\n"
-        "  register_fund     - Fund, create and send ProTx to network\n"
-        "  register_prepare  - Create an unsigned ProTx\n"
-        "  register_submit   - Sign and submit a ProTx\n"
-        "  quick_setup       - register_prepare, signmessage and register_submit in one command\n"
                #endif
                "  list              - List ProTxs\n"
                "  info              - Return information about a ProTx\n"
                #ifdef ENABLE_WALLET
                "  update_service    - Create and send ProUpServTx to network\n"
-        "  update_registrar  - Create and send ProUpRegTx to network\n"
-        "  revoke            - Create and send ProUpRevTx to network\n"
+               "  update_registrar  - Create and send ProUpRegTx to network\n"
+               "  revoke            - Create and send ProUpRevTx to network\n"
                #endif
                "  diff              - Calculate a diff and a proof between two smartnode lists\n",
                {

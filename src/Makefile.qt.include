@@ -31,7 +31,9 @@ QT_FORMS_UI = \
   qt/forms/sendcoinsdialog.ui \
   qt/forms/sendcoinsentry.ui \
   qt/forms/sendassetsdialog.ui \
+  qt/forms/createassetsdialog.ui \
   qt/forms/sendassetsentry.ui \
+  qt/forms/assetsdialog.ui \
   qt/forms/signverifymessagedialog.ui \
   qt/forms/transactiondescdialog.ui
 
@@ -78,7 +80,9 @@ QT_MOC_CPP = \
   qt/moc_sendcoinsdialog.cpp \
   qt/moc_sendcoinsentry.cpp \
   qt/moc_sendassetsdialog.cpp \
+  qt/moc_createassetsdialog.cpp \
   qt/moc_sendassetsentry.cpp \
+  qt/moc_assetsdialog.cpp \
   qt/moc_signverifymessagedialog.cpp \
   qt/moc_splashscreen.cpp \
   qt/moc_trafficgraphwidget.cpp \
@@ -277,6 +281,8 @@ BITCOIN_QT_WALLET_CPP = \
   qt/sendcoinsdialog.cpp \
   qt/sendcoinsentry.cpp \
   qt/sendassetsdialog.cpp \
+  qt/createassetsdialog.cpp \
+  qt/assetsdialog.cpp \
   qt/sendassetsentry.cpp \
   qt/signverifymessagedialog.cpp \
   qt/smartnodelist.cpp \

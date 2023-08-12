@@ -12,6 +12,7 @@
 #include <spork.h>
 #include <validation.h>
 #include <wallet/wallet.h>
+#include <univalue.h>
 
 static const std::regex name_characters("^[a-zA-Z0-9 ]{3,}$");
 static const std::regex rtm_names("^RTM$|^RAPTOREUM$|^wRTM$|^WRTM$|^RTMcoin$|^RTMCOIN$");
@@ -59,6 +60,42 @@ CAssetMetaData::CAssetMetaData(const std::string txid, const CNewAssetTx assetTx
     amount = assetTx.amount;
     ownerAddress = assetTx.ownerAddress;
     collateralAddress = assetTx.collateralAddress;
+}
+
+static std::string GetDistributionType(int t) {
+    switch (t) {
+        case 0:
+            return "manual";
+        case 1:
+            return "coinbase";
+        case 2:
+            return "address";
+        case 3:
+            return "schedule";
+    }
+    return "invalid";
+}
+
+void CAssetMetaData::ToJson(UniValue &obj) const {
+    obj.clear();
+    obj.setObject();
+    obj.pushKV("Asset_id", assetId);
+    obj.pushKV("Asset_name", name);
+    obj.pushKV("Circulating_supply", circulatingSupply / COIN);
+    obj.pushKV("MintCount", mintCount);
+    obj.pushKV("maxMintCount", maxMintCount);
+    obj.pushKV("owner", EncodeDestination(ownerAddress));
+    obj.pushKV("Isunique", isUnique);
+    obj.pushKV("Updatable", updatable);
+    obj.pushKV("Decimalpoint", (int) decimalPoint);
+    obj.pushKV("ReferenceHash", referenceHash);
+    UniValue dist(UniValue::VOBJ);
+    dist.pushKV("Type", GetDistributionType(type));
+    dist.pushKV("TargetAddress", EncodeDestination(targetAddress));
+    //tmp.pushKV("collateralAddress", EncodeDestination(collateralAddress));
+    dist.pushKV("IssueFrequency", issueFrequency);
+    dist.pushKV("Amount", amount / COIN);
+    obj.pushKV("Distribution", dist);
 }
 
 CDatabaseAssetData::CDatabaseAssetData(const CAssetMetaData &asset, const int &nHeight, const uint256 &blockHash) {

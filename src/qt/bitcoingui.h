@@ -162,7 +162,9 @@ private:
     QToolBar *appToolBar = nullptr;
     QToolButton *overviewButton = nullptr;
     QToolButton *sendCoinsButton = nullptr;
-    QToolButton *sendAssetsButton;
+    QToolButton *sendAssetsButton  = nullptr;
+    QToolButton *createAssetsButton  = nullptr;
+    QToolButton *myAssetsButton  = nullptr;
     QToolButton *coinJoinCoinsButton = nullptr;
     QToolButton *receiveCoinsButton = nullptr;
     QToolButton *historyButton = nullptr;
@@ -170,7 +172,8 @@ private:
     QAction *appToolBarLogoAction = nullptr;
     QAction *quitAction = nullptr;
     QAction *sendCoinsMenuAction = nullptr;
-    QAction *sendAssetsMenuAction;
+    QAction *sendAssetsMenuAction = nullptr;
+    QAction *createAssetsMenuAction = nullptr;
     QAction *coinJoinCoinsMenuAction = nullptr;
     QAction *usedSendingAddressesAction = nullptr;
     QAction *usedReceivingAddressesAction = nullptr;
@@ -369,6 +372,10 @@ public
             void gotoSendCoinsPage(QString addr = "");
             /** Switch to send assets page */
             void gotoSendAssetsPage(QString addr = "");
+            /** Switch to create assets page */
+            void gotoCreateAssetsPage();
+            /** Switch to my assets page */
+            void gotoMyAssetsPage();
             /** Switch to CoinJoin coins page */
             void gotoCoinJoinCoinsPage(QString addr = "");
 

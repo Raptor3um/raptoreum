@@ -264,6 +264,14 @@ void SendAssetsEntry::setAmount(const CAmount &amount) {
     ui->payAmount->setValue(amount);
 }
 
+void SendAssetsEntry::focusAsset(const std::string assetId) {
+    int index = ui->assetList->findText(QString::fromStdString(assetId));
+    if (index >= 0) {
+        assetName.clear();
+        ui->assetList->setCurrentIndex(index);
+    }
+}
+
 bool SendAssetsEntry::isClear() {
     return ui->payTo->text().isEmpty();
 }
@@ -346,12 +354,12 @@ void SendAssetsEntry::onAssetSelected(QString name) {
             bal = assetsbalance[assetId];
     }
 
-    //update balance
-    ui->AssetBalance->setText(BitcoinUnits::formatWithCustomName(name, bal));
-
     CAssetMetaData assetdata;
     if (!passetsCache->GetAssetMetaData(assetId, assetdata))
         return;
+
+    //update balance
+    ui->AssetBalance->setText(BitcoinUnits::formatWithCustomName(name, bal, assetdata.decimalPoint));
 
     if (assetdata.isUnique) {
 

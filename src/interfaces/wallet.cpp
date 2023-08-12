@@ -308,6 +308,21 @@ namespace interfaces {
             return tx;
         }
 
+        bool createTransaction(const std::vector <CRecipient> &recipients,
+                                          CTransactionRef &tx,
+                                          const CCoinControl &coin_control,
+                                          bool sign,
+                                          int &change_pos,
+                                          CAmount &fee,
+                                          std::string &fail_reason,
+                                          int nExtraPayloadSize = 0,
+                                          CNewAssetTx *newAsset = nullptr,
+                                          CMintAssetTx *mint = nullptr) override {
+            LOCK(m_wallet->cs_wallet);
+            return m_wallet->CreateTransaction(recipients, tx, fee, change_pos, fail_reason, coin_control, sign,
+                                             nExtraPayloadSize, nullptr, newAsset ,mint);
+        }
+
         void commitTransaction(CTransactionRef tx, WalletValueMap value_map, WalletOrderForm order_form) override {
             LOCK(m_wallet->cs_wallet);
             CReserveKey m_key(m_wallet.get());
@@ -490,6 +505,14 @@ namespace interfaces {
             }
             return result;
         }
+        void AvailableCoins(std::vector <COutput> &vCoins, bool fOnlySafe, const CCoinControl *coinControl,
+                        const CAmount &nMinimumAmount, const CAmount &nMaximumAmount,
+                        const CAmount &nMinimumSumAmount, const uint64_t nMaximumCount,
+                        const int nMinDepth, const int nMaxDepth)  override {
+            LOCK(m_wallet->cs_wallet);
+            m_wallet->AvailableCoins(vCoins, fOnlySafe, coinControl, nMinimumAmount, nMaximumAmount, nMinimumSumAmount,
+                        nMaximumCount, nMinDepth, nMaxDepth);
+        }
 
         CoinsList listAssets() override {
             LOCK(m_wallet->cs_wallet);
@@ -539,6 +562,19 @@ namespace interfaces {
         AssetBalance getAssetsBalance(const CCoinControl *coinControl, bool fSpendable) override {
             LOCK(m_wallet->cs_wallet);
             return m_wallet->getAssetsBalance(coinControl, fSpendable);
+        }
+
+        std::map<std::string, std::pair<CAmount, CAmount>> getAssetsBalanceAll() override {
+            LOCK(m_wallet->cs_wallet);
+            return m_wallet->getAssetsBalanceAll();
+        }
+
+        std::map <uint256, std::pair<std::string, CKeyID>> getMyAssets() override {
+            LOCK(m_wallet->cs_wallet);
+            std::map <uint256, std::pair<std::string, CKeyID>> result;
+            for (auto it : m_wallet->mapAsset)
+                result.insert(it);
+            return result;
         }
 
         std::vector <WalletTxOut> getCoins(const std::vector <COutPoint> &outputs) override {

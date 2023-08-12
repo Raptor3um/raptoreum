@@ -31,12 +31,16 @@ class CKey;
 
 class CWallet;
 
+class COutput;
+
 enum class FeeReason;
 enum class TransactionError;
 enum class WalletCreationStatus;
 enum isminetype : unsigned int;
 struct CRecipient;
 struct FuturePartialPayload;
+class CNewAssetTx;
+class CMintAssetTx;
 struct WalletContext;
 typedef uint8_t isminefilter;
 
@@ -186,6 +190,18 @@ namespace interfaces {
                                                   std::string &fail_reason,
                                                   int nExtraPayloadSize = 0,
                                                   FuturePartialPayload *fpp = nullptr) = 0;
+        
+        //! Create transaction.
+        virtual bool createTransaction(const std::vector <CRecipient> &recipients,
+                                                  CTransactionRef &tx,
+                                                  const CCoinControl &coin_control,
+                                                  bool sign,
+                                                  int &change_pos,
+                                                  CAmount &fee,
+                                                  std::string &fail_reason,
+                                                  int nExtraPayloadSize = 0,
+                                                  CNewAssetTx *newAsset = nullptr,
+                                                  CMintAssetTx *mint = nullptr) = 0;
 
         //! Commit transaction.
         virtual void commitTransaction(CTransactionRef tx, WalletValueMap value_map, WalletOrderForm order_form) = 0;
@@ -270,6 +286,12 @@ namespace interfaces {
 
         virtual CoinsList listCoins() = 0;
 
+        //return AvailableCoins
+        virtual void AvailableCoins(std::vector <COutput> &vCoins, bool fOnlySafe = true, const CCoinControl *coinControl = nullptr,
+                        const CAmount &nMinimumAmount = 1, const CAmount &nMaximumAmount = MAX_MONEY,
+                        const CAmount &nMinimumSumAmount = MAX_MONEY, const uint64_t nMaximumCount = 0,
+                        const int nMinDepth = 0, const int nMaxDepth = 9999999) = 0;
+
         //! Return AvailableAssets + LockedAssets grouped by wallet address.
         //! (put change in one group with wallet address)
         virtual CoinsList listAssets() = 0;
@@ -288,6 +310,11 @@ namespace interfaces {
         using AssetBalance = std::map<std::string, CAmount>;
 
         virtual AssetBalance getAssetsBalance(const CCoinControl *coinControl = nullptr, bool fSpendable = false) = 0;
+
+        virtual std::map<std::string, std::pair<CAmount, CAmount>> getAssetsBalanceAll() = 0;
+
+        //return list of assets that the wallet has ownership
+        virtual std::map <uint256, std::pair<std::string, CKeyID>> getMyAssets() = 0;
 
         //! Return wallet transaction output information.
         virtual std::vector <WalletTxOut> getCoins(const std::vector <COutPoint> &outputs) = 0;

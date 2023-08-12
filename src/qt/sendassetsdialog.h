@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITAsset_QT_SENDAssetSDIALOG_H
-#define BITAsset_QT_SENDAssetSDIALOG_H
+#ifndef RAPTOREUM_QT_SENDASSETSDIALOG_H
+#define RAPTOREUM_QT_SENDASSETSDIALOG_H
 
 #include <qt/walletmodel.h>
 
@@ -31,7 +31,7 @@ QT_BEGIN_NAMESPACE
 class QUrl;
 QT_END_NAMESPACE
 
-/** Dialog for sending bitAssets */
+/** Dialog for sending assets */
 class SendAssetsDialog : public QDialog {
     Q_OBJECT
 
@@ -147,6 +147,8 @@ private
 
     void updateSmartFeeLabel();
 
+    void focusAsset(const std::string assetId);
+
     Q_SIGNALS:
             // Fired when a message should be reported to the user
             void message(
@@ -177,4 +179,4 @@ private:
     int secDelay;
 };
 
-#endif // BITAsset_QT_SENDAssetSDIALOG_H
+#endif // RAPTOREUM_QT_SENDASSETSDIALOG_H

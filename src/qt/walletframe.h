@@ -91,9 +91,15 @@ public
     /** Switch to send coins page */
     void gotoSendCoinsPage(QString addr = "");
 
-    /** Switch to send coins page */
+    /** Switch to send assets page */
     void gotoSendAssetsPage(QString addr = "");
 
+    /** Switch to create assets page */
+    void gotoCreateAssetsPage();
+    
+    /** Switch to my assets page */
+    void gotoMyAssetsPage();
+    
     /** Switch to CoinJoin coins page */
     void gotoCoinJoinCoinsPage(QString addr = "");
 

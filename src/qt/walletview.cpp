@@ -15,6 +15,8 @@
 #include <qt/receivecoinsdialog.h>
 #include <qt/sendcoinsdialog.h>
 #include <qt/sendassetsdialog.h>
+#include <qt/createassetsdialog.h>
+#include <qt/assetsdialog.h>
 #include <qt/signverifymessagedialog.h>
 #include <qt/transactionrecord.h>
 #include <qt/transactiontablemodel.h>
@@ -75,6 +77,8 @@ WalletView::WalletView(QWidget *parent) :
     receiveCoinsPage = new ReceiveCoinsDialog();
     sendCoinsPage = new SendCoinsDialog();
     sendAssetsPage = new SendAssetsDialog();
+    createAssetsPage = new CreateAssetsDialog();
+    myAssetsPage = new AssetsDialog();
     coinJoinCoinsPage = new SendCoinsDialog(true);
 
     usedSendingAddressesPage = new AddressBookPage(AddressBookPage::ForEditing, AddressBookPage::SendingTab, this);
@@ -85,7 +89,9 @@ WalletView::WalletView(QWidget *parent) :
     addWidget(receiveCoinsPage);
     addWidget(sendCoinsPage);
     addWidget(coinJoinCoinsPage);
+    addWidget(myAssetsPage);
     addWidget(sendAssetsPage);
+    addWidget(createAssetsPage);
 
     QSettings settings;
     if (settings.value("fShowSmartnodesTab").toBool()) {
@@ -97,6 +103,8 @@ WalletView::WalletView(QWidget *parent) :
     connect(overviewPage, &OverviewPage::transactionClicked, transactionView,
             static_cast<void (TransactionView::*)(const QModelIndex &)>(&TransactionView::focusTransaction));
     connect(overviewPage, &OverviewPage::outOfSyncWarningClicked, this, &WalletView::requestedSyncWarningInfo);
+
+    connect(myAssetsPage, SIGNAL(assetSendClicked(std::string)), sendAssetsPage, SLOT(focusAsset(std::string)));
 
     // Highlight transaction after send
     connect(sendCoinsPage, &SendCoinsDialog::coinsSent, transactionView,
@@ -135,7 +143,7 @@ void WalletView::setBitcoinGUI(BitcoinGUI *gui) {
         connect(sendCoinsPage, &SendCoinsDialog::coinsSent, gui, &BitcoinGUI::gotoHistoryPage);
         connect(sendAssetsPage, &SendAssetsDialog::coinsSent, gui, &BitcoinGUI::gotoHistoryPage);
         connect(coinJoinCoinsPage, &SendCoinsDialog::coinsSent, gui, &BitcoinGUI::gotoHistoryPage);
-
+        connect(myAssetsPage, SIGNAL(assetSendClicked(std::string)), gui, SLOT(gotoSendAssetsPage()));
         // Receive and report messages
         connect(this, &WalletView::message, [gui](const QString &title, const QString &message, unsigned int style) {
             gui->message(title, message, style);
@@ -164,6 +172,12 @@ void WalletView::setClientModel(ClientModel *_clientModel) {
     if (sendAssetsPage != nullptr) {
         sendAssetsPage->setClientModel(_clientModel);
     }
+    if (createAssetsPage != nullptr) {
+        createAssetsPage->setClientModel(_clientModel);
+    }
+    if (myAssetsPage != nullptr) {
+        myAssetsPage->setClientModel(_clientModel);
+    }
     if (coinJoinCoinsPage != nullptr) {
         coinJoinCoinsPage->setClientModel(_clientModel);
     }
@@ -190,6 +204,8 @@ void WalletView::setWalletModel(WalletModel *_walletModel) {
     receiveCoinsPage->setModel(_walletModel);
     sendCoinsPage->setModel(_walletModel);
     sendAssetsPage->setModel(_walletModel);
+    createAssetsPage->setModel(_walletModel);
+    myAssetsPage->setModel(_walletModel);
     coinJoinCoinsPage->setModel(_walletModel);
     usedReceivingAddressesPage->setModel(_walletModel ? _walletModel->getAddressTableModel() : nullptr);
     usedSendingAddressesPage->setModel(_walletModel ? _walletModel->getAddressTableModel() : nullptr);
@@ -247,6 +263,7 @@ void WalletView::processNewTransaction(const QModelIndex &parent, int start, int
                                GUIUtil::HtmlEscape(walletModel->getWalletName()));
 
     sendAssetsPage->updateAssetList();
+    myAssetsPage->updateAssetBalance();
 }
 
 void WalletView::gotoOverviewPage() {
@@ -289,6 +306,14 @@ void WalletView::gotoSendAssetsPage(QString addr) {
     if (!addr.isEmpty()) {
         sendAssetsPage->setAddress(addr);
     }
+}
+
+void WalletView::gotoCreateAssetsPage() {
+    setCurrentWidget(createAssetsPage);
+}
+
+void WalletView::gotoMyAssetsPage() {
+    setCurrentWidget(myAssetsPage);
 }
 
 void WalletView::gotoCoinJoinCoinsPage(QString addr) {
