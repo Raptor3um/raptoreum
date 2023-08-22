@@ -514,6 +514,8 @@ SendCoinsEntry *SendCoinsDialog::addEntry() {
         bar->setSliderPosition(bar->maximum());
 
     updateTabsAndLabels();
+    //update fonts every time a entry is added
+    GUIUtil::updateFonts();
     return entry;
 }
 

@@ -51,6 +51,8 @@ class HelpMessageDialog;
 
 class ModalOverlay;
 
+class ToolbarOverlay;
+
 namespace interfaces {
     class Handler;
 
@@ -214,7 +216,10 @@ private:
     RPCConsole *rpcConsole = nullptr;
     HelpMessageDialog *helpMessageDialog = nullptr;
     ModalOverlay *modalOverlay = nullptr;
+    ToolbarOverlay *toolbarOverlay = nullptr;
     QButtonGroup *tabGroup = nullptr;
+
+    int nWidth = 0;
 
 #ifdef Q_OS_MAC
     CAppNapInhibitor* m_app_nap_inhibitor = nullptr;

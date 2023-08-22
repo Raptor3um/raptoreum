@@ -231,6 +231,8 @@ void OptionsDialog::setModel(OptionsModel *_model) {
     /* Wallet */
     connect(ui->showSmartnodesTab, &QCheckBox::clicked, this, &OptionsDialog::showRestartWarning);
     connect(ui->spendZeroConfChange, &QCheckBox::clicked, this, &OptionsDialog::showRestartWarning);
+    connect(ui->hideToolbar, &QCheckBox::clicked, this, &OptionsDialog::showRestartWarning);
+    
     /* Network */
     connect(ui->allowIncoming, &QCheckBox::clicked, this, &OptionsDialog::showRestartWarning);
     connect(ui->connectSocks, &QCheckBox::clicked, this, &OptionsDialog::showRestartWarning);
@@ -294,6 +296,7 @@ void OptionsDialog::setMapper() {
     mapper->addMapping(ui->spendZeroConfChange, OptionsModel::SpendZeroConfChange);
     mapper->addMapping(ui->coinJoinRounds, OptionsModel::CoinJoinRounds);
     mapper->addMapping(ui->coinJoinAmount, OptionsModel::CoinJoinAmount);
+    mapper->addMapping(ui->hideToolbar, OptionsModel::HideToolbar);
 
     /* Network */
     mapper->addMapping(ui->mapPortUpnp, OptionsModel::MapPortUPnP);

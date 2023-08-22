@@ -56,6 +56,7 @@ public:
         DatabaseCache,          // int
         SpendZeroConfChange,    // bool
         ShowSmartnodesTab,     // bool
+        HideToolbar,          //bool
         CoinJoinEnabled,     // bool
         ShowAdvancedCJUI,       // bool
         ShowCoinJoinPopups,  // bool
@@ -65,6 +66,7 @@ public:
         CoinJoinMultiSession,// bool
         Listen,                 // bool
         OptionIDRowCount,
+        
     };
 
     void Init(bool resetSettings = false);

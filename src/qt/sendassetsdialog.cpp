@@ -497,6 +497,10 @@ SendAssetsEntry *SendAssetsDialog::addEntry() {
     updateTabsAndLabels();
     if (model)
         entry->updateAssetList();
+
+    //update fonts every time a entry is added
+    GUIUtil::updateFonts();
+
     return entry;
 }
 

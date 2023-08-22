@@ -102,7 +102,7 @@
       </size>
      </property>
      <property name="currentIndex">
-      <number>2</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="pageMain">
       <layout class="QVBoxLayout" name="verticalLayout_Main">
@@ -282,6 +282,19 @@
            </property>
            <property name="text">
             <string notr="true">Enable CoinJoin features</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="hideToolbar">
+           <property name="toolTip">
+            <string>Automatic hide the toolbar menu interface</string>
+           </property>
+           <property name="text">
+            <string>Auto hide toolbar menu</string>
+           </property>
+           <property name="tristate">
+            <bool>false</bool>
            </property>
           </widget>
          </item>
