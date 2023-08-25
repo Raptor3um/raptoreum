@@ -575,7 +575,9 @@ void SetupServerArgs() {
     gArgs.AddArg("-powcachevalidate",
                  "Enable validation of pow hashes from the cache (default: %true). Use of this option will significantly slow down wallet synchronization.",
                  ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-
+    gArgs.AddArg("-powheaderthreads", strprintf(
+            "Set max pow threads to be used while processing headers (default: %d)",
+            DEFAULT_POWHEADERTHREADS), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-addressindex", strprintf(
             "Maintain a full address index, used to query for the balance, txids and unspent outputs for addresses (default: %u)",
             DEFAULT_ADDRESSINDEX), ArgsManager::ALLOW_ANY, OptionsCategory::INDEXING);
