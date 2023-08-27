@@ -131,8 +131,7 @@ bool CDeterministicMNList::IsMNValid(const CDeterministicMNCPtr &dmn, int height
 }
 
 bool CDeterministicMNList::IsMNValid(const CDeterministicMNCPtr &dmn) {
-    int height = ::ChainActive().Tip() == nullptr ? 0 : ::ChainActive().Tip()->nHeight;
-    return IsMNValid(dmn, height);
+    return IsMNValid(dmn, ::ChainActive().AtomicHeight());
 }
 
 bool CDeterministicMNList::IsMNPoSeBanned(const CDeterministicMNCPtr &dmn) {
