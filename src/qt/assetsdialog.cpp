@@ -330,6 +330,10 @@ void AssetsDialog::on_mintButton_clicked() {
     }
 
     if (!coinControl.HasSelected()) {
+        QMessageBox msgBox;
+        msgBox.setText(QString::fromStdString(strprintf("Error: No funds at specified address %s", EncodeDestination(ownerAddress))));
+        msgBox.setStandardButtons(QMessageBox::Ok);
+        msgBox.exec();
         return;
     }
 

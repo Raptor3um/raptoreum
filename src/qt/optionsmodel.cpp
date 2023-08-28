@@ -148,6 +148,9 @@ void OptionsModel::Init(bool resetSettings) {
     if (!settings.contains("digits"))
         settings.setValue("digits", "2");
 
+    if (!settings.contains("fHideToolbar"))
+        settings.setValue("fHideToolbar", true);
+
     // CoinJoin
     if (!settings.contains("fCoinJoinEnabled")) {
         settings.setValue("fCoinJoinEnabled", true);
@@ -400,6 +403,8 @@ QVariant OptionsModel::data(const QModelIndex &index, int role) const {
                     return settings.value("nCoinJoinAmount");
                 case CoinJoinMultiSession:
                     return settings.value("fCoinJoinMultiSession");
+                case HideToolbar:
+                    return settings.value("fHideToolbar");
 #endif
             case DisplayUnit:
                 return nDisplayUnit;
@@ -539,6 +544,12 @@ bool OptionsModel::setData(const QModelIndex &index, const QVariant &value, int 
                 case ShowSmartnodesTab:
                     if (settings.value("fShowSmartnodesTab") != value) {
                         settings.setValue("fShowSmartnodesTab", value);
+                        setRestartRequired(true);
+                    }
+                    break;
+                case HideToolbar:
+                    if (settings.value("fHideToolbar") != value) {
+                        settings.setValue("fHideToolbar", value);
                         setRestartRequired(true);
                     }
                     break;

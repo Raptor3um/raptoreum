@@ -12,6 +12,7 @@
 #include <qt/guiconstants.h>
 #include <qt/guiutil.h>
 #include <qt/modaloverlay.h>
+#include <qt/toolbaroverlay.h>
 #include <qt/networkstyle.h>
 #include <qt/notificator.h>
 #include <qt/openuridialog.h>
@@ -131,6 +132,7 @@ BitcoinGUI::BitcoinGUI(interfaces::Node &node, const NetworkStyle *networkStyle,
         rpcConsole(0),
         helpMessageDialog(0),
         modalOverlay(0),
+        toolbarOverlay(0),
         tabGroup(0),
         timerConnecting(0),
         timerSpinner(0) {
@@ -260,6 +262,10 @@ BitcoinGUI::BitcoinGUI(interfaces::Node &node, const NetworkStyle *networkStyle,
     });
 
     modalOverlay = new ModalOverlay(enableWallet, this->centralWidget());
+    if (settings.value("fHideToolbar").toBool()) {
+        toolbarOverlay = new ToolbarOverlay(enableWallet, this->centralWidget());
+        toolbarOverlay->addtoolbar(appToolBar);
+    }
     connect(labelBlocksIcon, &GUIUtil::ClickableLabel::clicked, this, &BitcoinGUI::showModalOverlay);
     connect(progressBar, &GUIUtil::ClickableProgressBar::clicked, this, &BitcoinGUI::showModalOverlay);
 #ifdef ENABLE_WALLET
@@ -811,7 +817,8 @@ void BitcoinGUI::createToolBars() {
             This is a workaround mostly for toolbar styling on Mac OS but should work fine for every other OSes too.
         */
         QHBoxLayout *layout = new QHBoxLayout;
-        layout->addWidget(toolbar);
+        if (!settings.value("fHideToolbar").toBool())
+            layout->addWidget(toolbar);
         layout->addWidget(walletFrame);
         layout->setSpacing(0);
         layout->setContentsMargins(QMargins());
@@ -1399,15 +1406,21 @@ void BitcoinGUI::updateWidth() {
         nWidthWidestButton = std::max<int>(nWidthWidestButton, GUIUtil::TextWidth(fm, button->text()));
     }
 
-    appToolBar->setMaximumWidth(nWidthWidestButton + 50);
-    // 980 + buttonWidth + 50 as padding is the minimum required to show all tab's contents
-    setMinimumWidth(980 + nWidthWidestButton + 50);
+    nWidth = nWidthWidestButton + 50;
+    appToolBar->setMaximumWidth(nWidth);
+    // 980 is the minimum required to show all tab's contents
+    int minWidth = 980;
+    if (toolbarOverlay)
+        toolbarOverlay->setMaxWidth(nWidth);
+    else
+        minWidth += nWidth;
+    
+    setMinimumWidth(minWidth);
 
     if (windowState() & (Qt::WindowMaximized | Qt::WindowFullScreen)) {
         return;
-    }
-    
-    resize(980 + nWidthWidestButton + 50, height());
+    }   
+    resize(minWidth, height());
 }
 
 void
@@ -1810,6 +1823,28 @@ bool BitcoinGUI::eventFilter(QObject *object, QEvent *event) {
         // Prevent adding text from setStatusTip(), if we currently use the status bar for displaying other stuff
         if (progressBarLabel->isVisible() || progressBar->isVisible())
             return true;
+    }
+    // Catch mouse move events to hide/show the toolbar
+    if (event->type() == QEvent::HoverMove && toolbarOverlay != nullptr)
+    {
+        static bool hide = false;
+        QMouseEvent *mouseEvent = static_cast<QMouseEvent*>(event);
+        if (!hide && mouseEvent->pos().x() > nWidth) {
+            if(toolbarOverlay->isLayerVisible()) {
+                toolbarOverlay->showHide(true);
+                hide = true;
+            }
+        }
+        if (hide && mouseEvent->pos().x() < nWidth) {
+            hide = false;
+            toolbarOverlay->cancelHide();
+        }
+        if (mouseEvent->pos().x() < 15) {
+            if(!toolbarOverlay->isLayerVisible()){
+                hide = false;
+                toolbarOverlay->showHide(false);
+            }        
+        }
     }
     return QMainWindow::eventFilter(object, event);
 }
