@@ -28,6 +28,7 @@
 #include <pow.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
+#include <primitives/powcache.h>
 #include <reverse_iterator.h>
 #include <script/script.h>
 #include <script/sigcache.h>
@@ -4118,6 +4119,88 @@ BlockManager::AcceptBlockHeader(const CBlockHeader &block, CValidationState &sta
     return true;
 }
 
+struct HeadersToProcess {
+    uint256 hash;
+    CBlockHeader header;
+    HeadersToProcess() {};
+    HeadersToProcess(uint256 hh, CBlockHeader hr) {
+        hash = hh;
+        header = hr;
+    }
+};
+
+std::vector<HeadersToProcess> headersQueue;
+std::mutex queueMutex;
+std::atomic<std::int32_t> TasksDone;
+
+static void ProcessHeadersQueue() {
+    try {
+        CPowCache &cache(CPowCache::Instance());
+        while (true){
+            HeadersToProcess header;            
+            std::unique_lock<std::mutex> lock(queueMutex);
+            if (headersQueue.begin() != headersQueue.end()) {
+                header = headersQueue.back();
+                headersQueue.pop_back();
+            } else {
+                lock.unlock();
+                TasksDone++;
+                return;
+            }
+            lock.unlock();  
+            uint256 powHash = header.header.ComputeHash();
+            {
+                LOCK(cs_pow);
+                cache.insert(header.hash, powHash);
+            }
+        }
+    } catch (const std::runtime_error &e) {
+        TasksDone++;
+        return;
+    }
+}
+
+void computePOWHeaderHash(const std::vector <CBlockHeader> &headers) {
+    static int cores = std::min((int)gArgs.GetArg("-powheaderthreads", DEFAULT_POWHEADERTHREADS), GetNumCores());
+
+    //if we have only a few headers or 1 core skip as there is no benefit
+    if (headers.size() <= 4 && cores <= 1) 
+        return;
+
+    int nheader = 0;
+    {
+        //check if POW cache contain entry for the block header if no add to the queue
+        LOCK(cs_pow);
+        CPowCache &cache(CPowCache::Instance());
+        std::unique_lock<std::mutex> lock(queueMutex);
+        //make sure the queue is empty
+        headersQueue.clear();           
+        for (const CBlockHeader &header: headers) {
+            uint256 headerHash = header.GetHash();
+            uint256 powHash;
+            if (!cache.get(headerHash, powHash)) {
+                headersQueue.push_back(HeadersToProcess(headerHash, header));
+                nheader++;
+            }            
+        }
+        lock.unlock();
+    }
+
+    //if we have only a few headers skip as there is no benefit
+    if (nheader > 4) {
+        TasksDone = 0;
+        //if we have headers to compute the POW hash start the worker threads
+        boost::thread_group processHeadertThreads;
+        for (int i = 0; i < cores; i++) {
+            processHeadertThreads.create_thread(boost::bind(&ProcessHeadersQueue));
+        }   
+        //wait until all worker threads finish
+        while (TasksDone < cores) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));   
+        }      
+    }
+}
+
 // Exposed wrapper for AcceptBlockHeader
 bool ChainstateManager::ProcessNewBlockHeaders(const std::vector <CBlockHeader> &headers, CValidationState &state,
                                                const CChainParams &chainparams, const CBlockIndex **ppindex,
@@ -4125,6 +4208,9 @@ bool ChainstateManager::ProcessNewBlockHeaders(const std::vector <CBlockHeader> 
     AssertLockNotHeld(cs_main);
     if (first_invalid != nullptr)
         first_invalid->SetNull();
+    
+    //compute POW hash first using multiple threads
+    computePOWHeaderHash(headers);
 
     // Scoped for the lock
     {
