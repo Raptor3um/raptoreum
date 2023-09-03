@@ -429,6 +429,8 @@ bool GetAssetData(const CScript &script, CAssetOutputEntry &data) {
         data.nAmount = transfer.nAmount;
         ExtractDestination(script, data.destination);
         data.assetId = transfer.assetId;
+        data.isUnique = transfer.isUnique;
+        data.uniqueId = transfer.uniqueId;
         return true;
     }
     return false;
@@ -447,4 +449,43 @@ bool validateAmount(const std::string &assetId, const CAmount nAmount) {
         return false; //this should never happen
 
     return validateAmount(nAmount, asset.decimalPoint);
+}
+
+// Combine two pairs if their elements match
+inline bool combineEntry(std::pair<uint64_t, uint64_t> entry, std::vector<std::pair<uint64_t, uint64_t>> &newUniqueIds) {
+    for (auto &it : newUniqueIds) {
+        if (it.first == entry.second){
+            it.first = entry.first;
+            return true;
+        }
+        if (it.second == entry.first){
+            it.second = entry.second;
+            return true;
+        }
+    }
+    return false;
+}
+
+// Function to combine pairs with matching starts or ends
+std::vector<std::pair<uint64_t, uint64_t>> combineUniqueIdPairs(const std::vector<std::pair<uint64_t, uint64_t>>& UniqueIds) {
+     std::vector<std::pair<uint64_t, uint64_t>> newUniqueIds = UniqueIds;
+    bool hasChanges = true;
+
+    while(hasChanges){
+        hasChanges = false;
+
+        std::vector<std::pair<uint64_t, uint64_t>> tmpUniqueIds = newUniqueIds;
+        newUniqueIds.clear();
+        while (!tmpUniqueIds.empty()){
+            std::pair<uint64_t, uint64_t> entry = tmpUniqueIds.back();
+            tmpUniqueIds.pop_back();
+            if (combineEntry(entry, newUniqueIds)){
+                hasChanges = true;
+            } else {
+                newUniqueIds.push_back(entry);
+            }         
+        }
+    }
+
+    return newUniqueIds;
 }

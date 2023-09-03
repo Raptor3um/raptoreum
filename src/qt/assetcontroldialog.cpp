@@ -676,8 +676,12 @@ void AssetControlDialog::updateView() {
                 nAmount = assetTransfer.nAmount;
                 CAssetMetaData assetData;
                 if (passetsCache->GetAssetMetaData(assetTransfer.assetId, assetData)) {
-                    if (assetData.isUnique)
-                        uniqueId += " [" + std::to_string(assetTransfer.uniqueId) + "]";
+                    if (assetData.isUnique) {
+                        uniqueId += " [" + std::to_string(assetTransfer.uniqueId);
+                        if (nAmount > 1 * COIN )
+                            uniqueId += "..."+ std::to_string(nAmount / COIN + assetTransfer.uniqueId -1);
+                        uniqueId += + "]";
+                    }
                     assetname = QString::fromStdString(assetData.name);
                 }
             }

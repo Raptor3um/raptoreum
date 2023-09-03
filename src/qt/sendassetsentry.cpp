@@ -75,15 +75,6 @@ SendAssetsEntry::SendAssetsEntry(QWidget *parent, bool hideFuture) :
     completer->setCompletionMode(QCompleter::PopupCompletion);
     completer->setCaseSensitivity(Qt::CaseInsensitive);
     ui->assetList->setCompleter(completer);
-
-    //uniqueid selection
-    stringModelId = new QStringListModel;
-
-    proxyId = new QSortFilterProxyModel;
-    proxyId->setSourceModel(stringModelId);
-
-    ui->uniqueIdList->setModel(proxyId);
-    ui->uniqueIdList->setEditable(false);
 }
 
 SendAssetsEntry::~SendAssetsEntry() {
@@ -220,7 +211,7 @@ SendCoinsRecipient SendAssetsEntry::getValue() {
     recipient.assetAmount = amount;
     recipient.fSubtractFeeFromAmount = false;
     if (uniqueAssetSelected)
-        recipient.uniqueId = ui->uniqueIdList->currentText().toInt();
+        recipient.uniqueId = 0;
     else
         recipient.uniqueId = MAX_UNIQUE_ID;
     //std::cout << " ui->futureCb->isChecked() " << ui->futureCb->isChecked() << "\n";
@@ -328,8 +319,6 @@ void SendAssetsEntry::ClearAssetOptions() {
     ui->payAmount->setVisible(true);
     ui->payAmount->clear();
     ui->payAmount->setAssetsUnit(MAX_ASSET_UNITS);
-    //hide unique list
-    ui->uniqueIdList->setVisible(false);
     ui->assetList->setFocus();
 }
 
@@ -361,51 +350,16 @@ void SendAssetsEntry::onAssetSelected(QString name) {
     //update balance
     ui->AssetBalance->setText(BitcoinUnits::formatWithCustomName(name, bal, assetdata.decimalPoint));
 
-    if (assetdata.isUnique) {
-
+    if (assetdata.isUnique)
         uniqueAssetSelected = true;
-        ui->payAmount->setAssetsUnit(0);
-        ui->payAmount->setValue(1);
-        ui->payAmount->setVisible(false);
-        ui->useAvailableBalanceButton->setEnabled(false);
-        ui->uniqueIdList->setVisible(true);
-        ui->amountLabel->setText("U&niqueId:");
-
-        //make a copy of current selected uniqueId to restore after
-        //updating the list of uniqueId
-        int index = ui->uniqueIdList->currentIndex();
-        QString uniqueId = ui->uniqueIdList->currentText();
-
-        //update the unique list
-        std::vector <uint16_t> assetsIds = model->wallet().listAssetUniqueId(assetId, m_coin_control);
-        QStringList list;
-        for (auto uniqueid: assetsIds) {
-            list << QString::number(uniqueid);
-        }
-
-        stringModelId->setStringList(list);
-
-        //restore selected assetId
-        if (index >= 0 && name == prevname) {
-            index = ui->uniqueIdList->findText(uniqueId);
-            ui->uniqueIdList->setCurrentIndex(index);
-        } else {
-            ui->uniqueIdList->setCurrentIndex(0);
-            ui->uniqueIdList->activated(0);
-        }
-    } else {
-
+    else 
         uniqueAssetSelected = false;
-        ui->amountLabel->setText("A&mount:");
-        ui->payAmount->setVisible(true);
-        ui->useAvailableBalanceButton->setEnabled(true);
-        ui->uniqueIdList->setVisible(false);
 
-        if (name != prevname) {
-            ui->payAmount->setAssetsUnit(assetdata.decimalPoint);
-            ui->payAmount->setValue(0);
-        }
+    if (name != prevname) {
+        ui->payAmount->setAssetsUnit(assetdata.decimalPoint);
+        ui->payAmount->setValue(0);
     }
+
     prevname = name;
 }
 

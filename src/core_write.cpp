@@ -186,8 +186,12 @@ void ScriptPubKeyToUniv(const CScript &scriptPubKey, UniValue &out, bool fInclud
         CAssetTransfer data;
         if (GetTransferAsset(scriptPubKey, data)) {
             std::string assetId = data.assetId;
-            if (data.isUnique)
-                assetId += "[" + std::to_string(data.uniqueId) + "]";
+            if (data.isUnique) {
+                assetId += "[" + std::to_string(data.uniqueId);
+                if (data.nAmount > 1 * COIN)
+                    assetId += "..." + std::to_string(data.nAmount / COIN + data.uniqueId -1);
+                assetId += "]";
+            }
             assetInfo.pushKV("asset_id", assetId);
             assetInfo.pushKV("amount", ValueFromAmount(data.nAmount));
         }

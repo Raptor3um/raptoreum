@@ -305,11 +305,8 @@ void SendAssetsDialog::send(QList <SendCoinsRecipient> recipients) {
         else
             mapAmounts[rcp.assetId.toStdString()].first += rcp.assetAmount;
 
-        std::string uniqueId = "";
-        if (rcp.uniqueId < MAX_UNIQUE_ID)
-            uniqueId += " [" + std::to_string(rcp.uniqueId) + "]";
         QString amount = "<b>" + BitcoinUnits::formatHtmlWithCustomName(QString::fromStdString(assetData.name),
-                                                                        QString::fromStdString(uniqueId), decimalPoint,
+                                                                        "", decimalPoint,
                                                                         rcp.assetAmount);
 
         if (model->isMultiwallet()) {

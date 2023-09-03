@@ -1506,264 +1506,133 @@ static void MaybePushAddress(UniValue &entry, const CTxDestination &dest) {
  */
 void ListTransactions(CWallet *const pwallet, const CWalletTx &wtx, int nMinDepth, bool fLong, UniValue &ret,
                       UniValue &retAssets, const isminefilter &filter, const std::string *filter_label)
+                      EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet) {
+    CAmount nFee;
+    std::list<COutputEntry> listReceived;
+    std::list<COutputEntry> listSent;
 
-EXCLUSIVE_LOCKS_REQUIRED(pwallet
-->cs_wallet)
-{
-CAmount nFee;
-std::list<COutputEntry> listReceived;
-std::list<COutputEntry> listSent;
+    std::list<CAssetOutputEntry> listAssetsReceived;
+    std::list<CAssetOutputEntry> listAssetsSent;
 
-std::list<CAssetOutputEntry> listAssetsReceived;
-std::list<CAssetOutputEntry> listAssetsSent;
+    wtx.GetAmounts(listReceived, listSent, nFee, filter, listAssetsReceived, listAssetsSent);
 
-wtx.
-GetAmounts(listReceived, listSent, nFee, filter, listAssetsReceived, listAssetsSent
-);
+    bool involvesWatchonly = wtx.IsFromMe(ISMINE_WATCH_ONLY);
 
-bool involvesWatchonly = wtx.IsFromMe(ISMINE_WATCH_ONLY);
+    // Sent
+    if (!filter_label) {
+        for (const COutputEntry &s: listSent) {
+            UniValue entry(UniValue::VOBJ);
+            if (involvesWatchonly || (::IsMine(*pwallet, s.destination) & ISMINE_WATCH_ONLY)) {
+                entry.pushKV("involvesWatchonly", true);
+            }
+            MaybePushAddress(entry, s.destination);
+            std::map<std::string, std::string>::const_iterator it = wtx.mapValue.find("DS");
+            entry.pushKV("category", (it != wtx.mapValue.end() && it->second == "1") ? "coinjoin" : "send");
+            entry.pushKV("amount", ValueFromAmount(-s.amount));
+            if (pwallet->mapAddressBook.count(s.destination)) {
+                entry.pushKV("label", pwallet->mapAddressBook[s.destination].name);
+            }
+            entry.pushKV("vout", s.vout);
+            entry.pushKV("fee", ValueFromAmount(-nFee));
+            if (fLong)
+                WalletTxToJSON(pwallet->chain(), wtx, entry);
+            entry.pushKV("abandoned", wtx.isAbandoned());
+            ret.push_back(entry);
+        }
+    }
 
-// Sent
-if (!filter_label) {
-for (
-const COutputEntry &s
-: listSent)
-{
-UniValue entry(UniValue::VOBJ);
-if (involvesWatchonly || (
-::IsMine(*pwallet, s
-.destination) & ISMINE_WATCH_ONLY)) {
-entry.pushKV("involvesWatchonly", true);
-}
-MaybePushAddress(entry, s
-.destination);
-std::map<std::string, std::string>::const_iterator it = wtx.mapValue.find("DS");
-entry.pushKV("category", (it != wtx.mapValue.
+    // Received
+    if (listReceived.size() > 0 && ((wtx.GetDepthInMainChain() >= nMinDepth) || wtx.IsLockedByInstantSend())) {
+        for (const COutputEntry &r: listReceived) {
+            std::string label;
+            if (pwallet->mapAddressBook.count(r.destination)) {
+                label = pwallet->mapAddressBook[r.destination].name;
+            }
+            if (filter_label &&label != *filter_label) {
+                continue;
+            }
+            UniValue entry(UniValue::VOBJ);
+            if (involvesWatchonly || (::IsMine(*pwallet, r.destination) & ISMINE_WATCH_ONLY)) {
+                entry.pushKV("involvesWatchonly", true);
+            }
+            MaybePushAddress(entry, r.destination);
+            if (wtx.IsCoinBase()) {
+                if (wtx.GetDepthInMainChain() < 1)
+                    entry.pushKV("category", "orphan");
+                else if (wtx.IsImmatureCoinBase())
+                    entry.pushKV("category", "immature");
+                else
+                    entry.pushKV("category", "generate");
+            } else {
+                entry.pushKV("category", "receive");
+            }
+            entry.pushKV("amount",ValueFromAmount(r.amount));
+            if (pwallet->mapAddressBook.count(r.destination)) {
+                entry.pushKV("label", label);
+            }
+            entry.pushKV("vout", r.vout);
+            if (fLong)
+                WalletTxToJSON(pwallet->chain(), wtx, entry);
+            ret.push_back(entry);
+        }
+    }
+    if (Params().IsAssetsActive (::ChainActive().Tip())) {
+        if (listAssetsReceived.size() > 0 && wtx.GetDepthInMainChain() >= nMinDepth) {
+            for (const CAssetOutputEntry &data: listAssetsReceived){
+                UniValue entry(UniValue::VOBJ);
 
-end() &&
+                if (involvesWatchonly || (::IsMine(*pwallet, data.destination) & ISMINE_WATCH_ONLY)) {
+                    entry.push_back(Pair("involvesWatchonly", true));
+                }
 
-it->second == "1") ? "coinjoin" : "send");
-entry.pushKV("amount", ValueFromAmount(-s.amount));
-if (pwallet->mapAddressBook.
-count(s
-.destination)) {
-entry.pushKV("label", pwallet->mapAddressBook[s.destination].name);
-}
-entry.pushKV("vout", s.vout);
-entry.pushKV("fee", ValueFromAmount(-nFee));
-if (fLong)
-WalletTxToJSON(pwallet
-->
+                entry.push_back(Pair("address", EncodeDestination(data.destination)));
+                entry.push_back(Pair("category", "receive"));
+                std::string assetId = data.assetId;
+                if (data.isUnique) {
+                    assetId += "[" + std::to_string(data.uniqueId);
+                    if (data.nAmount > 1 * COIN)
+                        assetId += "..." + std::to_string(data.nAmount / COIN + data.uniqueId -1);
+                    assetId += "]";
+                }
+                entry.push_back(Pair("asset_id", assetId));
+                entry.push_back(Pair("amount", ValueFromAmount(data.nAmount)));
+                entry.push_back(Pair("vout", data.vout));
 
-chain(), wtx, entry
+                if (fLong)
+                    WalletTxToJSON(pwallet->chain(), wtx, entry);
+                entry.push_back(Pair("abandoned", wtx.isAbandoned()));
+                retAssets.push_back(entry);
+            }
+        }
 
-);
-entry.pushKV("abandoned", wtx.
+        if ((!listAssetsSent.empty() || nFee != 0) /*&& (filter_label && label == *filter_label)*/) {
+            for (const CAssetOutputEntry &data: listAssetsSent) {
+                UniValue entry(UniValue::VOBJ);
 
-isAbandoned()
+                if (involvesWatchonly || (::IsMine(*pwallet, data.destination) & ISMINE_WATCH_ONLY)) {
+                    entry.push_back(Pair("involvesWatchonly", true));
+                }
+                entry.push_back(Pair("address", EncodeDestination(data.destination)));
+                entry.push_back(Pair("category", "send"));
+                std::string assetId = data.assetId;
+                if (data.isUnique) {
+                    assetId += "[" + std::to_string(data.uniqueId);
+                    if (data.nAmount > 1 * COIN)
+                        assetId += "..." + std::to_string(data.nAmount / COIN + data.uniqueId -1);
+                    assetId += "]";
+                }
+                entry.push_back(Pair("asset_id", assetId));
+                entry.push_back(Pair("amount", ValueFromAmount(-data.nAmount)));
 
-);
-ret.
-push_back(entry);
-}
-}
+                entry.push_back(Pair("vout", data.vout));
 
-// Received
-if (listReceived.
-
-size()
-
-> 0 && ((wtx.
-
-GetDepthInMainChain()
-
->= nMinDepth) || wtx.
-
-IsLockedByInstantSend()
-
-))
-{
-for (
-const COutputEntry &r
-: listReceived)
-{
-std::string label;
-if (pwallet->mapAddressBook.
-count(r
-.destination)) {
-label = pwallet->mapAddressBook[r.destination].name;
-}
-if (
-filter_label &&label
-!= *filter_label) {
-continue;
-}
-UniValue entry(UniValue::VOBJ);
-if (involvesWatchonly || (
-::IsMine(*pwallet, r
-.destination) & ISMINE_WATCH_ONLY)) {
-entry.pushKV("involvesWatchonly", true);
-}
-MaybePushAddress(entry, r
-.destination);
-if (wtx.
-
-IsCoinBase()
-
-)
-{
-if (wtx.
-
-GetDepthInMainChain()
-
-< 1)
-entry.pushKV("category", "orphan");
-else if (wtx.
-
-IsImmatureCoinBase()
-
-)
-entry.pushKV("category", "immature");
-else
-entry.pushKV("category", "generate");
-} else {
-entry.pushKV("category", "receive");
-}
-entry.pushKV("amount",
-ValueFromAmount(r
-.amount));
-if (pwallet->mapAddressBook.
-count(r
-.destination)) {
-entry.pushKV("label", label);
-}
-entry.pushKV("vout", r.vout);
-if (fLong)
-WalletTxToJSON(pwallet
-->
-
-chain(), wtx, entry
-
-);
-ret.
-push_back(entry);
-}
-}
-if (
-
-Params()
-
-.
-
-IsAssetsActive (::ChainActive()
-
-.
-
-Tip()
-
-)) {
-if (listAssetsReceived.
-
-size()
-
-> 0 && wtx.
-
-GetDepthInMainChain()
-
->= nMinDepth) {
-for (
-const CAssetOutputEntry &data
-: listAssetsReceived){
-UniValue entry(UniValue::VOBJ);
-
-if (involvesWatchonly || (
-::IsMine(*pwallet, data
-.destination) & ISMINE_WATCH_ONLY)) {
-entry.
-push_back(Pair("involvesWatchonly", true)
-);
-}
-
-entry.
-push_back(Pair("address", EncodeDestination(data.destination))
-);
-entry.
-push_back(Pair("category", "receive")
-);
-entry.
-push_back(Pair("asset_id", data.assetId)
-);
-entry.
-push_back(Pair("amount", ValueFromAmount(data.nAmount))
-);
-entry.
-push_back(Pair("vout", data.vout)
-);
-
-if (fLong)
-WalletTxToJSON(pwallet
-->
-
-chain(), wtx, entry
-
-);
-entry.
-push_back(Pair("abandoned", wtx.isAbandoned())
-);
-retAssets.
-push_back(entry);
-}
-}
-
-if ((!listAssetsSent.
-
-empty()
-
-|| nFee != 0) /*&& (filter_label && label == *filter_label)*/) {
-for (
-const CAssetOutputEntry &data
-: listAssetsSent) {
-UniValue entry(UniValue::VOBJ);
-
-if (involvesWatchonly || (
-::IsMine(*pwallet, data
-.destination) & ISMINE_WATCH_ONLY)) {
-entry.
-push_back(Pair("involvesWatchonly", true)
-);
-}
-entry.
-push_back(Pair("address", EncodeDestination(data.destination))
-);
-entry.
-push_back(Pair("category", "send")
-);
-entry.
-push_back(Pair("asset_id", data.assetId)
-);
-entry.
-push_back(Pair("amount", ValueFromAmount(-data.nAmount))
-);
-
-entry.
-push_back(Pair("vout", data.vout)
-);
-
-if (fLong)
-WalletTxToJSON(pwallet
-->
-
-chain(), wtx, entry
-
-);
-entry.
-push_back(Pair("abandoned", wtx.isAbandoned())
-);
-retAssets.
-push_back(entry);
-}
-}
-}
+                if (fLong)
+                    WalletTxToJSON(pwallet->chain(), wtx, entry);
+                entry.push_back(Pair("abandoned", wtx.isAbandoned()));
+                retAssets.push_back(entry);
+            }
+        }
+    }
 }
 
 void ListTransactions(CWallet *const pwallet, const CWalletTx &wtx, int nMinDepth, bool fLong, UniValue &ret,

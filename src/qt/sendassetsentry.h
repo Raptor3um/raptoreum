@@ -109,9 +109,6 @@ private:
     QSortFilterProxyModel *proxy;
     QCompleter *completer;
 
-    QStringListModel *stringModelId;
-    QSortFilterProxyModel *proxyId;
-
     /** Set required icons for buttons inside the dialog */
     void setButtonIcons();
 

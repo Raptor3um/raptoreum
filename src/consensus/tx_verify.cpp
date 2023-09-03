@@ -249,10 +249,11 @@ unsigned int GetTransactionSigOpCount(const CTransaction &tx, const CCoinsViewCa
 
     return nSigOps;
 }
-//check to see where these now
 
 inline bool checkOutput(const CTxOut &out, CValidationState &state, CAmount &nValueIn,
-                        std::map <std::pair<std::string, uint16_t>, CAmount> &nAssetVin, bool isV17active) {
+                        std::map <std::string, CAmount> &nAssetVin,
+                        std::map <std::string, std::vector<std::pair<uint64_t, uint64_t>>> &nMapids,
+                        bool isV17active) {
     // Check for negative or overflow values
     nValueIn += out.nValue;
     if (!MoneyRange(out.nValue, isV17active) || !MoneyRange(nValueIn, isV17active)) {
@@ -272,21 +273,63 @@ inline bool checkOutput(const CTxOut &out, CValidationState &state, CAmount &nVa
             return state.DoS(100, false, REJECT_INVALID, "bad-assets-transfer-amount");
         }
 
-        std::pair <std::string, uint16_t> asset(assetTransfer.assetId, assetTransfer.uniqueId);
-        if (nAssetVin.count(asset))
-            nAssetVin[asset] += assetTransfer.nAmount;
+        if (nAssetVin.count(assetTransfer.assetId))
+            nAssetVin[assetTransfer.assetId] += assetTransfer.nAmount;
         else
-            nAssetVin.insert(std::make_pair(asset, assetTransfer.nAmount));
+            nAssetVin.insert(std::make_pair(assetTransfer.assetId, assetTransfer.nAmount));
 
-        //check unique asset amount, should be alway 1 COIN
-        if (assetTransfer.isUnique && nAssetVin[asset] != 1 * COIN)
-            return state.DoS(100, false, REJECT_INVALID, "bad-asset-inputvalues-outofrange");
+        if (assetTransfer.isUnique) {
+            uint64_t idRange = assetTransfer.uniqueId + assetTransfer.nAmount / COIN;
 
-        if (!MoneyRange(assetTransfer.nAmount) || !MoneyRange(nAssetVin.at(asset))) {
+            if (!nMapids.count(assetTransfer.assetId))
+                nMapids.insert({assetTransfer.assetId, {}});
+
+            nMapids[assetTransfer.assetId].emplace_back(std::make_pair(assetTransfer.uniqueId, idRange));
+        }
+
+        if (!MoneyRange(assetTransfer.nAmount) || !MoneyRange(nAssetVin.at(assetTransfer.assetId))) {
             return state.DoS(100, false, REJECT_INVALID, "bad-asset-inputvalues-outofrange");
         }
     }
 
+    return true;
+}
+
+inline bool checkAssetsOutputs(CValidationState &state, std::map <std::string, CAmount> nAssetVin,
+                                    std::map <std::string, CAmount> nAssetVout,
+                                    std::map <std::string, std::vector<std::pair<uint64_t, uint64_t>>> nVinIds, 
+                                    std::map <std::string, std::vector<std::pair<uint64_t, uint64_t>>> nVoutIds) {
+    //check vin/vout amouts
+    for (const auto &outValue: nAssetVout) {
+        if (!nAssetVin.count(outValue.first) || nAssetVin.at(outValue.first) != outValue.second)
+            return state.DoS(100, false, REJECT_INVALID, "bad-asset-inputs-outputs-mismatch");
+    }
+    //Check for missing outputs
+    for (const auto &inValue: nAssetVin) {
+        if (!nAssetVout.count(inValue.first) || nAssetVout.at(inValue.first) != inValue.second)
+            return state.DoS(100, false, REJECT_INVALID, "bad-asset-inputs-outputs-mismatch");
+    }
+
+    for (auto &vin : nVinIds){
+        vin.second = combineUniqueIdPairs(vin.second);
+    }
+    
+    for (auto &vout : nVoutIds){
+        vout.second = combineUniqueIdPairs(vout.second);
+    }
+
+    //check uniqueids
+    for (auto vin : nVinIds){
+        for (auto vinIds : vin.second){
+            bool found = false;
+            for (auto voutIds : nVoutIds[vin.first]){
+                if (vinIds.first == voutIds.first && vinIds.second == voutIds.second)
+                    found = true;
+            }
+            if (!found)
+                return state.DoS(100, false, REJECT_INVALID, "bad-asset-id-inputs-outputs-mismatch");
+        }
+    }
     return true;
 }
 
@@ -300,7 +343,9 @@ bool Consensus::CheckTxInputs(const CTransaction &tx, CValidationState &state, c
     }
 
     CAmount nValueIn = 0;
-    std::map <std::pair<std::string, uint16_t>, CAmount> nAssetVin;
+    std::map <std::string, CAmount> nAssetVin;
+    std::map <std::string, std::vector<std::pair<uint64_t, uint64_t>>> mapVinIds;
+
     for (unsigned int i = 0; i < tx.vin.size(); ++i) {
         const COutPoint &prevout = tx.vin[i].prevout;
         const Coin &coin = inputs.AccessCoin(prevout);
@@ -313,7 +358,7 @@ bool Consensus::CheckTxInputs(const CTransaction &tx, CValidationState &state, c
                                  strprintf("tried to spend coinbase at depth %d", nSpendHeight - coin.nHeight));
         }
 
-        if (!checkOutput(coin.out, state, nValueIn, nAssetVin, isV17active))
+        if (!checkOutput(coin.out, state, nValueIn, nAssetVin, mapVinIds, isV17active))
             return false;
 
         const char *futureValidationError = validateFutureCoin(coin, nSpendHeight);
@@ -321,24 +366,19 @@ bool Consensus::CheckTxInputs(const CTransaction &tx, CValidationState &state, c
             return state.DoS(100, false, REJECT_INVALID, futureValidationError);
         }
     }
-
+    
     CAmount value_out = 0;
-    std::map <std::pair<std::string, uint16_t>, CAmount> nAssetVout;
+    std::map <std::string, CAmount> nAssetVout;
+    std::map <std::string, std::vector<std::pair<uint64_t, uint64_t>>> mapVoutIds;
+
     for (auto out: tx.vout) {
-        if (!checkOutput(out, state, value_out, nAssetVout, isV17active))
+        if (!checkOutput(out, state, value_out, nAssetVout, mapVoutIds, isV17active))
             return false;
     }
 
     if (tx.nType != TRANSACTION_MINT_ASSET) {
-        for (const auto &outValue: nAssetVout) {
-            if (!nAssetVin.count(outValue.first) || nAssetVin.at(outValue.first) != outValue.second)
-                return state.DoS(100, false, REJECT_INVALID, "bad-asset-inputs-outputs-mismatch");
-        }
-        //Check for missing outputs
-        for (const auto &outValue: nAssetVin) {
-            if (!nAssetVout.count(outValue.first) || nAssetVout.at(outValue.first) != outValue.second)
-                return state.DoS(100, false, REJECT_INVALID, "bad-asset-inputs-outputs-mismatch");
-        }
+        if (!checkAssetsOutputs(state, nAssetVin, nAssetVout, mapVinIds, mapVoutIds))
+            return false;
     }
 
     if (nValueIn < value_out) {

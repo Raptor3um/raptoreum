@@ -184,14 +184,11 @@ CreateMintAssetTx(const CTxMemPool& mempool, SimpleUTXOMap& utxos, const CKey& c
 
 
     if (asset.isUnique) {
-        int endId = (asset.circulatingSupply + asset.amount) / COIN;
-        for (int id = asset.circulatingSupply / COIN; id < endId; ++id) {
-            CScript scriptPubKey = GetScriptForDestination(asset.targetAddress);
-            CAssetTransfer assetTransfer(asset.assetId, 1 * COIN, id);
-            assetTransfer.BuildAssetTransaction(scriptPubKey);
-            CTxOut out(0, scriptPubKey);
-            tx.vout.push_back(out);
-        }
+        CScript scriptPubKey = GetScriptForDestination(asset.targetAddress);
+        CAssetTransfer assetTransfer(asset.assetId, asset.amount, 0);
+        assetTransfer.BuildAssetTransaction(scriptPubKey);
+        CTxOut out(0, scriptPubKey);
+        tx.vout.push_back(out);
     } else {
         CScript scriptPubKey = GetScriptForDestination(asset.targetAddress);
         CAssetTransfer assetTransfer(assetId, asset.amount);
@@ -571,10 +568,14 @@ BOOST_FIXTURE_TEST_CASE(assets_invalid_cases, TestChainDIP3BeforeActivationSetup
         CKey key;
         key.MakeNewKey(false);
         CScript scriptPubKey = GetScriptForDestination(key.GetPubKey().GetID());
-        CAssetTransfer assetTransfer(assetId, 1 * COIN, 8);
+        CAssetTransfer assetTransfer(assetId, 2 * COIN, 0);
         assetTransfer.BuildAssetTransaction(scriptPubKey);
         CTxOut out(0, scriptPubKey);
         tx2.vout.push_back(out);
+        CAssetTransfer assetTransfer2(assetId, 8 * COIN, 0);
+        assetTransfer.BuildAssetTransaction(scriptPubKey);
+        CTxOut out2(0, scriptPubKey);
+        tx2.vout.push_back(out2);
 
         tx2.vin.push_back(CTxIn(COutPoint(tx.GetHash(), 0)));
 
@@ -589,32 +590,7 @@ BOOST_FIXTURE_TEST_CASE(assets_invalid_cases, TestChainDIP3BeforeActivationSetup
     }
 
     {
-        //amount != 1 COIN
-        CMutableTransaction tx2;
-
-        CKey key;
-        key.MakeNewKey(false);
-        CScript scriptPubKey = GetScriptForDestination(key.GetPubKey().GetID());
-        CAssetTransfer assetTransfer(assetId, 1 * COIN, 0);
-        assetTransfer.BuildAssetTransaction(scriptPubKey);
-        CTxOut out(0, scriptPubKey);
-        tx2.vout.push_back(out);
-
-        tx2.vin.push_back(CTxIn(COutPoint(tx.GetHash(), 0))); //uniqueId=0
-        tx2.vin.push_back(CTxIn(COutPoint(tx.GetHash(), 5))); //uniqueId=5
-
-        FundTransaction(tx2, utxos, GetScriptForDestination(coinbaseKey.GetPubKey().GetID()), 1 * COIN, coinbaseKey);
-        BOOST_ASSERT(SignTransaction(*m_node.mempool, tx2, coinbaseKey));
-
-        auto block = std::make_shared<CBlock>(CreateBlock({tx2}, coinbaseKey));
-        EnsureChainman(m_node).ProcessNewBlock(Params(), block, true, nullptr);
-
-        BOOST_ASSERT(::ChainActive().Height() == nHeight + 2);
-        BOOST_ASSERT(block->GetHash() != ::ChainActive().Tip()->GetBlockHash());
-    }
-
-    {
-        //1 input 2 outputs
+        //amount mismatch
         CMutableTransaction tx2;
 
         CKey key;
@@ -651,7 +627,7 @@ BOOST_FIXTURE_TEST_CASE(assets_invalid_cases, TestChainDIP3BeforeActivationSetup
         CKey key;
         key.MakeNewKey(false);
         CScript scriptPubKey = GetScriptForDestination(key.GetPubKey().GetID());
-        CAssetTransfer assetTransfer(assetId, 1 * COIN, 0);
+        CAssetTransfer assetTransfer(assetId, 10 * COIN, 0);
         assetTransfer.BuildAssetTransaction(scriptPubKey);
         CTxOut out(1, scriptPubKey);
         tx2.vout.push_back(out);
