@@ -320,14 +320,15 @@ inline bool checkAssetsOutputs(CValidationState &state, std::map <std::string, C
 
     //check uniqueids
     for (auto vin : nVinIds){
+        std::unordered_map<uint64_t, uint64_t> mapIds;
+        mapIds.clear();
+        for (auto pair : nVoutIds[vin.first]){
+            mapIds[pair.first] = pair.second;
+        }
         for (auto vinIds : vin.second){
-            bool found = false;
-            for (auto voutIds : nVoutIds[vin.first]){
-                if (vinIds.first == voutIds.first && vinIds.second == voutIds.second)
-                    found = true;
-            }
-            if (!found)
+            if (!(mapIds.find(vinIds.first) != mapIds.end() && mapIds[vinIds.first] == vinIds.second)){
                 return state.DoS(100, false, REJECT_INVALID, "bad-asset-id-inputs-outputs-mismatch");
+            }
         }
     }
     return true;
