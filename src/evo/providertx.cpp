@@ -107,10 +107,6 @@ inline bool checkNewUniqueAsset(CNewAssetTx &assetTx, CValidationState &state) {
     if (!assetTx.isUnique)
         return true;
 
-    if (assetTx.amount > 500 * COIN) {
-        return state.DoS(100, false, REJECT_INVALID, "bad-assets-amount");
-    }
-
     if (assetTx.decimalPoint > 0) { // alway 0
         return state.DoS(100, false, REJECT_INVALID, "bad-assets-decimalPoint");
     }
@@ -267,27 +263,30 @@ bool CheckUpdateAssetTx(const CTransaction &tx, const CBlockIndex *pindexPrev, C
 
 inline bool checkAssetMintAmount(const CTransaction &tx, CValidationState &state, const CAssetMetaData asset) {
     CAmount nAmount = 0;
-    std::set <uint16_t> setUniqueId;
-    uint16_t minUniqueId = asset.circulatingSupply / COIN;
+    int count = 0;
+    uint64_t minUniqueId = asset.circulatingSupply / COIN;
     for (auto out: tx.vout) {
         if (out.scriptPubKey.IsAssetScript()) {
             CAssetTransfer assetTransfer;
             if (!GetTransferAsset(out.scriptPubKey, assetTransfer)) {
                 return state.DoS(100, false, REJECT_INVALID, "bad-mint-assets-transfer");
             }
+
+            count++;
+            //dont allow multiple outputs on unique asset, can lead to bad uniqueIds
+            if (asset.isUnique && count > 1) {
+                return state.DoS(100, false, REJECT_INVALID, "bad-mint-multiple-output");
+            }
+
             if (assetTransfer.assetId != asset.assetId) { //check asset id
                 return state.DoS(100, false, REJECT_INVALID, "bad-mint-assets-id");
             }
-            if (asset.isUnique) {
-                //check validate uniqueId and amount
-                if (assetTransfer.uniqueId < minUniqueId || setUniqueId.count(assetTransfer.uniqueId)) {
-                    return state.DoS(100, false, REJECT_INVALID, "bad-mint-dup-uniqueid");
-                }
-                setUniqueId.insert(assetTransfer.uniqueId);
-                if (assetTransfer.nAmount != 1 * COIN) {
-                    return state.DoS(100, false, REJECT_INVALID, "bad-mint-unique-amount");
-                }
+
+            //validate uniqueId
+            if (asset.isUnique && assetTransfer.uniqueId < minUniqueId) {
+                return state.DoS(100, false, REJECT_INVALID, "bad-mint-dup-uniqueid");
             }
+
             if (!validateAmount(assetTransfer.nAmount, asset.decimalPoint)) {
                 return state.DoS(100, false, REJECT_INVALID, "bad-mint-assets-amount");
             }

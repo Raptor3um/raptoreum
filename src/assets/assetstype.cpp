@@ -36,7 +36,7 @@ void CAssetTransfer::BuildAssetTransaction(CScript &script) const {
     script << OP_ASSET_ID << ToByteVector(vchMessage) << OP_DROP;
 }
 
-CAssetTransfer::CAssetTransfer(const std::string &assetId, const CAmount &nAmount, const uint32_t &uniqueId) {
+CAssetTransfer::CAssetTransfer(const std::string &assetId, const CAmount &nAmount, const uint64_t &uniqueId) {
     SetNull();
     this->assetId = assetId;
     this->isUnique = true;

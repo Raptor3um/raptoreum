@@ -198,5 +198,7 @@ void AddAssets(const CTransaction &tx, int nHeight, CAssetsCache *assetCache = n
 
 bool GetAssetData(const CScript &script, CAssetOutputEntry &data);
 
+//common function used by tx_verify and wallet
+std::vector<std::pair<uint64_t, uint64_t>> combineUniqueIdPairs(const std::vector<std::pair<uint64_t, uint64_t>>& UniqueIds);
 
 #endif //RAPTOREUM_ASSETS_H

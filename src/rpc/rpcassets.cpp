@@ -185,10 +185,10 @@ UniValue createasset(const JSONRPCRequest &request) {
 
     const UniValue &amount = find_value(asset, "amount");
     if (!amount.isNull()) {
-        CAmount a = amount.get_int64();
-        if (a <= 0 || a > MAX_MONEY || (assetTx.isUnique && a > 500))
-            throw JSONRPCError(RPC_TYPE_ERROR, strprintf("Invalid amount. Max amount %i", assetTx.isUnique ? 500 : MAX_MONEY));
-        assetTx.amount = a * COIN;
+        CAmount a = amount.get_int64() * COIN;
+        if (a <= 0 || a > MAX_MONEY)
+            throw JSONRPCError(RPC_TYPE_ERROR, strprintf("Invalid amount. Max amount %i", MAX_MONEY));
+        assetTx.amount = a;
     } else {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: missing amount");
     }
@@ -331,19 +331,17 @@ UniValue mintasset(const JSONRPCRequest &request) {
     std::vector <CRecipient> vecSend;
 
     if (tmpAsset.isUnique) {
-        uint32_t endid = (tmpAsset.circulatingSupply + tmpAsset.amount) / COIN;
-        //build unique outputs using current supply as start unique id
-        for (int id = tmpAsset.circulatingSupply / COIN; id < endid; ++id) {
-            // Get the script for the target address
-            CScript scriptPubKey = GetScriptForDestination(
-                    DecodeDestination(EncodeDestination(tmpAsset.targetAddress)));
-            // Update the scriptPubKey with the transfer asset information
-            CAssetTransfer assetTransfer(tmpAsset.assetId, 1 * COIN, id);
-            assetTransfer.BuildAssetTransaction(scriptPubKey);
+        //build unique output using current supply as start unique id
+        uint64_t id = tmpAsset.circulatingSupply / COIN;
+        // Get the script for the target address
+        CScript scriptPubKey = GetScriptForDestination(
+                DecodeDestination(EncodeDestination(tmpAsset.targetAddress)));
+        // Update the scriptPubKey with the transfer asset information
+        CAssetTransfer assetTransfer(tmpAsset.assetId, tmpAsset.amount, id);
+        assetTransfer.BuildAssetTransaction(scriptPubKey);
 
-            CRecipient recipient = {scriptPubKey, 0, false};
-            vecSend.push_back(recipient);
-        }
+        CRecipient recipient = {scriptPubKey, 0, false};
+        vecSend.push_back(recipient);
     } else {
         // Get the script for the target address
         CScript scriptPubKey = GetScriptForDestination(DecodeDestination(EncodeDestination(tmpAsset.targetAddress)));
@@ -373,12 +371,12 @@ UniValue sendasset(const JSONRPCRequest &request) {
     if (request.fHelp || !Params().IsAssetsActive(::ChainActive().Tip()) || request.params.size() < 3 ||
         request.params.size() > 7)
         throw std::runtime_error(
-                "sendasset \"asset_id\" qty \"to_address\" \"change_address\" \"asset_change_address\"\n"
+                "sendasset \"asset_id\" \"qty\" \"to_address\" \"change_address\" \"asset_change_address\"\n"
                 "\nTransfers a quantity of an owned asset to a given address"
 
                 "\nArguments:\n"
                 "1. \"asset_id\"                (string, required) asset hash id or asset name\n"
-                "2. \"qty/uniqueid\"            (numeric, required) number of assets you want to send to the address / unique asset identifier\n"
+                "2. \"qty\"                     (numeric, required) number of assets you want to send to the address\n"
                 "3. \"to_address\"              (string, required) address to send the asset to\n"
                 "4. \"change_address\"          (string, optional, default = \"\") the transactions RTM change will be sent to this address\n"
                 "5. \"asset_change_address\"    (string, optional, default = \"\") the transactions Asset change will be sent to this address\n"
@@ -421,28 +419,12 @@ UniValue sendasset(const JSONRPCRequest &request) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Raptoreum address: ") + to_address);
     }
 
-    CAmount nAmount = 0;
-    uint32_t unique_identifier = MAX_UNIQUE_ID;
-
-    if (tmpAsset.isUnique) {
-        nAmount = 1 * COIN;
-        UniValue value = request.params[1];
-        if (!value.isNum() && !value.isStr())
-            throw std::runtime_error("Amount is not a number or string");
-        CAmount amount;
-        if (!ParseFixedPoint(value.getValStr(), 0, &amount))
-            throw std::runtime_error("Error: invalid unique identifier");
-        uint32_t unique_identifier = amount & MAX_UNIQUE_ID;
-        if (unique_identifier < 0 || unique_identifier >= tmpAsset.circulatingSupply / COIN)
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: invalid unique identifier");
-    } else {
-        nAmount = AmountFromValue(request.params[1]);
-        if (nAmount <= 0) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: invalid amount");
-        }
-        if (!validateAmount(nAmount, tmpAsset.decimalPoint)) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: invalid amount");
-        }
+    CAmount nAmount = AmountFromValue(request.params[1]);
+    if (nAmount <= 0) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: invalid amount");
+    }
+    if (!validateAmount(nAmount, tmpAsset.decimalPoint)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: invalid amount");
     }
 
     std::map <std::string, std::vector<COutput>> mapAssetCoins;
@@ -489,7 +471,7 @@ UniValue sendasset(const JSONRPCRequest &request) {
 
     // Update the scriptPubKey with the transfer asset information
     if (tmpAsset.isUnique) {
-        CAssetTransfer assetTransfer(assetId, nAmount, unique_identifier);
+        CAssetTransfer assetTransfer(assetId, nAmount, 0);
         assetTransfer.BuildAssetTransaction(scriptPubKey);
     } else {
         CAssetTransfer assetTransfer(assetId, nAmount);

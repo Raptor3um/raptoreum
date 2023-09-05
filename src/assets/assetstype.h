@@ -12,13 +12,13 @@
 #define RTM_R 0x72 //R
 #define RTM_T 0x74 //T
 #define RTM_M 0x6d //M
-#define MAX_UNIQUE_ID 0xffffffff
+#define MAX_UNIQUE_ID 0xffffffffffffffff
 
 class CAssetTransfer {
 public:
     std::string assetId;
     bool isUnique = false;
-    uint32_t uniqueId = MAX_UNIQUE_ID; //default it to MAX_UNIQUE_ID
+    uint64_t uniqueId = MAX_UNIQUE_ID; //default it to MAX_UNIQUE_ID
     CAmount nAmount;
 
     CAssetTransfer() {
@@ -32,8 +32,7 @@ public:
         nAmount = 0;
     }
 
-    SERIALIZE_METHODS(CAssetTransfer, obj
-    ) {
+    SERIALIZE_METHODS(CAssetTransfer, obj) {
         READWRITE(obj.assetId, obj.isUnique);
         if (obj.isUnique) {
             READWRITE(obj.uniqueId);
@@ -42,7 +41,7 @@ public:
     }
 
 
-    CAssetTransfer(const std::string &assetId, const CAmount &nAmount, const uint32_t &uniqueId);
+    CAssetTransfer(const std::string &assetId, const CAmount &nAmount, const uint64_t &uniqueId);
 
     CAssetTransfer(const std::string &assetId, const CAmount &nAmount);
 

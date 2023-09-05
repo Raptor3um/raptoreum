@@ -73,7 +73,7 @@ public:
     // payment requests, we can abuse it for displaying an address list.
     // Todo: This is a hack, should be replaced with a cleaner solution!
     QString assetId;
-    int uniqueId;
+    uint64_t uniqueId;
     QString address;
     QString label;
     CAmount amount;

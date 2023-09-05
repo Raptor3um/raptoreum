@@ -257,6 +257,8 @@ struct COutputEntry {
 
 struct CAssetOutputEntry {
     std::string assetId;
+    bool isUnique;
+    uint64_t uniqueId;
     CTxDestination destination;
     CAmount nAmount;
     int vout;
@@ -764,7 +766,6 @@ private:
      */
     bool SelectAssets(const std::map <std::string, std::vector<COutput>> &mapAvailableAssets,
                       const std::map <std::string, CAmount> &mapAssetTargetValue,
-                      const std::map <std::string, std::vector<uint16_t>> mapAssetUniqueId,
                       std::set <CInputCoin> &setCoinsRet, std::map <std::string, CAmount> &nValueRet) const;
 
     WalletBatch *encrypted_batch = nullptr;

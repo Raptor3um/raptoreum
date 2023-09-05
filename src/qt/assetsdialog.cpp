@@ -8,6 +8,7 @@
 #include <qt/clientmodel.h>
 #include <clientversion.h>
 #include <coins.h>
+#include <txmempool.h>
 #include <qt/guiutil.h>
 #include <qt/walletmodel.h>
 #include <qt/optionsmodel.h>
@@ -300,6 +301,15 @@ void AssetsDialog::on_mintButton_clicked() {
         return;
     }
 
+    //check on mempool if have a mint tx for this asset
+    if (mempool.CheckForMintAssetConflict(tmpAsset.assetId)) {
+        QMessageBox msgBox;
+        msgBox.setText("Error: Already exist on mempool");
+        msgBox.setStandardButtons(QMessageBox::Ok);
+        msgBox.exec();
+        return;
+    }
+
     CMintAssetTx mintAsset;
     mintAsset.assetId = tmpAsset.assetId;
     mintAsset.fee = getAssetsFees();
@@ -344,19 +354,16 @@ void AssetsDialog::on_mintButton_clicked() {
     std::vector <CRecipient> vecSend;
 
     if (tmpAsset.isUnique) {
-        uint32_t endid = (tmpAsset.circulatingSupply + tmpAsset.amount) / COIN;
-        //build unique outputs using current supply as start unique id
-        for (int id = tmpAsset.circulatingSupply / COIN; id < endid; ++id) {
-            // Get the script for the target address
-            CScript scriptPubKey = GetScriptForDestination(
-                    DecodeDestination(EncodeDestination(tmpAsset.targetAddress)));
-            // Update the scriptPubKey with the transfer asset information
-            CAssetTransfer assetTransfer(tmpAsset.assetId, 1 * COIN, id);
-            assetTransfer.BuildAssetTransaction(scriptPubKey);
+        //build unique output using current supply as start unique id
+        uint64_t id = tmpAsset.circulatingSupply / COIN;
+        // Get the script for the target address
+        CScript scriptPubKey = GetScriptForDestination(tmpAsset.targetAddress);
+        // Update the scriptPubKey with the transfer asset information
+        CAssetTransfer assetTransfer(tmpAsset.assetId, tmpAsset.amount, id);
+        assetTransfer.BuildAssetTransaction(scriptPubKey);
 
-            CRecipient recipient = {scriptPubKey, 0, false};
-            vecSend.push_back(recipient);
-        }
+        CRecipient recipient = {scriptPubKey, 0, false};
+        vecSend.push_back(recipient);
     } else {
         // Get the script for the target address
         CScript scriptPubKey = GetScriptForDestination(DecodeDestination(EncodeDestination(tmpAsset.targetAddress)));
