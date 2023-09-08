@@ -402,6 +402,9 @@ QDialog#OpenURIDialog QPushButton#selectFileButton,
 QDialog#OptionsDialog QPushButton#resetButton,
 QDialog#SendCoinsDialog .QPushButton#addButton,
 QDialog#SendCoinsDialog .QPushButton#clearButton,
+QDialog#SendAssetsDialog .QPushButton#addButton,
+QDialog#SendAssetsDialog .QPushButton#clearButton,
+QDialog#CreateAssetsDialog .QPushButton#clearButton,
 QWidget#ReceiveCoinsDialog .QFrame#frame QPushButton#removeRequestButton,
 QWidget#ReceiveCoinsDialog .QFrame#frame2 QPushButton#clearButton,
 QWidget#ReceiveCoinsDialog .QFrame#frame QPushButton#showRequestButton,
@@ -419,6 +422,9 @@ QDialog#OpenURIDialog QPushButton#selectFileButton:hover,
 QDialog#OptionsDialog QPushButton#resetButton:hover,
 QDialog#SendCoinsDialog .QPushButton#addButton:hover,
 QDialog#SendCoinsDialog .QPushButton#clearButton:hover,
+QDialog#SendAssetsDialog .QPushButton#addButton:hover,
+QDialog#SendAssetsDialog .QPushButton#clearButton:hover,
+QDialog#CreateAssetsDialog .QPushButton#clearButton:hover,
 QWidget#ReceiveCoinsDialog .QFrame#frame QPushButton#removeRequestButton:hover,
 QWidget#ReceiveCoinsDialog .QFrame#frame2 QPushButton#clearButton:hover,
 QWidget#ReceiveCoinsDialog .QFrame#frame QPushButton#showRequestButton:hover,
@@ -436,6 +442,9 @@ QDialog#OpenURIDialog QPushButton#selectFileButton:pressed,
 QDialog#OptionsDialog QPushButton#resetButton:pressed,
 QDialog#SendCoinsDialog .QPushButton#addButton:pressed,
 QDialog#SendCoinsDialog .QPushButton#clearButton:pressed,
+QDialog#SendAssetsDialog .QPushButton#addButton:pressed,
+QDialog#SendAssetsDialog .QPushButton#clearButton:pressed,
+QDialog#CreateAssetsDialog .QPushButton#clearButton:pressed,
 QWidget#ReceiveCoinsDialog .QFrame#frame QPushButton#removeRequestButton:pressed,
 QWidget#ReceiveCoinsDialog .QFrame#frame2 QPushButton#clearButton:pressed,
 QWidget#ReceiveCoinsDialog .QFrame#frame QPushButton#showRequestButton:pressed,
@@ -453,6 +462,9 @@ QDialog#OpenURIDialog QPushButton#selectFileButton:disabled,
 QDialog#OptionsDialog QPushButton#resetButton:disabled,
 QDialog#SendCoinsDialog .QPushButton#addButton:disabled,
 QDialog#SendCoinsDialog .QPushButton#clearButton:disabled,
+QDialog#SendAssetsDialog .QPushButton#addButton:disabled,
+QDialog#SendAssetsDialog .QPushButton#clearButton:disabled,
+QDialog#CreateAssetsDialog .QPushButton#clearButton:disabled,
 QWidget#ReceiveCoinsDialog .QFrame#frame QPushButton#removeRequestButton:disabled,
 QWidget#ReceiveCoinsDialog .QFrame#frame2 QPushButton#clearButton:disabled,
 QWidget#ReceiveCoinsDialog .QFrame#frame QPushButton#showRequestButton:disabled,
@@ -814,6 +826,22 @@ QDialog#CoinControlDialog .CoinControlTreeWidget#treeWidget::branch:checked  {
 }
 
 /******************************************************
+AssetControlDialog
+******************************************************/
+
+QDialog#AssetControlDialog .AssetControlTreeWidget#treeWidget::item {
+    border-color: #4a4a4b;
+}
+
+QDialog#AssetControlDialog .AssetControlTreeWidget#treeWidget::item:selected,
+QDialog#AssetControlDialog .AssetControlTreeWidget#treeWidget::item:checked,
+QDialog#AssetControlDialog .AssetControlTreeWidget#treeWidget::branch:selected,
+QDialog#AssetControlDialog .AssetControlTreeWidget#treeWidget::branch:checked  {
+    background-color: #39393b;
+    color: #c7c7c7;
+}
+
+/******************************************************
 EditAddressDialog
 ******************************************************/
 
@@ -929,22 +957,22 @@ QDialog#SendCoinsDialog #scrollArea {
 }
 
 /******************************************************
-SendCoinsEntry
+SenAssetsEntry
 ******************************************************/
 
 /***** No dark.css specific coloring here yet *****/
 
 /******************************************************
-SendCoinsDialog
+SendAssetsDialog
 ******************************************************/
 
-QDialog#SendAssetssDialog .QFrame#frameCoinControl,
-QDialog#SendAssetsDialog #scrollArea {
+QDialog#SendAssetsDialog .QFrame#frameAssetControl,
+QDialog#SendAssetsDialog #scrollArea  { /* Asset Control Section */
     border-color: #39393b;
 }
 
 /******************************************************
-SendCoinsDialog
+CreateAssetssDialog
 ******************************************************/
 
 QDialog#CreateAssetsDialog .QFrame#frameCoinControl,

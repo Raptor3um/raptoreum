@@ -637,6 +637,8 @@ RPCConsole::setClientModel(ClientModel *model, int bestblock_height, int64_t bes
         ui->peerWidget->setColumnWidth(PeerTableModel::Subversion, SUBVERSION_COLUMN_WIDTH);
         ui->peerWidget->setColumnWidth(PeerTableModel::Ping, PING_COLUMN_WIDTH);
         ui->peerWidget->horizontalHeader()->setStretchLastSection(true);
+        ui->peerWidget->setWordWrap(false);
+
 
         // create peer table context menu actions
         QAction *disconnectAction = new QAction(tr("&Disconnect"), this);
@@ -695,6 +697,7 @@ RPCConsole::setClientModel(ClientModel *model, int bestblock_height, int64_t bes
         ui->banlistWidget->setColumnWidth(BanTableModel::Address, BANSUBNET_COLUMN_WIDTH);
         ui->banlistWidget->setColumnWidth(BanTableModel::Bantime, BANTIME_COLUMN_WIDTH);
         ui->banlistWidget->horizontalHeader()->setStretchLastSection(true);
+        ui->banlistWidget->setWordWrap(false);
 
         // create ban table context menu action
         QAction *unbanAction = new QAction(tr("&Unban"), this);

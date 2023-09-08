@@ -71,6 +71,8 @@ private:
 
     void updateFeeMinimizedLabel();
 
+    void createAsset();
+
     // Update the passed in CCoinControl with state from the GUI
     void updateCoinControlState(CCoinControl &ctrl);
 

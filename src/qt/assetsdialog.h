@@ -64,6 +64,7 @@ private:
     bool balanceChanged{true};
 
     std::string GetSelectedAsset();
+    void mintAsset();
 
     Q_SIGNALS:
         void doubleClicked(const QModelIndex&);

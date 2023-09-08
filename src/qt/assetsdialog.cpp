@@ -267,15 +267,6 @@ void AssetsDialog::Asset_details_clicked() {
 void AssetsDialog::on_mintButton_clicked() {
     if (!walletModel || !walletModel->getOptionsModel())
         return;
-
-    if (getAssetsFees() == 0) {
-        QMessageBox msgBox;
-        msgBox.setText(QString::fromStdString("Under maintenance, try again later."));
-        msgBox.setStandardButtons(QMessageBox::Ok);
-        msgBox.exec();
-        return;
-    }
-
     // request unlock only if was locked or unlocked for mixing:
     // this way we let users unlock by walletpassphrase or by menu
     // and make many transactions while unlocking through this dialog
@@ -287,6 +278,20 @@ void AssetsDialog::on_mintButton_clicked() {
             // Unlock wallet was cancelled
             return;
         }
+        mintAsset();
+        return;
+    }
+    // already unlocked or not encrypted at all
+    mintAsset();
+}
+
+void AssetsDialog::mintAsset() {
+    if (getAssetsFees() == 0) {
+        QMessageBox msgBox;
+        msgBox.setText(QString::fromStdString("Under maintenance, try again later."));
+        msgBox.setStandardButtons(QMessageBox::Ok);
+        msgBox.exec();
+        return;
     }
 
     std::string assetId = ui->idTextLablel->text().toStdString();
@@ -375,7 +380,7 @@ void AssetsDialog::on_mintButton_clicked() {
         vecSend.push_back(recipient);
     }
     int Payloadsize;
-
+    
     if (!walletModel->wallet().createTransaction(vecSend, wtx, coinControl, true, nChangePos, nFee, strFailReason,
                                 Payloadsize, nullptr, &mintAsset)) {
         //handle creation error
@@ -385,6 +390,7 @@ void AssetsDialog::on_mintButton_clicked() {
         msgBox.exec();
         return;
     }
+ 
     QString questionString = tr("Mint details:");
     questionString.append("<hr />");
     questionString.append(tr("Name: %1 <br>").arg(QString::fromStdString(tmpAsset.name)));

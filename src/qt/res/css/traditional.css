@@ -263,3 +263,29 @@ QDialog#SendCoinsDialog QLabel#labelBalance {
 QDialog#SendCoinsDialog .QFrame#frameCoinControl .QLabel#labelCoinControlInsuffFunds { /* Insufficient Funds Label */
     color: #a84832;
 }
+
+/******************************************************
+SendAssetsDialog
+******************************************************/
+
+QDialog#SendAssetsDialog QLabel#labelBalance {
+    margin-left: 0px;
+    padding-left: 0px;
+}
+
+QDialog#SendAssetsDialog .QFrame#frameAssetControl .QLabel#labelAssetControlInsuffFunds { /* Insufficient Funds Label */
+    color: #a84832;
+}
+
+/******************************************************
+CreateAssetsDialog
+******************************************************/
+
+QDialog#CreateAssetsDialog QLabel#labelBalance {
+    margin-left: 0px;
+    padding-left: 0px;
+}
+
+QDialog#CreateAssetsDialog .QFrame#frameCoinControl .QLabel#labelCoinControlInsuffFunds { /* Insufficient Funds Label */
+    color: #a84832;
+}
