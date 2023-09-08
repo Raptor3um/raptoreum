@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>980</width>
-    <height>861</height>
+    <width>987</width>
+    <height>712</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -29,33 +29,27 @@
    <bool>false</bool>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout" stretch="0,1,0,0">
-   <property name="leftMargin">
-    <number>9</number>
-   </property>
-   <property name="topMargin">
-    <number>9</number>
-   </property>
-   <property name="rightMargin">
-    <number>9</number>
-   </property>
-   <property name="bottomMargin">
-    <number>8</number>
-   </property>
    <item>
     <widget class="QFrame" name="frameCoinControl">
      <property name="sizePolicy">
-      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+      <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
        <horstretch>0</horstretch>
        <verstretch>0</verstretch>
       </sizepolicy>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>16777215</width>
+       <height>16777215</height>
+      </size>
      </property>
      <property name="frameShape">
       <enum>QFrame::StyledPanel</enum>
      </property>
      <property name="frameShadow">
-      <enum>QFrame::Raised</enum>
+      <enum>QFrame::Sunken</enum>
      </property>
-     <layout class="QVBoxLayout" name="verticalLayout_2">
+     <layout class="QVBoxLayout" name="verticalLayoutCoinControl2">
       <property name="spacing">
        <number>0</number>
       </property>
@@ -76,9 +70,6 @@
         <property name="spacing">
          <number>0</number>
         </property>
-        <property name="sizeConstraint">
-         <enum>QLayout::SetDefaultConstraint</enum>
-        </property>
         <property name="leftMargin">
          <number>10</number>
         </property>
@@ -97,15 +88,6 @@
               <horstretch>0</horstretch>
               <verstretch>0</verstretch>
              </sizepolicy>
-            </property>
-            <property name="font">
-             <font>
-              <weight>75</weight>
-              <bold>true</bold>
-             </font>
-            </property>
-            <property name="styleSheet">
-             <string notr="true">font-weight:bold;</string>
             </property>
             <property name="text">
              <string>Coin Control Features</string>
@@ -147,15 +129,6 @@
           </item>
           <item>
            <widget class="QLabel" name="labelCoinControlInsuffFunds">
-            <property name="font">
-             <font>
-              <weight>75</weight>
-              <bold>true</bold>
-             </font>
-            </property>
-            <property name="styleSheet">
-             <string notr="true">color:red;font-weight:bold;</string>
-            </property>
             <property name="text">
              <string>Insufficient funds!</string>
             </property>
@@ -239,12 +212,6 @@
                </property>
                <item row="0" column="0">
                 <widget class="QLabel" name="labelCoinControlQuantityText">
-                 <property name="font">
-                  <font>
-                   <weight>75</weight>
-                   <bold>true</bold>
-                  </font>
-                 </property>
                  <property name="text">
                   <string>Quantity:</string>
                  </property>
@@ -274,12 +241,6 @@
                </item>
                <item row="1" column="0">
                 <widget class="QLabel" name="labelCoinControlBytesText">
-                 <property name="font">
-                  <font>
-                   <weight>75</weight>
-                   <bold>true</bold>
-                  </font>
-                 </property>
                  <property name="text">
                   <string>Bytes:</string>
                  </property>
@@ -322,12 +283,6 @@
                </property>
                <item row="0" column="0">
                 <widget class="QLabel" name="labelCoinControlAmountText">
-                 <property name="font">
-                  <font>
-                   <weight>75</weight>
-                   <bold>true</bold>
-                  </font>
-                 </property>
                  <property name="text">
                   <string>Amount:</string>
                  </property>
@@ -345,7 +300,7 @@
                   <enum>Qt::ActionsContextMenu</enum>
                  </property>
                  <property name="text">
-                  <string notr="true">0.00 RTM</string>
+                  <string notr="true">0.00 RAPTOREUM</string>
                  </property>
                  <property name="textInteractionFlags">
                   <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
@@ -354,12 +309,6 @@
                </item>
                <item row="1" column="0">
                 <widget class="QLabel" name="labelCoinControlLowOutputText">
-                 <property name="font">
-                  <font>
-                   <weight>75</weight>
-                   <bold>true</bold>
-                  </font>
-                 </property>
                  <property name="text">
                   <string>Dust:</string>
                  </property>
@@ -402,12 +351,6 @@
                </property>
                <item row="0" column="0">
                 <widget class="QLabel" name="labelCoinControlFeeText">
-                 <property name="font">
-                  <font>
-                   <weight>75</weight>
-                   <bold>true</bold>
-                  </font>
-                 </property>
                  <property name="text">
                   <string>Fee:</string>
                  </property>
@@ -425,7 +368,7 @@
                   <enum>Qt::ActionsContextMenu</enum>
                  </property>
                  <property name="text">
-                  <string notr="true">0.00 RTM</string>
+                  <string notr="true">0.00 RAPTOREUM</string>
                  </property>
                  <property name="textInteractionFlags">
                   <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
@@ -453,12 +396,6 @@
                </property>
                <item row="0" column="0">
                 <widget class="QLabel" name="labelCoinControlAfterFeeText">
-                 <property name="font">
-                  <font>
-                   <weight>75</weight>
-                   <bold>true</bold>
-                  </font>
-                 </property>
                  <property name="text">
                   <string>After Fee:</string>
                  </property>
@@ -476,7 +413,7 @@
                   <enum>Qt::ActionsContextMenu</enum>
                  </property>
                  <property name="text">
-                  <string notr="true">0.00 RTM</string>
+                  <string notr="true">0.00 RAPTOREUM</string>
                  </property>
                  <property name="textInteractionFlags">
                   <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
@@ -485,12 +422,6 @@
                </item>
                <item row="1" column="0">
                 <widget class="QLabel" name="labelCoinControlChangeText">
-                 <property name="font">
-                  <font>
-                   <weight>75</weight>
-                   <bold>true</bold>
-                  </font>
-                 </property>
                  <property name="text">
                   <string>Change:</string>
                  </property>
@@ -505,7 +436,7 @@
                   <enum>Qt::ActionsContextMenu</enum>
                  </property>
                  <property name="text">
-                  <string notr="true">0.00 RTM</string>
+                  <string notr="true">0.00 RAPTOREUM</string>
                  </property>
                  <property name="textInteractionFlags">
                   <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
@@ -585,9 +516,6 @@
           <property name="orientation">
            <enum>Qt::Vertical</enum>
           </property>
-          <property name="sizeType">
-           <enum>QSizePolicy::Expanding</enum>
-          </property>
           <property name="sizeHint" stdset="0">
            <size>
             <width>800</width>
@@ -611,8 +539,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>960</width>
-        <height>388</height>
+        <width>953</width>
+        <height>248</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_7" stretch="0,1">
@@ -643,54 +571,6 @@
           <enum>QFrame::NoFrame</enum>
          </property>
          <layout class="QGridLayout" name="gridLayout_2">
-          <item row="0" column="2">
-           <layout class="QHBoxLayout" name="horizontalLayout">
-            <item>
-             <widget class="QValidatedLineEdit" name="assetnameText">
-              <property name="toolTip">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;a-z A-Z 0-9 and space&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-              </property>
-              <property name="maxLength">
-               <number>128</number>
-              </property>
-              <property name="placeholderText">
-               <string>The name of the asset you would like to create</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="availabilityButton">
-              <property name="text">
-               <string>Check Availabilty</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-          <item row="0" column="0">
-           <widget class="QLabel" name="assetNameLabel">
-            <property name="text">
-             <string>Asset Name:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="2">
-           <layout class="QHBoxLayout" name="horizontalLayout_10">
-            <item>
-             <widget class="QValidatedLineEdit" name="owneraddressText">
-              <property name="toolTip">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;RTM address that will own this asset&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-              </property>
-              <property name="text">
-               <string/>
-              </property>
-              <property name="placeholderText">
-               <string>The RTM address that own this asset</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
           <item row="6" column="2">
            <layout class="QHBoxLayout" name="horizontalLayout_6">
             <item>
@@ -715,47 +595,15 @@
             </item>
            </layout>
           </item>
-          <item row="10" column="0">
-           <layout class="QGridLayout" name="gridLayout_3">
-            <item row="1" column="0">
-             <layout class="QHBoxLayout" name="horizontalLayout_2">
-              <item>
-               <widget class="QCheckBox" name="uniqueBox">
-                <property name="toolTip">
-                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Make this asset unique also known as NFT&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                </property>
-                <property name="text">
-                 <string>Unique Asset</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QLabel" name="label">
-                <property name="text">
-                 <string/>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </item>
-            <item row="2" column="0">
-             <widget class="QLabel" name="typeLabel">
-              <property name="text">
-               <string>Distribution Type:</string>
-              </property>
-              <property name="margin">
-               <number>0</number>
-              </property>
-             </widget>
-            </item>
-            <item row="3" column="0">
-             <widget class="QLabel" name="mintLabel">
-              <property name="text">
-               <string>Mint count:</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
+          <item row="6" column="0">
+           <widget class="QLabel" name="ipfsLabel">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;[Optional] The ipfs/file hash that contains information about the asset&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="text">
+             <string>IPFS/file hash:</string>
+            </property>
+           </widget>
           </item>
           <item row="14" column="0">
            <widget class="QLabel" name="targetLabel">
@@ -766,20 +614,6 @@
              <string>Target Address:</string>
             </property>
            </widget>
-          </item>
-          <item row="14" column="2">
-           <layout class="QHBoxLayout" name="horizontalLayout_13">
-            <item>
-             <widget class="QValidatedLineEdit" name="targetaddressText">
-              <property name="toolTip">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The RTM address that will receive the minted asset&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-              </property>
-              <property name="placeholderText">
-               <string>The RTM address that will receive the minted asset</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
           </item>
           <item row="10" column="2">
            <layout class="QGridLayout" name="gridLayout">
@@ -921,16 +755,6 @@
             </item>
            </layout>
           </item>
-          <item row="6" column="0">
-           <widget class="QLabel" name="ipfsLabel">
-            <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;[Optional] The ipfs/file hash that contains information about the asset&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-            </property>
-            <property name="text">
-             <string>IPFS/file hash:</string>
-            </property>
-           </widget>
-          </item>
           <item row="3" column="0">
            <widget class="QLabel" name="addressLabel">
             <property name="toolTip">
@@ -940,6 +764,110 @@
              <string>Owner Address:</string>
             </property>
            </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="assetNameLabel">
+            <property name="text">
+             <string>Asset Name:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="14" column="2">
+           <layout class="QHBoxLayout" name="horizontalLayout_13">
+            <item>
+             <widget class="QValidatedLineEdit" name="targetaddressText">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The RTM address that will receive the minted asset&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+              <property name="placeholderText">
+               <string>The RTM address that will receive the minted asset</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item row="10" column="0">
+           <layout class="QGridLayout" name="gridLayout_3">
+            <item row="1" column="0">
+             <layout class="QHBoxLayout" name="horizontalLayout_2">
+              <item>
+               <widget class="QCheckBox" name="uniqueBox">
+                <property name="toolTip">
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Make this asset unique also known as NFT&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                </property>
+                <property name="text">
+                 <string>Unique Asset</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="label">
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="typeLabel">
+              <property name="text">
+               <string>Distribution Type:</string>
+              </property>
+              <property name="margin">
+               <number>0</number>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="0">
+             <widget class="QLabel" name="mintLabel">
+              <property name="text">
+               <string>Mint count:</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item row="3" column="2">
+           <layout class="QHBoxLayout" name="horizontalLayout_10">
+            <item>
+             <widget class="QValidatedLineEdit" name="owneraddressText">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;RTM address that will own this asset&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+              <property name="text">
+               <string/>
+              </property>
+              <property name="placeholderText">
+               <string>The RTM address that own this asset</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item row="0" column="2">
+           <layout class="QHBoxLayout" name="horizontalLayout">
+            <item>
+             <widget class="QValidatedLineEdit" name="assetnameText">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;a-z A-Z 0-9 and space&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+              <property name="maxLength">
+               <number>128</number>
+              </property>
+              <property name="placeholderText">
+               <string>The name of the asset you would like to create</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="availabilityButton">
+              <property name="text">
+               <string>Check Availabilty</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </item>
          </layout>
         </widget>
@@ -1066,7 +994,7 @@
                 <property name="sizeHint" stdset="0">
                  <size>
                   <width>1</width>
-                  <height>1</height>
+                  <height>10</height>
                  </size>
                 </property>
                </spacer>
@@ -1091,6 +1019,19 @@
                <bool>false</bool>
               </property>
              </widget>
+            </item>
+            <item>
+             <spacer name="verticalSpacer_7">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>1</width>
+                <height>1</height>
+               </size>
+              </property>
+             </spacer>
             </item>
            </layout>
           </item>
@@ -1155,6 +1096,9 @@
               <layout class="QVBoxLayout" name="verticalLayoutFee8">
                <property name="spacing">
                 <number>6</number>
+               </property>
+               <property name="topMargin">
+                <number>3</number>
                </property>
                <item>
                 <layout class="QHBoxLayout" name="horizontalLayoutFee13">
@@ -1233,6 +1177,12 @@
              </item>
              <item row="0" column="0">
               <layout class="QVBoxLayout" name="verticalLayoutFee4" stretch="0,1">
+               <property name="leftMargin">
+                <number>0</number>
+               </property>
+               <property name="topMargin">
+                <number>20</number>
+               </property>
                <item>
                 <widget class="QRadioButton" name="radioSmartFee">
                  <property name="text">
@@ -1263,6 +1213,9 @@
              </item>
              <item row="1" column="0">
               <layout class="QVBoxLayout" name="verticalLayoutFee9" stretch="0,1">
+               <property name="topMargin">
+                <number>20</number>
+               </property>
                <item>
                 <widget class="QRadioButton" name="radioCustomFee">
                  <property name="text">
@@ -1294,7 +1247,10 @@
                 <number>6</number>
                </property>
                <property name="topMargin">
-                <number>2</number>
+                <number>0</number>
+               </property>
+               <property name="bottomMargin">
+                <number>3</number>
                </property>
                <item>
                 <layout class="QHBoxLayout" name="horizontalLayoutFee12">
@@ -1432,7 +1388,7 @@
           <property name="sizeHint" stdset="0">
            <size>
             <width>40</width>
-            <height>5</height>
+            <height>1</height>
            </size>
           </property>
          </spacer>
@@ -1483,22 +1439,28 @@
         <number>3</number>
        </property>
        <item>
-        <widget class="QLabel" name="labelBalance">
+        <widget class="QLabel" name="labelBalanceText">
          <property name="layoutDirection">
           <enum>Qt::RightToLeft</enum>
          </property>
          <property name="text">
           <string>Balance:</string>
          </property>
+         <property name="indent">
+          <number>-1</number>
+         </property>
         </widget>
        </item>
        <item>
-        <widget class="QLabel" name="labelBalanceText">
+        <widget class="QLabel" name="labelBalance">
          <property name="layoutDirection">
-          <enum>Qt::RightToLeft</enum>
+          <enum>Qt::LeftToRight</enum>
          </property>
          <property name="text">
           <string>123.456 RTM</string>
+         </property>
+         <property name="textInteractionFlags">
+          <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
          </property>
         </widget>
        </item>

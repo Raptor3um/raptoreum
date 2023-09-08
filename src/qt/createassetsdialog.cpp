@@ -253,14 +253,6 @@ void CreateAssetsDialog::on_createAssetButton_clicked() {
     if (!model || !model->getOptionsModel() || !validateInputs())
         return;
 
-    if (getAssetsFees() == 0) {
-        QMessageBox msgBox;
-        msgBox.setText(QString::fromStdString("Under maintenance, try again later."));
-        msgBox.setStandardButtons(QMessageBox::Ok);
-        msgBox.exec();
-        return;
-    }
-
     // request unlock only if was locked or unlocked for mixing:
     // this way we let users unlock by walletpassphrase or by menu
     // and make many transactions while unlocking through this dialog
@@ -272,6 +264,20 @@ void CreateAssetsDialog::on_createAssetButton_clicked() {
             // Unlock wallet was cancelled
             return;
         }
+        createAsset();
+        return;
+    }
+    // already unlocked or not encrypted at all
+    createAsset();
+}
+
+void CreateAssetsDialog::createAsset() {
+    if (getAssetsFees() == 0) {
+        QMessageBox msgBox;
+        msgBox.setText(QString::fromStdString("Under maintenance, try again later."));
+        msgBox.setStandardButtons(QMessageBox::Ok);
+        msgBox.exec();
+        return;
     }
 
     CNewAssetTx assetTx;
@@ -315,6 +321,7 @@ void CreateAssetsDialog::on_createAssetButton_clicked() {
         msgBox.exec();
         return;
     }
+   
     QString questionString = tr("Asset details:");
     questionString.append("<hr />");
     questionString.append(tr("Name: %1 <br>").arg(QString::fromStdString(assetTx.name)));
