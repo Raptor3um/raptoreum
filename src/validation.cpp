@@ -53,6 +53,7 @@
 #include <evo/specialtx.h>
 #include <evo/deterministicmns.h>
 #include <assets/assets.h>
+#include <assets/assetstype.h>
 #include <assets/assetsdb.h>
 
 #include <llmq/quorums_instantsend.h>
@@ -1711,10 +1712,19 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock &block, const CBlockI
                                            out.nValue));
                     addressUnspentIndex.push_back(
                             std::make_pair(CAddressUnspentKey(1, hashBytes, hash, k), CAddressUnspentValue()));
+                } else if (out.scriptPubKey.IsAssetScript()) {
+                    CAssetTransfer assetTransfer;
+                    if (GetTransferAsset(out.scriptPubKey, assetTransfer)) {
+                        uint160 hashBytes(std::vector <unsigned char>(out.scriptPubKey.begin()+3, out.scriptPubKey.begin()+23));
+                        addressIndex.push_back(
+                                std::make_pair(CAddressIndexKey(1, hashBytes, assetTransfer.assetId, pindex->nHeight, i, hash, k, false),
+                                            assetTransfer.nAmount));
+                        addressUnspentIndex.push_back(
+                                std::make_pair(CAddressUnspentKey(1, hashBytes, hash, k), CAddressUnspentValue()));
+                    }
                 } else {
                     continue;
                 }
-
             }
 
         }
@@ -1747,21 +1757,17 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock &block, const CBlockI
             } else if (tx.nType == TRANSACTION_UPDATE_ASSET) {
                 CUpdateAssetTx assetTx;
                 if (GetTxPayload(tx, assetTx)) {
-                    if (assetsCache->CheckIfAssetExists(assetTx.assetId)) {
-                        if (!assetsCache->UndoUpdateAsset(assetTx, vUndoData)) {
-                            error("DisconnectBlock(): failed to und update asset: %s", assetTx.assetId);
-                            return DISCONNECT_FAILED;
-                        }
+                    if (!assetsCache->UndoUpdateAsset(assetTx, vUndoData)) {
+                        error("DisconnectBlock(): failed to und update asset: %s", assetTx.assetId);
+                        return DISCONNECT_FAILED;
                     }
                 }
             } else if (tx.nType == TRANSACTION_MINT_ASSET) {
                 CMintAssetTx assetTx;
                 if (GetTxPayload(tx, assetTx)) {
-                    if (assetsCache->CheckIfAssetExists(assetTx.assetId)) {
-                        if (!assetsCache->UndoMintAsset(assetTx, vUndoData)) {
-                            error("DisconnectBlock(): failed to rundo mint asset: %s", assetTx.assetId);
-                            return DISCONNECT_FAILED;
-                        }
+                    if (!assetsCache->UndoMintAsset(assetTx, vUndoData)) {
+                        error("DisconnectBlock(): failed to rundo mint asset: %s", assetTx.assetId);
+                        return DISCONNECT_FAILED;
                     }
                 }
             }
@@ -1851,9 +1857,19 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock &block, const CBlockI
                                                prevout.nValue));
                         addressUnspentIndex.push_back(
                                 std::make_pair(CAddressUnspentKey(1, hashBytes, hash, j), CAddressUnspentValue()));
-                    } else {
-                        continue;
+                    } else if (prevout.scriptPubKey.IsAssetScript()) {
+                        CAssetTransfer assetTransfer;
+                        if (GetTransferAsset(prevout.scriptPubKey, assetTransfer)) {
+                            uint160 hashBytes(std::vector <unsigned char>(prevout.scriptPubKey.begin()+3, prevout.scriptPubKey.begin()+23));
+                            addressIndex.push_back(
+                                    std::make_pair(CAddressIndexKey(1, hashBytes, assetTransfer.assetId, pindex->nHeight, i, hash, j, false),
+                                                assetTransfer.nAmount));
+                            addressUnspentIndex.push_back(
+                                    std::make_pair(CAddressUnspentKey(1, hashBytes, assetTransfer.assetId, hash, j), CAddressUnspentValue()));
+                        }
                     }
+                } else {
+                    continue;
                 }
             }
             // At this point, all of txundo.vprevout should have been moved out.
@@ -2287,6 +2303,8 @@ bool CChainState::ConnectBlock(const CBlock &block, CValidationState &state, CBl
                     const CTxOut &prevout = coin.out;
                     uint160 hashBytes;
                     int addressType;
+                    CAssetTransfer assetTransfer;
+                    bool isAsset = false;
 
                     if (prevout.scriptPubKey.IsPayToScriptHash()) {
                         hashBytes = uint160(std::vector<unsigned char>(prevout.scriptPubKey.begin() + 2,
@@ -2302,18 +2320,38 @@ bool CChainState::ConnectBlock(const CBlock &block, CValidationState &state, CBl
                     } else {
                         hashBytes.SetNull();
                         addressType = 0;
+                        if (prevout.scriptPubKey.IsAssetScript()) {
+                            if (GetTransferAsset(prevout.scriptPubKey, assetTransfer)) {
+                                hashBytes = uint160(std::vector <unsigned char>(prevout.scriptPubKey.begin()+3,
+                                                                                prevout.scriptPubKey.begin()+23));
+                                isAsset = true;
+                                addressType = 1;
+                            }
+                        }
                     }
 
                     if (fAddressIndex && addressType > 0) {
-                        // record spending activity
-                        addressIndex.push_back(std::make_pair(
-                                CAddressIndexKey(addressType, hashBytes, pindex->nHeight, i, txhash, j, true),
-                                prevout.nValue * -1));
+                        if (isAsset){
+                            // record spending activity
+                            addressIndex.push_back(std::make_pair(
+                                    CAddressIndexKey(addressType, hashBytes, assetTransfer.assetId, pindex->nHeight, i, txhash, j, true),
+                                     assetTransfer.nAmount * -1));
 
-                        // remove address from unspent index
-                        addressUnspentIndex.push_back(std::make_pair(
-                                CAddressUnspentKey(addressType, hashBytes, input.prevout.hash, input.prevout.n),
-                                CAddressUnspentValue()));
+                            // remove address from unspent index
+                            addressUnspentIndex.push_back(std::make_pair(
+                                    CAddressUnspentKey(addressType, hashBytes, assetTransfer.assetId, input.prevout.hash, input.prevout.n),
+                                    CAddressUnspentValue()));
+                        } else {
+                            // record spending activity
+                            addressIndex.push_back(std::make_pair(
+                                    CAddressIndexKey(addressType, hashBytes, pindex->nHeight, i, txhash, j, true),
+                                    prevout.nValue * -1));
+
+                            // remove address from unspent index
+                            addressUnspentIndex.push_back(std::make_pair(
+                                    CAddressUnspentKey(addressType, hashBytes, input.prevout.hash, input.prevout.n),
+                                    CAddressUnspentValue()));
+                        }
                     }
 
                     if (fSpentIndex) {
@@ -2404,11 +2442,29 @@ bool CChainState::ConnectBlock(const CBlock &block, CValidationState &state, CBl
                                                                                           pindex->nHeight,
                                                                                           vSpendableHeight,
                                                                                           vSpendableTime)));
+                    } else if (out.scriptPubKey.IsAssetScript()) {
+                        CAssetTransfer assetTransfer;
+                        if (GetTransferAsset(out.scriptPubKey, assetTransfer)){
+                            uint160 hashBytes(std::vector <unsigned char>(out.scriptPubKey.begin()+3,
+                                                                          out.scriptPubKey.begin()+23));
+                            addressIndex.push_back(
+                                    std::make_pair(CAddressIndexKey(1, hashBytes, assetTransfer.assetId, pindex->nHeight, i, txhash, k, false),
+                                                assetTransfer.nAmount));
+                            addressUnspentIndex.push_back(std::make_pair(CAddressUnspentKey(1, hashBytes, assetTransfer.assetId, txhash, k),
+                                                                     CAddressUnspentValue(assetTransfer.nAmount, out.scriptPubKey,
+                                                                                          assetTransfer.assetId, assetTransfer.isUnique,
+                                                                                          assetTransfer.uniqueId,
+                                                                                          pindex->nHeight,
+                                                                                          vSpendableHeight,
+                                                                                          vSpendableTime)));
+                        }
                     }
                 }
                 if (fFutureIndex && spendableHeight >= 0 && spendableTime >= 0 && k == lockOutputIndex) {
                     uint160 addressHash;
                     int addressType;
+                    CAssetTransfer assetTransfer;
+                    bool isAsset = false;
                     if (out.scriptPubKey.IsPayToScriptHash()) {
                         addressHash = uint160(std::vector<unsigned char>(out.scriptPubKey.begin() + 2,
                                                                          out.scriptPubKey.begin() + 22));
@@ -2420,12 +2476,20 @@ bool CChainState::ConnectBlock(const CBlock &block, CValidationState &state, CBl
                     } else if (out.scriptPubKey.IsPayToPublicKey()) {
                         addressHash = Hash160(out.scriptPubKey.begin() + 1, out.scriptPubKey.end() - 1);
                         addressType = 1;
+                    } else if (out.scriptPubKey.IsAssetScript()) {
+                        if (GetTransferAsset(out.scriptPubKey, assetTransfer)){
+                            addressHash = uint160(std::vector <unsigned char>(out.scriptPubKey.begin()+3, 
+                                                                              out.scriptPubKey.begin()+23));
+
+                            isAsset = true;
+                            addressType = 1;
+                        }
                     } else {
                         addressHash.SetNull();
                         addressType = 0;
                     }
                     futureIndex.push_back(std::make_pair(CFutureIndexKey(txhash, k),
-                                                         CFutureIndexValue(out.nValue, addressType, addressHash,
+                                                         CFutureIndexValue(isAsset ? assetTransfer.nAmount : out.nValue, addressType, addressHash,
                                                                            pindex->nHeight, spendableHeight,
                                                                            spendableTime)));
                 }

@@ -80,6 +80,7 @@ public:
 
     // Helper functions
     bool LoadAssets();
+    bool GetListAssets(std::vector<CDatabaseAssetData>& assets, const size_t count, const long start);
 };
 
 

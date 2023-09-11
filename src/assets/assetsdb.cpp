@@ -9,7 +9,6 @@
 #include <consensus/params.h>
 #include <script/ismine.h>
 #include <tinyformat.h>
-//#include <util.h>
 
 #include <boost/thread.hpp>
 
@@ -117,6 +116,46 @@ bool CAssetsDB::LoadAssets() {
             } else {
                 return error("%s: failed to read my assetId from database", __func__);
             }
+        } else {
+            break;
+        }
+    }
+
+    return true;
+}
+
+bool CAssetsDB::GetListAssets(std::vector<CDatabaseAssetData>& assets, const size_t count, const long start) {
+    ::ChainstateActive().ForceFlushStateToDisk();
+
+    std::unique_ptr<CDBIterator> pcursor(NewIterator());
+    pcursor->Seek(std::make_pair(ASSET_FLAG, std::string()));
+
+    size_t skip = 0;
+    if (start >= 0) {
+        skip = start;
+    }
+
+    size_t loaded = 0;
+    size_t offset = 0;
+
+    // Load assets
+    while (pcursor->Valid() && loaded < count) {
+        boost::this_thread::interruption_point();
+
+        std::pair<char, std::string> key;
+        if (pcursor->GetKey(key) && key.first == ASSET_FLAG) {
+            if (offset < skip) {
+                offset += 1;
+            } else {
+                CDatabaseAssetData data;
+                if (pcursor->GetValue(data)) {
+                    assets.push_back(data);
+                    loaded += 1;
+                } else {
+                    return error("%s: failed to read asset", __func__);
+                }
+            }
+            pcursor->Next();
         } else {
             break;
         }

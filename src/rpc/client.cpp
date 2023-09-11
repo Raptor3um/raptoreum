@@ -190,6 +190,9 @@ static const CRPCConvertParam vRPCConvertParams[] =
                 {"listunspentassets", 2, "addresses"},
                 {"listunspentassets", 3, "include_unsafe"},
                 {"listunspentassets", 4, "query_options"},
+                {"listassets", 0, "verbose"},
+                {"listassets", 1, "count"},
+                {"listassets", 2, "start"},
         };
 
 class CRPCConvertTable {

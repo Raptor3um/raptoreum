@@ -4,6 +4,7 @@
 
 #include "assets/assets.h"
 #include <assets/assetstype.h>
+#include "assets/assetsdb.h"
 #include <rpc/server.h>
 #include "chain.h"
 #include "validation.h"
@@ -21,6 +22,13 @@
 #include <evo/providertx.h>
 
 #include <iostream>
+#include <univalue.h>
+#include <util/check.h>
+#include <util/ref.h>
+#include <util/system.h>
+#include <util/strencodings.h>
+#include <util/validation.h>
+#include <rpc/util.h>
 
 
 static CKeyID ParsePubKeyIDFromAddress(const std::string &strAddress, const std::string &paramName) {
@@ -493,26 +501,54 @@ UniValue sendasset(const JSONRPCRequest &request) {
 }
 
 
-UniValue assetdetails(const JSONRPCRequest &request) {
+UniValue getassetdetailsbyname(const JSONRPCRequest &request) {
     if (request.fHelp || !Params().IsAssetsActive(::ChainActive().Tip()) || request.params.size() < 1 ||
         request.params.size() > 1)
         throw std::runtime_error(
-                "assetdetails 'asset_id or asset_name'\n"
+                "getassetdetailsbyname 'asset_name'\n"
                 "asset details\n"
                 "\nArguments:\n"
-                "1. \"asset_id\"                (string, required) asset name or txid reference\n"
+                "1. \"assetname\"                (string, required) asset name\n"
                 "\nResult:\n"
                 "\"asset\"                      (string) The asset details\n"
 
                 "\nExamples:\n"
-                + HelpExampleCli("assetdetails", "773cf7e057127048711d16839e4612ffb0f1599aef663d96e60f5190eb7de9a9")
+                + HelpExampleCli("getassetdetailsbyname", "WenMoon")
+        );
+    std::string assetId;
+
+    // try to get asset id
+    if (passetsCache->GetAssetId(request.params[0].get_str(), assetId)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Asset not found");
+    }
+
+    // get asset metadadta
+    CAssetMetaData tmpAsset;
+    if (!passetsCache->GetAssetMetaData(assetId, tmpAsset)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Asset metadata not found");
+    }
+
+    UniValue result(UniValue::VOBJ);
+    tmpAsset.ToJson(result);
+    return result;
+}
+
+UniValue getassetdetailsbyid(const JSONRPCRequest &request) {
+    if (request.fHelp || !Params().IsAssetsActive(::ChainActive().Tip()) || request.params.size() < 1 ||
+        request.params.size() > 1)
+        throw std::runtime_error(
+                "getassetdetailsbyid 'asset_id'\n"
+                "asset details\n"
+                "\nArguments:\n"
+                "1. \"assetId\"                (string, required) asset id\n"
+                "\nResult:\n"
+                "\"asset\"                      (string) The asset details\n"
+
+                "\nExamples:\n"
+                + HelpExampleCli("getassetdetailsbyid", "b683eccf3267561e1d5f5ad0caeb362b50d0d3a68e71cceee69869df173fed12")
         );
 
-    std::string name = request.params[0].get_str();
-    std::string assetId = name;
-
-    // try to get asset id in case asset name was used
-    passetsCache->GetAssetId(name, assetId);
+    std::string assetId = request.params[0].get_str();
 
     // get asset metadadta
     CAssetMetaData tmpAsset;
@@ -533,7 +569,7 @@ UniValue listassetsbalance(const JSONRPCRequest &request) {
                 "\"asset\"                      (string) list assets balance\n"
 
                 "\nExamples:\n"
-                + HelpExampleCli("assetbalance", "")
+                + HelpExampleCli("listassetsbalance", "")
         );
 
     std::shared_ptr <CWallet> const wallet = GetWalletForJSONRPCRequest(request);
@@ -547,7 +583,6 @@ UniValue listassetsbalance(const JSONRPCRequest &request) {
 
     std::map <std::string, CAmount> mapAssetbalance;
     for (auto asset: mapAssetCoins) {
-        std::cout << asset.first << std::endl;
         CAmount balance = 0;
         for (auto output: asset.second) {
             CInputCoin coin(output.tx->tx, output.i);
@@ -728,16 +763,16 @@ UniValue listunspentassets(const JSONRPCRequest& request)
         for (auto output : asset.second){
             CInputCoin coin(output.tx->tx, output.i);
 
+            if (!coin.txout.scriptPubKey.IsAssetScript()) {
+                continue;
+            }
+
             CTxDestination address;
             const CScript& scriptPubKey = coin.txout.scriptPubKey;
             bool fValidAddress = ExtractDestination(scriptPubKey, address);
 
             if (destinations.size() && (!fValidAddress || !destinations.count(address)))
                 continue;
-
-            if (!coin.txout.scriptPubKey.IsAssetScript()) {
-                continue;
-            }
 
             CAssetTransfer transferTemp;
             if (!GetTransferAsset(scriptPubKey, transferTemp))
@@ -776,15 +811,104 @@ UniValue listunspentassets(const JSONRPCRequest& request)
     return results;
 }
 
+UniValue listassets(const JSONRPCRequest &request) {
+    RPCHelpMan{"listassets",
+               "\nReturns a list of all assets.\n",
+        {
+            {"verbose", RPCArg::Type::BOOL, /* default */ "false", "false: return list of asset names, true: return list of asset metadata"},
+            {"count", RPCArg::Type::STR, /* default */ "ALL", "truncates results to include only the first _count_ assets found"},
+            {"start", RPCArg::Type::NUM, /* default */ "0", "results skip over the first _start_ assets found"},
+        },
+        {
+            RPCResult{"for verbose = false",
+                RPCResult::Type::OBJ, "", "",
+                {
+                    {RPCResult::Type::OBJ, "Asset_name", "",
+                    {
+                        {RPCResult::Type::STR, "Asset_id", "The asset id"},
+                    }},
+                },
+            },
+            RPCResult{"for verbose = true",
+                RPCResult::Type::OBJ, "", "",
+                {
+                    {RPCResult::Type::OBJ, "Asset_name", "",
+                    {
+                        {RPCResult::Type::STR, "Asset_id", "The asset id"},
+                        {RPCResult::Type::STR, "Asset_name", "The Asset name"},
+                        {RPCResult::Type::NUM, "Circulating_supply", "Current circulating supply of Asset"},
+                        {RPCResult::Type::NUM, "MintCount", "Number of times this Asset was minted"},
+                        {RPCResult::Type::NUM, "maxMintCount", "Maximum number of times this Asset can be minted"},
+                        {RPCResult::Type::STR, "owner", "Address that owns this Asset"},
+                        {RPCResult::Type::BOOL, "Isunique", "Unique asset/NFT"},
+                        {RPCResult::Type::BOOL, "Updatable", "If the Asset can be updated in the future"},
+                        {RPCResult::Type::NUM, "Decimalpoint", ""},
+                        {RPCResult::Type::STR, "ReferenceHash", "Hash of the underlying physical or digital Assets"},
+                        {RPCResult::Type::OBJ, "Distribution", "",
+                            {
+                                {RPCResult::Type::STR, "type", "Distribution type"},
+                                {RPCResult::Type::STR, "targetAddress", "Target address where this Asset is deployed after minting"},
+                                {RPCResult::Type::NUM, "issueFrequency", "How often the Asset is minted"},
+                                {RPCResult::Type::NUM, "amount", "Amount of the Asset that is minted"},
+                            },
+                        },
+                    }},
+                },
+            },
+        },
+        RPCExamples{
+                HelpExampleCli("listassets", "")
+        },
+    }.Check(request);
+
+    bool verbose = false;
+    if (request.params.size() > 0)
+        verbose = request.params[0].get_bool();
+
+    size_t count = INT_MAX;
+    if (request.params.size() > 1) {
+        if (request.params[1].get_int() < 1)
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "count must be greater than 1.");
+        count = request.params[1].get_int();
+    }
+
+    long start = 0;
+    if (request.params.size() > 2) {
+        start = request.params[2].get_int();
+    }
+
+    std::vector<CDatabaseAssetData> assets;
+    if (!passetsdb->GetListAssets(assets, count, start))
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "couldn't retrieve asset directory.");
+
+    UniValue result(UniValue::VOBJ);
+    for (auto asset: assets) {
+        // get asset metadadta
+        if (verbose){
+            UniValue tmp(UniValue::VOBJ);
+            asset.asset.ToJson(tmp);
+            result.pushKV(asset.asset.name, tmp);
+        } else {
+            UniValue tmp(UniValue::VOBJ);
+            tmp.pushKV("Asset_Id", asset.asset.assetId);
+            result.pushKV(asset.asset.name, tmp);
+        }
+    }
+
+    return result;
+}
+
 static const CRPCCommand commands[] =
         { //  category              name                      actor (function)
                 //  --------------------- ------------------------  -----------------------
-                {"assets", "createasset",       &createasset,       {"asset"}},
-                {"assets", "mintasset",         &mintasset,         {"assetId"}},
-                {"assets", "sendasset",         &sendasset,         {"assetId", "amount", "address", "change_address", "asset_change_address"}},
-                {"assets", "assetdetails",      &assetdetails,      {"assetId"}},
-                {"assets", "listassetsbalance", &listassetsbalance, {}},
-                {"assets", "listunspentassets", &listunspentassets, {"minconf", "maxconf", "addresses", "include_unsafe", "query_options"}},
+                {"assets", "createasset",            &createasset,            {"asset"}},
+                {"assets", "mintasset",              &mintasset,              {"assetId"}},
+                {"assets", "sendasset",              &sendasset,              {"assetId", "amount", "address", "change_address", "asset_change_address"}},
+                {"assets", "getassetdetailsbyname",  &getassetdetailsbyname,  {"assetname"}},
+                {"assets", "getassetdetailsbyid",    &getassetdetailsbyid,    {"assetid"}},
+                {"assets", "listassetsbalance",      &listassetsbalance,      {}},
+                {"assets", "listunspentassets",      &listunspentassets,      {"minconf", "maxconf", "addresses", "include_unsafe", "query_options"}},
+                {"assets", "listassets",             &listassets,             {"verbose", "count", "start"}},
         };
 
 void RegisterAssetsRPCCommands(CRPCTable &tableRPC) {
