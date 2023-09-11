@@ -23,13 +23,6 @@
 
 #include <iostream>
 #include <univalue.h>
-#include <util/check.h>
-#include <util/ref.h>
-#include <util/system.h>
-#include <util/strencodings.h>
-#include <util/validation.h>
-#include <rpc/util.h>
-
 
 static CKeyID ParsePubKeyIDFromAddress(const std::string &strAddress, const std::string &paramName) {
     CTxDestination dest = DecodeDestination(strAddress);
