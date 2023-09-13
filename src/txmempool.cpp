@@ -25,6 +25,7 @@
 #include <evo/providertx.h>
 #include <evo/deterministicmns.h>
 #include <llmq/quorums_instantsend.h>
+#include <assets/assetstype.h>
 
 #include <future/utils.h>
 
@@ -492,6 +493,15 @@ void CTxMemPool::addAddressIndex(const CTxMemPoolEntry &entry, const CCoinsViewC
             CMempoolAddressDelta delta(entry.GetTime(), prevout.nValue * -1, input.prevout.hash, input.prevout.n);
             mapAddress.insert(std::make_pair(key, delta));
             inserted.push_back(key);
+        } else if (prevout.scriptPubKey.IsAssetScript()) {
+            CAssetTransfer assetTransfer;
+            if (GetTransferAsset(prevout.scriptPubKey, assetTransfer)) {
+                uint160 hashBytes(std::vector <unsigned char>(prevout.scriptPubKey.begin()+3, prevout.scriptPubKey.begin()+23));
+                CMempoolAddressDeltaKey key(1, hashBytes, assetTransfer.assetId, txhash, j, 1);
+                CMempoolAddressDelta delta(entry.GetTime(), assetTransfer.nAmount * -1, input.prevout.hash, input.prevout.n);
+                mapAddress.insert(std::make_pair(key, delta));
+                inserted.push_back(key);
+            }
         }
     }
 
@@ -514,6 +524,15 @@ void CTxMemPool::addAddressIndex(const CTxMemPoolEntry &entry, const CCoinsViewC
             CMempoolAddressDeltaKey key(1, hashBytes, txhash, k, 0);
             mapAddress.insert(std::make_pair(key, CMempoolAddressDelta(entry.GetTime(), out.nValue)));
             inserted.push_back(key);
+        } else if (out.scriptPubKey.IsAssetScript()) {
+            CAssetTransfer assetTransfer;
+            if (GetTransferAsset(out.scriptPubKey, assetTransfer)) {
+                uint160 hashBytes(std::vector <unsigned char>(out.scriptPubKey.begin()+3, out.scriptPubKey.begin()+23));
+                std::pair<addressDeltaMap::iterator, bool> ret;
+                CMempoolAddressDeltaKey key(1, hashBytes, assetTransfer.assetId, txhash, k, 0);
+                mapAddress.insert(std::make_pair(key, CMempoolAddressDelta(entry.GetTime(), assetTransfer.nAmount)));
+                inserted.push_back(key);
+            }
         }
     }
 
@@ -561,6 +580,9 @@ void CTxMemPool::addFutureIndex(const CTxMemPoolEntry &entry, const CCoinsViewCa
 
             CFutureIndexKey key = CFutureIndexKey(tx.GetHash(), ftx.lockOutputIndex);
             CTxOut txOut = tx.vout[ftx.lockOutputIndex];
+            
+            CAssetTransfer assetTransfer;
+            bool isAsset = false;
 
             uint160 addressHash;
             int addressType;
@@ -575,6 +597,15 @@ void CTxMemPool::addFutureIndex(const CTxMemPoolEntry &entry, const CCoinsViewCa
             } else if (txOut.scriptPubKey.IsPayToPublicKey()) {
                 addressHash = Hash160(txOut.scriptPubKey.begin() + 1, txOut.scriptPubKey.end() - 1);
                 addressType = 1;
+            } else if (txOut.scriptPubKey.IsAssetScript()) {
+                if (GetTransferAsset(txOut.scriptPubKey, assetTransfer)) {
+                    addressHash = uint160(std::vector <unsigned char>(txOut.scriptPubKey.begin()+3, txOut.scriptPubKey.begin()+23));
+                    addressType = 1;
+                    isAsset = true;
+                } else {
+                    addressHash.SetNull();
+                    addressType = 0;
+                }
             } else {
                 addressHash.SetNull();
                 addressType = 0;
@@ -583,7 +614,7 @@ void CTxMemPool::addFutureIndex(const CTxMemPoolEntry &entry, const CCoinsViewCa
             unsigned int toHeight = entry.GetHeight() + ftx.maturity;
             int64_t toTime = GetTime() + ftx.lockTime;
 
-            CFutureIndexValue value = CFutureIndexValue(txOut.nValue, addressType, addressHash, entry.GetHeight(),
+            CFutureIndexValue value = CFutureIndexValue( isAsset ? assetTransfer.nAmount : txOut.nValue, addressType, addressHash, entry.GetHeight(),
                                                         toHeight,
                                                         toTime);//  txhash, j, -1, prevout.nValue, addressType, addressHash);
             mapFuture.insert(std::make_pair(key, value));
@@ -629,6 +660,8 @@ void CTxMemPool::addSpentIndex(const CTxMemPoolEntry &entry, const CCoinsViewCac
         const CTxOut &prevout = coin.out;
         uint160 addressHash;
         int addressType;
+        CAssetTransfer assetTransfer;
+        bool isAsset = false;
 
         if (prevout.scriptPubKey.IsPayToScriptHash()) {
             addressHash = uint160(
@@ -641,17 +674,25 @@ void CTxMemPool::addSpentIndex(const CTxMemPoolEntry &entry, const CCoinsViewCac
         } else if (prevout.scriptPubKey.IsPayToPublicKey()) {
             addressHash = Hash160(prevout.scriptPubKey.begin() + 1, prevout.scriptPubKey.end() - 1);
             addressType = 1;
+        } else if (prevout.scriptPubKey.IsAssetScript()) {
+            if (GetTransferAsset(prevout.scriptPubKey, assetTransfer)) {
+                addressHash = uint160(std::vector <unsigned char>(prevout.scriptPubKey.begin()+3, prevout.scriptPubKey.begin()+23));
+                addressType = 1;
+                isAsset = true;
+            } else {
+                addressHash.SetNull();
+                addressType = 0;
+            }
         } else {
             addressHash.SetNull();
             addressType = 0;
         }
 
         CSpentIndexKey key = CSpentIndexKey(input.prevout.hash, input.prevout.n);
-        CSpentIndexValue value = CSpentIndexValue(txhash, j, -1, prevout.nValue, addressType, addressHash);
+        CSpentIndexValue value = CSpentIndexValue(txhash, j, -1, isAsset ? assetTransfer.nAmount : prevout.nValue, addressType, addressHash);
 
         mapSpent.insert(std::make_pair(key, value));
         inserted.push_back(key);
-
     }
 
     mapSpentInserted.insert(make_pair(txhash, inserted));

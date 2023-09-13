@@ -254,13 +254,13 @@ void AssetsDialog::Asset_details_clicked() {
     if (passetsCache->GetAssetMetaData(assetId, asset)) {
         UniValue json(UniValue::VOBJ);
         asset.ToJson(json);
-
-        // Title of popup window
-        QString strWindowtitle = tr("Details for asset: %1").arg(
-                QString::fromStdString(asset.name));
-        QString strText = QString::fromStdString(json.write(2));
-
-        QMessageBox::information(this, strWindowtitle, strText);
+        
+        QMessageBox msgBox;
+        msgBox.setIcon(QMessageBox::Information);
+        msgBox.setWindowTitle(tr("Details for asset: %1").arg(QString::fromStdString(asset.name)));
+        msgBox.setText(QString::fromStdString(json.write(2)));
+        msgBox.setStandardButtons(QMessageBox::Ok);
+        msgBox.exec();
     }
 }
 

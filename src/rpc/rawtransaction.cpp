@@ -47,6 +47,10 @@
 #include <future/utils.h>
 #include <future/fee.h>
 
+#include "assets/assets.h"
+#include <assets/assetstype.h>
+#include "assets/assetsdb.h"
+
 #include <llmq/quorums_chainlocks.h>
 #include <llmq/quorums_commitment.h>
 #include <llmq/quorums_instantsend.h>
@@ -58,35 +62,211 @@ constexpr static CAmount
 DEFAULT_MAX_RAW_TX_FEE{
 COIN / 10};
 
+void ScriptPubKeyToUnivalue(const CScript &scriptPubKey, UniValue &out, bool fIncludeHex) {
+    txnouttype type;
+    std::vector <CTxDestination> addresses;
+    int nRequired;
+
+    out.pushKV("asm", ScriptToAsmStr(scriptPubKey));
+    if (fIncludeHex)
+        out.pushKV("hex", HexStr(scriptPubKey));
+
+    if (!ExtractDestinations(scriptPubKey, type, addresses, nRequired)) {
+        out.pushKV("type", GetTxnOutputType(type));
+        return;
+    }
+
+    out.pushKV("reqSigs", nRequired);
+    out.pushKV("type", GetTxnOutputType(type));
+
+    if (type == TX_TRANSFER_ASSET) {
+        UniValue assetInfo(UniValue::VOBJ);
+        std::string _assetAddress;
+
+        CAssetTransfer data;
+        if (GetTransferAsset(scriptPubKey, data)) {
+            std::string assetId = data.assetId;
+            if (data.isUnique) {
+                assetId += "[" + std::to_string(data.uniqueId);
+                if (data.nAmount > 1 * COIN)
+                    assetId += "..." + std::to_string(data.nAmount / COIN + data.uniqueId -1);
+                assetId += "]";
+            }
+            CAssetMetaData tmpAsset;
+            if (!passetsCache->GetAssetMetaData(data.assetId, tmpAsset)) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Asset asset metadata not found");
+            }
+            assetInfo.pushKV("name", tmpAsset.name);
+            assetInfo.pushKV("asset_id", assetId);
+            assetInfo.pushKV("amount", ValueFromAmount(data.nAmount));
+        }
+
+        out.pushKV("asset", assetInfo);
+    }
+
+    UniValue a(UniValue::VARR);
+    for (const CTxDestination &addr: addresses) {
+        a.push_back(EncodeDestination(addr));
+    }
+    out.pushKV("addresses", a);
+}
+
 void TxToJSON(const CTransaction &tx, const uint256 hashBlock, UniValue &entry) {
-    // Call into TxToUniv() in bitcoin-common to decode the transaction hex.
-    //
-    // Blockchain contextual information (confirmations and blocktime) is not
-    // available to code in bitcoin-common, so we query them here and push the
-    // data into the returned UniValue.
+    // bitcoin-common doen not have access to asset cache, changed to local function to decode the transaction hex.
 
     uint256 txid = tx.GetHash();
+    entry.pushKV("txid", txid.GetHex());
+    entry.pushKV("version", tx.nVersion);
+    entry.pushKV("type", tx.nType);
+    entry.pushKV("size", (int) ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION));
+    entry.pushKV("locktime", (int64_t) tx.nLockTime);
 
-    // Add spent information if spentindex is enabled
-    CSpentIndexTxInfo txSpentInfo;
-    for (const auto &txin: tx.vin) {
-        if (!tx.IsCoinBase()) {
+    UniValue vin(UniValue::VARR);
+    for (const CTxIn &txin: tx.vin) {
+        UniValue in(UniValue::VOBJ);
+        if (tx.IsCoinBase())
+            in.pushKV("coinbase", HexStr(txin.scriptSig));
+        else {
+            in.pushKV("txid", txin.prevout.hash.GetHex());
+            in.pushKV("vout", (int64_t) txin.prevout.n);
+            UniValue o(UniValue::VOBJ);
+            o.pushKV("asm", ScriptToAsmStr(txin.scriptSig, true));
+            o.pushKV("hex", HexStr(txin.scriptSig));
+            in.pushKV("scriptSig", o);
+
+            // Add address and value info if spentindex enabled
             CSpentIndexValue spentInfo;
             CSpentIndexKey spentKey(txin.prevout.hash, txin.prevout.n);
             if (GetSpentIndex(spentKey, spentInfo)) {
-                txSpentInfo.mSpentInfo.emplace(spentKey, spentInfo);
+                in.pushKV("value", ValueFromAmount(spentInfo.satoshis));
+                in.pushKV("valueSat", spentInfo.satoshis);
+                if (spentInfo.addressType == 1) {
+                    in.pushKV("address", EncodeDestination(CKeyID(spentInfo.addressHash)));
+                } else if (spentInfo.addressType == 2) {
+                    in.pushKV("address", EncodeDestination(CScriptID(spentInfo.addressHash)));
+                }
             }
         }
+        in.pushKV("sequence", (int64_t) txin.nSequence);
+        vin.push_back(in);
     }
+    entry.pushKV("vin", vin);
+
+    UniValue vout(UniValue::VARR);
     for (unsigned int i = 0; i < tx.vout.size(); i++) {
+        const CTxOut &txout = tx.vout[i];
+
+        UniValue out(UniValue::VOBJ);
+
+        out.pushKV("value", ValueFromAmount(txout.nValue));
+        out.pushKV("valueSat", txout.nValue);
+        out.pushKV("n", (int64_t) i);
+
+        UniValue o(UniValue::VOBJ);
+        ScriptPubKeyToUnivalue(txout.scriptPubKey, o, true);
+        out.pushKV("scriptPubKey", o);
+
+        // Add spent information if spentindex is enabled
         CSpentIndexValue spentInfo;
         CSpentIndexKey spentKey(txid, i);
         if (GetSpentIndex(spentKey, spentInfo)) {
-            txSpentInfo.mSpentInfo.emplace(spentKey, spentInfo);
+            out.pushKV("spentTxId", spentInfo.txid.GetHex());
+            out.pushKV("spentIndex", (int) spentInfo.inputIndex);
+            out.pushKV("spentHeight", spentInfo.blockHeight);
+        }
+        vout.push_back(out);
+    }
+    entry.pushKV("vout", vout);
+
+    if (!tx.vExtraPayload.empty()) {
+        entry.pushKV("extraPayloadSize", (int) tx.vExtraPayload.size());
+        entry.pushKV("extraPayload", HexStr(tx.vExtraPayload));
+    }
+
+    if (tx.nType == TRANSACTION_PROVIDER_REGISTER) {
+        CProRegTx proTx;
+        if (GetTxPayload(tx, proTx)) {
+            UniValue obj;
+            proTx.ToJson(obj);
+            entry.pushKV("proRegTx", obj);
+        }
+    } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_SERVICE) {
+        CProUpServTx proTx;
+        if (GetTxPayload(tx, proTx)) {
+            UniValue obj;
+            proTx.ToJson(obj);
+            entry.pushKV("proUpServTx", obj);
+        }
+    } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_REGISTRAR) {
+        CProUpRegTx proTx;
+        if (GetTxPayload(tx, proTx)) {
+            UniValue obj;
+            proTx.ToJson(obj);
+            entry.pushKV("proUpRegTx", obj);
+        }
+    } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_REVOKE) {
+        CProUpRevTx proTx;
+        if (GetTxPayload(tx, proTx)) {
+            UniValue obj;
+            proTx.ToJson(obj);
+            entry.pushKV("proUpRevTx", obj);
+        }
+    } else if (tx.nType == TRANSACTION_COINBASE) {
+        CCbTx cbTx;
+        if (GetTxPayload(tx, cbTx)) {
+            UniValue obj;
+            cbTx.ToJson(obj);
+            entry.pushKV("cbTx", obj);
+        }
+    } else if (tx.nType == TRANSACTION_QUORUM_COMMITMENT) {
+        llmq::CFinalCommitmentTxPayload qcTx;
+        if (GetTxPayload(tx, qcTx)) {
+            UniValue obj;
+            qcTx.ToJson(obj);
+            entry.pushKV("qcTx", obj);
+        }
+    } else if (tx.nType == TRANSACTION_FUTURE) {
+        CFutureTx ctx;
+        if (GetTxPayload(tx, ctx)) {
+            UniValue obj;
+            ctx.ToJson(obj);
+            entry.pushKV("futureTx", obj);
+        }
+    } else if (tx.nType == TRANSACTION_FUTURE) {
+        CFutureTx ctx;
+        if (GetTxPayload(tx, ctx)) {
+            UniValue obj;
+            ctx.ToJson(obj);
+            entry.push_back(Pair("futureTx", obj));
+        }
+    } else if (tx.nType == TRANSACTION_NEW_ASSET) {
+        CNewAssetTx ctx;
+        if (GetTxPayload(tx, ctx)) {
+            UniValue obj;
+            ctx.ToJson(obj);
+            entry.push_back(Pair("newAssetTx", obj));
+        }
+    } else if (tx.nType == TRANSACTION_UPDATE_ASSET) {
+        CNewAssetTx ctx;
+        if (GetTxPayload(tx, ctx)) {
+            UniValue obj;
+            ctx.ToJson(obj);
+            entry.push_back(Pair("UpdateAssetTx", obj));
+        }
+    } else if (tx.nType == TRANSACTION_MINT_ASSET) {
+        CMintAssetTx ctx;
+        if (GetTxPayload(tx, ctx)) {
+            UniValue obj;
+            ctx.ToJson(obj);
+            entry.push_back(Pair("MintAssetTx", obj));
         }
     }
 
-    TxToUniv(tx, uint256(), entry, true, &txSpentInfo);
+    if (!hashBlock.IsNull())
+        entry.pushKV("blockhash", hashBlock.GetHex());
+
+    // The hex-encoded transaction. Used the name "hex" to be consistent with the verbose output of "getrawtransaction".
+    entry.pushKV("hex", EncodeHexTx(tx)); 
 
     bool chainLock = false;
     if (!hashBlock.IsNull()) {

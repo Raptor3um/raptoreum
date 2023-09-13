@@ -46,6 +46,8 @@
 #include <boost/algorithm/string.hpp>
 
 #include <univalue.h>
+#include "assets/assets.h"
+#include <assets/assetstype.h>
 
 static UniValue mnsync(const JSONRPCRequest &request) {
     RPCHelpMan{"mnsync",
@@ -646,6 +648,8 @@ UniValue getaddressmempool(const JSONRPCRequest &request) {
                                {RPCResult::Type::OBJ, "", "",
                                 {
                                         {RPCResult::Type::STR, "address", "The base58check encoded address"},
+                                        {RPCResult::Type::STR, "asset", "The asset name of the associated asset"},
+                                        {RPCResult::Type::STR, "assetId", "(only on assets) The asset Id of the associated asset"},
                                         {RPCResult::Type::STR_HEX, "txid", "The related txid"},
                                         {RPCResult::Type::NUM, "index", "The related input or output index"},
                                         {RPCResult::Type::NUM, "satoshis", "The difference of duffs"},
@@ -691,6 +695,16 @@ UniValue getaddressmempool(const JSONRPCRequest &request) {
 
         UniValue delta(UniValue::VOBJ);
         delta.pushKV("address", address);
+        if (it->first.asset != "RTM"){
+            CAssetMetaData tmpAsset;
+            if (!passetsCache->GetAssetMetaData(it->first.asset, tmpAsset)) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Asset asset metadata not found");
+            }
+            delta.pushKV("asset", tmpAsset.name);
+            delta.pushKV("assetId", it->first.asset);
+        } else {
+            delta.pushKV("asset", it->first.asset);
+        }
         delta.pushKV("txid", it->first.txhash.GetHex());
         delta.pushKV("index", (int) it->first.index);
         delta.pushKV("satoshis", it->second.amount);
@@ -710,25 +724,49 @@ UniValue getaddressutxos(const JSONRPCRequest &request) {
             "getaddressutxos",
             "\nReturns all unspent outputs for an address (requires addressindex to be enabled).\n",
             {
-                    {"addresses", RPCArg::Type::ARR, /* default */ "", "",
-                     {
-                             {"address", RPCArg::Type::STR, /* default */ "", "The base58check encoded address"},
-                     },
+                {"addresses", RPCArg::Type::ARR, /* default */ "", "",
+                    {
+                            {"address", RPCArg::Type::STR, /* default */ "", "The base58check encoded address"},
                     },
+                },
+                {"asset", RPCArg::Type::STR, /* default */ "RTM", "Get UTXOs for a particular asset instead of RTM ('*' for all assets).",}
             },
-            RPCResult{
+            {
+                RPCResult{"For RTM",
                     RPCResult::Type::ARR, "", "",
                     {
-                            {RPCResult::Type::OBJ, "", "",
-                             {
-                                     {RPCResult::Type::STR, "address", "The address base58check encoded"},
-                                     {RPCResult::Type::STR_HEX, "txid", "The output txid"},
-                                     {RPCResult::Type::NUM, "index", "The output index"},
-                                     {RPCResult::Type::STR_HEX, "script", "The script hex-encoded"},
-                                     {RPCResult::Type::NUM, "satoshis", "The number of duffs of the output"},
-                                     {RPCResult::Type::NUM, "height", "The block height"},
-                             }},
-                    }},
+                        {RPCResult::Type::OBJ, "", "",
+                            {
+                                {RPCResult::Type::STR, "address", "The address base58check encoded"},
+                                {RPCResult::Type::STR_HEX, "txid", "The output txid"},
+                                {RPCResult::Type::NUM, "index", "The output index"},
+                                {RPCResult::Type::STR_HEX, "script", "The script hex-encoded"},
+                                {RPCResult::Type::NUM, "satoshis", "The number of duffs of the output"},
+                                {RPCResult::Type::NUM, "height", "The block height"},
+                            },
+                        },
+                    },
+                },
+                RPCResult{"For Assets",
+                    RPCResult::Type::OBJ, "", "",
+                    {
+                        {RPCResult::Type::ARR, "Asset name", "",
+                            {{RPCResult::Type::OBJ, "", "",
+                                {
+                                    {RPCResult::Type::STR, "address", "The address base58check encoded"},
+                                    {RPCResult::Type::STR, "assetId", "The asset id associated with the UTXOs"},
+                                    {RPCResult::Type::STR, "uniqueId", "(if unique) The unique id associated with the UTXOs"},
+                                    {RPCResult::Type::STR_HEX, "txid", "The output txid"},
+                                    {RPCResult::Type::NUM, "index", "The output index"},
+                                    {RPCResult::Type::STR_HEX, "script", "The script hex-encoded"},
+                                    {RPCResult::Type::NUM, "satoshis", "The number of duffs of the output"},
+                                    {RPCResult::Type::NUM, "height", "The block height"},
+                                },
+                            }},
+                        },
+                    },
+                },
+            },
             RPCExamples{
                     HelpExampleCli("getaddressutxos", "'{\"addresses\": [\"XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg\"]}'")
                     + HelpExampleRpc("getaddressutxos", "{\"addresses\": [\"XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg\"]}")
@@ -736,6 +774,7 @@ UniValue getaddressutxos(const JSONRPCRequest &request) {
     }.Check(request);
 
     std::vector <std::pair<uint160, int>> addresses;
+    std::string assetId = "RTM";
 
     if (!getAddressesFromParams(request.params, addresses)) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
@@ -750,6 +789,15 @@ UniValue getaddressutxos(const JSONRPCRequest &request) {
                 excludeUnspendable = excludeUnspendableValue.get_bool();
             }
         }
+
+        UniValue assetParam = find_value(request.params[0].get_obj(), "asset");
+        if (assetParam.isStr()) {
+            if (!Params().IsAssetsActive(::ChainActive().Tip()))
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Assets aren't active. assetId can't be specified.");
+            assetId = assetParam.get_str();
+            if (assetId != "*" && !passetsCache->GetAssetId(assetId, assetId))
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "ERROR: Asset not found");
+        }
     }
 
     std::vector <std::pair<CAddressUnspentKey, CAddressUnspentValue>> unspentOutputs;
@@ -763,48 +811,111 @@ UniValue getaddressutxos(const JSONRPCRequest &request) {
 
     std::sort(unspentOutputs.begin(), unspentOutputs.end(), heightSort);
 
-    UniValue result(UniValue::VARR);
-
-    for (std::vector < std::pair < CAddressUnspentKey, CAddressUnspentValue > >
-                                                       ::const_iterator it = unspentOutputs.begin(); it !=
-                                                                                                     unspentOutputs.end();
-    it++) {
-        UniValue output(UniValue::VOBJ);
-        std::string address;
-        if (!getAddressFromIndex(it->first.type, it->first.hashBytes, address)) {
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Unknown address type");
-        }
-        if (excludeUnspendable) {
-            int currentHeight = ::ChainActive().Tip() == nullptr ? 0 : ::ChainActive().Tip()->nHeight;
-            bool isFSpendable = (it->second.fSpendableHeight >= 0 && it->second.fSpendableHeight <= currentHeight) ||
-                                (it->second.fSpendableTime >= 0 && it->second.fSpendableTime <= GetAdjustedTime());
-            if (!isFSpendable) {
+    
+    if (assetId == "RTM"){
+        UniValue result(UniValue::VARR);
+        for (std::vector < std::pair < CAddressUnspentKey, CAddressUnspentValue > >
+                                                        ::const_iterator it = unspentOutputs.begin(); it !=
+                                                                                                        unspentOutputs.end();
+        it++) {
+            if (assetId != it->first.asset)
                 continue;
-            }
-        }
-        output.pushKV("address", address);
-        output.pushKV("txid", it->first.txhash.GetHex());
-        output.pushKV("outputIndex", (int) it->first.index);
-        output.pushKV("script", HexStr(it->second.script));
-        output.pushKV("satoshis", it->second.satoshis);
-        output.pushKV("height", it->second.blockHeight);
-        output.pushKV("spendableHeight", it->second.fSpendableHeight);
-        output.pushKV("spendableTime", it->second.fSpendableTime);
-        result.push_back(output);
-    }
 
-    return result;
+            UniValue output(UniValue::VOBJ);
+            std::string address;
+            if (!getAddressFromIndex(it->first.type, it->first.hashBytes, address)) {
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Unknown address type");
+            }
+            if (excludeUnspendable) {
+                int currentHeight = ::ChainActive().Tip() == nullptr ? 0 : ::ChainActive().Tip()->nHeight;
+                bool isFSpendable = (it->second.fSpendableHeight >= 0 && it->second.fSpendableHeight <= currentHeight) ||
+                                    (it->second.fSpendableTime >= 0 && it->second.fSpendableTime <= GetAdjustedTime());
+                if (!isFSpendable) {
+                    continue;
+                }
+            }
+            output.pushKV("address", address);
+            output.pushKV("txid", it->first.txhash.GetHex());
+            output.pushKV("outputIndex", (int) it->first.index);
+            output.pushKV("script", HexStr(it->second.script));
+            output.pushKV("satoshis", it->second.satoshis);
+            output.pushKV("height", it->second.blockHeight);
+            output.pushKV("spendableHeight", it->second.fSpendableHeight);
+            output.pushKV("spendableTime", it->second.fSpendableTime);
+            result.push_back(output);
+        }
+        return result;
+    } else {
+        UniValue result(UniValue::VOBJ);
+        std::map<std::string, std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue>>> mapassetUTXO;
+        for (std::vector < std::pair < CAddressUnspentKey, CAddressUnspentValue > >
+                                                        ::const_iterator it = unspentOutputs.begin(); it !=
+                                                                                                        unspentOutputs.end();
+        it++) {
+            if (it->first.asset == "RTM")
+                continue;
+
+            if (assetId != it->first.asset && assetId != "*")
+                continue;
+
+            if (excludeUnspendable) {
+                int currentHeight = ::ChainActive().Tip() == nullptr ? 0 : ::ChainActive().Tip()->nHeight;
+                bool isFSpendable = (it->second.fSpendableHeight >= 0 && it->second.fSpendableHeight <= currentHeight) ||
+                                    (it->second.fSpendableTime >= 0 && it->second.fSpendableTime <= GetAdjustedTime());
+                if (!isFSpendable) {
+                    continue;
+                }
+            }
+            if (!mapassetUTXO.count(it->first.asset)){
+                std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue>> tmp;
+                mapassetUTXO.insert(std::make_pair(it->first.asset, tmp));
+            }
+            mapassetUTXO[it->first.asset].push_back(*it);
+        }
+        for (auto asset : mapassetUTXO){
+            UniValue assetutxo(UniValue::VARR);
+            for (auto it : asset.second){
+                UniValue output(UniValue::VOBJ);
+                std::string address;
+                if (!getAddressFromIndex(it.first.type, it.first.hashBytes, address)) {
+                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Unknown address type");
+                }
+                output.pushKV("address", address);
+                output.pushKV("assetId", it.first.asset);
+                CAssetTransfer assetTransfer;
+                if (it.second.isUnique)
+                    output.pushKV("uniqueId", it.second.uniqueId);
+                output.pushKV("txid", it.first.txhash.GetHex());
+                output.pushKV("outputIndex", (int) it.first.index);
+                output.pushKV("script", HexStr(it.second.script));
+                output.pushKV("satoshis", it.second.satoshis);
+                output.pushKV("height", it.second.blockHeight);
+                output.pushKV("spendableHeight", it.second.fSpendableHeight);
+                output.pushKV("spendableTime", it.second.fSpendableTime);
+                assetutxo.push_back(output);
+            }
+
+            CAssetMetaData tmpAsset;
+            if (!passetsCache->GetAssetMetaData(asset.first, tmpAsset)) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Asset asset metadata not found");
+            }
+            result.pushKV(tmpAsset.name, assetutxo);      
+        }
+        return result;
+    }
 }
 
 UniValue getaddressdeltas(const JSONRPCRequest &request) {
     RPCHelpMan{"getaddressdeltas",
                "\nReturns all changes for an address (requires addressindex to be enabled).\n",
                {
-                       {"addresses", RPCArg::Type::ARR, /* default */ "", "",
+                    {"addresses", RPCArg::Type::ARR, /* default */ "", "",
                         {
                                 {"address", RPCArg::Type::STR, /* default */ "", "The base58check encoded address"},
                         },
-                       },
+                    },
+                    {"asset", RPCArg::Type::STR, /* default */ "RTM", "Get all changes for a particular asset instead of RTM.",}
+
                },
                RPCResult{
                        RPCResult::Type::ARR, "", "",
@@ -812,6 +923,7 @@ UniValue getaddressdeltas(const JSONRPCRequest &request) {
                                {RPCResult::Type::OBJ, "", "",
                                 {
                                         {RPCResult::Type::NUM, "satoshis", "The difference of duffs"},
+                                        {RPCResult::Type::STR, "assetId", "The asset id"},
                                         {RPCResult::Type::STR_HEX, "txid", "The related txid"},
                                         {RPCResult::Type::NUM, "index", "The related input or output index"},
                                         {RPCResult::Type::NUM, "blockindex", "The related block index"},
@@ -827,6 +939,19 @@ UniValue getaddressdeltas(const JSONRPCRequest &request) {
 
     UniValue startValue = find_value(request.params[0].get_obj(), "start");
     UniValue endValue = find_value(request.params[0].get_obj(), "end");
+
+    std::string assetId = "RTM";
+
+    if (request.params[0].isObject()) {
+        UniValue assetParam = find_value(request.params[0].get_obj(), "asset");
+        if (assetParam.isStr()) {
+            if (!Params().IsAssetsActive(::ChainActive().Tip()))
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Assets aren't active. assetId can't be specified.");
+            assetId = assetParam.get_str();
+            if (assetId != "*" && !passetsCache->GetAssetId(assetId, assetId))
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "ERROR: Asset not found");
+        }
+    }
 
     int start = 0;
     int end = 0;
@@ -865,6 +990,9 @@ UniValue getaddressdeltas(const JSONRPCRequest &request) {
     for (std::vector < std::pair < CAddressIndexKey, CAmount > > ::const_iterator it = addressIndex.begin(); it !=
                                                                                                              addressIndex.end();
     it++) {
+        if (it->first.asset != assetId && assetId != "*")
+            continue;
+
         std::string address;
         if (!getAddressFromIndex(it->first.type, it->first.hashBytes, address)) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Unknown address type");
@@ -872,6 +1000,14 @@ UniValue getaddressdeltas(const JSONRPCRequest &request) {
 
         UniValue delta(UniValue::VOBJ);
         delta.pushKV("satoshis", it->second);
+        if (it->first.asset != "RTM"){
+            CAssetMetaData tmpAsset;
+            if (!passetsCache->GetAssetMetaData(it->first.asset, tmpAsset)) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Asset asset metadata not found");
+            }
+            delta.pushKV("asset", tmpAsset.name);
+            delta.pushKV("assetId", it->first.asset);
+        }
         delta.pushKV("txid", it->first.txhash.GetHex());
         delta.pushKV("index", (int) it->first.index);
         delta.pushKV("blockindex", (int) it->first.txindex);
@@ -886,34 +1022,62 @@ UniValue getaddressdeltas(const JSONRPCRequest &request) {
 static UniValue getaddressbalance(const JSONRPCRequest &request) {
     RPCHelpMan{"getaddressbalance",
                "\nReturns the balance for an address(es) (requires addressindex to be enabled).\n",
-               {
-                       {"addresses", RPCArg::Type::ARR, /* default */ "", "",
-                        {
-                                {"address", RPCArg::Type::STR, /* default */ "", "The base58check encoded address"},
-                        },
-                       },
-               },
-               RPCResult{
-                       RPCResult::Type::OBJ, "", "",
-                       {
-                               {RPCResult::Type::NUM, "balance", "The current total balance in duffs"},
-                               {RPCResult::Type::NUM, "balance_immature", "The current immature balance in duffs"},
-                               {RPCResult::Type::NUM, "balance_spendable", "The current spendable balance in duffs"},
-                               {RPCResult::Type::NUM, "received",
-                                "The total number of duffs received (including change)"},
-                       }},
-               RPCExamples{
-                       HelpExampleCli("getaddressbalance",
-                                      "'{\"addresses\": [\"XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg\"]}'")
-                       +
-                       HelpExampleRpc("getaddressbalance", "{\"addresses\": [\"XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg\"]}")
-               },
+        {
+            {"addresses", RPCArg::Type::ARR, /* default */ "", "",
+                {
+                    {"address", RPCArg::Type::STR, /* default */ "", "The base58check encoded address"},
+                },
+            },
+            {"asset", RPCArg::Type::STR, /* default */ "RTM", "Get balance for a particular asset instead of RTM. (\"*\" for all assets)"},
+        },
+        {
+            RPCResult{"For RTM",
+                RPCResult::Type::OBJ, "", "",
+                {
+                    {RPCResult::Type::NUM, "balance", "The current total balance in duffs"},
+                    {RPCResult::Type::NUM, "balance_immature", "The current immature balance in duffs"},
+                    {RPCResult::Type::NUM, "balance_spendable", "The current spendable balance in duffs"},
+                    {RPCResult::Type::NUM, "received", "The total number of duffs received (including change)"},
+                }
+            },
+            RPCResult{"For assets",
+                RPCResult::Type::OBJ, " ", "",
+                {
+                    {RPCResult::Type::OBJ, "asset name", "",
+                    {
+                        {RPCResult::Type::NUM, "balance", "The current total balance in duffs"},
+                        {RPCResult::Type::NUM, "balance_immature", "The current immature balance in duffs"},
+                        {RPCResult::Type::NUM, "balance_spendable", "The current spendable balance in duffs"},
+                        {RPCResult::Type::NUM, "received", "The total number of duffs received (including change)"},
+                    }},
+                }
+            },
+        },
+        RPCExamples{
+                HelpExampleCli("getaddressbalance",
+                                "'{\"addresses\": [\"XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg\"]}'")
+                +
+                HelpExampleRpc("getaddressbalance", "{\"addresses\": [\"XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg\"]}")
+        },
     }.Check(request);
 
     std::vector <std::pair<uint160, int>> addresses;
 
     if (!getAddressesFromParams(request.params, addresses)) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
+    }
+
+    std::string assetId = "RTM";
+
+    if (request.params[0].isObject()) {
+        UniValue assetParam = find_value(request.params[0].get_obj(), "asset");
+        if (assetParam.isStr()) {
+            if (!Params().IsAssetsActive(::ChainActive().Tip()))
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Assets aren't active. assetId can't be specified.");
+            assetId = assetParam.get_str();
+            if (assetId != "*" && !passetsCache->GetAssetId(assetId, assetId))
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "ERROR: Asset not found");
+        }
     }
 
     std::vector <std::pair<CAddressIndexKey, CAmount>> addressIndex;
@@ -925,35 +1089,85 @@ static UniValue getaddressbalance(const JSONRPCRequest &request) {
         }
     }
 
-    int nHeight = WITH_LOCK(cs_main,
-    return ::ChainActive().Height());
+    int nHeight = WITH_LOCK(cs_main, return ::ChainActive().Height());
+    if (assetId == "RTM") {
+        CAmount balance = 0;
+        CAmount balance_spendable = 0;
+        CAmount balance_immature = 0;
+        CAmount received = 0;
 
-    CAmount balance = 0;
-    CAmount balance_spendable = 0;
-    CAmount balance_immature = 0;
-    CAmount received = 0;
+        for (std::vector < std::pair < CAddressIndexKey, CAmount > > ::const_iterator it = addressIndex.begin(); it !=
+                                                                                                                addressIndex.end();
+        it++) {
+            if (it->first.asset != "RTM")
+                continue;
+            if (it->second > 0) {
+                received += it->second;
+            }
+            if (it->first.txindex == 0 && nHeight - it->first.blockHeight < COINBASE_MATURITY) {
+                balance_immature += it->second;
+            } else {
+                balance_spendable += it->second;
+            }
+            balance += it->second;
+        }
 
-    for (std::vector < std::pair < CAddressIndexKey, CAmount > > ::const_iterator it = addressIndex.begin(); it !=
-                                                                                                             addressIndex.end();
-    it++) {
-        if (it->second > 0) {
-            received += it->second;
+        UniValue result(UniValue::VOBJ);
+        result.pushKV("balance", balance);
+        result.pushKV("balance_immature", balance_immature);
+        result.pushKV("balance_spendable", balance_spendable);
+        result.pushKV("received", received);
+
+        return result;
+    } else {
+        struct balance {
+            CAmount balance;
+            CAmount balance_spendable;
+            CAmount balance_immature;
+            CAmount received;
+        };
+
+        std::map<std::string, balance> mapbalance;
+        for (std::vector < std::pair < CAddressIndexKey, CAmount > > ::const_iterator it = addressIndex.begin(); 
+                                                                            it != addressIndex.end(); it++) {
+            if (it->first.asset != assetId && assetId != "*")
+                continue;
+
+            if (mapbalance.find(it->first.asset) == mapbalance.end()) {
+                balance tmp;
+                mapbalance.insert(std::make_pair(it->first.asset, tmp));
+            }
+            if (it->second > 0) {
+                mapbalance[it->first.asset].received += it->second;
+            }
+            if (it->first.txindex == 0 && nHeight - it->first.blockHeight < COINBASE_MATURITY) {
+                mapbalance[it->first.asset].balance_immature += it->second;
+            } else {
+                mapbalance[it->first.asset].balance_spendable += it->second;
+            }
+            mapbalance[it->first.asset].balance += it->second;
         }
-        if (it->first.txindex == 0 && nHeight - it->first.blockHeight < COINBASE_MATURITY) {
-            balance_immature += it->second;
-        } else {
-            balance_spendable += it->second;
+
+        UniValue result(UniValue::VOBJ);
+        for (auto it : mapbalance){
+            UniValue asset(UniValue::VOBJ);
+            asset.pushKV("balance", it.second.balance);
+            asset.pushKV("balance_immature", it.second.balance_immature);
+            asset.pushKV("balance_spendable", it.second.balance_spendable);
+            asset.pushKV("received", it.second.received);
+            if (it.first == "RTM") {
+                result.pushKV(it.first, asset);
+            } else {
+                CAssetMetaData tmpAsset;
+                if (!passetsCache->GetAssetMetaData(it.first, tmpAsset)) {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Asset asset metadata not found");
+                }
+                result.pushKV(tmpAsset.name, asset);
+            }      
         }
-        balance += it->second;
+
+        return result;
     }
-
-    UniValue result(UniValue::VOBJ);
-    result.pushKV("balance", balance);
-    result.pushKV("balance_immature", balance_immature);
-    result.pushKV("balance_spendable", balance_spendable);
-    result.pushKV("received", received);
-
-    return result;
 
 }
 
