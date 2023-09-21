@@ -260,6 +260,7 @@ void AssetsDialog::Asset_details_clicked() {
         msgBox.setWindowTitle(tr("Details for asset: %1").arg(QString::fromStdString(asset.name)));
         msgBox.setText(QString::fromStdString(json.write(2)));
         msgBox.setStandardButtons(QMessageBox::Ok);
+        msgBox.setTextInteractionFlags(Qt::TextSelectableByMouse);
         msgBox.exec();
     }
 }
