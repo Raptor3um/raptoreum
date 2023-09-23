@@ -1302,7 +1302,7 @@ void CWallet::LoadToWallet(CWalletTx &wtxIn) {
             }
         }
     }
-    if (wtx.tx->nType == TRANSACTION_NEW_ASSET){
+    if (wtx.tx->nType == TRANSACTION_NEW_ASSET && !wtx.isAbandoned()){
         CNewAssetTx assetTx;
         if (GetTxPayload(wtx.tx->vExtraPayload, assetTx))
                 mapAsset.emplace(hash, std::make_pair(assetTx.name, assetTx.ownerAddress));
@@ -4180,6 +4180,9 @@ bool CWallet::CreateTransaction(const std::vector <CRecipient> &vecSend, CTransa
     bool fHasAsset = false;
     std::map <std::string, CAmount> mapAssetValue;
     std::map <std::string, std::vector<std::pair<CTxDestination, CAmount>>> mapUniqueValue;
+    std::pair<CTxDestination, std::string> toLock;
+    bool lockUnique = false;
+    CScript lockUniquePubKey;
     CReserveKey reservekey(this);
     int nChangePosRequest = nChangePosInOut;
     unsigned int nSubtractFeeFromAmount = 0;
@@ -4206,6 +4209,10 @@ bool CWallet::CreateTransaction(const std::vector <CRecipient> &vecSend, CTransa
                             mapUniqueValue[assetTransfer.assetId] = tmp;
                         }
                         mapUniqueValue[assetTransfer.assetId].push_back(std::make_pair(dest,assetTransfer.nAmount));
+                        if (fpp && recipient.scriptPubKey == fpp->futureRecScript) {
+                            toLock = std::make_pair(dest, assetTransfer.assetId);
+                            lockUnique = true;
+                        }
                     }
                 }
             }
@@ -4393,7 +4400,7 @@ bool CWallet::CreateTransaction(const std::vector <CRecipient> &vecSend, CTransa
                             strFailReason = _("Transaction amount too small");
                         return false;
                     }
-                    if (fpp && recipient.scriptPubKey == fpp->futureRecScript) {
+                    if (fpp && !lockUnique && recipient.scriptPubKey == fpp->futureRecScript) {
                         ftx.lockOutputIndex = txNew.vout.size();
                         CDataStream ds(SER_NETWORK, PROTOCOL_VERSION);
                         ds << ftx;
@@ -4470,6 +4477,7 @@ bool CWallet::CreateTransaction(const std::vector <CRecipient> &vecSend, CTransa
                         }
 
                         //build the outputs
+                        bool toLockFound = false;
                         for (auto asset : mapUniqueIds){
                             for (auto dst: mapUniqueValue.at(asset.first)) {
                                 CAmount vToSend = dst.second;
@@ -4497,7 +4505,16 @@ bool CWallet::CreateTransaction(const std::vector <CRecipient> &vecSend, CTransa
                                     assetTransfer.BuildAssetTransaction(scriptPubKey);
                                     CTxOut txout( 0, scriptPubKey);
                                     txNew.vout.push_back(txout);
-
+                                    if (!toLockFound && fpp && lockUnique && toLock.first == dst.first && toLock.second == asset.first) {
+                                        toLockFound = true;
+                                        //copy the scriptPubKey to update the lockOutputIndex later on
+                                        lockUniquePubKey = scriptPubKey;
+                                        ftx.lockOutputIndex = txNew.vout.size();
+                                        CDataStream ds(SER_NETWORK, PROTOCOL_VERSION);
+                                        ds << ftx;
+                                        txNew.vExtraPayload.assign(ds.begin(), ds.end());
+                                        nExtraPayloadSize = txNew.vExtraPayload.size();
+                                    }
                                     if (change) {
                                         entry.first = entry.first + (amount / COIN);
                                         mapUniqueIds.at(asset.first).push_back(entry);  
@@ -4730,7 +4747,9 @@ bool CWallet::CreateTransaction(const std::vector <CRecipient> &vecSend, CTransa
             ftx.lockOutputIndex = 0;
             // this loop needed because vout may be in a different order then recipient list
             for (const auto &txOut: txNew.vout) {
-                if (txOut.scriptPubKey == fpp->futureRecScript)
+                if (!lockUnique && txOut.scriptPubKey == fpp->futureRecScript)
+                    break;
+                if (lockUnique && txOut.scriptPubKey == lockUniquePubKey)
                     break;
                 ftx.lockOutputIndex++;
             }

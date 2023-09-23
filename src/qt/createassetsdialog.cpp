@@ -10,6 +10,7 @@
 #include <qt/addresstablemodel.h>
 #include <qt/bitcoinunits.h>
 #include <qt/clientmodel.h>
+#include <txmempool.h>
 #include <qt/coincontroldialog.h>
 #include <qt/guiutil.h>
 #include <qt/optionsmodel.h>
@@ -354,6 +355,7 @@ void CreateAssetsDialog::createAsset() {
         return;
     }
     model->wallet().commitTransaction(newTx, {}, {});
+    clear();
 }
 
 void CreateAssetsDialog::onUniqueChanged() {
@@ -390,6 +392,11 @@ bool CreateAssetsDialog::validateInputs() {
             retval = false;
             ui->assetnameText->setValid(false);
         }
+    }
+    //check on mempool if asset already exist
+    if (mempool.CheckForNewAssetConflict(assetname)) {
+        retval = false;
+        ui->assetnameText->setValid(false);
     }
 
     std::string ipfshash = ui->ipfsText->text().toStdString();
@@ -740,6 +747,10 @@ void CreateAssetsDialog::checkAvailabilityClicked()
         if (passetsCache->GetAssetMetaData(assetId, tmpAsset)) {
             ui->assetnameText->setValid(false);
         }
+    }
+    // check if asset already exist on mempool
+    if (mempool.CheckForNewAssetConflict(assetname)) {
+        ui->assetnameText->setValid(false);
     }
 }
 

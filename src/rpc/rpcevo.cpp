@@ -1544,7 +1544,7 @@ UniValue protx(const JSONRPCRequest &request) {
 #ifdef ENABLE_WALLET
     if (command == "protxregister" || command == "protxregister_fund" || command == "protxregister_prepare") {
         return protx_register(new_request);
-    } else if (command == "protxregisterkoubmit") {
+    } else if (command == "protxregister_submit") {
         return protx_register_submit(new_request);
     } else if (command == "protxupdate_service") {
         return protx_update_service(new_request);
