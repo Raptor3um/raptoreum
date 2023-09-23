@@ -4562,7 +4562,6 @@ bool CWallet::CreateTransaction(const std::vector <CRecipient> &vecSend, CTransa
                     }
 
                     nBytes = ::GetSerializeSize(txNew, SER_NETWORK, PROTOCOL_VERSION);
-                     std::cout << "transaction size: " << nBytes << " payload: " << nExtraPayloadSize << std::endl;
 
                     if (nExtraPayloadSize != 0) {
                         // account for extra payload in fee calculation
