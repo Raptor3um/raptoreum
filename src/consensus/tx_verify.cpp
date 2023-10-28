@@ -252,11 +252,10 @@ unsigned int GetTransactionSigOpCount(const CTransaction &tx, const CCoinsViewCa
 
 inline bool checkOutput(const CTxOut &out, CValidationState &state, CAmount &nValueIn,
                         std::map <std::string, CAmount> &nAssetVin,
-                        std::map <std::string, std::vector<std::pair<uint64_t, uint64_t>>> &nMapids,
-                        bool isV17active) {
+                        std::map <std::string, std::vector<std::pair<uint64_t, uint64_t>>> &nMapids) {
     // Check for negative or overflow values
     nValueIn += out.nValue;
-    if (!MoneyRange(out.nValue, isV17active) || !MoneyRange(nValueIn, isV17active)) {
+    if (!MoneyRange(out.nValue) || !MoneyRange(nValueIn)) {
         return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputvalues-outofrange");
     }
 
@@ -335,8 +334,7 @@ inline bool checkAssetsOutputs(CValidationState &state, std::map <std::string, C
 }
 
 bool Consensus::CheckTxInputs(const CTransaction &tx, CValidationState &state, const CCoinsViewCache &inputs,
-                              int nSpendHeight, CAmount &txfee, CAmount &specialTxFee, bool isV17active,
-                              bool fFeeVerify) {
+                              int nSpendHeight, CAmount &txfee, CAmount &specialTxFee, bool fFeeVerify) {
     // are the actual inputs available?
     if (!inputs.HaveInputs(tx)) {
         return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputs-missingorspent", false,
@@ -359,7 +357,7 @@ bool Consensus::CheckTxInputs(const CTransaction &tx, CValidationState &state, c
                                  strprintf("tried to spend coinbase at depth %d", nSpendHeight - coin.nHeight));
         }
 
-        if (!checkOutput(coin.out, state, nValueIn, nAssetVin, mapVinIds, isV17active))
+        if (!checkOutput(coin.out, state, nValueIn, nAssetVin, mapVinIds))
             return false;
 
         const char *futureValidationError = validateFutureCoin(coin, nSpendHeight);
@@ -373,7 +371,7 @@ bool Consensus::CheckTxInputs(const CTransaction &tx, CValidationState &state, c
     std::map <std::string, std::vector<std::pair<uint64_t, uint64_t>>> mapVoutIds;
 
     for (auto out: tx.vout) {
-        if (!checkOutput(out, state, value_out, nAssetVout, mapVoutIds, isV17active))
+        if (!checkOutput(out, state, value_out, nAssetVout, mapVoutIds))
             return false;
     }
 
@@ -389,7 +387,7 @@ bool Consensus::CheckTxInputs(const CTransaction &tx, CValidationState &state, c
 
     // Tally transaction fees
     const CAmount txfee_aux = nValueIn - value_out;
-    if (!MoneyRange(txfee_aux, isV17active)) {
+    if (!MoneyRange(txfee_aux)) {
         return state.DoS(100, false, REJECT_INVALID, "bad-txns-fee-outofrange");
     }
     txfee = txfee_aux;

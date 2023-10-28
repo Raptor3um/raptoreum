@@ -312,18 +312,6 @@ SendMoney(CWallet *const pwallet, const CTxDestination &address, CAmount nValue,
         throw JSONRPCError(RPC_WALLET_ERROR, strError);
     }
 
-    if (!Params().IsFutureActive(::ChainActive().Tip())) {
-        CAmount subtotal = nValue;
-        if (nChangePosRet >= 0)
-            subtotal += tx.get()->vout.at(nChangePosRet).nValue;
-        if (!fSubtractFeeFromAmount)
-            subtotal += nFeeRequired;
-        if (subtotal > OLD_MAX_MONEY) {
-            strError = "Error: This transaction exceeds the limit of 21 million.";
-            throw JSONRPCError(RPC_WALLET_ERROR, strError);
-        }
-    }
-
     pwallet->CommitTransaction(tx, std::move(mapValue), {} /* orderForm */);
     return tx;
 }
@@ -1007,10 +995,6 @@ UniValue sendmany(const JSONRPCRequest &request) {
     std::string strFailReason;
     CTransactionRef tx;
     bool fCreated = pwallet->CreateTransaction(vecSend, tx, nFeeRequired, nChangePosRet, strFailReason, coin_control);
-    if (!Params().IsFutureActive(::ChainActive().Tip()) && fCreated) {
-        if (tx.get()->GetValueOut() > OLD_MAX_MONEY)
-            throw JSONRPCError(RPC_WALLET_ERROR, "Error: This transaction exceeds the limit of 21 million.");
-    }
     if (!fCreated)
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, strFailReason);
 

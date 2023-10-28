@@ -581,6 +581,9 @@ void SetupServerArgs() {
     gArgs.AddArg("-addressindex", strprintf(
             "Maintain a full address index, used to query for the balance, txids and unspent outputs for addresses (default: %u)",
             DEFAULT_ADDRESSINDEX), ArgsManager::ALLOW_ANY, OptionsCategory::INDEXING);
+    gArgs.AddArg("-assetindex", strprintf(
+            "Maintain a full asset index, used to query for asset balance (default: %u)",
+            DEFAULT_ASSETINDEX), ArgsManager::ALLOW_ANY, OptionsCategory::INDEXING);
     gArgs.AddArg("-reindex", "Rebuild chain state and block index from the blk*.dat files on disk",
                  ArgsManager::ALLOW_ANY, OptionsCategory::INDEXING);
     gArgs.AddArg("-reindex-chainstate", "Rebuild chain state from the currently indexed blocks", ArgsManager::ALLOW_ANY,
@@ -2219,6 +2222,12 @@ bool AppInitMain(const util::Ref &context, NodeContext &node, interfaces::BlockA
                 // Check for changed -addressindex state
                 if (fAddressIndex != gArgs.GetBoolArg("-addressindex", DEFAULT_ADDRESSINDEX)) {
                     strLoadError = _("You need to rebuild the database using -reindex to change -addressindex");
+                    break;
+                }
+
+                // Check for changed -assetindex state
+                if (fAssetIndex != gArgs.GetBoolArg("-assetindex", DEFAULT_ASSETINDEX)) {
+                    strLoadError = _("You need to rebuild the database using -reindex to change -assetindex");
                     break;
                 }
 

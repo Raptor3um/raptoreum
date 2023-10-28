@@ -1140,10 +1140,8 @@ CheckInputsAndUpdateCoins(const CTransaction &tx, CCoinsViewCache &mempoolDuplic
     CValidationState state;
     CAmount txfee = 0;
     CAmount specialTxFee = 0;
-    bool isV17active = Params().IsFutureActive(::ChainActive().Tip());
     bool fCheckResult = tx.IsCoinBase() ||
-                        Consensus::CheckTxInputs(tx, state, mempoolDuplicate, spendheight, txfee, specialTxFee,
-                                                 isV17active, true);
+                        Consensus::CheckTxInputs(tx, state, mempoolDuplicate, spendheight, txfee, specialTxFee, true);
     assert(fCheckResult);
     UpdateCoins(tx, mempoolDuplicate, std::numeric_limits<int>::max());
 }

@@ -193,6 +193,9 @@ static const CRPCConvertParam vRPCConvertParams[] =
                 {"listassets", 0, "verbose"},
                 {"listassets", 1, "count"},
                 {"listassets", 2, "start"},
+                { "listaddressesbyasset", 1, "totalonly"},
+                { "listaddressesbyasset", 2, "count"},
+                { "listaddressesbyasset", 3, "start"},
         };
 
 class CRPCConvertTable {

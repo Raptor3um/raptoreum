@@ -10,6 +10,7 @@
 #include "validation.h"
 #include <txmempool.h>
 #include <chainparams.h>
+#include "core_io.h"
 
 
 #ifdef ENABLE_WALLET
@@ -283,7 +284,7 @@ UniValue mintasset(const JSONRPCRequest &request) {
     // get asset metadadta
     CAssetMetaData tmpAsset;
     if (!passetsCache->GetAssetMetaData(assetId, tmpAsset)) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Asset asset metadata not found");
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Asset metadata not found");
     }
 
     if (tmpAsset.mintCount >= tmpAsset.maxMintCount) {
@@ -333,7 +334,7 @@ UniValue mintasset(const JSONRPCRequest &request) {
 
     if (tmpAsset.isUnique) {
         //build unique output using current supply as start unique id
-        uint64_t id = tmpAsset.circulatingSupply / COIN;
+        uint64_t id = tmpAsset.circulatingSupply;
         // Get the script for the target address
         CScript scriptPubKey = GetScriptForDestination(
                 DecodeDestination(EncodeDestination(tmpAsset.targetAddress)));
@@ -410,7 +411,7 @@ UniValue sendasset(const JSONRPCRequest &request) {
     // get asset metadadta
     CAssetMetaData tmpAsset;
     if (!passetsCache->GetAssetMetaData(request.params[0].get_str(), tmpAsset)) { //check if the asset exist
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Asset not found");
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Asset metadata not found");
     }
     std::string assetId = tmpAsset.assetId;
 
@@ -511,7 +512,7 @@ UniValue getassetdetailsbyname(const JSONRPCRequest &request) {
     std::string assetId;
 
     // try to get asset id
-    if (passetsCache->GetAssetId(request.params[0].get_str(), assetId)) {
+    if (!passetsCache->GetAssetId(request.params[0].get_str(), assetId)) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Asset not found");
     }
 
@@ -891,17 +892,172 @@ UniValue listassets(const JSONRPCRequest &request) {
     return result;
 }
 
+UniValue listaddressesbyasset(const JSONRPCRequest &request)
+{
+    if (!fAssetIndex) {
+        return "_This rpc call is not functional unless -assetindex is enabled. To enable, please run the wallet with -assetindex, this will require a reindex to occur";
+    }
+
+    if (request.fHelp || !Params().IsAssetsActive(::ChainActive().Tip()) || request.params.size() > 4 || request.params.size() < 1)
+        throw std::runtime_error(
+                "listaddressesbyasset \"asset_name\" (onlytotal) (count) (start)\n"
+                "\nReturns a list of all address that own the given asset (with balances)"
+                "\nOr returns the total size of how many address own the given asset"
+
+                "\nArguments:\n"
+                "1. \"asset_name\"               (string, required) name of asset\n"
+                "2. \"onlytotal\"                (boolean, optional, default=false) when false result is just a list of addresses with balances -- when true the result is just a single number representing the number of addresses\n"
+                "3. \"count\"                    (integer, optional, default=50000, MAX=50000) truncates results to include only the first _count_ assets found\n"
+                "4. \"start\"                    (integer, optional, default=0) results skip over the first _start_ assets found (if negative it skips back from the end)\n"
+
+                "\nResult:\n"
+                "[ "
+                "  (address): balance,\n"
+                "  ...\n"
+                "]\n"
+
+                "\nExamples:\n"
+                + HelpExampleCli("listaddressesbyasset", "\"ASSET_NAME\" false 2 0")
+                + HelpExampleCli("listaddressesbyasset", "\"ASSET_NAME\" true")
+                + HelpExampleCli("listaddressesbyasset", "\"ASSET_NAME\"")
+        );
+
+    LOCK(cs_main);
+
+    std::string assetId;
+
+    // try to get asset id
+    if (!passetsCache->GetAssetId(request.params[0].get_str(), assetId)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Asset not found");
+    }
+
+    bool fOnlyTotal = false;
+    if (request.params.size() > 1)
+        fOnlyTotal = request.params[1].get_bool();
+
+    size_t count = INT_MAX;
+    if (request.params.size() > 2) {
+        if (request.params[2].get_int() < 1)
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "count must be greater than 1.");
+        count = request.params[2].get_int();
+    }
+
+    long start = 0;
+    if (request.params.size() > 3) {
+        start = request.params[3].get_int();
+    }
+
+    LOCK(cs_main);
+    std::vector<std::pair<std::string, CAmount128> > vecAddressAmounts;
+    int nTotalEntries = 0;
+    if (!passetsdb->GetListAddressByAssets(vecAddressAmounts, nTotalEntries, fOnlyTotal, assetId, count, start))
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "couldn't retrieve address asset directory.");
+
+    // If only the number of addresses is wanted return it
+    if (fOnlyTotal) {
+        return nTotalEntries;
+    }
+
+    UniValue result(UniValue::VOBJ);
+    for (auto& pair : vecAddressAmounts) {
+        result.push_back(Pair(pair.first, pair.second.str()/*ValueFromAmount(pair.second, assetId*/));
+    }
+
+
+    return result;
+}
+
+UniValue listassetbalancesbyaddress(const JSONRPCRequest& request)
+{
+    if (!fAssetIndex) {
+        return "_This rpc call is not functional unless -assetindex is enabled. To enable, please run the wallet with -assetindex, this will require a reindex to occur";
+    }
+
+    if (request.fHelp || !Params().IsAssetsActive(::ChainActive().Tip()) || request.params.size() < 1)
+        throw std::runtime_error(
+            "listassetbalancesbyaddress \"address\" (onlytotal) (count) (start)\n"
+            "\nReturns a list of all asset balances for an address.\n"
+
+            "\nArguments:\n"
+            "1. \"address\"                  (string, required) a raven address\n"
+            "2. \"onlytotal\"                (boolean, optional, default=false) when false result is just a list of assets balances -- when true the result is just a single number representing the number of assets\n"
+            "3. \"count\"                    (integer, optional, default=50000, MAX=50000) truncates results to include only the first _count_ assets found\n"
+            "4. \"start\"                    (integer, optional, default=0) results skip over the first _start_ assets found (if negative it skips back from the end)\n"
+
+            "\nResult:\n"
+            "{\n"
+            "  (asset_name) : (quantity),\n"
+            "  ...\n"
+            "}\n"
+
+
+            "\nExamples:\n"
+            + HelpExampleCli("listassetbalancesbyaddress", "\"myaddress\" false 2 0")
+            + HelpExampleCli("listassetbalancesbyaddress", "\"myaddress\" true")
+            + HelpExampleCli("listassetbalancesbyaddress", "\"myaddress\"")
+        );
+
+    std::string address = request.params[0].get_str();
+    CTxDestination destination = DecodeDestination(address);
+    if (!IsValidDestination(destination)) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Raptoreum address: ") + address);
+    }
+
+    bool fOnlyTotal = false;
+    if (request.params.size() > 1)
+        fOnlyTotal = request.params[1].get_bool();
+
+    size_t count = INT_MAX;
+    if (request.params.size() > 2) {
+        if (request.params[2].get_int() < 1)
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "count must be greater than 1.");
+        count = request.params[2].get_int();
+    }
+
+    long start = 0;
+    if (request.params.size() > 3) {
+        start = request.params[3].get_int();
+    }
+
+    if (!passetsdb)
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "asset db unavailable.");
+
+    LOCK(cs_main);
+    std::vector<std::pair<std::string, CAmount128> > vecAssetAmounts;
+    int nTotalEntries = 0;
+    if (!passetsdb->GetListAssetsByAddress(vecAssetAmounts, nTotalEntries, fOnlyTotal, address, count, start))
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "couldn't retrieve address asset directory.");
+
+    // If only the number of addresses is wanted return it
+    if (fOnlyTotal) {
+        return nTotalEntries;
+    }
+
+    UniValue result(UniValue::VOBJ);
+    for (auto& pair : vecAssetAmounts) {
+        CAssetMetaData tmpAsset;
+        if (!passetsCache->GetAssetMetaData(pair.first, tmpAsset)) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Asset metadata not found");
+        }
+        result.push_back(Pair(tmpAsset.name, pair.second.str()));
+    }
+
+    return result;
+}
+
 static const CRPCCommand commands[] =
         { //  category              name                      actor (function)
-                //  --------------------- ------------------------  -----------------------
-                {"assets", "createasset",            &createasset,            {"asset"}},
-                {"assets", "mintasset",              &mintasset,              {"assetId"}},
-                {"assets", "sendasset",              &sendasset,              {"assetId", "amount", "address", "change_address", "asset_change_address"}},
-                {"assets", "getassetdetailsbyname",  &getassetdetailsbyname,  {"assetname"}},
-                {"assets", "getassetdetailsbyid",    &getassetdetailsbyid,    {"assetid"}},
-                {"assets", "listassetsbalance",      &listassetsbalance,      {}},
-                {"assets", "listunspentassets",      &listunspentassets,      {"minconf", "maxconf", "addresses", "include_unsafe", "query_options"}},
-                {"assets", "listassets",             &listassets,             {"verbose", "count", "start"}},
+            //  --------------------- ------------------------  -----------------------
+            {"assets",      "createasset",                  &createasset,                   {"asset"}},
+            {"assets",      "mintasset",                    &mintasset,                     {"assetId"}},
+            {"assets",      "sendasset",                    &sendasset,                     {"assetId", "amount", "address", "change_address", "asset_change_address"}},
+            {"assets",      "getassetdetailsbyname",        &getassetdetailsbyname,         {"assetname"}},
+            {"assets",      "getassetdetailsbyid",          &getassetdetailsbyid,           {"assetid"}},
+            {"assets",      "listassetsbalance",            &listassetsbalance,             {}},
+            {"assets",      "listunspentassets",            &listunspentassets,             {"minconf", "maxconf", "addresses", "include_unsafe", "query_options"}},
+            {"assets",      "listassets",                   &listassets,                    {"verbose", "count", "start"}},
+            {"assets",      "listaddressesbyasset",         &listaddressesbyasset,          {"asset_name", "onlytotal", "count", "start"}},
+            {"assets",      "listassetbalancesbyaddress",   &listassetbalancesbyaddress,    {"address", "onlytotal", "count", "start"} },
         };
 
 void RegisterAssetsRPCCommands(CRPCTable &tableRPC) {

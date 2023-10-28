@@ -115,6 +115,7 @@ std::atomic_bool fReindex(false);
 std::atomic_bool fProcessingHeaders(false);
 std::atomic<int> atomicHeaderHeight(0);
 bool fAddressIndex = false;
+bool fAssetIndex = false;
 bool fTimestampIndex = false;
 bool fSpentIndex = false;
 bool fFutureIndex = false;
@@ -703,8 +704,7 @@ static bool AcceptToMemoryPoolWorker(const CChainParams &chainparams, CTxMemPool
 
         CAmount nFees = 0;
         CAmount specialTxFees = 0;
-        bool isV17active = Params().IsFutureActive(::ChainActive().Tip());
-        if (!Consensus::CheckTxInputs(tx, state, view, GetSpendHeight(view), nFees, specialTxFees, isV17active, true)) {
+        if (!Consensus::CheckTxInputs(tx, state, view, GetSpendHeight(view), nFees, specialTxFees, true)) {
             return error("%s: Consensus::CheckTxInputs: %s, %s", __func__, tx.GetHash().ToString(),
                          FormatStateMessage(state));
         }
@@ -1355,6 +1355,12 @@ UpdateCoins(const CTransaction &tx, CCoinsViewCache &inputs, CTxUndo &txundo, in
     if (!tx.IsCoinBase()) {
         txundo.vprevout.reserve(tx.vin.size());
         for (const CTxIn &txin: tx.vin) {
+            if (fAssetIndex) {
+                const Coin &coin = inputs.AccessCoin(txin.prevout);
+                if (coin.out.scriptPubKey.IsAssetScript()) {
+                assetCache->RemoveAddressBalance(coin.out.scriptPubKey, txin.prevout);
+                }
+            }
             txundo.vprevout.emplace_back();
             bool is_spent = inputs.SpendCoin(txin.prevout, &txundo.vprevout.back());
             assert(is_spent);
@@ -1740,6 +1746,13 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock &block, const CBlockI
                     is_coinbase != coin.fCoinBase) {
                     fClean = false; // transaction output mismatch
                 }
+                if (fAssetIndex) {
+                    if (Params().IsAssetsActive(::ChainActive().Tip()) && assetsCache) {
+                        if (coin.out.scriptPubKey.IsAssetScript()) {
+                            assetsCache->RemoveAddressBalance(coin.out.scriptPubKey, out);
+                        }
+                    }
+                }
             }
         }
 
@@ -1795,6 +1808,15 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock &block, const CBlockI
                     // undo and delete the spent index
                     spentIndex.push_back(
                             std::make_pair(CSpentIndexKey(input.prevout.hash, input.prevout.n), CSpentIndexValue()));
+                }
+
+                if (fAssetIndex) {
+                    if (Params().IsAssetsActive(::ChainActive().Tip()) && assetsCache) {
+                        const Coin &coin = view.AccessCoin(tx.vin[j].prevout);
+                        if (coin.out.scriptPubKey.IsAssetScript()) {
+                            assetsCache->AddAssetBlance(coin.out.scriptPubKey, tx.vin[j].prevout);
+                        }
+                    }
                 }
 
                 if (fAddressIndex) {
@@ -2255,7 +2277,6 @@ bool CChainState::ConnectBlock(const CBlock &block, CValidationState &state, CBl
     LogPrint(BCLog::BENCHMARK, "      - ProcessSpecialTxsInBlock: %.2fms [%.2fs (%.2fms/blk)]\n",
              MILLI * (nTime2_1 - nTime2), nTimeProcessSpecial * MICRO, nTimeProcessSpecial * MILLI / nBlocksTotal);
 
-    bool isV17active = Params().IsFutureActive(::ChainActive().Tip());
     for (unsigned int i = 0; i < block.vtx.size(); i++) {
         const CTransaction &tx = *(block.vtx[i]);
         const uint256 txhash = tx.GetHash();
@@ -2266,19 +2287,19 @@ bool CChainState::ConnectBlock(const CBlock &block, CValidationState &state, CBl
             CAmount txfee = 0;
             CAmount specialTxFee = 0;
             bool isSyncing = IsInitialBlockDownload();
-            if (!Consensus::CheckTxInputs(tx, state, view, pindex->nHeight, txfee, specialTxFee, isV17active,
+            if (!Consensus::CheckTxInputs(tx, state, view, pindex->nHeight, txfee, specialTxFee,
                                           !isSyncing)) {
                 return error("%s: Consensus::CheckTxInputs: %s, %s", __func__, tx.GetHash().ToString(),
                              FormatStateMessage(state));
             }
             nFees += txfee;
             specialTxFees += specialTxFee;
-            if (!MoneyRange(nFees, isV17active)) {
+            if (!MoneyRange(nFees)) {
                 return state.DoS(100, error("%s: accumulated fee in the block out of range.", __func__),
                                  REJECT_INVALID, "bad-txns-accumulated-fee-outofrange");
             }
 
-            if (!MoneyRange(specialTxFees, isV17active)) {
+            if (!MoneyRange(specialTxFees)) {
                 return state.DoS(100, error("%s: accumulated specialTxFees in the block out of range.", __func__),
                                  REJECT_INVALID, "bad-txns-accumulated-specialTxFees-outofrange");
             }
@@ -4819,6 +4840,10 @@ EXCLUSIVE_LOCKS_REQUIRED(cs_main)
                 pblocktree->ReadFlag("addressindex", fAddressIndex);
                 LogPrintf("%s: address index %s\n", __func__, fAddressIndex ? "enabled" : "disabled");
 
+                // Check whether we have an address index
+                pblocktree->ReadFlag("addressindex", fAssetIndex);
+                LogPrintf("%s: asset index %s\n", __func__, fAssetIndex ? "enabled" : "disabled");
+
                 // Check whether we have a timestamp index
                 pblocktree->ReadFlag("timestampindex", fTimestampIndex);
                 LogPrintf("%s: timestamp index %s\n", __func__, fTimestampIndex ? "enabled" : "disabled");
@@ -5143,6 +5168,10 @@ bool ChainstateManager::LoadBlockIndex(const CChainParams &chainparams) {
         // Use the provided setting for -addressindex in the new database
         fAddressIndex = gArgs.GetBoolArg("-addressindex", DEFAULT_ADDRESSINDEX);
         pblocktree->WriteFlag("addressindex", fAddressIndex);
+
+        // Use the provided setting for -addressindex in the new database
+        fAssetIndex = gArgs.GetBoolArg("-assetindex", DEFAULT_ASSETINDEX);
+        pblocktree->WriteFlag("assetindex", fAssetIndex);
 
         // Use the provided setting for -timestampindex in the new database
         fTimestampIndex = gArgs.GetBoolArg("-timestampindex", DEFAULT_TIMESTAMPINDEX);

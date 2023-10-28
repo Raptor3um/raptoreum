@@ -264,7 +264,7 @@ bool CheckUpdateAssetTx(const CTransaction &tx, const CBlockIndex *pindexPrev, C
 inline bool checkAssetMintAmount(const CTransaction &tx, CValidationState &state, const CAssetMetaData asset) {
     CAmount nAmount = 0;
     int count = 0;
-    uint64_t minUniqueId = asset.circulatingSupply / COIN;
+    uint64_t minUniqueId = asset.circulatingSupply;
     for (auto out: tx.vout) {
         if (out.scriptPubKey.IsAssetScript()) {
             CAssetTransfer assetTransfer;

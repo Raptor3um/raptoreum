@@ -25,6 +25,7 @@
 
 #include <prevector.h>
 #include <span.h>
+#include <boost/multiprecision/cpp_int.hpp>
 
 static const unsigned int MAX_SIZE = 0x02000000;
 
@@ -282,6 +283,11 @@ template<typename Stream>
 inline void Serialize(Stream &s, uint64_t a) { ser_writedata64(s, a); }
 
 template<typename Stream>
+inline void Serialize(Stream &s, const boost::multiprecision::int128_t& a) {
+    s << a.str();
+}
+
+template<typename Stream>
 inline void Serialize(Stream &s, float a) { ser_writedata32(s, ser_float_to_uint32(a)); }
 
 template<typename Stream>
@@ -328,6 +334,14 @@ inline void Unserialize(Stream &s, int64_t &a) { a = ser_readdata64(s); }
 
 template<typename Stream>
 inline void Unserialize(Stream &s, uint64_t &a) { a = ser_readdata64(s); }
+
+template<typename Stream>
+inline void Unserialize(Stream &s, boost::multiprecision::int128_t &a) {
+    std::string tmp;
+    s >> tmp;
+    boost::multiprecision::int128_t data(tmp);
+    a = data;
+}
 
 template<typename Stream>
 inline void Unserialize(Stream &s, float &a) { a = ser_uint32_to_float(ser_readdata32(s)); }

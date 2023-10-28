@@ -15,6 +15,8 @@
 static const char ASSET_FLAG = 'A';
 static const char ASSET_NAME_TXID_FLAG = 'B';
 static const char BLOCK_ASSET_UNDO_DATA = 'U';
+static const char ASSET_ADDRESS_AMOUNT = 'C';
+static const char ADDRESS_ASSET_AMOUNT = 'D';
 
 static size_t MAX_DATABASE_RESULTS = 50000;
 
@@ -29,6 +31,14 @@ bool CAssetsDB::WriteAssetData(const CAssetMetaData &asset, const int nHeight, c
 
 bool CAssetsDB::WriteAssetId(const std::string assetName, const std::string Txid) {
     return Write(std::make_pair(ASSET_NAME_TXID_FLAG, assetName), Txid);
+}
+
+bool CAssetsDB::WriteAssetAddressAmount(const std::string &assetId, const std::string &address, const CAmount128 &amount) {
+    return Write(std::make_pair(ASSET_ADDRESS_AMOUNT, std::make_pair(assetId, address)), amount.str());
+}
+    
+bool CAssetsDB::WriteAddressAssetAmount(const std::string &address, const std::string &assetId, const CAmount128 &amount) {
+    return Write(std::make_pair(ADDRESS_ASSET_AMOUNT, std::make_pair(address, assetId)), amount);
 }
 
 bool CAssetsDB::ReadAssetData(const std::string &txid, CAssetMetaData &asset, int &nHeight, uint256 &blockHash) {
@@ -48,12 +58,28 @@ bool CAssetsDB::ReadAssetId(const std::string &assetName, std::string &Txid) {
     return Read(std::make_pair(ASSET_NAME_TXID_FLAG, assetName), Txid);
 }
 
+bool CAssetsDB::ReadAssetAddressAmount(const std::string &assetId, const std::string &address, CAmount128 &amount) {
+    return Read(std::make_pair(ASSET_ADDRESS_AMOUNT, std::make_pair(assetId, address)), amount);
+}
+    
+bool CAssetsDB::ReadAssetAddressAssetAmount(const std::string &address, const std::string &assetId, CAmount128 &amount){
+    return Read(std::make_pair(ADDRESS_ASSET_AMOUNT, std::make_pair(address, assetId)), amount);
+}
+
 bool CAssetsDB::EraseAssetData(const std::string &assetName) {
     return Erase(std::make_pair(ASSET_FLAG, assetName));
 }
 
 bool CAssetsDB::EraseAssetId(const std::string &assetName) {
     return Erase(std::make_pair(ASSET_NAME_TXID_FLAG, assetName));
+}
+
+bool CAssetsDB::EraseAssetAddressAmount(const std::string &assetId, const std::string &address) {
+    return Erase(std::make_pair(ASSET_ADDRESS_AMOUNT, std::make_pair(assetId, address)));
+}
+
+bool CAssetsDB::EraseAddressAssetAmount(const std::string &address, const std::string &assetId) {
+    return Erase(std::make_pair(ADDRESS_ASSET_AMOUNT, std::make_pair(address, assetId)));
 }
 
 bool CAssetsDB::WriteBlockUndoAssetData(const uint256 &blockHash,
@@ -153,6 +179,148 @@ bool CAssetsDB::GetListAssets(std::vector<CDatabaseAssetData>& assets, const siz
                     loaded += 1;
                 } else {
                     return error("%s: failed to read asset", __func__);
+                }
+            }
+            pcursor->Next();
+        } else {
+            break;
+        }
+    }
+
+    return true;
+}
+
+bool CAssetsDB::GetListAssetsByAddress(std::vector<std::pair<std::string, CAmount128> >& vecAssetAmount, int& totalEntries, const bool& fGetTotal, const std::string& address, const size_t count, const long start) {
+    ::ChainstateActive().ForceFlushStateToDisk();
+
+    std::unique_ptr<CDBIterator> pcursor(NewIterator());
+    pcursor->Seek(std::make_pair(ADDRESS_ASSET_AMOUNT, std::make_pair(address, std::string())));
+
+    if (fGetTotal) {
+        totalEntries = 0;
+        while (pcursor->Valid()) {
+            boost::this_thread::interruption_point();
+
+            std::pair<char, std::pair<std::string, std::string> > key;
+            if (pcursor->GetKey(key) && key.first == ADDRESS_ASSET_AMOUNT && key.second.first == address) {
+                totalEntries++;
+            }
+            pcursor->Next();
+        }
+        return true;
+    }
+
+    size_t skip = 0;
+    if (start >= 0) {
+        skip = start;
+    }
+    else {
+        // compute table size for backwards offset
+        long table_size = 0;
+        while (pcursor->Valid()) {
+            boost::this_thread::interruption_point();
+
+            std::pair<char, std::pair<std::string, std::string> > key;
+            if (pcursor->GetKey(key) && key.first == ADDRESS_ASSET_AMOUNT && key.second.first == address) {
+                table_size += 1;
+            }
+            pcursor->Next();
+        }
+        skip = table_size + start;
+        pcursor->SeekToFirst();
+    }
+
+
+    size_t loaded = 0;
+    size_t offset = 0;
+
+    // Load assets
+    while (pcursor->Valid() && loaded < count && loaded < MAX_DATABASE_RESULTS) {
+        boost::this_thread::interruption_point();
+
+        std::pair<char, std::pair<std::string, std::string> > key;
+        if (pcursor->GetKey(key) && key.first == ADDRESS_ASSET_AMOUNT && key.second.first == address) {
+                if (offset < skip) {
+                    offset += 1;
+                }
+                else {
+                    CAmount128 amount;
+                    if (pcursor->GetValue(amount)) {
+                        vecAssetAmount.emplace_back(std::make_pair(key.second.second, amount));
+                        loaded += 1;
+                    } else {
+                        return error("%s: failed to Address Asset Quanity", __func__);
+                    }
+                }
+            pcursor->Next();
+        } else {
+            break;
+        }
+    }
+
+    return true;
+}
+
+// Can get to total count of addresses that belong to a certain assetId, or get you the list of all address that belong to a certain assetId
+bool CAssetsDB::GetListAddressByAssets(std::vector<std::pair<std::string, CAmount128> >& vecAddressAmount, int& totalEntries, const bool& fGetTotal, const std::string& assetId, const size_t count, const long start) {
+    ::ChainstateActive().ForceFlushStateToDisk();
+
+    std::unique_ptr<CDBIterator> pcursor(NewIterator());
+    pcursor->Seek(std::make_pair(ASSET_ADDRESS_AMOUNT, std::make_pair(assetId, std::string())));
+
+    if (fGetTotal) {
+        totalEntries = 0;
+        while (pcursor->Valid()) {
+            boost::this_thread::interruption_point();
+
+            std::pair<char, std::pair<std::string, std::string> > key;
+            if (pcursor->GetKey(key) && key.first == ASSET_ADDRESS_AMOUNT && key.second.first == assetId) {
+                totalEntries += 1;
+            }
+            pcursor->Next();
+        }
+        return true;
+    }
+
+    size_t skip = 0;
+    if (start >= 0) {
+        skip = start;
+    }
+    else {
+        // compute table size for backwards offset
+        long table_size = 0;
+        while (pcursor->Valid()) {
+            boost::this_thread::interruption_point();
+
+            std::pair<char, std::pair<std::string, std::string> > key;
+            if (pcursor->GetKey(key) && key.first == ASSET_ADDRESS_AMOUNT && key.second.first == assetId) {
+                table_size += 1;
+            }
+            pcursor->Next();
+        }
+        skip = table_size + start;
+        pcursor->SeekToFirst();
+    }
+
+    size_t loaded = 0;
+    size_t offset = 0;
+
+    // Load assets
+    while (pcursor->Valid() && loaded < count && loaded < MAX_DATABASE_RESULTS) {
+        boost::this_thread::interruption_point();
+
+        std::pair<char, std::pair<std::string, std::string> > key;
+        if (pcursor->GetKey(key) && key.first == ASSET_ADDRESS_AMOUNT && key.second.first == assetId) {
+            if (offset < skip) {
+                offset += 1;
+            }
+            else {
+                CAmount128 amount;
+                if (pcursor->GetValue(amount)) {
+                    vecAddressAmount.emplace_back(std::make_pair(key.second.second, amount));
+                    loaded += 1;
+                } else {
+                    return error("%s: failed to Asset Address Quanity", __func__);
                 }
             }
             pcursor->Next();
