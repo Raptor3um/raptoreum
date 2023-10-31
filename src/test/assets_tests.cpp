@@ -359,7 +359,7 @@ BOOST_FIXTURE_TEST_CASE(assets_mint, TestChainDIP3BeforeActivationSetup)
     CAssetMetaData asset;
     BOOST_ASSERT(passetsCache->GetAssetMetaData(assetId, asset));
 
-    BOOST_ASSERT(asset.circulatingSupply == 1000 * COIN);
+    BOOST_ASSERT(asset.circulatingSupply == 1000);
 
     // Allow TX index to catch up with the block index.
     g_txindex->BlockUntilSyncedToCurrentChain();
@@ -434,7 +434,7 @@ BOOST_FIXTURE_TEST_CASE(assets_invalid_cases, TestChainDIP3BeforeActivationSetup
 
     CAssetMetaData asset;
     BOOST_ASSERT(passetsCache->GetAssetMetaData(assetId, asset));
-    BOOST_ASSERT(asset.circulatingSupply == 100 * COIN);
+    BOOST_ASSERT(asset.circulatingSupply == 100);
 
     // Allow TX index to catch up with the block index.
     g_txindex->BlockUntilSyncedToCurrentChain();
@@ -557,7 +557,7 @@ BOOST_FIXTURE_TEST_CASE(assets_invalid_cases, TestChainDIP3BeforeActivationSetup
 
     BOOST_ASSERT(passetsCache->GetAssetMetaData(assetId, asset));
 
-    BOOST_ASSERT(asset.circulatingSupply == 10 * COIN);
+    BOOST_ASSERT(asset.circulatingSupply == 10);
     // Allow TX index to catch up with the block index.
     g_txindex->BlockUntilSyncedToCurrentChain();
 

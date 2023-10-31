@@ -80,7 +80,7 @@ CAmount ParsePaymentAmount(const std::string &strAmount) {
         ostr << "ParsePaymentAmount: ParseFixedPoint failed for string: " << strAmount;
         throw std::runtime_error(ostr.str());
     }
-    if (!MoneyRange(nAmount, Params().IsFutureActive(::ChainActive().Tip()))) {
+    if (!MoneyRange(nAmount)) {
         nAmount = 0;
         std::ostringstream ostr;
         ostr << "ParsePaymentAmount: Invalid amount string, value outside of valid money range";

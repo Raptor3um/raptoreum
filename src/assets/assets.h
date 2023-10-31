@@ -9,6 +9,7 @@
 #include <coins.h>
 #include <key_io.h>
 #include <pubkey.h>
+#include <assets/assetstype.h>
 
 class CNewAssetTx;
 
@@ -119,19 +120,42 @@ public:
     }
 };
 
+struct CAssetTransferEntry
+{
+    CAssetTransfer transfer;
+    std::string address;
+    COutPoint out;
+
+    CAssetTransferEntry(const CAssetTransfer& transfer, const std::string& address, const COutPoint& out)
+    {
+        this->transfer = transfer;
+        this->address = address;
+        this->out = out;
+    }
+
+    bool operator<(const CAssetTransferEntry& rhs ) const
+    {
+        return out < rhs.out;
+    }
+};
+
 class CAssets {
 public:
     std::map <std::string, CDatabaseAssetData> mapAsset;
     std::map <std::string, std::string> mapAssetId;
 
+    std::map <std::pair<std::string, std::string>, CAmount128> mapAssetAddressAmount;
+
     CAssets(const CAssets &assets) {
         this->mapAsset = assets.mapAsset;
         this->mapAssetId = assets.mapAssetId;
+        this->mapAssetAddressAmount = assets.mapAssetAddressAmount;
     }
 
     CAssets &operator=(const CAssets &other) {
         mapAsset = other.mapAsset;
         mapAssetId = other.mapAssetId;
+        mapAssetAddressAmount = other.mapAssetAddressAmount;
         return *this;
     }
 
@@ -142,6 +166,7 @@ public:
     void SetNull() {
         mapAsset.clear();
         mapAssetId.clear();
+        mapAssetAddressAmount.clear();
     }
 };
 
@@ -149,6 +174,9 @@ class CAssetsCache : public CAssets {
 public:
     std::set <CDatabaseAssetData> NewAssetsToRemove;
     std::set <CDatabaseAssetData> NewAssetsToAdd;
+
+    std::set <CAssetTransferEntry> NewAssetsTranferToRemove;
+    std::set <CAssetTransferEntry> NewAssetsTransferToAdd;
 
     CAssetsCache() :
             CAssets() {
@@ -160,6 +188,9 @@ public:
             CAssets(cache) {
         this->NewAssetsToRemove = cache.NewAssetsToRemove;
         this->NewAssetsToAdd = cache.NewAssetsToAdd;
+
+        this->NewAssetsTranferToRemove = cache.NewAssetsTranferToRemove;
+        this->NewAssetsTransferToAdd = cache.NewAssetsTransferToAdd;
     }
 
     bool InsertAsset(CNewAssetTx newAsset, std::string assetId, int nHeight);
@@ -168,8 +199,11 @@ public:
 
     bool UpdateAsset(std::string assetId, CAmount amount);
 
+    void AddAssetBlance(const CScript &script, const COutPoint &out);
     //undo asset
     bool RemoveAsset(std::string assetId);
+
+    void RemoveAddressBalance(const CScript &script, const COutPoint &out);
 
     bool UndoUpdateAsset(const CUpdateAssetTx upAsset,
                          const std::vector <std::pair<std::string, CBlockAssetUndo>> &vUndoData);
@@ -190,6 +224,9 @@ public:
     void ClearDirtyCache() {
         NewAssetsToAdd.clear();
         NewAssetsToRemove.clear();
+
+        NewAssetsTransferToAdd.clear();
+        NewAssetsTranferToRemove.clear();
     }
 };
 

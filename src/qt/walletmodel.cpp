@@ -239,18 +239,7 @@ WalletModel::prepareTransaction(WalletModelTransaction &transaction, const CCoin
     if (fSubtractFeeFromAmount && newTx)
         transaction.reassignAmounts();
 
-    if (newTx) {
-        if (!Params().IsFutureActive(::ChainActive().Tip())) {
-            CAmount subtotal = total;
-            if (nChangePosRet >= 0)
-                subtotal += newTx.get()->vout.at(nChangePosRet).nValue;
-            if (!fSubtractFeeFromAmount)
-                subtotal += nFeeRequired;
-            if (subtotal > OLD_MAX_MONEY) {
-                return AmountExceedsmaxmoney;
-            }
-        }
-    } else {
+    if (!newTx) {
         if (!fSubtractFeeFromAmount && (total + nFeeRequired) > nBalance) {
             return SendCoinsReturn(AmountWithFeeExceedsBalance);
         }
@@ -409,18 +398,7 @@ WalletModel::prepareAssetTransaction(WalletModelTransaction &transaction, const 
     if (fSubtractFeeFromAmount && newTx)
         transaction.reassignAmounts();
 
-    if (newTx) {
-        if (!Params().IsFutureActive(::ChainActive().Tip())) {
-            CAmount subtotal = total;
-            if (nChangePosRet >= 0)
-                subtotal += newTx.get()->vout.at(nChangePosRet).nValue;
-            if (!fSubtractFeeFromAmount)
-                subtotal += nFeeRequired;
-            if (subtotal > OLD_MAX_MONEY) {
-                return AmountExceedsmaxmoney;
-            }
-        }
-    } else {
+    if (!newTx) {
         if (!fSubtractFeeFromAmount && (total + nFeeRequired) > nBalance) {
             return SendAssetsReturn(AmountWithFeeExceedsBalance);
         }

@@ -141,6 +141,7 @@ static const int64_t MAX_FEE_ESTIMATION_TIP_AGE = 3 * 60 * 60;
 static const bool DEFAULT_CHECKPOINTS_ENABLED = true;
 static const bool DEFAULT_TXINDEX = true;
 static const bool DEFAULT_ADDRESSINDEX = false;
+static const bool DEFAULT_ASSETINDEX = false;
 static const bool DEFAULT_TIMESTAMPINDEX = false;
 static const bool DEFAULT_SPENTINDEX = false;
 static const bool DEFAULT_FUTUREINDEX = false;
@@ -191,6 +192,7 @@ extern bool fSpentIndex;
  */
 extern bool g_parallel_script_checks;
 extern bool fAddressIndex;
+extern bool fAssetIndex;
 extern bool fTimestampIndex;
 extern bool fFutureIndex;
 extern bool fSpentIndex;

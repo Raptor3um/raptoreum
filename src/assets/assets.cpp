@@ -4,7 +4,6 @@
 
 #include <assets/assets.h>
 #include <assets/assetsdb.h>
-#include <assets/assetstype.h>
 #include <chainparams.h>
 #include <evo/providertx.h>
 #include <evo/specialtx.h>
@@ -81,7 +80,7 @@ void CAssetMetaData::ToJson(UniValue &obj) const {
     obj.setObject();
     obj.pushKV("Asset_id", assetId);
     obj.pushKV("Asset_name", name);
-    obj.pushKV("Circulating_supply", circulatingSupply / COIN);
+    obj.pushKV("Circulating_supply", circulatingSupply);
     obj.pushKV("MintCount", mintCount);
     obj.pushKV("maxMintCount", maxMintCount);
     obj.pushKV("owner", EncodeDestination(ownerAddress));
@@ -158,7 +157,7 @@ bool CAssetsCache::UpdateAsset(std::string assetId, CAmount amount) {
             NewAssetsToAdd.erase(mapAsset[assetId]);
 
         NewAssetsToRemove.insert(mapAsset[assetId]);
-        mapAsset[assetId].asset.circulatingSupply += amount;
+        mapAsset[assetId].asset.circulatingSupply += amount / COIN;
         mapAsset[assetId].asset.mintCount += 1;
         NewAssetsToAdd.insert(mapAsset[assetId]);
         return true;
@@ -305,6 +304,87 @@ bool CAssetsCache::GetAssetMetaData(std::string assetId, CAssetMetaData &asset) 
     return false;
 }
 
+//! This will get the amount that an address for a certain asset contains from the database if they cache doesn't already have it
+bool GetBestAssetAddressAmount(CAssetsCache& cache, const std::string& assetId, const std::string& address)
+{
+    if (fAssetIndex) {
+        auto pair = make_pair(assetId, address);
+
+        // If the caches map has the pair, return true because the map already contains the best dirty amount
+        if (cache.mapAssetAddressAmount.count(pair))
+            return true;
+
+        // If the caches map has the pair, return true because the map already contains the best dirty amount
+        if (passetsCache->mapAssetAddressAmount.count(pair)) {
+            cache.mapAssetAddressAmount[pair] = passetsCache->mapAssetAddressAmount.at(pair);
+            return true;
+        }
+
+        // If the database contains the assets address amount, insert it into the database and return true
+        CAmount128 nDBAmount;
+        if (passetsdb->ReadAssetAddressAmount(pair.first, pair.second, nDBAmount)) {
+            cache.mapAssetAddressAmount.insert(make_pair(pair, nDBAmount));
+            return true;
+        }
+    }
+
+    // The amount wasn't found return false
+    return false;
+}
+
+void CAssetsCache::AddAssetBlance(const CScript &script, const COutPoint &out) {
+    if (fAssetIndex) {
+        CAssetTransfer assetTransfer;
+        if (GetTransferAsset(script, assetTransfer)) {
+            CTxDestination dest;
+            ExtractDestination(script, dest);
+            std::string address = EncodeDestination(dest);
+            auto pair = std::make_pair(assetTransfer.assetId, address);
+            // Get the best amount
+            if (!GetBestAssetAddressAmount(*this, assetTransfer.assetId, address))
+                mapAssetAddressAmount.insert(std::make_pair(pair, 0));
+            //else
+                mapAssetAddressAmount[pair] += assetTransfer.nAmount;
+
+            // Add to cache so we can save to database
+            CAssetTransferEntry newTransfer(assetTransfer, address, out);
+
+            if (NewAssetsTranferToRemove.count(newTransfer))
+                NewAssetsTranferToRemove.erase(newTransfer);
+
+            NewAssetsTransferToAdd.insert(newTransfer);
+        }
+    }
+}
+
+void CAssetsCache::RemoveAddressBalance(const CScript &script, const COutPoint &out) {
+    if (fAssetIndex) {
+        CAssetTransfer assetTransfer;
+        if (GetTransferAsset(script, assetTransfer)) {
+            CTxDestination dest;
+            ExtractDestination(script, dest);
+            std::string address = EncodeDestination(dest);
+            
+            auto pair = make_pair(assetTransfer.assetId, address);
+            if (GetBestAssetAddressAmount(*this, assetTransfer.assetId, address)){
+               
+                if (mapAssetAddressAmount.count(pair))
+                    mapAssetAddressAmount[pair] -= assetTransfer.nAmount;
+
+                if (mapAssetAddressAmount.at(pair) < 0)
+                    mapAssetAddressAmount.at(pair) = 0;
+            }
+            // Add to cache so we can save to database
+            CAssetTransferEntry newTransfer(assetTransfer, address, out);
+
+            if (NewAssetsTransferToAdd.count(newTransfer))
+                NewAssetsTransferToAdd.erase(newTransfer);
+
+            NewAssetsTranferToRemove.insert(newTransfer);
+        }
+    }
+}
+
 bool CAssetsCache::DumpCacheToDatabase() {
     try {
         //remove assets from db
@@ -323,6 +403,38 @@ bool CAssetsCache::DumpCacheToDatabase() {
             }
             if (!passetsdb->WriteAssetId(newAsset.asset.name, newAsset.asset.assetId)) {
                 return error("%s : %s", __func__, "_Failed Writing New Asset Data to database");
+            }
+        }
+        // Undo the transfering by updating the balances in the database
+        for (auto transferToRemove: NewAssetsTranferToRemove) {
+            auto pair = std::make_pair(transferToRemove.transfer.assetId, transferToRemove.address);
+            if (mapAssetAddressAmount.count(pair)) {
+                if (mapAssetAddressAmount.at(pair) == 0) {
+                    if (!passetsdb->EraseAssetAddressAmount(transferToRemove.transfer.assetId, transferToRemove.address)) {
+                        return error("%s : %s", __func__, "_Failed Erasing address balance from database");
+                    }
+                    if (!passetsdb->EraseAddressAssetAmount(transferToRemove.address, transferToRemove.transfer.assetId)) {
+                        return error("%s : %s", __func__, "_Failed Erasing address balance from database");
+                    }
+                } else {
+                    if (!passetsdb->WriteAssetAddressAmount(transferToRemove.transfer.assetId, transferToRemove.address, mapAssetAddressAmount.at(pair))) {
+                        return error("%s : %s", __func__, "_Failed Writing address balance to database");
+                    }
+                    if (!passetsdb->WriteAddressAssetAmount(transferToRemove.address, transferToRemove.transfer.assetId, mapAssetAddressAmount.at(pair))) {
+                        return error("%s : %s", __func__, "_Failed Writing address balance to database");
+                    }
+                }
+            }
+        }
+        for (auto newTransfer: NewAssetsTransferToAdd) {
+            auto pair = std::make_pair(newTransfer.transfer.assetId, newTransfer.address);
+            if (mapAssetAddressAmount.count(pair)) {
+                if (!passetsdb->WriteAssetAddressAmount(newTransfer.transfer.assetId, newTransfer.address, mapAssetAddressAmount.at(pair))) {
+                    return error("%s : %s", __func__, "_Failed Writing address balance to database");
+                }
+                if (!passetsdb->WriteAddressAssetAmount(newTransfer.address, newTransfer.transfer.assetId, mapAssetAddressAmount.at(pair))) {
+                    return error("%s : %s", __func__, "_Failed Writing address balance to database");
+                }
             }
         }
         ClearDirtyCache();
@@ -348,6 +460,21 @@ bool CAssetsCache::Flush() {
                 passetsCache->NewAssetsToRemove.erase(item);
             passetsCache->NewAssetsToAdd.insert(item);
         }
+
+        for (auto &item: NewAssetsTransferToAdd) {
+            if (passetsCache->NewAssetsTranferToRemove.count(item))
+                passetsCache->NewAssetsTranferToRemove.erase(item);
+            passetsCache->NewAssetsTransferToAdd.insert(item);
+        }
+
+        for (auto &item: NewAssetsTranferToRemove) {
+            if (passetsCache->NewAssetsTransferToAdd.count(item))
+                passetsCache->NewAssetsTransferToAdd.erase(item);
+            passetsCache->NewAssetsTranferToRemove.insert(item);
+        }
+
+        for (auto &item : mapAssetAddressAmount)
+            passetsCache->mapAssetAddressAmount[item.first] = item.second;
 
         for (auto &item: mapAsset)
             passetsCache->mapAsset[item.first] = item.second;
@@ -415,6 +542,15 @@ void AddAssets(const CTransaction &tx, int nHeight, CAssetsCache *assetCache,
                                                         asset.amount,
                                                         asset.ownerAddress,
                                                         asset.collateralAddress};
+            }
+        } 
+        //process asset transaction in order to track address balances
+        if (fAssetIndex) {
+            for (size_t i = 0; i < tx.vout.size(); ++i) {
+                if (tx.vout[i].scriptPubKey.IsAssetScript()) {
+                    COutPoint out(tx.GetHash(), i);
+                    assetCache->AddAssetBlance(tx.vout[i].scriptPubKey, out);
+                }
             }
         }
     }

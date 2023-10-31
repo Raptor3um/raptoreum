@@ -62,11 +62,19 @@ public:
 
     bool WriteAssetId(const std::string assetName, const std::string Txid);
 
+    bool WriteAssetAddressAmount(const std::string &assetId, const std::string &address, const CAmount128 &amount);
+    
+    bool WriteAddressAssetAmount(const std::string &address, const std::string &assetId, const CAmount128 &amount);
+
     bool WriteBlockUndoAssetData(const uint256 &blockHash,
                                  const std::vector <std::pair<std::string, CBlockAssetUndo>> &assetUndoData);
 
     // Read from database
     bool ReadAssetData(const std::string &txid, CAssetMetaData &asset, int &nHeight, uint256 &blockHash);
+
+    bool ReadAssetAddressAmount(const std::string &assetId, const std::string &address, CAmount128 &amount);
+    
+    bool ReadAssetAddressAssetAmount(const std::string &address, const std::string &assetId, CAmount128 &amount);
 
     bool ReadAssetId(const std::string &assetName, std::string &Txid);
 
@@ -77,10 +85,17 @@ public:
     bool EraseAssetData(const std::string &assetName);
 
     bool EraseAssetId(const std::string &assetName);
+    
+    bool EraseAssetAddressAmount(const std::string &assetId, const std::string &address);
+
+    bool EraseAddressAssetAmount(const std::string &address, const std::string &assetId);
 
     // Helper functions
     bool LoadAssets();
     bool GetListAssets(std::vector<CDatabaseAssetData>& assets, const size_t count, const long start);
+    bool GetListAssetsByAddress(std::vector<std::pair<std::string, CAmount128> >& vecAssetAmount, int& totalEntries, const bool& fGetTotal, const std::string& address, const size_t count, const long start);
+    bool GetListAddressByAssets(std::vector<std::pair<std::string, CAmount128> >& vecAddressAmount, int& totalEntries, const bool& fGetTotal, const std::string& assetId, const size_t count, const long start);
+
 };
 
 

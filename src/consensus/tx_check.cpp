@@ -33,21 +33,17 @@ bool CheckTransaction(const CTransaction &tx, CValidationState &state, int nHeig
         return state.DoS(100, false, REJECT_INVALID, "bad-txns-payload-oversize");
 
     // Check for negative or overflow output values
-    bool isV17active = Params().IsFutureActive(::ChainActive().Tip());
     CAmount nValueOut = 0;
     std::map <std::string, CAmount> nAssetVout;
     for (const auto &txout: tx.vout) {
         if (txout.nValue < 0)
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-vout-negative");
-        if (isV17active) {
-            if (txout.nValue > MAX_MONEY)
-                return state.DoS(100, false, REJECT_INVALID, "bad-txns-vout-toolarge");
-        } else {
-            if (txout.nValue > OLD_MAX_MONEY)
-                return state.DoS(100, false, REJECT_INVALID, "bad-txns-vout-toolarge");
-        }
+
+        if (txout.nValue > MAX_MONEY)
+            return state.DoS(100, false, REJECT_INVALID, "bad-txns-vout-toolarge");
+        
         nValueOut += txout.nValue;
-        if (!MoneyRange(nValueOut, isV17active))
+        if (!MoneyRange(nValueOut))
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-txouttotal-toolarge");
 
         if (txout.scriptPubKey.IsAssetScript()) {
@@ -66,7 +62,7 @@ bool CheckTransaction(const CTransaction &tx, CValidationState &state, int nHeig
             if (assetTransfer.nAmount > MAX_MONEY)
                 return state.DoS(100, false, REJECT_INVALID, "bad-txns-vout-toolarge");
 
-            if (!MoneyRange(nAssetVout.at(assetTransfer.assetId), isV17active)) {
+            if (!MoneyRange(nAssetVout.at(assetTransfer.assetId))) {
                 return state.DoS(100, false, REJECT_INVALID, "bad-txns-outputvalues-outofrange");
             }
         }

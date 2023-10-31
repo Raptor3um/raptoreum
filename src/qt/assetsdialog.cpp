@@ -225,9 +225,9 @@ void AssetsDialog::Asset_clicked() {
     ui->nameTextLabel->setText(QString::fromStdString(asset.name));
     ui->typeLabel->setText( asset.isUnique ? "Unique/NFT" : "Root");
     if (asset.mintCount > 0) {
-        ui->suplyTextLabel->setText(BitcoinUnits::format(8, (asset.amount * asset.mintCount) / 
-                        BitcoinUnits::factorAsset(MAX_ASSET_UNITS -  asset.decimalPoint) , false, 
-                        BitcoinUnits::separatorAlways, asset.decimalPoint));
+        QString decimal = asset.decimalPoint > 0 ? "." + QString::number(0).rightJustified(asset.decimalPoint, '0') : "";
+        ui->suplyTextLabel->setText(BitcoinUnits::format(8, asset.circulatingSupply, false, 
+                        BitcoinUnits::separatorAlways, 0) + decimal);
     } else {
         ui->suplyTextLabel->setText("0");
     }
@@ -361,7 +361,7 @@ void AssetsDialog::mintAsset() {
 
     if (tmpAsset.isUnique) {
         //build unique output using current supply as start unique id
-        uint64_t id = tmpAsset.circulatingSupply / COIN;
+        uint64_t id = tmpAsset.circulatingSupply;
         // Get the script for the target address
         CScript scriptPubKey = GetScriptForDestination(tmpAsset.targetAddress);
         // Update the scriptPubKey with the transfer asset information
