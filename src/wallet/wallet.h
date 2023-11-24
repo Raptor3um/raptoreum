@@ -1394,7 +1394,7 @@ public:
     bool CreateTransaction(const std::vector <CRecipient> &vecSend, CTransactionRef &tx, CAmount &nFeeRet,
                            int &nChangePosInOut, std::string &strFailReason, const CCoinControl &coin_control,
                            bool sign = true, int nExtraPayloadSize = 0, FuturePartialPayload *fpp = nullptr,
-                           CNewAssetTx *newAsset = nullptr, CMintAssetTx *mint = nullptr);
+                           CNewAssetTx *newAsset = nullptr, CMintAssetTx *mint = nullptr, CUpdateAssetTx *updateAsset = nullptr);
 
     /**
      * Submit the transaction to the node's mempool and then relay to peers.

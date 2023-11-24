@@ -310,7 +310,7 @@ void AssetsDialog::mintAsset() {
     //check on mempool if have a mint tx for this asset
     if (mempool.CheckForMintAssetConflict(tmpAsset.assetId)) {
         QMessageBox msgBox;
-        msgBox.setText("Error: Already exist on mempool");
+        msgBox.setText("Error: Asset mint or update tx exist on mempool");
         msgBox.setStandardButtons(QMessageBox::Ok);
         msgBox.exec();
         return;

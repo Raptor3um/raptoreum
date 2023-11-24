@@ -150,6 +150,7 @@ CreateUpdateAssetTx(const CTxMemPool& mempool, SimpleUTXOMap& utxos, const CKey&
     upAsset.type = type;
     upAsset.targetAddress = asset.targetAddress;
     upAsset.issueFrequency = asset.issueFrequency;
+    upAsset.maxMintCount = asset.maxMintCount;
     upAsset.amount = amount * COIN;
     upAsset.ownerAddress = ownerKey;
     upAsset.collateralAddress = asset.collateralAddress;

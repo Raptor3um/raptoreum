@@ -96,7 +96,10 @@ public
 
     /** Switch to create assets page */
     void gotoCreateAssetsPage();
-    
+
+    /** Switch to create assets page */
+    void gotoUpdateAssetsPage();
+
     /** Switch to my assets page */
     void gotoMyAssetsPage();
     

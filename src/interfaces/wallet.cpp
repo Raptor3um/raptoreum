@@ -317,10 +317,11 @@ namespace interfaces {
                                           std::string &fail_reason,
                                           int nExtraPayloadSize = 0,
                                           CNewAssetTx *newAsset = nullptr,
-                                          CMintAssetTx *mint = nullptr) override {
+                                          CMintAssetTx *mint = nullptr,
+                                          CUpdateAssetTx *updateAsset = nullptr) override {
             LOCK(m_wallet->cs_wallet);
             return m_wallet->CreateTransaction(recipients, tx, fee, change_pos, fail_reason, coin_control, sign,
-                                             nExtraPayloadSize, nullptr, newAsset ,mint);
+                                             nExtraPayloadSize, nullptr, newAsset, mint, updateAsset);
         }
 
         void commitTransaction(CTransactionRef tx, WalletValueMap value_map, WalletOrderForm order_form) override {

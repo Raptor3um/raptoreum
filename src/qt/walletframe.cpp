@@ -163,6 +163,12 @@ void WalletFrame::gotoCreateAssetsPage() {
         i.value()->gotoCreateAssetsPage();
 }
 
+void WalletFrame::gotoUpdateAssetsPage() {
+    QMap<WalletModel *, WalletView *>::const_iterator i;
+    for (i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i)
+        i.value()->gotoUpdateAssetsPage();
+}
+
 void WalletFrame::gotoMyAssetsPage() {
     QMap<WalletModel *, WalletView *>::const_iterator i;
     for (i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i)

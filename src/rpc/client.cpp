@@ -185,6 +185,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
                 {"createwallet", 2, "blank"},
                 {"stop", 0, "wait"},
                 {"createasset", 0, "asset"},
+                {"updateasset", 0, "asset"},
                 {"listunspentassets", 0, "minconf"},
                 {"listunspentassets", 1, "maxconf"},
                 {"listunspentassets", 2, "addresses"},

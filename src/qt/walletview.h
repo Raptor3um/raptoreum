@@ -25,6 +25,8 @@ class SendAssetsDialog;
 
 class CreateAssetsDialog;
 
+class UpdateAssetsDialog;
+
 class AssetsDialog;
 
 class SendCoinsRecipient;
@@ -87,6 +89,7 @@ private:
     SendCoinsDialog *sendCoinsPage;
     SendAssetsDialog *sendAssetsPage;
     CreateAssetsDialog *createAssetsPage;
+    UpdateAssetsDialog *updateAssetsPage;
     AssetsDialog *myAssetsPage;
     SendCoinsDialog *coinJoinCoinsPage;
     AddressBookPage *usedSendingAddressesPage;
@@ -120,6 +123,9 @@ public
 
     /** Switch to create assets page */
     void gotoCreateAssetsPage();
+
+    /** Switch to update assets page */
+    void gotoUpdateAssetsPage();
     
     /** Switch to my assets page */
     void gotoMyAssetsPage();
