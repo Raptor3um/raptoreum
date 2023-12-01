@@ -109,6 +109,8 @@ WalletView::WalletView(QWidget *parent) :
 
     connect(myAssetsPage, SIGNAL(assetSendClicked(std::string)), sendAssetsPage, SLOT(focusAsset(std::string)));
 
+    connect(myAssetsPage, SIGNAL(assetUpdateClicked(std::string)), updateAssetsPage, SLOT(focusAsset(std::string)));
+
     // Highlight transaction after send
     connect(sendCoinsPage, &SendCoinsDialog::coinsSent, transactionView,
             static_cast<void (TransactionView::*)(const uint256 &)>(&TransactionView::focusTransaction));
@@ -147,7 +149,7 @@ void WalletView::setBitcoinGUI(BitcoinGUI *gui) {
         connect(sendAssetsPage, &SendAssetsDialog::coinsSent, gui, &BitcoinGUI::gotoHistoryPage);
         connect(coinJoinCoinsPage, &SendCoinsDialog::coinsSent, gui, &BitcoinGUI::gotoHistoryPage);
         connect(myAssetsPage, SIGNAL(assetSendClicked(std::string)), gui, SLOT(gotoSendAssetsPage()));
-        // Receive and report messages
+        connect(myAssetsPage, SIGNAL(assetUpdateClicked(std::string)), gui, SLOT(gotoUpdateAssetsPage()));// Receive and report messages
         connect(this, &WalletView::message, [gui](const QString &title, const QString &message, unsigned int style) {
             gui->message(title, message, style);
         });

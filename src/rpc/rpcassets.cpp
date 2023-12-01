@@ -328,9 +328,9 @@ UniValue updateasset(const JSONRPCRequest &request) {
     }
 
     bool newowner = false;
-    const UniValue &ownerAddress = find_value(asset, "ownerAddress");
-    if (!ownerAddress.isNull()) {   
-        assetTx.ownerAddress = ParsePubKeyIDFromAddress(ownerAddress.get_str(), "ownerAddress");
+    const UniValue &newOwnerAddress = find_value(asset, "ownerAddress");
+    if (!newOwnerAddress.isNull()) {   
+        assetTx.ownerAddress = ParsePubKeyIDFromAddress(newOwnerAddress.get_str(), "ownerAddress");
         //if we are transferring ownership of the asset check if the address are not equal
         if (assetTx.ownerAddress != assetdata.ownerAddress)
             newowner = true;
@@ -418,12 +418,37 @@ UniValue updateasset(const JSONRPCRequest &request) {
         throw JSONRPCError(RPC_TYPE_ERROR,"Error: at least 1 parameter must be updated");
     }
 
+    CTxDestination ownerAddress = CTxDestination(assetdata.ownerAddress);
+    if (!IsValidDestination(ownerAddress)) {
+        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid address");
+    }
+    
+    CCoinControl coinControl;
+
+    coinControl.destChange = ownerAddress;
+    coinControl.fRequireAllInputs = false;
+
+    std::vector <COutput> vecOutputs;
+    //select only confirmed inputs, nMinDepth >= 1
+    pwallet->AvailableCoins(vecOutputs, true, nullptr, 1, MAX_MONEY , MAX_MONEY, 0, 1);
+
+    for (const auto &out: vecOutputs) {
+        CTxDestination txDest;
+        if (ExtractDestination(out.tx->tx->vout[out.i].scriptPubKey, txDest) && txDest == ownerAddress) {
+            coinControl.Select(COutPoint(out.tx->tx->GetHash(), out.i));
+        }
+    }
+
+    if (!coinControl.HasSelected()) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR,
+                           strprintf("No funds at specified address %s", EncodeDestination(ownerAddress)));
+    }
+
     CTransactionRef newTx;
     CAmount nFee;
     int nChangePos = -1;
     std::string strFailReason;
     std::vector <CRecipient> vecSend;
-    CCoinControl coinControl;
     assetTx.fee = getAssetsFees();
     int Payloadsize;
 
@@ -440,6 +465,7 @@ UniValue updateasset(const JSONRPCRequest &request) {
     result.pushKV("Updatable", assetTx.updatable);
     result.pushKV("ReferenceHash", assetTx.referenceHash);
     result.pushKV("ownerAddress", EncodeDestination(assetTx.ownerAddress));
+    result.pushKV("MaxMintCount", assetTx.maxMintCount);
     result.pushKV("fee", assetTx.fee);
     UniValue dist(UniValue::VOBJ);
     dist.pushKV("Type", GetDistributionType(assetTx.type));

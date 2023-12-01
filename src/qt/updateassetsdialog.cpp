@@ -673,6 +673,13 @@ void UpdateAssetsDialog::updateAssetList() {
     }
 }
 
+void UpdateAssetsDialog::focusAsset(const std::string assetId) {
+    int index = ui->assetList->findText(QString::fromStdString(assetId));
+    if (index >= 0) {
+        ui->assetList->setCurrentIndex(index);
+    }
+}
+
 UpdateAssetConfirmationDialog::UpdateAssetConfirmationDialog(const QString &title, const QString &text, int _secDelay,
                                                          QWidget *parent) :
         QMessageBox(QMessageBox::Question, title, text, QMessageBox::Yes | QMessageBox::Cancel, parent),

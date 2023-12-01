@@ -82,8 +82,6 @@ AssetsDialog::AssetsDialog(QWidget *parent) :
     connect(timer, &QTimer::timeout, this, &AssetsDialog::updateAssetBalanceScheduled);
     timer->start(1000);
 
-    ui->updateButton->setEnabled(false);
-    ui->mintButton->setEnabled(false);
     ui->updateButton->setVisible(false);
     ui->mintButton->setVisible(false);
     ui->errorLabel->setVisible(false);
@@ -284,6 +282,15 @@ void AssetsDialog::on_mintButton_clicked() {
     }
     // already unlocked or not encrypted at all
     mintAsset();
+}
+
+void AssetsDialog::on_updateButton_clicked() {
+        std::string assetId = GetSelectedAsset();
+
+    if(assetId == "") return;
+    CAssetMetaData asset;
+    if (passetsCache->GetAssetMetaData(assetId, asset))
+        Q_EMIT assetUpdateClicked(asset.name);
 }
 
 void AssetsDialog::mintAsset() {

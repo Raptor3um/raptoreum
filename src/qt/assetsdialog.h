@@ -53,6 +53,8 @@ public:
     Q_SIGNALS:
     void assetSendClicked(const std::string &assetId);
 
+    void assetUpdateClicked(const std::string &assetName);
+
 private:
     QMenu *contextMenuAsset;
 
@@ -73,6 +75,8 @@ private
     Q_SLOTS:
 
         void on_mintButton_clicked();
+
+        void on_updateButton_clicked();
 
         void showContextMenuAsset(const QPoint&);
 
