@@ -197,8 +197,8 @@ UniValue createasset(const JSONRPCRequest &request) {
 
     const UniValue &maxMintCount = find_value(asset, "maxMintCount");
     if (!maxMintCount.isNull()) {
-        uint16_t a = maxMintCount.get_int64();
-        if (a <= 0 || a > MAX_UNIQUE_ID)
+        uint64_t a = maxMintCount.get_int64();
+        if (a <= 0 || a > 0xffff)
             throw JSONRPCError(RPC_TYPE_ERROR, "Invalid maxMintCount");
         assetTx.maxMintCount = a;
     } else {
@@ -385,8 +385,8 @@ UniValue updateasset(const JSONRPCRequest &request) {
 
         const UniValue &maxMintCount = find_value(asset, "maxMintCount");
         if (!maxMintCount.isNull()) {
-            uint16_t a = maxMintCount.get_int64();
-            if (a <= 0 || a > 0xffff)
+            uint64_t a = maxMintCount.get_int64();
+            if (a <= 0 || a > 0xffff || a < assetdata.mintCount)
                 throw JSONRPCError(RPC_TYPE_ERROR, "Invalid maxMintCount");
             assetTx.maxMintCount = a;
         } else {
