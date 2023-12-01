@@ -254,7 +254,6 @@ UniValue updateasset(const JSONRPCRequest &request) {
                 "{\n"
                 "   \"name:\"               (string) Asset name\n"
                 "   \"updatable:\"          (bool, optional, default=true) if true this asset can be modify using reissue process.\n"
-                "   \"decimalpoint:\"       (numeric, optional) [0 to 8] has to be 0 if is_unique is true.\n"
                 "   \"referenceHash:\"      (string, optional) hash of the underlying physical or digital assets, IPFS hash can be used here.\n"
                 "   \"maxMintCount\"        (numeric, optional) number of times this asset can be mint\n"
                 "   \"type:\"               (numeric, optional) distribution type manual=0, coinbase=1, address=2, schedule=3\n"
