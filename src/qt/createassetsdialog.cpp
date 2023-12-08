@@ -297,6 +297,7 @@ void CreateAssetsDialog::createAsset() {
         assetTx.decimalPoint = 0; //alway 0
         assetTx.type = 0;
     } else {
+        assetTx.updatable = ui->updatableBox->isChecked();
         assetTx.isUnique = false;
         assetTx.type = 0; //change this later
         assetTx.decimalPoint = ui->unitBox->value();
@@ -429,7 +430,7 @@ bool CreateAssetsDialog::validateInputs() {
     }
 
     if (ui->unitBox->value() < 0 || ui->unitBox->value() > 8){
-        ui->assetnameText->setValid(false);
+        ui->unitBox->setStyleSheet(GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_INVALID));
         retval = false;
     }
 
@@ -481,7 +482,7 @@ QWidget *CreateAssetsDialog::setupTabChain(QWidget *prev) {
 void CreateAssetsDialog::setBalance(const interfaces::WalletBalances &balances) {
     if (model && model->getOptionsModel()) {
         CAmount bal = balances.balance;
-        ui->labelBalanceText->setText(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), bal));
+        ui->labelBalance->setText(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), bal));
     }
 }
 

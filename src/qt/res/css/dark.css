@@ -405,6 +405,7 @@ QDialog#SendCoinsDialog .QPushButton#clearButton,
 QDialog#SendAssetsDialog .QPushButton#addButton,
 QDialog#SendAssetsDialog .QPushButton#clearButton,
 QDialog#CreateAssetsDialog .QPushButton#clearButton,
+QDialog#UpdateAssetsDialog .QPushButton#clearButton,
 QWidget#ReceiveCoinsDialog .QFrame#frame QPushButton#removeRequestButton,
 QWidget#ReceiveCoinsDialog .QFrame#frame2 QPushButton#clearButton,
 QWidget#ReceiveCoinsDialog .QFrame#frame QPushButton#showRequestButton,
@@ -425,6 +426,7 @@ QDialog#SendCoinsDialog .QPushButton#clearButton:hover,
 QDialog#SendAssetsDialog .QPushButton#addButton:hover,
 QDialog#SendAssetsDialog .QPushButton#clearButton:hover,
 QDialog#CreateAssetsDialog .QPushButton#clearButton:hover,
+QDialog#UpdateAssetsDialog .QPushButton#clearButton:hover,
 QWidget#ReceiveCoinsDialog .QFrame#frame QPushButton#removeRequestButton:hover,
 QWidget#ReceiveCoinsDialog .QFrame#frame2 QPushButton#clearButton:hover,
 QWidget#ReceiveCoinsDialog .QFrame#frame QPushButton#showRequestButton:hover,
@@ -445,6 +447,7 @@ QDialog#SendCoinsDialog .QPushButton#clearButton:pressed,
 QDialog#SendAssetsDialog .QPushButton#addButton:pressed,
 QDialog#SendAssetsDialog .QPushButton#clearButton:pressed,
 QDialog#CreateAssetsDialog .QPushButton#clearButton:pressed,
+QDialog#UpdateAssetsDialog .QPushButton#clearButton:pressed,
 QWidget#ReceiveCoinsDialog .QFrame#frame QPushButton#removeRequestButton:pressed,
 QWidget#ReceiveCoinsDialog .QFrame#frame2 QPushButton#clearButton:pressed,
 QWidget#ReceiveCoinsDialog .QFrame#frame QPushButton#showRequestButton:pressed,
@@ -465,6 +468,7 @@ QDialog#SendCoinsDialog .QPushButton#clearButton:disabled,
 QDialog#SendAssetsDialog .QPushButton#addButton:disabled,
 QDialog#SendAssetsDialog .QPushButton#clearButton:disabled,
 QDialog#CreateAssetsDialog .QPushButton#clearButton:disabled,
+QDialog#UpdateAssetsDialog .QPushButton#clearButton:disabled,
 QWidget#ReceiveCoinsDialog .QFrame#frame QPushButton#removeRequestButton:disabled,
 QWidget#ReceiveCoinsDialog .QFrame#frame2 QPushButton#clearButton:disabled,
 QWidget#ReceiveCoinsDialog .QFrame#frame QPushButton#showRequestButton:disabled,
@@ -977,6 +981,15 @@ CreateAssetssDialog
 
 QDialog#CreateAssetsDialog .QFrame#frameCoinControl,
 QDialog#CreateAssetsDialog #scrollArea {
+    border-color: #39393b;
+}
+
+/******************************************************
+UpdateAssetsDialog
+******************************************************/
+
+QDialog#UpdateAssetsDialog .QFrame#frameCoinControl,
+QDialog#UpdateAssetsDialog #scrollArea {
     border-color: #39393b;
 }
 

@@ -166,6 +166,7 @@ private:
     QToolButton *sendCoinsButton = nullptr;
     QToolButton *sendAssetsButton  = nullptr;
     QToolButton *createAssetsButton  = nullptr;
+    QToolButton *updateAssetsButton  = nullptr;
     QToolButton *myAssetsButton  = nullptr;
     QToolButton *coinJoinCoinsButton = nullptr;
     QToolButton *receiveCoinsButton = nullptr;
@@ -176,6 +177,7 @@ private:
     QAction *sendCoinsMenuAction = nullptr;
     QAction *sendAssetsMenuAction = nullptr;
     QAction *createAssetsMenuAction = nullptr;
+    QAction *updateAssetsMenuAction = nullptr;
     QAction *coinJoinCoinsMenuAction = nullptr;
     QAction *usedSendingAddressesAction = nullptr;
     QAction *usedReceivingAddressesAction = nullptr;
@@ -379,6 +381,8 @@ public
             void gotoSendAssetsPage(QString addr = "");
             /** Switch to create assets page */
             void gotoCreateAssetsPage();
+            /** Switch to update assets page */
+            void gotoUpdateAssetsPage();
             /** Switch to my assets page */
             void gotoMyAssetsPage();
             /** Switch to CoinJoin coins page */

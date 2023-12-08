@@ -844,6 +844,7 @@ public:
 
     bool CheckForNewAssetConflict(const std::string assetName) const;
 
+    //check for mint or update tx conflict
     bool CheckForMintAssetConflict(const std::string assetId) const;
 
     size_t DynamicMemoryUsage() const;

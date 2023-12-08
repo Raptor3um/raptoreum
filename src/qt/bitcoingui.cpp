@@ -417,6 +417,10 @@ void BitcoinGUI::createActions() {
     createAssetsMenuAction = new QAction(tr("&Create Asset"), this);
     createAssetsMenuAction->setStatusTip(tr("Create a new asset"));
     createAssetsMenuAction->setToolTip(createAssetsMenuAction->statusTip());
+    
+    updateAssetsMenuAction = new QAction(tr("&Update Asset"), this);
+    updateAssetsMenuAction->setStatusTip(tr("Update asset"));
+    updateAssetsMenuAction->setToolTip(updateAssetsMenuAction->statusTip());
 
 #ifdef ENABLE_WALLET
     // These showNormalIfMinimized are needed because Send Coins and Receive Coins
@@ -761,11 +765,17 @@ void BitcoinGUI::createToolBars() {
         createAssetsButton->setText(createAssetsMenuAction->text());
         createAssetsButton->setStatusTip(createAssetsMenuAction->statusTip());
         tabGroup->addButton(createAssetsButton);
+        
+        updateAssetsButton = new QToolButton(this);
+        updateAssetsButton->setText(updateAssetsMenuAction->text());
+        updateAssetsButton->setStatusTip(updateAssetsMenuAction->statusTip());
+        tabGroup->addButton(updateAssetsButton);
 
         connect(overviewButton, &QToolButton::clicked, this, &BitcoinGUI::gotoOverviewPage);
         connect(sendCoinsButton, &QToolButton::clicked, [this]{ gotoSendCoinsPage(); });
         connect(sendAssetsButton, &QToolButton::clicked, [this]{ gotoSendAssetsPage(); });
         connect(createAssetsButton, &QToolButton::clicked, [this]{ gotoCreateAssetsPage(); });
+        connect(updateAssetsButton, &QToolButton::clicked, [this]{ gotoUpdateAssetsPage(); });
         connect(myAssetsButton, &QToolButton::clicked, [this]{ gotoMyAssetsPage(); });
         connect(coinJoinCoinsButton, &QToolButton::clicked, [this]{ gotoCoinJoinCoinsPage(); });
         connect(receiveCoinsButton, &QToolButton::clicked, this, &BitcoinGUI::gotoReceiveCoinsPage);
@@ -1219,6 +1229,12 @@ void BitcoinGUI::gotoCreateAssetsPage()
 {
     createAssetsButton->setChecked(true);
     if (walletFrame) walletFrame->gotoCreateAssetsPage();
+}
+
+void BitcoinGUI::gotoUpdateAssetsPage()
+{
+    updateAssetsButton->setChecked(true);
+    if (walletFrame) walletFrame->gotoUpdateAssetsPage();
 }
 
 void BitcoinGUI::gotoMyAssetsPage()

@@ -4171,8 +4171,8 @@ CWallet::GetBudgetSystemCollateralTX(CTransactionRef &tx, uint256 hash, CAmount 
 bool CWallet::CreateTransaction(const std::vector <CRecipient> &vecSend, CTransactionRef &tx, CAmount &nFeeRet,
                                 int &nChangePosInOut, std::string &strFailReason, const CCoinControl &coin_control,
                                 bool sign, int nExtraPayloadSize, FuturePartialPayload *fpp, CNewAssetTx *newAsset,
-                                CMintAssetTx *mint) {
-    if (!Params().IsAssetsActive(::ChainActive().Tip()) && (newAsset || mint))
+                                CMintAssetTx *mint, CUpdateAssetTx *updateAsset) {
+    if (!Params().IsAssetsActive(::ChainActive().Tip()) && (newAsset || mint || updateAsset))
         return false;
 
     uint32_t const height = chain().getHeight().get_value_or(-1);
@@ -4227,7 +4227,7 @@ bool CWallet::CreateTransaction(const std::vector <CRecipient> &vecSend, CTransa
         if (recipient.fSubtractFeeFromAmount)
             nSubtractFeeFromAmount++;
     }
-    if (vecSend.empty() && !newAsset) {
+    if (vecSend.empty() && !newAsset && !updateAsset) {
         strFailReason = _("Transaction must have at least one recipient");
         return false;
     }
@@ -4238,6 +4238,7 @@ bool CWallet::CreateTransaction(const std::vector <CRecipient> &vecSend, CTransa
     CFutureTx ftx;
     CNewAssetTx atx;
     CMintAssetTx mtx;
+    CUpdateAssetTx  uptx;
     CAmount specialFees = 0;
     if (fpp) {
         txNew.nVersion = 3;
@@ -4261,6 +4262,12 @@ bool CWallet::CreateTransaction(const std::vector <CRecipient> &vecSend, CTransa
         mtx = *mint;
         mtx.nVersion = CMintAssetTx::CURRENT_VERSION;
         specialFees = getAssetsFeesCoin();
+    } else if (updateAsset){
+        txNew.nVersion = 3;
+        txNew.nType = TRANSACTION_UPDATE_ASSET;
+        uptx = *updateAsset;
+        uptx.nVersion = CUpdateAssetTx::CURRENT_VERSION;
+        specialFees = getAssetsFeesCoin();
     }
     // Discourage fee sniping.
     //
@@ -4283,7 +4290,7 @@ bool CWallet::CreateTransaction(const std::vector <CRecipient> &vecSend, CTransa
     // now we ensure code won't be written that makes assumptions about
     // nLockTime that preclude a fix later.
 
-    if (fpp) txNew.nLockTime = height;
+    if (fpp || newAsset || mint || updateAsset) txNew.nLockTime = height;
     else txNew.nLockTime = GetLocktimeForNewTransaction(chain());
 
     FeeCalculation feeCalc;
@@ -4417,6 +4424,11 @@ bool CWallet::CreateTransaction(const std::vector <CRecipient> &vecSend, CTransa
                 } else if (mint) {
                     CDataStream ds(SER_NETWORK, PROTOCOL_VERSION);
                     ds << mtx;
+                    txNew.vExtraPayload.assign(ds.begin(), ds.end());
+                    nExtraPayloadSize = txNew.vExtraPayload.size();
+                } else if (updateAsset) {
+                    CDataStream ds(SER_NETWORK, PROTOCOL_VERSION);
+                    ds << uptx;
                     txNew.vExtraPayload.assign(ds.begin(), ds.end());
                     nExtraPayloadSize = txNew.vExtraPayload.size();
                 }
@@ -4761,6 +4773,9 @@ bool CWallet::CreateTransaction(const std::vector <CRecipient> &vecSend, CTransa
         } else if (mint) {
             UpdateSpecialTxInputsHash(txNew, mtx);
             SetTxPayload(txNew, mtx);
+        } else if (updateAsset) {
+            UpdateSpecialTxInputsHash(txNew, uptx);
+            SetTxPayload(txNew, uptx);
         }
 
         if (sign) {

@@ -197,8 +197,8 @@ UniValue createasset(const JSONRPCRequest &request) {
 
     const UniValue &maxMintCount = find_value(asset, "maxMintCount");
     if (!maxMintCount.isNull()) {
-        uint16_t a = maxMintCount.get_int64();
-        if (a <= 0 || a > MAX_UNIQUE_ID)
+        uint64_t a = maxMintCount.get_int64();
+        if (a <= 0 || a > 0xffff)
             throw JSONRPCError(RPC_TYPE_ERROR, "Invalid maxMintCount");
         assetTx.maxMintCount = a;
     } else {
@@ -230,6 +230,241 @@ UniValue createasset(const JSONRPCRequest &request) {
     result.pushKV("ReferenceHash", assetTx.referenceHash);
     result.pushKV("MaxMintCount", assetTx.maxMintCount);
     result.pushKV("ownerAddress", EncodeDestination(assetTx.ownerAddress));
+    result.pushKV("fee", assetTx.fee);
+    UniValue dist(UniValue::VOBJ);
+    dist.pushKV("Type", GetDistributionType(assetTx.type));
+    dist.pushKV("TargetAddress", EncodeDestination(assetTx.targetAddress));
+    //dist.pushKV("collateralAddress", EncodeDestination(assetTx.collateralAddress));
+    dist.pushKV("IssueFrequency", assetTx.issueFrequency);
+    dist.pushKV("Amount", assetTx.amount / COIN);
+    result.pushKV("Distribution", dist);
+
+    return result;
+}
+
+UniValue updateasset(const JSONRPCRequest &request) {
+
+    if (request.fHelp || !Params().IsAssetsActive(::ChainActive().Tip()) || request.params.size() < 1 ||
+        request.params.size() > 1)
+        throw std::runtime_error(
+                "updateasset asset_metadata\n"
+                "Create a new asset\n"
+                "\nArguments:\n"
+                "1. \"asset\"               (string, required) A json object with asset metadata\n"
+                "{\n"
+                "   \"name:\"               (string) Asset name\n"
+                "   \"updatable:\"          (bool, optional, default=true) if true this asset can be modify using reissue process.\n"
+                "   \"referenceHash:\"      (string, optional) hash of the underlying physical or digital assets, IPFS hash can be used here.\n"
+                "   \"maxMintCount\"        (numeric, optional) number of times this asset can be mint\n"
+                "   \"type:\"               (numeric, optional) distribution type manual=0, coinbase=1, address=2, schedule=3\n"
+                "   \"targetAddress:\"      (string, optional) address to be issued to when asset issue transaction is created.\n"
+                "   \"issueFrequency:\"     (numeric, optional) mint specific amount of token every x blocks\n"
+                "   \"amount:\"             (numeric, optional) amount to distribute each time if type is not manual.\n"
+                "   \"ownerAddress:\"       (string, optional) address that this asset is owned by. Only key holder of this address will be able to mint new tokens\n"
+                "}\n"
+                "\nResult:\n"
+                "\"txid\"                   (string) The transaction hash\n"
+
+                "\nExamples:\n"
+                + HelpExampleCli("updateasset",
+                                 "'{\"name\":\"test asset\", \"updatable\":true, \"maxMintCount\":10, \"referenceHash\":\"\"\n,"
+                                 "\"type\":0, \"targetAddress\":\"yQPzaDmnF3FtRsoWijUN7aZDcEdyNAcmVk\", \"issueFrequency\":0\n,"
+                                 "\"amount\":10000,\"ownerAddress\":\"yRyiTCKfqMG2dQ9oUvs932TjN1R1MNUTWM\"}'")
+        );
+
+    if (getAssetsFees() == 0) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Under maintenance, try again later.");
+    }
+
+    std::shared_ptr <CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    if (!wallet) return NullUniValue;
+    CWallet *const pwallet = wallet.get();
+
+    // Make sure the results are valid at least up to the most recent block
+    // the user could have gotten from another RPC command prior to now
+    pwallet->BlockUntilSyncedToCurrentChain();
+
+    LOCK2(cs_main, mempool.cs);
+    LOCK(pwallet->cs_wallet);
+
+    if (pwallet->GetBroadcastTransactions() && !pwallet->chain().p2pEnabled()) {
+        throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
+    }
+
+    UniValue asset = request.params[0].get_obj();
+
+    const UniValue &name = find_value(asset, "name");
+    if (name.isNull()) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Asset not specified");
+    }
+    std::string assetname = name.getValStr();
+
+    // get the asset metadata
+    std::string assetId;
+    CAssetMetaData assetdata;
+    if (passetsCache->GetAssetId(assetname, assetId)) {
+        if (!passetsCache->GetAssetMetaData(assetId, assetdata)) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Asset not found");
+        }
+    }
+
+    if (!assetdata.updatable) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: This asset cannot be updated");  
+    }
+
+    //check on mempool if a mint/update tx already exist
+    if (mempool.CheckForMintAssetConflict(assetname)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Asset mint or update tx exist on mempool");
+    }
+
+    CUpdateAssetTx assetTx;
+    assetTx.assetId = assetId;
+    const UniValue &updatable = find_value(asset, "updatable");
+    if (!updatable.isNull()) {
+        assetTx.updatable = updatable.get_bool();
+    } else {
+        assetTx.updatable = true;
+    }
+
+    bool newowner = false;
+    const UniValue &newOwnerAddress = find_value(asset, "ownerAddress");
+    if (!newOwnerAddress.isNull()) {   
+        assetTx.ownerAddress = ParsePubKeyIDFromAddress(newOwnerAddress.get_str(), "ownerAddress");
+        //if we are transferring ownership of the asset check if the address are not equal
+        if (assetTx.ownerAddress != assetdata.ownerAddress)
+            newowner = true;
+    } else {
+        assetTx.ownerAddress = assetdata.ownerAddress;
+    }
+
+    if (newowner){
+        assetTx.referenceHash = assetdata.referenceHash;
+        assetTx.targetAddress = assetdata.targetAddress;
+        assetTx.amount = assetdata.amount;
+        assetTx.maxMintCount = assetdata.maxMintCount;
+        assetTx.issueFrequency = assetdata.issueFrequency;
+        assetTx.updatable = assetdata.updatable;
+        assetTx.type = assetdata.type;   
+    } else {
+        const UniValue &referenceHash = find_value(asset, "referenceHash");
+        if (!referenceHash.isNull() && !newowner) {
+            std::string ref = referenceHash.get_str();
+            if (ref.length() > 0) {
+                if (ref.length() > 128)
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Invalid referenceHash (max length 128)");
+                assetTx.referenceHash = ref;
+            }
+        } else {
+            assetTx.referenceHash = assetdata.referenceHash;
+        }
+
+        const UniValue &targetAddress = find_value(asset, "targetAddress");
+        if (!targetAddress.isNull()) {
+            assetTx.targetAddress = ParsePubKeyIDFromAddress(targetAddress.get_str(), "targetAddress");;
+        } else {
+            assetTx.targetAddress = assetdata.targetAddress;
+        }
+
+        const UniValue &type = find_value(asset, "type");
+        if (!type.isNull()) {
+            assetTx.type = type.get_int();
+        } else {
+            assetTx.type = assetdata.type;
+        }
+
+        const UniValue &amount = find_value(asset, "amount");
+        if (!amount.isNull()) {
+            CAmount a = amount.get_int64() * COIN;
+            if (a <= 0 || a > MAX_MONEY)
+                throw JSONRPCError(RPC_TYPE_ERROR, strprintf("Invalid amount. Max amount %i", MAX_MONEY));
+            assetTx.amount = a;
+        } else {
+            assetTx.amount = assetdata.amount;
+        }
+
+        const UniValue &maxMintCount = find_value(asset, "maxMintCount");
+        if (!maxMintCount.isNull()) {
+            uint64_t a = maxMintCount.get_int64();
+            if (a <= 0 || a > 0xffff || a < assetdata.mintCount)
+                throw JSONRPCError(RPC_TYPE_ERROR, "Invalid maxMintCount");
+            assetTx.maxMintCount = a;
+        } else {
+            assetTx.maxMintCount = assetdata.maxMintCount;
+        }
+    }
+
+    bool haschanges = false;
+    if (assetTx.ownerAddress != assetdata.ownerAddress) {
+        haschanges = true;
+    } else {
+        if (assetTx.updatable != assetdata.updatable)
+            haschanges = true;
+        else if (assetTx.referenceHash != assetdata.referenceHash)
+            haschanges = true;
+        else if (assetTx.targetAddress != assetdata.targetAddress)
+            haschanges = true;
+        else if (assetTx.type != assetdata.type)
+            haschanges = true;
+        else if (assetTx.amount != assetdata.amount)
+            haschanges = true;
+        else if (assetTx.maxMintCount != assetdata.maxMintCount)
+            haschanges = true;
+        else if (assetTx.issueFrequency != assetdata.issueFrequency)
+            haschanges = true;
+    }
+
+    if (!haschanges) {
+        throw JSONRPCError(RPC_TYPE_ERROR,"Error: at least 1 parameter must be updated");
+    }
+
+    CTxDestination ownerAddress = CTxDestination(assetdata.ownerAddress);
+    if (!IsValidDestination(ownerAddress)) {
+        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid address");
+    }
+    
+    CCoinControl coinControl;
+
+    coinControl.destChange = ownerAddress;
+    coinControl.fRequireAllInputs = false;
+
+    std::vector <COutput> vecOutputs;
+    //select only confirmed inputs, nMinDepth >= 1
+    pwallet->AvailableCoins(vecOutputs, true, nullptr, 1, MAX_MONEY , MAX_MONEY, 0, 1);
+
+    for (const auto &out: vecOutputs) {
+        CTxDestination txDest;
+        if (ExtractDestination(out.tx->tx->vout[out.i].scriptPubKey, txDest) && txDest == ownerAddress) {
+            coinControl.Select(COutPoint(out.tx->tx->GetHash(), out.i));
+        }
+    }
+
+    if (!coinControl.HasSelected()) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR,
+                           strprintf("No funds at specified address %s", EncodeDestination(ownerAddress)));
+    }
+
+    CTransactionRef newTx;
+    CAmount nFee;
+    int nChangePos = -1;
+    std::string strFailReason;
+    std::vector <CRecipient> vecSend;
+    assetTx.fee = getAssetsFees();
+    int Payloadsize;
+
+    if (!pwallet->CreateTransaction(vecSend, newTx, nFee, nChangePos, strFailReason, coinControl, true, Payloadsize,
+                                    nullptr, nullptr, nullptr, &assetTx)) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, strFailReason);
+    }
+
+    pwallet->CommitTransaction(newTx, {}, {});
+
+    UniValue result(UniValue::VOBJ);
+    result.pushKV("txid", newTx->GetHash().GetHex());
+    result.pushKV("Name", assetname);
+    result.pushKV("Updatable", assetTx.updatable);
+    result.pushKV("ReferenceHash", assetTx.referenceHash);
+    result.pushKV("ownerAddress", EncodeDestination(assetTx.ownerAddress));
+    result.pushKV("MaxMintCount", assetTx.maxMintCount);
     result.pushKV("fee", assetTx.fee);
     UniValue dist(UniValue::VOBJ);
     dist.pushKV("Type", GetDistributionType(assetTx.type));
@@ -291,9 +526,9 @@ UniValue mintasset(const JSONRPCRequest &request) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: max mint count reached");
     }
 
-    //check on mempool if have a mint tx for this asset
+    //check on mempool if have a mint/update tx for this asset
     if (mempool.CheckForMintAssetConflict(tmpAsset.assetId)) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Already exist on mempool");
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Asset mint or update tx exist on mempool");
     }
 
     CMintAssetTx mintAsset;
@@ -1049,6 +1284,7 @@ static const CRPCCommand commands[] =
         { //  category              name                      actor (function)
             //  --------------------- ------------------------  -----------------------
             {"assets",      "createasset",                  &createasset,                   {"asset"}},
+            {"assets",      "updateasset",                  &updateasset,                   {"asset"}},
             {"assets",      "mintasset",                    &mintasset,                     {"assetId"}},
             {"assets",      "sendasset",                    &sendasset,                     {"assetId", "amount", "address", "change_address", "asset_change_address"}},
             {"assets",      "getassetdetailsbyname",        &getassetdetailsbyname,         {"assetname"}},

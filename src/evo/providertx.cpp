@@ -234,6 +234,10 @@ bool CheckUpdateAssetTx(const CTransaction &tx, const CBlockIndex *pindexPrev, C
         return state.DoS(100, false, REJECT_INVALID, "bad-assets-invalid-id");
     }
 
+    if (!asset.updatable) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-assets-not-updateable");
+    }
+
     //Check if fees is paid by the owner address
     if (!checkAssetFeesPayment(tx, state, view, asset))
         return false;
@@ -252,6 +256,31 @@ bool CheckUpdateAssetTx(const CTransaction &tx, const CBlockIndex *pindexPrev, C
 
     if (assetTx.collateralAddress.IsNull() && assetTx.type != 0) { //
         return state.DoS(100, false, REJECT_INVALID, "bad-assets-collateralAddress");
+    }
+
+    if ((assetTx.referenceHash.length() > 128)) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-assets-referenceHash");
+    }
+
+    if (!validateAmount(assetTx.amount, asset.decimalPoint)) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-assets-amount");
+    }
+
+    if (assetTx.issueFrequency <= 0 && assetTx.type != 0) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-assets-issueFrequency");
+    }
+
+    if (assetTx.maxMintCount < asset.mintCount) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-assets-maxMintCount");
+    }
+    //when transferring ownership don't allow any other change
+    if (assetTx.ownerAddress != asset.ownerAddress) {
+        if (assetTx.targetAddress != asset.targetAddress || assetTx.collateralAddress != asset.collateralAddress 
+                || assetTx.updatable != asset.updatable || assetTx.referenceHash != asset.referenceHash 
+                || assetTx.type != asset.type || assetTx.issueFrequency != asset.issueFrequency 
+                || assetTx.amount != asset.amount|| assetTx.maxMintCount != asset.maxMintCount) {
+            return state.DoS(100, false, REJECT_INVALID, "bad-assets-owner-transfer");
+        }
     }
 
     if (!CheckInputsHash(tx, assetTx, state)) {

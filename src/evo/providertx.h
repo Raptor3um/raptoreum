@@ -310,6 +310,7 @@ public:
         }
         obj.pushKV("issueFrequency", issueFrequency);
         obj.pushKV("amount", amount);
+        obj.pushKV("maxMintCount", maxMintCount);
         obj.pushKV("exChainType", exChainType);
         CTxDestination dest;
         if (ExtractDestination(externalPayoutScript, dest)) {
@@ -336,6 +337,7 @@ public:
     uint8_t type; //manual, coinbase, address, schedule
     CKeyID targetAddress;
     uint8_t issueFrequency;
+    uint16_t maxMintCount = 0;
     CAmount amount;
     CKeyID ownerAddress;
     CKeyID collateralAddress;
@@ -351,7 +353,7 @@ public:
     )
     {
         READWRITE(obj.nVersion, obj.assetId, obj.updatable, obj.referenceHash, obj.fee,
-                  obj.type, obj.targetAddress, obj.issueFrequency, obj.amount,
+                  obj.type, obj.targetAddress, obj.issueFrequency, obj.maxMintCount, obj.amount,
                   obj.ownerAddress, obj.collateralAddress, obj.exChainType, obj.externalPayoutScript,
                   obj.externalTxid, obj.externalConfirmations, obj.inputsHash);
     }
@@ -376,6 +378,7 @@ public:
         }
         obj.pushKV("issueFrequency", issueFrequency);
         obj.pushKV("amount", amount);
+        obj.pushKV("maxMintCount", maxMintCount);
         obj.pushKV("exChainType", exChainType);
         CTxDestination dest;
         if (ExtractDestination(externalPayoutScript, dest)) {

@@ -142,6 +142,7 @@ bool CAssetsCache::UpdateAsset(CUpdateAssetTx upAsset) {
     assetData.targetAddress = upAsset.targetAddress;
     assetData.issueFrequency = upAsset.issueFrequency;
     assetData.amount = upAsset.amount;
+    assetData.maxMintCount = upAsset.maxMintCount;
     assetData.ownerAddress = upAsset.ownerAddress;
     assetData.collateralAddress = upAsset.collateralAddress;
     //update cache

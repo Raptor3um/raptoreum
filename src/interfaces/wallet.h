@@ -41,6 +41,7 @@ struct CRecipient;
 struct FuturePartialPayload;
 class CNewAssetTx;
 class CMintAssetTx;
+class CUpdateAssetTx;
 struct WalletContext;
 typedef uint8_t isminefilter;
 
@@ -201,7 +202,8 @@ namespace interfaces {
                                                   std::string &fail_reason,
                                                   int nExtraPayloadSize = 0,
                                                   CNewAssetTx *newAsset = nullptr,
-                                                  CMintAssetTx *mint = nullptr) = 0;
+                                                  CMintAssetTx *mint = nullptr,
+                                                  CUpdateAssetTx *updateAsset = nullptr) = 0;
 
         //! Commit transaction.
         virtual void commitTransaction(CTransactionRef tx, WalletValueMap value_map, WalletOrderForm order_form) = 0;

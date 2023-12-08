@@ -16,6 +16,7 @@
 #include <qt/sendcoinsdialog.h>
 #include <qt/sendassetsdialog.h>
 #include <qt/createassetsdialog.h>
+#include <qt/updateassetsdialog.h>
 #include <qt/assetsdialog.h>
 #include <qt/signverifymessagedialog.h>
 #include <qt/transactionrecord.h>
@@ -78,6 +79,7 @@ WalletView::WalletView(QWidget *parent) :
     sendCoinsPage = new SendCoinsDialog();
     sendAssetsPage = new SendAssetsDialog();
     createAssetsPage = new CreateAssetsDialog();
+    updateAssetsPage = new UpdateAssetsDialog();
     myAssetsPage = new AssetsDialog();
     coinJoinCoinsPage = new SendCoinsDialog(true);
 
@@ -92,6 +94,7 @@ WalletView::WalletView(QWidget *parent) :
     addWidget(myAssetsPage);
     addWidget(sendAssetsPage);
     addWidget(createAssetsPage);
+    addWidget(updateAssetsPage);
 
     QSettings settings;
     if (settings.value("fShowSmartnodesTab").toBool()) {
@@ -105,6 +108,8 @@ WalletView::WalletView(QWidget *parent) :
     connect(overviewPage, &OverviewPage::outOfSyncWarningClicked, this, &WalletView::requestedSyncWarningInfo);
 
     connect(myAssetsPage, SIGNAL(assetSendClicked(std::string)), sendAssetsPage, SLOT(focusAsset(std::string)));
+
+    connect(myAssetsPage, SIGNAL(assetUpdateClicked(std::string)), updateAssetsPage, SLOT(focusAsset(std::string)));
 
     // Highlight transaction after send
     connect(sendCoinsPage, &SendCoinsDialog::coinsSent, transactionView,
@@ -144,7 +149,7 @@ void WalletView::setBitcoinGUI(BitcoinGUI *gui) {
         connect(sendAssetsPage, &SendAssetsDialog::coinsSent, gui, &BitcoinGUI::gotoHistoryPage);
         connect(coinJoinCoinsPage, &SendCoinsDialog::coinsSent, gui, &BitcoinGUI::gotoHistoryPage);
         connect(myAssetsPage, SIGNAL(assetSendClicked(std::string)), gui, SLOT(gotoSendAssetsPage()));
-        // Receive and report messages
+        connect(myAssetsPage, SIGNAL(assetUpdateClicked(std::string)), gui, SLOT(gotoUpdateAssetsPage()));// Receive and report messages
         connect(this, &WalletView::message, [gui](const QString &title, const QString &message, unsigned int style) {
             gui->message(title, message, style);
         });
@@ -174,6 +179,9 @@ void WalletView::setClientModel(ClientModel *_clientModel) {
     }
     if (createAssetsPage != nullptr) {
         createAssetsPage->setClientModel(_clientModel);
+    }
+    if (updateAssetsPage != nullptr) {
+        updateAssetsPage->setClientModel(_clientModel);
     }
     if (myAssetsPage != nullptr) {
         myAssetsPage->setClientModel(_clientModel);
@@ -205,6 +213,7 @@ void WalletView::setWalletModel(WalletModel *_walletModel) {
     sendCoinsPage->setModel(_walletModel);
     sendAssetsPage->setModel(_walletModel);
     createAssetsPage->setModel(_walletModel);
+    updateAssetsPage->setModel(_walletModel);
     myAssetsPage->setModel(_walletModel);
     coinJoinCoinsPage->setModel(_walletModel);
     usedReceivingAddressesPage->setModel(_walletModel ? _walletModel->getAddressTableModel() : nullptr);
@@ -263,6 +272,7 @@ void WalletView::processNewTransaction(const QModelIndex &parent, int start, int
                                GUIUtil::HtmlEscape(walletModel->getWalletName()));
 
     sendAssetsPage->updateAssetList();
+    updateAssetsPage->updateAssetList();
     myAssetsPage->updateAssetBalance();
 }
 
@@ -310,6 +320,11 @@ void WalletView::gotoSendAssetsPage(QString addr) {
 
 void WalletView::gotoCreateAssetsPage() {
     setCurrentWidget(createAssetsPage);
+}
+
+void WalletView::gotoUpdateAssetsPage() {
+    updateAssetsPage->updateAssetList();
+    setCurrentWidget(updateAssetsPage);
 }
 
 void WalletView::gotoMyAssetsPage() {

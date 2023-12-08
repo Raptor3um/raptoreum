@@ -289,3 +289,12 @@ QDialog#CreateAssetsDialog QLabel#labelBalance {
 QDialog#CreateAssetsDialog .QFrame#frameCoinControl .QLabel#labelCoinControlInsuffFunds { /* Insufficient Funds Label */
     color: #a84832;
 }
+
+/******************************************************
+UpdateAssetsDialog
+******************************************************/
+
+QDialog#UpdateAssetsDialog QLabel#labelBalance {
+    margin-left: 0px;
+    padding-left: 0px;
+}
