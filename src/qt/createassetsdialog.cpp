@@ -835,12 +835,13 @@ void CreateAssetsDialog::onAssetTypeSelected(QString name) {
         ui->assetnameText->setToolTip("a-z A-Z 0-9 and space");
 
         // Get available assets list
-        std::vector <std::string> assets = model->wallet().listMyAssets();
+        std::map <uint256, std::pair<std::string, CKeyID>> assets = model->wallet().getMyAssets();
 
         QStringList list;
         list << "Select an asset";
-        for (auto assetId: assets) {
+        for (auto asset: assets) {
             CAssetMetaData assetData;
+            std::string assetId = asset.first.ToString();
             if (passetsCache->GetAssetMetaData(assetId, assetData) && assetData.isRoot) {
                 if (model->wallet().isSpendable(assetData.ownerAddress)){
                     list << QString::fromStdString(assetData.name);
