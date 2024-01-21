@@ -326,38 +326,39 @@ void AssetsDialog::mintAsset() {
     CMintAssetTx mintAsset;
     mintAsset.assetId = tmpAsset.assetId;
     mintAsset.fee = getAssetsFees();
-
-    CTxDestination ownerAddress = CTxDestination(tmpAsset.ownerAddress);
-    if (!IsValidDestination(ownerAddress)) {
-        QMessageBox msgBox;
-        msgBox.setText("ERROR: Invalid owner address");
-        msgBox.setStandardButtons(QMessageBox::Ok);
-        msgBox.exec();
-        return;
-    }
-
+    
     CCoinControl coinControl;
-
-    coinControl.destChange = ownerAddress;
-    coinControl.fRequireAllInputs = false;
-
-    std::vector <COutput> vecOutputs;
-    //select only confirmed inputs, nMinDepth >= 1
-    walletModel->wallet().AvailableCoins(vecOutputs, true, nullptr, 1, MAX_MONEY , MAX_MONEY, 0, 1);
-
-    for (const auto &out: vecOutputs) {
-        CTxDestination txDest;
-        if (ExtractDestination(out.tx->tx->vout[out.i].scriptPubKey, txDest) && txDest == ownerAddress) {
-            coinControl.Select(COutPoint(out.tx->tx->GetHash(), out.i));
+    if (!Params().IsRootAssetsActive(::ChainActive().Tip())) {
+        CTxDestination ownerAddress = CTxDestination(tmpAsset.ownerAddress);
+        if (!IsValidDestination(ownerAddress)) {
+            QMessageBox msgBox;
+            msgBox.setText("ERROR: Invalid owner address");
+            msgBox.setStandardButtons(QMessageBox::Ok);
+            msgBox.exec();
+            return;
         }
-    }
 
-    if (!coinControl.HasSelected()) {
-        QMessageBox msgBox;
-        msgBox.setText(QString::fromStdString(strprintf("Error: No funds at specified address %s", EncodeDestination(ownerAddress))));
-        msgBox.setStandardButtons(QMessageBox::Ok);
-        msgBox.exec();
-        return;
+        coinControl.destChange = ownerAddress;
+        coinControl.fRequireAllInputs = false;
+
+        std::vector <COutput> vecOutputs;
+        //select only confirmed inputs, nMinDepth >= 1
+        walletModel->wallet().AvailableCoins(vecOutputs, true, nullptr, 1, MAX_MONEY , MAX_MONEY, 0, 1);
+
+        for (const auto &out: vecOutputs) {
+            CTxDestination txDest;
+            if (ExtractDestination(out.tx->tx->vout[out.i].scriptPubKey, txDest) && txDest == ownerAddress) {
+                coinControl.Select(COutPoint(out.tx->tx->GetHash(), out.i));
+            }
+        }
+
+        if (!coinControl.HasSelected()) {
+            QMessageBox msgBox;
+            msgBox.setText(QString::fromStdString(strprintf("Error: No funds at specified address %s", EncodeDestination(ownerAddress))));
+            msgBox.setStandardButtons(QMessageBox::Ok);
+            msgBox.exec();
+            return;
+        }
     }
 
     CTransactionRef wtx;

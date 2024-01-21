@@ -17,6 +17,10 @@ class CCoinControl;
 
 class ClientModel;
 
+class QStringListModel;
+
+class QSortFilterProxyModel;
+
 namespace Ui {
     class CreateAssetsDialog;
 }
@@ -61,6 +65,9 @@ private:
     WalletModel *model;
     std::unique_ptr <CCoinControl> m_coin_control;
 
+    QStringListModel *stringModel;
+    QSortFilterProxyModel *proxy;
+
     bool validateInputs();
 
     bool filladdress(QString address, CKeyID &field);
@@ -87,6 +94,8 @@ private
     void on_buttonChooseFee_clicked();
 
     void on_buttonMinimizeFee_clicked();
+
+    void onAssetTypeSelected(QString name);
 
     void updateDisplayUnit();
 

@@ -148,6 +148,10 @@ public:
         return height >= GetConsensus().nAssetsForkBlock;
     };
 
+    bool IsRootAssetsActive(CBlockIndex *index) const {
+        int height = index == nullptr ? 0 : index->nHeight;
+        return height >= GetConsensus().nRootAssetsForkBlock;
+    };
     const std::vector <std::string> &SporkAddresses() const { return vSporkAddresses; }
 
     int MinSporkKeys() const { return nMinSporkKeys; }

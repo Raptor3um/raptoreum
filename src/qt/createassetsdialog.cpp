@@ -34,6 +34,8 @@
 #include <QFontMetrics>
 #include <QScrollBar>
 #include <QSettings>
+#include <QStringListModel>
+#include <QSortFilterProxyModel>
 #include <QTextDocument>
 
 #define SEND_CONFIRM_DELAY   3
@@ -77,6 +79,10 @@ CreateAssetsDialog::CreateAssetsDialog(QWidget *parent) :
                       ui->ipfsLabel,
                       ui->uniqueBox,
                       ui->updatableBox,
+                      ui->AssetTypeLabel,
+                      ui->AssetTypeBox,
+                      ui->RootAssetLabel,
+                      ui->RootAssetBox,
                       ui->IssueFrequencyLabel}, GUIUtil::FontWeight::Normal, 15);
 
     GUIUtil::setupAddressWidget(ui->lineEditCoinControlChange, this);
@@ -88,6 +94,7 @@ CreateAssetsDialog::CreateAssetsDialog(QWidget *parent) :
     connect(ui->clearButton, SIGNAL(clicked()), this, SLOT(clear()));
     connect(ui->availabilityButton, SIGNAL(clicked()), this, SLOT(checkAvailabilityClicked()));
     connect(ui->uniqueBox, SIGNAL(clicked()), this, SLOT(onUniqueChanged()));
+    connect(ui->AssetTypeBox, SIGNAL(currentIndexChanged(QString)), this, SLOT(onAssetTypeSelected(QString)));
 
     // Coin Control
     connect(ui->pushButtonCoinControl, SIGNAL(clicked()), this, SLOT(CoinControlButtonClicked()));
@@ -151,7 +158,21 @@ CreateAssetsDialog::CreateAssetsDialog(QWidget *parent) :
     ui->distributionBox->setToolTip(tr("Manual only until other types are developed"));
     ui->openIpfsButton->hide();
 
+    ui->RootAssetLabel->setVisible(false);
+    ui->RootAssetBox->setVisible(false);
+
     m_coin_control->UseCoinJoin(false);
+
+    /** Setup the root asset list combobox */
+    stringModel = new QStringListModel;
+
+    proxy = new QSortFilterProxyModel;
+    proxy->setSourceModel(stringModel);
+    proxy->setFilterCaseSensitivity(Qt::CaseInsensitive);
+
+    ui->RootAssetBox->setModel(proxy);
+    ui->RootAssetBox->setEditable(true);
+    ui->RootAssetBox->lineEdit()->setPlaceholderText("Select Root asset");
 }
 
 void CreateAssetsDialog::setClientModel(ClientModel *_clientModel) {
@@ -306,6 +327,21 @@ void CreateAssetsDialog::createAsset() {
     assetTx.maxMintCount = ui->maxmintSpinBox->value();
     assetTx.issueFrequency = ui->IssueFrequencyBox->value();
 
+    if (Params().IsRootAssetsActive(::ChainActive().Tip())) {
+        assetTx.isRoot = ui->AssetTypeBox->currentText() == "Root";
+        if (!assetTx.isRoot) {//sub asset
+            if (ui->RootAssetBox->currentIndex() > 0) {
+                std::string assetId;
+                if (passetsCache->GetAssetId(ui->RootAssetBox->currentText().toStdString(), assetId)) {
+                    assetTx.rootId = assetId;
+                } else {
+                    //shold never hapen
+                    return;
+                }
+            } 
+        }
+    }
+
     CTransactionRef newTx;
     CAmount nFee;
     int nChangePos = -1;
@@ -380,10 +416,27 @@ bool CreateAssetsDialog::validateInputs() {
     bool retval{true};
 
     std::string assetname = ui->assetnameText->text().toStdString();
+    bool isRoot = false; 
+    if (Params().IsRootAssetsActive(::ChainActive().Tip())){
+        isRoot = ui->AssetTypeBox->currentText() == "Root";
+    }
+    
     //check if asset name is valid
-    if (!IsAssetNameValid(assetname)) {
+    if (!IsAssetNameValid(assetname, isRoot)) {
         retval = false;
         ui->assetnameText->setValid(false);
+    }
+
+    if (Params().IsRootAssetsActive(::ChainActive().Tip())) {
+        if (!isRoot) {//sub asset
+            if (ui->RootAssetBox->currentIndex() > 0) {
+                assetname = ui->RootAssetBox->currentText().toStdString() + "|" + assetname;
+            } else {
+                //root asset not selected, set name as invalid
+                ui->assetnameText->setValid(false);
+                retval = false;
+            }
+        }
     }
     // check if asset already exist
     std::string assetId;
@@ -737,9 +790,25 @@ void CreateAssetsDialog::CoinControlUpdateLabels() {
 void CreateAssetsDialog::checkAvailabilityClicked()
 {
     std::string assetname = ui->assetnameText->text().toStdString();
+    bool isRoot = false; 
+    if (Params().IsRootAssetsActive(::ChainActive().Tip()))
+        isRoot = ui->AssetTypeBox->currentText() == "Root";
+
     //check if asset name is valid
-    if (!IsAssetNameValid(assetname)) {
+    if (!IsAssetNameValid(assetname, isRoot)) {
         ui->assetnameText->setValid(false);
+    }
+
+    if (Params().IsRootAssetsActive(::ChainActive().Tip())) {
+        if (!isRoot) {//sub asset
+            if (ui->RootAssetBox->currentIndex() > 0) {
+                assetname = ui->RootAssetBox->currentText().toStdString() + "|" + assetname;
+            } else {
+                //root asset not selected, set name as invalid
+                ui->assetnameText->setValid(false);
+                return;
+            }
+        }
     }
     // check if asset already exist
     std::string assetId;
@@ -752,6 +821,34 @@ void CreateAssetsDialog::checkAvailabilityClicked()
     // check if asset already exist on mempool
     if (mempool.CheckForNewAssetConflict(assetname)) {
         ui->assetnameText->setValid(false);
+    }
+}
+
+void CreateAssetsDialog::onAssetTypeSelected(QString name) {
+    if (name == "Root") {
+        ui->RootAssetLabel->setVisible(false);
+        ui->RootAssetBox->setVisible(false);
+        ui->assetnameText->setToolTip("A-Z 0-9 and space");
+    } else if (name == "Sub") {
+        ui->RootAssetLabel->setVisible(true);
+        ui->RootAssetBox->setVisible(true);
+        ui->assetnameText->setToolTip("a-z A-Z 0-9 and space");
+
+        // Get available assets list
+        std::vector <std::string> assets = model->wallet().listMyAssets();
+
+        QStringList list;
+        list << "Select an asset";
+        for (auto assetId: assets) {
+            CAssetMetaData assetData;
+            if (passetsCache->GetAssetMetaData(assetId, assetData) && assetData.isRoot) {
+                if (model->wallet().isSpendable(assetData.ownerAddress)){
+                    list << QString::fromStdString(assetData.name);
+                }
+            }
+        }
+        //update the list
+        stringModel->setStringList(list);
     }
 }
 

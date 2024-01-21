@@ -41,7 +41,7 @@ struct CMempoolAddressDeltaKey {
     CMempoolAddressDeltaKey(int addressType, uint160 addressHash, uint256 hash, unsigned int i, int s) {
         type = addressType;
         addressBytes = addressHash;
-        asset = "";
+        asset = "RTM";
         txhash = hash;
         index = i;
         spending = s;
@@ -50,7 +50,7 @@ struct CMempoolAddressDeltaKey {
     CMempoolAddressDeltaKey(int addressType, uint160 addressHash, std::string assetId, uint256 hash, unsigned int i, int s) {
         type = addressType;
         addressBytes = addressHash;
-        assetId = assetId;
+        asset = assetId;
         txhash = hash;
         index = i;
         spending = s;
@@ -68,7 +68,7 @@ struct CMempoolAddressDeltaKey {
     CMempoolAddressDeltaKey(int addressType, uint160 addressHash) {
         type = addressType;
         addressBytes = addressHash;
-        asset = "";
+        asset = "RTM";
         txhash.SetNull();
         index = 0;
         spending = 0;

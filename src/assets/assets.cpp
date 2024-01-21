@@ -13,12 +13,17 @@
 #include <wallet/wallet.h>
 #include <univalue.h>
 
-static const std::regex name_characters("^[a-zA-Z0-9 ]{3,}$");
+static const std::regex name_root_characters("^[A-Z0-9._]{3,}$");
+static const std::regex name_sub_characters("^[a-zA-Z0-9 ]{3,}$");
 static const std::regex rtm_names("^RTM$|^RAPTOREUM$|^wRTM$|^WRTM$|^RTMcoin$|^RTMCOIN$");
 
-bool IsAssetNameValid(std::string name) {
+
+bool IsAssetNameValid(std::string name, bool isRoot) {
     if (name.length() < 3 || name.length() > 128) return false;
-    return std::regex_match(name, name_characters) && !std::regex_match(name, rtm_names);
+    if (isRoot)
+        return std::regex_match(name, name_root_characters) && !std::regex_match(name, rtm_names);
+    else
+        return std::regex_match(name, name_sub_characters) && !std::regex_match(name, rtm_names); 
 }
 
 CAmount getAssetsFeesCoin() {
@@ -46,7 +51,14 @@ CAssetMetaData::CAssetMetaData(const std::string txid, const CNewAssetTx assetTx
     assetId = txid;
     circulatingSupply = 0;
     mintCount = 0;
-    name = assetTx.name;
+    if (assetTx.nVersion == 2 && !assetTx.isRoot){
+        CAssetMetaData rootAsset;
+        passetsCache->GetAssetMetaData(assetTx.rootId, rootAsset);
+        name = rootAsset.name + "|" + assetTx.name;
+    } else {
+        name = assetTx.name;
+    }
+    isRoot =  assetTx.isRoot;
     updatable = assetTx.updatable;
     isUnique = assetTx.isUnique;
     decimalPoint = assetTx.decimalPoint;

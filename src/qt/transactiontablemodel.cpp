@@ -102,7 +102,7 @@ public:
         // Find bounds of this transaction in model
         QList<TransactionRecord>::iterator lower = std::lower_bound(cachedWallet.begin(), cachedWallet.end(), hash,
                                                                TxLessThan());
-        QList<TransactionRecord>::iterator upper = std::lower_bound(cachedWallet.begin(), cachedWallet.end(), hash,
+        QList<TransactionRecord>::iterator upper = std::upper_bound(cachedWallet.begin(), cachedWallet.end(), hash,
                                                                TxLessThan());
         int lowerIndex = (lower - cachedWallet.begin());
         int upperIndex = (upper - cachedWallet.begin());

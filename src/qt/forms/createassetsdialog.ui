@@ -540,7 +540,7 @@
         <x>0</x>
         <y>0</y>
         <width>953</width>
-        <height>248</height>
+        <height>283</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_7" stretch="0,1">
@@ -571,7 +571,51 @@
           <enum>QFrame::NoFrame</enum>
          </property>
          <layout class="QGridLayout" name="gridLayout_2">
-          <item row="6" column="2">
+          <item row="15" column="0">
+           <widget class="QLabel" name="targetLabel">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The RTM address that will receive the minted asset&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="text">
+             <string>Target Address:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0">
+           <widget class="QLabel" name="addressLabel">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;RTM address that will own this asset&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="text">
+             <string>Owner Address:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="15" column="2">
+           <layout class="QHBoxLayout" name="horizontalLayout_13">
+            <item>
+             <widget class="QValidatedLineEdit" name="targetaddressText">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The RTM address that will receive the minted asset&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+              <property name="placeholderText">
+               <string>The RTM address that will receive the minted asset</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item row="7" column="0">
+           <widget class="QLabel" name="ipfsLabel">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;[Optional] The ipfs/file hash that contains information about the asset&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="text">
+             <string>IPFS/file hash:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="2">
            <layout class="QHBoxLayout" name="horizontalLayout_6">
             <item>
              <widget class="QValidatedLineEdit" name="ipfsText">
@@ -595,27 +639,97 @@
             </item>
            </layout>
           </item>
-          <item row="6" column="0">
-           <widget class="QLabel" name="ipfsLabel">
-            <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;[Optional] The ipfs/file hash that contains information about the asset&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-            </property>
+          <item row="1" column="2">
+           <layout class="QHBoxLayout" name="horizontalLayout">
+            <item>
+             <widget class="QValidatedLineEdit" name="assetnameText">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;a-z A-Z 0-9 and space&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+              <property name="maxLength">
+               <number>128</number>
+              </property>
+              <property name="placeholderText">
+               <string>The name of the asset you would like to create</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="availabilityButton">
+              <property name="text">
+               <string>Check Availabilty</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item row="4" column="2">
+           <layout class="QHBoxLayout" name="horizontalLayout_10">
+            <item>
+             <widget class="QValidatedLineEdit" name="owneraddressText">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;RTM address that will own this asset&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+              <property name="text">
+               <string/>
+              </property>
+              <property name="placeholderText">
+               <string>The RTM address that own this asset</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="assetNameLabel">
             <property name="text">
-             <string>IPFS/file hash:</string>
+             <string>Asset Name:</string>
             </property>
            </widget>
           </item>
-          <item row="14" column="0">
-           <widget class="QLabel" name="targetLabel">
-            <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The RTM address that will receive the minted asset&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-            </property>
-            <property name="text">
-             <string>Target Address:</string>
-            </property>
-           </widget>
+          <item row="11" column="0">
+           <layout class="QGridLayout" name="gridLayout_3">
+            <item row="1" column="0">
+             <layout class="QHBoxLayout" name="horizontalLayout_2">
+              <item>
+               <widget class="QCheckBox" name="uniqueBox">
+                <property name="toolTip">
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Make this asset unique also known as NFT&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                </property>
+                <property name="text">
+                 <string>Unique Asset</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="label">
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="typeLabel">
+              <property name="text">
+               <string>Distribution Type:</string>
+              </property>
+              <property name="margin">
+               <number>0</number>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="0">
+             <widget class="QLabel" name="mintLabel">
+              <property name="text">
+               <string>Mint count:</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </item>
-          <item row="10" column="2">
+          <item row="11" column="2">
            <layout class="QGridLayout" name="gridLayout">
             <property name="rightMargin">
              <number>0</number>
@@ -755,117 +869,77 @@
             </item>
            </layout>
           </item>
-          <item row="3" column="0">
-           <widget class="QLabel" name="addressLabel">
-            <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;RTM address that will own this asset&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-            </property>
-            <property name="text">
-             <string>Owner Address:</string>
-            </property>
-           </widget>
-          </item>
           <item row="0" column="0">
-           <widget class="QLabel" name="assetNameLabel">
+           <widget class="QLabel" name="AssetTypeLabel">
             <property name="text">
-             <string>Asset Name:</string>
+             <string>Asset type:</string>
             </property>
            </widget>
-          </item>
-          <item row="14" column="2">
-           <layout class="QHBoxLayout" name="horizontalLayout_13">
-            <item>
-             <widget class="QValidatedLineEdit" name="targetaddressText">
-              <property name="toolTip">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The RTM address that will receive the minted asset&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-              </property>
-              <property name="placeholderText">
-               <string>The RTM address that will receive the minted asset</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-          <item row="10" column="0">
-           <layout class="QGridLayout" name="gridLayout_3">
-            <item row="1" column="0">
-             <layout class="QHBoxLayout" name="horizontalLayout_2">
-              <item>
-               <widget class="QCheckBox" name="uniqueBox">
-                <property name="toolTip">
-                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Make this asset unique also known as NFT&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                </property>
-                <property name="text">
-                 <string>Unique Asset</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QLabel" name="label">
-                <property name="text">
-                 <string/>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </item>
-            <item row="2" column="0">
-             <widget class="QLabel" name="typeLabel">
-              <property name="text">
-               <string>Distribution Type:</string>
-              </property>
-              <property name="margin">
-               <number>0</number>
-              </property>
-             </widget>
-            </item>
-            <item row="3" column="0">
-             <widget class="QLabel" name="mintLabel">
-              <property name="text">
-               <string>Mint count:</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-          <item row="3" column="2">
-           <layout class="QHBoxLayout" name="horizontalLayout_10">
-            <item>
-             <widget class="QValidatedLineEdit" name="owneraddressText">
-              <property name="toolTip">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;RTM address that will own this asset&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-              </property>
-              <property name="text">
-               <string/>
-              </property>
-              <property name="placeholderText">
-               <string>The RTM address that own this asset</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
           </item>
           <item row="0" column="2">
-           <layout class="QHBoxLayout" name="horizontalLayout">
+           <layout class="QHBoxLayout" name="horizontalLayout_3">
             <item>
-             <widget class="QValidatedLineEdit" name="assetnameText">
-              <property name="toolTip">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;a-z A-Z 0-9 and space&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             <layout class="QGridLayout" name="gridLayout_4">
+              <property name="horizontalSpacing">
+               <number>20</number>
               </property>
-              <property name="maxLength">
-               <number>128</number>
+              <property name="verticalSpacing">
+               <number>6</number>
               </property>
-              <property name="placeholderText">
-               <string>The name of the asset you would like to create</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="availabilityButton">
-              <property name="text">
-               <string>Check Availabilty</string>
-              </property>
-             </widget>
+              <item row="0" column="0">
+               <widget class="QComboBox" name="AssetTypeBox">
+                <property name="minimumSize">
+                 <size>
+                  <width>200</width>
+                  <height>0</height>
+                 </size>
+                </property>
+                <item>
+                 <property name="text">
+                  <string>Root</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Sub</string>
+                 </property>
+                </item>
+               </widget>
+              </item>
+              <item row="0" column="2">
+               <widget class="QComboBox" name="RootAssetBox">
+                <property name="minimumSize">
+                 <size>
+                  <width>200</width>
+                  <height>0</height>
+                 </size>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1">
+               <widget class="QLabel" name="RootAssetLabel">
+                <property name="enabled">
+                 <bool>true</bool>
+                </property>
+                <property name="text">
+                 <string>Root Asset:</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="3">
+               <spacer name="horizontalSpacer">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+             </layout>
             </item>
            </layout>
           </item>
