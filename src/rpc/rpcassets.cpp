@@ -61,6 +61,8 @@ UniValue createasset(const JSONRPCRequest &request) {
                 "{\n"
                 "   \"name:\"               (string) Asset name\n"
                 "   \"updatable:\"          (bool, optional, default=true) if true this asset can be modify using reissue process.\n"
+                "   \"is_root:\"            (bool, required) if this asset is root.\n"
+                "   \"root_name:\"          (string) the root asset name for this sub asset.\n"
                 "   \"is_unique:\"          (bool, optional, default=false) if true this is asset is unique it has an identity per token (NFT flag)\n"
                 "   \"decimalpoint:\"       (numeric) [0 to 8] has to be 0 if is_unique is true.\n"
                 "   \"referenceHash:\"      (string) hash of the underlying physical or digital assets, IPFS hash can be used here.\n"
@@ -105,32 +107,96 @@ UniValue createasset(const JSONRPCRequest &request) {
     const UniValue &name = find_value(asset, "name");
 
     std::string assetname = name.getValStr();
-
-    //check if asset name is valid
-    if (!IsAssetNameValid(assetname)) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Invalid asset name");
-    }
-    // check if asset already exist
-    std::string assetId;
-    if (passetsCache->GetAssetId(assetname, assetId)) {
-        CAssetMetaData tmpAsset;
-        if (passetsCache->GetAssetMetaData(assetId, tmpAsset)) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Asset already exist");
-        }
-    }
-
-    //check on mempool if asset already exist
-    if (mempool.CheckForNewAssetConflict(assetname)) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Asset already exist on mempool");
-    }
-
+    
     CNewAssetTx assetTx;
     assetTx.name = assetname;
+
     const UniValue &updatable = find_value(asset, "updatable");
     if (!updatable.isNull()) {
         assetTx.updatable = updatable.get_bool();
     } else {
         assetTx.updatable = true;
+    }
+
+    if (Params().IsRootAssetsActive(::ChainActive().Tip())) {
+        const UniValue &isroot = find_value(asset, "is_root");
+        if (!isroot.isNull()) {
+            assetTx.isRoot = isroot.get_bool();
+        } else {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: asset type not found");
+        }
+
+        //check if asset name is valid
+        if (!IsAssetNameValid(assetname, assetTx.isRoot)) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Invalid asset name");
+        }
+
+        if (!assetTx.isRoot) { //sub asset
+            const UniValue &root_name = find_value(asset, "root_name");
+            if (root_name.isNull()) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Root asset not found (required)");
+            }
+            std::string rootname = root_name.getValStr();
+            // check if root asset exist
+            std::string assetId;
+            if (passetsCache->GetAssetId(rootname, assetId)) {
+                //set the root asset id
+                assetTx.rootId = assetId;
+                CAssetMetaData tmpAsset;
+                if (!passetsCache->GetAssetMetaData(assetId, tmpAsset)) {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Root asset metadata not found");
+                }
+
+                if (!tmpAsset.isRoot) {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Invalid root asset name");
+                }
+
+                //check if we own the root asset
+                if (!IsMine(*pwallet, tmpAsset.ownerAddress) & ISMINE_SPENDABLE) {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Invalid root asset key");
+                }
+                
+                //combine the root name with the asset name
+                std::string tmpname = tmpAsset.name + "|" + assetname;
+
+                //check if asset already exist
+                std::string tmp_id;
+                if (passetsCache->GetAssetId(tmpname, tmp_id)) {
+                    CAssetMetaData tmp_Asset;
+                    if (passetsCache->GetAssetMetaData(tmp_id, tmp_Asset)) {
+                        throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Asset already exist");
+                    }
+                }
+
+                //check on mempool if asset already exist
+                if (mempool.CheckForNewAssetConflict(tmpname)) {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Asset already exist on mempool");
+                }
+            } else {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Root asset metadata not found");
+            }
+        }
+    } else {
+        //this section can be removed later on
+        //on testnet set version to 1 until new fork
+        assetTx.nVersion = 1;
+        //check if asset name is valid
+        if (!IsAssetNameValid(assetname, false)) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Invalid asset name v1");
+        }
+
+        std::string assetId;
+        if (passetsCache->GetAssetId(assetname, assetId)) {
+            CAssetMetaData tmpAsset;
+            if (passetsCache->GetAssetMetaData(assetId, tmpAsset)) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Asset already exist");
+            }
+        }
+
+        //check on mempool if asset already exist
+        if (mempool.CheckForNewAssetConflict(assetname)) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Asset already exist on mempool");
+        }
     }
 
     const UniValue &referenceHash = find_value(asset, "referenceHash");
@@ -424,23 +490,25 @@ UniValue updateasset(const JSONRPCRequest &request) {
     
     CCoinControl coinControl;
 
-    coinControl.destChange = ownerAddress;
-    coinControl.fRequireAllInputs = false;
+    if (!Params().IsRootAssetsActive(::ChainActive().Tip())) {
+        coinControl.destChange = ownerAddress;
+        coinControl.fRequireAllInputs = false;
 
-    std::vector <COutput> vecOutputs;
-    //select only confirmed inputs, nMinDepth >= 1
-    pwallet->AvailableCoins(vecOutputs, true, nullptr, 1, MAX_MONEY , MAX_MONEY, 0, 1);
+        std::vector <COutput> vecOutputs;
+        //select only confirmed inputs, nMinDepth >= 1
+        pwallet->AvailableCoins(vecOutputs, true, nullptr, 1, MAX_MONEY , MAX_MONEY, 0, 1);
 
-    for (const auto &out: vecOutputs) {
-        CTxDestination txDest;
-        if (ExtractDestination(out.tx->tx->vout[out.i].scriptPubKey, txDest) && txDest == ownerAddress) {
-            coinControl.Select(COutPoint(out.tx->tx->GetHash(), out.i));
+        for (const auto &out: vecOutputs) {
+            CTxDestination txDest;
+            if (ExtractDestination(out.tx->tx->vout[out.i].scriptPubKey, txDest) && txDest == ownerAddress) {
+                coinControl.Select(COutPoint(out.tx->tx->GetHash(), out.i));
+            }
         }
-    }
 
-    if (!coinControl.HasSelected()) {
-        throw JSONRPCError(RPC_INTERNAL_ERROR,
-                           strprintf("No funds at specified address %s", EncodeDestination(ownerAddress)));
+        if (!coinControl.HasSelected()) {
+            throw JSONRPCError(RPC_INTERNAL_ERROR,
+                            strprintf("No funds at specified address %s", EncodeDestination(ownerAddress)));
+        }
     }
 
     CTransactionRef newTx;
@@ -541,23 +609,25 @@ UniValue mintasset(const JSONRPCRequest &request) {
     }
     CCoinControl coinControl;
 
-    coinControl.destChange = ownerAddress;
-    coinControl.fRequireAllInputs = false;
+    if (!Params().IsRootAssetsActive(::ChainActive().Tip())) {
+        coinControl.destChange = ownerAddress;
+        coinControl.fRequireAllInputs = false;
 
-    std::vector <COutput> vecOutputs;
-    //select only confirmed inputs, nMinDepth >= 1
-    pwallet->AvailableCoins(vecOutputs, true, nullptr, 1, MAX_MONEY , MAX_MONEY, 0, 1);
+        std::vector <COutput> vecOutputs;
+        //select only confirmed inputs, nMinDepth >= 1
+        pwallet->AvailableCoins(vecOutputs, true, nullptr, 1, MAX_MONEY , MAX_MONEY, 0, 1);
 
-    for (const auto &out: vecOutputs) {
-        CTxDestination txDest;
-        if (ExtractDestination(out.tx->tx->vout[out.i].scriptPubKey, txDest) && txDest == ownerAddress) {
-            coinControl.Select(COutPoint(out.tx->tx->GetHash(), out.i));
+        for (const auto &out: vecOutputs) {
+            CTxDestination txDest;
+            if (ExtractDestination(out.tx->tx->vout[out.i].scriptPubKey, txDest) && txDest == ownerAddress) {
+                coinControl.Select(COutPoint(out.tx->tx->GetHash(), out.i));
+            }
         }
-    }
 
-    if (!coinControl.HasSelected()) {
-        throw JSONRPCError(RPC_INTERNAL_ERROR,
-                           strprintf("No funds at specified address %s", EncodeDestination(ownerAddress)));
+        if (!coinControl.HasSelected()) {
+            throw JSONRPCError(RPC_INTERNAL_ERROR,
+                            strprintf("No funds at specified address %s", EncodeDestination(ownerAddress)));
+        }
     }
 
 

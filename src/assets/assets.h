@@ -28,7 +28,7 @@ CAmount getAssetsFeesCoin();
 
 uint16_t getAssetsFees();
 
-bool IsAssetNameValid(std::string name);
+bool IsAssetNameValid(std::string name, bool isRoot=false);
 
 bool GetAssetId(const CScript &script, std::string &assetId);
 
@@ -42,6 +42,7 @@ public:
     CAmount circulatingSupply; //update every mint transaction.
     uint16_t mintCount;
     std::string name;
+    bool isRoot = false; 
     bool updatable = false; //if true this asset meta can be modify using assetTx update process.
     bool isUnique = false;  //true if this is asset is unique it has an identity per token (NFT flag)
     uint8_t decimalPoint = 0;
@@ -65,7 +66,7 @@ public:
     SERIALIZE_METHODS(CAssetMetaData, obj
     )
     {
-        READWRITE(obj.assetId, obj.circulatingSupply, obj.mintCount, obj.name, obj.updatable,
+        READWRITE(obj.assetId, obj.circulatingSupply, obj.mintCount, obj.name, obj.isRoot, obj.updatable,
                   obj.isUnique, obj.maxMintCount, obj.decimalPoint, obj.referenceHash, obj.fee,
                   obj.type, obj.targetAddress, obj.issueFrequency, obj.amount, obj.ownerAddress,
                   obj.collateralAddress);
@@ -76,6 +77,7 @@ public:
         circulatingSupply = CAmount(-1);
         mintCount = uint16_t(-1);
         name = "";
+        isRoot = false;
         updatable = false;
         isUnique = false;
         decimalPoint = uint8_t(-1);

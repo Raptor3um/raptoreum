@@ -1230,8 +1230,17 @@ bool CWallet::AddToWallet(const CWalletTx &wtxIn, bool fFlushOnClose, bool resca
 
     if (wtxIn.tx->nType == TRANSACTION_NEW_ASSET && fInsertedNew){
         CNewAssetTx assetTx;
-        if (GetTxPayload(wtxIn.tx->vExtraPayload, assetTx))
+        if (GetTxPayload(wtxIn.tx->vExtraPayload, assetTx)) {
+            if (assetTx.nVersion == 2 && !assetTx.isRoot) {
+                CAssetMetaData rootAsset;
+                if (passetsCache->GetAssetMetaData(assetTx.rootId, rootAsset))
+                    mapAsset.emplace(hash, std::make_pair(rootAsset.name + "|" +assetTx.name, assetTx.ownerAddress));
+                else
+                    mapAsset.emplace(hash, std::make_pair("cache error|" +assetTx.name, assetTx.ownerAddress));
+            } else {
                 mapAsset.emplace(hash, std::make_pair(assetTx.name, assetTx.ownerAddress));
+            }
+        }
     }
 
     //// debug print
@@ -1304,8 +1313,17 @@ void CWallet::LoadToWallet(CWalletTx &wtxIn) {
     }
     if (wtx.tx->nType == TRANSACTION_NEW_ASSET && !wtx.isAbandoned()){
         CNewAssetTx assetTx;
-        if (GetTxPayload(wtx.tx->vExtraPayload, assetTx))
+        if (GetTxPayload(wtxIn.tx->vExtraPayload, assetTx)) {
+            if (assetTx.nVersion == 2 && !assetTx.isRoot) {
+                CAssetMetaData rootAsset;
+                if (passetsCache->GetAssetMetaData(assetTx.rootId, rootAsset))
+                    mapAsset.emplace(hash, std::make_pair(rootAsset.name + "|" +assetTx.name, assetTx.ownerAddress));
+                else
+                    mapAsset.emplace(hash, std::make_pair("cache error|" +assetTx.name, assetTx.ownerAddress));
+            } else {
                 mapAsset.emplace(hash, std::make_pair(assetTx.name, assetTx.ownerAddress));
+            }
+        }
     }
 }
 
@@ -4254,19 +4272,19 @@ bool CWallet::CreateTransaction(const std::vector <CRecipient> &vecSend, CTransa
         txNew.nVersion = 3;
         txNew.nType = TRANSACTION_NEW_ASSET;
         atx = *newAsset;
-        atx.nVersion = CNewAssetTx::CURRENT_VERSION;
+        atx.nVersion = Params().IsRootAssetsActive(::ChainActive().Tip()) ? 2 : 1;
         specialFees = getAssetsFeesCoin();
     } else if (mint) {
         txNew.nVersion = 3;
         txNew.nType = TRANSACTION_MINT_ASSET;
         mtx = *mint;
-        mtx.nVersion = CMintAssetTx::CURRENT_VERSION;
+        mtx.nVersion = Params().IsRootAssetsActive(::ChainActive().Tip()) ? 2 : 1;
         specialFees = getAssetsFeesCoin();
     } else if (updateAsset){
         txNew.nVersion = 3;
         txNew.nType = TRANSACTION_UPDATE_ASSET;
         uptx = *updateAsset;
-        uptx.nVersion = CUpdateAssetTx::CURRENT_VERSION;
+        uptx.nVersion = Params().IsRootAssetsActive(::ChainActive().Tip()) ? 2 : 1;
         specialFees = getAssetsFeesCoin();
     }
     // Discourage fee sniping.
@@ -4769,12 +4787,78 @@ bool CWallet::CreateTransaction(const std::vector <CRecipient> &vecSend, CTransa
             SetTxPayload(txNew, ftx);
         } else if (newAsset) {
             UpdateSpecialTxInputsHash(txNew, atx);
+            if (atx.nVersion == 2 && !atx.isRoot) {
+                atx.vchSig.clear();
+
+                CAssetMetaData assetData;
+                if (passetsCache->GetAssetMetaData(atx.rootId, assetData)) {
+                    std::string m = atx.MakeSignString(passetsCache.get());
+                    // lets prove we own the root asset
+                    CKey key;
+                    if (!CCryptoKeyStore::GetKey(assetData.ownerAddress, key)) {
+                        strFailReason = _("Root asset key not in wallet");
+                        return false;
+                    }
+                    if(!CMessageSigner::SignMessage(m, atx.vchSig, key))
+                    {
+                        strFailReason = _("Failed to sign special tx");
+                        return false;
+                    }
+                } else {
+                    strFailReason = _("Failed to get root metadata");
+                    return false;
+                }
+            }
             SetTxPayload(txNew, atx);
         } else if (mint) {
             UpdateSpecialTxInputsHash(txNew, mtx);
+            if (mtx.nVersion == 2) {
+                mtx.vchSig.clear();
+
+                CAssetMetaData assetData;
+                if (passetsCache->GetAssetMetaData(mtx.assetId, assetData)) {
+                    std::string m = mtx.MakeSignString(passetsCache.get());
+                    // lets prove we own the asset
+                    CKey key;
+                    if (!CCryptoKeyStore::GetKey(assetData.ownerAddress, key)) {
+                        strFailReason = _("Asset owner key not in wallet");
+                        return false;
+                    }
+                    if(!CMessageSigner::SignMessage(m, mtx.vchSig, key))
+                    {
+                        strFailReason = _("Failed to sign special tx");
+                        return false;
+                    }
+                } else {
+                    strFailReason = _("Failed to get root metadata");
+                    return false;
+                }
+            }
             SetTxPayload(txNew, mtx);
         } else if (updateAsset) {
             UpdateSpecialTxInputsHash(txNew, uptx);
+            if (uptx.nVersion == 2) {
+                uptx.vchSig.clear();
+
+                CAssetMetaData assetData;
+                if (passetsCache->GetAssetMetaData(uptx.assetId, assetData)) {
+                    std::string m = uptx.MakeSignString(passetsCache.get());
+                    // lets prove we own the asset
+                    CKey key;
+                    if (!CCryptoKeyStore::GetKey(assetData.ownerAddress, key)) {
+                        strFailReason = _("Asset owner key not in wallet");
+                        return false;
+                    }
+                    if(!CMessageSigner::SignMessage(m, uptx.vchSig, key))
+                    {
+                        strFailReason = _("Failed to sign special tx");
+                        return false;
+                    }
+                } else {
+                    strFailReason = _("Failed to get root metadata");
+                    return false;
+                }
+            }
             SetTxPayload(txNew, uptx);
         }
 

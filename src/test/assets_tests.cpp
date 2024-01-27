@@ -110,6 +110,7 @@ CreateNewAssetTx(const CTxMemPool& mempool, SimpleUTXOMap& utxos, const CKey& co
     CNewAssetTx newAsset;
 
     newAsset.name = name;
+    newAsset.isRoot = true;
     newAsset.updatable = updatable;
     newAsset.isUnique = is_unique;
     newAsset.decimalPoint = decimalPoint;
@@ -161,6 +162,11 @@ CreateUpdateAssetTx(const CTxMemPool& mempool, SimpleUTXOMap& utxos, const CKey&
     FundTransaction(tx, utxos, GetScriptForDestination(coinbaseKey.GetPubKey().GetID()), upAsset.fee * COIN + 1 * COIN,
         coinbaseKey);
     upAsset.inputsHash = CalcTxInputsHash(tx);
+
+    std::string m = upAsset.MakeSignString(passetsCache.get());
+    // lets prove we own the asset
+    BOOST_ASSERT(CMessageSigner::SignMessage(m, upAsset.vchSig, coinbaseKey));
+
     SetTxPayload(tx, upAsset);
     BOOST_ASSERT(SignTransaction(mempool, tx, coinbaseKey));
 
@@ -201,6 +207,11 @@ CreateMintAssetTx(const CTxMemPool& mempool, SimpleUTXOMap& utxos, const CKey& c
     FundTransaction(tx, utxos, GetScriptForDestination(coinbaseKey.GetPubKey().GetID()), mint.fee * COIN + 1 * COIN,
         coinbaseKey);
     mint.inputsHash = CalcTxInputsHash(tx);
+
+    std::string m = mint.MakeSignString(passetsCache.get());
+    // lets prove we own the asset
+    BOOST_ASSERT(CMessageSigner::SignMessage(m, mint.vchSig, coinbaseKey));
+
     SetTxPayload(tx, mint);
     BOOST_ASSERT(SignTransaction(mempool, tx, coinbaseKey));
 
@@ -227,7 +238,7 @@ BOOST_FIXTURE_TEST_CASE(assets_creation, TestChainDIP3BeforeActivationSetup)
 
     auto utxos = BuildSimpleUtxoMap(m_coinbase_txns);
 
-    auto tx = CreateNewAssetTx(*m_node.mempool, utxos, coinbaseKey, "Test Asset", true, false, 0, 8, 1000);
+    auto tx = CreateNewAssetTx(*m_node.mempool, utxos, coinbaseKey, "TEST_ASSET", true, false, 0, 8, 1000);
     std::vector<CMutableTransaction> txns = {tx};
 
     int nHeight = ::ChainActive().Height();
@@ -249,7 +260,7 @@ BOOST_FIXTURE_TEST_CASE(assets_creation, TestChainDIP3BeforeActivationSetup)
     BOOST_ASSERT(::ChainActive().Height() == nHeight + 1);
 
     //invalid distribution type
-    tx = CreateNewAssetTx(*m_node.mempool, utxos, coinbaseKey, "Test Asset", true, false, 5, 8, 1000);
+    tx = CreateNewAssetTx(*m_node.mempool, utxos, coinbaseKey, "TEST_ASSET", true, false, 5, 8, 1000);
     txns = {tx};
     block = std::make_shared<CBlock>(CreateBlock(txns, coinbaseKey));
     //block should be rejected
@@ -258,7 +269,7 @@ BOOST_FIXTURE_TEST_CASE(assets_creation, TestChainDIP3BeforeActivationSetup)
     BOOST_ASSERT(::ChainActive().Height() == nHeight + 1);
 
     //invalid decimalPoint
-    tx = CreateNewAssetTx(*m_node.mempool, utxos, coinbaseKey, "Test Asset", true, false, 0, 9, 1000);
+    tx = CreateNewAssetTx(*m_node.mempool, utxos, coinbaseKey, "TEST_ASSET", true, false, 0, 9, 1000);
     txns = {tx};
     block = std::make_shared<CBlock>(CreateBlock(txns, coinbaseKey));
     //block should be rejected
@@ -278,7 +289,7 @@ BOOST_FIXTURE_TEST_CASE(assets_update, TestChainDIP3BeforeActivationSetup)
 
     auto utxos = BuildSimpleUtxoMap(m_coinbase_txns);
 
-    auto tx = CreateNewAssetTx(*m_node.mempool, utxos, coinbaseKey, "Test Asset", true, false, 0, 8, 1000);
+    auto tx = CreateNewAssetTx(*m_node.mempool, utxos, coinbaseKey, "TEST_ASSET", true, false, 0, 8, 1000);
     std::vector<CMutableTransaction> txns = {tx};
 
     int nHeight = ::ChainActive().Height();
@@ -332,7 +343,7 @@ BOOST_FIXTURE_TEST_CASE(assets_mint, TestChainDIP3BeforeActivationSetup)
 
     auto utxos = BuildSimpleUtxoMap(m_coinbase_txns);
 
-    auto tx = CreateNewAssetTx(*m_node.mempool, utxos, coinbaseKey, "Test Asset", true, false, 0, 8, 1000);
+    auto tx = CreateNewAssetTx(*m_node.mempool, utxos, coinbaseKey, "TEST_ASSET", true, false, 0, 8, 1000);
     std::vector<CMutableTransaction> txns = {tx};
 
     int nHeight = ::ChainActive().Height();
@@ -407,7 +418,7 @@ BOOST_FIXTURE_TEST_CASE(assets_invalid_cases, TestChainDIP3BeforeActivationSetup
     auto utxos = BuildSimpleUtxoMap(m_coinbase_txns);
 
     //create a asset
-    auto tx = CreateNewAssetTx(*m_node.mempool, utxos, coinbaseKey, "Test Asset", false, false, 0, 2, 100);
+    auto tx = CreateNewAssetTx(*m_node.mempool, utxos, coinbaseKey, "TEST_ASSET", false, false, 0, 2, 100);
     std::vector<CMutableTransaction> txns = {tx};
 
     int nHeight = ::ChainActive().Height();
@@ -531,7 +542,7 @@ BOOST_FIXTURE_TEST_CASE(assets_invalid_cases, TestChainDIP3BeforeActivationSetup
     }
 
     //create a unique asset
-    tx = CreateNewAssetTx(*m_node.mempool, utxos, coinbaseKey, "Unique Asset", false, true, 0, 0, 10);
+    tx = CreateNewAssetTx(*m_node.mempool, utxos, coinbaseKey, "UNIQUE_ASSET", false, true, 0, 0, 10);
     txns = {tx};
 
     nHeight = ::ChainActive().Height();

@@ -251,10 +251,12 @@ public:
 
 class CNewAssetTx {
 public:
-    static const uint16_t CURRENT_VERSION = 1;
+    static const uint16_t CURRENT_VERSION = 2;
 
     uint16_t nVersion{CURRENT_VERSION}; // message version
     std::string name;
+    bool isRoot = false;
+    std::string rootId;
     bool updatable = true; // If true this asset metadata can be modified using assetTx update process.
     bool isUnique = false; // If true this asset is unique it has an identity per token (NFT flag)
     uint16_t maxMintCount = 0;
@@ -268,6 +270,7 @@ public:
     CAmount amount;
     CKeyID ownerAddress;
     CKeyID collateralAddress;
+    std::vector<unsigned char> vchSig; //Root asset Signature
 
     uint16_t exChainType = 0; // External chain type. each 15 bit unsigned number will be map to a external chain. i.e. 0 for btc
     CScript externalPayoutScript;
@@ -277,15 +280,26 @@ public:
 
 public:
 
-    SERIALIZE_METHODS(CNewAssetTx, obj
-    )
+    SERIALIZE_METHODS(CNewAssetTx, obj)
     {
         READWRITE(obj.nVersion, obj.name, obj.updatable, obj.isUnique, obj.maxMintCount,
                   obj.decimalPoint, obj.referenceHash, obj.fee, obj.type, obj.targetAddress,
-                  obj.issueFrequency, obj.amount, obj.ownerAddress, obj.collateralAddress,
-                  obj.exChainType, obj.externalPayoutScript, obj.externalTxid,
+                  obj.issueFrequency, obj.amount, obj.ownerAddress, obj.collateralAddress);
+        if(obj.nVersion == 2 ) { //testnet use v1 and v2, mainnet v2 only
+            READWRITE(obj.isRoot);
+            if (!obj.isRoot) {
+                //sub asset: serialise the root id and owner signature
+                READWRITE(obj.rootId);
+                if (!(s.GetType() & SER_GETHASH)) {
+                    READWRITE(obj.vchSig);
+                }
+            }
+        }
+        READWRITE(obj.exChainType, obj.externalPayoutScript, obj.externalTxid,
                   obj.externalConfirmations, obj.inputsHash);
     }
+
+    std::string MakeSignString(CAssetsCache *assetsCache) const;
 
     std::string ToString() const;
 
@@ -294,6 +308,9 @@ public:
         obj.setObject();
         obj.pushKV("version", nVersion);
         obj.pushKV("name", name);
+        obj.pushKV("isRoot", isRoot);
+        if (!isRoot && nVersion == 2)
+            obj.pushKV("rootId", rootId);
         obj.pushKV("isUnique", isUnique);
         obj.pushKV("maxMintCount", maxMintCount);
         obj.pushKV("updatable", updatable);
@@ -326,7 +343,7 @@ public:
 
 class CUpdateAssetTx {
 public:
-    static const uint16_t CURRENT_VERSION = 1;
+    static const uint16_t CURRENT_VERSION = 2;
 
     uint16_t nVersion{CURRENT_VERSION}; // message version
     std::string assetId;
@@ -341,6 +358,7 @@ public:
     CAmount amount;
     CKeyID ownerAddress;
     CKeyID collateralAddress;
+    std::vector<unsigned char> vchSig; //owner Signature
 
     uint16_t exChainType = 0; // External chain type. Each 15 bit unsigned number will be map to a external chain. i.e. 0 for btc
     CScript externalPayoutScript;
@@ -356,7 +374,14 @@ public:
                   obj.type, obj.targetAddress, obj.issueFrequency, obj.maxMintCount, obj.amount,
                   obj.ownerAddress, obj.collateralAddress, obj.exChainType, obj.externalPayoutScript,
                   obj.externalTxid, obj.externalConfirmations, obj.inputsHash);
+        if(obj.nVersion == 2 ) { //testnet use v1 and v2, mainnet v2 only
+            if (!(s.GetType() & SER_GETHASH)) {
+                READWRITE(obj.vchSig);
+            }
+        }
     }
+
+    std::string MakeSignString(CAssetsCache *assetsCache) const;
 
     std::string ToString() const;
 
@@ -394,12 +419,13 @@ public:
 
 class CMintAssetTx {
 public:
-    static const uint16_t CURRENT_VERSION = 1;
+    static const uint16_t CURRENT_VERSION = 2;
 
     uint16_t nVersion{CURRENT_VERSION}; // message version
     std::string assetId;
     uint16_t fee;
     uint256 inputsHash; // replay protection
+    std::vector<unsigned char> vchSig; //owner Signature
 
 public:
 
@@ -407,7 +433,14 @@ public:
     )
     {
         READWRITE(obj.nVersion, obj.assetId, obj.fee, obj.inputsHash);
+        if(obj.nVersion == 2 ) { //testnet use v1 and v2, mainnet v2 only
+            if (!(s.GetType() & SER_GETHASH)) {
+                READWRITE(obj.vchSig);
+            }
+        }
     }
+
+    std::string MakeSignString(CAssetsCache *assetsCache) const;
 
     std::string ToString() const;
 
