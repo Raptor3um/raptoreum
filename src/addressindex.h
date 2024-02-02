@@ -68,7 +68,7 @@ struct CMempoolAddressDeltaKey {
     CMempoolAddressDeltaKey(int addressType, uint160 addressHash) {
         type = addressType;
         addressBytes = addressHash;
-        asset = "RTM";
+        asset.clear();
         txhash.SetNull();
         index = 0;
         spending = 0;

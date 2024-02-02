@@ -630,7 +630,8 @@ std::string ArgsManager::GetHelpMessage() const {
                 usage += HelpMessageGroup("Wallet CoinJoin options:");
                 break;
             case OptionsCategory::WALLET_DEBUG_TEST:
-                usage += HelpMessageGroup("Wallet debugging/testing options:");
+                if (show_debug)
+                    usage += HelpMessageGroup("Wallet debugging/testing options:");
                 break;
             case OptionsCategory::CHAINPARAMS:
                 usage += HelpMessageGroup("Chain selection options:");

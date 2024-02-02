@@ -41,6 +41,7 @@ public:
 
 AssetsDialog::AssetsDialog(QWidget *parent) :
         QDialog(parent),
+        cachedNumBlocks(-1),
         ui(new Ui::AssetsDialog) {
     ui->setupUi(this);
 
@@ -114,17 +115,18 @@ void AssetsDialog::updateAssetBalance(){
 }
 
 void AssetsDialog::updateAssetBalanceScheduled() {
-    if (!walletModel || !clientModel || clientModel->node().shutdownRequested() || !balanceChanged) {
+    int num_block = clientModel->node().getNumBlocks();
+    if (!walletModel || !clientModel || clientModel->node().shutdownRequested() || (!balanceChanged && num_block == cachedNumBlocks)) {
         return;
     }
-
+    cachedNumBlocks = num_block;
     balanceChanged = false;
 
     ui->tableWidgetAssets->setSortingEnabled(false);
     ui->tableWidgetAssets->clearContents();
     ui->tableWidgetAssets->setRowCount(0);
 
-     std::map<std::string, std::pair<CAmount, CAmount>> assetsbalance = walletModel->wallet().getAssetsBalanceAll();
+    std::map<std::string, std::pair<CAmount, CAmount>> assetsbalance = walletModel->wallet().getAssetsBalanceAll();
     for (auto it : assetsbalance){
         CAssetMetaData asset;
         if (!passetsCache->GetAssetMetaData(it.first, asset))
