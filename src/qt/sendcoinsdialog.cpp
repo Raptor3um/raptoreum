@@ -81,9 +81,6 @@ SendCoinsDialog::SendCoinsDialog(bool _fCoinJoin, QWidget *parent) :
 
     // Coin Control
     connect(ui->pushButtonCoinControl, &QPushButton::clicked, this, &SendCoinsDialog::coinControlButtonClicked);
-    connect(ui->checkBoxCoinControlChange, &QCheckBox::stateChanged, this, &SendCoinsDialog::coinControlChangeChecked);
-    connect(ui->lineEditCoinControlChange, &QValidatedLineEdit::textEdited, this,
-            &SendCoinsDialog::coinControlChangeEdited);
 
     // Coin Control: clipboard actions
     QAction *clipboardQuantityAction = new QAction(tr("Copy quantity"), this);
@@ -134,7 +131,12 @@ SendCoinsDialog::SendCoinsDialog(bool _fCoinJoin, QWidget *parent) :
     if (_fCoinJoin) {
         ui->sendButton->setText(tr("S&end mixed funds"));
         ui->sendButton->setToolTip(tr("Confirm the %1 send action").arg(QString::fromStdString(gCoinJoinName)));
+        ui->checkBoxCoinControlChange->setVisible(false);
+        ui->lineEditCoinControlChange->setVisible(false);
     } else {
+        connect(ui->checkBoxCoinControlChange, &QCheckBox::stateChanged, this, &SendCoinsDialog::coinControlChangeChecked);
+        connect(ui->lineEditCoinControlChange, &QValidatedLineEdit::textEdited, this,
+            &SendCoinsDialog::coinControlChangeEdited);
         ui->sendButton->setText(tr("S&end"));
         ui->sendButton->setToolTip(tr("Confirm the send action"));
     }
