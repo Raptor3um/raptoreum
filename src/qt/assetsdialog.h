@@ -63,6 +63,8 @@ private:
     ClientModel *clientModel{nullptr};
     WalletModel *walletModel{nullptr};
 
+    int cachedNumBlocks;
+
     bool balanceChanged{true};
 
     std::string GetSelectedAsset();

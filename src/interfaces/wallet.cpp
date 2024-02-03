@@ -427,13 +427,12 @@ namespace interfaces {
             return result;
         }
 
-        bool tryGetBalances(WalletBalances &balances, int &num_blocks) override {
+        bool tryGetBalances(WalletBalances &balances) override {
             TRY_LOCK(m_wallet->cs_wallet, locked_wallet);
             if (!locked_wallet) {
                 return false;
             }
             balances = getBalances();
-            num_blocks = m_wallet->chain().getHeight().value_or(-1);
             return true;
         }
 

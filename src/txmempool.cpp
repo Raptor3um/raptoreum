@@ -26,6 +26,7 @@
 #include <evo/deterministicmns.h>
 #include <llmq/quorums_instantsend.h>
 #include <assets/assetstype.h>
+#include <assets/assets.h>
 
 #include <future/utils.h>
 
@@ -351,6 +352,16 @@ void CTxMemPool::AddTransactionsUpdated(unsigned int n) {
     nTransactionsUpdated += n;
 }
 
+static inline std::string getAssetFullName(CNewAssetTx assetTx) {
+        if (assetTx.nVersion == 2 && !assetTx.isRoot) {
+            CAssetMetaData tmpAsset;
+            if (passetsCache->GetAssetMetaData(assetTx.rootId, tmpAsset)) {
+                return tmpAsset.name + "|" +assetTx.name;
+            }
+        }
+        return assetTx.name;
+}
+
 void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, setEntries &setAncestors, bool validFeeEstimate) {
     NotifyEntryAdded(entry.GetSharedTx());
     // Add to memory pool without checking anything.
@@ -451,7 +462,7 @@ void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, setEntries &setAnces
         CNewAssetTx assetTx;
         bool ok = GetTxPayload(tx, assetTx);
         assert(ok);
-        mapAssetsToHash.emplace(assetTx.name, tx.GetHash());
+        mapAssetsToHash.emplace(getAssetFullName(assetTx), tx.GetHash());
     } else if (tx.nType == TRANSACTION_UPDATE_ASSET) {
         CUpdateAssetTx assetTx;
         bool ok = GetTxPayload(tx, assetTx);
@@ -789,7 +800,7 @@ void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason) {
         if (!GetTxPayload(it->GetTx(), assetTx)) {
             assert(false);
         }
-        mapAssetsToHash.erase(assetTx.name);
+        mapAssetsToHash.erase(getAssetFullName(assetTx));
     } else if (it->GetTx().nType == TRANSACTION_UPDATE_ASSET) {
         CUpdateAssetTx assetTx;
         if (!GetTxPayload(it->GetTx(), assetTx)) {
@@ -1461,7 +1472,7 @@ bool CTxMemPool::existsAssetTxConflict(const CTransaction &tx) const {
                      tx.ToString()); /* Continued */
             return true; // i.e. can't decode payload == conflict
         }
-        auto it = mapAssetsToHash.find(assetTx.name);
+        auto it = mapAssetsToHash.find(getAssetFullName(assetTx));
         return it != mapAssetsToHash.end() && it->second != tx.GetHash();
     } else if (tx.nType == TRANSACTION_UPDATE_ASSET) {
         CUpdateAssetTx assetTx;

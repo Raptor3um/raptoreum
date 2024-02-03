@@ -87,11 +87,6 @@ void WalletModel::pollBalanceChanged() {
     // avoids the GUI from getting stuck on periodical polls if the core is
     // holding the locks for a longer time - for example, during a wallet
     // rescan.
-    interfaces::WalletBalances new_balances;
-    int numBlocks = -1;
-    if (!m_wallet->tryGetBalances(new_balances, numBlocks)) {
-        return;
-    }
     int64_t now = 0;
     if (ninitialSync)
         now = GetTimeMillis();
@@ -99,19 +94,24 @@ void WalletModel::pollBalanceChanged() {
     // if we are in-sync, update the UI regardless of last update time
     if (!ninitialSync || now - nLastUpdateNotification > MODEL_UPDATE_DELAY_SYNC) {
 
-        nLastUpdateNotification = now;
+        nLastUpdateNotification = now;   
 
-        if (fForceCheckBalanceChanged || numBlocks != cachedNumBlocks ||
-            node().coinJoinOptions().getRounds() != cachedCoinJoinRounds) {
-
+        int num_blocks = node().getNumBlocks();
+        if(fForceCheckBalanceChanged || num_blocks != cachedNumBlocks || node().coinJoinOptions().getRounds() != cachedCoinJoinRounds)
+        {
+            interfaces::WalletBalances new_balances;
+            if (!m_wallet->tryGetBalances(new_balances)) {
+                return;
+            }
+            
             fForceCheckBalanceChanged = false;
 
             // Balance and number of transactions might have changed
-            cachedNumBlocks = numBlocks;
+            cachedNumBlocks = num_blocks;
             cachedCoinJoinRounds = node().coinJoinOptions().getRounds();
 
             checkBalanceChanged(new_balances);
-            if (transactionTableModel)
+            if(transactionTableModel)
                 transactionTableModel->updateConfirmations();
         }
     }
