@@ -31,13 +31,13 @@
 #include <txdb.h>
 #include <txmempool.h>
 #include <undo.h>
+#include <update/update.h>
 #include <util/ref.h>
 #include <util/system.h>
 #include <util/strencodings.h>
 #include <util/validation.h>
 #include <validation.h>
 #include <validationinterface.h>
-#include <versionbitsinfo.h>
 #include <warnings.h>
 
 #include <evo/specialtx.h>
@@ -1559,54 +1559,6 @@ static UniValue SoftForkDesc(const std::string &name, int version, const CBlockI
     rv.pushKV("version", version);
     rv.pushKV("reject", SoftForkMajorityDesc(version, pindex, consensusParams));
     return rv;
-}
-
-static UniValue BIP9SoftForkDesc(const Consensus::Params &consensusParams, Consensus::DeploymentPos id) {
-    UniValue rv(UniValue::VOBJ);
-    const ThresholdState thresholdState = VersionBitsTipState(consensusParams, id);
-    switch (thresholdState) {
-        case ThresholdState::DEFINED:
-            rv.pushKV("status", "defined");
-            break;
-        case ThresholdState::STARTED:
-            rv.pushKV("status", "started");
-            break;
-        case ThresholdState::LOCKED_IN:
-            rv.pushKV("status", "locked_in");
-            break;
-        case ThresholdState::ACTIVE:
-            rv.pushKV("status", "active");
-            break;
-        case ThresholdState::FAILED:
-            rv.pushKV("status", "failed");
-            break;
-    }
-    if (ThresholdState::STARTED == thresholdState) {
-        rv.pushKV("bit", consensusParams.vDeployments[id].bit);
-    }
-    rv.pushKV("startTime", consensusParams.vDeployments[id].nStartTime);
-    rv.pushKV("timeout", consensusParams.vDeployments[id].nTimeout);
-    rv.pushKV("since", VersionBitsTipStateSinceHeight(consensusParams, id));
-    if (ThresholdState::STARTED == thresholdState) {
-        UniValue statsUV(UniValue::VOBJ);
-        BIP9Stats statsStruct = VersionBitsTipStatistics(consensusParams, id);
-        statsUV.pushKV("period", statsStruct.period);
-        statsUV.pushKV("threshold", statsStruct.threshold);
-        statsUV.pushKV("elapsed", statsStruct.elapsed);
-        statsUV.pushKV("count", statsStruct.count);
-        statsUV.pushKV("possible", statsStruct.possible);
-        rv.pushKV("statistics", statsUV);
-    }
-    return rv;
-}
-
-void BIP9SoftForkDescPushBack(UniValue &bip9_softforks, const Consensus::Params &consensusParams,
-                              Consensus::DeploymentPos id) {
-    // Deployments with timeout value of 0 are hidden.
-    // A timeout value of 0 guarantees a softfork will never be activated.
-    // This is used when softfork codes are merged without specifying the deployment schedule.
-    if (consensusParams.vDeployments[id].nTimeout > 0)
-        bip9_softforks.pushKV(VersionBitsDeploymentInfo[id].name, BIP9SoftForkDesc(consensusParams, id));
 }
 
 UniValue getblockchaininfo(const JSONRPCRequest &request) {

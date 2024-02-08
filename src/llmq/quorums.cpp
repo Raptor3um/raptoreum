@@ -331,8 +331,9 @@ namespace llmq {
         std::vector <uint16_t> memberIndexes;
         std::vector <BLSVerificationVectorPtr> vvecs;
         BLSSecretKeyVector skContributions;
+        Consensus::CQuorumUpdateVoteVec updateVoteVec;
         if (!dkgManager.GetVerifiedContributions((Consensus::LLMQType) fqc->llmqType, quorum->m_quorum_base_block_index,
-                                                 fqc->validMembers, memberIndexes, vvecs, skContributions)) {
+                                                 fqc->validMembers, memberIndexes, vvecs, skContributions, updateVoteVec)) {
             return false;
         }
 

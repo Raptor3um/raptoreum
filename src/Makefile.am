@@ -289,6 +289,7 @@ BITCOIN_CORE_H = \
   ui_interface.h \
   undo.h \
   unordered_lru_cache.h \
+  update/update.h \
   util/bip32.h \
   util/bytevectorhash.h \
   util/check.h \
@@ -310,8 +311,6 @@ BITCOIN_CORE_H = \
   util/validation.h \
   validation.h \
   validationinterface.h \
-  versionbits.h \
-  versionbitsinfo.h \
   walletinitinterface.h \
   wallet/bdb.h \
   wallet/coincontrol.h \
@@ -445,7 +444,6 @@ libraptoreum_server_a_SOURCES = \
   ui_interface.cpp \
   validation.cpp \
   validationinterface.cpp \
-  versionbits.cpp \
   $(BITCOIN_CORE_H)
 
 if ENABLE_WALLET
@@ -699,8 +697,7 @@ libraptoreum_common_a_SOURCES = \
   script/descriptor.cpp \
   script/sign.cpp \
   script/standard.cpp \
-  versionbits.cpp \
-  versionbitsinfo.cpp \
+  update/update.cpp \
   warnings.cpp \
   $(BITCOIN_CORE_H)
 

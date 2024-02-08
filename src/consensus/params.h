@@ -14,34 +14,6 @@
 
 namespace Consensus {
 
-    enum DeploymentPos {
-        DEPLOYMENT_TESTDUMMY,
-        DEPLOYMENT_V17, // Hard Fork v17
-
-        // NOTE: Also add new deployments to VersionBitsDeploymentInfo in versionbits.cpp
-        MAX_VERSION_BITS_DEPLOYMENTS
-    };
-
-/**
- * Struct for each individual consensus rule change using BIP9.
- */
-    struct BIP9Deployment {
-        /** Bit position to select the particular bit in nVersion. */
-        int bit;
-        /** Start MedianTime for version bits miner confirmation. Can be a date in the past */
-        int64_t nStartTime;
-        /** Timeout/expiry MedianTime for the deployment attempt. */
-        int64_t nTimeout;
-        /** The number of past blocks (including the block under consideration) to be taken into account for locking in a fork. */
-        int64_t nWindowSize{0};
-        /** A starting number of blocks, in the range of 1..nWindowSize, which must signal for a fork in order to lock it in. */
-        int64_t nThresholdStart{0};
-        /** A minimum number of blocks, in the range of 1..nWindowSize, which must signal for a fork in order to lock it in. */
-        int64_t nThresholdMin{0};
-        /** A coefficient which adjusts the speed a required number of signaling blocks is decreasing from nThresholdStart to nThresholdMin at with each period. */
-        int64_t nFalloffCoeff{0};
-    };
-
 /**
  * future fee share for smartnode, miner and dev
  */
@@ -101,7 +73,6 @@ namespace Consensus {
         uint32_t nRuleChangeActivationThreshold;
         // Default BIP9Deployment::nWindowSize value for deployments where it's not specified and for unknown deployments.
         uint32_t nMinerConfirmationWindow;
-        BIP9Deployment vDeployments[MAX_VERSION_BITS_DEPLOYMENTS];
         /** Proof of work parameters */
         uint256 powLimit;
         bool fPowAllowMinDifficultyBlocks;

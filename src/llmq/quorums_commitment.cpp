@@ -13,6 +13,7 @@
 #include <logging.h>
 #include <spork.h>
 #include <validation.h>
+#include <update/update.h>
 
 bool IsBlsSigCheckEnabled(int64_t blockTime) {
     int64_t activeTime = sporkManager.GetSporkValue(SPORK_17_QUORUM_DKG_ENABLED);
@@ -86,8 +87,14 @@ namespace llmq {
 
         // sigs are only checked when the block is processed
         if (checkSigs && IsBlsSigCheckEnabled(pQuorumBaseBlockIndex->GetBlockTime())) {
-            uint256 commitmentHash = CLLMQUtils::BuildCommitmentHash(llmq_params.type, quorumHash, validMembers,
-                                                                     quorumPublicKey, quorumVvecHash);
+
+            uint256 commitmentHash;
+            if (UpdateManager::Instance().IsActive(EUpdate::ROUND_VOTING, pQuorumBaseBlockIndex)) {
+                commitmentHash = CLLMQUtils::BuildCommitmentHash(llmqType, quorumHash, validMembers, quorumUpdateVotes, quorumPublicKey, quorumVvecHash);
+            }
+            else {
+                commitmentHash = CLLMQUtils::BuildCommitmentHash(llmq_params.type, quorumHash, validMembers, quorumPublicKey, quorumVvecHash);
+            }
 
             std::vector <CBLSPublicKey> memberPubKeys;
             for (size_t i = 0; i < members.size(); i++) {

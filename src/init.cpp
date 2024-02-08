@@ -2103,7 +2103,26 @@ bool AppInitMain(const util::Ref &context, NodeContext &node, interfaces::BlockA
         return InitError(_("Failed to load sporks cache from") + "\n" + (GetDataDir() / "sporks.dat").string());
     }
 
-    // ********************************************************* Step 7b: load block chain
+    // ********************************************************* Step 7b: load powcache.dat
+    {
+        fs::path pathDB = GetDataDir();
+        std::string strDBName = "powcache.dat";
+
+        LOCK(cs_pow);
+        // Always load the powcache if available:
+        uiInterface.InitMessage(_("Loading POW cache..."));
+        fs::path powCacheFile = pathDB / strDBName;
+        if (!fs::exists(powCacheFile)) {
+            uiInterface.InitMessage("Loading POW cache for the first time. This could take a minute...");
+        }
+
+        CFlatDB <CPowCache> flatdb7(strDBName, "powCache");
+        if (!flatdb7.Load(CPowCache::Instance())) {
+            return InitError(_("Failed to load POW cache from") + "\n" + (pathDB / strDBName).string());
+        }
+    }
+
+    // ********************************************************* Step 7c: load block chain
 
     fReindex = gArgs.GetBoolArg("-reindex", false);
     bool fReindexChainState = gArgs.GetBoolArg("-reindex-chainstate", false);
@@ -2419,27 +2438,7 @@ bool AppInitMain(const util::Ref &context, NodeContext &node, interfaces::BlockA
         ::feeEstimator.Read(est_filein);
     fFeeEstimatesInitialized = true;
 
-    // ********************************************************* Step 8a: load powcache.dat
-
-    {
-        fs::path pathDB = GetDataDir();
-        std::string strDBName = "powcache.dat";
-
-        LOCK(cs_pow);
-        // Always load the powcache if available:
-        uiInterface.InitMessage(_("Loading POW cache..."));
-        fs::path powCacheFile = pathDB / strDBName;
-        if (!fs::exists(powCacheFile)) {
-            uiInterface.InitMessage("Loading POW cache for the first time. This could take a minute...");
-        }
-
-        CFlatDB <CPowCache> flatdb7(strDBName, "powCache");
-        if (!flatdb7.Load(CPowCache::Instance())) {
-            return InitError(_("Failed to load POW cache from") + "\n" + (pathDB / strDBName).string());
-        }
-    }
-
-    // ********************************************************* Step 8b: start indexers
+    // ********************************************************* Step 8: start indexers
     if (gArgs.GetBoolArg("-txindex", DEFAULT_TXINDEX)) {
         g_txindex = MakeUnique<TxIndex>(nTxIndexCache, false, fReindex);
         g_txindex->Start();

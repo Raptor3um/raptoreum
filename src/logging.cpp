@@ -164,6 +164,7 @@ const CLogCategoryDesc LogCategories[] =
                 {BCLog::NETCONN,     "netconn"},
                 {BCLog::QUORUMS,     "quorums"},
                 {BCLog::RTM,         "raptoreum"},
+                {BCLog::UPDATES,     "updates"}
                 //End Raptoreum
         };
 

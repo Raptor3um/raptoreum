@@ -12,6 +12,7 @@
 #include <bls/bls_worker.h>
 
 #include <llmq/quorums_utils.h>
+#include <update/update.h>
 
 class UniValue;
 
@@ -31,6 +32,7 @@ namespace llmq {
 
     class CDKGContribution {
     public:
+        int32_t nVersion { 0 };
         Consensus::LLMQType llmqType;
         uint256 quorumHash;
         uint256 proTxHash;
@@ -40,6 +42,10 @@ namespace llmq {
 
         template<typename Stream>
         inline void SerializeWithoutSig(Stream &s) const {
+            if (nVersion != 0) {
+               s << (uint8_t)0; // Marker for new serialization (old serialization was not versioned)
+               s << nVersion;
+            }
             s << llmqType;
             s << quorumHash;
             s << proTxHash;
@@ -59,11 +65,18 @@ namespace llmq {
             CBLSIESMultiRecipientObjects <CBLSSecretKey> tmp2;
 
             s >> llmqType;
+            if (llmqType == Consensus::LLMQType::LLMQ_INVALID) {
+               // New version, deserialize the version, then the real llmqType
+               s >> nVersion;
+               s >> llmqType;
+            }
             s >> quorumHash;
             s >> proTxHash;
             s >> tmp1;
             s >> tmp2;
             s >> sig;
+
+            // std::cout << "Deserialized Contribution: llmqType: " << llmqType << ", quorumHash: " << quorumHash.ToString() << ", proTxhash: " << proTxHash.ToString() << std::endl;
 
             vvec = std::make_shared<BLSVerificationVector>(std::move(tmp1));
             contributions = std::make_shared < CBLSIESMultiRecipientObjects < CBLSSecretKey >> (std::move(tmp2));
@@ -141,12 +154,15 @@ namespace llmq {
         CBLSPublicKey quorumPublicKey;
         uint256 quorumVvecHash;
 
+        bool roundVoting; // Is round voting active?
+        Consensus::CQuorumUpdateVoteVec quorumUpdateVotes; // If empty, write a single zero byte (first bit number).
+
         CBLSSignature quorumSig; // threshold sig share of quorumHash+validMembers+pubKeyHash+vvecHash
         CBLSSignature sig; // single member sig of quorumHash+validMembers+pubKeyHash+vvecHash
 
-        CDKGPrematureCommitment() = default;
+        CDKGPrematureCommitment() : roundVoting(false) {}
 
-        explicit CDKGPrematureCommitment(const Consensus::LLMQParams &params) : validMembers((size_t) params.size) {};
+        explicit CDKGPrematureCommitment(const Consensus::LLMQParams &params) : validMembers((size_t) params.size), roundVoting(false) {};
 
         [[nodiscard]] int CountValidMembers() const {
             return int(std::count(validMembers.begin(), validMembers.end(), true));
@@ -155,8 +171,11 @@ namespace llmq {
         SERIALIZE_METHODS(CDKGPrematureCommitment, obj
         )
         {
-            READWRITE(obj.llmqType, obj.quorumHash, obj.proTxHash, DYNBITSET(obj.validMembers), obj.quorumPublicKey,
-                      obj.quorumVvecHash, obj.quorumSig, obj.sig);
+            READWRITE(obj.llmqType, obj.quorumHash, obj.proTxHash, DYNBITSET(obj.validMembers));
+            if (obj.roundVoting) {
+                READWRITE(obj.quorumUpdateVotes);
+            }
+            READWRITE(obj.quorumPublicKey, obj.quorumVvecHash, obj.quorumSig, obj.sig);
         }
 
         [[nodiscard]] uint256 GetSignHash() const {
@@ -224,6 +243,7 @@ namespace llmq {
 
         BLSIdVector memberIds;
         std::vector <BLSVerificationVectorPtr> receivedVvecs;
+        std::vector <uint32_t> receivedVersions; // Used to track node update voting
         // these are not necessarily verified yet. Only trust in what was written to the DB
         BLSSecretKeyVector receivedSkContributions;
         /// Contains the received unverified/encrypted DKG contributions

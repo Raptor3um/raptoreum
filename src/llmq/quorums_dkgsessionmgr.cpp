@@ -178,6 +178,7 @@ namespace llmq {
         }
 
         // peek into the message and see which LLMQType it is. First byte of all messages is always the LLMQType
+        // TODO: JA Review if need to change due to first byte
         Consensus::LLMQType llmqType = (Consensus::LLMQType) * vRecv.begin();
         if (!dkgSessionHandlers.count(llmqType)) {
             LOCK(cs_main);
@@ -309,12 +310,21 @@ namespace llmq {
                   contributions);
     }
 
+    // TODO: JB Need to review evodb updates
+    //  void CDKGSessionManager::WriteUpdateVotesVec(Consensus::LLMQType llmqType,
+    //                                               const CBlockIndex *pQuorumBaseBlockIndex,
+    //                                               const uint256 &proTxHash,
+    //                                               const Consensus::CQuorumUpdateVoteVec& updateVotesVec) {
+    //      db->Write(std::make_tuple(DB_NODE_VOTES, llmqType, pQuorumBaseBlockIndex->GetBlockHash(), proTxHash), updateVotesVec);
+    //  }
+
     bool
     CDKGSessionManager::GetVerifiedContributions(Consensus::LLMQType llmqType, const CBlockIndex *pQuorumBaseBlockIndex,
                                                  const std::vector<bool> &validMembers,
                                                  std::vector <uint16_t> &memberIndexesRet,
                                                  std::vector <BLSVerificationVectorPtr> &vvecsRet,
-                                                 BLSSecretKeyVector &skContributionsRet) const {
+                                                 BLSSecretKeyVector &skContributionsRet,
+                                                 Consensus::CQuorumUpdateVoteVec &updateVotesRet) const {
         LOCK(contributionsCacheCs);
         auto members = CLLMQUtils::GetAllQuorumMembers(GetLLMQParams(llmqType), pQuorumBaseBlockIndex);
 
@@ -324,6 +334,7 @@ namespace llmq {
         memberIndexesRet.reserve(members.size());
         vvecsRet.reserve(members.size());
         skContributionsRet.reserve(members.size());
+        updateVotesRet.clear();
         for (size_t i = 0; i < members.size(); i++) {
             if (validMembers[i]) {
                 const uint256 &proTxHash = members[i]->proTxHash;
@@ -342,13 +353,18 @@ namespace llmq {
                     db->Read(std::make_tuple(DB_SKCONTRIB, llmqType, pQuorumBaseBlockIndex->GetBlockHash(), proTxHash),
                              skContribution);
 
-                    it = contributionsCache.emplace(cacheKey, ContributionsCacheEntry{GetTimeMillis(), vvecPtr,
+                    uint32_t nVersion = 0; // TODO: JB This needs to be added to the database
+                    it = contributionsCache.emplace(cacheKey, ContributionsCacheEntry{GetTimeMillis(), nVersion, vvecPtr,
                                                                                       skContribution}).first;
                 }
 
                 memberIndexesRet.emplace_back(i);
                 vvecsRet.emplace_back(it->second.vvec);
                 skContributionsRet.emplace_back(it->second.skContribution);
+                if (it->second.nVersion != 0)
+                {
+                    updateVotesRet.AddVotes(it->second.nVersion);
+                }
             }
         }
         return true;

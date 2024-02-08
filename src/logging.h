@@ -72,9 +72,10 @@ namespace BCLog {
         SPORK = ((uint64_t) 1 << 42),
         NETCONN = ((uint64_t) 1 << 43),
         QUORUMS = ((uint64_t) 1 << 44),
+        UPDATES = ((uint64_t) 1 << 45),
 
         RTM = CHAINLOCKS | GOBJECT | INSTANTSEND | LLMQ | LLMQ_DKG | LLMQ_SIGS
-              | MNPAYMENTS | MNSYNC | COINJOIN | SPORK | NETCONN | QUORUMS,
+              | MNPAYMENTS | MNSYNC | COINJOIN | SPORK | NETCONN | QUORUMS | UPDATES,
 
         NET_NETCONN = NET | NETCONN, // use this to have something logged in NET and NETCONN as well
         //End Raptoreum

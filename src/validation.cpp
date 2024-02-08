@@ -39,12 +39,12 @@
 #include <txmempool.h>
 #include <ui_interface.h>
 #include <undo.h>
+#include <update/update.h>
 #include <util/moneystr.h>
 #include <util/strencodings.h>
 #include <util/validation.h>
 #include <util/system.h>
 #include <validationinterface.h>
-#include <versionbitsinfo.h>
 #include <warnings.h>
 
 #include <smartnode/smartnode-payments.h>
@@ -1989,29 +1989,6 @@ void StopScriptCheckWorkerThreads() {
     scriptcheckqueue.StopWorkerThreads();
 }
 
-// Protected by cs_main
-VersionBitsCache versionbitscache;
-
-int32_t
-ComputeBlockVersion(const CBlockIndex *pindexPrev, const Consensus::Params &params, bool fCheckSmartnodesUpgraded) {
-    LOCK(cs_main);
-    int32_t nVersion = VERSIONBITS_TOP_BITS;
-
-    for (int i = 0; i < (int) Consensus::MAX_VERSION_BITS_DEPLOYMENTS; i++) {
-        Consensus::DeploymentPos pos = Consensus::DeploymentPos(i);
-        ThresholdState state = VersionBitsState(pindexPrev, params, pos, versionbitscache);
-        const struct VBDeploymentInfo &vbinfo = VersionBitsDeploymentInfo[pos];
-        if (vbinfo.check_mn_protocol && state == ThresholdState::STARTED && fCheckSmartnodesUpgraded) {
-            // TODO implement new logic for MN upgrade checks (e.g. with LLMQ based feature/version voting)
-        }
-        if (state == ThresholdState::LOCKED_IN || state == ThresholdState::STARTED) {
-            nVersion |= VersionBitsMask(params, static_cast<Consensus::DeploymentPos>(i));
-        }
-    }
-
-    return nVersion;
-}
-
 bool GetBlockHash(uint256 &hashRet, int nBlockHeight) {
     LOCK(cs_main);
     if (::ChainActive().Tip() == nullptr) return false;
@@ -2020,35 +1997,6 @@ bool GetBlockHash(uint256 &hashRet, int nBlockHeight) {
     hashRet = ::ChainActive()[nBlockHeight]->GetBlockHash();
     return true;
 }
-
-/**
- * Threshold condition checker that triggers when unknown versionbits are seen on the network.
- */
-class WarningBitsConditionChecker : public AbstractThresholdConditionChecker {
-private:
-    int bit;
-
-public:
-    explicit WarningBitsConditionChecker(int bitIn) : bit(bitIn) {}
-
-    int64_t BeginTime(const Consensus::Params &params) const override { return 0; }
-
-    int64_t EndTime(const Consensus::Params &params) const override { return std::numeric_limits<int64_t>::max(); }
-
-    int Period(const Consensus::Params &params) const override { return params.nMinerConfirmationWindow; }
-
-    int Threshold(const Consensus::Params &params,
-                  int nAttempt) const override { return params.nRuleChangeActivationThreshold; }
-
-    bool Condition(const CBlockIndex *pindex, const Consensus::Params &params) const override {
-        return ((pindex->nVersion & VERSIONBITS_TOP_MASK) == VERSIONBITS_TOP_BITS) &&
-               ((pindex->nVersion >> bit) & 1) != 0 &&
-               ((ComputeBlockVersion(pindex->pprev, params) >> bit) & 1) == 0;
-    }
-};
-
-// Protected by cs_main
-static ThresholdConditionCache warningcache[VERSIONBITS_NUM_BITS];
 
 static unsigned int GetBlockScriptFlags(const CBlockIndex *pindex, const Consensus::Params &consensusparams) {
     AssertLockHeld(cs_main);
@@ -2079,8 +2027,7 @@ static unsigned int GetBlockScriptFlags(const CBlockIndex *pindex, const Consens
         flags |= SCRIPT_VERIFY_NULLDUMMY;
     }
 
-    if (VersionBitsState(pindex->pprev, consensusparams, Consensus::DEPLOYMENT_V17, versionbitscache) ==
-        ThresholdState::ACTIVE) {
+    if (UpdateManager::Instance().IsActive(EUpdate::DEPLOYMENT_V17, pindex)) {
         flags |= SCRIPT_ENABLE_DIP0020_OPCODES;
     }
 
@@ -2499,7 +2446,7 @@ bool CChainState::ConnectBlock(const CBlock &block, CValidationState &state, CBl
                         addressType = 1;
                     } else if (out.scriptPubKey.IsAssetScript()) {
                         if (GetTransferAsset(out.scriptPubKey, assetTransfer)){
-                            addressHash = uint160(std::vector <unsigned char>(out.scriptPubKey.begin()+3, 
+                            addressHash = uint160(std::vector <unsigned char>(out.scriptPubKey.begin()+3,
                                                                               out.scriptPubKey.begin()+23));
 
                             isAsset = true;
@@ -2894,36 +2841,23 @@ EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
         {
             int nUpgraded = 0;
             const CBlockIndex *pindex = pindexNew;
-            for (int bit = 0; bit < VERSIONBITS_NUM_BITS; bit++) {
-                WarningBitsConditionChecker checker(bit);
-                ThresholdState state = checker.GetStateFor(pindex, chainParams.GetConsensus(), warningcache[bit]);
-                if (state == ThresholdState::ACTIVE || state == ThresholdState::LOCKED_IN) {
-                    const std::string strWarning = strprintf(_("Warning: unknown new rules activated (versionbit %i)"),
-                                                             bit);
-                    if (state == ThresholdState::ACTIVE) {
-                        DoWarning(strWarning);
-                    } else {
-                        AppendWarning(warningMessages, strWarning);
-                    }
-                }
+
+            uint32_t nExpectedVersion = UpdateManager::Instance().ComputeBlockVersion(pindex);
+            if (pindexNew->nVersion != nExpectedVersion) {
+                const std::string strWarning = strprintf(_("Warning: unknown new rules activated: Expected: 0x%08x, Actual: 0x%08x"), nExpectedVersion, pindexNew->nVersion);
+                AppendWarning(warningMessages, strWarning);
             }
+
             // Check the version of the last 100 blocks to see if we need to upgrade:
             for (int i = 0; i < 100 && pindex != nullptr; i++) {
-                int32_t nExpectedVersion = ComputeBlockVersion(pindex->pprev, chainParams.GetConsensus());
+                nExpectedVersion = UpdateManager::Instance().ComputeBlockVersion(pindex->pprev);
                 if (pindex->nVersion > VERSIONBITS_LAST_OLD_BLOCK_VERSION &&
                     (pindex->nVersion & ~nExpectedVersion) != 0)
                     ++nUpgraded;
                 pindex = pindex->pprev;
             }
             if (nUpgraded > 0)
-                AppendWarning(warningMessages,
-                              strprintf(_("%d of last 100 blocks have unexpected version"), nUpgraded));
-            if (nUpgraded > 100 / 2) {
-                std::string strWarning = _(
-                        "Warning: Unknown block versions being mined! It's possible unknown rules are in effect");
-                // notify GetWarnings(), called by Qt and the JSON-RPC code to warn the user:
-                DoWarning(strWarning);
-            }
+                AppendWarning(warningMessages, strprintf(_("%d of last 100 blocks have unexpected version"), nUpgraded));
         }
 
         std::string strMessage = strprintf("%s: new best=%s height=%d version=0x%08x log2_work=%.8f tx=%lu date='%s' progress=%f cache=%.1fMiB(%utxo)", __func__,
@@ -4222,7 +4156,7 @@ static void ProcessHeadersQueue() {
     try {
         CPowCache &cache(CPowCache::Instance());
         while (true){
-            HeadersToProcess header;            
+            HeadersToProcess header;
             std::unique_lock<std::mutex> lock(queueMutex);
             if (headersQueue.begin() != headersQueue.end()) {
                 header = headersQueue.back();
@@ -4232,7 +4166,7 @@ static void ProcessHeadersQueue() {
                 TasksDone++;
                 return;
             }
-            lock.unlock();  
+            lock.unlock();
             uint256 powHash = header.header.ComputeHash();
             {
                 LOCK(cs_pow);
@@ -4249,7 +4183,7 @@ void computePOWHeaderHash(const std::vector <CBlockHeader> &headers) {
     static int cores = std::min((int)gArgs.GetArg("-powheaderthreads", DEFAULT_POWHEADERTHREADS), GetNumCores());
 
     //if we have only a few headers or 1 core skip as there is no benefit
-    if (headers.size() <= 4 && cores <= 1) 
+    if (headers.size() <= 4 && cores <= 1)
         return;
 
     int nheader = 0;
@@ -4259,14 +4193,14 @@ void computePOWHeaderHash(const std::vector <CBlockHeader> &headers) {
         CPowCache &cache(CPowCache::Instance());
         std::unique_lock<std::mutex> lock(queueMutex);
         //make sure the queue is empty
-        headersQueue.clear();           
+        headersQueue.clear();
         for (const CBlockHeader &header: headers) {
             uint256 headerHash = header.GetHash();
             uint256 powHash;
             if (!cache.get(headerHash, powHash)) {
                 headersQueue.push_back(HeadersToProcess(headerHash, header));
                 nheader++;
-            }            
+            }
         }
         lock.unlock();
     }
@@ -4278,11 +4212,11 @@ void computePOWHeaderHash(const std::vector <CBlockHeader> &headers) {
         boost::thread_group processHeadertThreads;
         for (int i = 0; i < cores; i++) {
             processHeadertThreads.create_thread(boost::bind(&ProcessHeadersQueue));
-        }   
+        }
         //wait until all worker threads finish
         while (TasksDone < cores) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(50));   
-        }      
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        }
     }
 }
 
@@ -4293,7 +4227,7 @@ bool ChainstateManager::ProcessNewBlockHeaders(const std::vector <CBlockHeader> 
     AssertLockNotHeld(cs_main);
     if (first_invalid != nullptr)
         first_invalid->SetNull();
-    
+
     //compute POW hash first using multiple threads
     computePOWHeaderHash(headers);
 
@@ -5139,10 +5073,6 @@ void UnloadBlockIndex(CTxMemPool *mempool) {
     nLastBlockFile = 0;
     setDirtyBlockIndex.clear();
     setDirtyFileInfo.clear();
-    versionbitscache.Clear();
-    for (int b = 0; b < VERSIONBITS_NUM_BITS; b++) {
-        warningcache[b].clear();
-    }
     fHavePruned = false;
 }
 
@@ -5623,21 +5553,6 @@ CBlockFileInfo *GetBlockFileInfo(size_t n) {
     LOCK(cs_LastBlockFile);
 
     return &vinfoBlockFile.at(n);
-}
-
-ThresholdState VersionBitsTipState(const Consensus::Params &params, Consensus::DeploymentPos pos) {
-    AssertLockHeld(cs_main);
-    return VersionBitsState(::ChainActive().Tip(), params, pos, versionbitscache);
-}
-
-BIP9Stats VersionBitsTipStatistics(const Consensus::Params &params, Consensus::DeploymentPos pos) {
-    LOCK(cs_main);
-    return VersionBitsStatistics(::ChainActive().Tip(), params, pos, versionbitscache);
-}
-
-int VersionBitsTipStateSinceHeight(const Consensus::Params &params, Consensus::DeploymentPos pos) {
-    LOCK(cs_main);
-    return VersionBitsStateSinceHeight(::ChainActive().Tip(), params, pos, versionbitscache);
 }
 
 static const uint64_t MEMPOOL_DUMP_VERSION = 1;

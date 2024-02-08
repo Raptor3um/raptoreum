@@ -9,9 +9,9 @@
 #include <consensus/merkle.h>
 #include <llmq/quorums_parameters.h>
 #include <tinyformat.h>
+#include <update/update.h>
 #include <util/system.h>
 #include <util/strencodings.h>
-#include <versionbitsinfo.h>
 
 #include <arith_uint256.h>
 
@@ -206,17 +206,16 @@ public:
         consensus.nFutureForkBlock = 420420;
         consensus.nAssetsForkBlock = 9999999;
         consensus.nRootAssetsForkBlock = consensus.nAssetsForkBlock;
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 1199145601; // January 1, 2008
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 1230767999; // December 31, 2008
 
-        consensus.vDeployments[Consensus::DEPLOYMENT_V17].bit = 0;
-        consensus.vDeployments[Consensus::DEPLOYMENT_V17].nStartTime = 1665644400; // 1665644400; // 0ct 13, 2022 00:00:00hrs
-        consensus.vDeployments[Consensus::DEPLOYMENT_V17].nTimeout = 9999999999; // 1675206001; // Feb 01, 2023 00:00:01hrs
-        consensus.vDeployments[Consensus::DEPLOYMENT_V17].nWindowSize = 4032;
-        consensus.vDeployments[Consensus::DEPLOYMENT_V17].nThresholdStart = 3226; // 80% of 4032
-        consensus.vDeployments[Consensus::DEPLOYMENT_V17].nThresholdMin = 2420; // 60% of 4032
-        consensus.vDeployments[Consensus::DEPLOYMENT_V17].nFalloffCoeff = 5; // this corresponds to 10 periods
+        // TODO: JB Need to test these values on mainnet
+        UpdateManager::Instance().Add
+        ( // Blocks 419329-427391 have version bit set in mainnet, 4031 voting, 4031 grace period
+            Update(EUpdate::DEPLOYMENT_V17, std::string("v17"), 0, 1, 419329, 4031, 3, 4031, false, VoteThreshold(80, 60, 5), VoteThreshold(0, 0, 1))
+        );
+        // UpdateManager::Instance().Add
+        // (
+        //     Update(EUpdate::ROUND_VOTING, std::string("Round Voting"), 7, 100, 100000, 5, 10, 5, false, VoteThreshold(85, 85, 1), VoteThreshold(95, 95, 1))
+        // );
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S(
@@ -375,17 +374,15 @@ public:
         consensus.nFutureForkBlock = 1000;
         consensus.nAssetsForkBlock = 411300;
         consensus.nRootAssetsForkBlock = 9999999;
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 1199145601; // January 1, 2008
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 1230767999; // December 31, 2008
 
-        consensus.vDeployments[Consensus::DEPLOYMENT_V17].bit = 0;
-        consensus.vDeployments[Consensus::DEPLOYMENT_V17].nStartTime = 1643670001; // Feb 01, 2022 00:00:01hrs
-        consensus.vDeployments[Consensus::DEPLOYMENT_V17].nTimeout = 1675206001; // Feb 01, 2023 00:00:01hrs
-        consensus.vDeployments[Consensus::DEPLOYMENT_V17].nWindowSize = 100;
-        consensus.vDeployments[Consensus::DEPLOYMENT_V17].nThresholdStart = 80;
-        consensus.vDeployments[Consensus::DEPLOYMENT_V17].nThresholdMin = 60;
-        consensus.vDeployments[Consensus::DEPLOYMENT_V17].nFalloffCoeff = 5; // this corresponds to 10 periods
+        UpdateManager::Instance().Add
+        (
+            Update(EUpdate::DEPLOYMENT_V17, std::string("v17"), 0, 10, 0, 10, 100, 10, false, VoteThreshold(95, 95, 5), VoteThreshold(0, 0, 1))
+        );
+        // UpdateManager::Instance().Add
+        // (
+        //    Update(EUpdate::ROUND_VOTING, std::string("Round Voting"), 7, 100, 100000, 5, 10, 5, false, VoteThreshold(85, 85, 1), VoteThreshold(95, 95, 1))
+        // );
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x0"); // 0
@@ -529,17 +526,15 @@ public:
         consensus.nFutureForkBlock = 1;
         consensus.nAssetsForkBlock = 1;
         consensus.nRootAssetsForkBlock = 1;
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 1199145601; // January 1, 2008
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 1230767999; // December 31, 2008
 
-        consensus.vDeployments[Consensus::DEPLOYMENT_V17].bit = 0;
-        consensus.vDeployments[Consensus::DEPLOYMENT_V17].nStartTime = 0; // Feb 01, 2022 00:00:01hrs
-        consensus.vDeployments[Consensus::DEPLOYMENT_V17].nTimeout = 9999999999ULL; // Feb 01, 2023 00:00:01hrs
-        consensus.vDeployments[Consensus::DEPLOYMENT_V17].nWindowSize = 100;
-        consensus.vDeployments[Consensus::DEPLOYMENT_V17].nThresholdStart = 80;
-        consensus.vDeployments[Consensus::DEPLOYMENT_V17].nThresholdMin = 60;
-        consensus.vDeployments[Consensus::DEPLOYMENT_V17].nFalloffCoeff = 5; // this corresponds to 10 periods
+        UpdateManager::Instance().Add
+        (
+            Update(EUpdate::DEPLOYMENT_V17, std::string("v17"), 0, 10, 0, 10, 100, 10, false, VoteThreshold(95, 95, 5), VoteThreshold(0, 0, 1))
+        );
+        // UpdateManager::Instance().Add
+        // (
+        //    Update(EUpdate::ROUND_VOTING, std::string("Round Voting"), 7, 100, 100000, 5, 10, 5, false, VoteThreshold(85, 85, 1), VoteThreshold(95, 95, 1))
+        // );
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000000000000000000000000");
@@ -702,17 +697,15 @@ public:
         consensus.nFutureForkBlock = 1;
         consensus.nAssetsForkBlock = 1;
         consensus.nRootAssetsForkBlock = 1;
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 0;
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 999999999999ULL;
 
-        consensus.vDeployments[Consensus::DEPLOYMENT_V17].bit = 0;
-        consensus.vDeployments[Consensus::DEPLOYMENT_V17].nStartTime = 0; // 1643670001; // Feb 01, 2022 00:00:01hrs
-        consensus.vDeployments[Consensus::DEPLOYMENT_V17].nTimeout = 9999999999ULL; // 1675206001; // Feb 01, 2023 00:00:01hrs
-        consensus.vDeployments[Consensus::DEPLOYMENT_V17].nWindowSize = 100;
-        consensus.vDeployments[Consensus::DEPLOYMENT_V17].nThresholdStart = 80; // 80% of 4032
-        consensus.vDeployments[Consensus::DEPLOYMENT_V17].nThresholdMin = 60; // 60% of 4032
-        consensus.vDeployments[Consensus::DEPLOYMENT_V17].nFalloffCoeff = 5; // this corresponds to 10 periods
+        UpdateManager::Instance().Add
+        (
+            Update(EUpdate::DEPLOYMENT_V17, std::string("v17"), 0, 10, 0, 10, 100, 10, false, VoteThreshold(95, 95, 5), VoteThreshold(0, 0, 1))
+        );
+        // UpdateManager::Instance().Add
+        // (
+        //    Update(EUpdate::ROUND_VOTING, std::string("Round Voting"), 7, 100, 100000, 5, 10, 5, false, VoteThreshold(85, 85, 1), VoteThreshold(95, 95, 1))
+        // );
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x00");
@@ -734,7 +727,7 @@ public:
         m_assumed_blockchain_size = 0;
         m_assumed_chain_state_size = 0;
 
-        UpdateVersionBitsParametersFromArgs(args);
+        // UpdateVersionBitsParametersFromArgs(args);
         UpdateBudgetParametersFromArgs(args);
 
         genesis = CreateGenesisBlock(1614369600, 2, 0x207fffff, 4, 5000 * COIN);
@@ -808,26 +801,26 @@ public:
         consensus.llmqTypePlatform = Consensus::LLMQ_100_67;
     }
 
-    void
-    UpdateVersionBitsParameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout, int64_t nWindowSize,
-                                int64_t nThresholdStart, int64_t nThresholdMin, int64_t nFalloffCoeff) {
-        consensus.vDeployments[d].nStartTime = nStartTime;
-        consensus.vDeployments[d].nTimeout = nTimeout;
-        if (nWindowSize != -1) {
-            consensus.vDeployments[d].nWindowSize = nWindowSize;
-        }
-        if (nThresholdStart != -1) {
-            consensus.vDeployments[d].nThresholdStart = nThresholdStart;
-        }
-        if (nThresholdMin != -1) {
-            consensus.vDeployments[d].nThresholdMin = nThresholdMin;
-        }
-        if (nFalloffCoeff != -1) {
-            consensus.vDeployments[d].nFalloffCoeff = nFalloffCoeff;
-        }
-    }
+   //  void
+   //  UpdateVersionBitsParameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout, int64_t nWindowSize,
+   //                              int64_t nThresholdStart, int64_t nThresholdMin, int64_t nFalloffCoeff) {
+   //      consensus.vDeployments[d].nStartTime = nStartTime;
+   //      consensus.vDeployments[d].nTimeout = nTimeout;
+   //      if (nWindowSize != -1) {
+   //          consensus.vDeployments[d].nWindowSize = nWindowSize;
+   //      }
+   //      if (nThresholdStart != -1) {
+   //          consensus.vDeployments[d].nThresholdStart = nThresholdStart;
+   //      }
+   //      if (nThresholdMin != -1) {
+   //          consensus.vDeployments[d].nThresholdMin = nThresholdMin;
+   //      }
+   //      if (nFalloffCoeff != -1) {
+   //          consensus.vDeployments[d].nFalloffCoeff = nFalloffCoeff;
+   //      }
+   //  }
 
-    void UpdateVersionBitsParametersFromArgs(const ArgsManager &args);
+   //  void UpdateVersionBitsParametersFromArgs(const ArgsManager &args);
 
     void
     UpdateBudgetParameters(int nSmartnodePaymentsStartBlock, int nBudgetPaymentsStartBlock, int nSuperblockStartBlock) {
@@ -839,59 +832,59 @@ public:
     void UpdateBudgetParametersFromArgs(const ArgsManager &args);
 };
 
-void CRegTestParams::UpdateVersionBitsParametersFromArgs(const ArgsManager &args) {
-    if (!args.IsArgSet("-vbparams")) return;
+// void CRegTestParams::UpdateVersionBitsParametersFromArgs(const ArgsManager &args) {
+//     if (!args.IsArgSet("-vbparams")) return;
 
-    for (const std::string &strDeployment: args.GetArgs("-vbparams")) {
-        std::vector <std::string> vDeploymentParams;
-        boost::split(vDeploymentParams, strDeployment, boost::is_any_of(":"));
-        if (vDeploymentParams.size() != 3 && vDeploymentParams.size() != 5 && vDeploymentParams.size() != 7) {
-            throw std::runtime_error("Version bits parameters malformed, expecting "
-                                     "<deployment>:<start>:<end> or "
-                                     "<deployment>:<start>:<end>:<window>:<threshold> or "
-                                     "<deployment>:<start>:<end>:<window>:<thresholdstart>:<thresholdmin>:<falloffcoeff>");
-        }
-        int64_t nStartTime, nTimeout, nWindowSize = -1, nThresholdStart = -1, nThresholdMin = -1, nFalloffCoeff = -1;
-        if (!ParseInt64(vDeploymentParams[1], &nStartTime)) {
-            throw std::runtime_error(strprintf("Invalid nStartTime (%s)", vDeploymentParams[1]));
-        }
-        if (!ParseInt64(vDeploymentParams[2], &nTimeout)) {
-            throw std::runtime_error(strprintf("Invalid nTimeout (%s)", vDeploymentParams[2]));
-        }
-        if (vDeploymentParams.size() >= 5) {
-            if (!ParseInt64(vDeploymentParams[3], &nWindowSize)) {
-                throw std::runtime_error(strprintf("Invalid nWindowSize (%s)", vDeploymentParams[3]));
-            }
-            if (!ParseInt64(vDeploymentParams[4], &nThresholdStart)) {
-                throw std::runtime_error(strprintf("Invalid nThresholdStart (%s)", vDeploymentParams[4]));
-            }
-        }
-        if (vDeploymentParams.size() == 7) {
-            if (!ParseInt64(vDeploymentParams[5], &nThresholdMin)) {
-                throw std::runtime_error(strprintf("Invalid nThresholdMin (%s)", vDeploymentParams[5]));
-            }
-            if (!ParseInt64(vDeploymentParams[6], &nFalloffCoeff)) {
-                throw std::runtime_error(strprintf("Invalid nFalloffCoeff (%s)", vDeploymentParams[6]));
-            }
-        }
-        bool found = false;
-        for (int j = 0; j < (int) Consensus::MAX_VERSION_BITS_DEPLOYMENTS; ++j) {
-            if (vDeploymentParams[0] == VersionBitsDeploymentInfo[j].name) {
-                UpdateVersionBitsParameters(Consensus::DeploymentPos(j), nStartTime, nTimeout, nWindowSize,
-                                            nThresholdStart, nThresholdMin, nFalloffCoeff);
-                found = true;
-                LogPrintf(
-                        "Setting version bits activation parameters for %s to start=%ld, timeout=%ld, window=%ld, thresholdstart=%ld, thresholdmin=%ld, falloffcoeff=%ld\n",
-                        vDeploymentParams[0], nStartTime, nTimeout, nWindowSize, nThresholdStart, nThresholdMin,
-                        nFalloffCoeff);
-                break;
-            }
-        }
-        if (!found) {
-            throw std::runtime_error(strprintf("Invalid deployment (%s)", vDeploymentParams[0]));
-        }
-    }
-}
+//     for (const std::string &strDeployment: args.GetArgs("-vbparams")) {
+//         std::vector <std::string> vDeploymentParams;
+//         boost::split(vDeploymentParams, strDeployment, boost::is_any_of(":"));
+//         if (vDeploymentParams.size() != 3 && vDeploymentParams.size() != 5 && vDeploymentParams.size() != 7) {
+//             throw std::runtime_error("Version bits parameters malformed, expecting "
+//                                      "<deployment>:<start>:<end> or "
+//                                      "<deployment>:<start>:<end>:<window>:<threshold> or "
+//                                      "<deployment>:<start>:<end>:<window>:<thresholdstart>:<thresholdmin>:<falloffcoeff>");
+//         }
+//         int64_t nStartTime, nTimeout, nWindowSize = -1, nThresholdStart = -1, nThresholdMin = -1, nFalloffCoeff = -1;
+//         if (!ParseInt64(vDeploymentParams[1], &nStartTime)) {
+//             throw std::runtime_error(strprintf("Invalid nStartTime (%s)", vDeploymentParams[1]));
+//         }
+//         if (!ParseInt64(vDeploymentParams[2], &nTimeout)) {
+//             throw std::runtime_error(strprintf("Invalid nTimeout (%s)", vDeploymentParams[2]));
+//         }
+//         if (vDeploymentParams.size() >= 5) {
+//             if (!ParseInt64(vDeploymentParams[3], &nWindowSize)) {
+//                 throw std::runtime_error(strprintf("Invalid nWindowSize (%s)", vDeploymentParams[3]));
+//             }
+//             if (!ParseInt64(vDeploymentParams[4], &nThresholdStart)) {
+//                 throw std::runtime_error(strprintf("Invalid nThresholdStart (%s)", vDeploymentParams[4]));
+//             }
+//         }
+//         if (vDeploymentParams.size() == 7) {
+//             if (!ParseInt64(vDeploymentParams[5], &nThresholdMin)) {
+//                 throw std::runtime_error(strprintf("Invalid nThresholdMin (%s)", vDeploymentParams[5]));
+//             }
+//             if (!ParseInt64(vDeploymentParams[6], &nFalloffCoeff)) {
+//                 throw std::runtime_error(strprintf("Invalid nFalloffCoeff (%s)", vDeploymentParams[6]));
+//             }
+//         }
+//         bool found = false;
+//         for (int j = 0; j < (int) Consensus::MAX_VERSION_BITS_DEPLOYMENTS; ++j) {
+//             if (vDeploymentParams[0] == VersionBitsDeploymentInfo[j].name) {
+//                 UpdateVersionBitsParameters(Consensus::DeploymentPos(j), nStartTime, nTimeout, nWindowSize,
+//                                             nThresholdStart, nThresholdMin, nFalloffCoeff);
+//                 found = true;
+//                 LogPrintf(
+//                         "Setting version bits activation parameters for %s to start=%ld, timeout=%ld, window=%ld, thresholdstart=%ld, thresholdmin=%ld, falloffcoeff=%ld\n",
+//                         vDeploymentParams[0], nStartTime, nTimeout, nWindowSize, nThresholdStart, nThresholdMin,
+//                         nFalloffCoeff);
+//                 break;
+//             }
+//         }
+//         if (!found) {
+//             throw std::runtime_error(strprintf("Invalid deployment (%s)", vDeploymentParams[0]));
+//         }
+//     }
+// }
 
 void CRegTestParams::UpdateBudgetParametersFromArgs(const ArgsManager &args) {
     if (!args.IsArgSet("-budgetparams")) return;
