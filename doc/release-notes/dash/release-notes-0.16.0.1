@@ -257,7 +257,7 @@ by specifying a path to custom css files via `--custom-css-dir`. Additionally, t
 which makes it possible to see and debug all css adjustments live in the running GUI.
 
 From now on the "Pay To" field in "Send" and "PrivateSend" tabs also accepts Dash URIs.
-The Dash address and the amount from the URI are assigned to corresponding fields automatically
+The Raptoreum address and the amount from the URI are assigned to corresponding fields automatically
 if a Dash URI gets pasted into the field.
 
 Sporks

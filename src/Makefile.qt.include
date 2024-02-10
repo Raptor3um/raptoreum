@@ -161,7 +161,7 @@ BITCOIN_QT_H = \
   qt/rpcconsole.h \
   qt/sendcoinsdialog.h \
   qt/sendcoinsentry.h \
-  qt/sendassesdialog.h \
+  qt/sendassetsdialog.h \
   qt/sendassetsentry.h \
   qt/createassetsdialog.h \
   qt/updateassetsdialog.h \

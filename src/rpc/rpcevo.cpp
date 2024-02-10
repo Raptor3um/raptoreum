@@ -172,17 +172,17 @@ static RPCArg GetRpcArg(const std::string &strParamName) {
             },
             {"ownerAddress",
                     {"ownerAddress",            RPCArg::Type::STR,                RPCArg::Optional::NO,
-                            "The dash address to use for payee updates and proposal voting.\n"
+                            "The raptoreum address to use for payee updates and proposal voting.\n"
                             "The corresponding private key does not have to be known by your wallet.\n"
                             "The address must be unused and must differ from the collateralAddress."}
             },
             {"payoutAddress_register",
                     {"payoutAddress_register",  RPCArg::Type::STR,                RPCArg::Optional::NO,
-                            "The dash address to use for masternode reward payments."}
+                            "The raptoreum address to use for masternode reward payments."}
             },
             {"payoutAddress_update",
                     {"payoutAddress_update",    RPCArg::Type::STR,                RPCArg::Optional::NO,
-                            "The dash address to use for masternode reward payments.\n"
+                            "The raptoreum address to use for masternode reward payments.\n"
                             "If set to an empty string, the currently active payout address is reused."}
             },
             {"proTxHash",
