@@ -297,7 +297,7 @@ BITCOIN_CORE_H = \
   util/spanparsing.h \
   util/system.h \
   util/asmap.h \
-  util/macros.h \
+  util/macro.h \
   util/memory.h \
   util/moneystr.h \
   util/ranges.h \
