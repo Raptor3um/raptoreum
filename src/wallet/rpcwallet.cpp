@@ -1668,7 +1668,7 @@ UniValue listtransactions(const JSONRPCRequest &request) {
                                                                           {
                                                                               { RPCResult::Type::BOOL, "involvesWatchonly", "Only returns true if imported addresses were involved in transaction" },
                                                                               {
-                                                                                  RPCResult::Type::STR, "address", "The dash address of the transaction. Not present for\n"
+                                                                                  RPCResult::Type::STR, "address", "The raptoreum address of the transaction. Not present for\n"
                                                                                                                    "move transactions (category = move)."
                                                                               },
                                                                               {

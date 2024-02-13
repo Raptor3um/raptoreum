@@ -359,7 +359,7 @@ static UniValue getrawtransaction(const JSONRPCRequest &request) {
                                                                     {RPCResult::Type::ARR, "addresses", "",
                                                                      {
                                                                              {RPCResult::Type::STR, "address",
-                                                                              "dash address"},
+                                                                              "raptoreum address"},
                                                                      }},
                                                             }},
                                                    }},
