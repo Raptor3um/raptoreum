@@ -182,11 +182,13 @@ VoteResult NodeRoundVoting::GetVote(const CBlockIndex* blockIndex, const Update&
             // LogPrint(BCLog::UPDATES, "Updates: NodeRoundVoting, Height: %d, Tx: %d, Quorum Commitmentx - ValidMembers: %3d, Signers: %3d\n", curIndex->nHeight, i, qc.commitment.CountValidMembers(), qc.commitment.CountSigners());
             if (qc.commitment.CountValidMembers())
             {
-               // Pretend 50% voted:
-               int64_t yesCount = qc.commitment.CountValidMembers() * (curIndex->nHeight % 50 + 50) / 100; // 50-99% chance
                int64_t samples  = qc.commitment.CountValidMembers();
-               LogPrint(BCLog::UPDATES, "Updates: NodeRoundVoting, Height: %d, Tx: %d, Quorum Commitment - ValidMembers: %3d, Signers: %3d, yes: %3d\n", curIndex->nHeight, i, qc.commitment.CountValidMembers(), qc.commitment.CountSigners(), yesCount);
-               result += VoteResult(yesCount, samples);
+               for (const auto it : qc.commitment.quorumUpdateVotes) {
+                  if (update.Bit() == it.bit) {
+                     LogPrint(BCLog::UPDATES, "Updates: NodeRoundVoting, Height: %d, Tx: %d, Quorum Commitment - ValidMembers: %3d, Signers: %3d, yes: %3d\n", curIndex->nHeight, i, qc.commitment.CountValidMembers(), qc.commitment.CountSigners(), it.votes);
+                     result += VoteResult(it.votes, samples);
+                  }
+               }
             }
 
             // LogPrint(BCLog::UPDATES, "Updates: NodeRoundVoting, Height: %d, Tx: %d, Quorum Commitment\n", curIndex->nHeight, i);
@@ -257,6 +259,9 @@ UpdateManager::~UpdateManager() {};
 
 bool UpdateManager::Add(Update update)
 {
+   auto it = updates.find(update.UpdateId());
+   if (it != updates.end())
+      updates.erase(it);
    // TODO: Check for existence first
    updates.emplace(update.UpdateId(), update);
    // LogPrint(BCLog::UPDATES, "Updates: UpdateManager Added: %s\n", update.ToString());

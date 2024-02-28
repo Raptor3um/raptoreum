@@ -338,147 +338,96 @@ namespace llmq {
 
 // returns a set of NodeIds which sent invalid messages
     template<typename Message>
-    std::set <NodeId>
-    BatchVerifyMessageSigs(CDKGSession &session, const std::vector <std::pair<NodeId, std::shared_ptr < Message>>
+    std::set <NodeId> BatchVerifyMessageSigs(CDKGSession &session, const std::vector <std::pair<NodeId, std::shared_ptr < Message>>>& messages) {
+    if (messages.empty()) {
+        return {};
+    }
 
-    >& messages) {
-    if (messages.
+    std::set <NodeId> ret;
+    bool revertToSingleVerification = false;
 
-    empty()
+    CBLSSignature aggSig;
+    std::vector <CBLSPublicKey> pubKeys;
+    std::vector <uint256> messageHashes;
+    std::set <uint256> messageHashesSet;
+    pubKeys.reserve(messages.size());
+    messageHashes.reserve(messages.size());
+    bool first = true;
+    for (const auto &p: messages ) {
+        const auto &msg = *p.second;
 
-    ) {
-    return {
-};
-}
+        auto member = session.GetMember(msg.proTxHash);
+        if (!member) {
+            // should not happen as it was verified before
+            ret.emplace(p.first);
+            continue;
+        }
 
-std::set <NodeId> ret;
-bool revertToSingleVerification = false;
+        if (first) {
+            aggSig = msg.sig;
+        } else {
+            aggSig.AggregateInsecure(msg.sig);
+        }
+        first = false;
 
-CBLSSignature aggSig;
-std::vector <CBLSPublicKey> pubKeys;
-std::vector <uint256> messageHashes;
-std::set <uint256> messageHashesSet;
-pubKeys.
-reserve(messages
-.
+        auto msgHash = msg.GetSignHash();
+        if (!messageHashesSet.emplace(msgHash).second) {
+            // can only happen in 2 cases:
+            // 1. Someone sent us the same message twice but with differing signature, meaning that at least one of them
+            //    must be invalid. In this case, we'd have to revert to single message verification nevertheless
+            // 2. Someone managed to find a way to create two different binary representations of a message that deserializes
+            //    to the same object representation. This would be some form of malleability. However, this shouldn't be
+            //    possible as only deterministic/unique BLS signatures and very simple data types are involved
+            revertToSingleVerification = true;
+            break;
+        }
 
-size()
+        pubKeys.emplace_back(member->dmn->pdmnState->pubKeyOperator.Get());
+        messageHashes.emplace_back(msgHash);
+    }
+    if (!revertToSingleVerification) {
+        bool valid = aggSig.VerifyInsecureAggregated(pubKeys, messageHashes);
+        if (valid) {
+            // all good
+            return ret;
+        }
 
-);
-messageHashes.
-reserve(messages
-.
+        // are all messages from the same node?
+        NodeId firstNodeId;
+        first = true;
+        bool nodeIdsAllSame = true;
+        for (auto it = messages.begin(); it != messages.end(); ++it) {
+            if (first) {
+                firstNodeId = it->first;
+            } else {
+                first = false;
+                if (it->first != firstNodeId) {
+                    nodeIdsAllSame = false;
+                    break;
+                }
+            }
+        }
+        // if yes, take a short path and return a set with only him
+        if (nodeIdsAllSame) {
+            ret.emplace(firstNodeId);
+            return ret;
+        }
+        // different nodes, let's figure out who are the bad ones
+    }
 
-size()
+    for (const auto &p : messages) {
+        if (ret.count(p.first)) {
+            continue;
+        }
 
-);
-bool first = true;
-for (
-const auto &p
-: messages ) {
-const auto &msg = *p.second;
-
-auto member = session.GetMember(msg.proTxHash);
-if (!member) {
-// should not happen as it was verified before
-ret.
-emplace(p
-.first);
-continue;
-}
-
-if (first) {
-aggSig = msg.sig;
-} else {
-aggSig.
-AggregateInsecure(msg
-.sig);
-}
-first = false;
-
-auto msgHash = msg.GetSignHash();
-if (!messageHashesSet.
-emplace(msgHash)
-.second) {
-// can only happen in 2 cases:
-// 1. Someone sent us the same message twice but with differing signature, meaning that at least one of them
-//    must be invalid. In this case, we'd have to revert to single message verification nevertheless
-// 2. Someone managed to find a way to create two different binary representations of a message that deserializes
-//    to the same object representation. This would be some form of malleability. However, this shouldn't be
-//    possible as only deterministic/unique BLS signatures and very simple data types are involved
-revertToSingleVerification = true;
-break;
-}
-
-pubKeys.
-emplace_back(member
-->dmn->pdmnState->pubKeyOperator.
-
-Get()
-
-);
-messageHashes.
-emplace_back(msgHash);
-}
-if (!revertToSingleVerification) {
-bool valid = aggSig.VerifyInsecureAggregated(pubKeys, messageHashes);
-if (valid) {
-// all good
-return
-ret;
-}
-
-// are all messages from the same node?
-NodeId firstNodeId;
-first = true;
-bool nodeIdsAllSame = true;
-for (
-auto it = messages.begin();
-it != messages.
-
-end();
-
-++it) {
-if (first) {
-firstNodeId = it->first;
-} else {
-first = false;
-if (it->first != firstNodeId) {
-nodeIdsAllSame = false;
-break;
-}
-}
-}
-// if yes, take a short path and return a set with only him
-if (nodeIdsAllSame) {
-ret.
-emplace(firstNodeId);
-return
-ret;
-}
-// different nodes, let's figure out who are the bad ones
-}
-
-for (
-const auto &p
-: messages) {
-if (ret.
-count(p
-.first)) {
-continue;
-}
-
-const auto &msg = *p.second;
-auto member = session.GetMember(msg.proTxHash);
-bool valid = msg.sig.VerifyInsecure(member->dmn->pdmnState->pubKeyOperator.Get(), msg.GetSignHash());
-if (!valid) {
-ret.
-emplace(p
-.first);
-}
-}
-return
-ret;
+        const auto &msg = *p.second;
+        auto member = session.GetMember(msg.proTxHash);
+        bool valid = msg.sig.VerifyInsecure(member->dmn->pdmnState->pubKeyOperator.Get(), msg.GetSignHash());
+        if (!valid) {
+            ret.emplace(p.first);
+        }
+    }
+    return ret;
 }
 
 template<typename Message, int MessageType>

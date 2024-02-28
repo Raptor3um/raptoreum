@@ -1688,6 +1688,27 @@ UniValue getblockchaininfo(const JSONRPCRequest &request) {
     // for (int pos = Consensus::DEPLOYMENT_CSV; pos != Consensus::MAX_VERSION_BITS_DEPLOYMENTS; ++pos) {
     //     BIP9SoftForkDescPushBack(bip9_softforks, consensusParams, static_cast<Consensus::DeploymentPos>(pos));
     // }
+    for (int i = 0; i < static_cast<int>(EUpdate::MAX_VERSION_BITS_DEPLOYMENTS); ++i) {
+        StateInfo state = UpdateManager::Instance().State( static_cast<EUpdate>(i), ::ChainActive().Tip());
+        if (state.State == EUpdateState::Unknown)
+            continue;
+        const Update* update = UpdateManager::Instance().GetUpdate(static_cast<EUpdate>(i));
+        UniValue rv(UniValue::VOBJ);
+        switch (state.State) {
+            case EUpdateState::Defined: rv.pushKV("status", "defined"); break;
+            case EUpdateState::Failed: rv.pushKV("status", "failed"); break;
+            case EUpdateState::LockedIn: rv.pushKV("status", "locked_in"); break;
+            case EUpdateState::Voting: rv.pushKV("status", "voting"); break;
+            case EUpdateState::Active: rv.pushKV("status", "active"); break;
+        }
+        if (state.State == EUpdateState::Voting) {
+            rv.pushKV("bit", update->Bit());
+        }
+        rv.pushKV("start_height", update->StartHeight());
+        rv.pushKV("round_size", update->RoundSize());
+        rv.pushKV("voting_period", update->VotingPeriod());
+        bip9_softforks.pushKV(update->Name(), rv);
+    }
     obj.pushKV("softforks", softforks);
     obj.pushKV("bip9_softforks", bip9_softforks);
     obj.pushKV("warnings", GetWarnings(false));

@@ -151,7 +151,8 @@ namespace llmq {
         CDKGContribution qc;
         if (UpdateManager::Instance().IsActive(EUpdate::ROUND_VOTING, m_quorum_base_block_index)) {
             qc.nVersion = 1;
-            // TODO: JB Vote on active update proposals
+            // Vote on active update proposals
+            qc.nVersion = UpdateManager::Instance().ComputeBlockVersion(m_quorum_base_block_index);
         }
         qc.llmqType = params.type;
         qc.quorumHash = m_quorum_base_block_index->GetBlockHash();
@@ -357,6 +358,7 @@ namespace llmq {
         std::vector <size_t> memberIndexes;
         std::vector <BLSVerificationVectorPtr> vvecs;
         BLSSecretKeyVector skContributions;
+        std::vector <uint32_t> voteVersions;
 
         for (const auto &idx: pend) {
             const auto &m = members[idx];
@@ -366,6 +368,7 @@ namespace llmq {
             memberIndexes.emplace_back(idx);
             vvecs.emplace_back(receivedVvecs[idx]);
             skContributions.emplace_back(receivedSkContributions[idx]);
+            voteVersions.emplace_back(receivedVersions[idx]);
             // Write here to definitely store one contribution for each member no matter if
             // our share is valid or not, could be that others are still correct
             dkgManager.WriteEncryptedContributions(params.type, m_quorum_base_block_index, m->dmn->proTxHash,
@@ -393,6 +396,9 @@ namespace llmq {
                 size_t memberIdx = memberIndexes[i];
                 dkgManager.WriteVerifiedSkContribution(params.type, m_quorum_base_block_index,
                                                        members[memberIdx]->dmn->proTxHash, skContributions[i]);
+                //Write vote to disc
+                dkgManager.WriteUpdateVote(params.type, m_quorum_base_block_index,
+                                                       members[memberIdx]->dmn->proTxHash, voteVersions[i]);
             }
         }
 
@@ -995,6 +1001,7 @@ namespace llmq {
 
         uint256 commitmentHash;
         if (UpdateManager::Instance().IsActive(EUpdate::ROUND_VOTING, m_quorum_base_block_index)) {
+            qc.roundVoting = true;
             commitmentHash = CLLMQUtils::BuildCommitmentHash(qc.llmqType, qc.quorumHash, qc.validMembers, qc.quorumUpdateVotes, qc.quorumPublicKey, qc.quorumVvecHash);
         }
         else {
@@ -1005,8 +1012,7 @@ namespace llmq {
             (*commitmentHash.begin())++;
         }
 
-        qc.sig = WITH_LOCK(activeSmartnodeInfoCs,
-        return activeSmartnodeInfo.blsKeyOperator->Sign(commitmentHash));
+        qc.sig = WITH_LOCK(activeSmartnodeInfoCs, return activeSmartnodeInfo.blsKeyOperator->Sign(commitmentHash));
         qc.quorumSig = skShare.Sign(commitmentHash);
 
         if (lieType == 3) {
@@ -1243,6 +1249,10 @@ namespace llmq {
             fqc.quorumPublicKey = first.quorumPublicKey;
             fqc.quorumVvecHash = first.quorumVvecHash;
             fqc.quorumUpdateVotes = first.quorumUpdateVotes;
+
+            if (first.roundVoting) {
+                fqc.nVersion = 2;
+            }
 
             uint256 commitmentHash;
             if (UpdateManager::Instance().IsActive(EUpdate::ROUND_VOTING, m_quorum_base_block_index)) {

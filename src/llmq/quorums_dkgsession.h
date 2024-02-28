@@ -44,9 +44,11 @@ namespace llmq {
         inline void SerializeWithoutSig(Stream &s) const {
             if (nVersion != 0) {
                s << (uint8_t)0; // Marker for new serialization (old serialization was not versioned)
+               s << llmqType;
                s << nVersion;
+            } else {
+                s << llmqType;
             }
-            s << llmqType;
             s << quorumHash;
             s << proTxHash;
             s << *vvec;
@@ -67,8 +69,8 @@ namespace llmq {
             s >> llmqType;
             if (llmqType == Consensus::LLMQType::LLMQ_INVALID) {
                // New version, deserialize the version, then the real llmqType
-               s >> nVersion;
                s >> llmqType;
+               s >> nVersion;
             }
             s >> quorumHash;
             s >> proTxHash;
@@ -168,17 +170,47 @@ namespace llmq {
             return int(std::count(validMembers.begin(), validMembers.end(), true));
         }
 
-        SERIALIZE_METHODS(CDKGPrematureCommitment, obj
-        )
-        {
-            READWRITE(obj.llmqType, obj.quorumHash, obj.proTxHash, DYNBITSET(obj.validMembers));
-            if (obj.roundVoting) {
-                READWRITE(obj.quorumUpdateVotes);
+         template<typename Stream>
+        inline void Serialize(Stream &s) const {
+            if (roundVoting) {
+                s << (uint8_t)0; // Marker for new serialization (old serialization was not versioned)
+                s << llmqType;
+                s << roundVoting;
+                s << quorumUpdateVotes; 
+            } else {
+                s << llmqType;
             }
-            READWRITE(obj.quorumPublicKey, obj.quorumVvecHash, obj.quorumSig, obj.sig);
+            s << quorumHash;
+            s << proTxHash;
+            s << DYNBITSET(validMembers);
+            s << quorumPublicKey;
+            s << quorumVvecHash;
+            s << quorumSig;
+            s << sig;
         }
-
+        
+        template<typename Stream>
+        inline void Unserialize(Stream &s) {
+            s >> llmqType;
+            if (llmqType == Consensus::LLMQType::LLMQ_INVALID) {
+               // New version, deserialize the version, then the real llmqType
+               s >> llmqType;
+               s >> roundVoting;
+               s >> quorumUpdateVotes;
+            }
+            s >> quorumHash;
+            s >> proTxHash;
+            s >> DYNBITSET(validMembers);
+            s >> quorumPublicKey;
+            s >> quorumVvecHash;
+            s >> quorumSig;
+            s >> sig;
+        }
+    
         [[nodiscard]] uint256 GetSignHash() const {
+            if (roundVoting) {
+               return CLLMQUtils::BuildCommitmentHash(llmqType, quorumHash, validMembers, quorumUpdateVotes, quorumPublicKey, quorumVvecHash); 
+            }
             return CLLMQUtils::BuildCommitmentHash(llmqType, quorumHash, validMembers, quorumPublicKey, quorumVvecHash);
         }
     };
