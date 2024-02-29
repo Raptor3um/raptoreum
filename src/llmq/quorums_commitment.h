@@ -19,9 +19,9 @@ namespace llmq {
 // This is mined on-chain as part of TRANSACTION_QUORUM_COMMITMENT
     class CFinalCommitment {
     public:
-        static const uint16_t CURRENT_VERSION = 1;
+        static const uint16_t CURRENT_VERSION = 2;
 
-        uint16_t nVersion{CURRENT_VERSION};
+        uint16_t nVersion{1};
         Consensus::LLMQType llmqType{Consensus::LLMQ_NONE};
         uint256 quorumHash;
         std::vector<bool> signers;

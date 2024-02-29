@@ -41,6 +41,7 @@
 #include <smartnode/smartnode-payments.h>
 #include <smartnode/smartnode-sync.h>
 #include <node/context.h>
+#include <update/update.h>
 
 #include <boost/thread.hpp>
 #include <algorithm>
@@ -150,8 +151,8 @@ std::unique_ptr <CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript &s
     bool fDIP0003Active_context = chainparams.GetConsensus().DIP0003Enabled;
     bool fDIP0008Active_context = chainparams.GetConsensus().DIP0008Enabled;
 
-    pblock->nVersion = ComputeBlockVersion(pindexPrev, chainparams.GetConsensus(),
-                                           chainparams.BIP9CheckSmartnodesUpgraded());
+    pblock->nVersion = UpdateManager::Instance().ComputeBlockVersion(pindexPrev);
+
     // -regtest only: allow overriding block.nVersion with
     // -blockversion=N to test forking scenarios
     if (chainparams.MineBlocksOnDemand())

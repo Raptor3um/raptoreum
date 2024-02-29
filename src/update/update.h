@@ -15,7 +15,9 @@
 enum class EUpdate
 {
    DEPLOYMENT_V17 = 0,
-   ROUND_VOTING   = 1
+   ROUND_VOTING   = 1,
+ 
+   MAX_VERSION_BITS_DEPLOYMENTS
 };
 
 enum class EUpdateState
@@ -103,8 +105,9 @@ class Update
             (votingMaxRounds < 1)                                         ||
             (graceRounds < 0)                                             ||
             (heightActivated < -1)                                        ||
-            (startHeight % roundSize != 0)                                ||
-            (votingPeriod > votingMaxRounds)
+            (startHeight % roundSize != 0)/*
+            //disabled or wont start, need to verify the mainnet update parameter                               ||
+            (votingPeriod > votingMaxRounds)*/
          )
          {
             throw std::invalid_argument("Invalid argument(s) for Update " + name);

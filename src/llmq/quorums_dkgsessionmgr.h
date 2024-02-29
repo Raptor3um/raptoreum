@@ -96,6 +96,12 @@ namespace llmq {
                                        const std::vector<bool> &validMembers, const uint256 &proTxHash,
                                        std::vector <CBLSIESEncryptedObject<CBLSSecretKey>> &vecRet) const;
 
+        // Write UpdateVote for the member with the given proTxHash to the llmqDb
+        void WriteUpdateVote(Consensus::LLMQType llmqType,
+                                const CBlockIndex *pQuorumBaseBlockIndex,
+                                const uint256 &proTxHash,
+                                const uint32_t& updateVote);
+
       //   /// Write UpdateVotesVec for the member with the given proTxHash to the llmqDb
       //   void WriteUpdateVotesVec(Consensus::LLMQType llmqType,
       //                            const CBlockIndex *pQuorumBaseBlockIndex,

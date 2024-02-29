@@ -459,7 +459,7 @@ namespace Consensus {
                {
                   AddVote(bit);
                }
-               bits >> 1;
+               bits >>= 1;
                ++bit;
             }
         }
