@@ -108,7 +108,7 @@ ConstructTransaction(const UniValue &inputs_in, const UniValue &outputs_in, cons
         } else {
             CTxDestination destination = DecodeDestination(name_);
             if (!IsValidDestination(destination)) {
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Dash address: ") + name_);
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Raptoreum address: ") + name_);
             }
 
             if (!destinations.insert(destination).second) {
