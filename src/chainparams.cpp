@@ -210,7 +210,7 @@ public:
         // TODO: JB Need to test these values on mainnet
         UpdateManager::Instance().Add
         ( // Blocks 419329-427391 have version bit set in mainnet, 4031 voting, 4031 grace period
-            Update(EUpdate::DEPLOYMENT_V17, std::string("v17"), 0, 1, 419329, 4031, 3, 4031, false, VoteThreshold(80, 60, 5), VoteThreshold(0, 0, 1))
+            Update(EUpdate::DEPLOYMENT_V17, std::string("v17"), 0, 1, 419329, 4031, 12093, 4031, false, VoteThreshold(80, 60, 5), VoteThreshold(0, 0, 1))
         );
         // UpdateManager::Instance().Add
         // (
@@ -535,7 +535,7 @@ public:
         (
            Update(EUpdate::ROUND_VOTING, std::string("Round Voting"), 1, 100, 2000, 5, 10, 5, false, VoteThreshold(85, 85, 1), VoteThreshold(0, 0, 1))
         );
-        
+
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000000000000000000000000");
 

@@ -5099,7 +5099,7 @@ bool ChainstateManager::LoadBlockIndex(const CChainParams &chainparams) {
         fAddressIndex = gArgs.GetBoolArg("-addressindex", DEFAULT_ADDRESSINDEX);
         pblocktree->WriteFlag("addressindex", fAddressIndex);
 
-        // Use the provided setting for -addressindex in the new database
+        // Use the provided setting for -assetindex in the new database
         fAssetIndex = gArgs.GetBoolArg("-assetindex", DEFAULT_ASSETINDEX);
         pblocktree->WriteFlag("assetindex", fAssetIndex);
 

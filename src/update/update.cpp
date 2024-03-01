@@ -259,10 +259,10 @@ UpdateManager::~UpdateManager() {};
 
 bool UpdateManager::Add(Update update)
 {
+   // Check for existence first and erase if exist
    auto it = updates.find(update.UpdateId());
    if (it != updates.end())
       updates.erase(it);
-   // TODO: Check for existence first
    updates.emplace(update.UpdateId(), update);
    // LogPrint(BCLog::UPDATES, "Updates: UpdateManager Added: %s\n", update.ToString());
    LogPrintf("Updates: UpdateManager Added: %s\n", update.ToString());

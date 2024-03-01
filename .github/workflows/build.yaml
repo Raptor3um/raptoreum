@@ -90,8 +90,8 @@ jobs:
         run: |
           make -j$(nproc)
           mkdir -p ${BUILD_DIR} ${BUILD_DIR}_not_strip ${TEST_DIR}
-          cp src/{raptoreum-cli,raptoreum-tx,raptoreumd,qt/raptoreum-qt} ${BUILD_DIR}/
-          mv src/{raptoreum-cli,raptoreum-tx,raptoreumd,qt/raptoreum-qt} ${BUILD_DIR}_not_strip/
+          cp src/{raptoreum-cli,raptoreumd,qt/raptoreum-qt} ${BUILD_DIR}/
+          mv src/{raptoreum-cli,raptoreumd,qt/raptoreum-qt} ${BUILD_DIR}_not_strip/
           mv src/test/test_raptoreum ${TEST_DIR}
           strip ${BUILD_DIR}/*
 
@@ -103,7 +103,7 @@ jobs:
           ./configure --prefix=`pwd`/depends/x86_64-pc-linux-gnu --disable-tests --enable-debug
           make -j$(nproc)
           mkdir -p ${BUILD_DIR}_debug
-          mv src/{raptoreum-cli,raptoreum-tx,raptoreumd,qt/raptoreum-qt} ${BUILD_DIR}_debug/
+          mv src/{raptoreum-cli,raptoreumd,qt/raptoreum-qt} ${BUILD_DIR}_debug/
 
       - name: Generate Checksum and Compress
         run: |
@@ -227,8 +227,8 @@ jobs:
         run: |
           make -j$(nproc)
           mkdir -p ${BUILD_DIR} ${BUILD_DIR}_not_strip ${TEST_DIR}
-          cp src/{raptoreum-cli,raptoreum-tx,raptoreumd,qt/raptoreum-qt} ${BUILD_DIR}/
-          mv src/{raptoreum-cli,raptoreum-tx,raptoreumd,qt/raptoreum-qt} ${BUILD_DIR}_not_strip/
+          cp src/{raptoreum-cli,raptoreumd,qt/raptoreum-qt} ${BUILD_DIR}/
+          mv src/{raptoreum-cli,raptoreumd,qt/raptoreum-qt} ${BUILD_DIR}_not_strip/
           mv src/test/test_raptoreum ${TEST_DIR}
           strip ${BUILD_DIR}/*
 
@@ -240,7 +240,7 @@ jobs:
           ./configure --prefix=`pwd`/depends/x86_64-pc-linux-gnu --disable-tests --enable-debug
           make -j$(nproc)
           mkdir -p ${BUILD_DIR}_debug
-          mv src/{raptoreum-cli,raptoreum-tx,raptoreumd,qt/raptoreum-qt} ${BUILD_DIR}_debug/
+          mv src/{raptoreum-cli,raptoreumd,qt/raptoreum-qt} ${BUILD_DIR}_debug/
 
       - name: Generate Checksum and Compress
         run: |
@@ -345,7 +345,7 @@ jobs:
         run: |
           brew install automake libtool pkg-config miniupnpc librsvg libnatpmp zeromq python
           pip3 install ds_store mac_alias
-          pip3 install -U pip setuptools 
+          pip3 install -U pip setuptools
 
       - name: Build Depends
         run: |
@@ -362,8 +362,8 @@ jobs:
         run: |
           make -j8
           mkdir -p ${BUILD_DIR} ${BUILD_DIR}_not_strip ${TEST_DIR}
-          cp src/{raptoreum-cli,raptoreum-tx,raptoreumd,qt/raptoreum-qt} ${BUILD_DIR}/
-          mv src/{raptoreum-cli,raptoreum-tx,raptoreumd,qt/raptoreum-qt} ${BUILD_DIR}_not_strip/
+          cp src/{raptoreum-cli,raptoreumd,qt/raptoreum-qt} ${BUILD_DIR}/
+          mv src/{raptoreum-cli,raptoreumd,qt/raptoreum-qt} ${BUILD_DIR}_not_strip/
           mv src/test/test_raptoreum ${TEST_DIR}
           strip ${BUILD_DIR}/*
 
@@ -490,7 +490,7 @@ jobs:
   #       run: |
   #         make -j$(nproc)
   #         mkdir -p ${BUILD_DIR} ${TEST_DIR}
-  #         mv src/{raptoreum-cli,raptoreum-tx,raptoreumd,qt/raptoreum-qt} ${BUILD_DIR}/
+  #         mv src/{raptoreum-cli,raptoreumd,qt/raptoreum-qt} ${BUILD_DIR}/
   #         mv src/test/test_raptoreum ${TEST_DIR}
 
   #     - name: Build Debug Binaries
@@ -501,7 +501,7 @@ jobs:
   #         ./configure --prefix=`pwd`/depends/arm-linux-gnueabihf --disable-tests --enable-debug
   #         make -j$(nproc)
   #         mkdir -p ${BUILD_DIR}_debug
-  #         mv src/{raptoreum-cli,raptoreum-tx,raptoreumd,qt/raptoreum-qt} ${BUILD_DIR}_debug/
+  #         mv src/{raptoreum-cli,raptoreumd,qt/raptoreum-qt} ${BUILD_DIR}_debug/
 
   #     - name: Generate Checksum and Compress
   #       run: |
@@ -618,7 +618,7 @@ jobs:
         run: |
           make -j$(nproc)
           mkdir -p ${BUILD_DIR} ${TEST_DIR}
-          mv src/{raptoreum-cli,raptoreum-tx,raptoreumd,qt/raptoreum-qt} ${BUILD_DIR}/
+          mv src/{raptoreum-cli,raptoreumd,qt/raptoreum-qt} ${BUILD_DIR}/
           mv src/test/test_raptoreum ${TEST_DIR}/
 
       - name: Build Debug Binaries
@@ -629,7 +629,7 @@ jobs:
           ./configure --prefix=`pwd`/depends/aarch64-linux-gnu --disable-tests --enable-debug
           make -j$(nproc)
           mkdir -p ${BUILD_DIR}_debug
-          mv src/{raptoreum-cli,raptoreum-tx,raptoreumd,qt/raptoreum-qt} ${BUILD_DIR}_debug/
+          mv src/{raptoreum-cli,raptoreumd,qt/raptoreum-qt} ${BUILD_DIR}_debug/
 
       - name: Generate Checksum and Compress
         run: |
@@ -750,8 +750,8 @@ jobs:
         run: |
           make -j$(nproc)
           mkdir -p ${BUILD_DIR} ${BUILD_DIR}_not_strip ${TEST_DIR}
-          cp src/{raptoreum-cli.exe,raptoreum-tx.exe,raptoreumd.exe,qt/raptoreum-qt.exe} ${BUILD_DIR}/
-          mv src/{raptoreum-cli.exe,raptoreum-tx.exe,raptoreumd.exe,qt/raptoreum-qt.exe} ${BUILD_DIR}_not_strip/
+          cp src/{raptoreum-cli.exe,raptoreumd.exe,qt/raptoreum-qt.exe} ${BUILD_DIR}/
+          mv src/{raptoreum-cli.exe,raptoreumd.exe,qt/raptoreum-qt.exe} ${BUILD_DIR}_not_strip/
           mv src/test/test_raptoreum.exe ${TEST_DIR}
           strip ${BUILD_DIR}/*
 

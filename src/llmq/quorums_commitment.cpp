@@ -90,7 +90,7 @@ namespace llmq {
 
             uint256 commitmentHash;
             if (UpdateManager::Instance().IsActive(EUpdate::ROUND_VOTING, pQuorumBaseBlockIndex)) {
-                commitmentHash = CLLMQUtils::BuildCommitmentHash(llmqType, quorumHash, validMembers, quorumUpdateVotes, quorumPublicKey, quorumVvecHash);
+                commitmentHash = CLLMQUtils::BuildCommitmentHash(llmq_params.type, quorumHash, validMembers, quorumUpdateVotes, quorumPublicKey, quorumVvecHash);
             }
             else {
                 commitmentHash = CLLMQUtils::BuildCommitmentHash(llmq_params.type, quorumHash, validMembers, quorumPublicKey, quorumVvecHash);
