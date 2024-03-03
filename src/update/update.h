@@ -152,7 +152,7 @@ class Update
       VoteThreshold minerThreshold;
       VoteThreshold nodeThreshold;
 
-      // TODO: Flags for activation height to bypass vote checking (old votes)
+      // Flags for activation height to bypass vote checking (old votes)
       bool          failed;              // True if the proposed update failed and should be ignored
       int64_t       heightActivated;     // -1 if proposed update should be evaluated.  Set to height when activated to bypass evaluation (old votes, for performance).
 };
@@ -177,7 +177,7 @@ class VoteResult
 
          if (sampleSize > 0)
          {
-            int64_t percent = 100 * 100 * yes / sampleSize; // Scaled arithmetic (probability 0.1234 represented by integer 1234)
+            int64_t percent = scaleFactor * yes / sampleSize;
             weightedYes = percent * sampleSize;
             weight      = sampleSize;
             samples     = 1;
@@ -205,6 +205,8 @@ class VoteResult
       }
 
    private :
+      static const int64_t scaleFactor;
+
       int64_t weightedYes;
       int64_t weight;
       int64_t samples;

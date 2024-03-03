@@ -14,9 +14,7 @@ rm docker/bin/*
 mkdir docker/bin
 cp $BUILD_DIR/src/raptoreumd docker/bin/
 cp $BUILD_DIR/src/raptoreum-cli docker/bin/
-cp $BUILD_DIR/src/raptoreum-tx docker/bin/
 strip docker/bin/raptoreumd
 strip docker/bin/raptoreum-cli
-strip docker/bin/raptoreum-tx
 
 docker build --pull -t $DOCKER_IMAGE:$DOCKER_TAG -f docker/Dockerfile docker

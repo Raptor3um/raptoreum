@@ -207,10 +207,9 @@ public:
         consensus.nAssetsForkBlock = 9999999;
         consensus.nRootAssetsForkBlock = consensus.nAssetsForkBlock;
 
-        // TODO: JB Need to test these values on mainnet
         UpdateManager::Instance().Add
-        ( // Blocks 419329-427391 have version bit set in mainnet, 4031 voting, 4031 grace period
-            Update(EUpdate::DEPLOYMENT_V17, std::string("v17"), 0, 1, 419329, 4031, 12093, 4031, false, VoteThreshold(80, 60, 5), VoteThreshold(0, 0, 1))
+        (   // V17 voting blocks 419328-427391 in mainnet, 4032 voting, 4032 grace period, active at 427392
+            Update(EUpdate::DEPLOYMENT_V17, std::string("v17"), 0, 4032, 419328, 1, 3, 1, false, VoteThreshold(80, 60, 5), VoteThreshold(0, 0, 1), false, 427392)
         );
         // UpdateManager::Instance().Add
         // (

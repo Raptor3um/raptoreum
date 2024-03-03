@@ -11,7 +11,3 @@ endif
 if BUILD_BITCOIN_CLI
   dist_man1_MANS+=raptoreum-cli.1
 endif
-
-if BUILD_BITCOIN_TX
-  dist_man1_MANS+=raptoreum-tx.1
-endif

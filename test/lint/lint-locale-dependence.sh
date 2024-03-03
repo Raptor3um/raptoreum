@@ -5,9 +5,6 @@ export LC_ALL=C
 KNOWN_VIOLATIONS=(
     "src/base58.cpp:.*isspace"
     "src/bench/string_cast.cpp.*atoi"
-    "src/dash-tx.cpp.*stoul"
-    "src/dash-tx.cpp.*trim_right"
-    "src/dash-tx.cpp:.*atoi"
     "src/core_read.cpp.*is_digit"
     "src/dbwrapper.cpp.*stoul"
     "src/dbwrapper.cpp:.*vsnprintf"

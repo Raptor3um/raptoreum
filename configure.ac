@@ -22,7 +22,6 @@ fi
 BITCOIN_DAEMON_NAME=raptoreumd
 BITCOIN_GUI_NAME=raptoreum-qt
 BITCOIN_CLI_NAME=raptoreum-cli
-BITCOIN_TX_NAME=raptoreum-tx
 BITCOIN_WALLET_TOOL_NAME=raptoreum-wallet
 
 dnl Unless the user specified ARFLAGS, force it to be cr
@@ -589,7 +588,7 @@ CORE_CPPFLAGS="$CORE_CPPFLAGS -DHAVE_BUILD_INFO"
 
 AC_ARG_WITH([utils],
   [AS_HELP_STRING([--with-utils],
-  [build raptoreum-cli raptoreum-tx raptoreum-wallet (default=yes)])],
+  [build raptoreum-cli raptoreum-wallet (default=yes)])],
   [build_bitcoin_utils=$withval],
   [build_bitcoin_utils=yes])
 
@@ -598,11 +597,6 @@ AC_ARG_ENABLE([util-cli],
   [build raptoreum-cli])],
   [build_bitcoin_cli=$enableval],
   [build_bitcoin_cli=$build_bitcoin_utils])
-
-AC_ARG_ENABLE([util-tx],
-  [AS_HELP_STRING([--enable-util-tx],
-  [build raptoreum-tx (default=no)])],
-  [build_bitcoin_tx=$enableval])
 
 AC_ARG_ENABLE([util-wallet],
   [AS_HELP_STRING([--enable-util-wallet],
@@ -1241,7 +1235,6 @@ if test "$enable_fuzz" = "yes"; then
   AC_MSG_WARN([enable-fuzz will disable all other targets and force --enable-fuzz-binary=yes])
   build_bitcoin_utils=no
   build_bitcoin_cli=no
-  build_bitcoin_tx=no
   build_bitcoin_wallet=no
   build_bitcoind=no
   build_bitcoin_libs=no
@@ -1307,7 +1300,7 @@ if test "$enable_wallet" != "no"; then
   fi
 fi
 
-if test "$build_bitcoin_cli$build_bitcoin_tx$build_bitcoind$bitcoin_enable_qt$use_bench$use_tests" = "nononononono"; then
+if test "$build_bitcoin_cli$build_bitcoind$bitcoin_enable_qt$use_bench$use_tests" = "nononononono"; then
   use_upno=no
   use_natpmp=no
   use_zmq=no
@@ -1355,7 +1348,7 @@ if test "$use_natpmp" != "no"; then
   CPPFLAGS="$TEMP_CPPFLAGS"
 fi
 
-if test "$build_bitcoin_wallet$build_bitcoin_cli$build_bitcoin_tx$build_bitcoind$bitcoin_enable_qt$use_tests$use_bench" = "nonononononono"; then
+if test "$build_bitcoin_wallet$build_bitcoin_cli$build_bitcoind$bitcoin_enable_qt$use_tests$use_bench" = "nonononononono"; then
     use_boost=no
 else
     use_boost=yes
@@ -1490,10 +1483,6 @@ AC_MSG_RESULT([$build_bitcoind])
 AC_MSG_CHECKING([whether to build raptoreum-cli])
 AM_CONDITIONAL([BUILD_BITCOIN_CLI], [test $build_bitcoin_cli = "yes"])
 AC_MSG_RESULT([$build_bitcoin_cli])
-
-AC_MSG_CHECKING([whether to build raptoreum-tx])
-AM_CONDITIONAL([BUILD_BITCOIN_TX], [test $build_bitcoin_tx = "yes"])
-AC_MSG_RESULT([$build_bitcoin_tx])
 
 AC_MSG_CHECKING([whether to build raptoreum-wallet])
 AM_CONDITIONAL([BUILD_BITCOIN_WALLET], [test $build_bitcoin_wallet = "yes"])
@@ -1664,7 +1653,7 @@ else
 fi
 AC_MSG_RESULT([$dsymutil_needs_flat])
 
-if test "$build_bitcoin_wallet$build_bitcoin_cli$build_bitcoin_tx$build_bitcoin_libs$build_bitcoind$bitcoin_enable_qt$use_bench$use_tests" = "nononononononono"; then
+if test "$build_bitcoin_wallet$build_bitcoin_cli$build_bitcoin_libs$build_bitcoind$bitcoin_enable_qt$use_bench$use_tests" = "nononononononono"; then
   AC_MSG_ERROR([No targets! Please specify at least one of: --with-utils --with-libs --with-daemon --with-gui --enable-bench or --enable-tests])
 fi
 
@@ -1719,7 +1708,6 @@ AC_SUBST(COPYRIGHT_HOLDERS_FINAL, "_COPYRIGHT_HOLDERS_FINAL")
 AC_SUBST(BITCOIN_DAEMON_NAME)
 AC_SUBST(BITCOIN_GUI_NAME)
 AC_SUBST(BITCOIN_CLI_NAME)
-AC_SUBST(BITCOIN_TX_NAME)
 AC_SUBST(BITCOIN_WALLET_TOOL_NAME)
 
 AC_SUBST(RELDFLAGS)
