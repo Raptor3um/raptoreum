@@ -4775,7 +4775,7 @@ EXCLUSIVE_LOCKS_REQUIRED(cs_main)
                 LogPrintf("%s: address index %s\n", __func__, fAddressIndex ? "enabled" : "disabled");
 
                 // Check whether we have an address index
-                pblocktree->ReadFlag("addressindex", fAssetIndex);
+                pblocktree->ReadFlag("assetindex", fAssetIndex);
                 LogPrintf("%s: asset index %s\n", __func__, fAssetIndex ? "enabled" : "disabled");
 
                 // Check whether we have a timestamp index
@@ -5101,6 +5101,7 @@ bool ChainstateManager::LoadBlockIndex(const CChainParams &chainparams) {
 
         // Use the provided setting for -assetindex in the new database
         fAssetIndex = gArgs.GetBoolArg("-assetindex", DEFAULT_ASSETINDEX);
+        std::cerr << "LoadBlockIndex: -assetindex: " << fAssetIndex << std::endl;
         pblocktree->WriteFlag("assetindex", fAssetIndex);
 
         // Use the provided setting for -timestampindex in the new database
