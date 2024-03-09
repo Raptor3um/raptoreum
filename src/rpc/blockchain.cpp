@@ -31,13 +31,13 @@
 #include <txdb.h>
 #include <txmempool.h>
 #include <undo.h>
+#include <update/update.h>
 #include <util/ref.h>
 #include <util/system.h>
 #include <util/strencodings.h>
 #include <util/validation.h>
 #include <validation.h>
 #include <validationinterface.h>
-#include <versionbitsinfo.h>
 #include <warnings.h>
 
 #include <evo/specialtx.h>
@@ -1561,54 +1561,6 @@ static UniValue SoftForkDesc(const std::string &name, int version, const CBlockI
     return rv;
 }
 
-static UniValue BIP9SoftForkDesc(const Consensus::Params &consensusParams, Consensus::DeploymentPos id) {
-    UniValue rv(UniValue::VOBJ);
-    const ThresholdState thresholdState = VersionBitsTipState(consensusParams, id);
-    switch (thresholdState) {
-        case ThresholdState::DEFINED:
-            rv.pushKV("status", "defined");
-            break;
-        case ThresholdState::STARTED:
-            rv.pushKV("status", "started");
-            break;
-        case ThresholdState::LOCKED_IN:
-            rv.pushKV("status", "locked_in");
-            break;
-        case ThresholdState::ACTIVE:
-            rv.pushKV("status", "active");
-            break;
-        case ThresholdState::FAILED:
-            rv.pushKV("status", "failed");
-            break;
-    }
-    if (ThresholdState::STARTED == thresholdState) {
-        rv.pushKV("bit", consensusParams.vDeployments[id].bit);
-    }
-    rv.pushKV("startTime", consensusParams.vDeployments[id].nStartTime);
-    rv.pushKV("timeout", consensusParams.vDeployments[id].nTimeout);
-    rv.pushKV("since", VersionBitsTipStateSinceHeight(consensusParams, id));
-    if (ThresholdState::STARTED == thresholdState) {
-        UniValue statsUV(UniValue::VOBJ);
-        BIP9Stats statsStruct = VersionBitsTipStatistics(consensusParams, id);
-        statsUV.pushKV("period", statsStruct.period);
-        statsUV.pushKV("threshold", statsStruct.threshold);
-        statsUV.pushKV("elapsed", statsStruct.elapsed);
-        statsUV.pushKV("count", statsStruct.count);
-        statsUV.pushKV("possible", statsStruct.possible);
-        rv.pushKV("statistics", statsUV);
-    }
-    return rv;
-}
-
-void BIP9SoftForkDescPushBack(UniValue &bip9_softforks, const Consensus::Params &consensusParams,
-                              Consensus::DeploymentPos id) {
-    // Deployments with timeout value of 0 are hidden.
-    // A timeout value of 0 guarantees a softfork will never be activated.
-    // This is used when softfork codes are merged without specifying the deployment schedule.
-    if (consensusParams.vDeployments[id].nTimeout > 0)
-        bip9_softforks.pushKV(VersionBitsDeploymentInfo[id].name, BIP9SoftForkDesc(consensusParams, id));
-}
-
 UniValue getblockchaininfo(const JSONRPCRequest &request) {
     RPCHelpMan{"getblockchaininfo",
                "Returns an object containing various state info regarding blockchain processing.\n",
@@ -1736,6 +1688,27 @@ UniValue getblockchaininfo(const JSONRPCRequest &request) {
     // for (int pos = Consensus::DEPLOYMENT_CSV; pos != Consensus::MAX_VERSION_BITS_DEPLOYMENTS; ++pos) {
     //     BIP9SoftForkDescPushBack(bip9_softforks, consensusParams, static_cast<Consensus::DeploymentPos>(pos));
     // }
+    for (int i = 0; i < static_cast<int>(EUpdate::MAX_VERSION_BITS_DEPLOYMENTS); ++i) {
+        StateInfo state = UpdateManager::Instance().State( static_cast<EUpdate>(i), ::ChainActive().Tip());
+        if (state.State == EUpdateState::Unknown)
+            continue;
+        const Update* update = UpdateManager::Instance().GetUpdate(static_cast<EUpdate>(i));
+        UniValue rv(UniValue::VOBJ);
+        switch (state.State) {
+            case EUpdateState::Defined: rv.pushKV("status", "defined"); break;
+            case EUpdateState::Failed: rv.pushKV("status", "failed"); break;
+            case EUpdateState::LockedIn: rv.pushKV("status", "locked_in"); break;
+            case EUpdateState::Voting: rv.pushKV("status", "voting"); break;
+            case EUpdateState::Active: rv.pushKV("status", "active"); break;
+        }
+        if (state.State == EUpdateState::Voting) {
+            rv.pushKV("bit", update->Bit());
+        }
+        rv.pushKV("start_height", update->StartHeight());
+        rv.pushKV("round_size", update->RoundSize());
+        rv.pushKV("voting_period", update->VotingPeriod());
+        bip9_softforks.pushKV(update->Name(), rv);
+    }
     obj.pushKV("softforks", softforks);
     obj.pushKV("bip9_softforks", bip9_softforks);
     obj.pushKV("warnings", GetWarnings(false));

@@ -19,13 +19,14 @@ namespace llmq {
 // This is mined on-chain as part of TRANSACTION_QUORUM_COMMITMENT
     class CFinalCommitment {
     public:
-        static const uint16_t CURRENT_VERSION = 1;
+        static const uint16_t CURRENT_VERSION = 2;
 
-        uint16_t nVersion{CURRENT_VERSION};
+        uint16_t nVersion{1};
         Consensus::LLMQType llmqType{Consensus::LLMQ_NONE};
         uint256 quorumHash;
         std::vector<bool> signers;
         std::vector<bool> validMembers;
+        Consensus::CQuorumUpdateVoteVec quorumUpdateVotes;
 
         CBLSPublicKey quorumPublicKey;
         uint256 quorumVvecHash;
@@ -51,11 +52,14 @@ namespace llmq {
 
         bool VerifySizes(const Consensus::LLMQParams &params) const;
 
-        SERIALIZE_METHODS(CFinalCommitment, obj
-        )
+        SERIALIZE_METHODS(CFinalCommitment, obj)
         {
-            READWRITE(obj.nVersion, obj.llmqType, obj.quorumHash, DYNBITSET(obj.signers), DYNBITSET(obj.validMembers),
-                      obj.quorumPublicKey, obj.quorumVvecHash, obj.quorumSig, obj.membersSig);
+            READWRITE(obj.nVersion, obj.llmqType, obj.quorumHash, DYNBITSET(obj.signers), DYNBITSET(obj.validMembers));
+            if (obj.nVersion > 1)
+            {
+               READWRITE(obj.quorumUpdateVotes);
+            }
+            READWRITE(obj.quorumPublicKey, obj.quorumVvecHash, obj.quorumSig, obj.membersSig);
         }
 
         bool IsNull() const {
@@ -83,6 +87,16 @@ namespace llmq {
             obj.pushKV("validMembers", CLLMQUtils::ToHexStr(validMembers));
             obj.pushKV("quorumPublicKey", quorumPublicKey.ToString());
             obj.pushKV("quorumVvecHash", quorumVvecHash.ToString());
+            if (quorumUpdateVotes.size() > 0) {
+                UniValue votes(UniValue::VARR);
+                for (const auto& vote: quorumUpdateVotes) {
+                    UniValue eObj(UniValue::VOBJ);
+                    eObj.pushKV("bit", vote.bit);
+                    eObj.pushKV("votes", vote.votes);
+                    votes.push_back(eObj);
+                }
+                obj.pushKV("updateVotes", votes);
+            }
             obj.pushKV("quorumSig", quorumSig.ToString());
             obj.pushKV("membersSig", membersSig.ToString());
         }
@@ -98,8 +112,7 @@ namespace llmq {
         uint32_t nHeight{(uint32_t) - 1};
         CFinalCommitment commitment;
 
-        SERIALIZE_METHODS(CFinalCommitmentTxPayload, obj
-        )
+        SERIALIZE_METHODS(CFinalCommitmentTxPayload, obj)
         {
             READWRITE(obj.nVersion, obj.nHeight, obj.commitment);
         }

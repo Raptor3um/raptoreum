@@ -15,6 +15,7 @@
 #include <consensus/validation.h>
 #include <index/txindex.h>
 #include <txmempool.h>
+#include <update/update.h>
 #include <util/ranges.h>
 #include <smartnode/smartnode-sync.h>
 #include <net_processing.h>
@@ -1290,9 +1291,7 @@ namespace llmq {
 
     void CInstantSendManager::UpdatedBlockTip(const CBlockIndex *pindexNew) {
         if (!fUpgradedDB) {
-            if (WITH_LOCK(cs_llmq_vbc,
-                return VersionBitsState(pindexNew, Params().GetConsensus(), Consensus::DEPLOYMENT_V17,
-                                        llmq_versionbitscache) == ThresholdState::ACTIVE)) {
+            if (UpdateManager::Instance().IsActive(EUpdate::DEPLOYMENT_V17, pindexNew)) {
                 db.Upgrade();
                 fUpgradedDB = true;
             }

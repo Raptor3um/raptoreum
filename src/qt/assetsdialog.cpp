@@ -67,7 +67,7 @@ AssetsDialog::AssetsDialog(QWidget *parent) :
     QAction *sendAssetAction = new QAction(tr("Send asset"), this);
     QAction *copyAssetNameAction = new QAction(tr("Copy asset name"), this);
     QAction *detailsAction = new QAction(tr("View details"), this);
-    
+
     contextMenuAsset = new QMenu(this);
     contextMenuAsset->addAction(sendAssetAction);
     contextMenuAsset->addAction(detailsAction);
@@ -78,7 +78,7 @@ AssetsDialog::AssetsDialog(QWidget *parent) :
     connect(ui->tableWidgetAssets, &QTableWidget::doubleClicked, this, &AssetsDialog::Asset_details_clicked);
     connect(sendAssetAction, &QAction::triggered, this, &AssetsDialog::SendAsset_clicked);
     connect(detailsAction, &QAction::triggered, this, &AssetsDialog::Asset_details_clicked);
-    
+
     timer = new QTimer(this);
     connect(timer, &QTimer::timeout, this, &AssetsDialog::updateAssetBalanceScheduled);
     timer->start(1000);
@@ -115,10 +115,15 @@ void AssetsDialog::updateAssetBalance(){
 }
 
 void AssetsDialog::updateAssetBalanceScheduled() {
-    int num_block = clientModel->node().getNumBlocks();
-    if (!walletModel || !clientModel || clientModel->node().shutdownRequested() || (!balanceChanged && num_block == cachedNumBlocks)) {
+    if (!walletModel || !clientModel || clientModel->node().shutdownRequested()) {
         return;
     }
+    // Fix crash if the node is shutting down
+    int num_block = clientModel->node().getNumBlocks();
+    if (!balanceChanged && num_block == cachedNumBlocks) {
+        return;
+    }
+
     cachedNumBlocks = num_block;
     balanceChanged = false;
 
@@ -140,7 +145,7 @@ void AssetsDialog::updateAssetBalanceScheduled() {
                 BitcoinUnits::format(8, it.second.first / BitcoinUnits::factorAsset(MAX_ASSET_UNITS -  asset.decimalPoint) , false, BitcoinUnits::separatorAlways, asset.decimalPoint), it.second.first);
         QTableWidgetItem *pending = new CAssetListWidgetItem<CAmount>(
                 BitcoinUnits::format(8, it.second.second / BitcoinUnits::factorAsset(MAX_ASSET_UNITS -  asset.decimalPoint) , false, BitcoinUnits::separatorAlways, asset.decimalPoint), it.second.second);
-                
+
 
         ui->tableWidgetAssets->insertRow(0);
         ui->tableWidgetAssets->setItem(0, COLUMN_NAME, name);
@@ -156,7 +161,7 @@ void AssetsDialog::updateAssetBalanceScheduled() {
         auto tmp = assetsbalance.find(assetId);
         if (tmp != assetsbalance.end() || !walletModel->wallet().isSpendable(it.second.second))
             continue;
-        
+
         QTableWidgetItem *name = new CAssetListWidgetItem<QString>(
                 QString::fromStdString(it.second.first), QString::fromStdString(it.second.first));
         QTableWidgetItem *asset_Id = new CAssetListWidgetItem<QString>(
@@ -165,7 +170,7 @@ void AssetsDialog::updateAssetBalanceScheduled() {
                 QString::number(0), 0);
         QTableWidgetItem *pending = new CAssetListWidgetItem<CAmount>(
                 QString::number(0), 0);
-                
+
         ui->tableWidgetAssets->insertRow(0);
         ui->tableWidgetAssets->setItem(0, COLUMN_NAME, name);
         ui->tableWidgetAssets->setItem(0, COLUMN_ID, asset_Id);
@@ -216,7 +221,7 @@ void AssetsDialog::Asset_clicked() {
         ui->typeLabel->clear();
         ui->mintButton->setEnabled(false);
         ui->updateButton->setEnabled(false);
-        return;      
+        return;
     }
     //hide error labels
     ui->errorLabel->setVisible(false);
@@ -226,12 +231,12 @@ void AssetsDialog::Asset_clicked() {
     ui->typeLabel->setText( asset.isUnique ? "Unique/NFT" : "Root");
     if (asset.mintCount > 0) {
         QString decimal = asset.decimalPoint > 0 ? "." + QString::number(0).rightJustified(asset.decimalPoint, '0') : "";
-        ui->suplyTextLabel->setText(BitcoinUnits::format(8, asset.circulatingSupply, false, 
+        ui->suplyTextLabel->setText(BitcoinUnits::format(8, asset.circulatingSupply, false,
                         BitcoinUnits::separatorAlways, 0) + decimal);
     } else {
         ui->suplyTextLabel->setText("0");
     }
-    
+
     if (walletModel->wallet().isSpendable(asset.ownerAddress)){
         ui->updateButton->setVisible(true);
         ui->mintButton->setVisible(true);
@@ -254,7 +259,7 @@ void AssetsDialog::Asset_details_clicked() {
     if (passetsCache->GetAssetMetaData(assetId, asset)) {
         UniValue json(UniValue::VOBJ);
         asset.ToJson(json);
-        
+
         QMessageBox msgBox;
         msgBox.setIcon(QMessageBox::Information);
         msgBox.setWindowTitle(tr("Details for asset: %1").arg(QString::fromStdString(asset.name)));
@@ -328,7 +333,7 @@ void AssetsDialog::mintAsset() {
     CMintAssetTx mintAsset;
     mintAsset.assetId = tmpAsset.assetId;
     mintAsset.fee = getAssetsFees();
-    
+
     CCoinControl coinControl;
     if (!Params().IsRootAssetsActive(::ChainActive().Tip())) {
         CTxDestination ownerAddress = CTxDestination(tmpAsset.ownerAddress);
@@ -391,7 +396,7 @@ void AssetsDialog::mintAsset() {
         vecSend.push_back(recipient);
     }
     int Payloadsize;
-    
+
     if (!walletModel->wallet().createTransaction(vecSend, wtx, coinControl, true, nChangePos, nFee, strFailReason,
                                 Payloadsize, nullptr, &mintAsset)) {
         //handle creation error
@@ -401,7 +406,7 @@ void AssetsDialog::mintAsset() {
         msgBox.exec();
         return;
     }
- 
+
     QString questionString = tr("Mint details:");
     questionString.append("<hr />");
     questionString.append(tr("Name: %1 <br>").arg(QString::fromStdString(tmpAsset.name)));

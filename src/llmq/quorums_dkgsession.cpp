@@ -18,6 +18,7 @@
 #include <netmessagemaker.h>
 #include <univalue.h>
 #include <validation.h>
+#include <update/update.h>
 
 #include <cxxtimer.hpp>
 #include <memory>
@@ -72,6 +73,7 @@ namespace llmq {
         members.resize(mns.size());
         memberIds.resize(members.size());
         receivedVvecs.resize(members.size());
+        receivedVersions.resize(members.size());
         receivedSkContributions.resize(members.size());
         vecEncryptedContributions.resize(members.size());
 
@@ -147,6 +149,11 @@ namespace llmq {
         }
 
         CDKGContribution qc;
+        if (UpdateManager::Instance().IsActive(EUpdate::ROUND_VOTING, m_quorum_base_block_index)) {
+            qc.nVersion = 1;
+            // Vote on active update proposals
+            qc.nVersion = UpdateManager::Instance().ComputeBlockVersion(m_quorum_base_block_index);
+        }
         qc.llmqType = params.type;
         qc.quorumHash = m_quorum_base_block_index->GetBlockHash();
         qc.proTxHash = myProTxHash;
@@ -197,6 +204,11 @@ namespace llmq {
 
         if (qc.quorumHash != m_quorum_base_block_index->GetBlockHash()) {
             logger.Batch("contribution for wrong quorum, rejecting");
+            return false;
+        }
+
+        if (qc.nVersion < 2 && UpdateManager::Instance().IsActive(EUpdate::ROUND_VOTING, m_quorum_base_block_index)) {
+            logger.Batch("contribution from pre round voting node, rejecting");
             return false;
         }
 
@@ -277,6 +289,7 @@ namespace llmq {
         }
 
         receivedVvecs[member->idx] = qc.vvec;
+        receivedVersions[member->idx] = qc.nVersion;
 
         int receivedCount = ranges::count_if(members, [](const auto &m) { return !m->contributions.empty(); });
 
@@ -350,6 +363,7 @@ namespace llmq {
         std::vector <size_t> memberIndexes;
         std::vector <BLSVerificationVectorPtr> vvecs;
         BLSSecretKeyVector skContributions;
+        std::vector <uint32_t> voteVersions;
 
         for (const auto &idx: pend) {
             const auto &m = members[idx];
@@ -359,6 +373,7 @@ namespace llmq {
             memberIndexes.emplace_back(idx);
             vvecs.emplace_back(receivedVvecs[idx]);
             skContributions.emplace_back(receivedSkContributions[idx]);
+            voteVersions.emplace_back(receivedVersions[idx]);
             // Write here to definitely store one contribution for each member no matter if
             // our share is valid or not, could be that others are still correct
             dkgManager.WriteEncryptedContributions(params.type, m_quorum_base_block_index, m->dmn->proTxHash,
@@ -386,6 +401,9 @@ namespace llmq {
                 size_t memberIdx = memberIndexes[i];
                 dkgManager.WriteVerifiedSkContribution(params.type, m_quorum_base_block_index,
                                                        members[memberIdx]->dmn->proTxHash, skContributions[i]);
+                //Write vote to disc
+                dkgManager.WriteUpdateVote(params.type, m_quorum_base_block_index,
+                                                       members[memberIdx]->dmn->proTxHash, voteVersions[i]);
             }
         }
 
@@ -946,7 +964,7 @@ namespace llmq {
         std::vector <BLSVerificationVectorPtr> vvecs;
         BLSSecretKeyVector skContributions;
         if (!dkgManager.GetVerifiedContributions(params.type, m_quorum_base_block_index, qc.validMembers, memberIndexes,
-                                                 vvecs, skContributions)) {
+                                                 vvecs, skContributions, qc.quorumUpdateVotes)) {
             logger.Batch("failed to get valid contributions");
             return;
         }
@@ -986,15 +1004,20 @@ namespace llmq {
             (*qc.quorumVvecHash.begin())++;
         }
 
-        uint256 commitmentHash = CLLMQUtils::BuildCommitmentHash(qc.llmqType, qc.quorumHash, qc.validMembers,
-                                                                 qc.quorumPublicKey, qc.quorumVvecHash);
+        uint256 commitmentHash;
+        if (UpdateManager::Instance().IsActive(EUpdate::ROUND_VOTING, m_quorum_base_block_index)) {
+            qc.roundVoting = true;
+            commitmentHash = CLLMQUtils::BuildCommitmentHash(qc.llmqType, qc.quorumHash, qc.validMembers, qc.quorumUpdateVotes, qc.quorumPublicKey, qc.quorumVvecHash);
+        }
+        else {
+            commitmentHash = CLLMQUtils::BuildCommitmentHash(qc.llmqType, qc.quorumHash, qc.validMembers, qc.quorumPublicKey, qc.quorumVvecHash);
+        }
 
         if (lieType == 2) {
             (*commitmentHash.begin())++;
         }
 
-        qc.sig = WITH_LOCK(activeSmartnodeInfoCs,
-        return activeSmartnodeInfo.blsKeyOperator->Sign(commitmentHash));
+        qc.sig = WITH_LOCK(activeSmartnodeInfoCs, return activeSmartnodeInfo.blsKeyOperator->Sign(commitmentHash));
         qc.quorumSig = skShare.Sign(commitmentHash);
 
         if (lieType == 3) {
@@ -1053,6 +1076,21 @@ namespace llmq {
             retBan = true;
             return false;
         }
+
+        Consensus::CQuorumUpdateVoteVec quorumUpdateVotes;
+        for (size_t i = 0; i < members.size(); ++i) {
+            if (qc.validMembers[i]) {
+                uint32_t version = receivedVersions[i];
+                quorumUpdateVotes.AddVotes(version);
+            }
+        }
+
+        if (quorumUpdateVotes != qc.quorumUpdateVotes) {
+            logger.Batch("Inconsistent update vote counts");
+            retBan = true;
+            return false;
+        }
+
         if (!qc.sig.IsValid()) {
             logger.Batch("invalid membersSig");
             retBan = true;
@@ -1110,8 +1148,9 @@ namespace llmq {
         std::vector <BLSVerificationVectorPtr> vvecs;
         BLSSecretKeyVector skContributions;
         BLSVerificationVectorPtr quorumVvec;
+        Consensus::CQuorumUpdateVoteVec updateVoteVec;
         if (dkgManager.GetVerifiedContributions(params.type, m_quorum_base_block_index, qc.validMembers, memberIndexes,
-                                                vvecs, skContributions)) {
+                                                vvecs, skContributions, updateVoteVec)) {
             quorumVvec = cache.BuildQuorumVerificationVector(::SerializeHash(memberIndexes), vvecs);
         }
 
@@ -1214,9 +1253,19 @@ namespace llmq {
             fqc.validMembers = first.validMembers;
             fqc.quorumPublicKey = first.quorumPublicKey;
             fqc.quorumVvecHash = first.quorumVvecHash;
+            fqc.quorumUpdateVotes = first.quorumUpdateVotes;
 
-            uint256 commitmentHash = CLLMQUtils::BuildCommitmentHash(fqc.llmqType, fqc.quorumHash, fqc.validMembers,
-                                                                     fqc.quorumPublicKey, fqc.quorumVvecHash);
+            if (first.roundVoting) {
+                fqc.nVersion = 2;
+            }
+
+            uint256 commitmentHash;
+            if (UpdateManager::Instance().IsActive(EUpdate::ROUND_VOTING, m_quorum_base_block_index)) {
+                commitmentHash = CLLMQUtils::BuildCommitmentHash(fqc.llmqType, fqc.quorumHash, fqc.validMembers, fqc.quorumUpdateVotes, fqc.quorumPublicKey, fqc.quorumVvecHash);
+            }
+            else {
+                commitmentHash = CLLMQUtils::BuildCommitmentHash(fqc.llmqType, fqc.quorumHash, fqc.validMembers, fqc.quorumPublicKey, fqc.quorumVvecHash);
+            }
 
             std::vector <CBLSSignature> aggSigs;
             std::vector <CBLSPublicKey> aggPks;

@@ -13,7 +13,6 @@
 #include <random.h>
 #include <sync.h>
 #include <dbwrapper.h>
-#include <versionbits.h>
 
 class CConnman;
 
@@ -26,12 +25,6 @@ using CDeterministicMNCPtr = std::shared_ptr<const CDeterministicMN>;
 class CBLSPublicKey;
 
 namespace llmq {
-
-// Use a separate cache instance instead of versionbitscache to avoid locking cs_main
-// and dealing with all kinds of deadlocks.
-    extern RecursiveMutex cs_llmq_vbc;
-    extern VersionBitsCache llmq_versionbitscache
-    GUARDED_BY(cs_llmq_vbc);
 
     static const bool DEFAULT_ENABLE_QUORUM_DATA_RECOVERY = true;
 
@@ -49,6 +42,13 @@ namespace llmq {
 
         static uint256 BuildCommitmentHash(Consensus::LLMQType llmqType, const uint256 &blockHash,
                                            const std::vector<bool> &validMembers, const CBLSPublicKey &pubKey,
+                                           const uint256 &vvecHash);
+
+        // New commitment hash, including node voting
+        static uint256 BuildCommitmentHash(Consensus::LLMQType llmqType, const uint256 &blockHash,
+                                           const std::vector<bool> &validMembers,
+                                           const std::vector<Consensus::CQuorumUpdateVote>& quorumUpdateVotes,
+                                           const CBLSPublicKey &pubKey,
                                            const uint256 &vvecHash);
 
         static uint256 BuildSignHash(Consensus::LLMQType llmqType, const uint256 &quorumHash, const uint256 &id,

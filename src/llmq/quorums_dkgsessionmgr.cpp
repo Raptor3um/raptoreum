@@ -21,6 +21,7 @@ namespace llmq {
     static const std::string DB_VVEC = "qdkg_V";
     static const std::string DB_SKCONTRIB = "qdkg_S";
     static const std::string DB_ENC_CONTRIB = "qdkg_E";
+    static const std::string DB_NODE_VOTE = "qdkg_U";
 
     CDKGSessionManager::CDKGSessionManager(CConnman &_connman, CBLSWorker &_blsWorker, bool unitTests, bool fWipe) :
             db(std::make_unique<CDBWrapper>(unitTests ? "" : (GetDataDir() / "llmq/dkgdb"), 1 << 20, unitTests, fWipe)),
@@ -177,8 +178,12 @@ namespace llmq {
             return;
         }
 
-        // peek into the message and see which LLMQType it is. First byte of all messages is always the LLMQType
+        // Peek into the message and see which LLMQType it is. First byte of all messages is always the LLMQType
         Consensus::LLMQType llmqType = (Consensus::LLMQType) * vRecv.begin();
+        if (llmqType == Consensus::LLMQType::LLMQ_INVALID && (strCommand == NetMsgType::QCONTRIB || strCommand == NetMsgType::QPCOMMITMENT)) {
+            llmqType = (Consensus::LLMQType) * (vRecv.begin() + 1);
+        }
+
         if (!dkgSessionHandlers.count(llmqType)) {
             LOCK(cs_main);
             LogPrint(BCLog::LLMQ_DKG, "CDKGSessionManager::%s -- invalid llmqType received %d\n", __func__, llmqType);
@@ -309,12 +314,20 @@ namespace llmq {
                   contributions);
     }
 
+    void CDKGSessionManager::WriteUpdateVote(Consensus::LLMQType llmqType,
+                                                const CBlockIndex *pQuorumBaseBlockIndex,
+                                                const uint256 &proTxHash,
+                                                const uint32_t& updateVote) {
+        db->Write(std::make_tuple(DB_NODE_VOTE, llmqType, pQuorumBaseBlockIndex->GetBlockHash(), proTxHash), updateVote);
+    }
+
     bool
     CDKGSessionManager::GetVerifiedContributions(Consensus::LLMQType llmqType, const CBlockIndex *pQuorumBaseBlockIndex,
                                                  const std::vector<bool> &validMembers,
                                                  std::vector <uint16_t> &memberIndexesRet,
                                                  std::vector <BLSVerificationVectorPtr> &vvecsRet,
-                                                 BLSSecretKeyVector &skContributionsRet) const {
+                                                 BLSSecretKeyVector &skContributionsRet,
+                                                 Consensus::CQuorumUpdateVoteVec &updateVotesRet) const {
         LOCK(contributionsCacheCs);
         auto members = CLLMQUtils::GetAllQuorumMembers(GetLLMQParams(llmqType), pQuorumBaseBlockIndex);
 
@@ -324,6 +337,7 @@ namespace llmq {
         memberIndexesRet.reserve(members.size());
         vvecsRet.reserve(members.size());
         skContributionsRet.reserve(members.size());
+        updateVotesRet.clear();
         for (size_t i = 0; i < members.size(); i++) {
             if (validMembers[i]) {
                 const uint256 &proTxHash = members[i]->proTxHash;
@@ -342,13 +356,22 @@ namespace llmq {
                     db->Read(std::make_tuple(DB_SKCONTRIB, llmqType, pQuorumBaseBlockIndex->GetBlockHash(), proTxHash),
                              skContribution);
 
-                    it = contributionsCache.emplace(cacheKey, ContributionsCacheEntry{GetTimeMillis(), vvecPtr,
+                    uint32_t nVersion = 0;
+                    if (UpdateManager::Instance().IsActive(EUpdate::ROUND_VOTING, pQuorumBaseBlockIndex)) {
+                        db->Read(std::make_tuple(DB_NODE_VOTE, llmqType, pQuorumBaseBlockIndex->GetBlockHash(), proTxHash),
+                                nVersion);
+                    }
+                    it = contributionsCache.emplace(cacheKey, ContributionsCacheEntry{GetTimeMillis(), nVersion, vvecPtr,
                                                                                       skContribution}).first;
                 }
 
                 memberIndexesRet.emplace_back(i);
                 vvecsRet.emplace_back(it->second.vvec);
                 skContributionsRet.emplace_back(it->second.skContribution);
+                if (it->second.nVersion != 0)
+                {
+                    updateVotesRet.AddVotes(it->second.nVersion);
+                }
             }
         }
         return true;

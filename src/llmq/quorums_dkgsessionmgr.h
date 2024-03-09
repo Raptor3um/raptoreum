@@ -43,6 +43,7 @@ namespace llmq {
 
         struct ContributionsCacheEntry {
             int64_t entryTime;
+            uint32_t nVersion;
             BLSVerificationVectorPtr vvec;
             CBLSSecretKey skContribution;
         };
@@ -82,7 +83,8 @@ namespace llmq {
         bool GetVerifiedContributions(Consensus::LLMQType llmqType, const CBlockIndex *pQuorumBaseBlockIndex,
                                       const std::vector<bool> &validMembers, std::vector <uint16_t> &memberIndexesRet,
                                       std::vector <BLSVerificationVectorPtr> &vvecsRet,
-                                      BLSSecretKeyVector &skContributionsRet) const;
+                                      BLSSecretKeyVector &skContributionsRet,
+                                      Consensus::CQuorumUpdateVoteVec &updateVotesRet) const;
 
         /// Write encrypted (unverified) DKG contributions for the member with the given proTxHash to the llmqDb
         void WriteEncryptedContributions(Consensus::LLMQType llmqType, const CBlockIndex *pQuorumBaseBlockIndex,
@@ -93,6 +95,12 @@ namespace llmq {
         bool GetEncryptedContributions(Consensus::LLMQType llmqType, const CBlockIndex *pQuorumBaseBlockIndex,
                                        const std::vector<bool> &validMembers, const uint256 &proTxHash,
                                        std::vector <CBLSIESEncryptedObject<CBLSSecretKey>> &vecRet) const;
+
+        // Write UpdateVote for the member with the given proTxHash to the llmqDb
+        void WriteUpdateVote(Consensus::LLMQType llmqType,
+                                const CBlockIndex *pQuorumBaseBlockIndex,
+                                const uint256 &proTxHash,
+                                const uint32_t& updateVote);
 
     private:
         void MigrateDKG();

@@ -50,17 +50,3 @@ Description: peer-to-peer network based digital currency - Qt GUI
  is the name of the open source software which enables the use of this currency.
  .
  This package provides Raptoreum-Qt, a GUI for Raptoreum based on Qt.
-
-Package: raptoreum-tx
-Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: peer-to-peer digital currency - standalone transaction tool
- Raptoreum is an experimental new digital currency that enables instant, private
- payments to anyone, anywhere in the world. Raptoreum uses peer-to-peer
- technology to operate with no central authority: managing transactions
- and issuing money are carried out collectively by the network. Raptoreum Core
- is the name of the open source software which enables the use of this currency.
- .
- This package provides raptoreum-tx, a command-line transaction creation
- tool which can be used without a raptoreum daemon.  Some means of
- exchanging minimal transaction data with peers is still required.

@@ -105,9 +105,6 @@ if BUILD_BITCOIN_CLI
   bin_PROGRAMS += raptoreum-cli
 endif
 
-if BUILD_BITCOIN_TX
-  bin_PROGRAMS += raptoreum-tx
-endif
 if ENABLE_WALLET
 if BUILD_BITCOIN_WALLET
   bin_PROGRAMS += raptoreum-wallet
@@ -289,6 +286,7 @@ BITCOIN_CORE_H = \
   ui_interface.h \
   undo.h \
   unordered_lru_cache.h \
+  update/update.h \
   util/bip32.h \
   util/bytevectorhash.h \
   util/check.h \
@@ -310,8 +308,6 @@ BITCOIN_CORE_H = \
   util/validation.h \
   validation.h \
   validationinterface.h \
-  versionbits.h \
-  versionbitsinfo.h \
   walletinitinterface.h \
   wallet/bdb.h \
   wallet/coincontrol.h \
@@ -445,7 +441,6 @@ libraptoreum_server_a_SOURCES = \
   ui_interface.cpp \
   validation.cpp \
   validationinterface.cpp \
-  versionbits.cpp \
   $(BITCOIN_CORE_H)
 
 if ENABLE_WALLET
@@ -699,8 +694,7 @@ libraptoreum_common_a_SOURCES = \
   script/descriptor.cpp \
   script/sign.cpp \
   script/standard.cpp \
-  versionbits.cpp \
-  versionbitsinfo.cpp \
+  update/update.cpp \
   warnings.cpp \
   $(BITCOIN_CORE_H)
 
@@ -801,26 +795,6 @@ raptoreum_cli_LDADD = \
   $(LIBBITCOIN_CRYPTO)
 
 raptoreum_cli_LDADD += $(BACKTRACE_LIB) $(BOOST_LIBS) $(EVENT_LIBS) $(BLS_LIBS) $(GMP_LIBS)
-
-# raptoreum-tx binary #
-raptoreum_tx_SOURCES = raptoreum-tx.cpp
-raptoreum_tx_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
-raptoreum_tx_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-raptoreum_tx_LDFLAGS = $(LDFLAGS_WRAP_EXCEPTIONS) $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
-
-if TARGET_WINDOWS
-raptoreum_tx_SOURCES += raptoreum-tx-res.rc
-endif
-
-raptoreum_tx_LDADD = \
-  $(LIBUNIVALUE) \
-  $(LIBBITCOIN_COMMON) \
-  $(LIBBITCOIN_UTIL) \
-  $(LIBBITCOIN_CONSENSUS) \
-  $(LIBBITCOIN_CRYPTO) \
-  $(LIBSECP256K1)
-
-raptoreum_tx_LDADD += $(BACKTRACE_LIB) $(BOOST_LIBS) $(BLS_LIBS) $(GMP_LIBS)
 
 # raptoreum-wallet binary #
 raptoreum_wallet_SOURCES = raptoreum-wallet.cpp

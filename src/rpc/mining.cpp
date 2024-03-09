@@ -26,13 +26,13 @@
 #include <script/sign.h>
 #include <shutdown.h>
 #include <txmempool.h>
+#include <update/update.h>
 #include <util/system.h>
 #include <util/fees.h>
 #include <util/strencodings.h>
 #include <util/validation.h>
 #include <validation.h>
 #include <validationinterface.h>
-#include <versionbitsinfo.h>
 #include <warnings.h>
 
 #include <governance/governance-classes.h>
@@ -410,10 +410,9 @@ static UniValue BIP22ValidationResult(const CValidationState &state) {
     return "valid?";
 }
 
-std::string gbt_vb_name(const Consensus::DeploymentPos pos) {
-    const struct VBDeploymentInfo &vbinfo = VersionBitsDeploymentInfo[pos];
-    std::string s = vbinfo.name;
-    if (!vbinfo.gbt_force) {
+std::string gbt_update_name(const Update* update) {
+    std::string s = update->Name();
+    if (update->ForcedUpdate()) {
         s.insert(s.begin(), '!');
     }
     return s;
@@ -759,40 +758,38 @@ static UniValue getblocktemplate(const JSONRPCRequest &request) {
 
     UniValue aRules(UniValue::VARR);
     UniValue vbavailable(UniValue::VOBJ);
-    for (int j = 0; j < (int) Consensus::MAX_VERSION_BITS_DEPLOYMENTS; ++j) {
-        Consensus::DeploymentPos pos = Consensus::DeploymentPos(j);
-        ThresholdState state = VersionBitsState(pindexPrev, consensusParams, pos, versionbitscache);
-        switch (state) {
-            case ThresholdState::DEFINED:
-            case ThresholdState::FAILED:
+    for (int i = 0; i < static_cast<int>(EUpdate::MAX_VERSION_BITS_DEPLOYMENTS); ++i) {
+        StateInfo state = UpdateManager::Instance().State( static_cast<EUpdate>(i), ::ChainActive().Tip());
+        const Update* update = UpdateManager::Instance().GetUpdate(static_cast<EUpdate>(i));
+        switch (state.State) {
+            case EUpdateState::Defined:
+            case EUpdateState::Failed:
                 // Not exposed to GBT at all
                 break;
-            case ThresholdState::LOCKED_IN:
+            case EUpdateState::LockedIn:
                 // Ensure bit is set in block version
-                pblock->nVersion |= VersionBitsMask(consensusParams, pos);
+                pblock->nVersion |= (((uint32_t) 1) << update->Bit());
                 [[fallthrough]];
-            case ThresholdState::STARTED: {
-                const struct VBDeploymentInfo &vbinfo = VersionBitsDeploymentInfo[pos];
-                vbavailable.pushKV(gbt_vb_name(pos), consensusParams.vDeployments[pos].bit);
-                if (setClientRules.find(vbinfo.name) == setClientRules.end()) {
-                    if (!vbinfo.gbt_force) {
+            case EUpdateState::Voting: {
+                vbavailable.pushKV(gbt_update_name(update), update->Bit());
+                if (setClientRules.find(update->Name()) == setClientRules.end()) {
+                    if (update->ForcedUpdate()) {
                         // If the client doesn't support this, don't indicate it in the [default] version
-                        pblock->nVersion &= ~VersionBitsMask(consensusParams, pos);
+                        pblock->nVersion &= ~(((uint32_t) 1) << update->Bit());
                     }
                 }
                 break;
             }
-            case ThresholdState::ACTIVE: {
+            case EUpdateState::Active: {
                 // Add to rules only
-                const struct VBDeploymentInfo &vbinfo = VersionBitsDeploymentInfo[pos];
-                aRules.push_back(gbt_vb_name(pos));
-                if (setClientRules.find(vbinfo.name) == setClientRules.end()) {
+                aRules.push_back(gbt_update_name(update));
+                if (setClientRules.find(update->Name()) == setClientRules.end()) {
                     // Not supported by the client; make sure it's safe to proceed
-                    if (!vbinfo.gbt_force) {
+                    if (update->ForcedUpdate()) {
                         // If we do anything other than throw an exception here, be sure version/force isn't sent to old clients
                         throw JSONRPCError(RPC_INVALID_PARAMETER,
                                            strprintf("Support for '%s' rule requires explicit client support",
-                                                     vbinfo.name));
+                                                     update->Name()));
                     }
                 }
                 break;

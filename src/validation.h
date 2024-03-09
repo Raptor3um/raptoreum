@@ -22,7 +22,6 @@
 #include <sync.h>
 #include <txdb.h>
 #include <txmempool.h>
-#include <versionbits.h>
 #include <serialize.h>
 #include <indices/spent_index.h>
 #include <indices/future_index.h>
@@ -324,15 +323,6 @@ bool GetUTXOCoin(const COutPoint &outpoint, Coin &coin);
 int GetUTXOHeight(const COutPoint &outpoint);
 
 int GetUTXOConfirmations(const COutPoint &outpoint);
-
-/** Get the BIP9 state for a given deployment at the current tip. */
-ThresholdState VersionBitsTipState(const Consensus::Params &params, Consensus::DeploymentPos pos);
-
-/** Get the numerical statistics for the BIP9 state for a given deployment at the current tip. */
-BIP9Stats VersionBitsTipStatistics(const Consensus::Params &params, Consensus::DeploymentPos pos);
-
-/** Get the block height at which the BIP9 deployment switched into the state for the block building on the current tip. */
-int VersionBitsTipStateSinceHeight(const Consensus::Params &params, Consensus::DeploymentPos pos);
 
 /** Apply the effects of this transaction on the UTXO set represented by view */
 void UpdateCoins(const CTransaction &tx, CCoinsViewCache &inputs, int nHeight);
@@ -1141,8 +1131,6 @@ extern std::unique_ptr <CAssetsCache> passetsCache;
  * This is also true for mempool checks.
  */
 int GetSpendHeight(const CCoinsViewCache &inputs);
-
-extern VersionBitsCache versionbitscache;
 
 /**
  * Determine what nVersion a new block should use.

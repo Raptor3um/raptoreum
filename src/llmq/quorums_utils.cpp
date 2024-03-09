@@ -16,16 +16,13 @@
 #include <random.h>
 #include <spork.h>
 #include <timedata.h>
+#include <update/update.h>
 #include <util/ranges.h>
 #include <validation.h>
-#include <versionbits.h>
 
 #include <smartnode/smartnode-meta.h>
 
 namespace llmq {
-
-    RecursiveMutex cs_llmq_vbc;
-    VersionBitsCache llmq_versionbitscache;
 
     std::vector <CDeterministicMNCPtr>
     CLLMQUtils::GetAllQuorumMembers(const Consensus::LLMQParams &llmqParams, const CBlockIndex *pQuorumBaseBlockIndex) {
@@ -64,6 +61,21 @@ namespace llmq {
         hw << llmqType;
         hw << blockHash;
         hw << DYNBITSET(validMembers);
+        hw << pubKey;
+        hw << vvecHash;
+        return hw.GetHash();
+    }
+
+    uint256 CLLMQUtils::BuildCommitmentHash(Consensus::LLMQType llmqType, const uint256 &blockHash,
+                                            const std::vector<bool> &validMembers,
+                                            const std::vector<Consensus::CQuorumUpdateVote>& quorumUpdateVotes,
+                                            const CBLSPublicKey &pubKey,
+                                            const uint256 &vvecHash) {
+        CHashWriter hw(SER_NETWORK, 0);
+        hw << llmqType;
+        hw << blockHash;
+        hw << DYNBITSET(validMembers);
+        hw << quorumUpdateVotes;
         hw << pubKey;
         hw << vvecHash;
         return hw.GetHash();
@@ -321,9 +333,7 @@ namespace llmq {
                 break;
             case Consensus::LLMQ_100_67:
             case Consensus::LLMQ_TEST_V17:
-                if (LOCK(cs_llmq_vbc);
-                        VersionBitsState(pindex, consensusParams, Consensus::DEPLOYMENT_V17, llmq_versionbitscache) !=
-                        ThresholdState::ACTIVE) {
+                if (!UpdateManager::Instance().IsActive(EUpdate::DEPLOYMENT_V17, pindex)) {
                     return false;
                 }
                 break;

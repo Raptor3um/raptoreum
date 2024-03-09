@@ -14,20 +14,21 @@
 namespace Consensus {
 
     enum LLMQType : uint8_t {
-        LLMQ_NONE = 0xff,
+        LLMQ_NONE     = 0xFF,
+        LLMQ_INVALID  = 0x00, // Do not use - flag to indicate new serialization
+        LLMQ_50_60    = 1,    // 50 members, 30 (60%) threshold, one per hour
+        LLMQ_400_60   = 2,    // 400 members, 240 (60%) threshols, one every 12 hours
+        LLMQ_400_85   = 3,    // 400 members, 340 (85%) threshold, one every 24 hours
+        LLMQ_100_67   = 4,    // 100 members, 67 (67%) threshold, one per hour
 
-        LLMQ_50_60 = 1, // 50 members, 30 (60%) threshold, one per hour
-        LLMQ_400_60 = 2, // 400 members, 240 (60%) threshols, one every 12 hours
-        LLMQ_400_85 = 3, // 400 members, 340 (85%) threshold, one every 24 hours
-        LLMQ_100_67 = 4, // 100 members, 67 (67%) threshold, one per hour
         // these are LLMQ set when network still young
-//	LLMQ_10_60 = 4, // 10 members, 6 (60%) threshold, one per hour
-//	LLMQ_40_60 = 5, // 40 members, 24 (60%) threshold, one every 12 hours
-//	LLMQ_40_85 = 6, // 40 members, 34 (85%) threshold, one every 24 hours
+        // LLMQ_10_60 = 4, // 10 members, 6 (60%) threshold, one per hour
+        // LLMQ_40_60 = 5, // 40 members, 24 (60%) threshold, one every 12 hours
+        // LLMQ_40_85 = 6, // 40 members, 34 (85%) threshold, one every 24 hours
 
         // for testing only
-        LLMQ_5_60 = 100, // 5 members, 3 (60%) threshold, one every 12 hours. Params might be different when use -llmqtestparams
-        LLMQ_TEST_V17 = 101, // 3 members, 2 (66%) threshold, one per hour
+        LLMQ_5_60     = 100,  // 5 members, 3 (60%) threshold, one every 12 hours. Params might be different when use -llmqtestparams
+        LLMQ_TEST_V17 = 101,  // 3 members, 2 (66%) threshold, one per hour
     };
 
 // Configures a LLMQ and its DKG
@@ -395,6 +396,92 @@ namespace Consensus {
 
             .keepOldConnections = 25,
             .recoveryMembers = 50,
+    };
+
+// Used for recording quorum voting
+    class CQuorumUpdateVote
+    {
+    public :
+        uint8_t  bit;   // Bit number (0-28)
+        uint16_t votes; // Number of "yes" votes
+
+        SERIALIZE_METHODS(CQuorumUpdateVote, obj) {
+            READWRITE(obj.bit, obj.votes);
+        }
+        bool operator<(const CQuorumUpdateVote &rhs) const { return bit < rhs.bit; }
+    };
+
+    class CQuorumUpdateVoteVec : public std::vector<Consensus::CQuorumUpdateVote>
+    {
+    public :
+        template<typename Stream>
+        void Serialize(Stream &s) const {
+            for (int i = 0; i < size(); ++i) {
+               s << at(i);
+            }
+            // "null" termination
+            s << CQuorumUpdateVote { 0, 0 };
+        }
+
+        template<typename Stream>
+        void Unserialize(Stream &s) {
+            CQuorumUpdateVote vote;
+            do {
+               s >> vote;
+               if (vote.votes != 0) {
+                  emplace_back(vote);
+               }
+            } while (vote.votes != 0);
+        }
+
+        void AddVote(uint8_t bit)
+        {
+            for (int i = 0; i < size(); ++i)
+            {
+               if (at(i).bit == bit)
+               {
+                  ++at(i).votes;
+                  return;
+               }
+            }
+            // Add a new update vote and sort the results (for serialization)
+            push_back(CQuorumUpdateVote { bit, 1});
+            std::sort(begin(), end());
+        }
+
+        void AddVotes(uint32_t version)
+        {
+            static constexpr uint32_t updateBits = (1 << 29) - 1;
+
+            uint32_t bits = version & updateBits;
+            uint8_t bit = 0;
+            while (bits != 0)
+            {
+               if (bits & 1)
+               {
+                  AddVote(bit);
+               }
+               bits >>= 1;
+               ++bit;
+            }
+        }
+
+        bool operator ==(const CQuorumUpdateVoteVec& rhs) const {
+            if (size() != rhs.size())
+                return false;
+
+            for (int i = 0; i < size(); ++i)
+            {
+                if (at(i).bit != rhs[i].bit)
+                    return false;
+                if (at(i).votes != rhs[i].votes)
+                    return false;
+            }
+            return true;
+        }
+        bool operator!=(const CQuorumUpdateVoteVec& rhs) const {
+            return !(*this == rhs);
+        }
     };
 
 } // namespace Consensus

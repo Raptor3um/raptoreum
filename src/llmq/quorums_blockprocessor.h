@@ -8,6 +8,7 @@
 
 #include <llmq/quorums_utils.h>
 
+#include <primitives/block.h>
 #include <unordered_map>
 #include <unordered_lru_cache.h>
 #include <saltedhasher.h>

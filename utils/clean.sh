@@ -72,7 +72,6 @@ clean_exe src/bench/bench_raptoreum
 clean_exe src/raptoreum-cli
 clean_exe src/raptoreumd
 clean_exe src/raptoreum-gtest
-clean_exe src/raptoreum-tx
 clean_exe src/test/test_raptoreum
 clean_exe src/test/test_raptoreum_fuzzy
 clean_exe src/qt/raptoreum-qt

@@ -58,8 +58,6 @@ namespace llmq {
         quorumDKGDebugManager = nullptr;
         delete blsWorker;
         blsWorker = nullptr;
-        LOCK(cs_llmq_vbc);
-        llmq_versionbitscache.Clear();
     }
 
     void StartLLMQSystem() {
