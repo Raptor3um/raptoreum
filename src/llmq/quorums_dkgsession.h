@@ -78,8 +78,6 @@ namespace llmq {
             s >> tmp2;
             s >> sig;
 
-            // std::cout << "Deserialized Contribution: llmqType: " << llmqType << ", quorumHash: " << quorumHash.ToString() << ", proTxhash: " << proTxHash.ToString() << std::endl;
-
             vvec = std::make_shared<BLSVerificationVector>(std::move(tmp1));
             contributions = std::make_shared < CBLSIESMultiRecipientObjects < CBLSSecretKey >> (std::move(tmp2));
         }
@@ -176,7 +174,7 @@ namespace llmq {
                 s << (uint8_t)0; // Marker for new serialization (old serialization was not versioned)
                 s << llmqType;
                 s << roundVoting;
-                s << quorumUpdateVotes; 
+                s << quorumUpdateVotes;
             } else {
                 s << llmqType;
             }
@@ -188,7 +186,7 @@ namespace llmq {
             s << quorumSig;
             s << sig;
         }
-        
+
         template<typename Stream>
         inline void Unserialize(Stream &s) {
             s >> llmqType;
@@ -206,10 +204,10 @@ namespace llmq {
             s >> quorumSig;
             s >> sig;
         }
-    
+
         [[nodiscard]] uint256 GetSignHash() const {
             if (roundVoting) {
-               return CLLMQUtils::BuildCommitmentHash(llmqType, quorumHash, validMembers, quorumUpdateVotes, quorumPublicKey, quorumVvecHash); 
+               return CLLMQUtils::BuildCommitmentHash(llmqType, quorumHash, validMembers, quorumUpdateVotes, quorumPublicKey, quorumVvecHash);
             }
             return CLLMQUtils::BuildCommitmentHash(llmqType, quorumHash, validMembers, quorumPublicKey, quorumVvecHash);
         }

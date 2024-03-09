@@ -178,8 +178,7 @@ namespace llmq {
             return;
         }
 
-        // peek into the message and see which LLMQType it is. First byte of all messages is always the LLMQType
-        // TODO: JA Review if need to change due to first byte
+        // Peek into the message and see which LLMQType it is. First byte of all messages is always the LLMQType
         Consensus::LLMQType llmqType = (Consensus::LLMQType) * vRecv.begin();
         if (llmqType == Consensus::LLMQType::LLMQ_INVALID && (strCommand == NetMsgType::QCONTRIB || strCommand == NetMsgType::QPCOMMITMENT)) {
             llmqType = (Consensus::LLMQType) * (vRecv.begin() + 1);
@@ -315,20 +314,12 @@ namespace llmq {
                   contributions);
     }
 
-    // TODO: JB Need to review evodb updates
     void CDKGSessionManager::WriteUpdateVote(Consensus::LLMQType llmqType,
                                                 const CBlockIndex *pQuorumBaseBlockIndex,
                                                 const uint256 &proTxHash,
                                                 const uint32_t& updateVote) {
         db->Write(std::make_tuple(DB_NODE_VOTE, llmqType, pQuorumBaseBlockIndex->GetBlockHash(), proTxHash), updateVote);
     }
-    
-    //  void CDKGSessionManager::WriteUpdateVotesVec(Consensus::LLMQType llmqType,
-    //                                               const CBlockIndex *pQuorumBaseBlockIndex,
-    //                                               const uint256 &proTxHash,
-    //                                               const Consensus::CQuorumUpdateVoteVec& updateVotesVec) {
-    //      db->Write(std::make_tuple(DB_NODE_VOTES, llmqType, pQuorumBaseBlockIndex->GetBlockHash(), proTxHash), updateVotesVec);
-    //  }
 
     bool
     CDKGSessionManager::GetVerifiedContributions(Consensus::LLMQType llmqType, const CBlockIndex *pQuorumBaseBlockIndex,
@@ -365,7 +356,7 @@ namespace llmq {
                     db->Read(std::make_tuple(DB_SKCONTRIB, llmqType, pQuorumBaseBlockIndex->GetBlockHash(), proTxHash),
                              skContribution);
 
-                    uint32_t nVersion = 0; // TODO: JB This needs to be added to the database
+                    uint32_t nVersion = 0;
                     if (UpdateManager::Instance().IsActive(EUpdate::ROUND_VOTING, pQuorumBaseBlockIndex)) {
                         db->Read(std::make_tuple(DB_NODE_VOTE, llmqType, pQuorumBaseBlockIndex->GetBlockHash(), proTxHash),
                                 nVersion);

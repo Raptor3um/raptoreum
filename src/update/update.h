@@ -11,6 +11,7 @@
 #include <cmath>
 #include <mutex>
 #include <chain.h>
+#include <sync.h>
 
 enum class EUpdate
 {
@@ -212,75 +213,6 @@ class VoteResult
       int64_t samples;
 };
 
-// class VoteResult
-// {
-//    public :
-//       VoteResult(int64_t yes = 0, int64_t sampleSize = 0, int64_t population = 0) : yes(yes), sampleSize(sampleSize), population(population)
-//       {
-//          if
-//          (
-//             (yes < 0) ||
-//             (sampleSize < 0) ||
-//             (population < 0) ||
-//             (yes > sampleSize) ||
-//             (population > 0 && sampleSize > population)
-//          )
-//          {
-//             throw std::invalid_argument("Invalid arguments to VoteResult constructor.");
-//          }
-//       }
-
-//       int64_t Yes() const        { return yes;        }
-//       int64_t SampleSize() const { return sampleSize; }
-//       int64_t Population() const { return population; }
-
-//       double ComputeConfidenceIntervalLow() const
-//       {
-//          // if (sampleSize <= 0) { std::cout << std::endl; return 0.0; }
-//          // if (population > 0 && sampleSize > population) { std::cout << std::endl; return 0; }
-
-//          double fpc = population <= 0 ? 1.0 : std::sqrt((population - sampleSize) / static_cast<double>(population - 1));
-
-//          static constexpr double z = 1.96; // 95% CI
-
-//          double p = yes / static_cast<double>(sampleSize);
-//          double e = z * std::sqrt(p * (1 - p) / sampleSize);
-
-//          // Print(std::cout);
-//          // std::cout << ", 95% CI: p: " << std::fixed << p << ", e: " << e << ", fpc: " << fpc << ", lower: " << p - e * fpc << ", upper: " << p + e * fpc << std::endl;
-
-//          return p - e * fpc;
-//       }
-
-//       VoteResult& operator+=(const VoteResult& rhs)
-//       {
-//          yes += rhs.yes;
-//          sampleSize += rhs.sampleSize;
-//          if (population == 0 || rhs.population == 0)
-//          {
-//             population = 0; // population is unknown
-//          }
-//          else
-//          {
-//             population = std::max(population, rhs.population);
-//             // population = population + rhs.population;
-//          }
-//          return *this;
-//       }
-
-//       std::string   ToString() const;
-//       std::ostream& Print(std::ostream& os) const
-//       {
-//          os << ToString();
-//          return os;
-//       }
-
-//    private :
-//       int64_t yes;         /// Number of yes votes
-//       int64_t sampleSize;  /// Number potential yes votes
-//       int64_t population;  /// Population (use 0 for large/unknown populations).  This is used for Finite Population Correction in the confidence interval.
-// };
-
 VoteResult operator+(const VoteResult& lhs, const VoteResult &rhs);
 
 std::ostream& operator<<(std::ostream &os, VoteResult voteResult);
@@ -387,7 +319,7 @@ class UpdateManager
 
       bool Add(Update update);
 
-      const Update* GetUpdate(enum EUpdate eUpdate);
+      const Update* GetUpdate(enum EUpdate eUpdate) const;
       bool IsActive(enum EUpdate eUpdate, const CBlockIndex* blockIndex);
 
       StateInfo State(enum EUpdate eUpdate, const CBlockIndex* blockIndex);
@@ -400,6 +332,7 @@ class UpdateManager
 
       typedef std::unordered_map<const CBlockIndex*, EUpdateState> StateMap;
 
+      RecursiveMutex                      updateMutex;
       MinerRoundVoting                    minerRoundVoting;
       NodeRoundVoting                     nodeRoundVoting;
       MinerUpdateVoting                   minerUpdateVoting;
@@ -408,25 +341,5 @@ class UpdateManager
       UpdateMap                           updates;             // Update parameters (does not contain states)
       std::map<UpdateCacheKey, StateInfo> states;
 };
-
-
-// Caches:
-/*  Index by CBlockIndex* (important for chain splits)
-Miner:
-   Round Vote: height % roundSize == 0 represents the round (height + next N-1 blocks)
-      Store EUpdate, CBlockIndex*, VoteResult
-   Update Vote: height % roundSize == 0 represents the round (height + next N-1 blocks)
-      Store EUpdate, CBlockIndex*, UpdateVote
-
-Node:
-   Round Vote: height % roundSize == 0 represents the round (height + next N-1 blocks)
-      Store EUpdate, CBlockIndex*, VoteResult
-   Update Vote: height % roundSize == 0 represents the round (height + next N-1 blocks)
-      Store EUpdate, CBlockIndex*, UpdateVote
-
-UpdateManager:
-   Store EUpdate, CBlockIndex*, EUpdateState, failed, activeHeight - for all updates that are no complete (state note Active or Failed)
-   Store EUpdate, EUpdateState, activeHeight -- Store once - results are locked in at this point.  If not in this cache, check active proposed updates
-*/
 
 #endif // RAPTOREUM_UPDATE_HPP

@@ -43,7 +43,7 @@ namespace llmq {
 
         struct ContributionsCacheEntry {
             int64_t entryTime;
-            uint32_t nVersion; // TODO: JB Verify all use
+            uint32_t nVersion;
             BLSVerificationVectorPtr vvec;
             CBLSSecretKey skContribution;
         };
@@ -101,17 +101,6 @@ namespace llmq {
                                 const CBlockIndex *pQuorumBaseBlockIndex,
                                 const uint256 &proTxHash,
                                 const uint32_t& updateVote);
-
-      //   /// Write UpdateVotesVec for the member with the given proTxHash to the llmqDb
-      //   void WriteUpdateVotesVec(Consensus::LLMQType llmqType,
-      //                            const CBlockIndex *pQuorumBaseBlockIndex,
-      //                            const uint256 &proTxHash,
-      //                            const Consensus::CQuorumUpdateVoteVec& updateVotesVec);
-
-      //   /// Read UpdateVotesVec contributions for the member with the given proTxHash from the llmqDb
-      //   bool GetUpdateVotesVec(Consensus::LLMQType llmqType, const CBlockIndex *pQuorumBaseBlockIndex,
-      //                          const uint256 &proTxHash,
-      //                          Consensus::CQuorumUpdateVoteVec& updateVotesVec) const;
 
     private:
         void MigrateDKG();

@@ -5101,7 +5101,6 @@ bool ChainstateManager::LoadBlockIndex(const CChainParams &chainparams) {
 
         // Use the provided setting for -assetindex in the new database
         fAssetIndex = gArgs.GetBoolArg("-assetindex", DEFAULT_ASSETINDEX);
-        std::cerr << "LoadBlockIndex: -assetindex: " << fAssetIndex << std::endl;
         pblocktree->WriteFlag("assetindex", fAssetIndex);
 
         // Use the provided setting for -timestampindex in the new database

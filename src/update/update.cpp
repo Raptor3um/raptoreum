@@ -212,7 +212,6 @@ VoteResult MinerUpdateVoting::GetVote(const CBlockIndex* blockIndex, const Updat
    {
       return VoteResult(0, update.RoundSize() * update.VotingPeriod()); // Assume everyone voted no for the entire period
    }
-   // TODO: Cache lookup for Update Height
 
    // Simply collect all of the round votes for a full average in the voting period:
    VoteResult vote;
@@ -236,7 +235,6 @@ VoteResult NodeUpdateVoting::GetVote(const CBlockIndex* blockIndex, const Update
    {
       return VoteResult(0, update.RoundSize() * update.VotingPeriod()); // Assume everyone voted no for the entire period
    }
-   // TODO: Cache lookup for Update Height
 
    // Simply collect all of the round votes for a full average in the voting period:
    VoteResult vote;
@@ -276,7 +274,7 @@ bool UpdateManager::Add(Update update)
    return true;
 }
 
-const Update* UpdateManager::GetUpdate(enum EUpdate eUpdate)
+const Update* UpdateManager::GetUpdate(enum EUpdate eUpdate) const
 {
    auto it = updates.find(eUpdate);
    if (it != updates.end())
@@ -309,6 +307,8 @@ StateInfo UpdateManager::State(enum EUpdate eUpdate, const CBlockIndex* blockInd
       }
    }
 
+   LOCK(updateMutex);
+
    // Dump the final state cache:
    // LogPrint(BCLog::UPDATES, "Updates: FinalState cache\n");
    // for (auto const& finalState : finalStates)
@@ -334,19 +334,6 @@ StateInfo UpdateManager::State(enum EUpdate eUpdate, const CBlockIndex* blockInd
       StateInfo stateInfo = finalStates[eUpdate];
       if (blockIndex->nHeight >= stateInfo.FinalHeight)
       {
-         static bool dumpVersions = false; // TODO: Remove before flight
-         if (dumpVersions)
-         {
-            // Loop through all blocks, dumping versions:
-            const CBlockIndex* bi = blockIndex;
-            while (bi != nullptr)
-            {
-               LogPrint(BCLog::UPDATES, "   BI Height: %6d, nVersion: %d, blockIndex: %p\n", bi->nHeight, bi->nVersion, bi);
-               bi  = bi->pprev;
-            }
-            dumpVersions = false;
-         }
-
          // LogPrint(BCLog::UPDATES, "Updates: Update: %s, State: %d, FinalHeight: %7d - fast return\n", update->Name().c_str(), stateInfo.State, stateInfo.FinalHeight);
          return stateInfo;
       }
@@ -529,6 +516,7 @@ StateInfo UpdateManager::State(enum EUpdate eUpdate, const CBlockIndex* blockInd
 
 uint32_t UpdateManager::ComputeBlockVersion(const CBlockIndex* blockIndex)
 {
+   LOCK(updateMutex);
    uint32_t nVersion = VERSIONBITS_TOP_BITS;
    for (auto const& update: updates)
    {

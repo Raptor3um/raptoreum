@@ -451,7 +451,9 @@ namespace Consensus {
 
         void AddVotes(uint32_t version)
         {
-            uint32_t bits = version & ((1 << 29) - 1); // TODO: JB Move magic number
+            static constexpr uint32_t updateBits = (1 << 29) - 1;
+
+            uint32_t bits = version & updateBits;
             uint8_t bit = 0;
             while (bits != 0)
             {

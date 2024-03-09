@@ -333,7 +333,6 @@ namespace llmq {
                 break;
             case Consensus::LLMQ_100_67:
             case Consensus::LLMQ_TEST_V17:
-                // TODO: JB lock?
                 if (!UpdateManager::Instance().IsActive(EUpdate::DEPLOYMENT_V17, pindex)) {
                     return false;
                 }

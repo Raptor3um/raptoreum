@@ -207,6 +207,11 @@ namespace llmq {
             return false;
         }
 
+        if (qc.nVersion < 2 && UpdateManager::Instance().IsActive(EUpdate::ROUND_VOTING, m_quorum_base_block_index)) {
+            logger.Batch("contribution from pre round voting node, rejecting");
+            return false;
+        }
+
         auto *member = GetMember(qc.proTxHash);
         if (member == nullptr) {
             logger.Batch("contributor not a member of this quorum, rejecting contribution");
