@@ -2027,7 +2027,7 @@ static unsigned int GetBlockScriptFlags(const CBlockIndex *pindex, const Consens
         flags |= SCRIPT_VERIFY_NULLDUMMY;
     }
 
-    if (UpdateManager::Instance().IsActive(EUpdate::DEPLOYMENT_V17, pindex)) {
+    if (Updates().IsActive(EUpdate::DEPLOYMENT_V17, pindex)) {
         flags |= SCRIPT_ENABLE_DIP0020_OPCODES;
     }
 
@@ -2842,7 +2842,7 @@ EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
             int nUpgraded = 0;
             const CBlockIndex *pindex = pindexNew;
 
-            uint32_t nExpectedVersion = UpdateManager::Instance().ComputeBlockVersion(pindex);
+            uint32_t nExpectedVersion = Updates().ComputeBlockVersion(pindex);
             if (pindexNew->nVersion != nExpectedVersion) {
                 const std::string strWarning = strprintf(_("Warning: unknown new rules activated: Expected: 0x%08x, Actual: 0x%08x"), nExpectedVersion, pindexNew->nVersion);
                 AppendWarning(warningMessages, strWarning);
@@ -2850,7 +2850,7 @@ EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
 
             // Check the version of the last 100 blocks to see if we need to upgrade:
             for (int i = 0; i < 100 && pindex != nullptr; i++) {
-                nExpectedVersion = UpdateManager::Instance().ComputeBlockVersion(pindex->pprev);
+                nExpectedVersion = Updates().ComputeBlockVersion(pindex->pprev);
                 if (pindex->nVersion > VERSIONBITS_LAST_OLD_BLOCK_VERSION &&
                     (pindex->nVersion & ~nExpectedVersion) != 0)
                     ++nUpgraded;

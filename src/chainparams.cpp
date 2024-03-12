@@ -207,11 +207,11 @@ public:
         consensus.nAssetsForkBlock = 9999999;
         consensus.nRootAssetsForkBlock = consensus.nAssetsForkBlock;
 
-        UpdateManager::Instance().Add
+        updateManager.Add
         (   // V17 voting blocks 419328-427391 in mainnet, 4032 voting, 4032 grace period, active at 427392
             Update(EUpdate::DEPLOYMENT_V17, std::string("v17"), 0, 4032, 419328, 1, 3, 1, false, VoteThreshold(80, 60, 5), VoteThreshold(0, 0, 1), false, 427392)
         );
-        // UpdateManager::Instance().Add
+        // updateManager.Add
         // (
         //     Update(EUpdate::ROUND_VOTING, std::string("Round Voting"), 7, 100, 100000, 5, 10, 5, false, VoteThreshold(85, 85, 1), VoteThreshold(95, 95, 1))
         // );
@@ -374,11 +374,11 @@ public:
         consensus.nAssetsForkBlock = 411300;
         consensus.nRootAssetsForkBlock = 9999999;
 
-        UpdateManager::Instance().Add
+        updateManager.Add
         (
             Update(EUpdate::DEPLOYMENT_V17, std::string("v17"), 0, 10, 0, 10, 100, 10, false, VoteThreshold(95, 95, 5), VoteThreshold(0, 0, 1))
         );
-        // UpdateManager::Instance().Add
+        // updateManager.Add
         // (
         //    Update(EUpdate::ROUND_VOTING, std::string("Round Voting"), 7, 100, 100000, 5, 10, 5, false, VoteThreshold(85, 85, 1), VoteThreshold(95, 95, 1))
         // );
@@ -526,11 +526,11 @@ public:
         consensus.nAssetsForkBlock = 1;
         consensus.nRootAssetsForkBlock = 1;
 
-        UpdateManager::Instance().Add
+        updateManager.Add
         (
             Update(EUpdate::DEPLOYMENT_V17, std::string("v17"), 0, 10, 0, 10, 100, 10, false, VoteThreshold(95, 95, 5), VoteThreshold(0, 0, 1))
         );
-        UpdateManager::Instance().Add
+        updateManager.Add
         (
            Update(EUpdate::ROUND_VOTING, std::string("Round Voting"), 1, 100, 2000, 5, 10, 5, false, VoteThreshold(85, 85, 1), VoteThreshold(0, 0, 1))
         );
@@ -697,11 +697,11 @@ public:
         consensus.nAssetsForkBlock = 1;
         consensus.nRootAssetsForkBlock = 1;
 
-        UpdateManager::Instance().Add
+        updateManager.Add
         (
             Update(EUpdate::DEPLOYMENT_V17, std::string("v17"), 0, 10, 0, 10, 100, 10, false, VoteThreshold(95, 95, 5), VoteThreshold(0, 0, 1))
         );
-        // UpdateManager::Instance().Add
+        // updateManager.Add
         // (
         //    Update(EUpdate::ROUND_VOTING, std::string("Round Voting"), 7, 100, 100000, 5, 10, 5, false, VoteThreshold(85, 85, 1), VoteThreshold(95, 95, 1))
         // );
@@ -964,6 +964,12 @@ const CChainParams &Params() {
     assert(globalChainParams);
     return *globalChainParams;
 }
+
+UpdateManager& Updates() {
+    assert(globalChainParams);
+    return globalChainParams->Updates();
+}
+
 
 std::unique_ptr <CChainParams> CreateChainParams(const std::string &chain) {
     if (chain == CBaseChainParams::MAIN)

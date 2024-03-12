@@ -89,7 +89,7 @@ namespace llmq {
         if (checkSigs && IsBlsSigCheckEnabled(pQuorumBaseBlockIndex->GetBlockTime())) {
 
             uint256 commitmentHash;
-            if (UpdateManager::Instance().IsActive(EUpdate::ROUND_VOTING, pQuorumBaseBlockIndex)) {
+            if (Updates().IsActive(EUpdate::ROUND_VOTING, pQuorumBaseBlockIndex)) {
                 commitmentHash = CLLMQUtils::BuildCommitmentHash(llmq_params.type, quorumHash, validMembers, quorumUpdateVotes, quorumPublicKey, quorumVvecHash);
             }
             else {

@@ -759,8 +759,8 @@ static UniValue getblocktemplate(const JSONRPCRequest &request) {
     UniValue aRules(UniValue::VARR);
     UniValue vbavailable(UniValue::VOBJ);
     for (int i = 0; i < static_cast<int>(EUpdate::MAX_VERSION_BITS_DEPLOYMENTS); ++i) {
-        StateInfo state = UpdateManager::Instance().State( static_cast<EUpdate>(i), ::ChainActive().Tip());
-        const Update* update = UpdateManager::Instance().GetUpdate(static_cast<EUpdate>(i));
+        StateInfo state = Updates().State( static_cast<EUpdate>(i), ::ChainActive().Tip());
+        const Update* update = Updates().GetUpdate(static_cast<EUpdate>(i));
         switch (state.State) {
             case EUpdateState::Defined:
             case EUpdateState::Failed:

@@ -24,9 +24,6 @@
 // 100..199 Round 2 votes, results active and cached at height 200
 // 200..299 Round 3 votes, results active and cached at height 300
 
-UpdateManager* UpdateManager::_instance;
-std::once_flag UpdateManager::_instance_flag;
-
 const int64_t VoteResult::scaleFactor = 100 * 100; // Scaled arithmetic (value 0.1234 represented by integer 1234)
 
 std::ostream& operator<<(std::ostream& out, EUpdateState state)

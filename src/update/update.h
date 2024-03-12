@@ -302,18 +302,7 @@ typedef struct StateInfo
 
 class UpdateManager
 {
-   private :
-      // Singleton
-      static UpdateManager* _instance;
-      static std::once_flag _instance_flag;
-
    public:
-      static UpdateManager& Instance()
-      {
-         std::call_once(UpdateManager::_instance_flag, []() { UpdateManager::_instance = new UpdateManager(); });
-         return *UpdateManager::_instance;
-      }
-
       UpdateManager();
       virtual ~UpdateManager();
 

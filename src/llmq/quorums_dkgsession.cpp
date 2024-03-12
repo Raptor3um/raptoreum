@@ -149,10 +149,10 @@ namespace llmq {
         }
 
         CDKGContribution qc;
-        if (UpdateManager::Instance().IsActive(EUpdate::ROUND_VOTING, m_quorum_base_block_index)) {
+        if (Updates().IsActive(EUpdate::ROUND_VOTING, m_quorum_base_block_index)) {
             qc.nVersion = 1;
             // Vote on active update proposals
-            qc.nVersion = UpdateManager::Instance().ComputeBlockVersion(m_quorum_base_block_index);
+            qc.nVersion = Updates().ComputeBlockVersion(m_quorum_base_block_index);
         }
         qc.llmqType = params.type;
         qc.quorumHash = m_quorum_base_block_index->GetBlockHash();
@@ -207,7 +207,7 @@ namespace llmq {
             return false;
         }
 
-        if (qc.nVersion < 2 && UpdateManager::Instance().IsActive(EUpdate::ROUND_VOTING, m_quorum_base_block_index)) {
+        if (qc.nVersion < 2 && Updates().IsActive(EUpdate::ROUND_VOTING, m_quorum_base_block_index)) {
             logger.Batch("contribution from pre round voting node, rejecting");
             return false;
         }
@@ -1005,7 +1005,7 @@ namespace llmq {
         }
 
         uint256 commitmentHash;
-        if (UpdateManager::Instance().IsActive(EUpdate::ROUND_VOTING, m_quorum_base_block_index)) {
+        if (Updates().IsActive(EUpdate::ROUND_VOTING, m_quorum_base_block_index)) {
             qc.roundVoting = true;
             commitmentHash = CLLMQUtils::BuildCommitmentHash(qc.llmqType, qc.quorumHash, qc.validMembers, qc.quorumUpdateVotes, qc.quorumPublicKey, qc.quorumVvecHash);
         }
@@ -1260,7 +1260,7 @@ namespace llmq {
             }
 
             uint256 commitmentHash;
-            if (UpdateManager::Instance().IsActive(EUpdate::ROUND_VOTING, m_quorum_base_block_index)) {
+            if (Updates().IsActive(EUpdate::ROUND_VOTING, m_quorum_base_block_index)) {
                 commitmentHash = CLLMQUtils::BuildCommitmentHash(fqc.llmqType, fqc.quorumHash, fqc.validMembers, fqc.quorumUpdateVotes, fqc.quorumPublicKey, fqc.quorumVvecHash);
             }
             else {

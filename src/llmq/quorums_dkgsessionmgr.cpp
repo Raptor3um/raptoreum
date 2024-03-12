@@ -357,7 +357,7 @@ namespace llmq {
                              skContribution);
 
                     uint32_t nVersion = 0;
-                    if (UpdateManager::Instance().IsActive(EUpdate::ROUND_VOTING, pQuorumBaseBlockIndex)) {
+                    if (Updates().IsActive(EUpdate::ROUND_VOTING, pQuorumBaseBlockIndex)) {
                         db->Read(std::make_tuple(DB_NODE_VOTE, llmqType, pQuorumBaseBlockIndex->GetBlockHash(), proTxHash),
                                 nVersion);
                     }

@@ -1291,7 +1291,7 @@ namespace llmq {
 
     void CInstantSendManager::UpdatedBlockTip(const CBlockIndex *pindexNew) {
         if (!fUpgradedDB) {
-            if (UpdateManager::Instance().IsActive(EUpdate::DEPLOYMENT_V17, pindexNew)) {
+            if (Updates().IsActive(EUpdate::DEPLOYMENT_V17, pindexNew)) {
                 db.Upgrade();
                 fUpgradedDB = true;
             }
