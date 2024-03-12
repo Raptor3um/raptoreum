@@ -1689,10 +1689,10 @@ UniValue getblockchaininfo(const JSONRPCRequest &request) {
     //     BIP9SoftForkDescPushBack(bip9_softforks, consensusParams, static_cast<Consensus::DeploymentPos>(pos));
     // }
     for (int i = 0; i < static_cast<int>(EUpdate::MAX_VERSION_BITS_DEPLOYMENTS); ++i) {
-        StateInfo state = UpdateManager::Instance().State( static_cast<EUpdate>(i), ::ChainActive().Tip());
+        StateInfo state = Updates().State( static_cast<EUpdate>(i), ::ChainActive().Tip());
         if (state.State == EUpdateState::Unknown)
             continue;
-        const Update* update = UpdateManager::Instance().GetUpdate(static_cast<EUpdate>(i));
+        const Update* update = Updates().GetUpdate(static_cast<EUpdate>(i));
         UniValue rv(UniValue::VOBJ);
         switch (state.State) {
             case EUpdateState::Defined: rv.pushKV("status", "defined"); break;

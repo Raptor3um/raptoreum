@@ -151,7 +151,7 @@ std::unique_ptr <CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript &s
     bool fDIP0003Active_context = chainparams.GetConsensus().DIP0003Enabled;
     bool fDIP0008Active_context = chainparams.GetConsensus().DIP0008Enabled;
 
-    pblock->nVersion = UpdateManager::Instance().ComputeBlockVersion(pindexPrev);
+    pblock->nVersion = Updates().ComputeBlockVersion(pindexPrev);
 
     // -regtest only: allow overriding block.nVersion with
     // -blockversion=N to test forking scenarios
@@ -562,7 +562,7 @@ void static RaptoreumMiner(const CChainParams& chainparams, NodeContext& node) {
     #ifdef ENABLE_WALLET
         pWallet = GetFirstWallet();
 
-  			// TODO: either add this function back in, or update this for more appropriate wallet functionality 
+  		  // TODO: either add this function back in, or update this for more appropriate wallet functionality
         // if (!EnsureWalletIsAvailable(pWallet, false)) {
         //     LogPrintf("RaptoreumMiner -- Wallet not available\n");
         // }

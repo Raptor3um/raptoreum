@@ -333,7 +333,7 @@ namespace llmq {
                 break;
             case Consensus::LLMQ_100_67:
             case Consensus::LLMQ_TEST_V17:
-                if (!UpdateManager::Instance().IsActive(EUpdate::DEPLOYMENT_V17, pindex)) {
+                if (!Updates().IsActive(EUpdate::DEPLOYMENT_V17, pindex)) {
                     return false;
                 }
                 break;

@@ -13,6 +13,7 @@
 #include <primitives/block.h>
 #include <protocol.h>
 #include <chain.h>
+#include <update/update.h>
 
 #include <memory>
 #include <vector>
@@ -121,8 +122,7 @@ public:
 
     void UpdateDIP3Parameters(int nActivationHeight, int nEnforcementHeight);
 
-    void
-    UpdateBudgetParameters(int nSmartnodePaymentsStartBlock, int nBudgetPaymentsStartBlock, int nSuperblockStartBlock);
+    void UpdateBudgetParameters(int nSmartnodePaymentsStartBlock, int nBudgetPaymentsStartBlock, int nSuperblockStartBlock);
 
     void UpdateSubsidyAndDiffParams(int nMinimumDifficultyBlocks, int nHighSubsidyBlocks, int nHighSubsidyFactor);
 
@@ -137,6 +137,10 @@ public:
     int PoolMaxParticipants() const { return nPoolMaxParticipants; }
 
     int FulfilledRequestExpireTime() const { return nFulfilledRequestExpireTime; }
+
+    UpdateManager& Updates() { return updateManager; }
+
+    const UpdateManager& Updates() const { return updateManager; }
 
     bool IsFutureActive(CBlockIndex *index) const {
         int height = index == nullptr ? 0 : index->nHeight;
@@ -161,6 +165,7 @@ public:
 protected:
     CChainParams() {}
 
+    UpdateManager updateManager;
     Consensus::Params consensus;
     CMessageHeader::MessageStartChars pchMessageStart;
     int nDefaultPort;
@@ -207,6 +212,9 @@ std::unique_ptr <CChainParams> CreateChainParams(const std::string &chain);
  * startup, except for unit tests.
  */
 const CChainParams &Params();
+
+/// Returns the UpdateManager for the currently selected chain
+UpdateManager& Updates();
 
 /**
  * Sets the params returned by Params() to those for the given BIP70 chain name.
