@@ -327,19 +327,17 @@ void CreateAssetsDialog::createAsset() {
     assetTx.maxMintCount = ui->maxmintSpinBox->value();
     assetTx.issueFrequency = ui->IssueFrequencyBox->value();
 
-    if (Params().IsRootAssetsActive(::ChainActive().Tip())) {
-        assetTx.isRoot = ui->AssetTypeBox->currentText() == "Root";
-        if (!assetTx.isRoot) {//sub asset
-            if (ui->RootAssetBox->currentIndex() > 0) {
-                std::string assetId;
-                if (passetsCache->GetAssetId(ui->RootAssetBox->currentText().toStdString(), assetId)) {
-                    assetTx.rootId = assetId;
-                } else {
-                    //shold never hapen
-                    return;
-                }
-            } 
-        }
+    assetTx.isRoot = ui->AssetTypeBox->currentText() == "Root";
+    if (!assetTx.isRoot) {//sub asset
+        if (ui->RootAssetBox->currentIndex() > 0) {
+            std::string assetId;
+            if (passetsCache->GetAssetId(ui->RootAssetBox->currentText().toStdString(), assetId)) {
+                assetTx.rootId = assetId;
+            } else {
+                //shold never hapen
+                return;
+            }
+        } 
     }
 
     CTransactionRef newTx;
@@ -416,28 +414,24 @@ bool CreateAssetsDialog::validateInputs() {
     bool retval{true};
 
     std::string assetname = ui->assetnameText->text().toStdString();
-    bool isRoot = false; 
-    if (Params().IsRootAssetsActive(::ChainActive().Tip())){
-        isRoot = ui->AssetTypeBox->currentText() == "Root";
-    }
-    
+    bool isRoot = ui->AssetTypeBox->currentText() == "Root";
+
     //check if asset name is valid
     if (!IsAssetNameValid(assetname, isRoot)) {
         retval = false;
         ui->assetnameText->setValid(false);
     }
 
-    if (Params().IsRootAssetsActive(::ChainActive().Tip())) {
-        if (!isRoot) {//sub asset
-            if (ui->RootAssetBox->currentIndex() > 0) {
-                assetname = ui->RootAssetBox->currentText().toStdString() + "|" + assetname;
-            } else {
-                //root asset not selected, set name as invalid
-                ui->assetnameText->setValid(false);
-                retval = false;
-            }
+    if (!isRoot) {//sub asset
+        if (ui->RootAssetBox->currentIndex() > 0) {
+            assetname = ui->RootAssetBox->currentText().toStdString() + "|" + assetname;
+        } else {
+            //root asset not selected, set name as invalid
+            ui->assetnameText->setValid(false);
+            retval = false;
         }
     }
+
     // check if asset already exist
     std::string assetId;
     if (passetsCache->GetAssetId(assetname, assetId)) {
@@ -447,6 +441,7 @@ bool CreateAssetsDialog::validateInputs() {
             ui->assetnameText->setValid(false);
         }
     }
+
     //check on mempool if asset already exist
     if (mempool.CheckForNewAssetConflict(assetname)) {
         retval = false;
@@ -790,26 +785,23 @@ void CreateAssetsDialog::CoinControlUpdateLabels() {
 void CreateAssetsDialog::checkAvailabilityClicked()
 {
     std::string assetname = ui->assetnameText->text().toStdString();
-    bool isRoot = false; 
-    if (Params().IsRootAssetsActive(::ChainActive().Tip()))
-        isRoot = ui->AssetTypeBox->currentText() == "Root";
+    bool isRoot = ui->AssetTypeBox->currentText() == "Root";
 
     //check if asset name is valid
     if (!IsAssetNameValid(assetname, isRoot)) {
         ui->assetnameText->setValid(false);
     }
 
-    if (Params().IsRootAssetsActive(::ChainActive().Tip())) {
-        if (!isRoot) {//sub asset
-            if (ui->RootAssetBox->currentIndex() > 0) {
-                assetname = ui->RootAssetBox->currentText().toStdString() + "|" + assetname;
-            } else {
-                //root asset not selected, set name as invalid
-                ui->assetnameText->setValid(false);
-                return;
-            }
+    if (!isRoot) {//sub asset
+        if (ui->RootAssetBox->currentIndex() > 0) {
+            assetname = ui->RootAssetBox->currentText().toStdString() + "|" + assetname;
+        } else {
+            //root asset not selected, set name as invalid
+            ui->assetnameText->setValid(false);
+            return;
         }
     }
+
     // check if asset already exist
     std::string assetId;
     if (passetsCache->GetAssetId(assetname, assetId)) {

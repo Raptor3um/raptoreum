@@ -51,7 +51,7 @@ static std::string GetDistributionType(int t) {
 
 UniValue createasset(const JSONRPCRequest &request) {
 
-    if (request.fHelp || !Params().IsAssetsActive(::ChainActive().Tip()) || request.params.size() < 1 ||
+    if (request.fHelp || !Updates().IsAssetsActive(::ChainActive().Tip()) || request.params.size() < 1 ||
         request.params.size() > 1)
         throw std::runtime_error(
                 "createasset asset_metadata\n"
@@ -118,85 +118,63 @@ UniValue createasset(const JSONRPCRequest &request) {
         assetTx.updatable = true;
     }
 
-    if (Params().IsRootAssetsActive(::ChainActive().Tip())) {
-        const UniValue &isroot = find_value(asset, "is_root");
-        if (!isroot.isNull()) {
-            assetTx.isRoot = isroot.get_bool();
-        } else {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: asset type not found");
+    const UniValue &isroot = find_value(asset, "is_root");
+    if (!isroot.isNull()) {
+        assetTx.isRoot = isroot.get_bool();
+    } else {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: asset type not found");
+    }
+
+    //check if asset name is valid
+    if (!IsAssetNameValid(assetname, assetTx.isRoot)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Invalid asset name");
+    }
+
+    std::string tmpname = assetname;
+    if (!assetTx.isRoot) { //sub asset
+        const UniValue &root_name = find_value(asset, "root_name");
+        if (root_name.isNull()) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Root asset not found (required)");
         }
-
-        //check if asset name is valid
-        if (!IsAssetNameValid(assetname, assetTx.isRoot)) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Invalid asset name");
-        }
-
-        if (!assetTx.isRoot) { //sub asset
-            const UniValue &root_name = find_value(asset, "root_name");
-            if (root_name.isNull()) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Root asset not found (required)");
-            }
-            std::string rootname = root_name.getValStr();
-            // check if root asset exist
-            std::string assetId;
-            if (passetsCache->GetAssetId(rootname, assetId)) {
-                //set the root asset id
-                assetTx.rootId = assetId;
-                CAssetMetaData tmpAsset;
-                if (!passetsCache->GetAssetMetaData(assetId, tmpAsset)) {
-                    throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Root asset metadata not found");
-                }
-
-                if (!tmpAsset.isRoot) {
-                    throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Invalid root asset name");
-                }
-
-                //check if we own the root asset
-                if (!IsMine(*pwallet, tmpAsset.ownerAddress) & ISMINE_SPENDABLE) {
-                    throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Invalid root asset key");
-                }
-                
-                //combine the root name with the asset name
-                std::string tmpname = tmpAsset.name + "|" + assetname;
-
-                //check if asset already exist
-                std::string tmp_id;
-                if (passetsCache->GetAssetId(tmpname, tmp_id)) {
-                    CAssetMetaData tmp_Asset;
-                    if (passetsCache->GetAssetMetaData(tmp_id, tmp_Asset)) {
-                        throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Asset already exist");
-                    }
-                }
-
-                //check on mempool if asset already exist
-                if (mempool.CheckForNewAssetConflict(tmpname)) {
-                    throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Asset already exist on mempool");
-                }
-            } else {
+        std::string rootname = root_name.getValStr();
+        // check if root asset exist
+        std::string assetId;
+        if (passetsCache->GetAssetId(rootname, assetId)) {
+            //set the root asset id
+            assetTx.rootId = assetId;
+            CAssetMetaData tmpAsset;
+            if (!passetsCache->GetAssetMetaData(assetId, tmpAsset)) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Root asset metadata not found");
             }
-        }
-    } else {
-        //this section can be removed later on
-        //on testnet set version to 1 until new fork
-        assetTx.nVersion = 1;
-        //check if asset name is valid
-        if (!IsAssetNameValid(assetname, false)) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Invalid asset name v1");
-        }
 
-        std::string assetId;
-        if (passetsCache->GetAssetId(assetname, assetId)) {
-            CAssetMetaData tmpAsset;
-            if (passetsCache->GetAssetMetaData(assetId, tmpAsset)) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Asset already exist");
+            if (!tmpAsset.isRoot) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Invalid root asset name");
             }
-        }
 
-        //check on mempool if asset already exist
-        if (mempool.CheckForNewAssetConflict(assetname)) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Asset already exist on mempool");
+            //check if we own the root asset
+            if (!IsMine(*pwallet, tmpAsset.ownerAddress) & ISMINE_SPENDABLE) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Invalid root asset key");
+            }
+            
+            //combine the root name with the asset name
+            tmpname = tmpAsset.name + "|" + assetname;
+        } else {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Root asset metadata not found");
         }
+    } 
+    
+    //check if asset already exist
+    std::string assetId;
+    if (passetsCache->GetAssetId(tmpname, assetId)) {
+        CAssetMetaData tmp_Asset;
+        if (passetsCache->GetAssetMetaData(assetId, tmp_Asset)) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Asset already exist");
+        }
+    }
+
+    //check on mempool if asset already exist
+    if (mempool.CheckForNewAssetConflict(tmpname)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Asset already exist on mempool");
     }
 
     const UniValue &referenceHash = find_value(asset, "referenceHash");
@@ -310,7 +288,7 @@ UniValue createasset(const JSONRPCRequest &request) {
 
 UniValue updateasset(const JSONRPCRequest &request) {
 
-    if (request.fHelp || !Params().IsAssetsActive(::ChainActive().Tip()) || request.params.size() < 1 ||
+    if (request.fHelp || !Updates().IsAssetsActive(::ChainActive().Tip()) || request.params.size() < 1 ||
         request.params.size() > 1)
         throw std::runtime_error(
                 "updateasset asset_metadata\n"
@@ -489,28 +467,6 @@ UniValue updateasset(const JSONRPCRequest &request) {
     }
     
     CCoinControl coinControl;
-
-    if (!Params().IsRootAssetsActive(::ChainActive().Tip())) {
-        coinControl.destChange = ownerAddress;
-        coinControl.fRequireAllInputs = false;
-
-        std::vector <COutput> vecOutputs;
-        //select only confirmed inputs, nMinDepth >= 1
-        pwallet->AvailableCoins(vecOutputs, true, nullptr, 1, MAX_MONEY , MAX_MONEY, 0, 1);
-
-        for (const auto &out: vecOutputs) {
-            CTxDestination txDest;
-            if (ExtractDestination(out.tx->tx->vout[out.i].scriptPubKey, txDest) && txDest == ownerAddress) {
-                coinControl.Select(COutPoint(out.tx->tx->GetHash(), out.i));
-            }
-        }
-
-        if (!coinControl.HasSelected()) {
-            throw JSONRPCError(RPC_INTERNAL_ERROR,
-                            strprintf("No funds at specified address %s", EncodeDestination(ownerAddress)));
-        }
-    }
-
     CTransactionRef newTx;
     CAmount nFee;
     int nChangePos = -1;
@@ -546,7 +502,7 @@ UniValue updateasset(const JSONRPCRequest &request) {
 }
 
 UniValue mintasset(const JSONRPCRequest &request) {
-    if (request.fHelp || !Params().IsAssetsActive(::ChainActive().Tip()) || request.params.size() < 1 ||
+    if (request.fHelp || !Updates().IsAssetsActive(::ChainActive().Tip()) || request.params.size() < 1 ||
         request.params.size() > 1)
         throw std::runtime_error(
                 "mintasset txid\n"
@@ -607,30 +563,8 @@ UniValue mintasset(const JSONRPCRequest &request) {
     if (!IsValidDestination(ownerAddress)) {
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid address");
     }
+
     CCoinControl coinControl;
-
-    if (!Params().IsRootAssetsActive(::ChainActive().Tip())) {
-        coinControl.destChange = ownerAddress;
-        coinControl.fRequireAllInputs = false;
-
-        std::vector <COutput> vecOutputs;
-        //select only confirmed inputs, nMinDepth >= 1
-        pwallet->AvailableCoins(vecOutputs, true, nullptr, 1, MAX_MONEY , MAX_MONEY, 0, 1);
-
-        for (const auto &out: vecOutputs) {
-            CTxDestination txDest;
-            if (ExtractDestination(out.tx->tx->vout[out.i].scriptPubKey, txDest) && txDest == ownerAddress) {
-                coinControl.Select(COutPoint(out.tx->tx->GetHash(), out.i));
-            }
-        }
-
-        if (!coinControl.HasSelected()) {
-            throw JSONRPCError(RPC_INTERNAL_ERROR,
-                            strprintf("No funds at specified address %s", EncodeDestination(ownerAddress)));
-        }
-    }
-
-
     CTransactionRef wtx;
     CAmount nFee;
     int nChangePos = -1;
@@ -675,7 +609,7 @@ UniValue mintasset(const JSONRPCRequest &request) {
 }
 
 UniValue sendasset(const JSONRPCRequest &request) {
-    if (request.fHelp || !Params().IsAssetsActive(::ChainActive().Tip()) || request.params.size() < 3 ||
+    if (request.fHelp || !Updates().IsAssetsActive(::ChainActive().Tip()) || request.params.size() < 3 ||
         request.params.size() > 7)
         throw std::runtime_error(
                 "sendasset \"asset_id\" \"qty\" \"to_address\" \"change_address\" \"asset_change_address\"\n"
@@ -801,7 +735,7 @@ UniValue sendasset(const JSONRPCRequest &request) {
 
 
 UniValue getassetdetailsbyname(const JSONRPCRequest &request) {
-    if (request.fHelp || !Params().IsAssetsActive(::ChainActive().Tip()) || request.params.size() < 1 ||
+    if (request.fHelp || !Updates().IsAssetsActive(::ChainActive().Tip()) || request.params.size() < 1 ||
         request.params.size() > 1)
         throw std::runtime_error(
                 "getassetdetailsbyname 'asset_name'\n"
@@ -833,7 +767,7 @@ UniValue getassetdetailsbyname(const JSONRPCRequest &request) {
 }
 
 UniValue getassetdetailsbyid(const JSONRPCRequest &request) {
-    if (request.fHelp || !Params().IsAssetsActive(::ChainActive().Tip()) || request.params.size() < 1 ||
+    if (request.fHelp || !Updates().IsAssetsActive(::ChainActive().Tip()) || request.params.size() < 1 ||
         request.params.size() > 1)
         throw std::runtime_error(
                 "getassetdetailsbyid 'asset_id'\n"
@@ -861,7 +795,7 @@ UniValue getassetdetailsbyid(const JSONRPCRequest &request) {
 }
 
 UniValue listassetsbalance(const JSONRPCRequest &request) {
-    if (request.fHelp || !Params().IsAssetsActive(::ChainActive().Tip()) || request.params.size() > 0)
+    if (request.fHelp || !Updates().IsAssetsActive(::ChainActive().Tip()) || request.params.size() > 0)
         throw std::runtime_error(
                 "listassetsbalance\n"
                 "\nResult:\n"
@@ -1203,7 +1137,7 @@ UniValue listaddressesbyasset(const JSONRPCRequest &request)
         return "_This rpc call is not functional unless -assetindex is enabled. To enable, please run the wallet with -assetindex, this will require a reindex to occur";
     }
 
-    if (request.fHelp || !Params().IsAssetsActive(::ChainActive().Tip()) || request.params.size() > 4 || request.params.size() < 1)
+    if (request.fHelp || !Updates().IsAssetsActive(::ChainActive().Tip()) || request.params.size() > 4 || request.params.size() < 1)
         throw std::runtime_error(
                 "listaddressesbyasset \"asset_name\" (onlytotal) (count) (start)\n"
                 "\nReturns a list of all address that own the given asset (with balances)"
@@ -1278,7 +1212,7 @@ UniValue listassetbalancesbyaddress(const JSONRPCRequest& request)
         return "_This rpc call is not functional unless -assetindex is enabled. To enable, please run the wallet with -assetindex, this will require a reindex to occur";
     }
 
-    if (request.fHelp || !Params().IsAssetsActive(::ChainActive().Tip()) || request.params.size() < 1)
+    if (request.fHelp || !Updates().IsAssetsActive(::ChainActive().Tip()) || request.params.size() < 1)
         throw std::runtime_error(
             "listassetbalancesbyaddress \"address\" (onlytotal) (count) (start)\n"
             "\nReturns a list of all asset balances for an address.\n"

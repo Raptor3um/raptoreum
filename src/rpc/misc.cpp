@@ -792,7 +792,7 @@ UniValue getaddressutxos(const JSONRPCRequest &request) {
 
         UniValue assetParam = find_value(request.params[0].get_obj(), "asset");
         if (assetParam.isStr()) {
-            if (!Params().IsAssetsActive(::ChainActive().Tip()))
+            if (!Updates().IsAssetsActive(::ChainActive().Tip()))
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Assets aren't active. assetId can't be specified.");
             assetId = assetParam.get_str();
             if (assetId != "*" && !passetsCache->GetAssetId(assetId, assetId))
@@ -945,7 +945,7 @@ UniValue getaddressdeltas(const JSONRPCRequest &request) {
     if (request.params[0].isObject()) {
         UniValue assetParam = find_value(request.params[0].get_obj(), "asset");
         if (assetParam.isStr()) {
-            if (!Params().IsAssetsActive(::ChainActive().Tip()))
+            if (!Updates().IsAssetsActive(::ChainActive().Tip()))
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Assets aren't active. assetId can't be specified.");
             assetId = assetParam.get_str();
             if (assetId != "*" && !passetsCache->GetAssetId(assetId, assetId))
@@ -1072,7 +1072,7 @@ static UniValue getaddressbalance(const JSONRPCRequest &request) {
     if (request.params[0].isObject()) {
         UniValue assetParam = find_value(request.params[0].get_obj(), "asset");
         if (assetParam.isStr()) {
-            if (!Params().IsAssetsActive(::ChainActive().Tip()))
+            if (!Updates().IsAssetsActive(::ChainActive().Tip()))
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Assets aren't active. assetId can't be specified.");
             assetId = assetParam.get_str();
             if (assetId != "*" && !passetsCache->GetAssetId(assetId, assetId))

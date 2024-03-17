@@ -355,39 +355,6 @@ void UpdateAssetsDialog::updateAsset() {
         return;
     }
 
-    if (!Params().IsRootAssetsActive(::ChainActive().Tip())) {
-        CTxDestination ownerAddress = CTxDestination(assetData.ownerAddress);
-        if (!IsValidDestination(ownerAddress)) {
-            QMessageBox msgBox;
-            msgBox.setText("ERROR: Invalid owner address");
-            msgBox.setStandardButtons(QMessageBox::Ok);
-            msgBox.exec();
-            return;
-        }
-        m_coin_control->destChange = ownerAddress;
-
-        m_coin_control->fRequireAllInputs = false;
-
-        std::vector <COutput> vecOutputs;
-        //select only confirmed inputs, nMinDepth >= 1
-        model->wallet().AvailableCoins(vecOutputs, true, nullptr, 1, MAX_MONEY , MAX_MONEY, 0, 1);
-
-        for (const auto &out: vecOutputs) {
-            CTxDestination txDest;
-            if (ExtractDestination(out.tx->tx->vout[out.i].scriptPubKey, txDest) && txDest == ownerAddress) {
-                m_coin_control->Select(COutPoint(out.tx->tx->GetHash(), out.i));
-            }
-        }
-
-        if (!m_coin_control->HasSelected()) {
-            QMessageBox msgBox;
-            msgBox.setText(QString::fromStdString(strprintf("Error: No funds at specified address %s", EncodeDestination(ownerAddress))));
-            msgBox.setStandardButtons(QMessageBox::Ok);
-            msgBox.exec();
-            return;
-        }
-    }
-
     CTransactionRef newTx;
     CAmount nFee;
     int nChangePos = -1;

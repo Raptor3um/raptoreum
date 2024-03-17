@@ -1747,7 +1747,7 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock &block, const CBlockI
                     fClean = false; // transaction output mismatch
                 }
                 if (fAssetIndex) {
-                    if (Params().IsAssetsActive(::ChainActive().Tip()) && assetsCache) {
+                    if (Updates().IsAssetsActive(::ChainActive().Tip()) && assetsCache) {
                         if (coin.out.scriptPubKey.IsAssetScript()) {
                             assetsCache->RemoveAddressBalance(coin.out.scriptPubKey, out);
                         }
@@ -1756,7 +1756,7 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock &block, const CBlockI
             }
         }
 
-        if (Params().IsAssetsActive(::ChainActive().Tip()) && assetsCache) {
+        if (Updates().IsAssetsActive(::ChainActive().Tip()) && assetsCache) {
             if (tx.nType == TRANSACTION_NEW_ASSET) {
                 CNewAssetTx assetTx;
                 if (GetTxPayload(tx, assetTx)) {
@@ -1811,7 +1811,7 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock &block, const CBlockI
                 }
 
                 if (fAssetIndex) {
-                    if (Params().IsAssetsActive(::ChainActive().Tip()) && assetsCache) {
+                    if (Updates().IsAssetsActive(::ChainActive().Tip()) && assetsCache) {
                         const Coin &coin = view.AccessCoin(tx.vin[j].prevout);
                         if (coin.out.scriptPubKey.IsAssetScript()) {
                             assetsCache->AddAssetBlance(coin.out.scriptPubKey, tx.vin[j].prevout);
@@ -2772,7 +2772,7 @@ bool CChainState::FlushStateToDisk(const CChainParams &chainparams, CValidationS
                 if (!evoDb->CommitRootTransaction()) {
                     return AbortNode(state, "Failed to commit EvoDB");
                 }
-                if (Params().IsAssetsActive(::ChainActive().Tip())) {
+                if (Updates().IsAssetsActive(::ChainActive().Tip())) {
                     if (passetsCache && !passetsCache->DumpCacheToDatabase())
                         return AbortNode(state, "Failed to write to asset database");
                 }

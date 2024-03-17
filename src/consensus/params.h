@@ -102,9 +102,6 @@ namespace Consensus {
         SmartnodeCollaterals nCollaterals;
         int smartnodePaymentFixedBlock;
         int nFutureForkBlock;
-        int nAssetsForkBlock;
-        int nRootAssetsForkBlock;
-
     };
 } // namespace Consensus
 

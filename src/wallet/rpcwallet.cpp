@@ -1560,7 +1560,7 @@ void ListTransactions(CWallet *const pwallet, const CWalletTx &wtx, int nMinDept
             ret.push_back(entry);
         }
     }
-    if (Params().IsAssetsActive (::ChainActive().Tip())) {
+    if (Updates().IsAssetsActive (::ChainActive().Tip())) {
         if (listAssetsReceived.size() > 0 && wtx.GetDepthInMainChain() >= nMinDepth) {
             for (const CAssetOutputEntry &data: listAssetsReceived){
                 UniValue entry(UniValue::VOBJ);

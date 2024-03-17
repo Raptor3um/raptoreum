@@ -285,6 +285,11 @@ bool UpdateManager::IsActive(enum EUpdate eUpdate, const CBlockIndex* blockIndex
    return State(eUpdate, blockIndex).State == EUpdateState::Active;
 }
 
+bool UpdateManager::IsAssetsActive(const CBlockIndex* blockIndex)
+{
+        return IsActive(EUpdate::ROUND_VOTING, blockIndex);
+}
+
 StateInfo UpdateManager::State(enum EUpdate eUpdate, const CBlockIndex* blockIndex)
 {
    const Update* update = GetUpdate(eUpdate);

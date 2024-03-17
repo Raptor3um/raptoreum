@@ -353,7 +353,7 @@ void CTxMemPool::AddTransactionsUpdated(unsigned int n) {
 }
 
 static inline std::string getAssetFullName(CNewAssetTx assetTx) {
-        if (assetTx.nVersion == 2 && !assetTx.isRoot) {
+        if (!assetTx.isRoot) {
             CAssetMetaData tmpAsset;
             if (passetsCache->GetAssetMetaData(assetTx.rootId, tmpAsset)) {
                 return tmpAsset.name + "|" +assetTx.name;

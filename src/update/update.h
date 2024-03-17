@@ -310,6 +310,7 @@ class UpdateManager
 
       const Update* GetUpdate(enum EUpdate eUpdate) const;
       bool IsActive(enum EUpdate eUpdate, const CBlockIndex* blockIndex);
+      bool IsAssetsActive(const CBlockIndex* blockIndex);
 
       StateInfo State(enum EUpdate eUpdate, const CBlockIndex* blockIndex);
 
