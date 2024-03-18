@@ -251,7 +251,7 @@ public:
 
 class CNewAssetTx {
 public:
-    static const uint16_t CURRENT_VERSION = 2;
+    static const uint16_t CURRENT_VERSION = 1;
 
     uint16_t nVersion{CURRENT_VERSION}; // message version
     std::string name;
@@ -285,14 +285,12 @@ public:
         READWRITE(obj.nVersion, obj.name, obj.updatable, obj.isUnique, obj.maxMintCount,
                   obj.decimalPoint, obj.referenceHash, obj.fee, obj.type, obj.targetAddress,
                   obj.issueFrequency, obj.amount, obj.ownerAddress, obj.collateralAddress);
-        if(obj.nVersion == 2 ) { //testnet use v1 and v2, mainnet v2 only
-            READWRITE(obj.isRoot);
-            if (!obj.isRoot) {
-                //sub asset: serialise the root id and owner signature
-                READWRITE(obj.rootId);
-                if (!(s.GetType() & SER_GETHASH)) {
-                    READWRITE(obj.vchSig);
-                }
+        READWRITE(obj.isRoot);
+        if (!obj.isRoot) {
+            //sub asset: serialise the root id and owner signature
+            READWRITE(obj.rootId);
+            if (!(s.GetType() & SER_GETHASH)) {
+                READWRITE(obj.vchSig);
             }
         }
         READWRITE(obj.exChainType, obj.externalPayoutScript, obj.externalTxid,
@@ -309,7 +307,7 @@ public:
         obj.pushKV("version", nVersion);
         obj.pushKV("name", name);
         obj.pushKV("isRoot", isRoot);
-        if (!isRoot && nVersion == 2)
+        if (!isRoot)
             obj.pushKV("rootId", rootId);
         obj.pushKV("isUnique", isUnique);
         obj.pushKV("maxMintCount", maxMintCount);
@@ -343,7 +341,7 @@ public:
 
 class CUpdateAssetTx {
 public:
-    static const uint16_t CURRENT_VERSION = 2;
+    static const uint16_t CURRENT_VERSION = 1;
 
     uint16_t nVersion{CURRENT_VERSION}; // message version
     std::string assetId;
@@ -374,10 +372,8 @@ public:
                   obj.type, obj.targetAddress, obj.issueFrequency, obj.maxMintCount, obj.amount,
                   obj.ownerAddress, obj.collateralAddress, obj.exChainType, obj.externalPayoutScript,
                   obj.externalTxid, obj.externalConfirmations, obj.inputsHash);
-        if(obj.nVersion == 2 ) { //testnet use v1 and v2, mainnet v2 only
-            if (!(s.GetType() & SER_GETHASH)) {
-                READWRITE(obj.vchSig);
-            }
+        if (!(s.GetType() & SER_GETHASH)) {
+            READWRITE(obj.vchSig);
         }
     }
 
@@ -419,7 +415,7 @@ public:
 
 class CMintAssetTx {
 public:
-    static const uint16_t CURRENT_VERSION = 2;
+    static const uint16_t CURRENT_VERSION = 1;
 
     uint16_t nVersion{CURRENT_VERSION}; // message version
     std::string assetId;
@@ -433,10 +429,8 @@ public:
     )
     {
         READWRITE(obj.nVersion, obj.assetId, obj.fee, obj.inputsHash);
-        if(obj.nVersion == 2 ) { //testnet use v1 and v2, mainnet v2 only
-            if (!(s.GetType() & SER_GETHASH)) {
-                READWRITE(obj.vchSig);
-            }
+        if (!(s.GetType() & SER_GETHASH)) {
+            READWRITE(obj.vchSig);
         }
     }
 

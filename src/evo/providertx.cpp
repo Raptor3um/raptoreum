@@ -124,7 +124,7 @@ inline bool checkNewUniqueAsset(CNewAssetTx &assetTx, CValidationState &state) {
 
 bool CheckNewAssetTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CValidationState &state,
                      CAssetsCache *assetsCache) {
-    if (!Params().IsAssetsActive(::ChainActive().Tip())) {
+    if (!Updates().IsAssetsActive(::ChainActive().Tip())) {
         return state.DoS(100, false, REJECT_INVALID, "assets-not-enabled");
     }
 
@@ -141,14 +141,6 @@ bool CheckNewAssetTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CVal
         return state.DoS(100, false, REJECT_INVALID, "bad-assets-version");
     }
 
-    if (Params().IsRootAssetsActive(::ChainActive().Tip()) && assetTx.nVersion != 2) {
-            return state.DoS(100, false, REJECT_INVALID, "bad-assets-invalid-version");        
-    } else {
-        if (!Params().IsRootAssetsActive(::ChainActive().Tip()) && assetTx.nVersion != 1) {
-            return state.DoS(100, false, REJECT_INVALID, "bad-assets-invalid-version");
-        }       
-    }
-
     //validate asset name
     if (!IsAssetNameValid(assetTx.name, assetTx.isRoot)) {
         return state.DoS(100, false, REJECT_INVALID, "bad-assets-name");
@@ -157,7 +149,7 @@ bool CheckNewAssetTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CVal
     //Check if a asset already exist with give name
     std::string assetId = assetTx.name;
     CAssetMetaData rootAsset;
-    if (assetTx.nVersion == 2 && !assetTx.isRoot) {
+    if (!assetTx.isRoot) { //sub asset
         if (!assetsCache->GetAssetMetaData(assetTx.rootId, rootAsset)){
             return state.DoS(100, false, REJECT_INVALID, "bad-assets-root-id");
         }
@@ -167,7 +159,7 @@ bool CheckNewAssetTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CVal
                 return state.DoS(100, false, REJECT_INVALID, "bad-assets-dup-name");
             }
         }
-    } else { //v1 or ROOT asset
+    } else { //ROOT asset
         if (assetsCache->GetAssetId(assetTx.name, assetId)) {
             if (assetsCache->CheckIfAssetExists(assetId)) {
                 return state.DoS(100, false, REJECT_INVALID, "bad-assets-dup-name");
@@ -176,7 +168,7 @@ bool CheckNewAssetTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CVal
     }
 
     //check if the root asset is valid
-    if (assetTx.nVersion == 2 && !assetTx.isRoot) {
+    if (!assetTx.isRoot) {
         if (!rootAsset.isRoot) {
             return state.DoS(100, false, REJECT_INVALID, "bad-assets-invalid-root-id");
         }
@@ -226,25 +218,9 @@ bool CheckNewAssetTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CVal
     return true;
 }
 
-inline bool checkAssetFeesPayment(const CTransaction &tx, CValidationState &state, const CCoinsViewCache &view,
-                                  CAssetMetaData asset) {
-    for (auto in: tx.vin) {
-        const Coin &coin = view.AccessCoin(in.prevout);
-        if (coin.IsSpent())
-            return state.DoS(100, false, REJECT_INVALID, "bad-assets-invalid-input");
-        CTxDestination dest;
-        ExtractDestination(coin.out.scriptPubKey, dest);
-        if (EncodeDestination(dest) != EncodeDestination(asset.ownerAddress)) {
-            return state.DoS(100, false, REJECT_INVALID, "bad-assets-invalid-input");
-        }
-    }
-
-    return true;
-}
-
 bool CheckUpdateAssetTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CValidationState &state,
                         const CCoinsViewCache &view, CAssetsCache *assetsCache) {
-    if (!Params().IsAssetsActive(::ChainActive().Tip())) {
+    if (!Updates().IsAssetsActive(::ChainActive().Tip())) {
         return state.DoS(100, false, REJECT_INVALID, "assets-not-enabled");
     }
 
@@ -270,23 +246,11 @@ bool CheckUpdateAssetTx(const CTransaction &tx, const CBlockIndex *pindexPrev, C
     if (!asset.updatable) {
         return state.DoS(100, false, REJECT_INVALID, "bad-assets-not-updateable");
     }
-
-    if (Params().IsRootAssetsActive(::ChainActive().Tip())) {
-        if (assetTx.nVersion != 2) {
-            return state.DoS(100, false, REJECT_INVALID, "bad-assets-invalid-version");
-        }           
-        //check the asset owner signature
-        std::string strError;
-        if (!CMessageSigner::VerifyMessage(asset.ownerAddress, assetTx.vchSig, assetTx.MakeSignString(assetsCache), strError)) {
-            return state.DoS(100, false, REJECT_INVALID, "bad-assets-sig", false, strError);
-        }
-    } else {
-        if (assetTx.nVersion != 1) {
-            return state.DoS(100, false, REJECT_INVALID, "bad-assets-invalid-version");
-        }
-        //Check if fees is paid by the owner address
-        if (!checkAssetFeesPayment(tx, state, view, asset))
-            return false;
+         
+    //check the asset owner signature
+    std::string strError;
+    if (!CMessageSigner::VerifyMessage(asset.ownerAddress, assetTx.vchSig, assetTx.MakeSignString(assetsCache), strError)) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-assets-sig", false, strError);
     }
 
     if (assetTx.ownerAddress.IsNull()) {
@@ -379,7 +343,7 @@ inline bool checkAssetMintAmount(const CTransaction &tx, CValidationState &state
 
 bool CheckMintAssetTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CValidationState &state,
                       const CCoinsViewCache &view, CAssetsCache *assetsCache) {
-    if (!Params().IsAssetsActive(::ChainActive().Tip())) {
+    if (!Updates().IsAssetsActive(::ChainActive().Tip())) {
         return state.DoS(100, false, REJECT_INVALID, "assets-not-enabled");
     }
 
@@ -402,25 +366,12 @@ bool CheckMintAssetTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CVa
         return state.DoS(100, false, REJECT_INVALID, "bad-assets-invalid-asset-id");
     }
 
-    if (asset.type == 0 || asset.isUnique) { // manual mint or unique
-        if (Params().IsRootAssetsActive(::ChainActive().Tip())) {
-            if (assetTx.nVersion != 2) {
-                return state.DoS(100, false, REJECT_INVALID, "bad-assets-invalid-version");
-            }           
-            //check the asset owner signature
-            std::string strError;
-            if (!CMessageSigner::VerifyMessage(asset.ownerAddress, assetTx.vchSig, assetTx.MakeSignString(assetsCache), strError)) {
-                return state.DoS(100, false, REJECT_INVALID, "bad-mint-assets-sig", false, strError);
-            }
-        } else {
-            if (assetTx.nVersion != 1) {
-                return state.DoS(100, false, REJECT_INVALID, "bad-assets-invalid-version");
-            }
-            //Check if fees is paid by the owner address
-            if (!checkAssetFeesPayment(tx, state, view, asset))
-                return false;
+    if (asset.type == 0 || asset.isUnique) { // manual mint or unique        
+        //check the asset owner signature
+        std::string strError;
+        if (!CMessageSigner::VerifyMessage(asset.ownerAddress, assetTx.vchSig, assetTx.MakeSignString(assetsCache), strError)) {
+            return state.DoS(100, false, REJECT_INVALID, "bad-mint-assets-sig", false, strError);
         }
-
         if (!checkAssetMintAmount(tx, state, asset))
             return false;
 
@@ -867,6 +818,5 @@ std::string CMintAssetTx::MakeSignString(CAssetsCache *assetsCache) const {
 
     // ... and also the full hash of the payload as a protection agains malleability and replays
     s += ::SerializeHash(*this).ToString();
-
     return s;
 }

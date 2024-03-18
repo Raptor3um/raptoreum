@@ -204,8 +204,6 @@ public:
         consensus.nMinerConfirmationWindow = 2016; // nPowTargetTimespan / nPowTargetSpacing
         consensus.smartnodePaymentFixedBlock = 6800;
         consensus.nFutureForkBlock = 420420;
-        consensus.nAssetsForkBlock = 9999999;
-        consensus.nRootAssetsForkBlock = consensus.nAssetsForkBlock;
 
         updateManager.Add
         (   // V17 voting blocks 419328-427391 in mainnet, 4032 voting, 4032 grace period, active at 427392
@@ -371,17 +369,16 @@ public:
         consensus.nRuleChangeActivationThreshold = 1512; // 75% for testchains
         consensus.nMinerConfirmationWindow = 2016; // nPowTargetTimespan / nPowTargetSpacing
         consensus.nFutureForkBlock = 1000;
-        consensus.nAssetsForkBlock = 411300;
-        consensus.nRootAssetsForkBlock = 9999999;
 
         updateManager.Add
         (
             Update(EUpdate::DEPLOYMENT_V17, std::string("v17"), 0, 10, 0, 10, 100, 10, false, VoteThreshold(95, 95, 5), VoteThreshold(0, 0, 1))
         );
-        // updateManager.Add
-        // (
-        //    Update(EUpdate::ROUND_VOTING, std::string("Round Voting"), 7, 100, 100000, 5, 10, 5, false, VoteThreshold(85, 85, 1), VoteThreshold(95, 95, 1))
-        // );
+        //updateManager.Add
+        //(
+            //bit 1, 720 block/round, voting start at block 10080, 7 rounds to lock-in and 7 rounds off grace period
+        //    Update(EUpdate::ROUND_VOTING, std::string("Round Voting"), 1, 720, 10080, 7, 720, 7, false, VoteThreshold(85, 85, 1), VoteThreshold(0, 0, 1))
+        //);
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x0"); // 0
@@ -523,8 +520,6 @@ public:
         consensus.nRuleChangeActivationThreshold = 1512; // 75% for testchains
         consensus.nMinerConfirmationWindow = 2016; // nPowTargetTimespan / nPowTargetSpacing
         consensus.nFutureForkBlock = 1;
-        consensus.nAssetsForkBlock = 1;
-        consensus.nRootAssetsForkBlock = 1;
 
         updateManager.Add
         (
@@ -532,7 +527,7 @@ public:
         );
         updateManager.Add
         (
-           Update(EUpdate::ROUND_VOTING, std::string("Round Voting"), 1, 100, 2000, 5, 10, 5, false, VoteThreshold(85, 85, 1), VoteThreshold(0, 0, 1))
+           Update(EUpdate::ROUND_VOTING, std::string("Round Voting"), 1, 10, 100, 5, 10, 5, false, VoteThreshold(85, 85, 1), VoteThreshold(0, 0, 1))
         );
 
         // The best chain should have at least this much work.
@@ -694,17 +689,15 @@ public:
         consensus.nRuleChangeActivationThreshold = 108; // 75% for testchains
         consensus.nMinerConfirmationWindow = 144; // Faster than normal for regtest (144 instead of 2016)
         consensus.nFutureForkBlock = 1;
-        consensus.nAssetsForkBlock = 1;
-        consensus.nRootAssetsForkBlock = 1;
 
         updateManager.Add
         (
             Update(EUpdate::DEPLOYMENT_V17, std::string("v17"), 0, 10, 0, 10, 100, 10, false, VoteThreshold(95, 95, 5), VoteThreshold(0, 0, 1))
         );
-        // updateManager.Add
-        // (
-        //    Update(EUpdate::ROUND_VOTING, std::string("Round Voting"), 7, 100, 100000, 5, 10, 5, false, VoteThreshold(85, 85, 1), VoteThreshold(95, 95, 1))
-        // );
+        updateManager.Add
+        (
+            Update(EUpdate::ROUND_VOTING, std::string("Round Voting"), 1, 10, 100, 10, 100, 10, false, VoteThreshold(95, 95, 5), VoteThreshold(0, 0, 1))
+        );
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x00");

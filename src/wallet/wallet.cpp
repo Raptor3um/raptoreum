@@ -1231,7 +1231,7 @@ bool CWallet::AddToWallet(const CWalletTx &wtxIn, bool fFlushOnClose, bool resca
     if (wtxIn.tx->nType == TRANSACTION_NEW_ASSET && fInsertedNew){
         CNewAssetTx assetTx;
         if (GetTxPayload(wtxIn.tx->vExtraPayload, assetTx)) {
-            if (assetTx.nVersion == 2 && !assetTx.isRoot) {
+            if (!assetTx.isRoot) {
                 CAssetMetaData rootAsset;
                 if (passetsCache->GetAssetMetaData(assetTx.rootId, rootAsset))
                     mapAsset.emplace(hash, std::make_pair(rootAsset.name + "|" +assetTx.name, assetTx.ownerAddress));
@@ -1314,7 +1314,7 @@ void CWallet::LoadToWallet(CWalletTx &wtxIn) {
     if (wtx.tx->nType == TRANSACTION_NEW_ASSET && !wtx.isAbandoned()){
         CNewAssetTx assetTx;
         if (GetTxPayload(wtxIn.tx->vExtraPayload, assetTx)) {
-            if (assetTx.nVersion == 2 && !assetTx.isRoot) {
+            if (!assetTx.isRoot) {
                 CAssetMetaData rootAsset;
                 if (passetsCache->GetAssetMetaData(assetTx.rootId, rootAsset))
                     mapAsset.emplace(hash, std::make_pair(rootAsset.name + "|" +assetTx.name, assetTx.ownerAddress));
@@ -2334,7 +2334,7 @@ void CWalletTx::GetAmounts(std::list <COutputEntry> &listReceived,
                 listReceived.push_back(output);
         }
 
-        if (Params().IsAssetsActive(::ChainActive().Tip())) {
+        if (Updates().IsAssetsActive(::ChainActive().Tip())) {
             if (txout.scriptPubKey.IsAssetScript()) {
                 CAssetOutputEntry assetoutput;
                 assetoutput.vout = i;
@@ -3099,7 +3099,7 @@ void CWallet::AvailableCoins(std::vector <COutput> &vCoins, std::map <std::strin
     std::map <uint256, COutPoint> mapOutPoints;
     std::set <std::string> setAssetMaxFound;
 
-    bool fGetAssets = Params().IsAssetsActive(::ChainActive().Tip()) && fOnlyAssets;
+    bool fGetAssets = Updates().IsAssetsActive(::ChainActive().Tip()) && fOnlyAssets;
 
     for (auto pcoin: GetSpendableTXs()) {
         const uint256 &wtxid = pcoin->GetHash();
@@ -4190,7 +4190,7 @@ bool CWallet::CreateTransaction(const std::vector <CRecipient> &vecSend, CTransa
                                 int &nChangePosInOut, std::string &strFailReason, const CCoinControl &coin_control,
                                 bool sign, int nExtraPayloadSize, FuturePartialPayload *fpp, CNewAssetTx *newAsset,
                                 CMintAssetTx *mint, CUpdateAssetTx *updateAsset) {
-    if (!Params().IsAssetsActive(::ChainActive().Tip()) && (newAsset || mint || updateAsset))
+    if (!Updates().IsAssetsActive(::ChainActive().Tip()) && (newAsset || mint || updateAsset))
         return false;
 
     uint32_t const height = chain().getHeight().get_value_or(-1);
@@ -4272,19 +4272,19 @@ bool CWallet::CreateTransaction(const std::vector <CRecipient> &vecSend, CTransa
         txNew.nVersion = 3;
         txNew.nType = TRANSACTION_NEW_ASSET;
         atx = *newAsset;
-        atx.nVersion = Params().IsRootAssetsActive(::ChainActive().Tip()) ? 2 : 1;
+        atx.nVersion = 1;
         specialFees = getAssetsFeesCoin();
     } else if (mint) {
         txNew.nVersion = 3;
         txNew.nType = TRANSACTION_MINT_ASSET;
         mtx = *mint;
-        mtx.nVersion = Params().IsRootAssetsActive(::ChainActive().Tip()) ? 2 : 1;
+        mtx.nVersion = 1;
         specialFees = getAssetsFeesCoin();
     } else if (updateAsset){
         txNew.nVersion = 3;
         txNew.nType = TRANSACTION_UPDATE_ASSET;
         uptx = *updateAsset;
-        uptx.nVersion = Params().IsRootAssetsActive(::ChainActive().Tip()) ? 2 : 1;
+        uptx.nVersion = 1;
         specialFees = getAssetsFeesCoin();
     }
     // Discourage fee sniping.
@@ -4472,7 +4472,7 @@ bool CWallet::CreateTransaction(const std::vector <CRecipient> &vecSend, CTransa
                         return false;
                     }
                     vecCoins.assign(setCoinsTmp.begin(), setCoinsTmp.end());
-                    if (Params().IsAssetsActive(::ChainActive().Tip())) {
+                    if (Updates().IsAssetsActive(::ChainActive().Tip())) {
                         std::set <CInputCoin> setAssetsTmp;
                         mapAssetsIn.clear();
                         if (!SelectAssets(mapAssetCoins, mapAssetValue, setAssetsTmp, mapAssetsIn)) {
@@ -4635,7 +4635,7 @@ bool CWallet::CreateTransaction(const std::vector <CRecipient> &vecSend, CTransa
                     }
                 };
 
-                if (Params().IsAssetsActive(::ChainActive().Tip())) {
+                if (Updates().IsAssetsActive(::ChainActive().Tip())) {
                     // Add the change for the assets
                     std::map <std::string, CAmount> mapAssetChange;
                     for (auto asset: mapAssetValue) {
@@ -4787,7 +4787,7 @@ bool CWallet::CreateTransaction(const std::vector <CRecipient> &vecSend, CTransa
             SetTxPayload(txNew, ftx);
         } else if (newAsset) {
             UpdateSpecialTxInputsHash(txNew, atx);
-            if (atx.nVersion == 2 && !atx.isRoot) {
+            if (!atx.isRoot) {
                 atx.vchSig.clear();
 
                 CAssetMetaData assetData;
@@ -4812,52 +4812,48 @@ bool CWallet::CreateTransaction(const std::vector <CRecipient> &vecSend, CTransa
             SetTxPayload(txNew, atx);
         } else if (mint) {
             UpdateSpecialTxInputsHash(txNew, mtx);
-            if (mtx.nVersion == 2) {
-                mtx.vchSig.clear();
+            mtx.vchSig.clear();
 
-                CAssetMetaData assetData;
-                if (passetsCache->GetAssetMetaData(mtx.assetId, assetData)) {
-                    std::string m = mtx.MakeSignString(passetsCache.get());
-                    // lets prove we own the asset
-                    CKey key;
-                    if (!CCryptoKeyStore::GetKey(assetData.ownerAddress, key)) {
-                        strFailReason = _("Asset owner key not in wallet");
-                        return false;
-                    }
-                    if(!CMessageSigner::SignMessage(m, mtx.vchSig, key))
-                    {
-                        strFailReason = _("Failed to sign special tx");
-                        return false;
-                    }
-                } else {
-                    strFailReason = _("Failed to get root metadata");
+            CAssetMetaData assetData;
+            if (passetsCache->GetAssetMetaData(mtx.assetId, assetData)) {
+                std::string m = mtx.MakeSignString(passetsCache.get());
+                // lets prove we own the asset
+                CKey key;
+                if (!CCryptoKeyStore::GetKey(assetData.ownerAddress, key)) {
+                    strFailReason = _("Asset owner key not in wallet");
                     return false;
                 }
+                if(!CMessageSigner::SignMessage(m, mtx.vchSig, key))
+                {
+                    strFailReason = _("Failed to sign special tx");
+                    return false;
+                }
+            } else {
+                strFailReason = _("Failed to get root metadata");
+                return false;
             }
             SetTxPayload(txNew, mtx);
         } else if (updateAsset) {
             UpdateSpecialTxInputsHash(txNew, uptx);
-            if (uptx.nVersion == 2) {
-                uptx.vchSig.clear();
+            uptx.vchSig.clear();
 
-                CAssetMetaData assetData;
-                if (passetsCache->GetAssetMetaData(uptx.assetId, assetData)) {
-                    std::string m = uptx.MakeSignString(passetsCache.get());
-                    // lets prove we own the asset
-                    CKey key;
-                    if (!CCryptoKeyStore::GetKey(assetData.ownerAddress, key)) {
-                        strFailReason = _("Asset owner key not in wallet");
-                        return false;
-                    }
-                    if(!CMessageSigner::SignMessage(m, uptx.vchSig, key))
-                    {
-                        strFailReason = _("Failed to sign special tx");
-                        return false;
-                    }
-                } else {
-                    strFailReason = _("Failed to get root metadata");
+            CAssetMetaData assetData;
+            if (passetsCache->GetAssetMetaData(uptx.assetId, assetData)) {
+                std::string m = uptx.MakeSignString(passetsCache.get());
+                // lets prove we own the asset
+                CKey key;
+                if (!CCryptoKeyStore::GetKey(assetData.ownerAddress, key)) {
+                    strFailReason = _("Asset owner key not in wallet");
                     return false;
                 }
+                if(!CMessageSigner::SignMessage(m, uptx.vchSig, key))
+                {
+                    strFailReason = _("Failed to sign special tx");
+                    return false;
+                }
+            } else {
+                strFailReason = _("Failed to get root metadata");
+                return false;
             }
             SetTxPayload(txNew, uptx);
         }

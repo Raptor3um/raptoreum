@@ -51,7 +51,7 @@ CAssetMetaData::CAssetMetaData(const std::string txid, const CNewAssetTx assetTx
     assetId = txid;
     circulatingSupply = 0;
     mintCount = 0;
-    if (assetTx.nVersion == 2 && !assetTx.isRoot){
+    if (!assetTx.isRoot){
         CAssetMetaData rootAsset;
         passetsCache->GetAssetMetaData(assetTx.rootId, rootAsset);
         name = rootAsset.name + "|" + assetTx.name;
@@ -504,7 +504,7 @@ bool CAssetsCache::Flush() {
 
 void AddAssets(const CTransaction &tx, int nHeight, CAssetsCache *assetCache,
                std::pair <std::string, CBlockAssetUndo> *undoAssetData) {
-    if (Params().IsAssetsActive(::ChainActive().Tip()) && assetCache) {
+    if (Updates().IsAssetsActive(::ChainActive().Tip()) && assetCache) {
         if (tx.nType == TRANSACTION_NEW_ASSET) {
             CNewAssetTx assetTx;
             if (GetTxPayload(tx, assetTx)) {
