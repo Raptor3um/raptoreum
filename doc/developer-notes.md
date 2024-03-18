@@ -241,9 +241,9 @@ which includes known Valgrind warnings in our dependencies that cannot be fixed
 in-tree. Example use:
 
 ```shell
-$ valgrind --suppressions=contrib/valgrind.supp src/test/test_dash
+$ valgrind --suppressions=contrib/valgrind.supp src/test/test_raptoreum
 $ valgrind --suppressions=contrib/valgrind.supp --leak-check=full \
-      --show-leak-kinds=all src/test/test_dash --log_level=test_suite
+      --show-leak-kinds=all src/test/test_raptoreu --log_level=test_suite
 $ valgrind -v --leak-check=full src/raptoreumd -printtoconsole
 ```
 
@@ -260,7 +260,7 @@ To enable LCOV report generation during test runs:
 make
 make cov
 
-# A coverage report will now be accessible at `./test_dash.coverage/index.html`.
+# A coverage report will now be accessible at `./test_raptoreum.coverage/index.html`.
 ```
 
 **Sanitizers**
@@ -287,14 +287,14 @@ Some examples:
 
 Valgrind is a programming tool for memory debugging, memory leak detection, and
 profiling. The repo contains a Valgrind suppressions file
-([`valgrind.supp`](https://github.com/dashpay/dash/blob/master/contrib/valgrind.supp))
+([`valgrind.supp`](https://github.com/raptoreumpay/raptoreum/blob/master/contrib/valgrind.supp))
 which includes known Valgrind warnings in our dependencies that cannot be fixed
 in-tree. Example use:
 
 ```shell
-$ valgrind --suppressions=contrib/valgrind.supp src/test/test_dash
+$ valgrind --suppressions=contrib/valgrind.supp src/test/test_raptoreum
 $ valgrind --suppressions=contrib/valgrind.supp --leak-check=full \
-      --show-leak-kinds=all src/test/test_dash --log_level=test_suite
+      --show-leak-kinds=all src/test/test_raptoreum --log_level=test_suite
 $ valgrind -v --leak-check=full src/raptoreumd -printtoconsole
 ```
 
@@ -311,7 +311,7 @@ To enable LCOV report generation during test runs:
 make
 make cov
 
-# A coverage report will now be accessible at `./test_dash.coverage/index.html`.
+# A coverage report will now be accessible at `./test_raptoreum.coverage/index.html`.
 ```
 
 Locking/mutex usage notes

@@ -175,4 +175,4 @@ public:
 
 extern CSmartnodeMetaMan mmetaman;
 
-#endif // BITCOIN_SMARTNODE_MASTERNODE_META_H
+#endif // BITCOIN_SMARTNODE_SMARTNODE_META_H

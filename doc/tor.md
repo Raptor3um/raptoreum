@@ -137,9 +137,9 @@ configured. For cookie authentication the user running raptoreumd must have writ
 to the `CookieAuthFile` specified in Tor configuration. In some cases this is
 preconfigured and the creation of a hidden service is automatic. If permission problems
 are seen with `-debug=tor` they can be resolved by adding both the user running Tor and
-the user running dashd to the same group and setting permissions appropriately. On
-Debian-based systems the user running dashd can be added to the debian-tor group,
-which has the appropriate permissions. Before starting dashd you will need to re-login
+the user running raptoreumd to the same group and setting permissions appropriately. On
+Debian-based systems the user running raptoreumd can be added to the debian-tor group,
+which has the appropriate permissions. Before starting raptoreumd you will need to re-login
 to allow debian-tor group to be applied. Otherwise you will see the following notice: "tor:
 Authentication cookie /run/tor/control.authcookie could not be opened (check permissions)"
 on debug.log.

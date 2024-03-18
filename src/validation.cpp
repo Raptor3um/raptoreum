@@ -774,7 +774,7 @@ static bool AcceptToMemoryPoolWorker(const CChainParams &chainparams, CTxMemPool
         // check special TXs after all the other checks. If we'd do this before the other checks, we might end up
         // DoS scoring a node for non-critical errors, e.g. duplicate keys because a TX is received that was already
         // mined
-        // NOTE: we use UTXO here and do NOT allow mempool txes as masternode collaterals
+        // NOTE: we use UTXO here and do NOT allow mempool txes as smartnode collaterals
         if (!CheckSpecialTx(tx, ::ChainActive().Tip(), state, ::ChainstateActive().CoinsTip(), &assetsCache, true))
             return false;
         if (pool.existsProviderTxConflict(tx)) {

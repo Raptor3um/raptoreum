@@ -144,11 +144,11 @@ void WalletInit::AddWalletOptions() const {
                  strprintf("Enable multiple CoinJoin mixing sessions per block, experimental (0-1, default: %u)",
                            DEFAULT_COINJOIN_MULTISESSION), ArgsManager::ALLOW_ANY, OptionsCategory::WALLET_COINJOIN);
     gArgs.AddArg("-coinjoinrounds=<n>",
-                 strprintf("Use N separate masternodes for each denominated input to mix funds (%u-%u, default: %u)",
+                 strprintf("Use N separate smartnodes for each denominated input to mix funds (%u-%u, default: %u)",
                            MIN_COINJOIN_ROUNDS, MAX_COINJOIN_ROUNDS, DEFAULT_COINJOIN_ROUNDS), ArgsManager::ALLOW_ANY,
                  OptionsCategory::WALLET_COINJOIN);
     gArgs.AddArg("-coinjoinsessions=<n>",
-                 strprintf("Use N separate masternodes in parallel to mix funds (%u-%u, default: %u)",
+                 strprintf("Use N separate smartnodes in parallel to mix funds (%u-%u, default: %u)",
                            MIN_COINJOIN_SESSIONS, MAX_COINJOIN_SESSIONS, DEFAULT_COINJOIN_SESSIONS),
                  ArgsManager::ALLOW_ANY, OptionsCategory::WALLET_COINJOIN);
 

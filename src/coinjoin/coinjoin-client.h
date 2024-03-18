@@ -115,7 +115,7 @@ private:
 
     LOCKS_EXCLUDED(cs_coinjoin);
 
-    /// Process Masternode updates about the progress of mixing
+    /// Process smartnode updates about the progress of mixing
     void ProcessPoolStateUpdate(CCoinJoinStatusUpdate psssup);
 
     // Set the 'state' value, with some logging and capturing when the state changed
@@ -181,7 +181,7 @@ public:
  */
 class CCoinJoinClientManager {
 private:
-    // Keep track of the used Masternodes
+    // Keep track of the used Smartnodes
     std::vector <COutPoint> vecSmartnodesUsed;
 
     mutable Mutex cs_deqsessions;

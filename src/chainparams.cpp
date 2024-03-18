@@ -885,7 +885,7 @@ void CRegTestParams::UpdateBudgetParametersFromArgs(const ArgsManager &args) {
     std::vector <std::string> vParams;
     boost::split(vParams, strParams, boost::is_any_of(":"));
     if (vParams.size() != 3) {
-        throw std::runtime_error("Budget parameters malformed, expecting <masternode>:<budget>:<superblock>");
+        throw std::runtime_error("Budget parameters malformed, expecting <smartnode>:<budget>:<superblock>");
     }
     int nSmartnodePaymentsStartBlock, nBudgetPaymentsStartBlock, nSuperblockStartBlock;
     if (!ParseInt32(vParams[0], &nSmartnodePaymentsStartBlock)) {

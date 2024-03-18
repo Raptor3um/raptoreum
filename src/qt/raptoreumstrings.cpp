@@ -118,9 +118,6 @@ QT_TRANSLATE_NOOP("raptoreum-core", ""
 "Warning: The Network does not appear to fully agree! Some miners addear to "
 "experiencing issues."),
 QT_TRANSLATE_NOOP("raptoreum-core", ""
-"Warning: Unknown block versions being mined! It's possible unknown rules are "
-"in effect"),
-QT_TRANSLATE_NOOP("raptoreum-core", ""
 "Warning: We do not appear to fully agree with our peers! You may need to "
 "upgrade, or other nodes may need to upgrade."),
 QT_TRANSLATE_NOOP("raptoreum-core", ""
@@ -314,7 +311,7 @@ QT_TRANSLATE_NOOP("raptoreum-core", "Wallet needed to be rewritten: restart %s t
 QT_TRANSLATE_NOOP("raptoreum-core", "Warning"),
 QT_TRANSLATE_NOOP("raptoreum-core", "Warning: can't use %s and %s together, will prefer %s"),
 QT_TRANSLATE_NOOP("raptoreum-core", "Warning: incorrect parameter %s, path must exist! Using default path."),
-QT_TRANSLATE_NOOP("raptoreum-core", "Warning: unknown new rules activated (versionbit %i)"),
+QT_TRANSLATE_NOOP("raptoreum-core", "Warning: unknown new rules activated: Expected: 0x%08x, Actual: 0x%08x"),
 QT_TRANSLATE_NOOP("raptoreum-core", "Wasn't able to create wallet backup folder %s!"),
 QT_TRANSLATE_NOOP("raptoreum-core", "Will retry..."),
 QT_TRANSLATE_NOOP("raptoreum-core", "You are starting with governance validation disabled."),

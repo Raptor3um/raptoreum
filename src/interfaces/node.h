@@ -64,7 +64,7 @@ namespace interfaces {
         virtual size_t getInstantSentLockCount() = 0;
     };
 
-//! Interface for the src/masternode part of a raptoreum node (raptoreumd process).
+//! Interface for the src/smartnode part of a raptoreum node (raptoreumd process).
     namespace Smartnode {
         class Sync {
         public:
@@ -289,10 +289,10 @@ namespace interfaces {
         //! Return interface for accessing llmq related handler.
         virtual LLMQ &llmq() = 0;
 
-        //! Return interface for accessing masternode related handler.
+        //! Return interface for accessing smartnode related handler.
         virtual Smartnode::Sync &smartnodeSync() = 0;
 
-        //! Return interface for accessing masternode related handler.
+        //! Return interface for accessing smartnode related handler.
         virtual CoinJoin::Options &coinJoinOptions() = 0;
 
         //! Register handler for init messages.
@@ -355,7 +355,7 @@ namespace interfaces {
 
         virtual std::unique_ptr <Handler> handleNotifyHeaderTip(NotifyHeaderTipFn fn) = 0;
 
-        //! Register handler for masternode list update messages.
+        //! Register handler for smartnode list update messages.
         using NotifySmartnodeListChangedFn = std::function<void(const CDeterministicMNList &newList)>;
 
         virtual std::unique_ptr <Handler> handleNotifySmartnodeListChanged(NotifySmartnodeListChangedFn fn) = 0;

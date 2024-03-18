@@ -519,8 +519,8 @@ static UniValue getblocktemplate(const JSONRPCRequest &request) {
                                {RPCResult::Type::STR, "bits", "compressed target of next block"},
                                {RPCResult::Type::STR, "previousbits", "compressed target of current highest block"},
                                {RPCResult::Type::NUM, "height", "The height of the next block"},
-                               {RPCResult::Type::ARR, "masternode",
-                                "required masternode payments that must be included in the next block",
+                               {RPCResult::Type::ARR, "smartnode",
+                                "required smartnode payments that must be included in the next block",
                                 {
                                         {RPCResult::Type::OBJ, "", "",
                                          {

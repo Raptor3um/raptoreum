@@ -723,41 +723,41 @@
       <trans-unit id="_msg134">
         <source xml:space="preserve">Details for asset: %1</source>
         <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">260</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">265</context></context-group>
       </trans-unit>
       <trans-unit id="_msg135">
         <source xml:space="preserve">Mint details:</source>
         <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">405</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">378</context></context-group>
       </trans-unit>
       <trans-unit id="_msg136">
         <source xml:space="preserve">Name: %1 &lt;br&gt;</source>
         <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">407</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">380</context></context-group>
       </trans-unit>
       <trans-unit id="_msg137">
         <source xml:space="preserve">Amount: %1</source>
         <target xml:space="preserve" state="needs-review-translation">Amount: %1
  {1?}</target>
-        <context-group purpose="location"><context context-type="linenumber">408</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">381</context></context-group>
       </trans-unit>
       <trans-unit id="_msg138">
         <source xml:space="preserve">are added as transaction fee.&lt;hr /&gt;</source>
         <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">417</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">390</context></context-group>
       </trans-unit>
       <trans-unit id="_msg139">
         <source xml:space="preserve">Confirm Asset Mint</source>
         <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">419</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">392</context></context-group>
       </trans-unit>
     </group>
     <group restype="x-trolltech-linguist-context" resname="MintAssetConfirmationDialog">
       <trans-unit id="_msg140">
         <source xml:space="preserve">Yes</source>
         <target xml:space="preserve" state="needs-review-translation">Yes</target>
-        <context-group purpose="location"><context context-type="linenumber">462</context></context-group>
-        <context-group purpose="location"><context context-type="linenumber">465</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">435</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">438</context></context-group>
       </trans-unit>
     </group>
   </body></file>
@@ -1794,8 +1794,8 @@
       <trans-unit id="_msg335">
         <source xml:space="preserve">Yes</source>
         <target xml:space="preserve" state="needs-review-translation">Yes</target>
-        <context-group purpose="location"><context context-type="linenumber">885</context></context-group>
-        <context-group purpose="location"><context context-type="linenumber">888</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">877</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">880</context></context-group>
       </trans-unit>
     </group>
     <group restype="x-trolltech-linguist-context" resname="CreateAssetsDialog">
@@ -1857,86 +1857,86 @@
       <trans-unit id="_msg347">
         <source xml:space="preserve">Asset details:</source>
         <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">363</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">361</context></context-group>
       </trans-unit>
       <trans-unit id="_msg348">
         <source xml:space="preserve">Name: %1 &lt;br&gt;</source>
         <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">365</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">363</context></context-group>
       </trans-unit>
       <trans-unit id="_msg349">
         <source xml:space="preserve">Isunique: %1 &lt;br&gt;</source>
         <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">366</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">364</context></context-group>
       </trans-unit>
       <trans-unit id="_msg350">
         <source xml:space="preserve">Updatable: %1 &lt;br&gt;</source>
         <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">367</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">365</context></context-group>
       </trans-unit>
       <trans-unit id="_msg351">
         <source xml:space="preserve">Decimalpoint: %1 &lt;br&gt;</source>
         <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">368</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">366</context></context-group>
       </trans-unit>
       <trans-unit id="_msg352">
         <source xml:space="preserve">ReferenceHash: %1 &lt;br&gt;</source>
         <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">369</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">367</context></context-group>
       </trans-unit>
       <trans-unit id="_msg353">
         <source xml:space="preserve">MaxMintCount: %1 &lt;br&gt;</source>
         <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">370</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">368</context></context-group>
       </trans-unit>
       <trans-unit id="_msg354">
         <source xml:space="preserve">Owner: %1 &lt;hr /&gt;</source>
         <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">371</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">369</context></context-group>
       </trans-unit>
       <trans-unit id="_msg355">
         <source xml:space="preserve">Distribution:&lt;hr /&gt;</source>
         <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">372</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">370</context></context-group>
       </trans-unit>
       <trans-unit id="_msg356">
         <source xml:space="preserve">Type: %1 &lt;br&gt;</source>
         <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">373</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">371</context></context-group>
       </trans-unit>
       <trans-unit id="_msg357">
         <source xml:space="preserve">Target: %1 &lt;br&gt;</source>
         <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">374</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">372</context></context-group>
       </trans-unit>
       <trans-unit id="_msg358">
         <source xml:space="preserve">IssueFrequency: %1 &lt;br&gt;</source>
         <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">375</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">373</context></context-group>
       </trans-unit>
       <trans-unit id="_msg359">
         <source xml:space="preserve">Amount: %1</source>
         <target xml:space="preserve" state="needs-review-translation">Amount: %1
  {1?}</target>
-        <context-group purpose="location"><context context-type="linenumber">376</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">374</context></context-group>
       </trans-unit>
       <trans-unit id="_msg360">
         <source xml:space="preserve">are added as transaction fee.&lt;hr /&gt;</source>
         <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">385</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">383</context></context-group>
       </trans-unit>
       <trans-unit id="_msg361">
         <source xml:space="preserve">Confirm Asset Creation</source>
         <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">387</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">385</context></context-group>
       </trans-unit>
       <trans-unit id="_msg362">
         <source xml:space="preserve">Pay only the required fee of %1</source>
         <target xml:space="preserve" state="needs-review-translation">Pay only the required fee of %1</target>
-        <context-group purpose="location"><context context-type="linenumber">599</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">594</context></context-group>
       </trans-unit>
       <group restype="x-gettext-plurals">
-        <context-group purpose="location"><context context-type="linenumber">634</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">629</context></context-group>
         <trans-unit id="_msg363[0]">
           <source xml:space="preserve">Estimated to begin confirmation within %n block(s).</source>
           <target xml:space="preserve" state="needs-review-translation">Estimated to begin confirmation within %n block.</target>
@@ -1949,27 +1949,27 @@
       <trans-unit id="_msg364">
         <source xml:space="preserve">Warning: Invalid Raptoreum address</source>
         <target xml:space="preserve" state="needs-review-translation">Warning: Invalid Raptoreum address</target>
-        <context-group purpose="location"><context context-type="linenumber">726</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">721</context></context-group>
       </trans-unit>
       <trans-unit id="_msg365">
         <source xml:space="preserve">Warning: Unknown change address</source>
         <target xml:space="preserve" state="needs-review-translation">Warning: Unknown change address</target>
-        <context-group purpose="location"><context context-type="linenumber">730</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">725</context></context-group>
       </trans-unit>
       <trans-unit id="_msg366">
         <source xml:space="preserve">Confirm custom change address</source>
         <target xml:space="preserve" state="needs-review-translation">Confirm custom change address</target>
-        <context-group purpose="location"><context context-type="linenumber">733</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">728</context></context-group>
       </trans-unit>
       <trans-unit id="_msg367">
         <source xml:space="preserve">The address you selected for change is not part of this wallet. Any or all funds in your wallet may be sent to this address. Are you sure?</source>
         <target xml:space="preserve" state="needs-review-translation">The address you selected for change is not part of this wallet. Any or all funds in your wallet may be sent to this address. Are you sure?</target>
-        <context-group purpose="location"><context context-type="linenumber">734</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">729</context></context-group>
       </trans-unit>
       <trans-unit id="_msg368">
         <source xml:space="preserve">(no label)</source>
         <target xml:space="preserve" state="needs-review-translation">(no label)</target>
-        <context-group purpose="location"><context context-type="linenumber">756</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">751</context></context-group>
       </trans-unit>
     </group>
   </body></file>
@@ -2260,7 +2260,7 @@
         <context-group purpose="location"><context context-type="linenumber">1185</context></context-group>
       </trans-unit>
       <trans-unit id="_msg425">
-        <source xml:space="preserve">Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for raptoreum transactions than the network can process.</source>
+        <source xml:space="preserve">Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for Raptoreum transactions than the network can process.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">1212</context></context-group>
         <context-group purpose="location"><context context-type="linenumber">1225</context></context-group>
@@ -2920,161 +2920,160 @@
         <context-group purpose="location"><context context-type="linenumber">639</context></context-group>
       </trans-unit>
       <trans-unit id="_msg544">
+        <source xml:space="preserve">Language missing or translation incomplete? Help contributing translations here:
+https://explore.transifex.com/feathered-inc/</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">780</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg545">
         <source xml:space="preserve">Options set in this dialog are overriden by the command_line or in the configuration file:</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">911</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg545" approved="yes">
+      <trans-unit id="_msg546" approved="yes">
         <source xml:space="preserve">Hide the icon from the system tray.</source>
         <target xml:space="preserve">Hide the icon from the system tray.</target>
         <context-group purpose="location"><context context-type="linenumber">122</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg546" approved="yes">
+      <trans-unit id="_msg547" approved="yes">
         <source xml:space="preserve">&amp;Hide tray icon</source>
         <target xml:space="preserve">&amp;Hide tray icon</target>
         <context-group purpose="location"><context context-type="linenumber">125</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg547" approved="yes">
+      <trans-unit id="_msg548" approved="yes">
         <source xml:space="preserve">Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
         <target xml:space="preserve">Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</target>
         <context-group purpose="location"><context context-type="linenumber">142</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg548" approved="yes">
+      <trans-unit id="_msg549" approved="yes">
         <source xml:space="preserve">Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items.&lt;br/&gt;%s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
         <target xml:space="preserve">Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items.&lt;br/&gt;%s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</target>
         <context-group purpose="location"><context context-type="linenumber">844</context></context-group>
         <context-group purpose="location"><context context-type="linenumber">857</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg549" approved="yes">
+      <trans-unit id="_msg550" approved="yes">
         <source xml:space="preserve">&amp;Third party transaction URLs</source>
         <target xml:space="preserve">&amp;Third party transaction URLs</target>
         <context-group purpose="location"><context context-type="linenumber">847</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg550" approved="yes">
+      <trans-unit id="_msg551" approved="yes">
         <source xml:space="preserve">Whether to show coin control features or not.</source>
         <target xml:space="preserve">Whether to show coin control features or not.</target>
         <context-group purpose="location"><context context-type="linenumber">251</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg551" approved="yes">
+      <trans-unit id="_msg552" approved="yes">
         <source xml:space="preserve">Automatically start %1 after logging in to the system.</source>
         <target xml:space="preserve">Automatically start %1 after logging in to the system.</target>
         <context-group purpose="location"><context context-type="linenumber">112</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg552" approved="yes">
+      <trans-unit id="_msg553" approved="yes">
         <source xml:space="preserve">&amp;Start %1 on system login</source>
         <target xml:space="preserve">&amp;Start %1 on system login</target>
         <context-group purpose="location"><context context-type="linenumber">115</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg553" approved="yes">
+      <trans-unit id="_msg554" approved="yes">
         <source xml:space="preserve">Enable coin &amp;control features</source>
         <target xml:space="preserve">Enable coin &amp;control features</target>
         <context-group purpose="location"><context context-type="linenumber">254</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg554" approved="yes">
+      <trans-unit id="_msg555" approved="yes">
         <source xml:space="preserve">&amp;Spend unconfirmed change</source>
         <target xml:space="preserve">&amp;Spend unconfirmed change</target>
         <context-group purpose="location"><context context-type="linenumber">274</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg555" approved="yes">
+      <trans-unit id="_msg556" approved="yes">
         <source xml:space="preserve">This setting determines the amount of individual smartnodes that an input will be mixed through.&lt;br/&gt;More rounds of mixing gives a higher degree of privacy, but also costs more in fees.</source>
         <target xml:space="preserve">This setting determines the amount of individual smartnodes that an input will be mixed through.&lt;br/&gt;More rounds of mixing gives a higher degree of privacy, but also costs more in fees.</target>
         <context-group purpose="location"><context context-type="linenumber">365</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg556" approved="yes">
+      <trans-unit id="_msg557" approved="yes">
         <source xml:space="preserve">&amp;Network</source>
         <target xml:space="preserve">&amp;Network</target>
         <context-group purpose="location"><context context-type="linenumber">67</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg557" approved="yes">
+      <trans-unit id="_msg558" approved="yes">
         <source xml:space="preserve">Map port using &amp;UPnP</source>
         <target xml:space="preserve">Map port using &amp;UPnP</target>
         <context-group purpose="location"><context context-type="linenumber">452</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg558" approved="yes">
+      <trans-unit id="_msg559" approved="yes">
         <source xml:space="preserve">Proxy &amp;IP:</source>
         <target xml:space="preserve">Proxy &amp;IP:</target>
         <context-group purpose="location"><context context-type="linenumber">491</context></context-group>
         <context-group purpose="location"><context context-type="linenumber">648</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg559" approved="yes">
+      <trans-unit id="_msg560" approved="yes">
         <source xml:space="preserve">IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
         <target xml:space="preserve">IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</target>
         <context-group purpose="location"><context context-type="linenumber">516</context></context-group>
         <context-group purpose="location"><context context-type="linenumber">673</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg560" approved="yes">
+      <trans-unit id="_msg561" approved="yes">
         <source xml:space="preserve">&amp;Port:</source>
         <target xml:space="preserve">&amp;Port:</target>
         <context-group purpose="location"><context context-type="linenumber">523</context></context-group>
         <context-group purpose="location"><context context-type="linenumber">680</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg561" approved="yes">
+      <trans-unit id="_msg562" approved="yes">
         <source xml:space="preserve">Port of the proxy (e.g. 9050)</source>
         <target xml:space="preserve">Port of the proxy (e.g. 9050)</target>
         <context-group purpose="location"><context context-type="linenumber">548</context></context-group>
         <context-group purpose="location"><context context-type="linenumber">705</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg562" approved="yes">
+      <trans-unit id="_msg563" approved="yes">
         <source xml:space="preserve">Used for reaching peers via:</source>
         <target xml:space="preserve">Used for reaching peers via:</target>
         <context-group purpose="location"><context context-type="linenumber">572</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg563" approved="yes">
+      <trans-unit id="_msg564" approved="yes">
         <source xml:space="preserve">IPv4</source>
         <target xml:space="preserve">IPv4</target>
         <context-group purpose="location"><context context-type="linenumber">588</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg564" approved="yes">
+      <trans-unit id="_msg565" approved="yes">
         <source xml:space="preserve">IPv6</source>
         <target xml:space="preserve">IPv6</target>
         <context-group purpose="location"><context context-type="linenumber">601</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg565" approved="yes">
+      <trans-unit id="_msg566" approved="yes">
         <source xml:space="preserve">Tor</source>
         <target xml:space="preserve">Tor</target>
         <context-group purpose="location"><context context-type="linenumber">614</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg566" approved="yes">
+      <trans-unit id="_msg567" approved="yes">
         <source xml:space="preserve">Connect to the Raptoreum network through a separate SOCKS5 proxy for Tor hidden services.</source>
         <target xml:space="preserve">Connect to the Raptoreum network through a separate SOCKS5 proxy for Tor hidden services.</target>
         <context-group purpose="location"><context context-type="linenumber">636</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg567" approved="yes">
+      <trans-unit id="_msg568" approved="yes">
         <source xml:space="preserve">Show only a tray icon after minimizing the window.</source>
         <target xml:space="preserve">Show only a tray icon after minimizing the window.</target>
         <context-group purpose="location"><context context-type="linenumber">132</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg568" approved="yes">
+      <trans-unit id="_msg569" approved="yes">
         <source xml:space="preserve">&amp;Minimize to the tray instead of the taskbar</source>
         <target xml:space="preserve">&amp;Minimize to the tray instead of the taskbar</target>
         <context-group purpose="location"><context context-type="linenumber">135</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg569" approved="yes">
+      <trans-unit id="_msg570" approved="yes">
         <source xml:space="preserve">M&amp;inimize on close</source>
         <target xml:space="preserve">M&amp;inimize on close</target>
         <context-group purpose="location"><context context-type="linenumber">145</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg570" approved="yes">
+      <trans-unit id="_msg571" approved="yes">
         <source xml:space="preserve">&amp;Display</source>
         <target xml:space="preserve">&amp;Display</target>
         <context-group purpose="location"><context context-type="linenumber">77</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg571" approved="yes">
+      <trans-unit id="_msg572" approved="yes">
         <source xml:space="preserve">User Interface &amp;language:</source>
         <target xml:space="preserve">User Interface &amp;language:</target>
         <context-group purpose="location"><context context-type="linenumber">746</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg572" approved="yes">
+      <trans-unit id="_msg573" approved="yes">
         <source xml:space="preserve">The user interface language can be set here. This setting will take effect after restarting %1.</source>
         <target xml:space="preserve">The user interface language can be set here. This setting will take effect after restarting %1.</target>
         <context-group purpose="location"><context context-type="linenumber">759</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg573" approved="yes">
-        <source xml:space="preserve">Language missing or translation incomplete? Help contributing translations here:
-https://www.transifex.com/projects/p/raptoreum/</source>
-        <target xml:space="preserve">Language missing or translation incomplete? Help contributing translations here:
-https://www.transifex.com/projects/p/raptoreum/</target>
-        <context-group purpose="location"><context context-type="linenumber">780</context></context-group>
       </trans-unit>
       <trans-unit id="_msg574" approved="yes">
         <source xml:space="preserve">&amp;Unit to show amounts in:</source>
@@ -6847,8 +6846,8 @@ https://www.transifex.com/projects/p/raptoreum/</target>
       <trans-unit id="_msg1256">
         <source xml:space="preserve">Yes</source>
         <target xml:space="preserve" state="needs-review-translation">Yes</target>
-        <context-group purpose="location"><context context-type="linenumber">714</context></context-group>
-        <context-group purpose="location"><context context-type="linenumber">717</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">681</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">684</context></context-group>
       </trans-unit>
     </group>
     <group restype="x-trolltech-linguist-context" resname="UpdateAssetsDialog">
@@ -6875,70 +6874,70 @@ https://www.transifex.com/projects/p/raptoreum/</target>
       <trans-unit id="_msg1261">
         <source xml:space="preserve">Updating asset: %1&lt;br&gt;</source>
         <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">412</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">379</context></context-group>
       </trans-unit>
       <trans-unit id="_msg1262">
         <source xml:space="preserve">transfer ownership from: %1 &lt;br&gt;</source>
         <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">415</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">382</context></context-group>
       </trans-unit>
       <trans-unit id="_msg1263">
         <source xml:space="preserve">To: %1 &lt;hr /&gt;</source>
         <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">416</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">383</context></context-group>
       </trans-unit>
       <trans-unit id="_msg1264">
         <source xml:space="preserve">Updatable: %1 &lt;br&gt;</source>
         <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">419</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">386</context></context-group>
       </trans-unit>
       <trans-unit id="_msg1265">
         <source xml:space="preserve">ReferenceHash: %1 &lt;br&gt;</source>
         <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">422</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">389</context></context-group>
       </trans-unit>
       <trans-unit id="_msg1266">
         <source xml:space="preserve">Target: %1 &lt;br&gt;</source>
         <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">425</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">392</context></context-group>
       </trans-unit>
       <trans-unit id="_msg1267">
         <source xml:space="preserve">Distribution Type: %1 &lt;br&gt;</source>
         <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">428</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">395</context></context-group>
       </trans-unit>
       <trans-unit id="_msg1268">
         <source xml:space="preserve">Amount: %1 &lt;br&gt;</source>
         <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">431</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">398</context></context-group>
       </trans-unit>
       <trans-unit id="_msg1269">
         <source xml:space="preserve">MaxMintCount: %1 &lt;br&gt;</source>
         <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">434</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">401</context></context-group>
       </trans-unit>
       <trans-unit id="_msg1270">
         <source xml:space="preserve">IssueFrequency: %1 &lt;br&gt;</source>
         <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">437</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">404</context></context-group>
       </trans-unit>
       <trans-unit id="_msg1271">
         <source xml:space="preserve">are added as transaction fee.&lt;hr /&gt;</source>
         <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">448</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">415</context></context-group>
       </trans-unit>
       <trans-unit id="_msg1272">
         <source xml:space="preserve">Confirm Asset Update</source>
         <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">450</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">417</context></context-group>
       </trans-unit>
       <trans-unit id="_msg1273">
         <source xml:space="preserve">Pay only the required fee of %1</source>
         <target xml:space="preserve" state="needs-review-translation">Pay only the required fee of %1</target>
-        <context-group purpose="location"><context context-type="linenumber">580</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">547</context></context-group>
       </trans-unit>
       <group restype="x-gettext-plurals">
-        <context-group purpose="location"><context context-type="linenumber">615</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">582</context></context-group>
         <trans-unit id="_msg1274[0]">
           <source xml:space="preserve">Estimated to begin confirmation within %n block(s).</source>
           <target xml:space="preserve" state="needs-review-translation">Estimated to begin confirmation within %n block.</target>
@@ -7121,7 +7120,7 @@ https://www.transifex.com/projects/p/raptoreum/</target>
         <context-group purpose="location"><context context-type="linenumber">652</context></context-group>
       </trans-unit>
       <trans-unit id="_msg1308">
-        <source xml:space="preserve">Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for raptoreum transactions than the network can process.</source>
+        <source xml:space="preserve">Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for Raptoreum transactions than the network can process.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">679</context></context-group>
         <context-group purpose="location"><context context-type="linenumber">692</context></context-group>
@@ -7440,1020 +7439,1015 @@ https://www.transifex.com/projects/p/raptoreum/</target>
         <context-group purpose="location"><context context-type="linenumber">117</context></context-group>
       </trans-unit>
       <trans-unit id="_msg1368">
-        <source xml:space="preserve">Warning: Unknown block versions being mined! It&apos;s possible unknown rules are in effect</source>
+        <source xml:space="preserve">Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">120</context></context-group>
       </trans-unit>
       <trans-unit id="_msg1369">
-        <source xml:space="preserve">Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
+        <source xml:space="preserve">You need to rebuild the database using -reindex to change -timestampindex</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">123</context></context-group>
       </trans-unit>
       <trans-unit id="_msg1370">
-        <source xml:space="preserve">You need to rebuild the database using -reindex to change -timestampindex</source>
+        <source xml:space="preserve">You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
         <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">126</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">125</context></context-group>
       </trans-unit>
       <trans-unit id="_msg1371">
-        <source xml:space="preserve">You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
+        <source xml:space="preserve">%d of last 100 blocks have unexpected version</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">128</context></context-group>
       </trans-unit>
       <trans-unit id="_msg1372">
-        <source xml:space="preserve">%d of last 100 blocks have unexpected version</source>
+        <source xml:space="preserve">%s can&apos;t be lower than %s</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">129</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg1373">
+        <source xml:space="preserve">%s failed</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">130</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg1374">
+        <source xml:space="preserve">%s is idle.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">131</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1373">
-        <source xml:space="preserve">%s can&apos;t be lower than %s</source>
+      <trans-unit id="_msg1375">
+        <source xml:space="preserve">%s is not a valid backup folder!</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">132</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1374">
-        <source xml:space="preserve">%s failed</source>
+      <trans-unit id="_msg1376">
+        <source xml:space="preserve">%s is set very high!</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">133</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1375">
-        <source xml:space="preserve">%s is idle.</source>
+      <trans-unit id="_msg1377">
+        <source xml:space="preserve">%s request incomplete: %s</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">134</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1376">
-        <source xml:space="preserve">%s is not a valid backup folder!</source>
+      <trans-unit id="_msg1378">
+        <source xml:space="preserve">-devnet can only be specified once</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">135</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1377">
-        <source xml:space="preserve">%s is set very high!</source>
+      <trans-unit id="_msg1379">
+        <source xml:space="preserve">-maxmempool must be at least %d MB</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">136</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1378">
-        <source xml:space="preserve">%s request incomplete: %s</source>
+      <trans-unit id="_msg1380">
+        <source xml:space="preserve">-port must be specified when -devnet and -listen are specified</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">137</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1379">
-        <source xml:space="preserve">-devnet can only be specified once</source>
+      <trans-unit id="_msg1381">
+        <source xml:space="preserve">-rpcport must be specified when -devnet and -server are specified</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">138</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1380">
-        <source xml:space="preserve">-maxmempool must be at least %d MB</source>
+      <trans-unit id="_msg1382">
+        <source xml:space="preserve">Already have that input.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">139</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1381">
-        <source xml:space="preserve">-port must be specified when -devnet and -listen are specified</source>
+      <trans-unit id="_msg1383">
+        <source xml:space="preserve">Asset Transfer amounts must be greater than 0</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">140</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1382">
-        <source xml:space="preserve">-rpcport must be specified when -devnet and -server are specified</source>
+      <trans-unit id="_msg1384">
+        <source xml:space="preserve">Asset owner key not in wallet</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">141</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1383">
-        <source xml:space="preserve">Already have that input.</source>
+      <trans-unit id="_msg1385">
+        <source xml:space="preserve">Automatic backups disabled</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">142</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1384">
-        <source xml:space="preserve">Asset Transfer amounts must be greater than 0</source>
+      <trans-unit id="_msg1386">
+        <source xml:space="preserve">Can&apos;t find random Smartnode.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">143</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1385">
-        <source xml:space="preserve">Asset owner key not in wallet</source>
+      <trans-unit id="_msg1387">
+        <source xml:space="preserve">Can&apos;t mix while sync in progress.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">144</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1386">
-        <source xml:space="preserve">Automatic backups disabled</source>
+      <trans-unit id="_msg1388">
+        <source xml:space="preserve">Can&apos;t mix: no compatible inputs found!</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">145</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1387">
-        <source xml:space="preserve">Can&apos;t find random Smartnode.</source>
+      <trans-unit id="_msg1389">
+        <source xml:space="preserve">Cannot downgrade wallet</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">146</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1388">
-        <source xml:space="preserve">Can&apos;t mix while sync in progress.</source>
+      <trans-unit id="_msg1390">
+        <source xml:space="preserve">Cannot resolve -%s address: &apos;%s&apos;</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">147</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1389">
-        <source xml:space="preserve">Can&apos;t mix: no compatible inputs found!</source>
+      <trans-unit id="_msg1391">
+        <source xml:space="preserve">Cannot write to data directory &apos;%s&apos;; check permissions.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">148</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1390">
-        <source xml:space="preserve">Cannot downgrade wallet</source>
+      <trans-unit id="_msg1392">
+        <source xml:space="preserve">Change index out of range</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">149</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1391">
-        <source xml:space="preserve">Cannot resolve -%s address: &apos;%s&apos;</source>
+      <trans-unit id="_msg1393">
+        <source xml:space="preserve">Collateral not valid.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">150</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1392">
-        <source xml:space="preserve">Cannot write to data directory &apos;%s&apos;; check permissions.</source>
+      <trans-unit id="_msg1394">
+        <source xml:space="preserve">Config settings for %s only applied on %s network when in [%s] section.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">151</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1393">
-        <source xml:space="preserve">Change index out of range</source>
+      <trans-unit id="_msg1395">
+        <source xml:space="preserve">Copyright (C)</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">152</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1394">
-        <source xml:space="preserve">Collateral not valid.</source>
+      <trans-unit id="_msg1396">
+        <source xml:space="preserve">Corrupted block database detected</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">153</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1395">
-        <source xml:space="preserve">Config settings for %s only applied on %s network when in [%s] section.</source>
+      <trans-unit id="_msg1397">
+        <source xml:space="preserve">Could not find asmap file %s</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">154</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1396">
-        <source xml:space="preserve">Copyright (C)</source>
+      <trans-unit id="_msg1398">
+        <source xml:space="preserve">Could not parse asmap file %s</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">155</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1397">
-        <source xml:space="preserve">Corrupted block database detected</source>
+      <trans-unit id="_msg1399">
+        <source xml:space="preserve">Do you want to rebuild the block database now?</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">156</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1398">
-        <source xml:space="preserve">Could not find asmap file %s</source>
+      <trans-unit id="_msg1400">
+        <source xml:space="preserve">Done loading</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">157</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1399">
-        <source xml:space="preserve">Could not parse asmap file %s</source>
-        <target xml:space="preserve"></target>
+      <trans-unit id="_msg1401">
+        <source xml:space="preserve">ERROR! Failed to create automatic backup</source>
+        <target xml:space="preserve" state="needs-review-translation">ERROR! Failed to create automatic backup</target>
         <context-group purpose="location"><context context-type="linenumber">158</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1400">
-        <source xml:space="preserve">Do you want to rebuild the block database now?</source>
+      <trans-unit id="_msg1402">
+        <source xml:space="preserve">Entries are full.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">159</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1401">
-        <source xml:space="preserve">Done loading</source>
+      <trans-unit id="_msg1403">
+        <source xml:space="preserve">Entry exceeds maximum size.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">160</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1402">
-        <source xml:space="preserve">ERROR! Failed to create automatic backup</source>
-        <target xml:space="preserve" state="needs-review-translation">ERROR! Failed to create automatic backup</target>
+      <trans-unit id="_msg1404">
+        <source xml:space="preserve">Error initializing block database</source>
+        <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">161</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1403">
-        <source xml:space="preserve">Entries are full.</source>
+      <trans-unit id="_msg1405">
+        <source xml:space="preserve">Error initializing wallet database environment %s!</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">162</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1404">
-        <source xml:space="preserve">Entry exceeds maximum size.</source>
+      <trans-unit id="_msg1406">
+        <source xml:space="preserve">Error loading %s</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">163</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1405">
-        <source xml:space="preserve">Error initializing block database</source>
+      <trans-unit id="_msg1407">
+        <source xml:space="preserve">Error loading %s: Private keys can only be disabled during creation</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">164</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1406">
-        <source xml:space="preserve">Error initializing wallet database environment %s!</source>
+      <trans-unit id="_msg1408">
+        <source xml:space="preserve">Error loading %s: Wallet corrupted</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">165</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1407">
-        <source xml:space="preserve">Error loading %s</source>
+      <trans-unit id="_msg1409">
+        <source xml:space="preserve">Error loading %s: Wallet requires newer version of %s</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">166</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1408">
-        <source xml:space="preserve">Error loading %s: Private keys can only be disabled during creation</source>
+      <trans-unit id="_msg1410">
+        <source xml:space="preserve">Error loading %s: You can&apos;t disable HD on an already existing HD wallet</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">167</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1409">
-        <source xml:space="preserve">Error loading %s: Wallet corrupted</source>
+      <trans-unit id="_msg1411">
+        <source xml:space="preserve">Error loading block database</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">168</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1410">
-        <source xml:space="preserve">Error loading %s: Wallet requires newer version of %s</source>
+      <trans-unit id="_msg1412">
+        <source xml:space="preserve">Error loading wallet %s. Duplicate -wallet filename specified.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">169</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1411">
-        <source xml:space="preserve">Error loading %s: You can&apos;t disable HD on an already existing HD wallet</source>
+      <trans-unit id="_msg1413">
+        <source xml:space="preserve">Error opening block database</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">170</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1412">
-        <source xml:space="preserve">Error loading block database</source>
+      <trans-unit id="_msg1414">
+        <source xml:space="preserve">Error reading from database, shutting down.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">171</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1413">
-        <source xml:space="preserve">Error loading wallet %s. Duplicate -wallet filename specified.</source>
+      <trans-unit id="_msg1415">
+        <source xml:space="preserve">Error upgrading chainstate database</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">172</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1414">
-        <source xml:space="preserve">Error opening block database</source>
+      <trans-unit id="_msg1416">
+        <source xml:space="preserve">Error upgrading evo database</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">173</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1415">
-        <source xml:space="preserve">Error reading from database, shutting down.</source>
-        <target xml:space="preserve"></target>
+      <trans-unit id="_msg1417">
+        <source xml:space="preserve">Error</source>
+        <target xml:space="preserve" state="needs-review-translation">Error</target>
         <context-group purpose="location"><context context-type="linenumber">174</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1416">
-        <source xml:space="preserve">Error upgrading chainstate database</source>
+      <trans-unit id="_msg1418">
+        <source xml:space="preserve">Error: A fatal internal error occurred, see debug.log for details</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">175</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1417">
-        <source xml:space="preserve">Error upgrading evo database</source>
+      <trans-unit id="_msg1419">
+        <source xml:space="preserve">Error: Disk space is low for %s</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">176</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1418">
-        <source xml:space="preserve">Error</source>
-        <target xml:space="preserve" state="needs-review-translation">Error</target>
+      <trans-unit id="_msg1420">
+        <source xml:space="preserve">Error: Disk space is low!</source>
+        <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">177</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1419">
-        <source xml:space="preserve">Error: A fatal internal error occurred, see debug.log for details</source>
+      <trans-unit id="_msg1421">
+        <source xml:space="preserve">Error: failed to add socket to epollfd (epoll_ctl returned error %s)</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">178</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1420">
-        <source xml:space="preserve">Error: Disk space is low for %s</source>
+      <trans-unit id="_msg1422">
+        <source xml:space="preserve">Error: failed to add socket to kqueuefd (kevent returned error %s)</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">179</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1421">
-        <source xml:space="preserve">Error: Disk space is low!</source>
+      <trans-unit id="_msg1423">
+        <source xml:space="preserve">Exceeded max tries.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">180</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1422">
-        <source xml:space="preserve">Error: failed to add socket to epollfd (epoll_ctl returned error %s)</source>
+      <trans-unit id="_msg1424">
+        <source xml:space="preserve">Failed to clear fulfilled requests cache at</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">181</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1423">
-        <source xml:space="preserve">Error: failed to add socket to kqueuefd (kevent returned error %s)</source>
+      <trans-unit id="_msg1425">
+        <source xml:space="preserve">Failed to clear governance cache at</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">182</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1424">
-        <source xml:space="preserve">Exceeded max tries.</source>
+      <trans-unit id="_msg1426">
+        <source xml:space="preserve">Failed to clear smartnode cache at</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">183</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1425">
-        <source xml:space="preserve">Failed to clear fulfilled requests cache at</source>
+      <trans-unit id="_msg1427">
+        <source xml:space="preserve">Failed to commit EvoDB</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">184</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1426">
-        <source xml:space="preserve">Failed to clear governance cache at</source>
+      <trans-unit id="_msg1428">
+        <source xml:space="preserve">Failed to create backup %s!</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">185</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1427">
-        <source xml:space="preserve">Failed to clear smartnode cache at</source>
+      <trans-unit id="_msg1429">
+        <source xml:space="preserve">Failed to create backup, error: %s</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">186</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1428">
-        <source xml:space="preserve">Failed to commit EvoDB</source>
+      <trans-unit id="_msg1430">
+        <source xml:space="preserve">Failed to delete backup, error: %s</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">187</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1429">
-        <source xml:space="preserve">Failed to create backup %s!</source>
+      <trans-unit id="_msg1431">
+        <source xml:space="preserve">Failed to find mixing queue to join</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">188</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1430">
-        <source xml:space="preserve">Failed to create backup, error: %s</source>
+      <trans-unit id="_msg1432">
+        <source xml:space="preserve">Failed to get root metadata</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">189</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1431">
-        <source xml:space="preserve">Failed to delete backup, error: %s</source>
+      <trans-unit id="_msg1433">
+        <source xml:space="preserve">Failed to listen on any port. Use -listen=0 if you want this.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">190</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1432">
-        <source xml:space="preserve">Failed to find mixing queue to join</source>
+      <trans-unit id="_msg1434">
+        <source xml:space="preserve">Failed to load Assets Database</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">191</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1433">
-        <source xml:space="preserve">Failed to get root metadata</source>
+      <trans-unit id="_msg1435">
+        <source xml:space="preserve">Failed to load POW cache from</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">192</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1434">
-        <source xml:space="preserve">Failed to listen on any port. Use -listen=0 if you want this.</source>
+      <trans-unit id="_msg1436">
+        <source xml:space="preserve">Failed to load fulfilled requests cache from</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">193</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1435">
-        <source xml:space="preserve">Failed to load Assets Database</source>
+      <trans-unit id="_msg1437">
+        <source xml:space="preserve">Failed to load governance cache from</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">194</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1436">
-        <source xml:space="preserve">Failed to load POW cache from</source>
+      <trans-unit id="_msg1438">
+        <source xml:space="preserve">Failed to load smartnode cache from</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">195</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1437">
-        <source xml:space="preserve">Failed to load fulfilled requests cache from</source>
+      <trans-unit id="_msg1439">
+        <source xml:space="preserve">Failed to load sporks cache from</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">196</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1438">
-        <source xml:space="preserve">Failed to load governance cache from</source>
+      <trans-unit id="_msg1440">
+        <source xml:space="preserve">Failed to rescan the wallet during initialization</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">197</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1439">
-        <source xml:space="preserve">Failed to load smartnode cache from</source>
+      <trans-unit id="_msg1441">
+        <source xml:space="preserve">Failed to sign special tx</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">198</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1440">
-        <source xml:space="preserve">Failed to load sporks cache from</source>
+      <trans-unit id="_msg1442">
+        <source xml:space="preserve">Failed to start a new mixing queue</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">199</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1441">
-        <source xml:space="preserve">Failed to rescan the wallet during initialization</source>
+      <trans-unit id="_msg1443">
+        <source xml:space="preserve">Found enough users, signing ( waiting %s )</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">200</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1442">
-        <source xml:space="preserve">Failed to sign special tx</source>
+      <trans-unit id="_msg1444">
+        <source xml:space="preserve">Found enough users, signing ...</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">201</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1443">
-        <source xml:space="preserve">Failed to start a new mixing queue</source>
+      <trans-unit id="_msg1445">
+        <source xml:space="preserve">Importing...</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">202</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1444">
-        <source xml:space="preserve">Found enough users, signing ( waiting %s )</source>
+      <trans-unit id="_msg1446">
+        <source xml:space="preserve">Incompatible mode.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">203</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1445">
-        <source xml:space="preserve">Found enough users, signing ...</source>
+      <trans-unit id="_msg1447">
+        <source xml:space="preserve">Incompatible version.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">204</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1446">
-        <source xml:space="preserve">Importing...</source>
+      <trans-unit id="_msg1448">
+        <source xml:space="preserve">Incorrect -rescan mode, falling back to default value</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">205</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1447">
-        <source xml:space="preserve">Incompatible mode.</source>
+      <trans-unit id="_msg1449">
+        <source xml:space="preserve">Incorrect or no genesis block found. Wrong datadir for network?</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">206</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1448">
-        <source xml:space="preserve">Incompatible version.</source>
-        <target xml:space="preserve"></target>
+      <trans-unit id="_msg1450">
+        <source xml:space="preserve">Information</source>
+        <target xml:space="preserve" state="needs-review-translation">Information</target>
         <context-group purpose="location"><context context-type="linenumber">207</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1449">
-        <source xml:space="preserve">Incorrect -rescan mode, falling back to default value</source>
+      <trans-unit id="_msg1451">
+        <source xml:space="preserve">Initialization sanity check failed. %s is shutting down.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">208</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1450">
-        <source xml:space="preserve">Incorrect or no genesis block found. Wrong datadir for network?</source>
+      <trans-unit id="_msg1452">
+        <source xml:space="preserve">Input is not valid.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">209</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1451">
-        <source xml:space="preserve">Information</source>
-        <target xml:space="preserve" state="needs-review-translation">Information</target>
+      <trans-unit id="_msg1453">
+        <source xml:space="preserve">Inputs vs outputs size mismatch.</source>
+        <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">210</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1452">
-        <source xml:space="preserve">Initialization sanity check failed. %s is shutting down.</source>
+      <trans-unit id="_msg1454">
+        <source xml:space="preserve">Insufficient Unique asset funds</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">211</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1453">
-        <source xml:space="preserve">Input is not valid.</source>
+      <trans-unit id="_msg1455">
+        <source xml:space="preserve">Insufficient asset funds</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">212</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1454">
-        <source xml:space="preserve">Inputs vs outputs size mismatch.</source>
+      <trans-unit id="_msg1456">
+        <source xml:space="preserve">Insufficient funds.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">213</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1455">
-        <source xml:space="preserve">Insufficient Unique asset funds</source>
+      <trans-unit id="_msg1457">
+        <source xml:space="preserve">Invalid -onion address or hostname: &apos;%s&apos;</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">214</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1456">
-        <source xml:space="preserve">Insufficient asset funds</source>
+      <trans-unit id="_msg1458">
+        <source xml:space="preserve">Invalid -proxy address or hostname: &apos;%s&apos;</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">215</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1457">
-        <source xml:space="preserve">Insufficient funds.</source>
+      <trans-unit id="_msg1459">
+        <source xml:space="preserve">Invalid amount for -%s=&lt;amount&gt;: &apos;%s&apos;</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">216</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1458">
-        <source xml:space="preserve">Invalid -onion address or hostname: &apos;%s&apos;</source>
+      <trans-unit id="_msg1460">
+        <source xml:space="preserve">Invalid amount for -discardfee=&lt;amount&gt;: &apos;%s&apos;</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">217</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1459">
-        <source xml:space="preserve">Invalid -proxy address or hostname: &apos;%s&apos;</source>
+      <trans-unit id="_msg1461">
+        <source xml:space="preserve">Invalid amount for -fallbackfee=&lt;amount&gt;: &apos;%s&apos;</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">218</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1460">
-        <source xml:space="preserve">Invalid amount for -%s=&lt;amount&gt;: &apos;%s&apos;</source>
+      <trans-unit id="_msg1462">
+        <source xml:space="preserve">Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos; (must be at least %s)</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">219</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1461">
-        <source xml:space="preserve">Invalid amount for -discardfee=&lt;amount&gt;: &apos;%s&apos;</source>
+      <trans-unit id="_msg1463">
+        <source xml:space="preserve">Invalid minimum number of spork signers specified with -minsporkkeys</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">220</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1462">
-        <source xml:space="preserve">Invalid amount for -fallbackfee=&lt;amount&gt;: &apos;%s&apos;</source>
+      <trans-unit id="_msg1464">
+        <source xml:space="preserve">Invalid netmask specified in -whitelist: &apos;%s&apos;</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">221</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1463">
-        <source xml:space="preserve">Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos; (must be at least %s)</source>
+      <trans-unit id="_msg1465">
+        <source xml:space="preserve">Invalid script detected.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">222</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1464">
-        <source xml:space="preserve">Invalid minimum number of spork signers specified with -minsporkkeys</source>
+      <trans-unit id="_msg1466">
+        <source xml:space="preserve">Invalid smartnodeblsprivkey. Please see documentation.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">223</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1465">
-        <source xml:space="preserve">Invalid netmask specified in -whitelist: &apos;%s&apos;</source>
+      <trans-unit id="_msg1467">
+        <source xml:space="preserve">Invalid spork address specified with -sporkaddr</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">224</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1466">
-        <source xml:space="preserve">Invalid script detected.</source>
+      <trans-unit id="_msg1468">
+        <source xml:space="preserve">Keypool ran out, please call keypoolrefill first</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">225</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1467">
-        <source xml:space="preserve">Invalid smartnodeblsprivkey. Please see documentation.</source>
+      <trans-unit id="_msg1469">
+        <source xml:space="preserve">Last queue was created too recently.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">226</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1468">
-        <source xml:space="preserve">Invalid spork address specified with -sporkaddr</source>
+      <trans-unit id="_msg1470">
+        <source xml:space="preserve">Last successful action was too recent.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">227</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1469">
-        <source xml:space="preserve">Keypool ran out, please call keypoolrefill first</source>
+      <trans-unit id="_msg1471">
+        <source xml:space="preserve">Loading P2P addresses...</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">228</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1470">
-        <source xml:space="preserve">Last queue was created too recently.</source>
+      <trans-unit id="_msg1472">
+        <source xml:space="preserve">Loading POW cache...</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">229</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1471">
-        <source xml:space="preserve">Last successful action was too recent.</source>
+      <trans-unit id="_msg1473">
+        <source xml:space="preserve">Loading banlist...</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">230</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1472">
-        <source xml:space="preserve">Loading P2P addresses...</source>
+      <trans-unit id="_msg1474">
+        <source xml:space="preserve">Loading block index...</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">231</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1473">
-        <source xml:space="preserve">Loading POW cache...</source>
+      <trans-unit id="_msg1475">
+        <source xml:space="preserve">Loading fulfilled requests cache...</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">232</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1474">
-        <source xml:space="preserve">Loading banlist...</source>
+      <trans-unit id="_msg1476">
+        <source xml:space="preserve">Loading governance cache...</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">233</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1475">
-        <source xml:space="preserve">Loading block index...</source>
+      <trans-unit id="_msg1477">
+        <source xml:space="preserve">Loading smartnode cache...</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">234</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1476">
-        <source xml:space="preserve">Loading fulfilled requests cache...</source>
+      <trans-unit id="_msg1478">
+        <source xml:space="preserve">Loading sporks cache...</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">235</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1477">
-        <source xml:space="preserve">Loading governance cache...</source>
+      <trans-unit id="_msg1479">
+        <source xml:space="preserve">Loading wallet... (%3.2f %%)</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">236</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1478">
-        <source xml:space="preserve">Loading smartnode cache...</source>
+      <trans-unit id="_msg1480">
+        <source xml:space="preserve">Loading wallet...</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">237</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1479">
-        <source xml:space="preserve">Loading sporks cache...</source>
+      <trans-unit id="_msg1481">
+        <source xml:space="preserve">Lock is already in place.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">238</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1480">
-        <source xml:space="preserve">Loading wallet... (%3.2f %%)</source>
+      <trans-unit id="_msg1482">
+        <source xml:space="preserve">Missing input transaction information.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">239</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1481">
-        <source xml:space="preserve">Loading wallet...</source>
+      <trans-unit id="_msg1483">
+        <source xml:space="preserve">Mixing in progress...</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">240</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1482">
-        <source xml:space="preserve">Lock is already in place.</source>
+      <trans-unit id="_msg1484">
+        <source xml:space="preserve">Need to specify a port with -whitebind: &apos;%s&apos;</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">241</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1483">
-        <source xml:space="preserve">Missing input transaction information.</source>
+      <trans-unit id="_msg1485">
+        <source xml:space="preserve">No Smartnodes detected.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">242</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1484">
-        <source xml:space="preserve">Mixing in progress...</source>
+      <trans-unit id="_msg1486">
+        <source xml:space="preserve">No compatible Smartnode found.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">243</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1485">
-        <source xml:space="preserve">Need to specify a port with -whitebind: &apos;%s&apos;</source>
+      <trans-unit id="_msg1487">
+        <source xml:space="preserve">No errors detected.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">244</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1486">
-        <source xml:space="preserve">No Smartnodes detected.</source>
+      <trans-unit id="_msg1488">
+        <source xml:space="preserve">No matching denominations found for mixing.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">245</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1487">
-        <source xml:space="preserve">No compatible Smartnode found.</source>
+      <trans-unit id="_msg1489">
+        <source xml:space="preserve">Not compatible with existing transactions.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">246</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1488">
-        <source xml:space="preserve">No errors detected.</source>
+      <trans-unit id="_msg1490">
+        <source xml:space="preserve">Not enough file descriptors available.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">247</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1489">
-        <source xml:space="preserve">No matching denominations found for mixing.</source>
+      <trans-unit id="_msg1491">
+        <source xml:space="preserve">Not enough funds to mix.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">248</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1490">
-        <source xml:space="preserve">Not compatible with existing transactions.</source>
+      <trans-unit id="_msg1492">
+        <source xml:space="preserve">Not in the Smartnode list.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">249</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1491">
-        <source xml:space="preserve">Not enough file descriptors available.</source>
+      <trans-unit id="_msg1493">
+        <source xml:space="preserve">Prune cannot be configured with a negative value.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">250</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1492">
-        <source xml:space="preserve">Not enough funds to mix.</source>
+      <trans-unit id="_msg1494">
+        <source xml:space="preserve">Prune mode is incompatible with -disablegovernance=false.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">251</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1493">
-        <source xml:space="preserve">Not in the Smartnode list.</source>
+      <trans-unit id="_msg1495">
+        <source xml:space="preserve">Prune mode is incompatible with -txindex.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">252</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1494">
-        <source xml:space="preserve">Prune cannot be configured with a negative value.</source>
+      <trans-unit id="_msg1496">
+        <source xml:space="preserve">Pruning blockstore...</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">253</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1495">
-        <source xml:space="preserve">Prune mode is incompatible with -disablegovernance=false.</source>
+      <trans-unit id="_msg1497">
+        <source xml:space="preserve">Reducing -maxconnections from %d to %d, because of system limitations.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">254</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1496">
-        <source xml:space="preserve">Prune mode is incompatible with -txindex.</source>
+      <trans-unit id="_msg1498">
+        <source xml:space="preserve">Replaying blocks...</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">255</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1497">
-        <source xml:space="preserve">Pruning blockstore...</source>
+      <trans-unit id="_msg1499">
+        <source xml:space="preserve">Rescanning...</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">256</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1498">
-        <source xml:space="preserve">Reducing -maxconnections from %d to %d, because of system limitations.</source>
+      <trans-unit id="_msg1500">
+        <source xml:space="preserve">Root asset key not in wallet</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">257</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1499">
-        <source xml:space="preserve">Replaying blocks...</source>
+      <trans-unit id="_msg1501">
+        <source xml:space="preserve">Section [%s] is not recognized.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">258</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1500">
-        <source xml:space="preserve">Rescanning...</source>
+      <trans-unit id="_msg1502">
+        <source xml:space="preserve">Session not complete!</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">259</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1501">
-        <source xml:space="preserve">Root asset key not in wallet</source>
+      <trans-unit id="_msg1503">
+        <source xml:space="preserve">Session timed out.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">260</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1502">
-        <source xml:space="preserve">Section [%s] is not recognized.</source>
+      <trans-unit id="_msg1504">
+        <source xml:space="preserve">Signing transaction failed</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">261</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1503">
-        <source xml:space="preserve">Session not complete!</source>
+      <trans-unit id="_msg1505">
+        <source xml:space="preserve">Smartnode queue is full.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">262</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1504">
-        <source xml:space="preserve">Session timed out.</source>
+      <trans-unit id="_msg1506">
+        <source xml:space="preserve">Smartnode:</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">263</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1505">
-        <source xml:space="preserve">Signing transaction failed</source>
+      <trans-unit id="_msg1507">
+        <source xml:space="preserve">Specified -walletdir &quot;%s&quot; does not exist</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">264</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1506">
-        <source xml:space="preserve">Smartnode queue is full.</source>
+      <trans-unit id="_msg1508">
+        <source xml:space="preserve">Specified -walletdir &quot;%s&quot; is a relative path</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">265</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1507">
-        <source xml:space="preserve">Smartnode:</source>
+      <trans-unit id="_msg1509">
+        <source xml:space="preserve">Specified -walletdir &quot;%s&quot; is not a directory</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">266</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1508">
-        <source xml:space="preserve">Specified -walletdir &quot;%s&quot; does not exist</source>
+      <trans-unit id="_msg1510">
+        <source xml:space="preserve">Specified blocks directory &quot;%s&quot; does not exist.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">267</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1509">
-        <source xml:space="preserve">Specified -walletdir &quot;%s&quot; is a relative path</source>
+      <trans-unit id="_msg1511">
+        <source xml:space="preserve">Starting network threads...</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">268</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1510">
-        <source xml:space="preserve">Specified -walletdir &quot;%s&quot; is not a directory</source>
+      <trans-unit id="_msg1512">
+        <source xml:space="preserve">Submitted to smartnode, waiting in queue %s</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">269</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1511">
-        <source xml:space="preserve">Specified blocks directory &quot;%s&quot; does not exist.</source>
+      <trans-unit id="_msg1513">
+        <source xml:space="preserve">Synchronization finished</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">270</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1512">
-        <source xml:space="preserve">Starting network threads...</source>
+      <trans-unit id="_msg1514">
+        <source xml:space="preserve">Synchronizing blockchain...</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">271</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1513">
-        <source xml:space="preserve">Submitted to smartnode, waiting in queue %s</source>
+      <trans-unit id="_msg1515">
+        <source xml:space="preserve">Synchronizing governance objects...</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">272</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1514">
-        <source xml:space="preserve">Synchronization finished</source>
+      <trans-unit id="_msg1516">
+        <source xml:space="preserve">The source code is available from %s.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">273</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1515">
-        <source xml:space="preserve">Synchronizing blockchain...</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">274</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg1516">
-        <source xml:space="preserve">Synchronizing governance objects...</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">275</context></context-group>
-      </trans-unit>
       <trans-unit id="_msg1517">
-        <source xml:space="preserve">The source code is available from %s.</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">276</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg1518">
         <source xml:space="preserve">The specified config file %s does not exist
 </source>
         <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">277</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">274</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg1518">
+        <source xml:space="preserve">The transaction amount is too small to pay the fee</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">275</context></context-group>
       </trans-unit>
       <trans-unit id="_msg1519">
-        <source xml:space="preserve">The transaction amount is too small to pay the fee</source>
+        <source xml:space="preserve">The wallet will avoid paying less than the minimum relay fee.</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">276</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg1520">
+        <source xml:space="preserve">This is expected because you are running a pruned node.</source>
+        <target xml:space="preserve"></target>
+        <context-group purpose="location"><context context-type="linenumber">277</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg1521">
+        <source xml:space="preserve">This is experimental software.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">278</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1520">
-        <source xml:space="preserve">The wallet will avoid paying less than the minimum relay fee.</source>
+      <trans-unit id="_msg1522">
+        <source xml:space="preserve">This is the minimum transaction fee you pay on every transaction.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">279</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1521">
-        <source xml:space="preserve">This is expected because you are running a pruned node.</source>
+      <trans-unit id="_msg1523">
+        <source xml:space="preserve">This is the transaction fee you will pay if you send a transaction.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">280</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1522">
-        <source xml:space="preserve">This is experimental software.</source>
+      <trans-unit id="_msg1524">
+        <source xml:space="preserve">Transaction amount too small</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">281</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1523">
-        <source xml:space="preserve">This is the minimum transaction fee you pay on every transaction.</source>
+      <trans-unit id="_msg1525">
+        <source xml:space="preserve">Transaction amounts must not be negative</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">282</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1524">
-        <source xml:space="preserve">This is the transaction fee you will pay if you send a transaction.</source>
+      <trans-unit id="_msg1526">
+        <source xml:space="preserve">Transaction created successfully.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">283</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1525">
-        <source xml:space="preserve">Transaction amount too small</source>
+      <trans-unit id="_msg1527">
+        <source xml:space="preserve">Transaction fees are too high.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">284</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1526">
-        <source xml:space="preserve">Transaction amounts must not be negative</source>
+      <trans-unit id="_msg1528">
+        <source xml:space="preserve">Transaction has too long of a mempool chain</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">285</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1527">
-        <source xml:space="preserve">Transaction created successfully.</source>
+      <trans-unit id="_msg1529">
+        <source xml:space="preserve">Transaction must have at least one recipient</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">286</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1528">
-        <source xml:space="preserve">Transaction fees are too high.</source>
+      <trans-unit id="_msg1530">
+        <source xml:space="preserve">Transaction not valid.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">287</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1529">
-        <source xml:space="preserve">Transaction has too long of a mempool chain</source>
+      <trans-unit id="_msg1531">
+        <source xml:space="preserve">Transaction too large for fee policy</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">288</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1530">
-        <source xml:space="preserve">Transaction must have at least one recipient</source>
+      <trans-unit id="_msg1532">
+        <source xml:space="preserve">Transaction too large</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">289</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1531">
-        <source xml:space="preserve">Transaction not valid.</source>
+      <trans-unit id="_msg1533">
+        <source xml:space="preserve">Trying to connect...</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">290</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1532">
-        <source xml:space="preserve">Transaction too large for fee policy</source>
+      <trans-unit id="_msg1534">
+        <source xml:space="preserve">Unable to bind to %s on this computer (bind returned error %s)</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">291</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1533">
-        <source xml:space="preserve">Transaction too large</source>
+      <trans-unit id="_msg1535">
+        <source xml:space="preserve">Unable to bind to %s on this computer. %s is probably already running.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">292</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1534">
-        <source xml:space="preserve">Trying to connect...</source>
+      <trans-unit id="_msg1536">
+        <source xml:space="preserve">Unable to create PID file &apos;%s&apos;: %s</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">293</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1535">
-        <source xml:space="preserve">Unable to bind to %s on this computer (bind returned error %s)</source>
+      <trans-unit id="_msg1537">
+        <source xml:space="preserve">Unable to generate initial keys</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">294</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1536">
-        <source xml:space="preserve">Unable to bind to %s on this computer. %s is probably already running.</source>
+      <trans-unit id="_msg1538">
+        <source xml:space="preserve">Unable to locate enough mixed funds for this transaction.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">295</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1537">
-        <source xml:space="preserve">Unable to create PID file &apos;%s&apos;: %s</source>
+      <trans-unit id="_msg1539">
+        <source xml:space="preserve">Unable to locate enough non-denominated funds for this transaction.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">296</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1538">
-        <source xml:space="preserve">Unable to generate initial keys</source>
+      <trans-unit id="_msg1540">
+        <source xml:space="preserve">Unable to sign spork message, wrong key?</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">297</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1539">
-        <source xml:space="preserve">Unable to locate enough mixed funds for this transaction.</source>
+      <trans-unit id="_msg1541">
+        <source xml:space="preserve">Unable to start HTTP server. See debug log for details.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">298</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1540">
-        <source xml:space="preserve">Unable to locate enough non-denominated funds for this transaction.</source>
+      <trans-unit id="_msg1542">
+        <source xml:space="preserve">Unknown network specified in -onlynet: &apos;%s&apos;</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">299</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1541">
-        <source xml:space="preserve">Unable to sign spork message, wrong key?</source>
+      <trans-unit id="_msg1543">
+        <source xml:space="preserve">Unknown response.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">300</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1542">
-        <source xml:space="preserve">Unable to start HTTP server. See debug log for details.</source>
+      <trans-unit id="_msg1544">
+        <source xml:space="preserve">Unknown state: id = %u</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">301</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1543">
-        <source xml:space="preserve">Unknown network specified in -onlynet: &apos;%s&apos;</source>
+      <trans-unit id="_msg1545">
+        <source xml:space="preserve">Unsupported logging category %s=%s.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">302</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1544">
-        <source xml:space="preserve">Unknown response.</source>
+      <trans-unit id="_msg1546">
+        <source xml:space="preserve">Upgrading UTXO database</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">303</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1545">
-        <source xml:space="preserve">Unknown state: id = %u</source>
+      <trans-unit id="_msg1547">
+        <source xml:space="preserve">Upgrading txindex database</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">304</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1546">
-        <source xml:space="preserve">Unsupported logging category %s=%s.</source>
+      <trans-unit id="_msg1548">
+        <source xml:space="preserve">User Agent comment (%s) contains unsafe characters.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">305</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1547">
-        <source xml:space="preserve">Upgrading UTXO database</source>
+      <trans-unit id="_msg1549">
+        <source xml:space="preserve">Verifying blocks...</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">306</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1548">
-        <source xml:space="preserve">Upgrading txindex database</source>
+      <trans-unit id="_msg1550">
+        <source xml:space="preserve">Verifying wallet(s)...</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">307</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1549">
-        <source xml:space="preserve">User Agent comment (%s) contains unsafe characters.</source>
+      <trans-unit id="_msg1551">
+        <source xml:space="preserve">Very low number of keys left: %d</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">308</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1550">
-        <source xml:space="preserve">Verifying blocks...</source>
+      <trans-unit id="_msg1552">
+        <source xml:space="preserve">Wallet is locked.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">309</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1551">
-        <source xml:space="preserve">Verifying wallet(s)...</source>
+      <trans-unit id="_msg1553">
+        <source xml:space="preserve">Wallet needed to be rewritten: restart %s to complete</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">310</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1552">
-        <source xml:space="preserve">Very low number of keys left: %d</source>
-        <target xml:space="preserve"></target>
+      <trans-unit id="_msg1554">
+        <source xml:space="preserve">Warning</source>
+        <target xml:space="preserve" state="needs-review-translation">Warning</target>
         <context-group purpose="location"><context context-type="linenumber">311</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1553">
-        <source xml:space="preserve">Wallet is locked.</source>
+      <trans-unit id="_msg1555">
+        <source xml:space="preserve">Warning: can&apos;t use %s and %s together, will prefer %s</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">312</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1554">
-        <source xml:space="preserve">Wallet needed to be rewritten: restart %s to complete</source>
+      <trans-unit id="_msg1556">
+        <source xml:space="preserve">Warning: incorrect parameter %s, path must exist! Using default path.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">313</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1555">
-        <source xml:space="preserve">Warning</source>
-        <target xml:space="preserve" state="needs-review-translation">Warning</target>
+      <trans-unit id="_msg1557">
+        <source xml:space="preserve">Warning: unknown new rules activated: Expected: 0x%08x, Actual: 0x%08x</source>
+        <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">314</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1556">
-        <source xml:space="preserve">Warning: can&apos;t use %s and %s together, will prefer %s</source>
+      <trans-unit id="_msg1558">
+        <source xml:space="preserve">Wasn&apos;t able to create wallet backup folder %s!</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">315</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1557">
-        <source xml:space="preserve">Warning: incorrect parameter %s, path must exist! Using default path.</source>
+      <trans-unit id="_msg1559">
+        <source xml:space="preserve">Will retry...</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">316</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1558">
-        <source xml:space="preserve">Warning: unknown new rules activated (versionbit %i)</source>
+      <trans-unit id="_msg1560">
+        <source xml:space="preserve">You are starting with governance validation disabled.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">317</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1559">
-        <source xml:space="preserve">Wasn&apos;t able to create wallet backup folder %s!</source>
+      <trans-unit id="_msg1561">
+        <source xml:space="preserve">You can not disable governance validation on a smartnode.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">318</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1560">
-        <source xml:space="preserve">Will retry...</source>
+      <trans-unit id="_msg1562">
+        <source xml:space="preserve">You can not start a smartnode with wallet enabled.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">319</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1561">
-        <source xml:space="preserve">You are starting with governance validation disabled.</source>
+      <trans-unit id="_msg1563">
+        <source xml:space="preserve">You need to rebuild the database using -reindex to change -addressindex</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">320</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1562">
-        <source xml:space="preserve">You can not disable governance validation on a smartnode.</source>
+      <trans-unit id="_msg1564">
+        <source xml:space="preserve">You need to rebuild the database using -reindex to change -assetindex</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">321</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1563">
-        <source xml:space="preserve">You can not start a smartnode with wallet enabled.</source>
+      <trans-unit id="_msg1565">
+        <source xml:space="preserve">You need to rebuild the database using -reindex to change -futureindex</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">322</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1564">
-        <source xml:space="preserve">You need to rebuild the database using -reindex to change -addressindex</source>
+      <trans-unit id="_msg1566">
+        <source xml:space="preserve">You need to rebuild the database using -reindex to change -spentindex</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">323</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1565">
-        <source xml:space="preserve">You need to rebuild the database using -reindex to change -assetindex</source>
+      <trans-unit id="_msg1567">
+        <source xml:space="preserve">Your entries added successfully.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">324</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1566">
-        <source xml:space="preserve">You need to rebuild the database using -reindex to change -futureindex</source>
+      <trans-unit id="_msg1568">
+        <source xml:space="preserve">no mixing available.</source>
         <target xml:space="preserve"></target>
         <context-group purpose="location"><context context-type="linenumber">325</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg1567">
-        <source xml:space="preserve">You need to rebuild the database using -reindex to change -spentindex</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">326</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg1568">
-        <source xml:space="preserve">Your entries added successfully.</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">327</context></context-group>
-      </trans-unit>
       <trans-unit id="_msg1569">
-        <source xml:space="preserve">no mixing available.</source>
-        <target xml:space="preserve"></target>
-        <context-group purpose="location"><context context-type="linenumber">328</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg1570">
         <source xml:space="preserve">see debug.log for details.</source>
         <target xml:space="preserve" state="needs-review-translation">see debug.log for details.</target>
-        <context-group purpose="location"><context context-type="linenumber">329</context></context-group>
+        <context-group purpose="location"><context context-type="linenumber">326</context></context-group>
       </trans-unit>
     </group>
   </body></file>

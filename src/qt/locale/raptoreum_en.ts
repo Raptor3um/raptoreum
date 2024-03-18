@@ -701,12 +701,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+191"/>
+        <location line="+196"/>
         <source>Details for asset: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+145"/>
+        <location line="+113"/>
         <source>Mint details:</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1631,7 +1631,7 @@
 <context>
     <name>CreateAssetConfirmationDialog</name>
     <message>
-        <location filename="../createassetsdialog.cpp" line="+885"/>
+        <location filename="../createassetsdialog.cpp" line="+877"/>
         <location line="+3"/>
         <source>Yes</source>
         <translation type="unfinished">Yes</translation>
@@ -1926,7 +1926,7 @@
     <message>
         <location line="+27"/>
         <location line="+13"/>
-        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for raptoreum transactions than the network can process.</source>
+        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for Raptoreum transactions than the network can process.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1956,7 +1956,7 @@
     </message>
     <message>
         <location line="+106"/>
-        <location filename="../createassetsdialog.cpp" line="-736"/>
+        <location filename="../createassetsdialog.cpp" line="-728"/>
         <source>C&amp;reate Asset</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2031,7 +2031,7 @@
         <translation type="unfinished">%1 (%2 blocks)</translation>
     </message>
     <message>
-        <location line="+156"/>
+        <location line="+154"/>
         <source>Asset details:</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2107,7 +2107,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+212"/>
+        <location line="+209"/>
         <source>Pay only the required fee of %1</source>
         <translation type="unfinished">Pay only the required fee of %1</translation>
     </message>
@@ -2704,7 +2704,13 @@
         <translation>Use separate SOCKS&amp;5 proxy to reach peers via Tor hidden services:</translation>
     </message>
     <message>
-        <location line="+272"/>
+        <location line="+141"/>
+        <source>Language missing or translation incomplete? Help contributing translations here:
+https://explore.transifex.com/feathered-inc/</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+131"/>
         <source>Options set in this dialog are overriden by the command_line or in the configuration file:</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2854,14 +2860,7 @@
         <translation>The user interface language can be set here. This setting will take effect after restarting %1.</translation>
     </message>
     <message>
-        <location line="+21"/>
-        <source>Language missing or translation incomplete? Help contributing translations here:
-https://www.transifex.com/projects/p/raptoreum/</source>
-        <translation>Language missing or translation incomplete? Help contributing translations here:
-https://www.transifex.com/projects/p/raptoreum/</translation>
-    </message>
-    <message>
-        <location line="+26"/>
+        <location line="+47"/>
         <source>&amp;Unit to show amounts in:</source>
         <translation>&amp;Unit to show amounts in:</translation>
     </message>
@@ -6643,7 +6642,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
 <context>
     <name>UpdateAssetConfirmationDialog</name>
     <message>
-        <location filename="../updateassetsdialog.cpp" line="+714"/>
+        <location filename="../updateassetsdialog.cpp" line="+681"/>
         <location line="+3"/>
         <source>Yes</source>
         <translation type="unfinished">Yes</translation>
@@ -6822,7 +6821,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+27"/>
         <location line="+13"/>
-        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for raptoreum transactions than the network can process.</source>
+        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for Raptoreum transactions than the network can process.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -6852,7 +6851,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <location line="+106"/>
-        <location filename="../updateassetsdialog.cpp" line="-614"/>
+        <location filename="../updateassetsdialog.cpp" line="-581"/>
         <source>U&amp;pdate Asset</source>
         <translation type="unfinished"></translation>
     </message>
@@ -6892,7 +6891,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation type="unfinished">%1 (%2 blocks)</translation>
     </message>
     <message>
-        <location line="+257"/>
+        <location line="+224"/>
         <source>Updating asset: %1&lt;br&gt;</source>
         <translation type="unfinished"></translation>
     </message>
@@ -7243,11 +7242,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+2"/>
         <source>Warning: The Network does not appear to fully agree! Some miners addear to experiencing issues.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Warning: Unknown block versions being mined! It&apos;s possible unknown rules are in effect</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -8198,7 +8192,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>Warning: unknown new rules activated (versionbit %i)</source>
+        <source>Warning: unknown new rules activated: Expected: 0x%08x, Actual: 0x%08x</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
