@@ -3157,7 +3157,7 @@ static UniValue listunspent(const JSONRPCRequest &request) {
                                  "Minimum sum value of all UTXOs in " + CURRENCY_UNIT + ""},
                                 {"coinType", RPCArg::Type::NUM, /* default */ "0", "Filter coinTypes as follows:\n"
                                                                                    "                         0=ALL_COINS, 1=ONLY_FULLY_MIXED, 2=ONLY_READY_TO_MIX, 3=ONLY_NONDENOMINATED,\n"
-                                                                                   "                         4=ONLY_MASTERNODE_COLLATERAL, 5=ONLY_COINJOIN_COLLATERAL"},
+                                                                                   "                         4=ONLY_SMARTNODE_COLLATERAL, 5=ONLY_COINJOIN_COLLATERAL"},
                         },
                         "query_options"},
                },

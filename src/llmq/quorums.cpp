@@ -624,7 +624,7 @@ namespace llmq {
             auto verifiedProRegTxHash = pFrom->GetVerifiedProRegTxHash();
             if ((!fSmartnodeMode && !CLLMQUtils::IsWatchQuorumsEnabled()) || pFrom == nullptr ||
                 (verifiedProRegTxHash.IsNull() && !pFrom->qwatch)) {
-                errorHandler("Not a verified masternode or a qwatch connection");
+                errorHandler("Not a verified smartnode or a qwatch connection");
                 return;
             }
 

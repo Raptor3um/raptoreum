@@ -420,7 +420,7 @@ static UniValue gobject_submit(const JSONRPCRequest &request) {
 
 void gobject_vote_conf_help(const JSONRPCRequest &request) {
     RPCHelpMan{"gobject vote-conf",
-               "Vote on a governance object by masternode configured in dash.conf\n",
+               "Vote on a governance object by smartnode configured in raptoreum.conf\n",
                {
                        {"governance-hash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO,
                         "hash of the governance object"},

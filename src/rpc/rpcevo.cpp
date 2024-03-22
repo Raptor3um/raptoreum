@@ -157,12 +157,12 @@ static RPCArg GetRpcArg(const std::string &strParamName) {
             {"operatorPubKey_register",
                     {"operatorPubKey_register", RPCArg::Type::STR,                RPCArg::Optional::NO,
                             "The operator BLS public key. The BLS private key does not have to be known.\n"
-                            "It has to match the BLS private key which is later used when operating the masternode."}
+                            "It has to match the BLS private key which is later used when operating the smartnode."}
             },
             {"operatorPubKey_update",
                     {"operatorPubKey_update",   RPCArg::Type::STR,                RPCArg::Optional::NO,
                             "The operator BLS public key. The BLS private key does not have to be known.\n"
-                            "It has to match the BLS private key which is later used when operating the masternode.\n"
+                            "It has to match the BLS private key which is later used when operating the smartnode.\n"
                             "If set to an empty string, the currently active operator BLS public key is reused."}
             },
             {"operatorReward",
@@ -178,11 +178,11 @@ static RPCArg GetRpcArg(const std::string &strParamName) {
             },
             {"payoutAddress_register",
                     {"payoutAddress_register",  RPCArg::Type::STR,                RPCArg::Optional::NO,
-                            "The raptoreum address to use for masternode reward payments."}
+                            "The raptoreum address to use for smartnode reward payments."}
             },
             {"payoutAddress_update",
                     {"payoutAddress_update",    RPCArg::Type::STR,                RPCArg::Optional::NO,
-                            "The raptoreum address to use for masternode reward payments.\n"
+                            "The raptoreum address to use for smartnode reward payments.\n"
                             "If set to an empty string, the currently active payout address is reused."}
             },
             {"proTxHash",
@@ -191,7 +191,7 @@ static RPCArg GetRpcArg(const std::string &strParamName) {
             },
             {"reason",
                     {"reason",                  RPCArg::Type::NUM, /* default */  "",
-                            "The reason for masternode service revocation."}
+                            "The reason for smartnode service revocation."}
             },
             {"submit",
                     {"submit",                  RPCArg::Type::BOOL, /* default */ "true",
@@ -524,7 +524,7 @@ void protx_register_help(const JSONRPCRequest& request)
         + HELP_REQUIRING_PASSPHRASE,
         {
             GetRpcArg("collateralHash"),
-            GetRpcArg("collateralAddress"),
+            GetRpcArg("collateralIndex"),
             GetRpcArg("ipAndPort"),
             GetRpcArg("ownerAddress"),
             GetRpcArg("operatorPubKey_register"),
@@ -554,7 +554,7 @@ void protx_register_prepare_help(const JSONRPCRequest& request)
         "The prepared transaction will also contain inputs and outputs to cover fees.\n",
         {
             GetRpcArg("collateralHash"),
-            GetRpcArg("collateralAddress"),
+            GetRpcArg("collateralIndex"),
             GetRpcArg("ipAndPort"),
             GetRpcArg("ownerAddress"),
             GetRpcArg("operatorPubKey_register"),
@@ -1084,7 +1084,7 @@ void protx_quick_setup_help(const JSONRPCRequest& request)
         + HELP_REQUIRING_PASSPHRASE,
         {
             GetRpcArg("collateralHash"),
-            GetRpcArg("collateralAddress"),
+            GetRpcArg("collateralIndex"),
             GetRpcArg("ipAndPort"),
             GetRpcArg("feeSourceAddress"),
         },

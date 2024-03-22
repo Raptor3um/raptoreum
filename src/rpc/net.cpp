@@ -367,7 +367,7 @@ UniValue getaddednodeinfo(const JSONRPCRequest &request) {
                                                  {RPCResult::Type::OBJ, "", "",
                                                   {
                                                           {RPCResult::Type::STR, "address",
-                                                           "The dash server IP and port we're connected to"},
+                                                           "The Raptoreum server IP and port we're connected to"},
                                                           {RPCResult::Type::STR, "connected",
                                                            "connection, inbound or outbound"},
                                                   }},
