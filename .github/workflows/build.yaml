@@ -343,7 +343,7 @@ jobs:
         run: |
           brew install automake libtool pkg-config miniupnpc librsvg libnatpmp zeromq python
           pip3 install ds_store mac_alias
-          pip3 install -U pip setuptool
+          pip3 install -U pip setuptools
 
       - name: Build Depends
         run: |
