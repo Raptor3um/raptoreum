@@ -733,8 +733,8 @@ public:
 
         vSeeds.clear();
         // nodes with support for servicebits filtering should be at the top
-        vSeeds.emplace_back("47.155.87.132");
-        vSeeds.emplace_back("lbdn.raptoreum.com");
+        vSeeds.emplace_back("47.151.9.131");
+        vSeeds.emplace_back("lbtn.raptoreum.com");
 
         // Testnet Raptoreum addresses start with 'r'
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,123);
