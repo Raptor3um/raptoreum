@@ -374,11 +374,20 @@ public:
         (
             Update(EUpdate::DEPLOYMENT_V17, std::string("v17"), 0, 10, 0, 10, 100, 10, false, VoteThreshold(95, 95, 5), VoteThreshold(0, 0, 1))
         );
-        //updateManager.Add
-        //(
-            //bit 1, 720 block/round, voting start at block 10080, 7 rounds to lock-in and 7 rounds off grace period
-        //    Update(EUpdate::ROUND_VOTING, std::string("Round Voting"), 1, 720, 10080, 7, 720, 7, false, VoteThreshold(85, 85, 1), VoteThreshold(0, 0, 1))
-        //);
+        updateManager.Add
+        (
+//            bit 1, 720 block/round, voting start at block 10080, 7 rounds to lock-in and 7 rounds off grace period
+            Update(EUpdate::ROUND_VOTING, std::string("Round Voting"),
+                   1, //bit
+                   1440, //roundSize
+                   21600, // startHeight
+                   7, //votingPeriod
+                   365, //votingMaxRounds
+                   7, // gracePeriod
+                   false, // forceUpdate
+                   VoteThreshold(85, 85, 1), //minerThreshold
+                   VoteThreshold(0, 0, 1)) //nodeThreshold
+        );
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x0"); // 0
@@ -390,14 +399,14 @@ public:
         pchMessageStart[1] = 0x72; //r
         pchMessageStart[2] = 0x74; //t
         pchMessageStart[3] = 0x6d; //m
-        nDefaultPort = 10229;
+        nDefaultPort = 10230;
         nPruneAfterHeight = 1000;
-        genesis = CreateGenesisBlock(1668574674, 352, 0x20001fff, 4, 5000 * COIN);
+        genesis = CreateGenesisBlock(1711078237, 971, 0x20001fff, 4, 5000 * COIN);
         VerifyGenesisPOW(genesis);
 
         consensus.hashGenesisBlock = genesis.GetHash();
         assert(consensus.hashGenesisBlock ==
-               uint256S("0x16b418c4e84599ba61836085c5b780c199f90c207f7de189cbb56803e87529eb"));
+               uint256S("0xbbab22066081d3b466abd734de914e8092abf4e959bcd0fff978297c41591b23"));
         assert(genesis.hashMerkleRoot ==
                uint256S("0x87a48bc22468acdd72ee540aab7c086a5bbcddc12b51c6ac925717a74c269453"));
 
@@ -406,8 +415,8 @@ public:
 
         vSeeds.clear();
         // nodes with support for servicebits filtering should be at the top
-        vSeeds.emplace_back("47.155.87.132");
-        vSeeds.emplace_back("lbdn.raptoreum.com");
+        vSeeds.emplace_back("47.151.9.131");
+        vSeeds.emplace_back("lbtn.raptoreum.com");
 
         // Testnet Raptoreum addresses start with 'r'
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1, 123);
@@ -441,7 +450,7 @@ public:
         consensus.nFutureRewardShare = Consensus::FutureRewardShare(0.8, 0.2, 0.0);
 
         std::vector <FounderRewardStructure> rewardStructures = {{INT_MAX, 5}};// 5% founder/dev fee forever
-        consensus.nFounderPayment = FounderPayment(rewardStructures, 272200, "rghjACzPtVAN2wydgDbn9Jq1agREu6rH1e");
+        consensus.nFounderPayment = FounderPayment(rewardStructures, 100, "rghjACzPtVAN2wydgDbn9Jq1agREu6rH1e");
 
         fDefaultConsistencyChecks = false;
         fRequireStandard = false;
@@ -469,10 +478,9 @@ public:
         };
 
         chainTxData = ChainTxData{
-                1645942755, // * UNIX timestamp of last known number of transactions (Block 213054)
-                0,    // * total number of transactions between genesis and that timestamp
-                //   (the tx=... number in the SetBestChain debug.log lines)
-                0.01        // * estimated number of transactions per second after that timestamp
+                1712153599, // * UNIX timestamp of last known number of transactions (Block 17670)
+                22643,    // * total number of transactions between genesis and that timestamp
+                0.02108492915974094        // * estimated number of transactions per second after that timestamp
         };
 
     }

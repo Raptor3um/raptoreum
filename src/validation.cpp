@@ -1094,7 +1094,7 @@ GetBlockSubsidy(int nPrevBits, int nPrevHeight, const Consensus::Params &consens
     int multiplier;              // integer number of owlings
     int tempHeight;              // number of blocks since last anchor
     if (nPrevHeight < 720) {
-        nSubsidy = 4;
+        nSubsidy = Params().NetworkIDString().compare("test") == 0 ? 20000 : 4;
     } else if ((nPrevHeight > 553531) && (nPrevHeight < 2105657)) {
         tempHeight = nPrevHeight - 553532;
         multiplier = tempHeight / owlings;
