@@ -796,7 +796,7 @@ public:
         };
 
         chainTxData = ChainTxData{
-            1, // * UNIX timestamp of last known number of transactions (Block 213054)
+            1711078237, // * UNIX timestamp of last known number of transactions (Block 213054)
             0,    // * total number of transactions between genesis and that timestamp
                         //   (the tx=... number in the SetBestChain debug.log lines)
             0.01        // * estimated number of transactions per second after that timestamp
@@ -1189,7 +1189,8 @@ void CChainParams::UpdateLLMQParams(size_t totalMnCount, int height, bool lowLLM
 			consensus.llmqs[Consensus::LLMQ_50_60] = llmq10_60;
 			consensus.llmqs[Consensus::LLMQ_400_60] = llmq20_60;
 			consensus.llmqs[Consensus::LLMQ_400_85] = llmq20_85;
-		}  else if((totalMnCount < 4000 && isTestNet) || (totalMnCount < 600 && !isTestNet)) {
+		}  else if((((height >= 21400 && totalMnCount < 600) || (height < 21400 && totalMnCount < 4000)) && isTestNet)
+                    || (totalMnCount < 600 && !isTestNet)) {
 			consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
 			consensus.llmqs[Consensus::LLMQ_400_60] = llmq40_60;
 			consensus.llmqs[Consensus::LLMQ_400_85] = llmq40_85;
