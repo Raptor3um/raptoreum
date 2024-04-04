@@ -294,10 +294,20 @@ class NodeUpdateVoting : public IUpdateVoting
       NodeRoundVoting* nodeRoundVoting;
 };
 
+typedef struct VoteStats {
+    VoteResult *nodeVoteResult;
+    VoteResult *minerVoteResult;
+    int64_t currentMinerThreshold;
+    int64_t currentNodeThreshold;
+    bool nodesApproved;
+    bool minersApproved;
+} VoteStats;
+
 typedef struct StateInfo
 {
    EUpdateState State;
    int64_t      FinalHeight;    // Active height when state in (LockedIn, Active), Failed height when state == Failed
+   VoteStats voteStats;
 } StateInfo;
 
 class UpdateManager
@@ -330,6 +340,7 @@ class UpdateManager
       FinalStateMap                       finalStates;
       UpdateMap                           updates;             // Update parameters (does not contain states)
       std::map<UpdateCacheKey, StateInfo> states;
+
 };
 
 #endif // RAPTOREUM_UPDATE_HPP

@@ -287,25 +287,26 @@ bool UpdateManager::IsActive(enum EUpdate eUpdate, const CBlockIndex* blockIndex
 
 bool UpdateManager::IsAssetsActive(const CBlockIndex* blockIndex)
 {
-        return IsActive(EUpdate::ROUND_VOTING, blockIndex);
+    return IsActive(EUpdate::ROUND_VOTING, blockIndex);
 }
 
 StateInfo UpdateManager::State(enum EUpdate eUpdate, const CBlockIndex* blockIndex)
 {
    const Update* update = GetUpdate(eUpdate);
+   VoteStats voteStats = {nullptr, nullptr, 0, 0, false, false};
    if (!update || blockIndex == nullptr)
    {
-      return { EUpdateState::Unknown, -1 };
+      return { EUpdateState::Unknown, -1, voteStats };
    }
 
    // Check for forced updates (bypass voting logic and associated overhead for old updates):
    if (update->HeightActivated() >= 0)
    {
       if (blockIndex->nHeight >= update->HeightActivated()) {
-         return { update->Failed() ? EUpdateState::Failed : EUpdateState::Active , update->HeightActivated() };
+         return { update->Failed() ? EUpdateState::Failed : EUpdateState::Active , update->HeightActivated(), voteStats };
       }
       else {
-         return { EUpdateState::Defined, -1 };
+         return { EUpdateState::Defined, -1, voteStats };
       }
    }
 
@@ -350,7 +351,7 @@ StateInfo UpdateManager::State(enum EUpdate eUpdate, const CBlockIndex* blockInd
    // If we are not within one round of starting, just return defined:
    if (roundNumber < -1)
    {
-      return { EUpdateState::Defined, -1 };
+      return { EUpdateState::Defined, -1, voteStats };
    }
 
    LogPrint(BCLog::UPDATES, "Updates: Update: %s, roundSize: %d, startHeight: %7d, lastVotingHeight: %d, votingPeriod: %d, roundNumber: %d\n", update->Name().c_str(), roundSize, startHeight, lastVotingHeight, votingPeriod, roundNumber);
@@ -372,13 +373,13 @@ StateInfo UpdateManager::State(enum EUpdate eUpdate, const CBlockIndex* blockInd
 
       if (pIndexPrev == nullptr || pIndexPrev->nHeight == 0)
       {
-         states[{eUpdate, pIndexPrev}] = { EUpdateState::Defined, -1 }; // The genesis block is by definition defined.
+         states[{eUpdate, pIndexPrev}] = { EUpdateState::Defined, -1, voteStats }; // The genesis block is by definition defined.
          LogPrint(BCLog::UPDATES, "Updates: Genesis block, state: Defined\n");
          break;
       }
       if (pIndexPrev->nHeight < startHeight)
       {
-         states[{eUpdate, pIndexPrev}] = { EUpdateState::Defined, -1 }; // One round before the starting height
+         states[{eUpdate, pIndexPrev}] = { EUpdateState::Defined, -1, voteStats }; // One round before the starting height
          LogPrint(BCLog::UPDATES, "Updates: Height: %7d, Before startHeight, state: Defined\n", pIndexPrev->nHeight);
          break;
       }
@@ -409,6 +410,7 @@ StateInfo UpdateManager::State(enum EUpdate eUpdate, const CBlockIndex* blockInd
                {
                   stateNext.State       = EUpdateState::Failed;
                   stateNext.FinalHeight = pIndexPrev->nHeight;
+                  stateNext.voteStats   = stateInfo.voteStats;
                   // Save the final state:
                   finalStates[eUpdate] = stateNext;
                   // No longer need to continue checking rounds:
@@ -419,6 +421,7 @@ StateInfo UpdateManager::State(enum EUpdate eUpdate, const CBlockIndex* blockInd
                if (pIndexPrev->nHeight >= startHeight)
                {
                   stateNext.State       = EUpdateState::Voting;
+                  stateNext.voteStats = stateInfo.voteStats;
                   stateNext.FinalHeight = -1;
                }
                // Fall through to collect the vote for the first round
@@ -430,60 +433,58 @@ StateInfo UpdateManager::State(enum EUpdate eUpdate, const CBlockIndex* blockInd
                {
                   if (update->ForcedUpdate())
                   {
-                     stateNext = { EUpdateState::LockedIn, pIndexPrev->nHeight + roundSize * update->GraceRounds() };
+                     stateNext = { EUpdateState::LockedIn, pIndexPrev->nHeight + roundSize * update->GraceRounds(), voteStats };
                      LogPrint(BCLog::UPDATES, "Updates: Update: %s, Voting: Height: %7d, Voting failed, forcing update, Activation at height: %7d\n", update->Name().c_str(), pIndexPrev->nHeight, stateNext.FinalHeight);
                   }
                   else
                   {
-                     stateNext = { EUpdateState::Failed, pIndexPrev->nHeight };
+                     stateNext = { EUpdateState::Failed, pIndexPrev->nHeight, stateInfo.voteStats };
                   }
                   break;
                }
 
                // Check Miner votes:
-               bool minersApprove = false;
                {
                   VoteResult minerUpdateResult = minerUpdateVoting.GetVote(pIndexPrev, *update);
-
+                  voteStats.minerVoteResult = &minerUpdateResult;
                   // double  confidenceLow = minerUpdateResult.ComputeConfidenceIntervalLow() * 100.0;
                   int64_t minerMean = minerUpdateResult.MeanPercent();
-                  int64_t currentThreshold = update->MinerThreshold().GetThreshold(roundNumber);
-                  if (minerMean >= currentThreshold)
+                  voteStats.currentMinerThreshold = update->MinerThreshold().GetThreshold(roundNumber);
+                  if (minerMean >= voteStats.currentMinerThreshold)
                   {
                      LogPrint(BCLog::UPDATES, "Updates: Update: %s, Voting: Height: %7d, Miners %s, Threshold: %3d - Miners approve\n",
-                        update->Name().c_str(), pIndexPrev->nHeight, minerUpdateResult.ToString().c_str(), currentThreshold);
-                     minersApprove = true;
+                        update->Name().c_str(), pIndexPrev->nHeight, minerUpdateResult.ToString().c_str(), voteStats.currentMinerThreshold);
+                     voteStats.minersApproved = true;
                   }
                   else
                   {
                      LogPrint(BCLog::UPDATES, "Updates: Update: %s, Voting: Height: %7d, Miners %s, Threshold: %3d\n",
-                        update->Name().c_str(), pIndexPrev->nHeight, minerUpdateResult.ToString().c_str(), currentThreshold);
+                        update->Name().c_str(), pIndexPrev->nHeight, minerUpdateResult.ToString().c_str(), voteStats.currentMinerThreshold);
                   }
                }
 
                // Check Node votes:
-               bool nodesApprove = false;
                {
                   VoteResult nodeUpdateResult = nodeUpdateVoting.GetVote(pIndexPrev, *update);
-
+                  voteStats.nodeVoteResult = &nodeUpdateResult;
                   int64_t nodeMean = nodeUpdateResult.MeanPercent();
-                  int64_t currentThreshold = update->NodeThreshold().GetThreshold(roundNumber);
-                  if (nodeMean >= currentThreshold)
+                  voteStats.currentNodeThreshold = update->NodeThreshold().GetThreshold(roundNumber);
+                  if (nodeMean >= voteStats.currentNodeThreshold)
                   {
                      LogPrint(BCLog::UPDATES, "Updates: Update: %s, Voting: Height: %7d, Nodes  %s, Threshold: %3d - Nodes  approve\n",
-                        update->Name().c_str(), pIndexPrev->nHeight, nodeUpdateResult.ToString().c_str(), currentThreshold);
-                     nodesApprove = true;
+                        update->Name().c_str(), pIndexPrev->nHeight, nodeUpdateResult.ToString().c_str(), voteStats.currentNodeThreshold);
+                     voteStats.nodesApproved = true;
                   }
                   else
                   {
                      LogPrint(BCLog::UPDATES, "Updates: Update: %s, Voting: Height: %7d, Nodes  %s, Threshold: %3d\n",
-                        update->Name().c_str(), pIndexPrev->nHeight, nodeUpdateResult.ToString().c_str(), currentThreshold);
+                        update->Name().c_str(), pIndexPrev->nHeight, nodeUpdateResult.ToString().c_str(), voteStats.currentNodeThreshold);
                   }
                }
 
-               if (minersApprove && nodesApprove)
+               if (voteStats.minersApproved && voteStats.nodesApproved)
                {
-                  stateNext = { EUpdateState::LockedIn, pIndexPrev->nHeight + roundSize * update->GraceRounds() };
+                  stateNext = { EUpdateState::LockedIn, pIndexPrev->nHeight + roundSize * update->GraceRounds(), voteStats};
                   LogPrint(BCLog::UPDATES, "Updates: Update: %s, Voting: Height: %7d, Proposal has been locked in, Activation at height: %7d\n", update->Name().c_str(), pIndexPrev->nHeight, stateNext.FinalHeight);
                }
                break;
@@ -495,6 +496,7 @@ StateInfo UpdateManager::State(enum EUpdate eUpdate, const CBlockIndex* blockInd
                if (pIndexPrev->nHeight >= stateNext.FinalHeight)
                {
                   stateNext.State = EUpdateState::Active;
+                  stateNext.voteStats = stateInfo.voteStats;
                   // Save the final state:
                   finalStates[eUpdate] = stateNext;
                   // No longer need to continue checking rounds:
