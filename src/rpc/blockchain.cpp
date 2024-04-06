@@ -1404,7 +1404,7 @@ static UniValue gettxoutsetinfo(const JSONRPCRequest &request) {
 
     const CoinStatsHashType hash_type = ParseHashType(request.params[0], CoinStatsHashType::HASH_SERIALIZED);
 
-    CCoinsView * coins_view = WITH_LOCK(cs_main,
+    CCoinsView *coins_view = WITH_LOCK(cs_main,
     return &ChainstateActive().CoinsDB());
     NodeContext &node = EnsureNodeContext(request.context);
     if (GetUTXOStats(coins_view, stats, hash_type, node.rpc_interruption_point)) {
@@ -1605,33 +1605,49 @@ UniValue getblockchaininfo(const JSONRPCRequest &request) {
                                                   }},
                                          }},
                                 }},
-                               {RPCResult::Type::OBJ_DYN, "bip9_softforks", "status of BIP9 softforks in progress",
+                               {RPCResult::Type::OBJ_DYN, "rip1_softforks", "status of RIP1 softforks in progress",
                                 {
                                         {RPCResult::Type::OBJ, "xxxx", "name of the softfork",
                                          {
                                                  {RPCResult::Type::STR, "status",
                                                   "one of \"defined\", \"started\", \"locked_in\", \"active\", \"failed\""},
-                                                 {RPCResult::Type::NUM, "bit",
-                                                  "the bit (0-28) in the block version field used to signal this softfork (only for \"started\" status)"},
-                                                 {RPCResult::Type::NUM_TIME, "start_time",
-                                                  "the minimum median time past of a block at which the bit gains its meaning"},
-                                                 {RPCResult::Type::NUM_TIME, "timeout",
-                                                  "the median time past of a block at which the deployment is considered failed if not yet locked in"},
-                                                 {RPCResult::Type::NUM, "since",
-                                                  "height of the first block to which the status applies"},
-                                                 {RPCResult::Type::OBJ, "statistics",
-                                                  "numeric statistics about BIP9 signalling for a softfork",
+                                                 {RPCResult::Type::NUM, "start_height",
+                                                  "the block height where voting starts"},
+                                                 {RPCResult::Type::NUM, "round_size",
+                                                  "number of block per round of voting"},
+                                                 {RPCResult::Type::NUM, "voting_period",
+                                                  "Number of rounds required for voting threshold check"},
+                                                 {RPCResult::Type::OBJ, "miners",
+                                                  "miner numeric statistics about RIP1 signalling for a softfork",
                                                   {
-                                                          {RPCResult::Type::NUM, "period",
-                                                           "the length in blocks of the BIP9 signalling period"},
+                                                          {RPCResult::Type::NUM, "mean_percentage",
+                                                           "the mean approved percentage for this current voting period"},
+                                                          {RPCResult::Type::NUM, "weighted_yes",
+                                                           "the number of approved votes for this voting period"},
+                                                          {RPCResult::Type::NUM, "weight",
+                                                           "the number of votes for this voting period"},
+                                                          {RPCResult::Type::NUM, "samples",
+                                                           "the number of round has been passed"},
                                                           {RPCResult::Type::NUM, "threshold",
-                                                           "the number of blocks with the version bit set required to activate the feature"},
-                                                          {RPCResult::Type::NUM, "elapsed",
-                                                           "the number of blocks elapsed since the beginning of the current period"},
-                                                          {RPCResult::Type::NUM, "count",
-                                                           "the number of blocks with the version bit set in the current period"},
-                                                          {RPCResult::Type::BOOL, "possible",
-                                                           "returns false if there are not enough blocks left in this period to pass activation threshold"},
+                                                           "current pass activation threshold"},
+                                                          {RPCResult::Type::BOOL, "approved",
+                                                           "returns false if miners has not yet approved"},
+                                                  }},
+                                                 {RPCResult::Type::OBJ, "nodes",
+                                                  "node numeric statistics about RIP1 signalling for a softfork",
+                                                  {
+                                                          {RPCResult::Type::NUM, "mean_percentage",
+                                                           "the mean of approved percentage for this current voting period"},
+                                                          {RPCResult::Type::NUM, "weighted_yes",
+                                                           "the number of approved votes for this voting period"},
+                                                          {RPCResult::Type::NUM, "weight",
+                                                           "the number of votes for this voting period"},
+                                                          {RPCResult::Type::NUM, "samples",
+                                                           "the number of round has been passed"},
+                                                          {RPCResult::Type::NUM, "threshold",
+                                                           "current pass activation threshold"},
+                                                          {RPCResult::Type::BOOL, "approved",
+                                                           "returns false if nodes has not approved"},
                                                   }},
                                          }},
                                 }},
@@ -1642,7 +1658,6 @@ UniValue getblockchaininfo(const JSONRPCRequest &request) {
                        + HelpExampleRpc("getblockchaininfo", "")
                },
     }.Check(request);
-
     LOCK(cs_main);
 
     std::string strChainName = gArgs.IsArgSet("-devnet") ? gArgs.GetDevNetName() : Params().NetworkIDString();
@@ -1680,7 +1695,7 @@ UniValue getblockchaininfo(const JSONRPCRequest &request) {
 
     const Consensus::Params &consensusParams = Params().GetConsensus();
     UniValue softforks(UniValue::VARR);
-    UniValue bip9_softforks(UniValue::VOBJ);
+    UniValue rip1_softforks(UniValue::VOBJ);
     // sorted by activation block
     // softforks.push_back(SoftForkDesc("bip34", 2, tip, consensusParams));
     // softforks.push_back(SoftForkDesc("bip66", 3, tip, consensusParams));
@@ -1689,17 +1704,27 @@ UniValue getblockchaininfo(const JSONRPCRequest &request) {
     //     BIP9SoftForkDescPushBack(bip9_softforks, consensusParams, static_cast<Consensus::DeploymentPos>(pos));
     // }
     for (int i = 0; i < static_cast<int>(EUpdate::MAX_VERSION_BITS_DEPLOYMENTS); ++i) {
-        StateInfo state = Updates().State( static_cast<EUpdate>(i), ::ChainActive().Tip());
+        StateInfo state = Updates().State(static_cast<EUpdate>(i), ::ChainActive().Tip());
         if (state.State == EUpdateState::Unknown)
             continue;
-        const Update* update = Updates().GetUpdate(static_cast<EUpdate>(i));
+        const Update *update = Updates().GetUpdate(static_cast<EUpdate>(i));
         UniValue rv(UniValue::VOBJ);
         switch (state.State) {
-            case EUpdateState::Defined: rv.pushKV("status", "defined"); break;
-            case EUpdateState::Failed: rv.pushKV("status", "failed"); break;
-            case EUpdateState::LockedIn: rv.pushKV("status", "locked_in"); break;
-            case EUpdateState::Voting: rv.pushKV("status", "voting"); break;
-            case EUpdateState::Active: rv.pushKV("status", "active"); break;
+            case EUpdateState::Defined:
+                rv.pushKV("status", "defined");
+                break;
+            case EUpdateState::Failed:
+                rv.pushKV("status", "failed");
+                break;
+            case EUpdateState::LockedIn:
+                rv.pushKV("status", "locked_in");
+                break;
+            case EUpdateState::Voting:
+                rv.pushKV("status", "voting");
+                break;
+            case EUpdateState::Active:
+                rv.pushKV("status", "active");
+                break;
         }
         if (state.State == EUpdateState::Voting) {
             rv.pushKV("bit", update->Bit());
@@ -1707,10 +1732,31 @@ UniValue getblockchaininfo(const JSONRPCRequest &request) {
         rv.pushKV("start_height", update->StartHeight());
         rv.pushKV("round_size", update->RoundSize());
         rv.pushKV("voting_period", update->VotingPeriod());
-        bip9_softforks.pushKV(update->Name(), rv);
+        if (state.voteStats.currentMinerThreshold) {
+            UniValue minerStats(UniValue::VOBJ);
+            minerStats.pushKV("mean_percentage", state.voteStats.minerUpdateResult.MeanPercent());
+            minerStats.pushKV("weighted_yes", state.voteStats.minerUpdateResult.GetWeightedYes());
+            minerStats.pushKV("weight", state.voteStats.minerUpdateResult.GetWeight());
+            minerStats.pushKV("samples", state.voteStats.minerUpdateResult.GetSamples());
+            minerStats.pushKV("threshold", state.voteStats.currentMinerThreshold);
+            minerStats.pushKV("approved", state.voteStats.minersApproved);
+            rv.pushKV("miners", minerStats);
+
+        }
+        if (state.voteStats.currentNodeThreshold) {
+            UniValue minerStats(UniValue::VOBJ);
+            minerStats.pushKV("mean_percentage", state.voteStats.nodeUpdateResult.MeanPercent());
+            minerStats.pushKV("weighted_yes", state.voteStats.nodeUpdateResult.GetWeightedYes());
+            minerStats.pushKV("weight", state.voteStats.nodeUpdateResult.GetWeight());
+            minerStats.pushKV("samples", state.voteStats.nodeUpdateResult.GetSamples());
+            minerStats.pushKV("threshold", state.voteStats.currentNodeThreshold);
+            minerStats.pushKV("approved", state.voteStats.nodesApproved);
+            rv.pushKV("nodes", minerStats);
+        }
+        rip1_softforks.pushKV(update->Name(), rv);
     }
     obj.pushKV("softforks", softforks);
-    obj.pushKV("bip9_softforks", bip9_softforks);
+    obj.pushKV("rip1_softforks", rip1_softforks);
     obj.pushKV("warnings", GetWarnings(false));
     return obj;
 }

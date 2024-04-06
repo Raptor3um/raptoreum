@@ -206,9 +206,10 @@ public:
         consensus.nFutureForkBlock = 420420;
 
         updateManager.Add
-        (   // V17 voting blocks 419328-427391 in mainnet, 4032 voting, 4032 grace period, active at 427392
-            Update(EUpdate::DEPLOYMENT_V17, std::string("v17"), 0, 4032, 419328, 1, 3, 1, false, VoteThreshold(80, 60, 5), VoteThreshold(0, 0, 1), false, 427392)
-        );
+                (   // V17 voting blocks 419328-427391 in mainnet, 4032 voting, 4032 grace period, active at 427392
+                        Update(EUpdate::DEPLOYMENT_V17, std::string("v17"), 0, 4032, 419328, 1, 3, 1, false,
+                               VoteThreshold(80, 60, 5), VoteThreshold(0, 0, 1), false, 427392)
+                );
         // updateManager.Add
         // (
         //     Update(EUpdate::ROUND_VOTING, std::string("Round Voting"), 7, 100, 100000, 5, 10, 5, false, VoteThreshold(85, 85, 1), VoteThreshold(95, 95, 1))
@@ -371,22 +372,22 @@ public:
         consensus.nFutureForkBlock = 1000;
 
         updateManager.Add
-        (
-            Update(EUpdate::DEPLOYMENT_V17, std::string("v17"), 0, 10, 0, 10, 100, 10, false, VoteThreshold(95, 95, 5), VoteThreshold(0, 0, 1))
-        );
+                (
+                        Update(EUpdate::DEPLOYMENT_V17, std::string("v17"), 0, 1440, 25920, 7, 365, 7, false,
+                               VoteThreshold(95, 85, 5), VoteThreshold(0, 0, 1))
+                );
         updateManager.Add
-        (
-//            bit 1, 720 block/round, voting start at block 10080, 7 rounds to lock-in and 7 rounds off grace period
-            Update(EUpdate::ROUND_VOTING, std::string("Round Voting"),
-                   1, //bit
-                   1440, //roundSize
-                   21600, // startHeight
-                   7, //votingPeriod
-                   365, //votingMaxRounds
-                   7, // gracePeriod
-                   false, // forceUpdate
-                   VoteThreshold(85, 85, 1), //minerThreshold
-                   VoteThreshold(0, 0, 1)) //nodeThreshold
+                (
+                Update(EUpdate::ROUND_VOTING, std::string("Round Voting"),
+                       1, //bit
+                       1440, //roundSize
+                       27360, // startHeight
+                       7, //votingPeriod
+                       365, //votingMaxRounds
+                       7, // gracePeriod
+                       false, // forceUpdate
+                       VoteThreshold(85, 85, 1), //minerThreshold
+                       VoteThreshold(0, 0, 1)) //nodeThreshold
         );
 
         // The best chain should have at least this much work.
@@ -530,13 +531,15 @@ public:
         consensus.nFutureForkBlock = 1;
 
         updateManager.Add
-        (
-            Update(EUpdate::DEPLOYMENT_V17, std::string("v17"), 0, 10, 0, 10, 100, 10, false, VoteThreshold(95, 95, 5), VoteThreshold(0, 0, 1))
-        );
+                (
+                        Update(EUpdate::DEPLOYMENT_V17, std::string("v17"), 0, 10, 0, 10, 100, 10, false,
+                               VoteThreshold(95, 95, 5), VoteThreshold(0, 0, 1))
+                );
         updateManager.Add
-        (
-           Update(EUpdate::ROUND_VOTING, std::string("Round Voting"), 1, 10, 100, 5, 10, 5, false, VoteThreshold(85, 85, 1), VoteThreshold(0, 0, 1))
-        );
+                (
+                        Update(EUpdate::ROUND_VOTING, std::string("Round Voting"), 1, 10, 100, 5, 10, 5, false,
+                               VoteThreshold(85, 85, 1), VoteThreshold(0, 0, 1))
+                );
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000000000000000000000000");
@@ -633,7 +636,8 @@ public:
         };
     }
 
-    void UpdateDevnetSubsidyAndDiffParameters(int nMinimumDifficultyBlocks, int nHighSubsidyBlocks, int nHighSubsidyFactor) {
+    void
+    UpdateDevnetSubsidyAndDiffParameters(int nMinimumDifficultyBlocks, int nHighSubsidyBlocks, int nHighSubsidyFactor) {
         consensus.nMinimumDifficultyBlocks = nMinimumDifficultyBlocks;
         consensus.nHighSubsidyBlocks = nHighSubsidyBlocks;
         consensus.nHighSubsidyFactor = nHighSubsidyFactor;
@@ -699,13 +703,15 @@ public:
         consensus.nFutureForkBlock = 1;
 
         updateManager.Add
-        (
-            Update(EUpdate::DEPLOYMENT_V17, std::string("v17"), 0, 10, 0, 10, 100, 10, false, VoteThreshold(95, 95, 5), VoteThreshold(0, 0, 1))
-        );
+                (
+                        Update(EUpdate::DEPLOYMENT_V17, std::string("v17"), 0, 10, 0, 10, 100, 10, false,
+                               VoteThreshold(95, 95, 5), VoteThreshold(0, 0, 1))
+                );
         updateManager.Add
-        (
-            Update(EUpdate::ROUND_VOTING, std::string("Round Voting"), 1, 10, 100, 10, 100, 10, false, VoteThreshold(95, 95, 5), VoteThreshold(0, 0, 1))
-        );
+                (
+                        Update(EUpdate::ROUND_VOTING, std::string("Round Voting"), 1, 10, 100, 10, 100, 10, false,
+                               VoteThreshold(95, 95, 5), VoteThreshold(0, 0, 1))
+                );
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x00");
@@ -801,26 +807,26 @@ public:
         consensus.llmqTypePlatform = Consensus::LLMQ_100_67;
     }
 
-   //  void
-   //  UpdateVersionBitsParameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout, int64_t nWindowSize,
-   //                              int64_t nThresholdStart, int64_t nThresholdMin, int64_t nFalloffCoeff) {
-   //      consensus.vDeployments[d].nStartTime = nStartTime;
-   //      consensus.vDeployments[d].nTimeout = nTimeout;
-   //      if (nWindowSize != -1) {
-   //          consensus.vDeployments[d].nWindowSize = nWindowSize;
-   //      }
-   //      if (nThresholdStart != -1) {
-   //          consensus.vDeployments[d].nThresholdStart = nThresholdStart;
-   //      }
-   //      if (nThresholdMin != -1) {
-   //          consensus.vDeployments[d].nThresholdMin = nThresholdMin;
-   //      }
-   //      if (nFalloffCoeff != -1) {
-   //          consensus.vDeployments[d].nFalloffCoeff = nFalloffCoeff;
-   //      }
-   //  }
+    //  void
+    //  UpdateVersionBitsParameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout, int64_t nWindowSize,
+    //                              int64_t nThresholdStart, int64_t nThresholdMin, int64_t nFalloffCoeff) {
+    //      consensus.vDeployments[d].nStartTime = nStartTime;
+    //      consensus.vDeployments[d].nTimeout = nTimeout;
+    //      if (nWindowSize != -1) {
+    //          consensus.vDeployments[d].nWindowSize = nWindowSize;
+    //      }
+    //      if (nThresholdStart != -1) {
+    //          consensus.vDeployments[d].nThresholdStart = nThresholdStart;
+    //      }
+    //      if (nThresholdMin != -1) {
+    //          consensus.vDeployments[d].nThresholdMin = nThresholdMin;
+    //      }
+    //      if (nFalloffCoeff != -1) {
+    //          consensus.vDeployments[d].nFalloffCoeff = nFalloffCoeff;
+    //      }
+    //  }
 
-   //  void UpdateVersionBitsParametersFromArgs(const ArgsManager &args);
+    //  void UpdateVersionBitsParametersFromArgs(const ArgsManager &args);
 
     void
     UpdateBudgetParameters(int nSmartnodePaymentsStartBlock, int nBudgetPaymentsStartBlock, int nSuperblockStartBlock) {
@@ -966,7 +972,7 @@ const CChainParams &Params() {
     return *globalChainParams;
 }
 
-UpdateManager& Updates() {
+UpdateManager &Updates() {
     assert(globalChainParams);
     return globalChainParams->Updates();
 }
@@ -1034,7 +1040,8 @@ void CChainParams::UpdateLLMQParams(size_t totalMnCount, int height, bool lowLLM
             consensus.llmqs[Consensus::LLMQ_50_60] = Consensus::llmq10_60;
             consensus.llmqs[Consensus::LLMQ_400_60] = Consensus::llmq20_60;
             consensus.llmqs[Consensus::LLMQ_400_85] = Consensus::llmq20_85;
-        } else if ((totalMnCount < 4000 && isTestNet) || (totalMnCount < 600 && !isTestNet)) {
+        } else if ((((height >= 24280 && totalMnCount < 600) || (height < 24280 && totalMnCount < 4000)) && isTestNet)
+                   || (totalMnCount < 600 && !isTestNet)) {
             consensus.llmqs[Consensus::LLMQ_50_60] = Consensus::llmq50_60;
             consensus.llmqs[Consensus::LLMQ_400_60] = Consensus::llmq40_60;
             consensus.llmqs[Consensus::LLMQ_400_85] = Consensus::llmq40_85;
