@@ -430,7 +430,7 @@ StateInfo UpdateManager::State(enum EUpdate eUpdate, const CBlockIndex *blockInd
                 // Check Miner votes:
                 {
                     VoteResult minerUpdateResult = minerUpdateVoting.GetVote(pIndexPrev, *update);
-                    voteStats.minerVoteResult = minerUpdateResult;
+                    voteStats.minerUpdateResult = minerUpdateResult;
                     // double  confidenceLow = minerUpdateResult.ComputeConfidenceIntervalLow() * 100.0;
                     int64_t minerMean = minerUpdateResult.MeanPercent();
                     voteStats.currentMinerThreshold = update->MinerThreshold().GetThreshold(roundNumber);
@@ -451,7 +451,7 @@ StateInfo UpdateManager::State(enum EUpdate eUpdate, const CBlockIndex *blockInd
                 // Check Node votes:
                 {
                     VoteResult nodeUpdateResult = nodeUpdateVoting.GetVote(pIndexPrev, *update);
-                    voteStats.nodeVoteResult = nodeUpdateResult;
+                    voteStats.nodeUpdateResult = nodeUpdateResult;
                     int64_t nodeMean = nodeUpdateResult.MeanPercent();
                     voteStats.currentNodeThreshold = update->NodeThreshold().GetThreshold(roundNumber);
                     if (nodeMean >= voteStats.currentNodeThreshold) {

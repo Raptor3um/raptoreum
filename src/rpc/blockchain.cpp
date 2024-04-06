@@ -1631,7 +1631,7 @@ UniValue getblockchaininfo(const JSONRPCRequest &request) {
                                                           {RPCResult::Type::NUM, "threshold",
                                                            "current pass activation threshold"},
                                                           {RPCResult::Type::BOOL, "approved",
-                                                           "returns false if majority of miners are not yet approved"},
+                                                           "returns false if miners has not yet approved"},
                                                   }},
                                                  {RPCResult::Type::OBJ, "nodes",
                                                   "node numeric statistics about RIP1 signalling for a softfork",
@@ -1647,7 +1647,7 @@ UniValue getblockchaininfo(const JSONRPCRequest &request) {
                                                           {RPCResult::Type::NUM, "threshold",
                                                            "current pass activation threshold"},
                                                           {RPCResult::Type::BOOL, "approved",
-                                                           "returns false if majority of nodes are not yet approved"},
+                                                           "returns false if nodes has not approved"},
                                                   }},
                                          }},
                                 }},
@@ -1658,12 +1658,6 @@ UniValue getblockchaininfo(const JSONRPCRequest &request) {
                        + HelpExampleRpc("getblockchaininfo", "")
                },
     }.Check(request);
-//minerStats.pushKV("mean_percentage", state.voteStats.minerVoteResult->MeanPercent());
-//            minerStats.pushKV("weighted_yes", state.voteStats.minerVoteResult->GetWeightedYes());
-//            minerStats.pushKV("weight", state.voteStats.minerVoteResult->GetWeight());
-//            minerStats.pushKV("samples", state.voteStats.minerVoteResult->GetSamples());
-//            minerStats.pushKV("threshold", state.voteStats.currentMinerThreshold);
-//            minerStats.pushKV("approved", state.voteStats.minersApproved);
     LOCK(cs_main);
 
     std::string strChainName = gArgs.IsArgSet("-devnet") ? gArgs.GetDevNetName() : Params().NetworkIDString();
@@ -1740,10 +1734,10 @@ UniValue getblockchaininfo(const JSONRPCRequest &request) {
         rv.pushKV("voting_period", update->VotingPeriod());
         if (state.voteStats.currentMinerThreshold) {
             UniValue minerStats(UniValue::VOBJ);
-            minerStats.pushKV("mean_percentage", state.voteStats.minerVoteResult.MeanPercent());
-            minerStats.pushKV("weighted_yes", state.voteStats.minerVoteResult.GetWeightedYes());
-            minerStats.pushKV("weight", state.voteStats.minerVoteResult.GetWeight());
-            minerStats.pushKV("samples", state.voteStats.minerVoteResult.GetSamples());
+            minerStats.pushKV("mean_percentage", state.voteStats.minerUpdateResult.MeanPercent());
+            minerStats.pushKV("weighted_yes", state.voteStats.minerUpdateResult.GetWeightedYes());
+            minerStats.pushKV("weight", state.voteStats.minerUpdateResult.GetWeight());
+            minerStats.pushKV("samples", state.voteStats.minerUpdateResult.GetSamples());
             minerStats.pushKV("threshold", state.voteStats.currentMinerThreshold);
             minerStats.pushKV("approved", state.voteStats.minersApproved);
             rv.pushKV("miners", minerStats);
@@ -1751,10 +1745,10 @@ UniValue getblockchaininfo(const JSONRPCRequest &request) {
         }
         if (state.voteStats.currentNodeThreshold) {
             UniValue minerStats(UniValue::VOBJ);
-            minerStats.pushKV("mean_percentage", state.voteStats.nodeVoteResult.MeanPercent());
-            minerStats.pushKV("weighted_yes", state.voteStats.nodeVoteResult.GetWeightedYes());
-            minerStats.pushKV("weight", state.voteStats.nodeVoteResult.GetWeight());
-            minerStats.pushKV("samples", state.voteStats.nodeVoteResult.GetSamples());
+            minerStats.pushKV("mean_percentage", state.voteStats.nodeUpdateResult.MeanPercent());
+            minerStats.pushKV("weighted_yes", state.voteStats.nodeUpdateResult.GetWeightedYes());
+            minerStats.pushKV("weight", state.voteStats.nodeUpdateResult.GetWeight());
+            minerStats.pushKV("samples", state.voteStats.nodeUpdateResult.GetSamples());
             minerStats.pushKV("threshold", state.voteStats.currentNodeThreshold);
             minerStats.pushKV("approved", state.voteStats.nodesApproved);
             rv.pushKV("nodes", minerStats);

@@ -319,8 +319,8 @@ protected:
 };
 
 typedef struct VoteStats {
-    VoteResult nodeVoteResult;
-    VoteResult minerVoteResult;
+    VoteResult nodeUpdateResult;
+    VoteResult minerUpdateResult;
     int64_t currentMinerThreshold;
     int64_t currentNodeThreshold;
     bool nodesApproved;
