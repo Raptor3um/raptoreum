@@ -287,7 +287,7 @@ bool UpdateManager::IsAssetsActive(const CBlockIndex *blockIndex) {
 
 StateInfo UpdateManager::State(enum EUpdate eUpdate, const CBlockIndex *blockIndex) {
     const Update *update = GetUpdate(eUpdate);
-    VoteStats voteStats = {nullptr, nullptr, 0, 0, false, false};
+    VoteStats voteStats = {VoteResult(), VoteResult(), 0, 0, false, false};
     if (!update || blockIndex == nullptr) {
         return {EUpdateState::Unknown, -1, voteStats};
     }
@@ -430,10 +430,7 @@ StateInfo UpdateManager::State(enum EUpdate eUpdate, const CBlockIndex *blockInd
                 // Check Miner votes:
                 {
                     VoteResult minerUpdateResult = minerUpdateVoting.GetVote(pIndexPrev, *update);
-                    if (voteStats.minerVoteResult) {
-                        free(voteStats.minerVoteResult);
-                    }
-                    voteStats.minerVoteResult = &minerUpdateResult;
+                    voteStats.minerVoteResult = minerUpdateResult;
                     // double  confidenceLow = minerUpdateResult.ComputeConfidenceIntervalLow() * 100.0;
                     int64_t minerMean = minerUpdateResult.MeanPercent();
                     voteStats.currentMinerThreshold = update->MinerThreshold().GetThreshold(roundNumber);
@@ -454,10 +451,7 @@ StateInfo UpdateManager::State(enum EUpdate eUpdate, const CBlockIndex *blockInd
                 // Check Node votes:
                 {
                     VoteResult nodeUpdateResult = nodeUpdateVoting.GetVote(pIndexPrev, *update);
-                    if (voteStats.nodeVoteResult) {
-                        free(voteStats.nodeVoteResult);
-                    }
-                    voteStats.nodeVoteResult = &nodeUpdateResult;
+                    voteStats.nodeVoteResult = nodeUpdateResult;
                     int64_t nodeMean = nodeUpdateResult.MeanPercent();
                     voteStats.currentNodeThreshold = update->NodeThreshold().GetThreshold(roundNumber);
                     if (nodeMean >= voteStats.currentNodeThreshold) {

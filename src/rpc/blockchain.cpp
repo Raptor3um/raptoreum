@@ -1623,11 +1623,11 @@ UniValue getblockchaininfo(const JSONRPCRequest &request) {
                                                           {RPCResult::Type::NUM, "mean_percentage",
                                                            "the mean approved percentage for this current voting period"},
                                                           {RPCResult::Type::NUM, "weighted_yes",
-                                                           "the number approved votes for this voting period"},
+                                                           "the number of approved votes for this voting period"},
                                                           {RPCResult::Type::NUM, "weight",
-                                                           "the number votes for this voting period"},
+                                                           "the number of votes for this voting period"},
                                                           {RPCResult::Type::NUM, "samples",
-                                                           "the number round has been passed"},
+                                                           "the number of round has been passed"},
                                                           {RPCResult::Type::NUM, "threshold",
                                                            "current pass activation threshold"},
                                                           {RPCResult::Type::BOOL, "approved",
@@ -1637,17 +1637,17 @@ UniValue getblockchaininfo(const JSONRPCRequest &request) {
                                                   "node numeric statistics about RIP1 signalling for a softfork",
                                                   {
                                                           {RPCResult::Type::NUM, "mean_percentage",
-                                                           "the mean approved percentage for this current voting period"},
+                                                           "the mean of approved percentage for this current voting period"},
                                                           {RPCResult::Type::NUM, "weighted_yes",
-                                                           "the number approved votes for this voting period"},
+                                                           "the number of approved votes for this voting period"},
                                                           {RPCResult::Type::NUM, "weight",
-                                                           "the number votes for this voting period"},
+                                                           "the number of votes for this voting period"},
                                                           {RPCResult::Type::NUM, "samples",
-                                                           "the number round has been passed"},
+                                                           "the number of round has been passed"},
                                                           {RPCResult::Type::NUM, "threshold",
                                                            "current pass activation threshold"},
                                                           {RPCResult::Type::BOOL, "approved",
-                                                           "returns false if majority of miners are not yet approved"},
+                                                           "returns false if majority of nodes are not yet approved"},
                                                   }},
                                          }},
                                 }},
@@ -1738,23 +1738,23 @@ UniValue getblockchaininfo(const JSONRPCRequest &request) {
         rv.pushKV("start_height", update->StartHeight());
         rv.pushKV("round_size", update->RoundSize());
         rv.pushKV("voting_period", update->VotingPeriod());
-        if (state.voteStats.minerVoteResult) {
+        if (state.voteStats.currentMinerThreshold) {
             UniValue minerStats(UniValue::VOBJ);
-            minerStats.pushKV("mean_percentage", state.voteStats.minerVoteResult->MeanPercent());
-            minerStats.pushKV("weighted_yes", state.voteStats.minerVoteResult->GetWeightedYes());
-            minerStats.pushKV("weight", state.voteStats.minerVoteResult->GetWeight());
-            minerStats.pushKV("samples", state.voteStats.minerVoteResult->GetSamples());
+            minerStats.pushKV("mean_percentage", state.voteStats.minerVoteResult.MeanPercent());
+            minerStats.pushKV("weighted_yes", state.voteStats.minerVoteResult.GetWeightedYes());
+            minerStats.pushKV("weight", state.voteStats.minerVoteResult.GetWeight());
+            minerStats.pushKV("samples", state.voteStats.minerVoteResult.GetSamples());
             minerStats.pushKV("threshold", state.voteStats.currentMinerThreshold);
             minerStats.pushKV("approved", state.voteStats.minersApproved);
             rv.pushKV("miners", minerStats);
 
         }
-        if (state.voteStats.nodeVoteResult) {
+        if (state.voteStats.currentNodeThreshold) {
             UniValue minerStats(UniValue::VOBJ);
-            minerStats.pushKV("mean_percentage", state.voteStats.nodeVoteResult->MeanPercent());
-            minerStats.pushKV("weighted_yes", state.voteStats.nodeVoteResult->GetWeightedYes());
-            minerStats.pushKV("weight", state.voteStats.nodeVoteResult->GetWeight());
-            minerStats.pushKV("samples", state.voteStats.nodeVoteResult->GetSamples());
+            minerStats.pushKV("mean_percentage", state.voteStats.nodeVoteResult.MeanPercent());
+            minerStats.pushKV("weighted_yes", state.voteStats.nodeVoteResult.GetWeightedYes());
+            minerStats.pushKV("weight", state.voteStats.nodeVoteResult.GetWeight());
+            minerStats.pushKV("samples", state.voteStats.nodeVoteResult.GetSamples());
             minerStats.pushKV("threshold", state.voteStats.currentNodeThreshold);
             minerStats.pushKV("approved", state.voteStats.nodesApproved);
             rv.pushKV("nodes", minerStats);

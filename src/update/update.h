@@ -201,6 +201,16 @@ public :
         return *this;
     }
 
+    VoteResult &operator=(const VoteResult &vr) {
+        if(this == &vr) {
+            return *this;
+        }
+        weightedYes = vr.weightedYes;
+        weight = vr.weight;
+        samples = vr.samples;
+        return *this;
+    }
+
     std::string ToString() const;
 
     std::ostream &Print(std::ostream &os) const {
@@ -309,8 +319,8 @@ protected:
 };
 
 typedef struct VoteStats {
-    VoteResult *nodeVoteResult;
-    VoteResult *minerVoteResult;
+    VoteResult nodeVoteResult;
+    VoteResult minerVoteResult;
     int64_t currentMinerThreshold;
     int64_t currentNodeThreshold;
     bool nodesApproved;

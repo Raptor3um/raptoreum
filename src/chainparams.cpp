@@ -378,7 +378,6 @@ public:
                 );
         updateManager.Add
                 (
-//            bit 1, 720 block/round, voting start at block 10080, 7 rounds to lock-in and 7 rounds off grace period
                 Update(EUpdate::ROUND_VOTING, std::string("Round Voting"),
                        1, //bit
                        1440, //roundSize
