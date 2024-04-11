@@ -223,9 +223,10 @@ AC_ARG_ENABLE([debug],
 
 dnl Enable exception stacktrace
 AC_ARG_ENABLE([stacktraces],
-  [AS_HELP_STRING([--enable-stacktraces], [gather and print exception stack traces (default is no)])],
-  [enable_stacktraces=$enableval],
-  [enable_stacktraces=no])
+    [AS_HELP_STRING([--enable-stacktraces],
+                    [gather and print exception stack traces (default is yes)])],
+    [enable_stacktraces=$enableval],
+    [enable_stacktraces=yes])
 
 dnl Enable crash hooks
 AC_ARG_ENABLE([crash-hooks],

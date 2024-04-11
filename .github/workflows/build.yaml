@@ -100,7 +100,7 @@ jobs:
           make clean
           make distclean
           ./autogen.sh
-          ./configure --prefix=`pwd`/depends/x86_64-pc-linux-gnu --disable-tests --enable-debug --enable-stacktraces --enable-crash-hooks
+          ./configure --prefix=`pwd`/depends/x86_64-pc-linux-gnu --disable-tests --enable-debug --enable-crash-hooks
           make -j$(nproc)
           mkdir -p ${BUILD_DIR}_debug
           mv src/{raptoreum-cli,raptoreumd,qt/raptoreum-qt} ${BUILD_DIR}_debug/
@@ -237,7 +237,7 @@ jobs:
           make clean
           make distclean
           ./autogen.sh
-          ./configure --prefix=`pwd`/depends/x86_64-pc-linux-gnu --disable-tests --enable-debug --enable-stacktraces --enable-crash-hooks
+          ./configure --prefix=`pwd`/depends/x86_64-pc-linux-gnu --disable-tests --enable-debug --enable-crash-hooks
           make -j$(nproc)
           mkdir -p ${BUILD_DIR}_debug
           mv src/{raptoreum-cli,raptoreumd,qt/raptoreum-qt} ${BUILD_DIR}_debug/
@@ -626,7 +626,7 @@ jobs:
           make clean
           make distclean
           ./autogen.sh
-          ./configure --prefix=`pwd`/depends/aarch64-linux-gnu --disable-tests --enable-debug --enable-stacktraces --enable-crash-hooks
+          ./configure --prefix=`pwd`/depends/aarch64-linux-gnu --disable-tests --enable-debug --enable-crash-hooks
           make -j$(nproc)
           mkdir -p ${BUILD_DIR}_debug
           mv src/{raptoreum-cli,raptoreumd,qt/raptoreum-qt} ${BUILD_DIR}_debug/
