@@ -86,20 +86,30 @@ namespace llmq {
 
 //////
 
-// CDKGSessionHandler::CDKGSessionHandler(const Consensus::LLMQParams& _params, CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager) :
-//     params(_params),
-//     blsWorker(_blsWorker),
-//     dkgManager(_dkgManager),
-//     curSession(std::make_shared<CDKGSession>(_params, _blsWorker, _dkgManager)),
-//     pendingContributions(800, MSG_QUORUM_CONTRIB), // we allow size*2 messages as we need to make sure we see bad behavior (double messages)
-//     pendingComplaints(800, MSG_QUORUM_COMPLAINT),
-//     pendingJustifications(800, MSG_QUORUM_JUSTIFICATION),
-//     pendingPrematureCommitments(800, MSG_QUORUM_PREMATURE_COMMITMENT)
-// {
-//     if (params.type == Consensus::LLMQ_NONE) {
-//         throw std::runtime_error("Can't initialize CDKGSessionHandler with LLMQ_NONE type.");
-//     }
-// }
+    static int LlmqParamsSize(const Consensus::LLMQParams &_params) {
+        switch (_params.type) {
+            case Consensus::LLMQ_50_60: return 50; //llmq_50_60.size
+            case Consensus::LLMQ_400_60: return 400; //llmq_400_60.size
+            case Consensus::LLMQ_400_85: return 400; //llmq_400_85.size
+        }
+        return _params.size;
+    }
+    
+    CDKGSessionHandler::CDKGSessionHandler(const Consensus::LLMQParams &_params, CBLSWorker &_blsWorker,
+                        CDKGSessionManager &_dkgManager, CConnman &_connman) :
+            params(_params),
+            blsWorker(_blsWorker),
+            dkgManager(_dkgManager),
+            connman(_connman),
+            curSession(std::make_unique<CDKGSession>(_params, _blsWorker, _dkgManager, _connman)),
+            pendingContributions((size_t) LlmqParamsSize(_params) * 2,MSG_QUORUM_CONTRIB), // we allow size*2 messages as we need to make sure we see bad behavior (double messages)
+            pendingComplaints((size_t) LlmqParamsSize(_params) * 2, MSG_QUORUM_COMPLAINT),
+            pendingJustifications((size_t) LlmqParamsSize(_params) * 2, MSG_QUORUM_JUSTIFICATION),
+            pendingPrematureCommitments((size_t) LlmqParamsSize(_params) * 2, MSG_QUORUM_PREMATURE_COMMITMENT) {
+        if (params.type == Consensus::LLMQType::LLMQ_NONE) {
+            throw std::runtime_error("Can't initialize CDKGSessionHandler with LLMQ_NONE type.");
+        }
+    }
 
 // CDKGSessionHandler::~CDKGSessionHandler() = default;
 
