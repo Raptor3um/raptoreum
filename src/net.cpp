@@ -3593,7 +3593,6 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn
 }
 
 CNode::~CNode() {
-    LogPrint(BCLog::NET, "CNodeUpdate: Removed connection to %s peer=%d\n", addrName, id);
     CloseSocket(hSocket);
 }
 
