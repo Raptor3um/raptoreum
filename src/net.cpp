@@ -3585,11 +3585,11 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn
         mapRecvBytesPerMsgCmd[msg] = 0;
     mapRecvBytesPerMsgCmd[NET_MESSAGE_COMMAND_OTHER] = 0;
 
-   //  if (fLogIPs) {
-        LogPrint(BCLog::NET, "CNodeUpdate: Added connection to %s peer=%d\n", addrName, id);
-   //  } else {
-   //      LogPrint(BCLog::NET, "Added connection peer=%d\n", id);
-   //  }
+    if (fLogIPs) {
+        LogPrint(BCLog::NET, "Added connection to %s peer=%d\n", addrName, id);
+    } else {
+        LogPrint(BCLog::NET, "Added connection peer=%d\n", id);
+    }
 }
 
 CNode::~CNode() {
