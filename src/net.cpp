@@ -1863,7 +1863,7 @@ void CConnman::ThreadSocketHandler() {
     int64_t nLastCleanupNodes = 0;
 
     while (!interruptNet) {
-        // Handle sockets before we do the next rounf of disconnects. This allows us to flush send buffers one last time
+        // Handle sockets before we do the next round of disconnects. This allows us to flush send buffers one last time
         // before actually closing sockets. Receiving is however skipped in case a peer is pending to be disconnected
         SocketHandler();
         if (GetTimeMillis() - nLastCleanupNodes > 1000) {
@@ -3585,14 +3585,15 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn
         mapRecvBytesPerMsgCmd[msg] = 0;
     mapRecvBytesPerMsgCmd[NET_MESSAGE_COMMAND_OTHER] = 0;
 
-    if (fLogIPs) {
-        LogPrint(BCLog::NET, "Added connection to %s peer=%d\n", addrName, id);
-    } else {
-        LogPrint(BCLog::NET, "Added connection peer=%d\n", id);
-    }
+   //  if (fLogIPs) {
+        LogPrint(BCLog::NET, "CNodeUpdate: Added connection to %s peer=%d\n", addrName, id);
+   //  } else {
+   //      LogPrint(BCLog::NET, "Added connection peer=%d\n", id);
+   //  }
 }
 
 CNode::~CNode() {
+    LogPrint(BCLog::NET, "CNodeUpdate: Removed connection to %s peer=%d\n", addrName, id);
     CloseSocket(hSocket);
 }
 
