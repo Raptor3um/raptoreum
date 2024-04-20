@@ -2843,7 +2843,7 @@ EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
             const CBlockIndex *pindex = pindexNew;
 
             uint32_t nExpectedVersion = Updates().ComputeBlockVersion(pindex);
-            if (pindexNew->nVersion != nExpectedVersion) {
+            if ((pindexNew->nVersion | nExpectedVersion) != nExpectedVersion) {
                 const std::string strWarning = strprintf(_("Warning: unknown new rules activated: Expected: 0x%08x, Actual: 0x%08x"), nExpectedVersion, pindexNew->nVersion);
                 AppendWarning(warningMessages, strWarning);
             }
@@ -2852,7 +2852,7 @@ EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
             for (int i = 0; i < 100 && pindex != nullptr; i++) {
                 nExpectedVersion = Updates().ComputeBlockVersion(pindex->pprev);
                 if (pindex->nVersion > VERSIONBITS_LAST_OLD_BLOCK_VERSION &&
-                    (pindex->nVersion & ~nExpectedVersion) != 0)
+                    (pindex->nVersion | nExpectedVersion) != nExpectedVersion)
                     ++nUpgraded;
                 pindex = pindex->pprev;
             }

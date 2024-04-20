@@ -1863,7 +1863,7 @@ void CConnman::ThreadSocketHandler() {
     int64_t nLastCleanupNodes = 0;
 
     while (!interruptNet) {
-        // Handle sockets before we do the next rounf of disconnects. This allows us to flush send buffers one last time
+        // Handle sockets before we do the next round of disconnects. This allows us to flush send buffers one last time
         // before actually closing sockets. Receiving is however skipped in case a peer is pending to be disconnected
         SocketHandler();
         if (GetTimeMillis() - nLastCleanupNodes > 1000) {
