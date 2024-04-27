@@ -6785,7 +6785,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+33"/>
         <source>C&amp;ustom:</source>
-        <translation>Coutume:</translation>
+        <translation>Personnaliser:</translation>
     </message>
     <message>
         <location line="+55"/>
