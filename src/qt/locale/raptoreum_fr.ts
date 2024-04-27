@@ -486,7 +486,7 @@
     <message>
         <location line="+5"/>
         <source>Confirmations</source>
-        <translation>Confirmation</translation>
+        <translation>Confirmations</translation>
     </message>
     <message>
         <location filename="../assetcontroldialog.cpp" line="+75"/>
