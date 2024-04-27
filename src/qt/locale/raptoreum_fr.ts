@@ -671,7 +671,7 @@
     <message>
         <location line="+33"/>
         <source>Mint</source>
-        <translation>menthe</translation>
+        <translation>Fabriquer</translation>
     </message>
     <message>
         <location line="+10"/>
