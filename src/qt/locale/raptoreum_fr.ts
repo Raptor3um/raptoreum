@@ -436,7 +436,7 @@
     <message>
         <location line="+56"/>
         <source>(un)select all</source>
-        <translation>(tout déselectionner</translation>
+        <translation>tout (dé)selectionner</translation>
     </message>
     <message>
         <location line="+16"/>
