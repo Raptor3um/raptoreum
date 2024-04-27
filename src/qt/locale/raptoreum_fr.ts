@@ -6699,7 +6699,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+5"/>
         <source>schedule</source>
-        <translation>Planifier </translation>
+        <translation>planifier </translation>
     </message>
     <message>
         <location line="+5"/>
