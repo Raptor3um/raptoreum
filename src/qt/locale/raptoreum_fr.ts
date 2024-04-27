@@ -6806,7 +6806,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+7"/>
         <source>Clear</source>
-        <translation>Clair</translation>
+        <translation>Effacer</translation>
     </message>
     <message>
         <location line="+28"/>
