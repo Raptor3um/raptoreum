@@ -6811,7 +6811,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+28"/>
         <source>Balance:</source>
-        <translation>Équilibre:</translation>
+        <translation>Solde:</translation>
     </message>
     <message>
         <location line="+13"/>
