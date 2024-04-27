@@ -7397,813 +7397,814 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+1"/>
         <source>Error loading %s: Wallet corrupted</source>
-        <translation type="unfinished"/>
+        <translation>Erreur de chargement de %s : portefeuille corrompu</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Error loading %s: Wallet requires newer version of %s</source>
-        <translation type="unfinished"/>
+        <translation>Erreur de chargement de %s : votre wallet nécessite une version plus récente de %s</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Error loading %s: You can&apos;t disable HD on an already existing HD wallet</source>
-        <translation type="unfinished"/>
+        <translation>Erreur de chargement de %s : vous ne pouvez pas désactiver la HD sur un portefeuille HD déjà existant</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Error loading block database</source>
-        <translation type="unfinished"/>
+        <translation>Erreur lors du chargement de la blockchain</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Error loading wallet %s. Duplicate -wallet filename specified.</source>
-        <translation type="unfinished"/>
+        <translation>Erreur de chargement du wallet %s. Le nom de fichier -wallet indiqué est un doublon.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Error opening block database</source>
-        <translation type="unfinished"/>
+        <translation>Erreur lors de l&apos;ouverture de la blockchain</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Error reading from database, shutting down.</source>
-        <translation type="unfinished"/>
+        <translation>Erreur de lecture de la blockchain, mise à l&apos;arrêt.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Error upgrading chainstate database</source>
-        <translation type="unfinished"/>
+        <translation>Erreur lors de la mise à niveau de la base de données ChainState</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Error upgrading evo database</source>
-        <translation type="unfinished"/>
+        <translation>Erreur lors de la mise à jour de la base de données evo</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Error</source>
-        <translation type="unfinished"/>
+        <translation>Erreur</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Error: A fatal internal error occurred, see debug.log for details</source>
-        <translation type="unfinished"/>
+        <translation>Erreur : une erreur interne fatale s&apos;est produite, voir debug.log pour plus de détails</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Error: Disk space is low for %s</source>
-        <translation type="unfinished"/>
+        <translation>Erreur : L&apos;espace disque est faible pour %s</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Error: Disk space is low!</source>
-        <translation type="unfinished"/>
+        <translation>Erreur : Espace disque faible !</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Error: failed to add socket to epollfd (epoll_ctl returned error %s)</source>
-        <translation type="unfinished"/>
+        <translation>Erreur : échec de l&apos;ajout de la socket à epollfd (epoll_ctl a renvoyé une erreur %s)</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Error: failed to add socket to kqueuefd (kevent returned error %s)</source>
-        <translation type="unfinished"/>
+        <translation>Erreur : Echec lors de l&apos;ajout d&apos;un socket à kqueuefd (kevent a renvoyé l&apos;erreur %s)</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Exceeded max tries.</source>
-        <translation type="unfinished"/>
+        <translation>Nombre d&apos;essai maximum dépassé</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Failed to clear fulfilled requests cache at</source>
-        <translation type="unfinished"/>
+        <translation>Échec de la suppression du cache des requêtes exécutées à </translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Failed to clear governance cache at</source>
-        <translation type="unfinished"/>
+        <translation>Échec de la suppression du cache de gouvernance à</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Failed to clear smartnode cache at</source>
-        <translation type="unfinished"/>
+        <translation>Échec de la suppression du cache du smartnode à</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Failed to commit EvoDB</source>
-        <translation type="unfinished"/>
+        <translation>Échec de la validation d&apos;EvoDB</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Failed to create backup %s!</source>
-        <translation type="unfinished"/>
+        <translation>Échec de la création de la sauvegarde %s!</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Failed to create backup, error: %s</source>
-        <translation type="unfinished"/>
+        <translation>Échec de la création de la sauvegarde, erreur : %s</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Failed to delete backup, error: %s</source>
-        <translation type="unfinished"/>
+        <translation>Échec de la suppression de la sauvegarde, erreur : %s</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Failed to find mixing queue to join</source>
-        <translation type="unfinished"/>
+        <translation>Impossible de trouver la file d&apos;attente de mixage à rejoindre </translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Failed to get root metadata</source>
-        <translation type="unfinished"/>
+        <translation>Échec de l&apos;obtention des métadonnées racine</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
-        <translation type="unfinished"/>
+        <translation>Impossible d&apos;écouter sur aucun port.
+Utilisez -listen=0 si vous voulez ça.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Failed to load Assets Database</source>
-        <translation type="unfinished"/>
+        <translation>Échec du chargement de la base de données des Assets</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Failed to load POW cache from</source>
-        <translation type="unfinished"/>
+        <translation>Échec du chargement du cache PoW à partir de</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Failed to load fulfilled requests cache from</source>
-        <translation type="unfinished"/>
+        <translation>Échec du chargement du cache des demandes exécutées de</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Failed to load governance cache from</source>
-        <translation type="unfinished"/>
+        <translation>Échec du chargement du cache de gouvernance à partir de</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Failed to load smartnode cache from</source>
-        <translation type="unfinished"/>
+        <translation>Échec du chargement du cache du smartnode à partir de</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Failed to load sporks cache from</source>
-        <translation type="unfinished"/>
+        <translation>Échec du chargement du cache des sporks à partir de</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Failed to rescan the wallet during initialization</source>
-        <translation type="unfinished"/>
+        <translation>Échec de la nouvelle analyse du portefeuille lors de l&apos;initialisation</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Failed to sign special tx</source>
-        <translation type="unfinished"/>
+        <translation>Échec de la signature de la transaction spéciale</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Failed to start a new mixing queue</source>
-        <translation type="unfinished"/>
+        <translation>Échec du démarrage d&apos;une nouvelle file d&apos;attente de mixage</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Found enough users, signing ( waiting %s )</source>
-        <translation type="unfinished"/>
+        <translation>Suffisamment d&apos;utilisateurs trouvés, en cours de signature (en attente de %s)</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Found enough users, signing ...</source>
-        <translation type="unfinished"/>
+        <translation>Assez d&apos;utilisateurs trouvés, signature en cours...</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Importing...</source>
-        <translation type="unfinished"/>
+        <translation>Importation...</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Incompatible mode.</source>
-        <translation type="unfinished"/>
+        <translation>Mode incompatible.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Incompatible version.</source>
-        <translation type="unfinished"/>
+        <translation>Version incompatible. </translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Incorrect -rescan mode, falling back to default value</source>
-        <translation type="unfinished"/>
+        <translation>Mode -rescan incorrect, retour à la valeur par défaut</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
-        <translation type="unfinished"/>
+        <translation>Le block Genesis est incorrect ou introuvable. Mauvais répertoire (datadir) pour le réseau ?</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Information</source>
-        <translation type="unfinished"/>
+        <translation>Information</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Initialization sanity check failed. %s is shutting down.</source>
-        <translation type="unfinished"/>
+        <translation>La vérification de l&apos;intégrité de l&apos;initialisation a échoué. %s est en train de s&apos;arrêter.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Input is not valid.</source>
-        <translation type="unfinished"/>
+        <translation>L&apos;entrée n&apos;est pas valide.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Inputs vs outputs size mismatch.</source>
-        <translation type="unfinished"/>
+        <translation>La taille des entrées (inputs) et des sorties (outputs) ne correspondent pas.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Insufficient Unique asset funds</source>
-        <translation type="unfinished"/>
+        <translation>Fonds d&apos;actifs uniques insuffisants</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Insufficient asset funds</source>
-        <translation type="unfinished"/>
+        <translation>Fonds d&apos;actifs insuffisants</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Insufficient funds.</source>
-        <translation type="unfinished"/>
+        <translation>Fonds insuffisants</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Invalid -onion address or hostname: &apos;%s&apos;</source>
-        <translation type="unfinished"/>
+        <translation>Adresse -onion ou nom d&apos;hôte non valide : &apos;%s&apos;</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Invalid -proxy address or hostname: &apos;%s&apos;</source>
-        <translation type="unfinished"/>
+        <translation>Adresse proxy ou nom d&apos;hôte non valide : &apos;%s&apos;</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Invalid amount for -%s=&lt;amount&gt;: &apos;%s&apos;</source>
-        <translation type="unfinished"/>
+        <translation>Montant invalide pour -%s=&lt;amount&gt; &apos;%s&apos;</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Invalid amount for -discardfee=&lt;amount&gt;: &apos;%s&apos;</source>
-        <translation type="unfinished"/>
+        <translation>Montant invalide pour -discardfee=&lt;amount&gt;: &apos;%s&apos;</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Invalid amount for -fallbackfee=&lt;amount&gt;: &apos;%s&apos;</source>
-        <translation type="unfinished"/>
+        <translation>Montant invalide pour -fallbackfee=&lt;amount&gt;: &apos;%s&apos;</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos; (must be at least %s)</source>
-        <translation type="unfinished"/>
+        <translation>Montant invalide pour -paytxfee=&lt;amount&gt;: &apos;%s&apos; (doit être au moins d&apos;un montant de %s)</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Invalid minimum number of spork signers specified with -minsporkkeys</source>
-        <translation type="unfinished"/>
+        <translation>Nombre minimum invalide de signataires de spork spécifié avec -minsporkkeys</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Invalid netmask specified in -whitelist: &apos;%s&apos;</source>
-        <translation type="unfinished"/>
+        <translation>Masque de réseau non valide spécifié dans -whitelist : &apos;%s&apos;</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Invalid script detected.</source>
-        <translation type="unfinished"/>
+        <translation>Script invalide détecté. </translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Invalid smartnodeblsprivkey. Please see documentation.</source>
-        <translation type="unfinished"/>
+        <translation>Clé privée smartnodeblsprivkey invalide. Veuillez consulter la documentation.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Invalid spork address specified with -sporkaddr</source>
-        <translation type="unfinished"/>
+        <translation>Adresse spork non valide spécifiée avec -sporkaddr</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Keypool ran out, please call keypoolrefill first</source>
-        <translation type="unfinished"/>
+        <translation>Keypool n&apos;a plus de réserve, merci de d&apos;abord lancer keypoolrefill</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Last queue was created too recently.</source>
-        <translation type="unfinished"/>
+        <translation>La dernière file d&apos;attente a été créée trop récemment.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Last successful action was too recent.</source>
-        <translation type="unfinished"/>
+        <translation>La dernière action réussie était trop récente.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Loading P2P addresses...</source>
-        <translation type="unfinished"/>
+        <translation>Chargement des adresses P2P...</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Loading POW cache...</source>
-        <translation type="unfinished"/>
+        <translation>Chargement du cache POW...</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Loading banlist...</source>
-        <translation type="unfinished"/>
+        <translation>Chargement de la liste de bannissement...</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Loading block index...</source>
-        <translation type="unfinished"/>
+        <translation>Chargement de l&apos;index du bloc...</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Loading fulfilled requests cache...</source>
-        <translation type="unfinished"/>
+        <translation>Chargement du cache des demandes satisfaites...</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Loading governance cache...</source>
-        <translation type="unfinished"/>
+        <translation>Chargement du cache de gouvernance...</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Loading smartnode cache...</source>
-        <translation type="unfinished"/>
+        <translation>Chargement du cache des smartnodes...</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Loading sporks cache...</source>
-        <translation type="unfinished"/>
+        <translation>Chargement du cache des sporks...</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Loading wallet... (%3.2f %%)</source>
-        <translation type="unfinished"/>
+        <translation>Chargement du wallet... (%3.2f %%)</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Loading wallet...</source>
-        <translation type="unfinished"/>
+        <translation>Chargement du portefeuille...</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Lock is already in place.</source>
-        <translation type="unfinished"/>
+        <translation>Le verrou est déjà en place.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Missing input transaction information.</source>
-        <translation type="unfinished"/>
+        <translation>Informations de transaction d&apos;entrée (inputs) manquantes.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Mixing in progress...</source>
-        <translation type="unfinished"/>
+        <translation>Le mélange est en cours...</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Need to specify a port with -whitebind: &apos;%s&apos;</source>
-        <translation type="unfinished"/>
+        <translation>Besoin de spécifier un port avec -whitebind : &apos;%s&apos;</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>No Smartnodes detected.</source>
-        <translation type="unfinished"/>
+        <translation>Aucun Smartnode détecté.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>No compatible Smartnode found.</source>
-        <translation type="unfinished"/>
+        <translation>Aucun Smartnode compatible trouvé.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>No errors detected.</source>
-        <translation type="unfinished"/>
+        <translation>Aucune erreur détectée. </translation>
     </message>
     <message>
         <location line="+1"/>
         <source>No matching denominations found for mixing.</source>
-        <translation type="unfinished"/>
+        <translation>Aucune dénomination correspondante trouvée pour le mélange.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Not compatible with existing transactions.</source>
-        <translation type="unfinished"/>
+        <translation>Non compatible avec les transactions existantes.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Not enough file descriptors available.</source>
-        <translation type="unfinished"/>
+        <translation>Pas assez de descripteurs de fichiers disponibles.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Not enough funds to mix.</source>
-        <translation type="unfinished"/>
+        <translation>Pas assez de fonds pour mélanger.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Not in the Smartnode list.</source>
-        <translation type="unfinished"/>
+        <translation>Pas dans la liste des Smartnode.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Prune cannot be configured with a negative value.</source>
-        <translation type="unfinished"/>
+        <translation>Le mode optimisé ne peut pas être configuré avec une valeur négative.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Prune mode is incompatible with -disablegovernance=false.</source>
-        <translation type="unfinished"/>
+        <translation>Le mode optimisé est incompatible avec le paramètre -disablegovernance=false.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Prune mode is incompatible with -txindex.</source>
-        <translation type="unfinished"/>
+        <translation>Le mode optimisé n&apos;est pas compatible avec l&apos;option -txindex.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Pruning blockstore...</source>
-        <translation type="unfinished"/>
+        <translation>Optimisation du répertoire de block...</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
-        <translation type="unfinished"/>
+        <translation>Réduction de -maxconnections de %d à %d, à cause des limites du système.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Replaying blocks...</source>
-        <translation type="unfinished"/>
+        <translation>Reproduction des blocs...</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Rescanning...</source>
-        <translation type="unfinished"/>
+        <translation>Rescanner...</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Root asset key not in wallet</source>
-        <translation type="unfinished"/>
+        <translation>La clé de l&apos;actif racine n&apos;est pas dans le portefeuille</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Section [%s] is not recognized.</source>
-        <translation type="unfinished"/>
+        <translation>La section [%s] n&apos;est pas reconnue.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Session not complete!</source>
-        <translation type="unfinished"/>
+        <translation>Seesion non terminée !</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Session timed out.</source>
-        <translation type="unfinished"/>
+        <translation>Session expirée.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Signing transaction failed</source>
-        <translation type="unfinished"/>
+        <translation>Échec de la signature de la transaction</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Smartnode queue is full.</source>
-        <translation type="unfinished"/>
+        <translation>La file d’attente des Smartnodes est pleine.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Smartnode:</source>
-        <translation type="unfinished"/>
+        <translation>Smartnode :</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Specified -walletdir &quot;%s&quot; does not exist</source>
-        <translation type="unfinished"/>
+        <translation>Le -walletdir &quot;%s&quot; spécifié n&apos;existe pas</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Specified -walletdir &quot;%s&quot; is a relative path</source>
-        <translation type="unfinished"/>
+        <translation>L&apos;option -walletdir &quot;%s&quot; spécifiée est un chemin relatif.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Specified -walletdir &quot;%s&quot; is not a directory</source>
-        <translation type="unfinished"/>
+        <translation>L&apos;option -walletdir &quot;%s&quot; spécifiée n&apos;est pas un répertoire</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Specified blocks directory &quot;%s&quot; does not exist.</source>
-        <translation type="unfinished"/>
+        <translation>Réduction des connexions -max de %d à %d, en raison des limitations du système.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Starting network threads...</source>
-        <translation type="unfinished"/>
+        <translation>Démarrage des threads réseau...</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Submitted to smartnode, waiting in queue %s</source>
-        <translation type="unfinished"/>
+        <translation>Soumis au SmartNode, en attente dans la file d&apos;attente %s</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Synchronization finished</source>
-        <translation type="unfinished"/>
+        <translation>Synchronisation terminée</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Synchronizing blockchain...</source>
-        <translation type="unfinished"/>
+        <translation>Synchronisation de la blockchain...</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Synchronizing governance objects...</source>
-        <translation type="unfinished"/>
+        <translation>Synchronisation des objets de gouvernance...</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>The source code is available from %s.</source>
-        <translation type="unfinished"/>
+        <translation>Le code source est disponible auprès de %s.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>The specified config file %s does not exist
 </source>
-        <translation type="unfinished"/>
+        <translation>Le fichier de configuration spécifié %s n&apos;existe pas.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>The transaction amount is too small to pay the fee</source>
-        <translation type="unfinished"/>
+        <translation>Le montant de la transaction est trop faible pour payer les frais</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>The wallet will avoid paying less than the minimum relay fee.</source>
-        <translation type="unfinished"/>
+        <translation>Le portefeuille évitera de payer moins que les frais de relais minimum.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>This is expected because you are running a pruned node.</source>
-        <translation type="unfinished"/>
+        <translation>C&apos;est le résultat attendu car vous utilisez un nœud optimisé.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>This is experimental software.</source>
-        <translation type="unfinished"/>
+        <translation>Il s&apos;agit d&apos;un logiciel expérimental.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>This is the minimum transaction fee you pay on every transaction.</source>
-        <translation type="unfinished"/>
+        <translation>Ce sont les frais de transaction minimum a payer pour toute transaction.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>This is the transaction fee you will pay if you send a transaction.</source>
-        <translation type="unfinished"/>
+        <translation>Ce sont les frais de transaction a payer si vous envoyez la transaction.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Transaction amount too small</source>
-        <translation type="unfinished"/>
+        <translation>Montant de la transaction trop faible</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Transaction amounts must not be negative</source>
-        <translation type="unfinished"/>
+        <translation>Les montants des transactions ne doivent pas être négatifs</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Transaction created successfully.</source>
-        <translation type="unfinished"/>
+        <translation>Transaction créée avec succès.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Transaction fees are too high.</source>
-        <translation type="unfinished"/>
+        <translation>Les frais de transaction sont trop élevés.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Transaction has too long of a mempool chain</source>
-        <translation type="unfinished"/>
+        <translation>La transaction a une chaîne de mémoire trop longue</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Transaction must have at least one recipient</source>
-        <translation type="unfinished"/>
+        <translation>La transaction doit avoir au moins un destinataire</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Transaction not valid.</source>
-        <translation type="unfinished"/>
+        <translation>Transaction non valide.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Transaction too large for fee policy</source>
-        <translation type="unfinished"/>
+        <translation>Transaction trop importante pour la politique de frais</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Transaction too large</source>
-        <translation type="unfinished"/>
+        <translation>Transaction trop importante</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Trying to connect...</source>
-        <translation type="unfinished"/>
+        <translation>Connection en cours</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
-        <translation type="unfinished"/>
+        <translation>Impossible de se connecter à %s sur cet ordinateur (erreur de connexion retournée %s)</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Unable to bind to %s on this computer. %s is probably already running.</source>
-        <translation type="unfinished"/>
+        <translation>Impossible de se connecter à %s sur cet ordinateur. %s est probablement déjà en cours d&apos;exécution.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Unable to create PID file &apos;%s&apos;: %s</source>
-        <translation type="unfinished"/>
+        <translation>Impossible de créer le fichier PID &apos;%s&apos; : %s</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Unable to generate initial keys</source>
-        <translation type="unfinished"/>
+        <translation>Impossible de générer les clés initiales</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Unable to locate enough mixed funds for this transaction.</source>
-        <translation type="unfinished"/>
+        <translation>Impossible de trouver suffisamment de fonds mixtes pour cette transaction.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Unable to locate enough non-denominated funds for this transaction.</source>
-        <translation type="unfinished"/>
+        <translation>Impossible de trouver suffisamment de fonds non libellés pour cette transaction.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Unable to sign spork message, wrong key?</source>
-        <translation type="unfinished"/>
+        <translation>Impossible de signer le message spork, mauvaise clé ?</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Unable to start HTTP server. See debug log for details.</source>
-        <translation type="unfinished"/>
+        <translation>Impossible de démarrer le serveur HTTP. Voir le journal de débogage pour plus de détails.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
-        <translation type="unfinished"/>
+        <translation>Réseau inconnu spécifié dans -onlynet : &apos;%s&apos;</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Unknown response.</source>
-        <translation type="unfinished"/>
+        <translation>Réponse inconnue.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Unknown state: id = %u</source>
-        <translation type="unfinished"/>
+        <translation>État inconnu : id = %u</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Unsupported logging category %s=%s.</source>
-        <translation type="unfinished"/>
+        <translation>Catégorie de journalisation non prise en charge %s=%s.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Upgrading UTXO database</source>
-        <translation type="unfinished"/>
+        <translation>Mise à niveau de la base de données UTXO</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Upgrading txindex database</source>
-        <translation type="unfinished"/>
+        <translation>Mise à niveau de la base de données txindex</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>User Agent comment (%s) contains unsafe characters.</source>
-        <translation type="unfinished"/>
+        <translation>Le commentaire de l&apos;agent utilisateur (%s) contient des caractères non sécurisés.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Verifying blocks...</source>
-        <translation type="unfinished"/>
+        <translation>Vérification des blocs...</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Verifying wallet(s)...</source>
-        <translation type="unfinished"/>
+        <translation>Vérification du ou des portefeuilles...</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Very low number of keys left: %d</source>
-        <translation type="unfinished"/>
+        <translation>Très faible nombre de clés restantes : %d</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Wallet is locked.</source>
-        <translation type="unfinished"/>
+        <translation>Le portefeuille est verrouillé.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Wallet needed to be rewritten: restart %s to complete</source>
-        <translation type="unfinished"/>
+        <translation>Wallet a dû être réécrit : redémarrer %s pour terminer</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Warning</source>
-        <translation type="unfinished"/>
+        <translation>Avertissement</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Warning: can&apos;t use %s and %s together, will prefer %s</source>
-        <translation type="unfinished"/>
+        <translation>Attention : ne peut pas utiliser %s et %s ensemble, préférera %s</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Warning: incorrect parameter %s, path must exist! Using default path.</source>
-        <translation type="unfinished"/>
+        <translation>Attention : paramètre incorrect %s, le chemin doit exister ! Utilisation du chemin par défaut.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Warning: unknown new rules activated (versionbit %i)</source>
-        <translation type="unfinished"/>
+        <translation>Attention : nouvelles règles inconnues activées (versionbit %i)</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Wasn&apos;t able to create wallet backup folder %s!</source>
-        <translation type="unfinished"/>
+        <translation>Il n&apos;a pas été possible de créer le dossier de sauvegarde du portefeuille %s !</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Will retry...</source>
-        <translation type="unfinished"/>
+        <translation>Réessayer</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>You are starting with governance validation disabled.</source>
-        <translation type="unfinished"/>
+        <translation>Vous démarrez avec la validation de gouvernance désactivée.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>You can not disable governance validation on a smartnode.</source>
-        <translation type="unfinished"/>
+        <translation>Vous ne pouvez pas désactiver la validation de gouvernance sur un smartnode</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>You can not start a smartnode with wallet enabled.</source>
-        <translation type="unfinished"/>
+        <translation>Vous ne pouvez pas démarrer un smartnode avec le portefeuille activé.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>You need to rebuild the database using -reindex to change -addressindex</source>
-        <translation type="unfinished"/>
+        <translation>Vous devez reconstruire la base de données en utilisant -reindex pour modifier -addressindex</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>You need to rebuild the database using -reindex to change -assetindex</source>
-        <translation type="unfinished"/>
+        <translation>Vous devez reconstruire la base de données en utilisant -reindex pour modifier -assetindex</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>You need to rebuild the database using -reindex to change -futureindex</source>
-        <translation type="unfinished"/>
+        <translation>Vous devez reconstruire la base de données en utilisant -reindex pour modifier -futureindex</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>You need to rebuild the database using -reindex to change -spentindex</source>
-        <translation type="unfinished"/>
+        <translation>Vous devez reconstruire la base de données en utilisant -reindex pour modifier -spentindex</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Your entries added successfully.</source>
-        <translation type="unfinished"/>
+        <translation>Vos entrées ont été ajoutées avec succès.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>no mixing available.</source>
-        <translation type="unfinished"/>
+        <translation>Aucun mélange disponible.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>see debug.log for details.</source>
-        <translation type="unfinished"/>
+        <translation>voir debug.log pour plus de détails.</translation>
     </message>
 </context>
 </TS>
