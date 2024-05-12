@@ -336,6 +336,48 @@ namespace Consensus {
             .recoveryMembers = 100,
     };
 
+    static constexpr LLMQParams
+    llmq200_60 = {
+            .type = LLMQ_400_60,
+            .name = "llmq_200_60",
+            .size = 200,
+            .minSize = 150,
+            .threshold = 120,
+
+            .dkgInterval = 30 * 12, // one DKG every 12 hours
+            .dkgPhaseBlocks = 8,
+            .dkgMiningWindowStart = 40, // dkgPhaseBlocks * 5 = after finalization
+            .dkgMiningWindowEnd = 56,
+            .dkgBadVotesThreshold = 150,
+
+            .signingActiveQuorumCount = 4, // two days worth of LLMQs
+
+            .keepOldConnections = 5,
+            .recoveryMembers = 100,
+    };
+
+
+// Used for deployment and min-proto-version signalling, so it needs a higher threshold
+    static constexpr LLMQParams
+    llmq200_85 = {
+            .type = LLMQ_400_85,
+            .name = "llmq_200_85",
+            .size = 200,
+            .minSize = 175,
+            .threshold = 170,
+
+            .dkgInterval = 30 * 24, // one DKG every 24 hours
+            .dkgPhaseBlocks = 8,
+            .dkgMiningWindowStart = 40, // dkgPhaseBlocks * 5 = after finalization
+            .dkgMiningWindowEnd = 56, // give it a larger mining window to make sure it is mined
+            .dkgBadVotesThreshold = 150,
+
+            .signingActiveQuorumCount = 4, // four days worth of LLMQs
+
+            .keepOldConnections = 5,
+            .recoveryMembers = 100,
+    };
+
 // this one is for testing only
     static constexpr LLMQParams
     llmq_test_v17 = {

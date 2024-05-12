@@ -16,6 +16,7 @@
 enum class EUpdate {
     DEPLOYMENT_V17 = 0,
     ROUND_VOTING = 1,
+    QUORUMS_200_8 = 2,
 
     MAX_VERSION_BITS_DEPLOYMENTS
 };
