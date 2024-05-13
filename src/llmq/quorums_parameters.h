@@ -353,7 +353,7 @@ namespace Consensus {
             .signingActiveQuorumCount = 4, // two days worth of LLMQs
 
             .keepOldConnections = 5,
-            .recoveryMembers = 100,
+            .recoveryMembers = 50,
     };
 
 
@@ -375,7 +375,7 @@ namespace Consensus {
             .signingActiveQuorumCount = 4, // four days worth of LLMQs
 
             .keepOldConnections = 5,
-            .recoveryMembers = 100,
+            .recoveryMembers = 50,
     };
 
 // this one is for testing only
