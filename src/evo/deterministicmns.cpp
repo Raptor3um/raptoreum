@@ -930,7 +930,7 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock &block, const C
     }
 
     mnListRet = std::move(newList);
-    UpdateLLMQParams(mnListRet.GetAllMNsCount(), pindexPrev, sporkManager.IsSporkActive(SPORK_21_LOW_LLMQ_PARAMS));
+    UpdateLLMQParams(mnListRet.GetAllMNsCount(), nHeight, pindexPrev, sporkManager.IsSporkActive(SPORK_21_LOW_LLMQ_PARAMS));
     return true;
 }
 
@@ -1039,8 +1039,6 @@ CDeterministicMNList CDeterministicMNManager::GetListForBlock(const CBlockIndex 
             }
         }
     }
-    // is this needed?
-    UpdateLLMQParams(snapshot.GetAllMNsCount(), pindex, sporkManager.IsSporkActive(SPORK_21_LOW_LLMQ_PARAMS));
     return snapshot;
 }
 

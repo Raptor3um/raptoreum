@@ -1005,8 +1005,8 @@ void SelectParams(const std::string &network) {
     globalChainParams = CreateChainParams(network);
 }
 
-void UpdateLLMQParams(size_t totalMnCount, const CBlockIndex* blockIndex, bool lowLLMQParams) {
-    globalChainParams->UpdateLLMQParams(totalMnCount, blockIndex, lowLLMQParams);
+void UpdateLLMQParams(size_t totalMnCount, int height, const CBlockIndex* blockIndex, bool lowLLMQParams) {
+    globalChainParams->UpdateLLMQParams(totalMnCount, height, blockIndex, lowLLMQParams);
 }
 
 bool IsMiningPhase(const Consensus::LLMQParams &params, int nHeight) {
@@ -1026,8 +1026,7 @@ bool IsLLMQsMiningPhase(int nHeight) {
     return false;
 }
 
-void CChainParams::UpdateLLMQParams(size_t totalMnCount, const CBlockIndex* blockIndex, bool lowLLMQParams) {
-    int height = blockIndex->nHeight;
+void CChainParams::UpdateLLMQParams(size_t totalMnCount, int height, const CBlockIndex* blockIndex, bool lowLLMQParams) {
     bool isNotLLMQsMiningPhase;
     if (lastCheckHeight < height && (lastCheckMnCount != totalMnCount || lastCheckedLowLLMQParams != lowLLMQParams) &&
         (isNotLLMQsMiningPhase = !IsLLMQsMiningPhase(height))) {

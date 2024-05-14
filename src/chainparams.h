@@ -130,7 +130,7 @@ public:
 
     void UpdateLLMQInstantSend(Consensus::LLMQType llmqType);
 
-    void UpdateLLMQParams(size_t totalMnCount, const CBlockIndex* blockIndex, bool lowLLMQParams = false);
+    void UpdateLLMQParams(size_t totalMnCount, int height, const CBlockIndex* blockIndex, bool lowLLMQParams = false);
 
     int PoolMinParticipants() const { return nPoolMinParticipants; }
 
@@ -213,6 +213,6 @@ UpdateManager& Updates();
  */
 void SelectParams(const std::string &chain);
 
-void UpdateLLMQParams(size_t totalMnCount, const CBlockIndex* blockIndex, bool lowLLMQParams = false);
+void UpdateLLMQParams(size_t totalMnCount, int height, const CBlockIndex* blockIndex, bool lowLLMQParams = false);
 
 #endif // BITCOIN_CHAINPARAMS_H
