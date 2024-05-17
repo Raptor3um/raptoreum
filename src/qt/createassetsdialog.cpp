@@ -38,6 +38,7 @@
 #include <QSortFilterProxyModel>
 #include <QTextDocument>
 
+
 #define SEND_CONFIRM_DELAY   3
 
 CreateAssetsDialog::CreateAssetsDialog(QWidget *parent) :
@@ -304,6 +305,7 @@ void CreateAssetsDialog::createAsset() {
 
     CNewAssetTx assetTx;
     assetTx.name = ui->assetnameText->text().toStdString();
+    std::transform(assetTx.name.begin(), assetTx.name.end(), assetTx.name.begin(), ::toupper);
 
     assetTx.referenceHash = ui->ipfsText->text().toStdString();
 
@@ -414,6 +416,7 @@ bool CreateAssetsDialog::validateInputs() {
     bool retval{true};
 
     std::string assetname = ui->assetnameText->text().toStdString();
+    std::transform(assetname.begin(), assetname.end(), assetname.begin(), ::toupper);
     bool isRoot = ui->AssetTypeBox->currentText() == "Root";
 
     //check if asset name is valid
@@ -785,6 +788,7 @@ void CreateAssetsDialog::CoinControlUpdateLabels() {
 void CreateAssetsDialog::checkAvailabilityClicked()
 {
     std::string assetname = ui->assetnameText->text().toStdString();
+    std::transform(assetname.begin(), assetname.end(), assetname.begin(), ::toupper);
     bool isRoot = ui->AssetTypeBox->currentText() == "Root";
 
     //check if asset name is valid
