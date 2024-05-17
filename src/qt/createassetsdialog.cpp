@@ -174,6 +174,7 @@ CreateAssetsDialog::CreateAssetsDialog(QWidget *parent) :
     ui->RootAssetBox->setModel(proxy);
     ui->RootAssetBox->setEditable(true);
     ui->RootAssetBox->lineEdit()->setPlaceholderText("Select Root asset");
+    ui->assetnameText->setToolTip("a-z A-Z 0-9 and space");
 }
 
 void CreateAssetsDialog::setClientModel(ClientModel *_clientModel) {
@@ -294,6 +295,14 @@ void CreateAssetsDialog::on_createAssetButton_clicked() {
     createAsset();
 }
 
+std::string CreateAssetsDialog::getAssetName(bool isRoot) {
+    std::string assetName = ui->assetnameText->text().toStdString();
+    if(isRoot) {
+        std::transform(assetName.begin(), assetName.end(), assetName.begin(), ::toupper);
+    }
+    return assetName;
+}
+
 void CreateAssetsDialog::createAsset() {
     if (getAssetsFees() == 0) {
         QMessageBox msgBox;
@@ -304,8 +313,8 @@ void CreateAssetsDialog::createAsset() {
     }
 
     CNewAssetTx assetTx;
-    assetTx.name = ui->assetnameText->text().toStdString();
-    std::transform(assetTx.name.begin(), assetTx.name.end(), assetTx.name.begin(), ::toupper);
+    bool isRoot = ui->AssetTypeBox->currentText() == "Root";
+    assetTx.name = this->getAssetName(isRoot);
 
     assetTx.referenceHash = ui->ipfsText->text().toStdString();
 
@@ -415,10 +424,8 @@ void CreateAssetsDialog::onUniqueChanged() {
 bool CreateAssetsDialog::validateInputs() {
     bool retval{true};
 
-    std::string assetname = ui->assetnameText->text().toStdString();
-    std::transform(assetname.begin(), assetname.end(), assetname.begin(), ::toupper);
     bool isRoot = ui->AssetTypeBox->currentText() == "Root";
-
+    std::string assetname  = this->getAssetName(isRoot);
     //check if asset name is valid
     if (!IsAssetNameValid(assetname, isRoot)) {
         retval = false;
@@ -787,9 +794,9 @@ void CreateAssetsDialog::CoinControlUpdateLabels() {
 
 void CreateAssetsDialog::checkAvailabilityClicked()
 {
-    std::string assetname = ui->assetnameText->text().toStdString();
-    std::transform(assetname.begin(), assetname.end(), assetname.begin(), ::toupper);
+
     bool isRoot = ui->AssetTypeBox->currentText() == "Root";
+    std::string assetname = this->getAssetName(isRoot);
 
     //check if asset name is valid
     if (!IsAssetNameValid(assetname, isRoot)) {
@@ -824,11 +831,9 @@ void CreateAssetsDialog::onAssetTypeSelected(QString name) {
     if (name == "Root") {
         ui->RootAssetLabel->setVisible(false);
         ui->RootAssetBox->setVisible(false);
-        ui->assetnameText->setToolTip("A-Z 0-9 and space");
     } else if (name == "Sub") {
         ui->RootAssetLabel->setVisible(true);
         ui->RootAssetBox->setVisible(true);
-        ui->assetnameText->setToolTip("a-z A-Z 0-9 and space");
 
         // Get available assets list
         std::map <uint256, std::pair<std::string, CKeyID>> assets = model->wallet().getMyAssets();

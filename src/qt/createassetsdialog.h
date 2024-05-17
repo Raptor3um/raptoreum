@@ -79,6 +79,8 @@ private:
     void updateFeeMinimizedLabel();
 
     void createAsset();
+    //return all uppercase assetName if it is root, otherwise return as it is
+    std::string getAssetName(bool isRoot);
 
     // Update the passed in CCoinControl with state from the GUI
     void updateCoinControlState(CCoinControl &ctrl);
