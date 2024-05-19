@@ -1039,6 +1039,7 @@ CDeterministicMNList CDeterministicMNManager::GetListForBlock(const CBlockIndex 
             }
         }
     }
+    UpdateLLMQParams(snapshot.GetAllMNsCount(), snapshot.GetHeight(), pindex, sporkManager.IsSporkActive(SPORK_21_LOW_LLMQ_PARAMS));
     return snapshot;
 }
 
