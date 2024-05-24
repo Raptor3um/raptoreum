@@ -33,8 +33,7 @@ endif
 endif #ENABLE_STACKTRACES
 
 BITCOIN_INCLUDES=-I$(builddir) -I$(srcdir)/secp256k1/include -I$(srcdir)/$(UNIVALUE_INCLUDE_DIR_INT) $(BDB_CPPFLAGS) $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS)
-
-BLS_LIBS=-lbls-dash -lrelic_s
+BITCOIN_INCLUDES+=-I$(srcdir)/dashbls/include -I$(srcdir)/dashbls/depends/relic/include -I$(srcdir)/dashbls/depends/minialloc/include
 
 LIBBITCOIN_SERVER=libraptoreum_server.a
 LIBBITCOIN_COMMON=libraptoreum_common.a
@@ -43,6 +42,7 @@ LIBBITCOIN_CLI=libraptoreum_cli.a
 LIBBITCOIN_UTIL=libraptoreum_util.a
 LIBBITCOIN_CRYPTO=crypto/libraptoreum_crypto.a
 LIBBITCOINQT=qt/libraptoreumqt.a
+LIBDASHBLS=dashbls/libdashbls.la
 LIBSECP256K1=secp256k1/libsecp256k1.la
 
 if ENABLE_ZMQ
@@ -72,6 +72,9 @@ if ENABLE_ARM_SHANI
 LIBBITCOIN_CRYPTO_ARM_SHANI = crypto/libraptoreum_crypto_arm_shani.a
 LIBBITCOIN_CRYPTO += $(LIBBITCOIN_CRYPTO_ARM_SHANI)
 endif
+
+$(LIBDASHBLS):
+	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C $(@D)
 
 $(LIBSECP256K1): $(wildcard secp256k1/src/*.h) $(wildcard secp256k1/src/*.c) $(wildcard secp256k1/include/*)
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C $(@D) $(@F)
@@ -776,7 +779,7 @@ raptoreumd_LDADD = \
   $(LIBMEMENV) \
   $(LIBSECP256K1)
 
-raptoreumd_LDADD += $(BACKTRACE_LIB) $(BOOST_LIBS) $(BDB_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(BLS_LIBS) $(GMP_LIBS)
+raptoreumd_LDADD += $(BACKTRACE_LIB) $(BOOST_LIBS) $(BDB_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(LIBDASHBLS) $(GMP_LIBS)
 
 # raptoreum-cli binary #
 raptoreum_cli_SOURCES = raptoreum-cli.cpp
@@ -794,7 +797,7 @@ raptoreum_cli_LDADD = \
   $(LIBBITCOIN_UTIL) \
   $(LIBBITCOIN_CRYPTO)
 
-raptoreum_cli_LDADD += $(BACKTRACE_LIB) $(BOOST_LIBS) $(EVENT_LIBS) $(BLS_LIBS) $(GMP_LIBS)
+raptoreum_cli_LDADD += $(BACKTRACE_LIB) $(BOOST_LIBS) $(EVENT_LIBS) $(LIBDASHBLS) $(GMP_LIBS)
 
 # raptoreum-wallet binary #
 raptoreum_wallet_SOURCES = raptoreum-wallet.cpp
@@ -824,7 +827,7 @@ raptoreum_wallet_LDADD = \
   $(LIBSECP256K1) \
   $(LIBUNIVALUE)
 
-raptoreum_wallet_LDADD += $(BACKTRACE_LIB) $(BOOST_LIBS) $(BDB_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS) $(ZMQ_LIBS) $(BLS_LIBS) $(GMP_LIBS)
+raptoreum_wallet_LDADD += $(BACKTRACE_LIB) $(BOOST_LIBS) $(BDB_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS) $(ZMQ_LIBS) $(LIBDASHBLS) $(GMP_LIBS)
 #
 
 # raptoreumconsensus library #
@@ -833,8 +836,9 @@ include_HEADERS = script/raptoreumconsensus.h
 libraptoreumconsensus_la_SOURCES = support/cleanse.cpp $(crypto_libraptoreum_crypto_a_SOURCES) $(libraptoreum_consensus_a_SOURCES)
 
 libraptoreumconsensus_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
-libraptoreumconsensus_la_LIBADD = $(LIBSECP256K1) $(BLS_LIBS) $(GMP_LIBS)
+libraptoreumconsensus_la_LIBADD = $(LIBSECP256K1) $(LIBDASHBLS) $(GMP_LIBS)
 libraptoreumconsensus_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include -DBUILD_BITCOIN_INTERNAL
+libraptoreumconsensus_la_CPPFLAGS += -I$(srcdir)/dashbls/include -I$(srcdir)/dashbls/depends/relic/include -I$(srcdir)/dashbls/depends/minialloc/include
 libraptoreumconsensus_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 
 endif
@@ -863,7 +867,11 @@ CLEANFILES += wallet/test/*.gcda wallet/test/*.gcno
 CLEANFILES += zmq/*.gcda zmq/*.gcno
 CLEANFILES += obj/build.h
 
-EXTRA_DIST = $(CTAES_DIST)
+LIBDASHBLS_DIST = dashbls
+
+EXTRA_DIST = \
+  $(CTAES_DIST)   \
+  $(LIBDASHBLS_DIST)
 
 config/raptoreum-config.h: config/stamp-h1
 	@$(MAKE) -C $(top_builddir) $(subdir)/$(@)
@@ -874,6 +882,7 @@ $(top_srcdir)/$(subdir)/config/raptoreum-config.h.in:  $(am__configure_deps)
 
 
 clean-local:
+	-$(MAKE) -C dashbls clean
 	-$(MAKE) -C secp256k1 clean
 	-rm -f leveldb/*/*.gcda leveldb/*/*.gcno leveldb/helpers/memenv/*.gcda leveldb/helpers/memenv/*.gcno
 	-rm -f config.h

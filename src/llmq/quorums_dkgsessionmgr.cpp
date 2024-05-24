@@ -48,8 +48,7 @@ namespace llmq {
         pcursor->Seek(start_vvec);
 
         while (pcursor->Valid()) {
-            decltype(start_vvec)
-            k;
+            decltype(start_vvec) k;
             BLSVerificationVector v;
 
             if (!pcursor->GetKey(k) || std::get<0>(k) != DB_VVEC) {
@@ -73,8 +72,7 @@ namespace llmq {
         pcursor->Seek(start_contrib);
 
         while (pcursor->Valid()) {
-            decltype(start_contrib)
-            k;
+            decltype(start_contrib) k;
             CBLSSecretKey v;
 
             if (!pcursor->GetKey(k) || std::get<0>(k) != DB_SKCONTRIB) {
