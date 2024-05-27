@@ -231,15 +231,10 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, int nHeig
     {
         if (txout.nValue < 0)
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-vout-negative");
-        if(isV17active){
-            if (txout.nValue > MAX_MONEY)
-                return state.DoS(100, false, REJECT_INVALID, "bad-txns-vout-toolarge");
-        }else{
-            if (txout.nValue > OLD_MAX_MONEY)
-                return state.DoS(100, false, REJECT_INVALID, "bad-txns-vout-toolarge");
-        }
+        if (txout.nValue > MAX_MONEY)
+            return state.DoS(100, false, REJECT_INVALID, "bad-txns-vout-toolarge");
         nValueOut += txout.nValue;
-        if (!MoneyRange(nValueOut, isV17active))
+        if (!MoneyRange(nValueOut))
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-txouttotal-toolarge");
     }
 

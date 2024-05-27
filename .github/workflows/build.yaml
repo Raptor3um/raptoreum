@@ -331,9 +331,9 @@ jobs:
           report_paths: 'unit_test_results.xml'
 
   build-macos:
-    name: macOS 11 Build
+    name: macOS 13 Build
     needs: get-version
-    runs-on: macos-11
+    runs-on: macos-13
 
     steps:
       - name: Checkout
@@ -341,8 +341,9 @@ jobs:
 
       - name: Install Required Packages
         run: |
-          brew install automake libtool pkg-config miniupnpc librsvg libnatpmp zeromq python
+          brew install automake libtool pkg-config librsvg libnatpmp python
           pip3 install ds_store mac_alias
+          pip3 install -U pip setuptools
 
       - name: Build Depends
         run: |
