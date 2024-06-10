@@ -87,7 +87,7 @@ uint256 ParseHashV(const UniValue &v, std::string strName) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, strName + " must be hexadecimal string (not '" + strHex + "')");
     if (64 != strHex.length())
         throw JSONRPCError(RPC_INVALID_PARAMETER,
-                           strprintf("%s must be of length %d (not %d)", strName, 64, strHex.length()));
+                           strprintf("%s must be of length %d (not %d): %s", strName, 64, strHex.length(), strHex));
     uint256 result;
     result.SetHex(strHex);
     return result;
