@@ -892,7 +892,7 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock &block, const C
                 uint32_t quorumHeight = qc.nHeight - (qc.nHeight % llmq_params.dkgInterval);
                 auto pQuorumBaseBlockIndex = pindexPrev->GetAncestor(quorumHeight);
                 if (!pQuorumBaseBlockIndex || pQuorumBaseBlockIndex->GetBlockHash() != qc.commitment.quorumHash) {
-                    // we should actually never get into this case as validation should have catched it...but lets be sure
+                    // we should actually never get into this case as validation should have caught it...but lets be sure
                     return _state.DoS(100, false, REJECT_INVALID, "bad-qc-quorum-hash");
                 }
 
@@ -930,7 +930,7 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock &block, const C
     }
 
     mnListRet = std::move(newList);
-    UpdateLLMQParams(mnListRet.GetAllMNsCount(), nHeight, sporkManager.IsSporkActive(SPORK_21_LOW_LLMQ_PARAMS));
+    UpdateLLMQParams(mnListRet.GetAllMNsCount(), nHeight, pindexPrev, sporkManager.IsSporkActive(SPORK_21_LOW_LLMQ_PARAMS));
     return true;
 }
 
@@ -1039,9 +1039,7 @@ CDeterministicMNList CDeterministicMNManager::GetListForBlock(const CBlockIndex 
             }
         }
     }
-    // is this needed?
-    UpdateLLMQParams(snapshot.GetAllMNsCount(), snapshot.GetHeight(),
-                     sporkManager.IsSporkActive(SPORK_21_LOW_LLMQ_PARAMS));
+    UpdateLLMQParams(snapshot.GetAllMNsCount(), snapshot.GetHeight(), pindex, sporkManager.IsSporkActive(SPORK_21_LOW_LLMQ_PARAMS));
     return snapshot;
 }
 

@@ -82,8 +82,8 @@ VoteResult MinerRoundVoting::GetVote(const CBlockIndex *blockIndex, const Update
 
     // assert(height % update.RoundSize == 0);
     if (blockIndex->nHeight % update.RoundSize() != 0) {
-        LogPrint(BCLog::UPDATES, "Updates: MinerRoundVoting::GetVote, Height: %7d, Partial rounds not accepted\n",
-                 blockIndex->nHeight);
+        LogPrint(BCLog::UPDATES, "Updates: Update: %s, MinerRoundVoting::GetVote, Height: %7d, Partial rounds not accepted\n",
+                 update.Name().c_str(), blockIndex->nHeight);
         return VoteResult(0, update.RoundSize()); // Assume everyone voted no
     }
 
@@ -113,8 +113,8 @@ VoteResult MinerRoundVoting::GetVote(const CBlockIndex *blockIndex, const Update
         }
     }
     VoteResult vote(yesCount, update.RoundSize());
-    LogPrint(BCLog::UPDATES, "Updates: MinerRoundVoting::GetVote, Height: %7d, %s\n", blockIndex->nHeight,
-             vote.ToString().c_str());
+    LogPrint(BCLog::UPDATES, "Updates: Update: %s, MinerRoundVoting::GetVote, Height: %7d, %s\n", update.Name().c_str(),
+             blockIndex->nHeight, vote.ToString().c_str());
     cache[{update.UpdateId(), blockIndex}] = vote;
     return vote;
 }
@@ -124,14 +124,14 @@ VoteResult NodeRoundVoting::GetVote(const CBlockIndex *blockIndex, const Update 
 
     // assert(height % update.RoundSize == 0);
     if (blockIndex->nHeight % update.RoundSize() != 0) {
-        LogPrint(BCLog::UPDATES, "Updates: NodeRoundVoting::GetVote, Height: %7d, Partial rounds not accepted\n",
-                 blockIndex->nHeight);
+        LogPrint(BCLog::UPDATES, "Updates: Update: %s, NodeRoundVoting::GetVote, Height: %7d, Partial rounds not accepted\n",
+                 update.Name().c_str(), blockIndex->nHeight);
         return VoteResult();
     }
 
     if (blockIndex->nHeight < update.StartHeight() + update.RoundSize()) {
-        LogPrint(BCLog::UPDATES, "Updates: NodeRoundVoting::GetVote, Height: %7d, NodeRoundVoting - Before start\n",
-                 blockIndex->nHeight);
+        LogPrint(BCLog::UPDATES, "Updates: Update: %s, NodeRoundVoting::GetVote, Height: %7d, NodeRoundVoting - Before start\n",
+                 update.Name().c_str(), blockIndex->nHeight);
         return VoteResult();
     }
 
@@ -178,7 +178,7 @@ VoteResult NodeRoundVoting::GetVote(const CBlockIndex *blockIndex, const Update 
                     continue;
                 }
 
-                // LogPrint(BCLog::UPDATES, "Updates: NodeRoundVoting, Height: %d, Tx: %d, Quorum Commitmentx - ValidMembers: %3d, Signers: %3d\n", curIndex->nHeight, i, qc.commitment.CountValidMembers(), qc.commitment.CountSigners());
+                // LogPrint(BCLog::UPDATES, "Updates: NodeRoundVoting, Height: %d, Tx: %d, Quorum Commitment - ValidMembers: %3d, Signers: %3d\n", curIndex->nHeight, i, qc.commitment.CountValidMembers(), qc.commitment.CountSigners());
                 if (qc.commitment.CountValidMembers()) {
                     int64_t samples = qc.commitment.CountValidMembers();
                     for (const auto it: qc.commitment.quorumUpdateVotes) {
@@ -196,8 +196,8 @@ VoteResult NodeRoundVoting::GetVote(const CBlockIndex *blockIndex, const Update 
             }
         }
     }
-    LogPrint(BCLog::UPDATES, "Updates: NodeRoundVoting::GetVote, Height: %7d, %s\n", blockIndex->nHeight,
-             vote.ToString().c_str());
+    LogPrint(BCLog::UPDATES, "Updates: Update: %s, NodeRoundVoting::GetVote, Height: %7d, %s\n", update.Name().c_str(),
+             blockIndex->nHeight, vote.ToString().c_str());
     cache[{update.UpdateId(), blockIndex}] = vote;
     return vote;
 }
@@ -205,8 +205,7 @@ VoteResult NodeRoundVoting::GetVote(const CBlockIndex *blockIndex, const Update 
 VoteResult MinerUpdateVoting::GetVote(const CBlockIndex *blockIndex, const Update &update) {
     // assert(height % update.roundSize == 0);
     if (blockIndex->nHeight < update.StartHeight() + update.RoundSize() * update.VotingPeriod()) {
-        return VoteResult(0,
-                          update.RoundSize() * update.VotingPeriod()); // Assume everyone voted no for the entire period
+        return VoteResult(0, update.RoundSize() * update.VotingPeriod()); // Assume everyone voted no for the entire period
     }
 
     // Simply collect all of the round votes for a full average in the voting period:
@@ -220,16 +219,15 @@ VoteResult MinerUpdateVoting::GetVote(const CBlockIndex *blockIndex, const Updat
         // LogPrint(BCLog::UPDATES, "Updates: MinerUpdateVoting::GetVote - retrieved vote for height %d: %s\n", roundBlockIndex->nHeight, roundVote.ToString());
         vote += roundVote;
     }
-    LogPrint(BCLog::UPDATES, "Updates: MinerUpdateVoting::GetVote, Height: %7d, %s\n", blockIndex->nHeight,
-             vote.ToString().c_str());
+    LogPrint(BCLog::UPDATES, "Updates: Update: %s, MinerUpdateVoting::GetVote, Height: %7d, %s\n", update.Name().c_str(),
+             blockIndex->nHeight, vote.ToString().c_str());
     return vote;
 }
 
 VoteResult NodeUpdateVoting::GetVote(const CBlockIndex *blockIndex, const Update &update) {
     // assert(height % update.roundSize == 0);
     if (blockIndex->nHeight < update.StartHeight() + update.RoundSize() * update.VotingPeriod()) {
-        return VoteResult(0,
-                          update.RoundSize() * update.VotingPeriod()); // Assume everyone voted no for the entire period
+        return VoteResult(0, update.RoundSize() * update.VotingPeriod()); // Assume everyone voted no for the entire period
     }
 
     // Simply collect all of the round votes for a full average in the voting period:
@@ -243,8 +241,8 @@ VoteResult NodeUpdateVoting::GetVote(const CBlockIndex *blockIndex, const Update
         // LogPrint(BCLog::UPDATES, "Updates: NodeUpdateVoting::GetVote - retrieved vote for height %d: %s\n", roundBlockIndex->nHeight, roundVote.ToString());
         vote += roundVote;
     }
-    LogPrint(BCLog::UPDATES, "Updates: NodeUpdateVoting::GetVote, Height: %7d, %s\n", blockIndex->nHeight,
-             vote.ToString().c_str());
+    LogPrint(BCLog::UPDATES, "Updates: Update: %s, NodeUpdateVoting::GetVote, Height: %7d, %s\n", update.Name().c_str(),
+             blockIndex->nHeight, vote.ToString().c_str());
     return vote;
 }
 
@@ -302,7 +300,7 @@ StateInfo UpdateManager::State(enum EUpdate eUpdate, const CBlockIndex *blockInd
         }
     }
 
-    LOCK(updateMutex);
+    LOCK2(cs_main, updateMutex);
 
     // Dump the final state cache:
     // LogPrint(BCLog::UPDATES, "Updates: FinalState cache\n");
@@ -504,7 +502,7 @@ StateInfo UpdateManager::State(enum EUpdate eUpdate, const CBlockIndex *blockInd
 }
 
 uint32_t UpdateManager::ComputeBlockVersion(const CBlockIndex *blockIndex) {
-    LOCK(updateMutex);
+    LOCK2(cs_main, updateMutex);
     uint32_t nVersion = VERSIONBITS_TOP_BITS;
     for (auto const &update: updates) {
         StateInfo si = State(update.first, blockIndex);

@@ -2548,7 +2548,7 @@ bool CWalletTx::SubmitMemoryPoolAndRelay(std::string &err_string, bool relay) {
     if (GetDepthInMainChain() != 0) return false;
     // Don't try to submit transactions locked via InstantSend.
     if (IsLockedByInstantSend()) return false;
-    
+
     // Submit transaction to mempool for relay
     pwallet->WalletLogPrintf("Submitting wtx %s to mempool for relay\n", GetHash().ToString());
     // We must set fInMempool here - while it will be re-set to true by the
@@ -3380,7 +3380,7 @@ std::map <std::string, std::pair<CAmount, CAmount>> CWallet::getAssetsBalanceAll
             CAssetTransfer transferTemp;
             if (!GetTransferAsset(coin.txout.scriptPubKey, transferTemp))
                 continue;
-            
+
             if (!output.fSpendable || (output.isFuture && !output.isFutureSpendable) || (output.nDepth <
                 (output.tx->IsFromMe(ISMINE_ALL) ? 0 : 1)))
                 pending += transferTemp.nAmount;
@@ -4480,7 +4480,7 @@ bool CWallet::CreateTransaction(const std::vector <CRecipient> &vecSend, CTransa
                             return false;
                         }
                         vecCoins.insert(vecCoins.end(), setAssetsTmp.begin(), setAssetsTmp.end());
-                        
+
                         std::map<std::string, std::vector<std::pair<uint64_t, uint64_t>>> mapUniqueIds;
                         mapUniqueIds.clear();
 
@@ -4491,7 +4491,7 @@ bool CWallet::CreateTransaction(const std::vector <CRecipient> &vecSend, CTransa
                                 if(assetTransfer.isUnique){
                                     uint64_t rangeEnd = assetTransfer.uniqueId + assetTransfer.nAmount / COIN;
                                     if (!mapUniqueIds.count(assetTransfer.assetId)){
-                                        std::vector<std::pair<uint64_t, uint64_t>> tmp; 
+                                        std::vector<std::pair<uint64_t, uint64_t>> tmp;
                                         tmp.push_back(std::make_pair(assetTransfer.uniqueId, rangeEnd));
                                         mapUniqueIds.insert(std::make_pair(assetTransfer.assetId, tmp));
                                     } else {
@@ -4547,7 +4547,7 @@ bool CWallet::CreateTransaction(const std::vector <CRecipient> &vecSend, CTransa
                                     }
                                     if (change) {
                                         entry.first = entry.first + (amount / COIN);
-                                        mapUniqueIds.at(asset.first).push_back(entry);  
+                                        mapUniqueIds.at(asset.first).push_back(entry);
                                     }
                                 }
                             }
@@ -5791,7 +5791,9 @@ bool CWallet::Verify(interfaces::Chain &chain, const WalletLocation &location, s
     std::unique_ptr <WalletDatabase> database = CreateWalletDatabase(wallet_path);
 
     try {
-        return database->Verify(error_string);
+        if (!database->Verify(error_string)) {
+            return false;
+        }
     } catch (const fs::filesystem_error &e) {
         error_string = strprintf("Error loading wallet %s. %s", location.GetName(),
                                  fsbridge::get_filesystem_error_message(e));
@@ -5803,6 +5805,7 @@ bool CWallet::Verify(interfaces::Chain &chain, const WalletLocation &location, s
     if (!tempWallet->AutoBackupWallet(wallet_path, warning_string, error_string) && !error_string.empty()) {
         return false;
     }
+    return true;
 }
 
 std::shared_ptr <CWallet> CWallet::CreateWalletFromFile(interfaces::Chain &chain, const WalletLocation &location,

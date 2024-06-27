@@ -1,7 +1,7 @@
 AC_PREREQ([2.69])
 define(_CLIENT_VERSION_MAJOR, 2)
 define(_CLIENT_VERSION_MINOR, 0)
-define(_CLIENT_VERSION_REVISION, 00)
+define(_CLIENT_VERSION_REVISION, 02)
 define(_CLIENT_VERSION_BUILD, 99)
 define(_CLIENT_VERSION_IS_RELEASE, false)
 define(_COPYRIGHT_YEAR, 2024)
@@ -1783,7 +1783,7 @@ unset LIBS
 LIBS="$LIBS_TEMP"
 
 ac_configure_args="${ac_configure_args} --disable-shared --with-pic --enable-benchmark=no --enable-module-recovery --enable-module-schnorrsig"
-AC_CONFIG_SUBDIRS([src/secp256k1])
+AC_CONFIG_SUBDIRS([src/dashbls src/secp256k1])
 
 AC_OUTPUT
 

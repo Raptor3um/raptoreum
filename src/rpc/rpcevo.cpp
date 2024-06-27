@@ -240,7 +240,7 @@ static CBLSPublicKey ParseBLSPubKey(const std::string &hexKey, const std::string
 static CBLSSecretKey ParseBLSSecretKey(const std::string &hexKey, const std::string &paramName) {
     CBLSSecretKey secKey;
     if (!secKey.SetHexStr(hexKey)) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("%s must be a valid BLS secret key", paramName));
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("%s must be a valid BLS secret key %s", paramName, hexKey));
     }
     return secKey;
 }
@@ -1023,12 +1023,11 @@ UniValue protx_revoke(const JSONRPCRequest& request)
 
     CProUpRevTx ptx;
     ptx.nVersion = CProUpRevTx::CURRENT_VERSION;
-    ptx.proTxHash = ParseHashV(request.params[1], "proTxHash");
+    ptx.proTxHash = ParseHashV(request.params[0], "proTxHash");
 
-    CBLSSecretKey keyOperator = ParseBLSSecretKey(request.params[2].get_str(), "operatorKey");
-
-    if (!request.params[3].isNull()) {
-        int32_t nReason = ParseInt32V(request.params[3], "reason");
+    CBLSSecretKey keyOperator = ParseBLSSecretKey(request.params[1].get_str(), "operatorKey");
+    if (!request.params[2].isNull()) {
+        int32_t nReason = ParseInt32V(request.params[2], "reason");
         if (nReason < 0 || nReason > CProUpRevTx::REASON_LAST) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("invalid reason %d, must be between 0 and %d", nReason, CProUpRevTx::REASON_LAST));
         }
@@ -1048,10 +1047,10 @@ UniValue protx_revoke(const JSONRPCRequest& request)
     tx.nVersion = 3;
     tx.nType = TRANSACTION_PROVIDER_UPDATE_REVOKE;
 
-    if (!request.params[4].isNull()) {
-        CTxDestination feeSourceDest = DecodeDestination(request.params[4].get_str());
+    if (!request.params[3].isNull()) {
+        CTxDestination feeSourceDest = DecodeDestination(request.params[3].get_str());
         if (!IsValidDestination(feeSourceDest))
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Raptoreum address: ") + request.params[4].get_str());
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Raptoreum address: ") + request.params[3].get_str());
         FundSpecialTx(pwallet, tx, ptx, feeSourceDest);
     } else if (dmn->pdmnState->scriptOperatorPayout != CScript()) {
         // Using funds from previousely specified operator payout address

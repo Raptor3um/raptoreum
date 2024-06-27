@@ -371,23 +371,32 @@ public:
         consensus.nMinerConfirmationWindow = 2016; // nPowTargetTimespan / nPowTargetSpacing
         consensus.nFutureForkBlock = 1000;
 
-        updateManager.Add
-                (
-                        Update(EUpdate::DEPLOYMENT_V17, std::string("v17"), 0, 1440, 25920, 7, 365, 7, false,
-                               VoteThreshold(95, 85, 5), VoteThreshold(0, 0, 1))
-                );
-        updateManager.Add
-                (
-                Update(EUpdate::ROUND_VOTING, std::string("Round Voting"),
-                       1, //bit
-                       1440, //roundSize
-                       27360, // startHeight
-                       7, //votingPeriod
-                       365, //votingMaxRounds
-                       7, // gracePeriod
-                       false, // forceUpdate
-                       VoteThreshold(85, 85, 1), //minerThreshold
-                       VoteThreshold(0, 0, 1)) //nodeThreshold
+        updateManager.Add(
+            Update(EUpdate::DEPLOYMENT_V17, std::string("v17"), 0, 1440, 25920, 7, 365, 7, false,
+                VoteThreshold(95, 85, 5), VoteThreshold(0, 0, 1)));
+        updateManager.Add(
+            Update(EUpdate::ROUND_VOTING, std::string("Round Voting"),
+                1,                        // bit
+                1440,                     // roundSize
+                27360,                    // startHeight
+                7,                        // votingPeriod
+                365,                      // votingMaxRounds
+                7,                        // gracePeriod
+                false,                    // forceUpdate
+                VoteThreshold(85, 85, 1), // minerThreshold
+                VoteThreshold(0, 0, 1))   // nodeThreshold
+        );
+        updateManager.Add(
+            Update(EUpdate::QUORUMS_200_8, std::string("Quorums 200/8"),
+                2,                        // bit
+                1440,                     // roundSize
+                79200,                    // startHeight
+                3,                        // votingPeriod
+                365,                      // votingMaxRounds
+                2,                        // gracePeriod
+                false,                    // forceUpdate
+                VoteThreshold(85, 85, 1), // minerThreshold
+                VoteThreshold(85, 85, 1)) // nodeThreshold
         );
 
         // The best chain should have at least this much work.
@@ -996,8 +1005,8 @@ void SelectParams(const std::string &network) {
     globalChainParams = CreateChainParams(network);
 }
 
-void UpdateLLMQParams(size_t totalMnCount, int height, bool lowLLMQParams) {
-    globalChainParams->UpdateLLMQParams(totalMnCount, height, lowLLMQParams);
+void UpdateLLMQParams(size_t totalMnCount, int height, const CBlockIndex* blockIndex, bool lowLLMQParams) {
+    globalChainParams->UpdateLLMQParams(totalMnCount, height, blockIndex, lowLLMQParams);
 }
 
 bool IsMiningPhase(const Consensus::LLMQParams &params, int nHeight) {
@@ -1017,7 +1026,7 @@ bool IsLLMQsMiningPhase(int nHeight) {
     return false;
 }
 
-void CChainParams::UpdateLLMQParams(size_t totalMnCount, int height, bool lowLLMQParams) {
+void CChainParams::UpdateLLMQParams(size_t totalMnCount, int height, const CBlockIndex* blockIndex, bool lowLLMQParams) {
     bool isNotLLMQsMiningPhase;
     if (lastCheckHeight < height && (lastCheckMnCount != totalMnCount || lastCheckedLowLLMQParams != lowLLMQParams) &&
         (isNotLLMQsMiningPhase = !IsLLMQsMiningPhase(height))) {
@@ -1047,8 +1056,13 @@ void CChainParams::UpdateLLMQParams(size_t totalMnCount, int height, bool lowLLM
             consensus.llmqs[Consensus::LLMQ_400_85] = Consensus::llmq40_85;
         } else {
             consensus.llmqs[Consensus::LLMQ_50_60] = Consensus::llmq50_60;
-            consensus.llmqs[Consensus::LLMQ_400_60] = Consensus::llmq400_60;
-            consensus.llmqs[Consensus::LLMQ_400_85] = Consensus::llmq400_85;
+            if (Updates().IsActive(EUpdate::QUORUMS_200_8, blockIndex)) {
+               consensus.llmqs[Consensus::LLMQ_400_60] = Consensus::llmq200_60;
+               consensus.llmqs[Consensus::LLMQ_400_85] = Consensus::llmq200_85;
+            } else {
+               consensus.llmqs[Consensus::LLMQ_400_60] = Consensus::llmq400_60;
+               consensus.llmqs[Consensus::LLMQ_400_85] = Consensus::llmq400_85;
+            }
         }
         if (lowLLMQParams) {
             consensus.llmqs[Consensus::LLMQ_50_60] = Consensus::llmq200_2;

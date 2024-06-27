@@ -32,8 +32,7 @@ namespace llmq {
     CQuorumManager *quorumManager;
 
     RecursiveMutex cs_data_requests;
-    static std::unordered_map <std::pair<uint256, bool>, CQuorumDataRequest, StaticSaltedHasher> mapQuorumDataRequests
-    GUARDED_BY(cs_data_requests);
+    static std::unordered_map<CQuorumDataRequestKey, CQuorumDataRequest, StaticSaltedHasher> mapQuorumDataRequests GUARDED_BY(cs_data_requests);
 
     static uint256 MakeQuorumKey(const CQuorum &q) {
         CHashWriter hw(SER_NETWORK, 0);
@@ -43,6 +42,31 @@ namespace llmq {
             hw << dmn->proTxHash;
         }
         return hw.GetHash();
+    }
+
+    std::string CQuorumDataRequest::GetErrorString() const
+    {
+        switch (nError) {
+            case (Errors::NONE):
+                return "NONE";
+            case (Errors::QUORUM_TYPE_INVALID):
+                return "QUORUM_TYPE_INVALID";
+            case (Errors::QUORUM_BLOCK_NOT_FOUND):
+                return "QUORUM_BLOCK_NOT_FOUND";
+            case (Errors::QUORUM_NOT_FOUND):
+                return "QUORUM_NOT_FOUND";
+            case (Errors::SMARTNODE_IS_NO_MEMBER):
+                return "MASTERNODE_IS_NO_MEMBER";
+            case (Errors::QUORUM_VERIFICATION_VECTOR_MISSING):
+                return "QUORUM_VERIFICATION_VECTOR_MISSING";
+            case (Errors::ENCRYPTED_CONTRIBUTIONS_MISSING):
+                return "ENCRYPTED_CONTRIBUTIONS_MISSING";
+            case (Errors::UNDEFINED):
+                return "UNDEFINED";
+            default:
+                return "UNDEFINED";
+        }
+        return "UNDEFINED";
     }
 
     CQuorum::CQuorum(const Consensus::LLMQParams &_params, CBLSWorker &_blsWorker) : params(_params),
@@ -392,7 +416,11 @@ namespace llmq {
         }
 
         LOCK(cs_data_requests);
-        auto key = std::make_pair(pFrom->GetVerifiedProRegTxHash(), true);
+        CQuorumDataRequestKey key;
+        key.proRegTx = pFrom->GetVerifiedProRegTxHash();
+        key.flag = true;
+        key.quorumHash = pQuorumBaseBlockIndex->GetBlockHash();
+        key.llmqType = llmqType;
         auto it = mapQuorumDataRequests.emplace(key, CQuorumDataRequest(llmqType, pQuorumBaseBlockIndex->GetBlockHash(),
                                                                         nDataMask, proTxHash));
         if (!it.second && !it.first->second.IsExpired()) {
@@ -554,7 +582,11 @@ namespace llmq {
 
             {
                 LOCK2(cs_main, cs_data_requests);
-                auto key = std::make_pair(pFrom->GetVerifiedProRegTxHash(), false);
+                CQuorumDataRequestKey key;
+                key.proRegTx = pFrom->GetVerifiedProRegTxHash();
+                key.flag = false;
+                key.quorumHash = request.GetQuorumHash();
+                key.llmqType = request.GetLLMQType();
                 auto it = mapQuorumDataRequests.find(key);
                 if (it == mapQuorumDataRequests.end()) {
                     it = mapQuorumDataRequests.emplace(key, request).first;
@@ -633,7 +665,12 @@ namespace llmq {
 
             {
                 LOCK2(cs_main, cs_data_requests);
-                auto it = mapQuorumDataRequests.find(std::make_pair(verifiedProRegTxHash, true));
+                CQuorumDataRequestKey key;
+                key.proRegTx = pFrom->GetVerifiedProRegTxHash();
+                key.flag = true;
+                key.quorumHash = request.GetQuorumHash();
+                key.llmqType = request.GetLLMQType();
+                auto it = mapQuorumDataRequests.find(key);
                 if (it == mapQuorumDataRequests.end()) {
                     errorHandler("Not requested");
                     return;
@@ -650,7 +687,7 @@ namespace llmq {
             }
 
             if (request.GetError() != CQuorumDataRequest::Errors::NONE) {
-                errorHandler(strprintf("Error %d", request.GetError()), 0);
+                errorHandler(strprintf("Error %d (%s)", request.GetError(), request.GetErrorString()), 0);
                 return;
             }
 
@@ -680,38 +717,11 @@ namespace llmq {
             // Check if request has ENCRYPTED_CONTRIBUTIONS data
             if (request.GetDataMask() & CQuorumDataRequest::ENCRYPTED_CONTRIBUTIONS) {
 
-
                 if (WITH_LOCK(pQuorum->cs, return pQuorum->quorumVvec->size() != pQuorum->params.threshold)) {
-                    errorHandler("No valid quorum verification vector available",
-                                 0); // Don't bump score because we asked for it
-                    return;
-                }
-
-
-/*            BLSVerificationVectorPtr quorumVvecCopy;
-            int thresholdCopy;
-            {
-                LOCK(pQuorum->cs);
-                // work on copy (keep this simple)
-                quorumVvecCopy = pQuorum->quorumVvec;
-                // If the quorum vector ptr isn't here we know the issue is with pQuorum
-                thresholdCopy = pQuorum->params.threshold;
-                // Never say never :)
-            }
-
-            // This is 100% thread-safe so we can rule out threading issues
-            if (quorumVvecCopy) {
-                if (quorumVvecCopy->size() != thresholdCopy) {
                     errorHandler("No valid quorum verification vector available", 0); // Don't bump score because we asked for it
                     return;
                 }
-            }
 
-            if (pQuorum->qc.validMembers.size() != pQuorum->params.size) {
-                errorHandler("Quorum not fully qualified", 0); // Don't bump score because we asked for it
-                return;
-            }
-*/
                 int memberIdx = pQuorum->GetMemberIndex(request.GetProTxHash());
                 if (memberIdx == -1) {
                     errorHandler("Not a member of the quorum", 0); // Don't bump score because we asked for it
@@ -838,7 +848,12 @@ namespace llmq {
                     pCurrentMemberHash = &vecMemberHashes[(nMyStartOffset + nTries++) % vecMemberHashes.size()];
                     {
                         LOCK(cs_data_requests);
-                        auto it = mapQuorumDataRequests.find(std::make_pair(*pCurrentMemberHash, true));
+                        CQuorumDataRequestKey key;
+                        key.proRegTx = *pCurrentMemberHash;
+                        key.flag = true;
+                        key.quorumHash = pQuorum->qc->quorumHash;
+                        key.llmqType = pQuorum->qc->llmqType;
+                        auto it = mapQuorumDataRequests.find(key);
                         if (it != mapQuorumDataRequests.end() && !it->second.IsExpired()) {
                             printLog("Already asked");
                             continue;
@@ -865,7 +880,12 @@ namespace llmq {
                         printLog("Requested");
                     } else {
                         LOCK(cs_data_requests);
-                        auto it = mapQuorumDataRequests.find(std::make_pair(verifiedProRegTxHash, true));
+                        CQuorumDataRequestKey key;
+                        key.proRegTx = *pCurrentMemberHash;
+                        key.flag = true;
+                        key.quorumHash = pQuorum->qc->quorumHash;
+                        key.llmqType = pQuorum->qc->llmqType;
+                        auto it = mapQuorumDataRequests.find(key);
                         if (it == mapQuorumDataRequests.end()) {
                             printLog("Failed");
                             pNode->fDisconnect = true;
