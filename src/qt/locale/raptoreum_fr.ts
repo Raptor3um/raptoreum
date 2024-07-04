@@ -1,4 +1,6 @@
-<?xml version="1.0" ?><!DOCTYPE TS><TS version="2.1" language="fr">
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE TS>
+<TS version="2.1" language="fr">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -9,7 +11,7 @@
     <message>
         <location line="+10"/>
         <source>Right-click to edit address or label</source>
-        <translation>Faites un clic-droit pour modifier l&apos;adresse ou l&apos;étiquette</translation>
+        <translation>Faites un clic-droit pour modifier l’adresse ou l’étiquette</translation>
     </message>
     <message>
         <location line="+27"/>
@@ -24,7 +26,7 @@
     <message>
         <location line="+10"/>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>Copier l&apos;adresse actuellement sélectionnée dans le presse-papier</translation>
+        <translation>Copier l’adresse actuellement sélectionnée dans le presse-papier</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -34,7 +36,7 @@
     <message>
         <location line="+10"/>
         <source>Show QR code for the currently selected address</source>
-        <translation>Voir le QR-code pour l&apos;adresse actuellement sélectionnée</translation>
+        <translation>Voir le QR-code pour l’adresse actuellement sélectionnée</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -44,7 +46,7 @@
     <message>
         <location line="+10"/>
         <source>Delete the currently selected address from the list</source>
-        <translation>Effacer l&apos;adresse actuellement sélectionnée de la liste</translation>
+        <translation>Effacer l’adresse actuellement sélectionnée de la liste</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -54,7 +56,7 @@
     <message>
         <location line="+23"/>
         <source>Export the data in the current tab to a file</source>
-        <translation>Exporter les données de l&apos;onglet courant vers un fichier</translation>
+        <translation>Exporter les données de l’onglet courant vers un fichier</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -69,12 +71,12 @@
     <message>
         <location filename="../addressbookpage.cpp" line="+72"/>
         <source>Choose the address to send coins to</source>
-        <translation>Choisir l&apos;adresse à laquelle envoyer de l&apos;argent</translation>
+        <translation>Choisir l’adresse à laquelle envoyer de l’argent</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Choose the address to receive coins with</source>
-        <translation>Choisir l&apos;adresse avec laquelle recevoir de l&apos;argent</translation>
+        <translation>Choisir l’adresse avec laquelle recevoir de l’argent</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -84,7 +86,7 @@
     <message>
         <location line="+6"/>
         <source>Sending addresses</source>
-        <translation>Adresses d&apos;envoi</translation>
+        <translation>Adresses d’envoi</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -94,22 +96,22 @@
     <message>
         <location line="+8"/>
         <source>These are your Raptoreum addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Voici vos adresses Raptoreum pour l&apos;envoi de paiements. Vérifiez toujours le montant et l&apos;adresse de réception avant d&apos;envoyer de l&apos;argent.</translation>
+        <translation>Voici vos adresses Raptoreum pour l’envoi de paiements. Vérifiez toujours le montant et l’adresse de réception avant d’envoyer de l’argent.</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>These are your Raptoreum addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Voici vos adresses Raptoreum pour la réception de paiements. Il est recommandé d&apos;utiliser une nouvelle adresse de réception pour chaque transaction.</translation>
+        <translation>Voici vos adresses Raptoreum pour la réception de paiements. Il est recommandé d’utiliser une nouvelle adresse de réception pour chaque transaction.</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>&amp;Copy Address</source>
-        <translation>&amp;Copier l&apos;adresse</translation>
+        <translation>&amp;Copier l’adresse</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Copy &amp;Label</source>
-        <translation>Copier l&apos;é&amp;tiquette</translation>
+        <translation>Copier l’é&amp;tiquette</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -119,7 +121,7 @@
     <message>
         <location line="+1"/>
         <source>&amp;Show address QR code</source>
-        <translation>Voir le QR-code de l&apos;adresse</translation>
+        <translation>Voir le QR-code de l’adresse</translation>
     </message>
     <message>
         <location line="+122"/>
@@ -129,7 +131,7 @@
     <message>
         <location line="+58"/>
         <source>Export Address List</source>
-        <translation>Exporter la liste d&apos;adresses</translation>
+        <translation>Exporter la liste d’adresses</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -140,13 +142,13 @@
         <location line="+14"/>
         <source>Exporting Failed</source>
         <extracomment>%1 is a name of the file (e.g.: &quot;addressbook.csv&quot;) that the Raptoreum addresses were exported to.</extracomment>
-        <translation>L&apos;exportation a échoué</translation>
+        <translation>L’exportation a échoué</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>There was an error trying to save the address list to %1. Please try again.</source>
         <comment>An error message.</comment>
-        <translation>Une erreur s&amp;#39;est produite lors de la tentative d&amp;#39;enregistrement de la liste d&amp;#39;adresses dans %1. Veuillez réessayer.</translation>
+        <translation>Une erreur s’est produite lors de la tentative d’enregistrement de la liste d’adresses dans %1. Veuillez réessayer.</translation>
     </message>
 </context>
 <context>
@@ -164,7 +166,7 @@
     <message>
         <location line="+29"/>
         <source>(no label)</source>
-        <translation>(pas d&apos;étiquette)</translation>
+        <translation>(pas d’étiquette)</translation>
     </message>
 </context>
 <context>
@@ -288,7 +290,7 @@
     <message>
         <location line="+1"/>
         <source>Enter the old passphrase and new passphrase to the wallet.</source>
-        <translation>Saisissez l&apos;ancienne phrase de passe et la nouvelle phrase de passe du portefeuille.</translation>
+        <translation>Saisissez l’ancienne phrase de passe et la nouvelle phrase de passe du portefeuille.</translation>
     </message>
     <message>
         <location line="+40"/>
@@ -308,7 +310,7 @@
     <message>
         <location line="+5"/>
         <source>Remember that encrypting your wallet cannot fully protect your funds from being stolen by malware infecting your computer.</source>
-        <translation>N&amp;#39;oubliez pas que le cryptage de votre portefeuille ne peut pas protéger entièrement vos fonds contre le vol par des logiciels malveillants infectant votre ordinateur.</translation>
+        <translation>N’oubliez pas que le cryptage de votre portefeuille ne peut pas protéger entièrement vos fonds contre le vol par des logiciels malveillants infectant votre ordinateur.</translation>
     </message>
     <message>
         <location line="+4"/>
@@ -318,7 +320,7 @@
     <message>
         <location line="+2"/>
         <source>Your wallet is about to be encrypted. </source>
-        <translation>Votre portefeuille est sur le point d&amp;#39;être crypté. </translation>
+        <translation>Votre portefeuille est sur le point d’être crypté. </translation>
     </message>
     <message>
         <location line="+6"/>
@@ -354,7 +356,7 @@
     <message>
         <location line="-41"/>
         <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
-        <translation>Le chiffrement du portefeuille a échoué en raison d&apos;une erreur interne. Votre portefeuille n&apos;a pas été chiffré.</translation>
+        <translation>Le chiffrement du portefeuille a échoué en raison d’une erreur interne. Votre portefeuille n’a pas été chiffré.</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -406,7 +408,7 @@
     <message>
         <location line="+23"/>
         <source>Bytes:</source>
-        <translation>Octets :</translation>
+        <translation>Octets&#xa0;:</translation>
     </message>
     <message>
         <location line="+39"/>
@@ -426,7 +428,7 @@
     <message>
         <location line="+39"/>
         <source>After Fee:</source>
-        <translation>Après les frais :</translation>
+        <translation>Après les frais&#xa0;:</translation>
     </message>
     <message>
         <location line="+26"/>
@@ -491,12 +493,12 @@
     <message>
         <location filename="../assetcontroldialog.cpp" line="+75"/>
         <source>Copy address</source>
-        <translation>Copier l&amp;#39;adresse</translation>
+        <translation>Copier l’adresse</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Copy label</source>
-        <translation>Copier l&amp;#39;étiquette</translation>
+        <translation>Copier l’étiquette</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -507,7 +509,7 @@
     <message>
         <location line="-25"/>
         <source>Copy transaction ID</source>
-        <translation>Copier l&amp;#39;ID de la transaction</translation>
+        <translation>Copier l’ID de la transaction</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -582,12 +584,12 @@
     <message>
         <location line="+20"/>
         <source>Some Assets were unselected because they were spent.</source>
-        <translation>Certains actifs n&amp;#39;ont pas été sélectionnés car ils ont été dépensés.</translation>
+        <translation>Certains actifs n’ont pas été sélectionnés car ils ont été dépensés.</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Some Assets were unselected because they do not have enough mixing rounds.</source>
-        <translation>Certains éléments n&amp;#39;ont pas été sélectionnés car ils ne disposent pas de suffisamment de tours de mixage.</translation>
+        <translation>Certains éléments n’ont pas été sélectionnés car ils ne disposent pas de suffisamment de tours de mixage.</translation>
     </message>
     <message>
         <location line="+37"/>
@@ -616,7 +618,7 @@
     <message>
         <location line="+49"/>
         <source>Asset balance</source>
-        <translation>Solde de l&amp;#39;actif</translation>
+        <translation>Solde de l’actif</translation>
     </message>
     <message>
         <location line="+38"/>
@@ -626,7 +628,7 @@
     <message>
         <location line="+5"/>
         <source>asset id</source>
-        <translation>identifiant de l&amp;#39;actif</translation>
+        <translation>identifiant de l’actif</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -686,12 +688,12 @@
     <message>
         <location filename="../assetsdialog.cpp" line="+67"/>
         <source>Send asset</source>
-        <translation>Envoyer l&amp;#39;élément</translation>
+        <translation>Envoyer l’élément</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Copy asset name</source>
-        <translation>Copier le nom de l&amp;#39;élément</translation>
+        <translation>Copier le nom de l’élément</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -701,22 +703,22 @@
     <message>
         <location line="+191"/>
         <source>Details for asset: %1</source>
-        <translation>Détails de l&amp;#39;actif : %1</translation>
+        <translation>Détails de l’actif&#xa0;: %1</translation>
     </message>
     <message>
         <location line="+145"/>
         <source>Mint details:</source>
-        <translation>Détails de la menthe :</translation>
+        <translation>Détails de la menthe&#xa0;:</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Name: %1 &lt;br&gt;</source>
-        <translation>Nom : %1&lt;br&gt;</translation>
+        <translation>Nom&#xa0;: %1&lt;br&gt;</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Amount: %1</source>
-        <translation>Montant : %1
+        <translation>Montant&#xa0;:&#xa0;%1
  {1?}</translation>
     </message>
     <message>
@@ -727,7 +729,7 @@
     <message>
         <location line="+2"/>
         <source>Confirm Asset Mint</source>
-        <translation>Confirmer la création de l&amp;#39;actif</translation>
+        <translation>Confirmer la création de l’actif</translation>
     </message>
 </context>
 <context>
@@ -740,7 +742,7 @@
     <message>
         <location line="+0"/>
         <source>Banned Until</source>
-        <translation>banni jusqu&apos;à</translation>
+        <translation>banni jusqu’à</translation>
     </message>
 </context>
 <context>
@@ -756,12 +758,12 @@
     <message>
         <location filename="../raptoreum.cpp" line="+376"/>
         <source>A fatal error occurred. Raptoreum Core can no longer continue safely and will quit.</source>
-        <translation>Une erreur fatale est survenue. Raptoreum ne peut plus continuer de façon sûre et va s&apos;arrêter.</translation>
+        <translation>Une erreur fatale est survenue. Raptoreum ne peut plus continuer de façon sûre et va s’arrêter.</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="+720"/>
         <source>&amp;Overview</source>
-        <translation>&amp;Vue d&apos;ensemble</translation>
+        <translation>&amp;Vue d’ensemble</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -776,7 +778,7 @@
     <message>
         <location line="+1"/>
         <source>Send coins to a Raptoreum address</source>
-        <translation>Envoyer de l&apos;argent à une adresse Raptoreum</translation>
+        <translation>Envoyer de l’argent à une adresse Raptoreum</translation>
     </message>
     <message>
         <location line="+8"/>
@@ -791,17 +793,17 @@
     <message>
         <location line="+87"/>
         <source>&amp;Sending addresses</source>
-        <translation>&amp;amp;Adresses d&amp;#39;envoi</translation>
+        <translation>&amp;Adresses d’envoi</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>&amp;Receiving addresses</source>
-        <translation>&amp;amp;Adresses de réception</translation>
+        <translation>&amp;Adresses de réception</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Open a raptoreum: URI</source>
-        <translation>Ouvrir un raptoréum : URI</translation>
+        <translation>Ouvrir un raptoréum&#xa0;: URI</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -841,7 +843,7 @@
     <message>
         <location line="+56"/>
         <source>&amp;Window</source>
-        <translation>&amp;amp;Fenêtre</translation>
+        <translation>&amp;Fenêtre</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -866,7 +868,7 @@
     <message>
         <location line="+1"/>
         <source>Browse transaction history</source>
-        <translation>Parcourir l&apos;historique des transactions</translation>
+        <translation>Parcourir l’historique des transactions</translation>
     </message>
     <message>
         <location line="+11"/>
@@ -916,7 +918,7 @@
     <message>
         <location line="+7"/>
         <source>&amp;Send Asset</source>
-        <translation>&amp;amp;Envoyer l&amp;#39;élément</translation>
+        <translation>&amp;Envoyer l’élément</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -926,7 +928,7 @@
     <message>
         <location line="+3"/>
         <source>&amp;Create Asset</source>
-        <translation>&amp;amp;Créer un actif</translation>
+        <translation>&amp;Créer un actif</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -936,12 +938,12 @@
     <message>
         <location line="+3"/>
         <source>&amp;Update Asset</source>
-        <translation>&amp;amp;Mettre à jour l&amp;#39;actif</translation>
+        <translation>&amp;Mettre à jour l’actif</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Update asset</source>
-        <translation>Mettre à jour l&amp;#39;élément</translation>
+        <translation>Mettre à jour l’élément</translation>
     </message>
     <message>
         <location line="+21"/>
@@ -1016,7 +1018,7 @@
     <message>
         <location line="+1"/>
         <source>Sign messages with your Raptoreum addresses to prove you own them</source>
-        <translation>Signer les messages avec votre adresses Raptoreum pour prouver que vous en êtes l&apos;auteur</translation>
+        <translation>Signer les messages avec votre adresses Raptoreum pour prouver que vous en êtes l’auteur</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1026,7 +1028,7 @@
     <message>
         <location line="+2"/>
         <source>Verify messages to ensure they were signed with specified Raptoreum addresses</source>
-        <translation>Vérifier les messages pour vous assurer qu&apos;ils ont été signés avec les adresses Raptoreum spécifiées</translation>
+        <translation>Vérifier les messages pour vous assurer qu’ils ont été signés avec les adresses Raptoreum spécifiées</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -1106,12 +1108,12 @@
     <message>
         <location line="-1479"/>
         <source>Show the list of used sending addresses and labels</source>
-        <translation>Afficher la liste d&apos;adresses d&apos;envoi et d&apos;étiquettes utilisées</translation>
+        <translation>Afficher la liste d’adresses d’envoi et d’étiquettes utilisées</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Show the list of used receiving addresses and labels</source>
-        <translation>Afficher la liste d&apos;adresses de réception et d&apos;étiquettes utilisées</translation>
+        <translation>Afficher la liste d’adresses de réception et d’étiquettes utilisées</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -1148,7 +1150,7 @@
     <message>
         <location line="+90"/>
         <source>Wallet is &lt;b&gt;unencrypted&lt;/b&gt;</source>
-        <translation>Le portefeuille n&apos;est &lt;b&gt;pas chiffré&lt;/b&gt;</translation>
+        <translation>Le portefeuille n’est &lt;b&gt;pas chiffré&lt;/b&gt;</translation>
     </message>
     <message>
         <location line="-1280"/>
@@ -1178,12 +1180,15 @@
     <message>
         <location line="+12"/>
         <source>Tabs toolbar</source>
-        <translation>Barre d&apos;outils des onglets</translation>
+        <translation>Barre d’outils des onglets</translation>
     </message>
     <message numerus="yes">
         <location line="+619"/>
         <source>%n active connection(s) to Raptoreum network</source>
-        <translation><numerusform>%n connexion active au réseau Raptoreum</numerusform><numerusform>%n connexions actives au réseau Raptoreum</numerusform><numerusform>%n connexions actives au réseau Raptoreum</numerusform></translation>
+        <translation>
+            <numerusform>%n connexion active au réseau Raptoreum</numerusform>
+            <numerusform>%n connexions actives au réseau Raptoreum</numerusform>
+        </translation>
     </message>
     <message>
         <location line="+2"/>
@@ -1223,7 +1228,10 @@
     <message numerus="yes">
         <location line="+9"/>
         <source>Processed %n block(s) of transaction history.</source>
-        <translation><numerusform>%n bloc traité de l&amp;#39;historique des transactions.</numerusform><numerusform>%n blocs traités de l&amp;#39;historique des transactions.</numerusform><numerusform>%n blocs traités de l&amp;#39;historique des transactions.</numerusform></translation>
+        <translation>
+            <numerusform>%n bloc traité de l’historique des transactions.</numerusform>
+            <numerusform>%n blocs traités de l’historique des transactions.</numerusform>
+        </translation>
     </message>
     <message>
         <location line="+18"/>
@@ -1263,7 +1271,7 @@
     <message>
         <location line="+1"/>
         <source>Error: %1</source>
-        <translation>Erreur : %1</translation>
+        <translation>Erreur&#xa0;: %1</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1273,7 +1281,7 @@
     <message>
         <location line="+1"/>
         <source>Warning: %1</source>
-        <translation>Avertissement : %1</translation>
+        <translation>Avertissement&#xa0;: %1</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1390,7 +1398,7 @@
     <message>
         <location line="+39"/>
         <source>Amount:</source>
-        <translation>Montant :</translation>
+        <translation>Montant&#xa0;:</translation>
     </message>
     <message>
         <location line="+68"/>
@@ -1496,17 +1504,17 @@
     <message>
         <location line="-25"/>
         <source>Copy transaction ID</source>
-        <translation>Copier l&apos;ID de la transaction</translation>
+        <translation>Copier l’ID de la transaction</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Lock unspent</source>
-        <translation>Verrouiller ce qui n&apos;est pas dépensé</translation>
+        <translation>Verrouiller ce qui n’est pas dépensé</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Unlock unspent</source>
-        <translation>Déverrouiller ce qui n&apos;est pas dépensé</translation>
+        <translation>Déverrouiller ce qui n’est pas dépensé</translation>
     </message>
     <message>
         <location line="+22"/>
@@ -1561,7 +1569,7 @@
     <message>
         <location line="+13"/>
         <source>This label turns red if any recipient receives an amount smaller than the current dust threshold.</source>
-        <translation>Cette étiquette devient rouge si l&apos;un des destinataires reçoit un montant inférieur au niveau de &quot;poussière&quot;.</translation>
+        <translation>Cette étiquette devient rouge si l’un des destinataires reçoit un montant inférieur au niveau de &quot;poussière&quot;.</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -1660,7 +1668,7 @@
     <message>
         <location line="-527"/>
         <source>Bytes:</source>
-        <translation>Octets :</translation>
+        <translation>Octets&#xa0;:</translation>
     </message>
     <message>
         <location line="+42"/>
@@ -1680,7 +1688,7 @@
     <message>
         <location line="+45"/>
         <source>After Fee:</source>
-        <translation>Après les frais :</translation>
+        <translation>Après les frais&#xa0;:</translation>
     </message>
     <message>
         <location line="+26"/>
@@ -1690,7 +1698,7 @@
     <message>
         <location line="+44"/>
         <source>If this is activated, but the change address is empty or invalid, change will be sent to a newly generated address.</source>
-        <translation>Si cette option est activée, mais que l&amp;#39;adresse de modification est vide ou invalide, la modification sera envoyée à une adresse nouvellement générée.</translation>
+        <translation>Si cette option est activée, mais que l’adresse de modification est vide ou invalide, la modification sera envoyée à une adresse nouvellement générée.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1701,12 +1709,12 @@
         <location line="+104"/>
         <location line="+22"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The RTM address that will receive the minted asset&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;L&amp;#39;adresse RTM qui recevra l&amp;#39;actif créé&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;L’adresse RTM qui recevra l’actif créé&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location line="-19"/>
         <source>Target Address:</source>
-        <translation>Adresse cible :</translation>
+        <translation>Adresse cible&#xa0;:</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -1717,28 +1725,28 @@
     <message>
         <location line="-81"/>
         <source>Owner Address:</source>
-        <translation>Adresse du propriétaire :</translation>
+        <translation>Adresse du propriétaire&#xa0;:</translation>
     </message>
     <message>
         <location line="+12"/>
         <source>The RTM address that will receive the minted asset</source>
-        <translation>L&amp;#39;adresse RTM qui recevra l&amp;#39;actif créé</translation>
+        <translation>L’adresse RTM qui recevra l’actif créé</translation>
     </message>
     <message>
         <location line="+9"/>
         <location line="+12"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;[Optional] The ipfs/file hash that contains information about the asset&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;[Facultatif] Le hachage ipfs/file qui contient des informations sur l&amp;#39;actif&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;[Facultatif] Le hachage ipfs/file qui contient des informations sur l’actif&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location line="-9"/>
         <source>IPFS/file hash:</source>
-        <translation>Hachage IPFS/fichier :</translation>
+        <translation>Hachage IPFS/fichier&#xa0;:</translation>
     </message>
     <message>
         <location line="+15"/>
         <source>The ipfs/file hash that is associated with the asset being created (e.g. QmU4h365LYMHx...)</source>
-        <translation>Le hachage ipfs/fichier associé à l&amp;#39;actif en cours de création (par exemple QmU4h365LYMHx...)</translation>
+        <translation>Le hachage ipfs/fichier associé à l’actif en cours de création (par exemple QmU4h365LYMHx...)</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -1753,7 +1761,7 @@
     <message>
         <location line="+6"/>
         <source>The name of the asset you would like to create</source>
-        <translation>Le nom de l&amp;#39;actif que vous souhaitez créer</translation>
+        <translation>Le nom de l’actif que vous souhaitez créer</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -1763,12 +1771,12 @@
     <message>
         <location line="+17"/>
         <source>The RTM address that own this asset</source>
-        <translation>L&amp;#39;adresse RTM propriétaire de cet actif</translation>
+        <translation>L’adresse RTM propriétaire de cet actif</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>Asset Name:</source>
-        <translation>Nom de l&amp;#39;actif :</translation>
+        <translation>Nom de l’actif&#xa0;:</translation>
     </message>
     <message>
         <location line="+11"/>
@@ -1783,22 +1791,22 @@
     <message>
         <location line="+16"/>
         <source>Distribution Type:</source>
-        <translation>Type de distribution :</translation>
+        <translation>Type de distribution&#xa0;:</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>Mint count:</source>
-        <translation>Nombre de menthes :</translation>
+        <translation>Nombre de menthes&#xa0;:</translation>
     </message>
     <message>
         <location line="+17"/>
         <source>The number of assets that will be created</source>
-        <translation>Le nombre d&amp;#39;actifs qui seront créés</translation>
+        <translation>Le nombre d’actifs qui seront créés</translation>
     </message>
     <message>
         <location line="+19"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If the owner of this asset will be able to update the asset in the future&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Si le propriétaire de cet actif pourra mettre à jour l&amp;#39;actif à l&amp;#39;avenir&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Si le propriétaire de cet actif pourra mettre à jour l’actif à l’avenir&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1812,7 +1820,7 @@
     </message>
     <message>
         <location line="+7"/>
-        <source>How divisble the assets will be (e.g. 8 = 1.00000000, 2 = 1.00)</source>
+        <source>How divisble the assets will be (e.g. 8                                 = 1.00000000, 2 = 1.00)</source>
         <translation>Dans quelle mesure les actifs seront-ils divisibles (par exemple 8 = 1,00000000, 2 = 1,00)</translation>
     </message>
     <message>
@@ -1848,7 +1856,7 @@
     <message>
         <location line="+13"/>
         <source>Issue frequency:</source>
-        <translation>Fréquence d&amp;#39;émission :</translation>
+        <translation>Fréquence d’émission&#xa0;:</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -1858,7 +1866,7 @@
     <message>
         <location line="+9"/>
         <source>Asset type:</source>
-        <translation>Type d&amp;#39;actif:</translation>
+        <translation>Type d’actif:</translation>
     </message>
     <message>
         <location line="+24"/>
@@ -1873,7 +1881,7 @@
     <message>
         <location line="+21"/>
         <source>Root Asset:</source>
-        <translation>Actif racine :</translation>
+        <translation>Actif racine&#xa0;:</translation>
     </message>
     <message>
         <location line="+118"/>
@@ -1888,12 +1896,12 @@
     <message>
         <location line="+30"/>
         <source>Using the fallbackfee can result in sending a transaction that will take several hours or days (or never) to confirm. Consider choosing your fee manually or wait until you have validated the complete chain.</source>
-        <translation>L’utilisation des frais de secours peut entraîner l’envoi d’une transaction dont la confirmation prendra plusieurs heures ou jours (voire jamais). Pensez à choisir votre tarif manuellement ou attendez d&amp;#39;avoir validé la chaîne complète.</translation>
+        <translation>L’utilisation des frais de secours peut entraîner l’envoi d’une transaction dont la confirmation prendra plusieurs heures ou jours (voire jamais). Pensez à choisir votre tarif manuellement ou attendez d’avoir validé la chaîne complète.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Note: Not enough data for fee estimation, using the fallback fee instead.</source>
-        <translation>Remarque : Pas assez de données pour estimer les frais, utilisez plutôt les frais de secours.</translation>
+        <translation>Remarque&#xa0;: Pas assez de données pour estimer les frais, utilisez plutôt les frais de secours.</translation>
     </message>
     <message>
         <location line="+38"/>
@@ -1919,12 +1927,12 @@
         <location line="+27"/>
         <location line="+13"/>
         <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for raptoreum transactions than the network can process.</source>
-        <translation>Payer uniquement les frais minimums est très bien tant qu&amp;#39;il y a moins de volume de transactions que d&amp;#39;espace dans les blocs. Mais sachez que cela peut aboutir à une transaction jamais confirmée une fois que la demande de transactions raptoreum est supérieure à ce que le réseau peut traiter.</translation>
+        <translation>Payer uniquement les frais minimums est très bien tant qu’il y a moins de volume de transactions que d’espace dans les blocs. Mais sachez que cela peut aboutir à une transaction jamais confirmée une fois que la demande de transactions raptoreum est supérieure à ce que le réseau peut traiter.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>(read the tooltip)</source>
-        <translation>(lire l&amp;#39;info-bulle)</translation>
+        <translation>(lire l’info-bulle)</translation>
     </message>
     <message>
         <location line="+35"/>
@@ -1944,13 +1952,13 @@
     <message>
         <location line="+29"/>
         <source>Confirmation time target:</source>
-        <translation>Objectif de temps de confirmation :</translation>
+        <translation>Objectif de temps de confirmation&#xa0;:</translation>
     </message>
     <message>
         <location line="+106"/>
         <location filename="../createassetsdialog.cpp" line="-736"/>
         <source>C&amp;reate Asset</source>
-        <translation>Créer &amp;amp;créer un actif</translation>
+        <translation>Créer &amp;créer un actif</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -2005,7 +2013,7 @@
     <message>
         <location line="+40"/>
         <source>Confirm the create asset action</source>
-        <translation>Confirmez l&amp;#39;action de création d&amp;#39;actif</translation>
+        <translation>Confirmez l’action de création d’actif</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -2015,7 +2023,7 @@
     <message>
         <location line="+2"/>
         <source>Manual only until other types are developed</source>
-        <translation>Manuel uniquement jusqu&amp;#39;à ce que d&amp;#39;autres types soient développés</translation>
+        <translation>Manuel uniquement jusqu’à ce que d’autres types soient développés</translation>
     </message>
     <message>
         <location line="+49"/>
@@ -2025,42 +2033,42 @@
     <message>
         <location line="+156"/>
         <source>Asset details:</source>
-        <translation>Détails de l&amp;#39;actif :</translation>
+        <translation>Détails de l’actif&#xa0;:</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Name: %1 &lt;br&gt;</source>
-        <translation>Nom : %1&lt;br&gt;</translation>
+        <translation>Nom&#xa0;: %1&lt;br&gt;</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Isunique: %1 &lt;br&gt;</source>
-        <translation>Est unique : %1&lt;br&gt;</translation>
+        <translation>Est unique&#xa0;: %1&lt;br&gt;</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Updatable: %1 &lt;br&gt;</source>
-        <translation>Possibilité de mise à jour : %1&lt;br&gt;</translation>
+        <translation>Possibilité de mise à jour&#xa0;: %1&lt;br&gt;</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Decimalpoint: %1 &lt;br&gt;</source>
-        <translation>Point décimal : %1&lt;br&gt;</translation>
+        <translation>Point décimal&#xa0;: %1&lt;br&gt;</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>ReferenceHash: %1 &lt;br&gt;</source>
-        <translation>Hachage de référence : %1&lt;br&gt;</translation>
+        <translation>Hachage de référence&#xa0;: %1&lt;br&gt;</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>MaxMintCount: %1 &lt;br&gt;</source>
-        <translation>MaxMintCount : %1&lt;br&gt;</translation>
+        <translation>MaxMintCount&#xa0;:&#xa0;%1&lt;br&gt;</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Owner: %1 &lt;hr /&gt;</source>
-        <translation>Propriétaire : %1&lt;hr /&gt;</translation>
+        <translation>Propriétaire&#xa0;: %1&lt;hr /&gt;</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2075,17 +2083,17 @@
     <message>
         <location line="+1"/>
         <source>Target: %1 &lt;br&gt;</source>
-        <translation>Cible : %1&lt;br&gt;</translation>
+        <translation>Cible&#xa0;: %1&lt;br&gt;</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>IssueFrequency: %1 &lt;br&gt;</source>
-        <translation>Fréquence du problème : %1&lt;br&gt;</translation>
+        <translation>Fréquence du problème&#xa0;: %1&lt;br&gt;</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Amount: %1</source>
-        <translation>Montant : %1
+        <translation>Montant&#xa0;:&#xa0;%1
  {1?}</translation>
     </message>
     <message>
@@ -2096,7 +2104,7 @@
     <message>
         <location line="+2"/>
         <source>Confirm Asset Creation</source>
-        <translation>Confirmer la création de l&amp;#39;actif</translation>
+        <translation>Confirmer la création de l’actif</translation>
     </message>
     <message>
         <location line="+212"/>
@@ -2106,27 +2114,30 @@
     <message numerus="yes">
         <location line="+35"/>
         <source>Estimated to begin confirmation within %n block(s).</source>
-        <translation><numerusform>Il est estimé que la confirmation commencera dans %n blocs.</numerusform><numerusform>Il est estimé que la confirmation commencera dans %n blocs.</numerusform><numerusform>Il est estimé que la confirmation commencera dans %n blocs.</numerusform></translation>
+        <translation>
+            <numerusform>Il est estimé que la confirmation commencera dans %n bloc.</numerusform>
+            <numerusform>Il est estimé que la confirmation commencera dans %n blocs.</numerusform>
+        </translation>
     </message>
     <message>
         <location line="+92"/>
         <source>Warning: Invalid Raptoreum address</source>
-        <translation>Attention : adresse Raptoreum invalide</translation>
+        <translation>Attention&#xa0;: adresse Raptoreum invalide</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Warning: Unknown change address</source>
-        <translation>Attention : adresse de changement inconnue</translation>
+        <translation>Attention&#xa0;: adresse de changement inconnue</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Confirm custom change address</source>
-        <translation>Confirmer l&amp;#39;adresse de changement personnalisée</translation>
+        <translation>Confirmer l’adresse de changement personnalisée</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>The address you selected for change is not part of this wallet. Any or all funds in your wallet may be sent to this address. Are you sure?</source>
-        <translation>L&amp;#39;adresse que vous avez sélectionnée pour la modification ne fait pas partie de ce portefeuille. Tout ou partie des fonds de votre portefeuille peuvent être envoyés à cette adresse. Es-tu sûr?</translation>
+        <translation>L’adresse que vous avez sélectionnée pour la modification ne fait pas partie de ce portefeuille. Tout ou partie des fonds de votre portefeuille peuvent être envoyés à cette adresse. Es-tu sûr?</translation>
     </message>
     <message>
         <location line="+22"/>
@@ -2177,7 +2188,7 @@
     <message>
         <location line="+19"/>
         <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>
-        <translation>Désactivez les clés privées pour ce portefeuille. Les portefeuilles avec des clés privées désactivées n&amp;#39;auront pas de clé privée et ne pourront pas avoir de graine HD ou de clés privées importées. C’est idéal pour les portefeuilles réservés aux montres.</translation>
+        <translation>Désactivez les clés privées pour ce portefeuille. Les portefeuilles avec des clés privées désactivées n’auront pas de clé privée et ne pourront pas avoir de graine HD ou de clés privées importées. C’est idéal pour les portefeuilles réservés aux montres.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -2187,7 +2198,7 @@
     <message>
         <location line="+13"/>
         <source>Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported, or an HD seed can be set, at a later time.</source>
-        <translation>Créez un portefeuille vierge. Les portefeuilles vierges n&amp;#39;ont initialement pas de clés privées ou de scripts. Les clés privées et les adresses peuvent être importées, ou une graine HD peut être définie ultérieurement.</translation>
+        <translation>Créez un portefeuille vierge. Les portefeuilles vierges n’ont initialement pas de clés privées ou de scripts. Les clés privées et les adresses peuvent être importées, ou une graine HD peut être définie ultérieurement.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -2205,7 +2216,7 @@
     <message>
         <location filename="../forms/editaddressdialog.ui" line="+14"/>
         <source>Edit Address</source>
-        <translation>Modifier l&apos;adresse</translation>
+        <translation>Modifier l’adresse</translation>
     </message>
     <message>
         <location line="+11"/>
@@ -2215,7 +2226,7 @@
     <message>
         <location line="+10"/>
         <source>The label associated with this address list entry</source>
-        <translation>L&apos;étiquette associée à cette entrée de la liste d&apos;adresses</translation>
+        <translation>L’étiquette associée à cette entrée de la liste d’adresses</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -2225,7 +2236,7 @@
     <message>
         <location line="+10"/>
         <source>The address associated with this address list entry. This can only be modified for sending addresses.</source>
-        <translation>L&apos;adresse associée à cette entrée de la liste d&apos;adresses. Ceci ne peut être modifié que pour les adresses d&apos;envoi.</translation>
+        <translation>L’adresse associée à cette entrée de la liste d’adresses. Ceci ne peut être modifié que pour les adresses d’envoi.</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="+30"/>
@@ -2240,17 +2251,17 @@
     <message>
         <location line="+4"/>
         <source>Edit sending address</source>
-        <translation>Modifier l’adresse d&apos;envoi</translation>
+        <translation>Modifier l’adresse d’envoi</translation>
     </message>
     <message>
         <location line="+65"/>
         <source>The entered address &quot;%1&quot; is not a valid Raptoreum address.</source>
-        <translation>L&apos;adresse d&apos;entrée « %1 » n&apos;est pas une adresse Raptoreum valide</translation>
+        <translation>L’adresse d’entrée « %1 » n’est pas une adresse Raptoreum valide</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>The entered address &quot;%1&quot; is already in the address book.</source>
-        <translation>L’adresse fournie « %1 » est déjà présente dans le carnet d&apos;adresses.</translation>
+        <translation>L’adresse fournie «&#xa0;%1&#xa0;» est déjà présente dans le carnet d’adresses.</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -2283,7 +2294,7 @@
     <message>
         <location line="+4"/>
         <source>Path already exists, and is not a directory.</source>
-        <translation>Le chemin existe déjà et n&apos;est pas un répertoire.</translation>
+        <translation>Le chemin existe déjà et n’est pas un répertoire.</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -2316,7 +2327,7 @@
     <message>
         <location line="+4"/>
         <source>&lt;h3&gt;%1 Basics&lt;/h3&gt; %1 gives you true financial privacy by obscuring the origins of your funds. All the Raptoreum in your wallet is comprised of different &quot;inputs&quot; which you can think of as separate, discrete coins.&lt;br&gt; %1 uses an innovative process to mix your inputs with the inputs of two or more other people, without having your coins ever leave your wallet. You retain control of your money at all times.&lt;hr&gt; &lt;b&gt;The %1 process works like this:&lt;/b&gt;&lt;ol type=&quot;1&quot;&gt; &lt;li&gt;%1 begins by breaking your transaction inputs down into standard denominations. These denominations are 0.001 RTM, 0.01 RTM, 0.1 RTM, 1 RTM and 10 RTM -- sort of like the paper money you use every day.&lt;/li&gt; &lt;li&gt;Your wallet then sends requests to specially configured software nodes on the network, called &quot;smartnodes.&quot; These smartnodes are informed then that you are interested in mixing a certain denomination. No identifiable information is sent to the smartnodes, so they never know &quot;who&quot; you are.&lt;/li&gt; &lt;li&gt;When two or more other people send similar messages, indicating that they wish to mix the same denomination, a mixing session begins. The smartnode mixes up the inputs and instructs all three users&apos; wallets to pay the now-transformed input back to themselves. Your wallet pays that denomination directly to itself, but in a different address (called a change address).&lt;/li&gt; &lt;li&gt;In order to fully obscure your funds, your wallet must repeat this process a number of times with each denomination. Each time the process is completed, it&apos;s called a &quot;round.&quot; Each round of %1 makes it exponentially more difficult to determine where your funds originated.&lt;/li&gt; &lt;li&gt;This mixing process happens in the background without any intervention on your part. When you wish to make a transaction, your funds will already be mixed. No additional waiting is required.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;IMPORTANT:&lt;/b&gt; Your wallet only contains 1000 of these &quot;change addresses.&quot; Every time a mixing event happens, up to 9 of your addresses are used up. This means those 1000 addresses last for about 100 mixing events. When 900 of them are used, your wallet must create more addresses. It can only do this, however, if you have automatic backups enabled.&lt;br&gt; Consequently, users who have backups disabled will also have %1 disabled. &lt;hr&gt;For more information, see the &lt;a style=&quot;%2&quot; href=&quot;%3&quot;&gt;%1 documentation&lt;/a&gt;.</source>
-        <translation>&lt;h3&gt;Ce qu&apos;il faut savoir sur %1&lt;/h3&gt; %1 vous donne une véritable confidentialité financière en obscurcissant l&apos;origine de vos fonds. Tous les raptoreums de votre portefeuille sont répartis en différentes &quot;entrées&quot;, qu&apos;on peut se représenter comme des pièces distinctes.&lt;br&gt; %1 utilise une procédure innovante pour mélanger vos entrées avec les entrées de deux autres personnes, sans que vos fonds ne quittent jamais votre portefeuille. Vous gardez le contrôle de votre argent à tout moment.&lt;hr&gt; &lt;b&gt;La procédure %1 fonctionne comme ceci :&lt;/b&gt;&lt;ol type=&quot;1&quot;&gt; %1 commence par diviser vos entrées de transaction en coupures standard. Ces coupures sont de 0.001 RTM, 0.01 RTM, 0.1 RTM, 1 RTM et 10 RTM — un peu comme pour les billets de banque que vous utilisez tous les jours.&lt;/li&gt; &lt;li&gt;Votre portefeuille envoie alors des requêtes à des serveurs spécifiques sur le réseau, appelés &quot;smartnodes&quot;. Ces smartnodes sont informés que vous souhaiteriez mélanger certaines coupures. Aucune information permettant de vous identifier n&apos;est envoyée aux smartnodes, qui ne savent donc jamais &quot;qui&quot; vous êtes.&lt;/li&gt; &lt;li&gt;Quand deux autres personnes envoient des requêtes similaires, indiquant qu&apos;elles veulent mélanger les mêmes coupures, alors commence une session de mélange. Le smartnode mélange les entrées et demande aux portefeuilles des trois utilisateurs de payer l&apos;entrée, désormais transformée, à eux-mêmes. Votre portefeuille paie cette coupure directement à lui-même, mais à une adresse différente (appelée une adresse de monnaie rendue).&lt;/li&gt; &lt;li&gt;Afin d&apos;obscurcir complètement vos fonds, votre portefeuille doit répéter cette procédure un certain nombre de fois avec chaque coupure. Une procédure terminée s&apos;appelle un &quot;cycle&quot;. Chaque cycle %1 rend exponentiellement plus difficile de déterminer d&apos;où viennent vos fonds.&lt;/li&gt; &lt;li&gt;Cette procédure de mélange intervient en arrière-plan, sans aucune intervention de votre part. Quand vous souhaiterez faire une transaction, vos fonds seront déjà mélangés. Aucune autre attente ne sera nécessaire.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;IMPORTANT :&lt;/b&gt; Votre portefeuille ne contient que 1000 de ces &quot;adresses de monnaie rendue&quot;. À chaque opération de mélange, jusqu&apos;à 9 de ces adresses sont utilisées. Cela signifie que ces 1000 adresses couvrent environ 100 opérations de mélange. Quand 900 d&apos;entre elles sont utilisées, votre portefeuille doit créer de nouvelles adresses. Cependant il ne peut le faire que si vous avez activé les sauvegardes automatiques.&lt;br&gt; En conséquence, les utilisateurs qui ont désactivé les sauvegardes ont aussi %1 désactivé. &lt;hr&gt;Pour en savoir plus, voir la &lt;a style=&quot;%2&quot; href=&quot;%3&quot;&gt;documentation %1&lt;/a&gt;.   </translation>
+        <translation>&lt;h3&gt;Ce qu’il faut savoir sur %1&lt;/h3&gt; %1 vous donne une véritable confidentialité financière en obscurcissant l’origine de vos fonds. Tous les raptoreums de votre portefeuille sont répartis en différentes &quot;entrées&quot;, qu’on peut se représenter comme des pièces distinctes.&lt;br&gt; %1 utilise une procédure innovante pour mélanger vos entrées avec les entrées de deux autres personnes, sans que vos fonds ne quittent jamais votre portefeuille. Vous gardez le contrôle de votre argent à tout moment.&lt;hr&gt; &lt;b&gt;La procédure %1 fonctionne comme ceci :&lt;/b&gt;&lt;ol type=&quot;1&quot;&gt; %1 commence par diviser vos entrées de transaction en coupures standard. Ces coupures sont de 0.001 RTM, 0.01 RTM, 0.1 RTM, 1 RTM et 10 RTM — un peu comme pour les billets de banque que vous utilisez tous les jours.&lt;/li&gt; &lt;li&gt;Votre portefeuille envoie alors des requêtes à des serveurs spécifiques sur le réseau, appelés &quot;smartnodes&quot;. Ces smartnodes sont informés que vous souhaiteriez mélanger certaines coupures. Aucune information permettant de vous identifier n’est envoyée aux smartnodes, qui ne savent donc jamais &quot;qui&quot; vous êtes.&lt;/li&gt; &lt;li&gt;Quand deux autres personnes envoient des requêtes similaires, indiquant qu’elles veulent mélanger les mêmes coupures, alors commence une session de mélange. Le smartnode mélange les entrées et demande aux portefeuilles des trois utilisateurs de payer l’entrée, désormais transformée, à eux-mêmes. Votre portefeuille paie cette coupure directement à lui-même, mais à une adresse différente (appelée une adresse de monnaie rendue).&lt;/li&gt; &lt;li&gt;Afin d’obscurcir complètement vos fonds, votre portefeuille doit répéter cette procédure un certain nombre de fois avec chaque coupure. Une procédure terminée s’appelle un &quot;cycle&quot;. Chaque cycle %1 rend exponentiellement plus difficile de déterminer d’où viennent vos fonds.&lt;/li&gt; &lt;li&gt;Cette procédure de mélange intervient en arrière-plan, sans aucune intervention de votre part. Quand vous souhaiterez faire une transaction, vos fonds seront déjà mélangés. Aucune autre attente ne sera nécessaire.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;IMPORTANT :&lt;/b&gt; Votre portefeuille ne contient que 1000 de ces &quot;adresses de monnaie rendue&quot;. À chaque opération de mélange, jusqu’à 9 de ces adresses sont utilisées. Cela signifie que ces 1000 adresses couvrent environ 100 opérations de mélange. Quand 900 d’entre elles sont utilisées, votre portefeuille doit créer de nouvelles adresses. Cependant il ne peut le faire que si vous avez activé les sauvegardes automatiques.&lt;br&gt; En conséquence, les utilisateurs qui ont désactivé les sauvegardes ont aussi %1 désactivé. &lt;hr&gt;Pour en savoir plus, voir la &lt;a style=&quot;%2&quot; href=&quot;%3&quot;&gt;documentation %1&lt;/a&gt;.   </translation>
     </message>
 </context>
 <context>
@@ -2339,7 +2350,7 @@
     <message>
         <location line="+157"/>
         <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
-        <translation>Quand vous cliquerez sur Valider, %1 commencera à télécharger et à traiter l’intégralité de la chaîne de blocs %4 (%2 Go) en débutant avec les transactions les plus anciennes de %3, quand %4 a été lancé initialement.</translation>
+        <translation>Quand vous cliquerez sur Valider, %1 commencera à télécharger et à traiter l’intégralité de la chaîne de blocs %4 (%2&#xa0;Go) en débutant avec les transactions les plus anciennes de %3, quand %4 a été lancé initialement.</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -2394,7 +2405,7 @@
     <message>
         <location line="+8"/>
         <source>%1 GB of free space available</source>
-        <translation>%1 Go d&apos;espace libre disponible</translation>
+        <translation>%1 Go d’espace libre disponible</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -2474,7 +2485,7 @@
     <message>
         <location filename="../modaloverlay.cpp" line="-105"/>
         <source>Raptoreum Core is currently syncing. It will download headers at first and then blocks from peers and validate them until reaching latest block mined at chain.</source>
-        <translation>Raptoreum Core est actuellement en cours de synchronisation. Il téléchargera d&amp;#39;abord les en-têtes, puis les blocs des pairs et les validera jusqu&amp;#39;à atteindre le dernier bloc extrait de la chaîne.</translation>
+        <translation>Raptoreum Core est actuellement en cours de synchronisation. Il téléchargera d’abord les en-têtes, puis les blocs des pairs et les validera jusqu’à atteindre le dernier bloc extrait de la chaîne.</translation>
     </message>
     <message>
         <location line="+112"/>
@@ -2500,12 +2511,12 @@
     <message>
         <location filename="../walletcontroller.cpp" line="+36"/>
         <source>Open wallet failed</source>
-        <translation>Échec de l&amp;#39;ouverture du portefeuille</translation>
+        <translation>Échec de l’ouverture du portefeuille</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Open wallet warning</source>
-        <translation>Avertissement d&amp;#39;ouverture de portefeuille</translation>
+        <translation>Avertissement d’ouverture de portefeuille</translation>
     </message>
     <message>
         <location line="+9"/>
@@ -2547,8 +2558,8 @@
     </message>
     <message>
         <location line="+13"/>
-        <source>(0 = auto, &lt;0 = leave that many cores free)</source>
-        <translation>(0 = auto, &lt; 0 = ne pas utiliser ce nombre de cœurs)</translation>
+        <source>(0                                                                      = auto, &lt;0 = leave that many cores free)</source>
+        <translation>(0                                                                 = auto, &lt; 0 = ne pas utiliser ce nombre de cœurs)</translation>
     </message>
     <message>
         <location line="-163"/>
@@ -2568,37 +2579,37 @@
     <message>
         <location line="+3"/>
         <source>Show Smartnodes Tab</source>
-        <translation>Afficher l&apos;onglet Smartnodes</translation>
+        <translation>Afficher l’onglet Smartnodes</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>If you disable the spending of unconfirmed change, the change from a transaction&lt;br/&gt;cannot be used until that transaction has at least one confirmation.&lt;br/&gt;This also affects how your balance is computed.</source>
-        <translation>Si vous désactivez la dépense d&apos;argent non confirmé, le montant d&apos;une transaction&lt;br/&gt;ne peut pas être utilisé tant que cette transaction n&apos;a pas reçu au moins une confirmation.&lt;br/&gt;Ceci a aussi un impact sur le calcul de votre solde.</translation>
+        <translation>Si vous désactivez la dépense d’argent non confirmé, le montant d’une transaction&lt;br/&gt;ne peut pas être utilisé tant que cette transaction n’a pas reçu au moins une confirmation.&lt;br/&gt;Ceci a aussi un impact sur le calcul de votre solde.</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>Show mixing interface on Overview screen and reveal an additional screen which allows to spend fully mixed coins only.&lt;br/&gt;A new tab with more settings will also appear in this dialog, please make sure to check them before mixing your coins.</source>
-        <translation>Montre l&apos;interface de mélange sur l&apos;écran &quot;Vue d&apos;ensemble&quot; et affiche un écran supplémentaire qui permet de dépenser uniquement les fonds entièrement mélangés.&lt;br/&gt;Un nouvel onglet avec davantage d&apos;options apparaîtra aussi dans cette boîte de dialogue, veuillez vérifier ces options avant de mélanger vos fonds.</translation>
+        <translation>Montre l’interface de mélange sur l’écran &quot;Vue d’ensemble&quot; et affiche un écran supplémentaire qui permet de dépenser uniquement les fonds entièrement mélangés.&lt;br/&gt;Un nouvel onglet avec davantage d’options apparaîtra aussi dans cette boîte de dialogue, veuillez vérifier ces options avant de mélanger vos fonds.</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>Automatic hide the toolbar menu interface</source>
-        <translation>Masquer automatiquement l&amp;#39;interface du menu de la barre d&amp;#39;outils</translation>
+        <translation>Masquer automatiquement l’interface du menu de la barre d’outils</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Auto hide toolbar menu</source>
-        <translation>Masquer automatiquement le menu de la barre d&amp;#39;outils</translation>
+        <translation>Masquer automatiquement le menu de la barre d’outils</translation>
     </message>
     <message>
         <location line="+29"/>
         <source>Show additional information and buttons on overview screen.</source>
-        <translation>Afficher des infos et des boutons supplémentaires sur l&apos;écran &quot;Vue d&apos;ensemble&quot;.</translation>
+        <translation>Afficher des infos et des boutons supplémentaires sur l’écran &quot;Vue d’ensemble&quot;.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Enable advanced interface</source>
-        <translation>Activer l&apos;interface avancée</translation>
+        <translation>Activer l’interface avancée</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -2613,7 +2624,7 @@
     <message>
         <location line="+7"/>
         <source>Show warning dialog when the wallet has very low number of keys left.</source>
-        <translation>Afficher un message d&apos;avertissement quand le portefeuille n&apos;a plus que très peu de clefs</translation>
+        <translation>Afficher un message d’avertissement quand le portefeuille n’a plus que très peu de clefs</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -2623,7 +2634,7 @@
     <message>
         <location line="+7"/>
         <source>Whether to use experimental mode with multiple mixing sessions per block.&lt;br/&gt;Note: You must use this feature carefully.&lt;br/&gt;Make sure you always have recent wallet (auto)backup in a safe place!</source>
-        <translation>Choisir d&apos;utiliser un mode expérimental avec sessions multiples de mélange par bloc.&lt;br/&gt;Note : fonction à utiliser avec prudence.&lt;br/&gt;Assurez-vous toujours d&apos;avoir une sauvegarde récente (automatique) en lieu sûr !</translation>
+        <translation>Choisir d’utiliser un mode expérimental avec sessions multiples de mélange par bloc.&lt;br/&gt;Note : fonction à utiliser avec prudence.&lt;br/&gt;Assurez-vous toujours d’avoir une sauvegarde récente (automatique) en lieu sûr !</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -2653,17 +2664,17 @@
     <message>
         <location line="+10"/>
         <source>Automatically open the Raptoreum Core client port on the router. This only works when your router supports NAT-PMP and it is enabled. The external port could be random.</source>
-        <translation>Ouvrez automatiquement le port client Raptoreum Core sur le routeur. Cela ne fonctionne que lorsque votre routeur prend en charge NAT-PMP et qu&amp;#39;il est activé. Le port externe pourrait être aléatoire.</translation>
+        <translation>Ouvrez automatiquement le port client Raptoreum Core sur le routeur. Cela ne fonctionne que lorsque votre routeur prend en charge NAT-PMP et qu’il est activé. Le port externe pourrait être aléatoire.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Map port using NA&amp;T-PMP</source>
-        <translation>Cartographier le port à l&amp;#39;aide de NA&amp;amp;T-PMP</translation>
+        <translation>Cartographier le port à l’aide de NA&amp;T-PMP</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Accept connections from outside.</source>
-        <translation>Accepter des connexions depuis l&apos;extérieur.</translation>
+        <translation>Accepter des connexions depuis l’extérieur.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -2695,28 +2706,28 @@
     <message>
         <location line="+272"/>
         <source>Options set in this dialog are overriden by the command_line or in the configuration file:</source>
-        <translation>Les options définies dans cette boîte de dialogue sont remplacées par la ligne de commande ou dans le fichier de configuration :</translation>
+        <translation>Les options définies dans cette boîte de dialogue sont remplacées par la ligne de commande ou dans le fichier de configuration&#xa0;:</translation>
     </message>
     <message>
         <location line="-789"/>
         <source>Hide the icon from the system tray.</source>
-        <translation>Masquer l&apos;icône de la barre d&apos;état système.</translation>
+        <translation>Masquer l’icône de la barre d’état système.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>&amp;Hide tray icon</source>
-        <translation>Masquer l&apos;icône de la barre d&apos;état</translation>
+        <translation>Masquer l’icône de la barre d’état</translation>
     </message>
     <message>
         <location line="+17"/>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
-        <translation>Minimiser l&apos;application (au lieu de la quitter) quand la fenêtre est fermée. Si cette option est activée, l&apos;application se fermera uniquement en passant par le menu Quitter.</translation>
+        <translation>Minimiser l’application (au lieu de la quitter) quand la fenêtre est fermée. Si cette option est activée, l’application se fermera uniquement en passant par le menu Quitter.</translation>
     </message>
     <message>
         <location line="+702"/>
         <location line="+13"/>
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items.&lt;br/&gt;%s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
-        <translation>URLs de tierce partie (par ex. : un explorateur de blocs) affichées dans l&apos;onglet Transactions comme menu contextuel.&lt;br/&gt;%s dans l&apos;URL est remplacé par le hash de transaction. Les URLs multiples sont séparées par une barre verticale |.</translation>
+        <translation>URLs de tierce partie (par ex. : un explorateur de blocs) affichées dans l’onglet Transactions comme menu contextuel.&lt;br/&gt;%s dans l’URL est remplacé par le hash de transaction. Les URLs multiples sont séparées par une barre verticale |.</translation>
     </message>
     <message>
         <location line="-10"/>
@@ -2746,12 +2757,12 @@
     <message>
         <location line="+20"/>
         <source>&amp;Spend unconfirmed change</source>
-        <translation>&amp;Dépenser l&apos;argent non confirmé</translation>
+        <translation>&amp;Dépenser l’argent non confirmé</translation>
     </message>
     <message>
         <location line="+91"/>
         <source>This setting determines the amount of individual smartnodes that an input will be mixed through.&lt;br/&gt;More rounds of mixing gives a higher degree of privacy, but also costs more in fees.</source>
-        <translation>Ce paramètre détermine le nombre de smartnodes uniques par lesquels une entrée sera mélangée.&lt;br/&gt;Plus le nombre de cycles de mélange est important, plus le degré de confidentialité est élevé, mais les frais associés sont d&apos;autant plus importants.</translation>
+        <translation>Ce paramètre détermine le nombre de smartnodes uniques par lesquels une entrée sera mélangée.&lt;br/&gt;Plus le nombre de cycles de mélange est important, plus le degré de confidentialité est élevé, mais les frais associés sont d’autant plus importants.</translation>
     </message>
     <message>
         <location line="-298"/>
@@ -2761,13 +2772,13 @@
     <message>
         <location line="+385"/>
         <source>Map port using &amp;UPnP</source>
-        <translation>Mapper le port avec l&apos;&amp;UPnP</translation>
+        <translation>Mapper le port avec l’&amp;UPnP</translation>
     </message>
     <message>
         <location line="+39"/>
         <location line="+157"/>
         <source>Proxy &amp;IP:</source>
-        <translation>&amp;IP du serveur mandataire :</translation>
+        <translation>&amp;IP du serveur mandataire&#xa0;:</translation>
     </message>
     <message>
         <location line="-132"/>
@@ -2779,7 +2790,7 @@
         <location line="-150"/>
         <location line="+157"/>
         <source>&amp;Port:</source>
-        <translation>&amp;Port :</translation>
+        <translation>&amp;Port&#xa0;:</translation>
     </message>
     <message>
         <location line="-132"/>
@@ -2835,7 +2846,7 @@
     <message>
         <location line="+669"/>
         <source>User Interface &amp;language:</source>
-        <translation>&amp;Langue de l&apos;interface utilisateur :</translation>
+        <translation>&amp;Langue de l’interface utilisateur&#xa0;:</translation>
     </message>
     <message>
         <location line="+13"/>
@@ -2852,12 +2863,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+26"/>
         <source>&amp;Unit to show amounts in:</source>
-        <translation>&amp;Unité des montants :</translation>
+        <translation>&amp;Unité des montants&#xa0;:</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>Choose the default subdivision unit to show in the interface and when sending coins.</source>
-        <translation>Choisissez la sous-unité par défaut pour l&apos;affichage dans l&apos;interface et lors de l&apos;envoi d&apos;argent.</translation>
+        <translation>Choisissez la sous-unité par défaut pour l’affichage dans l’interface et lors de l’envoi d’argent.</translation>
     </message>
     <message>
         <location line="+11"/>
@@ -2918,7 +2929,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+24"/>
         <source>The supplied proxy address is invalid.</source>
-        <translation>L&apos;adresse de serveur mandataire fournie est invalide.</translation>
+        <translation>L’adresse de serveur mandataire fournie est invalide.</translation>
     </message>
 </context>
 <context>
@@ -2933,7 +2944,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <location line="+298"/>
         <location line="+237"/>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Raptoreum network after a connection is established, but this process has not completed yet.</source>
-        <translation>L&apos;information affichée peut être obsolète. Votre portefeuille se synchronise automatiquement avec le réseau Raptoreum lorsque la connection est établie, mais ce processus n&apos;est pas encore terminé.</translation>
+        <translation>L’information affichée peut être obsolète. Votre portefeuille se synchronise automatiquement avec le réseau Raptoreum lorsque la connection est établie, mais ce processus n’est pas encore terminé.</translation>
     </message>
     <message>
         <location line="-325"/>
@@ -2953,7 +2964,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="-200"/>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</source>
-        <translation>Total des transactions qui restent à confirmer et qu&apos;il n&apos;est pas encore possible de dépenser</translation>
+        <translation>Total des transactions qui restent à confirmer et qu’il n’est pas encore possible de dépenser</translation>
     </message>
     <message>
         <location line="+100"/>
@@ -2963,7 +2974,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="-29"/>
         <source>Mined balance that has not yet matured</source>
-        <translation>Le solde généré n&apos;est pas encore mûr</translation>
+        <translation>Le solde généré n’est pas encore mûr</translation>
     </message>
     <message>
         <location line="-133"/>
@@ -2973,7 +2984,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+43"/>
         <source>Unconfirmed transactions to watch-only addresses</source>
-        <translation>Transactions non confirmées d&apos;adresses en lecture seule</translation>
+        <translation>Transactions non confirmées d’adresses en lecture seule</translation>
     </message>
     <message>
         <location line="+38"/>
@@ -3053,7 +3064,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="-41"/>
         <source>The denominations you submitted to the Smartnode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
-        <translation>Les coupures que vous avez soumises au smartnode.&lt;br&gt;Pour mélanger, d&apos;autres utilisateurs doivent soumettre des coupures de même montant.</translation>
+        <translation>Les coupures que vous avez soumises au smartnode.&lt;br&gt;Pour mélanger, d’autres utilisateurs doivent soumettre des coupures de même montant.</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="+148"/>
@@ -3065,7 +3076,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+303"/>
         <source>Automatic backups are disabled, no mixing available!</source>
-        <translation>Les sauvegardes automatiques sont désactivées, le mélange n&apos;est pas possible !</translation>
+        <translation>Les sauvegardes automatiques sont désactivées, le mélange n’est pas possible !</translation>
     </message>
     <message>
         <location line="-123"/>
@@ -3083,17 +3094,20 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <location line="+24"/>
         <location line="+13"/>
         <source>%n Rounds</source>
-        <translation><numerusform>%n Tour</numerusform><numerusform>%n tours</numerusform><numerusform>%n tours</numerusform></translation>
+        <translation>
+            <numerusform>%n Tour</numerusform>
+            <numerusform>%n tours</numerusform>
+        </translation>
     </message>
     <message>
         <location line="-18"/>
         <source>Found enough compatible inputs to mix %1</source>
-        <translation>Trouvé assez d&apos;entrées compatibles pour mélanger %1</translation>
+        <translation>Trouvé assez d’entrées compatibles pour mélanger %1</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>Not enough compatible inputs to mix &lt;span style=&apos;%1&apos;&gt;%2&lt;/span&gt;,&lt;br&gt;will mix &lt;span style=&apos;%1&apos;&gt;%3&lt;/span&gt; instead</source>
-        <translation>Pas assez d&apos;entrées compatibles pour mélanger &lt;span style=&apos;%1&apos;&gt;%2&lt;/span&gt;,&lt;br&gt;nous allons mélanger &lt;span style=&apos;%1&apos;&gt;%3&lt;/span&gt; à la place</translation>
+        <translation>Pas assez d’entrées compatibles pour mélanger &lt;span style=’%1’&gt;%2&lt;/span&gt;,&lt;br&gt;nous allons mélanger &lt;span style=’%1’&gt;%3&lt;/span&gt; à la place</translation>
     </message>
     <message>
         <location line="+60"/>
@@ -3118,7 +3132,10 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message numerus="yes">
         <location line="+1"/>
         <source>Denominated inputs have %5 of %n rounds on average</source>
-        <translation><numerusform>Les entrées libellées ont %5 sur %n tours en moyenne</numerusform><numerusform>Les entrées libellées ont %5 de %n tours en moyenne</numerusform><numerusform>Les entrées libellées ont %5 de %n tours en moyenne</numerusform></translation>
+        <translation>
+            <numerusform>Les entrées libellées ont %5 sur %n tours en moyenne</numerusform>
+            <numerusform>Les entrées libellées ont %5 de %n tours en moyenne</numerusform>
+        </translation>
     </message>
     <message>
         <location line="+83"/>
@@ -3134,7 +3151,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="-37"/>
         <source>If you don&apos;t want to see internal %1 fees/transactions select &quot;Most Common&quot; as Type on the &quot;Transactions&quot; tab.</source>
-        <translation>Pour ne pas afficher les transactions et frais %1 internes, veuillez sélectionner le type &quot;Les plus courantes&quot; dans l&apos;onglet &quot;Transactions&quot;.</translation>
+        <translation>Pour ne pas afficher les transactions et frais %1 internes, veuillez sélectionner le type &quot;Les plus courantes&quot; dans l’onglet &quot;Transactions&quot;.</translation>
     </message>
     <message>
         <location line="+12"/>
@@ -3144,7 +3161,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+12"/>
         <source>Wallet is locked and user declined to unlock. Disabling %1.</source>
-        <translation>Le portefeuille est verrouillé et l&apos;utilisateur a refusé de le déverrouiller. Désactivation de %1.</translation>
+        <translation>Le portefeuille est verrouillé et l’utilisateur a refusé de le déverrouiller. Désactivation de %1.</translation>
     </message>
     <message>
         <location line="+17"/>
@@ -3167,7 +3184,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+1"/>
         <source>We are about to create a new automatic backup for you, however &lt;span style=&apos;%1&apos;&gt; you should always make sure you have backups saved in some safe place&lt;/span&gt;!</source>
-        <translation>Une nouvelle sauvegarde automatique est sur le point d&apos;être créée pour vous, cependant &lt;span style=&apos;%1&apos;&gt;assurez-vous toujours d&apos;avoir des sauvegardes en lieu sûr&lt;/span&gt; !</translation>
+        <translation>Une nouvelle sauvegarde automatique est sur le point d’être créée pour vous, cependant &lt;span style=’%1’&gt;assurez-vous toujours d’avoir des sauvegardes en lieu sûr&lt;/span&gt; !</translation>
     </message>
     <message>
         <location line="+4"/>
@@ -3230,19 +3247,19 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="-22"/>
         <source>&apos;raptoreum://&apos; is not a valid URI. Use &apos;raptoreum:&apos; instead.</source>
-        <translation>&apos;raptoreum://&apos; n&apos;est pas un URI valide. Utilisez &apos;raptoreum:&apos; à la place.</translation>
+        <translation>‘raptoreum://’ n’est pas un URI valide. Utilisez ‘raptoreum:’ à la place.</translation>
     </message>
     <message>
         <location line="+12"/>
         <location line="+21"/>
         <source>Cannot process payment request as BIP70 is no longer supported.</source>
-        <translation>Impossible de traiter la demande de paiement car BIP70 n&amp;#39;est plus pris en charge.</translation>
+        <translation>Impossible de traiter la demande de paiement car BIP70 n’est plus pris en charge.</translation>
     </message>
     <message>
         <location line="-20"/>
         <location line="+21"/>
         <source>Due to discontinued support, you should request the merchant to provide you with a BIP21 compatible URI or use a wallet that does continue to support BIP70.</source>
-        <translation>En raison de l&amp;#39;arrêt du support, vous devez demander au commerçant de vous fournir un URI compatible BIP21 ou d&amp;#39;utiliser un portefeuille qui continue de prendre en charge BIP70.</translation>
+        <translation>En raison de l’arrêt du support, vous devez demander au commerçant de vous fournir un URI compatible BIP21 ou d’utiliser un portefeuille qui continue de prendre en charge BIP70.</translation>
     </message>
     <message>
         <location line="-18"/>
@@ -3252,7 +3269,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+7"/>
         <source>URI cannot be parsed! This can be caused by an invalid Raptoreum address or malformed URI parameters.</source>
-        <translation>L&apos;URI ne peut être analysée ! Cela peut provenir d&apos;une adresse Raptoreum invalide, ou de paramètres d&apos;URI mal composés.</translation>
+        <translation>L’URI ne peut être analysée ! Cela peut provenir d’une adresse Raptoreum invalide, ou de paramètres d’URI mal composés.</translation>
     </message>
     <message>
         <location line="+9"/>
@@ -3308,7 +3325,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+4"/>
         <source>Set a scale factor which gets applied to the base font size. Possible range %1 (smallest fonts) to %2 (largest fonts). (default: %3)</source>
-        <translation>Choisir un facteur d&apos;agrandissement à appliquer à la taille typographique de base. Intervalle possible : %1 (polices les plus petites) to %2 (polices les plus grandes). (par défaut : %3)</translation>
+        <translation>Choisir un facteur d’agrandissement à appliquer à la taille typographique de base. Intervalle possible : %1 (polices les plus petites) to %2 (polices les plus grandes). (par défaut : %3)</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -3323,7 +3340,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+4"/>
         <source>Set language, for example &quot;de_DE&quot; (default: system locale)</source>
-        <translation>Définir la langue, par exemple « fr_FR » (par défaut : la langue du système)</translation>
+        <translation>Définir la langue, par exemple «&#xa0;fr_FR&#xa0;» (par défaut&#xa0;: la langue du système)</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -3333,7 +3350,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+1"/>
         <source>Reset all settings changed in the GUI</source>
-        <translation>Réinitialiser tous les réglages modifiés de l&apos;interface utilisateur</translation>
+        <translation>Réinitialiser tous les réglages modifiés de l’interface utilisateur</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -3343,57 +3360,57 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+2"/>
         <source>Show splash screen on startup (default: %u)</source>
-        <translation>Afficher l&apos;écran de démarrage (défaut : %u)</translation>
+        <translation>Afficher l’écran de démarrage (défaut : %u)</translation>
     </message>
     <message>
         <location line="+122"/>
         <source>Error: Specified data directory &quot;%1&quot; does not exist.</source>
-        <translation>Erreur : le répertoire de données spécifié « %1 » n&amp;#39;existe pas.</translation>
+        <translation>Erreur&#xa0;: le répertoire de données spécifié «&#xa0;%1&#xa0;» n’existe pas.</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Error: Cannot parse configuration file: %1.</source>
-        <translation>Erreur : Impossible d&amp;#39;analyser le fichier de configuration : %1.</translation>
+        <translation>Erreur&#xa0;: Impossible d’analyser le fichier de configuration&#xa0;: %1.</translation>
     </message>
     <message>
         <location line="+16"/>
         <source>Error: %1</source>
-        <translation>Erreur : %1</translation>
+        <translation>Erreur&#xa0;: %1</translation>
     </message>
     <message>
         <location line="+47"/>
         <source>Error: Failed to load application fonts.</source>
-        <translation>Erreur : échec du chargement des polices d&amp;#39;application.</translation>
+        <translation>Erreur&#xa0;: échec du chargement des polices d’application.</translation>
     </message>
     <message>
         <location line="+14"/>
         <source>Error: Specified font-family invalid. Valid values: %1.</source>
-        <translation>Erreur : famille de polices spécifiée non valide. Valeurs valides : %1.</translation>
+        <translation>Erreur&#xa0;:&#xa0;famille de polices spécifiée non valide. Valeurs valides&#xa0;: %1.</translation>
     </message>
     <message>
         <location line="+12"/>
         <source>Error: Specified font-weight-normal invalid. Valid range %1 to %2.</source>
-        <translation>Erreur : le poids de police spécifié n&amp;#39;est pas valide. Plage valide %1 à %2.</translation>
+        <translation>Erreur&#xa0;: le poids de police spécifié n’est pas valide. Plage valide %1 à %2.</translation>
     </message>
     <message>
         <location line="+12"/>
         <source>Error: Specified font-weight-bold invalid. Valid range %1 to %2.</source>
-        <translation>Erreur : font-weight-bold spécifié non valide. Plage valide %1 à %2.</translation>
+        <translation>Erreur&#xa0;:&#xa0;font-weight-bold spécifié non valide. Plage valide %1 à %2.</translation>
     </message>
     <message>
         <location line="+12"/>
         <source>Error: Specified font-scale invalid. Valid range %1 to %2.</source>
-        <translation>Erreur : échelle de police spécifiée non valide. Plage valide %1 à %2.</translation>
+        <translation>Erreur&#xa0;:&#xa0;échelle de police spécifiée non valide. Plage valide %1 à %2.</translation>
     </message>
     <message>
         <location line="+15"/>
         <source>Error: Invalid -custom-css-dir path.</source>
-        <translation>Erreur : chemin d&amp;#39;accès -custom-css-dir non valide.</translation>
+        <translation>Erreur&#xa0;:&#xa0;chemin d’accès -custom-css-dir non valide.</translation>
     </message>
     <message>
         <location line="+21"/>
         <source>Error: %1 CSS file(s) missing in -custom-css-dir path.</source>
-        <translation>Erreur : %1 fichier(s) CSS manquant dans le chemin -custom-css-dir.</translation>
+        <translation>Erreur&#xa0;: %1 fichier(s) CSS manquant dans le chemin -custom-css-dir.</translation>
     </message>
     <message>
         <location line="+26"/>
@@ -3413,17 +3430,17 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+12"/>
         <source>Appearance Setup</source>
-        <translation>Réglages de l&apos;apparence</translation>
+        <translation>Réglages de l’apparence</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Please choose your preferred settings for the appearance of %1</source>
-        <translation>Veuillez choisir vos réglages préférés pour l&apos;apparence de %1</translation>
+        <translation>Veuillez choisir vos réglages préférés pour l’apparence de %1</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>This can also be adjusted later in the &quot;Appearance&quot; tab of the preferences.</source>
-        <translation>Vous pouvez aussi choisir cela plus tard, dans l&apos;onglet &quot;Apparence&quot; des préférences.</translation>
+        <translation>Vous pouvez aussi choisir cela plus tard, dans l’onglet &quot;Apparence&quot; des préférences.</translation>
     </message>
     <message>
         <location line="+1352"/>
@@ -3464,33 +3481,51 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message numerus="yes">
         <location line="+15"/>
         <source>%n second(s)</source>
-        <translation><numerusform>%n seconde</numerusform><numerusform>%n secondes</numerusform><numerusform>%n secondes</numerusform></translation>
+        <translation>
+            <numerusform>%n seconde</numerusform>
+            <numerusform>%n secondes</numerusform>
+        </translation>
     </message>
     <message numerus="yes">
         <location line="+2"/>
         <source>%n minute(s)</source>
-        <translation><numerusform>%n minutes</numerusform><numerusform>%n minutes</numerusform><numerusform>%n minutes</numerusform></translation>
+        <translation>
+            <numerusform>%n minute</numerusform>
+            <numerusform>%n minutes</numerusform>
+        </translation>
     </message>
     <message numerus="yes">
         <location line="+2"/>
         <source>%n hour(s)</source>
-        <translation><numerusform>%n heure</numerusform><numerusform>%n heures</numerusform><numerusform>%n heures</numerusform></translation>
+        <translation>
+            <numerusform>%n heure</numerusform>
+            <numerusform>%n heures</numerusform>
+        </translation>
     </message>
     <message numerus="yes">
         <location line="+2"/>
         <source>%n day(s)</source>
-        <translation><numerusform>%n jour</numerusform><numerusform>%n jours</numerusform><numerusform>%n jours</numerusform></translation>
+        <translation>
+            <numerusform>%n jour</numerusform>
+            <numerusform>%n jours</numerusform>
+        </translation>
     </message>
     <message numerus="yes">
         <location line="+2"/>
         <location line="+5"/>
         <source>%n week(s)</source>
-        <translation><numerusform>%n semaine</numerusform><numerusform>%n semaines</numerusform><numerusform>%n semaines</numerusform></translation>
+        <translation>
+            <numerusform>%n semaine</numerusform>
+            <numerusform>%n semaines</numerusform>
+        </translation>
     </message>
     <message numerus="yes">
         <location line="-1"/>
         <source>%n year(s)</source>
-        <translation><numerusform>%n année</numerusform><numerusform>%n années</numerusform><numerusform>%n années</numerusform></translation>
+        <translation>
+            <numerusform>%n année</numerusform>
+            <numerusform>%n années</numerusform>
+        </translation>
     </message>
     <message>
         <location line="+0"/>
@@ -3556,7 +3591,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+3"/>
         <source>&amp;Copy Image</source>
-        <translation>&amp;Copier l&apos;image</translation>
+        <translation>&amp;Copier l’image</translation>
     </message>
     <message>
         <location line="+26"/>
@@ -3574,12 +3609,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location filename="../receiverequestdialog.cpp" line="+32"/>
         <source>&amp;Save Image...</source>
-        <translation>&amp;Sauvegarder l&apos;image...</translation>
+        <translation>&amp;Sauvegarder l’image...</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>&amp;Copy Image</source>
-        <translation>&amp;Copier l&apos;image</translation>
+        <translation>&amp;Copier l’image</translation>
     </message>
     <message>
         <location line="+28"/>
@@ -3836,7 +3871,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+10"/>
         <source>To specify a non-default location of the data directory use the &apos;%1&apos; option.</source>
-        <translation>Pour spécifier un emplacement autre que celui par défaut du répertoire de données, utilisez l&amp;#39;option &amp;#39;%1&amp;#39;.</translation>
+        <translation>Pour spécifier un emplacement autre que celui par défaut du répertoire de données, utilisez l’option ’%1’.</translation>
     </message>
     <message>
         <location line="+19"/>
@@ -3846,7 +3881,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+10"/>
         <source>To specify a non-default location of the blocks directory use the &apos;%1&apos; option.</source>
-        <translation>Pour spécifier un emplacement autre que celui par défaut du répertoire des blocs, utilisez l&amp;#39;option &amp;#39;%1&amp;#39;.</translation>
+        <translation>Pour spécifier un emplacement autre que celui par défaut du répertoire des blocs, utilisez l’option ’%1’.</translation>
     </message>
     <message>
         <location line="+171"/>
@@ -3936,7 +3971,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+23"/>
         <source>The duration of a currently outstanding ping.</source>
-        <translation>La durée d&apos;un ping en cours.</translation>
+        <translation>La durée d’un ping en cours.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -3966,7 +4001,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+7"/>
         <source>-upgradewallet: Upgrade wallet to latest format on startup. (Note: this is NOT an update of the wallet itself!)</source>
-        <translation>-upgradewallet : Mise à jour du format du fichier wallet.dat vers la dernière version au démarrage. (Note : ce n&apos;est PAS une mise à jour du logiciel portefeuille !)</translation>
+        <translation>-upgradewallet : Mise à jour du format du fichier wallet.dat vers la dernière version au démarrage. (Note : ce n’est PAS une mise à jour du logiciel portefeuille !)</translation>
     </message>
     <message>
         <location line="-83"/>
@@ -3976,12 +4011,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+93"/>
         <source>Rebuild index</source>
-        <translation>Reconstruire l&apos;index</translation>
+        <translation>Reconstruire l’index</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>-reindex: Rebuild block chain index from current blk000??.dat files.</source>
-        <translation>-reindex: Reconstruit l&apos;index de la chaîne de blocs à partir des fichiers blk000??.dat actuels.</translation>
+        <translation>-reindex: Reconstruit l’index de la chaîne de blocs à partir des fichiers blk000??.dat actuels.</translation>
     </message>
     <message>
         <location filename="../rpcconsole.cpp" line="-744"/>
@@ -4029,7 +4064,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+1"/>
         <source>Use up and down arrows to navigate history, and %1 to clear screen.</source>
-        <translation>Utilisez les touches de curseur pour naviguer dans l&apos;historique et %1 pour effacer l&apos;écran.</translation>
+        <translation>Utilisez les touches de curseur pour naviguer dans l’historique et %1 pour effacer l’écran.</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -4039,12 +4074,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+1"/>
         <source>For more information on using this console type %1.</source>
-        <translation>Pour en savoir plus sur l&apos;utilisation de cette console, saisissez %1.</translation>
+        <translation>Pour en savoir plus sur l’utilisation de cette console, saisissez %1.</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>WARNING: Scammers have been active, telling users to type commands here, stealing their wallet contents. Do not use this console without fully understanding the ramifications of a command.</source>
-        <translation>AVERTISSEMENT : des escrocs ont déjà tenté d&apos;inciter des utilisateurs à saisir des commandes ici même, pour voler le contenu de leur portefeuille. N&apos;utilisez pas cette console sans comprendre exactement la portée d&apos;une commande.</translation>
+        <translation>AVERTISSEMENT : des escrocs ont déjà tenté d’inciter des utilisateurs à saisir des commandes ici même, pour voler le contenu de leur portefeuille. N’utilisez pas cette console sans comprendre exactement la portée d’une commande.</translation>
     </message>
     <message>
         <location line="+27"/>
@@ -4165,7 +4200,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+10"/>
         <source>&amp;Label:</source>
-        <translation>&amp;Étiquette :</translation>
+        <translation>&amp;Étiquette&#xa0;:</translation>
     </message>
     <message>
         <location line="+13"/>
@@ -4233,7 +4268,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location filename="../receivecoinsdialog.cpp" line="+3"/>
         <source>Copy URI</source>
-        <translation>Copier l&apos;&amp;URI</translation>
+        <translation>Copier l’&amp;URI</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -4253,7 +4288,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+1"/>
         <source>Copy Address</source>
-        <translation>Copier l&amp;#39;adresse</translation>
+        <translation>Copier l’adresse</translation>
     </message>
 </context>
 <context>
@@ -4266,17 +4301,17 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+46"/>
         <source>Copy &amp;URI</source>
-        <translation>Copier l&apos;&amp;URI</translation>
+        <translation>Copier l’&amp;URI</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>Copy &amp;Address</source>
-        <translation>Copier l&apos;&amp;adresse</translation>
+        <translation>Copier l’&amp;adresse</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>&amp;Save Image...</source>
-        <translation>&amp;Sauvegarder l&apos;image...</translation>
+        <translation>&amp;Sauvegarder l’image...</translation>
     </message>
     <message>
         <location filename="../receiverequestdialog.cpp" line="+59"/>
@@ -4321,12 +4356,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+11"/>
         <source>Resulting URI too long, try to reduce the text for label / message.</source>
-        <translation>L&apos;URI résultante est trop longue. Essayez de réduire le texte d&apos;étiquette ou de message.</translation>
+        <translation>L’URI résultante est trop longue. Essayez de réduire le texte d’étiquette ou de message.</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Error encoding URI into QR Code.</source>
-        <translation>Erreur d&apos;encodage de l&apos;URI en QR-code.</translation>
+        <translation>Erreur d’encodage de l’URI en QR-code.</translation>
     </message>
 </context>
 <context>
@@ -4349,7 +4384,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+33"/>
         <source>(no label)</source>
-        <translation>(pas d&apos;étiquette)</translation>
+        <translation>(pas d’étiquette)</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -4412,7 +4447,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+29"/>
         <source>Bytes:</source>
-        <translation>Octets :</translation>
+        <translation>Octets&#xa0;:</translation>
     </message>
     <message>
         <location line="+42"/>
@@ -4432,7 +4467,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+45"/>
         <source>After Fee:</source>
-        <translation>Après les frais :</translation>
+        <translation>Après les frais&#xa0;:</translation>
     </message>
     <message>
         <location line="+26"/>
@@ -4442,7 +4477,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+44"/>
         <source>If this is activated, but the change address is empty or invalid, change will be sent to a newly generated address.</source>
-        <translation>Si cette option est activée, mais que l&amp;#39;adresse de modification est vide ou invalide, la modification sera envoyée à une adresse nouvellement générée.</translation>
+        <translation>Si cette option est activée, mais que l’adresse de modification est vide ou invalide, la modification sera envoyée à une adresse nouvellement générée.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -4462,12 +4497,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+22"/>
         <source>Using the fallbackfee can result in sending a transaction that will take several hours or days (or never) to confirm. Consider choosing your fee manually or wait until you have validated the complete chain.</source>
-        <translation>L’utilisation des frais de secours peut entraîner l’envoi d’une transaction dont la confirmation prendra plusieurs heures ou jours (voire jamais). Pensez à choisir votre tarif manuellement ou attendez d&amp;#39;avoir validé la chaîne complète.</translation>
+        <translation>L’utilisation des frais de secours peut entraîner l’envoi d’une transaction dont la confirmation prendra plusieurs heures ou jours (voire jamais). Pensez à choisir votre tarif manuellement ou attendez d’avoir validé la chaîne complète.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Note: Not enough data for fee estimation, using the fallback fee instead.</source>
-        <translation>Remarque : Pas assez de données pour estimer les frais, utilisez plutôt les frais de secours.</translation>
+        <translation>Remarque&#xa0;: Pas assez de données pour estimer les frais, utilisez plutôt les frais de secours.</translation>
     </message>
     <message>
         <location line="+38"/>
@@ -4482,7 +4517,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+51"/>
         <source>If the custom fee is set to 1000 ruffs and the transaction is only 250 bytes, then &quot;per kilobyte&quot; only pays 250 ruffs in fee,&lt;br /&gt;while &quot;at least&quot; pays 1000 ruffs. For transactions bigger than a kilobyte both pay by kilobyte.</source>
-        <translation>Si les frais de douane sont fixés à 1 000 fraises et que la transaction ne fait que 250 octets, alors « par kilo-octet » ne paie que 250 fraises,&lt;br /&gt; tandis que &amp;quot;au moins&amp;quot; paie 1000 fraises. Pour les transactions supérieures à un kilo-octet, les deux paient au kilo-octet.</translation>
+        <translation>Si les frais de douane sont fixés à 1&#xa0;000 fraises et que la transaction ne fait que 250 octets, alors « par kilo-octet » ne paie que 250 fraises,&lt;br /&gt; tandis que &amp;quot;au moins&amp;quot; paie 1000 fraises. Pour les transactions supérieures à un kilo-octet, les deux paient au kilo-octet.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -4493,12 +4528,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <location line="+27"/>
         <location line="+13"/>
         <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks.&lt;br /&gt;But be aware that this can end up in a never confirming transaction once there is more demand for raptoreum transactions than the network can process.</source>
-        <translation>Payer uniquement les frais minimums est très bien tant qu&amp;#39;il y a moins de volume de transactions que d&amp;#39;espace dans les blocs.&lt;br /&gt; Mais sachez que cela peut aboutir à une transaction jamais confirmée une fois que la demande de transactions raptoreum est supérieure à ce que le réseau peut traiter.</translation>
+        <translation>Payer uniquement les frais minimums est très bien tant qu’il y a moins de volume de transactions que d’espace dans les blocs.&lt;br /&gt; Mais sachez que cela peut aboutir à une transaction jamais confirmée une fois que la demande de transactions raptoreum est supérieure à ce que le réseau peut traiter.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>(read the tooltip)</source>
-        <translation>(lire l&amp;#39;info-bulle)</translation>
+        <translation>(lire l’info-bulle)</translation>
     </message>
     <message>
         <location line="+35"/>
@@ -4518,13 +4553,13 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+29"/>
         <source>Confirmation time target:</source>
-        <translation>Objectif de temps de confirmation :</translation>
+        <translation>Objectif de temps de confirmation&#xa0;:</translation>
     </message>
     <message>
         <location line="+90"/>
         <location filename="../sendassetsdialog.cpp" line="-503"/>
         <source>Confirm the send action</source>
-        <translation>Confirmez l&amp;#39;action d&amp;#39;envoi</translation>
+        <translation>Confirmez l’action d’envoi</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -4611,17 +4646,17 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+7"/>
         <source>&lt;br&gt;Confirmations in: &lt;b&gt;%1 blocks&lt;/b&gt;&lt;br /&gt;</source>
-        <translation>&lt;br&gt;Confirmations dans : &lt;b&gt;%1 blocs&lt;/b&gt;&lt;br /&gt;</translation>
+        <translation>&lt;br&gt;Confirmations dans&#xa0;: &lt;b&gt;%1 blocs&lt;/b&gt;&lt;br /&gt;</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Time in: &lt;b&gt;%1 seconds from first confirmed&lt;/b&gt;&lt;br /&gt;</source>
-        <translation>Temps écoulé : &lt;b&gt;%1 secondes depuis la première confirmation&lt;/b&gt;&lt;br /&gt;</translation>
+        <translation>Temps écoulé&#xa0;: &lt;b&gt;%1&#xa0;secondes depuis la première confirmation&lt;/b&gt;&lt;br /&gt;</translation>
     </message>
     <message>
         <location line="+32"/>
         <source>Are you sure you want to send?</source>
-        <translation>Êtes-vous sûr de vouloir envoyer ?</translation>
+        <translation>Êtes-vous sûr de vouloir envoyer&#xa0;?</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -4646,12 +4681,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+7"/>
         <source>Transaction size: %1</source>
-        <translation>Taille de la transaction : %1</translation>
+        <translation>Taille de la transaction&#xa0;: %1</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Fee rate: %1</source>
-        <translation>Taux de frais : %1</translation>
+        <translation>Taux de frais&#xa0;:&#xa0;%1</translation>
     </message>
     <message>
         <location line="+8"/>
@@ -4671,12 +4706,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+5"/>
         <source>Confirm send Assets</source>
-        <translation>Confirmer l&amp;#39;envoi des actifs</translation>
+        <translation>Confirmer l’envoi des actifs</translation>
     </message>
     <message>
         <location line="+176"/>
         <source>The recipient address is not valid. Please recheck.</source>
-        <translation>L&amp;#39;adresse du destinataire n&amp;#39;est pas valide. Revérifiez s&amp;#39;il vous plait.</translation>
+        <translation>L’adresse du destinataire n’est pas valide. Revérifiez s’il vous plait.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -4696,12 +4731,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+3"/>
         <source>Duplicate address found: addresses should only be used once each.</source>
-        <translation>Adresse en double trouvée : les adresses ne doivent être utilisées qu&amp;#39;une seule fois chacune.</translation>
+        <translation>Adresse en double trouvée&#xa0;: les adresses ne doivent être utilisées qu’une seule fois chacune.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Transaction creation failed!</source>
-        <translation>La création de la transaction a échoué !</translation>
+        <translation>La création de la transaction a échoué&#xa0;!</translation>
     </message>
     <message>
         <location line="+4"/>
@@ -4726,27 +4761,30 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message numerus="yes">
         <location line="+35"/>
         <source>Estimated to begin confirmation within %n block(s).</source>
-        <translation><numerusform>Il est estimé que la confirmation commencera dans %n blocs.</numerusform><numerusform>Il est estimé que la confirmation commencera dans %n blocs.</numerusform><numerusform>Il est estimé que la confirmation commencera dans %n blocs.</numerusform></translation>
+        <translation>
+            <numerusform>Il est estimé que la confirmation commencera dans %n bloc.</numerusform>
+            <numerusform>Il est estimé que la confirmation commencera dans %n blocs.</numerusform>
+        </translation>
     </message>
     <message>
         <location line="+92"/>
         <source>Warning: Invalid Raptoreum address</source>
-        <translation>Attention : adresse Raptoreum invalide</translation>
+        <translation>Attention&#xa0;: adresse Raptoreum invalide</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Warning: Unknown change address</source>
-        <translation>Attention : adresse de changement inconnue</translation>
+        <translation>Attention&#xa0;: adresse de changement inconnue</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Confirm custom change address</source>
-        <translation>Confirmer l&amp;#39;adresse de changement personnalisée</translation>
+        <translation>Confirmer l’adresse de changement personnalisée</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>The address you selected for change is not part of this wallet. Any or all funds in your wallet may be sent to this address. Are you sure?</source>
-        <translation>L&amp;#39;adresse que vous avez sélectionnée pour la modification ne fait pas partie de ce portefeuille. Tout ou partie des fonds de votre portefeuille peuvent être envoyés à cette adresse. Es-tu sûr?</translation>
+        <translation>L’adresse que vous avez sélectionnée pour la modification ne fait pas partie de ce portefeuille. Tout ou partie des fonds de votre portefeuille peuvent être envoyés à cette adresse. Es-tu sûr?</translation>
     </message>
     <message>
         <location line="+22"/>
@@ -4759,7 +4797,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location filename="../forms/sendassetsentry.ui" line="+24"/>
         <source>This is a normal payment.</source>
-        <translation>Il s&amp;#39;agit d&amp;#39;un paiement normal.</translation>
+        <translation>Il s’agit d’un paiement normal.</translation>
     </message>
     <message>
         <location line="+21"/>
@@ -4769,7 +4807,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+13"/>
         <source>Enter a label for this address to add it to the list of used addresses</source>
-        <translation>Entrez un libellé pour cette adresse pour l&amp;#39;ajouter à la liste des adresses utilisées</translation>
+        <translation>Entrez un libellé pour cette adresse pour l’ajouter à la liste des adresses utilisées</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -4779,17 +4817,17 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+7"/>
         <source>&amp;Label:</source>
-        <translation>&amp;amp;Étiquette:</translation>
+        <translation>&amp;Étiquette:</translation>
     </message>
     <message>
         <location line="+18"/>
         <source>The Raptoreum address to send the payment to</source>
-        <translation>L&amp;#39;adresse Raptoreum à laquelle envoyer le paiement</translation>
+        <translation>L’adresse Raptoreum à laquelle envoyer le paiement</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Choose previously used address</source>
-        <translation>Choisir l&amp;#39;adresse précédemment utilisée</translation>
+        <translation>Choisir l’adresse précédemment utilisée</translation>
     </message>
     <message>
         <location line="+12"/>
@@ -4799,7 +4837,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+7"/>
         <source>Paste address from clipboard</source>
-        <translation>Coller l&amp;#39;adresse du presse-papiers</translation>
+        <translation>Coller l’adresse du presse-papiers</translation>
     </message>
     <message>
         <location line="+12"/>
@@ -4844,12 +4882,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+10"/>
         <source>Lock time:</source>
-        <translation>Temps de verrouillage :</translation>
+        <translation>Temps de verrouillage&#xa0;:</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Time in seconds for this output to be spendable if happen before maturity</source>
-        <translation>Temps en secondes pour que cette sortie soit utilisable si elle se produit avant l&amp;#39;échéance</translation>
+        <translation>Temps en secondes pour que cette sortie soit utilisable si elle se produit avant l’échéance</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -4869,7 +4907,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location filename="../sendassetsentry.cpp" line="+36"/>
         <source>Enter a label for this address to add it to your address book</source>
-        <translation>Entrez un libellé pour cette adresse pour l&amp;#39;ajouter à votre carnet d&amp;#39;adresses</translation>
+        <translation>Entrez un libellé pour cette adresse pour l’ajouter à votre carnet d’adresses</translation>
     </message>
     <message>
         <location line="+282"/>
@@ -4883,7 +4921,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <location filename="../forms/sendcoinsdialog.ui" line="+14"/>
         <location filename="../sendcoinsdialog.cpp" line="+659"/>
         <source>Send Coins</source>
-        <translation>Envoyer de l&apos;argent</translation>
+        <translation>Envoyer de l’argent</translation>
     </message>
     <message>
         <location line="+67"/>
@@ -4918,7 +4956,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+42"/>
         <source>Amount:</source>
-        <translation>Montant :</translation>
+        <translation>Montant&#xa0;:</translation>
     </message>
     <message>
         <location line="+68"/>
@@ -4973,13 +5011,13 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="-198"/>
         <source>If the custom fee is set to 1000 ruffs and the transaction is only 250 bytes, then &quot;per kilobyte&quot; only pays 250 ruffs in fee,&lt;br /&gt;while &quot;at least&quot; pays 1000 ruffs. For transactions bigger than a kilobyte both pay by kilobyte.</source>
-        <translation>Si les frais personnalisés sont à 1000 ruffs et que la transaction fait seulement 250 octets, alors &quot;par kilooctet&quot; coûtera seulement 250 ruffs de frais,&lt;br /&gt;alors que &quot;au moins&quot; coûtera 1000 ruffs. Pour les transactions de plus d&apos;un kilooctet, les deux coûts seront calculés au kilooctet.</translation>
+        <translation>Si les frais personnalisés sont à 1000 ruffs et que la transaction fait seulement 250 octets, alors &quot;par kilooctet&quot; coûtera seulement 250 ruffs de frais,&lt;br /&gt;alors que &quot;au moins&quot; coûtera 1000 ruffs. Pour les transactions de plus d’un kilooctet, les deux coûts seront calculés au kilooctet.</translation>
     </message>
     <message>
         <location line="+30"/>
         <location line="+13"/>
         <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks.&lt;br /&gt;But be aware that this can end up in a never confirming transaction once there is more demand for raptoreum transactions than the network can process.</source>
-        <translation>Payer les frais minimaux fonctionne tant que le volume des transactions est inférieur à l&apos;espace libre dans les blocs.&lt;br/&gt;Gardez à l&apos;esprit que cette option peut entraîner des transactions qui ne seront jamais confirmées si la demande excède la capacité du réseau.</translation>
+        <translation>Payer les frais minimaux fonctionne tant que le volume des transactions est inférieur à l’espace libre dans les blocs.&lt;br/&gt;Gardez à l’esprit que cette option peut entraîner des transactions qui ne seront jamais confirmées si la demande excède la capacité du réseau.</translation>
     </message>
     <message>
         <location line="-40"/>
@@ -4989,7 +5027,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="-98"/>
         <source>Using the fallbackfee can result in sending a transaction that will take several hours or days (or never) to confirm. Consider choosing your fee manually or wait until you have validated the complete chain.</source>
-        <translation>Utiliser les frais de repli peut allonger le temps de confirmation d&apos;une transaction (jusqu&apos;à plusieurs heures, ou jours, voire jamais). Envisagez de choisir vos frais manuellement, ou bien attendez la validation complète de la blockchain.</translation>
+        <translation>Utiliser les frais de repli peut allonger le temps de confirmation d’une transaction (jusqu’à plusieurs heures, ou jours, voire jamais). Envisagez de choisir vos frais manuellement, ou bien attendez la validation complète de la blockchain.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -5004,7 +5042,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+97"/>
         <source>(read the tooltip)</source>
-        <translation>(lisez l&apos;infobulle)</translation>
+        <translation>(lisez l’infobulle)</translation>
     </message>
     <message>
         <location line="+35"/>
@@ -5019,13 +5057,13 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+55"/>
         <source>(Smart fee not initialized yet. This usually takes a few blocks...)</source>
-        <translation>(Les frais intelligents ne sont pas encore disponibles. Cette fonction apparaît d&apos;habitude après quelques blocs...)</translation>
+        <translation>(Les frais intelligents ne sont pas encore disponibles. Cette fonction apparaît d’habitude après quelques blocs...)</translation>
     </message>
     <message>
         <location line="+119"/>
         <location filename="../sendcoinsdialog.cpp" line="-518"/>
         <source>Confirm the send action</source>
-        <translation>Confirmer l’action d&apos;envoi</translation>
+        <translation>Confirmer l’action d’envoi</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -5056,7 +5094,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+28"/>
         <source>Balance:</source>
-        <translation>Solde :</translation>
+        <translation>Solde&#xa0;:</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="-54"/>
@@ -5127,8 +5165,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
     <message>
         <location line="+48"/>
-        <source>Total Amount = &lt;b&gt;%1&lt;/b&gt;&lt;br /&gt;= %2</source>
-        <translation>Montant total = &lt;b&gt;%1&lt;/b&gt;&lt;br /&gt;= %2</translation>
+        <source>Total Amount                                                            = &lt;b&gt;%1&lt;/b&gt;&lt;br /&gt;= %2</source>
+        <translation>Montant total                                                      = &lt;b&gt;%1&lt;/b&gt;&lt;br /&gt;= %2</translation>
     </message>
     <message>
         <location line="-60"/>
@@ -5143,17 +5181,17 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+1"/>
         <source>Confirm the %1 send action</source>
-        <translation>Confirmer l’action d&apos;envoi %1</translation>
+        <translation>Confirmer l’action d’envoi %1</translation>
     </message>
     <message>
         <location line="+199"/>
         <source>&lt;br&gt;Confirmations in: &lt;b&gt;%1 blocks&lt;/b&gt;&lt;br /&gt;</source>
-        <translation>&lt;br&gt;Confirmations dans : &lt;b&gt;%1 blocs&lt;/b&gt;&lt;br /&gt;</translation>
+        <translation>&lt;br&gt;Confirmations dans&#xa0;: &lt;b&gt;%1 blocs&lt;/b&gt;&lt;br /&gt;</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Time in: &lt;b&gt;%1 seconds from first confirmed&lt;/b&gt;&lt;br /&gt;</source>
-        <translation>Temps écoulé : &lt;b&gt;%1 secondes depuis la première confirmation&lt;/b&gt;&lt;br /&gt;</translation>
+        <translation>Temps écoulé&#xa0;: &lt;b&gt;%1&#xa0;secondes depuis la première confirmation&lt;/b&gt;&lt;br /&gt;</translation>
     </message>
     <message>
         <location line="+39"/>
@@ -5168,7 +5206,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+22"/>
         <source>(%1 transactions have higher fees usually due to no change output being allowed)</source>
-        <translation>(les transactions %1 ont d&apos;habitude des frais plus élevés, parce qu&apos;elles n&apos;acceptent pas de monnaie rendue)</translation>
+        <translation>(les transactions %1 ont d’habitude des frais plus élevés, parce qu’elles n’acceptent pas de monnaie rendue)</translation>
     </message>
     <message>
         <location line="+9"/>
@@ -5183,12 +5221,15 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message numerus="yes">
         <location line="+7"/>
         <source>This transaction will consume %n input(s)</source>
-        <translation><numerusform>Cette transaction consommera %n entrée</numerusform><numerusform>Cette transaction consommera %n entrées</numerusform><numerusform>Cette transaction consommera %n entrées</numerusform></translation>
+        <translation>
+            <numerusform>Cette transaction consommera %n entrée</numerusform>
+            <numerusform>Cette transaction consommera %n entrées</numerusform>
+        </translation>
     </message>
     <message>
         <location line="+8"/>
         <source>Warning: Using %1 with %2 or more inputs can harm your privacy and is not recommended</source>
-        <translation>Attention : utiliser %1 avec %2 entrées ou plus peut affaiblir votre confidentialité et n&apos;est pas recommandé</translation>
+        <translation>Attention : utiliser %1 avec %2 entrées ou plus peut affaiblir votre confidentialité et n’est pas recommandé</translation>
     </message>
     <message>
         <location line="+22"/>
@@ -5198,7 +5239,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+178"/>
         <source>The recipient address is not valid. Please recheck.</source>
-        <translation>L&apos;adresse du destinataire n’est pas valide. Veuillez la vérifier.</translation>
+        <translation>L’adresse du destinataire n’est pas valide. Veuillez la vérifier.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -5218,7 +5259,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+3"/>
         <source>Duplicate address found: addresses should only be used once each.</source>
-        <translation>Adresse déjà utilisée : chaque adresse devrait n&apos;être utilisée qu&apos;une seule fois.</translation>
+        <translation>Adresse déjà utilisée : chaque adresse devrait n’être utilisée qu’une seule fois.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -5243,7 +5284,10 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message numerus="yes">
         <location line="+35"/>
         <source>Estimated to begin confirmation within %n block(s).</source>
-        <translation><numerusform>Il est estimé que la confirmation commencera dans %n blocs.</numerusform><numerusform>Il est estimé que la confirmation commencera dans %n blocs.</numerusform><numerusform>Il est estimé que la confirmation commencera dans %n blocs.</numerusform></translation>
+        <translation>
+            <numerusform>Il est estimé que la confirmation commencera dans %n bloc.</numerusform>
+            <numerusform>Il est estimé que la confirmation commencera dans %n blocs.</numerusform>
+        </translation>
     </message>
     <message>
         <location line="+91"/>
@@ -5263,12 +5307,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+1"/>
         <source>The address you selected for change is not part of this wallet. Any or all funds in your wallet may be sent to this address. Are you sure?</source>
-        <translation>L’adresse que vous avez sélectionnée pour la monnaie ne fait pas partie de ce porte-monnaie. Les fonds de ce porte-monnaie peuvent en partie ou en totalité être envoyés vers cette adresse. Êtes-vous certain ?</translation>
+        <translation>L’adresse que vous avez sélectionnée pour la monnaie ne fait pas partie de ce porte-monnaie. Les fonds de ce porte-monnaie peuvent en partie ou en totalité être envoyés vers cette adresse. Êtes-vous certain&#x2009;?</translation>
     </message>
     <message>
         <location line="+22"/>
         <source>(no label)</source>
-        <translation>(pas d&apos;étiquette)</translation>
+        <translation>(pas d’étiquette)</translation>
     </message>
 </context>
 <context>
@@ -5281,12 +5325,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+123"/>
         <source>Pay &amp;To:</source>
-        <translation>&amp;Payer à :</translation>
+        <translation>&amp;Payer à&#xa0;:</translation>
     </message>
     <message>
         <location line="-63"/>
         <source>The Raptoreum address to send the payment to</source>
-        <translation>L&apos;adresse Raptoreum à laquelle envoyer de la monnaie</translation>
+        <translation>L’adresse Raptoreum à laquelle envoyer de la monnaie</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -5301,7 +5345,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+7"/>
         <source>Paste address from clipboard</source>
-        <translation>Coller l&apos;adresse depuis le presse-papier</translation>
+        <translation>Coller l’adresse depuis le presse-papier</translation>
     </message>
     <message>
         <location line="+12"/>
@@ -5328,24 +5372,24 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+16"/>
         <source>&amp;Label:</source>
-        <translation>É&amp;tiquette :</translation>
+        <translation>É&amp;tiquette&#xa0;:</translation>
     </message>
     <message>
         <location line="-156"/>
         <source>Enter a label for this address to add it to the list of used addresses</source>
-        <translation>Saisir une étiquette pour cette adresse afin de l&apos;ajouter à la liste d&apos;adresses utilisées</translation>
+        <translation>Saisir une étiquette pour cette adresse afin de l’ajouter à la liste d’adresses utilisées</translation>
     </message>
     <message>
         <location line="+176"/>
         <location line="+128"/>
         <location line="+94"/>
         <source>A&amp;mount:</source>
-        <translation>&amp;Montant :</translation>
+        <translation>&amp;Montant&#xa0;:</translation>
     </message>
     <message>
         <location line="-271"/>
         <source>The fee will be deducted from the amount being sent. The recipient will receive a lower amount of Raptoreum than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
-        <translation>Les frais vont être déduits du montant envoyé. Le destinataire recevra moins de raptoreums que ce que vous avez indiqué dans la case montant. S&apos;il y a plusieurs destinataires, les frais seront partagés équitablement.</translation>
+        <translation>Les frais vont être déduits du montant envoyé. Le destinataire recevra moins de raptoreums que ce que vous avez indiqué dans la case montant. S’il y a plusieurs destinataires, les frais seront partagés équitablement.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -5360,12 +5404,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="-140"/>
         <source>Message:</source>
-        <translation>Message :</translation>
+        <translation>Message&#xa0;:</translation>
     </message>
     <message>
         <location line="+17"/>
         <source>A message that was attached to the raptoreum: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Raptoreum network.</source>
-        <translation>Un message joint à l&apos;URI Raptoreum qui sera sauvegardé avec la transaction pour référence. Note : ce message ne sera pas envoyé à travers le réseau Raptoreum.</translation>
+        <translation>Un message joint à l’URI Raptoreum qui sera sauvegardé avec la transaction pour référence. Note : ce message ne sera pas envoyé à travers le réseau Raptoreum.</translation>
     </message>
     <message>
         <location line="+145"/>
@@ -5380,12 +5424,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+10"/>
         <source>Lock time:</source>
-        <translation>Temps de verrouillage :</translation>
+        <translation>Temps de verrouillage&#xa0;:</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Time in seconds for this output to be spendable if happen before maturity</source>
-        <translation>Temps en secondes pour que cette sortie soit utilisable si elle se produit avant l&amp;#39;échéance</translation>
+        <translation>Temps en secondes pour que cette sortie soit utilisable si elle se produit avant l’échéance</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -5457,12 +5501,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+35"/>
         <source>You can sign messages/agreements with your addresses to prove you can receive Raptoreum sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
-        <translation>Vous pouvez signer des messages ou contrats avec vos adresses, et ainsi prouver que vous pouvez y recevoir des raptoreums. Faites attention de ne pas signer quoi que ce soit de vague ou d&apos;aléatoire, car des attaques d&apos;hameçonnage peuvent essayer d&apos;usurper votre identité en utilisant votre signature. Ne signez que des déclarations très détaillées et avec lesquelles vous êtes entièrement d&apos;accord.</translation>
+        <translation>Vous pouvez signer des messages ou contrats avec vos adresses, et ainsi prouver que vous pouvez y recevoir des raptoreums. Faites attention de ne pas signer quoi que ce soit de vague ou d’aléatoire, car des attaques d’hameçonnage peuvent essayer d’usurper votre identité en utilisant votre signature. Ne signez que des déclarations très détaillées et avec lesquelles vous êtes entièrement d’accord.</translation>
     </message>
     <message>
         <location line="+18"/>
         <source>The Raptoreum address to sign the message with</source>
-        <translation>L&apos;adresse Raptoreum avec laquelle signer le message</translation>
+        <translation>L’adresse Raptoreum avec laquelle signer le message</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -5530,17 +5574,17 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+189"/>
         <source>Enter the receiver&apos;s address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack. Note that this only proves the signing party receives with the address, it cannot prove sendership of any transaction!</source>
-        <translation>Saisir ci-dessous l&apos;adresse du destinataire, le message (assurez-vous d&apos;avoir copié exactement les retours à la ligne, les espaces, tabulations, etc.) et la signature pour vérifier le message. Faites attention à ne pas déduire davantage de la signature que ce qui est contenu dans le message signé lui-même, pour éviter d&apos;être trompé par une attaque &quot;man in the middle&quot;. Gardez à l&apos;esprit que cette opération prouve uniquement que le signataire peut recevoir des fonds à l&apos;adresse donnée, cela ne prouve pas l&apos;identité de l&apos;expéditeur d&apos;une transaction !</translation>
+        <translation>Saisir ci-dessous l’adresse du destinataire, le message (assurez-vous d’avoir copié exactement les retours à la ligne, les espaces, tabulations, etc.) et la signature pour vérifier le message. Faites attention à ne pas déduire davantage de la signature que ce qui est contenu dans le message signé lui-même, pour éviter d’être trompé par une attaque &quot;man in the middle&quot;. Gardez à l’esprit que cette opération prouve uniquement que le signataire peut recevoir des fonds à l’adresse donnée, cela ne prouve pas l’identité de l’expéditeur d’une transaction !</translation>
     </message>
     <message>
         <location line="+21"/>
         <source>The Raptoreum address the message was signed with</source>
-        <translation>L&apos;adresse Raptoreum avec laquelle le message a été signé</translation>
+        <translation>L’adresse Raptoreum avec laquelle le message a été signé</translation>
     </message>
     <message>
         <location line="+30"/>
         <source>Verify the message to ensure it was signed with the specified Raptoreum address</source>
-        <translation>Vérifier le message pour s&apos;assurer qu&apos;il a été signé avec l&apos;adresse Raptoreum spécifiée</translation>
+        <translation>Vérifier le message pour s’assurer qu’il a été signé avec l’adresse Raptoreum spécifiée</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -5560,7 +5604,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+1"/>
         <source>Click &quot;Sign Message&quot; to generate signature</source>
-        <translation>Cliquez sur « Signer le message » pour générer la signature</translation>
+        <translation>Cliquez sur «&#xa0;Signer le message&#xa0;» pour générer la signature</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -5576,7 +5620,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <location line="+100"/>
         <location line="+71"/>
         <source>The entered address is invalid.</source>
-        <translation>L&apos;adresse saisie est invalide.</translation>
+        <translation>L’adresse saisie est invalide.</translation>
     </message>
     <message>
         <location line="-71"/>
@@ -5584,13 +5628,13 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <location line="+63"/>
         <location line="+7"/>
         <source>Please check the address and try again.</source>
-        <translation>Veuillez vérifier l&apos;adresse et réessayer.</translation>
+        <translation>Veuillez vérifier l’adresse et réessayer.</translation>
     </message>
     <message>
         <location line="-71"/>
         <location line="+70"/>
         <source>The entered address does not refer to a key.</source>
-        <translation>L&apos;adresse saisie ne fait pas référence à une clef.</translation>
+        <translation>L’adresse saisie ne fait pas référence à une clef.</translation>
     </message>
     <message>
         <location line="-62"/>
@@ -5600,7 +5644,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+7"/>
         <source>Private key for the entered address is not available.</source>
-        <translation>La clef privée pour l&apos;adresse indiquée n&apos;est pas disponible.</translation>
+        <translation>La clef privée pour l’adresse indiquée n’est pas disponible.</translation>
     </message>
     <message>
         <location line="+11"/>
@@ -5615,7 +5659,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+50"/>
         <source>The signature could not be decoded.</source>
-        <translation>La signature n&apos;a pu être décodée.</translation>
+        <translation>La signature n’a pu être décodée.</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -5626,7 +5670,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="-1"/>
         <source>The signature did not match the message digest.</source>
-        <translation>La signature ne correspond pas à l&apos;empreinte du message.</translation>
+        <translation>La signature ne correspond pas à l’empreinte du message.</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -5674,12 +5718,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="-23"/>
         <source>Show only smartnodes this wallet has keys for.</source>
-        <translation>N&apos;afficher que les smartnodes dont les clés sont dans ce portefeuille</translation>
+        <translation>N’afficher que les smartnodes dont les clés sont dans ce portefeuille</translation>
     </message>
     <message>
         <location line="-7"/>
         <source>Filter by any property (address or protx hash)</source>
-        <translation>Filtrer par n&amp;#39;importe quelle propriété (adresse ou hachage de protx)</translation>
+        <translation>Filtrer par n’importe quelle propriété (adresse ou hachage de protx)</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -5854,12 +5898,15 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message numerus="yes">
         <location filename="../transactiondesc.cpp" line="+36"/>
         <source>Open for %n more block(s)</source>
-        <translation><numerusform>Ouvert pour %n bloc supplémentaire</numerusform><numerusform>Ouvert pour %n blocs supplémentaires</numerusform><numerusform>Ouvert pour %n blocs supplémentaires</numerusform></translation>
+        <translation>
+            <numerusform>Ouvert pour %n bloc supplémentaire</numerusform>
+            <numerusform>Ouvert pour %n blocs supplémentaires</numerusform>
+        </translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Open until %1</source>
-        <translation>Ouvert jusqu&apos;à %1</translation>
+        <translation>Ouvert jusqu’à %1</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -5914,13 +5961,13 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+11"/>
         <source>Future Amount:</source>
-        <translation>Montant futur :</translation>
+        <translation>Montant futur&#xa0;:</translation>
     </message>
     <message>
         <location line="+3"/>
         <location line="+9"/>
         <source>Maturity Block:</source>
-        <translation>Bloc de maturité :</translation>
+        <translation>Bloc de maturité&#xa0;:</translation>
     </message>
     <message>
         <location line="-6"/>
@@ -5936,12 +5983,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <location line="+7"/>
         <location line="+4"/>
         <source>Maturity Time:</source>
-        <translation>Temps de maturité :</translation>
+        <translation>Temps de maturité&#xa0;:</translation>
     </message>
     <message>
         <location line="-3"/>
         <source>Locked Time:</source>
-        <translation>Heure verrouillée :</translation>
+        <translation>Heure verrouillée&#xa0;:</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -5957,7 +6004,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+2"/>
         <source>Locked Output Index:</source>
-        <translation>Index de sortie verrouillé :</translation>
+        <translation>Index de sortie verrouillé&#xa0;:</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -6031,7 +6078,10 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message numerus="yes">
         <location line="-136"/>
         <source>matures in %n more block(s)</source>
-        <translation><numerusform>arrive à échéance dans %n bloc supplémentaire</numerusform><numerusform>arrive à maturité dans %n blocs supplémentaires</numerusform><numerusform>arrive à maturité dans %n blocs supplémentaires</numerusform></translation>
+        <translation>
+            <numerusform>arrive à échéance dans %n bloc supplémentaire</numerusform>
+            <numerusform>arrive à maturité dans %n blocs supplémentaires</numerusform>
+        </translation>
     </message>
     <message>
         <location line="+2"/>
@@ -6167,12 +6217,15 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message numerus="yes">
         <location line="+65"/>
         <source>Open for %n more block(s)</source>
-        <translation><numerusform>Ouvert pour %n bloc supplémentaire</numerusform><numerusform>Ouvert pour %n blocs supplémentaires</numerusform><numerusform>Ouvert pour %n blocs supplémentaires</numerusform></translation>
+        <translation>
+            <numerusform>Ouvert pour %n bloc supplémentaire</numerusform>
+            <numerusform>Ouvert pour %n blocs supplémentaires</numerusform>
+        </translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Open until %1</source>
-        <translation>Ouvert jusqu&apos;à %1</translation>
+        <translation>Ouvert jusqu’à %1</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -6272,7 +6325,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+2"/>
         <source>%1 Make Collateral Inputs</source>
-        <translation>Création d&apos;entrées de caution %1</translation>
+        <translation>Création d’entrées de caution %1</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -6297,7 +6350,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+224"/>
         <source>(no label)</source>
-        <translation>(pas d&apos;étiquette)</translation>
+        <translation>(pas d’étiquette)</translation>
     </message>
     <message>
         <location line="+32"/>
@@ -6322,7 +6375,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+2"/>
         <source>User-defined intent/purpose of the transaction.</source>
-        <translation>Intention/raison de la transaction définie par l&apos;utilisateur</translation>
+        <translation>Intention/raison de la transaction définie par l’utilisateur</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -6406,7 +6459,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+2"/>
         <source>%1 Make Collateral Inputs</source>
-        <translation>Création d&apos;entrées de caution %1</translation>
+        <translation>Création d’entrées de caution %1</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -6471,7 +6524,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+1"/>
         <source>Copy transaction ID</source>
-        <translation>Copier l&apos;ID de la transaction</translation>
+        <translation>Copier l’ID de la transaction</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -6496,12 +6549,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+1"/>
         <source>Show address QR code</source>
-        <translation>Voir le QR-code de l&apos;adresse</translation>
+        <translation>Voir le QR-code de l’adresse</translation>
     </message>
     <message>
         <location line="+226"/>
         <source>Export Transaction History</source>
-        <translation>Exporter l&apos;historique des transactions</translation>
+        <translation>Exporter l’historique des transactions</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -6546,12 +6599,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+3"/>
         <source>Exporting Failed</source>
-        <translation>L&apos;exportation a échoué</translation>
+        <translation>L’exportation a échoué</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>There was an error trying to save the transaction history to %1.</source>
-        <translation>Une erreur est survenue lors de l&apos;enregistrement de l&apos;historique des transactions vers %1.</translation>
+        <translation>Une erreur est survenue lors de l’enregistrement de l’historique des transactions vers %1.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -6561,7 +6614,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+1"/>
         <source>The transaction history was successfully saved to %1.</source>
-        <translation>L&apos;historique des transactions a été sauvegardée avec succès vers %1.</translation>
+        <translation>L’historique des transactions a été sauvegardée avec succès vers %1.</translation>
     </message>
     <message>
         <location line="+125"/>
@@ -6571,7 +6624,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+43"/>
         <source>Range:</source>
-        <translation>Intervalle :</translation>
+        <translation>Intervalle&#xa0;:</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -6584,7 +6637,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location filename="../bitcoingui.cpp" line="+155"/>
         <source>Unit to show amounts in. Click to select another unit.</source>
-        <translation>Unité utilisée pour l&apos;affichage des montants. Cliquez pour choisir une autre unité.</translation>
+        <translation>Unité utilisée pour l’affichage des montants. Cliquez pour choisir une autre unité.</translation>
     </message>
 </context>
 <context>
@@ -6601,23 +6654,23 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location filename="../forms/updateassetsdialog.ui" line="+93"/>
         <source>Update Asset</source>
-        <translation>Mettre à jour l&amp;#39;actif</translation>
+        <translation>Mettre à jour l’actif</translation>
     </message>
     <message>
         <location line="+56"/>
         <location line="+12"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;[Optional] The ipfs/file hash that contains information about the asset&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;[Facultatif] Le hachage ipfs/file qui contient des informations sur l&amp;#39;actif&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;[Facultatif] Le hachage ipfs/file qui contient des informations sur l’actif&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location line="-9"/>
         <source>IPFS/file hash:</source>
-        <translation>Hachage IPFS/fichier :</translation>
+        <translation>Hachage IPFS/fichier&#xa0;:</translation>
     </message>
     <message>
         <location line="+15"/>
         <source>The ipfs/file hash that is associated with the asset being created (e.g. QmU4h365LYMHx...)</source>
-        <translation>Le hachage ipfs/fichier associé à l&amp;#39;actif en cours de création (par exemple QmU4h365LYMHx...)</translation>
+        <translation>Le hachage ipfs/fichier associé à l’actif en cours de création (par exemple QmU4h365LYMHx...)</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -6633,33 +6686,33 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="-188"/>
         <source>Owner Address:</source>
-        <translation>Adresse du propriétaire :</translation>
+        <translation>Adresse du propriétaire&#xa0;:</translation>
     </message>
     <message>
         <location line="+9"/>
         <location line="+12"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The RTM address that will receive the minted asset&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;L&amp;#39;adresse RTM qui recevra l&amp;#39;actif créé&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;L’adresse RTM qui recevra l’actif créé&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location line="-9"/>
         <source>The RTM address that will receive the minted asset</source>
-        <translation>L&amp;#39;adresse RTM qui recevra l&amp;#39;actif créé</translation>
+        <translation>L’adresse RTM qui recevra l’actif créé</translation>
     </message>
     <message>
         <location line="+12"/>
         <source>Target Address:</source>
-        <translation>Adresse cible :</translation>
+        <translation>Adresse cible&#xa0;:</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>Mint count:</source>
-        <translation>Nombre de menthes :</translation>
+        <translation>Nombre de menthes&#xa0;:</translation>
     </message>
     <message>
         <location line="+18"/>
         <source>Distribution Type:</source>
-        <translation>Type de distribution :</translation>
+        <translation>Type de distribution&#xa0;:</translation>
     </message>
     <message>
         <location line="+12"/>
@@ -6674,7 +6727,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+7"/>
         <source>Issue frequency:</source>
-        <translation>Fréquence d&amp;#39;émission :</translation>
+        <translation>Fréquence d’émission&#xa0;:</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -6709,12 +6762,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+8"/>
         <source>The number of assets that will be created</source>
-        <translation>Le nombre d&amp;#39;actifs qui seront créés</translation>
+        <translation>Le nombre d’actifs qui seront créés</translation>
     </message>
     <message>
         <location line="+19"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If the owner of this asset will be able to update the asset in the future&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Si le propriétaire de cet actif pourra mettre à jour l&amp;#39;actif à l&amp;#39;avenir&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Si le propriétaire de cet actif pourra mettre à jour l’actif à l’avenir&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -6724,7 +6777,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+17"/>
         <source>The RTM address that own this asset</source>
-        <translation>L&amp;#39;adresse RTM propriétaire de cet actif</translation>
+        <translation>L’adresse RTM propriétaire de cet actif</translation>
     </message>
     <message>
         <location line="+130"/>
@@ -6739,12 +6792,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+30"/>
         <source>Using the fallbackfee can result in sending a transaction that will take several hours or days (or never) to confirm. Consider choosing your fee manually or wait until you have validated the complete chain.</source>
-        <translation>L’utilisation des frais de secours peut entraîner l’envoi d’une transaction dont la confirmation prendra plusieurs heures ou jours (voire jamais). Pensez à choisir votre tarif manuellement ou attendez d&amp;#39;avoir validé la chaîne complète.</translation>
+        <translation>L’utilisation des frais de secours peut entraîner l’envoi d’une transaction dont la confirmation prendra plusieurs heures ou jours (voire jamais). Pensez à choisir votre tarif manuellement ou attendez d’avoir validé la chaîne complète.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Note: Not enough data for fee estimation, using the fallback fee instead.</source>
-        <translation>Remarque : Pas assez de données pour estimer les frais, utilisez plutôt les frais de secours.</translation>
+        <translation>Remarque&#xa0;: Pas assez de données pour estimer les frais, utilisez plutôt les frais de secours.</translation>
     </message>
     <message>
         <location line="+38"/>
@@ -6770,12 +6823,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <location line="+27"/>
         <location line="+13"/>
         <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for raptoreum transactions than the network can process.</source>
-        <translation>Payer uniquement les frais minimums est très bien tant qu&amp;#39;il y a moins de volume de transactions que d&amp;#39;espace dans les blocs. Mais sachez que cela peut aboutir à une transaction jamais confirmée une fois que la demande de transactions raptoreum est supérieure à ce que le réseau peut traiter.</translation>
+        <translation>Payer uniquement les frais minimums est très bien tant qu’il y a moins de volume de transactions que d’espace dans les blocs. Mais sachez que cela peut aboutir à une transaction jamais confirmée une fois que la demande de transactions raptoreum est supérieure à ce que le réseau peut traiter.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>(read the tooltip)</source>
-        <translation>(lire l&amp;#39;info-bulle)</translation>
+        <translation>(lire l’info-bulle)</translation>
     </message>
     <message>
         <location line="+35"/>
@@ -6795,13 +6848,13 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+29"/>
         <source>Confirmation time target:</source>
-        <translation>Objectif de temps de confirmation :</translation>
+        <translation>Objectif de temps de confirmation&#xa0;:</translation>
     </message>
     <message>
         <location line="+106"/>
         <location filename="../updateassetsdialog.cpp" line="-614"/>
         <source>U&amp;pdate Asset</source>
-        <translation>Mettre à jour l&amp;#39;actif</translation>
+        <translation>Mettre à jour l’actif</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -6821,7 +6874,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location filename="../updateassetsdialog.cpp" line="+1"/>
         <source>Confirm update asset action</source>
-        <translation>Confirmer l&amp;#39;action de mise à jour de l&amp;#39;actif</translation>
+        <translation>Confirmer l’action de mise à jour de l’actif</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -6831,7 +6884,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+2"/>
         <source>Manual only until other types are developed</source>
-        <translation>Manuel uniquement jusqu&amp;#39;à ce que d&amp;#39;autres types soient développés</translation>
+        <translation>Manuel uniquement jusqu’à ce que d’autres types soient développés</translation>
     </message>
     <message>
         <location line="+46"/>
@@ -6841,52 +6894,52 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+257"/>
         <source>Updating asset: %1&lt;br&gt;</source>
-        <translation>Mise à jour de l&amp;#39;actif : %1&lt;br&gt;</translation>
+        <translation>Mise à jour de l’actif&#xa0;:&#xa0;%1&lt;br&gt;</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>transfer ownership from: %1 &lt;br&gt;</source>
-        <translation>transférer la propriété de : %1&lt;br&gt;</translation>
+        <translation>transférer la propriété de&#xa0;:&#xa0;%1&lt;br&gt;</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>To: %1 &lt;hr /&gt;</source>
-        <translation>À : %1&lt;hr /&gt;</translation>
+        <translation>À&#xa0;: %1&lt;hr /&gt;</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Updatable: %1 &lt;br&gt;</source>
-        <translation>Possibilité de mise à jour : %1&lt;br&gt;</translation>
+        <translation>Possibilité de mise à jour&#xa0;: %1&lt;br&gt;</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>ReferenceHash: %1 &lt;br&gt;</source>
-        <translation>Hachage de référence : %1&lt;br&gt;</translation>
+        <translation>Hachage de référence&#xa0;: %1&lt;br&gt;</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Target: %1 &lt;br&gt;</source>
-        <translation>Cible : %1&lt;br&gt;</translation>
+        <translation>Cible&#xa0;: %1&lt;br&gt;</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Distribution Type: %1 &lt;br&gt;</source>
-        <translation>Type de distribution : %1&lt;br&gt;</translation>
+        <translation>Type de distribution&#xa0;: %1&lt;br&gt;</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Amount: %1 &lt;br&gt;</source>
-        <translation>Montant : %1&lt;br&gt;</translation>
+        <translation>Montant&#xa0;:&#xa0;%1&lt;br&gt;</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>MaxMintCount: %1 &lt;br&gt;</source>
-        <translation>MaxMintCount : %1&lt;br&gt;</translation>
+        <translation>MaxMintCount&#xa0;:&#xa0;%1&lt;br&gt;</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>IssueFrequency: %1 &lt;br&gt;</source>
-        <translation>Fréquence du problème : %1&lt;br&gt;</translation>
+        <translation>Fréquence du problème&#xa0;: %1&lt;br&gt;</translation>
     </message>
     <message>
         <location line="+11"/>
@@ -6906,7 +6959,10 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message numerus="yes">
         <location line="+35"/>
         <source>Estimated to begin confirmation within %n block(s).</source>
-        <translation><numerusform>Il est estimé que la confirmation commencera dans %n blocs.</numerusform><numerusform>Il est estimé que la confirmation commencera dans %n blocs.</numerusform><numerusform>Il est estimé que la confirmation commencera dans %n blocs.</numerusform></translation>
+        <translation>
+            <numerusform>Il est estimé que la confirmation commencera dans %n blocs.</numerusform>
+            <numerusform>Il est estimé que la confirmation commencera dans %n blocs.</numerusform>
+        </translation>
     </message>
 </context>
 <context>
@@ -6924,7 +6980,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+3"/>
         <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
-        <translation>Fermer le portefeuille trop longtemps peut entraîner la nécessité de resynchroniser l&amp;#39;intégralité de la chaîne si l&amp;#39;élagage est activé.</translation>
+        <translation>Fermer le portefeuille trop longtemps peut entraîner la nécessité de resynchroniser l’intégralité de la chaîne si l’élagage est activé.</translation>
     </message>
 </context>
 <context>
@@ -6959,7 +7015,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+1"/>
         <source>Export the data in the current tab to a file</source>
-        <translation>Exporter les données de l&apos;onglet courant vers un fichier</translation>
+        <translation>Exporter les données de l’onglet courant vers un fichier</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -6984,7 +7040,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+1"/>
         <source>There was an error trying to save the wallet data to %1.</source>
-        <translation>Une erreur est survenue lors de l&apos;enregistrement des données de portefeuille vers %1.</translation>
+        <translation>Une erreur est survenue lors de l’enregistrement des données de portefeuille vers %1.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -7012,7 +7068,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+1"/>
         <source>%s corrupt. Try using the wallet tool raptoreum-wallet to salvage or restoring a backup.</source>
-        <translation>%s corrompu. Essayez d&amp;#39;utiliser l&amp;#39;outil de portefeuille raptoreum-wallet pour récupérer ou restaurer une sauvegarde.</translation>
+        <translation>%s corrompu. Essayez d’utiliser l’outil de portefeuille raptoreum-wallet pour récupérer ou restaurer une sauvegarde.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -7027,7 +7083,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+3"/>
         <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
-        <translation>-maxtxfee est fixé très haut ! Des frais aussi importants pourraient être payés sur une seule transaction.</translation>
+        <translation>-maxtxfee est fixé très haut&#xa0;! Des frais aussi importants pourraient être payés sur une seule transaction.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -7037,17 +7093,17 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+3"/>
         <source>Can not generate a change-address key. Private keys are disabled for this wallet.</source>
-        <translation>Impossible de générer une clé de changement d&amp;#39;adresse. Les clés privées sont désactivées pour ce portefeuille.</translation>
+        <translation>Impossible de générer une clé de changement d’adresse. Les clés privées sont désactivées pour ce portefeuille.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
-        <translation>Impossible d&amp;#39;obtenir un verrou sur le répertoire de données %s. %s est probablement déjà en cours d&amp;#39;exécution.</translation>
+        <translation>Impossible d’obtenir un verrou sur le répertoire de données %s. %s est probablement déjà en cours d’exécution.</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Cannot provide specific connections and have addrman find outgoing connections at the same.</source>
-        <translation>Impossible de fournir des connexions spécifiques et demander à l&amp;#39;addrman de trouver en même temps les connexions sortantes.</translation>
+        <translation>Impossible de fournir des connexions spécifiques et demander à l’addrman de trouver en même temps les connexions sortantes.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -7057,62 +7113,62 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+3"/>
         <source>Error loading %s: You can&apos;t enable HD on an already existing non-HD wallet</source>
-        <translation>Erreur de chargement de %s : vous ne pouvez pas activer la HD sur un portefeuille non-HD déjà existant</translation>
+        <translation>Erreur de chargement de %s&#xa0;: vous ne pouvez pas activer la HD sur un portefeuille non-HD déjà existant</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
-        <translation>Erreur de lecture de %s ! Toutes les clés sont lues correctement, mais les données de transaction ou les entrées du carnet d&amp;#39;adresses peuvent être manquantes ou incorrectes.</translation>
+        <translation>Erreur de lecture de %s&#xa0;! Toutes les clés sont lues correctement, mais les données de transaction ou les entrées du carnet d’adresses peuvent être manquantes ou incorrectes.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
-        <translation>Erreur : L&amp;#39;écoute des connexions entrantes a échoué (l&amp;#39;écoute a renvoyé l&amp;#39;erreur %s)</translation>
+        <translation>Erreur&#xa0;: L’écoute des connexions entrantes a échoué (l’écoute a renvoyé l’erreur %s)</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Failed to create backup, file already exists! This could happen if you restarted wallet in less than 60 seconds. You can continue if you are ok with this.</source>
-        <translation>Échec de la création de la sauvegarde, le fichier existe déjà ! Cela peut se produire si vous redémarrez le portefeuille en moins de 60 secondes. Vous pouvez continuer si cela vous convient.</translation>
+        <translation>Échec de la création de la sauvegarde, le fichier existe déjà&#xa0;! Cela peut se produire si vous redémarrez le portefeuille en moins de 60 secondes. Vous pouvez continuer si cela vous convient.</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>Found unconfirmed denominated outputs, will wait till they confirm to continue.</source>
-        <translation>Les sorties libellées non confirmées trouvées attendront jusqu&amp;#39;à ce qu&amp;#39;elles soient confirmées pour continuer.</translation>
+        <translation>Les sorties libellées non confirmées trouvées attendront jusqu’à ce qu’elles soient confirmées pour continuer.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Group outputs by address, selecting all or none, instead of selecting on a per-output basis. Privacy is improved as an address is only used once (unless someone sends to it after spending from it), but may result in slightly higher fees as suboptimal coin selection may result due to the added limitation (default: %u)</source>
-        <translation>Regroupez les sorties par adresse, en sélectionnant tout ou rien, au lieu de sélectionner sortie par sortie. La confidentialité est améliorée car une adresse n&amp;#39;est utilisée qu&amp;#39;une seule fois (sauf si quelqu&amp;#39;un lui envoie après avoir dépensé), mais peut entraîner des frais légèrement plus élevés car une sélection de pièces sous-optimale peut en résulter en raison de la limitation supplémentaire (par défaut : %u)</translation>
+        <translation>Regroupez les sorties par adresse, en sélectionnant tout ou rien, au lieu de sélectionner sortie par sortie. La confidentialité est améliorée car une adresse n’est utilisée qu’une seule fois (sauf si quelqu’un lui envoie après avoir dépensé), mais peut entraîner des frais légèrement plus élevés car une sélection de pièces sous-optimale peut en résulter en raison de la limitation supplémentaire (par défaut : %u)</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Incorrect or no devnet genesis block found. Wrong datadir for devnet specified?</source>
-        <translation>Bloc de genèse devnet incorrect ou inexistant trouvé. Mauvais répertoire de données spécifié pour Devnet ?</translation>
+        <translation>Bloc de genèse devnet incorrect ou inexistant trouvé. Mauvais répertoire de données spécifié pour Devnet&#xa0;?</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Invalid -socketevents (&apos;%s&apos;) specified. Only these modes are supported: %s</source>
-        <translation>-socketevents (&amp;#39;%s&amp;#39;) spécifiés non valides. Seuls ces modes sont pris en charge : %s</translation>
+        <translation>-socketevents (’%s’) spécifiés non valides. Seuls ces modes sont pris en charge&#xa0;: %s</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Invalid amount for -maxtxfee=&lt;amount&gt;: &apos;%s&apos; (must be at least the minrelay fee of %s to prevent stuck transactions)</source>
-        <translation>Montant invalide pour -maxtxfee=&lt;amount&gt; : &amp;#39;%s&amp;#39; (doit être au moins égal aux frais minrelay de %s pour éviter les transactions bloquées)</translation>
+        <translation>Montant invalide pour -maxtxfee=&lt;amount&gt; : ’%s’ (doit être au moins égal aux frais minrelay de %s pour éviter les transactions bloquées)</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Make sure to encrypt your wallet and delete all non-encrypted backups after you have verified that the wallet works!</source>
-        <translation>Assurez-vous de crypter votre portefeuille et de supprimer toutes les sauvegardes non cryptées après avoir vérifié que le portefeuille fonctionne !</translation>
+        <translation>Assurez-vous de crypter votre portefeuille et de supprimer toutes les sauvegardes non cryptées après avoir vérifié que le portefeuille fonctionne&#xa0;!</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Please check that your computer&apos;s date and time are correct! If your clock is wrong, %s will not work properly.</source>
-        <translation>Veuillez vérifier que la date et l&amp;#39;heure de votre ordinateur sont correctes ! Si votre horloge est erronée, %s ne fonctionnera pas correctement.</translation>
+        <translation>Veuillez vérifier que la date et l’heure de votre ordinateur sont correctes&#xa0;! Si votre horloge est erronée, %s ne fonctionnera pas correctement.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Please contribute if you find %s useful. Visit %s for further information about the software.</source>
-        <translation>Veuillez contribuer si vous trouvez %s utile. Visitez %s pour plus d&amp;#39;informations sur le logiciel.</translation>
+        <translation>Veuillez contribuer si vous trouvez %s utile. Visitez %s pour plus d’informations sur le logiciel.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -7122,12 +7178,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+2"/>
         <source>Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)</source>
-        <translation>Prune : la dernière synchronisation du portefeuille va au-delà des données élaguées. Vous devez -réindexer (télécharger à nouveau l&amp;#39;intégralité de la blockchain en cas de nœud élagué)</translation>
+        <translation>Prune&#xa0;: la dernière synchronisation du portefeuille va au-delà des données élaguées. Vous devez -réindexer (télécharger à nouveau l’intégralité de la blockchain en cas de nœud élagué)</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>The block database contains a block which appears to be from the future. This may only be due to your computer&apos;s date and time being set incorrectly. Only rebuild the block database if you are sure that your computer&apos;s date and time are correct.</source>
-        <translation>La base de données de blocs contient un bloc qui semble provenir du futur. Cela peut uniquement être dû à un réglage incorrect de la date et de l&amp;#39;heure de votre ordinateur. Reconstruisez la base de données de blocs uniquement si vous êtes sûr que la date et l&amp;#39;heure de votre ordinateur sont correctes.</translation>
+        <translation>La base de données de blocs contient un bloc qui semble provenir du futur. Cela peut uniquement être dû à un réglage incorrect de la date et de l’heure de votre ordinateur. Reconstruisez la base de données de blocs uniquement si vous êtes sûr que la date et l’heure de votre ordinateur sont correctes.</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -7137,17 +7193,17 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+2"/>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
-        <translation>Il s&amp;#39;agit d&amp;#39;une version de test préliminaire - à utiliser à vos propres risques - ne pas utiliser pour des applications minières ou marchandes</translation>
+        <translation type="unfinished">Il s’agit d’une version de test préliminaire - à utiliser à vos propres risques - ne pas utiliser pour des applications minières ou marchandes</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>This is the transaction fee you may discard if change is smaller than dust at this level</source>
-        <translation>Il s&amp;#39;agit des frais de transaction que vous pouvez supprimer si la monnaie est inférieure à la poussière à ce niveau.</translation>
+        <translation>Il s’agit des frais de transaction que vous pouvez supprimer si la monnaie est inférieure à la poussière à ce niveau.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>This is the transaction fee you may pay when fee estimates are not available.</source>
-        <translation>Il s&amp;#39;agit des frais de transaction que vous pouvez payer lorsque les estimations des frais ne sont pas disponibles.</translation>
+        <translation>Il s’agit des frais de transaction que vous pouvez payer lorsque les estimations des frais ne sont pas disponibles.</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -7162,7 +7218,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+3"/>
         <source>Transaction index can&apos;t be disabled with governance validation enabled. Either start with -disablegovernance command line switch or enable transaction index.</source>
-        <translation>L&amp;#39;index de transaction ne peut pas être désactivé lorsque la validation de gouvernance est activée. Commencez par le commutateur de ligne de commande -disablegovernance ou activez l&amp;#39;index de transaction.</translation>
+        <translation>L’index de transaction ne peut pas être désactivé lorsque la validation de gouvernance est activée. Commencez par le commutateur de ligne de commande -disablegovernance ou activez l’index de transaction.</translation>
     </message>
     <message>
         <location line="+4"/>
@@ -7177,27 +7233,27 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+2"/>
         <source>Wallet is locked, can&apos;t replenish keypool! Automatic backups and mixing are disabled, please unlock your wallet to replenish keypool.</source>
-        <translation>Le portefeuille est verrouillé, impossible de reconstituer le pool de clés ! Les sauvegardes et le mixage automatiques sont désactivés, veuillez déverrouiller votre portefeuille pour reconstituer le pool de clés.</translation>
+        <translation>Le portefeuille est verrouillé, impossible de reconstituer le pool de clés&#xa0;! Les sauvegardes et le mixage automatiques sont désactivés, veuillez déverrouiller votre portefeuille pour reconstituer le pool de clés.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Warning: Private keys detected in wallet {%s} with disabled private keys</source>
-        <translation>Avertissement : Clés privées détectées dans le portefeuille {%s} avec des clés privées désactivées</translation>
+        <translation>Avertissement&#xa0;: Clés privées détectées dans le portefeuille {%s} avec des clés privées désactivées</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Warning: The Network does not appear to fully agree! Some miners addear to experiencing issues.</source>
-        <translation>Attention : le Réseau ne semble pas entièrement d&amp;#39;accord ! Certains mineurs ajoutent rencontrer des problèmes.</translation>
+        <translation>Attention : le Réseau ne semble pas entièrement d’accord ! Certains mineurs ajoutent rencontrer des problèmes.</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Warning: Unknown block versions being mined! It&apos;s possible unknown rules are in effect</source>
-        <translation>Attention : versions de blocs inconnues en cours d&amp;#39;extraction ! Il est possible que des règles inconnues soient en vigueur</translation>
+        <translation>Attention&#xa0;:&#xa0;versions de blocs inconnues en cours d’extraction&#xa0;! Il est possible que des règles inconnues soient en vigueur</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
-        <translation>Attention : nous ne semblons pas entièrement d&amp;#39;accord avec nos pairs ! Vous devrez peut-être effectuer une mise à niveau ou d&amp;#39;autres nœuds devront peut-être être mis à niveau.</translation>
+        <translation>Attention : nous ne semblons pas entièrement d’accord avec nos pairs ! Vous devrez peut-être effectuer une mise à niveau ou d’autres nœuds devront peut-être être mis à niveau.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -7207,7 +7263,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+2"/>
         <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
-        <translation>Vous devez reconstruire la base de données en utilisant -reindex pour revenir au mode non élagué. Cela retéléchargera l&amp;#39;intégralité de la blockchain</translation>
+        <translation>Vous devez reconstruire la base de données en utilisant -reindex pour revenir au mode non élagué. Cela retéléchargera l’intégralité de la blockchain</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -7232,22 +7288,22 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+1"/>
         <source>%s is not a valid backup folder!</source>
-        <translation>%s n&amp;#39;est pas un dossier de sauvegarde valide !</translation>
+        <translation>%s n’est pas un dossier de sauvegarde valide&#xa0;!</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>%s is set very high!</source>
-        <translation>%s est réglé très haut !</translation>
+        <translation>%s est réglé très haut&#xa0;!</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>%s request incomplete: %s</source>
-        <translation>Demande %s incomplète : %s</translation>
+        <translation>Demande %s incomplète&#xa0;: %s</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>-devnet can only be specified once</source>
-        <translation>-devnet ne peut être spécifié qu&amp;#39;une seule fois</translation>
+        <translation>-devnet ne peut être spécifié qu’une seule fois</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -7267,17 +7323,17 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+1"/>
         <source>Already have that input.</source>
-        <translation>J&amp;#39;ai déjà cette entrée.</translation>
+        <translation>J’ai déjà cette entrée.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Asset Transfer amounts must be greater than 0</source>
-        <translation>Les montants des transferts d&amp;#39;actifs doivent être supérieurs à 0</translation>
+        <translation>Les montants des transferts d’actifs doivent être supérieurs à 0</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Asset owner key not in wallet</source>
-        <translation>La clé du propriétaire de l&amp;#39;actif n&amp;#39;est pas dans le portefeuille</translation>
+        <translation>La clé du propriétaire de l’actif n’est pas dans le portefeuille</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -7297,7 +7353,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+1"/>
         <source>Can&apos;t mix: no compatible inputs found!</source>
-        <translation>Impossible de mixer : aucune entrée compatible trouvée !</translation>
+        <translation>Impossible de mixer&#xa0;: aucune entrée compatible trouvée&#xa0;!</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -7307,17 +7363,17 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+1"/>
         <source>Cannot resolve -%s address: &apos;%s&apos;</source>
-        <translation>Impossible de résoudre l&amp;#39;adresse -%s : &amp;#39;%s&amp;#39;</translation>
+        <translation>Impossible de résoudre l’adresse -%s&#xa0;: ’%s’</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Cannot write to data directory &apos;%s&apos;; check permissions.</source>
-        <translation>Impossible d&amp;#39;écrire dans le répertoire de données &amp;#39;%s&amp;#39; ; vérifier les autorisations.</translation>
+        <translation>Impossible d’écrire dans le répertoire de données ’%s’&#xa0;; vérifier les autorisations.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Change index out of range</source>
-        <translation>Changer l&amp;#39;index hors plage</translation>
+        <translation>Changer l’index hors plage</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -7332,7 +7388,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+1"/>
         <source>Copyright (C)</source>
-        <translation>Droit d&amp;#39;auteur (C)</translation>
+        <translation>Droit d’auteur (C)</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -7347,12 +7403,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+1"/>
         <source>Could not parse asmap file %s</source>
-        <translation>Impossible d&amp;#39;analyser le fichier asmap %s</translation>
+        <translation>Impossible d’analyser le fichier asmap %s</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Do you want to rebuild the block database now?</source>
-        <translation>Voulez-vous reconstruire la base de données de blocs maintenant ?</translation>
+        <translation>Voulez-vous reconstruire la base de données de blocs maintenant&#xa0;?</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -7362,7 +7418,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+1"/>
         <source>ERROR! Failed to create automatic backup</source>
-        <translation>ERREUR! Échec de la création d&amp;#39;une sauvegarde automatique</translation>
+        <translation>ERREUR! Échec de la création d’une sauvegarde automatique</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -7372,17 +7428,17 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+1"/>
         <source>Entry exceeds maximum size.</source>
-        <translation>L&amp;#39;entrée dépasse la taille maximale.</translation>
+        <translation>L’entrée dépasse la taille maximale.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Error initializing block database</source>
-        <translation>Erreur lors de l&amp;#39;initialisation de la base de données de blocs</translation>
+        <translation>Erreur lors de l’initialisation de la base de données de blocs</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Error initializing wallet database environment %s!</source>
-        <translation>Erreur lors de l&amp;#39;initialisation de l&amp;#39;environnement de base de données du portefeuille %s !</translation>
+        <translation>Erreur lors de l’initialisation de l’environnement de base de données du portefeuille %s&#xa0;!</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -7392,7 +7448,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+1"/>
         <source>Error loading %s: Private keys can only be disabled during creation</source>
-        <translation>Erreur de chargement de %s : les clés privées ne peuvent être désactivées que lors de la création</translation>
+        <translation>Erreur de chargement de %s&#xa0;: les clés privées ne peuvent être désactivées que lors de la création</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -7407,7 +7463,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+1"/>
         <source>Error loading %s: You can&apos;t disable HD on an already existing HD wallet</source>
-        <translation>Erreur de chargement de %s : vous ne pouvez pas désactiver la HD sur un portefeuille HD déjà existant</translation>
+        <translation>Erreur de chargement de %s&#xa0;: vous ne pouvez pas désactiver la HD sur un portefeuille HD déjà existant</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -7422,12 +7478,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+1"/>
         <source>Error opening block database</source>
-        <translation>Erreur lors de l&apos;ouverture de la blockchain</translation>
+        <translation>Erreur lors de l’ouverture de la blockchain</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Error reading from database, shutting down.</source>
-        <translation>Erreur de lecture de la blockchain, mise à l&apos;arrêt.</translation>
+        <translation>Erreur de lecture de la blockchain, mise à l’arrêt.</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -7447,12 +7503,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+1"/>
         <source>Error: A fatal internal error occurred, see debug.log for details</source>
-        <translation>Erreur : une erreur interne fatale s&apos;est produite, voir debug.log pour plus de détails</translation>
+        <translation>Erreur&#xa0;: une erreur interne fatale s’est produite, voir debug.log pour plus de détails</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Error: Disk space is low for %s</source>
-        <translation>Erreur : L&apos;espace disque est faible pour %s</translation>
+        <translation>Erreur&#xa0;: L’espace disque est faible pour %s</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -7462,17 +7518,17 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+1"/>
         <source>Error: failed to add socket to epollfd (epoll_ctl returned error %s)</source>
-        <translation>Erreur : échec de l&apos;ajout de la socket à epollfd (epoll_ctl a renvoyé une erreur %s)</translation>
+        <translation>Erreur : échec de l’ajout de la socket à epollfd (epoll_ctl a renvoyé une erreur %s)</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Error: failed to add socket to kqueuefd (kevent returned error %s)</source>
-        <translation>Erreur : Echec lors de l&apos;ajout d&apos;un socket à kqueuefd (kevent a renvoyé l&apos;erreur %s)</translation>
+        <translation>Erreur : Echec lors de l’ajout d’un socket à kqueuefd (kevent a renvoyé l’erreur %s)</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Exceeded max tries.</source>
-        <translation>Nombre d&apos;essai maximum dépassé</translation>
+        <translation>Nombre d’essai maximum dépassé</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -7492,7 +7548,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+1"/>
         <source>Failed to commit EvoDB</source>
-        <translation>Échec de la validation d&apos;EvoDB</translation>
+        <translation>Échec de la validation d’EvoDB</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -7502,7 +7558,7 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+1"/>
         <source>Failed to create backup, error: %s</source>
-        <translation>Échec de la création de la sauvegarde, erreur : %s</translation>
+        <translation>Échec de la création de la sauvegarde, erreur&#xa0;:&#xa0;%s</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -7512,17 +7568,17 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <location line="+1"/>
         <source>Failed to find mixing queue to join</source>
-        <translation>Impossible de trouver la file d&apos;attente de mixage à rejoindre </translation>
+        <translation>Impossible de trouver la file d’attente de mixage à rejoindre </translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Failed to get root metadata</source>
-        <translation>Échec de l&apos;obtention des métadonnées racine</translation>
+        <translation>Échec de l’obtention des métadonnées racine</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
-        <translation>Impossible d&apos;écouter sur aucun port.
+        <translation>Impossible d’écouter sur aucun port.
 Utilisez -listen=0 si vous voulez ça.</translation>
     </message>
     <message>
@@ -7558,7 +7614,7 @@ Utilisez -listen=0 si vous voulez ça.</translation>
     <message>
         <location line="+1"/>
         <source>Failed to rescan the wallet during initialization</source>
-        <translation>Échec de la nouvelle analyse du portefeuille lors de l&apos;initialisation</translation>
+        <translation>Échec de la nouvelle analyse du portefeuille lors de l’initialisation</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -7568,17 +7624,17 @@ Utilisez -listen=0 si vous voulez ça.</translation>
     <message>
         <location line="+1"/>
         <source>Failed to start a new mixing queue</source>
-        <translation>Échec du démarrage d&apos;une nouvelle file d&apos;attente de mixage</translation>
+        <translation>Échec du démarrage d’une nouvelle file d’attente de mixage</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Found enough users, signing ( waiting %s )</source>
-        <translation>Suffisamment d&apos;utilisateurs trouvés, en cours de signature (en attente de %s)</translation>
+        <translation>Suffisamment d’utilisateurs trouvés, en cours de signature (en attente de %s)</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Found enough users, signing ...</source>
-        <translation>Assez d&apos;utilisateurs trouvés, signature en cours...</translation>
+        <translation>Assez d’utilisateurs trouvés, signature en cours...</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -7613,12 +7669,12 @@ Utilisez -listen=0 si vous voulez ça.</translation>
     <message>
         <location line="+1"/>
         <source>Initialization sanity check failed. %s is shutting down.</source>
-        <translation>La vérification de l&apos;intégrité de l&apos;initialisation a échoué. %s est en train de s&apos;arrêter.</translation>
+        <translation>La vérification de l’intégrité de l’initialisation a échoué. %s est en train de s’arrêter.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Input is not valid.</source>
-        <translation>L&apos;entrée n&apos;est pas valide.</translation>
+        <translation>L’entrée n’est pas valide.</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -7628,12 +7684,12 @@ Utilisez -listen=0 si vous voulez ça.</translation>
     <message>
         <location line="+1"/>
         <source>Insufficient Unique asset funds</source>
-        <translation>Fonds d&apos;actifs uniques insuffisants</translation>
+        <translation>Fonds d’actifs uniques insuffisants</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Insufficient asset funds</source>
-        <translation>Fonds d&apos;actifs insuffisants</translation>
+        <translation>Fonds d’actifs insuffisants</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -7643,32 +7699,32 @@ Utilisez -listen=0 si vous voulez ça.</translation>
     <message>
         <location line="+1"/>
         <source>Invalid -onion address or hostname: &apos;%s&apos;</source>
-        <translation>Adresse -onion ou nom d&apos;hôte non valide : &apos;%s&apos;</translation>
+        <translation>Adresse -onion ou nom d’hôte non valide&#xa0;: ‘%s’</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Invalid -proxy address or hostname: &apos;%s&apos;</source>
-        <translation>Adresse proxy ou nom d&apos;hôte non valide : &apos;%s&apos;</translation>
+        <translation>Adresse proxy ou nom d’hôte non valide&#xa0;: ‘%s’</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Invalid amount for -%s=&lt;amount&gt;: &apos;%s&apos;</source>
-        <translation>Montant invalide pour -%s=&lt;amount&gt; &apos;%s&apos;</translation>
+        <translation>Montant invalide pour -%s=&lt;amount&gt; ‘%s’</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Invalid amount for -discardfee=&lt;amount&gt;: &apos;%s&apos;</source>
-        <translation>Montant invalide pour -discardfee=&lt;amount&gt;: &apos;%s&apos;</translation>
+        <translation>Montant invalide pour -discardfee=&lt;amount&gt;: ‘%s’</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Invalid amount for -fallbackfee=&lt;amount&gt;: &apos;%s&apos;</source>
-        <translation>Montant invalide pour -fallbackfee=&lt;amount&gt;: &apos;%s&apos;</translation>
+        <translation>Montant invalide pour -fallbackfee=&lt;amount&gt;: ‘%s’</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos; (must be at least %s)</source>
-        <translation>Montant invalide pour -paytxfee=&lt;amount&gt;: &apos;%s&apos; (doit être au moins d&apos;un montant de %s)</translation>
+        <translation>Montant invalide pour -paytxfee=&lt;amount&gt;: ‘%s’ (doit être au moins d’un montant de %s)</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -7678,7 +7734,7 @@ Utilisez -listen=0 si vous voulez ça.</translation>
     <message>
         <location line="+1"/>
         <source>Invalid netmask specified in -whitelist: &apos;%s&apos;</source>
-        <translation>Masque de réseau non valide spécifié dans -whitelist : &apos;%s&apos;</translation>
+        <translation>Masque de réseau non valide spécifié dans -whitelist&#xa0;: ‘%s’</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -7698,12 +7754,12 @@ Utilisez -listen=0 si vous voulez ça.</translation>
     <message>
         <location line="+1"/>
         <source>Keypool ran out, please call keypoolrefill first</source>
-        <translation>Keypool est vide, lancer la commande keypoolrefill d&apos;abord.</translation>
+        <translation>Keypool est vide, lancer la commande keypoolrefill d’abord.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Last queue was created too recently.</source>
-        <translation>La dernière file d&apos;attente a été créée trop récemment.</translation>
+        <translation>La dernière file d’attente a été créée trop récemment.</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -7728,7 +7784,7 @@ Utilisez -listen=0 si vous voulez ça.</translation>
     <message>
         <location line="+1"/>
         <source>Loading block index...</source>
-        <translation>Chargement de l&apos;index du bloc...</translation>
+        <translation>Chargement de l’index du bloc...</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -7768,7 +7824,7 @@ Utilisez -listen=0 si vous voulez ça.</translation>
     <message>
         <location line="+1"/>
         <source>Missing input transaction information.</source>
-        <translation>Informations de transaction d&apos;entrée (inputs) manquantes.</translation>
+        <translation>Informations de transaction d’entrée (inputs) manquantes.</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -7778,7 +7834,7 @@ Utilisez -listen=0 si vous voulez ça.</translation>
     <message>
         <location line="+1"/>
         <source>Need to specify a port with -whitebind: &apos;%s&apos;</source>
-        <translation>Besoin de spécifier un port avec -whitebind : &apos;%s&apos;</translation>
+        <translation>Besoin de spécifier un port avec -whitebind&#xa0;: ‘%s’</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -7833,7 +7889,7 @@ Utilisez -listen=0 si vous voulez ça.</translation>
     <message>
         <location line="+1"/>
         <source>Prune mode is incompatible with -txindex.</source>
-        <translation>Le mode optimisé n&apos;est pas compatible avec l&apos;option -txindex.</translation>
+        <translation>Le mode optimisé n’est pas compatible avec l’option -txindex.</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -7858,12 +7914,12 @@ Utilisez -listen=0 si vous voulez ça.</translation>
     <message>
         <location line="+1"/>
         <source>Root asset key not in wallet</source>
-        <translation>La clé de l&apos;actif racine n&apos;est pas dans le portefeuille</translation>
+        <translation>La clé de l’actif racine n’est pas dans le portefeuille</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Section [%s] is not recognized.</source>
-        <translation>La section [%s] n&apos;est pas reconnue.</translation>
+        <translation>La section [%s] n’est pas reconnue.</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -7893,17 +7949,17 @@ Utilisez -listen=0 si vous voulez ça.</translation>
     <message>
         <location line="+1"/>
         <source>Specified -walletdir &quot;%s&quot; does not exist</source>
-        <translation>Le -walletdir &quot;%s&quot; spécifié n&apos;existe pas</translation>
+        <translation>Le -walletdir &quot;%s&quot; spécifié n’existe pas</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Specified -walletdir &quot;%s&quot; is a relative path</source>
-        <translation>L&apos;option -walletdir &quot;%s&quot; spécifiée est un chemin relatif.</translation>
+        <translation>L’option -walletdir &quot;%s&quot; spécifiée est un chemin relatif.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Specified -walletdir &quot;%s&quot; is not a directory</source>
-        <translation>L&apos;option -walletdir &quot;%s&quot; spécifiée n&apos;est pas un répertoire</translation>
+        <translation>L’option -walletdir &quot;%s&quot; spécifiée n’est pas un répertoire</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -7918,7 +7974,7 @@ Utilisez -listen=0 si vous voulez ça.</translation>
     <message>
         <location line="+1"/>
         <source>Submitted to smartnode, waiting in queue %s</source>
-        <translation>Soumis au SmartNode, en attente dans la file d&apos;attente %s</translation>
+        <translation>Soumis au SmartNode, en attente dans la file d’attente %s</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -7944,7 +8000,7 @@ Utilisez -listen=0 si vous voulez ça.</translation>
         <location line="+1"/>
         <source>The specified config file %s does not exist
 </source>
-        <translation>Le fichier de configuration spécifié %s n&apos;existe pas.</translation>
+        <translation>Le fichier de configuration spécifié %s n’existe pas.</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -7959,12 +8015,12 @@ Utilisez -listen=0 si vous voulez ça.</translation>
     <message>
         <location line="+1"/>
         <source>This is expected because you are running a pruned node.</source>
-        <translation>C&apos;est le résultat attendu car vous utilisez un nœud optimisé.</translation>
+        <translation>C’est le résultat attendu car vous utilisez un nœud optimisé.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>This is experimental software.</source>
-        <translation>Il s&apos;agit d&apos;un logiciel expérimental.</translation>
+        <translation>Il s’agit d’un logiciel expérimental.</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -8034,12 +8090,12 @@ Utilisez -listen=0 si vous voulez ça.</translation>
     <message>
         <location line="+1"/>
         <source>Unable to bind to %s on this computer. %s is probably already running.</source>
-        <translation>Impossible de se connecter à %s sur cet ordinateur. %s est probablement déjà en cours d&apos;exécution.</translation>
+        <translation>Impossible de se connecter à %s sur cet ordinateur. %s est probablement déjà en cours d’exécution.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Unable to create PID file &apos;%s&apos;: %s</source>
-        <translation>Impossible de créer le fichier PID &apos;%s&apos; : %s</translation>
+        <translation>Impossible de créer le fichier PID ’%s’ : %s</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -8069,7 +8125,7 @@ Utilisez -listen=0 si vous voulez ça.</translation>
     <message>
         <location line="+1"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
-        <translation>Réseau inconnu spécifié dans -onlynet : &apos;%s&apos;</translation>
+        <translation>Réseau inconnu spécifié dans -onlynet : ’%s’</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -8078,8 +8134,8 @@ Utilisez -listen=0 si vous voulez ça.</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>Unknown state: id = %u</source>
-        <translation>État inconnu : id = %u</translation>
+        <source>Unknown state: id                                                       = %u</source>
+        <translation>État inconnu&#xa0;: id                                             = %u</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -8099,7 +8155,7 @@ Utilisez -listen=0 si vous voulez ça.</translation>
     <message>
         <location line="+1"/>
         <source>User Agent comment (%s) contains unsafe characters.</source>
-        <translation>Le commentaire de l&apos;agent utilisateur (%s) contient des caractères non sécurisés.</translation>
+        <translation>Le commentaire de l’agent utilisateur (%s) contient des caractères non sécurisés.</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -8149,7 +8205,7 @@ Utilisez -listen=0 si vous voulez ça.</translation>
     <message>
         <location line="+1"/>
         <source>Wasn&apos;t able to create wallet backup folder %s!</source>
-        <translation>Il n&apos;a pas été possible de créer le dossier de sauvegarde du portefeuille %s !</translation>
+        <translation>Il n’a pas été possible de créer le dossier de sauvegarde du portefeuille %s !</translation>
     </message>
     <message>
         <location line="+1"/>
