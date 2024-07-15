@@ -361,14 +361,11 @@ UniValue sendtoaddress(const JSONRPCRequest &request) {
                        RPCResult::Type::STR_HEX, "txid", "The transaction id."
                },
                RPCExamples{
-                       HelpExampleCli("sendtoaddress", "\"RwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwG\" 0.1")
-                       + HelpExampleCli("sendtoaddress",
-                                        "\"RwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwG\" 0.1 '{\"future_maturity\":100, \"future_locktime\":10000}'")
-                       + HelpExampleCli("sendtoaddress",
-                                        "\"RwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwG\" 0.1 [] \"donation\" \"seans outpost\"")
-                       + HelpExampleCli("sendtoaddress", "\"RwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwG\" 0.1 \"\" \"\" true")
-                       + HelpExampleRpc("sendtoaddress",
-                                        "\"RwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwG\", [], 0.1, \"donation\", \"seans outpost\"")
+                       HelpExampleCli("sendtoaddress",   "\"RwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwG\" 0.1")
+                       + HelpExampleCli("sendtoaddress", "\"RwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwG\" 0.1 '{\"future_maturity\":100, \"future_locktime\":10000}'")
+                       + HelpExampleCli("sendtoaddress", "\"RwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwG\" 0.1 [] \"donation\" \"seans outpost\"")
+                       + HelpExampleCli("sendtoaddress", "\"RwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwG\" 0.1 [] \"\" \"\" true")
+                       + HelpExampleRpc("sendtoaddress", "\"RwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwG\", 0.1, [], \"donation\", \"seans outpost\"")
                },
     }.Check(request);
 
@@ -405,7 +402,7 @@ UniValue sendtoaddress(const JSONRPCRequest &request) {
             hasFuture = true;
             fpp.maturity = request.params[nextParamsIndex]["future_maturity"].get_int();
             fpp.locktime = request.params[nextParamsIndex]["future_locktime"].get_int();
-            fpp.futureRecScript = GetScriptForDestination(dest);           
+            fpp.futureRecScript = GetScriptForDestination(dest);
         }
     }
     nextParamsIndex++;
@@ -415,7 +412,7 @@ UniValue sendtoaddress(const JSONRPCRequest &request) {
     nextParamsIndex++;
     if (!request.params[nextParamsIndex].isNull() && !request.params[nextParamsIndex].get_str().empty()){
         mapValue["to"] = request.params[nextParamsIndex].get_str();
-    }  
+    }
     nextParamsIndex++;
     bool fSubtractFeeFromAmount = false;
     if (!request.params[nextParamsIndex].isNull()) {
