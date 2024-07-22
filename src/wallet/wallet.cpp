@@ -4795,7 +4795,7 @@ bool CWallet::CreateTransaction(const std::vector <CRecipient> &vecSend, CTransa
                     std::string m = atx.MakeSignString(passetsCache.get());
                     // lets prove we own the root asset
                     CKey key;
-                    if (!CCryptoKeyStore::GetKey(assetData.ownerAddress, key)) {
+                    if (!GetKey(assetData.ownerAddress, key)) {
                         strFailReason = _("Root asset key not in wallet");
                         return false;
                     }
@@ -4819,7 +4819,7 @@ bool CWallet::CreateTransaction(const std::vector <CRecipient> &vecSend, CTransa
                 std::string m = mtx.MakeSignString(passetsCache.get());
                 // lets prove we own the asset
                 CKey key;
-                if (!CCryptoKeyStore::GetKey(assetData.ownerAddress, key)) {
+                if (!GetKey(assetData.ownerAddress, key)) {
                     strFailReason = _("Asset owner key not in wallet");
                     return false;
                 }
@@ -4842,7 +4842,7 @@ bool CWallet::CreateTransaction(const std::vector <CRecipient> &vecSend, CTransa
                 std::string m = uptx.MakeSignString(passetsCache.get());
                 // lets prove we own the asset
                 CKey key;
-                if (!CCryptoKeyStore::GetKey(assetData.ownerAddress, key)) {
+                if (!GetKey(assetData.ownerAddress, key)) {
                     strFailReason = _("Asset owner key not in wallet");
                     return false;
                 }

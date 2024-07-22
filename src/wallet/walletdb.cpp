@@ -201,470 +201,411 @@ public:
     }
 };
 
-bool
-ReadKeyValue(CWallet *pwallet, CDataStream &ssKey, CDataStream &ssValue,
-             CWalletScanState &wss, std::string &strType, std::string &strErr, const KeyFilterFn &filter_fn = nullptr)
+bool ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue, CWalletScanState& wss, std::string& strType, std::string& strErr, const KeyFilterFn& filter_fn = nullptr)
 
-EXCLUSIVE_LOCKS_REQUIRED(pwallet
-->cs_wallet)
+    EXCLUSIVE_LOCKS_REQUIRED(pwallet
+                                 ->cs_wallet)
 {
-try {
-// Unserialize
-// Taking advantage of the fact that pair serialization
-// is just the two items serialized one after the other
-ssKey >>
-strType;
-// If we have a filter, check if this matches the filter
-if (filter_fn && !
-filter_fn(strType)
-) {
-return true;
+    try {
+        // Unserialize
+        // Taking advantage of the fact that pair serialization
+        // is just the two items serialized one after the other
+        ssKey >>
+            strType;
+        // If we have a filter, check if this matches the filter
+        if (filter_fn && !filter_fn(strType)) {
+            return true;
+        }
+        if (strType == DBKeys::NAME) {
+            std::string strAddress;
+            ssKey >>
+                strAddress;
+            ssValue >> pwallet->mapAddressBook[DecodeDestination(strAddress)].name;
+        } else if (strType == DBKeys::PURPOSE) {
+            std::string strAddress;
+            ssKey >>
+                strAddress;
+            ssValue >> pwallet->mapAddressBook[DecodeDestination(strAddress)].purpose;
+        } else if (strType == DBKeys::TX) {
+            uint256 hash;
+            ssKey >>
+                hash;
+            CWalletTx wtx(nullptr /* pwallet */, MakeTransactionRef());
+            ssValue >>
+                wtx;
+            CValidationState state;
+            if (!(
+                    CheckTransaction(*wtx
+                                          .tx,
+                        state, 0, 0) &&
+                    (wtx.
+
+                        GetHash()
+
+                        == hash) &&
+                    state.
+
+                    IsValid()
+
+                        ))
+                return false;
+
+            // Undo serialize changes in 31600
+            if (31404 <= wtx.fTimeReceivedIsTxTime && wtx
+                                                              .fTimeReceivedIsTxTime <= 31703) {
+                if (!ssValue.
+
+                     empty()
+
+                ) {
+                    char fTmp;
+                    char fUnused;
+                    std::string unused_string;
+                    ssValue >> fTmp >> fUnused >>
+                        unused_string;
+                    strErr = strprintf("LoadWallet() upgrading tx ver=%d %d %s", wtx.fTimeReceivedIsTxTime, fTmp, hash.ToString());
+                    wtx.fTimeReceivedIsTxTime = fTmp;
+                } else {
+                    strErr = strprintf("LoadWallet() repairing tx ver=%d %s", wtx.fTimeReceivedIsTxTime, hash.ToString());
+                    wtx.fTimeReceivedIsTxTime = 0;
+                }
+                wss.vWalletUpgrade.push_back(hash);
+            }
+
+            if (wtx.nOrderPos == -1)
+                wss.fAnyUnordered = true;
+
+            pwallet->LoadToWallet(wtx);
+        } else if (strType == DBKeys::WATCHS) {
+            wss.nWatchKeys++;
+            CScript script;
+            ssKey >>
+                script;
+            char fYes;
+            ssValue >>
+                fYes;
+            if (fYes == '1')
+                pwallet->LoadWatchOnly(script);
+        } else if (strType == DBKeys::KEY) {
+            CPubKey vchPubKey;
+            ssKey >>
+                vchPubKey;
+            if (!vchPubKey.
+
+                 IsValid()
+
+            ) {
+                strErr = "Error reading wallet database: CPubKey corrupt";
+                return false;
+            }
+            CKey key;
+            CPrivKey pkey;
+            uint256 hash;
+
+            wss.nKeys++;
+            ssValue >>
+                pkey;
+
+            // Old wallets store keys as DBKeys::KEY [pubkey] => [privkey]
+            // ... which was slow for wallets with lots of keys, because the public key is re-derived from the private key
+            // using EC operations as a checksum.
+            // Newer wallets store keys as DBKeys::KEY [pubkey] => [privkey][hash(pubkey,privkey)], which is much faster while
+            // remaining backwards-compatible.
+            try {
+                ssValue >>
+                    hash;
+            } catch (...) {
+            }
+
+            bool fSkipCheck = false;
+
+            if (!hash.
+
+                 IsNull()
+
+            ) {
+                // hash pubkey/privkey to accelerate wallet load
+                std::vector<unsigned char> vchKey;
+                vchKey.reserve(vchPubKey
+                                   .
+
+                               size()
+
+                               + pkey.
+
+                                 size()
+
+                );
+                vchKey.insert(vchKey
+                                  .
+
+                              end(),
+                    vchPubKey
+
+                        .
+
+                    begin(),
+                    vchPubKey
+
+                        .
+
+                    end()
+
+                );
+                vchKey.insert(vchKey
+                                  .
+
+                              end(),
+                    pkey
+
+                        .
+
+                    begin(),
+                    pkey
+
+                        .
+
+                    end()
+
+                );
+
+                if (
+                    Hash(vchKey
+                             .
+
+                         begin(),
+                        vchKey
+
+                            .
+
+                        end()
+
+                            ) != hash) {
+                    strErr = "Error reading wallet database: CPubKey/CPrivKey corrupt";
+                    return false;
+                }
+
+                fSkipCheck = true;
+            }
+
+            if (!key.Load(pkey, vchPubKey, fSkipCheck)) {
+                strErr = "Error reading wallet database: CPrivKey corrupt";
+                return false;
+            }
+            if (!pwallet->LoadKey(key, vchPubKey)) {
+                strErr = "Error reading wallet database: LoadKey failed";
+                return false;
+            }
+        } else if (strType == DBKeys::MASTER_KEY) {
+            unsigned int nID;
+            ssKey >>
+                nID;
+            CMasterKey kMasterKey;
+            ssValue >>
+                kMasterKey;
+            if (pwallet->mapMasterKeys.count(nID) != 0) {
+                strErr = strprintf("Error reading wallet database: duplicate CMasterKey id %u", nID);
+                return false;
+            }
+            pwallet->mapMasterKeys[nID] =
+                kMasterKey;
+            if (pwallet->nMasterKeyMaxID < nID)
+                pwallet->nMasterKeyMaxID = nID;
+        } else if (strType == DBKeys::CRYPTED_KEY) {
+            CPubKey vchPubKey;
+            ssKey >>
+                vchPubKey;
+            if (!vchPubKey.
+
+                 IsValid()
+
+            ) {
+                strErr = "Error reading wallet database: CPubKey corrupt";
+                return false;
+            }
+            std::vector<unsigned char> vchPrivKey;
+            ssValue >>
+                vchPrivKey;
+            wss.nCKeys++;
+
+            if (!pwallet->LoadCryptedKey(vchPubKey, vchPrivKey)) {
+                strErr = "Error reading wallet database: LoadCryptedKey failed";
+                return false;
+            }
+            wss.fIsEncrypted = true;
+        } else if (strType == DBKeys::KEYMETA) {
+            CPubKey vchPubKey;
+            ssKey >>
+                vchPubKey;
+            CKeyMetadata keyMeta;
+            ssValue >>
+                keyMeta;
+            wss.nKeyMeta++;
+            pwallet->LoadKeyMetadata(vchPubKey
+                                         .
+
+                                     GetID(),
+                keyMeta
+
+            );
+        } else if (strType == DBKeys::WATCHMETA) {
+            CScript script;
+            ssKey >>
+                script;
+            CKeyMetadata keyMeta;
+            ssValue >>
+                keyMeta;
+            wss.nKeyMeta++;
+            pwallet->LoadScriptMetadata(CScriptID(script), keyMeta);
+        } else if (strType == DBKeys::DEFAULTKEY) {
+            // We don't want or need the default key, but if there is one set,
+            // we want to make sure that it is valid so that we can detect corruption
+            CPubKey vchPubKey;
+            ssValue >>
+                vchPubKey;
+            if (!vchPubKey.
+
+                 IsValid()
+
+            ) {
+                strErr = "Error reading wallet database: Default Key corrupt";
+                return false;
+            }
+        } else if (strType == DBKeys::POOL) {
+            int64_t nIndex;
+            ssKey >>
+                nIndex;
+            CKeyPool keypool;
+            ssValue >>
+                keypool;
+            pwallet->LoadKeyPool(nIndex, keypool);
+        } else if (strType == DBKeys::CSCRIPT) {
+            uint160 hash;
+            ssKey >>
+                hash;
+            CScript script;
+            ssValue >>
+                script;
+            if (!pwallet->LoadCScript(script)) {
+                strErr = "Error reading wallet database: LoadCScript failed";
+                return false;
+            }
+        } else if (strType == DBKeys::ORDERPOSNEXT) {
+            ssValue >> pwallet->nOrderPosNext;
+        } else if (strType == DBKeys::DESTDATA) {
+            std::string strAddress, strKey, strValue;
+            ssKey >>
+                strAddress;
+            ssKey >>
+                strKey;
+            ssValue >>
+                strValue;
+            pwallet->LoadDestData(DecodeDestination(strAddress), strKey, strValue);
+        } else if (strType == DBKeys::HDCHAIN) {
+            CHDChain chain;
+            ssValue >>
+                chain;
+            if (!pwallet->SetHDChainSingle(chain,
+                    true)) {
+                strErr = "Error reading wallet database: SetHDChain failed";
+                return false;
+            }
+        } else if (strType == DBKeys::CRYPTED_HDCHAIN) {
+            CHDChain chain;
+            ssValue >>
+                chain;
+            if (!pwallet->SetCryptedHDChainSingle(chain,
+                    true)) {
+                strErr = "Error reading wallet database: SetHDCryptedChain failed";
+                return false;
+            }
+        } else if (strType == DBKeys::HDPUBKEY) {
+            wss.nHDPubKeys++;
+            CPubKey vchPubKey;
+            ssKey >>
+                vchPubKey;
+
+            CHDPubKey hdPubKey;
+            ssValue >>
+                hdPubKey;
+
+            if (vchPubKey != hdPubKey.extPubKey.pubkey) {
+                strErr = "Error reading wallet database: CHDPubKey corrupt";
+                return false;
+            }
+            if (!pwallet->LoadHDPubKey(hdPubKey)) {
+                strErr = "Error reading wallet database: LoadHDPubKey failed";
+                return false;
+            }
+        } else if (strType == DBKeys::G_OBJECT) {
+            uint256 nObjectHash;
+            CGovernanceObject obj;
+            ssKey >>
+                nObjectHash;
+            ssValue >>
+                obj;
+
+            if (obj.
+
+                GetHash()
+
+                != nObjectHash) {
+                strErr = "Invalid governance object: Hash mismatch";
+                return false;
+            }
+
+            if (!pwallet->LoadGovernanceObject(obj)) {
+                strErr = "Invalid governance object: LoadGovernanceObject";
+                return false;
+            }
+        } else if (strType == DBKeys::FLAGS) {
+            uint64_t flags;
+            ssValue >>
+                flags;
+            if (!pwallet->SetWalletFlags(flags,
+                    true)) {
+                strErr = "Error reading wallet database: Unknown non-tolerable wallet flags found";
+                return false;
+            }
+        } else if (strType == DBKeys::OLD_KEY) {
+            strErr = "Found unsupported 'wkey' record, try loading with version 0.17";
+            return false;
+        } else if (strType !=
+                       DBKeys::BESTBLOCK &&
+                   strType !=
+                       DBKeys::BESTBLOCK_NOMERKLE &&
+                   strType !=
+                       DBKeys::MINVERSION &&
+                   strType !=
+                       DBKeys::ACENTRY &&
+                   strType != DBKeys::VERSION) {
+            wss.m_unknown_records++;
+        }
+    } catch (
+        const std::exception& e) {
+        if (strErr.
+
+            empty()
+
+        ) {
+            strErr = e.what();
+        }
+        return false;
+    } catch (...) {
+        if (strErr.
+
+            empty()
+
+        ) {
+            strErr = "Caught unknown exception in ReadKeyValue";
+        }
+        return false;
+    }
+    return true;
 }
-if (strType == DBKeys::NAME) {
-std::string strAddress;
-ssKey >>
-strAddress;
-ssValue >> pwallet->mapAddressBook[
-DecodeDestination(strAddress)
-].
-name;
-} else if (strType == DBKeys::PURPOSE) {
-std::string strAddress;
-ssKey >>
-strAddress;
-ssValue >> pwallet->mapAddressBook[
-DecodeDestination(strAddress)
-].
-purpose;
-} else if (strType == DBKeys::TX) {
-uint256 hash;
-ssKey >>
-hash;
-CWalletTx wtx(nullptr /* pwallet */, MakeTransactionRef());
-ssValue >>
-wtx;
-CValidationState state;
-if (!(
-CheckTransaction(*wtx
-.tx, state, 0, 0) && (wtx.
 
-GetHash()
-
-== hash) && state.
-
-IsValid()
-
-))
-return false;
-
-// Undo serialize changes in 31600
-if (31404 <= wtx.
-fTimeReceivedIsTxTime &&wtx
-.fTimeReceivedIsTxTime <= 31703)
+bool ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue, std::string& strType, std::string& strErr, const KeyFilterFn& filter_fn)
 {
-if (!ssValue.
-
-empty()
-
-)
-{
-char fTmp;
-char fUnused;
-std::string unused_string;
-ssValue >> fTmp >> fUnused >>
-unused_string;
-strErr = strprintf("LoadWallet() upgrading tx ver=%d %d %s", wtx.fTimeReceivedIsTxTime, fTmp, hash.ToString());
-wtx.
-fTimeReceivedIsTxTime = fTmp;
-}
-else
-{
-strErr = strprintf("LoadWallet() repairing tx ver=%d %s", wtx.fTimeReceivedIsTxTime, hash.ToString());
-wtx.
-fTimeReceivedIsTxTime = 0;
-}
-wss.vWalletUpgrade.
-push_back(hash);
-}
-
-if (wtx.nOrderPos == -1)
-wss.
-fAnyUnordered = true;
-
-pwallet->
-LoadToWallet(wtx);
-} else if (strType == DBKeys::WATCHS) {
-wss.nWatchKeys++;
-CScript script;
-ssKey >>
-script;
-char fYes;
-ssValue >>
-fYes;
-if (fYes == '1')
-pwallet->
-LoadWatchOnly(script);
-} else if (strType == DBKeys::KEY) {
-CPubKey vchPubKey;
-ssKey >>
-vchPubKey;
-if (!vchPubKey.
-
-IsValid()
-
-)
-{
-strErr = "Error reading wallet database: CPubKey corrupt";
-return false;
-}
-CKey key;
-CPrivKey pkey;
-uint256 hash;
-
-wss.nKeys++;
-ssValue >>
-pkey;
-
-// Old wallets store keys as DBKeys::KEY [pubkey] => [privkey]
-// ... which was slow for wallets with lots of keys, because the public key is re-derived from the private key
-// using EC operations as a checksum.
-// Newer wallets store keys as DBKeys::KEY [pubkey] => [privkey][hash(pubkey,privkey)], which is much faster while
-// remaining backwards-compatible.
-try
-{
-ssValue >>
-hash;
-}
-catch (...) {
-}
-
-bool fSkipCheck = false;
-
-if (!hash.
-
-IsNull()
-
-)
-{
-// hash pubkey/privkey to accelerate wallet load
-std::vector<unsigned char> vchKey;
-vchKey.
-reserve(vchPubKey
-.
-
-size()
-
-+ pkey.
-
-size()
-
-);
-vchKey.
-insert(vchKey
-.
-
-end(), vchPubKey
-
-.
-
-begin(), vchPubKey
-
-.
-
-end()
-
-);
-vchKey.
-insert(vchKey
-.
-
-end(), pkey
-
-.
-
-begin(), pkey
-
-.
-
-end()
-
-);
-
-if (
-Hash(vchKey
-.
-
-begin(), vchKey
-
-.
-
-end()
-
-) != hash)
-{
-strErr = "Error reading wallet database: CPubKey/CPrivKey corrupt";
-return false;
-}
-
-fSkipCheck = true;
-}
-
-if (!key.
-Load(pkey, vchPubKey, fSkipCheck
-))
-{
-strErr = "Error reading wallet database: CPrivKey corrupt";
-return false;
-}
-if (!pwallet->
-LoadKey(key, vchPubKey
-))
-{
-strErr = "Error reading wallet database: LoadKey failed";
-return false;
-}
-} else if (strType == DBKeys::MASTER_KEY) {
-unsigned int nID;
-ssKey >>
-nID;
-CMasterKey kMasterKey;
-ssValue >>
-kMasterKey;
-if(pwallet->mapMasterKeys.
-count(nID)
-!= 0)
-{
-strErr = strprintf("Error reading wallet database: duplicate CMasterKey id %u", nID);
-return false;
-}
-pwallet->mapMasterKeys[nID] =
-kMasterKey;
-if (pwallet->nMasterKeyMaxID<nID)
-pwallet->
-nMasterKeyMaxID = nID;
-} else if (strType == DBKeys::CRYPTED_KEY) {
-CPubKey vchPubKey;
-ssKey >>
-vchPubKey;
-if (!vchPubKey.
-
-IsValid()
-
-)
-{
-strErr = "Error reading wallet database: CPubKey corrupt";
-return false;
-}
-std::vector<unsigned char> vchPrivKey;
-ssValue >>
-vchPrivKey;
-wss.nCKeys++;
-
-if (!pwallet->
-LoadCryptedKey(vchPubKey, vchPrivKey
-))
-{
-strErr = "Error reading wallet database: LoadCryptedKey failed";
-return false;
-}
-wss.
-fIsEncrypted = true;
-} else if (strType == DBKeys::KEYMETA) {
-CPubKey vchPubKey;
-ssKey >>
-vchPubKey;
-CKeyMetadata keyMeta;
-ssValue >>
-keyMeta;
-wss.nKeyMeta++;
-pwallet->
-LoadKeyMetadata(vchPubKey
-.
-
-GetID(), keyMeta
-
-);
-} else if (strType == DBKeys::WATCHMETA) {
-CScript script;
-ssKey >>
-script;
-CKeyMetadata keyMeta;
-ssValue >>
-keyMeta;
-wss.nKeyMeta++;
-pwallet->
-LoadScriptMetadata(CScriptID(script), keyMeta
-);
-} else if (strType == DBKeys::DEFAULTKEY) {
-// We don't want or need the default key, but if there is one set,
-// we want to make sure that it is valid so that we can detect corruption
-CPubKey vchPubKey;
-ssValue >>
-vchPubKey;
-if (!vchPubKey.
-
-IsValid()
-
-) {
-strErr = "Error reading wallet database: Default Key corrupt";
-return false;
-}
-} else if (strType == DBKeys::POOL) {
-int64_t nIndex;
-ssKey >>
-nIndex;
-CKeyPool keypool;
-ssValue >>
-keypool;
-pwallet->
-LoadKeyPool(nIndex, keypool
-);
-} else if (strType == DBKeys::CSCRIPT) {
-uint160 hash;
-ssKey >>
-hash;
-CScript script;
-ssValue >>
-script;
-if (!pwallet->
-LoadCScript(script)
-)
-{
-strErr = "Error reading wallet database: LoadCScript failed";
-return false;
-}
-} else if (strType == DBKeys::ORDERPOSNEXT) {
-ssValue >> pwallet->
-nOrderPosNext;
-} else if (strType == DBKeys::DESTDATA) {
-std::string strAddress, strKey, strValue;
-ssKey >>
-strAddress;
-ssKey >>
-strKey;
-ssValue >>
-strValue;
-pwallet->
-LoadDestData(DecodeDestination(strAddress), strKey, strValue
-);
-} else if (strType == DBKeys::HDCHAIN) {
-CHDChain chain;
-ssValue >>
-chain;
-if (!pwallet->
-SetHDChainSingle(chain,
-true))
-{
-strErr = "Error reading wallet database: SetHDChain failed";
-return false;
-}
-} else if (strType == DBKeys::CRYPTED_HDCHAIN) {
-CHDChain chain;
-ssValue >>
-chain;
-if (!pwallet->
-SetCryptedHDChainSingle(chain,
-true))
-{
-strErr = "Error reading wallet database: SetHDCryptedChain failed";
-return false;
-}
-} else if (strType == DBKeys::HDPUBKEY) {
-wss.nHDPubKeys++;
-CPubKey vchPubKey;
-ssKey >>
-vchPubKey;
-
-CHDPubKey hdPubKey;
-ssValue >>
-hdPubKey;
-
-if(vchPubKey != hdPubKey.extPubKey.pubkey)
-{
-strErr = "Error reading wallet database: CHDPubKey corrupt";
-return false;
-}
-if (!pwallet->
-LoadHDPubKey(hdPubKey)
-)
-{
-strErr = "Error reading wallet database: LoadHDPubKey failed";
-return false;
-}
-} else if (strType == DBKeys::G_OBJECT) {
-uint256 nObjectHash;
-CGovernanceObject obj;
-ssKey >>
-nObjectHash;
-ssValue >>
-obj;
-
-if (obj.
-
-GetHash()
-
-!= nObjectHash) {
-strErr = "Invalid governance object: Hash mismatch";
-return false;
-}
-
-if (!pwallet->
-LoadGovernanceObject(obj)
-) {
-strErr = "Invalid governance object: LoadGovernanceObject";
-return false;
-}
-} else if (strType == DBKeys::FLAGS) {
-uint64_t flags;
-ssValue >>
-flags;
-if (!pwallet->
-SetWalletFlags(flags,
-true)) {
-strErr = "Error reading wallet database: Unknown non-tolerable wallet flags found";
-return false;
-}
-} else if (strType == DBKeys::OLD_KEY) {
-strErr = "Found unsupported 'wkey' record, try loading with version 0.17";
-return false;
-} else if (strType !=
-DBKeys::BESTBLOCK &&strType
-!=
-DBKeys::BESTBLOCK_NOMERKLE &&
-        strType
-!=
-DBKeys::MINVERSION &&strType
-!=
-DBKeys::ACENTRY &&strType
-!= DBKeys::VERSION) {
-wss.m_unknown_records++;
-}
-} catch (
-const std::exception &e
-) {
-if (strErr.
-
-empty()
-
-) {
-strErr = e.what();
-}
-return false;
-} catch (...) {
-if (strErr.
-
-empty()
-
-) {
-strErr = "Caught unknown exception in ReadKeyValue";
-}
-return false;
-}
-return true;
-}
-
-bool ReadKeyValue(CWallet *pwallet, CDataStream &ssKey, CDataStream &ssValue, std::string &strType, std::string &strErr,
-                  const KeyFilterFn &filter_fn) {
     CWalletScanState dummy_wss;
     LOCK(pwallet->cs_wallet);
     return ReadKeyValue(pwallet, ssKey, ssValue, dummy_wss, strType, strErr, filter_fn);
