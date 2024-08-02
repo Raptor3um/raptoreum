@@ -2121,6 +2121,7 @@ bool CWalletTx::isFutureSpendable(unsigned int outputIndex) const {
 
         CFutureTx futureTx;
         if (GetTxPayload(tx->vExtraPayload, futureTx)) {
+            LOCK(cs_main);
             int maturity = GetDepthInMainChain();
             int64_t adjustCurrentTime = GetAdjustedTime();
             uint32_t confirmedTime = GetConfirmationTime();
