@@ -60,11 +60,12 @@ CreateAssetsDialog::CreateAssetsDialog(QWidget *parent) :
                       ui->labelCoinControlAfterFeeText,
                       ui->labelCoinControlChangeText,
                       ui->labelFeeHeadline,
-                      ui->fallbackFeeWarningLabel
+                      ui->fallbackFeeWarningLabel,
+                      ui->assetNameValidation,
                      }, GUIUtil::FontWeight::Bold);
 
     GUIUtil::setFont({ui->labelBalance,
-                      ui->labelBalanceText
+                      ui->labelBalanceText,
                      }, GUIUtil::FontWeight::Bold, 14);
 
     GUIUtil::setFont({ui->labelCoinControlFeatures
@@ -93,9 +94,12 @@ CreateAssetsDialog::CreateAssetsDialog(QWidget *parent) :
     GUIUtil::updateFonts();
 
     connect(ui->clearButton, SIGNAL(clicked()), this, SLOT(clear()));
-    connect(ui->availabilityButton, SIGNAL(clicked()), this, SLOT(checkAvailabilityClicked()));
+    connect(ui->RootAssetLabel, SIGNAL(textChanged(QString)), this, SLOT(onAssetNameChanged(QString)));
+    connect(ui->assetnameText, SIGNAL(textChanged(QString)), this, SLOT(onAssetNameChanged(QString)));
     connect(ui->uniqueBox, SIGNAL(clicked()), this, SLOT(onUniqueChanged()));
     connect(ui->AssetTypeBox, SIGNAL(currentIndexChanged(QString)), this, SLOT(onAssetTypeSelected(QString)));
+    connect(ui->AssetTypeBox, SIGNAL(currentIndexChanged(QString)), this, SLOT(onAssetNameChanged(QString)));
+    connect(ui->RootAssetBox, SIGNAL(currentIndexChanged(QString)), this, SLOT(onAssetNameChanged(QString)));
 
     // Coin Control
     connect(ui->pushButtonCoinControl, SIGNAL(clicked()), this, SLOT(CoinControlButtonClicked()));
@@ -348,7 +352,7 @@ void CreateAssetsDialog::createAsset() {
                 //shold never hapen
                 return;
             }
-        } 
+        }
     }
 
     CTransactionRef newTx;
@@ -368,7 +372,7 @@ void CreateAssetsDialog::createAsset() {
         msgBox.exec();
         return;
     }
-   
+
     QString questionString = tr("Asset details:");
     questionString.append("<hr />");
     questionString.append(tr("Name: %1 <br>").arg(QString::fromStdString(assetTx.name)));
@@ -405,19 +409,19 @@ void CreateAssetsDialog::createAsset() {
 }
 
 void CreateAssetsDialog::onUniqueChanged() {
-    if (ui->uniqueBox->isChecked()) {    
+    if (ui->uniqueBox->isChecked()) {
         ui->updatableBox->setEnabled(false);
         ui->updatableBox->setChecked(false);
         ui->updatableBox->setStyleSheet("");
         ui->unitBox->setValue(0);
         ui->unitBox->setEnabled(false);
-        ui->unitBox->setStyleSheet("");  
+        ui->unitBox->setStyleSheet("");
     } else {
         ui->updatableBox->setEnabled(true);
         ui->updatableBox->setStyleSheet("");
         ui->unitBox->setValue(0);
         ui->unitBox->setEnabled(true);
-        ui->unitBox->setStyleSheet("");  
+        ui->unitBox->setStyleSheet("");
     }
 }
 
@@ -473,9 +477,9 @@ bool CreateAssetsDialog::validateInputs() {
         ui->targetaddressText->setValid(false);
         retval = false;
     }
-    
+
     //sanity checks, should never fail
-    if (ui->uniqueBox->isChecked()) {    
+    if (ui->uniqueBox->isChecked()) {
         if (ui->updatableBox->isChecked()) {
             ui->updatableBox->setStyleSheet(GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_INVALID));
             retval = false;
@@ -484,7 +488,7 @@ bool CreateAssetsDialog::validateInputs() {
         if (ui->unitBox->value() > 0){
             ui->unitBox->setStyleSheet(GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_INVALID));
             retval = false;
-        }  
+        }
     }
 
     if (ui->unitBox->value() < 0 || ui->unitBox->value() > 8){
@@ -520,7 +524,7 @@ void CreateAssetsDialog::clear() {
     ui->IssueFrequencyBox->setValue(0);
     ui->uniqueBox->setChecked(false);
     ui->updatableBox->setChecked(false);
-    
+
     CoinControlUpdateLabels();
 
     updateTabsAndLabels();
@@ -792,39 +796,47 @@ void CreateAssetsDialog::CoinControlUpdateLabels() {
     }
 }
 
-void CreateAssetsDialog::checkAvailabilityClicked()
+void CreateAssetsDialog::onAssetNameChanged(QString name)
 {
-
     bool isRoot = ui->AssetTypeBox->currentText() == "Root";
     std::string assetname = this->getAssetName(isRoot);
 
-    //check if asset name is valid
+    // Check asset name (root or sub)
     if (!IsAssetNameValid(assetname, isRoot)) {
         ui->assetnameText->setValid(false);
+        ui->assetNameValidation->setText(tr("Asset name invalid"));
+        return;
     }
 
-    if (!isRoot) {//sub asset
+    if (!isRoot) {
         if (ui->RootAssetBox->currentIndex() > 0) {
             assetname = ui->RootAssetBox->currentText().toStdString() + "|" + assetname;
         } else {
-            //root asset not selected, set name as invalid
+            // Root asset not selected, set name as invalid
             ui->assetnameText->setValid(false);
+            ui->assetNameValidation->setText(tr("Root asset not selected"));
             return;
         }
     }
 
-    // check if asset already exist
+    // Check if asset already exists
     std::string assetId;
     if (passetsCache->GetAssetId(assetname, assetId)) {
         CAssetMetaData tmpAsset;
         if (passetsCache->GetAssetMetaData(assetId, tmpAsset)) {
             ui->assetnameText->setValid(false);
+            ui->assetNameValidation->setText(tr("Asset already exists"));
+            return;
         }
     }
-    // check if asset already exist on mempool
+
+    // Check if asset already exists on mempool
     if (mempool.CheckForNewAssetConflict(assetname)) {
         ui->assetnameText->setValid(false);
+        ui->assetNameValidation->setText(tr("Asset already exists in mempool"));
+        return;
     }
+    ui->assetNameValidation->setText(tr("Asset name is valid and available"));
 }
 
 void CreateAssetsDialog::onAssetTypeSelected(QString name) {
