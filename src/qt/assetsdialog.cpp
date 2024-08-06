@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #include <qt/assetsdialog.h>
 #include <qt/forms/ui_assetsdialog.h>
+#include <qt/upload_download.h>
 
 #include <chainparams.h>
 #include <qt/clientmodel.h>
@@ -24,6 +25,14 @@
 #include <QPushButton>
 #include <QTableWidgetItem>
 #include <QtGui/QClipboard>
+#include <QByteArray>
+#include <QBuffer>
+#include <QPixmap>
+#include <QLabel>
+#include <QScrollArea>
+#include <QApplication>
+#include <QDesktopWidget>
+#include <QScreen>
 
 template<typename T>
 class CAssetListWidgetItem : public QTableWidgetItem {
@@ -78,7 +87,9 @@ AssetsDialog::AssetsDialog(QWidget *parent) :
     connect(ui->tableWidgetAssets, &QTableWidget::doubleClicked, this, &AssetsDialog::Asset_details_clicked);
     connect(sendAssetAction, &QAction::triggered, this, &AssetsDialog::SendAsset_clicked);
     connect(detailsAction, &QAction::triggered, this, &AssetsDialog::Asset_details_clicked);
-
+    connect(ui->referenceDisplay, SIGNAL(clicked()), this, SLOT(showFulRefImage()));
+    connect(ui->referenceLabel, SIGNAL(clicked(const QString& text)), this, SLOT(showFulRefImage()));
+    //connect(ui->referenceDisplay, &QLabel::mouseReleaseEvent, this, &AssetsDialog::showFulRefImage());
     timer = new QTimer(this);
     connect(timer, &QTimer::timeout, this, &AssetsDialog::updateAssetBalanceScheduled);
     timer->start(1000);
@@ -240,14 +251,15 @@ void AssetsDialog::Asset_clicked() {
     if (walletModel->wallet().isSpendable(asset.ownerAddress)){
         ui->updateButton->setVisible(true);
         ui->mintButton->setVisible(true);
-        ui->mintButton->setEnabled(asset.mintCount < asset.maxMintCount ? true : false);
-        ui->updateButton->setEnabled(asset.updatable ? true : false);
+        ui->mintButton->setEnabled(asset.mintCount < asset.maxMintCount);
+        ui->updateButton->setEnabled(asset.updatable);
     } else {
         ui->updateButton->setVisible(false);
         ui->mintButton->setVisible(false);
         ui->mintButton->setEnabled(false);
         ui->updateButton->setEnabled(false);
     }
+    displayImage(asset.referenceHash);
 }
 
 void AssetsDialog::Asset_details_clicked() {
@@ -298,6 +310,62 @@ void AssetsDialog::on_updateButton_clicked() {
     CAssetMetaData asset;
     if (passetsCache->GetAssetMetaData(assetId, asset))
         Q_EMIT assetUpdateClicked(asset.name);
+}
+
+void AssetsDialog::displayImage(const std::string& cid) {
+    ui->referenceDisplay->clear();
+    if(cid.empty()) {
+        ui->referenceLabel->hide();
+        ui->referenceDisplay->hide();
+    } else {
+        ui->referenceLabel->show();
+        ui->referenceDisplay->show();
+        std::string response_data;
+        downloadFile(cid, response_data);
+        QByteArray imageData = QByteArray::fromRawData(response_data.data(), response_data.size());
+        QBuffer buffer(&imageData);
+        buffer.open(QIODevice::ReadOnly);
+        bool isLoaded = currentRefImage.load(&buffer, nullptr);
+        if(isLoaded) {
+            int displayWidth = ui->referenceDisplay->width() < currentRefImage.width() ? ui->referenceDisplay->width() : currentRefImage.width();
+            int displayHeight = currentRefImage.height() > 40 ? 40 : currentRefImage.height();
+            QPixmap pixmap = QPixmap::fromImage(currentRefImage.scaled(displayWidth, displayHeight, Qt::KeepAspectRatio));
+            ui->referenceDisplay->setPixmap(pixmap);
+            ui->referenceDisplay->setCursor(Qt::PointingHandCursor);
+            ui->referenceDisplay->setToolTip(QString::fromStdString(cid));
+        } else {
+            ui->referenceDisplay->setText(QString::fromStdString(cid));
+            ui->referenceDisplay->unsetCursor();
+            ui->referenceDisplay->setToolTip("");
+        }
+
+    }
+}
+//TODO: not yet working.
+void AssetsDialog::showFulRefImage() {
+    printf("full image showing\n");
+    QDialog dialog(this);
+    dialog.setWindowTitle(ui->referenceDisplay->toolTip());
+
+    QVBoxLayout *dialogLayout = new QVBoxLayout(&dialog);
+
+    QLabel *fullImageLabel = new QLabel(&dialog);
+    fullImageLabel->setPixmap(QPixmap::fromImage(currentRefImage));
+
+    QScrollArea *scrollArea = new QScrollArea(&dialog);
+    scrollArea->setWidget(fullImageLabel);
+    scrollArea->setWidgetResizable(true);
+
+    dialogLayout->addWidget(scrollArea);
+
+    QScreen *currentScreen = this->screen();
+    QRect screenGeometry = currentScreen->geometry();
+    int displayWidth = currentRefImage.width() >= screenGeometry.width() ? screenGeometry.width() - 20 : screenGeometry.width();
+    int displayHeight = currentRefImage.height() >= screenGeometry.height() ? screenGeometry.height() - 20 : screenGeometry.height();
+
+    dialog.setLayout(dialogLayout);
+    dialog.resize(displayWidth, displayHeight); // Adjust the size of the dialog as needed
+    dialog.exec();
 }
 
 void AssetsDialog::mintAsset() {

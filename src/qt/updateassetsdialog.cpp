@@ -15,6 +15,7 @@
 #include <qt/guiutil.h>
 #include <qt/optionsmodel.h>
 #include <qt/sendassetsentry.h>
+#include <qt/upload_download.h>
 
 #include <chainparams.h>
 #include <interfaces/node.h>
@@ -76,6 +77,8 @@ UpdateAssetsDialog::UpdateAssetsDialog(QWidget *parent) :
     GUIUtil::updateFonts();
 
     connect(ui->clearButton, SIGNAL(clicked()), this, SLOT(clear()));
+    connect(ui->openIpfsButton, SIGNAL(clicked()), this, SLOT(openFilePicker()));
+
 
     // init transaction fee section
     QSettings settings;
@@ -107,7 +110,6 @@ UpdateAssetsDialog::UpdateAssetsDialog(QWidget *parent) :
     ui->IssueFrequencyBox->setToolTip(tr("Disabled. Not in use"));
     ui->distributionBox->setEnabled(false);
     ui->distributionBox->setToolTip(tr("Manual only until other types are developed"));
-    ui->openIpfsButton->hide();
 
     m_coin_control->UseCoinJoin(false);
 
@@ -236,6 +238,12 @@ void UpdateAssetsDialog::on_updateAssetButton_clicked() {
     // already unlocked or not encrypted at all
     updateAsset();
 }
+
+void UpdateAssetsDialog::openFilePicker() {
+    std::string cid = pickAndSendFileForIpfs(this);
+    ui->ipfsText->setText(QString::fromStdString(cid));
+}
+
 
 void UpdateAssetsDialog::updateAsset() {
     if (getAssetsFees() == 0) {

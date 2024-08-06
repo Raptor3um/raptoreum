@@ -73,7 +73,7 @@ jobs:
       - name: Install Required Packages
         run: |
           sudo apt-get update -y
-          sudo apt-get install curl build-essential libtool autotools-dev automake pkg-config python3 bsdmainutils cmake -y
+          sudo apt-get install curl libcurl4-openssl-dev build-essential libtool autotools-dev automake pkg-config python3 bsdmainutils cmake -y
       - name: Build Depends
         run: |
           echo "building with $(nproc) threads"
@@ -207,7 +207,7 @@ jobs:
       - name: Install Required Packages
         run: |
           sudo apt-get update -y
-          sudo apt-get install curl build-essential libtool autotools-dev automake pkg-config python3 bsdmainutils cmake -y
+          sudo apt-get install curl libcurl4-openssl-dev build-essential libtool autotools-dev automake pkg-config python3 bsdmainutils cmake -y
 
       - name: Build Depends
         run: |
@@ -333,9 +333,9 @@ jobs:
           report_paths: "unit_test_results.xml"
 
   build-macos:
-    name: macOS 11 Build
+    name: macOS 12 Build
     needs: get-version
-    runs-on: macos-11
+    runs-on: macos-12
 
     steps:
       - name: Checkout
@@ -343,7 +343,7 @@ jobs:
 
       - name: Install Required Packages
         run: |
-          brew install automake libtool pkg-config librsvg libnatpmp python
+          brew install automake libtool pkg-config librsvg libnatpmp python curl
           pip3 install ds_store mac_alias
           pip3 install -U pip setuptools
 
@@ -601,7 +601,7 @@ jobs:
       - name: Install Required Packages
         run: |
           sudo apt-get update -y
-          sudo apt-get install curl build-essential libtool g++-aarch64-linux-gnu autotools-dev automake pkg-config python3 bsdmainutils cmake -y
+          sudo apt-get install curl libcurl4-openssl-dev build-essential libtool g++-aarch64-linux-gnu autotools-dev automake pkg-config python3 bsdmainutils cmake -y
 
       - name: Build Depends
         run: |
@@ -728,7 +728,7 @@ jobs:
       - name: Install Required Packages
         run: |
           sudo apt-get update -y
-          sudo apt-get install curl build-essential libtool autotools-dev automake pkg-config python3 bsdmainutils cmake -y
+          sudo apt-get install curl libcurl4-openssl-dev build-essential libtool autotools-dev automake pkg-config python3 bsdmainutils cmake -y
           sudo apt-get install -y g++-mingw-w64-x86-64 gcc-mingw-w64-x86-64 nsis
           sudo update-alternatives --set x86_64-w64-mingw32-gcc /usr/bin/x86_64-w64-mingw32-gcc-posix
           sudo update-alternatives --set x86_64-w64-mingw32-g++ /usr/bin/x86_64-w64-mingw32-g++-posix

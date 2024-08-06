@@ -1474,6 +1474,13 @@ dnl Check for gmp
 AC_CHECK_HEADER([gmp.h])
 AC_CHECK_LIB([gmp], [__gmpz_init], [GMP_LIBS=-lgmp], [AC_MSG_ERROR([libgmp missing])])
 
+# Check for libcurl
+AC_CHECK_LIB([curl], [curl_easy_init], [have_curl=yes], [have_curl=no])
+if test "x$have_curl" = "xyes"; then
+    AC_DEFINE([HAVE_CURL], [1], [Define to 1 if you have the cURL library.])
+    LIBS="$LIBS -lcurl"
+fi
+
 dnl check for immer header
 AC_CHECK_HEADER([immer/map.hpp],, [AC_MSG_ERROR([immer map header not found])])
 

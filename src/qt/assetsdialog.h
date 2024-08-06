@@ -12,6 +12,7 @@
 #include <QTimer>
 #include <QMessageBox>
 #include <QDialog>
+#include <QImage>
 
 #define ASSETSDIALOG_UPDATE_SECONDS 3
 #define ASSETSDIALOG_FILTER_COOLDOWN_SECONDS 3
@@ -57,6 +58,7 @@ public:
 
 private:
     QMenu *contextMenuAsset;
+    QImage currentRefImage;
 
     QTimer *timer;
     Ui::AssetsDialog *ui;
@@ -69,6 +71,7 @@ private:
 
     std::string GetSelectedAsset();
     void mintAsset();
+    void displayImage(const std::string& cid);
 
     Q_SIGNALS:
         void doubleClicked(const QModelIndex&);
@@ -89,6 +92,8 @@ private
         void Asset_details_clicked();
 
         void SendAsset_clicked();
+
+        void showFulRefImage();
 
 };
 

@@ -55,7 +55,6 @@
              <property name="font">
               <font>
                <pointsize>14</pointsize>
-               <weight>75</weight>
                <bold>true</bold>
               </font>
              </property>
@@ -181,44 +180,27 @@
                 </item>
                 <item>
                  <layout class="QGridLayout" name="gridLayout">
-                  <item row="2" column="3">
-                   <widget class="QLabel" name="label_7">
+                  <item row="5" column="0">
+                   <widget class="QLabel" name="errorLabel">
                     <property name="text">
-                     <string/>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="1" column="2">
-                   <widget class="QLabel" name="nameTextLabel">
-                    <property name="text">
-                     <string notr="true"/>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
-                    </property>
-                    <property name="textInteractionFlags">
-                     <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="3" column="0">
-                   <widget class="QLabel" name="label_5">
-                    <property name="text">
-                     <string>Supply:</string>
+                     <string>Warning:</string>
                     </property>
                     <property name="alignment">
                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                     </property>
                    </widget>
                   </item>
-                  <item row="1" column="3">
-                   <widget class="QLabel" name="assetname">
+                  <item row="0" column="0">
+                   <widget class="QLabel" name="label_6">
                     <property name="text">
-                     <string/>
+                     <string>Id:</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                     </property>
                    </widget>
                   </item>
-                  <item row="3" column="2">
+                  <item row="3" column="1">
                    <widget class="QLabel" name="suplyTextLabel">
                     <property name="text">
                      <string notr="true"/>
@@ -228,10 +210,24 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="0" column="0">
-                   <widget class="QLabel" name="label_6">
+                  <item row="5" column="1">
+                   <layout class="QHBoxLayout" name="horizontalLayout_3">
+                    <item>
+                     <widget class="QLabel" name="errorTextLabel">
+                      <property name="text">
+                       <string/>
+                      </property>
+                      <property name="alignment">
+                       <set>Qt::AlignCenter</set>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                  <item row="3" column="0">
+                   <widget class="QLabel" name="label_5">
                     <property name="text">
-                     <string>Id:</string>
+                     <string>Supply:</string>
                     </property>
                     <property name="alignment">
                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -248,7 +244,33 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="0" column="2">
+                  <item row="6" column="1">
+                   <spacer name="horizontalSpacer">
+                    <property name="orientation">
+                     <enum>Qt::Horizontal</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>40</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                   </spacer>
+                  </item>
+                  <item row="1" column="1">
+                   <widget class="QLabel" name="nameTextLabel">
+                    <property name="text">
+                     <string notr="true"/>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                    <property name="textInteractionFlags">
+                     <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="1">
                    <widget class="QLabel" name="idTextLablel">
                     <property name="text">
                      <string notr="true"/>
@@ -261,13 +283,20 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="2" column="2">
+                  <item row="2" column="1">
                    <widget class="QLabel" name="typeLabel">
                     <property name="text">
                      <string/>
                     </property>
                     <property name="alignment">
                      <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="2">
+                   <widget class="QLabel" name="label_7">
+                    <property name="text">
+                     <string/>
                     </property>
                    </widget>
                   </item>
@@ -281,49 +310,36 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="3" column="3">
+                  <item row="1" column="2">
+                   <widget class="QLabel" name="assetname">
+                    <property name="text">
+                     <string/>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="3" column="2">
                    <widget class="QLabel" name="label_8">
                     <property name="text">
                      <string/>
                     </property>
                    </widget>
                   </item>
-                  <item row="4" column="2">
-                   <layout class="QHBoxLayout" name="horizontalLayout_3">
-                    <item>
-                     <widget class="QLabel" name="errorTextLabel">
-                      <property name="text">
-                       <string/>
-                      </property>
-                      <property name="alignment">
-                       <set>Qt::AlignCenter</set>
-                      </property>
-                     </widget>
-                    </item>
-                   </layout>
-                  </item>
                   <item row="4" column="0">
-                   <widget class="QLabel" name="errorLabel">
+                   <widget class="QLabel" name="referenceLabel">
                     <property name="text">
-                     <string>Warning:</string>
+                     <string>Reference:</string>
                     </property>
                     <property name="alignment">
                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                     </property>
                    </widget>
                   </item>
-                  <item row="5" column="2">
-                   <spacer name="horizontalSpacer">
-                    <property name="orientation">
-                     <enum>Qt::Horizontal</enum>
+                  <item row="4" column="1">
+                   <widget class="QLabel" name="referenceDisplay">
+                    <property name="text">
+                     <string/>
                     </property>
-                    <property name="sizeHint" stdset="0">
-                     <size>
-                      <width>40</width>
-                      <height>0</height>
-                     </size>
-                    </property>
-                   </spacer>
+                   </widget>
                   </item>
                  </layout>
                 </item>
@@ -370,7 +386,6 @@
              <property name="font">
               <font>
                <pointsize>14</pointsize>
-               <weight>75</weight>
                <bold>true</bold>
               </font>
              </property>
