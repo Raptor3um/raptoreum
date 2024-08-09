@@ -11,7 +11,6 @@
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/ssl/stream.hpp>
 #include <boost/asio/connect.hpp>
-#include <boost/stacktrace.hpp>
 #include <QString>
 #include <QFileDialog>
 #include <filesystem>
