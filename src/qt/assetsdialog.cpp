@@ -3,7 +3,9 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #include <qt/assetsdialog.h>
 #include <qt/forms/ui_assetsdialog.h>
-#include <qt/upload_download.h>
+//#include <qt/upload_download.h>
+#include <qt/uploaddownload.h>
+//#include <qt/httpclient.h>
 
 #include <chainparams.h>
 #include <qt/clientmodel.h>
@@ -320,8 +322,14 @@ void AssetsDialog::displayImage(const std::string& cid) {
     } else {
         ui->referenceLabel->show();
         ui->referenceDisplay->show();
+//        HttpClient httpClient;
+//        httpClient.sendGetRequest(cid, [this, cid](const QByteArray& data) {
+//            printf("data size %d\n", data.size());
+//        });
         std::string response_data;
-        downloadFile(cid, response_data);
+        //downloadFile(cid, response_data);
+        download(cid, response_data);
+        printf("size %ld\n", response_data.size());
         QByteArray imageData = QByteArray::fromRawData(response_data.data(), response_data.size());
         QBuffer buffer(&imageData);
         buffer.open(QIODevice::ReadOnly);

@@ -1378,6 +1378,9 @@ if test "$use_reduce_exports" = "yes"; then
   AX_CHECK_LINK_FLAG([-Wl,--exclude-libs,ALL], [RELDFLAGS="-Wl,--exclude-libs,ALL"], [], [$LDFLAG_WERROR])
 fi
 
+AX_CHECK_LINK_FLAG([-lssl], [LDFLAGS="$LDFLAGS -lssl"])
+AX_CHECK_LINK_FLAG([-lcrypto], [LDFLAGS="$LDFLAGS -lcrypto"])
+
 if test "$use_tests" = "yes"; then
   if test "$HEXDUMP" = ""; then
     AC_MSG_ERROR([hexdump is required for tests])
@@ -1473,13 +1476,6 @@ fi
 dnl Check for gmp
 AC_CHECK_HEADER([gmp.h])
 AC_CHECK_LIB([gmp], [__gmpz_init], [GMP_LIBS=-lgmp], [AC_MSG_ERROR([libgmp missing])])
-
-# Check for libcurl
-AC_CHECK_LIB([curl], [curl_easy_init], [have_curl=yes], [have_curl=no])
-if test "x$have_curl" = "xyes"; then
-    AC_DEFINE([HAVE_CURL], [1], [Define to 1 if you have the cURL library.])
-    LIBS="$LIBS -lcurl"
-fi
 
 dnl check for immer header
 AC_CHECK_HEADER([immer/map.hpp],, [AC_MSG_ERROR([immer map header not found])])

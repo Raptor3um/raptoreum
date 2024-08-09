@@ -15,7 +15,8 @@
 #include <qt/guiutil.h>
 #include <qt/optionsmodel.h>
 #include <qt/sendassetsentry.h>
-#include <qt/upload_download.h>
+//#include <qt/upload_download.h>
+#include <qt/uploaddownload.h>
 
 #include <chainparams.h>
 #include <interfaces/node.h>
@@ -795,7 +796,9 @@ void CreateAssetsDialog::CoinControlUpdateLabels() {
 }
 
 void CreateAssetsDialog::openFilePicker() {
-    std::string cid = pickAndSendFileForIpfs(this);
+    //std::string cid = pickAndSendFileForIpfs(this);
+    std::string cid;
+    pickAndUploadFileForIpfs(this, cid);
     ui->ipfsText->setText(QString::fromStdString(cid));
 }
 
