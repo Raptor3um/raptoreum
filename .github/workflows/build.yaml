@@ -431,7 +431,7 @@ jobs:
   test-macos:
     name: macOS Tests
     needs: [get-version, build-macos]
-    runs-on: macos-11
+    runs-on: macos-12
 
     steps:
       - name: Download Artifacts
