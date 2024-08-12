@@ -266,8 +266,8 @@ void SendCoinsEntry::changeEvent(QEvent *e) {
 }
 
 void SendCoinsEntry::setButtonIcons() {
-    GUIUtil::setIcon(ui->addressBookButton, "address-book");
-    GUIUtil::setIcon(ui->pasteButton, "editpaste");
+    GUIUtil::setIcon(ui->addressBookButton, "address-book", GUIUtil::ThemedColor::BLUE);
+    GUIUtil::setIcon(ui->pasteButton, "editpaste", GUIUtil::ThemedColor::BLUE);
     GUIUtil::setIcon(ui->deleteButton, "remove", GUIUtil::ThemedColor::RED);
     GUIUtil::setIcon(ui->deleteButton_is, "remove", GUIUtil::ThemedColor::RED);
     GUIUtil::setIcon(ui->deleteButton_s, "remove", GUIUtil::ThemedColor::RED);

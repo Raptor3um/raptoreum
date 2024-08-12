@@ -79,7 +79,7 @@ void TrafficGraphWidget::paintEvent(QPaintEvent *) {
 
     if (fMax <= 0.0f) return;
 
-    QColor green = GUIUtil::getThemedQColor(GUIUtil::ThemedColor::GREEN);
+    QColor green = GUIUtil::getThemedQColor(GUIUtil::ThemedColor::BLUE);
     QColor red = GUIUtil::getThemedQColor(GUIUtil::ThemedColor::RED);
     QColor axisCol(GUIUtil::getThemedQColor(GUIUtil::ThemedColor::DEFAULT));
     QColor axisCol2;

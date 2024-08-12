@@ -30,13 +30,13 @@ in the <theme.css> file.
 /* do not modify! section updated by update-css-files.py
 <colors>
 
-# Used colors in general.css for commit d1e3d76b1
+# Used colors in general.css for commit f877c1680
 
 #00000000
 #222222
-#5e8c41
 #a84832
 #c79304
+#EB7F00
 
 </colors>
 */
@@ -218,13 +218,11 @@ QCalendarWidget  {
 #qt_calendar_prevmonth {
     width: 80px;
     height: 30px;
-    qproperty-icon: url(':/images/arrow_left_normal');
     qproperty-iconSize: 23px 23px;
 }
 #qt_calendar_nextmonth {
     width: 80px;
     height: 30px;
-    qproperty-icon: url(':/images/arrow_right_normal');
     qproperty-iconSize: 23px 23px;
 }
 #qt_calendar_prevmonth:hover,
@@ -314,7 +312,6 @@ QComboBox:checked {
 }
 
 QComboBox:editable {
-    border: 0px solid #00000000;
 }
 
 QComboBox:focus {
@@ -328,7 +325,7 @@ QComboBox::drop-down {
 }
 
 QComboBox QListView {
-    padding: 3px;
+    padding: 0px;
 }
 
 QComboBox QAbstractItemView::item {
@@ -419,7 +416,6 @@ QHeaderView::section:last {
 QHeaderView::down-arrow {
     width: 20px;
     height: 20px;
-    image: url(':/images/arrow_light_down_normal');
     subcontrol-position: right center;
     subcontrol-origin: margin;
     margin-right: 5px;
@@ -428,7 +424,6 @@ QHeaderView::down-arrow {
 QHeaderView::up-arrow {
     width: 20px;
     height: 20px;
-    image: url(':/images/arrow_light_up_normal');
     subcontrol-position: right center;
     subcontrol-origin: margin;
     margin-right: 5px;
@@ -449,13 +444,15 @@ QMenu
 
 QMenu {
     border: 1px solid red;
-    border-radius: 5px;
 }
 
 QMenu::item {
+    border: 1px solid transparent;
+    padding: 3px 7px 3px 7px;
 }
 
-QMenu::item:selected {
+QMenu::item:selected:!disabled {
+    border-radius: 2px;
 }
 
 QMenu::separator {
@@ -468,9 +465,12 @@ QMenuBar
 ******************************************************/
 
 QMenuBar {
+  padding: 14px 5px;
+  spacing: 15px;
 }
 
 QMenuBar::item {
+  padding-top: 6px;
 }
 
 QMenuBar::item:selected {
@@ -797,18 +797,18 @@ QSlider
 ******************************************************/
 
 QSlider {
-    min-height: 30px;
+    min-height: 26px;
 }
 
 QSlider::groove:horizontal {
     background: #00000000;
-    height: 12px;
+    height: 8px;
     border-radius: 4px;
 }
 
 QSlider::add-page:horizontal,
 QSlider::sub-page:horizontal {
-    height: 12px;
+    height: 8px;
     border-radius: 4px;
 }
 
@@ -816,10 +816,10 @@ QSlider::handle:horizontal {
 margin-left: 5px;
 margin-right: 5px;
 background-color: red;
-width: 23px;
+width: 19px;
 margin-top: -5px;
 margin-bottom: -5px;
-border-radius: 11px;
+border-radius: 9px;
 }
 
 /******************************************************
@@ -890,18 +890,15 @@ QToolBar {
     border: none;
     width: 100%;
     padding: 0;
-    margin: 0;
     spacing: 0;
 }
 
 QToolBar > QToolButton {
     background-color: #00000000;
-    border: none;
-    min-height: 50px;
-    max-height: 50px;
+    min-height: 40px;
+    max-height: 40px;
     width: 100%;
     padding: 1px;
-    text-align: center;
 }
 
 QToolBar > QToolButton:hover:!checked {
@@ -914,9 +911,11 @@ QToolBar > QToolButton:disabled {
 }
 
 QToolBar QLabel#lblToolbarLogo {
-    padding: 12px;
-    image: url(':/images/raptoreum_logo_toolbar');
-    height: 2.5em;
+    background-repeat: no-repeat;
+    padding-top: 25px;
+    padding-bottom: 25px;
+    background-position: left bottom;
+    margin: 0px 18px;
 }
 
 /******************************************************
@@ -1392,7 +1391,7 @@ QDialog#OptionsDialog QLabel#label_3 { /* Translations Missing? Label */
     qproperty-alignment: 'AlignVCenter | AlignLeft';
     padding-left: 8px;
     min-height: 60px;
-    color: #c79304;
+    color: #EB7F00;
 }
 
 QDialog#OptionsDialog #line,
@@ -1728,11 +1727,9 @@ QWidget#RPCConsole .QToolButton { /* Console buttons fontbigger/fontsmaller/clea
 }
 
 QWidget#RPCConsole .QGroupBox #line { /* Network In Line */
-    background-color: #5e8c41;
 }
 
 QWidget#RPCConsole .QGroupBox #line_2 { /* Network Out Line */
-    background-color: #a84832;
 }
 
 #rpcAutoCompleter {
@@ -1747,6 +1744,9 @@ QWidget#RPCConsole .QGroupBox #line_2 { /* Network Out Line */
 #rpcAutoCompleter::item {
     background-color: #00000000;
     color: red;
+    border: 1px solid transparent;
+    border-radius: 2px;
+    padding: 2px 5px 2px 5px;
 }
 
 #rpcAutoCompleter::item:selected {

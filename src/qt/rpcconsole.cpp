@@ -1013,7 +1013,7 @@ void RPCConsole::showPage(int index) {
         }
     }
 
-    GUIUtil::setFont({btnActive}, GUIUtil::FontWeight::Bold, 16);
+    GUIUtil::setFont({btnActive}, GUIUtil::FontWeight::Normal, 16);
     GUIUtil::setFont(vecNormal, GUIUtil::FontWeight::Normal, 16);
     GUIUtil::updateFonts();
 
@@ -1267,7 +1267,7 @@ void RPCConsole::updateNodeDetail(const CNodeCombinedStats *stats) {
 
 void RPCConsole::setButtonIcons() {
     const QSize consoleButtonsSize(BUTTON_ICONSIZE *
-    0.8, BUTTON_ICONSIZE * 0.8);
+    0.9, BUTTON_ICONSIZE * 0.9);
     GUIUtil::setIcon(ui->clearButton, "remove", GUIUtil::ThemedColor::RED, consoleButtonsSize);
     GUIUtil::setIcon(ui->fontBiggerButton, "fontbigger", GUIUtil::ThemedColor::BLUE, consoleButtonsSize);
     GUIUtil::setIcon(ui->fontSmallerButton, "fontsmaller", GUIUtil::ThemedColor::BLUE, consoleButtonsSize);

@@ -84,9 +84,11 @@ namespace GUIUtil {
 // The name of the traditional theme
     static const QString traditionalTheme = "Traditional";
 // The theme to set by default if settings are missing or incorrect
-    static const QString defaultTheme = "Light";
+    static const QString defaultTheme = "Dark";
 // The prefix a theme name should have if we want to apply dark colors and styles to it
     static const QString darkThemePrefix = "Dark";
+// The prefix a theme name should have if we want to apply light colors and styles to it
+    static const QString lightThemePrefix = "Light";
 // The theme to set as a base one for non-traditional themes
     static const QString generalTheme = "general";
 // Mapping theme => css file
@@ -104,12 +106,12 @@ namespace GUIUtil {
     static const int defaultFontSize = 12;
     static const double fontScaleSteps = 0.01;
 #ifdef Q_OS_MAC
-    static const QFont::Weight defaultFontWeightNormal = QFont::ExtraLight;
-    static const QFont::Weight defaultFontWeightBold = QFont::Medium;
+    static const QFont::Weight defaultFontWeightNormal = QFont::Normal;
+    static const QFont::Weight defaultFontWeightBold = QFont::DemiBold;
     static const int defaultFontScale = 0;
 #else
-    static const QFont::Weight defaultFontWeightNormal = QFont::Light;
-    static const QFont::Weight defaultFontWeightBold = QFont::Medium;
+    static const QFont::Weight defaultFontWeightNormal = QFont::Normal;
+    static const QFont::Weight defaultFontWeightBold = QFont::DemiBold;
     static const int defaultFontScale = 0;
 #endif
 
@@ -132,55 +134,57 @@ namespace GUIUtil {
 #endif
 
     static const std::map <ThemedColor, QColor> themedColors = {
-            {ThemedColor::DEFAULT,                 QColor(85, 85, 85)},
             {ThemedColor::UNCONFIRMED,             QColor(128, 128, 128)},
-            {ThemedColor::BLUE,                    QColor(0, 141, 228)},
-            {ThemedColor::ORANGE,                  QColor(199, 147, 4)},
-            {ThemedColor::RED,                     QColor(168, 72, 50)},
-            {ThemedColor::GREEN,                   QColor(94, 140, 65)},
-            {ThemedColor::BAREADDRESS,             QColor(140, 140, 140)},
             {ThemedColor::TX_STATUS_OPENUNTILDATE, QColor(64, 64, 255)},
-            {ThemedColor::BACKGROUND_WIDGET,       QColor(234, 234, 236)},
-            {ThemedColor::BORDER_WIDGET,           QColor(220, 220, 220)},
-            {ThemedColor::BACKGROUND_NETSTATS,     QColor(210, 210, 210, 230)},
-            {ThemedColor::BORDER_NETSTATS,         QColor(180, 180, 180)},
-            {ThemedColor::QR_PIXEL,                QColor(85, 85, 85)},
-            {ThemedColor::ICON_ALTERNATIVE_COLOR,  QColor(167, 167, 167)},
+            {ThemedColor::QR_PIXEL,                QColor(17, 21, 34, 1)},
+            {ThemedColor::BACKGROUND_WIDGET,       QColor(247, 235, 232)},
+            {ThemedColor::BORDER_WIDGET,           QColor(194, 192, 192)},
+            {ThemedColor::BACKGROUND_NETSTATS,     QColor(239, 189, 177)},
+            {ThemedColor::BORDER_NETSTATS,         QColor(32, 36, 42)},
+            {ThemedColor::DEFAULT,                 QColor(17, 21, 34)},
+            {ThemedColor::ICON_ALTERNATIVE_COLOR,  QColor(194, 192, 192)},
+            {ThemedColor::BLUE,                    QColor(97, 123, 209)},
+            {ThemedColor::GREEN,                   QColor(10, 173, 6)}, 
+            {ThemedColor::ORANGE,                  QColor(235, 127, 0)},
+            {ThemedColor::PRIMARY,                 QColor(183, 68, 38)},
+            {ThemedColor::RED,                     QColor(243, 35, 73)},
+            {ThemedColor::SECONDARY,               QColor(194, 192, 192)},
     };
 
     static const std::map <ThemedColor, QColor> themedDarkColors = {
-            {ThemedColor::DEFAULT,                 QColor(199, 199, 199)},
-            {ThemedColor::UNCONFIRMED,             QColor(170, 170, 170)},
-            {ThemedColor::BLUE,                    QColor(0, 89, 154)},
-            {ThemedColor::ORANGE,                  QColor(199, 147, 4)},
-            {ThemedColor::RED,                     QColor(168, 72, 50)},
-            {ThemedColor::GREEN,                   QColor(94, 140, 65)},
-            {ThemedColor::BAREADDRESS,             QColor(140, 140, 140)},
+            {ThemedColor::UNCONFIRMED,             QColor(85, 91, 112)},
             {ThemedColor::TX_STATUS_OPENUNTILDATE, QColor(64, 64, 255)},
-            {ThemedColor::BACKGROUND_WIDGET,       QColor(45, 45, 46)},
-            {ThemedColor::BORDER_WIDGET,           QColor(74, 74, 75)},
-            {ThemedColor::BACKGROUND_NETSTATS,     QColor(45, 45, 46, 230)},
-            {ThemedColor::BORDER_NETSTATS,         QColor(74, 74, 75)},
-            {ThemedColor::QR_PIXEL,                QColor(199, 199, 199)},
-            {ThemedColor::ICON_ALTERNATIVE_COLOR,  QColor(74, 74, 75)},
+            {ThemedColor::QR_PIXEL,                QColor(194, 192, 192)},
+            {ThemedColor::BACKGROUND_WIDGET,       QColor(17, 21, 34)},
+            {ThemedColor::BORDER_WIDGET,           QColor(85, 91, 112)},
+            {ThemedColor::BACKGROUND_NETSTATS,     QColor(27, 31, 44)},
+            {ThemedColor::BORDER_NETSTATS,         QColor(194, 192, 192)},
+            {ThemedColor::DEFAULT,                 QColor(194, 192, 192)},
+            {ThemedColor::ICON_ALTERNATIVE_COLOR,  QColor(128, 134, 154)},
+            {ThemedColor::BLUE,                    QColor(171, 186, 237)},
+            {ThemedColor::GREEN,                   QColor(10, 173, 6)},
+            {ThemedColor::ORANGE,                  QColor(235, 127, 0)},
+            {ThemedColor::PRIMARY,                 QColor(180, 90, 70)},
+            {ThemedColor::RED,                     QColor(243, 35, 72)},
+            {ThemedColor::SECONDARY,               QColor(128, 134, 154)},
     };
 
     static const std::map <ThemedStyle, QString> themedStyles = {
-            {ThemedStyle::TS_INVALID,   "background:#a84832;"},
-            {ThemedStyle::TS_ERROR,     "color:#a84832;"},
-            {ThemedStyle::TS_SUCCESS,   "color:#5e8c41;"},
-            {ThemedStyle::TS_COMMAND,   "color:#008de4;"},
-            {ThemedStyle::TS_PRIMARY,   "color:#333;"},
-            {ThemedStyle::TS_SECONDARY, "color:#444;"},
+            {ThemedStyle::TS_INVALID,   "border: 1px solid #F90000; background: rgb(255, 20, 20, 0.2);"},
+            {ThemedStyle::TS_ERROR,     "color:#F32349;"},
+            {ThemedStyle::TS_SUCCESS,   "color:#56AA01;"},
+            {ThemedStyle::TS_COMMAND,   "color:#617BD1;"},
+            {ThemedStyle::TS_PRIMARY,   "color:#555B70;"}, 
+            {ThemedStyle::TS_SECONDARY, "color:#c2c0c0;"}, 
     };
 
     static const std::map <ThemedStyle, QString> themedDarkStyles = {
-            {ThemedStyle::TS_INVALID,   "background:#a84832;"},
-            {ThemedStyle::TS_ERROR,     "color:#a84832;"},
-            {ThemedStyle::TS_SUCCESS,   "color:#5e8c41;"},
-            {ThemedStyle::TS_COMMAND,   "color:#00599a;"},
-            {ThemedStyle::TS_PRIMARY,   "color:#c7c7c7;"},
-            {ThemedStyle::TS_SECONDARY, "color:#aaa;"},
+            {ThemedStyle::TS_INVALID,   "border: 1px solid #FF1414; background: rgb(255, 20, 20, 0.4);"},
+            {ThemedStyle::TS_ERROR,     "color:#F32349;"},
+            {ThemedStyle::TS_SUCCESS,   "color:#0AAD06;"},
+            {ThemedStyle::TS_COMMAND,   "color:#ABBAED;"},
+            {ThemedStyle::TS_PRIMARY,   "color:#d2d0d0;"},
+            {ThemedStyle::TS_SECONDARY, "color:#80869A;"},
     };
 
     QColor getThemedQColor(ThemedColor color) {
@@ -195,8 +199,28 @@ namespace GUIUtil {
 
     QIcon getIcon(const QString &strIcon, const ThemedColor color, const ThemedColor colorAlternative,
                   const QString &strIconPath) {
+        QColor qcolor = getThemedQColor(color);
+        QColor qcolorAlternative = getThemedQColor(colorAlternative);
         QIcon icon(strIconPath + strIcon);
-        return icon;
+        QIcon themedIcon;
+        for (const QSize& size : icon.availableSizes()) {
+            QImage image(icon.pixmap(size).toImage());
+            image = image.convertToFormat(QImage::Format_ARGB32);
+            for (int x = 0; x < image.width(); ++x) {
+                for (int y = 0; y < image.height(); ++y) {
+                    const QRgb rgb = image.pixel(x, y);
+                    QColor* pColor;
+                    if ((rgb & RGB_MASK) < RGB_HALF) {
+                        pColor = &qcolor;
+                    } else {
+                        pColor = &qcolorAlternative;
+                    }
+                    image.setPixel(x, y, qRgba(pColor->red(), pColor->green(), pColor->blue(), qAlpha(rgb)));
+                }
+            }
+            themedIcon.addPixmap(QPixmap::fromImage(image));
+        }
+        return themedIcon;
     }
 
     QIcon getIcon(const QString &strIcon, const ThemedColor color, const QString &strIconPath) {
@@ -884,7 +908,8 @@ namespace GUIUtil {
     }
 
     bool isValidTheme(const QString &strTheme) {
-        return strTheme == defaultTheme || strTheme == darkThemePrefix || strTheme == traditionalTheme;
+        // return strTheme == defaultTheme || strTheme == darkThemePrefix || strTheme == traditionalTheme;
+        return strTheme == lightThemePrefix || strTheme == darkThemePrefix || strTheme == traditionalTheme;
     }
 
     void loadStyleSheet(bool fForceUpdate) {
@@ -994,6 +1019,9 @@ namespace GUIUtil {
         if (strFamily == "Montserrat") {
             return FontFamily::Montserrat;
         }
+        if (strFamily == "Manrope") {
+            return FontFamily::Manrope;
+        }
         throw std::invalid_argument(strprintf("Invalid font-family: %s", strFamily.toStdString()));
     }
 
@@ -1003,6 +1031,8 @@ namespace GUIUtil {
                 return "SystemDefault";
             case FontFamily::Montserrat:
                 return "Montserrat";
+            case FontFamily::Manrope:
+                return "Manrope";
             default:
                 assert(false);
         }
@@ -1213,6 +1243,7 @@ namespace GUIUtil {
         mapSupportedWeights.insert(
                 std::make_pair(FontFamily::SystemDefault, supportedWeights(FontFamily::SystemDefault)));
         mapSupportedWeights.insert(std::make_pair(FontFamily::Montserrat, supportedWeights(FontFamily::Montserrat)));
+        mapSupportedWeights.insert(std::make_pair(FontFamily::Manrope, supportedWeights(FontFamily::Manrope)));
 
         auto getBestMatch = [&](FontFamily fontFamily, QFont::Weight targetWeight) {
             auto &vecSupported = mapSupportedWeights[fontFamily];
@@ -1245,6 +1276,7 @@ namespace GUIUtil {
 
         addBestDefaults(FontFamily::SystemDefault);
         addBestDefaults(FontFamily::Montserrat);
+        addBestDefaults(FontFamily::Manrope);
 
         // Load supported defaults. May become overwritten later.
         mapWeights = mapDefaultWeights;
@@ -1265,6 +1297,19 @@ namespace GUIUtil {
 
         if (fontFamily == FontFamily::Montserrat) {
             QString family = fontFamilyToString(FontFamily::Montserrat);
+#ifdef Q_OS_MAC
+            if (getFontWeightNormal() != getFontWeightNormalDefault()) {
+                font = std::make_unique<QFont>(getFontNormal());
+            } else {
+                font = std::make_unique<QFont>(family);
+                font->setWeight(getFontWeightNormalDefault());
+            }
+#else
+            font = std::make_unique<QFont>(family);
+            font->setWeight(getFontWeightNormal());
+#endif
+        } else if (fontFamily == FontFamily::Manrope) {
+            QString family = fontFamilyToString(FontFamily::Manrope);
 #ifdef Q_OS_MAC
             if (getFontWeightNormal() != getFontWeightNormalDefault()) {
                 font = std::make_unique<QFont>(getFontNormal());
@@ -1429,8 +1474,8 @@ namespace GUIUtil {
                     {QFont::Normal, "Regular"},
                     {QFont::Bold, "Bold"},
 #else
-                    {QFont::Normal, ""},
-                    {QFont::Bold, ""},
+                    {QFont::Normal, "Regular"},
+                    {QFont::Bold, "Bold"},
 #endif
             };
 
@@ -1452,6 +1497,45 @@ namespace GUIUtil {
             font.setStyleName(styleName);
 #else
             font.setFamily(fontFamilyToString(FontFamily::Montserrat) + " " + mapMontserratMapping[qWeight]);
+            font.setWeight(qWeight);
+            font.setStyle(fItalic ? QFont::StyleItalic : QFont::StyleNormal);
+#endif
+        } else if (family == FontFamily::Manrope) {
+            static std::map <QFont::Weight, QString> mapManropeMapping{
+                    {QFont::Thin, "Thin"},
+                    {QFont::ExtraLight, "ExtraLight"},
+                    {QFont::Light, "Light"},
+                    {QFont::Medium, "Medium"},
+                    {QFont::DemiBold, "SemiBold"},
+                    {QFont::ExtraBold, "ExtraBold"},
+                    {QFont::Black, "Black"},
+#ifdef Q_OS_MAC
+                    {QFont::Normal, "Regular"},
+                    {QFont::Bold, "Bold"},
+#else
+                    {QFont::Normal, "Regular"},
+                    {QFont::Bold, "Bold"},
+#endif
+            };
+
+            assert(mapManropeMapping.count(qWeight));
+
+#ifdef Q_OS_MAC
+
+            QString styleName = mapManropeMapping[qWeight];
+
+            if (fItalic) {
+                if (styleName == "Regular") {
+                    styleName = "Italic";
+                } else {
+                    styleName += " Italic";
+                }
+            }
+
+            font.setFamily(fontFamilyToString(FontFamily::Manrope));
+            font.setStyleName(styleName);
+#else
+            font.setFamily(fontFamilyToString(FontFamily::Manrope) + " " + mapManropeMapping[qWeight]);
             font.setWeight(qWeight);
             font.setStyle(fItalic ? QFont::StyleItalic : QFont::StyleNormal);
 #endif

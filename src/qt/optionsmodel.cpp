@@ -149,11 +149,10 @@ void OptionsModel::Init(bool resetSettings) {
         settings.setValue("digits", "2");
 
     if (!settings.contains("fHideToolbar"))
-        settings.setValue("fHideToolbar", true);
+        settings.setValue("fHideToolbar", false);
 
-    // CoinJoin
     if (!settings.contains("fCoinJoinEnabled")) {
-        settings.setValue("fCoinJoinEnabled", true);
+        settings.setValue("fCoinJoinEnabled", false);
     }
     if (!gArgs.SoftSetBoolArg("-enablecoinjoin", settings.value("fCoinJoinEnabled").toBool())) {
         addOverriddenOption("-enablecoinjoin");

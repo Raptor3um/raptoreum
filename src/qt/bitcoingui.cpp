@@ -397,28 +397,28 @@ void BitcoinGUI::stopConnectingAnimation() {
 }
 
 void BitcoinGUI::createActions() {
-    sendCoinsMenuAction = new QAction(tr("&Send"), this);
+    sendCoinsMenuAction = new QAction(tr(" Send"), this);
     sendCoinsMenuAction->setStatusTip(tr("Send coins to a Raptoreum address"));
     sendCoinsMenuAction->setToolTip(sendCoinsMenuAction->statusTip());
 
     QString strCoinJoinName = QString::fromStdString(gCoinJoinName);
-    coinJoinCoinsMenuAction = new QAction(QString("&%1").arg(strCoinJoinName), this);
+    coinJoinCoinsMenuAction = new QAction(QString(" %1").arg(strCoinJoinName), this);
     coinJoinCoinsMenuAction->setStatusTip(tr("Send %1 funds to a Raptoreum address").arg(strCoinJoinName));
     coinJoinCoinsMenuAction->setToolTip(coinJoinCoinsMenuAction->statusTip());
 
-    receiveCoinsMenuAction = new QAction(tr("&Receive"), this);
+    receiveCoinsMenuAction = new QAction(tr(" Receive"), this);
     receiveCoinsMenuAction->setStatusTip(tr("Request payments (generates QR codes and raptoreum: URIs)"));
     receiveCoinsMenuAction->setToolTip(receiveCoinsMenuAction->statusTip());
 
-    sendAssetsMenuAction = new QAction(tr("&Send Asset"), this);
+    sendAssetsMenuAction = new QAction(tr(" Send Asset"), this);
     sendAssetsMenuAction->setStatusTip(tr("Send assets to a Raptoreum address"));
     sendAssetsMenuAction->setToolTip(sendAssetsMenuAction->statusTip());
 
-    createAssetsMenuAction = new QAction(tr("&Create Asset"), this);
+    createAssetsMenuAction = new QAction(tr(" Create Asset"), this);
     createAssetsMenuAction->setStatusTip(tr("Create a new asset"));
     createAssetsMenuAction->setToolTip(createAssetsMenuAction->statusTip());
     
-    updateAssetsMenuAction = new QAction(tr("&Update Asset"), this);
+    updateAssetsMenuAction = new QAction(tr(" Update Asset"), this);
     updateAssetsMenuAction->setStatusTip(tr("Update asset"));
     updateAssetsMenuAction->setToolTip(updateAssetsMenuAction->statusTip());
 
@@ -714,29 +714,44 @@ void BitcoinGUI::createToolBars() {
         toolbar->setToolButtonStyle(Qt::ToolButtonTextOnly);
         toolbar->setMovable(false); // remove unused icon in upper left corner
 
+        QLabel *logoLabel = new QLabel();
+        logoLabel->setObjectName("lblToolbarLogo");
+        logoLabel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
+        appToolBarLogoAction = toolbar->addWidget(logoLabel);
+
         tabGroup = new QButtonGroup(this);
 
         overviewButton = new QToolButton(this);
-        overviewButton->setText(tr("&Overview"));
+        overviewButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+        overviewButton->setIcon(GUIUtil::getIcon("menu_overview", GUIUtil::ThemedColor::PRIMARY));
+        overviewButton->setText(tr(" Overview"));
         overviewButton->setStatusTip(tr("Show general overview of wallet"));
         tabGroup->addButton(overviewButton);
 
         sendCoinsButton = new QToolButton(this);
+        sendCoinsButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+        sendCoinsButton->setIcon(GUIUtil::getIcon("menu_send", GUIUtil::ThemedColor::PRIMARY));
         sendCoinsButton->setText(sendCoinsMenuAction->text());
         sendCoinsButton->setStatusTip(sendCoinsMenuAction->statusTip());
         tabGroup->addButton(sendCoinsButton);
 
         receiveCoinsButton = new QToolButton(this);
+        receiveCoinsButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+        receiveCoinsButton->setIcon(GUIUtil::getIcon("menu_receive", GUIUtil::ThemedColor::PRIMARY));
         receiveCoinsButton->setText(receiveCoinsMenuAction->text());
         receiveCoinsButton->setStatusTip(receiveCoinsMenuAction->statusTip());
         tabGroup->addButton(receiveCoinsButton);
 
         historyButton = new QToolButton(this);
-        historyButton->setText(tr("&Transactions"));
+        historyButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+        historyButton->setIcon(GUIUtil::getIcon("menu_transactions", GUIUtil::ThemedColor::PRIMARY));
+        historyButton->setText(tr(" Transactions"));
         historyButton->setStatusTip(tr("Browse transaction history"));
         tabGroup->addButton(historyButton);
 
         coinJoinCoinsButton = new QToolButton(this);
+        coinJoinCoinsButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+        coinJoinCoinsButton->setIcon(GUIUtil::getIcon("menu_coinjoin", GUIUtil::ThemedColor::PRIMARY));
         coinJoinCoinsButton->setText(coinJoinCoinsMenuAction->text());
         coinJoinCoinsButton->setStatusTip(coinJoinCoinsMenuAction->statusTip());
         tabGroup->addButton(coinJoinCoinsButton);
@@ -744,7 +759,9 @@ void BitcoinGUI::createToolBars() {
         QSettings settings;
         if (settings.value("fShowSmartnodesTab").toBool()) {
             smartnodeButton = new QToolButton(this);
-            smartnodeButton->setText(tr("&Smartnodes"));
+            smartnodeButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+            smartnodeButton->setIcon(GUIUtil::getIcon("menu_smartnodes", GUIUtil::ThemedColor::PRIMARY));
+            smartnodeButton->setText(tr(" Smartnodes"));
             smartnodeButton->setStatusTip(tr("Browse smartnodes"));
             tabGroup->addButton(smartnodeButton);
             connect(smartnodeButton, &QToolButton::clicked, this, &BitcoinGUI::gotoSmartnodePage);
@@ -752,21 +769,29 @@ void BitcoinGUI::createToolBars() {
         }
 
         myAssetsButton = new QToolButton(this);
-        myAssetsButton->setText("&Assets");
+        myAssetsButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+        myAssetsButton->setIcon(GUIUtil::getIcon("menu_assets", GUIUtil::ThemedColor::PRIMARY));
+        myAssetsButton->setText(" Assets");
         myAssetsButton->setStatusTip("Show general overview of assets");
         tabGroup->addButton(myAssetsButton);
 
         sendAssetsButton = new QToolButton(this);
+        sendAssetsButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+        sendAssetsButton->setIcon(GUIUtil::getIcon("menu_send_asset", GUIUtil::ThemedColor::PRIMARY));
         sendAssetsButton->setText(sendAssetsMenuAction->text());
         sendAssetsButton->setStatusTip(sendAssetsMenuAction->statusTip());
         tabGroup->addButton(sendAssetsButton);
 
         createAssetsButton = new QToolButton(this);
+        createAssetsButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+        createAssetsButton->setIcon(GUIUtil::getIcon("menu_create_asset", GUIUtil::ThemedColor::PRIMARY));
         createAssetsButton->setText(createAssetsMenuAction->text());
         createAssetsButton->setStatusTip(createAssetsMenuAction->statusTip());
         tabGroup->addButton(createAssetsButton);
         
         updateAssetsButton = new QToolButton(this);
+        updateAssetsButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+        updateAssetsButton->setIcon(GUIUtil::getIcon("menu_update_asset", GUIUtil::ThemedColor::PRIMARY));
         updateAssetsButton->setText(updateAssetsMenuAction->text());
         updateAssetsButton->setStatusTip(updateAssetsMenuAction->statusTip());
         tabGroup->addButton(updateAssetsButton);
@@ -781,9 +806,6 @@ void BitcoinGUI::createToolBars() {
         connect(receiveCoinsButton, &QToolButton::clicked, this, &BitcoinGUI::gotoReceiveCoinsPage);
         connect(historyButton, &QToolButton::clicked, this, &BitcoinGUI::gotoHistoryPage);
 
-        // Give the selected tab button a bolder font.
-        connect(tabGroup, static_cast<void (QButtonGroup::*)(QAbstractButton *, bool)>(&QButtonGroup::buttonToggled), this, &BitcoinGUI::highlightTabButton);
-
         for (auto button : tabGroup->buttons()) {
             GUIUtil::setFont({button}, GUIUtil::FontWeight::Normal, 16);
             button->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
@@ -797,16 +819,16 @@ void BitcoinGUI::createToolBars() {
 
 #ifdef ENABLE_WALLET
         m_wallet_selector = new QComboBox(this);
-        m_wallet_selector->setSizeAdjustPolicy(QComboBox::AdjustToContents);
+        m_wallet_selector->setMinimumContentsLength(200);
         connect(m_wallet_selector, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &BitcoinGUI::setCurrentWalletBySelectorIndex);
 
         QVBoxLayout* walletSelectorLayout = new QVBoxLayout(this);
         walletSelectorLayout->addWidget(m_wallet_selector);
         walletSelectorLayout->setSpacing(0);
         walletSelectorLayout->setMargin(0);
-        walletSelectorLayout->setContentsMargins(5, 0, 5, 0);
+        walletSelectorLayout->setContentsMargins(15, 7, 15, 0);
         QWidget* walletSelector = new QWidget(this);
-        walletSelector->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
+        walletSelector->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
         walletSelector->setObjectName("walletSelector");
         walletSelector->setLayout(walletSelectorLayout);
         m_wallet_selector_action = appToolBar->insertWidget(appToolBarLogoAction, walletSelector);
@@ -817,18 +839,12 @@ void BitcoinGUI::createToolBars() {
         spacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
         toolbar->addWidget(spacer);
 
-        QLabel *logoLabel = new QLabel();
-        logoLabel->setObjectName("lblToolbarLogo");
-        logoLabel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
-
-        appToolBarLogoAction = toolbar->addWidget(logoLabel);
-                
         /** Create additional container for toolbar and walletFrame and make it the central widget.
             This is a workaround mostly for toolbar styling on Mac OS but should work fine for every other OSes too.
         */
         QHBoxLayout *layout = new QHBoxLayout;
         if (!settings.value("fHideToolbar").toBool())
-            layout->addWidget(toolbar);
+        layout->addWidget(toolbar);
         layout->addWidget(walletFrame);
         layout->setSpacing(0);
         layout->setContentsMargins(QMargins());
@@ -1270,7 +1286,7 @@ void BitcoinGUI::updateNetworkState() {
     int count = clientModel->getNumConnections();
     bool fNetworkActive = m_node.getNetworkActive();
     QString icon;
-    GUIUtil::ThemedColor color = GUIUtil::ThemedColor::ORANGE;
+    GUIUtil::ThemedColor color = GUIUtil::ThemedColor::BLUE;
     switch (count) {
         case 0:
             icon = "connect_4";
@@ -1279,6 +1295,7 @@ void BitcoinGUI::updateNetworkState() {
         case 1:
         case 2:
             icon = "connect_1";
+            color = GUIUtil::ThemedColor::ORANGE;
             break;
         case 3:
         case 4:
@@ -1328,7 +1345,7 @@ void BitcoinGUI::updateNetworkState() {
         labelConnectionsIcon->setToolTip(tr("%n active connection(s) to Raptoreum network", "", count));
     } else {
         labelConnectionsIcon->setToolTip(tr("Network activity disabled"));
-        icon = "connect_4";
+        icon = "connect_0";
         color = GUIUtil::ThemedColor::RED;
     }
 
@@ -1337,7 +1354,7 @@ void BitcoinGUI::updateNetworkState() {
     }
     if (!fNetworkActive || count > 0) {
         stopConnectingAnimation();
-        labelConnectionsIcon->setPixmap(GUIUtil::getIcon(icon, color).pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));
+        labelConnectionsIcon->setPixmap(GUIUtil::getIcon(icon, color).pixmap(STATUSBAR_ICONSIZE * 1.2, STATUSBAR_ICONSIZE * 1.2));
     }
 }
 
@@ -1399,7 +1416,7 @@ void BitcoinGUI::updateCoinJoinVisibility() {
     // Hiding the QToolButton itself doesn't work for the GUI part
     // but is still needed for shortcuts to work properly.
     if (appToolBar != nullptr) {
-        appToolBar->actions()[4]->setVisible(fEnabled);
+        appToolBar->actions()[6]->setVisible(fEnabled);
         coinJoinCoinsButton->setVisible(fEnabled);
         GUIUtil::updateButtonGroupShortcuts(tabGroup);
     }
@@ -1422,7 +1439,7 @@ void BitcoinGUI::updateWidth() {
         nWidthWidestButton = std::max<int>(nWidthWidestButton, GUIUtil::TextWidth(fm, button->text()));
     }
 
-    nWidth = nWidthWidestButton + 50;
+    nWidth = nWidthWidestButton + 65;
     appToolBar->setMaximumWidth(nWidth);
     // 980 is the minimum required to show all tab's contents
     int minWidth = 980;
