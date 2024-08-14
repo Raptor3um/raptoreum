@@ -394,7 +394,7 @@ static void SetupUIArgs() {
                  "Set a directory which contains custom css files. Those will be used as stylesheets for the UI.",
                  ArgsManager::ALLOW_ANY, OptionsCategory::GUI);
     gArgs.AddArg("-font-family", QObject::tr("Set the font family. Possible values: %1. (default: %2)").arg(
-                         "SystemDefault, Montserrat").arg(
+                         "SystemDefault, Montserrat, Manrope").arg(
                          GUIUtil::fontFamilyToString(GUIUtil::getFontFamilyDefault())).toStdString(), ArgsManager::ALLOW_ANY,
                  OptionsCategory::GUI);
     gArgs.AddArg("-font-scale", QObject::tr(
@@ -624,7 +624,7 @@ int GuiMain(int argc, char *argv[]) {
         } catch (const std::exception &e) {
             QMessageBox::critical(nullptr, PACKAGE_NAME,
                                   QObject::tr("Error: Specified font-family invalid. Valid values: %1.").arg(
-                                          "SystemDefault, Montserrat"));
+                                          "SystemDefault, Montserrat, Manrope"));
             return EXIT_FAILURE;
         }
         GUIUtil::setFontFamily(family);

@@ -80,7 +80,8 @@ NetworkStyle::NetworkStyle(const QString &_appName, const int iconColorHueShift,
 
     appIcon = QIcon(appIconPixmap);
     trayAndWindowIcon = QIcon(appIconPixmap.scaled(QSize(256, 256)));
-    splashImage = QPixmap(":/images/splash");
+    QString theme = GUIUtil::getActiveTheme();
+    splashImage = theme.startsWith("Dark") ? QPixmap(":/images/splash_dark") : QPixmap(":/images/splash_light");
 }
 
 const NetworkStyle *NetworkStyle::instantiate(const QString &networkId) {

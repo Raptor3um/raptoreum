@@ -443,7 +443,7 @@ QVariant TransactionTableModel::addressColor(const TransactionRecord *wtx) const
         case TransactionRecord::FutureReceive:
         case TransactionRecord::FutureSend: {
             if (wtx->label.isEmpty()) {
-                return GUIUtil::getThemedQColor(GUIUtil::ThemedColor::BAREADDRESS);
+                return GUIUtil::getThemedQColor(GUIUtil::ThemedColor::SECONDARY);
             }
         }
             break;
@@ -452,7 +452,7 @@ QVariant TransactionTableModel::addressColor(const TransactionRecord *wtx) const
         case TransactionRecord::CoinJoinMixing:
         case TransactionRecord::CoinJoinMakeCollaterals:
         case TransactionRecord::CoinJoinCollateralPayment:
-            return GUIUtil::getThemedQColor(GUIUtil::ThemedColor::BAREADDRESS);
+            return GUIUtil::getThemedQColor(GUIUtil::ThemedColor::SECONDARY);
         default:
             break;
     }
@@ -506,17 +506,17 @@ QVariant TransactionTableModel::txStatusDecoration(const TransactionRecord *wtx)
         case TransactionStatus::Confirming:
             switch (wtx->status.depth) {
                 case 1:
-                    return GUIUtil::getIcon("transaction_1", GUIUtil::ThemedColor::ORANGE);
+                    return GUIUtil::getIcon("transaction_1", GUIUtil::ThemedColor::PRIMARY);
                 case 2:
-                    return GUIUtil::getIcon("transaction_2", GUIUtil::ThemedColor::ORANGE);
+                    return GUIUtil::getIcon("transaction_2", GUIUtil::ThemedColor::PRIMARY);
                 case 3:
-                    return GUIUtil::getIcon("transaction_3", GUIUtil::ThemedColor::ORANGE);
+                    return GUIUtil::getIcon("transaction_3", GUIUtil::ThemedColor::PRIMARY);
                 case 4:
-                    return GUIUtil::getIcon("transaction_4", GUIUtil::ThemedColor::ORANGE);
+                    return GUIUtil::getIcon("transaction_4", GUIUtil::ThemedColor::PRIMARY);
                 case 5:
-                    return GUIUtil::getIcon("transaction_5", GUIUtil::ThemedColor::ORANGE);
+                    return GUIUtil::getIcon("transaction_5", GUIUtil::ThemedColor::PRIMARY);
                 default:
-                    return GUIUtil::getIcon("transaction_6", GUIUtil::ThemedColor::ORANGE);
+                    return GUIUtil::getIcon("transaction_6", GUIUtil::ThemedColor::PRIMARY);
             };
         case TransactionStatus::Confirmed:
             return GUIUtil::getIcon("synced", GUIUtil::ThemedColor::GREEN);

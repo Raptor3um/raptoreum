@@ -287,8 +287,8 @@ void SendAssetsEntry::changeEvent(QEvent *e) {
 }
 
 void SendAssetsEntry::setButtonIcons() {
-    GUIUtil::setIcon(ui->addressBookButton, "address-book");
-    GUIUtil::setIcon(ui->pasteButton, "editpaste");
+    GUIUtil::setIcon(ui->addressBookButton, "address-book", GUIUtil::ThemedColor::BLUE);
+    GUIUtil::setIcon(ui->pasteButton, "editpaste", GUIUtil::ThemedColor::BLUE);
     GUIUtil::setIcon(ui->deleteButton, "remove", GUIUtil::ThemedColor::RED);
 }
 
