@@ -64,14 +64,17 @@ namespace GUIUtil {
         UNCONFIRMED,
         /* Theme related blue color */
         BLUE,
-        /* Eye-friendly orange color */
-        ORANGE,
-        /* Eye-friendly red color, e.g. Transaction list -- negative amount */
-        RED,
         /* Eye-friendly green color */
         GREEN,
-        /* Transaction list -- bare address (without label) */
-        BAREADDRESS,
+        /* Eye-friendly orange color */
+        ORANGE,
+        /* Primary color */
+        PRIMARY,
+        /* Eye-friendly red color, e.g. Transaction list -- negative amount */
+        RED,
+        /* Secondary color */
+        SECONDARY,
+      
         /* Transaction list -- TX status decoration - open until date */
         TX_STATUS_OPENUNTILDATE,
         /* Background used for some widgets. Its slightly darker than the wallets frame background. */
@@ -331,6 +334,7 @@ namespace GUIUtil {
     enum class FontFamily {
         SystemDefault,
         Montserrat,
+        Manrope,
     };
 
     FontFamily fontFamilyFromString(const QString &strFamily);

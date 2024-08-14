@@ -191,37 +191,39 @@ QT_RES_ICONS = \
   qt/res/icons/about_qt.png \
   qt/res/icons/add.png \
   qt/res/icons/address-book.png \
-  qt/res/icons/arrow_left.png \
-  qt/res/icons/arrow_right.png \
-  qt/res/icons/browse.png \
+  qt/res/icons/clock0.png \
   qt/res/icons/clock1.png \
   qt/res/icons/clock2.png \
   qt/res/icons/clock3.png \
   qt/res/icons/clock4.png \
   qt/res/icons/clock5.png \
   qt/res/icons/clock6.png \
-  qt/res/icons/configure.png \
-  qt/res/icons/connect0_16.png \
-  qt/res/icons/connect1_16.png \
-  qt/res/icons/connect2_16.png \
-  qt/res/icons/connect3_16.png \
-  qt/res/icons/connect4_16.png \
-  qt/res/icons/console_remove.png \
-  qt/res/icons/debugwindow.png \
+  qt/res/icons/connect_0.png \
+  qt/res/icons/connect_1.png \
+  qt/res/icons/connect_2.png \
+  qt/res/icons/connect_3.png \
+  qt/res/icons/connect_4.png \
   qt/res/icons/editcopy.png \
   qt/res/icons/editpaste.png \
   qt/res/icons/edit.png \
-  qt/res/icons/export.png \
   qt/res/icons/eye_minus.png \
   qt/res/icons/eye_plus.png \
   qt/res/icons/eye.png \
-  qt/res/icons/filesave.png \
   qt/res/icons/fontbigger.png \
   qt/res/icons/fontsmaller.png \
   qt/res/icons/hd_enabled.png \
-  qt/res/icons/key.png \
   qt/res/icons/lock_closed.png \
   qt/res/icons/lock_open.png \
+  qt/res/icons/menu_assets.png \
+  qt/res/icons/menu_coinjoin.png \
+  qt/res/icons/menu_create_asset.png \
+  qt/res/icons/menu_overview.png \
+  qt/res/icons/menu_receive.png \
+  qt/res/icons/menu_send_asset.png \
+  qt/res/icons/menu_send.png \
+  qt/res/icons/menu_smartnodes.png \
+  qt/res/icons/menu_transactions.png \
+  qt/res/icons/menu_update_asset.png \
   qt/res/icons/proxy.png \
   qt/res/icons/quit.png \
   qt/res/icons/raptoreum.ico \
@@ -231,13 +233,8 @@ QT_RES_ICONS = \
   qt/res/icons/remove.png \
   qt/res/icons/send.png \
   qt/res/icons/synced.png \
-  qt/res/icons/transaction0.png \
-  qt/res/icons/transaction2.png \
   qt/res/icons/transaction_abandoned.png \
   qt/res/icons/transaction_locked.png \
-  qt/res/icons/tx_inout.png \
-  qt/res/icons/tx_input.png \
-  qt/res/icons/tx_output.png \
   qt/res/icons/warning.png
 
 BITCOIN_QT_BASE_CPP = \
@@ -320,21 +317,29 @@ endif
 
 QT_RES_IMAGES = \
   qt/res/images/arrow_down_dark.png \
+  qt/res/images/arrow_down_dark_disabled.png \
+  qt/res/images/arrow_down_dark_hover.png \
   qt/res/images/arrow_down_light.png \
+  qt/res/images/arrow_down_light_disabled.png \
+  qt/res/images/arrow_down_light_hover.png \
   qt/res/images/arrow_left_dark.png \
+  qt/res/images/arrow_left_dark_disabled.png \
+  qt/res/images/arrow_left_dark_hover.png \
   qt/res/images/arrow_left_light.png \
+  qt/res/images/arrow_left_light_disabled.png \
+  qt/res/images/arrow_left_light_hover.png \
   qt/res/images/arrow_right_dark.png \
+  qt/res/images/arrow_right_dark_disabled.png \
+  qt/res/images/arrow_right_dark_hover.png \
   qt/res/images/arrow_right_light.png \
+  qt/res/images/arrow_right_light_disabled.png \
+  qt/res/images/arrow_right_light_hover.png \
   qt/res/images/arrow_up_dark.png \
+  qt/res/images/arrow_up_dark_disabled.png \
+  qt/res/images/arrow_up_dark_hover.png \
   qt/res/images/arrow_up_light.png \
-  qt/res/images/arrow_light_down_normal.png \
-  qt/res/images/arrow_light_down_hover.png \
-  qt/res/images/arrow_light_left_normal.png \
-  qt/res/images/arrow_light_left_hover.png \
-  qt/res/images/arrow_light_right_normal.png \
-  qt/res/images/arrow_light_right_hover.png \
-  qt/res/images/arrow_light_up_normal.png \
-  qt/res/images/arrow_light_up_hover.png \
+  qt/res/images/arrow_up_light_disabled.png \
+  qt/res/images/arrow_up_light_hover.png \
   qt/res/images/checkbox_normal_dark.png \
   qt/res/images/checkbox_normal_hover_dark.png \
   qt/res/images/checkbox_normal_disabled_dark.png \
@@ -353,8 +358,8 @@ QT_RES_IMAGES = \
   qt/res/images/checkbox_partly_checked_light.png \
   qt/res/images/checkbox_partly_checked_hover_light.png \
   qt/res/images/checkbox_partly_checked_disabled_light.png \
-  qt/res/images/raptoreum_logo_toolbar.png \
-  qt/res/images/raptoreum_logo_toolbar_blue.png \
+  qt/res/images/raptoreum_logo_toolbar_dark.png \
+  qt/res/images/raptoreum_logo_toolbar_light.png \
   qt/res/images/radio_normal_dark.png \
   qt/res/images/radio_normal_hover_dark.png \
   qt/res/images/radio_checked_dark.png \
@@ -367,7 +372,8 @@ QT_RES_IMAGES = \
   qt/res/images/radio_checked_hover_light.png \
   qt/res/images/radio_normal_disabled_light.png \
   qt/res/images/radio_checked_disabled_light.png \
-  qt/res/images/splash.png
+  qt/res/images/splash_dark.png \
+  qt/res/images/splash_light.png
 
 QT_RES_CSS = \
   qt/res/css/dark.css \
@@ -393,7 +399,25 @@ QT_RES_FONTS = \
   qt/res/fonts/Montserrat/Montserrat-SemiBold.otf \
   qt/res/fonts/Montserrat/Montserrat-SemiBoldItalic.otf \
   qt/res/fonts/Montserrat/Montserrat-Thin.otf \
-  qt/res/fonts/Montserrat/Montserrat-ThinItalic.otf
+  qt/res/fonts/Montserrat/Montserrat-ThinItalic.otf \
+  qt/res/fonts/Manrope/Manrope-Black.otf \
+  qt/res/fonts/Manrope/Manrope-BlackItalic.otf \
+  qt/res/fonts/Manrope/Manrope-Bold.otf \
+  qt/res/fonts/Manrope/Manrope-BoldItalic.otf \
+  qt/res/fonts/Manrope/Manrope-ExtraBold.otf \
+  qt/res/fonts/Manrope/Manrope-ExtraBoldItalic.otf \
+  qt/res/fonts/Manrope/Manrope-ExtraLight.otf \
+  qt/res/fonts/Manrope/Manrope-ExtraLightItalic.otf \
+  qt/res/fonts/Manrope/Manrope-Italic.otf \
+  qt/res/fonts/Manrope/Manrope-Light.otf \
+  qt/res/fonts/Manrope/Manrope-LightItalic.otf \
+  qt/res/fonts/Manrope/Manrope-Medium.otf \
+  qt/res/fonts/Manrope/Manrope-MediumItalic.otf \
+  qt/res/fonts/Manrope/Manrope-Regular.otf \
+  qt/res/fonts/Manrope/Manrope-SemiBold.otf \
+  qt/res/fonts/Manrope/Manrope-SemiBoldItalic.otf \
+  qt/res/fonts/Manrope/Manrope-Thin.otf \
+  qt/res/fonts/Manrope/Manrope-ThinItalic.otf 
 
 QT_RES_MOVIES = $(wildcard $(srcdir)/qt/res/movies/spinner-*.png)
 

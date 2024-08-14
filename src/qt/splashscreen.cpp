@@ -88,11 +88,10 @@ SplashScreen::SplashScreen(interfaces::Node &node, Qt::WindowFlags f, const Netw
     pixPaint.drawPixmap((width / 2) - (logoWidth / 2), (height / 2) - (logoHeight / 2) + 0,
                         pixmapLogo.scaled(logoWidth * scale, logoHeight * scale, Qt::KeepAspectRatio,
                                           Qt::SmoothTransformation));
-    //pixPaint.setPen(GUIUtil::getThemedQColor(GUIUtil::ThemedColor::DEFAULT));
-    pixPaint.setPen(Qt::white);
+    pixPaint.setPen(GUIUtil::getThemedQColor(GUIUtil::ThemedColor::DEFAULT));
 
     // check font size and drawing with
-    fontBold.setPointSize(50 * fontFactor);
+    fontBold.setPointSize(40 * fontFactor);
     pixPaint.setFont(fontBold);
     QFontMetrics fm = pixPaint.fontMetrics();
     int titleTextWidth = GUIUtil::TextWidth(fm, titleText);
@@ -161,8 +160,7 @@ static void InitMessage(SplashScreen *splash, const std::string &message) {
                                              Qt::QueuedConnection,
                                              Q_ARG(QString, QString::fromStdString(message)),
                                              Q_ARG(int, Qt::AlignBottom | Qt::AlignHCenter),
-                                             Q_ARG(QColor, Qt::white));
-//      Q_ARG(QColor, GUIUtil::getThemedQColor(GUIUtil::ThemedColor::DEFAULT)));
+                                             Q_ARG(QColor, GUIUtil::getThemedQColor(GUIUtil::ThemedColor::DEFAULT)));
     assert(invoked);
 }
 

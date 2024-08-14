@@ -87,7 +87,7 @@ private:
 
 private
     Q_SLOTS:
-    void checkAvailabilityClicked();
+    void onAssetNameChanged(QString name);
 
     void on_createAssetButton_clicked();
 
