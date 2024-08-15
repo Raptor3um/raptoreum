@@ -15,7 +15,6 @@
 #include <qt/guiutil.h>
 #include <qt/optionsmodel.h>
 #include <qt/sendassetsentry.h>
-//#include <qt/upload_download.h>
 #include <qt/uploaddownload.h>
 
 #include <chainparams.h>

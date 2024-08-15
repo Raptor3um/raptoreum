@@ -3,9 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #include <qt/assetsdialog.h>
 #include <qt/forms/ui_assetsdialog.h>
-//#include <qt/upload_download.h>
 #include <qt/uploaddownload.h>
-//#include <qt/httpclient.h>
 
 #include <chainparams.h>
 #include <qt/clientmodel.h>
@@ -56,8 +54,8 @@ AssetsDialog::AssetsDialog(QWidget *parent) :
         ui(new Ui::AssetsDialog) {
     ui->setupUi(this);
 
-    GUIUtil::setFont({ui->label_filter_2, ui->assetinfolabel, ui->recentlabel}, GUIUtil::FontWeight::Bold, 16);
-    GUIUtil::setFont({ui->label_6, ui->label_4, ui->label_3, ui->label_4, ui->label_5,
+    GUIUtil::setFont({ui->label_filter_2, ui->assetinfolabel}, GUIUtil::FontWeight::Bold, 16);
+    GUIUtil::setFont({ui->label_6, ui->label_4, ui->label_3, ui->label_4, ui->label_5, ui->referenceLabel,
                         ui->errorLabel}, GUIUtil::FontWeight::Bold, 14);
     GUIUtil::setFont({ui->idTextLablel, ui->nameTextLabel, ui->typeLabel,
                         ui->suplyTextLabel}, GUIUtil::FontWeight::Normal, 14);
@@ -89,9 +87,6 @@ AssetsDialog::AssetsDialog(QWidget *parent) :
     connect(ui->tableWidgetAssets, &QTableWidget::doubleClicked, this, &AssetsDialog::Asset_details_clicked);
     connect(sendAssetAction, &QAction::triggered, this, &AssetsDialog::SendAsset_clicked);
     connect(detailsAction, &QAction::triggered, this, &AssetsDialog::Asset_details_clicked);
-    connect(ui->referenceDisplay, SIGNAL(clicked()), this, SLOT(showFulRefImage()));
-    connect(ui->referenceLabel, SIGNAL(clicked(const QString& text)), this, SLOT(showFulRefImage()));
-    //connect(ui->referenceDisplay, &QLabel::mouseReleaseEvent, this, &AssetsDialog::showFulRefImage());
     timer = new QTimer(this);
     connect(timer, &QTimer::timeout, this, &AssetsDialog::updateAssetBalanceScheduled);
     timer->start(1000);
@@ -101,6 +96,7 @@ AssetsDialog::AssetsDialog(QWidget *parent) :
     ui->errorLabel->setVisible(false);
     ui->errorTextLabel->setVisible(false);
     ui->errorTextLabel->setStyleSheet(GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_INVALID));
+    ui->referenceDisplay->setCursor(Qt::PointingHandCursor);
 
     GUIUtil::updateFonts();
 }
@@ -316,35 +312,32 @@ void AssetsDialog::on_updateButton_clicked() {
 
 void AssetsDialog::displayImage(const std::string& cid) {
     ui->referenceDisplay->clear();
-    if(cid.empty()) {
+    if(cid.empty() || cid.length() < 46 || cid.compare(0, 2, "Qm")) {
         ui->referenceLabel->hide();
         ui->referenceDisplay->hide();
     } else {
         ui->referenceLabel->show();
         ui->referenceDisplay->show();
-//        HttpClient httpClient;
-//        httpClient.sendGetRequest(cid, [this, cid](const QByteArray& data) {
-//            printf("data size %d\n", data.size());
-//        });
         std::string response_data;
-        //downloadFile(cid, response_data);
         download(cid, response_data);
-        printf("size %ld\n", response_data.size());
         QByteArray imageData = QByteArray::fromRawData(response_data.data(), response_data.size());
         QBuffer buffer(&imageData);
         buffer.open(QIODevice::ReadOnly);
         bool isLoaded = currentRefImage.load(&buffer, nullptr);
+
         if(isLoaded) {
             int displayWidth = ui->referenceDisplay->width() < currentRefImage.width() ? ui->referenceDisplay->width() : currentRefImage.width();
-            int displayHeight = currentRefImage.height() > 40 ? 40 : currentRefImage.height();
+            int displayHeight = currentRefImage.height() > 260 ? 260 : currentRefImage.height();
             QPixmap pixmap = QPixmap::fromImage(currentRefImage.scaled(displayWidth, displayHeight, Qt::KeepAspectRatio));
             ui->referenceDisplay->setPixmap(pixmap);
-            ui->referenceDisplay->setCursor(Qt::PointingHandCursor);
             ui->referenceDisplay->setToolTip(QString::fromStdString(cid));
+            ui->referenceDisplay->setOpenExternalLinks(false);
         } else {
-            ui->referenceDisplay->setText(QString::fromStdString(cid));
-            ui->referenceDisplay->unsetCursor();
+            std::string displayUrl = "<a href=\"" + IPFS_GATEWAY_URL + cid + "\">" + cid + "</a>";
+            ui->referenceDisplay->setText(QString::fromStdString(displayUrl));
             ui->referenceDisplay->setToolTip("");
+            ui->referenceDisplay->setOpenExternalLinks(true);
+
         }
 
     }
