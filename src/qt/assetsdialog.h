@@ -93,7 +93,7 @@ private
 
         void SendAsset_clicked();
 
-        void showFulRefImage();
+        void showFullRefImage();
 
 };
 

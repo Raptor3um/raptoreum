@@ -343,7 +343,7 @@ void AssetsDialog::displayImage(const std::string& cid) {
     }
 }
 //TODO: not yet working.
-void AssetsDialog::showFulRefImage() {
+void AssetsDialog::showFullRefImage() {
     printf("full image showing\n");
     QDialog dialog(this);
     dialog.setWindowTitle(ui->referenceDisplay->toolTip());
