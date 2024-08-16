@@ -111,6 +111,7 @@ private
     void onAssetSelected(QString name);
 
     void focusAsset(const std::string assetId);
+    void openFilePicker();
 
     Q_SIGNALS:
             // Fired when a message should be reported to the user

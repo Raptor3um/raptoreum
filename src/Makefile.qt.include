@@ -164,6 +164,7 @@ BITCOIN_QT_H = \
   qt/sendassetsdialog.h \
   qt/sendassetsentry.h \
   qt/createassetsdialog.h \
+  qt/uploaddownload.h \
   qt/updateassetsdialog.h \
   qt/signverifymessagedialog.h \
   qt/smartnodelist.h \
@@ -287,6 +288,7 @@ BITCOIN_QT_WALLET_CPP = \
   qt/sendcoinsentry.cpp \
   qt/sendassetsdialog.cpp \
   qt/createassetsdialog.cpp \
+  qt/uploaddownload.cpp \
   qt/updateassetsdialog.cpp \
   qt/assetsdialog.cpp \
   qt/sendassetsentry.cpp \

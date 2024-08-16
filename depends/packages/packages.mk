@@ -1,4 +1,4 @@
-packages:=boost libevent gmp backtrace cmake immer zeromq
+packages:=boost libevent gmp backtrace cmake immer zeromq openssl
 
 qrencode_linux_packages = qrencode
 qrencode_android_packages = qrencode

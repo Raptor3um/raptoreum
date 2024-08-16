@@ -210,10 +210,18 @@ public:
                         Update(EUpdate::DEPLOYMENT_V17, std::string("v17"), 0, 4032, 419328, 1, 3, 1, false,
                                VoteThreshold(80, 60, 5), VoteThreshold(0, 0, 1), false, 427392)
                 );
-        // updateManager.Add
-        // (
-        //     Update(EUpdate::ROUND_VOTING, std::string("Round Voting"), 7, 100, 100000, 5, 10, 5, false, VoteThreshold(85, 85, 1), VoteThreshold(95, 95, 1))
-        // );
+        updateManager.Add(
+                Update(EUpdate::ROUND_VOTING, std::string("Round Voting"),
+                       1,                        // bit
+                       720,                     // roundSize
+                       905760,                    // startHeight
+                       7,                        // votingPeriod
+                       365,                      // votingMaxRounds
+                       7,                        // gracePeriod
+                       false,                    // forceUpdate
+                       VoteThreshold(85, 85, 1), // minerThreshold
+                       VoteThreshold(0, 0, 1))   // nodeThreshold
+        );
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S(

@@ -633,7 +633,7 @@
             <item>
              <widget class="QPushButton" name="openIpfsButton">
               <property name="text">
-               <string>Browse IPFS</string>
+               <string>Browse File</string>
               </property>
              </widget>
             </item>
@@ -1079,7 +1079,6 @@
              <widget class="QLabel" name="fallbackFeeWarningLabel">
               <property name="font">
                <font>
-                <weight>50</weight>
                 <bold>false</bold>
                </font>
               </property>

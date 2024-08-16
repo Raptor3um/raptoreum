@@ -1,7 +1,7 @@
 AC_PREREQ([2.69])
 define(_CLIENT_VERSION_MAJOR, 2)
 define(_CLIENT_VERSION_MINOR, 0)
-define(_CLIENT_VERSION_REVISION, 02)
+define(_CLIENT_VERSION_REVISION, 03)
 define(_CLIENT_VERSION_BUILD, 99)
 define(_CLIENT_VERSION_IS_RELEASE, false)
 define(_COPYRIGHT_YEAR, 2024)
@@ -1377,6 +1377,9 @@ if test "$use_reduce_exports" = "yes"; then
   [AC_MSG_ERROR([Cannot set default symbol visibility. Use --disable-reduce-exports.])], [$CXXFLAG_WERROR])
   AX_CHECK_LINK_FLAG([-Wl,--exclude-libs,ALL], [RELDFLAGS="-Wl,--exclude-libs,ALL"], [], [$LDFLAG_WERROR])
 fi
+
+AX_CHECK_LINK_FLAG([-lssl], [LDFLAGS="$LDFLAGS -lssl"])
+AX_CHECK_LINK_FLAG([-lcrypto], [LDFLAGS="$LDFLAGS -lcrypto"])
 
 if test "$use_tests" = "yes"; then
   if test "$HEXDUMP" = ""; then

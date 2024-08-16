@@ -15,6 +15,7 @@
 #include <qt/guiutil.h>
 #include <qt/optionsmodel.h>
 #include <qt/sendassetsentry.h>
+#include <qt/uploaddownload.h>
 
 #include <chainparams.h>
 #include <interfaces/node.h>
@@ -37,7 +38,7 @@
 #include <QStringListModel>
 #include <QSortFilterProxyModel>
 #include <QTextDocument>
-
+#include <QFileDialog>
 
 #define SEND_CONFIRM_DELAY   3
 
@@ -100,6 +101,7 @@ CreateAssetsDialog::CreateAssetsDialog(QWidget *parent) :
     connect(ui->AssetTypeBox, SIGNAL(currentIndexChanged(QString)), this, SLOT(onAssetTypeSelected(QString)));
     connect(ui->AssetTypeBox, SIGNAL(currentIndexChanged(QString)), this, SLOT(onAssetNameChanged(QString)));
     connect(ui->RootAssetBox, SIGNAL(currentIndexChanged(QString)), this, SLOT(onAssetNameChanged(QString)));
+    connect(ui->openIpfsButton, SIGNAL(clicked()), this, SLOT(openFilePicker()));
 
     // Coin Control
     connect(ui->pushButtonCoinControl, SIGNAL(clicked()), this, SLOT(CoinControlButtonClicked()));
@@ -161,7 +163,7 @@ CreateAssetsDialog::CreateAssetsDialog(QWidget *parent) :
     ui->IssueFrequencyBox->setToolTip(tr("Disabled. Not in use"));
     ui->distributionBox->setEnabled(false);
     ui->distributionBox->setToolTip(tr("Manual only until other types are developed"));
-    ui->openIpfsButton->hide();
+    //ui->openIpfsButton->hide();
 
     ui->RootAssetLabel->setVisible(false);
     ui->RootAssetBox->setVisible(false);
@@ -794,6 +796,12 @@ void CreateAssetsDialog::CoinControlUpdateLabels() {
         ui->widgetCoinControl->hide();
         ui->labelCoinControlInsuffFunds->hide();
     }
+}
+
+void CreateAssetsDialog::openFilePicker() {
+    std::string cid;
+    pickAndUploadFileForIpfs(this, cid);
+    ui->ipfsText->setText(QString::fromStdString(cid));
 }
 
 void CreateAssetsDialog::onAssetNameChanged(QString name)
