@@ -280,6 +280,14 @@ static QString GetDistributionType(int t) {
     return "invalid";
 }
 
+void CreateAssetsDialog::keyPressEvent(QKeyEvent* evt)
+{
+    // Escape hides the dialog, which leaves us with an empty window
+    if (evt->key() == Qt::Key_Escape)
+        return;
+    QDialog::keyPressEvent(evt);
+}
+
 void CreateAssetsDialog::on_createAssetButton_clicked() {
     if (!model || !model->getOptionsModel() || !validateInputs())
         return;
