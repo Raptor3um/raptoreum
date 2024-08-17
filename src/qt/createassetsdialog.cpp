@@ -179,8 +179,9 @@ CreateAssetsDialog::CreateAssetsDialog(QWidget *parent) :
 
     ui->RootAssetBox->setModel(proxy);
     ui->RootAssetBox->setEditable(true);
-    ui->RootAssetBox->lineEdit()->setPlaceholderText("Select Root asset");
-    ui->assetnameText->setToolTip("a-z A-Z 0-9 and space");
+    ui->RootAssetBox->lineEdit()->setPlaceholderText(tr("Select Root asset"));
+    bool isRoot = ui->AssetTypeBox->currentText() == "Root";
+    ui->assetnameText->setToolTip(isRoot ? tr("A-Z 0-9, no spaces") : tr("a-z A-Z 0-9 and space"));
 }
 
 void CreateAssetsDialog::setClientModel(ClientModel *_clientModel) {
@@ -851,9 +852,11 @@ void CreateAssetsDialog::onAssetTypeSelected(QString name) {
     if (name == "Root") {
         ui->RootAssetLabel->setVisible(false);
         ui->RootAssetBox->setVisible(false);
+        ui->assetnameText->setToolTip(tr("A-Z 0-9, no spaces"));
     } else if (name == "Sub") {
         ui->RootAssetLabel->setVisible(true);
         ui->RootAssetBox->setVisible(true);
+        ui->assetnameText->setToolTip(tr("a-z A-Z 0-9 and space"));
 
         // Get available assets list
         std::map <uint256, std::pair<std::string, CKeyID>> assets = model->wallet().getMyAssets();
