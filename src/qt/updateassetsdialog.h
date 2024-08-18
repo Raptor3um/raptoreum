@@ -56,6 +56,9 @@ public:
     QCompleter *completer;
     QString prevName = "";
 
+protected:
+   void keyPressEvent(QKeyEvent *e) override;
+
 public
     Q_SLOTS:
     void clear();

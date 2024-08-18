@@ -278,7 +278,7 @@ void UpdateAssetsDialog::updateAsset() {
         msgBox.setText(QString::fromStdString("Error: This asset cannot be updated"));
         msgBox.setStandardButtons(QMessageBox::Ok);
         msgBox.exec();
-        return;  
+        return;
     }
 
     //check on mempool if have a mint/update tx for this asset
@@ -319,17 +319,17 @@ void UpdateAssetsDialog::updateAsset() {
             assetTx.amount = ui->quantitySpinBox->value() * COIN;
         else
             assetTx.amount = assetData.amount;
-        
+
         //maxMintCount need to be equal to or greater than current mintCount
         if (ui->quantitySpinBox->value() >= assetData.mintCount)
             assetTx.maxMintCount = ui->maxmintSpinBox->value();
         else
             assetTx.maxMintCount = assetData.maxMintCount;
-        
+
         if (ui->IssueFrequencyBox->value() > 0)
             assetTx.issueFrequency = ui->IssueFrequencyBox->value();
         else
-            assetTx.issueFrequency = assetData.issueFrequency; 
+            assetTx.issueFrequency = assetData.issueFrequency;
 
         assetTx.updatable = ui->updatableBox->isChecked();
 
@@ -381,11 +381,11 @@ void UpdateAssetsDialog::updateAsset() {
         msgBox.exec();
         return;
     }
-    
+
     m_coin_control->destChange = CNoDestination();
     m_coin_control->UnSelectAll();
 
-    QString questionString = tr("Updating asset: %1<br>").arg(QString::fromStdString(assetData.name)); 
+    QString questionString = tr("Updating asset: %1<br>").arg(QString::fromStdString(assetData.name));
     questionString.append("<hr />");
     if (assetTx.ownerAddress != assetData.ownerAddress) {
         questionString.append(tr("transfer ownership from: %1 <br>").arg(QString::fromStdString(EncodeDestination(assetData.ownerAddress))));
@@ -393,25 +393,25 @@ void UpdateAssetsDialog::updateAsset() {
     } else {
         if (assetTx.updatable != assetData.updatable)
             questionString.append(tr("Updatable: %1 <br>").arg(assetTx.updatable ? "true": "false"));
-        
+
         if (assetTx.referenceHash != assetData.referenceHash)
             questionString.append(tr("ReferenceHash: %1 <br>").arg(QString::fromStdString(assetTx.referenceHash)));
-        
+
         if (assetTx.targetAddress != assetData.targetAddress)
             questionString.append(tr("Target: %1 <br>").arg(QString::fromStdString(EncodeDestination(assetTx.targetAddress))));
 
         if (assetTx.type != assetData.type)
             questionString.append(tr("Distribution Type: %1 <br>").arg(GetDistributionType(assetTx.type)));
-        
+
         if (assetTx.amount != assetData.amount)
             questionString.append(tr("Amount: %1 <br>").arg(QString::number(assetTx.amount / COIN)));
-        
+
         if (assetTx.maxMintCount != assetData.maxMintCount)
             questionString.append(tr("MaxMintCount: %1 <br>").arg(QString::number(assetTx.maxMintCount)));
 
         if (assetTx.issueFrequency != assetData.issueFrequency)
             questionString.append(tr("IssueFrequency: %1 <br>").arg(QString::number(assetTx.issueFrequency)));
-        
+
     }
     // Display message box
     nFee += assetTx.fee * COIN;
@@ -452,7 +452,7 @@ bool UpdateAssetsDialog::validateInputs() {
         ui->targetaddressText->setValid(false);
         retval = false;
     }
-    
+
     if (ui->maxmintSpinBox->value() < 0 || ui->maxmintSpinBox->value() > 65535){
         ui->maxmintSpinBox->setStyleSheet(GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_INVALID));
         retval = false;
@@ -476,7 +476,7 @@ void UpdateAssetsDialog::clear() {
     ui->maxmintSpinBox->setValue(1);
     ui->IssueFrequencyBox->setValue(0);
     ui->updatableBox->setChecked(false);
-    
+
     updateTabsAndLabels();
 }
 
@@ -649,6 +649,14 @@ void UpdateAssetsDialog::updateAssetList() {
         ui->assetList->setCurrentIndex(0);
         ui->assetList->activated(0);
     }
+}
+
+void UpdateAssetsDialog::keyPressEvent(QKeyEvent* evt)
+{
+    // Escape hides the dialog, which leaves us with an empty window
+    if (evt->key() == Qt::Key_Escape)
+        return;
+    QDialog::keyPressEvent(evt);
 }
 
 void UpdateAssetsDialog::focusAsset(const std::string assetId) {

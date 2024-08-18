@@ -59,6 +59,9 @@ public
     const uint256 &txid
     );
 
+protected:
+   void keyPressEvent(QKeyEvent *e) override;
+
 private:
     Ui::CreateAssetsDialog *ui;
     ClientModel *clientModel;

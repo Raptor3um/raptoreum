@@ -33,6 +33,7 @@
 #include <QApplication>
 #include <QDesktopWidget>
 #include <QScreen>
+#include <QKeyEvent>
 
 template<typename T>
 class CAssetListWidgetItem : public QTableWidgetItem {
@@ -112,6 +113,14 @@ void AssetsDialog::setClientModel(ClientModel *model) {
 void AssetsDialog::setModel(WalletModel *model) {
     this->walletModel = model;
     balanceChanged = true;
+}
+
+void AssetsDialog::keyPressEvent(QKeyEvent* evt)
+{
+    // Escape hides the dialog, which leaves us with an empty window
+    if (evt->key() == Qt::Key_Escape)
+        return;
+    QDialog::keyPressEvent(evt);
 }
 
 void AssetsDialog::showContextMenuAsset(const QPoint &point) {

@@ -56,6 +56,9 @@ public:
 
     void assetUpdateClicked(const std::string &assetName);
 
+protected:
+   void keyPressEvent(QKeyEvent *e) override;
+
 private:
     QMenu *contextMenuAsset;
     QImage currentRefImage;
