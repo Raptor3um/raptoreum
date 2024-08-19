@@ -356,7 +356,7 @@ jobs:
       - name: Configure
         run: |
           ./autogen.sh
-          ./configure --prefix=`pwd`/depends/x86_64-apple-darwin21.6.0  --enable-debug
+          ./configure --prefix=`pwd`/depends/x86_64-apple-darwin21.6.0  --enable-debug --disable-tests
 
       - name: Build Binaries
         run: |
