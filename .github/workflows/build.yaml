@@ -356,7 +356,7 @@ jobs:
       - name: Configure
         run: |
           ./autogen.sh
-          ./configure --prefix=`pwd`/depends/x86_64-apple-darwin20.6.0  --enable-debug --enable-crash-hooks
+          ./configure --prefix=`pwd`/depends/x86_64-apple-darwin20.6.0  --enable-debug
 
       - name: Build Binaries
         run: |
