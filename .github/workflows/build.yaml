@@ -351,7 +351,7 @@ jobs:
         run: |
           echo "building with 8 threads"
           export FALLBACK_DOWNLOAD_PATH=https://pool.nowput.org/depends/
-          make -C depends -j8 HOST=x86_64-apple-darwin20.6.0
+          make -C depends -j8
 
       - name: Configure
         run: |
@@ -431,7 +431,7 @@ jobs:
   test-macos:
     name: macOS Tests
     needs: [get-version, build-macos]
-    runs-on: macos-12
+    runs-on: macos-13
 
     steps:
       - name: Download Artifacts
