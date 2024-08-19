@@ -333,9 +333,9 @@ jobs:
           report_paths: "unit_test_results.xml"
 
   build-macos:
-    name: macOS 13 Build
+    name: macOS 12 Build
     needs: get-version
-    runs-on: macos-13
+    runs-on: macos-12
 
     steps:
       - name: Checkout
@@ -431,7 +431,7 @@ jobs:
   test-macos:
     name: macOS Tests
     needs: [get-version, build-macos]
-    runs-on: macos-13
+    runs-on: macos-12
 
     steps:
       - name: Download Artifacts
@@ -456,7 +456,7 @@ jobs:
         uses: mikepenz/action-junit-report@v3
         if: always()
         with:
-          check_name: "macOS 13"
+          check_name: "macOS 12"
           detailed_summary: ${{ steps.Tests.conclusion == 'failure'}}
           include_passed: false
           report_paths: "unit_test_results.xml"
