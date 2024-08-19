@@ -242,7 +242,7 @@
     <message>
         <location line="+14"/>
         <source>Show passphrase</source>
-        <translation type="unfinished"/>
+        <translation>显示密码</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="+55"/>
