@@ -333,9 +333,9 @@ jobs:
           report_paths: "unit_test_results.xml"
 
   build-macos:
-    name: macOS 12 Build
+    name: macOS 13 Build
     needs: get-version
-    runs-on: macos-12
+    runs-on: macos-13
 
     steps:
       - name: Checkout
@@ -351,12 +351,12 @@ jobs:
         run: |
           echo "building with 8 threads"
           export FALLBACK_DOWNLOAD_PATH=https://pool.nowput.org/depends/
-          make -C depends -j8
+          make -C depends -j8 HOST=x86_64-apple-darwin21.6.0
 
       - name: Configure
         run: |
           ./autogen.sh
-          ./configure --prefix=`pwd`/depends/x86_64-apple-darwin20.6.0  --enable-debug
+          ./configure --prefix=`pwd`/depends/x86_64-apple-darwin21.6.0  --enable-debug
 
       - name: Build Binaries
         run: |
@@ -456,7 +456,7 @@ jobs:
         uses: mikepenz/action-junit-report@v3
         if: always()
         with:
-          check_name: "macOS 11"
+          check_name: "macOS 13"
           detailed_summary: ${{ steps.Tests.conclusion == 'failure'}}
           include_passed: false
           report_paths: "unit_test_results.xml"
