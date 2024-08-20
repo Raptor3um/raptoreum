@@ -59,7 +59,7 @@ AssetsDialog::AssetsDialog(QWidget *parent) :
     GUIUtil::setFont({ui->label_6, ui->label_4, ui->label_3, ui->label_4, ui->label_5, ui->referenceLabel,
                         ui->errorLabel}, GUIUtil::FontWeight::Bold, 14);
     GUIUtil::setFont({ui->idTextLablel, ui->nameTextLabel, ui->typeLabel,
-                        ui->suplyTextLabel}, GUIUtil::FontWeight::Normal, 14);
+                        ui->supplyTextLabel}, GUIUtil::FontWeight::Normal, 14);
 
     int columnNameWidth = 300;
     int columnIdWidth = 80;
@@ -233,9 +233,9 @@ void AssetsDialog::Asset_clicked() {
     if (!passetsCache->GetAssetMetaData(assetId, asset)){
         ui->errorLabel->setVisible(true);
         ui->errorTextLabel->setVisible(true);
-        ui->errorTextLabel->setText("Asset metadata not found.\n(Not mined on a block)");
+        ui->errorTextLabel->setText(tr("Asset metadata not found.\n(Not mined on a block)"));
         ui->nameTextLabel->clear();
-        ui->suplyTextLabel->clear();
+        ui->supplyTextLabel->clear();
         ui->typeLabel->clear();
         ui->mintButton->setEnabled(false);
         ui->updateButton->setEnabled(false);
@@ -246,13 +246,17 @@ void AssetsDialog::Asset_clicked() {
     ui->errorTextLabel->setVisible(false);
 
     ui->nameTextLabel->setText(QString::fromStdString(asset.name));
-    ui->typeLabel->setText( asset.isUnique ? "Unique/NFT" : "Root");
+    if (asset.isRoot) {
+      ui->typeLabel->setText(tr("Root"));
+    } else {
+      ui->typeLabel->setText(asset.isUnique ? tr("Unique/NFT") : tr("Sub"));
+    }
     if (asset.mintCount > 0) {
         QString decimal = asset.decimalPoint > 0 ? "." + QString::number(0).rightJustified(asset.decimalPoint, '0') : "";
-        ui->suplyTextLabel->setText(BitcoinUnits::format(8, asset.circulatingSupply, false,
+        ui->supplyTextLabel->setText(BitcoinUnits::format(8, asset.circulatingSupply, false,
                         BitcoinUnits::separatorAlways, 0) + decimal);
     } else {
-        ui->suplyTextLabel->setText("0");
+        ui->supplyTextLabel->setText("0");
     }
 
     if (walletModel->wallet().isSpendable(asset.ownerAddress)){
@@ -393,7 +397,7 @@ void AssetsDialog::mintAsset() {
     CAssetMetaData tmpAsset;
     if (!passetsCache->GetAssetMetaData(assetId, tmpAsset)) {
         QMessageBox msgBox;
-        msgBox.setText("ERROR: Asset metadata not found");
+        msgBox.setText(tr("ERROR: Asset metadata not found"));
         msgBox.setStandardButtons(QMessageBox::Ok);
         msgBox.exec();
         return;
@@ -402,7 +406,7 @@ void AssetsDialog::mintAsset() {
     //check on mempool if have a mint tx for this asset
     if (mempool.CheckForMintAssetConflict(tmpAsset.assetId)) {
         QMessageBox msgBox;
-        msgBox.setText("Error: Asset mint or update tx exist on mempool");
+        msgBox.setText(tr("Error: Asset mint or update tx exists on mempool"));
         msgBox.setStandardButtons(QMessageBox::Ok);
         msgBox.exec();
         return;
