@@ -4,28 +4,30 @@
 
 #include <bench/bench.h>
 #include <policy/policy.h>
+#include <test/test_raptoreum.h>
 #include <txmempool.h>
 
-#include <list>
-#include <vector>
+static void AddTx(const CMutableTransaction &tx, const CAmount &nFee, const CAmount &specialTxFee, CTxMemPool &pool)
 
-static void AddTx(const CTransaction& tx, const CAmount& nFee, const CAmount& specialTxFee, CTxMemPool& pool) EXCLUSIVE_LOCKS_REQUIRED(pool.cs)
+EXCLUSIVE_LOCKS_REQUIRED(cs_main, pool
+.cs)
 {
-    int64_t nTime = 0;
-    unsigned int nHeight = 1;
-    bool spendsCoinbase = false;
-    unsigned int sigOpCost = 4;
-    LockPoints lp;
-    pool.addUnchecked(tx.GetHash(), CTxMemPoolEntry(
-                                        MakeTransactionRef(tx), nFee, specialTxFee, nTime, nHeight,
-                                        spendsCoinbase, sigOpCost, lp));
+int64_t nTime = 0;
+unsigned int nHeight = 1;
+bool spendsCoinbase = false;
+unsigned int sigOpCost = 4;
+LockPoints lp;
+pool.
+addUnchecked(CTxMemPoolEntry(MakeTransactionRef(tx), nFee, specialTxFee, nTime, nHeight, spendsCoinbase, sigOpCost, lp)
+);
 }
 
 // Right now this is only testing eviction performance in an extremely small
 // mempool. Code needs to be written to generate a much wider variety of
 // unique transactions for a more meaningful performance measurement.
-static void MempoolEviction(benchmark::State& state)
-{
+static void MempoolEviction(benchmark::Bench &bench) {
+    RegTestingSetup test_setup;
+
     CMutableTransaction tx1 = CMutableTransaction();
     tx1.vin.resize(1);
     tx1.vin[0].scriptSig = CScript() << OP_1;
@@ -97,19 +99,20 @@ static void MempoolEviction(benchmark::State& state)
     tx7.vout[1].nValue = 10 * COIN;
 
     CTxMemPool pool;
-    LOCK(pool.cs);
+    LOCK2(cs_main, pool.cs);
 
-    while (state.KeepRunning()) {
-        AddTx(tx1, 10000LL, 0LL,pool);
-        AddTx(tx2, 5000LL, 0LL, pool);
-        AddTx(tx3, 20000LL, 0LL, pool);
-        AddTx(tx4, 7000LL, 0LL, pool);
-        AddTx(tx5, 1000LL, 0LL, pool);
-        AddTx(tx6, 1100LL, 0LL, pool);
-        AddTx(tx7, 9000LL, 0LL, pool);
-        pool.TrimToSize(pool.DynamicMemoryUsage() * 3 / 4);
-        pool.TrimToSize(::GetSerializeSize(tx1, SER_NETWORK, PROTOCOL_VERSION));
-    }
+    bench.run([&]()
+    NO_THREAD_SAFETY_ANALYSIS{
+            AddTx(tx1, 10000LL, 0LL, pool);
+            AddTx(tx2, 5000LL, 0LL, pool);
+            AddTx(tx3, 20000LL, 0LL, pool);
+            AddTx(tx4, 7000LL, 0LL, pool);
+            AddTx(tx5, 1000LL, 0LL, pool);
+            AddTx(tx6, 1100LL, 0LL, pool);
+            AddTx(tx7, 9000LL, 0LL, pool);
+            pool.TrimToSize(pool.DynamicMemoryUsage() * 3 / 4);
+            pool.TrimToSize(::GetSerializeSize(tx1, SER_NETWORK, PROTOCOL_VERSION));
+    });
 }
 
-BENCHMARK(MempoolEviction, 41000);
+BENCHMARK(MempoolEviction);

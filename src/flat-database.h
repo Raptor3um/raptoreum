@@ -1,5 +1,5 @@
 // Copyright (c) 2014-2020 The Dash Core developers
-// Copyright (c) 2020-2022 The Raptoreum developers
+// Copyright (c) 2020-2023 The Raptoreum developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,7 +11,7 @@
 #include <fs.h>
 #include <hash.h>
 #include <streams.h>
-#include <util.h>
+#include <util/system.h>
 
 /**
 *   Generic Dumping and Loading
@@ -19,8 +19,7 @@
 */
 
 template<typename T>
-class CFlatDB
-{
+class CFlatDB {
 private:
 
     enum ReadResult {
@@ -37,8 +36,7 @@ private:
     std::string strFilename;
     std::string strMagicMessage;
 
-    bool Write(const T& objToSave)
-    {
+    bool Write(const T &objToSave) {
         // LOCK(objToSave.cs);
 
         int64_t nStart = GetTimeMillis();
@@ -72,16 +70,14 @@ private:
         return true;
     }
 
-    ReadResult Read(T& objToLoad, bool fDryRun = false)
-    {
+    ReadResult Read(T &objToLoad, bool fDryRun = false) {
         //LOCK(objToLoad.cs);
 
         int64_t nStart = GetTimeMillis();
         // open input file, and associate with CAutoFile
         FILE *file = fopen(pathDB.string().c_str(), "rb");
         CAutoFile filein(file, SER_DISK, CLIENT_VERSION);
-        if (filein.IsNull())
-        {
+        if (filein.IsNull()) {
             error("%s: Failed to open file %s", __func__, pathDB.string());
             return FileError;
         }
@@ -98,7 +94,7 @@ private:
 
         // read data and checksum from file
         try {
-            filein.read((char *)vchData.data(), dataSize);
+            filein.read((char *) vchData.data(), dataSize);
             filein >> hashIn;
         }
         catch (std::exception &e) {
@@ -111,8 +107,7 @@ private:
 
         // verify stored checksum matches input data
         uint256 hashTmp = Hash(ssObj.begin(), ssObj.end());
-        if (hashIn != hashTmp)
-        {
+        if (hashIn != hashTmp) {
             error("%s: Checksum mismatch, data corrupted", __func__);
             return IncorrectHash;
         }
@@ -125,8 +120,7 @@ private:
             ssObj >> strMagicMessageTmp;
 
             // ... verify the message matches predefined one
-            if (strMagicMessage != strMagicMessageTmp)
-            {
+            if (strMagicMessage != strMagicMessageTmp) {
                 error("%s: Invalid magic message", __func__);
                 return IncorrectMagicMessage;
             }
@@ -136,8 +130,7 @@ private:
             ssObj >> pchMsgTmp;
 
             // ... verify the network matches ours
-            if (memcmp(pchMsgTmp, Params().MessageStart(), sizeof(pchMsgTmp)))
-            {
+            if (memcmp(pchMsgTmp, Params().MessageStart(), sizeof(pchMsgTmp))) {
                 error("%s: Invalid network magic number", __func__);
                 return IncorrectMagicNumber;
             }
@@ -153,7 +146,7 @@ private:
 
         LogPrintf("Loaded info from %s  %dms\n", strFilename, GetTimeMillis() - nStart);
         LogPrintf("     %s\n", objToLoad.ToString());
-        if(!fDryRun) {
+        if (!fDryRun) {
             LogPrintf("%s: Cleaning....\n", __func__);
             objToLoad.CheckAndRemove();
             LogPrintf("     %s\n", objToLoad.ToString());
@@ -164,27 +157,22 @@ private:
 
 
 public:
-    CFlatDB(std::string strFilenameIn, std::string strMagicMessageIn)
-    {
+    CFlatDB(std::string strFilenameIn, std::string strMagicMessageIn) {
         pathDB = GetDataDir() / strFilenameIn;
         strFilename = strFilenameIn;
         strMagicMessage = strMagicMessageIn;
     }
 
-    bool Load(T& objToLoad)
-    {
+    bool Load(T &objToLoad) {
         LogPrintf("Reading info from %s...\n", strFilename);
         ReadResult readResult = Read(objToLoad);
         if (readResult == FileError)
             LogPrintf("Missing file %s, will try to recreate\n", strFilename);
-        else if (readResult != Ok)
-        {
+        else if (readResult != Ok) {
             LogPrintf("Error reading %s: ", strFilename);
-            if(readResult == IncorrectFormat)
-            {
+            if (readResult == IncorrectFormat) {
                 LogPrintf("%s: Magic is ok but data has invalid format, will try to recreate\n", __func__);
-            }
-            else {
+            } else {
                 LogPrintf("%s: File format is unknown or invalid, please fix it manually\n", __func__);
                 // program should exit with an error
                 return false;
@@ -193,8 +181,7 @@ public:
         return true;
     }
 
-    bool Dump(T& objToSave)
-    {
+    bool Dump(T &objToSave) {
         int64_t nStart = GetTimeMillis();
 
         LogPrintf("Verifying %s format...\n", strFilename);
@@ -204,13 +191,11 @@ public:
         // there was an error and it was not an error on file opening => do not proceed
         if (readResult == FileError)
             LogPrintf("Missing file %s, will try to recreate\n", strFilename);
-        else if (readResult != Ok)
-        {
+        else if (readResult != Ok) {
             LogPrintf("Error reading %s: ", strFilename);
-            if(readResult == IncorrectFormat)
+            if (readResult == IncorrectFormat)
                 LogPrintf("%s: Magic is ok but data has invalid format, will try to recreate\n", __func__);
-            else
-            {
+            else {
                 LogPrintf("%s: File format is unknown or invalid, please fix it manually\n", __func__);
                 return false;
             }

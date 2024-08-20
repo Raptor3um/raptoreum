@@ -14,36 +14,29 @@ struct IndexKey {
     uint256 txid;
     unsigned int outputIndex;
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(IndexKey, obj
+    )
     {
-        READWRITE(txid);
-        READWRITE(outputIndex);
+        READWRITE(obj.txid, obj.outputIndex);
     }
 
     IndexKey(uint256 hash, unsigned int index) :
-       txid(hash),
-       outputIndex(index)
-    {
+            txid(hash),
+            outputIndex(index) {
     }
 
-    IndexKey()
-    {
+    IndexKey() {
         SetNull();
     }
 
-    void SetNull()
-    {
+    void SetNull() {
         txid.SetNull();
         outputIndex = 0;
     }
 };
 
 struct CIndexKeyCompare {
-    bool operator()(const IndexKey& a, const IndexKey& b) const
-    {
+    bool operator()(const IndexKey &a, const IndexKey &b) const {
         if (a.txid == b.txid) {
             return a.outputIndex < b.outputIndex;
         } else {

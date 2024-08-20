@@ -9,17 +9,14 @@
 #include <indices/index.h>
 #include <script/script.h>
 #include <serialize.h>
-#include <uint256.h>
 
 struct CFutureIndexKey : IndexKey {
     CFutureIndexKey(uint256 hash, unsigned int index) :
-        IndexKey(hash, index)
-    {
+            IndexKey(hash, index) {
     }
 
     CFutureIndexKey() :
-        IndexKey()
-    {
+            IndexKey() {
     }
 };
 
@@ -31,36 +28,28 @@ struct CFutureIndexValue {
     int32_t lockedToHeight;
     int64_t lockedToTime;
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CFutureIndexValue, obj
+    )
     {
-        READWRITE(satoshis);
-        READWRITE(addressType);
-        READWRITE(addressHash);
-        READWRITE(confirmedHeight);
-        READWRITE(lockedToHeight);
-        READWRITE(lockedToTime);
+        READWRITE(obj.satoshis, obj.addressType, obj.addressHash, obj.confirmedHeight, obj.lockedToHeight,
+                  obj.lockedToTime);
     }
 
-    CFutureIndexValue(CAmount amount, int type, uint160 addrHash, int confirmedBlock, uint32_t toHeight, int64_t toTime) :
-        satoshis(amount),
-        addressType(type),
-        addressHash(addrHash),
-        confirmedHeight(confirmedBlock),
-        lockedToHeight(toHeight),
-        lockedToTime(toTime)
-    {
+    CFutureIndexValue(CAmount amount, int type, uint160 addrHash, int confirmedBlock, uint32_t toHeight, int64_t toTime)
+            :
+            satoshis(amount),
+            addressType(type),
+            addressHash(addrHash),
+            confirmedHeight(confirmedBlock),
+            lockedToHeight(toHeight),
+            lockedToTime(toTime) {
     }
 
-    CFutureIndexValue()
-    {
+    CFutureIndexValue() {
         SetNull();
     }
 
-    void SetNull()
-    {
+    void SetNull() {
         satoshis = 0;
         addressType = 0;
         addressHash.SetNull();
@@ -69,13 +58,12 @@ struct CFutureIndexValue {
         lockedToTime = 0;
     }
 
-    bool IsNull() const
-    {
+    bool IsNull() const {
         return addressHash.IsNull();
     }
 };
 
-typedef std::map<CFutureIndexKey, CFutureIndexValue, CIndexKeyCompare> mapFutureIndex;
+typedef std::map <CFutureIndexKey, CFutureIndexValue, CIndexKeyCompare> mapFutureIndex;
 struct CFutureIndexTxInfo {
     mapFutureIndex mFutureInfo;
 };

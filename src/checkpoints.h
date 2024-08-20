@@ -10,17 +10,17 @@
 #include <map>
 
 class CBlockIndex;
+
 struct CCheckpointData;
 
 /**
  * Block-chain checkpoints are compiled-in sanity checks.
  * They are updated every release or three.
  */
-namespace Checkpoints
-{
+namespace Checkpoints {
 
 //! Returns last CBlockIndex* that is a checkpoint
-CBlockIndex* GetLastCheckpoint(const CCheckpointData& data);
+    CBlockIndex *GetLastCheckpoint(const CCheckpointData &data);
 
 } //namespace Checkpoints
 

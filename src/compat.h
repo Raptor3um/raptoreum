@@ -10,24 +10,7 @@
 #include <config/raptoreum-config.h>
 #endif
 
-#include <type_traits>
-
-// GCC 4.8 is missing some C++11 type_traits,
-// https://www.gnu.org/software/gcc/gcc-5/changes.html
-#if defined(__GNUC__) && __GNUC__ < 5
-#define IS_TRIVIALLY_CONSTRUCTIBLE std::is_trivial
-#else
-#define IS_TRIVIALLY_CONSTRUCTIBLE std::is_trivially_constructible
-#endif
-
 #ifdef WIN32
-#ifdef _WIN32_WINNT
-#undef _WIN32_WINNT
-#endif
-#define _WIN32_WINNT 0x0501
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN 1
-#endif
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
@@ -43,6 +26,7 @@
 #include <ws2tcpip.h>
 #include <stdint.h>
 #else
+
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <sys/select.h>
@@ -56,11 +40,14 @@
 #include <limits.h>
 #include <netdb.h>
 #include <unistd.h>
+
 #endif
 
 #ifndef WIN32
 typedef unsigned int SOCKET;
+
 #include <errno.h>
+
 #define WSAGetLastError()   errno
 #define WSAEINVAL           EINVAL
 #define WSAEALREADY         EALREADY
@@ -109,12 +96,8 @@ typedef int32_t ssize_t;
 #define THREAD_PRIORITY_ABOVE_NORMAL    (-2)
 #endif
 
-#if HAVE_DECL_STRNLEN == 0
-size_t strnlen( const char *start, size_t max_len);
-#endif // HAVE_DECL_STRNLEN
-
 #ifndef WIN32
-typedef void* sockopt_arg_type;
+typedef void *sockopt_arg_type;
 #else
 typedef char* sockopt_arg_type;
 #endif
@@ -134,7 +117,7 @@ typedef char* sockopt_arg_type;
 #define USE_KQUEUE
 #endif
 
-bool static inline IsSelectableSocket(const SOCKET& s) {
+bool static inline IsSelectableSocket(const SOCKET &s) {
 #if defined(USE_POLL) || defined(WIN32)
     return true;
 #else

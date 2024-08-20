@@ -7,12 +7,14 @@
 #define BITCOIN_AMOUNT_H
 
 #include <stdint.h>
+#include <boost/multiprecision/cpp_int.hpp>
 
 /** Amount in satoshis (Can be negative) */
 typedef int64_t CAmount;
+/**128 bits integer used on assets*/
+typedef boost::multiprecision::int128_t CAmount128;
 
 static const CAmount COIN = 100000000;
-static const CAmount CENT = 1000000;
 
 /** No amount larger than this (in satoshi) is valid.
  *
@@ -25,12 +27,9 @@ static const CAmount CENT = 1000000;
  * */
 static const CAmount MAX_MONEY = 21000000000 * COIN;
 static const CAmount OLD_MAX_MONEY = 21000000 * COIN;
-inline bool MoneyRange(const CAmount& nValue, bool nV17active = true) {
-    if(nV17active){
+
+inline bool MoneyRange(const CAmount &nValue) {
         return (nValue >= 0 && nValue <= MAX_MONEY);
-    }else{
-        return (nValue >= 0 && nValue <= OLD_MAX_MONEY);
-    }
 }
 
 #endif //  BITCOIN_AMOUNT_H

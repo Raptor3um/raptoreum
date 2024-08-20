@@ -1,4 +1,5 @@
 // Copyright (c) 2011-2015 The Bitcoin Core developers
+// Copyright (c) 2020-2023 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,19 +12,38 @@
 #include <QStackedWidget>
 
 class BitcoinGUI;
+
 class ClientModel;
+
 class OverviewPage;
+
 class ReceiveCoinsDialog;
+
 class SendCoinsDialog;
+
+class SendAssetsDialog;
+
+class CreateAssetsDialog;
+
+class UpdateAssetsDialog;
+
+class AssetsDialog;
+
 class SendCoinsRecipient;
+
 class TransactionView;
+
 class WalletModel;
+
 class AddressBookPage;
 
 QT_BEGIN_NAMESPACE
 class QLabel;
+
 class QModelIndex;
+
 class QProgressDialog;
+
 QT_END_NAMESPACE
 
 /*
@@ -32,27 +52,30 @@ QT_END_NAMESPACE
   It communicates with both the client and the wallet models to give the user an up-to-date view of the
   current core state.
 */
-class WalletView : public QStackedWidget
-{
+class WalletView : public QStackedWidget {
     Q_OBJECT
 
 public:
-    explicit WalletView(QWidget* parent);
+    explicit WalletView(QWidget *parent);
+
     ~WalletView();
 
     void setBitcoinGUI(BitcoinGUI *gui);
+
     /** Set the client model.
         The client model represents the part of the core that communicates with the P2P network, and is wallet-agnostic.
     */
     void setClientModel(ClientModel *clientModel);
+
     WalletModel *getWalletModel() { return walletModel; }
+
     /** Set the wallet model.
         The wallet model represents a bitcoin wallet, and offers access to the list of transactions, address book and sending
         functionality.
     */
     void setWalletModel(WalletModel *walletModel);
 
-    bool handlePaymentRequest(const SendCoinsRecipient& recipient);
+    bool handlePaymentRequest(const SendCoinsRecipient &recipient);
 
     void showOutOfSyncWarning(bool fShow);
 
@@ -64,7 +87,11 @@ private:
     QWidget *transactionsPage;
     ReceiveCoinsDialog *receiveCoinsPage;
     SendCoinsDialog *sendCoinsPage;
-    SendCoinsDialog* coinJoinCoinsPage;
+    SendAssetsDialog *sendAssetsPage;
+    CreateAssetsDialog *createAssetsPage;
+    UpdateAssetsDialog *updateAssetsPage;
+    AssetsDialog *myAssetsPage;
+    SendCoinsDialog *coinJoinCoinsPage;
     AddressBookPage *usedSendingAddressesPage;
     AddressBookPage *usedReceivingAddressesPage;
     SmartnodeList *smartnodeListPage;
@@ -74,22 +101,41 @@ private:
     QProgressDialog *progressDialog;
     QLabel *transactionSum;
 
-public Q_SLOTS:
-    /** Switch to overview (home) page */
-    void gotoOverviewPage();
+public
+    Q_SLOTS:
+            /** Switch to overview (home) page */
+            void gotoOverviewPage();
+
     /** Switch to history (transactions) page */
     void gotoHistoryPage();
+
     /** Switch to smartnode page */
     void gotoSmartnodePage();
+
     /** Switch to receive coins page */
     void gotoReceiveCoinsPage();
+
     /** Switch to send coins page */
     void gotoSendCoinsPage(QString addr = "");
+
+    /** Switch to send assets page */
+    void gotoSendAssetsPage(QString addr = "");
+
+    /** Switch to create assets page */
+    void gotoCreateAssetsPage();
+
+    /** Switch to update assets page */
+    void gotoUpdateAssetsPage();
+    
+    /** Switch to my assets page */
+    void gotoMyAssetsPage();
+    
     /** Switch to CoinJoin coins page */
     void gotoCoinJoinCoinsPage(QString addr = "");
 
     /** Show Sign/Verify Message dialog and switch to sign message tab */
     void gotoSignMessageTab(QString addr = "");
+
     /** Show Sign/Verify Message dialog and switch to verify message tab */
     void gotoVerifyMessageTab(QString addr = "");
 
@@ -97,20 +143,26 @@ public Q_SLOTS:
 
         The new items are those between start and end inclusive, under the given parent item.
     */
-    void processNewTransaction(const QModelIndex& parent, int start, int /*end*/);
+    void processNewTransaction(const QModelIndex &parent, int start, int /*end*/);
+
     /** Encrypt the wallet */
     void encryptWallet();
+
     /** Backup the wallet */
     void backupWallet();
+
     /** Change encrypted wallet passphrase */
     void changePassphrase();
+
     /** Ask for passphrase to unlock wallet temporarily */
-    void unlockWallet(bool fAnonymizeOnly=false);
+    void unlockWallet(bool fAnonymizeOnly = false);
+
     /** Lock wallet */
     void lockWallet();
 
     /** Show used sending addresses */
     void usedSendingAddresses();
+
     /** Show used receiving addresses */
     void usedReceivingAddresses();
 
@@ -126,17 +178,24 @@ public Q_SLOTS:
 
     /** Update selected RTM amount from transactionview */
     void trxAmount(QString amount);
-Q_SIGNALS:
-    /** Signal that we want to show the main window */
-    void showNormalIfMinimized();
+
+    Q_SIGNALS:
+            /** Signal that we want to show the main window */
+            void showNormalIfMinimized();
+
     /**  Fired when a message should be reported to the user */
     void message(const QString &title, const QString &message, unsigned int style);
+
     /** Encryption status of wallet changed */
     void encryptionStatusChanged();
+
     /** HD-Enabled status of wallet changed (only possible during startup) */
     void hdEnabledStatusChanged();
+
     /** Notify that a new transaction appeared */
-    void incomingTransaction(const QString& date, int unit, const CAmount& amount, const QString& type, const QString& address, const QString& label, const QString& walletName);
+    void incomingTransaction(const QString &date, int unit, const CAmount &amount, const QString &type,
+                             const QString &address, const QString &label, const QString &walletName);
+
     /** Notify that the out of sync warning icon has been pressed */
     void outOfSyncWarningClicked();
 };

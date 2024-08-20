@@ -1,7 +1,7 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
 // Copyright (c) 2014-2019 The Dash Core developers
-// Copyright (c) 2020-2022 The Raptoreum developers
+// Copyright (c) 2020-2023 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -17,17 +17,17 @@
 #include <consensus/validation.h>
 #include <hash.h>
 #include <validation.h>
+#include <interfaces/chain.h>
+#include <interfaces/wallet.h>
 #include <net.h>
 #include <policy/feerate.h>
 #include <policy/policy.h>
 #include <pow.h>
 #include <primitives/transaction.h>
-#include <script/standard.h>
 #include <timedata.h>
-#include <util.h>
-#include <utilmoneystr.h>
-#include <smartnode/smartnode-payments.h>
-#include <smartnode/smartnode-sync.h>
+#include <util/system.h>
+#include <util/moneystr.h>
+#include <util/validation.h>
 #include <validationinterface.h>
 #include <wallet/wallet.h>
 
@@ -35,14 +35,17 @@
 #include <evo/cbtx.h>
 #include <evo/simplifiedmns.h>
 #include <evo/deterministicmns.h>
-
 #include <llmq/quorums_blockprocessor.h>
 #include <llmq/quorums_chainlocks.h>
+#include <llmq/quorums_utils.h>
+#include <smartnode/smartnode-payments.h>
+#include <smartnode/smartnode-sync.h>
+#include <node/context.h>
+#include <update/update.h>
 
 #include <boost/thread.hpp>
 #include <algorithm>
 #include <memory>
-#include <queue>
 #include <utility>
 
 //////////////////////////////////////////////////////////////////////////////
@@ -63,10 +66,9 @@ double nHashesPerSec = 0;
 uint64_t nHashesDone = 0;
 std::string alsoHashString;
 
-int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev)
-{
+int64_t UpdateTime(CBlockHeader *pblock, const Consensus::Params &consensusParams, const CBlockIndex *pindexPrev) {
     int64_t nOldTime = pblock->nTime;
-    int64_t nNewTime = std::max(pindexPrev->GetMedianTimePast()+1, GetAdjustedTime());
+    int64_t nNewTime = std::max(pindexPrev->GetMedianTimePast() + 1, GetAdjustedTime());
 
     if (nOldTime < nNewTime)
         pblock->nTime = nNewTime;
@@ -83,15 +85,15 @@ BlockAssembler::Options::Options() {
     nBlockMaxSize = DEFAULT_BLOCK_MAX_SIZE;
 }
 
-BlockAssembler::BlockAssembler(const CChainParams& params, const Options& options) : chainparams(params)
-{
+BlockAssembler::BlockAssembler(const CTxMemPool &mempool, const CChainParams &params, const Options &options)
+        : chainparams(params), m_mempool(mempool) {
     blockMinFeeRate = options.blockMinFeeRate;
     // Limit size to between 1K and MaxBlockSize()-1K for sanity:
-    nBlockMaxSize = std::max((unsigned int)1000, std::min((unsigned int)(MaxBlockSize(fDIP0001ActiveAtTip) - 1000), (unsigned int)options.nBlockMaxSize));
+    nBlockMaxSize = std::max((unsigned int) 1000, std::min((unsigned int) (MaxBlockSize(fDIP0001ActiveAtTip) - 1000),
+                                                           (unsigned int) options.nBlockMaxSize));
 }
 
-static BlockAssembler::Options DefaultOptions(const CChainParams& params)
-{
+static BlockAssembler::Options DefaultOptions() {
     // Block resource limits
     BlockAssembler::Options options;
     options.nBlockMaxSize = DEFAULT_BLOCK_MAX_SIZE;
@@ -107,10 +109,10 @@ static BlockAssembler::Options DefaultOptions(const CChainParams& params)
     return options;
 }
 
-BlockAssembler::BlockAssembler(const CChainParams& params) : BlockAssembler(params, DefaultOptions(params)) {}
+BlockAssembler::BlockAssembler(const CTxMemPool &mempool, const CChainParams &params) : BlockAssembler(mempool, params,
+                                                                                                       DefaultOptions()) {}
 
-void BlockAssembler::resetBlock()
-{
+void BlockAssembler::resetBlock() {
     inBlock.clear();
 
     // Reserve space for coinbase tx
@@ -123,15 +125,14 @@ void BlockAssembler::resetBlock()
     nSpecialTxFees = 0;
 }
 
-std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn)
-{
+std::unique_ptr <CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript &scriptPubKeyIn) {
     int64_t nTimeStart = GetTimeMicros();
 
     resetBlock();
 
     pblocktemplate.reset(new CBlockTemplate());
 
-    if(!pblocktemplate.get())
+    if (!pblocktemplate.get())
         return nullptr;
     pblock = &pblocktemplate->block; // pointer for convenience
 
@@ -141,16 +142,17 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     pblocktemplate->vSpecialTxFees.push_back(-1); // updated at end
     pblocktemplate->vTxSigOps.push_back(-1); // updated at end
 
-    LOCK2(cs_main, mempool.cs);
+    LOCK2(cs_main, m_mempool.cs);
 
-    CBlockIndex* pindexPrev = chainActive.Tip();
+    CBlockIndex *pindexPrev = ::ChainActive().Tip();
     assert(pindexPrev != nullptr);
     nHeight = pindexPrev->nHeight + 1;
 
     bool fDIP0003Active_context = chainparams.GetConsensus().DIP0003Enabled;
     bool fDIP0008Active_context = chainparams.GetConsensus().DIP0008Enabled;
 
-    pblock->nVersion = ComputeBlockVersion(pindexPrev, chainparams.GetConsensus(), chainparams.BIP9CheckSmartnodesUpgraded());
+    pblock->nVersion = Updates().ComputeBlockVersion(pindexPrev);
+
     // -regtest only: allow overriding block.nVersion with
     // -blockversion=N to test forking scenarios
     if (chainparams.MineBlocksOnDemand())
@@ -160,13 +162,13 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     const int64_t nMedianTimePast = pindexPrev->GetMedianTimePast();
 
     nLockTimeCutoff = (STANDARD_LOCKTIME_VERIFY_FLAGS & LOCKTIME_MEDIAN_TIME_PAST)
-                       ? nMedianTimePast
-                       : pblock->GetBlockTime();
+                      ? nMedianTimePast
+                      : pblock->GetBlockTime();
 
     if (fDIP0003Active_context) {
-        for (const Consensus::LLMQType& type : llmq::CLLMQUtils::GetEnabledQuorumTypes(pindexPrev)) {
+        for (const Consensus::LLMQParams &params: llmq::CLLMQUtils::GetEnabledQuorumParams(pindexPrev)) {
             CTransactionRef qcTx;
-            if (llmq::quorumBlockProcessor->GetMinableCommitmentTx(type, nHeight, qcTx)) {
+            if (llmq::quorumBlockProcessor->GetMineableCommitmentTx(params, nHeight, qcTx)) {
                 pblock->vtx.emplace_back(qcTx);
                 pblocktemplate->vTxFees.emplace_back(0);
                 pblocktemplate->vSpecialTxFees.emplace_back(0);
@@ -185,7 +187,8 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
 
     nLastBlockTx = nBlockTx;
     nLastBlockSize = nBlockSize;
-    LogPrintf("CreateNewBlock(): total size %u txs: %u fees: %ld specialTxFee: %ld sigops %d\n", nBlockSize, nBlockTx, nFees, nSpecialTxFees, nBlockSigOps);
+    LogPrintf("CreateNewBlock(): total size %u txs: %u fees: %ld specialTxFee: %ld sigops %d\n", nBlockSize, nBlockTx,
+              nFees, nSpecialTxFees, nBlockSigOps);
 
     // Create coinbase transaction.
     CMutableTransaction coinbaseTx;
@@ -195,7 +198,8 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     coinbaseTx.vout[0].scriptPubKey = scriptPubKeyIn;
 
     // NOTE: unlike in bitcoin, we need to pass PREVIOUS block height here
-    CAmount normalBlockReward = nFees + GetBlockSubsidy(pindexPrev->nBits, pindexPrev->nHeight, Params().GetConsensus());
+    CAmount normalBlockReward =
+            nFees + GetBlockSubsidy(pindexPrev->nBits, pindexPrev->nHeight, Params().GetConsensus());
     CAmount blockRewardWithSpecialtx = normalBlockReward + nSpecialTxFees;
 
     // Compute regular coinbase transaction.
@@ -214,12 +218,15 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
         cbTx.nHeight = nHeight;
 
         CValidationState state;
-        if (!CalcCbTxMerkleRootMNList(*pblock, pindexPrev, cbTx.merkleRootMNList, state, *pcoinsTip.get())) {
-            throw std::runtime_error(strprintf("%s: CalcCbTxMerkleRootMNList failed: %s", __func__, FormatStateMessage(state)));
+        if (!CalcCbTxMerkleRootMNList(*pblock, pindexPrev, cbTx.merkleRootMNList, state,
+                                      ::ChainstateActive().CoinsTip())) {
+            throw std::runtime_error(
+                    strprintf("%s: CalcCbTxMerkleRootMNList failed: %s", __func__, FormatStateMessage(state)));
         }
         if (fDIP0008Active_context) {
             if (!CalcCbTxMerkleRootQuorums(*pblock, pindexPrev, cbTx.merkleRootQuorums, state)) {
-                throw std::runtime_error(strprintf("%s: CalcCbTxMerkleRootQuorums failed: %s", __func__, FormatStateMessage(state)));
+                throw std::runtime_error(
+                        strprintf("%s: CalcCbTxMerkleRootQuorums failed: %s", __func__, FormatStateMessage(state)));
             }
         }
         LogPrintf("cbTx.merkleRootQuorums %s\n", cbTx.merkleRootQuorums.GetHex().c_str());
@@ -228,19 +235,20 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
 
     // Update coinbase transaction with additional info about smartnode and governance payments,
     // get some info back to pass to getblocktemplate
-    FillBlockPayments(coinbaseTx, nHeight, normalBlockReward, pblocktemplate->voutSmartnodePayments, pblocktemplate->voutSuperblockPayments, nSpecialTxFees);
+    FillBlockPayments(coinbaseTx, nHeight, normalBlockReward, pblocktemplate->voutSmartnodePayments,
+                      pblocktemplate->voutSuperblockPayments, nSpecialTxFees);
     FounderPayment founderPayment = chainparams.GetConsensus().nFounderPayment;
     founderPayment.FillFounderPayment(coinbaseTx, nHeight, normalBlockReward, pblock->txoutFounder);
- 	  pblock->vtx[0] = MakeTransactionRef(std::move(coinbaseTx));
+    pblock->vtx[0] = MakeTransactionRef(std::move(coinbaseTx));
     pblocktemplate->vTxFees[0] = -nFees;
     pblocktemplate->vSpecialTxFees[0] = -nSpecialTxFees;
 
 
     // Fill in header
-    pblock->hashPrevBlock  = pindexPrev->GetBlockHash();
+    pblock->hashPrevBlock = pindexPrev->GetBlockHash();
     UpdateTime(pblock, chainparams.GetConsensus(), pindexPrev);
-    pblock->nBits          = GetNextWorkRequired(pindexPrev, pblock, chainparams.GetConsensus());
-    pblock->nNonce         = 0;
+    pblock->nBits = GetNextWorkRequired(pindexPrev, pblock, chainparams.GetConsensus());
+    pblock->nNonce = 0;
     pblocktemplate->nPrevBits = pindexPrev->nBits;
     pblocktemplate->vTxSigOps[0] = GetLegacySigOpCount(*pblock->vtx[0]);
 
@@ -250,26 +258,26 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     }
     int64_t nTime2 = GetTimeMicros();
 
-    LogPrint(BCLog::BENCHMARK, "CreateNewBlock() packages: %.2fms (%d packages, %d updated descendants), validity: %.2fms (total %.2fms)\n", 0.001 * (nTime1 - nTimeStart), nPackagesSelected, nDescendantsUpdated, 0.001 * (nTime2 - nTime1), 0.001 * (nTime2 - nTimeStart));
+    LogPrint(BCLog::BENCHMARK,
+             "CreateNewBlock() packages: %.2fms (%d packages, %d updated descendants), validity: %.2fms (total %.2fms)\n",
+             0.001 * (nTime1 - nTimeStart), nPackagesSelected, nDescendantsUpdated, 0.001 * (nTime2 - nTime1),
+             0.001 * (nTime2 - nTimeStart));
 
     return std::move(pblocktemplate);
 }
 
-void BlockAssembler::onlyUnconfirmed(CTxMemPool::setEntries& testSet)
-{
-    for (CTxMemPool::setEntries::iterator iit = testSet.begin(); iit != testSet.end(); ) {
+void BlockAssembler::onlyUnconfirmed(CTxMemPool::setEntries &testSet) {
+    for (CTxMemPool::setEntries::iterator iit = testSet.begin(); iit != testSet.end();) {
         // Only test txs not already in the block
         if (inBlock.count(*iit)) {
             testSet.erase(iit++);
-        }
-        else {
+        } else {
             iit++;
         }
     }
 }
 
-bool BlockAssembler::TestPackage(uint64_t packageSize, unsigned int packageSigOps) const
-{
+bool BlockAssembler::TestPackage(uint64_t packageSize, unsigned int packageSigOps) const {
     if (nBlockSize + packageSize >= nBlockMaxSize)
         return false;
     if (nBlockSigOps + packageSigOps >= MaxBlockSigOps(fDIP0001ActiveAtTip))
@@ -280,9 +288,8 @@ bool BlockAssembler::TestPackage(uint64_t packageSize, unsigned int packageSigOp
 // Perform transaction-level checks before adding to block:
 // - transaction finality (locktime)
 // - safe TXs in regard to ChainLocks
-bool BlockAssembler::TestPackageTransactions(const CTxMemPool::setEntries& package)
-{
-    for (CTxMemPool::txiter it : package) {
+bool BlockAssembler::TestPackageTransactions(const CTxMemPool::setEntries &package) const {
+    for (CTxMemPool::txiter it: package) {
         if (!IsFinalTx(it->GetTx(), nHeight, nLockTimeCutoff))
             return false;
         if (!llmq::chainLocksHandler->IsTxSafeForMining(it->GetTx().GetHash())) {
@@ -292,8 +299,7 @@ bool BlockAssembler::TestPackageTransactions(const CTxMemPool::setEntries& packa
     return true;
 }
 
-void BlockAssembler::AddToBlock(CTxMemPool::txiter iter)
-{
+void BlockAssembler::AddToBlock(CTxMemPool::txiter iter) {
     pblock->vtx.emplace_back(iter->GetSharedTx());
     pblocktemplate->vTxFees.push_back(iter->GetFee());
     pblocktemplate->vSpecialTxFees.push_back(iter->GetSpecialTxFee());
@@ -313,15 +319,14 @@ void BlockAssembler::AddToBlock(CTxMemPool::txiter iter)
     }
 }
 
-int BlockAssembler::UpdatePackagesForAdded(const CTxMemPool::setEntries& alreadyAdded,
-        indexed_modified_transaction_set &mapModifiedTx)
-{
+int BlockAssembler::UpdatePackagesForAdded(const CTxMemPool::setEntries &alreadyAdded,
+                                           indexed_modified_transaction_set &mapModifiedTx) {
     int nDescendantsUpdated = 0;
-    for (CTxMemPool::txiter it : alreadyAdded) {
+    for (CTxMemPool::txiter it: alreadyAdded) {
         CTxMemPool::setEntries descendants;
-        mempool.CalculateDescendants(it, descendants);
+        m_mempool.CalculateDescendants(it, descendants);
         // Insert all descendants (not yet in block) into the modified set
-        for (CTxMemPool::txiter desc : descendants) {
+        for (CTxMemPool::txiter desc: descendants) {
             if (alreadyAdded.count(desc))
                 continue;
             ++nDescendantsUpdated;
@@ -349,14 +354,14 @@ int BlockAssembler::UpdatePackagesForAdded(const CTxMemPool::setEntries& already
 // guaranteed to fail again, but as a belt-and-suspenders check we put it in
 // failedTx and avoid re-evaluation, since the re-evaluation would be using
 // cached size/sigops/fee values that are not actually correct.
-bool BlockAssembler::SkipMapTxEntry(CTxMemPool::txiter it, indexed_modified_transaction_set &mapModifiedTx, CTxMemPool::setEntries &failedTx)
-{
-    assert (it != mempool.mapTx.end());
+bool BlockAssembler::SkipMapTxEntry(CTxMemPool::txiter it, indexed_modified_transaction_set &mapModifiedTx,
+                                    CTxMemPool::setEntries &failedTx) {
+    assert(it != m_mempool.mapTx.end());
     return mapModifiedTx.count(it) || inBlock.count(it) || failedTx.count(it);
 }
 
-void BlockAssembler::SortForBlock(const CTxMemPool::setEntries& package, std::vector<CTxMemPool::txiter>& sortedEntries)
-{
+void
+BlockAssembler::SortForBlock(const CTxMemPool::setEntries &package, std::vector <CTxMemPool::txiter> &sortedEntries) {
     // Sort package by ancestor count
     // If a transaction A depends on transaction B, then A's ancestor count
     // must be greater than B's.  So this is sufficient to validly order the
@@ -376,8 +381,7 @@ void BlockAssembler::SortForBlock(const CTxMemPool::setEntries& package, std::ve
 // Each time through the loop, we compare the best transaction in
 // mapModifiedTxs with the next transaction in the mempool to decide what
 // transaction package to work on next.
-void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpdated)
-{
+void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpdated) {
     // mapModifiedTx will store sorted packages after they are modified
     // because some of their txs are already in the block
     indexed_modified_transaction_set mapModifiedTx;
@@ -388,7 +392,7 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
     // and modifying them for their already included ancestors
     UpdatePackagesForAdded(inBlock, mapModifiedTx);
 
-    CTxMemPool::indexed_transaction_set::index<ancestor_score>::type::iterator mi = mempool.mapTx.get<ancestor_score>().begin();
+    CTxMemPool::indexed_transaction_set::index<ancestor_score>::type::iterator mi = m_mempool.mapTx.get<ancestor_score>().begin();
     CTxMemPool::txiter iter;
 
     // Limit the number of attempts to add transactions to the block when it is
@@ -397,11 +401,10 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
     const int64_t MAX_CONSECUTIVE_FAILURES = 1000;
     int64_t nConsecutiveFailed = 0;
 
-    while (mi != mempool.mapTx.get<ancestor_score>().end() || !mapModifiedTx.empty())
-    {
+    while (mi != m_mempool.mapTx.get<ancestor_score>().end() || !mapModifiedTx.empty()) {
         // First try to find a new transaction in mapTx to evaluate.
-        if (mi != mempool.mapTx.get<ancestor_score>().end() &&
-                SkipMapTxEntry(mempool.mapTx.project<0>(mi), mapModifiedTx, failedTx)) {
+        if (mi != m_mempool.mapTx.get<ancestor_score>().end() &&
+            SkipMapTxEntry(m_mempool.mapTx.project<0>(mi), mapModifiedTx, failedTx)) {
             ++mi;
             continue;
         }
@@ -411,15 +414,15 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
         bool fUsingModified = false;
 
         modtxscoreiter modit = mapModifiedTx.get<ancestor_score>().begin();
-        if (mi == mempool.mapTx.get<ancestor_score>().end()) {
+        if (mi == m_mempool.mapTx.get<ancestor_score>().end()) {
             // We're out of entries in mapTx; use the entry from mapModifiedTx
             iter = modit->iter;
             fUsingModified = true;
         } else {
             // Try to compare the mapTx entry to the mapModifiedTx entry
-            iter = mempool.mapTx.project<0>(mi);
+            iter = m_mempool.mapTx.project<0>(mi);
             if (modit != mapModifiedTx.get<ancestor_score>().end() &&
-                    CompareTxMemPoolEntryByAncestorFee()(*modit, CTxMemPoolModifiedEntry(iter))) {
+                CompareTxMemPoolEntryByAncestorFee()(*modit, CTxMemPoolModifiedEntry(iter))) {
                 // The best entry in mapModifiedTx has higher score
                 // than the one from mapTx.
                 // Switch which transaction (package) to consider
@@ -471,7 +474,7 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
         CTxMemPool::setEntries ancestors;
         uint64_t nNoLimit = std::numeric_limits<uint64_t>::max();
         std::string dummy;
-        mempool.CalculateMemPoolAncestors(*iter, ancestors, nNoLimit, nNoLimit, nNoLimit, nNoLimit, dummy, false);
+        m_mempool.CalculateMemPoolAncestors(*iter, ancestors, nNoLimit, nNoLimit, nNoLimit, nNoLimit, dummy, false);
 
         onlyUnconfirmed(ancestors);
         ancestors.insert(iter);
@@ -489,10 +492,10 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
         nConsecutiveFailed = 0;
 
         // Package can be added. Sort the entries in a valid order.
-        std::vector<CTxMemPool::txiter> sortedEntries;
+        std::vector <CTxMemPool::txiter> sortedEntries;
         SortForBlock(ancestors, sortedEntries);
 
-        for (size_t i=0; i<sortedEntries.size(); ++i) {
+        for (size_t i = 0; i < sortedEntries.size(); ++i) {
             AddToBlock(sortedEntries[i]);
             // Erase from the modified set, if present
             mapModifiedTx.erase(sortedEntries[i]);
@@ -505,15 +508,31 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
     }
 }
 
-static bool ProcessBlockFound(const CBlock* pblock, const CChainParams& chainparams, uint256& hash)
-{
+void IncrementExtraNonce(CBlock *pblock, const CBlockIndex *pindexPrev, unsigned int &nExtraNonce) {
+    // Update nExtraNonce
+    static uint256 hashPrevBlock;
+    if (hashPrevBlock != pblock->hashPrevBlock) {
+        nExtraNonce = 0;
+        hashPrevBlock = pblock->hashPrevBlock;
+    }
+    ++nExtraNonce;
+    unsigned int nHeight = pindexPrev->nHeight + 1; // Height first in coinbase required for block.version=2
+    CMutableTransaction txCoinbase(*pblock->vtx[0]);
+    txCoinbase.vin[0].scriptSig = (CScript() << nHeight << CScriptNum(nExtraNonce)) + COINBASE_FLAGS;
+    assert(txCoinbase.vin[0].scriptSig.size() <= 100);
+
+    pblock->vtx[0] = MakeTransactionRef(std::move(txCoinbase));
+    pblock->hashMerkleRoot = BlockMerkleRoot(*pblock);
+}
+
+static bool ProcessBlockFound(const CBlock *pblock, const CChainParams &chainparams, uint256 &hash, NodeContext &node) {
     LogPrintf("%s\n", pblock->ToString());
     LogPrintf("generated %s\n", FormatMoney(pblock->vtx[0]->vout[0].nValue));
 
     // Found a solution
     {
         LOCK(cs_main);
-        if (pblock->hashPrevBlock != chainActive.Tip()->GetBlockHash())
+        if (pblock->hashPrevBlock != ::ChainActive().Tip()->GetBlockHash())
             return error("ProcessBlockFound -- generated block is stale");
     }
 
@@ -523,30 +542,30 @@ static bool ProcessBlockFound(const CBlock* pblock, const CChainParams& chainpar
     // Process this block the same as if we had received it from another node
     //CValidationState state;
     //std::shared_ptr<CBlock> shared_pblock = std::make_shared<CBlock>(pblock);
+    ChainstateManager &chainman = EnsureChainman(node);
     std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(*pblock);
-    if (!ProcessNewBlock(chainparams, shared_pblock, true, nullptr))
+    if (!chainman.ProcessNewBlock(chainparams, shared_pblock, true, nullptr))
         return error("ProcessBlockFound -- ProcessNewBlock() failed, block not accepted");
 
     return true;
 }
 
-void static RaptoreumMiner(const CChainParams& chainparams)
-{
+void static RaptoreumMiner(const CChainParams& chainparams, NodeContext& node) {
     LogPrintf("RaptoreumMiner -- started\n");
     SetThreadPriority(THREAD_PRIORITY_LOWEST);
-    RenameThread("raptoreum-miner");
+    util::ThreadRename("raptoreum-miner");
 
     unsigned int nExtraNonce = 0;
 
-
-    CWallet * pWallet = NULL;
+        CWallet * pWallet = NULL;
 
     #ifdef ENABLE_WALLET
         pWallet = GetFirstWallet();
 
-        if (!EnsureWalletIsAvailable(pWallet, false)) {
-            LogPrintf("RaptoreumMiner -- Wallet not available\n");
-        }
+  		  // TODO: either add this function back in, or update this for more appropriate wallet functionality
+        // if (!EnsureWalletIsAvailable(pWallet, false)) {
+        //     LogPrintf("RaptoreumMiner -- Wallet not available\n");
+        // }
     #endif
 
     if (pWallet == NULL)
@@ -559,8 +578,6 @@ void static RaptoreumMiner(const CChainParams& chainparams)
     std::shared_ptr<CReserveScript> coinbaseScript;
     pWallet->GetScriptForMining(coinbaseScript);
 
-    //GetMainSignals().ScriptForMining(coinbaseScript);
-
     if (!coinbaseScript)
         LogPrintf("coinbaseScript is NULL\n");
 
@@ -572,8 +589,7 @@ void static RaptoreumMiner(const CChainParams& chainparams)
         // due to some internal error but also if the keypool is empty.
         // In the latter case, already the pointer is NULL.
 
-        if (!coinbaseScript || coinbaseScript->reserveScript.empty())
-        {
+        if (!coinbaseScript || coinbaseScript->reserveScript.empty()) {
             throw std::runtime_error("No coinbase script available (mining requires a wallet)");
         }
 
@@ -583,11 +599,13 @@ void static RaptoreumMiner(const CChainParams& chainparams)
                 // Busy-wait for the network to come online so we don't waste time mining
                 // on an obsolete chain. In regtest mode we expect to fly solo.
                 do {
-                    if ((g_connman->GetNodeCount(CConnman::CONNECTIONS_ALL) > 0) && !IsInitialBlockDownload()) {
+                    // NodeContext& node = EnsureNodeContext(request.context);
+                    // if (node.connman->GetNodeCount(CConnman::CONNECTIONS_ALL) == 0)
+                    if ((node.connman->GetNodeCount(CConnman::CONNECTIONS_ALL) > 0) &&
+                        !::ChainstateActive().IsInitialBlockDownload()) {
                         break;
                     }
-
-                    MilliSleep(1000);
+                    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
                 } while (true);
             }
 
@@ -596,42 +614,42 @@ void static RaptoreumMiner(const CChainParams& chainparams)
             // Create new block
             //
             unsigned int nTransactionsUpdatedLast = mempool.GetTransactionsUpdated();
-            CBlockIndex* pindexPrev = chainActive.Tip();
-            if(!pindexPrev) break;
-            std::unique_ptr<CBlockTemplate> pblocktemplate(BlockAssembler(Params()).CreateNewBlock(coinbaseScript->reserveScript));
+            CBlockIndex *pindexPrev = ::ChainActive().Tip();
+            if (!pindexPrev) break;
+            std::unique_ptr <CBlockTemplate> pblocktemplate(
+                    BlockAssembler(mempool, Params()).CreateNewBlock(coinbaseScript->reserveScript));
 
-            if (!pblocktemplate.get())
-            {
-                LogPrintf("RaptoreumMiner -- Keypool ran out, please call keypoolrefill before restarting the mining thread\n");
+            if (!pblocktemplate.get()) {
+                LogPrintf(
+                        "RaptoreumMiner -- Keypool ran out, please call keypoolrefill before restarting the mining thread\n");
                 return;
             }
             CBlock *pblock = &pblocktemplate->block;
-            HashSelection hashSelection(pblock->hashPrevBlock, {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14}, {0, 1, 2, 3, 4, 5});
-			alsoHashString.clear();
+            HashSelection hashSelection(pblock->hashPrevBlock, {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14},
+                                        {0, 1, 2, 3, 4, 5});
+            alsoHashString.clear();
             alsoHashString.append(hashSelection.getHashSelectionString());
-            LogPrintf("Algos: %s\n",hashSelection.getHashSelectionString());
+            LogPrintf("Algos: %s\n", hashSelection.getHashSelectionString());
             IncrementExtraNonce(pblock, pindexPrev, nExtraNonce);
 
             LogPrintf("RaptoreumMiner -- Running miner with %u transactions in block (%u bytes)\n", pblock->vtx.size(),
-                ::GetSerializeSize(*pblock, SER_NETWORK, PROTOCOL_VERSION));
+                      ::GetSerializeSize(*pblock, SER_NETWORK, PROTOCOL_VERSION));
 
             //
             // Search
             //
             int64_t nStart = GetTime();
             arith_uint256 hashTarget = arith_uint256().SetCompact(pblock->nBits);
-            while (true)
-            {
+            while (true) {
                 uint256 hash;
-                while (true)
-                {
+                while (true) {
                     hash = pblock->ComputeHash();
-                    if (UintToArith256(hash) <= hashTarget)
-                    {
+                    if (UintToArith256(hash) <= hashTarget) {
                         // Found a solution
                         SetThreadPriority(THREAD_PRIORITY_NORMAL);
-                        LogPrintf("RaptoreumMiner:\n  proof-of-work found\n  hash: %s\n  target: %s\n", hash.GetHex(), hashTarget.GetHex());
-                        ProcessBlockFound(pblock, chainparams, hash);
+                        LogPrintf("RaptoreumMiner:\n  proof-of-work found\n  hash: %s\n  target: %s\n", hash.GetHex(),
+                                  hashTarget.GetHex());
+                        ProcessBlockFound(pblock, chainparams, hash, node);
                         SetThreadPriority(THREAD_PRIORITY_LOWEST);
                         coinbaseScript->KeepScript();
                         // In regression test mode, stop mining after a block is found. This
@@ -645,7 +663,7 @@ void static RaptoreumMiner(const CChainParams& chainparams)
                     nHashesDone += 1;
                     if (nHashesDone % 1000 == 0) {   //Calculate hashing speed
                         nHashesPerSec = nHashesDone / (((GetTimeMicros() - nMiningTimeStart) / 1000000.00) + 1);
-                        LogPrintf("nNonce: %d, hashRate %f\n",pblock->nNonce, nHashesPerSec);
+                        LogPrintf("nNonce: %d, hashRate %f\n", pblock->nNonce, nHashesPerSec);
                         //LogPrintf("RaptoreumMiner:\n  proof-of-work in progress \n  hash: %s\n  target: %s\n, different=%s\n", hash.GetHex(), hashTarget.GetHex(), (UintToArith256(hash) - hashTarget));
                     }
                     if ((pblock->nNonce & 0xFF) == 0)
@@ -661,44 +679,39 @@ void static RaptoreumMiner(const CChainParams& chainparams)
                     break;
                 if (mempool.GetTransactionsUpdated() != nTransactionsUpdatedLast && GetTime() - nStart > 60)
                     break;
-                if (pindexPrev != chainActive.Tip())
+                if (pindexPrev != ::ChainActive().Tip())
                     break;
 
                 // Update nTime every few seconds
                 if (UpdateTime(pblock, chainparams.GetConsensus(), pindexPrev) < 0)
                     break; // Recreate the block if the clock has run backwards,
-                           // so that we can use the correct time.
-                if (chainparams.GetConsensus().fPowAllowMinDifficultyBlocks)
-                {
+                // so that we can use the correct time.
+                if (chainparams.GetConsensus().fPowAllowMinDifficultyBlocks) {
                     // Changing pblock->nTime can change work required on testnet:
                     hashTarget.SetCompact(pblock->nBits);
                 }
             }
         }
     }
-    catch (const boost::thread_interrupted&)
-    {
+    catch (const boost::thread_interrupted &) {
         LogPrintf("RaptoreumMiner -- terminated\n");
         throw;
     }
-    catch (const std::runtime_error &e)
-    {
+    catch (const std::runtime_error &e) {
         LogPrintf("RaptoreumMiner -- runtime error: %s\n", e.what());
         return;
     }
 }
 
-int GenerateRaptoreums(bool fGenerate, int nThreads, const CChainParams& chainparams)
-{
-
-    static boost::thread_group* minerThreads = NULL;
+// TODO: add reference node, get the conn man from there
+int GenerateRaptoreums(bool fGenerate, int nThreads, const CChainParams &chainparams, NodeContext &node) {
+    static boost::thread_group *minerThreads = NULL;
 
     int numCores = GetNumCores();
     if (nThreads < 0)
         nThreads = numCores;
 
-    if (minerThreads != NULL)
-    {
+    if (minerThreads != NULL) {
         minerThreads->interrupt_all();
         delete minerThreads;
         minerThreads = NULL;
@@ -715,27 +728,9 @@ int GenerateRaptoreums(bool fGenerate, int nThreads, const CChainParams& chainpa
     nHashesDone = 0;
     nHashesPerSec = 0;
 
-    for (int i = 0; i < nThreads; i++){
-        minerThreads->create_thread(boost::bind(&RaptoreumMiner, boost::cref(chainparams)));
+    for (int i = 0; i < nThreads; i++) {
+        minerThreads->create_thread(
+                boost::bind(&RaptoreumMiner, boost::cref(chainparams), boost::ref(node)));
     }
-    return(numCores);
-}
-
-void IncrementExtraNonce(CBlock* pblock, const CBlockIndex* pindexPrev, unsigned int& nExtraNonce)
-{
-    // Update nExtraNonce
-    static uint256 hashPrevBlock;
-    if (hashPrevBlock != pblock->hashPrevBlock)
-    {
-        nExtraNonce = 0;
-        hashPrevBlock = pblock->hashPrevBlock;
-    }
-    ++nExtraNonce;
-    unsigned int nHeight = pindexPrev->nHeight+1; // Height first in coinbase required for block.version=2
-    CMutableTransaction txCoinbase(*pblock->vtx[0]);
-    txCoinbase.vin[0].scriptSig = (CScript() << nHeight << CScriptNum(nExtraNonce)) + COINBASE_FLAGS;
-    assert(txCoinbase.vin[0].scriptSig.size() <= 100);
-
-    pblock->vtx[0] = MakeTransactionRef(std::move(txCoinbase));
-    pblock->hashMerkleRoot = BlockMerkleRoot(*pblock);
+    return (numCores);
 }

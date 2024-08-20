@@ -1,4 +1,5 @@
 // Copyright (c) 2011-2014 The Bitcoin Core developers
+// Copyright (c) 2020-2023 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,29 +8,27 @@
 
 #include <qt/walletmodel.h>
 
-#include <memory>
-
 #include <QObject>
 
 class SendCoinsRecipient;
 
 namespace interfaces {
-class Node;
-class PendingWalletTx;
+    class Node;
 }
 
 /** Data model for a walletmodel transaction. */
-class WalletModelTransaction
-{
+class WalletModelTransaction {
 public:
-    explicit WalletModelTransaction(const QList<SendCoinsRecipient> &recipients);
+    explicit WalletModelTransaction(const QList <SendCoinsRecipient> &recipients);
 
-    QList<SendCoinsRecipient> getRecipients() const;
+    QList <SendCoinsRecipient> getRecipients() const;
 
-    std::unique_ptr<interfaces::PendingWalletTx>& getWtx();
+    CTransactionRef &getWtx();
+
     unsigned int getTransactionSize();
 
-    void setTransactionFee(const CAmount& newFee);
+    void setTransactionFee(const CAmount &newFee);
+
     CAmount getTransactionFee() const;
 
     CAmount getTotalTransactionAmount() const;
@@ -37,8 +36,8 @@ public:
     void reassignAmounts(); // needed for the subtract-fee-from-amount feature
 
 private:
-    QList<SendCoinsRecipient> recipients;
-    std::unique_ptr<interfaces::PendingWalletTx> wtx;
+    QList <SendCoinsRecipient> recipients;
+    CTransactionRef wtx;
     CAmount fee;
 };
 

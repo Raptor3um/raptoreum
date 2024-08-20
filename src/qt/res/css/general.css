@@ -30,13 +30,13 @@ in the <theme.css> file.
 /* do not modify! section updated by update-css-files.py
 <colors>
 
-# Used colors in general.css for commit d1e3d76b1
+# Used colors in general.css for commit f877c1680
 
 #00000000
 #222222
-#5e8c41
 #a84832
 #c79304
+#EB7F00
 
 </colors>
 */
@@ -218,13 +218,11 @@ QCalendarWidget  {
 #qt_calendar_prevmonth {
     width: 80px;
     height: 30px;
-    qproperty-icon: url(':/images/arrow_left_normal');
     qproperty-iconSize: 23px 23px;
 }
 #qt_calendar_nextmonth {
     width: 80px;
     height: 30px;
-    qproperty-icon: url(':/images/arrow_right_normal');
     qproperty-iconSize: 23px 23px;
 }
 #qt_calendar_prevmonth:hover,
@@ -314,7 +312,6 @@ QComboBox:checked {
 }
 
 QComboBox:editable {
-    border: 0px solid #00000000;
 }
 
 QComboBox:focus {
@@ -328,7 +325,7 @@ QComboBox::drop-down {
 }
 
 QComboBox QListView {
-    padding: 3px;
+    padding: 0px;
 }
 
 QComboBox QAbstractItemView::item {
@@ -419,7 +416,6 @@ QHeaderView::section:last {
 QHeaderView::down-arrow {
     width: 20px;
     height: 20px;
-    image: url(':/images/arrow_light_down_normal');
     subcontrol-position: right center;
     subcontrol-origin: margin;
     margin-right: 5px;
@@ -428,7 +424,6 @@ QHeaderView::down-arrow {
 QHeaderView::up-arrow {
     width: 20px;
     height: 20px;
-    image: url(':/images/arrow_light_up_normal');
     subcontrol-position: right center;
     subcontrol-origin: margin;
     margin-right: 5px;
@@ -449,13 +444,15 @@ QMenu
 
 QMenu {
     border: 1px solid red;
-    border-radius: 5px;
 }
 
 QMenu::item {
+    border: 1px solid transparent;
+    padding: 3px 7px 3px 7px;
 }
 
-QMenu::item:selected {
+QMenu::item:selected:!disabled {
+    border-radius: 2px;
 }
 
 QMenu::separator {
@@ -468,9 +465,12 @@ QMenuBar
 ******************************************************/
 
 QMenuBar {
+  padding: 14px 5px;
+  spacing: 15px;
 }
 
 QMenuBar::item {
+  padding-top: 6px;
 }
 
 QMenuBar::item:selected {
@@ -547,6 +547,10 @@ QDialog#OpenURIDialog QPushButton#selectFileButton,
 QDialog#OptionsDialog QPushButton#resetButton,
 QDialog#SendCoinsDialog .QPushButton#addButton,
 QDialog#SendCoinsDialog .QPushButton#clearButton,
+QDialog#SendAssetsDialog .QPushButton#addButton,
+QDialog#SendAssetsDialog .QPushButton#clearButton,
+QDialog#CreateAssetsDialog .QPushButton#clearButton,
+QDialog#UpdateAssetsDialog .QPushButton#clearButton,
 QWidget#ReceiveCoinsDialog .QFrame#frame QPushButton#removeRequestButton,
 QWidget#ReceiveCoinsDialog .QFrame#frame2 QPushButton#clearButton,
 QWidget#ReceiveCoinsDialog .QFrame#frame QPushButton#showRequestButton,
@@ -564,6 +568,10 @@ QDialog#OpenURIDialog QPushButton#selectFileButton:hover,
 QDialog#OptionsDialog QPushButton#resetButton:hover,
 QDialog#SendCoinsDialog .QPushButton#addButton:hover,
 QDialog#SendCoinsDialog .QPushButton#clearButton:hover,
+QDialog#SendAssetsDialog .QPushButton#addButton:hover,
+QDialog#SendAssetsDialog .QPushButton#clearButton:hover,
+QDialog#CreateAssetsDialog .QPushButton#clearButton:hover,
+QDialog#UpdateAssetsDialog .QPushButton#clearButton:hover,
 QWidget#ReceiveCoinsDialog .QFrame#frame QPushButton#removeRequestButton:hover,
 QWidget#ReceiveCoinsDialog .QFrame#frame2 QPushButton#clearButton:hover,
 QWidget#ReceiveCoinsDialog .QFrame#frame QPushButton#showRequestButton:hover,
@@ -582,6 +590,10 @@ QDialog#OpenURIDialog QPushButton#selectFileButton:pressed,
 QDialog#OptionsDialog QPushButton#resetButton:pressed,
 QDialog#SendCoinsDialog .QPushButton#addButton:pressed,
 QDialog#SendCoinsDialog .QPushButton#clearButton:pressed,
+QDialog#SendAssetsDialog .QPushButton#addButton:pressed,
+QDialog#SendAssetsDialog .QPushButton#clearButton:pressed,
+QDialog#CreateAssetsDialog .QPushButton#clearButton:pressed,
+QDialog#UpdateAssetsDialog .QPushButton#clearButton:pressed,
 QWidget#ReceiveCoinsDialog .QFrame#frame QPushButton#removeRequestButton:pressed,
 QWidget#ReceiveCoinsDialog .QFrame#frame2 QPushButton#clearButton:pressed,
 QWidget#ReceiveCoinsDialog .QFrame#frame QPushButton#showRequestButton:pressed,
@@ -601,6 +613,10 @@ QDialog#OpenURIDialog QPushButton#selectFileButton:disabled,
 QDialog#OptionsDialog QPushButton#resetButton:disabled,
 QDialog#SendCoinsDialog .QPushButton#addButton:disabled,
 QDialog#SendCoinsDialog .QPushButton#clearButton:disabled,
+QDialog#SendAssetsDialog .QPushButton#addButton:disabled,
+QDialog#SendAssetsDialog .QPushButton#clearButton:disabled,
+QDialog#CreateAssetsDialog .QPushButton#clearButton:disabled,
+QDialog#UpdateAssetsDialog .QPushButton#clearButton:disabled,
 QWidget#ReceiveCoinsDialog .QFrame#frame QPushButton#removeRequestButton:disabled,
 QWidget#ReceiveCoinsDialog .QFrame#frame2 QPushButton#clearButton:disabled,
 QWidget#ReceiveCoinsDialog .QFrame#frame QPushButton#showRequestButton:disabled,
@@ -781,18 +797,18 @@ QSlider
 ******************************************************/
 
 QSlider {
-    min-height: 30px;
+    min-height: 26px;
 }
 
 QSlider::groove:horizontal {
     background: #00000000;
-    height: 12px;
+    height: 8px;
     border-radius: 4px;
 }
 
 QSlider::add-page:horizontal,
 QSlider::sub-page:horizontal {
-    height: 12px;
+    height: 8px;
     border-radius: 4px;
 }
 
@@ -800,10 +816,10 @@ QSlider::handle:horizontal {
 margin-left: 5px;
 margin-right: 5px;
 background-color: red;
-width: 23px;
+width: 19px;
 margin-top: -5px;
 margin-bottom: -5px;
-border-radius: 11px;
+border-radius: 9px;
 }
 
 /******************************************************
@@ -874,20 +890,15 @@ QToolBar {
     border: none;
     width: 100%;
     padding: 0;
-    margin: 0;
     spacing: 0;
-    min-height: 50px;
-    max-height: 50px;
 }
 
 QToolBar > QToolButton {
     background-color: #00000000;
-    border: none;
-    min-height: 50px;
-    max-height: 50px;
+    min-height: 40px;
+    max-height: 40px;
     width: 100%;
     padding: 1px;
-    text-align: center;
 }
 
 QToolBar > QToolButton:hover:!checked {
@@ -900,9 +911,11 @@ QToolBar > QToolButton:disabled {
 }
 
 QToolBar QLabel#lblToolbarLogo {
-    padding: 12px;
-    image: url(':/images/raptoreum_logo_toolbar');
-    height: 2.5em;
+    background-repeat: no-repeat;
+    padding-top: 25px;
+    padding-bottom: 25px;
+    background-position: left bottom;
+    margin: 0px 18px;
 }
 
 /******************************************************
@@ -990,11 +1003,11 @@ AboutDialog
 
 QDialog#AboutDialog QLabel#label,
 QDialog#AboutDialog QLabel#copyrightLabel,
-QDialog#AboutDialog QLabel#label_2 { /* About Dash Contents */
+QDialog#AboutDialog QLabel#label_2 { /* About Raptoreum Contents */
     margin-left: 10px;
 }
 
-QDialog#AboutDialog QLabel#label_2 { /* Margin for About Dash text */
+QDialog#AboutDialog QLabel#label_2 { /* Margin for About Raptoreum text */
     margin-right: 10px;
 }
 
@@ -1180,6 +1193,97 @@ QDialog#CoinControlDialog .CoinControlTreeWidget#treeWidget::seperator {
 }
 
 /******************************************************
+AssetControlDialog
+******************************************************/
+
+QDialog#AssetControlDialog .QLabel#labelAssetControlQuantityText { /* Asset Control Quantity Label */
+    min-height: 30px;
+    padding-left: 15px;
+}
+QDialog#AssetControlDialog .QLabel#labelAssetControlQuantity { /* Asset Control Quantity */
+    min-height: 30px;
+}
+QDialog#AssetControlDialog .QLabel#labelAssetControlBytesText { /* Asset Control Bytes Label */
+    padding-left: 15px;
+}
+QDialog#AssetControlDialog .QLabel#labelAssetControlBytes { /* Asset Control Bytes */
+}
+QDialog#AssetControlDialog .QLabel#labelAssetControlAmountText { /* Asset Control Amount Label */
+    min-height: 30px;
+    padding-left: 15px;
+}
+QDialog#AssetControlDialog .QLabel#labelAssetControlAmount { /* Asset Control Amount */
+    min-height: 30px;
+}
+QDialog#AssetControlDialog .QLabel#labelAssetControlPriorityText { /* Asset Control Priority Label */
+    padding-left: 15px;
+}
+QDialog#AssetControlDialog .QLabel#labelAssetControlPriority { /* Asset Control Priority */
+}
+QDialog#AssetControlDialog .QLabel#labelAssetControlFeeText { /* Asset Control Fee Label */
+    min-height: 30px;
+    padding-left: 15px;
+}
+QDialog#AssetControlDialog .QLabel#labelAssetControlFee { /* Asset Control Fee */
+    min-height: 30px;
+}
+QDialog#AssetControlDialog .QLabel#labelAssetControlLowOutputText { /* Asset Control Low Output Label */
+    padding-left: 15px;
+}
+QDialog#AssetControlDialog .QLabel#labelAssetControlLowOutput { /* Asset Control Low Output */
+}
+QDialog#AssetControlDialog .QLabel#labelAssetControlAfterFeeText { /* Asset Control After Fee Label */
+    min-height: 30px;
+    padding-left: 15px;
+}
+QDialog#AssetControlDialog .QLabel#labelAssetControlAfterFee { /* Asset Control After Fee */
+    min-height: 30px;
+}
+QDialog#AssetControlDialog .QLabel#labelAssetControlChangeText { /* Asset Control Change Label */
+    padding-left: 15px;
+}
+QDialog#AssetControlDialog .QLabel#labelAssetControlChange { /* Asset Control Change */
+
+}
+
+QDialog#AssetControlDialog .QFrame#frame .QPushButton#pushButtonSelectAll { /* (un)select all button */
+}
+QDialog#AssetControlDialog .QFrame#frame .QPushButton#pushButtonToggleLock { /* Toggle lock state button */
+}
+
+QDialog#AssetControlDialog .QDialogButtonBox#buttonBox QPushButton { /* Asset Control 'OK' button */
+}
+
+QDialog#AssetControlDialog QHeaderView::section:first { /* Bug Fix: the number 1 displays in this table for some reason... */
+    color: #00000000;
+}
+
+QDialog#AssetControlDialog .AssetControlTreeWidget#treeWidget::item {
+    /*border-bottom: 1px solid red;*/
+    min-height: 25px;
+}
+QDialog#AssetControlDialog .AssetControlTreeWidget#treeWidget::item:hover {
+    background-color: #00000000;
+}
+QDialog#AssetControlDialog .AssetControlTreeWidget#treeWidget::item:selected { /* Asset Control Item (selected) */
+}
+QDialog#AssetControlDialog .AssetControlTreeWidget#treeWidget::item:checked { /* Asset Control Item (checked) */
+}
+
+QDialog#AssetControlDialog .AssetControlTreeWidget#treeWidget::branch:selected { /* Asset Control Branch Icon */
+    background-repeat: no-repeat;
+    background-position: center;
+}
+QDialog#AssetControlDialog .AssetControlTreeWidget#treeWidget::branch:checked { /* Asset Control Branch Icon */
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+QDialog#AssetControlDialog .AssetControlTreeWidget#treeWidget::seperator {
+
+}
+
+/******************************************************
 EditAddressDialog
 ******************************************************/
 
@@ -1287,7 +1391,7 @@ QDialog#OptionsDialog QLabel#label_3 { /* Translations Missing? Label */
     qproperty-alignment: 'AlignVCenter | AlignLeft';
     padding-left: 8px;
     min-height: 60px;
-    color: #c79304;
+    color: #EB7F00;
 }
 
 QDialog#OptionsDialog #line,
@@ -1623,11 +1727,9 @@ QWidget#RPCConsole .QToolButton { /* Console buttons fontbigger/fontsmaller/clea
 }
 
 QWidget#RPCConsole .QGroupBox #line { /* Network In Line */
-    background-color: #5e8c41;
 }
 
 QWidget#RPCConsole .QGroupBox #line_2 { /* Network Out Line */
-    background-color: #a84832;
 }
 
 #rpcAutoCompleter {
@@ -1642,6 +1744,9 @@ QWidget#RPCConsole .QGroupBox #line_2 { /* Network Out Line */
 #rpcAutoCompleter::item {
     background-color: #00000000;
     color: red;
+    border: 1px solid transparent;
+    border-radius: 2px;
+    padding: 2px 5px 2px 5px;
 }
 
 #rpcAutoCompleter::item:selected {
@@ -1741,6 +1846,187 @@ QStackedWidget#SendCoinsEntry .QToolButton#deleteButton_is {
 }
 
 QStackedWidget#SendCoinsEntry .QLineEdit#addAsLabel { /* Pay To Input Field */
+}
+
+/******************************************************
+SendAssetsDialog
+******************************************************/
+
+QDialog#SendAssetsDialog .QFrame#frameAssetControl,
+QDialog#SendAssetsDialog #scrollArea  { /* Asset Control Section */
+    border-bottom: 1px solid red;
+}
+
+QDialog#SendAssetsDialog .QFrame#frameAssetControl .QPushButton#pushButtonAssetControl { /* Asset Control Inputs Button */
+}
+
+QDialog#SendAssetsDialog .QFrame#frameAssetControl .QLabel#labelAssetControlFeatures { /* Asset Control Header */
+}
+
+QDialog#SendAssetsDialog .QFrame#frameAssetControl .QWidget#widgetAssetControl { /* Asset Control Inputs */
+}
+
+QDialog#SendAssetsDialog .QFrame#frameAssetControl .QWidget#widgetAssetControl > .QLabel { /* Asset Control Inputs Labels */
+    padding: 2px;
+}
+
+QDialog#SendAssetsDialog .QFrame#frameAssetControl .QValidatedLineEdit#lineEditAssetControlChange { /* Custom Change Address */
+}
+
+QDialog#SendAssetsDialog .QFrame#frameAssetControl .QLabel#labelAssetControlChangeLabel { /* Custom Change Address Validation Label */
+    margin-right: 112px;
+}
+
+QDialog#SendAssetsDialog .QFrame#frameAssetControl .QLabel#labelAssetControlInsuffFunds { /* Insufficient Funds Label */
+    color: #a84832;
+}
+
+QDialog#SendAssetsDialog .QScrollArea#scrollArea .QWidget#scrollAreaWidgetContents { /* Send To Widget */
+    background-color: #00000000;
+}
+
+QDialog#SendAssetsDialog QLabel#labelBalanceText,
+QDialog#SendAssetsDialog QLabel#labelBalance {
+    qproperty-alignment: 'AlignLeading | AlignLeft';
+    min-height: 20px;
+    max-height: 20px;
+}
+
+QDialog#SendAssetsDialog QLabel#labelBalance {
+    margin-right: 10px;
+}
+
+QDialog#SendAssetsDialog QPushButton#sendButton {
+    margin-left:10px;
+}
+
+#checkboxSubtractFeeFromAmount {
+    padding-left: 10px;
+}
+
+/******************************************************
+SendAssetsEntry
+******************************************************/
+
+QStackedWidget#SendAssetsEntry .QFrame#SendAssets > .QLabel { /* Send Asset Entry Labels */
+    background-color: #00000000;
+    min-width: 50px;
+    min-height: 25px;
+    margin-right: 5px;
+    padding-right: 5px;
+}
+
+QStackedWidget#SendAssetsEntry .QFrame#SendAssets .QLabel#amountLabel {
+}
+
+QStackedWidget#SendAssetsEntry .QValidatedLineEdit#payTo { /* Pay To Input Field */
+}
+
+QStackedWidget#SendAssetsEntry .QToolButton { /* General Settings for Pay To Icons */
+    background-color: #00000000;
+    margin-left: 5px;
+    margin-right: 5px;
+    border: 0;
+}
+
+QStackedWidget#SendAssetsEntry .QToolButton#addressBookButton { /* Address Book Button */
+    margin-left: 10px;
+}
+
+QStackedWidget#SendAssetsEntry .QToolButton#addressBookButton,
+QStackedWidget#SendAssetsEntry .QToolButton#pasteButton,
+QStackedWidget#SendAssetsEntry .QToolButton#deleteButton,
+QStackedWidget#SendAssetsEntry .QToolButton#deleteButton_is {
+}
+
+QStackedWidget#SendAssetsEntry .QLineEdit#addAsLabel { /* Pay To Input Field */
+}
+
+/******************************************************
+CreateAssetsDialog
+******************************************************/
+
+QDialog#CreateAssetsDialog .QFrame#frameCoinControl,
+QDialog#CreateAssetsDialog #scrollArea  { /* Coin Control Section */
+    border-bottom: 1px solid red;
+}
+
+QDialog#CreateAssetsDialog .QFrame#frameCoinControl .QPushButton#pushButtonCoinControl { /* Coin Control Inputs Button */
+}
+
+QDialog#CreateAssetsDialog .QFrame#frameCoinControl .QLabel#labelCoinControlFeatures { /* Coin Control Header */
+}
+
+QDialog#CreateAssetsDialog .QFrame#frameCoinControl .QWidget#widgetCoinControl { /* Coin Control Inputs */
+}
+
+QDialog#CreateAssetsDialog .QFrame#frameCoinControl .QWidget#widgetCoinControl > .QLabel { /* Coin Control Inputs Labels */
+    padding: 2px;
+}
+
+QDialog#CreateAssetsDialog .QFrame#frameCoinControl .QValidatedLineEdit#lineEditCoinControlChange { /* Custom Change Address */
+}
+
+QDialog#CreateAssetsDialog .QFrame#frameCoinControl .QLabel#labelCoinControlChangeLabel { /* Custom Change Address Validation Label */
+    margin-right: 112px;
+}
+
+QDialog#CreateAssetsDialog .QFrame#frameCoinControl .QLabel#labelCoinControlInsuffFunds { /* Insufficient Funds Label */
+    color: #a84832;
+}
+
+QDialog#CreateAssetsDialog .QScrollArea#scrollArea .QWidget#scrollAreaWidgetContents { /* Send To Widget */
+    background-color: #00000000;
+}
+
+QDialog#CreateAssetsDialog QLabel#labelBalanceText,
+QDialog#CreateAssetsDialog QLabel#labelBalance {
+    qproperty-alignment: 'AlignLeading | AlignLeft';
+    min-height: 20px;
+    max-height: 20px;
+}
+
+QDialog#CreateAssetsDialog QLabel#labelBalance {
+    margin-right: 10px;
+}
+
+QDialog#CreateAssetsDialog QPushButton#createAssetButton {
+    margin-left: 10px;
+}
+
+/******************************************************
+UpdateAssetsDialog
+******************************************************/
+
+QDialog#UpdateAssetsDialog .QFrame#frameCoinControl,
+QDialog#UpdateAssetsDialog #scrollArea  { /* Coin Control Section */
+    border-bottom: 1px solid red;
+}
+
+QDialog#UpdateAssetsDialog .QScrollArea#scrollArea .QWidget#scrollAreaWidgetContents { /* Send To Widget */
+    background-color: #00000000;
+}
+
+QDialog#UpdateAssetsDialog QLabel#labelBalanceText,
+QDialog#UpdateAssetsDialog QLabel#labelBalance {
+    qproperty-alignment: 'AlignLeading | AlignLeft';
+    min-height: 20px;
+    max-height: 20px;
+}
+
+QDialog#UpdateAssetsDialog QLabel#labelBalance {
+    margin-right: 10px;
+}
+
+QDialog#UpdateAssetsDialog QPushButton#updateAssetButton {
+    margin-left: 10px;
+}
+
+/******************************************************
+AssetsDialog
+******************************************************/
+QDialog#AssetsDialog QListWidget#listWidget {
+    background-color: #00000000;
 }
 
 /******************************************************

@@ -89,7 +89,7 @@ static void secp256k1_fe_add(secp256k1_fe *r, const secp256k1_fe *a);
 
 /** Sets a field element to be the product of two others. Requires the inputs' magnitudes to be at most 8.
  *  The output magnitude is 1 (but not guaranteed to be normalized). */
-static void secp256k1_fe_mul(secp256k1_fe *r, const secp256k1_fe *a, const secp256k1_fe * SECP256K1_RESTRICT b);
+static void secp256k1_fe_mul(secp256k1_fe *r, const secp256k1_fe *a, const secp256k1_fe *SECP256K1_RESTRICT b);
 
 /** Sets a field element to be the square of another. Requires the input's magnitude to be at most 8.
  *  The output magnitude is 1 (but not guaranteed to be normalized). */

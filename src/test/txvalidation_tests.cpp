@@ -18,43 +18,74 @@ BOOST_AUTO_TEST_SUITE(txvalidation_tests)
 /**
  * Ensure that the mempool won't accept coinbase transactions.
  */
-BOOST_FIXTURE_TEST_CASE(tx_mempool_reject_coinbase, TestChain100Setup)
+BOOST_FIXTURE_TEST_CASE(tx_mempool_reject_coinbase, TestChain100Setup
+)
 {
-    CScript scriptPubKey = CScript() << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
-    CMutableTransaction coinbaseTx;
+CScript scriptPubKey = CScript() << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
+CMutableTransaction coinbaseTx;
 
-    coinbaseTx.nVersion = 1;
-    coinbaseTx.vin.resize(1);
-    coinbaseTx.vout.resize(1);
-    coinbaseTx.vin[0].scriptSig = CScript() << OP_11 << OP_EQUAL;
-    coinbaseTx.vout[0].nValue = 1 * CENT;
-    coinbaseTx.vout[0].scriptPubKey = scriptPubKey;
+coinbaseTx.
+nVersion = 1;
+coinbaseTx.vin.resize(1);
+coinbaseTx.vout.resize(1);
+coinbaseTx.vin[0].
+scriptSig = CScript() << OP_11 << OP_EQUAL;
+coinbaseTx.vout[0].
+nValue = 1 * CENT;
+coinbaseTx.vout[0].
+scriptPubKey = scriptPubKey;
 
-    assert(CTransaction(coinbaseTx).IsCoinBase());
+assert(CTransaction(coinbaseTx)
+.
 
-    CValidationState state;
+IsCoinBase()
 
-    LOCK(cs_main);
+);
 
-    unsigned int initialPoolSize = mempool.size();
+CValidationState state;
 
-    BOOST_CHECK_EQUAL(
-            false,
-            AcceptToMemoryPool(mempool, state, MakeTransactionRef(coinbaseTx),
-                nullptr /* pfMissingInputs */,
-                true /* bypass_limits */,
-                0 /* nAbsurdFee */));
+LOCK(cs_main);
 
-    // Check that the transaction hasn't been added to mempool.
-    BOOST_CHECK_EQUAL(mempool.size(), initialPoolSize);
+unsigned int initialPoolSize = m_node.mempool->size();
 
-    // Check that the validation state reflects the unsuccessful attempt.
-    BOOST_CHECK(state.IsInvalid());
-    BOOST_CHECK_EQUAL(state.GetRejectReason(), "coinbase");
+BOOST_CHECK_EQUAL(
+false,
+AcceptToMemoryPool(*m_node
+.mempool, state,
+MakeTransactionRef(coinbaseTx),
+        nullptr /* pfMissingInputs */,
+true /* bypass_limits */,
+0 /* nAbsurdFee */));
 
-    int nDoS;
-    BOOST_CHECK_EQUAL(state.IsInvalid(nDoS), true);
-    BOOST_CHECK_EQUAL(nDoS, 100);
+// Check that the transaction hasn't been added to mempool.
+BOOST_CHECK_EQUAL(m_node
+.mempool->
+
+size(), initialPoolSize
+
+);
+
+// Check that the validation state reflects the unsuccessful attempt.
+BOOST_CHECK(state
+.
+
+IsInvalid()
+
+);
+BOOST_CHECK_EQUAL(state
+.
+
+GetRejectReason(),
+
+"coinbase");
+
+int nDoS;
+BOOST_CHECK_EQUAL(state
+.
+IsInvalid(nDoS),
+true);
+BOOST_CHECK_EQUAL(nDoS,
+100);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -1,5 +1,5 @@
 // Copyright (c) 2014-2021 The Dash Core developers
-// Copyright (c) 2020-2022 The Raptoreum developers
+// Copyright (c) 2020-2023 The Raptoreum developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,26 +9,24 @@
 #include <key_io.h>
 #include <timedata.h>
 #include <tinyformat.h>
-#include <utilstrencodings.h>
+#include <util/strencodings.h>
 
 #include <algorithm>
 
 const size_t MAX_DATA_SIZE = 512;
 const size_t MAX_NAME_SIZE = 40;
 
-CProposalValidator::CProposalValidator(const std::string& strHexData, bool fAllowLegacyFormat) :
-    objJSON(UniValue::VOBJ),
-    fJSONValid(false),
-    fAllowLegacyFormat(fAllowLegacyFormat),
-    strErrorMessages()
-{
+CProposalValidator::CProposalValidator(const std::string &strHexData, bool fAllowLegacyFormat) :
+        objJSON(UniValue::VOBJ),
+        fJSONValid(false),
+        fAllowLegacyFormat(fAllowLegacyFormat),
+        strErrorMessages() {
     if (!strHexData.empty()) {
         ParseStrHexData(strHexData);
     }
 }
 
-void CProposalValidator::ParseStrHexData(const std::string& strHexData)
-{
+void CProposalValidator::ParseStrHexData(const std::string &strHexData) {
     std::vector<unsigned char> v = ParseHex(strHexData);
     if (v.size() > MAX_DATA_SIZE) {
         strErrorMessages = strprintf("data exceeds %lu characters;", MAX_DATA_SIZE);
@@ -37,8 +35,7 @@ void CProposalValidator::ParseStrHexData(const std::string& strHexData)
     ParseJSONData(std::string(v.begin(), v.end()));
 }
 
-bool CProposalValidator::Validate(bool fCheckExpiration)
-{
+bool CProposalValidator::Validate(bool fCheckExpiration) {
     if (!fJSONValid) {
         strErrorMessages += "JSON parsing error;";
         return false;
@@ -70,8 +67,7 @@ bool CProposalValidator::Validate(bool fCheckExpiration)
     return true;
 }
 
-bool CProposalValidator::ValidateType()
-{
+bool CProposalValidator::ValidateType() {
     int64_t nType;
     if (!GetDataValue("type", nType)) {
         strErrorMessages += "type field not found;";
@@ -86,8 +82,7 @@ bool CProposalValidator::ValidateType()
     return true;
 }
 
-bool CProposalValidator::ValidateName()
-{
+bool CProposalValidator::ValidateName() {
     std::string strName;
     if (!GetDataValue("name", strName)) {
         strErrorMessages += "name field not found;";
@@ -101,7 +96,7 @@ bool CProposalValidator::ValidateName()
 
     static const std::string strAllowedChars = "-_abcdefghijklmnopqrstuvwxyz0123456789";
 
-    std::transform(strName.begin(), strName.end(), strName.begin(), ::tolower);
+    strName = ToLower(strName);
 
     if (strName.find_first_not_of(strAllowedChars) != std::string::npos) {
         strErrorMessages += "name contains invalid characters;";
@@ -111,8 +106,7 @@ bool CProposalValidator::ValidateName()
     return true;
 }
 
-bool CProposalValidator::ValidateStartEndEpoch(bool fCheckExpiration)
-{
+bool CProposalValidator::ValidateStartEndEpoch(bool fCheckExpiration) {
     int64_t nStartEpoch = 0;
     int64_t nEndEpoch = 0;
 
@@ -139,8 +133,7 @@ bool CProposalValidator::ValidateStartEndEpoch(bool fCheckExpiration)
     return true;
 }
 
-bool CProposalValidator::ValidatePaymentAmount()
-{
+bool CProposalValidator::ValidatePaymentAmount() {
     double dValue = 0.0;
 
     if (!GetDataValue("payment_amount", dValue)) {
@@ -160,8 +153,7 @@ bool CProposalValidator::ValidatePaymentAmount()
     return true;
 }
 
-bool CProposalValidator::ValidatePaymentAddress()
-{
+bool CProposalValidator::ValidatePaymentAddress() {
     std::string strPaymentAddress;
 
     if (!GetDataValue("payment_address", strPaymentAddress)) {
@@ -169,7 +161,7 @@ bool CProposalValidator::ValidatePaymentAddress()
         return false;
     }
 
-    if (std::find_if(strPaymentAddress.begin(), strPaymentAddress.end(), ::isspace) != strPaymentAddress.end()) {
+    if (std::find_if(strPaymentAddress.begin(), strPaymentAddress.end(), IsSpace) != strPaymentAddress.end()) {
         strErrorMessages += "payment_address can't have whitespaces;";
         return false;
     }
@@ -189,15 +181,14 @@ bool CProposalValidator::ValidatePaymentAddress()
     return true;
 }
 
-bool CProposalValidator::ValidateURL()
-{
+bool CProposalValidator::ValidateURL() {
     std::string strURL;
     if (!GetDataValue("url", strURL)) {
         strErrorMessages += "url field not found;";
         return false;
     }
 
-    if (std::find_if(strURL.begin(), strURL.end(), ::isspace) != strURL.end()) {
+    if (std::find_if(strURL.begin(), strURL.end(), IsSpace) != strURL.end()) {
         strErrorMessages += "url can't have whitespaces;";
         return false;
     }
@@ -215,8 +206,7 @@ bool CProposalValidator::ValidateURL()
     return true;
 }
 
-void CProposalValidator::ParseJSONData(const std::string& strJSONData)
-{
+void CProposalValidator::ParseJSONData(const std::string &strJSONData) {
     fJSONValid = false;
 
     if (strJSONData.empty()) {
@@ -232,8 +222,8 @@ void CProposalValidator::ParseJSONData(const std::string& strJSONData)
             objJSON = obj;
         } else {
             if (fAllowLegacyFormat) {
-                std::vector<UniValue> arr1 = obj.getValues();
-                std::vector<UniValue> arr2 = arr1.at(0).getValues();
+                std::vector <UniValue> arr1 = obj.getValues();
+                std::vector <UniValue> arr2 = arr1.at(0).getValues();
                 objJSON = arr2.at(1);
             } else {
                 throw std::runtime_error("Legacy proposal serialization format not allowed");
@@ -241,20 +231,19 @@ void CProposalValidator::ParseJSONData(const std::string& strJSONData)
         }
 
         fJSONValid = true;
-    } catch (std::exception& e) {
+    } catch (std::exception &e) {
         strErrorMessages += std::string(e.what()) + std::string(";");
     } catch (...) {
         strErrorMessages += "Unknown exception;";
     }
 }
 
-bool CProposalValidator::GetDataValue(const std::string& strKey, std::string& strValueRet)
-{
+bool CProposalValidator::GetDataValue(const std::string &strKey, std::string &strValueRet) {
     bool fOK = false;
     try {
         strValueRet = objJSON[strKey].get_str();
         fOK = true;
-    } catch (std::exception& e) {
+    } catch (std::exception &e) {
         strErrorMessages += std::string(e.what()) + std::string(";");
     } catch (...) {
         strErrorMessages += "Unknown exception;";
@@ -262,20 +251,19 @@ bool CProposalValidator::GetDataValue(const std::string& strKey, std::string& st
     return fOK;
 }
 
-bool CProposalValidator::GetDataValue(const std::string& strKey, int64_t& nValueRet)
-{
+bool CProposalValidator::GetDataValue(const std::string &strKey, int64_t &nValueRet) {
     bool fOK = false;
     try {
         const UniValue uValue = objJSON[strKey];
         switch (uValue.getType()) {
-        case UniValue::VNUM:
-            nValueRet = uValue.get_int64();
-            fOK = true;
-            break;
-        default:
-            break;
+            case UniValue::VNUM:
+                nValueRet = uValue.get_int64();
+                fOK = true;
+                break;
+            default:
+                break;
         }
-    } catch (std::exception& e) {
+    } catch (std::exception &e) {
         strErrorMessages += std::string(e.what()) + std::string(";");
     } catch (...) {
         strErrorMessages += "Unknown exception;";
@@ -283,20 +271,19 @@ bool CProposalValidator::GetDataValue(const std::string& strKey, int64_t& nValue
     return fOK;
 }
 
-bool CProposalValidator::GetDataValue(const std::string& strKey, double& dValueRet)
-{
+bool CProposalValidator::GetDataValue(const std::string &strKey, double &dValueRet) {
     bool fOK = false;
     try {
         const UniValue uValue = objJSON[strKey];
         switch (uValue.getType()) {
-        case UniValue::VNUM:
-            dValueRet = uValue.get_real();
-            fOK = true;
-            break;
-        default:
-            break;
+            case UniValue::VNUM:
+                dValueRet = uValue.get_real();
+                fOK = true;
+                break;
+            default:
+                break;
         }
-    } catch (std::exception& e) {
+    } catch (std::exception &e) {
         strErrorMessages += std::string(e.what()) + std::string(";");
     } catch (...) {
         strErrorMessages += "Unknown exception;";
@@ -310,8 +297,7 @@ bool CProposalValidator::GetDataValue(const std::string& strKey, double& dValueR
   should return false whenever urlparse raises an exception and true
   otherwise.
  */
-bool CProposalValidator::CheckURL(const std::string& strURLIn)
-{
+bool CProposalValidator::CheckURL(const std::string &strURLIn) {
     std::string strRest(strURLIn);
     std::string::size_type nPos = strRest.find(':');
 

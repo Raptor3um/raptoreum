@@ -1,4 +1,5 @@
-// Copyright (c) 2017-2017 The Bitcoin Core developers
+// Copyright (c) 2017-2023 The Bitcoin Core developers
+// Copyright (c) 2020-2023 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -16,76 +17,126 @@
 #include <evo/specialtx.h>
 #include <evo/providertx.h>
 #include <timedata.h>
+#include <assets/assets.h>
+#include <assets/assetstype.h>
 
 // TODO remove the following dependencies
 #include <chain.h>
 #include <coins.h>
-#include <utilmoneystr.h>
+#include <util/moneystr.h>
+#include <version.h>
 
-extern CChain& chainActive;
+CChain &ChainActive();
 
-static bool checkSpecialTxFee(const CTransaction &tx, CAmount& nFeeTotal, CAmount& specialTxFee, bool fFeeVerify = false) {
-	if(tx.nVersion >= 3) {
-		switch(tx.nType){
-		case TRANSACTION_FUTURE:
-			CFutureTx ftx;
-			if(GetTxPayload(tx.vExtraPayload, ftx)) {
-                if(!Params().IsFutureActive(chainActive.Tip())) {
-                    return false;
+static bool
+checkSpecialTxFee(const CTransaction &tx, CAmount &nFeeTotal, CAmount &specialTxFee, bool fFeeVerify = false) {
+    if (tx.nVersion >= 3) {
+        switch (tx.nType) {
+            case TRANSACTION_FUTURE: {
+                CFutureTx ftx;
+                if (GetTxPayload(tx.vExtraPayload, ftx)) {
+                    if (!Params().IsFutureActive(::ChainActive().Tip())) {
+                        return false;
+                    }
+                    bool futureEnabled = sporkManager.IsSporkActive(SPORK_22_SPECIAL_TX_FEE);
+                    if (futureEnabled && fFeeVerify && ftx.fee != getFutureFees()) {
+                        return false;
+                    }
+                    specialTxFee = ftx.fee * COIN;
+                    nFeeTotal -= specialTxFee;
                 }
-                bool futureEnabled = sporkManager.IsSporkActive(SPORK_22_SPECIAL_TX_FEE);
-                if(futureEnabled && fFeeVerify && ftx.fee != getFutureFees()) {
-                    return false;
+                break;
+            }
+            case TRANSACTION_NEW_ASSET: {
+                CNewAssetTx asset;
+                if (GetTxPayload(tx.vExtraPayload, asset)) {
+                    if (!Updates().IsAssetsActive(::ChainActive().Tip())) {
+                        return false;
+                    }
+                    bool assetsEnabled = sporkManager.IsSporkActive(SPORK_22_SPECIAL_TX_FEE);
+                    if (assetsEnabled && fFeeVerify && asset.fee != getAssetsFees()) {
+                        return false;
+                    }
+                    specialTxFee = asset.fee * COIN;
+                    nFeeTotal -= specialTxFee;
                 }
-                specialTxFee = ftx.fee * COIN;
-                nFeeTotal -= specialTxFee;
-			}
-			break;
-		}
-	}
+                break;
+            }
+            case TRANSACTION_UPDATE_ASSET: {
+                CUpdateAssetTx asset;
+                if (GetTxPayload(tx.vExtraPayload, asset)) {
+                    if (!Updates().IsAssetsActive(::ChainActive().Tip())) {
+                        return false;
+                    }
+                    bool assetsEnabled = sporkManager.IsSporkActive(SPORK_22_SPECIAL_TX_FEE);
+                    if (assetsEnabled && fFeeVerify && asset.fee != getAssetsFees()) {
+                        return false;
+                    }
+                    specialTxFee = asset.fee * COIN;
+                    nFeeTotal -= specialTxFee;
+                }
+                break;
+            }
+            case TRANSACTION_MINT_ASSET: {
+                CMintAssetTx asset;
+                if (GetTxPayload(tx.vExtraPayload, asset)) {
+                    if (!Updates().IsAssetsActive(::ChainActive().Tip())) {
+                        return false;
+                    }
+                    bool assetsEnabled = sporkManager.IsSporkActive(SPORK_22_SPECIAL_TX_FEE);
+                    if (assetsEnabled && fFeeVerify && asset.fee != getAssetsFees()) {
+                        return false;
+                    }
+                    specialTxFee = asset.fee * COIN;
+                    nFeeTotal -= specialTxFee;
+                }
+                break;
+            }
+                break;
+        }
+    }
     return true;
 }
 
-static const char *validateFutureCoin(const Coin& coin, int nSpendHeight) {
-	if(coin.nType == TRANSACTION_FUTURE) {
-		CBlockIndex* confirmedBlockIndex = chainActive[coin.nHeight];
-		if(confirmedBlockIndex) {
-			int64_t adjustCurrentTime = GetAdjustedTime();
-			uint32_t confirmedTime = confirmedBlockIndex->GetBlockTime();
-			CFutureTx futureTx;
-			if(GetTxPayload(coin.vExtraPayload, futureTx)) {
+static const char *validateFutureCoin(const Coin &coin, int nSpendHeight) {
+    if (coin.nType == TRANSACTION_FUTURE) {
+        CBlockIndex *confirmedBlockIndex = ::ChainActive()[coin.nHeight];
+        if (confirmedBlockIndex) {
+            int64_t adjustCurrentTime = GetAdjustedTime();
+            uint32_t confirmedTime = confirmedBlockIndex->GetBlockTime();
+            CFutureTx futureTx;
+            if (GetTxPayload(coin.vExtraPayload, futureTx)) {
                 bool isBlockMature = futureTx.maturity >= 0 && nSpendHeight - coin.nHeight >= futureTx.maturity;
-                bool isTimeMature = futureTx.lockTime >= 0 && adjustCurrentTime - confirmedTime  >= futureTx.lockTime;
+                bool isTimeMature = futureTx.lockTime >= 0 && adjustCurrentTime - confirmedTime >= futureTx.lockTime;
                 bool canSpend = isBlockMature || isTimeMature;
-				if(!canSpend) {
-					return "bad-txns-premature-spend-of-future";
-				}
-				return nullptr;
-			}
-			return "bad-txns-unable-to-parse-future";
-		}
-		// should not get here
-		return "bad-txns-unable-to-block-index-for-future";
-	}
-	return nullptr;
+                if (!canSpend) {
+                    return "bad-txns-premature-spend-of-future";
+                }
+                return nullptr;
+            }
+            return "bad-txns-unable-to-parse-future";
+        }
+        // should not get here
+        return "bad-txns-unable-to-block-index-for-future";
+    }
+    return nullptr;
 }
 
 
-bool IsFinalTx(const CTransaction &tx, int nBlockHeight, int64_t nBlockTime)
-{
+bool IsFinalTx(const CTransaction &tx, int nBlockHeight, int64_t nBlockTime) {
     if (tx.nLockTime == 0)
         return true;
-    if ((int64_t)tx.nLockTime < ((int64_t)tx.nLockTime < LOCKTIME_THRESHOLD ? (int64_t)nBlockHeight : nBlockTime))
+    if ((int64_t) tx.nLockTime < ((int64_t) tx.nLockTime < LOCKTIME_THRESHOLD ? (int64_t) nBlockHeight : nBlockTime))
         return true;
-    for (const auto& txin : tx.vin) {
+    for (const auto &txin: tx.vin) {
         if (txin.nSequence != CTxIn::SEQUENCE_FINAL)
             return false;
     }
     return true;
 }
 
-std::pair<int, int64_t> CalculateSequenceLocks(const CTransaction &tx, int flags, std::vector<int>* prevHeights, const CBlockIndex& block)
-{
+std::pair<int, int64_t>
+CalculateSequenceLocks(const CTransaction &tx, int flags, std::vector<int> *prevHeights, const CBlockIndex &block) {
     assert(prevHeights->size() == tx.vin.size());
 
     // Will be set to the equivalent height- and time-based nLockTime
@@ -109,7 +160,7 @@ std::pair<int, int64_t> CalculateSequenceLocks(const CTransaction &tx, int flags
     }
 
     for (size_t txinIndex = 0; txinIndex < tx.vin.size(); txinIndex++) {
-        const CTxIn& txin = tx.vin[txinIndex];
+        const CTxIn &txin = tx.vin[txinIndex];
 
         // Sequence numbers with the most significant bit set are not
         // treated as relative lock-times, nor are they given any
@@ -123,7 +174,7 @@ std::pair<int, int64_t> CalculateSequenceLocks(const CTransaction &tx, int flags
         int nCoinHeight = (*prevHeights)[txinIndex];
 
         if (txin.nSequence & CTxIn::SEQUENCE_LOCKTIME_TYPE_FLAG) {
-            int64_t nCoinTime = block.GetAncestor(std::max(nCoinHeight-1, 0))->GetMedianTimePast();
+            int64_t nCoinTime = block.GetAncestor(std::max(nCoinHeight - 1, 0))->GetMedianTimePast();
             // NOTE: Subtract 1 to maintain nLockTime semantics
             // BIP 68 relative lock times have the semantics of calculating
             // the first block or time at which the transaction would be
@@ -137,17 +188,17 @@ std::pair<int, int64_t> CalculateSequenceLocks(const CTransaction &tx, int flags
             // smallest allowed timestamp of the block containing the
             // txout being spent, which is the median time past of the
             // block prior.
-            nMinTime = std::max(nMinTime, nCoinTime + (int64_t)((txin.nSequence & CTxIn::SEQUENCE_LOCKTIME_MASK) << CTxIn::SEQUENCE_LOCKTIME_GRANULARITY) - 1);
+            nMinTime = std::max(nMinTime, nCoinTime + (int64_t)(
+                    (txin.nSequence & CTxIn::SEQUENCE_LOCKTIME_MASK) << CTxIn::SEQUENCE_LOCKTIME_GRANULARITY) - 1);
         } else {
-            nMinHeight = std::max(nMinHeight, nCoinHeight + (int)(txin.nSequence & CTxIn::SEQUENCE_LOCKTIME_MASK) - 1);
+            nMinHeight = std::max(nMinHeight, nCoinHeight + (int) (txin.nSequence & CTxIn::SEQUENCE_LOCKTIME_MASK) - 1);
         }
     }
 
     return std::make_pair(nMinHeight, nMinTime);
 }
 
-bool EvaluateSequenceLocks(const CBlockIndex& block, std::pair<int, int64_t> lockPair)
-{
+bool EvaluateSequenceLocks(const CBlockIndex &block, std::pair<int, int64_t> lockPair) {
     assert(block.pprev);
     int64_t nBlockTime = block.pprev->GetMedianTimePast();
     if (lockPair.first >= block.nHeight || lockPair.second >= nBlockTime)
@@ -156,34 +207,28 @@ bool EvaluateSequenceLocks(const CBlockIndex& block, std::pair<int, int64_t> loc
     return true;
 }
 
-bool SequenceLocks(const CTransaction &tx, int flags, std::vector<int>* prevHeights, const CBlockIndex& block)
-{
+bool SequenceLocks(const CTransaction &tx, int flags, std::vector<int> *prevHeights, const CBlockIndex &block) {
     return EvaluateSequenceLocks(block, CalculateSequenceLocks(tx, flags, prevHeights, block));
 }
 
-unsigned int GetLegacySigOpCount(const CTransaction& tx)
-{
+unsigned int GetLegacySigOpCount(const CTransaction &tx) {
     unsigned int nSigOps = 0;
-    for (const auto& txin : tx.vin)
-    {
+    for (const auto &txin: tx.vin) {
         nSigOps += txin.scriptSig.GetSigOpCount(false);
     }
-    for (const auto& txout : tx.vout)
-    {
+    for (const auto &txout: tx.vout) {
         nSigOps += txout.scriptPubKey.GetSigOpCount(false);
     }
     return nSigOps;
 }
 
-unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CCoinsViewCache& inputs)
-{
+unsigned int GetP2SHSigOpCount(const CTransaction &tx, const CCoinsViewCache &inputs) {
     if (tx.IsCoinBase())
         return 0;
 
     unsigned int nSigOps = 0;
-    for (unsigned int i = 0; i < tx.vin.size(); i++)
-    {
-        const Coin& coin = inputs.AccessCoin(tx.vin[i].prevout);
+    for (unsigned int i = 0; i < tx.vin.size(); i++) {
+        const Coin &coin = inputs.AccessCoin(tx.vin[i].prevout);
         assert(!coin.IsSpent());
         const CTxOut &prevout = coin.out;
         if (prevout.scriptPubKey.IsPayToScriptHash())
@@ -192,8 +237,7 @@ unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CCoinsViewCache& in
     return nSigOps;
 }
 
-unsigned int GetTransactionSigOpCount(const CTransaction& tx, const CCoinsViewCache& inputs, int flags)
-{
+unsigned int GetTransactionSigOpCount(const CTransaction &tx, const CCoinsViewCache &inputs, int flags) {
     unsigned int nSigOps = GetLegacySigOpCount(tx);
 
     if (tx.IsCoinBase())
@@ -206,79 +250,91 @@ unsigned int GetTransactionSigOpCount(const CTransaction& tx, const CCoinsViewCa
     return nSigOps;
 }
 
-bool CheckTransaction(const CTransaction& tx, CValidationState &state, int nHeight, CAmount blockReward)
-{
-    bool allowEmptyTxInOut = false;
-    if (tx.nType == TRANSACTION_QUORUM_COMMITMENT) {
-        allowEmptyTxInOut = true;
+inline bool checkOutput(const CTxOut &out, CValidationState &state, CAmount &nValueIn,
+                        std::map <std::string, CAmount> &nAssetVin,
+                        std::map <std::string, std::vector<std::pair<uint64_t, uint64_t>>> &nMapids) {
+    // Check for negative or overflow values
+    nValueIn += out.nValue;
+    if (!MoneyRange(out.nValue) || !MoneyRange(nValueIn)) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputvalues-outofrange");
     }
 
-    // Basic checks that don't depend on any context
-    if (!allowEmptyTxInOut && tx.vin.empty())
-        return state.DoS(10, false, REJECT_INVALID, "bad-txns-vin-empty");
-    if (!allowEmptyTxInOut && tx.vout.empty())
-        return state.DoS(10, false, REJECT_INVALID, "bad-txns-vout-empty");
-    // Size limits
-    if (::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION) > MAX_LEGACY_BLOCK_SIZE)
-        return state.DoS(100, false, REJECT_INVALID, "bad-txns-oversize");
-    if (tx.vExtraPayload.size() > MAX_TX_EXTRA_PAYLOAD)
-        return state.DoS(100, false, REJECT_INVALID, "bad-txns-payload-oversize");
+    if (out.scriptPubKey.IsAssetScript()) {
+        if (out.nValue != 0)
+            return state.DoS(100, false, REJECT_INVALID, "bad-asset-value-outofrange");
 
-    // Check for negative or overflow output values
-    bool isV17active = Params().IsFutureActive(chainActive.Tip());
-    CAmount nValueOut = 0;
-    for (const auto& txout : tx.vout)
-    {
-        if (txout.nValue < 0)
-            return state.DoS(100, false, REJECT_INVALID, "bad-txns-vout-negative");
-        if(isV17active){
-            if (txout.nValue > MAX_MONEY)
-                return state.DoS(100, false, REJECT_INVALID, "bad-txns-vout-toolarge");
-        }else{
-            if (txout.nValue > OLD_MAX_MONEY)
-                return state.DoS(100, false, REJECT_INVALID, "bad-txns-vout-toolarge");
+        CAssetTransfer assetTransfer;
+        if (!GetTransferAsset(out.scriptPubKey, assetTransfer)) {
+            return state.DoS(100, false, REJECT_INVALID, "bad-asset-transfer");
         }
-        nValueOut += txout.nValue;
-        if (!MoneyRange(nValueOut, isV17active))
-            return state.DoS(100, false, REJECT_INVALID, "bad-txns-txouttotal-toolarge");
-    }
 
-    // Check for duplicate inputs
-    std::set<COutPoint> vInOutPoints;
-    for (const auto& txin : tx.vin)
-    {
-        if (!vInOutPoints.insert(txin.prevout).second)
-            return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputs-duplicate");
-    }
-
-    if (tx.IsCoinBase())
-    {
-        size_t minCbSize = 2;
-        if (tx.nType == TRANSACTION_COINBASE) {
-            // With the introduction of CbTx, coinbase scripts are not required anymore to hold a valid block height
-            minCbSize = 1;
+        if (!validateAmount(assetTransfer.assetId, assetTransfer.nAmount)) {
+            return state.DoS(100, false, REJECT_INVALID, "bad-assets-transfer-amount");
         }
-        if (tx.vin[0].scriptSig.size() < minCbSize || tx.vin[0].scriptSig.size() > 100)
-            return state.DoS(100, false, REJECT_INVALID, "bad-cb-length");
-		FounderPayment founderPayment = Params().GetConsensus().nFounderPayment;
-		CAmount founderReward = founderPayment.getFounderPaymentAmount(nHeight, blockReward);
-		int founderStartHeight = founderPayment.getStartBlock();
-		if(nHeight > founderStartHeight && founderReward && !founderPayment.IsBlockPayeeValid(tx,nHeight,blockReward)) {
-			return state.DoS(100, false, REJECT_INVALID, "bad-cb-founder-payment-not-found");
-		}
-    }
-    else
-    {
-        for (const auto& txin : tx.vin)
-            if (txin.prevout.IsNull())
-                return state.DoS(10, false, REJECT_INVALID, "bad-txns-prevout-null");
+
+        if (nAssetVin.count(assetTransfer.assetId))
+            nAssetVin[assetTransfer.assetId] += assetTransfer.nAmount;
+        else
+            nAssetVin.insert(std::make_pair(assetTransfer.assetId, assetTransfer.nAmount));
+
+        if (assetTransfer.isUnique) {
+            uint64_t idRange = assetTransfer.uniqueId + assetTransfer.nAmount / COIN;
+
+            if (!nMapids.count(assetTransfer.assetId))
+                nMapids.insert({assetTransfer.assetId, {}});
+
+            nMapids[assetTransfer.assetId].emplace_back(std::make_pair(assetTransfer.uniqueId, idRange));
+        }
+
+        if (!MoneyRange(assetTransfer.nAmount) || !MoneyRange(nAssetVin.at(assetTransfer.assetId))) {
+            return state.DoS(100, false, REJECT_INVALID, "bad-asset-inputvalues-outofrange");
+        }
     }
 
     return true;
 }
 
-bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight, CAmount& txfee, CAmount& specialTxFee, bool isV17active, bool fFeeVerify)
-{
+inline bool checkAssetsOutputs(CValidationState &state, std::map <std::string, CAmount> nAssetVin,
+                                    std::map <std::string, CAmount> nAssetVout,
+                                    std::map <std::string, std::vector<std::pair<uint64_t, uint64_t>>> nVinIds, 
+                                    std::map <std::string, std::vector<std::pair<uint64_t, uint64_t>>> nVoutIds) {
+    //check vin/vout amouts
+    for (const auto &outValue: nAssetVout) {
+        if (!nAssetVin.count(outValue.first) || nAssetVin.at(outValue.first) != outValue.second)
+            return state.DoS(100, false, REJECT_INVALID, "bad-asset-inputs-outputs-mismatch");
+    }
+    //Check for missing outputs
+    for (const auto &inValue: nAssetVin) {
+        if (!nAssetVout.count(inValue.first) || nAssetVout.at(inValue.first) != inValue.second)
+            return state.DoS(100, false, REJECT_INVALID, "bad-asset-inputs-outputs-mismatch");
+    }
+
+    for (auto &vin : nVinIds){
+        vin.second = combineUniqueIdPairs(vin.second);
+    }
+    
+    for (auto &vout : nVoutIds){
+        vout.second = combineUniqueIdPairs(vout.second);
+    }
+
+    //check uniqueids
+    for (auto vin : nVinIds){
+        std::unordered_map<uint64_t, uint64_t> mapIds;
+        mapIds.clear();
+        for (auto pair : nVoutIds[vin.first]){
+            mapIds[pair.first] = pair.second;
+        }
+        for (auto vinIds : vin.second){
+            if (!(mapIds.find(vinIds.first) != mapIds.end() && mapIds[vinIds.first] == vinIds.second)){
+                return state.DoS(100, false, REJECT_INVALID, "bad-asset-id-inputs-outputs-mismatch");
+            }
+        }
+    }
+    return true;
+}
+
+bool Consensus::CheckTxInputs(const CTransaction &tx, CValidationState &state, const CCoinsViewCache &inputs,
+                              int nSpendHeight, CAmount &txfee, CAmount &specialTxFee, bool fFeeVerify) {
     // are the actual inputs available?
     if (!inputs.HaveInputs(tx)) {
         return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputs-missingorspent", false,
@@ -286,51 +342,63 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
     }
 
     CAmount nValueIn = 0;
+    std::map <std::string, CAmount> nAssetVin;
+    std::map <std::string, std::vector<std::pair<uint64_t, uint64_t>>> mapVinIds;
+
     for (unsigned int i = 0; i < tx.vin.size(); ++i) {
         const COutPoint &prevout = tx.vin[i].prevout;
-        const Coin& coin = inputs.AccessCoin(prevout);
+        const Coin &coin = inputs.AccessCoin(prevout);
         assert(!coin.IsSpent());
 
         // If prev is coinbase, check that it's matured
         if (coin.IsCoinBase() && nSpendHeight - coin.nHeight < COINBASE_MATURITY) {
             return state.Invalid(false,
-                REJECT_INVALID, "bad-txns-premature-spend-of-coinbase",
-                strprintf("tried to spend coinbase at depth %d", nSpendHeight - coin.nHeight));
-        }
-        // Check for negative or overflow input values
-        nValueIn += coin.out.nValue;
-        if (!MoneyRange(coin.out.nValue, isV17active) || !MoneyRange(nValueIn, isV17active)) {
-            return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputvalues-outofrange");
+                                 REJECT_INVALID, "bad-txns-premature-spend-of-coinbase",
+                                 strprintf("tried to spend coinbase at depth %d", nSpendHeight - coin.nHeight));
         }
 
-        const char* futureValidationError = validateFutureCoin(coin, nSpendHeight);
-		if(futureValidationError) {
-			return state.DoS(100, false, REJECT_INVALID, futureValidationError);
+        if (!checkOutput(coin.out, state, nValueIn, nAssetVin, mapVinIds))
+            return false;
 
-		}
+        const char *futureValidationError = validateFutureCoin(coin, nSpendHeight);
+        if (futureValidationError) {
+            return state.DoS(100, false, REJECT_INVALID, futureValidationError);
+        }
+    }
+    
+    CAmount value_out = 0;
+    std::map <std::string, CAmount> nAssetVout;
+    std::map <std::string, std::vector<std::pair<uint64_t, uint64_t>>> mapVoutIds;
+
+    for (auto out: tx.vout) {
+        if (!checkOutput(out, state, value_out, nAssetVout, mapVoutIds))
+            return false;
     }
 
-    const CAmount value_out = tx.GetValueOut();
+    if (tx.nType != TRANSACTION_MINT_ASSET) {
+        if (!checkAssetsOutputs(state, nAssetVin, nAssetVout, mapVinIds, mapVoutIds))
+            return false;
+    }
+
     if (nValueIn < value_out) {
         return state.DoS(100, false, REJECT_INVALID, "bad-txns-in-belowout", false,
-            strprintf("value in (%s) < value out (%s)", FormatMoney(nValueIn), FormatMoney(value_out)));
+                         strprintf("value in (%s) < value out (%s)", FormatMoney(nValueIn), FormatMoney(value_out)));
     }
 
     // Tally transaction fees
     const CAmount txfee_aux = nValueIn - value_out;
-    if (!MoneyRange(txfee_aux, isV17active)) {
+    if (!MoneyRange(txfee_aux)) {
         return state.DoS(100, false, REJECT_INVALID, "bad-txns-fee-outofrange");
     }
     txfee = txfee_aux;
 
-	if(!checkSpecialTxFee(tx, txfee, specialTxFee, fFeeVerify)) {
+    if (!checkSpecialTxFee(tx, txfee, specialTxFee, fFeeVerify)) {
         return state.DoS(100, false, REJECT_INVALID, "bad-txns-wrong-future-fee-or-not-enable");
-
     }
 
-	if(txfee < 0) {
-		return state.DoS(100, false, REJECT_INVALID, "bad-txns-fee-too-low", false,
-		            strprintf("fee (%s), special tx fee (%s)", FormatMoney(txfee), FormatMoney(specialTxFee)));
-	}
+    if (txfee < 0) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-txns-fee-too-low", false,
+                         strprintf("fee (%s), special tx fee (%s)", FormatMoney(txfee), FormatMoney(specialTxFee)));
+    }
     return true;
 }

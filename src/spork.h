@@ -1,5 +1,5 @@
 // Copyright (c) 2014-2021 The Dash Core developers
-// Copyright (c) 2020-2022 The Raptoreum developers
+// Copyright (c) 2020-2023 The Raptoreum developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,14 +7,26 @@
 #define BITCOIN_SPORK_H
 
 #include <hash.h>
-#include <net.h>
-#include <utilstrencodings.h>
 #include <key.h>
+#include <net.h>
+#include <pubkey.h>
+#include <sync.h>
+#include <uint256.h>
 
+#include <array>
+#include <string>
+#include <string_view>
 #include <unordered_map>
-#include <unordered_set>
+#include <vector>
+
+class CConnman;
+
+class CNode;
+
+class CDataStream;
 
 class CSporkMessage;
+
 class CSporkManager;
 
 /*
@@ -22,39 +34,54 @@ class CSporkManager;
     - This would result in old clients getting confused about which spork is for what
 */
 enum SporkId : int32_t {
-    SPORK_2_INSTANTSEND_ENABLED                            = 10001,
-    SPORK_3_INSTANTSEND_BLOCK_FILTERING                    = 10002,
-    SPORK_9_SUPERBLOCKS_ENABLED                            = 10008,
-    SPORK_17_QUORUM_DKG_ENABLED                            = 10016,
-    SPORK_19_CHAINLOCKS_ENABLED                            = 10018,
-    SPORK_21_LOW_LLMQ_PARAMS                        	   = 10020,
-    SPORK_22_SPECIAL_TX_FEE                                = 10021,
-    SPORK_23_QUORUM_ALL_CONNECTED                          = 10023,
-    SPORK_24_PS_MORE_PARTICIPANTS                          = 10024,
-    SPORK_25_QUORUM_POSE                                   = 10025,
-    SPORK_INVALID                                          = -1,
-};
-template<> struct is_serializable_enum<SporkId> : std::true_type {};
+    SPORK_2_INSTANTSEND_ENABLED = 10001,
+    SPORK_3_INSTANTSEND_BLOCK_FILTERING = 10002,
+    SPORK_9_SUPERBLOCKS_ENABLED = 10008,
+    SPORK_17_QUORUM_DKG_ENABLED = 10016,
+    SPORK_19_CHAINLOCKS_ENABLED = 10018,
+    SPORK_21_LOW_LLMQ_PARAMS = 10020,
+    SPORK_22_SPECIAL_TX_FEE = 10021,
+    SPORK_23_QUORUM_ALL_CONNECTED = 10023,
+    SPORK_25_QUORUM_POSE = 10025,
 
-namespace std
-{
-    template<> struct hash<SporkId>
-    {
-        std::size_t operator()(SporkId const& id) const noexcept
+    SPORK_INVALID = -1,
+};
+template<>
+struct is_serializable_enum<SporkId> : std::true_type {
+};
+
+namespace std {
+    template<>
+    struct hash<SporkId> {
+        std::size_t operator()(SporkId const &id) const
+
+        noexcept
         {
             return std::hash<int>{}(id);
         }
     };
 }
 
-struct CSporkDef
-{
+struct CSporkDef {
     SporkId sporkId{SPORK_INVALID};
     int64_t defaultValue{0};
-    std::string name;
+    std::string_view name;
 };
 
-extern std::vector<CSporkDef> sporkDefs;
+#define MAKE_SPORK_DEF(name, defaultValue) CSporkDef{name, defaultValue, #name}
+[[maybe_unused]] static constexpr std::array<CSporkDef, 9>
+sporkDefs = {
+        MAKE_SPORK_DEF(SPORK_2_INSTANTSEND_ENABLED, 4070908800ULL), // OFF
+        MAKE_SPORK_DEF(SPORK_3_INSTANTSEND_BLOCK_FILTERING, 4070908800ULL), // OFF
+        MAKE_SPORK_DEF(SPORK_9_SUPERBLOCKS_ENABLED, 4070908800ULL), // OFF
+        MAKE_SPORK_DEF(SPORK_17_QUORUM_DKG_ENABLED, 4070908800ULL), // OFF
+        MAKE_SPORK_DEF(SPORK_19_CHAINLOCKS_ENABLED, 4070908800ULL), // OFF
+        MAKE_SPORK_DEF(SPORK_21_LOW_LLMQ_PARAMS, 4070908800ULL), // OFF
+        MAKE_SPORK_DEF(SPORK_22_SPECIAL_TX_FEE, 4070908800ULL), // OFF
+        MAKE_SPORK_DEF(SPORK_23_QUORUM_ALL_CONNECTED, 4070908800ULL), // OFF
+        MAKE_SPORK_DEF(SPORK_25_QUORUM_POSE, 4070908800ULL), // OFF
+};
+#undef MAKE_SPORK_DEF
 extern CSporkManager sporkManager;
 
 /**
@@ -75,8 +102,7 @@ extern CSporkManager sporkManager;
  * serialize them for transmission to other peers. This includes the internal
  * spork ID, value, spork signature and timestamp for the signature.
  */
-class CSporkMessage
-{
+class CSporkMessage {
 private:
     std::vector<unsigned char> vchSig;
 
@@ -86,26 +112,19 @@ public:
     int64_t nTimeSigned;
 
     CSporkMessage(SporkId nSporkID, int64_t nValue, int64_t nTimeSigned) :
-        nSporkID(nSporkID),
-        nValue(nValue),
-        nTimeSigned(nTimeSigned)
-        {}
+            nSporkID(nSporkID),
+            nValue(nValue),
+            nTimeSigned(nTimeSigned) {}
 
     CSporkMessage() :
-        nSporkID((SporkId)0),
-        nValue(0),
-        nTimeSigned(0)
-        {}
+            nSporkID((SporkId) 0),
+            nValue(0),
+            nTimeSigned(0) {}
 
-
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
-        READWRITE(nSporkID);
-        READWRITE(nValue);
-        READWRITE(nTimeSigned);
-        READWRITE(vchSig);
+    SERIALIZE_METHODS(CSporkMessage, obj
+    )
+    {
+        READWRITE(obj.nSporkID, obj.nValue, obj.nTimeSigned, obj.vchSig);
     }
 
     /**
@@ -123,13 +142,13 @@ public:
     /**
      * Sign will sign the spork message with the given key.
      */
-    bool Sign(const CKey& key);
+    bool Sign(const CKey &key);
 
     /**
      * CheckSignature will ensure the spork signature matches the provided public
      * key hash.
      */
-    bool CheckSignature(const CKeyID& pubKeyId) const;
+    bool CheckSignature(const CKeyID &pubKeyId) const;
 
     /**
      * GetSignerKeyID is used to recover the spork address of the key used to
@@ -138,12 +157,12 @@ public:
      * This method was introduced along with the multi-signer sporks feature,
      * in order to identify which spork key signed this message.
      */
-    bool GetSignerKeyID(CKeyID& retKeyidSporkSigner) const;
+    bool GetSignerKeyID(CKeyID &retKeyidSporkSigner) const;
 
     /**
      * Relay is used to send this spork message to other peers.
      */
-    void Relay(CConnman& connman) const;
+    void Relay(CConnman &connman) const;
 };
 
 /**
@@ -151,56 +170,58 @@ public:
  * messages, rules for which sporks should be considered active/inactive, and
  * processing for certain sporks (e.g. spork 12).
  */
-class CSporkManager
-{
+class CSporkManager {
 private:
     static const std::string SERIALIZATION_VERSION_STRING;
 
-    std::unordered_map<SporkId, CSporkDef*> sporkDefsById;
-    std::unordered_map<std::string, CSporkDef*> sporkDefsByName;
+    mutable RecursiveMutex cs;
 
-    mutable std::unordered_map<SporkId, bool> mapSporksCachedActive;
-    mutable std::unordered_map<SporkId, int64_t> mapSporksCachedValues;
+    mutable std::unordered_map<const SporkId, bool> mapSporksCachedActive
+    GUARDED_BY(cs);
 
-    mutable CCriticalSection cs;
-    std::unordered_map<uint256, CSporkMessage> mapSporksByHash;
-    std::unordered_map<SporkId, std::map<CKeyID, CSporkMessage> > mapSporksActive;
+    mutable std::unordered_map<SporkId, int64_t> mapSporksCachedValues
+    GUARDED_BY(cs);
+    std::unordered_map<uint256, CSporkMessage> mapSporksByHash
+    GUARDED_BY(cs);
+    std::unordered_map<SporkId, std::map<CKeyID, CSporkMessage>> mapSporksActive
+    GUARDED_BY(cs);
 
-    std::set<CKeyID> setSporkPubKeyIDs;
-    int nMinSporkKeys;
-    CKey sporkPrivKey;
+    std::set<CKeyID> setSporkPubKeyIDs
+    GUARDED_BY(cs);
+    int nMinSporkKeys
+    GUARDED_BY(cs);
+    CKey sporkPrivKey
+    GUARDED_BY(cs);
 
     /**
      * SporkValueIsActive is used to get the value agreed upon by the majority
      * of signed spork messages for a given Spork ID.
      */
-    bool SporkValueIsActive(SporkId nSporkID, int64_t& nActiveValueRet) const;
+    bool SporkValueIsActive(SporkId nSporkID, int64_t &nActiveValueRet) const
+
+    EXCLUSIVE_LOCKS_REQUIRED(cs);
 
 public:
 
-    CSporkManager();
+    CSporkManager() = default;
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
-        std::string strVersion;
-        if(ser_action.ForRead()) {
-            READWRITE(strVersion);
-            if (strVersion != SERIALIZATION_VERSION_STRING) {
-                return;
-            }
-        } else {
-            strVersion = SERIALIZATION_VERSION_STRING;
-            READWRITE(strVersion);
-        }
-        // we don't serialize pubkey ids because pubkeys should be
-        // hardcoded or be setted with cmdline or options, should
-        // not reuse pubkeys from previous raptoreumd run
+    template<typename Stream>
+    void Serialize(Stream &s) const {
+        // We don't serialize pubkey ids cus pubkeys should be
+        // hardcoded instead or be set with cmdline or options.
+        // Should not reuse pubkeys from previous raptoreumd run.
+        // We don't serialize private key to prevent its leakage.
         LOCK(cs);
-        READWRITE(mapSporksByHash);
-        READWRITE(mapSporksActive);
-        // we don't serialize private key to prevent its leakage
+        s << SERIALIZATION_VERSION_STRING << mapSporksByHash << mapSporksActive;
+    }
+
+    template<typename Stream>
+    void Unserialize(Stream &s) {
+        LOCK(cs);
+        std::string strVersion;
+        s >> strVersion;
+        if (strVersion != SERIALIZATION_VERSION_STRING) return;
+        s >> mapSporksByHash >> mapSporksActive;
     }
 
     /**
@@ -228,13 +249,13 @@ public:
      * it validates the spork and adds it to the internal spork storage and
      * performs any necessary processing.
      */
-    void ProcessSpork(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman);
+    void ProcessSpork(CNode *pfrom, const std::string &strCommand, CDataStream &vRecv, CConnman &connman);
 
     /**
      * UpdateSpork is used by the spork RPC command to set a new spork value, sign
      * and broadcast the spork message.
      */
-    bool UpdateSpork(SporkId nSporkID, int64_t nValue, CConnman& connman);
+    bool UpdateSpork(SporkId nSporkID, int64_t nValue, CConnman &connman);
 
     /**
      * IsSporkActive returns a bool for time-based sporks, and should be used
@@ -256,12 +277,7 @@ public:
     /**
      * GetSporkIDByName returns the internal Spork ID given the spork name.
      */
-    SporkId GetSporkIDByName(const std::string& strName) const;
-
-    /**
-     * GetSporkNameByID returns the spork name as a string, given a Spork ID.
-     */
-    std::string GetSporkNameByID(SporkId nSporkID) const;
+    static SporkId GetSporkIDByName(const std::string &strName);
 
     /**
      * GetSporkByHash returns a spork message given a hash of the spork message.
@@ -271,7 +287,7 @@ public:
      * hash-based index of sporks for this reason, and this function is the access
      * point into that index.
      */
-    bool GetSporkByHash(const uint256& hash, CSporkMessage &sporkRet) const;
+    bool GetSporkByHash(const uint256 &hash, CSporkMessage &sporkRet) const;
 
     /**
      * SetSporkAddress is used to set a public key ID which will be used to
@@ -280,7 +296,7 @@ public:
      * This can be called multiple times to add multiple keys to the set of
      * valid spork signers.
      */
-    bool SetSporkAddress(const std::string& strAddress);
+    bool SetSporkAddress(const std::string &strAddress);
 
     /**
      * SetMinSporkKeys is used to set the required spork signer threshold, for
@@ -298,7 +314,7 @@ public:
      * This will return false if the private key does not match any spork
      * address in the set of valid spork signers (see SetSporkAddress).
      */
-    bool SetPrivKey(const std::string& strPrivKey);
+    bool SetPrivKey(const std::string &strPrivKey);
 
     /**
      * ToString returns the string representation of the SporkManager.

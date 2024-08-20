@@ -11,34 +11,29 @@
 #include <qt/appearancewidget.h>
 #include <qt/optionsmodel.h>
 
-#include <util.h>
+#include <util/system.h>
 
 #include <QComboBox>
 #include <QDataWidgetMapper>
 #include <QSettings>
 #include <QSlider>
 
-AppearanceWidget::AppearanceWidget(QWidget* parent) :
-    QWidget(parent),
-    ui(new Ui::AppearanceWidget),
-    fAcceptChanges(false),
-    prevTheme(GUIUtil::getActiveTheme()),
-    prevFontFamily(GUIUtil::getFontFamily()),
-    prevScale(GUIUtil::getFontScale()),
-    prevWeightNormal(GUIUtil::getFontWeightNormal()),
-    prevWeightBold(GUIUtil::getFontWeightBold())
-{
+AppearanceWidget::AppearanceWidget(QWidget *parent) :
+        QWidget(parent),
+        ui{new Ui::AppearanceWidget()} {
     ui->setupUi(this);
 
-    for (const QString& entry : GUIUtil::listThemes()) {
+    for (const QString &entry: GUIUtil::listThemes()) {
         ui->theme->addItem(entry, QVariant(entry));
     }
 
     GUIUtil::FontFamily fontSystem = GUIUtil::FontFamily::SystemDefault;
     GUIUtil::FontFamily fontMontserrat = GUIUtil::FontFamily::Montserrat;
+    GUIUtil::FontFamily fontManrope = GUIUtil::FontFamily::Manrope;
 
     ui->fontFamily->addItem(GUIUtil::fontFamilyToString(fontSystem), QVariant(static_cast<int>(fontSystem)));
     ui->fontFamily->addItem(GUIUtil::fontFamilyToString(fontMontserrat), QVariant(static_cast<int>(fontMontserrat)));
+    ui->fontFamily->addItem(GUIUtil::fontFamilyToString(fontManrope), QVariant(static_cast<int>(fontManrope)));
 
     updateWeightSlider();
 
@@ -46,11 +41,13 @@ AppearanceWidget::AppearanceWidget(QWidget* parent) :
     mapper->setSubmitPolicy(QDataWidgetMapper::ManualSubmit);
     mapper->setOrientation(Qt::Vertical);
 
-    connect(ui->theme, SIGNAL(currentTextChanged(const QString&)), this, SLOT(updateTheme(const QString&)));
-    connect(ui->fontFamily, SIGNAL(currentIndexChanged(int)), this, SLOT(updateFontFamily(int)));
-    connect(ui->fontScaleSlider, SIGNAL(valueChanged(int)), this, SLOT(updateFontScale(int)));
-    connect(ui->fontWeightNormalSlider, SIGNAL(valueChanged(int)), this, SLOT(updateFontWeightNormal(int)));
-    connect(ui->fontWeightBoldSlider, SIGNAL(valueChanged(int)), this, SLOT(updateFontWeightBold(int)));
+    connect(ui->theme, &QComboBox::currentTextChanged, this, &AppearanceWidget::updateTheme);
+    connect(ui->fontFamily, QOverload<int>::of(&QComboBox::currentIndexChanged), this,
+            &AppearanceWidget::updateFontFamily);
+    connect(ui->fontScaleSlider, &QSlider::valueChanged, this, &AppearanceWidget::updateFontScale);
+    connect(ui->fontWeightNormalSlider, &QSlider::valueChanged,
+            [this](auto nValue) { updateFontWeightNormal(nValue); });
+    connect(ui->fontWeightBoldSlider, &QSlider::valueChanged, [this](auto nValue) { updateFontWeightBold(nValue); });
 
     connect(ui->theme, &QComboBox::currentTextChanged, [=]() { Q_EMIT appearanceChanged(); });
     connect(ui->fontFamily, &QComboBox::currentTextChanged, [=]() { Q_EMIT appearanceChanged(); });
@@ -59,8 +56,7 @@ AppearanceWidget::AppearanceWidget(QWidget* parent) :
     connect(ui->fontWeightBoldSlider, &QSlider::sliderReleased, [=]() { Q_EMIT appearanceChanged(); });
 }
 
-AppearanceWidget::~AppearanceWidget()
-{
+AppearanceWidget::~AppearanceWidget() {
     if (fAcceptChanges) {
         mapper->submit();
     } else {
@@ -83,8 +79,7 @@ AppearanceWidget::~AppearanceWidget()
     delete ui;
 }
 
-void AppearanceWidget::setModel(OptionsModel* _model)
-{
+void AppearanceWidget::setModel(OptionsModel *_model) {
     this->model = _model;
 
     if (_model) {
@@ -98,13 +93,11 @@ void AppearanceWidget::setModel(OptionsModel* _model)
     }
 }
 
-void AppearanceWidget::accept()
-{
+void AppearanceWidget::accept() {
     fAcceptChanges = true;
 }
 
-void AppearanceWidget::updateTheme(const QString& theme)
-{
+void AppearanceWidget::updateTheme(const QString &theme) {
     QString newValue = theme.isEmpty() ? ui->theme->currentData().toString() : theme;
     if (GUIUtil::getActiveTheme() != newValue) {
         QSettings().setValue("theme", newValue);
@@ -115,19 +108,16 @@ void AppearanceWidget::updateTheme(const QString& theme)
     }
 }
 
-void AppearanceWidget::updateFontFamily(int index)
-{
+void AppearanceWidget::updateFontFamily(int index) {
     GUIUtil::setFontFamily(static_cast<GUIUtil::FontFamily>(ui->fontFamily->itemData(index).toInt()));
     updateWeightSlider(true);
 }
 
-void AppearanceWidget::updateFontScale(int nScale)
-{
+void AppearanceWidget::updateFontScale(int nScale) {
     GUIUtil::setFontScale(nScale);
 }
 
-void AppearanceWidget::updateFontWeightNormal(int nValue, bool fForce)
-{
+void AppearanceWidget::updateFontWeightNormal(int nValue, bool fForce) {
     int nSliderValue = nValue;
     if (nValue > ui->fontWeightBoldSlider->value() && !fForce) {
         nSliderValue = ui->fontWeightBoldSlider->value();
@@ -137,8 +127,7 @@ void AppearanceWidget::updateFontWeightNormal(int nValue, bool fForce)
     GUIUtil::setFontWeightNormal(GUIUtil::supportedWeightFromIndex(ui->fontWeightNormalSlider->value()));
 }
 
-void AppearanceWidget::updateFontWeightBold(int nValue, bool fForce)
-{
+void AppearanceWidget::updateFontWeightBold(int nValue, bool fForce) {
     int nSliderValue = nValue;
     if (nValue < ui->fontWeightNormalSlider->value() && !fForce) {
         nSliderValue = ui->fontWeightNormalSlider->value();
@@ -148,8 +137,7 @@ void AppearanceWidget::updateFontWeightBold(int nValue, bool fForce)
     GUIUtil::setFontWeightBold(GUIUtil::supportedWeightFromIndex(ui->fontWeightBoldSlider->value()));
 }
 
-void AppearanceWidget::updateWeightSlider(const bool fForce)
-{
+void AppearanceWidget::updateWeightSlider(const bool fForce) {
     int nMaximum = GUIUtil::getSupportedWeights().size() - 1;
 
     ui->fontWeightNormalSlider->setMinimum(0);

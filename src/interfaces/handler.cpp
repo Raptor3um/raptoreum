@@ -4,30 +4,51 @@
 
 #include <interfaces/handler.h>
 
-#include <util.h>
+#include <util/system.h>
 
 #include <boost/signals2/connection.hpp>
 #include <memory>
 #include <utility>
 
 namespace interfaces {
-namespace {
+    namespace {
 
-class HandlerImpl : public Handler
-{
-public:
-    HandlerImpl(boost::signals2::connection connection) : m_connection(std::move(connection)) {}
+        class HandlerImpl : public Handler {
+        public:
+            HandlerImpl(boost::signals2::connection connection) : m_connection(std::move(connection)) {}
 
-    void disconnect() override { m_connection.disconnect(); }
+            void disconnect() override { m_connection.disconnect(); }
 
-    boost::signals2::scoped_connection m_connection;
-};
+            boost::signals2::scoped_connection m_connection;
+        };
 
-} // namespace
+        class CleanupHandler : public Handler {
+        public:
+            explicit CleanupHandler(std::function<void()> cleanup) : m_cleanup(std::move(cleanup)) {}
 
-std::unique_ptr<Handler> MakeHandler(boost::signals2::connection connection)
-{
-    return MakeUnique<HandlerImpl>(std::move(connection));
-}
+            ~CleanupHandler() override {
+                if (!m_cleanup) return;
+                m_cleanup();
+                m_cleanup = nullptr;
+            }
+
+            void disconnect() override {
+                if (!m_cleanup) return;
+                m_cleanup();
+                m_cleanup = nullptr;
+            }
+
+            std::function<void()> m_cleanup;
+        };
+
+    } // namespace
+
+    std::unique_ptr <Handler> MakeHandler(boost::signals2::connection connection) {
+        return MakeUnique<HandlerImpl>(std::move(connection));
+    }
+
+    std::unique_ptr <Handler> MakeHandler(std::function<void()> cleanup) {
+        return MakeUnique<CleanupHandler>(std::move(cleanup));
+    }
 
 } // namespace interfaces

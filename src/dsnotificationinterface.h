@@ -7,10 +7,10 @@
 
 #include <validationinterface.h>
 
-class CDSNotificationInterface : public CValidationInterface
-{
+class CDSNotificationInterface : public CValidationInterface {
 public:
-    explicit CDSNotificationInterface(CConnman& connmanIn): connman(connmanIn) {}
+    explicit CDSNotificationInterface(CConnman &connmanIn) : connman(connmanIn) {}
+
     virtual ~CDSNotificationInterface() = default;
 
     // a small helper to initialize current block height in sub-modules on startup
@@ -19,18 +19,31 @@ public:
 protected:
     // CValidationInterface
     void AcceptedBlockHeader(const CBlockIndex *pindexNew) override;
+
     void NotifyHeaderTip(const CBlockIndex *pindexNew, bool fInitialDownload) override;
-    void SynchronousUpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) override;
+
+    void SynchronousUpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork,
+                                    bool fInitialDownload) override;
+
     void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) override;
-    void TransactionAddedToMempool(const CTransactionRef& tx, int64_t nAcceptTime) override;
-    void TransactionRemovedFromMempool(const CTransactionRef& ptx, MemPoolRemovalReason reason) override;
-    void BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex, const std::vector<CTransactionRef>& vtxConflicted) override;
-    void BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexDisconnected) override;
-    void NotifySmartnodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff) override;
-    void NotifyChainLock(const CBlockIndex* pindex, const std::shared_ptr<const llmq::CChainLockSig>& clsig) override;
+
+    void TransactionAddedToMempool(const CTransactionRef &tx, int64_t nAcceptTime) override;
+
+    void TransactionRemovedFromMempool(const CTransactionRef &ptx, MemPoolRemovalReason reason) override;
+
+    void BlockConnected(const std::shared_ptr<const CBlock> &pblock, const CBlockIndex *pindex,
+                        const std::vector <CTransactionRef> &vtxConflicted) override;
+
+    void BlockDisconnected(const std::shared_ptr<const CBlock> &pblock, const CBlockIndex *pindexDisconnected) override;
+
+    void
+    NotifySmartnodeListChanged(bool undo, const CDeterministicMNList &oldMNList, const CDeterministicMNListDiff &diff,
+                               CConnman &connman) override;
+
+    void NotifyChainLock(const CBlockIndex *pindex, const std::shared_ptr<const llmq::CChainLockSig> &clsig) override;
 
 private:
-    CConnman& connman;
+    CConnman &connman;
 };
 
 #endif // BITCOIN_DSNOTIFICATIONINTERFACE_H

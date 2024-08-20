@@ -8,15 +8,15 @@
 #define SECP256K1_MODULE_ECDH_TESTS_H
 
 int ecdh_hash_function_test_fail(unsigned char *output, const unsigned char *x, const unsigned char *y, void *data) {
-    (void)output;
-    (void)x;
-    (void)y;
-    (void)data;
+    (void) output;
+    (void) x;
+    (void) y;
+    (void) data;
     return 0;
 }
 
 int ecdh_hash_function_custom(unsigned char *output, const unsigned char *x, const unsigned char *y, void *data) {
-    (void)data;
+    (void) data;
     /* Save x and y as uncompressed public key */
     output[0] = 0x04;
     memcpy(output + 1, x, 32);
@@ -29,7 +29,7 @@ void test_ecdh_api(void) {
     secp256k1_context *tctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN);
     secp256k1_pubkey point;
     unsigned char res[32];
-    unsigned char s_one[32] = { 0 };
+    unsigned char s_one[32] = {0};
     int32_t ecount = 0;
     s_one[31] = 1;
 
@@ -54,7 +54,7 @@ void test_ecdh_api(void) {
 }
 
 void test_ecdh_generator_basepoint(void) {
-    unsigned char s_one[32] = { 0 };
+    unsigned char s_one[32] = {0};
     secp256k1_pubkey point[2];
     int i;
 
@@ -95,14 +95,14 @@ void test_ecdh_generator_basepoint(void) {
 }
 
 void test_bad_scalar(void) {
-    unsigned char s_zero[32] = { 0 };
+    unsigned char s_zero[32] = {0};
     unsigned char s_overflow[32] = {
-        0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-        0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe,
-        0xba, 0xae, 0xdc, 0xe6, 0xaf, 0x48, 0xa0, 0x3b,
-        0xbf, 0xd2, 0x5e, 0x8c, 0xd0, 0x36, 0x41, 0x41
+            0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+            0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe,
+            0xba, 0xae, 0xdc, 0xe6, 0xaf, 0x48, 0xa0, 0x3b,
+            0xbf, 0xd2, 0x5e, 0x8c, 0xd0, 0x36, 0x41, 0x41
     };
-    unsigned char s_rand[32] = { 0 };
+    unsigned char s_rand[32] = {0};
     unsigned char output[32];
     secp256k1_scalar rand;
     secp256k1_pubkey point;

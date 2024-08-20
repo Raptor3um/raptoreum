@@ -2,6 +2,7 @@
 #define BITCOIN_STATSD_CLIENT_H
 
 #include <string>
+#include <memory>
 
 static const bool DEFAULT_STATSD_ENABLE = false;
 static const int DEFAULT_STATSD_PORT = 8125;
@@ -16,50 +17,60 @@ static const int MAX_STATSD_PERIOD = 60 * 60;
 
 namespace statsd {
 
-struct _StatsdClientData;
+    struct _StatsdClientData;
 
-class StatsdClient {
+    class StatsdClient {
     public:
-        StatsdClient(const std::string& host = DEFAULT_STATSD_HOST, int port = DEFAULT_STATSD_PORT, const std::string& ns = DEFAULT_STATSD_NAMESPACE);
+        StatsdClient(const std::string &host = DEFAULT_STATSD_HOST, int port = DEFAULT_STATSD_PORT,
+                     const std::string &ns = DEFAULT_STATSD_NAMESPACE);
+
         ~StatsdClient();
 
     public:
         // you can config at anytime; client will use new address (useful for Singleton)
-        void config(const std::string& host, int port, const std::string& ns = DEFAULT_STATSD_NAMESPACE);
-        const char* errmsg();
+        void config(const std::string &host, int port, const std::string &ns = DEFAULT_STATSD_NAMESPACE);
+
+        const char *errmsg();
 
     public:
-        int inc(const std::string& key, float sample_rate = 1.0);
-        int dec(const std::string& key, float sample_rate = 1.0);
-        int count(const std::string& key, size_t value, float sample_rate = 1.0);
-        int gauge(const std::string& key, size_t value, float sample_rate = 1.0);
-        int gaugeDouble(const std::string& key, double value, float sample_rate = 1.0);
-        int timing(const std::string& key, size_t ms, float sample_rate = 1.0);
+        int inc(const std::string &key, float sample_rate = 1.0);
+
+        int dec(const std::string &key, float sample_rate = 1.0);
+
+        int count(const std::string &key, size_t value, float sample_rate = 1.0);
+
+        int gauge(const std::string &key, size_t value, float sample_rate = 1.0);
+
+        int gaugeDouble(const std::string &key, double value, float sample_rate = 1.0);
+
+        int timing(const std::string &key, size_t ms, float sample_rate = 1.0);
 
     public:
         /**
          * (Low Level Api) manually send a message
          * which might be composed of several lines.
          */
-        int send(const std::string& message);
+        int send(const std::string &message);
 
         /* (Low Level Api) manually send a message
          * type = "c", "g" or "ms"
          */
         int send(std::string key, size_t value,
-                const std::string& type, float sample_rate);
+                 const std::string &type, float sample_rate);
+
         int sendDouble(std::string key, double value,
-                const std::string& type, float sample_rate);
+                       const std::string &type, float sample_rate);
 
     protected:
         int init();
-        void cleanup(std::string& key);
+
+        static void cleanup(std::string &key);
 
     protected:
-        struct _StatsdClientData* d;
-};
+        std::unique_ptr<struct _StatsdClientData> d;
+    };
 
-}; // namespace statsd
+} // namespace statsd
 
 extern statsd::StatsdClient statsClient;
 

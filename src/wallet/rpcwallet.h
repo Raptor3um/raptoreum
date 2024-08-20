@@ -5,14 +5,32 @@
 #ifndef BITCOIN_WALLET_RPCWALLET_H
 #define BITCOIN_WALLET_RPCWALLET_H
 
-#include <string>
+#include <span.h>
 
-class CRPCTable;
+#include <memory>
+#include <string>
+#include <vector>
+
+class CRPCCommand;
+
 class CWallet;
+
 class JSONRPCRequest;
+
 class UniValue;
 
-void RegisterWalletRPCCommands(CRPCTable &t);
+class CTransaction;
+
+class WalletContext;
+
+static const std::string HELP_REQUIRING_PASSPHRASE{
+        "\nRequires wallet passphrase to be set with walletpassphrase call if wallet is encrypted.\n"};
+
+namespace util {
+    class Ref;
+} // namespace util
+
+Span<const CRPCCommand> GetWalletRPCCommands();
 
 /**
  * Figures out what wallet, if any, to use for a JSONRPCRequest.
@@ -20,12 +38,14 @@ void RegisterWalletRPCCommands(CRPCTable &t);
  * @param[in] request JSONRPCRequest that wishes to access a wallet
  * @return nullptr if no wallet should be used, or a pointer to the CWallet
  */
-std::shared_ptr<CWallet> GetWalletForJSONRPCRequest(const JSONRPCRequest& request);
+std::shared_ptr <CWallet> GetWalletForJSONRPCRequest(const JSONRPCRequest &request);
 
-std::string HelpRequiringPassphrase(CWallet *);
 void EnsureWalletIsUnlocked(CWallet *);
-bool EnsureWalletIsAvailable(CWallet *, bool avoidException);
 
-UniValue getaddressinfo(const JSONRPCRequest& request);
-UniValue signrawtransactionwithwallet(const JSONRPCRequest& request);
+WalletContext &EnsureWalletContext(const util::Ref &context);
+
+UniValue getaddressinfo(const JSONRPCRequest &request);
+
+UniValue signrawtransactionwithwallet(const JSONRPCRequest &request);
+
 #endif //BITCOIN_WALLET_RPCWALLET_H

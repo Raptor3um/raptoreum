@@ -1,4 +1,5 @@
 // Copyright (c) 2011-2014 The Bitcoin Core developers
+// Copyright (c) 2020-2023 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,9 +14,8 @@
 #include <QString>
 
 TransactionDescDialog::TransactionDescDialog(const QModelIndex &idx, QWidget *parent) :
-    QDialog(parent),
-    ui(new Ui::TransactionDescDialog)
-{
+        QDialog(parent),
+        ui(new Ui::TransactionDescDialog) {
     ui->setupUi(this);
     GUIUtil::updateFonts();
     setWindowTitle(tr("Details for %1").arg(idx.data(TransactionTableModel::TxHashRole).toString()));
@@ -23,7 +23,6 @@ TransactionDescDialog::TransactionDescDialog(const QModelIndex &idx, QWidget *pa
     ui->detailText->setHtml(desc);
 }
 
-TransactionDescDialog::~TransactionDescDialog()
-{
+TransactionDescDialog::~TransactionDescDialog() {
     delete ui;
 }

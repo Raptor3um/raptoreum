@@ -1,4 +1,5 @@
 // Copyright (c) 2011-2015 The Bitcoin Core developers
+// Copyright (c) 2020-2023 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -20,30 +21,41 @@
 #include <QLabel>
 
 class QValidatedLineEdit;
+
 class OptionsModel;
+
 class SendCoinsRecipient;
+
 class SendFuturesRecipient;
 
-namespace interfaces
-{
-class Node;
+namespace interfaces {
+    class Node;
 }
 
 QT_BEGIN_NAMESPACE
 class QAbstractButton;
+
 class QAbstractItemView;
+
 class QButtonGroup;
+
 class QDateTime;
+
 class QFont;
+
 class QLineEdit;
+
+class QProgressDialog;
+
 class QUrl;
+
 class QWidget;
+
 QT_END_NAMESPACE
 
 /** Utility functions used by the Raptoreum Qt UI.
  */
-namespace GUIUtil
-{
+namespace GUIUtil {
     /* Enumeration of possible "colors" */
     enum class ThemedColor {
         /* Transaction list -- TX status decoration - default color */
@@ -52,14 +64,17 @@ namespace GUIUtil
         UNCONFIRMED,
         /* Theme related blue color */
         BLUE,
-        /* Eye-friendly orange color */
-        ORANGE,
-        /* Eye-friendly red color, e.g. Transaction list -- negative amount */
-        RED,
         /* Eye-friendly green color */
         GREEN,
-        /* Transaction list -- bare address (without label) */
-        BAREADDRESS,
+        /* Eye-friendly orange color */
+        ORANGE,
+        /* Primary color */
+        PRIMARY,
+        /* Eye-friendly red color, e.g. Transaction list -- negative amount */
+        RED,
+        /* Secondary color */
+        SECONDARY,
+      
         /* Transaction list -- TX status decoration - open until date */
         TX_STATUS_OPENUNTILDATE,
         /* Background used for some widgets. Its slightly darker than the wallets frame background. */
@@ -98,35 +113,46 @@ namespace GUIUtil
     QString getThemedStyleQString(ThemedStyle style);
 
     /** Helper to get an icon colorized with the given color (replaces black) and colorAlternative (replaces white)  */
-    QIcon getIcon(const QString& strIcon, ThemedColor color, ThemedColor colorAlternative, const QString& strIconPath = ICONS_PATH);
-    QIcon getIcon(const QString& strIcon, ThemedColor color = ThemedColor::BLUE, const QString& strIconPath = ICONS_PATH);
+    QIcon getIcon(const QString &strIcon, ThemedColor color, ThemedColor colorAlternative,
+                  const QString &strIconPath = ICONS_PATH);
+
+    QIcon
+    getIcon(const QString &strIcon, ThemedColor color = ThemedColor::BLUE, const QString &strIconPath = ICONS_PATH);
 
     /** Helper to set an icon for a button with the given color (replaces black) and colorAlternative (replaces white). */
-    void setIcon(QAbstractButton* button, const QString& strIcon, ThemedColor color, ThemedColor colorAlternative, const QSize& size);
-    void setIcon(QAbstractButton* button, const QString& strIcon, ThemedColor color = ThemedColor::BLUE, const QSize& size = QSize(BUTTON_ICONSIZE, BUTTON_ICONSIZE));
+    void setIcon(QAbstractButton *button, const QString &strIcon, ThemedColor color, ThemedColor colorAlternative,
+                 const QSize &size);
+
+    void setIcon(QAbstractButton *button, const QString &strIcon, ThemedColor color = ThemedColor::BLUE,
+                 const QSize &size = QSize(BUTTON_ICONSIZE, BUTTON_ICONSIZE));
 
     // Create human-readable string from date
     QString dateTimeStr(const QDateTime &datetime);
+
     QString dateTimeStr(qint64 nTime);
 
     // Set up widget for address
     void setupAddressWidget(QValidatedLineEdit *widget, QWidget *parent, bool fAllowURI = false);
 
     // Setup appearance settings if not done yet
-    void setupAppearance(QWidget* parent, OptionsModel* model);
+    void setupAppearance(QWidget *parent, OptionsModel *model);
 
     // Parse "raptoreum:" URI into recipient object, return true on successful parsing
     bool parseBitcoinURI(const QUrl &uri, SendCoinsRecipient *out);
+
     bool parseBitcoinURI(QString uri, SendCoinsRecipient *out);
-    bool validateBitcoinURI(const QString& uri);
+
+    bool validateBitcoinURI(const QString &uri);
+
     QString formatBitcoinURI(const SendCoinsRecipient &info);
 
     // Returns true if given address+amount meets "dust" definition
-    bool isDust(interfaces::Node& node, const QString& address, const CAmount& amount);
+    bool isDust(interfaces::Node &node, const QString &address, const CAmount &amount);
 
     // HTML escaping for rich text controls
-    QString HtmlEscape(const QString& str, bool fMultiLine=false);
-    QString HtmlEscape(const std::string& str, bool fMultiLine=false);
+    QString HtmlEscape(const QString &str, bool fMultiLine = false);
+
+    QString HtmlEscape(const std::string &str, bool fMultiLine = false);
 
     /** Copy a field of the currently selected entry of a view to the clipboard. Does nothing if nothing
         is selected.
@@ -134,16 +160,18 @@ namespace GUIUtil
        @param[in] role    Data role to extract from the model
        @see  TransactionView::copyLabel, TransactionView::copyAmount, TransactionView::copyAddress
      */
-    void copyEntryData(QAbstractItemView *view, int column, int role=Qt::EditRole);
+    void copyEntryData(QAbstractItemView *view, int column, int role = Qt::EditRole);
 
     /** Return a field of the currently selected entry as a QString. Does nothing if nothing
         is selected.
        @param[in] column  Data column to extract from the model
        @see  TransactionView::copyLabel, TransactionView::copyAmount, TransactionView::copyAddress
      */
-    QList<QModelIndex> getEntryData(QAbstractItemView *view, int column);
+    QList <QModelIndex> getEntryData(QAbstractItemView *view, int column);
 
-    void setClipboard(const QString& str);
+    void setClipboard(const QString &str);
+
+    QString getDefaultDataDirectory();
 
     /** Get save filename, mimics QFileDialog::getSaveFileName, except that it appends a default suffix
         when no suffix is provided by the user.
@@ -155,9 +183,8 @@ namespace GUIUtil
       @param[out] selectedSuffixOut  Pointer to return the suffix (file type) that was selected (or 0).
                   Can be useful when choosing the save file format based on suffix.
      */
-    QString getSaveFileName(QWidget *parent, const QString &caption, const QString &dir,
-        const QString &filter,
-        QString *selectedSuffixOut);
+    QString getSaveFileName(QWidget *parent, const QString &caption, const QString &dir, const QString &filter,
+                            QString *selectedSuffixOut);
 
     /** Get open filename, convenience wrapper for QFileDialog::getOpenFileName.
 
@@ -168,9 +195,8 @@ namespace GUIUtil
       @param[out] selectedSuffixOut  Pointer to return the suffix (file type) that was selected (or 0).
                   Can be useful when choosing the save file format based on suffix.
      */
-    QString getOpenFileName(QWidget *parent, const QString &caption, const QString &dir,
-        const QString &filter,
-        QString *selectedSuffixOut);
+    QString getOpenFileName(QWidget *parent, const QString &caption, const QString &dir, const QString &filter,
+                            QString *selectedSuffixOut);
 
     /** Get connection type to call object slot in GUI thread with invokeMethod. The call will be blocking.
 
@@ -183,7 +209,7 @@ namespace GUIUtil
     bool isObscured(QWidget *w);
 
     // Activate, show and raise the widget
-    void bringToFront(QWidget* w);
+    void bringToFront(QWidget *w);
 
     // Open debug.log
     void openDebugLogfile();
@@ -198,18 +224,32 @@ namespace GUIUtil
       representation if needed. This assures that Qt can word-wrap long tooltip messages.
       Tooltips longer than the provided size threshold (in characters) are wrapped.
      */
-    class ToolTipToRichTextFilter : public QObject
-    {
+    class ToolTipToRichTextFilter : public QObject {
         Q_OBJECT
 
     public:
-        explicit ToolTipToRichTextFilter(int size_threshold, QObject *parent = 0);
+        explicit ToolTipToRichTextFilter(int size_threshold, QObject *parent = nullptr);
 
     protected:
-        bool eventFilter(QObject *obj, QEvent *evt);
+        bool eventFilter(QObject *obj, QEvent *evt) override;
 
     private:
         int size_threshold;
+    };
+
+    /**
+     * Qt event filter lthat intercepts QEvent::FocusOut events for QLabel objects,
+     * and resets their 'textInteractionFlags' property to get rid of the visible cursor.
+     *
+     * This is a temporary fix of QTBUG-59514.
+     */
+    class LabelOutOfFocusEventFilter : public QObject {
+        Q_OBJECT
+
+    public:
+        explicit LabelOutOfFocusEventFilter(QObject *parent);
+
+        bool eventFilter(QObject *watched, QEvent *event) override;
     };
 
     /**
@@ -222,56 +262,70 @@ namespace GUIUtil
      * This helper object takes care of this issue.
      *
      */
-    class TableViewLastColumnResizingFixer: public QObject
-    {
+    class TableViewLastColumnResizingFixer : public QObject {
         Q_OBJECT
 
-        public:
-            TableViewLastColumnResizingFixer(QTableView* table, int lastColMinimumWidth, int allColsMinimumWidth, QObject *parent);
-            void stretchColumnWidth(int column);
+    public:
+        TableViewLastColumnResizingFixer(QTableView *table, int lastColMinimumWidth, int allColsMinimumWidth,
+                                         QObject *parent);
 
-        private:
-            QTableView* tableView;
-            int lastColumnMinimumWidth;
-            int allColumnsMinimumWidth;
-            int lastColumnIndex;
-            int columnCount;
-            int secondToLastColumnIndex;
+        void stretchColumnWidth(int column);
 
-            void adjustTableColumnsWidth();
-            int getAvailableWidthForColumn(int column);
-            int getColumnsWidth();
-            void connectViewHeadersSignals();
-            void disconnectViewHeadersSignals();
-            void setViewHeaderResizeMode(int logicalIndex, QHeaderView::ResizeMode resizeMode);
-            void resizeColumn(int nColumnIndex, int width);
+    private:
+        QTableView *tableView;
+        int lastColumnMinimumWidth;
+        int allColumnsMinimumWidth;
+        int lastColumnIndex;
+        int columnCount;
+        int secondToLastColumnIndex;
 
-        private Q_SLOTS:
-            void on_sectionResized(int logicalIndex, int oldSize, int newSize);
-            void on_geometriesChanged();
+        void adjustTableColumnsWidth();
+
+        int getAvailableWidthForColumn(int column);
+
+        int getColumnsWidth();
+
+        void connectViewHeadersSignals();
+
+        void disconnectViewHeadersSignals();
+
+        void setViewHeaderResizeMode(int logicalIndex, QHeaderView::ResizeMode resizeMode);
+
+        void resizeColumn(int nColumnIndex, int width);
+
+    private
+        Q_SLOTS:
+                void on_sectionResized(int
+        logicalIndex,
+        int oldSize,
+        int newSize
+        );
+
+        void on_geometriesChanged();
     };
 
     bool GetStartOnSystemStartup();
+
     bool SetStartOnSystemStartup(bool fAutoStart);
 
     /** Change the stylesheet directory. This is used by
         the parameter -custom-css-dir.*/
-    void setStyleSheetDirectory(const QString& path);
+    void setStyleSheetDirectory(const QString &path);
 
     /** Check if a custom css directory has been set with -custom-css-dir */
     bool isStyleSheetDirectoryCustom();
 
     /** Return a list of all required css files */
-    const std::vector<QString> listStyleSheets();
+    const std::vector <QString> listStyleSheets();
 
     /** Return a list of all theme css files */
-    const std::vector<QString> listThemes();
+    const std::vector <QString> listThemes();
 
     /** Return the name of the default theme `*/
     const QString getDefaultTheme();
 
     /** Check if the given theme name is valid or not */
-    const bool isValidTheme(const QString& strTheme);
+    bool isValidTheme(const QString &strTheme);
 
     /** Sets the stylesheet of the whole app and updates it if the
     related css files has been changed and -debug-ui mode is active. */
@@ -280,14 +334,18 @@ namespace GUIUtil
     enum class FontFamily {
         SystemDefault,
         Montserrat,
+        Manrope,
     };
 
-    FontFamily fontFamilyFromString(const QString& strFamily);
+    FontFamily fontFamilyFromString(const QString &strFamily);
+
     QString fontFamilyToString(FontFamily family);
 
     /** set/get font family: GUIUtil::fontFamily */
     FontFamily getFontFamilyDefault();
+
     FontFamily getFontFamily();
+
     void setFontFamily(FontFamily family);
 
     enum class FontWeight {
@@ -296,25 +354,33 @@ namespace GUIUtil
     };
 
     /** Convert weight value from args (0-8) to QFont::Weight */
-    bool weightFromArg(int nArg, QFont::Weight& weight);
+    bool weightFromArg(int nArg, QFont::Weight &weight);
+
     /** Convert QFont::Weight to an arg value (0-8) */
     int weightToArg(const QFont::Weight weight);
+
     /** Convert GUIUtil::FontWeight to QFont::Weight */
     QFont::Weight toQFontWeight(FontWeight weight);
 
     /** set/get normal font weight: GUIUtil::fontWeightNormal */
     QFont::Weight getFontWeightNormalDefault();
+
     QFont::Weight getFontWeightNormal();
+
     void setFontWeightNormal(QFont::Weight weight);
 
     /** set/get bold font weight: GUIUtil::fontWeightBold */
     QFont::Weight getFontWeightBoldDefault();
+
     QFont::Weight getFontWeightBold();
+
     void setFontWeightBold(QFont::Weight weight);
 
     /** set/get font scale: GUIUtil::fontScale */
     int getFontScaleDefault();
+
     int getFontScale();
+
     void setFontScale(int nScale);
 
     /** get font size with GUIUtil::fontScale applied */
@@ -322,6 +388,7 @@ namespace GUIUtil
 
     /** Load raptoreum specific appliciation fonts */
     bool loadFonts();
+
     /** Check if the fonts have been loaded successfully */
     bool fontsLoaded();
 
@@ -331,7 +398,8 @@ namespace GUIUtil
     /** Workaround to set correct font styles in all themes since there is a bug in macOS which leads to
         issues loading variations of montserrat in css it also keeps track of the set fonts to update on
         theme changes. */
-    void setFont(const std::vector<QWidget*>& vecWidgets, FontWeight weight, int nPointSize = -1, bool fItalic = false);
+    void
+    setFont(const std::vector<QWidget *> &vecWidgets, FontWeight weight, int nPointSize = -1, bool fItalic = false);
 
     /** Update the font of all widgets where a custom font has been set with
         GUIUtil::setFont */
@@ -339,7 +407,9 @@ namespace GUIUtil
 
     /** Get a properly weighted QFont object with the selected font. */
     QFont getFont(FontFamily family, QFont::Weight qWeight, bool fItalic = false, int nPointSize = -1);
+
     QFont getFont(QFont::Weight qWeight, bool fItalic = false, int nPointSize = -1);
+
     QFont getFont(FontWeight weight, bool fItalic = false, int nPointSize = -1);
 
     /** Get the default normal QFont */
@@ -350,14 +420,19 @@ namespace GUIUtil
 
     /** Return supported normal default for the current font family */
     QFont::Weight getSupportedFontWeightNormalDefault();
+
     /** Return supported bold default for the current font family */
     QFont::Weight getSupportedFontWeightBoldDefault();
+
     /** Return supported weights for the current font family */
-    std::vector<QFont::Weight> getSupportedWeights();
+    std::vector <QFont::Weight> getSupportedWeights();
+
     /** Convert an index to a weight in the supported weights vector */
     QFont::Weight supportedWeightFromIndex(int nIndex);
+
     /** Convert a weight to an index in the supported weights vector */
     int supportedWeightToIndex(QFont::Weight weight);
+
     /** Check if a weight is supported by the current font family */
     bool isSupportedWeight(QFont::Weight weight);
 
@@ -372,13 +447,13 @@ namespace GUIUtil
 
     /** Disable the OS default focus rect for macOS because we have custom focus rects
      * set in the css files */
-    void disableMacFocusRect(const QWidget* w);
+    void disableMacFocusRect(const QWidget *w);
 
     /** Enable/Disable the macOS focus rects depending on the current theme. */
     void updateMacFocusRects();
 
     /** Update shortcuts for individual buttons in QButtonGroup based on their visibility. */
-    void updateButtonGroupShortcuts(QButtonGroup* buttonGroup);
+    void updateButtonGroupShortcuts(QButtonGroup *buttonGroup);
 
     /* Convert QString to OS specific boost path through UTF-8 */
     fs::path qstringToBoostPath(const QString &path);
@@ -392,8 +467,8 @@ namespace GUIUtil
     /* Format CNodeStats.nServices bitmask into a user-readable string */
     QString formatServicesStr(quint64 mask);
 
-    /* Format a CNodeCombinedStats.dPingTime into a user-readable string or display N/A, if 0*/
-    QString formatPingTime(double dPingTime);
+    /* Format a CNodeStats.m_ping_usec into a user-readable string or display N/A, if 0*/
+    QString formatPingTime(int64_t ping_usec);
 
     /* Format a CNodeCombinedStats.nTimeOffset into a user-readable string. */
     QString formatTimeOffset(int64_t nTimeOffset);
@@ -402,48 +477,93 @@ namespace GUIUtil
 
     QString formatBytes(uint64_t bytes);
 
-    qreal calculateIdealFontSize(int width, const QString& text, QFont font, qreal minPointSize = 4, qreal startPointSize = 14);
+    qreal calculateIdealFontSize(int width, const QString &text, QFont font, qreal minPointSize = 4,
+                                 qreal startPointSize = 14);
 
-    class ClickableLabel : public QLabel
-    {
+    class ClickableLabel : public QLabel {
         Q_OBJECT
 
-    Q_SIGNALS:
-        /** Emitted when the label is clicked. The relative mouse coordinates of the click are
-         * passed to the signal.
-         */
-        void clicked(const QPoint& point);
+                Q_SIGNALS:
+                /** Emitted when the label is clicked. The relative mouse coordinates of the click are
+                 * passed to the signal.
+                 */
+                void clicked(
+        const QPoint &point
+        );
     protected:
-        void mouseReleaseEvent(QMouseEvent *event);
+        void mouseReleaseEvent(QMouseEvent *event) override;
     };
 
-    class ClickableProgressBar : public QProgressBar
-    {
+    class ClickableProgressBar : public QProgressBar {
         Q_OBJECT
 
-    Q_SIGNALS:
-        /** Emitted when the progressbar is clicked. The relative mouse coordinates of the click are
-         * passed to the signal.
-         */
-        void clicked(const QPoint& point);
+                Q_SIGNALS:
+                /** Emitted when the progressbar is clicked. The relative mouse coordinates of the click are
+                 * passed to the signal.
+                 */
+                void clicked(
+        const QPoint &point
+        );
     protected:
-        void mouseReleaseEvent(QMouseEvent *event);
+        void mouseReleaseEvent(QMouseEvent *event) override;
     };
 
     typedef ClickableProgressBar ProgressBar;
 
-    class ItemDelegate : public QItemDelegate
-    {
+    class ItemDelegate : public QItemDelegate {
         Q_OBJECT
     public:
-        ItemDelegate(QObject* parent) : QItemDelegate(parent) {}
+        ItemDelegate(QObject *parent) : QItemDelegate(parent) {}
 
-    Q_SIGNALS:
-        void keyEscapePressed();
+        Q_SIGNALS:
+                void keyEscapePressed();
 
     private:
-        bool eventFilter(QObject *object, QEvent *event);
+        bool eventFilter(QObject *object, QEvent *event) override;
     };
+
+    // Fix known bugs in QProgressDialog class.
+    void PolishProgressDialog(QProgressDialog *dialog);
+
+    /**
+     * Returns the start-moment of the day in local time.
+     *
+     * QDateTime::QDateTime(const QDate& date) is deprecated since Qt 5.15.
+     * QDate::startOfDay() was introduced in Qt 5.14.
+     */
+    QDateTime StartOfDay(const QDate &date);
+
+    /**
+     * Returns the distance in pixels appropriate for drawing a subsequent character after text.
+     *
+     * in Qt 5.12 and before the QFontMetrics::width() is used and it is deprecated since Qt 5.13.
+     * in Qt 5.11 the QFontMetrics::horizontalAdvance() was introduces.
+     */
+    int TextWidth(const QFontMetrics &fm, const QString &text);
+
+    /**
+     * Returns true if pixmap has been set.
+     *
+     * QPixmap* QLabel::pixmap() is deprecated since Qt 5.15.
+     */
+    bool HasPixmap(const QLabel *label);
+
+    QImage GetImage(const QLabel *label);
+
+    /**
+     * Queue a function to run in an object's event loop. This can be
+     * replaced by a call to the QMetaObject::invokeMethod functor overload after Qt 5.10, but
+     * for now use a QObject::connect for compatibility with older Qt versions, based on
+     * https://stackoverflow.com/questions/21646467/how-to-execute-a-functor-or-a-lambda-in-a-given-thread-in-qt-gcd-style
+     */
+    template<typename Fn>
+    void ObjectInvoke(QObject *object, Fn &&function, Qt::ConnectionType connection = Qt::QueuedConnection) {
+        QObject source;
+        QObject::connect(&source, &QObject::destroyed, object, std::forward<Fn>(function), connection);
+    }
+
+    void LogQtInfo();
+
 } // namespace GUIUtil
 
 #endif // BITCOIN_QT_GUIUTIL_H

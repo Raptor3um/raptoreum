@@ -1,30 +1,26 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2016 The Bitcoin Core developers
 // Copyright (c) 2017 The Dash Core developers
+// Copyright (c) 2020-2023 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <arith_uint256.h>
 
 #include <uint256.h>
-#include <utilstrencodings.h>
+#include <util/strencodings.h>
 #include <crypto/common.h>
 
-#include <stdio.h>
-#include <string.h>
-
-template <unsigned int BITS>
-base_uint<BITS>::base_uint(const std::string& str)
-{
-    static_assert(BITS/32 > 0 && BITS%32 == 0, "Template parameter BITS must be a positive multiple of 32.");
+template<unsigned int BITS>
+base_uint<BITS>::base_uint(const std::string &str) {
+    static_assert(BITS / 32 > 0 && BITS % 32 == 0, "Template parameter BITS must be a positive multiple of 32.");
 
     SetHex(str);
 }
 
-template <unsigned int BITS>
-base_uint<BITS>& base_uint<BITS>::operator<<=(unsigned int shift)
-{
-    base_uint<BITS> a(*this);
+template<unsigned int BITS>
+base_uint <BITS> &base_uint<BITS>::operator<<=(unsigned int shift) {
+    base_uint <BITS> a(*this);
     for (int i = 0; i < WIDTH; i++)
         pn[i] = 0;
     int k = shift / 32;
@@ -38,10 +34,9 @@ base_uint<BITS>& base_uint<BITS>::operator<<=(unsigned int shift)
     return *this;
 }
 
-template <unsigned int BITS>
-base_uint<BITS>& base_uint<BITS>::operator>>=(unsigned int shift)
-{
-    base_uint<BITS> a(*this);
+template<unsigned int BITS>
+base_uint <BITS> &base_uint<BITS>::operator>>=(unsigned int shift) {
+    base_uint <BITS> a(*this);
     for (int i = 0; i < WIDTH; i++)
         pn[i] = 0;
     int k = shift / 32;
@@ -55,26 +50,24 @@ base_uint<BITS>& base_uint<BITS>::operator>>=(unsigned int shift)
     return *this;
 }
 
-template <unsigned int BITS>
-base_uint<BITS>& base_uint<BITS>::operator*=(uint32_t b32)
-{
+template<unsigned int BITS>
+base_uint <BITS> &base_uint<BITS>::operator*=(uint32_t b32) {
     uint64_t carry = 0;
     for (int i = 0; i < WIDTH; i++) {
-        uint64_t n = carry + (uint64_t)b32 * pn[i];
+        uint64_t n = carry + (uint64_t) b32 * pn[i];
         pn[i] = n & 0xffffffff;
         carry = n >> 32;
     }
     return *this;
 }
 
-template <unsigned int BITS>
-base_uint<BITS>& base_uint<BITS>::operator*=(const base_uint& b)
-{
-    base_uint<BITS> a;
+template<unsigned int BITS>
+base_uint <BITS> &base_uint<BITS>::operator*=(const base_uint &b) {
+    base_uint <BITS> a;
     for (int j = 0; j < WIDTH; j++) {
         uint64_t carry = 0;
         for (int i = 0; i + j < WIDTH; i++) {
-            uint64_t n = carry + a.pn[i + j] + (uint64_t)pn[j] * b.pn[i];
+            uint64_t n = carry + a.pn[i + j] + (uint64_t) pn[j] * b.pn[i];
             a.pn[i + j] = n & 0xffffffff;
             carry = n >> 32;
         }
@@ -83,11 +76,10 @@ base_uint<BITS>& base_uint<BITS>::operator*=(const base_uint& b)
     return *this;
 }
 
-template <unsigned int BITS>
-base_uint<BITS>& base_uint<BITS>::operator/=(const base_uint& b)
-{
-    base_uint<BITS> div = b;     // make a copy, so we can shift.
-    base_uint<BITS> num = *this; // make a copy, so we can subtract.
+template<unsigned int BITS>
+base_uint <BITS> &base_uint<BITS>::operator/=(const base_uint &b) {
+    base_uint <BITS> div = b;     // make a copy, so we can shift.
+    base_uint <BITS> num = *this; // make a copy, so we can subtract.
     *this = 0;                   // the quotient.
     int num_bits = num.bits();
     int div_bits = div.bits();
@@ -109,9 +101,8 @@ base_uint<BITS>& base_uint<BITS>::operator/=(const base_uint& b)
     return *this;
 }
 
-template <unsigned int BITS>
-int base_uint<BITS>::CompareTo(const base_uint<BITS>& b) const
-{
+template<unsigned int BITS>
+int base_uint<BITS>::CompareTo(const base_uint <BITS> &b) const {
     for (int i = WIDTH - 1; i >= 0; i--) {
         if (pn[i] < b.pn[i])
             return -1;
@@ -121,9 +112,8 @@ int base_uint<BITS>::CompareTo(const base_uint<BITS>& b) const
     return 0;
 }
 
-template <unsigned int BITS>
-bool base_uint<BITS>::EqualTo(uint64_t b) const
-{
+template<unsigned int BITS>
+bool base_uint<BITS>::EqualTo(uint64_t b) const {
     for (int i = WIDTH - 1; i >= 2; i--) {
         if (pn[i])
             return false;
@@ -135,9 +125,8 @@ bool base_uint<BITS>::EqualTo(uint64_t b) const
     return true;
 }
 
-template <unsigned int BITS>
-double base_uint<BITS>::getdouble() const
-{
+template<unsigned int BITS>
+double base_uint<BITS>::getdouble() const {
     double ret = 0.0;
     double fact = 1.0;
     for (int i = 0; i < WIDTH; i++) {
@@ -147,60 +136,57 @@ double base_uint<BITS>::getdouble() const
     return ret;
 }
 
-template <unsigned int BITS>
+template<unsigned int BITS>
 int base_uint<BITS>::GET_WIDTH() const {
-	return this->WIDTH;
+    return this->WIDTH;
 }
-template <unsigned int BITS>
+
+template<unsigned int BITS>
 uint32_t base_uint<BITS>::GET_PN(int index) const {
-	return this->pn[index];
-}
-template <unsigned int BITS>
-std::string base_uint<BITS>::GetHex() const
-{	if(BITS <= 256) {
-		uint256 b;
-	    for(int x=0; x<this->WIDTH; ++x)
-	        WriteLE32(b.begin() + x*4, this->pn[x]);
-    	return b.GetHex();
-	} else {
-		uint512 b;
-		for(int x=0; x<this->WIDTH; ++x)
-			WriteLE32(b.begin() + x*4, this->pn[x]);
-		return b.trim256().GetHex();
-	}
+    return this->pn[index];
 }
 
-template <>
-void base_uint<256>::SetHex(const char* psz)
-{
-   *this = UintToArith256(uint256S(psz));
+template<unsigned int BITS>
+std::string base_uint<BITS>::GetHex() const {
+    if (BITS <= 256) {
+        uint256 b;
+        for (int x = 0; x < this->WIDTH; ++x)
+            WriteLE32(b.begin() + x * 4, this->pn[x]);
+        return b.GetHex();
+    } else {
+        uint512 b;
+        for (int x = 0; x < this->WIDTH; ++x)
+            WriteLE32(b.begin() + x * 4, this->pn[x]);
+        return b.trim256().GetHex();
+    }
 }
 
-template <>
-void base_uint<512>::SetHex(const char* psz)
-{
-   *this = UintToArith512(uint512S(psz));
+template<>
+void base_uint<256>::SetHex(const char *psz) {
+    *this = UintToArith256(uint256S(psz));
 }
 
-template <unsigned int BITS>
-void base_uint<BITS>::SetHex(const std::string& str)
-{
+template<>
+void base_uint<512>::SetHex(const char *psz) {
+    *this = UintToArith512(uint512S(psz));
+}
+
+template<unsigned int BITS>
+void base_uint<BITS>::SetHex(const std::string &str) {
     SetHex(str.c_str());
 }
 
-template <unsigned int BITS>
-std::string base_uint<BITS>::ToString() const
-{
+template<unsigned int BITS>
+std::string base_uint<BITS>::ToString() const {
     return (GetHex());
 }
 
-template <unsigned int BITS>
-unsigned int base_uint<BITS>::bits() const
-{
+template<unsigned int BITS>
+unsigned int base_uint<BITS>::bits() const {
     for (int pos = WIDTH - 1; pos >= 0; pos--) {
         if (pn[pos]) {
             for (int nbits = 31; nbits > 0; nbits--) {
-                if (pn[pos] & 1 << nbits)
+                if (pn[pos] & 1U << nbits)
                     return 32 * pos + nbits + 1;
             }
             return 32 * pos + 1;
@@ -210,27 +196,41 @@ unsigned int base_uint<BITS>::bits() const
 }
 
 // Explicit instantiations for base_uint<256>
-template base_uint<256>::base_uint(const std::string&);
-template base_uint<256>& base_uint<256>::operator<<=(unsigned int);
-template base_uint<256>& base_uint<256>::operator>>=(unsigned int);
-template base_uint<256>& base_uint<256>::operator*=(uint32_t b32);
-template base_uint<256>& base_uint<256>::operator*=(const base_uint<256>& b);
-template base_uint<256>& base_uint<256>::operator/=(const base_uint<256>& b);
-template int base_uint<256>::CompareTo(const base_uint<256>&) const;
+template base_uint<256>::base_uint(const std::string &);
+
+template base_uint<256> &base_uint<256>::operator<<=(unsigned int);
+
+template base_uint<256> &base_uint<256>::operator>>=(unsigned int);
+
+template base_uint<256> &base_uint<256>::operator*=(uint32_t b32);
+
+template base_uint<256> &base_uint<256>::operator*=(const base_uint<256> &b);
+
+template base_uint<256> &base_uint<256>::operator/=(const base_uint<256> &b);
+
+template int base_uint<256>::CompareTo(const base_uint<256> &) const;
+
 template bool base_uint<256>::EqualTo(uint64_t) const;
+
 template double base_uint<256>::getdouble() const;
+
 template std::string base_uint<256>::GetHex() const;
+
 template std::string base_uint<256>::ToString() const;
-template void base_uint<256>::SetHex(const char*);
-template void base_uint<256>::SetHex(const std::string&);
+
+template void base_uint<256>::SetHex(const char *);
+
+template void base_uint<256>::SetHex(const std::string &);
+
 template unsigned int base_uint<256>::bits() const;
+
 template int base_uint<256>::GET_WIDTH() const;
+
 template uint32_t base_uint<256>::GET_PN(int index) const;
 
 // This implementation directly uses shifts instead of going
 // through an intermediate MPI representation.
-arith_uint256& arith_uint256::SetCompact(uint32_t nCompact, bool* pfNegative, bool* pfOverflow)
-{
+arith_uint256 &arith_uint256::SetCompact(uint32_t nCompact, bool *pfNegative, bool *pfOverflow) {
     int nSize = nCompact >> 24;
     uint32_t nWord = nCompact & 0x007fffff;
     if (nSize <= 3) {
@@ -249,8 +249,7 @@ arith_uint256& arith_uint256::SetCompact(uint32_t nCompact, bool* pfNegative, bo
     return *this;
 }
 
-uint32_t arith_uint256::GetCompact(bool fNegative) const
-{
+uint32_t arith_uint256::GetCompact(bool fNegative) const {
     int nSize = (bits() + 7) / 8;
     uint32_t nCompact = 0;
     if (nSize <= 3) {
@@ -272,35 +271,31 @@ uint32_t arith_uint256::GetCompact(bool fNegative) const
     return nCompact;
 }
 
-uint256 ArithToUint256(const arith_uint256 &a)
-{
+uint256 ArithToUint256(const arith_uint256 &a) {
     uint256 b;
-    for(int x=0; x<a.WIDTH; ++x)
-        WriteLE32(b.begin() + x*4, a.pn[x]);
+    for (int x = 0; x < a.WIDTH; ++x)
+        WriteLE32(b.begin() + x * 4, a.pn[x]);
     return b;
 }
 
-uint512 ArithToUint512(const arith_uint512 &a)
-{
+uint512 ArithToUint512(const arith_uint512 &a) {
     uint512 b;
-    for(int x=0; x<a.WIDTH; ++x)
-        WriteLE32(b.begin() + x*4, a.pn[x]);
+    for (int x = 0; x < a.WIDTH; ++x)
+        WriteLE32(b.begin() + x * 4, a.pn[x]);
     return b;
 }
 
-arith_uint256 UintToArith256(const uint256 &a)
-{
+arith_uint256 UintToArith256(const uint256 &a) {
     arith_uint256 b;
-    for(int x=0; x<b.WIDTH; ++x)
-        b.pn[x] = ReadLE32(a.begin() + x*4);
+    for (int x = 0; x < b.WIDTH; ++x)
+        b.pn[x] = ReadLE32(a.begin() + x * 4);
     return b;
 }
 
-arith_uint512 UintToArith512(const uint512 &a)
-{
+arith_uint512 UintToArith512(const uint512 &a) {
     arith_uint512 b;
-    for(int x=0; x<b.WIDTH; ++x)
-        b.pn[x] = ReadLE32(a.begin() + x*4);
+    for (int x = 0; x < b.WIDTH; ++x)
+        b.pn[x] = ReadLE32(a.begin() + x * 4);
     return b;
 }
 
@@ -313,16 +308,28 @@ arith_uint512 UintToArith512(const uint512 &a)
 //}
 
 // Explicit instantiations for base_uint<512>
-template base_uint<512>::base_uint(const std::string&);
-template base_uint<512>& base_uint<512>::operator<<=(unsigned int);
-template base_uint<512>& base_uint<512>::operator>>=(unsigned int);
-template base_uint<512>& base_uint<512>::operator*=(uint32_t b32);
-template base_uint<512>& base_uint<512>::operator*=(const base_uint<512>& b);
-template base_uint<512>& base_uint<512>::operator/=(const base_uint<512>& b);
-template int base_uint<512>::CompareTo(const base_uint<512>&) const;
+template base_uint<512>::base_uint(const std::string &);
+
+template base_uint<512> &base_uint<512>::operator<<=(unsigned int);
+
+template base_uint<512> &base_uint<512>::operator>>=(unsigned int);
+
+template base_uint<512> &base_uint<512>::operator*=(uint32_t b32);
+
+template base_uint<512> &base_uint<512>::operator*=(const base_uint<512> &b);
+
+template base_uint<512> &base_uint<512>::operator/=(const base_uint<512> &b);
+
+template int base_uint<512>::CompareTo(const base_uint<512> &) const;
+
 template bool base_uint<512>::EqualTo(uint64_t) const;
+
 template double base_uint<512>::getdouble() const;
+
 template std::string base_uint<512>::ToString() const;
+
 template unsigned int base_uint<512>::bits() const;
+
 template int base_uint<512>::GET_WIDTH() const;
+
 template uint32_t base_uint<512>::GET_PN(int index) const;

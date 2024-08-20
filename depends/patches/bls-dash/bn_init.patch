@@ -1,0 +1,39 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index e7b1927..ceceebe 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -77,7 +77,7 @@ ENDIF()
+ set(STBIN "OFF" CACHE STRING "")
+ 
+ set(FP_METHD "INTEG;INTEG;INTEG;MONTY;LOWER;SLIDE" CACHE STRING "")
+-set(COMP "-O3 -funroll-loops -fomit-frame-pointer" CACHE STRING "")
++set(CFLAGS "-O3 -funroll-loops -fomit-frame-pointer" CACHE STRING "")
+ set(FP_PMERS "off" CACHE STRING "")
+ set(FPX_METHD "INTEG;INTEG;LAZYR" CACHE STRING "")
+ set(EP_PLAIN "off" CACHE STRING "")
+diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
+index 2779a2e..188ea4e 100644
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -7,7 +7,7 @@ include(FetchContent)
+ if (DEFINED ENV{RELIC_MAIN})
+   set(RELIC_GIT_TAG "origin/main")
+ else ()
+-  set(RELIC_GIT_TAG "3a23142be0a5510a3aa93cd6c76fc59d3fc732a5")
++  set(RELIC_GIT_TAG "03f86cb53c8bb75d96ce9e353b7dc8324dbf3e8b")
+ endif ()
+ 
+ message(STATUS "Relic will be built from: ${RELIC_GIT_TAG}")
+diff --git a/src/privatekey.cpp b/src/privatekey.cpp
+index 3a9c8d6..e8e51aa 100644
+--- a/src/privatekey.cpp
++++ b/src/privatekey.cpp
+@@ -258,7 +258,7 @@ void PrivateKey::AllocateKeyData()
+ {
+     assert(!keydata);
+     keydata = Util::SecAlloc<bn_st>(1);
+-    bn_init(keydata, RLC_BN_SIZE);
++    keydata->alloc = RLC_BN_SIZE;
+     bn_zero(keydata);
+ }
+ 

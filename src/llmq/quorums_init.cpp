@@ -1,5 +1,5 @@
 // Copyright (c) 2018-2021 The Dash Core developers
-// Copyright (c) 2020-2022 The Raptoreum developers
+// Copyright (c) 2020-2023 The Raptoreum developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -18,108 +18,99 @@
 
 #include <dbwrapper.h>
 
-namespace llmq
-{
+namespace llmq {
 
-CBLSWorker* blsWorker;
+    CBLSWorker *blsWorker;
 
-CDBWrapper* llmqDb;
+    void InitLLMQSystem(CEvoDB &evoDb, CTxMemPool &mempool, CConnman &connman, bool unitTests, bool fWipe) {
+        blsWorker = new CBLSWorker();
 
-void InitLLMQSystem(CEvoDB& evoDb, bool unitTests, bool fWipe)
-{
-    llmqDb = new CDBWrapper(unitTests ? "" : (GetDataDir() / "llmq"), 8 << 20, unitTests, fWipe);
-    blsWorker = new CBLSWorker();
+        quorumDKGDebugManager = new CDKGDebugManager();
+        quorumBlockProcessor = new CQuorumBlockProcessor(evoDb, connman);
+        quorumDKGSessionManager = new CDKGSessionManager(connman, *blsWorker, unitTests, fWipe);
+        quorumManager = new CQuorumManager(evoDb, connman, *blsWorker, *quorumDKGSessionManager);
+        quorumSigSharesManager = new CSigSharesManager(connman);
+        quorumSigningManager = new CSigningManager(connman, unitTests, fWipe);
+        chainLocksHandler = new CChainLocksHandler(mempool, connman);
+        quorumInstantSendManager = new CInstantSendManager(mempool, connman, unitTests, fWipe);
 
-    quorumDKGDebugManager = new CDKGDebugManager();
-    quorumBlockProcessor = new CQuorumBlockProcessor(evoDb);
-    quorumDKGSessionManager = new CDKGSessionManager(*llmqDb, *blsWorker);
-    quorumManager = new CQuorumManager(evoDb, *blsWorker, *quorumDKGSessionManager);
-    quorumSigSharesManager = new CSigSharesManager();
-    quorumSigningManager = new CSigningManager(*llmqDb, unitTests);
-    chainLocksHandler = new CChainLocksHandler();
-    quorumInstantSendManager = new CInstantSendManager(*llmqDb);
-}
+        // TODO: remove at some point of future upgrades. it is used only to wipe old db.
+        auto llmqDbTmp = std::make_unique<CDBWrapper>(unitTests ? "" : (GetDataDir() / "llmq"), 1 << 20, unitTests,
+                                                      true);
+    }
 
-void DestroyLLMQSystem()
-{
-    delete quorumInstantSendManager;
-    quorumInstantSendManager = nullptr;
-    delete chainLocksHandler;
-    chainLocksHandler = nullptr;
-    delete quorumSigningManager;
-    quorumSigningManager = nullptr;
-    delete quorumSigSharesManager;
-    quorumSigSharesManager = nullptr;
-    delete quorumManager;
-    quorumManager = nullptr;
-    delete quorumDKGSessionManager;
-    quorumDKGSessionManager = nullptr;
-    delete quorumBlockProcessor;
-    quorumBlockProcessor = nullptr;
-    delete quorumDKGDebugManager;
-    quorumDKGDebugManager = nullptr;
-    delete blsWorker;
-    blsWorker = nullptr;
-    delete llmqDb;
-    llmqDb = nullptr;
-    LOCK(cs_llmq_vbc);
-    llmq_versionbitscache.Clear();
-}
+    void DestroyLLMQSystem() {
+        delete quorumInstantSendManager;
+        quorumInstantSendManager = nullptr;
+        delete chainLocksHandler;
+        chainLocksHandler = nullptr;
+        delete quorumSigningManager;
+        quorumSigningManager = nullptr;
+        delete quorumSigSharesManager;
+        quorumSigSharesManager = nullptr;
+        delete quorumManager;
+        quorumManager = nullptr;
+        delete quorumDKGSessionManager;
+        quorumDKGSessionManager = nullptr;
+        delete quorumBlockProcessor;
+        quorumBlockProcessor = nullptr;
+        delete quorumDKGDebugManager;
+        quorumDKGDebugManager = nullptr;
+        delete blsWorker;
+        blsWorker = nullptr;
+    }
 
-void StartLLMQSystem()
-{
-    if (blsWorker) {
-        blsWorker->Start();
+    void StartLLMQSystem() {
+        if (blsWorker != nullptr) {
+            blsWorker->Start();
+        }
+        if (quorumDKGSessionManager != nullptr) {
+            quorumDKGSessionManager->StartThreads();
+        }
+        if (quorumManager != nullptr) {
+            quorumManager->Start();
+        }
+        if (quorumSigSharesManager != nullptr) {
+            quorumSigSharesManager->RegisterAsRecoveredSigsListener();
+            quorumSigSharesManager->StartWorkerThread();
+        }
+        if (chainLocksHandler != nullptr) {
+            chainLocksHandler->Start();
+        }
+        if (quorumInstantSendManager != nullptr) {
+            quorumInstantSendManager->Start();
+        }
     }
-    if (quorumDKGSessionManager) {
-        quorumDKGSessionManager->StartThreads();
-    }
-    if (quorumManager) {
-        quorumManager->Start();
-    }
-    if (quorumSigSharesManager) {
-        quorumSigSharesManager->RegisterAsRecoveredSigsListener();
-        quorumSigSharesManager->StartWorkerThread();
-    }
-    if (chainLocksHandler) {
-        chainLocksHandler->Start();
-    }
-    if (quorumInstantSendManager) {
-        quorumInstantSendManager->Start();
-    }
-}
 
-void StopLLMQSystem()
-{
-    if (quorumInstantSendManager) {
-        quorumInstantSendManager->Stop();
+    void StopLLMQSystem() {
+        if (quorumInstantSendManager != nullptr) {
+            quorumInstantSendManager->Stop();
+        }
+        if (chainLocksHandler != nullptr) {
+            chainLocksHandler->Stop();
+        }
+        if (quorumSigSharesManager != nullptr) {
+            quorumSigSharesManager->StopWorkerThread();
+            quorumSigSharesManager->UnregisterAsRecoveredSigsListener();
+        }
+        if (quorumManager != nullptr) {
+            quorumManager->Stop();
+        }
+        if (quorumDKGSessionManager != nullptr) {
+            quorumDKGSessionManager->StopThreads();
+        }
+        if (blsWorker != nullptr) {
+            blsWorker->Stop();
+        }
     }
-    if (chainLocksHandler) {
-        chainLocksHandler->Stop();
-    }
-    if (quorumSigSharesManager) {
-        quorumSigSharesManager->StopWorkerThread();
-        quorumSigSharesManager->UnregisterAsRecoveredSigsListener();
-    }
-    if (quorumManager) {
-        quorumManager->Stop();
-    }
-    if (quorumDKGSessionManager) {
-        quorumDKGSessionManager->StopThreads();
-    }
-    if (blsWorker) {
-        blsWorker->Stop();
-    }
-}
 
-void InterruptLLMQSystem()
-{
-    if (quorumSigSharesManager) {
-        quorumSigSharesManager->InterruptWorkerThread();
+    void InterruptLLMQSystem() {
+        if (quorumSigSharesManager != nullptr) {
+            quorumSigSharesManager->InterruptWorkerThread();
+        }
+        if (quorumInstantSendManager != nullptr) {
+            quorumInstantSendManager->InterruptWorkerThread();
+        }
     }
-    if (quorumInstantSendManager) {
-        quorumInstantSendManager->InterruptWorkerThread();
-    }
-}
 
 } // namespace llmq

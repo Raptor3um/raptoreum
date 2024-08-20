@@ -1,4 +1,5 @@
 // Copyright (c) 2011-2014 The Bitcoin Core developers
+// Copyright (c) 2020-2023 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,16 +14,12 @@
 #include <QSystemTrayIcon>
 #include <QTemporaryFile>
 #include <QVariant>
+
 #ifdef USE_DBUS
 #include <stdint.h>
 #include <QtDBus>
 #endif
-// Include ApplicationServices.h after QtDbus to avoid redefinition of check().
-// This affects at least OSX 10.6. See /usr/include/AssertMacros.h for details.
-// Note: This could also be worked around using:
-// #define __ASSERT_MACROS_DEFINE_VERSIONS_WITHOUT_UNDERSCORES 0
 #ifdef Q_OS_MAC
-#include <ApplicationServices/ApplicationServices.h>
 #include <qt/macnotificationhandler.h>
 #endif
 
@@ -33,17 +30,16 @@ const int FREEDESKTOP_NOTIFICATION_ICON_SIZE = 128;
 #endif
 
 Notificator::Notificator(const QString &_programName, QSystemTrayIcon *_trayIcon, QWidget *_parent) :
-    QObject(_parent),
-    parent(_parent),
-    programName(_programName),
-    mode(None),
-    trayIcon(_trayIcon)
+        QObject(_parent),
+        parent(_parent),
+        programName(_programName),
+        mode(None),
+        trayIcon(_trayIcon)
 #ifdef USE_DBUS
-    ,interface(0)
+,interface(nullptr)
 #endif
 {
-    if(_trayIcon && _trayIcon->supportsMessages())
-    {
+    if (_trayIcon && _trayIcon->supportsMessages()) {
         mode = QSystemTray;
     }
 #ifdef USE_DBUS
@@ -62,8 +58,7 @@ Notificator::Notificator(const QString &_programName, QSystemTrayIcon *_trayIcon
 #endif
 }
 
-Notificator::~Notificator()
-{
+Notificator::~Notificator() {
 #ifdef USE_DBUS
     delete interface;
 #endif
@@ -154,14 +149,14 @@ QVariant FreedesktopImage::toVariant(const QImage &img)
 
 void Notificator::notifyDBus(Class cls, const QString &title, const QString &text, const QIcon &icon, int millisTimeout)
 {
-    Q_UNUSED(cls);
-    // Arguments for DBus call:
+    // https://developer.gnome.org/notification-spec/
+    // Arguments for DBus "Notify" call:
     QList<QVariant> args;
 
     // Program Name:
     args.append(programName);
 
-    // Unique ID of this notification type:
+    // Replaces ID; A value of 0 means that this notification will not replace any existing notifications:
     args.append(0U);
 
     // Application Icon, empty string
@@ -209,51 +204,51 @@ void Notificator::notifyDBus(Class cls, const QString &title, const QString &tex
 }
 #endif
 
-void Notificator::notifySystray(Class cls, const QString &title, const QString &text, const QIcon &icon, int millisTimeout)
-{
-    Q_UNUSED(icon);
+void Notificator::notifySystray(Class cls, const QString &title, const QString &text, int millisTimeout) {
     QSystemTrayIcon::MessageIcon sicon = QSystemTrayIcon::NoIcon;
-    switch(cls) // Set icon based on class
+    switch (cls) // Set icon based on class
     {
-    case Information: sicon = QSystemTrayIcon::Information; break;
-    case Warning: sicon = QSystemTrayIcon::Warning; break;
-    case Critical: sicon = QSystemTrayIcon::Critical; break;
+        case Information:
+            sicon = QSystemTrayIcon::Information;
+            break;
+        case Warning:
+            sicon = QSystemTrayIcon::Warning;
+            break;
+        case Critical:
+            sicon = QSystemTrayIcon::Critical;
+            break;
     }
     trayIcon->showMessage(title, text, sicon, millisTimeout);
 }
 
-// Based on Qt's tray icon implementation
 #ifdef Q_OS_MAC
-void Notificator::notifyMacUserNotificationCenter(Class cls, const QString &title, const QString &text, const QIcon &icon) {
+void Notificator::notifyMacUserNotificationCenter(const QString &title, const QString &text)
+{
     // icon is not supported by the user notification center yet. OSX will use the app icon.
     MacNotificationHandler::instance()->showNotification(title, text);
 }
-
 #endif
 
-void Notificator::notify(Class cls, const QString &title, const QString &text, const QIcon &icon, int millisTimeout)
-{
-    switch(mode)
-    {
+void Notificator::notify(Class cls, const QString &title, const QString &text, const QIcon &icon, int millisTimeout) {
+    switch (mode) {
 #ifdef USE_DBUS
-    case Freedesktop:
-        notifyDBus(cls, title, text, icon, millisTimeout);
-        break;
+        case Freedesktop:
+            notifyDBus(cls, title, text, icon, millisTimeout);
+            break;
 #endif
-    case QSystemTray:
-        notifySystray(cls, title, text, icon, millisTimeout);
-        break;
+        case QSystemTray:
+            notifySystray(cls, title, text, millisTimeout);
+            break;
 #ifdef Q_OS_MAC
-    case UserNotificationCenter:
-        notifyMacUserNotificationCenter(cls, title, text, icon);
-        break;
+            case UserNotificationCenter:
+                notifyMacUserNotificationCenter(title, text);
+                break;
 #endif
-    default:
-        if(cls == Critical)
-        {
-            // Fall back to old fashioned pop-up dialog if critical and no other notification available
-            QMessageBox::critical(parent, title, text, QMessageBox::Ok, QMessageBox::Ok);
-        }
-        break;
+        default:
+            if (cls == Critical) {
+                // Fall back to old fashioned pop-up dialog if critical and no other notification available
+                QMessageBox::critical(parent, title, text, QMessageBox::Ok, QMessageBox::Ok);
+            }
+            break;
     }
 }

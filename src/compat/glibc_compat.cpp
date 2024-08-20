@@ -14,15 +14,13 @@
 #endif
 
 // Prior to GLIBC_2.14, memcpy was aliased to memmove.
-extern "C" void* memmove(void* a, const void* b, size_t c);
-extern "C" void* memcpy(void* a, const void* b, size_t c)
-{
+extern "C" void *memmove(void *a, const void *b, size_t c);
+extern "C" void *memcpy(void *a, const void *b, size_t c) {
     return memmove(a, b, c);
 }
 
 extern "C" void __chk_fail(void) __attribute__((__noreturn__));
-extern "C" FDELT_TYPE __fdelt_warn(FDELT_TYPE a)
-{
+extern "C" FDELT_TYPE __fdelt_warn(FDELT_TYPE a) {
     if (a >= FD_SETSIZE)
         __chk_fail();
     return a / __NFDBITS;
@@ -68,7 +66,6 @@ __asm(".symver log2f_old,log2f@GLIBC_2.4");
 #elif defined(__aarch64__)
 __asm(".symver log2f_old,log2f@GLIBC_2.17");
 #endif
-extern "C" float __wrap_log2f(float x)
-{
+extern "C" float __wrap_log2f(float x) {
     return log2f_old(x);
 }

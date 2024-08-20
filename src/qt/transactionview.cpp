@@ -1,4 +1,5 @@
 // Copyright (c) 2011-2015 The Bitcoin Core developers
+// Copyright (c) 2020-2023 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -41,18 +42,17 @@
 #include <QVBoxLayout>
 
 /** Date format for persistence */
-static const char* PERSISTENCE_DATE_FORMAT = "yyyy-MM-dd";
+static const char *PERSISTENCE_DATE_FORMAT = "yyyy-MM-dd";
 
-TransactionView::TransactionView(QWidget* parent) :
-    QWidget(parent), model(0), transactionProxyModel(0),
-    transactionView(0), abandonAction(0), columnResizingFixer(0)
-{
+TransactionView::TransactionView(QWidget *parent) :
+        QWidget(parent), model(nullptr), transactionProxyModel(nullptr),
+        transactionView(nullptr), abandonAction(nullptr), columnResizingFixer(nullptr) {
     QSettings settings;
     // Build filter row
-    setContentsMargins(0,0,0,0);
+    setContentsMargins(0, 0, 0, 0);
 
     QHBoxLayout *hlayout = new QHBoxLayout();
-    hlayout->setContentsMargins(0,0,0,0);
+    hlayout->setContentsMargins(0, 0, 0, 0);
     hlayout->setSpacing(1);
     hlayout->addSpacing(STATUS_COLUMN_WIDTH - 2);
 
@@ -74,27 +74,33 @@ TransactionView::TransactionView(QWidget* parent) :
     dateWidget->addItem(tr("Range..."), Range);
     hlayout->addWidget(dateWidget);
 
+    QString strCoinJoinName = QString::fromStdString(gCoinJoinName);
     typeWidget = new QComboBox(this);
     typeWidget->setFixedWidth(TYPE_COLUMN_WIDTH - 1);
     typeWidget->addItem(tr("All"), TransactionFilterProxy::ALL_TYPES);
     typeWidget->addItem(tr("Most Common"), TransactionFilterProxy::COMMON_TYPES);
     typeWidget->addItem(tr("Received with"), TransactionFilterProxy::TYPE(TransactionRecord::RecvWithAddress) |
-                                        TransactionFilterProxy::TYPE(TransactionRecord::RecvFromOther));
+                                             TransactionFilterProxy::TYPE(TransactionRecord::RecvFromOther));
     typeWidget->addItem(tr("Sent to"), TransactionFilterProxy::TYPE(TransactionRecord::SendToAddress) |
-                                  TransactionFilterProxy::TYPE(TransactionRecord::SendToOther));
+                                       TransactionFilterProxy::TYPE(TransactionRecord::SendToOther));
     typeWidget->addItem(tr("Future"), TransactionFilterProxy::TYPE(TransactionRecord::FutureSend) |
-                                    TransactionFilterProxy::TYPE(TransactionRecord::FutureReceive));
+                                      TransactionFilterProxy::TYPE(TransactionRecord::FutureReceive));
     typeWidget->addItem(tr("Future Send"), TransactionFilterProxy::TYPE(TransactionRecord::FutureSend));
     typeWidget->addItem(tr("Future Received"), TransactionFilterProxy::TYPE(TransactionRecord::FutureReceive));
-    typeWidget->addItem(tr("%1 Send").arg("CoinJoin"), TransactionFilterProxy::TYPE(TransactionRecord::CoinJoinSend));
-    typeWidget->addItem(tr("%1 Make Collateral Inputs").arg("CoinJoin"), TransactionFilterProxy::TYPE(TransactionRecord::CoinJoinMakeCollaterals));
-    typeWidget->addItem(tr("%1 Create Denominations").arg("CoinJoin"), TransactionFilterProxy::TYPE(TransactionRecord::CoinJoinCreateDenominations));
-    typeWidget->addItem(tr("%1 Mixing").arg("CoinJoin"), TransactionFilterProxy::TYPE(TransactionRecord::CoinJoinMixing));
-    typeWidget->addItem(tr("%1 Collateral Payment").arg("CoinJoin"), TransactionFilterProxy::TYPE(TransactionRecord::CoinJoinCollateralPayment));
+    typeWidget->addItem(tr("%1 Send").arg(strCoinJoinName),
+                        TransactionFilterProxy::TYPE(TransactionRecord::CoinJoinSend));
+    typeWidget->addItem(tr("%1 Make Collateral Inputs").arg(strCoinJoinName),
+                        TransactionFilterProxy::TYPE(TransactionRecord::CoinJoinMakeCollaterals));
+    typeWidget->addItem(tr("%1 Create Denominations").arg(strCoinJoinName),
+                        TransactionFilterProxy::TYPE(TransactionRecord::CoinJoinCreateDenominations));
+    typeWidget->addItem(tr("%1 Mixing").arg(strCoinJoinName),
+                        TransactionFilterProxy::TYPE(TransactionRecord::CoinJoinMixing));
+    typeWidget->addItem(tr("%1 Collateral Payment").arg(strCoinJoinName),
+                        TransactionFilterProxy::TYPE(TransactionRecord::CoinJoinCollateralPayment));
     typeWidget->addItem(tr("To yourself"), TransactionFilterProxy::TYPE(TransactionRecord::SendToSelf));
     typeWidget->addItem(tr("Mined"), TransactionFilterProxy::TYPE(TransactionRecord::Generated));
     typeWidget->addItem(tr("Other"), TransactionFilterProxy::TYPE(TransactionRecord::Other));
-    
+
     hlayout->addWidget(typeWidget);
 
     search_widget = new QLineEdit(this);
@@ -109,19 +115,19 @@ TransactionView::TransactionView(QWidget* parent) :
     amountWidget->setObjectName("amountWidget");
     hlayout->addWidget(amountWidget);
 
-    // Delay before filtering transactions in ms
+    // Delay before filtering transactions
     static const int input_filter_delay = 200;
 
-    QTimer* amount_typing_delay = new QTimer(this);
+    QTimer *amount_typing_delay = new QTimer(this);
     amount_typing_delay->setSingleShot(true);
     amount_typing_delay->setInterval(input_filter_delay);
 
-    QTimer* prefix_typing_delay = new QTimer(this);
+    QTimer *prefix_typing_delay = new QTimer(this);
     prefix_typing_delay->setSingleShot(true);
     prefix_typing_delay->setInterval(input_filter_delay);
 
     QVBoxLayout *vlayout = new QVBoxLayout(this);
-    vlayout->setContentsMargins(0,0,0,0);
+    vlayout->setContentsMargins(0, 0, 0, 0);
     vlayout->setSpacing(0);
 
     QTableView *view = new QTableView(this);
@@ -173,38 +179,44 @@ TransactionView::TransactionView(QWidget* parent) :
     mapperThirdPartyTxUrls = new QSignalMapper(this);
 
     // Connect actions
-    connect(mapperThirdPartyTxUrls, SIGNAL(mapped(QString)), this, SLOT(openThirdPartyTxUrl(QString)));
+    connect(mapperThirdPartyTxUrls, static_cast<void (QSignalMapper::*)(const QString &)>(&QSignalMapper::mappedString), this,
+            &TransactionView::openThirdPartyTxUrl);
 
-    connect(dateWidget, SIGNAL(activated(int)), this, SLOT(chooseDate(int)));
-    connect(typeWidget, SIGNAL(activated(int)), this, SLOT(chooseType(int)));
-    connect(watchOnlyWidget, SIGNAL(activated(int)), this, SLOT(chooseWatchonly(int)));
-    connect(amountWidget, SIGNAL(textChanged(QString)), amount_typing_delay, SLOT(start()));
-    connect(amount_typing_delay, SIGNAL(timeout()), this, SLOT(changedAmount()));
-    connect(search_widget, SIGNAL(textChanged(QString)), prefix_typing_delay, SLOT(start()));
-    connect(prefix_typing_delay, SIGNAL(timeout()), this, SLOT(changedSearch()));
+    connect(dateWidget, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this,
+            &TransactionView::chooseDate);
+    connect(typeWidget, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this,
+            &TransactionView::chooseType);
+    connect(watchOnlyWidget, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this,
+            &TransactionView::chooseWatchonly);
+    connect(amountWidget, &QLineEdit::textChanged, amount_typing_delay,
+            static_cast<void (QTimer::*)()>(&QTimer::start));
+    connect(amount_typing_delay, &QTimer::timeout, this, &TransactionView::changedAmount);
+    connect(search_widget, &QLineEdit::textChanged, prefix_typing_delay,
+            static_cast<void (QTimer::*)()>(&QTimer::start));
+    connect(prefix_typing_delay, &QTimer::timeout, this, &TransactionView::changedSearch);
 
-    connect(view, SIGNAL(doubleClicked(QModelIndex)), this, SIGNAL(doubleClicked(QModelIndex)));
-    connect(view, SIGNAL(clicked(QModelIndex)), this, SLOT(computeSum()));
-    connect(view, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextualMenu(QPoint)));
+    connect(view, &QTableView::doubleClicked, this, &TransactionView::doubleClicked);
+    connect(view, &QTableView::clicked, this, &TransactionView::computeSum);
+    connect(view, &QTableView::customContextMenuRequested, this, &TransactionView::contextualMenu);
 
-    connect(abandonAction, SIGNAL(triggered()), this, SLOT(abandonTx()));
-    connect(copyAddressAction, SIGNAL(triggered()), this, SLOT(copyAddress()));
-    connect(copyLabelAction, SIGNAL(triggered()), this, SLOT(copyLabel()));
-    connect(copyAmountAction, SIGNAL(triggered()), this, SLOT(copyAmount()));
-    connect(copyTxIDAction, SIGNAL(triggered()), this, SLOT(copyTxID()));
-    connect(copyTxHexAction, SIGNAL(triggered()), this, SLOT(copyTxHex()));
-    connect(copyTxPlainText, SIGNAL(triggered()), this, SLOT(copyTxPlainText()));
-    connect(editLabelAction, SIGNAL(triggered()), this, SLOT(editLabel()));
-    connect(showDetailsAction, SIGNAL(triggered()), this, SLOT(showDetails()));
-    connect(showAddressQRCodeAction, SIGNAL(triggered()), this, SLOT(showAddressQRCode()));
+    connect(abandonAction, &QAction::triggered, this, &TransactionView::abandonTx);
+    connect(copyAddressAction, &QAction::triggered, this, &TransactionView::copyAddress);
+    connect(copyLabelAction, &QAction::triggered, this, &TransactionView::copyLabel);
+    connect(copyAmountAction, &QAction::triggered, this, &TransactionView::copyAmount);
+    connect(copyTxIDAction, &QAction::triggered, this, &TransactionView::copyTxID);
+    connect(copyTxHexAction, &QAction::triggered, this, &TransactionView::copyTxHex);
+    connect(copyTxPlainText, &QAction::triggered, this, &TransactionView::copyTxPlainText);
+    connect(editLabelAction, &QAction::triggered, this, &TransactionView::editLabel);
+    connect(showDetailsAction, &QAction::triggered, this, &TransactionView::showDetails);
+    connect(showAddressQRCodeAction, &QAction::triggered, this, &TransactionView::showAddressQRCode);
+    // Double-clicling on transaction at transaction history page will show details of that transaction
+    connect(this, &TransactionView::doubleClicked, this, &TransactionView::showDetails);
 }
 
-void TransactionView::setModel(WalletModel *_model)
-{
+void TransactionView::setModel(WalletModel *_model) {
     QSettings settings;
     this->model = _model;
-    if(_model)
-    {
+    if (_model) {
         transactionProxyModel = new TransactionFilterProxy(this);
         transactionProxyModel->setSourceModel(_model->getTransactionTableModel());
         transactionProxyModel->setDynamicSortFilter(true);
@@ -218,8 +230,8 @@ void TransactionView::setModel(WalletModel *_model)
         transactionView->setAlternatingRowColors(true);
         transactionView->setSelectionBehavior(QAbstractItemView::SelectRows);
         transactionView->setSelectionMode(QAbstractItemView::ExtendedSelection);
+        transactionView->horizontalHeader()->setSortIndicator(TransactionTableModel::Date, Qt::DescendingOrder);
         transactionView->setSortingEnabled(true);
-        transactionView->sortByColumn(TransactionTableModel::Date, Qt::DescendingOrder);
         transactionView->verticalHeader()->hide();
 
         transactionView->setColumnWidth(TransactionTableModel::Status, STATUS_COLUMN_WIDTH);
@@ -229,36 +241,39 @@ void TransactionView::setModel(WalletModel *_model)
         transactionView->setColumnWidth(TransactionTableModel::Amount, AMOUNT_MINIMUM_COLUMN_WIDTH);
 
         // Note: it's a good idea to connect this signal AFTER the model is set
-        connect(transactionView->selectionModel(), SIGNAL(selectionChanged(QItemSelection, QItemSelection)), this, SLOT(computeSum()));
+        connect(transactionView->selectionModel(), &QItemSelectionModel::selectionChanged, this,
+                &TransactionView::computeSum);
 
-        columnResizingFixer = new GUIUtil::TableViewLastColumnResizingFixer(transactionView, AMOUNT_MINIMUM_COLUMN_WIDTH, MINIMUM_COLUMN_WIDTH, this);
+        columnResizingFixer = new GUIUtil::TableViewLastColumnResizingFixer(transactionView,
+                                                                            AMOUNT_MINIMUM_COLUMN_WIDTH,
+                                                                            MINIMUM_COLUMN_WIDTH, this);
 
-        if (_model->getOptionsModel())
-        {
+        if (_model->getOptionsModel()) {
             // Add third party transaction URLs to context menu
-            QStringList listUrls = _model->getOptionsModel()->getThirdPartyTxUrls().split("|", QString::SkipEmptyParts);
-            for (int i = 0; i < listUrls.size(); ++i)
-            {
-                QString host = QUrl(listUrls[i].trimmed(), QUrl::StrictMode).host();
-                if (!host.isEmpty())
-                {
+            QStringList listUrls = _model->getOptionsModel()->getThirdPartyTxUrls().split("|", Qt::SkipEmptyParts);
+            for (int i = 0; i < listUrls.size(); ++i) {
+                QUrl url = QUrl(listUrls[i].trimmed(), QUrl::StrictMode);
+                QString host = url.host();
+                if (!host.isEmpty() && url.scheme() == "https") {
                     QAction *thirdPartyTxUrlAction = new QAction(host, this); // use host as menu item label
                     if (i == 0)
                         contextMenu->addSeparator();
                     contextMenu->addAction(thirdPartyTxUrlAction);
-                    connect(thirdPartyTxUrlAction, SIGNAL(triggered()), mapperThirdPartyTxUrls, SLOT(map()));
+                    connect(thirdPartyTxUrlAction, &QAction::triggered, mapperThirdPartyTxUrls,
+                            static_cast<void (QSignalMapper::*)()>(&QSignalMapper::map));
                     mapperThirdPartyTxUrls->setMapping(thirdPartyTxUrlAction, listUrls[i].trimmed());
                 }
             }
 
-            connect(_model->getOptionsModel(), SIGNAL(coinJoinEnabledChanged()), this, SLOT(updateCoinJoinVisibility()));
+            connect(_model->getOptionsModel(), &OptionsModel::coinJoinEnabledChanged, this,
+                    &TransactionView::updateCoinJoinVisibility);
         }
 
         // show/hide column Watch-only
         updateWatchOnlyColumn(_model->wallet().haveWatchOnly());
 
         // Watch-only signal
-        connect(_model, SIGNAL(notifyWatchonlyChanged(bool)), this, SLOT(updateWatchOnlyColumn(bool)));
+        connect(_model, &WalletModel::notifyWatchonlyChanged, this, &TransactionView::updateWatchOnlyColumn);
 
         // Update transaction list with persisted settings
         chooseType(settings.value("transactionType").toInt());
@@ -271,90 +286,85 @@ void TransactionView::setModel(WalletModel *_model)
     }
 }
 
-void TransactionView::chooseDate(int idx)
-{
+void TransactionView::chooseDate(int idx) {
     if (!transactionProxyModel) return;
 
     QSettings settings;
     QDate current = QDate::currentDate();
     dateRangeWidget->setVisible(false);
-    switch(dateWidget->itemData(idx).toInt())
-    {
-    case All:
-        transactionProxyModel->setDateRange(
-                TransactionFilterProxy::MIN_DATE,
-                TransactionFilterProxy::MAX_DATE);
-        break;
-    case Today:
-        transactionProxyModel->setDateRange(
-                QDateTime(current),
-                TransactionFilterProxy::MAX_DATE);
-        break;
-    case ThisWeek: {
-        // Find last Monday
-        QDate startOfWeek = current.addDays(-(current.dayOfWeek()-1));
-        transactionProxyModel->setDateRange(
-                QDateTime(startOfWeek),
-                TransactionFilterProxy::MAX_DATE);
+    switch (dateWidget->itemData(idx).toInt()) {
+        case All:
+            transactionProxyModel->setDateRange(
+                    TransactionFilterProxy::MIN_DATE,
+                    TransactionFilterProxy::MAX_DATE);
+            break;
+        case Today:
+            transactionProxyModel->setDateRange(
+                    GUIUtil::StartOfDay(current),
+                    TransactionFilterProxy::MAX_DATE);
+            break;
+        case ThisWeek: {
+            // Find last Monday
+            QDate startOfWeek = current.addDays(-(current.dayOfWeek() - 1));
+            transactionProxyModel->setDateRange(
+                    GUIUtil::StartOfDay(startOfWeek),
+                    TransactionFilterProxy::MAX_DATE);
 
-        } break;
-    case ThisMonth:
-        transactionProxyModel->setDateRange(
-                QDateTime(QDate(current.year(), current.month(), 1)),
-                TransactionFilterProxy::MAX_DATE);
-        break;
-    case LastMonth:
-        transactionProxyModel->setDateRange(
-                QDateTime(QDate(current.year(), current.month(), 1).addMonths(-1)),
-                QDateTime(QDate(current.year(), current.month(), 1)));
-        break;
-    case ThisYear:
-        transactionProxyModel->setDateRange(
-                QDateTime(QDate(current.year(), 1, 1)),
-                TransactionFilterProxy::MAX_DATE);
-        break;
-    case Range:
-        dateRangeWidget->setVisible(true);
-        dateRangeChanged();
-        break;
+        }
+            break;
+        case ThisMonth:
+            transactionProxyModel->setDateRange(
+                    GUIUtil::StartOfDay(QDate(current.year(), current.month(), 1)),
+                    TransactionFilterProxy::MAX_DATE);
+            break;
+        case LastMonth:
+            transactionProxyModel->setDateRange(
+                    GUIUtil::StartOfDay(QDate(current.year(), current.month(), 1).addMonths(-1)),
+                    GUIUtil::StartOfDay(QDate(current.year(), current.month(), 1)));
+            break;
+        case ThisYear:
+            transactionProxyModel->setDateRange(
+                    GUIUtil::StartOfDay(QDate(current.year(), 1, 1)),
+                    TransactionFilterProxy::MAX_DATE);
+            break;
+        case Range:
+            dateRangeWidget->setVisible(true);
+            dateRangeChanged();
+            break;
     }
     // Persist new date settings
     settings.setValue("transactionDate", idx);
-    if (dateWidget->itemData(idx).toInt() == Range){
+    if (dateWidget->itemData(idx).toInt() == Range) {
         settings.setValue("transactionDateFrom", dateFrom->date().toString(PERSISTENCE_DATE_FORMAT));
         settings.setValue("transactionDateTo", dateTo->date().toString(PERSISTENCE_DATE_FORMAT));
     }
 }
 
-void TransactionView::chooseType(int idx)
-{
-    if(!transactionProxyModel)
+void TransactionView::chooseType(int idx) {
+    if (!transactionProxyModel)
         return;
     transactionProxyModel->setTypeFilter(
-        typeWidget->itemData(idx).toInt());
+            typeWidget->itemData(idx).toInt());
     // Persist settings
     QSettings settings;
     settings.setValue("transactionType", idx);
 }
 
-void TransactionView::chooseWatchonly(int idx)
-{
-    if(!transactionProxyModel)
+void TransactionView::chooseWatchonly(int idx) {
+    if (!transactionProxyModel)
         return;
     transactionProxyModel->setWatchOnlyFilter(
-        static_cast<TransactionFilterProxy::WatchOnlyFilter>(watchOnlyWidget->itemData(idx).toInt()));
+            static_cast<TransactionFilterProxy::WatchOnlyFilter>(watchOnlyWidget->itemData(idx).toInt()));
 }
 
-void TransactionView::changedSearch()
-{
-    if(!transactionProxyModel)
+void TransactionView::changedSearch() {
+    if (!transactionProxyModel)
         return;
     transactionProxyModel->setSearchString(search_widget->text());
 }
 
-void TransactionView::changedAmount()
-{
-    if(!transactionProxyModel)
+void TransactionView::changedAmount() {
+    if (!transactionProxyModel)
         return;
     CAmount amount_parsed = 0;
 
@@ -364,23 +374,20 @@ void TransactionView::changedAmount()
 
     if (BitcoinUnits::parse(model->getOptionsModel()->getDisplayUnit(), newAmount, &amount_parsed)) {
         transactionProxyModel->setMinAmount(amount_parsed);
-    }
-    else
-    {
+    } else {
         transactionProxyModel->setMinAmount(0);
     }
 }
 
-void TransactionView::exportClicked()
-{
+void TransactionView::exportClicked() {
     if (!model || !model->getOptionsModel()) {
         return;
     }
 
     // CSV is currently the only supported format
     QString filename = GUIUtil::getSaveFileName(this,
-        tr("Export Transaction History"), QString(),
-        tr("Comma separated file (*.csv)"), nullptr);
+                                                tr("Export Transaction History"), QString(),
+                                                tr("Comma separated file (*.csv)"), nullptr);
 
     if (filename.isNull())
         return;
@@ -396,21 +403,22 @@ void TransactionView::exportClicked()
     writer.addColumn(tr("Type"), TransactionTableModel::Type, Qt::EditRole);
     writer.addColumn(tr("Label"), 0, TransactionTableModel::LabelRole);
     writer.addColumn(tr("Address"), 0, TransactionTableModel::AddressRole);
-    writer.addColumn(BitcoinUnits::getAmountColumnTitle(model->getOptionsModel()->getDisplayUnit()), 0, TransactionTableModel::FormattedAmountRole);
+    writer.addColumn(BitcoinUnits::getAmountColumnTitle(model->getOptionsModel()->getDisplayUnit()), 0,
+                     TransactionTableModel::FormattedAmountRole);
     writer.addColumn(tr("ID"), 0, TransactionTableModel::TxHashRole);
 
-    if(!writer.write()) {
-        Q_EMIT message(tr("Exporting Failed"), tr("There was an error trying to save the transaction history to %1.").arg(filename),
-            CClientUIInterface::MSG_ERROR);
-    }
-    else {
-        Q_EMIT message(tr("Exporting Successful"), tr("The transaction history was successfully saved to %1.").arg(filename),
-            CClientUIInterface::MSG_INFORMATION);
+    if (!writer.write()) {
+        Q_EMIT message(tr("Exporting Failed"),
+                       tr("There was an error trying to save the transaction history to %1.").arg(filename),
+                       CClientUIInterface::MSG_ERROR);
+    } else {
+        Q_EMIT message(tr("Exporting Successful"),
+                       tr("The transaction history was successfully saved to %1.").arg(filename),
+                       CClientUIInterface::MSG_INFORMATION);
     }
 }
 
-void TransactionView::contextualMenu(const QPoint &point)
-{
+void TransactionView::contextualMenu(const QPoint &point) {
     if (!transactionView || !transactionView->selectionModel())
         return;
     QModelIndex index = transactionView->indexAt(point);
@@ -423,15 +431,13 @@ void TransactionView::contextualMenu(const QPoint &point)
     hash.SetHex(selection.at(0).data(TransactionTableModel::TxHashRole).toString().toStdString());
     abandonAction->setEnabled(model->wallet().transactionCanBeAbandoned(hash));
 
-    if(index.isValid())
-    {
+    if (index.isValid()) {
         contextMenu->popup(transactionView->viewport()->mapToGlobal(point));
     }
 }
 
-void TransactionView::abandonTx()
-{
-    if(!transactionView || !transactionView->selectionModel())
+void TransactionView::abandonTx() {
+    if (!transactionView || !transactionView->selectionModel())
         return;
     QModelIndexList selection = transactionView->selectionModel()->selectedRows(0);
 
@@ -447,75 +453,63 @@ void TransactionView::abandonTx()
     model->getTransactionTableModel()->updateTransaction(hashQStr, CT_UPDATED, false);
 }
 
-void TransactionView::copyAddress()
-{
+void TransactionView::copyAddress() {
     GUIUtil::copyEntryData(transactionView, 0, TransactionTableModel::AddressRole);
 }
 
-void TransactionView::copyLabel()
-{
+void TransactionView::copyLabel() {
     GUIUtil::copyEntryData(transactionView, 0, TransactionTableModel::LabelRole);
 }
 
-void TransactionView::copyAmount()
-{
+void TransactionView::copyAmount() {
     GUIUtil::copyEntryData(transactionView, 0, TransactionTableModel::FormattedAmountRole);
 }
 
-void TransactionView::copyTxID()
-{
+void TransactionView::copyTxID() {
     GUIUtil::copyEntryData(transactionView, 0, TransactionTableModel::TxHashRole);
 }
 
-void TransactionView::copyTxHex()
-{
+void TransactionView::copyTxHex() {
     GUIUtil::copyEntryData(transactionView, 0, TransactionTableModel::TxHexRole);
 }
 
-void TransactionView::copyTxPlainText()
-{
+void TransactionView::copyTxPlainText() {
     GUIUtil::copyEntryData(transactionView, 0, TransactionTableModel::TxPlainTextRole);
 }
 
-void TransactionView::editLabel()
-{
-    if(!transactionView->selectionModel() ||!model)
+void TransactionView::editLabel() {
+    if (!transactionView->selectionModel() || !model)
         return;
     QModelIndexList selection = transactionView->selectionModel()->selectedRows();
-    if(!selection.isEmpty())
-    {
+    if (!selection.isEmpty()) {
         AddressTableModel *addressBook = model->getAddressTableModel();
-        if(!addressBook)
+        if (!addressBook)
             return;
         QString address = selection.at(0).data(TransactionTableModel::AddressRole).toString();
-        if(address.isEmpty())
-        {
+        if (address.isEmpty()) {
             // If this transaction has no associated address, exit
             return;
         }
         // Is address in address book? Address book can miss address when a transaction is
         // sent from outside the UI.
         int idx = addressBook->lookupAddress(address);
-        if(idx != -1)
-        {
+        if (idx != -1) {
             // Edit sending / receiving address
             QModelIndex modelIdx = addressBook->index(idx, 0, QModelIndex());
             // Determine type of address, launch appropriate editor dialog type
             QString type = modelIdx.data(AddressTableModel::TypeRole).toString();
 
             EditAddressDialog dlg(
-                type == AddressTableModel::Receive
-                ? EditAddressDialog::EditReceivingAddress
-                : EditAddressDialog::EditSendingAddress, this);
+                    type == AddressTableModel::Receive
+                    ? EditAddressDialog::EditReceivingAddress
+                    : EditAddressDialog::EditSendingAddress, this);
             dlg.setModel(addressBook);
             dlg.loadRow(idx);
             dlg.exec();
-        }
-        else
-        {
+        } else {
             // Add sending address
             EditAddressDialog dlg(EditAddressDialog::NewSendingAddress,
-                this);
+                    this);
             dlg.setModel(addressBook);
             dlg.setAddress(address);
             dlg.exec();
@@ -523,62 +517,59 @@ void TransactionView::editLabel()
     }
 }
 
-void TransactionView::showDetails()
-{
-    if(!transactionView->selectionModel())
+void TransactionView::showDetails() {
+    if (!transactionView->selectionModel())
         return;
     QModelIndexList selection = transactionView->selectionModel()->selectedRows();
-    if(!selection.isEmpty())
-    {
-        TransactionDescDialog* dlg = new TransactionDescDialog(selection.at(0), this);
+    if (!selection.isEmpty()) {
+        TransactionDescDialog *dlg = new TransactionDescDialog(selection.at(0), this);
         dlg->setAttribute(Qt::WA_DeleteOnClose);
         dlg->show();
     }
 }
 
-void TransactionView::showAddressQRCode()
-{
-    QList<QModelIndex> entries = GUIUtil::getEntryData(transactionView, 0);
+void TransactionView::showAddressQRCode() {
+    QList <QModelIndex> entries = GUIUtil::getEntryData(transactionView, 0);
     if (entries.empty()) {
         return;
     }
 
     QString strAddress = entries.at(0).data(TransactionTableModel::AddressRole).toString();
-    QRDialog* dialog = new QRDialog(this);
+    QRDialog *dialog = new QRDialog(this);
 
     dialog->setAttribute(Qt::WA_DeleteOnClose);
-    dialog->setInfo(tr("QR code"), "raptoreum:"+strAddress, "", strAddress);
+    dialog->setInfo(tr("QR code"), "raptoreum:" + strAddress, "", strAddress);
     dialog->show();
 }
 
 /** Compute sum of all selected transactions */
-void TransactionView::computeSum()
-{
+void TransactionView::computeSum() {
     qint64 amount = 0;
     int nDisplayUnit = model->getOptionsModel()->getDisplayUnit();
-    if(!transactionView->selectionModel())
+    if (!transactionView->selectionModel())
         return;
     QModelIndexList selection = transactionView->selectionModel()->selectedRows();
 
-    for (QModelIndex index : selection){
+    for (QModelIndex index: selection) {
         amount += index.data(TransactionTableModel::AmountRole).toLongLong();
     }
     QString strAmount(BitcoinUnits::formatWithUnit(nDisplayUnit, amount, true, BitcoinUnits::separatorAlways));
-    if (amount < 0) strAmount = "<span style='" + GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_ERROR) + "'>" + strAmount + "</span>";
+    if (amount < 0) strAmount =
+                            "<span style='" + GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_ERROR) + "'>" +
+                            strAmount + "</span>";
     Q_EMIT trxAmount(strAmount);
 }
 
-void TransactionView::openThirdPartyTxUrl(QString url)
-{
-    if(!transactionView || !transactionView->selectionModel())
+void TransactionView::openThirdPartyTxUrl(QString url) {
+    if (!transactionView || !transactionView->selectionModel())
         return;
     QModelIndexList selection = transactionView->selectionModel()->selectedRows(0);
-    if(!selection.isEmpty())
-         QDesktopServices::openUrl(QUrl::fromUserInput(url.replace("%s", selection.at(0).data(TransactionTableModel::TxHashRole).toString())));
+    if (!selection.isEmpty())
+        QDesktopServices::openUrl(QUrl::fromUserInput(
+                url.replace("%s", selection.at(0).data(TransactionTableModel::TxHashRole).toString())));
 }
 
-QWidget *TransactionView::createDateRangeWidget()
-{
+QWidget *TransactionView::createDateRangeWidget() {
     // Create default dates in case nothing is persisted
     QString defaultDateFrom = QDate::currentDate().toString(PERSISTENCE_DATE_FORMAT);
     QString defaultDateTo = QDate::currentDate().addDays(1).toString(PERSISTENCE_DATE_FORMAT);
@@ -586,9 +577,9 @@ QWidget *TransactionView::createDateRangeWidget()
 
     dateRangeWidget = new QFrame();
     dateRangeWidget->setFrameStyle(QFrame::Panel | QFrame::Raised);
-    dateRangeWidget->setContentsMargins(1,1,1,1);
+    dateRangeWidget->setContentsMargins(1, 1, 1, 1);
     QHBoxLayout *layout = new QHBoxLayout(dateRangeWidget);
-    layout->setContentsMargins(0,0,0,0);
+    layout->setContentsMargins(0, 0, 0, 0);
     layout->addSpacing(23);
     layout->addWidget(new QLabel(tr("Range:")));
 
@@ -596,7 +587,8 @@ QWidget *TransactionView::createDateRangeWidget()
     dateFrom->setCalendarPopup(true);
     dateFrom->setMinimumWidth(100);
     // Load persisted FROM date
-    dateFrom->setDate(QDate::fromString(settings.value("transactionDateFrom", defaultDateFrom).toString(), PERSISTENCE_DATE_FORMAT));
+    dateFrom->setDate(QDate::fromString(settings.value("transactionDateFrom", defaultDateFrom).toString(),
+                                        PERSISTENCE_DATE_FORMAT));
 
     layout->addWidget(dateFrom);
     layout->addWidget(new QLabel(tr("to")));
@@ -605,7 +597,8 @@ QWidget *TransactionView::createDateRangeWidget()
     dateTo->setCalendarPopup(true);
     dateTo->setMinimumWidth(100);
     // Load persisted TO date
-    dateTo->setDate(QDate::fromString(settings.value("transactionDateTo", defaultDateTo).toString(), PERSISTENCE_DATE_FORMAT));
+    dateTo->setDate(
+            QDate::fromString(settings.value("transactionDateTo", defaultDateTo).toString(), PERSISTENCE_DATE_FORMAT));
 
     layout->addWidget(dateTo);
     layout->addStretch();
@@ -614,17 +607,16 @@ QWidget *TransactionView::createDateRangeWidget()
     dateRangeWidget->setVisible(false);
 
     // Notify on change
-    connect(dateFrom, SIGNAL(dateChanged(QDate)), this, SLOT(dateRangeChanged()));
-    connect(dateTo, SIGNAL(dateChanged(QDate)), this, SLOT(dateRangeChanged()));
+    connect(dateFrom, &QDateTimeEdit::dateChanged, this, &TransactionView::dateRangeChanged);
+    connect(dateTo, &QDateTimeEdit::dateChanged, this, &TransactionView::dateRangeChanged);
 
     updateCalendarWidgets();
 
     return dateRangeWidget;
 }
 
-void TransactionView::updateCalendarWidgets()
-{
-    auto adjustWeekEndColors = [](QCalendarWidget* w) {
+void TransactionView::updateCalendarWidgets() {
+    auto adjustWeekEndColors = [](QCalendarWidget *w) {
         QTextCharFormat format = w->weekdayTextFormat(Qt::Saturday);
         format.setForeground(QBrush(GUIUtil::getThemedQColor(GUIUtil::ThemedColor::DEFAULT), Qt::SolidPattern));
 
@@ -636,9 +628,8 @@ void TransactionView::updateCalendarWidgets()
     adjustWeekEndColors(dateTo->calendarWidget());
 }
 
-void TransactionView::dateRangeChanged()
-{
-    if(!transactionProxyModel)
+void TransactionView::dateRangeChanged() {
+    if (!transactionProxyModel)
         return;
 
     // Persist new date range
@@ -647,13 +638,12 @@ void TransactionView::dateRangeChanged()
     settings.setValue("transactionDateTo", dateTo->date().toString(PERSISTENCE_DATE_FORMAT));
 
     transactionProxyModel->setDateRange(
-            QDateTime(dateFrom->date()),
-            QDateTime(dateTo->date()));
+            GUIUtil::StartOfDay(dateFrom->date()),
+            GUIUtil::StartOfDay(dateTo->date()));
 }
 
-void TransactionView::focusTransaction(const QModelIndex &idx)
-{
-    if(!transactionProxyModel)
+void TransactionView::focusTransaction(const QModelIndex &idx) {
+    if (!transactionProxyModel)
         return;
     QModelIndex targetIdx = transactionProxyModel->mapFromSource(idx);
     transactionView->selectRow(targetIdx.row());
@@ -663,23 +653,22 @@ void TransactionView::focusTransaction(const QModelIndex &idx)
     transactionView->setFocus();
 }
 
-void TransactionView::focusTransaction(const uint256& txid)
-{
+void TransactionView::focusTransaction(const uint256 &txid) {
     if (!transactionProxyModel)
         return;
 
     const QModelIndexList results = this->model->getTransactionTableModel()->match(
-        this->model->getTransactionTableModel()->index(0,0),
-        TransactionTableModel::TxHashRole,
-        QString::fromStdString(txid.ToString()), -1);
+            this->model->getTransactionTableModel()->index(0, 0),
+            TransactionTableModel::TxHashRole,
+            QString::fromStdString(txid.ToString()), -1);
 
     transactionView->setFocus();
     transactionView->selectionModel()->clearSelection();
-    for (const QModelIndex& index : results) {
+    for (const QModelIndex &index: results) {
         const QModelIndex targetIndex = transactionProxyModel->mapFromSource(index);
         transactionView->selectionModel()->select(
-            targetIndex,
-            QItemSelectionModel::Rows | QItemSelectionModel::Select);
+                targetIndex,
+                QItemSelectionModel::Rows | QItemSelectionModel::Select);
         // Called once per destination to ensure all results are in view, unless
         // transactions are not ordered by (ascending or descending) date.
         transactionView->scrollTo(targetIndex);
@@ -691,14 +680,12 @@ void TransactionView::focusTransaction(const uint256& txid)
 
 // We override the virtual resizeEvent of the QWidget to adjust tables column
 // sizes as the tables width is proportional to the dialogs width.
-void TransactionView::resizeEvent(QResizeEvent* event)
-{
+void TransactionView::resizeEvent(QResizeEvent *event) {
     QWidget::resizeEvent(event);
     columnResizingFixer->stretchColumnWidth(TransactionTableModel::ToAddress);
 }
 
-void TransactionView::changeEvent(QEvent* e)
-{
+void TransactionView::changeEvent(QEvent *e) {
     QWidget::changeEvent(e);
     if (e->type() == QEvent::StyleChange) {
         updateCalendarWidgets();
@@ -706,15 +693,12 @@ void TransactionView::changeEvent(QEvent* e)
 }
 
 // Need to override default Ctrl+C action for amount as default behaviour is just to copy DisplayRole text
-bool TransactionView::eventFilter(QObject *obj, QEvent *event)
-{
-    if (event->type() == QEvent::KeyPress)
-    {
+bool TransactionView::eventFilter(QObject *obj, QEvent *event) {
+    if (event->type() == QEvent::KeyPress) {
         QKeyEvent *ke = static_cast<QKeyEvent *>(event);
-        if (ke->key() == Qt::Key_C && ke->modifiers().testFlag(Qt::ControlModifier))
-        {
-             GUIUtil::copyEntryData(transactionView, 0, TransactionTableModel::TxPlainTextRole);
-             return true;
+        if (ke->key() == Qt::Key_C && ke->modifiers().testFlag(Qt::ControlModifier)) {
+            GUIUtil::copyEntryData(transactionView, 0, TransactionTableModel::TxPlainTextRole);
+            return true;
         }
     }
     if (event->type() == QEvent::Show) {
@@ -729,14 +713,12 @@ bool TransactionView::eventFilter(QObject *obj, QEvent *event)
 }
 
 // show/hide column Watch-only
-void TransactionView::updateWatchOnlyColumn(bool fHaveWatchOnly)
-{
+void TransactionView::updateWatchOnlyColumn(bool fHaveWatchOnly) {
     watchOnlyWidget->setVisible(fHaveWatchOnly);
     transactionView->setColumnHidden(TransactionTableModel::Watchonly, !fHaveWatchOnly);
 }
 
-void TransactionView::updateCoinJoinVisibility()
-{
+void TransactionView::updateCoinJoinVisibility() {
     if (model == nullptr) {
         return;
     }
@@ -744,9 +726,9 @@ void TransactionView::updateCoinJoinVisibility()
     // If CoinJoin gets enabled use "All" else "Most common"
     typeWidget->setCurrentIndex(fEnabled ? 0 : 1);
     // Hide all CoinJoin related filters
-    QListView* typeList = qobject_cast<QListView*>(typeWidget->view());
+    QListView *typeList = qobject_cast<QListView *>(typeWidget->view());
     std::vector<int> vecRows{4, 5, 6, 7, 8};
-    for (auto nRow : vecRows) {
+    for (auto nRow: vecRows) {
         typeList->setRowHidden(nRow, !fEnabled);
     }
 }

@@ -6,10 +6,13 @@ reset-files.bash
 *.tar.gz
 
 *.exe
+*.pdb
 src/raptoreum
 src/raptoreumd
 src/raptoreum-cli
-src/raptoreum-tx
+src/raptoreum-wallet
+src/test/fuzz
+!src/test/fuzz/*.*
 src/test/test_raptoreum
 src/test/test_raptoreum_fuzzy
 src/qt/test/test_raptoreum-qt
@@ -35,6 +38,7 @@ build-aux/compile
 build-aux/test-driver
 config.log
 config.status
+config.status.old
 configure
 libtool
 src/config/raptoreum-config.h
@@ -85,9 +89,8 @@ libconftest.dylib*
 # Compilation and Qt preprocessor part
 *.qm
 Makefile
-raptoreum-qt
+src/qt/raptoreum-qt
 Raptoreum-Qt.app
-background.tiff*
 !/depends/Makefile
 
 # Unit-tests
@@ -101,7 +104,7 @@ qrc_*.cpp
 .DS_Store
 build
 *.dSYM
-
+._*
 #lcov
 *.gcno
 *.gcda
@@ -109,6 +112,7 @@ build
 test_raptoreum.coverage/
 total.coverage/
 coverage_percent.txt
+/cov_tool_wraper.sh
 
 #build tests
 linux-coverage-build
@@ -133,6 +137,7 @@ qa/pull-tester/tests-config.sh
 raptoreum-cli
 raptoreumd
 raptoreum-qt
+raptoreum-wallet
 make
 
 /docker/bin
@@ -152,3 +157,7 @@ dist/
 /raptoreum.iml
 /testnet3_binary/
 /testnet4/
+
+osx_volname
+dist/
+src/test/runtest.sh

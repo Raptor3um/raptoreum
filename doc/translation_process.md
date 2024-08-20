@@ -8,7 +8,7 @@ Transifex is setup to monitor the GitHub repo for updates, and when code contain
 
 Multiple language support is critical in assisting Raptoreum’s global adoption, and growth. One of Raptoreum’s greatest strengths is cross-border money transfers, any help making that easier is greatly appreciated.
 
-See the [Transifex Raptoreum project](https://www.transifex.com/projects/p/raptoreum/) to assist in translations. You should also join the translation mailing list for announcements - see details below.
+See the [Transifex Raptoreum project](https://explore.transifex.com/feathered-inc/) to assist in translations. You should also join the translation mailing list for announcements - see details below.
 
 ### Writing code with translations
 We use automated scripts to help extract translations in both Qt, and non-Qt source files. It is rarely necessary to manually edit the files in `src/qt/locale/`. The translation source files must adhere to the following format:
@@ -44,7 +44,7 @@ git commit
 ### Creating a Transifex account
 Visit the [Transifex Signup](https://www.transifex.com/signup/) page to create an account. Take note of your username and password, as they will be required to configure the command-line tool.
 
-You can find the Raptoreum translation project at [https://www.transifex.com/projects/p/raptoreum/](https://www.transifex.com/projects/p/raptoreum/).
+You can find the Raptoreum translation project at [https://explore.transifex.com/feathered-inc/](https://explore.transifex.com/feathered-inc/).
 
 ### Installing the Transifex client command-line tool
 The client it used to fetch updated translations. If you are having problems, or need more details, see [http://docs.transifex.com/developer/client/setup](http://docs.transifex.com/developer/client/setup)

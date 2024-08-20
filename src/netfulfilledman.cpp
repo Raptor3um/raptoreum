@@ -1,35 +1,32 @@
 // Copyright (c) 2014-2019 The Dash Core developers
-// Copyright (c) 2020-2022 The Raptoreum developers
+// Copyright (c) 2020-2023 The Raptoreum developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chainparams.h>
-#include <init.h>
 #include <netfulfilledman.h>
-#include <util.h>
+#include <shutdown.h>
+#include <util/system.h>
 
 CNetFulfilledRequestManager netfulfilledman;
 
-void CNetFulfilledRequestManager::AddFulfilledRequest(const CService& addr, const std::string& strRequest)
-{
+void CNetFulfilledRequestManager::AddFulfilledRequest(const CService &addr, const std::string &strRequest) {
     LOCK(cs_mapFulfilledRequests);
     CService addrSquashed = Params().AllowMultiplePorts() ? addr : CService(addr, 0);
     mapFulfilledRequests[addrSquashed][strRequest] = GetTime() + Params().FulfilledRequestExpireTime();
 }
 
-bool CNetFulfilledRequestManager::HasFulfilledRequest(const CService& addr, const std::string& strRequest)
-{
+bool CNetFulfilledRequestManager::HasFulfilledRequest(const CService &addr, const std::string &strRequest) {
     LOCK(cs_mapFulfilledRequests);
     CService addrSquashed = Params().AllowMultiplePorts() ? addr : CService(addr, 0);
     fulfilledreqmap_t::iterator it = mapFulfilledRequests.find(addrSquashed);
 
-    return  it != mapFulfilledRequests.end() &&
-            it->second.find(strRequest) != it->second.end() &&
-            it->second[strRequest] > GetTime();
+    return it != mapFulfilledRequests.end() &&
+           it->second.find(strRequest) != it->second.end() &&
+           it->second[strRequest] > GetTime();
 }
 
-void CNetFulfilledRequestManager::RemoveFulfilledRequest(const CService& addr, const std::string& strRequest)
-{
+void CNetFulfilledRequestManager::RemoveFulfilledRequest(const CService &addr, const std::string &strRequest) {
     LOCK(cs_mapFulfilledRequests);
     CService addrSquashed = Params().AllowMultiplePorts() ? addr : CService(addr, 0);
     fulfilledreqmap_t::iterator it = mapFulfilledRequests.find(addrSquashed);
@@ -39,8 +36,7 @@ void CNetFulfilledRequestManager::RemoveFulfilledRequest(const CService& addr, c
     }
 }
 
-void CNetFulfilledRequestManager::RemoveAllFulfilledRequests(const CService& addr)
-{
+void CNetFulfilledRequestManager::RemoveAllFulfilledRequests(const CService &addr) {
     LOCK(cs_mapFulfilledRequests);
     CService addrSquashed = Params().AllowMultiplePorts() ? addr : CService(addr, 0);
     fulfilledreqmap_t::iterator it = mapFulfilledRequests.find(addrSquashed);
@@ -50,23 +46,22 @@ void CNetFulfilledRequestManager::RemoveAllFulfilledRequests(const CService& add
     }
 }
 
-void CNetFulfilledRequestManager::CheckAndRemove()
-{
+void CNetFulfilledRequestManager::CheckAndRemove() {
     LOCK(cs_mapFulfilledRequests);
 
     int64_t now = GetTime();
     fulfilledreqmap_t::iterator it = mapFulfilledRequests.begin();
 
-    while(it != mapFulfilledRequests.end()) {
+    while (it != mapFulfilledRequests.end()) {
         fulfilledreqmapentry_t::iterator it_entry = it->second.begin();
-        while(it_entry != it->second.end()) {
-            if(now > it_entry->second) {
+        while (it_entry != it->second.end()) {
+            if (now > it_entry->second) {
                 it->second.erase(it_entry++);
             } else {
                 ++it_entry;
             }
         }
-        if(it->second.size() == 0) {
+        if (it->second.size() == 0) {
             mapFulfilledRequests.erase(it++);
         } else {
             ++it;
@@ -74,21 +69,18 @@ void CNetFulfilledRequestManager::CheckAndRemove()
     }
 }
 
-void CNetFulfilledRequestManager::Clear()
-{
+void CNetFulfilledRequestManager::Clear() {
     LOCK(cs_mapFulfilledRequests);
     mapFulfilledRequests.clear();
 }
 
-std::string CNetFulfilledRequestManager::ToString() const
-{
+std::string CNetFulfilledRequestManager::ToString() const {
     std::ostringstream info;
-    info << "Nodes with fulfilled requests: " << (int)mapFulfilledRequests.size();
+    info << "Nodes with fulfilled requests: " << (int) mapFulfilledRequests.size();
     return info.str();
 }
 
-void CNetFulfilledRequestManager::DoMaintenance()
-{
+void CNetFulfilledRequestManager::DoMaintenance() {
     if (ShutdownRequested()) return;
 
     CheckAndRemove();

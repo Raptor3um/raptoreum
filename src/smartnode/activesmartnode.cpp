@@ -1,67 +1,70 @@
 // Copyright (c) 2014-2020 The Dash Core developers
-// Copyright (c) 2020-2022 The Raptoreum developers
+// Copyright (c) 2020-2023 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <smartnode/activesmartnode.h>
+
 #include <evo/deterministicmns.h>
-#include <smartnode/smartnode-sync.h>
+
+#include <chainparams.h>
+#include <net.h>
 #include <netbase.h>
 #include <protocol.h>
 #include <validation.h>
 #include <warnings.h>
 
+#include <bls/bls.h>
+
 // Keep track of the active Smartnode
-CCriticalSection activeSmartnodeInfoCs;
-CActiveSmartnodeInfo activeSmartnodeInfo GUARDED_BY(activeSmartnodeInfoCs);
-CActiveSmartnodeManager* activeSmartnodeManager;
+RecursiveMutex activeSmartnodeInfoCs;
+CActiveSmartnodeInfo activeSmartnodeInfo
+GUARDED_BY(activeSmartnodeInfoCs);
+CActiveSmartnodeManager *activeSmartnodeManager;
 
-std::string CActiveSmartnodeManager::GetStateString() const
-{
+std::string CActiveSmartnodeManager::GetStateString() const {
     switch (state) {
-    case SMARTNODE_WAITING_FOR_PROTX:
-        return "WAITING_FOR_PROTX";
-    case SMARTNODE_POSE_BANNED:
-        return "POSE_BANNED";
-    case SMARTNODE_REMOVED:
-        return "REMOVED";
-    case SMARTNODE_OPERATOR_KEY_CHANGED:
-        return "OPERATOR_KEY_CHANGED";
-    case SMARTNODE_PROTX_IP_CHANGED:
-        return "PROTX_IP_CHANGED";
-    case SMARTNODE_READY:
-        return "READY";
-    case SMARTNODE_ERROR:
-        return "ERROR";
-    default:
-        return "UNKNOWN";
+        case SMARTNODE_WAITING_FOR_PROTX:
+            return "WAITING_FOR_PROTX";
+        case SMARTNODE_POSE_BANNED:
+            return "POSE_BANNED";
+        case SMARTNODE_REMOVED:
+            return "REMOVED";
+        case SMARTNODE_OPERATOR_KEY_CHANGED:
+            return "OPERATOR_KEY_CHANGED";
+        case SMARTNODE_PROTX_IP_CHANGED:
+            return "PROTX_IP_CHANGED";
+        case SMARTNODE_READY:
+            return "READY";
+        case SMARTNODE_ERROR:
+            return "ERROR";
+        default:
+            return "UNKNOWN";
     }
 }
 
-std::string CActiveSmartnodeManager::GetStatus() const
-{
+std::string CActiveSmartnodeManager::GetStatus() const {
     switch (state) {
-    case SMARTNODE_WAITING_FOR_PROTX:
-        return "Waiting for ProTx to appear on-chain";
-    case SMARTNODE_POSE_BANNED:
-        return "Smartnode was PoSe banned";
-    case SMARTNODE_REMOVED:
-        return "Smartnode removed from list";
-    case SMARTNODE_OPERATOR_KEY_CHANGED:
-        return "Operator key changed or revoked";
-    case SMARTNODE_PROTX_IP_CHANGED:
-        return "IP address specified in ProTx changed";
-    case SMARTNODE_READY:
-        return "Ready";
-    case SMARTNODE_ERROR:
-        return "Error. " + strError;
-    default:
-        return "Unknown";
+        case SMARTNODE_WAITING_FOR_PROTX:
+            return "Waiting for ProTx to appear on-chain";
+        case SMARTNODE_POSE_BANNED:
+            return "Smartnode was PoSe banned";
+        case SMARTNODE_REMOVED:
+            return "Smartnode removed from list";
+        case SMARTNODE_OPERATOR_KEY_CHANGED:
+            return "Operator key changed or revoked";
+        case SMARTNODE_PROTX_IP_CHANGED:
+            return "IP address specified in ProTx changed";
+        case SMARTNODE_READY:
+            return "Ready";
+        case SMARTNODE_ERROR:
+            return "Error. " + strError;
+        default:
+            return "Unknown";
     }
 }
 
-void CActiveSmartnodeManager::Init(const CBlockIndex* pindex)
-{
+void CActiveSmartnodeManager::Init(const CBlockIndex *pindex) {
     LOCK2(cs_main, activeSmartnodeInfoCs);
 
     if (!fSmartnodeMode) return;
@@ -109,7 +112,8 @@ void CActiveSmartnodeManager::Init(const CBlockIndex* pindex)
     }
 
     // Check socket connectivity
-    LogPrintf("CActiveSmartnodeManager::Init -- Checking inbound connection to '%s'\n", activeSmartnodeInfo.service.ToString());
+    LogPrintf("CActiveSmartnodeManager::Init -- Checking inbound connection to '%s'\n",
+              activeSmartnodeInfo.service.ToString());
     SOCKET hSocket = CreateSocket(activeSmartnodeInfo.service);
     if (hSocket == INVALID_SOCKET) {
         state = SMARTNODE_ERROR;
@@ -117,7 +121,8 @@ void CActiveSmartnodeManager::Init(const CBlockIndex* pindex)
         LogPrintf("CActiveSmartnodeManager::Init -- ERROR: %s\n", strError);
         return;
     }
-    bool fConnected = ConnectSocketDirectly(activeSmartnodeInfo.service, hSocket, nConnectTimeout, true) && IsSelectableSocket(hSocket);
+    bool fConnected = ConnectSocketDirectly(activeSmartnodeInfo.service, hSocket, nConnectTimeout, true) &&
+                      IsSelectableSocket(hSocket);
     CloseSocket(hSocket);
 
     if (!fConnected && Params().RequireRoutableExternalIP()) {
@@ -132,8 +137,8 @@ void CActiveSmartnodeManager::Init(const CBlockIndex* pindex)
     state = SMARTNODE_READY;
 }
 
-void CActiveSmartnodeManager::UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlockIndex* pindexFork, bool fInitialDownload)
-{
+void CActiveSmartnodeManager::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork,
+                                              bool fInitialDownload) {
     LOCK2(cs_main, activeSmartnodeInfoCs);
 
     if (!fSmartnodeMode) return;
@@ -180,8 +185,7 @@ void CActiveSmartnodeManager::UpdatedBlockTip(const CBlockIndex* pindexNew, cons
     }
 }
 
-bool CActiveSmartnodeManager::GetLocalAddress(CService& addrRet)
-{
+bool CActiveSmartnodeManager::GetLocalAddress(CService &addrRet) {
     // First try to find whatever our own local address is known internally.
     // Addresses could be specified via externalip or bind option, discovered via UPnP
     // or added by TorController. Use some random dummy IPv4 peer to prefer the one
@@ -199,8 +203,9 @@ bool CActiveSmartnodeManager::GetLocalAddress(CService& addrRet)
     if (!fFoundLocal) {
         bool empty = true;
         // If we have some peers, let's try to find our local address from one of them
-        auto service = WITH_LOCK(activeSmartnodeInfoCs, return activeSmartnodeInfo.service);
-        g_connman->ForEachNodeContinueIf(CConnman::AllNodes, [&](CNode* pnode) {
+        auto service = WITH_LOCK(activeSmartnodeInfoCs,
+        return activeSmartnodeInfo.service);
+        connman.ForEachNodeContinueIf(CConnman::AllNodes, [&](CNode *pnode) {
             empty = false;
             if (pnode->addr.IsIPv4())
                 fFoundLocal = GetLocal(service, &pnode->addr) && IsValidNetAddr(service);
@@ -216,8 +221,7 @@ bool CActiveSmartnodeManager::GetLocalAddress(CService& addrRet)
     return true;
 }
 
-bool CActiveSmartnodeManager::IsValidNetAddr(CService addrIn)
-{
+bool CActiveSmartnodeManager::IsValidNetAddr(CService addrIn) {
     // TODO: regtest is fine with any addresses for now,
     // should probably be a bit smarter if one day we start to implement tests for this
     return !Params().RequireRoutableExternalIP() ||

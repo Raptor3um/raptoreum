@@ -1,5 +1,5 @@
 // Copyright (c) 2019 The Dash Core developers
-// Copyright (c) 2020-2022 The Raptoreum developers
+// Copyright (c) 2020-2023 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -10,11 +10,17 @@
 #include <serialize.h>
 
 class CConnman;
+
 class CDataStream;
+
 class CDeterministicMN;
+
 class CDeterministicMNList;
+
 class CDeterministicMNListDiff;
+
 class CNode;
+
 class UniValue;
 
 /**
@@ -34,25 +40,24 @@ class UniValue;
  * proper encryption for these connections first.
  */
 
-class CMNAuth
-{
+class CMNAuth {
 public:
     uint256 proRegTxHash;
     CBLSSignature sig;
 
-public:
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CMNAuth, obj
+    )
     {
-        READWRITE(proRegTxHash);
-        READWRITE(sig);
+        READWRITE(obj.proRegTxHash, obj.sig);
     }
 
-    static void PushMNAUTH(CNode* pnode, CConnman& connman);
-    static void ProcessMessage(CNode* pnode, const std::string& strCommand, CDataStream& vRecv, CConnman& connman);
-    static void NotifySmartnodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff);
+    static void PushMNAUTH(CNode *pnode, CConnman &connman);
+
+    static void ProcessMessage(CNode *pnode, const std::string &strCommand, CDataStream &vRecv, CConnman &connman);
+
+    static void
+    NotifySmartnodeListChanged(bool undo, const CDeterministicMNList &oldMNList, const CDeterministicMNListDiff &diff,
+                               CConnman &connman);
 };
 
 

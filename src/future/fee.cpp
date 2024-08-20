@@ -1,4 +1,4 @@
-// Copyright (c) 2021 The Raptoreum developers
+// Copyright (c) 2021-2023 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,11 +8,11 @@
 #include <evo/providertx.h>
 
 CAmount getFutureFeesCoin() {
-	return getFutureFees() * COIN;
+    return getFutureFees() * COIN;
 }
 
 uint16_t getFutureFees() {
-    if(!sporkManager.IsSporkActive(SPORK_22_SPECIAL_TX_FEE)) {
+    if (!sporkManager.IsSporkActive(SPORK_22_SPECIAL_TX_FEE)) {
         return 0;
     }
     int64_t specialTxValue = sporkManager.GetSporkValue(SPORK_22_SPECIAL_TX_FEE);

@@ -16,9 +16,6 @@
 #include <QMouseEvent>
 #include <QPainter>
 #include <QPixmap>
-#if QT_VERSION < 0x050000
-#include <QUrl>
-#endif
 
 #if defined(HAVE_CONFIG_H)
 #include <config/raptoreum-config.h> /* for USE_QRCODE */
@@ -28,29 +25,23 @@
 #include <qrencode.h>
 #endif
 
-QRGeneralImageWidget::QRGeneralImageWidget(QWidget *parent):
-    QLabel(parent), contextMenu(0)
-{
+QRGeneralImageWidget::QRGeneralImageWidget(QWidget *parent) :
+        QLabel(parent), contextMenu(0) {
     contextMenu = new QMenu(this);
     QAction *saveImageAction = new QAction(tr("&Save Image..."), this);
-    connect(saveImageAction, SIGNAL(triggered()), this, SLOT(saveImage()));
+    connect(saveImageAction, &QAction::triggered, this, &QRGeneralImageWidget::saveImage);
     contextMenu->addAction(saveImageAction);
     QAction *copyImageAction = new QAction(tr("&Copy Image"), this);
-    connect(copyImageAction, SIGNAL(triggered()), this, SLOT(copyImage()));
+    connect(copyImageAction, &QAction::triggered, this, &QRGeneralImageWidget::copyImage);
     contextMenu->addAction(copyImageAction);
 }
 
-QImage QRGeneralImageWidget::exportImage()
-{
-    if(!pixmap())
-        return QImage();
-    return pixmap()->toImage();
+QImage QRGeneralImageWidget::exportImage() {
+    return GUIUtil::GetImage(this);
 }
 
-void QRGeneralImageWidget::mousePressEvent(QMouseEvent *event)
-{
-    if(event->button() == Qt::LeftButton && pixmap())
-    {
+void QRGeneralImageWidget::mousePressEvent(QMouseEvent *event) {
+    if (event->button() == Qt::LeftButton && GUIUtil::HasPixmap(this)) {
         event->accept();
         QMimeData *mimeData = new QMimeData;
         mimeData->setImageData(exportImage());
@@ -63,35 +54,30 @@ void QRGeneralImageWidget::mousePressEvent(QMouseEvent *event)
     }
 }
 
-void QRGeneralImageWidget::saveImage()
-{
-    if(!pixmap())
+void QRGeneralImageWidget::saveImage() {
+    if (!GUIUtil::HasPixmap(this))
         return;
     QString fn = GUIUtil::getSaveFileName(this, tr("Save QR Code"), QString(), tr("PNG Image (*.png)"), nullptr);
-    if (!fn.isEmpty())
-    {
+    if (!fn.isEmpty()) {
         exportImage().save(fn);
     }
 }
 
-void QRGeneralImageWidget::copyImage()
-{
-    if(!pixmap())
+void QRGeneralImageWidget::copyImage() {
+    if (!GUIUtil::HasPixmap(this))
         return;
     QApplication::clipboard()->setImage(exportImage());
 }
 
-void QRGeneralImageWidget::contextMenuEvent(QContextMenuEvent *event)
-{
-    if(!pixmap())
+void QRGeneralImageWidget::contextMenuEvent(QContextMenuEvent *event) {
+    if (!GUIUtil::HasPixmap(this))
         return;
     contextMenu->exec(event->globalPos());
 }
 
 QRDialog::QRDialog(QWidget *parent) :
-    QDialog(parent),
-    ui(new Ui::QRDialog)
-{
+        QDialog(parent),
+        ui(new Ui::QRDialog) {
     ui->setupUi(this);
 
     GUIUtil::setFont({ui->labelQRCodeTitle}, GUIUtil::FontWeight::Bold, 16);
@@ -103,16 +89,14 @@ QRDialog::QRDialog(QWidget *parent) :
     ui->lblQRCode->setVisible(false);
 #endif
 
-    connect(ui->button_saveImage, SIGNAL(clicked()), ui->lblQRCode, SLOT(saveImage()));
+    connect(ui->button_saveImage, &QPushButton::clicked, ui->lblQRCode, &QRGeneralImageWidget::saveImage);
 }
 
-QRDialog::~QRDialog()
-{
+QRDialog::~QRDialog() {
     delete ui;
 }
 
-void QRDialog::setInfo(QString strWindowtitle, QString strQRCode, QString strTextInfo, QString strQRCodeTitle)
-{
+void QRDialog::setInfo(QString strWindowtitle, QString strQRCode, QString strTextInfo, QString strQRCodeTitle) {
     this->strWindowtitle = strWindowtitle;
     this->strQRCode = strQRCode;
     this->strTextInfo = strTextInfo;
@@ -120,8 +104,7 @@ void QRDialog::setInfo(QString strWindowtitle, QString strQRCode, QString strTex
     update();
 }
 
-void QRDialog::update()
-{
+void QRDialog::update() {
     setWindowTitle(strWindowtitle);
     ui->button_saveImage->setEnabled(false);
     if (strTextInfo.isEmpty()) {

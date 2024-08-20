@@ -8,17 +8,16 @@
 #include <string>
 #include "univalue.h"
 
-using namespace std;
+//using namespace std;
 
-int main (int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
     UniValue val;
-    if (val.read(string(istreambuf_iterator<char>(cin),
-                        istreambuf_iterator<char>()))) {
-        cout << val.write(1 /* prettyIndent */, 4 /* indentLevel */) << endl;
+    if (val.read(std::string(istreambuf_iterator<char>(cin),
+                             istreambuf_iterator<char>()))) {
+        std::cout << val.write(1 /* prettyIndent */, 4 /* indentLevel */) << std::endl;
         return 0;
     } else {
-        cerr << "JSON Parse Error." << endl;
+        std::cerr << "JSON Parse Error." << std::endl;
         return 1;
     }
 }

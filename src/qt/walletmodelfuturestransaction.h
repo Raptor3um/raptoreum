@@ -1,4 +1,5 @@
 // Copyright (c) 2011-2014 The Bitcoin Core developers
+// Copyright (c) 2020-2023 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -14,26 +15,31 @@
 class SendFuturesRecipient;
 
 class CReserveKey;
+
 class CWallet;
+
 class CWalletTx;
 //class CFutureTx;
 namespace interfaces {
     class Node;
-    class PendingWalletTx;
 }
 
 /** Data model for a walletmodel future transaction. */
-class WalletModelFuturesTransaction
-{
+class WalletModelFuturesTransaction {
 public:
-    explicit WalletModelFuturesTransaction(const QList<SendFuturesRecipient> &recipients);
-    QList<SendFuturesRecipient> getRecipients() const;
+    explicit WalletModelFuturesTransaction(const QList <SendFuturesRecipient> &recipients);
+
+    QList <SendFuturesRecipient> getRecipients() const;
 
     //CFutureTx *getTransaction();
     CWalletTx *getTransaction() const;
+
     unsigned int getTransactionSize() const;
-    std::unique_ptr<interfaces::PendingWalletTx>& getWtx();
-    void setTransactionFee(const CAmount& newFee);
+
+    CTransactionRef &getWtx();
+
+    void setTransactionFee(const CAmount &newFee);
+
     CAmount getTransactionFee() const;
 
     CAmount getTotalTransactionAmount() const;
@@ -43,8 +49,8 @@ public:
     void assignFuturePayload();
 
 private:
-    QList<SendFuturesRecipient> recipients;
-    std::unique_ptr<interfaces::PendingWalletTx> wtx;
+    QList <SendFuturesRecipient> recipients;
+    CTransactionRef wtx;
     CAmount fee;
 };
 

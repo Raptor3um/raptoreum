@@ -19,8 +19,7 @@ namespace Ui {
 }
 
 /** "Help message" dialog box */
-class HelpMessageDialog : public QDialog
-{
+class HelpMessageDialog : public QDialog {
     Q_OBJECT
 
 public:
@@ -30,32 +29,35 @@ public:
         pshelp
     };
 
-    explicit HelpMessageDialog(interfaces::Node& node, QWidget *parent, HelpMode helpMode);
+    explicit HelpMessageDialog(interfaces::Node &node, QWidget *parent, HelpMode helpMode);
+
     ~HelpMessageDialog();
 
     void printToConsole();
+
     void showOrPrint();
 
 private:
     Ui::HelpMessageDialog *ui;
     QString text;
 
-private Q_SLOTS:
-    void on_okButton_accepted();
+private
+    Q_SLOTS:
+            void on_okButton_accepted();
 };
 
 
 /** "Shutdown" window */
-class ShutdownWindow : public QWidget
-{
+class ShutdownWindow : public QWidget {
     Q_OBJECT
 
 public:
-    explicit ShutdownWindow(interfaces::Node& node, QWidget *parent=0, Qt::WindowFlags f=0);
-    static QWidget *showShutdownWindow(interfaces::Node& node, BitcoinGUI *window);
+    explicit ShutdownWindow(interfaces::Node &node, QWidget *parent = nullptr, Qt::WindowFlags f = Qt::Widget);
+
+    static QWidget *showShutdownWindow(interfaces::Node &node, BitcoinGUI *window);
 
 protected:
-    void closeEvent(QCloseEvent *event);
+    void closeEvent(QCloseEvent *event) override;
 };
 
 #endif // BITCOIN_QT_UTILITYDIALOG_H

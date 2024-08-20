@@ -1,6 +1,6 @@
 // Copyright (c) 2011-2015 The Bitcoin Core developers
 // Copyright (c) 2014-2021 The Dash Core developers
-// Copyright (c) 2020-2022 The Raptoreum developers
+// Copyright (c) 2020-2023 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,16 +13,12 @@
 #include <qt/forms/ui_helpmessagedialog.h>
 
 #include <qt/bitcoingui.h>
-#include <qt/clientmodel.h>
-#include <qt/guiconstants.h>
 #include <qt/guiutil.h>
-#include <qt/intro.h>
-#include <qt/paymentrequestplus.h>
 
 #include <clientversion.h>
 #include <init.h>
-#include <interfaces/node.h>
-#include <util.h>
+#include <util/system.h>
+#include <util/strencodings.h>
 
 #include <stdio.h>
 
@@ -34,49 +30,39 @@
 #include <QVBoxLayout>
 
 /** "Help message" or "About" dialog box */
-HelpMessageDialog::HelpMessageDialog(interfaces::Node& node, QWidget *parent, HelpMode helpMode) :
-    QDialog(parent),
-    ui(new Ui::HelpMessageDialog)
-{
+HelpMessageDialog::HelpMessageDialog(interfaces::Node &node, QWidget *parent, HelpMode helpMode) :
+        QDialog(parent),
+        ui(new Ui::HelpMessageDialog) {
     ui->setupUi(this);
 
     GUIUtil::updateFonts();
 
-    QString version = tr(PACKAGE_NAME) + " " + tr("version") + " " + QString::fromStdString(FormatFullVersion());
-    /* On x86 add a bit specifier to the version so that users can distinguish between
-     * 32 and 64 bit builds. On other architectures, 32/64 bit may be more ambiguous.
-     */
-#if defined(__x86_64__)
-    version += " " + tr("(%1-bit)").arg(64);
-#elif defined(__i386__ )
-    version += " " + tr("(%1-bit)").arg(32);
-#endif
+    QString version = QString{PACKAGE_NAME} + " " + tr("version") + " " + QString::fromStdString(FormatFullVersion());
 
-    if (helpMode == about)
-    {
-        setWindowTitle(tr("About %1").arg(tr(PACKAGE_NAME)));
+    if (helpMode == about) {
+        setWindowTitle(tr("About %1").arg(PACKAGE_NAME));
 
+        std::string licenseInfo = LicenseInfo();
         /// HTML-format the license message from the core
-        QString licenseInfo = QString::fromStdString(LicenseInfo());
-        QString licenseInfoHTML = licenseInfo;
+        QString licenseInfoHTML = QString::fromStdString(licenseInfo);
 
         // Make URLs clickable
         QRegExp uri("<(.*)>", Qt::CaseSensitive, QRegExp::RegExp2);
         uri.setMinimal(true); // use non-greedy matching
-        licenseInfoHTML.replace(uri, QString("<a style=\"%1\"href=\"\\1\">\\1</a>").arg(GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_COMMAND)));
+        licenseInfoHTML.replace(uri, QString("<a style=\"%1\"href=\"\\1\">\\1</a>").arg(
+                GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_COMMAND)));
         // Replace newlines with HTML breaks
         licenseInfoHTML.replace("\n", "<br>");
 
         ui->aboutMessage->setTextFormat(Qt::RichText);
         ui->scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
-        text = version + "\n" + licenseInfo;
+        text = version + "\n" + QString::fromStdString(FormatParagraph(licenseInfo));
         ui->aboutMessage->setText(version + "<br><br>" + licenseInfoHTML);
         ui->aboutMessage->setWordWrap(true);
         ui->helpMessage->setVisible(false);
     } else if (helpMode == cmdline) {
         setWindowTitle(tr("Command-line options"));
-        QString header = "Usage:\n"
-            "  raptoreum-qt [command-line options]                     \n";
+        QString header = "Usage: raptoreum-qt [command-line options]                     \n";
         QTextCursor cursor(ui->helpMessage->document());
         cursor.insertText(version);
         cursor.insertBlock();
@@ -85,12 +71,12 @@ HelpMessageDialog::HelpMessageDialog(interfaces::Node& node, QWidget *parent, He
 
         std::string strUsage = gArgs.GetHelpMessage();
         QString coreOptions = QString::fromStdString(strUsage);
-        text = version + "\n" + header + "\n" + coreOptions;
+        text = version + "\n\n" + header + "\n" + coreOptions;
 
         QTextTableFormat tf;
         tf.setBorderStyle(QTextFrameFormat::BorderStyle_None);
         tf.setCellPadding(2);
-        QVector<QTextLength> widths;
+        QVector <QTextLength> widths;
         widths << QTextLength(QTextLength::PercentageLength, 35);
         widths << QTextLength(QTextLength::PercentageLength, 65);
         tf.setColumnWidthConstraints(widths);
@@ -98,16 +84,15 @@ HelpMessageDialog::HelpMessageDialog(interfaces::Node& node, QWidget *parent, He
         QTextCharFormat bold;
         bold.setFontWeight(QFont::Bold);
 
-        for (const QString &line : coreOptions.split("\n")) {
-            if (line.startsWith("  -"))
-            {
+        for (const QString &line: coreOptions.split("\n")) {
+            if (line.startsWith("  -")) {
                 cursor.currentTable()->appendRows(1);
                 cursor.movePosition(QTextCursor::PreviousCell);
                 cursor.movePosition(QTextCursor::NextRow);
                 cursor.insertText(line.trimmed());
                 cursor.movePosition(QTextCursor::NextCell);
             } else if (line.startsWith("   ")) {
-                cursor.insertText(line.trimmed()+' ');
+                cursor.insertText(line.trimmed() + ' ');
             } else if (line.size() > 0) {
                 //Title of a group
                 if (cursor.currentTable())
@@ -121,7 +106,8 @@ HelpMessageDialog::HelpMessageDialog(interfaces::Node& node, QWidget *parent, He
         ui->helpMessage->moveCursor(QTextCursor::Start);
         ui->scrollArea->setVisible(false);
     } else if (helpMode == pshelp) {
-        setWindowTitle(tr("%1 information").arg("CoinJoin"));
+        QString strCoinJoinName = QString::fromStdString(gCoinJoinName);
+        setWindowTitle(tr("%1 information").arg(strCoinJoinName));
 
         ui->aboutMessage->setTextFormat(Qt::RichText);
         ui->scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
@@ -151,29 +137,26 @@ This means those 1000 addresses last for about 100 mixing events. When 900 of th
 It can only do this, however, if you have automatic backups enabled.<br> \
 Consequently, users who have backups disabled will also have %1 disabled. <hr>\
 For more information, see the <a style=\"%2\" href=\"%3\">%1 documentation</a>."
-        )
-        .arg("CoinJoin")
-        .arg(GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_COMMAND))
-        .arg("https://docs.dash.org/en/stable/wallets/dashcore/coinjoin-instantsend.html")
+                                  )
+                                          .arg(strCoinJoinName)
+                                          .arg(GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_COMMAND))
+                                          .arg("https://docs.dash.org/en/stable/wallets/dashcore/coinjoin-instantsend.html")
         );
         ui->aboutMessage->setWordWrap(true);
         ui->helpMessage->setVisible(false);
     }
 }
 
-HelpMessageDialog::~HelpMessageDialog()
-{
+HelpMessageDialog::~HelpMessageDialog() {
     delete ui;
 }
 
-void HelpMessageDialog::printToConsole()
-{
+void HelpMessageDialog::printToConsole() {
     // On other operating systems, the expected action is to print the message to the console.
-    fprintf(stdout, "%s\n", qPrintable(text));
+    tfm::format(std::cout, "%s\n", qPrintable(text));
 }
 
-void HelpMessageDialog::showOrPrint()
-{
+void HelpMessageDialog::showOrPrint() {
 #if defined(WIN32)
     // On Windows, show a message box, as there is no stderr/stdout in windowed applications
     exec();
@@ -183,29 +166,25 @@ void HelpMessageDialog::showOrPrint()
 #endif
 }
 
-void HelpMessageDialog::on_okButton_accepted()
-{
+void HelpMessageDialog::on_okButton_accepted() {
     close();
 }
 
 
 /** "Shutdown" window */
-ShutdownWindow::ShutdownWindow(interfaces::Node& node, QWidget *parent, Qt::WindowFlags f):
-    QWidget(parent, f)
-{
+ShutdownWindow::ShutdownWindow(interfaces::Node &node, QWidget *parent, Qt::WindowFlags f) : QWidget(parent, f) {
     setObjectName("ShutdownWindow");
 
     QVBoxLayout *layout = new QVBoxLayout();
     layout->addWidget(new QLabel(
-        tr("%1 is shutting down...").arg(tr(PACKAGE_NAME)) + "<br /><br />" +
-        tr("Do not shut down the computer until this window disappears.")));
+            tr("%1 is shutting down...").arg(PACKAGE_NAME) + "<br /><br />" +
+            tr("Do not shut down the computer until this window disappears.")));
     setLayout(layout);
 
     GUIUtil::updateFonts();
 }
 
-QWidget *ShutdownWindow::showShutdownWindow(interfaces::Node& node, BitcoinGUI *window)
-{
+QWidget *ShutdownWindow::showShutdownWindow(interfaces::Node &node, BitcoinGUI *window) {
     if (!window)
         return nullptr;
 
@@ -220,7 +199,6 @@ QWidget *ShutdownWindow::showShutdownWindow(interfaces::Node& node, BitcoinGUI *
     return shutdownWindow;
 }
 
-void ShutdownWindow::closeEvent(QCloseEvent *event)
-{
+void ShutdownWindow::closeEvent(QCloseEvent *event) {
     event->ignore();
 }

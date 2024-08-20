@@ -1,12 +1,12 @@
 package=dbus
-$(package)_version=1.10.18
+$(package)_version=1.14.0
 $(package)_download_path=https://dbus.freedesktop.org/releases/dbus
-$(package)_file_name=$(package)-$($(package)_version).tar.gz
-$(package)_sha256_hash=6049ddd5f3f3e2618f615f1faeda0a115104423a7996b7aa73e2f36e38cc514a
+$(package)_file_name=$(package)-$($(package)_version).tar.xz
+$(package)_sha256_hash=ccd7cce37596e0a19558fd6648d1272ab43f011d80c8635aea8fd0bad58aebd4
 $(package)_dependencies=expat
 
 define $(package)_set_vars
-  $(package)_config_opts=--disable-tests --disable-doxygen-docs --disable-xml-docs --disable-static --without-x
+  $(package)_config_opts=--disable-tests --disable-doxygen-docs --disable-xml-docs --enable-static --disable-shared --without-x --prefix=$(host_prefix)
 endef
 
 define $(package)_config_cmds

@@ -11,20 +11,20 @@
 
 #include <boost/variant.hpp>
 
-#include <stdint.h>
-
 static const bool DEFAULT_ACCEPT_DATACARRIER = true;
 
 class CKeyID;
+
 class CScript;
 
 /** A reference to a CScript: the Hash160 of its serialization (see script.h) */
-class CScriptID : public uint160
-{
+class CScriptID : public uint160 {
 public:
     CScriptID() : uint160() {}
-    CScriptID(const CScript& in);
-    CScriptID(const uint160& in) : uint160(in) {}
+
+    CScriptID(const CScript &in);
+
+    CScriptID(const uint160 &in) : uint160(in) {}
 };
 
 /**
@@ -53,8 +53,7 @@ extern unsigned nMaxDatacarrierBytes;
  */
 static const unsigned int MANDATORY_SCRIPT_VERIFY_FLAGS = SCRIPT_VERIFY_P2SH;
 
-enum txnouttype
-{
+enum txnouttype {
     TX_NONSTANDARD,
     // 'standard' transaction types:
     TX_PUBKEY,
@@ -62,11 +61,13 @@ enum txnouttype
     TX_SCRIPTHASH,
     TX_MULTISIG,
     TX_NULL_DATA, //!< unspendable OP_RETURN script that carries data
+    TX_TRANSFER_ASSET,
 };
 
 class CNoDestination {
 public:
     friend bool operator==(const CNoDestination &a, const CNoDestination &b) { return true; }
+
     friend bool operator<(const CNoDestination &a, const CNoDestination &b) { return true; }
 };
 
@@ -77,13 +78,13 @@ public:
  *  * CScriptID: TX_SCRIPTHASH destination
  *  A CTxDestination is the internal data type encoded in a bitcoin address
  */
-typedef boost::variant<CNoDestination, CKeyID, CScriptID>CTxDestination;
+typedef boost::variant <CNoDestination, CKeyID, CScriptID> CTxDestination;
 
 /** Check whether a CTxDestination is a CNoDestination. */
-bool IsValidDestination(const CTxDestination& dest);
+bool IsValidDestination(const CTxDestination &dest);
 
 /** Get the name of a txnouttype as a C string, or nullptr if unknown. */
-const char* GetTxnOutputType(txnouttype t);
+const char *GetTxnOutputType(txnouttype t);
 
 /**
  * Parse a scriptPubKey and identify script type for standard scripts. If
@@ -92,11 +93,10 @@ const char* GetTxnOutputType(txnouttype t);
  * script hash, for P2PKH it will contain the key hash, etc.
  *
  * @param[in]   scriptPubKey   Script to parse
- * @param[out]  typeRet        The script type
  * @param[out]  vSolutionsRet  Vector of parsed pubkeys and hashes
- * @return                     True if script matches standard template.
+ * @return                     The script type, TX_NONSTANDARD represents a failed solve.
  */
-bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<std::vector<unsigned char>>& vSolutionsRet);
+txnouttype Solver(const CScript &scriptPubKey, std::vector <std::vector<unsigned char>> &vSolutionsRet);
 
 /**
  * Parse a standard scriptPubKey for the destination address. Assigns result to
@@ -104,7 +104,7 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<std::v
  * scripts, instead use ExtractDestinations. Currently only works for P2PK,
  * P2PKH, and P2SH scripts.
  */
-bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet);
+bool ExtractDestination(const CScript &scriptPubKey, CTxDestination &addressRet);
 
 /**
  * Parse a standard scriptPubKey with one or more destination addresses. For
@@ -113,19 +113,20 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
  * addressRet is populated with a single value and nRequiredRet is set to 1.
  * Returns true if successful.
  */
-bool ExtractDestinations(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<CTxDestination>& addressRet, int& nRequiredRet);
+bool ExtractDestinations(const CScript &scriptPubKey, txnouttype &typeRet, std::vector <CTxDestination> &addressRet,
+                         int &nRequiredRet);
 
 /**
  * Generate a Bitcoin scriptPubKey for the given CTxDestination. Returns a P2PKH
  * script for a CKeyID destination, a P2SH script for a CScriptID, and an empty
  * script for CNoDestination.
  */
-CScript GetScriptForDestination(const CTxDestination& dest);
+CScript GetScriptForDestination(const CTxDestination &dest);
 
 /** Generate a P2PK script for the given pubkey. */
-CScript GetScriptForRawPubKey(const CPubKey& pubkey);
+CScript GetScriptForRawPubKey(const CPubKey &pubkey);
 
 /** Generate a multisig script. */
-CScript GetScriptForMultisig(int nRequired, const std::vector<CPubKey>& keys);
+CScript GetScriptForMultisig(int nRequired, const std::vector <CPubKey> &keys);
 
 #endif // BITCOIN_SCRIPT_STANDARD_H

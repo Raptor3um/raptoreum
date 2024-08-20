@@ -11,9 +11,7 @@
 void CChain::SetTip(CBlockIndex *pindex) {
     if (pindex == nullptr) {
         vChain.clear();
-    }
-    else
-    {
+    } else {
         vChain.resize(pindex->nHeight + 1);
         while (pindex && vChain[pindex->nHeight] != pindex) {
             vChain[pindex->nHeight] = pindex;
@@ -25,7 +23,7 @@ void CChain::SetTip(CBlockIndex *pindex) {
 
 CBlockLocator CChain::GetLocator(const CBlockIndex *pindex) const {
     int nStep = 1;
-    std::vector<uint256> vHave;
+    std::vector <uint256> vHave;
     vHave.reserve(32);
 
     if (!pindex)
@@ -62,10 +60,15 @@ const CBlockIndex *CChain::FindFork(const CBlockIndex *pindex) const {
     return pindex;
 }
 
-CBlockIndex* CChain::FindEarliestAtLeast(int64_t nTime) const
-{
-    std::vector<CBlockIndex*>::const_iterator lower = std::lower_bound(vChain.begin(), vChain.end(), nTime,
-        [](CBlockIndex* pBlock, const int64_t& time) -> bool { return pBlock->GetBlockTimeMax() < time; });
+CBlockIndex *CChain::FindEarliestAtLeast(int64_t nTime, int height) const {
+    std::pair<int64_t, int> blockparams = std::make_pair(nTime, height);
+    std::vector<CBlockIndex *>::const_iterator lower = std::lower_bound(vChain.begin(), vChain.end(), blockparams,
+                                                                        [](CBlockIndex *pBlock,
+                                                                           const std::pair<int64_t, int> &blockparams) -> bool { return
+                                                                                pBlock->GetBlockTimeMax() <
+                                                                                blockparams.first ||
+                                                                                pBlock->nHeight < blockparams.second;
+                                                                        });
     return (lower == vChain.end() ? nullptr : *lower);
 }
 
@@ -83,13 +86,12 @@ int static inline GetSkipHeight(int height) {
     return (height & 1) ? InvertLowestOne(InvertLowestOne(height - 1)) + 1 : InvertLowestOne(height);
 }
 
-const CBlockIndex* CBlockIndex::GetAncestor(int height) const
-{
+const CBlockIndex *CBlockIndex::GetAncestor(int height) const {
     if (height > nHeight || height < 0) {
         return nullptr;
     }
 
-    const CBlockIndex* pindexWalk = this;
+    const CBlockIndex *pindexWalk = this;
     int heightWalk = nHeight;
     while (heightWalk > height) {
         int heightSkip = GetSkipHeight(heightWalk);
@@ -110,19 +112,16 @@ const CBlockIndex* CBlockIndex::GetAncestor(int height) const
     return pindexWalk;
 }
 
-CBlockIndex* CBlockIndex::GetAncestor(int height)
-{
-    return const_cast<CBlockIndex*>(static_cast<const CBlockIndex*>(this)->GetAncestor(height));
+CBlockIndex *CBlockIndex::GetAncestor(int height) {
+    return const_cast<CBlockIndex *>(static_cast<const CBlockIndex *>(this)->GetAncestor(height));
 }
 
-void CBlockIndex::BuildSkip()
-{
+void CBlockIndex::BuildSkip() {
     if (pprev)
         pskip = pprev->GetAncestor(GetSkipHeight(nHeight));
 }
 
-arith_uint256 GetBlockProof(const CBlockIndex& block)
-{
+arith_uint256 GetBlockProof(const CBlockIndex &block) {
     arith_uint256 bnTarget;
     bool fNegative;
     bool fOverflow;
@@ -136,8 +135,8 @@ arith_uint256 GetBlockProof(const CBlockIndex& block)
     return (~bnTarget / (bnTarget + 1)) + 1;
 }
 
-int64_t GetBlockProofEquivalentTime(const CBlockIndex& to, const CBlockIndex& from, const CBlockIndex& tip, const Consensus::Params& params)
-{
+int64_t GetBlockProofEquivalentTime(const CBlockIndex &to, const CBlockIndex &from, const CBlockIndex &tip,
+                                    const Consensus::Params &params) {
     arith_uint256 r;
     int sign = 1;
     if (to.nChainWork > from.nChainWork) {
@@ -155,7 +154,7 @@ int64_t GetBlockProofEquivalentTime(const CBlockIndex& to, const CBlockIndex& fr
 
 /** Find the last common ancestor two blocks have.
  *  Both pa and pb must be non-nullptr. */
-const CBlockIndex* LastCommonAncestor(const CBlockIndex* pa, const CBlockIndex* pb) {
+const CBlockIndex *LastCommonAncestor(const CBlockIndex *pa, const CBlockIndex *pb) {
     if (pa->nHeight > pb->nHeight) {
         pa = pa->GetAncestor(pb->nHeight);
     } else if (pb->nHeight > pa->nHeight) {

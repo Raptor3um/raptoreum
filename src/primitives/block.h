@@ -1,5 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2020-2023 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -10,7 +11,6 @@
 #include <serialize.h>
 #include <uint256.h>
 #include <unordered_lru_cache.h>
-#include <util.h>
 
 
 /** Nodes collect new transactions into a block, hash them into a hash tree,
@@ -20,8 +20,7 @@
  * in the block is a special one that creates a new coin owned by the creator
  * of the block.
  */
-class CBlockHeader
-{
+class CBlockHeader {
 public:
     // header
     int32_t nVersion;
@@ -32,26 +31,14 @@ public:
     uint32_t nBits;
     uint32_t nNonce;
 
-    CBlockHeader()
-    {
+    CBlockHeader() {
         SetNull();
     }
 
-    ADD_SERIALIZE_METHODS;
+    SERIALIZE_METHODS(CBlockHeader, obj
+    ) { READWRITE(obj.nVersion, obj.hashPrevBlock, obj.hashMerkleRoot, obj.nTime, obj.nBits, obj.nNonce); }
 
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
-    {
-        READWRITE(this->nVersion);
-        READWRITE(hashPrevBlock);
-        READWRITE(hashMerkleRoot);
-        READWRITE(nTime);
-        READWRITE(nBits);
-        READWRITE(nNonce);
-    }
-
-    void SetNull()
-    {
+    void SetNull() {
         nVersion = 0;
         hashPrevBlock.SetNull();
         hashMerkleRoot.SetNull();
@@ -60,8 +47,7 @@ public:
         nNonce = 0;
     }
 
-    bool IsNull() const
-    {
+    bool IsNull() const {
         return (nBits == 0);
     }
 
@@ -74,60 +60,52 @@ public:
     /// Caching lookup/computation of POW hash using GhostRider algorithm
     uint256 GetPOWHash(bool readCache = true) const;
 
-    int64_t GetBlockTime() const
-    {
-        return (int64_t)nTime;
+    int64_t GetBlockTime() const {
+        return (int64_t) nTime;
     }
 };
 
 
-class CBlock : public CBlockHeader
-{
+class CBlock : public CBlockHeader {
 public:
     // network and disk
-    std::vector<CTransactionRef> vtx;
+    std::vector <CTransactionRef> vtx;
 
     mutable CTxOut txoutFounder; // founder payment
     // memory only
     mutable bool fChecked;
 
-    CBlock()
-    {
+    CBlock() {
         SetNull();
     }
 
-    CBlock(const CBlockHeader& header)
-    {
+    CBlock(const CBlockHeader &header) {
         SetNull();
-        *(static_cast<CBlockHeader*>(this)) = header;
+        *(static_cast<CBlockHeader *>(this)) = header;
     }
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CBlock, obj
+    )
     {
-        READWRITEAS(CBlockHeader, *this);
-        READWRITE(vtx);
+        READWRITEAS(CBlockHeader, obj);
+        READWRITE(obj.vtx);
     }
 
-    void SetNull()
-    {
+    void SetNull() {
         CBlockHeader::SetNull();
         vtx.clear();
         fChecked = false;
         txoutFounder = CTxOut();
     }
 
-    CBlockHeader GetBlockHeader() const
-    {
+    CBlockHeader GetBlockHeader() const {
         CBlockHeader block;
-        block.nVersion       = nVersion;
-        block.hashPrevBlock  = hashPrevBlock;
+        block.nVersion = nVersion;
+        block.hashPrevBlock = hashPrevBlock;
         block.hashMerkleRoot = hashMerkleRoot;
-        block.nTime          = nTime;
-        block.nBits          = nBits;
-        block.nNonce         = nNonce;
+        block.nTime = nTime;
+        block.nBits = nBits;
+        block.nNonce = nNonce;
         return block;
     }
 
@@ -140,31 +118,26 @@ public:
  * The further back it is, the further before the fork it may be.
  */
 struct CBlockLocator {
-    std::vector<uint256> vHave;
+    std::vector <uint256> vHave;
 
     CBlockLocator() {}
 
-    explicit CBlockLocator(const std::vector<uint256>& vHaveIn) :
-        vHave(vHaveIn) {}
+    explicit CBlockLocator(const std::vector <uint256> &vHaveIn) : vHave(vHaveIn) {}
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CBlockLocator, obj
+    )
     {
         int nVersion = s.GetVersion();
         if (!(s.GetType() & SER_GETHASH))
             READWRITE(nVersion);
-        READWRITE(vHave);
+        READWRITE(obj.vHave);
     }
 
-    void SetNull()
-    {
+    void SetNull() {
         vHave.clear();
     }
 
-    bool IsNull() const
-    {
+    bool IsNull() const {
         return vHave.empty();
     }
 };

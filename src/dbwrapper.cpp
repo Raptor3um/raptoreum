@@ -18,57 +18,55 @@ class CBitcoinLevelDBLogger : public leveldb::Logger {
 public:
     // This code is adapted from posix_logger.h, which is why it is using vsprintf.
     // Please do not do this in normal code
-    void Logv(const char * format, va_list ap) override {
-            if (!LogAcceptCategory(BCLog::LEVELDB)) {
-                return;
+    void Logv(const char *format, va_list ap) override {
+        if (!LogAcceptCategory(BCLog::LEVELDB)) {
+            return;
+        }
+        char buffer[500];
+        for (int iter = 0; iter < 2; iter++) {
+            char *base;
+            int bufsize;
+            if (iter == 0) {
+                bufsize = sizeof(buffer);
+                base = buffer;
+            } else {
+                bufsize = 30000;
+                base = new char[bufsize];
             }
-            char buffer[500];
-            for (int iter = 0; iter < 2; iter++) {
-                char* base;
-                int bufsize;
+            char *p = base;
+            char *limit = base + bufsize;
+
+            // Print the message
+            if (p < limit) {
+                va_list backup_ap;
+                va_copy(backup_ap, ap);
+                // Do not use vsnprintf elsewhere in bitcoin source code, see above.
+                p += vsnprintf(p, limit - p, format, backup_ap);
+                va_end(backup_ap);
+            }
+
+            // Truncate to available space if necessary
+            if (p >= limit) {
                 if (iter == 0) {
-                    bufsize = sizeof(buffer);
-                    base = buffer;
+                    continue;       // Try again with larger buffer
+                } else {
+                    p = limit - 1;
                 }
-                else {
-                    bufsize = 30000;
-                    base = new char[bufsize];
-                }
-                char* p = base;
-                char* limit = base + bufsize;
-
-                // Print the message
-                if (p < limit) {
-                    va_list backup_ap;
-                    va_copy(backup_ap, ap);
-                    // Do not use vsnprintf elsewhere in bitcoin source code, see above.
-                    p += vsnprintf(p, limit - p, format, backup_ap);
-                    va_end(backup_ap);
-                }
-
-                // Truncate to available space if necessary
-                if (p >= limit) {
-                    if (iter == 0) {
-                        continue;       // Try again with larger buffer
-                    }
-                    else {
-                        p = limit - 1;
-                    }
-                }
-
-                // Add newline if necessary
-                if (p == base || p[-1] != '\n') {
-                    *p++ = '\n';
-                }
-
-                assert(p <= limit);
-                base[std::min(bufsize - 1, (int)(p - base))] = '\0';
-                LogPrintf("leveldb: %s", base);  /* Continued */
-                if (base != buffer) {
-                    delete[] base;
-                }
-                break;
             }
+
+            // Add newline if necessary
+            if (p == base || p[-1] != '\n') {
+                *p++ = '\n';
+            }
+
+            assert(p <= limit);
+            base[std::min(bufsize - 1, (int) (p - base))] = '\0';
+            LogPrintf("leveldb: %s", base);  /* Continued */
+            if (base != buffer) {
+                delete[] base;
+            }
+            break;
+        }
     }
 };
 
@@ -89,7 +87,7 @@ static void SetMaxOpenFiles(leveldb::Options *options) {
 
     int default_open_files = options->max_open_files;
 #ifndef WIN32
-    if (sizeof(void*) < 8) {
+    if (sizeof(void *) < 8) {
         options->max_open_files = 64;
     }
 #endif
@@ -97,8 +95,7 @@ static void SetMaxOpenFiles(leveldb::Options *options) {
              options->max_open_files, default_open_files);
 }
 
-static leveldb::Options GetOptions(size_t nCacheSize)
-{
+static leveldb::Options GetOptions(size_t nCacheSize) {
     leveldb::Options options;
     options.block_cache = leveldb::NewLRUCache(nCacheSize / 2);
     options.write_buffer_size = nCacheSize / 4; // up to two write buffers may be held in memory simultaneously
@@ -114,9 +111,8 @@ static leveldb::Options GetOptions(size_t nCacheSize)
     return options;
 }
 
-CDBWrapper::CDBWrapper(const fs::path& path, size_t nCacheSize, bool fMemory, bool fWipe, bool obfuscate)
-    : m_name(fs::basename(path))
-{
+CDBWrapper::CDBWrapper(const fs::path &path, size_t nCacheSize, bool fMemory, bool fWipe, bool obfuscate)
+        : m_name(fs::basename(path)) {
     penv = nullptr;
     readoptions.verify_checksums = true;
     iteroptions.verify_checksums = true;
@@ -166,8 +162,7 @@ CDBWrapper::CDBWrapper(const fs::path& path, size_t nCacheSize, bool fMemory, bo
     LogPrintf("Using obfuscation key for %s: %s\n", path.string(), HexStr(obfuscate_key));
 }
 
-CDBWrapper::~CDBWrapper()
-{
+CDBWrapper::~CDBWrapper() {
     delete pdb;
     pdb = nullptr;
     delete options.filter_policy;
@@ -180,8 +175,7 @@ CDBWrapper::~CDBWrapper()
     options.env = nullptr;
 }
 
-bool CDBWrapper::WriteBatch(CDBBatch& batch, bool fSync)
-{
+bool CDBWrapper::WriteBatch(CDBBatch &batch, bool fSync) {
     const bool log_memory = LogAcceptCategory(BCLog::LEVELDB);
     double mem_before = 0;
     if (log_memory) {
@@ -218,41 +212,40 @@ const unsigned int CDBWrapper::OBFUSCATE_KEY_NUM_BYTES = 8;
  * Returns a string (consisting of 8 random bytes) suitable for use as an
  * obfuscating XOR key.
  */
-std::vector<unsigned char> CDBWrapper::CreateObfuscateKey() const
-{
+std::vector<unsigned char> CDBWrapper::CreateObfuscateKey() const {
     unsigned char buff[OBFUSCATE_KEY_NUM_BYTES];
     GetRandBytes(buff, OBFUSCATE_KEY_NUM_BYTES);
     return std::vector<unsigned char>(&buff[0], &buff[OBFUSCATE_KEY_NUM_BYTES]);
 
 }
 
-bool CDBWrapper::IsEmpty()
-{
-    std::unique_ptr<CDBIterator> it(NewIterator());
+bool CDBWrapper::IsEmpty() {
+    std::unique_ptr <CDBIterator> it(NewIterator());
     it->SeekToFirst();
     return !(it->Valid());
 }
 
 CDBIterator::~CDBIterator() { delete piter; }
+
 bool CDBIterator::Valid() const { return piter->Valid(); }
+
 void CDBIterator::SeekToFirst() { piter->SeekToFirst(); }
+
 void CDBIterator::Next() { piter->Next(); }
 
 namespace dbwrapper_private {
 
-void HandleError(const leveldb::Status& status)
-{
-    if (status.ok())
-        return;
-    const std::string errmsg = "Fatal LevelDB error: " + status.ToString();
-    LogPrintf("%s\n", errmsg);
-    LogPrintf("You can use -debug=leveldb to get more complete diagnostic messages\n");
-    throw dbwrapper_error(errmsg);
-}
+    void HandleError(const leveldb::Status &status) {
+        if (status.ok())
+            return;
+        const std::string errmsg = "Fatal LevelDB error: " + status.ToString();
+        LogPrintf("%s\n", errmsg);
+        LogPrintf("You can use -debug=leveldb to get more complete diagnostic messages\n");
+        throw dbwrapper_error(errmsg);
+    }
 
-const std::vector<unsigned char>& GetObfuscateKey(const CDBWrapper &w)
-{
-    return w.obfuscate_key;
-}
+    const std::vector<unsigned char> &GetObfuscateKey(const CDBWrapper &w) {
+        return w.obfuscate_key;
+    }
 
 } // namespace dbwrapper_private

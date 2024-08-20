@@ -1,5 +1,5 @@
 // Copyright (c) 2014-2019 The Dash Core developers
-// Copyright (c) 2020-2022 The Raptoreum developers
+// Copyright (c) 2020-2023 The Raptoreum developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,16 +13,21 @@
 #include <key.h>
 #include <net.h>
 #include <sync.h>
-#include <util.h>
-#include <utilstrencodings.h>
+#include <util/system.h>
+#include <util/strencodings.h>
 #include <bls/bls.h>
 
 #include <univalue.h>
 
 class CGovernanceManager;
+
 class CGovernanceTriggerManager;
+
 class CGovernanceObject;
+
 class CGovernanceVote;
+
+extern RecursiveMutex cs_main;
 
 static const double GOVERNANCE_FILTER_FP_RATE = 0.001;
 
@@ -44,10 +49,9 @@ static const int SEEN_OBJECT_ERROR_INVALID = 1;
 static const int SEEN_OBJECT_EXECUTED = 3; //used for triggers
 static const int SEEN_OBJECT_UNKNOWN = 4;  // the default
 
-typedef std::pair<CGovernanceVote, int64_t> vote_time_pair_t;
+using vote_time_pair_t = std::pair<CGovernanceVote, int64_t>;
 
-inline bool operator<(const vote_time_pair_t& p1, const vote_time_pair_t& p2)
-{
+inline bool operator<(const vote_time_pair_t &p1, const vote_time_pair_t &p2) {
     return (p1.first < p2.first);
 }
 
@@ -56,39 +60,31 @@ struct vote_instance_t {
     int64_t nTime;
     int64_t nCreationTime;
 
-    explicit vote_instance_t(vote_outcome_enum_t eOutcomeIn = VOTE_OUTCOME_NONE, int64_t nTimeIn = 0, int64_t nCreationTimeIn = 0) :
-        eOutcome(eOutcomeIn),
-        nTime(nTimeIn),
-        nCreationTime(nCreationTimeIn)
-    {
+    explicit vote_instance_t(vote_outcome_enum_t eOutcomeIn = VOTE_OUTCOME_NONE, int64_t nTimeIn = 0,
+                             int64_t nCreationTimeIn = 0) :
+            eOutcome(eOutcomeIn),
+            nTime(nTimeIn),
+            nCreationTime(nCreationTimeIn) {
     }
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(vote_instance_t, obj
+    )
     {
-        int nOutcome = int(eOutcome);
-        READWRITE(nOutcome);
-        READWRITE(nTime);
-        READWRITE(nCreationTime);
-        if (ser_action.ForRead()) {
-            eOutcome = vote_outcome_enum_t(nOutcome);
-        }
+        int nOutcome;
+        SER_WRITE(obj, nOutcome = int(obj.eOutcome));
+        READWRITE(nOutcome, obj.nTime, obj.nCreationTime);
+        SER_READ(obj, obj.eOutcome = vote_outcome_enum_t(nOutcome));
     }
 };
 
-typedef std::map<int, vote_instance_t> vote_instance_m_t;
+using vote_instance_m_t = std::map<int, vote_instance_t>;
 
 struct vote_rec_t {
     vote_instance_m_t mapInstances;
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(vote_rec_t, obj)
     {
-        READWRITE(mapInstances);
+        READWRITE(obj.mapInstances);
     }
 };
 
@@ -97,14 +93,13 @@ struct vote_rec_t {
 *
 */
 
-class CGovernanceObject
-{
+class CGovernanceObject {
 public: // Types
-    typedef std::map<COutPoint, vote_rec_t> vote_m_t;
+    using vote_m_t = std::map<COutPoint, vote_rec_t>;
 
 private:
     /// critical section to protect the inner data structures
-    mutable CCriticalSection cs;
+    mutable RecursiveMutex cs;
 
     /// Object typecode
     int nObjectType;
@@ -167,100 +162,95 @@ private:
 public:
     CGovernanceObject();
 
-    CGovernanceObject(const uint256& nHashParentIn, int nRevisionIn, int64_t nTime, const uint256& nCollateralHashIn, const std::string& strDataHexIn);
+    CGovernanceObject(const uint256 &nHashParentIn, int nRevisionIn, int64_t nTime, const uint256 &nCollateralHashIn,
+                      const std::string &strDataHexIn);
 
-    CGovernanceObject(const CGovernanceObject& other);
+    CGovernanceObject(const CGovernanceObject &other);
 
     // Public Getter methods
 
-    int64_t GetCreationTime() const
-    {
+    int64_t GetCreationTime() const {
         return nTime;
     }
 
-    int64_t GetDeletionTime() const
-    {
+    int64_t GetDeletionTime() const {
         return nDeletionTime;
     }
 
-    int GetObjectType() const
-    {
+    int GetObjectType() const {
         return nObjectType;
     }
 
-    const uint256& GetCollateralHash() const
-    {
+    const uint256 &GetCollateralHash() const {
         return nCollateralHash;
     }
 
-    const COutPoint& GetSmartnodeOutpoint() const
-    {
+    const COutPoint &GetSmartnodeOutpoint() const {
         return smartnodeOutpoint;
     }
 
-    bool IsSetCachedFunding() const
-    {
+    bool IsSetCachedFunding() const {
         return fCachedFunding;
     }
 
-    bool IsSetCachedValid() const
-    {
+    bool IsSetCachedValid() const {
         return fCachedValid;
     }
 
-    bool IsSetCachedDelete() const
-    {
+    bool IsSetCachedDelete() const {
         return fCachedDelete;
     }
 
-    bool IsSetCachedEndorsed() const
-    {
+    bool IsSetCachedEndorsed() const {
         return fCachedEndorsed;
     }
 
-    bool IsSetDirtyCache() const
-    {
+    bool IsSetDirtyCache() const {
         return fDirtyCache;
     }
 
-    bool IsSetExpired() const
-    {
+    bool IsSetExpired() const {
         return fExpired;
     }
 
-    void SetExpired()
-    {
+    void SetExpired() {
         fExpired = true;
     }
 
-    const CGovernanceObjectVoteFile& GetVoteFile() const
-    {
+    const CGovernanceObjectVoteFile &GetVoteFile() const {
         return fileVotes;
     }
 
     // Signature related functions
 
-    void SetSmartnodeOutpoint(const COutPoint& outpoint);
-    bool Sign(const CBLSSecretKey& key);
-    bool CheckSignature(const CBLSPublicKey& pubKey) const;
+    void SetSmartnodeOutpoint(const COutPoint &outpoint);
+
+    bool Sign(const CBLSSecretKey &key);
+
+    bool CheckSignature(const CBLSPublicKey &pubKey) const;
 
     uint256 GetSignatureHash() const;
 
     // CORE OBJECT FUNCTIONS
 
-    bool IsValidLocally(std::string& strError, bool fCheckCollateral) const;
+    bool IsValidLocally(std::string &strError, bool fCheckCollateral) const
 
-    bool IsValidLocally(std::string& strError, bool& fMissingConfirmations, bool fCheckCollateral) const;
+    EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+    bool IsValidLocally(std::string &strError, bool &fMissingConfirmations, bool fCheckCollateral) const
+
+    EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     /// Check the collateral transaction for the budget proposal/finalized budget
-    bool IsCollateralValid(std::string& strError, bool& fMissingConfirmations) const;
+    bool IsCollateralValid(std::string &strError, bool &fMissingConfirmations) const
+
+    EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     void UpdateLocalValidity();
 
     void UpdateSentinelVariables();
 
-    void PrepareDeletion(int64_t nDeletionTime_)
-    {
+    void PrepareDeletion(int64_t nDeletionTime_) {
         fCachedDelete = true;
         if (nDeletionTime == 0) {
             nDeletionTime = nDeletionTime_;
@@ -271,7 +261,7 @@ public:
 
     UniValue GetJSONObject();
 
-    void Relay(CConnman& connman);
+    void Relay(CConnman &connman);
 
     uint256 GetHash() const;
 
@@ -280,44 +270,39 @@ public:
     int CountMatchingVotes(vote_signal_enum_t eVoteSignalIn, vote_outcome_enum_t eVoteOutcomeIn) const;
 
     int GetAbsoluteYesCount(vote_signal_enum_t eVoteSignalIn) const;
+
     int GetAbsoluteNoCount(vote_signal_enum_t eVoteSignalIn) const;
+
     int GetYesCount(vote_signal_enum_t eVoteSignalIn) const;
+
     int GetNoCount(vote_signal_enum_t eVoteSignalIn) const;
+
     int GetAbstainCount(vote_signal_enum_t eVoteSignalIn) const;
 
-    bool GetCurrentMNVotes(const COutPoint& mnCollateralOutpoint, vote_rec_t& voteRecord) const;
+    bool GetCurrentMNVotes(const COutPoint &mnCollateralOutpoint, vote_rec_t &voteRecord) const;
 
     // FUNCTIONS FOR DEALING WITH DATA STRING
 
     std::string GetDataAsHexString() const;
+
     std::string GetDataAsPlainString() const;
 
     // SERIALIZER
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CGovernanceObject, obj
+    )
     {
-        // SERIALIZE DATA FOR SAVING/LOADING OR NETWORK FUNCTIONS
-        READWRITE(nHashParent);
-        READWRITE(nRevision);
-        READWRITE(nTime);
-        READWRITE(nCollateralHash);
-        READWRITE(vchData);
-        READWRITE(nObjectType);
-        READWRITE(smartnodeOutpoint);
+        READWRITE(obj.nHashParent, obj.nRevision, obj.nTime, obj.nCollateralHash,
+                  obj.vchData, obj.nObjectType, obj.smartnodeOutpoint);
         if (!(s.GetType() & SER_GETHASH)) {
-            READWRITE(vchSig);
+            READWRITE(obj.vchSig);
         }
         if (s.GetType() & SER_DISK) {
             // Only include these for the disk file format
             LogPrint(BCLog::GOBJECT, "CGovernanceObject::SerializationOp Reading/writing votes from/to disk\n");
-            READWRITE(nDeletionTime);
-            READWRITE(fExpired);
-            READWRITE(mapCurrentMNVotes);
-            READWRITE(fileVotes);
-            LogPrint(BCLog::GOBJECT, "CGovernanceObject::SerializationOp hash = %s, vote count = %d\n", GetHash().ToString(), fileVotes.GetVoteCount());
+            READWRITE(obj.nDeletionTime, obj.fExpired, obj.mapCurrentMNVotes, obj.fileVotes);
+            LogPrint(BCLog::GOBJECT, "CGovernanceObject::SerializationOp hash = %s, vote count = %d\n",
+                     obj.GetHash().ToString(), obj.fileVotes.GetVoteCount());
         }
 
         // AFTER DESERIALIZATION OCCURS, CACHED VARIABLES MUST BE CALCULATED MANUALLY
@@ -327,12 +312,13 @@ public:
 
     // FUNCTIONS FOR DEALING WITH DATA STRING
     void LoadData();
-    void GetData(UniValue& objResult);
 
-    bool ProcessVote(CNode* pfrom,
-        const CGovernanceVote& vote,
-        CGovernanceException& exception,
-        CConnman& connman);
+    void GetData(UniValue &objResult);
+
+    bool ProcessVote(CNode *pfrom,
+                     const CGovernanceVote &vote,
+                     CGovernanceException &exception,
+                     CConnman &connman);
 
     /// Called when MN's which have voted on this object have been removed
     void ClearSmartnodeVotes();
@@ -341,7 +327,7 @@ public:
     // This is the case for DIP3 MNs that changed voting or operator keys and
     // also for MNs that were removed from the list completely.
     // Returns deleted vote hashes.
-    std::set<uint256> RemoveInvalidVotes(const COutPoint& mnOutpoint);
+    std::set <uint256> RemoveInvalidVotes(const COutPoint &mnOutpoint);
 };
 
 

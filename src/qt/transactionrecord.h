@@ -1,4 +1,5 @@
 // Copyright (c) 2011-2014 The Bitcoin Core developers
+// Copyright (c) 2020-2023 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,25 +14,27 @@
 #include <QString>
 
 namespace interfaces {
-class Node;
-class Wallet;
-struct WalletTx;
-struct WalletTxStatus;
+    class Node;
+
+    class Wallet;
+
+    struct WalletTx;
+    struct WalletTxStatus;
 }
 class CWallet;
+
 class CWalletTx;
+
 class CFutureTx;
 
 /** UI model for transaction status. The transaction status is the part of a transaction that will change over time.
  */
-class TransactionStatus
-{
+class TransactionStatus {
 public:
-    TransactionStatus():
-        countsForBalance(false), lockedByInstantSend(false), lockedByChainLocks(false), sortKey(""),
-        matures_in(0), status(Unconfirmed), depth(0), open_for(0), cur_num_blocks(-1),
-        cachedChainLockHeight(-1), needsUpdate(false)
-    { }
+    TransactionStatus() :
+            countsForBalance(false), lockedByInstantSend(false), lockedByChainLocks(false), sortKey(""),
+            matures_in(0), status(Unconfirmed), depth(0), open_for(0), cur_num_blocks(-1),
+            cachedChainLockHeight(-1), needsUpdate(false) {}
 
     enum Status {
         Confirmed,          /**< Have 6 or more confirmations (normal tx) or fully mature (mined tx) **/
@@ -82,11 +85,9 @@ public:
 /** UI model for a transaction. A core transaction can be represented by multiple UI transactions if it has
     multiple outputs.
  */
-class TransactionRecord
-{
+class TransactionRecord {
 public:
-    enum Type
-    {
+    enum Type {
         Other,
         Generated,
         SendToAddress,
@@ -107,32 +108,31 @@ public:
     /** Number of confirmation recommended for accepting a transaction */
     static const int RecommendedNumConfirmations = 6;
 
-    TransactionRecord():
-            hash(), time(0), type(Other), strAddress(""), debit(0), credit(0), idx(0)
-    {
+    TransactionRecord()
+            : hash(), time(0), type(Other),
+              strAddress(""), debit(0), credit(0), idx(0) {
         txDest = DecodeDestination(strAddress);
     }
 
-    TransactionRecord(uint256 _hash, qint64 _time):
-            hash(_hash), time(_time), type(Other), strAddress(""), debit(0),
-            credit(0), idx(0)
-    {
+    TransactionRecord(uint256 _hash, qint64 _time)
+            : hash(_hash), time(_time), type(Other),
+              strAddress(""), debit(0), credit(0), idx(0) {
         txDest = DecodeDestination(strAddress);
     }
 
-    TransactionRecord(uint256 _hash, qint64 _time,
-                Type _type, const std::string &_strAddress,
-                const CAmount& _debit, const CAmount& _credit):
-            hash(_hash), time(_time), type(_type), strAddress(_strAddress), debit(_debit), credit(_credit),
-            idx(0)
-    {
+    TransactionRecord(uint256 _hash, qint64 _time, Type _type, const std::string &_strAddress, const CAmount &_debit,
+                      const CAmount &_credit)
+            : hash(_hash), time(_time), type(_type),
+              strAddress(_strAddress), debit(_debit),
+              credit(_credit), idx(0) {
         txDest = DecodeDestination(strAddress);
     }
 
     /** Decompose CWallet transaction to model transaction records.
      */
     static bool showTransaction();
-    static QList<TransactionRecord> decomposeTransaction(interfaces::Wallet& wallet, const std::shared_ptr<const interfaces::WalletTx> wtx);
+
+    static QList <TransactionRecord> decomposeTransaction(interfaces::Wallet &wallet, const interfaces::WalletTx &wtx);
 
     /** @name Immutable transaction attributes
       @{*/
@@ -166,7 +166,8 @@ public:
 
     /** Update status from core wallet tx.
      */
-    void updateStatus(const std::shared_ptr<const interfaces::WalletTx> wtx, const interfaces::WalletTxStatus& wtxStatus, int numBlocks, int64_t adjustedTime, int chainLockHeight);
+    void updateStatus(const interfaces::WalletTx &wtx, const interfaces::WalletTxStatus &wtxStatus, int numBlocks,
+                      int64_t adjustedTime, int chainLockHeight, int64_t block_time);
 
     /** Return whether a status update is needed.
      */
@@ -174,7 +175,7 @@ public:
 
     /** Update label from address book.
      */
-    void updateLabel(interfaces::Wallet& wallet);
+    void updateLabel(interfaces::Wallet &wallet);
 
     /** Return the block height of this transaction */
     int getTransactionBlockHeight(const CWalletTx &wtx);
@@ -189,7 +190,8 @@ public:
     bool isFutureTxMatured(const CWalletTx &wtx, CFutureTx &ftx);
 
     /** Return the Future TX Status based on maturity */
-    void getFutureTxStatus(const std::shared_ptr<const interfaces::WalletTx> wtx, const interfaces::WalletTxStatus& wtxStatus, CFutureTx &ftx);
+    void
+    getFutureTxStatus(const interfaces::WalletTx &wtx, const interfaces::WalletTxStatus &wtxStatus, CFutureTx &ftx);
 
 };
 

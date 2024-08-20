@@ -1,4 +1,4 @@
-// Copyright (c) 2021 The Raptoreum developers
+// Copyright (c) 2021-2023 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,7 +8,8 @@
 #include <key_io.h>
 #include <messagesigner.h>
 #include <rpc/server.h>
-#include <utilmoneystr.h>
+#include <util/moneystr.h>
+#include <util/validation.h>
 #include <validation.h>
 
 #ifdef ENABLE_WALLET
@@ -20,11 +21,12 @@
 #include <netbase.h>
 #include <evo/specialtx.h>
 #include <evo/providertx.h>
+#include <assets/assets.h>
 
 #include <iostream>
 #include <unistd.h>
 
-using namespace std;
+//using namespace std;
 
 #ifdef ENABLE_WALLET
 extern UniValue signrawtransaction(const JSONRPCRequest& request);
@@ -34,7 +36,7 @@ template<typename SpecialTxPayload>
 static void FundSpecialTx(CWallet* pwallet, CMutableTransaction& tx, const SpecialTxPayload& payload, const CTxDestination& fundDest)
 {
     assert(pwallet != nullptr);
-    LOCK2(cs_main, pwallet->cs_wallet);
+    LOCK(pwallet->cs_wallet);
 
     CTxDestination nodest = CNoDestination();
     if (fundDest == nodest) {
@@ -84,7 +86,7 @@ static void FundSpecialTx(CWallet* pwallet, CMutableTransaction& tx, const Speci
     int nChangePos = -1;
     std::string strFailReason;
 
-    if (!pwallet->CreateTransaction(vecSend, wtx, reservekey, nFee, nChangePos, strFailReason, coinControl, false, tx.vExtraPayload.size())) {
+    if (!pwallet->CreateTransaction(vecSend, wtx, nFee, nChangePos, strFailReason, coinControl, false, tx.vExtraPayload.size())) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, strFailReason);
     }
 
@@ -103,9 +105,8 @@ static void FundSpecialTx(CWallet* pwallet, CMutableTransaction& tx, const Speci
 #endif//ENABLE_WALLET
 
 template<typename SpecialTxPayload>
-static void UpdateSpecialTxInputsHash(const CMutableTransaction& tx, SpecialTxPayload& payload)
-{
-    payload.inputsHash = CalcTxInputsHash(tx);
+static void UpdateSpecialTxInputsHash(const CMutableTransaction &tx, SpecialTxPayload &payload) {
+    payload.inputsHash = CalcTxInputsHash(CTransaction(tx));
 }
 
 #ifdef ENABLE_WALLET
@@ -113,7 +114,7 @@ static void UpdateSpecialTxInputsHash(const CMutableTransaction& tx, SpecialTxPa
 template<typename SpecialTxPayload>
 static void SignSpecialTxPayloadByHash(const CMutableTransaction& tx, SpecialTxPayload& payload, const CKey& key)
 {
-    UpdateSpecialTxInputsHash(tx, payload);
+    UpdateSpecialTxInputsHash(CTransaction(tx), payload);
     payload.vchSig.clear();
 
     uint256 hash = ::SerializeHash(payload);
@@ -125,7 +126,7 @@ static void SignSpecialTxPayloadByHash(const CMutableTransaction& tx, SpecialTxP
 template<typename SpecialTxPayload>
 static void SignSpecialTxPayloadByString(const CMutableTransaction& tx, SpecialTxPayload& payload, const CKey& key)
 {
-    UpdateSpecialTxInputsHash(tx, payload);
+    UpdateSpecialTxInputsHash(CTransaction(tx), payload);
     payload.vchSig.clear();
 
     std::string m = payload.MakeSignString();
@@ -137,31 +138,32 @@ static void SignSpecialTxPayloadByString(const CMutableTransaction& tx, SpecialT
 template<typename SpecialTxPayload>
 static void SignSpecialTxPayloadByHash(const CMutableTransaction& tx, SpecialTxPayload& payload, const CBLSSecretKey& key)
 {
-    UpdateSpecialTxInputsHash(tx, payload);
+    UpdateSpecialTxInputsHash(CTransaction(tx), payload);
 
     uint256 hash = ::SerializeHash(payload);
     payload.sig = key.Sign(hash);
 }
 
-static std::string SignAndSendSpecialTx(const CMutableTransaction& tx)
+static std::string SignAndSendSpecialTx(const JSONRPCRequest& request, const CMutableTransaction& tx)
 {
     LOCK(cs_main);
 
     CValidationState state;
-//    CCoinsViewCache view;
-    if (!CheckSpecialTx(tx, chainActive.Tip(), state, *pcoinsTip.get())) {
+    bool check_sigs;
+    CAssetsCache assetsCache = *passetsCache.get();
+    if (!CheckSpecialTx(CTransaction(tx), ::ChainActive().Tip(), state, ::ChainstateActive().CoinsTip(), &assetsCache, check_sigs)) {
         throw std::runtime_error(FormatStateMessage(state));
     }
 
     CDataStream ds(SER_NETWORK, PROTOCOL_VERSION);
     ds << tx;
 
-    JSONRPCRequest signRequest;
+    JSONRPCRequest signRequest(request);
     signRequest.params.setArray();
-    signRequest.params.push_back(HexStr(ds.begin(), ds.end()));
-    UniValue signResult = signrawtransaction(signRequest);
+    signRequest.params.push_back(HexStr(ds));
+    UniValue signResult = signrawtransactionwithwallet(signRequest);
 
-    JSONRPCRequest sendRequest;
+    JSONRPCRequest sendRequest(request);
     sendRequest.params.setArray();
     sendRequest.params.push_back(signResult["hex"].get_str());
     //return signResult["hex"].get_str();

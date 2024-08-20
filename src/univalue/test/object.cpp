@@ -1,7 +1,7 @@
 // Copyright (c) 2014 BitPay Inc.
 // Copyright (c) 2014-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// file COPYING or https://opensource.org/licenses/mit-license.php.
 
 #include <stdint.h>
 #include <vector>
@@ -21,22 +21,21 @@
             (stmt); \
             assert(0 && "No exception caught"); \
         } catch (excMatch & e) { \
-	} catch (...) { \
-	    assert(0 && "Wrong exception caught"); \
-	} \
+    } catch (...) { \
+        assert(0 && "Wrong exception caught"); \
+    } \
     }
 #define BOOST_CHECK_NO_THROW(stmt) { \
         try { \
             (stmt); \
-	} catch (...) { \
-	    assert(0); \
-	} \
+    } catch (...) { \
+        assert(0); \
+    } \
     }
 
 BOOST_FIXTURE_TEST_SUITE(univalue_tests, BasicTestingSetup)
 
-BOOST_AUTO_TEST_CASE(univalue_constructor)
-{
+BOOST_AUTO_TEST_CASE(univalue_constructor) {
     UniValue v1;
     BOOST_CHECK(v1.isNull());
 
@@ -83,8 +82,7 @@ BOOST_AUTO_TEST_CASE(univalue_constructor)
     BOOST_CHECK_EQUAL(v9.getValStr(), "zappa");
 }
 
-BOOST_AUTO_TEST_CASE(univalue_typecheck)
-{
+BOOST_AUTO_TEST_CASE(univalue_typecheck) {
     UniValue v1;
     BOOST_CHECK(v1.setNumStr("1"));
     BOOST_CHECK(v1.isNum());
@@ -117,7 +115,7 @@ BOOST_AUTO_TEST_CASE(univalue_typecheck)
     UniValue v5;
     BOOST_CHECK(v5.read("[true, 10]"));
     BOOST_CHECK_NO_THROW(v5.get_array());
-    std::vector<UniValue> vals = v5.getValues();
+    std::vector <UniValue> vals = v5.getValues();
     BOOST_CHECK_THROW(vals[0].get_int(), std::runtime_error);
     BOOST_CHECK_EQUAL(vals[0].get_bool(), true);
 
@@ -125,8 +123,7 @@ BOOST_AUTO_TEST_CASE(univalue_typecheck)
     BOOST_CHECK_THROW(vals[1].get_bool(), std::runtime_error);
 }
 
-BOOST_AUTO_TEST_CASE(univalue_set)
-{
+BOOST_AUTO_TEST_CASE(univalue_set) {
     UniValue v(UniValue::VSTR, "foo");
     v.clear();
     BOOST_CHECK(v.isNull());
@@ -150,15 +147,15 @@ BOOST_AUTO_TEST_CASE(univalue_set)
     BOOST_CHECK(v.isNum());
     BOOST_CHECK_EQUAL(v.getValStr(), "-1.01");
 
-    BOOST_CHECK(v.setInt((int)1023));
+    BOOST_CHECK(v.setInt((int) 1023));
     BOOST_CHECK(v.isNum());
     BOOST_CHECK_EQUAL(v.getValStr(), "1023");
 
-    BOOST_CHECK(v.setInt((int64_t)-1023LL));
+    BOOST_CHECK(v.setInt((int64_t) - 1023LL));
     BOOST_CHECK(v.isNum());
     BOOST_CHECK_EQUAL(v.getValStr(), "-1023");
 
-    BOOST_CHECK(v.setInt((uint64_t)1023ULL));
+    BOOST_CHECK(v.setInt((uint64_t) 1023ULL));
     BOOST_CHECK(v.isNum());
     BOOST_CHECK_EQUAL(v.getValStr(), "1023");
 
@@ -184,11 +181,10 @@ BOOST_AUTO_TEST_CASE(univalue_set)
     BOOST_CHECK(v.isNull());
 }
 
-BOOST_AUTO_TEST_CASE(univalue_array)
-{
+BOOST_AUTO_TEST_CASE(univalue_array) {
     UniValue arr(UniValue::VARR);
 
-    UniValue v((int64_t)1023LL);
+    UniValue v((int64_t) 1023LL);
     BOOST_CHECK(arr.push_back(v));
 
     std::string vStr("zippy");
@@ -197,7 +193,7 @@ BOOST_AUTO_TEST_CASE(univalue_array)
     const char *s = "pippy";
     BOOST_CHECK(arr.push_back(s));
 
-    std::vector<UniValue> vec;
+    std::vector <UniValue> vec;
     v.setStr("boing");
     vec.push_back(v);
 
@@ -207,22 +203,34 @@ BOOST_AUTO_TEST_CASE(univalue_array)
     BOOST_CHECK(arr.push_backV(vec));
 
     BOOST_CHECK(arr.push_back((uint64_t) 400ULL));
-    BOOST_CHECK(arr.push_back((int64_t) -400LL));
+    BOOST_CHECK(arr.push_back((int64_t) - 400LL));
     BOOST_CHECK(arr.push_back((int) -401));
     BOOST_CHECK(arr.push_back(-40.1));
+    BOOST_CHECK(arr.push_back(true));
 
     BOOST_CHECK_EQUAL(arr.empty(), false);
-    BOOST_CHECK_EQUAL(arr.size(), 9);
+    BOOST_CHECK_EQUAL(arr.size(), 10);
 
     BOOST_CHECK_EQUAL(arr[0].getValStr(), "1023");
+    BOOST_CHECK_EQUAL(arr[0].getType(), UniValue::VNUM);
     BOOST_CHECK_EQUAL(arr[1].getValStr(), "zippy");
+    BOOST_CHECK_EQUAL(arr[1].getType(), UniValue::VSTR);
     BOOST_CHECK_EQUAL(arr[2].getValStr(), "pippy");
+    BOOST_CHECK_EQUAL(arr[2].getType(), UniValue::VSTR);
     BOOST_CHECK_EQUAL(arr[3].getValStr(), "boing");
+    BOOST_CHECK_EQUAL(arr[3].getType(), UniValue::VSTR);
     BOOST_CHECK_EQUAL(arr[4].getValStr(), "going");
+    BOOST_CHECK_EQUAL(arr[4].getType(), UniValue::VSTR);
     BOOST_CHECK_EQUAL(arr[5].getValStr(), "400");
+    BOOST_CHECK_EQUAL(arr[5].getType(), UniValue::VNUM);
     BOOST_CHECK_EQUAL(arr[6].getValStr(), "-400");
+    BOOST_CHECK_EQUAL(arr[6].getType(), UniValue::VNUM);
     BOOST_CHECK_EQUAL(arr[7].getValStr(), "-401");
+    BOOST_CHECK_EQUAL(arr[7].getType(), UniValue::VNUM);
     BOOST_CHECK_EQUAL(arr[8].getValStr(), "-40.1");
+    BOOST_CHECK_EQUAL(arr[8].getType(), UniValue::VNUM);
+    BOOST_CHECK_EQUAL(arr[9].getValStr(), "1");
+    BOOST_CHECK_EQUAL(arr[9].getType(), UniValue::VBOOL);
 
     BOOST_CHECK_EQUAL(arr[999].getValStr(), "");
 
@@ -231,8 +239,7 @@ BOOST_AUTO_TEST_CASE(univalue_array)
     BOOST_CHECK_EQUAL(arr.size(), 0);
 }
 
-BOOST_AUTO_TEST_CASE(univalue_object)
-{
+BOOST_AUTO_TEST_CASE(univalue_object) {
     UniValue obj(UniValue::VOBJ);
     std::string strKey, strVal;
     UniValue v;
@@ -304,7 +311,7 @@ BOOST_AUTO_TEST_CASE(univalue_object)
 
     BOOST_CHECK(!obj.exists("nyuknyuknyuk"));
 
-    std::map<std::string, UniValue::VType> objTypes;
+    std::map <std::string, UniValue::VType> objTypes;
     objTypes["age"] = UniValue::VNUM;
     objTypes["first"] = UniValue::VSTR;
     objTypes["last"] = UniValue::VSTR;
@@ -340,7 +347,7 @@ BOOST_AUTO_TEST_CASE(univalue_object)
 
     obj.pushKV("name", "foo bar");
 
-    std::map<std::string,UniValue> kv;
+    std::map <std::string, UniValue> kv;
     obj.getObjMap(kv);
     BOOST_CHECK_EQUAL(kv["age"].getValStr(), "43");
     BOOST_CHECK_EQUAL(kv["name"].getValStr(), "foo bar");
@@ -348,10 +355,9 @@ BOOST_AUTO_TEST_CASE(univalue_object)
 }
 
 static const char *json1 =
-"[1.10000000,{\"key1\":\"str\\u0000\",\"key2\":800,\"key3\":{\"name\":\"martian http://test.com\"}}]";
+        "[1.10000000,{\"key1\":\"str\\u0000\",\"key2\":800,\"key3\":{\"name\":\"martian http://test.com\"}}]";
 
-BOOST_AUTO_TEST_CASE(univalue_readwrite)
-{
+BOOST_AUTO_TEST_CASE(univalue_readwrite) {
     UniValue v;
     BOOST_CHECK(v.read(json1));
 
@@ -395,8 +401,7 @@ BOOST_AUTO_TEST_CASE(univalue_readwrite)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-int main (int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
     univalue_constructor();
     univalue_typecheck();
     univalue_set();
