@@ -48,7 +48,7 @@ static std::string GetDistributionType(int t) {
     }
     return "invalid";
 }
-
+#ifdef ENABLE_WALLET	
 UniValue createasset(const JSONRPCRequest &request) {
 
     if (request.fHelp || !Updates().IsAssetsActive(::ChainActive().Tip()) || request.params.size() < 1 ||
@@ -732,7 +732,7 @@ UniValue sendasset(const JSONRPCRequest &request) {
     result.pushKV("txid", wtx->GetHash().GetHex());
     return result;
 }
-
+#endif//ENABLE_WALLET
 
 UniValue getassetdetailsbyname(const JSONRPCRequest &request) {
     if (request.fHelp || !Updates().IsAssetsActive(::ChainActive().Tip()) || request.params.size() < 1 ||
@@ -1287,14 +1287,18 @@ UniValue listassetbalancesbyaddress(const JSONRPCRequest& request)
 static const CRPCCommand commands[] =
         { //  category              name                      actor (function)
             //  --------------------- ------------------------  -----------------------
+#ifdef ENABLE_WALLET	
             {"assets",      "createasset",                  &createasset,                   {"asset"}},
             {"assets",      "updateasset",                  &updateasset,                   {"asset"}},
             {"assets",      "mintasset",                    &mintasset,                     {"assetId"}},
             {"assets",      "sendasset",                    &sendasset,                     {"assetId", "amount", "address", "change_address", "asset_change_address"}},
+#endif //ENABLE_WALLET
             {"assets",      "getassetdetailsbyname",        &getassetdetailsbyname,         {"assetname"}},
             {"assets",      "getassetdetailsbyid",          &getassetdetailsbyid,           {"assetid"}},
+#ifdef ENABLE_WALLET
             {"assets",      "listassetsbalance",            &listassetsbalance,             {}},
             {"assets",      "listunspentassets",            &listunspentassets,             {"minconf", "maxconf", "addresses", "include_unsafe", "query_options"}},
+#endif //ENABLE_WALLET
             {"assets",      "listassets",                   &listassets,                    {"verbose", "count", "start"}},
             {"assets",      "listaddressesbyasset",         &listaddressesbyasset,          {"asset_name", "onlytotal", "count", "start"}},
             {"assets",      "listassetbalancesbyaddress",   &listassetbalancesbyaddress,    {"address", "onlytotal", "count", "start"} },
