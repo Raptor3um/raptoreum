@@ -1554,8 +1554,9 @@ UniValue protx(const JSONRPCRequest &request) {
     } else if(command == "protxquick_setup") {
         return protx_quick_setup(new_request);
     }
-#endif
-    else if (command == "protxlist") {
+    else
+#endif    //ENABLE_WALLET
+    if (command == "protxlist") {
         return protx_list(new_request);
     } else if (command == "protxinfo") {
         return protx_info(new_request);

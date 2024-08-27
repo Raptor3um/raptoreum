@@ -346,7 +346,8 @@ void AssetsDialog::displayImage(const std::string& cid) {
             ui->referenceDisplay->setToolTip(QString::fromStdString(cid));
             ui->referenceDisplay->setOpenExternalLinks(false);
         } else {
-            std::string displayUrl = "<a href=\"" + IPFS_GATEWAY_URL + cid + "\">" + cid + "</a>";
+            std::string ipfsGatewayUrl = gArgs.GetArg("-ipfsgateway", DEFAULT_IPFS_GATEWAY_URL);
+            std::string displayUrl = "<a href=\"" + ipfsGatewayUrl + cid + "\">" + cid + "</a>";
             ui->referenceDisplay->setText(QString::fromStdString(displayUrl));
             ui->referenceDisplay->setToolTip("");
             ui->referenceDisplay->setOpenExternalLinks(true);

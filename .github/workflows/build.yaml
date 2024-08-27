@@ -351,12 +351,12 @@ jobs:
         run: |
           echo "building with 8 threads"
           export FALLBACK_DOWNLOAD_PATH=https://pool.nowput.org/depends/
-          make -C depends -j8 HOST=x86_64-apple-darwin20.6.0
+          make -C depends -j8 HOST=x86_64-apple-darwin21.6.0
 
       - name: Configure
         run: |
           ./autogen.sh
-          ./configure --prefix=`pwd`/depends/x86_64-apple-darwin20.6.0
+          ./configure --prefix=`pwd`/depends/x86_64-apple-darwin21.6.0
 
       - name: Build Binaries
         run: |
