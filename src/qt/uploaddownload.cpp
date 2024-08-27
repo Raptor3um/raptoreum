@@ -1,6 +1,6 @@
-//
-// Created by tri on 8/8/24.
-//
+// Copyright (c) 2024 The Raptoreum developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <qt/uploaddownload.h>
 
@@ -93,13 +93,14 @@ void graceful_disconnect(beast::ssl_stream<beast::tcp_stream>& stream) {
 
 void download(const std::string cid, std::string& response_data) {
     std::string getTarget = GET_URI + cid;
+    std::string ipfsServiceHost = gArgs.GetArg("-ipfsservice", DEFAULT_IPFS_SERVICE_URL);
     try {
         net::io_context ioc;
         ssl::context ctx = setup_ssl_context();
-        beast::ssl_stream<beast::tcp_stream> stream = create_and_connect_ssl_stream(ioc, IPFS_SERVICE_HOST, "443", ctx);
+        beast::ssl_stream<beast::tcp_stream> stream = create_and_connect_ssl_stream(ioc, ipfsServiceHost, "443", ctx);
 
         http::request<http::empty_body> req{http::verb::get, getTarget, 11};
-        req.set(http::field::host, IPFS_SERVICE_HOST);
+        req.set(http::field::host, ipfsServiceHost);
         req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
 
         response_data = write_response(stream, req);
@@ -114,7 +115,8 @@ void upload(const std::string& file_path, std::string& response_data) {
     try {
         net::io_context ioc;
         ssl::context ctx = setup_ssl_context();
-        beast::ssl_stream <beast::tcp_stream> stream = create_and_connect_ssl_stream(ioc, IPFS_SERVICE_HOST, "443", ctx);
+        std::string ipfsServiceHost = gArgs.GetArg("-ipfsservice", DEFAULT_IPFS_SERVICE_URL);
+        beast::ssl_stream <beast::tcp_stream> stream = create_and_connect_ssl_stream(ioc, ipfsServiceHost, "443", ctx);
 
         // Generate a boundary for the multipart form data
         std::string boundary = generate_boundary();
@@ -138,7 +140,7 @@ void upload(const std::string& file_path, std::string& response_data) {
         std::string body_str = body.str();
 
         http::request <http::string_body> req{http::verb::post, UPLOAD_URI, 11};
-        req.set(http::field::host, IPFS_SERVICE_HOST);
+        req.set(http::field::host, ipfsServiceHost);
         req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
         req.set(http::field::content_type, "multipart/form-data; boundary=" + boundary);
         req.set(http::field::content_length, std::to_string(body_str.size()));
