@@ -1,6 +1,6 @@
-//
-// Created by tri on 8/8/24.
-//
+// Copyright (c) 2024 The Raptoreum developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef RAPTOREUM_UPLOAD_DOWNLOAD_H
 #define RAPTOREUM_UPLOAD_DOWNLOAD_H
@@ -14,8 +14,8 @@
 
 static std::string GET_URI = "/get/";
 static std::string UPLOAD_URI = "/upload";
-static std::string IPFS_SERVICE_HOST = gArgs.GetArg("-ipfsservice", "ipfsm.raptoreum.com");
-static std::string IPFS_GATEWAY_URL = gArgs.GetArg("-ipfsgateway", "https://ipfsweb.raptoreum.com/ipfs/");
+static std::string DEFAULT_IPFS_SERVICE_URL = "ipfsm.raptoreum.com";
+static std::string DEFAULT_IPFS_GATEWAY_URL = "https://ipfsweb.raptoreum.com/ipfs/";
 
 void download(const std::string cid, std::string& response_data);
 void upload(const std::string& file_path, std::string& response_data);
