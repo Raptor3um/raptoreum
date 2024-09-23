@@ -10,29 +10,30 @@
 #include <map>
 #include <mutex>
 #include <memory>
+#include <unordered_map>
 
 /**
  * OS-dependent allocation and deallocation of locked/pinned memory pages.
  * Abstract base class.
  */
-class LockedPageAllocator
-{
+class LockedPageAllocator {
 public:
     virtual ~LockedPageAllocator() {}
+
     /** Allocate and lock memory pages.
      * If len is not a multiple of the system page size, it is rounded up.
-     * Returns 0 in case of allocation failure.
+     * Returns nullptr in case of allocation failure.
      *
      * If locking the memory pages could not be accomplished it will still
      * return the memory, however the lockingSuccess flag will be false.
      * lockingSuccess is undefined if the allocation fails.
      */
-    virtual void* AllocateLocked(size_t len, bool *lockingSuccess) = 0;
+    virtual void *AllocateLocked(size_t len, bool *lockingSuccess) = 0;
 
     /** Unlock and free memory pages.
      * Clear the memory before unlocking.
      */
-    virtual void FreeLocked(void* addr, size_t len) = 0;
+    virtual void FreeLocked(void *addr, size_t len) = 0;
 
     /** Get the total limit on the amount of memory that may be locked by this
      * process, in bytes. Return size_t max if there is no limit or the limit
@@ -44,15 +45,17 @@ public:
 /* An arena manages a contiguous region of memory by dividing it into
  * chunks.
  */
-class Arena
-{
+class Arena {
 public:
     Arena(void *base, size_t size, size_t alignment);
+
     virtual ~Arena();
 
+    Arena(const Arena &other) = delete; // non construction-copyable
+    Arena &operator=(const Arena &) = delete; // non copyable
+
     /** Memory statistics. */
-    struct Stats
-    {
+    struct Stats {
         size_t used;
         size_t free;
         size_t total;
@@ -64,7 +67,7 @@ public:
      * Returns pointer on success, or 0 if memory is full or
      * the application tried to allocate 0 bytes.
      */
-    void* alloc(size_t size);
+    void *alloc(size_t size);
 
     /** Free a previously allocated chunk of memory.
      * Freeing the zero pointer has no effect.
@@ -84,19 +87,25 @@ public:
      * chunk starting addresses.
      */
     bool addressInArena(void *ptr) const { return ptr >= base && ptr < end; }
-private:
-    Arena(const Arena& other) = delete; // non construction-copyable
-    Arena& operator=(const Arena&) = delete; // non copyable
 
-    /** Map of chunk address to chunk information. This class makes use of the
-     * sorted order to merge previous and next chunks during deallocation.
-     */
-    std::map<char*, size_t> chunks_free;
-    std::map<char*, size_t> chunks_used;
+private:
+    typedef std::multimap<size_t, char *> SizeToChunkSortedMap;
+    /** Map to enable O(log(n)) best-fit allocation, as it's sorted by size */
+    SizeToChunkSortedMap size_to_free_chunk;
+
+    typedef std::unordered_map<char *, SizeToChunkSortedMap::const_iterator> ChunkToSizeMap;
+    /** Map from begin of free chunk to its node in size_to_free_chunk */
+    ChunkToSizeMap chunks_free;
+    /** Map from end of free chunk to its node in size_to_free_chunk */
+    ChunkToSizeMap chunks_free_end;
+
+    /** Map from begin of used chunk to its size */
+    std::unordered_map<char *, size_t> chunks_used;
+
     /** Base address of arena */
-    char* base;
+    char *base;
     /** End address of arena */
-    char* end;
+    char *end;
     /** Minimum chunk alignment */
     size_t alignment;
 };
@@ -114,15 +123,14 @@ private:
  * information, as to conserve precious locked memory. In some operating systems
  * the amount of memory that can be locked is small.
  */
-class LockedPool
-{
+class LockedPool {
 public:
     /** Size of one arena of locked memory. This is a compromise.
      * Do not set this too low, as managing many arenas will increase
      * allocation and deallocation overhead. Setting it too high allocates
      * more locked memory from the OS than strictly necessary.
      */
-    static const size_t ARENA_SIZE = 256*1024;
+    static const size_t ARENA_SIZE = 256 * 1024;
     /** Chunk alignment. Another compromise. Setting this too high will waste
      * memory, setting it too low will facilitate fragmentation.
      */
@@ -133,8 +141,7 @@ public:
     typedef bool (*LockingFailed_Callback)();
 
     /** Memory statistics. */
-    struct Stats
-    {
+    struct Stats {
         size_t used;
         size_t free;
         size_t total;
@@ -150,14 +157,18 @@ public:
      * If this callback is provided and returns false, the allocation fails (hard fail), if
      * it returns true the allocation proceeds, but it could warn.
      */
-    LockedPool(std::unique_ptr<LockedPageAllocator> allocator, LockingFailed_Callback lf_cb_in = 0);
+    explicit LockedPool(std::unique_ptr <LockedPageAllocator> allocator, LockingFailed_Callback lf_cb_in = nullptr);
+
     ~LockedPool();
+
+    LockedPool(const LockedPool &other) = delete; // non construction-copyable
+    LockedPool &operator=(const LockedPool &) = delete; // non copyable
 
     /** Allocate size bytes from this arena.
      * Returns pointer on success, or 0 if memory is full or
      * the application tried to allocate 0 bytes.
      */
-    void* alloc(size_t size);
+    void *alloc(size_t size);
 
     /** Free a previously allocated chunk of memory.
      * Freeing the zero pointer has no effect.
@@ -167,18 +178,17 @@ public:
 
     /** Get pool usage statistics */
     Stats stats() const;
-private:
-    LockedPool(const LockedPool& other) = delete; // non construction-copyable
-    LockedPool& operator=(const LockedPool&) = delete; // non copyable
 
-    std::unique_ptr<LockedPageAllocator> allocator;
+private:
+    std::unique_ptr <LockedPageAllocator> allocator;
 
     /** Create an arena from locked pages */
-    class LockedPageArena: public Arena
-    {
+    class LockedPageArena : public Arena {
     public:
         LockedPageArena(LockedPageAllocator *alloc_in, void *base_in, size_t size, size_t align);
+
         ~LockedPageArena();
+
     private:
         void *base;
         size_t size;
@@ -187,7 +197,7 @@ private:
 
     bool new_arena(size_t size, size_t align);
 
-    std::list<LockedPageArena> arenas;
+    std::list <LockedPageArena> arenas;
     LockingFailed_Callback lf_cb;
     size_t cumulative_bytes_locked;
     /** Mutex protects access to this pool's data structures, including arenas.
@@ -206,25 +216,24 @@ private:
  * secure_allocator are created. So instead of having LockedPoolManager also be
  * static-initialized, it is created on demand.
  */
-class LockedPoolManager : public LockedPool
-{
+class LockedPoolManager : public LockedPool {
 public:
     /** Return the current instance, or create it once */
-    static LockedPoolManager& Instance()
-    {
+    static LockedPoolManager &Instance() {
         std::call_once(LockedPoolManager::init_flag, LockedPoolManager::CreateInstance);
         return *LockedPoolManager::_instance;
     }
 
 private:
-    LockedPoolManager(std::unique_ptr<LockedPageAllocator> allocator);
+    explicit LockedPoolManager(std::unique_ptr <LockedPageAllocator> allocator);
 
     /** Create a new LockedPoolManager specialized to the OS */
     static void CreateInstance();
+
     /** Called when locking fails, warn the user here */
     static bool LockingFailed();
 
-    static LockedPoolManager* _instance;
+    static LockedPoolManager *_instance;
     static std::once_flag init_flag;
 };
 

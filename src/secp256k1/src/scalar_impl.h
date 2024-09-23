@@ -4,8 +4,8 @@
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
  **********************************************************************/
 
-#ifndef _SECP256K1_SCALAR_IMPL_H_
-#define _SECP256K1_SCALAR_IMPL_H_
+#ifndef SECP256K1_SCALAR_IMPL_H
+#define SECP256K1_SCALAR_IMPL_H
 
 #include "group.h"
 #include "scalar.h"
@@ -25,6 +25,7 @@
 #endif
 
 #ifndef USE_NUM_NONE
+
 static void secp256k1_scalar_get_num(secp256k1_num *r, const secp256k1_scalar *a) {
     unsigned char c[32];
     secp256k1_scalar_get_b32(c, a);
@@ -42,14 +43,15 @@ static void secp256k1_scalar_order_get_num(secp256k1_num *r) {
     };
 #else
     static const unsigned char order[32] = {
-        0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
-        0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFE,
-        0xBA,0xAE,0xDC,0xE6,0xAF,0x48,0xA0,0x3B,
-        0xBF,0xD2,0x5E,0x8C,0xD0,0x36,0x41,0x41
+            0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+            0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFE,
+            0xBA, 0xAE, 0xDC, 0xE6, 0xAF, 0x48, 0xA0, 0x3B,
+            0xBF, 0xD2, 0x5E, 0x8C, 0xD0, 0x36, 0x41, 0x41
     };
 #endif
     secp256k1_num_set_bin(r, order, 32);
 }
+
 #endif
 
 static void secp256k1_scalar_inverse(secp256k1_scalar *r, const secp256k1_scalar *x) {
@@ -72,9 +74,9 @@ static void secp256k1_scalar_inverse(secp256k1_scalar *r, const secp256k1_scalar
     secp256k1_scalar u2, u5, u9, u11, u13;
 
     secp256k1_scalar_sqr(&u2, x);
-    secp256k1_scalar_mul(&x2, &u2,  x);
+    secp256k1_scalar_mul(&x2, &u2, x);
     secp256k1_scalar_mul(&u5, &u2, &x2);
-    secp256k1_scalar_mul(&x3, &u5,  &u2);
+    secp256k1_scalar_mul(&x3, &u5, &u2);
     secp256k1_scalar_mul(&u9, &x3, &u2);
     secp256k1_scalar_mul(&u11, &u9, &u2);
     secp256k1_scalar_mul(&u13, &u11, &u2);
@@ -85,7 +87,7 @@ static void secp256k1_scalar_inverse(secp256k1_scalar *r, const secp256k1_scalar
 
     secp256k1_scalar_sqr(&x8, &x6);
     secp256k1_scalar_sqr(&x8, &x8);
-    secp256k1_scalar_mul(&x8, &x8,  &x2);
+    secp256k1_scalar_mul(&x8, &x8, &x2);
 
     secp256k1_scalar_sqr(&x14, &x8);
     for (i = 0; i < 5; i++) {
@@ -220,6 +222,7 @@ static void secp256k1_scalar_inverse(secp256k1_scalar *r, const secp256k1_scalar
 SECP256K1_INLINE static int secp256k1_scalar_is_even(const secp256k1_scalar *a) {
     return !(a->d[0] & 1);
 }
+
 #endif
 
 static void secp256k1_scalar_inverse_var(secp256k1_scalar *r, const secp256k1_scalar *x) {
@@ -330,4 +333,4 @@ static void secp256k1_scalar_split_lambda(secp256k1_scalar *r1, secp256k1_scalar
 #endif
 #endif
 
-#endif
+#endif /* SECP256K1_SCALAR_IMPL_H */

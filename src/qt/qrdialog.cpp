@@ -2,56 +2,46 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "qrdialog.h"
-#include "ui_qrdialog.h"
+#include <qt/qrdialog.h>
+#include <qt/forms/ui_qrdialog.h>
 
-#include "bitcoinunits.h"
-#include "guiconstants.h"
-#include "guiutil.h"
-#include "optionsmodel.h"
-#include "walletmodel.h"
+#include <qt/bitcoinunits.h>
+#include <qt/guiconstants.h>
+#include <qt/guiutil.h>
 
 #include <QClipboard>
 #include <QDrag>
 #include <QMenu>
 #include <QMimeData>
 #include <QMouseEvent>
+#include <QPainter>
 #include <QPixmap>
-#if QT_VERSION < 0x050000
-#include <QUrl>
-#endif
 
 #if defined(HAVE_CONFIG_H)
-#include "config/raptoreum-config.h" /* for USE_QRCODE */
+#include <config/raptoreum-config.h> /* for USE_QRCODE */
 #endif
 
 #ifdef USE_QRCODE
 #include <qrencode.h>
 #endif
 
-QRGeneralImageWidget::QRGeneralImageWidget(QWidget *parent):
-    QLabel(parent), contextMenu(0)
-{
+QRGeneralImageWidget::QRGeneralImageWidget(QWidget *parent) :
+        QLabel(parent), contextMenu(0) {
     contextMenu = new QMenu(this);
     QAction *saveImageAction = new QAction(tr("&Save Image..."), this);
-    connect(saveImageAction, SIGNAL(triggered()), this, SLOT(saveImage()));
+    connect(saveImageAction, &QAction::triggered, this, &QRGeneralImageWidget::saveImage);
     contextMenu->addAction(saveImageAction);
     QAction *copyImageAction = new QAction(tr("&Copy Image"), this);
-    connect(copyImageAction, SIGNAL(triggered()), this, SLOT(copyImage()));
+    connect(copyImageAction, &QAction::triggered, this, &QRGeneralImageWidget::copyImage);
     contextMenu->addAction(copyImageAction);
 }
 
-QImage QRGeneralImageWidget::exportImage()
-{
-    if(!pixmap())
-        return QImage();
-    return pixmap()->toImage();
+QImage QRGeneralImageWidget::exportImage() {
+    return GUIUtil::GetImage(this);
 }
 
-void QRGeneralImageWidget::mousePressEvent(QMouseEvent *event)
-{
-    if(event->button() == Qt::LeftButton && pixmap())
-    {
+void QRGeneralImageWidget::mousePressEvent(QMouseEvent *event) {
+    if (event->button() == Qt::LeftButton && GUIUtil::HasPixmap(this)) {
         event->accept();
         QMimeData *mimeData = new QMimeData;
         mimeData->setImageData(exportImage());
@@ -64,64 +54,49 @@ void QRGeneralImageWidget::mousePressEvent(QMouseEvent *event)
     }
 }
 
-void QRGeneralImageWidget::saveImage()
-{
-    if(!pixmap())
+void QRGeneralImageWidget::saveImage() {
+    if (!GUIUtil::HasPixmap(this))
         return;
     QString fn = GUIUtil::getSaveFileName(this, tr("Save QR Code"), QString(), tr("PNG Image (*.png)"), nullptr);
-    if (!fn.isEmpty())
-    {
+    if (!fn.isEmpty()) {
         exportImage().save(fn);
     }
 }
 
-void QRGeneralImageWidget::copyImage()
-{
-    if(!pixmap())
+void QRGeneralImageWidget::copyImage() {
+    if (!GUIUtil::HasPixmap(this))
         return;
     QApplication::clipboard()->setImage(exportImage());
 }
 
-void QRGeneralImageWidget::contextMenuEvent(QContextMenuEvent *event)
-{
-    if(!pixmap())
+void QRGeneralImageWidget::contextMenuEvent(QContextMenuEvent *event) {
+    if (!GUIUtil::HasPixmap(this))
         return;
     contextMenu->exec(event->globalPos());
 }
 
 QRDialog::QRDialog(QWidget *parent) :
-    QDialog(parent),
-    ui(new Ui::QRDialog),
-    model(0)
-{
+        QDialog(parent),
+        ui(new Ui::QRDialog) {
     ui->setupUi(this);
+
+    GUIUtil::setFont({ui->labelQRCodeTitle}, GUIUtil::FontWeight::Bold, 16);
+
+    GUIUtil::updateFonts();
 
 #ifndef USE_QRCODE
     ui->button_saveImage->setVisible(false);
     ui->lblQRCode->setVisible(false);
 #endif
 
-    connect(ui->button_saveImage, SIGNAL(clicked()), ui->lblQRCode, SLOT(saveImage()));
+    connect(ui->button_saveImage, &QPushButton::clicked, ui->lblQRCode, &QRGeneralImageWidget::saveImage);
 }
 
-QRDialog::~QRDialog()
-{
+QRDialog::~QRDialog() {
     delete ui;
 }
 
-void QRDialog::setModel(OptionsModel *model)
-{
-    this->model = model;
-
-    if (model)
-        connect(model, SIGNAL(displayUnitChanged(int)), this, SLOT(update()));
-
-    // update the display unit if necessary
-    update();
-}
-
-void QRDialog::setInfo(QString strWindowtitle, QString strQRCode, QString strTextInfo, QString strQRCodeTitle)
-{
+void QRDialog::setInfo(QString strWindowtitle, QString strQRCode, QString strTextInfo, QString strQRCodeTitle) {
     this->strWindowtitle = strWindowtitle;
     this->strQRCode = strQRCode;
     this->strTextInfo = strTextInfo;
@@ -129,11 +104,7 @@ void QRDialog::setInfo(QString strWindowtitle, QString strQRCode, QString strTex
     update();
 }
 
-void QRDialog::update()
-{
-    if(!model)
-        return;
-
+void QRDialog::update() {
     setWindowTitle(strWindowtitle);
     ui->button_saveImage->setEnabled(false);
     if (strTextInfo.isEmpty()) {
@@ -155,20 +126,27 @@ void QRDialog::update()
         }
         ui->lblQRCode->setToolTip(strQRCode);
         QImage myImage = QImage(code->width + 8, code->width + 8, QImage::Format_RGB32);
-        myImage.fill(0xffffff);
+        myImage.fill(GUIUtil::getThemedQColor(GUIUtil::ThemedColor::BACKGROUND_WIDGET));
         unsigned char *p = code->data;
         for (int y = 0; y < code->width; y++)
         {
             for (int x = 0; x < code->width; x++)
             {
-                myImage.setPixel(x + 4, y + 4, ((*p & 1) ? 0x0 : 0xffffff));
+                myImage.setPixel(x + 4, y + 4, ((*p & 1) ? GUIUtil::getThemedQColor(GUIUtil::ThemedColor::QR_PIXEL).rgb() : GUIUtil::getThemedQColor(GUIUtil::ThemedColor::BACKGROUND_WIDGET).rgb()));
                 p++;
             }
         }
         QRcode_free(code);
 
+        QImage qrImage = QImage(QR_IMAGE_SIZE, QR_IMAGE_SIZE, QImage::Format_RGB32);
+        qrImage.fill(GUIUtil::getThemedQColor(GUIUtil::ThemedColor::BORDER_WIDGET));
+        QPainter painter(&qrImage);
+        QRect paddedRect = qrImage.rect().adjusted(1, 1, -1, -1);
+        painter.fillRect(paddedRect, GUIUtil::getThemedQColor(GUIUtil::ThemedColor::BACKGROUND_WIDGET));
+        painter.drawImage(1, 1, myImage.scaled(QR_IMAGE_SIZE - 2, QR_IMAGE_SIZE - 2));
+
         ui->labelQRCodeTitle->setText(strQRCodeTitle);
-        ui->lblQRCode->setPixmap(QPixmap::fromImage(myImage).scaled(300, 300));
+        ui->lblQRCode->setPixmap(QPixmap::fromImage(qrImage));
         ui->button_saveImage->setEnabled(true);
     }
 #endif

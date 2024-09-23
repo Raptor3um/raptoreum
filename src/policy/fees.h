@@ -2,23 +2,29 @@
 // Copyright (c) 2009-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-#ifndef BITCOIN_POLICYESTIMATOR_H
-#define BITCOIN_POLICYESTIMATOR_H
+#ifndef BITCOIN_POLICY_FEES_H
+#define BITCOIN_POLICY_FEES_H
 
-#include "amount.h"
-#include "feerate.h"
-#include "uint256.h"
-#include "random.h"
-#include "sync.h"
+#include <amount.h>
+#include <policy/feerate.h>
+#include <uint256.h>
+#include <random.h>
+#include <sync.h>
 
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
+#include <array>
 
 class CAutoFile;
+
 class CFeeRate;
+
 class CTxMemPoolEntry;
+
 class CTxMemPool;
+
 class TxConfirmStats;
 
 /** \class CBlockPolicyEstimator
@@ -68,7 +74,7 @@ class TxConfirmStats;
 
 /* Identifier for each of the 3 different TxConfirmStats which will track
  * history over different time horizons. */
-enum FeeEstimateHorizon {
+enum class FeeEstimateHorizon {
     SHORT_HALFLIFE = 0,
     MED_HALFLIFE = 1,
     LONG_HALFLIFE = 2
@@ -90,8 +96,6 @@ enum class FeeReason {
     MAXTXFEE,
 };
 
-std::string StringForFeeReason(FeeReason reason);
-
 /* Used to determine type of fee estimation requested */
 enum class FeeEstimateMode {
     UNSET,        //! Use default settings based on other criteria
@@ -99,11 +103,8 @@ enum class FeeEstimateMode {
     CONSERVATIVE, //! Force estimateSmartFee to use conservative estimates
 };
 
-bool FeeModeFromString(const std::string& mode_string, FeeEstimateMode& fee_estimate_mode);
-
 /* Used to return detailed information about a feerate bucket */
-struct EstimatorBucket
-{
+struct EstimatorBucket {
     double start = -1;
     double end = -1;
     double withinTarget = 0;
@@ -113,16 +114,14 @@ struct EstimatorBucket
 };
 
 /* Used to return detailed information about a fee estimate calculation */
-struct EstimationResult
-{
+struct EstimationResult {
     EstimatorBucket pass;
     EstimatorBucket fail;
     double decay = 0;
     unsigned int scale = 0;
 };
 
-struct FeeCalculation
-{
+struct FeeCalculation {
     EstimationResult est;
     FeeReason reason = FeeReason::NONE;
     int desiredTarget = 0;
@@ -134,8 +133,7 @@ struct FeeCalculation
  * a certain number of blocks.  Every time a block is added to the best chain, this class records
  * stats on the transactions included in that block
  */
-class CBlockPolicyEstimator
-{
+class CBlockPolicyEstimator {
 private:
     /** Track confirm delays up to 12 blocks for short horizon */
     static constexpr unsigned int SHORT_BLOCK_PERIODS = 12;
@@ -188,14 +186,15 @@ private:
 public:
     /** Create new BlockPolicyEstimator and initialize stats tracking classes with default values */
     CBlockPolicyEstimator();
+
     ~CBlockPolicyEstimator();
 
     /** Process all the transactions that have been included in a block */
     void processBlock(unsigned int nBlockHeight,
-                      std::vector<const CTxMemPoolEntry*>& entries);
+                      std::vector<const CTxMemPoolEntry *> &entries);
 
     /** Process a transaction accepted to the mempool*/
-    void processTransaction(const CTxMemPoolEntry& entry, bool validFeeEstimate);
+    void processTransaction(const CTxMemPoolEntry &entry, bool validFeeEstimate);
 
     /** Remove a transaction from the mempool tracking stats*/
     bool removeTx(uint256 hash, bool inBlock);
@@ -214,62 +213,98 @@ public:
      * threshold and time horizon, and optionally return detailed data about
      * calculation
      */
-    CFeeRate estimateRawFee(int confTarget, double successThreshold, FeeEstimateHorizon horizon, EstimationResult *result = nullptr) const;
+    CFeeRate estimateRawFee(int confTarget, double successThreshold, FeeEstimateHorizon horizon,
+                            EstimationResult *result = nullptr) const;
 
     /** Write estimation data to a file */
-    bool Write(CAutoFile& fileout) const;
+    bool Write(CAutoFile &fileout) const;
 
     /** Read estimation data from a file */
-    bool Read(CAutoFile& filein);
+    bool Read(CAutoFile &filein);
 
     /** Empty mempool transactions on shutdown to record failure to confirm for txs still in mempool */
-    void FlushUnconfirmed(CTxMemPool& pool);
+    void FlushUnconfirmed();
 
     /** Calculation of highest target that estimates are tracked for */
     unsigned int HighestTargetTracked(FeeEstimateHorizon horizon) const;
 
 private:
-    unsigned int nBestSeenHeight;
-    unsigned int firstRecordedHeight;
-    unsigned int historicalFirst;
-    unsigned int historicalBest;
+    mutable RecursiveMutex m_cs_fee_estimator;
 
-    struct TxStatsInfo
-    {
+    unsigned int nBestSeenHeight
+    GUARDED_BY(m_cs_fee_estimator);
+    unsigned int firstRecordedHeight
+    GUARDED_BY(m_cs_fee_estimator);
+    unsigned int historicalFirst
+    GUARDED_BY(m_cs_fee_estimator);
+    unsigned int historicalBest
+    GUARDED_BY(m_cs_fee_estimator);
+
+    struct TxStatsInfo {
         unsigned int blockHeight;
         unsigned int bucketIndex;
+
         TxStatsInfo() : blockHeight(0), bucketIndex(0) {}
     };
 
     // map of txids to information about that transaction
-    std::map<uint256, TxStatsInfo> mapMemPoolTxs;
+    std::map <uint256, TxStatsInfo> mapMemPoolTxs
+    GUARDED_BY(m_cs_fee_estimator);
 
     /** Classes to track historical data on transaction confirmations */
-    TxConfirmStats* feeStats;
-    TxConfirmStats* shortStats;
-    TxConfirmStats* longStats;
+    std::unique_ptr <TxConfirmStats> feeStats
+    PT_GUARDED_BY(m_cs_fee_estimator);
+    std::unique_ptr <TxConfirmStats> shortStats
+    PT_GUARDED_BY(m_cs_fee_estimator);
+    std::unique_ptr <TxConfirmStats> longStats
+    PT_GUARDED_BY(m_cs_fee_estimator);
 
-    unsigned int trackedTxs;
-    unsigned int untrackedTxs;
+    unsigned int trackedTxs
+    GUARDED_BY(m_cs_fee_estimator);
+    unsigned int untrackedTxs
+    GUARDED_BY(m_cs_fee_estimator);
 
-    std::vector<double> buckets;              // The upper-bound of the range for the bucket (inclusive)
-    std::map<double, unsigned int> bucketMap; // Map of bucket upper-bound to index into all vectors by bucket
-
-    mutable CCriticalSection cs_feeEstimator;
+    std::vector<double> buckets
+    GUARDED_BY(m_cs_fee_estimator);              // The upper-bound of the range for the bucket (inclusive)
+    std::map<double, unsigned int> bucketMap
+    GUARDED_BY(m_cs_fee_estimator); // Map of bucket upper-bound to index into all vectors by bucket
 
     /** Process a transaction confirmed in a block*/
-    bool processBlockTx(unsigned int nBlockHeight, const CTxMemPoolEntry* entry);
+    bool processBlockTx(unsigned int nBlockHeight, const CTxMemPoolEntry *entry)
+
+    EXCLUSIVE_LOCKS_REQUIRED(m_cs_fee_estimator);
 
     /** Helper for estimateSmartFee */
-    double estimateCombinedFee(unsigned int confTarget, double successThreshold, bool checkShorterHorizon, EstimationResult *result) const;
+    double estimateCombinedFee(unsigned int confTarget, double successThreshold, bool checkShorterHorizon,
+                               EstimationResult *result) const
+
+    EXCLUSIVE_LOCKS_REQUIRED(m_cs_fee_estimator);
+
     /** Helper for estimateSmartFee */
-    double estimateConservativeFee(unsigned int doubleTarget, EstimationResult *result) const;
+    double estimateConservativeFee(unsigned int doubleTarget, EstimationResult *result) const
+
+    EXCLUSIVE_LOCKS_REQUIRED(m_cs_fee_estimator);
+
     /** Number of blocks of data recorded while fee estimates have been running */
-    unsigned int BlockSpan() const;
+    unsigned int BlockSpan() const
+
+    EXCLUSIVE_LOCKS_REQUIRED(m_cs_fee_estimator);
+
     /** Number of blocks of recorded fee estimate data represented in saved data file */
-    unsigned int HistoricalBlockSpan() const;
+    unsigned int HistoricalBlockSpan() const
+
+    EXCLUSIVE_LOCKS_REQUIRED(m_cs_fee_estimator);
+
     /** Calculation of highest target that reasonable estimate can be provided for */
-    unsigned int MaxUsableEstimate() const;
+    unsigned int MaxUsableEstimate() const
+
+    EXCLUSIVE_LOCKS_REQUIRED(m_cs_fee_estimator);
 };
 
-#endif /*BITCOIN_POLICYESTIMATOR_H */
+static const std::array<int, 9> confTargets = {{2, 4, 6, 12, 24, 48, 144, 504, 1008}};
+
+int getConfTargetForIndex(int index);
+
+int getIndexForConfTarget(int target);
+
+#endif // BITCOIN_POLICY_FEES_H

@@ -9,7 +9,7 @@
  * ==========================(LICENSE BEGIN)============================
  *
  * Copyright (c) 2007-2010  Projet RNRT SAPHIR
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the
  * "Software"), to deal in the Software without restriction, including
@@ -17,10 +17,10 @@
  * distribute, sublicense, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to
  * the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be
  * included in all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
  * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -39,7 +39,7 @@
 #define SPH_SHAVITE_H__
 
 #include <stddef.h>
-#include "sph_types.h"
+#include <crypto/sph_types.h>
 
 #ifdef __cplusplus
 extern "C"{
@@ -77,10 +77,10 @@ extern "C"{
  */
 typedef struct {
 #ifndef DOXYGEN_IGNORE
-	unsigned char buf[64];    /* first field, for alignment */
-	size_t ptr;
-	sph_u32 h[8];
-	sph_u32 count0, count1;
+    unsigned char buf[64];    /* first field, for alignment */
+    size_t ptr;
+    sph_u32 h[8];
+    sph_u32 count0, count1;
 #endif
 } sph_shavite_small_context;
 
@@ -108,10 +108,10 @@ typedef sph_shavite_small_context sph_shavite256_context;
  */
 typedef struct {
 #ifndef DOXYGEN_IGNORE
-	unsigned char buf[128];    /* first field, for alignment */
-	size_t ptr;
-	sph_u32 h[16];
-	sph_u32 count0, count1, count2, count3;
+    unsigned char buf[128];    /* first field, for alignment */
+    size_t ptr;
+    sph_u32 h[16];
+    sph_u32 count0, count1, count2, count3;
 #endif
 } sph_shavite_big_context;
 
@@ -170,7 +170,7 @@ void sph_shavite224_close(void *cc, void *dst);
  * @param dst   the destination buffer
  */
 void sph_shavite224_addbits_and_close(
-	void *cc, unsigned ub, unsigned n, void *dst);
+        void *cc, unsigned ub, unsigned n, void *dst);
 
 /**
  * Initialize a SHAvite-256 context. This process performs no memory allocation.
@@ -215,7 +215,7 @@ void sph_shavite256_close(void *cc, void *dst);
  * @param dst   the destination buffer
  */
 void sph_shavite256_addbits_and_close(
-	void *cc, unsigned ub, unsigned n, void *dst);
+        void *cc, unsigned ub, unsigned n, void *dst);
 
 /**
  * Initialize a SHAvite-384 context. This process performs no memory allocation.
@@ -260,7 +260,7 @@ void sph_shavite384_close(void *cc, void *dst);
  * @param dst   the destination buffer
  */
 void sph_shavite384_addbits_and_close(
-	void *cc, unsigned ub, unsigned n, void *dst);
+        void *cc, unsigned ub, unsigned n, void *dst);
 
 /**
  * Initialize a SHAvite-512 context. This process performs no memory allocation.
@@ -305,10 +305,10 @@ void sph_shavite512_close(void *cc, void *dst);
  * @param dst   the destination buffer
  */
 void sph_shavite512_addbits_and_close(
-	void *cc, unsigned ub, unsigned n, void *dst);
-	
+        void *cc, unsigned ub, unsigned n, void *dst);
+
 #ifdef __cplusplus
 }
-#endif	
-	
+#endif
+
 #endif

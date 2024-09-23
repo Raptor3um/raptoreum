@@ -6,8 +6,7 @@
 #ifndef BITCOIN_SCRIPT_SCRIPT_ERROR_H
 #define BITCOIN_SCRIPT_SCRIPT_ERROR_H
 
-typedef enum ScriptError_t
-{
+typedef enum ScriptError_t {
     SCRIPT_ERR_OK = 0,
     SCRIPT_ERR_UNKNOWN_ERROR,
     SCRIPT_ERR_EVAL_FALSE,
@@ -26,6 +25,7 @@ typedef enum ScriptError_t
     SCRIPT_ERR_EQUALVERIFY,
     SCRIPT_ERR_CHECKMULTISIGVERIFY,
     SCRIPT_ERR_CHECKSIGVERIFY,
+    SCRIPT_ERR_CHECKDATASIGVERIFY,
     SCRIPT_ERR_NUMEQUALVERIFY,
 
     /* Logical/Format/Canonical errors */
@@ -34,6 +34,16 @@ typedef enum ScriptError_t
     SCRIPT_ERR_INVALID_STACK_OPERATION,
     SCRIPT_ERR_INVALID_ALTSTACK_OPERATION,
     SCRIPT_ERR_UNBALANCED_CONDITIONAL,
+
+    /* Operands checks */
+    SCRIPT_ERR_INVALID_SPLIT_RANGE,
+    SCRIPT_ERR_INVALID_OPERAND_SIZE,
+    SCRIPT_ERR_INVALID_NUMBER_RANGE,
+    SCRIPT_ERR_IMPOSSIBLE_ENCODING,
+
+    /* Divisor errors */
+    SCRIPT_ERR_DIV_BY_ZERO,
+    SCRIPT_ERR_MOD_BY_ZERO,
 
     /* CHECKLOCKTIMEVERIFY and CHECKSEQUENCEVERIFY */
     SCRIPT_ERR_NEGATIVE_LOCKTIME,
@@ -58,6 +68,6 @@ typedef enum ScriptError_t
 
 #define SCRIPT_ERR_LAST SCRIPT_ERR_ERROR_COUNT
 
-const char* ScriptErrorString(const ScriptError error);
+const char *ScriptErrorString(const ScriptError error);
 
 #endif // BITCOIN_SCRIPT_SCRIPT_ERROR_H

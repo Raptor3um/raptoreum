@@ -7,7 +7,7 @@
  * ==========================(LICENSE BEGIN)============================
  *
  * Copyright (c) 2007-2010  Projet RNRT SAPHIR
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the
  * "Software"), to deal in the Software without restriction, including
@@ -15,10 +15,10 @@
  * distribute, sublicense, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to
  * the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be
  * included in all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
  * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -41,7 +41,7 @@ extern "C"{
 #endif
 
 #include <stddef.h>
-#include "sph_types.h"
+#include <crypto/sph_types.h>
 
 /**
  * Output size (in bits) for Luffa-224.
@@ -75,9 +75,9 @@ extern "C"{
  */
 typedef struct {
 #ifndef DOXYGEN_IGNORE
-	unsigned char buf[32];    /* first field, for alignment */
-	size_t ptr;
-	sph_u32 V[3][8];
+    unsigned char buf[32];    /* first field, for alignment */
+    size_t ptr;
+    sph_u32 V[3][8];
 #endif
 } sph_luffa224_context;
 
@@ -92,9 +92,9 @@ typedef sph_luffa224_context sph_luffa256_context;
  */
 typedef struct {
 #ifndef DOXYGEN_IGNORE
-	unsigned char buf[32];    /* first field, for alignment */
-	size_t ptr;
-	sph_u32 V[4][8];
+    unsigned char buf[32];    /* first field, for alignment */
+    size_t ptr;
+    sph_u32 V[4][8];
 #endif
 } sph_luffa384_context;
 
@@ -103,9 +103,9 @@ typedef struct {
  */
 typedef struct {
 #ifndef DOXYGEN_IGNORE
-	unsigned char buf[32];    /* first field, for alignment */
-	size_t ptr;
-	sph_u32 V[5][8];
+    unsigned char buf[32];    /* first field, for alignment */
+    size_t ptr;
+    sph_u32 V[5][8];
 #endif
 } sph_luffa512_context;
 
@@ -152,7 +152,7 @@ void sph_luffa224_close(void *cc, void *dst);
  * @param dst   the destination buffer
  */
 void sph_luffa224_addbits_and_close(
-	void *cc, unsigned ub, unsigned n, void *dst);
+        void *cc, unsigned ub, unsigned n, void *dst);
 
 /**
  * Initialize a Luffa-256 context. This process performs no memory allocation.
@@ -197,7 +197,7 @@ void sph_luffa256_close(void *cc, void *dst);
  * @param dst   the destination buffer
  */
 void sph_luffa256_addbits_and_close(
-	void *cc, unsigned ub, unsigned n, void *dst);
+        void *cc, unsigned ub, unsigned n, void *dst);
 
 /**
  * Initialize a Luffa-384 context. This process performs no memory allocation.
@@ -242,7 +242,7 @@ void sph_luffa384_close(void *cc, void *dst);
  * @param dst   the destination buffer
  */
 void sph_luffa384_addbits_and_close(
-	void *cc, unsigned ub, unsigned n, void *dst);
+        void *cc, unsigned ub, unsigned n, void *dst);
 
 /**
  * Initialize a Luffa-512 context. This process performs no memory allocation.
@@ -287,10 +287,10 @@ void sph_luffa512_close(void *cc, void *dst);
  * @param dst   the destination buffer
  */
 void sph_luffa512_addbits_and_close(
-	void *cc, unsigned ub, unsigned n, void *dst);
-	
+        void *cc, unsigned ub, unsigned n, void *dst);
+
 #ifdef __cplusplus
 }
 #endif
-	
+
 #endif

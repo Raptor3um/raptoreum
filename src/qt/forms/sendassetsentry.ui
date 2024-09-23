@@ -1,0 +1,383 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>SendAssetsEntry</class>
+ <widget class="QStackedWidget" name="SendAssetsEntry">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>729</width>
+    <height>192</height>
+   </rect>
+  </property>
+  <property name="focusPolicy">
+   <enum>Qt::TabFocus</enum>
+  </property>
+  <property name="autoFillBackground">
+   <bool>false</bool>
+  </property>
+  <property name="currentIndex">
+   <number>0</number>
+  </property>
+  <widget class="QFrame" name="SendAssets">
+   <property name="toolTip">
+    <string>This is a normal payment.</string>
+   </property>
+   <property name="frameShape">
+    <enum>QFrame::NoFrame</enum>
+   </property>
+   <layout class="QGridLayout" name="gridLayout">
+    <property name="topMargin">
+     <number>8</number>
+    </property>
+    <property name="bottomMargin">
+     <number>4</number>
+    </property>
+    <property name="horizontalSpacing">
+     <number>12</number>
+    </property>
+    <property name="verticalSpacing">
+     <number>8</number>
+    </property>
+    <item row="5" column="0">
+     <widget class="QLabel" name="amountLabel">
+      <property name="text">
+       <string>A&amp;mount:</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      </property>
+      <property name="buddy">
+       <cstring>payAmount</cstring>
+      </property>
+     </widget>
+    </item>
+    <item row="4" column="1">
+     <widget class="QLineEdit" name="addAsLabel">
+      <property name="toolTip">
+       <string>Enter a label for this address to add it to the list of used addresses</string>
+      </property>
+     </widget>
+    </item>
+    <item row="6" column="0">
+     <widget class="QLabel" name="maturityLb">
+      <property name="text">
+       <string>Maturity:</string>
+      </property>
+     </widget>
+    </item>
+    <item row="4" column="0">
+     <widget class="QLabel" name="labellLabel">
+      <property name="text">
+       <string>&amp;Label:</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      </property>
+      <property name="buddy">
+       <cstring>addAsLabel</cstring>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="1">
+     <layout class="QHBoxLayout" name="payToLayout">
+      <property name="spacing">
+       <number>0</number>
+      </property>
+      <item>
+       <widget class="QValidatedLineEdit" name="payTo">
+        <property name="toolTip">
+         <string>The Raptoreum address to send the payment to</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QToolButton" name="addressBookButton">
+        <property name="toolTip">
+         <string>Choose previously used address</string>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>22</width>
+          <height>22</height>
+         </size>
+        </property>
+        <property name="shortcut">
+         <string>Alt+A</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QToolButton" name="pasteButton">
+        <property name="toolTip">
+         <string>Paste address from clipboard</string>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>22</width>
+          <height>22</height>
+         </size>
+        </property>
+        <property name="shortcut">
+         <string>Alt+P</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QToolButton" name="deleteButton">
+        <property name="toolTip">
+         <string>Remove this entry</string>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>22</width>
+          <height>22</height>
+         </size>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item row="9" column="0" colspan="2">
+     <widget class="Line" name="line">
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+     </widget>
+    </item>
+    <item row="5" column="1">
+     <layout class="QHBoxLayout" name="horizontalLayoutAmount" stretch="0,0,0,0">
+      <property name="spacing">
+       <number>6</number>
+      </property>
+      <item>
+       <widget class="BitcoinAmountField" name="payAmount">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="layoutDirection">
+         <enum>Qt::LeftToRight</enum>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="futureCb">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="toolTip">
+         <string>Enable/Disable future transaction</string>
+        </property>
+        <property name="text">
+         <string>future</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer_2">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QPushButton" name="useAvailableBalanceButton">
+        <property name="minimumSize">
+         <size>
+          <width>250</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>Use available balance</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item row="2" column="0">
+     <widget class="QLabel" name="payToLabel">
+      <property name="text">
+       <string>Pay &amp;To:</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      </property>
+      <property name="buddy">
+       <cstring>payTo</cstring>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="0">
+     <widget class="QLabel" name="Assetlabel">
+      <property name="text">
+       <string>Asset:</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      </property>
+     </widget>
+    </item>
+    <item row="6" column="1">
+     <layout class="QHBoxLayout" name="futureHorizontalLayout">
+      <item>
+       <widget class="QLineEdit" name="maturity">
+        <property name="toolTip">
+         <string>Number of block confirmations for this output to be spendable if happen before timelock</string>
+        </property>
+        <property name="text">
+         <string notr="true">100</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="locktimeLb">
+        <property name="text">
+         <string>Lock time:</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="locktime">
+        <property name="toolTip">
+         <string>Time in seconds for this output to be spendable if happen before maturity</string>
+        </property>
+        <property name="text">
+         <string notr="true">100</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="feeLb">
+        <property name="text">
+         <string>Fee:</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="feeDisplay">
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item row="0" column="1">
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <item>
+       <widget class="QComboBox" name="assetList">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>200</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>400</width>
+          <height>16777215</height>
+         </size>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="BalanceLabel">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Fixed" vsizetype="Minimum">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>Balance:</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="AssetBalance">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>123456 RTM</string>
+        </property>
+        <property name="margin">
+         <number>0</number>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>QValidatedLineEdit</class>
+   <extends>QLineEdit</extends>
+   <header>qt/qvalidatedlineedit.h</header>
+  </customwidget>
+  <customwidget>
+   <class>BitcoinAmountField</class>
+   <extends>QLineEdit</extends>
+   <header>qt/bitcoinamountfield.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <tabstops>
+  <tabstop>payTo</tabstop>
+  <tabstop>addressBookButton</tabstop>
+  <tabstop>pasteButton</tabstop>
+  <tabstop>deleteButton</tabstop>
+  <tabstop>addAsLabel</tabstop>
+  <tabstop>payAmount</tabstop>
+ </tabstops>
+ <resources>
+  <include location="../raptoreum.qrc"/>
+ </resources>
+ <connections/>
+</ui>

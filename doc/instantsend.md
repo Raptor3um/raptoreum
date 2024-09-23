@@ -12,8 +12,8 @@ When a "Transaction Lock" occurs the hash of the related transaction is broadcas
 * `zmqpubhashtxlock`: publishes the transaction hash when locked via InstantSend
 
 This mechanism has been integrated into Bitcore-Node-Raptoreum which allows for notification to be broadcast through Insight API in one of two ways:
-* WebSocket: [https://github.com/raptoreum/insight-api-raptoreum#web-socket-api](https://github.com/raptoreum/insight-api-raptoreum#web-socket-api)
-* API: [https://github.com/raptoreum/insight-api-raptoreum#instantsend-transactions](https://github.com/raptoreum/insight-api-raptoreum#instantsend-transactions)
+* WebSocket: [https://github.com/raptor3um/insight-api-raptoreum#web-socket-api](https://github.com/raptor3um/insight-api-raptoreum#web-socket-api)
+* API: [https://github.com/raptor3um/insight-api-raptoreum#instantsend-transactions](https://github.com/raptor3um/insight-api-raptoreum#instantsend-transactions)
 
 #### Command line option
 

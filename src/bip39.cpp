@@ -24,37 +24,34 @@
 // Source:
 // https://github.com/trezor/trezor-crypto
 
-#include "bip39.h"
-#include "bip39_english.h"
-#include "crypto/sha256.h"
-#include "random.h"
+#include <bip39.h>
+#include <bip39_english.h>
+#include <crypto/pkcs5_pbkdf2_hmac_sha512.h>
+#include <crypto/sha256.h>
+#include <random.h>
 
-#include <openssl/evp.h>
-
-SecureString CMnemonic::Generate(int strength)
-{
+SecureString CMnemonic::Generate(int strength) {
     if (strength % 32 || strength < 128 || strength > 256) {
         return SecureString();
     }
     SecureVector data(32);
-    GetStrongRandBytes(&data[0], 32);
+    GetStrongRandBytes(data.data(), 32);
     SecureString mnemonic = FromData(data, strength / 8);
     return mnemonic;
 }
 
 // SecureString CMnemonic::FromData(const uint8_t *data, int len)
-SecureString CMnemonic::FromData(const SecureVector& data, int len)
-{
+SecureString CMnemonic::FromData(const SecureVector &data, int len) {
     if (len % 4 || len < 16 || len > 32) {
         return SecureString();
     }
 
     SecureVector checksum(32);
-    CSHA256().Write(&data[0], len).Finalize(&checksum[0]);
+    CSHA256().Write(data.data(), len).Finalize(checksum.data());
 
     // data
     SecureVector bits(len);
-    memcpy(&bits[0], &data[0], len);
+    memcpy(bits.data(), data.data(), len);
     // checksum
     bits.push_back(checksum[0]);
 
@@ -77,8 +74,7 @@ SecureString CMnemonic::FromData(const SecureVector& data, int len)
     return mnemonic;
 }
 
-bool CMnemonic::Check(SecureString mnemonic)
-{
+bool CMnemonic::Check(SecureString mnemonic) {
     if (mnemonic.empty()) {
         return false;
     }
@@ -101,8 +97,7 @@ bool CMnemonic::Check(SecureString mnemonic)
 
     uint32_t nWordIndex, ki, nBitsCount{};
 
-    for (size_t i = 0; i < mnemonic.size(); ++i)
-    {
+    for (size_t i = 0; i < mnemonic.size(); ++i) {
         ssCurrentWord = "";
         while (i + ssCurrentWord.size() < mnemonic.size() && mnemonic[i + ssCurrentWord.size()] != ' ') {
             if (ssCurrentWord.size() >= 9) {
@@ -132,16 +127,14 @@ bool CMnemonic::Check(SecureString mnemonic)
         return false;
     }
     bits[32] = bits[nWordCount * 4 / 3];
-    CSHA256().Write(&bits[0], nWordCount * 4 / 3).Finalize(&bits[0]);
+    CSHA256().Write(bits.data(), nWordCount * 4 / 3).Finalize(bits.data());
 
     bool fResult = 0;
     if (nWordCount == 12) {
         fResult = (bits[0] & 0xF0) == (bits[32] & 0xF0); // compare first 4 bits
-    } else
-    if (nWordCount == 18) {
+    } else if (nWordCount == 18) {
         fResult = (bits[0] & 0xFC) == (bits[32] & 0xFC); // compare first 6 bits
-    } else
-    if (nWordCount == 24) {
+    } else if (nWordCount == 24) {
         fResult = bits[0] == bits[32]; // compare 8 bits
     }
 
@@ -149,14 +142,10 @@ bool CMnemonic::Check(SecureString mnemonic)
 }
 
 // passphrase must be at most 256 characters or code may crash
-void CMnemonic::ToSeed(SecureString mnemonic, SecureString passphrase, SecureVector& seedRet)
-{
+void CMnemonic::ToSeed(SecureString mnemonic, SecureString passphrase, SecureVector &seedRet) {
     SecureString ssSalt = SecureString("mnemonic") + passphrase;
     SecureVector vchSalt(ssSalt.begin(), ssSalt.end());
     seedRet.resize(64);
-    // int PKCS5_PBKDF2_HMAC(const char *pass, int passlen,
-    //                    const unsigned char *salt, int saltlen, int iter,
-    //                    const EVP_MD *digest,
-    //                    int keylen, unsigned char *out);
-    PKCS5_PBKDF2_HMAC(mnemonic.c_str(), mnemonic.size(), &vchSalt[0], vchSalt.size(), 2048, EVP_sha512(), 64, &seedRet[0]);
+    PKCS5_PBKDF2_HMAC_SHA512(mnemonic.c_str(), mnemonic.size(), vchSalt.data(), vchSalt.size(), 2048, 64,
+                             seedRet.data());
 }

@@ -63,6 +63,9 @@
            <property name="toolTip">
             <string>Filter smartnode list</string>
            </property>
+           <property name="placeholderText">
+            <string>Filter by any property (address or protx hash)</string>
+           </property>
           </widget>
          </item>
          <item>

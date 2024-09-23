@@ -5,11 +5,14 @@
 #ifndef BITCOIN_QT_BITCOINAMOUNTFIELD_H
 #define BITCOIN_QT_BITCOINAMOUNTFIELD_H
 
-#include "amount.h"
+#include <amount.h>
 
+#include <QValidator>
 #include <QWidget>
 
-class AmountSpinBox;
+class AmountLineEdit;
+
+class BitcoinUnits;
 
 QT_BEGIN_NAMESPACE
 class QValueComboBox;
@@ -17,33 +20,36 @@ QT_END_NAMESPACE
 
 /** Widget for entering bitcoin amounts.
   */
-class BitcoinAmountField: public QWidget
-{
+class BitcoinAmountField : public QWidget {
     Q_OBJECT
 
     // ugly hack: for some unknown reason CAmount (instead of qint64) does not work here as expected
     // discussion: https://github.com/bitcoin/bitcoin/pull/5117
-    Q_PROPERTY(qint64 value READ value WRITE setValue NOTIFY valueChanged USER true)
+    Q_PROPERTY(qint64 value READ value WRITE setValue NOTIFY valueChanged USER
+
+    true)
 
 public:
-    explicit BitcoinAmountField(QWidget *parent = 0);
+    explicit BitcoinAmountField(QWidget *parent = nullptr);
 
-    CAmount value(bool *value=0) const;
-    void setValue(const CAmount& value);
+    CAmount value(bool *value = nullptr) const;
 
-    /** Set single step in satoshis **/
-    void setSingleStep(const CAmount& step);
+    void setValue(const CAmount &value);
 
     /** Make read-only **/
     void setReadOnly(bool fReadOnly);
 
     /** Mark current value as invalid in UI. */
     void setValid(bool valid);
+
     /** Perform input validation, mark field as invalid if entered value is not valid. */
     bool validate();
 
     /** Change unit used to display amount. */
     void setDisplayUnit(int unit);
+
+    /** Change assets unit used to display amount. */
+    void setAssetsUnit(int unit);
 
     /** Make field empty and ready for new input. */
     void clear();
@@ -56,20 +62,19 @@ public:
     */
     QWidget *setupTabChain(QWidget *prev);
 
-Q_SIGNALS:
-    void valueChanged();
+    Q_SIGNALS:
+            void valueChanged();
 
 protected:
     /** Intercept focus-in event and ',' key presses */
-    bool eventFilter(QObject *object, QEvent *event);
+    bool eventFilter(QObject *object, QEvent *event) override;
 
 private:
-    AmountSpinBox *amount;
-    QValueComboBox *unit;
+    AmountLineEdit *amount;
+    BitcoinUnits *units;
+    int assetUnit;
 
-private Q_SLOTS:
     void unitChanged(int idx);
-
 };
 
 #endif // BITCOIN_QT_BITCOINAMOUNTFIELD_H

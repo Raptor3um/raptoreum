@@ -2,19 +2,16 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "hash.h"
-#include "crypto/common.h"
-#include "crypto/hmac_sha512.h"
-#include "pubkey.h"
+#include <hash.h>
+#include <crypto/common.h>
+#include <crypto/hmac_sha512.h>
 
 
-inline uint32_t ROTL32(uint32_t x, int8_t r)
-{
+inline uint32_t ROTL32(uint32_t x, int8_t r) {
     return (x << r) | (x >> (32 - r));
 }
 
-unsigned int MurmurHash3(unsigned int nHashSeed, const std::vector<unsigned char>& vDataToHash)
-{
+unsigned int MurmurHash3(unsigned int nHashSeed, Span<const unsigned char> vDataToHash) {
     // The following is MurmurHash3 (x86_32), see http://code.google.com/p/smhasher/source/browse/trunk/MurmurHash3.cpp
     uint32_t h1 = nHashSeed;
     const uint32_t c1 = 0xcc9e2d51;
@@ -24,10 +21,10 @@ unsigned int MurmurHash3(unsigned int nHashSeed, const std::vector<unsigned char
 
     //----------
     // body
-    const uint8_t* blocks = vDataToHash.data();
+    const uint8_t *blocks = vDataToHash.data();
 
     for (int i = 0; i < nblocks; ++i) {
-        uint32_t k1 = ReadLE32(blocks + i*4);
+        uint32_t k1 = ReadLE32(blocks + i * 4);
 
         k1 *= c1;
         k1 = ROTL32(k1, 15);
@@ -40,15 +37,17 @@ unsigned int MurmurHash3(unsigned int nHashSeed, const std::vector<unsigned char
 
     //----------
     // tail
-    const uint8_t* tail = vDataToHash.data() + nblocks * 4;
+    const uint8_t *tail = vDataToHash.data() + nblocks * 4;
 
     uint32_t k1 = 0;
 
     switch (vDataToHash.size() & 3) {
         case 3:
             k1 ^= tail[2] << 16;
+            [[fallthrough]];
         case 2:
             k1 ^= tail[1] << 8;
+            [[fallthrough]];
         case 1:
             k1 ^= tail[0];
             k1 *= c1;
@@ -69,14 +68,17 @@ unsigned int MurmurHash3(unsigned int nHashSeed, const std::vector<unsigned char
     return h1;
 }
 
-void BIP32Hash(const ChainCode &chainCode, unsigned int nChild, unsigned char header, const unsigned char data[32], unsigned char output[64])
-{
+void BIP32Hash(const ChainCode &chainCode, unsigned int nChild, unsigned char header, const unsigned char data[32],
+               unsigned char output[64]) {
     unsigned char num[4];
-    num[0] = (nChild >> 24) & 0xFF;
-    num[1] = (nChild >> 16) & 0xFF;
-    num[2] = (nChild >>  8) & 0xFF;
-    num[3] = (nChild >>  0) & 0xFF;
+    WriteBE32(num, nChild);
     CHMAC_SHA512(chainCode.begin(), chainCode.size()).Write(&header, 1).Write(data, 32).Write(num, 4).Finalize(output);
+}
+
+uint256 SHA256Uint256(const uint256 &input) {
+    uint256 result;
+    CSHA256().Write(input.begin(), 32).Finalize(result.begin());
+    return result;
 }
 
 #define ROTL(x, b) (uint64_t)(((x) << (b)) | ((x) >> (64 - (b))))
@@ -90,8 +92,7 @@ void BIP32Hash(const ChainCode &chainCode, unsigned int nChild, unsigned char he
     v2 = ROTL(v2, 32); \
 } while (0)
 
-CSipHasher::CSipHasher(uint64_t k0, uint64_t k1)
-{
+CSipHasher::CSipHasher(uint64_t k0, uint64_t k1) {
     v[0] = 0x736f6d6570736575ULL ^ k0;
     v[1] = 0x646f72616e646f6dULL ^ k1;
     v[2] = 0x6c7967656e657261ULL ^ k0;
@@ -100,8 +101,7 @@ CSipHasher::CSipHasher(uint64_t k0, uint64_t k1)
     tmp = 0;
 }
 
-CSipHasher& CSipHasher::Write(uint64_t data)
-{
+CSipHasher &CSipHasher::Write(uint64_t data) {
     uint64_t v0 = v[0], v1 = v[1], v2 = v[2], v3 = v[3];
 
     assert(count % 8 == 0);
@@ -120,8 +120,7 @@ CSipHasher& CSipHasher::Write(uint64_t data)
     return *this;
 }
 
-CSipHasher& CSipHasher::Write(const unsigned char* data, size_t size)
-{
+CSipHasher &CSipHasher::Write(const unsigned char *data, size_t size) {
     uint64_t v0 = v[0], v1 = v[1], v2 = v[2], v3 = v[3];
     uint64_t t = tmp;
     int c = count;
@@ -148,11 +147,10 @@ CSipHasher& CSipHasher::Write(const unsigned char* data, size_t size)
     return *this;
 }
 
-uint64_t CSipHasher::Finalize() const
-{
+uint64_t CSipHasher::Finalize() const {
     uint64_t v0 = v[0], v1 = v[1], v2 = v[2], v3 = v[3];
 
-    uint64_t t = tmp | (((uint64_t)count) << 56);
+    uint64_t t = tmp | (((uint64_t) count) << 56);
 
     v3 ^= t;
     SIPROUND;
@@ -166,8 +164,7 @@ uint64_t CSipHasher::Finalize() const
     return v0 ^ v1 ^ v2 ^ v3;
 }
 
-uint64_t SipHashUint256(uint64_t k0, uint64_t k1, const uint256& val)
-{
+uint64_t SipHashUint256(uint64_t k0, uint64_t k1, const uint256 &val) {
     /* Specialized implementation for efficiency */
     uint64_t d = val.GetUint64(0);
 
@@ -194,10 +191,10 @@ uint64_t SipHashUint256(uint64_t k0, uint64_t k1, const uint256& val)
     SIPROUND;
     SIPROUND;
     v0 ^= d;
-    v3 ^= ((uint64_t)4) << 59;
+    v3 ^= ((uint64_t) 4) << 59;
     SIPROUND;
     SIPROUND;
-    v0 ^= ((uint64_t)4) << 59;
+    v0 ^= ((uint64_t) 4) << 59;
     v2 ^= 0xFF;
     SIPROUND;
     SIPROUND;
@@ -206,8 +203,7 @@ uint64_t SipHashUint256(uint64_t k0, uint64_t k1, const uint256& val)
     return v0 ^ v1 ^ v2 ^ v3;
 }
 
-uint64_t SipHashUint256Extra(uint64_t k0, uint64_t k1, const uint256& val, uint32_t extra)
-{
+uint64_t SipHashUint256Extra(uint64_t k0, uint64_t k1, const uint256 &val, uint32_t extra) {
     /* Specialized implementation for efficiency */
     uint64_t d = val.GetUint64(0);
 
@@ -234,7 +230,7 @@ uint64_t SipHashUint256Extra(uint64_t k0, uint64_t k1, const uint256& val, uint3
     SIPROUND;
     SIPROUND;
     v0 ^= d;
-    d = (((uint64_t)36) << 56) | extra;
+    d = (((uint64_t) 36) << 56) | extra;
     v3 ^= d;
     SIPROUND;
     SIPROUND;

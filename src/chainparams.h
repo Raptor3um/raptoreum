@@ -1,24 +1,22 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2020-2023 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_CHAINPARAMS_H
 #define BITCOIN_CHAINPARAMS_H
 
-#include "chainparamsbase.h"
-#include "consensus/params.h"
-#include "primitives/block.h"
-#include "protocol.h"
+#include <chainparamsbase.h>
+#include <consensus/params.h>
+#include <llmq/quorums_parameters.h>
+#include <primitives/block.h>
+#include <protocol.h>
+#include <chain.h>
+#include <update/update.h>
 
 #include <memory>
 #include <vector>
-
-struct CDNSSeedData {
-    std::string host;
-    bool supportsServiceBitsFiltering;
-    CDNSSeedData(const std::string &strHost, bool supportsServiceBitsFilteringIn) : host(strHost), supportsServiceBitsFiltering(supportsServiceBitsFilteringIn) {}
-};
 
 struct SeedSpec6 {
     uint8_t addr[16];
@@ -31,6 +29,12 @@ struct CCheckpointData {
     MapCheckpoints mapCheckpoints;
 };
 
+/**
+ * Holds various statistics on transactions within a chain. Used to estimate
+ * verification progress during chain sync.
+ *
+ * See also: CChainParams::TxData, GuessVerificationProgress.
+ */
 struct ChainTxData {
     int64_t nTime;
     int64_t nTxCount;
@@ -44,8 +48,7 @@ struct ChainTxData {
  * a regression test mode which is intended for private networks only. It has
  * minimal difficulty to ensure that blocks can be found instantly.
  */
-class CChainParams
-{
+class CChainParams {
 public:
     enum Base58Type {
         PUBKEY_ADDRESS,
@@ -57,76 +60,135 @@ public:
         MAX_BASE58_TYPES
     };
 
-    const Consensus::Params& GetConsensus() const { return consensus; }
-    const CMessageHeader::MessageStartChars& MessageStart() const { return pchMessageStart; }
+    const Consensus::Params &GetConsensus() const { return consensus; }
+
+    const CMessageHeader::MessageStartChars &MessageStart() const { return pchMessageStart; }
+
     int GetDefaultPort() const { return nDefaultPort; }
 
-    const CBlock& GenesisBlock() const { return genesis; }
-    const CBlock& DevNetGenesisBlock() const { return devnetGenesis; }
+    const CBlock &GenesisBlock() const { return genesis; }
+
+    const CBlock &DevNetGenesisBlock() const { return devnetGenesis; }
+
     /** Default value for -checkmempool and -checkblockindex argument */
     bool DefaultConsistencyChecks() const { return fDefaultConsistencyChecks; }
+
     /** Policy: Filter transactions that do not match well-defined patterns */
     bool RequireStandard() const { return fRequireStandard; }
+
     /** Require addresses specified with "-externalip" parameter to be routable */
     bool RequireRoutableExternalIP() const { return fRequireRoutableExternalIP; }
+
+    /** If this chain allows time to be mocked */
+    bool IsMockableChain() const { return m_is_mockable_chain; }
+
     uint64_t PruneAfterHeight() const { return nPruneAfterHeight; }
+
+    /** Minimum free space (in GB) needed for data directory */
+    uint64_t AssumedBlockchainSize() const { return m_assumed_blockchain_size; }
+
+    /** Minimum free space (in GB) needed for data directory when pruned; Does not include prune targets */
+    uint64_t AssumedChainStateSize() const { return m_assumed_chain_state_size; }
+
     /** Make miner stop after a block is found. In RPC, don't return until nGenProcLimit blocks are generated */
     bool MineBlocksOnDemand() const { return fMineBlocksOnDemand; }
+
     /** Allow multiple addresses to be selected from the same network group (e.g. 192.168.x.x) */
     bool AllowMultipleAddressesFromGroup() const { return fAllowMultipleAddressesFromGroup; }
+
     /** Allow nodes with the same address and multiple ports */
     bool AllowMultiplePorts() const { return fAllowMultiplePorts; }
+
     bool MiningRequiresPeers() const { return miningRequiresPeers; }
+
+    /** How long to wait until we allow retrying of a LLMQ connection  */
+    int LLMQConnectionRetryTimeout() const { return nLLMQConnectionRetryTimeout; }
+
     /** Return the BIP70 network string (main, test or regtest) */
     std::string NetworkIDString() const { return strNetworkID; }
-    const std::vector<CDNSSeedData>& DNSSeeds() const { return vSeeds; }
-    const std::vector<unsigned char>& Base58Prefix(Base58Type type) const { return base58Prefixes[type]; }
+
+    /** Return the list of hostnames to look up for DNS seeds */
+    const std::vector <std::string> &DNSSeeds() const { return vSeeds; }
+
+    const std::vector<unsigned char> &Base58Prefix(Base58Type type) const { return base58Prefixes[type]; }
+
     int ExtCoinType() const { return nExtCoinType; }
-    const std::vector<SeedSpec6>& FixedSeeds() const { return vFixedSeeds; }
-    const CCheckpointData& Checkpoints() const { return checkpointData; }
-    const ChainTxData& TxData() const { return chainTxData; }
-    void UpdateVersionBitsParameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout, int64_t nWindowSize, int64_t nThreshold);
+
+    const std::vector <SeedSpec6> &FixedSeeds() const { return vFixedSeeds; }
+
+    const CCheckpointData &Checkpoints() const { return checkpointData; }
+
+    const ChainTxData &TxData() const { return chainTxData; }
+
     void UpdateDIP3Parameters(int nActivationHeight, int nEnforcementHeight);
+
     void UpdateBudgetParameters(int nSmartnodePaymentsStartBlock, int nBudgetPaymentsStartBlock, int nSuperblockStartBlock);
+
     void UpdateSubsidyAndDiffParams(int nMinimumDifficultyBlocks, int nHighSubsidyBlocks, int nHighSubsidyFactor);
+
     void UpdateLLMQChainLocks(Consensus::LLMQType llmqType);
-    void UpdateLLMQParams(size_t totalMnCount, int height, bool lowLLMQParams = false);
+
+    void UpdateLLMQInstantSend(Consensus::LLMQType llmqType);
+
+    void UpdateLLMQParams(size_t totalMnCount, int height, const CBlockIndex* blockIndex, bool lowLLMQParams = false);
+
     int PoolMinParticipants() const { return nPoolMinParticipants; }
+
     int PoolMaxParticipants() const { return nPoolMaxParticipants; }
+
     int FulfilledRequestExpireTime() const { return nFulfilledRequestExpireTime; }
-    const std::vector<std::string>& SporkAddresses() const { return vSporkAddresses; }
+
+    UpdateManager& Updates() { return updateManager; }
+
+    const UpdateManager& Updates() const { return updateManager; }
+
+    bool IsFutureActive(CBlockIndex *index) const {
+        int height = index == nullptr ? 0 : index->nHeight;
+        return height >= GetConsensus().nFutureForkBlock;
+    };
+
+    const std::vector <std::string> &SporkAddresses() const { return vSporkAddresses; }
+
     int MinSporkKeys() const { return nMinSporkKeys; }
+
     bool BIP9CheckSmartnodesUpgraded() const { return fBIP9CheckSmartnodesUpgraded; }
+
 protected:
     CChainParams() {}
 
+    UpdateManager updateManager;
     Consensus::Params consensus;
     CMessageHeader::MessageStartChars pchMessageStart;
     int nDefaultPort;
     uint64_t nPruneAfterHeight;
-    std::vector<CDNSSeedData> vSeeds;
+    uint64_t m_assumed_blockchain_size;
+    uint64_t m_assumed_chain_state_size;
+    std::vector <std::string> vSeeds;
     std::vector<unsigned char> base58Prefixes[MAX_BASE58_TYPES];
     int nExtCoinType;
     std::string strNetworkID;
     CBlock genesis;
     CBlock devnetGenesis;
-    std::vector<SeedSpec6> vFixedSeeds;
+    std::vector <SeedSpec6> vFixedSeeds;
     bool fDefaultConsistencyChecks;
     bool fRequireStandard;
     bool fRequireRoutableExternalIP;
     bool fMineBlocksOnDemand;
     bool fAllowMultipleAddressesFromGroup;
     bool fAllowMultiplePorts;
+    bool m_is_mockable_chain;
     bool miningRequiresPeers;
+    int nLLMQConnectionRetryTimeout;
     CCheckpointData checkpointData;
     ChainTxData chainTxData;
     int nPoolMinParticipants;
+    int nPoolNewMinParticipants;
     int nPoolMaxParticipants;
+    int nPoolNewMaxParticipants;
     int nFulfilledRequestExpireTime;
-    std::vector<std::string> vSporkAddresses;
+    std::vector <std::string> vSporkAddresses;
     int nMinSporkKeys;
     bool fBIP9CheckSmartnodesUpgraded;
-
 };
 
 /**
@@ -134,7 +196,7 @@ protected:
  * @returns a CChainParams* of the chosen chain.
  * @throws a std::runtime_error if the chain is not supported.
  */
-std::unique_ptr<CChainParams> CreateChainParams(const std::string& chain);
+std::unique_ptr <CChainParams> CreateChainParams(const std::string &chain);
 
 /**
  * Return the currently selected parameters. This won't change after app
@@ -142,37 +204,15 @@ std::unique_ptr<CChainParams> CreateChainParams(const std::string& chain);
  */
 const CChainParams &Params();
 
+/// Returns the UpdateManager for the currently selected chain
+UpdateManager& Updates();
+
 /**
  * Sets the params returned by Params() to those for the given BIP70 chain name.
  * @throws std::runtime_error when the chain is not supported.
  */
-void SelectParams(const std::string& chain);
+void SelectParams(const std::string &chain);
 
-/**
- * Allows modifying the Version Bits regtest parameters.
- */
-void UpdateVersionBitsParameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout, int64_t nWindowSize, int64_t nThreshold);
-
-/**
- * Allows modifying the DIP3 activation and enforcement height
- */
-void UpdateDIP3Parameters(int nActivationHeight, int nEnforcementHeight);
-
-/**
- * Allows modifying the budget regtest parameters.
- */
-void UpdateBudgetParameters(int nSmartnodePaymentsStartBlock, int nBudgetPaymentsStartBlock, int nSuperblockStartBlock);
-
-/**
- * Allows modifying the subsidy and difficulty devnet parameters.
- */
-void UpdateDevnetSubsidyAndDiffParams(int nMinimumDifficultyBlocks, int nHighSubsidyBlocks, int nHighSubsidyFactor);
-
-/**
- * Allows modifying the LLMQ type for ChainLocks.
- */
-void UpdateDevnetLLMQChainLocks(Consensus::LLMQType llmqType);
-
-void UpdateLLMQParams(size_t totalMnCount, int height, bool lowLLMQParams = false);
+void UpdateLLMQParams(size_t totalMnCount, int height, const CBlockIndex* blockIndex, bool lowLLMQParams = false);
 
 #endif // BITCOIN_CHAINPARAMS_H

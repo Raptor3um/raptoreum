@@ -6,13 +6,17 @@ reset-files.bash
 *.tar.gz
 
 *.exe
+*.pdb
 src/raptoreum
 src/raptoreumd
 src/raptoreum-cli
-src/raptoreum-tx
+src/raptoreum-wallet
+src/test/fuzz
+!src/test/fuzz/*.*
 src/test/test_raptoreum
 src/test/test_raptoreum_fuzzy
 src/qt/test/test_raptoreum-qt
+src/qt/res/css/colors/*
 src/bench/bench_raptoreum
 
 # autoreconf
@@ -34,6 +38,7 @@ build-aux/compile
 build-aux/test-driver
 config.log
 config.status
+config.status.old
 configure
 libtool
 src/config/raptoreum-config.h
@@ -62,8 +67,6 @@ libconftest.dylib*
 *.pyc
 *.o
 *.o-*
-*.patch
-!depends/patches/*/*.patch
 *.a
 *.pb.cc
 *.pb.h
@@ -75,6 +78,10 @@ libconftest.dylib*
 *.json.h
 *.raw.h
 
+# Only ignore unexpected patches
+*.patch
+!depends/patches/**/*.patch
+
 #libtool object files
 *.lo
 *.la
@@ -82,7 +89,7 @@ libconftest.dylib*
 # Compilation and Qt preprocessor part
 *.qm
 Makefile
-raptoreum-qt
+src/qt/raptoreum-qt
 Raptoreum-Qt.app
 !/depends/Makefile
 
@@ -96,7 +103,8 @@ qrc_*.cpp
 # Mac specific
 .DS_Store
 build
-
+*.dSYM
+._*
 #lcov
 *.gcno
 *.gcda
@@ -104,6 +112,7 @@ build
 test_raptoreum.coverage/
 total.coverage/
 coverage_percent.txt
+/cov_tool_wraper.sh
 
 #build tests
 linux-coverage-build
@@ -128,12 +137,14 @@ qa/pull-tester/tests-config.sh
 raptoreum-cli
 raptoreumd
 raptoreum-qt
+raptoreum-wallet
 make
 
 /docker/bin
 
 # CLion
 .idea
+.vscode
 cmake-build-debug
 
 depends/built
@@ -141,4 +152,12 @@ depends/x86_64-pc-linux-gnu
 depends/sdk-sources/
 dist/
 *.conf
+.settings/language.settings.xml
 
+/raptoreum.iml
+/testnet3_binary/
+/testnet4/
+
+osx_volname
+dist/
+src/test/runtest.sh

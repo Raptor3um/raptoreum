@@ -9,7 +9,7 @@ rm -f doc/man/Makefile
 rm -f doc/man/Makefile.in
 
 rm -f src/config/stamp-h1
-rm -f src/config/bitcoin-config.h
+rm -f src/config/raptoreum-config.h
 rm -f src/obj/build.h
 rm -f src/leveldb/build_config.mk
 
@@ -68,19 +68,21 @@ clean_dirs .deps
 clean_dirs .libs
 clean_dirs __pycache__
 
-clean_exe src/bench/bench_bitcoin
+clean_exe src/bench/bench_raptoreum
 clean_exe src/raptoreum-cli
 clean_exe src/raptoreumd
 clean_exe src/raptoreum-gtest
-clean_exe src/raptoreum-tx
-clean_exe src/test/test_bitcoin
+clean_exe src/test/test_raptoreum
+clean_exe src/test/test_raptoreum_fuzzy
+clean_exe src/qt/raptoreum-qt
+clean_exe src/qt/test/test_raptoreum-qt
 
 clean_exe src/leveldb/db_bench
 clean_exe src/leveldb/leveldbutil
 rm -f src/leveldb/*_test src/leveldb/*_test.exe
 rm -f src/leveldb/*.so src/leveldb/*.so.*
 
-clean_dep . src/config/bitcoin-config.h.in
+clean_dep . src/config/raptoreum-config.h.in
 
 clean_dep src/secp256k1 src/libsecp256k1-config.h.in
 rm -f src/secp256k1/src/ecmult_static_context.h

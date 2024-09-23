@@ -84,12 +84,12 @@ extern "C"{
  */
 typedef struct {
 #ifndef DOXYGEN_IGNORE
-	unsigned char buf[64];    /* first field, for alignment */
-	sph_u64 state[8];
+    unsigned char buf[64];    /* first field, for alignment */
+    sph_u64 state[8];
 #if SPH_64
-	sph_u64 count;
+    sph_u64 count;
 #else
-	sph_u32 count_high, count_low;
+    sph_u32 count_high, count_low;
 #endif
 #endif
 } sph_whirlpool_context;

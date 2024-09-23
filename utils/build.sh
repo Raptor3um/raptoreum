@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 export LC_ALL=C
 set -eu
@@ -50,7 +50,7 @@ $0 --help
 
 $0 [ MAKEARGS... ]
   Build Raptoreum and most of its transitive dependencies from
-  source. MAKEARGS are applied to both dependencies and Zcash itself.
+  source. MAKEARGS are applied to both dependencies and Raptoreum itself.
 
   Pass flags to ./configure using the CONFIGURE_FLAGS environment variable.
   For example, to enable coverage instrumentation (thus enabling "make cov"
@@ -77,7 +77,7 @@ case "$CONFIGURE_FLAGS" in
     DEBUG=
 ;;esac
 
-HOST="$HOST" BUILD="$BUILD" "$MAKE" "$@" -C ./depends/ DEBUG="$DEBUG"
+HOST="$HOST" BUILD="$BUILD" "$MAKE" "$@" -C depends DEBUG="$DEBUG"
 
 if [ "${BUILD_STAGE:-all}" = "depends" ]
 then

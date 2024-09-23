@@ -1,12 +1,18 @@
 // Copyright (c) 2012-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
+#include <cuckoocache.h>
+#include <random.h>
+#include <script/sigcache.h>
+#include <test/test_raptoreum.h>
+
 #include <boost/test/unit_test.hpp>
-#include "cuckoocache.h"
-#include "script/sigcache.h"
-#include "test/test_raptoreum.h"
-#include "random.h"
+
+#include <deque>
+#include <mutex>
+#include <shared_mutex>
 #include <thread>
+#include <vector>
 
 /** Test Suite for CuckooCache
  *
@@ -21,74 +27,56 @@
  *  using BOOST_CHECK_CLOSE to fail.
  *
  */
-FastRandomContext local_rand_ctx(true);
-
 BOOST_AUTO_TEST_SUITE(cuckoocache_tests);
-
-
-/** insecure_GetRandHash fills in a uint256 from local_rand_ctx
- */
-void insecure_GetRandHash(uint256& t)
-{
-    uint32_t* ptr = (uint32_t*)t.begin();
-    for (uint8_t j = 0; j < 8; ++j)
-        *(ptr++) = local_rand_ctx.rand32();
-}
-
-
 
 /* Test that no values not inserted into the cache are read out of it.
  *
  * There are no repeats in the first 200000 insecure_GetRandHash calls
  */
 BOOST_AUTO_TEST_CASE(test_cuckoocache_no_fakes)
-{
-    local_rand_ctx = FastRandomContext(true);
-    CuckooCache::cache<uint256, SignatureCacheHasher> cc{};
-    size_t megabytes = 4;
-    cc.setup_bytes(megabytes << 20);
-    uint256 v;
-    for (int x = 0; x < 100000; ++x) {
-        insecure_GetRandHash(v);
-        cc.insert(v);
-    }
-    for (int x = 0; x < 100000; ++x) {
-        insecure_GetRandHash(v);
-        BOOST_CHECK(!cc.contains(v, false));
-    }
-};
+        {
+                SeedInsecureRand(SeedRand::ZEROS);
+        CuckooCache::cache<uint256, SignatureCacheHasher> cc{};
+        size_t megabytes = 4;
+        cc.setup_bytes(megabytes << 20);
+        for (int x = 0; x < 100000; ++x) {
+            cc.insert(InsecureRand256());
+        }
+        for (int x = 0; x < 100000; ++x) {
+            BOOST_CHECK(!cc.contains(InsecureRand256(), false));
+        }
+        };
 
 /** This helper returns the hit rate when megabytes*load worth of entries are
  * inserted into a megabytes sized cache
  */
-template <typename Cache>
-double test_cache(size_t megabytes, double load)
-{
-    local_rand_ctx = FastRandomContext(true);
-    std::vector<uint256> hashes;
+template<typename Cache>
+double test_cache(size_t megabytes, double load) {
+    SeedInsecureRand(SeedRand::ZEROS);
+    std::vector <uint256> hashes;
     Cache set{};
     size_t bytes = megabytes * (1 << 20);
     set.setup_bytes(bytes);
     uint32_t n_insert = static_cast<uint32_t>(load * (bytes / sizeof(uint256)));
     hashes.resize(n_insert);
     for (uint32_t i = 0; i < n_insert; ++i) {
-        uint32_t* ptr = (uint32_t*)hashes[i].begin();
+        uint32_t *ptr = (uint32_t *) hashes[i].begin();
         for (uint8_t j = 0; j < 8; ++j)
-            *(ptr++) = local_rand_ctx.rand32();
+            *(ptr++) = InsecureRand32();
     }
     /** We make a copy of the hashes because future optimizations of the
      * cuckoocache may overwrite the inserted element, so the test is
      * "future proofed".
      */
-    std::vector<uint256> hashes_insert_copy = hashes;
+    std::vector <uint256> hashes_insert_copy = hashes;
     /** Do the insert */
-    for (uint256& h : hashes_insert_copy)
+    for (const uint256 &h: hashes_insert_copy)
         set.insert(h);
     /** Count the hits */
     uint32_t count = 0;
-    for (uint256& h : hashes)
+    for (const uint256 &h: hashes)
         count += set.contains(h, false);
-    double hit_rate = ((double)count) / ((double)n_insert);
+    double hit_rate = ((double) count) / ((double) n_insert);
     return hit_rate;
 }
 
@@ -109,49 +97,48 @@ double test_cache(size_t megabytes, double load)
  * how you measure around load 1.0 as after load 1.0 your normalized hit rate
  * becomes effectively perfect, ignoring freshness.
  */
-double normalize_hit_rate(double hits, double load)
-{
+double normalize_hit_rate(double hits, double load) {
     return hits * std::max(load, 1.0);
 }
 
-/** Check the hit rate on loads ranging from 0.1 to 2.0 */
+/** Check the hit rate on loads ranging from 0.1 to 1.6 */
 BOOST_AUTO_TEST_CASE(cuckoocache_hit_rate_ok)
-{
-    /** Arbitrarily selected Hit Rate threshold that happens to work for this test
-     * as a lower bound on performance.
-     */
-    double HitRateThresh = 0.98;
-    size_t megabytes = 4;
-    for (double load = 0.1; load < 2; load *= 2) {
-        double hits = test_cache<CuckooCache::cache<uint256, SignatureCacheHasher>>(megabytes, load);
-        BOOST_CHECK(normalize_hit_rate(hits, load) > HitRateThresh);
-    }
-}
+        {
+                /** Arbitrarily selected Hit Rate threshold that happens to work for this test
+                 * as a lower bound on performance.
+                 */
+                double HitRateThresh = 0.98;
+        size_t megabytes = 4;
+        for (double load = 0.1; load < 2; load *= 2) {
+            double hits = test_cache<CuckooCache::cache < uint256, SignatureCacheHasher>>
+            (megabytes, load);
+            BOOST_CHECK(normalize_hit_rate(hits, load) > HitRateThresh);
+        }
+        }
 
 
 /** This helper checks that erased elements are preferentially inserted onto and
  * that the hit rate of "fresher" keys is reasonable*/
-template <typename Cache>
-void test_cache_erase(size_t megabytes)
-{
+template<typename Cache>
+void test_cache_erase(size_t megabytes) {
     double load = 1;
-    local_rand_ctx = FastRandomContext(true);
-    std::vector<uint256> hashes;
+    SeedInsecureRand(SeedRand::ZEROS);
+    std::vector <uint256> hashes;
     Cache set{};
     size_t bytes = megabytes * (1 << 20);
     set.setup_bytes(bytes);
     uint32_t n_insert = static_cast<uint32_t>(load * (bytes / sizeof(uint256)));
     hashes.resize(n_insert);
     for (uint32_t i = 0; i < n_insert; ++i) {
-        uint32_t* ptr = (uint32_t*)hashes[i].begin();
+        uint32_t *ptr = (uint32_t *) hashes[i].begin();
         for (uint8_t j = 0; j < 8; ++j)
-            *(ptr++) = local_rand_ctx.rand32();
+            *(ptr++) = InsecureRand32();
     }
     /** We make a copy of the hashes because future optimizations of the
      * cuckoocache may overwrite the inserted element, so the test is
      * "future proofed".
      */
-    std::vector<uint256> hashes_insert_copy = hashes;
+    std::vector <uint256> hashes_insert_copy = hashes;
 
     /** Insert the first half */
     for (uint32_t i = 0; i < (n_insert / 2); ++i)
@@ -163,7 +150,7 @@ void test_cache_erase(size_t megabytes)
     for (uint32_t i = (n_insert / 2); i < n_insert; ++i)
         set.insert(hashes_insert_copy[i]);
 
-    /** elements that we marked erased but that are still there */
+    /** elements that we marked as erased but are still there */
     size_t count_erased_but_contained = 0;
     /** elements that we did not erase but are older */
     size_t count_stale = 0;
@@ -189,37 +176,36 @@ void test_cache_erase(size_t megabytes)
 }
 
 BOOST_AUTO_TEST_CASE(cuckoocache_erase_ok)
-{
-    size_t megabytes = 4;
-    test_cache_erase<CuckooCache::cache<uint256, SignatureCacheHasher>>(megabytes);
-}
+        {
+                size_t megabytes = 4;
+        test_cache_erase<CuckooCache::cache<uint256, SignatureCacheHasher>>(megabytes);
+        }
 
-template <typename Cache>
-void test_cache_erase_parallel(size_t megabytes)
-{
+template<typename Cache>
+void test_cache_erase_parallel(size_t megabytes) {
     double load = 1;
-    local_rand_ctx = FastRandomContext(true);
-    std::vector<uint256> hashes;
+    SeedInsecureRand(SeedRand::ZEROS);
+    std::vector <uint256> hashes;
     Cache set{};
     size_t bytes = megabytes * (1 << 20);
     set.setup_bytes(bytes);
     uint32_t n_insert = static_cast<uint32_t>(load * (bytes / sizeof(uint256)));
     hashes.resize(n_insert);
     for (uint32_t i = 0; i < n_insert; ++i) {
-        uint32_t* ptr = (uint32_t*)hashes[i].begin();
+        uint32_t *ptr = (uint32_t *) hashes[i].begin();
         for (uint8_t j = 0; j < 8; ++j)
-            *(ptr++) = local_rand_ctx.rand32();
+            *(ptr++) = InsecureRand32();
     }
     /** We make a copy of the hashes because future optimizations of the
      * cuckoocache may overwrite the inserted element, so the test is
      * "future proofed".
      */
-    std::vector<uint256> hashes_insert_copy = hashes;
-    boost::shared_mutex mtx;
+    std::vector <uint256> hashes_insert_copy = hashes;
+    std::shared_mutex mtx;
 
     {
         /** Grab lock to make sure we release inserts */
-        boost::unique_lock<boost::shared_mutex> l(mtx);
+        std::unique_lock <std::shared_mutex> l(mtx);
         /** Insert the first half */
         for (uint32_t i = 0; i < (n_insert / 2); ++i)
             set.insert(hashes_insert_copy[i]);
@@ -227,26 +213,26 @@ void test_cache_erase_parallel(size_t megabytes)
 
     /** Spin up 3 threads to run contains with erase.
      */
-    std::vector<std::thread> threads;
+    std::vector <std::thread> threads;
     /** Erase the first quarter */
     for (uint32_t x = 0; x < 3; ++x)
         /** Each thread is emplaced with x copy-by-value
         */
         threads.emplace_back([&, x] {
-            boost::shared_lock<boost::shared_mutex> l(mtx);
-            size_t ntodo = (n_insert/4)/3;
-            size_t start = ntodo*x;
-            size_t end = ntodo*(x+1);
+            std::shared_lock <std::shared_mutex> l(mtx);
+            size_t ntodo = (n_insert / 4) / 3;
+            size_t start = ntodo * x;
+            size_t end = ntodo * (x + 1);
             for (uint32_t i = start; i < end; ++i)
                 set.contains(hashes[i], true);
         });
 
     /** Wait for all threads to finish
      */
-    for (std::thread& t : threads)
+    for (std::thread &t: threads)
         t.join();
     /** Grab lock to make sure we observe erases */
-    boost::unique_lock<boost::shared_mutex> l(mtx);
+    std::unique_lock <std::shared_mutex> l(mtx);
     /** Insert the second half */
     for (uint32_t i = (n_insert / 2); i < n_insert; ++i)
         set.insert(hashes_insert_copy[i]);
@@ -275,16 +261,16 @@ void test_cache_erase_parallel(size_t megabytes)
     // erased elements.
     BOOST_CHECK(hit_rate_stale > 2 * hit_rate_erased_but_contained);
 }
+
 BOOST_AUTO_TEST_CASE(cuckoocache_erase_parallel_ok)
-{
-    size_t megabytes = 4;
-    test_cache_erase_parallel<CuckooCache::cache<uint256, SignatureCacheHasher>>(megabytes);
-}
+        {
+                size_t megabytes = 4;
+        test_cache_erase_parallel<CuckooCache::cache<uint256, SignatureCacheHasher>>(megabytes);
+        }
 
 
-template <typename Cache>
-void test_cache_generations()
-{
+template<typename Cache>
+void test_cache_generations() {
     // This test checks that for a simulation of network activity, the fresh hit
     // rate is never below 99%, and the number of times that it is worse than
     // 99.9% are less than 1% of the time.
@@ -300,30 +286,30 @@ void test_cache_generations()
     // iterations with non-deterministic values, so it isn't "overfit" to the
     // specific entropy in FastRandomContext(true) and implementation of the
     // cache.
-    local_rand_ctx = FastRandomContext(true);
+    SeedInsecureRand(SeedRand::ZEROS);
 
     // block_activity models a chunk of network activity. n_insert elements are
-    // adde to the cache. The first and last n/4 are stored for removal later
+    // added to the cache. The first and last n/4 are stored for removal later
     // and the middle n/2 are not stored. This models a network which uses half
     // the signatures of recently (since the last block) added transactions
     // immediately and never uses the other half.
     struct block_activity {
-        std::vector<uint256> reads;
-        block_activity(uint32_t n_insert, Cache& c) : reads()
-        {
-            std::vector<uint256> inserts;
+        std::vector <uint256> reads;
+
+        block_activity(uint32_t n_insert, Cache &c) : reads() {
+            std::vector <uint256> inserts;
             inserts.resize(n_insert);
             reads.reserve(n_insert / 2);
             for (uint32_t i = 0; i < n_insert; ++i) {
-                uint32_t* ptr = (uint32_t*)inserts[i].begin();
+                uint32_t *ptr = (uint32_t *) inserts[i].begin();
                 for (uint8_t j = 0; j < 8; ++j)
-                    *(ptr++) = local_rand_ctx.rand32();
+                    *(ptr++) = InsecureRand32();
             }
             for (uint32_t i = 0; i < n_insert / 4; ++i)
                 reads.push_back(inserts[i]);
             for (uint32_t i = n_insert - (n_insert / 4); i < n_insert; ++i)
                 reads.push_back(inserts[i]);
-            for (auto h : inserts)
+            for (const auto &h: inserts)
                 c.insert(h);
         }
     };
@@ -338,11 +324,11 @@ void test_cache_generations()
     const size_t bytes = megabytes * (1 << 20);
     const uint32_t n_insert = static_cast<uint32_t>(load * (bytes / sizeof(uint256)));
 
-    std::vector<block_activity> hashes;
+    std::vector <block_activity> hashes;
     Cache set{};
     set.setup_bytes(bytes);
     hashes.reserve(n_insert / BLOCK_SIZE);
-    std::deque<block_activity> last_few;
+    std::deque <block_activity> last_few;
     uint32_t out_of_tight_tolerance = 0;
     uint32_t total = n_insert / BLOCK_SIZE;
     // we use the deque last_few to model a sliding window of blocks. at each
@@ -353,7 +339,7 @@ void test_cache_generations()
             last_few.pop_front();
         last_few.emplace_back(BLOCK_SIZE, set);
         uint32_t count = 0;
-        for (auto& act : last_few)
+        for (auto &act: last_few)
             for (uint32_t k = 0; k < POP_AMOUNT; ++k) {
                 count += set.contains(act.reads.back(), true);
                 act.reads.pop_back();
@@ -372,9 +358,10 @@ void test_cache_generations()
     // max_rate_less_than_tight_hit_rate of the time
     BOOST_CHECK(double(out_of_tight_tolerance) / double(total) < max_rate_less_than_tight_hit_rate);
 }
+
 BOOST_AUTO_TEST_CASE(cuckoocache_generations)
-{
-    test_cache_generations<CuckooCache::cache<uint256, SignatureCacheHasher>>();
-}
+        {
+                test_cache_generations<CuckooCache::cache < uint256, SignatureCacheHasher>>();
+        }
 
 BOOST_AUTO_TEST_SUITE_END();

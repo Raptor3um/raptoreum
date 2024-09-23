@@ -2,34 +2,17 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "wallet/test/wallet_test_fixture.h"
+#include <wallet/test/wallet_test_fixture.h>
 
-#include "rpc/server.h"
-#include "wallet/db.h"
-#include "wallet/wallet.h"
+#include <rpc/server.h>
+#include <wallet/db.h>
+#include <wallet/rpcwallet.h>
 
-CWallet *pwalletMain;
-
-WalletTestingSetup::WalletTestingSetup(const std::string& chainName):
-    TestingSetup(chainName)
-{
-    bitdb.MakeMock();
-
+WalletTestingSetup::WalletTestingSetup(const std::string &chainName) :
+        TestingSetup(chainName), m_wallet(m_chain.get(), WalletLocation(), CreateMockWalletDatabase()) {
     bool fFirstRun;
-    std::unique_ptr<CWalletDBWrapper> dbw(new CWalletDBWrapper(&bitdb, "wallet_test.dat"));
-    pwalletMain = new CWallet(std::move(dbw));
-    pwalletMain->LoadWallet(fFirstRun);
-    RegisterValidationInterface(pwalletMain);
+    m_wallet.LoadWallet(fFirstRun);
+    m_wallet.m_chain_notifications_handler = m_chain->handleNotifications({&m_wallet, [](CWallet *) {}});
 
-    RegisterWalletRPCCommands(tableRPC);
-}
-
-WalletTestingSetup::~WalletTestingSetup()
-{
-    UnregisterValidationInterface(pwalletMain);
-    delete pwalletMain;
-    pwalletMain = nullptr;
-
-    bitdb.Flush(true);
-    bitdb.Reset();
+    m_wallet_client->registerRpcs();
 }

@@ -1,13 +1,14 @@
 // Copyright (c) 2014-2019 The Dash Core developers
-// Copyright (c) 2020 The Raptoreum developers
+// Copyright (c) 2020-2023 The Raptoreum developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "governance-classes.h"
-#include "core_io.h"
-#include "init.h"
-#include "utilstrencodings.h"
-#include "validation.h"
+#include <governance/governance-classes.h>
+
+#include <chainparams.h>
+#include <core_io.h>
+#include <util/strencodings.h>
+#include <validation.h>
 
 #include <boost/algorithm/string.hpp>
 
@@ -18,12 +19,11 @@ CGovernanceTriggerManager triggerman;
 
 // SPLIT UP STRING BY DELIMITER
 // http://www.boost.org/doc/libs/1_58_0/doc/html/boost/algorithm/split_idp202406848.html
-std::vector<std::string> SplitBy(const std::string& strCommand, const std::string& strDelimit)
-{
-    std::vector<std::string> vParts;
+std::vector <std::string> SplitBy(const std::string &strCommand, const std::string &strDelimit) {
+    std::vector <std::string> vParts;
     boost::split(vParts, strCommand, boost::is_any_of(strDelimit));
 
-    for (int q = 0; q < (int)vParts.size(); q++) {
+    for (int q = 0; q < (int) vParts.size(); q++) {
         if (strDelimit.find(vParts[q]) != std::string::npos) {
             vParts.erase(vParts.begin() + q);
             --q;
@@ -33,8 +33,7 @@ std::vector<std::string> SplitBy(const std::string& strCommand, const std::strin
     return vParts;
 }
 
-CAmount ParsePaymentAmount(const std::string& strAmount)
-{
+CAmount ParsePaymentAmount(const std::string &strAmount) {
     CAmount nAmount = 0;
     if (strAmount.empty()) {
         std::ostringstream ostr;
@@ -95,14 +94,14 @@ CAmount ParsePaymentAmount(const std::string& strAmount)
 *   Add Governance Object
 */
 
-bool CGovernanceTriggerManager::AddNewTrigger(uint256 nHash)
-{
+bool CGovernanceTriggerManager::AddNewTrigger(uint256 nHash) {
     AssertLockHeld(governance.cs);
 
     // IF WE ALREADY HAVE THIS HASH, RETURN
     if (mapTrigger.count(nHash)) {
-        LogPrint(BCLog::GOBJECT, "CGovernanceTriggerManager::AddNewTrigger -- Already have hash, nHash = %s, count = %d, size = %s\n",
-                    nHash.GetHex(), mapTrigger.count(nHash), mapTrigger.size());
+        LogPrint(BCLog::GOBJECT,
+                 "CGovernanceTriggerManager::AddNewTrigger -- Already have hash, nHash = %s, count = %d, size = %s\n",
+                 nHash.GetHex(), mapTrigger.count(nHash), mapTrigger.size());
         return false;
     }
 
@@ -110,7 +109,7 @@ bool CGovernanceTriggerManager::AddNewTrigger(uint256 nHash)
     try {
         CSuperblock_sptr pSuperblockTmp(new CSuperblock(nHash));
         pSuperblock = pSuperblockTmp;
-    } catch (std::exception& e) {
+    } catch (std::exception &e) {
         LogPrintf("CGovernanceTriggerManager::AddNewTrigger -- Error creating superblock: %s\n", e.what());
         return false;
     } catch (...) {
@@ -131,50 +130,54 @@ bool CGovernanceTriggerManager::AddNewTrigger(uint256 nHash)
 *
 */
 
-void CGovernanceTriggerManager::CleanAndRemove()
-{
+void CGovernanceTriggerManager::CleanAndRemove() {
     AssertLockHeld(governance.cs);
 
     // Remove triggers that are invalid or expired
-    LogPrint(BCLog::GOBJECT, "CGovernanceTriggerManager::CleanAndRemove -- mapTrigger.size() = %d\n", mapTrigger.size());
+    LogPrint(BCLog::GOBJECT, "CGovernanceTriggerManager::CleanAndRemove -- mapTrigger.size() = %d\n",
+             mapTrigger.size());
 
-    trigger_m_it it = mapTrigger.begin();
+    auto it = mapTrigger.begin();
     while (it != mapTrigger.end()) {
         bool remove = false;
-        CGovernanceObject* pObj = nullptr;
-        CSuperblock_sptr& pSuperblock = it->second;
+        CGovernanceObject *pObj = nullptr;
+        CSuperblock_sptr &pSuperblock = it->second;
         if (!pSuperblock) {
             LogPrint(BCLog::GOBJECT, "CGovernanceTriggerManager::CleanAndRemove -- nullptr superblock\n");
             remove = true;
         } else {
             pObj = governance.FindGovernanceObject(it->first);
             if (!pObj || pObj->GetObjectType() != GOVERNANCE_OBJECT_TRIGGER) {
-                LogPrint(BCLog::GOBJECT, "CGovernanceTriggerManager::CleanAndRemove -- Unknown or non-trigger superblock\n");
+                LogPrint(BCLog::GOBJECT,
+                         "CGovernanceTriggerManager::CleanAndRemove -- Unknown or non-trigger superblock\n");
                 pSuperblock->SetStatus(SEEN_OBJECT_ERROR_INVALID);
             }
 
-            LogPrint(BCLog::GOBJECT, "CGovernanceTriggerManager::CleanAndRemove -- superblock status = %d\n", pSuperblock->GetStatus());
+            LogPrint(BCLog::GOBJECT, "CGovernanceTriggerManager::CleanAndRemove -- superblock status = %d\n",
+                     pSuperblock->GetStatus());
             switch (pSuperblock->GetStatus()) {
-            case SEEN_OBJECT_ERROR_INVALID:
-            case SEEN_OBJECT_UNKNOWN:
-                LogPrint(BCLog::GOBJECT, "CGovernanceTriggerManager::CleanAndRemove -- Unknown or invalid trigger found\n");
-                remove = true;
-                break;
-            case SEEN_OBJECT_IS_VALID:
-            case SEEN_OBJECT_EXECUTED: {
-                LogPrint(BCLog::GOBJECT, "CGovernanceTriggerManager::CleanAndRemove -- Valid trigger found\n");
-                if (pSuperblock->IsExpired()) {
-                    // update corresponding object
-                    pObj->SetExpired();
+                case SEEN_OBJECT_ERROR_INVALID:
+                case SEEN_OBJECT_UNKNOWN:
+                    LogPrint(BCLog::GOBJECT,
+                             "CGovernanceTriggerManager::CleanAndRemove -- Unknown or invalid trigger found\n");
                     remove = true;
+                    break;
+                case SEEN_OBJECT_IS_VALID:
+                case SEEN_OBJECT_EXECUTED: {
+                    LogPrint(BCLog::GOBJECT, "CGovernanceTriggerManager::CleanAndRemove -- Valid trigger found\n");
+                    if (pSuperblock->IsExpired()) {
+                        // update corresponding object
+                        pObj->SetExpired();
+                        remove = true;
+                    }
+                    break;
                 }
-                break;
-            }
-            default:
-                break;
+                default:
+                    break;
             }
         }
-        LogPrint(BCLog::GOBJECT, "CGovernanceTriggerManager::CleanAndRemove -- %smarked for removal\n", remove ? "" : "NOT ");
+        LogPrint(BCLog::GOBJECT, "CGovernanceTriggerManager::CleanAndRemove -- %smarked for removal\n",
+                 remove ? "" : "NOT ");
 
         if (remove) {
             std::string strDataAsPlainString = "nullptr";
@@ -183,7 +186,8 @@ void CGovernanceTriggerManager::CleanAndRemove()
                 // mark corresponding object for deletion
                 pObj->PrepareDeletion(GetAdjustedTime());
             }
-            LogPrint(BCLog::GOBJECT, "CGovernanceTriggerManager::CleanAndRemove -- Removing trigger object %s\n", strDataAsPlainString);
+            LogPrint(BCLog::GOBJECT, "CGovernanceTriggerManager::CleanAndRemove -- Removing trigger object %s\n",
+                     strDataAsPlainString);
             // delete the trigger
             mapTrigger.erase(it++);
         } else {
@@ -199,14 +203,13 @@ void CGovernanceTriggerManager::CleanAndRemove()
 *   - Return the triggers in a list
 */
 
-std::vector<CSuperblock_sptr> CGovernanceTriggerManager::GetActiveTriggers()
-{
+std::vector <CSuperblock_sptr> CGovernanceTriggerManager::GetActiveTriggers() {
     AssertLockHeld(governance.cs);
-    std::vector<CSuperblock_sptr> vecResults;
+    std::vector <CSuperblock_sptr> vecResults;
 
     // LOOK AT THESE OBJECTS AND COMPILE A VALID LIST OF TRIGGERS
-    for (const auto& pair : mapTrigger) {
-        CGovernanceObject* pObj = governance.FindGovernanceObject(pair.first);
+    for (const auto &pair: mapTrigger) {
+        CGovernanceObject *pObj = governance.FindGovernanceObject(pair.first);
         if (pObj) {
             vecResults.push_back(pair.second);
         }
@@ -221,8 +224,7 @@ std::vector<CSuperblock_sptr> CGovernanceTriggerManager::GetActiveTriggers()
 *   - Does this block have a non-executed and actived trigger?
 */
 
-bool CSuperblockManager::IsSuperblockTriggered(int nBlockHeight)
-{
+bool CSuperblockManager::IsSuperblockTriggered(int nBlockHeight) {
     LogPrint(BCLog::GOBJECT, "CSuperblockManager::IsSuperblockTriggered -- Start nBlockHeight = %d\n", nBlockHeight);
     if (!CSuperblock::IsValidBlockHeight(nBlockHeight)) {
         return false;
@@ -230,31 +232,34 @@ bool CSuperblockManager::IsSuperblockTriggered(int nBlockHeight)
 
     LOCK(governance.cs);
     // GET ALL ACTIVE TRIGGERS
-    std::vector<CSuperblock_sptr> vecTriggers = triggerman.GetActiveTriggers();
+    std::vector <CSuperblock_sptr> vecTriggers = triggerman.GetActiveTriggers();
 
-    LogPrint(BCLog::GOBJECT, "CSuperblockManager::IsSuperblockTriggered -- vecTriggers.size() = %d\n", vecTriggers.size());
+    LogPrint(BCLog::GOBJECT, "CSuperblockManager::IsSuperblockTriggered -- vecTriggers.size() = %d\n",
+             vecTriggers.size());
 
-    for (const auto& pSuperblock : vecTriggers) {
+    for (const auto &pSuperblock: vecTriggers) {
         if (!pSuperblock) {
             LogPrintf("CSuperblockManager::IsSuperblockTriggered -- Non-superblock found, continuing\n");
             continue;
         }
 
-        CGovernanceObject* pObj = pSuperblock->GetGovernanceObject();
+        CGovernanceObject *pObj = pSuperblock->GetGovernanceObject();
 
         if (!pObj) {
             LogPrintf("CSuperblockManager::IsSuperblockTriggered -- pObj == nullptr, continuing\n");
             continue;
         }
 
-        LogPrint(BCLog::GOBJECT, "CSuperblockManager::IsSuperblockTriggered -- data = %s\n", pObj->GetDataAsPlainString());
+        LogPrint(BCLog::GOBJECT, "CSuperblockManager::IsSuperblockTriggered -- data = %s\n",
+                 pObj->GetDataAsPlainString());
 
         // note : 12.1 - is epoch calculation correct?
 
         if (nBlockHeight != pSuperblock->GetBlockHeight()) {
-            LogPrint(BCLog::GOBJECT, "CSuperblockManager::IsSuperblockTriggered -- block height doesn't match nBlockHeight = %d, blockStart = %d, continuing\n",
-                nBlockHeight,
-                pSuperblock->GetBlockHeight());
+            LogPrint(BCLog::GOBJECT,
+                     "CSuperblockManager::IsSuperblockTriggered -- block height doesn't match nBlockHeight = %d, blockStart = %d, continuing\n",
+                     nBlockHeight,
+                     pSuperblock->GetBlockHeight());
             continue;
         }
 
@@ -263,10 +268,12 @@ bool CSuperblockManager::IsSuperblockTriggered(int nBlockHeight)
         pObj->UpdateSentinelVariables();
 
         if (pObj->IsSetCachedFunding()) {
-            LogPrint(BCLog::GOBJECT, "CSuperblockManager::IsSuperblockTriggered -- fCacheFunding = true, returning true\n");
+            LogPrint(BCLog::GOBJECT,
+                     "CSuperblockManager::IsSuperblockTriggered -- fCacheFunding = true, returning true\n");
             return true;
         } else {
-            LogPrint(BCLog::GOBJECT, "CSuperblockManager::IsSuperblockTriggered -- fCacheFunding = false, continuing\n");
+            LogPrint(BCLog::GOBJECT,
+                     "CSuperblockManager::IsSuperblockTriggered -- fCacheFunding = false, continuing\n");
         }
     }
 
@@ -274,22 +281,21 @@ bool CSuperblockManager::IsSuperblockTriggered(int nBlockHeight)
 }
 
 
-bool CSuperblockManager::GetBestSuperblock(CSuperblock_sptr& pSuperblockRet, int nBlockHeight)
-{
+bool CSuperblockManager::GetBestSuperblock(CSuperblock_sptr &pSuperblockRet, int nBlockHeight) {
     if (!CSuperblock::IsValidBlockHeight(nBlockHeight)) {
         return false;
     }
 
     AssertLockHeld(governance.cs);
-    std::vector<CSuperblock_sptr> vecTriggers = triggerman.GetActiveTriggers();
+    std::vector <CSuperblock_sptr> vecTriggers = triggerman.GetActiveTriggers();
     int nYesCount = 0;
 
-    for (const auto& pSuperblock : vecTriggers) {
+    for (const auto &pSuperblock: vecTriggers) {
         if (!pSuperblock || nBlockHeight != pSuperblock->GetBlockHeight()) {
             continue;
         }
 
-        CGovernanceObject* pObj = pSuperblock->GetGovernanceObject();
+        CGovernanceObject *pObj = pSuperblock->GetGovernanceObject();
 
         if (!pObj) {
             continue;
@@ -313,15 +319,15 @@ bool CSuperblockManager::GetBestSuperblock(CSuperblock_sptr& pSuperblockRet, int
 *   - Returns payments for superblock
 */
 
-bool CSuperblockManager::GetSuperblockPayments(int nBlockHeight, std::vector<CTxOut>& voutSuperblockRet)
-{
+bool CSuperblockManager::GetSuperblockPayments(int nBlockHeight, std::vector <CTxOut> &voutSuperblockRet) {
     LOCK(governance.cs);
 
     // GET THE BEST SUPERBLOCK FOR THIS BLOCK HEIGHT
 
     CSuperblock_sptr pSuperblock;
     if (!CSuperblockManager::GetBestSuperblock(pSuperblock, nBlockHeight)) {
-        LogPrint(BCLog::GOBJECT, "CSuperblockManager::GetSuperblockPayments -- Can't find superblock for height %d\n", nBlockHeight);
+        LogPrint(BCLog::GOBJECT, "CSuperblockManager::GetSuperblockPayments -- Can't find superblock for height %d\n",
+                 nBlockHeight);
         return false;
     }
 
@@ -346,14 +352,14 @@ bool CSuperblockManager::GetSuperblockPayments(int nBlockHeight, std::vector<CTx
 
             // PRINT NICE LOG OUTPUT FOR SUPERBLOCK PAYMENT
 
-            CTxDestination address1;
-            ExtractDestination(payment.script, address1);
-            CBitcoinAddress address2(address1);
+            CTxDestination dest;
+            ExtractDestination(payment.script, dest);
 
             // TODO: PRINT NICE N.N RAPTOREUM OUTPUT
 
-            LogPrint(BCLog::GOBJECT, "CSuperblockManager::GetSuperblockPayments -- NEW Superblock: output %d (addr %s, amount %lld)\n",
-                        i, address2.ToString(), payment.nAmount);
+            LogPrint(BCLog::GOBJECT,
+                     "CSuperblockManager::GetSuperblockPayments -- NEW Superblock: output %d (addr %s, amount %lld)\n",
+                     i, EncodeDestination(dest), payment.nAmount);
         } else {
             LogPrint(BCLog::GOBJECT, "CSuperblockManager::GetSuperblockPayments -- Payment not found\n");
         }
@@ -362,8 +368,7 @@ bool CSuperblockManager::GetSuperblockPayments(int nBlockHeight, std::vector<CTx
     return true;
 }
 
-bool CSuperblockManager::IsValid(const CTransaction& txNew, int nBlockHeight, CAmount blockReward)
-{
+bool CSuperblockManager::IsValid(const CTransaction &txNew, int nBlockHeight, CAmount blockReward) {
     // GET BEST SUPERBLOCK, SHOULD MATCH
     LOCK(governance.cs);
 
@@ -375,8 +380,7 @@ bool CSuperblockManager::IsValid(const CTransaction& txNew, int nBlockHeight, CA
     return false;
 }
 
-void CSuperblockManager::ExecuteBestSuperblock(int nBlockHeight)
-{
+void CSuperblockManager::ExecuteBestSuperblock(int nBlockHeight) {
     LOCK(governance.cs);
 
     CSuperblock_sptr pSuperblock;
@@ -388,35 +392,37 @@ void CSuperblockManager::ExecuteBestSuperblock(int nBlockHeight)
 }
 
 CSuperblock::
-    CSuperblock() :
-    nGovObjHash(),
-    nBlockHeight(0),
-    nStatus(SEEN_OBJECT_UNKNOWN),
-    vecPayments()
-{
+CSuperblock() :
+        nGovObjHash(),
+        nBlockHeight(0),
+        nStatus(SEEN_OBJECT_UNKNOWN),
+        vecPayments() {
 }
 
 CSuperblock::
-    CSuperblock(uint256& nHash) :
-    nGovObjHash(nHash),
-    nBlockHeight(0),
-    nStatus(SEEN_OBJECT_UNKNOWN),
-    vecPayments()
-{
-    CGovernanceObject* pGovObj = GetGovernanceObject();
+CSuperblock(uint256 &nHash) :
+        nGovObjHash(nHash),
+        nBlockHeight(0),
+        nStatus(SEEN_OBJECT_UNKNOWN),
+        vecPayments() {
+    CGovernanceObject *pGovObj = GetGovernanceObject();
 
     if (!pGovObj) {
         throw std::runtime_error("CSuperblock: Failed to find Governance Object");
     }
 
     LogPrint(BCLog::GOBJECT, "CSuperblock -- Constructor pGovObj: %s, nObjectType = %d\n",
-                pGovObj->GetDataAsPlainString(), pGovObj->GetObjectType());
+             pGovObj->GetDataAsPlainString(), pGovObj->GetObjectType());
 
     if (pGovObj->GetObjectType() != GOVERNANCE_OBJECT_TRIGGER) {
         throw std::runtime_error("CSuperblock: Governance Object not a trigger");
     }
 
     UniValue obj = pGovObj->GetJSONObject();
+
+    if (obj["type"].get_int() != GOVERNANCE_OBJECT_TRIGGER) {
+        throw std::runtime_error("CSuperblock: invalid data type");
+    }
 
     // FIRST WE GET THE START HEIGHT, THE BLOCK HEIGHT AT WHICH THE PAYMENT SHALL OCCUR
     nBlockHeight = obj["event_block_height"].get_int();
@@ -426,8 +432,9 @@ CSuperblock::
     std::string strAmounts = obj["payment_amounts"].get_str();
     ParsePaymentSchedule(strAddresses, strAmounts);
 
-    LogPrint(BCLog::GOBJECT, "CSuperblock -- nBlockHeight = %d, strAddresses = %s, strAmounts = %s, vecPayments.size() = %d\n",
-        nBlockHeight, strAddresses, strAmounts, vecPayments.size());
+    LogPrint(BCLog::GOBJECT,
+             "CSuperblock -- nBlockHeight = %d, strAddresses = %s, strAmounts = %s, vecPayments.size() = %d\n",
+             nBlockHeight, strAddresses, strAmounts, vecPayments.size());
 }
 
 /**
@@ -436,16 +443,14 @@ CSuperblock::
  *   - See if a block at this height can be a superblock
  */
 
-bool CSuperblock::IsValidBlockHeight(int nBlockHeight)
-{
+bool CSuperblock::IsValidBlockHeight(int nBlockHeight) {
     // SUPERBLOCKS CAN HAPPEN ONLY after hardfork and only ONCE PER CYCLE
     return nBlockHeight >= Params().GetConsensus().nSuperblockStartBlock &&
            ((nBlockHeight % Params().GetConsensus().nSuperblockCycle) == 0);
 }
 
-void CSuperblock::GetNearestSuperblocksHeights(int nBlockHeight, int& nLastSuperblockRet, int& nNextSuperblockRet)
-{
-    const Consensus::Params& consensusParams = Params().GetConsensus();
+void CSuperblock::GetNearestSuperblocksHeights(int nBlockHeight, int &nLastSuperblockRet, int &nNextSuperblockRet) {
+    const Consensus::Params &consensusParams = Params().GetConsensus();
     int nSuperblockStartBlock = consensusParams.nSuperblockStartBlock;
     int nSuperblockCycle = consensusParams.nSuperblockCycle;
 
@@ -462,30 +467,30 @@ void CSuperblock::GetNearestSuperblocksHeights(int nBlockHeight, int& nLastSuper
     }
 }
 
-CAmount CSuperblock::GetPaymentsLimit(int nBlockHeight)
-{
-    const Consensus::Params& consensusParams = Params().GetConsensus();
+CAmount CSuperblock::GetPaymentsLimit(int nBlockHeight) {
+    const Consensus::Params &consensusParams = Params().GetConsensus();
 
     if (!IsValidBlockHeight(nBlockHeight)) {
         return 0;
     }
 
     // min subsidy for high diff networks and vice versa
-    int nBits = consensusParams.fPowAllowMinDifficultyBlocks ? UintToArith256(consensusParams.powLimit).GetCompact() : 1;
+    int nBits = consensusParams.fPowAllowMinDifficultyBlocks ? UintToArith256(consensusParams.powLimit).GetCompact()
+                                                             : 1;
     // some part of all blocks issued during the cycle goes to superblock, see GetBlockSubsidy
     CAmount nSuperblockPartOfSubsidy = GetBlockSubsidy(nBits, nBlockHeight - 1, consensusParams, true);
     CAmount nPaymentsLimit = nSuperblockPartOfSubsidy * consensusParams.nSuperblockCycle;
-    LogPrint(BCLog::GOBJECT, "CSuperblock::GetPaymentsLimit -- Valid superblock height %d, payments max %lld\n", nBlockHeight, nPaymentsLimit);
+    LogPrint(BCLog::GOBJECT, "CSuperblock::GetPaymentsLimit -- Valid superblock height %d, payments max %lld\n",
+             nBlockHeight, nPaymentsLimit);
 
     return nPaymentsLimit;
 }
 
-void CSuperblock::ParsePaymentSchedule(const std::string& strPaymentAddresses, const std::string& strPaymentAmounts)
-{
+void CSuperblock::ParsePaymentSchedule(const std::string &strPaymentAddresses, const std::string &strPaymentAmounts) {
     // SPLIT UP ADDR/AMOUNT STRINGS AND PUT IN VECTORS
 
-    std::vector<std::string> vecParsed1;
-    std::vector<std::string> vecParsed2;
+    std::vector <std::string> vecParsed1;
+    std::vector <std::string> vecParsed2;
     vecParsed1 = SplitBy(strPaymentAddresses, "|");
     vecParsed2 = SplitBy(strPaymentAmounts, "|");
 
@@ -511,9 +516,9 @@ void CSuperblock::ParsePaymentSchedule(const std::string& strPaymentAddresses, c
       AMOUNTS = [AMOUNT1|2|3|4|5|6]
     */
 
-    for (int i = 0; i < (int)vecParsed1.size(); i++) {
-        CBitcoinAddress address(vecParsed1[i]);
-        if (!address.IsValid()) {
+    for (int i = 0; i < (int) vecParsed1.size(); i++) {
+        CTxDestination dest = DecodeDestination(vecParsed1[i]);
+        if (!IsValidDestination(dest)) {
             std::ostringstream ostr;
             ostr << "CSuperblock::ParsePaymentSchedule -- Invalid Raptoreum Address : " << vecParsed1[i];
             LogPrintf("%s\n", ostr.str());
@@ -525,7 +530,8 @@ void CSuperblock::ParsePaymentSchedule(const std::string& strPaymentAddresses, c
             - There might be an issue with multisig in the coinbase on mainnet, we will add support for it in a future release.
             - Post 12.3+ (test multisig coinbase transaction)
         */
-        if (address.IsScript()) {
+        const CScriptID *scriptID = boost::get<CScriptID>(&dest);
+        if (scriptID) {
             std::ostringstream ostr;
             ostr << "CSuperblock::ParsePaymentSchedule -- Script addresses are not supported yet : " << vecParsed1[i];
             LogPrintf("%s\n", ostr.str());
@@ -534,15 +540,16 @@ void CSuperblock::ParsePaymentSchedule(const std::string& strPaymentAddresses, c
 
         CAmount nAmount = ParsePaymentAmount(vecParsed2[i]);
 
-        LogPrint(BCLog::GOBJECT, "CSuperblock::ParsePaymentSchedule -- i = %d, amount string = %s, nAmount = %lld\n", i, vecParsed2[i], nAmount);
+        LogPrint(BCLog::GOBJECT, "CSuperblock::ParsePaymentSchedule -- i = %d, amount string = %s, nAmount = %lld\n", i,
+                 vecParsed2[i], nAmount);
 
-        CGovernancePayment payment(address, nAmount);
+        CGovernancePayment payment(dest, nAmount);
         if (payment.IsValid()) {
             vecPayments.push_back(payment);
         } else {
             vecPayments.clear();
             std::ostringstream ostr;
-            ostr << "CSuperblock::ParsePaymentSchedule -- Invalid payment found: address = " << address.ToString()
+            ostr << "CSuperblock::ParsePaymentSchedule -- Invalid payment found: address = " << EncodeDestination(dest)
                  << ", amount = " << nAmount;
             LogPrintf("%s\n", ostr.str());
             throw std::runtime_error(ostr.str());
@@ -550,9 +557,8 @@ void CSuperblock::ParsePaymentSchedule(const std::string& strPaymentAddresses, c
     }
 }
 
-bool CSuperblock::GetPayment(int nPaymentIndex, CGovernancePayment& paymentRet)
-{
-    if ((nPaymentIndex < 0) || (nPaymentIndex >= (int)vecPayments.size())) {
+bool CSuperblock::GetPayment(int nPaymentIndex, CGovernancePayment &paymentRet) {
+    if ((nPaymentIndex < 0) || (nPaymentIndex >= (int) vecPayments.size())) {
         return false;
     }
 
@@ -560,8 +566,7 @@ bool CSuperblock::GetPayment(int nPaymentIndex, CGovernancePayment& paymentRet)
     return true;
 }
 
-CAmount CSuperblock::GetPaymentsTotalAmount()
-{
+CAmount CSuperblock::GetPaymentsTotalAmount() {
     CAmount nPaymentsTotalAmount = 0;
     int nPayments = CountPayments();
 
@@ -578,8 +583,7 @@ CAmount CSuperblock::GetPaymentsTotalAmount()
 *   - Does this transaction match the superblock?
 */
 
-bool CSuperblock::IsValid(const CTransaction& txNew, int nBlockHeight, CAmount blockReward)
-{
+bool CSuperblock::IsValid(const CTransaction &txNew, int nBlockHeight, CAmount blockReward) {
     // TODO : LOCK(cs);
     // No reason for a lock here now since this method only accesses data
     // internal to *this and since CSuperblock's are accessed only through
@@ -590,8 +594,6 @@ bool CSuperblock::IsValid(const CTransaction& txNew, int nBlockHeight, CAmount b
         return false;
     }
 
-    std::string strPayeesPossible = "";
-
     // CONFIGURE SUPERBLOCK OUTPUTS
 
     int nOutputs = txNew.vout.size();
@@ -599,7 +601,7 @@ bool CSuperblock::IsValid(const CTransaction& txNew, int nBlockHeight, CAmount b
     int nMinerAndSmartnodePayments = nOutputs - nPayments;
 
     LogPrint(BCLog::GOBJECT, "CSuperblock::IsValid -- nOutputs = %d, nPayments = %d, GetDataAsHexString = %s\n",
-        nOutputs, nPayments, GetGovernanceObject()->GetDataAsHexString());
+             nOutputs, nPayments, GetGovernanceObject()->GetDataAsHexString());
 
     // We require an exact match (including order) between the expected
     // superblock payments and the payments actually in the block.
@@ -616,14 +618,16 @@ bool CSuperblock::IsValid(const CTransaction& txNew, int nBlockHeight, CAmount b
     CAmount nPaymentsTotalAmount = GetPaymentsTotalAmount();
     CAmount nPaymentsLimit = GetPaymentsLimit(nBlockHeight);
     if (nPaymentsTotalAmount > nPaymentsLimit) {
-        LogPrintf("CSuperblock::IsValid -- ERROR: Block invalid, payments limit exceeded: payments %lld, limit %lld\n", nPaymentsTotalAmount, nPaymentsLimit);
+        LogPrintf("CSuperblock::IsValid -- ERROR: Block invalid, payments limit exceeded: payments %lld, limit %lld\n",
+                  nPaymentsTotalAmount, nPaymentsLimit);
         return false;
     }
 
     // miner and smartnodes should not get more than they would usually get
     CAmount nBlockValue = txNew.GetValueOut();
     if (nBlockValue > blockReward + nPaymentsTotalAmount) {
-        LogPrintf("CSuperblock::IsValid -- ERROR: Block invalid, block value limit exceeded: block %lld, limit %lld\n", nBlockValue, blockReward + nPaymentsTotalAmount);
+        LogPrintf("CSuperblock::IsValid -- ERROR: Block invalid, block value limit exceeded: block %lld, limit %lld\n",
+                  nBlockValue, blockReward + nPaymentsTotalAmount);
         return false;
     }
 
@@ -632,7 +636,8 @@ bool CSuperblock::IsValid(const CTransaction& txNew, int nBlockHeight, CAmount b
         CGovernancePayment payment;
         if (!GetPayment(i, payment)) {
             // This shouldn't happen so log a warning
-            LogPrintf("CSuperblock::IsValid -- WARNING: Failed to find payment: %d of %d total payments\n", i, nPayments);
+            LogPrintf("CSuperblock::IsValid -- WARNING: Failed to find payment: %d of %d total payments\n", i,
+                      nPayments);
             continue;
         }
 
@@ -652,10 +657,10 @@ bool CSuperblock::IsValid(const CTransaction& txNew, int nBlockHeight, CAmount b
         if (!fPaymentMatch) {
             // Superblock payment not found!
 
-            CTxDestination address1;
-            ExtractDestination(payment.script, address1);
-            CBitcoinAddress address2(address1);
-            LogPrintf("CSuperblock::IsValid -- ERROR: Block invalid: %d payment %d to %s not found\n", i, payment.nAmount, address2.ToString());
+            CTxDestination dest;
+            ExtractDestination(payment.script, dest);
+            LogPrintf("CSuperblock::IsValid -- ERROR: Block invalid: %d payment %d to %s not found\n", i,
+                      payment.nAmount, EncodeDestination(dest));
 
             return false;
         }
@@ -664,26 +669,26 @@ bool CSuperblock::IsValid(const CTransaction& txNew, int nBlockHeight, CAmount b
     return true;
 }
 
-bool CSuperblock::IsExpired() const
-{
-    int nExpirationBlocks{0};
+bool CSuperblock::IsExpired() const {
+    int nExpirationBlocks;
     // Executed triggers are kept for another superblock cycle (approximately 1 month),
     // other valid triggers are kept for ~1 day only, everything else is pruned after ~1h.
     switch (nStatus) {
-    case SEEN_OBJECT_EXECUTED:
-        nExpirationBlocks = Params().GetConsensus().nSuperblockCycle;
-        break;
-    case SEEN_OBJECT_IS_VALID:
-        nExpirationBlocks = 576;
-        break;
-    default:
-        nExpirationBlocks = 24;
-        break;
+        case SEEN_OBJECT_EXECUTED:
+            nExpirationBlocks = Params().GetConsensus().nSuperblockCycle;
+            break;
+        case SEEN_OBJECT_IS_VALID:
+            nExpirationBlocks = 576;
+            break;
+        default:
+            nExpirationBlocks = 24;
+            break;
     }
 
     int nExpirationBlock = nBlockHeight + nExpirationBlocks;
 
-    LogPrint(BCLog::GOBJECT, "CSuperblock::IsExpired -- nBlockHeight = %d, nExpirationBlock = %d\n", nBlockHeight, nExpirationBlock);
+    LogPrint(BCLog::GOBJECT, "CSuperblock::IsExpired -- nBlockHeight = %d, nExpirationBlock = %d\n", nBlockHeight,
+             nExpirationBlock);
 
     if (governance.GetCachedBlockHeight() > nExpirationBlock) {
         LogPrint(BCLog::GOBJECT, "CSuperblock::IsExpired -- Outdated trigger found\n");
@@ -691,47 +696,4 @@ bool CSuperblock::IsExpired() const
     }
 
     return false;
-}
-
-/**
-*   Get Required Payment String
-*
-*   - Get a string representing the payments required for a given superblock
-*/
-
-std::string CSuperblockManager::GetRequiredPaymentsString(int nBlockHeight)
-{
-    LOCK(governance.cs);
-    std::string ret = "Unknown";
-
-    // GET BEST SUPERBLOCK
-
-    CSuperblock_sptr pSuperblock;
-    if (!GetBestSuperblock(pSuperblock, nBlockHeight)) {
-        LogPrint(BCLog::GOBJECT, "CSuperblockManager::GetRequiredPaymentsString -- Can't find superblock for height %d\n", nBlockHeight);
-        return "error";
-    }
-
-    // LOOP THROUGH SUPERBLOCK PAYMENTS, CONFIGURE OUTPUT STRING
-
-    for (int i = 0; i < pSuperblock->CountPayments(); i++) {
-        CGovernancePayment payment;
-        if (pSuperblock->GetPayment(i, payment)) {
-            // PRINT NICE LOG OUTPUT FOR SUPERBLOCK PAYMENT
-
-            CTxDestination address1;
-            ExtractDestination(payment.script, address1);
-            CBitcoinAddress address2(address1);
-
-            // RETURN NICE OUTPUT FOR CONSOLE
-
-            if (ret != "Unknown") {
-                ret += ", " + address2.ToString();
-            } else {
-                ret = address2.ToString();
-            }
-        }
-    }
-
-    return ret;
 }

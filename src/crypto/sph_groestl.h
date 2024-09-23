@@ -6,7 +6,7 @@
  * ==========================(LICENSE BEGIN)============================
  *
  * Copyright (c) 2007-2010  Projet RNRT SAPHIR
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the
  * "Software"), to deal in the Software without restriction, including
@@ -14,10 +14,10 @@
  * distribute, sublicense, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to
  * the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be
  * included in all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
  * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -40,7 +40,7 @@ extern "C"{
 #endif
 
 #include <stddef.h>
-#include "sph_types.h"
+#include <crypto/sph_types.h>
 
 /**
  * Output size (in bits) for Groestl-224.
@@ -74,18 +74,18 @@ extern "C"{
  */
 typedef struct {
 #ifndef DOXYGEN_IGNORE
-	unsigned char buf[64];    /* first field, for alignment */
-	size_t ptr;
-	union {
+    unsigned char buf[64];    /* first field, for alignment */
+    size_t ptr;
+    union {
 #if SPH_64
-		sph_u64 wide[8];
+        sph_u64 wide[8];
 #endif
-		sph_u32 narrow[16];
-	} state;
+        sph_u32 narrow[16];
+    } state;
 #if SPH_64
-	sph_u64 count;
+    sph_u64 count;
 #else
-	sph_u32 count_high, count_low;
+    sph_u32 count_high, count_low;
 #endif
 #endif
 } sph_groestl_small_context;
@@ -114,18 +114,18 @@ typedef sph_groestl_small_context sph_groestl256_context;
  */
 typedef struct {
 #ifndef DOXYGEN_IGNORE
-	unsigned char buf[128];    /* first field, for alignment */
-	size_t ptr;
-	union {
+    unsigned char buf[128];    /* first field, for alignment */
+    size_t ptr;
+    union {
 #if SPH_64
-		sph_u64 wide[16];
+        sph_u64 wide[16];
 #endif
-		sph_u32 narrow[32];
-	} state;
+        sph_u32 narrow[32];
+    } state;
 #if SPH_64
-	sph_u64 count;
+    sph_u64 count;
 #else
-	sph_u32 count_high, count_low;
+    sph_u32 count_high, count_low;
 #endif
 #endif
 } sph_groestl_big_context;
@@ -185,7 +185,7 @@ void sph_groestl224_close(void *cc, void *dst);
  * @param dst   the destination buffer
  */
 void sph_groestl224_addbits_and_close(
-	void *cc, unsigned ub, unsigned n, void *dst);
+        void *cc, unsigned ub, unsigned n, void *dst);
 
 /**
  * Initialize a Groestl-256 context. This process performs no memory allocation.
@@ -230,7 +230,7 @@ void sph_groestl256_close(void *cc, void *dst);
  * @param dst   the destination buffer
  */
 void sph_groestl256_addbits_and_close(
-	void *cc, unsigned ub, unsigned n, void *dst);
+        void *cc, unsigned ub, unsigned n, void *dst);
 
 /**
  * Initialize a Groestl-384 context. This process performs no memory allocation.
@@ -275,7 +275,7 @@ void sph_groestl384_close(void *cc, void *dst);
  * @param dst   the destination buffer
  */
 void sph_groestl384_addbits_and_close(
-	void *cc, unsigned ub, unsigned n, void *dst);
+        void *cc, unsigned ub, unsigned n, void *dst);
 
 /**
  * Initialize a Groestl-512 context. This process performs no memory allocation.
@@ -320,7 +320,7 @@ void sph_groestl512_close(void *cc, void *dst);
  * @param dst   the destination buffer
  */
 void sph_groestl512_addbits_and_close(
-	void *cc, unsigned ub, unsigned n, void *dst);
+        void *cc, unsigned ub, unsigned n, void *dst);
 
 #ifdef __cplusplus
 }

@@ -1,16 +1,17 @@
 // Copyright (c) 2014 The Bitcoin Core developers
 // Copyright (c) 2014-2020 The Dash Core developers
-// Copyright (c) 2020 The Raptoreum developers
+// Copyright (c) 2020-2023 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "networkstyle.h"
+#include <qt/networkstyle.h>
 
-#include "guiconstants.h"
-#include "guiutil.h"
+#include <qt/guiconstants.h>
+#include <qt/guiutil.h>
 
-#include "chainparams.h"
-#include "tinyformat.h"
+#include <chainparams.h>
+#include <tinyformat.h>
+#include <util/system.h>
 
 #include <QApplication>
 
@@ -21,96 +22,77 @@ static const struct {
     const int iconColorSaturationReduction;
     const std::string titleAddText;
 } network_styles[] = {
-    {"main", QAPP_APP_NAME_DEFAULT, 0, 0, ""},
-    {"test", QAPP_APP_NAME_TESTNET, 190, 20, QT_TRANSLATE_NOOP("SplashScreen", "[testnet]")},
-    {"dev", QAPP_APP_NAME_DEVNET, 190, 20, "[devnet: %s]"},
-    {"regtest", QAPP_APP_NAME_REGTEST, 160, 30, "[regtest]"}
+        {"main",    QAPP_APP_NAME_DEFAULT, 0,   0,  ""},
+        {"test",    QAPP_APP_NAME_TESTNET, 190, 20, QT_TRANSLATE_NOOP("SplashScreen", "[testnet]")},
+        {"devnet",  QAPP_APP_NAME_DEVNET,  190, 20, "[devnet: %s]"},
+        {"regtest", QAPP_APP_NAME_REGTEST, 160, 30, "[regtest]"}
 };
-static const unsigned network_styles_count = sizeof(network_styles)/sizeof(*network_styles);
+static const unsigned network_styles_count = sizeof(network_styles) / sizeof(*network_styles);
 
-void NetworkStyle::rotateColors(QImage& img, const int iconColorHueShift, const int iconColorSaturationReduction) {
-    int h,s,l,a;
+void NetworkStyle::rotateColor(QColor &col, const int iconColorHueShift, const int iconColorSaturationReduction) {
+    int h, s, l, a;
+    col.getHsl(&h, &s, &l, &a);
 
+    // rotate color on RGB color circle
+    h += iconColorHueShift;
+    // change saturation value
+    s -= iconColorSaturationReduction;
+    s = std::max(s, 0);
+
+    col.setHsl(h, s, l, a);
+}
+
+void NetworkStyle::rotateColors(QImage &img, const int iconColorHueShift, const int iconColorSaturationReduction) {
     // traverse though lines
-    for(int y=0;y<img.height();y++)
-    {
-        QRgb *scL = reinterpret_cast< QRgb *>( img.scanLine( y ) );
+    for (int y = 0; y < img.height(); y++) {
+        QRgb *scL = reinterpret_cast< QRgb *>( img.scanLine(y));
 
         // loop through pixels
-        for(int x=0;x<img.width();x++)
-        {
-            // preserve alpha because QColor::getHsl doesen't return the alpha value
-            a = qAlpha(scL[x]);
-            QColor col(scL[x]);
-
-            // get hue value
-            col.getHsl(&h,&s,&l);
-
-            // rotate color on RGB color circle
-            // 70° should end up with the typical "testnet" green (in bitcoin)
-            h+=iconColorHueShift;
-
-            // change saturation value
-            s -= iconColorSaturationReduction;
-            s = std::max(s, 0);
-
-            col.setHsl(h,s,l,a);
-
-            // set the pixel
+        for (int x = 0; x < img.width(); x++) {
+            QColor col;
+            col.setRgba(scL[x]);
+            rotateColor(col, iconColorHueShift, iconColorSaturationReduction);
             scL[x] = col.rgba();
         }
     }
 }
 
 // titleAddText needs to be const char* for tr()
-NetworkStyle::NetworkStyle(const QString &_appName, const int iconColorHueShift, const int iconColorSaturationReduction, const char *_titleAddText):
-    appName(_appName),
-    titleAddText(qApp->translate("SplashScreen", _titleAddText))
-{
+NetworkStyle::NetworkStyle(const QString &_appName, const int iconColorHueShift, const int iconColorSaturationReduction,
+                           const char *_titleAddText) :
+        appName(_appName),
+        titleAddText(qApp->translate("SplashScreen", _titleAddText)),
+        badgeColor(QColor(0, 141, 228)) {
     // Allow for separate UI settings for testnets
     QApplication::setApplicationName(appName);
-    // Make sure settings migrated properly
-    GUIUtil::migrateQtSettings();
     // load pixmap
-    QPixmap appIconPixmap(":/icons/bitcoin");
-    QPixmap splashImagePixmap(":/images/splash");
+    QPixmap appIconPixmap(":/icons/raptoreum");
 
-    if(iconColorHueShift != 0 && iconColorSaturationReduction != 0)
-    {
+    if (iconColorHueShift != 0 && iconColorSaturationReduction != 0) {
         // generate QImage from QPixmap
         QImage appIconImg = appIconPixmap.toImage();
-        QImage splashImageImg = splashImagePixmap.toImage();
-
         rotateColors(appIconImg, iconColorHueShift, iconColorSaturationReduction);
-        rotateColors(splashImageImg, iconColorHueShift, iconColorSaturationReduction);
-
         //convert back to QPixmap
-#if QT_VERSION >= 0x040700
         appIconPixmap.convertFromImage(appIconImg);
-        splashImagePixmap.convertFromImage(splashImageImg);
-#else
-        appIconPixmap = QPixmap::fromImage(appIconImg);
-        splashImagePixmap = QPixmap::fromImage(splashImageImg);
-#endif
+        // tweak badge color
+        rotateColor(badgeColor, iconColorHueShift, iconColorSaturationReduction);
     }
 
-    appIcon             = QIcon(appIconPixmap);
-    trayAndWindowIcon   = QIcon(appIconPixmap.scaled(QSize(256,256)));
-    splashImage         = splashImagePixmap;
+    appIcon = QIcon(appIconPixmap);
+    trayAndWindowIcon = QIcon(appIconPixmap.scaled(QSize(256, 256)));
+    QString theme = GUIUtil::getActiveTheme();
+    splashImage = theme.startsWith("Dark") ? QPixmap(":/images/splash_dark") : QPixmap(":/images/splash_light");
 }
 
-const NetworkStyle *NetworkStyle::instantiate(const QString &networkId)
-{
-    for (unsigned x=0; x<network_styles_count; ++x)
-    {
-        if (networkId == network_styles[x].networkId)
-        {
+const NetworkStyle *NetworkStyle::instantiate(const QString &networkId) {
+    for (unsigned x = 0; x < network_styles_count; ++x) {
+        if (networkId == network_styles[x].networkId) {
             std::string appName = network_styles[x].appName;
             std::string titleAddText = network_styles[x].titleAddText;
 
             if (networkId == QString(CBaseChainParams::DEVNET.c_str())) {
-                appName = strprintf(appName, GetDevNetName());
-                titleAddText = strprintf(titleAddText, GetDevNetName());
+                appName = strprintf(appName, gArgs.GetDevNetName());
+                titleAddText = strprintf(titleAddText, gArgs.GetDevNetName());
             }
 
             return new NetworkStyle(
@@ -120,5 +102,5 @@ const NetworkStyle *NetworkStyle::instantiate(const QString &networkId)
                     titleAddText.c_str());
         }
     }
-    return 0;
+    return nullptr;
 }

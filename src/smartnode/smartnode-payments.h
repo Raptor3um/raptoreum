@@ -1,25 +1,36 @@
 // Copyright (c) 2014-2019 The Dash Core developers
-// Copyright (c) 2020 The Raptoreum developers
+// Copyright (c) 2020-2023 The Raptoreum developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef SMARTNODE_PAYMENTS_H
-#define SMARTNODE_PAYMENTS_H
+#ifndef BITCOIN_SMARTNODE_SMARTNODE_PAYMENTS_H
+#define BITCOIN_SMARTNODE_SMARTNODE_PAYMENTS_H
 
-#include "util.h"
-#include "core_io.h"
-#include "key.h"
-#include "net_processing.h"
-#include "utilstrencodings.h"
+#include <amount.h>
 
-#include "evo/deterministicmns.h"
+#include <string>
+#include <vector>
+#include <map>
 
 class CSmartnodePayments;
 
+class CBlock;
+
+class CTransaction;
+
+struct CMutableTransaction;
+
+class CTxOut;
+
 /// TODO: all 4 functions do not belong here really, they should be refactored/moved somewhere (main.cpp ?)
-bool IsBlockValueValid(const CBlock& block, int nBlockHeight, CAmount blockReward, std::string& strErrorRet);
-bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight, CAmount blockReward);
-void FillBlockPayments(CMutableTransaction& txNew, int nBlockHeight, CAmount blockReward, std::vector<CTxOut>& voutSmartnodePaymentsRet, std::vector<CTxOut>& voutSuperblockPaymentsRet);
+bool IsBlockValueValid(const CBlock &block, int nBlockHeight, CAmount blockReward, std::string &strErrorRet);
+
+bool IsBlockPayeeValid(const CTransaction &txNew, int nBlockHeight, CAmount blockReward, CAmount specialTxFees);
+
+void FillBlockPayments(CMutableTransaction &txNew, int nBlockHeight, CAmount blockReward,
+                       std::vector <CTxOut> &voutSmartnodePaymentsRet, std::vector <CTxOut> &voutSuperblockPaymentsRet,
+                       CAmount specialTxFees = 0);
+
 std::map<int, std::string> GetRequiredPaymentsStrings(int nStartHeight, int nEndHeight);
 
 extern CSmartnodePayments mnpayments;
@@ -29,14 +40,17 @@ extern CSmartnodePayments mnpayments;
 // Keeps track of who should get paid for which blocks
 //
 
-class CSmartnodePayments
-{
+class CSmartnodePayments {
 public:
-    bool GetBlockTxOuts(int nBlockHeight, CAmount blockReward, std::vector<CTxOut>& voutSmartnodePaymentsRet) const;
-    bool IsTransactionValid(const CTransaction& txNew, int nBlockHeight, CAmount blockReward) const;
-    bool IsScheduled(const CDeterministicMNCPtr& dmn, int nNotBlockHeight) const;
+    static bool GetBlockTxOuts(int nBlockHeight, CAmount blockReward, std::vector <CTxOut> &voutSmartnodePaymentsRet,
+                               CAmount specialTxFee);
 
-    bool GetSmartnodeTxOuts(int nBlockHeight, CAmount blockReward, std::vector<CTxOut>& voutSmartnodePaymentsRet) const;
+    static bool
+    IsTransactionValid(const CTransaction &txNew, int nBlockHeight, CAmount blockReward, CAmount specialTxFee);
+
+    static bool
+    GetSmartnodeTxOuts(int nBlockHeight, CAmount blockReward, std::vector <CTxOut> &voutSmartnodePaymentsRet,
+                       CAmount specialTxFee);
 };
 
-#endif
+#endif // BITCOIN_SMARTNODE_SMARTNODE_PAYMENTS_H

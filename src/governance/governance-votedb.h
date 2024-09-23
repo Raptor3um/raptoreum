@@ -1,18 +1,18 @@
 // Copyright (c) 2014-2019 The Dash Core developers
-// Copyright (c) 2020 The Raptoreum developers
+// Copyright (c) 2020-2023 The Raptoreum developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef GOVERNANCE_VOTEDB_H
-#define GOVERNANCE_VOTEDB_H
+#ifndef BITCOIN_GOVERNANCE_GOVERNANCE_VOTEDB_H
+#define BITCOIN_GOVERNANCE_GOVERNANCE_VOTEDB_H
 
 #include <list>
 #include <map>
 
-#include "governance-vote.h"
-#include "serialize.h"
-#include "streams.h"
-#include "uint256.h"
+#include <governance/governance-vote.h>
+#include <serialize.h>
+#include <streams.h>
+#include <uint256.h>
 
 /**
  * Represents the collection of votes associated with a given CGovernanceObject
@@ -22,20 +22,11 @@
  * Note: This is a stub implementation that doesn't limit the number of votes held
  * in memory and doesn't flush to disk.
  */
-class CGovernanceObjectVoteFile
-{
+class CGovernanceObjectVoteFile {
 public: // Types
-    typedef std::list<CGovernanceVote> vote_l_t;
+    using vote_l_t = std::list<CGovernanceVote>;
 
-    typedef vote_l_t::iterator vote_l_it;
-
-    typedef vote_l_t::const_iterator vote_l_cit;
-
-    typedef std::map<uint256, vote_l_it> vote_m_t;
-
-    typedef vote_m_t::iterator vote_m_it;
-
-    typedef vote_m_t::const_iterator vote_m_cit;
+    using vote_m_t = std::map<uint256, vote_l_t::iterator>;
 
 private:
     int nMemoryVotes;
@@ -47,50 +38,45 @@ private:
 public:
     CGovernanceObjectVoteFile();
 
-    CGovernanceObjectVoteFile(const CGovernanceObjectVoteFile& other);
+    CGovernanceObjectVoteFile(const CGovernanceObjectVoteFile &other);
 
     /**
      * Add a vote to the file
      */
-    void AddVote(const CGovernanceVote& vote);
+    void AddVote(const CGovernanceVote &vote);
 
     /**
      * Return true if the vote with this hash is currently cached in memory
      */
-    bool HasVote(const uint256& nHash) const;
+    bool HasVote(const uint256 &nHash) const;
 
     /**
      * Retrieve a vote cached in memory
      */
-    bool SerializeVoteToStream(const uint256& nHash, CDataStream& ss) const;
+    bool SerializeVoteToStream(const uint256 &nHash, CDataStream &ss) const;
 
-    int GetVoteCount()
-    {
+    int GetVoteCount() const {
         return nMemoryVotes;
     }
 
-    std::vector<CGovernanceVote> GetVotes() const;
+    std::vector <CGovernanceVote> GetVotes() const;
 
-    void RemoveVotesFromSmartnode(const COutPoint& outpointSmartnode);
-    std::set<uint256> RemoveInvalidVotes(const COutPoint& outpointSmartnode, bool fProposal);
+    void RemoveVotesFromSmartnode(const COutPoint &outpointSmartnode);
 
-    ADD_SERIALIZE_METHODS;
+    std::set <uint256> RemoveInvalidVotes(const COutPoint &outpointSmartnode, bool fProposal);
 
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CGovernanceObjectVoteFile, obj
+    )
     {
-        READWRITE(nMemoryVotes);
-        READWRITE(listVotes);
-        if (ser_action.ForRead()) {
-            RebuildIndex();
-        }
+        READWRITE(obj.nMemoryVotes, obj.listVotes);
+        SER_READ(obj, obj.RebuildIndex());
     }
 
 private:
     // Drop older votes for the same gobject from the same smartnode
-    void RemoveOldVotes(const CGovernanceVote& vote);
+    void RemoveOldVotes(const CGovernanceVote &vote);
 
     void RebuildIndex();
 };
 
-#endif
+#endif // BITCOIN_GOVERNANCE_GOVERNANCE_VOTEDB_H

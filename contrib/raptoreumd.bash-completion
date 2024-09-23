@@ -15,7 +15,7 @@ _raptoreumd() {
     _get_comp_words_by_ref -n = cur prev words cword
 
     case "$cur" in
-        -conf=*|-pid=*|-loadblock=*|-rootcertificates=*|-rpccookiefile=*|-wallet=*)
+        -conf=*|-pid=*|-loadblock=*|-rpccookiefile=*|-wallet=*)
             cur="${cur#*=}"
             _filedir
             return 0
@@ -30,7 +30,7 @@ _raptoreumd() {
             ;;
         *)
 
-            # only parse -help if senseful
+            # only parse -help if sensible
             if [[ -z "$cur" || "$cur" =~ ^- ]]; then
                 local helpopts
                 helpopts=$($raptoreumd -help 2>&1 | awk '$1 ~ /^-/ { sub(/=.*/, "="); print $1 }' )

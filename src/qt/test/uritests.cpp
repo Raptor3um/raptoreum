@@ -2,15 +2,14 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "uritests.h"
+#include <qt/test/uritests.h>
 
-#include "guiutil.h"
-#include "walletmodel.h"
+#include <qt/guiutil.h>
+#include <qt/walletmodel.h>
 
 #include <QUrl>
 
-void URITests::uriTests()
-{
+void URITests::uriTests() {
     SendCoinsRecipient rv;
     QUrl uri;
     uri.setUrl(QString("raptoreum:XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg?req-dontexist="));
@@ -51,7 +50,7 @@ void URITests::uriTests()
     QVERIFY(rv.address == QString("XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg"));
     QVERIFY(rv.label == QString());
 
-    QVERIFY(GUIUtil::parseBitcoinURI("raptoreum://XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg?message=Some Example Address", &rv));
+    QVERIFY(GUIUtil::parseBitcoinURI("raptoreum:XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg?message=Some Example Address", &rv));
     QVERIFY(rv.address == QString("XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg"));
     QVERIFY(rv.label == QString());
 
@@ -64,7 +63,8 @@ void URITests::uriTests()
     uri.setUrl(QString("raptoreum:XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg?amount=1,000.0&label=Some Example"));
     QVERIFY(!GUIUtil::parseBitcoinURI(uri, &rv));
 
-    uri.setUrl(QString("raptoreum:XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg?amount=100&label=Some Example&message=Some Example Message"));
+    uri.setUrl(
+            QString("raptoreum:XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg?amount=100&label=Some Example&message=Some Example Message"));
     QVERIFY(GUIUtil::parseBitcoinURI(uri, &rv));
     QVERIFY(rv.address == QString("XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg"));
     QVERIFY(rv.amount == 10000000000LL);

@@ -2,45 +2,48 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "core_io.h"
+#include <core_io.h>
 
-#include "base58.h"
-#include "primitives/transaction.h"
-#include "script/script.h"
-#include "script/standard.h"
-#include "serialize.h"
-#include "streams.h"
-#include "univalue.h"
-#include "util.h"
-#include "utilmoneystr.h"
-#include "utilstrencodings.h"
+#include <consensus/consensus.h>
+#include <consensus/validation.h>
+#include <key_io.h>
+#include <primitives/transaction.h>
+#include <script/script.h>
+#include <script/standard.h>
+#include <serialize.h>
+#include <streams.h>
+#include <univalue.h>
+#include <util/system.h>
+#include <util/moneystr.h>
+#include <util/strencodings.h>
 
-#include "spentindex.h"
+#include <indices/future_index.h>
+#include <indices/spent_index.h>
 
-#include "evo/cbtx.h"
-#include "evo/providertx.h"
-#include "evo/specialtx.h"
-#include "llmq/quorums_commitment.h"
+#include <evo/cbtx.h>
+#include <evo/providertx.h>
+#include <evo/specialtx.h>
+#include <llmq/quorums_commitment.h>
+#include <assets/assets.h>
+#include <assets/assetstype.h>
 
-UniValue ValueFromAmount(const CAmount& amount)
-{
+UniValue ValueFromAmount(const CAmount &amount) {
     bool sign = amount < 0;
     int64_t n_abs = (sign ? -amount : amount);
     int64_t quotient = n_abs / COIN;
     int64_t remainder = n_abs % COIN;
     return UniValue(UniValue::VNUM,
-            strprintf("%s%d.%08d", sign ? "-" : "", quotient, remainder));
+                    strprintf("%s%d.%08d", sign ? "-" : "", quotient, remainder));
 }
 
-std::string FormatScript(const CScript& script)
-{
+std::string FormatScript(const CScript &script) {
     std::string ret;
     CScript::const_iterator it = script.begin();
     opcodetype op;
     while (it != script.end()) {
         CScript::const_iterator it2 = it;
         std::vector<unsigned char> vch;
-        if (script.GetOp2(it, op, &vch)) {
+        if (script.GetOp(it, op, vch)) {
             if (op == OP_0) {
                 ret += "0 ";
                 continue;
@@ -55,26 +58,33 @@ std::string FormatScript(const CScript& script)
                 }
             }
             if (vch.size() > 0) {
-                ret += strprintf("0x%x 0x%x ", HexStr(it2, it - vch.size()), HexStr(it - vch.size(), it));
+                ret += strprintf("0x%x 0x%x ", HexStr(std::vector<uint8_t>(it2, it - vch.size())),
+                                 HexStr(std::vector<uint8_t>(it - vch.size(), it)));
             } else {
-                ret += strprintf("0x%x ", HexStr(it2, it));
+                ret += strprintf("0x%x ", HexStr(std::vector<uint8_t>(it2, it)));
             }
             continue;
         }
-        ret += strprintf("0x%x ", HexStr(it2, script.end()));
+        ret += strprintf("0x%x ", HexStr(std::vector<uint8_t>(it2, script.end())));
         break;
     }
     return ret.substr(0, ret.size() - 1);
 }
 
 const std::map<unsigned char, std::string> mapSigHashTypes = {
-    {static_cast<unsigned char>(SIGHASH_ALL), std::string("ALL")},
-    {static_cast<unsigned char>(SIGHASH_ALL|SIGHASH_ANYONECANPAY), std::string("ALL|ANYONECANPAY")},
-    {static_cast<unsigned char>(SIGHASH_NONE), std::string("NONE")},
-    {static_cast<unsigned char>(SIGHASH_NONE|SIGHASH_ANYONECANPAY), std::string("NONE|ANYONECANPAY")},
-    {static_cast<unsigned char>(SIGHASH_SINGLE), std::string("SINGLE")},
-    {static_cast<unsigned char>(SIGHASH_SINGLE|SIGHASH_ANYONECANPAY), std::string("SINGLE|ANYONECANPAY")},
+        {static_cast<unsigned char>(SIGHASH_ALL),                           std::string("ALL")},
+        {static_cast<unsigned char>(SIGHASH_ALL | SIGHASH_ANYONECANPAY),    std::string("ALL|ANYONECANPAY")},
+        {static_cast<unsigned char>(SIGHASH_NONE),                          std::string("NONE")},
+        {static_cast<unsigned char>(SIGHASH_NONE | SIGHASH_ANYONECANPAY),   std::string("NONE|ANYONECANPAY")},
+        {static_cast<unsigned char>(SIGHASH_SINGLE),                        std::string("SINGLE")},
+        {static_cast<unsigned char>(SIGHASH_SINGLE | SIGHASH_ANYONECANPAY), std::string("SINGLE|ANYONECANPAY")},
 };
+
+std::string SighashToStr(unsigned char sighash_type) {
+    const auto &it = mapSigHashTypes.find(sighash_type);
+    if (it == mapSigHashTypes.end()) return "";
+    return it->second;
+}
 
 /**
  * Create the assembly string representation of a CScript object.
@@ -83,8 +93,7 @@ const std::map<unsigned char, std::string> mapSigHashTypes = {
  *                                     of a signature. Only pass true for scripts you believe could contain signatures. For example,
  *                                     pass false, or omit the this argument (defaults to false), for scriptPubKeys.
  */
-std::string ScriptToAsmStr(const CScript& script, const bool fAttemptSighashDecode)
-{
+std::string ScriptToAsmStr(const CScript &script, const bool fAttemptSighashDecode) {
     std::string str;
     opcodetype opcode;
     std::vector<unsigned char> vch;
@@ -97,7 +106,12 @@ std::string ScriptToAsmStr(const CScript& script, const bool fAttemptSighashDeco
             str += "[error]";
             return str;
         }
-        if (0 <= opcode && opcode <= OP_PUSHDATA4) {
+        if (opcode == OP_ASSET_ID) {
+            // Once we hit an OP_ASSET_ID, all the next data should be considered as hex
+            str += GetOpName(opcode);
+            str += " ";
+            str += HexStr(vch);
+        } else if (0 <= opcode && opcode <= OP_PUSHDATA4) {
             if (vch.size() <= static_cast<std::vector<unsigned char>::size_type>(4)) {
                 str += strprintf("%d", CScriptNum(vch, false).getint());
             } else {
@@ -110,8 +124,9 @@ std::string ScriptToAsmStr(const CScript& script, const bool fAttemptSighashDeco
                     // checks in CheckSignatureEncoding.
                     if (CheckSignatureEncoding(vch, SCRIPT_VERIFY_STRICTENC, nullptr)) {
                         const unsigned char chSigHashType = vch.back();
-                        if (mapSigHashTypes.count(chSigHashType)) {
-                            strSigHashDecode = "[" + mapSigHashTypes.find(chSigHashType)->second + "]";
+                        const auto it = mapSigHashTypes.find(chSigHashType);
+                        if (it != mapSigHashTypes.end()) {
+                            strSigHashDecode = "[" + it->second + "]";
                             vch.pop_back(); // remove the sighash type byte. it will be replaced by the decode.
                         }
                     }
@@ -127,23 +142,34 @@ std::string ScriptToAsmStr(const CScript& script, const bool fAttemptSighashDeco
     return str;
 }
 
-std::string EncodeHexTx(const CTransaction& tx)
-{
+std::string EncodeHexTx(const CTransaction &tx) {
     CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
     ssTx << tx;
-    return HexStr(ssTx.begin(), ssTx.end());
+    return HexStr(ssTx);
 }
 
-void ScriptPubKeyToUniv(const CScript& scriptPubKey,
-                        UniValue& out, bool fIncludeHex)
-{
+void ScriptToUniv(const CScript &script, UniValue &out, bool include_address) {
+    out.pushKV("asm", ScriptToAsmStr(script));
+    out.pushKV("hex", HexStr(script));
+
+    std::vector <std::vector<unsigned char>> solns;
+    txnouttype type = Solver(script, solns);
+    out.pushKV("type", GetTxnOutputType(type));
+
+    CTxDestination address;
+    if (include_address && ExtractDestination(script, address)) {
+        out.pushKV("address", EncodeDestination(address));
+    }
+}
+
+void ScriptPubKeyToUniv(const CScript &scriptPubKey, UniValue &out, bool fIncludeHex) {
     txnouttype type;
-    std::vector<CTxDestination> addresses;
+    std::vector <CTxDestination> addresses;
     int nRequired;
 
     out.pushKV("asm", ScriptToAsmStr(scriptPubKey));
     if (fIncludeHex)
-        out.pushKV("hex", HexStr(scriptPubKey.begin(), scriptPubKey.end()));
+        out.pushKV("hex", HexStr(scriptPubKey));
 
     if (!ExtractDestinations(scriptPubKey, type, addresses, nRequired)) {
         out.pushKV("type", GetTxnOutputType(type));
@@ -153,32 +179,53 @@ void ScriptPubKeyToUniv(const CScript& scriptPubKey,
     out.pushKV("reqSigs", nRequired);
     out.pushKV("type", GetTxnOutputType(type));
 
+    if (type == TX_TRANSFER_ASSET) {
+        UniValue assetInfo(UniValue::VOBJ);
+        std::string _assetAddress;
+
+        CAssetTransfer data;
+        if (GetTransferAsset(scriptPubKey, data)) {
+            std::string assetId = data.assetId;
+            if (data.isUnique) {
+                assetId += "[" + std::to_string(data.uniqueId);
+                if (data.nAmount > 1 * COIN)
+                    assetId += "..." + std::to_string(data.nAmount / COIN + data.uniqueId -1);
+                assetId += "]";
+            }
+            assetInfo.pushKV("asset_id", assetId);
+            assetInfo.pushKV("amount", ValueFromAmount(data.nAmount));
+        }
+
+        out.pushKV("asset", assetInfo);
+    }
+
     UniValue a(UniValue::VARR);
-    for (const CTxDestination& addr : addresses)
-        a.push_back(CBitcoinAddress(addr).ToString());
+    for (const CTxDestination &addr: addresses) {
+        a.push_back(EncodeDestination(addr));
+    }
     out.pushKV("addresses", a);
 }
 
-void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry, const CSpentIndexTxInfo* ptxSpentInfo)
-{
+void TxToUniv(const CTransaction &tx, const uint256 &hashBlock, UniValue &entry, bool include_hex,
+              const CSpentIndexTxInfo *ptxSpentInfo, const CFutureIndexTxInfo *ptxFutureInfo) {
     uint256 txid = tx.GetHash();
     entry.pushKV("txid", txid.GetHex());
     entry.pushKV("version", tx.nVersion);
     entry.pushKV("type", tx.nType);
-    entry.pushKV("size", (int)::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION));
-    entry.pushKV("locktime", (int64_t)tx.nLockTime);
+    entry.pushKV("size", (int) ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION));
+    entry.pushKV("locktime", (int64_t) tx.nLockTime);
 
     UniValue vin(UniValue::VARR);
-    for (const CTxIn& txin : tx.vin) {
+    for (const CTxIn &txin: tx.vin) {
         UniValue in(UniValue::VOBJ);
         if (tx.IsCoinBase())
-            in.pushKV("coinbase", HexStr(txin.scriptSig.begin(), txin.scriptSig.end()));
+            in.pushKV("coinbase", HexStr(txin.scriptSig));
         else {
             in.pushKV("txid", txin.prevout.hash.GetHex());
-            in.pushKV("vout", (int64_t)txin.prevout.n);
+            in.pushKV("vout", (int64_t) txin.prevout.n);
             UniValue o(UniValue::VOBJ);
             o.pushKV("asm", ScriptToAsmStr(txin.scriptSig, true));
-            o.pushKV("hex", HexStr(txin.scriptSig.begin(), txin.scriptSig.end()));
+            o.pushKV("hex", HexStr(txin.scriptSig));
             in.pushKV("scriptSig", o);
 
             // Add address and value info if spentindex enabled
@@ -187,30 +234,49 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
                 auto it = ptxSpentInfo->mSpentInfo.find(spentKey);
                 if (it != ptxSpentInfo->mSpentInfo.end()) {
                     auto spentInfo = it->second;
-                    in.push_back(Pair("value", ValueFromAmount(spentInfo.satoshis)));
-                    in.push_back(Pair("valueSat", spentInfo.satoshis));
+                    in.pushKV("value", ValueFromAmount(spentInfo.satoshis));
+                    in.pushKV("valueSat", spentInfo.satoshis);
                     if (spentInfo.addressType == 1) {
-                        in.push_back(Pair("address", CBitcoinAddress(CKeyID(spentInfo.addressHash)).ToString()));
+                        in.pushKV("address", EncodeDestination(CKeyID(spentInfo.addressHash)));
                     } else if (spentInfo.addressType == 2) {
-                        in.push_back(Pair("address", CBitcoinAddress(CScriptID(spentInfo.addressHash)).ToString()));
+                        in.pushKV("address", EncodeDestination(CScriptID(spentInfo.addressHash)));
+                    }
+                }
+            }
+
+            // Add future tx info if futureindex enabled
+            if (ptxFutureInfo != nullptr) {
+                CFutureIndexKey futureKey(txin.prevout.hash, txin.prevout.n);
+                auto it = ptxFutureInfo->mFutureInfo.find(futureKey);
+                if (it != ptxFutureInfo->mFutureInfo.end()) {
+                    auto spentInfo = it->second;
+                    in.pushKV("value", ValueFromAmount(spentInfo.satoshis));
+                    in.pushKV("valueSat", spentInfo.satoshis);
+                    in.pushKV("lockHeight", spentInfo.lockedToHeight);
+                    in.pushKV("lockTime", spentInfo.lockedToTime);
+                    in.pushKV("confirmedHeight", spentInfo.confirmedHeight);
+                    if (spentInfo.addressType == 1) {
+                        in.pushKV("address", EncodeDestination(CKeyID(spentInfo.addressHash)));
+                    } else if (spentInfo.addressType == 2) {
+                        in.pushKV("address", EncodeDestination(CScriptID(spentInfo.addressHash)));
                     }
                 }
             }
         }
-        in.pushKV("sequence", (int64_t)txin.nSequence);
+        in.pushKV("sequence", (int64_t) txin.nSequence);
         vin.push_back(in);
     }
     entry.pushKV("vin", vin);
 
     UniValue vout(UniValue::VARR);
     for (unsigned int i = 0; i < tx.vout.size(); i++) {
-        const CTxOut& txout = tx.vout[i];
+        const CTxOut &txout = tx.vout[i];
 
         UniValue out(UniValue::VOBJ);
 
         out.pushKV("value", ValueFromAmount(txout.nValue));
         out.pushKV("valueSat", txout.nValue);
-        out.pushKV("n", (int64_t)i);
+        out.pushKV("n", (int64_t) i);
 
         UniValue o(UniValue::VOBJ);
         ScriptPubKeyToUniv(txout.scriptPubKey, o, true);
@@ -222,9 +288,9 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
             auto it = ptxSpentInfo->mSpentInfo.find(spentKey);
             if (it != ptxSpentInfo->mSpentInfo.end()) {
                 auto spentInfo = it->second;
-                out.push_back(Pair("spentTxId", spentInfo.txid.GetHex()));
-                out.push_back(Pair("spentIndex", (int)spentInfo.inputIndex));
-                out.push_back(Pair("spentHeight", spentInfo.blockHeight));
+                out.pushKV("spentTxId", spentInfo.txid.GetHex());
+                out.pushKV("spentIndex", (int) spentInfo.inputIndex);
+                out.pushKV("spentHeight", spentInfo.blockHeight);
             }
         }
         vout.push_back(out);
@@ -232,8 +298,8 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
     entry.pushKV("vout", vout);
 
     if (!tx.vExtraPayload.empty()) {
-        entry.push_back(Pair("extraPayloadSize", (int)tx.vExtraPayload.size()));
-        entry.push_back(Pair("extraPayload", HexStr(tx.vExtraPayload)));
+        entry.pushKV("extraPayloadSize", (int) tx.vExtraPayload.size());
+        entry.pushKV("extraPayload", HexStr(tx.vExtraPayload));
     }
 
     if (tx.nType == TRANSACTION_PROVIDER_REGISTER) {
@@ -241,47 +307,85 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
         if (GetTxPayload(tx, proTx)) {
             UniValue obj;
             proTx.ToJson(obj);
-            entry.push_back(Pair("proRegTx", obj));
+            entry.pushKV("proRegTx", obj);
         }
     } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_SERVICE) {
         CProUpServTx proTx;
         if (GetTxPayload(tx, proTx)) {
             UniValue obj;
             proTx.ToJson(obj);
-            entry.push_back(Pair("proUpServTx", obj));
+            entry.pushKV("proUpServTx", obj);
         }
     } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_REGISTRAR) {
         CProUpRegTx proTx;
         if (GetTxPayload(tx, proTx)) {
             UniValue obj;
             proTx.ToJson(obj);
-            entry.push_back(Pair("proUpRegTx", obj));
+            entry.pushKV("proUpRegTx", obj);
         }
     } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_REVOKE) {
         CProUpRevTx proTx;
         if (GetTxPayload(tx, proTx)) {
             UniValue obj;
             proTx.ToJson(obj);
-            entry.push_back(Pair("proUpRevTx", obj));
+            entry.pushKV("proUpRevTx", obj);
         }
     } else if (tx.nType == TRANSACTION_COINBASE) {
         CCbTx cbTx;
         if (GetTxPayload(tx, cbTx)) {
             UniValue obj;
             cbTx.ToJson(obj);
-            entry.push_back(Pair("cbTx", obj));
+            entry.pushKV("cbTx", obj);
         }
     } else if (tx.nType == TRANSACTION_QUORUM_COMMITMENT) {
         llmq::CFinalCommitmentTxPayload qcTx;
         if (GetTxPayload(tx, qcTx)) {
             UniValue obj;
             qcTx.ToJson(obj);
-            entry.push_back(Pair("qcTx", obj));
+            entry.pushKV("qcTx", obj);
+        }
+    } else if (tx.nType == TRANSACTION_FUTURE) {
+        CFutureTx ctx;
+        if (GetTxPayload(tx, ctx)) {
+            UniValue obj;
+            ctx.ToJson(obj);
+            entry.pushKV("futureTx", obj);
+        }
+    } else if (tx.nType == TRANSACTION_FUTURE) {
+        CFutureTx ctx;
+        if (GetTxPayload(tx, ctx)) {
+            UniValue obj;
+            ctx.ToJson(obj);
+            entry.push_back(Pair("futureTx", obj));
+        }
+    } else if (tx.nType == TRANSACTION_NEW_ASSET) {
+        CNewAssetTx ctx;
+        if (GetTxPayload(tx, ctx)) {
+            UniValue obj;
+            ctx.ToJson(obj);
+            entry.push_back(Pair("newAssetTx", obj));
+        }
+    } else if (tx.nType == TRANSACTION_UPDATE_ASSET) {
+        CNewAssetTx ctx;
+        if (GetTxPayload(tx, ctx)) {
+            UniValue obj;
+            ctx.ToJson(obj);
+            entry.push_back(Pair("UpdateAssetTx", obj));
+        }
+    } else if (tx.nType == TRANSACTION_MINT_ASSET) {
+        CMintAssetTx ctx;
+        if (GetTxPayload(tx, ctx)) {
+            UniValue obj;
+            ctx.ToJson(obj);
+            entry.push_back(Pair("MintAssetTx", obj));
         }
     }
 
     if (!hashBlock.IsNull())
         entry.pushKV("blockhash", hashBlock.GetHex());
 
-    entry.pushKV("hex", EncodeHexTx(tx)); // the hex-encoded transaction. used the name "hex" to be consistent with the verbose output of "getrawtransaction".
+    if (include_hex) {
+        entry.pushKV("hex", EncodeHexTx(
+                tx)); // The hex-encoded transaction. Used the name "hex" to be consistent with the verbose output of "getrawtransaction".
+    }
 }

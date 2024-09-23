@@ -1,4 +1,5 @@
 // Copyright (c) 2016 The Bitcoin Core developers
+// Copyright (c) 2020-2023 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -16,37 +17,50 @@ namespace Ui {
 }
 
 /** Modal overlay to display information about the chain-sync state */
-class ModalOverlay : public QWidget
-{
+class ModalOverlay : public QWidget {
     Q_OBJECT
 
 public:
-    explicit ModalOverlay(QWidget *parent);
+    explicit ModalOverlay(bool enable_wallet, QWidget *parent);
+
     ~ModalOverlay();
 
-public Q_SLOTS:
-    void tipUpdate(int count, const QDateTime& blockDate, double nVerificationProgress);
-    void setKnownBestHeight(int count, const QDateTime& blockDate);
+public
+    Q_SLOTS:
+            void tipUpdate(int
+    count,
+    const QDateTime &blockDate,
+    double nVerificationProgress
+    );
+
+    void setKnownBestHeight(int count, const QDateTime &blockDate);
 
     void toggleVisibility();
+
     // will show or hide the modal layer
     void showHide(bool hide = false, bool userRequested = false);
+
     void closeClicked();
+
     void hideForever();
-    bool isLayerVisible() { return layerIsVisible; }
+
+    bool isLayerVisible() const { return layerIsVisible; }
 
 protected:
-    bool eventFilter(QObject * obj, QEvent * ev);
-    bool event(QEvent* ev);
+    bool eventFilter(QObject *obj, QEvent *ev) override;
+
+    bool event(QEvent *ev) override;
 
 private:
     Ui::ModalOverlay *ui;
     int bestHeaderHeight; //best known height (based on the headers)
     QDateTime bestHeaderDate;
-    QVector<QPair<qint64, double> > blockProcessTime;
+    QVector <QPair<qint64, double>> blockProcessTime;
     bool layerIsVisible;
     bool userClosed;
     bool foreverHidden;
+
+    void UpdateHeaderSyncLabel();
 };
 
 #endif // BITCOIN_QT_MODALOVERLAY_H
