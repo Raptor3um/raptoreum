@@ -1,15 +1,15 @@
 // Copyright (c) 2011-2015 The Bitcoin Core developers
+// Copyright (c) 2020-2023 The Raptoreum developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "receiverequestdialog.h"
-#include "ui_receiverequestdialog.h"
+#include <qt/receiverequestdialog.h>
+#include <qt/forms/ui_receiverequestdialog.h>
 
-#include "bitcoinunits.h"
-#include "guiconstants.h"
-#include "guiutil.h"
-#include "optionsmodel.h"
-#include "walletmodel.h"
+#include <qt/bitcoinunits.h>
+#include <qt/guiconstants.h>
+#include <qt/guiutil.h>
+#include <qt/optionsmodel.h>
 
 #include <QClipboard>
 #include <QDrag>
@@ -17,41 +17,34 @@
 #include <QMimeData>
 #include <QMouseEvent>
 #include <QPixmap>
-#if QT_VERSION < 0x050000
-#include <QUrl>
-#endif
 
 #if defined(HAVE_CONFIG_H)
-#include "config/raptoreum-config.h" /* for USE_QRCODE */
+#include <config/raptoreum-config.h> /* for USE_QRCODE */
 #endif
 
 #ifdef USE_QRCODE
 #include <qrencode.h>
 #endif
 
-QRImageWidget::QRImageWidget(QWidget *parent):
-    QLabel(parent), contextMenu(0)
-{
+QRImageWidget::QRImageWidget(QWidget *parent) :
+        QLabel(parent), contextMenu(nullptr) {
     contextMenu = new QMenu(this);
     QAction *saveImageAction = new QAction(tr("&Save Image..."), this);
-    connect(saveImageAction, SIGNAL(triggered()), this, SLOT(saveImage()));
+    connect(saveImageAction, &QAction::triggered, this, &QRImageWidget::saveImage);
     contextMenu->addAction(saveImageAction);
     QAction *copyImageAction = new QAction(tr("&Copy Image"), this);
-    connect(copyImageAction, SIGNAL(triggered()), this, SLOT(copyImage()));
+    connect(copyImageAction, &QAction::triggered, this, &QRImageWidget::copyImage);
     contextMenu->addAction(copyImageAction);
 }
 
-QImage QRImageWidget::exportImage()
-{
-    if(!pixmap())
+QImage QRImageWidget::exportImage() {
+    if (!pixmap())
         return QImage();
     return pixmap()->toImage();
 }
 
-void QRImageWidget::mousePressEvent(QMouseEvent *event)
-{
-    if(event->button() == Qt::LeftButton && pixmap())
-    {
+void QRImageWidget::mousePressEvent(QMouseEvent *event) {
+    if (event->button() == Qt::LeftButton && pixmap()) {
         event->accept();
         QMimeData *mimeData = new QMimeData;
         mimeData->setImageData(exportImage());
@@ -64,91 +57,89 @@ void QRImageWidget::mousePressEvent(QMouseEvent *event)
     }
 }
 
-void QRImageWidget::saveImage()
-{
-    if(!pixmap())
+void QRImageWidget::saveImage() {
+    if (!pixmap())
         return;
     QString fn = GUIUtil::getSaveFileName(this, tr("Save QR Code"), QString(), tr("PNG Image (*.png)"), nullptr);
-    if (!fn.isEmpty())
-    {
+    if (!fn.isEmpty()) {
         exportImage().save(fn);
     }
 }
 
-void QRImageWidget::copyImage()
-{
-    if(!pixmap())
+void QRImageWidget::copyImage() {
+    if (!pixmap())
         return;
     QApplication::clipboard()->setImage(exportImage());
 }
 
-void QRImageWidget::contextMenuEvent(QContextMenuEvent *event)
-{
-    if(!pixmap())
+void QRImageWidget::contextMenuEvent(QContextMenuEvent *event) {
+    if (!pixmap())
         return;
     contextMenu->exec(event->globalPos());
 }
 
 ReceiveRequestDialog::ReceiveRequestDialog(QWidget *parent) :
-    QDialog(parent),
-    ui(new Ui::ReceiveRequestDialog),
-    model(0)
-{
+        QDialog(parent),
+        ui(new Ui::ReceiveRequestDialog),
+        model(nullptr) {
     ui->setupUi(this);
+
+    GUIUtil::updateFonts();
 
 #ifndef USE_QRCODE
     ui->btnSaveAs->setVisible(false);
     ui->lblQRCode->setVisible(false);
 #endif
 
-    connect(ui->btnSaveAs, SIGNAL(clicked()), ui->lblQRCode, SLOT(saveImage()));
+    connect(ui->btnSaveAs, &QPushButton::clicked, ui->lblQRCode, &QRImageWidget::saveImage);
 }
 
-ReceiveRequestDialog::~ReceiveRequestDialog()
-{
+ReceiveRequestDialog::~ReceiveRequestDialog() {
     delete ui;
 }
 
-void ReceiveRequestDialog::setModel(OptionsModel *_model)
-{
+void ReceiveRequestDialog::setModel(WalletModel *_model) {
     this->model = _model;
 
     if (_model)
-        connect(_model, SIGNAL(displayUnitChanged(int)), this, SLOT(update()));
+        connect(_model->getOptionsModel(), &OptionsModel::displayUnitChanged, this, &ReceiveRequestDialog::update);
 
     // update the display unit if necessary
     update();
 }
 
-void ReceiveRequestDialog::setInfo(const SendCoinsRecipient &_info)
-{
+void ReceiveRequestDialog::setInfo(const SendCoinsRecipient &_info) {
     this->info = _info;
     update();
 }
 
-void ReceiveRequestDialog::update()
-{
-    if(!model)
+void ReceiveRequestDialog::update() {
+    if (!model)
         return;
     QString target = info.label;
-    if(target.isEmpty())
+    if (target.isEmpty())
         target = info.address;
     setWindowTitle(tr("Request payment to %1").arg(target));
 
     QString uri = GUIUtil::formatBitcoinURI(info);
     ui->btnSaveAs->setEnabled(false);
     QString html;
-    html += "<html><font face='verdana, arial, helvetica, sans-serif'>";
-    html += "<b>"+tr("Payment information")+"</b><br>";
-    html += "<b>"+tr("URI")+"</b>: ";
-    html += "<a href=\""+uri+"\">" + GUIUtil::HtmlEscape(uri) + "</a><br>";
-    html += "<b>"+tr("Address")+"</b>: " + GUIUtil::HtmlEscape(info.address) + "<br>";
-    if(info.amount)
-        html += "<b>"+tr("Amount")+"</b>: " + BitcoinUnits::formatHtmlWithUnit(model->getDisplayUnit(), info.amount) + "<br>";
-    if(!info.label.isEmpty())
-        html += "<b>"+tr("Label")+"</b>: " + GUIUtil::HtmlEscape(info.label) + "<br>";
-    if(!info.message.isEmpty())
-        html += "<b>"+tr("Message")+"</b>: " + GUIUtil::HtmlEscape(info.message) + "<br>";
+    html += "<html>";
+    html += "<b>" + tr("Payment information") + "</b><br><br>";
+    html += "<b>" + tr("URI") + "</b>: ";
+    html += QString("<a style=\"%1\"href=\"").arg(GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_COMMAND)) +
+            uri + "\">" + GUIUtil::HtmlEscape(uri) + "</a><br>";
+    html += "<b>" + tr("Address") + "</b>: " + GUIUtil::HtmlEscape(info.address) + "<br>";
+    if (info.amount)
+        html += "<b>" + tr("Amount") + "</b>: " +
+                BitcoinUnits::formatHtmlWithUnit(model->getOptionsModel()->getDisplayUnit(), info.amount) + "<br>";
+    if (!info.label.isEmpty())
+        html += "<b>" + tr("Label") + "</b>: " + GUIUtil::HtmlEscape(info.label) + "<br>";
+    if (!info.message.isEmpty())
+        html += "<b>" + tr("Message") + "</b>: " + GUIUtil::HtmlEscape(info.message) + "<br>";
+    if (model->isMultiwallet()) {
+        html += "<b>" + tr("Wallet") + "</b>: " + GUIUtil::HtmlEscape(model->getWalletName()) + "<br>";
+    }
     ui->outUri->setText(html);
 
 #ifdef USE_QRCODE
@@ -166,28 +157,39 @@ void ReceiveRequestDialog::update()
                 ui->lblQRCode->setText(tr("Error encoding URI into QR Code."));
                 return;
             }
-            QImage qrImage = QImage(code->width + 8, code->width + 8, QImage::Format_RGB32);
-            qrImage.fill(0xffffff);
+            QImage qrImage = QImage(code->width + 6, code->width + 6, QImage::Format_RGB32);
+            qrImage.fill(GUIUtil::getThemedQColor(GUIUtil::ThemedColor::BACKGROUND_WIDGET));
             unsigned char *p = code->data;
             for (int y = 0; y < code->width; y++)
             {
                 for (int x = 0; x < code->width; x++)
                 {
-                    qrImage.setPixel(x + 4, y + 4, ((*p & 1) ? 0x0 : 0xffffff));
+                    qrImage.setPixel(x + 3, y + 3, ((*p & 1) ? GUIUtil::getThemedQColor(GUIUtil::ThemedColor::QR_PIXEL).rgb() : GUIUtil::getThemedQColor(GUIUtil::ThemedColor::BACKGROUND_WIDGET).rgb()));
                     p++;
                 }
             }
             QRcode_free(code);
-
-            QImage qrAddrImage = QImage(QR_IMAGE_SIZE, QR_IMAGE_SIZE+20, QImage::Format_RGB32);
-            qrAddrImage.fill(0xffffff);
+            // Create the image with respect to the device pixel ratio
+            int qrAddrImageWidth = QR_IMAGE_SIZE;
+            int qrAddrImageHeight = QR_IMAGE_SIZE + 20;
+            qreal scale = qApp->devicePixelRatio();
+            QImage qrAddrImage = QImage(qrAddrImageWidth * scale, qrAddrImageHeight * scale, QImage::Format_RGB32);
+            qrAddrImage.setDevicePixelRatio(scale);
             QPainter painter(&qrAddrImage);
-            painter.drawImage(0, 0, qrImage.scaled(QR_IMAGE_SIZE, QR_IMAGE_SIZE));
-            QFont font = GUIUtil::fixedPitchFont();
-            font.setPixelSize(12);
+            // Fill the whole image with border color
+            qrAddrImage.fill(GUIUtil::getThemedQColor(GUIUtil::ThemedColor::BORDER_WIDGET));
+            // Create a 2px/2px smaller rect and fill it with background color to keep the 1px border with the border color
+            QRect paddedRect = QRect(1, 1, qrAddrImageWidth - 2, qrAddrImageHeight - 2);
+            painter.fillRect(paddedRect, GUIUtil::getThemedQColor(GUIUtil::ThemedColor::BACKGROUND_WIDGET));
+            painter.drawImage(2, 2, qrImage.scaled(QR_IMAGE_SIZE - 4, QR_IMAGE_SIZE - 4));
+            // calculate ideal font size
+            QFont font = GUIUtil::getFontNormal();
+            qreal font_size = GUIUtil::calculateIdealFontSize((paddedRect.width() - 20), info.address, font);
+            font.setPointSizeF(font_size);
+            // paint the address
             painter.setFont(font);
-            QRect paddedRect = qrAddrImage.rect();
-            paddedRect.setHeight(QR_IMAGE_SIZE+12);
+            painter.setPen(GUIUtil::getThemedQColor(GUIUtil::ThemedColor::QR_PIXEL));
+            paddedRect.setHeight(QR_IMAGE_SIZE + 3);
             painter.drawText(paddedRect, Qt::AlignBottom|Qt::AlignCenter, info.address);
             painter.end();
 
@@ -198,12 +200,10 @@ void ReceiveRequestDialog::update()
 #endif
 }
 
-void ReceiveRequestDialog::on_btnCopyURI_clicked()
-{
+void ReceiveRequestDialog::on_btnCopyURI_clicked() {
     GUIUtil::setClipboard(GUIUtil::formatBitcoinURI(info));
 }
 
-void ReceiveRequestDialog::on_btnCopyAddress_clicked()
-{
+void ReceiveRequestDialog::on_btnCopyAddress_clicked() {
     GUIUtil::setClipboard(info.address);
 }

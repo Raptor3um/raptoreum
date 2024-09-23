@@ -52,16 +52,16 @@
 */
 
 #define ui_type(size)               uint##size##_t
-#define dec_unit_type(size,x)       typedef ui_type(size) x
-#define dec_bufr_type(size,bsize,x) typedef ui_type(size) x[bsize / (size >> 3)]
-#define ptr_cast(x,size)            ((ui_type(size)*)(x))
+#define dec_unit_type(size, x)       typedef ui_type(size) x
+#define dec_bufr_type(size, bsize, x) typedef ui_type(size) x[bsize / (size >> 3)]
+#define ptr_cast(x, size)            ((ui_type(size)*)(x))
 
-typedef unsigned int    uint_t;             /* native unsigned integer */
-typedef uint8_t         u08b_t;             /*  8-bit unsigned integer */
-typedef uint64_t        u64b_t;             /* 64-bit unsigned integer */
+typedef unsigned int uint_t;             /* native unsigned integer */
+typedef uint8_t u08b_t;             /*  8-bit unsigned integer */
+typedef uint64_t u64b_t;             /* 64-bit unsigned integer */
 
 #ifndef RotL_64
-#define RotL_64(x,N)    (((x) << (N)) | ((x) >> (64-(N))))
+#define RotL_64(x, N)    (((x) << (N)) | ((x) >> (64-(N))))
 #endif
 
 /*
@@ -114,10 +114,10 @@ typedef uint64_t        u64b_t;             /* 64-bit unsigned integer */
 
 
 #if   PLATFORM_BYTE_ORDER == IS_BIG_ENDIAN
-    /* here for big-endian CPUs */
+/* here for big-endian CPUs */
 #define SKEIN_NEED_SWAP   (1)
 #elif PLATFORM_BYTE_ORDER == IS_LITTLE_ENDIAN
-    /* here for x86 and x86-64 CPUs (and other detected little-endian CPUs) */
+/* here for x86 and x86-64 CPUs (and other detected little-endian CPUs) */
 #define SKEIN_NEED_SWAP   (0)
 #if   PLATFORM_MUST_ALIGN == 0              /* ok to use "fast" versions? */
 #define Skein_Put64_LSB_First(dst08,src64,bCnt) memcpy(dst08,src64,bCnt)
@@ -152,38 +152,40 @@ typedef uint64_t        u64b_t;             /* 64-bit unsigned integer */
 
 
 #ifndef Skein_Put64_LSB_First
-void    Skein_Put64_LSB_First(u08b_t *dst,const u64b_t *src,size_t bCnt)
-#ifdef  SKEIN_PORT_CODE /* instantiate the function code here? */
-    { /* this version is fully portable (big-endian or little-endian), but slow */
-    size_t n;
 
-    for (n=0;n<bCnt;n++)
-        dst[n] = (u08b_t) (src[n>>3] >> (8*(n&7)));
-    }
+void Skein_Put64_LSB_First(u08b_t *dst, const u64b_t *src, size_t bCnt)
+#ifdef  SKEIN_PORT_CODE /* instantiate the function code here? */
+{ /* this version is fully portable (big-endian or little-endian), but slow */
+size_t n;
+
+for (n=0;n<bCnt;n++)
+    dst[n] = (u08b_t) (src[n>>3] >> (8*(n&7)));
+}
 #else
-    ;    /* output only the function prototype */
+;    /* output only the function prototype */
 #endif
 #endif   /* ifndef Skein_Put64_LSB_First */
 
 
 #ifndef Skein_Get64_LSB_First
-void    Skein_Get64_LSB_First(u64b_t *dst,const u08b_t *src,size_t wCnt)
-#ifdef  SKEIN_PORT_CODE /* instantiate the function code here? */
-    { /* this version is fully portable (big-endian or little-endian), but slow */
-    size_t n;
 
-    for (n=0;n<8*wCnt;n+=8)
-        dst[n/8] = (((u64b_t) src[n  ])      ) +
-                   (((u64b_t) src[n+1]) <<  8) +
-                   (((u64b_t) src[n+2]) << 16) +
-                   (((u64b_t) src[n+3]) << 24) +
-                   (((u64b_t) src[n+4]) << 32) +
-                   (((u64b_t) src[n+5]) << 40) +
-                   (((u64b_t) src[n+6]) << 48) +
-                   (((u64b_t) src[n+7]) << 56) ;
-    }
+void Skein_Get64_LSB_First(u64b_t *dst, const u08b_t *src, size_t wCnt)
+#ifdef  SKEIN_PORT_CODE /* instantiate the function code here? */
+{ /* this version is fully portable (big-endian or little-endian), but slow */
+size_t n;
+
+for (n=0;n<8*wCnt;n+=8)
+    dst[n/8] = (((u64b_t) src[n  ])      ) +
+               (((u64b_t) src[n+1]) <<  8) +
+               (((u64b_t) src[n+2]) << 16) +
+               (((u64b_t) src[n+3]) << 24) +
+               (((u64b_t) src[n+4]) << 32) +
+               (((u64b_t) src[n+5]) << 40) +
+               (((u64b_t) src[n+6]) << 48) +
+               (((u64b_t) src[n+7]) << 56) ;
+}
 #else
-    ;    /* output only the function prototype */
+;    /* output only the function prototype */
 #endif
 #endif   /* ifndef Skein_Get64_LSB_First */
 

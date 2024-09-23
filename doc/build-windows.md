@@ -3,62 +3,102 @@ WINDOWS BUILD NOTES
 
 Below are some notes on how to build Raptoreum Core for Windows.
 
-Most developers use cross-compilation from Ubuntu to build executables for
-Windows. Cross-compilation is also used to build the release binaries.
+The options known to work for building Raptoreum Core on Windows are:
 
-Currently only building on Ubuntu Trusty 14.04 or Ubuntu Zesty 17.04 or later is supported.
-Building on Ubuntu Xenial 16.04 is known to be broken, see extensive discussion in issue [8732](https://github.com/bitcoin/bitcoin/issues/8732).
-While it may be possible to do so with work arounds, it's potentially dangerous and not recommended.
+* On Linux, using the [Mingw-w64](https://www.mingw-w64.org/) cross compiler tool chain. 
+and is the platform used to build the Raptoreum Core Windows release binaries.
+* On Windows, using [Windows
+Subsystem for Linux (WSL)](https://docs.microsoft.com/windows/wsl/about) and the Mingw-w64 cross compiler tool chain.
 
-While there are potentially a number of ways to build on Windows (for example using msys / mingw-w64),
-using the Windows Subsystem For Linux is the most straightforward. If you are building with
-another method, please contribute the instructions here for others who are running versions
-of Windows that are not compatible with the Windows Subsystem for Linux.
+Other options which may work, but which have not been extensively tested are (please contribute instructions):
 
-Compiling with Windows Subsystem For Linux
--------------------------------------------
+* On Windows, using a POSIX compatibility layer application such as [cygwin](https://www.cygwin.com/) or [msys2](https://www.msys2.org/).
 
-With Windows 10, Microsoft has released a new feature named the [Windows
-Subsystem for Linux](https://msdn.microsoft.com/commandline/wsl/about). This
-feature allows you to run a bash shell directly on Windows in an Ubuntu-based
-environment. Within this environment you can cross compile for Windows without
-the need for a separate Linux VM or server.
+Installing Windows Subsystem for Linux
+---------------------------------------
 
-This feature is not supported in versions of Windows prior to Windows 10 or on
-Windows Server SKUs. In addition, it is available [only for 64-bit versions of
-Windows](https://msdn.microsoft.com/en-us/commandline/wsl/install_guide).
+* Follow the upstream installation instructions, available [here](https://docs.microsoft.com/windows/wsl/install-win10).
 
-To get the bash shell, you must first activate the feature in Windows.
+Cross-compilation for Ubuntu and Windows Subsystem for Linux
+------------------------------------------------------------
 
-1. Turn on Developer Mode
-  * Open Settings -> Update and Security -> For developers
-  * Select the Developer Mode radio button
-  * Restart if necessary
-2. Enable the Windows Subsystem for Linux feature
-  * From Start, search for "Turn Windows features on or off" (type 'turn')
-  * Select Windows Subsystem for Linux (beta)
-  * Click OK
-  * Restart if necessary
-3. Complete Installation
-  * Open a cmd prompt and type "bash"
-  * Accept the license
-  * Create a new UNIX user account (this is a separate account from your Windows account)
+The steps below can be performed on Ubuntu or WSL. The depends system
+will also work on other Linux distributions, however the commands for
+installing the toolchain will be different.
 
-After the bash shell is active, you can follow the instructions below, starting
-with the "Cross-compilation" section. Compiling the 64-bit version is
-recommended but it is possible to compile the 32-bit version.
+First, install the general dependencies:
 
-Cross-compilation
--------------------
+	sudo apt update
+	sudo apt upgrade
+	sudo apt install build-essential libtool autotools-dev automake pkg-config bsdmainutils curl git
 
-Follow the instructions for Windows in [build-cross](build-cross.md)
+A host toolchain (`build-essential`) is necessary because some dependency
+packages need to build host utilities that are used in the build process.
+
+See [dependencies.md](dependencies.md) for a complete overview.
+
+If you want to build the windows installer with `make deploy` you need [NSIS](https://nsis.sourceforge.io/Main_Page):
+
+	sudo apt install nsis
+
+Acquire the source in the usual way:
+
+	git clone https://github.com/raptor3um/raptoreum.git
+	cd raptoreum
+
+## Building for 64-bit Windows
+
+The first step is to oinstall the mingw-w64 cross-compilation tool chain:
+ - on modern systems (Ubuntu 21.04 Hirsute Hippo or newer, Debian 11 Bullseye or newer):
+
+```sh
+sudo apt install g++-mingw-w64-x86-64-posix
+```
+
+ - on older systems:
+
+```sh
+sudo apt install g++-mingw-w64-x86-64
+```
+
+Once the toolchain is installed the build steps are common:
+
+Note that for WSL the Raptoreum Core source path MUST be somewhere in the default mount file system, for
+example /usr/src/raptoreum, AND not under /mnt/d/. If this is not the case the dependency autoconf scripts will fail.
+This means you cannot use a directory that is located directly on the host Windows file system to perform the build.
+
+Additional WSL Note:
+WSL support for [launching Win32 applications](https://docs.microsoft.com/en-us/archive/blogs/wsl/windows-and-ubuntu-interoperability#launching-win32-applications-from-within-wsl)
+results in `Autoconf` configure scripts being able to execute Windows Portable Executable files. This can cause
+unexpected behaviour during the build, such as Win32 error dialogs for missing libraries. The recommended approach
+is to temporarily disable WSL support for Win32 applications.
+
+Build using:
+
+    PATH=$(echo "$PATH" | sed -e 's/:\/mnt.*//g') # strip out problematic Windows %PATH% imported var
+    sudo bash -c "echo 0 > /proc/sys/fs/binfmt_misc/status" # Disable WSL support for Win32 applications.
+    cd depends
+    make HOST=x86_64-w64-mingw32
+    cd ..
+    ./autogen.sh
+    CONFIG_SITE=$PWD/depends/x86_64-w64-mingw32/share/config.site ./configure --prefix=/
+    make # use "-j N" for N parallel jobs
+    sudo bash -c "echo 1 > /proc/sys/fs/binfmt_misc/status" # Enable WSL support for Win32 applications.
+
+## Depends system
+
+For further documentation on the depends system see [README.md](../depends/README.md) in the depends directory.
 
 Installation
 -------------
 
 After building using the Windows subsystem it can be useful to copy the compiled
-executables to a directory on the windows drive in the same directory structure
+executables to a directory on the Windows drive in the same directory structure
 as they appear in the release `.zip` archive. This can be done in the following
 way. This will install to `c:\workspace\raptoreum`, for example:
 
     make install DESTDIR=/mnt/c/workspace/raptoreum
+
+You can also create an installer using:
+
+    make deploy

@@ -6,7 +6,7 @@
 #ifndef BITCOIN_SCRIPT_SIGCACHE_H
 #define BITCOIN_SCRIPT_SIGCACHE_H
 
-#include "script/interpreter.h"
+#include <script/interpreter.h>
 
 #include <vector>
 
@@ -27,28 +27,28 @@ class CPubKey;
  * nonced hashes (random) and this state is only ever used locally it is safe.
  * All that matters is local consistency.
  */
-class SignatureCacheHasher
-{
+class SignatureCacheHasher {
 public:
-    template <uint8_t hash_select>
-    uint32_t operator()(const uint256& key) const
-    {
-        static_assert(hash_select <8, "SignatureCacheHasher only has 8 hashes available.");
+    template<uint8_t hash_select>
+    uint32_t operator()(const uint256 &key) const {
+        static_assert(hash_select < 8, "SignatureCacheHasher only has 8 hashes available.");
         uint32_t u;
-        std::memcpy(&u, key.begin()+4*hash_select, 4);
+        std::memcpy(&u, key.begin() + 4 * hash_select, 4);
         return u;
     }
 };
 
-class CachingTransactionSignatureChecker : public TransactionSignatureChecker
-{
+class CachingTransactionSignatureChecker : public TransactionSignatureChecker {
 private:
     bool store;
 
 public:
-    CachingTransactionSignatureChecker(const CTransaction* txToIn, unsigned int nInIn, const CAmount& amount, PrecomputedTransactionData& txdataIn, bool storeIn=true) : TransactionSignatureChecker(txToIn, nInIn, amount, txdataIn), store(storeIn) {}
+    CachingTransactionSignatureChecker(const CTransaction *txToIn, unsigned int nInIn, const CAmount &amount,
+                                       PrecomputedTransactionData &txdataIn, bool storeIn = true)
+            : TransactionSignatureChecker(txToIn, nInIn, amount, txdataIn), store(storeIn) {}
 
-    bool VerifySignature(const std::vector<unsigned char>& vchSig, const CPubKey& vchPubKey, const uint256& sighash) const override;
+    bool VerifySignature(const std::vector<unsigned char> &vchSig, const CPubKey &vchPubKey,
+                         const uint256 &sighash) const override;
 };
 
 void InitSignatureCache();

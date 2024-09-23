@@ -1,111 +1,110 @@
-// Copyright (c) 2018-2019 The Dash Core developers
-// Copyright (c) 2020 The Raptoreum developers
+// Copyright (c) 2018-2020 The Dash Core developers
+// Copyright (c) 2020-2023 The Raptoreum developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef RAPTOREUM_QUORUMS_DEBUG_H
-#define RAPTOREUM_QUORUMS_DEBUG_H
+#ifndef BITCOIN_LLMQ_QUORUMS_DEBUG_H
+#define BITCOIN_LLMQ_QUORUMS_DEBUG_H
 
-#include "consensus/params.h"
-#include "sync.h"
-#include "univalue.h"
+#include <consensus/params.h>
+#include <sync.h>
+#include <univalue.h>
 
+#include <functional>
 #include <set>
 
 class CDataStream;
+
 class CInv;
+
 class CScheduler;
 
-namespace llmq
-{
+namespace llmq {
 
-class CDKGDebugMemberStatus
-{
-public:
-    union {
-        struct
-        {
-            // is it locally considered as bad (and thus removed from the validMembers set)
-            bool bad : 1;
-            // did we complain about this member
-            bool weComplain : 1;
+    class CDKGDebugMemberStatus {
+    public:
+        union {
+            struct {
+                // is it locally considered as bad (and thus removed from the validMembers set)
+                bool bad: 1;
+                // did we complain about this member
+                bool weComplain: 1;
 
-            // received message for DKG phases
-            bool receivedContribution : 1;
-            bool receivedComplaint : 1;
-            bool receivedJustification : 1;
-            bool receivedPrematureCommitment : 1;
+                // received message for DKG phases
+                bool receivedContribution: 1;
+                bool receivedComplaint: 1;
+                bool receivedJustification: 1;
+                bool receivedPrematureCommitment: 1;
+            };
+            uint8_t statusBitset;
         };
-        uint8_t statusBitset;
+
+        std::set <uint16_t> complaintsFromMembers;
+
+        CDKGDebugMemberStatus() : statusBitset(0) {}
     };
 
-    std::set<uint16_t> complaintsFromMembers;
+    class CDKGDebugSessionStatus {
+    public:
+        Consensus::LLMQType llmqType{Consensus::LLMQ_NONE};
+        uint256 quorumHash;
+        uint32_t quorumHeight{0};
+        uint8_t phase{0};
 
-public:
-    CDKGDebugMemberStatus() : statusBitset(0) {}
-};
+        union {
+            struct {
+                // sent messages for DKG phases
+                bool sentContributions: 1;
+                bool sentComplaint: 1;
+                bool sentJustification: 1;
+                bool sentPrematureCommitment: 1;
 
-class CDKGDebugSessionStatus
-{
-public:
-    Consensus::LLMQType llmqType{Consensus::LLMQ_NONE};
-    uint256 quorumHash;
-    uint32_t quorumHeight{0};
-    uint8_t phase{0};
-
-    union {
-        struct
-        {
-            // sent messages for DKG phases
-            bool sentContributions : 1;
-            bool sentComplaint : 1;
-            bool sentJustification : 1;
-            bool sentPrematureCommitment : 1;
-
-            bool aborted : 1;
+                bool aborted: 1;
+            };
+            uint8_t statusBitset;
         };
-        uint8_t statusBitset;
+
+        std::vector <CDKGDebugMemberStatus> members;
+
+        CDKGDebugSessionStatus() : statusBitset(0) {}
+
+        UniValue ToJson(int detailLevel) const;
     };
 
-    std::vector<CDKGDebugMemberStatus> members;
+    class CDKGDebugStatus {
+    public:
+        int64_t nTime{0};
 
-public:
-    CDKGDebugSessionStatus() : statusBitset(0) {}
+        std::map <Consensus::LLMQType, CDKGDebugSessionStatus> sessions;
 
-    UniValue ToJson(int detailLevel) const;
-};
+        UniValue ToJson(int detailLevel) const;
+    };
 
-class CDKGDebugStatus
-{
-public:
-    int64_t nTime{0};
+    class CDKGDebugManager {
+    private:
+        mutable RecursiveMutex cs;
+        CDKGDebugStatus localStatus
+        GUARDED_BY(cs);
 
-    std::map<Consensus::LLMQType, CDKGDebugSessionStatus> sessions;
+    public:
+        CDKGDebugManager();
 
-public:
-    UniValue ToJson(int detailLevel) const;
-};
+        void GetLocalDebugStatus(CDKGDebugStatus &ret) const;
 
-class CDKGDebugManager
-{
-private:
-    CCriticalSection cs;
-    CDKGDebugStatus localStatus;
+        void ResetLocalSessionStatus(Consensus::LLMQType llmqType);
 
-public:
-    CDKGDebugManager();
+        void
+        InitLocalSessionStatus(const Consensus::LLMQParams &llmqParams, const uint256 &quorumHash, int quorumHeight);
 
-    void GetLocalDebugStatus(CDKGDebugStatus& ret);
+        void UpdateLocalSessionStatus(Consensus::LLMQType llmqType,
+                                      std::function<bool(CDKGDebugSessionStatus &status)> &&func);
 
-    void ResetLocalSessionStatus(Consensus::LLMQType llmqType);
-    void InitLocalSessionStatus(Consensus::LLMQType llmqType, const uint256& quorumHash, int quorumHeight);
+        void UpdateLocalMemberStatus(Consensus::LLMQType llmqType, size_t memberIdx,
+                                     std::function<bool(CDKGDebugMemberStatus &status)> &&func);
+    };
 
-    void UpdateLocalSessionStatus(Consensus::LLMQType llmqType, std::function<bool(CDKGDebugSessionStatus& status)>&& func);
-    void UpdateLocalMemberStatus(Consensus::LLMQType llmqType, size_t memberIdx, std::function<bool(CDKGDebugMemberStatus& status)>&& func);
-};
-
-extern CDKGDebugManager* quorumDKGDebugManager;
+    extern CDKGDebugManager *quorumDKGDebugManager;
 
 } // namespace llmq
 
-#endif //RAPTOREUM_QUORUMS_DEBUG_H
+#endif // BITCOIN_LLMQ_QUORUMS_DEBUG_H

@@ -1,152 +1,168 @@
-// Copyright (c) 2018-2019 The Dash Core developers
-// Copyright (c) 2020 The Raptoreum developers
+// Copyright (c) 2018-2021 The Dash Core developers
+// Copyright (c) 2020-2023 The Raptoreum developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef RAPTOREUM_QUORUMS_SIGNING_SHARES_H
-#define RAPTOREUM_QUORUMS_SIGNING_SHARES_H
+#ifndef BITCOIN_LLMQ_QUORUMS_SIGNING_SHARES_H
+#define BITCOIN_LLMQ_QUORUMS_SIGNING_SHARES_H
 
-#include "bls/bls.h"
-#include "chainparams.h"
-#include "net.h"
-#include "random.h"
-#include "saltedhasher.h"
-#include "serialize.h"
-#include "sync.h"
-#include "tinyformat.h"
-#include "uint256.h"
+#include <bls/bls.h>
+#include <llmq/quorums_signing.h>
+#include <net.h>
+#include <random.h>
+#include <saltedhasher.h>
+#include <serialize.h>
+#include <sync.h>
+#include <uint256.h>
 
-#include "llmq/quorums.h"
-
+#include <optional>
 #include <thread>
-#include <mutex>
 #include <unordered_map>
-#include <unordered_set>
+#include <utility>
 
 class CEvoDB;
+
 class CScheduler;
 
-namespace llmq
-{
-// <signHash, quorumMember>
-typedef std::pair<uint256, uint16_t> SigShareKey;
+class CDeterministicMN;
 
-// this one does not get transmitted over the wire as it is batched inside CBatchedSigShares
-class CSigShare
-{
-public:
-    Consensus::LLMQType llmqType;
-    uint256 quorumHash;
+using CDeterministicMNCPtr = std::shared_ptr<const CDeterministicMN>;
+
+namespace llmq {
+// <signHash, quorumMember>
+    using SigShareKey = std::pair<uint256, uint16_t>;
+
+    constexpr uint32_t
+    UNINITIALIZED_SESSION_ID {
+    std::numeric_limits<uint32_t>::max()
+};
+
+class CSigShare : virtual public CSigBase {
+protected:
     uint16_t quorumMember;
-    uint256 id;
-    uint256 msgHash;
+public:
     CBLSLazySignature sigShare;
 
     SigShareKey key;
 
+    [[nodiscard]] auto getQuorumMember() const {
+        return quorumMember;
+    }
+
+    CSigShare(Consensus::LLMQType llmqType, const uint256 &quorumHash, const uint256 &id, const uint256 &msgHash,
+              uint16_t quorumMember, const CBLSLazySignature &sigShare) :
+            CSigBase(llmqType, quorumHash, id, msgHash),
+            quorumMember(quorumMember),
+            sigShare(sigShare) {};
+
+    // This should only be used for serialization
+    CSigShare() = default;
+
 public:
     void UpdateKey();
-    const SigShareKey& GetKey() const
-    {
+
+    const SigShareKey &GetKey() const {
         return key;
     }
-    const uint256& GetSignHash() const
-    {
+
+    const uint256 &GetSignHash() const {
         assert(!key.first.IsNull());
         return key.first;
+    }
+
+    SERIALIZE_METHODS(CSigShare, obj
+    )
+    {
+        READWRITE(obj.llmqType, obj.quorumHash, obj.quorumMember, obj.id, obj.msgHash, obj.sigShare);
+        SER_READ(obj, obj.UpdateKey());
     }
 };
 
 // Nodes will first announce a signing session with a sessionId to be used in all future P2P messages related to that
 // session. We locally keep track of the mapping for each node. We also assign new sessionIds for outgoing sessions
 // and send QSIGSESANN messages appropriately. All values except the max value for uint32_t are valid as sessionId
-class CSigSesAnn
-{
+class CSigSesAnn : virtual public CSigBase {
+private:
+    uint32_t sessionId{UNINITIALIZED_SESSION_ID};
+
 public:
-    uint32_t sessionId{(uint32_t)-1};
-    Consensus::LLMQType llmqType;
-    uint256 quorumHash;
-    uint256 id;
-    uint256 msgHash;
+    CSigSesAnn(uint32_t sessionId, Consensus::LLMQType llmqType, const uint256 &quorumHash, const uint256 &id,
+               const uint256 &msgHash) : CSigBase(llmqType, quorumHash, id, msgHash), sessionId(sessionId) {};
 
-    ADD_SERIALIZE_METHODS
+    // ONLY FOR SERIALIZATION
+    CSigSesAnn() = default;
 
-    template<typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
-        READWRITE(VARINT(sessionId));
-        READWRITE(llmqType);
-        READWRITE(quorumHash);
-        READWRITE(id);
-        READWRITE(msgHash);
+    [[nodiscard]] auto getSessionId() const {
+        return sessionId;
     }
 
-    std::string ToString() const;
+    SERIALIZE_METHODS(CSigSesAnn, obj
+    )
+    {
+        READWRITE(VARINT(obj.sessionId), obj.llmqType, obj.quorumHash, obj.id, obj.msgHash);
+    }
+
+    [[nodiscard]] std::string ToString() const;
 };
 
-class CSigSharesInv
-{
+class CSigSharesInv {
 public:
-    uint32_t sessionId{(uint32_t)-1};
+    uint32_t sessionId{UNINITIALIZED_SESSION_ID};
     std::vector<bool> inv;
 
-public:
-    ADD_SERIALIZE_METHODS
-
-    template<typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CSigSharesInv, obj
+    )
     {
-        uint64_t invSize = inv.size();
+        uint64_t invSize = obj.inv.size();
 
-        READWRITE(VARINT(sessionId));
-        READWRITE(COMPACTSIZE(invSize));
-        READWRITE(AUTOBITSET(inv, (size_t)invSize));
+        READWRITE(VARINT(obj.sessionId), COMPACTSIZE(invSize));
+        autobitset_t bitset = std::make_pair(obj.inv, (size_t) invSize);
+        READWRITE(AUTOBITSET(bitset));
+        SER_READ(obj, obj.inv = bitset.first);
     }
 
     void Init(size_t size);
-    bool IsSet(uint16_t quorumMember) const;
-    void Set(uint16_t quorumMember, bool v);
-    void SetAll(bool v);
-    void Merge(const CSigSharesInv& inv2);
 
-    size_t CountSet() const;
-    std::string ToString() const;
+    [[nodiscard]] bool IsSet(uint16_t quorumMember) const;
+
+    void Set(uint16_t quorumMember, bool v);
+
+    void SetAll(bool v);
+
+    void Merge(const CSigSharesInv &inv2);
+
+    [[nodiscard]] size_t CountSet() const;
+
+    [[nodiscard]] std::string ToString() const;
 };
 
 // sent through the message QBSIGSHARES as a vector of multiple batches
-class CBatchedSigShares
-{
+class CBatchedSigShares {
 public:
-    uint32_t sessionId{(uint32_t)-1};
-    std::vector<std::pair<uint16_t, CBLSLazySignature>> sigShares;
+    uint32_t sessionId{UNINITIALIZED_SESSION_ID};
+    std::vector <std::pair<uint16_t, CBLSLazySignature>> sigShares;
 
-public:
-    ADD_SERIALIZE_METHODS;
-
-    template<typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CBatchedSigShares, obj
+    )
     {
-        READWRITE(VARINT(sessionId));
-        READWRITE(sigShares);
+        READWRITE(VARINT(obj.sessionId), obj.sigShares);
     }
 
-    std::string ToInvString() const;
+    [[nodiscard]] std::string ToInvString() const;
 };
 
 template<typename T>
-class SigShareMap
-{
+class SigShareMap {
 private:
-    std::unordered_map<uint256, std::unordered_map<uint16_t, T>, StaticSaltedHasher> internalMap;
+    std::unordered_map <uint256, std::unordered_map<uint16_t, T>, StaticSaltedHasher> internalMap;
 
 public:
-    bool Add(const SigShareKey& k, const T& v)
-    {
-        auto& m = internalMap[k.first];
+    bool Add(const SigShareKey &k, const T &v) {
+        auto &m = internalMap[k.first];
         return m.emplace(k.second, v).second;
     }
 
-    void Erase(const SigShareKey& k)
-    {
+    void Erase(const SigShareKey &k) {
         auto it = internalMap.find(k.first);
         if (it == internalMap.end()) {
             return;
@@ -157,13 +173,11 @@ public:
         }
     }
 
-    void Clear()
-    {
+    void Clear() {
         internalMap.clear();
     }
 
-    bool Has(const SigShareKey& k) const
-    {
+    [[nodiscard]] bool Has(const SigShareKey &k) const {
         auto it = internalMap.find(k.first);
         if (it == internalMap.end()) {
             return false;
@@ -171,8 +185,7 @@ public:
         return it->second.count(k.second) != 0;
     }
 
-    T* Get(const SigShareKey& k)
-    {
+    T *Get(const SigShareKey &k) {
         auto it = internalMap.find(k.first);
         if (it == internalMap.end()) {
             return nullptr;
@@ -186,9 +199,8 @@ public:
         return &jt->second;
     }
 
-    T& GetOrAdd(const SigShareKey& k)
-    {
-        T* v = Get(k);
+    T &GetOrAdd(const SigShareKey &k) {
+        T *v = Get(k);
         if (!v) {
             Add(k, T());
             v = Get(k);
@@ -196,25 +208,22 @@ public:
         return *v;
     }
 
-    const T* GetFirst() const
-    {
+    const T *GetFirst() const {
         if (internalMap.empty()) {
             return nullptr;
         }
         return &internalMap.begin()->second.begin()->second;
     }
 
-    size_t Size() const
-    {
+    [[nodiscard]] size_t Size() const {
         size_t s = 0;
-        for (auto& p : internalMap) {
+        for (auto &p: internalMap) {
             s += p.second.size();
         }
         return s;
     }
 
-    size_t CountForSignHash(const uint256& signHash) const
-    {
+    [[nodiscard]] size_t CountForSignHash(const uint256 &signHash) const {
         auto it = internalMap.find(signHash);
         if (it == internalMap.end()) {
             return 0;
@@ -222,13 +231,11 @@ public:
         return it->second.size();
     }
 
-    bool Empty() const
-    {
+    [[nodiscard]] bool Empty() const {
         return internalMap.empty();
     }
 
-    const std::unordered_map<uint16_t, T>* GetAllForSignHash(const uint256& signHash)
-    {
+    const std::unordered_map <uint16_t, T> *GetAllForSignHash(const uint256 &signHash) const {
         auto it = internalMap.find(signHash);
         if (it == internalMap.end()) {
             return nullptr;
@@ -236,18 +243,16 @@ public:
         return &it->second;
     }
 
-    void EraseAllForSignHash(const uint256& signHash)
-    {
+    void EraseAllForSignHash(const uint256 &signHash) {
         internalMap.erase(signHash);
     }
 
     template<typename F>
-    void EraseIf(F&& f)
-    {
-        for (auto it = internalMap.begin(); it != internalMap.end(); ) {
+    void EraseIf(F &&f) {
+        for (auto it = internalMap.begin(); it != internalMap.end();) {
             SigShareKey k;
             k.first = it->first;
-            for (auto jt = it->second.begin(); jt != it->second.end(); ) {
+            for (auto jt = it->second.begin(); jt != it->second.end();) {
                 k.second = jt->first;
                 if (f(k, jt->second)) {
                     jt = it->second.erase(jt);
@@ -264,12 +269,11 @@ public:
     }
 
     template<typename F>
-    void ForEach(F&& f)
-    {
-        for (auto& p : internalMap) {
+    void ForEach(F &&f) {
+        for (auto &p: internalMap) {
             SigShareKey k;
             k.first = p.first;
-            for (auto& p2 : p.second) {
+            for (auto &p2: p.second) {
                 k.second = p2.first;
                 f(k, p2.second);
             }
@@ -277,12 +281,10 @@ public:
     }
 };
 
-class CSigSharesNodeState
-{
+class CSigSharesNodeState {
 public:
     // Used to avoid holding locks too long
-    struct SessionInfo
-    {
+    struct SessionInfo {
         Consensus::LLMQType llmqType;
         uint256 quorumHash;
         uint256 id;
@@ -293,8 +295,8 @@ public:
     };
 
     struct Session {
-        uint32_t recvSessionId{(uint32_t)-1};
-        uint32_t sendSessionId{(uint32_t)-1};
+        uint32_t recvSessionId{UNINITIALIZED_SESSION_ID};
+        uint32_t sendSessionId{UNINITIALIZED_SESSION_ID};
 
         Consensus::LLMQType llmqType;
         uint256 quorumHash;
@@ -309,9 +311,9 @@ public:
         CSigSharesInv knows;
     };
     // TODO limit number of sessions per node
-    std::unordered_map<uint256, Session, StaticSaltedHasher> sessions;
+    std::unordered_map <uint256, Session, StaticSaltedHasher> sessions;
 
-    std::unordered_map<uint32_t, Session*> sessionByRecvId;
+    std::unordered_map<uint32_t, Session *> sessionByRecvId;
     uint32_t nextSendSessionId{1};
 
     SigShareMap<CSigShare> pendingIncomingSigShares;
@@ -319,112 +321,204 @@ public:
 
     bool banned{false};
 
-    Session& GetOrCreateSessionFromShare(const CSigShare& sigShare);
-    Session& GetOrCreateSessionFromAnn(const CSigSesAnn& ann);
-    Session* GetSessionBySignHash(const uint256& signHash);
-    Session* GetSessionByRecvId(uint32_t sessionId);
-    bool GetSessionInfoByRecvId(uint32_t sessionId, SessionInfo& retInfo);
+    Session &GetOrCreateSessionFromShare(const CSigShare &sigShare);
 
-    void RemoveSession(const uint256& signHash);
+    Session &GetOrCreateSessionFromAnn(const CSigSesAnn &ann);
+
+    Session *GetSessionBySignHash(const uint256 &signHash);
+
+    Session *GetSessionByRecvId(uint32_t sessionId);
+
+    bool GetSessionInfoByRecvId(uint32_t sessionId, SessionInfo &retInfo);
+
+    void RemoveSession(const uint256 &signHash);
 };
 
-class CSigSharesManager : public CRecoveredSigsListener
-{
-    static const int64_t SESSION_NEW_SHARES_TIMEOUT = 60;
-    static const int64_t SIG_SHARE_REQUEST_TIMEOUT = 5;
+class CSignedSession {
+public:
+    CSigShare sigShare;
+    CQuorumCPtr quorum;
+
+    int64_t nextAttemptTime{0};
+    int attempt{0};
+};
+
+class CSigSharesManager : public CRecoveredSigsListener {
+private:
+    static constexpr int64_t
+    SESSION_NEW_SHARES_TIMEOUT{ 60 };
+    static constexpr int64_t
+    SIG_SHARE_REQUEST_TIMEOUT{ 5 };
 
     // we try to keep total message size below 10k
-    const size_t MAX_MSGS_CNT_QSIGSESANN = 100;
-    const size_t MAX_MSGS_CNT_QGETSIGSHARES = 200;
-    const size_t MAX_MSGS_CNT_QSIGSHARESINV = 200;
+    static constexpr size_t
+    MAX_MSGS_CNT_QSIGSESANN{ 100 };
+    static constexpr size_t
+    MAX_MSGS_CNT_QGETSIGSHARES{ 200 };
+    static constexpr size_t
+    MAX_MSGS_CNT_QSIGSHARESINV{ 200 };
     // 400 is the maximum quorum size, so this is also the maximum number of sigs we need to support
-    const size_t MAX_MSGS_TOTAL_BATCHED_SIGS = 400;
+    static constexpr size_t
+    MAX_MSGS_TOTAL_BATCHED_SIGS{ 400 };
 
-private:
-    CCriticalSection cs;
+    static constexpr int64_t
+    EXP_SEND_FOR_RECOVERY_TIMEOUT{ 2000 };
+    static constexpr int64_t
+    MAX_SEND_FOR_RECOVERY_TIMEOUT{ 10000 };
+    static constexpr size_t
+    MAX_MSGS_SIG_SHARES{ 32 };
+
+    RecursiveMutex cs;
 
     std::thread workThread;
     CThreadInterrupt workInterrupt;
 
-    SigShareMap<CSigShare> sigShares;
+    SigShareMap<CSigShare> sigShares
+    GUARDED_BY(cs);
+    std::unordered_map <uint256, CSignedSession, StaticSaltedHasher> signedSessions
+    GUARDED_BY(cs);
 
     // stores time of last receivedSigShare. Used to detect timeouts
-    std::unordered_map<uint256, int64_t, StaticSaltedHasher> timeSeenForSessions;
+    std::unordered_map <uint256, int64_t, StaticSaltedHasher> timeSeenForSessions
+    GUARDED_BY(cs);
 
-    std::unordered_map<NodeId, CSigSharesNodeState> nodeStates;
-    SigShareMap<std::pair<NodeId, int64_t>> sigSharesRequested;
-    SigShareMap<bool> sigSharesToAnnounce;
+    std::unordered_map <NodeId, CSigSharesNodeState> nodeStates
+    GUARDED_BY(cs);
+    SigShareMap<std::pair < NodeId, int64_t>> sigSharesRequested
+    GUARDED_BY(cs);
+    SigShareMap<bool> sigSharesQueuedToAnnounce
+    GUARDED_BY(cs);
 
-    std::vector<std::tuple<const CQuorumCPtr, uint256, uint256>> pendingSigns;
+    struct PendingSignatureData {
+        const CQuorumCPtr quorum;
+        const uint256 id;
+        const uint256 msgHash;
+
+        PendingSignatureData(CQuorumCPtr quorum, const uint256 &id, const uint256 &msgHash) : quorum(std::move(quorum)),
+                                                                                              id(id),
+                                                                                              msgHash(msgHash) {}
+    };
+
+    std::vector <PendingSignatureData> pendingSigns
+    GUARDED_BY(cs);
 
     // must be protected by cs
-    FastRandomContext rnd;
+    FastRandomContext rnd
+    GUARDED_BY(cs);
 
+    CConnman &connman;
     int64_t lastCleanupTime{0};
-    std::atomic<uint32_t> recoveredSigsCounter{0};
+    std::atomic <uint32_t> recoveredSigsCounter{0};
 
 public:
-    CSigSharesManager();
-    ~CSigSharesManager();
+    explicit CSigSharesManager(CConnman &_connman) : connman(_connman) {
+        workInterrupt.reset();
+    };
+
+    CSigSharesManager() = delete;
+
+    ~CSigSharesManager() override = default;
 
     void StartWorkerThread();
+
     void StopWorkerThread();
+
     void RegisterAsRecoveredSigsListener();
+
     void UnregisterAsRecoveredSigsListener();
+
     void InterruptWorkerThread();
 
-public:
-    void ProcessMessage(CNode* pnode, const std::string& strCommand, CDataStream& vRecv, CConnman& connman);
+    void ProcessMessage(const CNode *pnode, const std::string &strCommand, CDataStream &vRecv);
 
-    void AsyncSign(const CQuorumCPtr& quorum, const uint256& id, const uint256& msgHash);
-    void Sign(const CQuorumCPtr& quorum, const uint256& id, const uint256& msgHash);
-    void ForceReAnnouncement(const CQuorumCPtr& quorum, Consensus::LLMQType llmqType, const uint256& id, const uint256& msgHash);
+    void AsyncSign(const CQuorumCPtr &quorum, const uint256 &id, const uint256 &msgHash);
 
-    void HandleNewRecoveredSig(const CRecoveredSig& recoveredSig);
+    std::optional <CSigShare>
+    CreateSigShare(const CQuorumCPtr &quorum, const uint256 &id, const uint256 &msgHash) const;
+
+    void ForceReAnnouncement(const CQuorumCPtr &quorum, Consensus::LLMQType llmqType, const uint256 &id,
+                             const uint256 &msgHash);
+
+    void HandleNewRecoveredSig(const CRecoveredSig &recoveredSig) override;
+
+    static CDeterministicMNCPtr SelectMemberForRecovery(const CQuorumCPtr &quorum, const uint256 &id, size_t attempt);
 
 private:
     // all of these return false when the currently processed message should be aborted (as each message actually contains multiple messages)
-    bool ProcessMessageSigSesAnn(CNode* pfrom, const CSigSesAnn& ann, CConnman& connman);
-    bool ProcessMessageSigSharesInv(CNode* pfrom, const CSigSharesInv& inv, CConnman& connman);
-    bool ProcessMessageGetSigShares(CNode* pfrom, const CSigSharesInv& inv, CConnman& connman);
-    bool ProcessMessageBatchedSigShares(CNode* pfrom, const CBatchedSigShares& batchedSigShares, CConnman& connman);
+    bool ProcessMessageSigSesAnn(const CNode *pfrom, const CSigSesAnn &ann);
 
-    bool VerifySigSharesInv(NodeId from, Consensus::LLMQType llmqType, const CSigSharesInv& inv);
-    bool PreVerifyBatchedSigShares(NodeId nodeId, const CSigSharesNodeState::SessionInfo& session, const CBatchedSigShares& batchedSigShares, bool& retBan);
+    bool ProcessMessageSigSharesInv(const CNode *pfrom, const CSigSharesInv &inv);
+
+    bool ProcessMessageGetSigShares(const CNode *pfrom, const CSigSharesInv &inv);
+
+    bool ProcessMessageBatchedSigShares(const CNode *pfrom, const CBatchedSigShares &batchedSigShares);
+
+    void ProcessMessageSigShare(NodeId fromId, const CSigShare &sigShare);
+
+    static bool VerifySigSharesInv(Consensus::LLMQType llmqType, const CSigSharesInv &inv);
+
+    static bool PreVerifyBatchedSigShares(const CSigSharesNodeState::SessionInfo &session,
+                                          const CBatchedSigShares &batchedSigShares, bool &retBan);
 
     void CollectPendingSigSharesToVerify(size_t maxUniqueSessions,
-            std::unordered_map<NodeId, std::vector<CSigShare>>& retSigShares,
-            std::unordered_map<std::pair<Consensus::LLMQType, uint256>, CQuorumCPtr, StaticSaltedHasher>& retQuorums);
-    bool ProcessPendingSigShares(CConnman& connman);
+                                         std::unordered_map <NodeId, std::vector<CSigShare>> &retSigShares,
+                                         std::unordered_map <std::pair<Consensus::LLMQType, uint256>, CQuorumCPtr, StaticSaltedHasher> &retQuorums);
 
-    void ProcessPendingSigSharesFromNode(NodeId nodeId,
-            const std::vector<CSigShare>& sigShares,
-            const std::unordered_map<std::pair<Consensus::LLMQType, uint256>, CQuorumCPtr, StaticSaltedHasher>& quorums,
-            CConnman& connman);
+    bool ProcessPendingSigShares(const CConnman &connman);
 
-    void ProcessSigShare(NodeId nodeId, const CSigShare& sigShare, CConnman& connman, const CQuorumCPtr& quorum);
-    void TryRecoverSig(const CQuorumCPtr& quorum, const uint256& id, const uint256& msgHash, CConnman& connman);
+    void ProcessPendingSigShares(const std::vector <CSigShare> &sigSharesToProcess,
+                                 const std::unordered_map <std::pair<Consensus::LLMQType, uint256>, CQuorumCPtr, StaticSaltedHasher> &quorums,
+                                 const CConnman &connman);
 
-private:
-    bool GetSessionInfoByRecvId(NodeId nodeId, uint32_t sessionId, CSigSharesNodeState::SessionInfo& retInfo);
-    CSigShare RebuildSigShare(const CSigSharesNodeState::SessionInfo& session, const CBatchedSigShares& batchedSigShares, size_t idx);
+    void ProcessSigShare(const CSigShare &sigShare, const CConnman &connman, const CQuorumCPtr &quorum);
+
+    void TryRecoverSig(const CQuorumCPtr &quorum, const uint256 &id, const uint256 &msgHash);
+
+    bool GetSessionInfoByRecvId(NodeId nodeId, uint32_t sessionId, CSigSharesNodeState::SessionInfo &retInfo);
+
+    static CSigShare
+    RebuildSigShare(const CSigSharesNodeState::SessionInfo &session, const CBatchedSigShares &batchedSigShares,
+                    size_t idx);
 
     void Cleanup();
-    void RemoveSigSharesForSession(const uint256& signHash);
+
+    void RemoveSigSharesForSession(const uint256 &signHash)
+
+    EXCLUSIVE_LOCKS_REQUIRED(cs);
+
     void RemoveBannedNodeStates();
 
     void BanNode(NodeId nodeId);
 
     bool SendMessages();
-    void CollectSigSharesToRequest(std::unordered_map<NodeId, std::unordered_map<uint256, CSigSharesInv, StaticSaltedHasher>>& sigSharesToRequest);
-    void CollectSigSharesToSend(std::unordered_map<NodeId, std::unordered_map<uint256, CBatchedSigShares, StaticSaltedHasher>>& sigSharesToSend);
-    void CollectSigSharesToAnnounce(std::unordered_map<NodeId, std::unordered_map<uint256, CSigSharesInv, StaticSaltedHasher>>& sigSharesToAnnounce);
-    bool SignPendingSigShares();
+
+    void CollectSigSharesToRequest(
+            std::unordered_map <NodeId, std::unordered_map<uint256, CSigSharesInv, StaticSaltedHasher>> &sigSharesToRequest)
+
+    EXCLUSIVE_LOCKS_REQUIRED(cs);
+
+    void CollectSigSharesToSend(
+            std::unordered_map <NodeId, std::unordered_map<uint256, CBatchedSigShares, StaticSaltedHasher>> &sigSharesToSend)
+
+    EXCLUSIVE_LOCKS_REQUIRED(cs);
+
+    void CollectSigSharesToSendConcentrated(std::unordered_map <NodeId, std::vector<CSigShare>> &sigSharesToSend,
+                                            const std::vector<CNode *> &vNodes)
+
+    EXCLUSIVE_LOCKS_REQUIRED(cs);
+
+    void CollectSigSharesToAnnounce(
+            std::unordered_map <NodeId, std::unordered_map<uint256, CSigSharesInv, StaticSaltedHasher>> &sigSharesToAnnounce)
+
+    EXCLUSIVE_LOCKS_REQUIRED(cs);
+
+    void SignPendingSigShares();
+
     void WorkThreadMain();
 };
 
-extern CSigSharesManager* quorumSigSharesManager;
+extern CSigSharesManager *quorumSigSharesManager;
 
 } // namespace llmq
 
-#endif //RAPTOREUM_QUORUMS_SIGNING_SHARES_H
+#endif // BITCOIN_LLMQ_QUORUMS_SIGNING_SHARES_H

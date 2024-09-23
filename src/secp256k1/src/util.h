@@ -4,8 +4,8 @@
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
  **********************************************************************/
 
-#ifndef _SECP256K1_UTIL_H_
-#define _SECP256K1_UTIL_H_
+#ifndef SECP256K1_UTIL_H
+#define SECP256K1_UTIL_H
 
 #if defined HAVE_CONFIG_H
 #include "libsecp256k1-config.h"
@@ -16,12 +16,13 @@
 #include <stdio.h>
 
 typedef struct {
-    void (*fn)(const char *text, void* data);
-    const void* data;
+    void (*fn)(const char *text, void *data);
+
+    const void *data;
 } secp256k1_callback;
 
-static SECP256K1_INLINE void secp256k1_callback_call(const secp256k1_callback * const cb, const char * const text) {
-    cb->fn(text, (void*)cb->data);
+static SECP256K1_INLINE void secp256k1_callback_call(const secp256k1_callback *const cb, const char *const text) {
+    cb->fn(text, (void *) cb->data);
 }
 
 #ifdef DETERMINISTIC
@@ -36,10 +37,10 @@ static SECP256K1_INLINE void secp256k1_callback_call(const secp256k1_callback * 
 } while(0)
 #endif
 
-#ifdef HAVE_BUILTIN_EXPECT
+#if SECP256K1_GNUC_PREREQ(3, 0)
 #define EXPECT(x,c) __builtin_expect((x),(c))
 #else
-#define EXPECT(x,c) (x)
+#define EXPECT(x, c) (x)
 #endif
 
 #ifdef DETERMINISTIC
@@ -68,8 +69,16 @@ static SECP256K1_INLINE void secp256k1_callback_call(const secp256k1_callback * 
 #define VERIFY_SETUP(stmt)
 #endif
 
-static SECP256K1_INLINE void *checked_malloc(const secp256k1_callback* cb, size_t size) {
+static SECP256K1_INLINE void *checked_malloc(const secp256k1_callback *cb, size_t size) {
     void *ret = malloc(size);
+    if (ret == NULL) {
+        secp256k1_callback_call(cb, "Out of memory");
+    }
+    return ret;
+}
+
+static SECP256K1_INLINE void *checked_realloc(const secp256k1_callback *cb, void *ptr, size_t size) {
+    void *ret = realloc(ptr, size);
     if (ret == NULL) {
         secp256k1_callback_call(cb, "Out of memory");
     }
@@ -80,8 +89,8 @@ static SECP256K1_INLINE void *checked_malloc(const secp256k1_callback* cb, size_
 #if defined(SECP256K1_BUILD) && defined(VERIFY)
 # define SECP256K1_RESTRICT
 #else
-# if (!defined(__STDC_VERSION__) || (__STDC_VERSION__ < 199901L) )
-#  if SECP256K1_GNUC_PREREQ(3,0)
+# if (!defined(__STDC_VERSION__) || (__STDC_VERSION__ < 199901L))
+#  if SECP256K1_GNUC_PREREQ(3, 0)
 #   define SECP256K1_RESTRICT __restrict__
 #  elif (defined(_MSC_VER) && _MSC_VER >= 1400)
 #   define SECP256K1_RESTRICT __restrict
@@ -110,4 +119,4 @@ static SECP256K1_INLINE void *checked_malloc(const secp256k1_callback* cb, size_
 SECP256K1_GNUC_EXT typedef unsigned __int128 uint128_t;
 #endif
 
-#endif
+#endif /* SECP256K1_UTIL_H */

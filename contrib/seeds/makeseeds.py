@@ -6,6 +6,13 @@
 # Generate seeds.txt from "protx list valid 1"
 #
 
+import re
+import sys
+import dns.resolver
+import collections
+import json
+import multiprocessing
+
 NSEEDS=512
 
 MAX_SEEDS_PER_ASN=4
@@ -14,14 +21,6 @@ MAX_SEEDS_PER_ASN=4
 # aggressively connecting to every node).
 SUSPICIOUS_HOSTS = {
 }
-
-import re
-import sys
-import dns.resolver
-import collections
-import json
-import time
-import multiprocessing
 
 PATTERN_IPV4 = re.compile(r"^((\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})):(\d+)$")
 PATTERN_IPV6 = re.compile(r"^\[([0-9a-z:]+)\]:(\d+)$")
@@ -92,7 +91,7 @@ def filtermultipayoutaddress(mns):
     return [mn for mn in mns if len(hist[mn['state']['payoutAddress']]) == 1]
 
 def resolveasn(resolver, ip):
-    asn = int([x.to_text() for x in resolver.query('.'.join(reversed(ip.split('.'))) + '.origin.asn.cymru.com', 'TXT').response.answer][0].split('\"')[1].split(' ')[0])
+    asn = int([x.to_text() for x in resolver.resolve('.'.join(reversed(ip.split('.'))) + '.origin.asn.cymru.com', 'TXT').response.answer][0].split('\"')[1].split(' ')[0])
     return asn
 
 # Based on Greg Maxwell's seed_filter.py
@@ -107,7 +106,7 @@ def filterbyasn(ips, max_per_asn, max_total):
     pool = multiprocessing.Pool(processes=16)
 
     # OpenDNS servers
-    my_resolver.nameservers = ['208.67.222.222', '208.67.220.220']
+    my_resolver.nameservers = ['1.1.1.1', '8.8.8.8']
 
     # Resolve ASNs in parallel
     asns = [pool.apply_async(resolveasn, args=(my_resolver, ip['ip'])) for ip in ips_ipv4]
@@ -140,7 +139,7 @@ def filterbyasn(ips, max_per_asn, max_total):
 def main():
     # This expects a json as outputted by "protx list valid 1"
     if len(sys.argv) > 1:
-        with open(sys.argv[1], 'r') as f:
+        with open(sys.argv[1], 'r', encoding="utf8") as f:
             mns = json.load(f)
     else:
         mns = json.load(sys.stdin)

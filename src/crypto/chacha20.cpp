@@ -5,14 +5,19 @@
 // Based on the public domain implementation 'merged' by D. J. Bernstein
 // See https://cr.yp.to/chacha.html.
 
-#include "crypto/common.h"
-#include "crypto/chacha20.h"
+#include <crypto/common.h>
+#include <crypto/chacha20.h>
 
 #include <string.h>
 
-constexpr static inline uint32_t rotl32(uint32_t v, int c) { return (v << c) | (v >> (32 - c)); }
+constexpr static inline uint32_t
+rotl32(uint32_t
+v,
+int c
+) {
+return (v << c) | (v >> (32 - c)); }
 
-#define QUARTERROUND(a,b,c,d) \
+#define QUARTERROUND(a, b, c, d) \
   a += b; d = rotl32(d ^ a, 16); \
   c += d; b = rotl32(b ^ c, 12); \
   a += b; d = rotl32(d ^ a, 8); \
@@ -21,8 +26,7 @@ constexpr static inline uint32_t rotl32(uint32_t v, int c) { return (v << c) | (
 static const unsigned char sigma[] = "expand 32-byte k";
 static const unsigned char tau[] = "expand 16-byte k";
 
-void ChaCha20::SetKey(const unsigned char* k, size_t keylen)
-{
+void ChaCha20::SetKey(const unsigned char *k, size_t keylen) {
     const unsigned char *constants;
 
     input[4] = ReadLE32(k + 0);
@@ -49,30 +53,25 @@ void ChaCha20::SetKey(const unsigned char* k, size_t keylen)
     input[15] = 0;
 }
 
-ChaCha20::ChaCha20()
-{
+ChaCha20::ChaCha20() {
     memset(input, 0, sizeof(input));
 }
 
-ChaCha20::ChaCha20(const unsigned char* k, size_t keylen)
-{
+ChaCha20::ChaCha20(const unsigned char *k, size_t keylen) {
     SetKey(k, keylen);
 }
 
-void ChaCha20::SetIV(uint64_t iv)
-{
+void ChaCha20::SetIV(uint64_t iv) {
     input[14] = iv;
     input[15] = iv >> 32;
 }
 
-void ChaCha20::Seek(uint64_t pos)
-{
+void ChaCha20::Seek(uint64_t pos) {
     input[12] = pos;
     input[13] = pos >> 32;
 }
 
-void ChaCha20::Keystream(unsigned char* c, size_t bytes)
-{
+void ChaCha20::Keystream(unsigned char *c, size_t bytes) {
     uint32_t x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15;
     uint32_t j0, j1, j2, j3, j4, j5, j6, j7, j8, j9, j10, j11, j12, j13, j14, j15;
     unsigned char *ctarget = nullptr;
@@ -119,15 +118,15 @@ void ChaCha20::Keystream(unsigned char* c, size_t bytes)
         x13 = j13;
         x14 = j14;
         x15 = j15;
-        for (i = 20;i > 0;i -= 2) {
-            QUARTERROUND( x0, x4, x8,x12)
-            QUARTERROUND( x1, x5, x9,x13)
-            QUARTERROUND( x2, x6,x10,x14)
-            QUARTERROUND( x3, x7,x11,x15)
-            QUARTERROUND( x0, x5,x10,x15)
-            QUARTERROUND( x1, x6,x11,x12)
-            QUARTERROUND( x2, x7, x8,x13)
-            QUARTERROUND( x3, x4, x9,x14)
+        for (i = 20; i > 0; i -= 2) {
+            QUARTERROUND(x0, x4, x8, x12)
+            QUARTERROUND(x1, x5, x9, x13)
+            QUARTERROUND(x2, x6, x10, x14)
+            QUARTERROUND(x3, x7, x11, x15)
+            QUARTERROUND(x0, x5, x10, x15)
+            QUARTERROUND(x1, x6, x11, x12)
+            QUARTERROUND(x2, x7, x8, x13)
+            QUARTERROUND(x3, x4, x9, x14)
         }
         x0 += j0;
         x1 += j1;
@@ -168,7 +167,7 @@ void ChaCha20::Keystream(unsigned char* c, size_t bytes)
 
         if (bytes <= 64) {
             if (bytes < 64) {
-                for (i = 0;i < bytes;++i) ctarget[i] = c[i];
+                for (i = 0; i < bytes; ++i) ctarget[i] = c[i];
             }
             input[12] = j12;
             input[13] = j13;
@@ -179,8 +178,7 @@ void ChaCha20::Keystream(unsigned char* c, size_t bytes)
     }
 }
 
-void ChaCha20::Crypt(const unsigned char* m, unsigned char* c, size_t bytes)
-{
+void ChaCha20::Crypt(const unsigned char *m, unsigned char *c, size_t bytes) {
     uint32_t x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15;
     uint32_t j0, j1, j2, j3, j4, j5, j6, j7, j8, j9, j10, j11, j12, j13, j14, j15;
     unsigned char *ctarget = nullptr;
@@ -210,7 +208,7 @@ void ChaCha20::Crypt(const unsigned char* m, unsigned char* c, size_t bytes)
         if (bytes < 64) {
             // if m has fewer than 64 bytes available, copy m to tmp and
             // read from tmp instead
-            for (i = 0;i < bytes;++i) tmp[i] = m[i];
+            for (i = 0; i < bytes; ++i) tmp[i] = m[i];
             m = tmp;
             ctarget = c;
             c = tmp;
@@ -231,15 +229,15 @@ void ChaCha20::Crypt(const unsigned char* m, unsigned char* c, size_t bytes)
         x13 = j13;
         x14 = j14;
         x15 = j15;
-        for (i = 20;i > 0;i -= 2) {
-            QUARTERROUND( x0, x4, x8,x12)
-            QUARTERROUND( x1, x5, x9,x13)
-            QUARTERROUND( x2, x6,x10,x14)
-            QUARTERROUND( x3, x7,x11,x15)
-            QUARTERROUND( x0, x5,x10,x15)
-            QUARTERROUND( x1, x6,x11,x12)
-            QUARTERROUND( x2, x7, x8,x13)
-            QUARTERROUND( x3, x4, x9,x14)
+        for (i = 20; i > 0; i -= 2) {
+            QUARTERROUND(x0, x4, x8, x12)
+            QUARTERROUND(x1, x5, x9, x13)
+            QUARTERROUND(x2, x6, x10, x14)
+            QUARTERROUND(x3, x7, x11, x15)
+            QUARTERROUND(x0, x5, x10, x15)
+            QUARTERROUND(x1, x6, x11, x12)
+            QUARTERROUND(x2, x7, x8, x13)
+            QUARTERROUND(x3, x4, x9, x14)
         }
         x0 += j0;
         x1 += j1;
@@ -297,7 +295,7 @@ void ChaCha20::Crypt(const unsigned char* m, unsigned char* c, size_t bytes)
 
         if (bytes <= 64) {
             if (bytes < 64) {
-                for (i = 0;i < bytes;++i) ctarget[i] = c[i];
+                for (i = 0; i < bytes; ++i) ctarget[i] = c[i];
             }
             input[12] = j12;
             input[13] = j13;

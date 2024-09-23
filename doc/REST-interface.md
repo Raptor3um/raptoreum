@@ -20,6 +20,7 @@ For full TX query capability, one must enable the transaction index via "txindex
 `GET /rest/block/notxdetails/<BLOCK-HASH>.<bin|hex|json>`
 
 Given a block hash: returns a block, in binary, hex-encoded binary or JSON formats.
+Responds with 404 if the block does not exist.
 
 The HTTP request and response are both handled entirely in-memory, thus making maximum memory usage at least 2.66MB (1 MB max block, plus hex encoding) per request.
 
@@ -29,6 +30,12 @@ With the /notxdetails/ option JSON response will only contain the transaction ha
 `GET /rest/headers/<COUNT>/<BLOCK-HASH>.<bin|hex|json>`
 
 Given a block hash: returns <COUNT> amount of blockheaders in upward direction.
+Returns empty if the block does not exist or it is not in the active chain.
+
+#### Blockhash by height
+`GET /rest/blockhashbyheight/<HEIGHT>.<bin|hex|json>`
+
+Given a height: returns hash of the block in best-block-chain at height provided.
 
 #### Chaininfos
 `GET /rest/chaininfo.json`
@@ -44,7 +51,7 @@ Only supports JSON as output format.
 * verificationprogress : (numeric) estimate of verification progress [0..1]
 * chainwork : (string) total amount of work in active chain, in hexadecimal
 * pruned : (boolean) if the blocks are subject to pruning
-* pruneheight : (numeric) heighest block available
+* pruneheight : (numeric) highest block available
 * softforks : (array) status of softforks in progress
 * bip9_softforks : (object) status of BIP9 softforks in progress
 

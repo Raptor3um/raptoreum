@@ -1,0 +1,37 @@
+--- a/src/CMakeLists.txt	2022-09-12 23:43:19.861781722 +0200
++++ b/src/CMakeLists.txt	2022-09-12 23:50:52.213040305 +0200
+@@ -49,18 +49,18 @@
+ )
+ 
+ set(OPREFIX object_)
+-find_library(GMP_NAME NAMES libgmp.a gmp)
+-find_library(SODIUM_NAME NAMES libsodium.a sodium)
++find_library(GMP_NAME NAMES libgmp.a)
++find_library(SODIUM_NAME NAMES libsodium.a)
+ 
+ set(LIBRARIES_TO_COMBINE
+       COMMAND mkdir ${OPREFIX}$<TARGET_NAME:blstmp> || true && cd ${OPREFIX}$<TARGET_NAME:blstmp> &&  ${CMAKE_AR} -x $<TARGET_FILE:blstmp>
+       COMMAND mkdir ${OPREFIX}$<TARGET_NAME:relic_s> || true && cd ${OPREFIX}$<TARGET_NAME:relic_s> &&  ${CMAKE_AR} -x $<TARGET_FILE:relic_s>
+ )
+ 
+-if (GMP_FOUND)
++if (NOT ${GMP_NAME} STREQUAL "GMP_NAME-NOTFOUND")
+   list(APPEND LIBRARIES_TO_COMBINE COMMAND mkdir ${OPREFIX}gmp || true && cd ${OPREFIX}gmp &&  ${CMAKE_AR} -x ${GMP_NAME})
+ endif()
+-if (SODIUM_FOUND)
++if (NOT ${SODIUM_NAME} STREQUAL "SODIUM_NAME-NOTFOUND")
+   message("SODIUM_FOUND in src/CMakeLists.txt")
+   list(APPEND LIBRARIES_TO_COMBINE COMMAND mkdir ${OPREFIX}sodium || true && cd ${OPREFIX}sodium &&  ${CMAKE_AR} -x ${SODIUM_NAME})
+   target_compile_definitions(blstmp PRIVATE BLSALLOC_SODIUM=1)
+
+
+--- a/CMakeLists.txt   2022-09-12 23:54:22.215218919 +0200
++++ b/CMakeLists.txt  2022-09-12 23:54:29.998632664 +0200
+@@ -1,5 +1,7 @@
+ CMAKE_MINIMUM_REQUIRED(VERSION 3.14.0 FATAL_ERROR)
+ set(CMAKE_CXX_STANDARD 17)
++set(CMAKE_CXX_STANDARD_REQUIRED ON)
++set(CMAKE_C_STANDARD 99)
+ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+ 
+ IF(NOT CMAKE_BUILD_TYPE)

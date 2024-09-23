@@ -38,6 +38,7 @@
 
 #include <stddef.h>
 #include "sph_types.h"
+
 #ifdef __cplusplus
 extern "C"{
 #endif
@@ -79,10 +80,10 @@ extern "C"{
  */
 typedef struct {
 #ifndef DOXYGEN_IGNORE
-	unsigned char buf[64];    /* first field, for alignment */
-	size_t ptr;
-	sph_u32 A[12], B[16], C[16];
-	sph_u32 Whigh, Wlow;
+    unsigned char buf[64];    /* first field, for alignment */
+    size_t ptr;
+    sph_u32 A[12], B[16], C[16];
+    sph_u32 Whigh, Wlow;
 #endif
 } sph_shabal_context;
 
@@ -154,7 +155,7 @@ void sph_shabal192_close(void *cc, void *dst);
  * @param dst   the destination buffer
  */
 void sph_shabal192_addbits_and_close(
-	void *cc, unsigned ub, unsigned n, void *dst);
+        void *cc, unsigned ub, unsigned n, void *dst);
 
 /**
  * Initialize a Shabal-224 context. This process performs no memory allocation.
@@ -199,7 +200,7 @@ void sph_shabal224_close(void *cc, void *dst);
  * @param dst   the destination buffer
  */
 void sph_shabal224_addbits_and_close(
-	void *cc, unsigned ub, unsigned n, void *dst);
+        void *cc, unsigned ub, unsigned n, void *dst);
 
 /**
  * Initialize a Shabal-256 context. This process performs no memory allocation.
@@ -244,7 +245,7 @@ void sph_shabal256_close(void *cc, void *dst);
  * @param dst   the destination buffer
  */
 void sph_shabal256_addbits_and_close(
-	void *cc, unsigned ub, unsigned n, void *dst);
+        void *cc, unsigned ub, unsigned n, void *dst);
 
 /**
  * Initialize a Shabal-384 context. This process performs no memory allocation.
@@ -289,7 +290,7 @@ void sph_shabal384_close(void *cc, void *dst);
  * @param dst   the destination buffer
  */
 void sph_shabal384_addbits_and_close(
-	void *cc, unsigned ub, unsigned n, void *dst);
+        void *cc, unsigned ub, unsigned n, void *dst);
 
 /**
  * Initialize a Shabal-512 context. This process performs no memory allocation.
@@ -334,7 +335,7 @@ void sph_shabal512_close(void *cc, void *dst);
  * @param dst   the destination buffer
  */
 void sph_shabal512_addbits_and_close(
-	void *cc, unsigned ub, unsigned n, void *dst);
+        void *cc, unsigned ub, unsigned n, void *dst);
 
 #ifdef __cplusplus
 }

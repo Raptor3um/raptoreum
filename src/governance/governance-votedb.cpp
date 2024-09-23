@@ -1,27 +1,24 @@
 // Copyright (c) 2014-2019 The Dash Core developers
-// Copyright (c) 2020 The Raptoreum developers
+// Copyright (c) 2020-2023 The Raptoreum developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "governance-votedb.h"
+#include <governance/governance-votedb.h>
 
 CGovernanceObjectVoteFile::CGovernanceObjectVoteFile() :
-    nMemoryVotes(0),
-    listVotes(),
-    mapVoteIndex()
-{
+        nMemoryVotes(0),
+        listVotes(),
+        mapVoteIndex() {
 }
 
-CGovernanceObjectVoteFile::CGovernanceObjectVoteFile(const CGovernanceObjectVoteFile& other) :
-    nMemoryVotes(other.nMemoryVotes),
-    listVotes(other.listVotes),
-    mapVoteIndex()
-{
+CGovernanceObjectVoteFile::CGovernanceObjectVoteFile(const CGovernanceObjectVoteFile &other) :
+        nMemoryVotes(other.nMemoryVotes),
+        listVotes(other.listVotes),
+        mapVoteIndex() {
     RebuildIndex();
 }
 
-void CGovernanceObjectVoteFile::AddVote(const CGovernanceVote& vote)
-{
+void CGovernanceObjectVoteFile::AddVote(const CGovernanceVote &vote) {
     uint256 nHash = vote.GetHash();
     // make sure to never add/update already known votes
     if (HasVote(nHash))
@@ -32,14 +29,12 @@ void CGovernanceObjectVoteFile::AddVote(const CGovernanceVote& vote)
     RemoveOldVotes(vote);
 }
 
-bool CGovernanceObjectVoteFile::HasVote(const uint256& nHash) const
-{
+bool CGovernanceObjectVoteFile::HasVote(const uint256 &nHash) const {
     return mapVoteIndex.find(nHash) != mapVoteIndex.end();
 }
 
-bool CGovernanceObjectVoteFile::SerializeVoteToStream(const uint256& nHash, CDataStream& ss) const
-{
-    vote_m_cit it = mapVoteIndex.find(nHash);
+bool CGovernanceObjectVoteFile::SerializeVoteToStream(const uint256 &nHash, CDataStream &ss) const {
+    auto it = mapVoteIndex.find(nHash);
     if (it == mapVoteIndex.end()) {
         return false;
     }
@@ -47,18 +42,16 @@ bool CGovernanceObjectVoteFile::SerializeVoteToStream(const uint256& nHash, CDat
     return true;
 }
 
-std::vector<CGovernanceVote> CGovernanceObjectVoteFile::GetVotes() const
-{
-    std::vector<CGovernanceVote> vecResult;
-    for (vote_l_cit it = listVotes.begin(); it != listVotes.end(); ++it) {
+std::vector <CGovernanceVote> CGovernanceObjectVoteFile::GetVotes() const {
+    std::vector <CGovernanceVote> vecResult;
+    for (auto it = listVotes.begin(); it != listVotes.end(); ++it) {
         vecResult.push_back(*it);
     }
     return vecResult;
 }
 
-void CGovernanceObjectVoteFile::RemoveVotesFromSmartnode(const COutPoint& outpointSmartnode)
-{
-    vote_l_it it = listVotes.begin();
+void CGovernanceObjectVoteFile::RemoveVotesFromSmartnode(const COutPoint &outpointSmartnode) {
+    auto it = listVotes.begin();
     while (it != listVotes.end()) {
         if (it->GetSmartnodeOutpoint() == outpointSmartnode) {
             --nMemoryVotes;
@@ -70,11 +63,10 @@ void CGovernanceObjectVoteFile::RemoveVotesFromSmartnode(const COutPoint& outpoi
     }
 }
 
-std::set<uint256> CGovernanceObjectVoteFile::RemoveInvalidVotes(const COutPoint& outpointSmartnode, bool fProposal)
-{
-    std::set<uint256> removedVotes;
+std::set <uint256> CGovernanceObjectVoteFile::RemoveInvalidVotes(const COutPoint &outpointSmartnode, bool fProposal) {
+    std::set <uint256> removedVotes;
 
-    vote_l_it it = listVotes.begin();
+    auto it = listVotes.begin();
     while (it != listVotes.end()) {
         if (it->GetSmartnodeOutpoint() == outpointSmartnode) {
             bool useVotingKey = fProposal && (it->GetSignal() == VOTE_SIGNAL_FUNDING);
@@ -92,9 +84,8 @@ std::set<uint256> CGovernanceObjectVoteFile::RemoveInvalidVotes(const COutPoint&
     return removedVotes;
 }
 
-void CGovernanceObjectVoteFile::RemoveOldVotes(const CGovernanceVote& vote)
-{
-    vote_l_it it = listVotes.begin();
+void CGovernanceObjectVoteFile::RemoveOldVotes(const CGovernanceVote &vote) {
+    auto it = listVotes.begin();
     while (it != listVotes.end()) {
         if (it->GetSmartnodeOutpoint() == vote.GetSmartnodeOutpoint() // same smartnode
             && it->GetParentHash() == vote.GetParentHash() // same governance object (e.g. same proposal)
@@ -110,13 +101,12 @@ void CGovernanceObjectVoteFile::RemoveOldVotes(const CGovernanceVote& vote)
     }
 }
 
-void CGovernanceObjectVoteFile::RebuildIndex()
-{
+void CGovernanceObjectVoteFile::RebuildIndex() {
     mapVoteIndex.clear();
     nMemoryVotes = 0;
-    vote_l_it it = listVotes.begin();
+    auto it = listVotes.begin();
     while (it != listVotes.end()) {
-        CGovernanceVote& vote = *it;
+        CGovernanceVote &vote = *it;
         uint256 nHash = vote.GetHash();
         if (mapVoteIndex.find(nHash) == mapVoteIndex.end()) {
             mapVoteIndex[nHash] = it;

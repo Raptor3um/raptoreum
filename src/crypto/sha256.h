@@ -10,8 +10,7 @@
 #include <string>
 
 /** A hasher class for SHA-256. */
-class CSHA256
-{
+class CSHA256 {
 private:
     uint32_t s[8];
     unsigned char buf[64];
@@ -21,9 +20,12 @@ public:
     static const size_t OUTPUT_SIZE = 32;
 
     CSHA256();
-    CSHA256& Write(const unsigned char* data, size_t len);
+
+    CSHA256 &Write(const unsigned char *data, size_t len);
+
     void Finalize(unsigned char hash[OUTPUT_SIZE]);
-    CSHA256& Reset();
+
+    CSHA256 &Reset();
 };
 
 /** Autodetect the best available SHA256 implementation.
@@ -36,6 +38,6 @@ std::string SHA256AutoDetect();
  *  input:   pointer to a blocks*64 byte input buffer
  *  blocks:  the number of hashes to compute.
  */
-void SHA256D64(unsigned char* output, const unsigned char* input, size_t blocks);
+void SHA256D64(unsigned char *output, const unsigned char *input, size_t blocks);
 
 #endif // BITCOIN_CRYPTO_SHA256_H

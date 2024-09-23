@@ -114,8 +114,7 @@ static constexpr int AAD_PACKAGES_PER_ROUND = 21;        /* 64 / 3 round down*/
  * We use message sequence numbers for both communication directions.
  */
 
-class ChaCha20Poly1305AEAD
-{
+class ChaCha20Poly1305AEAD {
 private:
     ChaCha20 m_chacha_main;                                      // payload and poly1305 key-derivation cipher instance
     ChaCha20 m_chacha_header;                                    // AAD cipher instance (encrypted length)
@@ -123,9 +122,9 @@ private:
     uint64_t m_cached_aad_seqnr;                                 // aad keystream cache hint
 
 public:
-    ChaCha20Poly1305AEAD(const unsigned char* K_1, size_t K_1_len, const unsigned char* K_2, size_t K_2_len);
+    ChaCha20Poly1305AEAD(const unsigned char *K_1, size_t K_1_len, const unsigned char *K_2, size_t K_2_len);
 
-    explicit ChaCha20Poly1305AEAD(const ChaCha20Poly1305AEAD&) = delete;
+    explicit ChaCha20Poly1305AEAD(const ChaCha20Poly1305AEAD &) = delete;
 
     /** Encrypts/decrypts a packet
         seqnr_payload, the message sequence number
@@ -137,10 +136,11 @@ public:
         src_len, the length of the source buffer
         is_encrypt, set to true if we encrypt (creates and appends the MAC instead of verifying it)
         */
-    bool Crypt(uint64_t seqnr_payload, uint64_t seqnr_aad, int aad_pos, unsigned char* dest, size_t dest_len, const unsigned char* src, size_t src_len, bool is_encrypt);
+    bool Crypt(uint64_t seqnr_payload, uint64_t seqnr_aad, int aad_pos, unsigned char *dest, size_t dest_len,
+               const unsigned char *src, size_t src_len, bool is_encrypt);
 
     /** decrypts the 3 bytes AAD data and decodes it into a uint32_t field */
-    bool GetLength(uint32_t* len24_out, uint64_t seqnr_aad, int aad_pos, const uint8_t* ciphertext);
+    bool GetLength(uint32_t *len24_out, uint64_t seqnr_aad, int aad_pos, const uint8_t *ciphertext);
 };
 
 #endif // BITCOIN_CRYPTO_CHACHA_POLY_AEAD_H

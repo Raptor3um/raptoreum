@@ -28,7 +28,12 @@ brew install librsvg
 Building
 --------
 
-Follow the instructions in [build-generic](build-generic.md)
+It's possible that your `PATH` environment variable contains some problematic strings, run
+```bash
+export PATH=$(echo "$PATH" | sed -e '/\\/!s/ /\\ /g') # fix whitespaces
+```
+
+Next, follow the instructions in [build-generic](build-generic.md)
 
 Running
 -------
@@ -53,20 +58,3 @@ Other commands:
     ./src/raptoreumd -daemon # Starts the raptoreum daemon.
     ./src/raptoreum-cli --help # Outputs a list of command-line options.
     ./src/raptoreum-cli help # Outputs a list of RPC commands when the daemon is running.
-
-Using Qt Creator as IDE
-------------------------
-You can use Qt Creator as an IDE, for raptoreum development.
-Download and install the community edition of [Qt Creator](https://www.qt.io/download/).
-Uncheck everything except Qt Creator during the installation process.
-
-1. Make sure you installed everything through Homebrew mentioned above
-2. Do a proper ./configure --enable-debug
-3. In Qt Creator do "New Project" -> Import Project -> Import Existing Project
-4. Enter "raptoreum-qt" as project name, enter src/qt as location
-5. Leave the file selection as it is
-6. Confirm the "summary page"
-7. In the "Projects" tab select "Manage Kits..."
-8. Select the default "Desktop" kit and select "Clang (x86 64bit in /usr/bin)" as compiler
-9. Select LLDB as debugger (you might need to set the path to your installation)
-10. Start debugging with Qt Creator

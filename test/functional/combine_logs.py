@@ -6,6 +6,7 @@ to write to an outputfile."""
 
 import argparse
 from collections import defaultdict, namedtuple
+import glob
 import heapq
 import itertools
 import os
@@ -13,7 +14,7 @@ import re
 import sys
 
 # Matches on the date format at the start of the log event
-TIMESTAMP_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{6}")
+TIMESTAMP_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}Z")
 
 LogEvent = namedtuple('LogEvent', ['timestamp', 'source', 'event'])
 
@@ -24,10 +25,6 @@ def main():
     parser.add_argument('-c', '--color', dest='color', action='store_true', help='outputs the combined log with events colored by source (requires posix terminal colors. Use less -r for viewing)')
     parser.add_argument('--html', dest='html', action='store_true', help='outputs the combined log as html. Requires jinja2. pip install jinja2')
     args, unknown_args = parser.parse_known_args()
-
-    if args.color and os.name != 'posix':
-        print("Color output requires posix terminal colors.")
-        sys.exit(1)
 
     if args.html and args.color:
         print("Only one out of --color or --html should be specified")
@@ -48,9 +45,17 @@ def read_logs(tmp_dir):
     Delegates to generator function get_log_events() to provide individual log events
     for each of the input log files."""
 
+    # Find out what the folder is called that holds the debug.log file
+    chain = glob.glob("{}/node0/*/debug.log".format(tmp_dir))
+    if chain:
+        chain = chain[0]  # pick the first one if more than one chain was found (should never happen)
+        chain = re.search('node0/(.+?)/debug\.log$', chain).group(1)  # extract the chain name
+    else:
+        chain = 'regtest'  # fallback to regtest (should only happen when none exists)
+
     files = [("test", "%s/test_framework.log" % tmp_dir)]
     for i in itertools.count():
-        logfile = "{}/node{}/regtest/debug.log".format(tmp_dir, i)
+        logfile = "{}/node{}/{}/debug.log".format(tmp_dir, i, chain)
         if not os.path.isfile(logfile):
             break
         files.append(("node%d" % i, logfile))
@@ -63,7 +68,7 @@ def get_log_events(source, logfile):
     Log events may be split over multiple lines. We use the timestamp
     regex match as the marker for a new log event."""
     try:
-        with open(logfile, 'r') as infile:
+        with open(logfile, 'r', encoding='utf-8') as infile:
             event = ''
             timestamp = ''
             for line in infile:

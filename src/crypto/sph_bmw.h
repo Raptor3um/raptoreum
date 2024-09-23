@@ -7,7 +7,7 @@
  * ==========================(LICENSE BEGIN)============================
  *
  * Copyright (c) 2007-2010  Projet RNRT SAPHIR
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the
  * "Software"), to deal in the Software without restriction, including
@@ -15,10 +15,10 @@
  * distribute, sublicense, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to
  * the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be
  * included in all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
  * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -41,7 +41,7 @@ extern "C"{
 #endif
 
 #include <stddef.h>
-#include "sph_types.h"
+#include <crypto/sph_types.h>
 
 /**
  * Output size (in bits) for BMW-224.
@@ -79,13 +79,13 @@ extern "C"{
  */
 typedef struct {
 #ifndef DOXYGEN_IGNORE
-	unsigned char buf[64];    /* first field, for alignment */
-	size_t ptr;
-	sph_u32 H[16];
+    unsigned char buf[64];    /* first field, for alignment */
+    size_t ptr;
+    sph_u32 H[16];
 #if SPH_64
-	sph_u64 bit_count;
+    sph_u64 bit_count;
 #else
-	sph_u32 bit_count_high, bit_count_low;
+    sph_u32 bit_count_high, bit_count_low;
 #endif
 #endif
 } sph_bmw_small_context;
@@ -116,10 +116,10 @@ typedef sph_bmw_small_context sph_bmw256_context;
  */
 typedef struct {
 #ifndef DOXYGEN_IGNORE
-	unsigned char buf[128];    /* first field, for alignment */
-	size_t ptr;
-	sph_u64 H[16];
-	sph_u64 bit_count;
+    unsigned char buf[128];    /* first field, for alignment */
+    size_t ptr;
+    sph_u64 H[16];
+    sph_u64 bit_count;
 #endif
 } sph_bmw_big_context;
 
@@ -180,7 +180,7 @@ void sph_bmw224_close(void *cc, void *dst);
  * @param dst   the destination buffer
  */
 void sph_bmw224_addbits_and_close(
-	void *cc, unsigned ub, unsigned n, void *dst);
+        void *cc, unsigned ub, unsigned n, void *dst);
 
 /**
  * Initialize a BMW-256 context. This process performs no memory allocation.
@@ -225,7 +225,7 @@ void sph_bmw256_close(void *cc, void *dst);
  * @param dst   the destination buffer
  */
 void sph_bmw256_addbits_and_close(
-	void *cc, unsigned ub, unsigned n, void *dst);
+        void *cc, unsigned ub, unsigned n, void *dst);
 
 #if SPH_64
 
@@ -272,7 +272,7 @@ void sph_bmw384_close(void *cc, void *dst);
  * @param dst   the destination buffer
  */
 void sph_bmw384_addbits_and_close(
-	void *cc, unsigned ub, unsigned n, void *dst);
+    void *cc, unsigned ub, unsigned n, void *dst);
 
 /**
  * Initialize a BMW-512 context. This process performs no memory allocation.
@@ -317,7 +317,7 @@ void sph_bmw512_close(void *cc, void *dst);
  * @param dst   the destination buffer
  */
 void sph_bmw512_addbits_and_close(
-	void *cc, unsigned ub, unsigned n, void *dst);
+    void *cc, unsigned ub, unsigned n, void *dst);
 
 #endif
 

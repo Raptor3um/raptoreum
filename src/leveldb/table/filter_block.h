@@ -11,14 +11,16 @@
 
 #include <stddef.h>
 #include <stdint.h>
+
 #include <string>
 #include <vector>
+
 #include "leveldb/slice.h"
 #include "util/hash.h"
 
 namespace leveldb {
 
-class FilterPolicy;
+    class FilterPolicy;
 
 // A FilterBlockBuilder is used to construct all of the filters for a
 // particular Table.  It generates a single string which is stored as
@@ -26,43 +28,46 @@ class FilterPolicy;
 //
 // The sequence of calls to FilterBlockBuilder must match the regexp:
 //      (StartBlock AddKey*)* Finish
-class FilterBlockBuilder {
- public:
-  explicit FilterBlockBuilder(const FilterPolicy*);
+    class FilterBlockBuilder {
+    public:
+        explicit FilterBlockBuilder(const FilterPolicy *);
 
-  void StartBlock(uint64_t block_offset);
-  void AddKey(const Slice& key);
-  Slice Finish();
+        FilterBlockBuilder(const FilterBlockBuilder &) = delete;
 
- private:
-  void GenerateFilter();
+        FilterBlockBuilder &operator=(const FilterBlockBuilder &) = delete;
 
-  const FilterPolicy* policy_;
-  std::string keys_;              // Flattened key contents
-  std::vector<size_t> start_;     // Starting index in keys_ of each key
-  std::string result_;            // Filter data computed so far
-  std::vector<Slice> tmp_keys_;   // policy_->CreateFilter() argument
-  std::vector<uint32_t> filter_offsets_;
+        void StartBlock(uint64_t block_offset);
 
-  // No copying allowed
-  FilterBlockBuilder(const FilterBlockBuilder&);
-  void operator=(const FilterBlockBuilder&);
-};
+        void AddKey(const Slice &key);
 
-class FilterBlockReader {
- public:
- // REQUIRES: "contents" and *policy must stay live while *this is live.
-  FilterBlockReader(const FilterPolicy* policy, const Slice& contents);
-  bool KeyMayMatch(uint64_t block_offset, const Slice& key);
+        Slice Finish();
 
- private:
-  const FilterPolicy* policy_;
-  const char* data_;    // Pointer to filter data (at block-start)
-  const char* offset_;  // Pointer to beginning of offset array (at block-end)
-  size_t num_;          // Number of entries in offset array
-  size_t base_lg_;      // Encoding parameter (see kFilterBaseLg in .cc file)
-};
+    private:
+        void GenerateFilter();
 
-}
+        const FilterPolicy *policy_;
+        std::string keys_;             // Flattened key contents
+        std::vector <size_t> start_;    // Starting index in keys_ of each key
+        std::string result_;           // Filter data computed so far
+        std::vector <Slice> tmp_keys_;  // policy_->CreateFilter() argument
+        std::vector <uint32_t> filter_offsets_;
+    };
+
+    class FilterBlockReader {
+    public:
+        // REQUIRES: "contents" and *policy must stay live while *this is live.
+        FilterBlockReader(const FilterPolicy *policy, const Slice &contents);
+
+        bool KeyMayMatch(uint64_t block_offset, const Slice &key);
+
+    private:
+        const FilterPolicy *policy_;
+        const char *data_;    // Pointer to filter data (at block-start)
+        const char *offset_;  // Pointer to beginning of offset array (at block-end)
+        size_t num_;          // Number of entries in offset array
+        size_t base_lg_;      // Encoding parameter (see kFilterBaseLg in .cc file)
+    };
+
+}  // namespace leveldb
 
 #endif  // STORAGE_LEVELDB_TABLE_FILTER_BLOCK_H_

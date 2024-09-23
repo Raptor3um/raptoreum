@@ -6,7 +6,7 @@
 #define BITCOIN_ZMQ_ZMQCONFIG_H
 
 #if defined(HAVE_CONFIG_H)
-#include "config/raptoreum-config.h"
+#include <config/raptoreum-config.h>
 #endif
 
 #include <stdarg.h>
@@ -16,14 +16,15 @@
 #include <zmq.h>
 #endif
 
-#include "primitives/block.h"
-#include "primitives/transaction.h"
+#include <primitives/block.h>
+#include <primitives/transaction.h>
 
-#include "governance/governance-object.h"
-#include "governance/governance-vote.h"
+#include <governance/governance-object.h>
+#include <governance/governance-vote.h>
 
-#include "llmq/quorums_chainlocks.h"
-#include "llmq/quorums_instantsend.h"
+#include <llmq/quorums_chainlocks.h>
+#include <llmq/quorums_instantsend.h>
+#include <llmq/quorums_signing.h>
 
 void zmqError(const char *str);
 
