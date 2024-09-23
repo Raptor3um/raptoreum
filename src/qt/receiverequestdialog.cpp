@@ -119,6 +119,7 @@ void ReceiveRequestDialog::update() {
     QString target = info.label;
     if (target.isEmpty())
         target = info.address;
+    setWindowFlags(windowFlags().setFlag(Qt::WindowContextHelpButtonHint, false));
     setWindowTitle(tr("Request payment to %1").arg(target));
 
     QString uri = GUIUtil::formatBitcoinURI(info);
