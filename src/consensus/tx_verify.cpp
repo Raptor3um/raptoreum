@@ -9,6 +9,7 @@
 #include <primitives/transaction.h>
 #include <script/interpreter.h>
 #include <consensus/validation.h>
+#include <validation.h>
 
 #include <chainparams.h>
 #include <future/fee.h>
@@ -394,6 +395,13 @@ bool Consensus::CheckTxInputs(const CTransaction &tx, CValidationState &state, c
 
     if (!checkSpecialTxFee(tx, txfee, specialTxFee, fFeeVerify)) {
         return state.DoS(100, false, REJECT_INVALID, "bad-txns-wrong-future-fee-or-not-enable");
+    }
+    bool isMinFeeEnforceActive = Updates().IsMinFeeEnforceActive(::ChainActive().Tip());
+    if(tx.vin.size() > 0  && isMinFeeEnforceActive) {
+        size_t nSize = GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
+        if(txfee < enforcedMinRelayTxFee.GetFee(nSize)) {
+            return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "min relay fee not met");
+        }
     }
 
     if (txfee < 0) {

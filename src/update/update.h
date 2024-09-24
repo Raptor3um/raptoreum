@@ -17,6 +17,7 @@ enum class EUpdate {
     DEPLOYMENT_V17 = 0,
     ROUND_VOTING = 1,
     QUORUMS_200_8 = 2,
+    MIN_FEE_VOTING = 3,
 
     MAX_VERSION_BITS_DEPLOYMENTS
 };
@@ -347,6 +348,7 @@ public:
     bool IsActive(enum EUpdate eUpdate, const CBlockIndex *blockIndex);
 
     bool IsAssetsActive(const CBlockIndex *blockIndex);
+    bool IsMinFeeEnforceActive(const CBlockIndex *blockIndex);
 
     StateInfo State(enum EUpdate eUpdate, const CBlockIndex *blockIndex);
 

@@ -27,6 +27,7 @@
 #include <validation.h>
 #include <version.h>
 #include <warnings.h>
+#include <chainparams.h>
 
 #include <univalue.h>
 
@@ -589,8 +590,10 @@ UniValue getnetworkinfo(const JSONRPCRequest &request) {
         }
         obj.pushKV("socketevents", strSocketEvents);
     }
+    bool isMinFeeEnforceActive = Updates().IsMinFeeEnforceActive(::ChainActive().Tip());
+    UniValue minRelayFeeAmount = isMinFeeEnforceActive ? ValueFromAmount(::enforcedMinRelayTxFee.GetFeePerK()) : ValueFromAmount(::minRelayTxFee.GetFeePerK());
     obj.pushKV("networks", GetNetworksInfo());
-    obj.pushKV("relayfee", ValueFromAmount(::minRelayTxFee.GetFeePerK()));
+    obj.pushKV("relayfee", minRelayFeeAmount);
     obj.pushKV("incrementalfee", ValueFromAmount(::incrementalRelayFee.GetFeePerK()));
     UniValue localAddresses(UniValue::VARR);
     {

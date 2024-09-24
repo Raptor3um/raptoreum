@@ -329,7 +329,10 @@ namespace interfaces {
                 return ::mempool.GetMinFee(gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000);
             }
 
-            CFeeRate relayMinFee() override { return ::minRelayTxFee; }
+            CFeeRate relayMinFee() override {
+                bool isMinFeeEnforceActive = Updates().IsMinFeeEnforceActive(::ChainActive().Tip());
+                return isMinFeeEnforceActive ? ::enforcedMinRelayTxFee : ::minRelayTxFee;
+            }
 
             CFeeRate relayIncrementalFee() override { return ::incrementalRelayFee; }
 

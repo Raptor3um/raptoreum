@@ -4614,7 +4614,9 @@ bool CWallet::CreateTransaction(const std::vector <CRecipient> &vecSend, CTransa
 
                     // If we made it here and we aren't even able to meet the relay fee on the next pass, give up
                     // because we must be at the maximum allowed fee.
-                    if (nFee < ::minRelayTxFee.GetFee(nBytes)) {
+                    bool isMinFeeEnforceActive = Updates().IsMinFeeEnforceActive(::ChainActive().Tip());
+                    CFeeRate minRelayFeeRate = isMinFeeEnforceActive ? ::enforcedMinRelayTxFee : ::minRelayTxFee;
+                    if (nFee < minRelayFeeRate.GetFee(nBytes)) {
                         strFailReason = _("Transaction too large for fee policy");
                         return false;
                     }

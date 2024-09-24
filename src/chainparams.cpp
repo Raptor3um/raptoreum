@@ -406,6 +406,22 @@ public:
                 VoteThreshold(85, 85, 1), // minerThreshold
                 VoteThreshold(85, 85, 1)) // nodeThreshold
         );
+        updateManager.Add(
+                Update(EUpdate::MIN_FEE_VOTING, std::string("Min fee Voting"),
+                       3,                        // bit
+                       1440,                     // roundSize
+                       263520,                    // startHeight
+                       1,                        // votingPeriod
+                       365,                      // votingMaxRounds
+                       1,                        // gracePeriod
+                       true,                    // forceUpdate
+                       VoteThreshold(0, 0, 1), // minerThreshold
+                       VoteThreshold(0, 0, 1),   // nodeThreshold
+                       false,
+                       264341
+               )
+        );
+
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x0"); // 0
