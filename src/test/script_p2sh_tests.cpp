@@ -89,7 +89,8 @@ BOOST_AUTO_TEST_CASE(sign)
             txFrom.vout[i + 4].scriptPubKey = standardScripts[i];
             txFrom.vout[i + 4].nValue = COIN;
         }
-        BOOST_CHECK(IsStandardTx(CTransaction(txFrom), reason));
+        bool isStandardTx = IsStandardTx(CTransaction(txFrom), reason);
+        BOOST_CHECK_MESSAGE(isStandardTx, strprintf("IsStandardTx: reason: %s", reason.c_str()));
 
         CMutableTransaction txTo[8]; // Spending transactions
         for (int i = 0; i < 8; i++)
@@ -185,7 +186,8 @@ BOOST_AUTO_TEST_CASE(set)
             txFrom.vout[i].scriptPubKey = outer[i];
             txFrom.vout[i].nValue = CENT;
         }
-        BOOST_CHECK(IsStandardTx(CTransaction(txFrom), reason));
+        bool isStandardTx = IsStandardTx(CTransaction(txFrom), reason);
+        BOOST_CHECK_MESSAGE(isStandardTx, strprintf("IsStandardTx: reason: %s", reason.c_str()));
 
         CMutableTransaction txTo[4]; // Spending transactions
         for (int i = 0; i < 4; i++)
@@ -201,7 +203,8 @@ BOOST_AUTO_TEST_CASE(set)
         {
             BOOST_CHECK_MESSAGE(SignSignature(keystore, CTransaction(txFrom), txTo[i], 0, SIGHASH_ALL),
                                 strprintf("SignSignature %d", i));
-            BOOST_CHECK_MESSAGE(IsStandardTx(CTransaction(txTo[i]), reason), strprintf("txTo[%d].IsStandard", i));
+            bool isStandardTx = IsStandardTx(CTransaction(txTo[i]), reason);
+            BOOST_CHECK_MESSAGE(isStandardTx, strprintf("IsStandardTx: txTo[%d] reason: %s", i, reason.c_str()));
         }
         }
 

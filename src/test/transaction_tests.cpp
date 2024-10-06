@@ -313,6 +313,7 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
         CCoinsView coinsDummy;
         CCoinsViewCache coins(&coinsDummy);
         std::vector<CMutableTransaction> dummyTransactions = SetupDummyInputs(keystore, coins);
+        bool isStandardTx;
 
         CMutableTransaction t;
         t.vin.resize(1);
@@ -326,7 +327,8 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
         t.vout[0].scriptPubKey = GetScriptForDestination(key.GetPubKey().GetID());
 
         std::string reason;
-        BOOST_CHECK(IsStandardTx(CTransaction(t), reason));
+        isStandardTx = IsStandardTx(CTransaction(t), reason);
+        BOOST_CHECK_MESSAGE(isStandardTx, strprintf("IsStandardTx: reason: %s", reason.c_str()));
 
         // Check dust with default relay fee:
         CAmount nDustThreshold = 182 * dustRelayFee.GetFeePerK()/1000;
@@ -336,7 +338,8 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
         BOOST_CHECK(!IsStandardTx(CTransaction(t), reason));
         // not dust:
         t.vout[0].nValue = nDustThreshold;
-        BOOST_CHECK(IsStandardTx(CTransaction(t), reason));
+        isStandardTx = IsStandardTx(CTransaction(t), reason);
+        BOOST_CHECK_MESSAGE(isStandardTx, strprintf("IsStandardTx: reason: %s", reason.c_str()));
 
         // Check dust with odd relay fee to verify rounding:
         // nDustThreshold = 182 * 3702 / 1000
@@ -346,7 +349,8 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
         BOOST_CHECK(!IsStandardTx(CTransaction(t), reason));
         // not dust:
         t.vout[0].nValue = 546;
-        BOOST_CHECK(IsStandardTx(CTransaction(t), reason));
+        isStandardTx = IsStandardTx(CTransaction(t), reason);
+        BOOST_CHECK_MESSAGE(isStandardTx, strprintf("IsStandardTx: reason: %s", reason.c_str()));
         minRelayTxFee = CFeeRate(DUST_RELAY_TX_FEE);
 
         t.vout[0].scriptPubKey = CScript() << OP_1;
@@ -355,7 +359,8 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
         // MAX_OP_RETURN_RELAY-byte TX_NULL_DATA (standard)
         t.vout[0].scriptPubKey = CScript() << OP_RETURN << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3804678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38");
         BOOST_CHECK_EQUAL(MAX_OP_RETURN_RELAY, t.vout[0].scriptPubKey.size());
-        BOOST_CHECK(IsStandardTx(CTransaction(t), reason));
+        isStandardTx = IsStandardTx(CTransaction(t), reason);
+        BOOST_CHECK_MESSAGE(isStandardTx, strprintf("IsStandardTx: reason: %s", reason.c_str()));
 
         // MAX_OP_RETURN_RELAY+1-byte TX_NULL_DATA (non-standard)
         t.vout[0].scriptPubKey = CScript() << OP_RETURN << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3804678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3800");
@@ -364,14 +369,18 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
 
         // Data payload can be encoded in any way...
         t.vout[0].scriptPubKey = CScript() << OP_RETURN << ParseHex("");
-        BOOST_CHECK(IsStandardTx(CTransaction(t), reason));
+        isStandardTx = IsStandardTx(CTransaction(t), reason);
+        BOOST_CHECK_MESSAGE(isStandardTx, strprintf("IsStandardTx: reason: %s", reason.c_str()));
         t.vout[0].scriptPubKey = CScript() << OP_RETURN << ParseHex("00") << ParseHex("01");
-        BOOST_CHECK(IsStandardTx(CTransaction(t), reason));
+        isStandardTx = IsStandardTx(CTransaction(t), reason);
+        BOOST_CHECK_MESSAGE(isStandardTx, strprintf("IsStandardTx: reason: %s", reason.c_str()));
         // OP_RESERVED *is* considered to be a PUSHDATA type opcode by IsPushOnly()!
         t.vout[0].scriptPubKey = CScript() << OP_RETURN << OP_RESERVED << -1 << 0 << ParseHex("01") << 2 << 3 << 4 << 5 << 6 << 7 << 8 << 9 << 10 << 11 << 12 << 13 << 14 << 15 << 16;
-        BOOST_CHECK(IsStandardTx(CTransaction(t), reason));
+        isStandardTx = IsStandardTx(CTransaction(t), reason);
+        BOOST_CHECK_MESSAGE(isStandardTx, strprintf("IsStandardTx: reason: %s", reason.c_str()));
         t.vout[0].scriptPubKey = CScript() << OP_RETURN << 0 << ParseHex("01") << 2 << ParseHex("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
-        BOOST_CHECK(IsStandardTx(CTransaction(t), reason));
+        isStandardTx = IsStandardTx(CTransaction(t), reason);
+        BOOST_CHECK_MESSAGE(isStandardTx, strprintf("IsStandardTx: reason: %s", reason.c_str()));
 
         // ...so long as it only contains PUSHDATA's
         t.vout[0].scriptPubKey = CScript() << OP_RETURN << OP_RETURN;
@@ -380,7 +389,8 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
         // TX_NULL_DATA w/o PUSHDATA
         t.vout.resize(1);
         t.vout[0].scriptPubKey = CScript() << OP_RETURN;
-        BOOST_CHECK(IsStandardTx(CTransaction(t), reason));
+        isStandardTx = IsStandardTx(CTransaction(t), reason);
+        BOOST_CHECK_MESSAGE(isStandardTx, strprintf("IsStandardTx: reason: %s", reason.c_str()));
 
         // Only one TX_NULL_DATA permitted in all cases
         t.vout.resize(2);

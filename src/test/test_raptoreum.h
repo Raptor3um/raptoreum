@@ -61,9 +61,7 @@ static inline uint64_t InsecureRandRange(uint64_t range) { return g_insecure_ran
 
 static inline bool InsecureRandBool() { return g_insecure_rand_ctx.randbool(); }
 
-static constexpr CAmount
-CENT{
-1000000};
+static constexpr CAmount CENT{1000000};
 
 /** Basic testing setup.
  * This just configures logging and chain parameters.
