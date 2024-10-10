@@ -59,7 +59,7 @@ UniValue createasset(const JSONRPCRequest &request) {
                 "\nArguments:\n"
                 "1. \"asset\"               (string, required) A json object with asset metadata\n"
                 "{\n"
-                "   \"name:\"               (string) Asset name\n"
+                "   \"name:\"               (string) Asset name (must be uppercase for root asset)\n"
                 "   \"updatable:\"          (bool, optional, default=true) if true this asset can be modify using reissue process.\n"
                 "   \"is_root:\"            (bool, required) if this asset is root.\n"
                 "   \"root_name:\"          (string) the root asset name for this sub asset.\n"
@@ -78,8 +78,12 @@ UniValue createasset(const JSONRPCRequest &request) {
 
                 "\nExamples:\n"
                 + HelpExampleCli("createasset",
-                                 "'{\"name\":\"test asset\", \"updatable\":true, \"isunique\":false, \"maxMintCount\":10, \n"
+                                 "'{\"name\":\"TEST ASSET\", \"updatable\":true, \"is_root\":true, \"isunique\":false, \"maxMintCount\":10, \n"
                                  "\"decimalpoint\":2, \"referenceHash\":\"\", \"type\":0, \"targetAddress\":\"yQPzaDmnF3FtRsoWijUN7aZDcEdyNAcmVk\", \n"
+                                 "\"issueFrequency\":0, \"amount\":10000,\"ownerAddress\":\"yRyiTCKfqMG2dQ9oUvs932TjN1R1MNUTWM\"}'")
+                + HelpExampleCli("createasset",
+                                 "'{\"name\":\"sub test asset\", \"is_root\":false, \"root_name\":\"TEST ASSET\", \"isunique\":false, \"maxMintCount\":10, \n"
+                                 "\"decimalpoint\":2, \"referenceHash\":\"\", \"type\":0,  \"targetAddress\":\"yQPzaDmnF3FtRsoWijUN7aZDcEdyNAcmVk\", \n"
                                  "\"issueFrequency\":0, \"amount\":10000,\"ownerAddress\":\"yRyiTCKfqMG2dQ9oUvs932TjN1R1MNUTWM\"}'")
         );
 
