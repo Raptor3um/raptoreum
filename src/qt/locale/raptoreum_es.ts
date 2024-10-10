@@ -113,11 +113,13 @@
     </message>
     <message>
         <source>Exporting Failed</source>
+        <extracomment>%1 is a name of the file (e.g.: &quot;addressbook.csv&quot;) that the Raptoreum addresses were exported to.</extracomment>
         <translation>Error al exportar</translation>
     </message>
     <message>
         <source>There was an error trying to save the address list to %1. Please try again.</source>
-        <translation>Se produjo un error al intentar guardar la lista de direcciones en %1. Por favor, inténtelo otra vez.</translation>
+        <comment>An error message.</comment>
+        <translation type="unfinished">Se produjo un error al intentar guardar la lista de direcciones en %1. Por favor, inténtelo otra vez.</translation>
     </message>
 </context>
 <context>
@@ -193,8 +195,8 @@
         <translation>Repita la nueva contraseña</translation>
     </message>
     <message>
-        <source>Show password</source>
-        <translation>Mostrar contraseña</translation>
+        <source>Show passphrase</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
@@ -245,12 +247,24 @@
         <translation>¿Esta seguro que desea cifrar su billetera?</translation>
     </message>
     <message>
+        <source>Remember that encrypting your wallet cannot fully protect your funds from being stolen by malware infecting your computer.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Wallet to be encrypted</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Your wallet is about to be encrypted. </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Wallet encrypted</source>
         <translation>Billetera cifrado</translation>
     </message>
     <message>
-        <source>Your wallet is now encrypted. Remember that encrypting your wallet cannot fully protect your funds from being stolen by malware infecting your computer.</source>
-        <translation>Su billetera ahora está encriptada. Recuerde que encriptar su billetera no puede proteger completamente sus fondos para que no sean robados por malware que infecte su computadora.</translation>
+        <source>Your wallet is now encrypted. </source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. Previous backups of the unencrypted wallet file contain the same HD seed and still have full access to all your funds just like the new, encrypted wallet.</source>
@@ -294,6 +308,302 @@
     </message>
 </context>
 <context>
+    <name>AssetControlDialog</name>
+    <message>
+        <source>Asset Selection</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Quantity:</source>
+        <translation type="unfinished">Cantidad:</translation>
+    </message>
+    <message>
+        <source>Bytes:</source>
+        <translation type="unfinished">Bytes:</translation>
+    </message>
+    <message>
+        <source>Amount:</source>
+        <translation type="unfinished">Cantidad:</translation>
+    </message>
+    <message>
+        <source>Dust:</source>
+        <translation type="unfinished">Polvo:</translation>
+    </message>
+    <message>
+        <source>Fee:</source>
+        <translation type="unfinished">Comisión:</translation>
+    </message>
+    <message>
+        <source>After Fee:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Change:</source>
+        <translation type="unfinished">Cambio:</translation>
+    </message>
+    <message>
+        <source>(un)select all</source>
+        <translation type="unfinished">(des)marcar todos</translation>
+    </message>
+    <message>
+        <source>Tree mode</source>
+        <translation type="unfinished">Modo árbol</translation>
+    </message>
+    <message>
+        <source>List mode</source>
+        <translation type="unfinished">Modo lista</translation>
+    </message>
+    <message>
+        <source>(1 locked)</source>
+        <translation type="unfinished">(1 bloqueado)</translation>
+    </message>
+    <message>
+        <source>Asset</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Confirmed</source>
+        <translation type="unfinished">Confirmado</translation>
+    </message>
+    <message>
+        <source>Amount</source>
+        <translation type="unfinished">Cantidad</translation>
+    </message>
+    <message>
+        <source>Received with label</source>
+        <translation type="unfinished">Recibido con la etiqueta</translation>
+    </message>
+    <message>
+        <source>Received with address</source>
+        <translation type="unfinished">Recibido con la dirección</translation>
+    </message>
+    <message>
+        <source>Date</source>
+        <translation type="unfinished">Fecha</translation>
+    </message>
+    <message>
+        <source>Confirmations</source>
+        <translation type="unfinished">Confirmaciones</translation>
+    </message>
+    <message>
+        <source>Copy address</source>
+        <translation type="unfinished">Copiar dirección</translation>
+    </message>
+    <message>
+        <source>Copy label</source>
+        <translation type="unfinished">Copiar etiqueta</translation>
+    </message>
+    <message>
+        <source>Copy amount</source>
+        <translation type="unfinished">Copiar cantidad</translation>
+    </message>
+    <message>
+        <source>Copy transaction ID</source>
+        <translation type="unfinished">Copiar ID de transacción</translation>
+    </message>
+    <message>
+        <source>Lock unspent</source>
+        <translation type="unfinished">Bloquear lo no gastado</translation>
+    </message>
+    <message>
+        <source>Unlock unspent</source>
+        <translation type="unfinished">Desbloquear lo no gastado</translation>
+    </message>
+    <message>
+        <source>Copy quantity</source>
+        <translation type="unfinished">Copiar cantidad</translation>
+    </message>
+    <message>
+        <source>Copy fee</source>
+        <translation type="unfinished">Copiar comisión</translation>
+    </message>
+    <message>
+        <source>Copy after fee</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Copy bytes</source>
+        <translation type="unfinished">Copiar bytes</translation>
+    </message>
+    <message>
+        <source>Copy dust</source>
+        <translation type="unfinished">Copiar polvo</translation>
+    </message>
+    <message>
+        <source>Copy change</source>
+        <translation type="unfinished">Copiar cambio</translation>
+    </message>
+    <message>
+        <source>Please switch to &quot;List mode&quot; to use this function.</source>
+        <translation type="unfinished">Por favor, cambie a &quot;Modo Lista&quot; para poder usar esta función.</translation>
+    </message>
+    <message>
+        <source>(%1 locked)</source>
+        <translation type="unfinished">(%1 bloqueadas)</translation>
+    </message>
+    <message>
+        <source>yes</source>
+        <translation type="unfinished">si</translation>
+    </message>
+    <message>
+        <source>no</source>
+        <translation type="unfinished">no</translation>
+    </message>
+    <message>
+        <source>This label turns red if any recipient receives an amount smaller than the current dust threshold.</source>
+        <translation type="unfinished">Esta etiqueta se vuelve roja si cualquier receptor recibe una cantidad mas pequeña que el límite, mínimo actual de polvo.</translation>
+    </message>
+    <message>
+        <source>Can vary +/- %1 ruff(s) per input.</source>
+        <translation type="unfinished">Puede variar +/- %1 ruff(s) por entrada.</translation>
+    </message>
+    <message>
+        <source>Some Assets were unselected because they were spent.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Some Assets were unselected because they do not have enough mixing rounds.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation type="unfinished">(sin etiqueta)</translation>
+    </message>
+    <message>
+        <source>change from %1 (%2)</source>
+        <translation type="unfinished">cambiar desde %1 (%2)</translation>
+    </message>
+    <message>
+        <source>(change)</source>
+        <translation type="unfinished">(cambio)</translation>
+    </message>
+</context>
+<context>
+    <name>AssetsDialog</name>
+    <message>
+        <source>Form</source>
+        <translation type="unfinished">Formulario</translation>
+    </message>
+    <message>
+        <source>Asset balance</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Asset</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>asset id</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Available</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Pending</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Asset Info</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Warning:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Id:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Supply:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Name:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Type:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Reference:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Mint</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Update</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Send asset</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Copy asset name</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>View details</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Asset metadata not found.
+(Not mined on a block)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Root</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unique/NFT</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Sub</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Details for asset: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>ERROR: Asset metadata not found</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Error: Asset mint or update tx exists on mempool</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Mint details:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Name: %1 &lt;br&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Amount: %1</source>
+        <translation type="unfinished">Cantidad: %1
+ {1?}</translation>
+    </message>
+    <message>
+        <source>are added as transaction fee.&lt;hr /&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Confirm Asset Mint</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>BanTableModel</name>
     <message>
         <source>IP/Netmask</source>
@@ -318,52 +628,20 @@
         <translation>Se produjo un error fatal. Raptoreum Core no puede continuar de forma segura y se cerrará.</translation>
     </message>
     <message>
-        <source>Raptoreum Core</source>
-        <translation>Raptoreum Core</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Billetera</translation>
-    </message>
-    <message>
-        <source>Node</source>
-        <translation>Nodo</translation>
-    </message>
-    <message>
-        <source>&amp;Overview</source>
-        <translation>&amp;Vista general</translation>
-    </message>
-    <message>
         <source>Show general overview of wallet</source>
         <translation>Mostrar vista general de la billetera</translation>
-    </message>
-    <message>
-        <source>&amp;Send</source>
-        <translation>&amp;Enviar</translation>
     </message>
     <message>
         <source>Send coins to a Raptoreum address</source>
         <translation>Enviar monedas a una dirección Raptoreum</translation>
     </message>
     <message>
-        <source>&amp;Receive</source>
-        <translation>&amp;Recibir</translation>
-    </message>
-    <message>
         <source>Request payments (generates QR codes and raptoreum: URIs)</source>
         <translation>Solicitar pagos (genera códigos QR y URIs de Raptoreum)</translation>
     </message>
     <message>
-        <source>&amp;Transactions</source>
-        <translation>&amp;Transacciones</translation>
-    </message>
-    <message>
         <source>Browse transaction history</source>
         <translation>Examinar el historial de transacciones</translation>
-    </message>
-    <message>
-        <source>&amp;Smartnodes</source>
-        <translation>&amp;Smartnodes</translation>
     </message>
     <message>
         <source>Browse smartnodes</source>
@@ -376,10 +654,6 @@
     <message>
         <source>Quit application</source>
         <translation>Salir de la aplicación</translation>
-    </message>
-    <message>
-        <source>Show information about Raptoreum Core</source>
-        <translation>Mostrar información acerca de Raptoreum Core</translation>
     </message>
     <message>
         <source>About &amp;Qt</source>
@@ -398,8 +672,44 @@
         <translation>&amp;Acerca de %1</translation>
     </message>
     <message>
+        <source> Send</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Send %1 funds to a Raptoreum address</source>
         <translation>Enviar %1 de los fondos a una dirección de Raptoreum</translation>
+    </message>
+    <message>
+        <source> Receive</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source> Send Asset</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Send assets to a Raptoreum address</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source> Create Asset</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Create a new asset</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source> Update Asset</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Update asset</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Show information about %1</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Modify configuration options for %1</source>
@@ -522,16 +832,12 @@
         <translation>Mostrar las copias de seguridad de la billetera creadas automáticamente</translation>
     </message>
     <message>
-        <source>&amp;Sending addresses...</source>
-        <translation>&amp;Direcciones de envío...</translation>
+        <source>Proxy is &lt;b&gt;enabled&lt;/b&gt;: %1</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Show the list of used sending addresses and labels</source>
         <translation>Mostrar la lista de direcciones de envío y etiquetas</translation>
-    </message>
-    <message>
-        <source>&amp;Receiving addresses...</source>
-        <translation>&amp;Direcciones de recepción...</translation>
     </message>
     <message>
         <source>Show the list of used receiving addresses and labels</source>
@@ -540,10 +846,6 @@
     <message>
         <source>Open &amp;URI...</source>
         <translation>Abrir &amp;URI...</translation>
-    </message>
-    <message>
-        <source>Open a raptoreum: URI or payment request</source>
-        <translation>Abrir un raptoreum: URI o petición de pago</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
@@ -556,6 +858,22 @@
     <message>
         <source>default wallet</source>
         <translation>billetera predeterminada</translation>
+    </message>
+    <message>
+        <source>&amp;Window</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Minimize</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Zoom</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Main Window</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>%1 client</source>
@@ -576,6 +894,42 @@
         <translation>&amp;Archivo</translation>
     </message>
     <message>
+        <source>&amp;Sending addresses</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&amp;Receiving addresses</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Open a raptoreum: URI</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Open Wallet</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Open a wallet</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Close Wallet...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Close Wallet</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Create Wallet...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Create a new wallet</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>%1 &amp;information</source>
         <translation>%1 &amp;Información</translation>
     </message>
@@ -584,12 +938,12 @@
         <translation>Mostrar la información básica de %1</translation>
     </message>
     <message>
-        <source>&amp;Settings</source>
-        <translation>&amp;Configuración</translation>
+        <source>No wallets available</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>&amp;Tools</source>
-        <translation>&amp;Herramientas</translation>
+        <source>&amp;Settings</source>
+        <translation>&amp;Configuración</translation>
     </message>
     <message>
         <source>&amp;Help</source>
@@ -598,6 +952,18 @@
     <message>
         <source>Tabs toolbar</source>
         <translation>Barra de pestañas</translation>
+    </message>
+    <message>
+        <source> Overview</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source> Transactions</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source> Smartnodes</source>
+        <translation type="unfinished"></translation>
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Raptoreum network</source>
@@ -670,8 +1036,16 @@
         <translation>Error</translation>
     </message>
     <message>
+        <source>Error: %1</source>
+        <translation type="unfinished">Error: %1</translation>
+    </message>
+    <message>
         <source>Warning</source>
         <translation>Advertencia</translation>
+    </message>
+    <message>
+        <source>Warning: %1</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Information</source>
@@ -952,6 +1326,498 @@
     </message>
 </context>
 <context>
+    <name>CreateAssetConfirmationDialog</name>
+    <message>
+        <source>Yes</source>
+        <translation type="unfinished">Sí</translation>
+    </message>
+</context>
+<context>
+    <name>CreateAssetsDialog</name>
+    <message>
+        <source>Coin Control Features</source>
+        <translation type="unfinished">Características de Coin Control</translation>
+    </message>
+    <message>
+        <source>Inputs...</source>
+        <translation type="unfinished">Entradas...</translation>
+    </message>
+    <message>
+        <source>automatically selected</source>
+        <translation type="unfinished">seleccionadas automáticamente</translation>
+    </message>
+    <message>
+        <source>Insufficient funds!</source>
+        <translation type="unfinished">¡Fondos insuficientes!</translation>
+    </message>
+    <message>
+        <source>Quantity:</source>
+        <translation type="unfinished">Cantidad:</translation>
+    </message>
+    <message>
+        <source>Bytes:</source>
+        <translation type="unfinished">Bytes:</translation>
+    </message>
+    <message>
+        <source>Amount:</source>
+        <translation type="unfinished">Cantidad:</translation>
+    </message>
+    <message>
+        <source>Dust:</source>
+        <translation type="unfinished">Polvo:</translation>
+    </message>
+    <message>
+        <source>Fee:</source>
+        <translation type="unfinished">Comisión:</translation>
+    </message>
+    <message>
+        <source>After Fee:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Change:</source>
+        <translation type="unfinished">Cambio:</translation>
+    </message>
+    <message>
+        <source>If this is activated, but the change address is empty or invalid, change will be sent to a newly generated address.</source>
+        <translation type="unfinished">Si se marca esta opción pero la dirección de cambio está vacía o es inválida, el cambio se enviará a una nueva dirección recién generada.</translation>
+    </message>
+    <message>
+        <source>Custom change address</source>
+        <translation type="unfinished">Dirección de cambio personalizada</translation>
+    </message>
+    <message>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The RTM address that will receive the minted asset&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Target Address:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;RTM address that will own this asset&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Owner Address:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The RTM address that will receive the minted asset</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;[Optional] The ipfs/file hash that contains information about the asset&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>IPFS/file hash:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The ipfs/file hash that is associated with the asset being created (e.g. QmU4h365LYMHx...)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Browse File</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;a-z A-Z 0-9 and space&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The name of the asset you would like to create</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The RTM address that own this asset</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Asset Name:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Make this asset unique also known as NFT&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unique Asset</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Distribution Type:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Mint count:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The number of assets that will be created</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If the owner of this asset will be able to update the asset in the future&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Updatable</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source> Decimal point:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>How divisble the assets will be (e.g. 8 = 1.00000000, 2 = 1.00)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>e.g. 1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Manual</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Coinbase</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>schedule</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Addresss</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of times this asset can be minted&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Issue frequency:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The frequency that this asset will be minted&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Asset type:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Root</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Sub</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Root Asset:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Transaction Fee:</source>
+        <translation type="unfinished">Comisión por Transacción:</translation>
+    </message>
+    <message>
+        <source>Choose...</source>
+        <translation type="unfinished">Elegir...</translation>
+    </message>
+    <message>
+        <source>Using the fallbackfee can result in sending a transaction that will take several hours or days (or never) to confirm. Consider choosing your fee manually or wait until you have validated the complete chain.</source>
+        <translation type="unfinished">Usando el fallbackfee puede resultar en enviar una transacción que tome varias horas o días (o nunca) para confirmar. Considere elegir su comisión manualmente o espere hasta que haya validado la cadena completa.</translation>
+    </message>
+    <message>
+        <source>Note: Not enough data for fee estimation, using the fallback fee instead.</source>
+        <translation type="unfinished">Nota: No hay suficientes datos para la estimación de tarifas, en su lugar se utiliza la tarifa de reserva.</translation>
+    </message>
+    <message>
+        <source>collapse fee-settings</source>
+        <translation type="unfinished">plegar ajustes de comisión</translation>
+    </message>
+    <message>
+        <source>Hide</source>
+        <translation type="unfinished">Ocultar</translation>
+    </message>
+    <message>
+        <source>If the custom fee is set to 1000 satoshis and the transaction is only 250 bytes, then &quot;per kilobyte&quot; only pays 250 satoshis in fee, while &quot;total at least&quot; pays 1000 satoshis. For transactions bigger than a kilobyte both pay by kilobyte.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>per kilobyte</source>
+        <translation type="unfinished">por kilobyte</translation>
+    </message>
+    <message>
+        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for Raptoreum transactions than the network can process.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>(read the tooltip)</source>
+        <translation type="unfinished">(leer la sugerencia)</translation>
+    </message>
+    <message>
+        <source>Recommended:</source>
+        <translation type="unfinished">Recomendada:</translation>
+    </message>
+    <message>
+        <source>C&amp;ustom:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>(Smart fee not initialized yet. This usually takes a few blocks...)</source>
+        <translation type="unfinished">(La comisión inteligente no está aún inicializada. Esto habitualmente tarda unos pocos bloques...)</translation>
+    </message>
+    <message>
+        <source>Confirmation time target:</source>
+        <translation type="unfinished">Objetivo de tiempo de confirmación</translation>
+    </message>
+    <message>
+        <source>C&amp;reate Asset</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Clear</source>
+        <translation type="unfinished">Limpiar</translation>
+    </message>
+    <message>
+        <source>Balance:</source>
+        <translation type="unfinished">Saldo:</translation>
+    </message>
+    <message>
+        <source>123.456 RTM</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Copy quantity</source>
+        <translation type="unfinished">Copiar cantidad</translation>
+    </message>
+    <message>
+        <source>Copy amount</source>
+        <translation type="unfinished">Copiar cantidad</translation>
+    </message>
+    <message>
+        <source>Copy fee</source>
+        <translation type="unfinished">Copiar comisión</translation>
+    </message>
+    <message>
+        <source>Copy after fee</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Copy bytes</source>
+        <translation type="unfinished">Copiar bytes</translation>
+    </message>
+    <message>
+        <source>Copy dust</source>
+        <translation type="unfinished">Copiar polvo</translation>
+    </message>
+    <message>
+        <source>Copy change</source>
+        <translation type="unfinished">Copiar cambio</translation>
+    </message>
+    <message>
+        <source>Confirm the create asset action</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Disabled. Not in use</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Manual only until other types are developed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Select Root asset</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>A-Z 0-9, no spaces</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>a-z A-Z 0-9 and space</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1 (%2 blocks)</source>
+        <translation type="unfinished">%1 (%2 bloques)</translation>
+    </message>
+    <message>
+        <source>Asset details:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Name: %1 &lt;br&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Isunique: %1 &lt;br&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Updatable: %1 &lt;br&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Decimalpoint: %1 &lt;br&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>ReferenceHash: %1 &lt;br&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>MaxMintCount: %1 &lt;br&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Owner: %1 &lt;hr /&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Distribution:&lt;hr /&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Type: %1 &lt;br&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Target: %1 &lt;br&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>IssueFrequency: %1 &lt;br&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Amount: %1</source>
+        <translation type="unfinished">Cantidad: %1
+ {1?}</translation>
+    </message>
+    <message>
+        <source>are added as transaction fee.&lt;hr /&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Confirm Asset Creation</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Pay only the required fee of %1</source>
+        <translation type="unfinished">Pague solo la comisión requerida del %1</translation>
+    </message>
+    <message numerus="yes">
+        <source>Estimated to begin confirmation within %n block(s).</source>
+        <translation type="unfinished">
+            <numerusform>Está previsto que comience la confirmación en %n bloque.</numerusform>
+            <numerusform>Está previsto que comience la confirmación en %n bloques.</numerusform>
+        </translation>
+    </message>
+    <message>
+        <source>Warning: Invalid Raptoreum address</source>
+        <translation type="unfinished">Advertencia: Dirección de Raptoreum inválida</translation>
+    </message>
+    <message>
+        <source>Warning: Unknown change address</source>
+        <translation type="unfinished">Advertencia: Dirección de cambio desconocida</translation>
+    </message>
+    <message>
+        <source>Confirm custom change address</source>
+        <translation type="unfinished">Confirmar dirección de cambio personalizada</translation>
+    </message>
+    <message>
+        <source>The address you selected for change is not part of this wallet. Any or all funds in your wallet may be sent to this address. Are you sure?</source>
+        <translation type="unfinished">La dirección que ha seleccionado para cambiar no es parte de esta billetera. Ninguno o todos los fondos en su billetera pueden ser enviados a esta dirección. ¿Está seguro?</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation type="unfinished">(sin etiqueta)</translation>
+    </message>
+    <message>
+        <source>Asset name invalid</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Root asset not selected</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Asset already exists</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Asset already exists in mempool</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Asset name is valid and available</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>CreateWalletActivity</name>
+    <message>
+        <source>Creating Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Create wallet failed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Create wallet warning</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>CreateWalletDialog</name>
+    <message>
+        <source>Create Wallet</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Wallet Name</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Encrypt the wallet. The wallet will be encrypted with a passphrase of your choice.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Encrypt Wallet</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Disable Private Keys</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported, or an HD seed can be set, at a later time.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Make Blank Wallet</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Create</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>EditAddressDialog</name>
     <message>
         <source>Edit Address</source>
@@ -1032,10 +1898,6 @@
         <translation>versión</translation>
     </message>
     <message>
-        <source>(%1-bit)</source>
-        <translation>(%1-bit)</translation>
-    </message>
-    <message>
         <source>About %1</source>
         <translation>Acerda de %1</translation>
     </message>
@@ -1067,8 +1929,8 @@
         <translation>Al ser la primera vez que se ejecuta el programa, puede elegir donde %1 almacenará sus datos.</translation>
     </message>
     <message>
-        <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
-        <translation>Cuando haga click en OK, %1 se empezará a descargar la %4 cadena de bloques completa (%2GB) empezando por la transacción más antigua en %3 cuando se publicó %4 originalmente.</translation>
+        <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2 GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
@@ -1120,6 +1982,13 @@
     </message>
 </context>
 <context>
+    <name>MintAssetConfirmationDialog</name>
+    <message>
+        <source>Yes</source>
+        <translation type="unfinished">Sí</translation>
+    </message>
+</context>
+<context>
     <name>ModalOverlay</name>
     <message>
         <source>Form</source>
@@ -1166,8 +2035,12 @@
         <translation>Ocultar</translation>
     </message>
     <message>
-        <source>Unknown. Syncing Headers (%1)...</source>
-        <translation>Desconocido. Sincronizando Encabezados (%1)...</translation>
+        <source>Raptoreum Core is currently syncing. It will download headers at first and then blocks from peers and validate them until reaching latest block mined at chain.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unknown. Syncing Headers (%1, %2%)...</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -1177,20 +2050,27 @@
         <translation>Abrir URI</translation>
     </message>
     <message>
-        <source>Open payment request from URI or file</source>
-        <translation>Abrir solicitud de pago desde una URI o archivo</translation>
-    </message>
-    <message>
         <source>URI:</source>
         <translation>URI:</translation>
     </message>
+</context>
+<context>
+    <name>OpenWalletActivity</name>
     <message>
-        <source>Select payment request file</source>
-        <translation>Seleccione archivo de sulicitud de pago</translation>
+        <source>Open wallet failed</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Select payment request file to open</source>
-        <translation>Seleccione archivo de solicitud de pago a abrir</translation>
+        <source>Open wallet warning</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>default wallet</source>
+        <translation type="unfinished">billetera predeterminada</translation>
+    </message>
+    <message>
+        <source>Opening Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -1244,6 +2124,14 @@
         <translation>Mostrar la interfaz de mezcla en la pantalla de descripción general y revelar una pantalla adicional que permita gastar solo monedas completamente mezcladas.&lt;br/&gt;También aparecerá una nueva pestaña con más configuraciones en este cuadro de diálogo, asegúrate de verificarlas antes de mezclar tus monedas.</translation>
     </message>
     <message>
+        <source>Automatic hide the toolbar menu interface</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Auto hide toolbar menu</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Show additional information and buttons on overview screen.</source>
         <translation>Mostrar información y botones adicionales en la pantalla de resumen.</translation>
     </message>
@@ -1292,6 +2180,14 @@
         <translation>Abrir automáticamente el puerto del cliente Raptoreum Core en el enrutador. Esto solo funciona cuando su enrutador admite UPnP y está habilitado.</translation>
     </message>
     <message>
+        <source>Automatically open the Raptoreum Core client port on the router. This only works when your router supports NAT-PMP and it is enabled. The external port could be random.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Map port using NA&amp;T-PMP</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Accept connections from outside.</source>
         <translation>Aceptar conexiones del exterior.</translation>
     </message>
@@ -1316,6 +2212,10 @@
         <translation>Usar por separado SOCKS&amp;5 proxy para llegar a pares a través de los servicios ocultos de Tor:</translation>
     </message>
     <message>
+        <source>Options set in this dialog are overriden by the command_line or in the configuration file:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Hide the icon from the system tray.</source>
         <translation>Ocultar el icono de la bandeja del sistema.</translation>
     </message>
@@ -1326,6 +2226,11 @@
     <message>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
         <translation>Minimizar en lugar de salir de la aplicación cuando la ventana esté cerrada. Cuando esta opción está habilitada, la aplicación se cerrará solo después de seleccionar Salir en el menú.</translation>
+    </message>
+    <message>
+        <source>Language missing or translation incomplete? Help contributing translations here:
+https://explore.transifex.com/feathered-inc/</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items.&lt;br/&gt;%s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
@@ -1428,12 +2333,6 @@
         <translation>El idioma de la interfaz de usuario puede establecerse aquí. Esta configuración tendrá efecto tras reiniciar %1.</translation>
     </message>
     <message>
-        <source>Language missing or translation incomplete? Help contributing translations here:
-https://www.transifex.com/projects/p/raptoreum/</source>
-        <translation>¿Idioma no disponible o traducción incompleta? Contribuye a la traducción aquí:
-https://www.transifex.com/projects/p/raptoreum/</translation>
-    </message>
-    <message>
         <source>&amp;Unit to show amounts in:</source>
         <translation>&amp;Unidad para mostrar cantidades:</translation>
     </message>
@@ -1444,10 +2343,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Decimal digits</source>
         <translation>Dígitos decimales</translation>
-    </message>
-    <message>
-        <source>Active command-line options that override above options:</source>
-        <translation>Opciones activas de la consola de comandos que tienen preferencia sobre las opciones anteriores:</translation>
     </message>
     <message>
         <source>Reset all client options to default.</source>
@@ -1738,8 +2633,12 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>&apos;raptoreum://&apos; no es un URI válido. Usa &apos;raptoreum:&apos;.</translation>
     </message>
     <message>
-        <source>Payment request fetch URL is invalid: %1</source>
-        <translation>La URL de obtención de la solicitud de pago es inválida: %1</translation>
+        <source>Cannot process payment request as BIP70 is no longer supported.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Due to discontinued support, you should request the merchant to provide you with a BIP21 compatible URI or use a wallet that does continue to support BIP70.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Invalid payment address %1</source>
@@ -1752,66 +2651,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Payment request file handling</source>
         <translation>Procesado del archivo de solicitud de pago</translation>
-    </message>
-    <message>
-        <source>Payment request file cannot be read! This can be caused by an invalid payment request file.</source>
-        <translation>¡No se ha podido leer el archivo de solicitud de pago! Esto puede deberse a un archivo inválido de solicitud de pago.</translation>
-    </message>
-    <message>
-        <source>Payment request rejected</source>
-        <translation>Se rechazó la solicitud de pago</translation>
-    </message>
-    <message>
-        <source>Payment request network doesn&apos;t match client network.</source>
-        <translation>La red de solicitud de pago y la del cliente no coinciden.</translation>
-    </message>
-    <message>
-        <source>Payment request expired.</source>
-        <translation>Expiró su solocitud de pago.</translation>
-    </message>
-    <message>
-        <source>Payment request is not initialized.</source>
-        <translation>La solicitud de pago no está inicializada.</translation>
-    </message>
-    <message>
-        <source>Unverified payment requests to custom payment scripts are unsupported.</source>
-        <translation>No están soportadas las solicitudes de pago no verificadas a instrucciones de pago personalizados.</translation>
-    </message>
-    <message>
-        <source>Invalid payment request.</source>
-        <translation>Solicitud de pago inválida.</translation>
-    </message>
-    <message>
-        <source>Requested payment amount of %1 is too small (considered dust).</source>
-        <translation>La cantidad de pago solicitado del %1 es demasiado pequeña (considerada polvo).</translation>
-    </message>
-    <message>
-        <source>Refund from %1</source>
-        <translation>Reembolso desde %1</translation>
-    </message>
-    <message>
-        <source>Payment request %1 is too large (%2 bytes, allowed %3 bytes).</source>
-        <translation>La solicitud de pago %1 es demasiado grande (%2 bytes, %3 bytes permitidos).</translation>
-    </message>
-    <message>
-        <source>Error communicating with %1: %2</source>
-        <translation>Error comunicando con %1: %2</translation>
-    </message>
-    <message>
-        <source>Payment request cannot be parsed!</source>
-        <translation>¡No se puede intrepretar la solicitud de pago!</translation>
-    </message>
-    <message>
-        <source>Bad response from server %1</source>
-        <translation>Respuesta errónea del servidor %1</translation>
-    </message>
-    <message>
-        <source>Network request error</source>
-        <translation>Error en petición de red</translation>
-    </message>
-    <message>
-        <source>Payment acknowledged</source>
-        <translation>Pago aceptado</translation>
     </message>
 </context>
 <context>
@@ -1882,6 +2721,46 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Show splash screen on startup (default: %u)</source>
         <translation>Mostrar pantalla de bienvenida al iniciar (predeterminado: %u)</translation>
+    </message>
+    <message>
+        <source>Error: Specified data directory &quot;%1&quot; does not exist.</source>
+        <translation type="unfinished">Error: El directorio de datos «%1» especificado no existe.</translation>
+    </message>
+    <message>
+        <source>Error: Cannot parse configuration file: %1.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Error: %1</source>
+        <translation type="unfinished">Error: %1</translation>
+    </message>
+    <message>
+        <source>Error: Failed to load application fonts.</source>
+        <translation type="unfinished">Error: no se pudieron cargar las fuentes de la aplicación.</translation>
+    </message>
+    <message>
+        <source>Error: Specified font-family invalid. Valid values: %1.</source>
+        <translation type="unfinished">Error: la familia de fuentes especificada no es válida. Valores válidos: %1.</translation>
+    </message>
+    <message>
+        <source>Error: Specified font-weight-normal invalid. Valid range %1 to %2.</source>
+        <translation type="unfinished">Error: la fuente especificada-peso-normal no es válida. Rango válido %1 to %2.</translation>
+    </message>
+    <message>
+        <source>Error: Specified font-weight-bold invalid. Valid range %1 to %2.</source>
+        <translation type="unfinished">Error: el peso de la fuente especificado no es válido. Rango válido %1 to %2.</translation>
+    </message>
+    <message>
+        <source>Error: Specified font-scale invalid. Valid range %1 to %2.</source>
+        <translation type="unfinished">Error: La escala de fuente especificada no es válida. Rango válido %1 to %2.</translation>
+    </message>
+    <message>
+        <source>Error: Invalid -custom-css-dir path.</source>
+        <translation type="unfinished">Error: Invalido -custom-css-dir path.</translation>
+    </message>
+    <message>
+        <source>Error: %1 CSS file(s) missing in -custom-css-dir path.</source>
+        <translation type="unfinished">Error: %1 CSS archivo(s) falta en -custom-css-dir path.</translation>
     </message>
     <message>
         <source>%1 didn&apos;t yet exit safely...</source>
@@ -2003,49 +2882,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
 </context>
 <context>
-    <name>QObject::QObject</name>
-    <message>
-        <source>Error: Specified data directory &quot;%1&quot; does not exist.</source>
-        <translation>Error: El directorio de datos «%1» especificado no existe.</translation>
-    </message>
-    <message>
-        <source>Error: Cannot parse configuration file: %1. Only use key=value syntax.</source>
-        <translation>Error: No se puede analizar el archivo de configuración: %1. Utilice únicamente la sintaxis key=value.</translation>
-    </message>
-    <message>
-        <source>Error: %1</source>
-        <translation>Error: %1</translation>
-    </message>
-    <message>
-        <source>Error: Failed to load application fonts.</source>
-        <translation>Error: no se pudieron cargar las fuentes de la aplicación.</translation>
-    </message>
-    <message>
-        <source>Error: Specified font-family invalid. Valid values: %1.</source>
-        <translation>Error: la familia de fuentes especificada no es válida. Valores válidos: %1.</translation>
-    </message>
-    <message>
-        <source>Error: Specified font-weight-normal invalid. Valid range %1 to %2.</source>
-        <translation>Error: la fuente especificada-peso-normal no es válida. Rango válido %1 to %2.</translation>
-    </message>
-    <message>
-        <source>Error: Specified font-weight-bold invalid. Valid range %1 to %2.</source>
-        <translation>Error: el peso de la fuente especificado no es válido. Rango válido %1 to %2.</translation>
-    </message>
-    <message>
-        <source>Error: Specified font-scale invalid. Valid range %1 to %2.</source>
-        <translation>Error: La escala de fuente especificada no es válida. Rango válido %1 to %2.</translation>
-    </message>
-    <message>
-        <source>Error: Invalid -custom-css-dir path.</source>
-        <translation>Error: Invalido -custom-css-dir path.</translation>
-    </message>
-    <message>
-        <source>Error: %1 CSS file(s) missing in -custom-css-dir path.</source>
-        <translation>Error: %1 CSS archivo(s) falta en -custom-css-dir path.</translation>
-    </message>
-</context>
-<context>
     <name>QRDialog</name>
     <message>
         <source>QR-Code Title</source>
@@ -2157,10 +2993,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Versión del cliente</translation>
     </message>
     <message>
-        <source>Using BerkeleyDB version</source>
-        <translation>Utilizando versión de BerkeleyDB</translation>
-    </message>
-    <message>
         <source>Block chain</source>
         <translation>Cadena de bloques</translation>
     </message>
@@ -2241,6 +3073,10 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Bloques sincronizados</translation>
     </message>
     <message>
+        <source>The buttons below will restart the wallet with command-line options to repair the wallet, fix issues with corrupt blockchain files or missing/obsolete transactions.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Rescan blockchain files 1</source>
         <translation>Reexplorar la cadena de bloques 1</translation>
     </message>
@@ -2257,10 +3093,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>-rescan=2: Vuelve a escanear la cadena de bloques en busca de transacciones de billetera faltantes a partir del bloque génesis.</translation>
     </message>
     <message>
-        <source>Wallet Path</source>
-        <translation>Ruta de la billetera</translation>
-    </message>
-    <message>
         <source>User Agent</source>
         <translation>Agente del Usuario</translation>
     </message>
@@ -2269,8 +3101,28 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Datadir</translation>
     </message>
     <message>
+        <source>To specify a non-default location of the data directory use the &apos;%1&apos; option.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Blocksdir</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>To specify a non-default location of the blocks directory use the &apos;%1&apos; option.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Last block hash</source>
         <translation>Hash del último bloque</translation>
+    </message>
+    <message>
+        <source>Latest ChainLocked block hash</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Latest ChainLocked block height</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.</source>
@@ -2349,36 +3201,8 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>&amp;Reparar Billetera</translation>
     </message>
     <message>
-        <source>Salvage wallet</source>
-        <translation>Rescatar billetera</translation>
-    </message>
-    <message>
-        <source>Recover transactions 1</source>
-        <translation>Recuperar transacciones 1</translation>
-    </message>
-    <message>
-        <source>Recover transactions 2</source>
-        <translation>Recuperar transacciones 2</translation>
-    </message>
-    <message>
         <source>Upgrade wallet format</source>
         <translation>Actualizar formato de la billetera</translation>
-    </message>
-    <message>
-        <source>The buttons below will restart the wallet with command-line options to repair the wallet, fix issues with corrupt blockhain files or missing/obsolete transactions.</source>
-        <translation>Los botones de abajo reiniciarán la billetera con las opciones de la línea de comandos para reparar la billetera, arreglar problemas con archivos corruptos de la cadena de bloques o transacciones perdidas/obsoletas.</translation>
-    </message>
-    <message>
-        <source>-salvagewallet: Attempt to recover private keys from a corrupt wallet.dat.</source>
-        <translation>-salvagewallet: Intentar recuperar las llaves privadas de un wallet.dat corrupto.</translation>
-    </message>
-    <message>
-        <source>-zapwallettxes=1: Recover transactions from blockchain (keep meta-data, e.g. account owner).</source>
-        <translation>-zapwallettxes=1: Recuperar transacciones de la cadena de bloques (conservar metadatos, ej. propietario de la cuenta).</translation>
-    </message>
-    <message>
-        <source>-zapwallettxes=2: Recover transactions from blockchain (drop meta-data).</source>
-        <translation>-zapwallettxes=2: Recuperar transacciones de la cadena de bloques (descartar metadatos).</translation>
     </message>
     <message>
         <source>-upgradewallet: Upgrade wallet to latest format on startup. (Note: this is NOT an update of the wallet itself!)</source>
@@ -2423,10 +3247,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>&amp;Unban</source>
         <translation>&amp;Levantar prohibición</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation>billetera predeterminada</translation>
     </message>
     <message>
         <source>Welcome to the %1 RPC console.</source>
@@ -2703,6 +3523,414 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
 </context>
 <context>
+    <name>SendAssetConfirmationDialog</name>
+    <message>
+        <source>Yes</source>
+        <translation type="unfinished">Sí</translation>
+    </message>
+</context>
+<context>
+    <name>SendAssetsDialog</name>
+    <message>
+        <source>Send Assets</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Asset Control Features</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Inputs...</source>
+        <translation type="unfinished">Entradas...</translation>
+    </message>
+    <message>
+        <source>automatically selected</source>
+        <translation type="unfinished">seleccionadas automáticamente</translation>
+    </message>
+    <message>
+        <source>Insufficient funds!</source>
+        <translation type="unfinished">¡Fondos insuficientes!</translation>
+    </message>
+    <message>
+        <source>Quantity:</source>
+        <translation type="unfinished">Cantidad:</translation>
+    </message>
+    <message>
+        <source>Bytes:</source>
+        <translation type="unfinished">Bytes:</translation>
+    </message>
+    <message>
+        <source>Amount:</source>
+        <translation type="unfinished">Cantidad:</translation>
+    </message>
+    <message>
+        <source>Dust:</source>
+        <translation type="unfinished">Polvo:</translation>
+    </message>
+    <message>
+        <source>Fee:</source>
+        <translation type="unfinished">Comisión:</translation>
+    </message>
+    <message>
+        <source>After Fee:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Change:</source>
+        <translation type="unfinished">Cambio:</translation>
+    </message>
+    <message>
+        <source>If this is activated, but the change address is empty or invalid, change will be sent to a newly generated address.</source>
+        <translation type="unfinished">Si se marca esta opción pero la dirección de cambio está vacía o es inválida, el cambio se enviará a una nueva dirección recién generada.</translation>
+    </message>
+    <message>
+        <source>Custom change address</source>
+        <translation type="unfinished">Dirección de cambio personalizada</translation>
+    </message>
+    <message>
+        <source>Transaction Fee:</source>
+        <translation type="unfinished">Comisión por Transacción:</translation>
+    </message>
+    <message>
+        <source>Choose...</source>
+        <translation type="unfinished">Elegir...</translation>
+    </message>
+    <message>
+        <source>Using the fallbackfee can result in sending a transaction that will take several hours or days (or never) to confirm. Consider choosing your fee manually or wait until you have validated the complete chain.</source>
+        <translation type="unfinished">Usando el fallbackfee puede resultar en enviar una transacción que tome varias horas o días (o nunca) para confirmar. Considere elegir su comisión manualmente o espere hasta que haya validado la cadena completa.</translation>
+    </message>
+    <message>
+        <source>Note: Not enough data for fee estimation, using the fallback fee instead.</source>
+        <translation type="unfinished">Nota: No hay suficientes datos para la estimación de tarifas, en su lugar se utiliza la tarifa de reserva.</translation>
+    </message>
+    <message>
+        <source>collapse fee-settings</source>
+        <translation type="unfinished">plegar ajustes de comisión</translation>
+    </message>
+    <message>
+        <source>Hide</source>
+        <translation type="unfinished">Ocultar</translation>
+    </message>
+    <message>
+        <source>If the custom fee is set to 1000 ruffs and the transaction is only 250 bytes, then &quot;per kilobyte&quot; only pays 250 ruffs in fee,&lt;br /&gt;while &quot;at least&quot; pays 1000 ruffs. For transactions bigger than a kilobyte both pay by kilobyte.</source>
+        <translation type="unfinished">Si la comisión personalizada se establece en 1000 ruffs y la transacción sólo ocupa 250 bytes, entonces &quot;por kilobyte&quot; sólo se pagan 250 ruffs de comisión,&lt;br /&gt;mientras que &quot;como mínimo&quot; paga 1000 ruffs. Para transacciones mayores de un kilobyte ambas pagan por kilobyte.</translation>
+    </message>
+    <message>
+        <source>per kilobyte</source>
+        <translation type="unfinished">por kilobyte</translation>
+    </message>
+    <message>
+        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks.&lt;br /&gt;But be aware that this can end up in a never confirming transaction once there is more demand for raptoreum transactions than the network can process.</source>
+        <translation type="unfinished">Pagar sólo la comisión mínima está bien mientras el volumen de transacciones sea menor al espacio en los bloques.&lt;br /&gt;No obstante, tenga en cuenta que esto puede acabar en una transacción que nunca se confirme una vez haya más demanda de transacciones Raptoreum que lo que la red puede procesar.</translation>
+    </message>
+    <message>
+        <source>(read the tooltip)</source>
+        <translation type="unfinished">(leer la sugerencia)</translation>
+    </message>
+    <message>
+        <source>Recommended:</source>
+        <translation type="unfinished">Recomendada:</translation>
+    </message>
+    <message>
+        <source>Custom:</source>
+        <translation type="unfinished">Personalizada:</translation>
+    </message>
+    <message>
+        <source>(Smart fee not initialized yet. This usually takes a few blocks...)</source>
+        <translation type="unfinished">(La comisión inteligente no está aún inicializada. Esto habitualmente tarda unos pocos bloques...)</translation>
+    </message>
+    <message>
+        <source>Confirmation time target:</source>
+        <translation type="unfinished">Objetivo de tiempo de confirmación</translation>
+    </message>
+    <message>
+        <source>Confirm the send action</source>
+        <translation type="unfinished">Confirmar el envío</translation>
+    </message>
+    <message>
+        <source>S&amp;end</source>
+        <translation type="unfinished">E&amp;nviar</translation>
+    </message>
+    <message>
+        <source>Clear all fields of the form.</source>
+        <translation type="unfinished">Limpiar todos los campos del formulario.</translation>
+    </message>
+    <message>
+        <source>Clear &amp;All</source>
+        <translation type="unfinished">Limpiar &amp;Todo</translation>
+    </message>
+    <message>
+        <source>Send to multiple recipients at once</source>
+        <translation type="unfinished">Enviar a múltiples destinatarios simultáneamente</translation>
+    </message>
+    <message>
+        <source>Add &amp;Recipient</source>
+        <translation type="unfinished">Añadir &amp;Destinatario</translation>
+    </message>
+    <message>
+        <source>Balance:</source>
+        <translation type="unfinished">Saldo:</translation>
+    </message>
+    <message>
+        <source>Copy quantity</source>
+        <translation type="unfinished">Copiar cantidad</translation>
+    </message>
+    <message>
+        <source>Copy amount</source>
+        <translation type="unfinished">Copiar cantidad</translation>
+    </message>
+    <message>
+        <source>Copy fee</source>
+        <translation type="unfinished">Copiar comisión</translation>
+    </message>
+    <message>
+        <source>Copy after fee</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Copy bytes</source>
+        <translation type="unfinished">Copiar bytes</translation>
+    </message>
+    <message>
+        <source>Copy dust</source>
+        <translation type="unfinished">Copiar polvo</translation>
+    </message>
+    <message>
+        <source>Copy change</source>
+        <translation type="unfinished">Copiar cambio</translation>
+    </message>
+    <message>
+        <source>%1 (%2 blocks)</source>
+        <translation type="unfinished">%1 (%2 bloques)</translation>
+    </message>
+    <message>
+        <source>from wallet %1</source>
+        <translation type="unfinished">de la billetera %1</translation>
+    </message>
+    <message>
+        <source>%1 to %2</source>
+        <translation type="unfinished">%1 a %2</translation>
+    </message>
+    <message>
+        <source>&lt;br&gt;Confirmations in: &lt;b&gt;%1 blocks&lt;/b&gt;&lt;br /&gt;</source>
+        <translation type="unfinished">&lt;br&gt;Confirmaciones en: &lt;b&gt;%1 bloques&lt;/b&gt;&lt;br /&gt;</translation>
+    </message>
+    <message>
+        <source>Time in: &lt;b&gt;%1 seconds from first confirmed&lt;/b&gt;&lt;br /&gt;</source>
+        <translation type="unfinished">Tiempo en:: &lt;b&gt;%1 segundos desde la primera confirmación&lt;/b&gt;&lt;br /&gt;</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to send?</source>
+        <translation type="unfinished">¿Está seguro que desea enviar?</translation>
+    </message>
+    <message>
+        <source>using</source>
+        <translation type="unfinished">usando</translation>
+    </message>
+    <message>
+        <source>any available funds</source>
+        <translation type="unfinished">cualquier fondo disponible</translation>
+    </message>
+    <message>
+        <source>&lt;b&gt;(%1 of %2 entries displayed)&lt;/b&gt;</source>
+        <translation type="unfinished">&lt;b&gt;(%1 de %2 registros mostrados)&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>are added as transaction fee</source>
+        <translation type="unfinished">se añaden como comisión de transacción</translation>
+    </message>
+    <message>
+        <source>Transaction size: %1</source>
+        <translation type="unfinished">Tamaño de la transacción: %1</translation>
+    </message>
+    <message>
+        <source>Fee rate: %1</source>
+        <translation type="unfinished">Tasa de comisión: %1</translation>
+    </message>
+    <message>
+        <source>Total Amount:&lt;br&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;b&gt;%1&lt;/b&gt;&lt;br&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;b&gt;%1&lt;/b&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Confirm send Assets</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The recipient address is not valid. Please recheck.</source>
+        <translation type="unfinished">La dirección del destinatario no es válida. Por favor, verifíquela nuevamente.</translation>
+    </message>
+    <message>
+        <source>The amount to pay must be larger than 0.</source>
+        <translation type="unfinished">La cantidad a pagar debe ser mayor que 0.</translation>
+    </message>
+    <message>
+        <source>The amount exceeds your balance.</source>
+        <translation type="unfinished">La cantidad sobrepasa su saldo.</translation>
+    </message>
+    <message>
+        <source>The total exceeds your balance when the %1 transaction fee is included.</source>
+        <translation type="unfinished">El total sobrepasa su saldo cuando se incluye la comisión de envío de %1</translation>
+    </message>
+    <message>
+        <source>Duplicate address found: addresses should only be used once each.</source>
+        <translation type="unfinished">Dirección duplicada encontrada: las direcciones solo deben usarse una vez cada una.</translation>
+    </message>
+    <message>
+        <source>Transaction creation failed!</source>
+        <translation type="unfinished">¡Ha fallado la creación de la transacción!</translation>
+    </message>
+    <message>
+        <source>A fee higher than %1 is considered an absurdly high fee.</source>
+        <translation type="unfinished">Una comisión superior a %1 se considera una comisión excesivamente alta.</translation>
+    </message>
+    <message>
+        <source>Payment request expired.</source>
+        <translation type="unfinished">Solicitud de pago expirada.</translation>
+    </message>
+    <message>
+        <source>The amount to pay exceeds the limit of 21 million per transaction.</source>
+        <translation type="unfinished">El importe a pagar supera el límite de 21 millones por operación</translation>
+    </message>
+    <message>
+        <source>Pay only the required fee of %1</source>
+        <translation type="unfinished">Pague solo la comisión requerida del %1</translation>
+    </message>
+    <message numerus="yes">
+        <source>Estimated to begin confirmation within %n block(s).</source>
+        <translation type="unfinished">
+            <numerusform>Está previsto que comience la confirmación en %n bloque.</numerusform>
+            <numerusform>Está previsto que comience la confirmación en %n bloques.</numerusform>
+        </translation>
+    </message>
+    <message>
+        <source>Warning: Invalid Raptoreum address</source>
+        <translation type="unfinished">Advertencia: Dirección de Raptoreum inválida</translation>
+    </message>
+    <message>
+        <source>Warning: Unknown change address</source>
+        <translation type="unfinished">Advertencia: Dirección de cambio desconocida</translation>
+    </message>
+    <message>
+        <source>Confirm custom change address</source>
+        <translation type="unfinished">Confirmar dirección de cambio personalizada</translation>
+    </message>
+    <message>
+        <source>The address you selected for change is not part of this wallet. Any or all funds in your wallet may be sent to this address. Are you sure?</source>
+        <translation type="unfinished">La dirección que ha seleccionado para cambiar no es parte de esta billetera. Ninguno o todos los fondos en su billetera pueden ser enviados a esta dirección. ¿Está seguro?</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation type="unfinished">(sin etiqueta)</translation>
+    </message>
+</context>
+<context>
+    <name>SendAssetsEntry</name>
+    <message>
+        <source>This is a normal payment.</source>
+        <translation type="unfinished">Esto es un pago ordinario.</translation>
+    </message>
+    <message>
+        <source>A&amp;mount:</source>
+        <translation type="unfinished">C&amp;antidad:</translation>
+    </message>
+    <message>
+        <source>Enter a label for this address to add it to the list of used addresses</source>
+        <translation type="unfinished">Introduce una etiqueta para esta dirección para añadirla a la lista de direcciones utilizadas</translation>
+    </message>
+    <message>
+        <source>Maturity:</source>
+        <translation type="unfinished">Madurez:</translation>
+    </message>
+    <message>
+        <source>&amp;Label:</source>
+        <translation type="unfinished">&amp;Etiqueta:</translation>
+    </message>
+    <message>
+        <source>The Raptoreum address to send the payment to</source>
+        <translation type="unfinished">La dirección Raptoreum a la cual enviar el pago</translation>
+    </message>
+    <message>
+        <source>Choose previously used address</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Alt+A</source>
+        <translation type="unfinished">Alt+A</translation>
+    </message>
+    <message>
+        <source>Paste address from clipboard</source>
+        <translation type="unfinished">Pegar dirección desde portapapeles</translation>
+    </message>
+    <message>
+        <source>Alt+P</source>
+        <translation type="unfinished">Alt+P</translation>
+    </message>
+    <message>
+        <source>Remove this entry</source>
+        <translation type="unfinished">Eliminar esta entrada</translation>
+    </message>
+    <message>
+        <source>Enable/Disable future transaction</source>
+        <translation type="unfinished">Habilitar/deshabilitar transacciones futuras</translation>
+    </message>
+    <message>
+        <source>future</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Use available balance</source>
+        <translation type="unfinished">Usar saldo disponible</translation>
+    </message>
+    <message>
+        <source>Pay &amp;To:</source>
+        <translation type="unfinished">Pagar &amp;a:</translation>
+    </message>
+    <message>
+        <source>Asset:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Number of block confirmations for this output to be spendable if happen before timelock</source>
+        <translation type="unfinished">Número de confirmaciones de bloque para que esta salida sea gastable si ocurre antes del bloqueo de tiempo</translation>
+    </message>
+    <message>
+        <source>Lock time:</source>
+        <translation type="unfinished">Tiempo de bloqueo:</translation>
+    </message>
+    <message>
+        <source>Time in seconds for this output to be spendable if happen before maturity</source>
+        <translation type="unfinished">Tiempo en segundos para que esta salida sea gastable si sucede antes del vencimiento</translation>
+    </message>
+    <message>
+        <source>Fee:</source>
+        <translation type="unfinished">Comisión:</translation>
+    </message>
+    <message>
+        <source>Balance:</source>
+        <translation type="unfinished">Saldo:</translation>
+    </message>
+    <message>
+        <source>123456 RTM</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enter a label for this address to add it to your address book</source>
+        <translation type="unfinished">Etiquete esta dirección para añadirla al libro de direcciones</translation>
+    </message>
+    <message>
+        <source>Select an asset to see the balance</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>SendCoinsDialog</name>
     <message>
         <source>Send Coins</source>
@@ -2976,14 +4204,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Dirección duplicada encontrada: las direcciones solo deben usarse una vez cada una.</translation>
     </message>
     <message>
-        <source>Transaction creation failed!</source>
-        <translation>¡Ha fallado la creación de la transacción!</translation>
-    </message>
-    <message>
-        <source>The transaction was rejected with the following reason: %1</source>
-        <translation>Se ha rechazado la transacción por la siguiente razón: %1</translation>
-    </message>
-    <message>
         <source>A fee higher than %1 is considered an absurdly high fee.</source>
         <translation>Una comisión superior a %1 se considera una comisión excesivamente alta.</translation>
     </message>
@@ -3066,6 +4286,10 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Habilitar/deshabilitar transacciones futuras</translation>
     </message>
     <message>
+        <source>future</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>&amp;Label:</source>
         <translation>&amp;Etiqueta:</translation>
     </message>
@@ -3096,10 +4320,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>A message that was attached to the raptoreum: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Raptoreum network.</source>
         <translation>Un mensaje que se adjuntó al Raptoreum: URI que será almacenada con la transacción para su referencia. Nota: Este mensaje no se enviará a través de la red Raptoreum.</translation>
-    </message>
-    <message>
-        <source>Future</source>
-        <translation>Futuro</translation>
     </message>
     <message>
         <source>Maturity:</source>
@@ -3147,6 +4367,272 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Yes</source>
         <translation>Sí</translation>
+    </message>
+</context>
+<context>
+    <name>SendFuturesDialog</name>
+    <message>
+        <source>Send Futures</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Coin Control Features</source>
+        <translation type="unfinished">Características de Coin Control</translation>
+    </message>
+    <message>
+        <source>Inputs...</source>
+        <translation type="unfinished">Entradas...</translation>
+    </message>
+    <message>
+        <source>automatically selected</source>
+        <translation type="unfinished">seleccionadas automáticamente</translation>
+    </message>
+    <message>
+        <source>Insufficient funds!</source>
+        <translation type="unfinished">¡Fondos insuficientes!</translation>
+    </message>
+    <message>
+        <source>Quantity:</source>
+        <translation type="unfinished">Cantidad:</translation>
+    </message>
+    <message>
+        <source>Bytes:</source>
+        <translation type="unfinished">Bytes:</translation>
+    </message>
+    <message>
+        <source>Amount:</source>
+        <translation type="unfinished">Cantidad:</translation>
+    </message>
+    <message>
+        <source>Dust:</source>
+        <translation type="unfinished">Polvo:</translation>
+    </message>
+    <message>
+        <source>Fee:</source>
+        <translation type="unfinished">Comisión:</translation>
+    </message>
+    <message>
+        <source>After Fee:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Change:</source>
+        <translation type="unfinished">Cambio:</translation>
+    </message>
+    <message>
+        <source>If this is activated, but the change address is empty or invalid, change will be sent to a newly generated address.</source>
+        <translation type="unfinished">Si se marca esta opción pero la dirección de cambio está vacía o es inválida, el cambio se enviará a una nueva dirección recién generada.</translation>
+    </message>
+    <message>
+        <source>Custom change address</source>
+        <translation type="unfinished">Dirección de cambio personalizada</translation>
+    </message>
+    <message>
+        <source>Fee Rate:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Choose...</source>
+        <translation type="unfinished">Elegir...</translation>
+    </message>
+    <message>
+        <source>Futures Fee:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Using the fallbackfee can result in sending a transaction that will take several hours or days (or never) to confirm. Consider choosing your fee manually or wait until you have validated the complete chain.</source>
+        <translation type="unfinished">Usando el fallbackfee puede resultar en enviar una transacción que tome varias horas o días (o nunca) para confirmar. Considere elegir su comisión manualmente o espere hasta que haya validado la cadena completa.</translation>
+    </message>
+    <message>
+        <source>Note: Not enough data for fee rate estimation, using the fallback fee rate instead.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>collapse fee-settings</source>
+        <translation type="unfinished">plegar ajustes de comisión</translation>
+    </message>
+    <message>
+        <source>Hide</source>
+        <translation type="unfinished">Ocultar</translation>
+    </message>
+    <message>
+        <source>If the custom fee is set to 1000 ruffs and the transaction is only 250 bytes, then &quot;per kilobyte&quot; only pays 250 ruffs in fee,&lt;br /&gt;while &quot;at least&quot; pays 1000 ruffs. For transactions bigger than a kilobyte both pay by kilobyte.</source>
+        <translation type="unfinished">Si la comisión personalizada se establece en 1000 ruffs y la transacción sólo ocupa 250 bytes, entonces &quot;por kilobyte&quot; sólo se pagan 250 ruffs de comisión,&lt;br /&gt;mientras que &quot;como mínimo&quot; paga 1000 ruffs. Para transacciones mayores de un kilobyte ambas pagan por kilobyte.</translation>
+    </message>
+    <message>
+        <source>per kilobyte</source>
+        <translation type="unfinished">por kilobyte</translation>
+    </message>
+    <message>
+        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks.&lt;br /&gt;But be aware that this can end up in a never confirming transaction once there is more demand for raptoreum transactions than the network can process.</source>
+        <translation type="unfinished">Pagar sólo la comisión mínima está bien mientras el volumen de transacciones sea menor al espacio en los bloques.&lt;br /&gt;No obstante, tenga en cuenta que esto puede acabar en una transacción que nunca se confirme una vez haya más demanda de transacciones Raptoreum que lo que la red puede procesar.</translation>
+    </message>
+    <message>
+        <source>(read the tooltip)</source>
+        <translation type="unfinished">(leer la sugerencia)</translation>
+    </message>
+    <message>
+        <source>Recommended:</source>
+        <translation type="unfinished">Recomendada:</translation>
+    </message>
+    <message>
+        <source>Custom:</source>
+        <translation type="unfinished">Personalizada:</translation>
+    </message>
+    <message>
+        <source>(Smart fee not initialized yet. This usually takes a few blocks...)</source>
+        <translation type="unfinished">(La comisión inteligente no está aún inicializada. Esto habitualmente tarda unos pocos bloques...)</translation>
+    </message>
+    <message>
+        <source>Confirmation time target:</source>
+        <translation type="unfinished">Objetivo de tiempo de confirmación</translation>
+    </message>
+    <message>
+        <source>Confirm the send action</source>
+        <translation type="unfinished">Confirmar el envío</translation>
+    </message>
+    <message>
+        <source>S&amp;end</source>
+        <translation type="unfinished">E&amp;nviar</translation>
+    </message>
+    <message>
+        <source>Clear all fields of the form.</source>
+        <translation type="unfinished">Limpiar todos los campos del formulario.</translation>
+    </message>
+    <message>
+        <source>Clear &amp;All</source>
+        <translation type="unfinished">Limpiar &amp;Todo</translation>
+    </message>
+    <message>
+        <source>Send to multiple recipients at once</source>
+        <translation type="unfinished">Enviar a múltiples destinatarios simultáneamente</translation>
+    </message>
+    <message>
+        <source>Add &amp;Recipient</source>
+        <translation type="unfinished">Añadir &amp;Destinatario</translation>
+    </message>
+    <message>
+        <source>PrivateSend</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Pay From Balance:</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>SendFuturesEntry</name>
+    <message>
+        <source>This is a future payment.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Message:</source>
+        <translation type="unfinished">Mensaje:</translation>
+    </message>
+    <message>
+        <source>Pay From:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enter a label for this address to add it to the list of used addresses</source>
+        <translation type="unfinished">Introduce una etiqueta para esta dirección para añadirla a la lista de direcciones utilizadas</translation>
+    </message>
+    <message>
+        <source>The Raptoreum address to send the future payment to</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Choose previously used address</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Alt+A</source>
+        <translation type="unfinished">Alt+A</translation>
+    </message>
+    <message>
+        <source>Paste address from clipboard</source>
+        <translation type="unfinished">Pegar dirección desde portapapeles</translation>
+    </message>
+    <message>
+        <source>Alt+P</source>
+        <translation type="unfinished">Alt+P</translation>
+    </message>
+    <message>
+        <source>Remove this entry</source>
+        <translation type="unfinished">Eliminar esta entrada</translation>
+    </message>
+    <message>
+        <source>Pay &amp;To:</source>
+        <translation type="unfinished">Pagar &amp;a:</translation>
+    </message>
+    <message>
+        <source>Select a Raptoreum address</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The Raptoreum address to fund the future transaction</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Mature at number confirmations</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Confirmations:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>A&amp;mount:</source>
+        <translation type="unfinished">C&amp;antidad:</translation>
+    </message>
+    <message>
+        <source>Maturity</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&amp;Label:</source>
+        <translation type="unfinished">&amp;Etiqueta:</translation>
+    </message>
+    <message>
+        <source>A message that was attached to the raptoreum: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Raptoreum network.</source>
+        <translation type="unfinished">Un mensaje que se adjuntó al Raptoreum: URI que será almacenada con la transacción para su referencia. Nota: Este mensaje no se enviará a través de la red Raptoreum.</translation>
+    </message>
+    <message>
+        <source>Mature at date/time.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>MM/dd/yyyy hh:mm</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Time:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The fee will be deducted from the amount being sent. The recipient will receive a lower amount of Raptoreum than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
+        <translation type="unfinished">La comisión se descontará de la cantidad que se envía. El destinatario recibirá una cantidad menor de Raptoreum de la que ingrese en el campo de cantidad. Si se seleccionan múltiples destinatarios, la comisión se divide por igual.</translation>
+    </message>
+    <message>
+        <source>S&amp;ubtract fee from amount</source>
+        <translation type="unfinished">E&amp;xtraer comisión de la cantidad</translation>
+    </message>
+    <message>
+        <source>This is an unauthenticated payment request.</source>
+        <translation type="unfinished">Esta es una solicitud de pago no autenticada.</translation>
+    </message>
+    <message>
+        <source>Pay To:</source>
+        <translation type="unfinished">Pagar a:</translation>
+    </message>
+    <message>
+        <source>Memo:</source>
+        <translation type="unfinished">Memo:</translation>
+    </message>
+    <message>
+        <source>This is an authenticated payment request.</source>
+        <translation type="unfinished">Esta es una solicitud de pago autenticada.</translation>
     </message>
 </context>
 <context>
@@ -3342,6 +4828,10 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Mostrar solo nodos maestros relacionada a la llave de la wallet</translation>
     </message>
     <message>
+        <source>Filter by any property (address or protx hash)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>My smartnodes only</source>
         <translation>Únicamente mis nodos maestros</translation>
     </message>
@@ -3434,10 +4924,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>NINGUNO</translation>
     </message>
     <message>
-        <source>Filter by any property (e.g. address or protx hash)</source>
-        <translation>Filtrar por cualquier propiedad (ej. dirección o hash protx)</translation>
-    </message>
-    <message>
         <source>Please wait...</source>
         <translation>Por favor espera...</translation>
     </message>
@@ -3451,6 +4937,13 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>[testnet]</source>
         <translation>[testnet]</translation>
+    </message>
+</context>
+<context>
+    <name>ToolbarOverlay</name>
+    <message>
+        <source>Form</source>
+        <translation type="unfinished">Formulario</translation>
     </message>
 </context>
 <context>
@@ -3649,6 +5142,10 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
         <translation>Comentario</translation>
     </message>
     <message>
+        <source>Height</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Transaction ID</source>
         <translation>ID de transacción</translation>
     </message>
@@ -3659,10 +5156,6 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Transaction total size</source>
         <translation>Tamaño total de transacción</translation>
-    </message>
-    <message>
-        <source>Merchant</source>
-        <translation>Vendedor</translation>
     </message>
     <message>
         <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to &quot;not accepted&quot; and it won&apos;t be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
@@ -4061,6 +5554,278 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     </message>
 </context>
 <context>
+    <name>UpdateAssetConfirmationDialog</name>
+    <message>
+        <source>Yes</source>
+        <translation type="unfinished">Sí</translation>
+    </message>
+</context>
+<context>
+    <name>UpdateAssetsDialog</name>
+    <message>
+        <source>Update Asset</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;[Optional] The ipfs/file hash that contains information about the asset&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>IPFS/file hash:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The ipfs/file hash that is associated with the asset being created (e.g. QmU4h365LYMHx...)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Browse File</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;RTM address that will own this asset&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Owner Address:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The RTM address that will receive the minted asset&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The RTM address that will receive the minted asset</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Target Address:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Mint count:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Distribution Type:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Asset:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Quantity:</source>
+        <translation type="unfinished">Cantidad:</translation>
+    </message>
+    <message>
+        <source>Issue frequency:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The frequency that this asset will be minted&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of times this asset can be minted&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Manual</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Coinbase</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>schedule</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Addresss</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The number of assets that will be created</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If the owner of this asset will be able to update the asset in the future&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Updatable</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The RTM address that own this asset</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Transaction Fee:</source>
+        <translation type="unfinished">Comisión por Transacción:</translation>
+    </message>
+    <message>
+        <source>Choose...</source>
+        <translation type="unfinished">Elegir...</translation>
+    </message>
+    <message>
+        <source>Using the fallbackfee can result in sending a transaction that will take several hours or days (or never) to confirm. Consider choosing your fee manually or wait until you have validated the complete chain.</source>
+        <translation type="unfinished">Usando el fallbackfee puede resultar en enviar una transacción que tome varias horas o días (o nunca) para confirmar. Considere elegir su comisión manualmente o espere hasta que haya validado la cadena completa.</translation>
+    </message>
+    <message>
+        <source>Note: Not enough data for fee estimation, using the fallback fee instead.</source>
+        <translation type="unfinished">Nota: No hay suficientes datos para la estimación de tarifas, en su lugar se utiliza la tarifa de reserva.</translation>
+    </message>
+    <message>
+        <source>collapse fee-settings</source>
+        <translation type="unfinished">plegar ajustes de comisión</translation>
+    </message>
+    <message>
+        <source>Hide</source>
+        <translation type="unfinished">Ocultar</translation>
+    </message>
+    <message>
+        <source>If the custom fee is set to 1000 satoshis and the transaction is only 250 bytes, then &quot;per kilobyte&quot; only pays 250 satoshis in fee, while &quot;total at least&quot; pays 1000 satoshis. For transactions bigger than a kilobyte both pay by kilobyte.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>per kilobyte</source>
+        <translation type="unfinished">por kilobyte</translation>
+    </message>
+    <message>
+        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for Raptoreum transactions than the network can process.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>(read the tooltip)</source>
+        <translation type="unfinished">(leer la sugerencia)</translation>
+    </message>
+    <message>
+        <source>Recommended:</source>
+        <translation type="unfinished">Recomendada:</translation>
+    </message>
+    <message>
+        <source>C&amp;ustom:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>(Smart fee not initialized yet. This usually takes a few blocks...)</source>
+        <translation type="unfinished">(La comisión inteligente no está aún inicializada. Esto habitualmente tarda unos pocos bloques...)</translation>
+    </message>
+    <message>
+        <source>Confirmation time target:</source>
+        <translation type="unfinished">Objetivo de tiempo de confirmación</translation>
+    </message>
+    <message>
+        <source>U&amp;pdate Asset</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Clear</source>
+        <translation type="unfinished">Limpiar</translation>
+    </message>
+    <message>
+        <source>Balance:</source>
+        <translation type="unfinished">Saldo:</translation>
+    </message>
+    <message>
+        <source>123.456 RTM</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Confirm update asset action</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Disabled. Not in use</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Manual only until other types are developed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1 (%2 blocks)</source>
+        <translation type="unfinished">%1 (%2 bloques)</translation>
+    </message>
+    <message>
+        <source>Updating asset: %1&lt;br&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>transfer ownership from: %1 &lt;br&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>To: %1 &lt;hr /&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Updatable: %1 &lt;br&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>ReferenceHash: %1 &lt;br&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Target: %1 &lt;br&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Distribution Type: %1 &lt;br&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Amount: %1 &lt;br&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>MaxMintCount: %1 &lt;br&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>IssueFrequency: %1 &lt;br&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>are added as transaction fee.&lt;hr /&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Confirm Asset Update</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Pay only the required fee of %1</source>
+        <translation type="unfinished">Pague solo la comisión requerida del %1</translation>
+    </message>
+    <message numerus="yes">
+        <source>Estimated to begin confirmation within %n block(s).</source>
+        <translation type="unfinished">
+            <numerusform>Está previsto que comience la confirmación en %n bloque.</numerusform>
+            <numerusform>Está previsto que comience la confirmación en %n bloques.</numerusform>
+        </translation>
+    </message>
+</context>
+<context>
+    <name>WalletController</name>
+    <message>
+        <source>Close wallet</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Are you sure you wish to close the wallet &lt;i&gt;%1&lt;/i&gt;?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>WalletFrame</name>
     <message>
         <source>No wallet has been loaded.</source>
@@ -4072,6 +5837,10 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
     <message>
         <source>Send Coins</source>
         <translation>Enviar Raptoreum</translation>
+    </message>
+    <message>
+        <source>default wallet</source>
+        <translation type="unfinished">billetera predeterminada</translation>
     </message>
 </context>
 <context>
@@ -4120,12 +5889,961 @@ https://www.transifex.com/projects/p/raptoreum/</translation>
 <context>
     <name>raptoreum-core</name>
     <message>
-        <source>Raptoreum Core</source>
-        <translation>Raptoreum Core</translation>
-    </message>
-    <message>
         <source>The %s developers</source>
         <translation>Los desarrolladores de %s</translation>
+    </message>
+    <message>
+        <source>%s corrupt. Try using the wallet tool raptoreum-wallet to salvage or restoring a backup.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%s file contains all private keys from this wallet. Do not share it with anyone!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%s uses exact denominated amounts to send funds, you might simply need to mix some more coins.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>-zapwallettxes has been removed. If you are attempting to remove a stuck transaction from your wallet, please use abandontransaction instead.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Can not generate a change-address key. Private keys are disabled for this wallet.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Cannot provide specific connections and have addrman find outgoing connections at the same.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Distributed under the MIT software license, see the accompanying file %s or %s</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Error loading %s: You can&apos;t enable HD on an already existing non-HD wallet</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to create backup, file already exists! This could happen if you restarted wallet in less than 60 seconds. You can continue if you are ok with this.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Found unconfirmed denominated outputs, will wait till they confirm to continue.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Group outputs by address, selecting all or none, instead of selecting on a per-output basis. Privacy is improved as an address is only used once (unless someone sends to it after spending from it), but may result in slightly higher fees as suboptimal coin selection may result due to the added limitation (default: %u)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Incorrect or no devnet genesis block found. Wrong datadir for devnet specified?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Invalid -socketevents (&apos;%s&apos;) specified. Only these modes are supported: %s</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: &apos;%s&apos; (must be at least the minrelay fee of %s to prevent stuck transactions)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Make sure to encrypt your wallet and delete all non-encrypted backups after you have verified that the wallet works!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Please check that your computer&apos;s date and time are correct! If your clock is wrong, %s will not work properly.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Please contribute if you find %s useful. Visit %s for further information about the software.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The block database contains a block which appears to be from the future. This may only be due to your computer&apos;s date and time being set incorrectly. Only rebuild the block database if you are sure that your computer&apos;s date and time are correct.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The transaction amount is too small to send after the fee has been deducted</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This is the transaction fee you may discard if change is smaller than dust at this level</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This is the transaction fee you may pay when fee estimates are not available.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit %s and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Transaction index can&apos;t be disabled with governance validation enabled. Either start with -disablegovernance command line switch or enable transaction index.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unable to rerply blocks. You will need tpo rebuild the database using -reindex-chainstate.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>WARNING! Failed to replenish keypool, please unlock your wallet to do so.</source>
+        <translation type="unfinished">¡ADVERTENCIA! Falla al reponer keypool, para hacerlo, por favor desbloquee su billetera.</translation>
+    </message>
+    <message>
+        <source>Wallet is locked, can&apos;t replenish keypool! Automatic backups and mixing are disabled, please unlock your wallet to replenish keypool.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Warning: Private keys detected in wallet {%s} with disabled private keys</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Warning: The Network does not appear to fully agree! Some miners addear to experiencing issues.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You need to rebuild the database using -reindex to change -timestampindex</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%d of last 100 blocks have unexpected version</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%s can&apos;t be lower than %s</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%s failed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%s is idle.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%s is not a valid backup folder!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%s is set very high!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%s request incomplete: %s</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>-devnet can only be specified once</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>-maxmempool must be at least %d MB</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>-port must be specified when -devnet and -listen are specified</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>-rpcport must be specified when -devnet and -server are specified</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Already have that input.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Asset Transfer amounts must be greater than 0</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Asset owner key not in wallet</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Automatic backups disabled</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Can&apos;t find random Smartnode.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Can&apos;t mix while sync in progress.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Can&apos;t mix: no compatible inputs found!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Cannot downgrade wallet</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Cannot resolve -%s address: &apos;%s&apos;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Cannot write to data directory &apos;%s&apos;; check permissions.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Change index out of range</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Collateral not valid.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Config settings for %s only applied on %s network when in [%s] section.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Copyright (C)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Corrupted block database detected</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Could not find asmap file %s</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Could not parse asmap file %s</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Do you want to rebuild the block database now?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Done loading</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>ERROR! Failed to create automatic backup</source>
+        <translation type="unfinished">¡ERROR! Falla al crear una copia de seguridad automática</translation>
+    </message>
+    <message>
+        <source>Entries are full.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Entry exceeds maximum size.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Error initializing block database</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Error initializing wallet database environment %s!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Error loading %s</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Error loading %s: Private keys can only be disabled during creation</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Error loading %s: Wallet corrupted</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Error loading %s: Wallet requires newer version of %s</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Error loading %s: You can&apos;t disable HD on an already existing HD wallet</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Error loading block database</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Error loading wallet %s. Duplicate -wallet filename specified.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Error opening block database</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Error reading from database, shutting down.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Error upgrading chainstate database</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Error upgrading evo database</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation type="unfinished">Error</translation>
+    </message>
+    <message>
+        <source>Error: A fatal internal error occurred, see debug.log for details</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Error: Disk space is low for %s</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Error: Disk space is low!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Error: failed to add socket to epollfd (epoll_ctl returned error %s)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Error: failed to add socket to kqueuefd (kevent returned error %s)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Exceeded max tries.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to clear fulfilled requests cache at</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to clear governance cache at</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to clear smartnode cache at</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to commit EvoDB</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to create backup %s!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to create backup, error: %s</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to delete backup, error: %s</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to find mixing queue to join</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to get root metadata</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to load Assets Database</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to load POW cache from</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to load fulfilled requests cache from</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to load governance cache from</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to load smartnode cache from</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to load sporks cache from</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to rescan the wallet during initialization</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to sign special tx</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to start a new mixing queue</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Found enough users, signing ( waiting %s )</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Found enough users, signing ...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Importing...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Incompatible mode.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Incompatible version.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Incorrect -rescan mode, falling back to default value</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Information</source>
+        <translation type="unfinished">Información</translation>
+    </message>
+    <message>
+        <source>Initialization sanity check failed. %s is shutting down.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Input is not valid.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Inputs vs outputs size mismatch.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Insufficient Unique asset funds</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Insufficient asset funds</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Insufficient funds.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Invalid -onion address or hostname: &apos;%s&apos;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Invalid -proxy address or hostname: &apos;%s&apos;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Invalid amount for -%s=&lt;amount&gt;: &apos;%s&apos;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Invalid amount for -discardfee=&lt;amount&gt;: &apos;%s&apos;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Invalid amount for -fallbackfee=&lt;amount&gt;: &apos;%s&apos;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos; (must be at least %s)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Invalid minimum number of spork signers specified with -minsporkkeys</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Invalid netmask specified in -whitelist: &apos;%s&apos;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Invalid script detected.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Invalid smartnodeblsprivkey. Please see documentation.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Invalid spork address specified with -sporkaddr</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keypool ran out, please call keypoolrefill first</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Last queue was created too recently.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Last successful action was too recent.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Loading P2P addresses...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Loading POW cache...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Loading banlist...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Loading block index...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Loading fulfilled requests cache...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Loading governance cache...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Loading smartnode cache...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Loading sporks cache...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Loading wallet... (%3.2f %%)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Loading wallet...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Lock is already in place.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Missing input transaction information.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Mixing in progress...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Need to specify a port with -whitebind: &apos;%s&apos;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>No Smartnodes detected.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>No compatible Smartnode found.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>No errors detected.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>No matching denominations found for mixing.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Not compatible with existing transactions.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Not enough file descriptors available.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Not enough funds to mix.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Not in the Smartnode list.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Prune cannot be configured with a negative value.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Prune mode is incompatible with -disablegovernance=false.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Prune mode is incompatible with -txindex.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Pruning blockstore...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Replaying blocks...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Rescanning...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Root asset key not in wallet</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Section [%s] is not recognized.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Session not complete!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Session timed out.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Signing transaction failed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Smartnode queue is full.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Smartnode:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Specified -walletdir &quot;%s&quot; does not exist</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Specified -walletdir &quot;%s&quot; is a relative path</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Specified -walletdir &quot;%s&quot; is not a directory</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Specified blocks directory &quot;%s&quot; does not exist.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Starting network threads...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Submitted to smartnode, waiting in queue %s</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Synchronization finished</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Synchronizing blockchain...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Synchronizing governance objects...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The source code is available from %s.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The specified config file %s does not exist
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The transaction amount is too small to pay the fee</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The wallet will avoid paying less than the minimum relay fee.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This is expected because you are running a pruned node.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This is experimental software.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This is the minimum transaction fee you pay on every transaction.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This is the transaction fee you will pay if you send a transaction.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Transaction amount too small</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Transaction amounts must not be negative</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Transaction created successfully.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Transaction fees are too high.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Transaction has too long of a mempool chain</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Transaction must have at least one recipient</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Transaction not valid.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Transaction too large for fee policy</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Transaction too large</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Trying to connect...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unable to bind to %s on this computer (bind returned error %s)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unable to bind to %s on this computer. %s is probably already running.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unable to create PID file &apos;%s&apos;: %s</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unable to generate initial keys</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unable to locate enough mixed funds for this transaction.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unable to locate enough non-denominated funds for this transaction.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unable to sign spork message, wrong key?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unable to start HTTP server. See debug log for details.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unknown response.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unknown state: id = %u</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unsupported logging category %s=%s.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Upgrading UTXO database</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Upgrading txindex database</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>User Agent comment (%s) contains unsafe characters.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Verifying blocks...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Verifying wallet(s)...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Very low number of keys left: %d</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Wallet is locked.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Wallet needed to be rewritten: restart %s to complete</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Warning</source>
+        <translation type="unfinished">Advertencia</translation>
+    </message>
+    <message>
+        <source>Warning: can&apos;t use %s and %s together, will prefer %s</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Warning: incorrect parameter %s, path must exist! Using default path.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Warning: unknown new rules activated: Expected: 0x%08x, Actual: 0x%08x</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Wasn&apos;t able to create wallet backup folder %s!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Will retry...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You are starting with governance validation disabled.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You can not disable governance validation on a smartnode.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You can not start a smartnode with wallet enabled.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You need to rebuild the database using -reindex to change -addressindex</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You need to rebuild the database using -reindex to change -assetindex</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You need to rebuild the database using -reindex to change -futureindex</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You need to rebuild the database using -reindex to change -spentindex</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Your entries added successfully.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>no mixing available.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>see debug.log for details.</source>
+        <translation type="unfinished">ver debug.log para mayores detalles</translation>
     </message>
 </context>
 </TS>
