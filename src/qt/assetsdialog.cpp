@@ -247,7 +247,7 @@ void AssetsDialog::Asset_clicked() {
 
     ui->nameTextLabel->setText(QString::fromStdString(asset.name));
     if (asset.isRoot) {
-      ui->typeLabel->setText(tr("Root"));
+      ui->typeLabel->setText(asset.isUnique ? tr("Unique/NFT") : tr("Root"));
     } else {
       ui->typeLabel->setText(asset.isUnique ? tr("Unique/NFT") : tr("Sub"));
     }

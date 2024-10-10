@@ -536,6 +536,8 @@ void CreateAssetsDialog::clear() {
     ui->uniqueBox->setChecked(false);
     ui->updatableBox->setChecked(false);
 
+    onUniqueChanged();
+
     CoinControlUpdateLabels();
 
     updateTabsAndLabels();
