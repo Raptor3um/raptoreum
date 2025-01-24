@@ -424,4 +424,48 @@ namespace llmq {
         return sporkManager.IsSporkActive(SPORK_17_QUORUM_DKG_ENABLED);
     }
 
+    void CDKGSessionManager::CleanupOldContributions() const
+    {
+        if (db->IsEmpty()) {
+            return;
+        }
+
+        const auto prefixes = {DB_VVEC, DB_SKCONTRIB, DB_ENC_CONTRIB, DB_NODE_VOTE};
+
+        for (const auto& p : Params().GetConsensus().llmqs) {
+            auto& params = p.second;
+            LogPrint(BCLog::LLMQ, "CDKGSessionManager::%s -- looking for old entries for llmq type %d\n", __func__, params.type);
+
+            CDBBatch batch(*db);
+            size_t cnt_old{0}, cnt_all{0};
+            for (const auto& prefix : prefixes) {
+                std::unique_ptr<CDBIterator> pcursor(db->NewIterator());
+                auto start = std::make_tuple(prefix, params.type, uint256(), uint256());
+                decltype(start) k;
+
+                pcursor->Seek(start);
+                LOCK(cs_main);
+                while (pcursor->Valid() || std::get<0>(k) != prefix || std::get<1>(k) != params.type) {
+                    if (!pcursor->GetKey(k)) {
+                        break;
+                    }
+                    cnt_all++;
+                    const CBlockIndex* pindexQuorum = LookupBlockIndex(std::get<2>(k));
+                    if (pindexQuorum == nullptr || ::ChainActive().Tip()->nHeight - pindexQuorum->nHeight > params.max_store_depth()) {
+                        // not found or too old
+                        batch.Erase(k);
+                        cnt_old++;
+                    }
+                    pcursor->Next();
+                }
+                pcursor.reset();
+            }
+            LogPrint(BCLog::LLMQ, "CDKGSessionManager::%s -- found %lld entries for llmq type %d\n", __func__, cnt_all, uint8_t(params.type));
+            if (cnt_old > 0) {
+                db->WriteBatch(batch);
+                LogPrint(BCLog::LLMQ, "CDKGSessionManager::%s -- removed %lld old entries for llmq type %d\n", __func__, cnt_old, uint8_t(params.type));
+            }
+        }
+    }
+
 } // namespace llmq

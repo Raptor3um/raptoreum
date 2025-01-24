@@ -113,4 +113,10 @@ namespace llmq {
         }
     }
 
+    void DoMaintenance() {
+         if (quorumDKGSessionManager != nullptr) {
+            quorumDKGSessionManager->CleanupOldContributions();
+        }
+    }
+
 } // namespace llmq

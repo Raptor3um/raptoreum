@@ -27,6 +27,8 @@ namespace llmq {
     void StopLLMQSystem();
 
     void InterruptLLMQSystem();
+
+    void DoMaintenance();
 } // namespace llmq
 
 #endif //RAPTOREUM_QUORUMS_INIT_H
