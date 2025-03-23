@@ -28,7 +28,7 @@ jobs:
           echo "checking out $GITHUB_REF triggered by $GITHUB_EVENT_NAME"
 
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Read versions
         id: versions
@@ -53,7 +53,7 @@ jobs:
           echo "BUILD_VERSION=$version" > version.txt
 
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: version
           path: version.txt
@@ -68,12 +68,33 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install Required Packages
         run: |
           sudo apt-get update -y
-          sudo apt-get install curl libcurl4-openssl-dev build-essential libtool autotools-dev automake pkg-config python3 bsdmainutils cmake -y
+          sudo apt-get install curl libcurl4-openssl-dev build-essential libtool autotools-dev automake pkg-config python3 bsdmainutils cmake ccache -y
+
+      - name: Cache depends sources
+        uses: actions/cache@v4
+        with:
+          path: |
+            depends/sources
+          key: depends-sources-${{ hashFiles('depends/packages/*') }}
+          restore-keys: |
+            depends-sources-
+
+      - name: Restore cached depends
+        uses: actions/cache/restore@v4
+        id: restore-depends
+        with:
+          path: |
+            depends/built
+            depends/${{ steps.setup.outputs.HOST }}
+          key: depends-${{ github.job }}-${{ hashFiles('depends/packages/*') }}
+          restore-keys: |
+            depends-${{ github.job }}-
+
       - name: Build Depends
         run: |
           echo "building with $(nproc) threads"
@@ -81,10 +102,29 @@ jobs:
           export FALLBACK_DOWNLOAD_PATH=https://pool.nowput.org/depends/
           make -C depends -j$(nproc)  HOST=x86_64-pc-linux-gnu
 
+      - name: Save depends cache
+        uses: actions/cache/save@v4
+        if: steps.restore-depends.outputs.cache-hit != 'true'
+        with:
+          path: |
+            depends/built
+            depends/${{ steps.setup.outputs.HOST }}
+          key: ${{ steps.restore-depends.outputs.cache-primary-key }}
+
       - name: Configure
         run: |
           ./autogen.sh
           ./configure --prefix=`pwd`/depends/x86_64-pc-linux-gnu
+
+      - name: Set ccache directory
+        run: echo "CCACHE_DIR=${RUNNER_TEMP}/ccache_dir" >> "$GITHUB_ENV"
+
+      - name: Restore ccache cache
+        id: restore-ccache
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ${{ github.job }}-ccache
 
       - name: Build Binaries
         run: |
@@ -104,6 +144,13 @@ jobs:
           make -j$(nproc)
           mkdir -p ${BUILD_DIR}_debug
           mv src/{raptoreum-cli,raptoreumd,qt/raptoreum-qt} ${BUILD_DIR}_debug/
+
+      - name: Save ccache cache
+        uses: actions/cache/save@v4
+        if: steps.restore-ccache.outputs.cache-hit != 'true'
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ${{ github.job }}-ccache
 
       - name: Generate Checksum and Compress
         run: |
@@ -151,13 +198,13 @@ jobs:
           cat ${COMPRESS_DIR}/checksums.txt
 
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.COIN_NAME }}-ubuntu20-${{ needs.get-version.outputs.version }}
           path: ${{ env.COMPRESS_DIR }}
 
       - name: Upload Test Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.COIN_NAME }}-ubuntu20-test-${{ needs.get-version.outputs.version }}
           path: ${{ env.TEST_DIR }}
@@ -169,7 +216,7 @@ jobs:
 
     steps:
       - name: Download Artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: ${{ env.COIN_NAME }}-ubuntu20-test-${{ needs.get-version.outputs.version }}
 
@@ -180,14 +227,14 @@ jobs:
           ./test_raptoreum --log_format=JUNIT > unit_test_results.xml
 
       - name: Upload Test Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: ${{ env.COIN_NAME }}-ubuntu20-test-${{ needs.get-version.outputs.version }}
+          name: ${{ env.COIN_NAME }}-ubuntu20-test-results-${{ needs.get-version.outputs.version }}
           path: unit_test_results.xml
 
       - name: Publish Unit Test Report
-        uses: mikepenz/action-junit-report@v3
+        uses: mikepenz/action-junit-report@v5
         if: always()
         with:
           check_name: "Ubuntu 20"
@@ -202,12 +249,32 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install Required Packages
         run: |
           sudo apt-get update -y
-          sudo apt-get install curl libcurl4-openssl-dev build-essential libtool autotools-dev automake pkg-config python3 bsdmainutils cmake -y
+          sudo apt-get install curl libcurl4-openssl-dev build-essential libtool autotools-dev automake pkg-config python3 bsdmainutils cmake ccache -y
+
+      - name: Cache depends sources
+        uses: actions/cache@v4
+        with:
+          path: |
+            depends/sources
+          key: depends-sources-${{ hashFiles('depends/packages/*') }}
+          restore-keys: |
+            depends-sources-
+
+      - name: Restore cached depends
+        uses: actions/cache/restore@v4
+        id: restore-depends
+        with:
+          path: |
+            depends/built
+            depends/${{ steps.setup.outputs.HOST }}
+          key: depends-${{ github.job }}-${{ hashFiles('depends/packages/*') }}
+          restore-keys: |
+            depends-${{ github.job }}-
 
       - name: Build Depends
         run: |
@@ -216,12 +283,29 @@ jobs:
           export FALLBACK_DOWNLOAD_PATH=https://pool.nowput.org/depends/
           make -C depends -j$(nproc)  HOST=x86_64-pc-linux-gnu
 
+      - name: Save depends cache
+        uses: actions/cache/save@v4
+        if: steps.restore-depends.outputs.cache-hit != 'true'
+        with:
+          path: |
+            depends/built
+            depends/${{ steps.setup.outputs.HOST }}
+          key: ${{ steps.restore-depends.outputs.cache-primary-key }}
+
       - name: Configure
         run: |
           ./autogen.sh
           ./configure --prefix=`pwd`/depends/x86_64-pc-linux-gnu
-        # TODO: @Jami - this line was from malbit, I think we may not need it but could you help confirm?
-        # CONFIG_SITE=$PWD/depends/x86_64-pc-linux-gnu/share/config.site ./configure
+
+      - name: Set ccache directory
+        run: echo "CCACHE_DIR=${RUNNER_TEMP}/ccache_dir" >> "$GITHUB_ENV"
+
+      - name: Restore ccache cache
+        id: restore-ccache
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ${{ github.job }}-ccache
 
       - name: Build Binaries
         run: |
@@ -241,6 +325,13 @@ jobs:
           make -j$(nproc)
           mkdir -p ${BUILD_DIR}_debug
           mv src/{raptoreum-cli,raptoreumd,qt/raptoreum-qt} ${BUILD_DIR}_debug/
+
+      - name: Save ccache cache
+        uses: actions/cache/save@v4
+        if: steps.restore-ccache.outputs.cache-hit != 'true'
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ${{ github.job }}-ccache
 
       - name: Generate Checksum and Compress
         run: |
@@ -288,13 +379,13 @@ jobs:
           cat ${COMPRESS_DIR}/checksums.txt
 
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.COIN_NAME }}-ubuntu22-${{ needs.get-version.outputs.version }}
           path: ${{ env.COMPRESS_DIR }}
 
       - name: Upload Test Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.COIN_NAME }}-ubuntu22-test-${{ needs.get-version.outputs.version }}
           path: ${{ env.TEST_DIR }}
@@ -306,7 +397,7 @@ jobs:
 
     steps:
       - name: Download Artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: ${{ env.COIN_NAME }}-ubuntu22-test-${{ needs.get-version.outputs.version }}
 
@@ -317,14 +408,14 @@ jobs:
           ./test_raptoreum --log_format=JUNIT > unit_test_results.xml
 
       - name: Upload Test Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: ${{ env.COIN_NAME }}-ubuntu22-test-${{ needs.get-version.outputs.version }}
+          name: ${{ env.COIN_NAME }}-ubuntu22-test-results-${{ needs.get-version.outputs.version }}
           path: unit_test_results.xml
 
       - name: Publish Unit Test Report
-        uses: mikepenz/action-junit-report@v3
+        uses: mikepenz/action-junit-report@v5
         if: always()
         with:
           check_name: "Ubuntu 22"
@@ -332,43 +423,100 @@ jobs:
           include_passed: false
           report_paths: "unit_test_results.xml"
 
-  build-macos:
-    name: macOS 13 Build
+  build-ubuntu24:
+    name: Ubuntu 24 Build
     needs: get-version
-    runs-on: macos-13
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install Required Packages
         run: |
-          brew install automake libtool pkg-config librsvg libnatpmp python
-          pip3 install ds_store mac_alias
-          pip3 install -U pip setuptools
+          sudo apt-get update -y
+          sudo apt-get install curl libcurl4-openssl-dev build-essential libtool autotools-dev automake pkg-config python3 bsdmainutils cmake ccache -y
+
+      - name: Cache depends sources
+        uses: actions/cache@v4
+        with:
+          path: |
+            depends/sources
+          key: depends-sources-${{ hashFiles('depends/packages/*') }}
+          restore-keys: |
+            depends-sources-
+
+      - name: Restore cached depends
+        uses: actions/cache/restore@v4
+        id: restore-depends
+        with:
+          path: |
+            depends/built
+            depends/${{ steps.setup.outputs.HOST }}
+          key: depends-${{ github.job }}-${{ hashFiles('depends/packages/*') }}
+          restore-keys: |
+            depends-${{ github.job }}-
 
       - name: Build Depends
         run: |
-          echo "building with 8 threads"
+          echo "building with $(nproc) threads"
+          gcc --version
           export FALLBACK_DOWNLOAD_PATH=https://pool.nowput.org/depends/
-          make -C depends -j8 HOST=x86_64-apple-darwin21.6.0
+          make -C depends -j$(nproc)  HOST=x86_64-pc-linux-gnu
+
+      - name: Save depends cache
+        uses: actions/cache/save@v4
+        if: steps.restore-depends.outputs.cache-hit != 'true'
+        with:
+          path: |
+            depends/built
+            depends/${{ steps.setup.outputs.HOST }}
+          key: ${{ steps.restore-depends.outputs.cache-primary-key }}
 
       - name: Configure
         run: |
           ./autogen.sh
-          ./configure --prefix=`pwd`/depends/x86_64-apple-darwin21.6.0
+          ./configure --prefix=`pwd`/depends/x86_64-pc-linux-gnu
+
+      - name: Set ccache directory
+        run: echo "CCACHE_DIR=${RUNNER_TEMP}/ccache_dir" >> "$GITHUB_ENV"
+
+      - name: Restore ccache cache
+        id: restore-ccache
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ${{ github.job }}-ccache
 
       - name: Build Binaries
         run: |
-          make -j8
+          make -j$(nproc)
           mkdir -p ${BUILD_DIR} ${BUILD_DIR}_not_strip ${TEST_DIR}
           cp src/{raptoreum-cli,raptoreumd,qt/raptoreum-qt} ${BUILD_DIR}/
           mv src/{raptoreum-cli,raptoreumd,qt/raptoreum-qt} ${BUILD_DIR}_not_strip/
           mv src/test/test_raptoreum ${TEST_DIR}
           strip ${BUILD_DIR}/*
 
+      - name: Build Debug Binaries
+        run: |
+          make clean
+          make distclean
+          ./autogen.sh
+          ./configure --prefix=`pwd`/depends/x86_64-pc-linux-gnu --disable-tests --enable-debug --enable-crash-hooks
+          make -j$(nproc)
+          mkdir -p ${BUILD_DIR}_debug
+          mv src/{raptoreum-cli,raptoreumd,qt/raptoreum-qt} ${BUILD_DIR}_debug/
+
+      - name: Save ccache cache
+        uses: actions/cache/save@v4
+        if: steps.restore-ccache.outputs.cache-hit != 'true'
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ${{ github.job }}-ccache
+
       - name: Generate Checksum and Compress
         run: |
+          mkdir -p ${COMPRESS_DIR}
           cd ${BUILD_DIR}
           echo "sha256:" >> checksums.txt
           echo "------------------------------------" >> checksums.txt
@@ -376,9 +524,19 @@ jobs:
           echo "------------------------------------" >> checksums.txt
           echo "openssl-sha256:" >> checksums.txt
           echo "------------------------------------" >> checksums.txt
-          openssl sha256 * >> checksums.txt
+          sha256sum * >> checksums.txt
           cat checksums.txt
-          tar -cvzf ../${COIN_NAME}-macos-${{ needs.get-version.outputs.version }}.tar.gz *
+          tar -cvzf ../${COIN_NAME}-ubuntu24-${{ needs.get-version.outputs.version }}.tar.gz *
+          cd ../${BUILD_DIR}_debug
+          echo "sha256:" >> checksums.txt
+          echo "------------------------------------" >> checksums.txt
+          shasum * >> checksums.txt
+          echo "------------------------------------" >> checksums.txt
+          echo "openssl-sha256:" >> checksums.txt
+          echo "------------------------------------" >> checksums.txt
+          sha256sum * >> checksums.txt
+          cat checksums.txt
+          tar -cvzf ../${COIN_NAME}-ubuntu24-debug-${{ needs.get-version.outputs.version }}.tar.gz *
           cd ../${BUILD_DIR}_not_strip
           echo "sha256:" >> checksums.txt
           echo "------------------------------------" >> checksums.txt
@@ -386,58 +544,43 @@ jobs:
           echo "------------------------------------" >> checksums.txt
           echo "openssl-sha256:" >> checksums.txt
           echo "------------------------------------" >> checksums.txt
-          openssl sha256 * >> checksums.txt
+          sha256sum * >> checksums.txt
           cat checksums.txt
-          tar -cvzf ../${COIN_NAME}-macos-not_strip-${{ needs.get-version.outputs.version }}.tar.gz *
+          tar -cvzf ../${COIN_NAME}-ubuntu24-not_strip-${{ needs.get-version.outputs.version }}.tar.gz *
           cd ..
-          mkdir -p ${COMPRESS_DIR}
           mv *.tar.gz ${COMPRESS_DIR}/
           cd ${COMPRESS_DIR}
-          echo "sha256: `shasum ${COIN_NAME}-macos-${{ needs.get-version.outputs.version }}.tar.gz`" >> checksums.txt
-          echo "openssl-sha256: `openssl sha256 ${COIN_NAME}-macos-${{ needs.get-version.outputs.version }}.tar.gz`" >> checksums.txt
-          echo "sha256: `shasum ${COIN_NAME}-macos-not_strip-${{ needs.get-version.outputs.version }}.tar.gz`" >> checksums.txt
-          echo "openssl-sha256: `openssl sha256 ${COIN_NAME}-macos-not_strip-${{ needs.get-version.outputs.version }}.tar.gz`" >> checksums.txt
-          cat checksums.txt
+          echo "sha256: `shasum ${COIN_NAME}-ubuntu24-${{ needs.get-version.outputs.version }}.tar.gz`" >> checksums.txt
+          echo "openssl-sha256: `sha256sum ${COIN_NAME}-ubuntu24-${{ needs.get-version.outputs.version }}.tar.gz`" >> checksums.txt
+          echo "sha256: `shasum ${COIN_NAME}-ubuntu24-debug-${{ needs.get-version.outputs.version }}.tar.gz`" >> checksums.txt
+          echo "openssl-sha256: `sha256sum ${COIN_NAME}-ubuntu24-debug-${{ needs.get-version.outputs.version }}.tar.gz`" >> checksums.txt
+          echo "sha256: `shasum ${COIN_NAME}-ubuntu24-not_strip-${{ needs.get-version.outputs.version }}.tar.gz`" >> checksums.txt
+          echo "openssl-sha256: `sha256sum ${COIN_NAME}-ubuntu24-not_strip-${{ needs.get-version.outputs.version }}.tar.gz`" >> checksums.txt
           cd ..
+          cat ${COMPRESS_DIR}/checksums.txt
 
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.COIN_NAME }}-macos-${{ needs.get-version.outputs.version }}
+          name: ${{ env.COIN_NAME }}-ubuntu24-${{ needs.get-version.outputs.version }}
           path: ${{ env.COMPRESS_DIR }}
 
       - name: Upload Test Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.COIN_NAME }}-macos-test-${{ needs.get-version.outputs.version }}
+          name: ${{ env.COIN_NAME }}-ubuntu24-test-${{ needs.get-version.outputs.version }}
           path: ${{ env.TEST_DIR }}
 
-      - name: Generate Macos dmg files
-        run: |
-          make deploy
-          mkdir -p macos-dmg
-          mv Raptoreum-Core.dmg macos-dmg/
-          cd macos-dmg
-          echo "sha256: `shasum Raptoreum-Core.dmg`" >> checksums.txt
-          echo "openssl-sha256: `openssl sha256 Raptoreum-Core.dmg`" >> checksums.txt
-          cd ..
-
-      - name: Upload dmg file
-        uses: actions/upload-artifact@v3
-        with:
-          name: ${{ env.COIN_NAME }}-dmg-${{ needs.get-version.outputs.version }}
-          path: macos-dmg
-
-  test-macos:
-    name: macOS Tests
-    needs: [get-version, build-macos]
-    runs-on: macos-13
+  test-ubuntu24:
+    name: Ubuntu 24 Tests
+    needs: [get-version, build-ubuntu24]
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Download Artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
-          name: ${{ env.COIN_NAME }}-macos-test-${{ needs.get-version.outputs.version }}
+          name: ${{ env.COIN_NAME }}-ubuntu24-test-${{ needs.get-version.outputs.version }}
 
       - name: Run Unit Tests
         id: Tests
@@ -446,162 +589,454 @@ jobs:
           ./test_raptoreum --log_format=JUNIT > unit_test_results.xml
 
       - name: Upload Test Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: ${{ env.COIN_NAME }}-macos-test-${{ needs.get-version.outputs.version }}
+          name: ${{ env.COIN_NAME }}-ubuntu24-test-results-${{ needs.get-version.outputs.version }}
           path: unit_test_results.xml
 
       - name: Publish Unit Test Report
-        uses: mikepenz/action-junit-report@v3
+        uses: mikepenz/action-junit-report@v5
         if: always()
         with:
-          check_name: "macOS 13"
+          check_name: "Ubuntu 22"
           detailed_summary: ${{ steps.Tests.conclusion == 'failure'}}
           include_passed: false
           report_paths: "unit_test_results.xml"
 
-  # build-arm-32:
-  #   name: ARM 32-bit Build
-  #   needs: get-version
-  #   runs-on: ubuntu-20.04
+#   build-macos13-x86:
+#     name: macOS 13 x86 Build
+#     needs: get-version
+#     runs-on: macos-13
 
-  #   steps:
-  #     - name: Checkout
-  #       uses: actions/checkout@v3
+#     steps:
+#       - name: Checkout
+#         uses: actions/checkout@v4
 
-  #     - name: Install Required Packages
-  #       run: |
-  #         sudo apt-get update -y
-  #         sudo apt-get upgrade -y
-  #         sudo apt-get install curl build-essential libtool g++-arm-linux-gnueabihf autotools-dev automake pkg-config python3 bsdmainutils cmake
+#       - name: Install Required Packages
+#         run: |
+#           brew install automake libtool pkg-config librsvg libnatpmp python
+#           python3 -m venv venv
+#           source venv/bin/activate
+#           pip3 install -U pip ds_store mac_alias setuptools
 
-  #     - name: Build Depends
-  #       run: |
-  #         echo "building with $(nproc) threads"
-  #         make -C depends -j$(nproc) HOST=arm-linux-gnueabihf
+#       - name: Cache depends sources
+#         uses: actions/cache@v4
+#         with:
+#           path: |
+#             depends/sources
+#           key: depends-sources-${{ hashFiles('depends/packages/*') }}
+#           restore-keys: |
+#             depends-sources-
 
-  #     - name: Configure
-  #       run: |
-  #         ./autogen.sh
-  #         ./configure --prefix=`pwd`/depends/arm-linux-gnueabihf
+#       - name: Cache SDKs
+#         uses: actions/cache@v4
+#         if: inputs.build-target == 'mac'
+#         with:
+#           path: |
+#             depends/SDKs
+#           key: depends-sdks-${{ hashFiles('depends/hosts/darwin.mk') }}
+#           restore-keys: |
+#             depends-sdks-
 
-  #     - name: Build Binaries
-  #       run: |
-  #         make -j$(nproc)
-  #         mkdir -p ${BUILD_DIR} ${TEST_DIR}
-  #         mv src/{raptoreum-cli,raptoreumd,qt/raptoreum-qt} ${BUILD_DIR}/
-  #         mv src/test/test_raptoreum ${TEST_DIR}
+#       - name: Restore cached depends
+#         uses: actions/cache/restore@v4
+#         id: restore-depends
+#         with:
+#           path: |
+#             depends/built
+#             depends/${{ steps.setup.outputs.HOST }}
+#           key: depends-${{ github.job }}-${{ hashFiles('depends/packages/*') }}
+#           restore-keys: |
+#             depends-${{ github.job }}-
 
-  #     - name: Build Debug Binaries
-  #       run: |
-  #         make clean
-  #         make distclean
-  #         ./autogen.sh
-  #         ./configure --prefix=`pwd`/depends/arm-linux-gnueabihf --disable-tests --enable-debug
-  #         make -j$(nproc)
-  #         mkdir -p ${BUILD_DIR}_debug
-  #         mv src/{raptoreum-cli,raptoreumd,qt/raptoreum-qt} ${BUILD_DIR}_debug/
+#       - name: Build Depends
+#         run: |
+#           echo "building with $(sysctl -n hw.logicalcpu) threads"
+#           echo "Path: ${PATH}"
+#           echo "env:"
+#           env
+#           export FALLBACK_DOWNLOAD_PATH=https://pool.nowput.org/depends/
+#           make -C depends -j$(sysctl -n hw.logicalcpu) HOST=x86_64-apple-darwin
 
-  #     - name: Generate Checksum and Compress
-  #       run: |
-  #         mkdir -p ${COMPRESS_DIR}
-  #         cd ${BUILD_DIR}
-  #         echo "sha256:" >> checksums.txt
-  #         echo "------------------------------------" >> checksums.txt
-  #         shasum * >> checksums.txt
-  #         echo "------------------------------------" >> checksums.txt
-  #         echo "openssl-sha256:" >> checksums.txt
-  #         echo "------------------------------------" >> checksums.txt
-  #         sha256sum * >> checksums.txt
-  #         cat checksums.txt
-  #         tar -cvzf ../${COIN_NAME}-arm32-${{ needs.get-version.outputs.version }}.tar.gz *
-  #         cd ../${BUILD_DIR}_debug
-  #         echo "sha256:" >> checksums.txt
-  #         echo "------------------------------------" >> checksums.txt
-  #         shasum * >> checksums.txt
-  #         echo "------------------------------------" >> checksums.txt
-  #         echo "openssl-sha256:" >> checksums.txt
-  #         echo "------------------------------------" >> checksums.txt
-  #         sha256sum * >> checksums.txt
-  #         cat checksums.txt
-  #         tar -cvzf ../${COIN_NAME}-arm32-debug-${{ needs.get-version.outputs.version }}.tar.gz *
-  #         cd ..
-  #         mv *.tar.gz ${COMPRESS_DIR}/
-  #         cd ${COMPRESS_DIR}
-  #         echo "sha256: `shasum ${COIN_NAME}-arm32-${{ needs.get-version.outputs.version }}.tar.gz`" >> checksums.txt
-  #         echo "openssl-sha256: `sha256sum ${COIN_NAME}-arm32-${{ needs.get-version.outputs.version }}.tar.gz`" >> checksums.txt
-  #         echo "sha256: `shasum ${COIN_NAME}-arm32-debug-${{ needs.get-version.outputs.version }}.tar.gz`" >> checksums.txt
-  #         echo "openssl-sha256: `sha256sum ${COIN_NAME}-arm32-debug-${{ needs.get-version.outputs.version }}.tar.gz`" >> checksums.txt
-  #         cd ..
-  #         cat ${COMPRESS_DIR}/checksums.txt
+#       - name: Save config logs
+#         if: always()
+#         run: |
+#           find . -iname config.log -exec tar cvf config.tar {} +
 
-  #     - name: Upload Artifacts
-  #       uses: actions/upload-artifact@v3
-  #       with:
-  #         name: ${{ env.COIN_NAME }}-arm32-${{ needs.get-version.outputs.version }}
-  #         path: ${{ env.COMPRESS_DIR }}
+#       - name: Upload config logs
+#         if: always()
+#         uses: actions/upload-artifact@v4
+#         with:
+#           name: ${{ env.COIN_NAME }}-macos13-x86-config_logs.tar
+#           path: ./config.tar
 
-  #     - name: Upload Test Artifacts
-  #       uses: actions/upload-artifact@v3
-  #       with:
-  #         name: ${{ env.COIN_NAME }}-arm32-test-${{ needs.get-version.outputs.version }}
-  #         path: ${{ env.TEST_DIR }}
+#       - name: Save depends cache
+#         uses: actions/cache/save@v4
+#         if: steps.restore-depends.outputs.cache-hit != 'true'
+#         with:
+#           path: |
+#             depends/built
+#             depends/${{ steps.setup.outputs.HOST }}
+#           key: ${{ steps.restore-depends.outputs.cache-primary-key }}
 
-  # test-arm-32:
-  #   name: ARM 32-bit Tests
-  #   needs: [ get-version, build-arm-32 ]
-  #   runs-on: ubuntu-20.04
+#       - name: Configure
+#         run: |
+#           ./autogen.sh
+#           ./configure --prefix=`pwd`/depends/x86_64-apple-darwin
 
-  #   steps:
-  #     - name: Download Artifacts
-  #       uses: actions/download-artifact@v3
-  #       with:
-  #         name: ${{ env.COIN_NAME }}-arm32-test-${{ needs.get-version.outputs.version }}
+#       - name: Set ccache directory
+#         run: echo "CCACHE_DIR=${RUNNER_TEMP}/ccache_dir" >> "$GITHUB_ENV"
 
-  #    - name: Run Unit Tests
-  #      id: Tests
-  #      uses: nandofw/arm-runner-action@v2.5.2
-  #       with:
-  #         base_image: raspios_lite:latest
-  #         cpu: cortex-a7
-  #         cpu_info: cpuinfo/raspberrypi_3b
-  #         copy_artifact_dest: ${{ github.workspace }}
-  #         copy_artifact_path: unit_test_results.xml
-  #         copy_artifacts_on_fail: yes
-  #         commands: |
-  #           chmod +x test_raptoreum
-  #           ./test_raptoreum --log_format=JUNIT > unit_test_results.xml
+#       - name: Restore ccache cache
+#         id: restore-ccache
+#         uses: actions/cache/restore@v4
+#         with:
+#           path: ${{ env.CCACHE_DIR }}
+#           key: ${{ github.job }}-ccache
 
-  #     - name: Upload Test Artifacts
-  #       uses: actions/upload-artifact@v3
-  #       if: always()
-  #       with:
-  #         name: ${{ env.COIN_NAME }}-arm32-test-${{ needs.get-version.outputs.version }}
-  #         path: unit_test_results.xml
+#       - name: Build Binaries
+#         run: |
+#           make -j$(sysctl -n hw.logicalcpu)
+#           mkdir -p ${BUILD_DIR} ${BUILD_DIR}_not_strip ${TEST_DIR}
+#           cp src/{raptoreum-cli,raptoreumd,qt/raptoreum-qt} ${BUILD_DIR}/
+#           mv src/{raptoreum-cli,raptoreumd,qt/raptoreum-qt} ${BUILD_DIR}_not_strip/
+#           mv src/test/test_raptoreum ${TEST_DIR}
+#           strip ${BUILD_DIR}/*
 
-  #     - name: Publish Unit Test Report
-  #       uses: mikepenz/action-junit-report@v3
-  #       if: always()
-  #       with:
-  #         check_name: "ARM 32-bit"
-  #         detailed_summary: ${{ steps.Tests.conclusion == 'failure'}}
-  #         include_passed: false
-  #         report_paths: 'unit_test_results.xml'
+#       - name: Save ccache cache
+#         uses: actions/cache/save@v4
+#         if: steps.restore-ccache.outputs.cache-hit != 'true'
+#         with:
+#           path: ${{ env.CCACHE_DIR }}
+#           key: ${{ github.job }}-ccache
+
+#       - name: Generate Checksum and Compress
+#         run: |
+#           cd ${BUILD_DIR}
+#           echo "sha256:" >> checksums.txt
+#           echo "------------------------------------" >> checksums.txt
+#           shasum * >> checksums.txt
+#           echo "------------------------------------" >> checksums.txt
+#           echo "openssl-sha256:" >> checksums.txt
+#           echo "------------------------------------" >> checksums.txt
+#           openssl sha256 * >> checksums.txt
+#           cat checksums.txt
+#           tar -cvzf ../${COIN_NAME}-macos13-x86-${{ needs.get-version.outputs.version }}.tar.gz *
+#           cd ../${BUILD_DIR}_not_strip
+#           echo "sha256:" >> checksums.txt
+#           echo "------------------------------------" >> checksums.txt
+#           shasum * >> checksums.txt
+#           echo "------------------------------------" >> checksums.txt
+#           echo "openssl-sha256:" >> checksums.txt
+#           echo "------------------------------------" >> checksums.txt
+#           openssl sha256 * >> checksums.txt
+#           cat checksums.txt
+#           tar -cvzf ../${COIN_NAME}-macos13-x86-not_strip-${{ needs.get-version.outputs.version }}.tar.gz *
+#           cd ..
+#           mkdir -p ${COMPRESS_DIR}
+#           mv *.tar.gz ${COMPRESS_DIR}/
+#           cd ${COMPRESS_DIR}
+#           echo "sha256: `shasum ${COIN_NAME}-macos13-x86-${{ needs.get-version.outputs.version }}.tar.gz`" >> checksums.txt
+#           echo "openssl-sha256: `openssl sha256 ${COIN_NAME}-macos13-x86-${{ needs.get-version.outputs.version }}.tar.gz`" >> checksums.txt
+#           echo "sha256: `shasum ${COIN_NAME}-macos13-x86-not_strip-${{ needs.get-version.outputs.version }}.tar.gz`" >> checksums.txt
+#           echo "openssl-sha256: `openssl sha256 ${COIN_NAME}-macos13-x86-not_strip-${{ needs.get-version.outputs.version }}.tar.gz`" >> checksums.txt
+#           cat checksums.txt
+#           cd ..
+
+#       - name: Upload Artifacts
+#         uses: actions/upload-artifact@v4
+#         with:
+#           name: ${{ env.COIN_NAME }}-macos13-x86-${{ needs.get-version.outputs.version }}
+#           path: ${{ env.COMPRESS_DIR }}
+
+#       - name: Upload Test Artifacts
+#         uses: actions/upload-artifact@v4
+#         with:
+#           name: ${{ env.COIN_NAME }}-macos13-x86-test-${{ needs.get-version.outputs.version }}
+#           path: ${{ env.TEST_DIR }}
+
+#       - name: Generate macOS dmg files
+#         run: |
+#           make deploy
+#           mkdir -p macos13-x86-dmg
+#           mv Raptoreum-Core.dmg macos13-x86-dmg/
+#           cd macos13-x86-dmg
+#           echo "sha256: `shasum Raptoreum-Core.dmg`" >> checksums.txt
+#           echo "openssl-sha256: `openssl sha256 Raptoreum-Core.dmg`" >> checksums.txt
+#           cd ..
+
+#       - name: Upload dmg file
+#         uses: actions/upload-artifact@v4
+#         with:
+#           name: ${{ env.COIN_NAME }}-macos13-x86-dmg-${{ needs.get-version.outputs.version }}
+#           path: macos13-x86-dmg
+
+#   test-macos13-x86:
+#     name: macOS 13 x86 Tests
+#     needs: [get-version, build-macos13-x86]
+#     runs-on: macos-13
+
+#     steps:
+#       - name: Download Artifacts
+#         uses: actions/download-artifact@v4
+#         with:
+#           name: ${{ env.COIN_NAME }}-macos13-x86-test-${{ needs.get-version.outputs.version }}
+
+#       - name: Run Unit Tests
+#         id: Tests
+#         run: |
+#           chmod +x test_raptoreum
+#           ./test_raptoreum --log_format=JUNIT > unit_test_results.xml
+
+#       - name: Upload Test Artifacts
+#         uses: actions/upload-artifact@v4
+#         if: always()
+#         with:
+#           name: ${{ env.COIN_NAME }}-macos13-x86-test-results-${{ needs.get-version.outputs.version }}
+#           path: unit_test_results.xml
+
+#       - name: Publish Unit Test Report
+#         uses: mikepenz/action-junit-report@v5
+#         if: always()
+#         with:
+#           check_name: "macOS 13 x86"
+#           detailed_summary: ${{ steps.Tests.conclusion == 'failure'}}
+#           include_passed: false
+#           report_paths: "unit_test_results.xml"
+
+#   build-macos15-arm64:
+#     name: macOS 15 arm64 Build (M1)
+#     needs: get-version
+#     runs-on: macos-15
+
+#     steps:
+#       - name: Checkout
+#         uses: actions/checkout@v4
+
+#       - name: Install Required Packages
+#         run: |
+#           brew install automake librsvg libnatpmp python-setuptools ccache binutils
+#           python3 -m venv venv
+#           source venv/bin/activate
+#           pip3 install -U pip ds_store mac_alias setuptools
+#           gcc -v
+
+#       - name: Cache depends sources
+#         uses: actions/cache@v4
+#         with:
+#           path: |
+#             depends/sources
+#           key: depends-sources-${{ hashFiles('depends/packages/*') }}
+#           restore-keys: |
+#             depends-sources-
+
+#       - name: Cache SDKs
+#         uses: actions/cache@v4
+#         if: inputs.build-target == 'mac'
+#         with:
+#           path: |
+#             depends/SDKs
+#           key: depends-sdks-${{ hashFiles('depends/hosts/darwin.mk') }}
+#           restore-keys: |
+#             depends-sdks-
+
+#       - name: Restore cached depends
+#         uses: actions/cache/restore@v4
+#         id: restore-depends
+#         with:
+#           path: |
+#             depends/built
+#             depends/${{ steps.setup.outputs.HOST }}
+#           key: depends-${{ github.job }}-${{ hashFiles('depends/packages/*') }}
+#           restore-keys: |
+#             depends-${{ github.job }}-
+
+#       - name: Build Depends
+#         run: |
+#           echo "building with $(sysctl -n hw.logicalcpu) threads"
+#           export FALLBACK_DOWNLOAD_PATH=https://pool.nowput.org/depends/
+#           make -C depends -j$(sysctl -n hw.logicalcpu) HOST=arm64-apple-darwin
+
+#       - name: Save config logs
+#         if: always()
+#         run: |
+#           find . -iname config.log -exec tar cvf config.tar {} +
+
+#       - name: Upload config logs
+#         if: always()
+#         uses: actions/upload-artifact@v4
+#         with:
+#           name: ${{ env.COIN_NAME }}-macos15-arm64-config_logs.tar
+#           path: ./config.tar
+
+#       - name: Save depends cache
+#         uses: actions/cache/save@v4
+#         if: steps.restore-depends.outputs.cache-hit != 'true'
+#         with:
+#           path: |
+#             depends/built
+#             depends/${{ steps.setup.outputs.HOST }}
+#           key: ${{ steps.restore-depends.outputs.cache-primary-key }}
+
+#       - name: Configure
+#         run: |
+#           ./autogen.sh
+#           ./configure --prefix=`pwd`/depends/arm64-apple-darwin
+
+#       - name: Set ccache directory
+#         run: echo "CCACHE_DIR=${RUNNER_TEMP}/ccache_dir" >> "$GITHUB_ENV"
+
+#       - name: Restore ccache cache
+#         id: restore-ccache
+#         uses: actions/cache/restore@v4
+#         with:
+#           path: ${{ env.CCACHE_DIR }}
+#           key: ${{ github.job }}-ccache
+
+#       - name: Build Binaries
+#         run: |
+#           make -j$(sysctl -n hw.logicalcpu)
+#           mkdir -p ${BUILD_DIR} ${BUILD_DIR}_not_strip ${TEST_DIR}
+#           cp src/{raptoreum-cli,raptoreumd,qt/raptoreum-qt} ${BUILD_DIR}/
+#           mv src/{raptoreum-cli,raptoreumd,qt/raptoreum-qt} ${BUILD_DIR}_not_strip/
+#           mv src/test/test_raptoreum ${TEST_DIR}
+#           strip ${BUILD_DIR}/*
+
+#       - name: Save ccache cache
+#         uses: actions/cache/save@v4
+#         if: steps.restore-ccache.outputs.cache-hit != 'true'
+#         with:
+#           path: ${{ env.CCACHE_DIR }}
+#           key: ${{ github.job }}-ccache
+
+#       - name: Generate Checksum and Compress
+#         run: |
+#           cd ${BUILD_DIR}
+#           echo "sha256:" >> checksums.txt
+#           echo "------------------------------------" >> checksums.txt
+#           shasum * >> checksums.txt
+#           echo "------------------------------------" >> checksums.txt
+#           echo "openssl-sha256:" >> checksums.txt
+#           echo "------------------------------------" >> checksums.txt
+#           openssl sha256 * >> checksums.txt
+#           cat checksums.txt
+#           tar -cvzf ../${COIN_NAME}-macos15-arm64-${{ needs.get-version.outputs.version }}.tar.gz *
+#           cd ../${BUILD_DIR}_not_strip
+#           echo "sha256:" >> checksums.txt
+#           echo "------------------------------------" >> checksums.txt
+#           shasum * >> checksums.txt
+#           echo "------------------------------------" >> checksums.txt
+#           echo "openssl-sha256:" >> checksums.txt
+#           echo "------------------------------------" >> checksums.txt
+#           openssl sha256 * >> checksums.txt
+#           cat checksums.txt
+#           tar -cvzf ../${COIN_NAME}-macos15-arm64-not_strip-${{ needs.get-version.outputs.version }}.tar.gz *
+#           cd ..
+#           mkdir -p ${COMPRESS_DIR}
+#           mv *.tar.gz ${COMPRESS_DIR}/
+#           cd ${COMPRESS_DIR}
+#           echo "sha256: `shasum ${COIN_NAME}-macos15-arm64-${{ needs.get-version.outputs.version }}.tar.gz`" >> checksums.txt
+#           echo "openssl-sha256: `openssl sha256 ${COIN_NAME}-macos15-arm64-${{ needs.get-version.outputs.version }}.tar.gz`" >> checksums.txt
+#           echo "sha256: `shasum ${COIN_NAME}-macos15-arm64-not_strip-${{ needs.get-version.outputs.version }}.tar.gz`" >> checksums.txt
+#           echo "openssl-sha256: `openssl sha256 ${COIN_NAME}-macos15-arm64-not_strip-${{ needs.get-version.outputs.version }}.tar.gz`" >> checksums.txt
+#           cat checksums.txt
+#           cd ..mac
+
+#       - name: Upload Artifacts
+#         uses: actions/upload-artifact@v4
+#         with:
+#           name: ${{ env.COIN_NAME }}-macos15-arm64-${{ needs.get-version.outputs.version }}
+#           path: ${{ env.COMPRESS_DIR }}
+
+#       - name: Upload Test Artifacts
+#         uses: actions/upload-artifact@v4
+#         with:
+#           name: ${{ env.COIN_NAME }}-macos15-arm64-test-${{ needs.get-version.outputs.version }}
+#           path: ${{ env.TEST_DIR }}
+
+#       - name: Generate macOS dmg files
+#         run: |
+#           make deploy
+#           mkdir -p macos15-arm64-dmg
+#           mv Raptoreum-Core.dmg macos15-arm64-dmg/
+#           cd macos15-arm64-dmg
+#           echo "sha256: `shasum Raptoreum-Core.dmg`" >> checksums.txt
+#           echo "openssl-sha256: `openssl sha256 Raptoreum-Core.dmg`" >> checksums.txt
+#           cd ..
+
+#       - name: Upload dmg file
+#         uses: actions/upload-artifact@v4
+#         with:
+#           name: ${{ env.COIN_NAME }}-macos15-arm64-dmg-${{ needs.get-version.outputs.version }}
+#           path: macos15-arm64-dmg
+
+#   test-macos15-arm64:
+#     name: macOS 15 arm64 Tests
+#     needs: [get-version, build-macos15-arm64]
+#     runs-on: macos-15
+
+#     steps:
+#       - name: Download Artifacts
+#         uses: actions/download-artifact@v4
+#         with:
+#           name: ${{ env.COIN_NAME }}-macos15-arm64-test-${{ needs.get-version.outputs.version }}
+
+#       - name: Run Unit Tests
+#         id: Tests
+#         run: |
+#           chmod +x test_raptoreum
+#           ./test_raptoreum --log_format=JUNIT > unit_test_results.xml
+
+#       - name: Upload Test Artifacts
+#         uses: actions/upload-artifact@v4
+#         if: always()
+#         with:
+#           name: ${{ env.COIN_NAME }}-macos15-arm64-test-results-${{ needs.get-version.outputs.version }}
+#           path: unit_test_results.xml
+
+#       - name: Publish Unit Test Report
+#         uses: mikepenz/action-junit-report@v5
+#         if: always()
+#         with:
+#           check_name: "macOS 15 ARM"
+#           detailed_summary: ${{ steps.Tests.conclusion == 'failure'}}
+#           include_passed: false
+#           report_paths: "unit_test_results.xml"
 
   build-arm-64:
     name: ARM 64-bit Build
     needs: get-version
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install Required Packages
         run: |
           sudo apt-get update -y
-          sudo apt-get install curl libcurl4-openssl-dev build-essential libtool g++-aarch64-linux-gnu autotools-dev automake pkg-config python3 bsdmainutils cmake -y
+          sudo apt-get install curl libcurl4-openssl-dev build-essential libtool g++-aarch64-linux-gnu autotools-dev automake pkg-config python3 bsdmainutils cmake ccache -y
+
+      - name: Cache depends sources
+        uses: actions/cache@v4
+        with:
+          path: |
+            depends/sources
+          key: depends-sources-${{ hashFiles('depends/packages/*') }}
+          restore-keys: |
+            depends-sources-
+
+      - name: Restore cached depends
+        uses: actions/cache/restore@v4
+        id: restore-depends
+        with:
+          path: |
+            depends/built
+            depends/${{ steps.setup.outputs.HOST }}
+          key: depends-${{ github.job }}-${{ hashFiles('depends/packages/*') }}
+          restore-keys: |
+            depends-${{ github.job }}-
 
       - name: Build Depends
         run: |
@@ -609,10 +1044,29 @@ jobs:
           export FALLBACK_DOWNLOAD_PATH=https://pool.nowput.org/depends/
           make -C depends -j$(nproc) HOST=aarch64-linux-gnu
 
+      - name: Save depends cache
+        uses: actions/cache/save@v4
+        if: steps.restore-depends.outputs.cache-hit != 'true'
+        with:
+          path: |
+            depends/built
+            depends/${{ steps.setup.outputs.HOST }}
+          key: ${{ steps.restore-depends.outputs.cache-primary-key }}
+
       - name: Configure
         run: |
           ./autogen.sh
           ./configure --prefix=`pwd`/depends/aarch64-linux-gnu
+
+      - name: Set ccache directory
+        run: echo "CCACHE_DIR=${RUNNER_TEMP}/ccache_dir" >> "$GITHUB_ENV"
+
+      - name: Restore ccache cache
+        id: restore-ccache
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ${{ github.job }}-ccache
 
       - name: Build Binaries
         run: |
@@ -630,6 +1084,13 @@ jobs:
           make -j$(nproc)
           mkdir -p ${BUILD_DIR}_debug
           mv src/{raptoreum-cli,raptoreumd,qt/raptoreum-qt} ${BUILD_DIR}_debug/
+
+      - name: Save ccache cache
+        uses: actions/cache/save@v4
+        if: steps.restore-ccache.outputs.cache-hit != 'true'
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ${{ github.job }}-ccache
 
       - name: Generate Checksum and Compress
         run: |
@@ -665,13 +1126,13 @@ jobs:
           cat ${COMPRESS_DIR}/checksums.txt
 
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.COIN_NAME }}-arm64-${{ needs.get-version.outputs.version }}
           path: ${{ env.COMPRESS_DIR }}
 
       - name: Upload Test Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.COIN_NAME }}-arm64-test-${{ needs.get-version.outputs.version }}
           path: ${{ env.TEST_DIR }}
@@ -679,11 +1140,11 @@ jobs:
   test-arm-64:
     name: ARM 64-bit Tests
     needs: [get-version, build-arm-64]
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Download Artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: ${{ env.COIN_NAME }}-arm64-test-${{ needs.get-version.outputs.version }}
 
@@ -701,14 +1162,14 @@ jobs:
             ./test_raptoreum --log_format=JUNIT > unit_test_results.xml
 
       - name: Upload Test Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: ${{ env.COIN_NAME }}-arm64-test-${{ needs.get-version.outputs.version }}
+          name: ${{ env.COIN_NAME }}-arm64-test-results-${{ needs.get-version.outputs.version }}
           path: unit_test_results.xml
 
       - name: Publish Unit Test Report
-        uses: mikepenz/action-junit-report@v3
+        uses: mikepenz/action-junit-report@v5
         if: always()
         with:
           check_name: "ARM 64-bit"
@@ -723,15 +1184,35 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install Required Packages
         run: |
           sudo apt-get update -y
-          sudo apt-get install curl libcurl4-openssl-dev build-essential libtool autotools-dev automake pkg-config python3 bsdmainutils cmake -y
+          sudo apt-get install curl libcurl4-openssl-dev build-essential libtool autotools-dev automake pkg-config python3 bsdmainutils cmake ccache -y
           sudo apt-get install -y g++-mingw-w64-x86-64 gcc-mingw-w64-x86-64 nsis
           sudo update-alternatives --set x86_64-w64-mingw32-gcc /usr/bin/x86_64-w64-mingw32-gcc-posix
           sudo update-alternatives --set x86_64-w64-mingw32-g++ /usr/bin/x86_64-w64-mingw32-g++-posix
+
+      - name: Cache depends sources
+        uses: actions/cache@v4
+        with:
+          path: |
+            depends/sources
+          key: depends-sources-${{ hashFiles('depends/packages/*') }}
+          restore-keys: |
+            depends-sources-
+
+      - name: Restore cached depends
+        uses: actions/cache/restore@v4
+        id: restore-depends
+        with:
+          path: |
+            depends/built
+            depends/${{ steps.setup.outputs.HOST }}
+          key: depends-${{ github.job }}-${{ hashFiles('depends/packages/*') }}
+          restore-keys: |
+            depends-${{ github.job }}-
 
       - name: Build Depends
         run: |
@@ -739,12 +1220,30 @@ jobs:
           export FALLBACK_DOWNLOAD_PATH=https://pool.nowput.org/depends/
           make -C depends -j$(nproc) HOST=x86_64-w64-mingw32
 
+      - name: Save depends cache
+        uses: actions/cache/save@v4
+        if: steps.restore-depends.outputs.cache-hit != 'true'
+        with:
+          path: |
+            depends/built
+            depends/${{ steps.setup.outputs.HOST }}
+          key: ${{ steps.restore-depends.outputs.cache-primary-key }}
+
       - name: Configure
         run: |
           ./autogen.sh
           export FALLBACK_DOWNLOAD_PATH=https://pool.nowput.org/depends/
           ./configure --prefix=`pwd`/depends/x86_64-w64-mingw32
-        #  CONFIG_SITE=$PWD/depends/x86_64-w64-mingw32/share/config.site ./configure
+
+      - name: Set ccache directory
+        run: echo "CCACHE_DIR=${RUNNER_TEMP}/ccache_dir" >> "$GITHUB_ENV"
+
+      - name: Restore ccache cache
+        id: restore-ccache
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ${{ github.job }}-ccache
 
       - name: Build Binaries
         run: |
@@ -789,13 +1288,13 @@ jobs:
           cd ..
 
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.COIN_NAME }}-win-${{ needs.get-version.outputs.version }}
           path: ${{ env.COMPRESS_DIR }}
 
       - name: Upload Test Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.COIN_NAME }}-win-test-${{ needs.get-version.outputs.version }}
           path: ${{ env.TEST_DIR }}
@@ -811,7 +1310,7 @@ jobs:
           cd ..
 
       - name: Upload Win64 installation file
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.COIN_NAME }}-win-installation-${{ needs.get-version.outputs.version }}
           path: win64-installation
@@ -823,7 +1322,7 @@ jobs:
 
     steps:
       - name: Download Artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: ${{ env.COIN_NAME }}-win-test-${{ needs.get-version.outputs.version }}
 
@@ -832,7 +1331,7 @@ jobs:
           pwd
           dir
 
-      - name: Run Unit Tests B
+      - name: Run Unit Tests
         id: Tests
         run: |
           pwd
@@ -840,14 +1339,14 @@ jobs:
           .\test_raptoreum.exe --log_format=JUNIT > unit_test_results.xml
 
       - name: Upload Test Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: ${{ env.COIN_NAME }}-win-test-${{ needs.get-version.outputs.version }}
+          name: ${{ env.COIN_NAME }}-win-test-results${{ needs.get-version.outputs.version }}
           path: unit_test_results.xml
 
       - name: Publish Unit Test Report
-        uses: mikepenz/action-junit-report@v3
+        uses: mikepenz/action-junit-report@v5
         if: always()
         with:
           check_name: "Win64"

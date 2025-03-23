@@ -12,6 +12,8 @@ define $(package)_set_vars
   $(package)_config_opts_release=--disable-debug-mode
   $(package)_config_opts_linux=--with-pic
   $(package)_config_opts_android=--with-pic
+
+  $(package)_cflags_darwin=-std=c17
   $(package)_cppflags_mingw32=-D_WIN32_WINNT=0x0601
 endef
 

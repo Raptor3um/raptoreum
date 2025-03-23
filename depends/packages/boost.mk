@@ -1,10 +1,9 @@
 package=boost
-$(package)_version=1.77.0
-$(package)_download_path=https://boostorg.jfrog.io/artifactory/main/release/$($(package)_version)/source/
-$(package)_file_name=boost_$(subst .,_,$($(package)_version)).tar.bz2
-$(package)_sha256_hash=fc9f85fc030e233142908241af7a846e60630aa7388de9a5fafb1f3a26840854
+$(package)_version=1.84.0
+$(package)_download_path=https://archives.boost.io/release/$($(package)_version)/source/
+$(package)_file_name=boost_$(subst .,_,$($(package)_version)).tar.gz
+$(package)_sha256_hash=a5800f405508f5df8114558ca9855d2640a2de8f0445f051fa1c7c3383045724
 $(package)_dependencies=native_b2
-# $(package)_patches=boost_gcc11.patch
 
 define $(package)_set_vars
 $(package)_config_opts_release=variant=release
