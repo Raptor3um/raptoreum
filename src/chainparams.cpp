@@ -205,23 +205,13 @@ public:
         consensus.smartnodePaymentFixedBlock = 6800;
         consensus.nFutureForkBlock = 420420;
 
-        updateManager.Add
-                (   // V17 voting blocks 419328-427391 in mainnet, 4032 voting, 4032 grace period, active at 427392
-                        Update(EUpdate::DEPLOYMENT_V17, std::string("v17"), 0, 4032, 419328, 1, 3, 1, false,
-                               VoteThreshold(80, 60, 5), VoteThreshold(0, 0, 1), false, 427392)
-                );
-        updateManager.Add(
-                Update(EUpdate::ROUND_VOTING, std::string("Round Voting"),
-                       1,                        // bit
-                       720,                     // roundSize
-                       905760,                    // startHeight
-                       7,                        // votingPeriod
-                       365,                      // votingMaxRounds
-                       7,                        // gracePeriod
-                       false,                    // forceUpdate
-                       VoteThreshold(85, 85, 1), // minerThreshold
-                       VoteThreshold(0, 0, 1))   // nodeThreshold
-        );
+        updateManager.Add( // V17 voting blocks 419328-427391 in mainnet, 4032 voting, 4032 grace period, active at 427392
+            Update(EUpdate::DEPLOYMENT_V17, std::string("v17"), 0, 4032, 419328, 1, 3, 1, false,
+                VoteThreshold(80, 60, 5), VoteThreshold(0, 0, 1), false, 427392));
+
+        updateManager.Add( // Round voting blocks 905760-915839 in mainnet, 720 round size, 7*720 grace period, active at
+            Update(EUpdate::ROUND_VOTING, std::string("Round Voting"), 1, 720, 905760, 7, 365, 7, false,
+                VoteThreshold(85, 85, 1), VoteThreshold(0, 0, 1), false, 915840));
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S(
@@ -547,16 +537,12 @@ public:
         consensus.nMinerConfirmationWindow = 2016; // nPowTargetTimespan / nPowTargetSpacing
         consensus.nFutureForkBlock = 1;
 
-        updateManager.Add
-                (
-                        Update(EUpdate::DEPLOYMENT_V17, std::string("v17"), 0, 10, 0, 10, 100, 10, false,
-                               VoteThreshold(95, 95, 5), VoteThreshold(0, 0, 1))
-                );
-        updateManager.Add
-                (
-                        Update(EUpdate::ROUND_VOTING, std::string("Round Voting"), 1, 10, 100, 5, 10, 5, false,
-                               VoteThreshold(85, 85, 1), VoteThreshold(0, 0, 1))
-                );
+        updateManager.Add(
+            Update(EUpdate::DEPLOYMENT_V17, std::string("v17"), 0, 10, 0, 10, 100, 10, false,
+                VoteThreshold(95, 95, 5), VoteThreshold(0, 0, 1)));
+        updateManager.Add(
+            Update(EUpdate::ROUND_VOTING, std::string("Round Voting"), 1, 10, 100, 5, 10, 5, false,
+                VoteThreshold(85, 85, 1), VoteThreshold(0, 0, 1)));
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000000000000000000000000");
@@ -719,16 +705,12 @@ public:
         consensus.nMinerConfirmationWindow = 144; // Faster than normal for regtest (144 instead of 2016)
         consensus.nFutureForkBlock = 1;
 
-        updateManager.Add
-                (
-                        Update(EUpdate::DEPLOYMENT_V17, std::string("v17"), 0, 10, 0, 10, 100, 10, false,
-                               VoteThreshold(95, 95, 5), VoteThreshold(0, 0, 1))
-                );
-        updateManager.Add
-                (
-                        Update(EUpdate::ROUND_VOTING, std::string("Round Voting"), 1, 10, 100, 10, 100, 10, false,
-                               VoteThreshold(95, 95, 5), VoteThreshold(0, 0, 1))
-                );
+        updateManager.Add(
+            Update(EUpdate::DEPLOYMENT_V17, std::string("v17"), 0, 10, 0, 10, 100, 10, false,
+                VoteThreshold(95, 95, 5), VoteThreshold(0, 0, 1)));
+        updateManager.Add(
+            Update(EUpdate::ROUND_VOTING, std::string("Round Voting"), 1, 10, 100, 10, 100, 10, false,
+                VoteThreshold(95, 95, 5), VoteThreshold(0, 0, 1)));
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x00");
