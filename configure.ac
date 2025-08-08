@@ -411,7 +411,7 @@ if test "$CXXFLAGS_overridden" = "no"; then
   AX_CHECK_COMPILE_FLAG([-Wduplicated-branches],       [WARN_CXXFLAGS="$WARN_CXXFLAGS -Wduplicated-branches"],       [], [$CXXFLAG_WERROR])
   AX_CHECK_COMPILE_FLAG([-Wduplicated-cond],           [WARN_CXXFLAGS="$WARN_CXXFLAGS -Wduplicated-cond"],           [], [$CXXFLAG_WERROR])
   AX_CHECK_COMPILE_FLAG([-Wlogical-op],                [WARN_CXXFLAGS="$WARN_CXXFLAGS -Wlogical-op"],                [], [$CXXFLAG_WERROR])
-  AX_CHECK_COMPILE_FLAG([-Woverloaded-virtual],        [WARN_CXXFLAGS="$WARN_CXXFLAGS -Woverloded-virtual"],         [], [$CXXFLAG_WERROR])
+  AX_CHECK_COMPILE_FLAG([-Woverloaded-virtual],        [WARN_CXXFLAGS="$WARN_CXXFLAGS -Woverloaded-virtual"],         [], [$CXXFLAG_WERROR])
   dnl -Wsuggest-override is broken with GCC before 9.2
   dnl https://gcc.gnu.org/bugzilla/show_bug.cgi?id=78010
   AX_CHECK_COMPILE_FLAG([-Wsuggest-override], [WARN_CXXFLAGS="$WARN_CXXFLAGS -Wsuggest-override"],                               [], [$CXXFLAG_WERROR],
