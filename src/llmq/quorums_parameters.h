@@ -91,8 +91,21 @@ namespace Consensus {
         // should be at least one more then the active quorums set.
         int keepOldConnections;
 
+        // The number of quorums for which we should keep keys. Usually it's equal to signingActiveQuorumCount * 2.
+        // Unlike for other quorum types we want to keep data (secret key shares and vvec)
+        // for Platform quorums for much longer because Platform can be restarted and
+        // it must be able to re-sign stuff.
+
+        int keepOldKeys;
+
         // How many members should we try to send all sigShares to before we give up.
         int recoveryMembers;
+    public:
+        // For how many blocks recent DKG info should be kept
+        [[ nodiscard ]] constexpr int max_store_depth() const
+        {
+            return keepOldKeys * dkgInterval;
+        }
     };
 
     static constexpr LLMQParams
@@ -112,6 +125,7 @@ namespace Consensus {
             .signingActiveQuorumCount = 2, // just a few ones to allow easier testing
 
             .keepOldConnections = 3,
+            .keepOldKeys = 4,
             .recoveryMembers = 3,
     };
 
@@ -132,6 +146,7 @@ namespace Consensus {
             .signingActiveQuorumCount = 2, // just a few ones to allow easier testing
 
             .keepOldConnections = 3,
+            .keepOldKeys = 4,
             .recoveryMembers = 3,
     };
 
@@ -152,6 +167,7 @@ namespace Consensus {
             .signingActiveQuorumCount = 4, // two days worth of LLMQs
 
             .keepOldConnections = 5,
+            .keepOldKeys = 8,
             .recoveryMembers = 5,
     };
 
@@ -172,6 +188,7 @@ namespace Consensus {
             .signingActiveQuorumCount = 4, // four days worth of LLMQs
 
             .keepOldConnections = 5,
+            .keepOldKeys = 8,
             .recoveryMembers = 5,
     };
 
@@ -192,6 +209,7 @@ namespace Consensus {
             .signingActiveQuorumCount = 4, // two days worth of LLMQs
 
             .keepOldConnections = 5,
+            .keepOldKeys = 8,
             .recoveryMembers = 5,
     };
 
@@ -212,6 +230,7 @@ namespace Consensus {
             .signingActiveQuorumCount = 4, // four days worth of LLMQs
 
             .keepOldConnections = 5,
+            .keepOldKeys = 8,
             .recoveryMembers = 5,
     };
 
@@ -232,6 +251,7 @@ namespace Consensus {
             .signingActiveQuorumCount = 6, // just a few ones to allow easier testing
 
             .keepOldConnections = 7,
+            .keepOldKeys = 12,
             .recoveryMembers = 7,
     };
 
@@ -252,6 +272,7 @@ namespace Consensus {
             .signingActiveQuorumCount = 4, // two days worth of LLMQs
 
             .keepOldConnections = 5,
+            .keepOldKeys = 8,
             .recoveryMembers = 5,
     };
 
@@ -272,6 +293,7 @@ namespace Consensus {
             .signingActiveQuorumCount = 4, // four days worth of LLMQs
 
             .keepOldConnections = 5,
+            .keepOldKeys = 8,
             .recoveryMembers = 5,
     };
 
@@ -292,6 +314,7 @@ namespace Consensus {
             .signingActiveQuorumCount = 24, // a full day worth of LLMQs
 
             .keepOldConnections = 25,
+            .keepOldKeys = 48,
             .recoveryMembers = 25,
     };
 
@@ -312,6 +335,7 @@ namespace Consensus {
             .signingActiveQuorumCount = 4, // two days worth of LLMQs
 
             .keepOldConnections = 5,
+            .keepOldKeys = 8,
             .recoveryMembers = 100,
     };
 
@@ -333,6 +357,7 @@ namespace Consensus {
             .signingActiveQuorumCount = 4, // four days worth of LLMQs
 
             .keepOldConnections = 5,
+            .keepOldKeys = 8,
             .recoveryMembers = 100,
     };
 
@@ -353,6 +378,7 @@ namespace Consensus {
             .signingActiveQuorumCount = 4, // two days worth of LLMQs
 
             .keepOldConnections = 5,
+            .keepOldKeys = 8,
             .recoveryMembers = 50,
     };
 
@@ -375,6 +401,7 @@ namespace Consensus {
             .signingActiveQuorumCount = 4, // four days worth of LLMQs
 
             .keepOldConnections = 5,
+            .keepOldKeys = 8,
             .recoveryMembers = 50,
     };
 
@@ -396,6 +423,7 @@ namespace Consensus {
             .signingActiveQuorumCount = 2, // just a few ones to allow easier testing
 
             .keepOldConnections = 3,
+            .keepOldKeys = 4,
             .recoveryMembers = 3,
     };
 
@@ -416,6 +444,7 @@ namespace Consensus {
             .signingActiveQuorumCount = 24, // a full day worth of LLMQs
 
             .keepOldConnections = 25,
+            .keepOldKeys = 48,
             .recoveryMembers = 50,
     };
 
@@ -437,6 +466,7 @@ namespace Consensus {
             .signingActiveQuorumCount = 24, // a full day worth of LLMQs
 
             .keepOldConnections = 25,
+            .keepOldKeys = 48,
             .recoveryMembers = 50,
     };
 

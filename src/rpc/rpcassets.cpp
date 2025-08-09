@@ -85,6 +85,15 @@ UniValue createasset(const JSONRPCRequest &request) {
                                  "'{\"name\":\"sub test asset\", \"is_root\":false, \"root_name\":\"TEST ASSET\", \"isunique\":false, \"maxMintCount\":10, \n"
                                  "\"decimalpoint\":2, \"referenceHash\":\"\", \"type\":0,  \"targetAddress\":\"yQPzaDmnF3FtRsoWijUN7aZDcEdyNAcmVk\", \n"
                                  "\"issueFrequency\":0, \"amount\":10000,\"ownerAddress\":\"yRyiTCKfqMG2dQ9oUvs932TjN1R1MNUTWM\"}'")
+                + HelpExampleRpc("createasset",
+                                 "'{\"name\":\"TEST ASSET\", \"updatable\":true, \"is_root\":true, \"isunique\":false, \"maxMintCount\":10, \n"
+                                 "\"decimalpoint\":2, \"referenceHash\":\"\", \"type\":0, \"targetAddress\":\"yQPzaDmnF3FtRsoWijUN7aZDcEdyNAcmVk\", \n"
+                                 "\"issueFrequency\":0, \"amount\":10000,\"ownerAddress\":\"yRyiTCKfqMG2dQ9oUvs932TjN1R1MNUTWM\"}'")
+                + HelpExampleRpc("createasset",
+                                 "'{\"name\":\"sub test asset\", \"is_root\":false, \"root_name\":\"TEST ASSET\", \"isunique\":false, \"maxMintCount\":10, \n"
+                                 "\"decimalpoint\":2, \"referenceHash\":\"\", \"type\":0,  \"targetAddress\":\"yQPzaDmnF3FtRsoWijUN7aZDcEdyNAcmVk\", \n"
+                                 "\"issueFrequency\":0, \"amount\":10000,\"ownerAddress\":\"yRyiTCKfqMG2dQ9oUvs932TjN1R1MNUTWM\"}'")
+                
         );
 
     if (getAssetsFees() == 0) {
@@ -318,6 +327,10 @@ UniValue updateasset(const JSONRPCRequest &request) {
                                  "'{\"name\":\"test asset\", \"updatable\":true, \"maxMintCount\":10, \"referenceHash\":\"\"\n,"
                                  "\"type\":0, \"targetAddress\":\"yQPzaDmnF3FtRsoWijUN7aZDcEdyNAcmVk\", \"issueFrequency\":0\n,"
                                  "\"amount\":10000,\"ownerAddress\":\"yRyiTCKfqMG2dQ9oUvs932TjN1R1MNUTWM\"}'")
+                + HelpExampleRpc("updateasset",
+                                 "'{\"name\":\"test asset\", \"updatable\":true, \"maxMintCount\":10, \"referenceHash\":\"\"\n,"
+                                 "\"type\":0, \"targetAddress\":\"yQPzaDmnF3FtRsoWijUN7aZDcEdyNAcmVk\", \"issueFrequency\":0\n,"
+                                 "\"amount\":10000,\"ownerAddress\":\"yRyiTCKfqMG2dQ9oUvs932TjN1R1MNUTWM\"}'")
         );
 
     if (getAssetsFees() == 0) {
@@ -518,8 +531,7 @@ UniValue mintasset(const JSONRPCRequest &request) {
 
                 "\nExamples:\n"
                 + HelpExampleCli("mintasset", "773cf7e057127048711d16839e4612ffb0f1599aef663d96e60f5190eb7de9a9")
-                + HelpExampleCli("mintasset",
-                                 "773cf7e057127048711d16839e4612ffb0f1599aef663d96e60f5190eb7de9a9" "yZBvV16YFvPx11qP2XhCRDi7y2e1oSMpKH" "1000")
+                + HelpExampleRpc("mintasset", "\"773cf7e057127048711d16839e4612ffb0f1599aef663d96e60f5190eb7de9a9\"")
 
         );
 
@@ -751,6 +763,7 @@ UniValue getassetdetailsbyname(const JSONRPCRequest &request) {
 
                 "\nExamples:\n"
                 + HelpExampleCli("getassetdetailsbyname", "WenMoon")
+                + HelpExampleRpc("getassetdetailsbyname", "\"WenMoon\"")
         );
     std::string assetId;
 
@@ -783,6 +796,7 @@ UniValue getassetdetailsbyid(const JSONRPCRequest &request) {
 
                 "\nExamples:\n"
                 + HelpExampleCli("getassetdetailsbyid", "b683eccf3267561e1d5f5ad0caeb362b50d0d3a68e71cceee69869df173fed12")
+                + HelpExampleRpc("getassetdetailsbyid", "\"b683eccf3267561e1d5f5ad0caeb362b50d0d3a68e71cceee69869df173fed12\"")
         );
 
     std::string assetId = request.params[0].get_str();
@@ -807,6 +821,7 @@ UniValue listassetsbalance(const JSONRPCRequest &request) {
 
                 "\nExamples:\n"
                 + HelpExampleCli("listassetsbalance", "")
+                + HelpExampleRpc("listassetsbalance", "")
         );
 
     std::shared_ptr <CWallet> const wallet = GetWalletForJSONRPCRequest(request);
@@ -1053,8 +1068,9 @@ UniValue listassets(const JSONRPCRequest &request) {
                "\nReturns a list of all assets.\n",
         {
             {"verbose", RPCArg::Type::BOOL, /* default */ "false", "false: return list of asset names, true: return list of asset metadata"},
-            {"count", RPCArg::Type::STR, /* default */ "ALL", "truncates results to include only the first _count_ assets found"},
+            {"count", RPCArg::Type::NUM, /* default */ "ALL", "truncates results to include only the first _count_ assets found"},
             {"start", RPCArg::Type::NUM, /* default */ "0", "results skip over the first _start_ assets found"},
+            {"mine", RPCArg::Type::BOOL, /* default */ "false", "if true, only return assets owned by this wallet"},
         },
         {
             RPCResult{"for verbose = false",
@@ -1095,6 +1111,9 @@ UniValue listassets(const JSONRPCRequest &request) {
         },
         RPCExamples{
                 HelpExampleCli("listassets", "")
+                + HelpExampleCli("listassets", "true")
+                + HelpExampleCli("listassets", "false 10 0")
+                + HelpExampleCli("listassets", "false 100 0 true")
         },
     }.Check(request);
 
@@ -1104,9 +1123,10 @@ UniValue listassets(const JSONRPCRequest &request) {
 
     size_t count = INT_MAX;
     if (request.params.size() > 1) {
-        if (request.params[1].get_int() < 1)
+        int countInt = request.params[1].get_int();
+        if (countInt < 1)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "count must be greater than 1.");
-        count = request.params[1].get_int();
+        count = countInt;
     }
 
     long start = 0;
@@ -1114,21 +1134,90 @@ UniValue listassets(const JSONRPCRequest &request) {
         start = request.params[2].get_int();
     }
 
-    std::vector<CDatabaseAssetData> assets;
-    if (!passetsdb->GetListAssets(assets, count, start))
-        throw JSONRPCError(RPC_INTERNAL_ERROR, "couldn't retrieve asset directory.");
+    bool mine = false;
+    if (request.params.size() > 3) {
+        const UniValue &mineParam = request.params[3];
+        if (mineParam.isBool()) {
+            mine = mineParam.get_bool();
+        } else if (mineParam.isNum()) {
+            mine = mineParam.get_int() != 0;
+        } else if (mineParam.isStr()) {
+            const std::string s = mineParam.get_str();
+            if (s == "true" || s == "1") {
+                mine = true;
+            } else if (s == "false" || s == "0") {
+                mine = false;
+            } else {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "mine must be boolean (true/false or 1/0)");
+            }
+        } else {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "mine must be boolean (true/false or 1/0)");
+        }
+    }
 
     UniValue result(UniValue::VOBJ);
-    for (auto asset: assets) {
-        // get asset metadadta
-        if (verbose){
-            UniValue tmp(UniValue::VOBJ);
-            asset.asset.ToJson(tmp);
-            result.pushKV(asset.asset.name, tmp);
-        } else {
-            UniValue tmp(UniValue::VOBJ);
-            tmp.pushKV("Asset_Id", asset.asset.assetId);
-            result.pushKV(asset.asset.name, tmp);
+
+    if (mine) {
+        // Get only assets owned by this wallet
+        std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+        if (!wallet) {
+            throw JSONRPCError(RPC_WALLET_ERROR, "Wallet not found or not available");
+        }
+
+        std::map<std::string, std::vector<COutput>> mapAssetCoins;
+        wallet->AvailableAssets(mapAssetCoins, false);
+
+        std::set<std::string> myAssetIds;
+        for (const auto& entry : mapAssetCoins) {
+            myAssetIds.insert(entry.first);
+        }
+
+        // Get asset metadata for owned assets
+        std::vector<CDatabaseAssetData> allAssets;
+        if (!passetsdb->GetListAssets(allAssets, INT_MAX, 0))
+            throw JSONRPCError(RPC_INTERNAL_ERROR, "couldn't retrieve asset directory.");
+
+        size_t loaded = 0;
+        size_t skipped = 0;
+        for (auto asset : allAssets) {
+            if (myAssetIds.count(asset.asset.assetId) > 0) {
+                if (skipped < start) {
+                    skipped++;
+                    continue;
+                }
+                if (loaded >= count) {
+                    break;
+                }
+
+                if (verbose) {
+                    UniValue tmp(UniValue::VOBJ);
+                    asset.asset.ToJson(tmp);
+                    result.pushKV(asset.asset.name, tmp);
+                } else {
+                    UniValue tmp(UniValue::VOBJ);
+                    tmp.pushKV("Asset_Id", asset.asset.assetId);
+                    result.pushKV(asset.asset.name, tmp);
+                }
+                loaded++;
+            }
+        }
+    } else {
+        // Get all assets (original behavior)
+        std::vector<CDatabaseAssetData> assets;
+        if (!passetsdb->GetListAssets(assets, count, start))
+            throw JSONRPCError(RPC_INTERNAL_ERROR, "couldn't retrieve asset directory.");
+
+        for (auto asset: assets) {
+            // get asset metadadta
+            if (verbose){
+                UniValue tmp(UniValue::VOBJ);
+                asset.asset.ToJson(tmp);
+                result.pushKV(asset.asset.name, tmp);
+            } else {
+                UniValue tmp(UniValue::VOBJ);
+                tmp.pushKV("Asset_Id", asset.asset.assetId);
+                result.pushKV(asset.asset.name, tmp);
+            }
         }
     }
 
@@ -1163,6 +1252,7 @@ UniValue listaddressesbyasset(const JSONRPCRequest &request)
                 + HelpExampleCli("listaddressesbyasset", "\"ASSET_NAME\" false 2 0")
                 + HelpExampleCli("listaddressesbyasset", "\"ASSET_NAME\" true")
                 + HelpExampleCli("listaddressesbyasset", "\"ASSET_NAME\"")
+                + HelpExampleRpc("listaddressesbyasset", "\"ASSET_NAME\"")
         );
 
     LOCK(cs_main);
@@ -1238,6 +1328,7 @@ UniValue listassetbalancesbyaddress(const JSONRPCRequest& request)
             + HelpExampleCli("listassetbalancesbyaddress", "\"myaddress\" false 2 0")
             + HelpExampleCli("listassetbalancesbyaddress", "\"myaddress\" true")
             + HelpExampleCli("listassetbalancesbyaddress", "\"myaddress\"")
+            + HelpExampleRpc("listassetbalancesbyaddress", "\"myaddress\"")
         );
 
     std::string address = request.params[0].get_str();
@@ -1303,7 +1394,7 @@ static const CRPCCommand commands[] =
             {"assets",      "listassetsbalance",            &listassetsbalance,             {}},
             {"assets",      "listunspentassets",            &listunspentassets,             {"minconf", "maxconf", "addresses", "include_unsafe", "query_options"}},
 #endif //ENABLE_WALLET
-            {"assets",      "listassets",                   &listassets,                    {"verbose", "count", "start"}},
+            {"assets",      "listassets",                   &listassets,                    {"verbose", "count", "start", "mine"}},
             {"assets",      "listaddressesbyasset",         &listaddressesbyasset,          {"asset_name", "onlytotal", "count", "start"}},
             {"assets",      "listassetbalancesbyaddress",   &listassetbalancesbyaddress,    {"address", "onlytotal", "count", "start"} },
         };

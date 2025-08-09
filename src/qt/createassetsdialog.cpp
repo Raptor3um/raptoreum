@@ -180,7 +180,7 @@ CreateAssetsDialog::CreateAssetsDialog(QWidget *parent) :
     ui->RootAssetBox->setModel(proxy);
     ui->RootAssetBox->setEditable(true);
     ui->RootAssetBox->lineEdit()->setPlaceholderText(tr("Select Root asset"));
-    bool isRoot = ui->AssetTypeBox->currentText() == "Root";
+    bool isRoot = ui->AssetTypeBox->currentIndex() == 0;
     ui->assetnameText->setToolTip(isRoot ? tr("A-Z 0-9, no spaces") : tr("a-z A-Z 0-9 and space"));
 }
 
@@ -328,7 +328,7 @@ void CreateAssetsDialog::createAsset() {
     }
 
     CNewAssetTx assetTx;
-    bool isRoot = ui->AssetTypeBox->currentText() == "Root";
+    bool isRoot = ui->AssetTypeBox->currentIndex() == 0;
     assetTx.name = this->getAssetName(isRoot);
 
     assetTx.referenceHash = ui->ipfsText->text().toStdString();
@@ -353,7 +353,7 @@ void CreateAssetsDialog::createAsset() {
     assetTx.maxMintCount = ui->maxmintSpinBox->value();
     assetTx.issueFrequency = ui->IssueFrequencyBox->value();
 
-    assetTx.isRoot = ui->AssetTypeBox->currentText() == "Root";
+    assetTx.isRoot = ui->AssetTypeBox->currentIndex() == 0;
     if (!assetTx.isRoot) {//sub asset
         if (ui->RootAssetBox->currentIndex() > 0) {
             std::string assetId;
@@ -439,7 +439,7 @@ void CreateAssetsDialog::onUniqueChanged() {
 bool CreateAssetsDialog::validateInputs() {
     bool retval{true};
 
-    bool isRoot = ui->AssetTypeBox->currentText() == "Root";
+    bool isRoot = ui->AssetTypeBox->currentIndex() == 0;
     std::string assetname  = this->getAssetName(isRoot);
     //check if asset name is valid
     if (!IsAssetNameValid(assetname, isRoot)) {
@@ -817,7 +817,7 @@ void CreateAssetsDialog::openFilePicker() {
 
 void CreateAssetsDialog::onAssetNameChanged(QString name)
 {
-    bool isRoot = ui->AssetTypeBox->currentText() == "Root";
+    bool isRoot = ui->AssetTypeBox->currentIndex() == 0;
     std::string assetname = this->getAssetName(isRoot);
 
     // Check asset name (root or sub)

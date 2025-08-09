@@ -2592,6 +2592,7 @@ bool AppInitMain(const util::Ref &context, NodeContext &node, interfaces::BlockA
     if (fSmartnodeMode) {
         node.scheduler->scheduleEvery(
                 std::bind(&CCoinJoinServer::DoMaintenance, std::ref(coinJoinServer), std::ref(*node.connman)), 1000);
+        node.scheduler->scheduleEvery(&llmq::DoMaintenance, 3600000); // run every 1 hours
 #ifdef ENABLE_WALLET
         } else if(CCoinJoinClientOptions::IsEnabled()) {
             node.scheduler->scheduleEvery(std::bind(&DoCoinJoinMaintenance, std::ref(*node.connman)), 1000);

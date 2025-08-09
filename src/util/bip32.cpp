@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <sstream>
+#include <cstdint>
 #include <stdio.h>
 #include <tinyformat.h>
 #include <util/bip32.h>

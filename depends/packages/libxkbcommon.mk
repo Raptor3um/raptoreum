@@ -14,8 +14,9 @@ define $(package)_preprocess_cmds
   cp -f $(BASEDIR)/config.guess $(BASEDIR)/config.sub build-aux
 endef
 
+# gcc 12 generates array bound warnings.  Open issue for libxkbcommon: https://github.com/xkbcommon/libxkbcommon/issues/292
 define $(package)_config_cmds
-  $($(package)_autoconf)
+  $($(package)_autoconf) CFLAGS=-Wno-array-bounds CXXFLAGS=-Wno-array-bounds
 endef
 
 define $(package)_build_cmds
@@ -29,4 +30,3 @@ endef
 define $(package)_postprocess_cmds
   rm lib/*.la
 endef
-

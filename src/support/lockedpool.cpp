@@ -19,6 +19,7 @@
 #include <sys/mman.h> // for mmap
 #include <sys/resource.h> // for getrlimit
 #include <limits.h> // for PAGESIZE
+#include <stdexcept> // for std::runtime_error
 #include <unistd.h> // for sysconf
 
 #endif

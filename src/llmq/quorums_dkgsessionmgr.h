@@ -101,6 +101,8 @@ namespace llmq {
                                 const CBlockIndex *pQuorumBaseBlockIndex,
                                 const uint256 &proTxHash,
                                 const uint32_t& updateVote);
+                                
+        void CleanupOldContributions() const;
 
     private:
         void MigrateDKG();
