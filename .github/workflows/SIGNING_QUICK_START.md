@@ -177,7 +177,7 @@ If USB token is lost or damaged:
 
 For complete details, see:
 - [WINDOWS_CODE_SIGNING_GUIDE.md](WINDOWS_CODE_SIGNING_GUIDE.md) - Full guide
-- [sign-raptoreum.ps1](../scripts/sign-raptoreum.ps1) - Signing script
+- [sign-raptoreum.ps1](../../scripts/sign-raptoreum.ps1) - Signing script
 
 ## 🔗 Useful Links
 
