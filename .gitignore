@@ -167,3 +167,14 @@ release/
 contrib/guix/
 stage/
 
+# Code signing - never commit certificates or private keys
+*.pfx
+*.p12
+*.cer
+*.crt
+*.key
+*.pem
+scripts/CERTIFICATE_INFO.md
+**/certificate_info.md
+**/cert_*.md
+
