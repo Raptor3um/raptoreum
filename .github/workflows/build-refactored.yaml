@@ -78,18 +78,21 @@ jobs:
             host: x86_64-pc-linux-gnu
             packages: curl libcurl4-openssl-dev build-essential libtool autotools-dev automake pkg-config python3 bsdmainutils cmake ccache
             platform-id: ubuntu22
-            
+            strip-command: strip
+
           - name: Ubuntu 24
             runner: ubuntu-24.04
             host: x86_64-pc-linux-gnu
             packages: curl libcurl4-openssl-dev build-essential libtool autotools-dev automake pkg-config python3 bsdmainutils cmake ccache
             platform-id: ubuntu24
-            
+            strip-command: strip
+
           - name: ARM 64-bit
             runner: ubuntu-22.04
             host: aarch64-linux-gnu
             packages: curl libcurl4-openssl-dev build-essential libtool g++-aarch64-linux-gnu autotools-dev automake pkg-config python3 bsdmainutils cmake ccache
             platform-id: arm64
+            strip-command: aarch64-linux-gnu-strip
 
     steps:
       - name: Checkout
@@ -114,11 +117,20 @@ jobs:
 
       - name: Collect Release Binaries
         run: |
-          mkdir -p ${BUILD_DIR} ${BUILD_DIR}_not_strip ${TEST_DIR}
-          cp src/{raptoreum-cli,raptoreumd,qt/raptoreum-qt} ${BUILD_DIR}/
-          mv src/{raptoreum-cli,raptoreumd,qt/raptoreum-qt} ${BUILD_DIR}_not_strip/
+          mkdir -p ${BUILD_DIR} ${TEST_DIR}
+          
+          # For native builds, create stripped and non-stripped versions
+          if [[ "${{ matrix.platform.host }}" != "aarch64-linux-gnu" ]]; then
+            mkdir -p ${BUILD_DIR}_not_strip
+            cp src/{raptoreum-cli,raptoreumd,qt/raptoreum-qt} ${BUILD_DIR}/
+            mv src/{raptoreum-cli,raptoreumd,qt/raptoreum-qt} ${BUILD_DIR}_not_strip/
+            ${{ matrix.platform.strip-command }} ${BUILD_DIR}/*
+          else
+            # For ARM cross-compile, just move binaries (don't strip)
+            mv src/{raptoreum-cli,raptoreumd,qt/raptoreum-qt} ${BUILD_DIR}/
+          fi
+          
           mv src/test/test_raptoreum ${TEST_DIR}
-          strip ${BUILD_DIR}/*
 
       - name: Clean for Debug Build
         run: |
