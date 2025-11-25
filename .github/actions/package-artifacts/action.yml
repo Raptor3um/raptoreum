@@ -1,0 +1,78 @@
+name: 'Package Artifacts'
+description: 'Generate checksums and package build artifacts'
+inputs:
+  platform:
+    description: 'Platform identifier (e.g., ubuntu22, win64, arm64)'
+    required: true
+  version:
+    description: 'Version string for the package'
+    required: true
+  coin-name:
+    description: 'Coin name'
+    required: false
+    default: 'raptoreum'
+
+runs:
+  using: "composite"
+  steps:
+    - name: Generate Checksums and Compress
+      shell: bash
+      run: |
+        COIN_NAME="${{ inputs.coin-name }}"
+        PLATFORM="${{ inputs.platform }}"
+        VERSION="${{ inputs.version }}"
+        BUILD_DIR="${COIN_NAME}-build"
+        COMPRESS_DIR="${COIN_NAME}-compress"
+        
+        # Function to generate checksums for a directory
+        generate_checksums() {
+          local dir=$1
+          local variant=$2
+          
+          cd "$dir"
+          echo "sha256:" >> checksums.txt
+          echo "------------------------------------" >> checksums.txt
+          shasum * >> checksums.txt 2>/dev/null || true
+          echo "------------------------------------" >> checksums.txt
+          echo "openssl-sha256:" >> checksums.txt
+          echo "------------------------------------" >> checksums.txt
+          sha256sum * >> checksums.txt 2>/dev/null || true
+          cat checksums.txt
+          
+          cd ..
+          tar -czf "${COIN_NAME}-${PLATFORM}${variant}-${VERSION}.tar.gz" -C "$dir" .
+        }
+        
+        mkdir -p "${COMPRESS_DIR}"
+        
+        # Package main build
+        if [ -d "${BUILD_DIR}" ]; then
+          generate_checksums "${BUILD_DIR}" ""
+        fi
+        
+        # Package debug build
+        if [ -d "${BUILD_DIR}_debug" ]; then
+          generate_checksums "${BUILD_DIR}_debug" "-debug"
+        fi
+        
+        # Package non-stripped build
+        if [ -d "${BUILD_DIR}_not_strip" ]; then
+          generate_checksums "${BUILD_DIR}_not_strip" "-not_strip"
+        fi
+        
+        # Move all tarballs to compress directory
+        mv *.tar.gz "${COMPRESS_DIR}/" 2>/dev/null || true
+        
+        # Generate master checksums file
+        cd "${COMPRESS_DIR}"
+        rm -f checksums.txt
+        for file in *.tar.gz; do
+          if [ -f "$file" ]; then
+            echo "sha256: $(shasum "$file" 2>/dev/null || echo "N/A")" >> checksums.txt
+            echo "openssl-sha256: $(sha256sum "$file" 2>/dev/null || echo "N/A")" >> checksums.txt
+          fi
+        done
+        
+        cd ..
+        cat "${COMPRESS_DIR}/checksums.txt"
+

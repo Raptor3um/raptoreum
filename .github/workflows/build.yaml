@@ -61,186 +61,6 @@ jobs:
     outputs:
       version: ${{ steps.selected-version.outputs.version }}
 
-  build-ubuntu20:
-    name: Ubuntu 20 Build
-    needs: get-version
-    runs-on: ubuntu-20.04
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Install Required Packages
-        run: |
-          sudo apt-get update -y
-          sudo apt-get install curl libcurl4-openssl-dev build-essential libtool autotools-dev automake pkg-config python3 bsdmainutils cmake ccache -y
-
-      - name: Cache depends sources
-        uses: actions/cache@v4
-        with:
-          path: |
-            depends/sources
-          key: depends-sources-${{ hashFiles('depends/packages/*') }}
-          restore-keys: |
-            depends-sources-
-
-      - name: Restore cached depends
-        uses: actions/cache/restore@v4
-        id: restore-depends
-        with:
-          path: |
-            depends/built
-            depends/${{ steps.setup.outputs.HOST }}
-          key: depends-${{ github.job }}-${{ hashFiles('depends/packages/*') }}
-          restore-keys: |
-            depends-${{ github.job }}-
-
-      - name: Build Depends
-        run: |
-          echo "building with $(nproc) threads"
-          gcc --version
-          export FALLBACK_DOWNLOAD_PATH=https://pool.nowput.org/depends/
-          make -C depends -j$(nproc)  HOST=x86_64-pc-linux-gnu
-
-      - name: Save depends cache
-        uses: actions/cache/save@v4
-        if: steps.restore-depends.outputs.cache-hit != 'true'
-        with:
-          path: |
-            depends/built
-            depends/${{ steps.setup.outputs.HOST }}
-          key: ${{ steps.restore-depends.outputs.cache-primary-key }}
-
-      - name: Configure
-        run: |
-          ./autogen.sh
-          ./configure --prefix=`pwd`/depends/x86_64-pc-linux-gnu
-
-      - name: Set ccache directory
-        run: echo "CCACHE_DIR=${RUNNER_TEMP}/ccache_dir" >> "$GITHUB_ENV"
-
-      - name: Restore ccache cache
-        id: restore-ccache
-        uses: actions/cache/restore@v4
-        with:
-          path: ${{ env.CCACHE_DIR }}
-          key: ${{ github.job }}-ccache
-
-      - name: Build Binaries
-        run: |
-          make -j$(nproc)
-          mkdir -p ${BUILD_DIR} ${BUILD_DIR}_not_strip ${TEST_DIR}
-          cp src/{raptoreum-cli,raptoreumd,qt/raptoreum-qt} ${BUILD_DIR}/
-          mv src/{raptoreum-cli,raptoreumd,qt/raptoreum-qt} ${BUILD_DIR}_not_strip/
-          mv src/test/test_raptoreum ${TEST_DIR}
-          strip ${BUILD_DIR}/*
-
-      - name: Build Debug Binaries
-        run: |
-          make clean
-          make distclean
-          ./autogen.sh
-          ./configure --prefix=`pwd`/depends/x86_64-pc-linux-gnu --disable-tests --enable-debug --enable-crash-hooks
-          make -j$(nproc)
-          mkdir -p ${BUILD_DIR}_debug
-          mv src/{raptoreum-cli,raptoreumd,qt/raptoreum-qt} ${BUILD_DIR}_debug/
-
-      - name: Save ccache cache
-        uses: actions/cache/save@v4
-        if: steps.restore-ccache.outputs.cache-hit != 'true'
-        with:
-          path: ${{ env.CCACHE_DIR }}
-          key: ${{ github.job }}-ccache
-
-      - name: Generate Checksum and Compress
-        run: |
-          mkdir -p ${COMPRESS_DIR}
-          cd ${BUILD_DIR}
-          echo "sha256:" >> checksums.txt
-          echo "------------------------------------" >> checksums.txt
-          shasum * >> checksums.txt
-          echo "------------------------------------" >> checksums.txt
-          echo "openssl-sha256:" >> checksums.txt
-          echo "------------------------------------" >> checksums.txt
-          sha256sum * >> checksums.txt
-          cat checksums.txt
-          tar -cvzf ../${COIN_NAME}-ubuntu20-${{ needs.get-version.outputs.version }}.tar.gz *
-          cd ../${BUILD_DIR}_debug
-          echo "sha256:" >> checksums.txt
-          echo "------------------------------------" >> checksums.txt
-          shasum * >> checksums.txt
-          echo "------------------------------------" >> checksums.txt
-          echo "openssl-sha256:" >> checksums.txt
-          echo "------------------------------------" >> checksums.txt
-          sha256sum * >> checksums.txt
-          cat checksums.txt
-          tar -cvzf ../${COIN_NAME}-ubuntu20-debug-${{ needs.get-version.outputs.version }}.tar.gz *
-          cd ../${BUILD_DIR}_not_strip
-          echo "sha256:" >> checksums.txt
-          echo "------------------------------------" >> checksums.txt
-          shasum * >> checksums.txt
-          echo "------------------------------------" >> checksums.txt
-          echo "openssl-sha256:" >> checksums.txt
-          echo "------------------------------------" >> checksums.txt
-          sha256sum * >> checksums.txt
-          cat checksums.txt
-          tar -cvzf ../${COIN_NAME}-ubuntu20-not_strip-${{ needs.get-version.outputs.version }}.tar.gz *
-          cd ..
-          mv *.tar.gz ${COMPRESS_DIR}/
-          cd ${COMPRESS_DIR}
-          echo "sha256: `shasum ${COIN_NAME}-ubuntu20-${{ needs.get-version.outputs.version }}.tar.gz`" >> checksums.txt
-          echo "openssl-sha256: `sha256sum ${COIN_NAME}-ubuntu20-${{ needs.get-version.outputs.version }}.tar.gz`" >> checksums.txt
-          echo "sha256: `shasum ${COIN_NAME}-ubuntu20-debug-${{ needs.get-version.outputs.version }}.tar.gz`" >> checksums.txt
-          echo "openssl-sha256: `sha256sum ${COIN_NAME}-ubuntu20-debug-${{ needs.get-version.outputs.version }}.tar.gz`" >> checksums.txt
-          echo "sha256: `shasum ${COIN_NAME}-ubuntu20-not_strip-${{ needs.get-version.outputs.version }}.tar.gz`" >> checksums.txt
-          echo "openssl-sha256: `sha256sum ${COIN_NAME}-ubuntu20-not_strip-${{ needs.get-version.outputs.version }}.tar.gz`" >> checksums.txt
-          cd ..
-          cat ${COMPRESS_DIR}/checksums.txt
-
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ env.COIN_NAME }}-ubuntu20-${{ needs.get-version.outputs.version }}
-          path: ${{ env.COMPRESS_DIR }}
-
-      - name: Upload Test Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ env.COIN_NAME }}-ubuntu20-test-${{ needs.get-version.outputs.version }}
-          path: ${{ env.TEST_DIR }}
-
-  test-ubuntu20:
-    name: Ubuntu 20 Tests
-    needs: [get-version, build-ubuntu20]
-    runs-on: ubuntu-20.04
-
-    steps:
-      - name: Download Artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: ${{ env.COIN_NAME }}-ubuntu20-test-${{ needs.get-version.outputs.version }}
-
-      - name: Run Unit Tests
-        id: Tests
-        run: |
-          chmod +x test_raptoreum
-          ./test_raptoreum --log_format=JUNIT > unit_test_results.xml
-
-      - name: Upload Test Artifacts
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: ${{ env.COIN_NAME }}-ubuntu20-test-results-${{ needs.get-version.outputs.version }}
-          path: unit_test_results.xml
-
-      - name: Publish Unit Test Report
-        uses: mikepenz/action-junit-report@v5
-        if: always()
-        with:
-          check_name: "Ubuntu 20"
-          detailed_summary: ${{ steps.Tests.conclusion == 'failure'}}
-          include_passed: false
-          report_paths: "unit_test_results.xml"
 
   build-ubuntu22:
     name: Ubuntu 22 Build
@@ -280,7 +100,7 @@ jobs:
         run: |
           echo "building with $(nproc) threads"
           gcc --version
-          export FALLBACK_DOWNLOAD_PATH=https://pool.nowput.org/depends/
+          export FALLBACK_DOWNLOAD_PATH=https://sign.raptoreum.com/depends/
           make -C depends -j$(nproc)  HOST=x86_64-pc-linux-gnu
 
       - name: Save depends cache
@@ -461,7 +281,7 @@ jobs:
         run: |
           echo "building with $(nproc) threads"
           gcc --version
-          export FALLBACK_DOWNLOAD_PATH=https://pool.nowput.org/depends/
+          export FALLBACK_DOWNLOAD_PATH=https://sign.raptoreum.com/depends/
           make -C depends -j$(nproc)  HOST=x86_64-pc-linux-gnu
 
       - name: Save depends cache
@@ -656,7 +476,7 @@ jobs:
 #           echo "Path: ${PATH}"
 #           echo "env:"
 #           env
-#           export FALLBACK_DOWNLOAD_PATH=https://pool.nowput.org/depends/
+#           export FALLBACK_DOWNLOAD_PATH=https://sign.raptoreum.com/depends/
 #           make -C depends -j$(sysctl -n hw.logicalcpu) HOST=x86_64-apple-darwin
 
 #       - name: Save config logs
@@ -855,7 +675,7 @@ jobs:
 #       - name: Build Depends
 #         run: |
 #           echo "building with $(sysctl -n hw.logicalcpu) threads"
-#           export FALLBACK_DOWNLOAD_PATH=https://pool.nowput.org/depends/
+#           export FALLBACK_DOWNLOAD_PATH=https://sign.raptoreum.com/depends/
 #           make -C depends -j$(sysctl -n hw.logicalcpu) HOST=arm64-apple-darwin
 
 #       - name: Save config logs
@@ -1041,7 +861,7 @@ jobs:
       - name: Build Depends
         run: |
           echo "building with $(nproc) threads"
-          export FALLBACK_DOWNLOAD_PATH=https://pool.nowput.org/depends/
+          export FALLBACK_DOWNLOAD_PATH=https://sign.raptoreum.com/depends/
           make -C depends -j$(nproc) HOST=aarch64-linux-gnu
 
       - name: Save depends cache
@@ -1217,7 +1037,7 @@ jobs:
       - name: Build Depends
         run: |
           echo "building with $(nproc) threads"
-          export FALLBACK_DOWNLOAD_PATH=https://pool.nowput.org/depends/
+          export FALLBACK_DOWNLOAD_PATH=https://sign.raptoreum.com/depends/
           make -C depends -j$(nproc) HOST=x86_64-w64-mingw32
 
       - name: Save depends cache
@@ -1232,7 +1052,7 @@ jobs:
       - name: Configure
         run: |
           ./autogen.sh
-          export FALLBACK_DOWNLOAD_PATH=https://pool.nowput.org/depends/
+          export FALLBACK_DOWNLOAD_PATH=https://sign.raptoreum.com/depends/
           ./configure --prefix=`pwd`/depends/x86_64-w64-mingw32
 
       - name: Set ccache directory
