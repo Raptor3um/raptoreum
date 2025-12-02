@@ -36,6 +36,8 @@ namespace llmq {
     }
 
     void CDKGSessionManager::MigrateDKG() {
+        LOCK(cs_db);
+
         if (!db->IsEmpty()) return;
 
         LogPrint(BCLog::LLMQ, "CDKGSessionManager::%d -- start\n", __func__);
@@ -293,6 +295,7 @@ namespace llmq {
                                                            const CBlockIndex *pQuorumBaseBlockIndex,
                                                            const uint256 &proTxHash,
                                                            const BLSVerificationVectorPtr &vvec) {
+        LOCK(cs_db);
         db->Write(std::make_tuple(DB_VVEC, llmqType, pQuorumBaseBlockIndex->GetBlockHash(), proTxHash), *vvec);
     }
 
@@ -300,6 +303,7 @@ namespace llmq {
                                                          const CBlockIndex *pQuorumBaseBlockIndex,
                                                          const uint256 &proTxHash,
                                                          const CBLSSecretKey &skContribution) {
+        LOCK(cs_db);
         db->Write(std::make_tuple(DB_SKCONTRIB, llmqType, pQuorumBaseBlockIndex->GetBlockHash(), proTxHash),
                   skContribution);
     }
@@ -308,6 +312,7 @@ namespace llmq {
                                                          const CBlockIndex *pQuorumBaseBlockIndex,
                                                          const uint256 &proTxHash,
                                                          const CBLSIESMultiRecipientObjects <CBLSSecretKey> &contributions) {
+        LOCK(cs_db);
         db->Write(std::make_tuple(DB_ENC_CONTRIB, llmqType, pQuorumBaseBlockIndex->GetBlockHash(), proTxHash),
                   contributions);
     }
@@ -316,6 +321,7 @@ namespace llmq {
                                                 const CBlockIndex *pQuorumBaseBlockIndex,
                                                 const uint256 &proTxHash,
                                                 const uint32_t& updateVote) {
+        LOCK(cs_db);
         db->Write(std::make_tuple(DB_NODE_VOTE, llmqType, pQuorumBaseBlockIndex->GetBlockHash(), proTxHash), updateVote);
     }
 
@@ -342,6 +348,7 @@ namespace llmq {
                 ContributionsCacheKey cacheKey = {llmqType, pQuorumBaseBlockIndex->GetBlockHash(), proTxHash};
                 auto it = contributionsCache.find(cacheKey);
                 if (it == contributionsCache.end()) {
+                    LOCK(cs_db);
                     auto vvecPtr = std::make_shared<BLSVerificationVector>();
                     CBLSSecretKey skContribution;
                     if (!db->Read(std::make_tuple(DB_VVEC, llmqType, pQuorumBaseBlockIndex->GetBlockHash(), proTxHash),
@@ -397,6 +404,7 @@ namespace llmq {
 
         for (size_t i = 0; i < members.size(); i++) {
             if (validMembers[i]) {
+                LOCK(cs_db);
                 CBLSIESMultiRecipientObjects <CBLSSecretKey> encryptedContributions;
                 if (!db->Read(std::make_tuple(DB_ENC_CONTRIB, llmqType, pQuorumBaseBlockIndex->GetBlockHash(),
                                               members[i]->proTxHash), encryptedContributions)) {
@@ -426,6 +434,7 @@ namespace llmq {
 
     void CDKGSessionManager::CleanupOldContributions() const
     {
+        LOCK(cs_db);
         if (db->IsEmpty()) {
             return;
         }
@@ -445,13 +454,17 @@ namespace llmq {
 
                 pcursor->Seek(start);
                 LOCK(cs_main);
-                while (pcursor->Valid() || std::get<0>(k) != prefix || std::get<1>(k) != params.type) {
-                    if (!pcursor->GetKey(k)) {
+                LogPrint(BCLog::LLMQ, "CDKGSessionManager::%s -- Valid: %d, PrefixMatch: %d, TypeMatch: %d\n", __func__, pcursor->Valid(), std::get<0>(k) == prefix, std::get<1>(k) == params.type);
+
+                while (pcursor->Valid()) {
+                    if (!pcursor->GetKey(k) || std::get<0>(k) != prefix || std::get<1>(k) != params.type) {
                         break;
                     }
                     cnt_all++;
                     const CBlockIndex* pindexQuorum = LookupBlockIndex(std::get<2>(k));
                     if (pindexQuorum == nullptr || ::ChainActive().Tip()->nHeight - pindexQuorum->nHeight > params.max_store_depth()) {
+                        LogPrint(BCLog::LLMQ, "CDKGSessionManager::%s -- removing element for llmq type %d\n", __func__, uint8_t(params.type));
+
                         // not found or too old
                         batch.Erase(k);
                         cnt_old++;
@@ -460,7 +473,7 @@ namespace llmq {
                 }
                 pcursor.reset();
             }
-            LogPrint(BCLog::LLMQ, "CDKGSessionManager::%s -- found %lld entries for llmq type %d\n", __func__, cnt_all, uint8_t(params.type));
+            LogPrint(BCLog::LLMQ, "CDKGSessionManager::%s -- found %lld entries for llmq type %d, old: %d\n", __func__, cnt_all, uint8_t(params.type), cnt_old);
             if (cnt_old > 0) {
                 db->WriteBatch(batch);
                 LogPrint(BCLog::LLMQ, "CDKGSessionManager::%s -- removed %lld old entries for llmq type %d\n", __func__, cnt_old, uint8_t(params.type));

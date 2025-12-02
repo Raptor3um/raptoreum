@@ -21,6 +21,7 @@ namespace llmq {
         static const int64_t MAX_CONTRIBUTION_CACHE_TIME = 60 * 1000;
 
     private:
+        mutable Mutex cs_db;
         std::unique_ptr <CDBWrapper> db{nullptr};
         CBLSWorker &blsWorker;
         CConnman &connman;
@@ -101,7 +102,7 @@ namespace llmq {
                                 const CBlockIndex *pQuorumBaseBlockIndex,
                                 const uint256 &proTxHash,
                                 const uint32_t& updateVote);
-                                
+
         void CleanupOldContributions() const;
 
     private:
