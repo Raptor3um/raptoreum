@@ -1,0 +1,52 @@
+name: 'Setup Dependencies'
+description: 'Build and cache project dependencies'
+inputs:
+  host:
+    description: 'Host triplet for cross-compilation'
+    required: true
+    default: 'x86_64-pc-linux-gnu'
+  fallback-download-path:
+    description: 'Fallback URL for downloading dependencies'
+    required: false
+    default: 'https://sign.raptoreum.com/depends/'
+
+runs:
+  using: "composite"
+  steps:
+    - name: Cache depends sources
+      uses: actions/cache@v4
+      with:
+        path: |
+          depends/sources
+        key: depends-sources-${{ hashFiles('depends/packages/*') }}
+        restore-keys: |
+          depends-sources-
+
+    - name: Restore cached depends
+      uses: actions/cache/restore@v4
+      id: restore-depends
+      with:
+        path: |
+          depends/built
+          depends/${{ inputs.host }}
+        key: depends-${{ github.job }}-${{ hashFiles('depends/packages/*') }}
+        restore-keys: |
+          depends-${{ github.job }}-
+
+    - name: Build Depends
+      shell: bash
+      run: |
+        echo "building with $(nproc) threads"
+        gcc --version || clang --version
+        export FALLBACK_DOWNLOAD_PATH=${{ inputs.fallback-download-path }}
+        make -C depends -j$(nproc) HOST=${{ inputs.host }}
+
+    - name: Save depends cache
+      uses: actions/cache/save@v4
+      if: steps.restore-depends.outputs.cache-hit != 'true'
+      with:
+        path: |
+          depends/built
+          depends/${{ inputs.host }}
+        key: ${{ steps.restore-depends.outputs.cache-primary-key }}
+

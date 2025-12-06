@@ -1,0 +1,51 @@
+name: 'Build Binaries'
+description: 'Configure and build Raptoreum binaries'
+inputs:
+  host:
+    description: 'Host triplet for cross-compilation'
+    required: true
+    default: 'x86_64-pc-linux-gnu'
+  configure-flags:
+    description: 'Additional configure flags'
+    required: false
+    default: ''
+  build-type:
+    description: 'Build type (release or debug)'
+    required: false
+    default: 'release'
+
+runs:
+  using: "composite"
+  steps:
+    - name: Configure
+      shell: bash
+      run: |
+        ./autogen.sh
+        if [ "${{ inputs.build-type }}" = "debug" ]; then
+          ./configure --prefix=`pwd`/depends/${{ inputs.host }} --disable-tests --enable-debug --enable-crash-hooks ${{ inputs.configure-flags }}
+        else
+          ./configure --prefix=`pwd`/depends/${{ inputs.host }} ${{ inputs.configure-flags }}
+        fi
+
+    - name: Set ccache directory
+      shell: bash
+      run: echo "CCACHE_DIR=${RUNNER_TEMP}/ccache_dir" >> "$GITHUB_ENV"
+
+    - name: Restore ccache cache
+      id: restore-ccache
+      uses: actions/cache/restore@v4
+      with:
+        path: ${{ env.CCACHE_DIR }}
+        key: ${{ github.job }}-${{ inputs.build-type }}-ccache
+
+    - name: Build
+      shell: bash
+      run: make -j$(nproc)
+
+    - name: Save ccache cache
+      uses: actions/cache/save@v4
+      if: steps.restore-ccache.outputs.cache-hit != 'true'
+      with:
+        path: ${{ env.CCACHE_DIR }}
+        key: ${{ github.job }}-${{ inputs.build-type }}-ccache
+
