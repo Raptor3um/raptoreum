@@ -128,7 +128,12 @@ ConstructTransaction(const UniValue &inputs_in, const UniValue &outputs_in, cons
                     assetId = sendToValue["assetid"].get_str();
                     if (!sendToValue["uniqueid"].isNull()) {
                         uniqueId = (uint32_t)sendToValue["uniqueid"].get_int64();
-                        nAmount = 1 * COIN;
+                        // Read amount if specified, otherwise default to 1 COIN for single unique asset
+                        if (!sendToValue["amount"].isNull()) {
+                            nAmount = AmountFromValue(sendToValue["amount"]);
+                        } else {
+                            nAmount = 1 * COIN;
+                        }
                     } else {
                         if (sendToValue["amount"].isNull()) {
                             throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("no asset amount is specified"));
