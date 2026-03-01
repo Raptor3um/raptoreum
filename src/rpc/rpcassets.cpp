@@ -72,6 +72,7 @@ UniValue createasset(const JSONRPCRequest &request) {
                 "   \"issueFrequency:\"     (numeric) mint specific amount of token every x blocks\n"
                 "   \"amount:\"             (numeric, (max 500 for unique) amount to distribute each time if type is not manual.\n"
                 "   \"ownerAddress:\"       (string) address that this asset is owned by. Only key holder of this address will be able to mint new tokens\n"
+                "   \"feeAddress:\"         (string, optional) address that pays the burn fee and receives change\n"
                 "}\n"
                 "\nResult:\n"
                 "\"txid\"                   (string) The transaction id for the new asset\n"
@@ -255,6 +256,37 @@ UniValue createasset(const JSONRPCRequest &request) {
     std::string strFailReason;
     std::vector <CRecipient> vecSend;
     CCoinControl coinControl;
+    const UniValue &feeAddressObj = find_value(asset, "feeAddress");
+
+    if (!feeAddressObj.isNull()) {
+        std::string feeAddrStr = feeAddressObj.get_str();
+        CTxDestination feeDest = DecodeDestination(feeAddrStr);
+        
+        if (!IsValidDestination(feeDest)) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Error: Invalid feeAddress");
+        }
+
+        coinControl.destChange = feeDest;
+
+        std::vector<COutput> vAvailableCoins;
+        pwallet->AvailableCoins(vAvailableCoins, true, &coinControl);
+
+        bool foundCoins = false;
+        for (const COutput& out : vAvailableCoins) {
+            CTxDestination address;
+            if (ExtractDestination(out.tx->tx->vout[out.i].scriptPubKey, address) && address == feeDest) {
+                coinControl.Select(COutPoint(out.tx->GetHash(), out.i));
+                foundCoins = true;
+            }
+        }
+
+        if (!foundCoins) {
+            throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Error: No spendable UTXOs found on the specified feeAddress");
+        }
+
+        coinControl.fAllowOtherInputs = false;
+    }
+
     assetTx.fee = getAssetsFees();
     int Payloadsize;
 
@@ -292,7 +324,7 @@ UniValue updateasset(const JSONRPCRequest &request) {
         request.params.size() > 1)
         throw std::runtime_error(
                 "updateasset asset_metadata\n"
-                "Create a new asset\n"
+                "Update an existing asset\n"
                 "\nArguments:\n"
                 "1. \"asset\"               (string, required) A json object with asset metadata\n"
                 "{\n"
@@ -305,6 +337,7 @@ UniValue updateasset(const JSONRPCRequest &request) {
                 "   \"issueFrequency:\"     (numeric, optional) mint specific amount of token every x blocks\n"
                 "   \"amount:\"             (numeric, optional) amount to distribute each time if type is not manual.\n"
                 "   \"ownerAddress:\"       (string, optional) address that this asset is owned by. Only key holder of this address will be able to mint new tokens\n"
+                "   \"feeAddress:\"         (string, optional) address that pays the burn fee and receives RTM change\n"
                 "}\n"
                 "\nResult:\n"
                 "\"txid\"                   (string) The transaction hash\n"
@@ -313,7 +346,7 @@ UniValue updateasset(const JSONRPCRequest &request) {
                 + HelpExampleCli("updateasset",
                                  "'{\"name\":\"test asset\", \"updatable\":true, \"maxMintCount\":10, \"referenceHash\":\"\"\n,"
                                  "\"type\":0, \"targetAddress\":\"yQPzaDmnF3FtRsoWijUN7aZDcEdyNAcmVk\", \"issueFrequency\":0\n,"
-                                 "\"amount\":10000,\"ownerAddress\":\"yRyiTCKfqMG2dQ9oUvs932TjN1R1MNUTWM\"}'")
+                                 "\"amount\":10000,\"ownerAddress\":\"yRyiTCKfqMG2dQ9oUvs932TjN1R1MNUTWM\",\"feeAddress\":\"yRyiTCKfqMG2dQ9oUvs932TjN1R1MNUTWM\"}'")
         );
 
     if (getAssetsFees() == 0) {
@@ -473,6 +506,38 @@ UniValue updateasset(const JSONRPCRequest &request) {
     std::string strFailReason;
     std::vector <CRecipient> vecSend;
     assetTx.fee = getAssetsFees();
+
+    // feeAddress: optional parameter to control which address pays the fee and receives RTM change
+    const UniValue &feeAddressObj = find_value(asset, "feeAddress");
+    if (!feeAddressObj.isNull()) {
+        std::string feeAddrStr = feeAddressObj.get_str();
+        CTxDestination feeDest = DecodeDestination(feeAddrStr);
+
+        if (!IsValidDestination(feeDest)) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Error: Invalid feeAddress");
+        }
+
+        coinControl.destChange = feeDest;
+
+        std::vector<COutput> vAvailableCoins;
+        pwallet->AvailableCoins(vAvailableCoins, true, &coinControl);
+
+        bool foundCoins = false;
+        for (const COutput& out : vAvailableCoins) {
+            CTxDestination address;
+            if (ExtractDestination(out.tx->tx->vout[out.i].scriptPubKey, address) && address == feeDest) {
+                coinControl.Select(COutPoint(out.tx->GetHash(), out.i));
+                foundCoins = true;
+            }
+        }
+
+        if (!foundCoins) {
+            throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Error: No spendable UTXOs found on the specified feeAddress");
+        }
+
+        coinControl.fAllowOtherInputs = false;
+    }
+
     int Payloadsize;
 
     if (!pwallet->CreateTransaction(vecSend, newTx, nFee, nChangePos, strFailReason, coinControl, true, Payloadsize,
@@ -503,20 +568,19 @@ UniValue updateasset(const JSONRPCRequest &request) {
 
 UniValue mintasset(const JSONRPCRequest &request) {
     if (request.fHelp || !Updates().IsAssetsActive(::ChainActive().Tip()) || request.params.size() < 1 ||
-        request.params.size() > 1)
+        request.params.size() > 2)
         throw std::runtime_error(
-                "mintasset txid\n"
-                "Mint assset\n"
+                "mintasset \"asset_id\" (\"fee_address\")\n"
+                "Mint asset\n"
                 "\nArguments:\n"
-                "1. \"txid\"               (string, required) asset txid reference\n"
+                "1. \"asset_id\"           (string, required) asset id reference\n"
+                "2. \"fee_address\"        (string, optional) address that pays the burn fee and receives RTM change\n"
                 "\nResult:\n"
                 "\"txid\"                  (string) The transaction id for the new issued asset\n"
 
                 "\nExamples:\n"
-                + HelpExampleCli("mintasset", "773cf7e057127048711d16839e4612ffb0f1599aef663d96e60f5190eb7de9a9")
-                + HelpExampleCli("mintasset",
-                                 "773cf7e057127048711d16839e4612ffb0f1599aef663d96e60f5190eb7de9a9" "yZBvV16YFvPx11qP2XhCRDi7y2e1oSMpKH" "1000")
-
+                + HelpExampleCli("mintasset", "\"773cf7e057127048711d16839e4612ffb0f1599aef663d96e60f5190eb7de9a9\"")
+                + HelpExampleCli("mintasset", "\"773cf7e057127048711d16839e4612ffb0f1599aef663d96e60f5190eb7de9a9\" \"yZBvV16YFvPx11qP2XhCRDi7y2e1oSMpKH\"")
         );
 
     if (getAssetsFees() == 0) {
@@ -571,6 +635,36 @@ UniValue mintasset(const JSONRPCRequest &request) {
     std::string strFailReason;
     std::vector <CRecipient> vecSend;
 
+    // feeAddress: optional second parameter to control which address pays the fee and receives RTM change
+    if (request.params.size() > 1 && !request.params[1].isNull()) {
+        std::string feeAddrStr = request.params[1].get_str();
+        CTxDestination feeDest = DecodeDestination(feeAddrStr);
+
+        if (!IsValidDestination(feeDest)) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Error: Invalid fee_address");
+        }
+
+        coinControl.destChange = feeDest;
+
+        std::vector<COutput> vAvailableCoins;
+        pwallet->AvailableCoins(vAvailableCoins, true, &coinControl);
+
+        bool foundCoins = false;
+        for (const COutput& out : vAvailableCoins) {
+            CTxDestination address;
+            if (ExtractDestination(out.tx->tx->vout[out.i].scriptPubKey, address) && address == feeDest) {
+                coinControl.Select(COutPoint(out.tx->GetHash(), out.i));
+                foundCoins = true;
+            }
+        }
+
+        if (!foundCoins) {
+            throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Error: No spendable UTXOs found on the specified fee_address");
+        }
+
+        coinControl.fAllowOtherInputs = false;
+    }
+
     if (tmpAsset.isUnique) {
         //build unique output using current supply as start unique id
         uint64_t id = tmpAsset.circulatingSupply;
@@ -610,9 +704,9 @@ UniValue mintasset(const JSONRPCRequest &request) {
 
 UniValue sendasset(const JSONRPCRequest &request) {
     if (request.fHelp || !Updates().IsAssetsActive(::ChainActive().Tip()) || request.params.size() < 3 ||
-        request.params.size() > 7)
+        request.params.size() > 6)
         throw std::runtime_error(
-                "sendasset \"asset_id\" \"qty\" \"to_address\" \"change_address\" \"asset_change_address\"\n"
+                "sendasset \"asset_id\" \"qty\" \"to_address\" (\"change_address\") (\"asset_change_address\") (\"fee_address\")\n"
                 "\nTransfers a quantity of an owned asset to a given address"
 
                 "\nArguments:\n"
@@ -621,6 +715,7 @@ UniValue sendasset(const JSONRPCRequest &request) {
                 "3. \"to_address\"              (string, required) address to send the asset to\n"
                 "4. \"change_address\"          (string, optional, default = \"\") the transactions RTM change will be sent to this address\n"
                 "5. \"asset_change_address\"    (string, optional, default = \"\") the transactions Asset change will be sent to this address\n"
+                "6. \"fee_address\"             (string, optional, default = \"\") address that provides RTM inputs for the fee (only UTXOs from this address will be used)\n"
 
                 "\nResult:\n"
                 "txid"
@@ -629,8 +724,8 @@ UniValue sendasset(const JSONRPCRequest &request) {
                 "]\n"
 
                 "\nExamples:\n"
-                + HelpExampleCli("transfer", "\"ASSET_NAME\" 20 \"address\"")
-                + HelpExampleCli("transfer", "\"ASSET_NAME\" 20 \"address\"")
+                + HelpExampleCli("sendasset", "\"ASSET_NAME\" 20 \"to_address\"")
+                + HelpExampleCli("sendasset", "\"ASSET_NAME\" 20 \"to_address\" \"change_address\" \"asset_change_address\" \"fee_address\"")
         );
 
     std::shared_ptr <CWallet> const wallet = GetWalletForJSONRPCRequest(request);
@@ -700,6 +795,41 @@ UniValue sendasset(const JSONRPCRequest &request) {
     CCoinControl coinControl;
     coinControl.destChange = change_dest;
     coinControl.assetDestChange = asset_change_dest;
+
+    // fee_address: optional 6th parameter - only UTXOs from this address will be used for RTM fees
+    if (request.params.size() > 5 && !request.params[5].isNull()) {
+        std::string feeAddrStr = request.params[5].get_str();
+        if (!feeAddrStr.empty()) {
+            CTxDestination feeDest = DecodeDestination(feeAddrStr);
+
+            if (!IsValidDestination(feeDest)) {
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Error: Invalid fee_address");
+            }
+
+            // If no explicit change_address was given, use fee_address as change destination too
+            if (change_address.empty()) {
+                coinControl.destChange = feeDest;
+            }
+
+            std::vector<COutput> vAvailableCoins;
+            pwallet->AvailableCoins(vAvailableCoins, true, &coinControl);
+
+            bool foundCoins = false;
+            for (const COutput& out : vAvailableCoins) {
+                CTxDestination address;
+                if (ExtractDestination(out.tx->tx->vout[out.i].scriptPubKey, address) && address == feeDest) {
+                    coinControl.Select(COutPoint(out.tx->GetHash(), out.i));
+                    foundCoins = true;
+                }
+            }
+
+            if (!foundCoins) {
+                throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Error: No spendable UTXOs found on the specified fee_address");
+            }
+
+            coinControl.fAllowOtherInputs = false;
+        }
+    }
 
     CTransactionRef wtx;
     CAmount nFee;
@@ -794,6 +924,7 @@ UniValue getassetdetailsbyid(const JSONRPCRequest &request) {
     return result;
 }
 
+#ifdef ENABLE_WALLET
 UniValue listassetsbalance(const JSONRPCRequest &request) {
     if (request.fHelp || !Updates().IsAssetsActive(::ChainActive().Tip()) || request.params.size() > 0)
         throw std::runtime_error(
@@ -849,6 +980,8 @@ UniValue listassetsbalance(const JSONRPCRequest &request) {
     return result;
 }
 
+#endif // ENABLE_WALLET
+#ifdef ENABLE_WALLET
 UniValue listunspentassets(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() > 5)
@@ -1043,6 +1176,7 @@ UniValue listunspentassets(const JSONRPCRequest& request)
 
     return results;
 }
+#endif // ENABLE_WALLET
 
 UniValue listassets(const JSONRPCRequest &request) {
     RPCHelpMan{"listassets",
