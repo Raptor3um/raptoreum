@@ -96,6 +96,7 @@ QT_MOC_CPP = \
   qt/moc_transactiontablemodel.cpp \
   qt/moc_transactionview.cpp \
   qt/moc_utilitydialog.cpp \
+  qt/moc_updatechecker.cpp \
   qt/moc_walletcontroller.cpp \
   qt/moc_walletframe.cpp \
   qt/moc_walletmodel.cpp \
@@ -178,6 +179,7 @@ BITCOIN_QT_H = \
   qt/transactiontablemodel.h \
   qt/transactionview.h \
   qt/utilitydialog.h \
+  qt/updatechecker.h \
   qt/walletcontroller.h \
   qt/walletframe.h \
   qt/walletmodel.h \
@@ -290,6 +292,7 @@ BITCOIN_QT_WALLET_CPP = \
   qt/createassetsdialog.cpp \
   qt/uploaddownload.cpp \
   qt/updateassetsdialog.cpp \
+  qt/updatechecker.cpp \
   qt/assetsdialog.cpp \
   qt/sendassetsentry.cpp \
   qt/signverifymessagedialog.cpp \

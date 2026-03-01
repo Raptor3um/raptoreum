@@ -23,6 +23,7 @@
 #include <qt/splashscreen.h>
 #include <qt/utilitydialog.h>
 #include <qt/winshutdownmonitor.h>
+#include <qt/updatechecker.h>
 
 #ifdef ENABLE_WALLET
 #include <qt/paymentserver.h>
@@ -715,6 +716,11 @@ int GuiMain(int argc, char *argv[]) {
     int rv = EXIT_SUCCESS;
     try {
         app.createWindow(networkStyle.data());
+
+        // Check Version
+        UpdateChecker* updateChecker = new UpdateChecker(&app);
+        updateChecker->checkForUpdates();
+
         // Perform base initialization before spinning up initialization/shutdown thread
         // This is acceptable because this function only contains steps that are quick to execute,
         // so the GUI thread won't be held up.
