@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <support/lockedpool.h>
+#include <stdexcept>
 #include <support/cleanse.h>
 
 #if defined(HAVE_CONFIG_H)

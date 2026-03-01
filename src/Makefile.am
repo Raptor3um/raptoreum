@@ -729,6 +729,7 @@ libraptoreum_util_a_SOURCES = \
   threadinterrupt.cpp \
   util/bip32.cpp \
   util/system.cpp \
+  bootstrap/bootstrapmanager.cpp \
   util/asmap.cpp \
   util/moneystr.cpp \
   util/spanparsing.cpp \
@@ -779,7 +780,7 @@ raptoreumd_LDADD = \
   $(LIBMEMENV) \
   $(LIBSECP256K1)
 
-raptoreumd_LDADD += $(BACKTRACE_LIB) $(BOOST_LIBS) $(BDB_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(LIBDASHBLS) $(GMP_LIBS)
+raptoreumd_LDADD += $(BACKTRACE_LIB) $(BOOST_LIBS) $(BDB_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(LIBDASHBLS) $(GMP_LIBS) -lcurl -larchive
 
 # raptoreum-cli binary #
 raptoreum_cli_SOURCES = raptoreum-cli.cpp

@@ -161,3 +161,5 @@ dist/
 osx_volname
 dist/
 src/test/runtest.sh
+configure~
+src/dashbls/configure~

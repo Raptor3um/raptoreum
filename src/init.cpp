@@ -15,6 +15,7 @@
 #include <amount.h>
 #include <banman.h>
 #include <base58.h>
+#include <bootstrap/bootstrapmanager.h>
 #include <chain.h>
 #include <chainparams.h>
 #include <checkpoints.h>
@@ -1835,6 +1836,21 @@ bool AppInitMain(const util::Ref &context, NodeContext &node, interfaces::BlockA
     } else {
         LogPrintf("Config file: %s not found, skipping\n", config_file_path.string());
     }
+
+    // ********************************************************* Bootstrap
+    {
+        std::string dataDir = GetDataDir().string();
+        BootstrapManager::RunIfNeeded(dataDir, [](const std::string& status, int percent) {
+            if (percent < 0) {
+                // Fehler
+                LogPrintf("Bootstrap ERROR: %s\n", status);
+            } else {
+                LogPrintf("Bootstrap [%d%%]: %s\n", percent, status);
+            }
+        });
+    }
+    // ********************************************************* End Bootstrap
+
 
     LogPrintf("Using at most %i automatic connections (%i file descriptors available)\n", nMaxConnections, nFD);
 
