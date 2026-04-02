@@ -989,7 +989,12 @@ std::string ArgsManager::GetChainName() const {
     if (fDevNet) return CBaseChainParams::DEVNET;
     if (fRegTest) return CBaseChainParams::REGTEST;
     if (fTestNet) return CBaseChainParams::TESTNET;
+#ifdef DEFAULT_TO_TESTNET
+    // When mainnet is disabled, prevent it from being started
+    throw std::runtime_error("Mainnet is disabled in this build. Use -testnet, -regtest, or -devnet.");
+#else
     return CBaseChainParams::MAIN;
+#endif
 }
 
 std::string ArgsManager::GetDevNetName() const {

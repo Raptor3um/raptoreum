@@ -26,6 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.selected-version.outputs.version }}
+      disable-mainnet: ${{ steps.selected-version.outputs.disable-mainnet }}
     steps:
       - name: Triggered By
         run: echo "checking out $GITHUB_REF triggered by $GITHUB_EVENT_NAME"
@@ -44,15 +45,20 @@ jobs:
         id: selected-version
         shell: bash
         run: |
+          disable_mainnet=""
           if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]] || [[ "$GITHUB_REF" == *develop ]] || [[ "$GITHUB_REF" == *ft/* ]] || [[ "$GITHUB_REF" == *bug/* ]]; then
               version=${{ steps.versions.outputs.snapshot-version }}
+              disable_mainnet="--disable-mainnet"
           elif [[ "$GITHUB_EVENT_NAME" != "pull_request" ]] && [[ "$GITHUB_REF" == *"release/"* ]]; then
               version=${{ steps.versions.outputs.candidate-version }}
+              disable_mainnet="--disable-mainnet"
           elif [[ "$GITHUB_EVENT_NAME" != "pull_request" ]] && [[ "$GITHUB_REF" == "refs/heads/master" ]]; then
               version=${{ steps.versions.outputs.release-version }}
           fi
           echo "version is: [$version]"
+          echo "disable-mainnet flag: [$disable_mainnet]"
           echo "version=$version" >> $GITHUB_OUTPUT
+          echo "disable-mainnet=$disable_mainnet" >> $GITHUB_OUTPUT
           echo "BUILD_VERSION=$version" > version.txt
 
       - name: Upload Artifacts
@@ -114,6 +120,7 @@ jobs:
         with:
           host: ${{ matrix.platform.host }}
           build-type: release
+          configure-flags: ${{ needs.get-version.outputs.disable-mainnet }}
 
       - name: Collect Release Binaries
         run: |
@@ -142,6 +149,7 @@ jobs:
         with:
           host: ${{ matrix.platform.host }}
           build-type: debug
+          configure-flags: ${{ needs.get-version.outputs.disable-mainnet }}
 
       - name: Collect Debug Binaries
         run: |
@@ -231,6 +239,7 @@ jobs:
         with:
           host: x86_64-w64-mingw32
           build-type: release
+          configure-flags: ${{ needs.get-version.outputs.disable-mainnet }}
 
       - name: Collect Release Binaries
         run: |

@@ -245,6 +245,16 @@ if test "$enable_miner" = "yes"; then
     AC_DEFINE([ENABLE_MINER], [1], [Define this symbol if in-wallet miner should be enabled])
 fi
 
+dnl Disable mainnet and default to testnet
+AC_ARG_ENABLE([mainnet],
+  [AS_HELP_STRING([--disable-mainnet], [disable mainnet and default to testnet (default is no)])],
+  [enable_mainnet=$enableval],
+  [enable_mainnet=yes])
+
+if test "$enable_mainnet" = "no"; then
+    AC_DEFINE([DEFAULT_TO_TESTNET], [1], [Define this symbol to default to testnet instead of mainnet])
+fi
+
 dnl Enable different -fsanitize options
 AC_ARG_WITH([sanitizers],
     [AS_HELP_STRING([--with-sanitizers],
