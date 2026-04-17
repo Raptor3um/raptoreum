@@ -35,6 +35,10 @@ HelpMessageDialog::HelpMessageDialog(interfaces::Node &node, QWidget *parent, He
         ui(new Ui::HelpMessageDialog) {
     ui->setupUi(this);
 
+#ifdef Q_OS_WIN
+    setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
+#endif
+        
     GUIUtil::updateFonts();
 
     QString version = QString{PACKAGE_NAME} + " " + tr("version") + " " + QString::fromStdString(FormatFullVersion());
