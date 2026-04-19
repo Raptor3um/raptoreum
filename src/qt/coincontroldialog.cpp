@@ -53,6 +53,10 @@ CoinControlDialog::CoinControlDialog(CCoinControl &coin_control, WalletModel *_m
         model(_model) {
     ui->setupUi(this);
 
+#ifdef Q_OS_WIN
+    setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
+#endif    
+
     GUIUtil::setFont({ui->labelCoinControlQuantityText,
                       ui->labelCoinControlBytesText,
                       ui->labelCoinControlAmountText,
