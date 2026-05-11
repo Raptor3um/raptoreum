@@ -24,7 +24,13 @@ enum {
     TRANSACTION_FUTURE = 7,
     TRANSACTION_NEW_ASSET = 8,
     TRANSACTION_UPDATE_ASSET = 9,
-    TRANSACTION_MINT_ASSET = 10
+    TRANSACTION_MINT_ASSET = 10,
+    // EVM integration (Phase 1+). Gated behind Updates().IsEvmActive(height).
+    // Scaffolding only in this commit: types are validated for structure but
+    // execution is not implemented until Phase 2. See docs/evm/PLAN.md.
+    TRANSACTION_EVM_DEPLOY = 11,    // Deploy a new EVM contract.
+    TRANSACTION_EVM_CALL = 12,      // Invoke an existing EVM contract.
+    TRANSACTION_EVM_SPEND = 13      // Move RTM from an EVM account to a UTXO.
 };
 
 /** An outpoint - a combination of a transaction hash and an index n into its vout */

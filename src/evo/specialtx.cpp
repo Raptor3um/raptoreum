@@ -10,6 +10,7 @@
 #include <hash.h>
 #include <primitives/block.h>
 #include <validation.h>
+#include <evm/evmtx.h>
 #include <evo/cbtx.h>
 #include <evo/deterministicmns.h>
 #include <llmq/quorums_commitment.h>
@@ -46,6 +47,12 @@ bool CheckSpecialTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CVali
                 return CheckUpdateAssetTx(tx, pindexPrev, state, view, assetsCache);
             case TRANSACTION_MINT_ASSET:
                 return CheckMintAssetTx(tx, pindexPrev, state, view, assetsCache);
+            case TRANSACTION_EVM_DEPLOY:
+                return evm::CheckEvmDeployTx(tx, pindexPrev, state);
+            case TRANSACTION_EVM_CALL:
+                return evm::CheckEvmCallTx(tx, pindexPrev, state);
+            case TRANSACTION_EVM_SPEND:
+                return evm::CheckEvmSpendTx(tx, pindexPrev, state);
         }
     } catch (const std::exception &e) {
         LogPrintf("%s -- failed: %s\n", __func__, e.what());
@@ -78,6 +85,11 @@ bool ProcessSpecialTx(const CTransaction &tx, const CBlockIndex *pindex, CValida
             return true;
         case TRANSACTION_MINT_ASSET:
             return true;
+        case TRANSACTION_EVM_DEPLOY:
+        case TRANSACTION_EVM_CALL:
+        case TRANSACTION_EVM_SPEND:
+            // Phase 1: scaffolding only. Execution lands in Phase 2 (see PLAN.md).
+            return true;
     }
     return state.DoS(100, false, REJECT_INVALID, "bad-tx-type-proc");
 }
@@ -104,6 +116,11 @@ bool UndoSpecialTx(const CTransaction &tx, const CBlockIndex *pindex) {
         case TRANSACTION_UPDATE_ASSET:
             return true;
         case TRANSACTION_MINT_ASSET:
+            return true;
+        case TRANSACTION_EVM_DEPLOY:
+        case TRANSACTION_EVM_CALL:
+        case TRANSACTION_EVM_SPEND:
+            // Phase 1: nothing to undo (no state changes applied yet).
             return true;
     }
     return false;
