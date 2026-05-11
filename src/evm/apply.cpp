@@ -5,6 +5,7 @@
 #include <evm/apply.h>
 
 #include <evm/account.h>
+#include <evm/balance.h>
 #include <evm/hashing.h>
 #include <evm/state_cache.h>
 
@@ -227,82 +228,10 @@ ApplyResult ApplyEvmDeployTx(const CEvmDeployTx& payload,
 // Phase 2.3c — ApplyEvmSpendTx
 // ----------------------------------------------------------------------
 //
-// Helper arithmetic on 32-byte big-endian uint256s. Bitcoin Core's
-// uint256 is treated here as a raw byte blob with byte 0 the most
-// significant (matches evmc::bytes32 / our wire format). Bitcoin Core's
-// arith_uint256 uses a different layout (little-endian 32-bit words),
-// so we avoid that conversion path and do byte-level math directly.
-//
-// These helpers are intentionally local to this file. If we grow more
-// 256-bit arithmetic needs, they get promoted into a shared utility
-// header.
+// Balance arithmetic on uint256 (big-endian) lives in evm/balance.{h,cpp}
+// so apply.cpp and process.cpp (Phase 2.4) share a single implementation.
 
 namespace {
-
-// Returns true if `balance` (big-endian uint256) >= `amount` (uint64).
-bool Uint256BE_GreaterOrEqualUint64(const uint256& balance, uint64_t amount)
-{
-    // Any non-zero byte in the high 24 bytes means balance > 2^64 > any
-    // uint64 amount, so the comparison is unambiguously true.
-    for (int i = 0; i < 24; ++i) {
-        if (*(balance.begin() + i) != 0) return true;
-    }
-    // Otherwise interpret the low 8 bytes as a single uint64 (big-endian).
-    uint64_t low = 0;
-    for (int i = 24; i < 32; ++i) {
-        low = (low << 8) | static_cast<uint64_t>(*(balance.begin() + i));
-    }
-    return low >= amount;
-}
-
-// In-place subtract a uint64 from a big-endian uint256.
-// Returns true on success, false on underflow (caller checked
-// GreaterOrEqualUint64 first so this should not fail in practice).
-bool Uint256BE_SubUint64(uint256& balance, uint64_t amount)
-{
-    // Read the low 8 bytes as a uint64.
-    uint64_t low = 0;
-    for (int i = 24; i < 32; ++i) {
-        low = (low << 8) | static_cast<uint64_t>(*(balance.begin() + i));
-    }
-
-    if (low >= amount) {
-        // No borrow needed: simple subtraction in the low 64 bits.
-        low -= amount;
-        for (int i = 31; i >= 24; --i) {
-            *(balance.begin() + i) = static_cast<uint8_t>(low & 0xFF);
-            low >>= 8;
-        }
-        return true;
-    }
-
-    // Need to borrow from the high 24 bytes. Find the highest non-zero
-    // byte above index 23 and decrement it; fill the bytes in between
-    // with 0xFF (the borrow ripple).
-    int borrowFrom = -1;
-    for (int i = 23; i >= 0; --i) {
-        if (*(balance.begin() + i) != 0) {
-            borrowFrom = i;
-            break;
-        }
-    }
-    if (borrowFrom == -1) {
-        return false; // underflow — caller should have checked first
-    }
-    *(balance.begin() + borrowFrom) -= 1;
-    for (int i = borrowFrom + 1; i < 24; ++i) {
-        *(balance.begin() + i) = 0xFF;
-    }
-    // After the borrow, the low 8 bytes effectively gain 2^64.
-    // (low + 2^64) - amount, computed modulo 2^64 via wrap.
-    const uint64_t new_low = low - amount; // unsigned wrap is well-defined
-    uint64_t v = new_low;
-    for (int i = 31; i >= 24; --i) {
-        *(balance.begin() + i) = static_cast<uint8_t>(v & 0xFF);
-        v >>= 8;
-    }
-    return true;
-}
 
 // Convenience: fail-and-return-result for the early-exit error paths
 // in ApplyEvmSpendTx.
@@ -343,13 +272,13 @@ ApplyResult ApplyEvmSpendTx(const CEvmSpendTx& payload,
     }
 
     // 4. Balance must cover the requested amount.
-    if (!Uint256BE_GreaterOrEqualUint64(account.balance, payload.amount)) {
+    if (!Uint256GreaterOrEqualUint64(account.balance, payload.amount)) {
         return SpendFailure(gasLimitSigned);
     }
 
     // 5. Debit and write back. The subtraction should succeed since
     //    we just checked >=.
-    if (!Uint256BE_SubUint64(account.balance, payload.amount)) {
+    if (!Uint256SubUint64(account.balance, payload.amount)) {
         // Defensive: would mean the GreaterOrEqualUint64 check lied.
         // Treat as failure rather than corrupting state.
         return SpendFailure(gasLimitSigned);
