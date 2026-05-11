@@ -148,6 +148,57 @@ void CEvmStateCache::Discard()
     mAccountsDeleted.clear();
     mCodeDirty.clear();
     mStorageDirty.clear();
+    mSavepoints.clear();
+}
+
+// ----------------------------------------------------------------------
+// Snapshot / revert (Phase 2.3d, for nested CALL/CREATE)
+// ----------------------------------------------------------------------
+
+int CEvmStateCache::Snapshot()
+{
+    Savepoint sp;
+    sp.id = mNextSavepointId++;
+    sp.accountsDirty = mAccountsDirty;
+    sp.accountsDeleted = mAccountsDeleted;
+    sp.storageDirty = mStorageDirty;
+    sp.codeDirty = mCodeDirty;
+    mSavepoints.push_back(std::move(sp));
+    return mSavepoints.back().id;
+}
+
+void CEvmStateCache::Revert(int id)
+{
+    // Find the savepoint with the given id; drop everything above it
+    // (those frames are gone — outer revert subsumes inner state).
+    for (size_t i = mSavepoints.size(); i-- > 0; ) {
+        if (mSavepoints[i].id == id) {
+            // Restore from this savepoint.
+            mAccountsDirty = std::move(mSavepoints[i].accountsDirty);
+            mAccountsDeleted = std::move(mSavepoints[i].accountsDeleted);
+            mStorageDirty = std::move(mSavepoints[i].storageDirty);
+            mCodeDirty = std::move(mSavepoints[i].codeDirty);
+            // Drop this savepoint and any nested ones above it.
+            mSavepoints.resize(i);
+            return;
+        }
+    }
+    // Unknown id: silently no-op rather than throwing — the host wraps
+    // every call() in Snapshot/Revert and we don't want a programming
+    // bug here to corrupt consensus.
+}
+
+void CEvmStateCache::Commit(int id)
+{
+    // Drop the savepoint with the matching id. Inner savepoints
+    // (deeper in the stack) survive — they belong to frames that
+    // already committed within the now-also-committed outer frame.
+    for (size_t i = mSavepoints.size(); i-- > 0; ) {
+        if (mSavepoints[i].id == id) {
+            mSavepoints.erase(mSavepoints.begin() + i);
+            return;
+        }
+    }
 }
 
 } // namespace evm

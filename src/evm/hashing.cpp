@@ -127,4 +127,23 @@ uint160 ContractAddressFromCreate(const uint160& sender, uint64_t nonce)
     return address;
 }
 
+uint160 ContractAddressFromCreate2(const uint160& sender,
+                                   const uint256& salt,
+                                   const uint256& initCodeHash)
+{
+    // Preimage: 0xff || sender(20) || salt(32) || keccak256(init_code)(32)
+    std::vector<uint8_t> preimage;
+    preimage.reserve(1 + 20 + 32 + 32);
+    preimage.push_back(0xFF);
+    preimage.insert(preimage.end(), sender.begin(), sender.begin() + 20);
+    preimage.insert(preimage.end(), salt.begin(), salt.begin() + 32);
+    preimage.insert(preimage.end(), initCodeHash.begin(), initCodeHash.begin() + 32);
+
+    uint256 hash = Keccak256(preimage);
+
+    uint160 address;
+    std::memcpy(address.begin(), hash.begin() + 12, 20);
+    return address;
+}
+
 } // namespace evm

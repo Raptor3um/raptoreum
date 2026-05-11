@@ -4,6 +4,8 @@
 
 #include <test/test_raptoreum.h>
 
+#include <evm/account.h>
+#include <evm/hashing.h>
 #include <evm/host.h>
 #include <evm/state_cache.h>
 #include <evm/state_db.h>
@@ -271,10 +273,15 @@ BOOST_AUTO_TEST_CASE(access_storage_cold_then_warm)
 }
 
 // ----------------------------------------------------------------------------
-// Nested CALL returns EVMC_REVERT (Phase 2.2 stub)
+// Nested CALL to a codeless, zero-value target — succeeds as a no-op.
+//
+// Phase 2.2 returned EVMC_REVERT here because call() was a stub. Phase
+// 2.3d wires the real dispatcher, so this case now succeeds (matches
+// Ethereum semantics: CALL with no code is a value-only transfer, and
+// zero-value adds no state, so the result is empty success).
 // ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(call_stub_returns_revert)
+BOOST_AUTO_TEST_CASE(call_codeless_zero_value_succeeds)
 {
     evm::CEvmStateDB db(1 << 20, /*fMemory=*/ true);
     evm::CEvmStateCache cache(db);
@@ -285,8 +292,10 @@ BOOST_AUTO_TEST_CASE(call_stub_returns_revert)
     msg.gas = 100'000;
 
     evmc::Result r = host.call(msg);
-    BOOST_CHECK_EQUAL(r.status_code, EVMC_REVERT);
-    BOOST_CHECK_EQUAL(r.gas_left, 0);
+    BOOST_CHECK_EQUAL(r.status_code, EVMC_SUCCESS);
+    // Gas is returned untouched: no code to execute and no
+    // value-transfer work to do.
+    BOOST_CHECK_EQUAL(r.gas_left, 100'000);
 }
 
 // ----------------------------------------------------------------------------
@@ -341,6 +350,332 @@ BOOST_AUTO_TEST_CASE(selfdestruct_records_address)
     // false (already recorded) and does not duplicate.
     BOOST_CHECK(!host.selfdestruct(victim, heir));
     BOOST_CHECK_EQUAL(host.Selfdestructs().size(), 1U);
+}
+
+// ============================================================================
+// Phase 2.3d — Nested CALL / DELEGATECALL / STATICCALL / CREATE end-to-end
+// ============================================================================
+//
+// These tests run a real outer contract that issues the inner opcodes;
+// evmone invokes CEvmHost::call() under the hood, which exercises the
+// snapshot/revert + state-mutation paths added in this phase.
+
+namespace {
+
+// Pre-install runtime code + an account record at addr. Mirrors the
+// DeployForTest helper in evm_apply_tests.cpp but uses the host's
+// type conversions.
+void InstallContract(evm::CEvmStateCache& cache,
+                     uint8_t addrLowByte,
+                     const std::vector<uint8_t>& code,
+                     uint64_t balanceWeis = 0)
+{
+    uint160 addr;
+    *(addr.begin() + 19) = addrLowByte;
+
+    const uint256 codeHash = evm::Keccak256(code);
+    cache.SetCode(codeHash, code);
+
+    uint256 balance;
+    for (int i = 0; i < 8; ++i) {
+        *(balance.begin() + 31 - i) =
+            static_cast<uint8_t>((balanceWeis >> (8 * i)) & 0xFF);
+    }
+    cache.SetAccount(addr, evm::CEvmAccount(
+        /*nonce=*/ 1, balance,
+        codeHash, evm::CEvmAccount::EmptyStorageRoot()));
+}
+
+// Run runtime code at `addrLowByte` and return the evmone result.
+evmc::Result CallContract(evm::CEvmHost& host,
+                         evm::CEvmStateCache& cache,
+                         uint8_t addrLowByte,
+                         int64_t gas = 5'000'000,
+                         uint64_t valueWeis = 0)
+{
+    uint160 addr;
+    *(addr.begin() + 19) = addrLowByte;
+
+    evm::CEvmAccount acc;
+    BOOST_REQUIRE(cache.GetAccount(addr, acc));
+    std::vector<uint8_t> code;
+    BOOST_REQUIRE(cache.GetCode(acc.codeHash, code));
+
+    evmc_message msg{};
+    msg.kind = EVMC_CALL;
+    msg.gas = gas;
+    std::memcpy(msg.recipient.bytes, addr.begin(), 20);
+    msg.code_address = msg.recipient;
+    // value in big-endian: write the low 8 bytes.
+    for (int i = 0; i < 8; ++i) {
+        msg.value.bytes[31 - i] =
+            static_cast<uint8_t>((valueWeis >> (8 * i)) & 0xFF);
+    }
+
+    evmc::VM vm{evmc_create_evmone()};
+    return vm.execute(host, EVMC_CANCUN, msg,
+                      code.empty() ? nullptr : code.data(), code.size());
+}
+
+// Bytecode of "outer" contract that CALLs address 0x07 with no value
+// or args, then STOPs. Sufficient to exercise the inner CALL frame.
+std::vector<uint8_t> OuterCallsByte07Bytecode()
+{
+    return {
+        0x60, 0x00,                  // PUSH1 0 (retSize)
+        0x60, 0x00,                  // PUSH1 0 (retOffset)
+        0x60, 0x00,                  // PUSH1 0 (argsSize)
+        0x60, 0x00,                  // PUSH1 0 (argsOffset)
+        0x60, 0x00,                  // PUSH1 0 (value)
+        0x60, 0x07,                  // PUSH1 0x07 (address)
+        0x62, 0x0F, 0x42, 0x40,      // PUSH3 0x0F4240 (gas = 1_000_000)
+        0xF1,                        // CALL
+        0x00,                        // STOP
+    };
+}
+
+// Inner contract: SSTORE 0x42 at slot 0x01, then STOP (or REVERT).
+std::vector<uint8_t> InnerSstoreThenStop()
+{
+    return { 0x60, 0x42, 0x60, 0x01, 0x55, 0x00 };
+}
+std::vector<uint8_t> InnerSstoreThenRevert()
+{
+    return {
+        0x60, 0x42, 0x60, 0x01, 0x55, // PUSH1 0x42; PUSH1 0x01; SSTORE
+        0x60, 0x00, 0x60, 0x00,       // PUSH1 0x00; PUSH1 0x00 (offset/size for REVERT)
+        0xFD,                         // REVERT
+    };
+}
+
+} // anonymous namespace
+
+// ----------------------------------------------------------------------------
+// Nested CALL succeeds — inner SSTORE persists to the cache after the
+// outer frame completes.
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(nested_call_persists_inner_sstore)
+{
+    evm::CEvmStateDB db(1 << 20, /*fMemory=*/ true);
+    evm::CEvmStateCache cache(db);
+    evm::CEvmHost host(cache, MinimalContext());
+
+    InstallContract(cache, 0xAA, OuterCallsByte07Bytecode());
+    InstallContract(cache, 0x07, InnerSstoreThenStop());
+
+    evmc::Result r = CallContract(host, cache, 0xAA);
+    BOOST_CHECK_EQUAL(r.status_code, EVMC_SUCCESS);
+
+    uint160 innerAddr;
+    *(innerAddr.begin() + 19) = 0x07;
+    uint256 slot1;
+    *(slot1.begin() + 31) = 0x01;
+    uint256 stored;
+    BOOST_REQUIRE(cache.GetStorage(innerAddr, slot1, stored));
+    BOOST_CHECK_EQUAL(static_cast<int>(*(stored.begin() + 31)), 0x42);
+}
+
+// ----------------------------------------------------------------------------
+// Nested CALL that REVERTs rolls back its writes via the host's
+// snapshot mechanism. The outer frame still completes normally.
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(nested_call_revert_rolls_back_inner_sstore)
+{
+    evm::CEvmStateDB db(1 << 20, /*fMemory=*/ true);
+    evm::CEvmStateCache cache(db);
+    evm::CEvmHost host(cache, MinimalContext());
+
+    InstallContract(cache, 0xAB, OuterCallsByte07Bytecode());
+    InstallContract(cache, 0x07, InnerSstoreThenRevert());
+
+    evmc::Result r = CallContract(host, cache, 0xAB);
+    // Outer frame succeeds — the inner CALL's revert is contained.
+    BOOST_CHECK_EQUAL(r.status_code, EVMC_SUCCESS);
+
+    // The inner SSTORE was rolled back by the savepoint.
+    uint160 innerAddr;
+    *(innerAddr.begin() + 19) = 0x07;
+    uint256 slot1;
+    *(slot1.begin() + 31) = 0x01;
+    uint256 stored;
+    BOOST_CHECK(!cache.GetStorage(innerAddr, slot1, stored));
+}
+
+// ----------------------------------------------------------------------------
+// STATICCALL into a contract that attempts SSTORE: evmone enforces the
+// static flag and the inner frame fails. Outer succeeds. Storage is
+// not written.
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(nested_staticcall_blocks_inner_sstore)
+{
+    evm::CEvmStateDB db(1 << 20, /*fMemory=*/ true);
+    evm::CEvmStateCache cache(db);
+    evm::CEvmHost host(cache, MinimalContext());
+
+    // Outer contract: STATICCALL 0x07. STATICCALL pops 6 args (no value).
+    //   PUSH1 0 (retSize)
+    //   PUSH1 0 (retOffset)
+    //   PUSH1 0 (argsSize)
+    //   PUSH1 0 (argsOffset)
+    //   PUSH1 0x07 (address)
+    //   PUSH3 0x0F4240 (gas)
+    //   STATICCALL (0xFA)
+    //   STOP
+    const std::vector<uint8_t> outer = {
+        0x60, 0x00, 0x60, 0x00, 0x60, 0x00, 0x60, 0x00,
+        0x60, 0x07,
+        0x62, 0x0F, 0x42, 0x40,
+        0xFA,
+        0x00,
+    };
+
+    InstallContract(cache, 0xAC, outer);
+    InstallContract(cache, 0x07, InnerSstoreThenStop());
+
+    evmc::Result r = CallContract(host, cache, 0xAC);
+    BOOST_CHECK_EQUAL(r.status_code, EVMC_SUCCESS);
+
+    // Storage at the inner contract is untouched — STATICCALL +
+    // SSTORE is a state-mutation violation that evmone refuses.
+    uint160 innerAddr;
+    *(innerAddr.begin() + 19) = 0x07;
+    uint256 slot1;
+    *(slot1.begin() + 31) = 0x01;
+    uint256 stored;
+    BOOST_CHECK(!cache.GetStorage(innerAddr, slot1, stored));
+}
+
+// ----------------------------------------------------------------------------
+// CALL with value: balance transfers from caller to callee. Caller is
+// pre-funded so the inner debit can succeed.
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(nested_call_with_value_transfers_balance)
+{
+    evm::CEvmStateDB db(1 << 20, /*fMemory=*/ true);
+    evm::CEvmStateCache cache(db);
+    evm::CEvmHost host(cache, MinimalContext());
+
+    // Outer: CALL 0x07 with value=1000 (PUSH2 0x03E8).
+    //   PUSH1 0       (retSize)
+    //   PUSH1 0       (retOffset)
+    //   PUSH1 0       (argsSize)
+    //   PUSH1 0       (argsOffset)
+    //   PUSH2 0x03E8  (value = 1000)
+    //   PUSH1 0x07    (address)
+    //   PUSH3 0x0F4240(gas)
+    //   CALL          (0xF1)
+    //   STOP          (0x00)
+    const std::vector<uint8_t> outer = {
+        0x60, 0x00, 0x60, 0x00, 0x60, 0x00, 0x60, 0x00,
+        0x61, 0x03, 0xE8,
+        0x60, 0x07,
+        0x62, 0x0F, 0x42, 0x40,
+        0xF1, 0x00,
+    };
+
+    // Pre-fund the outer contract with 2000 weis.
+    InstallContract(cache, 0xAD, outer, /*balanceWeis=*/ 2000);
+    // Inner: do-nothing STOP.
+    InstallContract(cache, 0x07, {0x00});
+
+    evmc::Result r = CallContract(host, cache, 0xAD);
+    BOOST_CHECK_EQUAL(r.status_code, EVMC_SUCCESS);
+
+    uint160 outerAddr;
+    *(outerAddr.begin() + 19) = 0xAD;
+    uint160 innerAddr;
+    *(innerAddr.begin() + 19) = 0x07;
+
+    evm::CEvmAccount outerAcc;
+    BOOST_REQUIRE(cache.GetAccount(outerAddr, outerAcc));
+    evm::CEvmAccount innerAcc;
+    BOOST_REQUIRE(cache.GetAccount(innerAddr, innerAcc));
+
+    // Caller debited by 1000; callee credited by 1000.
+    BOOST_CHECK_EQUAL(static_cast<int>(*(outerAcc.balance.begin() + 30)), 0x03);
+    BOOST_CHECK_EQUAL(static_cast<int>(*(outerAcc.balance.begin() + 31)), 0xE8);
+    BOOST_CHECK_EQUAL(static_cast<int>(*(innerAcc.balance.begin() + 30)), 0x03);
+    BOOST_CHECK_EQUAL(static_cast<int>(*(innerAcc.balance.begin() + 31)), 0xE8);
+}
+
+// ----------------------------------------------------------------------------
+// Nested CREATE: outer contract uses CREATE to deploy a child whose
+// runtime executes SSTORE. After the outer frame completes, the child
+// account exists at the derived address with the correct runtime code.
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(nested_create_installs_child_at_derived_address)
+{
+    evm::CEvmStateDB db(1 << 20, /*fMemory=*/ true);
+    evm::CEvmStateCache cache(db);
+    evm::CEvmHost host(cache, MinimalContext());
+
+    // Outer contract code layout:
+    //   header(15 bytes) || init_code(15 bytes)
+    //
+    // header copies init_code into memory[0..15] via CODECOPY and then
+    // invokes CREATE(value=0, offset=0, length=15).
+    //
+    //   PUSH1 0x0F  (length=15)
+    //   PUSH1 0x0F  (codeOffset = 15 = end of header)
+    //   PUSH1 0x00  (destOffset = 0)
+    //   CODECOPY    (0x39)
+    //   PUSH1 0x0F  (length for CREATE)
+    //   PUSH1 0x00  (offset for CREATE)
+    //   PUSH1 0x00  (value for CREATE)
+    //   CREATE      (0xF0)
+    //   STOP
+    //
+    // init code returns the standard 6-byte runtime (SSTORE 0x42 at
+    // slot 0x01; STOP).
+    const std::vector<uint8_t> outer = {
+        // header (15 bytes)
+        0x60, 0x0F,
+        0x60, 0x0F,
+        0x60, 0x00,
+        0x39,
+        0x60, 0x0F,
+        0x60, 0x00,
+        0x60, 0x00,
+        0xF0,
+        0x00,
+        // init code (15 bytes): runtime 60 42 60 01 55 00
+        0x65, 0x60, 0x42, 0x60, 0x01, 0x55, 0x00,
+        0x60, 0x00, 0x52,
+        0x60, 0x06, 0x60, 0x1A, 0xF3,
+    };
+
+    InstallContract(cache, 0xCA, outer);
+
+    evmc::Result r = CallContract(host, cache, 0xCA);
+    BOOST_CHECK_EQUAL(r.status_code, EVMC_SUCCESS);
+
+    // Derived child address = CREATE(0xCA-padded-to-20-bytes, nonce=1).
+    uint160 outerAddr;
+    *(outerAddr.begin() + 19) = 0xCA;
+    const uint160 childAddr = evm::ContractAddressFromCreate(outerAddr, 1);
+
+    evm::CEvmAccount childAcc;
+    BOOST_REQUIRE(cache.GetAccount(childAddr, childAcc));
+    BOOST_CHECK_EQUAL(childAcc.nonce, 1U);
+
+    // Verify the runtime code stored under the child's codeHash matches
+    // the expected 6-byte SSTORE-and-STOP runtime.
+    const std::vector<uint8_t> expectedRuntime = {0x60, 0x42, 0x60, 0x01, 0x55, 0x00};
+    BOOST_CHECK(childAcc.codeHash == evm::Keccak256(expectedRuntime));
+    std::vector<uint8_t> storedRuntime;
+    BOOST_REQUIRE(cache.GetCode(childAcc.codeHash, storedRuntime));
+    BOOST_CHECK_EQUAL_COLLECTIONS(storedRuntime.begin(), storedRuntime.end(),
+                                  expectedRuntime.begin(), expectedRuntime.end());
+
+    // Outer contract's nonce was bumped by the CREATE.
+    evm::CEvmAccount outerAcc;
+    BOOST_REQUIRE(cache.GetAccount(outerAddr, outerAcc));
+    BOOST_CHECK_EQUAL(outerAcc.nonce, 2U);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

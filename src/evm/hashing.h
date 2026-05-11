@@ -67,10 +67,31 @@ uint256 Keccak256(const std::vector<uint8_t>& data);
  * would have on Ethereum mainnet with the same (sender, nonce) pair.
  *
  * CREATE2 derivation (with a user-provided salt and init code hash)
- * is a separate function added if/when we expose CREATE2 at the
- * tx-payload level. For Phase 2.3b only the CREATE variant is needed.
+ * is exposed via ContractAddressFromCreate2 below; nested CREATE2
+ * opcodes (Phase 2.3d) use it from within CEvmHost.
  */
 uint160 ContractAddressFromCreate(const uint160& sender, uint64_t nonce);
+
+/**
+ * Derive the EVM contract address for a CREATE2 deployment (EIP-1014).
+ *
+ *   address = last 20 bytes of keccak256(
+ *                 0xff || sender(20) || salt(32) || keccak256(init_code)
+ *             )
+ *
+ * The user-supplied 32-byte salt lets the deployer pre-compute the
+ * destination address before sending the create transaction (counter-
+ * factual deployment), which is the headline use case for CREATE2.
+ *
+ * `initCodeHash` is the keccak256 of the init bytecode (the code that
+ * RUNs at deploy time, not the runtime bytecode). Callers that have
+ * the raw init code should compute Keccak256(initCode) first; we accept
+ * the pre-computed hash so nested CREATE2 callers (evmone's call
+ * dispatcher) can pass it through without re-hashing.
+ */
+uint160 ContractAddressFromCreate2(const uint160& sender,
+                                   const uint256& salt,
+                                   const uint256& initCodeHash);
 
 } // namespace evm
 

@@ -35,9 +35,10 @@ class CEvmStateDB;
  *      atomically. At block discard (failed validation, reorg),
  *      Discard() abandons them.
  *
- * Snapshot support (for EVM CALL/CREATE nested-revert semantics) is
- * out of scope for Phase 2.1 — it lands together with the evmc::Host
- * implementation in Phase 2.2.
+ * Snapshot support for nested CALL/CREATE revert semantics ships in
+ * Phase 2.3d via Snapshot()/Revert()/Commit(). Snapshots compose:
+ * deeper savepoints sit inside outer ones, and reverting an outer one
+ * also discards everything saved below it.
  *
  * Thread safety: this class is NOT thread-safe. Each EVM execution
  * gets its own cache instance during the worker-pool phase (per D1),
@@ -104,6 +105,33 @@ public:
      *  surrounding block fails validation. */
     void Discard();
 
+    // ----------------------------------------------------------------
+    // Snapshot / revert (Phase 2.3d, for nested CALL/CREATE)
+    // ----------------------------------------------------------------
+    //
+    // Snapshots capture the dirty layer at a point in time. Reverting
+    // restores it; committing simply drops the saved copy. Used by
+    // CEvmHost::call() to roll back state changes when a nested frame
+    // returns EVMC_REVERT or any failure status.
+    //
+    // Snapshots compose:
+    //   - Nested CALLs each take their own savepoint. A revert of an
+    //     outer savepoint discards all savepoints saved below it (the
+    //     surrounding frame is going away anyway).
+    //   - Commit only the savepoint at the matching id; inner frames
+    //     that already committed have their changes preserved.
+
+    /** Capture the current dirty state and return an opaque id. */
+    int Snapshot();
+
+    /** Restore the dirty state captured at id. Also drops any
+     *  savepoints taken after id. */
+    void Revert(int id);
+
+    /** Discard the saved copy at id without touching current state.
+     *  Inner savepoints between id and the top of the stack survive. */
+    void Commit(int id);
+
     /** Diagnostics: number of currently-dirty entries by kind. */
     size_t DirtyAccountCount() const { return mAccountsDirty.size(); }
     size_t DirtyStorageCount() const { return mStorageDirty.size(); }
@@ -124,6 +152,22 @@ private:
 
     // codeHash -> bytecode
     std::map<uint256, std::vector<uint8_t>> mCodeDirty;
+
+    // Savepoint stack for nested CALL/CREATE revert. Each savepoint is
+    // a copy of the four dirty maps at the time Snapshot() was called.
+    // Copying eagerly trades memory for a simple revert path; for the
+    // small dirty sets typical of a single tx this is fine. A journal-
+    // based approach (record deltas) is a perf optimization for later.
+    struct Savepoint
+    {
+        int id;
+        std::map<uint160, CEvmAccount> accountsDirty;
+        std::map<uint160, bool> accountsDeleted;
+        std::map<std::pair<uint160, uint256>, uint256> storageDirty;
+        std::map<uint256, std::vector<uint8_t>> codeDirty;
+    };
+    std::vector<Savepoint> mSavepoints;
+    int mNextSavepointId{1};
 };
 
 } // namespace evm

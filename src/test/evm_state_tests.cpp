@@ -339,4 +339,135 @@ BOOST_AUTO_TEST_CASE(cache_code_write_and_read)
     BOOST_CHECK(db.HasCode(codeHash));
 }
 
+// ============================================================================
+// Phase 2.3d — Snapshot / Revert / Commit
+// ============================================================================
+//
+// Direct unit coverage of the savepoint stack. The nested-call tests in
+// evm_host_tests.cpp exercise the same machinery through the EVM
+// dispatcher; these tests pin the low-level semantics so a regression
+// in Snapshot()/Revert()/Commit() is detected close to the source.
+
+BOOST_AUTO_TEST_CASE(snapshot_revert_restores_dirty_state)
+{
+    evm::CEvmStateDB db(1 << 20, /*fMemory=*/ true);
+    evm::CEvmStateCache cache(db);
+
+    const uint160 addr = MakeAddr(0xA1);
+    evm::CEvmAccount initial(/*nonce=*/ 1, /*balance=*/ MakeWord(0x11),
+                             evm::CEvmAccount::EmptyCodeHash(),
+                             evm::CEvmAccount::EmptyStorageRoot());
+    cache.SetAccount(addr, initial);
+    cache.SetStorage(addr, MakeWord(0x07), MakeWord(0x42));
+
+    const int snap = cache.Snapshot();
+
+    // Dirty further changes on top of the snapshot.
+    evm::CEvmAccount changed = initial;
+    changed.nonce = 99;
+    cache.SetAccount(addr, changed);
+    cache.SetStorage(addr, MakeWord(0x07), MakeWord(0xEE));
+    cache.SetStorage(addr, MakeWord(0x08), MakeWord(0xBE)); // new slot
+
+    // Sanity check: cache reflects the post-snapshot writes.
+    evm::CEvmAccount peek;
+    BOOST_REQUIRE(cache.GetAccount(addr, peek));
+    BOOST_CHECK_EQUAL(peek.nonce, 99U);
+
+    cache.Revert(snap);
+
+    // After revert: account & storage are back to the snapshot state.
+    evm::CEvmAccount restored;
+    BOOST_REQUIRE(cache.GetAccount(addr, restored));
+    BOOST_CHECK_EQUAL(restored.nonce, 1U);
+
+    uint256 slot7;
+    BOOST_REQUIRE(cache.GetStorage(addr, MakeWord(0x07), slot7));
+    BOOST_CHECK(slot7 == MakeWord(0x42));
+
+    // The new slot 0x08 written *after* the snapshot is gone.
+    uint256 slot8;
+    BOOST_CHECK(!cache.GetStorage(addr, MakeWord(0x08), slot8));
+}
+
+BOOST_AUTO_TEST_CASE(snapshot_commit_keeps_changes)
+{
+    evm::CEvmStateDB db(1 << 20, /*fMemory=*/ true);
+    evm::CEvmStateCache cache(db);
+
+    const uint160 addr = MakeAddr(0xB2);
+    cache.SetAccount(addr, evm::CEvmAccount(
+        1, MakeWord(0x00),
+        evm::CEvmAccount::EmptyCodeHash(),
+        evm::CEvmAccount::EmptyStorageRoot()));
+
+    const int snap = cache.Snapshot();
+
+    // Modify and commit — current dirty layer should survive untouched.
+    cache.SetStorage(addr, MakeWord(0x01), MakeWord(0xCC));
+    cache.Commit(snap);
+
+    uint256 readBack;
+    BOOST_REQUIRE(cache.GetStorage(addr, MakeWord(0x01), readBack));
+    BOOST_CHECK(readBack == MakeWord(0xCC));
+}
+
+BOOST_AUTO_TEST_CASE(snapshot_nested_outer_revert_drops_inner)
+{
+    evm::CEvmStateDB db(1 << 20, /*fMemory=*/ true);
+    evm::CEvmStateCache cache(db);
+
+    const uint160 addr = MakeAddr(0xC3);
+    cache.SetAccount(addr, evm::CEvmAccount(
+        1, MakeWord(0x00),
+        evm::CEvmAccount::EmptyCodeHash(),
+        evm::CEvmAccount::EmptyStorageRoot()));
+
+    const int outer = cache.Snapshot();
+    cache.SetStorage(addr, MakeWord(0x01), MakeWord(0xAA));
+
+    const int inner = cache.Snapshot();
+    cache.SetStorage(addr, MakeWord(0x01), MakeWord(0xBB));
+    cache.Commit(inner); // inner change "committed"
+
+    uint256 mid;
+    BOOST_REQUIRE(cache.GetStorage(addr, MakeWord(0x01), mid));
+    BOOST_CHECK(mid == MakeWord(0xBB));
+
+    cache.Revert(outer); // outer revert — should wipe everything
+
+    uint256 afterRevert;
+    BOOST_CHECK(!cache.GetStorage(addr, MakeWord(0x01), afterRevert));
+}
+
+BOOST_AUTO_TEST_CASE(snapshot_inner_revert_preserves_outer)
+{
+    evm::CEvmStateDB db(1 << 20, /*fMemory=*/ true);
+    evm::CEvmStateCache cache(db);
+
+    const uint160 addr = MakeAddr(0xD4);
+    cache.SetAccount(addr, evm::CEvmAccount(
+        1, MakeWord(0x00),
+        evm::CEvmAccount::EmptyCodeHash(),
+        evm::CEvmAccount::EmptyStorageRoot()));
+
+    const int outer = cache.Snapshot();
+    cache.SetStorage(addr, MakeWord(0x01), MakeWord(0xAA));
+
+    const int inner = cache.Snapshot();
+    cache.SetStorage(addr, MakeWord(0x01), MakeWord(0xBB));
+    cache.Revert(inner);
+
+    // After inner revert: slot 0x01 should be back to outer's value 0xAA.
+    uint256 afterInner;
+    BOOST_REQUIRE(cache.GetStorage(addr, MakeWord(0x01), afterInner));
+    BOOST_CHECK(afterInner == MakeWord(0xAA));
+
+    // Outer commit should preserve 0xAA.
+    cache.Commit(outer);
+    uint256 final;
+    BOOST_REQUIRE(cache.GetStorage(addr, MakeWord(0x01), final));
+    BOOST_CHECK(final == MakeWord(0xAA));
+}
+
 BOOST_AUTO_TEST_SUITE_END()

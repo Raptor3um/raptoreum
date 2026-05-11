@@ -88,6 +88,19 @@ struct ExecutionContext
  *     Phase 2.3 work. This is deliberate: it lets us run leaf contracts
  *     (no inter-contract calls) right now and unblock state-touching
  *     tests, while keeping the surface area for this commit small.
+ *
+ * Phase 2.3d extends call() to a full nested-call dispatcher:
+ *   - EVMC_CALL: value transfer + run callee's code in callee's
+ *     storage context.
+ *   - EVMC_DELEGATECALL / EVMC_CALLCODE: run target code in current
+ *     frame's storage context (DELEGATECALL also preserves outer
+ *     sender + value).
+ *   - EVMC_STATICCALL: read-only nested call (no state mutations).
+ *   - EVMC_CREATE / EVMC_CREATE2: derive new contract address,
+ *     transfer value, run init code, install runtime on success.
+ *
+ * Every nested frame opens a CEvmStateCache savepoint up front;
+ * EVMC_REVERT or any failure status restores it before returning.
  */
 class CEvmHost final : public evmc::Host
 {
@@ -196,6 +209,12 @@ private:
     static evmc::address FromUint160(const uint160& a);
     static uint256 ToUint256(const evmc::bytes32& b);
     static evmc::bytes32 FromUint256(const uint256& u);
+
+    // Nested CREATE / CREATE2 dispatcher. Split out of call() because
+    // CREATE has a different control flow (address derivation, nonce
+    // bump, runtime code install) that doesn't compose cleanly with
+    // the CALL-family path.
+    evmc::Result CallCreate(const evmc_message& msg) noexcept;
 };
 
 } // namespace evm

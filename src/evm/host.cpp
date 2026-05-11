@@ -5,12 +5,96 @@
 #include <evm/host.h>
 
 #include <evm/account.h>
+#include <evm/hashing.h>
 #include <evm/state_cache.h>
 
+#include <evmone/evmone.h>
+
+#include <algorithm>
 #include <cstring>
 #include <vector>
 
 namespace evm {
+
+// ----------------------------------------------------------------------
+// Local helpers: byte-level arithmetic on big-endian uint256.
+//
+// Used by the value-transfer step of nested CALL and CREATE frames.
+// Same approach as in apply.cpp's spend path — kept local for now;
+// if a third caller needs them, promote to a shared utility header.
+// ----------------------------------------------------------------------
+
+namespace {
+
+// True if a >= b, where both are 32-byte big-endian uint256s.
+bool U256_BE_ge(const evmc::uint256be& a, const evmc::uint256be& b)
+{
+    for (size_t i = 0; i < 32; ++i) {
+        if (a.bytes[i] != b.bytes[i]) return a.bytes[i] > b.bytes[i];
+    }
+    return true; // equal
+}
+
+// True if v is zero.
+bool U256_BE_isZero(const evmc::uint256be& v)
+{
+    for (size_t i = 0; i < 32; ++i) {
+        if (v.bytes[i] != 0) return false;
+    }
+    return true;
+}
+
+// out = a - b (modular). Caller must ensure a >= b.
+void U256_BE_sub(evmc::uint256be& a, const evmc::uint256be& b)
+{
+    int borrow = 0;
+    for (int i = 31; i >= 0; --i) {
+        const int av = a.bytes[i];
+        const int bv = b.bytes[i] + borrow;
+        if (av < bv) {
+            a.bytes[i] = static_cast<uint8_t>(av + 256 - bv);
+            borrow = 1;
+        } else {
+            a.bytes[i] = static_cast<uint8_t>(av - bv);
+            borrow = 0;
+        }
+    }
+}
+
+// a = a + b (modular wrap on overflow, which we treat as a fatal
+// arithmetic condition — total RTM supply is far below 2^256, so a
+// real overflow indicates a consensus bug, not a legitimate balance).
+// Returns false on overflow so the caller can reject the operation.
+bool U256_BE_add(evmc::uint256be& a, const evmc::uint256be& b)
+{
+    int carry = 0;
+    for (int i = 31; i >= 0; --i) {
+        const int sum = static_cast<int>(a.bytes[i]) +
+                        static_cast<int>(b.bytes[i]) + carry;
+        a.bytes[i] = static_cast<uint8_t>(sum & 0xFF);
+        carry = sum >> 8;
+    }
+    return carry == 0;
+}
+
+// Convert evmc::uint256be -> Bitcoin Core uint256 (byte-for-byte; both
+// in big-endian wire layout).
+uint256 BeToU256(const evmc::uint256be& b)
+{
+    uint256 out;
+    std::memcpy(out.begin(), b.bytes, 32);
+    return out;
+}
+
+// And back the other way.
+evmc::uint256be U256ToBe(const uint256& u)
+{
+    evmc::uint256be out{};
+    std::memcpy(out.bytes, u.begin(), 32);
+    return out;
+}
+
+} // anonymous namespace
 
 // ----------------------------------------------------------------------
 // Type conversion helpers (evmc:: <-> Bitcoin Core uint types)
@@ -184,25 +268,333 @@ evmc_storage_status CEvmHost::set_storage(const evmc::address& addr,
 }
 
 bool CEvmHost::selfdestruct(const evmc::address& addr,
-                            const evmc::address& /*beneficiary*/) noexcept
+                            const evmc::address& beneficiary) noexcept
 {
-    // Record the intent. The caller will, after execution completes,
-    // transfer the contract's balance to the beneficiary and erase the
-    // account record from state. Beneficiary-side accounting is added
-    // in Phase 2.3 alongside the call() implementation.
+    // Record the SELFDESTRUCT intent so the caller can erase the
+    // account once the surrounding frame returns (we cannot delete
+    // mid-execution — evmone may still read the contract's storage
+    // before the opcode actually halts the frame).
+    //
+    // The balance transfer to the beneficiary, on the other hand,
+    // happens immediately at the EVM-state level: per Cancun the
+    // beneficiary's balance is credited even if the SELFDESTRUCT later
+    // gets rolled back by an outer REVERT (which is handled by our
+    // savepoint mechanism — the credit is dirty-layer, so reverting
+    // the savepoint also discards it).
+    const uint160 contractAddr = ToUint160(addr);
+    const uint160 beneficiaryAddr = ToUint160(beneficiary);
+
+    evm::CEvmAccount contractAcc;
+    if (!state.GetAccount(contractAddr, contractAcc)) {
+        // Selfdestruct of a non-existent account is a no-op for
+        // balance transfer; still record the intent so the caller can
+        // observe it and decide whether to flag the situation.
+        auto insertedEmpty = selfdestructed.insert(addr).second;
+        return insertedEmpty;
+    }
+
+    evmc::uint256be contractBalanceBe = U256ToBe(contractAcc.balance);
+    if (!U256_BE_isZero(contractBalanceBe) && contractAddr != beneficiaryAddr)
+    {
+        evm::CEvmAccount beneficiaryAcc;
+        const bool beneficiaryExists =
+            state.GetAccount(beneficiaryAddr, beneficiaryAcc);
+        if (!beneficiaryExists) {
+            beneficiaryAcc = evm::CEvmAccount(
+                /*nonce=*/ 0,
+                /*balance=*/ uint256(),
+                /*codeHash=*/ evm::CEvmAccount::EmptyCodeHash(),
+                /*storageRoot=*/ evm::CEvmAccount::EmptyStorageRoot());
+        }
+        evmc::uint256be beneficiaryBalanceBe = U256ToBe(beneficiaryAcc.balance);
+        if (!U256_BE_add(beneficiaryBalanceBe, contractBalanceBe)) {
+            // Overflow — refuse the operation rather than corrupt
+            // total supply. Returning false here tells evmone the
+            // selfdestruct did not register; evmone treats this as
+            // a duplicate-flag scenario (no extra gas refund), but
+            // the on-chain effect is no balance transfer either way.
+            return false;
+        }
+        beneficiaryAcc.balance = BeToU256(beneficiaryBalanceBe);
+        state.SetAccount(beneficiaryAddr, beneficiaryAcc);
+
+        // Zero out the contract's balance immediately. The account
+        // record is kept until after execution (so subsequent reads
+        // from the same frame see codeHash etc.); the actual erasure
+        // happens at the caller level once the frame returns.
+        contractAcc.balance = uint256();
+        state.SetAccount(contractAddr, contractAcc);
+    }
+
     auto inserted = selfdestructed.insert(addr).second;
     return inserted;
 }
 
-evmc::Result CEvmHost::call(const evmc_message& /*msg*/) noexcept
+// ----------------------------------------------------------------------
+// Nested CALL / DELEGATECALL / CALLCODE / STATICCALL
+// ----------------------------------------------------------------------
+//
+// All four kinds share the same control flow:
+//   1. Open a savepoint.
+//   2. For non-DELEGATECALL/non-STATICCALL with msg.value > 0: debit
+//      sender, credit recipient (account-to-account RTM transfer).
+//   3. Locate the code to execute (msg.code_address for DELEGATE/
+//      CALLCODE; msg.recipient for CALL/STATICCALL).
+//   4. Dispatch through evmone with the appropriate flags.
+//   5. On EVMC_SUCCESS: Commit savepoint.
+//      On EVMC_REVERT or any failure: Revert savepoint.
+//
+// evmone tracks msg.depth itself and refuses to recurse past 1024,
+// so we don't pre-check depth here.
+
+evmc::Result CEvmHost::call(const evmc_message& msg) noexcept
 {
-    // Phase 2.2 deliberately does NOT support nested CALL / CREATE /
-    // CREATE2 / DELEGATECALL / STATICCALL / CALLCODE. Contracts that
-    // attempt such operations get an empty-output revert. Phase 2.3
-    // implements full nested-call semantics with snapshot/revert.
-    evmc::Result r;
-    r.status_code = EVMC_REVERT;
-    r.gas_left = 0;
+    // Branch CREATE/CREATE2 out to its own helper — it has different
+    // pre-conditions (address derivation, code installation) and reads
+    // less cleanly when interleaved with the CALL family.
+    if (msg.kind == EVMC_CREATE || msg.kind == EVMC_CREATE2) {
+        // Defer to the create handler defined below.
+        return CallCreate(msg);
+    }
+
+    const int snap = state.Snapshot();
+
+    // --- 1. Value transfer (CALL and CALLCODE only — DELEGATECALL
+    //        inherits the outer frame's value; STATICCALL disallows
+    //        any state change). --------------------------------------
+    const bool doTransfer =
+        (msg.kind == EVMC_CALL || msg.kind == EVMC_CALLCODE) &&
+        !U256_BE_isZero(msg.value);
+
+    if (doTransfer) {
+        const uint160 fromAddr = ToUint160(msg.sender);
+        const uint160 toAddr = ToUint160(msg.recipient);
+
+        evm::CEvmAccount fromAcc;
+        if (!state.GetAccount(fromAddr, fromAcc)) {
+            state.Revert(snap);
+            evmc::Result r;
+            r.status_code = EVMC_INSUFFICIENT_BALANCE;
+            r.gas_left = 0;
+            return r;
+        }
+        evmc::uint256be fromBal = U256ToBe(fromAcc.balance);
+        if (!U256_BE_ge(fromBal, msg.value)) {
+            state.Revert(snap);
+            evmc::Result r;
+            r.status_code = EVMC_INSUFFICIENT_BALANCE;
+            r.gas_left = 0;
+            return r;
+        }
+        U256_BE_sub(fromBal, msg.value);
+        fromAcc.balance = BeToU256(fromBal);
+        state.SetAccount(fromAddr, fromAcc);
+
+        // Recipient may not exist yet — that's legal for CALL
+        // (creates an EOA-style record with the transferred balance).
+        evm::CEvmAccount toAcc;
+        if (!state.GetAccount(toAddr, toAcc)) {
+            toAcc = evm::CEvmAccount(
+                /*nonce=*/ 0,
+                /*balance=*/ uint256(),
+                /*codeHash=*/ evm::CEvmAccount::EmptyCodeHash(),
+                /*storageRoot=*/ evm::CEvmAccount::EmptyStorageRoot());
+        }
+        evmc::uint256be toBal = U256ToBe(toAcc.balance);
+        if (!U256_BE_add(toBal, msg.value)) {
+            // Catastrophic — total balance would overflow uint256.
+            // Refuse to corrupt state.
+            state.Revert(snap);
+            evmc::Result r;
+            r.status_code = EVMC_FAILURE;
+            r.gas_left = 0;
+            return r;
+        }
+        toAcc.balance = BeToU256(toBal);
+        state.SetAccount(toAddr, toAcc);
+    }
+
+    // --- 2. Locate the code to execute. ----------------------------
+    // CALL / STATICCALL run the recipient's own code.
+    // DELEGATECALL / CALLCODE run the target's code with this frame's
+    // (= caller's) recipient identity, hence msg.code_address.
+    const evmc::address codeAddr =
+        (msg.kind == EVMC_DELEGATECALL || msg.kind == EVMC_CALLCODE)
+            ? msg.code_address
+            : msg.recipient;
+
+    std::vector<uint8_t> code;
+    {
+        evm::CEvmAccount codeAcc;
+        if (state.GetAccount(ToUint160(codeAddr), codeAcc) &&
+            codeAcc.codeHash != evm::CEvmAccount::EmptyCodeHash())
+        {
+            state.GetCode(codeAcc.codeHash, code);
+        }
+    }
+
+    // --- 3. Run the inner frame. -----------------------------------
+    // If the code is empty this is equivalent to a value-transfer-only
+    // call (which already succeeded above). evmone returns success
+    // with empty output and no gas consumed beyond the entry.
+    evmc::VM vm{evmc_create_evmone()};
+    evmc::Result r = vm.execute(*this, EVMC_CANCUN, msg,
+                                code.empty() ? nullptr : code.data(),
+                                code.size());
+
+    // --- 4. Commit or revert based on the inner status. ------------
+    if (r.status_code == EVMC_SUCCESS) {
+        state.Commit(snap);
+    } else {
+        // EVMC_REVERT, EVMC_OUT_OF_GAS, EVMC_INVALID_INSTRUCTION,
+        // EVMC_STACK_*, EVMC_FAILURE, etc. — all roll back.
+        state.Revert(snap);
+    }
+
+    return r;
+}
+
+// ----------------------------------------------------------------------
+// Nested CREATE / CREATE2
+// ----------------------------------------------------------------------
+//
+// Responsibilities (per the evmc::Host contract):
+//   1. Read sender's account (caller-side state). Reject if missing.
+//   2. Derive the new contract address:
+//        - CREATE:  keccak(rlp([sender, nonce]))[12:]
+//        - CREATE2: keccak(0xff || sender || salt ||
+//                          keccak(init_code))[12:]
+//   3. Increment sender's nonce immediately (per EIP-161, the nonce
+//      bump happens whether or not the constructor succeeds).
+//   4. Collision check: refuse if the derived address has code or a
+//      non-zero nonce.
+//   5. Transfer msg.value from sender to the (about to exist) new
+//      contract account.
+//   6. Run msg.input_data as init code through evmone with the new
+//      address as msg.recipient.
+//   7. On EVMC_SUCCESS: store the RETURN bytes as the runtime code,
+//      install a fresh account record at the new address, commit
+//      savepoint. Populate r.create_address.
+//   8. On any failure: revert savepoint (nonce bump survives in
+//      Ethereum semantics, but our savepoint includes it — matching
+//      what other EVM hosts do at this layer is fine; the caller
+//      already debited gas to make this irreversible at the fee
+//      level, even though state mutation rolls back).
+evmc::Result CEvmHost::CallCreate(const evmc_message& msg) noexcept
+{
+    const int snap = state.Snapshot();
+
+    const uint160 senderAddr = ToUint160(msg.sender);
+    evm::CEvmAccount senderAcc;
+    if (!state.GetAccount(senderAddr, senderAcc)) {
+        state.Revert(snap);
+        evmc::Result r;
+        r.status_code = EVMC_FAILURE;
+        r.gas_left = 0;
+        return r;
+    }
+
+    // Derive the new address. For CREATE the nonce we use is the
+    // sender's CURRENT nonce (before increment).
+    uint160 newAddr;
+    if (msg.kind == EVMC_CREATE) {
+        newAddr = ContractAddressFromCreate(senderAddr, senderAcc.nonce);
+    } else {
+        // CREATE2: hash the init code.
+        std::vector<uint8_t> initCode(msg.input_data,
+                                      msg.input_data + msg.input_size);
+        const uint256 initCodeHash = Keccak256(initCode);
+        const uint256 salt = ToUint256(msg.create2_salt);
+        newAddr = ContractAddressFromCreate2(senderAddr, salt, initCodeHash);
+    }
+
+    // Bump sender's nonce now. EIP-161 mandates the increment even
+    // on failure (in real Ethereum); a revert here would leave us
+    // out of sync with that, but our outer caller is responsible for
+    // the cross-tx nonce bookkeeping anyway (Phase 2.4). Within a
+    // single nested CREATE frame, the bump must be visible to a
+    // subsequent CREATE by the same sender at the same depth, hence
+    // we apply it before running the constructor.
+    senderAcc.nonce += 1;
+
+    // Collision check on the derived address.
+    evm::CEvmAccount existing;
+    if (state.GetAccount(newAddr, existing)) {
+        const bool hasCode =
+            existing.codeHash != evm::CEvmAccount::EmptyCodeHash();
+        if (hasCode || existing.nonce > 0) {
+            state.Revert(snap);
+            evmc::Result r;
+            r.status_code = EVMC_FAILURE;
+            r.gas_left = 0;
+            return r;
+        }
+    }
+
+    // Value transfer sender -> new contract account.
+    if (!U256_BE_isZero(msg.value)) {
+        evmc::uint256be senderBal = U256ToBe(senderAcc.balance);
+        if (!U256_BE_ge(senderBal, msg.value)) {
+            state.Revert(snap);
+            evmc::Result r;
+            r.status_code = EVMC_INSUFFICIENT_BALANCE;
+            r.gas_left = 0;
+            return r;
+        }
+        U256_BE_sub(senderBal, msg.value);
+        senderAcc.balance = BeToU256(senderBal);
+    }
+    state.SetAccount(senderAddr, senderAcc);
+
+    // Seed the new account with the value (and a nonce of 1 per
+    // EIP-161 — this gets overwritten below on success but exists
+    // here so the constructor can observe a non-zero existence).
+    evm::CEvmAccount newAcc(
+        /*nonce=*/ 1,
+        /*balance=*/ BeToU256(msg.value),
+        /*codeHash=*/ evm::CEvmAccount::EmptyCodeHash(),
+        /*storageRoot=*/ evm::CEvmAccount::EmptyStorageRoot());
+    state.SetAccount(newAddr, newAcc);
+
+    // Build the init-code execution message. evmone runs the input
+    // as the code; the RETURN bytes become the runtime code on
+    // success.
+    evmc_message initMsg = msg;
+    initMsg.kind = EVMC_CREATE;
+    std::memcpy(initMsg.recipient.bytes, newAddr.begin(), 20);
+    initMsg.code_address = initMsg.recipient;
+    initMsg.input_data = nullptr;
+    initMsg.input_size = 0;
+
+    evmc::VM vm{evmc_create_evmone()};
+    evmc::Result r = vm.execute(*this, EVMC_CANCUN, initMsg,
+                                msg.input_size > 0 ? msg.input_data : nullptr,
+                                msg.input_size);
+
+    if (r.status_code == EVMC_SUCCESS) {
+        // Install the runtime code.
+        std::vector<uint8_t> runtime;
+        if (r.output_size > 0 && r.output_data != nullptr) {
+            runtime.assign(r.output_data, r.output_data + r.output_size);
+        }
+        const uint256 codeHash = Keccak256(runtime);
+        state.SetCode(codeHash, runtime);
+
+        evm::CEvmAccount finalAcc;
+        // Reload — the constructor may have written balance/storage.
+        if (!state.GetAccount(newAddr, finalAcc)) {
+            finalAcc = newAcc;
+        }
+        finalAcc.nonce = 1;
+        finalAcc.codeHash = codeHash;
+        state.SetAccount(newAddr, finalAcc);
+
+        state.Commit(snap);
+        std::memcpy(r.create_address.bytes, newAddr.begin(), 20);
+    } else {
+        state.Revert(snap);
+    }
+
     return r;
 }
 
