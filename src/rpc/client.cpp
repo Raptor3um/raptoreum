@@ -202,6 +202,8 @@ static const CRPCConvertParam vRPCConvertParams[] =
                 { "evm_executeReadOnly", 2, "gas_limit" },
                 { "eth_call", 0, "callObject" },
                 { "eth_estimateGas", 0, "callObject" },
+                { "eth_getBlockByNumber", 1, "fullTx" },
+                { "eth_getBlockByHash", 1, "fullTx" },
         };
 
 class CRPCConvertTable {

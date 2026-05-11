@@ -11,11 +11,16 @@
 #include <evm/smoke.h>
 #include <evm/state_cache.h>
 #include <evm/state_db.h>
+#include <evo/specialtx.h>
+#include <primitives/block.h>
+#include <primitives/transaction.h>
 #include <rpc/protocol.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
+#include <streams.h>
 #include <util/strencodings.h>
 #include <validation.h>
+#include <version.h>
 
 #include <evmc/evmc.hpp>
 #include <evmone/evmone.h>
@@ -479,10 +484,14 @@ uint64_t ParseEthQuantity(const UniValue& v, const std::string& name)
     }
     const std::string stripped = StripHexPrefix(v.get_str());
     if (stripped.empty()) return 0;
-    if (!IsHex(stripped.size() % 2 == 0 ? stripped : "0" + stripped)) {
+    // Ethereum quantity hex allows odd lengths ("0x0", "0xa"); pad
+    // for the IsHex validity check only.
+    const std::string padded = (stripped.size() % 2 == 0)
+        ? stripped : ("0" + stripped);
+    if (!IsHex(padded)) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, name + " is not valid hex");
     }
-    // Manual hex-to-uint64 parse; rejects values > uint64 max.
+    // Reject values > uint64 max (16 hex nibbles).
     if (stripped.size() > 16) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, name + " quantity exceeds uint64");
     }
@@ -727,6 +736,360 @@ UniValue eth_estimateGas(const JSONRPCRequest& request)
     return ToEthQuantity(static_cast<uint64_t>(r.gasUsed));
 }
 
+// ----------------------------------------------------------------------
+// Phase 3.3 — Block exploration: eth_getBlockBy{Number,Hash} +
+// eth_getBlockTransactionCountBy{Number,Hash}.
+// ----------------------------------------------------------------------
+//
+// MetaMask, Etherscan-style explorers, and most RPC clients poll
+// these on every refresh. Returns an Ethereum-shaped block object:
+//
+//   { number, hash, parentHash, sha3Uncles, logsBloom,
+//     transactionsRoot, stateRoot, receiptsRoot, miner, difficulty,
+//     totalDifficulty, extraData, size, gasLimit, gasUsed,
+//     timestamp, transactions[], uncles[] }
+//
+// Fields backed by Raptoreum chain data: number, hash, parentHash,
+// timestamp, size, transactions[]. Fields with no Raptoreum analog
+// today (stateRoot / receiptsRoot per D2; logsBloom; sha3Uncles)
+// return canonical zeros — clients tolerate this for chains where
+// the consensus surface deviates from Ethereum L1.
+//
+// The fullTx parameter:
+//   false → transactions[] is an array of 0x-prefixed tx hashes
+//   true  → transactions[] is an array of full Ethereum-shaped tx
+//           objects (subset: hash, blockHash, blockNumber,
+//           transactionIndex, from, to, value, input, gas, gasPrice,
+//           type, nonce). EVM-typed Raptoreum txs are mapped from
+//           their CEvmCallTx / CEvmDeployTx payload; non-EVM txs are
+//           emitted with a synthetic from=0x0, to=0x0, input=0x.
+
+namespace {
+
+// 32-byte zero word, formatted once for reuse in fields with no
+// Raptoreum analog today.
+const std::string kZeroWord =
+    "0x0000000000000000000000000000000000000000000000000000000000000000";
+const std::string kZeroAddress = "0x0000000000000000000000000000000000000000";
+// 256-byte (2048-bit) zero bloom filter.
+std::string ZeroLogsBloom()
+{
+    return "0x" + std::string(512, '0');
+}
+
+// uint256 (Bitcoin Core layout — bitcoinish little-endian internally
+// but exposed big-endian via begin/end byte iteration) to Ethereum
+// 0x-prefixed 32-byte hex.
+std::string Uint256ToEthHex(const uint256& v)
+{
+    // Bitcoin Core stores uint256 in little-endian byte order; the
+    // Ethereum convention is big-endian. Reverse on the way out.
+    std::vector<uint8_t> bytes(32);
+    for (int i = 0; i < 32; ++i) bytes[i] = *(v.begin() + (31 - i));
+    return "0x" + HexStr(bytes);
+}
+
+// Resolve a block tag ("latest"/"pending" or a 0x-quantity height)
+// into a CBlockIndex*. Throws RPC_INVALID_PARAMETER on miss.
+CBlockIndex* ResolveBlockTagToIndex(const UniValue& tag,
+                                   const std::string& name)
+{
+    if (tag.isNull()) {
+        return ::ChainActive().Tip();
+    }
+    if (!tag.isStr()) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER,
+                          name + " must be a string block tag");
+    }
+    const std::string s = tag.get_str();
+    if (s == "latest" || s == "pending") return ::ChainActive().Tip();
+    if (s == "earliest") return ::ChainActive().Genesis();
+    // Otherwise treat as a 0x-prefixed hex quantity height.
+    // Ethereum quantity hex is minimally encoded — "0x0", "0xa",
+    // "0x10" — so odd-length payloads are legal. IsHex requires
+    // even length; pad the payload before the hex-validity check.
+    const std::string stripped = StripHexPrefix(s);
+    const std::string padded = (stripped.size() % 2 == 0)
+        ? stripped : ("0" + stripped);
+    if (stripped.empty() || stripped.size() > 16 || !IsHex(padded)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER,
+                          name + " is not a recognised block tag");
+    }
+    uint64_t height = 0;
+    for (char c : stripped) {
+        height <<= 4;
+        if (c >= '0' && c <= '9') height |= static_cast<uint64_t>(c - '0');
+        else if (c >= 'a' && c <= 'f') height |= static_cast<uint64_t>(c - 'a' + 10);
+        else if (c >= 'A' && c <= 'F') height |= static_cast<uint64_t>(c - 'A' + 10);
+        else throw JSONRPCError(RPC_INVALID_PARAMETER, name + " has invalid hex");
+    }
+    if (height > static_cast<uint64_t>(::ChainActive().Height())) {
+        return nullptr; // out of range
+    }
+    return ::ChainActive()[static_cast<int>(height)];
+}
+
+// Parse a 0x-prefixed 32-byte block hash string into uint256.
+uint256 ParseEthBlockHash(const UniValue& v, const std::string& name)
+{
+    if (!v.isStr()) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER,
+                          name + " must be a 0x-prefixed 32-byte hex string");
+    }
+    const std::string stripped = StripHexPrefix(v.get_str());
+    if (stripped.size() != 64 || !IsHex(stripped)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER,
+                          name + " must be a 0x-prefixed 32-byte hex string");
+    }
+    // Eth-style hex is big-endian; Bitcoin uint256 stores
+    // little-endian. Reverse the bytes for the round trip.
+    std::vector<unsigned char> beBytes = ParseHex(stripped);
+    std::reverse(beBytes.begin(), beBytes.end());
+    return uint256(beBytes);
+}
+
+// Compute the on-disk serialised size of a block (matches what
+// Ethereum reports under `size`).
+uint64_t BlockSerializedSize(const CBlock& block)
+{
+    return ::GetSerializeSize(block, PROTOCOL_VERSION);
+}
+
+// Build the Ethereum-shaped tx object for `eth_getBlockByX` with
+// fullTx=true. Subset of fields — sufficient for MetaMask + most
+// explorers; missing fields default to zero/empty.
+UniValue FormatTransactionForBlock(const CTransaction& tx,
+                                  const uint256& blockHash,
+                                  uint64_t blockHeight,
+                                  uint64_t txIndex)
+{
+    UniValue out(UniValue::VOBJ);
+    out.pushKV("hash", Uint256ToEthHex(tx.GetHash()));
+    out.pushKV("blockHash", Uint256ToEthHex(blockHash));
+    out.pushKV("blockNumber", ToEthQuantity(blockHeight));
+    out.pushKV("transactionIndex", ToEthQuantity(txIndex));
+    out.pushKV("chainId", ToEthQuantity(static_cast<uint64_t>(ActiveEvmChainId())));
+    // Type 2 = EIP-1559 tx; matches the gas-fee model we run.
+    out.pushKV("type", "0x2");
+
+    // EVM-typed txs project their payload fields onto Ethereum's tx
+    // shape. Non-EVM txs (TRANSACTION_NORMAL, asset txs, etc.) get
+    // synthetic zeros — they exist in the UTXO subsystem but have
+    // no native Ethereum analog.
+    if (tx.nType == TRANSACTION_EVM_CALL) {
+        evm::CEvmCallTx payload;
+        if (GetTxPayload(tx, payload)) {
+            uint160 to;
+            std::memcpy(to.begin(), payload.toAddress.begin() + 12, 20);
+            uint160 from;
+            std::memcpy(from.begin(), payload.senderHash.begin() + 12, 20);
+            out.pushKV("from", ToEthData(from));
+            out.pushKV("to", ToEthData(to));
+            out.pushKV("value", ToEthQuantity(payload.value));
+            out.pushKV("input", ToEthData(payload.data));
+            out.pushKV("gas", ToEthQuantity(payload.gasLimit));
+            out.pushKV("gasPrice", ToEthQuantity(payload.maxFeePerGas));
+            out.pushKV("maxFeePerGas", ToEthQuantity(payload.maxFeePerGas));
+            out.pushKV("maxPriorityFeePerGas", ToEthQuantity(payload.maxPriorityFeePerGas));
+            out.pushKV("nonce", ToEthQuantity(payload.nonce));
+            return out;
+        }
+    } else if (tx.nType == TRANSACTION_EVM_DEPLOY) {
+        evm::CEvmDeployTx payload;
+        if (GetTxPayload(tx, payload)) {
+            uint160 from;
+            std::memcpy(from.begin(), payload.senderHash.begin() + 12, 20);
+            out.pushKV("from", ToEthData(from));
+            // Deploy txs have to=null in Ethereum's spec.
+            out.pushKV("to", UniValue());
+            out.pushKV("value", "0x0");
+            out.pushKV("input", ToEthData(payload.code));
+            out.pushKV("gas", ToEthQuantity(payload.gasLimit));
+            out.pushKV("gasPrice", ToEthQuantity(payload.maxFeePerGas));
+            out.pushKV("maxFeePerGas", ToEthQuantity(payload.maxFeePerGas));
+            out.pushKV("maxPriorityFeePerGas", ToEthQuantity(payload.maxPriorityFeePerGas));
+            out.pushKV("nonce", ToEthQuantity(payload.nonce));
+            return out;
+        }
+    }
+    // Non-EVM or malformed-payload fallback.
+    out.pushKV("from", kZeroAddress);
+    out.pushKV("to", kZeroAddress);
+    out.pushKV("value", "0x0");
+    out.pushKV("input", "0x");
+    out.pushKV("gas", "0x0");
+    out.pushKV("gasPrice", "0x0");
+    out.pushKV("nonce", "0x0");
+    return out;
+}
+
+UniValue FormatBlock(CBlockIndex* pindex, const CBlock& block, bool fullTx)
+{
+    UniValue out(UniValue::VOBJ);
+    const uint256 blockHash = block.GetHash();
+    out.pushKV("number", ToEthQuantity(static_cast<uint64_t>(pindex->nHeight)));
+    out.pushKV("hash", Uint256ToEthHex(blockHash));
+    out.pushKV("parentHash", Uint256ToEthHex(block.hashPrevBlock));
+    // PoW nonce is 4 bytes in Bitcoin/Raptoreum; Ethereum's "nonce"
+    // field is an 8-byte data hex. Pad the high 4 bytes with zeros.
+    out.pushKV("nonce", strprintf("0x00000000%08x", block.nNonce));
+    out.pushKV("sha3Uncles", kZeroWord);     // no uncles in Raptoreum
+    out.pushKV("logsBloom", ZeroLogsBloom()); // FUP: aggregate from receipts
+    out.pushKV("transactionsRoot", Uint256ToEthHex(block.hashMerkleRoot));
+    out.pushKV("stateRoot", kZeroWord);   // FUP-1 / D2 header field
+    out.pushKV("receiptsRoot", kZeroWord); // FUP-1 / D2 header field
+    // Miner / coinbase: the first output of the coinbase tx carries
+    // the script we'd map to an Ethereum-style address. Until the
+    // proper UTXO→EVM-address mapping lands, return zero.
+    out.pushKV("miner", kZeroAddress);
+    out.pushKV("difficulty", ToEthQuantity(pindex->nBits));
+    out.pushKV("totalDifficulty", ToEthQuantity(pindex->nBits));
+    out.pushKV("extraData", "0x");
+    out.pushKV("size", ToEthQuantity(BlockSerializedSize(block)));
+    out.pushKV("gasLimit", ToEthQuantity(30'000'000)); // FUP-1 / D2
+    out.pushKV("gasUsed", ToEthQuantity(0));           // FUP: sum from receipts
+    out.pushKV("timestamp", ToEthQuantity(static_cast<uint64_t>(block.GetBlockTime())));
+    UniValue txs(UniValue::VARR);
+    for (size_t i = 0; i < block.vtx.size(); ++i) {
+        if (fullTx) {
+            txs.push_back(FormatTransactionForBlock(
+                *block.vtx[i], blockHash,
+                static_cast<uint64_t>(pindex->nHeight), i));
+        } else {
+            txs.push_back(Uint256ToEthHex(block.vtx[i]->GetHash()));
+        }
+    }
+    out.pushKV("transactions", txs);
+    out.pushKV("uncles", UniValue(UniValue::VARR));
+    return out;
+}
+
+} // anonymous namespace (Phase 3.3 helpers)
+
+UniValue eth_getBlockByNumber(const JSONRPCRequest& request)
+{
+    RPCHelpMan{"eth_getBlockByNumber",
+        "\nReturns the block at the given height as an Ethereum-shaped object.\n"
+        "\nFields with no Raptoreum analog today (stateRoot, receiptsRoot,\n"
+        "logsBloom, sha3Uncles, miner) return canonical zeros — D2 header\n"
+        "field landing (tracked as FUP-1) populates them properly.\n",
+        {
+            {"block", RPCArg::Type::STR, RPCArg::Optional::NO,
+             "Block tag ('latest', 'earliest', 'pending') or 0x-prefixed hex height."},
+            {"fullTx", RPCArg::Type::BOOL, /* default */ "false",
+             "If true, transactions[] is an array of full tx objects; "
+             "otherwise just tx hashes."},
+        },
+        RPCResult{RPCResult::Type::OBJ, "", "Ethereum-shaped block object",
+                  {RPCResult{RPCResult::Type::ELISION, "", "Standard Ethereum eth_getBlock fields"}}},
+        RPCExamples{
+            HelpExampleCli("eth_getBlockByNumber", "\"latest\" false")
+            + HelpExampleRpc("eth_getBlockByNumber", "\"latest\", false")
+        },
+    }.Check(request);
+
+    LOCK(cs_main);
+    CBlockIndex* pindex = ResolveBlockTagToIndex(request.params[0], "block");
+    if (pindex == nullptr) return UniValue(UniValue::VNULL);
+
+    const bool fullTx = !request.params[1].isNull() && request.params[1].get_bool();
+
+    CBlock block;
+    if (!ReadBlockFromDisk(block, pindex, Params().GetConsensus())) {
+        throw JSONRPCError(RPC_MISC_ERROR, "Failed to read block from disk");
+    }
+    return FormatBlock(pindex, block, fullTx);
+}
+
+UniValue eth_getBlockByHash(const JSONRPCRequest& request)
+{
+    RPCHelpMan{"eth_getBlockByHash",
+        "\nReturns the block with the given hash as an Ethereum-shaped object.\n",
+        {
+            {"blockHash", RPCArg::Type::STR, RPCArg::Optional::NO,
+             "0x-prefixed 32-byte block hash."},
+            {"fullTx", RPCArg::Type::BOOL, /* default */ "false",
+             "If true, transactions[] is an array of full tx objects; "
+             "otherwise just tx hashes."},
+        },
+        RPCResult{RPCResult::Type::OBJ, "", "Ethereum-shaped block object",
+                  {RPCResult{RPCResult::Type::ELISION, "", "Standard Ethereum eth_getBlock fields"}}},
+        RPCExamples{
+            HelpExampleCli("eth_getBlockByHash", "\"0x...\" false")
+            + HelpExampleRpc("eth_getBlockByHash", "\"0x...\", false")
+        },
+    }.Check(request);
+
+    const uint256 hash = ParseEthBlockHash(request.params[0], "blockHash");
+    const bool fullTx = !request.params[1].isNull() && request.params[1].get_bool();
+
+    LOCK(cs_main);
+    auto it = ::BlockIndex().find(hash);
+    if (it == ::BlockIndex().end()) {
+        return UniValue(UniValue::VNULL);
+    }
+    CBlockIndex* pindex = it->second;
+    if (pindex == nullptr) return UniValue(UniValue::VNULL);
+
+    CBlock block;
+    if (!ReadBlockFromDisk(block, pindex, Params().GetConsensus())) {
+        throw JSONRPCError(RPC_MISC_ERROR, "Failed to read block from disk");
+    }
+    return FormatBlock(pindex, block, fullTx);
+}
+
+UniValue eth_getBlockTransactionCountByNumber(const JSONRPCRequest& request)
+{
+    RPCHelpMan{"eth_getBlockTransactionCountByNumber",
+        "\nReturns the number of transactions in the block at the given height.\n",
+        {{"block", RPCArg::Type::STR, RPCArg::Optional::NO,
+          "Block tag or 0x-prefixed hex height."}},
+        RPCResult{RPCResult::Type::STR, "count", "Transaction count (0x-prefixed)"},
+        RPCExamples{
+            HelpExampleCli("eth_getBlockTransactionCountByNumber", "\"latest\"")
+            + HelpExampleRpc("eth_getBlockTransactionCountByNumber", "\"latest\"")
+        },
+    }.Check(request);
+
+    LOCK(cs_main);
+    CBlockIndex* pindex = ResolveBlockTagToIndex(request.params[0], "block");
+    if (pindex == nullptr) return ToEthQuantity(0);
+
+    CBlock block;
+    if (!ReadBlockFromDisk(block, pindex, Params().GetConsensus())) {
+        throw JSONRPCError(RPC_MISC_ERROR, "Failed to read block from disk");
+    }
+    return ToEthQuantity(static_cast<uint64_t>(block.vtx.size()));
+}
+
+UniValue eth_getBlockTransactionCountByHash(const JSONRPCRequest& request)
+{
+    RPCHelpMan{"eth_getBlockTransactionCountByHash",
+        "\nReturns the number of transactions in the block with the given hash.\n",
+        {{"blockHash", RPCArg::Type::STR, RPCArg::Optional::NO,
+          "0x-prefixed 32-byte block hash."}},
+        RPCResult{RPCResult::Type::STR, "count", "Transaction count (0x-prefixed)"},
+        RPCExamples{
+            HelpExampleCli("eth_getBlockTransactionCountByHash", "\"0x...\"")
+            + HelpExampleRpc("eth_getBlockTransactionCountByHash", "\"0x...\"")
+        },
+    }.Check(request);
+
+    const uint256 hash = ParseEthBlockHash(request.params[0], "blockHash");
+
+    LOCK(cs_main);
+    auto it = ::BlockIndex().find(hash);
+    if (it == ::BlockIndex().end()) return ToEthQuantity(0);
+    CBlockIndex* pindex = it->second;
+    if (pindex == nullptr) return ToEthQuantity(0);
+
+    CBlock block;
+    if (!ReadBlockFromDisk(block, pindex, Params().GetConsensus())) {
+        throw JSONRPCError(RPC_MISC_ERROR, "Failed to read block from disk");
+    }
+    return ToEthQuantity(static_cast<uint64_t>(block.vtx.size()));
+}
+
 // clang-format off
 const CRPCCommand commands[] =
 { //  category   name                       actor (function)            argNames
@@ -734,15 +1097,19 @@ const CRPCCommand commands[] =
     { "evm",      "evm_executeReadOnly",     &evm_executeReadOnly,       {"bytecode_hex", "calldata_hex", "gas_limit"} },
 
     // Phase 3 — Ethereum JSON-RPC compatibility (read-only subset).
-    { "ethereum", "eth_chainId",             &eth_chainId,               {} },
-    { "ethereum", "eth_blockNumber",         &eth_blockNumber,           {} },
-    { "ethereum", "eth_gasPrice",            &eth_gasPrice,              {} },
-    { "ethereum", "eth_getBalance",          &eth_getBalance,            {"address", "block"} },
-    { "ethereum", "eth_getTransactionCount", &eth_getTransactionCount,   {"address", "block"} },
-    { "ethereum", "eth_getCode",             &eth_getCode,               {"address", "block"} },
-    { "ethereum", "eth_getStorageAt",        &eth_getStorageAt,          {"address", "slot", "block"} },
-    { "ethereum", "eth_call",                &eth_call,                  {"callObject", "block"} },
-    { "ethereum", "eth_estimateGas",         &eth_estimateGas,           {"callObject", "block"} },
+    { "ethereum", "eth_chainId",                            &eth_chainId,                            {} },
+    { "ethereum", "eth_blockNumber",                        &eth_blockNumber,                        {} },
+    { "ethereum", "eth_gasPrice",                           &eth_gasPrice,                           {} },
+    { "ethereum", "eth_getBalance",                         &eth_getBalance,                         {"address", "block"} },
+    { "ethereum", "eth_getTransactionCount",                &eth_getTransactionCount,                {"address", "block"} },
+    { "ethereum", "eth_getCode",                            &eth_getCode,                            {"address", "block"} },
+    { "ethereum", "eth_getStorageAt",                       &eth_getStorageAt,                       {"address", "slot", "block"} },
+    { "ethereum", "eth_call",                               &eth_call,                               {"callObject", "block"} },
+    { "ethereum", "eth_estimateGas",                        &eth_estimateGas,                        {"callObject", "block"} },
+    { "ethereum", "eth_getBlockByNumber",                   &eth_getBlockByNumber,                   {"block", "fullTx"} },
+    { "ethereum", "eth_getBlockByHash",                     &eth_getBlockByHash,                     {"blockHash", "fullTx"} },
+    { "ethereum", "eth_getBlockTransactionCountByNumber",   &eth_getBlockTransactionCountByNumber,   {"block"} },
+    { "ethereum", "eth_getBlockTransactionCountByHash",     &eth_getBlockTransactionCountByHash,     {"blockHash"} },
 };
 // clang-format on
 
