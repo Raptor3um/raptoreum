@@ -901,20 +901,80 @@ Coordinar con D2: el header tendrá un cuarto campo nuevo, `chainLocksCommit` (3
 - Validación de bloque verifica que los locks committed son válidos (firmas BLS verificables)
 - Precompile `0x...0a03` lee del header, no de `chainLocksHandler`
 
-### D4 — Modelo de estado de Smart Assets en EVM
-**Decisión: A — Mirror completo bidireccional.**
+### D4 — Modelo de estado de Smart Assets en EVM (REVISADO 2026-05-11)
 
-⚠️ **Esta es la decisión de mayor riesgo de ingeniería de las 6.** Phase 4.1 debe incluir explícitamente:
+**Decisión REVISADA por aceptación del core team (2026-05-11):** ~~A — Mirror completo bidireccional~~. **Sustituida por modelo de tres clases de assets.**
 
-1. **Ordering rules formales de `ConnectBlock`:**
-   - Pase 1: aplicar UTXO + Smart Assets nativas (incluyendo `TRANSACTION_MINT_ASSET`).
-   - Pase 2: ejecutar EVM tx loop (worker pool de D1) con acceso al asset state via mirror.
-   - Pase 3: reconciliation — verificar que cualquier mutación EVM-side al mirror se refleja correctamente en assetsdb.
-2. **Allowance mapping vive en EVM storage trie del precompile** — NO extender `assetsdb`.
-3. **Reentrancy guards en el precompile mismo:** mutex per-asset durante ejecución.
-4. **Test exhaustivo de divergencia (T-mirror):** ejecutar 10000 sequences de `(Smart Asset tx, EVM tx que mute el mismo asset)` en orden aleatorio y verificar convergencia de estado entre nodos.
+El core team rechazó D4-A (mirror bidireccional) porque expondría todos los Smart Assets existentes a bugs potenciales de Solidity, comprometiendo la promesa de aislamiento de riesgo para servicios construidos sobre la capa de assets actual.
 
-Si durante Phase 4 el mirror se demuestra inviable (test T-mirror falla repetidamente), pivot a Camino C alternativo: wrap/unwrap pattern (lo que era opción D4-C).
+**Modelo aprobado: tres clases de assets con riesgo claramente segmentado.**
+
+#### Clase 1 — Smart Assets (existentes) — tx types 8 / 9 / 10
+
+- `TRANSACTION_NEW_ASSET`, `_UPDATE_ASSET`, `_MINT_ASSET` — sin cambios.
+- Estado en `assetsdb` (UTXO side), sin cambios.
+- **Cero exposición a EVM.** No accesibles desde contratos Solidity.
+- **Backward compatibility 100%.** Ningún asset existente cambia su comportamiento.
+- Caso de uso: pagos conservadores, tokenización RWA sin riesgo DeFi.
+
+#### Clase 2 — EVM Assets (NUEVO, Phase 4) — tx types 14 / 15 / 16 (reservados)
+
+- `TRANSACTION_NEW_EVM_ASSET`, `_UPDATE_EVM_ASSET`, `_MINT_EVM_ASSET`.
+- Estado vive en el storage trie de un registry precompile (EVM side).
+- ERC-20 nativo desde la creación.
+- Coste de creación similar a Smart Assets (~5 RTM).
+- Caso de uso: tokens diseñados para DeFi/AMM/lending desde el día 1.
+
+#### Clase 3 — Wrapped Smart Assets (OPT-IN, Phase 5+) — tx types 17 / 18 (reservados)
+
+- `TRANSACTION_WRAP_ASSET`, `_UNWRAP_ASSET`.
+- El owner de un Smart Asset puede **opcionalmente** habilitar wrap/unwrap.
+- WRAP: lockear N units en UTXO side → mintear N wrapped ERC-20 en EVM side.
+- UNWRAP: burn wrapped → liberar units en UTXO side.
+- Si el owner nunca opta in, el Smart Asset permanece 100% UTXO-only para siempre.
+- Caso de uso: assets existentes que quieren exposición DeFi a posteriori.
+
+**Implicaciones del cambio:**
+
+| Aspecto | D4-A (original) | D4 revisado |
+|---|---|---|
+| Riesgo a assets existentes | Medio (cross-contamination) | **Cero** (Class 1 aislada) |
+| Complejidad de consenso | Alta (reconciliation + cross-namespace allowance) | **Baja** (cada clase auto-contenida) |
+| Test T-mirror obligatorio | Sí (10000 sequences) | **Eliminado** (no hay mirror que fuzzear) |
+| Backward compat | Cambio de comportamiento | **100% inalterado** |
+| Narrativa pública | "Smart Assets son ERC-20" — sobrepromesa | **"Elige tu perfil de riesgo"** — mejor historia |
+| Risk classification | **HIGH** | **LOW** |
+
+**Cambios concretos en el código:**
+
+- El precompile `0x...0a01` ahora expone solo Classes 2 y 3 (si el owner habilitó wrap). NO Class 1.
+- A11 (address collision prevention) ahora aplica solo a Classes 2/3.
+- T-mirror eliminado de la lista de tests gating.
+- Phase 4.1 mucho más simple: sin reconciliation pass, sin cross-namespace allowance.
+
+### D7 — Restricción de superficie criptográfica (NUEVO 2026-05-11)
+
+**Decisión:** No se introducen nuevos esquemas de firma ni primitivas criptográficas fuera de las que RTM ya usa.
+
+Añadida por restricción del core team: *"the whole AI thing needs be within the dual consensus no weird sigs box"*.
+
+**Primitivas criptográficas permitidas:**
+- **secp256k1** — firmas de transacciones, ecrecover en EVM (precompile estándar).
+- **LLMQ BLS threshold** — toda firma de oráculos / datos externos, commitments de ChainLocks, locks de InstantSend.
+
+**Explícitamente prohibido en este scope:**
+- zk-SNARKs / zk-STARKs.
+- Variantes BLS fuera de lo que `src/bls/` ya implementa.
+- ECDSA sobre curvas no-secp256k1 (P-256, ed25519) como firmas consensus-relevant.
+- Schnorr signatures como primitivas de consenso.
+
+**Justificación:** la stack criptográfica actual está auditada y probada en producción. Añadir primitivas multiplica la superficie de auditoría/riesgo y (per core team) es innecesario para la funcionalidad anunciada.
+
+**Compatibilidad forward:** si una propuesta futura genuinamente requiere nuevas primitivas (e.g., zk-SNARKs para privacidad), debe revisarse y aceptarse en sus propios méritos con un hard fork separado — no como bundle del EVM.
+
+**Implicaciones prácticas:**
+- El precompile `0x...0a02` (LLMQ oracle) es el mecanismo canónico para cualquier integración AI / dato externo.
+- Cualquier feature futura que proponga firmas no-existentes debe ratificarse por el core team antes de implementación.
 
 ### D5 — Ordering de transacciones (consensus rule)
 **Decisión: A — Fee-priority estándar (Ethereum-compatible) en v1.**

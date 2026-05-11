@@ -161,18 +161,19 @@ Genesis state of the EVM trie is empty (`stateRoot = keccak256(rlp(empty trie))`
 
 ---
 
-## Frozen design decisions (D1-D6)
+## Frozen design decisions (D1-D7, revised 2026-05-11)
 
-See [TODOS.md → Decisions](TODOS.md#decisions-frozen) for the full table. Summary:
+The core team accepted the proposal on 2026-05-11 with revisions to D4 and addition of D7. See [TODOS.md → Decisions](TODOS.md#decisions-revised-per-core-team-acceptance-2026-05-11) for the full table.
 
 | ID | Topic | Decision |
 |---|---|---|
 | D1 | EVM execution model | Worker pool + serialized merge (NOT inline in `cs_main`) |
 | D2 | `CBlockHeader` fields | Add `stateRoot`, `receiptsRoot`, `transactionsRoot` + hard-fork activation |
-| D3 | LLMQ/ChainLock determinism | Commitment in header, NOT runtime read of LLMQ managers |
-| D4 | Smart Assets ↔ EVM | Bidirectional mirror with reconciliation (HIGH RISK — see warnings) |
+| D3 | LLMQ/ChainLock determinism | Commitment in header (`chainLocksCommit` field), NOT runtime read of LLMQ managers |
+| **D4 (revised)** | **Three asset classes** | **(1) Smart Assets stay UTXO-only and isolated from EVM. (2) New EVM Assets (tx 14/15/16) for DeFi tokens. (3) Optional wrap/unwrap (tx 17/18) for Smart Assets that opt in. No bidirectional mirror.** |
 | D5 | Tx ordering | Fee-priority v1; LLMQ-PBS deferred to v2 hard fork |
 | D6 | EVM target | Cancun (PUSH0, MCOPY, transient storage); blob txs excluded |
+| **D7 (new)** | **Cryptographic surface** | **No new signature schemes. All signing via existing secp256k1 (txs) and LLMQ BLS threshold (oracles, ChainLocks). No zk-SNARKs, no new BLS variants, no exotic curves.** |
 
 ---
 

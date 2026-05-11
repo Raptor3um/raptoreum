@@ -2,10 +2,103 @@
 
 > **Audience:** Raptoreum Core team and Foundation
 > **Branch:** `feat/evm-integration`
-> **Status:** Phase 0 spike in active validation. This document is a request for technical validation before any consensus-level work begins.
 > **Date prepared:** 2026-05-11
+> **Status:** **✅ ACCEPTED by Raptoreum core team (2026-05-11)** with revisions to D4 (see "Acceptance summary" below).
 
 ---
+
+## ✅ Acceptance summary (2026-05-11)
+
+The Raptoreum core team has accepted this proposal with the following non-negotiable constraints. These are reflected in the revised decision D4 and the new D7.
+
+| Constraint | Effect on the plan |
+|---|---|
+| **Existing Smart Assets (tx types 8/9/10) must remain isolated from EVM.** Owners and services built on the current asset layer must never be exposed to Solidity bugs. | **D4 revised.** The original bidirectional-mirror design (D4-A) is dropped. Existing Smart Assets keep their UTXO-only behavior unchanged. |
+| **A new asset class for EVM-native tokens** must be available, separately from existing Smart Assets. | Reserve tx types 14/15/16 for `TRANSACTION_NEW_EVM_ASSET` / `_UPDATE_EVM_ASSET` / `_MINT_EVM_ASSET`. State lives in EVM trie of a registry precompile. |
+| **Some services must remain non-EVMable** to avoid Solidity risk. Opt-in is required, not default. | Optional **wrap/unwrap bridge** (tx types 17/18, Phase 5+) lets Smart Asset owners *choose* to expose units as wrapped ERC-20. If owner never enables it, the asset stays UTXO-forever. |
+| **"AI thing" / oracle integrations must live within the dual-consensus (PoW + LLMQ) box. No exotic signature schemes.** | **New D7 added.** All future cryptographic surface stays within existing secp256k1 (txs) and LLMQ BLS threshold (oracles, ChainLocks). No zk-SNARKs, no new BLS variants, no alternative curves. The LLMQ oracle precompile (`0x...0a02`) is the canonical mechanism. |
+| **Serialization changes acknowledged.** | See § "Serialization changes summary" in `TODOS.md` for the complete list of consensus-level changes across all phases. |
+
+**Other acceptances** (no objections raised): D1 (worker-pool execution model), D2 (header fields + hard-fork activation), D3 (ChainLocks header commitment), D5 (fee-priority v1, LLMQ-PBS v2), D6 (Cancun target). Phase roadmap (8 phases, ~26 months). Budget envelope ($4-6M). Foundation legal entity requirement.
+
+**Still open:** Foundation legal entity setup (Q-6 / CQ4) — required for Phase 6 audit contracts and bug bounty escrow.
+
+**New questions surfaced by acceptance** (see § "Open questions to ask the core team" in TODOS.md):
+- **Q-A1** What specifically is "the AI thing"? Knowing this validates that the LLMQ oracle precompile covers the use case.
+- **Q-A2** Wrap/unwrap bridge (tx 17/18) — v1 scope or strictly v2?
+- **Q-A3** EVM Asset (tx 14/15/16) economics — reuse Smart Assets fee model (~5 RTM) or separate?
+
+---
+
+## Revised D4 — Three asset classes
+
+The original D4-A (bidirectional mirror between `CAssetsCache` and EVM state trie) is dropped. The revised model:
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│  CLASS 1 — Smart Assets (existing)                  Tx types 8 / 9 / 10│
+│  - UTXO side, assetsdb unchanged                                        │
+│  - Zero EVM exposure                                                    │
+│  - 100% backward compatible — no behavior change for any existing asset │
+│  - Use case: conservative payments, RWA tokenization without DeFi risk  │
+├─────────────────────────────────────────────────────────────────────────┤
+│  CLASS 2 — EVM Assets (NEW, Phase 4)                Tx types 14/15/16  │
+│  - State lives in EVM storage trie of a registry precompile             │
+│  - ERC-20 native from creation                                          │
+│  - Same creation cost as Smart Assets (~5 RTM)                          │
+│  - Use case: tokens designed for DeFi composability from day 1          │
+├─────────────────────────────────────────────────────────────────────────┤
+│  CLASS 3 — Wrapped Smart Assets (OPTIONAL, Phase 5+)  Tx types 17/18   │
+│  - Owner of a Smart Asset may OPT IN to enable wrap/unwrap              │
+│  - WRAP: lock N units UTXO-side → mint N wrapped ERC-20 EVM-side        │
+│  - UNWRAP: burn wrapped → release units UTXO-side                       │
+│  - If owner never opts in: Smart Asset is permanently UTXO-only         │
+│  - Use case: existing assets that want DeFi exposure later              │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+**Risk classification under revised D4: LOW** (was HIGH under D4-A).
+
+**Why this is better than D4-A:**
+
+| Dimension | D4-A (original mirror) | D4-revised (three classes) |
+|---|---|---|
+| Risk to existing assets | Medium (consensus bug crosses boundary) | **Zero** (Class 1 fully isolated) |
+| Consensus complexity | High (reconciliation, allowance cross-namespace) | **Low** (each class self-contained) |
+| Mandatory T-mirror fuzz test | Yes (10,000 sequences, gating) | **No** (no mirror = nothing to fuzz) |
+| Backward compat | Behavior change for existing assets | **100% unchanged** |
+| Public narrative | "Smart Assets are ERC-20 natively" — overpromised | **"Choose your risk profile"** — actually a better story |
+
+**Implementation impact:**
+- Phase 4.1 precompile (`0x...0a01`) now exposes only Class 2 (and Class 3 if owner opted in). NOT Class 1.
+- T-mirror test removed from mandatory list.
+- The address-collision concern (A11) now applies only to Class 2/3 assets, not Class 1.
+
+---
+
+## New D7 — Cryptographic surface restriction
+
+Added per core team's "AI thing within dual consensus no weird sigs box" constraint.
+
+**Decision:** No new signature schemes or cryptographic primitives may be introduced outside what RTM already uses.
+
+**Permitted cryptographic primitives:**
+- **secp256k1** — transaction signatures, EVM-side ECDSA (ecrecover precompile).
+- **LLMQ BLS threshold** — all oracle/external-data signing, ChainLocks commitments, InstantSend locks.
+
+**Explicitly disallowed in this scope:**
+- zk-SNARKs / zk-STARKs (privacy precompiles must wait for a separate proposal).
+- BLS variants outside what `src/bls/` already implements.
+- ECDSA on non-secp256k1 curves (P-256, ed25519, etc.) as consensus-relevant signatures.
+- Schnorr signatures as consensus primitives (RTM does not currently use them).
+
+**Why:** existing crypto stack is audited and battle-tested. Adding new primitives multiplies the audit/risk surface and (per core team) is unnecessary for the announced functionality.
+
+**Forward compatibility:** if a future proposal genuinely requires new primitives (e.g., zk-SNARKs for privacy), it must be reviewed and accepted on its own merits with a separate hard fork — not bundled with the EVM integration.
+
+---
+
+## Original proposal (D1, D2, D3, D5, D6 unchanged; D4 superseded by revised version above)
 
 ## Table of contents
 
