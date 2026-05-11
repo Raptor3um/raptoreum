@@ -32,6 +32,15 @@ BACKTRACE_LIB = -lbacktrace
 endif
 endif #ENABLE_STACKTRACES
 
+# evmone (Phase 0 EVM integration smoke test).
+# Provided by depends/packages/evmone.mk (manually built — see docs/evm/PHASE-0-HANDOFF.md).
+# Uses the "standalone" variant of evmone which bundles ethash_keccak256 and other
+# transitive Hunter-managed dependencies, avoiding the need to ship libkeccak/libethash
+# separately. Phase 1 cleanup (CQ3) will split this into explicit -levmone -lkeccak -lethash
+# after vendoring those packages individually.
+# TODO(phase-1): formalize with PKG_CHECK_MODULES / AC_CHECK_LIB in configure.ac.
+EVMONE_LIBS = -levmone-standalone
+
 BITCOIN_INCLUDES=-I$(builddir) -I$(srcdir)/secp256k1/include -I$(srcdir)/$(UNIVALUE_INCLUDE_DIR_INT) $(BDB_CPPFLAGS) $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS)
 BITCOIN_INCLUDES+=-I$(srcdir)/dashbls/include -I$(srcdir)/dashbls/depends/relic/include -I$(srcdir)/dashbls/depends/minialloc/include
 
@@ -163,6 +172,7 @@ BITCOIN_CORE_H = \
   cuckoocache.h \
   ctpl_stl.h \
   cxxtimer.hpp \
+  evm/smoke.h \
   evo/cbtx.h \
   evo/deterministicmns.h \
   evo/evodb.h \
@@ -364,6 +374,7 @@ libraptoreum_server_a_SOURCES = \
   consensus/tx_verify.cpp \
   dbwrapper.cpp \
   dsnotificationinterface.cpp \
+  evm/smoke.cpp \
   evo/cbtx.cpp \
   evo/deterministicmns.cpp \
   evo/evodb.cpp \
@@ -422,6 +433,7 @@ libraptoreum_server_a_SOURCES = \
   pow.cpp \
   rest.cpp \
   rpc/blockchain.cpp \
+  rpc/ethereum.cpp \
   rpc/smartnode.cpp \
   rpc/governance.cpp \
   rpc/mining.cpp \
@@ -779,7 +791,7 @@ raptoreumd_LDADD = \
   $(LIBMEMENV) \
   $(LIBSECP256K1)
 
-raptoreumd_LDADD += $(BACKTRACE_LIB) $(BOOST_LIBS) $(BDB_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(LIBDASHBLS) $(GMP_LIBS)
+raptoreumd_LDADD += $(BACKTRACE_LIB) $(BOOST_LIBS) $(BDB_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(LIBDASHBLS) $(GMP_LIBS) $(EVMONE_LIBS)
 
 # raptoreum-cli binary #
 raptoreum_cli_SOURCES = raptoreum-cli.cpp
