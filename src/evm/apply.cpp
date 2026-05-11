@@ -5,6 +5,7 @@
 #include <evm/apply.h>
 
 #include <evm/account.h>
+#include <evm/hashing.h>
 #include <evm/state_cache.h>
 
 #include <evmc/evmc.hpp>
@@ -115,6 +116,109 @@ ApplyResult ApplyEvmCallTx(const CEvmCallTx& payload,
     }
     out.logs = host.Logs();
     out.selfdestructs = host.Selfdestructs();
+
+    return out;
+}
+
+ApplyResult ApplyEvmDeployTx(const CEvmDeployTx& payload,
+                             CEvmStateCache& cache,
+                             const ExecutionContext& context)
+{
+    ApplyResult out;
+
+    // ----------------------------------------------------------------
+    // 1. Derive sender and the contract address.
+    // ----------------------------------------------------------------
+
+    uint160 sender;
+    std::memcpy(sender.begin(), payload.senderHash.begin() + 12, 20);
+
+    const uint160 contractAddress =
+        ContractAddressFromCreate(sender, payload.nonce);
+    out.deployedAddress = contractAddress;
+
+    // ----------------------------------------------------------------
+    // 2. CREATE-collision check. Per the Ethereum yellow paper, we
+    //    cannot deploy to an address that already has code or a
+    //    non-zero nonce. (Pre-existing accounts with only a balance
+    //    are legal — the deploy proceeds and the balance is preserved.)
+    // ----------------------------------------------------------------
+
+    evm::CEvmAccount existing;
+    if (cache.GetAccount(contractAddress, existing)) {
+        const bool hasCode =
+            existing.codeHash != evm::CEvmAccount::EmptyCodeHash();
+        if (hasCode || existing.nonce > 0) {
+            out.statusCode = EVMC_FAILURE;
+            out.gasUsed = static_cast<int64_t>(payload.gasLimit);
+            return out;
+        }
+    }
+
+    // ----------------------------------------------------------------
+    // 3. Dispatch the init bytecode through evmone with EVMC_CREATE.
+    //    The init code's RETURN output becomes the runtime code that
+    //    is persisted under its keccak256 hash.
+    // ----------------------------------------------------------------
+
+    CEvmHost host(cache, context);
+
+    evmc_message msg{};
+    msg.kind = EVMC_CREATE;
+    msg.flags = 0;
+    msg.depth = 0;
+    msg.gas = static_cast<int64_t>(payload.gasLimit);
+    std::memcpy(msg.recipient.bytes, contractAddress.begin(), 20);
+    std::memcpy(msg.sender.bytes, sender.begin(), 20);
+    msg.code_address = msg.recipient;
+    {
+        evmc::uint256be v{};
+        // payload uses no value-on-create field for now (Phase 2.3b).
+        // The CEvmDeployTx struct does not have a `value` field; the
+        // contract is born with zero balance and the sender's balance
+        // debit (Phase 2.4) covers gas only.
+        msg.value = v;
+    }
+    msg.input_data = nullptr;
+    msg.input_size = 0;
+
+    evmc::VM vm{evmc_create_evmone()};
+    evmc::Result r = vm.execute(host, EVMC_CANCUN, msg,
+                                payload.code.empty() ? nullptr : payload.code.data(),
+                                payload.code.size());
+
+    out.statusCode = r.status_code;
+    out.gasUsed = static_cast<int64_t>(payload.gasLimit) - r.gas_left;
+    if (r.output_size > 0 && r.output_data != nullptr) {
+        out.returnData.assign(r.output_data, r.output_data + r.output_size);
+    }
+    out.logs = host.Logs();
+    out.selfdestructs = host.Selfdestructs();
+
+    // ----------------------------------------------------------------
+    // 4. On success: install the runtime code + a fresh account
+    //    record. The runtime code is the init code's RETURN output;
+    //    its keccak256 becomes the account's codeHash.
+    // ----------------------------------------------------------------
+
+    if (r.status_code == EVMC_SUCCESS) {
+        const std::vector<uint8_t> runtimeCode = out.returnData;
+        const uint256 codeHash = Keccak256(runtimeCode);
+
+        cache.SetCode(codeHash, runtimeCode);
+
+        // The deployed account is born with nonce=1 per EIP-161 (after
+        // Spurious Dragon) and with the codeHash pointing at the
+        // runtime code we just stored. Balance starts at zero — the
+        // caller (Phase 2.4) credits the constructor's CALLVALUE if
+        // any when sender-side accounting lands.
+        evm::CEvmAccount account(
+            /*nonce=*/ 1,
+            /*balance=*/ uint256(),
+            /*codeHash=*/ codeHash,
+            /*storageRoot=*/ evm::CEvmAccount::EmptyStorageRoot());
+        cache.SetAccount(contractAddress, account);
+    }
 
     return out;
 }

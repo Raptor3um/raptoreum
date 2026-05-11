@@ -56,6 +56,11 @@ struct ApplyResult
      *  account deletion + beneficiary balance transfer after a
      *  successful execution. */
     std::set<evmc::address> selfdestructs;
+
+    /** Set by ApplyEvmDeployTx on EVMC_SUCCESS: the 20-byte address
+     *  the new contract was created at. Zero-initialized for CALL
+     *  and SPEND results. */
+    uint160 deployedAddress;
 };
 
 /**
@@ -92,6 +97,47 @@ struct ApplyResult
 ApplyResult ApplyEvmCallTx(const CEvmCallTx& payload,
                            CEvmStateCache& cache,
                            const ExecutionContext& context);
+
+/**
+ * Execute a CEvmDeployTx against the cache via evmone (Phase 2.3b).
+ *
+ *   1. Derive the contract address from the payload's sender and
+ *      nonce using the standard Ethereum CREATE formula:
+ *
+ *          address = last 20 bytes of keccak256(rlp([sender, nonce]))
+ *
+ *      An address derived this way is byte-identical to what geth /
+ *      erigon / nethermind would produce for the same (sender, nonce)
+ *      pair. The chosen address is reflected in
+ *      ApplyResult.deployedAddress for the caller to record in a
+ *      transaction receipt.
+ *
+ *   2. CREATE-collision check (matches A11): refuse to overwrite a
+ *      pre-existing account that already has code (codeHash !=
+ *      EmptyCodeHash) or a non-zero nonce. Refusal returns
+ *      EVMC_FAILURE in the result.
+ *
+ *   3. Dispatch the init bytecode (payload.code) through evmone with
+ *      EVMC_CREATE kind. evmone executes the constructor and the
+ *      RETURN output of the init code becomes the runtime code we
+ *      persist.
+ *
+ *   4. On EVMC_SUCCESS: write the runtime code (keyed by its
+ *      keccak256 hash) and a fresh CEvmAccount(nonce=1, balance=value,
+ *      codeHash=hash, storageRoot=empty) for the new address. The
+ *      caller (Phase 2.4 ConnectBlock) is responsible for the
+ *      sender-side bookkeeping (nonce increment, balance debit for
+ *      gas + value).
+ *
+ *   5. On revert or any non-success status: the cache is left as
+ *      evmone wrote it; the caller Discard()s.
+ *
+ * Same scope notes as ApplyEvmCallTx — no gas accounting, no sender
+ * nonce/balance updates in this commit; those live in Phase 2.4.
+ */
+ApplyResult ApplyEvmDeployTx(const CEvmDeployTx& payload,
+                             CEvmStateCache& cache,
+                             const ExecutionContext& context);
 
 } // namespace evm
 

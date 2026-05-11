@@ -7,17 +7,18 @@
 #include <evm/account.h>
 #include <evm/apply.h>
 #include <evm/evmtx.h>
+#include <evm/hashing.h>
 #include <evm/host.h>
 #include <evm/state_cache.h>
 #include <evm/state_db.h>
 
-#include <crypto/sha256.h>
 #include <hash.h>
 #include <uint256.h>
 
 #include <boost/test/unit_test.hpp>
 
 #include <cstdint>
+#include <cstring>
 #include <vector>
 
 /**
@@ -58,27 +59,13 @@ uint256 AddrAsUint256(uint8_t lowByte)
     return u;
 }
 
-// Compute the canonical keccak256 of `bytes` using evmone's bundled
-// ethash_keccak256. We re-use the same constant verification approach
-// as Phase 0 (keccak256("") = c5d2460186...). Here we need a real
-// hasher for contract code, so go through evmone.
+// Phase 2.3a tests used a Bitcoin Core HashWriter for codeHash because
+// a real Keccak-256 wrapper did not exist yet. Phase 2.3b ships
+// evm::Keccak256 (see src/evm/hashing.{h,cpp}) — we use it directly
+// here so the tests double as integration coverage for that wrapper.
 uint256 Keccak256(const std::vector<uint8_t>& bytes)
 {
-    // Trick: deploy a contract whose Keccak256 we want and call
-    // EvmSmokeExecute with a SHA3 opcode over the same bytes. But that's
-    // overkill. The cleaner way is to use evmone's exported hasher,
-    // but it isn't part of the public header at the version we pin.
-    //
-    // Simpler approach for the unit test: pre-compute the codeHash
-    // off-line for each test contract. We don't actually need it for
-    // the test bodies — we just need ANY deterministic 32-byte value
-    // that's consistent between CEvmAccount.codeHash and the key under
-    // which we WriteCode(). Use a Bitcoin Core HashWriter for that:
-    // it's deterministic and unique-per-bytes, even if it isn't the
-    // actual Ethereum keccak256.
-    CHashWriter hw(SER_GETHASH, 0);
-    hw.write(reinterpret_cast<const char*>(bytes.data()), bytes.size());
-    return hw.GetHash();
+    return evm::Keccak256(bytes);
 }
 
 evm::ExecutionContext MinimalContext()
@@ -294,6 +281,194 @@ BOOST_AUTO_TEST_CASE(call_captures_log_in_apply_result)
     uint160 loggedAddr;
     std::memcpy(loggedAddr.begin(), log.address.bytes, 20);
     BOOST_CHECK(loggedAddr == expectedAddr);
+}
+
+// ============================================================================
+// Phase 2.3b — ApplyEvmDeployTx
+// ============================================================================
+
+namespace {
+
+// Build a CEvmDeployTx with the supplied init code, sender, and nonce.
+evm::CEvmDeployTx MakeDeployTx(const uint256& senderHash,
+                               uint64_t nonce,
+                               const std::vector<uint8_t>& initCode,
+                               uint64_t gasLimit = 1'000'000)
+{
+    evm::CEvmDeployTx tx;
+    tx.nVersion = evm::EVM_TX_PAYLOAD_VERSION;
+    tx.code = initCode;
+    tx.gasLimit = gasLimit;
+    tx.maxFeePerGas = 0;
+    tx.maxPriorityFeePerGas = 0;
+    tx.senderHash = senderHash;
+    tx.nonce = nonce;
+    return tx;
+}
+
+} // anonymous namespace
+
+// ----------------------------------------------------------------------------
+// Deploy a minimal contract: init returns a 6-byte runtime
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(deploy_installs_runtime_code_at_derived_address)
+{
+    // Runtime code (what the deployed contract will execute on each
+    // CALL):
+    //   PUSH1 0x42, PUSH1 0x01, SSTORE, STOP   ; 6 bytes
+    const std::vector<uint8_t> runtime = {
+        0x60, 0x42,
+        0x60, 0x01,
+        0x55,
+        0x00,
+    };
+
+    // Init code: place runtime in memory at offset 26 (so its 6 bytes
+    // sit at memory[26..31]) and RETURN(offset=26, size=6).
+    //
+    //   PUSH6 0x604260015500    ; (65 60 42 60 01 55 00) push runtime
+    //   PUSH1 0x00              ; offset for MSTORE
+    //   MSTORE                  ; memory[0..32] = 0...0||runtime
+    //   PUSH1 0x06              ; size = 6
+    //   PUSH1 0x1A              ; offset = 32 - 6 = 26
+    //   RETURN
+    const std::vector<uint8_t> initCode = {
+        0x65, 0x60, 0x42, 0x60, 0x01, 0x55, 0x00,
+        0x60, 0x00,
+        0x52,
+        0x60, 0x06,
+        0x60, 0x1A,
+        0xF3,
+    };
+
+    evm::CEvmStateDB db(1 << 20, /*fMemory=*/ true);
+    evm::CEvmStateCache cache(db);
+
+    // Sender's 20-byte address lives in the low 20 bytes of senderHash.
+    uint256 senderHash;
+    *(senderHash.begin() + 31) = 0xAA; // sender = 0x00..00AA
+
+    evm::CEvmDeployTx tx = MakeDeployTx(senderHash, /*nonce=*/ 0, initCode);
+    evm::ApplyResult r = evm::ApplyEvmDeployTx(tx, cache, MinimalContext());
+
+    BOOST_REQUIRE_EQUAL(r.statusCode, EVMC_SUCCESS);
+
+    // The deployed address is the CREATE derivation of (sender, nonce).
+    uint160 expectedSender;
+    std::memcpy(expectedSender.begin(), senderHash.begin() + 12, 20);
+    uint160 expectedAddress = evm::ContractAddressFromCreate(expectedSender, 0);
+    BOOST_CHECK(r.deployedAddress == expectedAddress);
+
+    // The account record at the deployed address now has codeHash =
+    // Keccak256(runtime) and a fresh empty storage root.
+    evm::CEvmAccount account;
+    BOOST_REQUIRE(cache.GetAccount(r.deployedAddress, account));
+    BOOST_CHECK_EQUAL(account.nonce, 1U);
+    uint256 expectedCodeHash = evm::Keccak256(runtime);
+    BOOST_CHECK(account.codeHash == expectedCodeHash);
+    BOOST_CHECK(account.storageRoot == evm::CEvmAccount::EmptyStorageRoot());
+
+    // The runtime code is stored under its hash, byte-for-byte
+    // identical to what we expected.
+    std::vector<uint8_t> stored;
+    BOOST_REQUIRE(cache.GetCode(expectedCodeHash, stored));
+    BOOST_REQUIRE_EQUAL(stored.size(), runtime.size());
+    BOOST_CHECK_EQUAL_COLLECTIONS(stored.begin(), stored.end(),
+                                  runtime.begin(), runtime.end());
+}
+
+// ----------------------------------------------------------------------------
+// Deploy then Call — end-to-end "real" sequence
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(deploy_then_call_persists_storage_at_deployed_address)
+{
+    // Same runtime as the previous test: SSTORE 0x42 at slot 0x01.
+    const std::vector<uint8_t> runtime = {
+        0x60, 0x42, 0x60, 0x01, 0x55, 0x00,
+    };
+    const std::vector<uint8_t> initCode = {
+        0x65, 0x60, 0x42, 0x60, 0x01, 0x55, 0x00,
+        0x60, 0x00, 0x52,
+        0x60, 0x06, 0x60, 0x1A, 0xF3,
+    };
+
+    evm::CEvmStateDB db(1 << 20, /*fMemory=*/ true);
+    evm::CEvmStateCache cache(db);
+
+    uint256 senderHash;
+    *(senderHash.begin() + 31) = 0xBC;
+
+    // 1. Deploy
+    evm::CEvmDeployTx deployTx = MakeDeployTx(senderHash, /*nonce=*/ 0, initCode);
+    evm::ApplyResult deployR =
+        evm::ApplyEvmDeployTx(deployTx, cache, MinimalContext());
+    BOOST_REQUIRE_EQUAL(deployR.statusCode, EVMC_SUCCESS);
+
+    // 2. Construct a CALL tx pointing at the freshly-deployed contract.
+    //    Convert the 20-byte address into the 32-byte payload form
+    //    (low 20 bytes carry the address; high 12 bytes are zero).
+    uint256 toAddress;
+    std::memcpy(toAddress.begin() + 12, deployR.deployedAddress.begin(), 20);
+
+    evm::CEvmCallTx callTx = MakeCallTx(toAddress, 1'000'000);
+    evm::ApplyResult callR =
+        evm::ApplyEvmCallTx(callTx, cache, MinimalContext());
+    BOOST_REQUIRE_EQUAL(callR.statusCode, EVMC_SUCCESS);
+
+    // 3. Verify storage slot 0x01 at the deployed address is 0x42.
+    uint160 contractAddr = deployR.deployedAddress;
+    uint256 slot = LowByte(0x01);
+    uint256 stored;
+    BOOST_REQUIRE(cache.GetStorage(contractAddr, slot, stored));
+    BOOST_CHECK_EQUAL(static_cast<int>(*(stored.begin() + 31)), 0x42);
+}
+
+// ----------------------------------------------------------------------------
+// CREATE-collision refusal
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(deploy_refuses_collision_with_existing_contract)
+{
+    const std::vector<uint8_t> initCode = {
+        0x60, 0x00, 0x60, 0x00, 0xF3, // return empty
+    };
+
+    evm::CEvmStateDB db(1 << 20, /*fMemory=*/ true);
+    evm::CEvmStateCache cache(db);
+
+    uint256 senderHash;
+    *(senderHash.begin() + 31) = 0xDD;
+
+    uint160 expectedSender;
+    std::memcpy(expectedSender.begin(), senderHash.begin() + 12, 20);
+    uint160 collidingAddress = evm::ContractAddressFromCreate(expectedSender, 5);
+
+    // Place a pre-existing contract at the address we'd derive for
+    // (sender, nonce=5). Use a non-empty codeHash to trigger the
+    // collision branch.
+    uint256 fakeCodeHash;
+    *(fakeCodeHash.begin() + 31) = 0xFE;
+    cache.SetAccount(collidingAddress, evm::CEvmAccount(
+        /*nonce=*/ 1,
+        /*balance=*/ uint256(),
+        /*codeHash=*/ fakeCodeHash,
+        evm::CEvmAccount::EmptyStorageRoot()));
+
+    evm::CEvmDeployTx tx = MakeDeployTx(senderHash, /*nonce=*/ 5, initCode);
+    evm::ApplyResult r = evm::ApplyEvmDeployTx(tx, cache, MinimalContext());
+
+    BOOST_CHECK_EQUAL(r.statusCode, EVMC_FAILURE);
+    // Gas counter records the full gas limit as consumed on refusal —
+    // a deploy that collides is treated like out-of-gas for fee
+    // accounting purposes (matches what EIP-3541 and friends do).
+    BOOST_CHECK_EQUAL(r.gasUsed, static_cast<int64_t>(tx.gasLimit));
+
+    // The colliding account is unchanged: still has the fake codeHash.
+    evm::CEvmAccount unchanged;
+    BOOST_REQUIRE(cache.GetAccount(collidingAddress, unchanged));
+    BOOST_CHECK(unchanged.codeHash == fakeCodeHash);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
