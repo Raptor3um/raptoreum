@@ -4,6 +4,9 @@
 
 #include <chain.h>
 #include <chainparams.h>
+#include <clientversion.h>
+#include <net.h>
+#include <node/context.h>
 #include <evm/account.h>
 #include <evm/apply.h>
 #include <evm/balance.h>
@@ -18,6 +21,7 @@
 #include <rpc/server.h>
 #include <rpc/util.h>
 #include <streams.h>
+#include <util/ref.h>
 #include <util/strencodings.h>
 #include <validation.h>
 #include <version.h>
@@ -1090,6 +1094,180 @@ UniValue eth_getBlockTransactionCountByHash(const JSONRPCRequest& request)
     return ToEthQuantity(static_cast<uint64_t>(block.vtx.size()));
 }
 
+// ----------------------------------------------------------------------
+// Phase 3.4 — Ethereum / Web3 metadata methods
+// ----------------------------------------------------------------------
+//
+// MetaMask, ethers.js, viem, web3.js and most dApps poll these on
+// connect to probe the node. Returning canonical answers (chain id,
+// peer count, sync status, client version) lets the wallet show
+// "Connected" instead of an error.
+
+UniValue eth_protocolVersion(const JSONRPCRequest& request)
+{
+    RPCHelpMan{"eth_protocolVersion",
+        "\nReturns the Ethereum protocol version this node speaks.\n"
+        "\nReports 0x41 (65) — the value modern clients return; the JSON-RPC\n"
+        "surface is more meaningful than the wire version on a non-devp2p chain.\n",
+        {},
+        RPCResult{RPCResult::Type::STR, "version", "Protocol version as a 0x quantity"},
+        RPCExamples{
+            HelpExampleCli("eth_protocolVersion", "")
+            + HelpExampleRpc("eth_protocolVersion", "")
+        },
+    }.Check(request);
+    return ToEthQuantity(0x41);
+}
+
+UniValue eth_syncing(const JSONRPCRequest& request)
+{
+    RPCHelpMan{"eth_syncing",
+        "\nReturns false when the node is at the chain tip; otherwise a sync\n"
+        "object with startingBlock / currentBlock / highestBlock.\n",
+        {},
+        RPCResult{RPCResult::Type::STR, "result", "false or sync status object"},
+        RPCExamples{
+            HelpExampleCli("eth_syncing", "")
+            + HelpExampleRpc("eth_syncing", "")
+        },
+    }.Check(request);
+
+    LOCK(cs_main);
+    if (!::ChainstateActive().IsInitialBlockDownload()) {
+        return UniValue(false);
+    }
+    UniValue out(UniValue::VOBJ);
+    out.pushKV("startingBlock", ToEthQuantity(0));
+    const int height = ::ChainActive().Height();
+    out.pushKV("currentBlock", ToEthQuantity(static_cast<uint64_t>(std::max(0, height))));
+    out.pushKV("highestBlock", ToEthQuantity(static_cast<uint64_t>(std::max(0, height))));
+    return out;
+}
+
+UniValue eth_accounts(const JSONRPCRequest& request)
+{
+    RPCHelpMan{"eth_accounts",
+        "\nReturns the EVM accounts the node manages. Until wallet integration\n"
+        "lands (Phase 5), this returns an empty array — clients drive their own\n"
+        "signing via local keys / hardware wallets and use eth_sendRawTransaction.\n",
+        {},
+        RPCResult{RPCResult::Type::ARR, "", "EVM addresses",
+                  {RPCResult{RPCResult::Type::STR, "address", "0x-prefixed 20-byte address"}}},
+        RPCExamples{
+            HelpExampleCli("eth_accounts", "")
+            + HelpExampleRpc("eth_accounts", "")
+        },
+    }.Check(request);
+    return UniValue(UniValue::VARR);
+}
+
+UniValue eth_coinbase(const JSONRPCRequest& request)
+{
+    RPCHelpMan{"eth_coinbase",
+        "\nReturns the address mining rewards are sent to. Returns the zero\n"
+        "address until Phase 5 wallet integration lands.\n",
+        {},
+        RPCResult{RPCResult::Type::STR, "address", "0x-prefixed 20-byte coinbase address"},
+        RPCExamples{
+            HelpExampleCli("eth_coinbase", "")
+            + HelpExampleRpc("eth_coinbase", "")
+        },
+    }.Check(request);
+    return kZeroAddress;
+}
+
+UniValue eth_mining(const JSONRPCRequest& request)
+{
+    RPCHelpMan{"eth_mining",
+        "\nReturns whether the node is mining. Raptoreum uses PoW + masternode\n"
+        "consensus; the EVM-side answer is always false (this node does not\n"
+        "claim to be the network's miner from MetaMask's perspective).\n",
+        {},
+        RPCResult{RPCResult::Type::BOOL, "mining", "false"},
+        RPCExamples{HelpExampleCli("eth_mining", "")},
+    }.Check(request);
+    return UniValue(false);
+}
+
+UniValue eth_hashrate(const JSONRPCRequest& request)
+{
+    RPCHelpMan{"eth_hashrate",
+        "\nReturns the EVM-side hashrate. Always 0x0 — Raptoreum's PoW is\n"
+        "GhostRider on the UTXO side and not reported through the EVM RPC.\n",
+        {},
+        RPCResult{RPCResult::Type::STR, "hashrate", "Always 0x0"},
+        RPCExamples{HelpExampleCli("eth_hashrate", "")},
+    }.Check(request);
+    return ToEthQuantity(0);
+}
+
+UniValue eth_maxPriorityFeePerGas(const JSONRPCRequest& request)
+{
+    RPCHelpMan{"eth_maxPriorityFeePerGas",
+        "\nReturns the suggested EIP-1559 max-priority-fee-per-gas.\n"
+        "\nReports 0x0 until base-fee dynamics activate (FUP-1/FUP-2).\n",
+        {},
+        RPCResult{RPCResult::Type::STR, "fee", "0x-prefixed quantity"},
+        RPCExamples{HelpExampleCli("eth_maxPriorityFeePerGas", "")},
+    }.Check(request);
+    return ToEthQuantity(0);
+}
+
+UniValue net_version(const JSONRPCRequest& request)
+{
+    RPCHelpMan{"net_version",
+        "\nReturns the active network id as a decimal string (per the net_ spec).\n",
+        {},
+        RPCResult{RPCResult::Type::STR, "version", "Decimal-string network id"},
+        RPCExamples{HelpExampleCli("net_version", "")},
+    }.Check(request);
+    return strprintf("%d", ActiveEvmChainId());
+}
+
+UniValue net_listening(const JSONRPCRequest& request)
+{
+    RPCHelpMan{"net_listening",
+        "\nReturns true when the node is actively listening for P2P connections.\n",
+        {},
+        RPCResult{RPCResult::Type::BOOL, "listening", "True if listening"},
+        RPCExamples{HelpExampleCli("net_listening", "")},
+    }.Check(request);
+    if (!request.context.Has<NodeContext>()) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "Node context not found");
+    }
+    const NodeContext& node = request.context.Get<NodeContext>();
+    return UniValue(static_cast<bool>(node.connman));
+}
+
+UniValue net_peerCount(const JSONRPCRequest& request)
+{
+    RPCHelpMan{"net_peerCount",
+        "\nReturns the number of connected P2P peers as a 0x quantity.\n",
+        {},
+        RPCResult{RPCResult::Type::STR, "count", "0x-prefixed peer count"},
+        RPCExamples{HelpExampleCli("net_peerCount", "")},
+    }.Check(request);
+    if (!request.context.Has<NodeContext>()) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "Node context not found");
+    }
+    const NodeContext& node = request.context.Get<NodeContext>();
+    const uint64_t n = node.connman
+        ? static_cast<uint64_t>(node.connman->GetNodeCount(CConnman::CONNECTIONS_ALL))
+        : 0;
+    return ToEthQuantity(n);
+}
+
+UniValue web3_clientVersion(const JSONRPCRequest& request)
+{
+    RPCHelpMan{"web3_clientVersion",
+        "\nReturns the underlying client's full version string.\n",
+        {},
+        RPCResult{RPCResult::Type::STR, "client", "Client name / version"},
+        RPCExamples{HelpExampleCli("web3_clientVersion", "")},
+    }.Check(request);
+    return std::string("Raptoreum/") + FormatFullVersion() + "/EVM";
+}
+
 // clang-format off
 const CRPCCommand commands[] =
 { //  category   name                       actor (function)            argNames
@@ -1110,6 +1288,17 @@ const CRPCCommand commands[] =
     { "ethereum", "eth_getBlockByHash",                     &eth_getBlockByHash,                     {"blockHash", "fullTx"} },
     { "ethereum", "eth_getBlockTransactionCountByNumber",   &eth_getBlockTransactionCountByNumber,   {"block"} },
     { "ethereum", "eth_getBlockTransactionCountByHash",     &eth_getBlockTransactionCountByHash,     {"blockHash"} },
+    { "ethereum", "eth_protocolVersion",                    &eth_protocolVersion,                    {} },
+    { "ethereum", "eth_syncing",                            &eth_syncing,                            {} },
+    { "ethereum", "eth_accounts",                           &eth_accounts,                           {} },
+    { "ethereum", "eth_coinbase",                           &eth_coinbase,                           {} },
+    { "ethereum", "eth_mining",                             &eth_mining,                             {} },
+    { "ethereum", "eth_hashrate",                           &eth_hashrate,                           {} },
+    { "ethereum", "eth_maxPriorityFeePerGas",               &eth_maxPriorityFeePerGas,               {} },
+    { "ethereum", "net_version",                            &net_version,                            {} },
+    { "ethereum", "net_listening",                          &net_listening,                          {} },
+    { "ethereum", "net_peerCount",                          &net_peerCount,                          {} },
+    { "ethereum", "web3_clientVersion",                     &web3_clientVersion,                     {} },
 };
 // clang-format on
 
