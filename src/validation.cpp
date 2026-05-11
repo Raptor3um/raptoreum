@@ -22,6 +22,7 @@
 #include <evm/host.h>
 #include <evm/state_cache.h>
 #include <evm/state_db.h>
+#include <evm/undo.h>
 #include <flatfile.h>
 #include <hash.h>
 #include <index/txindex.h>
@@ -2957,6 +2958,27 @@ bool CChainState::DisconnectTip(CValidationState &state, const CChainParams &cha
         assert(flushed);
         bool assetsFlushed = assetCache.Flush();
         assert(assetsFlushed);
+
+        // Phase 2.6 — read + apply + erase the EVM block undo.
+        // Quietly skip when no entry exists (pre-EVM blocks have no
+        // journal, and EVM-active blocks with no EVM txs also write
+        // no journal entry via IsEmpty()).
+        if (pevmstatedb) {
+            std::vector<uint8_t> undoBytes;
+            if (pevmstatedb->ReadBlockUndoBytes(pindexDelete->GetBlockHash(),
+                                                undoBytes)) {
+                CDataStream undoStream(undoBytes, SER_DISK, CLIENT_VERSION);
+                evm::CEvmStateUndo evmUndo;
+                undoStream >> evmUndo;
+                const bool undoApplied =
+                    evm::ApplyUndoToDB(evmUndo, *pevmstatedb);
+                assert(undoApplied);
+                const bool undoErased =
+                    pevmstatedb->EraseBlockUndo(pindexDelete->GetBlockHash());
+                assert(undoErased);
+            }
+        }
+
         dbTx->Commit();
     }
     LogPrint(BCLog::BENCHMARK, "- Disconnect block: %.2fms\n", (GetTimeMicros() - nStart) * MILLI);
@@ -3118,8 +3140,28 @@ bool CChainState::ConnectTip(CValidationState &state, const CChainParams &chainp
         bool assetsFlushed = assetCache.Flush();
         assert(assetsFlushed);
         if (evmCachePtr) {
+            // Phase 2.6 — build the reorg journal BEFORE the EVM
+            // flush. While the cache still holds the dirty layer
+            // and the DB still has the pre-block state, we walk
+            // the dirty entries and record the pre-block values
+            // we're about to overwrite. The serialized journal
+            // is then persisted to the DB keyed by block hash so
+            // DisconnectTip can revert this block later.
+            evm::CEvmStateUndo evmUndo =
+                evm::BuildUndoFromCache(*evmCachePtr, *pevmstatedb);
+
             const bool evmFlushed = evmCachePtr->Flush();
             assert(evmFlushed);
+
+            if (!evmUndo.IsEmpty()) {
+                CDataStream undoStream(SER_DISK, CLIENT_VERSION);
+                undoStream << evmUndo;
+                std::vector<uint8_t> undoBytes(undoStream.begin(),
+                                              undoStream.end());
+                const bool undoWritten = pevmstatedb->WriteBlockUndoBytes(
+                    pindexNew->GetBlockHash(), undoBytes);
+                assert(undoWritten);
+            }
         }
         dbTx->Commit();
     }
