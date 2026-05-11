@@ -77,6 +77,34 @@ public:
     bool ReadStorage(const uint160& address, const uint256& slot, uint256& value) const;
 
     bool EraseStorage(const uint160& address, const uint256& slot);
+
+    // ----------------------------------------------------------------
+    // Code erase (Phase 2.6 — needed for reorg journaling to retract
+    // a code blob that this block was the first to install). For an
+    // address still pointing at the codeHash, callers must first
+    // delete or rewrite the account record; this method does NOT
+    // walk the account index.
+    // ----------------------------------------------------------------
+    bool EraseCode(const uint256& codeHash);
+
+    // ----------------------------------------------------------------
+    // Phase 2.6 — Block undo journal keyed by block hash.
+    //
+    //   'U' + blockHash(32)  ->  serialized CEvmStateUndo
+    //
+    // ConnectBlock writes the journal during the flush phase;
+    // DisconnectBlock reads it, applies the inverse, then erases the
+    // entry. Mirrors how CAssetsDB stores per-block asset undo.
+    // ----------------------------------------------------------------
+
+    /** Write a serialized undo blob keyed by block hash. */
+    bool WriteBlockUndoBytes(const uint256& blockHash,
+                             const std::vector<uint8_t>& bytes);
+    /** Read a serialized undo blob; returns false if no entry. */
+    bool ReadBlockUndoBytes(const uint256& blockHash,
+                           std::vector<uint8_t>& outBytes) const;
+    /** Erase the per-block undo entry. */
+    bool EraseBlockUndo(const uint256& blockHash);
 };
 
 } // namespace evm

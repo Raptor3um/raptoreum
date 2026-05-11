@@ -137,6 +137,20 @@ public:
     size_t DirtyStorageCount() const { return mStorageDirty.size(); }
     size_t DirtyCodeCount() const    { return mCodeDirty.size(); }
 
+    // ----------------------------------------------------------------
+    // Phase 2.6 — Reorg journaling helpers
+    // ----------------------------------------------------------------
+    //
+    // Const accessors over the dirty layer for callers that need to
+    // walk it (currently: BuildUndoFromCache, defined in undo.cpp).
+    // They expose internal storage by const reference; the iteration
+    // contract assumes the cache is not mutated during the walk.
+
+    const std::map<uint160, CEvmAccount>& DirtyAccounts() const { return mAccountsDirty; }
+    const std::map<uint160, bool>& DeletedAccounts() const { return mAccountsDeleted; }
+    const std::map<std::pair<uint160, uint256>, uint256>& DirtyStorage() const { return mStorageDirty; }
+    const std::map<uint256, std::vector<uint8_t>>& DirtyCode() const { return mCodeDirty; }
+
 private:
     CEvmStateDB& db;
 

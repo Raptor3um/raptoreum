@@ -183,6 +183,7 @@ BITCOIN_CORE_H = \
   evm/smoke.h \
   evm/state_cache.h \
   evm/state_db.h \
+  evm/undo.h \
   evo/cbtx.h \
   evo/deterministicmns.h \
   evo/evodb.h \
@@ -395,6 +396,7 @@ libraptoreum_server_a_SOURCES = \
   evm/smoke.cpp \
   evm/state_cache.cpp \
   evm/state_db.cpp \
+  evm/undo.cpp \
   evo/cbtx.cpp \
   evo/deterministicmns.cpp \
   evo/evodb.cpp \

@@ -15,6 +15,8 @@ namespace evm {
 static constexpr char ACCOUNT_PREFIX = 'A';
 static constexpr char CODE_PREFIX = 'C';
 static constexpr char STORAGE_PREFIX = 'S';
+// Phase 2.6 — per-block undo journal:
+static constexpr char BLOCKUNDO_PREFIX = 'U';
 
 CEvmStateDB::CEvmStateDB(size_t nCacheSize, bool fMemory, bool fWipe)
     : CDBWrapper(GetDataDir() / "evmstate", nCacheSize, fMemory, fWipe)
@@ -81,6 +83,32 @@ bool CEvmStateDB::ReadStorage(const uint160& address, const uint256& slot, uint2
 bool CEvmStateDB::EraseStorage(const uint160& address, const uint256& slot)
 {
     return Erase(std::make_pair(STORAGE_PREFIX, std::make_pair(address, slot)));
+}
+
+// ----------------------------------------------------------------------
+// Phase 2.6 — code erase + per-block undo journal
+// ----------------------------------------------------------------------
+
+bool CEvmStateDB::EraseCode(const uint256& codeHash)
+{
+    return Erase(std::make_pair(CODE_PREFIX, codeHash));
+}
+
+bool CEvmStateDB::WriteBlockUndoBytes(const uint256& blockHash,
+                                     const std::vector<uint8_t>& bytes)
+{
+    return Write(std::make_pair(BLOCKUNDO_PREFIX, blockHash), bytes);
+}
+
+bool CEvmStateDB::ReadBlockUndoBytes(const uint256& blockHash,
+                                    std::vector<uint8_t>& outBytes) const
+{
+    return Read(std::make_pair(BLOCKUNDO_PREFIX, blockHash), outBytes);
+}
+
+bool CEvmStateDB::EraseBlockUndo(const uint256& blockHash)
+{
+    return Erase(std::make_pair(BLOCKUNDO_PREFIX, blockHash));
 }
 
 } // namespace evm
