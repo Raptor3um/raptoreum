@@ -320,4 +320,23 @@ BOOST_AUTO_TEST_CASE(evm_opcodes_accepted_with_flag)
     }
 }
 
+// ----------------------------------------------------------------------------
+// Reserved tx types are recognized by the protocol enum
+// ----------------------------------------------------------------------------
+//
+// Per the revised D4 (core team acceptance 2026-05-11), tx types 14-18 are
+// reserved for the new asset classes. They are NOT implemented yet — sending
+// one will be rejected by CheckSpecialTx() via the default-case BAD_TX_TYPE
+// path. But the enum constants must exist and have the documented values so
+// future implementation does not silently collide.
+
+BOOST_AUTO_TEST_CASE(reserved_evm_asset_tx_types)
+{
+    BOOST_CHECK_EQUAL(TRANSACTION_NEW_EVM_ASSET, 14);
+    BOOST_CHECK_EQUAL(TRANSACTION_UPDATE_EVM_ASSET, 15);
+    BOOST_CHECK_EQUAL(TRANSACTION_MINT_EVM_ASSET, 16);
+    BOOST_CHECK_EQUAL(TRANSACTION_WRAP_ASSET, 17);
+    BOOST_CHECK_EQUAL(TRANSACTION_UNWRAP_ASSET, 18);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

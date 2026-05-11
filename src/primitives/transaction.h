@@ -26,11 +26,24 @@ enum {
     TRANSACTION_UPDATE_ASSET = 9,
     TRANSACTION_MINT_ASSET = 10,
     // EVM integration (Phase 1+). Gated behind Updates().IsEvmActive(height).
-    // Scaffolding only in this commit: types are validated for structure but
-    // execution is not implemented until Phase 2. See docs/evm/PLAN.md.
+    // Scaffolding only: types are validated for structure but execution is
+    // not implemented until Phase 2. See docs/evm/PLAN.md.
     TRANSACTION_EVM_DEPLOY = 11,    // Deploy a new EVM contract.
     TRANSACTION_EVM_CALL = 12,      // Invoke an existing EVM contract.
-    TRANSACTION_EVM_SPEND = 13      // Move RTM from an EVM account to a UTXO.
+    TRANSACTION_EVM_SPEND = 13,     // Move RTM from an EVM account to a UTXO.
+    // EVM-native assets (Phase 4, revised D4 per core team acceptance 2026-05-11).
+    // Reserved here to prevent collision with other future features. Validation
+    // logic lands in Phase 4 alongside the EVM Asset registry precompile.
+    // See docs/evm/PROPOSAL-FOR-CORE-TEAM.md § "Revised D4 — Three asset classes".
+    TRANSACTION_NEW_EVM_ASSET = 14,    // Create a new EVM-native asset (ERC-20).
+    TRANSACTION_UPDATE_EVM_ASSET = 15, // Update metadata of an EVM-native asset.
+    TRANSACTION_MINT_EVM_ASSET = 16,   // Mint additional units of an EVM-native asset.
+    // Smart Asset <-> EVM wrap/unwrap bridge (Phase 5+, OPT-IN per asset).
+    // Smart Asset owners may optionally enable a wrapped ERC-20 representation
+    // of their asset for DeFi composability. Strictly opt-in: assets that never
+    // opt in remain permanently UTXO-only.
+    TRANSACTION_WRAP_ASSET = 17,      // Lock Smart Asset units, mint wrapped ERC-20.
+    TRANSACTION_UNWRAP_ASSET = 18     // Burn wrapped ERC-20, release Smart Asset units.
 };
 
 /** An outpoint - a combination of a transaction hash and an index n into its vout */

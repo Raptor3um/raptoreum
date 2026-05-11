@@ -17,6 +17,13 @@ enum class EUpdate {
     DEPLOYMENT_V17 = 0,
     ROUND_VOTING = 1,
     QUORUMS_200_8 = 2,
+    // EVM activation gate. Per design decision D2 this is a hard-fork
+    // activation (fixed heightActivated in chainparams), NOT BIP9 version-bit
+    // voting — the Update infrastructure supports both modes via the
+    // heightActivated field. Currently UNREGISTERED in chainparams.cpp for
+    // any network: IsEvmActive() returns false on all chains until specific
+    // activation heights are committed.
+    EVM = 3,
 
     MAX_VERSION_BITS_DEPLOYMENTS
 };
@@ -347,6 +354,12 @@ public:
     bool IsActive(enum EUpdate eUpdate, const CBlockIndex *blockIndex);
 
     bool IsAssetsActive(const CBlockIndex *blockIndex);
+
+    /** Convenience wrapper: returns true once UPDATE_EVM is active.
+     *  Until an Update(EUpdate::EVM, ..., heightActivated=X) is registered in
+     *  chainparams.cpp for a given network, this returns false (the safe
+     *  default — EVM transactions are rejected with "evm-not-activated"). */
+    bool IsEvmActive(const CBlockIndex *blockIndex);
 
     StateInfo State(enum EUpdate eUpdate, const CBlockIndex *blockIndex);
 

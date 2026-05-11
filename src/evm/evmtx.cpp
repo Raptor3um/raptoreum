@@ -5,9 +5,11 @@
 #include <evm/evmtx.h>
 
 #include <chain.h>
+#include <chainparams.h>
 #include <consensus/validation.h>
 #include <evo/specialtx.h>
 #include <tinyformat.h>
+#include <update/update.h>
 
 namespace evm {
 
@@ -69,14 +71,21 @@ std::string CEvmSpendTx::ToString() const
 
 namespace {
 
-/** Returns false until Phase 2 registers UPDATE_EVM in chainparams.cpp. */
-bool IsEvmActive(const CBlockIndex* /*pindexPrev*/)
+/** Returns true once UPDATE_EVM is registered AND active for the given chain tip.
+ *
+ *  Phase 1.4: wired to the real UpdateManager. The EUpdate::EVM entry is
+ *  declared in src/update/update.h but is NOT yet registered in
+ *  src/chainparams.cpp for any network. As a consequence, IsActive() returns
+ *  false on every chain — the safe default. EVM transactions are rejected
+ *  with "evm-not-activated".
+ *
+ *  Activation per network is committed in a later phase (Phase 6+):
+ *  chainparams.cpp will register Update(EUpdate::EVM, ..., heightActivated=X)
+ *  with the chosen block height. Hard-fork-style activation per D2 — fixed
+ *  height, not BIP9 version-bit voting. */
+bool IsEvmActive(const CBlockIndex* pindexPrev)
 {
-    // PHASE 1: hard-coded false.
-    // PHASE 2: replace with Params().GetUpdateManager().IsActive(
-    //   EUpdate::EVM, pindexPrev) once UPDATE_EVM is wired into
-    //   src/update/update.h and src/chainparams.cpp.
-    return false;
+    return Updates().IsEvmActive(pindexPrev);
 }
 
 /** Common Phase-1 structural checks shared by all three EVM tx types. */
