@@ -172,8 +172,11 @@ BITCOIN_CORE_H = \
   cuckoocache.h \
   ctpl_stl.h \
   cxxtimer.hpp \
-  evm/smoke.h \
+  evm/account.h \
   evm/evmtx.h \
+  evm/smoke.h \
+  evm/state_cache.h \
+  evm/state_db.h \
   evo/cbtx.h \
   evo/deterministicmns.h \
   evo/evodb.h \
@@ -375,8 +378,11 @@ libraptoreum_server_a_SOURCES = \
   consensus/tx_verify.cpp \
   dbwrapper.cpp \
   dsnotificationinterface.cpp \
-  evm/smoke.cpp \
+  evm/account.cpp \
   evm/evmtx.cpp \
+  evm/smoke.cpp \
+  evm/state_cache.cpp \
+  evm/state_db.cpp \
   evo/cbtx.cpp \
   evo/deterministicmns.cpp \
   evo/evodb.cpp \
