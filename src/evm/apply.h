@@ -5,8 +5,10 @@
 #ifndef RAPTOREUM_EVM_APPLY_H
 #define RAPTOREUM_EVM_APPLY_H
 
+#include <amount.h>
 #include <evm/evmtx.h>
 #include <evm/host.h>
+#include <script/script.h>
 #include <uint256.h>
 
 #include <evmc/evmc.h>
@@ -61,7 +63,30 @@ struct ApplyResult
      *  the new contract was created at. Zero-initialized for CALL
      *  and SPEND results. */
     uint160 deployedAddress;
+
+    /** A UTXO output that the caller must add to the surrounding
+     *  block, produced by ApplyEvmSpendTx on success. Empty for
+     *  CALL and DEPLOY results. The script is the destination
+     *  output script (typically a P2PKH); amount is in RTM satoshis. */
+    struct UtxoCredit
+    {
+        CScript script;
+        CAmount amount{0};
+    };
+    std::vector<UtxoCredit> utxoCredits;
 };
+
+/**
+ * Conversion factor between EVM weis and UTXO-side satoshis.
+ *
+ * RTM uses Bitcoin-style 1 RTM = 10^8 satoshis. EVM accounting uses
+ * Ethereum-style 1 RTM = 10^18 weis. Therefore 1 satoshi = 10^10 weis,
+ * and any amount transferred between the two sides must be an exact
+ * multiple of this factor — otherwise we either round (losing money)
+ * or refuse (we refuse, returning EVMC_FAILURE so the user knows to
+ * round the value themselves rather than the chain silently truncating).
+ */
+constexpr uint64_t kWeisPerSatoshi = 10'000'000'000ULL;
 
 /**
  * Execute a CEvmCallTx against the cache via evmone.
@@ -138,6 +163,41 @@ ApplyResult ApplyEvmCallTx(const CEvmCallTx& payload,
 ApplyResult ApplyEvmDeployTx(const CEvmDeployTx& payload,
                              CEvmStateCache& cache,
                              const ExecutionContext& context);
+
+/**
+ * Execute a CEvmSpendTx against the cache (Phase 2.3c).
+ *
+ * Moves RTM weis from an EVM account to a UTXO output:
+ *
+ *   1. Verify payload.amount is an exact multiple of kWeisPerSatoshi
+ *      (10^10). Non-multiples are rejected with EVMC_FAILURE — the
+ *      chain never silently rounds funds away.
+ *
+ *   2. Verify payload.outputScript is non-empty (the destination
+ *      UTXO output script). Empty is rejected.
+ *
+ *   3. Load the source EVM account from the cache. Account must
+ *      exist (no implicit zero-balance accounts on the EVM side).
+ *
+ *   4. Verify account.balance >= payload.amount (no overdraft).
+ *
+ *   5. Debit the EVM account's balance and write the updated record
+ *      back through the cache.
+ *
+ *   6. Record the satoshi-amount UTXO output in ApplyResult.utxoCredits.
+ *      The caller (Phase 2.4 ConnectBlock) creates the actual CTxOut
+ *      in the block and emits a coinbase-style "EVM credit" output
+ *      with this script + amount.
+ *
+ * Same scope notes as the other Apply* functions: nonce increment
+ * and gas accounting happen at the surrounding ConnectBlock layer
+ * (Phase 2.4), not here. ApplyEvmSpendTx records an intrinsic
+ * gasUsed of 21000 (matches the Ethereum baseline for a simple
+ * value transfer) so the caller has a reasonable lower bound.
+ */
+ApplyResult ApplyEvmSpendTx(const CEvmSpendTx& payload,
+                            CEvmStateCache& cache,
+                            const ExecutionContext& context);
 
 } // namespace evm
 

@@ -471,4 +471,316 @@ BOOST_AUTO_TEST_CASE(deploy_refuses_collision_with_existing_contract)
     BOOST_CHECK(unchanged.codeHash == fakeCodeHash);
 }
 
+// ============================================================================
+// Phase 2.3c — ApplyEvmSpendTx
+// ============================================================================
+//
+// These tests exercise the EVM -> UTXO move:
+//   - Successful spend debits the EVM account and produces a UTXO credit
+//     whose satoshi amount equals weis / 10^10.
+//   - Precision-loss amounts (not a multiple of 10^10 weis) are rejected.
+//   - Zero amount is rejected.
+//   - Empty output scripts are rejected.
+//   - Non-existent source accounts are rejected.
+//   - Insufficient balance is rejected.
+//
+// Like the other Apply* tests, these run against an in-memory CEvmStateDB
+// and do NOT depend on Updates().IsEvmActive() (that is the *outer*
+// validation gate; the apply layer is below it).
+
+namespace {
+
+// Build a CEvmSpendTx with the given source address, destination script,
+// and amount-in-weis.
+evm::CEvmSpendTx MakeSpendTx(const uint256& fromAddress,
+                             const CScript& outputScript,
+                             uint64_t amount,
+                             uint64_t gasLimit = 21'000)
+{
+    evm::CEvmSpendTx tx;
+    tx.nVersion = evm::EVM_TX_PAYLOAD_VERSION;
+    tx.fromAddress = fromAddress;
+    tx.amount = amount;
+    tx.outputScript = outputScript;
+    tx.gasLimit = gasLimit;
+    tx.maxFeePerGas = 0;
+    tx.maxPriorityFeePerGas = 0;
+    tx.nonce = 0;
+    return tx;
+}
+
+// Encode a uint64 into the low 8 bytes of a big-endian uint256
+// (matches the on-wire layout we use for balances).
+uint256 BalanceFromUint64(uint64_t weis)
+{
+    uint256 u;
+    for (int i = 0; i < 8; ++i) {
+        *(u.begin() + 31 - i) = static_cast<uint8_t>((weis >> (8 * i)) & 0xFF);
+    }
+    return u;
+}
+
+// Read the low 8 bytes of a big-endian uint256 as a uint64.
+uint64_t BalanceToUint64(const uint256& balance)
+{
+    uint64_t v = 0;
+    for (int i = 24; i < 32; ++i) {
+        v = (v << 8) | static_cast<uint64_t>(*(balance.begin() + i));
+    }
+    return v;
+}
+
+// Pre-populate an EVM account at `addrU256` with the given balance.
+void SeedAccountForSpend(evm::CEvmStateCache& cache,
+                        const uint256& addrU256,
+                        uint64_t balanceWeis)
+{
+    uint160 addr;
+    std::memcpy(addr.begin(), addrU256.begin() + 12, 20);
+    evm::CEvmAccount account(
+        /*nonce=*/ 1,
+        /*balance=*/ BalanceFromUint64(balanceWeis),
+        /*codeHash=*/ evm::CEvmAccount::EmptyCodeHash(),
+        /*storageRoot=*/ evm::CEvmAccount::EmptyStorageRoot());
+    cache.SetAccount(addr, account);
+}
+
+// Build a plausible destination script. Any non-empty bytes are valid
+// for the spend layer — script-language validation lives in the outer
+// CheckSpendTx step (Phase 1).
+CScript MakeDummyOutputScript()
+{
+    CScript s;
+    s << OP_DUP << OP_HASH160;
+    // 20-byte placeholder hash
+    std::vector<unsigned char> hash(20, 0xAB);
+    s << hash;
+    s << OP_EQUALVERIFY << OP_CHECKSIG;
+    return s;
+}
+
+} // anonymous namespace
+
+// ----------------------------------------------------------------------------
+// Happy path: spend an exact-multiple amount, balance debits, UTXO credit
+// records the satoshi amount and script.
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(spend_debits_balance_and_records_utxo_credit)
+{
+    evm::CEvmStateDB db(1 << 20, /*fMemory=*/ true);
+    evm::CEvmStateCache cache(db);
+
+    const uint256 fromAddr = AddrAsUint256(0x5A);
+    // Seed with 10 satoshis worth of weis = 10 * 10^10 = 10^11 weis.
+    const uint64_t seed = 10 * evm::kWeisPerSatoshi;
+    SeedAccountForSpend(cache, fromAddr, seed);
+
+    // Spend 3 satoshis worth (3 * 10^10 weis). Expect 3 sat credit.
+    const uint64_t spendWeis = 3 * evm::kWeisPerSatoshi;
+    const CScript dest = MakeDummyOutputScript();
+
+    evm::CEvmSpendTx tx = MakeSpendTx(fromAddr, dest, spendWeis);
+    evm::ApplyResult r = evm::ApplyEvmSpendTx(tx, cache, MinimalContext());
+
+    BOOST_CHECK_EQUAL(r.statusCode, EVMC_SUCCESS);
+    BOOST_CHECK_EQUAL(r.gasUsed, 21000);
+
+    // One UTXO credit, matching the destination script and 3 satoshis.
+    BOOST_REQUIRE_EQUAL(r.utxoCredits.size(), 1U);
+    BOOST_CHECK(r.utxoCredits[0].script == dest);
+    BOOST_CHECK_EQUAL(r.utxoCredits[0].amount, static_cast<CAmount>(3));
+
+    // The source account balance was debited.
+    uint160 fromAddr160;
+    std::memcpy(fromAddr160.begin(), fromAddr.begin() + 12, 20);
+    evm::CEvmAccount account;
+    BOOST_REQUIRE(cache.GetAccount(fromAddr160, account));
+    BOOST_CHECK_EQUAL(BalanceToUint64(account.balance), seed - spendWeis);
+}
+
+// ----------------------------------------------------------------------------
+// Spend the entire balance — leaves account at zero balance, still exists.
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(spend_entire_balance_succeeds)
+{
+    evm::CEvmStateDB db(1 << 20, /*fMemory=*/ true);
+    evm::CEvmStateCache cache(db);
+
+    const uint256 fromAddr = AddrAsUint256(0x5B);
+    const uint64_t seed = 5 * evm::kWeisPerSatoshi;
+    SeedAccountForSpend(cache, fromAddr, seed);
+
+    evm::CEvmSpendTx tx = MakeSpendTx(fromAddr, MakeDummyOutputScript(), seed);
+    evm::ApplyResult r = evm::ApplyEvmSpendTx(tx, cache, MinimalContext());
+
+    BOOST_CHECK_EQUAL(r.statusCode, EVMC_SUCCESS);
+    BOOST_REQUIRE_EQUAL(r.utxoCredits.size(), 1U);
+    BOOST_CHECK_EQUAL(r.utxoCredits[0].amount, static_cast<CAmount>(5));
+
+    uint160 fromAddr160;
+    std::memcpy(fromAddr160.begin(), fromAddr.begin() + 12, 20);
+    evm::CEvmAccount account;
+    BOOST_REQUIRE(cache.GetAccount(fromAddr160, account));
+    BOOST_CHECK_EQUAL(BalanceToUint64(account.balance), 0U);
+}
+
+// ----------------------------------------------------------------------------
+// Precision-loss rejection: amount must be an exact multiple of 10^10 weis.
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(spend_rejects_non_multiple_amount)
+{
+    evm::CEvmStateDB db(1 << 20, /*fMemory=*/ true);
+    evm::CEvmStateCache cache(db);
+
+    const uint256 fromAddr = AddrAsUint256(0x5C);
+    const uint64_t seed = 100 * evm::kWeisPerSatoshi;
+    SeedAccountForSpend(cache, fromAddr, seed);
+
+    // 1 wei over a clean satoshi boundary — would silently round.
+    const uint64_t badAmount = evm::kWeisPerSatoshi + 1;
+    evm::CEvmSpendTx tx = MakeSpendTx(fromAddr, MakeDummyOutputScript(), badAmount);
+
+    evm::ApplyResult r = evm::ApplyEvmSpendTx(tx, cache, MinimalContext());
+
+    BOOST_CHECK_EQUAL(r.statusCode, EVMC_FAILURE);
+    // Gas charged: full limit (the chain still bills for the work).
+    BOOST_CHECK_EQUAL(r.gasUsed, static_cast<int64_t>(tx.gasLimit));
+    BOOST_CHECK(r.utxoCredits.empty());
+
+    // Source balance untouched.
+    uint160 fromAddr160;
+    std::memcpy(fromAddr160.begin(), fromAddr.begin() + 12, 20);
+    evm::CEvmAccount account;
+    BOOST_REQUIRE(cache.GetAccount(fromAddr160, account));
+    BOOST_CHECK_EQUAL(BalanceToUint64(account.balance), seed);
+}
+
+// ----------------------------------------------------------------------------
+// Zero-amount rejection: a no-op spend would still consume gas with no
+// observable effect; we refuse rather than encode useless tx work.
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(spend_rejects_zero_amount)
+{
+    evm::CEvmStateDB db(1 << 20, /*fMemory=*/ true);
+    evm::CEvmStateCache cache(db);
+
+    const uint256 fromAddr = AddrAsUint256(0x5D);
+    SeedAccountForSpend(cache, fromAddr, evm::kWeisPerSatoshi);
+
+    evm::CEvmSpendTx tx = MakeSpendTx(fromAddr, MakeDummyOutputScript(), 0);
+    evm::ApplyResult r = evm::ApplyEvmSpendTx(tx, cache, MinimalContext());
+
+    BOOST_CHECK_EQUAL(r.statusCode, EVMC_FAILURE);
+    BOOST_CHECK(r.utxoCredits.empty());
+}
+
+// ----------------------------------------------------------------------------
+// Empty output script rejection: would produce an unspendable UTXO.
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(spend_rejects_empty_output_script)
+{
+    evm::CEvmStateDB db(1 << 20, /*fMemory=*/ true);
+    evm::CEvmStateCache cache(db);
+
+    const uint256 fromAddr = AddrAsUint256(0x5E);
+    SeedAccountForSpend(cache, fromAddr, 10 * evm::kWeisPerSatoshi);
+
+    // Empty CScript — explicitly disallowed.
+    CScript empty;
+    evm::CEvmSpendTx tx = MakeSpendTx(fromAddr, empty, evm::kWeisPerSatoshi);
+
+    evm::ApplyResult r = evm::ApplyEvmSpendTx(tx, cache, MinimalContext());
+
+    BOOST_CHECK_EQUAL(r.statusCode, EVMC_FAILURE);
+    BOOST_CHECK(r.utxoCredits.empty());
+}
+
+// ----------------------------------------------------------------------------
+// Non-existent source account rejection.
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(spend_rejects_missing_source_account)
+{
+    evm::CEvmStateDB db(1 << 20, /*fMemory=*/ true);
+    evm::CEvmStateCache cache(db);
+
+    // No SeedAccountForSpend call — the address has never been
+    // written to and GetAccount should return false.
+    const uint256 fromAddr = AddrAsUint256(0x5F);
+
+    evm::CEvmSpendTx tx = MakeSpendTx(fromAddr, MakeDummyOutputScript(),
+                                      evm::kWeisPerSatoshi);
+    evm::ApplyResult r = evm::ApplyEvmSpendTx(tx, cache, MinimalContext());
+
+    BOOST_CHECK_EQUAL(r.statusCode, EVMC_FAILURE);
+    BOOST_CHECK(r.utxoCredits.empty());
+}
+
+// ----------------------------------------------------------------------------
+// Insufficient balance rejection.
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(spend_rejects_insufficient_balance)
+{
+    evm::CEvmStateDB db(1 << 20, /*fMemory=*/ true);
+    evm::CEvmStateCache cache(db);
+
+    const uint256 fromAddr = AddrAsUint256(0x60);
+    // Seed with exactly 2 satoshis worth.
+    const uint64_t seed = 2 * evm::kWeisPerSatoshi;
+    SeedAccountForSpend(cache, fromAddr, seed);
+
+    // Try to spend 3 satoshis worth — should fail.
+    const uint64_t want = 3 * evm::kWeisPerSatoshi;
+    evm::CEvmSpendTx tx = MakeSpendTx(fromAddr, MakeDummyOutputScript(), want);
+
+    evm::ApplyResult r = evm::ApplyEvmSpendTx(tx, cache, MinimalContext());
+
+    BOOST_CHECK_EQUAL(r.statusCode, EVMC_FAILURE);
+    BOOST_CHECK(r.utxoCredits.empty());
+
+    // Account balance unchanged.
+    uint160 fromAddr160;
+    std::memcpy(fromAddr160.begin(), fromAddr.begin() + 12, 20);
+    evm::CEvmAccount account;
+    BOOST_REQUIRE(cache.GetAccount(fromAddr160, account));
+    BOOST_CHECK_EQUAL(BalanceToUint64(account.balance), seed);
+}
+
+// ----------------------------------------------------------------------------
+// Flush through to the underlying DB: a successful spend's balance debit
+// survives Flush(), so the UTXO subsystem and the EVM stay consistent
+// across the commit boundary.
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(spend_debit_persists_through_flush)
+{
+    evm::CEvmStateDB db(1 << 20, /*fMemory=*/ true);
+    evm::CEvmStateCache cache(db);
+
+    const uint256 fromAddr = AddrAsUint256(0x61);
+    const uint64_t seed = 7 * evm::kWeisPerSatoshi;
+    SeedAccountForSpend(cache, fromAddr, seed);
+    BOOST_REQUIRE(cache.Flush()); // commit the seed so the spend's
+                                  // debit becomes a *new* dirty entry.
+
+    const uint64_t spend = 4 * evm::kWeisPerSatoshi;
+    evm::CEvmSpendTx tx = MakeSpendTx(fromAddr, MakeDummyOutputScript(), spend);
+    evm::ApplyResult r = evm::ApplyEvmSpendTx(tx, cache, MinimalContext());
+    BOOST_REQUIRE_EQUAL(r.statusCode, EVMC_SUCCESS);
+
+    BOOST_REQUIRE(cache.Flush());
+
+    uint160 fromAddr160;
+    std::memcpy(fromAddr160.begin(), fromAddr.begin() + 12, 20);
+    evm::CEvmAccount onDisk;
+    BOOST_REQUIRE(db.ReadAccount(fromAddr160, onDisk));
+    BOOST_CHECK_EQUAL(BalanceToUint64(onDisk.balance), seed - spend);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
