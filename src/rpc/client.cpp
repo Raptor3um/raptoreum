@@ -197,6 +197,11 @@ static const CRPCConvertParam vRPCConvertParams[] =
                 { "listaddressesbyasset", 1, "totalonly"},
                 { "listaddressesbyasset", 2, "count"},
                 { "listaddressesbyasset", 3, "start"},
+                // Phase 3 — eth_*: numeric args + the eth_call JSON
+                // object need decoding before they reach the handler.
+                { "evm_executeReadOnly", 2, "gas_limit" },
+                { "eth_call", 0, "callObject" },
+                { "eth_estimateGas", 0, "callObject" },
         };
 
 class CRPCConvertTable {

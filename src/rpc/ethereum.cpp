@@ -5,14 +5,20 @@
 #include <chain.h>
 #include <chainparams.h>
 #include <evm/account.h>
+#include <evm/apply.h>
 #include <evm/balance.h>
+#include <evm/host.h>
 #include <evm/smoke.h>
+#include <evm/state_cache.h>
 #include <evm/state_db.h>
 #include <rpc/protocol.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
 #include <util/strencodings.h>
 #include <validation.h>
+
+#include <evmc/evmc.hpp>
+#include <evmone/evmone.h>
 
 #include <univalue.h>
 
@@ -435,6 +441,292 @@ UniValue eth_getStorageAt(const JSONRPCRequest& request)
     return ToEthData(value);
 }
 
+// ----------------------------------------------------------------------
+// Phase 3.2 — eth_call / eth_estimateGas
+// ----------------------------------------------------------------------
+//
+// eth_call runs a read-only EVM execution against a snapshot of the
+// current chain state. The call frame is dispatched through evmone
+// exactly as a Phase 2 EVM transaction would be, but the resulting
+// state changes are discarded: the CEvmStateCache is never flushed,
+// so the EVM state DB is untouched.
+//
+// Parameter shape mirrors Ethereum's JSON-RPC spec:
+//
+//   {
+//     "from":     "0x...",           // optional sender; defaults to 0x0
+//     "to":       "0x...",           // required contract address
+//     "gas":      "0x...",           // optional gas limit
+//     "gasPrice": "0x...",           // optional; ignored on read-only
+//     "value":    "0x...",           // optional value forwarded
+//     "data":     "0x..."            // optional calldata
+//   }
+//
+// eth_estimateGas runs the same execution and returns the gas the
+// frame consumed. A future refinement is a binary search to find the
+// minimum gas the call succeeds at; for now we report the actual
+// consumption of a single attempt with a generous limit, which is
+// accurate for non-pathological contracts.
+
+namespace {
+
+// Parse a 0x-prefixed quantity hex into uint64. Returns 0 on missing.
+uint64_t ParseEthQuantity(const UniValue& v, const std::string& name)
+{
+    if (v.isNull()) return 0;
+    if (!v.isStr()) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, name + " must be a hex quantity string");
+    }
+    const std::string stripped = StripHexPrefix(v.get_str());
+    if (stripped.empty()) return 0;
+    if (!IsHex(stripped.size() % 2 == 0 ? stripped : "0" + stripped)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, name + " is not valid hex");
+    }
+    // Manual hex-to-uint64 parse; rejects values > uint64 max.
+    if (stripped.size() > 16) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, name + " quantity exceeds uint64");
+    }
+    uint64_t out = 0;
+    for (char c : stripped) {
+        out <<= 4;
+        if (c >= '0' && c <= '9') out |= static_cast<uint64_t>(c - '0');
+        else if (c >= 'a' && c <= 'f') out |= static_cast<uint64_t>(c - 'a' + 10);
+        else if (c >= 'A' && c <= 'F') out |= static_cast<uint64_t>(c - 'A' + 10);
+        else throw JSONRPCError(RPC_INVALID_PARAMETER, name + " is not valid hex");
+    }
+    return out;
+}
+
+// Parse the "data" field — arbitrary-length 0x-prefixed hex.
+std::vector<uint8_t> ParseEthDataField(const UniValue& v, const std::string& name)
+{
+    if (v.isNull()) return {};
+    if (!v.isStr()) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, name + " must be a hex data string");
+    }
+    const std::string stripped = StripHexPrefix(v.get_str());
+    if (stripped.empty()) return {};
+    if (stripped.size() % 2 != 0 || !IsHex(stripped)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, name + " is not valid hex data");
+    }
+    return ParseHex(stripped);
+}
+
+// Bundle of fields parsed out of the eth_call object.
+struct EthCallObject
+{
+    uint160 from;              // defaults to all-zero
+    uint160 to;                // required
+    uint64_t gas{30'000'000};  // generous default matching our block gas cap
+    uint64_t value{0};         // in weis
+    std::vector<uint8_t> data;
+};
+
+EthCallObject ParseEthCallObject(const UniValue& obj)
+{
+    if (!obj.isObject()) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER,
+                          "call object must be a JSON object");
+    }
+    EthCallObject out;
+    const UniValue& toV = obj["to"];
+    if (toV.isNull()) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "'to' is required for eth_call");
+    }
+    out.to = ParseEthAddress(toV, "to");
+
+    const UniValue& fromV = obj["from"];
+    if (!fromV.isNull()) {
+        out.from = ParseEthAddress(fromV, "from");
+    }
+    out.gas = obj["gas"].isNull()
+        ? out.gas
+        : ParseEthQuantity(obj["gas"], "gas");
+    if (out.gas == 0) out.gas = 30'000'000; // sentinel: 0 means "use default"
+    out.value = ParseEthQuantity(obj["value"], "value");
+    out.data = ParseEthDataField(obj["data"], "data");
+    return out;
+}
+
+// Run a single read-only EVM call and return both the apply-layer
+// result and the raw evmone status/output. We avoid going through
+// the Phase 2.4 process layer (which mutates sender nonce / balance);
+// eth_call is a "what would this return" probe and must not bump
+// nonces or charge gas.
+struct EthCallExecResult
+{
+    evmc_status_code statusCode;
+    int64_t gasUsed;
+    std::vector<uint8_t> output;
+};
+
+EthCallExecResult ExecuteEthCall(const EthCallObject& call)
+{
+    EthCallExecResult out{EVMC_FAILURE, 0, {}};
+    if (!pevmstatedb) {
+        // No EVM state DB: treat as empty world.
+        return out;
+    }
+
+    evm::CEvmStateCache cache(*pevmstatedb);
+    evm::ExecutionContext ctx;
+    ctx.chainId = ActiveEvmChainId();
+    {
+        LOCK(cs_main);
+        const int height = ::ChainActive().Height();
+        ctx.blockHeight = static_cast<uint64_t>(std::max(0, height));
+        if (::ChainActive().Tip() != nullptr) {
+            ctx.blockTimestamp = ::ChainActive().Tip()->GetBlockTime();
+        }
+    }
+    ctx.blockGasLimit = 30'000'000;
+    // baseFee defaults to zero; matches Phase 2.4e ConnectBlock state
+    // until FUP-1/FUP-2 land the header-field dynamics.
+
+    // Load the recipient's deployed code (if any).
+    std::vector<uint8_t> code;
+    {
+        evm::CEvmAccount recipientAccount;
+        if (cache.GetAccount(call.to, recipientAccount) &&
+            recipientAccount.codeHash != evm::CEvmAccount::EmptyCodeHash())
+        {
+            cache.GetCode(recipientAccount.codeHash, code);
+        }
+    }
+
+    evm::CEvmHost host(cache, ctx);
+
+    evmc_message msg{};
+    msg.kind = EVMC_CALL;
+    msg.flags = 0;
+    msg.depth = 0;
+    msg.gas = static_cast<int64_t>(call.gas);
+    std::memcpy(msg.recipient.bytes, call.to.begin(), 20);
+    std::memcpy(msg.sender.bytes, call.from.begin(), 20);
+    msg.code_address = msg.recipient;
+    // Encode value into the low 8 bytes of the BE 256-bit field.
+    for (int i = 0; i < 8; ++i) {
+        msg.value.bytes[24 + i] = static_cast<uint8_t>(call.value >> (56 - 8 * i));
+    }
+    msg.input_data = call.data.empty() ? nullptr : call.data.data();
+    msg.input_size = call.data.size();
+
+    evmc::VM vm{evmc_create_evmone()};
+    evmc::Result r = vm.execute(host, EVMC_CANCUN, msg,
+                               code.empty() ? nullptr : code.data(),
+                               code.size());
+
+    out.statusCode = r.status_code;
+    out.gasUsed = static_cast<int64_t>(call.gas) - r.gas_left;
+    if (r.output_size > 0 && r.output_data != nullptr) {
+        out.output.assign(r.output_data, r.output_data + r.output_size);
+    }
+    return out;
+}
+
+} // anonymous namespace (Phase 3.2 helpers)
+
+UniValue eth_call(const JSONRPCRequest& request)
+{
+    RPCHelpMan{"eth_call",
+        "\nExecute a read-only EVM call against the current chain state and\n"
+        "return the contract's RETURN bytes. State changes are discarded.\n",
+        {
+            {"callObject", RPCArg::Type::OBJ, RPCArg::Optional::NO,
+             "The call to execute (Ethereum JSON-RPC call object).",
+             {
+                 {"from", RPCArg::Type::STR, /* default */ "\"0x0...0\"",
+                  "Sender address (0x-prefixed 20 bytes). Defaults to zero."},
+                 {"to", RPCArg::Type::STR, RPCArg::Optional::NO,
+                  "Recipient contract address (required)."},
+                 {"gas", RPCArg::Type::STR, /* default */ "\"0x1c9c380\"",
+                  "Gas limit as a 0x-prefixed hex quantity. Defaults to 30M."},
+                 {"gasPrice", RPCArg::Type::STR, /* default */ "\"0x0\"",
+                  "Ignored for read-only calls; accepted for client compatibility."},
+                 {"value", RPCArg::Type::STR, /* default */ "\"0x0\"",
+                  "Value forwarded (in weis) as a 0x-prefixed quantity."},
+                 {"data", RPCArg::Type::STR, /* default */ "\"0x\"",
+                  "Calldata as a 0x-prefixed hex byte string."},
+             }},
+            {"block", RPCArg::Type::STR, /* default */ "\"latest\"",
+             "Block tag. Only 'latest'/'pending' are supported in this build."},
+        },
+        RPCResult{RPCResult::Type::STR_HEX, "output",
+                  "RETURN bytes from the call as 0x-prefixed hex. '0x' on empty."},
+        RPCExamples{
+            HelpExampleCli("eth_call",
+                "'{\"to\":\"0x000000000000000000000000000000000000000a\",\"data\":\"0x\"}' \"latest\"")
+            + HelpExampleRpc("eth_call",
+                "{\"to\":\"0x000000000000000000000000000000000000000a\",\"data\":\"0x\"}, \"latest\"")
+        },
+    }.Check(request);
+
+    const EthCallObject call = ParseEthCallObject(request.params[0]);
+    RequireLatestBlockTag(request.params[1], "block");
+
+    const EthCallExecResult r = ExecuteEthCall(call);
+    if (r.statusCode == EVMC_REVERT) {
+        // Ethereum surfaces REVERT via a JSON-RPC error with the
+        // revert bytes attached. Wallets parse those bytes into
+        // "Error(string)" messages. For now we expose the revert
+        // bytes in a structured error to keep the surface small.
+        throw JSONRPCError(RPC_TRANSACTION_REJECTED,
+                          "execution reverted; revert data: " + ToEthData(r.output));
+    }
+    if (r.statusCode != EVMC_SUCCESS) {
+        throw JSONRPCError(RPC_TRANSACTION_REJECTED,
+                          strprintf("evm execution failed: status %d", static_cast<int>(r.statusCode)));
+    }
+    return ToEthData(r.output);
+}
+
+UniValue eth_estimateGas(const JSONRPCRequest& request)
+{
+    RPCHelpMan{"eth_estimateGas",
+        "\nReturn the gas a single read-only execution of the given call would\n"
+        "consume. Useful for clients sizing the gasLimit of a real transaction.\n"
+        "\nA single-attempt estimate today; binary-search refinement to find the\n"
+        "minimum-gas-that-succeeds is a follow-up (FUP-6 functional-test trail).\n",
+        {
+            {"callObject", RPCArg::Type::OBJ, RPCArg::Optional::NO,
+             "Same shape as eth_call's callObject.",
+             {
+                 {"from", RPCArg::Type::STR, /* default */ "\"0x0...0\"", "Sender address."},
+                 {"to", RPCArg::Type::STR, RPCArg::Optional::NO, "Recipient contract address."},
+                 {"gas", RPCArg::Type::STR, /* default */ "\"0x1c9c380\"", "Gas limit hex."},
+                 {"gasPrice", RPCArg::Type::STR, /* default */ "\"0x0\"", "Accepted for client compatibility."},
+                 {"value", RPCArg::Type::STR, /* default */ "\"0x0\"", "Value forwarded (weis hex)."},
+                 {"data", RPCArg::Type::STR, /* default */ "\"0x\"", "Calldata hex."},
+             }},
+            {"block", RPCArg::Type::STR, /* default */ "\"latest\"",
+             "Block tag. Only 'latest'/'pending' are supported in this build."},
+        },
+        RPCResult{RPCResult::Type::STR, "gas",
+                  "Gas consumed by the call (0x-prefixed quantity)."},
+        RPCExamples{
+            HelpExampleCli("eth_estimateGas",
+                "'{\"to\":\"0x000000000000000000000000000000000000000a\",\"data\":\"0x\"}' \"latest\"")
+            + HelpExampleRpc("eth_estimateGas",
+                "{\"to\":\"0x000000000000000000000000000000000000000a\",\"data\":\"0x\"}, \"latest\"")
+        },
+    }.Check(request);
+
+    const EthCallObject call = ParseEthCallObject(request.params[0]);
+    RequireLatestBlockTag(request.params[1], "block");
+
+    const EthCallExecResult r = ExecuteEthCall(call);
+    if (r.statusCode != EVMC_SUCCESS) {
+        // The call failed under the supplied gas (which defaults to
+        // 30M — generous enough that real OOG is the actual cause).
+        // Surface that as a JSON-RPC error so clients don't silently
+        // pick a too-low value.
+        throw JSONRPCError(RPC_TRANSACTION_REJECTED,
+                          strprintf("gas estimation failed: evm status %d",
+                                    static_cast<int>(r.statusCode)));
+    }
+    return ToEthQuantity(static_cast<uint64_t>(r.gasUsed));
+}
+
 // clang-format off
 const CRPCCommand commands[] =
 { //  category   name                       actor (function)            argNames
@@ -449,6 +741,8 @@ const CRPCCommand commands[] =
     { "ethereum", "eth_getTransactionCount", &eth_getTransactionCount,   {"address", "block"} },
     { "ethereum", "eth_getCode",             &eth_getCode,               {"address", "block"} },
     { "ethereum", "eth_getStorageAt",        &eth_getStorageAt,          {"address", "slot", "block"} },
+    { "ethereum", "eth_call",                &eth_call,                  {"callObject", "block"} },
+    { "ethereum", "eth_estimateGas",         &eth_estimateGas,           {"callObject", "block"} },
 };
 // clang-format on
 
