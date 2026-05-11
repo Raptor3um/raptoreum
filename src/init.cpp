@@ -82,6 +82,7 @@
 #include <walletinitinterface.h>
 #include <assets/assets.h>
 #include <assets/assetsdb.h>
+#include <evm/state_db.h>
 
 #include <evo/deterministicmns.h>
 #include <llmq/quorums.h>
@@ -324,6 +325,7 @@ void PrepareShutdown(NodeContext &node) {
         pblocktree.reset();
         passetsdb.reset();
         passetsCache.reset();
+        pevmstatedb.reset();
         llmq::DestroyLLMQSystem();
         deterministicMNManager.reset();
         evoDb.reset();
@@ -2191,6 +2193,12 @@ bool AppInitMain(const util::Ref &context, NodeContext &node, interfaces::BlockA
                     strLoadError = _("Failed to load Assets Database");
                     break;
                 }
+
+                // Phase 2.4e — open the EVM state database. Lives at
+                // <datadir>/evmstate/. Stays in step with passetsdb's
+                // open/reset cycle: a chain reset wipes both.
+                pevmstatedb.reset();
+                pevmstatedb.reset(new evm::CEvmStateDB(nBlockTreeDBCache, false, fReset));
 
                 llmq::DestroyLLMQSystem();
                 // Same logic as above with pblocktree

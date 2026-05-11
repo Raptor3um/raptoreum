@@ -18,6 +18,10 @@
 #include <consensus/tx_verify.h>
 #include <consensus/validation.h>
 #include <cuckoocache.h>
+#include <evm/connectblock.h>
+#include <evm/host.h>
+#include <evm/state_cache.h>
+#include <evm/state_db.h>
 #include <flatfile.h>
 #include <hash.h>
 #include <index/txindex.h>
@@ -185,6 +189,7 @@ CBlockIndex *FindForkInGlobalIndex(const CChain &chain, const CBlockLocator &loc
 std::unique_ptr <CBlockTreeDB> pblocktree;
 std::unique_ptr <CAssetsDB> passetsdb;
 std::unique_ptr <CAssetsCache> passetsCache;
+std::unique_ptr<evm::CEvmStateDB> pevmstatedb;
 
 // See definition for documentation
 static void FindFilesToPruneManual(ChainstateManager &chainman, std::set<int> &setFilesToPrune, int nManualPruneHeight);
@@ -1633,8 +1638,16 @@ int ApplyTxInUndo(Coin &&undo, CCoinsViewCache &view, const COutPoint &out) {
 /** Undo the effects of this block (with given index) on the UTXO set represented by coins.
  *  When FAILED is returned, view is left in an indeterminate state. */
 DisconnectResult CChainState::DisconnectBlock(const CBlock &block, const CBlockIndex *pindex, CCoinsViewCache &view,
-                                              CAssetsCache *assetsCache) {
+                                              CAssetsCache *assetsCache,
+                                              evm::CEvmStateCache *evmStateCache) {
     AssertLockHeld(cs_main);
+    // Phase 2.4e: the evmStateCache parameter is accepted but reverting
+    // EVM state on disconnect requires the journal/undo records added
+    // by Phase 2.6. Until then the caller is expected to handle reorgs
+    // by re-running from a known-good state rather than rolling back
+    // dirty entries in-place. Mark the parameter used so the compiler
+    // does not warn:
+    (void)evmStateCache;
 
     bool fDIP0003Active = Params().GetConsensus().DIP0003Enabled;
 
@@ -2074,7 +2087,7 @@ void getFutureMaturity(const CTransaction &tx, int &lockOutputIndex, CFutureTx &
  *  can fail if those validity checks fail (among other reasons). */
 bool CChainState::ConnectBlock(const CBlock &block, CValidationState &state, CBlockIndex *pindex,
                                CCoinsViewCache &view, const CChainParams &chainparams, CAssetsCache *assetsCache,
-                               bool fJustCheck) {
+                               bool fJustCheck, evm::CEvmStateCache *evmStateCache) {
     std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
     //boost::posix_time::ptime start = boost::posix_time::microsec_clock::local_time();
 
@@ -2494,6 +2507,44 @@ bool CChainState::ConnectBlock(const CBlock &block, CValidationState &state, CBl
     LogPrint(BCLog::BENCHMARK, "    - Verify %u txins: %.2fms (%.3fms/txin) [%.2fs (%.2fms/blk)]\n", nInputs - 1,
              MILLI * (nTime4 - nTime2), nInputs <= 1 ? 0 : MILLI * (nTime4 - nTime2) / (nInputs - 1),
              nTimeVerify * MICRO, nTimeVerify * MILLI / nBlocksTotal);
+
+    // ------------------------------------------------------------------
+    // Phase 2.4e — EVM transaction execution.
+    //
+    // Once EVM is active, every TRANSACTION_EVM_DEPLOY / CALL / SPEND
+    // in the block is processed through the EIP-1559 ProcessEvm*Tx
+    // pipeline. The aggregated coinbaseTip / burned fees are surfaced
+    // for the caller (currently ignored at the consensus level —
+    // coinbase output verification arrives alongside the header field
+    // changes per D2 in a future hard-fork commit).
+    //
+    // A null evmStateCache or an inactive EVM gate skips this step
+    // entirely; the legacy validation flow continues unchanged.
+    // ------------------------------------------------------------------
+    if (evmStateCache != nullptr && Updates().IsEvmActive(pindex->pprev)) {
+        evm::ExecutionContext evmCtx;
+        evmCtx.chainId = 7373; // TODO: parameterize via chainparams once the
+                               //       EVM chain-id is added to Consensus::Params
+        evmCtx.blockHeight = static_cast<uint64_t>(pindex->nHeight);
+        evmCtx.blockTimestamp = block.GetBlockTime();
+        evmCtx.blockGasLimit = 30'000'000; // hard cap until header field lands
+        // baseFee 0 in Phase 2.4e: real EIP-1559 dynamics activate alongside
+        // the header field change. With baseFee=0, effective_gas_price ==
+        // priority fee and the burn portion is zero — fee accounting still
+        // works, just nothing is removed from circulation yet.
+        // coinbase + prevBlockHash left zero; opcodes that read them get
+        // zeros under Phase 2.4e, which is harmless for the typical contract.
+
+        const auto evmResult = evm::ProcessEvmTransactionsInBlock(
+            block, pindex, *evmStateCache, evmCtx);
+        if (!evmResult.ok) {
+            return state.DoS(100,
+                error("%s: EVM transaction processing failed at index %d for block %s",
+                      __func__, evmResult.failedTxIndex,
+                      pindex->GetBlockHash().ToString()),
+                REJECT_INVALID, "bad-evm-tx");
+        }
+    }
 
 
     // RAPTOREUM
@@ -3041,7 +3092,16 @@ bool CChainState::ConnectTip(CValidationState &state, const CChainParams &chainp
 
         CCoinsViewCache view(&CoinsTip());
         CAssetsCache assetCache;
-        bool rv = ConnectBlock(blockConnecting, state, pindexNew, view, chainparams, &assetCache);
+        // Phase 2.4e: build a block-local EVM state cache layered over
+        // the persistent pevmstatedb. Only when the DB is initialised
+        // (it is once AppInitMain runs); falls back to nullptr in
+        // edge cases like unit-test contexts where the DB isn't set up.
+        std::unique_ptr<evm::CEvmStateCache> evmCachePtr;
+        if (pevmstatedb) {
+            evmCachePtr.reset(new evm::CEvmStateCache(*pevmstatedb));
+        }
+        bool rv = ConnectBlock(blockConnecting, state, pindexNew, view, chainparams, &assetCache,
+                               /*fJustCheck=*/ false, evmCachePtr.get());
         GetMainSignals().BlockChecked(blockConnecting, state);
         if (!rv) {
             if (state.IsInvalid())
@@ -3057,6 +3117,10 @@ bool CChainState::ConnectTip(CValidationState &state, const CChainParams &chainp
         assert(flushed);
         bool assetsFlushed = assetCache.Flush();
         assert(assetsFlushed);
+        if (evmCachePtr) {
+            const bool evmFlushed = evmCachePtr->Flush();
+            assert(evmFlushed);
+        }
         dbTx->Commit();
     }
     int64_t nTime4 = GetTimeMicros();
