@@ -175,6 +175,7 @@ BITCOIN_CORE_H = \
   evm/account.h \
   evm/apply.h \
   evm/balance.h \
+  evm/connectblock.h \
   evm/evmtx.h \
   evm/hashing.h \
   evm/host.h \
@@ -386,6 +387,7 @@ libraptoreum_server_a_SOURCES = \
   evm/account.cpp \
   evm/apply.cpp \
   evm/balance.cpp \
+  evm/connectblock.cpp \
   evm/evmtx.cpp \
   evm/hashing.cpp \
   evm/host.cpp \
