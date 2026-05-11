@@ -98,6 +98,13 @@ enum {
 
     // Enable the opcodes listed in DIP0020 (OP_CAT, OP_AND, OP_OR, OP_XOR, OP_DIV, OP_MOD, OP_SPLIT, OP_BIN2NUM, OP_NUM2BIN, OP_CHECKDATASIG, OP_CHECKDATASIGVERIFY).
     SCRIPT_ENABLE_DIP0020_OPCODES = (1U << 15),
+
+    // Enable the EVM marker opcodes (OP_EVMCREATE, OP_EVMCALL, OP_EVMSPEND).
+    // These accompany TRANSACTION_EVM_DEPLOY/CALL/SPEND respectively and do not
+    // perform stack manipulation themselves — the EVM execution lives at the
+    // transaction-type level. Without this flag set, the opcodes are rejected
+    // as BAD_OPCODE. Activation is gated by UPDATE_EVM (Phase 2).
+    SCRIPT_ENABLE_EVM_OPCODES = (1U << 16),
 };
 
 bool CheckSignatureEncoding(const std::vector<unsigned char> &vchSig, unsigned int flags, ScriptError *serror);

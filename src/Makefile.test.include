@@ -61,6 +61,7 @@ BITCOIN_TESTS =\
   test/dip0020opcodes_tests.cpp \
   test/descriptor_tests.cpp \
   test/evm_smoke_tests.cpp \
+  test/evm_evmtx_tests.cpp \
   test/evo_deterministicmns_tests.cpp \
   test/evo_simplifiedmns_tests.cpp \
   test/flatfile_tests.cpp \
