@@ -92,6 +92,37 @@ checkSpecialTxFee(const CTransaction &tx, CAmount &nFeeTotal, CAmount &specialTx
                 }
                 break;
             }
+            // EVM transactions (Phase 1.4+ scaffolding).
+            //
+            // Activation gate: until UPDATE_EVM is registered with a
+            // heightActivated in chainparams.cpp, IsEvmActive() returns false
+            // and these cases reject. After activation, the cases fall through
+            // (return true) — Phase 2 will replace the body with full EIP-1559
+            // fee accounting (gasLimit * maxFeePerGas) once the EVM execution
+            // pipeline lands.
+            //
+            // Why a defense-in-depth check here even though CheckSpecialTx also
+            // gates on IsEvmActive: tx_verify runs in multiple contexts
+            // (mempool, block validation, RPC). Ensuring the activation gate
+            // is checked at every entry point means a future refactor that
+            // bypasses CheckSpecialTx still cannot accept an EVM tx pre-fork.
+            case TRANSACTION_EVM_DEPLOY:
+            case TRANSACTION_EVM_CALL:
+            case TRANSACTION_EVM_SPEND:
+            case TRANSACTION_NEW_EVM_ASSET:    // reserved, Phase 4
+            case TRANSACTION_UPDATE_EVM_ASSET: // reserved, Phase 4
+            case TRANSACTION_MINT_EVM_ASSET:   // reserved, Phase 4
+            case TRANSACTION_WRAP_ASSET:       // reserved, Phase 5+
+            case TRANSACTION_UNWRAP_ASSET: {   // reserved, Phase 5+
+                if (!Updates().IsEvmActive(::ChainActive().Tip())) {
+                    return false;
+                }
+                // Phase 2 TODO: parse the payload, compute EIP-1559 fee:
+                //     specialTxFee = payload.gasLimit * payload.maxFeePerGas
+                //   then debit nFeeTotal accordingly. For now the activation
+                //   gate above is the only block.
+                break;
+            }
                 break;
         }
     }

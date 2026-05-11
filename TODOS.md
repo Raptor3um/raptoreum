@@ -65,11 +65,25 @@ All deliverables completed and validated 2026-05-11.
 ## Phase 1.0 — Build hygiene fixes (cleanup of Phase 0 workarounds)
 
 - ✅ **Issue 1** — Add top-level `.gitattributes` enforcing LF on build-critical files. Commit `28ed1c0c2`.
-- ☐ **Issue 2** — Two options to fix Hunter+HTTPS:
-  - (A) `depends/packages/cmake.mk`: `-DCMAKE_USE_OPENSSL=ON`, add openssl as dep.
-  - (B) Vendor `evmc`, `intx`, `ethash` as separate `depends/packages/{evmc,intx,ethash}.mk`; patch evmone to disable Hunter. **Recommended** (offline reproducibility, Guix compat).
-- ☐ **Issue 3** — Add `#ifdef ENABLE_WALLET` guards in `src/assets/assets.cpp`, `src/rpc/rpcassets.cpp`, etc. Fix `#ifdef USE_NATPMP` → `#if USE_NATPMP` in `src/mapport.cpp` (or `configure.ac` to `#undef` on disable).
+- ⚠️ **Issue 2 (partial)** — Helper script `contrib/devtools/build-evmone.sh` automates the manual install workaround (Phase 1.5c). The "proper" depends/ integration (vendor `evmc`/`intx`/`ethash` as separate packages, patch evmone to disable Hunter) is **deferred to Phase 2** alongside Guix manifest updates. Rationale: the helper script is sufficient for developer onboarding; vendored packages are a precondition for reproducible-builds (audit gate) not for execution correctness.
+- 🔒 **Issue 3 — DEFERRED** to Phase 2 cleanup. Rationale below.
 - ✅ **Issue 4** — Fixed `NATPMP_LIBS` substitution + inverted conditional + typo in `configure.ac`. Commit `158621864`.
+
+### Issue 3 deferral rationale (DOCUMENTED 2026-05-11)
+
+**What:** Add `#ifdef ENABLE_WALLET` guards in `src/assets/assets.cpp`, `src/rpc/rpcassets.cpp`, `src/rpc/governance.cpp`, `src/rpc/rawtransaction.cpp`, `src/rpc/coinjoin.cpp`, `src/rpc/rpcevo.cpp`, `src/rpc/smartnode.cpp` so that `./configure --disable-wallet` produces a buildable binary. Also fix `#ifdef USE_NATPMP` → `#if USE_NATPMP` in `src/mapport.cpp`.
+
+**Why deferred:**
+
+- **Scope**: 45+ wallet-type uses in `rpc/rpcassets.cpp` alone; multiple files; ~150+ guard insertions total when counted across the affected files.
+- **Regression risk**: every guard touches consensus-adjacent code paths (asset RPCs are user-facing and used by exchanges/explorers). A bad guard placement silently breaks RPC functionality on wallet-enabled builds, which is the configuration **everyone** uses today.
+- **Pre-existing**: Issue 3 was NOT introduced by the EVM integration work. The unconditional wallet includes pre-date this branch by years. The branch only surfaced the issue because Phase 0 tried `--disable-wallet` to minimize build time.
+- **Workaround is trivial and free**: always build with `--enable-wallet --with-incompatible-bdb`. System BDB satisfies the requirement; build time impact is small.
+- **Bitcoin Core did this gradually**: upstream Bitcoin Core spent ~3 years splitting wallet from node cleanly (the libbitcoin-node / libbitcoin-wallet refactor). Replicating that effort inside this PR would balloon the diff to thousands of lines and delay shipping.
+
+**When to fix:** Phase 2 (parallel work with the EVM execution layer) or as a separate maintenance PR by a wallet-area maintainer. Bundle with the libwallet split if/when Raptoreum decides to do one.
+
+**Compensating control for Phase 1:** Issue 3 is documented in `docs/evm/PHASE-0-HANDOFF.md` § "Issue 3" with the exact configure flags required for a working build. CI should pin `--enable-wallet` until the fix lands.
 
 ---
 
@@ -106,13 +120,23 @@ Commit `92c3498dd`.
 
 ---
 
-## Phase 1.4 — Activation gating (NEXT — pending core team consensus on activation height)
+## Phase 1.4 — Activation gating (DONE)
 
-- ☐ Add `EUpdate::EVM` enum entry to `src/update/update.h`.
-- ☐ Add UPDATE_EVM activation params to `src/chainparams.cpp` per network (mainnet/testnet/regtest/devnet). Hard-fork model, NOT BIP9 (per D2).
-- ☐ Replace `evm::IsEvmActive()` stub in `src/evm/evmtx.cpp` with `Updates().IsActive(EUpdate::EVM, pindexPrev)`.
-- ☐ Wire `SCRIPT_ENABLE_EVM_OPCODES` into `STANDARD_SCRIPT_VERIFY_FLAGS` after activation height.
-- ☐ Functional test `test/functional/feature_evm_activation.py` — regtest activation gating.
+Commit `7251cc56c`.
+
+- ✅ Added `EUpdate::EVM = 3` to `src/update/update.h` + `UpdateManager::IsEvmActive()` wrapper.
+- ✅ Replaced hardcoded `IsEvmActive() { return false; }` in `src/evm/evmtx.cpp` with `Updates().IsEvmActive(pindexPrev)`.
+- ✅ Reserved tx types 14-18 in `src/primitives/transaction.h` per revised D4.
+- ✅ Added `reserved_evm_asset_tx_types` test (pins values 14-18 against silent renumbering).
+- ☐ **Registering** `Update(EUpdate::EVM, ..., heightActivated=X)` in `src/chainparams.cpp` per network — DEFERRED to Phase 6+ (consensus commitment, requires core team agreement on activation heights).
+- ☐ Wire `SCRIPT_ENABLE_EVM_OPCODES` into `STANDARD_SCRIPT_VERIFY_FLAGS` post-activation — Phase 2 (alongside execution logic).
+
+## Phase 1.5 — Validation surface completion (DONE)
+
+- ✅ **1.5a** — Fee handling cases in `src/consensus/tx_verify.cpp` for tx types 11-18 (defense-in-depth activation gate at the fee-verify layer; full EIP-1559 fee accounting deferred to Phase 2).
+- ✅ **1.5b** — Functional test `test/functional/feature_evm_activation.py` validating Phase 0 RPC + pre-activation tx rejection (Python EVM payload wrappers in `test_framework/messages.py` deferred to Phase 1.5 follow-up).
+- ✅ **1.5c** — `contrib/devtools/build-evmone.sh` automates the manual evmone install. One command replaces the ~6-step manual procedure documented in `docs/evm/PHASE-0-HANDOFF.md` § "Validated procedure".
+- 🔒 **1.5d** — Issue 3 deferred with rationale (see Phase 1.0 section above).
 
 ---
 
