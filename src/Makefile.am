@@ -174,6 +174,7 @@ BITCOIN_CORE_H = \
   cxxtimer.hpp \
   evm/account.h \
   evm/evmtx.h \
+  evm/host.h \
   evm/smoke.h \
   evm/state_cache.h \
   evm/state_db.h \
@@ -380,6 +381,7 @@ libraptoreum_server_a_SOURCES = \
   dsnotificationinterface.cpp \
   evm/account.cpp \
   evm/evmtx.cpp \
+  evm/host.cpp \
   evm/smoke.cpp \
   evm/state_cache.cpp \
   evm/state_db.cpp \

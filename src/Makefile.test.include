@@ -63,6 +63,7 @@ BITCOIN_TESTS =\
   test/evm_smoke_tests.cpp \
   test/evm_evmtx_tests.cpp \
   test/evm_state_tests.cpp \
+  test/evm_host_tests.cpp \
   test/evo_deterministicmns_tests.cpp \
   test/evo_simplifiedmns_tests.cpp \
   test/flatfile_tests.cpp \
