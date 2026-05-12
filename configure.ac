@@ -1568,14 +1568,14 @@ fi
 
 dnl Enable NAT-PMP support
 AC_MSG_CHECKING([whether to build with support for NAT-PMP])
-if test "$have_natpmp" = "yes"; then
+if test "$have_natpmp" = "no"; then
   if test "$use_natpmp" = "yes"; then
     AC_MSG_ERROR([NAT-PMP requested but can not be built. Use --without-natpmp])
   fi
   AC_MSG_RESULT([no])
   use_natpmp=no
 else
-  if test "$use_natpmp" != "no"l; then
+  if test "$use_natpmp" != "no"; then
     AC_MSG_RESULT([yes])
     AC_MSG_CHECKING([whether to build with NAT-PMP enabled by default])
     use_natpmp=yes
@@ -1585,7 +1585,7 @@ else
       natpmp_setting=1
     fi
     AC_MSG_RESULT([$use_natpmp_default])
-    AC_DEFINE_UNQUOTED([USE_NATPMP], [$natpmp_setting], [NAT-PMP support not compiled if undefined, otherwise value (0 or 1) determine default state])
+    AC_DEFINE_UNQUOTED([USE_NATPMP], [$natpmp_setting], [NAT-PMP support not compiled if undefined, otherwise value (0 or 1) determines default state])
     if test "$TARGET_OS" = "windows"; then
       NATPMP_CPPFLAGS="$NATPMP_CPPFLAGS -DSTATICLIB -DNATPMP_STATICLIB"
     fi
