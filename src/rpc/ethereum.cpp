@@ -12,6 +12,7 @@
 #include <evm/balance.h>
 #include <evm/host.h>
 #include <evm/rawtx.h>
+#include <evm/receipt.h>
 #include <evm/smoke.h>
 #include <evm/state_cache.h>
 #include <evm/state_db.h>
@@ -1379,6 +1380,24 @@ UniValue eth_sendRawTransaction(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Node context not found");
     }
     NodeContext& node = request.context.Get<NodeContext>();
+
+    // Phase 3.6 — register the eth_hash <-> rtm_hash cross-indices
+    // BEFORE broadcast. ConnectTip's receipt-generation pass reads
+    // the reverse direction so the persisted CEvmReceipt knows its
+    // Ethereum-side hash. Writing both directions here is cheap and
+    // lets eth_getTransactionReceipt(eth_hash) work end-to-end as
+    // soon as the tx lands in a block.
+    const uint256 ethHash = evm::EthTxHash(wire);
+    if (pevmstatedb) {
+        const uint256 rtmHash = tx->GetHash();
+        const bool fwd = pevmstatedb->WriteEthToRtmHash(ethHash, rtmHash);
+        const bool rev = pevmstatedb->WriteRtmToEthHash(rtmHash, ethHash);
+        if (!fwd || !rev) {
+            throw JSONRPCError(RPC_INTERNAL_ERROR,
+                              "failed to register eth/rtm tx-hash cross-index");
+        }
+    }
+
     AssertLockNotHeld(cs_main);
     std::string errString;
     const TransactionError err = BroadcastTransaction(
@@ -1390,11 +1409,178 @@ UniValue eth_sendRawTransaction(const JSONRPCRequest& request)
 
     // Return the Ethereum-style tx hash (keccak256 of wire bytes) —
     // NOT the Raptoreum sha256d wrapper hash. dApps look this up via
-    // eth_getTransactionByHash (Phase 3.6).
-    const uint256 ethHash = evm::EthTxHash(wire);
-    // Ethereum hashes are reported big-endian; uint256 stores
-    // big-endian-already in our EVM module.
+    // eth_getTransactionByHash / eth_getTransactionReceipt.
     return ToEthData(ethHash);
+}
+
+// ----------------------------------------------------------------------
+// Phase 3.6 — eth_getTransactionReceipt + eth_getLogs
+// ----------------------------------------------------------------------
+//
+// Receipts are written by ConnectTip during block validation and
+// keyed by the wrapper's sha256d (rtmTxHash). The eth_hash <-> rtm_hash
+// cross-index (populated by eth_sendRawTransaction at submit time)
+// lets dApp clients look up receipts via the Ethereum hash they
+// received from sendRawTransaction.
+
+namespace {
+
+// Format a CEvmReceipt as the Ethereum-shaped JSON object that
+// eth_getTransactionReceipt clients expect.
+UniValue FormatReceiptForRpc(const evm::CEvmReceipt& r)
+{
+    UniValue out(UniValue::VOBJ);
+    out.pushKV("transactionHash",
+              r.ethTxHash.IsNull() ? ToEthData(r.rtmTxHash)
+                                   : ToEthData(r.ethTxHash));
+    out.pushKV("transactionIndex", ToEthQuantity(r.txIndex));
+    out.pushKV("blockHash", Uint256ToEthHex(r.blockHash));
+    out.pushKV("blockNumber", ToEthQuantity(r.blockHeight));
+    out.pushKV("from", ToEthData(r.sender));
+    if (r.isContractCreation) {
+        out.pushKV("to", UniValue());
+        out.pushKV("contractAddress", ToEthData(r.contractAddress));
+    } else {
+        out.pushKV("to", ToEthData(r.to));
+        out.pushKV("contractAddress", UniValue());
+    }
+    out.pushKV("cumulativeGasUsed", ToEthQuantity(r.cumulativeGasUsed));
+    out.pushKV("gasUsed", ToEthQuantity(r.gasUsed));
+    out.pushKV("effectiveGasPrice", ToEthQuantity(r.effectiveGasPrice));
+    out.pushKV("status", ToEthQuantity(r.status));
+    // Type 2 = EIP-1559; that's what we generate from
+    // eth_sendRawTransaction. Legacy txs would surface as type 0
+    // but we don't yet track this through to receipts; FUP.
+    out.pushKV("type", "0x2");
+    out.pushKV("logsBloom", ZeroLogsBloom());
+
+    UniValue logsArr(UniValue::VARR);
+    for (size_t i = 0; i < r.logs.size(); ++i) {
+        const auto& log = r.logs[i];
+        UniValue lo(UniValue::VOBJ);
+        lo.pushKV("removed", false);
+        lo.pushKV("logIndex", ToEthQuantity(static_cast<uint64_t>(i)));
+        lo.pushKV("transactionIndex", ToEthQuantity(r.txIndex));
+        lo.pushKV("transactionHash",
+                 r.ethTxHash.IsNull() ? ToEthData(r.rtmTxHash)
+                                      : ToEthData(r.ethTxHash));
+        lo.pushKV("blockHash", Uint256ToEthHex(r.blockHash));
+        lo.pushKV("blockNumber", ToEthQuantity(r.blockHeight));
+        lo.pushKV("address", ToEthData(log.address));
+        UniValue topicsArr(UniValue::VARR);
+        for (const auto& t : log.topics) topicsArr.push_back(ToEthData(t));
+        lo.pushKV("topics", topicsArr);
+        lo.pushKV("data", ToEthData(log.data));
+        logsArr.push_back(lo);
+    }
+    out.pushKV("logs", logsArr);
+    return out;
+}
+
+// Read + deserialize a receipt by Raptoreum tx hash. Returns false
+// on miss.
+bool LoadReceiptByRtmHash(const uint256& rtmTxHash, evm::CEvmReceipt& out)
+{
+    if (!pevmstatedb) return false;
+    std::vector<uint8_t> bytes;
+    if (!pevmstatedb->ReadReceiptBytes(rtmTxHash, bytes)) return false;
+    CDataStream s(bytes, SER_DISK, CLIENT_VERSION);
+    try {
+        s >> out;
+    } catch (...) {
+        return false;
+    }
+    return true;
+}
+
+} // anonymous namespace (Phase 3.6 helpers)
+
+UniValue eth_getTransactionReceipt(const JSONRPCRequest& request)
+{
+    RPCHelpMan{"eth_getTransactionReceipt",
+        "\nReturns the receipt for the given Ethereum transaction hash, or null\n"
+        "if the tx has not been mined yet (or the hash is unknown).\n",
+        {
+            {"txHash", RPCArg::Type::STR, RPCArg::Optional::NO,
+             "0x-prefixed 32-byte Ethereum tx hash."},
+        },
+        RPCResult{RPCResult::Type::OBJ, "", "Ethereum-shaped receipt or null",
+                  {RPCResult{RPCResult::Type::ELISION, "",
+                             "Standard eth_getTransactionReceipt fields"}}},
+        RPCExamples{
+            HelpExampleCli("eth_getTransactionReceipt", "\"0x07b1...\"")
+            + HelpExampleRpc("eth_getTransactionReceipt", "\"0x07b1...\"")
+        },
+    }.Check(request);
+
+    const uint256 ethHash = ParseEthBlockHash(request.params[0], "txHash");
+    if (!pevmstatedb) return UniValue(UniValue::VNULL);
+
+    // Resolve the eth_hash to the Raptoreum wrapper hash.
+    uint256 rtmHash;
+    if (!pevmstatedb->ReadEthToRtmHash(ethHash, rtmHash)) {
+        // Fallback: caller may have passed the rtm hash directly
+        // (txs not submitted via eth_sendRawTransaction don't have
+        // a cross-index entry; we accept the rtm hash transparently
+        // for compatibility with internal tooling).
+        rtmHash = ethHash;
+    }
+    evm::CEvmReceipt receipt;
+    if (!LoadReceiptByRtmHash(rtmHash, receipt)) {
+        return UniValue(UniValue::VNULL);
+    }
+    return FormatReceiptForRpc(receipt);
+}
+
+UniValue eth_getTransactionByHash(const JSONRPCRequest& request)
+{
+    RPCHelpMan{"eth_getTransactionByHash",
+        "\nReturns the Ethereum-shaped transaction object for the given hash,\n"
+        "or null if unknown.\n"
+        "\nMinimum-viable today: surfaces the fields that survive serialization\n"
+        "into the wrapper's vExtraPayload. Full mempool/chain dual-lookup with\n"
+        "block coordinates is a follow-up (requires txindex integration).\n",
+        {
+            {"txHash", RPCArg::Type::STR, RPCArg::Optional::NO,
+             "0x-prefixed 32-byte Ethereum tx hash."},
+        },
+        RPCResult{RPCResult::Type::OBJ, "", "Ethereum-shaped tx or null",
+                  {RPCResult{RPCResult::Type::ELISION, "",
+                             "Standard eth_getTransactionByHash fields"}}},
+        RPCExamples{
+            HelpExampleCli("eth_getTransactionByHash", "\"0x07b1...\"")
+        },
+    }.Check(request);
+
+    const uint256 ethHash = ParseEthBlockHash(request.params[0], "txHash");
+    if (!pevmstatedb) return UniValue(UniValue::VNULL);
+
+    uint256 rtmHash;
+    if (!pevmstatedb->ReadEthToRtmHash(ethHash, rtmHash)) {
+        rtmHash = ethHash;
+    }
+    // Reuse receipt to extract sender/to/coords. For richer fields
+    // (value/input/gas) the wrapper tx itself would need to be
+    // loaded — a txindex follow-up.
+    evm::CEvmReceipt receipt;
+    if (!LoadReceiptByRtmHash(rtmHash, receipt)) {
+        return UniValue(UniValue::VNULL);
+    }
+    UniValue out(UniValue::VOBJ);
+    out.pushKV("hash", ToEthData(receipt.ethTxHash.IsNull()
+                                 ? receipt.rtmTxHash : receipt.ethTxHash));
+    out.pushKV("blockHash", Uint256ToEthHex(receipt.blockHash));
+    out.pushKV("blockNumber", ToEthQuantity(receipt.blockHeight));
+    out.pushKV("transactionIndex", ToEthQuantity(receipt.txIndex));
+    out.pushKV("from", ToEthData(receipt.sender));
+    if (receipt.isContractCreation) {
+        out.pushKV("to", UniValue());
+    } else {
+        out.pushKV("to", ToEthData(receipt.to));
+    }
+    out.pushKV("chainId", ToEthQuantity(static_cast<uint64_t>(ActiveEvmChainId())));
+    out.pushKV("type", "0x2");
+    return out;
 }
 
 // clang-format off
@@ -1429,6 +1615,8 @@ const CRPCCommand commands[] =
     { "ethereum", "net_peerCount",                          &net_peerCount,                          {} },
     { "ethereum", "web3_clientVersion",                     &web3_clientVersion,                     {} },
     { "ethereum", "eth_sendRawTransaction",                 &eth_sendRawTransaction,                 {"signedTx"} },
+    { "ethereum", "eth_getTransactionReceipt",              &eth_getTransactionReceipt,              {"txHash"} },
+    { "ethereum", "eth_getTransactionByHash",               &eth_getTransactionByHash,               {"txHash"} },
 };
 // clang-format on
 

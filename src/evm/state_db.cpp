@@ -17,6 +17,10 @@ static constexpr char CODE_PREFIX = 'C';
 static constexpr char STORAGE_PREFIX = 'S';
 // Phase 2.6 — per-block undo journal:
 static constexpr char BLOCKUNDO_PREFIX = 'U';
+// Phase 3.6 — per-tx receipts + Ethereum hash cross-index:
+static constexpr char RECEIPT_PREFIX = 'R';
+static constexpr char ETH_HASH_INDEX_PREFIX = 'X';     // eth -> rtm
+static constexpr char RTM_HASH_INDEX_PREFIX = 'Y';     // rtm -> eth
 
 CEvmStateDB::CEvmStateDB(size_t nCacheSize, bool fMemory, bool fWipe)
     : CDBWrapper(GetDataDir() / "evmstate", nCacheSize, fMemory, fWipe)
@@ -109,6 +113,61 @@ bool CEvmStateDB::ReadBlockUndoBytes(const uint256& blockHash,
 bool CEvmStateDB::EraseBlockUndo(const uint256& blockHash)
 {
     return Erase(std::make_pair(BLOCKUNDO_PREFIX, blockHash));
+}
+
+// ----------------------------------------------------------------------
+// Phase 3.6 — receipt + eth-hash cross-index
+// ----------------------------------------------------------------------
+
+bool CEvmStateDB::WriteReceiptBytes(const uint256& rtmTxHash,
+                                   const std::vector<uint8_t>& bytes)
+{
+    return Write(std::make_pair(RECEIPT_PREFIX, rtmTxHash), bytes);
+}
+
+bool CEvmStateDB::ReadReceiptBytes(const uint256& rtmTxHash,
+                                  std::vector<uint8_t>& outBytes) const
+{
+    return Read(std::make_pair(RECEIPT_PREFIX, rtmTxHash), outBytes);
+}
+
+bool CEvmStateDB::EraseReceipt(const uint256& rtmTxHash)
+{
+    return Erase(std::make_pair(RECEIPT_PREFIX, rtmTxHash));
+}
+
+bool CEvmStateDB::WriteEthToRtmHash(const uint256& ethTxHash,
+                                   const uint256& rtmTxHash)
+{
+    return Write(std::make_pair(ETH_HASH_INDEX_PREFIX, ethTxHash), rtmTxHash);
+}
+
+bool CEvmStateDB::ReadEthToRtmHash(const uint256& ethTxHash,
+                                  uint256& rtmTxHash) const
+{
+    return Read(std::make_pair(ETH_HASH_INDEX_PREFIX, ethTxHash), rtmTxHash);
+}
+
+bool CEvmStateDB::EraseEthToRtmHash(const uint256& ethTxHash)
+{
+    return Erase(std::make_pair(ETH_HASH_INDEX_PREFIX, ethTxHash));
+}
+
+bool CEvmStateDB::WriteRtmToEthHash(const uint256& rtmTxHash,
+                                   const uint256& ethTxHash)
+{
+    return Write(std::make_pair(RTM_HASH_INDEX_PREFIX, rtmTxHash), ethTxHash);
+}
+
+bool CEvmStateDB::ReadRtmToEthHash(const uint256& rtmTxHash,
+                                  uint256& ethTxHash) const
+{
+    return Read(std::make_pair(RTM_HASH_INDEX_PREFIX, rtmTxHash), ethTxHash);
+}
+
+bool CEvmStateDB::EraseRtmToEthHash(const uint256& rtmTxHash)
+{
+    return Erase(std::make_pair(RTM_HASH_INDEX_PREFIX, rtmTxHash));
 }
 
 } // namespace evm

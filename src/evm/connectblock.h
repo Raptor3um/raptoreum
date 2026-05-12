@@ -51,6 +51,12 @@ struct BlockProcessResult
     /** Per-EVM-tx results, in the order they appeared in block.vtx. */
     std::vector<ProcessResult> txResults;
 
+    /** Parallel to `txResults`: the index in `block.vtx` of the
+     *  CTransaction each ProcessResult came from. Phase 3.6 receipt
+     *  generation uses this to key receipts by the wrapper's
+     *  Raptoreum sha256d hash (block.vtx[blockIndex]->GetHash()). */
+    std::vector<int> txBlockIndices;
+
     /** UTXO credits collected from all SPEND txs in the block. The
      *  caller adds these as outputs alongside the coinbase. */
     std::vector<ApplyResult::UtxoCredit> utxoCredits;

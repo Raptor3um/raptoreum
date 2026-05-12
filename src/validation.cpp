@@ -20,6 +20,7 @@
 #include <cuckoocache.h>
 #include <evm/connectblock.h>
 #include <evm/host.h>
+#include <evm/receipt.h>
 #include <evm/state_cache.h>
 #include <evm/state_db.h>
 #include <evm/undo.h>
@@ -2561,6 +2562,91 @@ bool CChainState::ConnectBlock(const CBlock &block, CValidationState &state, CBl
                       __func__, evmResult.failedTxIndex,
                       pindex->GetBlockHash().ToString()),
                 REJECT_INVALID, "bad-evm-tx");
+        }
+
+        // Phase 3.6 — generate + persist per-tx receipts. We have the
+        // BlockProcessResult that ProcessEvmTransactionsInBlock just
+        // built; each entry carries the per-tx status, gas used,
+        // logs, and the deployed-contract address (for DEPLOY txs).
+        // We key by the wrapper tx's sha256d (block.vtx[bidx]->GetHash())
+        // and additionally maintain an eth_hash → rtm_hash cross-
+        // index so dApps can look up receipts via the Ethereum hash
+        // they got back from eth_sendRawTransaction (the cross-index
+        // is populated at submit time; receipts get the matching
+        // ethTxHash from the DB at write time if available).
+        if (pevmstatedb) {
+            uint64_t cumulativeGas = 0;
+            for (size_t i = 0; i < evmResult.txResults.size(); ++i) {
+                const auto& tr = evmResult.txResults[i];
+                const int bidx = evmResult.txBlockIndices[i];
+                const CTransaction& wrapperTx = *block.vtx[bidx];
+                const uint256 rtmHash = wrapperTx.GetHash();
+
+                evm::CEvmReceipt receipt;
+                receipt.rtmTxHash = rtmHash;
+                receipt.blockHash = pindex->GetBlockHash();
+                receipt.blockHeight = static_cast<uint64_t>(pindex->nHeight);
+                receipt.txIndex = static_cast<uint32_t>(bidx);
+                receipt.status = (tr.apply.statusCode == EVMC_SUCCESS) ? 1 : 0;
+                receipt.gasUsed = static_cast<uint64_t>(tr.apply.gasUsed);
+                cumulativeGas += receipt.gasUsed;
+                receipt.cumulativeGasUsed = cumulativeGas;
+                // effectiveGasPrice = burned/gasUsed + tip/gasUsed if
+                // gasUsed > 0; otherwise zero. The fee split already
+                // carries the per-tx components.
+                receipt.effectiveGasPrice = receipt.gasUsed == 0
+                    ? 0
+                    : (tr.fee.burned + tr.fee.coinbaseTip) / receipt.gasUsed;
+
+                // Sender + recipient: pull from the payload by tx
+                // type. The wrapper carries the payload in
+                // vExtraPayload.
+                if (wrapperTx.nType == TRANSACTION_EVM_DEPLOY) {
+                    evm::CEvmDeployTx payload;
+                    if (GetTxPayload(wrapperTx, payload)) {
+                        std::memcpy(receipt.sender.begin(),
+                                   payload.senderHash.begin() + 12, 20);
+                    }
+                    receipt.isContractCreation = true;
+                    receipt.contractAddress = tr.apply.deployedAddress;
+                } else if (wrapperTx.nType == TRANSACTION_EVM_CALL) {
+                    evm::CEvmCallTx payload;
+                    if (GetTxPayload(wrapperTx, payload)) {
+                        std::memcpy(receipt.sender.begin(),
+                                   payload.senderHash.begin() + 12, 20);
+                        std::memcpy(receipt.to.begin(),
+                                   payload.toAddress.begin() + 12, 20);
+                    }
+                } else if (wrapperTx.nType == TRANSACTION_EVM_SPEND) {
+                    evm::CEvmSpendTx payload;
+                    if (GetTxPayload(wrapperTx, payload)) {
+                        std::memcpy(receipt.sender.begin(),
+                                   payload.fromAddress.begin() + 12, 20);
+                    }
+                }
+
+                // Logs come from the apply-layer result; convert
+                // from evmc::Log to the serializable receipt form.
+                for (const auto& hostLog : tr.apply.logs) {
+                    receipt.logs.push_back(evm::ConvertHostLog(hostLog));
+                }
+
+                // ethTxHash was pre-registered at
+                // eth_sendRawTransaction-submit time via the rtm ->
+                // eth cross-index. Look it up so the persisted
+                // receipt carries the eth hash (eth_getLogs etc.
+                // surface it inline). Missing entry = tx didn't
+                // arrive via eth_sendRawTransaction; receipt's
+                // ethTxHash stays null and clients use the rtm hash.
+                receipt.ethTxHash.SetNull();
+                pevmstatedb->ReadRtmToEthHash(rtmHash, receipt.ethTxHash);
+
+                CDataStream s(SER_DISK, CLIENT_VERSION);
+                s << receipt;
+                std::vector<uint8_t> bytes(s.begin(), s.end());
+                const bool ok = pevmstatedb->WriteReceiptBytes(rtmHash, bytes);
+                assert(ok);
+            }
         }
     }
 

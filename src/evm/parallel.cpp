@@ -184,6 +184,7 @@ BlockProcessResult ParallelProcessEvmTransactionsInBlock(
             out.utxoCredits.push_back(credit);
         }
         out.txResults.push_back(std::move(result));
+        out.txBlockIndices.push_back(pf.blockIndex);
     }
 
     return out;

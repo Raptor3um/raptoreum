@@ -133,6 +133,7 @@ BlockProcessResult ProcessEvmTransactionsInBlock(
             out.utxoCredits.push_back(credit);
         }
         out.txResults.push_back(std::move(result));
+        out.txBlockIndices.push_back(static_cast<int>(i));
     }
 
     return out;

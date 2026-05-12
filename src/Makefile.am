@@ -182,6 +182,7 @@ BITCOIN_CORE_H = \
   evm/parallel.h \
   evm/process.h \
   evm/rawtx.h \
+  evm/receipt.h \
   evm/rlp.h \
   evm/smoke.h \
   evm/state_cache.h \
@@ -398,6 +399,7 @@ libraptoreum_server_a_SOURCES = \
   evm/parallel.cpp \
   evm/process.cpp \
   evm/rawtx.cpp \
+  evm/receipt.cpp \
   evm/rlp.cpp \
   evm/smoke.cpp \
   evm/state_cache.cpp \

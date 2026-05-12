@@ -105,6 +105,35 @@ public:
                            std::vector<uint8_t>& outBytes) const;
     /** Erase the per-block undo entry. */
     bool EraseBlockUndo(const uint256& blockHash);
+
+    // ----------------------------------------------------------------
+    // Phase 3.6 — Receipt persistence + Ethereum-hash cross-index.
+    //
+    //   'R' + rtmTxHash(32)  ->  serialized CEvmReceipt
+    //   'X' + ethTxHash(32)  ->  rtmTxHash(32)
+    //
+    // ConnectTip writes both at receipt-generation time; the cross-
+    // index lets dApps that hold the Ethereum tx hash (from
+    // eth_sendRawTransaction) look up the receipt by either key.
+    // Receipts are NOT consensus-critical until D2 lands the
+    // receiptsRoot header field (FUP-1).
+    // ----------------------------------------------------------------
+
+    bool WriteReceiptBytes(const uint256& rtmTxHash,
+                          const std::vector<uint8_t>& bytes);
+    bool ReadReceiptBytes(const uint256& rtmTxHash,
+                         std::vector<uint8_t>& outBytes) const;
+    bool EraseReceipt(const uint256& rtmTxHash);
+
+    bool WriteEthToRtmHash(const uint256& ethTxHash, const uint256& rtmTxHash);
+    bool ReadEthToRtmHash(const uint256& ethTxHash, uint256& rtmTxHash) const;
+    bool EraseEthToRtmHash(const uint256& ethTxHash);
+
+    // Reverse direction so receipt generation can populate
+    // CEvmReceipt::ethTxHash without iterating the forward index.
+    bool WriteRtmToEthHash(const uint256& rtmTxHash, const uint256& ethTxHash);
+    bool ReadRtmToEthHash(const uint256& rtmTxHash, uint256& ethTxHash) const;
+    bool EraseRtmToEthHash(const uint256& rtmTxHash);
 };
 
 } // namespace evm
