@@ -5,6 +5,7 @@
 #include <test/test_raptoreum.h>
 
 #include <evm/account.h>
+#include <evm/hashing.h>
 #include <evm/state_cache.h>
 #include <evm/state_db.h>
 
@@ -85,14 +86,24 @@ BOOST_AUTO_TEST_CASE(account_default_is_empty)
 BOOST_AUTO_TEST_CASE(account_canonical_constants)
 {
     // Canonical Keccak-256("") — pinned by the Ethereum yellow paper.
+    // Our EVM stack stores hashes in BIG-ENDIAN byte order (byte[0]=MSB)
+    // so they round-trip cleanly through evmc::bytes32 and match the
+    // output of evm::Keccak256(). uint256::ToString() displays in the
+    // Bitcoin-Core "hash convention" (byte[31] first), so the natural
+    // Ethereum hex `c5d2460186...85a470` appears as its byte-reverse
+    // here. The actual 32-byte sequence in memory is still canonical.
     BOOST_CHECK_EQUAL(
         evm::CEvmAccount::EmptyCodeHash().ToString(),
-        "c5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470");
+        "70a4855d04d8fa7b3b2782ca53b600e5c003c7dcb27d7e923c23f7860146d2c5");
+    // Cross-check: EmptyCodeHash must equal Keccak256({}), confirming
+    // the byte order is consistent across the EVM layer.
+    BOOST_CHECK(evm::CEvmAccount::EmptyCodeHash() ==
+                evm::Keccak256(std::vector<uint8_t>{}));
 
-    // Empty Merkle-Patricia-Trie root.
+    // Empty Merkle-Patricia-Trie root, same convention.
     BOOST_CHECK_EQUAL(
         evm::CEvmAccount::EmptyStorageRoot().ToString(),
-        "56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421");
+        "21b463e3b52f6201c0ad6c991be0485b6ef8c092e64583ffa655cc1b171fe856");
 }
 
 BOOST_AUTO_TEST_CASE(account_round_trip)

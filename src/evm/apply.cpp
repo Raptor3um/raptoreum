@@ -98,10 +98,20 @@ ApplyResult ApplyEvmCallTx(const CEvmCallTx& payload,
         p.bytes[19] = i;
         host.WarmAddress(p);
     }
-    // EIP-2930 explicit access list pre-warming is not yet supported
-    // — would require extending CEvmCallTx with an accessList field.
-    // Tracked as a follow-up; fixtures with non-empty access lists
-    // will mis-account access gas until then.
+    // EIP-2930 explicit access list pre-warming. The payload's
+    // off-wire `accessList` carries (address, [slots]) pairs; we
+    // mark both the address AND each listed slot warm so subsequent
+    // SLOAD/CALL etc. pay 100 gas instead of 2100 / 2600.
+    for (const auto& entry : payload.accessList) {
+        evmc::address a{};
+        std::memcpy(a.bytes, entry.address.begin(), 20);
+        host.WarmAddress(a);
+        for (const auto& slot : entry.storageKeys) {
+            evmc::bytes32 k{};
+            std::memcpy(k.bytes, slot.begin(), 32);
+            host.WarmStorage(a, k);
+        }
+    }
 
     evmc_message msg{};
     msg.kind = EVMC_CALL;
@@ -206,6 +216,16 @@ ApplyResult ApplyEvmDeployTx(const CEvmDeployTx& payload,
             evmc::address p{};
             p.bytes[19] = i;
             host.WarmAddress(p);
+        }
+        for (const auto& entry : payload.accessList) {
+            evmc::address a{};
+            std::memcpy(a.bytes, entry.address.begin(), 20);
+            host.WarmAddress(a);
+            for (const auto& slot : entry.storageKeys) {
+                evmc::bytes32 k{};
+                std::memcpy(k.bytes, slot.begin(), 32);
+                host.WarmStorage(a, k);
+            }
         }
     }
 

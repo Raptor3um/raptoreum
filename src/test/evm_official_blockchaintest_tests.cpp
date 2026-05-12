@@ -353,7 +353,11 @@ bool ComparePostState(const UniValue& expectedPost,
                                        ? evm::CEvmAccount::EmptyCodeHash()
                                        : evm::Keccak256(wantCode);
             if (exists && actual.codeHash != wantCodeHash) {
-                diff = "code mismatch at " + addrStr;
+                std::ostringstream os;
+                os << "code mismatch at " << addrStr
+                   << ": expected codeHash " << wantCodeHash.GetHex()
+                   << ", got " << actual.codeHash.GetHex();
+                diff = os.str();
                 return false;
             }
         }
@@ -529,6 +533,14 @@ FixtureResult RunOneFixture(const std::string& filePath,
         if (header["baseFeePerGas"].isStr())
             blockCtx.baseFee = ParseU256(header["baseFeePerGas"].getValStr());
         if (header["coinbase"].isStr())  blockCtx.coinbase = ParseAddress(header["coinbase"].getValStr());
+        // Post-Merge, `mixHash` carries the Beacon Chain's prevRandao
+        // value, which the EVM exposes via the PREVRANDAO opcode (the
+        // renamed DIFFICULTY). Our ExecutionContext reuses prevBlockHash
+        // for this slot (host.cpp memcpys it into tx.block_prev_randao);
+        // populate it from the JSON's mixHash field for correct behavior
+        // of fixtures that branch on PREVRANDAO.
+        if (header["mixHash"].isStr())
+            blockCtx.prevBlockHash = ParseU256(header["mixHash"].getValStr());
 
         // EIP-4788 beacon-roots system pre-call: once per block, before
         // any user transactions. Reuse the block context.
@@ -563,6 +575,7 @@ FixtureResult RunOneFixture(const std::string& filePath,
     uint64_t txNonce = 0;
     uint256 senderHash;
     uint256 toAddressU256;
+    std::vector<evm::AccessListEntry> accessList;
 
     try {
         txValue = txObj["value"].isStr() ? ParseU64(txObj["value"].getValStr()) : 0;
@@ -590,16 +603,45 @@ FixtureResult RunOneFixture(const std::string& filePath,
         if (!isCreate) {
             toAddressU256 = AddressToU256(ParseAddress(toField.getValStr()));
         }
+
+        // EIP-2930 access list (type-1 and type-2 envelopes). Parse
+        // into the off-wire payload field so ApplyEvmCallTx /
+        // ApplyEvmDeployTx can pre-warm at execution time.
+        const auto& al = txObj["accessList"];
+        if (al.isArray()) {
+            for (size_t i = 0; i < al.size(); ++i) {
+                const auto& e = al[i];
+                if (!e.isObject()) continue;
+                evm::AccessListEntry entry;
+                if (e["address"].isStr())
+                    entry.address = ParseAddress(e["address"].getValStr());
+                const auto& keys = e["storageKeys"];
+                if (keys.isArray()) {
+                    for (size_t k = 0; k < keys.size(); ++k) {
+                        if (keys[k].isStr())
+                            entry.storageKeys.push_back(ParseU256(keys[k].getValStr()));
+                    }
+                }
+                accessList.push_back(std::move(entry));
+            }
+        }
     } catch (const std::exception& e) {
         r.outcome = Outcome::FAIL;
         r.reason = std::string("tx parsing failed: ") + e.what();
         return r;
     }
 
-    // Use a per-tx context built from the per-block context.
+    // Use a per-tx context built from the per-block context. We must
+    // also set `txGasPrice` correctly because the EVM exposes it via
+    // the GASPRICE opcode — contracts may branch on it, so leaving it
+    // zero would change control flow in real fixtures. The exact
+    // value Ethereum surfaces is the *effective* gas price (post
+    // EIP-1559 reconciliation), which is computed below. Stash it
+    // here as a placeholder; we recompute and overwrite once
+    // effectiveGasPrice is known.
     evm::ExecutionContext ctx = blockCtx;
     ctx.txOrigin = U256ToAddress(senderHash);
-    ctx.txGasPrice = uint256(); // gas accounting handled below
+    ctx.txGasPrice = uint256();
 
     // Capa B simulation of Phase 2.4 fee accounting.
     // Our production `ApplyEvmTx` deliberately does not debit gas, pay
@@ -644,15 +686,32 @@ FixtureResult RunOneFixture(const std::string& filePath,
     const uint64_t priorityPerGas =
         effectiveGasPrice > baseFeeU64 ? effectiveGasPrice - baseFeeU64 : 0;
 
+    // Surface effectiveGasPrice to the EVM via GASPRICE opcode.
+    // Our uint256 is big-endian byte[0]=MSB; the low 8 bytes (24..31)
+    // carry the value.
+    {
+        uint256 gpU256;
+        for (int i = 0; i < 8; ++i) {
+            *(gpU256.begin() + 31 - i) =
+                static_cast<uint8_t>((effectiveGasPrice >> (8 * i)) & 0xFF);
+        }
+        ctx.txGasPrice = gpU256;
+    }
+
     // EIP-2 intrinsic gas:
     //   - CALL: 21000 base + 4 per zero byte of calldata + 16 per non-zero.
     //   - CREATE: 53000 base + same per-byte cost on init code + EIP-3860
     //     init-code metering of 2 gas per 32-byte word (Cancun).
+    //   - EIP-2930 access list adds 2400 per address + 1900 per slot.
     uint64_t intrinsicGas = isCreate ? 53000 : 21000;
     for (uint8_t b : txData) intrinsicGas += (b == 0) ? 4 : 16;
     if (isCreate) {
         const uint64_t words = (txData.size() + 31) / 32;
         intrinsicGas += 2 * words;
+    }
+    for (const auto& entry : accessList) {
+        intrinsicGas += 2400;
+        intrinsicGas += 1900 * entry.storageKeys.size();
     }
 
     const uint64_t txGasLimit = parsedGasLimit;
@@ -689,6 +748,7 @@ FixtureResult RunOneFixture(const std::string& filePath,
             // address, while the harness already bumped senderAcc.nonce
             // above. So we pass the *pre-bump* nonce here.
             deployTx.nonce = txNonce;
+            deployTx.accessList = accessList;
             exec = evm::ApplyEvmDeployTx(deployTx, cache, ctx);
         } else {
             evm::CEvmCallTx callTx;
@@ -701,6 +761,7 @@ FixtureResult RunOneFixture(const std::string& filePath,
             callTx.maxPriorityFeePerGas = maxPriorityFeePerGas;
             callTx.senderHash = senderHash;
             callTx.nonce = txNonce;
+            callTx.accessList = accessList;
             exec = evm::ApplyEvmCallTx(callTx, cache, ctx);
         }
     } catch (const std::exception& e) {

@@ -36,6 +36,27 @@ namespace evm {
 /** Common payload version constant for all EVM tx types. */
 static constexpr uint16_t EVM_TX_PAYLOAD_VERSION = 1;
 
+/**
+ * One entry of an EIP-2930 access list: an address plus a set of
+ * storage slots within that address that the transaction will
+ * touch. The Ethereum spec pre-warms both when the tx enters the
+ * EVM, so subsequent reads cost the warm price (100) instead of
+ * cold (2600 / 2100).
+ *
+ * For Phase 1/2 the access list is NOT wire-serialised — it sits on
+ * the in-memory payload only and is consumed by ApplyEvmCallTx /
+ * ApplyEvmDeployTx for pre-warming. When Phase 2.4 finalises the
+ * full Cancun-compatible tx envelope, this will graduate into the
+ * SERIALIZE_METHODS block (and bump EVM_TX_PAYLOAD_VERSION). Until
+ * then the field is callers' responsibility to populate; production
+ * code can leave it empty.
+ */
+struct AccessListEntry
+{
+    uint160 address;
+    std::vector<uint256> storageKeys;
+};
+
 /** Maximum EVM contract bytecode size in bytes. Matches Ethereum's EIP-170
  *  contract code size limit (24576 bytes = 24KB). */
 static constexpr size_t MAX_EVM_CONTRACT_CODE_SIZE = 24576;
@@ -72,6 +93,9 @@ struct CEvmDeployTx
 
     /** Sender's nonce at the time of deploy. */
     uint64_t nonce{0};
+
+    /** EIP-2930 access list (off-wire for now — see AccessListEntry). */
+    std::vector<AccessListEntry> accessList;
 
     SERIALIZE_METHODS(CEvmDeployTx, obj)
     {
@@ -113,6 +137,9 @@ struct CEvmCallTx
 
     uint256 senderHash;
     uint64_t nonce{0};
+
+    /** EIP-2930 access list (off-wire for now — see AccessListEntry). */
+    std::vector<AccessListEntry> accessList;
 
     SERIALIZE_METHODS(CEvmCallTx, obj)
     {
