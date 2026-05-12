@@ -20,6 +20,16 @@ bool CheckTransaction(const CTransaction &tx, CValidationState &state, int nHeig
     if (tx.nType == TRANSACTION_QUORUM_COMMITMENT) {
         allowEmptyTxInOut = true;
     }
+    // EVM-typed special transactions (Phase 1) carry their payload in
+    // vExtraPayload and have no UTXO-side inputs or outputs — gas/value
+    // accounting happens entirely against the EVM state database in
+    // ProcessEvm*Tx (Phase 2.4). Permit them to be vin/vout-empty so
+    // the existing UTXO-shape consensus rules don't reject the wrapper.
+    if (tx.nType == TRANSACTION_EVM_DEPLOY ||
+        tx.nType == TRANSACTION_EVM_CALL ||
+        tx.nType == TRANSACTION_EVM_SPEND) {
+        allowEmptyTxInOut = true;
+    }
 
     // Basic checks that don't depend on any context
     if (!allowEmptyTxInOut && tx.vin.empty())

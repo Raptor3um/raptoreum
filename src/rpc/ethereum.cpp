@@ -11,10 +11,12 @@
 #include <evm/apply.h>
 #include <evm/balance.h>
 #include <evm/host.h>
+#include <evm/rawtx.h>
 #include <evm/smoke.h>
 #include <evm/state_cache.h>
 #include <evm/state_db.h>
 #include <evo/specialtx.h>
+#include <node/transaction.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <rpc/protocol.h>
@@ -1268,6 +1270,133 @@ UniValue web3_clientVersion(const JSONRPCRequest& request)
     return std::string("Raptoreum/") + FormatFullVersion() + "/EVM";
 }
 
+// ----------------------------------------------------------------------
+// Phase 3.5 — eth_sendRawTransaction
+// ----------------------------------------------------------------------
+//
+// Accepts a wallet-signed EIP-1559 (type 0x02) or legacy EIP-155
+// transaction blob, recovers the sender, wraps it as a Raptoreum
+// special transaction (TRANSACTION_EVM_CALL or TRANSACTION_EVM_DEPLOY)
+// with the matching CEvmCallTx / CEvmDeployTx payload, and broadcasts
+// through the normal mempool path. The returned hash is the
+// keccak256 of the original wire bytes — what dApps key receipts /
+// logs by, and what eth_getTransactionByHash will look up once that
+// lands in Phase 3.6.
+//
+// Notes:
+//   - chainId is verified against the active network's EVM chain
+//     id (EIP-155 replay protection).
+//   - access lists are accepted only when empty; populating evmone's
+//     warm-slot tracking from a non-empty access list is a follow-up.
+//   - The wallet that signed the tx took responsibility for sender
+//     nonce and gas. The pre-flight check in ProcessEvmTx (Phase 2.4)
+//     will reject the tx in-block if the recovered sender's nonce
+//     doesn't match — that's the consensus-side check, separate from
+//     this RPC entry.
+
+UniValue eth_sendRawTransaction(const JSONRPCRequest& request)
+{
+    RPCHelpMan{"eth_sendRawTransaction",
+        "\nAccept a wallet-signed Ethereum transaction (EIP-1559 type-0x02 or\n"
+        "legacy EIP-155), verify its signature, wrap it as the matching\n"
+        "Raptoreum special tx (TRANSACTION_EVM_CALL or TRANSACTION_EVM_DEPLOY),\n"
+        "and broadcast through the standard mempool pipeline.\n",
+        {
+            {"signedTx", RPCArg::Type::STR_HEX, RPCArg::Optional::NO,
+             "Wallet-signed transaction wire bytes, 0x-prefixed hex."},
+        },
+        RPCResult{RPCResult::Type::STR_HEX, "txHash",
+                  "Keccak-256 of the signed wire bytes (the tx hash dApps "
+                  "see in eth_getTransactionByHash / eth_getTransactionReceipt)."},
+        RPCExamples{
+            HelpExampleCli("eth_sendRawTransaction", "\"0x02f8...\"")
+            + HelpExampleRpc("eth_sendRawTransaction", "\"0x02f8...\"")
+        },
+    }.Check(request);
+
+    if (!request.params[0].isStr()) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER,
+                          "signedTx must be 0x-prefixed hex");
+    }
+    const std::string stripped = StripHexPrefix(request.params[0].get_str());
+    if (stripped.empty() || stripped.size() % 2 != 0 || !IsHex(stripped)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER,
+                          "signedTx must be 0x-prefixed hex");
+    }
+    const std::vector<uint8_t> wire = ParseHex(stripped);
+
+    evm::DecodedRawTx decoded;
+    const uint64_t expectedChainId =
+        static_cast<uint64_t>(ActiveEvmChainId());
+    if (!evm::DecodeRawEthTx(wire, expectedChainId, decoded)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER,
+                          "failed to decode signed tx; check envelope, chain id, "
+                          "and signature");
+    }
+
+    // -- Map to Raptoreum special tx ---------------------------------
+    CMutableTransaction mtx;
+    mtx.nVersion = 3;
+    if (decoded.emptyTo) {
+        // Contract creation.
+        mtx.nType = TRANSACTION_EVM_DEPLOY;
+        evm::CEvmDeployTx payload;
+        payload.nVersion = evm::EVM_TX_PAYLOAD_VERSION;
+        payload.code = decoded.data;
+        payload.gasLimit = decoded.gasLimit;
+        payload.maxFeePerGas = decoded.maxFeePerGas;
+        payload.maxPriorityFeePerGas = decoded.maxPriorityFeePerGas;
+        // senderHash is the 20-byte EVM address widened into a
+        // uint256 (low 20 bytes carry the address).
+        payload.senderHash.SetNull();
+        std::memcpy(payload.senderHash.begin() + 12, decoded.sender.begin(), 20);
+        payload.nonce = decoded.nonce;
+        CDataStream s(SER_NETWORK, PROTOCOL_VERSION);
+        s << payload;
+        mtx.vExtraPayload.assign(s.begin(), s.end());
+    } else {
+        mtx.nType = TRANSACTION_EVM_CALL;
+        evm::CEvmCallTx payload;
+        payload.nVersion = evm::EVM_TX_PAYLOAD_VERSION;
+        payload.toAddress.SetNull();
+        std::memcpy(payload.toAddress.begin() + 12, decoded.to.begin(), 20);
+        payload.value = decoded.value;
+        payload.data = decoded.data;
+        payload.gasLimit = decoded.gasLimit;
+        payload.maxFeePerGas = decoded.maxFeePerGas;
+        payload.maxPriorityFeePerGas = decoded.maxPriorityFeePerGas;
+        payload.senderHash.SetNull();
+        std::memcpy(payload.senderHash.begin() + 12, decoded.sender.begin(), 20);
+        payload.nonce = decoded.nonce;
+        CDataStream s(SER_NETWORK, PROTOCOL_VERSION);
+        s << payload;
+        mtx.vExtraPayload.assign(s.begin(), s.end());
+    }
+
+    // -- Broadcast via the standard mempool path. --------------------
+    CTransactionRef tx = MakeTransactionRef(std::move(mtx));
+    if (!request.context.Has<NodeContext>()) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "Node context not found");
+    }
+    NodeContext& node = request.context.Get<NodeContext>();
+    AssertLockNotHeld(cs_main);
+    std::string errString;
+    const TransactionError err = BroadcastTransaction(
+        node, tx, errString, /*highfee=*/ 0,
+        /*relay=*/ true, /*wait_callback=*/ true, /*bypass_limits=*/ false);
+    if (err != TransactionError::OK) {
+        throw JSONRPCTransactionError(err, errString);
+    }
+
+    // Return the Ethereum-style tx hash (keccak256 of wire bytes) —
+    // NOT the Raptoreum sha256d wrapper hash. dApps look this up via
+    // eth_getTransactionByHash (Phase 3.6).
+    const uint256 ethHash = evm::EthTxHash(wire);
+    // Ethereum hashes are reported big-endian; uint256 stores
+    // big-endian-already in our EVM module.
+    return ToEthData(ethHash);
+}
+
 // clang-format off
 const CRPCCommand commands[] =
 { //  category   name                       actor (function)            argNames
@@ -1299,6 +1428,7 @@ const CRPCCommand commands[] =
     { "ethereum", "net_listening",                          &net_listening,                          {} },
     { "ethereum", "net_peerCount",                          &net_peerCount,                          {} },
     { "ethereum", "web3_clientVersion",                     &web3_clientVersion,                     {} },
+    { "ethereum", "eth_sendRawTransaction",                 &eth_sendRawTransaction,                 {"signedTx"} },
 };
 // clang-format on
 

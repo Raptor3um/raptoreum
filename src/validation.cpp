@@ -396,7 +396,14 @@ ContextualCheckTransaction(const CTransaction &tx, CValidationState &state, cons
                 tx.nType != TRANSACTION_FUTURE &&
                 tx.nType != TRANSACTION_NEW_ASSET &&
                 tx.nType != TRANSACTION_UPDATE_ASSET &&
-                tx.nType != TRANSACTION_MINT_ASSET) {
+                tx.nType != TRANSACTION_MINT_ASSET &&
+                // Phase 3.5: EVM-typed special txs are valid at the
+                // wrapper level. The EVM-side validation (sender
+                // recovery, gas accounting, nonce match) happens in
+                // ProcessEvm*Tx during ConnectBlock.
+                tx.nType != TRANSACTION_EVM_DEPLOY &&
+                tx.nType != TRANSACTION_EVM_CALL &&
+                tx.nType != TRANSACTION_EVM_SPEND) {
                 return state.DoS(100, false, REJECT_INVALID, "bad-txns-type");
             }
             if (tx.IsCoinBase() && tx.nType != TRANSACTION_COINBASE)
@@ -748,15 +755,25 @@ static bool AcceptToMemoryPoolWorker(const CChainParams &chainparams, CTxMemPool
             return state.DoS(0, false, REJECT_NONSTANDARD, "bad-txns-too-many-sigops", false,
                              strprintf("%d", nSigOps));
 
+        // Phase 3.5 — EVM-typed txs pay their fee on the EVM side
+        // (gasLimit * effectiveGasPrice debited from the sender's EVM
+        // balance during ConnectBlock). They legitimately carry no
+        // UTXO-side fee, so skip the mempool/relay fee gates that
+        // expect a positive nModifiedFees on the UTXO side.
+        const bool isEvmTx =
+            tx.nType == TRANSACTION_EVM_DEPLOY ||
+            tx.nType == TRANSACTION_EVM_CALL ||
+            tx.nType == TRANSACTION_EVM_SPEND;
+
         CAmount mempoolRejectFee = pool.GetMinFee(
                 gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000).GetFee(nSize);
-        if (!bypass_limits && mempoolRejectFee > 0 && nModifiedFees < mempoolRejectFee) {
+        if (!bypass_limits && !isEvmTx && mempoolRejectFee > 0 && nModifiedFees < mempoolRejectFee) {
             return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "mempool min fee not met", false,
                              strprintf("%d < %d", nModifiedFees, mempoolRejectFee));
         }
 
         // No transactions are allowed below minRelayTxFee except from disconnected blocks
-        if (!bypass_limits && nModifiedFees < ::minRelayTxFee.GetFee(nSize)) {
+        if (!bypass_limits && !isEvmTx && nModifiedFees < ::minRelayTxFee.GetFee(nSize)) {
             return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "min relay fee not met", false,
                              strprintf("%d < %d", nModifiedFees, ::minRelayTxFee.GetFee(nSize)));
         }

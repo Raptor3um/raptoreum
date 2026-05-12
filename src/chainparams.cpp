@@ -711,6 +711,20 @@ public:
         updateManager.Add(
             Update(EUpdate::ROUND_VOTING, std::string("Round Voting"), 1, 10, 100, 10, 100, 10, false,
                 VoteThreshold(95, 95, 5), VoteThreshold(0, 0, 1)));
+        // Phase 3.5 — regtest EVM activation at height 0 so functional
+        // tests and RPC smokes can exercise the full Phase 2 + Phase 3
+        // pipeline without waiting for vote signaling. The trailing
+        // heightActivated=0 sets a forced activation point that
+        // UpdateManager::State() honours unconditionally. Mainnet /
+        // testnet activation heights land alongside the D2 header
+        // fields (FUP-2.1) in a coordinated hard fork.
+        updateManager.Add(
+            Update(EUpdate::EVM, std::string("EVM (Phase 1+)"),
+                /*bit=*/ 2, /*roundSize=*/ 10, /*startHeight=*/ 0,
+                /*votingPeriod=*/ 10, /*votingMaxRounds=*/ 100,
+                /*graceRounds=*/ 10, /*forcedUpdate=*/ false,
+                VoteThreshold(95, 95, 5), VoteThreshold(0, 0, 1),
+                /*failed=*/ false, /*heightActivated=*/ 0));
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x00");
