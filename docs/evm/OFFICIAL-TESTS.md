@@ -134,12 +134,12 @@ docker exec rtm-builder bash -lc "
                                   --log_level=message"
 ```
 
-### Current coverage (as of commit d0b136a31)
+### Current coverage (as of commit c6997fa77)
 
 Running against `ethereum/tests` v14.0 `BlockchainTests/GeneralStateTests`:
 
 ```
-Cancun fixtures: 6507 pass, 13578 fail, 2294 skip
+Cancun fixtures: 9202 pass, 11136 fail, 2041 skip
 ```
 
 | Version | Commit | PASS | FAIL | SKIP |
@@ -147,10 +147,16 @@ Cancun fixtures: 6507 pass, 13578 fail, 2294 skip
 | Capa B v1 | `976d6967d` | 5820 | 7551 | 9008 |
 | Capa B v2 | `191e563a8` | 6321 | 13764 | 2294 |
 | Capa B v3 | `5f0bdb4a7` | 6476 | 13609 | 2294 |
-| Capa B v4 | `d0b136a31` | **6507** | 13578 | 2294 |
+| Capa B v4 | `d0b136a31` | 6507 | 13578 | 2294 |
+| Capa B v5 | `5da5cf2c2` | 6509 | 13829 | 2041 (MPT) |
+| Capa B v6 | `ffd91fcbf` | 8777 | 11561 | 2041 (CALL value xfer) |
+| Capa B v7 | `80e461aa1` | 8921 | 11417 | 2041 (CREATE value xfer + pre-seed) |
+| Capa B v8 | `7c52cd60d` | 9202 | 11136 | 2041 (eth precompiles 0x01-0x04) |
+| Capa B v9 | `c6997fa77` | **9202** | 11136 | 2041 (EIP-2681 + EIP-6780) |
 
-Pass count grew by ~12% over v1, all from production-pipeline
-correctness fixes that each new round of bringup caught.
+Pass count is **58% higher than v1** — every increment came from a
+real production-pipeline correctness fix uncovered by running the
+fixtures.
 
 **Skip categories** (all by design, not failures):
 
@@ -228,43 +234,83 @@ ship as part of the EVM stack):
   CREATEs, those nonce bumps survive correctly. (The hard-coded
   `finalAcc.nonce = 1` was defensive code that turned into a
   silent bug for contract-creator-of-contract patterns.)
+- **ApplyEvmCallTx now transfers `payload.value` from sender to
+  recipient** before invoking evmone. evmone exposes the value
+  via the CALLVALUE opcode but does NOT move funds itself — by
+  spec, that's the transaction harness's job. Every outer CALL
+  with value > 0 was previously leaving the recipient under-
+  funded by exactly that amount, breaking ALL value-bearing
+  transactions (huge silent class of failures).
+- **ApplyEvmDeployTx similarly transfers the new `payload.value`
+  field** from sender to the deployed contract, and pre-seeds
+  the contract record with nonce=1 before init runs. This makes
+  inner CREATEs from within the constructor work (their
+  CallCreate path requires the constructing contract's account
+  to exist).
+- **Standard Ethereum precompiles 0x01..0x04** (ECRECOVER, SHA256,
+  RIPEMD160, IDENTITY) are now dispatched by CEvmHost::call().
+  Previously these CALLs fell through to empty bytecode and
+  returned zero output, silently corrupting any contract that
+  signature-verified, hashed, or memcopied. The bn128 /
+  blake2f / KZG primitives (0x05..0x0a) are still pending — port
+  of bignum / pairing crypto is a separate follow-up.
+- **EIP-2681 nonce overflow guard**: a sender whose nonce is
+  already at 2^64-1 can no longer perform CREATE / CREATE2; the
+  attempt fails before the (overflowing) nonce bump.
+- **EIP-6780 SELFDESTRUCT semantics**: CEvmHost tracks the set of
+  addresses CREATEd in the current tx; selfdestructing only
+  deletes the account when its address is in that set
+  (`exec.selfdestructs ∩ exec.sameTxCreated`). Pre-existing
+  contracts that SELFDESTRUCT just transfer balance and remain
+  in state.
 
-### Remaining failure breakdown (as of v4)
+### Remaining failure breakdown (as of v9)
 
-13578 failures, still dominated by small gas-accounting drifts.
-The big systemic fixes that yield 10–100× passes per round (intrinsic
-gas, EIP-1559 effective price, codeHash byte order, warm-set revert)
-are landed. What's left is a long tail of small per-fixture
-differences, each requiring its own dive.
+11136 failures across the broader fixture set:
 
 | Count | Category | Notes |
 |---|---|---|
-| 12689 | balance | mostly small (10–10K wei) drifts inside specific opcode/contract patterns |
-| ~525 | storage | downstream of wrong gas → wrong control flow |
-| 291 | address | account expected to exist in post but missing |
-| 73 | nonce | CREATE-specific account.nonce timing |
-| 0 | code | resolved in v3 |
+| 10259 | balance | small per-fixture drifts; concentrated in MODEXP-using and bn128 pairings tests we can't yet run correctly |
+| ~580 | storage | downstream of wrong gas → wrong control flow |
+| 128 | nonce | CREATE/CREATE2 corner cases beyond EIP-2681 / EIP-6780 |
+| 31 | address | account expected to exist in post but missing |
+| 8 | expected | postStateHash mismatch (state slightly off; MPT computation itself is correct per unit tests) |
+
+Per-suite pass rates as of v9 (selected):
+
+| Suite | Pass | Total | Rate |
+|---|---|---|---|
+| stLogTests | 46 | 46 | 100% |
+| stCallDelegateCodesHomestead | 58 | 58 | 100% |
+| stArgsZeroOneBalance | 94 | 96 | 98% |
+| stCallCodes | 81 | 86 | 94% |
+| stReturnDataTest | 202 | 273 | 74% |
+| stStaticCall | 425 | 478 | 89% |
+| stMemoryTest | 274 | 578 | 47% |
+| stRevertTest | 138 | 271 | 51% |
+| stSStoreTest | 93 | 475 | 19% |
+| stPreCompiledContracts | 278 | 960 | 29% |
+| stZeroKnowledge | 113 | 944 | 12% |
+| stBadOpcode | 3199 | 4251 | 75% |
 
 Likely follow-ups, in ROI order:
 
-1. **`postStateHash` support.** Compute the canonical MPT root over
-   the cache and compare against `postStateHash`. Heavy work (~400
-   lines, port evmone's mpt.cpp; RLP already present) but unlocks
-   the 253 `postStateHash`-only fixtures wholesale.
-2. **Long-tail gas accounting.** stLogTests (0/46 pass), stSStoreTest
-   (59/475), stRevertTest (122/271) all show small fixed-amount
-   balance drifts per fixture. Likely one or two bugs each that
-   affect a specific opcode's metering or memory expansion math.
-3. **EIP-6780 SELFDESTRUCT semantics.** Cancun restricts SELFDESTRUCT
-   to delete the account only if it was CREATEd in the same tx;
-   otherwise just transfer balance. Our pipeline records selfdestruct
-   intent but doesn't track "same-tx-created" so deletion handling
-   may misalign in a small share of fixtures.
-4. **Pre-state setup edge cases.** Some fixtures pre-stage accounts
-   with `nonce = 0xffffffffffffffff` (u64 max) which our `ParseU64`
-   accepts but the address may end up missing from the cache for
-   reasons not yet traced — see `CREATE2_HighNonceDelegatecall_*`.
-
-The 1428 InvalidBlocks-style skips will stay skipped — those
-fixtures intentionally test malformed inputs that don't represent
-"apply a real tx" semantics.
+1. **Standard Ethereum precompiles 0x05–0x0a** (MODEXP, BN_ADD,
+   BN_MUL, BN_PAIRING, BLAKE2F, KZG_POINT_EVALUATION). The
+   stZeroKnowledge and stPreCompiledContracts suites are dominated
+   by these. Implementing them requires bignum modular exponentiation
+   (libgmp or hand-rolled), bn128 elliptic-curve arithmetic
+   (libff, libbn128, or evmone's port), Blake2f compression, and
+   KZG point evaluation (BLS12-381 + KZG). Mature C/C++
+   implementations exist; vendoring evmone's `test/state/precompiles_*`
+   is probably the cleanest unlock — would clear ~1500 fixtures.
+2. **Long-tail gas accounting** in stSStoreTest / stMemoryTest /
+   stRevertTest. Each suite shows a per-fixture small balance drift
+   pattern. Probably one or two metering bugs per suite (memory
+   expansion charge, SSTORE refund schedule edge cases, MSTORE
+   memory expansion).
+3. **InvalidBlocks-style fixtures** (1428 currently skipped). These
+   test consensus validation of malformed blocks. Implementing
+   the validation rules (header gas limit, timestamp ordering,
+   trie roots) would let us assert "block rejected, state == pre".
+   Lower ROI than precompiles.
