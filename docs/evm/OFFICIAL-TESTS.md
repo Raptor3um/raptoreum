@@ -134,17 +134,24 @@ docker exec rtm-builder bash -lc "
                                   --log_level=message"
 ```
 
-### Current coverage (as of commit 191e563a8)
+### Current coverage (as of commit 5f0bdb4a7)
 
 Running against `ethereum/tests` v14.0 `BlockchainTests/GeneralStateTests`:
 
 ```
-Cancun fixtures: 6321 pass, 13764 fail, 2294 skip
+Cancun fixtures: 6476 pass, 13609 fail, 2294 skip
 ```
 
+| Version | Commit | PASS | FAIL | SKIP |
+|---|---|---|---|---|
+| Capa B v1 | `976d6967d` | 5820 | 7551 | 9008 |
+| Capa B v2 | `191e563a8` | 6321 | 13764 | 2294 |
+| Capa B v3 | `5f0bdb4a7` | **6476** | 13609 | 2294 |
+
 Pass rate over what we actually exercise (excluding correct-by-design
-skips): roughly **30%** across CALL + CREATE + multi-tx + multi-block
-fixtures.
+skips): ~32% across CALL + CREATE + multi-tx + multi-block fixtures.
+Pass count grew by ~11% over v1 from production-pipeline improvements
+each new round caught.
 
 **Skip categories** (all by design, not failures):
 
@@ -181,8 +188,9 @@ it's `gasPrice` directly.
 
 ### What our production pipeline now does (Capa B-driven)
 
-The bringup of Capa B uncovered real spec gaps that this commit
-landed in the production pipeline:
+The bringup of Capa B uncovered and fixed real spec gaps in the
+production pipeline (these are NOT just harness concerns — they
+ship as part of the EVM stack):
 
 - `ApplyResult.gasRefund` exposes `evmc_result.gas_refund` so
   upstream fee accounting can apply the EIP-3529 cap.
@@ -191,36 +199,57 @@ landed in the production pipeline:
 - `ApplyEvmCallTx` / `ApplyEvmDeployTx` pre-warm the spec-mandated
   access set on every tx: sender, recipient, coinbase (EIP-3651
   Cancun), and the standard precompiles 0x01..0x0a.
+- `CEvmCallTx` / `CEvmDeployTx` gain an off-wire `accessList` field
+  (vector of `AccessListEntry`) consumed by Apply\* for EIP-2930
+  pre-warming. The field will graduate into the consensus wire
+  format in Phase 2.4 when the full tx envelope is finalised.
+- `CEvmAccount::EmptyCodeHash()` and `EmptyStorageRoot()` are now
+  stored in big-endian byte order (byte[0]=MSB) to match
+  `evm::Keccak256()` output. Previously these constants used
+  `uint256S()` which reverses the bytes for Bitcoin-Core hash-
+  style display — that meant `account.codeHash == EmptyCodeHash()`
+  would ALWAYS evaluate false for accounts whose codeHash was set
+  via `Keccak256()`, silently breaking the CREATE collision check
+  and any EXTCODEHASH-driven contract logic that compared against
+  `keccak256("")`. Fixed in `src/evm/account.cpp` with a
+  byte-for-byte canonical constant; `evm_state_tests/
+  account_canonical_constants` cross-asserts equality with
+  `Keccak256({})`.
 
-### Remaining failure breakdown
+### Remaining failure breakdown (as of v3)
 
-The 13764 failures fall into clear, actionable categories. Each
-failure prints the specific account/slot diff so the next
-iteration can drill down into one category at a time.
+13609 failures, dominated by gas-accounting drift in nested call
+frames. Each failure prints the specific account/slot diff so the
+next iteration can drill down.
 
-| Count | Category |
-|---|---|
-| 12669 | balance — residual gas accounting (likely culprits below) |
-| 360+ | storage — usually downstream of wrong gas → wrong control flow |
-| 291 | address — account expected to exist in post but missing |
-| 133 | code — deployed contract code differs (CREATE-specific) |
-| 81 | nonce — CREATE-specific account.nonce timing |
+| Count | Category | Notes |
+|---|---|---|
+| 12709 | balance | residual gas drift; concentrated in recursive call tests |
+| ~525 | storage | usually downstream of wrong gas → wrong control flow |
+| 291 | address | account expected to exist in post but missing |
+| 84 | nonce | CREATE-specific account.nonce timing |
+| 0 | code | resolved by v3's codeHash byte-order fix |
 
 Likely follow-ups, in order of expected ROI:
 
-1. **EIP-2930 access list pre-warming.** Requires extending
-   `CEvmCallTx` with an `accessList` field. Significant share of
-   the type-2 EIP-1559 fixtures use non-empty access lists; today
-   they pay cold (2600) for what the spec says is warm (100). Big
-   payoff and a real pipeline improvement.
-2. **Nested-call gas budget pricing.** Some `stCallCodes` / `stCall*`
-   fixtures show storage diffs at the inner call's contract, which
-   points at gas-budget propagation between frames. Likely
-   off-by-something in our CALL/STATICCALL gas forwarding.
-3. **CREATE / CREATE2 corner cases.** EIP-161 nonce initialization,
-   selfdestruct-during-init handling, init code returning code with
-   the wrong size, etc. Each affects a small share of fixtures but
-   the categories are well-defined.
-4. **`postStateHash` support** — compute the canonical MPT root
-   over the cache and compare. Heavy work (full MPT impl, RLP
-   already present); ~253 fixtures unlock.
+1. **Nested-call gas budget pricing.** The dominant balance
+   failures are in `stCallCodes` / `stCall*` recursive tests where
+   each nested frame drifts by ~hundreds of gas — accumulates
+   across the recursion. Root cause is one or more of: warm/cold
+   tracking across frame boundaries, EIP-150 63/64 gas forwarding,
+   or specific opcode pricing differences inside our `CEvmHost::
+   call()` path. This is the biggest remaining lever but also the
+   deepest debug.
+2. **CREATE / CREATE2 corner cases.** 84 nonce failures and the
+   remaining address-existence failures concentrate around
+   `CREATE_EContractCreate*InInit_*` tests — sender/inner nonce
+   bookkeeping when a contract's init code does its own CREATE.
+   Well-defined category; small share of total but tractable.
+3. **`postStateHash` support.** Compute the canonical MPT root over
+   the cache and compare against `postStateHash`. Heavy work (full
+   MPT implementation — RLP already present); unlocks the 253
+   `postStateHash`-only fixtures.
+
+The 1428 InvalidBlocks-style skips will stay skipped — those
+fixtures intentionally test malformed inputs that don't represent
+"apply a real tx" semantics.
