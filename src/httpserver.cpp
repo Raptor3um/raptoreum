@@ -325,6 +325,38 @@ static bool HTTPBindAddresses(struct evhttp *http) {
         }
     }
 
+    // Phase 3.7 — Ethereum-default RPC port (MetaMask / ethers / viem
+    // / web3.js look for 8545 unless told otherwise). Bind the same
+    // RPC dispatcher to that additional port unless explicitly
+    // disabled (-evmrpcport=0). The same handlers serve both ports,
+    // so a single binary is reachable from both Bitcoin-style tools
+    // (raptoreum-cli on -rpcport) and Ethereum-style tools (MetaMask
+    // on -evmrpcport) without any per-port routing.
+    const int64_t evmRpcPort = gArgs.GetArg("-evmrpcport", 8545);
+    if (evmRpcPort > 0 && evmRpcPort <= 65535) {
+        const uint16_t evmPort = static_cast<uint16_t>(evmRpcPort);
+        if (gArgs.IsArgSet("-evmrpcbind")) {
+            for (const std::string& strEvmBind : gArgs.GetArgs("-evmrpcbind")) {
+                int port = evmPort;
+                std::string host;
+                SplitHostPort(strEvmBind, port, host);
+                endpoints.push_back(std::make_pair(host, static_cast<uint16_t>(port)));
+            }
+        } else if (gArgs.IsArgSet("-rpcallowip") && gArgs.IsArgSet("-rpcbind")) {
+            // Mirror -rpcbind's host list onto the EVM port.
+            for (const std::string& strRPCBind : gArgs.GetArgs("-rpcbind")) {
+                int port = evmPort;
+                std::string host;
+                SplitHostPort(strRPCBind, port, host);
+                endpoints.push_back(std::make_pair(host, evmPort));
+            }
+        } else {
+            // Default loopback bindings on the EVM port.
+            endpoints.push_back(std::make_pair("::1", evmPort));
+            endpoints.push_back(std::make_pair("127.0.0.1", evmPort));
+        }
+    }
+
     // Bind addresses
     for (std::vector < std::pair < std::string, uint16_t > > ::iterator i = endpoints.begin(); i != endpoints.end();
     ++i) {

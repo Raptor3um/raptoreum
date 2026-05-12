@@ -944,6 +944,17 @@ void SetupServerArgs() {
                  strprintf("Listen for JSON-RPC connections on <port> (default: %u, testnet: %u, regtest: %u)",
                            defaultBaseParams->RPCPort(), testnetBaseParams->RPCPort(), regtestBaseParams->RPCPort()),
                  ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::RPC);
+    gArgs.AddArg("-evmrpcport=<port>",
+                 "Open an additional JSON-RPC listener on <port>, serving the same "
+                 "RPC namespace as -rpcport. Defaults to 8545 (MetaMask / ethers / "
+                 "viem / web3.js Ethereum-default port) so wallets can connect to "
+                 "this node without custom-port configuration. Set to 0 to disable.",
+                 ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
+    gArgs.AddArg("-evmrpcbind=<addr>[:port]",
+                 "Additional bind address for the EVM-port JSON-RPC listener. "
+                 "Same semantics as -rpcbind but applies to -evmrpcport. "
+                 "Defaults to the same addresses as -rpcbind.",
+                 ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
     gArgs.AddArg("-rpcservertimeout=<n>",
                  strprintf("Timeout during HTTP requests (default: %d)", DEFAULT_HTTP_SERVER_TIMEOUT),
                  ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::RPC);
