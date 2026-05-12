@@ -205,6 +205,8 @@ static const CRPCConvertParam vRPCConvertParams[] =
                 { "eth_getBlockByNumber", 1, "fullTx" },
                 { "eth_getBlockByHash", 1, "fullTx" },
                 { "eth_getLogs", 0, "filter" },
+                { "evm_signTransaction", 1, "callObject" },
+                { "evm_sendTransaction", 1, "callObject" },
         };
 
 class CRPCConvertTable {

@@ -14,7 +14,10 @@
 #include <evm/precompiles.h>
 #include <evm/rawtx.h>
 #include <evm/receipt.h>
+#include <evm/signing.h>
 #include <evm/smoke.h>
+#include <key.h>
+#include <key_io.h>
 #include <evm/state_cache.h>
 #include <evm/state_db.h>
 #include <evo/specialtx.h>
@@ -1828,6 +1831,221 @@ UniValue eth_getLogs(const JSONRPCRequest& request)
     return results;
 }
 
+// ----------------------------------------------------------------------
+// Phase 5 — server-side EIP-1559 signing primitives.
+// ----------------------------------------------------------------------
+//
+// Three RPC methods that let CLI / scripts / the future wallet UI
+// sign EIP-1559 transactions from a Raptoreum node:
+//
+//   evm_keyToAddress(privKey)
+//     -> 0x-prefixed 20-byte EVM address
+//
+//   evm_signTransaction(privKey, callObject)
+//     -> 0x-prefixed signed wire bytes (consume via eth_sendRawTransaction)
+//
+//   evm_sendTransaction(privKey, callObject)
+//     -> sign + submit in one call. Returns the Ethereum tx hash
+//        (keccak256 of wire bytes).
+//
+// The `privKey` argument is a 32-byte hex private key (with or
+// without 0x prefix). Wallet-keystore HD integration arrives later
+// (Q-A2 to the core team on derivation path; currently the user
+// sources the key themselves).
+//
+// callObject mirrors what eth_call accepts:
+//   { from?, to, gas, gasPrice?, maxFeePerGas?, maxPriorityFeePerGas?,
+//     value, data, nonce, chainId? }
+
+namespace {
+
+// Parse a 0x-prefixed (or bare) 32-byte hex into CKey. Returns
+// false on any deviation from the canonical form. CKey will refuse
+// invalid scalar values (zero, >= curve order).
+bool ParseEthPrivateKey(const UniValue& v, CKey& outKey)
+{
+    if (!v.isStr()) return false;
+    const std::string stripped = StripHexPrefix(v.get_str());
+    if (stripped.size() != 64 || !IsHex(stripped)) return false;
+    const std::vector<unsigned char> raw = ParseHex(stripped);
+    outKey.Set(raw.begin(), raw.end(), /*fCompressed=*/ false);
+    return outKey.IsValid();
+}
+
+// Decode the JSON call object into Eip1559TxFields. Throws
+// JSONRPCError on malformed input.
+evm::Eip1559TxFields ParseEvmSignFields(const UniValue& obj)
+{
+    if (!obj.isObject()) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER,
+                          "callObject must be a JSON object");
+    }
+    evm::Eip1559TxFields out;
+    out.chainId = obj["chainId"].isNull()
+        ? static_cast<uint64_t>(ActiveEvmChainId())
+        : ParseEthQuantity(obj["chainId"], "chainId");
+    if (obj["nonce"].isNull()) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "nonce is required");
+    }
+    out.nonce = ParseEthQuantity(obj["nonce"], "nonce");
+    out.maxFeePerGas = obj["maxFeePerGas"].isNull()
+        ? ParseEthQuantity(obj["gasPrice"], "gasPrice")
+        : ParseEthQuantity(obj["maxFeePerGas"], "maxFeePerGas");
+    out.maxPriorityFeePerGas = obj["maxPriorityFeePerGas"].isNull()
+        ? out.maxFeePerGas
+        : ParseEthQuantity(obj["maxPriorityFeePerGas"], "maxPriorityFeePerGas");
+    if (obj["gas"].isNull()) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "gas is required");
+    }
+    out.gasLimit = ParseEthQuantity(obj["gas"], "gas");
+    if (obj["to"].isNull() || (obj["to"].isStr() && obj["to"].get_str().empty())) {
+        out.emptyTo = true;
+    } else {
+        out.emptyTo = false;
+        out.to = ParseEthAddress(obj["to"], "to");
+    }
+    out.value = ParseEthQuantity(obj["value"], "value");
+    out.data = ParseEthDataField(obj["data"], "data");
+    return out;
+}
+
+} // anonymous namespace (Phase 5 helpers)
+
+UniValue evm_keyToAddress(const JSONRPCRequest& request)
+{
+    RPCHelpMan{"evm_keyToAddress",
+        "\nDerive the EVM-style 20-byte address from a secp256k1 private key.\n"
+        "Address = keccak256(uncompressed_pubkey[1..])[12..].\n",
+        {
+            {"privKey", RPCArg::Type::STR_HEX, RPCArg::Optional::NO,
+             "32-byte private key, 0x-prefixed hex."},
+        },
+        RPCResult{RPCResult::Type::STR_HEX, "address",
+                  "0x-prefixed 20-byte EVM address"},
+        RPCExamples{
+            HelpExampleCli("evm_keyToAddress", "\"0x46464646464646464646464646464646\"")
+        },
+    }.Check(request);
+
+    CKey key;
+    if (!ParseEthPrivateKey(request.params[0], key)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER,
+                          "privKey must be a 32-byte 0x-prefixed hex string");
+    }
+    const uint160 addr = evm::EvmAddressForKey(key);
+    return ToEthData(addr);
+}
+
+UniValue evm_signTransaction(const JSONRPCRequest& request)
+{
+    RPCHelpMan{"evm_signTransaction",
+        "\nSign an EIP-1559 transaction with the supplied private key and\n"
+        "return the wire bytes. Pipe the result into eth_sendRawTransaction.\n",
+        {
+            {"privKey", RPCArg::Type::STR_HEX, RPCArg::Optional::NO,
+             "32-byte private key, 0x-prefixed hex."},
+            {"callObject", RPCArg::Type::OBJ, RPCArg::Optional::NO,
+             "EIP-1559 transaction fields.",
+             {
+                 {"chainId", RPCArg::Type::STR,
+                  /*default*/ "\"active EVM chainId\"", "Chain id (EIP-155)."},
+                 {"nonce", RPCArg::Type::STR, RPCArg::Optional::NO, "Sender nonce."},
+                 {"maxFeePerGas", RPCArg::Type::STR, /*default*/ "\"0x0\"",
+                  "Maximum gas price."},
+                 {"maxPriorityFeePerGas", RPCArg::Type::STR,
+                  /*default*/ "\"maxFeePerGas\"", "Priority tip."},
+                 {"gas", RPCArg::Type::STR, RPCArg::Optional::NO, "Gas limit."},
+                 {"to", RPCArg::Type::STR, /*default*/ "\"\"",
+                  "Recipient or empty for contract creation."},
+                 {"value", RPCArg::Type::STR, /*default*/ "\"0x0\"",
+                  "Value in weis."},
+                 {"data", RPCArg::Type::STR, /*default*/ "\"0x\"",
+                  "Calldata / init bytecode."},
+             }},
+        },
+        RPCResult{RPCResult::Type::STR_HEX, "signedTx",
+                  "0x-prefixed signed wire bytes"},
+        RPCExamples{
+            HelpExampleCli("evm_signTransaction",
+                "\"0x4646...\" '{\"nonce\":\"0x0\",\"gas\":\"0x5208\","
+                "\"maxFeePerGas\":\"0x64\",\"to\":\"0x3535...\"}'")
+        },
+    }.Check(request);
+
+    CKey key;
+    if (!ParseEthPrivateKey(request.params[0], key)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER,
+                          "privKey must be a 32-byte 0x-prefixed hex string");
+    }
+    const evm::Eip1559TxFields fields = ParseEvmSignFields(request.params[1]);
+    const std::vector<uint8_t> wire = evm::SignEip1559Tx(key, fields);
+    if (wire.empty()) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "EIP-1559 signing failed");
+    }
+    return std::string("0x") + HexStr(wire);
+}
+
+UniValue evm_sendTransaction(const JSONRPCRequest& request)
+{
+    RPCHelpMan{"evm_sendTransaction",
+        "\nSign an EIP-1559 transaction with the supplied private key AND\n"
+        "submit it through the standard mempool. Returns the Ethereum tx\n"
+        "hash (keccak256 of the wire bytes) the same way\n"
+        "eth_sendRawTransaction does — so eth_getTransactionReceipt(<hash>)\n"
+        "looks it up later.\n",
+        {
+            {"privKey", RPCArg::Type::STR_HEX, RPCArg::Optional::NO,
+             "32-byte private key, 0x-prefixed hex."},
+            {"callObject", RPCArg::Type::OBJ, RPCArg::Optional::NO,
+             "EIP-1559 transaction fields; same shape as evm_signTransaction.",
+             {
+                 {"nonce", RPCArg::Type::STR, RPCArg::Optional::NO, "Sender nonce."},
+                 {"gas", RPCArg::Type::STR, RPCArg::Optional::NO, "Gas limit."},
+                 {"to", RPCArg::Type::STR, /*default*/ "\"\"", "Recipient or empty."},
+                 {"value", RPCArg::Type::STR, /*default*/ "\"0x0\"", "Value (weis)."},
+                 {"data", RPCArg::Type::STR, /*default*/ "\"0x\"", "Calldata."},
+                 {"maxFeePerGas", RPCArg::Type::STR, /*default*/ "\"0x0\"", "Max fee."},
+                 {"maxPriorityFeePerGas", RPCArg::Type::STR,
+                  /*default*/ "\"maxFeePerGas\"", "Priority tip."},
+                 {"chainId", RPCArg::Type::STR,
+                  /*default*/ "\"active EVM chainId\"", "Chain id."},
+             }},
+        },
+        RPCResult{RPCResult::Type::STR_HEX, "txHash",
+                  "Ethereum tx hash (keccak256 of signed wire bytes)"},
+        RPCExamples{
+            HelpExampleCli("evm_sendTransaction",
+                "\"0x4646...\" '{\"nonce\":\"0x0\",\"gas\":\"0x5208\","
+                "\"to\":\"0x3535...\"}'")
+        },
+    }.Check(request);
+
+    // Build the call params for eth_sendRawTransaction by signing
+    // here and forwarding the wire bytes. We re-use the existing
+    // handler so consensus carve-outs, cross-index registration,
+    // and mempool broadcast all share one code path.
+    CKey key;
+    if (!ParseEthPrivateKey(request.params[0], key)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER,
+                          "privKey must be a 32-byte 0x-prefixed hex string");
+    }
+    const evm::Eip1559TxFields fields = ParseEvmSignFields(request.params[1]);
+    const std::vector<uint8_t> wire = evm::SignEip1559Tx(key, fields);
+    if (wire.empty()) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "EIP-1559 signing failed");
+    }
+
+    // Re-dispatch through eth_sendRawTransaction's RPC handler by
+    // constructing a synthetic JSONRPCRequest. Cleaner than calling
+    // it directly (which would split the validation in two places).
+    JSONRPCRequest inner(request.context);
+    inner.strMethod = "eth_sendRawTransaction";
+    UniValue params(UniValue::VARR);
+    params.push_back(std::string("0x") + HexStr(wire));
+    inner.params = params;
+    return eth_sendRawTransaction(inner);
+}
+
 // clang-format off
 const CRPCCommand commands[] =
 { //  category   name                       actor (function)            argNames
@@ -1863,6 +2081,11 @@ const CRPCCommand commands[] =
     { "ethereum", "eth_getTransactionReceipt",              &eth_getTransactionReceipt,              {"txHash"} },
     { "ethereum", "eth_getTransactionByHash",               &eth_getTransactionByHash,               {"txHash"} },
     { "ethereum", "eth_getLogs",                            &eth_getLogs,                            {"filter"} },
+
+    // Phase 5 — server-side EIP-1559 signing primitives.
+    { "evm",      "evm_keyToAddress",                       &evm_keyToAddress,                       {"privKey"} },
+    { "evm",      "evm_signTransaction",                    &evm_signTransaction,                    {"privKey", "callObject"} },
+    { "evm",      "evm_sendTransaction",                    &evm_sendTransaction,                    {"privKey", "callObject"} },
 };
 // clang-format on
 
