@@ -774,6 +774,20 @@ FixtureResult RunOneFixture(const std::string& filePath,
         return r;
     }
 
+    // EIP-6780 (Cancun): on a successful tx, accounts that BOTH
+    // SELFDESTRUCT'd AND were created in this tx must be erased.
+    // Accounts that selfdestructed but weren't created here keep
+    // their record (balance has already been transferred by the
+    // host).
+    if (exec.statusCode == EVMC_SUCCESS) {
+        for (const auto& addrEvmc : exec.selfdestructs) {
+            if (exec.sameTxCreated.count(addrEvmc) == 0) continue;
+            uint160 addr;
+            std::memcpy(addr.begin(), addrEvmc.bytes, 20);
+            cache.DeleteAccount(addr);
+        }
+    }
+
     // Apply EIP-3529 (Cancun) refund cap: refund = min(gasUsed / 5,
     // accumulated_gas_refund). The "gasUsed" used for the cap is the
     // pre-refund total (intrinsic + raw exec gas). evmone reports

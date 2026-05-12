@@ -328,6 +328,13 @@ bool CEvmHost::selfdestruct(const evmc::address& addr,
         state.SetAccount(contractAddr, contractAcc);
     }
 
+    // EIP-6780 (Cancun): only record the address for deletion if it
+    // was created within the current transaction. Otherwise the
+    // SELFDESTRUCT opcode acts as a balance transfer only; the
+    // account record itself is left intact. We still report the
+    // address via Selfdestructs() so callers can observe the event,
+    // but the caller-side erasure path must filter by
+    // SameTxCreated() to determine which ones actually delete.
     auto inserted = selfdestructed.insert(addr).second;
     return inserted;
 }
@@ -648,6 +655,12 @@ evmc::Result CEvmHost::CallCreate(const evmc_message& msg) noexcept
 
         state.Commit(snap);
         std::memcpy(r.create_address.bytes, newAddr.begin(), 20);
+
+        // EIP-6780: the new contract address is eligible for
+        // SELFDESTRUCT-driven deletion within this transaction.
+        evmc::address evmcAddr{};
+        std::memcpy(evmcAddr.bytes, newAddr.begin(), 20);
+        sameTxCreated.insert(evmcAddr);
     } else {
         state.Revert(snap);
         warmAddresses = std::move(warmAddrsSnap);

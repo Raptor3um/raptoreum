@@ -199,6 +199,19 @@ public:
      *  the EVM frame returns. Phase 2.3 will track beneficiaries too. */
     const std::set<evmc::address>& Selfdestructs() const { return selfdestructed; }
 
+    /** Addresses that were CREATEd / CREATE2'd in the current outer
+     *  transaction. Per EIP-6780 (Cancun), SELFDESTRUCT only deletes
+     *  the contract account if the SELFDESTRUCT happens in the same
+     *  transaction as the contract's creation; otherwise the opcode
+     *  merely transfers balance. The set is populated by CallCreate
+     *  (for nested CREATEs) and by ApplyEvmDeployTx (for outer
+     *  CREATEs that invoke the host externally). */
+    const std::set<evmc::address>& SameTxCreated() const { return sameTxCreated; }
+
+    /** Mark an address as having been created in this transaction.
+     *  Idempotent. */
+    void RecordSameTxCreated(const evmc::address& addr) { sameTxCreated.insert(addr); }
+
 private:
     CEvmStateCache& state;
     ExecutionContext context;
@@ -216,6 +229,10 @@ private:
 
     // SELFDESTRUCT bookkeeping.
     std::set<evmc::address> selfdestructed;
+
+    // EIP-6780 (Cancun): addresses created in this tx. SELFDESTRUCT
+    // only deletes the account if it's in this set.
+    std::set<evmc::address> sameTxCreated;
 
     // Captured logs (LOG0..LOG4 opcodes).
     std::vector<Log> logs;

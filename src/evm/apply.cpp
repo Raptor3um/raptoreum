@@ -188,6 +188,7 @@ ApplyResult ApplyEvmCallTx(const CEvmCallTx& payload,
     }
     out.logs = host.Logs();
     out.selfdestructs = host.Selfdestructs();
+    out.sameTxCreated = host.SameTxCreated();
 
     return out;
 }
@@ -283,6 +284,14 @@ ApplyResult ApplyEvmDeployTx(const CEvmDeployTx& payload,
     msg.input_data = nullptr;
     msg.input_size = 0;
 
+    // EIP-6780 (Cancun): the new contract is eligible for
+    // SELFDESTRUCT-driven deletion in this tx.
+    {
+        evmc::address evmcContract{};
+        std::memcpy(evmcContract.bytes, contractAddress.begin(), 20);
+        host.RecordSameTxCreated(evmcContract);
+    }
+
     // Seed the new contract's account record BEFORE the constructor
     // runs, regardless of value. The constructor may do its own
     // CREATEs whose CallCreate path reads `msg.sender`'s account
@@ -338,6 +347,7 @@ ApplyResult ApplyEvmDeployTx(const CEvmDeployTx& payload,
     }
     out.logs = host.Logs();
     out.selfdestructs = host.Selfdestructs();
+    out.sameTxCreated = host.SameTxCreated();
 
     // ----------------------------------------------------------------
     // 4. On success: install the runtime code + a fresh account

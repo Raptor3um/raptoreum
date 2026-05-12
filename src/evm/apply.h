@@ -68,6 +68,12 @@ struct ApplyResult
      *  successful execution. */
     std::set<evmc::address> selfdestructs;
 
+    /** Addresses CREATEd / CREATE2'd during this transaction. Per
+     *  EIP-6780 (Cancun), only the intersection
+     *  `selfdestructs ∩ sameTxCreated` actually deletes accounts;
+     *  everything else in `selfdestructs` is balance-transfer-only. */
+    std::set<evmc::address> sameTxCreated;
+
     /** Set by ApplyEvmDeployTx on EVMC_SUCCESS: the 20-byte address
      *  the new contract was created at. Zero-initialized for CALL
      *  and SPEND results. */
