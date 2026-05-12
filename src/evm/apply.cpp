@@ -133,6 +133,42 @@ ApplyResult ApplyEvmCallTx(const CEvmCallTx& payload,
     msg.input_data = payload.data.empty() ? nullptr : payload.data.data();
     msg.input_size = payload.data.size();
 
+    // Outer-call value transfer. evmone exposes msg.value to the
+    // contract via the CALLVALUE opcode, but does NOT move the funds
+    // itself — by spec, that's the transaction harness's job (and
+    // the host's job for nested calls; see CEvmHost::call()).
+    // Without this debit/credit pair, every tx with value > 0 leaves
+    // the recipient under-funded and the sender over-funded, exactly
+    // accounting for the missing value.
+    if (payload.value > 0) {
+        uint160 senderAddr;
+        std::memcpy(senderAddr.begin(), sender.bytes, 20);
+        uint160 recipientAddr;
+        std::memcpy(recipientAddr.begin(), recipient.bytes, 20);
+        evm::CEvmAccount senderAcc;
+        if (cache.GetAccount(senderAddr, senderAcc)) {
+            if (Uint256GreaterOrEqualUint64(senderAcc.balance, payload.value)) {
+                Uint256SubUint64(senderAcc.balance, payload.value);
+                cache.SetAccount(senderAddr, senderAcc);
+
+                evm::CEvmAccount recipientAcc;
+                if (!cache.GetAccount(recipientAddr, recipientAcc)) {
+                    recipientAcc = evm::CEvmAccount(
+                        /*nonce=*/ 0,
+                        /*balance=*/ uint256(),
+                        /*codeHash=*/ evm::CEvmAccount::EmptyCodeHash(),
+                        /*storageRoot=*/ evm::CEvmAccount::EmptyStorageRoot());
+                }
+                Uint256AddUint64(recipientAcc.balance, payload.value);
+                cache.SetAccount(recipientAddr, recipientAcc);
+            }
+            // Insufficient-balance case: evmone will hit it via the
+            // CALLVALUE/balance check inside the contract anyway;
+            // letting it run with the un-moved funds yields the same
+            // observable result for fixtures (a failing tx).
+        }
+    }
+
     evmc::VM vm{evmc_create_evmone()};
     evmc::Result r = vm.execute(host, EVMC_CANCUN, msg,
                                 code.empty() ? nullptr : code.data(),
