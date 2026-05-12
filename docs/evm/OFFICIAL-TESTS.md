@@ -134,24 +134,23 @@ docker exec rtm-builder bash -lc "
                                   --log_level=message"
 ```
 
-### Current coverage (as of commit 5f0bdb4a7)
+### Current coverage (as of commit d0b136a31)
 
 Running against `ethereum/tests` v14.0 `BlockchainTests/GeneralStateTests`:
 
 ```
-Cancun fixtures: 6476 pass, 13609 fail, 2294 skip
+Cancun fixtures: 6507 pass, 13578 fail, 2294 skip
 ```
 
 | Version | Commit | PASS | FAIL | SKIP |
 |---|---|---|---|---|
 | Capa B v1 | `976d6967d` | 5820 | 7551 | 9008 |
 | Capa B v2 | `191e563a8` | 6321 | 13764 | 2294 |
-| Capa B v3 | `5f0bdb4a7` | **6476** | 13609 | 2294 |
+| Capa B v3 | `5f0bdb4a7` | 6476 | 13609 | 2294 |
+| Capa B v4 | `d0b136a31` | **6507** | 13578 | 2294 |
 
-Pass rate over what we actually exercise (excluding correct-by-design
-skips): ~32% across CALL + CREATE + multi-tx + multi-block fixtures.
-Pass count grew by ~11% over v1 from production-pipeline improvements
-each new round caught.
+Pass count grew by ~12% over v1, all from production-pipeline
+correctness fixes that each new round of bringup caught.
 
 **Skip categories** (all by design, not failures):
 
@@ -215,40 +214,56 @@ ship as part of the EVM stack):
   byte-for-byte canonical constant; `evm_state_tests/
   account_canonical_constants` cross-asserts equality with
   `Keccak256({})`.
+- EIP-2929 warm-access tracking now participates in the call-frame
+  snapshot/revert. `CEvmHost::call()` and `CEvmHost::CallCreate()`
+  capture `warmAddresses` / `warmSlots` at frame entry and restore
+  them on any failure status. Without this, addresses/slots that
+  a REVERTed sub-frame touched stayed warm in the host, charging
+  100 gas (warm) instead of 2600 / 2100 (cold) on the next access
+  in the surviving outer frame. Observable in any recursive test
+  that has one of the inner frames REVERT and the same address
+  re-accessed afterwards.
+- Nested CREATE/CREATE2 no longer clobbers the post-init nonce
+  with `1`. If the new contract's constructor did its own
+  CREATEs, those nonce bumps survive correctly. (The hard-coded
+  `finalAcc.nonce = 1` was defensive code that turned into a
+  silent bug for contract-creator-of-contract patterns.)
 
-### Remaining failure breakdown (as of v3)
+### Remaining failure breakdown (as of v4)
 
-13609 failures, dominated by gas-accounting drift in nested call
-frames. Each failure prints the specific account/slot diff so the
-next iteration can drill down.
+13578 failures, still dominated by small gas-accounting drifts.
+The big systemic fixes that yield 10–100× passes per round (intrinsic
+gas, EIP-1559 effective price, codeHash byte order, warm-set revert)
+are landed. What's left is a long tail of small per-fixture
+differences, each requiring its own dive.
 
 | Count | Category | Notes |
 |---|---|---|
-| 12709 | balance | residual gas drift; concentrated in recursive call tests |
-| ~525 | storage | usually downstream of wrong gas → wrong control flow |
+| 12689 | balance | mostly small (10–10K wei) drifts inside specific opcode/contract patterns |
+| ~525 | storage | downstream of wrong gas → wrong control flow |
 | 291 | address | account expected to exist in post but missing |
-| 84 | nonce | CREATE-specific account.nonce timing |
-| 0 | code | resolved by v3's codeHash byte-order fix |
+| 73 | nonce | CREATE-specific account.nonce timing |
+| 0 | code | resolved in v3 |
 
-Likely follow-ups, in order of expected ROI:
+Likely follow-ups, in ROI order:
 
-1. **Nested-call gas budget pricing.** The dominant balance
-   failures are in `stCallCodes` / `stCall*` recursive tests where
-   each nested frame drifts by ~hundreds of gas — accumulates
-   across the recursion. Root cause is one or more of: warm/cold
-   tracking across frame boundaries, EIP-150 63/64 gas forwarding,
-   or specific opcode pricing differences inside our `CEvmHost::
-   call()` path. This is the biggest remaining lever but also the
-   deepest debug.
-2. **CREATE / CREATE2 corner cases.** 84 nonce failures and the
-   remaining address-existence failures concentrate around
-   `CREATE_EContractCreate*InInit_*` tests — sender/inner nonce
-   bookkeeping when a contract's init code does its own CREATE.
-   Well-defined category; small share of total but tractable.
-3. **`postStateHash` support.** Compute the canonical MPT root over
-   the cache and compare against `postStateHash`. Heavy work (full
-   MPT implementation — RLP already present); unlocks the 253
-   `postStateHash`-only fixtures.
+1. **`postStateHash` support.** Compute the canonical MPT root over
+   the cache and compare against `postStateHash`. Heavy work (~400
+   lines, port evmone's mpt.cpp; RLP already present) but unlocks
+   the 253 `postStateHash`-only fixtures wholesale.
+2. **Long-tail gas accounting.** stLogTests (0/46 pass), stSStoreTest
+   (59/475), stRevertTest (122/271) all show small fixed-amount
+   balance drifts per fixture. Likely one or two bugs each that
+   affect a specific opcode's metering or memory expansion math.
+3. **EIP-6780 SELFDESTRUCT semantics.** Cancun restricts SELFDESTRUCT
+   to delete the account only if it was CREATEd in the same tx;
+   otherwise just transfer balance. Our pipeline records selfdestruct
+   intent but doesn't track "same-tx-created" so deletion handling
+   may misalign in a small share of fixtures.
+4. **Pre-state setup edge cases.** Some fixtures pre-stage accounts
+   with `nonce = 0xffffffffffffffff` (u64 max) which our `ParseU64`
+   accepts but the address may end up missing from the cache for
+   reasons not yet traced — see `CREATE2_HighNonceDelegatecall_*`.
 
 The 1428 InvalidBlocks-style skips will stay skipped — those
 fixtures intentionally test malformed inputs that don't represent
