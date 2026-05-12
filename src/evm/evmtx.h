@@ -97,6 +97,13 @@ struct CEvmDeployTx
     /** EIP-2930 access list (off-wire for now — see AccessListEntry). */
     std::vector<AccessListEntry> accessList;
 
+    /** Amount of RTM weis to fund the new contract with. Off-wire for
+     *  Phase 2 (CEvmDeployTx serialisation predates this field); the
+     *  ApplyEvmDeployTx path transfers it sender->new-contract before
+     *  the constructor runs. Will graduate into SERIALIZE_METHODS in
+     *  Phase 2.4. */
+    uint64_t value{0};
+
     SERIALIZE_METHODS(CEvmDeployTx, obj)
     {
         READWRITE(obj.nVersion);

@@ -275,14 +275,55 @@ ApplyResult ApplyEvmDeployTx(const CEvmDeployTx& payload,
     msg.code_address = msg.recipient;
     {
         evmc::uint256be v{};
-        // payload uses no value-on-create field for now (Phase 2.3b).
-        // The CEvmDeployTx struct does not have a `value` field; the
-        // contract is born with zero balance and the sender's balance
-        // debit (Phase 2.4) covers gas only.
+        for (int i = 0; i < 8; ++i) {
+            v.bytes[24 + i] = static_cast<uint8_t>(payload.value >> (56 - 8 * i));
+        }
         msg.value = v;
     }
     msg.input_data = nullptr;
     msg.input_size = 0;
+
+    // Seed the new contract's account record BEFORE the constructor
+    // runs, regardless of value. The constructor may do its own
+    // CREATEs whose CallCreate path reads `msg.sender`'s account
+    // (= this new contract); leaving the account missing causes
+    // those inner CREATEs to fail with EVMC_FAILURE even though
+    // they should succeed. Per EIP-161 a new contract is born with
+    // nonce=1 so it can immediately CREATE further contracts at a
+    // deterministic address.
+    {
+        evm::CEvmAccount newAcc;
+        if (!cache.GetAccount(contractAddress, newAcc)) {
+            newAcc = evm::CEvmAccount(
+                /*nonce=*/ 1,
+                /*balance=*/ uint256(),
+                /*codeHash=*/ evm::CEvmAccount::EmptyCodeHash(),
+                /*storageRoot=*/ evm::CEvmAccount::EmptyStorageRoot());
+            cache.SetAccount(contractAddress, newAcc);
+        } else if (newAcc.nonce == 0) {
+            newAcc.nonce = 1;
+            cache.SetAccount(contractAddress, newAcc);
+        }
+    }
+
+    // Outer-CREATE value transfer (same rationale as CALL):
+    // evmone exposes msg.value via CALLVALUE inside the constructor
+    // but doesn't move the funds. We debit sender, credit the
+    // new-contract address.
+    if (payload.value > 0) {
+        evm::CEvmAccount senderAcc;
+        if (cache.GetAccount(sender, senderAcc) &&
+            Uint256GreaterOrEqualUint64(senderAcc.balance, payload.value))
+        {
+            Uint256SubUint64(senderAcc.balance, payload.value);
+            cache.SetAccount(sender, senderAcc);
+
+            evm::CEvmAccount newAcc;
+            cache.GetAccount(contractAddress, newAcc); // we just seeded it above
+            Uint256AddUint64(newAcc.balance, payload.value);
+            cache.SetAccount(contractAddress, newAcc);
+        }
+    }
 
     evmc::VM vm{evmc_create_evmone()};
     evmc::Result r = vm.execute(host, EVMC_CANCUN, msg,
@@ -310,16 +351,30 @@ ApplyResult ApplyEvmDeployTx(const CEvmDeployTx& payload,
 
         cache.SetCode(codeHash, runtimeCode);
 
-        // The deployed account is born with nonce=1 per EIP-161 (after
-        // Spurious Dragon) and with the codeHash pointing at the
-        // runtime code we just stored. Balance starts at zero — the
-        // caller (Phase 2.4) credits the constructor's CALLVALUE if
-        // any when sender-side accounting lands.
-        evm::CEvmAccount account(
-            /*nonce=*/ 1,
-            /*balance=*/ uint256(),
-            /*codeHash=*/ codeHash,
-            /*storageRoot=*/ evm::CEvmAccount::EmptyStorageRoot());
+        // Reload the contract's account so we PRESERVE any balance the
+        // value transfer (above) credited, plus any storage the
+        // constructor SSTORE'd. The deployed account is born with
+        // nonce=1 per EIP-161 (after Spurious Dragon). We do NOT
+        // reset balance to zero — that would erase the
+        // constructor-time CALLVALUE.
+        evm::CEvmAccount account;
+        if (!cache.GetAccount(contractAddress, account)) {
+            account = evm::CEvmAccount(
+                /*nonce=*/ 1,
+                /*balance=*/ uint256(),
+                /*codeHash=*/ codeHash,
+                /*storageRoot=*/ evm::CEvmAccount::EmptyStorageRoot());
+        } else {
+            // EIP-161: new contracts are born with nonce=1. The
+            // constructor may have bumped further by doing its own
+            // CREATEs — keep whatever the cache already shows, just
+            // ensure it's at least 1.
+            if (account.nonce < 1) account.nonce = 1;
+            account.codeHash = codeHash;
+            // storageRoot stays as-is so the constructor's SSTORE
+            // entries (already in cache.mStorageDirty) remain
+            // attached to this address.
+        }
         cache.SetAccount(contractAddress, account);
     }
 

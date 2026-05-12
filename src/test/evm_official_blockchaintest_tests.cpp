@@ -752,6 +752,7 @@ FixtureResult RunOneFixture(const std::string& filePath,
             // above. So we pass the *pre-bump* nonce here.
             deployTx.nonce = txNonce;
             deployTx.accessList = accessList;
+            deployTx.value = txValue;
             exec = evm::ApplyEvmDeployTx(deployTx, cache, ctx);
         } else {
             evm::CEvmCallTx callTx;
