@@ -71,6 +71,7 @@ BITCOIN_TESTS =\
   test/evm_rlp_tests.cpp \
   test/evm_undo_tests.cpp \
   test/evm_hashing_tests.cpp \
+  test/evm_mpt_tests.cpp \
   test/evm_official_blockchaintest_tests.cpp \
   test/evo_deterministicmns_tests.cpp \
   test/evo_simplifiedmns_tests.cpp \

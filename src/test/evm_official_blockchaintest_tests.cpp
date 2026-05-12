@@ -9,6 +9,7 @@
 #include <evm/evmtx.h>
 #include <evm/hashing.h>
 #include <evm/host.h>
+#include <evm/mpt.h>
 #include <evm/state_cache.h>
 #include <evm/state_db.h>
 
@@ -455,13 +456,15 @@ FixtureResult RunOneFixture(const std::string& filePath,
         return r;
     }
 
-    // Some fixtures only ship a "postStateHash" (the MPT root) without
-    // an expanded "postState" — typically because the full state is too
-    // big to inline. Capa B v1 does not compute the Merkle-Patricia-
-    // Trie root, so we can't verify those; skip them.
-    if (!fixture["postState"].isObject()) {
+    // Some fixtures ship only `postStateHash` (the canonical state
+    // MPT root) without an expanded `postState`. We handle them by
+    // computing our cache's state-root hash and comparing — wired
+    // up later in this function after execution.
+    const bool hasExpandedPost = fixture["postState"].isObject();
+    const bool hasPostStateHash = fixture["postStateHash"].isStr();
+    if (!hasExpandedPost && !hasPostStateHash) {
         r.outcome = Outcome::SKIP;
-        r.reason = "fixture has postStateHash only (no expanded postState)";
+        r.reason = "fixture has neither postState nor postStateHash";
         return r;
     }
 
@@ -808,14 +811,43 @@ FixtureResult RunOneFixture(const std::string& filePath,
     }  // end per-block loop
 
     // After every block / every tx has been applied, compare the
-    // final cache state against the fixture's expected `postState`.
-    std::string diff;
-    if (!ComparePostState(fixture["postState"], cache, diff)) {
-        std::ostringstream os;
-        os << "post-state mismatch: " << diff;
-        r.outcome = Outcome::FAIL;
-        r.reason = os.str();
-        return r;
+    // final cache state against whichever post-state shape the
+    // fixture provides:
+    //   - `postState` (expanded): account-by-account / slot-by-slot
+    //     comparison (the v1 path).
+    //   - `postStateHash`: the canonical MPT root only. Compute
+    //     ours and compare.
+    if (hasExpandedPost) {
+        std::string diff;
+        if (!ComparePostState(fixture["postState"], cache, diff)) {
+            std::ostringstream os;
+            os << "post-state mismatch: " << diff;
+            r.outcome = Outcome::FAIL;
+            r.reason = os.str();
+            return r;
+        }
+    } else {
+        // postStateHash path. The fixture's hash is in natural
+        // Ethereum hex (MSB first). Our ParseU256 stores big-endian
+        // (byte[0]=MSB), matching ComputeStateRoot's output, so the
+        // raw uint256 comparison is the right primitive.
+        uint256 expectedRoot;
+        try { expectedRoot = ParseU256(fixture["postStateHash"].getValStr()); }
+        catch (const std::exception& e) {
+            r.outcome = Outcome::FAIL;
+            r.reason = std::string("bad postStateHash: ") + e.what();
+            return r;
+        }
+        auto accounts = evm::CollectAccountsForStateRoot(cache);
+        uint256 actualRoot = evm::ComputeStateRoot(accounts);
+        if (actualRoot != expectedRoot) {
+            std::ostringstream os;
+            os << "postStateHash mismatch: expected " << expectedRoot.GetHex()
+               << ", got " << actualRoot.GetHex();
+            r.outcome = Outcome::FAIL;
+            r.reason = os.str();
+            return r;
+        }
     }
 
     r.outcome = Outcome::PASS;
