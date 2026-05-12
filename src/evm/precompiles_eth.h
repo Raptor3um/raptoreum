@@ -1,0 +1,37 @@
+// Copyright (c) 2026 The Raptoreum developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+#ifndef RAPTOREUM_EVM_PRECOMPILES_ETH_H
+#define RAPTOREUM_EVM_PRECOMPILES_ETH_H
+
+#include <evmc/evmc.hpp>
+
+namespace evm {
+
+/**
+ * Dispatch a CALL/STATICCALL/CALLCODE/DELEGATECALL whose target is one
+ * of the standard Ethereum precompiles (0x01..0x0a). Returns true if
+ * the message addressed a known precompile and `result` was populated
+ * with the appropriate evmc::Result; returns false otherwise (the
+ * caller should fall back to normal bytecode execution).
+ *
+ * Implemented precompiles (Cancun-relevant subset):
+ *   0x01 ECRECOVER  — secp256k1 signature recovery -> 20-byte address
+ *   0x02 SHA256     — SHA-256 hash
+ *   0x03 RIPEMD160  — RIPEMD-160 hash
+ *   0x04 IDENTITY   — pass-through copy
+ *
+ * Not yet implemented (return EVMC_FAILURE so the caller can decide):
+ *   0x05 MODEXP, 0x06 BN_ADD, 0x07 BN_MUL, 0x08 BN_PAIRING,
+ *   0x09 BLAKE2F, 0x0a KZG_POINT_EVALUATION
+ *
+ * Gas charging follows the Cancun schedule. The caller is responsible
+ * for verifying msg.gas >= base + per_word cost before invoking the
+ * precompile; if msg.gas is insufficient we return EVMC_OUT_OF_GAS.
+ */
+bool ExecuteEthereumPrecompile(const evmc_message& msg, evmc::Result& result);
+
+} // namespace evm
+
+#endif // RAPTOREUM_EVM_PRECOMPILES_ETH_H

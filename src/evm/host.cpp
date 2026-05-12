@@ -7,6 +7,7 @@
 #include <evm/account.h>
 #include <evm/hashing.h>
 #include <evm/precompiles.h>
+#include <evm/precompiles_eth.h>
 #include <evm/state_cache.h>
 
 #include <evmone/evmone.h>
@@ -368,6 +369,19 @@ evmc::Result CEvmHost::call(const evmc_message& msg) noexcept
         }
     }
 
+    // Standard Ethereum precompiles (0x01..0x04 currently). evmone
+    // delegates all CALLs to the host, so we have to recognise these
+    // addresses here. If the precompile is unknown we fall through
+    // to normal bytecode execution (which for these addresses runs
+    // empty code — wrong per spec, but limits the mistake to the
+    // unimplemented subset 0x05..0x0a).
+    {
+        evmc::Result ethResult;
+        if (ExecuteEthereumPrecompile(msg, ethResult)) {
+            return ethResult;
+        }
+    }
+
     const int snap = state.Snapshot();
     // EIP-2929: warm-access tracking participates in the call-frame
     // snapshot. If the inner frame reverts, addresses/slots accessed
@@ -533,6 +547,20 @@ evmc::Result CEvmHost::CallCreate(const evmc_message& msg) noexcept
         newAddr = ContractAddressFromCreate2(senderAddr, salt, initCodeHash);
     }
 
+    // EIP-2681: a CREATE/CREATE2 by a sender whose nonce is already
+    // at 2^64-1 must fail without bumping (overflowing the nonce
+    // would silently restart the address space). The official tests
+    // exercise this against contracts pre-staged with nonce =
+    // 0xffffffffffffffff.
+    if (senderAcc.nonce >= static_cast<uint64_t>(-1)) {
+        state.Revert(snap);
+        warmAddresses = std::move(warmAddrsSnap);
+        warmSlots = std::move(warmSlotsSnap);
+        evmc::Result r;
+        r.status_code = EVMC_FAILURE;
+        r.gas_left = 0;
+        return r;
+    }
     // Bump sender's nonce now. EIP-161 mandates the increment even
     // on failure (in real Ethereum); a revert here would leave us
     // out of sync with that, but our outer caller is responsible for
