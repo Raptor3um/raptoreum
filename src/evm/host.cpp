@@ -6,6 +6,7 @@
 
 #include <evm/account.h>
 #include <evm/hashing.h>
+#include <evm/precompiles.h>
 #include <evm/state_cache.h>
 
 #include <evmone/evmone.h>
@@ -355,6 +356,16 @@ evmc::Result CEvmHost::call(const evmc_message& msg) noexcept
     if (msg.kind == EVMC_CREATE || msg.kind == EVMC_CREATE2) {
         // Defer to the create handler defined below.
         return CallCreate(msg);
+    }
+
+    // Phase 4 — RTM-native precompile dispatch. Recognised addresses
+    // bypass the bytecode-execution path entirely; the precompile
+    // does its own ABI decode + state lookup + ABI encode.
+    {
+        evmc::Result precompileResult;
+        if (ExecutePrecompile(*this, msg, precompileResult)) {
+            return precompileResult;
+        }
     }
 
     const int snap = state.Snapshot();

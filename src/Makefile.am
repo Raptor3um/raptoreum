@@ -180,6 +180,7 @@ BITCOIN_CORE_H = \
   evm/hashing.h \
   evm/host.h \
   evm/parallel.h \
+  evm/precompiles.h \
   evm/process.h \
   evm/rawtx.h \
   evm/receipt.h \
@@ -397,6 +398,11 @@ libraptoreum_server_a_SOURCES = \
   evm/hashing.cpp \
   evm/host.cpp \
   evm/parallel.cpp \
+  evm/precompile_asset_erc20.cpp \
+  evm/precompile_chainlocks.cpp \
+  evm/precompile_llmq_oracle.cpp \
+  evm/precompile_masternodes.cpp \
+  evm/precompiles.cpp \
   evm/process.cpp \
   evm/rawtx.cpp \
   evm/receipt.cpp \

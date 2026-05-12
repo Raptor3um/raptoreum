@@ -11,6 +11,7 @@
 #include <evm/apply.h>
 #include <evm/balance.h>
 #include <evm/host.h>
+#include <evm/precompiles.h>
 #include <evm/rawtx.h>
 #include <evm/receipt.h>
 #include <evm/smoke.h>
@@ -620,12 +621,32 @@ EthCallExecResult ExecuteEthCall(const EthCallObject& call)
     std::memcpy(msg.recipient.bytes, call.to.begin(), 20);
     std::memcpy(msg.sender.bytes, call.from.begin(), 20);
     msg.code_address = msg.recipient;
+
+    // Phase 4 — precompiles short-circuit the bytecode path. eth_call
+    // dispatches the inner frame directly to vm.execute below, which
+    // executes the recipient's deployed code. Precompiles have no
+    // deployed code (their address space is reserved), so we hand
+    // off to the precompile dispatcher here when the recipient is
+    // in the precompile range. The nested-call path inside CEvmHost
+    // already does the same check; this is the direct entry-point.
     // Encode value into the low 8 bytes of the BE 256-bit field.
     for (int i = 0; i < 8; ++i) {
         msg.value.bytes[24 + i] = static_cast<uint8_t>(call.value >> (56 - 8 * i));
     }
     msg.input_data = call.data.empty() ? nullptr : call.data.data();
     msg.input_size = call.data.size();
+
+    if (evm::IsPrecompileAddress(msg.recipient)) {
+        evmc::Result r;
+        if (evm::ExecutePrecompile(host, msg, r)) {
+            out.statusCode = r.status_code;
+            out.gasUsed = static_cast<int64_t>(call.gas) - r.gas_left;
+            if (r.output_size > 0 && r.output_data != nullptr) {
+                out.output.assign(r.output_data, r.output_data + r.output_size);
+            }
+            return out;
+        }
+    }
 
     evmc::VM vm{evmc_create_evmone()};
     evmc::Result r = vm.execute(host, EVMC_CANCUN, msg,
