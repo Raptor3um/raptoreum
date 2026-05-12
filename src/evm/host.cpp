@@ -369,6 +369,13 @@ evmc::Result CEvmHost::call(const evmc_message& msg) noexcept
     }
 
     const int snap = state.Snapshot();
+    // EIP-2929: warm-access tracking participates in the call-frame
+    // snapshot. If the inner frame reverts, addresses/slots accessed
+    // inside it must un-warm so that re-accessing them in the
+    // surviving outer frame costs cold (2600 / 2100) again. We snapshot
+    // the warm sets here and restore them in the revert branch below.
+    auto warmAddrsSnap = warmAddresses;
+    auto warmSlotsSnap = warmSlots;
 
     // --- 1. Value transfer (CALL and CALLCODE only — DELEGATECALL
     //        inherits the outer frame's value; STATICCALL disallows
@@ -458,8 +465,11 @@ evmc::Result CEvmHost::call(const evmc_message& msg) noexcept
         state.Commit(snap);
     } else {
         // EVMC_REVERT, EVMC_OUT_OF_GAS, EVMC_INVALID_INSTRUCTION,
-        // EVMC_STACK_*, EVMC_FAILURE, etc. — all roll back.
+        // EVMC_STACK_*, EVMC_FAILURE, etc. — all roll back, including
+        // the warm-access sets per EIP-2929.
         state.Revert(snap);
+        warmAddresses = std::move(warmAddrsSnap);
+        warmSlots = std::move(warmSlotsSnap);
     }
 
     return r;
@@ -494,6 +504,10 @@ evmc::Result CEvmHost::call(const evmc_message& msg) noexcept
 evmc::Result CEvmHost::CallCreate(const evmc_message& msg) noexcept
 {
     const int snap = state.Snapshot();
+    // Mirror the warm-access snapshot from `call()` — EIP-2929 requires
+    // the warm sets to roll back with state on any failure.
+    auto warmAddrsSnap = warmAddresses;
+    auto warmSlotsSnap = warmSlots;
 
     const uint160 senderAddr = ToUint160(msg.sender);
     evm::CEvmAccount senderAcc;
@@ -592,11 +606,15 @@ evmc::Result CEvmHost::CallCreate(const evmc_message& msg) noexcept
         state.SetCode(codeHash, runtime);
 
         evm::CEvmAccount finalAcc;
-        // Reload — the constructor may have written balance/storage.
+        // Reload — the constructor may have written balance/storage,
+        // and (per EIP-161) bumped the new contract's nonce if it did
+        // its own CREATEs. Reloading preserves those changes. We seed
+        // nonce=1 at line 568 before init runs, so any post-init nonce
+        // we read here is >= 1; do NOT overwrite — clobbering would
+        // lose the bumps from inner CREATEs.
         if (!state.GetAccount(newAddr, finalAcc)) {
             finalAcc = newAcc;
         }
-        finalAcc.nonce = 1;
         finalAcc.codeHash = codeHash;
         state.SetAccount(newAddr, finalAcc);
 
@@ -604,6 +622,8 @@ evmc::Result CEvmHost::CallCreate(const evmc_message& msg) noexcept
         std::memcpy(r.create_address.bytes, newAddr.begin(), 20);
     } else {
         state.Revert(snap);
+        warmAddresses = std::move(warmAddrsSnap);
+        warmSlots = std::move(warmSlotsSnap);
     }
 
     return r;
