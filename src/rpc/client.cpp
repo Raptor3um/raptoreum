@@ -204,6 +204,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
                 { "eth_estimateGas", 0, "callObject" },
                 { "eth_getBlockByNumber", 1, "fullTx" },
                 { "eth_getBlockByHash", 1, "fullTx" },
+                { "eth_getLogs", 0, "filter" },
         };
 
 class CRPCConvertTable {

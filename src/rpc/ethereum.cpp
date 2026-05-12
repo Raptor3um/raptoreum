@@ -1583,6 +1583,230 @@ UniValue eth_getTransactionByHash(const JSONRPCRequest& request)
     return out;
 }
 
+// ----------------------------------------------------------------------
+// Phase 3.6d — eth_getLogs
+// ----------------------------------------------------------------------
+//
+// Filters logs by block range + address + topic positions. Iterates
+// each block in [fromBlock, toBlock], reads it from disk, walks the
+// EVM-typed txs to load receipts, and applies the filter to each
+// log. Block ranges are capped to keep a single call bounded.
+//
+// Filter shape (per Ethereum spec):
+//   {
+//     "fromBlock": "0x..." | "latest" | "earliest",  (default: "latest")
+//     "toBlock":   "0x..." | "latest" | "earliest",  (default: "latest")
+//     "address":   "0x..." | ["0x...", ...]          (default: any)
+//     "topics":    [ topic_or_null_or_array, ... ]   (per-position OR;
+//                                                    array-of-arrays
+//                                                    means "any of")
+//   }
+
+namespace {
+
+constexpr int kMaxLogBlockSpan = 10000;
+
+// Parse the address filter. Accepts a single 0x-prefixed address or
+// an array of them. Empty input means "match any address".
+std::vector<uint160> ParseLogAddressFilter(const UniValue& v)
+{
+    std::vector<uint160> out;
+    if (v.isNull()) return out;
+    if (v.isStr()) {
+        out.push_back(ParseEthAddress(v, "address"));
+        return out;
+    }
+    if (v.isArray()) {
+        for (size_t i = 0; i < v.size(); ++i) {
+            out.push_back(ParseEthAddress(v[i], "address[]"));
+        }
+        return out;
+    }
+    throw JSONRPCError(RPC_INVALID_PARAMETER,
+                      "address must be a hex string or array of hex strings");
+}
+
+// Parse the topics filter. Each position is one of:
+//   - null  -> match anything at that position
+//   - string -> match that specific topic
+//   - array -> match any of these topics
+// Positions beyond the array are unconstrained.
+//
+// Returned vector: outer dimension = position; inner = the set of
+// 32-byte topics that match. Empty inner set means "any at this
+// position".
+std::vector<std::vector<uint256>> ParseLogTopicsFilter(const UniValue& v)
+{
+    std::vector<std::vector<uint256>> out;
+    if (v.isNull()) return out;
+    if (!v.isArray()) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "topics must be an array");
+    }
+    for (size_t i = 0; i < v.size(); ++i) {
+        std::vector<uint256> position;
+        const UniValue& slot = v[i];
+        if (slot.isNull()) {
+            // any-match at this position
+        } else if (slot.isStr()) {
+            position.push_back(ParseEthWord(slot, "topic"));
+        } else if (slot.isArray()) {
+            for (size_t j = 0; j < slot.size(); ++j) {
+                position.push_back(ParseEthWord(slot[j], "topic[]"));
+            }
+        } else {
+            throw JSONRPCError(RPC_INVALID_PARAMETER,
+                              "topic entry must be null, string, or array");
+        }
+        out.push_back(std::move(position));
+    }
+    return out;
+}
+
+bool LogAddressMatches(const evm::CEvmLog& log,
+                       const std::vector<uint160>& addressFilter)
+{
+    if (addressFilter.empty()) return true;
+    for (const auto& a : addressFilter) {
+        if (a == log.address) return true;
+    }
+    return false;
+}
+
+bool LogTopicsMatch(const evm::CEvmLog& log,
+                    const std::vector<std::vector<uint256>>& topicFilter)
+{
+    // The filter only constrains the first N positions; beyond
+    // that, anything goes.
+    for (size_t i = 0; i < topicFilter.size(); ++i) {
+        if (topicFilter[i].empty()) continue;       // any-match
+        if (i >= log.topics.size()) return false;   // log too short to match
+        bool any = false;
+        for (const auto& want : topicFilter[i]) {
+            if (want == log.topics[i]) { any = true; break; }
+        }
+        if (!any) return false;
+    }
+    return true;
+}
+
+UniValue FormatLogForRpc(const evm::CEvmLog& log,
+                         const evm::CEvmReceipt& receipt,
+                         uint64_t logIndex)
+{
+    UniValue out(UniValue::VOBJ);
+    out.pushKV("removed", false);
+    out.pushKV("logIndex", ToEthQuantity(logIndex));
+    out.pushKV("transactionIndex", ToEthQuantity(receipt.txIndex));
+    out.pushKV("transactionHash",
+              receipt.ethTxHash.IsNull() ? ToEthData(receipt.rtmTxHash)
+                                         : ToEthData(receipt.ethTxHash));
+    out.pushKV("blockHash", Uint256ToEthHex(receipt.blockHash));
+    out.pushKV("blockNumber", ToEthQuantity(receipt.blockHeight));
+    out.pushKV("address", ToEthData(log.address));
+    UniValue topicsArr(UniValue::VARR);
+    for (const auto& t : log.topics) topicsArr.push_back(ToEthData(t));
+    out.pushKV("topics", topicsArr);
+    out.pushKV("data", ToEthData(log.data));
+    return out;
+}
+
+} // anonymous namespace (Phase 3.6d helpers)
+
+UniValue eth_getLogs(const JSONRPCRequest& request)
+{
+    RPCHelpMan{"eth_getLogs",
+        "\nReturn the logs matching the given filter. Walks block range,\n"
+        "reads receipts for the EVM-typed txs in each block, and applies\n"
+        "the address + topic filters.\n",
+        {
+            {"filter", RPCArg::Type::OBJ, RPCArg::Optional::NO,
+             "Standard Ethereum getLogs filter object.",
+             {
+                 {"fromBlock", RPCArg::Type::STR, /* default */ "\"latest\"", "Range start"},
+                 {"toBlock",   RPCArg::Type::STR, /* default */ "\"latest\"", "Range end"},
+                 {"address",   RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Address or array of addresses"},
+                 {"topics",    RPCArg::Type::ARR, RPCArg::Optional::OMITTED,
+                  "Per-position topic filter; null entries match anything",
+                  {{"topic", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Topic"}}},
+             }},
+        },
+        RPCResult{RPCResult::Type::ARR, "", "Matching logs",
+                  {RPCResult{RPCResult::Type::OBJ, "", "log entry",
+                             {RPCResult{RPCResult::Type::ELISION, "",
+                                        "Standard Ethereum log fields"}}}}},
+        RPCExamples{
+            HelpExampleCli("eth_getLogs",
+                "'{\"fromBlock\":\"0x0\",\"toBlock\":\"latest\"}'")
+        },
+    }.Check(request);
+
+    const UniValue& filter = request.params[0];
+    if (!filter.isObject()) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "filter must be an object");
+    }
+
+    // Resolve block range.
+    int fromHeight = 0;
+    int toHeight = 0;
+    {
+        LOCK(cs_main);
+        CBlockIndex* fromIdx = ResolveBlockTagToIndex(filter["fromBlock"], "fromBlock");
+        CBlockIndex* toIdx = ResolveBlockTagToIndex(filter["toBlock"], "toBlock");
+        if (fromIdx == nullptr || toIdx == nullptr) {
+            return UniValue(UniValue::VARR);
+        }
+        fromHeight = fromIdx->nHeight;
+        toHeight = toIdx->nHeight;
+    }
+    if (fromHeight > toHeight) {
+        return UniValue(UniValue::VARR);
+    }
+    if (toHeight - fromHeight > kMaxLogBlockSpan) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER,
+                          strprintf("log range exceeds the maximum of %d blocks "
+                                    "(narrow fromBlock/toBlock)",
+                                    kMaxLogBlockSpan));
+    }
+
+    const std::vector<uint160> addressFilter = ParseLogAddressFilter(filter["address"]);
+    const std::vector<std::vector<uint256>> topicFilter = ParseLogTopicsFilter(filter["topics"]);
+
+    if (!pevmstatedb) return UniValue(UniValue::VARR);
+
+    UniValue results(UniValue::VARR);
+    for (int h = fromHeight; h <= toHeight; ++h) {
+        CBlockIndex* pindex = nullptr;
+        {
+            LOCK(cs_main);
+            pindex = ::ChainActive()[h];
+        }
+        if (pindex == nullptr) continue;
+
+        CBlock block;
+        if (!ReadBlockFromDisk(block, pindex, Params().GetConsensus())) {
+            continue;
+        }
+
+        for (size_t i = 0; i < block.vtx.size(); ++i) {
+            const CTransaction& tx = *block.vtx[i];
+            const int t = tx.nType;
+            if (t != TRANSACTION_EVM_DEPLOY &&
+                t != TRANSACTION_EVM_CALL &&
+                t != TRANSACTION_EVM_SPEND)
+                continue;
+            evm::CEvmReceipt receipt;
+            if (!LoadReceiptByRtmHash(tx.GetHash(), receipt)) continue;
+            for (size_t li = 0; li < receipt.logs.size(); ++li) {
+                const auto& log = receipt.logs[li];
+                if (!LogAddressMatches(log, addressFilter)) continue;
+                if (!LogTopicsMatch(log, topicFilter)) continue;
+                results.push_back(FormatLogForRpc(log, receipt, static_cast<uint64_t>(li)));
+            }
+        }
+    }
+    return results;
+}
+
 // clang-format off
 const CRPCCommand commands[] =
 { //  category   name                       actor (function)            argNames
@@ -1617,6 +1841,7 @@ const CRPCCommand commands[] =
     { "ethereum", "eth_sendRawTransaction",                 &eth_sendRawTransaction,                 {"signedTx"} },
     { "ethereum", "eth_getTransactionReceipt",              &eth_getTransactionReceipt,              {"txHash"} },
     { "ethereum", "eth_getTransactionByHash",               &eth_getTransactionByHash,               {"txHash"} },
+    { "ethereum", "eth_getLogs",                            &eth_getLogs,                            {"filter"} },
 };
 // clang-format on
 
