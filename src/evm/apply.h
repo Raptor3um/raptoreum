@@ -47,6 +47,15 @@ struct ApplyResult
      *  caller for fee accounting. */
     int64_t gasUsed{0};
 
+    /** Gas refund accumulated during execution (mostly from SSTORE
+     *  clearing non-zero slots to zero, and historically from
+     *  SELFDESTRUCT). The Phase 2.4 fee accounting layer is expected
+     *  to apply this refund — capped at `gasUsed / 5` per EIP-3529
+     *  (London+) — when settling the sender's gas debit. ApplyEvmTx
+     *  itself does not deduct the refund from `gasUsed`; it just
+     *  surfaces evmone's raw `gas_refund` for the caller to consume. */
+    int64_t gasRefund{0};
+
     /** Bytes returned by the contract via RETURN. */
     std::vector<uint8_t> returnData;
 

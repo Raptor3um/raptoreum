@@ -79,6 +79,30 @@ ApplyResult ApplyEvmCallTx(const CEvmCallTx& payload,
 
     CEvmHost host(cache, context);
 
+    // EIP-2929 / EIP-3651 access-list pre-warming. The standard
+    // Ethereum tx envelope pre-warms the sender, the recipient, the
+    // standard precompiles (0x01..0x09 historically; Cancun keeps
+    // KZG_POINT_EVALUATION at 0x0a as well), and — since Cancun via
+    // EIP-3651 — the coinbase. Without this the first access of any
+    // of these addresses would charge cold (2600) instead of warm
+    // (100), corrupting gas accounting for every tx.
+    host.WarmAddress(sender);
+    host.WarmAddress(recipient);
+    {
+        evmc::address cb{};
+        std::memcpy(cb.bytes, context.coinbase.begin(), 20);
+        host.WarmAddress(cb);
+    }
+    for (uint8_t i = 1; i <= 0x0a; ++i) {
+        evmc::address p{};
+        p.bytes[19] = i;
+        host.WarmAddress(p);
+    }
+    // EIP-2930 explicit access list pre-warming is not yet supported
+    // — would require extending CEvmCallTx with an accessList field.
+    // Tracked as a follow-up; fixtures with non-empty access lists
+    // will mis-account access gas until then.
+
     evmc_message msg{};
     msg.kind = EVMC_CALL;
     msg.flags = 0;
@@ -112,6 +136,7 @@ ApplyResult ApplyEvmCallTx(const CEvmCallTx& payload,
 
     out.statusCode = r.status_code;
     out.gasUsed = static_cast<int64_t>(payload.gasLimit) - r.gas_left;
+    out.gasRefund = r.gas_refund;
     if (r.output_size > 0 && r.output_data != nullptr) {
         out.returnData.assign(r.output_data, r.output_data + r.output_size);
     }
@@ -164,6 +189,26 @@ ApplyResult ApplyEvmDeployTx(const CEvmDeployTx& payload,
 
     CEvmHost host(cache, context);
 
+    // Pre-warm the standard access set (same rationale as
+    // ApplyEvmCallTx — see comment there). For CREATE the recipient
+    // is the derived contract address; pre-warming it matches
+    // Ethereum's transaction harness.
+    {
+        evmc::address s{}, rcp{};
+        std::memcpy(s.bytes, sender.begin(), 20);
+        std::memcpy(rcp.bytes, contractAddress.begin(), 20);
+        host.WarmAddress(s);
+        host.WarmAddress(rcp);
+        evmc::address cb{};
+        std::memcpy(cb.bytes, context.coinbase.begin(), 20);
+        host.WarmAddress(cb);
+        for (uint8_t i = 1; i <= 0x0a; ++i) {
+            evmc::address p{};
+            p.bytes[19] = i;
+            host.WarmAddress(p);
+        }
+    }
+
     evmc_message msg{};
     msg.kind = EVMC_CREATE;
     msg.flags = 0;
@@ -190,6 +235,7 @@ ApplyResult ApplyEvmDeployTx(const CEvmDeployTx& payload,
 
     out.statusCode = r.status_code;
     out.gasUsed = static_cast<int64_t>(payload.gasLimit) - r.gas_left;
+    out.gasRefund = r.gas_refund;
     if (r.output_size > 0 && r.output_data != nullptr) {
         out.returnData.assign(r.output_data, r.output_data + r.output_size);
     }

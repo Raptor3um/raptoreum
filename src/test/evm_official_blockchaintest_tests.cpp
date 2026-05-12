@@ -192,13 +192,28 @@ struct SummaryStats
     size_t fail{0};
     size_t skip{0};
     std::map<std::string, size_t> skipsByReason;
+    // Bucket failures by the leading diagnostic word so we can see the
+    // dominant failure category at a glance (balance/storage/nonce/...).
+    std::map<std::string, size_t> failsByCategory;
     std::vector<FixtureResult> failures;
 
     void absorb(const FixtureResult& r)
     {
         switch (r.outcome) {
             case Outcome::PASS: ++pass; break;
-            case Outcome::FAIL: ++fail; failures.push_back(r); break;
+            case Outcome::FAIL: {
+                ++fail;
+                failures.push_back(r);
+                // Strip the leading "post-state mismatch ..." prefix
+                // and key the bucket by the underlying diff kind.
+                std::string cat = r.reason;
+                auto colon = cat.find(": ");
+                if (colon != std::string::npos) cat = cat.substr(colon + 2);
+                colon = cat.find(' ');
+                if (colon != std::string::npos) cat = cat.substr(0, colon);
+                ++failsByCategory[cat];
+                break;
+            }
             case Outcome::SKIP:
                 ++skip;
                 ++skipsByReason[r.reason];
@@ -274,26 +289,6 @@ bool SetupPreState(const UniValue& pre, evm::CEvmStateCache& cache, std::string&
     return true;
 }
 
-// Extract the (single, expected) transaction from blocks[0].transactions[0].
-// Sets `txObj` to the JSON object on success, or returns false with a
-// reason in `skipReason` (e.g., multi-tx block).
-bool ExtractSingleBlockTx(const UniValue& blocks,
-                          UniValue& txObj,
-                          std::string& skipReason)
-{
-    if (!blocks.isArray() || blocks.size() != 1) {
-        skipReason = "multi-block fixture (unsupported in v1)";
-        return false;
-    }
-    const auto& blk = blocks[0];
-    const auto& txs = blk["transactions"];
-    if (!txs.isArray() || txs.size() != 1) {
-        skipReason = "multi-tx block (unsupported in v1)";
-        return false;
-    }
-    txObj = txs[0];
-    return true;
-}
 
 // Compare the cache's post-execution state to the fixture's expected
 // "postState" object. Returns true if everything matches; on mismatch
@@ -466,25 +461,15 @@ FixtureResult RunOneFixture(const std::string& filePath,
         return r;
     }
 
-    UniValue txObj;
-    std::string skipReason;
-    if (!ExtractSingleBlockTx(fixture["blocks"], txObj, skipReason)) {
+    const auto& blocks = fixture["blocks"];
+    if (!blocks.isArray() || blocks.empty()) {
         r.outcome = Outcome::SKIP;
-        r.reason = skipReason;
+        r.reason = "no blocks in fixture";
         return r;
     }
 
-    // CREATE (to == "") vs CALL.
-    const auto& toField = txObj["to"];
-    const bool isCreate = !toField.isStr() || toField.getValStr().empty()
-                          || ParseHexBytes(toField.getValStr()).empty();
-    if (isCreate) {
-        r.outcome = Outcome::SKIP;
-        r.reason = "CREATE-only tx (Capa B v1 covers CALL)";
-        return r;
-    }
-
-    // Set up the cache from "pre".
+    // Set up the cache from "pre" once for the whole fixture; the
+    // cache persists across all blocks and transactions.
     evm::CEvmStateDB db(1 << 20, /*fMemory=*/ true);
     evm::CEvmStateCache cache(db);
     std::string err;
@@ -494,84 +479,10 @@ FixtureResult RunOneFixture(const std::string& filePath,
         return r;
     }
 
-    // Build the call payload from the JSON tx fields.
-    evm::CEvmCallTx callTx;
-    callTx.nVersion = evm::EVM_TX_PAYLOAD_VERSION;
-    try {
-        callTx.toAddress = AddressToU256(ParseAddress(toField.getValStr()));
-        callTx.value = txObj["value"].isStr() ? ParseU64(txObj["value"].getValStr()) : 0;
-        callTx.data = txObj["data"].isStr() ? ParseHexBytes(txObj["data"].getValStr())
-                                            : std::vector<uint8_t>{};
-        callTx.gasLimit = txObj["gasLimit"].isStr() ? ParseU64(txObj["gasLimit"].getValStr()) : 0;
-        // EIP-1559 fee fields if present; legacy tx may only carry gasPrice.
-        if (txObj["maxFeePerGas"].isStr())
-            callTx.maxFeePerGas = ParseU64(txObj["maxFeePerGas"].getValStr());
-        else if (txObj["gasPrice"].isStr())
-            callTx.maxFeePerGas = ParseU64(txObj["gasPrice"].getValStr());
-        if (txObj["maxPriorityFeePerGas"].isStr())
-            callTx.maxPriorityFeePerGas = ParseU64(txObj["maxPriorityFeePerGas"].getValStr());
-        callTx.nonce = txObj["nonce"].isStr() ? ParseU64(txObj["nonce"].getValStr()) : 0;
-
-        // Sender: fixtures use "sender" (the recovered EOA address) when
-        // available; otherwise we'd need to recover from (v,r,s). We
-        // skip if not present rather than implementing recovery here.
-        const auto& sender = txObj["sender"];
-        if (!sender.isStr()) {
-            r.outcome = Outcome::SKIP;
-            r.reason = "no explicit sender in tx (signature recovery not implemented in v1)";
-            return r;
-        }
-        callTx.senderHash = AddressToU256(ParseAddress(sender.getValStr()));
-    } catch (const std::exception& e) {
-        r.outcome = Outcome::FAIL;
-        r.reason = std::string("tx parsing failed: ") + e.what();
-        return r;
-    }
-
-    // Build the execution context. Chain ID, coinbase, baseFee come from
-    // the fixture's blockHeader.
-    evm::ExecutionContext ctx;
-    const auto& header = fixture["blocks"][0]["blockHeader"];
-    ctx.chainId = 1; // Mainnet — the fixtures use chainId=1 throughout.
-    if (header.isObject()) {
-        if (header["number"].isStr())     ctx.blockHeight = ParseU64(header["number"].getValStr());
-        if (header["timestamp"].isStr())  ctx.blockTimestamp = static_cast<int64_t>(ParseU64(header["timestamp"].getValStr()));
-        if (header["gasLimit"].isStr())   ctx.blockGasLimit  = ParseU64(header["gasLimit"].getValStr());
-        if (header["baseFeePerGas"].isStr())
-            ctx.baseFee = ParseU256(header["baseFeePerGas"].getValStr());
-        if (header["coinbase"].isStr())   ctx.coinbase = ParseAddress(header["coinbase"].getValStr());
-    }
-    ctx.txOrigin = U256ToAddress(callTx.senderHash);
-    ctx.txGasPrice = uint256(); // gas accounting deferred to Phase 2.4
-
-    // Drive the EIP-4788 beacon-roots system pre-call so the fixture's
-    // postState (which captures it) matches ours.
-    DriveBeaconRootsSystemCall(fixture["blocks"][0]["blockHeader"], cache, ctx);
-
-    // Capa B simulation of Phase 2.4 fee accounting.
-    // Our production `ApplyEvmTx` deliberately does not debit gas, pay
-    // the coinbase, or increment the sender nonce — those live in the
-    // surrounding ConnectBlock layer (Phase 2.4). The official fixtures
-    // assume an Ethereum-style "transaction harness" that applies them,
-    // so we replicate that harness here:
-    //   1. Pre-debit the sender by gasLimit * effectiveGasPrice and
-    //      bump nonce.
-    //   2. Run the EVM call.
-    //   3. Refund unused gas to the sender at effectiveGasPrice.
-    //   4. Credit the coinbase with the priority-fee portion of the
-    //      consumed gas (gasUsed * (effectiveGasPrice - baseFee)).
-    //   5. Burn the baseFee portion (no-op in our model — it just
-    //      stays debited from the sender and is not credited anywhere).
-    //
-    // EIP-1559 effective gas price: legacy txs set gasPrice directly,
-    // EIP-1559 txs derive it from min(maxFeePerGas, baseFee + tip).
-    // The fixtures we exercise use legacy gasPrice mostly; for those,
-    // baseFee == gasPrice and the priority portion is zero.
     // Our uint256 is big-endian — byte[0] is MSB, byte[31] is LSB —
     // because CEvmHost::get_balance memcpys it straight into an
     // evmc::uint256be (see host.cpp). So arithmetic propagates carry
-    // from byte[31] downwards (i.e., from low memory address upwards
-    // is wrong, it's the opposite).
+    // from byte[31] downwards.
     auto u256AddU64 = [](const uint256& v, uint64_t delta) -> uint256 {
         uint256 out = v;
         uint64_t carry = delta;
@@ -598,8 +509,114 @@ FixtureResult RunOneFixture(const std::string& filePath,
         return out;
     };
 
-    const uint160 senderAddr = U256ToAddress(callTx.senderHash);
-    const uint64_t effectiveGasPrice = callTx.maxFeePerGas;  // legacy: == gasPrice
+    // Loop over blocks. The cache persists across them so multi-block
+    // fixtures get applied serially.
+    for (size_t blockIdx = 0; blockIdx < blocks.size(); ++blockIdx) {
+        const auto& block = blocks[blockIdx];
+        const auto& header = block["blockHeader"];
+        if (!header.isObject()) {
+            r.outcome = Outcome::SKIP;
+            r.reason = "block has no blockHeader (likely an InvalidBlocks fixture)";
+            return r;
+        }
+
+        // Build the per-block ExecutionContext.
+        evm::ExecutionContext blockCtx;
+        blockCtx.chainId = 1;
+        if (header["number"].isStr())    blockCtx.blockHeight    = ParseU64(header["number"].getValStr());
+        if (header["timestamp"].isStr()) blockCtx.blockTimestamp = static_cast<int64_t>(ParseU64(header["timestamp"].getValStr()));
+        if (header["gasLimit"].isStr())  blockCtx.blockGasLimit  = ParseU64(header["gasLimit"].getValStr());
+        if (header["baseFeePerGas"].isStr())
+            blockCtx.baseFee = ParseU256(header["baseFeePerGas"].getValStr());
+        if (header["coinbase"].isStr())  blockCtx.coinbase = ParseAddress(header["coinbase"].getValStr());
+
+        // EIP-4788 beacon-roots system pre-call: once per block, before
+        // any user transactions. Reuse the block context.
+        DriveBeaconRootsSystemCall(header, cache, blockCtx);
+
+        const auto& txs = block["transactions"];
+        if (!txs.isArray()) {
+            r.outcome = Outcome::SKIP;
+            r.reason = "block transactions field missing/non-array";
+            return r;
+        }
+
+        for (size_t txIdx = 0; txIdx < txs.size(); ++txIdx) {
+            const auto& txObj = txs[txIdx];
+
+            // CREATE (to == "") vs CALL.
+            const auto& toField = txObj["to"];
+            const bool isCreate = !toField.isStr() || toField.getValStr().empty()
+                                  || ParseHexBytes(toField.getValStr()).empty();
+    bool isEip1559 = false;
+    if (txObj["type"].isStr()) {
+        try { isEip1559 = ParseU64(txObj["type"].getValStr()) == 2; }
+        catch (...) {}
+    } else if (txObj["maxFeePerGas"].isStr()) {
+        isEip1559 = true;
+    }
+
+    uint64_t txValue = 0;
+    std::vector<uint8_t> txData;
+    uint64_t parsedGasLimit = 0;
+    uint64_t maxFeePerGas = 0, maxPriorityFeePerGas = 0;
+    uint64_t txNonce = 0;
+    uint256 senderHash;
+    uint256 toAddressU256;
+
+    try {
+        txValue = txObj["value"].isStr() ? ParseU64(txObj["value"].getValStr()) : 0;
+        txData = txObj["data"].isStr() ? ParseHexBytes(txObj["data"].getValStr())
+                                       : std::vector<uint8_t>{};
+        parsedGasLimit = txObj["gasLimit"].isStr() ? ParseU64(txObj["gasLimit"].getValStr()) : 0;
+        if (txObj["maxFeePerGas"].isStr())
+            maxFeePerGas = ParseU64(txObj["maxFeePerGas"].getValStr());
+        else if (txObj["gasPrice"].isStr())
+            maxFeePerGas = ParseU64(txObj["gasPrice"].getValStr());
+        if (txObj["maxPriorityFeePerGas"].isStr())
+            maxPriorityFeePerGas = ParseU64(txObj["maxPriorityFeePerGas"].getValStr());
+        txNonce = txObj["nonce"].isStr() ? ParseU64(txObj["nonce"].getValStr()) : 0;
+
+        // Sender: fixtures supply an explicit "sender" field (the
+        // recovered EOA). We don't do (v,r,s) recovery here; skip if
+        // absent rather than fabricating.
+        const auto& sender = txObj["sender"];
+        if (!sender.isStr()) {
+            r.outcome = Outcome::SKIP;
+            r.reason = "no explicit sender in tx (signature recovery not implemented in v1)";
+            return r;
+        }
+        senderHash = AddressToU256(ParseAddress(sender.getValStr()));
+        if (!isCreate) {
+            toAddressU256 = AddressToU256(ParseAddress(toField.getValStr()));
+        }
+    } catch (const std::exception& e) {
+        r.outcome = Outcome::FAIL;
+        r.reason = std::string("tx parsing failed: ") + e.what();
+        return r;
+    }
+
+    // Use a per-tx context built from the per-block context.
+    evm::ExecutionContext ctx = blockCtx;
+    ctx.txOrigin = U256ToAddress(senderHash);
+    ctx.txGasPrice = uint256(); // gas accounting handled below
+
+    // Capa B simulation of Phase 2.4 fee accounting.
+    // Our production `ApplyEvmTx` deliberately does not debit gas, pay
+    // the coinbase, or increment the sender nonce — those live in the
+    // surrounding ConnectBlock layer (Phase 2.4). The official fixtures
+    // assume an Ethereum-style "transaction harness" that applies them,
+    // so we replicate that harness here:
+    //   1. Pre-debit the sender by gasLimit * effectiveGasPrice and
+    //      bump nonce.
+    //   2. Run the EVM call.
+    //   3. Refund unused gas to the sender at effectiveGasPrice.
+    //   4. Credit the coinbase with the priority-fee portion of the
+    //      consumed gas (gasUsed * (effectiveGasPrice - baseFee)).
+    //   5. Burn the baseFee portion (no-op in our model — it just
+    //      stays debited from the sender and is not credited anywhere).
+
+    const uint160 senderAddr = U256ToAddress(senderHash);
     const uint64_t baseFeeU64 = [&]() -> uint64_t {
         // baseFee is small enough in fixtures to fit in u64. Read the
         // low 8 bytes of the big-endian uint256 (byte[24..31]).
@@ -608,30 +625,43 @@ FixtureResult RunOneFixture(const std::string& filePath,
         for (int i = 24; i < 32; ++i) v = (v << 8) | static_cast<uint8_t>(*(b.begin() + i));
         return v;
     }();
+    // Effective gas price:
+    //   - Legacy (type 0/1): just gasPrice (which we stashed in
+    //     maxFeePerGas). The whole price acts as the fee cap AND the
+    //     tip; baseFee is burned from it, anything above goes to the
+    //     coinbase.
+    //   - EIP-1559 (type 2): min(maxFeePerGas, baseFee +
+    //     maxPriorityFeePerGas).
+    uint64_t effectiveGasPrice;
+    if (isEip1559) {
+        const uint64_t basePlusTip = baseFeeU64 + maxPriorityFeePerGas;
+        effectiveGasPrice = (maxFeePerGas < basePlusTip)
+                                ? maxFeePerGas
+                                : basePlusTip;
+    } else {
+        effectiveGasPrice = maxFeePerGas;
+    }
     const uint64_t priorityPerGas =
         effectiveGasPrice > baseFeeU64 ? effectiveGasPrice - baseFeeU64 : 0;
 
-    // EIP-2 intrinsic gas: 21000 for a basic tx, +4 per zero byte of
-    // calldata, +16 per non-zero byte. Compute it BEFORE invoking
-    // evmone because Ethereum's convention is to deduct intrinsic
-    // gas before handing the remainder to the EVM (so e.g. a tx with
-    // gasLimit=24000 and 0-byte data has only 3000 gas available
-    // inside the EVM, not 24000). Our `CEvmCallTx.gasLimit` is the
-    // post-intrinsic EVM budget by Phase 2 contract, so we subtract
-    // here.
-    uint64_t intrinsicGas = 21000;
-    for (uint8_t b : callTx.data) intrinsicGas += (b == 0) ? 4 : 16;
-    const uint64_t txGasLimit = callTx.gasLimit;
+    // EIP-2 intrinsic gas:
+    //   - CALL: 21000 base + 4 per zero byte of calldata + 16 per non-zero.
+    //   - CREATE: 53000 base + same per-byte cost on init code + EIP-3860
+    //     init-code metering of 2 gas per 32-byte word (Cancun).
+    uint64_t intrinsicGas = isCreate ? 53000 : 21000;
+    for (uint8_t b : txData) intrinsicGas += (b == 0) ? 4 : 16;
+    if (isCreate) {
+        const uint64_t words = (txData.size() + 31) / 32;
+        intrinsicGas += 2 * words;
+    }
+
+    const uint64_t txGasLimit = parsedGasLimit;
     if (txGasLimit < intrinsicGas) {
-        // The tx couldn't even cover intrinsic — Ethereum treats this
-        // as "tx never enters EVM, sender pays the full gasLimit".
-        // Capa B v1 skips this edge case; landing it properly requires
-        // a separate code path with no ApplyEvmCallTx invocation.
         r.outcome = Outcome::SKIP;
         r.reason = "tx gasLimit below intrinsic (out-of-gas-before-execution)";
         return r;
     }
-    callTx.gasLimit = txGasLimit - intrinsicGas;
+    const uint64_t evmGas = txGasLimit - intrinsicGas;
 
     evm::CEvmAccount senderAcc;
     if (cache.GetAccount(senderAddr, senderAcc)) {
@@ -640,18 +670,59 @@ FixtureResult RunOneFixture(const std::string& filePath,
         cache.SetAccount(senderAddr, senderAcc);
     }
 
-    // Execute.
+    // Build the payload (CALL or CREATE) and execute via the right
+    // pipeline entry point.
     evm::ApplyResult exec;
     try {
-        exec = evm::ApplyEvmCallTx(callTx, cache, ctx);
+        if (isCreate) {
+            evm::CEvmDeployTx deployTx;
+            deployTx.nVersion = evm::EVM_TX_PAYLOAD_VERSION;
+            deployTx.code = txData;
+            deployTx.gasLimit = evmGas;
+            deployTx.maxFeePerGas = maxFeePerGas;
+            deployTx.maxPriorityFeePerGas = maxPriorityFeePerGas;
+            deployTx.senderHash = senderHash;
+            // ApplyEvmDeployTx derives the contract address from
+            // (sender, nonce). The fixture's expected nonce on the
+            // sender is the same one we passed to the deploy
+            // (pre-bump): the deploy uses payload.nonce to derive the
+            // address, while the harness already bumped senderAcc.nonce
+            // above. So we pass the *pre-bump* nonce here.
+            deployTx.nonce = txNonce;
+            exec = evm::ApplyEvmDeployTx(deployTx, cache, ctx);
+        } else {
+            evm::CEvmCallTx callTx;
+            callTx.nVersion = evm::EVM_TX_PAYLOAD_VERSION;
+            callTx.toAddress = toAddressU256;
+            callTx.value = txValue;
+            callTx.data = txData;
+            callTx.gasLimit = evmGas;
+            callTx.maxFeePerGas = maxFeePerGas;
+            callTx.maxPriorityFeePerGas = maxPriorityFeePerGas;
+            callTx.senderHash = senderHash;
+            callTx.nonce = txNonce;
+            exec = evm::ApplyEvmCallTx(callTx, cache, ctx);
+        }
     } catch (const std::exception& e) {
         r.outcome = Outcome::FAIL;
-        r.reason = std::string("ApplyEvmCallTx threw: ") + e.what();
+        r.reason = std::string("apply threw: ") + e.what();
         return r;
     }
 
-    const uint64_t totalGasUsed =
+    // Apply EIP-3529 (Cancun) refund cap: refund = min(gasUsed / 5,
+    // accumulated_gas_refund). The "gasUsed" used for the cap is the
+    // pre-refund total (intrinsic + raw exec gas). evmone reports
+    // r.gas_refund accumulated from SSTORE clears (and historically
+    // SELFDESTRUCT); we apply it here, since ApplyEvmCallTx's docstring
+    // delegates fee accounting to the surrounding caller.
+    const uint64_t preRefundUsed =
         static_cast<uint64_t>(exec.gasUsed) + intrinsicGas;
+    const uint64_t refundCap = preRefundUsed / 5;
+    const uint64_t rawRefund = exec.gasRefund > 0
+                                   ? static_cast<uint64_t>(exec.gasRefund)
+                                   : 0;
+    const uint64_t appliedRefund = rawRefund < refundCap ? rawRefund : refundCap;
+    const uint64_t totalGasUsed = preRefundUsed - appliedRefund;
 
     // Settle gas: refund the unused gas to the sender, credit the
     // priority portion of the used gas to the coinbase. Use the
@@ -672,17 +743,15 @@ FixtureResult RunOneFixture(const std::string& filePath,
             u256AddU64(coinbaseAcc.balance, totalGasUsed * priorityPerGas);
         cache.SetAccount(ctx.coinbase, coinbaseAcc);
     }
+        }  // end per-tx loop
+    }  // end per-block loop
 
-    // On success: compare the post-state.
-    // On revert/failure: still compare — the fixture may expect the
-    // failure to leave state unchanged. The comparator handles both
-    // cases identically because "pre" was the cache's starting state
-    // and any reverted changes were rolled back by evmone internally.
+    // After every block / every tx has been applied, compare the
+    // final cache state against the fixture's expected `postState`.
     std::string diff;
     if (!ComparePostState(fixture["postState"], cache, diff)) {
         std::ostringstream os;
-        os << "post-state mismatch (status="
-           << static_cast<int>(exec.statusCode) << "): " << diff;
+        os << "post-state mismatch: " << diff;
         r.outcome = Outcome::FAIL;
         r.reason = os.str();
         return r;
@@ -781,6 +850,10 @@ BOOST_AUTO_TEST_CASE(run_general_state_tests_cancun)
     BOOST_TEST_MESSAGE("Skip reasons:");
     for (const auto& [reason, count] : stats.skipsByReason) {
         BOOST_TEST_MESSAGE("  " << count << " × " << reason);
+    }
+    BOOST_TEST_MESSAGE("Failure categories:");
+    for (const auto& [cat, count] : stats.failsByCategory) {
+        BOOST_TEST_MESSAGE("  " << count << " × " << cat);
     }
     if (!stats.failures.empty()) {
         BOOST_TEST_MESSAGE("First failures (up to 20):");

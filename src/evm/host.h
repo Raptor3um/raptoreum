@@ -174,6 +174,22 @@ public:
         std::vector<uint8_t> data;
     };
 
+    /** Mark an address as warm in EIP-2929 terms. Called by
+     *  ApplyEvmCallTx / ApplyEvmDeployTx during tx setup to pre-warm
+     *  the sender, recipient, coinbase (EIP-3651, Cancun) and the
+     *  standard precompiles per the access-list expectations of the
+     *  Ethereum spec. Subsequent reads of these addresses by the
+     *  executing contract cost the warm (100) instead of cold (2600)
+     *  base. Idempotent. */
+    void WarmAddress(const evmc::address& addr) { warmAddresses.insert(addr); }
+
+    /** Mark a storage slot as warm. Called for entries in the tx's
+     *  EIP-2930 access list. */
+    void WarmStorage(const evmc::address& addr, const evmc::bytes32& key)
+    {
+        warmSlots.insert(std::make_pair(addr, key));
+    }
+
     /** Logs accumulated during execution. The caller drains these to
      *  build the receipt for the surrounding transaction. */
     const std::vector<Log>& Logs() const { return logs; }
