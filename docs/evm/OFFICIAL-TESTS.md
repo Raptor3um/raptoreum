@@ -152,11 +152,13 @@ Cancun fixtures: 9202 pass, 11136 fail, 2041 skip
 | Capa B v6 | `ffd91fcbf` | 8777 | 11561 | 2041 (CALL value xfer) |
 | Capa B v7 | `80e461aa1` | 8921 | 11417 | 2041 (CREATE value xfer + pre-seed) |
 | Capa B v8 | `7c52cd60d` | 9202 | 11136 | 2041 (eth precompiles 0x01-0x04) |
-| Capa B v9 | `c6997fa77` | **9202** | 11136 | 2041 (EIP-2681 + EIP-6780) |
+| Capa B v9 | `c6997fa77` | 9202 | 11136 | 2041 (EIP-2681 + EIP-6780) |
+| Capa B v10 | `7daae762d` | 9501 | 10837 | 2041 (MODEXP 0x05) |
+| Capa B v11 | `8b8656ba0` | 9635 | 10703 | 2041 (BLAKE2F 0x09) |
+| Capa B v12 | `6a0b4337e` | **9815** | 10523 | 2041 (CREATE-failure cleanup) |
 
-Pass count is **58% higher than v1** — every increment came from a
-real production-pipeline correctness fix uncovered by running the
-fixtures.
+Pass count is **+69% over v1** — every increment came from a real
+production-pipeline correctness fix uncovered by running the fixtures.
 
 **Skip categories** (all by design, not failures):
 
@@ -263,20 +265,31 @@ ship as part of the EVM stack):
   (`exec.selfdestructs ∩ exec.sameTxCreated`). Pre-existing
   contracts that SELFDESTRUCT just transfer balance and remain
   in state.
+- **MODEXP precompile (0x05)** via boost::multiprecision::powm.
+  EIP-198 layout, EIP-2565 gas (Berlin+) with 64KB per-component
+  sanity cap to defend against adversarial input sizes.
+- **BLAKE2F precompile (0x09)**. Hand-rolled Blake2b F compression
+  function per RFC 7693 / EIP-152: 213-byte input layout (rounds,
+  h, m, t, f), 64-byte output, gas = rounds (1 per round).
+- **Failed CREATE now deletes the pre-seeded account record** and
+  refunds any value transferred. Previously ApplyEvmDeployTx left
+  the seed in place after EVMC_REVERT / OOG / etc., so the
+  fixture's post-state (which expects no account at the CREATE
+  address on failure) would show our spurious `nonce=1` placeholder.
 
-### Remaining failure breakdown (as of v9)
+### Remaining failure breakdown (as of v12)
 
-11136 failures across the broader fixture set:
+10523 failures across the broader fixture set:
 
 | Count | Category | Notes |
 |---|---|---|
-| 10259 | balance | small per-fixture drifts; concentrated in MODEXP-using and bn128 pairings tests we can't yet run correctly |
-| ~580 | storage | downstream of wrong gas → wrong control flow |
-| 128 | nonce | CREATE/CREATE2 corner cases beyond EIP-2681 / EIP-6780 |
-| 31 | address | account expected to exist in post but missing |
+| 9742 | balance | small per-fixture drifts; concentrated in bn128-using tests + long-tail SSTORE/memory metering |
+| ~600 | storage | downstream of wrong gas → wrong control flow |
+| 124 | nonce | CREATE/CREATE2 corner cases beyond EIP-2681 / EIP-6780 |
+| 39 | address | account expected to exist in post but missing |
 | 8 | expected | postStateHash mismatch (state slightly off; MPT computation itself is correct per unit tests) |
 
-Per-suite pass rates as of v9 (selected):
+Per-suite pass rates as of v12 (selected):
 
 | Suite | Pass | Total | Rate |
 |---|---|---|---|
@@ -284,14 +297,16 @@ Per-suite pass rates as of v9 (selected):
 | stCallDelegateCodesHomestead | 58 | 58 | 100% |
 | stArgsZeroOneBalance | 94 | 96 | 98% |
 | stCallCodes | 81 | 86 | 94% |
-| stReturnDataTest | 202 | 273 | 74% |
 | stStaticCall | 425 | 478 | 89% |
+| stRevertTest | 178 | 271 | 66% |
+| stReturnDataTest | 202 | 273 | 74% |
+| stBadOpcode | 3306 | 4251 | 78% |
 | stMemoryTest | 274 | 578 | 47% |
-| stRevertTest | 138 | 271 | 51% |
-| stSStoreTest | 93 | 475 | 19% |
-| stPreCompiledContracts | 278 | 960 | 29% |
+| stPreCompiledContracts | 593 | 960 | 62% |
+| stPreCompiledContracts2 | 216 | 248 | 87% |
+| stSStoreTest | 155 | 475 | 33% |
 | stZeroKnowledge | 113 | 944 | 12% |
-| stBadOpcode | 3199 | 4251 | 75% |
+| stZeroKnowledge2 | 55 | 519 | 11% |
 
 Likely follow-ups, in ROI order:
 
