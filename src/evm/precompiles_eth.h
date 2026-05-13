@@ -21,14 +21,20 @@ namespace evm {
  *   0x02 SHA256     — SHA-256 hash
  *   0x03 RIPEMD160  — RIPEMD-160 hash
  *   0x04 IDENTITY   — pass-through copy
+ *   0x05 MODEXP     — modular exponentiation via boost::multiprecision
  *
- * Not yet implemented (return EVMC_FAILURE so the caller can decide):
- *   0x05 MODEXP, 0x06 BN_ADD, 0x07 BN_MUL, 0x08 BN_PAIRING,
- *   0x09 BLAKE2F, 0x0a KZG_POINT_EVALUATION
+ * Not yet implemented (the dispatcher returns false so CEvmHost::call
+ * falls back to bytecode execution on empty code — wrong per spec,
+ * but limits the lie to those four):
+ *   0x06 BN_ADD, 0x07 BN_MUL, 0x08 BN_PAIRING — bn128 elliptic curve;
+ *     would need libff / hand-rolled pairing arithmetic.
+ *   0x09 BLAKE2F      — Blake2 compression function; possible to
+ *     hand-implement (small code surface).
+ *   0x0a KZG_POINT_EVALUATION — BLS12-381 + KZG commitments;
+ *     would need c-kzg-4844 or equivalent.
  *
- * Gas charging follows the Cancun schedule. The caller is responsible
- * for verifying msg.gas >= base + per_word cost before invoking the
- * precompile; if msg.gas is insufficient we return EVMC_OUT_OF_GAS.
+ * Gas charging follows the Cancun schedule. If msg.gas is insufficient
+ * we return EVMC_OUT_OF_GAS.
  */
 bool ExecuteEthereumPrecompile(const evmc_message& msg, evmc::Result& result);
 

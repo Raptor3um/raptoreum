@@ -11,6 +11,9 @@
 #include <pubkey.h>
 #include <uint256.h>
 
+#include <boost/multiprecision/cpp_int.hpp>
+
+#include <algorithm>
 #include <cstdlib>
 #include <cstring>
 #include <vector>
@@ -163,6 +166,163 @@ evmc::Result Identity(const evmc_message& msg)
     return Ok(msg.gas - cost, out);
 }
 
+// ---------------------------------------------------------------------------
+// 0x05 MODEXP (EIP-198 / EIP-2565 gas)
+// ---------------------------------------------------------------------------
+// Input layout (variable-length, zero-padded):
+//   [Bsize(32) | Esize(32) | Msize(32) | B(Bsize) | E(Esize) | M(Msize)]
+// where each size is a 32-byte big-endian length, then the values
+// follow concatenated. Output: M-size bytes containing (B**E) % M.
+//
+// EIP-2565 (Berlin+) gas formula:
+//   multiplication_complexity = ceil(max(Bsize, Msize) / 8) ** 2
+//   iteration_count = max(adjusted_exp_length(E), 1)
+//     where adjusted_exp_length depends on whether Esize <= 32 and
+//     the bit width of E.
+//   cost = max(200, multiplication_complexity * iteration_count / 3)
+
+namespace {
+
+// Big-endian read of a 32-byte length field. Caps at SIZE_MAX/2 to
+// avoid pathological allocations on adversarial input.
+size_t ReadSize32(const evmc_message& msg, size_t offset)
+{
+    // Take the low 8 bytes of the 32-byte length (top 24 must be 0 per
+    // spec; we tolerate non-zero by treating them as "huge" and
+    // letting gas cost OoG us).
+    for (int i = 0; i < 24; ++i) {
+        if (InputByte(msg, offset + i) != 0) {
+            return std::numeric_limits<size_t>::max() / 2;
+        }
+    }
+    uint64_t v = 0;
+    for (int i = 24; i < 32; ++i) {
+        v = (v << 8) | InputByte(msg, offset + i);
+    }
+    if (v > (std::numeric_limits<size_t>::max() / 2)) {
+        return std::numeric_limits<size_t>::max() / 2;
+    }
+    return static_cast<size_t>(v);
+}
+
+// Read `len` bytes starting at `offset`, zero-padding past the
+// declared input.
+std::vector<uint8_t> ReadBytes(const evmc_message& msg, size_t offset, size_t len)
+{
+    std::vector<uint8_t> out(len);
+    for (size_t i = 0; i < len; ++i) {
+        out[i] = InputByte(msg, offset + i);
+    }
+    return out;
+}
+
+// EIP-2565 multiplication complexity.
+uint64_t MultComplexity(size_t base_len, size_t mod_len)
+{
+    const size_t max_len = std::max(base_len, mod_len);
+    const uint64_t words = (max_len + 7) / 8;
+    return words * words;
+}
+
+// EIP-2565 adjusted exponent length. If E fits in 32 bytes, looks at
+// its bit width; otherwise charges 8 bits per excess byte plus the
+// top-32-byte bit width.
+uint64_t IterCount(size_t exp_len, const std::vector<uint8_t>& E)
+{
+    // Find the bit length of the first 32 bytes of E.
+    auto top_bits = [&]() -> uint64_t {
+        const size_t look = std::min<size_t>(32, E.size());
+        for (size_t i = 0; i < look; ++i) {
+            if (E[i] != 0) {
+                // Leading byte is E[i]. Bit width = (look - i - 1) * 8 + bit
+                // width of E[i].
+                uint8_t b = E[i];
+                int hi = 0;
+                while (b) { ++hi; b >>= 1; }
+                return static_cast<uint64_t>((look - i - 1) * 8 + hi);
+            }
+        }
+        return 0;
+    };
+
+    uint64_t iter;
+    if (exp_len <= 32) {
+        iter = top_bits();
+    } else {
+        iter = 8 * static_cast<uint64_t>(exp_len - 32) + top_bits();
+    }
+    return iter == 0 ? 1 : iter;
+}
+
+} // namespace
+
+evmc::Result Modexp(const evmc_message& msg)
+{
+    using boost::multiprecision::cpp_int;
+
+    const size_t base_len = ReadSize32(msg, 0);
+    const size_t exp_len  = ReadSize32(msg, 32);
+    const size_t mod_len  = ReadSize32(msg, 64);
+
+    // Sanity cap: real fixtures use at most a few KB per component.
+    // Anything beyond ~64KB would cost more gas than any reasonable
+    // tx provides AND risks allocating gigabytes if we trusted the
+    // declared sizes blindly. Treat oversized inputs as out-of-gas.
+    constexpr size_t kMaxLen = 64 * 1024;
+    if (base_len > kMaxLen || exp_len > kMaxLen || mod_len > kMaxLen) {
+        return Oog();
+    }
+
+    // Trivial case: modulus length is zero — output is empty.
+    if (mod_len == 0) {
+        const int64_t cost = 200;
+        if (msg.gas < cost) return Oog();
+        return Ok(msg.gas - cost, {});
+    }
+
+    const size_t base_off = 96;
+    const size_t exp_off  = base_off + base_len;
+    const size_t mod_off  = exp_off + exp_len;
+
+    std::vector<uint8_t> B = ReadBytes(msg, base_off, base_len);
+    std::vector<uint8_t> E = ReadBytes(msg, exp_off,  exp_len);
+    std::vector<uint8_t> M = ReadBytes(msg, mod_off,  mod_len);
+
+    // EIP-2565 gas.
+    const uint64_t mc = MultComplexity(base_len, mod_len);
+    const uint64_t it = IterCount(exp_len, E);
+    uint64_t cost = (mc * it) / 3;
+    if (cost < 200) cost = 200;
+    if (msg.gas < static_cast<int64_t>(cost)) return Oog();
+
+    // Convert big-endian byte strings into cpp_int.
+    auto from_bytes = [](const std::vector<uint8_t>& bytes) -> cpp_int {
+        cpp_int v = 0;
+        for (uint8_t b : bytes) { v <<= 8; v += b; }
+        return v;
+    };
+    cpp_int b = from_bytes(B);
+    cpp_int e = from_bytes(E);
+    cpp_int m = from_bytes(M);
+
+    cpp_int result = 0;
+    if (m != 0) {
+        // boost::multiprecision::powm computes (b ** e) mod m.
+        result = boost::multiprecision::powm(b, e, m);
+    }
+
+    // Encode result as mod_len big-endian bytes (left-padded with
+    // zeros).
+    std::vector<uint8_t> out(mod_len, 0);
+    cpp_int tmp = result;
+    for (size_t i = 0; i < mod_len && tmp != 0; ++i) {
+        out[mod_len - 1 - i] = static_cast<uint8_t>(tmp & 0xff);
+        tmp >>= 8;
+    }
+
+    return Ok(msg.gas - static_cast<int64_t>(cost), out);
+}
+
 // Detect a standard Ethereum precompile address: the high 19 bytes
 // must be zero and the low byte must be in 1..0x0a.
 bool IsStandardPrecompile(const evmc::address& addr, uint8_t& which)
@@ -188,12 +348,13 @@ bool ExecuteEthereumPrecompile(const evmc_message& msg, evmc::Result& result)
         case 0x02: result = Sha256(msg);     return true;
         case 0x03: result = Ripemd160(msg);  return true;
         case 0x04: result = Identity(msg);   return true;
-        // 0x05..0x0a not yet implemented: fall back to bytecode
+        case 0x05: result = Modexp(msg);     return true;
+        // 0x06..0x0a not yet implemented: fall back to bytecode
         // execution (which will run no-op-success at the empty code
         // residing at the precompile address). This is wrong per the
-        // spec, but limiting the lie to those five lets the four
+        // spec, but limiting the lie to those five lets the five
         // commonly-tested precompiles pass while we plan a port of
-        // the bignum / pairing / blake2f / KZG primitives.
+        // the bn128 / pairing / blake2f / KZG primitives.
         default: return false;
     }
 }
