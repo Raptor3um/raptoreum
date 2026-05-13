@@ -155,10 +155,13 @@ Cancun fixtures: 9202 pass, 11136 fail, 2041 skip
 | Capa B v9 | `c6997fa77` | 9202 | 11136 | 2041 (EIP-2681 + EIP-6780) |
 | Capa B v10 | `7daae762d` | 9501 | 10837 | 2041 (MODEXP 0x05) |
 | Capa B v11 | `8b8656ba0` | 9635 | 10703 | 2041 (BLAKE2F 0x09) |
-| Capa B v12 | `6a0b4337e` | **9815** | 10523 | 2041 (CREATE-failure cleanup) |
+| Capa B v12 | `6a0b4337e` | 9815 | 10523 | 2041 (CREATE-failure cleanup) |
+| Capa B v13 | `1e9a44b5d` | 10888 | 9450 | 2041 (bn128 BN_ADD/BN_MUL) |
+| Capa B v14 | `65c76eb16` | **10895** | 9443 | 2041 (EIP-7610 storage-collision) |
 
-Pass count is **+69% over v1** — every increment came from a real
-production-pipeline correctness fix uncovered by running the fixtures.
+Pass count is **+87% over v1** (5820 → 10895) — every increment came
+from a real production-pipeline correctness fix uncovered by running
+the fixtures.
 
 **Skip categories** (all by design, not failures):
 
@@ -276,37 +279,46 @@ ship as part of the EVM stack):
   the seed in place after EVMC_REVERT / OOG / etc., so the
   fixture's post-state (which expects no account at the CREATE
   address on failure) would show our spurious `nonce=1` placeholder.
+- **bn128 BN_ADD (0x06) and BN_MUL (0x07)** implemented with
+  Boost.Multiprecision. Field arithmetic over Fp where p is the
+  BN254 prime, affine point ops, validation that input points lie
+  on y² = x³ + 3. Unlocked ~1000 fixtures wholesale (stZeroKnowledge2
+  jumped from 11% to 99% pass).
+- **EIP-7610 (Cancun) storage-collision check** added to CREATE
+  paths. An account with non-empty storage is now an occupied
+  collision target even when its code is empty and nonce is zero,
+  matching the post-Cancun semantics.
 
-### Remaining failure breakdown (as of v12)
+### Remaining failure breakdown (as of v14)
 
-10523 failures across the broader fixture set:
+9443 failures across the broader fixture set:
 
 | Count | Category | Notes |
 |---|---|---|
-| 9742 | balance | small per-fixture drifts; concentrated in bn128-using tests + long-tail SSTORE/memory metering |
-| ~600 | storage | downstream of wrong gas → wrong control flow |
-| 124 | nonce | CREATE/CREATE2 corner cases beyond EIP-2681 / EIP-6780 |
-| 39 | address | account expected to exist in post but missing |
+| 8645 | balance | small per-fixture drifts; remaining gas-accounting edges (BN_PAIRING / KZG-using fixtures + long-tail SSTORE/memory metering) |
+| ~625 | storage | downstream of wrong gas → wrong control flow |
+| 122 | nonce | CREATE/CREATE2 corner cases beyond EIP-2681 / EIP-6780 / EIP-7610 |
+| 43 | address | account expected to exist in post but missing |
 | 8 | expected | postStateHash mismatch (state slightly off; MPT computation itself is correct per unit tests) |
 
-Per-suite pass rates as of v12 (selected):
+Per-suite pass rates as of v14 (selected):
 
 | Suite | Pass | Total | Rate |
 |---|---|---|---|
 | stLogTests | 46 | 46 | 100% |
 | stCallDelegateCodesHomestead | 58 | 58 | 100% |
+| stZeroKnowledge2 | 513 | 519 | 99% |
 | stArgsZeroOneBalance | 94 | 96 | 98% |
 | stCallCodes | 81 | 86 | 94% |
 | stStaticCall | 425 | 478 | 89% |
-| stRevertTest | 178 | 271 | 66% |
-| stReturnDataTest | 202 | 273 | 74% |
-| stBadOpcode | 3306 | 4251 | 78% |
-| stMemoryTest | 274 | 578 | 47% |
-| stPreCompiledContracts | 593 | 960 | 62% |
 | stPreCompiledContracts2 | 216 | 248 | 87% |
+| stBadOpcode | 3306 | 4251 | 78% |
+| stReturnDataTest | 202 | 273 | 74% |
+| stRevertTest | 212 | 271 | 78% |
+| stZeroKnowledge | 661 | 944 | 70% |
+| stPreCompiledContracts | 623 | 960 | 65% |
+| stMemoryTest | 274 | 578 | 47% |
 | stSStoreTest | 155 | 475 | 33% |
-| stZeroKnowledge | 113 | 944 | 12% |
-| stZeroKnowledge2 | 55 | 519 | 11% |
 
 Likely follow-ups, in ROI order:
 
