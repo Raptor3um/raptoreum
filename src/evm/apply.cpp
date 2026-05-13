@@ -221,7 +221,18 @@ ApplyResult ApplyEvmDeployTx(const CEvmDeployTx& payload,
     if (cache.GetAccount(contractAddress, existing)) {
         const bool hasCode =
             existing.codeHash != evm::CEvmAccount::EmptyCodeHash();
-        if (hasCode || existing.nonce > 0) {
+        // EIP-7610 (Cancun): an account with non-empty storage is
+        // also a collision target, even if code and nonce are zero.
+        // We approximate by scanning the cache's dirty-storage map
+        // for any entry keyed on this address with a non-zero value.
+        bool hasStorage = false;
+        for (const auto& [key, value] : cache.DirtyStorage()) {
+            if (key.first == contractAddress && value != uint256()) {
+                hasStorage = true;
+                break;
+            }
+        }
+        if (hasCode || existing.nonce > 0 || hasStorage) {
             out.statusCode = EVMC_FAILURE;
             out.gasUsed = static_cast<int64_t>(payload.gasLimit);
             return out;

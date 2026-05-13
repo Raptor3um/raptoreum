@@ -582,8 +582,19 @@ evmc::Result CEvmHost::CallCreate(const evmc_message& msg) noexcept
     if (state.GetAccount(newAddr, existing)) {
         const bool hasCode =
             existing.codeHash != evm::CEvmAccount::EmptyCodeHash();
-        if (hasCode || existing.nonce > 0) {
+        // EIP-7610 (Cancun): an account with non-empty storage is
+        // also a collision target.
+        bool hasStorage = false;
+        for (const auto& [key, value] : state.DirtyStorage()) {
+            if (key.first == newAddr && value != uint256()) {
+                hasStorage = true;
+                break;
+            }
+        }
+        if (hasCode || existing.nonce > 0 || hasStorage) {
             state.Revert(snap);
+            warmAddresses = std::move(warmAddrsSnap);
+            warmSlots = std::move(warmSlotsSnap);
             evmc::Result r;
             r.status_code = EVMC_FAILURE;
             r.gas_left = 0;
