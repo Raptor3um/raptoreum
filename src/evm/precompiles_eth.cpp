@@ -257,6 +257,185 @@ uint64_t IterCount(size_t exp_len, const std::vector<uint8_t>& E)
 } // namespace
 
 // ---------------------------------------------------------------------------
+// 0x06 BN_ADD, 0x07 BN_MUL (EIP-196 — alt_bn128 curve, G1)
+// ---------------------------------------------------------------------------
+//
+// Curve: y^2 = x^3 + 3 over Fp where
+//   p = 0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47
+// Point at infinity is encoded as (0, 0). Affine coords are 32-byte
+// big-endian field elements. We use boost::multiprecision::cpp_int
+// for the field arithmetic — fast enough for the few-hundred-cycle
+// ops these precompiles do, and no extra dependency.
+//
+// BN_PAIRING (0x08) requires Fp^2 / Fp^12 arithmetic and the optimal
+// Ate pairing — not yet implemented. Hand-rolling it cleanly is
+// ~2000 LOC; we'd vendor evmone's silkpre or libff to bring it in.
+
+namespace {
+
+using boost::multiprecision::cpp_int;
+
+// bn128 / alt_bn128 base field prime (Yellow Paper App. E).
+const cpp_int& BnPrime()
+{
+    static const cpp_int p =
+        cpp_int("0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47");
+    return p;
+}
+
+// Normalise a possibly-negative cpp_int result back into [0, p).
+cpp_int FpMod(cpp_int v)
+{
+    const cpp_int& p = BnPrime();
+    v %= p;
+    if (v < 0) v += p;
+    return v;
+}
+
+cpp_int FpAdd(const cpp_int& a, const cpp_int& b) { return FpMod(a + b); }
+cpp_int FpSub(const cpp_int& a, const cpp_int& b) { return FpMod(a - b); }
+cpp_int FpMul(const cpp_int& a, const cpp_int& b) { return FpMod(a * b); }
+
+// Modular inverse via Fermat's little theorem: a^(p-2) mod p.
+cpp_int FpInv(const cpp_int& a)
+{
+    return boost::multiprecision::powm(a, BnPrime() - 2, BnPrime());
+}
+
+// Affine point representation. Infinity = (0, 0).
+struct G1Point
+{
+    cpp_int x;
+    cpp_int y;
+    bool is_infinity() const { return x == 0 && y == 0; }
+};
+
+// Validate a point is on y^2 == x^3 + 3 mod p.
+bool IsOnCurve(const G1Point& p)
+{
+    if (p.is_infinity()) return true;
+    const cpp_int lhs = FpMul(p.y, p.y);
+    cpp_int rhs = FpMul(p.x, p.x);
+    rhs = FpMul(rhs, p.x);
+    rhs = FpAdd(rhs, 3);
+    return lhs == rhs;
+}
+
+// Read 32 big-endian bytes from the (zero-padded) input as a cpp_int.
+cpp_int ReadFp(const evmc_message& msg, size_t offset)
+{
+    cpp_int v = 0;
+    for (size_t i = 0; i < 32; ++i) {
+        v <<= 8;
+        v += InputByte(msg, offset + i);
+    }
+    return v;
+}
+
+// Encode a cpp_int as 32 big-endian bytes.
+void WriteFp(std::vector<uint8_t>& out, size_t offset, cpp_int v)
+{
+    for (int i = 31; i >= 0; --i) {
+        out[offset + i] = static_cast<uint8_t>(v & 0xff);
+        v >>= 8;
+    }
+}
+
+// Affine point doubling.
+G1Point G1Double(const G1Point& P)
+{
+    if (P.is_infinity() || P.y == 0) return G1Point{0, 0};
+    // slope = (3*x^2) / (2*y)
+    cpp_int num = FpMul(FpMul(P.x, P.x), 3);
+    cpp_int den_inv = FpInv(FpMul(P.y, 2));
+    cpp_int s = FpMul(num, den_inv);
+    cpp_int x3 = FpSub(FpMul(s, s), FpMul(P.x, 2));
+    cpp_int y3 = FpSub(FpMul(s, FpSub(P.x, x3)), P.y);
+    return G1Point{x3, y3};
+}
+
+// Affine point addition.
+G1Point G1Add(const G1Point& P, const G1Point& Q)
+{
+    if (P.is_infinity()) return Q;
+    if (Q.is_infinity()) return P;
+    if (P.x == Q.x) {
+        if (P.y == Q.y) return G1Double(P);
+        // P + (-P) = O.
+        return G1Point{0, 0};
+    }
+    // slope = (Qy - Py) / (Qx - Px)
+    cpp_int s = FpMul(FpSub(Q.y, P.y), FpInv(FpSub(Q.x, P.x)));
+    cpp_int x3 = FpSub(FpSub(FpMul(s, s), P.x), Q.x);
+    cpp_int y3 = FpSub(FpMul(s, FpSub(P.x, x3)), P.y);
+    return G1Point{x3, y3};
+}
+
+// Scalar multiplication via double-and-add.
+G1Point G1Mul(const G1Point& P, const cpp_int& k_in)
+{
+    G1Point R{0, 0};
+    G1Point base = P;
+    cpp_int k = k_in;
+    while (k > 0) {
+        if ((k & 1) != 0) R = G1Add(R, base);
+        base = G1Double(base);
+        k >>= 1;
+    }
+    return R;
+}
+
+} // namespace
+
+evmc::Result BnAdd(const evmc_message& msg)
+{
+    // Istanbul (EIP-1108) gas: 150.
+    const int64_t cost = 150;
+    if (msg.gas < cost) return Oog();
+
+    G1Point P{ReadFp(msg, 0),  ReadFp(msg, 32)};
+    G1Point Q{ReadFp(msg, 64), ReadFp(msg, 96)};
+
+    // Validate both inputs (out of bounds or off-curve → fail).
+    if (P.x >= BnPrime() || P.y >= BnPrime() ||
+        Q.x >= BnPrime() || Q.y >= BnPrime()) {
+        return evmc::Result{EVMC_FAILURE, 0, 0};
+    }
+    if (!IsOnCurve(P) || !IsOnCurve(Q)) {
+        return evmc::Result{EVMC_FAILURE, 0, 0};
+    }
+
+    G1Point R = G1Add(P, Q);
+    std::vector<uint8_t> out(64, 0);
+    WriteFp(out, 0,  R.x);
+    WriteFp(out, 32, R.y);
+    return Ok(msg.gas - cost, out);
+}
+
+evmc::Result BnMul(const evmc_message& msg)
+{
+    // Istanbul (EIP-1108) gas: 6000.
+    const int64_t cost = 6000;
+    if (msg.gas < cost) return Oog();
+
+    G1Point P{ReadFp(msg, 0), ReadFp(msg, 32)};
+    cpp_int k = ReadFp(msg, 64);
+
+    if (P.x >= BnPrime() || P.y >= BnPrime()) {
+        return evmc::Result{EVMC_FAILURE, 0, 0};
+    }
+    if (!IsOnCurve(P)) {
+        return evmc::Result{EVMC_FAILURE, 0, 0};
+    }
+
+    G1Point R = G1Mul(P, k);
+    std::vector<uint8_t> out(64, 0);
+    WriteFp(out, 0,  R.x);
+    WriteFp(out, 32, R.y);
+    return Ok(msg.gas - cost, out);
+}
+
+// ---------------------------------------------------------------------------
 // 0x09 BLAKE2F (EIP-152)
 // ---------------------------------------------------------------------------
 //
@@ -475,11 +654,14 @@ bool ExecuteEthereumPrecompile(const evmc_message& msg, evmc::Result& result)
         case 0x03: result = Ripemd160(msg);  return true;
         case 0x04: result = Identity(msg);   return true;
         case 0x05: result = Modexp(msg);     return true;
+        case 0x06: result = BnAdd(msg);      return true;
+        case 0x07: result = BnMul(msg);      return true;
         case 0x09: result = Blake2f(msg);    return true;
-        // 0x06..0x08, 0x0a not yet implemented: fall back to bytecode
-        // execution (which will run no-op-success at the empty code
-        // residing at the precompile address). Limits the lie to:
-        //   0x06 BN_ADD, 0x07 BN_MUL, 0x08 BN_PAIRING (need libff)
+        // 0x08, 0x0a not yet implemented: fall back to bytecode
+        // execution (returns no-op success on empty code). Limits
+        // the lie to:
+        //   0x08 BN_PAIRING (needs Fp^12 + Miller loop + final exp;
+        //     ~2000 LOC of careful crypto, easier to vendor libff)
         //   0x0a KZG_POINT_EVALUATION (needs c-kzg-4844)
         default: return false;
     }

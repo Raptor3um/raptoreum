@@ -22,16 +22,17 @@ namespace evm {
  *   0x03 RIPEMD160  — RIPEMD-160 hash
  *   0x04 IDENTITY   — pass-through copy
  *   0x05 MODEXP     — modular exponentiation via boost::multiprecision
+ *   0x06 BN_ADD     — bn128 G1 point addition
+ *   0x07 BN_MUL     — bn128 G1 scalar multiplication
+ *   0x09 BLAKE2F    — Blake2 F compression function
  *
  * Not yet implemented (the dispatcher returns false so CEvmHost::call
- * falls back to bytecode execution on empty code — wrong per spec,
- * but limits the lie to those four):
- *   0x06 BN_ADD, 0x07 BN_MUL, 0x08 BN_PAIRING — bn128 elliptic curve;
- *     would need libff / hand-rolled pairing arithmetic.
- *   0x09 BLAKE2F      — Blake2 compression function; possible to
- *     hand-implement (small code surface).
- *   0x0a KZG_POINT_EVALUATION — BLS12-381 + KZG commitments;
- *     would need c-kzg-4844 or equivalent.
+ * falls back to bytecode execution on empty code — wrong per spec):
+ *   0x08 BN_PAIRING — optimal Ate pairing on bn128; needs Fp^12
+ *     arithmetic + Miller loop + final exponentiation. ~2000 LOC of
+ *     careful crypto; easier to vendor libff / silkpre.
+ *   0x0a KZG_POINT_EVALUATION — BLS12-381 + KZG commitments; needs
+ *     c-kzg-4844 or equivalent.
  *
  * Gas charging follows the Cancun schedule. If msg.gas is insufficient
  * we return EVMC_OUT_OF_GAS.

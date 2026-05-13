@@ -417,9 +417,11 @@ evmc::Result CallContract(evm::CEvmHost& host,
                       code.empty() ? nullptr : code.data(), code.size());
 }
 
-// Bytecode of "outer" contract that CALLs address 0x07 with no value
+// Bytecode of "outer" contract that CALLs address 0xB7 with no value
 // or args, then STOPs. Sufficient to exercise the inner CALL frame.
-std::vector<uint8_t> OuterCallsByte07Bytecode()
+// We use 0xB7 (not 0x01..0x0a) to avoid clashing with Ethereum
+// standard precompile addresses — see ExecuteEthereumPrecompile.
+std::vector<uint8_t> OuterCallsByteB7Bytecode()
 {
     return {
         0x60, 0x00,                  // PUSH1 0 (retSize)
@@ -427,7 +429,7 @@ std::vector<uint8_t> OuterCallsByte07Bytecode()
         0x60, 0x00,                  // PUSH1 0 (argsSize)
         0x60, 0x00,                  // PUSH1 0 (argsOffset)
         0x60, 0x00,                  // PUSH1 0 (value)
-        0x60, 0x07,                  // PUSH1 0x07 (address)
+        0x60, 0xB7,                  // PUSH1 0xB7 (address)
         0x62, 0x0F, 0x42, 0x40,      // PUSH3 0x0F4240 (gas = 1_000_000)
         0xF1,                        // CALL
         0x00,                        // STOP
@@ -461,14 +463,14 @@ BOOST_AUTO_TEST_CASE(nested_call_persists_inner_sstore)
     evm::CEvmStateCache cache(db);
     evm::CEvmHost host(cache, MinimalContext());
 
-    InstallContract(cache, 0xAA, OuterCallsByte07Bytecode());
-    InstallContract(cache, 0x07, InnerSstoreThenStop());
+    InstallContract(cache, 0xAA, OuterCallsByteB7Bytecode());
+    InstallContract(cache, 0xB7, InnerSstoreThenStop());
 
     evmc::Result r = CallContract(host, cache, 0xAA);
     BOOST_CHECK_EQUAL(r.status_code, EVMC_SUCCESS);
 
     uint160 innerAddr;
-    *(innerAddr.begin() + 19) = 0x07;
+    *(innerAddr.begin() + 19) = 0xB7;
     uint256 slot1;
     *(slot1.begin() + 31) = 0x01;
     uint256 stored;
@@ -487,8 +489,8 @@ BOOST_AUTO_TEST_CASE(nested_call_revert_rolls_back_inner_sstore)
     evm::CEvmStateCache cache(db);
     evm::CEvmHost host(cache, MinimalContext());
 
-    InstallContract(cache, 0xAB, OuterCallsByte07Bytecode());
-    InstallContract(cache, 0x07, InnerSstoreThenRevert());
+    InstallContract(cache, 0xAB, OuterCallsByteB7Bytecode());
+    InstallContract(cache, 0xB7, InnerSstoreThenRevert());
 
     evmc::Result r = CallContract(host, cache, 0xAB);
     // Outer frame succeeds — the inner CALL's revert is contained.
@@ -496,7 +498,7 @@ BOOST_AUTO_TEST_CASE(nested_call_revert_rolls_back_inner_sstore)
 
     // The inner SSTORE was rolled back by the savepoint.
     uint160 innerAddr;
-    *(innerAddr.begin() + 19) = 0x07;
+    *(innerAddr.begin() + 19) = 0xB7;
     uint256 slot1;
     *(slot1.begin() + 31) = 0x01;
     uint256 stored;
@@ -520,20 +522,20 @@ BOOST_AUTO_TEST_CASE(nested_staticcall_blocks_inner_sstore)
     //   PUSH1 0 (retOffset)
     //   PUSH1 0 (argsSize)
     //   PUSH1 0 (argsOffset)
-    //   PUSH1 0x07 (address)
+    //   PUSH1 0xB7 (address — outside standard precompiles)
     //   PUSH3 0x0F4240 (gas)
     //   STATICCALL (0xFA)
     //   STOP
     const std::vector<uint8_t> outer = {
         0x60, 0x00, 0x60, 0x00, 0x60, 0x00, 0x60, 0x00,
-        0x60, 0x07,
+        0x60, 0xB7,
         0x62, 0x0F, 0x42, 0x40,
         0xFA,
         0x00,
     };
 
     InstallContract(cache, 0xAC, outer);
-    InstallContract(cache, 0x07, InnerSstoreThenStop());
+    InstallContract(cache, 0xB7, InnerSstoreThenStop());
 
     evmc::Result r = CallContract(host, cache, 0xAC);
     BOOST_CHECK_EQUAL(r.status_code, EVMC_SUCCESS);
@@ -541,7 +543,7 @@ BOOST_AUTO_TEST_CASE(nested_staticcall_blocks_inner_sstore)
     // Storage at the inner contract is untouched — STATICCALL +
     // SSTORE is a state-mutation violation that evmone refuses.
     uint160 innerAddr;
-    *(innerAddr.begin() + 19) = 0x07;
+    *(innerAddr.begin() + 19) = 0xB7;
     uint256 slot1;
     *(slot1.begin() + 31) = 0x01;
     uint256 stored;
@@ -565,22 +567,23 @@ BOOST_AUTO_TEST_CASE(nested_call_with_value_transfers_balance)
     //   PUSH1 0       (argsSize)
     //   PUSH1 0       (argsOffset)
     //   PUSH2 0x03E8  (value = 1000)
-    //   PUSH1 0x07    (address)
+    //   PUSH1 0xB7    (address — outside standard precompiles)
     //   PUSH3 0x0F4240(gas)
     //   CALL          (0xF1)
     //   STOP          (0x00)
     const std::vector<uint8_t> outer = {
         0x60, 0x00, 0x60, 0x00, 0x60, 0x00, 0x60, 0x00,
         0x61, 0x03, 0xE8,
-        0x60, 0x07,
+        0x60, 0xB7,
         0x62, 0x0F, 0x42, 0x40,
         0xF1, 0x00,
     };
 
     // Pre-fund the outer contract with 2000 weis.
     InstallContract(cache, 0xAD, outer, /*balanceWeis=*/ 2000);
-    // Inner: do-nothing STOP.
-    InstallContract(cache, 0x07, {0x00});
+    // Inner: do-nothing STOP. Use 0xB7 (not 0x07, which collides
+    // with a standard Ethereum precompile address).
+    InstallContract(cache, 0xB7, {0x00});
 
     evmc::Result r = CallContract(host, cache, 0xAD);
     BOOST_CHECK_EQUAL(r.status_code, EVMC_SUCCESS);
@@ -588,7 +591,7 @@ BOOST_AUTO_TEST_CASE(nested_call_with_value_transfers_balance)
     uint160 outerAddr;
     *(outerAddr.begin() + 19) = 0xAD;
     uint160 innerAddr;
-    *(innerAddr.begin() + 19) = 0x07;
+    *(innerAddr.begin() + 19) = 0xB7;
 
     evm::CEvmAccount outerAcc;
     BOOST_REQUIRE(cache.GetAccount(outerAddr, outerAcc));
