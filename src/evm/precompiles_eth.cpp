@@ -436,6 +436,88 @@ evmc::Result BnMul(const evmc_message& msg)
 }
 
 // ---------------------------------------------------------------------------
+// 0x08 BN_PAIRING — degenerate-case fallback (EIP-197)
+// ---------------------------------------------------------------------------
+//
+// Full optimal-Ate pairing on bn128 requires Fp² / Fp^6 / Fp^12
+// arithmetic, the Miller loop, and final exponentiation — roughly
+// 2000 LOC of careful crypto code. We have NOT implemented it yet.
+//
+// However, two classes of pairing inputs have trivial answers we can
+// short-circuit:
+//   - Empty input: the product of zero pairings is the identity (1
+//     in Fp^12) → return 1.
+//   - All input pairs degenerate: if every pair contains an infinity
+//     G1 or infinity G2, every pairing equals 1; product is 1 → return 1.
+//
+// For everything else we return EVMC_FAILURE so the EVM caller sees
+// the "precompile failed" status (the alternative — wrong success
+// with a fabricated answer — would silently corrupt state). Tests
+// expecting a real pairing computation will still fail; tests in the
+// degenerate categories now pass.
+//
+// Gas (EIP-1108 Istanbul, kept under Cancun):
+//   base       = 45000
+//   per-pair   = 34000
+
+namespace {
+
+bool BnPairInputAllDegenerate(const evmc_message& msg, size_t pair_count)
+{
+    // For each 192-byte pair, read G1.x, G1.y, G2.{x.c0, x.c1, y.c0, y.c1}.
+    // If any pair has a non-zero G1 AND a non-zero G2 (all four Fp² coords),
+    // we cannot short-circuit.
+    for (size_t i = 0; i < pair_count; ++i) {
+        const size_t off = i * 192;
+        // G1 infinity == both x and y are zero.
+        bool g1_inf = true;
+        for (size_t j = 0; j < 64; ++j) {
+            if (InputByte(msg, off + j) != 0) { g1_inf = false; break; }
+        }
+        if (g1_inf) continue;
+        // G2 infinity == all four 32-byte coords are zero.
+        bool g2_inf = true;
+        for (size_t j = 64; j < 192; ++j) {
+            if (InputByte(msg, off + j) != 0) { g2_inf = false; break; }
+        }
+        if (!g2_inf) return false;
+    }
+    return true;
+}
+
+} // namespace
+
+evmc::Result BnPairing(const evmc_message& msg)
+{
+    // Input length must be a multiple of 192.
+    if (msg.input_size % 192 != 0) {
+        return evmc::Result{EVMC_FAILURE, 0, 0};
+    }
+    const size_t pair_count = msg.input_size / 192;
+
+    // EIP-1108 gas.
+    const int64_t cost = 45000 + 34000 * static_cast<int64_t>(pair_count);
+    if (msg.gas < cost) return Oog();
+
+    // Two short-circuit cases produce a known answer of "true" (1):
+    //   - empty input (product of no pairings = identity)
+    //   - all pairs degenerate (each pairing with an infinity point
+    //     equals identity)
+    if (pair_count == 0 || BnPairInputAllDegenerate(msg, pair_count)) {
+        std::vector<uint8_t> out(32, 0);
+        out[31] = 1;
+        return Ok(msg.gas - cost, out);
+    }
+
+    // Non-degenerate input: full optimal-Ate pairing is required.
+    // Returning EVMC_FAILURE is honest — the calling contract sees
+    // the precompile as failed and can choose its own fallback. This
+    // is preferable to fabricating a success/failure answer that
+    // would silently mis-state state.
+    return evmc::Result{EVMC_FAILURE, 0, 0};
+}
+
+// ---------------------------------------------------------------------------
 // 0x09 BLAKE2F (EIP-152)
 // ---------------------------------------------------------------------------
 //
@@ -656,6 +738,7 @@ bool ExecuteEthereumPrecompile(const evmc_message& msg, evmc::Result& result)
         case 0x05: result = Modexp(msg);     return true;
         case 0x06: result = BnAdd(msg);      return true;
         case 0x07: result = BnMul(msg);      return true;
+        case 0x08: result = BnPairing(msg);  return true;
         case 0x09: result = Blake2f(msg);    return true;
         // 0x08, 0x0a not yet implemented: fall back to bytecode
         // execution (returns no-op success on empty code). Limits
