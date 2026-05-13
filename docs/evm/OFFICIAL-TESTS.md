@@ -157,9 +157,10 @@ Cancun fixtures: 9202 pass, 11136 fail, 2041 skip
 | Capa B v11 | `8b8656ba0` | 9635 | 10703 | 2041 (BLAKE2F 0x09) |
 | Capa B v12 | `6a0b4337e` | 9815 | 10523 | 2041 (CREATE-failure cleanup) |
 | Capa B v13 | `1e9a44b5d` | 10888 | 9450 | 2041 (bn128 BN_ADD/BN_MUL) |
-| Capa B v14 | `65c76eb16` | **10895** | 9443 | 2041 (EIP-7610 storage-collision) |
+| Capa B v14 | `65c76eb16` | 10895 | 9443 | 2041 (EIP-7610 storage-collision) |
+| Capa B v15 | `2a9f1d6dd` | **11095** | 9243 | 2041 (BN_PAIRING degenerate-case) |
 
-Pass count is **+87% over v1** (5820 → 10895) — every increment came
+Pass count is **+91% over v1** (5820 → 11095) — every increment came
 from a real production-pipeline correctness fix uncovered by running
 the fixtures.
 
@@ -288,17 +289,23 @@ ship as part of the EVM stack):
   paths. An account with non-empty storage is now an occupied
   collision target even when its code is empty and nonce is zero,
   matching the post-Cancun semantics.
+- **BN_PAIRING (0x08) degenerate-case short-circuit**. Empty input
+  and all-pairs-degenerate cases return identity (1) directly. The
+  full optimal-Ate pairing (Fp^12 + Miller loop + final exp; ~2000
+  LOC) is still pending; mixed-degenerate inputs return EVMC_FAILURE
+  so callers see the honest "not yet implemented" status rather than
+  a fabricated wrong answer.
 
-### Remaining failure breakdown (as of v14)
+### Remaining failure breakdown (as of v15)
 
-9443 failures across the broader fixture set:
+9243 failures across the broader fixture set:
 
 | Count | Category | Notes |
 |---|---|---|
-| 8645 | balance | small per-fixture drifts; remaining gas-accounting edges (BN_PAIRING / KZG-using fixtures + long-tail SSTORE/memory metering) |
-| ~625 | storage | downstream of wrong gas → wrong control flow |
+| 8527 | balance | small per-fixture drifts; long-tail SSTORE/memory metering + non-degenerate BN_PAIRING fixtures + KZG |
+| ~540 | storage | downstream of wrong gas → wrong control flow |
 | 122 | nonce | CREATE/CREATE2 corner cases beyond EIP-2681 / EIP-6780 / EIP-7610 |
-| 43 | address | account expected to exist in post but missing |
+| 45 | address | account expected to exist in post but missing |
 | 8 | expected | postStateHash mismatch (state slightly off; MPT computation itself is correct per unit tests) |
 
 Per-suite pass rates as of v14 (selected):
@@ -316,9 +323,10 @@ Per-suite pass rates as of v14 (selected):
 | stReturnDataTest | 202 | 273 | 74% |
 | stRevertTest | 212 | 271 | 78% |
 | stZeroKnowledge | 661 | 944 | 70% |
-| stPreCompiledContracts | 623 | 960 | 65% |
+| stPreCompiledContracts | 639 | 960 | 67% |
+| stZeroKnowledge | 836 | 944 | 88% |
 | stMemoryTest | 274 | 578 | 47% |
-| stSStoreTest | 155 | 475 | 33% |
+| stSStoreTest | 159 | 475 | 33% |
 
 Likely follow-ups, in ROI order:
 
