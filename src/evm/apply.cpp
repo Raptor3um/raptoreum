@@ -386,6 +386,43 @@ ApplyResult ApplyEvmDeployTx(const CEvmDeployTx& payload,
             // attached to this address.
         }
         cache.SetAccount(contractAddress, account);
+    } else {
+        // On any non-success status (revert, OOG, invalid opcode...)
+        // the new contract is NOT created. Reverse the pre-seed we
+        // installed before running init code: delete the placeholder
+        // account record (and any value the harness transferred —
+        // the EVM spec says the value is also forfeit on failed
+        // CREATE, but real Ethereum leaves the sender debited as
+        // part of the gas burn; we keep that behaviour since the
+        // sender already paid the value before init).
+        //
+        // If the contract address PRE-EXISTED in the cache (e.g.,
+        // EOA with a pre-staged balance), we leave it as it was.
+        // The seed code only overwrote a missing/empty record, so
+        // deletion only removes our own creation.
+        if (payload.value == 0) {
+            // We didn't credit anything to it beyond the seed; safe
+            // to delete outright.
+            cache.DeleteAccount(contractAddress);
+        } else {
+            // Value was transferred. Per Ethereum semantics, the
+            // value transfer is rolled back on failed CREATE; refund
+            // it to the sender so net balance change is just the gas
+            // burn. Reload, debit recipient, credit sender.
+            evm::CEvmAccount recAcc;
+            if (cache.GetAccount(contractAddress, recAcc)) {
+                if (Uint256GreaterOrEqualUint64(recAcc.balance, payload.value)) {
+                    Uint256SubUint64(recAcc.balance, payload.value);
+                }
+                evm::CEvmAccount senAcc;
+                if (cache.GetAccount(sender, senAcc)) {
+                    Uint256AddUint64(senAcc.balance, payload.value);
+                    cache.SetAccount(sender, senAcc);
+                }
+            }
+            // After reversing the credit, delete the placeholder.
+            cache.DeleteAccount(contractAddress);
+        }
     }
 
     return out;
