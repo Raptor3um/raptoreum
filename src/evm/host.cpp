@@ -397,6 +397,11 @@ evmc::Result CEvmHost::call(const evmc_message& msg) noexcept
     // the warm sets here and restore them in the revert branch below.
     auto warmAddrsSnap = warmAddresses;
     auto warmSlotsSnap = warmSlots;
+    // EIP-1153 transient storage: TSTOREs done inside a call frame that
+    // ends in REVERT/OOG/INVALID must be undone (just like normal
+    // storage). evmone delegates transient storage to the host, so
+    // the host owns the rollback. Snapshot here, restore on revert.
+    auto transientSnap = transient;
 
     // --- 1. Value transfer (CALL and CALLCODE only — DELEGATECALL
     //        inherits the outer frame's value; STATICCALL disallows
@@ -487,10 +492,12 @@ evmc::Result CEvmHost::call(const evmc_message& msg) noexcept
     } else {
         // EVMC_REVERT, EVMC_OUT_OF_GAS, EVMC_INVALID_INSTRUCTION,
         // EVMC_STACK_*, EVMC_FAILURE, etc. — all roll back, including
-        // the warm-access sets per EIP-2929.
+        // the warm-access sets per EIP-2929 and transient storage
+        // per EIP-1153.
         state.Revert(snap);
         warmAddresses = std::move(warmAddrsSnap);
         warmSlots = std::move(warmSlotsSnap);
+        transient = std::move(transientSnap);
     }
 
     return r;
@@ -526,9 +533,11 @@ evmc::Result CEvmHost::CallCreate(const evmc_message& msg) noexcept
 {
     const int snap = state.Snapshot();
     // Mirror the warm-access snapshot from `call()` — EIP-2929 requires
-    // the warm sets to roll back with state on any failure.
+    // the warm sets to roll back with state on any failure. Same for
+    // transient storage per EIP-1153.
     auto warmAddrsSnap = warmAddresses;
     auto warmSlotsSnap = warmSlots;
+    auto transientSnap = transient;
 
     const uint160 senderAddr = ToUint160(msg.sender);
     evm::CEvmAccount senderAcc;
@@ -563,6 +572,7 @@ evmc::Result CEvmHost::CallCreate(const evmc_message& msg) noexcept
         state.Revert(snap);
         warmAddresses = std::move(warmAddrsSnap);
         warmSlots = std::move(warmSlotsSnap);
+        transient = std::move(transientSnap);
         evmc::Result r;
         r.status_code = EVMC_FAILURE;
         r.gas_left = 0;
@@ -595,6 +605,7 @@ evmc::Result CEvmHost::CallCreate(const evmc_message& msg) noexcept
             state.Revert(snap);
             warmAddresses = std::move(warmAddrsSnap);
             warmSlots = std::move(warmSlotsSnap);
+            transient = std::move(transientSnap);
             evmc::Result r;
             r.status_code = EVMC_FAILURE;
             r.gas_left = 0;
@@ -676,6 +687,7 @@ evmc::Result CEvmHost::CallCreate(const evmc_message& msg) noexcept
         state.Revert(snap);
         warmAddresses = std::move(warmAddrsSnap);
         warmSlots = std::move(warmSlotsSnap);
+        transient = std::move(transientSnap);
     }
 
     return r;
