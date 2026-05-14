@@ -139,7 +139,7 @@ docker exec rtm-builder bash -lc "
 Running against `ethereum/tests` v14.0 `BlockchainTests/GeneralStateTests`:
 
 ```
-Cancun fixtures: 9202 pass, 11136 fail, 2041 skip
+Cancun fixtures: 11607 pass, 8731 fail, 2041 skip
 ```
 
 | Version | Commit | PASS | FAIL | SKIP |
@@ -158,11 +158,15 @@ Cancun fixtures: 9202 pass, 11136 fail, 2041 skip
 | Capa B v12 | `6a0b4337e` | 9815 | 10523 | 2041 (CREATE-failure cleanup) |
 | Capa B v13 | `1e9a44b5d` | 10888 | 9450 | 2041 (bn128 BN_ADD/BN_MUL) |
 | Capa B v14 | `65c76eb16` | 10895 | 9443 | 2041 (EIP-7610 storage-collision) |
-| Capa B v15 | `2a9f1d6dd` | **11095** | 9243 | 2041 (BN_PAIRING degenerate-case) |
+| Capa B v15 | `2a9f1d6dd` | 11095 | 9243 | 2041 (BN_PAIRING degenerate-case) |
+| Capa B v16 | `5dd3d97b1` | 11134 | 9204 | 2041 (EIP-1153 transient revert) |
+| Capa B v17 | `24508ce9c` | 11134 | 9204 | 2041 (BLOBHASH plumbing — correctness) |
+| Capa B v18 | `99b914770` | 11569 | 8769 | 2041 (Type 3 fee + blob gas accounting) |
+| **Capa B v19** | `e040a29fc` | **11607** | **8731** | **2041** (BLOBBASEFEE opcode) |
 
-Pass count is **+91% over v1** (5820 → 11095) — every increment came
-from a real production-pipeline correctness fix uncovered by running
-the fixtures.
+Pass count is **+99% over v1** (5820 → 11607) — every increment came
+from a real production-pipeline or harness-correctness fix uncovered
+by running the fixtures.
 
 **Skip categories** (all by design, not failures):
 
