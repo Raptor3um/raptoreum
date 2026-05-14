@@ -76,8 +76,14 @@ struct ExecutionContext
      *  Computed by the harness/RPC layer from the block header's
      *  excessBlobGas via fake_exponential — at the consensus layer we
      *  don't drive blob-fee market mechanics yet, but the opcode must
-     *  return a sane value for Cancun-fork fixtures and contracts. */
-    uint64_t blobBaseFee{0};
+     *  return a sane value for Cancun-fork fixtures and contracts.
+     *
+     *  Width: __uint128_t — for moderately-elevated excessBlobGas the
+     *  result climbs past u64 (the official fixtures probe this
+     *  range, e.g. parent_excess_blobs_1230 expects a ~68-bit value).
+     *  Stays in the low 16 bytes of the evmc_tx_context.blob_base_fee
+     *  evmc::uint256be field. */
+    __uint128_t blobBaseFee{0};
 };
 
 /**

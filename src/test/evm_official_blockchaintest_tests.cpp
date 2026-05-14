@@ -515,6 +515,27 @@ FixtureResult RunOneFixture(const std::string& filePath,
         }
         return out;
     };
+    // u128 subtraction helper, needed because EIP-4844 blob gas
+    // charge = BLOB_GAS_PER_BLOB(131072) * num_blobs * blob_base_fee
+    // can exceed u64 (blob_base_fee can climb to ~10^19, and 131072 *
+    // that overflows). Same byte-shifting structure as u256SubU64
+    // but draws the borrow from a 128-bit value.
+    auto u256SubU128 = [](const uint256& v, __uint128_t delta) -> uint256 {
+        uint256 out = v;
+        __uint128_t borrow = delta;
+        for (int i = 31; i >= 0 && borrow; --i) {
+            int32_t diff = static_cast<uint8_t>(*(out.begin() + i)) -
+                           static_cast<int32_t>(borrow & 0xff);
+            if (diff < 0) {
+                *(out.begin() + i) = static_cast<uint8_t>(diff + 0x100);
+                borrow = (borrow >> 8) + 1;
+            } else {
+                *(out.begin() + i) = static_cast<uint8_t>(diff);
+                borrow >>= 8;
+            }
+        }
+        return out;
+    };
 
     // Loop over blocks. The cache persists across them so multi-block
     // fixtures get applied serially.
@@ -555,30 +576,26 @@ FixtureResult RunOneFixture(const std::string& filePath,
         uint64_t blockExcessBlobGas = 0;
         if (header["excessBlobGas"].isStr())
             blockExcessBlobGas = ParseU64(header["excessBlobGas"].getValStr());
-        const uint64_t blobBaseFee = [blockExcessBlobGas]() -> uint64_t {
+        const __uint128_t blobBaseFee = [blockExcessBlobGas]() -> __uint128_t {
             // EIP-4844 fake_exponential(MIN_BLOB_BASE_FEE=1,
             // excess_blob_gas, BLOB_BASE_FEE_UPDATE_FRACTION=3338477).
-            // Output is integer; capped — for fixture-realistic
-            // excess values, output fits comfortably in u64.
+            // The official fixtures probe excess values that drive the
+            // result above 2^64 (e.g. parent_excess_blobs_1230 expects
+            // a ~68-bit value), so we keep the result in u128.
             constexpr uint64_t kFactor = 1;
             constexpr uint64_t kDenom = 3338477;
             uint64_t i = 1;
-            // Use __int128 internally to avoid overflow in the
-            // numerator accumulation. cpp doesn't have it on every
-            // platform; emulate with checked multiply.
-            unsigned long long output = 0;
-            unsigned long long numAccum = kFactor * kDenom;
+            __uint128_t output = 0;
+            __uint128_t numAccum =
+                static_cast<__uint128_t>(kFactor) *
+                static_cast<__uint128_t>(kDenom);
             while (numAccum > 0) {
-                // overflow guard: stop if adding would wrap.
-                if (output + numAccum < output) break;
                 output += numAccum;
-                // numAccum = numAccum * excess / (denom * i)
                 if (blockExcessBlobGas == 0) break;
-                // careful multiply: numAccum * excess can overflow
-                // u64 for absurdly large numbers; clamp.
-                __uint128_t prod = static_cast<__uint128_t>(numAccum) *
-                                   static_cast<__uint128_t>(blockExcessBlobGas);
-                numAccum = static_cast<unsigned long long>(prod / (kDenom * i));
+                // numAccum = numAccum * excess / (denom * i)
+                numAccum = (numAccum *
+                            static_cast<__uint128_t>(blockExcessBlobGas)) /
+                           (static_cast<__uint128_t>(kDenom) * i);
                 if (++i > 256) break; // belt-and-braces termination
             }
             return output / kDenom;
@@ -798,16 +815,22 @@ FixtureResult RunOneFixture(const std::string& filePath,
     // (computed from the block's excessBlobGas above). This is a
     // separate, burned fee — it does NOT go to the coinbase, just
     // leaves the sender's balance.
+    //
+    // The product easily exceeds u64 once blob_base_fee climbs into
+    // the 10^19 range; blob_base_fee itself can exceed u64 in
+    // higher-excess fixtures. The arithmetic stays in u128 (the
+    // expected ranges in BlockchainTests do not exceed it).
     constexpr uint64_t kBlobGasPerBlob = 131072;
-    const uint64_t blobGasCharge =
-        static_cast<uint64_t>(blobVersionedHashes.size()) *
-        kBlobGasPerBlob * blobBaseFee;
+    const __uint128_t blobGasCharge =
+        static_cast<__uint128_t>(blobVersionedHashes.size()) *
+        static_cast<__uint128_t>(kBlobGasPerBlob) *
+        blobBaseFee;
 
     evm::CEvmAccount senderAcc;
     if (cache.GetAccount(senderAddr, senderAcc)) {
         senderAcc.balance = u256SubU64(senderAcc.balance, txGasLimit * effectiveGasPrice);
         if (blobGasCharge > 0) {
-            senderAcc.balance = u256SubU64(senderAcc.balance, blobGasCharge);
+            senderAcc.balance = u256SubU128(senderAcc.balance, blobGasCharge);
         }
         senderAcc.nonce += 1;
         cache.SetAccount(senderAddr, senderAcc);

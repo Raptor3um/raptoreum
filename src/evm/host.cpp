@@ -739,9 +739,13 @@ evmc_tx_context CEvmHost::get_tx_context() const noexcept
     // live elsewhere.
     {
         evmc::uint256be bbf{};
-        for (int i = 0; i < 8; ++i) {
-            bbf.bytes[24 + i] = static_cast<uint8_t>(
-                (context.blobBaseFee >> (56 - 8 * i)) & 0xFF);
+        // Write the low 16 bytes (128-bit value) big-endian into the
+        // tail of the 32-byte field. byte[16] is the MSB of the u128;
+        // byte[31] the LSB.
+        __uint128_t v = context.blobBaseFee;
+        for (int i = 0; i < 16; ++i) {
+            bbf.bytes[31 - i] = static_cast<uint8_t>(v & 0xFF);
+            v >>= 8;
         }
         tx.blob_base_fee = bbf;
     }
