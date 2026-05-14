@@ -61,6 +61,15 @@ struct ExecutionContext
      *  A full lookback table for BLOCKHASH(N-2..N-256) is plumbed by the
      *  caller via getBlockHash callback (see CEvmHost ctor). */
     uint256 prevBlockHash;
+
+    /** EIP-4844 blob versioned hashes attached to the current tx, in
+     *  declaration order. Read-only on the EVM side via the BLOBHASH
+     *  opcode (0x49 in Cancun). Empty for non-blob (legacy / 1559 /
+     *  2930) txs — BLOBHASH then returns 0 for any index. Per design
+     *  decision D6 we do NOT execute blob transactions natively, but
+     *  exposing the field lets us run the official BLOBHASH-opcode
+     *  fixtures cleanly. */
+    std::vector<uint256> blobVersionedHashes;
 };
 
 /**
@@ -236,6 +245,12 @@ private:
 
     // Captured logs (LOG0..LOG4 opcodes).
     std::vector<Log> logs;
+
+    // Scratch buffer for blob versioned hashes exposed via
+    // get_tx_context(). evmone reads tx context lazily inside the VM
+    // frame, so we need stable storage outliving each call. Sized
+    // once per host instance from ExecutionContext.blobVersionedHashes.
+    mutable std::vector<evmc::bytes32> blobHashesScratch;
 
     // --- helpers -----------------------------------------------------
     static uint160 ToUint160(const evmc::address& a);

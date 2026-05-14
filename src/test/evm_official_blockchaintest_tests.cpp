@@ -579,6 +579,7 @@ FixtureResult RunOneFixture(const std::string& filePath,
     uint256 senderHash;
     uint256 toAddressU256;
     std::vector<evm::AccessListEntry> accessList;
+    std::vector<uint256> blobVersionedHashes;
 
     try {
         txValue = txObj["value"].isStr() ? ParseU64(txObj["value"].getValStr()) : 0;
@@ -626,6 +627,18 @@ FixtureResult RunOneFixture(const std::string& filePath,
                     }
                 }
                 accessList.push_back(std::move(entry));
+            }
+        }
+        // EIP-4844 (Cancun) blob versioned hashes (type-3 envelope).
+        // We don't execute the blob transactions natively (D6), but
+        // we DO expose the hashes via get_tx_context() so the
+        // BLOBHASH opcode (0x49) reads the right values inside any
+        // contract called by this fixture.
+        const auto& bvh = txObj["blobVersionedHashes"];
+        if (bvh.isArray()) {
+            for (size_t i = 0; i < bvh.size(); ++i) {
+                if (bvh[i].isStr())
+                    blobVersionedHashes.push_back(ParseU256(bvh[i].getValStr()));
             }
         }
     } catch (const std::exception& e) {
@@ -700,6 +713,10 @@ FixtureResult RunOneFixture(const std::string& filePath,
         }
         ctx.txGasPrice = gpU256;
     }
+    // EIP-4844 BLOBHASH opcode: any blob versioned hashes parsed
+    // from the fixture tx ride along in ctx so CEvmHost can expose
+    // them via get_tx_context().blob_hashes.
+    ctx.blobVersionedHashes = blobVersionedHashes;
 
     // EIP-2 intrinsic gas:
     //   - CALL: 21000 base + 4 per zero byte of calldata + 16 per non-zero.

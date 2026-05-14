@@ -730,12 +730,30 @@ evmc_tx_context CEvmHost::get_tx_context() const noexcept
 
     std::memcpy(tx.block_base_fee.bytes, context.baseFee.begin(), 32);
 
-    // blob_base_fee + blob_hashes are EIP-4844 fields. We exclude blob
-    // transactions in the Cancun target per design decision D6, so leave
-    // these zero and empty.
+    // EIP-4844 blob fields. We do not execute blob transactions natively
+    // (decision D6) so blob_base_fee stays zero. However, we DO expose
+    // the tx's blob versioned hashes so the BLOBHASH opcode (0x49)
+    // reads the right value when the surrounding harness/RPC adapter
+    // plumbed the field — the opcode itself is part of Cancun
+    // regardless of how the tx was signed.
     tx.blob_base_fee = evmc::uint256be{};
-    tx.blob_hashes = nullptr;
-    tx.blob_hashes_count = 0;
+    if (context.blobVersionedHashes.empty()) {
+        tx.blob_hashes = nullptr;
+        tx.blob_hashes_count = 0;
+    } else {
+        // We need stable storage for the lifetime of get_tx_context()'s
+        // return value. evmone re-fetches tx context lazily inside the
+        // VM frame, so we materialize into a member buffer.
+        blobHashesScratch.resize(context.blobVersionedHashes.size());
+        for (size_t i = 0; i < context.blobVersionedHashes.size(); ++i) {
+            // uint256 layout is big-endian byte[0]=MSB (matches
+            // evmc::bytes32 wire format). Memcpy is exact.
+            std::memcpy(blobHashesScratch[i].bytes,
+                        context.blobVersionedHashes[i].begin(), 32);
+        }
+        tx.blob_hashes = blobHashesScratch.data();
+        tx.blob_hashes_count = blobHashesScratch.size();
+    }
 
     // initcodes for EOF (post-Cancun); leave empty.
     tx.initcodes = nullptr;
