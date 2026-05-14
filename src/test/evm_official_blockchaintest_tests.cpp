@@ -764,8 +764,10 @@ FixtureResult RunOneFixture(const std::string& filePath,
     }
     // EIP-4844 BLOBHASH opcode: any blob versioned hashes parsed
     // from the fixture tx ride along in ctx so CEvmHost can expose
-    // them via get_tx_context().blob_hashes.
+    // them via get_tx_context().blob_hashes. BLOBBASEFEE opcode
+    // (0x4a) reads the block-level blob_base_fee computed above.
     ctx.blobVersionedHashes = blobVersionedHashes;
+    ctx.blobBaseFee = blobBaseFee;
 
     // EIP-2 intrinsic gas:
     //   - CALL: 21000 base + 4 per zero byte of calldata + 16 per non-zero.
@@ -1043,8 +1045,11 @@ BOOST_AUTO_TEST_CASE(run_general_state_tests_cancun)
         BOOST_TEST_MESSAGE("  " << count << " × " << cat);
     }
     if (!stats.failures.empty()) {
-        BOOST_TEST_MESSAGE("First failures (up to 20):");
-        const size_t shown = std::min<size_t>(20, stats.failures.size());
+        const char* limitStr2 = std::getenv("EVM_OFFICIAL_TESTS_FAIL_LIMIT");
+        const size_t failShown =
+            limitStr2 ? static_cast<size_t>(std::atoi(limitStr2)) : 20;
+        BOOST_TEST_MESSAGE("First failures (up to " << failShown << "):");
+        const size_t shown = std::min<size_t>(failShown, stats.failures.size());
         for (size_t i = 0; i < shown; ++i) {
             const auto& f = stats.failures[i];
             BOOST_TEST_MESSAGE("  - " << f.fixtureName << ": " << f.reason);

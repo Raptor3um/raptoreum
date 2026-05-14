@@ -70,6 +70,14 @@ struct ExecutionContext
      *  exposing the field lets us run the official BLOBHASH-opcode
      *  fixtures cleanly. */
     std::vector<uint256> blobVersionedHashes;
+
+    /** EIP-4844 (Cancun) blob base fee for the block this tx belongs
+     *  to. Exposed to contracts via the BLOBBASEFEE opcode (0x4a).
+     *  Computed by the harness/RPC layer from the block header's
+     *  excessBlobGas via fake_exponential — at the consensus layer we
+     *  don't drive blob-fee market mechanics yet, but the opcode must
+     *  return a sane value for Cancun-fork fixtures and contracts. */
+    uint64_t blobBaseFee{0};
 };
 
 /**

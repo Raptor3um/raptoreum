@@ -730,13 +730,21 @@ evmc_tx_context CEvmHost::get_tx_context() const noexcept
 
     std::memcpy(tx.block_base_fee.bytes, context.baseFee.begin(), 32);
 
-    // EIP-4844 blob fields. We do not execute blob transactions natively
-    // (decision D6) so blob_base_fee stays zero. However, we DO expose
-    // the tx's blob versioned hashes so the BLOBHASH opcode (0x49)
-    // reads the right value when the surrounding harness/RPC adapter
-    // plumbed the field — the opcode itself is part of Cancun
-    // regardless of how the tx was signed.
-    tx.blob_base_fee = evmc::uint256be{};
+    // EIP-4844 blob fields. We do not execute blob transactions
+    // natively (decision D6), but we DO expose the tx's blob versioned
+    // hashes so the BLOBHASH opcode (0x49) reads the right value, and
+    // we surface the block's blob_base_fee so BLOBBASEFEE (0x4a)
+    // returns it. Both opcodes are part of Cancun regardless of how
+    // the tx was signed; the consensus-layer fee-market mechanics
+    // live elsewhere.
+    {
+        evmc::uint256be bbf{};
+        for (int i = 0; i < 8; ++i) {
+            bbf.bytes[24 + i] = static_cast<uint8_t>(
+                (context.blobBaseFee >> (56 - 8 * i)) & 0xFF);
+        }
+        tx.blob_base_fee = bbf;
+    }
     if (context.blobVersionedHashes.empty()) {
         tx.blob_hashes = nullptr;
         tx.blob_hashes_count = 0;
