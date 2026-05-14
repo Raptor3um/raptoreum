@@ -545,6 +545,45 @@ FixtureResult RunOneFixture(const std::string& filePath,
         if (header["mixHash"].isStr())
             blockCtx.prevBlockHash = ParseU256(header["mixHash"].getValStr());
 
+        // EIP-4844 blob base fee for this block. Computed from the
+        // block header's excessBlobGas via the spec's fake_exponential
+        // function. We use it below to charge sender wallets per blob
+        // attached to type-3 transactions. excessBlobGas is the
+        // accumulated over-target blob gas from prior blocks; the
+        // block we're currently executing pays its txs against the
+        // base fee derived from its own excessBlobGas field.
+        uint64_t blockExcessBlobGas = 0;
+        if (header["excessBlobGas"].isStr())
+            blockExcessBlobGas = ParseU64(header["excessBlobGas"].getValStr());
+        const uint64_t blobBaseFee = [blockExcessBlobGas]() -> uint64_t {
+            // EIP-4844 fake_exponential(MIN_BLOB_BASE_FEE=1,
+            // excess_blob_gas, BLOB_BASE_FEE_UPDATE_FRACTION=3338477).
+            // Output is integer; capped — for fixture-realistic
+            // excess values, output fits comfortably in u64.
+            constexpr uint64_t kFactor = 1;
+            constexpr uint64_t kDenom = 3338477;
+            uint64_t i = 1;
+            // Use __int128 internally to avoid overflow in the
+            // numerator accumulation. cpp doesn't have it on every
+            // platform; emulate with checked multiply.
+            unsigned long long output = 0;
+            unsigned long long numAccum = kFactor * kDenom;
+            while (numAccum > 0) {
+                // overflow guard: stop if adding would wrap.
+                if (output + numAccum < output) break;
+                output += numAccum;
+                // numAccum = numAccum * excess / (denom * i)
+                if (blockExcessBlobGas == 0) break;
+                // careful multiply: numAccum * excess can overflow
+                // u64 for absurdly large numbers; clamp.
+                __uint128_t prod = static_cast<__uint128_t>(numAccum) *
+                                   static_cast<__uint128_t>(blockExcessBlobGas);
+                numAccum = static_cast<unsigned long long>(prod / (kDenom * i));
+                if (++i > 256) break; // belt-and-braces termination
+            }
+            return output / kDenom;
+        }();
+
         // EIP-4788 beacon-roots system pre-call: once per block, before
         // any user transactions. Reuse the block context.
         DriveBeaconRootsSystemCall(header, cache, blockCtx);
@@ -563,12 +602,22 @@ FixtureResult RunOneFixture(const std::string& filePath,
             const auto& toField = txObj["to"];
             const bool isCreate = !toField.isStr() || toField.getValStr().empty()
                                   || ParseHexBytes(toField.getValStr()).empty();
+    // Any envelope with maxFeePerGas / maxPriorityFeePerGas uses the
+    // EIP-1559 fee formula. That's type 2 (DynamicFee), type 3 (Blob —
+    // EIP-4844), and any future type that inherits the dynamic-fee
+    // pricing. Type 0 (legacy) and type 1 (EIP-2930 access list) use
+    // `gasPrice` and are flat. We previously hard-coded `type == 2`
+    // here, which silently fell back to legacy pricing for type 3 and
+    // charged sender 5 gwei/gas instead of (baseFee + tip) on every
+    // blob fixture — accounting for the ~212T-wei sender drift we saw.
     bool isEip1559 = false;
-    if (txObj["type"].isStr()) {
-        try { isEip1559 = ParseU64(txObj["type"].getValStr()) == 2; }
-        catch (...) {}
-    } else if (txObj["maxFeePerGas"].isStr()) {
+    if (txObj["maxFeePerGas"].isStr() || txObj["maxPriorityFeePerGas"].isStr()) {
         isEip1559 = true;
+    } else if (txObj["type"].isStr()) {
+        try {
+            const uint64_t txType = ParseU64(txObj["type"].getValStr());
+            isEip1559 = (txType == 2 || txType == 3);
+        } catch (...) {}
     }
 
     uint64_t txValue = 0;
@@ -742,9 +791,22 @@ FixtureResult RunOneFixture(const std::string& filePath,
     }
     const uint64_t evmGas = txGasLimit - intrinsicGas;
 
+    // EIP-4844 blob gas charge. Type-3 (blob) txs additionally debit
+    // the sender by BLOB_GAS_PER_BLOB * num_blobs * blob_base_fee
+    // (computed from the block's excessBlobGas above). This is a
+    // separate, burned fee — it does NOT go to the coinbase, just
+    // leaves the sender's balance.
+    constexpr uint64_t kBlobGasPerBlob = 131072;
+    const uint64_t blobGasCharge =
+        static_cast<uint64_t>(blobVersionedHashes.size()) *
+        kBlobGasPerBlob * blobBaseFee;
+
     evm::CEvmAccount senderAcc;
     if (cache.GetAccount(senderAddr, senderAcc)) {
         senderAcc.balance = u256SubU64(senderAcc.balance, txGasLimit * effectiveGasPrice);
+        if (blobGasCharge > 0) {
+            senderAcc.balance = u256SubU64(senderAcc.balance, blobGasCharge);
+        }
         senderAcc.nonce += 1;
         cache.SetAccount(senderAddr, senderAcc);
     }
