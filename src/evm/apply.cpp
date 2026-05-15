@@ -408,6 +408,43 @@ ApplyResult ApplyEvmDeployTx(const CEvmDeployTx& payload,
 
     if (r.status_code == EVMC_SUCCESS) {
         const std::vector<uint8_t> runtimeCode = out.returnData;
+
+        // Code-deposit gas + EIP-3541 / EIP-170 for the TOP-LEVEL
+        // create transaction. evmone only auto-charges the runtime
+        // deposit for NESTED creates (via host.call(EVMC_CREATE) —
+        // handled in CEvmHost::CallCreate); for a top-level
+        // vm.execute(EVMC_CREATE) it runs the init code and returns
+        // the RETURN bytes but does NOT charge the 200-per-byte
+        // deposit — that's the transaction processor's job. We were
+        // skipping it, so every contract-creating TX under-consumed
+        // 200*len gas (systematic ~200-wei*priority coinbase drift
+        // across eip3860_initcode, selfdestruct, CreateResults, ...).
+        constexpr int64_t kGasCodeDeposit = 200;
+        constexpr size_t  kMaxCodeSize    = 24576;       // EIP-170
+        const bool eip3541Violation =
+            !runtimeCode.empty() && runtimeCode[0] == 0xEF; // EIP-3541
+        const int64_t depositCost =
+            static_cast<int64_t>(runtimeCode.size()) * kGasCodeDeposit;
+        const int64_t gasLeftAfterInit =
+            static_cast<int64_t>(payload.gasLimit) - out.gasUsed;
+        if (eip3541Violation || runtimeCode.size() > kMaxCodeSize ||
+            gasLeftAfterInit < depositCost)
+        {
+            // Deposit cannot be paid (or banned code) → the whole
+            // CREATE fails out-of-gas: all gas consumed, state rolled
+            // back to before the pre-seed.
+            cache.Revert(deploySnap);
+            out.statusCode = EVMC_FAILURE;
+            out.gasUsed = static_cast<int64_t>(payload.gasLimit);
+            out.gasRefund = 0;
+            out.returnData.clear();
+            out.logs.clear();
+            out.selfdestructs.clear();
+            out.sameTxCreated.clear();
+            return out;
+        }
+        out.gasUsed += depositCost;
+
         const uint256 codeHash = Keccak256(runtimeCode);
 
         cache.SetCode(codeHash, runtimeCode);
