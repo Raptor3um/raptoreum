@@ -139,7 +139,7 @@ docker exec rtm-builder bash -lc "
 Running against `ethereum/tests` v14.0 `BlockchainTests/GeneralStateTests`:
 
 ```
-Cancun fixtures: 12267 pass, 8071 fail, 2041 skip
+Cancun fixtures: 14252 pass, 6086 fail, 2041 skip
 ```
 
 | Version | Commit | PASS | FAIL | SKIP |
@@ -168,12 +168,14 @@ Cancun fixtures: 12267 pass, 8071 fail, 2041 skip
 | Capa B v22 | `17fac9c23` | 11824 | 8514 | 2041 (nested-CREATE code-deposit gas 200/byte) |
 | Capa B v23 | `467d4bed0` | 11841 | 8497 | 2041 (EIP-4895 withdrawals) |
 | Capa B v24 | `230702a5f` | 11855 | 8483 | 2041 (EIP-2681 nonce-overflow returns forwarded gas) |
-| **Capa B v25** | `fedd9b496` | **12267** | **8071** | **2041** (EIP-2929 CREATE address warm-after-fail) |
+| Capa B v25 | `fedd9b496` | 12267 | 8071 | 2041 (EIP-2929 CREATE address warm-after-fail) |
+| **Capa B v26** | `3e12c8362` | **14252** | **6086** | **2041** (full 9-state EIP-2200/3529 SSTORE status) |
 
-Pass count is **+111% over v1** (5820 → 12267) — every increment came
+Pass count is **+145% over v1** (5820 → 14252) — every increment came
 from a real production-pipeline or harness-correctness fix uncovered
-by running the fixtures. v25 (+412) is the biggest single jump since
-the CALL value-transfer fix (v6).
+by running the fixtures. v26 (+1985) is the largest single correctness
+fix in the project, eclipsing the CALL value-transfer fix (v6, +2268
+was over two versions).
 
 **Skip categories** (all by design, not failures):
 
