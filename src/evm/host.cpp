@@ -695,14 +695,33 @@ evmc::Result CEvmHost::CallCreate(const evmc_message& msg) noexcept
     }
     state.SetAccount(senderAddr, senderAcc);
 
-    // Seed the new account with the value (and a nonce of 1 per
-    // EIP-161 — this gets overwritten below on success but exists
-    // here so the constructor can observe a non-zero existence).
-    evm::CEvmAccount newAcc(
-        /*nonce=*/ 1,
-        /*balance=*/ BeToU256(msg.value),
-        /*codeHash=*/ evm::CEvmAccount::EmptyCodeHash(),
-        /*storageRoot=*/ evm::CEvmAccount::EmptyStorageRoot());
+    // Seed the new account with a nonce of 1 (EIP-161) plus the
+    // transferred value. CRUCIAL: a CREATE/CREATE2 target may already
+    // exist with a non-zero BALANCE (and no code/nonce/storage — that
+    // is NOT a collision per EIP-684/7610, e.g. someone pre-funded the
+    // counterfactual address). That pre-existing balance must be
+    // PRESERVED and the value added on top, not overwritten — the
+    // create2collisionBalance fixtures send 1 wei to the address
+    // before deploying and expect the deployed contract to keep it.
+    evm::CEvmAccount newAcc;
+    if (!state.GetAccount(newAddr, newAcc)) {
+        newAcc = evm::CEvmAccount(
+            /*nonce=*/ 1,
+            /*balance=*/ uint256(),
+            /*codeHash=*/ evm::CEvmAccount::EmptyCodeHash(),
+            /*storageRoot=*/ evm::CEvmAccount::EmptyStorageRoot());
+    } else {
+        // Pre-existing balance-only account: keep its balance,
+        // (re)birth it with nonce 1 per EIP-161.
+        newAcc.nonce = 1;
+        newAcc.codeHash = evm::CEvmAccount::EmptyCodeHash();
+        newAcc.storageRoot = evm::CEvmAccount::EmptyStorageRoot();
+    }
+    {
+        evmc::uint256be bal = U256ToBe(newAcc.balance);
+        (void)U256_BE_add(bal, msg.value);   // value already debited from sender
+        newAcc.balance = BeToU256(bal);
+    }
     state.SetAccount(newAddr, newAcc);
 
     // Build the init-code execution message. evmone runs the input
