@@ -659,6 +659,37 @@ evmc::Result CEvmHost::CallCreate(const evmc_message& msg) noexcept
         if (r.output_size > 0 && r.output_data != nullptr) {
             runtime.assign(r.output_data, r.output_data + r.output_size);
         }
+
+        // --- Code-deposit gas + EIP-170 / EIP-3541 ----------------
+        // EVMC delegates the WHOLE create (init execution AND the
+        // runtime-code deposit) to the host: evmone does NOT re-charge
+        // the deposit on the returned gas_left, it trusts host.call()
+        // to have done it. So we must:
+        //   * EIP-3541 (London): reject runtime starting with 0xEF.
+        //   * EIP-170 (Spurious Dragon): reject runtime > 24576 bytes.
+        //   * Charge GAS_CODE_DEPOSIT (200) per runtime byte; if the
+        //     init frame didn't leave enough gas, the CREATE fails
+        //     out-of-gas (state rolls back, address is zero).
+        constexpr int64_t kGasCodeDeposit = 200;
+        constexpr size_t  kMaxCodeSize   = 24576;        // EIP-170
+        const bool eip3541Violation =
+            !runtime.empty() && runtime[0] == 0xEF;       // EIP-3541
+        const int64_t depositCost =
+            static_cast<int64_t>(runtime.size()) * kGasCodeDeposit;
+        if (eip3541Violation || runtime.size() > kMaxCodeSize ||
+            r.gas_left < depositCost)
+        {
+            state.Revert(snap);
+            warmAddresses = std::move(warmAddrsSnap);
+            warmSlots = std::move(warmSlotsSnap);
+            transient = std::move(transientSnap);
+            evmc::Result fail{};
+            fail.status_code = EVMC_FAILURE;
+            fail.gas_left = 0;
+            return fail;
+        }
+        r.gas_left -= depositCost;
+
         const uint256 codeHash = Keccak256(runtime);
         state.SetCode(codeHash, runtime);
 
