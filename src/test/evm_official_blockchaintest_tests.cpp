@@ -515,6 +515,21 @@ FixtureResult RunOneFixture(const std::string& filePath,
         }
         return out;
     };
+    // u128 addition helper. EIP-4895 withdrawals credit
+    // amount(gwei) * 10^9 wei; amount can be up to u64-max so the
+    // wei value overflows u64 (needs up to ~94 bits).
+    auto u256AddU128 = [](const uint256& v, __uint128_t delta) -> uint256 {
+        uint256 out = v;
+        __uint128_t carry = delta;
+        for (int i = 31; i >= 0 && carry; --i) {
+            __uint128_t sum =
+                static_cast<__uint128_t>(static_cast<uint8_t>(*(out.begin() + i))) +
+                (carry & 0xff);
+            *(out.begin() + i) = static_cast<uint8_t>(sum & 0xff);
+            carry = (carry >> 8) + (sum >> 8);
+        }
+        return out;
+    };
     // u128 subtraction helper, needed because EIP-4844 blob gas
     // charge = BLOB_GAS_PER_BLOB(131072) * num_blobs * blob_base_fee
     // can exceed u64 (blob_base_fee can climb to ~10^19, and 131072 *
@@ -927,6 +942,36 @@ FixtureResult RunOneFixture(const std::string& filePath,
         cache.SetAccount(ctx.coinbase, coinbaseAcc);
     }
         }  // end per-tx loop
+
+        // EIP-4895 (Shanghai) withdrawals: after all the block's txs
+        // are applied, each withdrawal credits its target with
+        // amount * 10^9 wei (the JSON `amount` is denominated in
+        // Gwei). Withdrawals never create gas cost, never run code,
+        // and the recipient is force-created if absent (an empty
+        // account that, per EIP-158/161, will be pruned if it stays
+        // empty — but a credited balance keeps it alive).
+        const auto& withdrawals = block["withdrawals"];
+        if (withdrawals.isArray()) {
+            for (size_t wi = 0; wi < withdrawals.size(); ++wi) {
+                const auto& w = withdrawals[wi];
+                if (!w.isObject()) continue;
+                if (!w["address"].isStr() || !w["amount"].isStr()) continue;
+                const uint160 wAddr = ParseAddress(w["address"].getValStr());
+                const uint64_t amountGwei = ParseU64(w["amount"].getValStr());
+                if (amountGwei == 0) continue; // zero-amount: no-op
+                const __uint128_t weiDelta =
+                    static_cast<__uint128_t>(amountGwei) *
+                    static_cast<__uint128_t>(1000000000ULL);
+                evm::CEvmAccount wacc;
+                if (!cache.GetAccount(wAddr, wacc)) {
+                    wacc = evm::CEvmAccount{};
+                    wacc.codeHash = evm::CEvmAccount::EmptyCodeHash();
+                    wacc.storageRoot = evm::CEvmAccount::EmptyStorageRoot();
+                }
+                wacc.balance = u256AddU128(wacc.balance, weiDelta);
+                cache.SetAccount(wAddr, wacc);
+            }
+        }
     }  // end per-block loop
 
     // After every block / every tx has been applied, compare the
