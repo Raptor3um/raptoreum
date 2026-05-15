@@ -563,6 +563,23 @@ evmc::Result CEvmHost::CallCreate(const evmc_message& msg) noexcept
         newAddr = ContractAddressFromCreate2(senderAddr, salt, initCodeHash);
     }
 
+    // EIP-2929: the CREATE/CREATE2 opcode adds the address being
+    // created to accessed_addresses (warm) in the EXECUTING frame's
+    // substate — i.e. the caller's. This warming persists for the
+    // rest of the transaction even if the create fails (collision,
+    // nonce overflow, REVERT, OOG), because it lives in the caller's
+    // substate, not the reverted inner frame's. Our failure paths
+    // below restore `warmAddrsSnap`, which would erase this warming;
+    // adding newAddr to BOTH the live set and the snapshot makes the
+    // warm bit survive every exit path. (Matches the
+    // CreateAddressWarmAfterFail / CREATE2_HighNonce* fixtures: each
+    // was off by exactly one cold→warm delta = 2500 gas.)
+    {
+        const evmc::address newAddrEvmc = FromUint160(newAddr);
+        warmAddresses.insert(newAddrEvmc);
+        warmAddrsSnap.insert(newAddrEvmc);
+    }
+
     // EIP-2681: a CREATE/CREATE2 by a sender whose nonce is already
     // at 2^64-1 must fail without bumping (overflowing the nonce
     // would silently restart the address space). The official tests
