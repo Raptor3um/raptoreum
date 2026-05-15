@@ -331,6 +331,18 @@ ApplyResult ApplyEvmDeployTx(const CEvmDeployTx& payload,
         host.RecordSameTxCreated(evmcContract);
     }
 
+    // Transaction-level atomicity for the deploy. Everything from the
+    // pre-seed through the constructor must roll back as a unit if the
+    // CREATE tx fails (REVERT / OOG / INVALID / collision-at-runtime):
+    // the pre-seeded account record, the value transfer, the
+    // constructor's top-level SSTOREs, and any account it touched.
+    // This replaces the previous hand-rolled cleanup (delete the
+    // pre-seed, manually refund value) which missed top-level storage
+    // writes and mishandled a pre-existing account that carried
+    // storage (EIP-7610). Snapshot here; Revert/Commit on the
+    // execution status below.
+    const int deploySnap = cache.Snapshot();
+
     // Seed the new contract's account record BEFORE the constructor
     // runs, regardless of value. The constructor may do its own
     // CREATEs whose CallCreate path reads `msg.sender`'s account
@@ -425,43 +437,18 @@ ApplyResult ApplyEvmDeployTx(const CEvmDeployTx& payload,
             // attached to this address.
         }
         cache.SetAccount(contractAddress, account);
+        cache.Commit(deploySnap);
     } else {
-        // On any non-success status (revert, OOG, invalid opcode...)
-        // the new contract is NOT created. Reverse the pre-seed we
-        // installed before running init code: delete the placeholder
-        // account record (and any value the harness transferred —
-        // the EVM spec says the value is also forfeit on failed
-        // CREATE, but real Ethereum leaves the sender debited as
-        // part of the gas burn; we keep that behaviour since the
-        // sender already paid the value before init).
-        //
-        // If the contract address PRE-EXISTED in the cache (e.g.,
-        // EOA with a pre-staged balance), we leave it as it was.
-        // The seed code only overwrote a missing/empty record, so
-        // deletion only removes our own creation.
-        if (payload.value == 0) {
-            // We didn't credit anything to it beyond the seed; safe
-            // to delete outright.
-            cache.DeleteAccount(contractAddress);
-        } else {
-            // Value was transferred. Per Ethereum semantics, the
-            // value transfer is rolled back on failed CREATE; refund
-            // it to the sender so net balance change is just the gas
-            // burn. Reload, debit recipient, credit sender.
-            evm::CEvmAccount recAcc;
-            if (cache.GetAccount(contractAddress, recAcc)) {
-                if (Uint256GreaterOrEqualUint64(recAcc.balance, payload.value)) {
-                    Uint256SubUint64(recAcc.balance, payload.value);
-                }
-                evm::CEvmAccount senAcc;
-                if (cache.GetAccount(sender, senAcc)) {
-                    Uint256AddUint64(senAcc.balance, payload.value);
-                    cache.SetAccount(sender, senAcc);
-                }
-            }
-            // After reversing the credit, delete the placeholder.
-            cache.DeleteAccount(contractAddress);
-        }
+        // On any non-success status (revert, OOG, invalid opcode,
+        // runtime collision...) the new contract is NOT created.
+        // Reverting the snapshot taken before the pre-seed restores
+        // EXACTLY the pre-execution world: the placeholder account is
+        // gone (or, if the address pre-existed, restored verbatim
+        // including its storage per EIP-7610), the value transfer is
+        // undone, and every top-level SSTORE/account the constructor
+        // made is rolled back. Gas is still charged by the caller
+        // (the snapshot is scoped to the execution frame only).
+        cache.Revert(deploySnap);
     }
 
     return out;
