@@ -574,8 +574,15 @@ evmc::Result CEvmHost::CallCreate(const evmc_message& msg) noexcept
         warmSlots = std::move(warmSlotsSnap);
         transient = std::move(transientSnap);
         evmc::Result r;
+        // EIP-2681 nonce overflow: per the execution-specs the
+        // create instruction pushes 0 and RETURNS the entire
+        // forwarded gas (`evm.gas_left += create_message_gas`) — the
+        // init frame never runs and nothing is charged beyond the
+        // CREATE base + EIP-3860 metering evmone already took. This
+        // differs from the address-collision path below, which DOES
+        // consume the forwarded gas (gas_left = 0).
         r.status_code = EVMC_FAILURE;
-        r.gas_left = 0;
+        r.gas_left = msg.gas;
         return r;
     }
     // Bump sender's nonce now. EIP-161 mandates the increment even
