@@ -410,18 +410,14 @@ evmc::Result CEvmHost::call(const evmc_message& msg) noexcept
         }
     }
 
-    // Standard Ethereum precompiles (0x01..0x04 currently). evmone
-    // delegates all CALLs to the host, so we have to recognise these
-    // addresses here. If the precompile is unknown we fall through
-    // to normal bytecode execution (which for these addresses runs
-    // empty code — wrong per spec, but limits the mistake to the
-    // unimplemented subset 0x05..0x0a).
-    {
-        evmc::Result ethResult;
-        if (ExecuteEthereumPrecompile(msg, ethResult)) {
-            return ethResult;
-        }
-    }
+    // NOTE: Ethereum precompile dispatch (0x01..0x0a) is intentionally
+    // performed AFTER the value transfer below — geth/EELS move the
+    // CALL value in the generic call path regardless of whether the
+    // target is a precompile, so a precompile called with value must
+    // still accumulate that balance and appear in the post-state
+    // (precompsEIP2929Cancun asserts exactly this). The dispatch
+    // therefore lives just past the doTransfer block, inside the
+    // snapshot so an OOG precompile rolls the transfer back.
 
     const int snap = state.Snapshot();
     // EIP-2929: warm-access tracking participates in the call-frame
@@ -490,6 +486,28 @@ evmc::Result CEvmHost::call(const evmc_message& msg) noexcept
         }
         toAcc.balance = BeToU256(toBal);
         state.SetAccount(toAddr, toAcc);
+    }
+
+    // --- 1b. Standard Ethereum precompiles (0x01..0x0a). evmone
+    //         delegates every CALL to the host, so we recognise these
+    //         addresses here. The value transfer (step 1) has already
+    //         credited the precompile address, so it persists in
+    //         state even though the precompile "executes". On precompile
+    //         success commit the transfer; on OOG/failure revert it
+    //         (and the warm/transient snapshots) like any other frame.
+    {
+        evmc::Result ethResult;
+        if (ExecuteEthereumPrecompile(msg, ethResult)) {
+            if (ethResult.status_code == EVMC_SUCCESS) {
+                state.Commit(snap);
+            } else {
+                state.Revert(snap);
+                warmAddresses = std::move(warmAddrsSnap);
+                warmSlots = std::move(warmSlotsSnap);
+                transient = std::move(transientSnap);
+            }
+            return ethResult;
+        }
     }
 
     // --- 2. Locate the code to execute. ----------------------------
