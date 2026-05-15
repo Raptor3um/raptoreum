@@ -460,26 +460,336 @@ evmc::Result BnMul(const evmc_message& msg)
 //   base       = 45000
 //   per-pair   = 34000
 
+// Full optimal-Ate pairing on alt_bn128 (BN254), ported faithfully
+// from the canonical py_ecc / ethereum-execution-specs `bn128`
+// reference (the non-optimized direct-FQ12-polynomial variant — the
+// simplest form to reproduce byte-exactly). All arithmetic in
+// boost::multiprecision::cpp_int mod the bn128 field prime.
 namespace {
+
+// Group order r of bn128 (the scalar field / subgroup order).
+const cpp_int& BnCurveOrder()
+{
+    static const cpp_int r(
+        "21888242871839275222246405745257275088548364400416034343698204186575808495617");
+    return r;
+}
+
+// ---- FQ2 = Fp[i]/(i^2 + 1) ; element = a + b*i --------------------
+struct FQ2 { cpp_int a, b; };
+
+FQ2 Fq2Zero() { return {0, 0}; }
+FQ2 Fq2One()  { return {1, 0}; }
+bool Fq2IsZero(const FQ2& x) { return x.a == 0 && x.b == 0; }
+bool Fq2Eq(const FQ2& x, const FQ2& y) { return x.a == y.a && x.b == y.b; }
+FQ2 Fq2Add(const FQ2& x, const FQ2& y) { return {FpAdd(x.a,y.a), FpAdd(x.b,y.b)}; }
+FQ2 Fq2Sub(const FQ2& x, const FQ2& y) { return {FpSub(x.a,y.a), FpSub(x.b,y.b)}; }
+FQ2 Fq2Neg(const FQ2& x) { return {FpSub(0,x.a), FpSub(0,x.b)}; }
+FQ2 Fq2Mul(const FQ2& x, const FQ2& y)
+{
+    // (a+bi)(c+di) = (ac - bd) + (ad + bc) i
+    cpp_int ac = FpMul(x.a, y.a), bd = FpMul(x.b, y.b);
+    cpp_int ad = FpMul(x.a, y.b), bc = FpMul(x.b, y.a);
+    return { FpSub(ac, bd), FpAdd(ad, bc) };
+}
+FQ2 Fq2MulScalar(const FQ2& x, const cpp_int& s)
+{ return { FpMul(x.a, s), FpMul(x.b, s) }; }
+FQ2 Fq2Inv(const FQ2& x)
+{
+    // 1/(a+bi) = (a - bi)/(a^2 + b^2)
+    cpp_int denom = FpAdd(FpMul(x.a, x.a), FpMul(x.b, x.b));
+    cpp_int dinv = FpInv(denom);
+    return { FpMul(x.a, dinv), FpMul(FpSub(0, x.b), dinv) };
+}
+FQ2 Fq2Div(const FQ2& x, const FQ2& y) { return Fq2Mul(x, Fq2Inv(y)); }
+
+// ---- FQ12 = Fp[x]/(x^12 - 18 x^6 + 82) (py_ecc modulus_coeffs) -----
+// Stored as 12 Fp coefficients, low degree first.
+struct FQ12 { cpp_int c[12]; };
+
+FQ12 Fq12Zero() { FQ12 r; for (auto& v : r.c) v = 0; return r; }
+FQ12 Fq12One()  { FQ12 r = Fq12Zero(); r.c[0] = 1; return r; }
+bool Fq12Eq(const FQ12& x, const FQ12& y)
+{ for (int i=0;i<12;i++) if (x.c[i]!=y.c[i]) return false; return true; }
+FQ12 Fq12Add(const FQ12& x, const FQ12& y)
+{ FQ12 r; for(int i=0;i<12;i++) r.c[i]=FpAdd(x.c[i],y.c[i]); return r; }
+FQ12 Fq12Sub(const FQ12& x, const FQ12& y)
+{ FQ12 r; for(int i=0;i<12;i++) r.c[i]=FpSub(x.c[i],y.c[i]); return r; }
+FQ12 Fq12Neg(const FQ12& x)
+{ FQ12 r; for(int i=0;i<12;i++) r.c[i]=FpSub(0,x.c[i]); return r; }
+
+// py_ecc FQP modulus_coeffs for FQ12: (82,0,0,0,0,0,-18,0,0,0,0,0)
+// reduction: while len>12: exp=len-13; top=pop();
+//            for i in 0..11: b[exp+i] -= top*mc[i]
+FQ12 Fq12Mul(const FQ12& x, const FQ12& y)
+{
+    // polynomial product into degree-23 buffer
+    std::vector<cpp_int> b(23, cpp_int(0));
+    for (int i = 0; i < 12; ++i) {
+        if (x.c[i] == 0) continue;
+        for (int j = 0; j < 12; ++j) {
+            if (y.c[j] == 0) continue;
+            b[i + j] = FpAdd(b[i + j], FpMul(x.c[i], y.c[j]));
+        }
+    }
+    static const long long mc[12] = {82,0,0,0,0,0,-18,0,0,0,0,0};
+    // reduce from top down to degree 12
+    for (int len = 23; len > 12; --len) {
+        int exp = len - 13;
+        cpp_int top = b[len - 1];
+        if (top != 0) {
+            for (int i = 0; i < 12; ++i) {
+                if (mc[i] == 0) continue;
+                cpp_int term = FpMul(top, cpp_int(mc[i]));
+                b[exp + i] = FpSub(b[exp + i], term);
+            }
+        }
+    }
+    FQ12 r; for (int i = 0; i < 12; ++i) r.c[i] = FpMod(b[i]);
+    return r;
+}
+
+// Degree of a coefficient list (highest non-zero index), 0 if all zero.
+int PolyDeg(const std::vector<cpp_int>& p)
+{
+    int d = static_cast<int>(p.size()) - 1;
+    while (d > 0 && p[d] == 0) --d;
+    return d;
+}
+
+// py_ecc poly_rounded_div over Fp.
+std::vector<cpp_int> PolyRoundedDiv(std::vector<cpp_int> a,
+                                    const std::vector<cpp_int>& b)
+{
+    int dega = PolyDeg(a), degb = PolyDeg(b);
+    std::vector<cpp_int> o(a.size(), cpp_int(0));
+    cpp_int binv = FpInv(b[degb]);
+    for (int i = dega - degb; i >= 0; --i) {
+        o[i] = FpAdd(o[i], FpMul(a[degb + i], binv));
+        for (int c = 0; c <= degb; ++c) {
+            a[c + i] = FpSub(a[c + i], FpMul(o[i], b[c]));
+        }
+    }
+    int no = PolyDeg(o);
+    return std::vector<cpp_int>(o.begin(), o.begin() + no + 1);
+}
+
+// FQ12 inverse via extended Euclid on the polynomial ring (py_ecc inv).
+FQ12 Fq12Inv(const FQ12& in)
+{
+    const int degree = 12;
+    static const long long mc[12] = {82,0,0,0,0,0,-18,0,0,0,0,0};
+    std::vector<cpp_int> lm(degree + 1, cpp_int(0)),
+                         hm(degree + 1, cpp_int(0));
+    lm[0] = 1;
+    std::vector<cpp_int> low(degree + 1, cpp_int(0)),
+                         high(degree + 1, cpp_int(0));
+    for (int i = 0; i < degree; ++i) low[i] = in.c[i];
+    low[degree] = 0;
+    for (int i = 0; i < degree; ++i) high[i] = FpMod(cpp_int(mc[i]));
+    high[degree] = 1;
+
+    while (PolyDeg(low) > 0) {
+        std::vector<cpp_int> r = PolyRoundedDiv(high, low);
+        r.resize(degree + 1, cpp_int(0));
+        std::vector<cpp_int> nm = hm;
+        std::vector<cpp_int> nw = high;
+        for (int i = 0; i <= degree; ++i) {
+            for (int j = 0; j <= degree - i; ++j) {
+                nm[i + j] = FpSub(nm[i + j], FpMul(lm[i], r[j]));
+                nw[i + j] = FpSub(nw[i + j], FpMul(low[i], r[j]));
+            }
+        }
+        // py_ecc simultaneous rebind: lm, low, hm, high = nm, new, lm, low
+        std::vector<cpp_int> old_lm = lm;
+        std::vector<cpp_int> old_low = low;
+        lm = nm;
+        low = nw;
+        hm = old_lm;
+        high = old_low;
+    }
+    cpp_int linv = FpInv(low[0]);
+    FQ12 out;
+    for (int i = 0; i < degree; ++i) out.c[i] = FpMul(lm[i], linv);
+    return out;
+}
+FQ12 Fq12Div(const FQ12& x, const FQ12& y) { return Fq12Mul(x, Fq12Inv(y)); }
+
+FQ12 Fq12Pow(const FQ12& base_in, cpp_int e)
+{
+    FQ12 result = Fq12One();
+    FQ12 base = base_in;
+    while (e > 0) {
+        if ((e & 1) != 0) result = Fq12Mul(result, base);
+        base = Fq12Mul(base, base);
+        e >>= 1;
+    }
+    return result;
+}
+
+// ---- Points -------------------------------------------------------
+template <typename F> struct Pt { F x, y; bool inf; };
+using G1P  = Pt<cpp_int>;
+using G2P  = Pt<FQ2>;
+using G12P = Pt<FQ12>;
+
+// G2 on the twist: y^2 = x^3 + b2, b2 = 3/(9+i).
+FQ2 Bn_b2()
+{
+    static FQ2 b2 = Fq2Div(FQ2{3, 0}, FQ2{9, 1});
+    return b2;
+}
+bool G2OnCurve(const G2P& p)
+{
+    if (p.inf) return true;
+    FQ2 y2 = Fq2Mul(p.y, p.y);
+    FQ2 x3 = Fq2Mul(Fq2Mul(p.x, p.x), p.x);
+    return Fq2Eq(y2, Fq2Add(x3, Bn_b2()));
+}
+G2P G2Double(const G2P& p)
+{
+    if (p.inf) return p;
+    FQ2 m = Fq2Div(Fq2MulScalar(Fq2Mul(p.x, p.x), 3),
+                    Fq2MulScalar(p.y, 2));
+    FQ2 newx = Fq2Sub(Fq2Mul(m, m), Fq2MulScalar(p.x, 2));
+    FQ2 newy = Fq2Sub(Fq2Add(Fq2Neg(Fq2Mul(m, newx)), Fq2Mul(m, p.x)), p.y);
+    return {newx, newy, false};
+}
+G2P G2Add(const G2P& p1, const G2P& p2)
+{
+    if (p1.inf) return p2;
+    if (p2.inf) return p1;
+    if (Fq2Eq(p1.x, p2.x)) {
+        if (Fq2Eq(p1.y, p2.y)) return G2Double(p1);
+        return {Fq2Zero(), Fq2Zero(), true};
+    }
+    FQ2 m = Fq2Div(Fq2Sub(p2.y, p1.y), Fq2Sub(p2.x, p1.x));
+    FQ2 newx = Fq2Sub(Fq2Sub(Fq2Mul(m, m), p1.x), p2.x);
+    FQ2 newy = Fq2Sub(Fq2Add(Fq2Neg(Fq2Mul(m, newx)), Fq2Mul(m, p1.x)), p1.y);
+    return {newx, newy, false};
+}
+G2P G2Mul(const G2P& p, cpp_int n)
+{
+    G2P r{Fq2Zero(), Fq2Zero(), true};
+    G2P base = p;
+    while (n > 0) {
+        if ((n & 1) != 0) r = G2Add(r, base);
+        base = G2Double(base);
+        n >>= 1;
+    }
+    return r;
+}
+
+// ---- twist : G2(FQ2) -> point over FQ12 ---------------------------
+// py_ecc: w = FQ12 with c[1]=1.  xcoeffs=[x.a - x.b*9, x.b];
+//   nx = FQ12([xc0,0,0,0,0,0, xc1,0,0,0,0,0]) ; result x = nx * w^2,
+//   y analogous with w^3.
+G12P Twist(const G2P& q)
+{
+    if (q.inf) return {Fq12Zero(), Fq12Zero(), true};
+    cpp_int xc0 = FpSub(q.x.a, FpMul(q.x.b, 9));
+    cpp_int xc1 = q.x.b;
+    cpp_int yc0 = FpSub(q.y.a, FpMul(q.y.b, 9));
+    cpp_int yc1 = q.y.b;
+    FQ12 nx = Fq12Zero(); nx.c[0] = xc0; nx.c[6] = xc1;
+    FQ12 ny = Fq12Zero(); ny.c[0] = yc0; ny.c[6] = yc1;
+    FQ12 w = Fq12Zero(); w.c[1] = 1;
+    FQ12 w2 = Fq12Mul(w, w);
+    FQ12 w3 = Fq12Mul(w2, w);
+    return { Fq12Mul(nx, w2), Fq12Mul(ny, w3), false };
+}
+G12P CastG1ToFq12(const G1P& p)
+{
+    if (p.inf) return {Fq12Zero(), Fq12Zero(), true};
+    FQ12 x = Fq12Zero(); x.c[0] = p.x;
+    FQ12 y = Fq12Zero(); y.c[0] = p.y;
+    return {x, y, false};
+}
+
+// linefunc over FQ12 (py_ecc).
+FQ12 LineFunc(const G12P& P1, const G12P& P2, const G12P& T)
+{
+    if (!Fq12Eq(P1.x, P2.x)) {
+        FQ12 m = Fq12Div(Fq12Sub(P2.y, P1.y), Fq12Sub(P2.x, P1.x));
+        return Fq12Sub(Fq12Mul(m, Fq12Sub(T.x, P1.x)),
+                        Fq12Sub(T.y, P1.y));
+    } else if (Fq12Eq(P1.y, P2.y)) {
+        FQ12 three = Fq12Zero(); three.c[0] = 3;
+        FQ12 two = Fq12Zero(); two.c[0] = 2;
+        FQ12 m = Fq12Div(Fq12Mul(three, Fq12Mul(P1.x, P1.x)),
+                          Fq12Mul(two, P1.y));
+        return Fq12Sub(Fq12Mul(m, Fq12Sub(T.x, P1.x)),
+                        Fq12Sub(T.y, P1.y));
+    } else {
+        return Fq12Sub(T.x, P1.x);
+    }
+}
+G12P G12Double(const G12P& pt)
+{
+    FQ12 three = Fq12Zero(); three.c[0] = 3;
+    FQ12 two = Fq12Zero(); two.c[0] = 2;
+    FQ12 m = Fq12Div(Fq12Mul(three, Fq12Mul(pt.x, pt.x)),
+                      Fq12Mul(two, pt.y));
+    FQ12 newx = Fq12Sub(Fq12Mul(m, m), Fq12Mul(two, pt.x));
+    FQ12 newy = Fq12Sub(Fq12Add(Fq12Neg(Fq12Mul(m, newx)),
+                                  Fq12Mul(m, pt.x)), pt.y);
+    return {newx, newy, false};
+}
+G12P G12Add(const G12P& p1, const G12P& p2)
+{
+    if (p1.inf) return p2;
+    if (p2.inf) return p1;
+    if (Fq12Eq(p1.x, p2.x) && Fq12Eq(p1.y, p2.y)) return G12Double(p1);
+    if (Fq12Eq(p1.x, p2.x)) return {Fq12Zero(), Fq12Zero(), true};
+    FQ12 m = Fq12Div(Fq12Sub(p2.y, p1.y), Fq12Sub(p2.x, p1.x));
+    FQ12 newx = Fq12Sub(Fq12Sub(Fq12Mul(m, m), p1.x), p2.x);
+    FQ12 newy = Fq12Sub(Fq12Add(Fq12Neg(Fq12Mul(m, newx)),
+                                  Fq12Mul(m, p1.x)), p1.y);
+    return {newx, newy, false};
+}
+// Frobenius on a twisted FQ12 point coord: coord ** field_modulus.
+FQ12 Fq12Frob(const FQ12& v) { return Fq12Pow(v, BnPrime()); }
+
+FQ12 MillerLoop(const G12P& Q, const G12P& P)
+{
+    static const cpp_int ate_loop_count("29793968203157093288");
+    const int log_ate_loop_count = 63;
+    if (Q.inf || P.inf) return Fq12One();
+    G12P R = Q;
+    FQ12 f = Fq12One();
+    for (int i = log_ate_loop_count; i >= 0; --i) {
+        f = Fq12Mul(Fq12Mul(f, f), LineFunc(R, R, P));
+        R = G12Double(R);
+        if (((ate_loop_count >> i) & 1) != 0) {
+            f = Fq12Mul(f, LineFunc(R, Q, P));
+            R = G12Add(R, Q);
+        }
+    }
+    // Q1 = (Q.x^p, Q.y^p) ; nQ2 = (Q1.x^p, -(Q1.y^p))
+    G12P Q1{ Fq12Frob(Q.x), Fq12Frob(Q.y), false };
+    G12P nQ2{ Fq12Frob(Q1.x), Fq12Neg(Fq12Frob(Q1.y)), false };
+    f = Fq12Mul(f, LineFunc(R, Q1, P));
+    R = G12Add(R, Q1);
+    f = Fq12Mul(f, LineFunc(R, nQ2, P));
+    // final exponentiation
+    cpp_int p = BnPrime();
+    cpp_int p12 = 1;
+    for (int i = 0; i < 12; ++i) p12 *= p;
+    cpp_int exp = (p12 - 1) / BnCurveOrder();
+    return Fq12Pow(f, exp);
+}
 
 bool BnPairInputAllDegenerate(const evmc_message& msg, size_t pair_count)
 {
-    // For each 192-byte pair, read G1.x, G1.y, G2.{x.c0, x.c1, y.c0, y.c1}.
-    // If any pair has a non-zero G1 AND a non-zero G2 (all four Fp² coords),
-    // we cannot short-circuit.
     for (size_t i = 0; i < pair_count; ++i) {
         const size_t off = i * 192;
-        // G1 infinity == both x and y are zero.
         bool g1_inf = true;
-        for (size_t j = 0; j < 64; ++j) {
+        for (size_t j = 0; j < 64; ++j)
             if (InputByte(msg, off + j) != 0) { g1_inf = false; break; }
-        }
         if (g1_inf) continue;
-        // G2 infinity == all four 32-byte coords are zero.
         bool g2_inf = true;
-        for (size_t j = 64; j < 192; ++j) {
+        for (size_t j = 64; j < 192; ++j)
             if (InputByte(msg, off + j) != 0) { g2_inf = false; break; }
-        }
         if (!g2_inf) return false;
     }
     return true;
@@ -489,32 +799,75 @@ bool BnPairInputAllDegenerate(const evmc_message& msg, size_t pair_count)
 
 evmc::Result BnPairing(const evmc_message& msg)
 {
-    // Input length must be a multiple of 192.
     if (msg.input_size % 192 != 0) {
         return evmc::Result{EVMC_FAILURE, 0, 0};
     }
     const size_t pair_count = msg.input_size / 192;
 
-    // EIP-1108 gas.
     const int64_t cost = 45000 + 34000 * static_cast<int64_t>(pair_count);
     if (msg.gas < cost) return Oog();
 
-    // Two short-circuit cases produce a known answer of "true" (1):
-    //   - empty input (product of no pairings = identity)
-    //   - all pairs degenerate (each pairing with an infinity point
-    //     equals identity)
     if (pair_count == 0 || BnPairInputAllDegenerate(msg, pair_count)) {
         std::vector<uint8_t> out(32, 0);
         out[31] = 1;
         return Ok(msg.gas - cost, out);
     }
 
-    // Non-degenerate input: full optimal-Ate pairing is required.
-    // Returning EVMC_FAILURE is honest — the calling contract sees
-    // the precompile as failed and can choose its own fallback. This
-    // is preferable to fabricating a success/failure answer that
-    // would silently mis-state state.
-    return evmc::Result{EVMC_FAILURE, 0, 0};
+    // Accumulate the product of Miller loops, then check == 1.
+    FQ12 acc = Fq12One();
+    for (size_t i = 0; i < pair_count; ++i) {
+        const size_t off = i * 192;
+        // G1 = (x, y) over Fp.
+        cpp_int g1x = ReadFp(msg, off + 0);
+        cpp_int g1y = ReadFp(msg, off + 32);
+        // G2 = (x = x_c1*i + x_c0, y = y_c1*i + y_c0). EIP-197 input
+        // order per coordinate is (imag, real) i.e. c1 first.
+        cpp_int g2x_c1 = ReadFp(msg, off + 64);
+        cpp_int g2x_c0 = ReadFp(msg, off + 96);
+        cpp_int g2y_c1 = ReadFp(msg, off + 128);
+        cpp_int g2y_c0 = ReadFp(msg, off + 160);
+
+        // Range checks: every coordinate must be < field prime.
+        if (g1x >= BnPrime() || g1y >= BnPrime() ||
+            g2x_c0 >= BnPrime() || g2x_c1 >= BnPrime() ||
+            g2y_c0 >= BnPrime() || g2y_c1 >= BnPrime()) {
+            return evmc::Result{EVMC_FAILURE, 0, 0};
+        }
+
+        G1P g1{ g1x, g1y, (g1x == 0 && g1y == 0) };
+        G2P g2;
+        g2.x = FQ2{ g2x_c0, g2x_c1 };
+        g2.y = FQ2{ g2y_c0, g2y_c1 };
+        g2.inf = Fq2IsZero(g2.x) && Fq2IsZero(g2.y);
+
+        // G1 must be on y^2 = x^3 + 3 (or be infinity).
+        if (!g1.inf) {
+            G1Point chk{g1.x, g1.y};
+            if (!IsOnCurve(chk)) {
+                return evmc::Result{EVMC_FAILURE, 0, 0};
+            }
+        }
+        // G2 must be on the twist AND in the order-r subgroup.
+        if (!g2.inf) {
+            if (!G2OnCurve(g2)) {
+                return evmc::Result{EVMC_FAILURE, 0, 0};
+            }
+            G2P chk = G2Mul(g2, BnCurveOrder());
+            if (!chk.inf) {
+                return evmc::Result{EVMC_FAILURE, 0, 0};
+            }
+        }
+
+        if (g1.inf || g2.inf) continue; // pairing == 1, no contribution
+
+        FQ12 m = MillerLoop(Twist(g2), CastG1ToFq12(g1));
+        acc = Fq12Mul(acc, m);
+    }
+
+    const bool ok = Fq12Eq(acc, Fq12One());
+    std::vector<uint8_t> out(32, 0);
+    out[31] = ok ? 1 : 0;
+    return Ok(msg.gas - cost, out);
 }
 
 // ---------------------------------------------------------------------------
