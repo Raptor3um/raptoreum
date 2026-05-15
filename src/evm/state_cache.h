@@ -86,6 +86,15 @@ public:
      *  the caller's responsibility, not this method's. */
     bool GetStorage(const uint160& address, const uint256& slot, uint256& out);
 
+    /** Read the COMMITTED storage value — bypassing the dirty layer,
+     *  going straight to the DB. This is the EIP-2200 "original"
+     *  value (the slot's value at the start of the transaction)
+     *  needed to return the correct 9-state evmc_storage_status from
+     *  CEvmHost::set_storage so evmone charges SSTORE gas + refunds
+     *  per EIP-2200/3529. Returns false on miss (treat as zero). */
+    bool GetCommittedStorage(const uint160& address, const uint256& slot,
+                             uint256& out);
+
     /** Write a storage slot. Per SSTORE semantics, writing a zero value
      *  is allowed and stays in dirty as a zero (Flush() will EraseStorage
      *  if value.IsNull() to keep the DB compact). */

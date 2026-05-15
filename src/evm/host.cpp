@@ -241,32 +241,66 @@ evmc_storage_status CEvmHost::set_storage(const evmc::address& addr,
     const uint256 newValue = ToUint256(value);
 
     uint256 currentValue;
-    const bool hadCurrent = state.GetStorage(address, slot, currentValue);
-    if (!hadCurrent) {
+    if (!state.GetStorage(address, slot, currentValue)) {
         currentValue.SetNull();
+    }
+    uint256 originalValue;
+    if (!state.GetCommittedStorage(address, slot, originalValue)) {
+        originalValue.SetNull();
     }
 
     state.SetStorage(address, slot, newValue);
 
-    // Status return per EIP-2200/3529. The "_RESTORED" variants require
-    // tracking the value at the start of the surrounding transaction,
-    // which is wired in Phase 2.3 (transaction-level snapshotting).
-    // For Phase 2.2 we report the simpler 4-state distinction; evmone's
-    // gas accounting handles this correctly but does not get refunds
-    // for the "restored to original" cases yet.
-    const bool oldZero = currentValue.IsNull();
-    const bool newZero = newValue.IsNull();
+    // Full EIP-2200/3529 9-state status. evmone derives the exact
+    // SSTORE gas cost AND the refund-counter delta purely from this
+    // return value, so it MUST distinguish clean/dirty and the
+    // restore cases — a 4-state approximation mis-charges every
+    // dirty-slot and restore transition (the sstore_combinations_*
+    // suites, ~1300 fixtures, exhaustively probe these).
+    //
+    // Notation: o = original (value at tx start), c = current
+    // (value before this SSTORE), n = new.
+    const bool oZero = originalValue.IsNull();
+    const bool cZero = currentValue.IsNull();
+    const bool nZero = newValue.IsNull();
 
     if (currentValue == newValue) {
+        // 0|X|Y -> Y -> Y : current value unchanged.
         return EVMC_STORAGE_ASSIGNED;
     }
-    if (oldZero) {
-        return EVMC_STORAGE_ADDED;
+
+    if (originalValue == currentValue) {
+        // Clean slot — first modification of this slot in the tx.
+        if (oZero)  return EVMC_STORAGE_ADDED;     // 0 -> 0 -> Z
+        if (nZero)  return EVMC_STORAGE_DELETED;   // X -> X -> 0
+        return EVMC_STORAGE_MODIFIED;              // X -> X -> Z
     }
-    if (newZero) {
-        return EVMC_STORAGE_DELETED;
+
+    // Dirty slot (o != c, and c != n).
+    if (!oZero && cZero) {
+        // X -> 0 -> n
+        if (newValue == originalValue)
+            return EVMC_STORAGE_DELETED_RESTORED;  // X -> 0 -> X
+        return EVMC_STORAGE_DELETED_ADDED;         // X -> 0 -> Z
     }
-    return EVMC_STORAGE_MODIFIED;
+    if (!oZero && !cZero) {
+        // X -> Y -> n   (o != 0, c != 0, o != c)
+        if (nZero)
+            return EVMC_STORAGE_MODIFIED_DELETED;  // X -> Y -> 0
+        if (newValue == originalValue)
+            return EVMC_STORAGE_MODIFIED_RESTORED; // X -> Y -> X
+        return EVMC_STORAGE_ASSIGNED;              // X -> Y -> Z
+    }
+    if (oZero && !cZero) {
+        // 0 -> Y -> n   (o == 0, c != 0, c != n)
+        if (nZero)
+            return EVMC_STORAGE_ADDED_DELETED;     // 0 -> Y -> 0
+        return EVMC_STORAGE_ASSIGNED;              // 0 -> Y -> Z
+    }
+
+    // Unreachable (o==0,c==0 implies o==c, handled above), but the
+    // spec says ASSIGNED is the catch-all.
+    return EVMC_STORAGE_ASSIGNED;
 }
 
 bool CEvmHost::selfdestruct(const evmc::address& addr,

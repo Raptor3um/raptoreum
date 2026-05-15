@@ -86,6 +86,17 @@ bool CEvmStateCache::GetStorage(const uint160& address, const uint256& slot, uin
     return db.ReadStorage(address, slot, out);
 }
 
+bool CEvmStateCache::GetCommittedStorage(const uint160& address,
+                                         const uint256& slot, uint256& out)
+{
+    // Deliberately skip the dirty layer: the DB holds the value as of
+    // the start of the transaction (the harness / ConnectBlock loads
+    // pre-state into the DB and only Flush()es at end of block, so no
+    // intra-tx SSTORE has reached it). That's exactly the EIP-2200
+    // "original" value.
+    return db.ReadStorage(address, slot, out);
+}
+
 void CEvmStateCache::SetStorage(const uint160& address, const uint256& slot, const uint256& value)
 {
     mStorageDirty[std::make_pair(address, slot)] = value;
