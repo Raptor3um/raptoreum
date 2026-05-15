@@ -485,6 +485,21 @@ FixtureResult RunOneFixture(const std::string& filePath,
         r.reason = "pre-state setup failed: " + err;
         return r;
     }
+    // Flush the pre-state into the DB so it becomes the COMMITTED
+    // baseline. Without this, SetupPreState's writes sit in the
+    // cache's dirty layer and CEvmHost::GetCommittedStorage() (which
+    // reads straight through to the DB to get the EIP-2200 "original"
+    // value) would see 0 for every slot that the fixture pre-seeded
+    // with a nonzero value — breaking the SSTORE 9-state status for
+    // all initial-nonzero cases (sstore_combinations_initial1*/2*).
+    // After this Flush the dirty layer is empty and accumulates only
+    // the transaction's own mutations, exactly mirroring how
+    // ConnectBlock treats the chainstate as the committed baseline.
+    if (!cache.Flush()) {
+        r.outcome = Outcome::FAIL;
+        r.reason = "pre-state flush to DB failed";
+        return r;
+    }
 
     // Our uint256 is big-endian — byte[0] is MSB, byte[31] is LSB —
     // because CEvmHost::get_balance memcpys it straight into an
