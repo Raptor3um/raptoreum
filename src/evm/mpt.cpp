@@ -13,12 +13,15 @@
 #include <evm/hashing.h>
 #include <evm/rlp.h>
 #include <evm/state_cache.h>
+#include <evm/state_db.h>
 
 #include <uint256.h>
 
 #include <algorithm>
 #include <cassert>
 #include <cstring>
+#include <map>
+#include <set>
 
 namespace evm {
 
@@ -381,16 +384,33 @@ uint256 ComputeStateRoot(const std::vector<StateRootAccount>& accounts)
 
 std::vector<StateRootAccount> CollectAccountsForStateRoot(CEvmStateCache& cache)
 {
-    std::vector<StateRootAccount> out;
+    // The canonical state root must cover the COMPLETE world state,
+    // not just what the current transaction dirtied. Since the
+    // pre-state is flushed into the DB before execution (so the
+    // EIP-2200 "original" lookup works), accounts the tx never
+    // touched live only in the DB. Merge: start from every DB
+    // account, then overlay the dirty layer (dirty wins), then drop
+    // anything in the deleted set.
     const auto& deleted = cache.DeletedAccounts();
-    for (const auto& [addr, acc] : cache.DirtyAccounts()) {
+    const auto& dirtyAccts = cache.DirtyAccounts();
+
+    std::map<uint160, CEvmAccount> merged;
+    cache.Db().ForEachAccount(
+        [&merged](const uint160& a, const CEvmAccount& acc) {
+            merged[a] = acc;
+        });
+    for (const auto& [addr, acc] : dirtyAccts) {
+        merged[addr] = acc;
+    }
+
+    std::vector<StateRootAccount> out;
+    out.reserve(merged.size());
+    for (const auto& [addr, acc] : merged) {
         auto delIt = deleted.find(addr);
         if (delIt != deleted.end() && delIt->second) continue;
 
-        // Optional EIP-161 cleanup: skip "empty" accounts (no code,
-        // no balance, nonce=0). Live accounts that the EVM has touched
-        // but are otherwise empty should NOT appear in the canonical
-        // state.
+        // EIP-158/161: an account that is empty (nonce 0, balance 0,
+        // no code) is not part of the canonical state trie.
         if (acc.nonce == 0 &&
             acc.balance == uint256() &&
             acc.codeHash == CEvmAccount::EmptyCodeHash())
@@ -402,17 +422,24 @@ std::vector<StateRootAccount> CollectAccountsForStateRoot(CEvmStateCache& cache)
         entry.address = addr;
         entry.nonce = acc.nonce;
         entry.balance = acc.balance;
-        // Pull code from cache when this account has any.
         if (acc.codeHash != CEvmAccount::EmptyCodeHash()) {
             cache.GetCode(acc.codeHash, entry.code);
         }
-        // Pull storage entries; the dirty storage map is keyed by
-        // (address, slot).
+
+        // Storage = DB-persisted slots overlaid with the dirty layer
+        // (dirty wins; an explicit zero in dirty clears the slot).
+        std::map<uint256, uint256> slots;
+        cache.Db().ForEachStorage(
+            addr, [&slots](const uint256& slot, const uint256& val) {
+                if (val != uint256()) slots[slot] = val;
+            });
         for (const auto& [key, value] : cache.DirtyStorage()) {
-            if (key.first == addr && value != uint256()) {
-                entry.storage[key.second] = value;
-            }
+            if (key.first != addr) continue;
+            if (value == uint256()) slots.erase(key.second);
+            else slots[key.second] = value;
         }
+        entry.storage = std::move(slots);
+
         out.push_back(std::move(entry));
     }
     return out;

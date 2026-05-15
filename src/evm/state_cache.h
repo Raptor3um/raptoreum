@@ -160,6 +160,14 @@ public:
     const std::map<std::pair<uint160, uint256>, uint256>& DirtyStorage() const { return mStorageDirty; }
     const std::map<uint256, std::vector<uint8_t>>& DirtyCode() const { return mCodeDirty; }
 
+    /** Access to the backing DB, for full-state enumeration (the
+     *  canonical state-root computation needs accounts/storage that
+     *  the current tx never touched and therefore live only in the
+     *  flushed DB, not the dirty layer). Non-const because the
+     *  underlying CDBWrapper iterator API is non-const even for a
+     *  read-only walk. */
+    CEvmStateDB& Db() { return db; }
+
 private:
     CEvmStateDB& db;
 

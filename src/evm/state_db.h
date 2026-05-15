@@ -12,6 +12,7 @@
 
 #include <cstdint>
 #include <cstddef>
+#include <functional>
 #include <vector>
 
 class uint160;
@@ -77,6 +78,27 @@ public:
     bool ReadStorage(const uint160& address, const uint256& slot, uint256& value) const;
 
     bool EraseStorage(const uint160& address, const uint256& slot);
+
+    // ----------------------------------------------------------------
+    // Full enumeration (state-root computation). LevelDB stores
+    // accounts under ('A', addr) and storage under
+    // ('S', (addr, slot)); these walk those key ranges so the
+    // canonical state root can include accounts/slots that the
+    // current transaction never touched (they live only in the DB
+    // after the pre-state flush, not in the cache's dirty layer).
+    // ----------------------------------------------------------------
+
+    /** Invoke `fn(address, account)` for every persisted account.
+     *  Non-const because CDBWrapper::NewIterator() is non-const, even
+     *  though the walk is read-only. */
+    void ForEachAccount(
+        const std::function<void(const uint160&, const CEvmAccount&)>& fn);
+
+    /** Invoke `fn(slot, value)` for every persisted storage entry of
+     *  `address`. */
+    void ForEachStorage(
+        const uint160& address,
+        const std::function<void(const uint256&, const uint256&)>& fn);
 
     // ----------------------------------------------------------------
     // Code erase (Phase 2.6 — needed for reorg journaling to retract

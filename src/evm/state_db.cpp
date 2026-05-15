@@ -89,6 +89,36 @@ bool CEvmStateDB::EraseStorage(const uint160& address, const uint256& slot)
     return Erase(std::make_pair(STORAGE_PREFIX, std::make_pair(address, slot)));
 }
 
+void CEvmStateDB::ForEachAccount(
+    const std::function<void(const uint160&, const CEvmAccount&)>& fn)
+{
+    std::unique_ptr<CDBIterator> it(NewIterator());
+    for (it->Seek(std::make_pair(ACCOUNT_PREFIX, uint160()));
+         it->Valid(); it->Next())
+    {
+        std::pair<char, uint160> key;
+        if (!it->GetKey(key) || key.first != ACCOUNT_PREFIX) break;
+        CEvmAccount acc;
+        if (it->GetValue(acc)) fn(key.second, acc);
+    }
+}
+
+void CEvmStateDB::ForEachStorage(
+    const uint160& address,
+    const std::function<void(const uint256&, const uint256&)>& fn)
+{
+    std::unique_ptr<CDBIterator> it(NewIterator());
+    const auto seekKey =
+        std::make_pair(STORAGE_PREFIX, std::make_pair(address, uint256()));
+    for (it->Seek(seekKey); it->Valid(); it->Next()) {
+        std::pair<char, std::pair<uint160, uint256>> key;
+        if (!it->GetKey(key) || key.first != STORAGE_PREFIX) break;
+        if (key.second.first != address) break; // left the address range
+        uint256 value;
+        if (it->GetValue(value)) fn(key.second.second, value);
+    }
+}
+
 // ----------------------------------------------------------------------
 // Phase 2.6 — code erase + per-block undo journal
 // ----------------------------------------------------------------------
