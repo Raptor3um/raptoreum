@@ -90,12 +90,20 @@ evmc::Result EcRecover(const evmc_message& msg)
     const uint8_t v = v_bytes[31];
     if (v != 27 && v != 28) return Ok(gasLeft, {});
 
-    // CPubKey::RecoverCompact takes a 65-byte compact signature laid
-    // out as [recid_byte(1) | r(32) | s(32)] where recid_byte =
-    // 27 + recid + 4 (Bitcoin convention). For Ethereum's v == 27/28
-    // and uncompressed pubkey, recid_byte = 31 or 32.
+    // CPubKey::RecoverCompact takes a 65-byte compact signature
+    // [header(1) | r(32) | s(32)] where, per Bitcoin Core's parser,
+    //   recid       = (header - 27) & 3
+    //   compressed  = ((header - 27) & 4) != 0
+    // Ethereum's ECRECOVER must yield the UNCOMPRESSED pubkey (its
+    // keccak256 is the address), so the compressed bit MUST be 0.
+    // recid = v - 27, hence header = 27 + recid = v. The previous
+    // `v + 4` set the compressed bit, so RecoverCompact returned a
+    // 33-byte key and the size!=65 guard below silently produced an
+    // empty (failed) ECRECOVER for every well-formed signature
+    // (ecrecoverWeirdV expected the real recovered address; we
+    // returned 0).
     std::vector<unsigned char> sig(65, 0);
-    sig[0] = static_cast<unsigned char>(v + 4);
+    sig[0] = static_cast<unsigned char>(v);
     std::memcpy(sig.data() + 1, rsig, 32);
     std::memcpy(sig.data() + 33, ssig, 32);
 
