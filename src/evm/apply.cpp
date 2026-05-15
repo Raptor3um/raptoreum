@@ -133,6 +133,22 @@ ApplyResult ApplyEvmCallTx(const CEvmCallTx& payload,
     msg.input_data = payload.data.empty() ? nullptr : payload.data.data();
     msg.input_size = payload.data.size();
 
+    // Transaction-level atomicity. Ethereum semantics: a transaction
+    // that ends in REVERT / OOG / INVALID consumes gas but rolls back
+    // EVERY state mutation it made — the outer value transfer and any
+    // top-level (non-nested) SSTORE/account writes included. Nested
+    // CALL/CREATE frames are already snapshot-protected inside
+    // CEvmHost; the OUTERMOST frame had no such protection, so a
+    // failing value-bearing tx left the recipient credited and the
+    // sender debited (off by exactly `value`), and a failing tx with
+    // top-level storage writes persisted them. Snapshot here, before
+    // the value transfer, and revert the whole frame on any
+    // non-success status. The surrounding fee accounting (gas
+    // pre-debit, nonce bump, refund) lives in the caller and is
+    // intentionally OUTSIDE this snapshot, matching the spec (gas is
+    // charged even on failure).
+    const int txSnap = cache.Snapshot();
+
     // Outer-call value transfer. evmone exposes msg.value to the
     // contract via the CALLVALUE opcode, but does NOT move the funds
     // itself — by spec, that's the transaction harness's job (and
@@ -180,12 +196,24 @@ ApplyResult ApplyEvmCallTx(const CEvmCallTx& payload,
     //    caller decides whether to keep them based on the status code.
     // ----------------------------------------------------------------
 
+    if (r.status_code == EVMC_SUCCESS) {
+        cache.Commit(txSnap);
+    } else {
+        // Roll back the value transfer + every top-level state
+        // mutation. Gas is still charged by the caller (the snapshot
+        // is scoped to the execution frame only).
+        cache.Revert(txSnap);
+    }
+
     out.statusCode = r.status_code;
     out.gasUsed = static_cast<int64_t>(payload.gasLimit) - r.gas_left;
     out.gasRefund = r.gas_refund;
     if (r.output_size > 0 && r.output_data != nullptr) {
         out.returnData.assign(r.output_data, r.output_data + r.output_size);
     }
+    // Logs / selfdestructs are only meaningful on success; on a
+    // reverted tx evmone won't have emitted any that survive, and the
+    // caller already gates these on statusCode == EVMC_SUCCESS.
     out.logs = host.Logs();
     out.selfdestructs = host.Selfdestructs();
     out.sameTxCreated = host.SameTxCreated();
