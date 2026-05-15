@@ -245,11 +245,18 @@ uint64_t IterCount(size_t exp_len, const std::vector<uint8_t>& E)
         return 0;
     };
 
+    // EIP-2565 calculate_iteration_count uses bit_length() - 1 (the
+    // 0-based index of the most-significant set bit), NOT the full
+    // bit length. Using the full length over-counts one squaring per
+    // call and over-charges gas (modexp_* drifted by exactly 50 wei
+    // = the missing -1 worth of mult-complexity/3).
+    const uint64_t bl = top_bits();
+    const uint64_t hiBitIndex = (bl == 0) ? 0 : (bl - 1);
     uint64_t iter;
     if (exp_len <= 32) {
-        iter = top_bits();
+        iter = hiBitIndex;
     } else {
-        iter = 8 * static_cast<uint64_t>(exp_len - 32) + top_bits();
+        iter = 8 * static_cast<uint64_t>(exp_len - 32) + hiBitIndex;
     }
     return iter == 0 ? 1 : iter;
 }
