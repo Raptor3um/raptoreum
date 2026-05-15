@@ -139,7 +139,7 @@ docker exec rtm-builder bash -lc "
 Running against `ethereum/tests` v14.0 `BlockchainTests/GeneralStateTests`:
 
 ```
-Cancun fixtures: 17938 pass, 2400 fail, 2041 skip
+Cancun fixtures: 18185 pass, 2153 fail, 2041 skip
 ```
 
 | Version | Commit | PASS | FAIL | SKIP |
@@ -170,13 +170,14 @@ Cancun fixtures: 17938 pass, 2400 fail, 2041 skip
 | Capa B v24 | `230702a5f` | 11855 | 8483 | 2041 (EIP-2681 nonce-overflow returns forwarded gas) |
 | Capa B v25 | `fedd9b496` | 12267 | 8071 | 2041 (EIP-2929 CREATE address warm-after-fail) |
 | Capa B v26 | `3e12c8362` | 14252 | 6086 | 2041 (full 9-state EIP-2200/3529 SSTORE status) |
-| **Capa B v27** | `7ec9d571a` | **17938** | **2400** | **2041** (Capa B harness: flush pre-state to DB as committed baseline) |
+| Capa B v27 | `7ec9d571a` | 17938 | 2400 | 2041 (Capa B harness: flush pre-state to DB as committed baseline) |
+| **Capa B v28** | `6110e6718` | **18185** | **2153** | **2041** (state root covers full world state, not just dirty) |
 
-Pass count is **+208% over v1** (5820 → 17938) — every increment came
+Pass count is **+212% over v1** (5820 → 18185) — every increment came
 from a real production-pipeline or harness-correctness fix uncovered
-by running the fixtures. v26+v27 together (+5671) landed the
-EIP-2200/3529 SSTORE gas+refund model correctly; ~88% of applicable
-Cancun fixtures now pass.
+by running the fixtures. v26+v27+v28 together landed the EIP-2200/3529
+SSTORE gas+refund model and the canonical state-root computation;
+~89% of applicable Cancun fixtures now pass.
 
 **Skip categories** (all by design, not failures):
 
