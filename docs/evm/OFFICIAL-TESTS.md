@@ -139,7 +139,7 @@ docker exec rtm-builder bash -lc "
 Running against `ethereum/tests` v14.0 `BlockchainTests/GeneralStateTests`:
 
 ```
-Cancun fixtures: 19890 pass, 448 fail, 2041 skip
+Cancun fixtures: 20055 pass, 283 fail, 2041 skip
 ```
 
 | Version | Commit | PASS | FAIL | SKIP |
@@ -177,14 +177,17 @@ Cancun fixtures: 19890 pass, 448 fail, 2041 skip
 | Capa B v31 | `9bac44dab` | 19696 | 642 | 2041 (transfer CALL value to precompiles before dispatch) |
 | Capa B v32 | `1495c1116` | 19828 | 510 | 2041 (EIP-161 persist CREATE nonce bump before frame snapshot) |
 | Capa B v33 | `77e8b7e74` | 19836 | 502 | 2041 (CREATE/CREATE2 preserves pre-existing target balance) |
-| **Capa B v34** | `4fe9e46e1` | **19890** | **448** | **2041** (full BN_PAIRING 0x08 — EIP-197 optimal-ate) |
+| Capa B v34 | `4fe9e46e1` | 19890 | 448 | 2041 (full BN_PAIRING 0x08 — EIP-197 optimal-ate) |
+| Capa B v35 | `54e31e33b` | 19911 | 427 | 2041 (MODEXP EIP-2565 iteration_count bit_length-1) |
+| **Capa B v36** | `0794182d2` | **20055** | **283** | **2041** (top-level CREATE-tx code-deposit gas 200/byte) |
 
-Pass count is **+242% over v1** (5820 → 19890) — every increment came
+Pass count is **+245% over v1** (5820 → 20055) — every increment came
 from a real production-pipeline or harness-correctness fix uncovered
-by running the fixtures. v34 implements the complete alt_bn128
-optimal-ate pairing (Fp2/Fp12 tower, Miller loop, final exp) in
-boost::multiprecision with no new dependency. **~97.8% of applicable
-Cancun fixtures now pass.**
+by running the fixtures. **~98.6% of applicable Cancun fixtures now
+pass.** The remaining ~283 are dominated by the KZG point-evaluation
+"correct-proof" external vectors (need a real BLS12-381 / c-kzg-4844
+verifier — a vendoring task, ~52 fixtures) and a thin long-tail of
+deeply-nested SELFDESTRUCT value-routing and 1-wei gas-trace edges.
 
 **Skip categories** (all by design, not failures):
 
