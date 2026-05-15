@@ -139,7 +139,7 @@ docker exec rtm-builder bash -lc "
 Running against `ethereum/tests` v14.0 `BlockchainTests/GeneralStateTests`:
 
 ```
-Cancun fixtures: 20055 pass, 283 fail, 2041 skip
+Cancun fixtures: 20100 pass, 238 fail, 2041 skip
 ```
 
 | Version | Commit | PASS | FAIL | SKIP |
@@ -179,11 +179,12 @@ Cancun fixtures: 20055 pass, 283 fail, 2041 skip
 | Capa B v33 | `77e8b7e74` | 19836 | 502 | 2041 (CREATE/CREATE2 preserves pre-existing target balance) |
 | Capa B v34 | `4fe9e46e1` | 19890 | 448 | 2041 (full BN_PAIRING 0x08 — EIP-197 optimal-ate) |
 | Capa B v35 | `54e31e33b` | 19911 | 427 | 2041 (MODEXP EIP-2565 iteration_count bit_length-1) |
-| **Capa B v36** | `0794182d2` | **20055** | **283** | **2041** (top-level CREATE-tx code-deposit gas 200/byte) |
+| Capa B v36 | `0794182d2` | 20055 | 283 | 2041 (top-level CREATE-tx code-deposit gas 200/byte) |
+| **Capa B v37** | `7fd8f2d7d` | **20100** | **238** | **2041** (BN_PAIRING validates every G2 even with infinity G1) |
 
-Pass count is **+245% over v1** (5820 → 20055) — every increment came
+Pass count is **+245% over v1** (5820 → 20100) — every increment came
 from a real production-pipeline or harness-correctness fix uncovered
-by running the fixtures. **~98.6% of applicable Cancun fixtures now
+by running the fixtures. **~98.8% of applicable Cancun fixtures now
 pass.** The remaining ~283 are dominated by the KZG point-evaluation
 "correct-proof" external vectors (need a real BLS12-381 / c-kzg-4844
 verifier — a vendoring task, ~52 fixtures) and a thin long-tail of
