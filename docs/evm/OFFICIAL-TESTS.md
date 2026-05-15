@@ -139,7 +139,7 @@ docker exec rtm-builder bash -lc "
 Running against `ethereum/tests` v14.0 `BlockchainTests/GeneralStateTests`:
 
 ```
-Cancun fixtures: 11741 pass, 8597 fail, 2041 skip
+Cancun fixtures: 11841 pass, 8497 fail, 2041 skip
 ```
 
 | Version | Commit | PASS | FAIL | SKIP |
@@ -164,9 +164,11 @@ Cancun fixtures: 11741 pass, 8597 fail, 2041 skip
 | Capa B v18 | `99b914770` | 11569 | 8769 | 2041 (Type 3 fee + blob gas accounting) |
 | Capa B v19 | `e040a29fc` | 11607 | 8731 | 2041 (BLOBBASEFEE opcode) |
 | Capa B v20 | `57d58c897` | 11613 | 8725 | 2041 (u128 widening for blob_base_fee + charge) |
-| **Capa B v21** | `9bac6e0ef` | **11741** | **8597** | **2041** (KZG_POINT_EVALUATION cheap-checks stub) |
+| Capa B v21 | `9bac6e0ef` | 11741 | 8597 | 2041 (KZG_POINT_EVALUATION cheap-checks stub) |
+| Capa B v22 | `17fac9c23` | 11824 | 8514 | 2041 (nested-CREATE code-deposit gas 200/byte) |
+| **Capa B v23** | `467d4bed0` | **11841** | **8497** | **2041** (EIP-4895 withdrawals) |
 
-Pass count is **+102% over v1** (5820 → 11741) — every increment came
+Pass count is **+103% over v1** (5820 → 11841) — every increment came
 from a real production-pipeline or harness-correctness fix uncovered
 by running the fixtures.
 
