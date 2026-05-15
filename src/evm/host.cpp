@@ -583,18 +583,9 @@ evmc::Result CEvmHost::call(const evmc_message& msg) noexcept
 //      level, even though state mutation rolls back).
 evmc::Result CEvmHost::CallCreate(const evmc_message& msg) noexcept
 {
-    const int snap = state.Snapshot();
-    // Mirror the warm-access snapshot from `call()` — EIP-2929 requires
-    // the warm sets to roll back with state on any failure. Same for
-    // transient storage per EIP-1153.
-    auto warmAddrsSnap = warmAddresses;
-    auto warmSlotsSnap = warmSlots;
-    auto transientSnap = transient;
-
     const uint160 senderAddr = ToUint160(msg.sender);
     evm::CEvmAccount senderAcc;
     if (!state.GetAccount(senderAddr, senderAcc)) {
-        state.Revert(snap);
         evmc::Result r;
         r.status_code = EVMC_FAILURE;
         r.gas_left = 0;
@@ -620,48 +611,48 @@ evmc::Result CEvmHost::CallCreate(const evmc_message& msg) noexcept
     // substate — i.e. the caller's. This warming persists for the
     // rest of the transaction even if the create fails (collision,
     // nonce overflow, REVERT, OOG), because it lives in the caller's
-    // substate, not the reverted inner frame's. Our failure paths
-    // below restore `warmAddrsSnap`, which would erase this warming;
-    // adding newAddr to BOTH the live set and the snapshot makes the
-    // warm bit survive every exit path. (Matches the
-    // CreateAddressWarmAfterFail / CREATE2_HighNonce* fixtures: each
-    // was off by exactly one cold→warm delta = 2500 gas.)
-    {
-        const evmc::address newAddrEvmc = FromUint160(newAddr);
-        warmAddresses.insert(newAddrEvmc);
-        warmAddrsSnap.insert(newAddrEvmc);
-    }
+    // substate. We add it to the live warm set before taking the
+    // frame snapshot, so the snapshot of warmAddresses already
+    // includes it and every failure-path restore keeps it.
+    warmAddresses.insert(FromUint160(newAddr));
 
     // EIP-2681: a CREATE/CREATE2 by a sender whose nonce is already
     // at 2^64-1 must fail without bumping (overflowing the nonce
-    // would silently restart the address space). The official tests
-    // exercise this against contracts pre-staged with nonce =
-    // 0xffffffffffffffff.
+    // would silently restart the address space). Nothing has mutated
+    // yet (no snapshot, no nonce bump), so we just return — per the
+    // execution-specs the instruction pushes 0 and RETURNS the entire
+    // forwarded gas. newAddr stays warm (caller substate). This
+    // differs from the address-collision path below, which DOES
+    // consume the forwarded gas (gas_left = 0).
     if (senderAcc.nonce >= static_cast<uint64_t>(-1)) {
-        state.Revert(snap);
-        warmAddresses = std::move(warmAddrsSnap);
-        warmSlots = std::move(warmSlotsSnap);
-        transient = std::move(transientSnap);
         evmc::Result r;
-        // EIP-2681 nonce overflow: per the execution-specs the
-        // create instruction pushes 0 and RETURNS the entire
-        // forwarded gas (`evm.gas_left += create_message_gas`) — the
-        // init frame never runs and nothing is charged beyond the
-        // CREATE base + EIP-3860 metering evmone already took. This
-        // differs from the address-collision path below, which DOES
-        // consume the forwarded gas (gas_left = 0).
         r.status_code = EVMC_FAILURE;
         r.gas_left = msg.gas;
         return r;
     }
-    // Bump sender's nonce now. EIP-161 mandates the increment even
-    // on failure (in real Ethereum); a revert here would leave us
-    // out of sync with that, but our outer caller is responsible for
-    // the cross-tx nonce bookkeeping anyway (Phase 2.4). Within a
-    // single nested CREATE frame, the bump must be visible to a
-    // subsequent CREATE by the same sender at the same depth, hence
-    // we apply it before running the constructor.
+
+    // EIP-161: bump the creator's nonce and PERSIST it BEFORE the
+    // frame snapshot. The bump lives in the CALLER's substate and
+    // survives every failure of THIS inner create (collision, init
+    // REVERT/OOG) — it must NOT be rolled back by CallCreate's own
+    // state.Revert(snap). Taking the snapshot *after* this write
+    // achieves exactly that: CallCreate's revert returns to the
+    // post-bump state, while the caller's own outer snapshot (taken
+    // before it executed the CREATE opcode) still governs whether the
+    // bump ultimately persists — correct EIP-161 semantics.
+    // (CreateAddressWarmAfterFail / dynamic_create2_selfdestruct_*
+    // assert the bumped nonce on a contract whose CREATE failed.)
     senderAcc.nonce += 1;
+    state.SetAccount(senderAddr, senderAcc);
+
+    const int snap = state.Snapshot();
+    // Mirror the warm-access snapshot from `call()` — EIP-2929 requires
+    // the warm sets to roll back with state on any failure. Same for
+    // transient storage per EIP-1153. warmAddresses already contains
+    // newAddr (added above), so the warm bit survives every restore.
+    auto warmAddrsSnap = warmAddresses;
+    auto warmSlotsSnap = warmSlots;
+    auto transientSnap = transient;
 
     // Collision check on the derived address.
     evm::CEvmAccount existing;
