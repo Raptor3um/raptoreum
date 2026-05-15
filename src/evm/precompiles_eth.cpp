@@ -786,22 +786,6 @@ FQ12 MillerLoop(const G12P& Q, const G12P& P)
     return Fq12Pow(f, exp);
 }
 
-bool BnPairInputAllDegenerate(const evmc_message& msg, size_t pair_count)
-{
-    for (size_t i = 0; i < pair_count; ++i) {
-        const size_t off = i * 192;
-        bool g1_inf = true;
-        for (size_t j = 0; j < 64; ++j)
-            if (InputByte(msg, off + j) != 0) { g1_inf = false; break; }
-        if (g1_inf) continue;
-        bool g2_inf = true;
-        for (size_t j = 64; j < 192; ++j)
-            if (InputByte(msg, off + j) != 0) { g2_inf = false; break; }
-        if (!g2_inf) return false;
-    }
-    return true;
-}
-
 } // namespace
 
 evmc::Result BnPairing(const evmc_message& msg)
@@ -814,7 +798,15 @@ evmc::Result BnPairing(const evmc_message& msg)
     const int64_t cost = 45000 + 34000 * static_cast<int64_t>(pair_count);
     if (msg.gas < cost) return Oog();
 
-    if (pair_count == 0 || BnPairInputAllDegenerate(msg, pair_count)) {
+    // Empty input → product of zero pairings = identity → 1. (No
+    // points to validate.) We deliberately do NOT short-circuit the
+    // "all pairs degenerate" case any more: EIP-197 requires EVERY
+    // G2 point to be range-checked, on-curve and in the order-r
+    // subgroup even when its paired G1 is the point at infinity — a
+    // degenerate-looking input with an off-subgroup G2 must still
+    // make the precompile FAIL. The full loop below validates first,
+    // then skips the (now-validated) degenerate pairs.
+    if (pair_count == 0) {
         std::vector<uint8_t> out(32, 0);
         out[31] = 1;
         return Ok(msg.gas - cost, out);
