@@ -139,7 +139,7 @@ docker exec rtm-builder bash -lc "
 Running against `ethereum/tests` v14.0 `BlockchainTests/GeneralStateTests`:
 
 ```
-Cancun fixtures: 19828 pass, 510 fail, 2041 skip
+Cancun fixtures: 19890 pass, 448 fail, 2041 skip
 ```
 
 | Version | Commit | PASS | FAIL | SKIP |
@@ -175,16 +175,16 @@ Cancun fixtures: 19828 pass, 510 fail, 2041 skip
 | Capa B v29 | `19982101b` | 19638 | 700 | 2041 (ApplyEvmCallTx tx-level atomicity on failure) |
 | Capa B v30 | `34c83e94e` | 19669 | 669 | 2041 (ApplyEvmDeployTx snapshot/revert atomicity) |
 | Capa B v31 | `9bac44dab` | 19696 | 642 | 2041 (transfer CALL value to precompiles before dispatch) |
-| **Capa B v32** | `1495c1116` | **19828** | **510** | **2041** (EIP-161 persist CREATE nonce bump before frame snapshot) |
+| Capa B v32 | `1495c1116` | 19828 | 510 | 2041 (EIP-161 persist CREATE nonce bump before frame snapshot) |
+| Capa B v33 | `77e8b7e74` | 19836 | 502 | 2041 (CREATE/CREATE2 preserves pre-existing target balance) |
+| **Capa B v34** | `4fe9e46e1` | **19890** | **448** | **2041** (full BN_PAIRING 0x08 — EIP-197 optimal-ate) |
 
-Pass count is **+241% over v1** (5820 → 19828) — every increment came
+Pass count is **+242% over v1** (5820 → 19890) — every increment came
 from a real production-pipeline or harness-correctness fix uncovered
-by running the fixtures. v29 (+1453) closed the last big systemic
-gap: a failed top-level tx now rolls back its value transfer and
-top-level state writes (gas still charged). v32 fixed EIP-161
-nonce-persist structurally (snapshot after the persisted bump) where
-an earlier re-apply hack had regressed. **~97.5% of applicable Cancun
-fixtures now pass.**
+by running the fixtures. v34 implements the complete alt_bn128
+optimal-ate pairing (Fp2/Fp12 tower, Miller loop, final exp) in
+boost::multiprecision with no new dependency. **~97.8% of applicable
+Cancun fixtures now pass.**
 
 **Skip categories** (all by design, not failures):
 
