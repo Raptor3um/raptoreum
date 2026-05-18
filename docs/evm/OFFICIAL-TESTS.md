@@ -139,7 +139,7 @@ docker exec rtm-builder bash -lc "
 Running against `ethereum/tests` v14.0 `BlockchainTests/GeneralStateTests`:
 
 ```
-Cancun fixtures: 20292 pass, 46 fail, 2041 skip
+Cancun fixtures: 20318 pass, 20 fail, 2041 skip
 ```
 
 | Version | Commit | PASS | FAIL | SKIP |
@@ -187,21 +187,28 @@ Cancun fixtures: 20292 pass, 46 fail, 2041 skip
 | Capa B v41 | `d33b026b8` | 20187 | 151 | 2041 (MODEXP — EIP-2565 gas computed before length early-outs) |
 | Capa B v42 | `2c4387288` | 20220 | 118 | 2041 (dispatch Ethereum precompile for top-level tx-to-precompile) |
 | Capa B v43 | `e96c07c98` | 20230 | 108 | 2041 (consensus-safety: EIP-7610 collision sees committed storage) |
-| **Capa B v44** | `dec38a64e` | **20292** | **46** | **2041** (consensus-security: real BLS12-381 KZG point-evaluation) |
+| Capa B v44 | `dec38a64e` | 20292 | 46 | 2041 (consensus-security: real BLS12-381 KZG point-evaluation) |
+| Capa B v45 | `c9a071ed6` | 20312 | 26 | 2041 (consensus: successful nested CREATE returns empty returndata) |
+| **Capa B v46** | `f799decaa` | **20318** | **20** | **2041** (consensus: DeleteAccount purges whole storage footprint, EIP-6780) |
 
-Pass count is **+249% over v1** (5820 → 20292) — every increment came
+Pass count is **+249% over v1** (5820 → 20318) — every increment came
 from a real production-pipeline or harness-correctness fix uncovered
-by running the fixtures. **~99.8% of applicable Cancun fixtures now
-pass.** v40, v43 and v44 are consensus-security fixes: v40 =
-reverted-frame SELFDESTRUCT leak; v43 = EIP-7610 collision blindness
-to committed storage; **v44 = the KZG point-evaluation precompile
-previously accepted forged proofs** (it returned success without
-verifying the proof — a critical soundness hole now closed with a
-full BLS12-381 pairing check via the already-vendored dashbls/RELIC,
-no new dependency). The remaining 46 are a thin long-tail of
-deeply-nested CREATE/SELFDESTRUCT value-routing (~44, needs a
-parent/child substate split — heuristic patches have repeatedly
-regressed) and 1 u64-overflow harness edge.
+by running the fixtures. **~99.9% of applicable Cancun fixtures now
+pass.** v40, v43, v44, v45 and v46 are consensus-correctness/security
+fixes: v40 = reverted-frame SELFDESTRUCT leak; v43 = EIP-7610
+collision blindness to committed storage; **v44 = the KZG point-
+evaluation precompile previously accepted forged proofs** (closed
+with a full BLS12-381 pairing check via the already-vendored
+dashbls/RELIC, no new dependency); v45 = a successful nested
+CREATE/CREATE2 leaked the constructor's RETURN bytes into the
+caller's RETURNDATA buffer (EVMC contract violation); v46 =
+SELFDESTRUCT/EIP-6780 deletion did not purge the destructed
+contract's storage, so stale slots blocked same-block recreate
+(EIP-7610) and Flush() resurrected them on disk (latent state-root
+divergence). The remaining 20 are a thin long-tail of deeply-nested
+SELFDESTRUCT value-routing plus harness-only edges (a >u64 tx value
+that the production payload cannot represent by design, a postState-
+hash MPT-root fidelity case, sub-frame gas-trace edges).
 
 **Skip categories** (all by design, not failures):
 
