@@ -330,36 +330,60 @@ bool CEvmHost::selfdestruct(const evmc::address& addr,
     }
 
     evmc::uint256be contractBalanceBe = U256ToBe(contractAcc.balance);
-    if (!U256_BE_isZero(contractBalanceBe) && contractAddr != beneficiaryAddr)
+    if (!U256_BE_isZero(contractBalanceBe))
     {
-        evm::CEvmAccount beneficiaryAcc;
-        const bool beneficiaryExists =
-            state.GetAccount(beneficiaryAddr, beneficiaryAcc);
-        if (!beneficiaryExists) {
-            beneficiaryAcc = evm::CEvmAccount(
-                /*nonce=*/ 0,
-                /*balance=*/ uint256(),
-                /*codeHash=*/ evm::CEvmAccount::EmptyCodeHash(),
-                /*storageRoot=*/ evm::CEvmAccount::EmptyStorageRoot());
-        }
-        evmc::uint256be beneficiaryBalanceBe = U256ToBe(beneficiaryAcc.balance);
-        if (!U256_BE_add(beneficiaryBalanceBe, contractBalanceBe)) {
-            // Overflow — refuse the operation rather than corrupt
-            // total supply. Returning false here tells evmone the
-            // selfdestruct did not register; evmone treats this as
-            // a duplicate-flag scenario (no extra gas refund), but
-            // the on-chain effect is no balance transfer either way.
-            return false;
-        }
-        beneficiaryAcc.balance = BeToU256(beneficiaryBalanceBe);
-        state.SetAccount(beneficiaryAddr, beneficiaryAcc);
+        if (contractAddr != beneficiaryAddr) {
+            // beneficiary != self: credit the beneficiary and zero the
+            // originator (the classic SELFDESTRUCT balance move). This
+            // path is unchanged.
+            evm::CEvmAccount beneficiaryAcc;
+            const bool beneficiaryExists =
+                state.GetAccount(beneficiaryAddr, beneficiaryAcc);
+            if (!beneficiaryExists) {
+                beneficiaryAcc = evm::CEvmAccount(
+                    /*nonce=*/ 0,
+                    /*balance=*/ uint256(),
+                    /*codeHash=*/ evm::CEvmAccount::EmptyCodeHash(),
+                    /*storageRoot=*/ evm::CEvmAccount::EmptyStorageRoot());
+            }
+            evmc::uint256be beneficiaryBalanceBe =
+                U256ToBe(beneficiaryAcc.balance);
+            if (!U256_BE_add(beneficiaryBalanceBe, contractBalanceBe)) {
+                // Overflow — refuse the operation rather than corrupt
+                // total supply. Returning false here tells evmone the
+                // selfdestruct did not register; evmone treats this as
+                // a duplicate-flag scenario (no extra gas refund), but
+                // the on-chain effect is no balance transfer either way.
+                return false;
+            }
+            beneficiaryAcc.balance = BeToU256(beneficiaryBalanceBe);
+            state.SetAccount(beneficiaryAddr, beneficiaryAcc);
 
-        // Zero out the contract's balance immediately. The account
-        // record is kept until after execution (so subsequent reads
-        // from the same frame see codeHash etc.); the actual erasure
-        // happens at the caller level once the frame returns.
-        contractAcc.balance = uint256();
-        state.SetAccount(contractAddr, contractAcc);
+            // Zero out the contract's balance immediately. The account
+            // record is kept until after execution (so subsequent
+            // reads from the same frame see codeHash etc.); the actual
+            // erasure happens at the caller level once the frame
+            // returns.
+            contractAcc.balance = uint256();
+            state.SetAccount(contractAddr, contractAcc);
+        } else if (sameTxCreated.count(addr)) {
+            // beneficiary == self AND the contract was created in THIS
+            // transaction (EIP-6780): the account is deleted at end of
+            // tx, so the self-transfer nets to the funds being
+            // destroyed. We must zero NOW (not merely rely on the
+            // end-of-tx erasure) — otherwise the balance leaks forward
+            // to a later frame / a later SELFDESTRUCT of the same
+            // contract within the same tx and is wrongly forwarded to
+            // a different beneficiary (the multiple_calls / single_self
+            // same-tx-created EIP-6780 cluster) and perturbs final
+            // settlement.
+            contractAcc.balance = uint256();
+            state.SetAccount(contractAddr, contractAcc);
+        }
+        // else: beneficiary == self AND NOT created this tx — per
+        // EIP-6780 the account survives and a self-transfer is a
+        // no-op, so the balance is RETAINED (no write). Zeroing here
+        // is the historical -40 regression trap.
     }
 
     // EIP-6780 (Cancun): only record the address for deletion if it
