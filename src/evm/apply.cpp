@@ -7,6 +7,7 @@
 #include <evm/account.h>
 #include <evm/balance.h>
 #include <evm/hashing.h>
+#include <evm/precompiles_eth.h>
 #include <evm/state_cache.h>
 
 #include <evmc/evmc.hpp>
@@ -182,6 +183,40 @@ ApplyResult ApplyEvmCallTx(const CEvmCallTx& payload,
             // CALLVALUE/balance check inside the contract anyway;
             // letting it run with the un-moved funds yields the same
             // observable result for fixtures (a failing tx).
+        }
+    }
+
+    // Top-level transaction sent DIRECTLY to a standard Ethereum
+    // precompile (0x01..0x0a). evmone does not implement precompiles
+    // — it only invokes the host for them on NESTED calls (handled in
+    // CEvmHost::call). A precompile address has no stored code, so
+    // running it through vm.execute() on empty code would return
+    // EVMC_SUCCESS with zero gas consumed and skip the precompile
+    // entirely (value committed, no work, no gas). Dispatch it here
+    // through the same already-validated ExecuteEthereumPrecompile
+    // the nested path uses. Scoped inside txSnap so a failing
+    // precompile reverts the value transfer; a successful one keeps
+    // it (matches geth: value sticks even for precompile recipients).
+    {
+        evmc::Result preR;
+        if (evm::ExecuteEthereumPrecompile(msg, preR)) {
+            if (preR.status_code == EVMC_SUCCESS) {
+                cache.Commit(txSnap);
+            } else {
+                cache.Revert(txSnap);
+            }
+            out.statusCode = preR.status_code;
+            out.gasUsed =
+                static_cast<int64_t>(payload.gasLimit) - preR.gas_left;
+            out.gasRefund = preR.gas_refund;
+            if (preR.output_size > 0 && preR.output_data != nullptr) {
+                out.returnData.assign(
+                    preR.output_data,
+                    preR.output_data + preR.output_size);
+            }
+            // Precompiles emit no logs / selfdestructs / created
+            // accounts.
+            return out;
         }
     }
 
