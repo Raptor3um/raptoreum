@@ -287,6 +287,10 @@ bool UpdateManager::IsEvmActive(const CBlockIndex *blockIndex) {
     return IsActive(EUpdate::EVM, blockIndex);
 }
 
+bool UpdateManager::IsEvmCommitActive(const CBlockIndex *blockIndex) {
+    return IsActive(EUpdate::EVM_COMMIT, blockIndex);
+}
+
 StateInfo UpdateManager::State(enum EUpdate eUpdate, const CBlockIndex *blockIndex) {
     const Update *update = GetUpdate(eUpdate);
     VoteStats voteStats = {VoteResult(), VoteResult(), 0, 0, false, false};

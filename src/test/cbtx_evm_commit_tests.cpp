@@ -5,8 +5,10 @@
 #include <test/test_raptoreum.h>
 
 #include <evo/cbtx.h>
+#include <chainparams.h>
 #include <streams.h>
 #include <uint256.h>
+#include <update/update.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -123,6 +125,21 @@ BOOST_AUTO_TEST_CASE(current_version_still_2_until_activation_increment)
     BOOST_CHECK_EQUAL((int)CCbTx::EVM_COMMIT_VERSION, 3);
     CCbTx fresh;
     BOOST_CHECK_EQUAL((int)fresh.nVersion, (int)CCbTx::CURRENT_VERSION);
+}
+
+// Increment 2: the EVM_COMMIT activation gate exists but is
+// UNREGISTERED on every network → IsEvmCommitActive() is false, so
+// CheckCbTx still caps at v2 (v3 rejected). This pins the inertness.
+BOOST_AUTO_TEST_CASE(evm_commit_gate_is_inert_until_scheduled)
+{
+    BOOST_CHECK_EQUAL((int)EUpdate::EVM_COMMIT, 4);
+    BOOST_CHECK_EQUAL((int)EUpdate::MAX_VERSION_BITS_DEPLOYMENTS, 5);
+    // Unregistered on regtest (and everywhere) → never active.
+    BOOST_CHECK(!Updates().IsEvmCommitActive(nullptr));
+    // EVM execution gate and the D2 commitment gate are distinct
+    // enum slots (regtest force-activates EVM at 0 but must NOT
+    // thereby require committed roots).
+    BOOST_CHECK((int)EUpdate::EVM != (int)EUpdate::EVM_COMMIT);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
