@@ -1011,20 +1011,55 @@ evmc::Result Modexp(const evmc_message& msg)
     const size_t exp_len  = ReadSize32(msg, 32);
     const size_t mod_len  = ReadSize32(msg, 64);
 
-    // Sanity cap: real fixtures use at most a few KB per component.
-    // Anything beyond ~64KB would cost more gas than any reasonable
-    // tx provides AND risks allocating gigabytes if we trusted the
-    // declared sizes blindly. Treat oversized inputs as out-of-gas.
-    constexpr size_t kMaxLen = 64 * 1024;
-    if (base_len > kMaxLen || exp_len > kMaxLen || mod_len > kMaxLen) {
+    // EIP-2565: gas is the ONLY gatekeeper. The spec never out-of-gas
+    // on a declared length by itself — it computes
+    //   multiplication_complexity = ceil(max(Bsize,Msize)/8)^2
+    //   iteration_count           = f(Esize, leading 32 bytes of E)
+    //   cost = max(200, floor(mc * iteration_count / 3))
+    // and then OoGs iff msg.gas < cost. So we must compute the cost
+    // FIRST (it only needs the lengths and E's first <=32 bytes),
+    // compare gas, and only THEN materialise B/E/M. The previous
+    // code (a) hard-OoG'd on a >64KB length even when mc was 0
+    // (Bsize==Msize==0 with a huge Esize must SUCCEED at 200 gas),
+    // and (b) short-circuited mod_len==0 to a flat cost=200, ignoring
+    // a non-zero Bsize-driven multiplication complexity.
+    const uint64_t mc = MultComplexity(base_len, mod_len);
+
+    // IterCount only inspects the first <=32 bytes of the exponent.
+    // Read just those, zero-padded — safe even for absurd base_len
+    // (InputByte() zero-fills past the actual input).
+    const size_t exp_off0 = 96 + base_len;
+    std::vector<uint8_t> Ehead =
+        ReadBytes(msg, exp_off0, std::min<size_t>(exp_len, 32));
+    const uint64_t it = IterCount(exp_len, Ehead);
+
+    // cost = max(200, mc*it/3) with 64-bit saturation: an overflowing
+    // product means the true cost dwarfs any block gas limit, so the
+    // call must OoG (never silently succeed).
+    uint64_t cost;
+    if (mc != 0 && it > (std::numeric_limits<uint64_t>::max() / mc)) {
+        cost = std::numeric_limits<uint64_t>::max();
+    } else {
+        cost = (mc * it) / 3;
+        if (cost < 200) cost = 200;
+    }
+    if (msg.gas < 0 ||
+        static_cast<uint64_t>(msg.gas) < cost) {
         return Oog();
     }
 
-    // Trivial case: modulus length is zero — output is empty.
+    // Modulus length zero → empty output (gas already charged above).
     if (mod_len == 0) {
-        const int64_t cost = 200;
-        if (msg.gas < cost) return Oog();
-        return Ok(msg.gas - cost, {});
+        return Ok(msg.gas - static_cast<int64_t>(cost), {});
+    }
+
+    // Only now is allocation safe: any input whose declared sizes are
+    // pathological has already OoG'd on the gas formula. Keep a hard
+    // cap purely as an allocation backstop (such inputs are
+    // unreachable post-gas-check for any realistic gasLimit).
+    constexpr size_t kMaxLen = 64 * 1024;
+    if (base_len > kMaxLen || exp_len > kMaxLen || mod_len > kMaxLen) {
+        return Oog();
     }
 
     const size_t base_off = 96;
@@ -1034,13 +1069,6 @@ evmc::Result Modexp(const evmc_message& msg)
     std::vector<uint8_t> B = ReadBytes(msg, base_off, base_len);
     std::vector<uint8_t> E = ReadBytes(msg, exp_off,  exp_len);
     std::vector<uint8_t> M = ReadBytes(msg, mod_off,  mod_len);
-
-    // EIP-2565 gas.
-    const uint64_t mc = MultComplexity(base_len, mod_len);
-    const uint64_t it = IterCount(exp_len, E);
-    uint64_t cost = (mc * it) / 3;
-    if (cost < 200) cost = 200;
-    if (msg.gas < static_cast<int64_t>(cost)) return Oog();
 
     // Convert big-endian byte strings into cpp_int.
     auto from_bytes = [](const std::vector<uint8_t>& bytes) -> cpp_int {
