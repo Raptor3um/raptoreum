@@ -95,6 +95,14 @@ public:
     bool GetCommittedStorage(const uint160& address, const uint256& slot,
                              uint256& out);
 
+    /** EIP-7610 collision predicate: true iff the account has ANY
+     *  storage slot whose EFFECTIVE value (dirty layer overlaid on
+     *  the committed DB) is non-zero. Must consider committed slots,
+     *  not just the dirty layer — after the pre-state flush a
+     *  counterfactual address can carry storage that lives only in
+     *  the DB. A dirty zero correctly masks a committed non-zero. */
+    bool HasNonEmptyStorage(const uint160& address);
+
     /** Write a storage slot. Per SSTORE semantics, writing a zero value
      *  is allowed and stays in dirty as a zero (Flush() will EraseStorage
      *  if value.IsNull() to keep the DB compact). */

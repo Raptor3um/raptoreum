@@ -97,6 +97,29 @@ bool CEvmStateCache::GetCommittedStorage(const uint160& address,
     return db.ReadStorage(address, slot, out);
 }
 
+bool CEvmStateCache::HasNonEmptyStorage(const uint160& address)
+{
+    // Any dirty slot for this address that is non-zero is a hit.
+    for (const auto& kv : mStorageDirty) {
+        if (kv.first.first == address && kv.second != uint256()) {
+            return true;
+        }
+    }
+    // Then the committed (DB) slots: resolve each through GetStorage
+    // so a dirty zero masks a committed non-zero (EIP-7610 looks at
+    // the effective current storage, not the raw committed value).
+    bool found = false;
+    db.ForEachStorage(address,
+                      [&](const uint256& slot, const uint256& /*dbVal*/) {
+        if (found) return;
+        uint256 eff;
+        if (GetStorage(address, slot, eff) && eff != uint256()) {
+            found = true;
+        }
+    });
+    return found;
+}
+
 void CEvmStateCache::SetStorage(const uint160& address, const uint256& slot, const uint256& value)
 {
     mStorageDirty[std::make_pair(address, slot)] = value;

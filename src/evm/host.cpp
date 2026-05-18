@@ -680,14 +680,10 @@ evmc::Result CEvmHost::CallCreate(const evmc_message& msg) noexcept
         const bool hasCode =
             existing.codeHash != evm::CEvmAccount::EmptyCodeHash();
         // EIP-7610 (Cancun): an account with non-empty storage is
-        // also a collision target.
-        bool hasStorage = false;
-        for (const auto& [key, value] : state.DirtyStorage()) {
-            if (key.first == newAddr && value != uint256()) {
-                hasStorage = true;
-                break;
-            }
-        }
+        // also a collision target — including storage that lives only
+        // in the committed DB after the pre-state flush, not just the
+        // dirty layer.
+        const bool hasStorage = state.HasNonEmptyStorage(newAddr);
         if (hasCode || existing.nonce > 0 || hasStorage) {
             state.Revert(snap);
             warmAddresses = std::move(warmAddrsSnap);
