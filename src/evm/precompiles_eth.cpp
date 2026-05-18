@@ -13,9 +13,20 @@
 
 #include <boost/multiprecision/cpp_int.hpp>
 
+// BLS12-381 (RELIC-backed) for the EIP-4844 KZG point-evaluation
+// precompile. dashbls is already vendored and linked for consensus
+// BLS signatures; elements.hpp pulls in the RELIC bn_t/g1_t/g2_t API.
+// gmp.h must be seen first at C++ linkage: relic.h re-includes it
+// inside an extern "C" block, which would otherwise turn GMP's C++
+// stream operators into conflicting C declarations.
+#include <gmp.h>
+#include <dashbls/elements.hpp>
+#include <dashbls/util.hpp>
+
 #include <algorithm>
 #include <cstdlib>
 #include <cstring>
+#include <stdexcept>
 #include <vector>
 
 namespace evm {
@@ -1108,22 +1119,20 @@ evmc::Result Modexp(const evmc_message& msg)
 // Spec output on success (64 bytes):
 //   field_elements_per_blob = 4096 (32 BE) || BLS_MODULUS (32 BE)
 //
-// Full verification needs a BLS12-381 KZG library (c-kzg-4844). We
-// don't link one yet, but the spec also requires several CHEAP
-// validity checks that, when violated, must produce EVMC_FAILURE:
+// Full verification: BLS12-381 KZG proof check using the already-
+// vendored dashbls/RELIC (the same library that backs consensus BLS
+// signatures). The spec (EIP-4844) requires, in order:
 //   1. input_size == 192
-//   2. versioned_hash[0] == VERSIONED_HASH_VERSION_KZG (0x01)
-//   3. z < BLS_MODULUS
-//   4. y < BLS_MODULUS
+//   2. kzg_to_versioned_hash(commitment) == versioned_hash, where
+//      kzg_to_versioned_hash(c) = 0x01 || sha256(c)[1:]
+//   3. verify_kzg_proof(commitment, z, y, proof), which internally
+//      requires z, y < BLS_MODULUS and commitment/proof to be valid
+//      compressed G1 points in the correct subgroup.
 //
-// If those checks all pass, we OPTIMISTICALLY return success with the
-// canonical constants — without verifying the proof. That's wrong for
-// the cryptographic guarantee, but it lines us up with the bulk of the
-// fixture suite: the "correct_proof_*" cases (~hundreds) pre-validated
-// the inputs and pass, and the "invalid_*" cases violate one of the
-// cheap checks and fail. Only the few "_incorrect" tests (well-formed
-// inputs with a wrong proof) end up wrongly succeeding — to be fixed
-// once we vendor c-kzg-4844.
+// verify_kzg_proof checks the pairing equation
+//   e(commitment - [y]·G1, G2) == e(proof, [s]·G2 - [z]·G2)
+// where [s]·G2 = KZG_SETUP_G2_MONOMIAL[1] from the Ethereum mainnet
+// trusted setup (c-kzg-4844 trusted_setup.txt).
 namespace {
 
 constexpr int64_t kKzgPointEvalGas = 50000;
@@ -1136,6 +1145,22 @@ constexpr uint8_t kBlsModulusBE[32] = {
     0xff, 0xff, 0xff, 0xff, 0x00, 0x00, 0x00, 0x01,
 };
 
+// KZG_SETUP_G2_MONOMIAL[1] = [s]·G2, the second element of the G2
+// monomial trusted setup from the Ethereum mainnet KZG ceremony
+// (c-kzg-4844 / consensus-specs trusted_setup.txt). 96-byte
+// compressed G2 point. This single point is the only trusted-setup
+// material the point-evaluation precompile needs.
+constexpr uint8_t kKzgSetupG2_1[96] = {
+    0xb5, 0xbf, 0xd7, 0xdd, 0x8c, 0xde, 0xb1, 0x28, 0x84, 0x3b, 0xc2, 0x87,
+    0x23, 0x0a, 0xf3, 0x89, 0x26, 0x18, 0x70, 0x75, 0xcb, 0xfb, 0xef, 0xa8,
+    0x10, 0x09, 0xa2, 0xce, 0x61, 0x5a, 0xc5, 0x3d, 0x29, 0x14, 0xe5, 0x87,
+    0x0c, 0xb4, 0x52, 0xd2, 0xaf, 0xaa, 0xab, 0x24, 0xf3, 0x49, 0x9f, 0x72,
+    0x18, 0x5c, 0xbf, 0xee, 0x53, 0x49, 0x27, 0x14, 0x73, 0x44, 0x29, 0xb7,
+    0xb3, 0x86, 0x08, 0xe2, 0x39, 0x26, 0xc9, 0x11, 0xcc, 0xec, 0xea, 0xc9,
+    0xa3, 0x68, 0x51, 0x47, 0x7b, 0xa4, 0xc6, 0x0b, 0x08, 0x70, 0x41, 0xde,
+    0x62, 0x10, 0x00, 0xed, 0xc9, 0x8e, 0xda, 0xda, 0x20, 0xc1, 0xde, 0xf2,
+};
+
 // big-endian 32-byte less-than: returns true if a < b.
 bool BE32_Lt(const uint8_t* a, const uint8_t* b)
 {
@@ -1144,6 +1169,63 @@ bool BE32_Lt(const uint8_t* a, const uint8_t* b)
         if (a[i] > b[i]) return false;
     }
     return false; // equal
+}
+
+// Real BLS12-381 KZG proof verification. Returns false on any
+// malformed input (bad point encoding, off-curve, wrong subgroup,
+// z/y out of field) or a failed pairing — the precompile must
+// produce EVMC_FAILURE in all of those cases.
+bool VerifyKzgProof(const uint8_t* commitment48, const uint8_t* z32,
+                    const uint8_t* y32, const uint8_t* proof48)
+{
+    using bls::G1Element;
+    using bls::G2Element;
+    using bls::GTElement;
+    using bls::Bytes;
+
+    bn_t mod, zb, yb, negz, negy;
+    bn_null(mod); bn_null(zb); bn_null(yb); bn_null(negz); bn_null(negy);
+    bool ok = false;
+    try {
+        bn_new(mod); bn_new(zb); bn_new(yb); bn_new(negz); bn_new(negy);
+        bn_read_bin(mod, kBlsModulusBE, 32);
+        bn_read_bin(zb, z32, 32);
+        bn_read_bin(yb, y32, 32);
+
+        // Reject z or y >= BLS_MODULUS (bytes_to_bls_field would
+        // raise in the reference spec → precompile fails).
+        if (bn_cmp(zb, mod) != RLC_LT || bn_cmp(yb, mod) != RLC_LT) {
+            bn_free(mod); bn_free(zb); bn_free(yb);
+            bn_free(negz); bn_free(negy);
+            return false;
+        }
+
+        // negz = (mod - z) mod mod ; negy = (mod - y) mod mod.
+        // The mod-after-sub maps the z==0 / y==0 case to scalar 0
+        // (mod - 0 == mod, mod mod mod == 0) rather than to mod.
+        bn_sub(negz, mod, zb); bn_mod(negz, negz, mod);
+        bn_sub(negy, mod, yb); bn_mod(negy, negy, mod);
+
+        // Decompress points. FromBytes runs the on-curve + subgroup
+        // checks and throws std::invalid_argument on a bad encoding.
+        G1Element comm  = G1Element::FromBytes(Bytes(commitment48, 48));
+        G1Element prf   = G1Element::FromBytes(Bytes(proof48, 48));
+        G2Element setup = G2Element::FromBytes(Bytes(kKzgSetupG2_1, 96));
+
+        // P_minus_y = commitment + (-y)·G1
+        G1Element Pmy = comm + (negy * G1Element::Generator());
+        // X_minus_z = [s]·G2 + (-z)·G2
+        G2Element Xmz = setup + (negz * G2Element::Generator());
+
+        // e(P_minus_y, G2) == e(proof, X_minus_z)
+        GTElement lhs = Pmy.Pair(G2Element::Generator());
+        GTElement rhs = prf.Pair(Xmz);
+        ok = (lhs == rhs);
+    } catch (const std::exception&) {
+        ok = false;
+    }
+    bn_free(mod); bn_free(zb); bn_free(yb); bn_free(negz); bn_free(negy);
+    return ok;
 }
 
 } // namespace
@@ -1158,28 +1240,41 @@ evmc::Result KzgPointEvaluation(const evmc_message& msg)
         return evmc::Result{EVMC_FAILURE, 0, 0};
     }
 
-    // 2. versioned_hash[0] must be 0x01.
-    if (msg.input_data[0] != 0x01) {
+    const uint8_t* vh         = msg.input_data;        // [0:32]
+    const uint8_t* z          = msg.input_data + 32;   // [32:64]
+    const uint8_t* y          = msg.input_data + 64;   // [64:96]
+    const uint8_t* commitment = msg.input_data + 96;   // [96:144]
+    const uint8_t* proof      = msg.input_data + 144;  // [144:192]
+
+    // 2. kzg_to_versioned_hash(commitment) == versioned_hash, i.e.
+    //    versioned_hash == 0x01 || sha256(commitment)[1:].
+    if (vh[0] != 0x01) {
+        return evmc::Result{EVMC_FAILURE, 0, 0};
+    }
+    uint8_t sh[CSHA256::OUTPUT_SIZE];
+    CSHA256().Write(commitment, 48).Finalize(sh);
+    if (std::memcmp(vh + 1, sh + 1, 31) != 0) {
         return evmc::Result{EVMC_FAILURE, 0, 0};
     }
 
-    // 3-4. z and y must be < BLS_MODULUS.
-    if (!BE32_Lt(msg.input_data + 32, kBlsModulusBE)) {
-        return evmc::Result{EVMC_FAILURE, 0, 0};
-    }
-    if (!BE32_Lt(msg.input_data + 64, kBlsModulusBE)) {
+    // 3. Cheap z/y < BLS_MODULUS pre-filter (also re-checked inside
+    //    VerifyKzgProof; keeping it here is a fast exit).
+    if (!BE32_Lt(z, kBlsModulusBE) || !BE32_Lt(y, kBlsModulusBE)) {
         return evmc::Result{EVMC_FAILURE, 0, 0};
     }
 
-    // Cheap checks pass: build the canonical success output. (We
-    // skip the actual BLS verification — see header comment.)
+    // 4. Full BLS12-381 KZG proof verification.
+    if (!VerifyKzgProof(commitment, z, y, proof)) {
+        return evmc::Result{EVMC_FAILURE, 0, 0};
+    }
+
+    // Verified: return the canonical (FIELD_ELEMENTS_PER_BLOB,
+    // BLS_MODULUS) constant pair.
     std::vector<uint8_t> out(64, 0);
-    // First 32 bytes: FIELD_ELEMENTS_PER_BLOB as big-endian.
     for (int i = 0; i < 8; ++i) {
         out[31 - i] = static_cast<uint8_t>(
             (kFieldElementsPerBlob >> (8 * i)) & 0xff);
     }
-    // Next 32 bytes: BLS_MODULUS.
     std::memcpy(out.data() + 32, kBlsModulusBE, 32);
 
     return Ok(msg.gas - kKzgPointEvalGas, out);
