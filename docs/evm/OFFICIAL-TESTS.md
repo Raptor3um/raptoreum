@@ -238,6 +238,43 @@ production-consensus bug:
   fee/accounting edge in the same family as the deep SELFDESTRUCT
   work; single fixture, structural.
 
+### CI gating (regression baseline + version pin)
+
+Two guards keep the EVM consensus pipeline from silently regressing.
+A silent state-root divergence is the single worst failure mode for a
+chain, so these are wired to fail the build, not just warn.
+
+**evmone version pin (always on).** `evm_smoke_tests::evmone_version_pin`
+runs inside the normal `make check` (no opt-in, no fixtures needed).
+It asserts the linked engine is exactly `evmone 0.12.0` — the version
+pinned in `depends/packages/evmone.mk` — and EVMC-ABI-compatible. Any
+evmone bump fails this test until `kPinnedEvmoneVersion` is
+consciously updated *and* the Capa B baseline below is re-validated.
+
+**Capa B regression baseline.** `evm_official_blockchaintest_tests`
+is opt-in via `EVM_OFFICIAL_TESTS_PATH` (skip-clean when unset). When
+run it is now a true gate: it holds a committed allow-list of exactly
+the residual fixtures (the "remaining 10" above, each proven
+non-consensus) plus a pass-count floor. **Any** failure outside the
+allow-list — a new consensus divergence — fails the build; mass
+coverage loss trips the floor; a baseline entry that starts passing
+is surfaced so the list tightens. Changing the baseline requires
+editing both the allow-list in the test and this document in the
+same commit.
+
+To make the gate run in CI, fetch the pinned fixtures once (see
+"Quick start" — the `run_official_state_tests.sh` cache, or a shallow
+`ethereum/tests @ v14.0` clone) and run:
+
+```bash
+EVM_OFFICIAL_TESTS_PATH=<cache>/tests-data/BlockchainTests/GeneralStateTests \
+  ./src/test/test_raptoreum --run_test=evm_official_blockchaintest_tests
+```
+
+A green run means 20328 pass / 10 baseline fail / 2041 skip with zero
+unexpected failures. A non-zero exit means a real regression — do not
+merge.
+
 **Skip categories** (all by design, not failures):
 
 | Count | Reason |
