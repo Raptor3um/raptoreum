@@ -50,6 +50,35 @@ void CEvmStateCache::DeleteAccount(const uint160& address)
 {
     mAccountsDirty.erase(address);
     mAccountsDeleted[address] = true;
+
+    // EIP-6780: deleting an account must purge its ENTIRE storage
+    // footprint, not just the account record. Otherwise stale slots
+    // survive into later txs of the same block: (1) the EIP-7610
+    // collision predicate (HasNonEmptyStorage) would still see the
+    // destructed contract's slots and wrongly block a same-address
+    // recreate; (2) Flush() re-writes every dirty slot and never
+    // erases the committed (DB) slots, resurrecting a destructed
+    // contract's storage on disk (latent state-root divergence).
+    //
+    // (a) Drop dirty slots for this address. (b) Shadow every
+    // committed (DB) slot with an explicit dirty zero so reads,
+    // HasNonEmptyStorage() and Flush() all observe an empty account.
+    // A later SetAccount() clears mAccountsDeleted (recreate), and
+    // the dirty-zero slots then correctly read as empty storage for
+    // the freshly-created contract. The whole-map Savepoint copy
+    // means an outer Revert() restores the pre-purge storage with no
+    // extra wiring.
+    for (auto it = mStorageDirty.begin(); it != mStorageDirty.end(); ) {
+        if (it->first.first == address) {
+            it = mStorageDirty.erase(it);
+        } else {
+            ++it;
+        }
+    }
+    db.ForEachStorage(address,
+                      [&](const uint256& slot, const uint256& /*dbVal*/) {
+        mStorageDirty[std::make_pair(address, slot)] = uint256();
+    });
 }
 
 // ----------------------------------------------------------------------
