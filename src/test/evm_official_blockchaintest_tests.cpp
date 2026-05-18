@@ -858,7 +858,14 @@ FixtureResult RunOneFixture(const std::string& filePath,
 
     evm::CEvmAccount senderAcc;
     if (cache.GetAccount(senderAddr, senderAcc)) {
-        senderAcc.balance = u256SubU64(senderAcc.balance, txGasLimit * effectiveGasPrice);
+        // gasLimit * price can exceed u64 (loopMul uses
+        // gasLimit = 2^63-1, price = 10 -> ~9.2e19 > 2^64). Compute
+        // the product in u128 and debit via the u128 path, same as
+        // the EIP-4844 blob-gas charge.
+        senderAcc.balance = u256SubU128(
+            senderAcc.balance,
+            static_cast<__uint128_t>(txGasLimit) *
+                static_cast<__uint128_t>(effectiveGasPrice));
         if (blobGasCharge > 0) {
             senderAcc.balance = u256SubU128(senderAcc.balance, blobGasCharge);
         }
@@ -942,7 +949,10 @@ FixtureResult RunOneFixture(const std::string& filePath,
     // ORIGINAL pre-intrinsic gasLimit since that's what we debited.
     if (cache.GetAccount(senderAddr, senderAcc)) {
         const uint64_t unused = txGasLimit - totalGasUsed;
-        senderAcc.balance = u256AddU64(senderAcc.balance, unused * effectiveGasPrice);
+        senderAcc.balance = u256AddU128(
+            senderAcc.balance,
+            static_cast<__uint128_t>(unused) *
+                static_cast<__uint128_t>(effectiveGasPrice));
         cache.SetAccount(senderAddr, senderAcc);
     }
     if (priorityPerGas > 0) {
@@ -953,7 +963,9 @@ FixtureResult RunOneFixture(const std::string& filePath,
             coinbaseAcc.storageRoot = evm::CEvmAccount::EmptyStorageRoot();
         }
         coinbaseAcc.balance =
-            u256AddU64(coinbaseAcc.balance, totalGasUsed * priorityPerGas);
+            u256AddU128(coinbaseAcc.balance,
+                        static_cast<__uint128_t>(totalGasUsed) *
+                            static_cast<__uint128_t>(priorityPerGas));
         cache.SetAccount(ctx.coinbase, coinbaseAcc);
     }
         }  // end per-tx loop
