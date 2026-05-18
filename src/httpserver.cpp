@@ -646,6 +646,25 @@ CService HTTPRequest::GetPeer() {
     return peer;
 }
 
+int HTTPRequest::GetLocalPort() {
+    evhttp_connection *con = evhttp_request_get_connection(req);
+    if (!con) return -1;
+    bufferevent *bev = evhttp_connection_get_bufferevent(con);
+    if (!bev) return -1;
+    const evutil_socket_t fd = bufferevent_getfd(bev);
+    if (fd == (evutil_socket_t)-1) return -1;
+    struct sockaddr_storage ss;
+    socklen_t slen = sizeof(ss);
+    if (getsockname(fd, (struct sockaddr *)&ss, &slen) != 0) return -1;
+    if (ss.ss_family == AF_INET) {
+        return ntohs(reinterpret_cast<struct sockaddr_in *>(&ss)->sin_port);
+    }
+    if (ss.ss_family == AF_INET6) {
+        return ntohs(reinterpret_cast<struct sockaddr_in6 *>(&ss)->sin6_port);
+    }
+    return -1;
+}
+
 std::string HTTPRequest::GetURI() {
     return evhttp_request_get_uri(req);
 }

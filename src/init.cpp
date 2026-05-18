@@ -945,15 +945,25 @@ void SetupServerArgs() {
                            defaultBaseParams->RPCPort(), testnetBaseParams->RPCPort(), regtestBaseParams->RPCPort()),
                  ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::RPC);
     gArgs.AddArg("-evmrpcport=<port>",
-                 "Open an additional JSON-RPC listener on <port>, serving the same "
-                 "RPC namespace as -rpcport. Defaults to 8545 (MetaMask / ethers / "
-                 "viem / web3.js Ethereum-default port) so wallets can connect to "
-                 "this node without custom-port configuration. Set to 0 to disable.",
+                 "Open an additional JSON-RPC listener on <port> for the "
+                 "Ethereum-compatible namespace only (eth_/net_/web3_). "
+                 "Unauthenticated by default (MetaMask / ethers / viem / "
+                 "web3.js connect without credentials) and STRICTLY "
+                 "restricted to that namespace, so it can never reach "
+                 "wallet, stop, debug or admin RPCs. Defaults to 8545 "
+                 "(the Ethereum-default port), loopback-only unless bound "
+                 "wider. Set to 0 to disable.",
                  ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
     gArgs.AddArg("-evmrpcbind=<addr>[:port]",
                  "Additional bind address for the EVM-port JSON-RPC listener. "
                  "Same semantics as -rpcbind but applies to -evmrpcport. "
                  "Defaults to the same addresses as -rpcbind.",
+                 ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
+    gArgs.AddArg("-evmrpcauth",
+                 "Also require HTTP basic auth (the same -rpcuser/-rpcauth "
+                 "credentials) on the EVM RPC port. Off by default so "
+                 "wallets work out of the box; enable this if you expose "
+                 "-evmrpcport off loopback. (default: 0)",
                  ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
     gArgs.AddArg("-rpcservertimeout=<n>",
                  strprintf("Timeout during HTTP requests (default: %d)", DEFAULT_HTTP_SERVER_TIMEOUT),
