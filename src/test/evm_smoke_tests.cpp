@@ -9,6 +9,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <cstdint>
+#include <string>
 #include <vector>
 
 // EVMC_SUCCESS = 0 — see evmc/evmc.h. We don't include evmc here to keep
@@ -127,6 +128,34 @@ BOOST_AUTO_TEST_CASE(keccak256_empty_matches_known_constant)
     BOOST_CHECK_EQUAL_COLLECTIONS(
         r.return_data.begin(), r.return_data.end(),
         expected_hash.begin(), expected_hash.end());
+}
+
+/**
+ * Test 4 — evmone version pin (test gap T4).
+ *
+ * The linked EVM engine MUST be exactly the version pinned in
+ * depends/packages/evmone.mk. A silent evmone bump can change
+ * execution or gas semantics and cause node state-root divergence —
+ * a critical, hard-to-detect consensus bug. This test fails the build
+ * the moment the engine drifts, forcing a conscious version update
+ * here plus a re-validation of the Capa B official-tests baseline.
+ *
+ * If you are intentionally bumping evmone: update kPinnedEvmoneVersion
+ * to match evmone.mk, then re-run evm_official_blockchaintest_tests
+ * and refresh its committed baseline before merging.
+ */
+BOOST_AUTO_TEST_CASE(evmone_version_pin)
+{
+    // Keep in lockstep with `$(package)_version` in
+    // depends/packages/evmone.mk.
+    static const std::string kPinnedEvmoneVersion = "0.12.0";
+
+    evm::EngineInfo info = evm::EvmEngineInfo();
+    BOOST_CHECK_EQUAL(info.name, "evmone");
+    BOOST_CHECK_EQUAL(info.version, kPinnedEvmoneVersion);
+    BOOST_CHECK_MESSAGE(info.abi_compatible,
+        "Linked evmone is not EVMC-ABI-compatible with the headers we "
+        "build against — refusing to trust its execution.");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

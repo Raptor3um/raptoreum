@@ -54,4 +54,16 @@ SmokeResult EvmSmokeExecute(const std::vector<uint8_t>& bytecode,
     return result;
 }
 
+EngineInfo EvmEngineInfo()
+{
+    evmc::VM vm{evmc_create_evmone()};
+    EngineInfo info;
+    const char* n = vm.name();
+    const char* v = vm.version();
+    info.name = n ? n : "";
+    info.version = v ? v : "";
+    info.abi_compatible = vm.is_abi_compatible();
+    return info;
+}
+
 } // namespace evm

@@ -6,6 +6,7 @@
 #define RAPTOREUM_EVM_SMOKE_H
 
 #include <cstdint>
+#include <string>
 #include <vector>
 
 /**
@@ -48,6 +49,25 @@ struct SmokeResult {
 SmokeResult EvmSmokeExecute(const std::vector<uint8_t>& bytecode,
                             const std::vector<uint8_t>& calldata,
                             int64_t gas_limit = 1000000);
+
+/** Identity of the linked EVM engine, for the build-time version pin. */
+struct EngineInfo {
+    std::string name;            // evmc_vm::name, e.g. "evmone"
+    std::string version;         // evmc_vm::version, e.g. "0.12.0"
+    bool abi_compatible{false};  // evmc::VM::is_abi_compatible()
+};
+
+/**
+ * Report the linked EVM engine's name/version/ABI compatibility.
+ *
+ * Used by the evmone version-pin unit test (test gap T4): a silent
+ * evmone bump can change execution or gas semantics and cause node
+ * state-root divergence. The pin test asserts the engine matches the
+ * version pinned in depends/packages/evmone.mk; bumping evmone then
+ * forces a conscious update of that constant and a re-validation of the
+ * official-tests (Capa B) baseline.
+ */
+EngineInfo EvmEngineInfo();
 
 } // namespace evm
 
