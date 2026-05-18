@@ -200,6 +200,73 @@ jobs:
           coin-name: ${{ env.COIN_NAME }}
 
   # ============================================================================
+  # EVM consensus regression gate (Capa B + reorg fuzz)
+  #
+  # Drives the canonical ethereum/tests Cancun corpus through our own
+  # pipeline and runs the deep-reorg property fuzz. The Capa B suite
+  # holds a committed allow-list of the classified residual fixtures and
+  # a pass-count floor (see docs/evm/OFFICIAL-TESTS.md "CI gating"): any
+  # NEW failure — a fresh consensus divergence — exits non-zero and
+  # fails this job. evmone is pinned to v0.12.0 by the unit-test version
+  # pin that already runs in the normal test job; this job adds the
+  # higher-value state-equivalence gate. Single platform: EVM state is
+  # platform-independent, so one deterministic run is sufficient.
+  #
+  # Additive job — it cannot affect the existing build/test jobs. The
+  # fixtures are a sparse, blob-filtered, cached checkout of
+  # ethereum/tests @ v14.0 (the tag matched to evmone 0.12.0).
+  # ============================================================================
+  evm-consensus-gate:
+    name: EVM Consensus Gate
+    needs: [get-version, build-linux]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download Test Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.COIN_NAME }}-ubuntu24-test-${{ needs.get-version.outputs.version }}
+
+      - name: Cache ethereum/tests fixtures
+        id: fixtures-cache
+        uses: actions/cache@v4
+        with:
+          path: ethereum-tests
+          key: ethereum-tests-v14.0-blockchain-genstate
+
+      - name: Fetch ethereum/tests @ v14.0 (sparse)
+        if: steps.fixtures-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --branch v14.0 --filter=blob:none --sparse \
+            https://github.com/ethereum/tests.git ethereum-tests
+          cd ethereum-tests
+          git sparse-checkout set BlockchainTests/GeneralStateTests
+
+      - name: Capa B + reorg fuzz (consensus regression gate)
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x test_raptoreum
+          EVM_OFFICIAL_TESTS_PATH="$PWD/ethereum-tests/BlockchainTests/GeneralStateTests" \
+            ./test_raptoreum \
+              --run_test=evm_official_blockchaintest_tests,evm_reorg_fuzz_tests \
+              --log_level=message 2>&1 | tee evm_consensus_gate.log
+          # test_raptoreum's exit code already reflects the baseline
+          # gate (non-zero on any unexpected failure); `set -o pipefail`
+          # propagates it through the tee.
+
+      - name: Upload gate log
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ${{ env.COIN_NAME }}-evm-consensus-gate-${{ needs.get-version.outputs.version }}
+          path: evm_consensus_gate.log
+
+  # ============================================================================
   # Windows Build
   # ============================================================================
   

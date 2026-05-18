@@ -262,18 +262,25 @@ is surfaced so the list tightens. Changing the baseline requires
 editing both the allow-list in the test and this document in the
 same commit.
 
-To make the gate run in CI, fetch the pinned fixtures once (see
-"Quick start" — the `run_official_state_tests.sh` cache, or a shallow
-`ethereum/tests @ v14.0` clone) and run:
+This gate runs in CI as the **`EVM Consensus Gate`** job in
+`.github/workflows/build.yaml`: it downloads the prebuilt
+`test_raptoreum`, restores a sparse, blob-filtered, cached checkout of
+`ethereum/tests @ v14.0` (the tag matched to evmone 0.12.0), and runs
 
 ```bash
-EVM_OFFICIAL_TESTS_PATH=<cache>/tests-data/BlockchainTests/GeneralStateTests \
-  ./src/test/test_raptoreum --run_test=evm_official_blockchaintest_tests
+EVM_OFFICIAL_TESTS_PATH=<fixtures>/BlockchainTests/GeneralStateTests \
+  ./test_raptoreum \
+    --run_test=evm_official_blockchaintest_tests,evm_reorg_fuzz_tests \
+    --log_level=message
 ```
 
 A green run means 20328 pass / 10 baseline fail / 2041 skip with zero
-unexpected failures. A non-zero exit means a real regression — do not
-merge.
+unexpected failures, plus the deep-reorg property fuzz. A non-zero
+exit means a real regression and fails the job — do not merge. The
+job is additive (it cannot affect the build/test jobs) and triggers
+on PRs to `develop` and pushes to the gated branches. To reproduce
+locally, run the same command against any
+`run_official_state_tests.sh` cache.
 
 **Skip categories** (all by design, not failures):
 
